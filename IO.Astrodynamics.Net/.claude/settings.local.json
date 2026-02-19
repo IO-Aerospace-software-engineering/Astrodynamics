@@ -39,7 +39,9 @@
       "Bash(dotnet run:*)",
       "Bash(echo:*)",
       "WebFetch(domain:docs.json-everything.net)",
-      "Bash(dotnet restore:*)"
+      "Bash(dotnet restore:*)",
+      "Bash(/home/sw/Applications/Cspice/exe/brief IO.Astrodynamics.Tests/Data/SolarSystem/earth_latest_high_prec.bpc)",
+      "Bash(git -C /home/sw/Sources/Astrodynamics/IO.Astrodynamics.Net stash)"
     ],
     "deny": [],
     "ask": []

@@ -17,6 +17,6 @@ public class NadirAttitude : Attitude
 
     protected override Quaternion ComputeOrientation(StateVector stateVector)
     {
-        return Spacecraft.Front.To(stateVector.Position.Inverse());
+        return GetBodyFront().To(stateVector.Position.Inverse());
     }
 }

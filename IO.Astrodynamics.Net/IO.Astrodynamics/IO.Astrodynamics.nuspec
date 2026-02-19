@@ -4,14 +4,14 @@
         <id>IO.Astrodynamics</id>
         <authors>Sylvain Guillet</authors>
         <copyright>Sylvain Guillet</copyright>
-        <version>8.3.2</version>
+        <version>8.4.0-preview</version>
         <title>Astrodynamics framework</title>
         <icon>images\dragonfly-dark-trans.png</icon>
         <readme>docs\README.md</readme>
         <projectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics</projectUrl>
         <license type="expression">LGPL-3.0-or-later</license>
-        <description>This astrodynamics framework provides tools to manipulate orbital parameters, run spacecraft propagation, evaluate impulsive maneuvers, generate fuel balance, ...</description>
-        <tags>astrodynamics aerospace orbital mechanics spice space physics</tags>
+        <description>This astrodynamics framework provides tools to manipulate orbital parameters, run spacecraft propagation, evaluate impulsive maneuvers, generate fuel balance, compute spacecraft attitudes (prograde, nadir, normal, TRIAD with orbital/celestial targets), ...</description>
+        <tags>astrodynamics aerospace orbital mechanics spice space physics attitude</tags>
     </metadata>
     <files>
         <!-- binding libraries .NET 8.0 -->

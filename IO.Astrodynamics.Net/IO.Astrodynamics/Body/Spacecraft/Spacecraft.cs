@@ -27,6 +27,26 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public static readonly Vector3 Up = Vector3.VectorZ;
         public static readonly Vector3 Down = Up.Inverse();
 
+        /// <summary>
+        /// Instance-level body front axis. Defaults to +Y (same as static Front).
+        /// Override via constructor to support non-standard body frame conventions (e.g., +X forward).
+        /// </summary>
+        public Vector3 BodyFront { get; }
+
+        /// <summary>
+        /// Instance-level body right axis. Defaults to +X (same as static Right).
+        /// </summary>
+        public Vector3 BodyRight { get; }
+
+        /// <summary>
+        /// Instance-level body up axis. Defaults to +Z (same as static Up).
+        /// </summary>
+        public Vector3 BodyUp { get; }
+
+        public Vector3 BodyBack => BodyFront.Inverse();
+        public Vector3 BodyLeft => BodyRight.Inverse();
+        public Vector3 BodyDown => BodyUp.Inverse();
+
         private readonly HashSet<Maneuver.Maneuver> _executedManeuvers = new HashSet<Maneuver.Maneuver>();
         public IReadOnlyCollection<Maneuver.Maneuver> ExecutedManeuvers => _executedManeuvers;
         public Maneuver.Maneuver StandbyManeuver { get; private set; }
@@ -86,10 +106,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="dragCoeff">Drag coefficient (Cd), default 2.2 for satellites in free-molecular flow</param>
         /// <param name="cosparId">COSPAR international designator (e.g., "1998-067A")</param>
         /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr), default 1.0</param>
+        /// <param name="bodyFront">Instance body front axis (default: +Y). Must be orthogonal to bodyRight and bodyUp.</param>
+        /// <param name="bodyRight">Instance body right axis (default: +X). Must be orthogonal to bodyFront and bodyUp.</param>
+        /// <param name="bodyUp">Instance body up axis (default: +Z). Must be orthogonal to bodyFront and bodyRight.</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed.</exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
-            double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0) : base(
+            double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
+            Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null) : base(
             naifId, name, mass, initialOrbitalParameters)
         {
             if (maximumOperatingMass < mass) throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass));
@@ -105,6 +130,33 @@ namespace IO.Astrodynamics.Body.Spacecraft
             DragCoefficient = dragCoeff;
             CosparId = cosparId;
             SolarRadiationCoeff = solarRadiationCoeff;
+
+            BodyFront = bodyFront?.Normalize() ?? Vector3.VectorY;
+            BodyRight = bodyRight?.Normalize() ?? Vector3.VectorX;
+            BodyUp = bodyUp?.Normalize() ?? Vector3.VectorZ;
+
+            if (bodyFront.HasValue || bodyRight.HasValue || bodyUp.HasValue)
+            {
+                ValidateBodyAxes();
+            }
+        }
+
+        private void ValidateBodyAxes()
+        {
+            const double tolerance = 1e-10;
+
+            // Check orthogonality
+            if (System.Math.Abs(BodyFront * BodyRight) > tolerance)
+                throw new ArgumentException("Body axes must be orthogonal: BodyFront and BodyRight are not perpendicular.");
+            if (System.Math.Abs(BodyFront * BodyUp) > tolerance)
+                throw new ArgumentException("Body axes must be orthogonal: BodyFront and BodyUp are not perpendicular.");
+            if (System.Math.Abs(BodyRight * BodyUp) > tolerance)
+                throw new ArgumentException("Body axes must be orthogonal: BodyRight and BodyUp are not perpendicular.");
+
+            // Check right-handedness: Right x Front should equal Up
+            var cross = BodyRight.Cross(BodyFront);
+            if ((cross - BodyUp).Magnitude() > tolerance)
+                throw new ArgumentException("Body axes must form a right-handed coordinate system: BodyRight x BodyFront must equal BodyUp.");
         }
 
         /// <summary>

@@ -723,4 +723,387 @@ public class TriadAttitudeTests
     }
 
     #endregion
+
+    #region IAttitudeTarget Tests
+
+    [Fact]
+    public void Constructor_WithAttitudeTargets_CreatesValidManeuver()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First());
+
+        Assert.NotNull(maneuver);
+        Assert.Equal(Spacecraft.Front, maneuver.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Up, maneuver.SecondaryBodyVector);
+        Assert.NotNull(maneuver.PrimaryAttitudeTarget);
+        Assert.NotNull(maneuver.SecondaryAttitudeTarget);
+    }
+
+    [Fact]
+    public void Constructor_WithAttitudeTargets_NullManeuverCenter_ThrowsArgumentNullException()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
+            null,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First()));
+    }
+
+    [Fact]
+    public void Constructor_WithAttitudeTargets_NullPrimaryTarget_ThrowsArgumentNullException()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Spacecraft.Front,
+            null,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First()));
+    }
+
+    [Fact]
+    public void Constructor_WithAttitudeTargets_NullSecondaryTarget_ThrowsArgumentNullException()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        Assert.Throws<ArgumentNullException>(() => new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            null,
+            spc.Engines.First()));
+    }
+
+    [Fact]
+    public void Execute_ProgradeWithSunTracking()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First());
+
+        maneuver.TryExecute(orbitalParams);
+
+        // Verify Front aligns with velocity direction
+        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var progradeDir = localSv.Velocity.Normalize();
+
+        double alignment = rotatedFront * progradeDir;
+        Assert.True(alignment > 0.9999, $"Front should align with prograde. Alignment: {alignment}");
+
+        // Verify Up is in Sun-facing half-space
+        var rotatedUp = Spacecraft.Up.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var sunEphemeris = TestHelpers.Sun.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
+        var sunDirection = (sunEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
+        Assert.True(rotatedUp * sunDirection > 0.0, "Up should be in Sun-facing half-space");
+    }
+
+    [Fact]
+    public void Execute_NadirWithNormalConstraint_LVLH()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Down,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            spc.Engines.First());
+
+        maneuver.TryExecute(orbitalParams);
+
+        // Verify Down aligns with nadir
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var rotatedDown = Spacecraft.Down.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var nadirDir = localSv.Position.Inverse().Normalize();
+
+        double nadirAlignment = rotatedDown * nadirDir;
+        Assert.True(nadirAlignment > 0.9999, $"Down should align with nadir. Alignment: {nadirAlignment}");
+
+        // Verify Front is in prograde half-space
+        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var progradeDir = localSv.Velocity.Normalize();
+        Assert.True(rotatedFront * progradeDir > 0.0, "Front should be in prograde half-space");
+    }
+
+    [Fact]
+    public void Execute_MixedTargets_CelestialPrimaryOrbitalSecondary()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Vector3.VectorX,
+            OrbitalDirectionTarget.Normal,
+            spc.Engines.First());
+
+        maneuver.TryExecute(orbitalParams);
+
+        // Verify primary pointing
+        var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
+        var moonDirection = (moonEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
+        var pointingVector = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+
+        double alignment = pointingVector * moonDirection;
+        Assert.True(alignment > 0.9999, $"Primary should point at Moon. Alignment: {alignment}");
+
+        // Verify quaternion is normalized
+        var q = maneuver.StateOrientation.Rotation;
+        double magnitude = System.Math.Sqrt(q.W * q.W + q.VectorPart.X * q.VectorPart.X +
+                                            q.VectorPart.Y * q.VectorPart.Y + q.VectorPart.Z * q.VectorPart.Z);
+        Assert.True(System.Math.Abs(magnitude - 1.0) < 1e-10, "Quaternion should be normalized");
+    }
+
+    [Fact]
+    public void Execute_CollinearOrbitalDirections_ThrowsInvalidOperationException()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Up,
+            OrbitalDirectionTarget.Zenith,  // Opposite of nadir — collinear!
+            spc.Engines.First());
+
+        Assert.Throws<InvalidOperationException>(() => maneuver.TryExecute(orbitalParams));
+    }
+
+    [Fact]
+    public void Execute_CelestialAttitudeTarget_MapsToILocalizable()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0),
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Vector3.VectorX,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First());
+
+        // CelestialAttitudeTarget should map back to PrimaryTarget/SecondaryTarget
+        Assert.Equal(TestHelpers.MoonAtJ2000, maneuver.PrimaryTarget);
+        Assert.Equal(TestHelpers.Sun, maneuver.SecondaryTarget);
+    }
+
+    [Fact]
+    public void Execute_IAttitudeTargetVsILocalizable_SameQuaternion()
+    {
+        // Create two TriadAttitude instances targeting Moon (primary) and Sun (secondary).
+        // One uses the ILocalizable constructor, the other the IAttitudeTarget constructor
+        // with CelestialAttitudeTarget wrappers and the SAME maneuver center.
+        // The ILocalizable constructor uses GetManeuverCenter(primaryTarget) = MoonAtJ2000,
+        // so we must also pass MoonAtJ2000 as maneuverCenter to the IAttitudeTarget constructor.
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        // ILocalizable constructor — maneuverCenter is set internally to MoonAtJ2000
+        var localizableManeuver = new TriadAttitude(
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Front,
+            TestHelpers.MoonAtJ2000,
+            Spacecraft.Up,
+            TestHelpers.Sun,
+            spc.Engines.First());
+
+        // IAttitudeTarget constructor with CelestialAttitudeTarget wrappers.
+        // Use MoonAtJ2000 as maneuverCenter to match the ILocalizable path.
+        var attitudeTargetManeuver = new TriadAttitude(
+            TestHelpers.MoonAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Front,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun),
+            spc.Engines.First());
+
+        localizableManeuver.TryExecute(orbitalParams);
+        attitudeTargetManeuver.TryExecute(orbitalParams);
+
+        var q1 = localizableManeuver.StateOrientation.Rotation;
+        var q2 = attitudeTargetManeuver.StateOrientation.Rotation;
+
+        // Account for quaternion double-cover: q and -q represent the same rotation
+        double dot = q1.W * q2.W + q1.VectorPart.X * q2.VectorPart.X +
+                     q1.VectorPart.Y * q2.VectorPart.Y + q1.VectorPart.Z * q2.VectorPart.Z;
+        double sign = dot >= 0 ? 1.0 : -1.0;
+
+        const double tolerance = 1e-10;
+        Assert.True(System.Math.Abs(sign * q2.W - q1.W) < tolerance,
+            $"IAttitudeTarget and ILocalizable should produce same quaternion W. Got {q1.W} vs {sign * q2.W}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.X - q1.VectorPart.X) < tolerance,
+            $"IAttitudeTarget and ILocalizable should produce same quaternion X. Got {q1.VectorPart.X} vs {sign * q2.VectorPart.X}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.Y - q1.VectorPart.Y) < tolerance,
+            $"IAttitudeTarget and ILocalizable should produce same quaternion Y. Got {q1.VectorPart.Y} vs {sign * q2.VectorPart.Y}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.Z - q1.VectorPart.Z) < tolerance,
+            $"IAttitudeTarget and ILocalizable should produce same quaternion Z. Got {q1.VectorPart.Z} vs {sign * q2.VectorPart.Z}");
+    }
+
+    #endregion
+
+    #region Factory Method Tests
+
+    [Fact]
+    public void CreateLVLH_CreatesValidManeuver()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = TriadAttitude.CreateLVLH(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            spc.Engines.First());
+
+        Assert.NotNull(maneuver);
+        Assert.Equal(Spacecraft.Down, maneuver.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Front, maneuver.SecondaryBodyVector);
+
+        // Execute and verify
+        maneuver.TryExecute(orbitalParams);
+
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var rotatedDown = Spacecraft.Down.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var nadirDir = localSv.Position.Inverse().Normalize();
+
+        double alignment = rotatedDown * nadirDir;
+        Assert.True(alignment > 0.9999, $"LVLH Down should align with nadir. Alignment: {alignment}");
+    }
+
+    [Fact]
+    public void CreateProgradeWithSunTracking_CreatesValidManeuver()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = TriadAttitude.CreateProgradeWithSunTracking(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            TestHelpers.Sun,
+            spc.Engines.First());
+
+        Assert.NotNull(maneuver);
+        Assert.Equal(Spacecraft.Front, maneuver.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Up, maneuver.SecondaryBodyVector);
+
+        // Execute and verify
+        maneuver.TryExecute(orbitalParams);
+
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var rotatedFront = Spacecraft.Front.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+        var progradeDir = localSv.Velocity.Normalize();
+
+        double alignment = rotatedFront * progradeDir;
+        Assert.True(alignment > 0.9999, $"Front should align with prograde. Alignment: {alignment}");
+    }
+
+    [Fact]
+    public void CreateProgradeWithSunTracking_NullSun_ThrowsArgumentNullException()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+
+        Assert.Throws<ArgumentNullException>(() => TriadAttitude.CreateProgradeWithSunTracking(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            null,
+            spc.Engines.First()));
+    }
+
+    [Fact]
+    public void CreateLVLH_MatchesManualConstruction()
+    {
+        // The CreateLVLH factory should produce the same result as manually constructing
+        // a TriadAttitude with Down→Nadir, Front→Prograde.
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var factoryManeuver = TriadAttitude.CreateLVLH(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            spc.Engines.First());
+
+        var manualManeuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Spacecraft.Down,
+            OrbitalDirectionTarget.Nadir,
+            Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde,
+            spc.Engines.First());
+
+        // Both should have the same body vectors
+        Assert.Equal(Spacecraft.Down, factoryManeuver.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Front, factoryManeuver.SecondaryBodyVector);
+        Assert.Equal(manualManeuver.PrimaryBodyVector, factoryManeuver.PrimaryBodyVector);
+        Assert.Equal(manualManeuver.SecondaryBodyVector, factoryManeuver.SecondaryBodyVector);
+
+        // Execute both on the same state vector and verify identical quaternions
+        factoryManeuver.TryExecute(orbitalParams);
+        manualManeuver.TryExecute(orbitalParams);
+
+        var q1 = factoryManeuver.StateOrientation.Rotation;
+        var q2 = manualManeuver.StateOrientation.Rotation;
+
+        // Account for quaternion double-cover
+        double dot = q1.W * q2.W + q1.VectorPart.X * q2.VectorPart.X +
+                     q1.VectorPart.Y * q2.VectorPart.Y + q1.VectorPart.Z * q2.VectorPart.Z;
+        double sign = dot >= 0 ? 1.0 : -1.0;
+
+        const double tolerance = 1e-10;
+        Assert.True(System.Math.Abs(sign * q2.W - q1.W) < tolerance,
+            $"Factory and manual LVLH quaternion W should match. Got {q1.W} vs {sign * q2.W}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.X - q1.VectorPart.X) < tolerance,
+            $"Factory and manual LVLH quaternion X should match. Got {q1.VectorPart.X} vs {sign * q2.VectorPart.X}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.Y - q1.VectorPart.Y) < tolerance,
+            $"Factory and manual LVLH quaternion Y should match. Got {q1.VectorPart.Y} vs {sign * q2.VectorPart.Y}");
+        Assert.True(System.Math.Abs(sign * q2.VectorPart.Z - q1.VectorPart.Z) < tolerance,
+            $"Factory and manual LVLH quaternion Z should match. Got {q1.VectorPart.Z} vs {sign * q2.VectorPart.Z}");
+    }
+
+    #endregion
 }

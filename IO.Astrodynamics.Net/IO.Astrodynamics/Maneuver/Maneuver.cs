@@ -49,6 +49,12 @@ namespace IO.Astrodynamics.Maneuver
         public Engine Engine { get; }
 
         /// <summary>
+        /// Gets the body front vector from the spacecraft instance (if available),
+        /// falling back to the static Spacecraft.Front default.
+        /// </summary>
+        protected Vector3 GetBodyFront() => Engine.FuelTank.Spacecraft?.BodyFront ?? Spacecraft.Front;
+
+        /// <summary>
         /// Gets or sets the next maneuver.
         /// </summary>
         public Maneuver NextManeuver { get; protected set; }
@@ -67,7 +73,7 @@ namespace IO.Astrodynamics.Maneuver
             ManeuverCenter = maneuverCenter;
             MinimumEpoch = minimumEpoch;
             ManeuverHoldDuration = maneuverHoldDuration;
-            Engine = engine;
+            Engine = engine ?? throw new ArgumentNullException(nameof(engine));
         }
 
         public Maneuver SetNextManeuver(Maneuver maneuver)
