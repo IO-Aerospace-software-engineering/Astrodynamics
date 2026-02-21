@@ -702,14 +702,35 @@ public class API
         Frame referenceFrame, TimeSpan stepSize)
     {
         if (spacecraft == null) throw new ArgumentNullException(nameof(spacecraft));
+        return ReadOrientation(searchWindow, spacecraft.NaifId, tolerance, referenceFrame, stepSize);
+    }
+
+    /// <summary>
+    ///     Read spacecraft orientation for a given period using a NAIF ID directly.
+    ///     Use this overload to read CK kernels from external missions (NASA/ESA) where
+    ///     you have only the NAIF ID, not a Spacecraft object.
+    ///     Both the CK kernel and the corresponding SCLK kernel must be loaded via
+    ///     LoadKernels() before calling this method.
+    /// </summary>
+    /// <param name="searchWindow">Time window to query</param>
+    /// <param name="naifId">NAIF ID of the spacecraft (the CK bus frame ID is derived as naifId * 1000)</param>
+    /// <param name="tolerance">Search tolerance — data within this duration of each step epoch will be returned</param>
+    /// <param name="referenceFrame">Reference frame for the returned orientations</param>
+    /// <param name="stepSize">Time step between successive query epochs</param>
+    public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
+        int naifId, TimeSpan tolerance,
+        Frame referenceFrame, TimeSpan stepSize)
+    {
         if (referenceFrame == null) throw new ArgumentNullException(nameof(referenceFrame));
         lock (lockObject)
         {
             var stateOrientations = new StateOrientation[10000];
-            ReadOrientationProxy(searchWindow.Convert(), spacecraft.NaifId, tolerance.TotalSeconds,
+            ReadOrientationProxy(searchWindow.Convert(), naifId, tolerance.TotalSeconds,
                 referenceFrame.Name, stepSize.TotalSeconds,
                 stateOrientations);
-            return stateOrientations.Where(x => x.Frame != null).Select(x => new OrbitalParameters.StateOrientation(
+            // ByValTStr marshaling returns "" (not null) for zero-padded unwritten slots;
+            // use IsNullOrEmpty to correctly exclude entries the proxy did not populate.
+            return stateOrientations.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x => new OrbitalParameters.StateOrientation(
                 x.Rotation.Convert(), x.AngularVelocity.Convert(), Time.Create(x.Epoch, TimeFrame.TDBFrame), referenceFrame));
         }
     }

@@ -515,6 +515,82 @@ public class APITest
             TimeSpan.FromSeconds(10.0)).ToArray());
     }
 
+    [Fact]
+    public void ReadOrientationFromExternalCKKernel()
+    {
+        // PHSRM (Phobos Soil Return Mission) — spacecraft NAIF ID -555 (NAIF convention: negative)
+        // SCLK epoch: tick=0 → TDB ≈ 373,960,866 s from J2000 (2011-11-07)
+        // CK coverage: 2011-11-08 to 2013-02-14; CK object ID = -555000
+        var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName,
+            "phsrm_201008031645.tsc"));
+        var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName,
+            "phsrm_sc_test2_111108_130214_v00.bc"));
+
+        API.Instance.LoadKernels(sclkFile);
+        API.Instance.LoadKernels(ckFile);
+        try
+        {
+            // Window safely within the CK coverage (~1.6 days past SCLK epoch)
+            var start = TimeSystem.Time.CreateTDB(374100000.0);
+            var window = new Window(start, start.AddSeconds(300.0));
+
+            var results = API.Instance.ReadOrientation(
+                window, -555, TimeSpan.FromSeconds(60.0),
+                Frames.Frame.ICRF, TimeSpan.FromSeconds(60.0)).ToArray();
+
+            Assert.NotEmpty(results);
+            Assert.All(results, r =>
+            {
+                Assert.Equal(Frames.Frame.ICRF, r.ReferenceFrame);
+                // Quaternion must be unit length
+                var q = r.Rotation;
+                var norm = System.Math.Sqrt(q.W * q.W
+                    + q.VectorPart.X * q.VectorPart.X
+                    + q.VectorPart.Y * q.VectorPart.Y
+                    + q.VectorPart.Z * q.VectorPart.Z);
+                Assert.Equal(1.0, norm, 6);
+            });
+        }
+        finally
+        {
+            API.Instance.UnloadKernels(ckFile);
+            API.Instance.UnloadKernels(sclkFile);
+        }
+    }
+
+    [Fact]
+    public void ReadOrientationToleranceHonored()
+    {
+        // Verify that tolerance is correctly interpreted as time duration (not raw ticks).
+        // Before the bug fix, tolerance seconds were passed directly to ckgpav_c as ticks,
+        // giving a near-zero search window → "No orientation found" exception.
+        var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName,
+            "phsrm_201008031645.tsc"));
+        var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName,
+            "phsrm_sc_test2_111108_130214_v00.bc"));
+
+        API.Instance.LoadKernels(sclkFile);
+        API.Instance.LoadKernels(ckFile);
+        try
+        {
+            var start = TimeSystem.Time.CreateTDB(374100000.0);
+            // Use a step size (7.5 s) smaller than the CK sample interval so query epochs
+            // fall between CK data points — tolerance must bridge the gap.
+            var window = new Window(start, start.AddSeconds(120.0));
+
+            // Must NOT throw: tolerance of 30 s must successfully find the nearest sample
+            var results = API.Instance.ReadOrientation(
+                window, -555, TimeSpan.FromSeconds(30.0),
+                Frames.Frame.ICRF, TimeSpan.FromSeconds(7.5)).ToArray();
+
+            Assert.NotEmpty(results);
+        }
+        finally
+        {
+            API.Instance.UnloadKernels(ckFile);
+            API.Instance.UnloadKernels(sclkFile);
+        }
+    }
 
     [Fact]
     void WriteEphemeris()
