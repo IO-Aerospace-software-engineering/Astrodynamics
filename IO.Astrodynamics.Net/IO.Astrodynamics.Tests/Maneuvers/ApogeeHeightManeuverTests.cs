@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
     {
         public ApogeeHeightManeuverTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         [Fact]

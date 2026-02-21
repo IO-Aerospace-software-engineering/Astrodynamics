@@ -13,7 +13,7 @@ public class RetrogradeAttitudeTests
 {
     public RetrogradeAttitudeTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
     [Fact]
     void Create()

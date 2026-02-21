@@ -77,6 +77,6 @@ public class SpacecraftFrame : Frame
 
     public void WriteOrientation(FileInfo outputFile, Spacecraft spacecraft)
     {
-        API.Instance.WriteOrientation(outputFile, spacecraft, _stateOrientationsToICRF.Values.OrderBy(x => x.Epoch).ToArray());
+        SpiceAPI.Instance.WriteOrientation(outputFile, spacecraft.NaifId, _stateOrientationsToICRF.Values.OrderBy(x => x.Epoch).ToArray());
     }
 }

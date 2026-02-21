@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Tests.Body
     {
         public SpacecraftTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         [Fact]

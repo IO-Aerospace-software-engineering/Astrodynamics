@@ -29,7 +29,7 @@ public class OrbitalParametersConverterCommand
         string targetFrame = "ICRF")
     {
         //Load kernels
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         //Check inputs
         if (!(orbitalParameters.FromEquinoctial ^ orbitalParameters.FromKeplerian ^ orbitalParameters.FromStateVector ^ orbitalParameters.FromTLE))

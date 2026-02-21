@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using FuelTank = IO.Astrodynamics.Body.Spacecraft.FuelTank;
 using KeplerianElements = IO.Astrodynamics.OrbitalParameters.KeplerianElements;
-using Launch = IO.Astrodynamics.Maneuver.Launch;
 using NadirAttitude = IO.Astrodynamics.Maneuver.NadirAttitude;
 using Payload = IO.Astrodynamics.Body.Spacecraft.Payload;
 using Planetodetic = IO.Astrodynamics.Coordinates.Planetodetic;
@@ -24,63 +22,28 @@ using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
 using Window = IO.Astrodynamics.TimeSystem.Window;
 
+#pragma warning disable CS0612 // Type or member is obsolete
+
 namespace IO.Astrodynamics.Tests;
 
-public class APITest
+public class SpiceApiTest
 {
-    public APITest()
+    public SpiceApiTest()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]
     public void CheckVersion()
     {
-        Assert.Equal("CSPICE_N0067", API.Instance.GetSpiceVersion());
-    }
-
-    [Fact]
-    public void ExecuteLaunchScenario()
-    {
-        //Load solar system kernels
-        var start = new TimeSystem.Time("2021-03-02 00:00:00.000000").ToTDB();
-        var end = new TimeSystem.Time("2021-03-05 00:00:00.000000").ToTDB();
-
-        Window window = new Window(start, end);
-
-        //Define launch site
-        LaunchSite launchSite = new LaunchSite(399303, "S3", TestHelpers.EarthAtJ2000,
-            new Planetodetic(-81.0 * IO.Astrodynamics.Constants.Deg2Rad, 28.5 * IO.Astrodynamics.Constants.Deg2Rad, 0.0));
-
-        //Define the targeted parking orbit
-        StateVector parkingOrbit = new StateVector(
-            new Vector3(5056554.1874925727, 4395595.4942363985, 0.0),
-            new Vector3(-3708.6305608890916, 4266.2914313011433, 6736.8538488755494), TestHelpers.EarthAtJ2000,
-            start, Frames.Frame.ICRF);
-
-        var sunset_rise = launchSite.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence, RelationnalOperator.Lower,
-            Astrodynamics.Constants.PI2 - Astrodynamics.Constants.CivilTwilight, 0.0, Aberration.CNS, TimeSpan.FromHours(6.0), TestHelpers.Sun);
-        //Create launch object
-        Launch launch = new Launch(launchSite, launchSite, parkingOrbit, IO.Astrodynamics.Constants.CivilTwilight,
-            true);
-
-        //Find launch windows
-        var res = API.Instance.FindLaunchWindows(launch, window, Constants.OutputPath).ToArray();
-
-        //Read results
-        Assert.True(res.Length >= 2, $"Expected at least 2 launch windows, got {res.Length}");
-        // Verify first two windows contain expected launch data
-        Assert.Equal(47.006184451999999, res.ElementAt(0).InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-        Assert.Equal(45.125545666622976, res.ElementAt(0).NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-        Assert.Equal(8794.33812148836, res.ElementAt(0).InertialInsertionVelocity, 6);
-        Assert.Equal(8499.7258854462671, res.ElementAt(0).NonInertialInsertionVelocity, 6);
+        Assert.Equal("CSPICE_N0067", SpiceAPI.Instance.GetSpiceVersion());
     }
 
     [Fact]
     public void FindWindowsOnDistanceConstraintProxy()
     {
         //Find time windows when the moon will be 400000 km away from the Earth
-        var res = API.Instance.FindWindowsOnDistanceConstraint(
+        var res = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
             new Window(TimeSystem.Time.CreateTDB(220881665.18391809),
                 TimeSystem.Time.CreateTDB(228657665.18565452)),
             TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None,
@@ -91,12 +54,12 @@ public class APITest
         Assert.Equal("2007-01-13T06:37:47.9481440 TDB", windows.ElementAt(0).EndDate.ToString());
         Assert.Equal("2007-03-29T22:53:58.1518963 TDB", windows.ElementAt(3).StartDate.ToString());
         Assert.Equal("2007-04-01T00:01:05.1856544 TDB", windows.ElementAt(3).EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnDistanceConstraint(new Window(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(new Window(
                 TimeSystem.Time.CreateTDB(220881665.18391809),
                 TimeSystem.Time.CreateTDB(228657665.18565452)), null, TestHelpers.MoonAtJ2000,
             RelationnalOperator.Greater, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnDistanceConstraint(new Window(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(new Window(
                 TimeSystem.Time.CreateTDB(220881665.18391809),
                 TimeSystem.Time.CreateTDB(228657665.18565452)), TestHelpers.EarthAtJ2000, null,
             RelationnalOperator.Greater, 400000000, Aberration.None,
@@ -107,7 +70,7 @@ public class APITest
     public void FindWindowsOnDistanceConstraintFromIdsProxy()
     {
         //Find time windows when the moon will be 400000 km away from the Earth
-        var res = API.Instance.FindWindowsOnDistanceConstraint(
+        var res = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
             new Window(TimeSystem.Time.CreateTDB(220881665.18391809),
                 TimeSystem.Time.CreateTDB(228657665.18565452)),
             TestHelpers.EarthAtJ2000.NaifId, TestHelpers.MoonAtJ2000.NaifId, RelationnalOperator.Greater, 400000000, Aberration.None,
@@ -118,12 +81,12 @@ public class APITest
         Assert.Equal("2007-01-13T06:37:47.9481440 TDB", windows.ElementAt(0).EndDate.ToString());
         Assert.Equal("2007-03-29T22:53:58.1518963 TDB", windows.ElementAt(3).StartDate.ToString());
         Assert.Equal("2007-04-01T00:01:05.1856544 TDB", windows.ElementAt(3).EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnDistanceConstraint(new Window(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(new Window(
                 TimeSystem.Time.CreateTDB(220881665.18391809),
                 TimeSystem.Time.CreateTDB(228657665.18565452)), null, TestHelpers.MoonAtJ2000,
             RelationnalOperator.Greater, 400000000, Aberration.None,
             TimeSpan.FromSeconds(86400.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnDistanceConstraint(new Window(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(new Window(
                 TimeSystem.Time.CreateTDB(220881665.18391809),
                 TimeSystem.Time.CreateTDB(228657665.18565452)), TestHelpers.EarthAtJ2000, null,
             RelationnalOperator.Greater, 400000000, Aberration.None,
@@ -134,7 +97,7 @@ public class APITest
     public void FindWindowsOnOccultationConstraint()
     {
         //Find time windows when the Sun will be occulted by the moon
-        var res = API.Instance.FindWindowsOnOccultationConstraint(
+        var res = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, TestHelpers.Sun,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
@@ -143,17 +106,17 @@ public class APITest
         Assert.Single(windows);
         Assert.Equal("2001-12-14T20:10:15.4105881 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2001-12-14T21:35:49.1005208 TDB", windows[0].EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), null, TestHelpers.Sun,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, null,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, TestHelpers.Sun,
             ShapeType.Ellipsoid, null, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
@@ -164,7 +127,7 @@ public class APITest
     public void FindWindowsOnOccultationConstraintFromIDs()
     {
         //Find time windows when the Sun will be occulted by the moon
-        var res = API.Instance.FindWindowsOnOccultationConstraint(
+        var res = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000.NaifId, TestHelpers.Sun.NaifId,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000.NaifId, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
@@ -173,17 +136,17 @@ public class APITest
         Assert.Single(windows);
         Assert.Equal("2001-12-14T20:10:15.4105881 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2001-12-14T21:35:49.1005208 TDB", windows[0].EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), null, TestHelpers.Sun,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, null,
             ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnOccultationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
             new Window(TimeSystem.Time.CreateTDB(61473664.183390938),
                 TimeSystem.Time.CreateTDB(61646464.183445148)), TestHelpers.EarthAtJ2000, TestHelpers.Sun,
             ShapeType.Ellipsoid, null, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT,
@@ -194,7 +157,7 @@ public class APITest
     public void FindWindowsOnIlluminationConstraint()
     {
         //Find time windows when the planetodetic point is illuminated by the sun (Official twilight 0.8° bellow horizon)
-        var res = API.Instance.FindWindowsOnIlluminationConstraint(
+        var res = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, TestHelpers.EarthAtJ2000, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -207,7 +170,7 @@ public class APITest
         Assert.Equal("2021-05-17T19:35:24.9088323 TDB", windows[0].EndDate.ToString());
         Assert.Equal("2021-05-18T04:18:32.4437502 TDB", windows[1].StartDate.ToString());
         Assert.Equal("2021-05-18T12:00:00.0000000 TDB", windows[1].EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             null, TestHelpers.EarthAtJ2000, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -215,7 +178,7 @@ public class APITest
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, null, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -223,7 +186,7 @@ public class APITest
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, TestHelpers.EarthAtJ2000, null,
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -231,7 +194,7 @@ public class APITest
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, TestHelpers.EarthAtJ2000, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -247,7 +210,7 @@ public class APITest
             new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad,
                 35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
         //Find time windows when the moon will be above the horizon relative to Deep Space Station 13
-        var res = API.Instance.FindWindowsOnCoordinateConstraint(
+        var res = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
             TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater,
@@ -257,15 +220,15 @@ public class APITest
         Assert.Single(windows);
         Assert.Equal("2023-02-19T14:33:08.9179868 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2023-02-20T00:00:00.0000000 TDB", windows[0].EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), null,
             TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
             null, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
             TestHelpers.MoonAtJ2000, null, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
@@ -278,7 +241,7 @@ public class APITest
             new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad,
                 35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
         //Find time windows when the moon will be above the horizon relative to Deep Space Station 13
-        var res = API.Instance.FindWindowsOnCoordinateConstraint(
+        var res = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site.NaifId,
             TestHelpers.MoonAtJ2000.NaifId, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0));
@@ -287,15 +250,15 @@ public class APITest
         Assert.Single(windows);
         Assert.Equal("2023-02-19T14:33:08.9179868 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2023-02-20T00:00:00.0000000 TDB", windows[0].EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), null,
             TestHelpers.MoonAtJ2000, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
             null, site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnCoordinateConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
             new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730123200)), site,
             TestHelpers.MoonAtJ2000, null, CoordinateSystem.Rectangular, Coordinate.Z,
             RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0)));
@@ -305,7 +268,7 @@ public class APITest
     public void FromIDs()
     {
         //Find time windows when the planetodetic point is illuminated by the sun (Official twilight 0.8° bellow horizon)
-        var res = API.Instance.FindWindowsOnIlluminationConstraint(
+        var res = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun.NaifId, TestHelpers.EarthAtJ2000.NaifId, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -318,7 +281,7 @@ public class APITest
         Assert.Equal("2021-05-17T19:35:24.9088323 TDB", windows[0].EndDate.ToString());
         Assert.Equal("2021-05-18T04:18:32.4437502 TDB", windows[1].StartDate.ToString());
         Assert.Equal("2021-05-18T12:00:00.0000000 TDB", windows[1].EndDate.ToString());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             null, TestHelpers.EarthAtJ2000, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -326,7 +289,7 @@ public class APITest
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, null, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -334,7 +297,7 @@ public class APITest
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, TestHelpers.EarthAtJ2000, null,
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -342,7 +305,7 @@ public class APITest
             System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.CNS,
             TimeSpan.FromHours(4.5), TestHelpers.Sun));
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.FindWindowsOnIlluminationConstraint(
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
             new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
             TestHelpers.Sun, TestHelpers.EarthAtJ2000, new Frames.Frame("ITRF93"),
             new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad, 48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
@@ -355,7 +318,7 @@ public class APITest
     public void ReadEphemeris()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(100.0));
-        var res = API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
+        var res = SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
         var stateVectors = res as StateVector[] ?? res.ToArray();
@@ -369,22 +332,22 @@ public class APITest
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
         Assert.Equal(0.0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, null,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow, null,
             TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
             null,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
             TestHelpers.MoonAtJ2000,
             null, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate, null,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow.StartDate, null,
             TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow.StartDate,
             TestHelpers.EarthAtJ2000, null,
             Frames.Frame.ICRF, Aberration.LT));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow.StartDate,
             TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             null, Aberration.LT));
     }
@@ -393,7 +356,7 @@ public class APITest
     public void ReadEphemerisUTC()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateUTC(0.0), TimeSystem.Time.CreateUTC(100.0));
-        var res = API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
+        var res = SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
 
         var stateVectors = res as StateVector[] ?? res.ToArray();
@@ -403,22 +366,22 @@ public class APITest
         Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
         Assert.Equal(0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds, 6);
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, null,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow, null,
             TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
             null,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000,
             TestHelpers.MoonAtJ2000,
             null, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector()));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate, null,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow.StartDate, null,
             TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow.StartDate,
             TestHelpers.EarthAtJ2000, null,
             Frames.Frame.ICRF, Aberration.LT));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadEphemeris(searchWindow.StartDate,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadEphemeris(searchWindow.StartDate,
             TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             null, Aberration.LT));
     }
@@ -427,7 +390,7 @@ public class APITest
     public void ReadLongEphemeris()
     {
         var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(15000.0));
-        var res = API.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
+        var res = SpiceAPI.Instance.ReadEphemeris(searchWindow, TestHelpers.EarthAtJ2000, TestHelpers.MoonAtJ2000,
             Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(1.0)).Select(x => x.ToStateVector());
 
         Assert.Equal(15001, res.Count());
@@ -484,17 +447,17 @@ public class APITest
         var ckFile = new FileInfo(root + "/OrientationTestFile.ck");
         var clckFile = new FileInfo(root + "/ClckTestFile.tsc");
         await spacecraft.Clock.WriteAsync(clckFile);
-        API.Instance.LoadKernels(clckFile);
+        SpiceAPI.Instance.LoadKernels(clckFile);
 
         spacecraft.WriteOrientation(ckFile);
-        API.Instance.LoadKernels(ckFile);
+        SpiceAPI.Instance.LoadKernels(ckFile);
         //Read spacecraft orientation
 
-        var res = API.Instance.ReadOrientation(window, spacecraft, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
+        var res = SpiceAPI.Instance.ReadOrientation(window, spacecraft, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray();
         var resICRF = spacecraft.Frame.GetStateOrientationsToICRF().ElementAt(1).RelativeToICRF();
-        API.Instance.UnloadKernels(ckFile);
-        API.Instance.UnloadKernels(clckFile);
+        SpiceAPI.Instance.UnloadKernels(ckFile);
+        SpiceAPI.Instance.UnloadKernels(clckFile);
 
         //Read results
         Assert.Equal(0.70670859819960763, res.ElementAt(1).Rotation.W);
@@ -507,10 +470,10 @@ public class APITest
         Assert.Equal(window.StartDate, res.ElementAt(0).Epoch);
         Assert.Equal(Frames.Frame.ICRF, res.ElementAt(0).ReferenceFrame);
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadOrientation(window, null,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadOrientation(window, null,
             TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray());
-        Assert.Throws<ArgumentNullException>(() => API.Instance.ReadOrientation(window, spacecraft,
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadOrientation(window, spacecraft,
             TimeSpan.FromSeconds(10.0), null,
             TimeSpan.FromSeconds(10.0)).ToArray());
     }
@@ -526,15 +489,15 @@ public class APITest
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName,
             "phsrm_sc_test2_111108_130214_v00.bc"));
 
-        API.Instance.LoadKernels(sclkFile);
-        API.Instance.LoadKernels(ckFile);
+        SpiceAPI.Instance.LoadKernels(sclkFile);
+        SpiceAPI.Instance.LoadKernels(ckFile);
         try
         {
             // Window safely within the CK coverage (~1.6 days past SCLK epoch)
             var start = TimeSystem.Time.CreateTDB(374100000.0);
             var window = new Window(start, start.AddSeconds(300.0));
 
-            var results = API.Instance.ReadOrientation(
+            var results = SpiceAPI.Instance.ReadOrientation(
                 window, -555, TimeSpan.FromSeconds(60.0),
                 Frames.Frame.ICRF, TimeSpan.FromSeconds(60.0)).ToArray();
 
@@ -553,8 +516,8 @@ public class APITest
         }
         finally
         {
-            API.Instance.UnloadKernels(ckFile);
-            API.Instance.UnloadKernels(sclkFile);
+            SpiceAPI.Instance.UnloadKernels(ckFile);
+            SpiceAPI.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -569,8 +532,8 @@ public class APITest
         var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName,
             "phsrm_sc_test2_111108_130214_v00.bc"));
 
-        API.Instance.LoadKernels(sclkFile);
-        API.Instance.LoadKernels(ckFile);
+        SpiceAPI.Instance.LoadKernels(sclkFile);
+        SpiceAPI.Instance.LoadKernels(ckFile);
         try
         {
             var start = TimeSystem.Time.CreateTDB(374100000.0);
@@ -579,7 +542,7 @@ public class APITest
             var window = new Window(start, start.AddSeconds(120.0));
 
             // Must NOT throw: tolerance of 30 s must successfully find the nearest sample
-            var results = API.Instance.ReadOrientation(
+            var results = SpiceAPI.Instance.ReadOrientation(
                 window, -555, TimeSpan.FromSeconds(30.0),
                 Frames.Frame.ICRF, TimeSpan.FromSeconds(7.5)).ToArray();
 
@@ -587,8 +550,8 @@ public class APITest
         }
         finally
         {
-            API.Instance.UnloadKernels(ckFile);
-            API.Instance.UnloadKernels(sclkFile);
+            SpiceAPI.Instance.UnloadKernels(ckFile);
+            SpiceAPI.Instance.UnloadKernels(sclkFile);
         }
     }
 
@@ -614,16 +577,16 @@ public class APITest
         //Write ephemeris file
         FileInfo file = new FileInfo("EphemerisTestFile.spk");
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.WriteEphemeris(null, spacecraft, sv));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.WriteEphemeris(file, null, sv));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.WriteEphemeris(file, spacecraft, null));
-        API.Instance.WriteEphemeris(file, spacecraft, sv);
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemeris(null, spacecraft, sv));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemeris(file, null, sv));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemeris(file, spacecraft, null));
+        SpiceAPI.Instance.WriteEphemeris(file, spacecraft, sv);
 
         //Load ephemeris file
-        API.Instance.LoadKernels(file);
+        SpiceAPI.Instance.LoadKernels(file);
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-        var stateVectors = API.Instance.ReadEphemeris(window, TestHelpers.EarthAtJ2000, spacecraft, Frames.Frame.ICRF,
+        var stateVectors = SpiceAPI.Instance.ReadEphemeris(window, TestHelpers.EarthAtJ2000, spacecraft, Frames.Frame.ICRF,
                 Aberration.None, TimeSpan.FromSeconds(1.0))
             .Select(x => x.ToStateVector()).ToArray();
         for (int i = 0; i < size; ++i)
@@ -659,20 +622,20 @@ public class APITest
 
         var clockFile = new FileInfo("OrientationClockTest.tsc");
         await clock.WriteAsync(clockFile);
-        API.Instance.LoadKernels(clockFile);
+        SpiceAPI.Instance.LoadKernels(clockFile);
         //Write ephemeris file
         FileInfo file = new FileInfo("OrientationTestFile.ck");
 
-        Assert.Throws<ArgumentNullException>(() => API.Instance.WriteOrientation(null, spacecraft, so));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.WriteOrientation(file, null, so));
-        Assert.Throws<ArgumentNullException>(() => API.Instance.WriteOrientation(file, spacecraft, null));
-        API.Instance.WriteOrientation(file, spacecraft, so);
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(null, spacecraft, so));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(file, null, so));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(file, spacecraft, null));
+        SpiceAPI.Instance.WriteOrientation(file, spacecraft, so);
 
         //Load ephemeris file
-        API.Instance.LoadKernels(file);
+        SpiceAPI.Instance.LoadKernels(file);
 
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-        var stateOrientation = API.Instance.ReadOrientation(window, spacecraft, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
+        var stateOrientation = SpiceAPI.Instance.ReadOrientation(window, spacecraft, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
             .Select(x => x).ToArray();
 
         Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
@@ -698,7 +661,7 @@ public class APITest
     void GetCelestialBodyInformation()
     {
         //Read celestial celestialItem information from spice kernels
-        var res = API.Instance.GetCelestialBodyInfo(TestHelpers.EarthAtJ2000.NaifId);
+        var res = SpiceAPI.Instance.GetCelestialBodyInfo(TestHelpers.EarthAtJ2000.NaifId);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.Id);
         Assert.Equal(Stars.Sun.NaifId, res.CenterOfMotionId);
         Assert.Equal(Barycenters.EARTH_BARYCENTER.NaifId, res.BarycenterOfMotionId);
@@ -718,7 +681,7 @@ public class APITest
     void GetCelestialBodyInformationWithoutJ()
     {
         //Read celestial celestialItem information from spice kernels
-        var res = API.Instance.GetCelestialBodyInfo(TestHelpers.MoonAtJ2000.NaifId);
+        var res = SpiceAPI.Instance.GetCelestialBodyInfo(TestHelpers.MoonAtJ2000.NaifId);
         Assert.Equal(PlanetsAndMoons.MOON.NaifId, res.Id);
         Assert.Equal(PlanetsAndMoons.EARTH.NaifId, res.CenterOfMotionId);
         Assert.Equal(Barycenters.EARTH_BARYCENTER.NaifId, res.BarycenterOfMotionId);
@@ -738,7 +701,7 @@ public class APITest
     void TransformFrame()
     {
         //Get the quaternion to transform
-        var res = API.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame));
+        var res = SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, new Frames.Frame(PlanetsAndMoons.EARTH.Frame));
         Assert.Equal(0.76713121207787449, res.Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.Rotation.VectorPart.X, 6);
         Assert.Equal(8.4688405480964646E-07, res.Rotation.VectorPart.Y, 6);
@@ -752,7 +715,7 @@ public class APITest
     void TransformFrameWindows()
     {
         //Get the quaternion to transform
-        var res = API.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
+        var res = SpiceAPI.Instance.TransformFrame(new TimeSystem.Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1.0)), Frames.Frame.ICRF,
             new Frames.Frame(PlanetsAndMoons.EARTH.Frame), TimeSpan.FromDays(1.0));
         Assert.Equal(0.76713121207787449, res.First().Rotation.W, 6);
         Assert.Equal(-1.8618836714990174E-05, res.First().Rotation.VectorPart.X, 6);
@@ -768,9 +731,9 @@ public class APITest
     {
         //Get the quaternion to transform
         Assert.Throws<ArgumentNullException>(() =>
-            API.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null));
+            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null));
         Assert.Throws<ArgumentNullException>(() =>
-            API.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame)));
+            SpiceAPI.Instance.TransformFrame(TimeSystem.Time.J2000TDB, null, new Frames.Frame(PlanetsAndMoons.EARTH.Frame)));
     }
 
     [Fact]
@@ -805,7 +768,7 @@ public class APITest
     [Fact]
     void LoadKernelException()
     {
-        Assert.Throws<ArgumentNullException>(() => API.Instance.LoadKernels(null));
+        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels(null));
     }
 
     private static object lockobj = new Object();
@@ -813,43 +776,43 @@ public class APITest
     [Fact]
     void UnloadKernels()
     {
-        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
-        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
-        API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        var kernels = API.Instance.GetLoadedKernels().ToArray();
+        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        SpiceAPI.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
         Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
     }
 
     [Fact]
     void UnloadKernels2()
     {
-        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
+        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
 
-        API.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
-        var kernels = API.Instance.GetLoadedKernels().ToArray();
+        SpiceAPI.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc"));
+        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
         Assert.Equal(0, kernels.Count(x => x.FullName.Contains("DRAGONFLY32.tsc")));
     }
 
     [Fact]
     void LoadKernels()
     {
-        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
-        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
 
-        var kernels = API.Instance.GetLoadedKernels().ToArray();
+        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
         Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
     }
 
     [Fact]
     void LoadKernels2()
     {
-        API.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
-        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        API.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
+        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
+        SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
 
-        var kernels = API.Instance.GetLoadedKernels().ToArray();
+        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
         Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
     }
 
@@ -889,7 +852,7 @@ public class APITest
     [Fact]
     void ConvertTLE()
     {
-        var res = API.Instance.ConvertTleToStateVector("ISS",
+        var res = SpiceAPI.Instance.ConvertTleToStateVector("ISS",
             "1 25544U 98067A   24001.00000000  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703", new TimeSystem.Time(2024, 1, 1, frame: TimeFrame.UTCFrame));
         
@@ -899,8 +862,8 @@ public class APITest
     void ConvertConicToState()
     {
         var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var state = API.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
-        var ke2 = API.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
+        var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
         Assert.Equal(ke.A, ke2.A, 6);
         Assert.Equal(ke.E, ke2.E, 6);
         Assert.Equal(ke.I, ke2.I, 6);
@@ -916,8 +879,8 @@ public class APITest
     void ConvertConicHyperbolicToState()
     {
         var ke = new KeplerianElements(-6800000.0, 1.2, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        var state = API.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
-        var ke2 = API.Instance.ConvertStateVectorToConicOrbitalElement(state);
+        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB);
+        var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
         Assert.Equal(ke.A, ke2.A, 6);
         Assert.Equal(ke.E, ke2.E, 6);
         Assert.Equal(ke.I, ke2.I, 6);
@@ -927,5 +890,137 @@ public class APITest
         Assert.Equal(ke.Epoch, ke2.Epoch);
         Assert.Equal(ke.Frame, ke2.Frame);
         Assert.Equal(ke.Observer, ke2.Observer);
+    }
+
+    [Fact]
+    public void ReadEphemerisFromIds()
+    {
+        var searchWindow = new Window(TimeSystem.Time.CreateTDB(0.0), TimeSystem.Time.CreateTDB(100.0));
+        var res = SpiceAPI.Instance.ReadEphemeris(searchWindow, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+            Frames.Frame.ICRF, Aberration.LT, TimeSpan.FromSeconds(10.0)).Select(x => x.ToStateVector());
+
+        var stateVectors = res as StateVector[] ?? res.ToArray();
+        Assert.Equal(-291569264.48965073, stateVectors[0].Position.X);
+        Assert.Equal(-266709187.1624887, stateVectors[0].Position.Y);
+        Assert.Equal(-76099155.244104564, stateVectors[0].Position.Z);
+        Assert.Equal(643.53061483971885, stateVectors[0].Velocity.X);
+        Assert.Equal(-666.08181440799092, stateVectors[0].Velocity.Y);
+        Assert.Equal(-301.32283209101018, stateVectors[0].Velocity.Z);
+        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[0].Observer.NaifId);
+        Assert.Equal(Frames.Frame.ICRF, stateVectors[0].Frame);
+        Assert.Equal(0.0, stateVectors[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
+    }
+
+    [Fact]
+    public void ReadEphemerisAtEpochFromIds()
+    {
+        var epoch = TimeSystem.Time.CreateTDB(0.0);
+        var res = SpiceAPI.Instance.ReadEphemeris(epoch, PlanetsAndMoons.EARTH.NaifId, PlanetsAndMoons.MOON.NaifId,
+            Frames.Frame.ICRF, Aberration.LT);
+
+        var sv = res.ToStateVector();
+        Assert.Equal(-291569264.48965073, sv.Position.X);
+        Assert.Equal(-266709187.1624887, sv.Position.Y);
+        Assert.Equal(-76099155.244104564, sv.Position.Z);
+        Assert.Equal(PlanetsAndMoons.EARTH.NaifId, sv.Observer.NaifId);
+    }
+
+    [Fact]
+    public void ReadEphemerisFromSsbObserver()
+    {
+        // Test with SSB observer (naifId = 0) — CelestialItem.Create(0) returns a Barycenter
+        var epoch = TimeSystem.Time.CreateTDB(0.0);
+        var res = SpiceAPI.Instance.ReadEphemeris(epoch, 0, PlanetsAndMoons.EARTH.NaifId,
+            Frames.Frame.ICRF, Aberration.None);
+
+        var sv = res.ToStateVector();
+        Assert.Equal(0, sv.Observer.NaifId);
+        Assert.NotEqual(0.0, sv.Position.Magnitude());
+    }
+
+    [Fact]
+    void WriteEphemerisFromId()
+    {
+        const int size = 10;
+        var sv = new StateVector[size];
+        for (int i = 0; i < size; ++i)
+        {
+            sv[i] = new StateVector(new Vector3(6800 + i, i, i), new Vector3(i, 8.0 + i * 0.001, i),
+                TestHelpers.EarthAtJ2000,
+                TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF);
+        }
+
+        FileInfo file = new FileInfo("EphemerisTestFileFromId.spk");
+        SpiceAPI.Instance.WriteEphemeris(file, -136, sv);
+        SpiceAPI.Instance.LoadKernels(file);
+
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+        var stateVectors = SpiceAPI.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -136,
+                Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0))
+            .Select(x => x.ToStateVector()).ToArray();
+        for (int i = 0; i < size; ++i)
+        {
+            Assert.Equal(6800.0 + i, stateVectors[i].Position.X, 9);
+            Assert.Equal(i, stateVectors[i].Position.Y, 12);
+            Assert.Equal(i, stateVectors[i].Position.Z, 12);
+        }
+    }
+
+    [Fact]
+    async Task WriteOrientationFromId()
+    {
+        const int size = 10;
+        Clock clock = new Clock("clk1", 65536);
+        var spacecraft = new Spacecraft(-176, "Spc2", 3000.0, 10000.0, clock, new StateVector(new Vector3(6800, 0, 0),
+            new Vector3(0, 8.0, 0),
+            TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.CreateTDB(0.0), Frames.Frame.ICRF));
+
+        var so = new StateOrientation[size];
+        for (int i = 0; i < size; ++i)
+        {
+            so[i] = new StateOrientation(new Quaternion(i, 1 + i * 0.1, 1 + i * 0.2, 1 + i * 0.3), Vector3.Zero, TimeSystem.Time.CreateTDB(i), Frames.Frame.ICRF);
+        }
+
+        var clockFile = new FileInfo("OrientationClockTestFromId.tsc");
+        await clock.WriteAsync(clockFile);
+        SpiceAPI.Instance.LoadKernels(clockFile);
+
+        FileInfo file = new FileInfo("OrientationTestFileFromId.ck");
+        SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, so);
+        SpiceAPI.Instance.LoadKernels(file);
+
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+        var stateOrientation = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
+            .ToArray();
+
+        Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
+        Assert.Equal(Frames.Frame.ICRF, stateOrientation[0].ReferenceFrame);
+    }
+
+    [Fact]
+    void ConvertConicToStateWithExplicitGm()
+    {
+        var ke = new KeplerianElements(6800000.0, 0.1, 0.2, 0.3, 0.4, 0.5, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke, TimeSystem.Time.J2000TDB, gm);
+        var ke2 = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state, gm);
+        Assert.Equal(ke.A, ke2.A, 6);
+        Assert.Equal(ke.E, ke2.E, 6);
+        Assert.Equal(ke.I, ke2.I, 6);
+        Assert.Equal(ke.RAAN, ke2.RAAN, 6);
+        Assert.Equal(ke.AOP, ke2.AOP, 6);
+        Assert.Equal(ke.M, ke2.M, 6);
+    }
+
+    [Fact]
+    void Propagate2BodiesWithExplicitGm()
+    {
+        var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
+            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var result = SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
+        Assert.NotEqual(0.0, result.Position.Magnitude());
+        Assert.NotEqual(sv.Position.X, result.Position.X);
     }
 }

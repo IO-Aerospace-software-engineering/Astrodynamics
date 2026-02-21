@@ -23,7 +23,7 @@ public class FrameConverterCommand
         string to,
         EpochParameters epoch)
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         if (from.Equals("ICRF", StringComparison.InvariantCultureIgnoreCase))
         {

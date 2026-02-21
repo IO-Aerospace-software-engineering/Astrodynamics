@@ -13,7 +13,7 @@ public class NadirAttitudeTests
 {
     public NadirAttitudeTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
         public OpmStateVectorTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
             _earth = new AstroCelestialBody(399, AstroFrame.ICRF, new AstroTime(_testEpoch, AstroTimeFrame.UTCFrame));
         }
 

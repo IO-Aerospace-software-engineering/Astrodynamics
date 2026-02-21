@@ -10,7 +10,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
     {
         public StateOrientationTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         [Fact]

@@ -22,7 +22,7 @@ public class SpacecraftPropagatorTests
 {
     public SpacecraftPropagatorTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

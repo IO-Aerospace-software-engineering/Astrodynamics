@@ -525,7 +525,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="outputFile"></param>
     public void WriteEphemeris(FileInfo outputFile)
     {
-        API.Instance.WriteEphemeris(outputFile, this, _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray());
+        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray());
     }
 
     /// <summary>

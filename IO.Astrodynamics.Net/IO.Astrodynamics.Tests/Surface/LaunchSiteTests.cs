@@ -9,7 +9,7 @@ namespace IO.Astrodynamics.Tests.Surface
     {
         public LaunchSiteTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
         [Fact]
         public void Create()

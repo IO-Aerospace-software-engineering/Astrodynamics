@@ -477,7 +477,7 @@ namespace IO.Astrodynamics.Surface
         public void WriteEphemeris(Window window, FileInfo outputFile)
         {
             var ephemeris = GetEphemeris(window, CelestialBody, CelestialBody.Frame, Aberration.None, TimeSpan.FromMinutes(1.0));
-            API.Instance.WriteEphemeris(outputFile, this, ephemeris.Select(x => x.ToStateVector()).ToArray());
+            SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, ephemeris.Select(x => x.ToStateVector()).ToArray());
         }
 
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
