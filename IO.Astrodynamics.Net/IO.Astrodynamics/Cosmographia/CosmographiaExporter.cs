@@ -313,10 +313,10 @@ public class CosmographiaExporter
                 try
                 {
                     await spacecraft.Clock.WriteAsync(clockFile);
-                    API.Instance.LoadKernels(clockFile);
+                    SpiceAPI.Instance.LoadKernels(clockFile);
 
                     await spacecraft.Frame.WriteAsync(frameFile);
-                    API.Instance.LoadKernels(frameFile);
+                    SpiceAPI.Instance.LoadKernels(frameFile);
                     var orientationFile = new FileInfo(Path.Combine(orientationOutputDirectory.FullName, $"{spacecraft.Name}.ck"));
                     spacecraft.WriteOrientation(orientationFile);
                     var ephemerisFile = new FileInfo(Path.Combine(ephemerisOutputDirectory.FullName, $"{spacecraft.Name}.spk"));
@@ -324,8 +324,8 @@ public class CosmographiaExporter
                 }
                 finally
                 {
-                    API.Instance.UnloadKernels(clockFile);
-                    API.Instance.UnloadKernels(frameFile);
+                    SpiceAPI.Instance.UnloadKernels(clockFile);
+                    SpiceAPI.Instance.UnloadKernels(frameFile);
                 }
 
                 foreach (var instrument in spacecraft.Instruments)

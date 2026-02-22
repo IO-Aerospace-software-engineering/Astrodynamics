@@ -19,7 +19,7 @@ public class BodyInformationCommand
         [Argument(Description = "Celestial body identifier (Naif Identifier)")]
         int id)
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
         CelestialBody body = new CelestialBody(id);
         Console.WriteLine(body.ToString());
         return Task.CompletedTask;

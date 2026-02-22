@@ -13,7 +13,7 @@ public class InstrumentPointingAttitudeTests
 {
     public InstrumentPointingAttitudeTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

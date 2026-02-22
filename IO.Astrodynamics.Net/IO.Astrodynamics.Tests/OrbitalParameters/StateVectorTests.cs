@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
     {
         public StateVectorTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         [Fact]
@@ -367,7 +367,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 30.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0 * IO.Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF, perigeeRadius: 6800000.0);
             var sv = ke.ToStateVector();
-            var svref = API.Instance.ConvertConicElementsToStateVector(ke);
+            var svref = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke);
             var res = sv.ToKeplerianElements();
             Assert.Equal(ke, res, TestHelpers.KeplerComparer);
         }

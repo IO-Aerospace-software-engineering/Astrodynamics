@@ -13,7 +13,7 @@ public class AntiNormalAttitudeTests
 {
     public AntiNormalAttitudeTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

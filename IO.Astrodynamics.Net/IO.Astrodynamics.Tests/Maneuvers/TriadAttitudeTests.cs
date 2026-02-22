@@ -13,7 +13,7 @@ public class TriadAttitudeTests
 {
     public TriadAttitudeTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     private (Spacecraft spacecraft, StateVector orbitalParams) CreateTestSpacecraft()

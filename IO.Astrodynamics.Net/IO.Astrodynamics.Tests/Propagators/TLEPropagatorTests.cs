@@ -20,7 +20,7 @@ public class TLEPropagatorTests
 {
     public TLEPropagatorTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

@@ -43,7 +43,7 @@ public class PropagateCommand
     )
     {
         //Load kernels
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         //Initialize date
         Clock clock = new Clock($"clock{bodyName}", 65536);

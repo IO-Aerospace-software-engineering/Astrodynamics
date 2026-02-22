@@ -35,7 +35,7 @@ public class VelocityScenario
 
     public VelocityScenario()
     {
-        API.Instance.LoadKernels(new DirectoryInfo("Data"));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
         _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, TimeSystem.Time.J2000TDB,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 30), new EarthStandardAtmosphere());
         _moon = new CelestialBody(PlanetsAndMoons.MOON);

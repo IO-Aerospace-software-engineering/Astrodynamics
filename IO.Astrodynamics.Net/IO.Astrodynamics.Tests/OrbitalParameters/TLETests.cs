@@ -23,7 +23,7 @@ public class TLETests
     public TLETests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

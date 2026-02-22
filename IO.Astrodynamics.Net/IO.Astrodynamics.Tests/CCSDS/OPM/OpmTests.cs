@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
         public OpmTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         #region Constructor Tests

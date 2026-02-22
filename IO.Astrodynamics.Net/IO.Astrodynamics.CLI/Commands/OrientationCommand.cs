@@ -29,7 +29,7 @@ public class OrientationCommand
             frame = "j2000";
         }
         
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
         
         var celestialItem = Helpers.CreateOrientable(objectId);
 

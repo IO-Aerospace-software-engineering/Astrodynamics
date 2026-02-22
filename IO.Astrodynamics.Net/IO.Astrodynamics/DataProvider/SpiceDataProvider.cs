@@ -16,16 +16,16 @@ public class SpiceDataProvider : IDataProvider
 {
     public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
     {
-        return API.Instance.TransformFrame(date, source, Frame.ICRF);
+        return SpiceAPI.Instance.TransformFrame(date, source, Frame.ICRF);
     }
 
     public OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration)
     {
-        return API.Instance.ReadEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER, target, frame, aberration);
+        return SpiceAPI.Instance.ReadEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId, target.NaifId, frame, aberration);
     }
 
     CelestialBody IDataProvider.GetCelestialBodyInfo(int naifId)
     {
-        return API.Instance.GetCelestialBodyInfo(naifId);
+        return SpiceAPI.Instance.GetCelestialBodyInfo(naifId);
     }
 }

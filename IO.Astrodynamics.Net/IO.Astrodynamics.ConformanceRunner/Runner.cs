@@ -38,7 +38,7 @@ public class Runner
     {
         // Load SPICE kernels
         Console.WriteLine($"Loading SPICE kernels from: {_spiceKernelsPath}");
-        API.Instance.LoadKernels(new DirectoryInfo(_spiceKernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(_spiceKernelsPath));
 
         // Load tolerances
         var toleranceConfig = LoadTolerances();
@@ -57,7 +57,7 @@ public class Runner
                 RunnerName = "IO.Astrodynamics.ConformanceRunner",
                 RunnerVersion = "1.0.0",
                 Framework = "IO.Astrodynamics.Net",
-                FrameworkVersion = typeof(API).Assembly.GetName().Version?.ToString() ?? "unknown",
+                FrameworkVersion = typeof(SpiceAPI).Assembly.GetName().Version?.ToString() ?? "unknown",
                 RunTimestamp = DateTime.UtcNow.ToString("o"),
                 ConformanceTestsCommit = commitSha
             }

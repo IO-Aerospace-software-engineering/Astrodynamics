@@ -17,7 +17,7 @@ namespace IO.Astrodynamics.Tests.Surface
     {
         public SiteTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         [Fact]
@@ -311,8 +311,8 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(339, "S339", TestHelpers.EarthAtJ2000, new Planetodetic(30 * Astrodynamics.Constants.Deg2Rad, 10 * Astrodynamics.Constants.Deg2Rad, 1000.0));
             site.WriteEphemeris(window,new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName,"sitetest339.spk")));
-            API.Instance.LoadKernels(new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName, "sitetest339.spk")));
-            var orbitalParametersEnumerable = API.Instance.ReadEphemeris(window, site.CelestialBody, site, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1));
+            SpiceAPI.Instance.LoadKernels(new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName, "sitetest339.spk")));
+            var orbitalParametersEnumerable = SpiceAPI.Instance.ReadEphemeris(window, site.CelestialBody, site, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1));
             Assert.Equal(new Vector3(4054783.094777815, -4799280.900382741, 1100391.2394741199), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Position,
                 TestHelpers.VectorComparer);
             Assert.Equal(new Vector3(349.9668418905813, 295.68160979710234, 0.01769212826071784), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,

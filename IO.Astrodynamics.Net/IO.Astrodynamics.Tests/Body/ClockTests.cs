@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Tests.Body
     {
         public ClockTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
         [Fact]
         public void CreateClock()

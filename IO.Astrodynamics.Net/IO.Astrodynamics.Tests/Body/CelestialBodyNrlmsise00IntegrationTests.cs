@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.Body
         public CelestialBodyNrlmsise00IntegrationTests()
         {
             // Load SPICE kernels required for CelestialBody
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         /// <summary>

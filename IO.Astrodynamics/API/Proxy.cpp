@@ -150,6 +150,14 @@ void ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
     //Build platform id
     SpiceInt id = spacecraftId * 1000;
 
+    // Convert tolerance from TDB seconds to encoded spacecraft clock ticks.
+    // ckgpav_c requires tolerance in ticks, not seconds.
+    // Computing once at window start is valid for linear (type 1) SCLK.
+    SpiceDouble sclk0, sclkPlusTol;
+    sce2c_c(spacecraftId, searchWindow.start, &sclk0);
+    sce2c_c(spacecraftId, searchWindow.start + tolerance, &sclkPlusTol);
+    SpiceDouble toleranceInTicks = std::abs(sclkPlusTol - sclk0);
+
     double epoch = searchWindow.start;
     int idx{0};
     while (epoch <= searchWindow.end)
@@ -160,13 +168,20 @@ void ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
                                                                                                             std::chrono::duration<double>(
                                                                                                                     epoch)));
 
-        SpiceDouble cmat[3][3];
-        SpiceDouble av[3];
+        SpiceDouble cmat[3][3]{};
+        SpiceDouble av[3]{};
         SpiceDouble clkout;
         SpiceBoolean found;
 
         //Get orientation and angular velocity
-        ckgpav_c(id, sclk, tolerance, frame, cmat, av, &clkout, &found);
+        ckgpav_c(id, sclk, toleranceInTicks, frame, cmat, av, &clkout, &found);
+        if (failed_c())
+        {
+            // CK segment may not carry angular velocity (e.g. Type 1 CK).
+            // Reset the error and fall back to rotation-only query; av stays zero.
+            reset_c();
+            ckgp_c(id, sclk, toleranceInTicks, frame, cmat, &clkout, &found);
+        }
 
         if (!found)
         {
@@ -197,7 +212,7 @@ void ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, i
         delete[] arrayCmat;
 
         double correctedEpoch{};
-        sct2e_c(spacecraftId, sclk, &correctedEpoch);
+        sct2e_c(spacecraftId, clkout, &correctedEpoch);
         so[idx].epoch = correctedEpoch;
         so[idx].SetFrame(frame);
         so[idx].orientation = ToQuaternionDTO(q);

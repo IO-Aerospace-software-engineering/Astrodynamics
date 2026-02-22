@@ -13,7 +13,7 @@ public class InitialOrbitDeterminationTests
 {
     public InitialOrbitDeterminationTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

@@ -51,7 +51,7 @@ For this astrodynamics project:
    {
        public MyTests()
        {
-           API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+           SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
        }
    }
    ```
@@ -92,7 +92,7 @@ namespace IO.Astrodynamics.Tests.Category
         public ClassNameTests()
         {
             // Setup: Load kernels if needed
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         [Fact]

@@ -72,7 +72,7 @@ Load kernels once at startup, then query ephemerides, frames, and more.
 
 ```csharp
 // Load required kernels (recursively) from your data directory
-API.Instance.LoadKernels(new DirectoryInfo("<your path containing data>"));
+SpiceAPI.Instance.LoadKernels(new DirectoryInfo("<your path containing data>"));
 
 // Example: Moon ephemeris at 2000-01-01T12:00Z in ICRF with Earth as center
 var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -108,7 +108,7 @@ You need to provide the kernels relevant to your scenario. Common sets:
 Organize them in a directory and load them recursively:
 
 ```csharp
-API.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 ```
 
 

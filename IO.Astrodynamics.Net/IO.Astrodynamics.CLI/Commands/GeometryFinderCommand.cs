@@ -37,7 +37,7 @@ public class GeometryFinderCommand
         double adjustValue = 0.0,
         [Argument(Description = "Frame")] string frame = "ICRF")
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
         if (frame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
         {
             frame = "j2000";
@@ -49,7 +49,7 @@ public class GeometryFinderCommand
         var coor = Enum.Parse<Coordinate>(coordinate, true);
         var op = Enumeration.GetValueFromDescription<RelationnalOperator>(relationalOperator);
 
-        var res = API.Instance.FindWindowsOnCoordinateConstraint(win, observerId, targetId, new Frame(frame), coorSys, coor, op, value, adjustValue, abe, step);
+        var res = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(win, observerId, targetId, new Frame(frame), coorSys, coor, op, value, adjustValue, abe, step);
 
         foreach (var windowResult in res)
         {
@@ -77,13 +77,13 @@ public class GeometryFinderCommand
         [Argument(Description = "Aberration")] string aberration = "None"
     )
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
         var op = Enumeration.GetValueFromDescription<RelationnalOperator>(relationalOperator);
 
-        var res = API.Instance.FindWindowsOnDistanceConstraint(win, observerId, targetId, op, value, abe, step);
+        var res = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(win, observerId, targetId, op, value, abe, step);
 
         foreach (var windowResult in res)
         {
@@ -115,7 +115,7 @@ public class GeometryFinderCommand
         [Argument(Description = "Aberration")] string aberration = "None"
     )
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
@@ -123,7 +123,7 @@ public class GeometryFinderCommand
         var frontShp = Enum.Parse<ShapeType>(frontBodyShape, true);
         var occultation = Enum.Parse<OccultationType>(occultationType, true);
 
-        var res = API.Instance.FindWindowsOnOccultationConstraint(win, observerId, targetId, targetShp, frontBodyId, frontShp, occultation, abe, step);
+        var res = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(win, observerId, targetId, targetShp, frontBodyId, frontShp, occultation, abe, step);
 
         foreach (var windowResult in res)
         {
@@ -153,13 +153,13 @@ public class GeometryFinderCommand
         [Argument(Description = "Aberration")] string aberration = "None"
     )
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
         var targetShp = Enum.Parse<ShapeType>(targetShape, true);
 
-        var res = API.Instance.FindWindowsInFieldOfViewConstraint(win, observerId, instrumentId, targetId, new Frame(targetFrame), targetShp, abe, step);
+        var res = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(win, observerId, instrumentId, targetId, new Frame(targetFrame), targetShp, abe, step);
 
         foreach (var windowResult in res)
         {
@@ -195,14 +195,14 @@ public class GeometryFinderCommand
         double adjustValue=0.0
     )
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
         var coordinates = Helpers.ConvertToPlanetodetic(planetodetic.Planetodetic);
         var illuminationAngle = Enum.Parse<IlluminationAngle>(illuminationType, true);
         var relOperator = Enumeration.GetValueFromDescription<RelationnalOperator>(relationalOperator);
-        var res = API.Instance.FindWindowsOnIlluminationConstraint(win, observerId, targetId, new Frame(fixedFrame), coordinates, illuminationAngle, relOperator, value,
+        var res = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(win, observerId, targetId, new Frame(fixedFrame), coordinates, illuminationAngle, relOperator, value,
             adjustValue, abe, step, illuminationId);
 
         foreach (var windowResult in res)

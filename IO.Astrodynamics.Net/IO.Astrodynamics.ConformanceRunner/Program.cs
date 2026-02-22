@@ -88,7 +88,7 @@ public static class Program
         Console.WriteLine("=====================================================");
         Console.WriteLine();
 
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         try
         {

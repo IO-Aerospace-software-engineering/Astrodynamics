@@ -97,10 +97,10 @@ Before any computation, load the required SPICE kernel files:
 using IO.Astrodynamics;
 
 // Load kernels from a directory
-API.Instance.LoadKernels(new DirectoryInfo("path/to/kernels"));
+SpiceAPI.Instance.LoadKernels(new DirectoryInfo("path/to/kernels"));
 
 // Or load a specific kernel file
-API.Instance.LoadKernels(new FileInfo("de440.bsp"));
+SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```
 
 ### Basic Example: Compute Earth Position
@@ -112,7 +112,7 @@ using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
 // Load kernels
-API.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 // Create celestial bodies
 var earth = PlanetsAndMoons.EARTH_BODY;
@@ -178,7 +178,7 @@ Console.WriteLine($"ISS Position: {sv.Position}");
 
 ### IO.Astrodynamics (Core)
 
-#### API
+#### SpiceAPI
 
 Singleton class providing access to SPICE operations.
 
@@ -192,10 +192,10 @@ Singleton class providing access to SPICE operations.
 
 ```csharp
 // Load all kernels from a directory
-API.Instance.LoadKernels(new DirectoryInfo("kernels/"));
+SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels/"));
 
 // Check loaded kernels
-foreach (var kernel in API.Instance.GetLoadedKernels())
+foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
     Console.WriteLine(kernel);
 ```
 
@@ -2046,7 +2046,7 @@ Body shape models.
 
 ```csharp
 // Load all required kernels at startup
-API.Instance.LoadKernels(new DirectoryInfo("kernels"));
+SpiceAPI.Instance.LoadKernels(new DirectoryInfo("kernels"));
 
 // Required kernel types:
 // - LSK (leap seconds): naif0012.tls
@@ -2055,7 +2055,7 @@ API.Instance.LoadKernels(new DirectoryInfo("kernels"));
 // - FK (frames): earth_assoc_itrf93.tf
 
 // Clean up when done
-API.Instance.ClearKernels();
+SpiceAPI.Instance.ClearKernels();
 ```
 
 ### Time Handling

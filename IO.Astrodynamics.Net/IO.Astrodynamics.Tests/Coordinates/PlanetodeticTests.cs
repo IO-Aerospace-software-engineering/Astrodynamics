@@ -9,7 +9,7 @@ public class PlanetodeticTests
 {
     public PlanetodeticTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

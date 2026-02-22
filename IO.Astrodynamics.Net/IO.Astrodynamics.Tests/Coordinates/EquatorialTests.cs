@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Tests.Coordinates
     {
         public EquatorialTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         [Fact]

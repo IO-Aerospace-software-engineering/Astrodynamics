@@ -16,7 +16,7 @@ public class CelestialBodyTests
 {
     public CelestialBodyTests()
     {
-        API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
     [Fact]

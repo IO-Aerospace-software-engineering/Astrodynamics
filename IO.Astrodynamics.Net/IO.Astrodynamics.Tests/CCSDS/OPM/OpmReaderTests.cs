@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
         public OpmReaderTests()
         {
-            API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
         [Fact]

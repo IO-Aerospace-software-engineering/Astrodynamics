@@ -576,7 +576,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// </remarks>
     public StateVector ToOsculating(Time epoch)
     {
-        return API.Instance.ConvertTleToStateVector(Name, Line1, Line2, epoch).ToStateVector();
+        return SpiceAPI.Instance.ConvertTleToStateVector(Name, Line1, Line2, epoch).ToStateVector();
     }
 
     /// <summary>

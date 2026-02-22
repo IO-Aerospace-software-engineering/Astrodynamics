@@ -40,7 +40,7 @@ public class EphemerisCommand
             frame = "j2000";
         }
 
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         var localizableObject = Helpers.CreateLocalizable(objectId);
 
@@ -86,7 +86,7 @@ public class EphemerisCommand
         [Option(shortName: 'c', Description = "Display result as planetocentric cartesian coordinates")]
         bool cartesian = false)
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         var localizableObject = Helpers.CreateLocalizable(objectId) as CelestialItem;
 
@@ -126,7 +126,7 @@ public class EphemerisCommand
         [Argument(Description = "Aberration")] string aberration = "None"
     )
     {
-        API.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         var observer = Helpers.CreateLocalizable(observerId);
         var firstObject = Helpers.CreateLocalizable(firstObjectId);
