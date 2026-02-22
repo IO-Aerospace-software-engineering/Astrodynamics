@@ -51,7 +51,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 
 ### Core Components
 
-**Native Interop Layer (IO.Astrodynamics/API.cs)**
+**Native Interop Layer (IO.Astrodynamics/SpiceAPI.cs)**
 - P/Invoke wrapper around native SPICE toolkit (NASA's CSPICE)
 - Platform-specific libraries: `IO.Astrodynamics.dll` (Windows), `libIO.Astrodynamics.so` (Linux)
 - Thread-safe access through lock synchronization
@@ -639,7 +639,7 @@ var rotationMatrix = Matrix.FromColumnVectors(col0, col1, col2);
 
 All test classes load SPICE kernels in constructor:
 ```csharp
-API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
 ```
 
 Test data files are in `Data/SolarSystem/` and copied to output directory.

@@ -53,7 +53,7 @@ IO.Astrodynamics.Net/        ← .NET (ACTIVE): All new development here
   └── IO.Astrodynamics.Performance/  ← BenchmarkDotNet benchmarks
 ```
 
-The native bridge is accessed via `IO.Astrodynamics.API` (singleton, P/Invoke). All SPICE calls must go through the shared lock object — CSPICE is not thread-safe.
+The native bridge is accessed via `IO.Astrodynamics.SpiceAPI` (singleton, P/Invoke). All SPICE calls must go through the shared lock object — CSPICE is not thread-safe.
 
 ### Key Namespaces
 
@@ -81,7 +81,7 @@ Configuration.Instance.SetDataProvider(new MemoryDataProvider());
 
 Test classes load SPICE kernels in their constructor:
 ```csharp
-API.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
 ```
 Test data files live in `Data/SolarSystem/` and are copied to the output directory.
 

@@ -70,7 +70,7 @@ public void ComputeStateVector(ReadOnlySpan<double> elements, Span<double> resul
 **Thread Safety**
 - SPICE operations require synchronization - use the shared lock pattern:
 ```csharp
-lock (API.Instance.LockObject)
+lock (SpiceAPI.Instance.LockObject)
 {
     // SPICE operations here
 }
