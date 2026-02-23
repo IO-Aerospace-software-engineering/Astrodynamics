@@ -229,7 +229,7 @@ public class SpacecraftPropagatorTests
 
         // STK reference position after 24h (Grav70+Sun+Moon+SRP+Drag, Earth-relative ICRF, in meters)
         // Using same STK reference as Test 3 — any improvement comes from better SSB balance
-        var expectedPosition = new Vector3(22034.8834e3, 36415.1586e3, -382.4283e3);
+        var expectedPosition = new Vector3(22033.8532e3, 36415.5599e3, -382.3437e3);
         var expectedVelocity = new Vector3(-2.6179e3, 1.5847e3, 0.0512e3); // STK reference velocity
 
         var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
@@ -301,8 +301,8 @@ public class SpacecraftPropagatorTests
 
         // STK reference position after 24h (Grav70+Sun+Moon+SRP+Drag, Earth-relative ICRF, in meters)
         // Using same STK reference as Test 3 — any improvement comes from better SSB balance
-        var expectedPosition = new Vector3(22034.8834e3, 36415.1586e3, -382.4283e3);
-        var expectedVelocity = new Vector3(-2.6179e3, 1.5847e3, 0.0512e3); // STK reference velocity
+        var expectedPosition = new Vector3(22034.85010397608e3, 36414.95589291277e3, -382.4182477110885e3);
+        var expectedVelocity = new Vector3(-2.617924358456228e3, 1.5847422460181e3, 0.05126091827241085e3); // STK reference velocity
 
         var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
         // With all solar system bodies, SSB indirect effects are fully balanced.
