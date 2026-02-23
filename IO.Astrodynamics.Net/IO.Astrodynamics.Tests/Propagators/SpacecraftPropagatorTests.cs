@@ -248,11 +248,9 @@ public class SpacecraftPropagatorTests
     [Fact]
     public void PropagateGeo24hGrav70AllBodiesWithoutSrpDrag()
     {
-        // GEO satellite (INTELSAT 901) propagated 24h with full force model and all solar system bodies:
-        // degree-70 geopotential + Sun + Moon + all planetary barycenters + SRP + Drag.
-        // Adding Jupiter, Saturn, Venus, Mars, etc. should improve accuracy by accounting
-        // for their (small but non-zero) gravitational perturbations and resolving
-        // additional SSB frame indirect effects.
+        // GEO satellite (INTELSAT 901) propagated 24h with:
+        // EGM2008 degree-70 geopotential + Sun + Moon + all planetary barycenters. No SRP, no drag.
+        // Reference: GMAT R2025a with JGM3 70x70, de440s, PrinceDormand78 (RK7/8), no SRP, no drag.
         Clock clk = new Clock("My clock", 256);
 
         var tle = new TLE("INTELSAT 901",
@@ -299,21 +297,19 @@ public class SpacecraftPropagatorTests
         var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
             .RelativeTo(earth, Aberration.None) as StateVector;
 
-        // STK reference position after 24h (Grav70+Sun+Moon+SRP+Drag, Earth-relative ICRF, in meters)
-        // Using same STK reference as Test 3 — any improvement comes from better SSB balance
-        var expectedPosition = new Vector3(22034.85010397608e3, 36414.95589291277e3, -382.4182477110885e3);
-        var expectedVelocity = new Vector3(-2.617924358456228e3, 1.5847422460181e3, 0.05126091827241085e3); // STK reference velocity
+        // GMAT R2025a reference (JGM3 70x70, de440s, PrinceDormand78 RK7/8, no SRP, no drag)
+        var expectedPosition = new Vector3(22035.05464841816e3, 36415.07444453181e3, -382.4219052105268e3);
+        var expectedVelocity = new Vector3(-2.61790823218342e3, 1.584740384557747e3, 0.05126063967862107e3);
 
         var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        // With all solar system bodies, SSB indirect effects are fully balanced.
-        // Expect improved accuracy compared to Sun+Moon only.
-        Assert.True(positionError < 2.9e3,
-            $"3D position error after 24h is {positionError:F3} m, expected < 2900 m. " +
+        // ~9 m residual is expected: EGM2008 (our model) vs JGM3 (GMAT reference)
+        Assert.True(positionError < 10.0,
+            $"3D position error after 24h is {positionError:F3} m, expected < 50 m. " +
             $"Actual position: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
 
         var velocityError = (lastEphemeris!.Velocity - expectedVelocity).Magnitude();
-        Assert.True(velocityError < 0.21,
-            $"3D velocity error after 24h is {velocityError:F3} m/s, expected < 0.21 m/s. " +
-            $"Actual velocity: ({lastEphemeris.Velocity.X:F3}, {lastEphemeris.Velocity.Y:F3}, {lastEphemeris.Velocity.Z:F3}) m/s");
+        Assert.True(velocityError < 0.001,
+            $"3D velocity error after 24h is {velocityError:F6} m/s, expected < 0.005 m/s. " +
+            $"Actual velocity: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
     }
 }
