@@ -22,6 +22,32 @@ public static class BodyResolver
         };
     }
 
+    public static CelestialItem ResolveCelestialItem(string name)
+    {
+        return name?.ToUpperInvariant() switch
+        {
+            "SUN" => Stars.SUN_BODY,
+            "MOON" => PlanetsAndMoons.MOON_BODY,
+            "MERCURY" => new CelestialBody(PlanetsAndMoons.MERCURY),
+            "VENUS" => new CelestialBody(PlanetsAndMoons.VENUS),
+            "EARTH" => new CelestialBody(PlanetsAndMoons.EARTH),
+            "MARS" => new CelestialBody(PlanetsAndMoons.MARS),
+            "JUPITER" => new CelestialBody(PlanetsAndMoons.JUPITER),
+            "SATURN" => new CelestialBody(PlanetsAndMoons.SATURN),
+            "MERCURY BARYCENTER" => Barycenters.MERCURY_BARYCENTER,
+            "VENUS BARYCENTER" => Barycenters.VENUS_BARYCENTER,
+            "EARTH BARYCENTER" => Barycenters.EARTH_BARYCENTER,
+            "MARS BARYCENTER" => Barycenters.MARS_BARYCENTER,
+            "JUPITER BARYCENTER" => Barycenters.JUPITER_BARYCENTER,
+            "SATURN BARYCENTER" => Barycenters.SATURN_BARYCENTER,
+            "URANUS BARYCENTER" => Barycenters.URANUS_BARYCENTER,
+            "NEPTUNE BARYCENTER" => Barycenters.NEPTUNE_BARYCENTER,
+            "PLUTO BARYCENTER" => Barycenters.PLUTO_BARYCENTER,
+            "SOLAR SYSTEM BARYCENTER" => Barycenters.SOLAR_SYSTEM_BARYCENTER,
+            _ => throw new ArgumentException($"Unknown body: {name}")
+        };
+    }
+
     public static NaifObject ResolveNaif(string name)
     {
         return name?.ToUpperInvariant() switch

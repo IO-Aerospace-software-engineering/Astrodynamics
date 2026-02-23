@@ -1,0 +1,123 @@
+{
+  "report_meta": {
+    "runner_name": "IO.Astrodynamics.ConformanceRunner",
+    "runner_version": "1.0.0",
+    "framework": "IO.Astrodynamics.Net",
+    "framework_version": "1.0.0.0",
+    "run_timestamp": "2026-02-23T15:07:22.5744550Z",
+    "conformance_tests_commit": "d648c08f2206423bc9ce54ffc85f023406581d78"
+  },
+  "results": [
+    {
+      "case_id": "eclipse_simple_001",
+      "status": "FAIL",
+      "deltas": {
+        "penumbra_entry": {
+          "max_abs_delta": 2.617102026939392,
+          "max_rel_delta": 3.163662777925987E-09
+        },
+        "umbra_entry": {
+          "max_abs_delta": 2.6121020317077637,
+          "max_rel_delta": 3.1576185380590614E-09
+        },
+        "umbra_exit": {
+          "max_abs_delta": 0.1639261245727539,
+          "max_rel_delta": 1.981602831995986E-10
+        },
+        "penumbra_exit": {
+          "max_abs_delta": 0.3847806453704834,
+          "max_rel_delta": 4.651378234799259E-10
+        },
+        "penumbra_duration_s": {
+          "max_abs_delta": 0.21385450000021677,
+          "max_rel_delta": 0.011429957242128102
+        },
+        "umbra_duration_s": {
+          "max_abs_delta": 2.4461762000000817,
+          "max_rel_delta": 0.001185162887596939
+        }
+      }
+    },
+    {
+      "case_id": "pointing_triad_001",
+      "status": "PASS",
+      "deltas": {
+        "attitude_quaternion": {
+          "max_abs_delta": 7.770501657310781E-05,
+          "max_rel_delta": 7.770501657310781E-05
+        },
+        "target_in_fov": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0
+        }
+      }
+    },
+    {
+      "case_id": "propagator_24h_geo10_001",
+      "status": "PASS",
+      "deltas": {
+        "final_x_km": {
+          "max_abs_delta": 0.10688375695826835,
+          "max_rel_delta": 2.0257872100366524E-05
+        },
+        "final_y_km": {
+          "max_abs_delta": 0.13381576745632628,
+          "max_rel_delta": 3.138782440230005E-05
+        },
+        "final_z_km": {
+          "max_abs_delta": 0.19318638473509964,
+          "max_rel_delta": 0.0004775664050358517
+        },
+        "final_vx_km_s": {
+          "max_abs_delta": 0.0002551844033185091,
+          "max_rel_delta": 9.36607414253192E-05
+        },
+        "final_vy_km_s": {
+          "max_abs_delta": 0.00019810269780196066,
+          "max_rel_delta": 5.035971953550736E-05
+        },
+        "final_vz_km_s": {
+          "max_abs_delta": 2.7513330903339295E-05,
+          "max_rel_delta": 4.597948153479561E-06
+        }
+      }
+    },
+    {
+      "case_id": "propagator_24h_geo70_full_002",
+      "status": "FAIL",
+      "deltas": {
+        "final_x_km": {
+          "max_abs_delta": 2.4387914489743707,
+          "max_rel_delta": 0.00011067866367626755
+        },
+        "final_y_km": {
+          "max_abs_delta": 1.4960825866655796,
+          "max_rel_delta": 4.108406070942059E-05
+        },
+        "final_z_km": {
+          "max_abs_delta": 0.057502537536606724,
+          "max_rel_delta": 0.00015036161690075428
+        },
+        "final_vx_km_s": {
+          "max_abs_delta": 0.00012176952584308509,
+          "max_rel_delta": 4.651420063527449E-05
+        },
+        "final_vy_km_s": {
+          "max_abs_delta": 0.00014730664959206052,
+          "max_rel_delta": 9.295554337859565E-05
+        },
+        "final_vz_km_s": {
+          "max_abs_delta": 6.261355700625665E-05,
+          "max_rel_delta": 0.0012229210352784502
+        }
+      }
+    }
+  ],
+  "summary": {
+    "total": 4,
+    "passed": 2,
+    "failed": 2,
+    "skipped": 0,
+    "errors": 0
+  }
+}
