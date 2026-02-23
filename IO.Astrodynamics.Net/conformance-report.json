@@ -4,13 +4,13 @@
     "runner_version": "1.0.0",
     "framework": "IO.Astrodynamics.Net",
     "framework_version": "1.0.0.0",
-    "run_timestamp": "2026-02-23T15:07:22.5744550Z",
-    "conformance_tests_commit": "d648c08f2206423bc9ce54ffc85f023406581d78"
+    "run_timestamp": "2026-02-23T22:31:58.2367595Z",
+    "conformance_tests_commit": "bcc4072f2e6197d080f1712f90c84b0127a9fb9c"
   },
   "results": [
     {
       "case_id": "eclipse_simple_001",
-      "status": "FAIL",
+      "status": "PASS",
       "deltas": {
         "penumbra_entry": {
           "max_abs_delta": 2.617102026939392,
@@ -57,66 +57,66 @@
       "status": "PASS",
       "deltas": {
         "final_x_km": {
-          "max_abs_delta": 0.10688375695826835,
-          "max_rel_delta": 2.0257872100366524E-05
+          "max_abs_delta": 0.11222914568043052,
+          "max_rel_delta": 2.1270971759061217E-05
         },
         "final_y_km": {
-          "max_abs_delta": 0.13381576745632628,
-          "max_rel_delta": 3.138782440230005E-05
+          "max_abs_delta": 0.14419313423604763,
+          "max_rel_delta": 3.382202172703148E-05
         },
         "final_z_km": {
-          "max_abs_delta": 0.19318638473509964,
-          "max_rel_delta": 0.0004775664050358517
+          "max_abs_delta": 0.22958222417730667,
+          "max_rel_delta": 0.0005674876818618389
         },
         "final_vx_km_s": {
-          "max_abs_delta": 0.0002551844033185091,
-          "max_rel_delta": 9.36607414253192E-05
+          "max_abs_delta": 0.0002491266242508061,
+          "max_rel_delta": 9.14371417524283E-05
         },
         "final_vy_km_s": {
-          "max_abs_delta": 0.00019810269780196066,
-          "max_rel_delta": 5.035971953550736E-05
+          "max_abs_delta": 0.00019244124662209927,
+          "max_rel_delta": 4.892059149858022E-05
         },
         "final_vz_km_s": {
-          "max_abs_delta": 2.7513330903339295E-05,
-          "max_rel_delta": 4.597948153479561E-06
+          "max_abs_delta": 2.7737814232153823E-05,
+          "max_rel_delta": 4.6354633308702074E-06
         }
       }
     },
     {
       "case_id": "propagator_24h_geo70_full_002",
-      "status": "FAIL",
+      "status": "PASS",
       "deltas": {
         "final_x_km": {
-          "max_abs_delta": 2.4387914489743707,
-          "max_rel_delta": 0.00011067866367626755
+          "max_abs_delta": 0.007637272145075258,
+          "max_rel_delta": 3.4659646944072897E-07
         },
         "final_y_km": {
-          "max_abs_delta": 1.4960825866655796,
-          "max_rel_delta": 4.108406070942059E-05
+          "max_abs_delta": 0.004230191603710409,
+          "max_rel_delta": 1.1616594688427518E-07
         },
         "final_z_km": {
-          "max_abs_delta": 0.057502537536606724,
-          "max_rel_delta": 0.00015036161690075428
+          "max_abs_delta": 0.0001484393755504243,
+          "max_rel_delta": 3.881560484060322E-07
         },
         "final_vx_km_s": {
-          "max_abs_delta": 0.00012176952584308509,
-          "max_rel_delta": 4.651420063527449E-05
+          "max_abs_delta": 3.4200221721292223E-07,
+          "max_rel_delta": 1.3063949798105848E-07
         },
         "final_vy_km_s": {
-          "max_abs_delta": 0.00014730664959206052,
-          "max_rel_delta": 9.295554337859565E-05
+          "max_abs_delta": 5.195297738680438E-07,
+          "max_rel_delta": 3.2783273457944265E-07
         },
         "final_vz_km_s": {
-          "max_abs_delta": 6.261355700625665E-05,
-          "max_rel_delta": 0.0012229210352784502
+          "max_abs_delta": 5.885760101520532E-09,
+          "max_rel_delta": 1.1482026245519651E-07
         }
       }
     }
   ],
   "summary": {
     "total": 4,
-    "passed": 2,
-    "failed": 2,
+    "passed": 4,
+    "failed": 0,
     "skipped": 0,
     "errors": 0
   }
