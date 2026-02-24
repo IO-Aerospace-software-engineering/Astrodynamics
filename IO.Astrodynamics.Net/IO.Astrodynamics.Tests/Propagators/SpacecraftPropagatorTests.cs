@@ -365,4 +365,78 @@ public class SpacecraftPropagatorTests
             $"3D velocity error after 24h is {velocityError:F6} m/s, expected < 0.005 m/s. " +
             $"Actual velocity: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
     }
+
+    [Fact]
+    public void PropagateHelioSync24hGrav10SunMoon()
+    {
+        // Conformance case propagator_24h_sso10_003:
+        // Sun-Synchronous Orbit (SSO / heliosynchronous) propagated 24h with EGM2008 degree-10
+        // geopotential + Sun + Moon perturbations. No atmospheric drag, no SRP.
+        // J2 nodal precession for SSO: ~+0.9857 deg/day (right-ascension drift tracks the Sun).
+        // Reference: GMAT R2025a with JGM3 10x10, de440s, PrinceDormand78 (RK7/8), no SRP, no drag.
+        // Tolerances: position abs_tol = 500 m, velocity abs_tol = 0.5 m/s.
+        Clock clk = new Clock("My clock", 256);
+
+        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
+
+        // Earth with degree-10 geopotential (EGM2008), no atmospheric model
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+
+        // SSO Keplerian elements (osculating, ICRF, Earth-centered)
+        // SMA: 7078.137 km → m, ecc: 0.001, inc: 98.186°, RAAN: 75°, AoP: 90°, MA: 0°
+        var smaM = 7078137.0;
+        var ecc = 0.001;
+        var incRad = 98.186 * System.Math.PI / 180.0;
+        var raanRad = 75.0 * System.Math.PI / 180.0;
+        var aopRad = 90.0 * System.Math.PI / 180.0;
+        var maRad = 0.0;
+
+        var keplerianOrbit = new KeplerianElements(smaM, ecc, incRad, raanRad, aopRad, maRad,
+            earth, utcEpoch, Frames.Frame.ICRF);
+        var orbit = keplerianOrbit.ToStateVector();
+
+        // mass=100 kg, maxMass=1000 kg (no drag/SRP so sectional area is irrelevant)
+        Spacecraft spc = new Spacecraft(-1001, "SSO_SAT", 100.0, 1000.0, clk, orbit);
+
+        var endEpoch = utcEpoch.AddDays(1);
+        var propWindow = new Window(utcEpoch, endEpoch);
+
+        // Propagate with Earth (grav10), Moon, Sun. No drag, no SRP. Step = 1 s.
+        Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(
+            propWindow, spc,
+            [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
+            false, false,
+            TimeSpan.FromSeconds(1.0));
+
+        spacecraftPropagator.Propagate();
+
+        // Get the last ephemeris point, Earth-relative ICRF
+        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
+            .RelativeTo(earth, Aberration.None) as StateVector;
+
+        // GMAT R2025a reference (JGM3 10x10, de440s, PrinceDormand78 RK7/8, no SRP, no drag)
+        // Position in meters (converted from km)
+        var expectedPosition = new Vector3(
+            -608.6315307021005 * 1000.0,
+            1650.694083265209 * 1000.0,
+            -6887.696349104228 * 1000.0);
+
+        // Velocity in m/s
+        var expectedVelocity = new Vector3(
+            1985.415757873638,
+            7042.412568889923,
+            1515.859902259437);
+
+        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
+        var velocityError = (lastEphemeris!.Velocity - expectedVelocity).Magnitude();
+
+        Assert.True(positionError < 300.0,
+            $"3D position error after 24h is {positionError:F3} m, expected < 300 m. " +
+            $"Actual position: ({lastEphemeris.Position.X / 1000.0:F6}, {lastEphemeris.Position.Y / 1000.0:F6}, {lastEphemeris.Position.Z / 1000.0:F6}) km");
+
+        Assert.True(velocityError < 0.3,
+            $"3D velocity error after 24h is {velocityError:F6} m/s, expected < 0.3 m/s. " +
+            $"Actual velocity: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+    }
 }

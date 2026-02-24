@@ -4,8 +4,8 @@
     "runner_version": "1.0.0",
     "framework": "IO.Astrodynamics.Net",
     "framework_version": "1.0.0.0",
-    "run_timestamp": "2026-02-23T22:31:58.2367595Z",
-    "conformance_tests_commit": "bcc4072f2e6197d080f1712f90c84b0127a9fb9c"
+    "run_timestamp": "2026-02-24T17:06:21.2324288Z",
+    "conformance_tests_commit": "f2b63b52089592efec7b6dabd18ab4a133c0b385"
   },
   "results": [
     {
@@ -111,11 +111,41 @@
           "max_rel_delta": 1.1482026245519651E-07
         }
       }
+    },
+    {
+      "case_id": "propagator_24h_sso10_003",
+      "status": "PASS",
+      "deltas": {
+        "final_x_km": {
+          "max_abs_delta": 0.070543226732525,
+          "max_rel_delta": 0.00011590465359418414
+        },
+        "final_y_km": {
+          "max_abs_delta": 0.2365531596180972,
+          "max_rel_delta": 0.0001433052689873193
+        },
+        "final_z_km": {
+          "max_abs_delta": 0.07633722084574401,
+          "max_rel_delta": 1.1083128084714707E-05
+        },
+        "final_vx_km_s": {
+          "max_abs_delta": 3.0741269795075965E-05,
+          "max_rel_delta": 1.5483542765873672E-05
+        },
+        "final_vy_km_s": {
+          "max_abs_delta": 3.8632119697901146E-05,
+          "max_rel_delta": 5.485637105181787E-06
+        },
+        "final_vz_km_s": {
+          "max_abs_delta": 0.00026994444632122416,
+          "max_rel_delta": 0.00017808007581628319
+        }
+      }
     }
   ],
   "summary": {
-    "total": 4,
-    "passed": 4,
+    "total": 5,
+    "passed": 5,
     "failed": 0,
     "skipped": 0,
     "errors": 0
