@@ -114,12 +114,12 @@ SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 
 ## Native C++ interop (frozen)
 
-The native C++ library exists only as a high-performance bridge to CSPICE. It won’t receive new features. If you need to link it directly:
+The native C++ library exists only as a high-performance bridge to CSPICE. It won’t receive new features (only safety/correctness fixes). If you need to link it directly:
 - Download prebuilt binaries from Releases: https://github.com/IO-Aerospace-software-engineering/Astrodynamics/releases
 - Linux: install headers to /usr/local/include/IO and libIO.Astrodynamics.so to /usr/local/lib
 - Windows: place IO.Astrodynamics.dll/.lib alongside your app and include headers
 
-Note: Prefer the .NET SDK for all new work.
+Note: Prefer the .NET SDK for all new work. The native library and .NET assembly must be from the same release — P/Invoke signatures are version-coupled.
 
 
 ## Build status and coverage

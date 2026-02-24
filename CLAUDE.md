@@ -55,6 +55,14 @@ IO.Astrodynamics.Net/        ← .NET (ACTIVE): All new development here
 
 The native bridge is accessed via `IO.Astrodynamics.SpiceAPI` (singleton, P/Invoke). All SPICE calls must go through the shared lock object — CSPICE is not thread-safe.
 
+### Native Error Propagation
+
+The C++ proxy layer uses a `bool` return + `GetLastErrorProxy()` pattern instead of throwing C++ exceptions across the P/Invoke boundary:
+- `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` return `bool` (`true` = success, `false` = error)
+- On failure, call `GetLastErrorProxy()` to retrieve the error message (thread-local buffer)
+- The .NET `SpiceAPI` class checks the return value and throws `InvalidOperationException` with the native error message
+- Buffer safety: all DTO `SetFrame`/`SetName` methods use `strncpy`; all `FindWindows*` loops are bounds-checked to 1000; `ReadOrientation`/`ReadEphemeris` loops are bounds-checked to 10000
+
 ### Key Namespaces
 
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
