@@ -628,7 +628,7 @@ public class SpiceAPI
         lock (lockObject)
         {
             var observer = CelestialItem.Create(observerId);
-            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.TimeSpanFromJ2000().TotalSeconds, observerId,
+            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, observerId,
                 targetId, frame.Name, aberration.GetDescription());
             return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
                 Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
