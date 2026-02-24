@@ -83,12 +83,14 @@ jobs:
       with:
         name: native-linux
         path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+      if: matrix.os == 'ubuntu-latest'
 
     - name: Download native Windows library
       uses: actions/download-artifact@v4
       with:
         name: native-windows
         path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+      if: matrix.os == 'windows-latest'
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
