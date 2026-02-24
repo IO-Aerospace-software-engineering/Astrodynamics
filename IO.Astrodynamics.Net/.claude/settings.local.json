@@ -54,7 +54,9 @@
       "Bash(ar t /home/sw/Sources/Astrodynamics/external-lib/cspice.lib 2>/dev/null | head -5)",
       "Bash(which clang 2>/dev/null && clang --version | head -1 || echo \"clang not installed\")",
       "Bash(docker --version 2>/dev/null && docker info --format '{{.OSType}}' 2>/dev/null || echo \"Docker not available or not running\")",
-      "Bash(dotnet pack IO.Astrodynamics/IO.Astrodynamics.csproj -p:NuspecFile=IO.Astrodynamics.nuspec --configuration Release 2>&1 | tail -10)"
+      "Bash(dotnet pack IO.Astrodynamics/IO.Astrodynamics.csproj -p:NuspecFile=IO.Astrodynamics.nuspec --configuration Release 2>&1 | tail -10)",
+      "Bash(git -C /home/sw/Sources/Astrodynamics/IO.Astrodynamics.Net log --oneline -20)",
+      "Bash(git -C /home/sw/Sources/Astrodynamics/IO.Astrodynamics.Net show bf86d338 --name-only | head -30)"
     ],
     "deny": [],
     "ask": []
