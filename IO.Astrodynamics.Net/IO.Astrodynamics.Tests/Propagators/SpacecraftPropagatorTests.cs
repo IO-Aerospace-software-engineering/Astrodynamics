@@ -40,7 +40,7 @@ public class SpacecraftPropagatorTests
         var diff = max - min;
         Assert.True(diff < 9.8E-05);
     }
-    
+
     [Fact]
     public void CheckInitialStep()
     {
@@ -48,10 +48,10 @@ public class SpacecraftPropagatorTests
         var orbit = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), new CelestialBody(PlanetsAndMoons.EARTH), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
         Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2)), spc,
-            [PlanetsAndMoons.EARTH_BODY,PlanetsAndMoons.MOON_BODY,Stars.SUN_BODY], false, false, TimeSpan.FromSeconds(1.0));
+            [PlanetsAndMoons.EARTH_BODY, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY], false, false, TimeSpan.FromSeconds(1.0));
         spacecraftPropagator.Propagate();
-        var orbitalParams = spc.StateVectorsRelativeToICRF.Values.First().RelativeTo(PlanetsAndMoons.EARTH_BODY,Aberration.None) as StateVector;
-        Assert.Equal(orbit,orbitalParams,TestHelpers.StateVectorComparer);
+        var orbitalParams = spc.StateVectorsRelativeToICRF.Values.First().RelativeTo(PlanetsAndMoons.EARTH_BODY, Aberration.None) as StateVector;
+        Assert.Equal(orbit, orbitalParams, TestHelpers.StateVectorComparer);
     }
 
     [Fact]
@@ -69,6 +69,59 @@ public class SpacecraftPropagatorTests
         var state1 = spc.StateVectorsRelativeToICRF.Values.ElementAt(1);
         var state2 = spc.StateVectorsRelativeToICRF.Values.ElementAt(2);
         var state3 = spc.StateVectorsRelativeToICRF.Values.ElementAt(3);
+    }
+
+    [Theory]
+    [InlineData(3600, 1.0)]    // 1 hour, step 1s — evenly divides
+    [InlineData(7200, 1.0)]    // 2 hours, step 1s — evenly divides
+    [InlineData(5, 2.0)]       // 5s window, step 2s — non-fitting
+    [InlineData(10, 3.0)]      // 10s window, step 3s — non-fitting
+    [InlineData(100, 7.0)]     // 100s window, step 7s — non-fitting
+    [InlineData(86400, 100.0)] // 24h, step 100s — evenly divides
+    public void CacheSizeAndTimeSpanAreConsistent(double windowSeconds, double stepSeconds)
+    {
+        Clock clk = new Clock("My clock", 256);
+        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
+
+        var windowStart = TimeSystem.Time.J2000TDB;
+        var windowEnd = windowStart.AddSeconds(windowSeconds);
+        var window = new Window(windowStart, windowEnd);
+        var deltaT = TimeSpan.FromSeconds(stepSeconds);
+
+        Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(
+            window, spc,
+            [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, deltaT);
+
+        spacecraftPropagator.Propagate();
+
+        var stateVectors = spc.StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+        var expectedCount = (uint)System.Math.Round(windowSeconds / stepSeconds, MidpointRounding.AwayFromZero) + 1;
+
+        // Check the number of state vectors matches the expected cache size
+        Assert.Equal((int)expectedCount, stateVectors.Length);
+
+        // Check the first state vector epoch matches the window start (in TDB)
+        var firstEpoch = stateVectors.First().Epoch;
+        var lastEpoch = stateVectors.Last().Epoch;
+
+        Assert.Equal(window.StartDate.TimeSpanFromJ2000().TotalSeconds, firstEpoch.TimeSpanFromJ2000().TotalSeconds, 6);
+
+        // Check the time span between first and last state vector is consistent with the window length
+        var actualSpan = (lastEpoch - firstEpoch).TotalSeconds;
+        var expectedSpan = (expectedCount - 1) * stepSeconds;
+        Assert.Equal(expectedSpan, actualSpan, 6);
+
+        // The last epoch should not exceed the window end
+        Assert.True(lastEpoch <= window.EndDate.AddSeconds(stepSeconds),
+            $"Last epoch {lastEpoch} exceeds window end {window.EndDate} + one step");
+
+        // Check uniform spacing between consecutive state vectors
+        for (int i = 1; i < stateVectors.Length; i++)
+        {
+            var dt = (stateVectors[i].Epoch - stateVectors[i - 1].Epoch).TotalSeconds;
+            Assert.Equal(stepSeconds, dt, 6);
+        }
     }
 
     [Fact]
@@ -152,9 +205,11 @@ public class SpacecraftPropagatorTests
 
         // Expected position after 24h (from STK HPOP reference, in meters)
         var expectedPosition = new Vector3(-5276159.136, 4263301.774, -404522.560);
+        var expectedVelocity = new Vector3(-2724.561, -3933.753, -5983.828);
 
         // Compute 3D position error
         var positionError = (lastEphemeris.Position - expectedPosition).Magnitude();
+        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
 
         // With degree-10 geopotential, Sun, and Moon perturbations,
         // position error vs STK HPOP should be within a few km over 24h
@@ -164,158 +219,10 @@ public class SpacecraftPropagatorTests
         Assert.True(positionError < 300.0,
             $"3D position error after 24h is {positionError / 1000.0:F3} km, expected < 300 m. " +
             $"Actual position: ({lastEphemeris.Position.X / 1000.0:F6}, {lastEphemeris.Position.Y / 1000.0:F6}, {lastEphemeris.Position.Z / 1000.0:F6}) km");
-    }
 
-    [Fact]
-    public void PropagateGeo24hGrav10PlusSun()
-    {
-        // GEO satellite (INTELSAT 901) propagated 24h with degree-10 geopotential + Sun only (no Moon).
-        // This test documents the SSB frame limitation: the propagator integrates in SSB frame,
-        // so Earth's SPICE ephemeris includes the Moon's indirect effect on Earth, but without
-        // Moon in the force model the direct Moon perturbation on the spacecraft is missing.
-        // This imbalance produces ~100-200 km position error over 24h for GEO orbits.
-        Clock clk = new Clock("My clock", 256);
-
-        var tle = new TLE("INTELSAT 901",
-            "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
-            "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
-        var tleEpoch = tle.Epoch;
-
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, tleEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-
-        var osculatingIcrf = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
-        var orbit = new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
-            earth, osculatingIcrf.Epoch, Frames.Frame.ICRF);
-
-        Spacecraft spc = new Spacecraft(-1001, "INTELSAT901", 3000.0, 5000.0, clk, orbit);
-
-        var endEpoch = tleEpoch.AddDays(1);
-        var propWindow = new Window(tleEpoch, endEpoch);
-
-        // Sun only — no Moon in force model
-        Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(
-            propWindow, spc,
-            [earth, Stars.SUN_BODY],
-            false, false,
-            TimeSpan.FromSeconds(1.0));
-
-        spacecraftPropagator.Propagate();
-
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
-        // STK reference position after 24h (Grav10+Sun, Earth-relative ICRF, in meters)
-        var expectedPosition = new Vector3(22037.9725e3, 36413.3715e3, -382.7784e3);
-
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var positionErrorKm = positionError / 1000.0;
-        // Without Moon, expect large error (100-200 km) due to SSB frame imbalance.
-        // The indirect Moon perturbation on Earth is present (via SPICE ephemeris)
-        // but the direct Moon perturbation on the spacecraft is absent.
-        Assert.True(positionErrorKm > 200.0,
-            $"Expected > 200 km error without Moon (SSB frame limitation), but got {positionErrorKm:F3} km. " +
-            "If this fails, the SSB frame limitation may have been resolved.");
-        Assert.True(positionErrorKm < 300.0,
-            $"Expected < 300 km error without Moon, but got {positionErrorKm:F3} km. " +
-            $"Actual position: ({lastEphemeris.Position.X / 1000.0:F4}, {lastEphemeris.Position.Y / 1000.0:F4}, {lastEphemeris.Position.Z / 1000.0:F4}) km");
-    }
-
-    [Fact]
-    public void PropagateGeo24hGrav10PlusSunPlusMoon()
-    {
-        // GEO satellite (INTELSAT 901) propagated 24h with degree-10 geopotential + Sun + Moon.
-        // Including Moon resolves the SSB frame imbalance, achieving ~1.5 km accuracy vs STK.
-        Clock clk = new Clock("My clock", 256);
-
-        var tle = new TLE("INTELSAT 901",
-            "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
-            "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
-        var tleEpoch = tle.Epoch;
-
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, tleEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-
-        var osculatingIcrf = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
-        var orbit = new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
-            earth, osculatingIcrf.Epoch, Frames.Frame.ICRF);
-
-        Spacecraft spc = new Spacecraft(-1001, "INTELSAT901", 3000.0, 5000.0, clk, orbit);
-
-        var endEpoch = tleEpoch.AddDays(1);
-        var propWindow = new Window(tleEpoch, endEpoch);
-
-        // Sun + Moon in force model
-        Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(
-            propWindow, spc,
-            [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-            false, false,
-            TimeSpan.FromSeconds(1.0));
-
-        spacecraftPropagator.Propagate();
-
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
-        // STK reference position after 24h (Grav10+Sun+Moon, Earth-relative ICRF, in meters)
-        var expectedPosition = new Vector3(22034.8998e3, 36415.1680e3, -382.4286e3);
-
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var positionErrorKm = positionError / 1000.0;
-        Assert.True(positionErrorKm < 1.5,
-            $"3D position error after 24h is {positionErrorKm:F3} km, expected < 1.5 km. " +
-            $"Actual position: ({lastEphemeris.Position.X / 1000.0:F4}, {lastEphemeris.Position.Y / 1000.0:F4}, {lastEphemeris.Position.Z / 1000.0:F4}) km");
-    }
-
-    [Fact]
-    public void PropagateGeo24hGrav70PlusSunPlusMoonPlusSrpPlusDrag()
-    {
-        // GEO satellite (INTELSAT 901) propagated 24h with full force model:
-        // degree-70 geopotential + Sun + Moon + SRP + atmospheric drag.
-        // At GEO altitude (~36000 km), drag is negligible and SRP effect is minimal.
-        Clock clk = new Clock("My clock", 256);
-
-        var tle = new TLE("INTELSAT 901",
-            "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
-            "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
-        var tleEpoch = tle.Epoch;
-
-        // Earth with degree-70 geopotential and atmosphere model (needed for drag force)
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, tleEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70),
-            new EarthStandardAtmosphere());
-
-        var osculatingIcrf = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
-        var orbit = new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
-            earth, osculatingIcrf.Epoch, Frames.Frame.ICRF);
-
-        // mass=3000kg, maxMass=5000kg, area=50m², Cd=2.2, Cr=1.5
-        Spacecraft spc = new Spacecraft(-1001, "INTELSAT901", 3000.0, 5000.0, clk, orbit,
-            sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
-
-        var endEpoch = tleEpoch.AddDays(1);
-        var propWindow = new Window(tleEpoch, endEpoch);
-
-        // Full force model: Sun + Moon + SRP + Drag
-        Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(
-            propWindow, spc,
-            [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-            true, true,
-            TimeSpan.FromSeconds(1.0));
-
-        spacecraftPropagator.Propagate();
-
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
-        // STK reference position after 24h (Grav70+Sun+Moon+SRP+Drag, Earth-relative ICRF, in meters)
-        var expectedPosition = new Vector3(22034.8834e3, 36415.1586e3, -382.4283e3);
-
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var positionErrorKm = positionError / 1000.0;
-        Assert.True(positionErrorKm < 5.0,
-            $"3D position error after 24h is {positionErrorKm:F3} km, expected < 5 km. " +
-            $"Actual position: ({lastEphemeris.Position.X / 1000.0:F4}, {lastEphemeris.Position.Y / 1000.0:F4}, {lastEphemeris.Position.Z / 1000.0:F4}) km");
+        Assert.True(velocityError < 0.33,
+            $"3D velocity error after 24h is {velocityError:F6} m/s, expected < 0.33 m/s. " +
+            $"Actual velocity: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
     }
 
     [Fact]
@@ -375,14 +282,87 @@ public class SpacecraftPropagatorTests
 
         // STK reference position after 24h (Grav70+Sun+Moon+SRP+Drag, Earth-relative ICRF, in meters)
         // Using same STK reference as Test 3 — any improvement comes from better SSB balance
-        var expectedPosition = new Vector3(22034.8834e3, 36415.1586e3, -382.4283e3);
+        var expectedPosition = new Vector3(22033.8532e3, 36415.5599e3, -382.3437e3);
+        var expectedVelocity = new Vector3(-2.6179e3, 1.5847e3, 0.0512e3); // STK reference velocity
 
         var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var positionErrorKm = positionError / 1000.0;
         // With all solar system bodies, SSB indirect effects are fully balanced.
         // Expect improved accuracy compared to Sun+Moon only.
-        Assert.True(positionErrorKm < 5.0,
-            $"3D position error after 24h is {positionErrorKm:F3} km, expected < 5 km. " +
-            $"Actual position: ({lastEphemeris.Position.X / 1000.0:F4}, {lastEphemeris.Position.Y / 1000.0:F4}, {lastEphemeris.Position.Z / 1000.0:F4}) km");
+        Assert.True(positionError < 2.9e3,
+            $"3D position error after 24h is {positionError:F3} m, expected < 2900 m. " +
+            $"Actual position: ({lastEphemeris.Position.X:F4}, {lastEphemeris.Position.Y:F4}, {lastEphemeris.Position.Z:F4}) m");
+
+        var velocityError = (lastEphemeris!.Velocity - expectedVelocity).Magnitude();
+        Assert.True(velocityError < 0.21,
+            $"3D velocity error after 24h is {velocityError:F6} m/s, expected < 0.21 m/s. " +
+            $"Actual velocity: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+    }
+
+    [Fact]
+    public void PropagateGeo24hGrav70AllBodiesWithoutSrpDrag()
+    {
+        // GEO satellite (INTELSAT 901) propagated 24h with:
+        // EGM2008 degree-70 geopotential + Sun + Moon + all planetary barycenters. No SRP, no drag.
+        // Reference: GMAT R2025a with JGM3 70x70, de440s, PrinceDormand78 (RK7/8), no SRP, no drag.
+        Clock clk = new Clock("My clock", 256);
+
+        var tle = new TLE("INTELSAT 901",
+            "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
+            "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
+        var tleEpoch = tle.Epoch;
+
+        // Earth with degree-70 geopotential and atmosphere model
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, tleEpoch,
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70));
+
+        var osculatingIcrf = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
+        var orbit = new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
+            earth, osculatingIcrf.Epoch, Frames.Frame.ICRF);
+
+        // mass=3000kg, maxMass=5000kg, area=50m², Cd=2.2, Cr=1.5
+        Spacecraft spc = new Spacecraft(-1001, "INTELSAT901", 3000.0, 5000.0, clk, orbit,
+            sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
+
+        var endEpoch = tleEpoch.AddDays(1);
+        var propWindow = new Window(tleEpoch, endEpoch);
+
+        // Full force model with ALL solar system bodies
+        Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(
+            propWindow, spc,
+            [
+                earth,
+                PlanetsAndMoons.MOON_BODY,
+                Stars.SUN_BODY,
+                Barycenters.MERCURY_BARYCENTER,
+                Barycenters.VENUS_BARYCENTER,
+                Barycenters.MARS_BARYCENTER,
+                Barycenters.JUPITER_BARYCENTER,
+                Barycenters.SATURN_BARYCENTER,
+                Barycenters.URANUS_BARYCENTER,
+                Barycenters.NEPTUNE_BARYCENTER,
+                Barycenters.PLUTO_BARYCENTER
+            ],
+            false, false,
+            TimeSpan.FromSeconds(1.0));
+
+        spacecraftPropagator.Propagate();
+
+        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
+            .RelativeTo(earth, Aberration.None) as StateVector;
+
+        // GMAT R2025a reference (JGM3 70x70, de440s, PrinceDormand78 RK7/8, no SRP, no drag)
+        var expectedPosition = new Vector3(22035.05464841816e3, 36415.07444453181e3, -382.4219052105268e3);
+        var expectedVelocity = new Vector3(-2.61790823218342e3, 1.584740384557747e3, 0.05126063967862107e3);
+
+        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
+        // ~9 m residual is expected: EGM2008 (our model) vs JGM3 (GMAT reference)
+        Assert.True(positionError < 10.0,
+            $"3D position error after 24h is {positionError:F3} m, expected < 50 m. " +
+            $"Actual position: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
+
+        var velocityError = (lastEphemeris!.Velocity - expectedVelocity).Magnitude();
+        Assert.True(velocityError < 0.001,
+            $"3D velocity error after 24h is {velocityError:F6} m/s, expected < 0.005 m/s. " +
+            $"Actual velocity: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
     }
 }

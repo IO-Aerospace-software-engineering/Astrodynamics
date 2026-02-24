@@ -67,7 +67,7 @@ public class SpacecraftPropagator : IPropagator
         var initialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector().RelativeTo(ssb, Aberration.None).ToStateVector();
         Integrator = new VVIntegrator(forces, DeltaT, initialState);
 
-        _svCacheSize = (uint)Window.Length.TotalSeconds / (uint)DeltaT.TotalSeconds + 2;
+        _svCacheSize = (uint)System.Math.Round(Window.Length.TotalSeconds / DeltaT.TotalSeconds, MidpointRounding.AwayFromZero) + 1;
         _svCache = new StateVector[_svCacheSize];
         _svCache[0] = initialState;
         for (int i = 1; i < _svCacheSize; i++)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.ConformanceRunner.Models;
@@ -13,6 +14,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
@@ -33,12 +35,13 @@ public class PropagatorSolver : ICategorySolver
         var frame = FrameMapper.Map(caseInput.Metadata.ReferenceFrame);
         var epoch = ParseTime(inputs.Epoch);
 
-        // Create central body with geopotential model
+        // Create central body with geopotential model and optional atmospheric model
         var geoModelPath = Path.Combine(_dataPath, inputs.GeopotentialModel);
         var geoParams = new GeopotentialModelParameters(geoModelPath, (ushort)inputs.GeopotentialDegree);
+        IAtmosphericModel atmosphericModel = inputs.ForceModel.Drag ? new EarthStandardAtmosphere() : null;
         var centralBody = new CelestialBody(
             BodyResolver.ResolveNaif(inputs.CentralBody),
-            frame, epoch, geoParams);
+            frame, epoch, geoParams, atmosphericModel);
 
         // Build initial state vector
         var sv = BuildStateVector(inputs.Orbit, centralBody, epoch, frame);
@@ -52,18 +55,18 @@ public class PropagatorSolver : ICategorySolver
         var bodies = new List<CelestialItem> { centralBody };
         foreach (var bodyName in inputs.PerturbationBodies)
         {
-            var upperName = bodyName.ToUpperInvariant();
-            if (upperName == "SUN")
-                bodies.Add(Stars.SUN_BODY);
-            else if (upperName == "MOON")
-                bodies.Add(PlanetsAndMoons.MOON_BODY);
-            else
-                bodies.Add(BodyResolver.Resolve(bodyName));
+            bodies.Add(BodyResolver.ResolveCelestialItem(bodyName));
         }
 
         // Create spacecraft
         var clock = new Clock("ConfClk", 256);
-        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", 100.0, 10000.0, clock, sv);
+        double mass = inputs.Spacecraft?.MassKg ?? 100.0;
+        double maxMass = inputs.Spacecraft?.MaxMassKg ?? mass * 10.0;
+        double area = inputs.Spacecraft?.SectionalAreaM2 ?? 1.0;
+        double cd = inputs.Spacecraft?.DragCoefficient ?? 2.2;
+        double cr = inputs.Spacecraft?.RadiationPressureCoefficient ?? 1.0;
+        var spacecraft = new Spacecraft(-999, "ConformanceTestSC", mass, maxMass, clock, sv,
+            sectionalArea: area, dragCoeff: cd, solarRadiationCoeff: cr);
 
         // Propagate
         var stepSize = TimeSpan.FromSeconds(inputs.StepSizeS);
@@ -126,6 +129,14 @@ public class PropagatorSolver : ICategorySolver
                 observer,
                 epoch,
                 frame);
+        }
+
+        if (orbit is TleOrbit tleOrbit)
+        {
+            var tle = new TLE(tleOrbit.Name, tleOrbit.Line1, tleOrbit.Line2);
+            var osculatingIcrf = tle.ToStateVector().ToFrame(frame).ToStateVector();
+            return new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
+                observer, osculatingIcrf.Epoch, frame);
         }
 
         throw new ArgumentException("Unknown orbit type");

@@ -64,6 +64,14 @@ public class StateVectorOrbit
     public double[] VelocityKmS { get; set; }
 }
 
+public class TleOrbit
+{
+    public string Type { get; set; }
+    public string Name { get; set; }
+    public string Line1 { get; set; }
+    public string Line2 { get; set; }
+}
+
 public class FieldOfView
 {
     public double HalfAngleDeg { get; set; }
@@ -96,6 +104,15 @@ public class SearchWindow
     public string End { get; set; }
 }
 
+public class SpacecraftInputs
+{
+    public double MassKg { get; set; }
+    public double? MaxMassKg { get; set; }
+    public double SectionalAreaM2 { get; set; }
+    public double DragCoefficient { get; set; }
+    public double RadiationPressureCoefficient { get; set; }
+}
+
 public class PropagatorInputs
 {
     public string Epoch { get; set; }
@@ -106,6 +123,7 @@ public class PropagatorInputs
     public string GeopotentialModel { get; set; }
     public List<string> PerturbationBodies { get; set; }
     public PropagatorForceModel ForceModel { get; set; }
+    public SpacecraftInputs Spacecraft { get; set; }
     public double StepSizeS { get; set; }
 }
 

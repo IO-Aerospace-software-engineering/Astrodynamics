@@ -83,6 +83,18 @@ public static class InputParser
         var bodies = inputs["perturbation_bodies"] as List<object>;
         result.PerturbationBodies = bodies?.ConvertAll(b => b.ToString()) ?? new List<string>();
 
+        if (inputs.TryGetValue("spacecraft", out var scObj) && scObj is Dictionary<object, object> sc)
+        {
+            result.Spacecraft = new SpacecraftInputs
+            {
+                MassKg = ToDouble(sc["mass_kg"]),
+                MaxMassKg = sc.ContainsKey("max_mass_kg") ? ToDouble(sc["max_mass_kg"]) : null,
+                SectionalAreaM2 = ToDouble(sc["sectional_area_m2"]),
+                DragCoefficient = ToDouble(sc["drag_coefficient"]),
+                RadiationPressureCoefficient = ToDouble(sc["radiation_pressure_coefficient"])
+            };
+        }
+
         return result;
     }
 
@@ -110,6 +122,17 @@ public static class InputParser
                 Type = type,
                 PositionKm = ParseVec3(orbit["position_km"]),
                 VelocityKmS = ParseVec3(orbit["velocity_km_s"])
+            };
+        }
+
+        if (type == "tle")
+        {
+            return new TleOrbit
+            {
+                Type = type,
+                Name = orbit["name"]?.ToString(),
+                Line1 = orbit["line1"]?.ToString(),
+                Line2 = orbit["line2"]?.ToString()
             };
         }
 
