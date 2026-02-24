@@ -1,12 +1,9 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: Astrodynamics CD
 
 on:
-  push :
-      tags:
-        - 'v*'
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
           logLevel:
@@ -18,27 +15,101 @@ on:
             - info
             - warning
             - debug
+
+env:
+  BUILD_TYPE: Release
+
 jobs:
-  build:
+  # Job 1: Build and test C++ native library on both platforms
+  build-native:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build C++
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
+
+    - name: C++ Tests (Linux)
+      working-directory: ${{github.workspace}}/build/IO.Astrodynamics.Tests
+      run: ./IO.Astrodynamics.Tests
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: C++ Tests (Windows)
+      working-directory: ${{github.workspace}}\build\IO.Astrodynamics.Tests\Release
+      shell: cmd
+      run: IO.Astrodynamics.Tests.exe
+      if: matrix.os == 'windows-latest'
+
+    - name: Upload native library (Linux)
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-linux
+        path: build/IO.Astrodynamics/libIO.Astrodynamics.so
+        retention-days: 5
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: Upload native library (Windows)
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-windows
+        path: |
+          build/IO.Astrodynamics/Release/IO.Astrodynamics.dll
+          build/IO.Astrodynamics/Release/IO.Astrodynamics.lib
+        retention-days: 5
+      if: matrix.os == 'windows-latest'
+
+  # Job 2: Build, test, pack, and publish .NET with freshly built native libraries
+  package-dotnet:
+    needs: build-native
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./IO.Astrodynamics.Net
+
     steps:
     - uses: actions/checkout@v4
+
+    - name: Download native Linux library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-linux
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+
+    - name: Download native Windows library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-windows
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+
+    - name: Verify native libraries
+      run: |
+        ls -la IO.Astrodynamics/resources/libIO.Astrodynamics.so
+        ls -la IO.Astrodynamics/resources/IO.Astrodynamics.dll
+        ls -la IO.Astrodynamics/resources/IO.Astrodynamics.lib
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build --no-restore --configuration Release
+
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release
-    - name: where i am
-      run: pwd
+
     - name: Package Framework
-      run: dotnet pack -p:NuspecFile=IO.Astrodynamics.nuspec --no-build --configuration Release 
+      run: dotnet pack -p:NuspecFile=IO.Astrodynamics.nuspec --no-build --configuration Release
+
     - name: Publish package
       run: dotnet nuget push "**/*.nupkg" --api-key ${{secrets.NUGET_TOKEN}} --source https://api.nuget.org/v3/index.json
