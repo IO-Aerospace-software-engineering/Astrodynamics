@@ -71,6 +71,59 @@ public class SpacecraftPropagatorTests
         var state3 = spc.StateVectorsRelativeToICRF.Values.ElementAt(3);
     }
 
+    [Theory]
+    [InlineData(3600, 1.0)]    // 1 hour, step 1s — evenly divides
+    [InlineData(7200, 1.0)]    // 2 hours, step 1s — evenly divides
+    [InlineData(5, 2.0)]       // 5s window, step 2s — non-fitting
+    [InlineData(10, 3.0)]      // 10s window, step 3s — non-fitting
+    [InlineData(100, 7.0)]     // 100s window, step 7s — non-fitting
+    [InlineData(86400, 100.0)] // 24h, step 100s — evenly divides
+    public void CacheSizeAndTimeSpanAreConsistent(double windowSeconds, double stepSeconds)
+    {
+        Clock clk = new Clock("My clock", 256);
+        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
+
+        var windowStart = TimeSystem.Time.J2000TDB;
+        var windowEnd = windowStart.AddSeconds(windowSeconds);
+        var window = new Window(windowStart, windowEnd);
+        var deltaT = TimeSpan.FromSeconds(stepSeconds);
+
+        Propagator.SpacecraftPropagator spacecraftPropagator = new Propagator.SpacecraftPropagator(
+            window, spc,
+            [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, deltaT);
+
+        spacecraftPropagator.Propagate();
+
+        var stateVectors = spc.StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+        var expectedCount = (uint)System.Math.Round(windowSeconds / stepSeconds, MidpointRounding.AwayFromZero) + 1;
+
+        // Check the number of state vectors matches the expected cache size
+        Assert.Equal((int)expectedCount, stateVectors.Length);
+
+        // Check the first state vector epoch matches the window start (in TDB)
+        var firstEpoch = stateVectors.First().Epoch;
+        var lastEpoch = stateVectors.Last().Epoch;
+
+        Assert.Equal(window.StartDate.TimeSpanFromJ2000().TotalSeconds, firstEpoch.TimeSpanFromJ2000().TotalSeconds, 6);
+
+        // Check the time span between first and last state vector is consistent with the window length
+        var actualSpan = (lastEpoch - firstEpoch).TotalSeconds;
+        var expectedSpan = (expectedCount - 1) * stepSeconds;
+        Assert.Equal(expectedSpan, actualSpan, 6);
+
+        // The last epoch should not exceed the window end
+        Assert.True(lastEpoch <= window.EndDate.AddSeconds(stepSeconds),
+            $"Last epoch {lastEpoch} exceeds window end {window.EndDate} + one step");
+
+        // Check uniform spacing between consecutive state vectors
+        for (int i = 1; i < stateVectors.Length; i++)
+        {
+            var dt = (stateVectors[i].Epoch - stateVectors[i - 1].Epoch).TotalSeconds;
+            Assert.Equal(stepSeconds, dt, 6);
+        }
+    }
+
     [Fact]
     public void CheckInitialStepWithUTCEpoch()
     {
