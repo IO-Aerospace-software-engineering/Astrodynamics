@@ -23,6 +23,13 @@
 
 #pragma region Proxy
 
+static thread_local char lastError[2048] = "";
+
+const char *GetLastErrorProxy()
+{
+    return lastError;
+}
+
 const char *GetSpiceVersionProxy()
 {
     ActivateErrorManagement();
@@ -35,43 +42,55 @@ const char *GetSpiceVersionProxy()
     return strdup(version);
 }
 
-void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
+bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
 {
-    ActivateErrorManagement();
-    auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(launchDto.recoverySite.bodyId);
-    IO::Astrodynamics::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name,
-                                            ToPlanetodetic(launchDto.launchSite.coordinates),
-                                            std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-                                                    launchDto.launchSite.bodyId),
-                                            launchDto.launchSite.directoryPath);
-    IO::Astrodynamics::Sites::LaunchSite rs(launchDto.recoverySite.id, launchDto.recoverySite.name,
-                                            ToPlanetodetic(launchDto.recoverySite.coordinates),
-                                            std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-                                                    launchDto.recoverySite.bodyId),
-                                            launchDto.launchSite.directoryPath);
-    IO::Astrodynamics::OrbitalParameters::StateVector sv(celestialBody, ToVector3D(launchDto.targetOrbit.position),
-                                                         ToVector3D(launchDto.targetOrbit.velocity),
-                                                         IO::Astrodynamics::Time::TDB(
-                                                                 std::chrono::duration<double>(
-                                                                         launchDto.targetOrbit.epoch)),
-                                                         IO::Astrodynamics::Frames::Frames(
-                                                                 launchDto.targetOrbit.inertialFrame));
-    IO::Astrodynamics::Maneuvers::Launch launch(ls, rs, launchDto.launchByDay, sv);
-    auto tdbWindow = ToTDBWindow(launchDto.window);
-    auto res = launch.GetLaunchWindows(
-            IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(tdbWindow.GetStartDate().ToUTC(),
-                                                                          tdbWindow.GetEndDate().ToUTC()));
-    for (size_t i = 0; i < res.size(); ++i)
+    try
     {
-        launchDto.windows[i] = ToWindowDTO(res[i].GetWindow());
-        launchDto.inertialAzimuth[i] = res[i].GetInertialAzimuth();
-        launchDto.nonInertialAzimuth[i] = res[i].GetNonInertialAzimuth();
-        launchDto.inertialInsertionVelocity[i] = res[i].GetInertialInsertionVelocity();
-        launchDto.nonInertialInsertionVelocity[i] = res[i].GetNonInertialInsertionVelocity();
+        ActivateErrorManagement();
+        auto celestialBody = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(launchDto.recoverySite.bodyId);
+        IO::Astrodynamics::Sites::LaunchSite ls(launchDto.launchSite.id, launchDto.launchSite.name,
+                                                ToPlanetodetic(launchDto.launchSite.coordinates),
+                                                std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
+                                                        launchDto.launchSite.bodyId),
+                                                launchDto.launchSite.directoryPath);
+        IO::Astrodynamics::Sites::LaunchSite rs(launchDto.recoverySite.id, launchDto.recoverySite.name,
+                                                ToPlanetodetic(launchDto.recoverySite.coordinates),
+                                                std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
+                                                        launchDto.recoverySite.bodyId),
+                                                launchDto.launchSite.directoryPath);
+        IO::Astrodynamics::OrbitalParameters::StateVector sv(celestialBody, ToVector3D(launchDto.targetOrbit.position),
+                                                             ToVector3D(launchDto.targetOrbit.velocity),
+                                                             IO::Astrodynamics::Time::TDB(
+                                                                     std::chrono::duration<double>(
+                                                                             launchDto.targetOrbit.epoch)),
+                                                             IO::Astrodynamics::Frames::Frames(
+                                                                     launchDto.targetOrbit.inertialFrame));
+        IO::Astrodynamics::Maneuvers::Launch launch(ls, rs, launchDto.launchByDay, sv);
+        auto tdbWindow = ToTDBWindow(launchDto.window);
+        auto res = launch.GetLaunchWindows(
+                IO::Astrodynamics::Time::Window<IO::Astrodynamics::Time::UTC>(tdbWindow.GetStartDate().ToUTC(),
+                                                                              tdbWindow.GetEndDate().ToUTC()));
+        for (size_t i = 0; i < res.size(); ++i)
+        {
+            launchDto.windows[i] = ToWindowDTO(res[i].GetWindow());
+            launchDto.inertialAzimuth[i] = res[i].GetInertialAzimuth();
+            launchDto.nonInertialAzimuth[i] = res[i].GetNonInertialAzimuth();
+            launchDto.inertialInsertionVelocity[i] = res[i].GetInertialInsertionVelocity();
+            launchDto.nonInertialInsertionVelocity[i] = res[i].GetNonInertialInsertionVelocity();
+        }
+        if (failed_c())
+        {
+            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
+        return true;
     }
-    if (failed_c())
+    catch (const std::exception &e)
     {
-        throw IO::Astrodynamics::Exception::SDKException(HandleError());
+        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
     }
 }
 
@@ -88,7 +107,7 @@ bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::
 
     for (unsigned int i = 0; i < size; ++i)
     {
-        if (celestialBodies.find(sv[0].centerOfMotionId) == celestialBodies.end())
+        if (celestialBodies.find(sv[i].centerOfMotionId) == celestialBodies.end())
         {
             celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
                     sv[i].centerOfMotionId);
@@ -137,95 +156,93 @@ bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics
     return true;
 }
 
-void ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
+bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
                           const char *frame,
                           double stepSize, IO::Astrodynamics::API::DTO::StateOrientationDTO *so)
 {
-    ActivateErrorManagement();
-    if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
+    try
     {
-        throw IO::Astrodynamics::Exception::InvalidArgumentException(
-                "Step size to small or search window to large. The number of State orientation must be lower than 10000");
-    }
-    //Build platform id
-    SpiceInt id = spacecraftId * 1000;
+        ActivateErrorManagement();
+        if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
+        {
+            std::strncpy(lastError,
+                    "Step size to small or search window to large. The number of State orientation must be lower than 10000",
+                    sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
+        //Build platform id
+        SpiceInt id = spacecraftId * 1000;
 
-    // Convert tolerance from TDB seconds to encoded spacecraft clock ticks.
-    // ckgpav_c requires tolerance in ticks, not seconds.
-    // Computing once at window start is valid for linear (type 1) SCLK.
-    SpiceDouble sclk0, sclkPlusTol;
-    sce2c_c(spacecraftId, searchWindow.start, &sclk0);
-    sce2c_c(spacecraftId, searchWindow.start + tolerance, &sclkPlusTol);
-    SpiceDouble toleranceInTicks = std::abs(sclkPlusTol - sclk0);
+        // Convert tolerance from TDB seconds to encoded spacecraft clock ticks.
+        // ckgpav_c requires tolerance in ticks, not seconds.
+        // Computing once at window start is valid for linear (type 1) SCLK.
+        SpiceDouble sclk0, sclkPlusTol;
+        sce2c_c(spacecraftId, searchWindow.start, &sclk0);
+        sce2c_c(spacecraftId, searchWindow.start + tolerance, &sclkPlusTol);
+        SpiceDouble toleranceInTicks = std::abs(sclkPlusTol - sclk0);
 
-    double epoch = searchWindow.start;
-    int idx{0};
-    while (epoch <= searchWindow.end)
-    {
-        //Get encoded clock
-        SpiceDouble sclk = IO::Astrodynamics::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(spacecraftId,
-                                                                                                    IO::Astrodynamics::Time::TDB(
-                                                                                                            std::chrono::duration<double>(
-                                                                                                                    epoch)));
+        double epoch = searchWindow.start;
+        int idx{0};
+        while (epoch <= searchWindow.end && idx < 10000)
+        {
+            //Get encoded clock
+            SpiceDouble sclk = IO::Astrodynamics::Kernels::SpacecraftClockKernel::ConvertToEncodedClock(spacecraftId,
+                                                                                                        IO::Astrodynamics::Time::TDB(
+                                                                                                                std::chrono::duration<double>(
+                                                                                                                        epoch)));
 
-        SpiceDouble cmat[3][3]{};
-        SpiceDouble av[3]{};
-        SpiceDouble clkout;
-        SpiceBoolean found;
+            SpiceDouble cmat[3][3]{};
+            SpiceDouble av[3]{};
+            SpiceDouble clkout;
+            SpiceBoolean found;
 
-        //Get orientation and angular velocity
-        ckgpav_c(id, sclk, toleranceInTicks, frame, cmat, av, &clkout, &found);
+            //Get orientation and angular velocity
+            ckgpav_c(id, sclk, toleranceInTicks, frame, cmat, av, &clkout, &found);
+            if (failed_c())
+            {
+                // CK segment may not carry angular velocity (e.g. Type 1 CK).
+                // Reset the error and fall back to rotation-only query; av stays zero.
+                reset_c();
+                ckgp_c(id, sclk, toleranceInTicks, frame, cmat, &clkout, &found);
+            }
+
+            if (!found)
+            {
+                std::strncpy(lastError, "No orientation found", sizeof(lastError) - 1);
+                lastError[sizeof(lastError) - 1] = '\0';
+                return false;
+            }
+
+            // Use Matrix(double[3][3]) constructor directly — no heap allocation needed
+            IO::Astrodynamics::Math::Matrix mat(cmat);
+            IO::Astrodynamics::Math::Quaternion q(mat);
+
+            double correctedEpoch{};
+            sct2e_c(spacecraftId, clkout, &correctedEpoch);
+            so[idx].epoch = correctedEpoch;
+            so[idx].SetFrame(frame);
+            so[idx].orientation = ToQuaternionDTO(q);
+            so[idx].angularVelocity.x = av[0];
+            so[idx].angularVelocity.y = av[1];
+            so[idx].angularVelocity.z = av[2];
+
+            epoch += stepSize;
+            idx++;
+        }
         if (failed_c())
         {
-            // CK segment may not carry angular velocity (e.g. Type 1 CK).
-            // Reset the error and fall back to rotation-only query; av stays zero.
-            reset_c();
-            ckgp_c(id, sclk, toleranceInTicks, frame, cmat, &clkout, &found);
+            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
         }
-
-        if (!found)
-        {
-            throw IO::Astrodynamics::Exception::SDKException("No orientation found");
-        }
-
-        //Build array pointers
-        double **arrayCmat;
-        arrayCmat = new double *[3];
-        for (int i = 0; i < 3; i++)
-        {
-            arrayCmat[i] = new double[3]{};
-        }
-
-        for (size_t i = 0; i < 3; i++)
-        {
-            for (size_t j = 0; j < 3; j++)
-            {
-                arrayCmat[i][j] = cmat[i][j];
-            }
-        }
-
-        IO::Astrodynamics::Math::Quaternion q(IO::Astrodynamics::Math::Matrix(3, 3, arrayCmat));
-
-        //Free memory
-        for (int i = 0; i < 3; i++)
-            delete[] arrayCmat[i];
-        delete[] arrayCmat;
-
-        double correctedEpoch{};
-        sct2e_c(spacecraftId, clkout, &correctedEpoch);
-        so[idx].epoch = correctedEpoch;
-        so[idx].SetFrame(frame);
-        so[idx].orientation = ToQuaternionDTO(q);
-        so[idx].angularVelocity.x = av[0];
-        so[idx].angularVelocity.y = av[1];
-        so[idx].angularVelocity.z = av[2];
-
-        epoch += stepSize;
-        idx++;
+        return true;
     }
-    if (failed_c())
+    catch (const std::exception &e)
     {
-        HandleError();
+        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
     }
 }
 
@@ -235,8 +252,8 @@ bool LoadKernelsProxy(const char *path)
     IO::Astrodynamics::Kernels::KernelsLoader::Load(path);
     if (failed_c())
     {
-        return false;
         HandleError();
+        return false;
     }
     return true;
 }
@@ -277,27 +294,42 @@ const char *UTCToStringProxy(double secondsFromJ2000)
     return strdup(str.c_str());
 }
 
-void ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
+bool ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId,
                         const char *frame, const char *aberration, double stepSize,
                         IO::Astrodynamics::API::DTO::StateVectorDTO *stateVectors)
 {
-    ActivateErrorManagement();
-    if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
+    try
     {
-        throw IO::Astrodynamics::Exception::InvalidArgumentException(
-                "Step size to small or search window to large. The number of State vector must be lower than 10000");
+        ActivateErrorManagement();
+        if ((searchWindow.end - searchWindow.start) / stepSize > 10000)
+        {
+            std::strncpy(lastError,
+                    "Step size to small or search window to large. The number of State vector must be lower than 10000",
+                    sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
+        int idx = 0;
+        double epoch = searchWindow.start;
+        while (epoch <= searchWindow.end && idx < 10000)
+        {
+            stateVectors[idx] = ReadEphemerisAtGivenEpochProxy(epoch, observerId, targetId, frame, aberration);
+            epoch += stepSize;
+            idx++;
+        }
+        if (failed_c())
+        {
+            std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+            lastError[sizeof(lastError) - 1] = '\0';
+            return false;
+        }
+        return true;
     }
-    int idx = 0;
-    double epoch = searchWindow.start;
-    while (epoch <= searchWindow.end)
+    catch (const std::exception &e)
     {
-        stateVectors[idx] = ReadEphemerisAtGivenEpochProxy(epoch, observerId, targetId, frame, aberration);
-        epoch += stepSize;
-        idx++;
-    }
-    if (failed_c())
-    {
-        HandleError();
+        std::strncpy(lastError, e.what(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
     }
 }
 
@@ -317,6 +349,7 @@ void FindWindowsOnDistanceConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO
             IO::Astrodynamics::Time::TimeSpan(stepSize));
     for (size_t i = 0; i < res.size(); ++i)
     {
+        if (i >= 1000) break;
         windows[i] = ToWindowDTO(res[i]);
     }
     if (failed_c())
@@ -348,6 +381,7 @@ FindWindowsOnOccultationConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
 
     for (size_t i = 0; i < res.size(); ++i)
     {
+        if (i >= 1000) break;
         windows[i] = ToWindowDTO(res[i]);
     }
     if (failed_c())
@@ -381,6 +415,7 @@ FindWindowsOnCoordinateConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO se
 
     for (size_t i = 0; i < res.size(); ++i)
     {
+        if (i >= 1000) break;
         windows[i] = ToWindowDTO(res[i]);
     }
     if (failed_c())
@@ -420,6 +455,7 @@ void FindWindowsOnIlluminationConstraintProxy(IO::Astrodynamics::API::DTO::Windo
                     stepSize), method);
     for (size_t i = 0; i < res.size(); ++i)
     {
+        if (i >= 1000) break;
         windows[i] = ToWindowDTO(res[i]);
     }
     if (failed_c())
@@ -447,6 +483,7 @@ FindWindowsInFieldOfViewConstraintProxy(IO::Astrodynamics::API::DTO::WindowDTO s
                     stepSize));
     for (size_t i = 0; i < res.size(); ++i)
     {
+        if (i >= 1000) break;
         windows[i] = ToWindowDTO(res[i]);
     }
     if (failed_c())

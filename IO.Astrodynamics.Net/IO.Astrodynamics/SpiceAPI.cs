@@ -83,12 +83,15 @@ public class SpiceAPI
         [In] [Out] Window[] windows);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern void ReadOrientationProxy(Window searchWindow, int spacecraftId, double tolerance,
+    private static extern bool ReadOrientationProxy(Window searchWindow, int spacecraftId, double tolerance,
         string frame, double stepSize, [In] [Out] StateOrientation[] stateOrientations);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern void ReadEphemerisProxy(Window searchWindow, int observerId, int targetId,
+    private static extern bool ReadEphemerisProxy(Window searchWindow, int observerId, int targetId,
         string frame, string aberration, double stepSize, [In] [Out] StateVector[] stateVectors);
+
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern IntPtr GetLastErrorProxy();
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern bool
@@ -153,6 +156,16 @@ public class SpiceAPI
 
     //Use the same lock for all cspice calls because it doesn't support multithreading.
     private static object lockObject = new object();
+
+    /// <summary>
+    ///     Retrieve the last error message from the native proxy layer and throw an InvalidOperationException.
+    /// </summary>
+    private static void ThrowLastProxyError()
+    {
+        var ptr = GetLastErrorProxy();
+        var msg = Marshal.PtrToStringAnsi(ptr);
+        throw new InvalidOperationException(string.IsNullOrEmpty(msg) ? "Native proxy call failed" : msg);
+    }
 
     /// <summary>
     ///     Get spice toolkit version number
@@ -581,9 +594,10 @@ public class SpiceAPI
                 var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
                 var window = new TimeSystem.Window(start.ToTDB(), end.ToTDB());
                 var stateVectors = new StateVector[messageSize];
-                ReadEphemerisProxy(window.Convert(), observerId, targetId, frame.Name,
+                if (!ReadEphemerisProxy(window.Convert(), observerId, targetId, frame.Name,
                     aberration.GetDescription(), stepSize.TotalSeconds,
-                    stateVectors);
+                    stateVectors))
+                    ThrowLastProxyError();
                 orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
                     new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame), frame)));
             }
@@ -673,9 +687,10 @@ public class SpiceAPI
         lock (lockObject)
         {
             var stateOrientations = new StateOrientation[10000];
-            ReadOrientationProxy(searchWindow.Convert(), naifId, tolerance.TotalSeconds,
+            if (!ReadOrientationProxy(searchWindow.Convert(), naifId, tolerance.TotalSeconds,
                 referenceFrame.Name, stepSize.TotalSeconds,
-                stateOrientations);
+                stateOrientations))
+                ThrowLastProxyError();
             // ByValTStr marshaling returns "" (not null) for zero-padded unwritten slots;
             // use IsNullOrEmpty to correctly exclude entries the proxy did not populate.
             return stateOrientations.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x => new OrbitalParameters.StateOrientation(

@@ -23,14 +23,14 @@ namespace IO::Astrodynamics::API::DTO
 
         void SetFrame(const char* frame)
         {
-            std::strcpy(FrameName,frame);
-            FrameName[31]='\0';
+            std::strncpy(FrameName, frame, sizeof(FrameName) - 1);
+            FrameName[sizeof(FrameName) - 1] = '\0';
         }
 
         void SetName(const char* name)
         {
-            std::strcpy(Name,name);
-            Name[31]='\0';
+            std::strncpy(Name, name, sizeof(Name) - 1);
+            Name[sizeof(Name) - 1] = '\0';
         }
     };
 }

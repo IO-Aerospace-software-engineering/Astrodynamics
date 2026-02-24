@@ -4,7 +4,7 @@
         <id>IO.Astrodynamics</id>
         <authors>Sylvain Guillet</authors>
         <copyright>Sylvain Guillet</copyright>
-        <version>8.4.3-preview</version>
+        <version>8.5.0-preview</version>
         <title>Astrodynamics framework</title>
         <icon>images\dragonfly-dark-trans.png</icon>
         <readme>docs\README.md</readme>
