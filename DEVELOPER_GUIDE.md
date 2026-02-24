@@ -189,6 +189,8 @@ Singleton class providing access to SPICE operations.
 | `ClearKernels()` | Unload all kernels |
 | `GetLoadedKernels()` | Get list of currently loaded kernels |
 | `GetSpiceVersion()` | Get SPICE toolkit version |
+| `ReadEphemeris(...)` | Read state vectors (throws `InvalidOperationException` on native error) |
+| `ReadOrientation(...)` | Read spacecraft orientations (throws `InvalidOperationException` on native error) |
 
 ```csharp
 // Load all kernels from a directory
@@ -2097,7 +2099,10 @@ try
 }
 catch (InvalidOperationException ex)
 {
-    // Likely kernel not loaded or epoch out of coverage
+    // Likely kernel not loaded, epoch out of coverage, or native proxy error
+    // Native C++ errors (from ReadEphemeris, ReadOrientation, Launch) are
+    // caught at the P/Invoke boundary and re-thrown as InvalidOperationException
+    // with the original error message from the SPICE toolkit.
     Console.WriteLine($"Ephemeris error: {ex.Message}");
 }
 catch (ArgumentException ex)
@@ -2796,8 +2801,20 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 ## Version Information
 
+- NuGet Package: 8.5.0-preview
+- CLI Tool: 0.8.5.0-preview
 - Framework: .NET 8.0 / .NET 10.0
 - SPICE Toolkit: CSPICE N0067
 - License: LGPL-2.1
+
+### Breaking Changes in 8.5.0
+
+The native C++ proxy layer has been updated for safety and correctness:
+
+- **Native error propagation**: `ReadOrientationProxy`, `ReadEphemerisProxy`, and `LaunchProxy` now return `bool` instead of `void`. C++ exceptions no longer cross the P/Invoke boundary (which previously could crash the .NET process). Errors are retrieved via `GetLastErrorProxy()` and surfaced as `InvalidOperationException` in .NET.
+- **Ephemeris write fix**: `WriteEphemerisProxy` now correctly uses the per-element center of motion ID (`sv[i]`) instead of always using the first element (`sv[0]`).
+- **Buffer safety**: All `FindWindows*` functions are bounds-checked to their declared array size (1000). `ReadOrientation`/`ReadEphemeris` loops are bounds-checked to 10000. All DTO string setters use `strncpy` instead of `strcpy`.
+- **Memory safety**: `ReadOrientationProxy` no longer uses heap-allocated matrices; uses the stack-based `Matrix(double[3][3])` constructor instead, eliminating memory leak risk.
+- **Native library**: Both `libIO.Astrodynamics.so` (Linux) and `IO.Astrodynamics.dll` (Windows) must be rebuilt from this version. Old native binaries are **incompatible** with the new .NET P/Invoke signatures.
 
 Contact: [contact@io-aerospace.org](mailto:contact@io-aerospace.org)

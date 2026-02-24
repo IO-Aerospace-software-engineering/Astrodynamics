@@ -168,7 +168,7 @@ public class CelestialBodyTests
             TimeSpan.FromDays(1.0)).ToArray();
         Assert.Equal(2, res.Length);
         Assert.Equal(
-            new StateVector(new Vector3(-29069076368.647408, 132303142494.37561, 57359794320.98976), new Vector3(-29695.854459557304, -5497.347182651618, -2382.9422283991967),
+            new StateVector(new Vector3(-29070982363.61077, 132302789641.47415, 57359641369.38879), new Vector3(-29695.777755257383, -5497.7027267302865, -2383.0961958293515),
                 TestHelpers.Sun, TimeSystem.Time.J2000UTC + TimeSpan.FromDays(1.0), Frames.Frame.ICRF), res.ElementAt(1).ToStateVector(), TestHelpers.StateVectorComparer);
     }
     

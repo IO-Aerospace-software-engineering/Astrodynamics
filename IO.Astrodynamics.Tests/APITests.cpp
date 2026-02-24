@@ -7,7 +7,6 @@
 #include "Proxy.h"
 #include "InertialFrames.h"
 #include "Spacecraft.h"
-#include "InvalidArgumentException.h"
 #include <Converters.cpp>
 #include <TLE.h>
 
@@ -94,7 +93,7 @@ TEST(API, ReadEphemerisProxy)
     searchWindow.end = 100.0;
 
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[5000];
-    ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 10.0, sv);
+    ASSERT_TRUE(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 10.0, sv));
     ASSERT_DOUBLE_EQ(-291569264.48965073, sv[0].position.x);
     ASSERT_DOUBLE_EQ(-266709187.1624887, sv[0].position.y);
     ASSERT_DOUBLE_EQ(-76099155.244104564, sv[0].position.z);
@@ -113,8 +112,8 @@ TEST(API, ReadEphemerisProxyException)
     searchWindow.end = 10001.0;
 
     IO::Astrodynamics::API::DTO::StateVectorDTO sv[5000];
-    ASSERT_THROW(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv),
-                 IO::Astrodynamics::Exception::InvalidArgumentException);
+    ASSERT_FALSE(ReadEphemerisProxy(searchWindow, 399, 301, "J2000", "LT", 1.0, sv));
+    ASSERT_STRNE("", GetLastErrorProxy());
 }
 
 TEST(API, ReadSpacecraftOrientationProxyException)
@@ -124,8 +123,8 @@ TEST(API, ReadSpacecraftOrientationProxyException)
     searchWindow.end = 10001.0;
 
     IO::Astrodynamics::API::DTO::StateOrientationDTO so[10000];
-    ASSERT_THROW(ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so),
-                 IO::Astrodynamics::Exception::InvalidArgumentException);
+    ASSERT_FALSE(ReadOrientationProxy(searchWindow, -172, 10.0 * std::pow(2.0, ClockAccuracy), "J2000", 1.0, so));
+    ASSERT_STRNE("", GetLastErrorProxy());
 }
 
 TEST(API, ToTDB)

@@ -55,6 +55,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - P/Invoke wrapper around native SPICE toolkit (NASA's CSPICE)
 - Platform-specific libraries: `IO.Astrodynamics.dll` (Windows), `libIO.Astrodynamics.so` (Linux)
 - Thread-safe access through lock synchronization
+- Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`
 
 **Data Provider Pattern**
 - `IDataProvider` interface with implementations:
@@ -648,19 +649,20 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
 
 1. **Thread Safety**: CSPICE operations are not thread-safe - all API calls must use the shared lock object
 2. **Kernel Management**: Load/unload SPICE kernels appropriately to avoid memory leaks
-3. **Native Resources**: Properly free unmanaged memory returned from native calls
-4. **Time Systems**: Be explicit about time frames when working with epochs
-5. **Coordinate Systems**: Always specify reference frames for state vectors and transformations
-6. **Mean vs Osculating Elements**: Always check `ElementsType` when working with orbital parameters:
+3. **Native Error Handling**: The C++ proxy functions (`ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy`) return `bool` instead of throwing exceptions across the P/Invoke boundary. On failure, call `GetLastErrorProxy()` for the error message. The `SpiceAPI` class wraps this pattern and throws `InvalidOperationException` with the native message.
+4. **Native Resources**: Properly free unmanaged memory returned from native calls
+5. **Time Systems**: Be explicit about time frames when working with epochs
+6. **Coordinate Systems**: Always specify reference frames for state vectors and transformations
+7. **Mean vs Osculating Elements**: Always check `ElementsType` when working with orbital parameters:
    - Use `ToOsculating()` for TLE position/velocity calculations
    - Never call `ToStateVector()` directly on mean KeplerianElements
    - Use `TLE.Create()` only with mean elements (validates `ElementsType.Mean`)
-7. **CCSDS OMM Handling**: When working with OMM files:
+8. **CCSDS OMM Handling**: When working with OMM files:
    - Use `Omm.LoadFromFile()` with validation for production code
    - Check `IsTleCompatible` before calling `ToTle()`
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
-8. **CCSDS OPM Handling**: When working with OPM files:
+9. **CCSDS OPM Handling**: When working with OPM files:
    - Use `Opm.LoadFromFile()` with validation for production code
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
    - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId, clock, maxMass)
@@ -668,7 +670,7 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - Unit conversions (km↔m, deg↔rad) are automatic
    - Maneuver conversion is one-way: Spacecraft→OPM (OPM maneuvers are archival only)
    - User-defined parameters support custom mission-specific data
-9. **Attitude Maneuvers**: When implementing attitude control:
+10. **Attitude Maneuvers**: When implementing attitude control:
    - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)
    - Use single-vector attitudes (`NadirAttitude`, `ProgradeAttitude`, `NormalAttitude`, etc.) only when roll is unconstrained
    - Use `NormalAttitude` / `AntiNormalAttitude` for plane-change burns (h = r × v)
@@ -679,14 +681,14 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
    - Use factory methods `TriadAttitude.CreateLVLH()` and `CreateProgradeWithSunTracking()` for common operational attitudes
    - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing
-10. **Geopotential Gravity**: When working with spherical harmonic gravity models:
+11. **Geopotential Gravity**: When working with spherical harmonic gravity models:
    - Pass `GeopotentialModelParameters` to `CelestialBody` constructor to enable geopotential
    - Use degree 10 for typical LEO accuracy; degree 2 for J2-only analysis
    - EGM2008 model file: `Data/SolarSystem/EGM2008_to70_TideFree` (degrees 2-70)
    - `GeopotentialGravitationalField` is NOT thread-safe — one instance per thread
    - Legendre functions use geodesy normalization without Condon-Shortley phase
    - The model file starts at degree 2; degrees 0 and 1 are handled as zeros internally
-11. **Force Models (Drag & SRP)**: When working with atmospheric drag or solar radiation pressure:
+12. **Force Models (Drag & SRP)**: When working with atmospheric drag or solar radiation pressure:
    - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3
    - Atmospheric drag uses **atmosphere-relative velocity** (body-centered velocity minus co-rotation)
    - SRP includes **Cr coefficient** from `Spacecraft.SolarRadiationCoeff` (default 1.0, range 1.0–2.0)

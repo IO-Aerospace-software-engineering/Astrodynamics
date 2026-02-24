@@ -26,8 +26,8 @@ namespace IO::Astrodynamics::API::DTO
 
         void SetFrame(const char* inputFrame)
         {
-            std::strcpy(frame,inputFrame);
-            frame[31]='\0';
+            std::strncpy(frame, inputFrame, sizeof(frame) - 1);
+            frame[sizeof(frame) - 1] = '\0';
         }
 
     };

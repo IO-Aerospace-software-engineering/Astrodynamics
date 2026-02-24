@@ -9,4 +9,5 @@ public static class Constants
     public static readonly DirectoryInfo OutputPath = new("Data/User/");
     public static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
     public static readonly DirectoryInfo PhsrmDataPath = new("Data/PHSRM");
+    public static readonly DirectoryInfo ClpsDataPath = new("Data/CLPS");
 }

@@ -27,8 +27,8 @@ namespace IO::Astrodynamics::API::DTO
 
         void SetFrame(const char* inputFrame)
         {
-            std::strcpy(inertialFrame,inputFrame);
-            inertialFrame[31]='\0';
+            std::strncpy(inertialFrame, inputFrame, sizeof(inertialFrame) - 1);
+            inertialFrame[sizeof(inertialFrame) - 1] = '\0';
         }
     };
 }

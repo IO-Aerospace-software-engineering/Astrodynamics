@@ -30,6 +30,12 @@ extern "C" {
 #endif
 
 /**
+ * Get the last error message from a failed proxy call
+ * @return Error message string, or empty string if no error
+ */
+MODULE_API const char *GetLastErrorProxy();
+
+/**
  * Get the spice version
  * @return version
  */
@@ -67,8 +73,9 @@ MODULE_API bool WriteOrientationProxy(const char *filePath, int objectId,
  * @param aberration Aberration correction
  * @param stepSize Step size for the search
  * @param stateVectors Array to store the state vectors
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details)
  */
-MODULE_API void
+MODULE_API bool
 ReadEphemerisProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int observerId, int targetId, const char *frame,
                    const char *aberration, double stepSize,
                    IO::Astrodynamics::API::DTO::StateVectorDTO stateVectors[10000]);
@@ -93,8 +100,9 @@ MODULE_API IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpoch
  * @param frame Reference frame
  * @param stepSize Step size for the search
  * @param so Array to store the state orientations
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details)
  */
-MODULE_API void
+MODULE_API bool
 ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,
                      const char *frame, double stepSize,
                      IO::Astrodynamics::API::DTO::StateOrientationDTO so[10000]);
@@ -102,8 +110,9 @@ ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int sp
 /**
  * Evaluate launch windows
  * @param launchDto Launch data transfer object
+ * @return true if successful, false otherwise (call GetLastErrorProxy for details)
  */
-MODULE_API void LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
+MODULE_API bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto);
 
 /**
  * Load kernels

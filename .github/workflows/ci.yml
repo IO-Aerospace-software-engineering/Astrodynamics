@@ -1,11 +1,8 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
 name: Astrodynamics CI
 
 on:
   pull_request:
-    branches: [ "main" ] 
+    branches: [ "main" ]
   workflow_dispatch:
     inputs:
           logLevel:
@@ -17,13 +14,62 @@ on:
             - info
             - warning
             - debug
+
+env:
+  BUILD_TYPE: Release
+
 jobs:
-  build:
+  # Job 1: Build and test C++ native library on both platforms
+  build-native:
     strategy:
       matrix:
-        os: [ubuntu-latest,windows-latest]
-        
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
 
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build C++
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
+
+    - name: C++ Tests (Linux)
+      working-directory: ${{github.workspace}}/build/IO.Astrodynamics.Tests
+      run: ./IO.Astrodynamics.Tests
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: C++ Tests (Windows)
+      working-directory: ${{github.workspace}}\build\IO.Astrodynamics.Tests\Release
+      shell: cmd
+      run: IO.Astrodynamics.Tests.exe
+      if: matrix.os == 'windows-latest'
+
+    - name: Upload native library (Linux)
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-linux
+        path: build/IO.Astrodynamics/libIO.Astrodynamics.so
+        retention-days: 1
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: Upload native library (Windows)
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-windows
+        path: |
+          build/IO.Astrodynamics/Release/IO.Astrodynamics.dll
+          build/IO.Astrodynamics/Release/IO.Astrodynamics.lib
+        retention-days: 1
+      if: matrix.os == 'windows-latest'
+
+  # Job 2: Build and test .NET with freshly built native libraries
+  build-dotnet:
+    needs: build-native
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -31,13 +77,28 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Download native Linux library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-linux
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+      if: matrix.os == 'ubuntu-latest'
+
+    - name: Download native Windows library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-windows
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+      if: matrix.os == 'windows-latest'
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
+
     - name: Restore dependencies
       run: dotnet restore
-#    - name: Build
-#      run: dotnet build --no-restore -c Release
+
     - name: Test
       run: dotnet test --verbosity Normal -c Release
