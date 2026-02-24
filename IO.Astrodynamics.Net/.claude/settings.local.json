@@ -53,7 +53,8 @@
       "Bash(readelf --debug-dump=info /home/sw/Sources/Astrodynamics/build/IO.Astrodynamics/libIO.Astrodynamics.so 2>/dev/null | head -5; echo \"---\"; readelf -S /home/sw/Sources/Astrodynamics/build/IO.Astrodynamics/libIO.Astrodynamics.so | grep -i debug)",
       "Bash(ar t /home/sw/Sources/Astrodynamics/external-lib/cspice.lib 2>/dev/null | head -5)",
       "Bash(which clang 2>/dev/null && clang --version | head -1 || echo \"clang not installed\")",
-      "Bash(docker --version 2>/dev/null && docker info --format '{{.OSType}}' 2>/dev/null || echo \"Docker not available or not running\")"
+      "Bash(docker --version 2>/dev/null && docker info --format '{{.OSType}}' 2>/dev/null || echo \"Docker not available or not running\")",
+      "Bash(dotnet pack IO.Astrodynamics/IO.Astrodynamics.csproj -p:NuspecFile=IO.Astrodynamics.nuspec --configuration Release 2>&1 | tail -10)"
     ],
     "deny": [],
     "ask": []

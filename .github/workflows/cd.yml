@@ -65,7 +65,7 @@ jobs:
         retention-days: 5
       if: matrix.os == 'windows-latest'
 
-  # Job 2: Build, test, pack, and publish .NET with freshly built native libraries
+  # Job 2: Build, test, pack, smoke-test, and publish .NET with freshly built native libraries
   package-dotnet:
     needs: build-native
     runs-on: ubuntu-latest
@@ -110,6 +110,21 @@ jobs:
 
     - name: Package Framework
       run: dotnet pack -p:NuspecFile=IO.Astrodynamics.nuspec --no-build --configuration Release
+
+    # Smoke-test the NuGet package before publishing
+    - name: Create local NuGet feed
+      run: |
+        mkdir -p local-feed
+        cp IO.Astrodynamics/bin/Release/*.nupkg local-feed/
+        ls -la local-feed/
+
+    - name: Smoke test NuGet package
+      run: |
+        dotnet restore IO.Astrodynamics.SmokeTests/IO.Astrodynamics.SmokeTests.csproj \
+          --source local-feed \
+          --source https://api.nuget.org/v3/index.json
+        dotnet test IO.Astrodynamics.SmokeTests/IO.Astrodynamics.SmokeTests.csproj \
+          --no-restore --verbosity normal --configuration Release
 
     - name: Publish package
       run: dotnet nuget push "**/*.nupkg" --api-key ${{secrets.NUGET_TOKEN}} --source https://api.nuget.org/v3/index.json
