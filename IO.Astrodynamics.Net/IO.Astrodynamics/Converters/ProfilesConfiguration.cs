@@ -43,7 +43,7 @@ public static class ProfilesConfiguration
 
     internal static DTO.StateVector Convert(this StateVector stateVector)
     {
-        return new DTO.StateVector(stateVector.Observer.NaifId, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds, stateVector.Frame.Name, stateVector.Position.Convert(),
+        return new DTO.StateVector(stateVector.Observer.NaifId, stateVector.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, stateVector.Frame.Name, stateVector.Position.Convert(),
             stateVector.Velocity.Convert());
     }
 
@@ -55,13 +55,13 @@ public static class ProfilesConfiguration
 
     internal static DTO.StateOrientation Convert(this StateOrientation stateOrientation)
     {
-        return new DTO.StateOrientation(stateOrientation.Rotation.Convert(), stateOrientation.AngularVelocity.Convert(), stateOrientation.Epoch.TimeSpanFromJ2000().TotalSeconds,
+        return new DTO.StateOrientation(stateOrientation.Rotation.Convert(), stateOrientation.AngularVelocity.Convert(), stateOrientation.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
             stateOrientation.ReferenceFrame.Name);
     }
 
     internal static DTO.Window Convert(this Window window)
     {
-        return new DTO.Window(window.StartDate.TimeSpanFromJ2000().TotalSeconds, window.EndDate.TimeSpanFromJ2000().TotalSeconds);
+        return new DTO.Window(window.StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds, window.EndDate.ToTDB().TimeSpanFromJ2000().TotalSeconds);
     }
 
     internal static Window Convert(this in DTO.Window window)
@@ -101,7 +101,7 @@ public static class ProfilesConfiguration
 
     internal static DTO.EquinoctialElements Convert(this OrbitalParameters.EquinoctialElements equinoctialElements)
     {
-        return new EquinoctialElements(equinoctialElements.Epoch.TimeSpanFromJ2000().TotalSeconds, equinoctialElements.Observer.NaifId, equinoctialElements.Frame.Name,
+        return new EquinoctialElements(equinoctialElements.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, equinoctialElements.Observer.NaifId, equinoctialElements.Frame.Name,
             equinoctialElements.SemiMajorAxis(), equinoctialElements.G, equinoctialElements.F,
             equinoctialElements.K, equinoctialElements.H, equinoctialElements.L0, 0.0, -Constants.PI2, Constants.PI2, 0.0);
     }

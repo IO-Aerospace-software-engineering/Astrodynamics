@@ -152,6 +152,14 @@
       <Content Include="Data\PHSRM\phsrm_sc_test2_111108_130214_v00.bc">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+      <None Remove="Data\CLPS\clps_to2ab_apm1_v02.tsc" />
+      <Content Include="Data\CLPS\clps_to2ab_apm1_v02.tsc">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <None Remove="Data\CLPS\clps_to2ab_apm1_cru_rec_240108_240118_v02.bc" />
+      <Content Include="Data\CLPS\clps_to2ab_apm1_cru_rec_240108_240118_v02.bc">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

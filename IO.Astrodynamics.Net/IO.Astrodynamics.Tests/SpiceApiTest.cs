@@ -1023,4 +1023,106 @@ public class SpiceApiTest
         Assert.NotEqual(0.0, result.Position.Magnitude());
         Assert.NotEqual(sv.Position.X, result.Position.X);
     }
+
+    [Fact]
+    public void ReadOrientationFromCLPS_APM1_CKKernel_UTCWindow()
+    {
+        // Reproduce customer scenario: CLPS APM1 lander (NAIF ID -244)
+        // CK object ID: -244000 (derived as naifId * 1000)
+        // CK coverage: 2024-JAN-08 08:17:27.955 ET to 2024-JAN-18 13:29:39.231 ET
+        //
+        // Customer-specified start: 2024-01-08T08:16:18.771 (UTC)
+        // UTC 08:16:18.771 → TDB ≈ 08:17:27.955 (exactly at CK coverage start)
+        // Without ToTDB() fix, SPICE receives TDB 08:16:18.771 → before CK start → crash
+        var sclkFile = new FileInfo(Path.Combine(Constants.ClpsDataPath.FullName,
+            "clps_to2ab_apm1_v02.tsc"));
+        var ckFile = new FileInfo(Path.Combine(Constants.ClpsDataPath.FullName,
+            "clps_to2ab_apm1_cru_rec_240108_240118_v02.bc"));
+
+        SpiceAPI.Instance.LoadKernels(sclkFile);
+        SpiceAPI.Instance.LoadKernels(ckFile);
+        try
+        {
+            // Create the window in UTC — the customer's natural time frame
+            var start = new TimeSystem.Time(2024, 1, 8, 8, 16, 19, frame: TimeSystem.TimeFrame.UTCFrame);
+            var window = new Window(start, start.AddSeconds(60.0));
+
+            var results = SpiceAPI.Instance.ReadOrientation(
+                window, -244, TimeSpan.FromSeconds(10.0),
+                Frames.Frame.ICRF, TimeSpan.FromSeconds(10.0)).ToArray();
+
+            Assert.NotEmpty(results);
+
+            // Verify returned epochs are near 2024 (far from J2000)
+            var windowStartTdbSeconds = window.StartDate.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            foreach (var orientation in results)
+            {
+                var epochSeconds = orientation.Epoch.TimeSpanFromJ2000().TotalSeconds;
+                // Epoch must be far from J2000 (>24 years away)
+                Assert.True(System.Math.Abs(epochSeconds) > 1e6,
+                    $"Epoch {epochSeconds} s from J2000 is suspiciously close to J2000 — window conversion bug?");
+                // Epoch must be reasonably close to the requested window start
+                Assert.True(System.Math.Abs(epochSeconds - windowStartTdbSeconds) < 120.0,
+                    $"Epoch {epochSeconds} is too far from window start {windowStartTdbSeconds}");
+            }
+
+            // Quaternions must be unit length
+            Assert.All(results, r =>
+            {
+                var q = r.Rotation;
+                var norm = System.Math.Sqrt(q.W * q.W
+                    + q.VectorPart.X * q.VectorPart.X
+                    + q.VectorPart.Y * q.VectorPart.Y
+                    + q.VectorPart.Z * q.VectorPart.Z);
+                Assert.Equal(1.0, norm, 6);
+            });
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(ckFile);
+            SpiceAPI.Instance.UnloadKernels(sclkFile);
+        }
+    }
+
+    [Fact]
+    public void ReadOrientationFromCLPS_APM1_CKKernel_TDBWindow()
+    {
+        // Same scenario as above but with a TDB window safely within CK coverage.
+        // CK coverage: 2024-JAN-08 08:17:27.955 ET to 2024-JAN-18 13:29:39.231 ET
+        var sclkFile = new FileInfo(Path.Combine(Constants.ClpsDataPath.FullName,
+            "clps_to2ab_apm1_v02.tsc"));
+        var ckFile = new FileInfo(Path.Combine(Constants.ClpsDataPath.FullName,
+            "clps_to2ab_apm1_cru_rec_240108_240118_v02.bc"));
+
+        SpiceAPI.Instance.LoadKernels(sclkFile);
+        SpiceAPI.Instance.LoadKernels(ckFile);
+        try
+        {
+            // Use a TDB time safely within CK coverage (a few minutes after start)
+            var start = new TimeSystem.Time(2024, 1, 8, 8, 20, 0);
+            var window = new Window(start, start.AddSeconds(60.0));
+
+            var results = SpiceAPI.Instance.ReadOrientation(
+                window, -244, TimeSpan.FromSeconds(10.0),
+                Frames.Frame.ICRF, TimeSpan.FromSeconds(10.0)).ToArray();
+
+            Assert.NotEmpty(results);
+
+            // Quaternions must be unit length
+            Assert.All(results, r =>
+            {
+                var q = r.Rotation;
+                var norm = System.Math.Sqrt(q.W * q.W
+                    + q.VectorPart.X * q.VectorPart.X
+                    + q.VectorPart.Y * q.VectorPart.Y
+                    + q.VectorPart.Z * q.VectorPart.Z);
+                Assert.Equal(1.0, norm, 6);
+            });
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(ckFile);
+            SpiceAPI.Instance.UnloadKernels(sclkFile);
+        }
+    }
 }

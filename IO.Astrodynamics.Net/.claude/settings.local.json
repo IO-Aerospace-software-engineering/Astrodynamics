@@ -41,7 +41,9 @@
       "WebFetch(domain:docs.json-everything.net)",
       "Bash(dotnet restore:*)",
       "Bash(/home/sw/Applications/Cspice/exe/brief IO.Astrodynamics.Tests/Data/SolarSystem/earth_latest_high_prec.bpc)",
-      "Bash(git -C /home/sw/Sources/Astrodynamics/IO.Astrodynamics.Net stash)"
+      "Bash(git -C /home/sw/Sources/Astrodynamics/IO.Astrodynamics.Net stash)",
+      "Bash(cd /home/sw/Sources/Astrodynamics/IO.Astrodynamics.Net/IO.Astrodynamics.Tests && /home/sw/Applications/Cspice/exe/ckbrief -t Data/CLPS/clps_to2ab_apm1_cru_rec_240108_240118_v02.bc -l Data/SolarSystem/latest_leapseconds.tls -s Data/CLPS/clps_to2ab_apm1_v02.tsc 2>&1)",
+      "Bash(/home/sw/Applications/Cspice/exe/ckbrief -t Data/CLPS/clps_to2ab_apm1_cru_rec_240108_240118_v02.bc Data/SolarSystem/latest_leapseconds.tls Data/CLPS/clps_to2ab_apm1_v02.tsc 2>&1)"
     ],
     "deny": [],
     "ask": []
