@@ -29,10 +29,40 @@ public class SpacecraftPropagator : IPropagator
 
     /// <summary>
     /// Instantiate propagator with a custom integrator.
+    /// Forces are built automatically from the provided celestial bodies and flags,
+    /// then added to the integrator via <see cref="Integrator.AddForce"/>.
     /// </summary>
     /// <param name="window">Time window</param>
     /// <param name="spacecraft">Spacecraft to propagate</param>
-    /// <param name="integrator">Numerical integrator</param>
+    /// <param name="integrator">Numerical integrator (must extend Integrator base class)</param>
+    /// <param name="additionalCelestialBodies">Celestial bodies for gravitational perturbations</param>
+    /// <param name="includeAtmosphericDrag">Include atmospheric drag for bodies with atmospheric models</param>
+    /// <param name="includeSolarRadiationPressure">Include solar radiation pressure with eclipse shadow</param>
+    /// <param name="deltaT">Output step size</param>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException"></exception>
+    public SpacecraftPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
+        IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        bool includeSolarRadiationPressure, TimeSpan deltaT)
+        : this(window, spacecraft, integrator, deltaT)
+    {
+        var forces = BuildForces(additionalCelestialBodies ?? Array.Empty<CelestialItem>(), spacecraft,
+            includeAtmosphericDrag, includeSolarRadiationPressure);
+        foreach (var force in forces)
+        {
+            integrator.AddForce(force);
+        }
+
+        integrator.Initialize(_svCache[0]);
+    }
+
+    /// <summary>
+    /// Instantiate propagator with a custom integrator that already has forces configured.
+    /// No forces are added; the integrator is used as-is.
+    /// </summary>
+    /// <param name="window">Time window</param>
+    /// <param name="spacecraft">Spacecraft to propagate</param>
+    /// <param name="integrator">Numerical integrator with forces already configured</param>
     /// <param name="deltaT">Output step size</param>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="ArgumentException"></exception>

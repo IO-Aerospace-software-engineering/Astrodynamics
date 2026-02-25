@@ -9,13 +9,36 @@ namespace IO.Astrodynamics.Propagator.Integrators;
 
 public abstract class Integrator : IIntegrator
 {
-    public IReadOnlyCollection<ForceBase> Forces { get; }
+    private readonly List<ForceBase> _forces;
+    public IReadOnlyCollection<ForceBase> Forces => _forces;
 
     public abstract void Integrate(StateVector[] result, int idx);
 
     public Integrator(IEnumerable<ForceBase> forces)
     {
-        Forces = new List<ForceBase>(forces);
+        _forces = new List<ForceBase>(forces);
+    }
+
+    public Integrator()
+    {
+        _forces = new List<ForceBase>();
+    }
+
+    /// <summary>
+    /// Add a force to the integrator's force collection.
+    /// </summary>
+    public void AddForce(ForceBase force)
+    {
+        _forces.Add(force);
+    }
+
+    /// <summary>
+    /// Initialize the integrator with an SSB-relative initial state.
+    /// Called by SpacecraftPropagator after forces have been added.
+    /// Override in derived classes that need the initial state (e.g. for observer/frame or initial acceleration).
+    /// </summary>
+    public virtual void Initialize(StateVector initialState)
+    {
     }
 
     /// <summary>
