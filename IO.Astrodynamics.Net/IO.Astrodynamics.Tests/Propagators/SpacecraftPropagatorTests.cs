@@ -1,12 +1,15 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator.Forces;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -438,5 +441,59 @@ public class SpacecraftPropagatorTests
         Assert.True(velocityError < 0.3,
             $"3D velocity error after 24h is {velocityError:F6} m/s, expected < 0.3 m/s. " +
             $"Actual velocity: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+    }
+
+    [Fact]
+    public void PropagateWithInjectedIntegratorMatchesConvenienceConstructor()
+    {
+        // Verify that the IIntegrator injection constructor produces identical results
+        // to the convenience constructor that builds VVIntegrator internally.
+        Clock clk1 = new Clock("My clock", 256);
+        Clock clk2 = new Clock("My clock", 256);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var orbit1 = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var orbit2 = new StateVector(new Vector3(6800000.0, 0, 0), new Vector3(0, 7500.0, 0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        Spacecraft spc1 = new Spacecraft(-1001, "MySpacecraft1", 100.0, 10000.0, clk1, orbit1);
+        Spacecraft spc2 = new Spacecraft(-1002, "MySpacecraft2", 100.0, 10000.0, clk2, orbit2);
+
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2));
+        var deltaT = TimeSpan.FromSeconds(1.0);
+        CelestialItem[] bodies = [PlanetsAndMoons.EARTH_BODY, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY];
+
+        // Convenience constructor (builds VVIntegrator internally)
+        var propagator1 = new Propagator.SpacecraftPropagator(window, spc1, bodies, false, false, deltaT);
+
+        // IIntegrator injection constructor (manually build forces + VVIntegrator)
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var tdbStart = window.StartDate.ToTDB();
+        var initialState = spc2.InitialOrbitalParameters.AtEpoch(tdbStart).ToStateVector()
+            .RelativeTo(ssb, Aberration.None).ToStateVector();
+        var forces = new List<ForceBase>();
+        foreach (var body in bodies)
+        {
+            forces.Add(new GravitationalAcceleration(body));
+        }
+
+        IIntegrator integrator = new VVIntegrator(forces, deltaT, initialState);
+        var propagator2 = new Propagator.SpacecraftPropagator(window, spc2, integrator, deltaT);
+
+        // Propagate both
+        propagator1.Propagate();
+        propagator2.Propagate();
+
+        // Compare results — should be identical
+        var results1 = spc1.StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+        var results2 = spc2.StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+
+        Assert.Equal(results1.Length, results2.Length);
+        for (int i = 0; i < results1.Length; i++)
+        {
+            Assert.Equal(results1[i].Position.X, results2[i].Position.X, 6);
+            Assert.Equal(results1[i].Position.Y, results2[i].Position.Y, 6);
+            Assert.Equal(results1[i].Position.Z, results2[i].Position.Z, 6);
+            Assert.Equal(results1[i].Velocity.X, results2[i].Velocity.X, 6);
+            Assert.Equal(results1[i].Velocity.Y, results2[i].Velocity.Y, 6);
+            Assert.Equal(results1[i].Velocity.Z, results2[i].Velocity.Z, 6);
+        }
     }
 }

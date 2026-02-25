@@ -20,52 +20,34 @@ public class SpacecraftPropagator : IPropagator
 {
     private readonly CelestialItem _originalObserver;
     public Window Window { get; }
-    public IEnumerable<CelestialItem> CelestialItems { get; }
-    public bool IncludeAtmosphericDrag { get; }
-    public bool IncludeSolarRadiationPressure { get; }
     public Spacecraft Spacecraft { get; }
-    public Integrator Integrator { get; }
+    public IIntegrator Integrator { get; }
     public TimeSpan DeltaT { get; }
 
     private uint _svCacheSize;
     private StateVector[] _svCache;
 
     /// <summary>
-    /// Instantiate propagator
+    /// Instantiate propagator with a custom integrator.
     /// </summary>
     /// <param name="window">Time window</param>
-    /// <param name="spacecraft"></param>
-    /// <param name="additionalCelestialBodies">Additional celestial bodies</param>
-    /// <param name="includeAtmosphericDrag"></param>
-    /// <param name="includeSolarRadiationPressure"></param>
-    /// <param name="deltaT">Simulation step size</param>
+    /// <param name="spacecraft">Spacecraft to propagate</param>
+    /// <param name="integrator">Numerical integrator</param>
+    /// <param name="deltaT">Output step size</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public SpacecraftPropagator(in Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
-        bool includeSolarRadiationPressure, TimeSpan deltaT)
+    /// <exception cref="ArgumentException"></exception>
+    public SpacecraftPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
     {
         var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
-        if (spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ICRF
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.B1950
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.FK4
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ECLIPTIC_J2000
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ECLIPTIC_B1950
-            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.GALACTIC_SYSTEM2)
-        {
-            throw new ArgumentException("Spacecraft initial orbital parameters must be defined in inertial frame", nameof(spacecraft));
-        }
+        Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
+        ValidateInertialFrame(spacecraft);
 
         _originalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
-        CelestialItems = additionalCelestialBodies ?? Array.Empty<CelestialItem>();
-        IncludeAtmosphericDrag = includeAtmosphericDrag;
-        IncludeSolarRadiationPressure = includeSolarRadiationPressure;
         DeltaT = deltaT;
 
-        var forces = InitializeForces(IncludeAtmosphericDrag, IncludeSolarRadiationPressure);
-
         var initialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector().RelativeTo(ssb, Aberration.None).ToStateVector();
-        Integrator = new VVIntegrator(forces, DeltaT, initialState);
 
         _svCacheSize = (uint)System.Math.Round(Window.Length.TotalSeconds / DeltaT.TotalSeconds, MidpointRounding.AwayFromZero) + 1;
         _svCache = new StateVector[_svCacheSize];
@@ -76,28 +58,72 @@ public class SpacecraftPropagator : IPropagator
         }
     }
 
-    private List<ForceBase> InitializeForces(bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
+    /// <summary>
+    /// Instantiate propagator with default Velocity-Verlet integrator.
+    /// Forces are built automatically from the provided celestial bodies and flags.
+    /// </summary>
+    /// <param name="window">Time window</param>
+    /// <param name="spacecraft">Spacecraft to propagate</param>
+    /// <param name="additionalCelestialBodies">Additional celestial bodies</param>
+    /// <param name="includeAtmosphericDrag">Include atmospheric drag</param>
+    /// <param name="includeSolarRadiationPressure">Include solar radiation pressure</param>
+    /// <param name="deltaT">Simulation step size</param>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException"></exception>
+    public SpacecraftPropagator(in Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        bool includeSolarRadiationPressure, TimeSpan deltaT)
+        : this(window, spacecraft,
+            CreateDefaultIntegrator(window, spacecraft, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, deltaT),
+            deltaT)
+    {
+    }
+
+    private static IIntegrator CreateDefaultIntegrator(Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> celestialItems,
+        bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan deltaT)
+    {
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var tdbStartDate = window.StartDate.ToTDB();
+        var initialState = spacecraft.InitialOrbitalParameters.AtEpoch(tdbStartDate).ToStateVector().RelativeTo(ssb, Aberration.None).ToStateVector();
+        var forces = BuildForces(celestialItems ?? Array.Empty<CelestialItem>(), spacecraft, includeAtmosphericDrag, includeSolarRadiationPressure);
+        return new VVIntegrator(forces, deltaT, initialState);
+    }
+
+    private static List<ForceBase> BuildForces(IEnumerable<CelestialItem> celestialItems, Spacecraft spacecraft,
+        bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
     {
         List<ForceBase> forces = new List<ForceBase>();
-        foreach (var celestialBody in CelestialItems.Distinct())
+        foreach (var celestialBody in celestialItems.Distinct())
         {
             forces.Add(new GravitationalAcceleration(celestialBody));
         }
 
         if (includeAtmosphericDrag)
         {
-            foreach (var celestialBody in CelestialItems.OfType<CelestialBody>().Where(x => x.HasAtmosphericModel).ToArray())
+            foreach (var celestialBody in celestialItems.OfType<CelestialBody>().Where(x => x.HasAtmosphericModel).ToArray())
             {
-                forces.Add(new AtmosphericDrag(Spacecraft, celestialBody));
+                forces.Add(new AtmosphericDrag(spacecraft, celestialBody));
             }
         }
 
         if (includeSolarRadiationPressure)
         {
-            forces.Add(new SolarRadiationPressure(Spacecraft, CelestialItems.OfType<CelestialBody>()));
+            forces.Add(new SolarRadiationPressure(spacecraft, celestialItems.OfType<CelestialBody>()));
         }
 
         return forces;
+    }
+
+    private static void ValidateInertialFrame(Spacecraft spacecraft)
+    {
+        if (spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ICRF
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.B1950
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.FK4
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ECLIPTIC_J2000
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.ECLIPTIC_B1950
+            && spacecraft.InitialOrbitalParameters.Frame != Frames.Frame.GALACTIC_SYSTEM2)
+        {
+            throw new ArgumentException("Spacecraft initial orbital parameters must be defined in inertial frame", nameof(spacecraft));
+        }
     }
 
     /// <summary>
@@ -124,10 +150,6 @@ public class SpacecraftPropagator : IPropagator
             latestOrientation.ReferenceFrame));
 
         Spacecraft.AddStateVectorRelativeToICRF(_svCache);
-        
-        //Before return result state vectors must be converted back to original observer
-        // return (Array.Empty<StateVector>(),
-        //     Spacecraft.Frame.GetStateOrientationsToICRF().OrderBy(x => x.Epoch)); //Return spacecraft frames
     }
 
     public void Dispose()
