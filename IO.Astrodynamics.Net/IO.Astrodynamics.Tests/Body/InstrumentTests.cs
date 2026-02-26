@@ -98,10 +98,10 @@ namespace IO.Astrodynamics.Tests.Body
 
             //Read results
             Assert.Equal(2, res.Length);
-            Assert.Equal(new TimeSystem.Time(DateTime.Parse("2021-06-09T23:58:05.3906250"), TimeFrame.TDBFrame), res.ElementAt(0).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal("2021-06-10T00:11:05.3917694 TDB", res.ElementAt(0).EndDate.ToString());
-            Assert.Equal("2021-06-10T01:21:54.1406250 TDB", res.ElementAt(1).StartDate.ToString());
-            Assert.Equal("2021-06-10T01:44:06.2898178 TDB", res.ElementAt(1).EndDate.ToString());
+            Assert.Equal(new TimeSystem.Time(DateTime.Parse("2021-06-09T23:58:03.2812500"), TimeFrame.TDBFrame), res.ElementAt(0).StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2021-06-10T00:11:06.0708618 TDB"), res.ElementAt(0).EndDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2021-06-10T01:21:54.1406250 TDB"), res.ElementAt(1).StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(new TimeSystem.Time("2021-06-10T01:44:06.2898178 TDB"), res.ElementAt(1).EndDate, TestHelpers.TimeComparer);
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
                 new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), null,

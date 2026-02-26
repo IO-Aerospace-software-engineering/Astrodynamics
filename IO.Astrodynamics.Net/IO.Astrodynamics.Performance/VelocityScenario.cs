@@ -30,7 +30,7 @@ public class VelocityScenario
     private readonly CelestialBody _earth;
     private readonly CelestialBody _sun;
     private readonly CelestialBody _moon;
-    private readonly Propagator.SpacecraftPropagator _spacecraftPropagator;
+    private readonly Propagator.SsbPropagator _spacecraftPropagator;
     // IO.Astrodynamics.Tests.Mission.ScenarioTests _scenario = new IO.Astrodynamics.Tests.Mission.ScenarioTests();
 
     public VelocityScenario()
@@ -55,7 +55,7 @@ public class VelocityScenario
         // _integrator = new VVIntegrator(forces, TimeSpan.FromSeconds(1.0), new StateVector(new Vector3(6800000.0 - Random.Shared.NextDouble(), 0.0, 0.0),
         //     new Vector3(0.0, 8000.0 - Random.Shared.NextDouble(), 0.0), _earth,
         //     TimeSystem.Time.J2000TDB, Frame.ICRF));
-        _spacecraftPropagator = new Propagator.SpacecraftPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + spc.InitialOrbitalParameters.Period()), spc,
+        _spacecraftPropagator = new Propagator.SsbPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + spc.InitialOrbitalParameters.Period()), spc,
             new[] { _moon, _earth, _sun }, true, true, TimeSpan.FromSeconds(1.0));
     }
 

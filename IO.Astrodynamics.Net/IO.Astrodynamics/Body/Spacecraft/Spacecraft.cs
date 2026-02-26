@@ -420,10 +420,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Task PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
-            return Task.Run(() =>
-            {
-                Propagate(window, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            });
+            return Task.Run(() => { Propagate(window, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize); });
         }
 
         public void Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
@@ -435,9 +432,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
             {
                 propagator = new TLEPropagator(window, this, propagatorStepSize);
             }
+            else if (InitialOrbitalParameters.Observer is Star or Barycenter)
+            {
+                propagator = new SsbPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+            }
             else
             {
-                propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+                propagator = new CentralBodyPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
             }
 
             propagator.Propagate();
@@ -556,6 +557,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                         maneuverList.Add(impulseManeuver.ToOpmManeuverParameters(stateVector.Frame.Name));
                     }
                 }
+
                 if (maneuverList.Count > 0)
                 {
                     maneuvers = maneuverList;

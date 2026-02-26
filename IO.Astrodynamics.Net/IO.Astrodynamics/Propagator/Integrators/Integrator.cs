@@ -34,7 +34,7 @@ public abstract class Integrator : IIntegrator
 
     /// <summary>
     /// Initialize the integrator with an SSB-relative initial state.
-    /// Called by SpacecraftPropagator after forces have been added.
+    /// Called by the propagator after forces have been added.
     /// Override in derived classes that need the initial state (e.g. for observer/frame or initial acceleration).
     /// </summary>
     public virtual void Initialize(StateVector initialState)

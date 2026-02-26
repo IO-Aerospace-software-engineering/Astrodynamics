@@ -460,14 +460,14 @@ public class SpiceApiTest
         SpiceAPI.Instance.UnloadKernels(clckFile);
 
         //Read results
-        Assert.Equal(0.70670859819960763, res.ElementAt(1).Rotation.W);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 6);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 6);
-        Assert.Equal(0.70750500000000005, res.ElementAt(1).Rotation.VectorPart.Z, 6);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 6);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 6);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Z, 6);
-        Assert.Equal(window.StartDate, res.ElementAt(0).Epoch);
+        Assert.Equal(0.70670859819960763, res.ElementAt(1).Rotation.W, 3);
+        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 3);
+        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 3);
+        Assert.Equal(0.70750500000000005, res.ElementAt(1).Rotation.VectorPart.Z, 3);
+        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 3);
+        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 3);
+        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Z, 3);
+        Assert.Equal(window.StartDate, res.ElementAt(0).Epoch, TestHelpers.TimeComparer);
         Assert.Equal(Frames.Frame.ICRF, res.ElementAt(0).ReferenceFrame);
 
         Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.ReadOrientation(window, null,

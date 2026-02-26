@@ -14,9 +14,6 @@
         <tags>astrodynamics aerospace orbital mechanics spice space physics attitude</tags>
     </metadata>
     <files>
-        <!-- binding libraries .NET 8.0 -->
-        <file src="bin/Release/net8.0/IO.Astrodynamics.Net.dll" target="lib/net8.0"/>
-        <file src="resources/One_Sgp4.dll" target="lib/net8.0"/>
         <!-- binding libraries .NET 10.0 -->
         <file src="bin/Release/net10.0/IO.Astrodynamics.Net.dll" target="lib/net10.0"/>
         <file src="resources/One_Sgp4.dll" target="lib/net10.0"/>
