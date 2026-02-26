@@ -19,6 +19,7 @@ namespace IO.Astrodynamics.Propagator;
 public class SpacecraftPropagator : IPropagator
 {
     private readonly CelestialItem _originalObserver;
+    private readonly CelestialItem _centralBody;
     public Window Window { get; }
     public Spacecraft Spacecraft { get; }
     public IIntegrator Integrator { get; }
@@ -28,7 +29,7 @@ public class SpacecraftPropagator : IPropagator
     private StateVector[] _svCache;
 
     /// <summary>
-    /// Instantiate propagator with a custom integrator.
+    /// Instantiate propagator with a custom integrator (SSB mode).
     /// Forces are built automatically from the provided celestial bodies and flags,
     /// then added to the integrator via <see cref="Integrator.AddForce"/>.
     /// </summary>
@@ -57,7 +58,7 @@ public class SpacecraftPropagator : IPropagator
     }
 
     /// <summary>
-    /// Instantiate propagator with a custom integrator that already has forces configured.
+    /// Instantiate propagator with a custom integrator that already has forces configured (SSB mode).
     /// No forces are added; the integrator is used as-is.
     /// </summary>
     /// <param name="window">Time window</param>
@@ -74,6 +75,7 @@ public class SpacecraftPropagator : IPropagator
         ValidateInertialFrame(spacecraft);
 
         _originalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
+        _centralBody = null;
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         DeltaT = deltaT;
 
@@ -89,7 +91,7 @@ public class SpacecraftPropagator : IPropagator
     }
 
     /// <summary>
-    /// Instantiate propagator with default Velocity-Verlet integrator.
+    /// Instantiate propagator with default Velocity-Verlet integrator (SSB mode).
     /// Forces are built automatically from the provided celestial bodies and flags.
     /// </summary>
     /// <param name="window">Time window</param>
@@ -108,6 +110,89 @@ public class SpacecraftPropagator : IPropagator
     {
     }
 
+    /// <summary>
+    /// Instantiate central-body-centered propagator with a custom integrator.
+    /// Uses Battin's numerically stable third-body perturbation formula.
+    /// Forces are built automatically from the provided celestial bodies and flags.
+    /// </summary>
+    /// <param name="window">Time window</param>
+    /// <param name="spacecraft">Spacecraft to propagate</param>
+    /// <param name="centralBody">Central body for the propagation frame (e.g., Earth)</param>
+    /// <param name="integrator">Numerical integrator (must extend Integrator base class)</param>
+    /// <param name="additionalCelestialBodies">Third-body perturbers (e.g., Moon, Sun)</param>
+    /// <param name="includeAtmosphericDrag">Include atmospheric drag for bodies with atmospheric models</param>
+    /// <param name="includeSolarRadiationPressure">Include solar radiation pressure with eclipse shadow</param>
+    /// <param name="deltaT">Output step size</param>
+    public SpacecraftPropagator(in Window window, Spacecraft spacecraft, CelestialItem centralBody,
+        Integrator integrator, IEnumerable<CelestialItem> additionalCelestialBodies,
+        bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan deltaT)
+        : this(window, spacecraft, centralBody, integrator, deltaT)
+    {
+        var forces = BuildCentralBodyForces(centralBody, additionalCelestialBodies ?? Array.Empty<CelestialItem>(),
+            spacecraft, includeAtmosphericDrag, includeSolarRadiationPressure);
+        foreach (var force in forces)
+        {
+            integrator.AddForce(force);
+        }
+
+        integrator.Initialize(_svCache[0]);
+    }
+
+    /// <summary>
+    /// Instantiate central-body-centered propagator with a custom integrator that already has forces configured.
+    /// No forces are added; the integrator is used as-is.
+    /// </summary>
+    /// <param name="window">Time window</param>
+    /// <param name="spacecraft">Spacecraft to propagate</param>
+    /// <param name="centralBody">Central body for the propagation frame (e.g., Earth)</param>
+    /// <param name="integrator">Numerical integrator with forces already configured</param>
+    /// <param name="deltaT">Output step size</param>
+    public SpacecraftPropagator(in Window window, Spacecraft spacecraft, CelestialItem centralBody,
+        IIntegrator integrator, TimeSpan deltaT)
+    {
+        Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
+        _centralBody = centralBody ?? throw new ArgumentNullException(nameof(centralBody));
+        Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
+        ValidateInertialFrame(spacecraft);
+
+        _originalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
+        Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        DeltaT = deltaT;
+
+        var initialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector()
+            .RelativeTo(centralBody, Aberration.None).ToStateVector();
+
+        _svCacheSize = (uint)System.Math.Round(Window.Length.TotalSeconds / DeltaT.TotalSeconds, MidpointRounding.AwayFromZero) + 1;
+        _svCache = new StateVector[_svCacheSize];
+        _svCache[0] = initialState;
+        for (int i = 1; i < _svCacheSize; i++)
+        {
+            _svCache[i] = new StateVector(Vector3.Zero, Vector3.Zero, initialState.Observer, Window.StartDate + (i * DeltaT), initialState.Frame);
+        }
+    }
+
+    /// <summary>
+    /// Instantiate central-body-centered propagator with default Velocity-Verlet integrator.
+    /// Uses Battin's numerically stable third-body perturbation formula.
+    /// Forces are built automatically from the provided celestial bodies and flags.
+    /// </summary>
+    /// <param name="window">Time window</param>
+    /// <param name="spacecraft">Spacecraft to propagate</param>
+    /// <param name="centralBody">Central body for the propagation frame (e.g., Earth)</param>
+    /// <param name="additionalCelestialBodies">Third-body perturbers (e.g., Moon, Sun)</param>
+    /// <param name="includeAtmosphericDrag">Include atmospheric drag</param>
+    /// <param name="includeSolarRadiationPressure">Include solar radiation pressure</param>
+    /// <param name="deltaT">Simulation step size</param>
+    public SpacecraftPropagator(in Window window, Spacecraft spacecraft, CelestialItem centralBody,
+        IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        bool includeSolarRadiationPressure, TimeSpan deltaT)
+        : this(window, spacecraft, centralBody,
+            CreateDefaultCentralBodyIntegrator(window, spacecraft, centralBody, additionalCelestialBodies,
+                includeAtmosphericDrag, includeSolarRadiationPressure, deltaT),
+            deltaT)
+    {
+    }
+
     private static IIntegrator CreateDefaultIntegrator(Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> celestialItems,
         bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan deltaT)
     {
@@ -115,6 +200,18 @@ public class SpacecraftPropagator : IPropagator
         var tdbStartDate = window.StartDate.ToTDB();
         var initialState = spacecraft.InitialOrbitalParameters.AtEpoch(tdbStartDate).ToStateVector().RelativeTo(ssb, Aberration.None).ToStateVector();
         var forces = BuildForces(celestialItems ?? Array.Empty<CelestialItem>(), spacecraft, includeAtmosphericDrag, includeSolarRadiationPressure);
+        return new VVIntegrator(forces, deltaT, initialState);
+    }
+
+    private static IIntegrator CreateDefaultCentralBodyIntegrator(Window window, Spacecraft spacecraft,
+        CelestialItem centralBody, IEnumerable<CelestialItem> celestialItems,
+        bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan deltaT)
+    {
+        var tdbStartDate = window.StartDate.ToTDB();
+        var initialState = spacecraft.InitialOrbitalParameters.AtEpoch(tdbStartDate).ToStateVector()
+            .RelativeTo(centralBody, Aberration.None).ToStateVector();
+        var forces = BuildCentralBodyForces(centralBody, celestialItems ?? Array.Empty<CelestialItem>(),
+            spacecraft, includeAtmosphericDrag, includeSolarRadiationPressure);
         return new VVIntegrator(forces, deltaT, initialState);
     }
 
@@ -138,6 +235,41 @@ public class SpacecraftPropagator : IPropagator
         if (includeSolarRadiationPressure)
         {
             forces.Add(new SolarRadiationPressure(spacecraft, celestialItems.OfType<CelestialBody>()));
+        }
+
+        return forces;
+    }
+
+    private static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
+        IEnumerable<CelestialItem> celestialItems, Spacecraft spacecraft,
+        bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
+    {
+        List<ForceBase> forces = new List<ForceBase>();
+        var items = celestialItems.Distinct().ToArray();
+
+        // Central body gravity (two-body + geopotential if configured)
+        forces.Add(new GravitationalAcceleration(centralBody));
+
+        // Third-body perturbations via Battin's formula for all other bodies
+        foreach (var body in items)
+        {
+            if (!body.Equals(centralBody))
+            {
+                forces.Add(new ThirdBodyPerturbation(body, centralBody));
+            }
+        }
+
+        if (includeAtmosphericDrag)
+        {
+            foreach (var celestialBody in items.OfType<CelestialBody>().Where(x => x.HasAtmosphericModel).ToArray())
+            {
+                forces.Add(new AtmosphericDrag(spacecraft, celestialBody));
+            }
+        }
+
+        if (includeSolarRadiationPressure)
+        {
+            forces.Add(new SolarRadiationPressure(spacecraft, items.OfType<CelestialBody>()));
         }
 
         return forces;
@@ -179,7 +311,27 @@ public class SpacecraftPropagator : IPropagator
         Spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(latestOrientation.Rotation, latestOrientation.AngularVelocity, Window.EndDate,
             latestOrientation.ReferenceFrame));
 
-        Spacecraft.AddStateVectorRelativeToICRF(_svCache);
+        if (_centralBody != null)
+        {
+            // Central-body mode: convert propagated states to SSB-relative for storage
+            var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+            var ssbStates = new StateVector[_svCacheSize];
+            for (int i = 0; i < _svCacheSize; i++)
+            {
+                var cbSv = _svCache[i];
+                var cbStateFromSsb = _centralBody.GetGeometricStateFromICRF(cbSv.Epoch).ToStateVector();
+                ssbStates[i] = new StateVector(
+                    cbStateFromSsb.Position + cbSv.Position,
+                    cbStateFromSsb.Velocity + cbSv.Velocity,
+                    ssb, cbSv.Epoch, Frame.ICRF);
+            }
+
+            Spacecraft.AddStateVectorRelativeToICRF(ssbStates);
+        }
+        else
+        {
+            Spacecraft.AddStateVectorRelativeToICRF(_svCache);
+        }
     }
 
     public void Dispose()
