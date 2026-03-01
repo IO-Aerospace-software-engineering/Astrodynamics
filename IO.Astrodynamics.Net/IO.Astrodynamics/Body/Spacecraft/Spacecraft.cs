@@ -513,11 +513,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (_stateVectorsRelativeToICRF.TryGetValue(date, out var exact))
                 return ConvertToSsbIfNeeded(exact, date);
 
-            // TLE fallback
+            // TLE fallback: convert to ICRF before RelativeTo to avoid passing TEME to SPICE
             if (InitialOrbitalParameters is TLE)
                 return InitialOrbitalParameters.ToStateVector(date)
+                    .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(new Barycenter(0, date), Aberration.None)
-                    .ToFrame(Frames.Frame.ICRF).ToStateVector();
+                    .ToStateVector();
 
             // Not enough states for interpolation
             if (_stateVectorsRelativeToICRF.Count < 2)

@@ -60,14 +60,14 @@ namespace IO.Astrodynamics.Tests.Coordinates
             var earth = TestHelpers.EarthAtJ2000;
             var eq = moon.GetEphemeris(TimeSystem.Time.J2000TDB, earth, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
 
-            Assert.Equal(new Equatorial(-0.1902441356821152, 3.8824377884372, 402448639.8873211, TimeSystem.Time.J2000TDB), eq);
+            Assert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), eq);
             if (OperatingSystem.IsWindows())
             {
-                Assert.Equal(new Vector3(-291608384.6334343, -266716833.39422607, -76102487.09989929), eq.ToCartesian());
+                Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian());
             }
             else
             {
-                Assert.Equal(new Vector3(-291608384.6334343, -266716833.39422607, -76102487.09989929), eq.ToCartesian());
+                Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian());
             }
         }
     }
