@@ -94,6 +94,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <summary>
     /// Resets the cached values for various orbital parameters.
     /// </summary>
+    internal void UpdateEpoch(in Time epoch)
+    {
+        ResetCache();
+        Epoch = epoch;
+    }
+
     protected virtual void ResetCache()
     {
         _eccentricVector = null;

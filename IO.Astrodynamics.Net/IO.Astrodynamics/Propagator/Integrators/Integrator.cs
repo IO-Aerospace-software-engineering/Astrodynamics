@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
+using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Propagator.Integrators;
@@ -63,5 +64,16 @@ public abstract class Integrator : IIntegrator
     {
         sv.UpdatePosition(position);
         sv.UpdateVelocity(velocity);
+    }
+
+    /// <summary>
+    /// Update state vector position, velocity, and epoch. Bridges internal access
+    /// for integrator implementations in external assemblies.
+    /// </summary>
+    protected void UpdateState(StateVector sv, in Vector3 position, in Vector3 velocity, in Time epoch)
+    {
+        sv.UpdatePosition(position);
+        sv.UpdateVelocity(velocity);
+        sv.UpdateEpoch(epoch);
     }
 }
