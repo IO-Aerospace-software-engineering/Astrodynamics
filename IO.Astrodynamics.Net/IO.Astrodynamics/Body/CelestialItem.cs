@@ -9,6 +9,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using Window = IO.Astrodynamics.TimeSystem.Window;
 
@@ -237,13 +238,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     /// <summary>
     /// GetEphemeris. For SPICE-backed observer/target pairs, uses SPICE directly.
-    /// Falls back to SSB subtraction for non-SPICE observers (Spacecraft, Site).
+    /// For non-SPICE observers (Spacecraft, Site), uses reference-body approach.
     /// </summary>
-    /// <param name="epoch"></param>
-    /// <param name="observer"></param>
-    /// <param name="frame"></param>
-    /// <param name="aberration"></param>
-    /// <returns></returns>
     public virtual OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
         // For SPICE-backed observer/target pairs, use SPICE directly (handles aberration natively)
@@ -252,55 +248,88 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
         }
 
-        // Fallback: SSB subtraction for non-SPICE observers (Spacecraft, Site)
-        return GetEphemerisViaSsbSubtraction(epoch, observer, frame, aberration);
-    }
-
-    /// <summary>
-    /// Compute ephemeris via SSB subtraction with manual aberration correction.
-    /// Used when observer is not in SPICE (Spacecraft, Site).
-    /// </summary>
-    protected OrbitalParameters.OrbitalParameters GetEphemerisViaSsbSubtraction(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
-    {
-        var targetGeometricStateFromSSB = this.GetGeometricStateFromICRF(epoch).ToStateVector();
-        var observerGeometricStateFromSSB = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
-        var relativeState = new StateVector(targetGeometricStateFromSSB.Position - observerGeometricStateFromSSB.Position,
-            targetGeometricStateFromSSB.Velocity - observerGeometricStateFromSSB.Velocity,
+        // Reference-body approach for non-SPICE observers
+        var cb = GetReferenceBodyFor(observer);
+        var targetCB = this.GetGeometricStateRelativeTo(epoch, cb);
+        var observerCB = observer.GetGeometricStateRelativeTo(epoch, cb);
+        var relative = new StateVector(
+            targetCB.Position - observerCB.Position,
+            targetCB.Velocity - observerCB.Velocity,
             observer, epoch, Frame.ICRF);
-        if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
-        {
-            relativeState = CorrectFromAberration(epoch, observer, aberration, relativeState, observerGeometricStateFromSSB);
-        }
 
-        return relativeState.ToFrame(frame);
+        if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+            relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerCB, cb);
+
+        return relative.ToFrame(frame);
     }
 
     /// <summary>
-    /// Correct from aberration
+    /// Computes the geometric state of this object relative to a reference body in ICRF.
+    /// Base implementation uses SPICE directly. Subclasses override for efficiency.
     /// </summary>
-    protected StateVector CorrectFromAberration(Time epoch, ILocalizable observer, Aberration aberration, StateVector relativeState,
-        StateVector observerGeometricStateFromSSB)
+    public virtual StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
+    {
+        if (NaifId == referenceBody.NaifId)
+            return new StateVector(Vector3.Zero, Vector3.Zero, referenceBody, epoch, Frame.ICRF);
+        return _dataProvider.GetEphemeris(epoch, this, referenceBody, Frame.ICRF, Aberration.None).ToStateVector();
+    }
+
+    /// <summary>
+    /// Determines the best reference body for computing ephemeris relative to an observer.
+    /// </summary>
+    internal static CelestialItem GetReferenceBodyFor(ILocalizable observer)
+    {
+        return observer switch
+        {
+            Spacecraft.Spacecraft sc => sc.InitialOrbitalParameters?.Observer as CelestialItem
+                                        ?? Barycenters.SOLAR_SYSTEM_BARYCENTER,
+            Surface.Site site => site.CelestialBody,
+            _ => Barycenters.SOLAR_SYSTEM_BARYCENTER
+        };
+    }
+
+    /// <summary>
+    /// Correct from aberration using reference-body approach.
+    /// Accounts for the reference body's motion between observation epoch and retarded/advanced epoch.
+    /// </summary>
+    internal static StateVector CorrectFromAberrationCB(
+        ILocalizable target, Time epoch, ILocalizable observer, Aberration aberration,
+        StateVector relativeState, StateVector observerCB, CelestialItem referenceBody)
     {
         var lightTime = TimeSpan.FromSeconds(relativeState.Position.Magnitude() / Constants.C);
+        Time newEpoch = (aberration is Aberration.LT or Aberration.LTS)
+            ? epoch - lightTime : epoch + lightTime;
 
-        Time newEpoch;
-        if (aberration is Aberration.LT or Aberration.LTS)
-            newEpoch = epoch - lightTime;
-        else
-            newEpoch = epoch + lightTime;
+        var targetNewCB = target.GetGeometricStateRelativeTo(newEpoch, referenceBody);
 
-        var targetNewGeometricStateFromSSB = this.GetGeometricStateFromICRF(newEpoch).ToStateVector();
-        var correctedGeometricState = new StateVector(targetNewGeometricStateFromSSB.Position - observerGeometricStateFromSSB.Position,
-            targetNewGeometricStateFromSSB.Velocity - observerGeometricStateFromSSB.Velocity, observer, epoch, Frame.ICRF);
-
-        if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
+        // Account for reference body's motion between epochs.
+        // target_inertial(newEpoch) = target_CB(newEpoch) + CB_SSB(newEpoch)
+        // observer_inertial(epoch) = observer_CB(epoch) + CB_SSB(epoch)
+        // corrected = target_CB(newEpoch) - observer_CB(epoch) + [CB_SSB(newEpoch) - CB_SSB(epoch)]
+        Vector3 cbDeltaPos = Vector3.Zero;
+        Vector3 cbDeltaVel = Vector3.Zero;
+        if (referenceBody.NaifId != 0) // SSB is inertial, no correction needed
         {
-            var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
-            var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
-            correctedGeometricState.UpdatePosition(relativeState.Position + stellarAberration);
+            var cbAtNewEpoch = referenceBody.GetGeometricStateFromICRF(newEpoch).ToStateVector();
+            var cbAtEpoch = referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector();
+            cbDeltaPos = cbAtNewEpoch.Position - cbAtEpoch.Position;
+            cbDeltaVel = cbAtNewEpoch.Velocity - cbAtEpoch.Velocity;
         }
 
-        return correctedGeometricState;
+        var corrected = new StateVector(
+            targetNewCB.Position + cbDeltaPos - observerCB.Position,
+            targetNewCB.Velocity + cbDeltaVel - observerCB.Velocity,
+            observer, epoch, Frame.ICRF);
+
+        if (aberration is Aberration.LTS or Aberration.XLTS)
+        {
+            var cbSsbVel = referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector().Velocity;
+            var observerSsbVel = observerCB.Velocity + cbSsbVel;
+            var voverc = observerSsbVel.Magnitude() / Constants.C;
+            corrected.UpdatePosition(relativeState.Position + observerSsbVel * voverc);
+        }
+
+        return corrected;
     }
 
     /// <summary>

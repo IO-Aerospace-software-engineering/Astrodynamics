@@ -172,6 +172,22 @@ public class Star : CelestialBody
     }
 
     /// <summary>
+    /// Computes the geometric state relative to a reference body.
+    /// Stars use equatorial coordinates (inherently SSB-relative), then chain to reference body.
+    /// </summary>
+    public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
+    {
+        var starSsb = GetEquatorialCoordinates(epoch).ToCartesian();
+        if (referenceBody.NaifId == 0)
+            return new StateVector(starSsb, Vector3.Zero, referenceBody, epoch, Frame.ICRF);
+
+        var refFromSsb = referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector();
+        return new StateVector(
+            starSsb - refFromSsb.Position, refFromSsb.Velocity.Inverse(),
+            referenceBody, epoch, Frame.ICRF);
+    }
+
+    /// <summary>
     /// Get geometric state from SSB in ICRF. Computes directly from equatorial coordinates.
     /// </summary>
     public override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
@@ -181,11 +197,22 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Star is not in SPICE — always use SSB subtraction for ephemeris.
+    /// Star ephemeris using reference-body approach. Stars use SSB as reference.
     /// </summary>
     public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
-        return GetEphemerisViaSsbSubtraction(epoch, observer, frame, aberration);
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var starSsb = GetGeometricStateRelativeTo(epoch, ssb);
+        var observerSsb = observer.GetGeometricStateRelativeTo(epoch, ssb);
+        var relative = new StateVector(
+            starSsb.Position - observerSsb.Position,
+            starSsb.Velocity - observerSsb.Velocity,
+            observer, epoch, Frame.ICRF);
+
+        if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+            relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerSsb, ssb);
+
+        return relative.ToFrame(frame);
     }
 
     /// <summary>

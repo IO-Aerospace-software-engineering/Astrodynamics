@@ -451,24 +451,70 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Spacecraft is not in SPICE — uses SSB subtraction for ephemeris.
-        /// Short-circuits when stored states are CB-relative and observer matches the central body.
+        /// Computes the geometric state relative to a reference body.
+        /// Uses cached propagation states with Lagrange interpolation, chaining via SPICE if needed.
+        /// </summary>
+        public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
+        {
+            // TLE fallback
+            if (InitialOrbitalParameters is TLE)
+                return InitialOrbitalParameters.ToStateVector(epoch)
+                    .ToFrame(Frames.Frame.ICRF)
+                    .RelativeTo(referenceBody, Aberration.None).ToStateVector();
+
+            // Not enough cached states
+            if (_stateVectorsRelativeToICRF.Count < 2)
+                return InitialOrbitalParameters.ToStateVector(epoch)
+                    .RelativeTo(referenceBody, Aberration.None).ToStateVector();
+
+            // Interpolate from cache
+            var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+            var cb = (CelestialItem)states[0].Observer;
+            var interpolated = Lagrange.Interpolate(states, epoch);
+
+            if (cb.NaifId == referenceBody.NaifId)
+                return new StateVector(interpolated.Position, interpolated.Velocity,
+                    referenceBody, epoch, Frames.Frame.ICRF);
+
+            // Chain: spacecraft_CB + SPICE(CB, referenceBody)
+            var cbFromRef = cb.GetGeometricStateRelativeTo(epoch, referenceBody);
+            return new StateVector(
+                cbFromRef.Position + interpolated.Position,
+                cbFromRef.Velocity + interpolated.Velocity,
+                referenceBody, epoch, Frames.Frame.ICRF);
+        }
+
+        /// <summary>
+        /// Spacecraft ephemeris using reference-body approach.
+        /// Short-circuits when observer IS the central body with no aberration.
         /// </summary>
         public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
-            // Short-circuit: if stored states are relative to the requested observer, skip SSB round-trip
-            if (aberration == Aberration.None && _stateVectorsRelativeToICRF.Count >= 2)
+            // Determine reference body
+            CelestialItem cb = (_stateVectorsRelativeToICRF.Count >= 2)
+                ? (CelestialItem)_stateVectorsRelativeToICRF.Values.First().Observer
+                : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
+
+            // Short-circuit: observer IS the CB, no aberration, have cached states
+            if (aberration == Aberration.None && _stateVectorsRelativeToICRF.Count >= 2
+                && cb.NaifId == observer.NaifId && cb.NaifId != 0)
             {
-                var sample = _stateVectorsRelativeToICRF.Values.First();
-                if (sample.Observer.NaifId == observer.NaifId && sample.Observer.NaifId != 0)
-                {
-                    var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
-                    var interpolated = Lagrange.Interpolate(states, epoch);
-                    return interpolated.ToFrame(frame);
-                }
+                var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+                return Lagrange.Interpolate(states, epoch).ToFrame(frame);
             }
 
-            return GetEphemerisViaSsbSubtraction(epoch, observer, frame, aberration);
+            // Reference-body approach
+            var spacecraftCB = this.GetGeometricStateRelativeTo(epoch, cb);
+            var observerCB = observer.GetGeometricStateRelativeTo(epoch, cb);
+            var relative = new StateVector(
+                spacecraftCB.Position - observerCB.Position,
+                spacecraftCB.Velocity - observerCB.Velocity,
+                observer, epoch, Frames.Frame.ICRF);
+
+            if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+                relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerCB, cb);
+
+            return relative.ToFrame(frame);
         }
 
         /// <summary>
