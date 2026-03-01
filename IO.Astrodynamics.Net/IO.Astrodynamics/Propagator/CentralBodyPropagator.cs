@@ -9,9 +9,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
-using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Propagator;
 
@@ -153,19 +151,7 @@ public class CentralBodyPropagator : PropagatorBase
 
     protected override void StorePropagatedStates()
     {
-        // Central-body mode: convert propagated states to SSB-relative for storage
-        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
-        var ssbStates = new StateVector[SvCacheSize];
-        for (int i = 0; i < SvCacheSize; i++)
-        {
-            var cbSv = SvCache[i];
-            var cbStateFromSsb = _centralBody.GetGeometricStateFromICRF(cbSv.Epoch).ToStateVector();
-            ssbStates[i] = new StateVector(
-                cbStateFromSsb.Position + cbSv.Position,
-                cbStateFromSsb.Velocity + cbSv.Velocity,
-                ssb, cbSv.Epoch, Frame.ICRF);
-        }
-
-        Spacecraft.AddStateVectorRelativeToICRF(ssbStates);
+        // Store CB-relative states directly; conversion to SSB happens on demand
+        Spacecraft.AddStateVectorRelativeToICRF(SvCache);
     }
 }
