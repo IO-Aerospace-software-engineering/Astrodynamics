@@ -26,7 +26,20 @@ public class AtmosphericDrag : ForceBase
     public override Vector3 Apply(StateVector stateVector)
     {
         // Get body-centered state vector (position and velocity relative to the celestial body)
-        var bodyCentered = stateVector.RelativeTo(_celestialBody, Aberration.None).ToStateVector();
+        StateVector bodyCentered;
+        if (EphemerisCache != null && stateVector.Observer as CelestialItem != _celestialBody
+            && EphemerisCache.Contains(_celestialBody.NaifId, Aberration.None))
+        {
+            var (bodyPos, bodyVel) = EphemerisCache.GetState(_celestialBody.NaifId, Aberration.None, stateVector.Epoch);
+            bodyCentered = new StateVector(
+                stateVector.Position - bodyPos,
+                stateVector.Velocity - bodyVel,
+                _celestialBody, stateVector.Epoch, stateVector.Frame);
+        }
+        else
+        {
+            bodyCentered = stateVector.RelativeTo(_celestialBody, Aberration.None).ToStateVector();
+        }
 
         // Get the angular velocity of the body's rotation in ICRF
         var omega = _celestialBody.GetOrientation(Frame.ICRF, stateVector.Epoch).AngularVelocity;

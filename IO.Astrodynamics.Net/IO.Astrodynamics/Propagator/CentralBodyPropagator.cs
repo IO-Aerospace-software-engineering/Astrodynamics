@@ -33,8 +33,10 @@ public class CentralBodyPropagator : PropagatorBase
         bool includeSolarRadiationPressure, TimeSpan deltaT)
         : this(window, spacecraft, integrator, deltaT)
     {
-        var forces = BuildCentralBodyForces(_centralBody, additionalCelestialBodies ?? Array.Empty<CelestialItem>(),
-            spacecraft, includeAtmosphericDrag, includeSolarRadiationPressure);
+        var items = (additionalCelestialBodies ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
+        var forces = BuildCentralBodyForces(_centralBody, items, spacecraft, includeAtmosphericDrag,
+            includeSolarRadiationPressure);
+        InjectEphemerisCache(Window, forces, items, _centralBody);
         foreach (var force in forces)
         {
             integrator.AddForce(force);
@@ -88,17 +90,19 @@ public class CentralBodyPropagator : PropagatorBase
         var tdbStartDate = window.StartDate.ToTDB();
         var initialState = spacecraft.InitialOrbitalParameters.AtEpoch(tdbStartDate).ToStateVector()
             .RelativeTo(centralBody, Aberration.None).ToStateVector();
-        var forces = BuildCentralBodyForces(centralBody, celestialItems ?? Array.Empty<CelestialItem>(),
-            spacecraft, includeAtmosphericDrag, includeSolarRadiationPressure);
+        var items = (celestialItems ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
+        var forces = BuildCentralBodyForces(centralBody, items, spacecraft, includeAtmosphericDrag,
+            includeSolarRadiationPressure);
+        var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        InjectEphemerisCache(tdbWindow, forces, items, centralBody);
         return new VVIntegrator(forces, deltaT, initialState);
     }
 
     private static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
-        IEnumerable<CelestialItem> celestialItems, Spacecraft spacecraft,
+        CelestialItem[] items, Spacecraft spacecraft,
         bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
     {
         List<ForceBase> forces = new List<ForceBase>();
-        var items = celestialItems.Distinct().ToArray();
 
         // Central body gravity (two-body + geopotential if configured)
         forces.Add(new GravitationalAcceleration(centralBody));
@@ -126,6 +130,25 @@ public class CentralBodyPropagator : PropagatorBase
         }
 
         return forces;
+    }
+
+    private static void InjectEphemerisCache(Window tdbWindow, List<ForceBase> forces,
+        CelestialItem[] celestialBodies, ILocalizable observer)
+    {
+        if (celestialBodies.Length == 0) return;
+
+        var entries = new List<(CelestialItem, Aberration)>();
+        foreach (var body in celestialBodies)
+        {
+            entries.Add((body, Aberration.None));
+            entries.Add((body, Aberration.LT));
+        }
+
+        var cache = new PropagationEphemerisCache(tdbWindow, entries, observer, TimeSpan.FromSeconds(60));
+        foreach (var force in forces)
+        {
+            force.EphemerisCache = cache;
+        }
     }
 
     protected override void StorePropagatedStates()

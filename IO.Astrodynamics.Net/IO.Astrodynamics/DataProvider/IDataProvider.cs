@@ -13,5 +13,6 @@ public interface IDataProvider
 {
     StateOrientation FrameTransformationToICRF(in Time date, Frame source);
     OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration);
+    OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration);
     DTO.CelestialBody GetCelestialBodyInfo(int naifId);
 }

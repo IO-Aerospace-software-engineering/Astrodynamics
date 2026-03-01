@@ -29,8 +29,9 @@ public class SsbPropagator : PropagatorBase
         bool includeSolarRadiationPressure, TimeSpan deltaT)
         : this(window, spacecraft, integrator, deltaT)
     {
-        var forces = BuildForces(additionalCelestialBodies ?? Array.Empty<CelestialItem>(), spacecraft,
-            includeAtmosphericDrag, includeSolarRadiationPressure);
+        var items = (additionalCelestialBodies ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
+        var forces = BuildForces(items, spacecraft, includeAtmosphericDrag, includeSolarRadiationPressure);
+        InjectEphemerisCache(Window, forces, items);
         foreach (var force in forces)
         {
             integrator.AddForce(force);
@@ -73,16 +74,18 @@ public class SsbPropagator : PropagatorBase
         var tdbStartDate = window.StartDate.ToTDB();
         var initialState = spacecraft.InitialOrbitalParameters.AtEpoch(tdbStartDate).ToStateVector()
             .RelativeTo(ssb, Aberration.None).ToStateVector();
-        var forces = BuildForces(celestialItems ?? Array.Empty<CelestialItem>(), spacecraft,
-            includeAtmosphericDrag, includeSolarRadiationPressure);
+        var items = (celestialItems ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
+        var forces = BuildForces(items, spacecraft, includeAtmosphericDrag, includeSolarRadiationPressure);
+        var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
+        InjectEphemerisCache(tdbWindow, forces, items);
         return new VVIntegrator(forces, deltaT, initialState);
     }
 
-    private static List<ForceBase> BuildForces(IEnumerable<CelestialItem> celestialItems, Spacecraft spacecraft,
+    private static List<ForceBase> BuildForces(CelestialItem[] celestialItems, Spacecraft spacecraft,
         bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
     {
         List<ForceBase> forces = new List<ForceBase>();
-        foreach (var celestialBody in celestialItems.Distinct())
+        foreach (var celestialBody in celestialItems)
         {
             forces.Add(new GravitationalAcceleration(celestialBody));
         }
@@ -102,6 +105,26 @@ public class SsbPropagator : PropagatorBase
         }
 
         return forces;
+    }
+
+    private static void InjectEphemerisCache(Window tdbWindow, List<ForceBase> forces,
+        CelestialItem[] celestialBodies)
+    {
+        if (celestialBodies.Length == 0) return;
+
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var entries = new List<(CelestialItem, Aberration)>();
+        foreach (var body in celestialBodies)
+        {
+            entries.Add((body, Aberration.None));
+            entries.Add((body, Aberration.LT));
+        }
+
+        var cache = new PropagationEphemerisCache(tdbWindow, entries, ssb, TimeSpan.FromSeconds(60));
+        foreach (var force in forces)
+        {
+            force.EphemerisCache = cache;
+        }
     }
 
     protected override void StorePropagatedStates()

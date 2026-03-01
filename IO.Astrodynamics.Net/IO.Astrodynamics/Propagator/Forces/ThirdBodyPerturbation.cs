@@ -29,9 +29,13 @@ public class ThirdBodyPerturbation : ForceBase
     /// </summary>
     public override Vector3 Apply(StateVector stateVector)
     {
-        // d_j = position of perturbing body relative to central body (from SPICE)
-        var dj = PerturbingBody.GetEphemeris(stateVector.Epoch, CentralBody, Frame.ICRF, Aberration.None)
-            .ToStateVector().Position;
+        // d_j = position of perturbing body relative to central body
+        Vector3 dj;
+        if (EphemerisCache != null && EphemerisCache.Contains(PerturbingBody.NaifId, Aberration.None))
+            dj = EphemerisCache.GetPosition(PerturbingBody.NaifId, Aberration.None, stateVector.Epoch);
+        else
+            dj = PerturbingBody.GetEphemeris(stateVector.Epoch, CentralBody, Frame.ICRF, Aberration.None)
+                .ToStateVector().Position;
 
         var r = stateVector.Position;
         double djMag = dj.Magnitude();

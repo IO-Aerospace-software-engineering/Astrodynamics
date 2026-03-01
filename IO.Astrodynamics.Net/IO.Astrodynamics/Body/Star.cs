@@ -1,6 +1,8 @@
 ﻿﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
@@ -16,6 +18,7 @@ namespace IO.Astrodynamics.Body;
 /// </summary>
 public class Star : CelestialBody
 {
+    private readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
     /// </summary>
@@ -169,6 +172,31 @@ public class Star : CelestialBody
     }
 
     /// <summary>
+    /// Get geometric state from SSB in ICRF. Computes directly from equatorial coordinates.
+    /// </summary>
+    public override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+    {
+        var position = GetEquatorialCoordinates(date).ToCartesian();
+        return new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, date, Frame.ICRF);
+    }
+
+    /// <summary>
+    /// Star is not in SPICE — always use SSB subtraction for ephemeris.
+    /// </summary>
+    public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+    {
+        return GetEphemerisViaSsbSubtraction(epoch, observer, frame, aberration);
+    }
+
+    /// <summary>
+    /// Write star ephemeris from propagated states.
+    /// </summary>
+    public override void WriteEphemeris(FileInfo outputFile)
+    {
+        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray());
+    }
+
+    /// <summary>
     /// Propagates the star asynchronously.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
@@ -183,14 +211,12 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Propagates the star asynchronously.
+    /// Propagates the star.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
     /// <param name="stepSize">The step size for propagation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
     public void Propagate(Window timeWindow, TimeSpan stepSize)
     {
-        List<StateVector> svs = new List<StateVector>();
         for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();

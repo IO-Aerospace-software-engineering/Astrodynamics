@@ -7,5 +7,11 @@ namespace IO.Astrodynamics.Propagator.Forces;
 
 public abstract class ForceBase
 {
+    /// <summary>
+    /// Optional ephemeris cache for avoiding repeated SPICE calls during propagation.
+    /// Set by the propagator before integration begins.
+    /// </summary>
+    internal PropagationEphemerisCache EphemerisCache { get; set; }
+
     public abstract Vector3 Apply(StateVector stateVector);
 }

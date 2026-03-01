@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +21,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
 {
     public class Spacecraft : CelestialItem, IOrientable<SpacecraftFrame>
     {
+        private readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
+        public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
+
         public static readonly Vector3 Front = Vector3.VectorY;
         public static readonly Vector3 Back = Front.Inverse();
         public static readonly Vector3 Right = Vector3.VectorX;
@@ -444,6 +448,22 @@ namespace IO.Astrodynamics.Body.Spacecraft
             propagator.Propagate();
             propagator.Dispose();
             _isPropagated = true;
+        }
+
+        /// <summary>
+        /// Spacecraft is not in SPICE — always use SSB subtraction for ephemeris.
+        /// </summary>
+        public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+        {
+            return GetEphemerisViaSsbSubtraction(epoch, observer, frame, aberration);
+        }
+
+        /// <summary>
+        /// Write spacecraft ephemeris from propagated states.
+        /// </summary>
+        public override void WriteEphemeris(FileInfo outputFile)
+        {
+            SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray());
         }
 
         public void AddStateVectorRelativeToICRF(params StateVector[] stateVectors)

@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -12,17 +10,14 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
-using MathNet.Numerics.LinearAlgebra;
 using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Body;
 
 public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
-    private readonly IDataProvider _dataProvider;
+    protected readonly IDataProvider _dataProvider;
 
-    protected readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
-    public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
 
@@ -241,14 +236,31 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
-    /// GetEphemeris
+    /// GetEphemeris. For SPICE-backed observer/target pairs, uses SPICE directly.
+    /// Falls back to SSB subtraction for non-SPICE observers (Spacecraft, Site).
     /// </summary>
     /// <param name="epoch"></param>
     /// <param name="observer"></param>
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
-    public OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+    public virtual OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+    {
+        // For SPICE-backed observer/target pairs, use SPICE directly (handles aberration natively)
+        if (observer is CelestialItem ci && !ci.IsSpacecraft && !ci.IsStar)
+        {
+            return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
+        }
+
+        // Fallback: SSB subtraction for non-SPICE observers (Spacecraft, Site)
+        return GetEphemerisViaSsbSubtraction(epoch, observer, frame, aberration);
+    }
+
+    /// <summary>
+    /// Compute ephemeris via SSB subtraction with manual aberration correction.
+    /// Used when observer is not in SPICE (Spacecraft, Site).
+    /// </summary>
+    protected OrbitalParameters.OrbitalParameters GetEphemerisViaSsbSubtraction(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
         var targetGeometricStateFromSSB = this.GetGeometricStateFromICRF(epoch).ToStateVector();
         var observerGeometricStateFromSSB = observer.GetGeometricStateFromICRF(epoch).ToStateVector();
@@ -266,12 +278,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Correct from aberration
     /// </summary>
-    /// <param name="epoch"></param>
-    /// <param name="observer"></param>
-    /// <param name="aberration"></param>
-    /// <param name="relativeState"></param>
-    /// <param name="observerGeometricStateFromSSB"></param>
-    /// <returns></returns>
     protected StateVector CorrectFromAberration(Time epoch, ILocalizable observer, Aberration aberration, StateVector relativeState,
         StateVector observerGeometricStateFromSSB)
     {
@@ -298,14 +304,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
-    /// Get geometric state from SSB in ICRF
+    /// Get geometric state from SSB in ICRF. Direct SPICE call, no caching.
     /// </summary>
     /// <param name="date"></param>
     /// <returns></returns>
     public virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return _stateVectorsRelativeToICRF.GetOrAdd(date,
-            x => _dataProvider.GetEphemerisFromICRF(x, this, Frame.ICRF, Aberration.None).ToStateVector());
+        return _dataProvider.GetEphemerisFromICRF(date, this, Frame.ICRF, Aberration.None).ToStateVector();
     }
 
     /// <summary>
@@ -520,12 +525,14 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
-    /// Write ephemeris
+    /// Write ephemeris. Must be overridden by subclasses that store state vectors (Spacecraft, Star).
     /// </summary>
     /// <param name="outputFile"></param>
-    public void WriteEphemeris(FileInfo outputFile)
+    public virtual void WriteEphemeris(FileInfo outputFile)
     {
-        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray());
+        throw new NotSupportedException(
+            $"WriteEphemeris is not supported for {GetType().Name} '{Name}'. " +
+            "CelestialBody ephemeris comes from SPICE kernels; only Spacecraft and Star support WriteEphemeris.");
     }
 
     /// <summary>

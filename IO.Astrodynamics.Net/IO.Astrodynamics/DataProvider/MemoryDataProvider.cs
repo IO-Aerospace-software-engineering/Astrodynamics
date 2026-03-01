@@ -95,6 +95,19 @@ public class MemoryDataProvider : IDataProvider
         return stateVector;
     }
 
+    public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
+    {
+        if (target.NaifId == observer.NaifId)
+        {
+            return new StateVector(Vector3.Zero, Vector3.Zero, observer, date, frame);
+        }
+
+        var targetFromSSB = GetEphemerisFromICRF(date, target, frame, aberration).ToStateVector();
+        var observerFromSSB = GetEphemerisFromICRF(date, observer, frame, aberration).ToStateVector();
+        return new StateVector(targetFromSSB.Position - observerFromSSB.Position,
+            targetFromSSB.Velocity - observerFromSSB.Velocity, observer, date, frame);
+    }
+
     public CelestialBody GetCelestialBodyInfo(int naifId)
     {
         return _celestialBodies[naifId];
