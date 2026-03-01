@@ -16,6 +16,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Export simulations to Cosmographia
 - Manage PDS archives (generate, materialize objects, validate against XML schemas)
 - Ephemerides and propagation
+  - Reference-body ephemeris: optimized computation avoids SSB round-trips, reducing memory allocation by up to 42% for spacecraft/site relative ephemeris
   - Spacecraft propagator: EGM2008 geopotential gravity (up to degree/order 70, validated against STK HPOP), atmospheric drag with co-rotation (Earth, Mars), solar radiation pressure with Cr and continuous shadow fraction, n-body perturbations, dynamic mass, impulsive maneuvers, fuel balance
   - Small-body propagator: geopotential (Earth), atmospheric drag (Earth, Mars), SRP, n-body
 - Atmospheric modeling

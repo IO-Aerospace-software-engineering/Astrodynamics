@@ -348,10 +348,13 @@ Base class for celestial objects (bodies, spacecraft).
 
 | Method | Description |
 |--------|-------------|
-| `GetGeometricStateFromICRF(Time date)` | Get geometric state in ICRF |
+| `GetGeometricStateFromICRF(Time date)` | Get geometric state relative to SSB in ICRF |
+| `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body in ICRF (avoids SSB round-trips) |
 | `AngularSize(double distance)` | Compute angular diameter at distance |
 | `IsOcculted(CelestialItem by, OrbitalParameters from, Aberration aberration)` | Check if occulted |
 | `WriteEphemeris(FileInfo outputFile)` | Write ephemeris to SPK file |
+
+**Ephemeris Computation Strategy**: When computing ephemeris between a target and a non-SPICE observer (Spacecraft, Site), the framework uses a "reference body" pattern instead of going through SSB. The reference body is determined automatically (Spacecraft's central body, Site's celestial body, or SSB as fallback). This avoids the numerical issues and overhead of subtracting two ~150 Gm SSB-relative vectors to get a relative position between nearby objects.
 
 ---
 
@@ -1082,8 +1085,9 @@ Ground-based observation site.
 | Method | Description |
 |--------|-------------|
 | `GetHorizontalCoordinates(Time epoch, ILocalizable target, Aberration aberration)` | Get azimuth, elevation, range |
-| `GetEphemeris(Time epoch, CelestialBody observer, Frame frame, Aberration aberration)` | Get site state |
-| `GetEphemeris(Window window, CelestialBody observer, Frame frame, Aberration aberration, TimeSpan step)` | Get site states |
+| `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get site state relative to any observer |
+| `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get site states over window |
+| `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body |
 | `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows |
@@ -1264,6 +1268,8 @@ Represents a spacecraft with components.
 | `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set maneuver to execute |
 | `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit |
 | `PropagateAsync(...)` | Propagate orbit asynchronously |
+| `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
+| `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
 | `GetOrientation(Frame frame, Time epoch)` | Get spacecraft orientation |
 | `WriteOrientation(FileInfo file)` | Write orientation kernel |
 
