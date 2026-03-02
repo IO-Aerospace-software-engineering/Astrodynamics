@@ -3,6 +3,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
@@ -23,10 +24,11 @@ namespace IO.Astrodynamics.Maneuver
             TargetApogee = apogeeRadius;
         }
 
-        protected override Vector3 ComputeManeuverPoint(StateVector stateVector)
-        {
-            return stateVector.PerigeeVector();
-        }
+        /// <summary>
+        /// Fires at perigee: r·v = 0, transitioning from negative to positive.
+        /// </summary>
+        public override double ComputeEventValue(StateVector localState) => localState.Position * localState.Velocity;
+        public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
 
         protected override Vector3 Execute(StateVector stateVector)
         {

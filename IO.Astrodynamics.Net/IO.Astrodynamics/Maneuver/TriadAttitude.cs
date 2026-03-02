@@ -270,7 +270,7 @@ public class TriadAttitude : Attitude
     /// </summary>
     /// <param name="stateVector">Current spacecraft state vector.</param>
     /// <returns>Quaternion representing the spacecraft orientation.</returns>
-    protected override Quaternion ComputeOrientation(StateVector stateVector)
+    public override Quaternion ComputeOrientation(StateVector stateVector)
     {
         Vector3 primaryRefVector;
         Vector3 secondaryRefVector;

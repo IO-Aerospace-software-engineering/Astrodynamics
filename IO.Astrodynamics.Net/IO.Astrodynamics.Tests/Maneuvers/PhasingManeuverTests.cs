@@ -32,23 +32,6 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         [Fact]
-        public void CanExecute()
-        {
-            var orbitalParams = new KeplerianElements(13600000.0, 0.5, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var targtOrbitalParams = new KeplerianElements(13600000.0, 0.5, 0.0, 0.0, 0.0, 30.0 * Astrodynamics.Constants.Deg2Rad, TestHelpers.EarthAtJ2000,
-                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 1000.0, 3000.0, new Clock("GenericClk", 65536), orbitalParams);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-            PhasingManeuver maneuver = new PhasingManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, 3, spc.Engines.First());
-
-            Assert.False(maneuver.CanExecute(orbitalParams.ToStateVector(TimeSystem.Time.J2000TDB.AddSeconds(-10))));
-            Assert.False(maneuver.CanExecute(orbitalParams.ToStateVector(TimeSystem.Time.J2000TDB.AddSeconds(-1))));
-            Assert.True(maneuver.CanExecute(orbitalParams.ToStateVector(TimeSystem.Time.J2000TDB.AddSeconds(1))));
-            Assert.False(maneuver.CanExecute(orbitalParams.ToStateVector(TimeSystem.Time.J2000TDB.AddSeconds(2))));
-        }
-
-        [Fact]
         public void Execute()
         {
             var orbitalParams = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);

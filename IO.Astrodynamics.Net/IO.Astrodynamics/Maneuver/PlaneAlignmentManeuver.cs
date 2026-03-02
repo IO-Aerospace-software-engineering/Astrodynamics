@@ -2,6 +2,7 @@ using System;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
@@ -11,41 +12,68 @@ namespace IO.Astrodynamics.Maneuver
         public bool? IsAscendingNode { get; private set; }
         public double RelativeInclination { get; private set; }
 
+        private CrossingDirection _crossingDirection = CrossingDirection.Any;
+
         public PlaneAlignmentManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit,
             Engine engine) : base(minimumEpoch, maneuverHoldDuration, targetOrbit, engine)
         {
         }
 
-        protected override Vector3 ComputeManeuverPoint(StateVector stateVector)
+        /// <summary>
+        /// g = r · ĥ_target : height above target orbital plane.
+        /// Zero at both ascending and descending nodes.
+        /// CrossingDirection distinguishes which node triggers the maneuver.
+        /// </summary>
+        public override double ComputeEventValue(StateVector localState)
         {
-            var an = TargetOrbit.SpecificAngularMomentum().Cross(stateVector.SpecificAngularMomentum()).Normalize();
-            if (IsAscendingNode == true)
+            var targetH = TargetOrbit.SpecificAngularMomentum().Normalize();
+            double g = localState.Position * targetH;
+
+            // On first evaluation, determine which node is closer and lock the direction
+            if (IsAscendingNode == null)
             {
-                return an;
+                // Ascending node: spacecraft crosses from below to above target plane (g: - → +, NegToPos)
+                // Descending node: spacecraft crosses from above to below target plane (g: + → -, PosToNeg)
+                double threshold = 1e-6 * localState.Position.Magnitude();
+
+                if (System.Math.Abs(g) < threshold)
+                {
+                    // At/near the node: use rate of change dg/dt = v · ĥ_target
+                    // Positive dg/dt → ascending through the plane → ascending node
+                    // Negative dg/dt → descending through the plane → descending node
+                    double dgdt = localState.Velocity * targetH;
+                    IsAscendingNode = dgdt > 0;
+                }
+                else if (g > 0)
+                {
+                    // Above target plane: next zero-crossing going negative is descending node
+                    IsAscendingNode = false;
+                }
+                else
+                {
+                    // Below target plane: next zero-crossing going positive is ascending node
+                    IsAscendingNode = true;
+                }
+
+                _crossingDirection = IsAscendingNode == true
+                    ? CrossingDirection.NegativeToPositive
+                    : CrossingDirection.PositiveToNegative;
             }
 
-            if (IsAscendingNode == false)
-            {
-                return an.Inverse();
-            }
-
-            if (stateVector.Position.Angle(an, stateVector.SpecificAngularMomentum()) > 0.0)
-            {
-                IsAscendingNode = true;
-                return an;
-            }
-
-            IsAscendingNode = false;
-            return an.Inverse();
+            return g;
         }
+
+        public override CrossingDirection EventCrossingDirection => _crossingDirection;
 
         protected override Vector3 Execute(StateVector stateVector)
         {
+            // Determine ascending node direction from angular momentum cross product
+            var an = TargetOrbit.SpecificAngularMomentum().Cross(stateVector.SpecificAngularMomentum()).Normalize();
             if (IsAscendingNode is null)
             {
                 throw new InvalidOperationException("Maneuver point undefined");
             }
-            
+
             var vel = stateVector.Velocity;
             var pos = stateVector.Position;
 

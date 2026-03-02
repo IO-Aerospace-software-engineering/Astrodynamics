@@ -3,6 +3,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
@@ -19,15 +20,17 @@ namespace IO.Astrodynamics.Maneuver
             TargetInclination = inclination;
         }
 
-        public override bool CanExecute(StateVector stateVector)
-        {
-            return System.Math.Abs(stateVector.ApogeeVector().Normalize() * stateVector.AscendingNodeVector().Normalize()) > 0.9 && base.CanExecute(stateVector);
-        }
+        /// <summary>
+        /// Fires at apogee: r·v = 0, transitioning from positive to negative.
+        /// </summary>
+        public override double ComputeEventValue(StateVector localState) => localState.Position * localState.Velocity;
+        public override CrossingDirection EventCrossingDirection => CrossingDirection.PositiveToNegative;
 
-        protected override Vector3 ComputeManeuverPoint(StateVector stateVector)
-        {
-            return stateVector.ApogeeVector();
-        }
+        /// <summary>
+        /// Apogee must be nearly aligned with ascending node (dot product > 0.9).
+        /// </summary>
+        public override bool CheckPreconditions(StateVector state) =>
+            System.Math.Abs(state.ApogeeVector().Normalize() * state.AscendingNodeVector().Normalize()) > 0.9;
 
         protected override Vector3 Execute(StateVector stateVector)
         {

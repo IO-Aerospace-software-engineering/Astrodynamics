@@ -19,7 +19,7 @@ public class AntiNormalAttitude : Attitude
     {
     }
 
-    protected override Quaternion ComputeOrientation(StateVector stateVector)
+    public override Quaternion ComputeOrientation(StateVector stateVector)
     {
         var normal = stateVector.Position.Cross(stateVector.Velocity);
         if (normal.MagnitudeSquared() < double.Epsilon)

@@ -9,13 +9,15 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
-/// Central-body-centered propagator for missions around a celestial body (LEO, GEO, lunar, etc.).
+/// Central-body-centered propagator for missions around any celestial body (LEO, GEO, lunar, interplanetary, etc.).
 /// The central body is inferred from the spacecraft's initial orbital parameters observer.
+/// When the observer is a Star or Barycenter, the Sun is used as the central body.
 /// </summary>
 public class CentralBodyPropagator : PropagatorBase
 {
@@ -40,25 +42,22 @@ public class CentralBodyPropagator : PropagatorBase
             integrator.AddForce(force);
         }
 
-        integrator.Initialize(SvCache[0]);
+        integrator.Initialize(InitialState);
     }
 
     /// <summary>
     /// Instantiate central-body propagator with a custom integrator that already has forces configured.
     /// No forces are added; the integrator is used as-is.
     /// The central body is inferred from the spacecraft's orbital parameters observer.
+    /// When the observer is a Star or Barycenter, the Sun is used as the central body.
     /// </summary>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
         : base(window, spacecraft, integrator, deltaT)
     {
-        _centralBody = spacecraft.InitialOrbitalParameters.Observer as CelestialItem
-                       ?? throw new ArgumentException(
-                           "Spacecraft initial orbital parameters observer must be a CelestialItem",
-                           nameof(spacecraft));
+        _centralBody = ResolveCentralBody(spacecraft);
 
-        var initialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector()
+        InitialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector()
             .RelativeTo(_centralBody, Aberration.None).ToStateVector();
-        InitializeCache(initialState);
     }
 
     /// <summary>
@@ -76,14 +75,30 @@ public class CentralBodyPropagator : PropagatorBase
     {
     }
 
+    /// <summary>
+    /// Resolves the central body from the spacecraft's observer.
+    /// For Star or Barycenter observers, returns the Sun.
+    /// </summary>
+    private static CelestialItem ResolveCentralBody(Spacecraft spacecraft)
+    {
+        var observer = spacecraft.InitialOrbitalParameters.Observer;
+
+        if (observer is Star or Barycenter)
+        {
+            return Stars.SUN_BODY;
+        }
+
+        return observer as CelestialItem
+               ?? throw new ArgumentException(
+                   "Spacecraft initial orbital parameters observer must be a CelestialItem",
+                   nameof(spacecraft));
+    }
+
     private static IIntegrator CreateDefaultIntegrator(Window window, Spacecraft spacecraft,
         IEnumerable<CelestialItem> celestialItems, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
     {
-        var centralBody = spacecraft.InitialOrbitalParameters.Observer as CelestialItem
-                          ?? throw new ArgumentException(
-                              "Spacecraft initial orbital parameters observer must be a CelestialItem",
-                              nameof(spacecraft));
+        var centralBody = ResolveCentralBody(spacecraft);
 
         var tdbStartDate = window.StartDate.ToTDB();
         var initialState = spacecraft.InitialOrbitalParameters.AtEpoch(tdbStartDate).ToStateVector()
@@ -96,7 +111,7 @@ public class CentralBodyPropagator : PropagatorBase
         return new VVIntegrator(forces, deltaT, initialState);
     }
 
-    private static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
+    protected static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
         CelestialItem[] items, Spacecraft spacecraft,
         bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
     {
@@ -149,9 +164,9 @@ public class CentralBodyPropagator : PropagatorBase
         }
     }
 
-    protected override void StorePropagatedStates()
+    protected override void StorePropagatedStates(StateVector[] outputStates)
     {
         // Store CB-relative states directly; conversion to SSB happens on demand
-        Spacecraft.AddStateVectorRelativeToICRF(SvCache);
+        Spacecraft.AddStateVectorRelativeToICRF(outputStates);
     }
 }

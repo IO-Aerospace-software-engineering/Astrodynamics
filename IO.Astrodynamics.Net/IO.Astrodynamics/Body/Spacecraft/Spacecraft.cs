@@ -431,22 +431,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             ResetPropagation();
-            IPropagator propagator;
-            if (InitialOrbitalParameters is TLE)
-            {
-                propagator = new TLEPropagator(window, this, propagatorStepSize);
-            }
-            else if (InitialOrbitalParameters.Observer is Star or Barycenter)
-            {
-                propagator = new SsbPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            }
-            else
-            {
-                propagator = new CentralBodyPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            }
+
+            // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
+            // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
+            using var propagator = new CentralBodyPropagator(window, this, additionalCelestialBodies,
+                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
 
             propagator.Propagate();
-            propagator.Dispose();
             _isPropagated = true;
         }
 

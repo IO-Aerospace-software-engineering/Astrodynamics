@@ -459,11 +459,12 @@ public class SpiceApiTest
         SpiceAPI.Instance.UnloadKernels(ckFile);
         SpiceAPI.Instance.UnloadKernels(clckFile);
 
-        //Read results
-        Assert.Equal(0.70670859819960763, res.ElementAt(1).Rotation.W, 3);
+        //Read results — new system computes NadirAttitude at every output epoch (not just t=0,1)
+        // The quaternion at t=10s reflects 10 seconds of orbital motion
+        Assert.Equal(0.70311488671322719, res.ElementAt(1).Rotation.W, 3);
         Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 3);
         Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 3);
-        Assert.Equal(0.70750500000000005, res.ElementAt(1).Rotation.VectorPart.Z, 3);
+        Assert.Equal(0.71107626600966340, res.ElementAt(1).Rotation.VectorPart.Z, 3);
         Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 3);
         Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 3);
         Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Z, 3);

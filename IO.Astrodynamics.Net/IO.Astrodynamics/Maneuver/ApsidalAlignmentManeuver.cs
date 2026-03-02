@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.TimeSystem;
 
 
@@ -18,7 +19,20 @@ namespace IO.Astrodynamics.Maneuver
         {
         }
 
-        protected override Vector3 ComputeManeuverPoint(StateVector stateVector)
+        /// <summary>
+        /// g = r · (ĥ × p̂) : perpendicular component in orbital plane relative to intersection point.
+        /// Zero when spacecraft passes through the nearest orbit intersection point.
+        /// </summary>
+        public override double ComputeEventValue(StateVector localState)
+        {
+            var intersectionDir = DetermineIntersectionDirection(localState);
+            var perpDir = localState.SpecificAngularMomentum().Cross(intersectionDir).Normalize();
+            return localState.Position * perpDir;
+        }
+
+        public override CrossingDirection EventCrossingDirection => CrossingDirection.NegativeToPositive;
+
+        private Vector3 DetermineIntersectionDirection(StateVector stateVector)
         {
             double pv = GetPTrueAnomaly(stateVector);
             double qv = GetQTrueAnomaly(stateVector);
@@ -30,12 +44,12 @@ namespace IO.Astrodynamics.Maneuver
             {
                 IntersectsP = true;
                 IntersectsQ = false;
-                return stateVector.ToStateVector(pv).Position;
+                return stateVector.ToStateVector(pv).Position.Normalize();
             }
 
             IntersectsP = false;
             IntersectsQ = true;
-            return stateVector.ToStateVector(qv).Position;
+            return stateVector.ToStateVector(qv).Position.Normalize();
         }
 
         private double AngleDifference(double angleA, double angleB)
@@ -51,7 +65,7 @@ namespace IO.Astrodynamics.Maneuver
 
         protected override Vector3 Execute(StateVector stateVector)
         {
-            ComputeManeuverPoint(stateVector);
+            DetermineIntersectionDirection(stateVector);
             Vector3 resVector;
             if (IntersectsP)
             {

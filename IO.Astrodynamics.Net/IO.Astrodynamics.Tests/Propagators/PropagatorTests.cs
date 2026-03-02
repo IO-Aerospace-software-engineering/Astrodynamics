@@ -31,17 +31,22 @@ public class PropagatorTests
     [Fact]
     public void CheckSymplecticProperty()
     {
+        // VV integrator should conserve energy (symplectic property).
+        // Use a GEO orbit around Earth with no perturbations to isolate integrator behavior.
         Clock clk = new Clock("My clock", 256);
-        var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var orbit = new KeplerianElements(42164000.0, 0, 0, 0, 0, 0, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
-        var propagator = new Propagator.SsbPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(30)), spc,
-            [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, TimeSpan.FromSeconds(100.0));
+        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1)), spc,
+            System.Array.Empty<CelestialItem>(), false, false, TimeSpan.FromSeconds(10.0));
         propagator.Propagate();
-        var energy = spc.StateVectorsRelativeToICRF.Values.Select(x => x.SpecificOrbitalEnergy()).ToArray();
+        var energy = spc.StateVectorsRelativeToICRF.Values
+            .Select(x => x.RelativeTo(earth, Aberration.None).ToStateVector().SpecificOrbitalEnergy())
+            .ToArray();
         var min = energy.Min();
         var max = energy.Max();
         var diff = max - min;
-        Assert.True(diff < 9.8E-05);
+        Assert.True(diff < 1e-4, $"Energy variation {diff:E3} exceeds limit 1E-4");
     }
 
     [Fact]
@@ -63,7 +68,7 @@ public class PropagatorTests
         Clock clk = new Clock("My clock", 256);
         var orbit = new KeplerianElements(150000000000.0, 0, 0, 0, 0, 0, Barycenters.SOLAR_SYSTEM_BARYCENTER, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
-        var propagator = new Propagator.SsbPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(5)),
+        var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(5)),
             spc,
             [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, TimeSpan.FromSeconds(2.0));
 
@@ -92,7 +97,7 @@ public class PropagatorTests
         var window = new Window(windowStart, windowEnd);
         var deltaT = TimeSpan.FromSeconds(stepSeconds);
 
-        var propagator = new Propagator.SsbPropagator(
+        var propagator = new Propagator.CentralBodyPropagator(
             window, spc,
             [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, deltaT);
 
@@ -259,7 +264,7 @@ public class PropagatorTests
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
-        var propagator = new Propagator.SsbPropagator(
+        var propagator = new Propagator.CentralBodyPropagator(
             propWindow, spc,
             [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
             false, false, TimeSpan.FromSeconds(1.0));
@@ -365,7 +370,7 @@ public class PropagatorTests
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
-        var propagator = new Propagator.SsbPropagator(
+        var propagator = new Propagator.CentralBodyPropagator(
             propWindow, spc,
             [
                 earth,
@@ -498,7 +503,7 @@ public class PropagatorTests
 
         var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
-        var propagator = new Propagator.SsbPropagator(
+        var propagator = new Propagator.CentralBodyPropagator(
             propWindow, spc,
             [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
             false, false, TimeSpan.FromSeconds(1.0));
