@@ -19,11 +19,6 @@ public class SpiceDataProvider : IDataProvider
         return SpiceAPI.Instance.TransformFrame(date, source, Frame.ICRF);
     }
 
-    public OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration)
-    {
-        return SpiceAPI.Instance.ReadEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId, target.NaifId, frame, aberration);
-    }
-
     public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
     {
         var result = SpiceAPI.Instance.ReadEphemeris(date, observer.NaifId, target.NaifId, frame, aberration).ToStateVector();

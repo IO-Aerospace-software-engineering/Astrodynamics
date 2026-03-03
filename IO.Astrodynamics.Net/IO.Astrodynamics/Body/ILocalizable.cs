@@ -21,8 +21,6 @@ namespace IO.Astrodynamics.Body
         /// <returns>An enumerable of orbital parameters over the specified time window.</returns>
         IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize);
 
-        OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date);
-
         /// <summary>
         /// Computes the geometric state of this object relative to a reference body in ICRF.
         /// Each type implements this efficiently to avoid SSB round-trips.
