@@ -12,6 +12,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
@@ -441,6 +442,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
             _isPropagated = true;
         }
 
+        public void Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, Integrator integrator, bool includeAtmosphericDrag,
+            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
+        {
+            ResetPropagation();
+
+            // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
+            // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
+            using var propagator = new CentralBodyPropagator(window, this, integrator, additionalCelestialBodies,
+                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+
+            propagator.Propagate();
+            _isPropagated = true;
+        }
+
         /// <summary>
         /// Computes the geometric state relative to a reference body.
         /// Uses cached propagation states with Lagrange interpolation, chaining via SPICE if needed.
@@ -488,7 +503,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // Short-circuit: observer IS the CB, no aberration, have cached states
             if (aberration == Aberration.None && _stateVectorsRelativeToICRF.Count >= 2
-                && cb.NaifId == observer.NaifId && cb.NaifId != 0)
+                                              && cb.NaifId == observer.NaifId && cb.NaifId != 0)
             {
                 var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
                 return Lagrange.Interpolate(states, epoch).ToFrame(frame);
