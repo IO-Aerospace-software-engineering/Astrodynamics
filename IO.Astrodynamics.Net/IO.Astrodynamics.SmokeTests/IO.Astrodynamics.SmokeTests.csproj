@@ -4,7 +4,7 @@
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <IsPackable>false</IsPackable>
-        <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+        <TargetFramework>net10.0</TargetFramework>
         <!-- Version of the IO.Astrodynamics NuGet package to test.
              Override via -p:IOAstrodynamicsVersion=8.5.0-preview on the command line.
              Defaults to *-* (latest prerelease from any configured source). -->

@@ -32,26 +32,38 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         [Fact]
-        public void CanExecute()
+        public void CheckPreconditions()
         {
-            var orbitalParams = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 9000.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+            // CombinedManeuver.CheckPreconditions verifies that the apogee vector is aligned with the
+            // ascending node vector (|dot| > 0.9). This ensures the maneuver fires at the correct
+            // orbital geometry: apogee must be near the ascending node.
+
+            // AOP = 0: apogee is at true anomaly 180°, ascending node at true anomaly 0° → they are
+            // anti-parallel, so |dot| of normalized vectors ≈ 1.0 → passes
+            var alignedOrbit = new KeplerianElements(11480000.0, 0.5, 28.5 * Astrodynamics.Constants.Deg2Rad,
+                0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+
+            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,
+                new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+                alignedOrbit.ApogeeVector().Magnitude() + 100000.0, 10.0,
+                new Engine("eng", "engmk1", "12345", 450, 50,
+                    new FuelTank("ft", "ftA", "123456", 1000, 1000)));
+
+            Assert.True(maneuver.CheckPreconditions(alignedOrbit.ToStateVector()));
+
+            // AOP = 90°: apogee is 90° away from ascending node → dot product ≈ 0 → fails
+            var perpendicularOrbit = new KeplerianElements(11480000.0, 0.5, 28.5 * Astrodynamics.Constants.Deg2Rad,
+                0.0, Astrodynamics.Constants.PI * 0.5, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
                 Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 100.0, 1000.0, new Clock("GenericClk", 65536), orbitalParams);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000, 1000));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
 
-            var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.InitialOrbitalParameters.ApogeeVector().Magnitude() + 100000.0, 10.0,
-                spc.Engines.First());
+            Assert.False(maneuver.CheckPreconditions(perpendicularOrbit.ToStateVector()));
 
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(-30)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(-10)).ToStateVector()));
-            Assert.True(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(10)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(30)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(-30)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(-10)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(10)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(30)).ToStateVector()));
-            Assert.True(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(10)).ToStateVector()));
+            // AOP = 45°: apogee is 45° from ascending node → |dot| ≈ cos(45°) ≈ 0.707 → fails (< 0.9)
+            var intermediateOrbit = new KeplerianElements(11480000.0, 0.5, 28.5 * Astrodynamics.Constants.Deg2Rad,
+                0.0, Astrodynamics.Constants.PI * 0.25, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+
+            Assert.False(maneuver.CheckPreconditions(intermediateOrbit.ToStateVector()));
         }
 
         [Fact]

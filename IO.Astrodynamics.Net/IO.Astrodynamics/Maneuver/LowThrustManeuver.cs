@@ -2,6 +2,7 @@ using System;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
@@ -13,10 +14,12 @@ namespace IO.Astrodynamics.Maneuver
         {
         }
 
-        protected override Vector3 ComputeManeuverPoint(StateVector stateVector)
+        public override double ComputeEventValue(StateVector localState)
         {
             throw new NotImplementedException();
         }
+
+        public override CrossingDirection EventCrossingDirection => throw new NotImplementedException();
 
         protected override Vector3 Execute(StateVector vector)
         {

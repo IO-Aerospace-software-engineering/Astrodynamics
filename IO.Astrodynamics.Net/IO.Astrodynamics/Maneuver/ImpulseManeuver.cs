@@ -6,6 +6,7 @@ using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
+using IO.Astrodynamics.Propagator.Events;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
@@ -19,6 +20,24 @@ namespace IO.Astrodynamics.Maneuver
         public OrbitalParameters.OrbitalParameters TargetOrbit { get; protected set; }
 
         public Vector3 DeltaV { get; internal set; }
+
+        /// <summary>
+        /// Industry-standard g-function. Zero-crossing triggers the maneuver.
+        /// State is relative to ManeuverCenter (already transformed by ManeuverEventDetector).
+        /// Must be continuous, smooth, and stateless — suitable for root-finding.
+        /// </summary>
+        public abstract double ComputeEventValue(StateVector localState);
+
+        /// <summary>
+        /// Which zero-crossing direction triggers this maneuver.
+        /// </summary>
+        public abstract CrossingDirection EventCrossingDirection { get; }
+
+        /// <summary>
+        /// Optional precondition check at event time (default: true).
+        /// Override for maneuvers with additional constraints (e.g., CombinedManeuver).
+        /// </summary>
+        public virtual bool CheckPreconditions(StateVector state) => true;
 
         protected ImpulseManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
         {
@@ -43,6 +62,12 @@ namespace IO.Astrodynamics.Maneuver
         public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
         {
             var localSv = stateVector.RelativeTo(ManeuverCenter, Aberration.None).ToStateVector();
+
+            // Ensure g-function state is initialized (e.g., PlaneAlignmentManeuver.IsAscendingNode).
+            // In the propagator loop, ComputeEventValue is called by the event detector before TryExecute.
+            // This call handles direct invocations (e.g., unit tests).
+            ComputeEventValue(localSv);
+
             //Compute the deltaV
             DeltaV = Execute(localSv);
 

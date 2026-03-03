@@ -16,17 +16,12 @@ public abstract class Attitude : Maneuver
     {
     }
 
-    protected override Vector3 ComputeManeuverPoint(StateVector stateVector)
-    {
-        return stateVector.Position;
-    }
-
     protected override Vector3 Execute(StateVector vector)
     {
         return Vector3.Zero;
     }
 
-    protected abstract Quaternion ComputeOrientation(StateVector stateVector);
+    public abstract Quaternion ComputeOrientation(StateVector stateVector);
 
     public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
     {

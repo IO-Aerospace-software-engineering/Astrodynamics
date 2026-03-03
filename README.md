@@ -16,8 +16,9 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Export simulations to Cosmographia
 - Manage PDS archives (generate, materialize objects, validate against XML schemas)
 - Ephemerides and propagation
-  - Spacecraft propagator: EGM2008 geopotential gravity (up to degree/order 70, validated against STK HPOP), atmospheric drag with co-rotation (Earth, Mars), solar radiation pressure with Cr and continuous shadow fraction, n-body perturbations, dynamic mass, impulsive maneuvers, fuel balance
-  - Small-body propagator: geopotential (Earth), atmospheric drag (Earth, Mars), SRP, n-body
+  - Reference-body ephemeris: optimized computation avoids SSB round-trips, reducing memory allocation by up to 42% for spacecraft/site relative ephemeris
+  - Central-body propagator: segment-based architecture with event-driven maneuver execution, EGM2008 geopotential gravity (up to degree/order 70, validated against GMAT), atmospheric drag with co-rotation (Earth, Mars), solar radiation pressure with Cr and continuous shadow fraction, Battin's third-body perturbations, dynamic mass, impulsive maneuvers with g-function event detection, fuel balance, cubic Hermite dense output
+  - Ephemeris cache: 60-second grid with 8-point Lagrange interpolation for force model evaluation
 - Atmospheric modeling
   - Unified API via `IAtmosphericModel` interface with `Atmosphere` result record
   - Earth: U.S. Standard Atmosphere 1976 (simple), NRLMSISE-00 (high-fidelity with space weather)
@@ -30,7 +31,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Compute TLE from state vectors with SGP4-compatible fitting
 - Frames and coordinates: ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, Equatorial/Horizontal/Planetodetic/Planetographic
 - Spacecraft configuration: clocks, fuel tanks, engines, instruments, configurable body axes
-- Impulsive maneuvers: Lambert transfers, apogee/perigee height changes, plane/apsidal alignment, phasing, combined maneuvers
+- Impulsive maneuvers: Lambert transfers, apogee/perigee height changes, plane/apsidal alignment, phasing, combined maneuvers — all triggered via industry-standard g-function zero-crossing event detection
 - Attitudes: instrument pointing, nadir/zenith, prograde/retrograde, normal/anti-normal, TRIAD (fully-constrained 3-DOF with orbital direction and celestial targets), configurable body axes
 - Time systems: Calendar, Julian, TDB, UTC, local; conversions included
 - Event finding: distance, occultation, coordinate, illumination constraints; instrument field-of-view windows

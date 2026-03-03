@@ -70,7 +70,7 @@ public class PropagatorSolver : ICategorySolver
 
         // Propagate
         var stepSize = TimeSpan.FromSeconds(inputs.StepSizeS);
-        var propagator = new SpacecraftPropagator(
+        var propagator = new CentralBodyPropagator(
             propWindow, spacecraft, bodies,
             inputs.ForceModel.Drag, inputs.ForceModel.Srp, stepSize);
 

@@ -348,10 +348,13 @@ Base class for celestial objects (bodies, spacecraft).
 
 | Method | Description |
 |--------|-------------|
-| `GetGeometricStateFromICRF(Time date)` | Get geometric state in ICRF |
+| `GetGeometricStateFromICRF(Time date)` | Get geometric state relative to SSB in ICRF |
+| `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body in ICRF (avoids SSB round-trips) |
 | `AngularSize(double distance)` | Compute angular diameter at distance |
 | `IsOcculted(CelestialItem by, OrbitalParameters from, Aberration aberration)` | Check if occulted |
 | `WriteEphemeris(FileInfo outputFile)` | Write ephemeris to SPK file |
+
+**Ephemeris Computation Strategy**: When computing ephemeris between a target and a non-SPICE observer (Spacecraft, Site), the framework uses a "reference body" pattern instead of going through SSB. The reference body is determined automatically (Spacecraft's central body, Site's celestial body, or SSB as fallback). This avoids the numerical issues and overhead of subtracting two ~150 Gm SSB-relative vectors to get a relative position between nearby objects.
 
 ---
 
@@ -1082,8 +1085,9 @@ Ground-based observation site.
 | Method | Description |
 |--------|-------------|
 | `GetHorizontalCoordinates(Time epoch, ILocalizable target, Aberration aberration)` | Get azimuth, elevation, range |
-| `GetEphemeris(Time epoch, CelestialBody observer, Frame frame, Aberration aberration)` | Get site state |
-| `GetEphemeris(Window window, CelestialBody observer, Frame frame, Aberration aberration, TimeSpan step)` | Get site states |
+| `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get site state relative to any observer |
+| `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get site states over window |
+| `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body |
 | `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows |
@@ -1264,6 +1268,8 @@ Represents a spacecraft with components.
 | `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set maneuver to execute |
 | `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit |
 | `PropagateAsync(...)` | Propagate orbit asynchronously |
+| `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
+| `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
 | `GetOrientation(Frame frame, Time epoch)` | Get spacecraft orientation |
 | `WriteOrientation(FileInfo file)` | Write orientation kernel |
 
@@ -1383,9 +1389,20 @@ Base class for orbital maneuvers.
 
 | Method | Description |
 |--------|-------------|
-| `CanExecute(StateVector stateVector)` | Check if maneuver can execute |
-| `TryExecute(StateVector stateVector)` | Execute maneuver if conditions met |
-| `SetNextManeuver(Maneuver maneuver)` | Chain maneuvers |
+| `TryExecute(StateVector stateVector)` | Execute maneuver and return new state + orientation |
+| `SetNextManeuver(Maneuver maneuver)` | Chain maneuvers in sequence |
+
+#### ImpulseManeuver (Abstract)
+
+Base class for impulse maneuvers. Uses industry-standard g-function event detection for precise maneuver triggering.
+
+| Method / Property | Description |
+|--------|-------------|
+| `ComputeEventValue(StateVector localState)` | Continuous g-function; zero-crossing triggers the maneuver. State is maneuver-center-relative. |
+| `EventCrossingDirection` | Which zero-crossing direction triggers this maneuver (`NegativeToPositive`, `PositiveToNegative`, `Any`) |
+| `CheckPreconditions(StateVector state)` | Optional additional constraints (default: true). Override for maneuvers with extra conditions. |
+| `TryExecute(StateVector stateVector)` | Execute maneuver: compute DeltaV, burn fuel, update state |
+| `DeltaV` | Computed delta-V vector (set after execution) |
 
 #### Attitude maneuvers
 
@@ -1444,12 +1461,16 @@ Key features:
 
 #### Impulse maneuvers
 
-- `ApogeeHeightManeuver`: Change apogee altitude
-- `PerigeeHeightManeuver`: Change perigee altitude
-- `PlaneAlignmentManeuver`: Change orbital plane
-- `ApsidalAlignmentManeuver`: Rotate line of apsides
-- `PhasingManeuver`: Change orbital period for phasing
-- `CombinedManeuver`: Execute combined plane change and height change
+Each impulse maneuver defines a g-function for event-driven triggering:
+
+| Maneuver | g-function | Crossing Direction | Fires at |
+|----------|-----------|-------------------|----------|
+| `ApogeeHeightManeuver` | r·v | Negative → Positive | Perigee |
+| `PerigeeHeightManeuver` | r·v | Positive → Negative | Apogee |
+| `PhasingManeuver` | r·v | Negative → Positive | Perigee |
+| `CombinedManeuver` | r·v | Positive → Negative | Apogee (+ precondition: apogee aligned with ascending node) |
+| `PlaneAlignmentManeuver` | r·ĥ_target | Adaptive | Nearest orbital node (ascending or descending) |
+| `ApsidalAlignmentManeuver` | r·(ĥ×p̂) | Negative → Positive | Nearest orbit intersection point |
 
 ---
 
@@ -1485,22 +1506,50 @@ Console.WriteLine($"Delta-V at arrival: {solution.ArrivalVelocity.Magnitude():F1
 
 ### IO.Astrodynamics.Propagator
 
-#### SpacecraftPropagator
+#### CentralBodyPropagator
 
-Numerical orbit propagator using a Velocity-Verlet (symplectic) integrator with configurable perturbation models.
+Numerical orbit propagator using a segment-based architecture with event-driven maneuver execution and dense output via Hermite interpolation. Handles LEO, GEO, lunar, and interplanetary missions — the central body is inferred from the spacecraft's initial orbital parameters observer (Star/Barycenter observers → Sun).
 
 | Constructor | Description |
 |------------|-------------|
-| `SpacecraftPropagator(Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Create propagator |
+| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Create propagator with auto force-building and default VV integrator |
+| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step)` | Create propagator with custom integrator (forces pre-configured) |
+| `CentralBodyPropagator(Window window, Spacecraft spacecraft, Integrator integrator, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Create propagator with custom integrator and auto force-building |
 
 | Method | Description |
 |--------|-------------|
-| `Propagate()` | Execute propagation |
+| `Propagate()` | Execute propagation with event detection and dense output |
+
+**Propagation Architecture:**
+1. **Build event detectors** from the spacecraft's maneuver chain (leading attitudes execute immediately)
+2. **Segment loop**: Integrator advances with event detection; on event → execute maneuver, reinitialize
+3. **Output**: Interpolate `PropagationSolution` at fixed `DeltaT` epochs via cubic Hermite dense output
+4. **Continuous attitude**: Recompute orientations at each output epoch if an attitude maneuver is active
+
+**Key Supporting Types:**
+- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output
+- `PropagationSegment`: Ordered list of `AcceptedStep` records with binary-search Hermite interpolation
+- `AcceptedStep`: Stores position, velocity, and acceleration at step start/end for cubic Hermite interpolation
+- `IntegrationResult`: Integration segment + optional `EventInfo` (detector index, precise event time and state)
+
+**Integrator Interface (`IIntegrator`):**
+- `Initialize(StateVector initialState)` — set observer, frame, workspace
+- `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`
+- Community default: `VVIntegrator` (Velocity-Verlet, fixed-step, event detection at step boundaries)
+- Pro extension: `RK78Integrator` (adaptive Prince-Dormand 7(8), sub-step event refinement via bisection)
+
+**Event Detection (`IEventDetector`):**
+- `Evaluate(state)` → continuous scalar g-function
+- `Direction` → `CrossingDirection` (`NegativeToPositive`, `PositiveToNegative`, `Any`)
+- `HandleEvent()` → `EventResult` (modified state, orientation, action, next detector)
+- `ManeuverEventDetector` wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`
 
 **Force Models:**
 - **Gravitational acceleration** from each body in the `bodies` list. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
+- **Third-body perturbation**: Battin's numerically stable formula for each additional celestial body.
 - **Atmospheric drag** (when `drag` is true): uses the body's atmospheric model with atmosphere-relative velocity (accounts for body co-rotation). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
 - **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
+- **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration.
 
 **Geopotential usage:**
 
@@ -1518,7 +1567,7 @@ var orbit = new StateVector(
 var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit);
 
 // Propagate with geopotential, Moon, and Sun perturbations
-var propagator = new SpacecraftPropagator(
+var propagator = new CentralBodyPropagator(
     new Window(epoch, epoch.AddDays(1)),
     spacecraft,
     [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
@@ -1526,7 +1575,7 @@ var propagator = new SpacecraftPropagator(
 propagator.Propagate();
 ```
 
-**Accuracy:** With degree-10 EGM2008, Moon, and Sun perturbations, 24h LEO propagation achieves sub-kilometer position accuracy compared to STK HPOP reference solutions.
+**Accuracy:** With degree-10 EGM2008, Moon, and Sun perturbations, 24h LEO propagation achieves sub-kilometer position accuracy compared to GMAT reference solutions.
 
 #### TLEPropagator
 
@@ -2611,7 +2660,7 @@ var orbit = new StateVector(
 var clock = new Clock("Clock", 256);
 var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, 10000.0, clock, orbit);
 
-var propagator = new SpacecraftPropagator(
+var propagator = new CentralBodyPropagator(
     new Window(epoch, epoch.AddDays(1)),
     spacecraft,
     [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
@@ -2816,5 +2865,19 @@ The native C++ proxy layer has been updated for safety and correctness:
 - **Buffer safety**: All `FindWindows*` functions are bounds-checked to their declared array size (1000). `ReadOrientation`/`ReadEphemeris` loops are bounds-checked to 10000. All DTO string setters use `strncpy` instead of `strcpy`.
 - **Memory safety**: `ReadOrientationProxy` no longer uses heap-allocated matrices; uses the stack-based `Matrix(double[3][3])` constructor instead, eliminating memory leak risk.
 - **Native library**: Both `libIO.Astrodynamics.so` (Linux) and `IO.Astrodynamics.dll` (Windows) must be rebuilt from this version. Old native binaries are **incompatible** with the new .NET P/Invoke signatures.
+
+### Breaking Changes in 8.6.0
+
+The propagator and maneuver systems have been redesigned:
+
+- **`SpacecraftPropagator` renamed to `CentralBodyPropagator`**: Handles all numerical propagation (LEO through interplanetary). Central body is inferred from the spacecraft's initial observer. `SsbPropagator` has been removed.
+- **`Maneuver.CanExecute()` removed**: Maneuver triggering now uses industry-standard g-function event detection. Each `ImpulseManeuver` implements `ComputeEventValue(StateVector)` → continuous scalar and `EventCrossingDirection` → crossing direction.
+- **`Maneuver.ComputeManeuverPoint()` removed**: Replaced by g-function zero-crossing in `ComputeEventValue()`.
+- **`Attitude.ComputeOrientation()` is now `public`** (was `protected`): Enables continuous attitude recomputation at output epochs.
+- **New `ImpulseManeuver` abstract members**: `ComputeEventValue(StateVector)`, `EventCrossingDirection`, and optional `CheckPreconditions(StateVector)` must be implemented by custom maneuver subclasses.
+- **New integrator interface**: `IIntegrator` with `Initialize(StateVector)` and `IntegrateSegment()` replaces the previous tight coupling between propagator and integrator.
+- **New event detection system**: `IEventDetector`, `ManeuverEventDetector`, `CrossingDirection` in `IO.Astrodynamics.Propagator.Events`.
+- **Segment-based propagation**: `PropagationSolution`, `PropagationSegment`, `AcceptedStep` enable cubic Hermite dense output for all integrators.
+- **`Spacecraft.Propagate()` simplified**: Always uses `CentralBodyPropagator` — no auto-routing between different propagator types.
 
 Contact: [contact@io-aerospace.org](mailto:contact@io-aerospace.org)

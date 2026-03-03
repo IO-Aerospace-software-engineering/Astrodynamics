@@ -26,7 +26,7 @@ public class EphemerisTests
             var res = sb.ToString();
 
             Assert.Equal(
-                $"Epoch : 2023-01-01T01:00:00.0000000 TDB A : 149547984744.6522, Ecc. : 0.016383513214941237, Inc. : 0.40904753866331567, AN : 6.283111166910646, AOP : 1.8230032812672177, M : 6.208209945338079, Frame : j2000{Environment.NewLine}Epoch : 2023-01-01T01:01:00.0000000 TDB A : 149547966664.0716, Ecc. : 0.01638339268455749, Inc. : 0.40904753879539246, AN : 6.283111165026861, AOP : 1.8230022519007245, M : 6.208222876826916, Frame : j2000{Environment.NewLine}"
+                $"Epoch : 2023-01-01T01:00:00.0000000 TDB A : 149548023692.8589, Ecc. : 0.016383768660595866, Inc. : 0.4090475386632512, AN : 6.283111166910646, AOP : 1.8230020944251075, M : 6.208211132464601, Frame : j2000{Environment.NewLine}Epoch : 2023-01-01T01:01:00.0000000 TDB A : 149548005605.26834, Ecc. : 0.016383648084550295, Inc. : 0.4090475387953283, AN : 6.283111165029856, AOP : 1.8230010654683242, M : 6.20822406354363, Frame : j2000{Environment.NewLine}"
                 , res);
         }
     }
@@ -47,9 +47,9 @@ public class EphemerisTests
             }, TimeSpan.FromMinutes(1));
             var res = sb.ToString();
             Assert.Equal(
-                $"Epoch : 2023-01-01T01:00:00.0000000 TDB Position : X : -25577262731.326492 Y : 132913320450.42278 Z: 57617007553.115654 Velocity : X : -29812.532391293124 Y : -4864.249418137372 Z: -2109.6070263224897 Frame : j2000{
+                $"Epoch : 2023-01-01T01:00:00.0000000 TDB Position : X : -25577262731.326492 Y : 132913320450.42278 Z: 57617007553.115654 Velocity : X : -29812.532391293124 Y : -4864.249418137372 Z: -2109.60702632249 Frame : j2000{
                     Environment.NewLine
-                }Epoch : 2023-01-01T01:01:00.0000000 TDB Position : X : -25579051481.302357 Y : 132913028585.51353 Z: 57616880972.382614 Velocity : X : -29812.466803377923 Y : -4864.580889886811 Z: -2109.750741816462 Frame : j2000{
+                }Epoch : 2023-01-01T01:01:00.0000000 TDB Position : X : -25579051481.302353 Y : 132913028585.51353 Z: 57616880972.382614 Velocity : X : -29812.466803377927 Y : -4864.580889886812 Z: -2109.7507418164614 Frame : j2000{
                     Environment.NewLine}"
                 , res);
         }
@@ -67,7 +67,7 @@ public class EphemerisTests
             command.SubPoint("Data", 301, 399, new EpochParameters{Epoch = "0.0"});
 
             var res = sb.ToString();
-            Assert.Equal($"Planetocentric {{ Longitude = -1.007868325632746, Latitude = -0.1902070039162086, Radius = 402448639.8873211 }}{Environment.NewLine}"
+            Assert.Equal($"Planetocentric {{ Longitude = -1.0078683256327345, Latitude = -0.19020700391621248, Radius = 402448639.8873273 }}{Environment.NewLine}"
                 , res);
         }
     }
@@ -84,7 +84,7 @@ public class EphemerisTests
             command.SubPoint("Data", 301, 399, new EpochParameters{Epoch = "0.0"}, cartesian: true);
 
             var res = sb.ToString();
-            Assert.Equal($"X : 3341996.8388490714 Y : -5296048.281834733 Z: -1205719.123716723{Environment.NewLine}"
+            Assert.Equal($"X : 3341996.8388491296 Y : -5296048.281834691 Z: -1205719.1237167474{Environment.NewLine}"
                 , res);
         }
     }
@@ -101,7 +101,7 @@ public class EphemerisTests
             command.SubPoint("Data", 301, 399, new EpochParameters{Epoch = "0.0"}, planetodetic: true);
 
             var res = sb.ToString();
-            Assert.Equal($"Planetodetic {{ Longitude = -1.007868325632746, Latitude = -0.19145790695998618, Altitude = 396166994.9749261 }}{Environment.NewLine}"
+            Assert.Equal($"Planetodetic {{ Longitude = -1.0078683256327345, Latitude = -0.1914579069599901, Altitude = 396166994.9749323 }}{Environment.NewLine}"
                 , res);
         }
     }

@@ -160,6 +160,33 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
+        /// Computes the geometric state relative to a reference body.
+        /// Kernel sites use SPICE; custom sites use body-fixed→ICRF + chain.
+        /// </summary>
+        public StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
+        {
+            if (_isFromKernel)
+            {
+                return _dataProvider.GetEphemeris(epoch, this, referenceBody, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            }
+
+            // Custom site: body-fixed → ICRF
+            var siteOnBody = new StateVector(
+                Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
+                Vector3.Zero, CelestialBody, epoch, CelestialBody.Frame)
+                .ToFrame(Frames.Frame.ICRF).ToStateVector();
+
+            if (referenceBody.NaifId == CelestialBody.NaifId)
+                return siteOnBody;
+
+            var bodyFromRef = CelestialBody.GetGeometricStateRelativeTo(epoch, referenceBody);
+            return new StateVector(
+                bodyFromRef.Position + siteOnBody.Position,
+                bodyFromRef.Velocity + siteOnBody.Velocity,
+                referenceBody, epoch, Frames.Frame.ICRF);
+        }
+
+        /// <summary>
         /// Get site ephemeris
         /// </summary>
         /// <param name="date"></param>
@@ -178,58 +205,39 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Get site ephemeris
+        /// Site ephemeris. Uses SPICE/direct path for CelestialBody observers,
+        /// reference-body approach for Spacecraft/Site observers.
         /// </summary>
-        /// <param name="date"></param>
-        /// <param name="observer"></param>
-        /// <param name="frame"></param>
-        /// <param name="aberration"></param>
-        /// <returns></returns>
         public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable observer, Frame frame, Aberration aberration)
         {
-            if (_isFromKernel)
+            // For SPICE-backed observers (CelestialBodies that aren't spacecraft/stars)
+            if (observer is CelestialItem ci && !ci.IsSpacecraft && !ci.IsStar)
             {
-                var targetGeometricStateFromSSB = this.GetGeometricStateFromICRF(date).ToStateVector();
-                var observerGeometricStateFromSSB = observer.GetGeometricStateFromICRF(date).ToStateVector();
-                var relativeState = new StateVector(targetGeometricStateFromSSB.Position - observerGeometricStateFromSSB.Position,
-                    targetGeometricStateFromSSB.Velocity - observerGeometricStateFromSSB.Velocity,
-                    observer, date, Frames.Frame.ICRF);
-                if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+                if (_isFromKernel)
                 {
-                    relativeState = CorrectFromAberration(date, observer, aberration, relativeState, observerGeometricStateFromSSB);
+                    return _dataProvider.GetEphemeris(date, this, observer, frame, aberration);
                 }
 
-                return relativeState.ToFrame(frame);
+                // Custom site: body-fixed computation with RelativeTo for observer change
+                var siteInFrame = new StateVector(
+                    Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
+                    Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
+                return siteInFrame.RelativeTo(observer, aberration);
             }
 
-            var siteInFrame = new StateVector(Planetodetic.ToPlanetocentric(CelestialBody.Flattening, CelestialBody.EquatorialRadius).ToCartesianCoordinates(),
-                Vector3.Zero, CelestialBody, date, CelestialBody.Frame).ToFrame(frame).ToStateVector();
-            return siteInFrame.RelativeTo(observer, aberration);
-        }
-        
-        protected StateVector CorrectFromAberration(Time epoch, ILocalizable observer, Aberration aberration, StateVector relativeState,
-            StateVector observerGeometricStateFromSSB)
-        {
-            var lightTime = TimeSpan.FromSeconds(relativeState.Position.Magnitude() / Constants.C);
+            // Reference-body approach for non-SPICE observers (Spacecraft, other Sites)
+            CelestialItem cb = CelestialBody;
+            var siteCB = this.GetGeometricStateRelativeTo(date, cb);
+            var observerCB = observer.GetGeometricStateRelativeTo(date, cb);
+            var relative = new StateVector(
+                siteCB.Position - observerCB.Position,
+                siteCB.Velocity - observerCB.Velocity,
+                observer, date, Frames.Frame.ICRF);
 
-            Time newEpoch;
-            if (aberration is Aberration.LT or Aberration.LTS)
-                newEpoch = epoch - lightTime;
-            else
-                newEpoch = epoch + lightTime;
+            if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+                relative = CelestialItem.CorrectFromAberrationCB(this, date, observer, aberration, relative, observerCB, cb);
 
-            var targetNewGeometricStateFromSSB = this.GetGeometricStateFromICRF(newEpoch).ToStateVector();
-            var correctedGeometricState = new StateVector(targetNewGeometricStateFromSSB.Position - observerGeometricStateFromSSB.Position,
-                targetNewGeometricStateFromSSB.Velocity - observerGeometricStateFromSSB.Velocity, observer, epoch, Frames.Frame.ICRF);
-
-            if (aberration == Aberration.LTS || aberration == Aberration.XLTS)
-            {
-                var voverc = observerGeometricStateFromSSB.Velocity.Magnitude() / Constants.C;
-                var stellarAberration = observerGeometricStateFromSSB.Velocity * voverc;
-                correctedGeometricState.UpdatePosition(relativeState.Position + stellarAberration);
-            }
-
-            return correctedGeometricState;
+            return relative.ToFrame(frame);
         }
 
         /// <summary>

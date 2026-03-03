@@ -72,8 +72,10 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
 - `IO.Astrodynamics.Frames`: Reference frames and transformations
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
-- `IO.Astrodynamics.Propagator`: Orbital propagation and integration (Velocity-Verlet symplectic integrator)
+- `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution, AcceptedStep
+- `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet)
 - `IO.Astrodynamics.Propagator.Forces`: Force models (gravitational, atmospheric drag, solar radiation pressure)
+- `IO.Astrodynamics.Propagator.Events`: IEventDetector, ManeuverEventDetector, CrossingDirection
 - `IO.Astrodynamics.Atmosphere`: Atmospheric density, temperature, and pressure models for Earth and Mars
 - `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions
 - `IO.Astrodynamics.Physics`: Geopotential model reader, coefficients
@@ -426,7 +428,7 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
 // The propagator automatically uses the geopotential model when present
-var propagator = new SpacecraftPropagator(window, spacecraft,
+var propagator = new CentralBodyPropagator(window, spacecraft,
     [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
     false, false, TimeSpan.FromSeconds(1.0));
 ```
@@ -435,7 +437,7 @@ var propagator = new SpacecraftPropagator(window, spacecraft,
 
 ### Force Models (Propagator Perturbations)
 
-The `IO.Astrodynamics.Propagator.Forces` namespace provides configurable perturbation models used by the `SpacecraftPropagator`.
+The `IO.Astrodynamics.Propagator.Forces` namespace provides configurable perturbation models used by `CentralBodyPropagator`.
 
 **Atmospheric Drag (`AtmosphericDrag`)**
 - Uses **atmosphere-relative velocity**: body-centered velocity minus co-rotation (`v_rel = v_body - omega x r_body`)
@@ -471,6 +473,78 @@ var srp = new SolarRadiationPressure(spacecraft, [earth]);
 - Instance method: `ShadowFraction(CelestialItem by, OrbitalParameters from, Aberration aberration)` → `[0, 1]`
 - Returns 0.0 for full illumination, 1.0 for total eclipse
 - Uses the standard two-circle intersection area formula for partial eclipses
+
+### Propagator Architecture
+
+The propagation system uses a segment-based architecture with event-driven maneuver execution.
+
+**Propagator Hierarchy**
+```
+PropagatorBase (abstract)
+├── TLEPropagator         — SGP4/SDP4 from Two-Line Elements
+└── CentralBodyPropagator — All numerical propagation (LEO, GEO, lunar, interplanetary)
+```
+
+`CentralBodyPropagator` infers the central body from `spacecraft.InitialOrbitalParameters.Observer`. For Star/Barycenter observers, Sun is used as central body. There is no separate SSB propagator.
+
+**Key Classes**
+- `PropagatorBase`: Abstract base with segment-based propagation loop, event detection, and dense output
+- `CentralBodyPropagator`: Concrete implementation with auto force-building and ephemeris cache injection
+- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output
+- `PropagationSegment`: List of `AcceptedStep` records with Hermite interpolation
+- `AcceptedStep`: Start/end position, velocity, and acceleration for cubic Hermite dense output
+- `IntegrationResult`: Segment + optional `EventInfo` (detector index, precise event time and state)
+
+**Propagation Loop**
+1. Build event detectors from maneuver chain (leading attitudes execute immediately)
+2. Segment loop: `Integrator.IntegrateSegment()` advances with event detection
+3. On event: `IEventDetector.HandleEvent()` → execute maneuver, reinitialize integrator
+4. Output: interpolate solution at fixed `DeltaT` epochs, recompute continuous attitudes
+
+**Integrator Interface**
+```csharp
+public interface IIntegrator
+{
+    void Initialize(StateVector initialState);
+    IntegrationResult IntegrateSegment(
+        Vector3 startPosition, Vector3 startVelocity,
+        Time baseEpoch, double duration,
+        IReadOnlyList<IEventDetector> eventDetectors = null);
+}
+```
+
+VVIntegrator is the community default (fixed-step, symplectic). Both VV and Pro RK78 store `AcceptedStep` for Hermite dense output. Event detection at step boundaries (VV) or with sub-step bisection refinement (RK78 Pro).
+
+### Event Detection System
+
+Industry-standard g-function zero-crossing approach for maneuver triggering and general event detection.
+
+**Key Types**
+- `IEventDetector`: `Evaluate(state)` → scalar, `Direction` → `CrossingDirection`, `HandleEvent()` → `EventResult`
+- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`, handles maneuver chain advancement
+- `CrossingDirection` enum: `NegativeToPositive`, `PositiveToNegative`, `Any`
+- `EventResult`: Modified state, orientation, action (`StopAndRestart` or `Continue`), next detector
+
+**Maneuver Event Functions**
+Each `ImpulseManeuver` implements:
+- `ComputeEventValue(StateVector localState)` → continuous g-function (state is maneuver-center-relative)
+- `EventCrossingDirection` → which zero-crossing triggers the maneuver
+- `CheckPreconditions(StateVector)` → optional additional constraints (default: true)
+
+| Maneuver | g-function | Direction | Fires at |
+|----------|-----------|-----------|----------|
+| ApogeeHeightManeuver | r·v | neg→pos | Perigee |
+| PerigeeHeightManeuver | r·v | pos→neg | Apogee |
+| PhasingManeuver | r·v | neg→pos | Perigee |
+| CombinedManeuver | r·v | pos→neg | Apogee (+ precondition) |
+| PlaneAlignmentManeuver | r·ĥ_target | adaptive | Nearest node |
+| ApsidalAlignmentManeuver | r·(ĥ×p̂) | neg→pos | Nearest intersection |
+
+**Maneuver Chain Processing**
+- Leading `Attitude` maneuvers are executed immediately (not via event detection)
+- First `ImpulseManeuver` is wrapped in `ManeuverEventDetector`
+- After impulse fires: chain advances to next impulse, skipping intermediate attitudes (which are executed synchronously)
+- `Attitude.ComputeOrientation()` is `public` for continuous orientation recomputation at output epochs
 
 ### Attitude Maneuvers
 

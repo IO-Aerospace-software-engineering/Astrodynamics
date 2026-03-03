@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +21,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
 {
     public class Spacecraft : CelestialItem, IOrientable<SpacecraftFrame>
     {
+        private readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
+        public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
+
         public static readonly Vector3 Front = Vector3.VectorY;
         public static readonly Vector3 Back = Front.Inverse();
         public static readonly Vector3 Right = Vector3.VectorX;
@@ -420,29 +424,116 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Task PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
-            return Task.Run(() =>
-            {
-                Propagate(window, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            });
+            return Task.Run(() => { Propagate(window, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize); });
         }
 
         public void Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             ResetPropagation();
-            IPropagator propagator;
-            if (InitialOrbitalParameters is TLE)
-            {
-                propagator = new TLEPropagator(window, this, propagatorStepSize);
-            }
-            else
-            {
-                propagator = new SpacecraftPropagator(window, this, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-            }
+
+            // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
+            // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
+            using var propagator = new CentralBodyPropagator(window, this, additionalCelestialBodies,
+                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
 
             propagator.Propagate();
-            propagator.Dispose();
             _isPropagated = true;
+        }
+
+        /// <summary>
+        /// Computes the geometric state relative to a reference body.
+        /// Uses cached propagation states with Lagrange interpolation, chaining via SPICE if needed.
+        /// </summary>
+        public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
+        {
+            // TLE fallback
+            if (InitialOrbitalParameters is TLE)
+                return InitialOrbitalParameters.ToStateVector(epoch)
+                    .ToFrame(Frames.Frame.ICRF)
+                    .RelativeTo(referenceBody, Aberration.None).ToStateVector();
+
+            // Not enough cached states
+            if (_stateVectorsRelativeToICRF.Count < 2)
+                return InitialOrbitalParameters.ToStateVector(epoch)
+                    .RelativeTo(referenceBody, Aberration.None).ToStateVector();
+
+            // Interpolate from cache
+            var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+            var cb = (CelestialItem)states[0].Observer;
+            var interpolated = Lagrange.Interpolate(states, epoch);
+
+            if (cb.NaifId == referenceBody.NaifId)
+                return new StateVector(interpolated.Position, interpolated.Velocity,
+                    referenceBody, epoch, Frames.Frame.ICRF);
+
+            // Chain: spacecraft_CB + SPICE(CB, referenceBody)
+            var cbFromRef = cb.GetGeometricStateRelativeTo(epoch, referenceBody);
+            return new StateVector(
+                cbFromRef.Position + interpolated.Position,
+                cbFromRef.Velocity + interpolated.Velocity,
+                referenceBody, epoch, Frames.Frame.ICRF);
+        }
+
+        /// <summary>
+        /// Spacecraft ephemeris using reference-body approach.
+        /// Short-circuits when observer IS the central body with no aberration.
+        /// </summary>
+        public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+        {
+            // Determine reference body
+            CelestialItem cb = (_stateVectorsRelativeToICRF.Count >= 2)
+                ? (CelestialItem)_stateVectorsRelativeToICRF.Values.First().Observer
+                : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
+
+            // Short-circuit: observer IS the CB, no aberration, have cached states
+            if (aberration == Aberration.None && _stateVectorsRelativeToICRF.Count >= 2
+                && cb.NaifId == observer.NaifId && cb.NaifId != 0)
+            {
+                var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+                return Lagrange.Interpolate(states, epoch).ToFrame(frame);
+            }
+
+            // Reference-body approach
+            var spacecraftCB = this.GetGeometricStateRelativeTo(epoch, cb);
+            var observerCB = observer.GetGeometricStateRelativeTo(epoch, cb);
+            var relative = new StateVector(
+                spacecraftCB.Position - observerCB.Position,
+                spacecraftCB.Velocity - observerCB.Velocity,
+                observer, epoch, Frames.Frame.ICRF);
+
+            if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+                relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerCB, cb);
+
+            return relative.ToFrame(frame);
+        }
+
+        /// <summary>
+        /// Write spacecraft ephemeris from propagated states.
+        /// Converts CB-relative states to SSB-relative if needed (SPK files need consistent observer).
+        /// </summary>
+        public override void WriteEphemeris(FileInfo outputFile)
+        {
+            var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+
+            if (states.Length > 0 && states[0].Observer.NaifId != 0)
+            {
+                var cb = (CelestialItem)states[0].Observer;
+                var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+                var ssbStates = new StateVector[states.Length];
+                for (int i = 0; i < states.Length; i++)
+                {
+                    var cbFromSsb = cb.GetGeometricStateFromICRF(states[i].Epoch).ToStateVector();
+                    ssbStates[i] = new StateVector(
+                        cbFromSsb.Position + states[i].Position,
+                        cbFromSsb.Velocity + states[i].Velocity,
+                        ssb, states[i].Epoch, Frames.Frame.ICRF);
+                }
+
+                states = ssbStates;
+            }
+
+            SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, states);
         }
 
         public void AddStateVectorRelativeToICRF(params StateVector[] stateVectors)
@@ -455,20 +546,41 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         public override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
         {
-            return _stateVectorsRelativeToICRF.GetOrAdd(date, date =>
-            {
-                if (InitialOrbitalParameters is TLE)
-                {
-                    return InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0, date), Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
-                }
+            // Fast path: exact match in cache
+            if (_stateVectorsRelativeToICRF.TryGetValue(date, out var exact))
+                return ConvertToSsbIfNeeded(exact, date);
 
-                if (_stateVectorsRelativeToICRF.Count < 2)
-                {
-                    return this.InitialOrbitalParameters.ToStateVector(date).RelativeTo(new Barycenter(0, date), Aberration.None).ToFrame(Frames.Frame.ICRF).ToStateVector();
-                }
+            // TLE fallback: convert to ICRF before RelativeTo to avoid passing TEME to SPICE
+            if (InitialOrbitalParameters is TLE)
+                return InitialOrbitalParameters.ToStateVector(date)
+                    .ToFrame(Frames.Frame.ICRF)
+                    .RelativeTo(new Barycenter(0, date), Aberration.None)
+                    .ToStateVector();
 
-                return Lagrange.Interpolate(_stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);
-            });
+            // Not enough states for interpolation
+            if (_stateVectorsRelativeToICRF.Count < 2)
+                return this.InitialOrbitalParameters.ToStateVector(date)
+                    .RelativeTo(new Barycenter(0, date), Aberration.None)
+                    .ToFrame(Frames.Frame.ICRF).ToStateVector();
+
+            // Interpolate and convert
+            var interpolated = Lagrange.Interpolate(
+                _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray(), date);
+            return ConvertToSsbIfNeeded(interpolated, date);
+        }
+
+        /// <summary>
+        /// Converts a CB-relative state vector to SSB-relative if needed.
+        /// Returns as-is if already SSB-relative (NaifId == 0).
+        /// </summary>
+        private StateVector ConvertToSsbIfNeeded(StateVector sv, in Time date)
+        {
+            if (sv.Observer.NaifId == 0) return sv; // Already SSB-relative
+            var cbFromSsb = ((CelestialItem)sv.Observer).GetGeometricStateFromICRF(date).ToStateVector();
+            return new StateVector(
+                cbFromSsb.Position + sv.Position,
+                cbFromSsb.Velocity + sv.Velocity,
+                Barycenters.SOLAR_SYSTEM_BARYCENTER, date, Frames.Frame.ICRF);
         }
 
         /// <summary>
@@ -556,6 +668,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                         maneuverList.Add(impulseManeuver.ToOpmManeuverParameters(stateVector.Frame.Name));
                     }
                 }
+
                 if (maneuverList.Count > 0)
                 {
                     maneuvers = maneuverList;

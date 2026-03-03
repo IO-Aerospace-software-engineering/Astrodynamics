@@ -35,11 +35,16 @@ public class IntegratorTests
         forces.Add(new GravitationalAcceleration(earth));
         forces.Add(new AtmosphericDrag(spc, earth));
         forces.Add(new SolarRadiationPressure(spc,[earth]));
-        VVIntegrator vvIntegrator = new VVIntegrator(forces, TimeSpan.FromSeconds(1.0), spc.InitialOrbitalParameters.ToStateVector());
-        StateVector[] data = new StateVector[2];
-        Array.Fill(data, spc.InitialOrbitalParameters.ToStateVector(), 0, 2);
-        vvIntegrator.Integrate(data, 1);
-        Assert.Equal(new Vector3(6799995.684483348, 7656.217667342655, -0.0012397643540559202), data[1].Position, TestHelpers.VectorComparer);
-        Assert.Equal(new Vector3(-8.631030741663455, 7656.210057569128, -0.0024794199962349384), data[1].Velocity, TestHelpers.VectorComparer);
+        var initialState = spc.InitialOrbitalParameters.ToStateVector();
+        VVIntegrator vvIntegrator = new VVIntegrator(forces, TimeSpan.FromSeconds(1.0), initialState);
+
+        // Integrate one step (1 second)
+        var result = vvIntegrator.IntegrateSegment(
+            initialState.Position, initialState.Velocity,
+            initialState.Epoch, 1.0);
+
+        var (pos, vel) = result.Segment.InterpolateAt(1.0);
+        Assert.Equal(new Vector3(6799995.684483348, 7656.217667342655, -0.0012397643540559202), pos, TestHelpers.VectorComparer);
+        Assert.Equal(new Vector3(-8.631030741663455, 7656.210057569128, -0.0024794199962349384), vel, TestHelpers.VectorComparer);
     }
 }

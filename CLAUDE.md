@@ -68,8 +68,10 @@ The C++ proxy layer uses a `bool` return + `GetLastErrorProxy()` pattern instead
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
 - `IO.Astrodynamics.OrbitalParameters`: StateVector, KeplerianElements, TLE, EquinoctialElements
 - `IO.Astrodynamics.CCSDS.OMM` / `.OPM`: CCSDS standards (read/write/validate/convert)
-- `IO.Astrodynamics.Propagator`: SpacecraftPropagator (Velocity-Verlet), SmallBodyPropagator
+- `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution
+- `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, VVIntegrator (Velocity-Verlet, fixed-step)
 - `IO.Astrodynamics.Propagator.Forces`: AtmosphericDrag, SolarRadiationPressure
+- `IO.Astrodynamics.Propagator.Events`: IEventDetector, ManeuverEventDetector, CrossingDirection
 - `IO.Astrodynamics.Maneuver`: Lambert, impulsive maneuvers, attitude maneuvers, IAttitudeTarget
 - `IO.Astrodynamics.Atmosphere`: IAtmosphericModel, EarthStandardAtmosphere, Nrlmsise00Model
 - `IO.Astrodynamics.Physics`: GeopotentialGravitationalField (EGM2008, up to degree 70)

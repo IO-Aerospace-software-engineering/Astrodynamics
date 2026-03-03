@@ -24,6 +24,13 @@ public class SpiceDataProvider : IDataProvider
         return SpiceAPI.Instance.ReadEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER.NaifId, target.NaifId, frame, aberration);
     }
 
+    public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
+    {
+        var result = SpiceAPI.Instance.ReadEphemeris(date, observer.NaifId, target.NaifId, frame, aberration).ToStateVector();
+        // ReadEphemeris always returns TDB epoch; preserve the caller's time frame
+        return new StateVector(result.Position, result.Velocity, result.Observer, date, result.Frame);
+    }
+
     CelestialBody IDataProvider.GetCelestialBodyInfo(int naifId)
     {
         return SpiceAPI.Instance.GetCelestialBodyInfo(naifId);

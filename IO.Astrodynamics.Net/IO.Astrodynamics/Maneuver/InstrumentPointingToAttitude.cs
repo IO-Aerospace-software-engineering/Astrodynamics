@@ -22,7 +22,7 @@ public class InstrumentPointingToAttitude : Attitude
         Target = target ?? throw new ArgumentNullException(nameof(target));
     }
 
-    protected override Quaternion ComputeOrientation(StateVector stateVector)
+    public override Quaternion ComputeOrientation(StateVector stateVector)
     {
         var ephemeris = Target.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT);
         var targetVector = ephemeris.ToStateVector().Position - stateVector.Position;

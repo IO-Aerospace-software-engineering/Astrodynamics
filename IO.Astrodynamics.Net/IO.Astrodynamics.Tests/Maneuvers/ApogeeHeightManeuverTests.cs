@@ -46,27 +46,6 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         [Fact]
-        public void CanExecute()
-        {
-            var orbitalParams = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 9000.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
-                Frames.Frame.ICRF);
-            var spc = new Spacecraft(-666, "GenericSpacecraft", 100.0, 1000.0, new Clock("GenericClk", 65536), orbitalParams);
-            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000, 1000));
-            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
-
-            ApogeeHeightManeuver maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.InitialOrbitalParameters.ApogeeVector().Magnitude() + 100000.0,
-                spc.Engines.First());
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(-30)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(-10)).ToStateVector()));
-            Assert.True(maneuver.CanExecute(orbitalParams.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(10)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch(TimeSystem.Time.J2000TDB.AddSeconds(30)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(-30)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(-10)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(10)).ToStateVector()));
-            Assert.False(maneuver.CanExecute(orbitalParams.AtEpoch((TimeSystem.Time.J2000TDB + (orbitalParams.Period() * 0.5)).AddSeconds(30)).ToStateVector()));
-        }
-
-        [Fact]
         public void TryExecuteIncreaseApogee()
         {
             var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,

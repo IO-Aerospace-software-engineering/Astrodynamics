@@ -65,9 +65,6 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         public double FuelBurned { get; internal set; }
 
-        private bool IsInbound { get; set; }
-
-
         protected Maneuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine)
         {
             ManeuverCenter = maneuverCenter;
@@ -82,42 +79,11 @@ namespace IO.Astrodynamics.Maneuver
             return maneuver;
         }
 
-        public virtual bool CanExecute(StateVector stateVector)
-        {
-            var localSv = stateVector.RelativeTo(ManeuverCenter, Aberration.None).ToStateVector();
-            //Evaluate Epoch constraint
-            if (localSv.Epoch < MinimumEpoch)
-            {
-                return false;
-            }
-
-            
-            //Compute the target point
-            var maneuverPoint = ComputeManeuverPoint(localSv);
-            if (localSv.Position == maneuverPoint)
-            {
-                return true;
-            }
-
-            //Check if target point is reached
-            var isInbound = localSv.Position.Angle(maneuverPoint, localSv.SpecificAngularMomentum()) > 0.0;
-            if (isInbound == IsInbound)
-            {
-                return false;
-            }
-
-            IsInbound = isInbound;
-
-            return isInbound == false;
-        }
-
-        protected abstract Vector3 ComputeManeuverPoint(StateVector stateVector);
         protected abstract Vector3 Execute(StateVector vector);
         public abstract (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector);
 
         internal virtual void Reset()
         {
-            IsInbound = false;
             FuelBurned = 0.0;
             ManeuverWindow = ThrustWindow = null;
             NextManeuver?.Reset();

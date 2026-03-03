@@ -338,12 +338,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var earth = TestHelpers.EarthAtJ2000;
             var sv = earth.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
             Assert.Equal(
-                new StateVector(new Vector3(-26499033677.425091, 132757417338.33946, 57556718470.538193),
-                    new Vector3(-29794.260070421966, -5018.0523087861111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv);
+                new StateVector(new Vector3(-26499033677.425095, 132757417338.33946, 57556718470.53819),
+                    new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv);
             var ke = sv.ToKeplerianElements();
             Assert.Equal(
-                new KeplerianElements(149665479724.9162, 0.017121683034759624, 0.40908763696755318, 1.2954003758357889E-05,
-                    1.7768848943668827, 6.2590562576536941, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), ke);
+                new KeplerianElements(149665479724.91623, 0.01712168303475997, 0.4090876369675532, 1.2954012328856077E-05,
+                    1.77688489436688, 6.259056257653703, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), ke);
         }
 
         [Fact]
@@ -377,7 +377,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         {
             var moon = TestHelpers.MoonAtJ2000;
             var ra = moon.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF, Aberration.None).ToEquatorial();
-            Assert.Equal(new Equatorial(-0.1902441356821152, 3.8824377884372, 402448639.8873211, TimeSystem.Time.J2000TDB), ra);
+            Assert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), ra);
         }
 
         [Fact]
@@ -511,8 +511,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 .ToStateVector();
             var earthSvFromSun = earthSv.RelativeTo(TestHelpers.Sun, Aberration.None).ToStateVector();
             Assert.Equal(
-                new StateVector(new Vector3(-26499033677.425091, 132757417338.33946, 57556718470.538193),
-                    new Vector3(-29794.260070421966, -5018.0523087861111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), earthSvFromSun);
+                new StateVector(new Vector3(-26499033677.42509, 132757417338.33946, 57556718470.53819),
+                    new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), earthSvFromSun);
         }
     }
 }

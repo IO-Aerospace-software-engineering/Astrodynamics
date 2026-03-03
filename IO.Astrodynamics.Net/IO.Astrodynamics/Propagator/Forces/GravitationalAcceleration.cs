@@ -23,6 +23,19 @@ public class GravitationalAcceleration : ForceBase
     /// <returns></returns>
     public override Vector3 Apply(StateVector stateVector)
     {
+        // In SSB mode, the state vector observer is SSB, not the body.
+        // Use cache to avoid SPICE call for body-relative conversion.
+        if (EphemerisCache != null && stateVector.Observer as CelestialItem != CelestialItem
+            && EphemerisCache.Contains(CelestialItem.NaifId, Aberration.None))
+        {
+            var (bodyPos, bodyVel) = EphemerisCache.GetState(CelestialItem.NaifId, Aberration.None, stateVector.Epoch);
+            var relSv = new StateVector(
+                stateVector.Position - bodyPos,
+                stateVector.Velocity - bodyVel,
+                CelestialItem, stateVector.Epoch, stateVector.Frame);
+            return CelestialItem.EvaluateGravitationalAcceleration(relSv);
+        }
+
         return CelestialItem.EvaluateGravitationalAcceleration(stateVector);
     }
 }

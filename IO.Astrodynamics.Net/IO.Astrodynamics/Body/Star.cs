@@ -1,6 +1,8 @@
 ﻿﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
@@ -16,6 +18,7 @@ namespace IO.Astrodynamics.Body;
 /// </summary>
 public class Star : CelestialBody
 {
+    private readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
     /// </summary>
@@ -169,6 +172,58 @@ public class Star : CelestialBody
     }
 
     /// <summary>
+    /// Computes the geometric state relative to a reference body.
+    /// Stars use equatorial coordinates (inherently SSB-relative), then chain to reference body.
+    /// </summary>
+    public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
+    {
+        var starSsb = GetEquatorialCoordinates(epoch).ToCartesian();
+        if (referenceBody.NaifId == 0)
+            return new StateVector(starSsb, Vector3.Zero, referenceBody, epoch, Frame.ICRF);
+
+        var refFromSsb = referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector();
+        return new StateVector(
+            starSsb - refFromSsb.Position, refFromSsb.Velocity.Inverse(),
+            referenceBody, epoch, Frame.ICRF);
+    }
+
+    /// <summary>
+    /// Get geometric state from SSB in ICRF. Computes directly from equatorial coordinates.
+    /// </summary>
+    public override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+    {
+        var position = GetEquatorialCoordinates(date).ToCartesian();
+        return new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, date, Frame.ICRF);
+    }
+
+    /// <summary>
+    /// Star ephemeris using reference-body approach. Stars use SSB as reference.
+    /// </summary>
+    public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
+    {
+        var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
+        var starSsb = GetGeometricStateRelativeTo(epoch, ssb);
+        var observerSsb = observer.GetGeometricStateRelativeTo(epoch, ssb);
+        var relative = new StateVector(
+            starSsb.Position - observerSsb.Position,
+            starSsb.Velocity - observerSsb.Velocity,
+            observer, epoch, Frame.ICRF);
+
+        if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+            relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerSsb, ssb);
+
+        return relative.ToFrame(frame);
+    }
+
+    /// <summary>
+    /// Write star ephemeris from propagated states.
+    /// </summary>
+    public override void WriteEphemeris(FileInfo outputFile)
+    {
+        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray());
+    }
+
+    /// <summary>
     /// Propagates the star asynchronously.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
@@ -183,14 +238,12 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Propagates the star asynchronously.
+    /// Propagates the star.
     /// </summary>
     /// <param name="timeWindow">The time window for propagation.</param>
     /// <param name="stepSize">The step size for propagation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
     public void Propagate(Window timeWindow, TimeSpan stepSize)
     {
-        List<StateVector> svs = new List<StateVector>();
         for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
