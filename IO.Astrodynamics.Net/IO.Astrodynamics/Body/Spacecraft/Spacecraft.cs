@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
     public class Spacecraft : CelestialItem, IOrientable<SpacecraftFrame>
     {
         private readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
-        public ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
+        internal ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
 
         public static readonly Vector3 Front = Vector3.VectorY;
         public static readonly Vector3 Back = Front.Inverse();
@@ -422,13 +422,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="includeAtmosphericDrag"></param>
         /// <param name="includeSolarRadiationPressure"></param>
         /// <param name="propagatorStepSize"></param>
-        public Task PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        public Task<PropagationSolution> PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
-            return Task.Run(() => { Propagate(window, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize); });
+            return Task.Run(() => Propagate(window, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
         }
 
-        public void Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             ResetPropagation();
@@ -438,11 +438,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
             using var propagator = new CentralBodyPropagator(window, this, additionalCelestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
 
-            propagator.Propagate();
+            var solution = propagator.Propagate();
             _isPropagated = true;
+            return solution;
         }
 
-        public void Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, Integrator integrator, bool includeAtmosphericDrag,
+        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, Integrator integrator, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             ResetPropagation();
@@ -452,8 +453,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
             using var propagator = new CentralBodyPropagator(window, this, integrator, additionalCelestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
 
-            propagator.Propagate();
+            var solution = propagator.Propagate();
             _isPropagated = true;
+            return solution;
         }
 
         /// <summary>

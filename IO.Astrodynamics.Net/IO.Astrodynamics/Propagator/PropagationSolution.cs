@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -14,11 +15,25 @@ namespace IO.Astrodynamics.Propagator;
 public sealed class PropagationSolution
 {
     private readonly List<PropagationSegment> _segments = new();
+    private StateVector[] _stateVectors = Array.Empty<StateVector>();
 
     /// <summary>
     /// Ordered propagation segments.
     /// </summary>
     public IReadOnlyList<PropagationSegment> Segments => _segments;
+
+    /// <summary>
+    /// Pre-computed state vectors sampled at DeltaT intervals.
+    /// </summary>
+    public IReadOnlyList<StateVector> StateVectors => _stateVectors;
+
+    /// <summary>
+    /// Set the sampled output state vectors.
+    /// </summary>
+    public void SetOutputStates(StateVector[] states)
+    {
+        _stateVectors = states ?? throw new ArgumentNullException(nameof(states));
+    }
 
     /// <summary>
     /// Add a completed segment to the solution.
