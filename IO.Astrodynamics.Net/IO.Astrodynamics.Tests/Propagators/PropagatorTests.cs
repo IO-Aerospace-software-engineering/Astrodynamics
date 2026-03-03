@@ -239,61 +239,6 @@ public class PropagatorTests
 
     #endregion
 
-    #region Conformance Case 001: LEO 24h, EGM2008 degree-10, Sun + Moon (SSB mode)
-
-    [Fact]
-    public void Conformance001_Leo24hGrav10SunMoon_SsbMode()
-    {
-        // Conformance case propagator_24h_geo10_001:
-        // 24h propagation with EGM2008 degree-10 geopotential, Sun and Moon perturbations.
-        // No drag, no SRP.
-        // Reference: GMAT R2025a, JGM3 10x10, de440s, PrinceDormand78 (RK7/8), accuracy 1e-13.
-        Clock clk = new Clock("My clock", 256);
-
-        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
-
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-
-        var orbit = new StateVector(
-            new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
-            new Vector3(2858.1975428173836, 3809.7859312745794, 6002.1266931226886),
-            earth, utcEpoch, Frames.Frame.ICRF);
-
-        Spacecraft spc = new Spacecraft(-1001, "LEO_SAT", 100.0, 10000.0, clk, orbit);
-
-        var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
-
-        var propagator = new Propagator.CentralBodyPropagator(
-            propWindow, spc,
-            [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-            false, false, TimeSpan.FromSeconds(1.0));
-
-        propagator.Propagate();
-
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
-        // GMAT R2025a reference (JGM3 10x10, de440s, PrinceDormand78 RK7/8)
-        var expectedPosition = new Vector3(-5276164.48141924, 4263291.396350933, -404558.956106471);
-        var expectedVelocity = new Vector3(-2724.567057501992, -3933.747338841648, -5983.827775625323);
-
-        // Conformance tolerances: position 300 m, velocity 0.3 m/s (JGM3 matching).
-        // Widened to 0.35 m/s for velocity to account for EGM2008 vs JGM3 geopotential difference.
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 300.0,
-            $"Position error: {positionError:F3} m (limit: 300 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.35,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.35 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
-    }
-
-    #endregion
-
     #region Conformance Case 001: LEO 24h, EGM2008 degree-10, Sun + Moon (Central-body mode)
 
     [Fact]
@@ -338,74 +283,6 @@ public class PropagatorTests
 
         Assert.True(velocityError < 0.35,
             $"Velocity error: {velocityError:F6} m/s (limit: 0.35 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
-    }
-
-    #endregion
-
-    #region Conformance Case 002: GEO 24h, EGM2008 degree-70, all bodies (SSB mode)
-
-    [Fact]
-    public void Conformance002_Geo24hGrav70AllBodies_SsbMode()
-    {
-        // Conformance case propagator_24h_geo70_full_002:
-        // GEO satellite 24h propagation with EGM2008 degree-70 geopotential,
-        // Sun, Moon, and all planetary barycenters. No SRP, no drag.
-        // Reference: GMAT R2025a, JGM3 70x70, de440s, PrinceDormand78 (RK7/8), accuracy 1e-13.
-        Clock clk = new Clock("My clock", 256);
-
-        var utcEpoch = new Astrodynamics.TimeSystem.Time(2026, 2, 9, 10, 22, 58, millisecond: 958, frame: TimeFrame.UTCFrame);
-
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70));
-
-        // State vector from conformance case (km -> m, km/s -> m/s)
-        var orbit = new StateVector(
-            new Vector3(19283848.018390323, 37944390.563573960, -328553.51550521),
-            new Vector3(-2727.809889171343, 1386.957738048448, 52.987319351738),
-            earth, utcEpoch, Frames.Frame.ICRF);
-
-        Spacecraft spc = new Spacecraft(-1001, "GEO_SAT", 3000.0, 5000.0, clk, orbit,
-            sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
-
-        var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
-
-        var propagator = new Propagator.CentralBodyPropagator(
-            propWindow, spc,
-            [
-                earth,
-                PlanetsAndMoons.MOON_BODY,
-                Stars.SUN_BODY,
-                Barycenters.MERCURY_BARYCENTER,
-                Barycenters.VENUS_BARYCENTER,
-                Barycenters.MARS_BARYCENTER,
-                Barycenters.JUPITER_BARYCENTER,
-                Barycenters.SATURN_BARYCENTER,
-                Barycenters.URANUS_BARYCENTER,
-                Barycenters.NEPTUNE_BARYCENTER,
-                Barycenters.PLUTO_BARYCENTER
-            ],
-            false, false, TimeSpan.FromSeconds(1.0));
-
-        propagator.Propagate();
-
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
-        // GMAT R2025a reference (JGM3 70x70, de440s, PrinceDormand78 RK7/8)
-        var expectedPosition = new Vector3(22035054.64841816, 36415074.44453181, -382421.9052105268);
-        var expectedVelocity = new Vector3(-2617.90823218342, 1584.740384557747, 51.26063967862107);
-
-        // Tolerances from conformance case: position 50 m, velocity 0.005 m/s
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 9.0,
-            $"Position error: {positionError:F3} m (limit: 9 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.0007,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.0007 m/s). " +
             $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
     }
 
@@ -468,65 +345,6 @@ public class PropagatorTests
 
         Assert.True(velocityError < 0.0007,
             $"Velocity error: {velocityError:F6} m/s (limit: 0.005 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
-    }
-
-    #endregion
-
-    #region Conformance Case 003: SSO 24h, EGM2008 degree-10, Sun + Moon (SSB mode)
-
-    [Fact]
-    public void Conformance003_Sso24hGrav10SunMoon_SsbMode()
-    {
-        // Conformance case propagator_24h_sso10_003:
-        // Sun-Synchronous Orbit 24h propagation with EGM2008 degree-10 geopotential,
-        // Sun and Moon perturbations. No drag, no SRP.
-        // Frozen orbit: e=0.001, AoP=90 deg, i=98.186 deg (J2 nodal precession ~+0.9857 deg/day).
-        // Reference: GMAT R2025a, JGM3 10x10, de440s, PrinceDormand78 (RK7/8), accuracy 1e-13.
-        Clock clk = new Clock("My clock", 256);
-
-        var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
-
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
-
-        var keplerianOrbit = new KeplerianElements(
-            7078137.0, 0.001,
-            98.186 * System.Math.PI / 180.0,
-            75.0 * System.Math.PI / 180.0,
-            90.0 * System.Math.PI / 180.0,
-            0.0,
-            earth, utcEpoch, Frames.Frame.ICRF);
-        var orbit = keplerianOrbit.ToStateVector();
-
-        Spacecraft spc = new Spacecraft(-1001, "SSO_SAT", 100.0, 1000.0, clk, orbit);
-
-        var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
-
-        var propagator = new Propagator.CentralBodyPropagator(
-            propWindow, spc,
-            [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
-            false, false, TimeSpan.FromSeconds(1.0));
-
-        propagator.Propagate();
-
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
-        // GMAT R2025a reference (JGM3 10x10, de440s, PrinceDormand78 RK7/8)
-        var expectedPosition = new Vector3(-608631.5307021005, 1650694.083265209, -6887696.349104228);
-        var expectedVelocity = new Vector3(1985.415757873638, 7042.412568889923, 1515.859902259437);
-
-        // Tolerances from conformance case: position 300 m, velocity 0.3 m/s
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 260.0,
-            $"Position error: {positionError:F3} m (limit: 300 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.28,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.28 m/s). " +
             $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
     }
 

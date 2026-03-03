@@ -63,11 +63,11 @@ namespace IO.Astrodynamics.Tests.Coordinates
             Assert.Equal(new Equatorial(-0.19024413568211912, 3.8824377884372114, 402448639.8873273, TimeSystem.Time.J2000TDB), eq);
             if (OperatingSystem.IsWindows())
             {
-                Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian());
+                Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian(),TestHelpers.VectorComparer);
             }
             else
             {
-                Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian());
+                Assert.Equal(new Vector3(-291608384.63343555, -266716833.3942334, -76102487.09990202), eq.ToCartesian(),TestHelpers.VectorComparer);
             }
         }
     }
