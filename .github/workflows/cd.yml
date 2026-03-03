@@ -144,10 +144,7 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore smoke tests from local feed
-      run: >
-        dotnet restore IO.Astrodynamics.SmokeTests/IO.Astrodynamics.SmokeTests.csproj
-        --source local-feed
-        --source https://api.nuget.org/v3/index.json
+      run: dotnet restore IO.Astrodynamics.SmokeTests/IO.Astrodynamics.SmokeTests.csproj
 
     - name: Run smoke tests
       run: >
