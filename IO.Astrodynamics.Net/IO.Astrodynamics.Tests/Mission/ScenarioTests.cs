@@ -57,8 +57,8 @@ namespace IO.Astrodynamics.Tests.Mission
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("Mission1");
             Scenario scenario = new Scenario("Scenario", mission, new Window(new TimeSystem.Time(2021, 1, 1), new TimeSystem.Time(2021, 1, 2)));
             scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
-            Assert.Single(scenario.AdditionalCelstialBodies);
-            Assert.Equal(TestHelpers.MoonAtJ2000, scenario.AdditionalCelstialBodies.First());
+            Assert.Single(scenario.CelestialBodies);
+            Assert.Equal(TestHelpers.MoonAtJ2000, scenario.CelestialBodies.First());
             Assert.Throws<ArgumentNullException>(() => scenario.AddCelestialItem(null));
         }
 

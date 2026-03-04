@@ -418,24 +418,24 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Propagate spacecraft
         /// </summary>
         /// <param name="window"></param>
-        /// <param name="additionalCelestialBodies">Celestial bodies involved as perturbation bodies</param>
+        /// <param name="celestialBodies">Celestial bodies used for gravity, third-body perturbations, drag, and SRP</param>
         /// <param name="includeAtmosphericDrag"></param>
         /// <param name="includeSolarRadiationPressure"></param>
         /// <param name="propagatorStepSize"></param>
-        public Task<PropagationSolution> PropagateAsync(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        public Task<PropagationSolution> PropagateAsync(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
-            return Task.Run(() => Propagate(window, additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
+            return Task.Run(() => Propagate(window, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
         }
 
-        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             ResetPropagation();
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
-            using var propagator = new CentralBodyPropagator(window, this, additionalCelestialBodies,
+            using var propagator = new CentralBodyPropagator(window, this, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
 
             var solution = propagator.Propagate();
@@ -443,14 +443,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return solution;
         }
 
-        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, Integrator integrator, bool includeAtmosphericDrag,
+        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             ResetPropagation();
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
-            using var propagator = new CentralBodyPropagator(window, this, integrator, additionalCelestialBodies,
+            using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
 
             var solution = propagator.Propagate();

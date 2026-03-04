@@ -1548,7 +1548,7 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 
 **Force Models:**
 - **Gravitational acceleration** from each body in the `bodies` list. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
-- **Third-body perturbation**: Battin's numerically stable formula for each additional celestial body.
+- **Third-body perturbation**: Battin's numerically stable formula for each celestial body beyond the central body.
 - **Atmospheric drag** (when `drag` is true): uses the body's atmospheric model with atmosphere-relative velocity (accounts for body co-rotation). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
 - **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
 - **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration.
@@ -1638,7 +1638,11 @@ Computes the full 3D gravitational acceleration including spherical harmonic per
 
 **Supported model file:** EGM2008 (tide-free), included as `Data/SolarSystem/EGM2008_to70_TideFree`. The file provides coefficients C_nm and S_nm from degree 2 to degree 70.
 
-**Thread safety:** `GeopotentialGravitationalField` is **not** thread-safe. Pre-allocated buffers (Legendre tables, trig arrays) are reused across calls. Create a separate `CelestialBody` instance per thread when propagating concurrently.
+**Thread safety:** `GeopotentialGravitationalField` is **not** thread-safe. Pre-allocated buffers (`_P`, `_dP` Legendre tables and `_cosMLambda`, `_sinMLambda` trig arrays) are overwritten on every acceleration evaluation. Create a separate `CelestialBody` instance per thread when propagating concurrently.
+
+Additionally, `CentralBodyPropagator` sets an `OrientationCache` on the central body's `Frame` during propagation and clears it on completion. This cache is a plain unsynchronized property, so sharing the same `Frame` instance across concurrent propagations can cause data races. When each propagation uses its own `CelestialBody` instance (and therefore its own `Frame`), this is not an issue.
+
+`CelestialBody` instances *without* geopotential are safe to share across threads — two-body gravity is stateless, and the `Frame.GetStateOrientationToICRF` fallback uses a `ConcurrentDictionary` cache. Third-body perturbation bodies (Sun, Moon, etc.) that do not use geopotential can also be shared safely.
 
 **Degree selection guidelines:**
 

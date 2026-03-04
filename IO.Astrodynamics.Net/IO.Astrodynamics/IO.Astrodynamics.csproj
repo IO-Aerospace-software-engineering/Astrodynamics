@@ -61,9 +61,6 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <None Remove="resources\One_Sgp4.dll" />
-      <Content Include="resources\One_Sgp4.dll">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
     </ItemGroup>
 
     <ItemGroup>
