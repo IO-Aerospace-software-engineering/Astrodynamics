@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Frames;
@@ -20,6 +21,12 @@ public class Frame : IEquatable<Frame>
 
     protected ConcurrentDictionary<Time, StateOrientation> _stateOrientationsToICRF = new();
     protected ImmutableSortedDictionary<Time, StateOrientation> StateOrientationsToICRF => _stateOrientationsToICRF.ToImmutableSortedDictionary();
+
+    /// <summary>
+    /// Optional pre-computed orientation cache for avoiding SPICE calls during propagation.
+    /// Set by the propagator before integration begins; cleared after propagation completes.
+    /// </summary>
+    internal PropagationFrameOrientationCache OrientationCache { get; set; }
 
     /// <summary>
     /// International Celestial Reference Frame (ICRF) at epoch J2000.
@@ -71,6 +78,8 @@ public class Frame : IEquatable<Frame>
 
     public virtual StateOrientation GetStateOrientationToICRF(Time date)
     {
+        if (OrientationCache != null)
+            return OrientationCache.GetOrientation(date);
         return _stateOrientationsToICRF.GetOrAdd(date, dt => _dataProvider.FrameTransformationToICRF(dt, this));
     }
 

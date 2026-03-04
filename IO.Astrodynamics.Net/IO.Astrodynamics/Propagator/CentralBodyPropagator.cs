@@ -25,18 +25,20 @@ public class CentralBodyPropagator : PropagatorBase
 
     /// <summary>
     /// Instantiate central-body propagator with a custom integrator.
-    /// Forces are built automatically from the provided third-body perturbers and flags.
+    /// Forces (gravity, third-body perturbations, drag, SRP) are built automatically from the
+    /// provided celestial bodies and flags.
     /// The central body is inferred from the spacecraft's orbital parameters observer.
     /// </summary>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
-        IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
         : this(window, spacecraft, integrator, deltaT)
     {
-        var items = (additionalCelestialBodies ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
+        var items = (celestialBodies ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
         var forces = BuildCentralBodyForces(_centralBody, items, spacecraft, includeAtmosphericDrag,
             includeSolarRadiationPressure);
         InjectEphemerisCache(Window, forces, items, _centralBody);
+        InjectFrameOrientationCache(Window, _centralBody);
         foreach (var force in forces)
         {
             integrator.AddForce(force);
@@ -62,14 +64,15 @@ public class CentralBodyPropagator : PropagatorBase
 
     /// <summary>
     /// Instantiate central-body propagator with default Velocity-Verlet integrator.
-    /// Forces are built automatically from the provided third-body perturbers and flags.
+    /// Forces (gravity, third-body perturbations, drag, SRP) are built automatically from the
+    /// provided celestial bodies and flags.
     /// The central body is inferred from the spacecraft's orbital parameters observer.
     /// </summary>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft,
-        IEnumerable<CelestialItem> additionalCelestialBodies, bool includeAtmosphericDrag,
+        IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
         : this(window, spacecraft,
-            CreateDefaultIntegrator(window, spacecraft, additionalCelestialBodies,
+            CreateDefaultIntegrator(window, spacecraft, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, deltaT),
             deltaT)
     {
@@ -108,6 +111,7 @@ public class CentralBodyPropagator : PropagatorBase
             includeSolarRadiationPressure);
         var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         InjectEphemerisCache(tdbWindow, forces, items, centralBody);
+        InjectFrameOrientationCache(tdbWindow, centralBody);
         return new VVIntegrator(forces, deltaT, initialState);
     }
 
@@ -145,6 +149,15 @@ public class CentralBodyPropagator : PropagatorBase
         return forces;
     }
 
+    private static void InjectFrameOrientationCache(Window tdbWindow, CelestialItem centralBody)
+    {
+        if (centralBody is not CelestialBody celestialBody) return;
+
+        var cache = new PropagationFrameOrientationCache(
+            tdbWindow, celestialBody.Frame, TimeSpan.FromSeconds(60));
+        celestialBody.Frame.OrientationCache = cache;
+    }
+
     private static void InjectEphemerisCache(Window tdbWindow, List<ForceBase> forces,
         CelestialItem[] celestialBodies, ILocalizable observer)
     {
@@ -168,5 +181,11 @@ public class CentralBodyPropagator : PropagatorBase
     {
         // Store CB-relative states directly; conversion to SSB happens on demand
         Spacecraft.AddStateVectorRelativeToICRF(outputStates);
+
+        // Clear frame orientation cache to avoid stale data on shared Frame instances
+        if (_centralBody is CelestialBody cb)
+        {
+            cb.Frame.OrientationCache = null;
+        }
     }
 }

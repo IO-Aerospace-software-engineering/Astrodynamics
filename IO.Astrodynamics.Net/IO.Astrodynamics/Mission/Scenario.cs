@@ -15,8 +15,8 @@ namespace IO.Astrodynamics.Mission
         public string Name { get; }
         public Window Window { get; }
         public Mission Mission { get; }
-        private readonly HashSet<Body.CelestialItem> _additionalCelestialBodies = new();
-        public IReadOnlyCollection<Body.CelestialItem> AdditionalCelstialBodies => _additionalCelestialBodies;
+        private readonly HashSet<Body.CelestialItem> _celestialBodies = new();
+        public IReadOnlyCollection<Body.CelestialItem> CelestialBodies => _celestialBodies;
 
         private readonly HashSet<Body.Spacecraft.Spacecraft> _spacecrafts = new();
         public IReadOnlyCollection<Body.Spacecraft.Spacecraft> Spacecrafts => _spacecrafts;
@@ -56,7 +56,7 @@ namespace IO.Astrodynamics.Mission
         public void AddCelestialItem(Body.CelestialItem celestialItem)
         {
             if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
-            _additionalCelestialBodies.Add(celestialItem);
+            _celestialBodies.Add(celestialItem);
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace IO.Astrodynamics.Mission
 
             foreach (var spacecraft in _spacecrafts)
             {
-                await spacecraft.PropagateAsync(Window, _additionalCelestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+                await spacecraft.PropagateAsync(Window, _celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
             }
 
             ScenarioSummary scenarioSummary = new ScenarioSummary(this.Window);
