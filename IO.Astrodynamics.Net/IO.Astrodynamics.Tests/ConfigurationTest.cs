@@ -89,21 +89,23 @@ public class ConfigurationTest
     }
 
     [Fact]
-    public void GetEphemerisFromICRF_ThrowsArgumentException_WhenTargetNotFound()
+    public void GetEphemeris_ThrowsArgumentException_WhenTargetNotFound()
     {
         var dataProvider = new MemoryDataProvider();
         var target = TestHelpers.EarthAtJ2000;
+        var ssb = TestHelpers.SsbAtJ2000;
         var date = TimeSystem.Time.J2000TDB;
         var frame = Frames.Frame.ICRF;
 
-        Assert.Throws<ArgumentException>(() => dataProvider.GetEphemerisFromICRF(date, target, frame, Aberration.None));
+        Assert.Throws<ArgumentException>(() => dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None));
     }
 
     [Fact]
-    public void GetEphemerisFromICRF_ReturnsStateVector_WhenDateExists()
+    public void GetEphemeris_ReturnsStateVector_WhenDateExists()
     {
         var dataProvider = new MemoryDataProvider();
         var target = TestHelpers.EarthAtJ2000;
+        var ssb = TestHelpers.SsbAtJ2000;
         var date = TimeSystem.Time.J2000TDB;
         var frame = Frames.Frame.ICRF;
         var stateVector = new StateVector(Vector3.Zero, Vector3.Zero, target, date, frame);
@@ -111,16 +113,20 @@ public class ConfigurationTest
 
         dataProvider.AddStateVector(target.NaifId, date, stateVector);
 
-        var result = dataProvider.GetEphemerisFromICRF(date, target, frame, Aberration.None);
+        var result = dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None).ToStateVector();
 
-        Assert.Equal(stateVector, result);
+        Assert.Equal(Vector3.Zero, result.Position);
+        Assert.Equal(Vector3.Zero, result.Velocity);
+        Assert.Equal(date, result.Epoch);
+        Assert.Equal(frame, result.Frame);
     }
 
     [Fact]
-    public void GetEphemerisFromICRF_InterpolatesStateVector_WhenDateDoesNotExist()
+    public void GetEphemeris_InterpolatesStateVector_WhenDateDoesNotExist()
     {
         var dataProvider = new MemoryDataProvider();
         var target = TestHelpers.EarthAtJ2000;
+        var ssb = TestHelpers.SsbAtJ2000;
         var frame = Frames.Frame.ICRF;
         var date1 = TimeSystem.Time.J2000TDB;
         var date2 = date1.AddHours(1.0);
@@ -131,16 +137,17 @@ public class ConfigurationTest
         dataProvider.AddStateVector(target.NaifId, date1, stateVector1);
         dataProvider.AddStateVector(target.NaifId, date2, stateVector2);
 
-        var result = dataProvider.GetEphemerisFromICRF(dateToInterpolate, target, frame, Aberration.None);
+        var result = dataProvider.GetEphemeris(dateToInterpolate, target, ssb, frame, Aberration.None);
 
         Assert.NotNull(result);
     }
-    
+
     [Fact]
-    public void GetEphemerisFromICRF_InterpolatesStateVector_WhenDateOutOfRange()
+    public void GetEphemeris_InterpolatesStateVector_WhenDateOutOfRange()
     {
         var dataProvider = new MemoryDataProvider();
         var target = TestHelpers.EarthAtJ2000;
+        var ssb = TestHelpers.SsbAtJ2000;
         var frame = Frames.Frame.ICRF;
         var date1 = TimeSystem.Time.J2000TDB;
         var date2 = date1.AddHours(1.0);
@@ -151,7 +158,7 @@ public class ConfigurationTest
         dataProvider.AddStateVector(target.NaifId, date1, stateVector1);
         dataProvider.AddStateVector(target.NaifId, date2, stateVector2);
 
-        Assert.Throws<ArgumentException>(()=> dataProvider.GetEphemerisFromICRF(dateToInterpolate, target, frame, Aberration.None));
+        Assert.Throws<ArgumentException>(()=> dataProvider.GetEphemeris(dateToInterpolate, target, ssb, frame, Aberration.None));
     }
 
     [Fact]

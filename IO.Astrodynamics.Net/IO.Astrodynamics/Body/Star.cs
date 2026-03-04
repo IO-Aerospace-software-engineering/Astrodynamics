@@ -190,7 +190,7 @@ public class Star : CelestialBody
     /// <summary>
     /// Get geometric state from SSB in ICRF. Computes directly from equatorial coordinates.
     /// </summary>
-    public override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+    internal override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
         var position = GetEquatorialCoordinates(date).ToCartesian();
         return new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, date, Frame.ICRF);

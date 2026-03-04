@@ -337,9 +337,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </summary>
     /// <param name="date"></param>
     /// <returns></returns>
-    public virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+    internal virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return _dataProvider.GetEphemerisFromICRF(date, this, Frame.ICRF, Aberration.None).ToStateVector();
+        return _dataProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None).ToStateVector();
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -39,8 +40,8 @@ public class PropagatorTests
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
         var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddDays(1)), spc,
             System.Array.Empty<CelestialItem>(), false, false, TimeSpan.FromSeconds(10.0));
-        propagator.Propagate();
-        var energy = spc.StateVectorsRelativeToICRF.Values
+        var solution = propagator.Propagate();
+        var energy = solution.StateVectors
             .Select(x => x.RelativeTo(earth, Aberration.None).ToStateVector().SpecificOrbitalEnergy())
             .ToArray();
         var min = energy.Min();
@@ -57,8 +58,8 @@ public class PropagatorTests
         Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 100.0, 10000.0, clk, orbit);
         var propagator = new Propagator.CentralBodyPropagator(new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2)), spc,
             [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY], false, false, TimeSpan.FromSeconds(1.0));
-        propagator.Propagate();
-        var orbitalParams = spc.StateVectorsRelativeToICRF.Values.First().RelativeTo(PlanetsAndMoons.EARTH_BODY, Aberration.None) as StateVector;
+        var solution = propagator.Propagate();
+        var orbitalParams = solution.StateVectors.First().RelativeTo(PlanetsAndMoons.EARTH_BODY, Aberration.None) as StateVector;
         Assert.Equal(orbit, orbitalParams, TestHelpers.StateVectorComparer);
     }
 
@@ -72,11 +73,11 @@ public class PropagatorTests
             spc,
             [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, TimeSpan.FromSeconds(2.0));
 
-        propagator.Propagate();
-        var state = spc.StateVectorsRelativeToICRF.Values.ElementAt(0);
-        var state1 = spc.StateVectorsRelativeToICRF.Values.ElementAt(1);
-        var state2 = spc.StateVectorsRelativeToICRF.Values.ElementAt(2);
-        var state3 = spc.StateVectorsRelativeToICRF.Values.ElementAt(3);
+        var solution = propagator.Propagate();
+        var state = solution.StateVectors[0];
+        var state1 = solution.StateVectors[1];
+        var state2 = solution.StateVectors[2];
+        var state3 = solution.StateVectors[3];
     }
 
     [Theory]
@@ -101,9 +102,9 @@ public class PropagatorTests
             window, spc,
             [Barycenters.SOLAR_SYSTEM_BARYCENTER], false, false, deltaT);
 
-        propagator.Propagate();
+        var solution = propagator.Propagate();
 
-        var stateVectors = spc.StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+        var stateVectors = solution.StateVectors.ToArray();
         var expectedCount = (uint)System.Math.Round(windowSeconds / stepSeconds, MidpointRounding.AwayFromZero) + 1;
 
         Assert.Equal((int)expectedCount, stateVectors.Length);
@@ -151,9 +152,9 @@ public class PropagatorTests
             false, false,
             TimeSpan.FromSeconds(1.0));
 
-        propagator.Propagate();
+        var solution = propagator.Propagate();
 
-        var firstEphemeris = spc.StateVectorsRelativeToICRF.Values.First()
+        var firstEphemeris = solution.StateVectors.First()
             .RelativeTo(PlanetsAndMoons.EARTH_BODY, Aberration.None) as StateVector;
 
         var posDiff = (firstEphemeris.Position - orbit.Position).Magnitude();
@@ -192,11 +193,11 @@ public class PropagatorTests
         IIntegrator integrator = new VVIntegrator(forces, deltaT, initialState);
         var propagator2 = new Propagator.CentralBodyPropagator(window, spc2, integrator, deltaT);
 
-        propagator1.Propagate();
-        propagator2.Propagate();
+        var solution1 = propagator1.Propagate();
+        var solution2 = propagator2.Propagate();
 
-        var results1 = spc1.StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
-        var results2 = spc2.StateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+        var results1 = solution1.StateVectors.ToArray();
+        var results2 = solution2.StateVectors.ToArray();
 
         Assert.Equal(results1.Length, results2.Length);
         for (int i = 0; i < results1.Length; i++)
@@ -225,9 +226,9 @@ public class PropagatorTests
             [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
             false, false, TimeSpan.FromSeconds(1.0));
 
-        propagator.Propagate();
+        var solution = propagator.Propagate();
 
-        var firstEphemeris = spc.StateVectorsRelativeToICRF.Values.First()
+        var firstEphemeris = solution.StateVectors.First()
             .RelativeTo(earth, Aberration.None) as StateVector;
 
         var posDiff = (firstEphemeris!.Position - orbit.Position).Magnitude();
@@ -266,9 +267,9 @@ public class PropagatorTests
             [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
             false, false, TimeSpan.FromSeconds(1.0));
 
-        propagator.Propagate();
+        var solution = propagator.Propagate();
 
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
+        var lastEphemeris = solution.StateVectors.Last()
             .RelativeTo(earth, Aberration.None) as StateVector;
 
         var expectedPosition = new Vector3(-5276164.48141924, 4263291.396350933, -404558.956106471);
@@ -327,9 +328,9 @@ public class PropagatorTests
             ],
             false, false, TimeSpan.FromSeconds(1.0));
 
-        propagator.Propagate();
+        var solution = propagator.Propagate();
 
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
+        var lastEphemeris = solution.StateVectors.Last()
             .RelativeTo(earth, Aberration.None) as StateVector;
 
         var expectedPosition = new Vector3(22035054.64841816, 36415074.44453181, -382421.9052105268);
@@ -381,9 +382,9 @@ public class PropagatorTests
             [PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
             false, false, TimeSpan.FromSeconds(1.0));
 
-        propagator.Propagate();
+        var solution = propagator.Propagate();
 
-        var lastEphemeris = spc.StateVectorsRelativeToICRF.Values.Last()
+        var lastEphemeris = solution.StateVectors.Last()
             .RelativeTo(earth, Aberration.None) as StateVector;
 
         var expectedPosition = new Vector3(-608631.5307021005, 1650694.083265209, -6887696.349104228);

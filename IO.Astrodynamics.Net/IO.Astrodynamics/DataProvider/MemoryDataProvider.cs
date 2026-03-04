@@ -64,7 +64,7 @@ public class MemoryDataProvider : IDataProvider
         return stateOrientation;
     }
 
-    public OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration)
+    private OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration)
     {
         if (target.NaifId == 0)
         {

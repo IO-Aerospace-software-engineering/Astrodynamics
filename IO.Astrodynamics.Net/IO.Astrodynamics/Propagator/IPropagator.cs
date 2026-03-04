@@ -15,6 +15,6 @@ public interface IPropagator : IDisposable
     /// <summary>
     /// Propagate spacecraft
     /// </summary>
-    /// <returns></returns>
-    void Propagate();
+    /// <returns>The propagation solution containing segments and sampled state vectors</returns>
+    PropagationSolution Propagate();
 }
