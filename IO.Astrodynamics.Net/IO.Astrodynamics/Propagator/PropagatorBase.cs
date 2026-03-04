@@ -39,7 +39,7 @@ public abstract class PropagatorBase : IPropagator
         DeltaT = deltaT;
     }
 
-    public void Propagate()
+    public PropagationSolution Propagate()
     {
         // 2. Build event detectors from maneuver chain (also discovers standalone attitude maneuvers)
         _continuousAttitude = null;
@@ -135,6 +135,11 @@ public abstract class PropagatorBase : IPropagator
 
         // 7. Store propagated states
         StorePropagatedStates(outputStates);
+
+        // 8. Attach sampled output to solution
+        solution.SetOutputStates(outputStates);
+
+        return solution;
     }
 
     /// <summary>

@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Surface
         private readonly GeometryFinder _geometryFinder = new GeometryFinder();
         private readonly bool _isFromKernel = false;
 
-        private ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new ConcurrentDictionary<Time, StateVector>();
+        private ConcurrentDictionary<Time, StateVector> _ssbStateCache = new ConcurrentDictionary<Time, StateVector>();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }
@@ -187,17 +187,17 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Get site ephemeris
+        /// Get site geometric state from SSB in ICRF.
         /// </summary>
         /// <param name="date"></param>
         /// <returns></returns>
-        public OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
+        internal OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
         {
-            return _stateVectorsRelativeToICRF.GetOrAdd(date, dt =>
+            return _ssbStateCache.GetOrAdd(date, dt =>
             {
                 if (_isFromKernel)
                 {
-                    return _dataProvider.GetEphemerisFromICRF(dt, this, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    return _dataProvider.GetEphemeris(dt, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frames.Frame.ICRF, Aberration.None).ToStateVector();
                 }
 
                 return GetEphemeris(dt, new Barycenter(0, dt), Frames.Frame.ICRF, Aberration.None).ToStateVector();

@@ -10,6 +10,11 @@
         <NoWarn>$(NoWarn);CS8981</NoWarn>
         <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="IO.Astrodynamics.Tests" />
+        <InternalsVisibleTo Include="IO.Astrodynamics.CLI.Tests" />
+    </ItemGroup>
     <PropertyGroup>
         <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
     </PropertyGroup>

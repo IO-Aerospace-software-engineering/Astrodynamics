@@ -35,7 +35,7 @@ public class TLEPropagator : IPropagator
         _svCache[0] = initialState;
     }
 
-    public void Propagate()
+    public PropagationSolution Propagate()
     {
         _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Frame.ICRF);
         for (int i = 1; i < _svCacheSize; i++)
@@ -45,6 +45,26 @@ public class TLEPropagator : IPropagator
 
         _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.EndDate, Frame.ICRF);
         Spacecraft.AddStateVectorRelativeToICRF(_svCache);
+
+        // Build synthetic PropagationSolution from TLE states
+        var solution = new PropagationSolution();
+        var segment = new PropagationSegment(Window.StartDate, (int)_svCacheSize);
+
+        for (int i = 0; i < _svCacheSize - 1; i++)
+        {
+            double stepSize = DeltaT.TotalSeconds;
+            double cumulativeTime = i * stepSize;
+            segment.AddStep(new AcceptedStep(
+                cumulativeTime, stepSize,
+                _svCache[i].Position, _svCache[i].Velocity,
+                _svCache[i + 1].Position, _svCache[i + 1].Velocity,
+                Vector3.Zero, Vector3.Zero));
+        }
+
+        solution.AddSegment(segment);
+        solution.SetOutputStates(_svCache);
+
+        return solution;
     }
     public void Dispose()
     {

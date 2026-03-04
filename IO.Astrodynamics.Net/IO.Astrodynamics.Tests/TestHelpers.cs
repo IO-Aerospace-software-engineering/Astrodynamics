@@ -19,6 +19,8 @@ namespace IO.Astrodynamics.Tests
 
         internal static CelestialBody EarthAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
 
+        internal static Barycenter SsbAtJ2000 => new(0, new TimeSystem.Time(2000, 1, 1, 12, 0, 0));
+
         internal static CelestialBody EarthWithAtmAndGeoAtJ2000 => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, new TimeSystem.Time(2000, 1, 1, 12, 0, 0),
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new EarthStandardAtmosphere());
 

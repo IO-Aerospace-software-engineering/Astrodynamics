@@ -348,13 +348,12 @@ Base class for celestial objects (bodies, spacecraft).
 
 | Method | Description |
 |--------|-------------|
-| `GetGeometricStateFromICRF(Time date)` | Get geometric state relative to SSB in ICRF |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body in ICRF (avoids SSB round-trips) |
 | `AngularSize(double distance)` | Compute angular diameter at distance |
 | `IsOcculted(CelestialItem by, OrbitalParameters from, Aberration aberration)` | Check if occulted |
 | `WriteEphemeris(FileInfo outputFile)` | Write ephemeris to SPK file |
 
-**Ephemeris Computation Strategy**: When computing ephemeris between a target and a non-SPICE observer (Spacecraft, Site), the framework uses a "reference body" pattern instead of going through SSB. The reference body is determined automatically (Spacecraft's central body, Site's celestial body, or SSB as fallback). This avoids the numerical issues and overhead of subtracting two ~150 Gm SSB-relative vectors to get a relative position between nearby objects.
+**Ephemeris Computation Strategy**: When computing ephemeris between a target and a non-SPICE observer (Spacecraft, Site), the framework uses a "reference body" pattern instead of going through SSB. The reference body is determined automatically (Spacecraft's central body, Site's celestial body, or SSB as fallback). This avoids the numerical issues and overhead of subtracting two ~150 Gm SSB-relative vectors to get a relative position between nearby objects. SSB-relative states are only used internally for aberration correction (light-time displacement of the reference body) and star positions.
 
 ---
 
@@ -1245,7 +1244,7 @@ Represents a spacecraft with components.
 | `DragCoefficient` | Drag coefficient Cd (default 2.2) |
 | `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
 | `InitialOrbitalParameters` | Initial orbit |
-| `StateVectorsRelativeToICRF` | Propagated states |
+| `StateVectorsRelativeToICRF` | Propagated states (CB-relative in ICRF) |
 | `BodyFront` | Instance body front axis (default: +Y, same as `Spacecraft.Front`) |
 | `BodyRight` | Instance body right axis (default: +X, same as `Spacecraft.Right`) |
 | `BodyUp` | Instance body up axis (default: +Z, same as `Spacecraft.Up`) |
@@ -1266,8 +1265,8 @@ Represents a spacecraft with components.
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
 | `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set maneuver to execute |
-| `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit |
-| `PropagateAsync(...)` | Propagate orbit asynchronously |
+| `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit, returns `PropagationSolution` |
+| `PropagateAsync(...)` | Propagate orbit asynchronously, returns `PropagationSolution` |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
 | `GetGeometricStateRelativeTo(Time epoch, CelestialItem referenceBody)` | Get geometric state relative to a reference body (interpolates from cache) |
 | `GetOrientation(Frame frame, Time epoch)` | Get spacecraft orientation |
@@ -1302,8 +1301,8 @@ spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
     new Vector3(0, 0, 0)                 // Orientation
 );
 
-// Propagate
-spacecraft.Propagate(
+// Propagate (returns PropagationSolution for dense output)
+var solution = spacecraft.Propagate(
     new Window(epoch, epoch.AddDays(1)),
     new[] { earth },
     includeAtmosphericDrag: false,
@@ -1311,7 +1310,10 @@ spacecraft.Propagate(
     TimeSpan.FromSeconds(60)
 );
 
-// Access propagated states
+// Interpolate at any epoch within the propagation window
+var stateAtHalfDay = solution.InterpolateAt(epoch.AddHours(12));
+
+// Access propagated states from the cache
 foreach (var sv in spacecraft.StateVectorsRelativeToICRF.Values.Take(5))
 {
     Console.WriteLine($"{sv.Epoch}: {sv.Position.Magnitude():F0} m");
@@ -1518,7 +1520,7 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 
 | Method | Description |
 |--------|-------------|
-| `Propagate()` | Execute propagation with event detection and dense output |
+| `Propagate()` | Execute propagation with event detection and dense output, returns `PropagationSolution` |
 
 **Propagation Architecture:**
 1. **Build event detectors** from the spacecraft's maneuver chain (leading attitudes execute immediately)
@@ -1572,7 +1574,10 @@ var propagator = new CentralBodyPropagator(
     spacecraft,
     [earth, PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY],
     false, false, TimeSpan.FromSeconds(1.0));
-propagator.Propagate();
+var solution = propagator.Propagate();
+
+// Use dense output for sub-step interpolation
+var midState = solution.InterpolateAt(epoch.AddHours(12));
 ```
 
 **Accuracy:** With degree-10 EGM2008, Moon, and Sun perturbations, 24h LEO propagation achieves sub-kilometer position accuracy compared to GMAT reference solutions.
@@ -1587,7 +1592,7 @@ SGP4/SDP4 propagator for TLE elements.
 
 | Method | Description |
 |--------|-------------|
-| `Propagate()` | Execute propagation |
+| `Propagate()` | Execute propagation, returns `PropagationSolution` |
 
 ---
 
@@ -2667,11 +2672,10 @@ var propagator = new CentralBodyPropagator(
     false, false,
     TimeSpan.FromSeconds(1.0));
 
-propagator.Propagate();
+var solution = propagator.Propagate();
 
-// Get final state relative to Earth
-var finalState = spacecraft.StateVectorsRelativeToICRF.Values.Last()
-    .RelativeTo(earth, Aberration.None) as StateVector;
+// Get final state via dense output or from cache
+var finalState = spacecraft.StateVectorsRelativeToICRF.Values.Last();
 
 Console.WriteLine($"Position after 24h: ({finalState.Position.X/1000:F3}, " +
     $"{finalState.Position.Y/1000:F3}, {finalState.Position.Z/1000:F3}) km");
@@ -2879,5 +2883,8 @@ The propagator and maneuver systems have been redesigned:
 - **New event detection system**: `IEventDetector`, `ManeuverEventDetector`, `CrossingDirection` in `IO.Astrodynamics.Propagator.Events`.
 - **Segment-based propagation**: `PropagationSolution`, `PropagationSegment`, `AcceptedStep` enable cubic Hermite dense output for all integrators.
 - **`Spacecraft.Propagate()` simplified**: Always uses `CentralBodyPropagator` — no auto-routing between different propagator types.
+- **`Propagate()` returns `PropagationSolution`**: `PropagatorBase.Propagate()`, `CentralBodyPropagator.Propagate()`, `TLEPropagator.Propagate()`, and `Spacecraft.Propagate()` / `PropagateAsync()` now return a `PropagationSolution` for dense output via `InterpolateAt(epoch)`. Previously callers had to access `StateVectorsRelativeToICRF` directly.
+- **SSB-specific methods removed from public API**: `GetGeometricStateFromICRF` removed from `ILocalizable` interface and changed to `internal` on `CelestialItem`, `Spacecraft`, `Star`, and `Site`. `GetEphemerisFromICRF` removed from `IDataProvider` interface and `SpiceDataProvider`. Use `GetEphemeris(epoch, target, observer, frame, aberration)` with SSB as observer for equivalent functionality. SSB-relative states are now an internal implementation detail used only for aberration correction and star positions.
+- **`Spacecraft.WriteEphemeris()` writes CB-relative states**: SPK files now contain states relative to the central body instead of SSB. SPICE handles ephemeris chaining automatically via the center body ID in the SPK segment.
 
 Contact: [contact@io-aerospace.org](mailto:contact@io-aerospace.org)
