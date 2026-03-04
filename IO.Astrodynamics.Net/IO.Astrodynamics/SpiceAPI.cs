@@ -264,27 +264,6 @@ public class SpiceAPI
         }
     }
 
-    /// <summary>
-    ///     Find time windows based on distance constraint
-    /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="observer"></param>
-    /// <param name="target"></param>
-    /// <param name="relationalOperator"></param>
-    /// <param name="value"></param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
-    /// <returns></returns>
-    [Obsolete("Use the overload that accepts int IDs instead.")]
-    public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, INaifObject observer,
-        INaifObject target, RelationnalOperator relationalOperator, double value, Aberration aberration,
-        TimeSpan stepSize)
-    {
-        if (observer == null) throw new ArgumentNullException(nameof(observer));
-        if (target == null) throw new ArgumentNullException(nameof(target));
-        return FindWindowsOnDistanceConstraint(searchWindow, observer.NaifId, target.NaifId, relationalOperator, value, aberration, stepSize);
-    }
-
     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
@@ -301,31 +280,6 @@ public class SpiceAPI
                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
         }
-    }
-
-    /// <summary>
-    ///     Find time windows based on occultation constraint
-    /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="target"></param>
-    /// <param name="targetShape"></param>
-    /// <param name="frontBody"></param>
-    /// <param name="frontShape"></param>
-    /// <param name="occultationType"></param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
-    /// <param name="observer"></param>
-    /// <returns></returns>
-    [Obsolete("Use the overload that accepts int IDs instead.")]
-    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
-        INaifObject target, ShapeType targetShape, INaifObject frontBody, ShapeType frontShape,
-        OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
-    {
-        if (observer == null) throw new ArgumentNullException(nameof(observer));
-        if (target == null) throw new ArgumentNullException(nameof(target));
-        if (frontBody == null) throw new ArgumentNullException(nameof(frontBody));
-        return FindWindowsOnOccultationConstraint(searchWindow, observer.NaifId, target.NaifId, targetShape,
-            frontBody.NaifId, frontShape, occultationType, aberration, stepSize);
     }
 
     /// <summary>
@@ -366,34 +320,6 @@ public class SpiceAPI
     }
 
     /// <summary>
-    ///     Find time windows based on coordinate constraint
-    /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="target"></param>
-    /// <param name="frame"></param>
-    /// <param name="coordinateSystem"></param>
-    /// <param name="coordinate"></param>
-    /// <param name="relationalOperator"></param>
-    /// <param name="value"></param>
-    /// <param name="adjustValue"></param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
-    /// <param name="observer"></param>
-    /// <returns></returns>
-    [Obsolete("Use the overload that accepts int IDs instead.")]
-    public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, INaifObject observer,
-        INaifObject target, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
-        RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
-        TimeSpan stepSize)
-    {
-        if (observer == null) throw new ArgumentNullException(nameof(observer));
-        if (target == null) throw new ArgumentNullException(nameof(target));
-        if (frame == null) throw new ArgumentNullException(nameof(frame));
-        return FindWindowsOnCoordinateConstraint(searchWindow, observer.NaifId, target.NaifId, frame,
-            coordinateSystem, coordinate, relationalOperator, value, adjustValue, aberration, stepSize);
-    }
-
-    /// <summary>
     /// Find time windows based on coordinate constraint
     /// </summary>
     /// <param name="searchWindow"></param>
@@ -431,38 +357,6 @@ public class SpiceAPI
         }
     }
 
-    /// <summary>
-    ///     Find time windows based on illumination constraint
-    /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="illuminationSource"></param>
-    /// <param name="observer"></param>
-    /// <param name="targetBody"></param>
-    /// <param name="fixedFrame"></param>
-    /// <param name="planetodetic"></param>
-    /// <param name="illuminationType"></param>
-    /// <param name="relationalOperator"></param>
-    /// <param name="value"></param>
-    /// <param name="adjustValue"></param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
-    /// <param name="method"></param>
-    /// <returns></returns>
-    [Obsolete("Use the overload that accepts int IDs instead.")]
-    public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, INaifObject observer,
-        INaifObject targetBody, Frame fixedFrame,
-        Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
-        double value, double adjustValue, Aberration aberration, TimeSpan stepSize, INaifObject illuminationSource,
-        string method = "Ellipsoid")
-    {
-        if (observer == null) throw new ArgumentNullException(nameof(observer));
-        if (targetBody == null) throw new ArgumentNullException(nameof(targetBody));
-        if (illuminationSource == null) throw new ArgumentNullException(nameof(illuminationSource));
-        return FindWindowsOnIlluminationConstraint(searchWindow, observer.NaifId, targetBody.NaifId, fixedFrame,
-            planetodetic, illuminationType, relationalOperator, value, adjustValue, aberration, stepSize,
-            illuminationSource.NaifId, method);
-    }
-
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
@@ -485,30 +379,6 @@ public class SpiceAPI
                 aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
         }
-    }
-
-    /// <summary>
-    ///     Find time window when a target is in instrument's field of view
-    /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="observer"></param>
-    /// <param name="instrument"></param>
-    /// <param name="target"></param>
-    /// <param name="targetFrame"></param>
-    /// <param name="targetShape"></param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
-    /// <returns></returns>
-    [Obsolete("Use the overload that accepts int IDs instead.")]
-    public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, Spacecraft observer,
-        Instrument instrument, INaifObject target, Frame targetFrame, ShapeType targetShape, Aberration aberration,
-        TimeSpan stepSize)
-    {
-        if (observer == null) throw new ArgumentNullException(nameof(observer));
-        if (instrument == null) throw new ArgumentNullException(nameof(instrument));
-        if (target == null) throw new ArgumentNullException(nameof(target));
-        if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
-        return FindWindowsInFieldOfViewConstraint(searchWindow, observer.NaifId, instrument.NaifId, target.NaifId, targetFrame, targetShape, aberration, stepSize);
     }
 
     /// <summary>
@@ -543,27 +413,6 @@ public class SpiceAPI
 
             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
         }
-    }
-
-    /// <summary>
-    ///     Read object ephemeris for a given period
-    /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="target"></param>
-    /// <param name="frame"></param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
-    /// <param name="observer"></param>
-    /// <returns></returns>
-    [Obsolete("Use the overload that accepts int IDs instead.")]
-    public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
-        ILocalizable observer, ILocalizable target, Frame frame,
-        Aberration aberration, TimeSpan stepSize)
-    {
-        ArgumentNullException.ThrowIfNull(observer);
-        ArgumentNullException.ThrowIfNull(target);
-        ArgumentNullException.ThrowIfNull(frame);
-        return ReadEphemeris(searchWindow, observer.NaifId, target.NaifId, frame, aberration, stepSize);
     }
 
     /// <summary>
@@ -607,26 +456,6 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// Return state vector at given epoch
-    /// </summary>
-    /// <param name="epoch"></param>
-    /// <param name="observer"></param>
-    /// <param name="target"></param>
-    /// <param name="frame"></param>
-    /// <param name="aberration"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    [Obsolete("Use the overload that accepts int IDs instead.")]
-    public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, ILocalizable observer,
-        ILocalizable target, Frame frame, Aberration aberration)
-    {
-        ArgumentNullException.ThrowIfNull(observer);
-        ArgumentNullException.ThrowIfNull(target);
-        ArgumentNullException.ThrowIfNull(frame);
-        return ReadEphemeris(epoch, observer.NaifId, target.NaifId, frame, aberration);
-    }
-
-    /// <summary>
     /// Return state vector at given epoch using NAIF IDs directly.
     /// </summary>
     /// <param name="epoch"></param>
@@ -647,24 +476,6 @@ public class SpiceAPI
             return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
                 Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
         }
-    }
-
-    /// <summary>
-    ///     Read spacecraft orientation for a given period
-    /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="spacecraft"></param>
-    /// <param name="tolerance"></param>
-    /// <param name="referenceFrame"></param>
-    /// <param name="stepSize"></param>
-    /// <returns></returns>
-    [Obsolete("Use the overload that accepts int naifId instead.")]
-    public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
-        Spacecraft spacecraft, TimeSpan tolerance,
-        Frame referenceFrame, TimeSpan stepSize)
-    {
-        if (spacecraft == null) throw new ArgumentNullException(nameof(spacecraft));
-        return ReadOrientation(searchWindow, spacecraft.NaifId, tolerance, referenceFrame, stepSize);
     }
 
     /// <summary>
@@ -699,21 +510,6 @@ public class SpiceAPI
     }
 
     /// <summary>
-    ///     Write ephemeris file
-    /// </summary>
-    /// <param name="filePath"></param>
-    /// <param name="naifObject"></param>
-    /// <param name="stateVectors"></param>
-    /// <returns></returns>
-    [Obsolete("Use the overload that accepts int naifId instead.")]
-    public bool WriteEphemeris(FileInfo filePath, INaifObject naifObject,
-        IEnumerable<OrbitalParameters.StateVector> stateVectors)
-    {
-        if (naifObject == null) throw new ArgumentNullException(nameof(naifObject));
-        return WriteEphemeris(filePath, naifObject.NaifId, stateVectors);
-    }
-
-    /// <summary>
     /// Write ephemeris file using a NAIF ID directly.
     /// </summary>
     /// <param name="filePath"></param>
@@ -740,13 +536,6 @@ public class SpiceAPI
 
             return true;
         }
-    }
-
-    [Obsolete("Use the overload that accepts int naifId instead.")]
-    public bool WriteOrientation(FileInfo filePath, INaifObject naifObject, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
-    {
-        if (naifObject == null) throw new ArgumentNullException(nameof(naifObject));
-        return WriteOrientation(filePath, naifObject.NaifId, stateOrientations);
     }
 
     /// <summary>

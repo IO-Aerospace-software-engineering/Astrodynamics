@@ -127,23 +127,6 @@ public class SpiceAPISmokeTests
     }
 
     [Fact]
-    public void ReadEphemeris_WithObsoleteOverload()
-    {
-#pragma warning disable CS0618 // Obsolete
-        var searchWindow = new Window(Time.CreateTDB(0.0), Time.CreateTDB(100.0));
-        var results = SpiceAPI.Instance.ReadEphemeris(searchWindow, EarthAtJ2000, MoonAtJ2000,
-                Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(50.0))
-            .Select(x => x.ToStateVector()).ToArray();
-        Assert.NotEmpty(results);
-
-        var epoch = Time.CreateTDB(0.0);
-        var result = SpiceAPI.Instance.ReadEphemeris(epoch, EarthAtJ2000, MoonAtJ2000,
-            Frame.ICRF, Aberration.None);
-        Assert.NotEqual(0.0, result.ToStateVector().Position.Magnitude());
-#pragma warning restore CS0618
-    }
-
-    [Fact]
     public void ReadEphemeris_SsbObserver()
     {
         var epoch = Time.CreateTDB(0.0);
@@ -186,37 +169,6 @@ public class SpiceAPISmokeTests
             SpiceAPI.Instance.UnloadKernels(file);
             if (file.Exists) file.Delete();
         }
-    }
-
-    [Fact]
-    public void WriteEphemeris_WithObsoleteOverload()
-    {
-#pragma warning disable CS0618
-        const int size = 10;
-        Clock clock = new Clock("smokeClk1", 65536);
-        var spacecraft = new Spacecraft(-901, "SmokeSpc1", 1000.0, 5000.0, clock,
-            new StateVector(new Vector3(6800000, 0, 0), new Vector3(0, 7656.0, 0),
-                EarthAtJ2000, Time.CreateTDB(0.0), Frame.ICRF));
-
-        var sv = new StateVector[size];
-        for (int i = 0; i < size; ++i)
-        {
-            sv[i] = new StateVector(new Vector3(6800000 + i * 100, i * 10, i * 10),
-                new Vector3(i, 7656.0 + i * 0.001, i),
-                EarthAtJ2000, Time.CreateTDB(i), Frame.ICRF);
-        }
-
-        var file = new FileInfo("SmokeTest_Ephemeris_Obsolete.spk");
-        try
-        {
-            SpiceAPI.Instance.WriteEphemeris(file, spacecraft, sv);
-            Assert.True(file.Exists);
-        }
-        finally
-        {
-            if (file.Exists) file.Delete();
-        }
-#pragma warning restore CS0618
     }
 
     // ===== WriteOrientation & ReadOrientation =====
@@ -262,50 +214,6 @@ public class SpiceAPISmokeTests
             if (ckFile.Exists) ckFile.Delete();
             if (clockFile.Exists) clockFile.Delete();
         }
-    }
-
-    [Fact]
-    public async Task WriteAndReadOrientation_ObsoleteOverloads()
-    {
-#pragma warning disable CS0618
-        const int size = 10;
-        Clock clock = new Clock("smokeClk3", 65536);
-        var spacecraft = new Spacecraft(-903, "SmokeSpc3", 1000.0, 5000.0, clock,
-            new StateVector(new Vector3(6800000, 0, 0), new Vector3(0, 7656.0, 0),
-                EarthAtJ2000, Time.CreateTDB(0.0), Frame.ICRF));
-
-        var so = new StateOrientation[size];
-        for (int i = 0; i < size; ++i)
-        {
-            so[i] = new StateOrientation(
-                new Quaternion(i, 1 + i * 0.1, 1 + i * 0.2, 1 + i * 0.3),
-                Vector3.Zero, Time.CreateTDB(i), Frame.ICRF);
-        }
-
-        var clockFile = new FileInfo("SmokeTest_Clock_Obsolete.tsc");
-        var ckFile = new FileInfo("SmokeTest_Orientation_Obsolete.ck");
-        try
-        {
-            await clock.WriteAsync(clockFile);
-            SpiceAPI.Instance.LoadKernels(clockFile);
-
-            SpiceAPI.Instance.WriteOrientation(ckFile, spacecraft, so);
-            SpiceAPI.Instance.LoadKernels(ckFile);
-
-            var window = new Window(Time.J2000TDB, Time.J2000TDB.AddSeconds(9.0));
-            var results = SpiceAPI.Instance.ReadOrientation(window, spacecraft,
-                TimeSpan.Zero, Frame.ICRF, TimeSpan.FromSeconds(1.0)).ToArray();
-
-            Assert.NotEmpty(results);
-        }
-        finally
-        {
-            SpiceAPI.Instance.UnloadKernels(ckFile);
-            SpiceAPI.Instance.UnloadKernels(clockFile);
-            if (ckFile.Exists) ckFile.Delete();
-            if (clockFile.Exists) clockFile.Delete();
-        }
-#pragma warning restore CS0618
     }
 
     // ===== TransformFrame =====
@@ -494,20 +402,6 @@ public class SpiceAPISmokeTests
         Assert.NotEmpty(results);
     }
 
-    [Fact]
-    public void FindWindowsOnDistanceConstraint_ObsoleteOverload()
-    {
-#pragma warning disable CS0618
-        var searchWindow = new Window(Time.CreateTDB(220881665.18391809),
-            Time.CreateTDB(228657665.18565452));
-        var results = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
-            searchWindow, EarthAtJ2000, MoonAtJ2000,
-            RelationnalOperator.Greater, 400000000, Aberration.None,
-            TimeSpan.FromSeconds(86400.0)).ToArray();
-        Assert.NotEmpty(results);
-#pragma warning restore CS0618
-    }
-
     // ===== FindWindowsOnOccultationConstraint =====
 
     [Fact]
@@ -521,21 +415,6 @@ public class SpiceAPISmokeTests
             OccultationType.Any, Aberration.LT,
             TimeSpan.FromSeconds(3600.0)).ToArray();
         Assert.NotEmpty(results);
-    }
-
-    [Fact]
-    public void FindWindowsOnOccultationConstraint_ObsoleteOverload()
-    {
-#pragma warning disable CS0618
-        var searchWindow = new Window(Time.CreateTDB(61473664.183390938),
-            Time.CreateTDB(61646464.183445148));
-        var results = SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
-            searchWindow, EarthAtJ2000, Sun, ShapeType.Ellipsoid,
-            MoonAtJ2000, ShapeType.Ellipsoid,
-            OccultationType.Any, Aberration.LT,
-            TimeSpan.FromSeconds(3600.0)).ToArray();
-        Assert.NotEmpty(results);
-#pragma warning restore CS0618
     }
 
     // ===== FindWindowsOnCoordinateConstraint =====
@@ -557,25 +436,6 @@ public class SpiceAPISmokeTests
         Assert.NotEmpty(results);
     }
 
-    [Fact]
-    public void FindWindowsOnCoordinateConstraint_ObsoleteOverload()
-    {
-#pragma warning disable CS0618
-        var site = new Site(13, "DSS-13", EarthAtJ2000,
-            new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad,
-                35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad, 0.107));
-
-        var searchWindow = new Window(Time.CreateTDB(730036800.0),
-            Time.CreateTDB(730123200));
-        var results = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
-            searchWindow, site, MoonAtJ2000,
-            site.Frame, CoordinateSystem.Rectangular, Coordinate.Z,
-            RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
-            TimeSpan.FromSeconds(60.0)).ToArray();
-        Assert.NotEmpty(results);
-#pragma warning restore CS0618
-    }
-
     // ===== FindWindowsOnIlluminationConstraint =====
 
     [Fact]
@@ -593,25 +453,6 @@ public class SpiceAPISmokeTests
             0.0, Aberration.CNS, TimeSpan.FromHours(4.5),
             Stars.Sun.NaifId).ToArray();
         Assert.NotEmpty(results);
-    }
-
-    [Fact]
-    public void FindWindowsOnIlluminationConstraint_ObsoleteOverload()
-    {
-#pragma warning disable CS0618
-        var searchWindow = new Window(Time.CreateTDB(674524800),
-            Time.CreateTDB(674611200));
-        var results = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
-            searchWindow, Sun, EarthAtJ2000,
-            new Frame("ITRF93"),
-            new Planetodetic(2.2 * IO.Astrodynamics.Constants.Deg2Rad,
-                48.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0),
-            IlluminationAngle.Incidence, RelationnalOperator.Lower,
-            System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad),
-            0.0, Aberration.CNS, TimeSpan.FromHours(4.5),
-            Sun).ToArray();
-        Assert.NotEmpty(results);
-#pragma warning restore CS0618
     }
 
     // ===== FindWindowsInFieldOfViewConstraint =====
@@ -644,32 +485,4 @@ public class SpiceAPISmokeTests
         Assert.NotNull(results);
     }
 
-    [Fact]
-    public void FindWindowsInFieldOfViewConstraint_ObsoleteOverload()
-    {
-#pragma warning disable CS0618
-        Clock clock = new Clock("smokeFovClk2", 65536);
-        var parkingOrbit = new StateVector(
-            new Vector3(6800000.0, 0.0, 0.0),
-            new Vector3(0.0, 7656.2204182967143, 0.0),
-            EarthAtJ2000, Time.Create(676555130.0, TimeFrame.TDBFrame), Frame.ICRF);
-
-        var spacecraft = new Spacecraft(-905, "SmokeFovSpc2", 1000.0, 5000.0, clock, parkingOrbit);
-        spacecraft.AddCircularInstrument(-905789, "SMOKECAM2", "mod1", 0.75,
-            Vector3.VectorZ, Vector3.VectorY,
-            new Vector3(0.0, System.Math.PI * 0.5, 0.0));
-
-        var searchWindow = new Window(
-            Time.Create(676555200.0, TimeFrame.TDBFrame),
-            Time.Create(676561646.0, TimeFrame.TDBFrame));
-
-        var results = SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
-            searchWindow, spacecraft, spacecraft.Instruments.First(),
-            EarthAtJ2000, EarthAtJ2000.Frame,
-            ShapeType.Ellipsoid, Aberration.LT,
-            TimeSpan.FromSeconds(360.0)).ToArray();
-
-        Assert.NotNull(results);
-#pragma warning restore CS0618
-    }
 }
