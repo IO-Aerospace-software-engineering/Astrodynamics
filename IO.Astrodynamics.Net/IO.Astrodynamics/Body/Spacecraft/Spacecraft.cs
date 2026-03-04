@@ -458,20 +458,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return solution;
         }
 
-        public void Propagate(Window window, IEnumerable<CelestialItem> additionalCelestialBodies, Integrator integrator, bool includeAtmosphericDrag,
-            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
-        {
-            ResetPropagation();
-
-            // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
-            // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
-            using var propagator = new CentralBodyPropagator(window, this, integrator, additionalCelestialBodies,
-                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
-
-            propagator.Propagate();
-            _isPropagated = true;
-        }
-
         /// <summary>
         /// Computes the geometric state relative to a reference body.
         /// Uses cached propagation states with Lagrange interpolation, chaining via SPICE if needed.
