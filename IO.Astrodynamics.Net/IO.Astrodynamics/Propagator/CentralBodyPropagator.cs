@@ -37,6 +37,7 @@ public class CentralBodyPropagator : PropagatorBase
         var forces = BuildCentralBodyForces(_centralBody, items, spacecraft, includeAtmosphericDrag,
             includeSolarRadiationPressure);
         InjectEphemerisCache(Window, forces, items, _centralBody);
+        InjectFrameOrientationCache(Window, _centralBody);
         foreach (var force in forces)
         {
             integrator.AddForce(force);
@@ -108,6 +109,7 @@ public class CentralBodyPropagator : PropagatorBase
             includeSolarRadiationPressure);
         var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         InjectEphemerisCache(tdbWindow, forces, items, centralBody);
+        InjectFrameOrientationCache(tdbWindow, centralBody);
         return new VVIntegrator(forces, deltaT, initialState);
     }
 
@@ -145,6 +147,15 @@ public class CentralBodyPropagator : PropagatorBase
         return forces;
     }
 
+    private static void InjectFrameOrientationCache(Window tdbWindow, CelestialItem centralBody)
+    {
+        if (centralBody is not CelestialBody celestialBody) return;
+
+        var cache = new PropagationFrameOrientationCache(
+            tdbWindow, celestialBody.Frame, TimeSpan.FromSeconds(60));
+        celestialBody.Frame.OrientationCache = cache;
+    }
+
     private static void InjectEphemerisCache(Window tdbWindow, List<ForceBase> forces,
         CelestialItem[] celestialBodies, ILocalizable observer)
     {
@@ -168,5 +179,11 @@ public class CentralBodyPropagator : PropagatorBase
     {
         // Store CB-relative states directly; conversion to SSB happens on demand
         Spacecraft.AddStateVectorRelativeToICRF(outputStates);
+
+        // Clear frame orientation cache to avoid stale data on shared Frame instances
+        if (_centralBody is CelestialBody cb)
+        {
+            cb.Frame.OrientationCache = null;
+        }
     }
 }
