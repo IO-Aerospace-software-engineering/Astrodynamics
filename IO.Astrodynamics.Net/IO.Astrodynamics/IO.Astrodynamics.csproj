@@ -4,11 +4,24 @@
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <AssemblyName>IO.Astrodynamics.Net</AssemblyName>
-        <Company>IO</Company>
+        <Company>IO Aerospace</Company>
         <LangVersion>12</LangVersion>
         <!-- Suppress CS8981 for auto-generated PDS model classes with lowercase type names -->
         <NoWarn>$(NoWarn);CS8981</NoWarn>
         <TargetFramework>net10.0</TargetFramework>
+
+        <!-- NuGet package metadata (replaces IO.Astrodynamics.nuspec) -->
+        <PackageId>IO.Astrodynamics</PackageId>
+        <Version>9.0.0-preview-1</Version>
+        <Authors>Sylvain Guillet</Authors>
+        <Copyright>Sylvain Guillet</Copyright>
+        <Title>IO Astrodynamics framework</Title>
+        <Description>This astrodynamics framework provides tools to manipulate orbital parameters, run spacecraft propagation, evaluate impulsive maneuvers, generate fuel balance, compute spacecraft attitudes (prograde, nadir, normal, TRIAD with orbital/celestial targets), ...</Description>
+        <PackageTags>astrodynamics aerospace orbital mechanics spice space physics attitude</PackageTags>
+        <PackageProjectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics</PackageProjectUrl>
+        <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+        <PackageIcon>dragonfly-dark-trans.png</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -48,19 +61,24 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="resources\IO.Astrodynamics.dll" />
-      <None Remove="resources\IO.Astrodynamics.lib" />
-      <None Remove="resources\libIO.Astrodynamics.so" />
-      <Content Include="resources\IO.Astrodynamics.dll">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <Content Include="resources\IO.Astrodynamics.lib">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <Content Include="resources\libIO.Astrodynamics.so">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
       <None Remove="resources\One_Sgp4.dll" />
+      <!-- Native libs: copy to output for local dev + pack into runtimes/ for NuGet -->
+      <Content Include="resources\IO.Astrodynamics.dll" Pack="true" PackagePath="runtimes/windows10-x64/">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="resources\IO.Astrodynamics.lib" Pack="true" PackagePath="runtimes/windows10-x64/">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="resources\libIO.Astrodynamics.so" Pack="true" PackagePath="runtimes/linux-x64/">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <!-- NuGet package content: .targets, icon, readme -->
+    <ItemGroup>
+      <None Include="IO.Astrodynamics.targets" Pack="true" PackagePath="build/" />
+      <None Include="resources\dragonfly-dark-trans.png" Pack="true" PackagePath="/" />
+      <None Include="..\..\README.md" Pack="true" PackagePath="/" />
     </ItemGroup>
 
     <ItemGroup>
