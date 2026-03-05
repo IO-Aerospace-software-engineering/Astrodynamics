@@ -109,7 +109,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal --configuration Release
 
     - name: Package Framework
-      run: dotnet pack -p:NuspecFile=IO.Astrodynamics.nuspec --no-build --configuration Release
+      run: dotnet pack IO.Astrodynamics/IO.Astrodynamics.csproj --no-build --configuration Release
 
     - name: Upload NuGet package
       uses: actions/upload-artifact@v4
