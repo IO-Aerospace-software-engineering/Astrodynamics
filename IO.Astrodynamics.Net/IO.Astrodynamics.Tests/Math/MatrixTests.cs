@@ -659,6 +659,156 @@ public class MatirxTests
 
     #endregion
 
+    #region Cholesky Tests
+
+    [Fact]
+    public void Cholesky_3x3PositiveDefinite_ReconstructsOriginal()
+    {
+        var P = new Matrix(new double[,]
+        {
+            { 4, 12, -16 },
+            { 12, 37, -43 },
+            { -16, -43, 98 }
+        });
+
+        var L = P.Cholesky();
+        var reconstructed = L * L.Transpose();
+
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                Assert.Equal(P.Get(i, j), reconstructed.Get(i, j), 10);
+    }
+
+    [Fact]
+    public void Cholesky_6x6CovarianceMatrix_ReconstructsOriginal()
+    {
+        // Realistic LEO covariance (diagonal-dominant, units m² and m²/s²)
+        var P = new Matrix(6, 6);
+        P.Set(0, 0, 1e4); P.Set(0, 1, 1e2); P.Set(0, 2, 5e1);
+        P.Set(1, 0, 1e2); P.Set(1, 1, 2e4); P.Set(1, 2, 3e1);
+        P.Set(2, 0, 5e1); P.Set(2, 1, 3e1); P.Set(2, 2, 1.5e4);
+        P.Set(3, 3, 1e-2); P.Set(3, 4, 1e-4);
+        P.Set(4, 3, 1e-4); P.Set(4, 4, 2e-2); P.Set(4, 5, 5e-5);
+        P.Set(5, 4, 5e-5); P.Set(5, 5, 1.5e-2);
+
+        var L = P.Cholesky();
+        var reconstructed = L * L.Transpose();
+
+        for (int i = 0; i < 6; i++)
+            for (int j = 0; j < 6; j++)
+                Assert.Equal(P.Get(i, j), reconstructed.Get(i, j), 6);
+    }
+
+    [Fact]
+    public void Cholesky_IdentityMatrix_ReturnsIdentity()
+    {
+        var I = new Matrix(new double[,]
+        {
+            { 1, 0, 0 },
+            { 0, 1, 0 },
+            { 0, 0, 1 }
+        });
+
+        var L = I.Cholesky();
+
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                Assert.Equal(I.Get(i, j), L.Get(i, j), 10);
+    }
+
+    [Fact]
+    public void Cholesky_DiagonalMatrix_ReturnsSqrtDiagonal()
+    {
+        var D = new Matrix(new double[,]
+        {
+            { 4, 0, 0 },
+            { 0, 9, 0 },
+            { 0, 0, 16 }
+        });
+
+        var L = D.Cholesky();
+
+        Assert.Equal(2.0, L.Get(0, 0), 10);
+        Assert.Equal(3.0, L.Get(1, 1), 10);
+        Assert.Equal(4.0, L.Get(2, 2), 10);
+    }
+
+    [Fact]
+    public void Cholesky_LowerTriangular_ZerosAboveDiagonal()
+    {
+        var P = new Matrix(new double[,]
+        {
+            { 4, 12, -16 },
+            { 12, 37, -43 },
+            { -16, -43, 98 }
+        });
+
+        var L = P.Cholesky();
+
+        for (int i = 0; i < 3; i++)
+            for (int j = i + 1; j < 3; j++)
+                Assert.Equal(0.0, L.Get(i, j), 10);
+    }
+
+    [Fact]
+    public void Cholesky_NonSquareMatrix_Throws()
+    {
+        var m = new Matrix(2, 3);
+
+        Assert.Throws<InvalidOperationException>(() => m.Cholesky());
+    }
+
+    [Fact]
+    public void Cholesky_NonSymmetricMatrix_Throws()
+    {
+        var m = new Matrix(new double[,]
+        {
+            { 1, 2, 3 },
+            { 4, 5, 6 },
+            { 7, 8, 9 }
+        });
+
+        Assert.Throws<InvalidOperationException>(() => m.Cholesky());
+    }
+
+    [Fact]
+    public void Cholesky_NonPositiveDefinite_Throws()
+    {
+        // Negative eigenvalue matrix
+        var m = new Matrix(new double[,]
+        {
+            { 1, 0 },
+            { 0, -1 }
+        });
+
+        Assert.Throws<InvalidOperationException>(() => m.Cholesky());
+    }
+
+    [Fact]
+    public void Cholesky_SemiDefinite_Throws()
+    {
+        // Positive semi-definite (rank deficient): last diagonal becomes 0
+        var m = new Matrix(new double[,]
+        {
+            { 1, 1 },
+            { 1, 1 }
+        });
+
+        Assert.Throws<InvalidOperationException>(() => m.Cholesky());
+    }
+
+    [Fact]
+    public void Cholesky_1x1Matrix_ReturnsScalar()
+    {
+        var m = new Matrix(new double[,] { { 4.0 } });
+
+        var L = m.Cholesky();
+
+        Assert.Equal(2.0, L.Get(0, 0), 10);
+    }
+
+    #endregion
+
     #region FromQuaternion Tests
 
     [Fact]
