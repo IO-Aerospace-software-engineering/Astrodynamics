@@ -180,7 +180,7 @@ public class CentralBodyPropagator : PropagatorBase
     protected override void StorePropagatedStates(StateVector[] outputStates)
     {
         // Store CB-relative states directly; conversion to SSB happens on demand
-        Spacecraft.AddStateVectorRelativeToICRF(outputStates);
+        Spacecraft.AddPropagatedStates(outputStates);
 
         // Clear frame orientation cache to avoid stale data on shared Frame instances
         if (_centralBody is CelestialBody cb)

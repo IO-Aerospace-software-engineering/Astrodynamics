@@ -44,7 +44,7 @@ public class TLEPropagator : IPropagator
         }
 
         _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.EndDate, Frame.ICRF);
-        Spacecraft.AddStateVectorRelativeToICRF(_svCache);
+        Spacecraft.AddPropagatedStates(_svCache);
 
         // Build synthetic PropagationSolution from TLE states
         var solution = new PropagationSolution();

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,8 +21,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 {
     public class Spacecraft : CelestialItem, IOrientable<SpacecraftFrame>
     {
-        private readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
-        internal ImmutableSortedDictionary<Time, StateVector> StateVectorsRelativeToICRF => _stateVectorsRelativeToICRF.ToImmutableSortedDictionary();
+        private readonly ConcurrentDictionary<Time, StateVector> _propagatedStates = new();
 
         public static readonly Vector3 Front = Vector3.VectorY;
         public static readonly Vector3 Back = Front.Inverse();
@@ -471,12 +469,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
             // Not enough cached states
-            if (_stateVectorsRelativeToICRF.Count < 2)
+            if (_propagatedStates.Count < 2)
                 return InitialOrbitalParameters.ToStateVector(epoch)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
             // Interpolate from cache
-            var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+            var states = _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
             var cb = (CelestialItem)states[0].Observer;
             var interpolated = Lagrange.Interpolate(states, epoch);
 
@@ -499,15 +497,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
             // Determine reference body
-            CelestialItem cb = (_stateVectorsRelativeToICRF.Count >= 2)
-                ? (CelestialItem)_stateVectorsRelativeToICRF.Values.First().Observer
+            CelestialItem cb = (_propagatedStates.Count >= 2)
+                ? (CelestialItem)_propagatedStates.Values.First().Observer
                 : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
 
             // Short-circuit: observer IS the CB, no aberration, have cached states
-            if (aberration == Aberration.None && _stateVectorsRelativeToICRF.Count >= 2
+            if (aberration == Aberration.None && _propagatedStates.Count >= 2
                                               && cb.NaifId == observer.NaifId && cb.NaifId != 0)
             {
-                var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+                var states = _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
                 return Lagrange.Interpolate(states, epoch).ToFrame(frame);
             }
 
@@ -532,15 +530,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         public override void WriteEphemeris(FileInfo outputFile)
         {
-            var states = _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray();
+            var states = _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
             SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, states);
         }
 
-        public void AddStateVectorRelativeToICRF(params StateVector[] stateVectors)
+        public void AddPropagatedStates(params StateVector[] stateVectors)
         {
             foreach (var sv in stateVectors)
             {
-                _stateVectorsRelativeToICRF[sv.Epoch] = sv;
+                _propagatedStates[sv.Epoch] = sv;
             }
         }
 
@@ -664,7 +662,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (IsPropagated)
             {
                 _isPropagated = false;
-                _stateVectorsRelativeToICRF.Clear();
+                _propagatedStates.Clear();
                 Frame.ClearStateOrientations();
             }
 
