@@ -565,6 +565,51 @@ public readonly record struct Matrix
     /// <param name="col1">The second column vector.</param>
     /// <param name="col2">The third column vector.</param>
     /// <returns>A 3x3 matrix with the specified column vectors.</returns>
+    /// <summary>
+    /// Computes the Cholesky decomposition of this symmetric positive-definite matrix.
+    /// Returns a lower-triangular matrix L such that L * L^T = this matrix.
+    /// </summary>
+    /// <param name="tolerance">Tolerance for symmetry check.</param>
+    /// <returns>The lower-triangular Cholesky factor L.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the matrix is not square, not symmetric, or not positive-definite.
+    /// </exception>
+    public Matrix Cholesky(double tolerance = 1e-10)
+    {
+        if (Rows != Columns)
+            throw new InvalidOperationException("Cholesky decomposition requires a square matrix.");
+
+        if (!IsSymmetric(tolerance))
+            throw new InvalidOperationException("Cholesky decomposition requires a symmetric matrix.");
+
+        int n = Rows;
+        var L = new Matrix(n, n);
+
+        for (int j = 0; j < n; j++)
+        {
+            double sum = 0.0;
+            for (int k = 0; k < j; k++)
+                sum += L.Get(j, k) * L.Get(j, k);
+
+            double diag = _data[j, j] - sum;
+            if (diag <= 0.0)
+                throw new InvalidOperationException("Matrix is not positive-definite.");
+
+            L.Set(j, j, System.Math.Sqrt(diag));
+
+            for (int i = j + 1; i < n; i++)
+            {
+                double innerSum = 0.0;
+                for (int k = 0; k < j; k++)
+                    innerSum += L.Get(i, k) * L.Get(j, k);
+
+                L.Set(i, j, (_data[i, j] - innerSum) / L.Get(j, j));
+            }
+        }
+
+        return L;
+    }
+
     public static Matrix FromColumnVectors(Vector3 col0, Vector3 col1, Vector3 col2)
     {
         var m = new Matrix(3, 3);
