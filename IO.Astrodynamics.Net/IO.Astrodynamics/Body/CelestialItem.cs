@@ -453,9 +453,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public OccultationType? IsOcculted(CelestialItem by, OrbitalParameters.OrbitalParameters from, Aberration aberration = Aberration.LT)
     {
-        double backSize = AngularSize((GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
-        double bySize = by.AngularSize((by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position)
-            .Magnitude());
+        var observerPos = from.ToStateVector().Position;
+        double backDistance = (GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - observerPos).Magnitude();
+        double byDistance = (by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - observerPos).Magnitude();
+
+        // The occluding body must be closer than the target for a true occultation.
+        // If the target is closer, it's a transit, not an occultation.
+        if (byDistance >= backDistance)
+            return OccultationType.None;
+
+        double backSize = AngularSize(backDistance);
+        double bySize = by.AngularSize(byDistance);
         var angularSeparation = this.AngularSeparation(from.Epoch, by, from, aberration);
         return IsOcculted(angularSeparation, backSize, bySize);
     }
