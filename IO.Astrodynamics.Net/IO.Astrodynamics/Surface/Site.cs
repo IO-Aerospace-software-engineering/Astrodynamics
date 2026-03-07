@@ -1,5 +1,4 @@
 ﻿﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -22,7 +21,6 @@ namespace IO.Astrodynamics.Surface
         private readonly GeometryFinder _geometryFinder = new GeometryFinder();
         private readonly bool _isFromKernel = false;
 
-        private ConcurrentDictionary<Time, StateVector> _ssbStateCache = new ConcurrentDictionary<Time, StateVector>();
         public int Id { get; }
         public int NaifId { get; }
         public string Name { get; }
@@ -35,6 +33,7 @@ namespace IO.Astrodynamics.Surface
         public SiteFrame Frame { get; }
         public double GM { get; } = 0.0;
         public double Mass { get; } = 0.0;
+        public bool IsSpiceBacked => _isFromKernel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Site"/> class with default planetodetic coordinates.
@@ -187,31 +186,13 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Get site geometric state from SSB in ICRF.
-        /// </summary>
-        /// <param name="date"></param>
-        /// <returns></returns>
-        internal OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
-        {
-            return _ssbStateCache.GetOrAdd(date, dt =>
-            {
-                if (_isFromKernel)
-                {
-                    return _dataProvider.GetEphemeris(dt, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frames.Frame.ICRF, Aberration.None).ToStateVector();
-                }
-
-                return GetEphemeris(dt, new Barycenter(0, dt), Frames.Frame.ICRF, Aberration.None).ToStateVector();
-            });
-        }
-
-        /// <summary>
         /// Site ephemeris. Uses SPICE/direct path for CelestialBody observers,
         /// reference-body approach for Spacecraft/Site observers.
         /// </summary>
         public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable observer, Frame frame, Aberration aberration)
         {
-            // For SPICE-backed observers (CelestialBodies that aren't spacecraft/stars)
-            if (observer is CelestialItem ci && !ci.IsSpacecraft && !ci.IsStar)
+            // For SPICE-backed CelestialItem observers (planets, moons, barycenters, kernel-backed spacecraft)
+            if (observer is CelestialItem && observer.IsSpiceBacked)
             {
                 if (_isFromKernel)
                 {
@@ -269,6 +250,10 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize)
         {
+            if (IsSpiceBacked && observer is CelestialItem ci1 && ci1.IsSpiceBacked && ci1.IsSpacecraft)
+                return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+                    searchWindow, observer.NaifId, NaifId, relationalOperator, value / 1000.0, aberration, stepSize);
+
             Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
 
             return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
@@ -289,6 +274,12 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
         {
+            if (IsSpiceBacked && target is CelestialItem ciTgt && ciTgt.IsSpiceBacked && ciTgt.IsSpacecraft
+                && frontBody is ILocalizable fb && fb.IsSpiceBacked)
+                return SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
+                    searchWindow, NaifId, target.NaifId, targetShape,
+                    frontBody.NaifId, frontShape, occultationType, aberration, stepSize);
+
             return target.FindWindowsOnOccultationConstraint(searchWindow, this, targetShape, frontBody, frontShape, occultationType, aberration, stepSize);
         }
 
@@ -309,6 +300,17 @@ namespace IO.Astrodynamics.Surface
         public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
         {
+            if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked && ci3.IsSpacecraft)
+            {
+                bool isDistanceCoord = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z
+                    or Coordinate.Range or Coordinate.Radius or Coordinate.Altitude;
+                double spiceValue = isDistanceCoord ? value / 1000.0 : value;
+                double spiceAdjust = isDistanceCoord ? adjustValue / 1000.0 : adjustValue;
+                return SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
+                    searchWindow, observer.NaifId, NaifId, frame,
+                    coordinateSystem, coordinate, relationalOperator, spiceValue, spiceAdjust, aberration, stepSize);
+            }
+
             Func<Time, double> evaluateCoordinates = null;
             switch (coordinateSystem)
             {
@@ -377,7 +379,6 @@ namespace IO.Astrodynamics.Surface
         /// Find when illumination constraint occurs
         /// </summary>
         /// <param name="searchWindow"></param>
-        /// <param name="observer"></param>
         /// <param name="illuminationType"></param>
         /// <param name="relationalOperator"></param>
         /// <param name="value"></param>
@@ -391,6 +392,12 @@ namespace IO.Astrodynamics.Surface
             RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource,
             string method = "Ellipsoid")
         {
+            if (_isFromKernel && illuminationSource is INaifObject src)
+                return SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
+                    searchWindow, NaifId, CelestialBody.NaifId, CelestialBody.Frame,
+                    Planetodetic, illuminationType, relationalOperator, value, adjustValue,
+                    aberration, stepSize, src.NaifId, method);
+
             Func<Time, double> evaluateIllumination = null;
 
             switch (illuminationType)

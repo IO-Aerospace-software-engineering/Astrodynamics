@@ -56,6 +56,12 @@ namespace IO.Astrodynamics.Body
         OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; }
 
         /// <summary>
+        /// Gets a value indicating whether this object's ephemeris is backed by SPICE kernels.
+        /// When true, SPICE can compute ephemeris directly for this object (enabling native FindWindows, etc.).
+        /// </summary>
+        bool IsSpiceBacked { get; }
+
+        /// <summary>
         /// Gets the centers of motion for the celestial object.
         /// </summary>
         /// <returns>An enumerable of localizable centers of motion.</returns>

@@ -93,6 +93,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </remarks>
         public double SolarRadiationCoeff { get; }
 
+        private readonly bool _isFromKernel;
+        public override bool IsSpiceBacked => _isFromKernel;
+
         private bool _isPropagated;
         public bool IsPropagated => _isPropagated;
 
@@ -142,6 +145,45 @@ namespace IO.Astrodynamics.Body.Spacecraft
             {
                 ValidateBodyAxes();
             }
+        }
+
+        /// <summary>
+        /// Creates a kernel-backed spacecraft whose ephemeris and orientation come from loaded SPK/CK kernels.
+        /// No central body parameter — SPICE handles segment chaining internally.
+        /// </summary>
+        /// <param name="naifId">NAIF ID (must be negative)</param>
+        /// <param name="name">Spacecraft name</param>
+        /// <param name="epoch">Epoch for initial state lookup (defaults to J2000 TDB)</param>
+        /// <param name="mass">Dry mass in kg</param>
+        /// <param name="maximumOperatingMass">Maximum operating mass in kg</param>
+        /// <param name="clock">Onboard clock (defaults to a new clock named after the spacecraft)</param>
+        /// <param name="sectionalArea">Mean sectional area in m²</param>
+        /// <param name="dragCoeff">Drag coefficient (Cd)</param>
+        /// <param name="cosparId">COSPAR international designator</param>
+        /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr)</param>
+        public Spacecraft(int naifId, string name,
+            Time? epoch = null, double mass = 0.0, double maximumOperatingMass = double.MaxValue,
+            Clock clock = null, double sectionalArea = 1.0, double dragCoeff = 2.2,
+            string cosparId = null, double solarRadiationCoeff = 1.0)
+            : base(naifId, name, mass,
+                SpiceAPI.Instance.ReadEphemeris(
+                    epoch ?? TimeSystem.Time.J2000TDB,
+                    0, naifId,
+                    Frames.Frame.ICRF, Aberration.None).ToStateVector())
+        {
+            if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId), "Kernel-backed spacecraft NAIF ID must be negative.");
+            _isFromKernel = true;
+            MaximumOperatingMass = maximumOperatingMass;
+            Clock = clock ?? new Clock(name + "_CLK", 256);
+            Clock.AttachSpacecraft(this);
+            Frame = new SpacecraftFrame(this);
+            SectionalArea = sectionalArea;
+            DragCoefficient = dragCoeff;
+            CosparId = cosparId;
+            SolarRadiationCoeff = solarRadiationCoeff;
+            BodyFront = Vector3.VectorY;
+            BodyRight = Vector3.VectorX;
+            BodyUp = Vector3.VectorZ;
         }
 
         private void ValidateBodyAxes()
@@ -423,12 +465,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Task<PropagationSolution> PropagateAsync(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
             return Task.Run(() => Propagate(window, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
         }
 
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
             ResetPropagation();
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
@@ -444,6 +488,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
             ResetPropagation();
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
@@ -462,6 +507,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         public override StateVector GetGeometricStateRelativeTo(in Time epoch, CelestialItem referenceBody)
         {
+            // Kernel-backed: delegate to base which uses SPICE directly
+            if (_isFromKernel)
+                return base.GetGeometricStateRelativeTo(epoch, referenceBody);
+
             // TLE fallback
             if (InitialOrbitalParameters is TLE)
                 return InitialOrbitalParameters.ToStateVector(epoch)
@@ -496,6 +545,27 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
         {
+            // Kernel-backed: use SPICE directly when observer is also SPICE-backed
+            if (_isFromKernel && observer.IsSpiceBacked)
+                return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
+
+            if (_isFromKernel)
+            {
+                // Non-SPICE observer: reference-body approach, but GetGeometricStateRelativeTo delegates to SPICE
+                var kernelCb = GetReferenceBodyFor(observer);
+                var kernelScCB = this.GetGeometricStateRelativeTo(epoch, kernelCb);
+                var kernelObsCB = observer.GetGeometricStateRelativeTo(epoch, kernelCb);
+                var kernelRelative = new StateVector(
+                    kernelScCB.Position - kernelObsCB.Position,
+                    kernelScCB.Velocity - kernelObsCB.Velocity,
+                    observer, epoch, Frames.Frame.ICRF);
+
+                if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+                    kernelRelative = CorrectFromAberrationCB(this, epoch, observer, aberration, kernelRelative, kernelObsCB, kernelCb);
+
+                return kernelRelative.ToFrame(frame);
+            }
+
             // Determine reference body
             CelestialItem cb = (_propagatedStates.Count >= 2)
                 ? (CelestialItem)_propagatedStates.Values.First().Observer
@@ -530,12 +600,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         public override void WriteEphemeris(FileInfo outputFile)
         {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");
             var states = _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
             SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, states);
         }
 
         public void AddPropagatedStates(params StateVector[] stateVectors)
         {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
             foreach (var sv in stateVectors)
             {
                 _propagatedStates[sv.Epoch] = sv;
