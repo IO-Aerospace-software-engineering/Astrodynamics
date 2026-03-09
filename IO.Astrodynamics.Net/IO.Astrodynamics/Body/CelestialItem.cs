@@ -110,6 +110,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public bool IsLagrangePoint => this.NaifId is 391 or 392 or 393 or 394 or 395;
 
     /// <summary>
+    /// Gets a value indicating whether this object's ephemeris is backed by SPICE kernels.
+    /// Planets, moons, barycenters, Sun, and asteroids are always SPICE-backed.
+    /// Spacecraft and stars are not by default (overridable).
+    /// </summary>
+    public virtual bool IsSpiceBacked => !IsSpacecraft && !IsStar;
+
+    /// <summary>
     /// Gets the barycenter of motion identifier.
     /// </summary>
     public int BarycenterOfMotionId { get; protected set; }
@@ -242,8 +249,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </summary>
     public virtual OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
-        // For SPICE-backed observer/target pairs, use SPICE directly (handles aberration natively)
-        if (observer is CelestialItem ci && !ci.IsSpacecraft && !ci.IsStar)
+        // For SPICE-backed CelestialItem observers, use SPICE directly (handles aberration natively).
+        // Sites are not CelestialItems and handle their own SPICE delegation in Site.GetEphemeris.
+        if (observer is CelestialItem && observer.IsSpiceBacked)
         {
             return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
         }
@@ -445,9 +453,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public OccultationType? IsOcculted(CelestialItem by, OrbitalParameters.OrbitalParameters from, Aberration aberration = Aberration.LT)
     {
-        double backSize = AngularSize((GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position).Magnitude());
-        double bySize = by.AngularSize((by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - from.ToStateVector().Position)
-            .Magnitude());
+        var observerPos = from.ToStateVector().Position;
+        double backDistance = (GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - observerPos).Magnitude();
+        double byDistance = (by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - observerPos).Magnitude();
+
+        // The occluding body must be closer than the target for a true occultation.
+        // If the target is closer, it's a transit, not an occultation.
+        if (byDistance >= backDistance)
+            return OccultationType.None;
+
+        double backSize = AngularSize(backDistance);
+        double bySize = by.AngularSize(byDistance);
         var angularSeparation = this.AngularSeparation(from.Epoch, by, from, aberration);
         return IsOcculted(angularSeparation, backSize, bySize);
     }
@@ -647,6 +663,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
         RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
+        if (IsSpiceBacked && observer is CelestialItem ci1 && ci1.IsSpiceBacked
+            && (IsSpacecraft || ci1.IsSpacecraft))
+            return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
+                searchWindow, observer.NaifId, NaifId, relationalOperator, value / 1000.0, aberration, stepSize);
+
         Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
 
         return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateDistance, relationalOperator, value, stepSize);
@@ -667,6 +688,13 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
+        if (IsSpiceBacked && observer is CelestialItem ci2 && ci2.IsSpiceBacked
+            && frontBody is ILocalizable fb && fb.IsSpiceBacked
+            && (IsSpacecraft || ci2.IsSpacecraft))
+            return SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
+                searchWindow, observer.NaifId, NaifId, targetShape,
+                frontBody.NaifId, frontShape, occultationType, aberration, stepSize);
+
         Func<Time, bool> calculateOccultation = date =>
         {
             var occultation = IsOcculted(frontBody as CelestialItem, new StateVector(Vector3.Zero, Vector3.Zero, observer, date, Frame.ICRF), aberration);
@@ -700,6 +728,19 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         CoordinateSystem coordinateSystem, Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         in TimeSpan stepSize)
     {
+        if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked
+            && (IsSpacecraft || ci3.IsSpacecraft))
+        {
+            // SPICE uses km for distance coordinates; framework uses m. Angles are radians in both.
+            bool isDistanceCoord = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z
+                or Coordinate.Range or Coordinate.Radius or Coordinate.Altitude;
+            double spiceValue = isDistanceCoord ? value / 1000.0 : value;
+            double spiceAdjust = isDistanceCoord ? adjustValue / 1000.0 : adjustValue;
+            return SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(
+                searchWindow, observer.NaifId, NaifId, frame,
+                coordinateSystem, coordinate, relationalOperator, spiceValue, spiceAdjust, aberration, stepSize);
+        }
+
         Func<Time, double> evaluateCoordinates = null;
         switch (coordinateSystem)
         {

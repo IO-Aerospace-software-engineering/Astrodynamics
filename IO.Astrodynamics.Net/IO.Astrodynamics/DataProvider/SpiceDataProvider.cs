@@ -21,9 +21,11 @@ public class SpiceDataProvider : IDataProvider
 
     public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)
     {
-        var result = SpiceAPI.Instance.ReadEphemeris(date, observer.NaifId, target.NaifId, frame, aberration).ToStateVector();
-        // ReadEphemeris always returns TDB epoch; preserve the caller's time frame
-        return new StateVector(result.Position, result.Velocity, result.Observer, date, result.Frame);
+        // Use ReadEphemerisRaw to avoid CelestialItem.Create() which can't handle
+        // spacecraft/site NAIF IDs. The actual observer object is passed through directly.
+        var result = SpiceAPI.Instance.ReadEphemerisRaw(date, observer, target.NaifId, frame, aberration);
+        // ReadEphemeris always returns TDB epoch; preserve the caller's time frame.
+        return new StateVector(result.Position, result.Velocity, observer, date, result.Frame);
     }
 
     CelestialBody IDataProvider.GetCelestialBodyInfo(int naifId)

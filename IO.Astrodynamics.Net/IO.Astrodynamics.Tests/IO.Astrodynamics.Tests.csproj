@@ -160,6 +160,9 @@
       <Content Include="Data\CLPS\clps_to2ab_apm1_cru_rec_240108_240118_v02.bc">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
+      <Content Update="Data\SolarSystem\lro-reconstructed-2023349_2024075_v01_little_endian.bsp">
+        <Link>Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

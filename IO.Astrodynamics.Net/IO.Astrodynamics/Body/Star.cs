@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Body;
 /// </summary>
 public class Star : CelestialBody
 {
-    private readonly ConcurrentDictionary<Time, StateVector> _stateVectorsRelativeToICRF = new();
+    private readonly ConcurrentDictionary<Time, StateVector> _propagatedStates = new();
     /// <summary>
     /// Initializes a new instance of the <see cref="Star"/> class.
     /// </summary>
@@ -220,7 +220,7 @@ public class Star : CelestialBody
     /// </summary>
     public override void WriteEphemeris(FileInfo outputFile)
     {
-        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, _stateVectorsRelativeToICRF.Values.OrderBy(x => x.Epoch).ToArray());
+        SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray());
     }
 
     /// <summary>
@@ -247,7 +247,7 @@ public class Star : CelestialBody
         for (Time epoch = timeWindow.StartDate; epoch <= timeWindow.EndDate; epoch += stepSize)
         {
             var position = GetEquatorialCoordinates(epoch).ToCartesian();
-            _stateVectorsRelativeToICRF.TryAdd(epoch, new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
+            _propagatedStates.TryAdd(epoch, new StateVector(position, Vector3.Zero, Barycenters.SOLAR_SYSTEM_BARYCENTER, epoch, Frame.ICRF));
         }
     }
 }

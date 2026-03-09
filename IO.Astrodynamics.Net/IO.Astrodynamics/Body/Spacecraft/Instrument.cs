@@ -119,6 +119,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
 
+            if (Spacecraft.IsSpiceBacked && target.IsSpiceBacked)
+                return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
+                    searchWindow, Spacecraft.NaifId, NaifId, target.NaifId,
+                    targetFrame, targetShape, aberration, stepSize);
+
             Func<Time, bool> calculateInFov = date => IsInFOV(date, target, aberration);
 
             return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateInFov, RelationnalOperator.Equal, true, stepSize);

@@ -25,6 +25,10 @@ public class SpacecraftFrame : Frame
 
     public override StateOrientation GetStateOrientationToICRF(Time date)
     {
+        // Kernel-backed spacecraft: delegate to SPICE (requires FK+CK kernels loaded)
+        if (Spacecraft.IsSpiceBacked)
+            return _stateOrientationsToICRF.GetOrAdd(date, dt => _dataProvider.FrameTransformationToICRF(dt, this));
+
         return _stateOrientationsToICRF.GetOrAdd(date, _ =>
         {
             if (_stateOrientationsToICRF.IsEmpty)

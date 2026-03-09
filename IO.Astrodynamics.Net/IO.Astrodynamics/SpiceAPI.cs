@@ -479,6 +479,23 @@ public class SpiceAPI
     }
 
     /// <summary>
+    /// Read ephemeris at a given epoch using the caller-provided observer object.
+    /// Avoids CelestialItem.Create() which can't handle spacecraft/site NAIF IDs.
+    /// </summary>
+    internal OrbitalParameters.StateVector ReadEphemerisRaw(Time epoch, ILocalizable observer,
+        int targetId, Frame frame, Aberration aberration)
+    {
+        ArgumentNullException.ThrowIfNull(frame);
+        lock (lockObject)
+        {
+            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
+                observer.NaifId, targetId, frame.Name, aberration.GetDescription());
+            return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(),
+                observer, Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
+        }
+    }
+
+    /// <summary>
     ///     Read spacecraft orientation for a given period using a NAIF ID directly.
     ///     Use this overload to read CK kernels from external missions (NASA/ESA) where
     ///     you have only the NAIF ID, not a Spacecraft object.
