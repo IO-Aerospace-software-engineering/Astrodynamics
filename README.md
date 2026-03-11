@@ -17,7 +17,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - Manage PDS archives (generate, materialize objects, validate against XML schemas)
 - Ephemerides and propagation
   - Reference-body ephemeris: optimized computation avoids SSB round-trips, reducing memory allocation by up to 42% for spacecraft/site relative ephemeris
-  - Central-body propagator: segment-based architecture with event-driven maneuver execution, EGM2008 geopotential gravity (up to degree/order 70, validated against GMAT), atmospheric drag with co-rotation (Earth, Mars), solar radiation pressure with Cr and continuous shadow fraction, Battin's third-body perturbations, dynamic mass, impulsive maneuvers with g-function event detection, fuel balance, cubic Hermite dense output
+  - Central-body propagator: segment-based architecture with event-driven maneuver execution, EGM2008 geopotential gravity (up to degree/order 70, validated against GMAT), atmospheric drag with co-rotation (Earth, Mars), solar radiation pressure with Cr and continuous shadow fraction, albedo and thermal radiation pressure (Pro), Battin's third-body perturbations, dynamic mass, impulsive maneuvers with g-function event detection, fuel balance, cubic Hermite dense output
   - Ephemeris cache: 60-second grid with 8-point Lagrange interpolation for force model evaluation
 - Atmospheric modeling
   - Unified API via `IAtmosphericModel` interface with `Atmosphere` result record
