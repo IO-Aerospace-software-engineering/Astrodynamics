@@ -60,6 +60,12 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     protected IAtmosphericModel AtmosphericModel { get; }
 
     /// <summary>
+    /// Gets the bond albedo of the celestial body (fraction of incident solar radiation reflected).
+    /// Value of 0.0 means not configured. Typical values: Earth ~0.306, Moon ~0.12.
+    /// </summary>
+    public double Albedo { get; }
+
+    /// <summary>
     /// Gets a value indicating whether the celestial body has an atmospheric model.
     /// </summary>
     public bool HasAtmosphericModel => AtmosphericModel != null;
@@ -75,8 +81,8 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="naifObject"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(NaifObject naifObject, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null) : this(naifObject.NaifId,
-        geopotentialModelParameters, atmosphericModel)
+    public CelestialBody(NaifObject naifObject, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0) : this(naifObject.NaifId,
+        geopotentialModelParameters, atmosphericModel, albedo)
     {
     }
 
@@ -86,8 +92,8 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="naifId"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(int naifId, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null) : this(naifId, Frame.ECLIPTIC_J2000,
-        TimeSystem.Time.J2000TDB, geopotentialModelParameters, atmosphericModel)
+    public CelestialBody(int naifId, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0) : this(naifId, Frame.ECLIPTIC_J2000,
+        TimeSystem.Time.J2000TDB, geopotentialModelParameters, atmosphericModel, albedo)
     {
     }
 
@@ -99,8 +105,8 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(NaifObject naifObject, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null)
-        : this(naifObject.NaifId, frame, epoch, geopotentialModelParameters, atmosphericModel)
+    public CelestialBody(NaifObject naifObject, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0)
+        : this(naifObject.NaifId, frame, epoch, geopotentialModelParameters, atmosphericModel, albedo)
     {
     }
 
@@ -112,7 +118,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="epoch"></param>
     /// <param name="geopotentialModelParameters"></param>
     /// <param name="atmosphericModel"></param>
-    public CelestialBody(int naifId, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null) :
+    public CelestialBody(int naifId, Frame frame, Time epoch, GeopotentialModelParameters geopotentialModelParameters = null, IAtmosphericModel atmosphericModel = null, double albedo = 0.0) :
         base(naifId, frame, epoch, geopotentialModelParameters)
     {
         PolarRadius = ExtendedInformation.Radii.Z;
@@ -134,6 +140,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         UpdateSphereOfInfluence();
 
         AtmosphericModel = atmosphericModel;
+        Albedo = albedo;
     }
 
     /// <summary>
@@ -146,7 +153,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="equatorialRadius"></param>
     /// <param name="initialOrbitalParameters"></param>
     protected CelestialBody(int naifId, string name, double mass, double polarRadius = 0.0, double equatorialRadius = 0.0,
-        OrbitalParameters.OrbitalParameters initialOrbitalParameters = null) : base(naifId, name, mass, initialOrbitalParameters)
+        OrbitalParameters.OrbitalParameters initialOrbitalParameters = null, double albedo = 0.0) : base(naifId, name, mass, initialOrbitalParameters)
     {
         PolarRadius = polarRadius;
         EquatorialRadius = equatorialRadius;
@@ -157,6 +164,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         }
 
         SphereOfInfluence = double.PositiveInfinity;
+        Albedo = albedo;
     }
 
     private void UpdateSphereOfInfluence()
