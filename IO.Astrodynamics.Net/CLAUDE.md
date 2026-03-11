@@ -74,7 +74,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution, AcceptedStep
 - `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet)
-- `IO.Astrodynamics.Propagator.Forces`: Force models (gravitational, atmospheric drag, solar radiation pressure)
+- `IO.Astrodynamics.Propagator.Forces`: Force models (gravitational, atmospheric drag, solar radiation pressure; Pro adds albedo and thermal radiation pressure)
 - `IO.Astrodynamics.Propagator.Events`: IEventDetector, ManeuverEventDetector, CrossingDirection
 - `IO.Astrodynamics.Atmosphere`: Atmospheric density, temperature, and pressure models for Earth and Mars
 - `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions
@@ -769,6 +769,7 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - SRP uses **continuous shadow fraction** (partial/annular eclipses reduce SRP proportionally)
    - Both forces use **dynamic mass** via `GetTotalMass()` (accounts for fuel consumption during propagation)
    - Use `CelestialItem.ShadowFraction()` for eclipse geometry calculations
+13. **CelestialBody Thermal Properties**: `CelestialBody` supports optional `thermalEffectiveTemperature` (K) and `thermalEmissivity` (0-1) constructor parameters for thermal radiation pressure modeling (Pro feature). Typical values: Earth T_eff=254K, emissivity=0.95.
 
 ## Code Quality Standards
 
