@@ -76,6 +76,17 @@ public class Frame : IEquatable<Frame>
         Id = id;
     }
 
+    /// <summary>
+    /// Returns the orientation that maps vectors expressed in <c>this</c> frame into ICRF at the given epoch.
+    /// </summary>
+    /// <remarks>
+    /// If <c>so = frame.GetStateOrientationToICRF(epoch)</c>, then
+    /// <c>vectorIcrf = vectorInFrame.Rotate(so.Rotation)</c>.
+    /// The returned <see cref="StateOrientation.ReferenceFrame"/> is the source frame (<c>this</c>),
+    /// not the destination frame.
+    /// </remarks>
+    /// <param name="date">Epoch of the transform.</param>
+    /// <returns>A state orientation whose rotation is <c>this → ICRF</c>.</returns>
     public virtual StateOrientation GetStateOrientationToICRF(Time date)
     {
         if (OrientationCache != null)
@@ -98,6 +109,13 @@ public class Frame : IEquatable<Frame>
         return _stateOrientationsToICRF.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
     }
 
+    /// <summary>
+    /// Builds the transform that maps vectors from <c>this</c> frame into <paramref name="targetFrame"/>.
+    /// </summary>
+    /// <remarks>
+    /// The returned rotation follows the same convention as <see cref="GetStateOrientationToICRF(Time)"/>:
+    /// <c>vectorInTarget = vectorInThis.Rotate(result.Rotation)</c>.
+    /// </remarks>
     public StateOrientation ToFrame(Frame targetFrame, Time epoch)
     {
         if (targetFrame == this)

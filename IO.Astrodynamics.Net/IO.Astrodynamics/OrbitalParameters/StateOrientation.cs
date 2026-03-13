@@ -6,21 +6,31 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.OrbitalParameters
 {
     /// <summary>
-    /// Represents the orientation state of an object in space, including its rotation, angular velocity, epoch, and reference frame.
+    /// Represents a time-stamped frame transform together with its angular velocity.
     /// </summary>
-    /// <param name="Rotation">The rotation quaternion representing the orientation.</param>
-    /// <param name="AngularVelocity">The angular velocity vector.</param>
+    /// <param name="Rotation">
+    /// Rotation that maps vectors from <paramref name="ReferenceFrame"/> into the destination frame
+    /// implied by the calling context.
+    /// For example, <c>frame.GetStateOrientationToICRF(epoch)</c> returns a rotation
+    /// <c>frame → ICRF</c>.
+    /// </param>
+    /// <param name="AngularVelocity">
+    /// Angular velocity associated with <paramref name="Rotation"/>.
+    /// In this codebase it is used with left-multiplied incremental rotations in <see cref="AtDate"/>,
+    /// so it is expressed in the same inertial/destination frame as the returned rotation acts into.
+    /// </param>
     /// <param name="Epoch">The time at which the state is defined.</param>
-    /// <param name="ReferenceFrame">The reference frame from which the rotation is applied.</param>
+    /// <param name="ReferenceFrame">Source frame of the rotation.</param>
     public record StateOrientation(Quaternion Rotation, Vector3 AngularVelocity, in Time Epoch, Frame ReferenceFrame)
     {
         /// <summary>
-        /// Gets the reference frame from which the rotation is applied.
+        /// Gets the source frame of <see cref="Rotation"/>.
+        /// The destination frame depends on the API that produced this instance.
         /// </summary>
         public Frame ReferenceFrame { get; } = ReferenceFrame;
 
         /// <summary>
-        /// Converts the current state orientation to the International Celestial Reference Frame (ICRF).
+        /// Re-expresses the current orientation so that it maps from the same source frame into ICRF.
         /// </summary>
         /// <returns>A new <see cref="StateOrientation"/> instance relative to the ICRF.</returns>
         public StateOrientation RelativeToICRF()
@@ -29,10 +39,13 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Converts the current state orientation to a specified reference frame.
+        /// Re-expresses the current orientation in a specified reference frame.
         /// </summary>
         /// <param name="frame">The target reference frame.</param>
-        /// <returns>A new <see cref="StateOrientation"/> instance relative to the specified frame.</returns>
+        /// <returns>
+        /// A new <see cref="StateOrientation"/> whose rotation maps from the same physical source orientation
+        /// into <paramref name="frame"/>.
+        /// </returns>
         public StateOrientation RelativeTo(Frame frame)
         {
             if (ReferenceFrame == frame)
@@ -44,6 +57,13 @@ namespace IO.Astrodynamics.OrbitalParameters
             return new StateOrientation(Rotation * transform.Rotation, transform.AngularVelocity - AngularVelocity, Epoch, frame);
         }
 
+        /// <summary>
+        /// Propagates the orientation to another epoch using constant angular velocity.
+        /// </summary>
+        /// <remarks>
+        /// The incremental rotation is left-multiplied, so callers providing angular velocities manually
+        /// should keep that destination-frame convention in mind.
+        /// </remarks>
         public StateOrientation AtDate(in Time date)
         {
             var deltaT = (date - Epoch).TotalSeconds;
