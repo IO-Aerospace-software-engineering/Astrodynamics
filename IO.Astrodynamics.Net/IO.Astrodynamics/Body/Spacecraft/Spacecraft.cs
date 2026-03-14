@@ -93,6 +93,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </remarks>
         public double SolarRadiationCoeff { get; }
 
+        /// <summary>
+        /// Gets the hard-body radius in meters used for conjunction assessment collision probability.
+        /// </summary>
+        /// <remarks>
+        /// Represents the bounding sphere radius for the spacecraft. Combined with the secondary
+        /// object's hard-body radius to compute the collision cross-section.
+        /// Default is 0.0 (point object).
+        /// </remarks>
+        public double HardBodyRadius { get; }
+
         private readonly bool _isFromKernel;
         public override bool IsSpiceBacked => _isFromKernel;
 
@@ -115,12 +125,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="bodyFront">Instance body front axis (default: +Y). Must be orthogonal to bodyRight and bodyUp.</param>
         /// <param name="bodyRight">Instance body right axis (default: +X). Must be orthogonal to bodyFront and bodyUp.</param>
         /// <param name="bodyUp">Instance body up axis (default: +Z). Must be orthogonal to bodyFront and bodyRight.</param>
+        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed.</exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
             double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
-            Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null) : base(
+            Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
             naifId, name, mass, initialOrbitalParameters)
         {
             if (maximumOperatingMass < mass) throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass));
@@ -128,6 +139,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             ArgumentOutOfRangeException.ThrowIfNegative(dragCoeff);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sectionalArea);
             ArgumentOutOfRangeException.ThrowIfNegative(solarRadiationCoeff);
+            ArgumentOutOfRangeException.ThrowIfNegative(hardBodyRadius);
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
             Clock.AttachSpacecraft(this);
@@ -136,6 +148,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             DragCoefficient = dragCoeff;
             CosparId = cosparId;
             SolarRadiationCoeff = solarRadiationCoeff;
+            HardBodyRadius = hardBodyRadius;
 
             BodyFront = bodyFront?.Normalize() ?? Vector3.VectorY;
             BodyRight = bodyRight?.Normalize() ?? Vector3.VectorX;
@@ -161,10 +174,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="dragCoeff">Drag coefficient (Cd)</param>
         /// <param name="cosparId">COSPAR international designator</param>
         /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr)</param>
+        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
         public Spacecraft(int naifId, string name,
             Time? epoch = null, double mass = 0.0, double maximumOperatingMass = double.MaxValue,
             Clock clock = null, double sectionalArea = 1.0, double dragCoeff = 2.2,
-            string cosparId = null, double solarRadiationCoeff = 1.0)
+            string cosparId = null, double solarRadiationCoeff = 1.0, double hardBodyRadius = 0.0)
             : base(naifId, name, mass,
                 SpiceAPI.Instance.ReadEphemeris(
                     epoch ?? TimeSystem.Time.J2000TDB,
@@ -181,6 +195,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             DragCoefficient = dragCoeff;
             CosparId = cosparId;
             SolarRadiationCoeff = solarRadiationCoeff;
+            HardBodyRadius = hardBodyRadius;
             BodyFront = Vector3.VectorY;
             BodyRight = Vector3.VectorX;
             BodyUp = Vector3.VectorZ;
