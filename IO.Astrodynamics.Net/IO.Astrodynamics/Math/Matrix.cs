@@ -610,6 +610,82 @@ public readonly record struct Matrix
         return L;
     }
 
+    /// <summary>
+    /// Adds two matrices element-wise.
+    /// </summary>
+    /// <param name="other">The matrix to add.</param>
+    /// <returns>A new matrix that is the element-wise sum of this and <paramref name="other"/>.</returns>
+    /// <exception cref="ArgumentException">Thrown when the matrices have different dimensions.</exception>
+    public Matrix Add(Matrix other)
+    {
+        if (Rows != other.Rows || Columns != other.Columns)
+        {
+            throw new ArgumentException("Matrices must have the same dimensions for addition.");
+        }
+
+        var result = new Matrix(Rows, Columns);
+        for (int i = 0; i < Rows; i++)
+        {
+            for (int j = 0; j < Columns; j++)
+            {
+                result.Set(i, j, _data[i, j] + other.Get(i, j));
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Adds two matrices element-wise.
+    /// </summary>
+    public static Matrix operator +(Matrix lhs, Matrix rhs)
+    {
+        return lhs.Add(rhs);
+    }
+
+    /// <summary>
+    /// Extracts a sub-block from this matrix.
+    /// </summary>
+    /// <param name="startRow">Starting row index (inclusive).</param>
+    /// <param name="startColumn">Starting column index (inclusive).</param>
+    /// <param name="blockRows">Number of rows to extract.</param>
+    /// <param name="blockColumns">Number of columns to extract.</param>
+    /// <returns>A new matrix containing the extracted sub-block.</returns>
+    public Matrix SubMatrix(int startRow, int startColumn, int blockRows, int blockColumns)
+    {
+        if (startRow + blockRows > Rows || startColumn + blockColumns > Columns)
+        {
+            throw new ArgumentOutOfRangeException("Sub-matrix exceeds matrix dimensions.");
+        }
+
+        var result = new Matrix(blockRows, blockColumns);
+        for (int i = 0; i < blockRows; i++)
+        {
+            for (int j = 0; j < blockColumns; j++)
+            {
+                result.Set(i, j, _data[startRow + i, startColumn + j]);
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Creates a 3x3 matrix from three row vectors.
+    /// </summary>
+    /// <param name="row0">The first row vector.</param>
+    /// <param name="row1">The second row vector.</param>
+    /// <param name="row2">The third row vector.</param>
+    /// <returns>A 3x3 matrix with the specified row vectors.</returns>
+    public static Matrix FromRowVectors(Vector3 row0, Vector3 row1, Vector3 row2)
+    {
+        var m = new Matrix(3, 3);
+        m.Set(0, 0, row0.X); m.Set(0, 1, row0.Y); m.Set(0, 2, row0.Z);
+        m.Set(1, 0, row1.X); m.Set(1, 1, row1.Y); m.Set(1, 2, row1.Z);
+        m.Set(2, 0, row2.X); m.Set(2, 1, row2.Y); m.Set(2, 2, row2.Z);
+        return m;
+    }
+
     public static Matrix FromColumnVectors(Vector3 col0, Vector3 col1, Vector3 col2)
     {
         var m = new Matrix(3, 3);

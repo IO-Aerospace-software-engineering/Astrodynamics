@@ -1050,4 +1050,106 @@ public class MatirxTests
     }
 
     #endregion
+
+    #region Add
+
+    [Fact]
+    public void Add_SameDimensions()
+    {
+        var a = new Matrix(new double[,] { { 1, 2 }, { 3, 4 } });
+        var b = new Matrix(new double[,] { { 5, 6 }, { 7, 8 } });
+        var result = a.Add(b);
+        Assert.Equal(6.0, result.Get(0, 0));
+        Assert.Equal(8.0, result.Get(0, 1));
+        Assert.Equal(10.0, result.Get(1, 0));
+        Assert.Equal(12.0, result.Get(1, 1));
+    }
+
+    [Fact]
+    public void Add_OperatorPlus()
+    {
+        var a = new Matrix(new double[,] { { 1, 2 }, { 3, 4 } });
+        var b = new Matrix(new double[,] { { 10, 20 }, { 30, 40 } });
+        var result = a + b;
+        Assert.Equal(11.0, result.Get(0, 0));
+        Assert.Equal(44.0, result.Get(1, 1));
+    }
+
+    [Fact]
+    public void Add_DimensionMismatch_Throws()
+    {
+        var a = new Matrix(2, 3);
+        var b = new Matrix(3, 2);
+        Assert.Throws<ArgumentException>(() => a.Add(b));
+    }
+
+    #endregion
+
+    #region SubMatrix
+
+    [Fact]
+    public void SubMatrix_Extract2x2From3x3()
+    {
+        var m = new Matrix(new double[,] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
+        var sub = m.SubMatrix(0, 0, 2, 2);
+        Assert.Equal(2, sub.Rows);
+        Assert.Equal(2, sub.Columns);
+        Assert.Equal(1.0, sub.Get(0, 0));
+        Assert.Equal(2.0, sub.Get(0, 1));
+        Assert.Equal(4.0, sub.Get(1, 0));
+        Assert.Equal(5.0, sub.Get(1, 1));
+    }
+
+    [Fact]
+    public void SubMatrix_OffsetExtraction()
+    {
+        var m = new Matrix(new double[,] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } });
+        var sub = m.SubMatrix(1, 1, 2, 2);
+        Assert.Equal(5.0, sub.Get(0, 0));
+        Assert.Equal(6.0, sub.Get(0, 1));
+        Assert.Equal(8.0, sub.Get(1, 0));
+        Assert.Equal(9.0, sub.Get(1, 1));
+    }
+
+    [Fact]
+    public void SubMatrix_OutOfRange_Throws()
+    {
+        var m = new Matrix(3, 3);
+        Assert.Throws<ArgumentOutOfRangeException>(() => m.SubMatrix(2, 2, 2, 2));
+    }
+
+    #endregion
+
+    #region FromRowVectors
+
+    [Fact]
+    public void FromRowVectors_CreatesCorrectMatrix()
+    {
+        var r0 = new Vector3(1, 0, 0);
+        var r1 = new Vector3(0, 1, 0);
+        var r2 = new Vector3(0, 0, 1);
+        var m = Matrix.FromRowVectors(r0, r1, r2);
+        Assert.Equal(3, m.Rows);
+        Assert.Equal(3, m.Columns);
+        Assert.Equal(1.0, m.Get(0, 0));
+        Assert.Equal(0.0, m.Get(0, 1));
+        Assert.Equal(1.0, m.Get(1, 1));
+        Assert.Equal(1.0, m.Get(2, 2));
+    }
+
+    [Fact]
+    public void FromRowVectors_ArbitraryValues()
+    {
+        var r0 = new Vector3(1, 2, 3);
+        var r1 = new Vector3(4, 5, 6);
+        var r2 = new Vector3(7, 8, 9);
+        var m = Matrix.FromRowVectors(r0, r1, r2);
+        Assert.Equal(1.0, m.Get(0, 0));
+        Assert.Equal(3.0, m.Get(0, 2));
+        Assert.Equal(5.0, m.Get(1, 1));
+        Assert.Equal(7.0, m.Get(2, 0));
+        Assert.Equal(9.0, m.Get(2, 2));
+    }
+
+    #endregion
 }
