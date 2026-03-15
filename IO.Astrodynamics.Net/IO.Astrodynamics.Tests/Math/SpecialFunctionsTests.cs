@@ -77,5 +77,40 @@ namespace IO.Astrodynamics.Tests.Math
             double result = SpecialFunctions.NormalizeAngle(angle);
             Assert.Equal(0, result, 6);
         }
+
+        [Fact]
+        public void ErrorFunction_Zero_ReturnsZero()
+        {
+            Assert.Equal(0.0, SpecialFunctions.ErrorFunction(0.0), 7);
+        }
+
+        [Theory]
+        [InlineData(1.0, 0.8427007929)]
+        [InlineData(2.0, 0.9953222650)]
+        [InlineData(0.5, 0.5204998778)]
+        [InlineData(3.0, 0.9999779095)]
+        public void ErrorFunction_KnownValues(double x, double expected)
+        {
+            Assert.Equal(expected, SpecialFunctions.ErrorFunction(x), 6);
+        }
+
+        [Fact]
+        public void ErrorFunction_IsOddFunction()
+        {
+            double x = 1.5;
+            Assert.Equal(-SpecialFunctions.ErrorFunction(x), SpecialFunctions.ErrorFunction(-x), 10);
+        }
+
+        [Fact]
+        public void ErrorFunction_LargePositive_ApproachesOne()
+        {
+            Assert.True(SpecialFunctions.ErrorFunction(6.0) > 0.999999);
+        }
+
+        [Fact]
+        public void ErrorFunction_LargeNegative_ApproachesMinusOne()
+        {
+            Assert.True(SpecialFunctions.ErrorFunction(-6.0) < -0.999999);
+        }
     }
 }

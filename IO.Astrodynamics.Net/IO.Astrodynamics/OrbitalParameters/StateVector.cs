@@ -363,6 +363,57 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
 
+        /// <summary>
+        /// Computes the 3x3 rotation matrix from the inertial frame to the RTN (Radial-Transverse-Normal) frame.
+        /// R = r_hat, T = (h × r) normalized, N = (r × v) normalized.
+        /// </summary>
+        /// <returns>A 3x3 rotation matrix whose rows are the R, T, N unit vectors in inertial coordinates.</returns>
+        public Matrix CreateRtnRotation()
+        {
+            var r = Position.Normalize();
+            var h = Position.Cross(Velocity).Normalize();
+            var t = h.Cross(r).Normalize();
+            return Matrix.FromRowVectors(r, t, h);
+        }
+
+        /// <summary>
+        /// Rotates a vector from the inertial frame to the RTN frame defined by this state.
+        /// </summary>
+        /// <param name="inertialVector">A vector expressed in the inertial frame.</param>
+        /// <returns>The vector expressed in RTN coordinates.</returns>
+        public Vector3 ToRtn(Vector3 inertialVector)
+        {
+            var rtn = CreateRtnRotation();
+            var rotated = rtn * new[] { inertialVector.X, inertialVector.Y, inertialVector.Z };
+            return new Vector3(rotated[0], rotated[1], rotated[2]);
+        }
+
+        /// <summary>
+        /// Rotates a vector from the RTN frame to the inertial frame defined by this state.
+        /// </summary>
+        /// <param name="rtnVector">A vector expressed in RTN coordinates.</param>
+        /// <returns>The vector expressed in inertial coordinates.</returns>
+        public Vector3 FromRtn(Vector3 rtnVector)
+        {
+            var rtn = CreateRtnRotation();
+            var rotated = rtn.Transpose() * new[] { rtnVector.X, rtnVector.Y, rtnVector.Z };
+            return new Vector3(rotated[0], rotated[1], rotated[2]);
+        }
+
+        /// <summary>
+        /// Rotates a 6x6 position-velocity covariance matrix from the inertial frame to RTN.
+        /// Uses the block-diagonal rotation: C_RTN = R_6x6 * C_ICRF * R_6x6^T
+        /// where R_6x6 = diag(R_3x3, R_3x3).
+        /// </summary>
+        /// <param name="covarianceIcrf">A 6x6 covariance matrix in the inertial frame (units: m², m²/s, m²/s²).</param>
+        /// <returns>The 6x6 covariance matrix in RTN coordinates.</returns>
+        public Matrix RotateCovarianceToRtn(Matrix covarianceIcrf)
+        {
+            var rotation = CreateRtnRotation();
+            var rot6X6 = Matrix.CreateBlockDiagonal(rotation, rotation);
+            return rot6X6 * covarianceIcrf * rot6X6.Transpose();
+        }
+
         public bool Equals(StateVector other)
         {
             if (ReferenceEquals(null, other)) return false;

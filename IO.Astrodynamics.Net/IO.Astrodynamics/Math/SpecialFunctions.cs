@@ -41,6 +41,22 @@ namespace IO.Astrodynamics.Math
         }
 
         /// <summary>
+        /// Computes the error function erf(x) using the Abramowitz and Stegun 7.1.26 rational approximation.
+        /// Maximum absolute error is approximately 1.5e-7.
+        /// </summary>
+        /// <param name="x">The input value.</param>
+        /// <returns>The value of erf(x) in the range [-1, 1].</returns>
+        public static double ErrorFunction(double x)
+        {
+            double sign = x < 0.0 ? -1.0 : 1.0;
+            x = System.Math.Abs(x);
+            double t = 1.0 / (1.0 + 0.3275911 * x);
+            double polynomial =
+                (((((1.061405429 * t) - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592;
+            return sign * (1.0 - polynomial * t * System.Math.Exp(-x * x));
+        }
+
+        /// <summary>
         /// Normalizes an angle to the range [0, 2π).
         /// This method ensures that the angle is always non-negative and within the specified range.
         /// If the input angle is negative, it adds 2π to bring it into the desired range.

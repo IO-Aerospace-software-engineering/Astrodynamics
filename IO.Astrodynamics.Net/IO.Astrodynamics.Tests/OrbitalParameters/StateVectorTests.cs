@@ -514,5 +514,98 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 new StateVector(new Vector3(-26499033677.42509, 132757417338.33946, 57556718470.53819),
                     new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), earthSvFromSun);
         }
+        [Fact]
+        public void CreateRtnRotation_CircularEquatorialOrbit()
+        {
+            // Circular equatorial orbit along +X, velocity along +Y
+            var sv = new StateVector(
+                new Vector3(7000000.0, 0.0, 0.0),
+                new Vector3(0.0, 7546.0, 0.0),
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+
+            var rtn = sv.CreateRtnRotation();
+
+            // R should be along +X
+            Assert.Equal(1.0, rtn.Get(0, 0), 10);
+            Assert.Equal(0.0, rtn.Get(0, 1), 10);
+            Assert.Equal(0.0, rtn.Get(0, 2), 10);
+            // T should be along +Y
+            Assert.Equal(0.0, rtn.Get(1, 0), 10);
+            Assert.Equal(1.0, rtn.Get(1, 1), 10);
+            Assert.Equal(0.0, rtn.Get(1, 2), 10);
+            // N should be along +Z
+            Assert.Equal(0.0, rtn.Get(2, 0), 10);
+            Assert.Equal(0.0, rtn.Get(2, 1), 10);
+            Assert.Equal(1.0, rtn.Get(2, 2), 10);
+        }
+
+        [Fact]
+        public void CreateRtnRotation_IsOrthogonal()
+        {
+            var sv = new StateVector(
+                new Vector3(6800000.0, 1000000.0, -500000.0),
+                new Vector3(-1000.0, 7000.0, 500.0),
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+
+            var rtn = sv.CreateRtnRotation();
+            // R * R^T should be identity
+            var product = rtn * rtn.Transpose();
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    Assert.Equal(i == j ? 1.0 : 0.0, product.Get(i, j), 10);
+        }
+
+        [Fact]
+        public void ToRtn_RadialPosition_MapsToRComponent()
+        {
+            var sv = new StateVector(
+                new Vector3(7000000.0, 0.0, 0.0),
+                new Vector3(0.0, 7546.0, 0.0),
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+
+            var rtn = sv.ToRtn(sv.Position);
+            Assert.Equal(7000000.0, rtn.X, 1); // R component
+            Assert.Equal(0.0, rtn.Y, 1);       // T component
+            Assert.Equal(0.0, rtn.Z, 1);       // N component
+        }
+
+        [Fact]
+        public void FromRtn_RoundTrip()
+        {
+            var sv = new StateVector(
+                new Vector3(6800000.0, 1000000.0, -500000.0),
+                new Vector3(-1000.0, 7000.0, 500.0),
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+
+            var original = new Vector3(100.0, 200.0, 300.0);
+            var rtn = sv.ToRtn(original);
+            var recovered = sv.FromRtn(rtn);
+            Assert.Equal(original.X, recovered.X, 6);
+            Assert.Equal(original.Y, recovered.Y, 6);
+            Assert.Equal(original.Z, recovered.Z, 6);
+        }
+
+        [Fact]
+        public void RotateCovarianceToRtn_DiagonalCovariance()
+        {
+            // For aligned orbit, diagonal covariance stays diagonal
+            var sv = new StateVector(
+                new Vector3(7000000.0, 0.0, 0.0),
+                new Vector3(0.0, 7546.0, 0.0),
+                TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+
+            var cov = new Matrix(6, 6);
+            cov.Set(0, 0, 100.0); // X variance → maps to R
+            cov.Set(1, 1, 200.0); // Y variance → maps to T
+            cov.Set(2, 2, 300.0); // Z variance → maps to N
+            cov.Set(3, 3, 1.0);
+            cov.Set(4, 4, 2.0);
+            cov.Set(5, 5, 3.0);
+
+            var rtnCov = sv.RotateCovarianceToRtn(cov);
+            Assert.Equal(100.0, rtnCov.Get(0, 0), 6); // R variance
+            Assert.Equal(200.0, rtnCov.Get(1, 1), 6); // T variance
+            Assert.Equal(300.0, rtnCov.Get(2, 2), 6); // N variance
+        }
     }
 }
