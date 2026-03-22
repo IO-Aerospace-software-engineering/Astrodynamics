@@ -819,7 +819,7 @@ public class TriadAttitudeTests
         var progradeDir = localSv.Velocity.Normalize();
 
         double alignment = rotatedFront * progradeDir;
-        Assert.True(alignment > 0.9999, $"Front should align with prograde. Alignment: {alignment}");
+        Assert.True(alignment > 0.999999, $"Front should align with prograde. Alignment: {alignment}");
 
         // Verify Up is in Sun-facing half-space
         var rotatedUp = Spacecraft.Up.Rotate(maneuver.StateOrientation.Rotation).Normalize();
@@ -876,13 +876,13 @@ public class TriadAttitudeTests
 
         maneuver.TryExecute(orbitalParams);
 
-        // Verify primary pointing
-        var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.LT);
+        // Verify primary pointing (geometric, matching CelestialAttitudeTarget default)
+        var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(orbitalParams.Epoch, orbitalParams.Observer, orbitalParams.Frame, Aberration.None);
         var moonDirection = (moonEphemeris.ToStateVector().Position - orbitalParams.Position).Normalize();
         var pointingVector = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
 
         double alignment = pointingVector * moonDirection;
-        Assert.True(alignment > 0.9999, $"Primary should point at Moon. Alignment: {alignment}");
+        Assert.True(alignment > 0.999999, $"Primary should point at Moon. Alignment: {alignment}");
 
         // Verify quaternion is normalized
         var q = maneuver.StateOrientation.Rotation;
@@ -1103,6 +1103,93 @@ public class TriadAttitudeTests
             $"Factory and manual LVLH quaternion Y should match. Got {q1.VectorPart.Y} vs {sign * q2.VectorPart.Y}");
         Assert.True(System.Math.Abs(sign * q2.VectorPart.Z - q1.VectorPart.Z) < tolerance,
             $"Factory and manual LVLH quaternion Z should match. Got {q1.VectorPart.Z} vs {sign * q2.VectorPart.Z}");
+    }
+
+    #endregion
+
+    #region Aberration Consistency Tests
+
+    [Fact]
+    public void Execute_MixedTargets_DefaultAberration_ProducesConsistentTriad()
+    {
+        // Regression test: CelestialAttitudeTarget defaults to Aberration.None,
+        // which is consistent with OrbitalDirectionTarget (geometric).
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000),
+            Vector3.VectorX,
+            OrbitalDirectionTarget.Normal,
+            spc.Engines.First());
+
+        maneuver.TryExecute(orbitalParams);
+
+        // Compute local state (same conversion as Attitude.TryExecute line 41)
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+
+        // Verify primary pointing: body Z should align with geometric Moon direction
+        var moonEphemeris = TestHelpers.MoonAtJ2000.GetEphemeris(localSv.Epoch, localSv.Observer, localSv.Frame, Aberration.None);
+        var moonDirection = (moonEphemeris.ToStateVector().Position - localSv.Position).Normalize();
+        var rotatedZ = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+
+        double primaryAlignment = rotatedZ * moonDirection;
+        Assert.True(primaryAlignment > 0.9999, $"Primary should point at Moon (geometric). Alignment: {primaryAlignment}");
+
+        // Verify secondary constraint: body X should lie in the plane defined by
+        // Moon direction and orbital normal. The TRIAD cross-product t2 = primary x secondary
+        // is orthogonal to both reference vectors. Body X, after rotation, should have
+        // zero component along t2.
+        var orbitalNormal = localSv.Position.Cross(localSv.Velocity).Normalize();
+        var t2 = moonDirection.Cross(orbitalNormal).Normalize();
+        var rotatedX = Vector3.VectorX.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+
+        double outOfPlane = System.Math.Abs(rotatedX * t2);
+        Assert.True(outOfPlane < 1e-12, $"Secondary body vector should lie in the reference plane. Out-of-plane: {outOfPlane}");
+    }
+
+    [Fact]
+    public void Execute_MixedTargets_LTvsNone_ProducesDifferentAttitude()
+    {
+        // Demonstrates that the aberration choice matters: LT and None produce
+        // measurably different attitudes when mixing with orbital directions.
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+
+        var maneuverLT = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.LT),
+            Vector3.VectorX,
+            OrbitalDirectionTarget.Normal,
+            spc.Engines.First());
+
+        var maneuverNone = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(TestHelpers.MoonAtJ2000, Aberration.None),
+            Vector3.VectorX,
+            OrbitalDirectionTarget.Normal,
+            spc.Engines.First());
+
+        maneuverLT.TryExecute(orbitalParams);
+        maneuverNone.TryExecute(orbitalParams);
+
+        var qLT = maneuverLT.StateOrientation.Rotation;
+        var qNone = maneuverNone.StateOrientation.Rotation;
+
+        // Quaternion dot product: 1.0 means identical, < 1.0 means different rotation
+        double dot = System.Math.Abs(
+            qLT.W * qNone.W + qLT.VectorPart.X * qNone.VectorPart.X +
+            qLT.VectorPart.Y * qNone.VectorPart.Y + qLT.VectorPart.Z * qNone.VectorPart.Z);
+
+        Assert.True(dot < 1.0 - 1e-9, $"LT and None should produce different attitudes. Quaternion dot: {dot}");
     }
 
     #endregion
