@@ -283,9 +283,9 @@ public class TriadAttitude : Attitude
         }
         else
         {
-            // ILocalizable ephemeris path — original behavior
-            var primaryEphemeris = PrimaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT);
-            var secondaryEphemeris = SecondaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT);
+            // ILocalizable ephemeris path — geometric, consistent with Attitude.TryExecute and IAttitudeTarget path
+            var primaryEphemeris = PrimaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None);
+            var secondaryEphemeris = SecondaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None);
 
             primaryRefVector = (primaryEphemeris.ToStateVector().Position - stateVector.Position).Normalize();
             secondaryRefVector = (secondaryEphemeris.ToStateVector().Position - stateVector.Position).Normalize();
