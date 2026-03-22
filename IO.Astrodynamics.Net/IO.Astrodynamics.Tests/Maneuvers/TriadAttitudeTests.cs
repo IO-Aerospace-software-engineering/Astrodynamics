@@ -32,6 +32,29 @@ public class TriadAttitudeTests
         return (spc, orbitalParams);
     }
 
+    private Spacecraft CreatePropagatedTargetSpacecraft(TimeSystem.Time epoch)
+    {
+        var targetPosition = new Vector3(6888000.0, 1200000.0, 300000.0);
+        var targetVelocity = new Vector3(-1200.0, 7200.0, 300.0);
+        var targetState = new StateVector(
+            targetPosition,
+            targetVelocity,
+            TestHelpers.EarthAtJ2000,
+            epoch,
+            Frames.Frame.ICRF);
+
+        var target = new Spacecraft(-668, "TriadTargetSpacecraft", 800.0, 2000.0, new Clock("TargetClk", 65536), targetState);
+        var step = TimeSpan.FromSeconds(30.0);
+        double dt = step.TotalSeconds;
+
+        target.AddPropagatedStates(
+            new StateVector(targetPosition - targetVelocity * dt, targetVelocity, TestHelpers.EarthAtJ2000, epoch - step, Frames.Frame.ICRF),
+            targetState,
+            new StateVector(targetPosition + targetVelocity * dt, targetVelocity, TestHelpers.EarthAtJ2000, epoch + step, Frames.Frame.ICRF));
+
+        return target;
+    }
+
     #region Constructor Validation Tests
 
     [Fact]
@@ -1149,6 +1172,44 @@ public class TriadAttitudeTests
 
         double outOfPlane = System.Math.Abs(rotatedX * t2);
         Assert.True(outOfPlane < 1e-12, $"Secondary body vector should lie in the reference plane. Out-of-plane: {outOfPlane}");
+    }
+
+    [Fact]
+    public void Execute_MixedTargets_TargetSpacecraft_DefaultAberration_ProducesConsistentTriad()
+    {
+        // This matches the reported issue: another propagated spacecraft wrapped in
+        // CelestialAttitudeTarget with an orbital-direction secondary constraint.
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+        var targetSpacecraft = CreatePropagatedTargetSpacecraft(orbitalParams.Epoch);
+
+        var maneuver = new TriadAttitude(
+            TestHelpers.EarthAtJ2000,
+            new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0),
+            Vector3.VectorZ,
+            new CelestialAttitudeTarget(targetSpacecraft),
+            Vector3.VectorX,
+            OrbitalDirectionTarget.Normal,
+            spc.Engines.First());
+
+        maneuver.TryExecute(orbitalParams);
+
+        var localSv = orbitalParams.RelativeTo(TestHelpers.EarthAtJ2000, Aberration.None).ToStateVector();
+        var targetEphemeris = targetSpacecraft.GetEphemeris(localSv.Epoch, localSv.Observer, localSv.Frame, Aberration.None);
+        var targetDirection = (targetEphemeris.ToStateVector().Position - localSv.Position).Normalize();
+        var rotatedZ = Vector3.VectorZ.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+
+        double primaryAlignment = rotatedZ * targetDirection;
+        Assert.True(primaryAlignment > 0.9999999999,
+            $"Primary should point at the target spacecraft (geometric). Alignment: {primaryAlignment}");
+
+        var orbitalNormal = localSv.SpecificAngularMomentum().Normalize();
+        var t2 = targetDirection.Cross(orbitalNormal).Normalize();
+        var rotatedX = Vector3.VectorX.Rotate(maneuver.StateOrientation.Rotation).Normalize();
+
+        double outOfPlane = System.Math.Abs(rotatedX * t2);
+        Assert.True(outOfPlane < 1e-12,
+            $"Secondary body vector should lie in the target-spacecraft/orbital-normal plane. Out-of-plane: {outOfPlane}");
     }
 
     [Fact]
