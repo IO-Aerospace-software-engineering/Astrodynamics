@@ -140,7 +140,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - **TriadAttitude**: Fully-constrained 3-DOF via TRIAD algorithm — use when roll must be defined
 - **Single-vector attitudes** (`NadirAttitude`, `ProgradeAttitude`, etc.): leave roll unconstrained
 - Primary + secondary body vectors must be ≥5 degrees apart (prevents numerical instability)
-- `IAttitudeTarget` mixes orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial bodies (`CelestialAttitudeTarget`)
+- `IAttitudeTarget` mixes orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial bodies (`CelestialAttitudeTarget`); `CelestialAttitudeTarget` defaults to `Aberration.None` (geometric), configurable to `Aberration.LT` for photon-based scenarios
 - Factory methods: `TriadAttitude.CreateLVLH()`, `TriadAttitude.CreateProgradeWithSunTracking()`
 - Configurable body axes per spacecraft instance (`BodyFront`, `BodyRight`, `BodyUp`); must be orthogonal and right-handed
 
