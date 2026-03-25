@@ -651,7 +651,7 @@ The `IAttitudeTarget` interface enables orbital directions and celestial bodies 
 **Implementations:**
 - `OrbitalDirectionTarget` — computes direction from state vector (prograde, nadir, normal, etc.)
   - Predefined static instances: `OrbitalDirectionTarget.Prograde`, `.Retrograde`, `.Nadir`, `.Zenith`, `.Normal`, `.AntiNormal`
-- `CelestialAttitudeTarget` — wraps `ILocalizable`, computes direction via ephemeris with `Aberration.LT`
+- `CelestialAttitudeTarget` — wraps `ILocalizable`, computes direction via ephemeris (default: `Aberration.None`; configurable via constructor parameter, e.g. `Aberration.LT` for photon-based scenarios)
 
 **`OrbitalDirection` enum**: `Prograde`, `Retrograde`, `Nadir`, `Zenith`, `Normal`, `AntiNormal`
 
