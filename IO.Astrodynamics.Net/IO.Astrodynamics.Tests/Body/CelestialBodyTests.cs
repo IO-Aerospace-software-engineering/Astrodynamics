@@ -270,6 +270,21 @@ public class CelestialBodyTests
         Assert.Equal(new Vector3(-1171.3783810266016, -2842.7805399479103, 2.354430257176734), orbit.ToStateVector().Velocity, TestHelpers.VectorComparer);
     }
 
+    [Fact]
+    public void GeosynchronousOrbitThrowsOnInvalidLongitude()
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        Assert.Throws<ArgumentOutOfRangeException>(() => TestHelpers.EarthAtJ2000.GeosynchronousOrbit(4.0, 0.0, epoch));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TestHelpers.EarthAtJ2000.GeosynchronousOrbit(-4.0, 0.0, epoch));
+    }
+
+    [Fact]
+    public void GeosynchronousOrbitThrowsOnInvalidLatitude()
+    {
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        Assert.Throws<ArgumentOutOfRangeException>(() => TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, 2.0, epoch));
+        Assert.Throws<ArgumentOutOfRangeException>(() => TestHelpers.EarthAtJ2000.GeosynchronousOrbit(0.0, -2.0, epoch));
+    }
 
     [Fact]
     public void TrueSolarDayJan()
