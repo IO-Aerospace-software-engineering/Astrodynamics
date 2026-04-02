@@ -244,8 +244,24 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         return (2.0 * Constants.PI) / siderealRotationPeriod.TotalSeconds;
     }
 
+    /// <summary>
+    /// Computes the Keplerian elements for a geosynchronous orbit at the specified longitude and latitude.
+    /// The latitude parameter defines the orbital inclination — for non-zero latitude, the satellite follows
+    /// an inclined geosynchronous orbit tracing a figure-eight ground track. The specified (longitude, latitude)
+    /// is the sub-satellite point only at the given epoch.
+    /// </summary>
+    /// <param name="longitude">Planetocentric longitude in radians, in range [-π, π].</param>
+    /// <param name="latitude">Planetocentric latitude in radians, in range [-π/2, π/2]. Defines the orbital inclination.</param>
+    /// <param name="epoch">The epoch at which to compute the orbit.</param>
+    /// <returns>Keplerian elements for the geosynchronous orbit.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when longitude or latitude is out of range.</exception>
     public KeplerianElements GeosynchronousOrbit(double longitude, double latitude, Time epoch)
     {
+        if (longitude < -Constants.PI || longitude > Constants.PI)
+            throw new ArgumentOutOfRangeException(nameof(longitude), longitude, "Longitude must be in range [-π, π] radians.");
+        if (latitude < -Constants.PI2 || latitude > Constants.PI2)
+            throw new ArgumentOutOfRangeException(nameof(latitude), latitude, "Latitude must be in range [-π/2, π/2] radians.");
+
         var sideralRotation2 = System.Math.Pow(SideralRotationPeriod(epoch).TotalSeconds, 2);
         var radius = System.Math.Cbrt((GM * sideralRotation2) / (4 * Constants.PI * Constants.PI));
         var bodyfFixedCoordinates = new Planetocentric(longitude, latitude, radius).ToCartesianCoordinates();
@@ -253,7 +269,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         var icrfRot = Vector3.VectorZ.Rotate(Frame.ToFrame(Frame.ICRF, epoch).Rotation);
         var inertialVelocity = icrfRot.Cross(icrfPos).Normalize() * System.Math.Sqrt(GM / radius);
         var sv = new StateVector(icrfPos, inertialVelocity, this, epoch, Frame.ICRF);
-        return new KeplerianElements(radius, 0.0, sv.Inclination(), sv.AscendingNode(), (sv.ArgumentOfPeriapsis() + sv.MeanAnomaly()) % Constants._2PI, 0.0, this, epoch, sv.Frame);
+        return new KeplerianElements(radius, 0.0, sv.Inclination(), sv.AscendingNode(), sv.ArgumentOfPeriapsis() + sv.MeanAnomaly(), 0.0, this, epoch, sv.Frame);
     }
 
     /// <summary>
