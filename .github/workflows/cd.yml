@@ -125,7 +125,7 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release
+      run: dotnet test --no-build --verbosity ${{ inputs.logLevel || 'minimal' }} --configuration Release
 
     - name: Set version in csproj
       run: |
@@ -173,7 +173,7 @@ jobs:
     - name: Run smoke tests
       run: >
         dotnet test IO.Astrodynamics.SmokeTests/IO.Astrodynamics.SmokeTests.csproj
-        --no-restore --verbosity normal --configuration Release
+        --no-restore --verbosity ${{ inputs.logLevel || 'minimal' }} --configuration Release
 
   # Job 4: Publish to NuGet (only after smoke tests pass on both platforms)
   publish:
