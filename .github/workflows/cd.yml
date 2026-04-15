@@ -190,9 +190,16 @@ jobs:
         name: nuget-package
         path: IO.Astrodynamics.Net/nupkg
 
-    - name: Publish package
+    - name: Publish package to NuGet.org
       run: >
         dotnet nuget push nupkg/*.nupkg
         --skip-duplicate
         --api-key ${{secrets.NUGET_TOKEN}}
         --source https://api.nuget.org/v3/index.json
+
+    - name: Publish package to Private Feed
+      run: >
+        dotnet nuget push "nupkg/*.nupkg"
+        --skip-duplicate
+        --api-key ${{secrets.PROGET_API_KEY}}
+        --source ${{secrets.PROGET_FEED_URL}}
