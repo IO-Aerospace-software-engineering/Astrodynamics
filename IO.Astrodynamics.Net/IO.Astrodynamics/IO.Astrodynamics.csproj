@@ -73,6 +73,10 @@
       <Content Include="resources\libIO.Astrodynamics.so" Pack="true" PackagePath="runtimes/linux-x64/">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <None Remove="resources\io-only-dark.png" />
+      <Content Include="resources\io-only-dark.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
     <!-- NuGet package content: .targets, icon, readme -->
