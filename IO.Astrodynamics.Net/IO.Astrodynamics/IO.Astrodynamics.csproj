@@ -12,7 +12,7 @@
 
         <!-- NuGet package metadata (replaces IO.Astrodynamics.nuspec) -->
         <PackageId>IO.Astrodynamics</PackageId>
-        <Version>9.0.0-preview-4</Version>
+        <Version>9.0.1</Version>
         <Authors>Sylvain Guillet</Authors>
         <Copyright>Sylvain Guillet</Copyright>
         <Title>IO Astrodynamics framework</Title>
@@ -20,7 +20,7 @@
         <PackageTags>astrodynamics aerospace orbital mechanics spice space physics attitude</PackageTags>
         <PackageProjectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics</PackageProjectUrl>
         <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
-        <PackageIcon>dragonfly-dark-trans.png</PackageIcon>
+        <PackageIcon>resources\io-only-dark-trans.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
@@ -35,6 +35,9 @@
 
     <ItemGroup>
         <None Remove="resources\libIO.SDK.so" />
+        <None Update="resources\io-only-dark-trans.png">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <ItemGroup>
@@ -74,9 +77,6 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <None Remove="resources\io-only-dark.png" />
-      <Content Include="resources\io-only-dark.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
     </ItemGroup>
 
     <!-- NuGet package content: .targets, icon, readme -->
