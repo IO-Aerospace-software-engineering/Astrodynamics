@@ -78,7 +78,6 @@
     <!-- NuGet package content: .targets, icon, readme -->
     <ItemGroup>
       <None Include="IO.Astrodynamics.targets" Pack="true" PackagePath="build/" />
-      <None Include="resources\dragonfly-dark-trans.png" Pack="true" PackagePath="/" />
       <None Include="..\..\README.md" Pack="true" PackagePath="/" />
     </ItemGroup>
 
