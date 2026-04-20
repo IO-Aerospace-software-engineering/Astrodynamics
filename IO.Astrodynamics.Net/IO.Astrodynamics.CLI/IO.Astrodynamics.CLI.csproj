@@ -9,13 +9,13 @@
         <FileVersion>0.0.1</FileVersion>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>astro</ToolCommandName>
-        <Version>0.9.0.0-preview-4</Version>
+        <Version>0.9.0.5</Version>
         <Title>Astrodynamics command line interface</Title>
         <Authors>Sylvain Guillet</Authors>
         <Description>This CLI allows end user to exploit IO.Astrodynamics framework </Description>
         <Copyright>Sylvain Guillet</Copyright>
         <PackageProjectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net</PackageProjectUrl>
-        <PackageIcon>dragonfly-dark-trans.png</PackageIcon>
+        <PackageIcon>io-only-dark-trans.png</PackageIcon>
         <PackageTags>astrodynamics aerospace orbitalmechanics ephemeris physics</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
@@ -29,15 +29,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="dragonfly-dark-trans.png">
-        <Pack>True</Pack>
-        <PackagePath></PackagePath>
-      </None>
-    </ItemGroup>
-
-    <ItemGroup>
       <None Remove="Data\EGM2008_to100_TideFree.txt" />
       <EmbeddedResource Include="Data\EGM2008_to100_TideFree.txt" />
+      <None Include="io-only-dark-trans.png">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

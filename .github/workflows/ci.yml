@@ -2,18 +2,21 @@ name: Astrodynamics CI
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
+  push:
+    branches: [ "develop", "release/*", "hotfix/*" ]
   workflow_dispatch:
     inputs:
           logLevel:
             description: 'Log level'
             required: true
-            default: 'warning'
+            default: 'minimal'
             type: choice
             options:
-            - info
-            - warning
-            - debug
+            - minimal
+            - normal
+            - detailed
+            - diagnostic
 
 env:
   BUILD_TYPE: Release
@@ -101,4 +104,4 @@ jobs:
       run: dotnet restore
 
     - name: Test
-      run: dotnet test --verbosity Normal -c Release
+      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release
