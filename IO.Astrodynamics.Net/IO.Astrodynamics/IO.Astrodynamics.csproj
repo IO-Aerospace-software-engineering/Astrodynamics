@@ -12,7 +12,7 @@
 
         <!-- NuGet package metadata (replaces IO.Astrodynamics.nuspec) -->
         <PackageId>IO.Astrodynamics</PackageId>
-        <Version>9.0.5</Version>
+        <Version>9.0.6</Version>
         <Authors>Sylvain Guillet</Authors>
         <Copyright>Sylvain Guillet</Copyright>
         <Title>IO Astrodynamics framework</Title>
@@ -46,6 +46,8 @@
         <None Remove="resources\IO.SDK.dll" />
         <None Remove="resources\IO.SDK.exp" />
         <None Remove="resources\IO.SDK.lib" />
+        <!-- Windows import library: needed only by C++ consumers at link time. .NET P/Invoke does not use it. -->
+        <None Remove="resources\IO.Astrodynamics.lib" />
     </ItemGroup>
 
     <ItemGroup>
@@ -68,22 +70,20 @@
 
     <ItemGroup>
       <None Remove="resources\One_Sgp4.dll" />
-      <!-- Native libs: copy to output for local dev + pack into runtimes/ for NuGet -->
-      <Content Include="resources\IO.Astrodynamics.dll" Pack="true" PackagePath="runtimes/windows10-x64/">
+      <!-- Native libs use the standard NuGet runtime asset layout: runtimes/{rid}/native/.
+           This way they are auto-resolved by MSBuild during `dotnet build` (no RID required)
+           and propagate through transitive references — no companion .targets workaround needed. -->
+      <Content Include="resources\IO.Astrodynamics.dll" Pack="true" PackagePath="runtimes/win-x64/native/">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <Content Include="resources\IO.Astrodynamics.lib" Pack="true" PackagePath="runtimes/windows10-x64/">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <Content Include="resources\libIO.Astrodynamics.so" Pack="true" PackagePath="runtimes/linux-x64/">
+      <Content Include="resources\libIO.Astrodynamics.so" Pack="true" PackagePath="runtimes/linux-x64/native/">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <None Remove="resources\io-only-dark.png" />
     </ItemGroup>
 
-    <!-- NuGet package content: .targets, icon, readme -->
+    <!-- NuGet package content: icon, readme -->
     <ItemGroup>
-      <None Include="IO.Astrodynamics.targets" Pack="true" PackagePath="build/" />
       <None Include="..\..\README.md" Pack="true" PackagePath="/" />
     </ItemGroup>
 
