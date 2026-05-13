@@ -9,28 +9,28 @@ namespace IO.Astrodynamics.CLI.Tests;
 public class PropagateTests
 {
     [Fact]
-    public void PropagateWithPerturbations()
+    public async Task PropagateWithPerturbations()
     {
         var command = new PropagateCommand();
         StringBuilder sb = new StringBuilder();
         StringWriter sw = new StringWriter(sb);
         string res;
 
-        lock (Configuration.objLock)
+        using (await Configuration.LockAsync())
         {
             Console.SetOut(sw);
 
-            command.Propagate("Data", "MyBody",
+            await command.Propagate("Data", "MyBody",
                 new Commands.Parameters.OrbitalParameters
                 {
                     CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0", Frame = "ICRF", OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 8000.0 0.0",
                     FromStateVector = true
                 }, new WindowParameters { Begin = "0.0", End = "3600.0" }, "PropagatorExport", true,
-                true, 20, celestialBodies: [10, 301]).Wait();
+                true, 20, celestialBodies: [10, 301]);
 
             res = sb.ToString();
         }
-        
+
         Assert.Contains("Propagation completed", res);
     }
 }

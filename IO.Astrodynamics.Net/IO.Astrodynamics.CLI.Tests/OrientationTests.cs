@@ -11,7 +11,7 @@ public class OrientationsTests
     [Fact]
     public void CallWithAllOptions()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new OrientationCommand();
             StringBuilder sb = new StringBuilder();
@@ -34,7 +34,7 @@ public class OrientationsTests
     [Fact]
     public void CallWithoutOptions()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new OrientationCommand();
             StringBuilder sb = new StringBuilder();

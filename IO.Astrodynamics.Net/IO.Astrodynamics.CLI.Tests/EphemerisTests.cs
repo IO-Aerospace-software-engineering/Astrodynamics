@@ -11,7 +11,7 @@ public class EphemerisTests
     [Fact]
     public void CallWithAllOptions()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new EphemerisCommand();
             StringBuilder sb = new StringBuilder();
@@ -34,7 +34,7 @@ public class EphemerisTests
     [Fact]
     public void CallWithoutOptions()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new EphemerisCommand();
             StringBuilder sb = new StringBuilder();
@@ -58,7 +58,7 @@ public class EphemerisTests
     [Fact]
     public void SubPoint()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new EphemerisCommand();
             StringBuilder sb = new StringBuilder();
@@ -75,7 +75,7 @@ public class EphemerisTests
     [Fact]
     public void SubPointCartesian()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new EphemerisCommand();
             StringBuilder sb = new StringBuilder();
@@ -92,7 +92,7 @@ public class EphemerisTests
     [Fact]
     public void SubPointPlanetodetic()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new EphemerisCommand();
             StringBuilder sb = new StringBuilder();
@@ -109,7 +109,7 @@ public class EphemerisTests
     [Fact]
     public void AngularSeparation()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new EphemerisCommand();
             StringBuilder sb = new StringBuilder();

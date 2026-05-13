@@ -118,6 +118,13 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
+    - name: Set version in csproj
+      run: |
+        sed -i 's|<Version>.*</Version>|<Version>${{ needs.get-version.outputs.version }}</Version>|' \
+          IO.Astrodynamics/IO.Astrodynamics.csproj
+        sed -i 's|<Version>.*</Version>|<Version>${{ needs.get-version.outputs.version }}</Version>|' \
+          IO.Astrodynamics.CLI/IO.Astrodynamics.CLI.csproj
+
     - name: Restore dependencies
       run: dotnet restore
 
@@ -127,19 +134,24 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity ${{ inputs.logLevel || 'minimal' }} --configuration Release
 
-    - name: Set version in csproj
-      run: |
-        sed -i 's|<Version>.*</Version>|<Version>${{ needs.get-version.outputs.version }}</Version>|' \
-          IO.Astrodynamics/IO.Astrodynamics.csproj
-
     - name: Package Framework
       run: dotnet pack IO.Astrodynamics/IO.Astrodynamics.csproj --no-build --configuration Release
+
+    - name: Package CLI
+      run: dotnet pack IO.Astrodynamics.CLI/IO.Astrodynamics.CLI.csproj --no-build --configuration Release
+
+    - name: Stage NuGet packages
+      run: |
+        mkdir -p nupkg-staging
+        cp IO.Astrodynamics/bin/Release/*.nupkg nupkg-staging/
+        cp IO.Astrodynamics.CLI/bin/Release/*.nupkg nupkg-staging/
+        ls -la nupkg-staging/
 
     - name: Upload NuGet package
       uses: actions/upload-artifact@v4
       with:
         name: nuget-package
-        path: IO.Astrodynamics.Net/IO.Astrodynamics/bin/Release/*.nupkg
+        path: IO.Astrodynamics.Net/nupkg-staging/*.nupkg
         retention-days: 5
 
   # Job 3: Smoke-test the NuGet package on both platforms

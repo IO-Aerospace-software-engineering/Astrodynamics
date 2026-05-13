@@ -9,7 +9,7 @@ public class OrbitalParametersTests
     [Fact]
     public void SvToSv()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new OrbitalParametersConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -33,7 +33,7 @@ public class OrbitalParametersTests
     [Fact]
     public void SvToSvToDifferentFrame()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new OrbitalParametersConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -57,7 +57,7 @@ public class OrbitalParametersTests
     [Fact]
     public void SvToKeplerian()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new OrbitalParametersConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -82,7 +82,7 @@ public class OrbitalParametersTests
     [Fact]
     public void KeplerianToEquinocial()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new OrbitalParametersConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -114,7 +114,7 @@ public class OrbitalParametersTests
     [Fact]
     public void KeplerianToSv()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new OrbitalParametersConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -146,7 +146,7 @@ public class OrbitalParametersTests
     [Fact]
     public void KeplerianToKeplerian()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new OrbitalParametersConverterCommand();
             StringBuilder sb = new StringBuilder();

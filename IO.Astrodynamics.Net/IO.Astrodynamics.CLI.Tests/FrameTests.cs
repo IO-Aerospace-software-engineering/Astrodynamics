@@ -9,7 +9,7 @@ public class FrameTests
     [Fact]
     public void Convert()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new FrameConverterCommand();
             StringBuilder sb = new StringBuilder();
