@@ -8,7 +8,7 @@ public class BodyInformationsTests
     [Fact]
     public void CelestialBodyInformation()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new BodyInformationCommand();
             StringBuilder sb = new StringBuilder();

@@ -10,7 +10,7 @@ public class TimeTests
     [Fact]
     public void DateToJDUTC()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -26,7 +26,7 @@ public class TimeTests
     [Fact]
     public void DateToSecondsFromJ2000()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -42,7 +42,7 @@ public class TimeTests
     [Fact]
     public void DateToDateTDB()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -58,7 +58,7 @@ public class TimeTests
     [Fact]
     public void J2000ToDateUTC()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -74,7 +74,7 @@ public class TimeTests
     // [Fact]
     internal void J2000ToLocal()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -90,7 +90,7 @@ public class TimeTests
     [Fact]
     public void LocalToJ2000()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -106,7 +106,7 @@ public class TimeTests
     [Fact]
     public void J2000ToJulianTDB()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -122,7 +122,7 @@ public class TimeTests
     [Fact]
     public void J2000ToJ2000UTC()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -138,7 +138,7 @@ public class TimeTests
     [Fact]
     public void JulianToJ2000TDB()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -154,7 +154,7 @@ public class TimeTests
     [Fact]
     public void JulianToDateTDB()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -170,7 +170,7 @@ public class TimeTests
     [Fact]
     public void JulianToJulianUTC()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();
@@ -186,7 +186,7 @@ public class TimeTests
     [Fact]
     public async Task Exceptions()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new TimeConverterCommand();
             StringBuilder sb = new StringBuilder();

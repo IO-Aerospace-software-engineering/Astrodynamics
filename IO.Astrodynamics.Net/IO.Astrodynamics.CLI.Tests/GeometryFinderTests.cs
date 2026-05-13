@@ -9,7 +9,7 @@ public class GeometryFinderTests
     [Fact]
     public void CoordinateConstraint()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new GeometryFinderCommand();
             StringBuilder sb = new StringBuilder();
@@ -29,7 +29,7 @@ public class GeometryFinderTests
     [Fact]
     public void DistanceConstraint()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new GeometryFinderCommand();
             StringBuilder sb = new StringBuilder();
@@ -49,7 +49,7 @@ public class GeometryFinderTests
     [Fact]
     public void OccultationConstraint()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new GeometryFinderCommand();
             StringBuilder sb = new StringBuilder();
@@ -69,7 +69,7 @@ public class GeometryFinderTests
     [Fact]
     public void FOVConstraint()
     {
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new GeometryFinderCommand();
             StringBuilder sb = new StringBuilder();
@@ -89,7 +89,7 @@ public class GeometryFinderTests
     public void IlluminationConstraint()
     {
         //Find time windows when the planetodetic point is illuminated by the sun (Official twilight 0.8° bellow horizon)
-        lock (Configuration.objLock)
+        using (Configuration.Lock())
         {
             var command = new GeometryFinderCommand();
             StringBuilder sb = new StringBuilder();
