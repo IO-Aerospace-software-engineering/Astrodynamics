@@ -63,7 +63,7 @@ Install into your project:
 ```
 
 Requirements:
-- Supported OS: Windows and Linux x64 (native CSPICE interop is bundled)
+- Supported OS: Windows x64, Linux x64, and macOS (Apple Silicon/arm64 and Intel/x64) — native CSPICE interop is bundled
 - SPICE kernels: you must load the kernels required for your computations
 
 
@@ -118,6 +118,7 @@ SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
 The native C++ library exists only as a high-performance bridge to CSPICE. It won’t receive new features (only safety/correctness fixes). If you need to link it directly:
 - Download prebuilt binaries from Releases: https://github.com/IO-Aerospace-software-engineering/Astrodynamics/releases
 - Linux: install headers to /usr/local/include/IO and libIO.Astrodynamics.so to /usr/local/lib
+- macOS: place libIO.Astrodynamics.dylib alongside your app (arm64 and x64 builds are provided) and include headers
 - Windows: place IO.Astrodynamics.dll/.lib alongside your app and include headers
 
 Note: Prefer the .NET SDK for all new work. The native library and .NET assembly must be from the same release — P/Invoke signatures are version-coupled.
@@ -135,7 +136,7 @@ Note: Prefer the .NET SDK for all new work. The native library and .NET assembly
 Building and sustaining a .NET-first astrodynamics toolkit on top of SPICE takes significant effort across:
 - Keeping pace with SPICE releases and kernel updates
 - Evolving the .NET API, CLI, and documentation
-- Cross-platform packaging and CI (Windows/Linux)
+- Cross-platform packaging and CI (Windows/Linux/macOS)
 - Extensive tests, validation against reference data, and performance work
 - New features and scenarios (propagators, event finders, attitudes, PDS tooling, Cosmographia export)
 - Community support, triage, and example curation

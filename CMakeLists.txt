@@ -28,7 +28,9 @@ enable_testing()
 include(FetchContent)
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip
+  # v1.15.2: modern release that configures cleanly under CMake >= 4.0 (its
+  # cmake_minimum_required is 3.16+), unlike the previous 2020-era pin.
+  URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)

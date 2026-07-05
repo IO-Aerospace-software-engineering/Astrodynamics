@@ -2295,3 +2295,11 @@ IO.Astrodynamics.Net/IO.Astrodynamics/code-analysis/Spacecraft_domain.csv
 IO.Astrodynamics.Net/IO.Astrodynamics/code-analysis/Surface_domain.csv
 IO.Astrodynamics.Net/IO.Astrodynamics/code-analysis/TimeSystem_domain.csv
 IO.Astrodynamics.Net/IO.Astrodynamics/code-analysis/TLE_domain.csv
+
+# macOS SOFA build artifacts (compiled in CI from external-lib/sofa-src, not committed)
+external-lib/libsofa_c_osx_*.a
+external-lib/sofa-src/*.o
+# macOS native dylibs staged into resources/ during packaging (produced by CI)
+IO.Astrodynamics.Net/IO.Astrodynamics/resources/libIO.Astrodynamics.dylib
+IO.Astrodynamics.Net/IO.Astrodynamics/resources/osx-arm64/
+IO.Astrodynamics.Net/IO.Astrodynamics/resources/osx-x64/

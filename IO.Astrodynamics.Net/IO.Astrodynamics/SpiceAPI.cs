@@ -145,6 +145,7 @@ public class SpiceAPI
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             sharedLibName = "resources/IO.Astrodynamics.dll";
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) sharedLibName = "resources/libIO.Astrodynamics.so";
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) sharedLibName = "resources/libIO.Astrodynamics.dylib";
 
         if (!string.IsNullOrEmpty(sharedLibName))
             NativeLibrary.TryLoad(sharedLibName, typeof(SpiceAPI).Assembly, DllImportSearchPath.AssemblyDirectory, out _libHandle);
