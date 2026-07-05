@@ -67,9 +67,7 @@ jobs:
         ar rcs ../libsofa_c_osx_${{ matrix.osx_arch }}.a *.o
 
     - name: Configure CMake
-      # CMAKE_POLICY_VERSION_MINIMUM=3.5 lets the pinned googletest configure under
-      # CMake >= 4.0 (macOS runners), which dropped pre-3.5 compatibility. Harmless on older CMake.
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build C++
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2

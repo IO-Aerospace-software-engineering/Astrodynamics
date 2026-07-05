@@ -162,14 +162,17 @@ TEST(Site, ConvertToLocalFrame)
                                IO::Astrodynamics::AberrationsEnum::None,
                                IO::Astrodynamics::Time::TDB("2021-05-18 12:00:00 TDB"));
     auto frm = sv.ToFrame(IO::Astrodynamics::Frames::Frames("DSS-13_TOPO"));
-    ASSERT_NEAR(151331778648.73987, frm.GetPosition().Magnitude(), 1e-6);
-    ASSERT_NEAR(10363092.454562536, frm.GetVelocity().Magnitude(), 1e-6);
-    ASSERT_NEAR(77897211085.470154, frm.GetPosition().GetX(), 1e-6);
-    ASSERT_NEAR(-127863165773.11325, frm.GetPosition().GetY(), 1e-6);
-    ASSERT_NEAR(-22007784363.135338, frm.GetPosition().GetZ(), 1e-6);
-    ASSERT_NEAR(-5361336.304448748, frm.GetVelocity().GetX(), 1e-6);
-    ASSERT_NEAR(-4574026.8948354861, frm.GetVelocity().GetY(), 1e-6);
-    ASSERT_NEAR(7597896.8285791064, frm.GetVelocity().GetZ(), 1e-6);
+    // Tolerances scaled to magnitude (~1e-11 relative). The previous 1e-6 was far below
+    // one ULP for these ~1e11 m / ~1e7 m/s values, so it demanded bit-identical results and
+    // failed on arm64 (libm differs from x64 at the ULP level) while passing on x64.
+    ASSERT_NEAR(151331778648.73987, frm.GetPosition().Magnitude(), 1.0);
+    ASSERT_NEAR(10363092.454562536, frm.GetVelocity().Magnitude(), 1e-4);
+    ASSERT_NEAR(77897211085.470154, frm.GetPosition().GetX(), 1.0);
+    ASSERT_NEAR(-127863165773.11325, frm.GetPosition().GetY(), 1.0);
+    ASSERT_NEAR(-22007784363.135338, frm.GetPosition().GetZ(), 1.0);
+    ASSERT_NEAR(-5361336.304448748, frm.GetVelocity().GetX(), 1e-4);
+    ASSERT_NEAR(-4574026.8948354861, frm.GetVelocity().GetY(), 1e-4);
+    ASSERT_NEAR(7597896.8285791064, frm.GetVelocity().GetZ(), 1e-4);
 }
 
 TEST(Site, GetHorizontalCoordinates)
