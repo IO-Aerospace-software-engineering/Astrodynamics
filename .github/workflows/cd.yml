@@ -38,7 +38,9 @@ jobs:
         fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-  # Job 1: Build and test C++ native library on all platforms
+  # Job 1: Build and test C++ native library on all platforms.
+  # Both macOS arches build on the Apple Silicon runner: arm64 natively, x64 by
+  # cross-compiling (GitHub's Intel macOS runners are retired/capacity-starved).
   build-native:
     needs: get-version
     strategy:
@@ -47,27 +49,31 @@ jobs:
         include:
           - os: ubuntu-latest
           - os: windows-latest
-          - os: macos-14        # Apple Silicon (arm64)
+          - os: macos-14        # Apple Silicon — native arm64
             osx_arch: arm64
-          - os: macos-13        # Intel (x64)
+            osx_cc_arch: arm64
+            cmake_extra: -DCMAKE_OSX_ARCHITECTURES=arm64 -DOSX_ARCH=arm64
+          - os: macos-14        # Apple Silicon — cross-compiled x64
             osx_arch: x64
+            osx_cc_arch: x86_64
+            cmake_extra: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DOSX_ARCH=x86_64
     runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
 
-    # SOFA has no prebuilt macOS archive: compile it from vendored source into the
-    # per-arch static lib the CMake APPLE branch links.
+    # SOFA has no prebuilt macOS archive: compile it from vendored source (for the
+    # target arch) into the static lib the CMake APPLE branch links.
     - name: Build SOFA (macOS)
       if: matrix.osx_arch
       run: |
         cd external-lib/sofa-src
         # Compile library routines only; skip any t_*.c test drivers (they define main()).
-        cc -O2 -c $(ls *.c | grep -v '^t_')
+        cc -arch ${{ matrix.osx_cc_arch }} -O2 -c $(ls *.c | grep -v '^t_')
         ar rcs ../libsofa_c_osx_${{ matrix.osx_arch }}.a *.o
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{ matrix.cmake_extra }}
 
     - name: Build C++
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
@@ -77,10 +83,12 @@ jobs:
       run: ./IO.Astrodynamics.Tests
       if: matrix.os == 'ubuntu-latest'
 
-    - name: C++ Tests (macOS)
+    # Only the native arm64 build runs its tests; the x64 dylib is cross-compiled
+    # (can't execute natively here) and is covered by the Linux/Windows x64 tests.
+    - name: C++ Tests (macOS arm64)
       working-directory: ${{github.workspace}}/build/IO.Astrodynamics.Tests
       run: ./IO.Astrodynamics.Tests
-      if: matrix.osx_arch
+      if: matrix.osx_arch == 'arm64'
 
     - name: C++ Tests (Windows)
       working-directory: ${{github.workspace}}\build\IO.Astrodynamics.Tests\Release
@@ -205,7 +213,7 @@ jobs:
     needs: package-dotnet
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14, macos-13]
+        os: [ubuntu-latest, windows-latest, macos-14]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
