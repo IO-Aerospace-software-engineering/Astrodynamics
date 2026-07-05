@@ -61,7 +61,8 @@ jobs:
       if: matrix.osx_arch
       run: |
         cd external-lib/sofa-src
-        cc -O2 -c *.c
+        # Compile library routines only; skip any t_*.c test drivers (they define main()).
+        cc -O2 -c $(ls *.c | grep -v '^t_')
         ar rcs ../libsofa_c_osx_${{ matrix.osx_arch }}.a *.o
 
     - name: Configure CMake
