@@ -95,19 +95,11 @@ public class OrbitalParametersTests
                 Frame = "ICRF", FromStateVector = false, FromKeplerian = true, FromEquinoctial = false, FromTLE = false
             }, false, false, true, new EpochParameters());
             var res = sb.ToString();
-            if (OperatingSystem.IsWindows())
-            {
-                Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.3535533905932738 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226534411255 Frame : J2000{
-                        Environment.NewLine}",
-                    res);
-            }
-            else
-            {
-                Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.35355339059327373 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226534411255 Frame : J2000{Environment.NewLine}",
-                    res);
-            }
+            // Numbers compared within tolerance so the same expected value holds across
+            // architectures (last-digit round-trip formatting differs on x64 vs arm64).
+            OutputAssert.EqualApprox(
+                $"Epoch : 2000-01-01T12:00:00.0000000 TDB P : 10170000 F : 0.3535533905932738 G : 0.35355339059327373 H : 0.08450755960720442 K 0.022643732351075387 L0 : 2.589226534411255 Frame : J2000{Environment.NewLine}",
+                res);
         }
     }
 
@@ -128,18 +120,11 @@ public class OrbitalParametersTests
             }, true, false, false, new EpochParameters());
             var res = sb.ToString();
 
-            if (OperatingSystem.IsWindows())
-            {
-                Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.469556896 Y : -1546174.69867672 Z: 2521950.1574303135 Velocity : X : -807.8383054672158 Y : -5477.646279080879 Z: -5297.633404926932 Frame : J2000{Environment.NewLine}",
-                    res);
-            }
-            else
-            {
-                Assert.Equal(
-                    $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.469556894 Y : -1546174.6986767196 Z: 2521950.1574303135 Velocity : X : -807.8383054672163 Y : -5477.64627908088 Z: -5297.633404926932 Frame : J2000{Environment.NewLine}",
-                    res);
-            }
+            // Numbers compared within tolerance so the same expected value holds across
+            // architectures (last-digit round-trip formatting differs on x64 vs arm64).
+            OutputAssert.EqualApprox(
+                $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -6116559.469556894 Y : -1546174.6986767196 Z: 2521950.1574303135 Velocity : X : -807.8383054672163 Y : -5477.64627908088 Z: -5297.633404926932 Frame : J2000{Environment.NewLine}",
+                res);
         }
     }
 

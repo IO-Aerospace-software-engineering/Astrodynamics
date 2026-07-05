@@ -25,7 +25,7 @@ public class EphemerisTests
                 }, TimeSpan.FromMinutes(1), "ICRF", "LT", toKeplerian: true);
             var res = sb.ToString();
 
-            Assert.Equal(
+            OutputAssert.EqualApprox(
                 $"Epoch : 2023-01-01T01:00:00.0000000 TDB A : 149548023692.8589, Ecc. : 0.016383768660595866, Inc. : 0.4090475386632512, AN : 6.283111166910646, AOP : 1.8230020944251075, M : 6.208211132464601, Frame : j2000{Environment.NewLine}Epoch : 2023-01-01T01:01:00.0000000 TDB A : 149548005605.26834, Ecc. : 0.016383648084550295, Inc. : 0.4090475387953283, AN : 6.283111165029856, AOP : 1.8230010654683242, M : 6.20822406354363, Frame : j2000{Environment.NewLine}"
                 , res);
         }
