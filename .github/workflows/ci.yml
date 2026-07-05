@@ -22,15 +22,30 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  # Job 1: Build and test C++ native library on both platforms
+  # Job 1: Build and test C++ native library on all platforms
   build-native:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+          - os: macos-14        # Apple Silicon (arm64)
+            osx_arch: arm64
+          - os: macos-13        # Intel (x64)
+            osx_arch: x64
     runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
+
+    # SOFA has no prebuilt macOS archive: compile it from vendored source into the
+    # per-arch static lib the CMake APPLE branch links.
+    - name: Build SOFA (macOS)
+      if: matrix.osx_arch
+      run: |
+        cd external-lib/sofa-src
+        cc -O2 -c *.c
+        ar rcs ../libsofa_c_osx_${{ matrix.osx_arch }}.a *.o
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -42,6 +57,11 @@ jobs:
       working-directory: ${{github.workspace}}/build/IO.Astrodynamics.Tests
       run: ./IO.Astrodynamics.Tests
       if: matrix.os == 'ubuntu-latest'
+
+    - name: C++ Tests (macOS)
+      working-directory: ${{github.workspace}}/build/IO.Astrodynamics.Tests
+      run: ./IO.Astrodynamics.Tests
+      if: matrix.osx_arch
 
     - name: C++ Tests (Windows)
       working-directory: ${{github.workspace}}\build\IO.Astrodynamics.Tests\Release
@@ -56,6 +76,14 @@ jobs:
         path: build/IO.Astrodynamics/libIO.Astrodynamics.so
         retention-days: 1
       if: matrix.os == 'ubuntu-latest'
+
+    - name: Upload native library (macOS)
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-osx-${{ matrix.osx_arch }}
+        path: build/IO.Astrodynamics/libIO.Astrodynamics.dylib
+        retention-days: 1
+      if: matrix.osx_arch
 
     - name: Upload native library (Windows)
       uses: actions/upload-artifact@v4
@@ -72,7 +100,13 @@ jobs:
     needs: build-native
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+          - os: macos-14        # Apple Silicon (arm64)
+            osx_arch: arm64
+          - os: macos-13        # Intel (x64)
+            osx_arch: x64
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -94,6 +128,14 @@ jobs:
         name: native-windows
         path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
       if: matrix.os == 'windows-latest'
+
+    # The resolver loads resources/libIO.Astrodynamics.dylib for the from-source build.
+    - name: Download native macOS library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-osx-${{ matrix.osx_arch }}
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+      if: matrix.osx_arch
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4

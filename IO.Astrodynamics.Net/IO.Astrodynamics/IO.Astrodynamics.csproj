@@ -79,6 +79,27 @@
       <Content Include="resources\libIO.Astrodynamics.so" Pack="true" PackagePath="runtimes/linux-x64/native/">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <!-- macOS native libs. Both RIDs share a file name, so each arch dylib lives in its
+           own resources subfolder. Guarded by Exists(): these are supplied by CI before pack
+           and are absent on a plain Linux/Windows dev build (which must still build/pack). -->
+      <Content Include="resources\osx-arm64\libIO.Astrodynamics.dylib" Pack="true"
+               PackagePath="runtimes/osx-arm64/native/"
+               Condition="Exists('resources\osx-arm64\libIO.Astrodynamics.dylib')">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>resources\osx-arm64\libIO.Astrodynamics.dylib</Link>
+      </Content>
+      <Content Include="resources\osx-x64\libIO.Astrodynamics.dylib" Pack="true"
+               PackagePath="runtimes/osx-x64/native/"
+               Condition="Exists('resources\osx-x64\libIO.Astrodynamics.dylib')">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Link>resources\osx-x64\libIO.Astrodynamics.dylib</Link>
+      </Content>
+      <!-- Flat copy loaded by the resolver during a from-source dev build on macOS. Not packed
+           (RID assets above are what consumers restore); copied to output only when present. -->
+      <Content Include="resources\libIO.Astrodynamics.dylib" Pack="false"
+               Condition="Exists('resources\libIO.Astrodynamics.dylib')">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
       <None Remove="resources\io-only-dark.png" />
     </ItemGroup>
 

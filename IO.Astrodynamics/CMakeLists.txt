@@ -24,8 +24,25 @@ ENDMACRO()
 HEADER_DIRECTORIES(MyList)
 target_include_directories(${This} PUBLIC ${MyList})
 
-#ADD SPECIFICS LIBS AND HEADERS 
-if (UNIX)
+#ADD SPECIFICS LIBS AND HEADERS
+if (APPLE)
+    # macOS: pick the CSPICE archive by target arch (native runners set
+    # CMAKE_SYSTEM_PROCESSOR to arm64/x86_64); -DOSX_ARCH overrides for cross-compile.
+    if (NOT OSX_ARCH)
+        set(OSX_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+    endif ()
+    if (OSX_ARCH STREQUAL "arm64")
+        set(_cspice ${CMAKE_SOURCE_DIR}/external-lib/cspice_osx_arm64.a)
+        set(_sofa   ${CMAKE_SOURCE_DIR}/external-lib/libsofa_c_osx_arm64.a)
+    else ()
+        set(_cspice ${CMAKE_SOURCE_DIR}/external-lib/cspice_osx_x64.a)
+        set(_sofa   ${CMAKE_SOURCE_DIR}/external-lib/libsofa_c_osx_x64.a)
+    endif ()
+    # Mac CSPICE headers match includeLinux (which also carries sofa.h/sofam.h) — reuse it.
+    target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeLinux)
+    target_link_libraries(${This} ${_cspice})
+    target_link_libraries(${This} ${_sofa})
+elseif (UNIX)
     target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeLinux)
     target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.a)
     target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/libsofa_c.a)

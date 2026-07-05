@@ -38,16 +38,31 @@ jobs:
         fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-  # Job 1: Build and test C++ native library on both platforms
+  # Job 1: Build and test C++ native library on all platforms
   build-native:
     needs: get-version
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+          - os: macos-14        # Apple Silicon (arm64)
+            osx_arch: arm64
+          - os: macos-13        # Intel (x64)
+            osx_arch: x64
     runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v4
+
+    # SOFA has no prebuilt macOS archive: compile it from vendored source into the
+    # per-arch static lib the CMake APPLE branch links.
+    - name: Build SOFA (macOS)
+      if: matrix.osx_arch
+      run: |
+        cd external-lib/sofa-src
+        cc -O2 -c *.c
+        ar rcs ../libsofa_c_osx_${{ matrix.osx_arch }}.a *.o
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -59,6 +74,11 @@ jobs:
       working-directory: ${{github.workspace}}/build/IO.Astrodynamics.Tests
       run: ./IO.Astrodynamics.Tests
       if: matrix.os == 'ubuntu-latest'
+
+    - name: C++ Tests (macOS)
+      working-directory: ${{github.workspace}}/build/IO.Astrodynamics.Tests
+      run: ./IO.Astrodynamics.Tests
+      if: matrix.osx_arch
 
     - name: C++ Tests (Windows)
       working-directory: ${{github.workspace}}\build\IO.Astrodynamics.Tests\Release
@@ -73,6 +93,14 @@ jobs:
         path: build/IO.Astrodynamics/libIO.Astrodynamics.so
         retention-days: 5
       if: matrix.os == 'ubuntu-latest'
+
+    - name: Upload native library (macOS)
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-osx-${{ matrix.osx_arch }}
+        path: build/IO.Astrodynamics/libIO.Astrodynamics.dylib
+        retention-days: 5
+      if: matrix.osx_arch
 
     - name: Upload native library (Windows)
       uses: actions/upload-artifact@v4
@@ -107,11 +135,27 @@ jobs:
         name: native-windows
         path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
 
+    # Each macOS RID dylib goes to its own subfolder (both share a file name);
+    # the csproj packs them to runtimes/osx-{arm64,x64}/native/.
+    - name: Download native macOS arm64 library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-osx-arm64
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources/osx-arm64
+
+    - name: Download native macOS x64 library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-osx-x64
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources/osx-x64
+
     - name: Verify native libraries
       run: |
         ls -la IO.Astrodynamics/resources/libIO.Astrodynamics.so
         ls -la IO.Astrodynamics/resources/IO.Astrodynamics.dll
         ls -la IO.Astrodynamics/resources/IO.Astrodynamics.lib
+        ls -la IO.Astrodynamics/resources/osx-arm64/libIO.Astrodynamics.dylib
+        ls -la IO.Astrodynamics/resources/osx-x64/libIO.Astrodynamics.dylib
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -154,12 +198,12 @@ jobs:
         path: IO.Astrodynamics.Net/nupkg-staging/*.nupkg
         retention-days: 5
 
-  # Job 3: Smoke-test the NuGet package on both platforms
+  # Job 3: Smoke-test the NuGet package on all platforms
   smoke-test:
     needs: package-dotnet
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-14, macos-13]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
