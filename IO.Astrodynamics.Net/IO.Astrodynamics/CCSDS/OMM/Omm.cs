@@ -19,6 +19,11 @@ public class Omm
     private static readonly OmmReader DefaultReader = new();
     private static readonly OmmWriter DefaultWriter = new();
     private static readonly OmmValidator DefaultValidator = new();
+
+    /// <summary>
+    /// Largest revolution number at epoch representable in the 5-character TLE field.
+    /// </summary>
+    private const int MAX_TLE_REVOLUTION_NUMBER = 99999;
     /// <summary>
     /// The CCSDS OMM format version.
     /// </summary>
@@ -237,11 +242,25 @@ public class Omm
             epoch,
             Frames.Frame.TEME);
 
-        // Extract TLE parameters
-        var noradId = (ushort)tleParams.NoradCatalogId.Value;
+        // Extract TLE parameters. No narrowing cast here: the OMM fields are wider than the TLE
+        // ones, so out-of-range values are reported rather than silently wrapped.
+        var noradId = tleParams.NoradCatalogId.Value;
+        if (!OrbitalParameters.TLE.NoradCatalogNumber.IsValid(noradId))
+        {
+            throw new InvalidOperationException(
+                $"NORAD catalog ID {noradId} cannot be represented in a TLE: the 5-character field holds at most " +
+                $"{OrbitalParameters.TLE.NoradCatalogNumber.MaxValue} (Alpha-5 encoded). Keep this object in OMM form.");
+        }
+
         // Convert OMM Object ID (e.g., "1998-067A") to TLE COSPAR format (e.g., "98067A")
         var cosparId = ConvertObjectIdToCosparId(ObjectId);
-        var revolutionsAtEpoch = (ushort)(tleParams.RevolutionNumberAtEpoch ?? 0);
+        var revolutionsAtEpoch = tleParams.RevolutionNumberAtEpoch ?? 0;
+        if (revolutionsAtEpoch > MAX_TLE_REVOLUTION_NUMBER)
+        {
+            throw new InvalidOperationException(
+                $"Revolution number at epoch {revolutionsAtEpoch} cannot be represented in a TLE: " +
+                $"the 5-character field holds at most {MAX_TLE_REVOLUTION_NUMBER}.");
+        }
 
         // Parse classification
         var classification = OrbitalParameters.TLE.Classification.Unclassified;
@@ -258,7 +277,7 @@ public class Omm
         var bstar = tleParams.BStar.Value;
         var nDot = tleParams.MeanMotionDot;
         var nDDot = tleParams.MeanMotionDDot ?? 0.0;
-        var elementSetNumber = (ushort)(tleParams.ElementSetNumber ?? 999);
+        var elementSetNumber = tleParams.ElementSetNumber ?? 999;
 
         return OrbitalParameters.TLE.TLE.Create(
             keplerianElements,

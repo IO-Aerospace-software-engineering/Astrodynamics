@@ -107,6 +107,13 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - Use `TLE.ToMeanKeplerianElements()` to get mean elements for TLE creation
 - `KeplerianElements.FromOMM()` caches original mean motion to prevent precision loss on round-trip
 
+### NORAD Catalog Numbers
+
+- The TLE catalog number field is 5 characters: plain digits up to 99999, then **Alpha-5** (leading letter, `A`=10 … `Z`=33, excluding `I` and `O`) up to **339999**
+- `NoradCatalogNumber.Format` / `.Parse` handle both forms; `TLE.NoradCatalogId` exposes the decoded value
+- Identifiers are `int` throughout (`Configuration`, `TLE.Create`) — never `ushort`, the catalog passed 65535 long ago
+- Values above 339999 cannot be represented in TLE form at all; `Omm.ToTle()` throws rather than truncating. Use OMM (`NORAD_CAT_ID`, 9 digits) for those objects
+
 ### Force Model Defaults
 
 - Drag coefficient (Cd) default: **2.2** (free-molecular flow), not 0.3

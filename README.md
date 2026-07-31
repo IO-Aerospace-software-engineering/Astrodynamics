@@ -29,6 +29,7 @@ Important: The C++ layer is feature-frozen and exists only for communication wit
 - CCSDS OPM support: read/write CCSDS Orbit Parameter Messages with state vectors, Keplerian elements, covariance, maneuvers, and user-defined parameters; bidirectional OPM↔Spacecraft conversion
 - Mean elements support: OMM data import, TLE creation with precision preservation
 - Compute TLE from state vectors with SGP4-compatible fitting
+- NORAD catalog numbers beyond the 5-digit range via the Alpha-5 convention (up to 339999)
 - Frames and coordinates: ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, Equatorial/Horizontal/Planetodetic/Planetographic
 - Spacecraft configuration: clocks, fuel tanks, engines, instruments, configurable body axes
 - Impulsive maneuvers: Lambert transfers, apogee/perigee height changes, plane/apsidal alignment, phasing, combined maneuvers — all triggered via industry-standard g-function zero-crossing event detection

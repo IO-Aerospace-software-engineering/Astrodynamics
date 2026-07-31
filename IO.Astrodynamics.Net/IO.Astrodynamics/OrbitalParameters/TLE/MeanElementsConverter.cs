@@ -22,10 +22,10 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
         /// </summary>
         internal OrbitalParameters Convert(
             OrbitalParameters osculatingElements,
-            ushort noradId,
+            int noradId,
             string name,
             string cosparId,
-            ushort revAtEpoch = 0,
+            int revAtEpoch = 0,
             double bstar = 0.0001,
             int maxIter = 200)
         {
@@ -54,10 +54,10 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
         /// <exception cref="InvalidOperationException"></exception>
         private OrbitalParameters ConvertUsingEquinoctialElements(
             StateVector osculatingElements,
-            ushort noradId,
+            int noradId,
             string name,
             string cosparId,
-            ushort revAtEpoch,
+            int revAtEpoch,
             double bstar,
             double epsilon,
             int maxIterations,

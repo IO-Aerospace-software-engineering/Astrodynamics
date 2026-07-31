@@ -574,6 +574,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `Name` | Object name |
 | `Line1` | First line of TLE |
 | `Line2` | Second line of TLE |
+| `NoradCatalogId` | NORAD catalog number, Alpha-5 decoded (`T5544` → 275544) |
 | `Epoch` | Epoch of elements |
 | `ElementsType` | Always returns `OrbitalElementsType.Mean` |
 | `MeanSemiMajorAxis` | Mean semi-major axis (m) |
@@ -595,7 +596,7 @@ Two-Line Element set for Earth-orbiting objects. TLE stores **mean** orbital ele
 | `ToKeplerianElements()` | Get osculating Keplerian elements (via SGP4) |
 | `ToMeanKeplerianElements()` | Get mean Keplerian elements directly from TLE data |
 | `AtEpoch(Time epoch)` | Get propagated orbital parameters |
-| `Create(OrbitalParameters params, string name, ushort noradId, string cosparId, ...)` | Create TLE from orbital parameters |
+| `Create(OrbitalParameters params, string name, int noradId, string cosparId, ...)` | Create TLE from orbital parameters |
 
 ```csharp
 // Parse TLE
@@ -614,7 +615,7 @@ var now = new Time(2021, 1, 21, 12, 0, 0);
 var svAtTime = tle.ToStateVector(now);
 
 // Access TLE mean parameters
-Console.WriteLine($"NORAD ID: 25544");
+Console.WriteLine($"NORAD ID: {tle.NoradCatalogId}");
 Console.WriteLine($"Inclination: {tle.MeanInclination * Constants.Rad2Deg:F4}°");
 Console.WriteLine($"Eccentricity: {tle.MeanEccentricity:F7}");
 
@@ -627,7 +628,18 @@ var epoch = new Time(2024, 1, 1);
 var state = new StateVector(...);
 var config = new TLE.Configuration(99999, "MY_SAT", "24001A");
 var newTle = state.ToTLE(config);
+
+// NORAD catalog numbers above 99999 use the Alpha-5 convention (up to 339999)
+var alpha5 = new TLE.Configuration(275544, "MY_SAT", "24001A");
+var alpha5Tle = state.ToTLE(alpha5);
+Console.WriteLine(alpha5Tle.Line1.Substring(2, 5)); // T5544
+Console.WriteLine(alpha5Tle.NoradCatalogId);        // 275544
 ```
+
+> **NORAD catalog numbers.** The 5-character TLE field holds plain numbers up to 99999 and
+> Alpha-5 encoded numbers up to 339999 (`NoradCatalogNumber.MaxValue`). Values beyond that
+> cannot be represented in TLE form at all — use a CCSDS OMM, whose `NORAD_CAT_ID` accepts
+> 9 digits. Encoding and decoding are handled by `NoradCatalogNumber.Format` / `.Parse`.
 
 ---
 
@@ -661,6 +673,10 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 | `SaveToString(bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OMM to XML string |
 | `ToTle()` | Convert OMM to TLE (requires TLE parameters in data) |
 | `Validate()` | Validate OMM content and return validation result |
+
+> `ToTle()` throws `InvalidOperationException` when a field cannot be represented in TLE form
+> rather than truncating it: `NORAD_CAT_ID` above 339999, or `REV_AT_EPOCH` above 99999.
+> Such objects can only be carried in OMM form.
 
 ```csharp
 using IO.Astrodynamics.CCSDS.OMM;
