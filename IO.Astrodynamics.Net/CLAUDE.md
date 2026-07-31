@@ -146,7 +146,28 @@ Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
 // Create TLE from mean elements (preserves mean motion precision)
 var newTle = TLE.Create(meanKep, "ISS", 25544, "98067A", 2570,
     Classification.Unclassified, bstar: 0.0001027);
+
+// NORAD catalog number, decoded from Alpha-5 when applicable
+Assert.Equal(25544, tle.NoradCatalogId);
 ```
+
+**NORAD Catalog Numbers (Alpha-5)**
+
+The catalog number field is 5 characters wide on both lines. The catalog passed 65535 long ago, so
+identifiers are `int` everywhere (`Configuration.NoradId`, `TLE.Create`) — never `ushort`.
+
+| Range | Encoding | Example |
+|-------|----------|---------|
+| 0 – 99999 | Plain zero-padded digits | `25544` |
+| 100000 – 339999 | Alpha-5: leading letter, `A`=10 … `Z`=33, excluding `I` and `O` | `T5544` = 275544 |
+| Above 339999 | Not representable in TLE — use OMM (`NORAD_CAT_ID`, 9 digits) | — |
+
+- `NoradCatalogNumber.Format` / `.Parse` / `.TryParse` / `.IsValid` handle the encoding
+- `TLE.NoradCatalogId` returns the decoded numeric value
+- Alpha-5 letters count as 0 in the TLE checksum, and SGP4/SDP4 ignores the field entirely
+- Out-of-range identifiers, revolution numbers (> 99999) and element set numbers (> 9999) throw
+  instead of being silently truncated
+- The `TLE` constructor rejects lines whose catalog numbers disagree (`InvalidOperationException`)
 
 **Mean Motion Precision Preservation**
 When converting OMM → KeplerianElements → TLE, mean motion is cached to avoid precision loss from round-trip conversions:
@@ -216,6 +237,13 @@ When converting OMM → TLE → OMM, expect some precision loss:
 - Angles: ~4 decimal places (TLE format constraint)
 - BSTAR: ~6 decimal places
 - Mean motion is preserved exactly (cached internally)
+- NORAD catalog ID is preserved exactly, including Alpha-5 identifiers
+
+**TLE Capacity Limitations**
+`ToTle()` throws `InvalidOperationException` rather than truncating when an OMM field is too wide
+for its TLE counterpart:
+- `NORAD_CAT_ID` above 339999 (5-character field, Alpha-5 encoded)
+- `REV_AT_EPOCH` above 99999 (5-character field)
 
 ### CCSDS OPM (Orbit Parameter Message)
 
@@ -731,11 +759,14 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - Use `ToOsculating()` for TLE position/velocity calculations
    - Never call `ToStateVector()` directly on mean KeplerianElements
    - Use `TLE.Create()` only with mean elements (validates `ElementsType.Mean`)
+   - NORAD catalog numbers are `int`, not `ushort`; values above 99999 use Alpha-5 encoding, and
+     `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:
    - Use `Omm.LoadFromFile()` with validation for production code
    - Check `IsTleCompatible` before calling `ToTle()`
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
+   - `ToTle()` throws when `NORAD_CAT_ID` (> 339999) or `REV_AT_EPOCH` (> 99999) exceeds TLE capacity
 9. **CCSDS OPM Handling**: When working with OPM files:
    - Use `Opm.LoadFromFile()` with validation for production code
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers

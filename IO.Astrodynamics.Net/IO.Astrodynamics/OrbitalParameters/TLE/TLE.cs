@@ -18,6 +18,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 {
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
+    private const int MAX_REVOLUTIONS_AT_EPOCH = 99999;
     private KeplerianElements _meanKeplerianElements;
 
     /// <summary>
@@ -34,6 +35,15 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// Gets the name of the TLE.
     /// </summary>
     public string Name { get; }
+
+    /// <summary>
+    /// Gets the NORAD catalog number decoded from line 1.
+    /// </summary>
+    /// <remarks>
+    /// Alpha-5 identifiers (above 99999) are decoded to their numeric value, so <c>T5544</c> yields 275544.
+    /// See <see cref="NoradCatalogNumber"/>.
+    /// </remarks>
+    public int NoradCatalogId { get; }
 
     /// <summary>
     /// Gets the ballistic coefficient (drag term) in units of 1/earth radii.
@@ -161,6 +171,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         Line1 = line1;
         Line2 = line2;
         Name = name;
+        NoradCatalogId = NoradCatalogNumber.Parse(line1.Substring(2, NoradCatalogNumber.FieldLength));
 
         // Extract orbital parameters from TLE lines
         var epoch = ExtractEpochFromTLE(line1);
@@ -257,9 +268,12 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// </summary>
     /// <param name="meanElements">The orbital parameters to convert to TLE format.</param>
     /// <param name="name">The name/title of the satellite or object.</param>
-    /// <param name="noradId">The NORAD catalog number (5 digits).</param>
+    /// <param name="noradId">
+    /// The NORAD catalog number, between 0 and <see cref="NoradCatalogNumber.MaxValue"/> (339999).
+    /// Values above 99999 are encoded with the Alpha-5 convention.
+    /// </param>
     /// <param name="cosparId">The COSPAR international designator (6-8 characters).</param>
-    /// <param name="revolutionsAtEpoch">The revolution number at epoch.</param>
+    /// <param name="revolutionsAtEpoch">The revolution number at epoch (0 to 99999).</param>
     /// <param name="classification">The security classification of the object (default: Unclassified).</param>
     /// <param name="bstar">The ballistic coefficient (drag term) in units of 1/earth radii (default: 0.0001).</param>
     /// <param name="nDot">The first derivative of mean motion in revolutions/day² (default: 0.0).</param>
@@ -268,9 +282,11 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <returns>A new TLE instance constructed from the provided parameters.</returns>
     /// <exception cref="ArgumentNullException">Thrown when orbitalParams or name is null.</exception>
     /// <exception cref="ArgumentException">Thrown when cosparId is null, whitespace, or not between 6-8 characters.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when elementSetNumber exceeds the maximum allowed value.</exception>
-    public static TLE Create(OrbitalParameters meanElements, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
-        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, ushort elementSetNumber = MAX_ELEMENT_SET_NUMBER)
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when noradId, revolutionsAtEpoch or elementSetNumber falls outside the range its TLE field can represent.
+    /// </exception>
+    public static TLE Create(OrbitalParameters meanElements, string name, int noradId, string cosparId, int revolutionsAtEpoch,
+        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = MAX_ELEMENT_SET_NUMBER)
     {
         if (meanElements == null) throw new ArgumentNullException(nameof(meanElements));
         if (meanElements.ElementsType != OrbitalElementsType.Mean)
@@ -283,8 +299,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// Internal method for creating TLE from orbital parameters during the fitting process.
     /// This method does not validate ElementsType, allowing iterative convergence from osculating to mean elements.
     /// </summary>
-    internal static TLE CreateInternal(OrbitalParameters orbitalParams, string name, ushort noradId, string cosparId, ushort revolutionsAtEpoch,
-        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, ushort elementSetNumber = MAX_ELEMENT_SET_NUMBER)
+    internal static TLE CreateInternal(OrbitalParameters orbitalParams, string name, int noradId, string cosparId, int revolutionsAtEpoch,
+        Classification classification = Classification.Unclassified, double bstar = 0.0001, double nDot = 0.0, double nDDot = 0.0, int elementSetNumber = MAX_ELEMENT_SET_NUMBER)
     {
         if (orbitalParams == null) throw new ArgumentNullException(nameof(orbitalParams));
         if (name == null) throw new ArgumentNullException(nameof(name));
@@ -294,7 +310,20 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             throw new ArgumentException("COSPAR Identifier must be between 6 and 8 characters long.", nameof(cosparId));
         }
 
-        if (elementSetNumber > MAX_ELEMENT_SET_NUMBER)
+        if (!NoradCatalogNumber.IsValid(noradId))
+        {
+            throw new ArgumentOutOfRangeException(nameof(noradId),
+                $"NORAD catalog number must be between 0 and {NoradCatalogNumber.MaxValue} " +
+                $"(values above {NoradCatalogNumber.MaxNumericValue} use the Alpha-5 convention).");
+        }
+
+        if (revolutionsAtEpoch is < 0 or > MAX_REVOLUTIONS_AT_EPOCH)
+        {
+            throw new ArgumentOutOfRangeException(nameof(revolutionsAtEpoch),
+                $"Revolution number at epoch must be between 0 and {MAX_REVOLUTIONS_AT_EPOCH} to fit the 5-character TLE field.");
+        }
+
+        if (elementSetNumber is < 0 or > MAX_ELEMENT_SET_NUMBER)
         {
             throw new ArgumentOutOfRangeException(nameof(elementSetNumber), $"Element set number must be between 0 and {MAX_ELEMENT_SET_NUMBER}.");
         }
@@ -342,7 +371,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // Build line 1 - use single ToString call
         var line1Builder = new StringBuilder(69);
         line1Builder.Append("1 ")
-            .Append(noradId.ToString("00000"))
+            .Append(NoradCatalogNumber.Format(noradId))
             .Append((char)classification)
             .Append(' ')
             .Append(cosparId.PadRight(8))
@@ -364,7 +393,7 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // Build line 2
         var line2Builder = new StringBuilder(69);
         line2Builder.Append("2 ")
-            .Append(noradId.ToString("00000"))
+            .Append(NoradCatalogNumber.Format(noradId))
             .Append(' ')
             .Append(iDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
@@ -474,6 +503,23 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             throw new ArgumentException($"TLE line 1 must start with '1', got '{line1[0]}': {line1}");
         if (line2[0] != '2')
             throw new ArgumentException($"TLE line 2 must start with '2', got '{line2[0]}': {line2}");
+
+        // Validate the NORAD catalog number field (columns 3-7), which both lines must carry identically
+        var noradField1 = line1.Substring(2, NoradCatalogNumber.FieldLength);
+        var noradField2 = line2.Substring(2, NoradCatalogNumber.FieldLength);
+
+        if (!NoradCatalogNumber.TryParse(noradField1, out int noradId1))
+            throw new ArgumentException($"Invalid NORAD catalog number '{noradField1}' in TLE line 1: {line1}");
+        if (!NoradCatalogNumber.TryParse(noradField2, out int noradId2))
+            throw new ArgumentException($"Invalid NORAD catalog number '{noradField2}' in TLE line 2: {line2}");
+        if (noradId1 != noradId2)
+        {
+            // Reported as an invalid state rather than an invalid argument, consistently with the
+            // checksum validation below: each line is well-formed, only their pairing is wrong.
+            throw new InvalidOperationException(
+                $"NORAD catalog numbers differ between TLE lines: {noradId1} in line 1, {noradId2} in line 2. " +
+                "The two lines do not belong to the same object.");
+        }
 
         // Validate checksums
         ValidateLineChecksum(line1, 1);
@@ -837,9 +883,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
             MeanArgumentOfPeriapsis * Constants.Rad2Deg,
             MeanMeanAnomaly * Constants.Rad2Deg);
 
-        // Extract NORAD catalog ID from line 1 positions 2-6
-        var noradCatIdStr = Line1.Substring(2, 5).Trim();
-        int? noradCatId = int.TryParse(noradCatIdStr, CultureInfo.InvariantCulture, out var id) ? id : null;
+        // NORAD catalog ID, decoded from Alpha-5 when applicable (validated at construction)
+        int? noradCatId = NoradCatalogId;
 
         // Extract element set number from line 1 positions 64-67
         var elementSetNoStr = Line1.Substring(64, 4).Trim();
