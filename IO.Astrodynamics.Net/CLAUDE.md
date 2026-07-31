@@ -143,12 +143,8 @@ Assert.Equal(OrbitalElementsType.Osculating, osculating.ElementsType);
 var meanKep = tle.ToMeanKeplerianElements();
 Assert.Equal(OrbitalElementsType.Mean, meanKep.ElementsType);
 
-// Create TLE from mean elements (preserves mean motion precision)
-var newTle = TLE.Create(meanKep, "ISS", 25544, "98067A", 2570,
-    Classification.Unclassified, bstar: 0.0001027);
-
 // NORAD catalog number, decoded from Alpha-5 when applicable
-Assert.Equal(25544, tle.NoradCatalogId);
+Assert.Equal(25544, newTle.NoradCatalogId);
 ```
 
 **NORAD Catalog Numbers (Alpha-5)**
