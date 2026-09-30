@@ -14,7 +14,7 @@
         <Authors>Sylvain Guillet</Authors>
         <Description>This CLI allows end user to exploit IO.Astrodynamics framework </Description>
         <Copyright>Sylvain Guillet</Copyright>
-        <PackageProjectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics.Net</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics</PackageProjectUrl>
         <PackageIcon>io-only-dark-trans.png</PackageIcon>
         <PackageTags>astrodynamics aerospace orbitalmechanics ephemeris physics</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
