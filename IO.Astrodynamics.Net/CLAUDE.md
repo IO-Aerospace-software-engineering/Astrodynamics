@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-IO.Astrodynamics.Net is a .NET 8/10 astrodynamics framework for orbital mechanics calculations, ephemeris computations, and space mission planning. It consists of:
+IO.Astrodynamics.Net is a .NET 10 astrodynamics framework for orbital mechanics calculations, ephemeris computations, and space mission planning. It consists of:
 
 - **IO.Astrodynamics**: Core framework library with orbital mechanics algorithms
 - **IO.Astrodynamics.CLI**: Command-line interface tool (`astro`) for astrodynamics operations

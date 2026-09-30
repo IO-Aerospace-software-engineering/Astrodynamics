@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-IO.Astrodynamics is a .NET 8/10 astrodynamics toolkit with a thin C++ interop layer for NASA/JPL NAIF CSPICE.
+IO.Astrodynamics is a .NET 10 astrodynamics toolkit with a thin C++ interop layer for NASA/JPL NAIF CSPICE.
 
 **Critical**: The C++ layer (`IO.Astrodynamics/`) is **feature-frozen**. All new development targets the .NET projects in `IO.Astrodynamics.Net/`.
 

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-IO.Astrodynamics.Net is a .NET 8/10 astrodynamics framework for orbital mechanics calculations, ephemeris computations, and space mission planning. Built on NASA's CSPICE toolkit, it provides high-precision calculations for spacecraft trajectory analysis, celestial body ephemerides, and mission planning.
+IO.Astrodynamics.Net is a .NET 10 astrodynamics framework for orbital mechanics calculations, ephemeris computations, and space mission planning. Built on NASA's CSPICE toolkit, it provides high-precision calculations for spacecraft trajectory analysis, celestial body ephemerides, and mission planning.
 
 ### What IO.Astrodynamics Does
 
@@ -2876,11 +2876,11 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 ## Version Information
 
-- NuGet Package: 8.5.0-preview
-- CLI Tool: 0.8.5.0-preview
-- Framework: .NET 8.0 / .NET 10.0
+- NuGet Package: 9.1.1
+- CLI Tool: 9.1.1
+- Framework: .NET 10.0 (`net10.0` only)
 - SPICE Toolkit: CSPICE N0067
-- License: LGPL-2.1
+- License: LGPL-3.0-or-later
 
 ### Breaking Changes in 8.5.0
 
