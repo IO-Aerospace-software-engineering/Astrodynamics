@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <LangVersion>12</LangVersion>
+        <IsPackable>false</IsPackable>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>IO.Astrodynamics.ConformanceRunner</AssemblyName>
+        <RootNamespace>IO.Astrodynamics.ConformanceRunner</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="JsonSchema.Net" Version="7.3.0" />
+      <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\IO.Astrodynamics\IO.Astrodynamics.csproj" />
+    </ItemGroup>
+
+    <!-- SPICE kernels and geopotential models are linked from the test project:
+         the runner needs the same data set, there is no reason to duplicate 51 MB. -->
+    <ItemGroup>
+        <Content Include="..\IO.Astrodynamics.Tests\Data\SolarSystem\**\*">
+            <Link>Data\SolarSystem\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+</Project>

@@ -3,9 +3,9 @@
     "runner_name": "IO.Astrodynamics.ConformanceRunner",
     "runner_version": "1.0.0",
     "framework": "IO.Astrodynamics.Net",
-    "framework_version": "1.0.0.0",
-    "run_timestamp": "2026-02-24T17:06:21.2324288Z",
-    "conformance_tests_commit": "f2b63b52089592efec7b6dabd18ab4a133c0b385"
+    "framework_version": "10.0.0.0",
+    "run_timestamp": "2026-10-01T20:54:03.5430381Z",
+    "conformance_tests_commit": "6be6fa1995c87c7fae5bf6615e4e2f4fdaaf1e98"
   },
   "results": [
     {
@@ -14,27 +14,179 @@
       "deltas": {
         "penumbra_entry": {
           "max_abs_delta": 2.617102026939392,
-          "max_rel_delta": 3.163662777925987E-09
+          "max_rel_delta": 3.163662777925987E-09,
+          "passed": true
         },
         "umbra_entry": {
           "max_abs_delta": 2.6121020317077637,
-          "max_rel_delta": 3.1576185380590614E-09
+          "max_rel_delta": 3.1576185380590614E-09,
+          "passed": true
         },
         "umbra_exit": {
           "max_abs_delta": 0.1639261245727539,
-          "max_rel_delta": 1.981602831995986E-10
+          "max_rel_delta": 1.981602831995986E-10,
+          "passed": true
         },
         "penumbra_exit": {
           "max_abs_delta": 0.3847806453704834,
-          "max_rel_delta": 4.651378234799259E-10
+          "max_rel_delta": 4.651378234799259E-10,
+          "passed": true
         },
         "penumbra_duration_s": {
           "max_abs_delta": 0.21385450000021677,
-          "max_rel_delta": 0.011429957242128102
+          "max_rel_delta": 0.011429957242128102,
+          "passed": true
         },
         "umbra_duration_s": {
           "max_abs_delta": 2.4461762000000817,
-          "max_rel_delta": 0.001185162887596939
+          "max_rel_delta": 0.001185162887596939,
+          "passed": true
+        }
+      }
+    },
+    {
+      "case_id": "geosynchronous_equatorial_001",
+      "status": "PASS",
+      "deltas": {
+        "semi_major_axis_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 42164.171960633015
+        },
+        "eccentricity": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "inclination_deg": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "raan_deg": {
+          "max_abs_delta": 1.4210854715202004E-14,
+          "max_rel_delta": 1.5785518003345181E-16,
+          "passed": true
+        },
+        "argp_deg": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "mean_anomaly_deg": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "position_x_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": -7546.189968725609
+        },
+        "position_y_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 41483.39650498019
+        },
+        "position_z_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 15.11596288274515
+        },
+        "velocity_x_km_s": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": -3.025010960933871
+        },
+        "velocity_y_km_s": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": -0.5502779692816377
+        },
+        "velocity_z_km_s": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 0.006074305818773523
+        }
+      }
+    },
+    {
+      "case_id": "geosynchronous_inclined_002",
+      "status": "PASS",
+      "deltas": {
+        "semi_major_axis_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 42164.171960633015
+        },
+        "eccentricity": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "inclination_deg": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "raan_deg": {
+          "max_abs_delta": 7.105427357601002E-15,
+          "max_rel_delta": 1.2820362106946098E-16,
+          "passed": true
+        },
+        "argp_deg": {
+          "max_abs_delta": 1.4210854715202004E-14,
+          "max_rel_delta": 1.5812794824819376E-16,
+          "passed": true
+        },
+        "mean_anomaly_deg": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "position_x_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": -29981.986058158498
+        },
+        "position_y_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 20782.218755440514
+        },
+        "position_z_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 21142.310487154362
+        },
+        "velocity_x_km_s": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": -1.7499012606609816
+        },
+        "velocity_y_km_s": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": -2.528115359674478
+        },
+        "velocity_z_km_s": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 0.0035157578211616404
         }
       }
     },
@@ -43,12 +195,14 @@
       "status": "PASS",
       "deltas": {
         "attitude_quaternion": {
-          "max_abs_delta": 7.770501657310781E-05,
-          "max_rel_delta": 7.770501657310781E-05
+          "max_abs_delta": 7.77070511095644E-05,
+          "max_rel_delta": 7.77070511095644E-05,
+          "passed": true
         },
         "target_in_fov": {
           "max_abs_delta": 0,
-          "max_rel_delta": 0
+          "max_rel_delta": 0,
+          "passed": true
         }
       }
     },
@@ -57,28 +211,40 @@
       "status": "PASS",
       "deltas": {
         "final_x_km": {
-          "max_abs_delta": 0.11222914568043052,
-          "max_rel_delta": 2.1270971759061217E-05
+          "max_abs_delta": 0.005176759185815172,
+          "max_rel_delta": 9.81159553316782E-07,
+          "passed": true,
+          "golden_value": -5276.16448141924
         },
         "final_y_km": {
-          "max_abs_delta": 0.14419313423604763,
-          "max_rel_delta": 3.382202172703148E-05
+          "max_abs_delta": 0.006679301009171468,
+          "max_rel_delta": 1.566700557904267E-06,
+          "passed": true,
+          "golden_value": 4263.291396350933
         },
         "final_z_km": {
-          "max_abs_delta": 0.22958222417730667,
-          "max_rel_delta": 0.0005674876818618389
+          "max_abs_delta": 0.010047777302418126,
+          "max_rel_delta": 2.483637341543311E-05,
+          "passed": true,
+          "golden_value": -404.558956106471
         },
         "final_vx_km_s": {
-          "max_abs_delta": 0.0002491266242508061,
-          "max_rel_delta": 9.14371417524283E-05
+          "max_abs_delta": 1.1583135650639065E-05,
+          "max_rel_delta": 4.251367430559413E-06,
+          "passed": true,
+          "golden_value": -2.724567057501992
         },
         "final_vy_km_s": {
-          "max_abs_delta": 0.00019244124662209927,
-          "max_rel_delta": 4.892059149858022E-05
+          "max_abs_delta": 9.135478226340865E-06,
+          "max_rel_delta": 2.3223347712593422E-06,
+          "passed": true,
+          "golden_value": -3.933747338841648
         },
         "final_vz_km_s": {
-          "max_abs_delta": 2.7737814232153823E-05,
-          "max_rel_delta": 4.6354633308702074E-06
+          "max_abs_delta": 1.291604876385577E-06,
+          "max_rel_delta": 2.1584927321050804E-07,
+          "passed": true,
+          "golden_value": -5.983827775625323
         }
       }
     },
@@ -87,28 +253,40 @@
       "status": "PASS",
       "deltas": {
         "final_x_km": {
-          "max_abs_delta": 0.007637272145075258,
-          "max_rel_delta": 3.4659646944072897E-07
+          "max_abs_delta": 0.006863282975245966,
+          "max_rel_delta": 3.114711120418602E-07,
+          "passed": true,
+          "golden_value": 22035.05464841816
         },
         "final_y_km": {
-          "max_abs_delta": 0.004230191603710409,
-          "max_rel_delta": 1.1616594688427518E-07
+          "max_abs_delta": 0.004143679878325202,
+          "max_rel_delta": 1.1379023499284451E-07,
+          "passed": true,
+          "golden_value": 36415.07444453181
         },
         "final_z_km": {
-          "max_abs_delta": 0.0001484393755504243,
-          "max_rel_delta": 3.881560484060322E-07
+          "max_abs_delta": 0.00013292273632714569,
+          "max_rel_delta": 3.4758138724812453E-07,
+          "passed": true,
+          "golden_value": -382.4219052105268
         },
         "final_vx_km_s": {
-          "max_abs_delta": 3.4200221721292223E-07,
-          "max_rel_delta": 1.3063949798105848E-07
+          "max_abs_delta": 2.9697950898466274E-07,
+          "max_rel_delta": 1.1344152760349902E-07,
+          "passed": true,
+          "golden_value": -2.61790823218342
         },
         "final_vy_km_s": {
-          "max_abs_delta": 5.195297738680438E-07,
-          "max_rel_delta": 3.2783273457944265E-07
+          "max_abs_delta": 4.899818555337276E-07,
+          "max_rel_delta": 3.0918746080321967E-07,
+          "passed": true,
+          "golden_value": 1.584740384557747
         },
         "final_vz_km_s": {
-          "max_abs_delta": 5.885760101520532E-09,
-          "max_rel_delta": 1.1482026245519651E-07
+          "max_abs_delta": 5.07977659935932E-09,
+          "max_rel_delta": 9.909701929603326E-08,
+          "passed": true,
+          "golden_value": 0.05126063967862107
         }
       }
     },
@@ -117,37 +295,883 @@
       "status": "PASS",
       "deltas": {
         "final_x_km": {
-          "max_abs_delta": 0.070543226732525,
-          "max_rel_delta": 0.00011590465359418414
+          "max_abs_delta": 0.0010345058959728703,
+          "max_rel_delta": 1.6997244536106977E-06,
+          "passed": true,
+          "golden_value": -608.6315307021005
         },
         "final_y_km": {
-          "max_abs_delta": 0.2365531596180972,
-          "max_rel_delta": 0.0001433052689873193
+          "max_abs_delta": 0.0033330570104226354,
+          "max_rel_delta": 2.019185168356316E-06,
+          "passed": true,
+          "golden_value": 1650.694083265209
         },
         "final_z_km": {
-          "max_abs_delta": 0.07633722084574401,
-          "max_rel_delta": 1.1083128084714707E-05
+          "max_abs_delta": 0.0007061314099701121,
+          "max_rel_delta": 1.025206940288457E-07,
+          "passed": true,
+          "golden_value": -6887.696349104228
         },
         "final_vx_km_s": {
-          "max_abs_delta": 3.0741269795075965E-05,
-          "max_rel_delta": 1.5483542765873672E-05
+          "max_abs_delta": 8.33396218036242E-07,
+          "max_rel_delta": 4.197590427754042E-07,
+          "passed": true,
+          "golden_value": 1.985415757873638
         },
         "final_vy_km_s": {
-          "max_abs_delta": 3.8632119697901146E-05,
-          "max_rel_delta": 5.485637105181787E-06
+          "max_abs_delta": 9.456561258502916E-07,
+          "max_rel_delta": 1.3428013718306664E-07,
+          "passed": true,
+          "golden_value": 7.042412568889923
         },
         "final_vz_km_s": {
-          "max_abs_delta": 0.00026994444632122416,
-          "max_rel_delta": 0.00017808007581628319
+          "max_abs_delta": 3.6239625447187507E-06,
+          "max_rel_delta": 2.3906975435639667E-06,
+          "passed": true,
+          "golden_value": 1.515859902259437
+        }
+      }
+    },
+    {
+      "case_id": "geosync_equatorial_twobody_004",
+      "status": "PASS",
+      "deltas": {
+        "final_x_km": {
+          "max_abs_delta": 1.382431946694851E-10,
+          "max_rel_delta": 3.27868867503643E-15,
+          "passed": true,
+          "golden_value": 42164.17243944305
+        },
+        "final_y_km": {
+          "max_abs_delta": 8.14775632461533E-05,
+          "max_rel_delta": "Infinity",
+          "passed": true,
+          "golden_value": 0
+        },
+        "final_z_km": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 0
+        },
+        "final_vx_km_s": {
+          "max_abs_delta": 5.941435547995866E-09,
+          "max_rel_delta": "Infinity",
+          "passed": true,
+          "golden_value": 0
+        },
+        "final_vy_km_s": {
+          "max_abs_delta": 2.220446049250313E-15,
+          "max_rel_delta": 7.221761329840402E-16,
+          "passed": true,
+          "golden_value": 3.0746599725961645
+        },
+        "final_vz_km_s": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true,
+          "golden_value": 0
+        }
+      }
+    },
+    {
+      "case_id": "geosync_inclined30_twobody_005",
+      "status": "PASS",
+      "deltas": {
+        "final_x_km": {
+          "max_abs_delta": 2.255546860396862E-10,
+          "max_rel_delta": 5.349439417164702E-15,
+          "passed": true,
+          "golden_value": 42164.17243944305
+        },
+        "final_y_km": {
+          "max_abs_delta": 7.056183760869317E-05,
+          "max_rel_delta": "Infinity",
+          "passed": true,
+          "golden_value": 0
+        },
+        "final_z_km": {
+          "max_abs_delta": 4.073896416230127E-05,
+          "max_rel_delta": "Infinity",
+          "passed": true,
+          "golden_value": 0
+        },
+        "final_vx_km_s": {
+          "max_abs_delta": 5.941458531388832E-09,
+          "max_rel_delta": "Infinity",
+          "passed": true,
+          "golden_value": 0
+        },
+        "final_vy_km_s": {
+          "max_abs_delta": 9.769962616701378E-15,
+          "max_rel_delta": 3.669147546069795E-15,
+          "passed": true,
+          "golden_value": 2.6627336442674445
+        },
+        "final_vz_km_s": {
+          "max_abs_delta": 9.769962616701378E-15,
+          "max_rel_delta": 6.355149970259553E-15,
+          "passed": true,
+          "golden_value": 1.5373299862980823
+        }
+      }
+    },
+    {
+      "case_id": "tracking_data_001",
+      "status": "PASS",
+      "deltas": {
+        "arc_0_rise": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_0_fall": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_1_rise": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_1_fall": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_2_rise": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_2_fall": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_3_rise": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_3_fall": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_4_rise": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_4_fall": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_5_rise": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_5_fall": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "arc_count": {
+          "max_abs_delta": 0,
+          "max_rel_delta": 0,
+          "passed": true
+        },
+        "range_mean_km": {
+          "max_abs_delta": 0.0012235294561833143,
+          "max_rel_delta": 3.365889535069404E-09,
+          "passed": true
+        },
+        "range_median_km": {
+          "max_abs_delta": 0.0005951448110863566,
+          "max_rel_delta": 1.6380730971428583E-09,
+          "passed": true
+        },
+        "range_min_km": {
+          "max_abs_delta": 0.0023150634951889515,
+          "max_rel_delta": 6.413994925341244E-09,
+          "passed": true
+        },
+        "range_max_km": {
+          "max_abs_delta": 0.0009015724062919617,
+          "max_rel_delta": 2.4475373653782533E-09,
+          "passed": true
+        },
+        "doppler_mean_km_s": {
+          "max_abs_delta": 0.00015946306066837862,
+          "max_rel_delta": 0.0026954084729531045,
+          "passed": true
+        },
+        "doppler_median_km_s": {
+          "max_abs_delta": 5.096452467540091E-05,
+          "max_rel_delta": 0.0007261558856064191,
+          "passed": true
+        },
+        "doppler_min_km_s": {
+          "max_abs_delta": 0.0002463748986489822,
+          "max_rel_delta": 0.00013224177948206942,
+          "passed": true
+        },
+        "doppler_max_km_s": {
+          "max_abs_delta": 0.0004659161353464114,
+          "max_rel_delta": 0.00024888921760273945,
+          "passed": true
         }
       }
     }
   ],
   "summary": {
-    "total": 5,
-    "passed": 5,
+    "total": 10,
+    "passed": 10,
     "failed": 0,
     "skipped": 0,
-    "errors": 0
+    "errors": 0,
+    "accuracy_by_metric": [
+      {
+        "metric": "arc_0_fall",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_0_rise",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_1_fall",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_1_rise",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_2_fall",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_2_rise",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_3_fall",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_3_rise",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_4_fall",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_4_rise",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_5_fall",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_5_rise",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "arc_count",
+        "unit": "-",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "argp_deg",
+        "unit": "deg",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 1.4210854715202004E-14,
+        "avg_abs_delta": 7.105427357601002E-15,
+        "min_rel_delta": 0,
+        "max_rel_delta": 1.5812794824819376E-16,
+        "avg_rel_delta": 7.906397412409688E-17
+      },
+      {
+        "metric": "attitude_quaternion",
+        "unit": "rad",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 7.77070511095644E-05,
+        "max_abs_delta": 7.77070511095644E-05,
+        "avg_abs_delta": 7.77070511095644E-05,
+        "min_rel_delta": 7.77070511095644E-05,
+        "max_rel_delta": 7.77070511095644E-05,
+        "avg_rel_delta": 7.77070511095644E-05
+      },
+      {
+        "metric": "doppler_max_km_s",
+        "unit": "km/s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.0004659161353464114,
+        "max_abs_delta": 0.0004659161353464114,
+        "avg_abs_delta": 0.0004659161353464114,
+        "min_rel_delta": 0.00024888921760273945,
+        "max_rel_delta": 0.00024888921760273945,
+        "avg_rel_delta": 0.00024888921760273945
+      },
+      {
+        "metric": "doppler_mean_km_s",
+        "unit": "km/s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.00015946306066837862,
+        "max_abs_delta": 0.00015946306066837862,
+        "avg_abs_delta": 0.00015946306066837862,
+        "min_rel_delta": 0.0026954084729531045,
+        "max_rel_delta": 0.0026954084729531045,
+        "avg_rel_delta": 0.0026954084729531045
+      },
+      {
+        "metric": "doppler_median_km_s",
+        "unit": "km/s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 5.096452467540091E-05,
+        "max_abs_delta": 5.096452467540091E-05,
+        "avg_abs_delta": 5.096452467540091E-05,
+        "min_rel_delta": 0.0007261558856064191,
+        "max_rel_delta": 0.0007261558856064191,
+        "avg_rel_delta": 0.0007261558856064191
+      },
+      {
+        "metric": "doppler_min_km_s",
+        "unit": "km/s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.0002463748986489822,
+        "max_abs_delta": 0.0002463748986489822,
+        "avg_abs_delta": 0.0002463748986489822,
+        "min_rel_delta": 0.00013224177948206942,
+        "max_rel_delta": 0.00013224177948206942,
+        "avg_rel_delta": 0.00013224177948206942
+      },
+      {
+        "metric": "eccentricity",
+        "unit": "-",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "final_vx_km_s",
+        "unit": "m/s",
+        "cases_evaluated": 5,
+        "pass_count": 5,
+        "fail_count": 0,
+        "min_abs_delta": 5.941435547995866E-06,
+        "max_abs_delta": 0.011583135650639065,
+        "avg_abs_delta": 0.0025450788543478708,
+        "min_rel_delta": 1.1344152760349902E-07,
+        "max_rel_delta": 4.251367430559413E-06,
+        "avg_rel_delta": 1.5948560003127722E-06
+      },
+      {
+        "metric": "final_vy_km_s",
+        "unit": "m/s",
+        "cases_evaluated": 5,
+        "pass_count": 5,
+        "fail_count": 0,
+        "min_abs_delta": 2.220446049250313E-12,
+        "max_abs_delta": 0.009135478226340865,
+        "avg_abs_delta": 0.0021142232439430586,
+        "min_rel_delta": 7.221761329840402E-16,
+        "max_rel_delta": 2.3223347712593422E-06,
+        "avg_rel_delta": 5.531604747273904E-07
+      },
+      {
+        "metric": "final_vz_km_s",
+        "unit": "m/s",
+        "cases_evaluated": 5,
+        "pass_count": 5,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0.0036239625447187507,
+        "avg_abs_delta": 0.00098412944149473,
+        "min_rel_delta": 0,
+        "max_rel_delta": 2.3906975435639667E-06,
+        "avg_rel_delta": 5.411287684851316E-07
+      },
+      {
+        "metric": "final_x_km",
+        "unit": "m",
+        "cases_evaluated": 5,
+        "pass_count": 5,
+        "fail_count": 0,
+        "min_abs_delta": 1.382431946694851E-07,
+        "max_abs_delta": 6.863282975245966,
+        "avg_abs_delta": 2.6149096841663777,
+        "min_rel_delta": 3.27868867503643E-15,
+        "max_rel_delta": 1.6997244536106977E-06,
+        "avg_rel_delta": 5.984710255194937E-07
+      },
+      {
+        "metric": "final_y_km",
+        "unit": "m",
+        "cases_evaluated": 5,
+        "pass_count": 5,
+        "fail_count": 0,
+        "min_abs_delta": 0.07056183760869317,
+        "max_abs_delta": 6.679301009171468,
+        "avg_abs_delta": 2.8616154597548302,
+        "min_rel_delta": 1.1379023499284451E-07,
+        "max_rel_delta": 2.019185168356316E-06,
+        "avg_rel_delta": 1.2332253204178092E-06
+      },
+      {
+        "metric": "final_z_km",
+        "unit": "m",
+        "cases_evaluated": 5,
+        "pass_count": 5,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 10.047777302418126,
+        "avg_abs_delta": 2.185514082575537,
+        "min_rel_delta": 0,
+        "max_rel_delta": 2.483637341543311E-05,
+        "avg_rel_delta": 6.32161887417752E-06
+      },
+      {
+        "metric": "inclination_deg",
+        "unit": "deg",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "mean_anomaly_deg",
+        "unit": "deg",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "penumbra_duration_s",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.21385450000021677,
+        "max_abs_delta": 0.21385450000021677,
+        "avg_abs_delta": 0.21385450000021677,
+        "min_rel_delta": 0.011429957242128102,
+        "max_rel_delta": 0.011429957242128102,
+        "avg_rel_delta": 0.011429957242128102
+      },
+      {
+        "metric": "penumbra_entry",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 2.617102026939392,
+        "max_abs_delta": 2.617102026939392,
+        "avg_abs_delta": 2.617102026939392,
+        "min_rel_delta": 3.163662777925987E-09,
+        "max_rel_delta": 3.163662777925987E-09,
+        "avg_rel_delta": 3.163662777925987E-09
+      },
+      {
+        "metric": "penumbra_exit",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.3847806453704834,
+        "max_abs_delta": 0.3847806453704834,
+        "avg_abs_delta": 0.3847806453704834,
+        "min_rel_delta": 4.651378234799259E-10,
+        "max_rel_delta": 4.651378234799259E-10,
+        "avg_rel_delta": 4.651378234799259E-10
+      },
+      {
+        "metric": "position_x_km",
+        "unit": "m",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "position_y_km",
+        "unit": "m",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "position_z_km",
+        "unit": "m",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "raan_deg",
+        "unit": "deg",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 7.105427357601002E-15,
+        "max_abs_delta": 1.4210854715202004E-14,
+        "avg_abs_delta": 1.0658141036401503E-14,
+        "min_rel_delta": 1.2820362106946098E-16,
+        "max_rel_delta": 1.5785518003345181E-16,
+        "avg_rel_delta": 1.430294005514564E-16
+      },
+      {
+        "metric": "range_max_km",
+        "unit": "km",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.0009015724062919617,
+        "max_abs_delta": 0.0009015724062919617,
+        "avg_abs_delta": 0.0009015724062919617,
+        "min_rel_delta": 2.4475373653782533E-09,
+        "max_rel_delta": 2.4475373653782533E-09,
+        "avg_rel_delta": 2.4475373653782533E-09
+      },
+      {
+        "metric": "range_mean_km",
+        "unit": "km",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.0012235294561833143,
+        "max_abs_delta": 0.0012235294561833143,
+        "avg_abs_delta": 0.0012235294561833143,
+        "min_rel_delta": 3.365889535069404E-09,
+        "max_rel_delta": 3.365889535069404E-09,
+        "avg_rel_delta": 3.365889535069404E-09
+      },
+      {
+        "metric": "range_median_km",
+        "unit": "km",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.0005951448110863566,
+        "max_abs_delta": 0.0005951448110863566,
+        "avg_abs_delta": 0.0005951448110863566,
+        "min_rel_delta": 1.6380730971428583E-09,
+        "max_rel_delta": 1.6380730971428583E-09,
+        "avg_rel_delta": 1.6380730971428583E-09
+      },
+      {
+        "metric": "range_min_km",
+        "unit": "km",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.0023150634951889515,
+        "max_abs_delta": 0.0023150634951889515,
+        "avg_abs_delta": 0.0023150634951889515,
+        "min_rel_delta": 6.413994925341244E-09,
+        "max_rel_delta": 6.413994925341244E-09,
+        "avg_rel_delta": 6.413994925341244E-09
+      },
+      {
+        "metric": "semi_major_axis_km",
+        "unit": "m",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "target_in_fov",
+        "unit": "-",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "umbra_duration_s",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 2.4461762000000817,
+        "max_abs_delta": 2.4461762000000817,
+        "avg_abs_delta": 2.4461762000000817,
+        "min_rel_delta": 0.001185162887596939,
+        "max_rel_delta": 0.001185162887596939,
+        "avg_rel_delta": 0.001185162887596939
+      },
+      {
+        "metric": "umbra_entry",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 2.6121020317077637,
+        "max_abs_delta": 2.6121020317077637,
+        "avg_abs_delta": 2.6121020317077637,
+        "min_rel_delta": 3.1576185380590614E-09,
+        "max_rel_delta": 3.1576185380590614E-09,
+        "avg_rel_delta": 3.1576185380590614E-09
+      },
+      {
+        "metric": "umbra_exit",
+        "unit": "s",
+        "cases_evaluated": 1,
+        "pass_count": 1,
+        "fail_count": 0,
+        "min_abs_delta": 0.1639261245727539,
+        "max_abs_delta": 0.1639261245727539,
+        "avg_abs_delta": 0.1639261245727539,
+        "min_rel_delta": 1.981602831995986E-10,
+        "max_rel_delta": 1.981602831995986E-10,
+        "avg_rel_delta": 1.981602831995986E-10
+      },
+      {
+        "metric": "velocity_x_km_s",
+        "unit": "m/s",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "velocity_y_km_s",
+        "unit": "m/s",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "velocity_z_km_s",
+        "unit": "m/s",
+        "cases_evaluated": 2,
+        "pass_count": 2,
+        "fail_count": 0,
+        "min_abs_delta": 0,
+        "max_abs_delta": 0,
+        "avg_abs_delta": 0,
+        "min_rel_delta": 0,
+        "max_rel_delta": 0,
+        "avg_rel_delta": 0
+      },
+      {
+        "metric": "position_magnitude_km",
+        "unit": "m",
+        "cases_evaluated": 5,
+        "pass_count": 5,
+        "fail_count": 0,
+        "min_abs_delta": 0.08147756324627058,
+        "max_abs_delta": 13.128965167065894,
+        "avg_abs_delta": 4.974161201403626,
+        "min_rel_delta": 1.9323885311229606E-09,
+        "max_rel_delta": 1.932041908594518E-06,
+        "avg_rel_delta": 5.250317705927245E-07
+      },
+      {
+        "metric": "velocity_magnitude_km_s",
+        "unit": "m/s",
+        "cases_evaluated": 5,
+        "pass_count": 5,
+        "fail_count": 0,
+        "min_abs_delta": 5.941435547996282E-06,
+        "max_abs_delta": 0.014808586599731817,
+        "avg_abs_delta": 0.0038460727513674976,
+        "min_rel_delta": 1.9323878415665863E-09,
+        "max_rel_delta": 1.9327709797699528E-06,
+        "avg_rel_delta": 5.27466035947676E-07
+      }
+    ]
   }
 }

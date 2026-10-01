@@ -12,12 +12,12 @@
 
         <!-- NuGet package metadata (replaces IO.Astrodynamics.nuspec) -->
         <PackageId>IO.Astrodynamics</PackageId>
-        <Version>9.1.1</Version>
+        <Version>10.0.0</Version>
         <Authors>Sylvain Guillet</Authors>
         <Copyright>Sylvain Guillet</Copyright>
         <Title>IO Astrodynamics framework</Title>
-        <Description>This astrodynamics framework provides tools to manipulate orbital parameters, run spacecraft propagation, evaluate impulsive maneuvers, generate fuel balance, compute spacecraft attitudes (prograde, nadir, normal, TRIAD with orbital/celestial targets), ...</Description>
-        <PackageTags>astrodynamics aerospace orbital mechanics spice space physics attitude</PackageTags>
+        <Description>This astrodynamics framework provides tools to manipulate orbital parameters, run spacecraft propagation, evaluate impulsive maneuvers, generate fuel balance, compute spacecraft attitudes (prograde, nadir, normal, TRIAD with orbital/celestial targets), propagate with the adaptive Prince-Dormand RK7(8) integrator and a fluent propagator builder, model albedo and thermal radiation pressure, work in the CIO-based GCRF/CIRS/TIRS frames, run batch and Monte Carlo dispersion analyses, assess conjunctions and collision probability, read and write CCSDS OMM/OPM/CDM messages, ...</Description>
+        <PackageTags>astrodynamics aerospace orbital mechanics spice space physics attitude ssa conjunction cdm collision-probability monte-carlo rk78</PackageTags>
         <PackageProjectUrl>https://github.com/IO-Aerospace-software-engineering/Astrodynamics</PackageProjectUrl>
         <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
         <PackageIcon>resources\io-only-dark-trans.png</PackageIcon>
@@ -27,7 +27,6 @@
     <ItemGroup>
         <InternalsVisibleTo Include="IO.Astrodynamics.Tests" />
         <InternalsVisibleTo Include="IO.Astrodynamics.CLI.Tests" />
-        <InternalsVisibleTo Include="IO.Astrodynamics.Pro" />
     </ItemGroup>
     <PropertyGroup>
         <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>

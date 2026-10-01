@@ -69,13 +69,16 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.OrbitalParameters.TLE`: Two-Line Element sets and OMM support
 - `IO.Astrodynamics.CCSDS.OMM`: CCSDS Orbit Mean-elements Message support (read/write/validate/convert)
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert)
+- `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
-- `IO.Astrodynamics.Frames`: Reference frames and transformations
+- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU 2006/2000A chain (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`) and the `Frames` static accessor
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution, AcceptedStep
-- `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet)
-- `IO.Astrodynamics.Propagator.Forces`: Force models (gravitational, atmospheric drag, solar radiation pressure; Pro adds albedo and thermal radiation pressure)
+- `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet), RK78Integrator (adaptive Prince-Dormand 7(8))
+- `IO.Astrodynamics.Propagator.Forces`: Force models (gravitational, atmospheric drag, solar radiation pressure, albedo and thermal radiation pressure)
 - `IO.Astrodynamics.Propagator.Events`: IEventDetector, ManeuverEventDetector, CrossingDirection
+- `IO.Astrodynamics.Propagator.MonteCarlo`: MonteCarloPropagator, StateSampler, StatisticsAggregator, per-epoch statistics and RSS percentiles
+- `IO.Astrodynamics.SSA`: ConjunctionAssessment (Screen, Analyze, AnalyzeAll, EvaluateAvoidance), Foster 2D collision probability, maximum probability, encounter quality flags
 - `IO.Astrodynamics.Atmosphere`: Atmospheric density, temperature, and pressure models for Earth and Mars
 - `IO.Astrodynamics.Math`: Vectors, matrices, quaternions, Legendre functions
 - `IO.Astrodynamics.Physics`: Geopotential model reader, coefficients
@@ -537,7 +540,7 @@ public interface IIntegrator
 }
 ```
 
-VVIntegrator is the community default (fixed-step, symplectic). Both VV and Pro RK78 store `AcceptedStep` for Hermite dense output. Event detection at step boundaries (VV) or with sub-step bisection refinement (RK78 Pro).
+VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV) or with sub-step bisection refinement (RK78).
 
 ### Event Detection System
 
@@ -743,6 +746,16 @@ SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
 
 Test data files are in `Data/SolarSystem/` and copied to output directory.
 
+**Name shadowing in test namespaces.** `IO.Astrodynamics.Tests` contains the sub-namespaces `Frame`
+and `Time`, and a local `Constants` class. Inside any `IO.Astrodynamics.Tests.*` namespace these
+shadow the library types of the same name, so always qualify them:
+
+```csharp
+Frames.Frame.ICRF                  // not Frame.ICRF
+TimeSystem.Time.J2000TDB           // not Time.J2000TDB
+IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test helper)
+```
+
 ## Development Guidelines
 
 1. **Thread Safety**: CSPICE operations are not thread-safe - all API calls must use the shared lock object
@@ -796,7 +809,7 @@ Test data files are in `Data/SolarSystem/` and copied to output directory.
    - SRP uses **continuous shadow fraction** (partial/annular eclipses reduce SRP proportionally)
    - Both forces use **dynamic mass** via `GetTotalMass()` (accounts for fuel consumption during propagation)
    - Use `CelestialItem.ShadowFraction()` for eclipse geometry calculations
-13. **CelestialBody Thermal Properties**: `CelestialBody` supports optional `thermalEffectiveTemperature` (K) and `thermalEmissivity` (0-1) constructor parameters for thermal radiation pressure modeling (Pro feature). Typical values: Earth T_eff=254K, emissivity=0.95.
+13. **CelestialBody Thermal Properties**: `CelestialBody` supports optional `thermalEffectiveTemperature` (K) and `thermalEmissivity` (0-1) constructor parameters for thermal radiation pressure modeling. Typical values: Earth T_eff=254K, emissivity=0.95.
 
 ## Code Quality Standards
 

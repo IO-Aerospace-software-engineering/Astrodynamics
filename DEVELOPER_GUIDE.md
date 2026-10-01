@@ -1554,7 +1554,7 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 - `Initialize(StateVector initialState)` — set observer, frame, workspace
 - `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`
 - Community default: `VVIntegrator` (Velocity-Verlet, fixed-step, event detection at step boundaries)
-- Pro extension: `RK78Integrator` (adaptive Prince-Dormand 7(8), sub-step event refinement via bisection)
+- `RK78Integrator` (adaptive Prince-Dormand 7(8), sub-step event refinement via bisection)
 
 **Event Detection (`IEventDetector`):**
 - `Evaluate(state)` → continuous scalar g-function
@@ -1667,7 +1667,7 @@ Additionally, `CentralBodyPropagator` sets an `OrientationCache` on the central 
 | Degree | Use Case | Typical LEO Accuracy (24h) |
 |--------|----------|---------------------------|
 | 2 | J2-only, fast preliminary analysis | ~10 km |
-| 10 | Good accuracy for most LEO missions | < 1 km vs STK HPOP |
+| 10 | Good accuracy for most LEO missions | < 1 km vs GMAT high-fidelity propagation |
 | 20-30 | High-fidelity geodesy applications | Sub-100 m |
 | 70 | Maximum available (EGM2008_to70) | Highest fidelity |
 
@@ -2849,7 +2849,7 @@ var customLvlh = new TriadAttitude(
 
 When integrating IO.Astrodynamics into your applications:
 
-1. **Validate all results** - Cross-check computed values against authoritative sources (JPL Horizons, STK, GMAT) before relying on them for critical decisions
+1. **Validate all results** - Cross-check computed values against authoritative sources (JPL Horizons, GMAT, FreeFlyer or equivalent tools) before relying on them for critical decisions
 
 2. **Understand limitations** - The software implements standard algorithms but may not account for all perturbations or edge cases relevant to your specific application
 

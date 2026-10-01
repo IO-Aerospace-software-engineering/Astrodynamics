@@ -63,6 +63,22 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     public static readonly Frame TEME = new Frame("TEME");
 
+    /// <summary>
+    /// Geocentric Celestial Reference Frame (GCRF), the realization of the ICRS.
+    /// It differs from SPICE's J2000 frame by the IAU 2006 frame bias (~23 mas).
+    /// </summary>
+    public static Frame GCRF => Frames.GCRF;
+
+    /// <summary>
+    /// Celestial Intermediate Reference System (CIRS), CIO-based intermediate frame.
+    /// </summary>
+    public static Frame CIRS => Frames.CIRS;
+
+    /// <summary>
+    /// Terrestrial Intermediate Reference System (TIRS), obtained from CIRS by Earth rotation.
+    /// </summary>
+    public static Frame TIRS => Frames.TIRS;
+
     public Frame(string name, int? id = null)
     {
         if (string.IsNullOrEmpty(name))

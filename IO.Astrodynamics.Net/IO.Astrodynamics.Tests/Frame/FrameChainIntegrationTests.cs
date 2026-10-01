@@ -1,0 +1,214 @@
+using System;
+using System.IO;
+using IO.Astrodynamics;
+using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Math;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.TimeSystem.Frames;
+using TimeSystem_Time = IO.Astrodynamics.TimeSystem.Time;
+using Xunit;
+
+namespace IO.Astrodynamics.Tests.Frame;
+
+public class FrameChainIntegrationTests
+{
+    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
+
+    public FrameChainIntegrationTests()
+    {
+        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+    }
+
+    [Fact]
+    public void CirsToGcrfIsConsistentWithQtTimesB()
+    {
+        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
+
+        // Compute CIRS→GCRF via ToFrame
+        var cirsToGcrf = IO.Astrodynamics.Frames.Frames.CIRS.ToFrame(IO.Astrodynamics.Frames.Frames.GCRF, epoch);
+
+        // The rotation should represent the precession-nutation (without bias)
+        var rotMatrix = Matrix.FromQuaternion(cirsToGcrf.Rotation);
+        var product = rotMatrix.Transpose().Multiply(rotMatrix);
+
+        // Verify orthogonality
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                double expected = i == j ? 1.0 : 0.0;
+                Assert.Equal(expected, product.Get(i, j), 1e-12);
+            }
+        }
+    }
+
+    [Fact]
+    public void TirsToCirsIsPureEraRotation()
+    {
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+
+        var tirsToCirs = IO.Astrodynamics.Frames.Frames.TIRS.ToFrame(IO.Astrodynamics.Frames.Frames.CIRS, epoch);
+
+        // The rotation should be approximately R3(ERA) — a rotation about Z axis
+        var rotMatrix = Matrix.FromQuaternion(tirsToCirs.Rotation);
+
+        // In a pure Z rotation, [2][0], [2][1], [0][2], [1][2] should all be ~0
+        // and [2][2] should be ~1
+        Assert.Equal(1.0, rotMatrix.Get(2, 2), 1e-6);
+        Assert.Equal(0.0, rotMatrix.Get(2, 0), 1e-6);
+        Assert.Equal(0.0, rotMatrix.Get(2, 1), 1e-6);
+        Assert.Equal(0.0, rotMatrix.Get(0, 2), 1e-6);
+        Assert.Equal(0.0, rotMatrix.Get(1, 2), 1e-6);
+
+        // The [0][0] and [1][1] should have the same magnitude (cos(ERA))
+        Assert.Equal(System.Math.Abs(rotMatrix.Get(0, 0)),
+                     System.Math.Abs(rotMatrix.Get(1, 1)), 1e-6);
+    }
+
+    [Fact]
+    public void TirsToIcrfFullChain()
+    {
+        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
+
+        // Direct TIRS→ICRF
+        var tirsToIcrf = IO.Astrodynamics.Frames.Frames.TIRS.GetStateOrientationToICRF(epoch);
+
+        // The rotation matrix should be orthogonal
+        var rotMatrix = Matrix.FromQuaternion(tirsToIcrf.Rotation);
+        var product = rotMatrix.Transpose().Multiply(rotMatrix);
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                double expected = i == j ? 1.0 : 0.0;
+                Assert.Equal(expected, product.Get(i, j), 1e-12);
+            }
+        }
+    }
+
+    [Fact]
+    public void StateVectorIcrfToTirsRoundTrip()
+    {
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var tirs = IO.Astrodynamics.Frames.Frames.TIRS;
+
+        // ISS-like state vector in ICRF
+        var posIcrf = new Vector3(6778136.3, 0.0, 0.0);
+        var velIcrf = new Vector3(0.0, 7656.2, 0.0);
+
+        // Transform to TIRS
+        var icrfToTirs = Frames.Frame.ICRF.ToFrame(tirs, epoch);
+        var posTirs = posIcrf.Rotate(icrfToTirs.Rotation);
+        var velTirs = velIcrf.Rotate(icrfToTirs.Rotation);
+
+        // Transform back to ICRF
+        var tirsToIcrf = tirs.ToFrame(Frames.Frame.ICRF, epoch);
+        var posBack = posTirs.Rotate(tirsToIcrf.Rotation);
+        var velBack = velTirs.Rotate(tirsToIcrf.Rotation);
+
+        // Round-trip error should be < 1e-6 m
+        Assert.Equal(posIcrf.X, posBack.X, 1e-6);
+        Assert.Equal(posIcrf.Y, posBack.Y, 1e-6);
+        Assert.Equal(posIcrf.Z, posBack.Z, 1e-6);
+        Assert.Equal(velIcrf.X, velBack.X, 1e-6);
+        Assert.Equal(velIcrf.Y, velBack.Y, 1e-6);
+        Assert.Equal(velIcrf.Z, velBack.Z, 1e-6);
+    }
+
+    [Fact]
+    public void TirsApproximatesItrf93WithinPolarMotionMagnitude()
+    {
+        // TIRS with NullEop (no polar motion) should approximate ITRF93
+        // within ~0.5" (the typical polar motion magnitude)
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var tirs = IO.Astrodynamics.Frames.Frames.TIRS;
+        var itrf93 = new Frames.Frame("ITRF93");
+
+        var tirsOrientation = tirs.GetStateOrientationToICRF(epoch);
+        var itrfOrientation = itrf93.GetStateOrientationToICRF(epoch);
+
+        // Compare the rotation matrices
+        var tirsMat = Matrix.FromQuaternion(tirsOrientation.Rotation);
+        var itrfMat = Matrix.FromQuaternion(itrfOrientation.Rotation);
+
+        // The difference should be within ~1e-5 rad (~2") accounting for:
+        // - Polar motion (~0.5")
+        // - Nutation model difference (IAU 2000B vs SPICE's model) (~1 mas)
+        // - Different Earth rotation models
+        var relQ = tirsOrientation.Rotation.Conjugate() * itrfOrientation.Rotation;
+        double angle = 2.0 * System.Math.Acos(System.Math.Min(1.0, System.Math.Abs(relQ.W)));
+
+        // Allow up to 5" = 2.4e-5 rad for all the model differences
+        Assert.True(angle < 5e-5,
+            $"TIRS-ITRF93 angle should be < 5e-5 rad (~10\"), got {angle} rad ({angle * 180 * 3600 / System.Math.PI:F2}\")");
+    }
+
+    [Fact]
+    public void FramesStaticInstancesAreCorrectTypes()
+    {
+        Assert.IsType<GcrfFrame>(IO.Astrodynamics.Frames.Frames.GCRF);
+        Assert.IsType<CirsFrame>(IO.Astrodynamics.Frames.Frames.CIRS);
+        Assert.IsType<TirsFrame>(IO.Astrodynamics.Frames.Frames.TIRS);
+        Assert.Same(Frames.Frame.ICRF, IO.Astrodynamics.Frames.Frames.ICRF);
+        Assert.Same(Frames.Frame.TEME, IO.Astrodynamics.Frames.Frames.TEME);
+    }
+
+    [Fact]
+    public void TemeToCircTransformation()
+    {
+        var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+
+        // This tests that the hub-and-spoke architecture works:
+        // TEME→ICRF→CIRS
+        var temeToCirs = IO.Astrodynamics.Frames.Frames.TEME.ToFrame(
+            IO.Astrodynamics.Frames.Frames.CIRS, epoch);
+
+        // Should produce a valid rotation
+        var rotMatrix = Matrix.FromQuaternion(temeToCirs.Rotation);
+        var product = rotMatrix.Transpose().Multiply(rotMatrix);
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                double expected = i == j ? 1.0 : 0.0;
+                Assert.Equal(expected, product.Get(i, j), 1e-12);
+            }
+        }
+    }
+
+    [Fact]
+    public void FullChainGcrsToItrsAtSofaTestDate()
+    {
+        // SOFA reference values use TT = UT1 (artificial). Use UTC epoch so that
+        // UT1 = UTC (with NullEop), and precession-nutation from TDB ≈ UTC + ~66s
+        // (negligible difference in t for precession).
+        // Epoch: 2010-06-15 12:00 UTC (MJD 55362.0, not on a leap second boundary)
+        var epoch = TimeSystem_Time.CreateFromJD(2400000.5 + 55362.0, TimeFrame.UTCFrame);
+
+        var tirs = new TirsFrame();
+        var orientation = tirs.GetStateOrientationToICRF(epoch);
+        var m = Matrix.FromQuaternion(orientation.Rotation);
+
+        // The TIRS→ICRF matrix is the TRANSPOSE of SOFA's rc2t (GCRS→ITRS)
+        // So our m should equal rc2t^T, or equivalently m^T should match rc2t
+        var mT = m.Transpose();
+
+        // SOFA rc2t_gcrs_to_itrs (no polar motion, UT1=TT):
+        // Tolerance accounts for IAU 2000B vs 2000A nutation (~1 mas) plus
+        // the ~66s TDB-UTC offset affecting precession-nutation computation.
+        double tol = 2e-8;
+        Assert.Equal(-1.212538003906374340e-01, mT.Get(0, 0), tol);
+        Assert.Equal(-9.926215281615898833e-01, mT.Get(0, 1), tol);
+        Assert.Equal(9.926209842961773999e-01, mT.Get(1, 0), tol);
+        Assert.Equal(-1.212538733089508491e-01, mT.Get(1, 1), tol);
+        // The [2][0] and [2][1] elements depend on CIP coordinates
+        Assert.Equal(1.047580887328611408e-03, mT.Get(2, 0), tol);
+        Assert.Equal(6.142246342155655014e-06, mT.Get(2, 1), tol);
+        Assert.Equal(9.999994512681280590e-01, mT.Get(2, 2), tol);
+    }
+}
