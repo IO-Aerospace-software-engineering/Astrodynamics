@@ -28,7 +28,7 @@ public class FrameChainIntegrationTests
         var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
 
         // Compute CIRS→GCRF via ToFrame
-        var cirsToGcrf = IO.Astrodynamics.Frames.Frames.CIRS.ToFrame(IO.Astrodynamics.Frames.Frames.GCRF, epoch);
+        var cirsToGcrf = Frames.Frame.CIRS.ToFrame(Frames.Frame.GCRF, epoch);
 
         // The rotation should represent the precession-nutation (without bias)
         var rotMatrix = Matrix.FromQuaternion(cirsToGcrf.Rotation);
@@ -50,7 +50,7 @@ public class FrameChainIntegrationTests
     {
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
 
-        var tirsToCirs = IO.Astrodynamics.Frames.Frames.TIRS.ToFrame(IO.Astrodynamics.Frames.Frames.CIRS, epoch);
+        var tirsToCirs = Frames.Frame.TIRS.ToFrame(Frames.Frame.CIRS, epoch);
 
         // The rotation should be approximately R3(ERA) — a rotation about Z axis
         var rotMatrix = Matrix.FromQuaternion(tirsToCirs.Rotation);
@@ -74,7 +74,7 @@ public class FrameChainIntegrationTests
         var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
 
         // Direct TIRS→ICRF
-        var tirsToIcrf = IO.Astrodynamics.Frames.Frames.TIRS.GetStateOrientationToICRF(epoch);
+        var tirsToIcrf = Frames.Frame.TIRS.GetStateOrientationToICRF(epoch);
 
         // The rotation matrix should be orthogonal
         var rotMatrix = Matrix.FromQuaternion(tirsToIcrf.Rotation);
@@ -94,7 +94,7 @@ public class FrameChainIntegrationTests
     public void StateVectorIcrfToTirsRoundTrip()
     {
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
-        var tirs = IO.Astrodynamics.Frames.Frames.TIRS;
+        var tirs = Frames.Frame.TIRS;
 
         // ISS-like state vector in ICRF
         var posIcrf = new Vector3(6778136.3, 0.0, 0.0);
@@ -125,7 +125,7 @@ public class FrameChainIntegrationTests
         // TIRS with NullEop (no polar motion) should approximate ITRF93
         // within ~0.5" (the typical polar motion magnitude)
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
-        var tirs = IO.Astrodynamics.Frames.Frames.TIRS;
+        var tirs = Frames.Frame.TIRS;
         var itrf93 = new Frames.Frame("ITRF93");
 
         var tirsOrientation = tirs.GetStateOrientationToICRF(epoch);
@@ -150,11 +150,9 @@ public class FrameChainIntegrationTests
     [Fact]
     public void FramesStaticInstancesAreCorrectTypes()
     {
-        Assert.IsType<GcrfFrame>(IO.Astrodynamics.Frames.Frames.GCRF);
-        Assert.IsType<CirsFrame>(IO.Astrodynamics.Frames.Frames.CIRS);
-        Assert.IsType<TirsFrame>(IO.Astrodynamics.Frames.Frames.TIRS);
-        Assert.Same(Frames.Frame.ICRF, IO.Astrodynamics.Frames.Frames.ICRF);
-        Assert.Same(Frames.Frame.TEME, IO.Astrodynamics.Frames.Frames.TEME);
+        Assert.IsType<GcrfFrame>(Frames.Frame.GCRF);
+        Assert.IsType<CirsFrame>(Frames.Frame.CIRS);
+        Assert.IsType<TirsFrame>(Frames.Frame.TIRS);
     }
 
     [Fact]
@@ -164,8 +162,8 @@ public class FrameChainIntegrationTests
 
         // This tests that the hub-and-spoke architecture works:
         // TEME→ICRF→CIRS
-        var temeToCirs = IO.Astrodynamics.Frames.Frames.TEME.ToFrame(
-            IO.Astrodynamics.Frames.Frames.CIRS, epoch);
+        var temeToCirs = Frames.Frame.TEME.ToFrame(
+            Frames.Frame.CIRS, epoch);
 
         // Should produce a valid rotation
         var rotMatrix = Matrix.FromQuaternion(temeToCirs.Rotation);

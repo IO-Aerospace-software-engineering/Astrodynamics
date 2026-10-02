@@ -44,16 +44,15 @@ public class PropagationTypesSmokeTests
     }
 
     [Fact]
-    public void CioBasedFrames_AreAccessibleFromBothEntryPoints()
+    public void CioBasedFrames_AreExposedOnFrame()
     {
-        Assert.NotNull(Frames.Frames.GCRF);
-        Assert.NotNull(Frames.Frames.CIRS);
-        Assert.NotNull(Frames.Frames.TIRS);
+        Assert.IsType<GcrfFrame>(Frame.GCRF);
+        Assert.IsType<CirsFrame>(Frame.CIRS);
+        Assert.IsType<TirsFrame>(Frame.TIRS);
 
-        // Frame exposes the same singletons, so a cached orientation is shared.
-        Assert.Same(Frames.Frames.GCRF, Frame.GCRF);
-        Assert.Same(Frames.Frames.CIRS, Frame.CIRS);
-        Assert.Same(Frames.Frames.TIRS, Frame.TIRS);
+        // Singletons, so a cached orientation is shared across call sites.
+        Assert.Same(Frame.GCRF, Frame.GCRF);
+        Assert.Same(Frame.TIRS, Frame.TIRS);
     }
 
     [Fact]
