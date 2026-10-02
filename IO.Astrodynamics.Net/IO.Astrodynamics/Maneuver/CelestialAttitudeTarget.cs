@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Maneuver;
 /// <remarks>
 /// The aberration model controls how the target direction is computed:
 /// <list type="bullet">
-///   <item><description><see cref="Aberration.None"/> (default): geometric instantaneous direction — consistent with the attitude pipeline and industry standard (GMAT, STK, OREKIT).</description></item>
+///   <item><description><see cref="Aberration.None"/> (default): geometric instantaneous direction — consistent with the attitude pipeline and industry standard (GMAT, Orekit and equivalent tools).</description></item>
 ///   <item><description><see cref="Aberration.LT"/>: light-time corrected apparent direction — use when modeling photon-based scenarios (optical sensors observing distant targets).</description></item>
 /// </list>
 /// </remarks>
