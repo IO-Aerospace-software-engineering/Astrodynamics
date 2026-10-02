@@ -242,6 +242,32 @@ jobs:
         --no-restore --verbosity ${{ inputs.logLevel || 'minimal' }} --configuration Release
 
   # Job 4: Publish to NuGet (only after smoke tests pass on both platforms)
+  publish-docs:
+    needs: smoke-test
+    if: "!contains(github.ref_name, '-')"
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install MkDocs and dependencies
+      run: pip install mkdocs-material pymdown-extensions
+
+    - name: Build documentation
+      run: mkdocs build --strict
+
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        command: pages deploy docs-site --project-name=astrodynamics-pro-docs --branch=main
+
   publish:
     needs: smoke-test
     runs-on: ubuntu-latest

@@ -2303,3 +2303,9 @@ external-lib/sofa-src/*.o
 IO.Astrodynamics.Net/IO.Astrodynamics/resources/libIO.Astrodynamics.dylib
 IO.Astrodynamics.Net/IO.Astrodynamics/resources/osx-arm64/
 IO.Astrodynamics.Net/IO.Astrodynamics/resources/osx-x64/
+
+# MkDocs build output
+docs-site/
+
+# Doxygen output (no longer tracked; MkDocs is the documentation source)
+Docs/

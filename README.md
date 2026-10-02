@@ -17,6 +17,7 @@ The reference documentation lives at **[docs.io-aerospace.org](https://docs.io-a
 - [API Reference](https://docs.io-aerospace.org/reference/) — types, methods, and parameters
 - [Guides](https://docs.io-aerospace.org/guides/) — kernel management, thread safety, high-fidelity propagation, Cosmographia export, validation
 - [Standards & Units](https://docs.io-aerospace.org/standards-and-units/) — SI units, frame and time conventions
+- [Contributing](https://docs.io-aerospace.org/contributing/) — how to contribute, versioning policy, migration notes
 
 A single-file companion reference is also kept in this repository: [DEVELOPER_GUIDE.md](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/blob/main/DEVELOPER_GUIDE.md).
 
@@ -156,7 +157,7 @@ You can help by sponsoring the project through [GitHub Sponsors](https://github.
 
 ## Services
 
-IO Aerospace offers paid services around the toolkit: annual support with guaranteed response times, integration work, validation reports against reference trajectories, and a hosted MCP server for AI-assisted mission analysis. Contact: [io-aerospace.org](https://io-aerospace.org/).
+The framework is free; IO Aerospace funds its development through services around it: annual support with a contractual response time, integration work, validation reports against reference trajectories, training, and a hosted MCP server for AI-assisted mission analysis. See [Services](https://docs.io-aerospace.org/contributing/services/), or get in touch through [io-aerospace.org](https://io-aerospace.org/).
 
 ## Disclaimer
 
