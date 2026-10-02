@@ -1,0 +1,117 @@
+site_name: IO Aerospace
+site_description: Documentation for IO.Astrodynamics, the open source .NET astrodynamics framework
+repo_name: IO Aerospace
+repo_url: https://github.com/IO-Aerospace-software-engineering/Astrodynamics
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - navigation.path
+    - content.code.copy
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+    - search.share
+    - toc.follow
+    - header.autohide
+  logo: assets/light-trans.svg
+  favicon: assets/light-trans.svg
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+  font:
+    text: Inter
+    code: JetBrains Mono
+extra_css:
+  - stylesheets/extra.css
+site_dir: docs-site
+nav:
+  - Home:
+    - Welcome: index.md
+    - Quick Start: get-started.md
+    - Standards & Units: standards-and-units.md
+
+  - Tutorials:
+    - tutorials/index.md
+    - Ephemeris Queries: tutorials/ephemeris-queries.md
+    - Coordinate Conversions: tutorials/coordinate-conversions.md
+    - Orbit Creation: tutorials/orbit-creation.md
+    - TLE & OMM: tutorials/tle-and-omm.md
+    - Numerical Propagation: tutorials/numerical-propagation.md
+    - Maneuvers: tutorials/maneuvers.md
+    - Geometry & Visibility: tutorials/geometry-and-visibility.md
+    - Mission Design: tutorials/mission-design.md
+    - Conjunction Assessment: tutorials/conjunction-assessment.md
+    - Monte Carlo: tutorials/monte-carlo.md
+    - Batch Propagation: tutorials/batch-propagation.md
+
+  - API Reference:
+    - reference/index.md
+    - Core:
+      - SpiceAPI & Data Providers: reference/spice-api.md
+      - Time & Windows: reference/time-and-windows.md
+      - Frames & Orientation: reference/frames.md
+      - Celestial Bodies: reference/celestial-bodies.md
+      - Spacecraft: reference/spacecraft.md
+      - Sites: reference/sites.md
+    - Orbital Mechanics:
+      - StateVector: reference/state-vector.md
+      - Keplerian Elements: reference/keplerian-elements.md
+      - TLE: reference/tle.md
+    - Propagation:
+      - Propagators: reference/propagators.md
+      - Integrators: reference/integrators.md
+      - Force Models: reference/force-models.md
+      - Propagator Builder: reference/propagator-builder.md
+      - Event Detection: reference/event-detection.md
+    - Maneuvers:
+      - Impulse Maneuvers: reference/impulse-maneuvers.md
+      - Attitudes: reference/attitudes.md
+      - Lambert Solver: reference/lambert.md
+    - SSA:
+      - Conjunction Assessment: reference/conjunction-assessment.md
+      - Avoidance Studies: reference/avoidance.md
+    - CCSDS:
+      - CDM: reference/cdm.md
+      - OMM: reference/omm.md
+      - OPM: reference/opm.md
+    - Utilities:
+      - Math: reference/math.md
+      - Enumerations: reference/enumerations.md
+      - Predefined Objects: reference/predefined-objects.md
+
+  - Guides:
+    - guides/index.md
+    - Kernel Management: guides/kernel-management.md
+    - Thread Safety: guides/thread-safety.md
+    - High-Fidelity Propagation: guides/high-fidelity-propagation.md
+    - Cosmographia Export: guides/cosmographia-export.md
+    - Validation: guides/validation.md
+
+  - Contributing:
+    - contributing/index.md
+    - Versioning: contributing/versioning.md
+    - Services: contributing/services.md
+
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true

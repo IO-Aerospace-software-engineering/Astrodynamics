@@ -11,8 +11,7 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.Propagator;
 
 /// <summary>
-/// Fluent builder for constructing a <see cref="CentralBodyPropagator"/> with both community
-/// and Pro force models.
+/// Fluent builder for constructing a <see cref="CentralBodyPropagator"/> with its force models.
 /// </summary>
 public class CentralBodyPropagatorBuilder
 {
@@ -93,7 +92,7 @@ public class CentralBodyPropagatorBuilder
         var propagator = new CentralBodyPropagator(_window, _spacecraft, _integrator,
             _perturbingBodies, _includeAtmosphericDrag, _includeSolarRadiationPressure, _deltaT);
 
-        // Add Pro forces after construction (with ephemeris cache from existing forces)
+        // Add the radiation forces after construction (with ephemeris cache from existing forces)
         if (_albedoBody != null)
         {
             var albedoForce = new AlbedoRadiationPressure(_spacecraft, _albedoBody);

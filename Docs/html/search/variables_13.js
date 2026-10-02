@@ -1,8 +1,0 @@
-var searchData=
-[
-  ['secondderivativeofmeanmotion_0',['SecondDerivativeOfMeanMotion',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#abedf28bdaf1e5788cf22aa94555ff66a',1,'IO::Astrodynamics::API::DTO::TLEElementsDTO']]],
-  ['semimajoraxis_1',['semimajoraxis',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#aed55e771d7143e0255e9a66849e30a27',1,'IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO::semiMajorAxis'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html#add5d8b40424b6585749a6ae3f712656c',1,'IO::Astrodynamics::API::DTO::EquinoctialElementsDTO::semiMajorAxis']]],
-  ['serialnumber_2',['serialnumber',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EngineDTO.html#a6db490fd77950080aa029e688a66deee',1,'IO::Astrodynamics::API::DTO::EngineDTO::serialNumber'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1FuelTankDTO.html#ad1baaaec80370f33855fad55273aa48d',1,'IO::Astrodynamics::API::DTO::FuelTankDTO::serialNumber'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1PayloadDTO.html#ad7e4c899bbe31c09eaf4a22c19e1cb1b',1,'IO::Astrodynamics::API::DTO::PayloadDTO::serialNumber']]],
-  ['shape_3',['shape',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1InstrumentDTO.html#a26bbec6cf8e28f8d0b3dc51b2a6a6c77',1,'IO::Astrodynamics::API::DTO::InstrumentDTO']]],
-  ['start_4',['start',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1AzimuthRangeDTO.html#a4b8de03612da8543876739235e0b541d',1,'IO::Astrodynamics::API::DTO::AzimuthRangeDTO::start'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html#a8ad028c987314a63b804a5413f01fe28',1,'IO::Astrodynamics::API::DTO::WindowDTO::start']]]
-];

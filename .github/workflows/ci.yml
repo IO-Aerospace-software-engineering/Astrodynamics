@@ -22,6 +22,25 @@ env:
   BUILD_TYPE: Release
 
 jobs:
+  # Job 0: Documentation. Independent of the build, so it fails fast on a broken
+  # link or a page missing from the nav rather than at release time.
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install MkDocs and dependencies
+      run: pip install mkdocs-material pymdown-extensions
+
+    - name: Build documentation
+      run: mkdocs build --strict
+
   # Job 1: Build and test C++ native library on all platforms.
   # Both macOS arches build on the Apple Silicon runner: arm64 natively, x64 by
   # cross-compiling (GitHub's Intel macOS runners are retired/capacity-starved).

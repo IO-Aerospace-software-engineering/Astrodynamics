@@ -1,9 +1,0 @@
-var searchData=
-[
-  ['e_0',['E',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#a1e7db29771b8c0ee18504ed14130b686',1,'IO::Astrodynamics::API::DTO::TLEElementsDTO']]],
-  ['eccentric_5fanomaly_5faccuracy_1',['ECCENTRIC_ANOMALY_ACCURACY',['../namespaceIO_1_1Astrodynamics_1_1Constants.html#ae0f21e703b04782f568e2348fb657977',1,'IO::Astrodynamics::Constants']]],
-  ['eccentricity_2',['eccentricity',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a6d5222650ed268639fa13ab575b35402',1,'IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO']]],
-  ['elevation_3',['elevation',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1HorizontalDTO.html#abff6621bd4c746e52da85599e82c75df',1,'IO::Astrodynamics::API::DTO::HorizontalDTO']]],
-  ['end_4',['end',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1AzimuthRangeDTO.html#ae2f7969b12a6d5baa8c4b9f551dbde44',1,'IO::Astrodynamics::API::DTO::AzimuthRangeDTO::end'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1WindowDTO.html#a99de4bb056e4647b4f704dbb84d53f85',1,'IO::Astrodynamics::API::DTO::WindowDTO::end']]],
-  ['epoch_5',['epoch',['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1TLEElementsDTO.html#a528194ad5d733c6a5086d1247be2ac13',1,'IO::Astrodynamics::API::DTO::TLEElementsDTO::Epoch'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1ConicOrbitalElementsDTO.html#a3b25ccc4bef36960d676607e00d49b12',1,'IO::Astrodynamics::API::DTO::ConicOrbitalElementsDTO::epoch'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1EquinoctialElementsDTO.html#a5086f497986cf97f35a5fc8e4f7847b2',1,'IO::Astrodynamics::API::DTO::EquinoctialElementsDTO::epoch'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateOrientationDTO.html#aeb7027e17dee8c2cb2193a5b0692aff7',1,'IO::Astrodynamics::API::DTO::StateOrientationDTO::epoch'],['../structIO_1_1Astrodynamics_1_1API_1_1DTO_1_1StateVectorDTO.html#afe72ba8c3801040ff26468d4af86418f',1,'IO::Astrodynamics::API::DTO::StateVectorDTO::epoch']]]
-];
