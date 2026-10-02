@@ -12,15 +12,14 @@ namespace IO.Astrodynamics.Frames;
 /// The CIO-based Q(t) matrix produced by the model is <c>ICRF → CIRS</c>, so
 /// <see cref="GetStateOrientationToICRF(Time)"/> returns its transpose, <c>CIRS → ICRF</c>.
 /// </summary>
+/// <remarks>
+/// CIRS depends on precession-nutation only, so it takes no Earth orientation parameters:
+/// UT1-UTC enters at <see cref="TirsFrame"/> and polar motion only in the TIRS to ITRF step.
+/// </remarks>
 public sealed class CirsFrame : Frame
 {
-    public CirsFrame() : this(NullEop.Instance)
+    public CirsFrame() : base("CIRS")
     {
-    }
-
-    public CirsFrame(IEarthOrientationParameters eop) : base("CIRS")
-    {
-        _ = eop ?? NullEop.Instance;
     }
 
     public override StateOrientation GetStateOrientationToICRF(Time date)
