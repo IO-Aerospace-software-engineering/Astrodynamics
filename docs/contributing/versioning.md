@@ -11,7 +11,7 @@ Current version information and a summary of breaking changes since 8.0.
 | Component | Version |
 |-----------|---------|
 | NuGet (`IO.Astrodynamics`) | `10.0.0` |
-| CLI tool | `0.9.0.5` |
+| CLI tool (`IO.Astrodynamics.CLI`) | `10.0.0` |
 | .NET framework | `.NET 10.0` |
 | SPICE toolkit | `CSPICE N0067` |
 | License | `LGPL-3.0-or-later` |

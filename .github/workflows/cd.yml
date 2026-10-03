@@ -244,6 +244,10 @@ jobs:
   # Job 4: Publish to NuGet (only after smoke tests pass on both platforms)
   publish-docs:
     needs: smoke-test
+    # Skipped on prereleases, whose tags carry a hyphen, so a preview never
+    # overwrites the published documentation. A workflow_dispatch from main does
+    # run it: with the publish guard above, that is a docs-only deployment, which
+    # is how a documentation fix ships without cutting a release.
     if: "!contains(github.ref_name, '-')"
     runs-on: ubuntu-latest
 
@@ -270,6 +274,10 @@ jobs:
 
   publish:
     needs: smoke-test
+    # Tags only. On a workflow_dispatch, get-version falls back to 0.0.0-dev, and
+    # without this guard a manual run would publish that placeholder to nuget.org,
+    # where a version can be unlisted but never removed.
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     # Trusted publishing: nuget.org issues a one-hour API key in exchange for the
     # job's OIDC token, so no long-lived NUGET_TOKEN is stored in the repository.
