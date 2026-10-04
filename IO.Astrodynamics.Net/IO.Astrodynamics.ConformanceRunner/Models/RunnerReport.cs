@@ -29,6 +29,18 @@ public class ReportMeta
     [JsonPropertyName("framework_version")]
     public string FrameworkVersion { get; set; }
 
+    /// <summary>
+    /// AssemblyInformationalVersion of the framework, e.g. <c>10.1.0+&lt;commit&gt;</c>.
+    /// </summary>
+    [JsonPropertyName("framework_informational_version")]
+    public string FrameworkInformationalVersion { get; set; }
+
+    /// <summary>
+    /// Commit of the framework that was tested, taken from the informational version.
+    /// </summary>
+    [JsonPropertyName("framework_commit")]
+    public string FrameworkCommit { get; set; }
+
     [JsonPropertyName("run_timestamp")]
     public string RunTimestamp { get; set; }
 

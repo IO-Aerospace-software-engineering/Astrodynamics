@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using IO.Astrodynamics.ConformanceRunner.Comparison;
 using IO.Astrodynamics.ConformanceRunner.Models;
@@ -52,6 +53,9 @@ public class Runner
         var caseDirs = DiscoverCases();
         Console.WriteLine($"Discovered {caseDirs.Count} test case(s)");
 
+        var frameworkAssembly = typeof(SpiceAPI).Assembly;
+        var informationalVersion = frameworkAssembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
         var report = new RunnerReport
         {
             ReportMeta = new ReportMeta
@@ -59,7 +63,9 @@ public class Runner
                 RunnerName = "IO.Astrodynamics.ConformanceRunner",
                 RunnerVersion = "1.0.0",
                 Framework = "IO.Astrodynamics.Net",
-                FrameworkVersion = typeof(SpiceAPI).Assembly.GetName().Version?.ToString() ?? "unknown",
+                FrameworkVersion = frameworkAssembly.GetName().Version?.ToString() ?? "unknown",
+                FrameworkInformationalVersion = informationalVersion,
+                FrameworkCommit = CommitFromInformationalVersion(informationalVersion),
                 RunTimestamp = DateTime.UtcNow.ToString("o"),
                 ConformanceTestsCommit = commitSha
             }
@@ -647,6 +653,15 @@ public class Runner
         }
 
         return cases;
+    }
+
+    /// <summary>
+    /// The SDK appends the source commit to the informational version (<c>10.1.0+&lt;sha&gt;</c>).
+    /// </summary>
+    internal static string CommitFromInformationalVersion(string informationalVersion)
+    {
+        int plus = informationalVersion.IndexOf('+');
+        return plus >= 0 && plus < informationalVersion.Length - 1 ? informationalVersion[(plus + 1)..] : "unknown";
     }
 
     private static string GetGitSha(string repoPath)
