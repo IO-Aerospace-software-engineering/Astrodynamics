@@ -2880,8 +2880,8 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 ## Version Information
 
-- NuGet Package: 10.0.0
-- CLI Tool: 10.0.0
+- NuGet Package: 10.1.0
+- CLI Tool: 10.1.0
 - Framework: .NET 10.0 (`net10.0` only)
 - Supported runtimes: `win-x64`, `linux-x64`, `osx-arm64` (Apple Silicon), `osx-x64` (Intel)
 - SPICE Toolkit: CSPICE N0067
