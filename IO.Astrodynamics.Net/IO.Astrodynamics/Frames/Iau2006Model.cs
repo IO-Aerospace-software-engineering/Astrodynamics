@@ -129,16 +129,23 @@ public static class Iau2006Model
     }
 
     /// <summary>
-    /// Computes IAU 2000B nutation (dpsi, deps) in radians.
-    /// Uses 77 luni-solar terms plus planetary bias corrections.
+    /// Computes IAU 2000B nutation (dpsi, deps) in radians, with the IAU 2006 (P03) adjustments.
+    /// Uses 77 luni-solar terms plus the fixed planetary offsets, evaluated with the linear Delaunay
+    /// arguments of Simon et al. (1994) that define IAU 2000B, as in SOFA <c>iauNut00b</c>.
+    /// The P03 adjustments are those of SOFA <c>iauNut06a</c>, including the secular J2 factor
+    /// <c>-2.7774e-6 t</c>.
     /// </summary>
+    /// <param name="t">Julian centuries TT since J2000.0.</param>
     public static (double dpsi, double deps) Nutation(double t)
     {
-        double l = Iau2006FundamentalArguments.MoonMeanAnomaly(t);
-        double lp = Iau2006FundamentalArguments.SunMeanAnomaly(t);
-        double f = Iau2006FundamentalArguments.MoonMeanArgumentOfLatitude(t);
-        double d = Iau2006FundamentalArguments.MeanElongation(t);
-        double om = Iau2006FundamentalArguments.MoonAscendingNodeLongitude(t);
+        // IAU 2000B is defined with linear arguments (Simon et al. 1994), not with the full IERS 2003
+        // polynomials of Iau2006FundamentalArguments. The two differ by up to ~1.6e-10 rad of nutation
+        // by 2024; using the defining arguments keeps the model identical to SOFA iauNut00b.
+        double l = SimonArgument(485868.249036, 1717915923.2178, t);
+        double lp = SimonArgument(1287104.79305, 129596581.0481, t);
+        double f = SimonArgument(335779.526232, 1739527262.8478, t);
+        double d = SimonArgument(1072260.70369, 1602961601.2090, t);
+        double om = SimonArgument(450160.398036, -6962890.5431, t);
 
         double dpsi = 0.0;
         double deps = 0.0;
@@ -146,7 +153,7 @@ public static class Iau2006Model
         for (int i = Iau2006NutationData.LuniSolarTerms.Length - 1; i >= 0; i--)
         {
             var term = Iau2006NutationData.LuniSolarTerms[i];
-            double arg = term.nl * l + term.nlp * lp + term.nf * f + term.nd * d + term.nom * om;
+            double arg = (term.nl * l + term.nlp * lp + term.nf * f + term.nd * d + term.nom * om) % TwoPi;
             double sinArg = System.Math.Sin(arg);
             double cosArg = System.Math.Cos(arg);
 
@@ -158,12 +165,25 @@ public static class Iau2006Model
         dpsi = dpsi * Iau2006NutationData.U + Iau2006NutationData.DpsiPlanetaryBias * DAS2R * 1e-6;
         deps = deps * Iau2006NutationData.U + Iau2006NutationData.DepsPlanetaryBias * DAS2R * 1e-6;
 
-        // Apply IAU 2006 corrections to IAU 2000 nutation (P03 compatibility, from SOFA iauNut06a)
-        double fj2 = -2.7774e-6;
+        // Apply IAU 2006 corrections to IAU 2000 nutation (P03 compatibility, from SOFA iauNut06a).
+        // fj2 corrects for the secular variation of J2 and grows linearly with time.
+        double fj2 = -2.7774e-6 * t;
         dpsi += dpsi * (0.4697e-6 + fj2);
         deps += deps * fj2;
 
         return (dpsi, deps);
+    }
+
+    /// <summary>
+    /// Linear Delaunay argument of Simon et al. (1994), as used by IAU 2000B, in radians.
+    /// </summary>
+    /// <param name="constantArcsec">Value at J2000.0, in arcseconds.</param>
+    /// <param name="rateArcsecPerCentury">Rate, in arcseconds per Julian century.</param>
+    /// <param name="t">Julian centuries TT since J2000.0.</param>
+    private static double SimonArgument(double constantArcsec, double rateArcsecPerCentury, double t)
+    {
+        const double turnArcsec = 1296000.0;
+        return (constantArcsec + rateArcsecPerCentury * t) % turnArcsec * DAS2R;
     }
 
     /// <summary>

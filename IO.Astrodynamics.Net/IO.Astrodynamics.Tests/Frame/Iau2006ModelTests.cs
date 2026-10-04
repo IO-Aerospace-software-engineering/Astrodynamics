@@ -265,5 +265,26 @@ public class Iau2006ModelTests
         Assert.Equal(-2.79708311923741366e-05, deps, depsTol);
     }
 
+    /// <summary>
+    /// Nutation is IAU 2000B with the P03 adjustments of iauNut06a, so it must reproduce SOFA
+    /// iauNut00b with those adjustments to rounding level. The secular factor fj2 = -2.7774e-6 t
+    /// changes dpsi by up to 1.9e-10 rad: this test catches a constant or missing factor.
+    /// Reference values: tools/sofa_reference/extract_nut00b.c (dpsi_2000B_P03, deps_2000B_P03).
+    /// </summary>
+    [Theory]
+    [InlineData(0.0, -6.75426442646874552e-05, -2.79709233109856526e-05)] // J2000.0
+    [InlineData(5.99999999999999978e-02, -9.63255521035108483e-06, 4.06319642951374308e-05)] // MJD 53736 TT
+    [InlineData(2.40013689253935653e-01, -2.61510163946240930e-05, 3.93017153735647972e-05)] // 2024-01-01 12h TT
+    [InlineData(-1.00000000000000006e-01, 5.74092078610876616e-05, 3.10604204797782922e-05)] // 1990-01-01 12h TT
+    [InlineData(5.00000000000000000e-01, 7.35528403568220829e-05, -2.58410693765859737e-05)] // 2050-01-01 12h TT
+    public void NutationMatchesSofaNut00bWithP03Adjustments(double t, double expectedDpsi, double expectedDeps)
+    {
+        var (dpsi, deps) = Iau2006Model.Nutation(t);
+
+        const double tolerance = 1e-13;
+        Assert.Equal(expectedDpsi, dpsi, tolerance);
+        Assert.Equal(expectedDeps, deps, tolerance);
+    }
+
     #endregion
 }
