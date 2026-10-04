@@ -260,7 +260,7 @@ jobs:
         python-version: '3.x'
 
     - name: Install MkDocs and dependencies
-      run: pip install mkdocs-material pymdown-extensions
+      run: pip install -r docs/requirements.txt
 
     - name: Build documentation
       run: mkdocs build --strict
@@ -312,10 +312,3 @@ jobs:
         --skip-duplicate
         --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         --source https://api.nuget.org/v3/index.json
-
-    - name: Publish package to Private Feed
-      run: >
-        dotnet nuget push "nupkg/*.nupkg"
-        --skip-duplicate
-        --api-key ${{secrets.PROGET_API_KEY}}
-        --source ${{secrets.PROGET_FEED_URL}}

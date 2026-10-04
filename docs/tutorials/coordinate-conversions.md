@@ -108,5 +108,5 @@ Longitude and latitude are in radians; altitude is in meters above the reference
 
 - All frame transforms pivot through ICRF. Use `ToFrame` to convert between any supported frames.
 - Body-fixed frames (`IAU_EARTH`, `IAU_MOON`, etc.) rotate with the body.
-- Pro provides GCRF, CIRS, and TIRS frames for high-accuracy Earth orientation.
+- GCRF, CIRS, and TIRS frames provide the IAU CIO-based Earth orientation chain.
 - `ToEquatorial` extracts RA/Dec; `Planetodetic` represents geodetic surface coordinates.

@@ -21,7 +21,7 @@ namespace IO.Astrodynamics.Propagator;
 /// <param name="IntegratorFactory">
 /// Optional factory that creates a fresh <see cref="Integrator"/> for this task.
 /// Each invocation must return a new instance (integrators are not thread-safe).
-/// When null, the default community Velocity-Verlet integrator is used.
+/// When null, the default Velocity-Verlet integrator is used.
 /// </param>
 /// <remarks>
 /// <b>Thread safety:</b> The <paramref name="Spacecraft"/> and its central body
