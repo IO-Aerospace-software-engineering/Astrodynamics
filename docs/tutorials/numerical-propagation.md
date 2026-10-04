@@ -1,8 +1,8 @@
 # Numerical Propagation
 
-This tutorial covers high-fidelity orbit propagation with configurable force models. You will start with the community Velocity-Verlet integrator, then move to the adaptive RK7(8) integrator available in the Pro edition, and learn how to select force models, configure geopotential gravity, and extract dense output.
+This tutorial covers high-fidelity orbit propagation with configurable force models. You will start with the fixed-step Velocity-Verlet integrator, then move to the adaptive RK7(8) integrator, and learn how to select force models, configure geopotential gravity, and extract dense output.
 
-## Basic Propagation (Community)
+## Basic Propagation
 
 The simplest way to propagate uses `Spacecraft.Propagate`, which sets up the integrator and force models automatically:
 
@@ -127,7 +127,7 @@ using var propagator = new CentralBodyPropagator(
 
 Drag uses the NRLMSISE-00 atmosphere model with default Cd = 2.2. SRP uses a cannonball model with continuous shadow fraction computation.
 
-## Fluent Builder with Pro Force Models
+## Fluent Builder with Additional Force Models
 
 !!! tip "Fluent configuration"
     The `CentralBodyPropagatorBuilder` provides a fluent API for constructing propagators with advanced force models including albedo and thermal radiation pressure.
