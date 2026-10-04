@@ -16,21 +16,22 @@ public enum CcsdsReferenceFrame
 {
     /// <summary>
     /// International Celestial Reference Frame (IERS standard).
-    /// Maps to Frame.ICRF (J2000).
+    /// Maps to Frame.ICRF (SPICE J2000, treated as ICRF-aligned): exact.
     /// </summary>
     [Description("ICRF")]
     ICRF,
 
     /// <summary>
     /// Earth Mean Equator and Equinox of J2000.
-    /// Equivalent to ICRF for most purposes. Maps to Frame.ICRF.
+    /// Maps to Frame.ICRF, ignoring the ~23 mas IAU 2006 frame bias between EME2000 and the ICRF
+    /// (about 0.8 m on a LEO position, 4.7 m on a GEO position).
     /// </summary>
     [Description("EME2000")]
     EME2000,
 
     /// <summary>
     /// Geocentric Celestial Reference Frame (IAU standard).
-    /// Equivalent to ICRF. Maps to Frame.ICRF.
+    /// Shares the ICRF axes. Maps to Frame.ICRF: exact.
     /// </summary>
     [Description("GCRF")]
     GCRF,

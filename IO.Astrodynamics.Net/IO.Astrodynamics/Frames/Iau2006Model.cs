@@ -5,12 +5,19 @@ using IO.Astrodynamics.Math;
 namespace IO.Astrodynamics.Frames;
 
 /// <summary>
-/// IAU 2006/2000A precession-nutation model.
-/// Implements the CIO-based transformation chain: ICRF → GCRF → CIRS → TIRS → ITRF.
+/// IAU 2006 precession with IAU 2000B nutation, CIO based.
+/// Provides the CIO-based chain GCRS → CIRS → TIRS used by <see cref="GcrfFrame"/>,
+/// <see cref="CirsFrame"/> and <see cref="TirsFrame"/>.
 ///
 /// Uses IAU 2006 precession (Fukushima-Williams angles) with IAU 2000B nutation (77 luni-solar terms).
-/// Accuracy: ~1 mas for nutation, sub-µas for precession and frame bias.
+/// Accuracy: ~1 mas for nutation, sub-µas for precession and frame bias. Against SOFA (IAU 2006/2000A)
+/// from 1990 to 2040, CIP X and Y agree within 3.6e-9 rad (0.73 mas) and the GCRS to TIRS matrix within
+/// 4.3e-9 rad (Iau2006SofaSweepTests).
 /// </summary>
+/// <remarks>
+/// The chain stops at TIRS. The terrestrial step TIRS → ITRS (polar motion) is not part of any frame yet:
+/// <see cref="PolarMotionMatrix"/> and <see cref="TioLocator"/> are validated against SOFA but used by no frame.
+/// </remarks>
 public static class Iau2006Model
 {
     private const double DAS2R = System.Math.PI / (180.0 * 3600.0);
@@ -255,7 +262,7 @@ public static class Iau2006Model
 
     /// <summary>
     /// Builds the CIO-based precession-nutation matrix Q(t) from CIP coordinates X, Y
-    /// and CIO locator s. Transforms from GCRS (≈ ICRF/J2000) to CIRS.
+    /// and CIO locator s. Transforms from GCRS (the ICRF axes) to CIRS.
     /// IERS Conventions 2010, Eq. 5.1.
     /// </summary>
     public static Matrix PrecessionNutationMatrix(double x, double y, double s)

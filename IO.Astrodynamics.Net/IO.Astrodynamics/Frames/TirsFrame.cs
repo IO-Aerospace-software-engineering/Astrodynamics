@@ -12,14 +12,28 @@ namespace IO.Astrodynamics.Frames;
 /// The CIO-based model first forms <c>ICRF → TIRS</c>; this class returns the inverse,
 /// <c>TIRS → ICRF</c>, from <see cref="GetStateOrientationToICRF(Time)"/>.
 /// </summary>
+/// <remarks>
+/// TIRS is the last frame of the IAU chain: polar motion, which leads to the ITRS, is not applied.
+/// Only UT1 - UTC is taken from the Earth orientation parameters.
+/// </remarks>
 public sealed class TirsFrame : Frame
 {
     private readonly IEarthOrientationParameters _eop;
 
+    /// <summary>
+    /// Builds a TIRS frame without Earth orientation parameters (<see cref="NullEop"/>, UT1 = UTC).
+    /// The frame is then off by the actual UT1 - UTC, within 0.9 s: up to about 13.5 arcseconds of Earth
+    /// rotation angle, about 420 m for a point fixed on the equator.
+    /// </summary>
     public TirsFrame() : this(NullEop.Instance)
     {
     }
 
+    /// <summary>
+    /// Builds a TIRS frame that takes UT1 - UTC from the given provider.
+    /// </summary>
+    /// <param name="eop">Earth orientation parameters; <c>null</c> falls back to <see cref="NullEop"/>,
+    /// with the accuracy described on <see cref="TirsFrame()"/>.</param>
     public TirsFrame(IEarthOrientationParameters eop) : base("TIRS")
     {
         _eop = eop ?? NullEop.Instance;

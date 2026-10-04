@@ -86,8 +86,9 @@ public class Frame : IEquatable<Frame>
 
     /// <summary>
     /// Terrestrial Intermediate Reference System (TIRS), obtained from CIRS by Earth rotation.
-    /// Uses <see cref="NullEop"/>; build a <see cref="TirsFrame"/> directly to supply real
-    /// Earth orientation parameters.
+    /// Uses <see cref="NullEop"/> (UT1 = UTC), so it is off by the actual UT1 - UTC, within 0.9 s: up to about
+    /// 13.5 arcseconds of Earth rotation, about 420 m for a point fixed on the equator. Build a
+    /// <see cref="TirsFrame"/> directly to supply real Earth orientation parameters.
     /// </summary>
     public static readonly Frame TIRS = new TirsFrame();
 
