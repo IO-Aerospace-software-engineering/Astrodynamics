@@ -89,6 +89,10 @@ Add the IO.Astrodynamics NuGet package to your project:
 dotnet add package IO.Astrodynamics
 ```
 
+The package targets `net10.0` and bundles the native CSPICE interop library for `win-x64`,
+`linux-x64`, `osx-arm64` (Apple Silicon) and `osx-x64` (Intel). The right one is resolved
+automatically at build time.
+
 ### Loading SPICE Kernels
 
 Before any computation, load the required SPICE kernel files:
@@ -2876,9 +2880,10 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 ## Version Information
 
-- NuGet Package: 9.1.1
-- CLI Tool: 9.1.1
+- NuGet Package: 10.0.0
+- CLI Tool: 10.0.0
 - Framework: .NET 10.0 (`net10.0` only)
+- Supported runtimes: `win-x64`, `linux-x64`, `osx-arm64` (Apple Silicon), `osx-x64` (Intel)
 - SPICE Toolkit: CSPICE N0067
 - License: LGPL-3.0-or-later
 
