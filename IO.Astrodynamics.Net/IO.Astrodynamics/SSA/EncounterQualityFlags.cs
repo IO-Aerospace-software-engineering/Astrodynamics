@@ -35,7 +35,10 @@ public enum EncounterQualityFlags
     CovarianceRemediated = 1 << 3,
 
     /// <summary>
-    /// A stale covariance snapshot was used because no covariance was available at the encounter epoch.
+    /// A participant had no covariance at the encounter epoch, and the covariance of its initial state, used
+    /// instead, is older than <see cref="ConjunctionAnalysisOptions.StaleCovarianceThreshold"/> (60 s by default).
+    /// That covariance is not propagated: it is held fixed in the RTN frame. See
+    /// <see cref="EncounterState.ProtectedCovarianceAge"/> and <see cref="EncounterState.SecondaryCovarianceAge"/>.
     /// </summary>
     StaleCovarianceUsed = 1 << 4,
 

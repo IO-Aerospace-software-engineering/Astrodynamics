@@ -19,12 +19,29 @@ public sealed class EncounterState
         double missDistanceMeters,
         Matrix combinedCovarianceRtn,
         EncounterQualityFlags qualityFlags)
+        : this(epoch, relativeState, missDistanceMeters, combinedCovarianceRtn, qualityFlags, null, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes an encounter-state snapshot, with the age of each participant's covariance.
+    /// </summary>
+    public EncounterState(
+        Time epoch,
+        RelativeState relativeState,
+        double missDistanceMeters,
+        Matrix combinedCovarianceRtn,
+        EncounterQualityFlags qualityFlags,
+        TimeSpan? protectedCovarianceAge,
+        TimeSpan? secondaryCovarianceAge)
     {
         Epoch = epoch;
         RelativeState = relativeState ?? throw new ArgumentNullException(nameof(relativeState));
         MissDistanceMeters = missDistanceMeters;
         CombinedCovarianceRtn = combinedCovarianceRtn;
         QualityFlags = qualityFlags;
+        ProtectedCovarianceAge = protectedCovarianceAge;
+        SecondaryCovarianceAge = secondaryCovarianceAge;
     }
 
     /// <summary>
@@ -51,4 +68,17 @@ public sealed class EncounterState
     /// Gets quality flags that indicate missing data, remediation, or regime warnings for this encounter.
     /// </summary>
     public EncounterQualityFlags QualityFlags { get; }
+
+    /// <summary>
+    /// Gets the time between the epoch of the protected object's covariance and the encounter epoch:
+    /// zero when the covariance was available at the encounter epoch, the distance to the initial state epoch
+    /// when the initial covariance was used, null when the protected object has no covariance.
+    /// </summary>
+    public TimeSpan? ProtectedCovarianceAge { get; }
+
+    /// <summary>
+    /// Gets the time between the epoch of the secondary object's covariance and the encounter epoch, with the same
+    /// conventions as <see cref="ProtectedCovarianceAge"/>.
+    /// </summary>
+    public TimeSpan? SecondaryCovarianceAge { get; }
 }

@@ -295,6 +295,51 @@ public class CdmTests
     }
 
     [Fact]
+    public void ToCdm_SameStateInIcrfAndGcrf_ExportsTheSameContent()
+    {
+        // Frame.ICRF (SPICE J2000) and Frame.GCRF share the ICRF axes, so the GCRF label of the CDM is exact for both.
+        var icrfEncounter = CreateManualEncounterCase();
+        var gcrfEncounter = new EncounterCase(
+            icrfEncounter.ProtectedAsset,
+            icrfEncounter.SecondaryObject,
+            icrfEncounter.ScreeningWindow,
+            icrfEncounter.EncounterState,
+            icrfEncounter.CollisionRisk,
+            (StateVector)icrfEncounter.ProtectedState!.ToFrame(Frames.Frame.GCRF),
+            (StateVector)icrfEncounter.SecondaryState!.ToFrame(Frames.Frame.GCRF));
+        Assert.Equal("GCRF", gcrfEncounter.ProtectedState!.Frame.Name);
+
+        var options = new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc),
+            MessageId = "CDM-UNIT-ICRF-GCRF"
+        };
+        var fromIcrf = icrfEncounter.ToCdm(options);
+        var fromGcrf = gcrfEncounter.ToCdm(options);
+
+        for (int index = 0; index < 2; index++)
+        {
+            var icrfSegment = fromIcrf.Segments[index];
+            var gcrfSegment = fromGcrf.Segments[index];
+            Assert.Equal(CdmReferenceFrame.Gcrf, icrfSegment.Metadata!.ReferenceFrame);
+            Assert.Equal(CdmReferenceFrame.Gcrf, gcrfSegment.Metadata!.ReferenceFrame);
+            AssertVectorApproximatelyEqual(icrfSegment.Data!.StateVector!.PositionMeters, gcrfSegment.Data!.StateVector!.PositionMeters, 1.0e-6);
+            AssertVectorApproximatelyEqual(icrfSegment.Data.StateVector.VelocityMetersPerSecond,
+                gcrfSegment.Data.StateVector.VelocityMetersPerSecond, 1.0e-9);
+
+            var icrfCovariance = icrfSegment.Data.CovarianceMatrix!.StateCovarianceRtn;
+            var gcrfCovariance = gcrfSegment.Data.CovarianceMatrix!.StateCovarianceRtn;
+            for (int row = 0; row < 6; row++)
+            {
+                for (int column = 0; column < 6; column++)
+                {
+                    Assert.Equal(icrfCovariance.Get(row, column), gcrfCovariance.Get(row, column), 1.0e-6);
+                }
+            }
+        }
+    }
+
+    [Fact]
     public void ToCdm_ThrowsWhenParticipantCovarianceIsUnavailable()
     {
         var earth = CreateEarth();

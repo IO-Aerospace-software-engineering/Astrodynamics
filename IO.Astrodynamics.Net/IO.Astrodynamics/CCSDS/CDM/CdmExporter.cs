@@ -14,8 +14,6 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 
 internal static class CdmExporter
 {
-    private sealed record ResolvedCovariance(Matrix? CovarianceIcrf, bool UsedStaleCovariance);
-
     public static Cdm Export(EncounterCase encounterCase, CdmExportOptions? options)
     {
         ArgumentNullException.ThrowIfNull(encounterCase);
@@ -27,19 +25,29 @@ internal static class CdmExporter
                 "EncounterCase does not retain participant TCA states. Re-run conjunction assessment with the current version before exporting to CDM.");
         }
 
-        var protectedCovariance = ResolveCovariance(encounterCase.ProtectedAsset.Spacecraft, encounterCase.ProtectedState);
-        var secondaryCovariance = ResolveCovariance(encounterCase.SecondaryObject, encounterCase.SecondaryState);
+        // Same resolution as the conjunction analysis: covariance at TCA, otherwise the initial-state covariance
+        // held fixed in RTN.
+        var protectedCovariance = EncounterCovariance.Resolve(encounterCase.ProtectedAsset.Spacecraft, encounterCase.ProtectedState);
+        var secondaryCovariance = EncounterCovariance.Resolve(encounterCase.SecondaryObject, encounterCase.SecondaryState);
 
-        if (protectedCovariance.CovarianceIcrf == null)
+        if (protectedCovariance.CovarianceInertial == null)
         {
             throw new InvalidOperationException(
                 "Protected object covariance is required to export a standards-compliant CDM.");
         }
 
-        if (secondaryCovariance.CovarianceIcrf == null)
+        if (secondaryCovariance.CovarianceInertial == null)
         {
             throw new InvalidOperationException(
                 "Secondary object covariance is required to export a standards-compliant CDM.");
+        }
+
+        if (encounterCase.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed) && !options.AllowStaleCovariance)
+        {
+            throw new InvalidOperationException(
+                $"The encounter used a stale covariance (protected: {FormatAge(protectedCovariance.Age)}, secondary: " +
+                $"{FormatAge(secondaryCovariance.Age)} from TCA, held fixed in RTN, not propagated). " +
+                "Set CdmExportOptions.AllowStaleCovariance to export it anyway.");
         }
 
         var protectedMetadata = MergeMetadata(
@@ -48,7 +56,7 @@ internal static class CdmExporter
                 CdmObjectRole.Object1,
                 encounterCase.ProtectedAsset.Spacecraft,
                 encounterCase.ProtectedState,
-                protectedCovariance.UsedStaleCovariance),
+                protectedCovariance),
             options.ProtectedParticipantMetadata);
 
         var secondaryMetadata = MergeMetadata(
@@ -57,7 +65,7 @@ internal static class CdmExporter
                 CdmObjectRole.Object2,
                 encounterCase.SecondaryObject,
                 encounterCase.SecondaryState,
-                secondaryCovariance.UsedStaleCovariance),
+                secondaryCovariance),
             options.SecondaryParticipantMetadata);
 
         var protectedRadius = encounterCase.ProtectedAsset.Spacecraft.HardBodyRadius;
@@ -71,16 +79,16 @@ internal static class CdmExporter
                 protectedMetadata,
                 encounterCase.ProtectedAsset.Spacecraft,
                 encounterCase.ProtectedState,
-                RotateCovarianceToRtn(protectedCovariance.CovarianceIcrf!.Value, encounterCase.ProtectedState),
+                RotateCovarianceToRtn(protectedCovariance.CovarianceInertial!.Value, encounterCase.ProtectedState),
                 protectedRadius,
-                protectedCovariance.UsedStaleCovariance),
+                protectedCovariance),
             BuildSegment(
                 secondaryMetadata,
                 encounterCase.SecondaryObject,
                 encounterCase.SecondaryState,
-                RotateCovarianceToRtn(secondaryCovariance.CovarianceIcrf!.Value, encounterCase.SecondaryState),
+                RotateCovarianceToRtn(secondaryCovariance.CovarianceInertial!.Value, encounterCase.SecondaryState),
                 secondaryRadius,
-                secondaryCovariance.UsedStaleCovariance)
+                secondaryCovariance)
         };
 
         var header = new CdmHeader
@@ -137,10 +145,14 @@ internal static class CdmExporter
         StateVector state,
         Matrix covarianceRtn,
         double hardBodyRadiusMeters,
-        bool usedStaleCovariance)
+        EncounterCovariance covariance)
     {
-        var dataComments = usedStaleCovariance
-            ? new[] { "Covariance exported from the participant's initial state because no covariance was available at TCA." }
+        var dataComments = covariance.FromInitialState
+            ? new[]
+            {
+                $"Covariance taken from the participant's initial state, {FormatAge(covariance.Age)} from TCA, " +
+                "held fixed in the RTN frame (not propagated)."
+            }
             : Array.Empty<string>();
 
         return new CdmSegment
@@ -196,12 +208,13 @@ internal static class CdmExporter
         CdmObjectRole role,
         ILocalizable source,
         StateVector state,
-        bool usedStaleCovariance)
+        EncounterCovariance covariance)
     {
         var comments = new List<string>();
-        if (usedStaleCovariance)
+        if (covariance.FromInitialState)
         {
-            comments.Add("Participant covariance at TCA was unavailable; initial state covariance was exported instead.");
+            comments.Add($"Participant covariance at TCA was unavailable; the initial state covariance, {FormatAge(covariance.Age)} " +
+                         "from TCA, was exported instead.");
         }
 
         if (source.IsSpiceBacked)
@@ -309,21 +322,17 @@ internal static class CdmExporter
             $"CDM-{System.Math.Abs(encounterCase.ProtectedAsset.Spacecraft.NaifId)}-{System.Math.Abs(encounterCase.SecondaryObject.NaifId)}-{encounterCase.EncounterState.Epoch.ToUTC().DateTime:yyyyMMddHHmmssfff}");
     }
 
-    private static ResolvedCovariance ResolveCovariance(ILocalizable source, StateVector state)
+    private static string FormatAge(TimeSpan? age)
     {
-        if (state.Covariance.HasValue)
-        {
-            return new ResolvedCovariance(state.Covariance.Value, false);
-        }
-
-        if (source.InitialOrbitalParameters is StateVector initialState && initialState.Covariance.HasValue)
-        {
-            return new ResolvedCovariance(initialState.Covariance.Value, true);
-        }
-
-        return new ResolvedCovariance(null, false);
+        return age.HasValue
+            ? string.Create(CultureInfo.InvariantCulture, $"{age.Value.TotalSeconds:F1} s")
+            : "no covariance";
     }
 
+    /// <summary>
+    /// Maps the frame of a participant state onto a CDM REF_FRAME. SPICE J2000 (Frame.ICRF) and GCRF share the ICRF
+    /// axes, so both are labelled GCRF exactly; no frame bias is involved. A frame named EME2000 keeps its label.
+    /// </summary>
     private static CdmReferenceFrame MapReferenceFrame(string frameName)
     {
         return frameName.ToUpperInvariant() switch

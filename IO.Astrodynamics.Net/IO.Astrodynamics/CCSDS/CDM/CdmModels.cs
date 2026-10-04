@@ -272,4 +272,12 @@ public sealed record CdmExportOptions
     public bool IncludeScreeningWindow { get; init; } = true;
 
     public string? CollisionProbabilityMethod { get; init; }
+
+    /// <summary>
+    /// Allows the export of an encounter flagged <see cref="IO.Astrodynamics.SSA.EncounterQualityFlags.StaleCovarianceUsed"/>, whose
+    /// covariance was taken from a participant's initial state further from the TCA than
+    /// <see cref="IO.Astrodynamics.SSA.ConjunctionAnalysisOptions.StaleCovarianceThreshold"/>. Such an export is refused by default.
+    /// The age of each exported covariance is written in the CDM comments either way.
+    /// </summary>
+    public bool AllowStaleCovariance { get; init; }
 }

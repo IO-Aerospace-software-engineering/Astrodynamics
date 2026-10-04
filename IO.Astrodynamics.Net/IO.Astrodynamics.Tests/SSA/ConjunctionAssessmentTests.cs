@@ -5,6 +5,7 @@ using System.Linq;
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.CCSDS.CDM;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -1495,7 +1496,10 @@ public class ConjunctionAssessmentTests
         double dt = (encounter.EncounterState.Epoch - tca).TotalSeconds;
         var relativePosition = (r2 + v2 * dt) - (r1 + v1 * dt);
         var relativeVelocity = v2 - v1;
-        var (miss2D, knownCov2D) = ConjunctionAssessment.ProjectOntoEncounterPlane(relativePosition, relativeVelocity, cov1);
+        // The protected covariance is held fixed in RTN from the initial state to the found TCA.
+        var heldCov1 = HoldPositionCovarianceInRtn(cov1,
+            Assert.IsType<StateVector>(protectedSpacecraft.InitialOrbitalParameters), r1 + v1 * dt, v1);
+        var (miss2D, knownCov2D) = ConjunctionAssessment.ProjectOntoEncounterPlane(relativePosition, relativeVelocity, heldCov1);
         var maximumPc = ConjunctionAssessment.ComputeSingleCovarianceMaximumCollisionProbability(miss2D, knownCov2D, combinedHardBodyRadius);
         var directKnownOnlyPc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss2D, knownCov2D, combinedHardBodyRadius);
 
@@ -1525,6 +1529,173 @@ public class ConjunctionAssessmentTests
         Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
         // Pc should still be computed from the stale covariance
         Assert.NotNull(encounter.CollisionRisk.ProbabilityOfCollision);
+    }
+
+    // ========== Covariance Held In RTN And Stale Covariance Guard ==========
+
+    [Theory]
+    [InlineData(0.25)]
+    [InlineData(0.5)]
+    [InlineData(0.75)]
+    public void EncounterCovariance_InitialCovarianceIsHeldInRtnUpToTheEncounter(double orbitFraction)
+    {
+        // Circular orbit of 6,778 km. At the initial epoch the covariance is elongated along-track:
+        // sigma R = 1 m, sigma T = 100 m, sigma N = 2 m. Half an orbit later the along-track axis is merely reversed,
+        // so a covariance left in the inertial frame would still look right; a quarter or three quarters of an orbit
+        // later it would point radially. Held in RTN, it stays aligned with the velocity at every fraction.
+        var earth = CreateEarth();
+        const double radius = 6_778_000.0;
+        double speed = System.Math.Sqrt(earth.GM / radius);
+        double period = 2.0 * System.Math.PI * radius / speed;
+
+        var initialPosition = new Vector3(radius, 0.0, 0.0);
+        var initialVelocity = new Vector3(0.0, speed, 0.0);
+        var covarianceRtn = new Matrix(6, 6);
+        double[] variances = { 1.0, 1.0e4, 4.0, 1.0e-6, 1.0e-4, 4.0e-6 };
+        for (int i = 0; i < 6; i++)
+        {
+            covarianceRtn.Set(i, i, variances[i]);
+        }
+
+        var initialOrientation = new StateVector(initialPosition, initialVelocity, earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var spacecraft = CreateSpacecraft(-3401, "RTN_HOLD", earth, initialPosition, initialVelocity,
+            initialOrientation.RotateCovarianceFromRtn(covarianceRtn));
+
+        double angle = 2.0 * System.Math.PI * orbitFraction;
+        var encounterVelocity = new Vector3(-speed * System.Math.Sin(angle), speed * System.Math.Cos(angle), 0.0);
+        var encounterState = new StateVector(
+            new Vector3(radius * System.Math.Cos(angle), radius * System.Math.Sin(angle), 0.0),
+            encounterVelocity,
+            earth,
+            TimeSystem.Time.J2000TDB.AddSeconds(period * orbitFraction),
+            Frames.Frame.ICRF);
+
+        var resolved = EncounterCovariance.Resolve(spacecraft, encounterState);
+
+        Assert.True(resolved.FromInitialState);
+        Assert.NotNull(resolved.CovarianceInertial);
+        Assert.Equal(period * orbitFraction, resolved.Age!.Value.TotalSeconds, 1.0e-6);
+        AssertMatrixApproximatelyEqual(covarianceRtn, encounterState.RotateCovarianceToRtn(resolved.CovarianceInertial!.Value), 1.0e-9);
+
+        // The largest position variance (100 m squared) lies along the velocity at the encounter.
+        var along = encounterVelocity.Normalize();
+        double[] direction = { along.X, along.Y, along.Z };
+        double varianceAlongVelocity = 0.0;
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                varianceAlongVelocity += direction[i] * resolved.CovarianceInertial.Value.Get(i, j) * direction[j];
+            }
+        }
+
+        Assert.Equal(1.0e4, varianceAlongVelocity, 6);
+    }
+
+    [Fact]
+    public void Analyze_CovarianceHoursOldAtTca_IsFlaggedAndCdmExportRequiresOptIn()
+    {
+        // Omitron geometry (NASA CARA), with the TCA three hours after the initial states that carry the covariances.
+        var earth = CreateEarth();
+        var tca = TimeSystem.Time.J2000TDB.AddHours(3.0);
+        var window = new Window(tca.AddSeconds(-10.0), tca.AddSeconds(10.0));
+        const double combinedHardBodyRadius = 0.020;
+
+        var r1 = new Vector3(378.39559, 4305.721887, 5752.767554);
+        var v1 = new Vector3(2.360800244, 5.580331936, -4.322349039);
+        var cov1 = BuildPositionCovariance(new[,]
+        {
+            { 44.5757544811362, 81.6751751052616, -67.8687662707124 },
+            { 81.6751751052616, 158.4534029561630, -128.6169216448570 },
+            { -67.8687662707124, -128.6169216448580, 105.4905425627010 }
+        });
+        var r2 = new Vector3(374.5180598, 4307.560983, 5751.130418);
+        var v2 = new Vector3(-5.388125081, -3.946827739, 3.322820358);
+        var cov2 = BuildPositionCovariance(new[,]
+        {
+            { 2.31067077720423, 1.69905293875632, -1.41701645776610 },
+            { 1.69905293875632, 1.24957388457206, -1.04174164279599 },
+            { -1.41701645776610, -1.04174164279599, 0.869260558223714 }
+        });
+
+        var protectedSpacecraft = CreateSpacecraft(-5711, "STALE_P", earth, r1, v1, BuildStateCovarianceFromPosition(cov1),
+            hardBodyRadius: combinedHardBodyRadius);
+        var secondarySpacecraft = CreateSpacecraft(-5712, "STALE_S", earth, r2, v2, BuildStateCovarianceFromPosition(cov2),
+            hardBodyRadius: 0.0);
+        var protectedTrajectory = CreatePropagationSolution(earth, window.StartDate, 20.0, 20.0,
+            seconds => (r1 + v1 * (seconds - 10.0), v1, Vector3.Zero));
+        var secondaryTrajectory = CreatePropagationSolution(earth, window.StartDate, 20.0, 20.0,
+            seconds => (r2 + v2 * (seconds - 10.0), v2, Vector3.Zero));
+
+        var encounter = ConjunctionAssessment.Analyze(
+            new ProtectedSpacecraftProfile(protectedSpacecraft),
+            protectedTrajectory,
+            secondarySpacecraft,
+            secondaryTrajectory,
+            window,
+            new ConjunctionAnalysisOptions
+            {
+                SampleStep = TimeSpan.FromDays(1.0),
+                MaximumEventSearchStep = TimeSpan.FromDays(1.0),
+                SecondaryHardBodyRadiusMeters = 0.0,
+                LowRelativeSpeedThresholdMetersPerSecond = 0.0
+            });
+
+        Assert.Equal(EncounterQualityFlags.StaleCovarianceUsed, encounter.EncounterState.QualityFlags);
+        Assert.Equal(10800.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-3);
+        Assert.Equal(10800.0, encounter.EncounterState.SecondaryCovarianceAge!.Value.TotalSeconds, 1.0e-3);
+        // The initial states carry the TCA geometry, so holding the covariances in RTN leaves them unchanged:
+        // the published Pc is still reproduced.
+        Assert.True(System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision!.Value - 2.70601573490125e-05) / 2.70601573490125e-05 < 1.0e-5);
+
+        var creationDate = new DateTime(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc);
+        var refused = Assert.Throws<InvalidOperationException>(() => encounter.ToCdm(new CdmExportOptions { CreationDateUtc = creationDate }));
+        Assert.Contains("AllowStaleCovariance", refused.Message);
+        Assert.Contains("10800.0 s", refused.Message);
+
+        var cdm = encounter.ToCdm(new CdmExportOptions { CreationDateUtc = creationDate, AllowStaleCovariance = true });
+        foreach (var segment in cdm.Segments)
+        {
+            Assert.Contains(segment.Data!.Comments, comment => comment.Contains("10800.0 s") && comment.Contains("RTN"));
+            Assert.Contains(segment.Metadata!.Comments, comment => comment.Contains("10800.0 s"));
+        }
+    }
+
+    [Fact]
+    public void Analyze_CovarianceWithinStaleThreshold_IsNotFlagged()
+    {
+        // Same geometry as above with a 60 s threshold and the TCA 45 s after the initial states.
+        var earth = CreateEarth();
+        var tca = TimeSystem.Time.J2000TDB.AddSeconds(45.0);
+        var window = new Window(tca.AddSeconds(-10.0), tca.AddSeconds(10.0));
+        var r1 = new Vector3(6_800_000.0, 0.0, 0.0);
+        var v1 = new Vector3(0.0, 7_656.2204182967143, 0.0);
+        var r2 = new Vector3(6_800_000.0, 20.0, 5.0);
+        var v2 = new Vector3(0.0, 0.0, 7_656.2204182967143);
+        var protectedSpacecraft = CreateSpacecraft(-5721, "FRESH_P", earth, r1, v1);
+        var secondarySpacecraft = CreateSpacecraft(-5722, "FRESH_S", earth, r2, v2);
+        var protectedTrajectory = CreatePropagationSolution(earth, window.StartDate, 20.0, 20.0,
+            seconds => (r1 + v1 * (seconds - 10.0), v1, Vector3.Zero));
+        var secondaryTrajectory = CreatePropagationSolution(earth, window.StartDate, 20.0, 20.0,
+            seconds => (r2 + v2 * (seconds - 10.0), v2, Vector3.Zero));
+
+        var options = new ConjunctionAnalysisOptions
+        {
+            SampleStep = TimeSpan.FromDays(1.0),
+            MaximumEventSearchStep = TimeSpan.FromDays(1.0),
+            LowRelativeSpeedThresholdMetersPerSecond = 0.0
+        };
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory,
+            secondarySpacecraft, secondaryTrajectory, window, options);
+
+        Assert.Equal(TimeSpan.FromSeconds(60), options.StaleCovarianceThreshold);
+        Assert.False(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
+        Assert.Equal(45.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-2);
+
+        // A tighter threshold flags the same encounter.
+        var strict = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory,
+            secondarySpacecraft, secondaryTrajectory, window, options with { StaleCovarianceThreshold = TimeSpan.FromSeconds(30) });
+        Assert.True(strict.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
     }
 
     [Fact]
@@ -1845,6 +2016,17 @@ public class ConjunctionAssessmentTests
         double expectedPublishedPc,
         double publishedPcRelativeTolerance)
     {
+        // The covariances are attached to the initial states and held fixed in RTN up to the encounter epoch.
+        // The fixtures put the TCA geometry on the initial states, so this transport is a rotation of about
+        // 1e-7 rad (the found TCA is within 1e-4 s of the nominal one); it is applied here with the test's own
+        // RTN construction so that the direct and entry-point Pc can be compared to rounding level.
+        var protectedInitial = Assert.IsType<StateVector>(encounter.ProtectedAsset.Spacecraft.InitialOrbitalParameters);
+        var secondaryInitial = Assert.IsType<StateVector>(encounter.SecondaryObject.InitialOrbitalParameters);
+        primaryPositionCovariance = HoldPositionCovarianceInRtn(primaryPositionCovariance, protectedInitial,
+            primaryPositionAtEpoch, primaryVelocityAtEpoch);
+        secondaryPositionCovariance = HoldPositionCovarianceInRtn(secondaryPositionCovariance, secondaryInitial,
+            secondaryPositionAtEpoch, secondaryVelocityAtEpoch);
+
         var expectedRelativePosition = secondaryPositionAtEpoch - primaryPositionAtEpoch;
         var expectedRelativeVelocity = secondaryVelocityAtEpoch - primaryVelocityAtEpoch;
         double expectedMissDistance = expectedRelativePosition.Magnitude();
@@ -1871,7 +2053,12 @@ public class ConjunctionAssessmentTests
             secondaryPositionCovariance,
             expectedCombinedHardBodyRadius);
 
-        Assert.Equal(EncounterQualityFlags.StaleCovarianceUsed, encounter.EncounterState.QualityFlags);
+        // The covariances are 10 s old at TCA, below the 60 s stale threshold: no quality flag.
+        Assert.Equal(EncounterQualityFlags.None, encounter.EncounterState.QualityFlags);
+        Assert.NotNull(encounter.EncounterState.ProtectedCovarianceAge);
+        Assert.NotNull(encounter.EncounterState.SecondaryCovarianceAge);
+        Assert.Equal(10.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-3);
+        Assert.Equal(10.0, encounter.EncounterState.SecondaryCovarianceAge!.Value.TotalSeconds, 1.0e-3);
         Assert.Equal(expectedCombinedHardBodyRadius, encounter.CollisionRisk.CombinedHardBodyRadiusMeters, 12);
         Assert.NotNull(encounter.CollisionRisk.ProbabilityOfCollision);
         Assert.NotNull(expectedPc);
@@ -1921,6 +2108,19 @@ public class ConjunctionAssessmentTests
     {
         var rotated = rotation * new[] { vector.X, vector.Y, vector.Z };
         return new Vector3(rotated[0], rotated[1], rotated[2]);
+    }
+
+    /// <summary>
+    /// Holds a 3x3 position covariance fixed in RTN from the initial state to the given epoch state:
+    /// C_epoch = R_epoch^T R_initial C R_initial^T R_epoch.
+    /// </summary>
+    private static Matrix HoldPositionCovarianceInRtn(Matrix positionCovariance, StateVector initialState, Vector3 positionAtEpoch,
+        Vector3 velocityAtEpoch)
+    {
+        var initialRotation = CreateRtnRotation(initialState.Position, initialState.Velocity);
+        var epochRotation = CreateRtnRotation(positionAtEpoch, velocityAtEpoch);
+        var covarianceRtn = initialRotation * positionCovariance * initialRotation.Transpose();
+        return epochRotation.Transpose() * covarianceRtn * epochRotation;
     }
 
     private static Matrix CreateRtnRotation(Vector3 position, Vector3 velocity)

@@ -35,7 +35,8 @@ var orbit = new StateVector(
 ```
 
 Use a full (non-diagonal) covariance when available from orbit determination.
-Diagonal-only covariance underestimates cross-axis correlations.
+A diagonal covariance ignores the correlations between axes, which changes the
+shape of the sampled dispersion in either direction.
 
 ### MonteCarloConfiguration
 
