@@ -13,6 +13,7 @@ using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 using CelestialBody = IO.Astrodynamics.Body.CelestialBody;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 using StateVector = IO.Astrodynamics.OrbitalParameters.StateVector;
@@ -22,8 +23,11 @@ namespace IO.Astrodynamics.Tests.Propagators;
 
 public class PropagatorTests
 {
-    public PropagatorTests()
+    private readonly ITestOutputHelper _output;
+
+    public PropagatorTests(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
@@ -245,7 +249,7 @@ public class PropagatorTests
     [Fact]
     public void Conformance001_Leo24hGrav10SunMoon_CentralBodyMode()
     {
-        // Same as Conformance001 but using central-body-centered propagation with Battin's formula.
+        // Conformance case propagator_24h_leo_grav10_001, Velocity-Verlet with a fixed 1 s step.
         Clock clk = new Clock("My clock", 256);
 
         var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
@@ -269,22 +273,14 @@ public class PropagatorTests
 
         var solution = propagator.Propagate();
 
-        var lastEphemeris = solution.StateVectors.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
         var expectedPosition = new Vector3(-5276164.48141924, 4263291.396350933, -404558.956106471);
         var expectedVelocity = new Vector3(-2724.567057501992, -3933.747338841648, -5983.827775625323);
 
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 300.0,
-            $"Position error: {positionError:F3} m (limit: 300 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.35,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.35 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+        // Measured on 2026-10-04: 294.3 m and 332.0 mm/s.
+        const double PositionLimitMeters = 300.0;
+        const double VelocityLimitMetersPerSecond = 0.35;
+        ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_leo_grav10_001 (Verlet 1 s)", solution, propWindow,
+            expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
 
     #endregion
@@ -294,7 +290,7 @@ public class PropagatorTests
     [Fact]
     public void Conformance002_Geo24hGrav70AllBodies_CentralBodyMode()
     {
-        // Same as Conformance002 but using central-body-centered propagation with Battin's formula.
+        // Conformance case propagator_24h_geo_grav70_002, Velocity-Verlet with a fixed 1 s step.
         Clock clk = new Clock("My clock", 256);
 
         var utcEpoch = new Astrodynamics.TimeSystem.Time(2026, 2, 9, 10, 22, 58, millisecond: 958, frame: TimeFrame.UTCFrame);
@@ -330,23 +326,14 @@ public class PropagatorTests
 
         var solution = propagator.Propagate();
 
-        var lastEphemeris = solution.StateVectors.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
         var expectedPosition = new Vector3(22035054.64841816, 36415074.44453181, -382421.9052105268);
         var expectedVelocity = new Vector3(-2617.90823218342, 1584.740384557747, 51.26063967862107);
 
-        // Central-body mode should match SSB mode accuracy (both are mathematically equivalent)
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 9.0,
-            $"Position error: {positionError:F3} m (limit: 50 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.0007,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.005 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+        // Measured on 2026-10-04: 8.48 m and 0.606 mm/s.
+        const double PositionLimitMeters = 9.0;
+        const double VelocityLimitMetersPerSecond = 0.0007;
+        ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_geo_grav70_002 (Verlet 1 s)", solution, propWindow,
+            expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
 
     #endregion
@@ -356,7 +343,7 @@ public class PropagatorTests
     [Fact]
     public void Conformance003_Sso24hGrav10SunMoon_CentralBodyMode()
     {
-        // Same as Conformance003 but using central-body-centered propagation with Battin's formula.
+        // Conformance case propagator_24h_sso_grav10_003, Velocity-Verlet with a fixed 1 s step.
         Clock clk = new Clock("My clock", 256);
 
         var utcEpoch = new Astrodynamics.TimeSystem.Time(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
@@ -384,22 +371,14 @@ public class PropagatorTests
 
         var solution = propagator.Propagate();
 
-        var lastEphemeris = solution.StateVectors.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
         var expectedPosition = new Vector3(-608631.5307021005, 1650694.083265209, -6887696.349104228);
         var expectedVelocity = new Vector3(1985.415757873638, 7042.412568889923, 1515.859902259437);
 
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 250.0,
-            $"Position error: {positionError:F3} m (limit: 300 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.26,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.3 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+        // Measured on 2026-10-04: 246.4 m and 258.4 mm/s.
+        const double PositionLimitMeters = 250.0;
+        const double VelocityLimitMetersPerSecond = 0.26;
+        ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_sso_grav10_003 (Verlet 1 s)", solution, propWindow,
+            expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
 
     #endregion
