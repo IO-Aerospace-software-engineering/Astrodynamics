@@ -213,21 +213,44 @@ public static class Iau2006Model
     }
 
     /// <summary>
-    /// Computes the CIO locator s in radians.
-    /// Uses the polynomial approximation with the dominant -XY/2 term.
+    /// Computes the CIO locator s in radians, given the CIP coordinates X, Y.
+    /// Evaluates the full IAU 2006 series of <c>s + XY/2</c> (IERS Conventions 2010, Table 5.2d), as
+    /// SOFA <c>iauS06</c> does: a polynomial plus 66 periodic terms, the largest being 2640.73 µas in sin Ω.
     /// </summary>
+    /// <param name="t">Julian centuries TT since J2000.0.</param>
+    /// <param name="x">CIP X coordinate, in radians.</param>
+    /// <param name="y">CIP Y coordinate, in radians.</param>
     public static double CioLocator(double t, double x, double y)
     {
-        // s + XY/2 approximation (polynomial terms from IERS Conventions 2010)
-        double s = -x * y / 2.0;
+        // Fundamental arguments from the IERS Conventions 2003, in the order of the series multipliers.
+        Span<double> fa = stackalloc double[8];
+        fa[0] = Iau2006FundamentalArguments.MoonMeanAnomaly(t);
+        fa[1] = Iau2006FundamentalArguments.SunMeanAnomaly(t);
+        fa[2] = Iau2006FundamentalArguments.MoonMeanArgumentOfLatitude(t);
+        fa[3] = Iau2006FundamentalArguments.MeanElongation(t);
+        fa[4] = Iau2006FundamentalArguments.MoonAscendingNodeLongitude(t);
+        fa[5] = Iau2006FundamentalArguments.LambdaVenus(t);
+        fa[6] = Iau2006FundamentalArguments.LambdaEarth(t);
+        fa[7] = Iau2006FundamentalArguments.GeneralPrecession(t);
 
-        // Add polynomial terms (microarcseconds, from SOFA iauS06)
-        s += (94.0 + 3808.65 * t - 122.68 * t * t
-              - 72574.11 * t * t * t
-              + 27.98 * t * t * t * t
-              + 15.62 * t * t * t * t * t) * DAS2R * 1e-6;
+        // w[k] is the coefficient of t^k, in microarcseconds: polynomial part plus periodic terms.
+        Span<double> w = stackalloc double[6];
+        Iau2006CioLocatorData.Polynomial.CopyTo(w);
+        for (int k = 0; k < Iau2006CioLocatorData.Series.Length; k++)
+        {
+            var terms = Iau2006CioLocatorData.Series[k];
+            // Smallest terms first, as SOFA does, to limit rounding.
+            for (int i = terms.Length - 1; i >= 0; i--)
+            {
+                var term = terms[i];
+                double a = term.l * fa[0] + term.lp * fa[1] + term.f * fa[2] + term.d * fa[3]
+                           + term.om * fa[4] + term.lve * fa[5] + term.le * fa[6] + term.pa * fa[7];
+                w[k] += term.s * System.Math.Sin(a) + term.c * System.Math.Cos(a);
+            }
+        }
 
-        return s;
+        double sPlusHalfXy = w[0] + (w[1] + (w[2] + (w[3] + (w[4] + w[5] * t) * t) * t) * t) * t;
+        return sPlusHalfXy * DAS2R * 1e-6 - x * y / 2.0;
     }
 
     /// <summary>

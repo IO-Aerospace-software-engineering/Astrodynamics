@@ -202,6 +202,22 @@ public class Iau2006ModelTests
         Assert.Equal(-1.22003221307645991e-08, s, 3e-9);
     }
 
+    /// <summary>
+    /// The periodic terms of s + XY/2 peak where |sin Omega| = 1 (the 2640.73 uas sin Omega term):
+    /// a polynomial-only locator is off by 1.27e-8 rad (2.6 mas) there. Given SOFA's X, Y, the full
+    /// series must reproduce iauS06. Reference: tools/sofa_reference/sofa_ref.c, epochs
+    /// 2011_Feb_14_TT_sin_om_minus_1 and 2020_Jun_14_TT_sin_om_plus_1.
+    /// </summary>
+    [Theory]
+    [InlineData(0.11117043121149897, 0.001115607505323693, -5.981399643273296e-07, 1.5092970507704093e-08)]
+    [InlineData(0.20425735797399042, 0.0019498452577781959, -6.578588181375801e-06, -5.022023971233836e-09)]
+    public void CioLocatorMatchesSofaS06WhereSinOmegaPeaks(double t, double x, double y, double expectedS)
+    {
+        double s = Iau2006Model.CioLocator(t, x, y);
+
+        Assert.Equal(expectedS, s, 1e-11);
+    }
+
     #endregion
 
     #region TIO Locator

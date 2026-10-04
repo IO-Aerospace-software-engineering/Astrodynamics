@@ -12,9 +12,9 @@ public class CirsFrameTests
 {
     private static double QuaternionAngleDifference(Quaternion left, Quaternion right)
     {
+        // atan2 keeps full precision for small angles, where 2 acos(|w|) cannot resolve less than ~3e-8 rad.
         var relative = left.Conjugate() * right;
-        double clampedW = System.Math.Min(1.0, System.Math.Abs(relative.W));
-        return 2.0 * System.Math.Acos(clampedW);
+        return 2.0 * System.Math.Atan2(relative.VectorPart.Magnitude(), System.Math.Abs(relative.W));
     }
 
     [Fact]

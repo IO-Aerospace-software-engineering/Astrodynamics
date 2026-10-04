@@ -1,4 +1,13 @@
+/*
+ * SOFA reference values for the IAU 2006 / 2000B frame chain (IO.Astrodynamics/Frames).
+ *
+ *   ./sofa_ref           Detailed JSON at a few named epochs (matrices, fundamental arguments, ...).
+ *   ./sofa_ref --sweep   Compact JSON sweep from 1990 to 2040, written to
+ *                        IO.Astrodynamics.Tests/Data/SofaReference/iau2006_sweep.json and read by
+ *                        Iau2006SofaSweepTests.
+ */
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include "sofa.h"
 #include "sofam.h"
@@ -82,7 +91,7 @@ static void compute_epoch(double jd1, double jd2, const char *label,
     printf("    \"om_rad\": %.17e,\n", om);
     printf("    \"lve_rad\": %.17e,\n", lve);
     printf("    \"lea_rad\": %.17e,\n", lea);
-    printf("    \"lge_rad\": %.17e,\n", lge);
+    printf("    \"lge_rad\": %.17e\n", lge);
     printf("  },\n");
     print_matrix("rc2i_gcrs_to_cirs", rc2i);
     printf(",\n");
@@ -98,7 +107,62 @@ static void compute_epoch(double jd1, double jd2, const char *label,
     printf("\n}\n");
 }
 
-int main() {
+/*
+ * Sweep from 1990-01-01 to 2040-01-01 UTC, every 61 days, at a time of day that changes from one
+ * epoch to the next, with a sub-second part printed to 0.1 microsecond (the .NET tick, so that the
+ * same instant is exactly representable on the .NET side). UT1 is taken equal to UTC (no EOP, as
+ * with NullEop). For each epoch: TT centuries, CIP X/Y
+ * (iauXy06, IAU 2006/2000A), CIO locator s (iauS06), ERA (iauEra00) and the GCRS-to-TIRS matrix
+ * R3(ERA) * C2I (iauC2tcio with an identity polar motion matrix, so s' is excluded too).
+ */
+static void sweep(void) {
+    int first = 1;
+    printf("[\n");
+    for (int k = 0; ; k++) {
+        double mjd = 47892.0 + 61.0 * k;            /* 1990-01-01 + 61 k days */
+        if (mjd > 66154.0) break;                    /* 2040-01-01 */
+        int seconds = (int) ((k * 27449L) % 86400L); /* time of day, whole seconds */
+        long ticks = (k * 7919L * 1009L) % 10000000L;  /* sub-second part, in 0.1 us */
+
+        int iy, im, id;
+        double fd;
+        iauJd2cal(DJM0, mjd, &iy, &im, &id, &fd);
+        int hh = seconds / 3600, mm = (seconds / 60) % 60, ss = seconds % 60;
+
+        double utc1, utc2, tai1, tai2, tt1, tt2, ut11, ut12;
+        double sec = ss + ticks * 1e-7;
+        iauDtf2d("UTC", iy, im, id, hh, mm, sec, &utc1, &utc2);
+        iauUtctai(utc1, utc2, &tai1, &tai2);
+        iauTaitt(tai1, tai2, &tt1, &tt2);
+        iauUtcut1(utc1, utc2, 0.0, &ut11, &ut12);
+
+        double t = ((tt1 - DJ00) + tt2) / DJC;
+        double x, y, rc2i[3][3], rpom[3][3], rc2t[3][3];
+        iauXy06(tt1, tt2, &x, &y);
+        double s = iauS06(tt1, tt2, x, y);
+        double era = iauEra00(ut11, ut12);
+        iauC2ixys(x, y, s, rc2i);
+        iauIr(rpom);
+        iauC2tcio(rc2i, era, rpom, rc2t);
+
+        printf("%s  {\"utc\": \"%04d-%02d-%02dT%02d:%02d:%02d.%07ld\", \"t_tt\": %.17e, "
+               "\"cip_x\": %.17e, \"cip_y\": %.17e, \"cio_s\": %.17e, \"era\": %.17e, "
+               "\"gcrs_to_tirs\": [%.17e, %.17e, %.17e, %.17e, %.17e, %.17e, %.17e, %.17e, %.17e]}",
+               first ? "" : ",\n", iy, im, id, hh, mm, ss, ticks, t, x, y, s, era,
+               rc2t[0][0], rc2t[0][1], rc2t[0][2],
+               rc2t[1][0], rc2t[1][1], rc2t[1][2],
+               rc2t[2][0], rc2t[2][1], rc2t[2][2]);
+        first = 0;
+    }
+    printf("\n]\n");
+}
+
+int main(int argc, char **argv) {
+    if (argc > 1 && strcmp(argv[1], "--sweep") == 0) {
+        sweep();
+        return 0;
+    }
+
     printf("[\n");
 
     /* Epoch 1: J2000.0 TT (zero-offset test) */
@@ -123,6 +187,15 @@ int main() {
     /* Epoch 5: 2010-06-15 12:00:00 TT */
     double mjd_2010 = 55362.0;
     compute_epoch(DJM0, mjd_2010, "2010_Jun_15_TT",
+                  0.0, 0.0, 0.0);
+    printf(",\n");
+
+    /* Epochs 6 and 7: |sin(Omega)| = 1, where the periodic terms of the CIO locator s peak
+       (the 2640.73 uas sin(Omega) term). 2011-02-14 TT and 2020-06-14 TT. */
+    compute_epoch(DJM0, 55605.0, "2011_Feb_14_TT_sin_om_minus_1",
+                  0.0, 0.0, 0.0);
+    printf(",\n");
+    compute_epoch(DJM0, 59005.0, "2020_Jun_14_TT_sin_om_plus_1",
                   0.0, 0.0, 0.0);
 
     printf("\n]\n");

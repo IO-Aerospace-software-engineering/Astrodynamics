@@ -4,9 +4,12 @@ using System;
 namespace IO.Astrodynamics.Frames;
 
 /// <summary>
-/// Fundamental arguments for the IAU 2006/2000A nutation model.
+/// Fundamental arguments of the IERS Conventions 2003 (SOFA <c>iauFa*03</c>), used by the IAU 2006
+/// CIO locator series (<see cref="Iau2006Model.CioLocator"/>).
 /// Each method returns the argument in radians, given t in Julian centuries TT from J2000.
 /// Polynomial coefficients from IERS Conventions 2010, Table 5.2 / SOFA.
+/// IAU 2000B nutation (<see cref="Iau2006Model.Nutation"/>) is defined with its own linear arguments
+/// (Simon et al. 1994) and does not use these.
 /// </summary>
 public static class Iau2006FundamentalArguments
 {
