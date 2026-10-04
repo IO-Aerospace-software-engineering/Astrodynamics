@@ -77,7 +77,13 @@ namespace IO.Astrodynamics.Maneuver
             //Update DeltaV
             stateVector.UpdateVelocity(stateVector.Velocity + DeltaV);
 
-            //Compute thrust windows and maneuver windows
+            //Compute thrust windows and maneuver windows.
+            //The impulse is applied at the event epoch t. The equivalent finite burn of duration dt is placed on
+            //[t - 0.666 dt, t + 0.334 dt]: two thirds of the burn before the impulse, one third after.
+            //This value dates back to the initial import of the .NET project and no derivation of it is on record.
+            //The usual impulsive approximation of a finite burn centres the burn on the impulse (50 %).
+            //The propagated state receives the full delta-V at t. The windows are reported, and the end of the
+            //maneuver window sets the earliest epoch of the next maneuver in the chain.
             var thrustDuration = Tsiolkovski.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
             ThrustWindow = new Window(stateVector.Epoch - thrustDuration * 0.666, thrustDuration);
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, ManeuverHoldDuration).Merge(ThrustWindow.Value);
