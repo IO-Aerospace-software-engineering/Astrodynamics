@@ -42,18 +42,25 @@ public class GcrfFrameTests
     }
 
     [Fact]
-    public void GcrfBiasMagnitudeIsAbout23Mas()
+    public void GcrfSharesTheIcrfAxes()
     {
+        // The SPICE J2000 pivot is treated as ICRS-aligned, so GCRF -> ICRF is the identity.
+        // The IAU 2006 frame bias lives in the precession-nutation matrix of CIRS, not here.
         var gcrf = new GcrfFrame();
         var orientation = gcrf.GetStateOrientationToICRF(TimeSystem_Time.J2000TDB);
 
-        // Convert quaternion to rotation angle
         var q = orientation.Rotation;
-        double angle = 2.0 * System.Math.Acos(System.Math.Abs(q.W));
+        Assert.Equal(1.0, q.W, 1e-15);
+        Assert.Equal(0.0, q.VectorPart.X, 1e-15);
+        Assert.Equal(0.0, q.VectorPart.Y, 1e-15);
+        Assert.Equal(0.0, q.VectorPart.Z, 1e-15);
 
-        // ~23 mas ≈ 1.1e-7 rad
-        Assert.True(angle < 2e-7, $"Bias angle {angle} should be ~1e-7 rad (~23 mas)");
-        Assert.True(angle > 5e-8, $"Bias angle {angle} should be ~1e-7 rad (~23 mas)");
+        var position = new Vector3(6778136.3, -1234567.8, 345678.9);
+        var inIcrf = gcrf.ToFrame(Frames.Frame.ICRF, TimeSystem_Time.J2000TDB);
+        var rotated = position.Rotate(inIcrf.Rotation);
+        Assert.Equal(position.X, rotated.X, 1e-9);
+        Assert.Equal(position.Y, rotated.Y, 1e-9);
+        Assert.Equal(position.Z, rotated.Z, 1e-9);
     }
 
     [Fact]

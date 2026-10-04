@@ -29,8 +29,17 @@ public class Frame : IEquatable<Frame>
     internal PropagationFrameOrientationCache OrientationCache { get; set; }
 
     /// <summary>
-    /// International Celestial Reference Frame (ICRF) at epoch J2000.
+    /// International Celestial Reference Frame (ICRF), built on the SPICE frame <c>J2000</c>.
+    /// It is the pivot of every frame transformation in the library.
     /// </summary>
+    /// <remarks>
+    /// SPICE names this frame <c>J2000</c> and treats it as aligned with the ICRF; the DE planetary
+    /// ephemerides it carries are ICRF-aligned. The library follows the same convention: the ICRF has
+    /// no epoch, and <see cref="GCRF"/> shares its axes. The ~23 mas IAU 2006 frame bias separates the
+    /// ICRF from the mean equator and equinox of J2000 (EME2000, the dynamical frame); no frame of the
+    /// library models EME2000 separately, so data labelled EME2000 is read in this frame, ignoring the
+    /// bias (about 0.8 m on a LEO position, 4.7 m on a GEO position).
+    /// </remarks>
     public static readonly Frame ICRF = new Frame("J2000");
 
     /// <summary>
@@ -64,8 +73,9 @@ public class Frame : IEquatable<Frame>
     public static readonly Frame TEME = new Frame("TEME");
 
     /// <summary>
-    /// Geocentric Celestial Reference Frame (GCRF), the realization of the ICRS.
-    /// It differs from SPICE's J2000 frame by the IAU 2006 frame bias (~23 mas).
+    /// Geocentric Celestial Reference Frame (GCRF), the ICRS axes centred on the Earth.
+    /// It shares the axes of <see cref="ICRF"/>: the rotation between the two is the identity.
+    /// It is the celestial end of the IAU CIO-based chain GCRF → <see cref="CIRS"/> → <see cref="TIRS"/>.
     /// </summary>
     public static readonly Frame GCRF = new GcrfFrame();
 
