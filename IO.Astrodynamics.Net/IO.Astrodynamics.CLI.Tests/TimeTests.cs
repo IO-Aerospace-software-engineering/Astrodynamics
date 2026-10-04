@@ -179,7 +179,9 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = $"{Time.JULIAN_J2000} JD TDB" }, false, true, false, true, false, false);
             var res = sb.ToString();
 
-            Assert.Equal($"2451544.9992571296 JD{Environment.NewLine}", res);
+            // J2000 TDB is 11:58:55.816074 UTC (TDB - TT is about -74 µs at J2000). The value used to be
+            // truncated to the millisecond (...2571296).
+            Assert.Equal($"2451544.9992571305 JD{Environment.NewLine}", res);
         }
     }
 

@@ -53,9 +53,46 @@ public abstract class TimeFrame : ITimeFrame, IEquatable<TimeFrame>
         Name = name ?? throw new ArgumentNullException(nameof(name));
     }
 
+    /// <summary>
+    /// TAI - UTC at the given UTC instant.
+    /// </summary>
+    /// <remarks>
+    /// Each entry of the leap second table is the first UTC instant of the new offset (00:00:00 UTC), so it
+    /// counts from that instant onward: 2017-01-01T00:00:00 UTC already has TAI - UTC = 37 s.
+    /// </remarks>
     public TimeSpan LeapSecondsFrom(Time dateTime)
     {
-        return TimeSpan.FromSeconds(PREVIOUS_OFFSET + LEAP_SECONDS.Count(x => x < dateTime.DateTime));
+        return LeapSecondsAtUtc(dateTime.DateTime);
+    }
+
+    /// <summary>
+    /// TAI - UTC at the given UTC instant.
+    /// </summary>
+    internal static TimeSpan LeapSecondsAtUtc(DateTime utc)
+    {
+        return TimeSpan.FromSeconds(PREVIOUS_OFFSET + LEAP_SECONDS.Count(x => x <= utc));
+    }
+
+    /// <summary>
+    /// TAI - UTC at the given TAI instant.
+    /// </summary>
+    /// <remarks>
+    /// The leap second inserted before a table entry D starts at the TAI instant D + (previous offset): from there
+    /// on the new offset applies. During the inserted second, UTC 23:59:60, which <see cref="DateTime"/> cannot
+    /// represent, reads as 23:59:59 a second time; D 00:00:00 UTC is reached one second later, as it should be.
+    /// </remarks>
+    internal static TimeSpan LeapSecondsAtTai(DateTime tai)
+    {
+        int count = 0;
+        for (int i = 0; i < LEAP_SECONDS.Length; i++)
+        {
+            if (tai >= LEAP_SECONDS[i].AddSeconds(PREVIOUS_OFFSET + i))
+            {
+                count++;
+            }
+        }
+
+        return TimeSpan.FromSeconds(PREVIOUS_OFFSET + count);
     }
 
     public abstract Time ConvertToTAI(Time time);
