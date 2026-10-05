@@ -17,7 +17,7 @@ using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
-using TLE = IO.Astrodynamics.OrbitalParameters.TLE.TLE;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Propagators.Integrators;
 
@@ -25,8 +25,11 @@ public class RK78IntegratorTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
 
-    public RK78IntegratorTests()
+    private readonly ITestOutputHelper _output;
+
+    public RK78IntegratorTests(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
@@ -499,7 +502,7 @@ public class RK78IntegratorTests
     [Fact]
     public void IntegratesWithCentralBodyPropagator()
     {
-        // Same as SSB mode but using central-body-centered propagation with Battin's formula.
+        // Central-body-centered propagation (Battin's formula), 2 h circular orbit sanity check.
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
 
         Clock clk = new Clock("My clock", 256);
@@ -583,7 +586,7 @@ public class RK78IntegratorTests
     [Fact]
     public void Conformance001_Leo24hGrav10SunMoon_RK78_CentralBodyMode()
     {
-        // Same as SSB mode but using central-body-centered propagation with Battin's formula.
+        // Conformance case propagator_24h_leo_grav10_001, RK7(8) with tolerances 1e-11, as the conformance runner runs it.
         Clock clk = new Clock("My clock", 256);
 
         var utcEpoch = new TimeSystem.Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
@@ -611,22 +614,14 @@ public class RK78IntegratorTests
 
         var res = propagator.Propagate();
 
-        var lastEphemeris = res.StateVectors.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
         var expectedPosition = new Vector3(-5276164.48141924, 4263291.396350933, -404558.956106471);
         var expectedVelocity = new Vector3(-2724.567057501992, -3933.747338841648, -5983.827775625323);
 
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 13.0,
-            $"Position error: {positionError:F3} m (limit: 15 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.015,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.015 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+        // Measured on 2026-10-04: 13.13 m and 14.81 mm/s.
+        const double PositionLimitMeters = 13.5;
+        const double VelocityLimitMetersPerSecond = 0.0155;
+        ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_leo_grav10_001 (RK7(8))", res, propWindow,
+            expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
 
     #endregion
@@ -636,25 +631,24 @@ public class RK78IntegratorTests
     [Fact]
     public void Conformance002_Geo24hGrav70AllBodies_RK78_CentralBodyMode()
     {
-        // Same as SSB mode but using central-body-centered propagation with Battin's formula.
+        // Conformance case propagator_24h_geo_grav70_002, RK7(8) with tolerances 1e-11, as the conformance runner runs it.
         Clock clk = new Clock("My clock", 256);
 
-        var tle = new TLE("INTELSAT 901",
-            "1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994",
-            "2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659");
-        var tleEpoch = tle.Epoch;
+        // Initial state of the conformance case (inputs.yaml), from which the golden was produced.
+        var utcEpoch = new TimeSystem.Time(2026, 2, 9, 10, 22, 58, millisecond: 958, frame: TimeFrame.UTCFrame);
 
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, tleEpoch,
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70));
 
-        var osculatingIcrf = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
-        var orbit = new StateVector(osculatingIcrf.Position, osculatingIcrf.Velocity,
-            earth, osculatingIcrf.Epoch, Frames.Frame.ICRF);
+        var orbit = new StateVector(
+            new Vector3(19283848.018390323, 37944390.563573960, -328553.51550521),
+            new Vector3(-2727.809889171343, 1386.957738048448, 52.987319351738),
+            earth, utcEpoch, Frames.Frame.ICRF);
 
         Spacecraft spc = new Spacecraft(-1001, "INTELSAT901_CB", 3000.0, 5000.0, clk, orbit,
             sectionalArea: 50.0, dragCoeff: 2.2, solarRadiationCoeff: 1.5);
 
-        var propWindow = new Window(tleEpoch, tleEpoch.AddDays(1));
+        var propWindow = new Window(utcEpoch, utcEpoch.AddDays(1));
 
         var integrator = new RK78Integrator(
             absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
@@ -679,22 +673,14 @@ public class RK78IntegratorTests
 
         var res= propagator.Propagate();
 
-        var lastEphemeris = res.StateVectors.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
         var expectedPosition = new Vector3(22035054.64841816, 36415074.44453181, -382421.9052105268);
         var expectedVelocity = new Vector3(-2617.90823218342, 1584.740384557747, 51.26063967862107);
 
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 8.1,
-            $"Position error: {positionError:F3} m (limit: 8.1 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.0006,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.0006 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+        // Measured on 2026-10-04: 8.02 m and 0.573 mm/s.
+        const double PositionLimitMeters = 8.3;
+        const double VelocityLimitMetersPerSecond = 0.0006;
+        ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_geo_grav70_002 (RK7(8))", res, propWindow,
+            expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
 
     #endregion
@@ -704,7 +690,7 @@ public class RK78IntegratorTests
     [Fact]
     public void Conformance003_Sso24hGrav10SunMoon_RK78_CentralBodyMode()
     {
-        // Same as SSB mode but using central-body-centered propagation with Battin's formula.
+        // Conformance case propagator_24h_sso_grav10_003, RK7(8) with tolerances 1e-11, as the conformance runner runs it.
         Clock clk = new Clock("My clock", 256);
 
         var utcEpoch = new TimeSystem.Time(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
@@ -736,22 +722,14 @@ public class RK78IntegratorTests
 
         var res=propagator.Propagate();
 
-        var lastEphemeris = res.StateVectors.Last()
-            .RelativeTo(earth, Aberration.None) as StateVector;
-
         var expectedPosition = new Vector3(-608631.5307021005, 1650694.083265209, -6887696.349104228);
         var expectedVelocity = new Vector3(1985.415757873638, 7042.412568889923, 1515.859902259437);
 
-        var positionError = (lastEphemeris!.Position - expectedPosition).Magnitude();
-        var velocityError = (lastEphemeris.Velocity - expectedVelocity).Magnitude();
-
-        Assert.True(positionError < 4.0,
-            $"Position error: {positionError:F3} m (limit: 4.0 m). " +
-            $"Actual: ({lastEphemeris.Position.X:F3}, {lastEphemeris.Position.Y:F3}, {lastEphemeris.Position.Z:F3}) m");
-
-        Assert.True(velocityError < 0.004,
-            $"Velocity error: {velocityError:F6} m/s (limit: 0.004 m/s). " +
-            $"Actual: ({lastEphemeris.Velocity.X:F6}, {lastEphemeris.Velocity.Y:F6}, {lastEphemeris.Velocity.Z:F6}) m/s");
+        // Measured on 2026-10-04: 3.56 m and 3.84 mm/s.
+        const double PositionLimitMeters = 4.0;
+        const double VelocityLimitMetersPerSecond = 0.004;
+        ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_sso_grav10_003 (RK7(8))", res, propWindow,
+            expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
 
     #endregion
