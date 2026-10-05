@@ -20,8 +20,8 @@ namespace IO.Astrodynamics.Performance;
 
 /// <summary>
 /// Benchmarks for the RK78 adaptive integrator via CentralBodyPropagator.
-/// Scenarios match the three conformance test cases so results can be directly
-/// compared with the VV-integrator benchmarks.
+/// The LEO and SSO scenarios use the orbits and force models of conformance cases 001 and 003; the GEO
+/// scenario uses the orbit of case 002 with a lighter geopotential (degree 10 instead of 70).
 /// </summary>
 [MarkdownExporterAttribute.GitHub]
 [MemoryDiagnoser(true)]
@@ -103,7 +103,8 @@ public class RK78Benchmarks
     }
 
     /// <summary>
-    /// GEO 1 orbit (~24 h) — EGM2008 degree-10, all planets (conformance case 002).
+    /// GEO 1 orbit (~24 h) — EGM2008 degree-10, all planets. Orbit of conformance case 002, whose geopotential
+    /// is degree 70.
     /// </summary>
     [Benchmark(Description = "GEO 1 orbit EGM2008/10 all planets")]
     public void GeoOneOrbit_EGM10_AllPlanets()

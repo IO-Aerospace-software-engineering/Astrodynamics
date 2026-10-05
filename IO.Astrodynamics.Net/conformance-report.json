@@ -4,8 +4,10 @@
     "runner_version": "1.0.0",
     "framework": "IO.Astrodynamics.Net",
     "framework_version": "10.0.0.0",
-    "run_timestamp": "2026-10-01T20:54:03.5430381Z",
-    "conformance_tests_commit": "6be6fa1995c87c7fae5bf6615e4e2f4fdaaf1e98"
+    "framework_informational_version": "10.0.0\u002B2d6815c1c9663e6ad88347853ef90adb4cae0c0c",
+    "framework_commit": "2d6815c1c9663e6ad88347853ef90adb4cae0c0c",
+    "run_timestamp": "2026-10-04T22:34:30.2940036Z",
+    "conformance_tests_commit": "97d8e941c44f6c5efea43d8c42b292b3ac10c145"
   },
   "results": [
     {
@@ -207,7 +209,7 @@
       }
     },
     {
-      "case_id": "propagator_24h_geo10_001",
+      "case_id": "propagator_24h_leo_grav10_001",
       "status": "PASS",
       "deltas": {
         "final_x_km": {
@@ -249,7 +251,7 @@
       }
     },
     {
-      "case_id": "propagator_24h_geo70_full_002",
+      "case_id": "propagator_24h_geo_grav70_002",
       "status": "PASS",
       "deltas": {
         "final_x_km": {
@@ -291,7 +293,7 @@
       }
     },
     {
-      "case_id": "propagator_24h_sso10_003",
+      "case_id": "propagator_24h_sso_grav10_003",
       "status": "PASS",
       "deltas": {
         "final_x_km": {
@@ -333,7 +335,7 @@
       }
     },
     {
-      "case_id": "geosync_equatorial_twobody_004",
+      "case_id": "propagator_1sd_geo_twobody_004",
       "status": "PASS",
       "deltas": {
         "final_x_km": {
@@ -375,7 +377,7 @@
       }
     },
     {
-      "case_id": "geosync_inclined30_twobody_005",
+      "case_id": "propagator_1sd_geo_i30_twobody_005",
       "status": "PASS",
       "deltas": {
         "final_x_km": {

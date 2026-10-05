@@ -256,12 +256,23 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// Convert to julian date
+    /// Convert to julian date, in this time frame.
     /// </summary>
-    /// <returns></returns>
+    /// <remarks>
+    /// Computed from the <see cref="System.DateTime"/> ticks (0.1 µs). A Julian date held in a single double
+    /// resolves about 40 µs; <see cref="DaysFromJ2000"/> keeps the full resolution.
+    /// </remarks>
     public double ToJulianDate()
     {
-        return DateTime.ToOADate() + 2415018.5; //julian date at 1899-12-30 00:00:00
+        return JULIAN_J2000 + DaysFromJ2000();
+    }
+
+    /// <summary>
+    /// Days elapsed since J2000 (2000-01-01 12:00:00) in this time frame, from the <see cref="System.DateTime"/> ticks.
+    /// </summary>
+    internal double DaysFromJ2000()
+    {
+        return (DateTime.Ticks - J2000.Ticks) / (double)TimeSpan.TicksPerDay;
     }
 
     /// <summary>
@@ -270,7 +281,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// <returns></returns>
     public double Centuries()
     {
-        return (ToJulianDate() - JULIAN_J2000) / 36525.0;
+        return DaysFromJ2000() / 36525.0;
     }
 
     public static Time CreateFromJD(double julianDate, ITimeFrame frame)

@@ -23,25 +23,37 @@ public class FrameChainIntegrationTests
     }
 
     [Fact]
-    public void CirsToGcrfIsConsistentWithQtTimesB()
+    public void GcrfToCirsMatchesSofaRc2i()
     {
-        var epoch = new TimeSystem_Time(2010, 6, 15, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        // SOFA test date MJD 53736.0 TT. rc2i maps GCRS to CIRS; the SPICE pivot is the ICRS, so
+        // GCRF -> CIRS must be Q(t) alone, without a second application of the frame bias.
+        var epoch = TimeSystem_Time.CreateFromJD(2400000.5 + 53736.0, TimeFrame.TDTFrame);
+        var gcrfToCirs = Frames.Frame.GCRF.ToFrame(Frames.Frame.CIRS, epoch);
 
-        // Compute CIRS→GCRF via ToFrame
-        var cirsToGcrf = Frames.Frame.CIRS.ToFrame(Frames.Frame.GCRF, epoch);
-
-        // The rotation should represent the precession-nutation (without bias)
-        var rotMatrix = Matrix.FromQuaternion(cirsToGcrf.Rotation);
-        var product = rotMatrix.Transpose().Multiply(rotMatrix);
-
-        // Verify orthogonality
-        for (int i = 0; i < 3; i++)
+        // Column j is the image of the j-th GCRF axis expressed in CIRS.
+        var columns = new[]
         {
-            for (int j = 0; j < 3; j++)
-            {
-                double expected = i == j ? 1.0 : 0.0;
-                Assert.Equal(expected, product.Get(i, j), 1e-12);
-            }
+            Vector3.VectorX.Rotate(gcrfToCirs.Rotation),
+            Vector3.VectorY.Rotate(gcrfToCirs.Rotation),
+            Vector3.VectorZ.Rotate(gcrfToCirs.Rotation)
+        };
+
+        // SOFA iauC2i06a at MJD 53736.0 TT (tools/sofa_reference/sofa_ref.c, label SOFA_test_MJD53736).
+        double[,] rc2i =
+        {
+            { 9.999998323037156e-01, 5.581121259590205e-10, -5.791308491611245e-04 },
+            { -2.3842530075257606e-08, 9.999999991917468e-01, -4.020579110174657e-05 },
+            { 5.791308486706009e-04, 4.020579816732948e-05, 9.999998314954628e-01 }
+        };
+
+        // 5e-9 rad covers IAU 2000B against SOFA's IAU 2000A nutation (about 1 mas). A doubled
+        // frame bias would shift the off-diagonal terms by up to 8e-8.
+        const double tolerance = 5e-9;
+        for (int j = 0; j < 3; j++)
+        {
+            Assert.Equal(rc2i[0, j], columns[j].X, tolerance);
+            Assert.Equal(rc2i[1, j], columns[j].Y, tolerance);
+            Assert.Equal(rc2i[2, j], columns[j].Z, tolerance);
         }
     }
 

@@ -9,7 +9,22 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 | `ComputeEventValue(StateVector)` | Scalar g-function evaluated at the current state |
 | `EventCrossingDirection` | `CrossingDirection` that triggers the burn |
 | `CheckPreconditions(StateVector)` | Optional additional constraints (returns `true` to allow firing) |
-| `DeltaV` | Burn delta-V vector in the maneuver frame |
+| `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state |
+| `ThrustWindow` | Window of the equivalent finite burn (see below) |
+| `ManeuverWindow` | Thrust window extended by the maneuver hold duration |
+
+## Thrust Window Convention
+
+The burn is impulsive: the propagated state receives the whole delta-V at the event epoch `t`.
+The library also reports the finite burn the impulse stands for. Its duration `dt` follows from
+the rocket equation (engine ISP, fuel flow and total mass), and the window is placed on
+`[t - 0.666 dt, t + 0.334 dt]`: two thirds of the burn before the impulse, one third after.
+
+The end of `ManeuverWindow` is the earliest epoch at which the next maneuver of the chain may fire.
+
+The two-thirds split dates back to the initial .NET implementation and no derivation of it is on
+record. The usual impulsive approximation of a finite burn centres the burn on the impulse (50 %).
+The value is kept unchanged for now; it will be revisited together with finite-thrust modelling.
 
 ## Concrete Maneuvers
 
@@ -49,11 +64,13 @@ Maneuvers are linked in a chain on the spacecraft:
 ## Example
 
 ```csharp
+// Raise the apogee radius to 42,164 km (meters), at the first perigee after J2000 TDB.
 var maneuver = new ApogeeHeightManeuver(
+    earth,
     Time.J2000TDB,
-    TimeSpan.FromSeconds(0),
-    targetApogee: 42164000.0,
-    engine, fuelTank);
+    TimeSpan.Zero,
+    42164000.0,
+    engine);
 
 spacecraft.SetStandbyManeuver(maneuver);
 var solution = spacecraft.Propagate(window, perturbingBodies, false, false, deltaT);

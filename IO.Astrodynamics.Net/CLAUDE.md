@@ -71,7 +71,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert)
 - `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
-- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU 2006/2000A chain exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`)
+- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`)
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution, AcceptedStep
 - `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet), RK78Integrator (adaptive Prince-Dormand 7(8))
@@ -85,7 +85,6 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 
 **External Dependencies**
 - MathNet.Numerics: Linear algebra operations
-- MathNet.Filtering.Kalman: Kalman filtering for state estimation
 - Cocona: CLI framework (CLI project only)
 - xUnit + BenchmarkDotNet: Testing and benchmarking
 

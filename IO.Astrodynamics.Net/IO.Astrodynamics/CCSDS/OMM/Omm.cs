@@ -206,6 +206,10 @@ public class Omm
     /// <para>
     /// The object ID (international designator) is used as the COSPAR ID in the TLE.
     /// </para>
+    /// <para>
+    /// The resulting TLE is in TEME, the frame of SGP4/SDP4 mean elements, whatever REF_FRAME says; no frame
+    /// bias or other inertial-frame conversion is involved.
+    /// </para>
     /// </remarks>
     public OrbitalParameters.TLE.TLE ToTle()
     {

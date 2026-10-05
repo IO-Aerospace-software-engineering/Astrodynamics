@@ -251,4 +251,84 @@ public class DateTimeTests
         var expected = new TimeSystem.Time(2000, 1, 1, 12, frame: TimeFrame.GPSFrame);
         Assert.Equal(expected, source);
     }
+
+    /// <summary>
+    /// Every leap second of the table, with its index: TAI - UTC is 9 + index s just before it and 10 + index s
+    /// from its first instant on (10 s on 1972-01-01, 37 s on 2017-01-01).
+    /// </summary>
+    public static TheoryData<DateTime, int> LeapSeconds()
+    {
+        var data = new TheoryData<DateTime, int>();
+        for (int i = 0; i < TimeFrame.LEAP_SECONDS.Length; i++)
+        {
+            data.Add(TimeFrame.LEAP_SECONDS[i], i);
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(LeapSeconds))]
+    public void UtcToTaiUsesTheNewOffsetFromMidnightOfTheLeapSecondDate(DateTime leapDate, int index)
+    {
+        var midnight = new TimeSystem.Time(leapDate, TimeFrame.UTCFrame);
+        Assert.Equal(leapDate.AddSeconds(10 + index), midnight.ToTAI().DateTime);
+
+        var justBefore = new TimeSystem.Time(leapDate.AddSeconds(-0.5), TimeFrame.UTCFrame);
+        Assert.Equal(leapDate.AddSeconds(-0.5 + 9 + index), justBefore.ToTAI().DateTime);
+    }
+
+    [Theory]
+    [MemberData(nameof(LeapSeconds))]
+    public void UtcRoundTripsThroughTaiAroundEveryLeapSecond(DateTime leapDate, int index)
+    {
+        _ = index;
+        foreach (var offset in new[] { -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5 })
+        {
+            var utc = new TimeSystem.Time(leapDate.AddSeconds(offset), TimeFrame.UTCFrame);
+            Assert.Equal(utc.DateTime, utc.ToTAI().ToUTC().DateTime);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(LeapSeconds))]
+    public void TaiToUtcSwitchesOffsetAtTheInsertedSecond(DateTime leapDate, int index)
+    {
+        // Just after midnight TAI, UTC is still on the previous day with the previous offset.
+        var shortlyAfterMidnightTai = new TimeSystem.Time(leapDate.AddSeconds(5), TimeFrame.TAIFrame);
+        Assert.Equal(leapDate.AddSeconds(5 - 9 - index), shortlyAfterMidnightTai.ToUTC().DateTime);
+
+        // The inserted second 23:59:60 cannot be represented and reads as 23:59:59 a second time.
+        var insertedSecond = new TimeSystem.Time(leapDate.AddSeconds(9 + index + 0.5), TimeFrame.TAIFrame);
+        Assert.Equal(leapDate.AddSeconds(-0.5), insertedSecond.ToUTC().DateTime);
+
+        // One second later, UTC reaches midnight with the new offset.
+        var newOffset = new TimeSystem.Time(leapDate.AddSeconds(10 + index), TimeFrame.TAIFrame);
+        Assert.Equal(leapDate, newOffset.ToUTC().DateTime);
+    }
+
+    [Fact]
+    public void UtcToTdbAtTheLastLeapSecondMidnight()
+    {
+        // 2017-01-01T00:00:00 UTC = 00:00:37 TAI = 00:01:09.184 TT; TDB differs from TT by less than 2 ms.
+        var utc = new TimeSystem.Time(2017, 1, 1, frame: TimeFrame.UTCFrame);
+        var tdt = utc.ToTDT();
+        Assert.Equal(new DateTime(2017, 1, 1, 0, 1, 9, 184), tdt.DateTime);
+        Assert.Equal(tdt.DateTime, utc.ToTDB().DateTime, TimeSpan.FromMilliseconds(2));
+    }
+
+    [Fact]
+    public void JulianDateKeepsSubMillisecondTime()
+    {
+        // 0.4 ms apart: the former OADate-based conversion truncated both to the same millisecond.
+        var first = new TimeSystem.Time(new DateTime(2024, 1, 1, 6, 30, 15).AddTicks(1234567), TimeFrame.UTCFrame);
+        var second = first.Add(TimeSpan.FromTicks(4000));
+
+        // About 8766 days from J2000, a double resolves ~2e-12 day (0.2 µs).
+        double elapsedDays = second.DaysFromJ2000() - first.DaysFromJ2000();
+        Assert.Equal(4000.0 / TimeSpan.TicksPerDay, elapsedDays, 2e-12);
+        Assert.Equal(TimeSystem.Time.JULIAN_J2000 + first.DaysFromJ2000(), first.ToJulianDate());
+        Assert.Equal(first.DaysFromJ2000() / 36525.0, first.Centuries());
+        Assert.NotEqual(first.ToJulianDate(), second.ToJulianDate());
+    }
 }

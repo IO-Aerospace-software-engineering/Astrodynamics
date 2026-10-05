@@ -12,6 +12,10 @@ namespace IO.Astrodynamics.Maneuver
         public CelestialItem ManeuverCenter { get; }
         /// <summary>
         /// Gets or sets the ThrustWindow instance.
+        /// For an <see cref="ImpulseManeuver"/>, this is the window of the equivalent finite burn: it lasts the burn duration
+        /// given by the rocket equation and starts two thirds of that duration before the impulse epoch
+        /// (<c>[t - 0.666 dt, t + 0.334 dt]</c>). The propagated state receives the full delta-V at the impulse epoch;
+        /// the window is reported, and the end of <see cref="ManeuverWindow"/> sets the earliest epoch of the next maneuver.
         /// </summary>
         /// <value>
         /// The ThrustWindow instance.

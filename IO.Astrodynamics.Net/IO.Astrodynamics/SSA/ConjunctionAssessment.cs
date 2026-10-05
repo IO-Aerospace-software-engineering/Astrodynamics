@@ -1104,10 +1104,15 @@ public static class ConjunctionAssessment
             qualityFlags |= EncounterQualityFlags.LowRelativeVelocityEncounter;
         }
 
-        var combinedCovarianceIcrf = BuildCombinedCovarianceIcrf(
-            protectedAsset.Spacecraft, protectedState,
-            secondaryObject, secondaryState,
-            ref qualityFlags);
+        var protectedCovariance = EncounterCovariance.Resolve(protectedAsset.Spacecraft, protectedState);
+        var secondaryCovariance = EncounterCovariance.Resolve(secondaryObject, secondaryState);
+        if (protectedCovariance.IsStale(options.StaleCovarianceThreshold) ||
+            secondaryCovariance.IsStale(options.StaleCovarianceThreshold))
+        {
+            qualityFlags |= EncounterQualityFlags.StaleCovarianceUsed;
+        }
+
+        var combinedCovarianceIcrf = BuildCombinedCovarianceIcrf(protectedCovariance, secondaryCovariance, ref qualityFlags);
 
         var combinedCovarianceRtn = RotateCovarianceToRtn(combinedCovarianceIcrf, protectedState);
 
@@ -1129,7 +1134,9 @@ public static class ConjunctionAssessment
             relativeState,
             relativeState.RelativePositionInertial.Magnitude(),
             combinedCovarianceRtn,
-            qualityFlags);
+            qualityFlags,
+            protectedCovariance.Age,
+            secondaryCovariance.Age);
 
         return new EncounterCase(
             protectedAsset,
@@ -1162,21 +1169,16 @@ public static class ConjunctionAssessment
     // --- Covariance handling ---
 
     private static Matrix BuildCombinedCovarianceIcrf(
-        ILocalizable protectedObject,
-        StateVector protectedState,
-        ILocalizable secondaryObject,
-        StateVector secondaryState,
+        EncounterCovariance protectedCovariance,
+        EncounterCovariance secondaryCovariance,
         ref EncounterQualityFlags qualityFlags)
     {
         var combined = new Matrix(6, 6);
         bool hasCovariance = false;
 
-        var protectedCovariance = ResolveCovariance(protectedObject, protectedState, ref qualityFlags);
-        var secondaryCovariance = ResolveCovariance(secondaryObject, secondaryState, ref qualityFlags);
-
-        if (protectedCovariance.HasValue)
+        if (protectedCovariance.CovarianceInertial.HasValue)
         {
-            combined = protectedCovariance.Value;
+            combined = protectedCovariance.CovarianceInertial.Value;
             hasCovariance = true;
         }
         else
@@ -1184,9 +1186,9 @@ public static class ConjunctionAssessment
             qualityFlags |= EncounterQualityFlags.MissingProtectedCovariance;
         }
 
-        if (secondaryCovariance.HasValue)
+        if (secondaryCovariance.CovarianceInertial.HasValue)
         {
-            combined = combined + secondaryCovariance.Value;
+            combined = combined + secondaryCovariance.CovarianceInertial.Value;
             hasCovariance = true;
         }
         else
@@ -1200,22 +1202,6 @@ public static class ConjunctionAssessment
     private static Matrix RotateCovarianceToRtn(Matrix covarianceIcrf, StateVector referenceState)
     {
         return referenceState.RotateCovarianceToRtn(covarianceIcrf);
-    }
-
-    private static Matrix? ResolveCovariance(ILocalizable source, StateVector state, ref EncounterQualityFlags qualityFlags)
-    {
-        if (state.Covariance.HasValue)
-        {
-            return state.Covariance.Value;
-        }
-
-        if (source.InitialOrbitalParameters is StateVector initialState && initialState.Covariance.HasValue)
-        {
-            qualityFlags |= EncounterQualityFlags.StaleCovarianceUsed;
-            return initialState.Covariance.Value;
-        }
-
-        return null;
     }
 
     // --- Encounter-plane projection ---
@@ -1610,8 +1596,6 @@ public static class ConjunctionAssessment
         return System.Math.Clamp(integral, 0.0, 1.0);
     }
 
-    // RTN rotation methods are now on StateVector (community): CreateRtnRotation(), ToRtn(), FromRtn(), RotateCovarianceToRtn()
-
     private static IEnumerable<Vector3> BuildBurnDirections()
     {
         yield return Vector3.VectorX;
@@ -1903,8 +1887,6 @@ public static class ConjunctionAssessment
             .OrderBy(step => step.StartEpoch)
             .ToArray();
     }
-
-    // ErrorFunction moved to community: SpecialFunctions.ErrorFunction()
 
     private static Spacecraft CloneSpacecraft(Spacecraft template, StateVector initialState)
     {

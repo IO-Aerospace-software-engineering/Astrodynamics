@@ -33,7 +33,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Remove="resources\libIO.SDK.so" />
         <None Include="resources\io-only-dark-trans.png">
           <Pack>True</Pack>
           <PackagePath>resources\</PackagePath>
@@ -42,9 +41,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="resources\IO.SDK.dll" />
-        <None Remove="resources\IO.SDK.exp" />
-        <None Remove="resources\IO.SDK.lib" />
         <!-- Windows import library: needed only by C++ consumers at link time. .NET P/Invoke does not use it. -->
         <None Remove="resources\IO.Astrodynamics.lib" />
     </ItemGroup>
@@ -68,7 +64,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="resources\One_Sgp4.dll" />
       <!-- Native libs use the standard NuGet runtime asset layout: runtimes/{rid}/native/.
            This way they are auto-resolved by MSBuild during `dotnet build` (no RID required)
            and propagate through transitive references — no companion .targets workaround needed. -->
@@ -99,7 +94,6 @@
                Condition="Exists('resources\libIO.Astrodynamics.dylib')">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <None Remove="resources\io-only-dark.png" />
     </ItemGroup>
 
     <!-- NuGet package content: icon, readme -->
@@ -118,7 +112,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MathNet.Filtering.Kalman" Version="0.7.0" />
       <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
     </ItemGroup>
 

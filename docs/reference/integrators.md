@@ -17,22 +17,26 @@ Both integrators record `AcceptedStep` entries containing position, velocity, an
 
 ## VVIntegrator
 
-`VVIntegrator` is the community fixed-step symplectic integrator using the Velocity-Verlet scheme.
+`VVIntegrator` is the default fixed-step symplectic integrator using the Velocity-Verlet scheme.
+`CentralBodyPropagator` creates one with the propagator's `deltaT` as step when no integrator is
+given.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `stepSize` | `double` | Fixed time step in seconds |
+| Constructor | Description |
+|-------------|-------------|
+| `VVIntegrator(TimeSpan deltaT)` | Fixed step; forces are added by the propagator |
+| `VVIntegrator(IEnumerable<ForceBase> forces, TimeSpan deltaT, StateVector initialState)` | Fixed step, forces and initial state given directly |
 
 | Property | Description |
 |----------|-------------|
-| `StepSize` | The configured step size (s) |
+| `DeltaT` | The configured step (`TimeSpan`) |
+| `DeltaTs` | The step in seconds |
 
 - Symplectic: conserves energy over long durations for conservative systems.
+- Second order: the global error grows with the square of the step (see below).
 - Event detection occurs at step boundaries only (no sub-step refinement).
-- Suitable for quick analyses where adaptive accuracy is not required.
 
 ```csharp
-var integrator = new VVIntegrator(stepSize: 10.0);
+var integrator = new VVIntegrator(TimeSpan.FromSeconds(1.0));
 ```
 
 ## RK78Integrator
@@ -76,7 +80,9 @@ When created with a fixed step size, `AdaptiveMode` is `false` and the integrato
 
 - **Adaptive PI step control**: Adjusts step size to maintain error within tolerances.
 - **Sub-step event refinement**: Uses `BisectionEventFinder` to locate event times to ~1e-10 s precision within a step via Hermite dense output.
-- **Conformance-level accuracy**: Validated against reference trajectories (LEO, GEO, SSO).
+- **Accuracy**: on the 24-hour conformance cases, 3.6 m (SSO) to 13.1 m (LEO) from the GMAT
+  references with tolerances 1e-11, the rest being model differences between the two tools; see
+  [Validation](../guides/validation.md#measured-errors).
 
 ```csharp
 // Adaptive (default)
@@ -88,6 +94,27 @@ var integrator = new RK78Integrator(
 // Fixed-step
 var fixedIntegrator = new RK78Integrator(fixedStepSize: 10.0);
 ```
+
+## Accuracy And Cost
+
+Velocity-Verlet is second order: halving the step divides the global error by four. Measured on
+2026-10-04 on the LEO orbit of conformance case `propagator_24h_leo_grav10_001`:
+
+| Integrator | Two-body position error after 24 h | Time per orbit, EGM2008 10x10 + Moon + Sun |
+|------------|------------------------------------|--------------------------------------------|
+| Velocity-Verlet, 0.5 s | 69.9 m | 21.0 ms |
+| Velocity-Verlet, 1 s | 279.5 m | 10.5 ms |
+| Velocity-Verlet, 2 s | 1,118 m | about 5 ms or about 24 ms, bimodal ([#346](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/346)) |
+| RK7(8), tolerances 1e-11 | not measured in two-body; 13.1 m from the full-model reference | 5.5 ms |
+
+Sources: errors from `VVIntegratorTests.GlobalErrorIsSecondOrderInTheStep`, against the analytic
+Keplerian solution; times from `VVBenchmarks` and `RK78Benchmarks.LeoOneOrbit_EGM10_SunMoon`
+(BenchmarkDotNet 0.14.0, medium run, AMD Ryzen 7 5800X, Fedora Linux 44, .NET 10). The step of
+`VVIntegrator` is also the output cadence of the propagator; RK7(8) outputs every 10 s here.
+
+With the full force model, the 1 s Velocity-Verlet error on this case is 294 m, of which 280 m is
+truncation. For results below about ten meters, use `RK78Integrator`: on this case it is both more
+accurate and faster than Velocity-Verlet at 1 s.
 
 ## See Also
 

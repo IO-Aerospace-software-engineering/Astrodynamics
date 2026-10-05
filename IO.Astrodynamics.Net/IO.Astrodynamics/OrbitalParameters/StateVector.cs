@@ -414,6 +414,19 @@ namespace IO.Astrodynamics.OrbitalParameters
             return rot6X6 * covarianceIcrf * rot6X6.Transpose();
         }
 
+        /// <summary>
+        /// Rotates a 6x6 position-velocity covariance matrix from the RTN frame defined by this state to the inertial frame.
+        /// Inverse of <see cref="RotateCovarianceToRtn"/>: C_ICRF = R_6x6^T * C_RTN * R_6x6.
+        /// </summary>
+        /// <param name="covarianceRtn">A 6x6 covariance matrix in RTN coordinates (units: m², m²/s, m²/s²).</param>
+        /// <returns>The 6x6 covariance matrix in the inertial frame of this state.</returns>
+        public Matrix RotateCovarianceFromRtn(Matrix covarianceRtn)
+        {
+            var rotation = CreateRtnRotation();
+            var rot6X6 = Matrix.CreateBlockDiagonal(rotation, rotation);
+            return rot6X6.Transpose() * covarianceRtn * rot6X6;
+        }
+
         public bool Equals(StateVector other)
         {
             if (ReferenceEquals(null, other)) return false;
