@@ -10,13 +10,13 @@ public class UTCTimeFrame : TimeFrame
 
     public override Time ConvertToTAI(Time time)
     {
-        var leaps = this.LeapSecondsFrom(time);
+        var leaps = LeapSecondsAtUtc(time.DateTime);
         return new TimeSystem.Time(time.DateTime + leaps, TAIFrame);
     }
 
     public override Time ConvertFromTAI(Time time)
     {
-        var leaps = this.LeapSecondsFrom(time);
+        var leaps = LeapSecondsAtTai(time.DateTime);
         return new TimeSystem.Time(time.DateTime - leaps, UTCFrame);
     }
 

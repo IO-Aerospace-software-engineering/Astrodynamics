@@ -46,9 +46,9 @@ public sealed class TirsFrame : Frame
         // Earth Rotation Angle
         var utc = date.ConvertTo(TimeFrame.UTCFrame);
         double deltaUT1 = _eop.GetDeltaUT1(utc);
-        double jdUtc = utc.ToJulianDate();
-        double jdUt1High = jdUtc;
-        double jdUt1Low = deltaUT1 / 86400.0;
+        // Two-part Julian date (J2000 + days elapsed), so that the ERA keeps the 0.1 µs resolution of the epoch.
+        double jdUt1High = TimeSystem.Time.JULIAN_J2000;
+        double jdUt1Low = utc.DaysFromJ2000() + deltaUT1 / 86400.0;
         double era = Iau2006Model.EarthRotationAngle(jdUt1High, jdUt1Low);
 
         // Compose the inverse of the standard ICRF -> TIRS chain to obtain TIRS -> ICRF.
