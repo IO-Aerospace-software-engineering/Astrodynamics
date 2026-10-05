@@ -5,12 +5,19 @@ using IO.Astrodynamics.Math;
 namespace IO.Astrodynamics.Frames;
 
 /// <summary>
-/// IAU 2006/2000A precession-nutation model.
-/// Implements the CIO-based transformation chain: ICRF → GCRF → CIRS → TIRS → ITRF.
+/// IAU 2006 precession with IAU 2000B nutation, CIO based.
+/// Provides the CIO-based chain GCRS → CIRS → TIRS used by <see cref="GcrfFrame"/>,
+/// <see cref="CirsFrame"/> and <see cref="TirsFrame"/>.
 ///
 /// Uses IAU 2006 precession (Fukushima-Williams angles) with IAU 2000B nutation (77 luni-solar terms).
-/// Accuracy: ~1 mas for nutation, sub-µas for precession and frame bias.
+/// Accuracy: ~1 mas for nutation, sub-µas for precession and frame bias. Against SOFA (IAU 2006/2000A)
+/// from 1990 to 2040, CIP X and Y agree within 3.6e-9 rad (0.73 mas) and the GCRS to TIRS matrix within
+/// 4.3e-9 rad (Iau2006SofaSweepTests).
 /// </summary>
+/// <remarks>
+/// The chain stops at TIRS. The terrestrial step TIRS → ITRS (polar motion) is not part of any frame yet:
+/// <see cref="PolarMotionMatrix"/> and <see cref="TioLocator"/> are validated against SOFA but used by no frame.
+/// </remarks>
 public static class Iau2006Model
 {
     private const double DAS2R = System.Math.PI / (180.0 * 3600.0);
@@ -129,16 +136,23 @@ public static class Iau2006Model
     }
 
     /// <summary>
-    /// Computes IAU 2000B nutation (dpsi, deps) in radians.
-    /// Uses 77 luni-solar terms plus planetary bias corrections.
+    /// Computes IAU 2000B nutation (dpsi, deps) in radians, with the IAU 2006 (P03) adjustments.
+    /// Uses 77 luni-solar terms plus the fixed planetary offsets, evaluated with the linear Delaunay
+    /// arguments of Simon et al. (1994) that define IAU 2000B, as in SOFA <c>iauNut00b</c>.
+    /// The P03 adjustments are those of SOFA <c>iauNut06a</c>, including the secular J2 factor
+    /// <c>-2.7774e-6 t</c>.
     /// </summary>
+    /// <param name="t">Julian centuries TT since J2000.0.</param>
     public static (double dpsi, double deps) Nutation(double t)
     {
-        double l = Iau2006FundamentalArguments.MoonMeanAnomaly(t);
-        double lp = Iau2006FundamentalArguments.SunMeanAnomaly(t);
-        double f = Iau2006FundamentalArguments.MoonMeanArgumentOfLatitude(t);
-        double d = Iau2006FundamentalArguments.MeanElongation(t);
-        double om = Iau2006FundamentalArguments.MoonAscendingNodeLongitude(t);
+        // IAU 2000B is defined with linear arguments (Simon et al. 1994), not with the full IERS 2003
+        // polynomials of Iau2006FundamentalArguments. The two differ by up to ~1.6e-10 rad of nutation
+        // by 2024; using the defining arguments keeps the model identical to SOFA iauNut00b.
+        double l = SimonArgument(485868.249036, 1717915923.2178, t);
+        double lp = SimonArgument(1287104.79305, 129596581.0481, t);
+        double f = SimonArgument(335779.526232, 1739527262.8478, t);
+        double d = SimonArgument(1072260.70369, 1602961601.2090, t);
+        double om = SimonArgument(450160.398036, -6962890.5431, t);
 
         double dpsi = 0.0;
         double deps = 0.0;
@@ -146,7 +160,7 @@ public static class Iau2006Model
         for (int i = Iau2006NutationData.LuniSolarTerms.Length - 1; i >= 0; i--)
         {
             var term = Iau2006NutationData.LuniSolarTerms[i];
-            double arg = term.nl * l + term.nlp * lp + term.nf * f + term.nd * d + term.nom * om;
+            double arg = (term.nl * l + term.nlp * lp + term.nf * f + term.nd * d + term.nom * om) % TwoPi;
             double sinArg = System.Math.Sin(arg);
             double cosArg = System.Math.Cos(arg);
 
@@ -158,12 +172,25 @@ public static class Iau2006Model
         dpsi = dpsi * Iau2006NutationData.U + Iau2006NutationData.DpsiPlanetaryBias * DAS2R * 1e-6;
         deps = deps * Iau2006NutationData.U + Iau2006NutationData.DepsPlanetaryBias * DAS2R * 1e-6;
 
-        // Apply IAU 2006 corrections to IAU 2000 nutation (P03 compatibility, from SOFA iauNut06a)
-        double fj2 = -2.7774e-6;
+        // Apply IAU 2006 corrections to IAU 2000 nutation (P03 compatibility, from SOFA iauNut06a).
+        // fj2 corrects for the secular variation of J2 and grows linearly with time.
+        double fj2 = -2.7774e-6 * t;
         dpsi += dpsi * (0.4697e-6 + fj2);
         deps += deps * fj2;
 
         return (dpsi, deps);
+    }
+
+    /// <summary>
+    /// Linear Delaunay argument of Simon et al. (1994), as used by IAU 2000B, in radians.
+    /// </summary>
+    /// <param name="constantArcsec">Value at J2000.0, in arcseconds.</param>
+    /// <param name="rateArcsecPerCentury">Rate, in arcseconds per Julian century.</param>
+    /// <param name="t">Julian centuries TT since J2000.0.</param>
+    private static double SimonArgument(double constantArcsec, double rateArcsecPerCentury, double t)
+    {
+        const double turnArcsec = 1296000.0;
+        return (constantArcsec + rateArcsecPerCentury * t) % turnArcsec * DAS2R;
     }
 
     /// <summary>
@@ -193,26 +220,49 @@ public static class Iau2006Model
     }
 
     /// <summary>
-    /// Computes the CIO locator s in radians.
-    /// Uses the polynomial approximation with the dominant -XY/2 term.
+    /// Computes the CIO locator s in radians, given the CIP coordinates X, Y.
+    /// Evaluates the full IAU 2006 series of <c>s + XY/2</c> (IERS Conventions 2010, Table 5.2d), as
+    /// SOFA <c>iauS06</c> does: a polynomial plus 66 periodic terms, the largest being 2640.73 µas in sin Ω.
     /// </summary>
+    /// <param name="t">Julian centuries TT since J2000.0.</param>
+    /// <param name="x">CIP X coordinate, in radians.</param>
+    /// <param name="y">CIP Y coordinate, in radians.</param>
     public static double CioLocator(double t, double x, double y)
     {
-        // s + XY/2 approximation (polynomial terms from IERS Conventions 2010)
-        double s = -x * y / 2.0;
+        // Fundamental arguments from the IERS Conventions 2003, in the order of the series multipliers.
+        Span<double> fa = stackalloc double[8];
+        fa[0] = Iau2006FundamentalArguments.MoonMeanAnomaly(t);
+        fa[1] = Iau2006FundamentalArguments.SunMeanAnomaly(t);
+        fa[2] = Iau2006FundamentalArguments.MoonMeanArgumentOfLatitude(t);
+        fa[3] = Iau2006FundamentalArguments.MeanElongation(t);
+        fa[4] = Iau2006FundamentalArguments.MoonAscendingNodeLongitude(t);
+        fa[5] = Iau2006FundamentalArguments.LambdaVenus(t);
+        fa[6] = Iau2006FundamentalArguments.LambdaEarth(t);
+        fa[7] = Iau2006FundamentalArguments.GeneralPrecession(t);
 
-        // Add polynomial terms (microarcseconds, from SOFA iauS06)
-        s += (94.0 + 3808.65 * t - 122.68 * t * t
-              - 72574.11 * t * t * t
-              + 27.98 * t * t * t * t
-              + 15.62 * t * t * t * t * t) * DAS2R * 1e-6;
+        // w[k] is the coefficient of t^k, in microarcseconds: polynomial part plus periodic terms.
+        Span<double> w = stackalloc double[6];
+        Iau2006CioLocatorData.Polynomial.CopyTo(w);
+        for (int k = 0; k < Iau2006CioLocatorData.Series.Length; k++)
+        {
+            var terms = Iau2006CioLocatorData.Series[k];
+            // Smallest terms first, as SOFA does, to limit rounding.
+            for (int i = terms.Length - 1; i >= 0; i--)
+            {
+                var term = terms[i];
+                double a = term.l * fa[0] + term.lp * fa[1] + term.f * fa[2] + term.d * fa[3]
+                           + term.om * fa[4] + term.lve * fa[5] + term.le * fa[6] + term.pa * fa[7];
+                w[k] += term.s * System.Math.Sin(a) + term.c * System.Math.Cos(a);
+            }
+        }
 
-        return s;
+        double sPlusHalfXy = w[0] + (w[1] + (w[2] + (w[3] + (w[4] + w[5] * t) * t) * t) * t) * t;
+        return sPlusHalfXy * DAS2R * 1e-6 - x * y / 2.0;
     }
 
     /// <summary>
     /// Builds the CIO-based precession-nutation matrix Q(t) from CIP coordinates X, Y
-    /// and CIO locator s. Transforms from GCRS (≈ ICRF/J2000) to CIRS.
+    /// and CIO locator s. Transforms from GCRS (the ICRF axes) to CIRS.
     /// IERS Conventions 2010, Eq. 5.1.
     /// </summary>
     public static Matrix PrecessionNutationMatrix(double x, double y, double s)

@@ -74,7 +74,7 @@ More worked examples: [docs.io-aerospace.org/tutorials](https://docs.io-aerospac
 - **Attitudes** — instrument pointing, nadir/zenith, prograde/retrograde, normal/anti-normal, TRIAD fully-constrained 3-DOF pointing with orbital and celestial targets, configurable body axes.
 - **Launch and mission analysis** — launch windows from a launch site to a target orbit, scenario definition and simulation, fuel budgets.
 - **Atmospheric modeling** — unified `IAtmosphericModel` interface returning an `Atmosphere` record. Earth: U.S. Standard Atmosphere 1976 and NRLMSISE-00 with space weather. Mars: standard analytical model. Earth picks NRLMSISE-00 automatically when the full context is available.
-- **Frames and coordinates** — ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, the CIO-based IAU 2006/2000A chain (GCRF, CIRS, TIRS) with pluggable Earth orientation parameters, plus Equatorial, Horizontal, Planetodetic and Planetographic coordinates.
+- **Frames and coordinates** — ICRF/J2000, Ecliptic (J2000/B1950), TEME, Galactic, FK4, body-fixed/ITRF93, the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation: GCRF, CIRS, TIRS) with pluggable Earth orientation parameters, plus Equatorial, Horizontal, Planetodetic and Planetographic coordinates.
 - **Time systems** — Calendar, Julian, TDB, TAI, TDT, UTC, GPS and local time, with conversions.
 - **Event finding** — distance, occultation, coordinate and illumination constraints; instrument field-of-view windows.
 - **CCSDS messages** — OMM (Orbit Mean-elements Message), OPM (Orbit Parameter Message) and CDM (Conjunction Data Message) reading, writing and schema validation, with bidirectional OMM↔TLE and OPM↔Spacecraft conversion and `EncounterCase.ToCdm()` export.

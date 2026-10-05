@@ -4,12 +4,15 @@
 #include "sofam.h"
 
 /*
- * Extracts IAU 2000B nutation coefficients by evaluating SOFA's iauNut00b
- * at many carefully chosen epochs and fitting the individual term contributions.
+ * Prints SOFA nutation and precession values at a few reference epochs, for validating the managed
+ * IAU 2006 / IAU 2000B implementation (IO.Astrodynamics/Frames/Iau2006Model.cs).
  *
- * Instead, we use an alternative approach: we call iauNut06a (full 2000A)
- * at many epochs and output dpsi/deps for validation.
- * We also output the precession angles for validation.
+ * For each epoch (t in Julian centuries TT since J2000.0):
+ *   - iauNut06a: full IAU 2000A nutation with the IAU 2006 (P03) adjustments, the accuracy reference;
+ *   - iauNut00b: IAU 2000B nutation (77 luni-solar terms, Simon et al. 1994 linear arguments);
+ *   - IAU 2000B with the same P03 adjustments as iauNut06a (fj2 = -2.7774e-6 t): this is exactly what
+ *     Iau2006Model.Nutation computes, and what Iau2006ModelTests asserts at 1e-13 rad;
+ *   - IAU 2006 precession angles, CIP X/Y (iauXy06) and the CIO locator s (iauS06).
  */
 
 int main() {
@@ -40,6 +43,11 @@ int main() {
         double dpsi_b, deps_b;
         iauNut00b(jd1, jd2, &dpsi_b, &deps_b);
 
+        /* IAU 2000B with the P03 adjustments of iauNut06a (Wallace & Capitaine 2006, Eqs. 5) */
+        double fj2 = -2.7774e-6 * t;
+        double dpsi_bp = dpsi_b + dpsi_b * (0.4697e-6 + fj2);
+        double deps_bp = deps_b + deps_b * fj2;
+
         /* Precession angles (IAU 2006) */
         double eps0, psia, oma, bpa, bqa, pia, bpia,
                epsa, chia, za, zetaa, thetaa, pa, gam, phi, psi;
@@ -62,6 +70,8 @@ int main() {
         printf("//   deps_2000A = %.17e rad (%.6f mas)\n", deps_a, deps_a / DAS2R * 1000.0);
         printf("//   dpsi_2000B = %.17e rad (%.6f mas)\n", dpsi_b, dpsi_b / DAS2R * 1000.0);
         printf("//   deps_2000B = %.17e rad (%.6f mas)\n", deps_b, deps_b / DAS2R * 1000.0);
+        printf("//   dpsi_2000B_P03 = %.17e rad\n", dpsi_bp);
+        printf("//   deps_2000B_P03 = %.17e rad\n", deps_bp);
         printf("//   dpsi diff  = %.6f µas\n", (dpsi_a - dpsi_b) / DAS2R * 1e6);
         printf("//   deps diff  = %.6f µas\n", (deps_a - deps_b) / DAS2R * 1e6);
         printf("//   epsa       = %.17e rad\n", epsa);

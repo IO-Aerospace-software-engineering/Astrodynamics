@@ -107,6 +107,10 @@ public class Opm
     /// <param name="stateVector">The state vector.</param>
     /// <param name="originator">The message originator.</param>
     /// <returns>A new OPM instance.</returns>
+    /// <remarks>
+    /// REF_FRAME is written as the SPICE name of the state vector frame: <c>J2000</c> for <see cref="Frame.ICRF"/>,
+    /// <c>GCRF</c> for <see cref="Frame.GCRF"/>. Both denote the ICRF axes; no frame bias is applied.
+    /// </remarks>
     public static Opm CreateFromStateVector(
         string objectName,
         string objectId,
@@ -188,6 +192,11 @@ public class Opm
     /// <returns>A new StateVector instance with the OPM data.</returns>
     /// <remarks>
     /// <para>
+    /// Frames: CCSDS <c>ICRF</c> and <c>GCRF</c> map exactly onto <see cref="Frame.ICRF"/>, whose axes are the ICRF's.
+    /// <c>EME2000</c> also maps onto <see cref="Frame.ICRF"/>: the ~23 mas IAU 2006 frame bias between EME2000 and the
+    /// ICRF is ignored (about 0.8 m on a LEO position, 4.7 m on a GEO position).
+    /// </para>
+    /// <para>
     /// If the OPM contains a covariance matrix with a reference frame that differs from the state vector
     /// reference frame (e.g., covariance in RTN while state vector in ICRF), the covariance is included
     /// as-is without frame transformation. The caller is responsible for frame transformation if needed.
@@ -254,6 +263,7 @@ public class Opm
     /// The caller must provide naifId, maximumOperatingMass, and clock as these are not part of the CCSDS OPM standard.
     /// If spacecraftParameters is not present in the OPM, default values are used for mass (1.0 kg),
     /// sectionalArea (1.0 m²), dragCoeff (2.2), and solarRadiationCoeff (1.0).
+    /// The reference frame is mapped as described on <see cref="ToStateVector"/>.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when clock is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when naifId is non-negative or maximumOperatingMass is invalid.</exception>
@@ -290,6 +300,7 @@ public class Opm
 
     /// <summary>
     /// Gets the reference frame from metadata.
+    /// ICRF, GCRF and EME2000 all map onto <see cref="Frame.ICRF"/>; for EME2000 the ~23 mas frame bias is ignored.
     /// </summary>
     /// <returns>The Frame object corresponding to the metadata reference frame.</returns>
     private Frame GetFrame()

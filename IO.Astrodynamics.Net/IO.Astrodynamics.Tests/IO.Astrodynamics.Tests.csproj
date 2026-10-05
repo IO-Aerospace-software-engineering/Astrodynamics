@@ -101,6 +101,9 @@
       <None Update="PDS\SurfaceMissionInformation\test1_VALID.xml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="Data\SofaReference\iau2006_sweep.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="Data\SolarSystem\EGM2008_to70_TideFree">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

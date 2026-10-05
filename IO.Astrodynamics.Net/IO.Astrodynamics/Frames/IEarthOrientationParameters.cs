@@ -16,10 +16,12 @@ public interface IEarthOrientationParameters
     /// <summary>
     /// Returns polar motion x_p in radians at the given UTC epoch.
     /// </summary>
+    /// <remarks>Not used by the library frames yet: the IAU chain stops at TIRS, there is no ITRS frame.</remarks>
     double GetXp(Time utcEpoch);
 
     /// <summary>
     /// Returns polar motion y_p in radians at the given UTC epoch.
     /// </summary>
+    /// <remarks>Not used by the library frames yet: the IAU chain stops at TIRS, there is no ITRS frame.</remarks>
     double GetYp(Time utcEpoch);
 }

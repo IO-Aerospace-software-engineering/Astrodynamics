@@ -104,8 +104,10 @@ namespace IO.Astrodynamics.Maneuver
         /// <summary>
         /// Converts this executed maneuver to CCSDS OPM maneuver parameters.
         /// </summary>
-        /// <param name="referenceFrame">The reference frame for delta-V components. Defaults to "EME2000".
-        /// Note: Delta-V is stored in the inertial frame (e.g., ICRF/EME2000), not in a local orbital frame.</param>
+        /// <param name="referenceFrame">The reference frame label for delta-V components. Defaults to "EME2000".
+        /// Note: Delta-V is stored in the inertial frame of the propagated state, not in a local orbital frame.
+        /// The components are written unchanged whatever the label: labelling an <see cref="Frames.Frame.ICRF"/>
+        /// delta-V as EME2000 ignores the ~23 mas frame bias between the two (about 1.1e-7 relative on the components).</param>
         /// <param name="comments">Optional comments to include with the maneuver.</param>
         /// <returns>An OpmManeuverParameters instance representing this maneuver.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the maneuver has not been executed (ThrustWindow not set).</exception>
