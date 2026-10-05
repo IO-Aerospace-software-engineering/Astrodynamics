@@ -1,5 +1,6 @@
 site_name: IO Aerospace
 site_description: Documentation for IO.Astrodynamics, the open source .NET astrodynamics framework
+site_url: https://docs.io-aerospace.org/
 repo_name: IO Aerospace
 repo_url: https://github.com/IO-Aerospace-software-engineering/Astrodynamics
 theme:
