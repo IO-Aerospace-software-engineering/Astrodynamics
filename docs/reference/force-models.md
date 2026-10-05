@@ -1,8 +1,8 @@
 # Force Models
 
-Force models compute accelerations applied to a spacecraft during numerical propagation. Community models cover standard perturbations; Pro models add radiation effects.
+Force models compute accelerations applied to a spacecraft during numerical propagation. Gravity, drag and direct solar radiation pressure cover the standard perturbations; albedo and thermal radiation pressure add the radiation emitted or reflected by the central body.
 
-## Community Force Models
+## Gravity, Drag And Solar Radiation
 
 ### GravitationalAcceleration
 

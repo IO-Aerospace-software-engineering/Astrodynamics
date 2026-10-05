@@ -83,8 +83,5 @@
         "xutility": "cpp",
         "ranges": "cpp"
     },
-    "C_Cpp.errorSquiggles": "Disabled",
-    "gcovViewer.buildDirectories": [
-        "/home/sylvain/Sources/IO/SDK/build/IO.SDK/CMakeFiles/IO.SDK.dir/Integrators/Forces"
-    ]
+    "C_Cpp.errorSquiggles": "Disabled"
 }

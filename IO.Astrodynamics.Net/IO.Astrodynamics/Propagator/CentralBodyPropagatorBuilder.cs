@@ -87,7 +87,7 @@ public class CentralBodyPropagatorBuilder
 
     public CentralBodyPropagator Build()
     {
-        // Create propagator via community auto-building constructor
+        // Create propagator via the auto-building constructor
         // (handles gravity, third-body, drag, SRP, ephemeris cache, integrator init)
         var propagator = new CentralBodyPropagator(_window, _spacecraft, _integrator,
             _perturbingBodies, _includeAtmosphericDrag, _includeSolarRadiationPressure, _deltaT);

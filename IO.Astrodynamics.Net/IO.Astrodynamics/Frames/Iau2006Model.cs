@@ -87,7 +87,7 @@ public static class Iau2006Model
     {
         // SOFA iauFw2m left-accumulates: Rz(gamb), Rx(phib), Rz(-psi), Rx(-eps)
         // Product: M_sofa = iauRx(-eps) * iauRz(-psi) * iauRx(phib) * iauRz(gamb)
-        // SOFA rotation matrices are transposed relative to community: iauR(a) = comm_R(-a)
+        // SOFA rotation matrices are transposed relative to Matrix.CreateRotationMatrix*: iauR(a) = CreateRotationMatrix(-a)
         // So negate all angles. Outermost (last SOFA op) is leftmost in chain.
         return Matrix.CreateRotationMatrixX(eps)
             .Multiply(Matrix.CreateRotationMatrixZ(psi))

@@ -1,0 +1,5 @@
+# Pinned documentation toolchain, installed by ci.yml and cd.yml.
+# MkDocs 2.0 is announced as incompatible with existing themes and plugins: stay on 1.x.
+mkdocs==1.6.1
+mkdocs-material==9.7.4
+pymdown-extensions==10.21

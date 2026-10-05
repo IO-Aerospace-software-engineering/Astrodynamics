@@ -34,14 +34,14 @@ var solution = propagator.Propagate();
 
 The builder supports the following perturbations:
 
-| Method | Force Model | Source |
-|--------|-------------|--------|
-| *(automatic)* | Central-body gravity | Community |
-| `WithPerturbingBody(body)` | Third-body perturbation | Community |
-| `IncludeAtmosphericDrag()` | Atmospheric drag | Community |
-| `IncludeSolarRadiationPressure()` | Direct solar radiation pressure | Community |
-| `IncludeAlbedo(body)` | Reflected sunlight (Lambertian sphere) | Pro |
-| `IncludeThermalRadiation(body)` | Infrared emission (isotropic emitter) | Pro |
+| Method | Force Model |
+|--------|-------------|
+| *(automatic)* | Central-body gravity |
+| `WithPerturbingBody(body)` | Third-body perturbation |
+| `IncludeAtmosphericDrag()` | Atmospheric drag |
+| `IncludeSolarRadiationPressure()` | Direct solar radiation pressure |
+| `IncludeAlbedo(body)` | Reflected sunlight (Lambertian sphere) |
+| `IncludeThermalRadiation(body)` | Infrared emission (isotropic emitter) |
 
 ## Geopotential Degree Guidance
 

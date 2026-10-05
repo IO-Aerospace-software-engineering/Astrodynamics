@@ -13,6 +13,11 @@ out/
 cmake-build-release/
 cmake-build-release-linux/
 cmake-build-release-coverage/
+
+# Generated C++ coverage reports
+/coverage/
+/coverage.info
+/filtered_coverage.info
 cmake-build-debug/
 cmake-build-debug-linux/
 .vscode/

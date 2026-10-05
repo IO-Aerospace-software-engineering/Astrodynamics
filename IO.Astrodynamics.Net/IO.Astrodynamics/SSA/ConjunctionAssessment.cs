@@ -1610,8 +1610,6 @@ public static class ConjunctionAssessment
         return System.Math.Clamp(integral, 0.0, 1.0);
     }
 
-    // RTN rotation methods are now on StateVector (community): CreateRtnRotation(), ToRtn(), FromRtn(), RotateCovarianceToRtn()
-
     private static IEnumerable<Vector3> BuildBurnDirections()
     {
         yield return Vector3.VectorX;
@@ -1903,8 +1901,6 @@ public static class ConjunctionAssessment
             .OrderBy(step => step.StartEpoch)
             .ToArray();
     }
-
-    // ErrorFunction moved to community: SpecialFunctions.ErrorFunction()
 
     private static Spacecraft CloneSpacecraft(Spacecraft template, StateVector initialState)
     {

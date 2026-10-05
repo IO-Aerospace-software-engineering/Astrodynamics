@@ -85,7 +85,6 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 
 **External Dependencies**
 - MathNet.Numerics: Linear algebra operations
-- MathNet.Filtering.Kalman: Kalman filtering for state estimation
 - Cocona: CLI framework (CLI project only)
 - xUnit + BenchmarkDotNet: Testing and benchmarking
 

@@ -17,7 +17,7 @@ Both integrators record `AcceptedStep` entries containing position, velocity, an
 
 ## VVIntegrator
 
-`VVIntegrator` is the community fixed-step symplectic integrator using the Velocity-Verlet scheme.
+`VVIntegrator` is the default fixed-step symplectic integrator using the Velocity-Verlet scheme.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
