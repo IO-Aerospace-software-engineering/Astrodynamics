@@ -15,15 +15,13 @@ The propagation subsystem provides numerical and analytical orbit propagation th
 
 ### Supported Perturbations
 
-| Force Model | Edition |
-|-------------|---------|
-| Central-body gravity | Community |
-| Third-body perturbations | Community |
-| EGM2008 geopotential | Community |
-| Atmospheric drag | Community |
-| Solar radiation pressure | Community |
-| Albedo radiation pressure | Pro |
-| Thermal radiation pressure | Pro |
+- Central-body gravity
+- Third-body perturbations
+- EGM2008 geopotential
+- Atmospheric drag
+- Solar radiation pressure
+- Albedo radiation pressure
+- Thermal radiation pressure
 
 ### CentralBodyPropagator Constructors
 

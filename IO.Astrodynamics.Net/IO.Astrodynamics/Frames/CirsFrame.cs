@@ -8,13 +8,14 @@ namespace IO.Astrodynamics.Frames;
 
 /// <summary>
 /// Celestial Intermediate Reference System (CIRS).
-/// Uses IAU 2006/2000A precession-nutation.
+/// Uses IAU 2006 precession with IAU 2000B nutation.
 /// The CIO-based Q(t) matrix produced by the model is <c>ICRF → CIRS</c>, so
 /// <see cref="GetStateOrientationToICRF(Time)"/> returns its transpose, <c>CIRS → ICRF</c>.
 /// </summary>
 /// <remarks>
 /// CIRS depends on precession-nutation only, so it takes no Earth orientation parameters:
-/// UT1-UTC enters at <see cref="TirsFrame"/> and polar motion only in the TIRS to ITRF step.
+/// UT1-UTC enters at <see cref="TirsFrame"/>. Polar motion belongs to the TIRS to ITRS step, which the
+/// library does not provide yet.
 /// </remarks>
 public sealed class CirsFrame : Frame
 {

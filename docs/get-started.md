@@ -11,9 +11,14 @@ integration, numerical propagation with both integrators, maneuvers, attitude co
 searches, Earth orientation frames, batch and Monte Carlo analysis, conjunction assessment, and
 CCSDS OMM, OPM and CDM support.
 
+The package targets `net10.0` and bundles the native CSPICE interop library for `win-x64`,
+`linux-x64`, `osx-arm64` (Apple Silicon) and `osx-x64` (Intel). The right one is resolved
+automatically at build time.
+
 !!! note "Coming from `IO.Astrodynamics.Pro`"
     Replace the package reference with `IO.Astrodynamics` 10.0.0 or later and drop the licence key.
-    Namespaces are unchanged, so no code edit is needed. See
+    Namespaces are unchanged. The only code edit concerns the static `Frames` accessor, which is
+    gone: write `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` instead. See
     [Versioning](contributing/versioning.md).
 
 ## Load SPICE Kernels

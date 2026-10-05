@@ -45,6 +45,20 @@ The CDM module supports constructing, reading, writing, and validating CCSDS Con
 | `Originator` | `string` | Originating organization |
 | `MessageId` | `string` | Unique message identifier |
 | `MessageFor` | `string` | Intended recipient |
+| `CollisionProbabilityMethod` | `string` | Overrides the method name, `FOSTER-2D` by default |
+| `AllowStaleCovariance` | `bool` | Allows exporting an encounter flagged `StaleCovarianceUsed` (refused by default) |
+
+The covariance of each participant is resolved as in the conjunction analysis: the covariance at
+TCA, otherwise the initial-state covariance held fixed in RTN (not propagated). In the second case a
+comment gives its age at TCA. See
+[Conjunction Assessment](conjunction-assessment.md).
+
+### Reference frame
+
+States in `Frame.ICRF` (SPICE `J2000`) and `Frame.GCRF` are written with `REF_FRAME = GCRF`. Both
+frames share the ICRF axes, so the label is exact and the same state gives the same CDM content in
+either frame. A state in a frame named `EME2000` is labelled `EME2000`, and a state in `ITRF93` is
+labelled `ITRF`.
 
 ## Unit Conversion
 
@@ -57,7 +71,8 @@ The managed API stores values internally in SI units. The CDM writer emits CCSDS
 | Miss distance | m | m |
 | Relative position | m | m |
 
-Standards-compliant CDM export requires covariance for both participants.
+Standards-compliant CDM export requires covariance for both participants, so the exported
+`COLLISION_PROBABILITY_METHOD` is `FOSTER-2D`.
 
 ## Example
 

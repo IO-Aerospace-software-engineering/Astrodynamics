@@ -89,6 +89,10 @@ Add the IO.Astrodynamics NuGet package to your project:
 dotnet add package IO.Astrodynamics
 ```
 
+The package targets `net10.0` and bundles the native CSPICE interop library for `win-x64`,
+`linux-x64`, `osx-arm64` (Apple Silicon) and `osx-x64` (Intel). The right one is resolved
+automatically at build time.
+
 ### Loading SPICE Kernels
 
 Before any computation, load the required SPICE kernel files:
@@ -1553,7 +1557,7 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 **Integrator Interface (`IIntegrator`):**
 - `Initialize(StateVector initialState)` — set observer, frame, workspace
 - `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`
-- Community default: `VVIntegrator` (Velocity-Verlet, fixed-step, event detection at step boundaries)
+- Default: `VVIntegrator` (Velocity-Verlet, fixed-step, event detection at step boundaries)
 - `RK78Integrator` (adaptive Prince-Dormand 7(8), sub-step event refinement via bisection)
 
 **Event Detection (`IEventDetector`):**
@@ -1567,8 +1571,8 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 - **Third-body perturbation**: Battin's numerically stable formula for each celestial body beyond the central body.
 - **Atmospheric drag** (when `drag` is true): uses the body's atmospheric model with atmosphere-relative velocity (accounts for body co-rotation). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
 - **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
-- **Albedo radiation pressure** (Pro, via `CentralBodyPropagatorBuilder.IncludeAlbedo()`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
-- **Thermal radiation pressure** (Pro, via `CentralBodyPropagatorBuilder.IncludeThermalRadiation()`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
+- **Albedo radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeAlbedo()`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
+- **Thermal radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeThermalRadiation()`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
 - **Ephemeris cache**: 60-second grid with 8-point Lagrange interpolation, injected into all force models to eliminate redundant SPICE calls during integration.
 
 **Geopotential usage:**
@@ -2876,9 +2880,10 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 ## Version Information
 
-- NuGet Package: 9.1.1
-- CLI Tool: 9.1.1
+- NuGet Package: 10.0.0
+- CLI Tool: 10.0.0
 - Framework: .NET 10.0 (`net10.0` only)
+- Supported runtimes: `win-x64`, `linux-x64`, `osx-arm64` (Apple Silicon), `osx-x64` (Intel)
 - SPICE Toolkit: CSPICE N0067
 - License: LGPL-3.0-or-later
 

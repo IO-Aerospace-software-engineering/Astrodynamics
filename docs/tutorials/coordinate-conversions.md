@@ -52,11 +52,11 @@ Body-fixed frames are essential for ground track computation and surface-relativ
     These high-accuracy Earth orientation frames account for precession, nutation and the
     Earth rotation angle.
 
-These three frames follow the IAU 2006/2000A model chain:
+These three frames follow the CIO-based IAU chain, IAU 2006 precession with IAU 2000B nutation:
 
 | Frame | Description |
 |-------|-------------|
-| GCRF | Geocentric Celestial Reference Frame (aligned with ICRF) |
+| GCRF | Geocentric Celestial Reference Frame (same axes as ICRF) |
 | CIRS | Celestial Intermediate Reference System (accounts for precession and nutation) |
 | TIRS | Terrestrial Intermediate Reference System (accounts for Earth rotation angle) |
 
@@ -108,5 +108,5 @@ Longitude and latitude are in radians; altitude is in meters above the reference
 
 - All frame transforms pivot through ICRF. Use `ToFrame` to convert between any supported frames.
 - Body-fixed frames (`IAU_EARTH`, `IAU_MOON`, etc.) rotate with the body.
-- Pro provides GCRF, CIRS, and TIRS frames for high-accuracy Earth orientation.
+- GCRF, CIRS, and TIRS frames provide the IAU CIO-based Earth orientation chain.
 - `ToEquatorial` extracts RA/Dec; `Planetodetic` represents geodetic surface coordinates.

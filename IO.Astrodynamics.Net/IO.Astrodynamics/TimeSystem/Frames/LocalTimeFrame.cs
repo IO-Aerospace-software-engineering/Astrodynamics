@@ -11,13 +11,13 @@ public class LocalTimeFrame : TimeFrame
     public override Time ConvertToTAI(Time time)
     {
         var utcEpoch = time.DateTime.ToUniversalTime();
-        var leaps = this.LeapSecondsFrom(time);
+        var leaps = LeapSecondsAtUtc(utcEpoch);
         return new TimeSystem.Time(utcEpoch + leaps, TAIFrame);
     }
 
     public override Time ConvertFromTAI(Time time)
     {
-        var leaps = this.LeapSecondsFrom(time);
+        var leaps = LeapSecondsAtTai(time.DateTime);
         var epoch = DateTime.SpecifyKind(time.DateTime - leaps, DateTimeKind.Utc).ToLocalTime();
         return new TimeSystem.Time(epoch, LocalFrame);
     }

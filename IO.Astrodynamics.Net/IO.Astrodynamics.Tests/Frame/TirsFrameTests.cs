@@ -12,9 +12,26 @@ public class TirsFrameTests
 {
     private static double QuaternionAngleDifference(Quaternion left, Quaternion right)
     {
+        // atan2 keeps full precision for small angles, where 2 acos(|w|) cannot resolve less than ~3e-8 rad.
         var relative = left.Conjugate() * right;
-        double clampedW = System.Math.Min(1.0, System.Math.Abs(relative.W));
-        return 2.0 * System.Math.Acos(clampedW);
+        return 2.0 * System.Math.Atan2(relative.VectorPart.Magnitude(), System.Math.Abs(relative.W));
+    }
+
+    [Fact]
+    public void TirsResolvesSubMillisecondEpochs()
+    {
+        // 0.4 ms of UT1 is 2.9e-8 rad of Earth rotation. The ERA used to be fed a millisecond-truncated
+        // Julian date, so both epochs gave the same orientation.
+        var tirs = new TirsFrame();
+        var first = new TimeSystem_Time(new DateTime(2024, 1, 1, 6, 30, 15).AddTicks(1234567), TimeFrame.UTCFrame);
+        var second = first.Add(TimeSpan.FromTicks(4000));
+
+        double angle = QuaternionAngleDifference(tirs.GetStateOrientationToICRF(first).Rotation,
+            tirs.GetStateOrientationToICRF(second).Rotation);
+
+        // Tolerance: ~2e-12 day of double resolution on the date, times the Earth rotation rate, is 1.3e-11 rad.
+        const double earthRotationRate = 2.0 * System.Math.PI * 1.00273781191135448 / 86400.0;
+        Assert.Equal(earthRotationRate * 4e-4, angle, 2e-11);
     }
 
     [Fact]

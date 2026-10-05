@@ -22,7 +22,7 @@ class Program
         app.AddCommands<BodyInformationCommand>();
         app.AddCommands<PropagateCommand>();
         var assName = Assembly.GetExecutingAssembly().GetName();
-        app.AddSubCommand("--version", (a) => { Console.WriteLine($"{assName.Name} v{assName.Version} experimental"); });
+        app.AddSubCommand("--version", (a) => { Console.WriteLine($"{assName.Name} v{assName.Version?.ToString(3)} experimental"); });
 
         app.Run();
     }

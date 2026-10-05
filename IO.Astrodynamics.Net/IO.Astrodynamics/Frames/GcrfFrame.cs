@@ -6,16 +6,17 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.Frames;
 
 /// <summary>
-/// Geocentric Celestial Reference Frame (GCRF).
-/// The GCRF is the realization of the International Celestial Reference System (ICRS).
-/// It differs from SPICE's J2000 frame by the IAU 2006 frame bias (~23 mas rotation).
-/// The rotation is constant (no time dependence) and the angular velocity is zero.
-/// <see cref="GetStateOrientationToICRF(Time)"/> returns the rotation <c>GCRF → ICRF</c>.
+/// Geocentric Celestial Reference Frame (GCRF): the axes of the International Celestial Reference
+/// System (ICRS), centred on the Earth.
+/// The library pivot frame <see cref="Frame.ICRF"/> (SPICE <c>J2000</c>) is treated as aligned with
+/// the ICRS, like the DE planetary ephemerides it carries, so the rotation <c>GCRF → ICRF</c> is the
+/// identity and the angular velocity is zero.
+/// The IAU 2006 frame bias (~23 mas) relates the ICRS to the mean equator and equinox of J2000
+/// (EME2000). It belongs to the precession-nutation matrix used by <see cref="CirsFrame"/>, and is
+/// not applied between GCRF and ICRF.
 /// </summary>
 public sealed class GcrfFrame : Frame
 {
-    private static readonly Quaternion _biasQuaternion = Iau2006Model.FrameBias().ToQuaternion();
-
     public GcrfFrame() : base("GCRF")
     {
     }
@@ -25,8 +26,7 @@ public sealed class GcrfFrame : Frame
         if (OrientationCache != null)
             return OrientationCache.GetOrientation(date);
 
-        // The stored quaternion rotates vectors from GCRF into ICRF.
         return _stateOrientationsToICRF.GetOrAdd(date, _ =>
-            new StateOrientation(_biasQuaternion, Vector3.Zero, date, this));
+            new StateOrientation(Quaternion.Zero, Vector3.Zero, date, this));
     }
 }
