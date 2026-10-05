@@ -10,15 +10,47 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 | Component | Version |
 |-----------|---------|
-| NuGet (`IO.Astrodynamics`) | `10.0.0` |
-| CLI tool (`IO.Astrodynamics.CLI`) | `10.0.0` |
+| NuGet (`IO.Astrodynamics`) | `10.1.0` |
+| CLI tool (`IO.Astrodynamics.CLI`) | `10.1.0` |
 | .NET framework | `.NET 10.0` |
 | SPICE toolkit | `CSPICE N0067` |
 | License | `LGPL-3.0-or-later` |
 
 ## Release Notes
 
-### 10.1.0 (unreleased)
+### 10.1.0
+
+Corrections from the post-merge review: no new feature, but several results change.
+
+**Changed**
+
+- **`Frame.GCRF` has the axes of `Frame.ICRF`.** SPICE `J2000`, the pivot of every transform, is treated
+  as ICRF-aligned, like the DE ephemerides it carries. `GcrfFrame` used to rotate by the IAU 2006 frame
+  bias on top of CIRS and TIRS, which already contain it. GCRF to CIRS or TIRS was therefore off by
+  about 23 mas. CIRS and TIRS relative to `Frame.ICRF` are unchanged.
+- **IAU 2000B nutation.** The P03 adjustment now scales with time (`-2.7774e-6 t`, as in SOFA
+  `iauNut06a`), and the series uses the linear Delaunay arguments that define IAU 2000B. Nutation
+  changes by up to 1.9e-10 rad and now matches SOFA `iauNut00b` + P03 to 1e-13 rad.
+- **CIO locator.** The full IAU 2006 series of `s + XY/2` is evaluated (66 periodic terms). The
+  polynomial-only version was off by up to 1.27e-8 rad (2.6 mas).
+- **`EncounterQualityFlags.StaleCovarianceUsed`.** It is now raised only when the covariance taken from
+  a participant's initial state is older than `ConjunctionAnalysisOptions.StaleCovarianceThreshold`
+  (60 s by default). It used to be raised whenever the initial-state covariance was used, even 10 s
+  from TCA.
+- **Initial-state covariance at TCA.** When no covariance is available at TCA, the initial-state
+  covariance is held fixed in the RTN frame instead of being reused unchanged in the inertial frame.
+  It is still not propagated.
+- **CDM export.** An encounter flagged `StaleCovarianceUsed` is refused unless
+  `CdmExportOptions.AllowStaleCovariance` is set. The comments give the age of each exported
+  covariance.
+
+**Added**
+
+- `EncounterState.ProtectedCovarianceAge` and `SecondaryCovarianceAge`,
+  `ConjunctionAnalysisOptions.StaleCovarianceThreshold`, `CdmExportOptions.AllowStaleCovariance` and
+  `StateVector.RotateCovarianceFromRtn`.
+- The conformance runner report records the tested framework commit (`framework_commit`,
+  `framework_informational_version`).
 
 **Deprecated**
 
@@ -32,8 +64,14 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 **Fixed**
 
-- The CLI reported version `0.0.1` (`astro --version`) whatever the release. Its assembly and file
-  versions now derive from the package version.
+- **Leap seconds.** UTC to TAI used the previous offset at exactly 00:00:00 UTC on a leap second date
+  (for example `2017-01-01T00:00:00Z`), one second short. TAI to UTC was one second off for the first
+  seconds after midnight TAI on those dates, and `LocalTimeFrame` looked the offset up from the local
+  clock.
+- **Sub-millisecond time.** `Time.ToJulianDate()` and `Centuries()` truncated to the millisecond. The
+  Earth rotation angle of TIRS could be off by up to 7.3e-8 rad.
+- **CLI version.** The CLI reported version `0.0.1` (`astro --version`) whatever the release. Its
+  assembly and file versions now derive from the package version.
 
 ### 10.0.0
 

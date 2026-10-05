@@ -12,7 +12,7 @@
 
         <!-- NuGet package metadata (replaces IO.Astrodynamics.nuspec) -->
         <PackageId>IO.Astrodynamics</PackageId>
-        <Version>10.0.0</Version>
+        <Version>10.1.0</Version>
         <Authors>Sylvain Guillet</Authors>
         <Copyright>Sylvain Guillet</Copyright>
         <Title>IO Astrodynamics framework</Title>
