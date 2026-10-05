@@ -4,7 +4,7 @@ title: Versioning
 
 # Versioning
 
-Current version information and a summary of breaking changes since 8.0.
+Current version information and release notes since 8.0. Breaking changes are called out in each release.
 
 ## Current Versions
 
@@ -16,7 +16,24 @@ Current version information and a summary of breaking changes since 8.0.
 | SPICE toolkit | `CSPICE N0067` |
 | License | `LGPL-3.0-or-later` |
 
-## Breaking Changes
+## Release Notes
+
+### 10.1.0 (unreleased)
+
+**Deprecated**
+
+- `LowThrustManeuver` is marked `[Obsolete]`. It was never implemented: every member threw
+  `NotImplementedException`. It will be removed in 11.0.
+
+**Removed**
+
+- The unused `MathNet.Filtering.Kalman` package dependency. A project that used it through
+  `IO.Astrodynamics` must now reference it directly.
+
+**Fixed**
+
+- The CLI reported version `0.0.1` (`astro --version`) whatever the release. Its assembly and file
+  versions now derive from the package version.
 
 ### 10.0.0
 
@@ -52,15 +69,43 @@ var cirs = Frame.CIRS;
 `CirsFrame(IEarthOrientationParameters)` is removed as well; it ignored its argument. CIRS depends
 on precession-nutation only. Use `new TirsFrame(eop)` where Earth orientation parameters matter.
 
+### 9.1.1
+
+**Added**
+
+- NORAD catalog numbers above 99999 in TLE form, through the Alpha-5 encoding (leading letter,
+  `A` = 10 to `Z` = 33, without `I` and `O`), up to 339999: `NoradCatalogNumber.Format` and
+  `NoradCatalogNumber.Parse`, and `TLE.NoradCatalogId` for the decoded value.
+- `Omm.ToTle()` throws for a catalog number that a TLE cannot represent, instead of truncating it.
+
+**Changed**
+
+- `TLE.Create` and the TLE `Configuration` record take `int` instead of `ushort` for the NORAD
+  identifier, the revolution number at epoch and the element set number. Source code compiles
+  unchanged; binaries built against 9.1.0 must be recompiled.
+
+### 9.1.0
+
+**Added**
+
+- macOS support: native libraries for `osx-arm64` (Apple Silicon) and `osx-x64` (Intel) are shipped
+  in the package, next to `linux-x64` and `win-x64`.
+
 ### 9.0.0
 
 !!! note "Reading the entries below"
     Entries marked **(Pro)** shipped in the separate `IO.Astrodynamics.Pro` package at the time.
     That package is discontinued and its content is part of `IO.Astrodynamics` since 10.0.0.
 
+**Breaking changes**
+
 - **.NET 8.0 removed**. All projects now target `net10.0` only.
-- **Batch propagation** (Pro): Added `BatchPropagator` with fault isolation and progress reporting.
+- **SemVer 3-part versioning**: Migrated from 4-part version numbers to standard SemVer.
 - **Build-time license enforcement** (Pro): consumer builds required a signed licence token. Removed in 10.0.0.
+
+**Added**
+
+- **Batch propagation** (Pro): Added `BatchPropagator` with fault isolation and progress reporting.
 - **Albedo radiation pressure** (Pro): Lambertian sphere model for reflected sunlight. Requires `CelestialBody.Albedo > 0`.
 - **Thermal radiation pressure** (Pro): Isotropic emitter model for infrared body radiation. Requires `CelestialBody.ThermalEffectiveTemperature > 0` and `ThermalEmissivity > 0`.
 - **CIO-based Earth orientation frames** (Pro): Added GCRF, CIRS, and TIRS frames with `IEarthOrientationParameters` interface.
@@ -68,7 +113,6 @@ on precession-nutation only. Use `new TirsFrame(eop)` where Earth orientation pa
 - **Conjunction assessment** (Pro): Screening, encounter analysis, and avoidance trade studies.
 - **CCSDS CDM** (Pro): Conjunction Data Message generation, reading, writing, and XML schema validation.
 - **Matrix operations**: Added matrix addition and RTN (Radial-Transverse-Normal) transformations.
-- **SemVer 3-part versioning**: Migrated from 4-part version numbers to standard SemVer.
 
 ### 8.7.0
 

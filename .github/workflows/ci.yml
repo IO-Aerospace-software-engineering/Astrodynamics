@@ -23,12 +23,16 @@ env:
 
 jobs:
   # Job 0: Documentation. Independent of the build, so it fails fast on a broken
-  # link or a page missing from the nav rather than at release time.
+  # link, a page missing from the nav, or a documented version that disagrees with
+  # the projects, rather than at release time.
   docs:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Check documented versions
+      run: tools/ci/check-versions.sh
 
     - name: Setup Python
       uses: actions/setup-python@v5
