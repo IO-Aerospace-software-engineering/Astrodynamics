@@ -19,4 +19,11 @@ public class TolerancePair
 
     [YamlMember(Alias = "rel_tol")]
     public double RelTol { get; set; }
+
+    /// <summary>
+    /// Why a case overrides the default tolerance. Required by the case schema for every entry of
+    /// <c>tolerances_override</c>; absent from the defaults.
+    /// </summary>
+    [YamlMember(Alias = "justification")]
+    public string Justification { get; set; }
 }
