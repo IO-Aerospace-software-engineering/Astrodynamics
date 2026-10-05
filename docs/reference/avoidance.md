@@ -54,7 +54,7 @@ var options = ConjunctionAssessment.EvaluateAvoidance(
 foreach (var opt in options.OrderBy(o => o.RankingScore))
 {
     Console.WriteLine($"Burn at {opt.BurnEpoch}: dV={opt.DeltaVInertial.Magnitude():F3} m/s, "
-        + $"post-miss={opt.PostManeuverEncounter.EncounterState.MissDistance:F0} m");
+        + $"post-miss={opt.PostManeuverEncounter.EncounterState.MissDistanceMeters:F0} m");
 }
 ```
 

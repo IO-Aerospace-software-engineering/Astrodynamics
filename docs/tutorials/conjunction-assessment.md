@@ -7,9 +7,29 @@ CCSDS-compliant Conjunction Data Messages.
 
 ## Setting up spacecraft with covariance
 
-Conjunction assessment requires position and velocity covariance on both the
+Collision probability needs a position and velocity covariance on the
 protected (primary) and secondary objects. Covariance is attached to the
 initial `StateVector` as a 6x6 matrix.
+
+!!! warning "Covariance is not propagated to TCA"
+    The covariance used at the time of closest approach (TCA) is resolved in this order, for each
+    participant:
+
+    1. the covariance carried by the participant's state at TCA, when there is one (age zero). The
+       `ILocalizable` and `PropagationSolution` entry points sample states without covariance, so in
+       practice this applies to hand-built states only;
+    2. otherwise the covariance of the participant's initial `StateVector`, **held fixed in the RTN
+       frame**: rotated into RTN with the initial state, then back into the inertial frame with the
+       state at TCA. It is not propagated. Its age, the time between its epoch and TCA, is reported in
+       `EncounterState.ProtectedCovarianceAge` / `SecondaryCovarianceAge`, and
+       `EncounterQualityFlags.StaleCovarianceUsed` is raised when it exceeds
+       `ConjunctionAnalysisOptions.StaleCovarianceThreshold` (60 s by default);
+    3. otherwise no covariance: `MissingProtectedCovariance` or `MissingSecondaryCovariance`, and
+       `CovarianceUnavailable` when both are missing.
+
+    Holding the covariance in RTN keeps its shape relative to the orbit (large along-track, small
+    radial), but its size does not grow with time as a propagated covariance would. Keep the initial
+    epoch close to the TCA, or supply covariances from a recent orbit determination.
 
 ```csharp
 // Build a 6x6 covariance matrix (diagonal for simplicity)
@@ -60,8 +80,11 @@ var secondarySpacecraft = new Spacecraft(
 ## Basic conjunction analysis
 
 The simplest analysis evaluates a single protected-vs-secondary pair over a
-time window. `ConjunctionAssessment.Analyze` propagates both objects and
-returns the closest-approach encounter.
+time window. `ConjunctionAssessment.Analyze` samples both objects'
+ephemerides and returns the closest-approach encounter. For a spacecraft that
+has not been propagated, its ephemeris is the initial orbit extrapolated on a
+Keplerian orbit (SGP4 for a TLE); propagate it first, or use the
+`PropagationSolution` overloads, for a high-fidelity trajectory.
 
 ```csharp
 var encounter = ConjunctionAssessment.Analyze(
@@ -75,8 +98,8 @@ Console.WriteLine($"Probability:    {encounter.CollisionRisk.ProbabilityOfCollis
 Console.WriteLine($"Relative speed: {encounter.EncounterState.RelativeState.RelativeVelocityInertial.Magnitude():F1} m/s");
 ```
 
-The `ProtectedSpacecraftProfile` wraps the protected spacecraft with any
-additional screening configuration (e.g., custom covariance scaling).
+The `ProtectedSpacecraftProfile` wraps the protected spacecraft with the
+maneuver constraints used by avoidance studies (`ManeuverConstraints`).
 
 ## Analyzing all encounters
 
@@ -126,27 +149,29 @@ foreach (var enc in encounters)
 | Property | Description |
 |----------|-------------|
 | `MaxMissDistanceMeters` | Upper bound on miss distance |
-| `MinCollisionProbability` | Lower bound on collision probability |
 | `MaxResults` | Maximum number of encounters to return |
 
-Results are ranked by collision probability (highest first).
+Results are ranked by collision probability (highest first), then by miss
+distance.
 
 ## Reusing propagated trajectories
 
-If you have already propagated the protected spacecraft (e.g., from a
-previous analysis), pass the pre-computed trajectory to avoid redundant
-propagation:
+If you have already propagated both trajectories, pass the
+`PropagationSolution` objects to reuse their dense output instead of
+sampling the participants' ephemerides:
 
 ```csharp
-// Propagate once
-var protectedProfile = new ProtectedSpacecraftProfile(protectedSpacecraft);
+var protectedTrajectory = protectedSpacecraft.Propagate(window, perturbingBodies, false, false, step);
+var secondaryTrajectory = secondarySpacecraft.Propagate(window, perturbingBodies, false, false, step);
 
-// Reuse for multiple secondaries
-var enc1 = ConjunctionAssessment.Analyze(protectedProfile, secondary1, window);
-var enc2 = ConjunctionAssessment.Analyze(protectedProfile, secondary2, window);
+var encounter = ConjunctionAssessment.Analyze(
+    new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory,
+    secondarySpacecraft, secondaryTrajectory,
+    window);
 ```
 
-The profile caches the propagated trajectory after the first call.
+The profile itself caches nothing: each call samples the trajectories it is
+given.
 
 ## Avoidance trade study
 
@@ -171,10 +196,11 @@ var options = ConjunctionAssessment.EvaluateAvoidance(
 
 foreach (var opt in options)
 {
-    Console.WriteLine($"Lead={opt.LeadTime.TotalHours:F0}h, " +
-                      $"DV={opt.DeltaV:F3} m/s => " +
-                      $"Miss={opt.ResultingMissDistance:F0} m, " +
-                      $"Pc={opt.ResultingProbability:E3}");
+    var after = opt.PostManeuverEncounter;
+    Console.WriteLine($"Burn at {opt.BurnEpoch}, " +
+                      $"DV={opt.DeltaVInertial.Magnitude():F3} m/s => " +
+                      $"Miss={after.EncounterState.MissDistanceMeters:F0} m, " +
+                      $"Pc={after.CollisionRisk.ProbabilityOfCollision:E3}");
 }
 ```
 
@@ -210,7 +236,7 @@ if (validation.IsValid)
     Console.WriteLine("CDM is schema-valid.");
 else
     foreach (var error in validation.Errors)
-        Console.WriteLine($"Validation error: {error}");
+        Console.WriteLine($"Validation error: {error.Message}");
 ```
 
 ### CDM fields
@@ -221,8 +247,15 @@ The exported CDM includes:
 - **Relative metadata**: TCA, miss distance, reference frame
 - **Object 1 / Object 2**: state vectors, covariance (RTN frame), physical
   properties (mass, area, drag/SRP coefficients)
-- **Collision probability**: computed using the single-covariance maximum
-  probability method
+- **Collision probability**: the Pc of the encounter, with
+  `COLLISION_PROBABILITY_METHOD` set to `FOSTER-2D`. Export requires a
+  covariance for both participants, so the single-covariance maximum Pc is
+  never exported; `CdmExportOptions.CollisionProbabilityMethod` overrides the
+  method name
+- **Covariance age**: when a participant's covariance comes from its initial
+  state, a comment gives its age at TCA. An encounter flagged
+  `StaleCovarianceUsed` is refused unless `CdmExportOptions.AllowStaleCovariance`
+  is set
 
 ## Best practices and quality flags
 
@@ -231,10 +264,15 @@ The exported CDM includes:
 The accuracy of collision probability depends heavily on covariance quality.
 Watch for these indicators:
 
-- **Covariance realism**: Diagonal-only covariance underestimates probability.
-  Use full 6x6 matrices from orbit determination when available.
-- **Covariance age**: Covariance propagated far from the last observation
-  epoch becomes unreliable. Prefer recent OD solutions.
+- **Covariance realism**: A diagonal covariance ignores the correlations
+  between axes. Depending on the geometry, that can raise or lower the
+  probability, so neither direction is a safe bound. Use full 6x6 matrices
+  from orbit determination when available.
+- **Covariance age**: The library does not propagate covariance: it holds the
+  initial covariance fixed in RTN up to TCA, so its size does not grow with
+  time. Check `EncounterState.ProtectedCovarianceAge` and
+  `SecondaryCovarianceAge`, and prefer covariances from a recent orbit
+  determination.
 - **Hard-body radius**: Setting this too large inflates probability
   artificially. Use realistic physical dimensions.
 

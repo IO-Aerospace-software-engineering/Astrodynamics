@@ -68,7 +68,7 @@ Used in geometry-finder constraint searches.
 | `MissingSecondaryCovariance` | Secondary object has no covariance |
 | `CovarianceUnavailable` | No covariance for either participant |
 | `CovarianceRemediated` | Covariance was remediated |
-| `StaleCovarianceUsed` | Stale covariance was used |
+| `StaleCovarianceUsed` | An initial-state covariance older than `ConjunctionAnalysisOptions.StaleCovarianceThreshold` (60 s by default) was used at TCA, held fixed in RTN |
 | `LowRelativeVelocityEncounter` | 2D assumption may be degraded |
 | `SingleCovarianceMaximumPcUsed` | Single-covariance maximum Pc was used |
 

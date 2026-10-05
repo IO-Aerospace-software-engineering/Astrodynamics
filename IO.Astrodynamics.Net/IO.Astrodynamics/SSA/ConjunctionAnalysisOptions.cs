@@ -32,4 +32,12 @@ public sealed record ConjunctionAnalysisOptions
     /// Gets the relative-speed threshold below which the encounter is flagged as a low-velocity case.
     /// </summary>
     public double LowRelativeSpeedThresholdMetersPerSecond { get; init; } = 1.0;
+
+    /// <summary>
+    /// Gets the covariance age beyond which <see cref="EncounterQualityFlags.StaleCovarianceUsed"/> is raised.
+    /// The age is the time between the epoch of a participant's initial-state covariance, used when no covariance
+    /// is available at the encounter epoch, and the encounter epoch. Covariance is not propagated: it is held fixed
+    /// in the RTN frame. Default: 60 seconds.
+    /// </summary>
+    public TimeSpan StaleCovarianceThreshold { get; init; } = TimeSpan.FromSeconds(60);
 }
