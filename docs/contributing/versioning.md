@@ -30,6 +30,13 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   1 m/s for a LEO state or a ground site, and 34.5 m/s for the geocentric Moon in ITRF93 (1.1 m/s in 2000).
   Positions were right. Every conversion to or from a body-fixed frame is concerned, including the velocities of
   custom `Site` objects and the `GetEphemeris` of non-SPICE objects asked in a body-fixed frame.
+- **Angular velocity of TIRS, CIRS and site frames.** These frames, computed in .NET, now return their angular
+  velocity in the convention of the SPICE frames: the angular velocity of ICRF relative to the frame, expressed in the
+  frame. TIRS returned the Earth rotation in ICRF axes with the opposite sign, so a state converted to or from TIRS
+  had its rotation term reversed: twice the rotation velocity, up to 1 km/s for a LEO state. CIRS had the same sign
+  error on its 6e-12 rad/s rate (about 5 mm/s at lunar distance). The topocentric frame of a `Site` expressed the
+  angular velocity of its body in the wrong axes: 1.5e-7 rad/s relative to ITRF93 in 2021, 44 m/s on the Moon seen
+  in the site frame. `StateOrientation.AtDate` keeps its attitude convention and does not apply to frame transforms.
 
 ### 10.1.0
 

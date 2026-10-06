@@ -180,6 +180,87 @@ public class FrameChainIntegrationTests
         Assert.True(angle < 1e-12, $"Propagated and recomputed {frameName} rotations differ by {angle:E3} rad");
     }
 
+    [Theory]
+    [InlineData(2000)]
+    [InlineData(2021)]
+    public void TirsAngularVelocityMatchesItrf93(int year)
+    {
+        // Both frames turn about the CIP at the Earth rotation rate; SPICE takes ITRF93 from the high precision Earth
+        // orientation kernel. TIRS leaves out the precession-nutation rate of the CIP (a few 1e-12 rad/s) and the
+        // length-of-day variations (about 1e-12 rad/s). The former TIRS angular velocity had the opposite sign,
+        // 1.5e-4 rad/s away.
+        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0);
+
+        var tirs = Frames.Frame.ICRF.ToFrame(Frames.Frame.TIRS, epoch).AngularVelocity;
+        var itrf93 = Frames.Frame.ICRF.ToFrame(new Frames.Frame("ITRF93"), epoch).AngularVelocity;
+
+        double difference = (tirs - itrf93).Magnitude();
+        Assert.True(difference < 5e-11, $"|w(TIRS) - w(ITRF93)| = {difference:E3} rad/s");
+    }
+
+    [Theory]
+    [InlineData(2000)]
+    [InlineData(2021)]
+    public void PointFixedInTirsMovesAtTheDerivativeOfItsIcrfPosition(int year)
+    {
+        // A point fixed in TIRS at LEO distance: the ICRF velocity given by ToFrame must be the time derivative of its
+        // ICRF position, here a central difference over +/- 1 s (truncation error about 1e-9 in relative terms). TIRS
+        // leaves out the precession-nutation rate of the CIP, a few 1e-12 against 7.3e-5 rad/s: about 1e-7. The former
+        // TIRS angular velocity gave the opposite velocity.
+        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0);
+        var position = new Vector3(4.2e6, -3.2e6, 4.4e6);
+
+        var velocity = FixedPointInIcrf(Frames.Frame.TIRS, position, epoch).Velocity;
+        var derivative = CentralDifference(Frames.Frame.TIRS, position, epoch, 1.0);
+
+        double error = (velocity - derivative).Magnitude();
+        Assert.True(error < 1e-6 * derivative.Magnitude(), $"|v - dr/dt| = {error:E3} m/s, |dr/dt| = {derivative.Magnitude():E6} m/s");
+    }
+
+    [Theory]
+    [InlineData(2000)]
+    [InlineData(2021)]
+    public void PointFixedInCirsMovesAtTheDerivativeOfItsIcrfPosition(int year)
+    {
+        // CIRS follows the CIP at a few 1e-12 rad/s, so a point fixed in CIRS at lunar distance moves at a few mm/s in
+        // ICRF. The CIRS angular velocity is itself a central difference over +/- 0.01 s, accurate to a few 1e-4,
+        // hence the 1e-3 tolerance. The former CIRS angular velocity gave the opposite velocity.
+        var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0);
+        var position = new Vector3(2.3e8, 0.0, 3.07e8);
+
+        var velocity = FixedPointInIcrf(Frames.Frame.CIRS, position, epoch).Velocity;
+        var derivative = CentralDifference(Frames.Frame.CIRS, position, epoch, 100.0);
+
+        double error = (velocity - derivative).Magnitude();
+        Assert.True(error < 1e-3 * derivative.Magnitude(), $"|v - dr/dt| = {error:E3} m/s, |dr/dt| = {derivative.Magnitude():E6} m/s");
+    }
+
+    [Fact]
+    public void StateRoundTripThroughTirsRestoresTheState()
+    {
+        var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0);
+        var state = new StateVector(new Vector3(4211623.0, -3218447.0, 4402165.0), new Vector3(4523.1, 5601.7, 1188.4),
+            PlanetsAndMoons.EARTH_BODY, epoch, Frames.Frame.ICRF);
+
+        var roundTrip = state.ToFrame(Frames.Frame.TIRS).ToFrame(Frames.Frame.ICRF).ToStateVector();
+
+        Assert.True((roundTrip.Position - state.Position).Magnitude() < 1e-12 * state.Position.Magnitude());
+        Assert.True((roundTrip.Velocity - state.Velocity).Magnitude() < 1e-12 * state.Velocity.Magnitude());
+    }
+
+    private static StateVector FixedPointInIcrf(Frames.Frame frame, Vector3 position, TimeSystem_Time epoch)
+    {
+        return new StateVector(position, Vector3.Zero, PlanetsAndMoons.EARTH_BODY, epoch, frame)
+            .ToFrame(Frames.Frame.ICRF).ToStateVector();
+    }
+
+    private static Vector3 CentralDifference(Frames.Frame frame, Vector3 position, TimeSystem_Time epoch, double step)
+    {
+        var after = FixedPointInIcrf(frame, position, epoch.AddSeconds(step)).Position;
+        var before = FixedPointInIcrf(frame, position, epoch.AddSeconds(-step)).Position;
+        return (after - before) / (2.0 * step);
+    }
+
     [Fact]
     public void FramesStaticInstancesAreCorrectTypes()
     {

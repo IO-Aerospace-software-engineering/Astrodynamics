@@ -55,8 +55,11 @@ public class SiteFrame : Frame
             rotationMatrix[2, 2] = System.Math.Sin(Site.Planetodetic.Latitude);
             Matrix mtx = new Matrix(rotationMatrix);
 
-            var rotation = celestialBodyFrameToICRF.Rotation * mtx.ToQuaternion().Conjugate();
-            var angularVelocity = celestialBodyFrameToICRF.AngularVelocity.Rotate(rotation.Conjugate());
+            var bodyToTopocentric = mtx.ToQuaternion();
+            var rotation = celestialBodyFrameToICRF.Rotation * bodyToTopocentric.Conjugate();
+            // The site frame is fixed in the body frame: same angular velocity of ICRF relative to it, which comes
+            // in body axes (SPICE convention, see Frame.GetStateOrientationToICRF) and goes to topocentric axes.
+            var angularVelocity = celestialBodyFrameToICRF.AngularVelocity.Rotate(bodyToTopocentric);
             return new StateOrientation(rotation, angularVelocity, epoch, this);
         });
     }

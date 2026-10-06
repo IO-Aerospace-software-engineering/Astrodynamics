@@ -11,6 +11,11 @@ namespace IO.Astrodynamics.Tests.Frame;
 
 public class FrameTests
 {
+    // Reference for the angular velocity of the DSS-13 site frame: the SPICE frame DSS-13_TOPO (earth_topo_201023.tf).
+    // Its axes differ by 5.5e-7 rad from the frame built from the site coordinates, which moves the angular velocity
+    // by 4e-11 rad/s, well within the 1e-9 rad/s of VelocityVectorComparer.
+    private static Frames.Frame SpiceDss13TopocentricFrame => new("DSS-13_TOPO");
+
     public FrameTests()
     {
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
@@ -56,7 +61,8 @@ public class FrameTests
         var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
         var res = site.Frame.ToFrame(Frames.Frame.ICRF, Astrodynamics.TimeSystem.Time.J2000TDB);
         Assert.Equal(new Quaternion(0.8786982934817295, -0.06636828545847888, -0.4550266984882364, -0.12820009118754105), res.Rotation, TestHelpers.QuaternionComparer);
-        Assert.Equal(new Vector3(-5.9553215865189714E-05, -2.3226543847335639E-09, -4.2082165983713788E-05), res.AngularVelocity, TestHelpers.VelocityVectorComparer);
+        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(Frames.Frame.ICRF, Astrodynamics.TimeSystem.Time.J2000TDB).AngularVelocity, res.AngularVelocity,
+            TestHelpers.VelocityVectorComparer);
     }
     
     [Fact]
@@ -65,7 +71,8 @@ public class FrameTests
         var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
         var res = site.Frame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB);
         Assert.Equal(new Quaternion(0.7944038930635089, -0.3881980140265745, -0.3544407946772864, -0.30429669676139814), res.Rotation, TestHelpers.QuaternionComparer);
-        Assert.Equal(new Vector3(-5.7424516047543196E-05, -1.0695369682206368E-06, -4.0892322780031159E-05), res.AngularVelocity, TestHelpers.VelocityVectorComparer);
+        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB).AngularVelocity,
+            res.AngularVelocity, TestHelpers.VelocityVectorComparer);
     }
     
     [Fact]
@@ -74,7 +81,70 @@ public class FrameTests
         Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
         var res = site.Frame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB);
         Assert.Equal(new Quaternion(0.7944038930635089, -0.3881980140265745, -0.3544407946772864, -0.30429669676139814), res.Rotation, TestHelpers.QuaternionComparer);
-        Assert.Equal(new Vector3(-5.7424516047543196E-05, -1.0695369682206368E-06, -4.0892322780031159E-05), res.AngularVelocity, TestHelpers.VelocityVectorComparer);
+        Assert.Equal(SpiceDss13TopocentricFrame.ToFrame(TestHelpers.MoonAtJ2000.Frame, Astrodynamics.TimeSystem.Time.J2000TDB).AngularVelocity,
+            res.AngularVelocity, TestHelpers.VelocityVectorComparer);
+    }
+
+    [Theory]
+    [InlineData(2000)]
+    [InlineData(2021)]
+    public void SiteFrameMatchesSpiceTopocentricFrame(int year)
+    {
+        // DSS-13_TOPO (earth_topo_201023.tf) is the SPICE topocentric frame of DSS-13, x north, y west, z zenith,
+        // fixed in ITRF93 like the site frame of the library. The site is placed at the planetodetic coordinates of the
+        // frame kernel, so that both frames have the same axes.
+        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
+        var site = CreateSiteAtSpiceDss13Coordinates();
+
+        var actual = site.Frame.GetStateOrientationToICRF(epoch);
+        var expected = new Frames.Frame("DSS-13_TOPO").GetStateOrientationToICRF(epoch);
+
+        var relative = expected.Rotation.Conjugate() * actual.Rotation;
+        double angle = 2.0 * System.Math.Atan2(relative.VectorPart.Magnitude(), System.Math.Abs(relative.W));
+        Assert.True(angle < 1e-12, $"Rotation difference {angle:E3} rad");
+        double difference = (actual.AngularVelocity - expected.AngularVelocity).Magnitude();
+        Assert.True(difference < 1e-16, $"Angular velocity difference {difference:E3} rad/s");
+    }
+
+    [Theory]
+    [InlineData(2000)]
+    [InlineData(2021)]
+    public void StateInSiteFrameMatchesSpiceTopocentricFrame(int year)
+    {
+        var epoch = new TimeSystem.Time(year, 1, 1, 12, 0, 0);
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        var moon = PlanetsAndMoons.MOON_BODY;
+        var site = CreateSiteAtSpiceDss13Coordinates();
+        var inIcrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var expected = moon.GetEphemeris(epoch, earth, new Frames.Frame("DSS-13_TOPO"), Aberration.None).ToStateVector();
+
+        var actual = inIcrf.ToFrame(site.Frame).ToStateVector();
+
+        double positionError = (actual.Position - expected.Position).Magnitude();
+        double velocityError = (actual.Velocity - expected.Velocity).Magnitude();
+        Assert.True(positionError < 1e-12 * expected.Position.Magnitude(), $"Position error {positionError:E3} m");
+        Assert.True(velocityError < 1e-12 * expected.Velocity.Magnitude(), $"Velocity error {velocityError:E3} m/s");
+    }
+
+    [Fact]
+    public void SiteFrameDoesNotRotateRelativeToItrf93()
+    {
+        // The former site frame angular velocity was expressed in the wrong axes: 1.5e-7 rad/s relative to ITRF93 in
+        // 2021, 44 m/s on the Moon seen in the site frame.
+        var epoch = new TimeSystem.Time(2021, 1, 1, 12, 0, 0);
+        var site = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
+
+        var orientation = new Frames.Frame("ITRF93").ToFrame(site.Frame, epoch);
+
+        Assert.True(orientation.AngularVelocity.Magnitude() < 1e-18, $"|w| = {orientation.AngularVelocity.Magnitude():E3} rad/s");
+    }
+
+    private static Site CreateSiteAtSpiceDss13Coordinates()
+    {
+        // Planetodetic coordinates of DSS-13 in earth_topo_201023.tf.
+        return new Site(113, "SPICE-DSS-13", PlanetsAndMoons.EARTH_BODY,
+            new Planetodetic(-116.7944627147624 * IO.Astrodynamics.Constants.Deg2Rad, 35.2471635434595 * IO.Astrodynamics.Constants.Deg2Rad,
+                1070.439519876));
     }
 
     [Fact]

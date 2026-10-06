@@ -21,8 +21,8 @@ The angular velocity of a frame transform follows the SPICE convention (`xf2rav_
 | `frame.ToFrame(targetFrame, epoch)` | `targetFrame` relative to `frame`, expressed in `frame` |
 
 With `R` the rotation `frame -> ICRF` and `ω` the angular velocity of `GetStateOrientationToICRF`, the rotation
-evolves as `R(t + dt) = R(t) exp(-[ω×] dt)`. The SPICE frames follow this convention, which the tests check on
-ITRF93, IAU_MOON, MOON_ME and a DSN topocentric frame.
+evolves as `R(t + dt) = R(t) exp(-[ω×] dt)`. The SPICE frames, TIRS, CIRS and the site frames all follow this
+convention, which the tests check on ITRF93, IAU_MOON, MOON_ME and a DSN topocentric frame.
 `StateOrientation.AtDate` applies its angular velocity in the destination axes, the convention of spacecraft
 attitudes: it does not extrapolate a frame transform.
 
@@ -91,6 +91,11 @@ Earth orientation data. Without it, TIRS is off by the actual UT1-UTC, which sta
 to about 13.5 arcseconds of Earth rotation angle, about 420 m for a point fixed on the equator. The
 chain stops at TIRS, so polar motion is never applied, even with a provider that returns it. See
 [Accuracy Without EOP](../standards-and-units.md#accuracy-without-eop).
+
+The angular velocity of TIRS is `(0, 0, -Ω)` in TIRS axes, with `Ω = 2π × 1.00273781191135448 / 86400` rad/s, the
+rate of the Earth rotation angle used by IAU SOFA `iauPvtob`. As there, the motion of the CIP itself
+(precession-nutation, a few 1e-12 rad/s) is left out: about 1e-7 of the velocity of an Earth-fixed point. CIRS, which
+only follows the CIP, takes its angular velocity from a central difference of its rotation.
 
 ### ICRF, GCRF And EME2000
 
