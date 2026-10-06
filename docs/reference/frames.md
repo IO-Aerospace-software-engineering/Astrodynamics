@@ -11,6 +11,29 @@ The frame API always returns rotations from the source frame to the destination 
 
 Apply the returned quaternion to rotate a vector from the source frame into the destination frame. Use the conjugate for the inverse direction.
 
+### Angular Velocity
+
+The angular velocity of a frame transform follows the SPICE convention (`xf2rav_c`), in rad/s:
+
+| API | Returned angular velocity |
+|-----|---------------------------|
+| `frame.GetStateOrientationToICRF(epoch)` | ICRF relative to `frame`, expressed in `frame`: about `(0, 0, -7.292e-5)` for an Earth-fixed frame |
+| `frame.ToFrame(targetFrame, epoch)` | `targetFrame` relative to `frame`, expressed in `frame` |
+
+With `R` the rotation `frame -> ICRF` and `ω` the angular velocity of `GetStateOrientationToICRF`, the rotation
+evolves as `R(t + dt) = R(t) exp(-[ω×] dt)`. The SPICE frames follow this convention, which the tests check on
+ITRF93, IAU_MOON, MOON_ME and a DSN topocentric frame.
+`StateOrientation.AtDate` applies its angular velocity in the destination axes, the convention of spacecraft
+attitudes: it does not extrapolate a frame transform.
+
+### States
+
+`OrbitalParameters.ToFrame(frame)` converts a whole state. With `R` and `ω` the rotation and angular velocity of
+`frame.ToFrame(target, epoch)`, the position becomes `r' = R r` and the velocity `v' = R v - (R ω) × r'`: `R ω`
+expresses in the target frame the angular velocity that `ToFrame` gives in the source frame. The second term is zero
+between inertial frames and non-zero towards or from a rotating frame (ITRF93, TIRS, a body-fixed frame). The result
+matches the states SPICE computes directly in ITRF93 to a few 1e-16 in relative terms.
+
 ## Frame
 
 `Frame` represents a named reference frame.
@@ -45,9 +68,9 @@ Apply the returned quaternion to rotate a vector from the source frame into the 
 | Member | Description |
 |--------|-------------|
 | `Rotation` | Quaternion from `ReferenceFrame` to destination |
-| `AngularVelocity` | Angular velocity of the transform |
+| `AngularVelocity` | Angular velocity of the transform; for a frame transform, see [Angular Velocity](#angular-velocity) |
 | `ReferenceFrame` | Source frame of the transform |
-| `AtDate(Time)` | Propagate using constant angular velocity |
+| `AtDate(Time)` | Propagate an attitude using constant angular velocity, applied in the destination axes; not for frame transforms |
 | `RelativeTo(Frame)` | Re-express in another destination frame |
 
 ## Earth Orientation Frames

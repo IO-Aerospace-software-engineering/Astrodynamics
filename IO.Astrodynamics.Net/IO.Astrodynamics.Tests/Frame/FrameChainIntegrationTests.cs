@@ -159,6 +159,27 @@ public class FrameChainIntegrationTests
             $"TIRS-ITRF93 angle should be < 5e-5 rad (~10\"), got {angle} rad ({angle * 180 * 3600 / System.Math.PI:F2}\")");
     }
 
+    [Theory]
+    [InlineData("ITRF93")]
+    [InlineData("IAU_MOON")]
+    [InlineData("MOON_ME")]
+    [InlineData("DSS-13_TOPO")]
+    public void SpiceFrameRotationFollowsItsAngularVelocity(string frameName)
+    {
+        // The convention every frame follows (xf2rav_c): the angular velocity of ICRF relative to the frame, in the
+        // frame axes. Over one second the measured residual is below 2e-13 rad. StateOrientation.AtDate, built for
+        // attitudes, would turn the other way.
+        var frame = new Frames.Frame(frameName);
+        var epoch = new TimeSystem_Time(2021, 1, 1, 12, 0, 0);
+
+        var propagated = TestHelpers.RotateWithFrameAngularVelocity(frame.GetStateOrientationToICRF(epoch), 1.0);
+        var recomputed = frame.GetStateOrientationToICRF(epoch.AddSeconds(1)).Rotation;
+
+        var relative = propagated.Conjugate() * recomputed;
+        double angle = 2.0 * System.Math.Atan2(relative.VectorPart.Magnitude(), System.Math.Abs(relative.W));
+        Assert.True(angle < 1e-12, $"Propagated and recomputed {frameName} rotations differ by {angle:E3} rad");
+    }
+
     [Fact]
     public void FramesStaticInstancesAreCorrectTypes()
     {

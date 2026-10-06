@@ -57,6 +57,10 @@ var positionCirs = positionIcrf.Rotate(so.Rotation.Conjugate());
 
 `StateOrientation.ReferenceFrame` identifies the source frame of the rotation, not the destination frame.
 
+The angular velocity of a frame transform follows the SPICE convention (`xf2rav_c`): `frame.ToFrame(targetFrame, epoch)`
+returns the angular velocity of `targetFrame` relative to `frame`, expressed in `frame`, in rad/s. A state then
+transforms as `r' = R r` and `v' = R v - (R ω) × r'`. See [Frames & Orientation](reference/frames.md#angular-velocity).
+
 ## Earth-Centered Inertial And Intermediate Frames
 
 !!! note

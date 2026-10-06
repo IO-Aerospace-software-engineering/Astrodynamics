@@ -18,6 +18,19 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 ## Release Notes
 
+### 10.2.0 (in development)
+
+Phase 2, feature 1: propagation of the state transition matrix and of the covariance. Entries are added lot by lot.
+
+**Fixed**
+
+- **Velocity into and out of a rotating frame.** `ToFrame` computed `v' = R v - ω × r'` with the angular velocity
+  `ω` expressed in the source frame and `r'` in the target frame. It now uses `R ω` and matches the states SPICE
+  computes directly in ITRF93 to a few 1e-16. The error grew with the precession since J2000: in 2021, up to about
+  1 m/s for a LEO state or a ground site, and 34.5 m/s for the geocentric Moon in ITRF93 (1.1 m/s in 2000).
+  Positions were right. Every conversion to or from a body-fixed frame is concerned, including the velocities of
+  custom `Site` objects and the `GetEphemeris` of non-SPICE objects asked in a body-fixed frame.
+
 ### 10.1.0
 
 Corrections from the post-merge review: no new feature, but several results change.

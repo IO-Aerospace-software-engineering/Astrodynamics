@@ -893,8 +893,16 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <param name="frame">The reference frame to which to convert the orbital parameters.</param>
     /// <returns>The orbital parameters in the new reference frame.</returns>
     /// <remarks>
+    /// <para>
+    /// The state transforms as r' = R r and v' = R v - (R ω) × r', where R and ω come from
+    /// <see cref="Frames.Frame.ToFrame(Frame, Time)"/>: ω is the angular velocity of the target frame relative to
+    /// the source frame, expressed in the source frame, so R ω expresses it in the target frame. ω is zero between
+    /// two inertial frames and non-zero towards or from a rotating frame (ITRF93, TIRS, a body-fixed frame).
+    /// </para>
+    /// <para>
     /// If the orbital parameters have an associated covariance matrix, it is also transformed
     /// using the formula P' = T · P · T^T, where T is the 6×6 block-diagonal rotation matrix.
+    /// </para>
     /// </remarks>
     public OrbitalParameters ToFrame(Frame frame)
     {
@@ -903,16 +911,18 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             return this;
         }
 
-        StateVector icrfSv = ToStateVector();
+        StateVector sourceSv = ToStateVector();
         var orientation = Frame.ToFrame(frame, Epoch);
-        var newPos = icrfSv.Position.Rotate(orientation.Rotation);
-        var newVel = icrfSv.Velocity.Rotate(orientation.Rotation) - orientation.AngularVelocity.Cross(newPos);
+        // The angular velocity comes in the source frame (SPICE xf2rav_c convention); r' is in the target frame.
+        var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
+        var newPos = sourceSv.Position.Rotate(orientation.Rotation);
+        var newVel = sourceSv.Velocity.Rotate(orientation.Rotation) - angularVelocity.Cross(newPos);
 
         // Transform covariance if present
         Matrix? transformedCovariance = null;
-        if (icrfSv.Covariance.HasValue)
+        if (sourceSv.Covariance.HasValue)
         {
-            transformedCovariance = Matrix.TransformCovariance(icrfSv.Covariance.Value, orientation.Rotation);
+            transformedCovariance = Matrix.TransformCovariance(sourceSv.Covariance.Value, orientation.Rotation);
         }
 
         return new StateVector(newPos, newVel, Observer, Epoch, frame, transformedCovariance);
