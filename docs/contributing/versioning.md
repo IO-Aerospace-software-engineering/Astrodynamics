@@ -18,6 +18,17 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 ## Release Notes
 
+### 10.2.0 (in development)
+
+Phase 2, feature 1: propagation of the state transition matrix and of the covariance. Entries are added lot by lot.
+
+**Added**
+
+- **Integrator choice in `Scenario`.** New overload `Scenario.SimulateAsync(includeAtmosphericDrag,
+  includeSolarRadiationPressure, propagatorStepSize, integratorFactory)`: the factory creates the integrator of each
+  spacecraft, for example `() => new RK78Integrator()`. The existing overload and the default integrator,
+  Velocity-Verlet, are unchanged.
+
 ### 10.1.0
 
 Corrections from the post-merge review: no new feature, but several results change.

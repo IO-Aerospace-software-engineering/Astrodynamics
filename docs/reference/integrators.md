@@ -95,6 +95,29 @@ var integrator = new RK78Integrator(
 var fixedIntegrator = new RK78Integrator(fixedStepSize: 10.0);
 ```
 
+## Choosing the integrator
+
+Velocity-Verlet is the default everywhere, with the step given to the propagator. Each entry point that propagates a
+spacecraft can take another integrator:
+
+| Entry point | How to choose the integrator |
+|-------------|------------------------------|
+| `CentralBodyPropagator` | Constructor taking an `Integrator` (the propagator adds the forces) or an `IIntegrator` already configured |
+| `CentralBodyPropagatorBuilder` | `integrator` argument of the constructor |
+| `Spacecraft.Propagate` | Overload `Propagate(window, celestialBodies, integrator, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize)` |
+| `BatchPropagator` | `PropagationTask.IntegratorFactory` |
+| `MonteCarloPropagator` | `MonteCarloConfiguration.IntegratorFactory` |
+| `Scenario.SimulateAsync` | Overload `SimulateAsync(includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, integratorFactory)` |
+
+An integrator receives the forces of the spacecraft it propagates, so it must not be shared between spacecraft:
+the batch, Monte Carlo and scenario entry points take a factory that returns a new instance for each spacecraft.
+`Scenario.SimulateAsync` refuses a factory that returns the same instance twice.
+
+```csharp
+var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0),
+    () => new RK78Integrator(absoluteTolerance: 1e-11, relativeTolerance: 1e-11));
+```
+
 ## Accuracy And Cost
 
 Velocity-Verlet is second order: halving the step divides the global error by four. Measured on

@@ -102,6 +102,23 @@ var summary = await scenario.SimulateAsync(
 `SimulateAsync` propagates all spacecraft in the scenario, applies maneuvers,
 and returns a summary with ephemeris data.
 
+### Choosing the integrator
+
+By default, `SimulateAsync` integrates with Velocity-Verlet, using `propagatorStepSize` as step. Pass a factory to
+use another integrator, for example the adaptive RK7(8):
+
+```csharp
+var summary = await scenario.SimulateAsync(
+    includeAtmosphericDrag: false,
+    includeSolarRadiationPressure: false,
+    TimeSpan.FromSeconds(10.0),
+    () => new RK78Integrator(absoluteTolerance: 1e-11, relativeTolerance: 1e-11));
+```
+
+The factory is called once per spacecraft and must return a new instance each time, because the propagator adds
+the force model of each spacecraft to its integrator. `propagatorStepSize` remains the step of the propagated
+states. See [Integrators](../reference/integrators.md#choosing-the-integrator).
+
 ### Multiple scenarios
 
 A mission can contain sequential or alternative scenarios:
