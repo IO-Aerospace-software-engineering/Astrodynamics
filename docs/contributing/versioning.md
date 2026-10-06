@@ -22,6 +22,16 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 Phase 2, feature 1: propagation of the state transition matrix and of the covariance. Entries are added lot by lot.
 
+**Changed**
+
+- **Covariance towards a rotating frame.** `ToFrame` now transforms a state covariance with the Jacobian of the
+  state transformation, `J = [[R, 0], [-[(R ω)×] R, R]]`, instead of the block-diagonal rotation `diag(R, R)`.
+  Towards ITRF93, TIRS or any body-fixed frame, the velocity covariance now includes the position uncertainty
+  carried by the rotation of the frame (about 7 mm/s for 100 m of position uncertainty in an Earth-fixed frame); it
+  used to be wrong by that amount. Between inertial frames the result is unchanged, apart from the symmetrization of
+  the output. `Matrix.TransformCovariance` is documented as valid between inertial frames only, and the RTN rotation
+  of the conjunction analysis and of the CDM export keeps its pure-rotation convention.
+
 **Fixed**
 
 - **Velocity into and out of a rotating frame.** `ToFrame` computed `v' = R v - ω × r'` with the angular velocity

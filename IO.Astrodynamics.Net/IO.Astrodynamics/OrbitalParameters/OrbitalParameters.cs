@@ -900,8 +900,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// two inertial frames and non-zero towards or from a rotating frame (ITRF93, TIRS, a body-fixed frame).
     /// </para>
     /// <para>
-    /// If the orbital parameters have an associated covariance matrix, it is also transformed
-    /// using the formula P' = T · P · T^T, where T is the 6×6 block-diagonal rotation matrix.
+    /// If the state carries a covariance matrix, it is transformed with the Jacobian of this transformation,
+    /// P' = J · P · J^T with J = [[R, 0], [-[(R ω)×] R, R]], and symmetrized. Towards a rotating frame, the
+    /// lower-left block makes the velocity covariance depend on the position covariance: a 100 m position
+    /// uncertainty brings about 7 mm/s of velocity uncertainty in an Earth-fixed frame. Between inertial frames,
+    /// J reduces to the block-diagonal rotation diag(R, R).
     /// </para>
     /// </remarks>
     public OrbitalParameters ToFrame(Frame frame)
@@ -918,11 +921,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         var newPos = sourceSv.Position.Rotate(orientation.Rotation);
         var newVel = sourceSv.Velocity.Rotate(orientation.Rotation) - angularVelocity.Cross(newPos);
 
-        // Transform covariance if present
+        // The covariance goes through the Jacobian of the transformation above, the exact derivative of a map that
+        // is linear in (r, v) at a fixed epoch. See docs/reference/covariance-propagation-provenance.md.
         Matrix? transformedCovariance = null;
         if (sourceSv.Covariance.HasValue)
         {
-            transformedCovariance = Matrix.TransformCovariance(sourceSv.Covariance.Value, orientation.Rotation);
+            var jacobian = Matrix.CreateStateTransformationJacobian(orientation.Rotation, angularVelocity);
+            transformedCovariance = Matrix.TransformCovarianceWithJacobian(sourceSv.Covariance.Value, jacobian);
         }
 
         return new StateVector(newPos, newVel, Observer, Epoch, frame, transformedCovariance);

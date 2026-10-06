@@ -73,6 +73,7 @@ nav:
       - Force Models: reference/force-models.md
       - Propagator Builder: reference/propagator-builder.md
       - Event Detection: reference/event-detection.md
+      - Covariance Provenance: reference/covariance-propagation-provenance.md
     - Maneuvers:
       - Impulse Maneuvers: reference/impulse-maneuvers.md
       - Attitudes: reference/attitudes.md

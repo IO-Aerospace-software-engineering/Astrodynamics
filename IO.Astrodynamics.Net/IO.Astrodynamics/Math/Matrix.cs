@@ -496,15 +496,24 @@ public readonly record struct Matrix
     }
 
     /// <summary>
-    /// Transforms a 6x6 covariance matrix using the given rotation.
+    /// Rotates a 6x6 position-velocity covariance matrix: P' = T · P · T^T, with T = diag(R, R).
+    /// Valid only between frames that do not rotate relative to each other, such as two inertial frames.
     /// </summary>
-    /// <param name="covariance">The 6x6 covariance matrix to transform.</param>
+    /// <param name="covariance">The 6x6 covariance matrix to transform (m², m²/s, m²/s²).</param>
     /// <param name="rotation">The quaternion representing the rotation from current frame to target frame.</param>
     /// <returns>The transformed 6x6 covariance matrix.</returns>
     /// <remarks>
-    /// The transformation is performed using the formula P' = T · P · T^T,
-    /// where T is a 6×6 block-diagonal matrix with the 3×3 rotation matrix R in both diagonal blocks.
-    /// This is the standard formula for transforming a state covariance matrix between reference frames.
+    /// <para>
+    /// T is the 6×6 block-diagonal matrix with the 3×3 rotation matrix R in both diagonal blocks. It is the
+    /// Jacobian of the state transformation only when the target frame has no angular velocity relative to the
+    /// source frame.
+    /// </para>
+    /// <para>
+    /// Do not use it towards a rotating frame (ITRF93, TIRS, a body-fixed frame): there the velocity transforms as
+    /// v' = R v - ω × r', so the velocity covariance also depends on the position covariance through ω.
+    /// <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.ToFrame"/> applies the full Jacobian and is the method to
+    /// use for any frame change of a state carrying a covariance.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentException">Thrown when covariance is not 6x6.</exception>
     public static Matrix TransformCovariance(Matrix covariance, Quaternion rotation)
@@ -522,6 +531,99 @@ public readonly record struct Matrix
 
         // Compute P' = T * P * T^T
         return T.Multiply(covariance).Multiply(T.Transpose());
+    }
+
+    /// <summary>
+    /// Builds the 6x6 Jacobian of the state transformation r' = R r, v' = R v - ω × r' applied by
+    /// <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.ToFrame"/>.
+    /// </summary>
+    /// <param name="rotation">Rotation from the source frame to the target frame: r' = r.Rotate(rotation).</param>
+    /// <param name="angularVelocity">The angular velocity ω of the target frame relative to the source frame (rad/s),
+    /// expressed in the target frame, as used with r' in v' = R v - ω × r'.</param>
+    /// <returns>J = [[R, 0], [-[ω×] R, R]], where [ω×] is the cross-product matrix of ω.</returns>
+    /// <remarks>
+    /// The transformation is linear in (r, v) at a fixed epoch, so J is its exact derivative:
+    /// ∂r'/∂r = R, ∂r'/∂v = 0, ∂v'/∂r = -[ω×] R, ∂v'/∂v = R. The lower-left block is the term that a block-diagonal
+    /// rotation omits towards a rotating frame.
+    /// </remarks>
+    internal static Matrix CreateStateTransformationJacobian(Quaternion rotation, Vector3 angularVelocity)
+    {
+        var r = FromQuaternion(rotation);
+        var jacobian = new Matrix(6, 6);
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                jacobian._data[i, j] = r._data[i, j];
+                jacobian._data[i + 3, j + 3] = r._data[i, j];
+            }
+        }
+
+        // Lower-left block -[ω×] R, with [ω×] = [[0, -ωz, ωy], [ωz, 0, -ωx], [-ωy, ωx, 0]].
+        double wx = angularVelocity.X;
+        double wy = angularVelocity.Y;
+        double wz = angularVelocity.Z;
+        for (int j = 0; j < 3; j++)
+        {
+            double r0 = r._data[0, j];
+            double r1 = r._data[1, j];
+            double r2 = r._data[2, j];
+            jacobian._data[3, j] = wz * r1 - wy * r2;
+            jacobian._data[4, j] = wx * r2 - wz * r0;
+            jacobian._data[5, j] = wy * r0 - wx * r1;
+        }
+
+        return jacobian;
+    }
+
+    /// <summary>
+    /// Transforms a covariance matrix through a linear map of Jacobian J: P' = J · P · J^T, symmetrized.
+    /// </summary>
+    /// <param name="covariance">The square covariance matrix to transform.</param>
+    /// <param name="jacobian">The Jacobian of the map; its column count must equal the covariance dimension.</param>
+    /// <returns>The transformed covariance, (P' + P'^T) / 2, exactly symmetric.</returns>
+    /// <exception cref="ArgumentException">Thrown when the dimensions do not match.</exception>
+    internal static Matrix TransformCovarianceWithJacobian(Matrix covariance, Matrix jacobian)
+    {
+        if (covariance.Rows != covariance.Columns)
+        {
+            throw new ArgumentException("Covariance matrix must be square.", nameof(covariance));
+        }
+
+        if (jacobian.Columns != covariance.Rows)
+        {
+            throw new ArgumentException("The Jacobian must have as many columns as the covariance has rows.", nameof(jacobian));
+        }
+
+        return Symmetrize(jacobian.Multiply(covariance).Multiply(jacobian.Transpose()));
+    }
+
+    /// <summary>
+    /// Returns (M + M^T) / 2 for a square matrix M.
+    /// </summary>
+    /// <param name="matrix">The square matrix to symmetrize.</param>
+    /// <returns>A new, exactly symmetric matrix.</returns>
+    /// <exception cref="ArgumentException">Thrown when the matrix is not square.</exception>
+    internal static Matrix Symmetrize(Matrix matrix)
+    {
+        if (matrix.Rows != matrix.Columns)
+        {
+            throw new ArgumentException("Only a square matrix can be symmetrized.", nameof(matrix));
+        }
+
+        var result = new Matrix(matrix.Rows, matrix.Columns);
+        for (int i = 0; i < matrix.Rows; i++)
+        {
+            result._data[i, i] = matrix._data[i, i];
+            for (int j = i + 1; j < matrix.Columns; j++)
+            {
+                double value = 0.5 * (matrix._data[i, j] + matrix._data[j, i]);
+                result._data[i, j] = value;
+                result._data[j, i] = value;
+            }
+        }
+
+        return result;
     }
 
     /// <summary>

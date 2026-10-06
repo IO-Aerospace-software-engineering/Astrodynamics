@@ -26,13 +26,25 @@ convention, which the tests check on ITRF93, IAU_MOON, MOON_ME and a DSN topocen
 `StateOrientation.AtDate` applies its angular velocity in the destination axes, the convention of spacecraft
 attitudes: it does not extrapolate a frame transform.
 
-### States
+### States And Covariance
 
 `OrbitalParameters.ToFrame(frame)` converts a whole state. With `R` and `ω` the rotation and angular velocity of
 `frame.ToFrame(target, epoch)`, the position becomes `r' = R r` and the velocity `v' = R v - (R ω) × r'`: `R ω`
 expresses in the target frame the angular velocity that `ToFrame` gives in the source frame. The second term is zero
 between inertial frames and non-zero towards or from a rotating frame (ITRF93, TIRS, a body-fixed frame). The result
 matches the states SPICE computes directly in ITRF93 to a few 1e-16 in relative terms.
+
+A covariance carried by the state goes through the Jacobian of this transformation:
+
+```
+P' = J P Jᵀ,   J = | R              0 |
+                   | -[(R ω)×] R    R |
+```
+
+`[(R ω)×]` is the cross-product matrix of `R ω`. The result is symmetrized. Towards an Earth-fixed frame, the
+lower-left block makes the velocity covariance depend on the position covariance: 100 m of position uncertainty brings
+about 7 mm/s of velocity uncertainty. `Matrix.TransformCovariance(covariance, rotation)` applies `diag(R, R)` only and
+is reserved for changes between inertial frames.
 
 ## Frame
 
