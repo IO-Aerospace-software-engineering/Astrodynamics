@@ -16,10 +16,23 @@ public class SolarRadiationPressure : ForceBase
     private readonly double _term1;
     private readonly CelestialBody[] _occultingBodies;
 
+    /// <summary>
+    /// Cannonball solar radiation pressure on <paramref name="spacecraft"/>, scaled by the shadow of the occulting
+    /// bodies.
+    /// </summary>
+    /// <param name="spacecraft">The spacecraft: sectional area, mass and reflectivity coefficient.</param>
+    /// <param name="occultingBodies">
+    /// The bodies that can eclipse the Sun. The Sun itself is ignored if it is among them: it cannot eclipse itself,
+    /// and treating it as an occulter would put the spacecraft in a permanent total eclipse.
+    /// </param>
+    /// <exception cref="ArgumentNullException"><paramref name="spacecraft"/> or <paramref name="occultingBodies"/> is
+    /// null.</exception>
     public SolarRadiationPressure(Spacecraft spacecraft, IEnumerable<CelestialBody> occultingBodies)
     {
         _spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
-        _occultingBodies = (occultingBodies ?? throw new ArgumentNullException(nameof(occultingBodies))).ToArray();
+        _occultingBodies = (occultingBodies ?? throw new ArgumentNullException(nameof(occultingBodies)))
+            .Where(body => body.NaifId != _sun.NaifId)
+            .ToArray();
         _term1 = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.C);
     }
 

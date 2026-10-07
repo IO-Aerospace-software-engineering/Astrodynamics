@@ -37,7 +37,7 @@ public class CentralBodyPropagator : PropagatorBase
         var items = (celestialBodies ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
         var forces = BuildCentralBodyForces(_centralBody, items, spacecraft, includeAtmosphericDrag,
             includeSolarRadiationPressure);
-        InjectEphemerisCache(Window, forces, items, _centralBody);
+        InjectEphemerisCache(Window, forces, items, _centralBody, InitialState.Frame);
         InjectFrameOrientationCache(Window, _centralBody);
         foreach (var force in forces)
         {
@@ -110,7 +110,7 @@ public class CentralBodyPropagator : PropagatorBase
         var forces = BuildCentralBodyForces(centralBody, items, spacecraft, includeAtmosphericDrag,
             includeSolarRadiationPressure);
         var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
-        InjectEphemerisCache(tdbWindow, forces, items, centralBody);
+        InjectEphemerisCache(tdbWindow, forces, items, centralBody, initialState.Frame);
         InjectFrameOrientationCache(tdbWindow, centralBody);
         return new VVIntegrator(forces, deltaT, initialState);
     }
@@ -158,8 +158,12 @@ public class CentralBodyPropagator : PropagatorBase
         celestialBody.Frame.OrientationCache = cache;
     }
 
+    /// <summary>
+    /// Gives the forces an ephemeris cache of the bodies relative to <paramref name="observer"/>, in
+    /// <paramref name="frame"/>, the frame of the propagated state, so that the forces combine vectors of one frame.
+    /// </summary>
     private static void InjectEphemerisCache(Window tdbWindow, List<ForceBase> forces,
-        CelestialItem[] celestialBodies, ILocalizable observer)
+        CelestialItem[] celestialBodies, ILocalizable observer, Frame frame)
     {
         if (celestialBodies.Length == 0) return;
 
@@ -170,7 +174,7 @@ public class CentralBodyPropagator : PropagatorBase
             entries.Add((body, Aberration.LT));
         }
 
-        var cache = new PropagationEphemerisCache(tdbWindow, entries, observer, TimeSpan.FromSeconds(60));
+        var cache = new PropagationEphemerisCache(tdbWindow, entries, observer, frame, TimeSpan.FromSeconds(60));
         foreach (var force in forces)
         {
             force.EphemerisCache = cache;

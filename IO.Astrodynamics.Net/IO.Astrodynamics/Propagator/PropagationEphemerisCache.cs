@@ -29,7 +29,12 @@ public sealed class PropagationEphemerisCache : IDisposable
     private const int BufferPoints = 4;
 
     /// <summary>
-    /// Create a propagation ephemeris cache for the given bodies over the specified time window.
+    /// The frame of the cached positions and velocities.
+    /// </summary>
+    public Frame Frame { get; }
+
+    /// <summary>
+    /// Create a propagation ephemeris cache for the given bodies over the specified time window, in ICRF.
     /// </summary>
     /// <param name="window">Propagation time window (TDB).</param>
     /// <param name="entries">Bodies and aberration modes to cache.</param>
@@ -40,7 +45,32 @@ public sealed class PropagationEphemerisCache : IDisposable
         IEnumerable<(CelestialItem body, Aberration aberration)> entries,
         ILocalizable observer,
         TimeSpan gridStep)
+        : this(window, entries, observer, Frame.ICRF, gridStep)
     {
+    }
+
+    /// <summary>
+    /// Create a propagation ephemeris cache for the given bodies over the specified time window, in
+    /// <paramref name="frame"/>.
+    /// </summary>
+    /// <remarks>
+    /// The forces combine the cached vectors with the propagated state, so the cache must be in the frame of that
+    /// state: <see cref="CentralBodyPropagator"/> builds it in the frame of the initial state.
+    /// </remarks>
+    /// <param name="window">Propagation time window (TDB).</param>
+    /// <param name="entries">Bodies and aberration modes to cache.</param>
+    /// <param name="observer">Observer for all cached ephemeris (central body or SSB).</param>
+    /// <param name="frame">Frame of the cached positions and velocities, the frame of the propagated state.</param>
+    /// <param name="gridStep">Time between grid points (default: 60 seconds).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="frame"/> is null.</exception>
+    public PropagationEphemerisCache(
+        Window window,
+        IEnumerable<(CelestialItem body, Aberration aberration)> entries,
+        ILocalizable observer,
+        Frame frame,
+        TimeSpan gridStep)
+    {
+        Frame = frame ?? throw new ArgumentNullException(nameof(frame));
         _gridStepSeconds = gridStep.TotalSeconds;
         if (_gridStepSeconds <= 0)
             throw new ArgumentOutOfRangeException(nameof(gridStep), "Grid step must be positive.");
@@ -68,7 +98,7 @@ public sealed class PropagationEphemerisCache : IDisposable
             {
                 double epochSec = _startEpochSeconds + i * _gridStepSeconds;
                 var epoch = Time.CreateTDB(epochSec);
-                var sv = body.GetEphemeris(epoch, observer, Frame.ICRF, aberration).ToStateVector();
+                var sv = body.GetEphemeris(epoch, observer, frame, aberration).ToStateVector();
                 points[i] = new EphemerisPoint(sv.Position, sv.Velocity, epochSec);
             }
 

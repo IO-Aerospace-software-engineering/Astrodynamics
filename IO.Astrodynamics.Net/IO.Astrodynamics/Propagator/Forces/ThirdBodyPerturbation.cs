@@ -30,8 +30,9 @@ public class ThirdBodyPerturbation : ForceBase
     /// </summary>
     public override Vector3 Apply(StateVector stateVector)
     {
-        // d_j = position of perturbing body relative to central body
-        Vector3 dj = PerturbingBodyPosition(stateVector.Epoch);
+        // d_j = position of perturbing body relative to central body, in the frame of the state (the ephemeris cache is
+        // built in the frame of the propagated state)
+        Vector3 dj = PerturbingBodyPosition(stateVector.Epoch, stateVector.Frame);
 
         var r = stateVector.Position;
         double djMag = dj.Magnitude();
@@ -68,27 +69,29 @@ public class ThirdBodyPerturbation : ForceBase
     /// confirmed by S. Guillet (2026-10-07). d_j is the same as in <see cref="Apply(StateVector)"/>.
     /// </para>
     /// <para>
-    /// Precondition, as for <see cref="Apply(StateVector)"/>: the state is relative to <see cref="CentralBody"/>, and
-    /// in the frame of d_j, which is ICRF (the frame of the ephemeris cache and of the SPICE fallback, see #357).
+    /// Precondition, as for <see cref="Apply(StateVector)"/>: the state is relative to <see cref="CentralBody"/>. d_j is
+    /// in the frame of the state, from the SPICE fallback or from the ephemeris cache, which the propagator builds in the
+    /// frame of the propagated state, so the blocks are in that frame.
     /// </para>
     /// </remarks>
     private protected override void AccumulateStatePartialsCore(StateVector stateVector,
         in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)
     {
-        var rho = stateVector.Position - PerturbingBodyPosition(stateVector.Epoch);
+        var rho = stateVector.Position - PerturbingBodyPosition(stateVector.Epoch, stateVector.Frame);
         PointMassPartials.Accumulate(rho, PerturbingBody.GM, dadr);
     }
 
     /// <summary>
-    /// d_j, position of the perturbing body relative to the central body: from the ephemeris cache when it holds the
-    /// body, otherwise from SPICE in ICRF.
+    /// d_j, position of the perturbing body relative to the central body, in <paramref name="frame"/>: from the
+    /// ephemeris cache when it holds the body (the propagator builds it in the frame of the propagated state),
+    /// otherwise from SPICE.
     /// </summary>
-    private Vector3 PerturbingBodyPosition(in Time epoch)
+    private Vector3 PerturbingBodyPosition(in Time epoch, Frame frame)
     {
         if (EphemerisCache != null && EphemerisCache.Contains(PerturbingBody.NaifId, Aberration.None))
             return EphemerisCache.GetPosition(PerturbingBody.NaifId, Aberration.None, epoch);
 
-        return PerturbingBody.GetEphemeris(epoch, CentralBody, Frame.ICRF, Aberration.None)
+        return PerturbingBody.GetEphemeris(epoch, CentralBody, frame, Aberration.None)
             .ToStateVector().Position;
     }
 
