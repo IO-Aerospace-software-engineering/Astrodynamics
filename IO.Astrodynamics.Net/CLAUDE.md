@@ -467,7 +467,7 @@ The `IO.Astrodynamics.Propagator.Forces` namespace provides configurable perturb
 
 **Atmospheric Drag (`AtmosphericDrag`)**
 - Uses **atmosphere-relative velocity**: body-centered velocity minus co-rotation (`v_rel = v_body - omega x r_body`)
-- The body's angular velocity is obtained via `CelestialBody.GetOrientation(Frame.ICRF, epoch).AngularVelocity`
+- The body's angular velocity is obtained via `CelestialBody.GetOrientation(stateVector.Frame, epoch).AngularVelocity`, in the inertial frame of the state
 - **Dynamic mass**: area/mass ratio is computed per step using `Spacecraft.GetTotalMass()` (dry + fuel + payload)
 - Drag coefficient default is **2.2** (appropriate for satellites in free-molecular flow)
 

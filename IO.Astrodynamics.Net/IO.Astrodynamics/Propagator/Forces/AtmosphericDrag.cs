@@ -2,7 +2,6 @@ using System;
 using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
-using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 
@@ -41,8 +40,10 @@ public class AtmosphericDrag : ForceBase
             bodyCentered = stateVector.RelativeTo(_celestialBody, Aberration.None).ToStateVector();
         }
 
-        // Get the angular velocity of the body's rotation in ICRF
-        var omega = _celestialBody.GetOrientation(Frame.ICRF, stateVector.Epoch).AngularVelocity;
+        // Angular velocity of the body frame relative to the inertial frame of the state, expressed in that frame
+        // (Frame.ToFrame convention: target relative to source, in the source axes). It is the same vector for any
+        // inertial frame, so drag does not depend on the frame of the propagation.
+        var omega = _celestialBody.GetOrientation(stateVector.Frame, stateVector.Epoch).AngularVelocity;
 
         // Compute atmosphere-relative velocity: v_rel = v_body_centered - omega x r_body_centered
         var vRel = bodyCentered.Velocity - omega.Cross(bodyCentered.Position);

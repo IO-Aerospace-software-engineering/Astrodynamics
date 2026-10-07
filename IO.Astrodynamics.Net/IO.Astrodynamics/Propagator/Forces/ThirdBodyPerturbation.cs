@@ -2,7 +2,6 @@
 
 using System;
 using IO.Astrodynamics.Body;
-using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -29,12 +28,13 @@ public class ThirdBodyPerturbation : ForceBase
     /// </summary>
     public override Vector3 Apply(StateVector stateVector)
     {
-        // d_j = position of perturbing body relative to central body
+        // d_j = position of perturbing body relative to central body, in the frame of the state (the ephemeris cache is
+        // built in the frame of the propagated state)
         Vector3 dj;
         if (EphemerisCache != null && EphemerisCache.Contains(PerturbingBody.NaifId, Aberration.None))
             dj = EphemerisCache.GetPosition(PerturbingBody.NaifId, Aberration.None, stateVector.Epoch);
         else
-            dj = PerturbingBody.GetEphemeris(stateVector.Epoch, CentralBody, Frame.ICRF, Aberration.None)
+            dj = PerturbingBody.GetEphemeris(stateVector.Epoch, CentralBody, stateVector.Frame, Aberration.None)
                 .ToStateVector().Position;
 
         var r = stateVector.Position;

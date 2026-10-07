@@ -6,6 +6,14 @@ The propagation subsystem provides numerical and analytical orbit propagation th
 
 `CentralBodyPropagator` is the primary numerical propagator for LEO, GEO, lunar, and interplanetary missions. The central body is inferred from the spacecraft's initial orbital parameters.
 
+### Propagation Frame
+
+The initial state may be given in any inertial frame: ICRF, B1950, FK4, ECLIPJ2000, ECLIPB1950 or GALACTIC. The
+propagation runs in that frame, and the output states are in it. Every force input is evaluated in it as well: the
+ephemeris cache of the bodies, the third-body positions and the rotation of the atmosphere. The trajectory therefore
+does not depend on the inertial frame chosen, apart from rounding and from the step sequence of an adaptive
+integrator, whose error control scales each component separately.
+
 ### Propagation Loop
 
 1. Build event detectors from the spacecraft maneuver chain.
