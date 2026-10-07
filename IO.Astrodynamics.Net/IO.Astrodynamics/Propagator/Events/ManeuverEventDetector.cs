@@ -18,6 +18,9 @@ public class ManeuverEventDetector : IEventDetector
         _maneuver = maneuver ?? throw new System.ArgumentNullException(nameof(maneuver));
     }
 
+    /// <summary>The maneuver this detector triggers; its DeltaV is set once it has executed.</summary>
+    internal ImpulseManeuver Maneuver => _maneuver;
+
     public CrossingDirection Direction => _maneuver.EventCrossingDirection;
 
     public bool IsActive => true;

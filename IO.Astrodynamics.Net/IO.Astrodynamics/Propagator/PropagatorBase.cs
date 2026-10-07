@@ -8,7 +8,9 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Events;
+using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
@@ -28,6 +30,9 @@ public abstract class PropagatorBase : IPropagator
     // Standalone attitude maneuver to apply at each output epoch (null if none)
     private Attitude _continuousAttitude;
 
+    // Options of the variational equations, null when they are off (internal until the public API of step 8)
+    private VariationalOptions _variationalOptions;
+
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
     {
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
@@ -38,6 +43,34 @@ public abstract class PropagatorBase : IPropagator
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         DeltaT = deltaT;
     }
+
+    /// <summary>
+    /// Integrate the variational equations with the state: the state transition matrix, the sensitivity to the force
+    /// parameters and the process-noise covariance of <paramref name="options"/>, read afterwards with
+    /// <see cref="PropagationSolution.EvaluateVariational"/>.
+    /// </summary>
+    /// <param name="options">What to integrate.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> is null.</exception>
+    /// <exception cref="NotSupportedException">The integrator is not an <see cref="RK78Integrator"/>.</exception>
+    internal void EnableVariationalEquations(VariationalOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        if (Integrator is not RK78Integrator rk78)
+        {
+            throw new NotSupportedException(
+                "The state transition matrix is integrated by the RK7(8) integrator (RK78Integrator) only; this " +
+                $"propagator uses {Integrator.GetType().Name}.");
+        }
+
+        rk78.EnableVariationalEquations(options);
+        _variationalOptions = options;
+    }
+
+    /// <summary>
+    /// The frame whose orientation cache the propagation uses, and that cache, put back for the evaluations of the
+    /// variational equations after the propagation. None by default.
+    /// </summary>
+    private protected virtual (Frame Frame, PropagationFrameOrientationCache Cache) OrientationCache => (null, null);
 
     public PropagationSolution Propagate()
     {
@@ -60,6 +93,27 @@ public abstract class PropagatorBase : IPropagator
         var currentVel = InitialState.Velocity;
         var currentEpoch = Window.StartDate;
 
+        // RK7(8): the dynamics, kept by the solution, and the variational equations when they are on
+        var rk78 = Integrator as RK78Integrator;
+        PropagationDynamics dynamics = null;
+        if (rk78 != null)
+        {
+            var (cacheFrame, cache) = OrientationCache;
+            dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
+                InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations);
+        }
+
+        var variational = _variationalOptions != null ? rk78.VariationalEquations : null;
+        double[] entryY = null;
+        double[] entryQ = null;
+        ManeuverRecord? entryManeuver = null;
+        if (variational != null)
+        {
+            entryY = new double[variational.YLength];
+            variational.SetIdentity(entryY);
+            entryQ = new double[variational.HasProcessNoise ? VariationalEquations.CovarianceLength : 0];
+        }
+
         // Compute required propagation duration (may exceed window for non-fitting step sizes)
         uint outputCount = (uint)System.Math.Round(Window.Length.TotalSeconds / DeltaT.TotalSeconds,
             MidpointRounding.AwayFromZero) + 1;
@@ -73,9 +127,20 @@ public abstract class PropagatorBase : IPropagator
             double remaining = (propagationEnd - currentEpoch).TotalSeconds;
             if (remaining <= 0.0) break;
 
-            // a. Integrate segment
+            // a. Integrate segment, with the mass and coefficients of the segment in RK7(8)
+            ForceEvaluationContext? context = null;
+            if (rk78 != null)
+            {
+                context = ForceEvaluationContext.FromSpacecraft(Spacecraft);
+                if (variational != null)
+                {
+                    rk78.BeginVariationalSegment(context.Value, entryY, entryQ, entryManeuver);
+                }
+            }
+
             var result = Integrator.IntegrateSegment(
                 currentPos, currentVel, currentEpoch, remaining, eventDetectors);
+            result.Segment.Context = context;
 
             // b. Add segment to solution
             solution.AddSegment(result.Segment);
@@ -89,6 +154,17 @@ public abstract class PropagatorBase : IPropagator
                 // Create StateVector at event epoch
                 var eventState = new StateVector(evt.EventPosition, evt.EventVelocity,
                     InitialState.Observer, eventEpoch, InitialState.Frame);
+
+                // Variational values at the event, before the maneuver changes the spacecraft: by a shortened step
+                // from the start of the last accepted step
+                double[] eventY = null;
+                double[] eventQ = null;
+                if (variational != null)
+                {
+                    eventY = new double[variational.YLength];
+                    eventQ = new double[entryQ.Length];
+                    dynamics.Evaluate(result.Segment, evt.EventTime, eventY, eventQ);
+                }
 
                 // Delegate to the event detector
                 var detector = eventDetectors[evt.DetectorIndex];
@@ -105,6 +181,17 @@ public abstract class PropagatorBase : IPropagator
                     currentPos = eventResult.ModifiedState.Position;
                     currentVel = eventResult.ModifiedState.Velocity;
                     currentEpoch = eventResult.ModifiedState.Epoch;
+
+                    // Open loop: the maneuver is fixed in epoch and ΔV, so the variational values are continuous at
+                    // the event and become the entry values of the next segment
+                    if (variational != null)
+                    {
+                        entryY = eventY;
+                        entryQ = eventQ;
+                        entryManeuver = detector is ManeuverEventDetector maneuverDetector
+                            ? new ManeuverRecord(eventEpoch, maneuverDetector.Maneuver.DeltaV)
+                            : null;
+                    }
 
                     // Update event detectors for next segment
                     eventDetectors = UpdateEventDetectors(eventResult.NextDetector);
@@ -138,6 +225,7 @@ public abstract class PropagatorBase : IPropagator
 
         // 8. Attach sampled output to solution
         solution.SetOutputStates(outputStates);
+        solution.Dynamics = dynamics;
 
         return solution;
     }

@@ -259,6 +259,82 @@ internal sealed class VariationalEquations
         return maxError;
     }
 
+    /// <summary>
+    /// The cumulative values from the values relative to a segment start and the cumulative values at that start:
+    /// Φ = Φ_seg Φ_entry, Ψ = Φ_seg Ψ_entry + Ψ_seg, Q = Φ_seg Q_entry Φ_segᵀ + Q_seg.
+    /// </summary>
+    /// <remarks>
+    /// The variational equations are linear, so their solution from the start of the propagation is the solution from
+    /// the segment start applied to the entry values: x(t) − x̄(t) = Φ_seg (x(te) − x̄(te)) + Ψ_seg δp, with
+    /// x(te) − x̄(te) = Φ_entry δx0 + Ψ_entry δp, and the noise accumulated before te propagates through Φ_seg while the
+    /// noise after te is independent of it. The outputs must not overlap the inputs.
+    /// </remarks>
+    /// <param name="columns">Number of columns n of Y.</param>
+    /// <param name="segmentY">Y relative to the segment start.</param>
+    /// <param name="segmentQ">Q relative to the segment start; empty without Q.</param>
+    /// <param name="entryY">Cumulative Y at the segment start.</param>
+    /// <param name="entryQ">Cumulative Q at the segment start; empty without Q.</param>
+    /// <param name="y">Cumulative Y.</param>
+    /// <param name="q">Cumulative Q; empty without Q.</param>
+    internal static void Compose(int columns, ReadOnlySpan<double> segmentY, ReadOnlySpan<double> segmentQ,
+        ReadOnlySpan<double> entryY, ReadOnlySpan<double> entryQ, Span<double> y, Span<double> q)
+    {
+        for (int i = 0; i < StateDimension; i++)
+        {
+            for (int c = 0; c < columns; c++)
+            {
+                double sum = 0.0;
+                for (int k = 0; k < StateDimension; k++)
+                {
+                    sum += segmentY[i * columns + k] * entryY[k * columns + c];
+                }
+
+                if (c >= StateDimension)
+                {
+                    sum += segmentY[i * columns + c];
+                }
+
+                y[i * columns + c] = sum;
+            }
+        }
+
+        if (q.Length == 0)
+        {
+            return;
+        }
+
+        // T = Φ_seg Q_entry, then Q = T Φ_segᵀ + Q_seg on the upper triangle
+        Span<double> t = stackalloc double[36];
+        for (int i = 0; i < StateDimension; i++)
+        {
+            for (int j = 0; j < StateDimension; j++)
+            {
+                double sum = 0.0;
+                for (int k = 0; k < StateDimension; k++)
+                {
+                    sum += segmentY[i * columns + k] *
+                           entryQ[CovarianceIndex(System.Math.Min(k, j), System.Math.Max(k, j))];
+                }
+
+                t[6 * i + j] = sum;
+            }
+        }
+
+        for (int i = 0; i < StateDimension; i++)
+        {
+            for (int j = i; j < StateDimension; j++)
+            {
+                double sum = 0.0;
+                for (int k = 0; k < StateDimension; k++)
+                {
+                    sum += t[6 * i + k] * segmentY[j * columns + k];
+                }
+
+                q[CovarianceIndex(i, j)] = sum + segmentQ[CovarianceIndex(i, j)];
+            }
+        }
+    }
+
     private static double ParameterScale(double parameter)
     {
         return parameter != 0.0 ? System.Math.Abs(parameter) : 1.0;

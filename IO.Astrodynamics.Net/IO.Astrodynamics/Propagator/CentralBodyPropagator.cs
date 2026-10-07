@@ -181,6 +181,9 @@ public class CentralBodyPropagator : PropagatorBase
         }
     }
 
+    private protected override (Frame Frame, PropagationFrameOrientationCache Cache) OrientationCache =>
+        _centralBody is CelestialBody celestialBody ? (celestialBody.Frame, celestialBody.Frame.OrientationCache) : (null, null);
+
     protected override void StorePropagatedStates(StateVector[] outputStates)
     {
         // Store CB-relative states directly; conversion to SSB happens on demand

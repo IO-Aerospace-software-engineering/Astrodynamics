@@ -12,6 +12,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using StateOrientation = IO.Astrodynamics.OrbitalParameters.StateOrientation;
@@ -503,6 +504,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
+            return Propagate(window, celestialBodies, integrator, includeAtmosphericDrag, includeSolarRadiationPressure,
+                propagatorStepSize, null);
+        }
+
+        /// <summary>
+        /// Propagate the spacecraft with <paramref name="integrator"/>, integrating the variational equations of
+        /// <paramref name="variationalOptions"/> when it is not null (internal until the public API of step 8).
+        /// </summary>
+        internal PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
+            bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, VariationalOptions variationalOptions)
+        {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
             ResetPropagation();
 
@@ -510,6 +522,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
             // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
             using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+            if (variationalOptions != null)
+            {
+                propagator.EnableVariationalEquations(variationalOptions);
+            }
 
             var solution = propagator.Propagate();
             _isPropagated = true;
