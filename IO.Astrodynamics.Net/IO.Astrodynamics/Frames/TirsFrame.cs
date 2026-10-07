@@ -18,6 +18,16 @@ namespace IO.Astrodynamics.Frames;
 /// </remarks>
 public sealed class TirsFrame : Frame
 {
+    /// <summary>
+    /// Earth rotation rate, the rate of the Earth rotation angle (rad/s): 2π × 1.00273781191135448 / 86400.
+    /// </summary>
+    /// <remarks>
+    /// IAU SOFA, <c>iauPvtob</c> (release 2023-10-11), constant <c>OM</c>, which gives the velocity of an Earth-fixed
+    /// point in the CIRS as Ω ẑ × r. As there, the rate is per UT1 second, and the angular velocity of the CIP
+    /// itself (precession-nutation, a few 1e-12 rad/s) is not added.
+    /// </remarks>
+    internal const double EarthRotationRate = 2.0 * System.Math.PI * 1.00273781191135448 / 86400.0;
+
     private readonly IEarthOrientationParameters _eop;
 
     /// <summary>
@@ -70,25 +80,10 @@ public sealed class TirsFrame : Frame
         var tirs2icrf = qt.Transpose().Multiply(eraMatrix);
         var rotation = tirs2icrf.ToQuaternion();
 
-        // Angular velocity matches the returned TIRS -> ICRF rotation convention.
-        var angularVelocity = ComputeAngularVelocity(t);
+        // Angular velocity of ICRF relative to TIRS, in TIRS axes: the convention of the SPICE frames, see
+        // GetStateOrientationToICRF. TIRS turns at the ERA rate about the CIP, its z-axis.
+        var angularVelocity = new Vector3(0.0, 0.0, -EarthRotationRate);
 
         return new StateOrientation(rotation, angularVelocity, date, this);
-    }
-
-    private static Vector3 ComputeAngularVelocity(double t)
-    {
-        // Expressed in ICRF, Earth's instantaneous spin is along the CIP direction.
-        // The precession-nutation angular velocity (~1e-11 rad/s) is negligible here.
-        // ERA rate: dERA/dt = 2π * 1.00273781191135448 / 86400 rad/s
-        const double OmegaEarth = 2.0 * System.Math.PI * 1.00273781191135448 / 86400.0;
-
-        var (x, y) = Iau2006Model.CipXY(t);
-        double s = Iau2006Model.CioLocator(t, x, y);
-        var qt = Iau2006Model.PrecessionNutationMatrix(x, y, s);
-
-        return new Vector3(qt.Get(2, 0) * OmegaEarth,
-                           qt.Get(2, 1) * OmegaEarth,
-                           qt.Get(2, 2) * OmegaEarth);
     }
 }

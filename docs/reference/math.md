@@ -114,7 +114,7 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 | `CreateRotationMatrixY(angle)` | Rotation around Y axis |
 | `CreateRotationMatrixZ(angle)` | Rotation around Z axis |
 | `CreateBlockDiagonal(upperLeft, lowerRight)` | Create block-diagonal matrix |
-| `TransformCovariance(covariance, rotation)` | Rotate a covariance matrix |
+| `TransformCovariance(covariance, rotation)` | Rotate a 6x6 covariance with `diag(R, R)`; only between inertial frames, use `ToFrame` for a rotating frame |
 | `Identity6x6()` | 6x6 identity matrix |
 
 ## Lagrange

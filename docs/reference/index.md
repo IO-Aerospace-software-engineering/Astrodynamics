@@ -34,6 +34,7 @@ Numerical integration and force models.
 - [Force Models](force-models.md) — gravity, drag, SRP, albedo, thermal
 - [Propagator Builder](propagator-builder.md) — fluent builder API
 - [Event Detection](event-detection.md) — g-function zero-crossing, `BisectionEventFinder`
+- [Covariance Provenance](covariance-propagation-provenance.md) — source and tests of each covariance equation
 
 ## Maneuvers
 

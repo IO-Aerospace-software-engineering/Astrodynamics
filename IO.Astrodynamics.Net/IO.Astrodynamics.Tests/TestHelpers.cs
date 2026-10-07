@@ -31,6 +31,17 @@ namespace IO.Astrodynamics.Tests
         internal static Spacecraft Spacecraft => new Spacecraft(-666, "GenericSpacecraft", 100.0, 1000.0, new Clock("GenericClk", 65536),
             new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), Earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
 
+        /// <summary>
+        /// Rotation of a frame transform <paramref name="dt"/> seconds later, from its angular velocity under the SPICE
+        /// convention of <see cref="Frames.Frame.GetStateOrientationToICRF"/>: R(t + dt) = R(t) exp(-[w×] dt), where w
+        /// is the angular velocity of ICRF relative to the frame, in the frame axes.
+        /// </summary>
+        internal static Quaternion RotateWithFrameAngularVelocity(StateOrientation orientation, double dt)
+        {
+            var w = orientation.AngularVelocity;
+            return orientation.Rotation * new Quaternion(w.Normalize(), -w.Magnitude() * dt);
+        }
+
         internal static bool VectorComparer(Vector3 v1, Vector3 v2)
         {
             return System.Math.Abs(v1.X - v2.X) < 1E-03 && System.Math.Abs(v1.Y - v2.Y) < 1E-03 && System.Math.Abs(v1.Z - v2.Z) < 1E-03;

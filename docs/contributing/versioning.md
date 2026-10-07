@@ -18,6 +18,36 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 ## Release Notes
 
+### 10.2.0 (in development)
+
+Phase 2, feature 1: propagation of the state transition matrix and of the covariance. Entries are added lot by lot.
+
+**Changed**
+
+- **Covariance towards a rotating frame.** `ToFrame` now transforms a state covariance with the Jacobian of the
+  state transformation, `J = [[R, 0], [-[(R ω)×] R, R]]`, instead of the block-diagonal rotation `diag(R, R)`.
+  Towards ITRF93, TIRS or any body-fixed frame, the velocity covariance now includes the position uncertainty
+  carried by the rotation of the frame (about 7 mm/s for 100 m of position uncertainty in an Earth-fixed frame); it
+  used to be wrong by that amount. Between inertial frames the result is unchanged, apart from the symmetrization of
+  the output. `Matrix.TransformCovariance` is documented as valid between inertial frames only, and the RTN rotation
+  of the conjunction analysis and of the CDM export keeps its pure-rotation convention.
+
+**Fixed**
+
+- **Velocity into and out of a rotating frame.** `ToFrame` computed `v' = R v - ω × r'` with the angular velocity
+  `ω` expressed in the source frame and `r'` in the target frame. It now uses `R ω` and matches the states SPICE
+  computes directly in ITRF93 to a few 1e-16. The error grew with the precession since J2000: in 2021, up to about
+  1 m/s for a LEO state or a ground site, and 34.5 m/s for the geocentric Moon in ITRF93 (1.1 m/s in 2000).
+  Positions were right. Every conversion to or from a body-fixed frame is concerned, including the velocities of
+  custom `Site` objects and the `GetEphemeris` of non-SPICE objects asked in a body-fixed frame.
+- **Angular velocity of TIRS, CIRS and site frames.** These frames, computed in .NET, now return their angular
+  velocity in the convention of the SPICE frames: the angular velocity of ICRF relative to the frame, expressed in the
+  frame. TIRS returned the Earth rotation in ICRF axes with the opposite sign, so a state converted to or from TIRS
+  had its rotation term reversed: twice the rotation velocity, up to 1 km/s for a LEO state. CIRS had the same sign
+  error on its 6e-12 rad/s rate (about 5 mm/s at lunar distance). The topocentric frame of a `Site` expressed the
+  angular velocity of its body in the wrong axes: 1.5e-7 rad/s relative to ITRF93 in 2021, 44 m/s on the Moon seen
+  in the site frame. `StateOrientation.AtDate` keeps its attitude convention and does not apply to frame transforms.
+
 ### 10.1.0
 
 Corrections from the post-merge review: no new feature, but several results change.
