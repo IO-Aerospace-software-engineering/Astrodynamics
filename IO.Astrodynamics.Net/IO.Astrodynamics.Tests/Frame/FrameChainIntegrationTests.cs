@@ -223,8 +223,9 @@ public class FrameChainIntegrationTests
     public void PointFixedInCirsMovesAtTheDerivativeOfItsIcrfPosition(int year)
     {
         // CIRS follows the CIP at a few 1e-12 rad/s, so a point fixed in CIRS at lunar distance moves at a few mm/s in
-        // ICRF. The CIRS angular velocity is itself a central difference over +/- 0.01 s, accurate to a few 1e-4,
-        // hence the 1e-3 tolerance. The former CIRS angular velocity gave the opposite velocity.
+        // ICRF. The CIRS angular velocity is itself a central difference over +/- 100 s: measured agreement below 6e-7
+        // from 2000 to 2024. Over +/- 0.01 s the rounding reached 2e-3 on macOS arm64. The former CIRS angular
+        // velocity gave the opposite velocity.
         var epoch = new TimeSystem_Time(year, 1, 1, 12, 0, 0);
         var position = new Vector3(2.3e8, 0.0, 3.07e8);
 
@@ -232,7 +233,7 @@ public class FrameChainIntegrationTests
         var derivative = CentralDifference(Frames.Frame.CIRS, position, epoch, 100.0);
 
         double error = (velocity - derivative).Magnitude();
-        Assert.True(error < 1e-3 * derivative.Magnitude(), $"|v - dr/dt| = {error:E3} m/s, |dr/dt| = {derivative.Magnitude():E6} m/s");
+        Assert.True(error < 1e-5 * derivative.Magnitude(), $"|v - dr/dt| = {error:E3} m/s, |dr/dt| = {derivative.Magnitude():E6} m/s");
     }
 
     [Fact]

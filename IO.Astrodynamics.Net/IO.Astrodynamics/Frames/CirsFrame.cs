@@ -61,7 +61,10 @@ public sealed class CirsFrame : Frame
 
     private static Vector3 ComputeAngularVelocity(double t)
     {
-        double dt = 0.01; // seconds
+        // Central difference over +/- 100 s. The rate is only 2e-12 to 8e-12 rad/s, so the step is set by the rounding
+        // of the quaternion components (about 1e-16 / 2 dt, near 1e-7 of the rate here, 1e-3 over +/- 0.01 s), while
+        // the truncation error, driven by nutation periods of days, stays below 1e-7.
+        double dt = 100.0; // seconds
         double dtCenturies = dt / (36525.0 * 86400.0);
 
         double tMinus = t - dtCenturies;
