@@ -62,6 +62,12 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   400 km LEO with geopotential, Moon, Sun, drag and SRP, propagated for a day from ECLIPJ2000, ended 10 km away from
   the same propagation from ICRF (49 m from B1950); it now ends within 3e-5 m with a fixed step. Propagations from
   ICRF are unchanged.
+- **Solar radiation pressure with the Sun among the bodies** ([#356](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/356)).
+  `SolarRadiationPressure` took every body it was given as an occulter, the Sun included, which then eclipsed itself:
+  the acceleration was exactly zero. The propagator passes all its bodies to SRP, so SRP had no effect in any
+  propagation, scenario, batch or Monte Carlo run whose bodies included the Sun, which is the usual case. The Sun is
+  now ignored as an occulter. Every such propagation with SRP on changes: for a LEO spacecraft with an area-to-mass
+  ratio of 0.1 m²/kg and Cr = 1.5, the position differs by about 25 m after 3 h.
 
 ### 10.1.0
 
