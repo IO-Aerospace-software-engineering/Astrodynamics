@@ -131,6 +131,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - `GeopotentialGravitationalField`: **NOT thread-safe** — create one instance per thread/propagator
 - `Nrlmsise00Model`: thread-safe, concurrent use OK
 - Force partials (internal, `ForceBase.AccumulateStatePartials`): a force keeps a work `StateVector` for its finite differences, so the partials path of one force instance is **not reentrant**, unlike `Apply`. Forces belong to one integrator, as the propagator builds them
+- Variational evaluations after a propagation (internal, `PropagationSolution.EvaluateVariational`): serialized by a lock per solution; each one puts the orientation cache back on the central body frame for its duration, so the rule of concurrent propagations sharing a `CelestialBody` applies to them too
 
 ### Geopotential
 
