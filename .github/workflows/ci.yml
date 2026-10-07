@@ -131,6 +131,8 @@ jobs:
   # Job 2: Build and test .NET with freshly built native libraries.
   # macOS runs on Apple Silicon only — the arm64 .NET host can load the arm64
   # dylib; the x64 dylib is validated by the Linux/Windows x64 .NET jobs.
+  # Tests in the Validation category (bit-for-bit goldens, heavy statistical validations) run on Linux only: a golden
+  # holds on one platform, since the mathematical library differs between operating systems.
   build-dotnet:
     needs: build-native
     strategy:
@@ -138,8 +140,10 @@ jobs:
         include:
           - os: ubuntu-latest
           - os: windows-latest
+            test_filter: '--filter "Category!=Validation"'
           - os: macos-14        # Apple Silicon (arm64)
             osx_arch: arm64
+            test_filter: '--filter "Category!=Validation"'
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -179,4 +183,4 @@ jobs:
       run: dotnet restore
 
     - name: Test
-      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release
+      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release ${{ matrix.test_filter }}

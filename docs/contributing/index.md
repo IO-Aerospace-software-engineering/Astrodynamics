@@ -30,6 +30,11 @@ stability improvements, but not new API surface: new capabilities belong in the 
   above 95 percent.
 - Numerical work validated against an authoritative source. Say which one and quote the residuals;
   a conformance case is better still, see [Validation](../guides/validation.md).
+- Tests that hold on one platform only, or take minutes (bit-for-bit goldens, statistical validations), carry
+  `[Trait("Category", "Validation")]`. The CI runs them on Linux only; on Windows or macOS, run
+  `dotnet test --filter "Category!=Validation"`. A golden is recaptured only for an intended change of results, which
+  the pull request states: set `IO_ASTRODYNAMICS_GOLDEN_CAPTURE` to the `Data/Golden` directory of the test project and
+  run `PropagationGoldenTests`.
 - XML documentation comments on every public member, and a documentation update when the public
   API changes.
 - Microsoft C# conventions, SOLID and DRY, methods that do one thing.

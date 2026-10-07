@@ -22,6 +22,9 @@ dotnet test
 # Run tests for a specific project
 dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj
 
+# Skip the Validation category (bit-for-bit goldens, heavy validations), which CI runs on Linux only
+dotnet test --filter "Category!=Validation"
+
 # Run a single test by name
 dotnet test --filter "FullyQualifiedName~IO.Astrodynamics.Tests.ClassName.TestName"
 dotnet test --filter "DisplayName~TLE"
