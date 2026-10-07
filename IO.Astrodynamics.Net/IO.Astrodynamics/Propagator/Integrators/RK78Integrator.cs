@@ -316,7 +316,17 @@ public sealed class RK78Integrator : Integrator
     /// </summary>
     private double ComponentError(double y0, double y1, double errComponent)
     {
-        double sc = AbsoluteTolerance + RelativeTolerance * System.Math.Max(System.Math.Abs(y0), System.Math.Abs(y1));
+        return ScaledComponentError(y0, y1, errComponent, AbsoluteTolerance, RelativeTolerance);
+    }
+
+    /// <summary>
+    /// The scaled error of one component with given tolerances: |err| / (absTol + relTol * max(|y0|, |y1|)). Shared with
+    /// the error of the variational equations, when it takes part in the step-size control.
+    /// </summary>
+    internal static double ScaledComponentError(double y0, double y1, double errComponent, double absoluteTolerance,
+        double relativeTolerance)
+    {
+        double sc = absoluteTolerance + relativeTolerance * System.Math.Max(System.Math.Abs(y0), System.Math.Abs(y1));
         return System.Math.Abs(errComponent) / sc;
     }
 }
