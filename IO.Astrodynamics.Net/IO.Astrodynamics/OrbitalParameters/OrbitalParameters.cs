@@ -893,8 +893,19 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <param name="frame">The reference frame to which to convert the orbital parameters.</param>
     /// <returns>The orbital parameters in the new reference frame.</returns>
     /// <remarks>
-    /// If the orbital parameters have an associated covariance matrix, it is also transformed
-    /// using the formula P' = T · P · T^T, where T is the 6×6 block-diagonal rotation matrix.
+    /// <para>
+    /// The state transforms as r' = R r and v' = R v - (R ω) × r', where R and ω come from
+    /// <see cref="Frames.Frame.ToFrame(Frame, Time)"/>: ω is the angular velocity of the target frame relative to
+    /// the source frame, expressed in the source frame, so R ω expresses it in the target frame. ω is zero between
+    /// two inertial frames and non-zero towards or from a rotating frame (ITRF93, TIRS, a body-fixed frame).
+    /// </para>
+    /// <para>
+    /// If the state carries a covariance matrix, it is transformed with the Jacobian of this transformation,
+    /// P' = J · P · J^T with J = [[R, 0], [-[(R ω)×] R, R]], and symmetrized. Towards a rotating frame, the
+    /// lower-left block makes the velocity covariance depend on the position covariance: a 100 m position
+    /// uncertainty brings about 7 mm/s of velocity uncertainty in an Earth-fixed frame. Between inertial frames,
+    /// J reduces to the block-diagonal rotation diag(R, R).
+    /// </para>
     /// </remarks>
     public OrbitalParameters ToFrame(Frame frame)
     {
@@ -903,16 +914,20 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             return this;
         }
 
-        StateVector icrfSv = ToStateVector();
+        StateVector sourceSv = ToStateVector();
         var orientation = Frame.ToFrame(frame, Epoch);
-        var newPos = icrfSv.Position.Rotate(orientation.Rotation);
-        var newVel = icrfSv.Velocity.Rotate(orientation.Rotation) - orientation.AngularVelocity.Cross(newPos);
+        // The angular velocity comes in the source frame (SPICE xf2rav_c convention); r' is in the target frame.
+        var angularVelocity = orientation.AngularVelocity.Rotate(orientation.Rotation);
+        var newPos = sourceSv.Position.Rotate(orientation.Rotation);
+        var newVel = sourceSv.Velocity.Rotate(orientation.Rotation) - angularVelocity.Cross(newPos);
 
-        // Transform covariance if present
+        // The covariance goes through the Jacobian of the transformation above, the exact derivative of a map that
+        // is linear in (r, v) at a fixed epoch. See docs/reference/covariance-propagation-provenance.md.
         Matrix? transformedCovariance = null;
-        if (icrfSv.Covariance.HasValue)
+        if (sourceSv.Covariance.HasValue)
         {
-            transformedCovariance = Matrix.TransformCovariance(icrfSv.Covariance.Value, orientation.Rotation);
+            var jacobian = Matrix.CreateStateTransformationJacobian(orientation.Rotation, angularVelocity);
+            transformedCovariance = Matrix.TransformCovarianceWithJacobian(sourceSv.Covariance.Value, jacobian);
         }
 
         return new StateVector(newPos, newVel, Observer, Epoch, frame, transformedCovariance);

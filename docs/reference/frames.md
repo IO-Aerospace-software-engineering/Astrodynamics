@@ -11,6 +11,41 @@ The frame API always returns rotations from the source frame to the destination 
 
 Apply the returned quaternion to rotate a vector from the source frame into the destination frame. Use the conjugate for the inverse direction.
 
+### Angular Velocity
+
+The angular velocity of a frame transform follows the SPICE convention (`xf2rav_c`), in rad/s:
+
+| API | Returned angular velocity |
+|-----|---------------------------|
+| `frame.GetStateOrientationToICRF(epoch)` | ICRF relative to `frame`, expressed in `frame`: about `(0, 0, -7.292e-5)` for an Earth-fixed frame |
+| `frame.ToFrame(targetFrame, epoch)` | `targetFrame` relative to `frame`, expressed in `frame` |
+
+With `R` the rotation `frame -> ICRF` and `ω` the angular velocity of `GetStateOrientationToICRF`, the rotation
+evolves as `R(t + dt) = R(t) exp(-[ω×] dt)`. The SPICE frames, TIRS, CIRS and the site frames all follow this
+convention, which the tests check on ITRF93, IAU_MOON, MOON_ME and a DSN topocentric frame.
+`StateOrientation.AtDate` applies its angular velocity in the destination axes, the convention of spacecraft
+attitudes: it does not extrapolate a frame transform.
+
+### States And Covariance
+
+`OrbitalParameters.ToFrame(frame)` converts a whole state. With `R` and `ω` the rotation and angular velocity of
+`frame.ToFrame(target, epoch)`, the position becomes `r' = R r` and the velocity `v' = R v - (R ω) × r'`: `R ω`
+expresses in the target frame the angular velocity that `ToFrame` gives in the source frame. The second term is zero
+between inertial frames and non-zero towards or from a rotating frame (ITRF93, TIRS, a body-fixed frame). The result
+matches the states SPICE computes directly in ITRF93 to a few 1e-16 in relative terms.
+
+A covariance carried by the state goes through the Jacobian of this transformation:
+
+```
+P' = J P Jᵀ,   J = | R              0 |
+                   | -[(R ω)×] R    R |
+```
+
+`[(R ω)×]` is the cross-product matrix of `R ω`. The result is symmetrized. Towards an Earth-fixed frame, the
+lower-left block makes the velocity covariance depend on the position covariance: 100 m of position uncertainty brings
+about 7 mm/s of velocity uncertainty. `Matrix.TransformCovariance(covariance, rotation)` applies `diag(R, R)` only and
+is reserved for changes between inertial frames.
+
 ## Frame
 
 `Frame` represents a named reference frame.
@@ -45,9 +80,9 @@ Apply the returned quaternion to rotate a vector from the source frame into the 
 | Member | Description |
 |--------|-------------|
 | `Rotation` | Quaternion from `ReferenceFrame` to destination |
-| `AngularVelocity` | Angular velocity of the transform |
+| `AngularVelocity` | Angular velocity of the transform; for a frame transform, see [Angular Velocity](#angular-velocity) |
 | `ReferenceFrame` | Source frame of the transform |
-| `AtDate(Time)` | Propagate using constant angular velocity |
+| `AtDate(Time)` | Propagate an attitude using constant angular velocity, applied in the destination axes; not for frame transforms |
 | `RelativeTo(Frame)` | Re-express in another destination frame |
 
 ## Earth Orientation Frames
@@ -68,6 +103,11 @@ Earth orientation data. Without it, TIRS is off by the actual UT1-UTC, which sta
 to about 13.5 arcseconds of Earth rotation angle, about 420 m for a point fixed on the equator. The
 chain stops at TIRS, so polar motion is never applied, even with a provider that returns it. See
 [Accuracy Without EOP](../standards-and-units.md#accuracy-without-eop).
+
+The angular velocity of TIRS is `(0, 0, -Ω)` in TIRS axes, with `Ω = 2π × 1.00273781191135448 / 86400` rad/s, the
+rate of the Earth rotation angle used by IAU SOFA `iauPvtob`. As there, the motion of the CIP itself
+(precession-nutation, a few 1e-12 rad/s) is left out: about 1e-7 of the velocity of an Earth-fixed point. CIRS, which
+only follows the CIP, takes its angular velocity from a central difference of its rotation.
 
 ### ICRF, GCRF And EME2000
 

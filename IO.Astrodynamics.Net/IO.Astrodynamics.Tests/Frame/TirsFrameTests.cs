@@ -55,13 +55,13 @@ public class TirsFrameTests
 
         var orientation = tirs.GetStateOrientationToICRF(epoch);
         var omega = orientation.AngularVelocity;
-        double mag = omega.Magnitude();
 
-        // Angular velocity is expressed in ICRF, so it should align with the CIP.
-        double zFraction = System.Math.Abs(omega.Z) / mag;
-        Assert.True(zFraction > 0.99, $"Z fraction of angular velocity should be >0.99, got {zFraction}");
-        Assert.True(System.Math.Abs(omega.X) < 2e-7, $"ICRF X component should stay small, got {omega.X}");
-        Assert.True(System.Math.Abs(omega.Y) < 2e-7, $"ICRF Y component should stay small, got {omega.Y}");
+        // Angular velocity of ICRF relative to TIRS, in TIRS axes (SPICE convention): minus the Earth rotation rate
+        // about the CIP, the z-axis of TIRS. SOFA iauPvtob uses the same rate.
+        const double earthRotationRate = 2.0 * System.Math.PI * 1.00273781191135448 / 86400.0;
+        Assert.Equal(0.0, omega.X);
+        Assert.Equal(0.0, omega.Y);
+        Assert.Equal(-earthRotationRate, omega.Z, 1e-20);
     }
 
     [Fact]
@@ -134,14 +134,16 @@ public class TirsFrameTests
     }
 
     [Fact]
-    public void TirsAtDateMatchesFreshRecomputationOverOneSecond()
+    public void TirsAngularVelocityMatchesFreshRecomputationOverOneSecond()
     {
+        // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtDate.
+        // The residual, about 6e-12 rad, is the precession-nutation rate of the CIP, which TIRS leaves out.
         var tirs = new TirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
-        var propagated = tirs.GetStateOrientationToICRF(epoch).AtDate(epoch.AddSeconds(1));
+        var propagated = TestHelpers.RotateWithFrameAngularVelocity(tirs.GetStateOrientationToICRF(epoch), 1.0);
         var recomputed = tirs.GetStateOrientationToICRF(epoch.AddSeconds(1));
 
-        double angle = QuaternionAngleDifference(propagated.Rotation, recomputed.Rotation);
+        double angle = QuaternionAngleDifference(propagated, recomputed.Rotation);
 
         Assert.True(angle < 1e-9, $"Propagated and recomputed TIRS rotations should agree within 1e-9 rad, got {angle}");
     }

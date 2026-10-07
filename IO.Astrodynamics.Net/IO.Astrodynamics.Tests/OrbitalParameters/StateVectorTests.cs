@@ -288,12 +288,13 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 epoch.ToTDB(), Frames.Frame.ICRF);
 
             double[] res = sv.ToFrame(earthFrame).ToStateVector().ToArray();
-            Assert.Equal(-135352868.83073345, res[0], 6);
-            Assert.Equal(-2583535.7733799666, res[1], 6);
-            Assert.Equal(57553737.736814909, res[2], 6);
-            Assert.Equal(-188.61117071296093, res[3], 6);
-            Assert.Equal(9839.7618152916002, res[4], 6);
-            Assert.Equal(-1.903603287599916, res[5], 6);
+            // SPICE state transformation matrix (sxform_c, tools/spice_reference/spice_ref.c).
+            Assert.Equal(-135352868.83073342, res[0], 6);
+            Assert.Equal(-2583535.7733796588, res[1], 6);
+            Assert.Equal(57553737.736814931, res[2], 6);
+            Assert.Equal(-188.72096169477405, res[3], 6);
+            Assert.Equal(9839.8755381037336, res[4], 6);
+            Assert.Equal(-2.1567010716200286, res[5], 6);
         }
 
         [Fact]

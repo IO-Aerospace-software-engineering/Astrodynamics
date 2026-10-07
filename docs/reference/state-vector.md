@@ -17,6 +17,15 @@ An optional 6x6 covariance matrix can be attached:
 var sv = new StateVector(position, velocity, earth, epoch, Frame.ICRF, covarianceMatrix);
 ```
 
+The covariance is 6x6, in `m²`, `m²/s` and `m²/s²`, ordered `X, Y, Z, X_DOT, Y_DOT, Z_DOT` in the frame of the
+state.
+
+| Operation | What happens to the covariance |
+|-----------|--------------------------------|
+| `ToFrame(frame)` | Transformed with the Jacobian of the state transformation, `P' = J P Jᵀ`, symmetrized. Towards a rotating frame (ITRF93, TIRS, body-fixed frames) `J` includes the angular velocity term, so the velocity covariance also depends on the position covariance. See [Frames](frames.md#states-and-covariance). |
+| `RotateCovarianceToRtn(covariance)` / `RotateCovarianceFromRtn(covariance)` | Pure rotation `diag(R, R)` into or out of RTN; the rotation rate of the RTN frame is not applied. This is the convention of the conjunction analysis and of the CDM export. |
+| `Matrix.TransformCovariance(covariance, rotation)` | Pure rotation `diag(R, R)`, valid only between inertial frames. |
+
 ## Properties
 
 | Property | Description |

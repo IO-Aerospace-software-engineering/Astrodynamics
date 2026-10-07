@@ -874,6 +874,100 @@ public class MatirxTests
 
     #endregion
 
+    #region State Transformation Jacobian Tests
+
+    [Fact]
+    public void CreateStateTransformationJacobian_ZeroAngularVelocity_IsBlockDiagonalRotation()
+    {
+        // Arrange
+        var rotation = new Quaternion(System.Math.Cos(0.3), new Vector3(0.0, 0.0, System.Math.Sin(0.3)));
+        var r = Matrix.FromQuaternion(rotation);
+
+        // Act
+        var jacobian = Matrix.CreateStateTransformationJacobian(rotation, Vector3.Zero);
+
+        // Assert
+        var expected = Matrix.CreateBlockDiagonal(r, r);
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                Assert.Equal(expected.Get(i, j), jacobian.Get(i, j));
+            }
+        }
+    }
+
+    [Fact]
+    public void CreateStateTransformationJacobian_IdentityRotation_LowerLeftBlockIsMinusCrossProductMatrix()
+    {
+        // Arrange
+        var identity = new Quaternion(1.0, Vector3.Zero);
+        var omega = new Vector3(1e-5, -2e-5, 7.292115e-5);
+
+        // Act
+        var jacobian = Matrix.CreateStateTransformationJacobian(identity, omega);
+
+        // Assert: dv'/dr applied to any r must equal -(w x r).
+        var r = new Vector3(7000000.0, -1200000.0, 300000.0);
+        var expected = omega.Cross(r).Inverse();
+        var actual = jacobian.SubMatrix(3, 0, 3, 3).Multiply(new[] { r.X, r.Y, r.Z });
+        Assert.Equal(expected.X, actual[0], 9);
+        Assert.Equal(expected.Y, actual[1], 9);
+        Assert.Equal(expected.Z, actual[2], 9);
+        Assert.Equal(0.0, jacobian.Get(0, 3));
+        Assert.Equal(1.0, jacobian.Get(3, 3));
+    }
+
+    [Fact]
+    public void TransformCovarianceWithJacobian_ReturnsSymmetrizedProduct()
+    {
+        // Arrange
+        var covariance = new Matrix(new[,] { { 4.0, 1.0 }, { 1.0, 9.0 } });
+        var jacobian = new Matrix(new[,] { { 1.0, 2.0 }, { 0.5, -1.0 }, { 3.0, 0.0 } });
+
+        // Act
+        var result = Matrix.TransformCovarianceWithJacobian(covariance, jacobian);
+
+        // Assert
+        var expected = jacobian.Multiply(covariance).Multiply(jacobian.Transpose());
+        Assert.Equal(3, result.Rows);
+        Assert.Equal(3, result.Columns);
+        Assert.True(result.IsSymmetric(0.0));
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                Assert.Equal(expected.Get(i, j), result.Get(i, j), 12);
+            }
+        }
+    }
+
+    [Fact]
+    public void TransformCovarianceWithJacobian_InvalidDimensions_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => Matrix.TransformCovarianceWithJacobian(new Matrix(2, 3), new Matrix(2, 2)));
+        Assert.Throws<ArgumentException>(() => Matrix.TransformCovarianceWithJacobian(new Matrix(3, 3), new Matrix(3, 2)));
+    }
+
+    [Fact]
+    public void Symmetrize_AveragesOffDiagonalTerms()
+    {
+        // Arrange
+        var matrix = new Matrix(new[,] { { 1.0, 2.0 }, { 4.0, 5.0 } });
+
+        // Act
+        var result = Matrix.Symmetrize(matrix);
+
+        // Assert
+        Assert.Equal(1.0, result.Get(0, 0));
+        Assert.Equal(3.0, result.Get(0, 1));
+        Assert.Equal(3.0, result.Get(1, 0));
+        Assert.Equal(5.0, result.Get(1, 1));
+        Assert.Throws<ArgumentException>(() => Matrix.Symmetrize(new Matrix(2, 3)));
+    }
+
+    #endregion
+
     #region TransformCovariance Tests
 
     [Fact]

@@ -46,6 +46,10 @@ Console.WriteLine($"Body-fixed position: {svBodyFixed.Position}");
 
 Body-fixed frames are essential for ground track computation and surface-relative geometry.
 
+If the state carries a covariance, `ToFrame` transforms it too. Towards a body-fixed frame the velocity picks up the
+rotation of the frame (`v' = R v - (R ω) × r'`), and so does the covariance: a position uncertainty adds a velocity
+uncertainty, about 7 mm/s for 100 m in an Earth-fixed frame. See [Frames](../reference/frames.md#states-and-covariance).
+
 ## Earth Orientation Frames
 
 !!! note

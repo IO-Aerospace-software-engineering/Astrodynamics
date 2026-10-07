@@ -78,7 +78,8 @@ namespace IO.Astrodynamics.Tests.Mission
             var orbitalParametersEnumerable = res as Astrodynamics.OrbitalParameters.OrbitalParameters[] ?? res.ToArray();
             Assert.Equal(new Vector3(4054783.094777816, -4799280.900382741, 1100391.2394741199), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Position,
                 TestHelpers.VectorComparer);
-            Assert.Equal(new Vector3(349.9689414487369, 295.67943565441215, 0.00047467276487285595), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
+            // Site velocities from SPICE (sxform_c, tools/spice_reference/spice_ref.c).
+            Assert.Equal(new Vector3(349.96684185604835, 295.6816098501219, 0.017692122716396586), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                 TestHelpers.VectorComparer);
             Assert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
@@ -87,9 +88,9 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(5675531.4452713095, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.X, 3);
             Assert.Equal(2694837.3743363195, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Y, 3);
             Assert.Equal(1100644.504707, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Z, 3);
-            Assert.Equal(-196.510785, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.X, 3);
-            Assert.Equal(413.86626642107882, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Y, 3);
-            Assert.Equal(0.00077810438580775993, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Z, 3);
+            Assert.Equal(-196.51288785362226, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.X, 3);
+            Assert.Equal(413.86844020475326, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Y, 3);
+            Assert.Equal(0.0062996655398009317, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Z, 3);
             Assert.Equal(18000.0, orbitalParametersEnumerable.ElementAt(5).Epoch.TimeSpanFromJ2000().TotalSeconds);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(5).Frame);
             Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(5).Observer);

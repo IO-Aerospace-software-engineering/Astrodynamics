@@ -45,7 +45,8 @@ public sealed class CirsFrame : Frame
         var cirs2icrf = qt.Transpose();
         var rotation = cirs2icrf.ToQuaternion();
 
-        // Angular velocity is derived numerically from the returned CIRS -> ICRF rotation.
+        // Angular velocity of ICRF relative to CIRS, in CIRS axes (convention of the SPICE frames, see
+        // GetStateOrientationToICRF), derived numerically from the returned CIRS -> ICRF rotation.
         var angularVelocity = ComputeAngularVelocity(t);
 
         return new StateOrientation(rotation, angularVelocity, date, this);
@@ -60,7 +61,10 @@ public sealed class CirsFrame : Frame
 
     private static Vector3 ComputeAngularVelocity(double t)
     {
-        double dt = 0.01; // seconds
+        // Central difference over +/- 100 s. The rate is only 2e-12 to 8e-12 rad/s, so the step is set by the rounding
+        // of the quaternion components (about 1e-16 / 2 dt, near 1e-7 of the rate here, 1e-3 over +/- 0.01 s), while
+        // the truncation error, driven by nutation periods of days, stays below 1e-7.
+        double dt = 100.0; // seconds
         double dtCenturies = dt / (36525.0 * 86400.0);
 
         double tMinus = t - dtCenturies;
@@ -77,11 +81,11 @@ public sealed class CirsFrame : Frame
                 (qp.VectorPart.Y - qm.VectorPart.Y) / (2.0 * dt),
                 (qp.VectorPart.Z - qm.VectorPart.Z) / (2.0 * dt)));
 
-        // StateOrientation.AtDate left-multiplies the delta quaternion, so the
-        // angular velocity here must be expressed in the destination/inertial frame.
+        // q maps CIRS to ICRF, so 2 q^-1 dq/dt is the angular velocity of CIRS relative to ICRF, in CIRS axes.
+        // The frames return the opposite, the angular velocity of ICRF relative to CIRS.
         var qCenter = ComputeOrientationQuaternion(t);
         var qInverse = qCenter.Conjugate() / (qCenter.Magnitude() * qCenter.Magnitude());
-        var omegaQ = dq * qInverse;
-        return new Vector3(2.0 * omegaQ.VectorPart.X, 2.0 * omegaQ.VectorPart.Y, 2.0 * omegaQ.VectorPart.Z);
+        var omegaQ = qInverse * dq;
+        return new Vector3(-2.0 * omegaQ.VectorPart.X, -2.0 * omegaQ.VectorPart.Y, -2.0 * omegaQ.VectorPart.Z);
     }
 }

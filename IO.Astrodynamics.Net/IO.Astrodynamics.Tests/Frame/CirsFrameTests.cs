@@ -106,14 +106,15 @@ public class CirsFrameTests
     }
 
     [Fact]
-    public void CirsAtDateMatchesFreshRecomputationOverOneSecond()
+    public void CirsAngularVelocityMatchesFreshRecomputationOverOneSecond()
     {
+        // The angular velocity follows the SPICE convention of the frames, not the one of StateOrientation.AtDate.
         var cirs = new CirsFrame();
         var epoch = new TimeSystem_Time(2024, 1, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
-        var propagated = cirs.GetStateOrientationToICRF(epoch).AtDate(epoch.AddSeconds(1));
+        var propagated = TestHelpers.RotateWithFrameAngularVelocity(cirs.GetStateOrientationToICRF(epoch), 1.0);
         var recomputed = cirs.GetStateOrientationToICRF(epoch.AddSeconds(1));
 
-        double angle = QuaternionAngleDifference(propagated.Rotation, recomputed.Rotation);
+        double angle = QuaternionAngleDifference(propagated, recomputed.Rotation);
 
         Assert.True(angle < 1e-12, $"Propagated and recomputed CIRS rotations should agree within 1e-12 rad, got {angle}");
     }
