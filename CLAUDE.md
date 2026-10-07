@@ -130,6 +130,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - CSPICE P/Invoke calls: use shared lock — **not thread-safe**
 - `GeopotentialGravitationalField`: **NOT thread-safe** — create one instance per thread/propagator
 - `Nrlmsise00Model`: thread-safe, concurrent use OK
+- Force partials (internal, `ForceBase.AccumulateStatePartials`): a force keeps a work `StateVector` for its finite differences, so the partials path of one force instance is **not reentrant**, unlike `Apply`. Forces belong to one integrator, as the propagator builds them
 
 ### Geopotential
 

@@ -31,13 +31,19 @@ public class GravitationalField
     /// <remarks>
     /// The point mass has them, with the same gravitational parameter as the acceleration: that of the observer of
     /// <paramref name="stateVector"/>. A field without analytic partials returns false and leaves
-    /// <paramref name="dadr"/> untouched, so that the caller falls back to finite differences.
+    /// <paramref name="dadr"/> untouched, so that the caller falls back to finite differences. A subclass that does not
+    /// override this method gets that fallback, not the point-mass partials: its acceleration is not the point mass.
     /// </remarks>
     /// <param name="stateVector">The state, relative to the attracting body.</param>
     /// <param name="dadr">3×3 row-major block the partials are added to, in 1/s², in the frame of the state.</param>
     /// <returns>Whether the partials were added.</returns>
     internal virtual bool TryAccumulatePositionPartials(StateVector stateVector, Span<double> dadr)
     {
+        if (GetType() != typeof(GravitationalField))
+        {
+            return false;
+        }
+
         CelestialItem centerOfMotion = stateVector.Observer as CelestialItem;
         PointMassPartials.Accumulate(stateVector.Position, centerOfMotion.GM, dadr);
         return true;

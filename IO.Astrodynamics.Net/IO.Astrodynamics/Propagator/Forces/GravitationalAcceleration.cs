@@ -33,6 +33,11 @@ public class GravitationalAcceleration : ForceBase
     /// Analytic point-mass partials when the field of the body has them; otherwise (geopotential, until phase 2,
     /// step 5a) the default central differences.
     /// </summary>
+    /// <remarks>
+    /// For a state relative to the body, the propagator's case, the analytic path allocates nothing. For a state
+    /// relative to another observer, the state relative to the body is built as in <see cref="Apply(StateVector)"/>: one
+    /// <see cref="StateVector"/> from the ephemeris cache, or a SPICE call without it.
+    /// </remarks>
     private protected override void AccumulateStatePartialsCore(StateVector stateVector,
         in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)
     {

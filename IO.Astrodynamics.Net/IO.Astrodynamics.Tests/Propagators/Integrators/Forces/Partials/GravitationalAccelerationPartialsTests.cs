@@ -125,6 +125,46 @@ public class GravitationalAccelerationPartialsTests : IClassFixture<PartialsTest
         Assert.All(dadr, x => Assert.Equal(3.0, x));
     }
 
+    [Fact]
+    public void FieldSubclassWithoutPartials_HasNoAnalyticPartialsAndLeavesTheBufferUntouched()
+    {
+        // Arrange: a field that changes the acceleration but not the partials must fall back to finite differences,
+        // not inherit the point-mass partials
+        var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
+        var field = new ScaledGravitationalField();
+        var dadr = Enumerable.Repeat(3.0, 9).ToArray();
+
+        // Act
+        bool added = field.TryAccumulatePositionPartials(state, dadr);
+
+        // Assert
+        Assert.False(added);
+        Assert.All(dadr, x => Assert.Equal(3.0, x));
+    }
+
+    [Fact]
+    public void PointMassField_HasAnalyticPartials()
+    {
+        // Arrange
+        var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
+        var dadr = new double[9];
+
+        // Act
+        bool added = new IO.Astrodynamics.Body.GravitationalField().TryAccumulatePositionPartials(state, dadr);
+
+        // Assert
+        Assert.True(added);
+        Assert.NotEqual(0.0, dadr[0]);
+    }
+
+    private sealed class ScaledGravitationalField : IO.Astrodynamics.Body.GravitationalField
+    {
+        public override IO.Astrodynamics.Math.Vector3 ComputeGravitationalAcceleration(StateVector stateVector)
+        {
+            return base.ComputeGravitationalAcceleration(stateVector) * 2.0;
+        }
+    }
+
     private void AssertMatchesRidders(ForceBase force, StateVector state, double scale, double[] dadr)
     {
         var reference = RiddersDerivative.StatePartials(force, state, Context, 1e-3 * scale, 1.0);

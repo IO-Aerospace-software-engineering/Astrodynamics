@@ -63,8 +63,14 @@ public class ThirdBodyPerturbation : ForceBase
     /// term, the attraction of the perturbing body on the central body, does not depend on r.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Reference: Montenbruck and Gill, Satellite Orbits, Springer (2000), chapter 7 (variational equations),
     /// confirmed by S. Guillet (2026-10-07). d_j is the same as in <see cref="Apply(StateVector)"/>.
+    /// </para>
+    /// <para>
+    /// Precondition, as for <see cref="Apply(StateVector)"/>: the state is relative to <see cref="CentralBody"/>, and
+    /// in the frame of d_j, which is ICRF (the frame of the ephemeris cache and of the SPICE fallback, see #357).
+    /// </para>
     /// </remarks>
     private protected override void AccumulateStatePartialsCore(StateVector stateVector,
         in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)

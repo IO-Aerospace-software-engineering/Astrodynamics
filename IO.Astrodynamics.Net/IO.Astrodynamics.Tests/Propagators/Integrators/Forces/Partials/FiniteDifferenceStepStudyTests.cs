@@ -27,15 +27,16 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// Two errors are measured. The relative error ‖ΔJ‖_F / ‖J‖_F of the block of the force itself, and, for ∂a/∂r, the
 /// error scaled by the point-mass block of the central body ‖ΔJ‖_F / ‖J_pm‖_F, which is the error the state transition
 /// matrix sees, since the blocks of all the forces are summed. The two differ for SRP: its position derivative is about
-/// |a| / d_sun, so a step scaled by the geocentric |r| leaves it with a rounding error of about 1e-6 relative, but about
-/// 1e-18 scaled.
+/// |a| / d_sun, so a step scaled by the geocentric |r| leaves it with a rounding error of about 1e-6 relative, but near
+/// 1e-17 scaled (9.1e-17 measured at the default step).
 /// </para>
 /// <para>
 /// Bounds at the default steps: relative error below 1e-4, the threshold of the specification for the default path
 /// (B7); scaled error of ∂a/∂r, and relative error of ∂a/∂v (drag only, whose block is the whole velocity block), below
 /// 1e-9, so that the partials stay two orders of magnitude below the 1e-7 required of the state transition matrix on
 /// the Keplerian reference case (F1); Ridders' error estimate below 1e-7 relative, so that the reference resolves the
-/// errors measured.
+/// errors measured. The bounds are checked on the four states that chose the step, so the check is in-sample: it
+/// guards the plateau against a change of a force, not the choice of the step itself.
 /// </para>
 /// <para>
 /// To write the curves, set the environment variable <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test then

@@ -120,6 +120,27 @@ public class ForceEvaluationContextTests : IClassFixture<PartialsTestCases>
         AssertSameBits(force.Apply(state, context), force.Apply(state, other), forceName);
     }
 
+    [Theory]
+    [MemberData(nameof(ContextForces))]
+    public void Apply_AfterABurn_ReadsTheNewMassOfTheSpacecraft(string forceName)
+    {
+        // Arrange: a mass-dependent force on a spacecraft whose tank is burnt, as at an impulsive maneuver
+        var (force, state, spacecraft) = Create(forceName, PartialsTestCases.Leo400);
+        var tank = new FuelTank("burntank", "model", "sn1", 500.0, 300.0);
+        spacecraft.AddFuelTank(tank);
+        var beforeBurn = force.Apply(state);
+        double massBeforeBurn = spacecraft.GetTotalMass();
+
+        // Act
+        tank.Burn(123.456);
+        var afterBurn = force.Apply(state);
+
+        // Assert: the live path follows the new mass, and equals the context path at that mass
+        AssertSameBits(force.Apply(state, ForceEvaluationContext.FromSpacecraft(spacecraft)), afterBurn, forceName);
+        Assert.NotEqual(beforeBurn, afterBurn);
+        Assert.Equal(massBeforeBurn - 123.456, ForceEvaluationContext.FromSpacecraft(spacecraft).TotalMass, 1e-9);
+    }
+
     [Fact]
     public void Apply_ForceWithoutContextOverride_IgnoresTheContext()
     {

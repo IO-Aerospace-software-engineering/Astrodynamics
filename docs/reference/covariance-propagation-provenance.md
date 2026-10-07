@@ -66,7 +66,10 @@ The worst scaled error of `∂a/∂r` stays below 1e-9 from `δ = 3e-7` to `1e-5
 of `∂a/∂v` stays below 1e-9 from `1e-7` to `1e-4` and is smallest at `3e-6`, in line with the `ε^(1/3)` of a central
 difference. The test asserts, at the default steps, a relative error below 1e-4 (the threshold of the specification
 for the default path), a scaled error of `∂a/∂r` and a relative error of `∂a/∂v` below 1e-9, and a Ridders error
-estimate below 1e-7.
+estimate below 1e-7. These bounds are checked on the four states that chose the step, so the check is in-sample: it
+guards the plateau against a change of a force, not the choice of the step itself. All four states are in sunlight;
+the penumbra, where the shadow function makes the SRP, albedo and thermal partials large and only continuous at its
+edges, is measured with the analytic SRP partials (step 5b) and in the validation of the state transition matrix (F1).
 
 ## Modeling Assumptions
 

@@ -80,8 +80,18 @@ public abstract class ForceBase
     /// <paramref name="dadv"/>.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The blocks are 3×3, row-major (element (i, j) at index 3i + j is ∂a_i/∂r_j), in the frame of the state. They are
     /// added to the buffers, so a caller sums over the forces by passing the same buffers to each.
+    /// </para>
+    /// <para>
+    /// Precondition: <paramref name="stateVector"/> is the state the integrator propagates, relative to the observer of
+    /// the propagation and in its frame, the observer and frame of the ephemeris cache. The partials differentiate
+    /// <see cref="Apply(StateVector, in ForceEvaluationContext)"/>, which shares that precondition: some forces read
+    /// body positions relative to that observer (the third bodies), or apply the light time from it (SRP, albedo,
+    /// thermal), so the same physical state re-expressed relative to another observer can give another acceleration
+    /// and other partials.
+    /// </para>
     /// </remarks>
     /// <param name="stateVector">The state, relative to the observer of the propagation.</param>
     /// <param name="context">Mass and coefficients.</param>
