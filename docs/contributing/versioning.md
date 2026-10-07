@@ -54,6 +54,12 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   error on its 6e-12 rad/s rate (about 5 mm/s at lunar distance). The topocentric frame of a `Site` expressed the
   angular velocity of its body in the wrong axes: 1.5e-7 rad/s relative to ITRF93 in 2021, 44 m/s on the Moon seen
   in the site frame. `StateOrientation.AtDate` keeps its attitude convention and does not apply to frame transforms.
+- **Solar radiation pressure with the Sun among the bodies** ([#356](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/356)).
+  `SolarRadiationPressure` took every body it was given as an occulter, the Sun included, which then eclipsed itself:
+  the acceleration was exactly zero. The propagator passes all its bodies to SRP, so SRP had no effect in any
+  propagation, scenario, batch or Monte Carlo run whose bodies included the Sun, which is the usual case. The Sun is
+  now ignored as an occulter. Every such propagation with SRP on changes: for a LEO spacecraft with an area-to-mass
+  ratio of 0.1 m²/kg and Cr = 1.5, the position differs by about 25 m after 3 h.
 
 ### 10.1.0
 
