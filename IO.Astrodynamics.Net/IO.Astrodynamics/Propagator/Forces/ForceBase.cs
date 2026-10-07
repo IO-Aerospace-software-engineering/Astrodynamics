@@ -177,8 +177,8 @@ public abstract class ForceBase
     /// <para>
     /// Column j of ∂a/∂r is (a(r + h e_j) − a(r − h e_j)) / ((r_j + h) − (r_j − h)). Dividing by the difference of the
     /// perturbed components as they are stored, rather than by 2h, removes the representation error of the step.
-    /// Reference: Press, Teukolsky, Vetterling and Flannery, Numerical Recipes, 3rd edition (2007), section 5.7, to be
-    /// verified by Sylvain.
+    /// Reference: Press, Teukolsky, Vetterling and Flannery, Numerical Recipes, 3rd edition (2007), section 5.7,
+    /// confirmed by S. Guillet (2026-10-07).
     /// </para>
     /// <para>
     /// The perturbed states go through a work state vector kept by the force and updated in place, so the differences

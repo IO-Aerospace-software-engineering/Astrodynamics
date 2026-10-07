@@ -15,7 +15,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// References: C. J. F. Ridders, "Accurate computation of F'(x) and F'(x)F''(x)", Advances in Engineering Software
 /// 4(2), 75-76 (1982); Press, Teukolsky, Vetterling and Flannery, Numerical Recipes, 3rd edition (2007), section 5.7,
 /// routine <c>dfridr</c>, with its constants (step contraction 1.4, table size 10, stop when the error grows by a factor
-/// of 2). Both to be verified by Sylvain. The helper is checked against closed-form derivatives in
+/// of 2). Both confirmed by S. Guillet (2026-10-07). The helper is checked against closed-form derivatives in
 /// <see cref="RiddersDerivativeTests"/>.
 /// </remarks>
 internal static class RiddersDerivative

@@ -15,7 +15,7 @@ internal static class PointMassPartials
     /// </summary>
     /// <remarks>
     /// Reference: Montenbruck and Gill, Satellite Orbits, Springer (2000), chapter 7 (variational equations, partials
-    /// of the point-mass acceleration), to be verified by Sylvain.
+    /// of the point-mass acceleration), confirmed by S. Guillet (2026-10-07).
     /// </remarks>
     /// <param name="relativePosition">ρ, position of the attracted point relative to the attracting mass, in m.</param>
     /// <param name="gm">μ, gravitational parameter of the attracting mass, in m³/s².</param>
