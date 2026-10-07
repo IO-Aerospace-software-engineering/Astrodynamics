@@ -113,6 +113,9 @@ public class Frame : IEquatable<Frame>
     /// <c>vectorIcrf = vectorInFrame.Rotate(so.Rotation)</c>.
     /// The returned <see cref="StateOrientation.ReferenceFrame"/> is the source frame (<c>this</c>),
     /// not the destination frame.
+    /// <see cref="StateOrientation.AngularVelocity"/> follows the SPICE convention (<c>xf2rav_c</c>): it is the
+    /// angular velocity of ICRF relative to <c>this</c> frame, expressed in <c>this</c> frame, in rad/s. For an
+    /// Earth-fixed frame it is close to (0, 0, -7.292e-5).
     /// </remarks>
     /// <param name="date">Epoch of the transform.</param>
     /// <returns>A state orientation whose rotation is <c>this → ICRF</c>.</returns>
@@ -144,6 +147,10 @@ public class Frame : IEquatable<Frame>
     /// <remarks>
     /// The returned rotation follows the same convention as <see cref="GetStateOrientationToICRF(Time)"/>:
     /// <c>vectorInTarget = vectorInThis.Rotate(result.Rotation)</c>.
+    /// The returned angular velocity is that of <paramref name="targetFrame"/> relative to <c>this</c> frame,
+    /// expressed in <c>this</c> frame (SPICE <c>xf2rav_c</c> convention), in rad/s. A state transforms as
+    /// r' = R r and v' = R v - (R ω) × r', see
+    /// <see cref="IO.Astrodynamics.OrbitalParameters.OrbitalParameters.ToFrame(Frame)"/>.
     /// </remarks>
     public StateOrientation ToFrame(Frame targetFrame, Time epoch)
     {

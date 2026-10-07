@@ -18,6 +18,9 @@ namespace IO.Astrodynamics.OrbitalParameters
     /// Angular velocity associated with <paramref name="Rotation"/>.
     /// In this codebase it is used with left-multiplied incremental rotations in <see cref="AtDate"/>,
     /// so it is expressed in the same inertial/destination frame as the returned rotation acts into.
+    /// A frame transform from <see cref="Frame.ToFrame(Frame, Time)"/> or
+    /// <see cref="Frame.GetStateOrientationToICRF(Time)"/> follows the SPICE convention instead: angular velocity of
+    /// the destination frame relative to the source frame, expressed in the source frame.
     /// </param>
     /// <param name="Epoch">The time at which the state is defined.</param>
     /// <param name="ReferenceFrame">Source frame of the rotation.</param>

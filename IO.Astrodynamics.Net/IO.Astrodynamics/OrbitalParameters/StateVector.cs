@@ -53,7 +53,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </code>
         /// </para>
         /// <para>
-        /// To transform covariance between frames, use <see cref="Matrix.TransformCovariance"/>.
+        /// <see cref="ToFrame"/> transforms the covariance with the Jacobian of the state
+        /// transformation, including the angular velocity term of a rotating frame (ITRF93, TIRS, body-fixed frames).
+        /// <see cref="Matrix.TransformCovariance"/> is a pure rotation, valid only between inertial frames.
+        /// <see cref="RotateCovarianceToRtn"/> is a pure rotation into RTN, the convention of the conjunction
+        /// analysis and of the CDM export.
         /// </para>
         /// </remarks>
         public Matrix? Covariance { get; }
@@ -407,6 +411,13 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </summary>
         /// <param name="covarianceIcrf">A 6x6 covariance matrix in the inertial frame (units: m², m²/s, m²/s²).</param>
         /// <returns>The 6x6 covariance matrix in RTN coordinates.</returns>
+        /// <remarks>
+        /// This is a pure rotation: the rotation rate of the RTN frame is deliberately not applied to the velocity
+        /// block. The velocity covariance is the inertial one, expressed along the R, T and N axes. This is the
+        /// convention used by the conjunction analysis and by the CDM export, whose covariance is given in RTN at
+        /// TCA. It differs from <see cref="ToFrame"/>, which applies the full Jacobian of a
+        /// rotating frame.
+        /// </remarks>
         public Matrix RotateCovarianceToRtn(Matrix covarianceIcrf)
         {
             var rotation = CreateRtnRotation();
