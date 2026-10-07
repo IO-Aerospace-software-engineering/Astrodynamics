@@ -22,6 +22,13 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 Phase 2, feature 1: propagation of the state transition matrix and of the covariance. Entries are added lot by lot.
 
+**Added**
+
+- **Integrator choice in `Scenario`.** New overload `Scenario.SimulateAsync(includeAtmosphericDrag,
+  includeSolarRadiationPressure, propagatorStepSize, integratorFactory)`: the factory creates the integrator of each
+  spacecraft, for example `() => new RK78Integrator()`. The existing overload and the default integrator,
+  Velocity-Verlet, are unchanged.
+  
 **Changed**
 
 - **Covariance towards a rotating frame.** `ToFrame` now transforms a state covariance with the Jacobian of the

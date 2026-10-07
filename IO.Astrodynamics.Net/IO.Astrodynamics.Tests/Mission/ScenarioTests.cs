@@ -14,6 +14,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -571,6 +572,154 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.False(scenario.Equals((object)scenario2));
             Assert.False(scenario.Equals((object)null));
             Assert.True(scenario.Equals((object)scenario));
+        }
+
+        [Fact]
+        public async Task SimulateAsync_WithIntegratorFactory_MatchesDirectPropagationWithThatIntegrator()
+        {
+            // Arrange
+            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0), new TimeSystem.Time(2021, 1, 1, 14, 0, 0));
+            var step = TimeSpan.FromSeconds(10.0);
+            var scenario = CreateIntegratorScenario(window);
+            var simulated = CreateLeoSpacecraft(-1801, "RK78A", window.StartDate);
+            scenario.AddSpacecraft(simulated);
+            var reference = CreateLeoSpacecraft(-1802, "RK78B", window.StartDate);
+            var velocityVerlet = CreateLeoSpacecraft(-1811, "VVC", window.StartDate);
+
+            // Act
+            await scenario.SimulateAsync(false, false, step, () => new RK78Integrator());
+            reference.Propagate(window, scenario.CelestialBodies, new RK78Integrator(), false, false, step);
+            velocityVerlet.Propagate(window, scenario.CelestialBodies, false, false, step);
+
+            // Assert: the same integrator gives bit-identical states, the default one does not.
+            Assert.True(simulated.IsPropagated);
+            AssertSameEphemeris(reference, simulated, window);
+            var earth = TestHelpers.EarthAtJ2000;
+            Assert.NotEqual(velocityVerlet.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position,
+                simulated.GetEphemeris(window.EndDate, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position);
+        }
+
+        [Fact]
+        public async Task SimulateAsync_WithVelocityVerletFactory_MatchesDefaultOverload()
+        {
+            // Arrange: the default overload integrates with Velocity-Verlet at the propagator step.
+            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0), new TimeSystem.Time(2021, 1, 1, 14, 0, 0));
+            var step = TimeSpan.FromSeconds(10.0);
+            var withFactory = CreateIntegratorScenario(window);
+            var simulated = CreateLeoSpacecraft(-1803, "VVA", window.StartDate);
+            withFactory.AddSpacecraft(simulated);
+            var byDefault = CreateIntegratorScenario(window);
+            var reference = CreateLeoSpacecraft(-1804, "VVB", window.StartDate);
+            byDefault.AddSpacecraft(reference);
+
+            // Act
+            await withFactory.SimulateAsync(false, false, step, () => new VVIntegrator(step));
+            await byDefault.SimulateAsync(false, false, step);
+
+            // Assert
+            Assert.True(simulated.IsPropagated);
+            AssertSameEphemeris(reference, simulated, window);
+            Assert.True(withFactory.IsSimulated);
+        }
+
+        [Fact]
+        public async Task SimulateAsync_WithIntegratorFactory_CreatesOneIntegratorPerSpacecraft()
+        {
+            // Arrange
+            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0), new TimeSystem.Time(2021, 1, 1, 13, 0, 0));
+            var scenario = CreateIntegratorScenario(window);
+            scenario.AddSpacecraft(CreateLeoSpacecraft(-1805, "SC5", window.StartDate));
+            scenario.AddSpacecraft(CreateLeoSpacecraft(-1806, "SC6", window.StartDate));
+            var created = new System.Collections.Generic.List<RK78Integrator>();
+
+            // Act
+            var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), () =>
+            {
+                var integrator = new RK78Integrator();
+                created.Add(integrator);
+                return integrator;
+            });
+
+            // Assert: one integrator per spacecraft, each given its force model by the propagator.
+            Assert.Equal(2, created.Count);
+            Assert.NotSame(created[0], created[1]);
+            Assert.All(created, integrator => Assert.NotEmpty(integrator.Forces));
+            Assert.Equal(2, summary.SpacecraftSummaries.Count);
+        }
+
+        [Fact]
+        public async Task SimulateAsync_NullIntegratorFactory_Throws()
+        {
+            // Arrange
+            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0), new TimeSystem.Time(2021, 1, 1, 13, 0, 0));
+            var scenario = CreateIntegratorScenario(window);
+            scenario.AddSpacecraft(CreateLeoSpacecraft(-1807, "SC7", window.StartDate));
+
+            // Act and assert
+            await Assert.ThrowsAsync<ArgumentNullException>(() => scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), null));
+            Assert.False(scenario.IsSimulated);
+        }
+
+        [Fact]
+        public async Task SimulateAsync_IntegratorFactoryReturningTheSameInstance_Throws()
+        {
+            // Arrange: a shared integrator would accumulate the forces of both spacecraft.
+            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0), new TimeSystem.Time(2021, 1, 1, 13, 0, 0));
+            var scenario = CreateIntegratorScenario(window);
+            scenario.AddSpacecraft(CreateLeoSpacecraft(-1808, "SC8", window.StartDate));
+            scenario.AddSpacecraft(CreateLeoSpacecraft(-1809, "SC9", window.StartDate));
+            var shared = new RK78Integrator();
+
+            // Act
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), () => shared));
+
+            // Assert
+            Assert.Contains("new instance", exception.Message);
+            Assert.False(scenario.IsSimulated);
+        }
+
+        [Fact]
+        public async Task SimulateAsync_IntegratorFactoryReturningNull_Throws()
+        {
+            // Arrange
+            var window = new Window(new TimeSystem.Time(2021, 1, 1, 12, 0, 0), new TimeSystem.Time(2021, 1, 1, 13, 0, 0));
+            var scenario = CreateIntegratorScenario(window);
+            scenario.AddSpacecraft(CreateLeoSpacecraft(-1810, "SC10", window.StartDate));
+
+            // Act
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0), () => null));
+
+            // Assert
+            Assert.Contains("returned null", exception.Message);
+        }
+
+        private static Scenario CreateIntegratorScenario(Window window)
+        {
+            var scenario = new Scenario("Integrator", new Astrodynamics.Mission.Mission("IntegratorChoice"), window);
+            scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
+            scenario.AddCelestialItem(TestHelpers.Sun);
+            return scenario;
+        }
+
+        private static Spacecraft CreateLeoSpacecraft(int naifId, string name, TimeSystem.Time epoch)
+        {
+            var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5420.0, 5420.0),
+                TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
+            return new Spacecraft(naifId, name, 1000.0, 10000.0, new Clock("clk" + name, 65536), orbit);
+        }
+
+        private static void AssertSameEphemeris(Spacecraft expected, Spacecraft actual, Window window)
+        {
+            var earth = TestHelpers.EarthAtJ2000;
+            for (var epoch = window.StartDate; epoch <= window.EndDate; epoch = epoch.AddSeconds(600.0))
+            {
+                var expectedState = expected.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var actualState = actual.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                Assert.Equal(expectedState.Position, actualState.Position);
+                Assert.Equal(expectedState.Velocity, actualState.Velocity);
+            }
         }
 
         [Fact]
