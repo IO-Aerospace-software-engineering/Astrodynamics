@@ -80,6 +80,18 @@ public class GeopotentialGravitationalField : GravitationalField
     public double MaxDegrees => MaxDegree;
 
     /// <summary>
+    /// The geopotential has no analytic partials yet (they come with the Cunningham recursion of phase 2, step 5a):
+    /// returns false, so that the caller falls back to finite differences.
+    /// </summary>
+    /// <param name="stateVector">The state, relative to the attracting body.</param>
+    /// <param name="dadr">Left untouched.</param>
+    /// <returns>False.</returns>
+    internal override bool TryAccumulatePositionPartials(StateVector stateVector, System.Span<double> dadr)
+    {
+        return false;
+    }
+
+    /// <summary>
     /// Computes the full 3D gravitational acceleration including geopotential harmonics
     /// using the Montenbruck &amp; Gill spherical coordinate gradient formulation.
     /// </summary>

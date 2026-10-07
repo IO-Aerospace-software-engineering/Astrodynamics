@@ -2,7 +2,9 @@
 
 using System;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Propagator.Forces;
@@ -30,12 +32,7 @@ public class ThirdBodyPerturbation : ForceBase
     {
         // d_j = position of perturbing body relative to central body, in the frame of the state (the ephemeris cache is
         // built in the frame of the propagated state)
-        Vector3 dj;
-        if (EphemerisCache != null && EphemerisCache.Contains(PerturbingBody.NaifId, Aberration.None))
-            dj = EphemerisCache.GetPosition(PerturbingBody.NaifId, Aberration.None, stateVector.Epoch);
-        else
-            dj = PerturbingBody.GetEphemeris(stateVector.Epoch, CentralBody, stateVector.Frame, Aberration.None)
-                .ToStateVector().Position;
+        Vector3 dj = PerturbingBodyPosition(stateVector.Epoch, stateVector.Frame);
 
         var r = stateVector.Position;
         double djMag = dj.Magnitude();
@@ -58,6 +55,44 @@ public class ThirdBodyPerturbation : ForceBase
         var acceleration = (r + dj * fq) * (-PerturbingBody.GM / rMinusDjMag3);
 
         return acceleration;
+    }
+
+    internal override bool DependsOnVelocity => false;
+
+    /// <summary>
+    /// Analytic ∂a/∂r = μ_j (3 ρ ρᵀ / |ρ|⁵ − I / |ρ|³), with ρ = r − d_j: the partials of the direct term. The indirect
+    /// term, the attraction of the perturbing body on the central body, does not depend on r.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Reference: Montenbruck and Gill, Satellite Orbits, Springer (2000), chapter 7 (variational equations),
+    /// confirmed by S. Guillet (2026-10-07). d_j is the same as in <see cref="Apply(StateVector)"/>.
+    /// </para>
+    /// <para>
+    /// Precondition, as for <see cref="Apply(StateVector)"/>: the state is relative to <see cref="CentralBody"/>. d_j is
+    /// in the frame of the state, from the SPICE fallback or from the ephemeris cache, which the propagator builds in the
+    /// frame of the propagated state, so the blocks are in that frame.
+    /// </para>
+    /// </remarks>
+    private protected override void AccumulateStatePartialsCore(StateVector stateVector,
+        in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)
+    {
+        var rho = stateVector.Position - PerturbingBodyPosition(stateVector.Epoch, stateVector.Frame);
+        PointMassPartials.Accumulate(rho, PerturbingBody.GM, dadr);
+    }
+
+    /// <summary>
+    /// d_j, position of the perturbing body relative to the central body, in <paramref name="frame"/>: from the
+    /// ephemeris cache when it holds the body (the propagator builds it in the frame of the propagated state),
+    /// otherwise from SPICE.
+    /// </summary>
+    private Vector3 PerturbingBodyPosition(in Time epoch, Frame frame)
+    {
+        if (EphemerisCache != null && EphemerisCache.Contains(PerturbingBody.NaifId, Aberration.None))
+            return EphemerisCache.GetPosition(PerturbingBody.NaifId, Aberration.None, epoch);
+
+        return PerturbingBody.GetEphemeris(epoch, CentralBody, frame, Aberration.None)
+            .ToStateVector().Position;
     }
 
     /// <summary>

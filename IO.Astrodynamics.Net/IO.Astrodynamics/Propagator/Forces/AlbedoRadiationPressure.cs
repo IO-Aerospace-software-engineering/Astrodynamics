@@ -19,7 +19,6 @@ public class AlbedoRadiationPressure : ForceBase
     private readonly CelestialBody _reflectingBody;
     private readonly CelestialBody _sun = Stars.SUN_BODY;
     private readonly double _albedo;
-    private readonly double _cr;
     private readonly double _luminosityTerm;
     private readonly double _bodyRadius;
 
@@ -40,12 +39,23 @@ public class AlbedoRadiationPressure : ForceBase
                 nameof(reflectingBody));
 
         _albedo = reflectingBody.Albedo;
-        _cr = spacecraft.SolarRadiationCoeff;
         _luminosityTerm = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.C);
         _bodyRadius = reflectingBody.EquatorialRadius;
     }
 
     public override Vector3 Apply(StateVector stateVector)
+    {
+        return Apply(stateVector, ForceEvaluationContext.FromSpacecraft(_spacecraft));
+    }
+
+    internal override bool DependsOnVelocity => false;
+
+    internal override ForceParameters Parameters => ForceParameters.ReflectivityCoefficient;
+
+    /// <summary>
+    /// Albedo acceleration with the mass and the reflectivity coefficient of <paramref name="context"/>.
+    /// </summary>
+    internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
         // Get Sun position relative to observer
         Vector3 sunFromObserver;
@@ -95,12 +105,12 @@ public class AlbedoRadiationPressure : ForceBase
         if (lambertianVisibility <= 0.0) return Vector3.Zero;
 
         // Area/mass ratio (dynamic mass)
-        double areaMassRatio = _spacecraft.SectionalArea / _spacecraft.GetTotalMass();
+        double areaMassRatio = _spacecraft.SectionalArea / context.TotalMass;
 
         // Full acceleration magnitude:
         // a = (L_sun / (4*pi*c)) * alpha * Cr * (A/m) * (2/(3*pi)) * (R_body/r_sun)^2 * [(pi-phi)*cos(phi)+sin(phi)] / r_sc^2
         double bodyRadiusOverRSun = _bodyRadius / rSun;
-        double acceleration = _luminosityTerm * _albedo * _cr * areaMassRatio
+        double acceleration = _luminosityTerm * _albedo * context.ReflectivityCoefficient * areaMassRatio
                               * LambertianFactor
                               * bodyRadiusOverRSun * bodyRadiusOverRSun
                               * lambertianVisibility
