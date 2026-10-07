@@ -98,6 +98,15 @@ public sealed class PartialsTestCases
     /// </summary>
     internal static PropagationEphemerisCache Cache(ILocalizable observer, params CelestialItem[] bodies)
     {
+        return Cache(Frames.Frame.ICRF, observer, bodies);
+    }
+
+    /// <summary>
+    /// The same cache, in <paramref name="frame"/>, as the propagator builds it for a state in that frame.
+    /// </summary>
+    internal static PropagationEphemerisCache Cache(Frames.Frame frame, ILocalizable observer,
+        params CelestialItem[] bodies)
+    {
         var window = new TimeSystem.Window(Epoch.ToTDB().AddHours(-1.0), Epoch.ToTDB().AddHours(1.0));
         var entries = new System.Collections.Generic.List<(CelestialItem, Aberration)>();
         foreach (var body in bodies)
@@ -106,6 +115,6 @@ public sealed class PartialsTestCases
             entries.Add((body, Aberration.LT));
         }
 
-        return new PropagationEphemerisCache(window, entries, observer, TimeSpan.FromSeconds(60.0));
+        return new PropagationEphemerisCache(window, entries, observer, frame, TimeSpan.FromSeconds(60.0));
     }
 }
