@@ -61,7 +61,7 @@ internal sealed class PropagationDynamics
         ArgumentNullException.ThrowIfNull(forces);
         _forces = forces.ToArray();
         Observer = observer ?? throw new ArgumentNullException(nameof(observer));
-        Frame = frame ?? throw new ArgumentNullException(nameof(frame));
+        ArgumentNullException.ThrowIfNull(frame);
         _orientationCacheFrame = orientationCacheFrame;
         _orientationCache = orientationCache;
         Options = options;
@@ -81,14 +81,8 @@ internal sealed class PropagationDynamics
         }
     }
 
-    /// <summary>The forces of the propagation, in their order.</summary>
-    internal IReadOnlyList<ForceBase> Forces => _forces;
-
     /// <summary>Observer of the integrated state.</summary>
     internal ILocalizable Observer { get; }
-
-    /// <summary>Frame of the integrated state.</summary>
-    internal Frame Frame { get; }
 
     /// <summary>The options of the variational equations, or null when they were off.</summary>
     internal VariationalOptions Options { get; }

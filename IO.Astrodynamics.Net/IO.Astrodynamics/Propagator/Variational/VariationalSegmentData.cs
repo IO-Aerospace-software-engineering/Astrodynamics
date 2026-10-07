@@ -72,9 +72,6 @@ internal sealed class VariationalSegmentData
     /// <summary>Number of stored elements of Q: 21, or 0 without Q.</summary>
     internal int CovarianceLength { get; }
 
-    /// <summary>Whether Q is stored.</summary>
-    internal bool HasCovariance => CovarianceLength > 0;
-
     /// <summary>Cumulative Y, from the start of the propagation, at the segment start.</summary>
     internal double[] EntryY { get; }
 

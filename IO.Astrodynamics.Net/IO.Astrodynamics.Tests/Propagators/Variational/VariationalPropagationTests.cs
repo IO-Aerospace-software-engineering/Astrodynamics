@@ -87,6 +87,58 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     }
 
     [Fact]
+    public void APropagatorWithoutOrientationCache_EvaluatesWithoutPuttingOneBack()
+    {
+        // Arrange: a propagator of its own, with the default of PropagatorBase (no orientation cache), around a
+        // point-mass Earth
+        var integrator = new RK78Integrator();
+        integrator.AddForce(new GravitationalAcceleration(_cases.Earth));
+        var propagator = new MinimalPropagator(new TimeSystem.Window(Start, Start.AddHours(1.0)),
+            PartialsTestCases.Spacecraft(Leo), integrator);
+        propagator.EnableVariationalEquations(new VariationalOptions());
+        var y = new double[36];
+
+        // Act
+        var solution = propagator.Propagate();
+        solution.EvaluateVariational(Start.AddMinutes(17.3), y, Array.Empty<double>());
+
+        // Assert
+        Assert.NotNull(solution.Dynamics);
+        Assert.Equal(13L * solution.Segments.Single().Steps.Count + 13, solution.Dynamics.StageJacobianEvaluations);
+        Assert.NotEqual(0.0, y[3]);
+    }
+
+    [Fact]
+    public void InterpolateAt_BeforeTheStart_ReturnsTheFirstState()
+    {
+        // Arrange
+        var solution = PropagateLeo(Start.AddHours(1.0), null, false);
+        var first = solution.Segments[0].Steps[0];
+
+        // Act
+        var (position, velocity) = solution.InterpolateAt(Start.AddSeconds(-10.0));
+
+        // Assert
+        AssertSameBits(first.StartPosition, position, "position");
+        AssertSameBits(first.StartVelocity, velocity, "velocity");
+    }
+
+    /// <summary>A propagator with the defaults of <see cref="PropagatorBase"/>, storing nothing.</summary>
+    private sealed class MinimalPropagator : PropagatorBase
+    {
+        internal MinimalPropagator(in TimeSystem.Window window, Spacecraft spacecraft, RK78Integrator integrator)
+            : base(window, spacecraft, integrator, TimeSpan.FromSeconds(600.0))
+        {
+            InitialState = spacecraft.InitialOrbitalParameters.ToStateVector();
+            integrator.Initialize(InitialState);
+        }
+
+        protected override void StorePropagatedStates(StateVector[] outputStates)
+        {
+        }
+    }
+
+    [Fact]
     public void ShortenedStep_OfASegmentWithoutContext_Throws()
     {
         // Arrange: a segment built by hand, with variational data but no context
