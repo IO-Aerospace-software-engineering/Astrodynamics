@@ -16,6 +16,9 @@ public abstract class Integrator : IIntegrator
     private readonly List<ForceBase> _forces;
     public IReadOnlyCollection<ForceBase> Forces => _forces;
 
+    // The same list, indexable without an enumerator, for the RK7(8) stepper
+    internal IReadOnlyList<ForceBase> ForceList => _forces;
+
     // Reference state info (from initial state, for constructing intermediate StateVectors)
     protected ILocalizable Observer { get; private set; }
     protected Frame ReferenceFrame { get; private set; }
@@ -89,7 +92,7 @@ public abstract class Integrator : IIntegrator
     /// Update any StateVector with new position, velocity, and epoch.
     /// Used by subclasses that maintain their own StateVector pools (e.g., RK78 stage pool).
     /// </summary>
-    protected static void UpdateStateVector(StateVector sv, in Vector3 position, in Vector3 velocity, in Time epoch)
+    protected internal static void UpdateStateVector(StateVector sv, in Vector3 position, in Vector3 velocity, in Time epoch)
     {
         sv.UpdatePosition(position);
         sv.UpdateVelocity(velocity);

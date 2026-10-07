@@ -39,16 +39,8 @@ public sealed class RK78Integrator : Integrator
     // Current internal step size (seconds, always positive)
     private double _currentH;
 
-    // Reusable stage arrays (13 stages)
-    private readonly Vector3[] _kPos; // kPos[s] = velocity at stage s (dr/dt)
-    private readonly Vector3[] _kVel; // kVel[s] = acceleration at stage s (dv/dt)
-
-    // Acceleration at start and end of the last computed step (for dense output)
-    private Vector3 _stepAccelStart;
-    private Vector3 _stepAccelEnd;
-
-    // Reusable StateVectors for force evaluation (one per RK stage, avoids per-step allocations)
-    private StateVector[] _stagePool;
+    // The 13 stages of a step, with their reusable stage states (avoids per-step allocations)
+    private readonly RK78Stepper _stepper;
 
     /// <summary>
     /// Create an adaptive RK7(8) integrator.
@@ -77,8 +69,7 @@ public sealed class RK78Integrator : Integrator
         _initialH = initialStepSize;
         _currentH = initialStepSize;
 
-        _kPos = new Vector3[RK78ButcherTableau.Stages];
-        _kVel = new Vector3[RK78ButcherTableau.Stages];
+        _stepper = new RK78Stepper(ForceList);
     }
 
     /// <summary>
@@ -97,8 +88,7 @@ public sealed class RK78Integrator : Integrator
         _initialH = fixedStepSize;
         _currentH = fixedStepSize;
 
-        _kPos = new Vector3[RK78ButcherTableau.Stages];
-        _kVel = new Vector3[RK78ButcherTableau.Stages];
+        _stepper = new RK78Stepper(ForceList);
     }
 
     /// <summary>
@@ -111,9 +101,7 @@ public sealed class RK78Integrator : Integrator
         if (initialState == null) throw new ArgumentNullException(nameof(initialState));
         base.Initialize(initialState);
 
-        _stagePool = new StateVector[RK78ButcherTableau.Stages];
-        for (int i = 0; i < RK78ButcherTableau.Stages; i++)
-            _stagePool[i] = new StateVector(Vector3.Zero, Vector3.Zero, Observer, initialState.Epoch, ReferenceFrame);
+        _stepper.Reset(Observer, ReferenceFrame, initialState.Epoch);
 
         // Reset step size and PI controller at segment boundaries.
         // After a maneuver the velocity is discontinuous, so the previous segment's
@@ -191,7 +179,8 @@ public sealed class RK78Integrator : Integrator
                 rejections = 0;
 
                 // Store accepted step
-                segment.AddStep(new AcceptedStep(t, h, pos, vel, posNew, velNew, _stepAccelStart, _stepAccelEnd));
+                segment.AddStep(new AcceptedStep(t, h, pos, vel, posNew, velNew, _stepper.StartAcceleration,
+                    _stepper.EndAcceleration));
 
                 t += h;
                 pos = posNew;
@@ -233,7 +222,8 @@ public sealed class RK78Integrator : Integrator
             else
             {
                 // Fixed step — always accepted
-                segment.AddStep(new AcceptedStep(t, h, pos, vel, posNew, velNew, _stepAccelStart, _stepAccelEnd));
+                segment.AddStep(new AcceptedStep(t, h, pos, vel, posNew, velNew, _stepper.StartAcceleration,
+                    _stepper.EndAcceleration));
 
                 t += h;
                 pos = posNew;
@@ -285,72 +275,10 @@ public sealed class RK78Integrator : Integrator
     internal (Vector3 posNew, Vector3 velNew, double err) ComputeRK78Step(
         in Vector3 pos0, in Vector3 vel0, in Time baseEpoch, double tOffset, double h)
     {
-        var a = RK78ButcherTableau.A;
-        var c = RK78ButcherTableau.C;
-        var b = RK78ButcherTableau.B;
-        var e = RK78ButcherTableau.E;
-
-        // Stage 0: evaluate at current point
-        UpdateStateVector(_stagePool[0], pos0, vel0, baseEpoch.AddSeconds(tOffset));
-        _kPos[0] = vel0;
-        _kVel[0] = ComputeAcceleration(_stagePool[0]);
-
-        // Stages 1..12
-        for (int s = 1; s < RK78ButcherTableau.Stages; s++)
-        {
-            var rS = pos0;
-            var vS = vel0;
-            var aS = a[s];
-
-            for (int j = 0; j < s; j++)
-            {
-                double aCoeff = aS[j];
-                if (aCoeff != 0.0) // skip zero coefficients for performance
-                {
-                    double hA = h * aCoeff;
-                    rS += _kPos[j] * hA;
-                    vS += _kVel[j] * hA;
-                }
-            }
-
-            UpdateStateVector(_stagePool[s], rS, vS, baseEpoch.AddSeconds(tOffset + c[s] * h));
-            _kPos[s] = vS;
-            _kVel[s] = ComputeAcceleration(_stagePool[s]);
-        }
-
-        // 8th-order solution
-        var posNew = pos0;
-        var velNew = vel0;
-
-        for (int j = 0; j < RK78ButcherTableau.Stages; j++)
-        {
-            if (b[j] != 0.0)
-            {
-                double hB = h * b[j];
-                posNew += _kPos[j] * hB;
-                velNew += _kVel[j] * hB;
-            }
-        }
-
-        // Error estimate (difference between 8th and 7th order)
-        var errPos = Vector3.Zero;
-        var errVel = Vector3.Zero;
-
-        for (int j = 0; j < RK78ButcherTableau.Stages; j++)
-        {
-            if (e[j] != 0.0)
-            {
-                double hE = h * e[j];
-                errPos += _kPos[j] * hE;
-                errVel += _kVel[j] * hE;
-            }
-        }
+        _stepper.Step(pos0, vel0, baseEpoch, tOffset, h, out var posNew, out var velNew, out var errPos,
+            out var errVel);
 
         double err = ComputeErrorNorm(pos0, posNew, vel0, velNew, errPos, errVel);
-
-        // Save accelerations for dense output
-        _stepAccelStart = _kVel[0];
-        _stepAccelEnd = _kVel[12];
 
         return (posNew, velNew, err);
     }
