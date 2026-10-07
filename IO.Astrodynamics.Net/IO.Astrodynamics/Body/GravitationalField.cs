@@ -1,5 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using System;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 
@@ -21,5 +22,24 @@ public class GravitationalField
         var position = stateVector.Position;
 
         return position.Normalize() * (-centerOfMotion.GM / System.Math.Pow(position.Magnitude(), 2.0));
+    }
+
+    /// <summary>
+    /// Adds the analytic ∂a/∂r of <see cref="ComputeGravitationalAcceleration"/> to <paramref name="dadr"/>, if this
+    /// field has them.
+    /// </summary>
+    /// <remarks>
+    /// The point mass has them, with the same gravitational parameter as the acceleration: that of the observer of
+    /// <paramref name="stateVector"/>. A field without analytic partials returns false and leaves
+    /// <paramref name="dadr"/> untouched, so that the caller falls back to finite differences.
+    /// </remarks>
+    /// <param name="stateVector">The state, relative to the attracting body.</param>
+    /// <param name="dadr">3×3 row-major block the partials are added to, in 1/s², in the frame of the state.</param>
+    /// <returns>Whether the partials were added.</returns>
+    internal virtual bool TryAccumulatePositionPartials(StateVector stateVector, Span<double> dadr)
+    {
+        CelestialItem centerOfMotion = stateVector.Observer as CelestialItem;
+        PointMassPartials.Accumulate(stateVector.Position, centerOfMotion.GM, dadr);
+        return true;
     }
 }

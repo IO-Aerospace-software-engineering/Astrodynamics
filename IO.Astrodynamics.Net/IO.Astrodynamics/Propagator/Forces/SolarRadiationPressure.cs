@@ -13,7 +13,6 @@ public class SolarRadiationPressure : ForceBase
 {
     private readonly CelestialBody _sun = Stars.SUN_BODY;
     private readonly Spacecraft _spacecraft;
-    private readonly double _cr;
     private readonly double _term1;
     private readonly CelestialBody[] _occultingBodies;
 
@@ -21,11 +20,22 @@ public class SolarRadiationPressure : ForceBase
     {
         _spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         _occultingBodies = (occultingBodies ?? throw new ArgumentNullException(nameof(occultingBodies))).ToArray();
-        _cr = spacecraft.SolarRadiationCoeff;
         _term1 = Constants.SolarMeanRadiativeLuminosity / (4.0 * System.Math.PI * Constants.C);
     }
 
     public override Vector3 Apply(StateVector stateVector)
+    {
+        return Apply(stateVector, ForceEvaluationContext.FromSpacecraft(_spacecraft));
+    }
+
+    internal override bool DependsOnVelocity => false;
+
+    internal override ForceParameters Parameters => ForceParameters.ReflectivityCoefficient;
+
+    /// <summary>
+    /// SRP acceleration with the mass and the reflectivity coefficient of <paramref name="context"/>.
+    /// </summary>
+    internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
         // Get Sun position relative to the state vector observer
         Vector3 sunFromObserver;
@@ -69,7 +79,7 @@ public class SolarRadiationPressure : ForceBase
         // SRP acceleration: spacecraft position relative to Sun
         var posRelToSun = scPosition - sunFromObserver;
         var term2 = posRelToSun / System.Math.Pow(posRelToSun.Magnitude(), 3.0);
-        var areaMassRatio = _spacecraft.SectionalArea / _spacecraft.GetTotalMass();
-        return term2 * _term1 * areaMassRatio * _cr * (1.0 - maxShadowFraction);
+        var areaMassRatio = _spacecraft.SectionalArea / context.TotalMass;
+        return term2 * _term1 * areaMassRatio * context.ReflectivityCoefficient * (1.0 - maxShadowFraction);
     }
 }

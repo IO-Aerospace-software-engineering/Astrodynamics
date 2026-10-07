@@ -25,6 +25,16 @@ public class AtmosphericDrag : ForceBase
 
     public override Vector3 Apply(StateVector stateVector)
     {
+        return Apply(stateVector, ForceEvaluationContext.FromSpacecraft(_spacecraft));
+    }
+
+    internal override ForceParameters Parameters => ForceParameters.DragCoefficient;
+
+    /// <summary>
+    /// Drag acceleration with the mass and the drag coefficient of <paramref name="context"/>.
+    /// </summary>
+    internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
+    {
         // Get body-centered state vector (position and velocity relative to the celestial body)
         StateVector bodyCentered;
         if (EphemerisCache != null && stateVector.Observer as CelestialItem != _celestialBody
@@ -52,15 +62,15 @@ public class AtmosphericDrag : ForceBase
             .ToPlanetodetic(_celestialBody.Flattening, _celestialBody.EquatorialRadius);
 
         // Create rich atmospheric context with time and position for complex models
-        var context = AtmosphericContext.FromPlanetodetic(
+        var atmosphericContext = AtmosphericContext.FromPlanetodetic(
             planetodetic.Altitude,
             planetodetic.Latitude,
             planetodetic.Longitude,
             stateVector.Epoch
         );
 
-        var density = _celestialBody.GetAirDensity(context);
-        var areaMassRatio = _spacecraft.SectionalArea / _spacecraft.GetTotalMass();
-        return vRel * -0.5 * density * areaMassRatio * _spacecraft.DragCoefficient * vRel.Magnitude();
+        var density = _celestialBody.GetAirDensity(atmosphericContext);
+        var areaMassRatio = _spacecraft.SectionalArea / context.TotalMass;
+        return vRel * -0.5 * density * areaMassRatio * context.DragCoefficient * vRel.Magnitude();
     }
 }

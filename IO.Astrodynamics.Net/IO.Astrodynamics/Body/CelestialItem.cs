@@ -564,9 +564,26 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public Vector3 EvaluateGravitationalAcceleration(OrbitalParameters.OrbitalParameters orbitalParameters)
     {
-        var sv = orbitalParameters.Observer as CelestialItem != this ? orbitalParameters.RelativeTo(this, Aberration.None).ToStateVector() : orbitalParameters.ToStateVector();
+        return GravitationalField.ComputeGravitationalAcceleration(RelativeToThis(orbitalParameters));
+    }
 
-        return GravitationalField.ComputeGravitationalAcceleration(sv);
+    /// <summary>
+    /// Adds the analytic ∂a/∂r of <see cref="EvaluateGravitationalAcceleration"/> to <paramref name="dadr"/>, if the
+    /// gravitational field of this item has them.
+    /// </summary>
+    /// <param name="orbitalParameters">The state, relative to any observer: the partials do not depend on it, since
+    /// changing the observer is a translation.</param>
+    /// <param name="dadr">3×3 row-major block the partials are added to, in 1/s².</param>
+    /// <returns>Whether the partials were added; when false, <paramref name="dadr"/> is untouched.</returns>
+    internal bool TryAccumulateGravitationalPositionPartials(OrbitalParameters.OrbitalParameters orbitalParameters,
+        Span<double> dadr)
+    {
+        return GravitationalField.TryAccumulatePositionPartials(RelativeToThis(orbitalParameters), dadr);
+    }
+
+    private StateVector RelativeToThis(OrbitalParameters.OrbitalParameters orbitalParameters)
+    {
+        return orbitalParameters.Observer as CelestialItem != this ? orbitalParameters.RelativeTo(this, Aberration.None).ToStateVector() : orbitalParameters.ToStateVector();
     }
 
     /// <summary>

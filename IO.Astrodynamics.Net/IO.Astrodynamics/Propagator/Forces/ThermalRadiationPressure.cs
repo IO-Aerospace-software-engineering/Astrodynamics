@@ -17,7 +17,6 @@ public class ThermalRadiationPressure : ForceBase
 {
     private readonly Spacecraft _spacecraft;
     private readonly CelestialBody _emittingBody;
-    private readonly double _cr;
     private readonly double _thermalTerm; // epsilon * sigma * T^4 * R^2 / c  (precomputed)
 
     public ThermalRadiationPressure(Spacecraft spacecraft, CelestialBody emittingBody)
@@ -37,8 +36,6 @@ public class ThermalRadiationPressure : ForceBase
                 "Set thermalEmissivity in the CelestialBody constructor.",
                 nameof(emittingBody));
 
-        _cr = spacecraft.SolarRadiationCoeff;
-
         double t = emittingBody.ThermalEffectiveTemperature;
         double t4 = t * t * t * t;
         double r = emittingBody.EquatorialRadius;
@@ -46,6 +43,18 @@ public class ThermalRadiationPressure : ForceBase
     }
 
     public override Vector3 Apply(StateVector stateVector)
+    {
+        return Apply(stateVector, ForceEvaluationContext.FromSpacecraft(_spacecraft));
+    }
+
+    internal override bool DependsOnVelocity => false;
+
+    internal override ForceParameters Parameters => ForceParameters.ReflectivityCoefficient;
+
+    /// <summary>
+    /// Thermal acceleration with the mass and the reflectivity coefficient of <paramref name="context"/>.
+    /// </summary>
+    internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
         // Get emitting body position relative to observer
         Vector3 bodyFromObserver;
@@ -72,10 +81,10 @@ public class ThermalRadiationPressure : ForceBase
         if (rSc < 1.0) return Vector3.Zero; // Avoid singularity
 
         // Area/mass ratio (dynamic mass)
-        double areaMassRatio = _spacecraft.SectionalArea / _spacecraft.GetTotalMass();
+        double areaMassRatio = _spacecraft.SectionalArea / context.TotalMass;
 
         // Acceleration magnitude: Cr * (A/m) * thermalTerm / r^2
-        double acceleration = _cr * areaMassRatio * _thermalTerm / (rSc * rSc);
+        double acceleration = context.ReflectivityCoefficient * areaMassRatio * _thermalTerm / (rSc * rSc);
 
         // Direction: radially outward from emitting body (isotropic emitter model)
         var direction = bodyToSc / rSc;
