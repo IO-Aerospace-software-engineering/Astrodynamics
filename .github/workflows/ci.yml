@@ -140,10 +140,8 @@ jobs:
         include:
           - os: ubuntu-latest
           - os: windows-latest
-            test_filter: '--filter "Category!=Validation"'
           - os: macos-14        # Apple Silicon (arm64)
             osx_arch: arm64
-            test_filter: '--filter "Category!=Validation"'
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -183,4 +181,4 @@ jobs:
       run: dotnet restore
 
     - name: Test
-      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release ${{ matrix.test_filter }}
+      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release ${{ matrix.os != 'ubuntu-latest' && '--filter "Category!=Validation"' || '' }}
