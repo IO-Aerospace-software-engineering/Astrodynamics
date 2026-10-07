@@ -41,6 +41,9 @@ Cannonball SRP model with configurable reflectivity coefficient and continuous s
 new SolarRadiationPressure(spacecraft, occultingBodies)
 ```
 
+The occulting bodies are the bodies that can eclipse the Sun. The Sun itself is ignored if it is among them, so the
+propagator can pass its whole body list, Sun included.
+
 | Property | Default | Description |
 |----------|---------|-------------|
 | `SolarRadiationCoeff` (Cr) | 1.0 | Set on the `Spacecraft` constructor |
