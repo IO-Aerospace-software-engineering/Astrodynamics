@@ -124,6 +124,38 @@ internal sealed class PropagationDynamics
         }
     }
 
+    /// <summary>
+    /// The state at <paramref name="t"/> seconds from the base epoch of <paramref name="segment"/>: the stored state at a
+    /// step boundary, a shortened step from the start of the accepted step that contains <paramref name="t"/> otherwise
+    /// (#363). Before the segment, its first state; after it, its last state.
+    /// </summary>
+    /// <remarks>
+    /// The state has the accuracy of the integrator, unlike the cubic Hermite interpolation of
+    /// <see cref="PropagationSegment.InterpolateAt"/>. Inside a step it costs one RK7(8) step, 13 evaluations of the
+    /// forces; at a step boundary, none.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">The segment holds no steps or no context.</exception>
+    internal (Vector3 Position, Vector3 Velocity) StateAt(PropagationSegment segment, double t)
+    {
+        ArgumentNullException.ThrowIfNull(segment);
+        if (segment.Steps.Count == 0)
+            throw new InvalidOperationException("Segment contains no steps.");
+
+        if (t <= 0.0)
+            return (segment.Steps[0].StartPosition, segment.Steps[0].StartVelocity);
+
+        // The end of a step as the integrator computes it (t_k + h_k), so that its exact boundary reads the stored state
+        int k = segment.FindStepIndex(System.Math.Min(t, segment.Duration));
+        var step = segment.Steps[k];
+        if (t >= step.CumulativeTime + step.StepSize)
+            return (step.EndPosition, step.EndVelocity);
+
+        lock (_lock)
+        {
+            return StateInsideStep(segment, k, t - step.CumulativeTime);
+        }
+    }
+
     private VariationalSegmentData VariationalData(PropagationSegment segment)
     {
         ArgumentNullException.ThrowIfNull(segment);
@@ -164,32 +196,69 @@ internal sealed class PropagationDynamics
     private (Vector3 Position, Vector3 Velocity) ShortenedStepCore(PropagationSegment segment,
         VariationalSegmentData data, int k, double tau, Span<double> y, Span<double> q)
     {
-        var step = segment.Steps[k];
-        var context = segment.Context ?? throw new InvalidOperationException("The segment holds no context.");
+        var context = ContextOf(segment);
         ReadOnlySpan<double> yStart = k == 0 ? _identity : data.StepEndY(k - 1);
         ReadOnlySpan<double> qStart = k == 0 ? _zeroCovariance : data.StepEndQ(k - 1);
 
-        bool injectCache = _orientationCacheFrame != null && _orientationCache != null;
-        var previousCache = injectCache ? _orientationCacheFrame.OrientationCache : null;
+        var previousCache = PutOrientationCacheBack();
         try
         {
-            if (injectCache)
-            {
-                _orientationCacheFrame.OrientationCache = _orientationCache;
-            }
-
-            _stepper.Context = context;
-            _stepper.Step(step.StartPosition, step.StartVelocity, segment.BaseEpoch, step.CumulativeTime, tau,
-                out var position, out var velocity, out _, out _);
+            var state = Step(segment, context, k, tau);
             _evaluationEquations.Step(_stepper.StageStates, _forces, context, tau, yStart, qStart, y, q);
-            return (position, velocity);
+            return state;
         }
         finally
         {
-            if (injectCache)
-            {
-                _orientationCacheFrame.OrientationCache = previousCache;
-            }
+            RestoreOrientationCache(previousCache);
+        }
+    }
+
+    private (Vector3 Position, Vector3 Velocity) StateInsideStep(PropagationSegment segment, int k, double tau)
+    {
+        var context = ContextOf(segment);
+        var previousCache = PutOrientationCacheBack();
+        try
+        {
+            return Step(segment, context, k, tau);
+        }
+        finally
+        {
+            RestoreOrientationCache(previousCache);
+        }
+    }
+
+    private static ForceEvaluationContext ContextOf(PropagationSegment segment) =>
+        segment.Context ?? throw new InvalidOperationException("The segment holds no context.");
+
+    // A step of tau seconds from the start of accepted step k, in the context of the segment; its stage states stay in
+    // the stepper for the variational step
+    private (Vector3 Position, Vector3 Velocity) Step(PropagationSegment segment, in ForceEvaluationContext context,
+        int k, double tau)
+    {
+        var step = segment.Steps[k];
+        _stepper.Context = context;
+        _stepper.Step(step.StartPosition, step.StartVelocity, segment.BaseEpoch, step.CumulativeTime, tau,
+            out var position, out var velocity, out _, out _);
+        return (position, velocity);
+    }
+
+    // The orientation cache of the central body frame, cleared at the end of the propagation, put back for an evaluation;
+    // returns the cache it replaces
+    private PropagationFrameOrientationCache PutOrientationCacheBack()
+    {
+        if (_orientationCacheFrame == null || _orientationCache == null)
+            return null;
+
+        var previousCache = _orientationCacheFrame.OrientationCache;
+        _orientationCacheFrame.OrientationCache = _orientationCache;
+        return previousCache;
+    }
+
+    private void RestoreOrientationCache(PropagationFrameOrientationCache previousCache)
+    {
+        if (_orientationCacheFrame != null && _orientationCache != null)
+        {
+            _orientationCacheFrame.OrientationCache = previousCache;
         }
     }
 }

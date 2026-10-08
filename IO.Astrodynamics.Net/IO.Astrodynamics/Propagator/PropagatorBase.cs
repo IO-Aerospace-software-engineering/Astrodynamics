@@ -211,7 +211,8 @@ public abstract class PropagatorBase : IPropagator
             }
         }
 
-        // 5. Generate output StateVectors by interpolating solution at DeltaT epochs
+        // 5. Generate output StateVectors at DeltaT epochs; in RK7(8), from the dynamics of the propagation
+        solution.Dynamics = dynamics;
         var outputStates = GenerateOutput(solution, outputCount);
 
         // 6. Add final orientation
@@ -225,7 +226,6 @@ public abstract class PropagatorBase : IPropagator
 
         // 8. Attach sampled output to solution
         solution.SetOutputStates(outputStates);
-        solution.Dynamics = dynamics;
 
         return solution;
     }
@@ -286,7 +286,7 @@ public abstract class PropagatorBase : IPropagator
     }
 
     /// <summary>
-    /// Generate output StateVectors by interpolating the solution at DeltaT intervals.
+    /// Generate output StateVectors at DeltaT intervals with <see cref="PropagationSolution.InterpolateAt"/>.
     /// Output may extend slightly past the window end when the step size doesn't evenly divide the window.
     /// Also computes continuous attitude orientations at each output epoch if a standalone attitude maneuver exists.
     /// </summary>

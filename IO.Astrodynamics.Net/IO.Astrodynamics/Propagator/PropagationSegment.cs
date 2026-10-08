@@ -69,6 +69,12 @@ public sealed class PropagationSegment
     /// Interpolate position and velocity at time t (seconds from BaseEpoch)
     /// using cubic Hermite interpolation within the appropriate step.
     /// </summary>
+    /// <remarks>
+    /// The interpolation is exact at the step boundaries only. Between them its error grows as the fourth power of the
+    /// step size: about 100 m in LEO for the steps of an RK7(8) integration at its default tolerance. For an RK7(8)
+    /// propagation, <see cref="PropagationSolution.InterpolateAt"/> computes the state at the accuracy of the
+    /// integrator instead.
+    /// </remarks>
     public (Vector3 position, Vector3 velocity) InterpolateAt(double t)
     {
         if (_steps.Count == 0)

@@ -7,9 +7,10 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Propagator.Integrators;
 
 /// <summary>
-/// Root-finding within an accepted integration step using cubic Hermite dense output.
-/// Bisects on the cumulative time t within the step to locate the zero-crossing
-/// of an event g-function to high precision (~1e-10 seconds).
+/// Root-finding within an accepted integration step by bisection on the cumulative time t, to locate the zero-crossing
+/// of an event g-function to high precision (~1e-10 seconds). The public overload evaluates the g-function on the cubic
+/// Hermite interpolation of the step; <see cref="RK78Integrator"/> evaluates it on states computed by shortened RK7(8)
+/// steps, at the accuracy of the integrator.
 /// </summary>
 public static class BisectionEventFinder
 {
@@ -37,11 +38,34 @@ public static class BisectionEventFinder
         Time stepStartEpoch,
         double tolerance = DefaultTolerance)
     {
+        var hermiteStep = step;
+        return FindRoot(step.CumulativeTime, step.CumulativeTime + step.StepSize, t =>
+        {
+            // Interpolate state at t using Hermite dense output
+            var (pos, vel) = PropagationSegment.HermiteInterpolate(hermiteStep, t);
+            return eventFunc(pos, vel, stepStartEpoch.AddSeconds(t));
+        }, gStart, gEnd, tolerance);
+    }
+
+    /// <summary>
+    /// Find the time at which the event function <paramref name="g"/> crosses zero between <paramref name="tStart"/>
+    /// and <paramref name="tEnd"/>, by bisection.
+    /// </summary>
+    /// <param name="tStart">Start of the interval, in seconds from the segment base epoch.</param>
+    /// <param name="tEnd">End of the interval, in seconds from the segment base epoch.</param>
+    /// <param name="g">Event g-function of the time, in seconds from the segment base epoch.</param>
+    /// <param name="gStart">g-function value at <paramref name="tStart"/>.</param>
+    /// <param name="gEnd">g-function value at <paramref name="tEnd"/>.</param>
+    /// <param name="tolerance">Convergence tolerance in seconds.</param>
+    /// <returns>The time of the zero-crossing, in seconds from the segment base epoch.</returns>
+    internal static double FindRoot(double tStart, double tEnd, Func<double, double> g, double gStart, double gEnd,
+        double tolerance = DefaultTolerance)
+    {
         if (gStart * gEnd > 0.0)
             throw new ArgumentException("g-function must have opposite signs at step boundaries for bisection.");
 
-        double tLo = step.CumulativeTime;
-        double tHi = step.CumulativeTime + step.StepSize;
+        double tLo = tStart;
+        double tHi = tEnd;
         double gLo = gStart;
 
         for (int i = 0; i < MaxIterations; i++)
@@ -50,11 +74,7 @@ public static class BisectionEventFinder
                 break;
 
             double tMid = 0.5 * (tLo + tHi);
-
-            // Interpolate state at tMid using Hermite dense output
-            var (pos, vel) = PropagationSegment.HermiteInterpolate(step, tMid);
-            var epoch = stepStartEpoch.AddSeconds(tMid);
-            double gMid = eventFunc(pos, vel, epoch);
+            double gMid = g(tMid);
 
             if (gMid == 0.0)
                 return tMid;

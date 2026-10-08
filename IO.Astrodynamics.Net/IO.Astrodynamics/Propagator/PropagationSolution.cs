@@ -52,13 +52,29 @@ public sealed class PropagationSolution
     }
 
     /// <summary>
-    /// Interpolate position and velocity at the given epoch.
-    /// Finds the correct segment and delegates to its Hermite interpolation.
+    /// Position and velocity at the given epoch, in the frame of the propagation and relative to its observer.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// For an RK7(8) propagation, the state is computed by a shortened RK7(8) step from the start of the accepted step
+    /// that contains the epoch, so it has the accuracy of the integrator; at a step boundary, the stored state is
+    /// returned. Inside a step this costs 13 evaluations of the forces, which run under a lock of the solution: like the
+    /// propagation itself, it must not run concurrently with another propagation or solution that shares a
+    /// <see cref="IO.Astrodynamics.Body.CelestialBody"/> with a geopotential.
+    /// </para>
+    /// <para>
+    /// For another integrator, the state is the cubic Hermite interpolation of the accepted step
+    /// (<see cref="PropagationSegment.InterpolateAt"/>).
+    /// </para>
+    /// <para>
+    /// At a maneuver, the state after the maneuver is returned for epochs at or after it. Before the solution, its
+    /// first state; after it, its last state.
+    /// </para>
+    /// </remarks>
     public (Vector3 position, Vector3 velocity) InterpolateAt(Time epoch)
     {
         var segment = SegmentAt(epoch, out double t);
-        return segment.InterpolateAt(t);
+        return Dynamics != null ? Dynamics.StateAt(segment, t) : segment.InterpolateAt(t);
     }
 
     /// <summary>
