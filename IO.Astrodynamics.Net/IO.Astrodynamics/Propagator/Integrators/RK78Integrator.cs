@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Events;
+using IO.Astrodynamics.Propagator.Forces;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -39,16 +41,24 @@ public sealed class RK78Integrator : Integrator
     // Current internal step size (seconds, always positive)
     private double _currentH;
 
-    // Reusable stage arrays (13 stages)
-    private readonly Vector3[] _kPos; // kPos[s] = velocity at stage s (dr/dt)
-    private readonly Vector3[] _kVel; // kVel[s] = acceleration at stage s (dv/dt)
+    // The 13 stages of a step, with their reusable stage states (avoids per-step allocations)
+    private readonly RK78Stepper _stepper;
 
-    // Acceleration at start and end of the last computed step (for dense output)
-    private Vector3 _stepAccelStart;
-    private Vector3 _stepAccelEnd;
+    // Variational equations, null when off; Y and Q relative to the segment start, at the start and end of a step
+    private VariationalEquations _variational;
+    private bool _variationalInStepControl;
+    private double[] _variationalY0;
+    private double[] _variationalY1;
+    private double[] _variationalQ0;
+    private double[] _variationalQ1;
+    private double[] _variationalScales;
 
-    // Reusable StateVectors for force evaluation (one per RK stage, avoids per-step allocations)
-    private StateVector[] _stagePool;
+    // The next segment, set by BeginVariationalSegment
+    private bool _variationalSegmentPending;
+    private ForceEvaluationContext _variationalContext;
+    private double[] _variationalEntryY;
+    private double[] _variationalEntryQ;
+    private ManeuverRecord? _variationalEntryManeuver;
 
     /// <summary>
     /// Create an adaptive RK7(8) integrator.
@@ -77,8 +87,7 @@ public sealed class RK78Integrator : Integrator
         _initialH = initialStepSize;
         _currentH = initialStepSize;
 
-        _kPos = new Vector3[RK78ButcherTableau.Stages];
-        _kVel = new Vector3[RK78ButcherTableau.Stages];
+        _stepper = new RK78Stepper(ForceList);
     }
 
     /// <summary>
@@ -97,8 +106,7 @@ public sealed class RK78Integrator : Integrator
         _initialH = fixedStepSize;
         _currentH = fixedStepSize;
 
-        _kPos = new Vector3[RK78ButcherTableau.Stages];
-        _kVel = new Vector3[RK78ButcherTableau.Stages];
+        _stepper = new RK78Stepper(ForceList);
     }
 
     /// <summary>
@@ -111,9 +119,7 @@ public sealed class RK78Integrator : Integrator
         if (initialState == null) throw new ArgumentNullException(nameof(initialState));
         base.Initialize(initialState);
 
-        _stagePool = new StateVector[RK78ButcherTableau.Stages];
-        for (int i = 0; i < RK78ButcherTableau.Stages; i++)
-            _stagePool[i] = new StateVector(Vector3.Zero, Vector3.Zero, Observer, initialState.Epoch, ReferenceFrame);
+        _stepper.Reset(Observer, ReferenceFrame, initialState.Epoch);
 
         // Reset step size and PI controller at segment boundaries.
         // After a maneuver the velocity is discontinuous, so the previous segment's
@@ -121,6 +127,49 @@ public sealed class RK78Integrator : Integrator
         // nearby events (e.g., a periapsis crossing immediately after a burn).
         _currentH = _initialH;
         _controller?.Reset();
+    }
+
+    /// <summary>
+    /// The variational equations integrated with the state, null when they are off.
+    /// </summary>
+    internal VariationalEquations VariationalEquations => _variational;
+
+    /// <summary>
+    /// Integrate the variational equations with the state from now on.
+    /// </summary>
+    /// <param name="options">What to integrate.</param>
+    internal void EnableVariationalEquations(VariationalOptions options)
+    {
+        _variational = new VariationalEquations(options);
+        _variationalInStepControl = options.IncludeInStepControl && AdaptiveMode;
+        int covarianceLength = _variational.HasProcessNoise ? VariationalEquations.CovarianceLength : 0;
+        _variationalY0 = new double[_variational.YLength];
+        _variationalY1 = new double[_variational.YLength];
+        _variationalQ0 = new double[covarianceLength];
+        _variationalQ1 = new double[covarianceLength];
+        _variationalScales = new double[_variational.ColumnCount];
+    }
+
+    /// <summary>
+    /// Prepare the variational data of the next segment: <see cref="IntegrateSegment"/> creates it, attaches it to the
+    /// segment and fills it with Y and Q at the end of each accepted step.
+    /// </summary>
+    /// <param name="context">Mass and coefficients of the segment.</param>
+    /// <param name="entryY">Cumulative Y at the segment start.</param>
+    /// <param name="entryQ">Cumulative Q at the segment start; empty without process noise.</param>
+    /// <param name="entryManeuver">The maneuver that starts the segment, if any.</param>
+    /// <exception cref="InvalidOperationException">The variational equations are off.</exception>
+    internal void BeginVariationalSegment(in ForceEvaluationContext context, double[] entryY, double[] entryQ,
+        ManeuverRecord? entryManeuver)
+    {
+        if (_variational == null)
+            throw new InvalidOperationException("The variational equations are not enabled on this integrator.");
+
+        _variationalSegmentPending = true;
+        _variationalContext = context;
+        _variationalEntryY = entryY;
+        _variationalEntryQ = entryQ;
+        _variationalEntryManeuver = entryManeuver;
     }
 
     /// <summary>
@@ -138,6 +187,7 @@ public sealed class RK78Integrator : Integrator
             ? (int)(duration / _currentH) + 16
             : (int)(duration / _currentH) + 2;
         var segment = new PropagationSegment(baseEpoch, estimatedSteps);
+        var variational = StartVariationalSegment(segment, estimatedSteps, startPosition, startVelocity);
 
         var pos = startPosition;
         var vel = startVelocity;
@@ -172,6 +222,13 @@ public sealed class RK78Integrator : Integrator
             // Compute one RK78 step
             var (posNew, velNew, err) = ComputeRK78Step(pos, vel, baseEpoch, t, h);
 
+            if (variational != null && _variationalInStepControl)
+            {
+                AdvanceVariational(h);
+                err = System.Math.Max(err, _variational.ScaledError(_variationalY0, _variationalY1, _variationalScales,
+                    AbsoluteTolerance, RelativeTolerance));
+            }
+
             if (AdaptiveMode)
             {
                 var (accepted, hNew) = _controller.Evaluate(h, err);
@@ -191,7 +248,17 @@ public sealed class RK78Integrator : Integrator
                 rejections = 0;
 
                 // Store accepted step
-                segment.AddStep(new AcceptedStep(t, h, pos, vel, posNew, velNew, _stepAccelStart, _stepAccelEnd));
+                segment.AddStep(new AcceptedStep(t, h, pos, vel, posNew, velNew, _stepper.StartAcceleration,
+                    _stepper.EndAcceleration));
+                if (variational != null)
+                {
+                    if (!_variationalInStepControl)
+                    {
+                        AdvanceVariational(h);
+                    }
+
+                    CommitVariational(variational);
+                }
 
                 t += h;
                 pos = posNew;
@@ -233,7 +300,13 @@ public sealed class RK78Integrator : Integrator
             else
             {
                 // Fixed step — always accepted
-                segment.AddStep(new AcceptedStep(t, h, pos, vel, posNew, velNew, _stepAccelStart, _stepAccelEnd));
+                segment.AddStep(new AcceptedStep(t, h, pos, vel, posNew, velNew, _stepper.StartAcceleration,
+                    _stepper.EndAcceleration));
+                if (variational != null)
+                {
+                    AdvanceVariational(h);
+                    CommitVariational(variational);
+                }
 
                 t += h;
                 pos = posNew;
@@ -269,6 +342,42 @@ public sealed class RK78Integrator : Integrator
         return new IntegrationResult(segment, null);
     }
 
+    // The variational data of the segment, when BeginVariationalSegment prepared it; Y and Q restart at [I | 0] and 0
+    private VariationalSegmentData StartVariationalSegment(PropagationSegment segment, int estimatedSteps,
+        in Vector3 startPosition, in Vector3 startVelocity)
+    {
+        if (!_variationalSegmentPending)
+            return null;
+
+        _variationalSegmentPending = false;
+        var data = new VariationalSegmentData(_variational.YLength, _variational.HasProcessNoise, estimatedSteps,
+            _variationalEntryY, _variationalEntryQ, _variationalEntryManeuver);
+        segment.Variational = data;
+        _variational.SetIdentity(_variationalY0);
+        Array.Clear(_variationalQ0);
+        if (_variationalInStepControl)
+        {
+            _variational.ColumnScales(startPosition, startVelocity, _variationalContext, _variationalScales);
+        }
+
+        return data;
+    }
+
+    // Y and Q at the end of the step just computed, from the stage states of that step
+    private void AdvanceVariational(double h)
+    {
+        _variational.Step(_stepper.StageStates, ForceList, _variationalContext, h, _variationalY0, _variationalQ0,
+            _variationalY1, _variationalQ1);
+    }
+
+    // The step is accepted: store its end values, which become the start values of the next step
+    private void CommitVariational(VariationalSegmentData data)
+    {
+        data.Append(_variationalY1, _variationalQ1);
+        (_variationalY0, _variationalY1) = (_variationalY1, _variationalY0);
+        (_variationalQ0, _variationalQ1) = (_variationalQ1, _variationalQ0);
+    }
+
     /// <summary>
     /// Create a temporary StateVector for event detector evaluation.
     /// </summary>
@@ -285,72 +394,10 @@ public sealed class RK78Integrator : Integrator
     internal (Vector3 posNew, Vector3 velNew, double err) ComputeRK78Step(
         in Vector3 pos0, in Vector3 vel0, in Time baseEpoch, double tOffset, double h)
     {
-        var a = RK78ButcherTableau.A;
-        var c = RK78ButcherTableau.C;
-        var b = RK78ButcherTableau.B;
-        var e = RK78ButcherTableau.E;
-
-        // Stage 0: evaluate at current point
-        UpdateStateVector(_stagePool[0], pos0, vel0, baseEpoch.AddSeconds(tOffset));
-        _kPos[0] = vel0;
-        _kVel[0] = ComputeAcceleration(_stagePool[0]);
-
-        // Stages 1..12
-        for (int s = 1; s < RK78ButcherTableau.Stages; s++)
-        {
-            var rS = pos0;
-            var vS = vel0;
-            var aS = a[s];
-
-            for (int j = 0; j < s; j++)
-            {
-                double aCoeff = aS[j];
-                if (aCoeff != 0.0) // skip zero coefficients for performance
-                {
-                    double hA = h * aCoeff;
-                    rS += _kPos[j] * hA;
-                    vS += _kVel[j] * hA;
-                }
-            }
-
-            UpdateStateVector(_stagePool[s], rS, vS, baseEpoch.AddSeconds(tOffset + c[s] * h));
-            _kPos[s] = vS;
-            _kVel[s] = ComputeAcceleration(_stagePool[s]);
-        }
-
-        // 8th-order solution
-        var posNew = pos0;
-        var velNew = vel0;
-
-        for (int j = 0; j < RK78ButcherTableau.Stages; j++)
-        {
-            if (b[j] != 0.0)
-            {
-                double hB = h * b[j];
-                posNew += _kPos[j] * hB;
-                velNew += _kVel[j] * hB;
-            }
-        }
-
-        // Error estimate (difference between 8th and 7th order)
-        var errPos = Vector3.Zero;
-        var errVel = Vector3.Zero;
-
-        for (int j = 0; j < RK78ButcherTableau.Stages; j++)
-        {
-            if (e[j] != 0.0)
-            {
-                double hE = h * e[j];
-                errPos += _kPos[j] * hE;
-                errVel += _kVel[j] * hE;
-            }
-        }
+        _stepper.Step(pos0, vel0, baseEpoch, tOffset, h, out var posNew, out var velNew, out var errPos,
+            out var errVel);
 
         double err = ComputeErrorNorm(pos0, posNew, vel0, velNew, errPos, errVel);
-
-        // Save accelerations for dense output
-        _stepAccelStart = _kVel[0];
-        _stepAccelEnd = _kVel[12];
 
         return (posNew, velNew, err);
     }
@@ -388,7 +435,17 @@ public sealed class RK78Integrator : Integrator
     /// </summary>
     private double ComponentError(double y0, double y1, double errComponent)
     {
-        double sc = AbsoluteTolerance + RelativeTolerance * System.Math.Max(System.Math.Abs(y0), System.Math.Abs(y1));
+        return ScaledComponentError(y0, y1, errComponent, AbsoluteTolerance, RelativeTolerance);
+    }
+
+    /// <summary>
+    /// The scaled error of one component with given tolerances: |err| / (absTol + relTol * max(|y0|, |y1|)). Shared with
+    /// the error of the variational equations, when it takes part in the step-size control.
+    /// </summary>
+    internal static double ScaledComponentError(double y0, double y1, double errComponent, double absoluteTolerance,
+        double relativeTolerance)
+    {
+        double sc = absoluteTolerance + relativeTolerance * System.Math.Max(System.Math.Abs(y0), System.Math.Abs(y1));
         return System.Math.Abs(errComponent) / sc;
     }
 }

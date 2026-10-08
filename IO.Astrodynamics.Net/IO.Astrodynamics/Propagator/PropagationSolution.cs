@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -28,6 +29,12 @@ public sealed class PropagationSolution
     public IReadOnlyList<StateVector> StateVectors => _stateVectors;
 
     /// <summary>
+    /// The dynamics of the propagation, kept in RK7(8) for the evaluations of the variational equations after it; null
+    /// for another integrator.
+    /// </summary>
+    internal PropagationDynamics Dynamics { get; set; }
+
+    /// <summary>
     /// Set the sampled output state vectors.
     /// </summary>
     public void SetOutputStates(StateVector[] states)
@@ -50,23 +57,57 @@ public sealed class PropagationSolution
     /// </summary>
     public (Vector3 position, Vector3 velocity) InterpolateAt(Time epoch)
     {
+        var segment = SegmentAt(epoch, out double t);
+        return segment.InterpolateAt(t);
+    }
+
+    /// <summary>
+    /// The cumulative variational values at <paramref name="epoch"/>, from the start of the propagation: Y = [Φ | Ψ] and
+    /// Q (<see cref="VariationalEquations"/>). Picks the segment as <see cref="InterpolateAt"/> does, the later one at a
+    /// maneuver.
+    /// </summary>
+    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="y">Y, 6n values.</param>
+    /// <param name="q">Q, 21 values, or empty without process noise.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
+    /// <exception cref="InvalidOperationException">The propagation did not integrate the variational equations.</exception>
+    internal void EvaluateVariational(Time epoch, Span<double> y, Span<double> q)
+    {
         if (_segments.Count == 0)
             throw new InvalidOperationException("Solution contains no segments.");
 
-        // Find the segment containing the given epoch
-        // At boundaries, prefer the later segment (post-maneuver state)
+        var last = _segments[^1];
+        if (epoch < _segments[0].BaseEpoch || (epoch - last.BaseEpoch).TotalSeconds > last.Duration)
+            throw new ArgumentOutOfRangeException(nameof(epoch), epoch,
+                "The epoch is outside the propagation.");
+
+        var segment = SegmentAt(epoch, out double t);
+        if (Dynamics == null)
+            throw new InvalidOperationException(
+                "The solution holds no variational data: the propagation did not integrate the variational equations.");
+
+        Dynamics.Evaluate(segment, t, y, q);
+    }
+
+    // The segment containing the epoch, the later one at boundaries (post-maneuver state), and the time from its start
+    private PropagationSegment SegmentAt(in Time epoch, out double t)
+    {
+        if (_segments.Count == 0)
+            throw new InvalidOperationException("Solution contains no segments.");
+
         for (int i = _segments.Count - 1; i >= 0; i--)
         {
             var segment = _segments[i];
-            double t = (epoch - segment.BaseEpoch).TotalSeconds;
+            t = (epoch - segment.BaseEpoch).TotalSeconds;
 
             if (t >= 0.0)
             {
-                return segment.InterpolateAt(t);
+                return segment;
             }
         }
 
-        // Before the first segment: return the start of the first segment
-        return _segments[0].InterpolateAt(0.0);
+        // Before the first segment: the start of the first segment
+        t = 0.0;
+        return _segments[0];
     }
 }

@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Generic;
+using IO.Astrodynamics.Propagator.Forces;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -31,6 +33,17 @@ public sealed class PropagationSegment
     public double Duration => _steps.Count > 0
         ? _steps[^1].CumulativeTime + _steps[^1].StepSize
         : 0.0;
+
+    /// <summary>
+    /// The mass and coefficients of the spacecraft during the segment, set by the propagator in RK7(8); null otherwise.
+    /// The mass is constant within a segment: fuel burns only at the impulsive maneuvers between segments.
+    /// </summary>
+    internal ForceEvaluationContext? Context { get; set; }
+
+    /// <summary>
+    /// The variational data of the segment, when the propagation integrates the variational equations; null otherwise.
+    /// </summary>
+    internal VariationalSegmentData Variational { get; set; }
 
     public PropagationSegment(Time baseEpoch)
     {
@@ -76,9 +89,10 @@ public sealed class PropagationSegment
     }
 
     /// <summary>
-    /// Find the index of the step containing time t using binary search.
+    /// Find the index of the step containing time t using binary search. At the boundary between two steps, the
+    /// earlier one.
     /// </summary>
-    private int FindStepIndex(double t)
+    internal int FindStepIndex(double t)
     {
         int lo = 0;
         int hi = _steps.Count - 1;

@@ -13,7 +13,9 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -78,18 +80,42 @@ public class PropagationGoldenTests
         AssertBitIdentical(expected!, actual);
     }
 
-    private static PropagationSolution Propagate(string caseName)
+    /// <summary>
+    /// The same propagations with the variational equations (Φ, Ψ for Cd and Cr, and Q): the step control is on the
+    /// state only and the variational stages never feed the state, so the trajectory is the same golden (A2).
+    /// </summary>
+    [Theory]
+    [InlineData("rk78_leo_drag_srp")]
+    [InlineData("rk78_geo_moon_sun")]
+    [InlineData("rk78_leo_maneuver")]
+    public void Rk78PropagationWithTheVariationalEquations_IsBitIdenticalToGolden(string caseName)
+    {
+        // Arrange
+        var options = new VariationalOptions(ForceParameters.DragCoefficient | ForceParameters.ReflectivityCoefficient,
+            new ConstantProcessNoise(new[] { 1e-12, 0.0, 0.0, 0.0, 1e-12, 0.0, 0.0, 0.0, 1e-12 }));
+
+        // Act
+        var solution = Propagate(caseName, options);
+
+        // Assert
+        Assert.All(solution.Segments, segment => Assert.NotNull(segment.Variational));
+        var expected = JsonSerializer.Deserialize<GoldenRecord>(
+            File.ReadAllText(Path.Combine(GoldenDirectory, caseName + ".json")));
+        AssertBitIdentical(expected!, GoldenRecord.From(solution));
+    }
+
+    private static PropagationSolution Propagate(string caseName, VariationalOptions options = null)
     {
         return caseName switch
         {
-            "rk78_leo_drag_srp" => PropagateLeoWithDragAndSrp(),
-            "rk78_geo_moon_sun" => PropagateGeo(),
-            "rk78_leo_maneuver" => PropagateLeoWithManeuver(),
+            "rk78_leo_drag_srp" => PropagateLeoWithDragAndSrp(options),
+            "rk78_geo_moon_sun" => PropagateGeo(options),
+            "rk78_leo_maneuver" => PropagateLeoWithManeuver(options),
             _ => throw new ArgumentOutOfRangeException(nameof(caseName))
         };
     }
 
-    private static PropagationSolution PropagateLeoWithDragAndSrp()
+    private static PropagationSolution PropagateLeoWithDragAndSrp(VariationalOptions options)
     {
         // 400 km, 51.6 deg, EGM2008 10x10, NRLMSISE-00 (nominal space weather), Moon, drag and SRP, 3 h.
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
@@ -102,10 +128,10 @@ public class PropagationGoldenTests
             null, 1.5);
 
         return spacecraft.Propagate(new Window(Start, Start.AddHours(3.0)), new CelestialItem[] { earth, moon },
-            new RK78Integrator(1e-11, 1e-11), true, true, TimeSpan.FromSeconds(60.0));
+            new RK78Integrator(1e-11, 1e-11), true, true, TimeSpan.FromSeconds(60.0), options);
     }
 
-    private static PropagationSolution PropagateGeo()
+    private static PropagationSolution PropagateGeo(VariationalOptions options)
     {
         // GEO, EGM2008 10x10, Moon and Sun, 1 day.
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
@@ -117,10 +143,10 @@ public class PropagationGoldenTests
         var spacecraft = new Spacecraft(-1952, "GOLDEN2", 2000.0, 5000.0, new Clock("golden2", 65536), orbit);
 
         return spacecraft.Propagate(new Window(Start, Start.AddDays(1.0)), new CelestialItem[] { earth, moon, sun },
-            new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(600.0));
+            new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(600.0), options);
     }
 
-    private static PropagationSolution PropagateLeoWithManeuver()
+    private static PropagationSolution PropagateLeoWithManeuver(VariationalOptions options)
     {
         // 400 x 1000 km LEO starting at apogee, EGM2008 10x10, Moon and Sun, apogee raised to 2000 km at the first
         // perigee (about 50 min later), 4 h.
@@ -138,7 +164,7 @@ public class PropagationGoldenTests
         spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine));
 
         return spacecraft.Propagate(new Window(Start, Start.AddHours(4.0)), new CelestialItem[] { earth, moon, sun },
-            new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(60.0));
+            new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(60.0), options);
     }
 
     private static void AssertBitIdentical(GoldenRecord expected, GoldenRecord actual)
