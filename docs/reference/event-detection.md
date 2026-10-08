@@ -45,9 +45,9 @@ When `Evaluate` changes sign in the specified `Direction` between two integratio
 
 ## BisectionEventFinder
 
-`BisectionEventFinder` performs sub-step root-finding to locate event times to approximately 1e-10 second precision. It uses Hermite dense output from `AcceptedStep` records to evaluate the g-function at arbitrary points within a step, then applies bisection to converge on the zero crossing.
+`BisectionEventFinder` performs sub-step root-finding to locate event times to approximately 1e-10 second precision, by bisection on the zero crossing of the g-function within a step. Its public `FindRoot` evaluates the g-function on the cubic Hermite interpolation of an `AcceptedStep`.
 
-`VVIntegrator` detects events at step boundaries only. `RK78Integrator` uses `BisectionEventFinder` for sub-step refinement.
+`VVIntegrator` detects events at step boundaries only. `RK78Integrator` refines them within the step by the same bisection, on states computed by shortened RK7(8) steps from the start of the step, so that the event is located on the integrated trajectory. The event time is then moved to the 100 ns grid of the epochs, and the propagation restarts from the state of a shortened step to that time: at the accuracy of the integrator, and the same state from which the state transition matrix at the event comes.
 
 ## Maneuver G-Functions
 

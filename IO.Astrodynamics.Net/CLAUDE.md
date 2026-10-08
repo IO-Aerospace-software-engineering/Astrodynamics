@@ -516,7 +516,7 @@ PropagatorBase (abstract)
 **Key Classes**
 - `PropagatorBase`: Abstract base with segment-based propagation loop, event detection, and dense output
 - `CentralBodyPropagator`: Concrete implementation with auto force-building and ephemeris cache injection
-- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output
+- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output: a shortened RK7(8) step from the start of the accepted step for RK7(8) (accuracy of the integrator, 13 force evaluations inside a step), cubic Hermite for Velocity-Verlet
 - `PropagationSegment`: List of `AcceptedStep` records with Hermite interpolation
 - `AcceptedStep`: Start/end position, velocity, and acceleration for cubic Hermite dense output
 - `IntegrationResult`: Segment + optional `EventInfo` (detector index, precise event time and state)
@@ -539,7 +539,7 @@ public interface IIntegrator
 }
 ```
 
-VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV) or with sub-step bisection refinement (RK78).
+VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV) or with sub-step bisection refinement (RK78) on states computed by shortened RK7(8) steps; the RK7(8) restart after a maneuver uses the same shortened step, never the cubic Hermite interpolation, which is off by up to ~100 m in LEO (#363).
 
 ### Event Detection System
 

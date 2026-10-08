@@ -37,7 +37,7 @@
 Each method has two families of overloads:
 
 - **`ILocalizable`** overloads for generic participants. States are sampled from each participant's ephemeris: SPICE data for kernel-backed objects, the stored states of a spacecraft that was already propagated, otherwise the initial orbit (Keplerian, or SGP4 for a TLE).
-- **`PropagationSolution`** overloads when both trajectories were already propagated, reusing dense output.
+- **`PropagationSolution`** overloads when both trajectories were already propagated, reusing dense output. When both trajectories share the observer and the frame, the close approaches are searched on the cubic polynomials of their accepted steps, then each TCA is refined by bisection of the range rate on the states of the trajectories (`PropagationSolution.InterpolateAt`), at the accuracy of the integrator for RK7(8) trajectories.
 
 ## ProtectedSpacecraftProfile
 
