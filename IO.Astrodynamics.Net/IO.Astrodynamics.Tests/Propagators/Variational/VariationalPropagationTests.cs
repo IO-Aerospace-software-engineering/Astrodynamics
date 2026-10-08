@@ -317,33 +317,28 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         Assert.True(after.Context.Value.TotalMass < initialMass);
 
         // Φ, Ψ and Q are continuous: the values of the first segment at te are the entry values of the second, and the
-        // solution returns those at te. The epochs carry te to 100 ns (TimeSpan ticks), against the exact bisection time
-        // the propagator used, so the comparison allows the change of Y and Q over 1e-7 s: about 1e-7 s × n ≈ 1e-10
-        // relative.
-        double te = (after.BaseEpoch - before.BaseEpoch).TotalSeconds;
+        // solution returns those at te. The event time te is on the 100 ns grid of the epochs, so the second segment
+        // starts at the instant of the values of the first: the same doubles (#363; 1e-9 before, when the epoch carried
+        // te to 100 ns only).
+        int k = before.Steps.Count - 1;
+        double te = RK78Integrator.OnEpochGrid(before.BaseEpoch, after.BaseEpoch, before.Steps[k].CumulativeTime,
+            before.Duration);
         var yBefore = new double[48];
         var qBefore = new double[VariationalEquations.CovarianceLength];
         solution.Dynamics.Evaluate(before, te, yBefore, qBefore);
-        double yJump = RiddersDerivative.RelativeFrobeniusError(yBefore, after.Variational.EntryY);
-        double qJump = RiddersDerivative.RelativeFrobeniusError(qBefore, after.Variational.EntryQ);
-        _output.WriteLine($"at the maneuver: Y {yJump:E2}, Q {qJump:E2} between the two sides");
-        Assert.True(yJump < 1e-9, $"Y: {yJump:E2}");
-        Assert.True(qJump < 1e-9, $"Q: {qJump:E2}");
+        AssertSameBits(yBefore, after.Variational.EntryY, "Y at the maneuver");
+        AssertSameBits(qBefore, after.Variational.EntryQ, "Q at the maneuver");
         var y = new double[48];
         var q = new double[VariationalEquations.CovarianceLength];
         solution.EvaluateVariational(after.BaseEpoch, y, q);
         AssertSameBits(after.Variational.EntryY, y, "Y returned at te");
         AssertSameBits(after.Variational.EntryQ, q, "Q returned at te");
 
-        // Measured, not asserted (decision 4): the state of the shortened step at te, from which Y(te) comes, against
-        // the Hermite state the trajectory restarts from. The gap is the error of the cubic Hermite interpolation of the
-        // propagator, an issue of its own.
-        int k = before.FindStepIndex(te);
+        // The trajectory restarts from the state of the shortened step from which Y(te) comes, plus ΔV
         var (rkPosition, rkVelocity) = solution.Dynamics.ShortenedStep(before, k, te - before.Steps[k].CumulativeTime,
             new double[48], new double[VariationalEquations.CovarianceLength]);
-        var (hermitePosition, hermiteVelocity) = PropagationSegment.HermiteInterpolate(before.Steps[k], te);
-        _output.WriteLine($"step {before.Steps[k].StepSize:F1} s: |Δr| = {(rkPosition - hermitePosition).Magnitude():E3} m, " +
-                          $"|Δv| = {(rkVelocity - hermiteVelocity).Magnitude():E3} m/s between the RK and Hermite states at te");
+        AssertSameBits(rkPosition, after.Steps[0].StartPosition, "position at te");
+        AssertSameBits(rkVelocity + maneuver.DeltaV, after.Steps[0].StartVelocity, "velocity after the maneuver");
     }
 
     [Fact]

@@ -41,6 +41,30 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **States between the steps of an RK7(8) propagation (#363).** The output states, `PropagationSolution.InterpolateAt`,
+  the location of the events and the state the propagation restarts from after an impulsive maneuver came from a cubic
+  Hermite interpolation between the accepted steps, whose error grows as the fourth power of the step size. In a
+  400 km LEO with outputs every 10 s, the output states were off by up to 101 m at the default tolerance (18.5 m at
+  1e-11, 1.8 m at 1e-13), while the step ends were within 1.5 cm. Each of these states is now computed by a shortened
+  RK7(8) step from the start of the accepted step that contains its epoch: it has the accuracy of the integrator, and
+  the worst output error equals the worst error at the step ends (1.5 cm, 0.1 mm and 0.8 µm at the three tolerances).
+  Every RK7(8) propagation is concerned: its output states move (by up to 13 m, 77 m and 63 m in the three
+  propagations of the golden of `PropagationGoldenTests`, recaptured), and after a maneuver its whole trajectory, since
+  the maneuver now fires on the integrated trajectory (99 µs later in the golden). The accepted steps before the first
+  event are bit-identical. The event time is put on the 100 ns grid of the epochs, so the state at the event, the epoch
+  of the next segment and the state transition matrix at the event refer to the same instant. Velocity-Verlet, TLE and
+  SPICE propagations are unchanged, and so are `PropagationSegment.InterpolateAt` and the public
+  `BisectionEventFinder.FindRoot`, which keep the cubic Hermite interpolation. Cost: one RK7(8) step, 13 force
+  evaluations, per output epoch inside a step, none at a step boundary. Over one day with EGM2008 10×10, the Moon and
+  the Sun at the default tolerance, the propagation takes about as long with outputs every 600 s, about twice as long
+  every 60 s, and seven to nine times as long every 10 s. `PropagationSolution.InterpolateAt` of an RK7(8) solution
+  evaluates the forces under a lock of the solution: like a propagation, it must not run concurrently with another one
+  that shares a `CelestialBody` with a geopotential.
+- **TCA of the conjunction analysis of two propagated trajectories (#363).** The polynomial search of the
+  `PropagationSolution` overloads located the TCA on the cubic Hermite interpolation of the positions. Each TCA is now
+  refined by bisection of the range rate on the states of the trajectories. On RK7(8) trajectories at the default
+  tolerance, the TCA moves from 2.6e-6 s to 1.3e-4 s away from the Keplerian reference to less than 1e-7 s; the miss
+  distance, already computed on the states, changes at second order only (by up to 2.8 mm in the test cases).
 - **Velocity into and out of a rotating frame.** `ToFrame` computed `v' = R v - ω × r'` with the angular velocity
   `ω` expressed in the source frame and `r'` in the target frame. It now uses `R ω` and matches the states SPICE
   computes directly in ITRF93 to a few 1e-16. The error grew with the precession since J2000: in 2021, up to about

@@ -1545,11 +1545,11 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 **Propagation Architecture:**
 1. **Build event detectors** from the spacecraft's maneuver chain (leading attitudes execute immediately)
 2. **Segment loop**: Integrator advances with event detection; on event → execute maneuver, reinitialize
-3. **Output**: Interpolate `PropagationSolution` at fixed `DeltaT` epochs via cubic Hermite dense output
+3. **Output**: Evaluate `PropagationSolution.InterpolateAt` at fixed `DeltaT` epochs: a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
 4. **Continuous attitude**: Recompute orientations at each output epoch if an attitude maneuver is active
 
 **Key Supporting Types:**
-- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output
+- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output (shortened RK7(8) step for RK7(8), cubic Hermite otherwise)
 - `PropagationSegment`: Ordered list of `AcceptedStep` records with binary-search Hermite interpolation
 - `AcceptedStep`: Stores position, velocity, and acceleration at step start/end for cubic Hermite interpolation
 - `IntegrationResult`: Integration segment + optional `EventInfo` (detector index, precise event time and state)

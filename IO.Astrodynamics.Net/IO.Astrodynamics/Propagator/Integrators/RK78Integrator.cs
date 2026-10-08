@@ -272,21 +272,9 @@ public sealed class RK78Integrator : Integrator
 
                     if (detIdx >= 0)
                     {
-                        // Event detected in this step — use bisection for precise timing
-                        var lastStep = segment.Steps[segment.Steps.Count - 1];
-                        double eventT = BisectionEventFinder.FindRoot(
-                            lastStep,
-                            (p, v, epoch) => eventDetectors[detIdx].Evaluate(
-                                CreateTempState(p, v, epoch)),
-                            prevG[detIdx], currG[detIdx],
-                            baseEpoch);
-
-                        // Interpolate state at exact event time
-                        var (eventPos, eventVel) = PropagationSegment.HermiteInterpolate(lastStep, eventT);
-
                         _currentH = hNew;
                         return new IntegrationResult(segment,
-                            new EventInfo(detIdx, eventT, eventPos, eventVel));
+                            LocateEvent(segment, eventDetectors[detIdx], detIdx, prevG[detIdx], currG[detIdx]));
                     }
 
                     (prevG, currG) = (currG, prevG);
@@ -320,18 +308,8 @@ public sealed class RK78Integrator : Integrator
 
                     if (detIdx >= 0)
                     {
-                        var lastStep = segment.Steps[segment.Steps.Count - 1];
-                        double eventT = BisectionEventFinder.FindRoot(
-                            lastStep,
-                            (p, v, epoch) => eventDetectors[detIdx].Evaluate(
-                                CreateTempState(p, v, epoch)),
-                            prevG[detIdx], currG[detIdx],
-                            baseEpoch);
-
-                        var (eventPos, eventVel) = PropagationSegment.HermiteInterpolate(lastStep, eventT);
-
                         return new IntegrationResult(segment,
-                            new EventInfo(detIdx, eventT, eventPos, eventVel));
+                            LocateEvent(segment, eventDetectors[detIdx], detIdx, prevG[detIdx], currG[detIdx]));
                     }
 
                     (prevG, currG) = (currG, prevG);
@@ -376,6 +354,70 @@ public sealed class RK78Integrator : Integrator
         data.Append(_variationalY1, _variationalQ1);
         (_variationalY0, _variationalY1) = (_variationalY1, _variationalY0);
         (_variationalQ0, _variationalQ1) = (_variationalQ1, _variationalQ0);
+    }
+
+    /// <summary>
+    /// Locate the event detected in the last accepted step of <paramref name="segment"/>, and the state at the event.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every state comes from a shortened RK7(8) step from the start of the last accepted step, so the event is located
+    /// on the integrated trajectory, and the propagation restarts from a state at the accuracy of the integrator (#363).
+    /// The step is the one <see cref="PropagationDynamics"/> computes for the variational values at the event, so both
+    /// are the same doubles.
+    /// </para>
+    /// <para>
+    /// The event time is then moved to the epoch the propagator restarts from, which <see cref="Time"/> holds to
+    /// 100 ns, so that the state, the epoch of the next segment and the variational values refer to the same instant.
+    /// </para>
+    /// </remarks>
+    private EventInfo LocateEvent(PropagationSegment segment, IEventDetector detector, int detectorIndex, double gStart,
+        double gEnd)
+    {
+        var step = segment.Steps[^1];
+        double stepEnd = step.CumulativeTime + step.StepSize;
+        var baseEpoch = segment.BaseEpoch;
+
+        double eventT = BisectionEventFinder.FindRoot(step.CumulativeTime, stepEnd, t =>
+        {
+            var (p, v) = StateInsideStep(step, baseEpoch, t);
+            return detector.Evaluate(CreateTempState(p, v, baseEpoch.AddSeconds(t)));
+        }, gStart, gEnd);
+
+        eventT = OnEpochGrid(baseEpoch, baseEpoch.AddSeconds(eventT), step.CumulativeTime, stepEnd);
+        var (eventPos, eventVel) = StateInsideStep(step, baseEpoch, eventT);
+        return new EventInfo(detectorIndex, eventT, eventPos, eventVel);
+    }
+
+    // The state at t, in seconds from the segment base epoch, by a shortened step from the start of the accepted step
+    private (Vector3 Position, Vector3 Velocity) StateInsideStep(in AcceptedStep step, in Time baseEpoch, double t)
+    {
+        _stepper.Step(step.StartPosition, step.StartVelocity, baseEpoch, step.CumulativeTime, t - step.CumulativeTime,
+            out var position, out var velocity, out _, out _);
+        return (position, velocity);
+    }
+
+    /// <summary>
+    /// A time t, in seconds from <paramref name="baseEpoch"/> and within [<paramref name="tStart"/>,
+    /// <paramref name="tEnd"/>], that <see cref="Time.AddSeconds"/> carries to <paramref name="epoch"/> from
+    /// <paramref name="baseEpoch"/>, as the propagator does with the event time; the time of
+    /// <paramref name="epoch"/> clamped to the interval when there is none.
+    /// </summary>
+    internal static double OnEpochGrid(in Time baseEpoch, in Time epoch, double tStart, double tEnd)
+    {
+        const int maxAdjustments = 64;
+        double t = System.Math.Clamp((epoch - baseEpoch).TotalSeconds, tStart, tEnd);
+        double onGrid = t;
+        for (int i = 0; i < maxAdjustments && onGrid >= tStart && onGrid <= tEnd; i++)
+        {
+            var found = baseEpoch.AddSeconds(onGrid);
+            if (found == epoch)
+                return onGrid;
+
+            onGrid = found < epoch ? System.Math.BitIncrement(onGrid) : System.Math.BitDecrement(onGrid);
+        }
+
+        return t;
     }
 
     /// <summary>

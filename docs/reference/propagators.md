@@ -19,7 +19,7 @@ integrator, whose error control scales each component separately.
 1. Build event detectors from the spacecraft maneuver chain.
 2. Integrate a segment until the next event or end of window.
 3. Execute the maneuver via `IEventDetector.HandleEvent()`, update state.
-4. Interpolate output states on the requested `DeltaT` cadence via Hermite dense output.
+4. Compute output states on the requested `DeltaT` cadence with `PropagationSolution.InterpolateAt`.
 
 ### Supported Perturbations
 
@@ -41,13 +41,13 @@ integrator, whose error control scales each component separately.
 
 ### PropagationSolution
 
-`PropagationSolution` is the multi-segment container returned by propagation. It holds `PropagationSegment` objects, each containing `AcceptedStep` records that support Hermite interpolation.
+`PropagationSolution` is the multi-segment container returned by propagation. It holds `PropagationSegment` objects, each containing `AcceptedStep` records that support Hermite interpolation. An RK7(8) solution also keeps the dynamics of the propagation, to compute its states between the steps at the accuracy of the integrator.
 
 | Member | Description |
 |--------|-------------|
 | `Segments` | Read-only list of `PropagationSegment` objects |
 | `StateVectors` | Output state vectors at the requested cadence |
-| `InterpolateAt(Time epoch)` | Dense-output interpolation at any epoch within the solution window; returns `(Vector3 position, Vector3 velocity)` |
+| `InterpolateAt(Time epoch)` | State at any epoch within the solution window; returns `(Vector3 position, Vector3 velocity)`. RK7(8): a shortened RK7(8) step from the start of the accepted step (13 force evaluations inside a step, none at a boundary); Velocity-Verlet: cubic Hermite interpolation. At a maneuver, the state after it |
 
 When conjunction assessment follows propagation, pass `PropagationSolution` directly to the SSA overloads to reuse the dense output.
 

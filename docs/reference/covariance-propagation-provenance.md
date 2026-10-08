@@ -127,7 +127,7 @@ them are merged.
 |------------|-----|-----------|-----------------|
 | Linear propagation of the covariance | A, C | Pending | Validity domain to be measured against Monte Carlo (F3) |
 | Open-loop impulsive maneuvers: nominal delta-V, no derivative of the firing time | A | Chaining row above: `∂x⁺/∂x⁻ = I` | To be measured (F1) |
-| At an event, Φ, Ψ and `Q` come from a shortened step to the event epoch, while the trajectory restarts from the cubic Hermite interpolation of the propagator | A | [#363](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/363) | At the maneuver of the test case (123.5 s step), the two states differ by 7.5 m and 1.1 cm/s; second order on Φ |
+| At an event, Φ, Ψ and `Q` come from a shortened step to the event epoch, and the trajectory restarts from the state of the same shortened step (fixed by [#363](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/363); the trajectory used to restart from the cubic Hermite interpolation, 7.5 m and 1.1 cm/s away at the maneuver of the test case) | A | Chaining row above | None: the same doubles, and the event time on the 100 ns grid of the epochs, so Y and `Q` are continuous bit for bit (`VariationalPropagationTests.AtAManeuver_PhiIsContinuous_AndTheBurnIsRecorded`, `Rk78OutputAccuracyTests.AManeuverAtPerigee_IsLocatedAndRestartedOnTheIntegratedTrajectory`) |
 | Derivative of the shadow function neglected in SRP, albedo and thermal partials | B | Pending | Penumbra effect to be measured (F1) |
 | Atmospheric density gradient by finite differences, constant space weather | B | Pending | To be measured (B7) |
 | Cartesian covariance in the inertial frame of propagation; RTN by pure rotation | C | See the RTN row above | Not applicable |

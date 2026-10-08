@@ -13,6 +13,7 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 | `Frame.OrientationCache` | **No** | Propagator sets/clears an unsynchronized cache on the central body's `Frame` |
 | Third-body perturbation bodies (Sun, Moon, etc.) | Yes | Stateless — safe to share |
 | `Nrlmsise00Model` | Yes | Thread-safe atmospheric model |
+| `PropagationSolution.InterpolateAt` of an RK7(8) solution | Serialized per solution | Evaluates the forces of the propagation (a shortened RK7(8) step) under a lock of the solution. Like a propagation, it must not run concurrently with another propagation or RK7(8) solution that shares a `CelestialBody` with a geopotential |
 
 ## Per-Task CelestialBody Pattern
 

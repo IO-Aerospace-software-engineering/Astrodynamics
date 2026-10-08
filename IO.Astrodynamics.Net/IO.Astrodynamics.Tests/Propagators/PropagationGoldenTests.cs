@@ -28,9 +28,11 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <remarks>
 /// <para>
 /// Captured on <c>main</c> before the force partial derivatives and the variational equations of phase 2, feature 1
-/// (lots B and A), which must not move a single bit of the trajectory. A golden holds on one platform only (the
-/// mathematical library differs between operating systems), so the test is in the <c>Validation</c> category, which
-/// the CI runs on Linux only.
+/// (lots B and A), which must not move a single bit of the trajectory. Recaptured with the fix of #363: the output
+/// states, and the event and restart of a maneuver, come from shortened RK7(8) steps instead of a cubic Hermite
+/// interpolation. The accepted steps before the maneuver did not move; the output states moved by up to 13 m, 77 m and
+/// 63 m, and the maneuver by 99 µs. A golden holds on one platform only (the mathematical library differs between
+/// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>
 /// <para>
 /// The cases avoid two known defects, so that fixing them does not invalidate the golden: SRP is zero when the Sun is
