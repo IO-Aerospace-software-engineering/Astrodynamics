@@ -613,7 +613,41 @@ public static class ConjunctionAssessment
         }
 
         var distinctCandidates = DistinctEpochs(candidateEpochs, toleranceSeconds);
-        return SelectLocalMinimumEpochs(distinctCandidates, protectedSource, secondarySource, toleranceSeconds);
+        var minima = SelectLocalMinimumEpochs(distinctCandidates, protectedSource, secondarySource, toleranceSeconds);
+        return RefineOnStates(minima, distinctCandidates, protectedSource, secondarySource, toleranceSeconds);
+    }
+
+    // The polynomial search locates each minimum on the cubic Hermite interpolation of the positions, which is off by up
+    // to about 100 m between the steps of an RK7(8) propagation (#363). Each minimum is moved to the zero of the range
+    // rate of the states of the sources, between the candidates next to it, as the sampled search does; a minimum that
+    // the states do not bracket (at a window boundary) is kept.
+    private static List<Time> RefineOnStates(
+        List<Time> minima,
+        List<Time> candidates,
+        StateSamplingSource protectedSource,
+        StateSamplingSource secondarySource,
+        double toleranceSeconds)
+    {
+        var refined = new List<Time>(minima.Count);
+        foreach (var minimum in minima)
+        {
+            int index = candidates.IndexOf(minimum);
+            var tca = minimum;
+            if (index > 0 && index < candidates.Count - 1)
+            {
+                var left = candidates[index - 1];
+                var right = candidates[index + 1];
+                if (EvaluateRangeRate(protectedSource, secondarySource, left) < 0.0 &&
+                    EvaluateRangeRate(protectedSource, secondarySource, right) >= 0.0)
+                {
+                    tca = BisectForZero(protectedSource, secondarySource, left, right, toleranceSeconds);
+                }
+            }
+
+            AddDistinctEpoch(refined, tca, toleranceSeconds);
+        }
+
+        return refined;
     }
 
     private static double EvaluateRangeRate(
