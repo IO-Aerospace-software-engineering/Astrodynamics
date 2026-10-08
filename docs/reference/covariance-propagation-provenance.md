@@ -36,6 +36,8 @@ this page is a defect.
 | Step-size control (A2): on the state only by default; with `IncludeInStepControl`, the embedded error of `Y`, each column scaled by the initial perturbation it stands for (`|r0|`, `|v0|`, or `|p|`, 1 when `p = 0`), joins the component norm of the state | `RK78Integrator`, `VariationalEquations.ScaledError`, `RK78Integrator.ScaledComponentError` | Hipparchus, `AdaptiveStepsizeIntegrator` (Javadoc: only the primary part of the state controls the step) and `DormandPrince853Integrator.estimateError` (loop over the main set only), read in the source of the `master` branch on 2026-10-07. Component norm: E. Hairer, S. P. Nørsett, G. Wanner, *Solving Ordinary Differential Equations I*, Springer, section II.4, equation (4.11). | `PropagationGoldenTests.Rk78PropagationWithTheVariationalEquations_IsBitIdenticalToGolden`; `VariationalPropagationTests.WithTheVariationalEquations_TheTrajectoryIsBitIdentical`; `VariationalEquationsTests.ScaledError_IsTheStateErrorOfTheScaledUnitStates`; `VariationalPropagationTests.IncludeInStepControl_AddsTheErrorOfYToTheAdaptiveControlOnly` | Hipparchus: verified on the source. Hairer, Nørsett and Wanner: to be verified by S. Guillet. |
 | Values at any epoch (A3): a shortened step of size `t - t_k` from the start of the step that contains `t`, in the context (mass, Cd, Cr) of the segment | `Propagator/Variational/PropagationDynamics.cs`, `PropagationDynamics.Evaluate`, `PropagationDynamics.ShortenedStep`; `PropagationSolution.EvaluateVariational` | The discretization of the row above, with `h = t - t_k`. | `VariationalPropagationTests.AFullShortenedStep_ReproducesTheStoredValuesAndState_BitForBit`; `VariationalPropagationTests.InsideAStep_MatchesAPropagationThatStopsThere` (identical) | Not applicable. |
 | Chaining across segments (A5): `Φ(t, t0) = Φ(t, te) Φ(te, t0)`, `Ψ(t, t0) = Φ(t, te) Ψ(te, t0) + Ψ(t, te)`, `Q(t, t0) = Φ(t, te) Q(te, t0) Φ(t, te)ᵀ + Q(t, te)`; at an impulsive maneuver, open loop, the values at `te` from a shortened step become the entry values of the next segment | `VariationalEquations.Compose`; `PropagatorBase.Propagate` | Derivation: the variational equations are linear, so their solution from `t0` is the solution from `te` applied to the values at `te`; the noise after `te` is independent of the state at `te`. An impulse fixed in epoch and in ΔV gives `∂x⁺/∂x⁻ = I`. | `VariationalPropagationTests.Composition_MatchesAnIndependentPropagationFromAnIntermediateEpoch` (Φ 2e-14, `Q` 2e-11, tolerance 1e-10); `VariationalPropagationTests.AtAManeuver_PhiIsContinuous_AndTheBurnIsRecorded` | Derivation checked by the listed tests. |
+| Reference of the tests, Keplerian STM: the closed-form two-body solution `r = f r0 + g v0`, `v = ḟ r0 + ġ v0`, with the Lagrange coefficients in universal variables and the Stumpff functions `c2`, `c3`; `Φ` is its gradient, by forward-mode automatic differentiation, and the root of the universal Kepler equation carries its derivative through one Newton step in dual arithmetic (implicit function theorem) | Test project, `KeplerianStm`, `Dual` | Universal variables: W. H. Goodyear, "Completely general closed-form solution for coordinates and partial derivatives of the two-body problem", *Astronomical Journal* 70, 189, 1965; D. A. Vallado, *Fundamentals of Astrodynamics and Applications*, 4th edition, Microcosm Press, 2013, algorithm 8; R. R. Bate, D. D. Mueller, J. E. White, *Fundamentals of Astrodynamics*, Dover, 1971, sections 4.4 and 4.5. Compared, without copying code, with hapsira 0.18.0 (MIT license), `core/propagation/vallado.py` and `_math/special.py`. Automatic differentiation: A. Griewank, A. Walther, *Evaluating Derivatives*, 2nd edition, SIAM, 2008, chapter 3. | `KeplerianStmTests`: state against the two-body propagation of the library through the Keplerian elements, 60 s to 1 day (2.2e-14 at most, tolerance 1e-12); Φ against central differences of the closed form (6.6e-10 to 7.4e-9, tolerance 1e-7), including a circular orbit; composition (2.3e-13, tolerance 1e-11); symplectic defect relative to `‖Φ‖²` (3.7e-16 at most, tolerance 1e-14) and determinant (1.3e-12 at most, tolerance 1e-11) | hapsira: compared on the source (2026-10-08). Goodyear, Vallado, Bate, Mueller and White, Griewank and Walther: to be verified by S. Guillet. |
+| Structural properties (F2): the flow of a Hamiltonian system is symplectic, `ΦᵀJΦ = J`, `J = [[0, I], [-I, 0]]`, with `det Φ = 1`; the two-body, geopotential and third-body accelerations derive from a potential | Test project, `StructuralPropertiesTests`, `StmMeasures` | V. I. Arnold, *Mathematical Methods of Classical Mechanics*, 2nd edition, Springer, 1989, section 16 (Liouville's theorem) and chapter 8 (Hamiltonian phase flows preserve the symplectic structure). Departure of the integrated `Φ`, derived: `d(ΦᵀJΦ)/dt = Φᵀ (AᵀJ + JA) Φ` with `AᵀJ + JA = [[G - Gᵀ, D], [-Dᵀ, 0]]`, so for a conservative force (`D = 0`) only the asymmetry of `G` and the RK step map, which is not symplectic, move it. Canonical units, derived: with `S = diag(I / L, (T / L) I)`, `S J S = (T / L²) J`, so the property holds for `S Φ S⁻¹`. | See the [structural properties](#structural-properties-f2) below | Arnold: to be verified by S. Guillet. Derivations checked by the measurements below. |
 
 ## Finite-Difference Steps
 
@@ -76,6 +78,45 @@ estimate below 1e-7. These bounds are checked on the four states that chose the 
 guards the plateau against a change of a force, not the choice of the step itself. All four states are in sunlight;
 the penumbra, where the shadow function makes the SRP, albedo and thermal partials large and only continuous at its
 edges, is measured with the analytic SRP partials (step 5b) and in the validation of the state transition matrix (F1).
+
+## Structural Properties (F2)
+
+`StructuralPropertiesTests` checks the state transition matrix integrated by RK7(8) on the reference cases R1 to R5
+of the specification (`ReferenceCases`, 2021-03-20 12:00 UTC), without drag and SRP, so that the dynamics are
+conservative. `Φ` is measured in canonical units, with the initial radius and the matching time unit, at the end of
+the arc: one day, two revolutions for R5. The values below are from Linux, .NET 10, 2026-10-08, identical in Debug and
+Release.
+
+On R1 (two-body, LEO 700 km), every defect decreases with the tolerance, so it is the error of the integration:
+
+| Tolerance | `‖ΦᵀJΦ - J‖` | `|det Φ - 1|` | `Φ` against the Keplerian STM (worst 3×3 block) |
+|-----------|--------------|---------------|--------------------------------------------------|
+| 1e-9 | 3.0e-7 | 3.8e-8 | 1.2e-7 |
+| 1e-11 | 2.8e-9 | 2.6e-10 | 9.9e-10 |
+| 1e-13 | 2.1e-10 | 4.8e-11 | 8.2e-12 |
+
+The tests run at 1e-13, the tolerance of the reference propagations of F1, and assert the thresholds of the
+specification: below 1e-9 for the symplectic defect, the determinant and the Keplerian error (also checked at a
+quarter and half of the day: 6.3e-13 and 2.2e-12).
+
+The geopotential partials are central differences until step 5a, asymmetric by 2.1e-11 (R2) and 5.6e-11 (R5) of
+`G`, against zero for the point mass. That asymmetry dominates the symplectic defect of the cases with a geopotential,
+which therefore wait for the analytic partials of step 5a; the tests check the third bodies around a point-mass Earth:
+
+| Case | Geopotential and third bodies | Geopotential only | Point-mass Earth and third bodies (tested) | `|det Φ - 1|`, point-mass Earth |
+|------|-------------------------------|-------------------|---------------------------------------------|---------------------------------|
+| R2, LEO 400 km, Sun, Moon | 5.5e-8 | 1.7e-7 | 1.9e-10 | 5.9e-11 |
+| R3, SSO 700 km, Sun, Moon | 1.1e-7 | 8.7e-8 | 1.5e-10 | 2.0e-12 |
+| R4, GEO, Sun, Moon, planets, EGM2008 70×70 | 2.2e-9 | 3.6e-9 | 4.3e-12 | 2.8e-13 |
+| R5, HEO 300 × 36 000 km, Sun, Moon | 1.1e-7 | 3.3e-8 | 1.1e-9 | 8.7e-11 |
+
+The determinant stays below 1e-9 in every case, the geopotential included (2.3e-10 at most).
+
+R5 is checked relative to `‖Φ‖²` (decision of S. Guillet, 2026-10-08). After two revolutions, `‖Φ‖ = 2.7e3` in
+canonical units, and the defect is 1.05e-9, 1.09e-9 and 2.3e-9 at the tolerances 1e-12, 1e-13 and 1e-14: it no
+longer decreases with the tolerance. Relative to `‖Φ‖²` it is 1.5e-16, the rounding of double precision, so the test
+asserts `‖ΦᵀJΦ - J‖ / ‖Φ‖² < 1e-14`. The other cases keep the absolute threshold; relative to `‖Φ‖²` they are at
+5.4e-16 (R2), 4.9e-16 (R3) and 3.0e-15 (R4).
 
 ## Modeling Assumptions
 
