@@ -98,7 +98,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
         }
 
         // Assert
-        double error = WorstBlockError(phi, expected);
+        double error = StmMeasures.WorstBlockError(phi, expected);
         _output.WriteLine($"heliocentric Φ against central differences of propagations: {error:E2} (worst 3×3 block)");
         Assert.True(error < 1e-6, $"Φ: {error:E2}");
     }
@@ -120,7 +120,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
 
         // Assert
         Assert.Equal(Stars.SUN_BODY.NaifId, ((CelestialItem)fromBarycentre.Dynamics.Observer).NaifId);
-        double error = WorstBlockError(Phi(fromBarycentre, end), Phi(fromSun, end));
+        double error = StmMeasures.WorstBlockError(Phi(fromBarycentre, end), Phi(fromSun, end));
         _output.WriteLine($"Φ from the barycentre against Φ from the Sun: {error:E2} (worst 3×3 block)");
         Assert.True(error < 1e-10, $"Φ: {error:E2}");
     }
@@ -169,29 +169,5 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
             _ => v
         };
         return new StateVector(position, velocity, state.Observer, state.Epoch, state.Frame);
-    }
-
-    private static double WorstBlockError(double[] actual, double[] expected)
-    {
-        double worst = 0.0;
-        for (int block = 0; block < 4; block++)
-        {
-            int rowOffset = block < 2 ? 0 : 3;
-            int columnOffset = block % 2 == 0 ? 0 : 3;
-            var a = new double[9];
-            var e = new double[9];
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    a[3 * i + j] = actual[6 * (rowOffset + i) + columnOffset + j];
-                    e[3 * i + j] = expected[6 * (rowOffset + i) + columnOffset + j];
-                }
-            }
-
-            worst = System.Math.Max(worst, RiddersDerivative.RelativeFrobeniusError(a, e));
-        }
-
-        return worst;
     }
 }
