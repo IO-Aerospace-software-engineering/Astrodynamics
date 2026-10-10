@@ -139,7 +139,7 @@ public sealed class ReferenceCases
 
     /// <summary>
     /// The conservative variant of <paramref name="referenceCase"/> around a point-mass Earth: the same state and third
-    /// bodies, without the geopotential, whose partials are central differences until step 5a.
+    /// bodies, without the geopotential.
     /// </summary>
     internal ReferenceCase WithPointMassEarth(ReferenceCase referenceCase)
     {

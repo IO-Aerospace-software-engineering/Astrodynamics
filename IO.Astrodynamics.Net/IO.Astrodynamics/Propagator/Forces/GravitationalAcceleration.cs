@@ -30,18 +30,30 @@ public class GravitationalAcceleration : ForceBase
     internal override bool DependsOnVelocity => false;
 
     /// <summary>
-    /// Analytic point-mass partials when the field of the body has them; otherwise (geopotential, until phase 2,
-    /// step 5a) the default central differences.
+    /// For a geopotential, the highest degree of the partials of its harmonics; null (the default) for the degree of
+    /// the field, which then gives the partials of the acceleration itself.
     /// </summary>
     /// <remarks>
-    /// For a state relative to the body, the propagator's case, the analytic path allocates nothing. For a state
-    /// relative to another observer, the state relative to the body is built as in <see cref="Apply(StateVector)"/>: one
+    /// A degree above that of the field is that of the field; without a geopotential the degree is ignored. Set by the
+    /// propagator from the variational options.
+    /// </remarks>
+    internal int? PartialsDegree { get; set; }
+
+    /// <summary>
+    /// Analytic partials when the field of the body has them: the point mass (B2), and the geopotential by the
+    /// Cunningham recursion (B3); otherwise the default central differences.
+    /// </summary>
+    /// <remarks>
+    /// For a state relative to the body, the propagator's case, the point-mass path allocates nothing, and the
+    /// geopotential path only the orientation records of its rotation to the body-fixed frame. For a state relative to
+    /// another observer, the state relative to the body is built as in <see cref="Apply(StateVector)"/>: one
     /// <see cref="StateVector"/> from the ephemeris cache, or a SPICE call without it.
     /// </remarks>
     private protected override void AccumulateStatePartialsCore(StateVector stateVector,
         in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)
     {
-        if (!CelestialItem.TryAccumulateGravitationalPositionPartials(RelativeToBodyFromCache(stateVector), dadr))
+        if (!CelestialItem.TryAccumulateGravitationalPositionPartials(RelativeToBodyFromCache(stateVector), dadr,
+                PartialsDegree))
         {
             base.AccumulateStatePartialsCore(stateVector, context, dadr, dadv);
         }

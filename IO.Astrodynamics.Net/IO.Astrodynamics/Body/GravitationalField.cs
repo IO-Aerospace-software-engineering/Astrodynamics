@@ -36,8 +36,11 @@ public class GravitationalField
     /// </remarks>
     /// <param name="stateVector">The state, relative to the attracting body.</param>
     /// <param name="dadr">3×3 row-major block the partials are added to, in 1/s², in the frame of the state.</param>
+    /// <param name="partialsDegree">For a field with harmonics, the highest degree of their partials, or null for the
+    /// degree of the field; ignored by the point mass.</param>
     /// <returns>Whether the partials were added.</returns>
-    internal virtual bool TryAccumulatePositionPartials(StateVector stateVector, Span<double> dadr)
+    internal virtual bool TryAccumulatePositionPartials(StateVector stateVector, Span<double> dadr,
+        int? partialsDegree = null)
     {
         if (GetType() != typeof(GravitationalField))
         {

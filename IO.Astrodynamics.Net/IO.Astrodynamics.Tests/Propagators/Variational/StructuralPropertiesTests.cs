@@ -26,10 +26,9 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// How the integrated Φ departs from it, derived: with A = [[0, I], [G, D]], d(ΦᵀJΦ)/dt = Φᵀ (AᵀJ + JA) Φ and
 /// AᵀJ + JA = [[G − Gᵀ, D], [−Dᵀ, 0]]. For a conservative force D = 0, so the defect grows only through the asymmetry
 /// of G, integrated with the position rows of Φ on both sides, and through the RK step map, which is not symplectic.
-/// The point-mass and third-body partials (B2, B4) are symmetric; the geopotential partials are central differences
-/// until step 5a, asymmetric by 2e-11 to 6e-11 of G, which puts the geopotential cases at 2e-9 to 2e-7 after a day.
-/// Those cases are measured in the PR of step 4 and tested with the analytic partials of step 5a; the cases here have
-/// a point-mass Earth.
+/// The point-mass, third-body and geopotential partials (B2, B4, B3) are symmetric by construction; until step 5a the
+/// geopotential partials were central differences, asymmetric by 2e-11 to 6e-11 of G, which put the geopotential cases
+/// at 2e-9 to 2e-7 after a day. The cases are tested both around a point-mass Earth and with their geopotential.
 /// </para>
 /// <para>
 /// Φ is measured in canonical units (<see cref="StmMeasures.Canonical"/>), with the initial radius and the matching
@@ -119,6 +118,39 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
         double relativeSymplectic = StmMeasures.RelativeSymplecticDefect(canonical);
         double determinant = StmMeasures.DeterminantDefect(canonical);
         _output.WriteLine($"{name}, point-mass Earth and third bodies: ‖ΦᵀJΦ − J‖ = {symplectic:E2} " +
+                          $"({relativeSymplectic:E2} of ‖Φ‖²), |det Φ − 1| = {determinant:E2}");
+        if (relative)
+        {
+            Assert.True(relativeSymplectic < 1e-14, $"relative symplectic defect: {relativeSymplectic:E2}");
+        }
+        else
+        {
+            Assert.True(symplectic < 1e-9, $"symplectic defect: {symplectic:E2}");
+        }
+
+        Assert.True(determinant < 1e-9, $"determinant defect: {determinant:E2}");
+    }
+
+    // The conservative variants of R2 to R5 with their geopotential (EGM2008 10x10, 70x70 for R4): R5 relative to ‖Φ‖²
+    // for the reason given above
+    public static TheoryData<string, bool> GeopotentialCases => PointMassCases;
+
+    [Theory]
+    [MemberData(nameof(GeopotentialCases))]
+    public void GeopotentialAndThirdBodies_PhiIsSymplecticWithUnitDeterminant(string name, bool relative)
+    {
+        // Arrange: the state, geopotential and third bodies of the case, without drag and SRP
+        var referenceCase = _cases[name].Conservative;
+        var solution = Propagate(referenceCase);
+
+        // Act
+        var canonical = CanonicalPhi(referenceCase, solution, referenceCase.InitialState.Epoch + referenceCase.Duration);
+
+        // Assert
+        double symplectic = StmMeasures.SymplecticDefect(canonical);
+        double relativeSymplectic = StmMeasures.RelativeSymplecticDefect(canonical);
+        double determinant = StmMeasures.DeterminantDefect(canonical);
+        _output.WriteLine($"{name}, geopotential and third bodies: ‖ΦᵀJΦ − J‖ = {symplectic:E2} " +
                           $"({relativeSymplectic:E2} of ‖Φ‖²), |det Φ − 1| = {determinant:E2}");
         if (relative)
         {

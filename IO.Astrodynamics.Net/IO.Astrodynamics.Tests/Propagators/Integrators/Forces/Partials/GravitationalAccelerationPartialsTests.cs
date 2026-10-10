@@ -9,8 +9,8 @@ using Xunit.Abstractions;
 namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 
 /// <summary>
-/// Analytic partials of the central-body point mass (B2), against Ridders' reference, and the fallback of the
-/// geopotential to the default central differences.
+/// Analytic partials of the central-body point mass (B2), against Ridders' reference, and the analytic partials of the
+/// geopotential (B3, checked in <see cref="GeopotentialPartialsTests"/>) through the force.
 /// </summary>
 public class GravitationalAccelerationPartialsTests : IClassFixture<PartialsTestCases>
 {
@@ -91,38 +91,30 @@ public class GravitationalAccelerationPartialsTests : IClassFixture<PartialsTest
 
     [Theory]
     [MemberData(nameof(States))]
-    public void Geopotential_FallsBackToTheDefaultCentralDifferences(string stateName)
+    public void Geopotential_UsesTheAnalyticPartialsOfTheField_AtTheDegreeOfTheForce(string stateName)
     {
-        // Arrange
-        var state = PartialsTestCases.State(stateName, _cases.EarthWithGeopotential);
-        var force = new GravitationalAcceleration(_cases.EarthWithGeopotential);
-        var expected = new double[9];
-        force.AccumulateStatePartialsByCentralDifferences(state, Context, expected, new double[9],
-            ForceBase.DefaultPositionRelativeStep, ForceBase.DefaultVelocityRelativeStep);
-        var dadr = new double[9];
+        // Arrange: the Cunningham partials themselves are checked in GeopotentialPartialsTests
+        var earth = _cases.EarthWithGeopotential;
+        var state = PartialsTestCases.State(stateName, earth);
+        var full = new GravitationalAcceleration(earth);
+        var reduced = new GravitationalAcceleration(earth) { PartialsDegree = 4 };
+        var expectedFull = new double[9];
+        var expectedReduced = new double[9];
+        earth.TryAccumulateGravitationalPositionPartials(state, expectedFull);
+        earth.TryAccumulateGravitationalPositionPartials(state, expectedReduced, 4);
+        var dadrFull = new double[9];
+        var dadrReduced = new double[9];
         var dadv = new double[9];
 
         // Act
-        force.AccumulateStatePartials(state, Context, dadr, dadv);
+        full.AccumulateStatePartials(state, Context, dadrFull, dadv);
+        reduced.AccumulateStatePartials(state, Context, dadrReduced, dadv);
 
         // Assert
-        Assert.Equal(expected, dadr);
+        Assert.Equal(expectedFull, dadrFull);
+        Assert.Equal(expectedReduced, dadrReduced);
+        Assert.NotEqual(dadrFull, dadrReduced);
         Assert.All(dadv, x => Assert.Equal(0.0, x));
-    }
-
-    [Fact]
-    public void Geopotential_HasNoAnalyticPartialsAndLeavesTheBufferUntouched()
-    {
-        // Arrange
-        var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.EarthWithGeopotential);
-        var dadr = Enumerable.Repeat(3.0, 9).ToArray();
-
-        // Act
-        bool added = _cases.EarthWithGeopotential.TryAccumulateGravitationalPositionPartials(state, dadr);
-
-        // Assert
-        Assert.False(added);
-        Assert.All(dadr, x => Assert.Equal(3.0, x));
     }
 
     [Fact]
