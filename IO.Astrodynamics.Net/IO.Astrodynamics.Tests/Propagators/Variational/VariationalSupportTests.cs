@@ -97,10 +97,12 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
             }
         }
 
-        // Assert
+        // Assert: measured 6.6e-9 (Linux, .NET 10, 2026-10-10), the size of the rounding estimated above; the threshold of
+        // the two-body case (VariationalPropagationTests.TwoBody_PhiMatchesCentralDifferencesOfWholePropagations, 9.1e-9
+        // measured), 15 times the measurement
         double error = StmMeasures.WorstBlockError(phi, expected);
         _output.WriteLine($"heliocentric Φ against central differences of propagations: {error:E2} (worst 3×3 block)");
-        Assert.True(error < 1e-6, $"Φ: {error:E2}");
+        Assert.True(error < 1e-7, $"Φ: {error:E2}");
     }
 
     [Fact]

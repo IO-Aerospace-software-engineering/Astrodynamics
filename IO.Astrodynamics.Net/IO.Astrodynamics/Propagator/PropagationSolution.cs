@@ -87,6 +87,8 @@ public sealed class PropagationSolution
     /// <param name="q">Q, 21 values, or empty without process noise.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not integrate the variational equations.</exception>
+    /// <exception cref="ArgumentException"><paramref name="y"/> or <paramref name="q"/> does not have the length of the
+    /// propagation's options.</exception>
     internal void EvaluateVariational(Time epoch, Span<double> y, Span<double> q)
     {
         if (_segments.Count == 0)
