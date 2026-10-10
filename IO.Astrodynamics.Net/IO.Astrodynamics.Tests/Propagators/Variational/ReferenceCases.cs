@@ -157,6 +157,27 @@ public sealed class ReferenceCases
         };
     }
 
+    /// <summary>
+    /// The two-body variant of <paramref name="referenceCase"/>: the same state around a point-mass Earth, without third
+    /// bodies, drag or SRP, so that the closed-form Keplerian STM is its exact Φ.
+    /// </summary>
+    internal ReferenceCase TwoBody(ReferenceCase referenceCase)
+    {
+        return WithPointMassEarth(referenceCase) with
+        {
+            Name = referenceCase.Name + " two-body", Bodies = new CelestialItem[] { _pointMassEarth }
+        };
+    }
+
+    /// <summary>
+    /// The conservative variant of <paramref name="referenceCase"/> without its third bodies: the geopotential of its
+    /// Earth only.
+    /// </summary>
+    internal static ReferenceCase GeopotentialOnly(ReferenceCase referenceCase)
+    {
+        return referenceCase.Conservative with { Bodies = new[] { referenceCase.Bodies[0] } };
+    }
+
     private static CelestialBody Earth(ushort degree, bool atmosphere)
     {
         var geopotential = new GeopotentialModelParameters(GeopotentialModel, degree);
