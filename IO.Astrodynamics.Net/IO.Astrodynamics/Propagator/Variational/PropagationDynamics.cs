@@ -98,9 +98,21 @@ internal sealed class PropagationDynamics
     /// <paramref name="segment"/>.
     /// </summary>
     /// <exception cref="InvalidOperationException">The segment holds no variational data.</exception>
+    /// <exception cref="ArgumentException"><paramref name="y"/> does not hold 6n values, or <paramref name="q"/> does
+    /// not hold 21 values with process noise and none without.</exception>
     internal void Evaluate(PropagationSegment segment, double t, Span<double> y, Span<double> q)
     {
         var data = VariationalData(segment);
+        if (y.Length != _evaluationEquations.YLength)
+            throw new ArgumentException(
+                $"Y holds {_evaluationEquations.YLength} values (6 × {_evaluationEquations.ColumnCount}); got {y.Length}.",
+                nameof(y));
+        if (q.Length != _segmentQ.Length)
+            throw new ArgumentException(
+                _segmentQ.Length == 0
+                    ? $"Q must be empty without process noise; got {q.Length} values."
+                    : $"Q holds {_segmentQ.Length} values with process noise; got {q.Length}.", nameof(q));
+
         lock (_lock)
         {
             SegmentValues(segment, data, t, _segmentY, _segmentQ);

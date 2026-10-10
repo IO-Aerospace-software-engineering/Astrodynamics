@@ -28,8 +28,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// of G, integrated with the position rows of Φ on both sides, and through the RK step map, which is not symplectic.
 /// The point-mass and third-body partials (B2, B4) are symmetric; the geopotential partials are central differences
 /// until step 5a, asymmetric by 2e-11 to 6e-11 of G, which puts the geopotential cases at 2e-9 to 2e-7 after a day.
-/// Those cases are measured in the PR of step 4 and tested with the analytic partials of step 5a; the cases here have
-/// a point-mass Earth.
+/// Their determinant is asserted here, and their symplectic defect is written to the output, measured but not asserted
+/// until the analytic partials of step 5a; the symplectic defect is asserted on the cases with a point-mass Earth.
 /// </para>
 /// <para>
 /// Φ is measured in canonical units (<see cref="StmMeasures.Canonical"/>), with the initial radius and the matching
@@ -39,8 +39,9 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
 {
     // The tolerance of the reference propagations of F1 in the specification. The defects decrease with it, so they are
-    // the error of the integration: on R1 after a day, symplectic defect 3.0e-7, 2.8e-9 and 2.1e-10, determinant defect
-    // 3.8e-8, 2.6e-10 and 4.8e-11, Keplerian error 1.2e-7, 9.9e-10 and 8.2e-12, at 1e-9, 1e-11 and 1e-13
+    // the error of the integration (R1_DefectsDecreaseWithTheTolerance): on R1 after a day, symplectic defect 3.0e-7,
+    // 2.8e-9 and 2.1e-10, determinant defect 3.8e-8, 2.6e-10 and 4.8e-11, Keplerian error 1.2e-7, 9.9e-10 and 8.2e-12,
+    // at 1e-9, 1e-11 and 1e-13
     private const double Tolerance = 1e-13;
 
     private readonly ReferenceCases _cases;
@@ -58,6 +59,13 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
     public static TheoryData<string, bool> PointMassCases => new()
     {
         { "R2", false }, { "R3", false }, { "R4", false }, { "R5", true }
+    };
+
+    // The conservative geopotential cases of F2, with and without their third bodies
+    public static TheoryData<string, bool> GeopotentialCases => new()
+    {
+        { "R2", true }, { "R3", true }, { "R4", true }, { "R5", true },
+        { "R2", false }, { "R3", false }, { "R4", false }, { "R5", false }
     };
 
     [Fact]
@@ -132,12 +140,114 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
         Assert.True(determinant < 1e-9, $"determinant defect: {determinant:E2}");
     }
 
-    private static PropagationSolution Propagate(ReferenceCase referenceCase)
+    [Fact]
+    public void R5TwoBody_PhiMatchesTheKeplerianStm()
+    {
+        // Arrange: the R5 state around a point-mass Earth, no third body, two revolutions starting at perigee. The step
+        // changes by orders of magnitude along the arc and ‖Φ‖ reaches 2.7e3 in canonical units, where R1 runs at an
+        // almost constant step with a Φ of order 1e2.
+        var referenceCase = _cases.TwoBody(_cases.R5);
+        var start = referenceCase.InitialState;
+        var solution = Propagate(referenceCase);
+
+        // Act and assert: at the apogees and the perigees. Measured 2.7e-14, 7.8e-13, 2.4e-12 and 3.5e-12 (Linux, .NET 10,
+        // 2026-10-10), growing with Φ; the threshold is about three times the largest
+        foreach (double fraction in new[] { 0.25, 0.5, 0.75, 1.0 })
+        {
+            var epoch = fraction < 1.0
+                ? start.Epoch.AddSeconds(fraction * referenceCase.Duration.TotalSeconds)
+                : start.Epoch + referenceCase.Duration;
+            var phi = Phi(solution, epoch);
+            var (_, expected) = KeplerianStm.Propagate(referenceCase.GravitationalParameter, start.Position,
+                start.Velocity, (epoch - start.Epoch).TotalSeconds);
+
+            double error = StmMeasures.WorstBlockError(phi, expected);
+            _output.WriteLine($"R5 two-body at {fraction:F2} of two revolutions: Φ against the Keplerian STM " +
+                              $"{error:E2} (worst 3×3 block)");
+            Assert.True(error < 1e-11, $"Φ at {fraction:F2} of two revolutions: {error:E2}");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(GeopotentialCases))]
+    public void ConservativeGeopotentialCases_HaveUnitDeterminant(string name, bool thirdBodies)
+    {
+        // Arrange: the case without drag and SRP, with or without its third bodies
+        var referenceCase = thirdBodies ? _cases[name].Conservative : ReferenceCases.GeopotentialOnly(_cases[name]);
+        var solution = Propagate(referenceCase);
+
+        // Act
+        var canonical = CanonicalPhi(referenceCase, solution, referenceCase.InitialState.Epoch + referenceCase.Duration);
+
+        // Assert: the determinant only. The symplectic defect is measured, not asserted, until the analytic partials of
+        // step 5a: the central-difference partials of the geopotential are asymmetric and dominate it.
+        double symplectic = StmMeasures.SymplecticDefect(canonical);
+        double relativeSymplectic = StmMeasures.RelativeSymplecticDefect(canonical);
+        double determinant = StmMeasures.DeterminantDefect(canonical);
+        _output.WriteLine($"{name}, geopotential{(thirdBodies ? " and third bodies" : " only")}: " +
+                          $"‖ΦᵀJΦ − J‖ = {symplectic:E2} ({relativeSymplectic:E2} of ‖Φ‖², not asserted until 5a), " +
+                          $"|det Φ − 1| = {determinant:E2}");
+        Assert.True(determinant < 1e-9, $"determinant defect: {determinant:E2}");
+    }
+
+    [Fact]
+    public void R1_DefectsDecreaseWithTheTolerance()
+    {
+        // Arrange
+        var referenceCase = _cases.R1;
+        var start = referenceCase.InitialState;
+        var end = start.Epoch + referenceCase.Duration;
+        var (_, keplerian) = KeplerianStm.Propagate(referenceCase.GravitationalParameter, start.Position,
+            start.Velocity, referenceCase.Duration.TotalSeconds);
+        var previous = (Symplectic: double.MaxValue, Determinant: double.MaxValue, Keplerian: double.MaxValue);
+
+        foreach (double tolerance in new[] { 1e-9, 1e-11, 1e-13 })
+        {
+            // Act
+            var solution = Propagate(referenceCase, tolerance);
+            var phi = Phi(solution, end);
+            var canonical = CanonicalPhi(referenceCase, solution, end);
+            var current = (StmMeasures.SymplecticDefect(canonical), StmMeasures.DeterminantDefect(canonical),
+                StmMeasures.WorstBlockError(phi, keplerian));
+
+            // Assert: every defect decreases with the tolerance, so it is the error of the integration
+            _output.WriteLine($"R1 at {tolerance:E0}: ‖ΦᵀJΦ − J‖ = {current.Item1:E2}, |det Φ − 1| = {current.Item2:E2}, " +
+                              $"Φ against the Keplerian STM {current.Item3:E2}");
+            Assert.True(current.Item1 < previous.Symplectic, $"symplectic defect at {tolerance:E0}: {current.Item1:E2}");
+            Assert.True(current.Item2 < previous.Determinant,
+                $"determinant defect at {tolerance:E0}: {current.Item2:E2}");
+            Assert.True(current.Item3 < previous.Keplerian, $"Keplerian error at {tolerance:E0}: {current.Item3:E2}");
+            previous = current;
+        }
+    }
+
+    [Fact]
+    public void R5PointMass_RelativeSymplecticDefectIsAtTheRoundingWhateverTheTolerance()
+    {
+        // Arrange
+        var referenceCase = _cases.WithPointMassEarth(_cases.R5);
+        var end = referenceCase.InitialState.Epoch + referenceCase.Duration;
+
+        foreach (double tolerance in new[] { 1e-12, 1e-13, 1e-14 })
+        {
+            // Act
+            var canonical = CanonicalPhi(referenceCase, Propagate(referenceCase, tolerance), end);
+
+            // Assert: the absolute defect no longer decreases with the tolerance; relative to ‖Φ‖² it is the rounding
+            double symplectic = StmMeasures.SymplecticDefect(canonical);
+            double relative = StmMeasures.RelativeSymplecticDefect(canonical);
+            _output.WriteLine($"R5, point-mass Earth and third bodies, at {tolerance:E0}: ‖ΦᵀJΦ − J‖ = " +
+                              $"{symplectic:E2} ({relative:E2} of ‖Φ‖²)");
+            Assert.True(relative < 1e-14, $"relative symplectic defect at {tolerance:E0}: {relative:E2}");
+        }
+    }
+
+    private static PropagationSolution Propagate(ReferenceCase referenceCase, double tolerance = Tolerance)
     {
         var start = referenceCase.InitialState;
         return PartialsTestCases.Spacecraft(start).Propagate(
             new TimeSystem.Window(start.Epoch, start.Epoch + referenceCase.Duration), referenceCase.Bodies,
-            new RK78Integrator(Tolerance, Tolerance), referenceCase.AtmosphericDrag,
+            new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
             referenceCase.SolarRadiationPressure, TimeSpan.FromHours(1.0), new VariationalOptions());
     }
 
