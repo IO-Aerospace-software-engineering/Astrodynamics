@@ -37,7 +37,10 @@
 Each method has two families of overloads:
 
 - **`ILocalizable`** overloads for generic participants. States are sampled from each participant's ephemeris: SPICE data for kernel-backed objects, the stored states of a spacecraft that was already propagated, otherwise the initial orbit (Keplerian, or SGP4 for a TLE).
-- **`PropagationSolution`** overloads when both trajectories were already propagated, reusing dense output. When both trajectories share the observer and the frame, the close approaches are searched on the cubic polynomials of their accepted steps, then each TCA is refined by bisection of the range rate on the states of the trajectories (`PropagationSolution.InterpolateAt`), at the accuracy of the integrator for RK7(8) trajectories.
+- **`PropagationSolution`** overloads when both trajectories were already propagated, reusing dense output. When both trajectories share the observer and the frame, the close approaches are searched on the cubic polynomials of their accepted steps, then each TCA is refined on the range rate of the states of the trajectories (`PropagationSolution.InterpolateAt`), at the accuracy of the integrator for RK7(8) trajectories.
+    - The local minima are selected on the polynomials, which costs no force evaluation. Only the refinement uses the states: inside a step of an RK7(8) trajectory, each state is one RK7(8) step, 13 force evaluations.
+    - The refinement starts from two secants of the range rate near the minimum, each checked by a bracket, then bisects down to one tick (100 ns), the resolution of the epochs; it ends on the same epoch as a bisection between the neighbouring candidates, with about 7 states per trajectory and per minimum instead of about 33. When the secants cannot be checked, it bisects between the neighbouring candidates, moving the bracket at most twice to the next candidate when the minimum on the states lies past one of them.
+    - Cost on two RK7(8) trajectories: for two 400 km LEO trajectories over one day with EGM2008 10×10, the Moon and the Sun at the default tolerance (32 minima), `Analyze` takes 15 to 20 ms, against 8 to 13 ms with the cubic Hermite states of 10.1 and 190 to 200 ms with the first version of the refinement (Release, median of 21 calls after a warm-up, Intel Xeon 2.1 GHz, 4 cores, 2026-10-11).
 
 ## ProtectedSpacecraftProfile
 
@@ -107,7 +110,7 @@ Top-level conjunction result packaging all assessment products.
 | `SampleStep` | 1 min | Coarse search cadence |
 | `MaximumEventSearchStep` | 60 s | Largest interval subdivided while refining the TCA |
 | `SecondaryHardBodyRadiusMeters` | 5 m | Secondary hard-body radius when the object does not expose one |
-| `BisectionToleranceSeconds` | 1e-9 s | TCA refinement tolerance |
+| `BisectionToleranceSeconds` | 1e-9 s | TCA refinement tolerance; the epochs have a resolution of 100 ns, which bounds the refinement below this value |
 | `LowRelativeSpeedThresholdMetersPerSecond` | 1 m/s | Below this relative speed, `LowRelativeVelocityEncounter` is raised |
 | `StaleCovarianceThreshold` | 60 s | Covariance age beyond which `StaleCovarianceUsed` is raised |
 

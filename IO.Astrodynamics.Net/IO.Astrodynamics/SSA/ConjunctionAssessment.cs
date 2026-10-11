@@ -613,34 +613,128 @@ public static class ConjunctionAssessment
         }
 
         var distinctCandidates = DistinctEpochs(candidateEpochs, toleranceSeconds);
-        var minima = SelectLocalMinimumEpochs(distinctCandidates, protectedSource, secondarySource, toleranceSeconds);
-        return RefineOnStates(minima, distinctCandidates, protectedSource, secondarySource, toleranceSeconds);
+
+        // The minima are selected on the polynomials of the stored steps, which costs no force evaluation; only their
+        // refinement uses the states of the sources, which inside a step cost an RK7(8) step each (#363)
+        var minima = SelectLocalMinimumEpochs(distinctCandidates,
+            epoch => (DensePosition(secondaryDense, epoch) - DensePosition(protectedDense, epoch)).MagnitudeSquared(),
+            toleranceSeconds);
+        return RefineOnRangeRate(minima, distinctCandidates,
+            epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch), toleranceSeconds);
     }
 
-    // The polynomial search locates each minimum on the cubic Hermite interpolation of the positions, which is off by up
-    // to about 100 m between the steps of an RK7(8) propagation (#363). Each minimum is moved to the zero of the range
-    // rate of the states of the sources, between the candidates next to it, as the sampled search does; a minimum that
-    // the states do not bracket (at a window boundary) is kept.
-    private static List<Time> RefineOnStates(
-        List<Time> minima,
-        List<Time> candidates,
-        StateSamplingSource protectedSource,
-        StateSamplingSource secondarySource,
+    // The cubic Hermite position of a dense trajectory, from the step that contains the epoch (the earlier one at a
+    // boundary), as the polynomial search sees it
+    private static Vector3 DensePosition(DenseTrajectorySource dense, Time epoch)
+    {
+        var steps = dense.Steps;
+        int lo = 0;
+        int hi = steps.Count - 1;
+        while (lo < hi)
+        {
+            int mid = lo + (hi - lo) / 2;
+            if (epoch > steps[mid].EndEpoch)
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
+
+        var step = steps[lo];
+        return PropagationSegment.HermiteInterpolate(step.Step, (epoch - step.SegmentBaseEpoch).TotalSeconds).position;
+    }
+
+    /// <summary>
+    /// The number of times <see cref="RefineOnRangeRate"/> may move the bracket of a minimum to the next candidate
+    /// before it keeps the minimum as it is.
+    /// </summary>
+    internal const int MaximumBracketWidenings = 2;
+
+    // Base of the secant of the range rate at a minimum of the polynomial search, in s
+    private const double SecantBaseSeconds = 1.0e-3;
+
+    // Half-width of the bracket checked around a secant estimate, in s: ten ticks
+    private const double SecantBracketHalfWidthSeconds = 1.0e-6;
+
+    /// <summary>
+    /// Moves each minimum of the polynomial search to the zero of <paramref name="rangeRate"/>, from negative to
+    /// positive, near it.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The polynomial search locates each minimum on the cubic Hermite interpolation of the positions, which is off by up
+    /// to about 100 m between the steps of an RK7(8) propagation (#363): the TCA is then off by up to milliseconds. The
+    /// range rate comes from the states of the sources, as in the sampled search.
+    /// </para>
+    /// <para>
+    /// The range rate is close to linear near its zero: its relative curvature is of the order of the orbital rate, so
+    /// over a few milliseconds the zero of its secant is within a fraction of a tick (100 ns) of the zero. The secant
+    /// through the minimum and an epoch 1 ms away gives a first estimate, a second secant within ten ticks of it a
+    /// second one, and a bracket of one tick on each side of that is checked before the bisection. Each bracket is
+    /// checked before it is used, and the bisection ends on the bracket one tick wide that contains the change of sign
+    /// on the grid of the epochs, whichever checked bracket it starts from: these estimates take the refinement from
+    /// about 33 evaluations of the states of each source to about 7 without changing the refined TCA.
+    /// </para>
+    /// <para>
+    /// When an estimate cannot be checked, the bisection starts from the candidates next to the minimum. When the
+    /// minimum on the states lies past one of them, the range rate has the wrong sign there; the bracket then moves to
+    /// the next candidate on that side, at most <see cref="MaximumBracketWidenings"/> times in all. A minimum that is
+    /// still not bracketed (at a window boundary) is kept.
+    /// </para>
+    /// </remarks>
+    /// <param name="minima">The minima of the polynomial search, each one of <paramref name="candidates"/>.</param>
+    /// <param name="candidates">The sorted candidate epochs of the polynomial search.</param>
+    /// <param name="rangeRate">The range rate, (r_s − r_p)·(v_s − v_p), at an epoch.</param>
+    /// <param name="toleranceSeconds">Tolerance of the bisection, in s.</param>
+    /// <returns>The refined minima, distinct within the tolerance.</returns>
+    internal static List<Time> RefineOnRangeRate(
+        IReadOnlyList<Time> minima,
+        IReadOnlyList<Time> candidates,
+        Func<Time, double> rangeRate,
         double toleranceSeconds)
     {
         var refined = new List<Time>(minima.Count);
         foreach (var minimum in minima)
         {
-            int index = candidates.IndexOf(minimum);
+            int index = IndexOf(candidates, minimum);
             var tca = minimum;
             if (index > 0 && index < candidates.Count - 1)
             {
-                var left = candidates[index - 1];
-                var right = candidates[index + 1];
-                if (EvaluateRangeRate(protectedSource, secondarySource, left) < 0.0 &&
-                    EvaluateRangeRate(protectedSource, secondarySource, right) >= 0.0)
+                // The estimates may not go further than the widened bracket of the candidates
+                var lowest = candidates[System.Math.Max(index - 1 - MaximumBracketWidenings, 0)];
+                var highest = candidates[System.Math.Min(index + 1 + MaximumBracketWidenings, candidates.Count - 1)];
+                if (TryZeroBySecants(rangeRate, minimum, lowest, highest, toleranceSeconds, out var zero))
                 {
-                    tca = BisectForZero(protectedSource, secondarySource, left, right, toleranceSeconds);
+                    AddDistinctEpoch(refined, zero, toleranceSeconds);
+                    continue;
+                }
+
+                int left = index - 1;
+                int right = index + 1;
+                double leftRate = rangeRate(candidates[left]);
+                double rightRate = rangeRate(candidates[right]);
+                for (int widening = 0;
+                     widening < MaximumBracketWidenings && (leftRate >= 0.0 || rightRate < 0.0);
+                     widening++)
+                {
+                    // Already receding at the left candidate: the minimum lies before it; still closing at the right
+                    // candidate: after it
+                    if (leftRate >= 0.0 && left > 0)
+                    {
+                        leftRate = rangeRate(candidates[--left]);
+                    }
+                    else if (rightRate < 0.0 && right < candidates.Count - 1)
+                    {
+                        rightRate = rangeRate(candidates[++right]);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (leftRate < 0.0 && rightRate >= 0.0)
+                {
+                    tca = BisectForZero(rangeRate, candidates[left], candidates[right], toleranceSeconds);
                 }
             }
 
@@ -648,6 +742,86 @@ public static class ConjunctionAssessment
         }
 
         return refined;
+    }
+
+    // The zero of the range rate near a minimum, by two secants and a checked bracket (RefineOnRangeRate); false when a
+    // secant is undefined or leaves [lowest, highest], or when the bracket around it does not hold the change of sign
+    private static bool TryZeroBySecants(Func<Time, double> rangeRate, Time minimum, Time lowest, Time highest,
+        double toleranceSeconds, out Time zero)
+    {
+        zero = minimum;
+        var secantBase = TimeSpan.FromSeconds(SecantBaseSeconds);
+        if (!TrySecantZero(rangeRate, minimum, minimum + secantBase, lowest, highest, out var estimate))
+        {
+            return false;
+        }
+
+        var halfWidth = TimeSpan.FromSeconds(SecantBracketHalfWidthSeconds);
+        var left = estimate - halfWidth;
+        var right = estimate + halfWidth;
+        if (left <= lowest || right >= highest)
+        {
+            return false;
+        }
+
+        double leftRate = rangeRate(left);
+        double rightRate = rangeRate(right);
+        if (leftRate >= 0.0 || rightRate < 0.0)
+        {
+            return false;
+        }
+
+        // Within the checked bracket, the second secant and the two ticks around it, checked in turn
+        if (TrySecantZero(left, leftRate, right, rightRate, left, right, out var refinedEstimate))
+        {
+            var low = refinedEstimate.AddTicks(-1);
+            var high = refinedEstimate.AddTicks(1);
+            if (low > left && high < right && rangeRate(low) < 0.0 && rangeRate(high) >= 0.0)
+            {
+                zero = BisectForZero(rangeRate, low, high, toleranceSeconds);
+                return true;
+            }
+        }
+
+        zero = BisectForZero(rangeRate, left, right, toleranceSeconds);
+        return true;
+    }
+
+    private static bool TrySecantZero(Func<Time, double> rangeRate, Time first, Time second, Time lowest,
+        Time highest, out Time estimate)
+    {
+        return TrySecantZero(first, rangeRate(first), second, rangeRate(second), lowest, highest, out estimate);
+    }
+
+    private static bool TrySecantZero(Time first, double firstRate, Time second, double secondRate, Time lowest,
+        Time highest, out Time estimate)
+    {
+        estimate = first;
+        double slope = (secondRate - firstRate) / (second - first).TotalSeconds;
+        if (!(slope > 0.0) || double.IsInfinity(slope))
+        {
+            return false;
+        }
+
+        double offset = -firstRate / slope;
+        if (System.Math.Abs(offset) > (highest - lowest).TotalSeconds)
+        {
+            return false;
+        }
+
+        estimate = first + TimeSpan.FromSeconds(offset);
+        return estimate > lowest && estimate < highest;
+    }
+
+    private static int IndexOf(IReadOnlyList<Time> epochs, Time epoch)
+    {
+        for (int i = 0; i < epochs.Count; i++)
+        {
+            if (epochs[i] == epoch)
+                return i;
+        }
+
+        return -1;
     }
 
     private static double EvaluateRangeRate(
@@ -669,6 +843,12 @@ public static class ConjunctionAssessment
         Time tHigh,
         double toleranceSeconds)
     {
+        return BisectForZero(epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch), tLow, tHigh,
+            toleranceSeconds);
+    }
+
+    private static Time BisectForZero(Func<Time, double> rangeRate, Time tLow, Time tHigh, double toleranceSeconds)
+    {
         const int maxIterations = 80;
         for (int i = 0; i < maxIterations; i++)
         {
@@ -679,7 +859,15 @@ public static class ConjunctionAssessment
             }
 
             var tMid = tLow + TimeSpan.FromSeconds(interval * 0.5);
-            double gMid = EvaluateRangeRate(protectedSource, secondarySource, tMid);
+
+            // The epochs have a resolution of 100 ns: once the bracket is one tick wide, the middle rounds to one of its
+            // ends, and every further iteration would evaluate it again without changing the bracket
+            if (tMid == tLow || tMid == tHigh)
+            {
+                break;
+            }
+
+            double gMid = rangeRate(tMid);
 
             if (gMid < 0.0)
             {
@@ -1071,8 +1259,7 @@ public static class ConjunctionAssessment
 
     private static List<Time> SelectLocalMinimumEpochs(
         IReadOnlyList<Time> candidateEpochs,
-        StateSamplingSource protectedSource,
-        StateSamplingSource secondarySource,
+        Func<Time, double> distanceSquared,
         double toleranceSeconds)
     {
         if (candidateEpochs.Count < 2)
@@ -1080,14 +1267,7 @@ public static class ConjunctionAssessment
             return new List<Time>();
         }
 
-        var missDistanceSquared = candidateEpochs
-            .Select(epoch =>
-            {
-                var protectedState = protectedSource.GetState(epoch);
-                var secondaryState = secondarySource.GetState(epoch);
-                return (secondaryState.Position - protectedState.Position).MagnitudeSquared();
-            })
-            .ToArray();
+        var missDistanceSquared = candidateEpochs.Select(distanceSquared).ToArray();
         double comparisonTolerance = System.Math.Max(
             1.0e-6,
             missDistanceSquared.Max(distance => System.Math.Abs(distance)) * 1.0e-12);

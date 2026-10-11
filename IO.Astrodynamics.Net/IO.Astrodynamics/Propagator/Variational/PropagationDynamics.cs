@@ -25,8 +25,10 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// <para>
 /// An evaluation computes a shortened RK7(8) step with <see cref="RK78Stepper"/>, the same code as the integrator, in
 /// the context of the segment (its mass and coefficients), so a step of the full size reproduces the stored values bit
-/// for bit. The orientation cache of the central body frame, cleared at the end of the propagation, is put back for the
-/// duration of the evaluation. Evaluations are serialized by a lock: the stepper and the force partials reuse buffers.
+/// for bit. The orientation cache of the propagation is made active for the central body frame on the evaluating thread
+/// only, for the duration of the evaluation (<see cref="Frame.UseOrientationCache"/>): the shared frame is never
+/// changed, so evaluations of solutions sharing a central body may run concurrently. Evaluations of one solution are
+/// serialized by its lock: the stepper and the force partials reuse buffers.
 /// </para>
 /// </remarks>
 internal sealed class PropagationDynamics
@@ -212,30 +214,20 @@ internal sealed class PropagationDynamics
         ReadOnlySpan<double> yStart = k == 0 ? _identity : data.StepEndY(k - 1);
         ReadOnlySpan<double> qStart = k == 0 ? _zeroCovariance : data.StepEndQ(k - 1);
 
-        var previousCache = PutOrientationCacheBack();
-        try
+        using (Frame.UseOrientationCache(_orientationCacheFrame, _orientationCache))
         {
             var state = Step(segment, context, k, tau);
             _evaluationEquations.Step(_stepper.StageStates, _forces, context, tau, yStart, qStart, y, q);
             return state;
-        }
-        finally
-        {
-            RestoreOrientationCache(previousCache);
         }
     }
 
     private (Vector3 Position, Vector3 Velocity) StateInsideStep(PropagationSegment segment, int k, double tau)
     {
         var context = ContextOf(segment);
-        var previousCache = PutOrientationCacheBack();
-        try
+        using (Frame.UseOrientationCache(_orientationCacheFrame, _orientationCache))
         {
             return Step(segment, context, k, tau);
-        }
-        finally
-        {
-            RestoreOrientationCache(previousCache);
         }
     }
 
@@ -252,25 +244,5 @@ internal sealed class PropagationDynamics
         _stepper.Step(step.StartPosition, step.StartVelocity, segment.BaseEpoch, step.CumulativeTime, tau,
             out var position, out var velocity, out _, out _);
         return (position, velocity);
-    }
-
-    // The orientation cache of the central body frame, cleared at the end of the propagation, put back for an evaluation;
-    // returns the cache it replaces
-    private PropagationFrameOrientationCache PutOrientationCacheBack()
-    {
-        if (_orientationCacheFrame == null || _orientationCache == null)
-            return null;
-
-        var previousCache = _orientationCacheFrame.OrientationCache;
-        _orientationCacheFrame.OrientationCache = _orientationCache;
-        return previousCache;
-    }
-
-    private void RestoreOrientationCache(PropagationFrameOrientationCache previousCache)
-    {
-        if (_orientationCacheFrame != null && _orientationCache != null)
-        {
-            _orientationCacheFrame.OrientationCache = previousCache;
-        }
     }
 }
