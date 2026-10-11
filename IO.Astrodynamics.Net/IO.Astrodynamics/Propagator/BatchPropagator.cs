@@ -37,18 +37,14 @@ namespace IO.Astrodynamics.Propagator;
 /// access from multiple threads causes data races.
 /// </para>
 /// <para>
-/// <b>Frame orientation cache:</b> During propagation, the propagator sets an
-/// <c>OrientationCache</c> on the central body's <c>Frame</c> and clears it on completion.
-/// This cache is a plain property (not synchronized), so sharing the same <c>Frame</c> instance
-/// across concurrent propagations can cause one task to read stale or partially written cache data
-/// from another. When each task uses its own <c>CelestialBody</c> (and therefore its own <c>Frame</c>),
-/// this is not an issue.
+/// <b>Frame orientation cache:</b> The orientation cache of the central body frame is active only on
+/// the thread that runs the propagation, for its duration; the shared <c>Frame</c> is never changed, so
+/// concurrent propagations sharing a central body do not see each other's cache.
 /// </para>
 /// <para>
 /// <b>Recommendation:</b> When using geopotential gravity, create a separate
 /// <see cref="IO.Astrodynamics.Body.CelestialBody"/> instance per task for the central body.
-/// This ensures each task has its own <c>GeopotentialGravitationalField</c> buffers and its own
-/// <c>Frame</c> orientation cache. Third-body perturbation bodies (Sun, Moon, etc.) that do not
+/// This ensures each task has its own <c>GeopotentialGravitationalField</c> buffers. Third-body perturbation bodies (Sun, Moon, etc.) that do not
 /// use geopotential can safely be shared.
 /// </para>
 /// </remarks>

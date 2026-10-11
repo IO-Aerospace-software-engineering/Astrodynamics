@@ -22,11 +22,62 @@ public class Frame : IEquatable<Frame>
     protected ConcurrentDictionary<Time, StateOrientation> _stateOrientationsToICRF = new();
     protected ImmutableSortedDictionary<Time, StateOrientation> StateOrientationsToICRF => _stateOrientationsToICRF.ToImmutableSortedDictionary();
 
+    // The orientation cache active on the current thread, and the frame it belongs to (FrameOrientationCacheScope)
+    [ThreadStatic] private static Frame _cachedFrame;
+    [ThreadStatic] private static PropagationFrameOrientationCache _activeCache;
+
     /// <summary>
-    /// Optional pre-computed orientation cache for avoiding SPICE calls during propagation.
-    /// Set by the propagator before integration begins; cleared after propagation completes.
+    /// The pre-computed orientation cache that replaces the SPICE calls of this frame on the current thread, or null.
     /// </summary>
-    internal PropagationFrameOrientationCache OrientationCache { get; set; }
+    /// <remarks>
+    /// Active only on the thread that propagates or evaluates a propagation, for its duration
+    /// (<see cref="FrameOrientationCacheScope"/>): the cache never sits on the shared <see cref="Frame"/> instance, so
+    /// concurrent propagations and evaluations that share a central body do not see each other's cache.
+    /// </remarks>
+    internal PropagationFrameOrientationCache OrientationCache =>
+        ReferenceEquals(_cachedFrame, this) ? _activeCache : null;
+
+    /// <summary>
+    /// Make <paramref name="cache"/> the orientation cache of <paramref name="frame"/> on the current thread until the
+    /// returned scope is disposed, which restores the previous one. A null frame or cache leaves the thread unchanged.
+    /// </summary>
+    internal static FrameOrientationCacheScope UseOrientationCache(Frame frame, PropagationFrameOrientationCache cache)
+    {
+        if (frame == null || cache == null)
+        {
+            return default;
+        }
+
+        var scope = new FrameOrientationCacheScope(_cachedFrame, _activeCache);
+        _cachedFrame = frame;
+        _activeCache = cache;
+        return scope;
+    }
+
+    /// <summary>
+    /// The orientation cache of a frame on the current thread, restored when disposed. A value type, so entering and
+    /// leaving a scope allocates nothing.
+    /// </summary>
+    internal readonly struct FrameOrientationCacheScope : IDisposable
+    {
+        private readonly bool _active;
+        private readonly Frame _previousFrame;
+        private readonly PropagationFrameOrientationCache _previousCache;
+
+        internal FrameOrientationCacheScope(Frame previousFrame, PropagationFrameOrientationCache previousCache)
+        {
+            _active = true;
+            _previousFrame = previousFrame;
+            _previousCache = previousCache;
+        }
+
+        public void Dispose()
+        {
+            if (!_active) return;
+            _cachedFrame = _previousFrame;
+            _activeCache = _previousCache;
+        }
+    }
 
     /// <summary>
     /// International Celestial Reference Frame (ICRF), built on the SPICE frame <c>J2000</c>.

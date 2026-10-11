@@ -135,21 +135,72 @@ public class PropagationFrameOrientationCacheTests
         // Get direct result first (no cache)
         var directResult = earth.Frame.GetStateOrientationToICRF(start.AddSeconds(30));
 
-        // Inject cache
+        // Make the cache active on this thread
         var cache = new PropagationFrameOrientationCache(window, earth.Frame, TimeSpan.FromSeconds(60));
-        earth.Frame.OrientationCache = cache;
-
-        try
+        using (Frames.Frame.UseOrientationCache(earth.Frame, cache))
         {
             // Should now go through cache
+            Assert.Same(cache, earth.Frame.OrientationCache);
             var cachedResult = earth.Frame.GetStateOrientationToICRF(start.AddSeconds(30));
             AssertQuaternionClose(directResult.Rotation, cachedResult.Rotation, 1e-9);
         }
-        finally
+
+        // Restored when the scope ends
+        Assert.Null(earth.Frame.OrientationCache);
+    }
+
+    [Fact]
+    public void FrameOrientationCache_IsActiveOnTheCurrentThreadOnly_AndForThatFrameInstanceOnly()
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var otherEarth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var start = TimeSystem.Time.J2000TDB;
+        var cache = new PropagationFrameOrientationCache(new Window(start, start.AddSeconds(3600)), earth.Frame,
+            TimeSpan.FromSeconds(60));
+
+        using (Frames.Frame.UseOrientationCache(earth.Frame, cache))
         {
-            // Clean up
-            earth.Frame.OrientationCache = null;
+            PropagationFrameOrientationCache seenFromAnotherThread = cache;
+            var thread = new System.Threading.Thread(() => seenFromAnotherThread = earth.Frame.OrientationCache);
+            thread.Start();
+            thread.Join();
+
+            Assert.Null(seenFromAnotherThread);
+            Assert.Null(otherEarth.Frame.OrientationCache);
+            Assert.Same(cache, earth.Frame.OrientationCache);
         }
+    }
+
+    [Fact]
+    public void FrameOrientationCache_NestedScopes_RestoreTheEnclosingCache()
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var start = TimeSystem.Time.J2000TDB;
+        var window = new Window(start, start.AddSeconds(3600));
+        var earthCache = new PropagationFrameOrientationCache(window, earth.Frame, TimeSpan.FromSeconds(60));
+        var moonCache = new PropagationFrameOrientationCache(window, moon.Frame, TimeSpan.FromSeconds(60));
+
+        using (Frames.Frame.UseOrientationCache(earth.Frame, earthCache))
+        {
+            using (Frames.Frame.UseOrientationCache(moon.Frame, moonCache))
+            {
+                Assert.Same(moonCache, moon.Frame.OrientationCache);
+                Assert.Null(earth.Frame.OrientationCache);
+            }
+
+            // A null frame or cache changes nothing
+            using (Frames.Frame.UseOrientationCache(null, moonCache))
+            using (Frames.Frame.UseOrientationCache(moon.Frame, null))
+            {
+                Assert.Same(earthCache, earth.Frame.OrientationCache);
+            }
+
+            Assert.Same(earthCache, earth.Frame.OrientationCache);
+            Assert.Null(moon.Frame.OrientationCache);
+        }
+
+        Assert.Null(earth.Frame.OrientationCache);
     }
 
     private static void AssertQuaternionClose(Quaternion expected, Quaternion actual, double tolerance)

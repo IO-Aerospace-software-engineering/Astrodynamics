@@ -23,6 +23,9 @@ public class CentralBodyPropagator : PropagatorBase
 {
     private readonly CelestialItem _centralBody;
 
+    // Orientation cache of the central body frame, active on the propagating thread only (Frame.UseOrientationCache)
+    private readonly PropagationFrameOrientationCache _orientationCache;
+
     /// <summary>
     /// Instantiate central-body propagator with a custom integrator.
     /// Forces (gravity, third-body perturbations, drag, SRP) are built automatically from the
@@ -38,7 +41,7 @@ public class CentralBodyPropagator : PropagatorBase
         var forces = BuildCentralBodyForces(_centralBody, items, spacecraft, includeAtmosphericDrag,
             includeSolarRadiationPressure);
         InjectEphemerisCache(Window, forces, items, _centralBody, InitialState.Frame);
-        InjectFrameOrientationCache(Window, _centralBody);
+        _orientationCache = CreateFrameOrientationCache(Window, _centralBody);
         foreach (var force in forces)
         {
             integrator.AddForce(force);
@@ -76,6 +79,7 @@ public class CentralBodyPropagator : PropagatorBase
                 includeAtmosphericDrag, includeSolarRadiationPressure, deltaT),
             deltaT)
     {
+        _orientationCache = CreateFrameOrientationCache(Window, _centralBody);
     }
 
     /// <summary>
@@ -111,7 +115,6 @@ public class CentralBodyPropagator : PropagatorBase
             includeSolarRadiationPressure);
         var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         InjectEphemerisCache(tdbWindow, forces, items, centralBody, initialState.Frame);
-        InjectFrameOrientationCache(tdbWindow, centralBody);
         return new VVIntegrator(forces, deltaT, initialState);
     }
 
@@ -149,13 +152,14 @@ public class CentralBodyPropagator : PropagatorBase
         return forces;
     }
 
-    private static void InjectFrameOrientationCache(Window tdbWindow, CelestialItem centralBody)
+    // The orientation cache of the central body frame over the window, kept by the propagator: it is active only on the
+    // thread that propagates (PropagatorBase.Propagate) or evaluates the solution, never set on the shared Frame
+    private static PropagationFrameOrientationCache CreateFrameOrientationCache(Window tdbWindow,
+        CelestialItem centralBody)
     {
-        if (centralBody is not CelestialBody celestialBody) return;
-
-        var cache = new PropagationFrameOrientationCache(
-            tdbWindow, celestialBody.Frame, TimeSpan.FromSeconds(60));
-        celestialBody.Frame.OrientationCache = cache;
+        return centralBody is CelestialBody celestialBody
+            ? new PropagationFrameOrientationCache(tdbWindow, celestialBody.Frame, TimeSpan.FromSeconds(60))
+            : null;
     }
 
     /// <summary>
@@ -182,17 +186,11 @@ public class CentralBodyPropagator : PropagatorBase
     }
 
     private protected override (Frame Frame, PropagationFrameOrientationCache Cache) OrientationCache =>
-        _centralBody is CelestialBody celestialBody ? (celestialBody.Frame, celestialBody.Frame.OrientationCache) : (null, null);
+        _centralBody is CelestialBody celestialBody ? (celestialBody.Frame, _orientationCache) : (null, null);
 
     protected override void StorePropagatedStates(StateVector[] outputStates)
     {
         // Store CB-relative states directly; conversion to SSB happens on demand
         Spacecraft.AddPropagatedStates(outputStates);
-
-        // Clear frame orientation cache to avoid stale data on shared Frame instances
-        if (_centralBody is CelestialBody cb)
-        {
-            cb.Frame.OrientationCache = null;
-        }
     }
 }

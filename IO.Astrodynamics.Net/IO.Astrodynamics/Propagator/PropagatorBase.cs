@@ -67,12 +67,23 @@ public abstract class PropagatorBase : IPropagator
     }
 
     /// <summary>
-    /// The frame whose orientation cache the propagation uses, and that cache, put back for the evaluations of the
-    /// variational equations after the propagation. None by default.
+    /// The frame whose orientation cache the propagation uses, and that cache, active on the propagating thread during
+    /// the propagation and during the evaluations of its solution after it. None by default.
     /// </summary>
     private protected virtual (Frame Frame, PropagationFrameOrientationCache Cache) OrientationCache => (null, null);
 
     public PropagationSolution Propagate()
+    {
+        // The orientation cache is active on this thread only, so concurrent propagations sharing a central body do not
+        // see each other's cache, and none is left on the shared frame
+        var (cacheFrame, cache) = OrientationCache;
+        using (Frame.UseOrientationCache(cacheFrame, cache))
+        {
+            return PropagateWithOrientationCache(cacheFrame, cache);
+        }
+    }
+
+    private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache)
     {
         // 2. Build event detectors from maneuver chain (also discovers standalone attitude maneuvers)
         _continuousAttitude = null;
@@ -98,7 +109,6 @@ public abstract class PropagatorBase : IPropagator
         PropagationDynamics dynamics = null;
         if (rk78 != null)
         {
-            var (cacheFrame, cache) = OrientationCache;
             dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
                 InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations);
         }
