@@ -105,6 +105,16 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   its inclination is 0 or π, its node 0, and its argument of periapsis is measured from the x axis. Numerical
   propagations that start from a state vector change at the rounding level (1.4 µm at most in the golden of
   `PropagationGoldenTests`, recaptured), and by much more for an equatorial orbit or a start near an apsis.
+- **Parabolic and hyperbolic orbits** ([#368](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/368)).
+  The parabolic anomaly from the true anomaly was `ν/2 - sinh(ν/2)` instead of Barker's `D = tan(ν/2)`, its inverse
+  solved `M = D/2 + D³/6` instead of Barker's equation `M = D + D³/3`, and the parabolic mean motion was
+  `2 √(μ/q³)` instead of `√(μ/(2q³))`: a parabolic state and its elements did not correspond, except at the periapsis.
+  They now follow Barker's equation, solved in closed form, and agree with its trigonometric solution to a few 1e-15.
+  On parabolic and hyperbolic orbits the mean anomaly is no longer reduced modulo 2π (`KeplerianElements`, `AtEpoch`,
+  `ToKeplerianElements`, `EpochAtMeanAnomaly`): it is negative before the periapsis and grows without bound after
+  it, as in SPICE OSCELT, where it used to put a state before the periapsis after it. The hyperbolic Kepler solver
+  starts from `asinh(M/e)` and converges for a negative mean anomaly, where its former guess was NaN. Hyperbolic
+  states and elements agree with SPICE OSCELT to 2e-13 relative.
 
 ### 10.1.0
 
