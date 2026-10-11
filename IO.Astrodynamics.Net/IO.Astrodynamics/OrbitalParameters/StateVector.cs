@@ -16,6 +16,17 @@ namespace IO.Astrodynamics.OrbitalParameters
     {
         private StateVector _inverse;
 
+        /// <summary>
+        /// Inclination, rad, below which (or within which of π) the orbit is equatorial: i is set to 0 (or π), Ω to 0,
+        /// and ω is measured from the x axis.
+        /// </summary>
+        /// <remarks>
+        /// The rule of SPICE OSCELT, measured on <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(StateVector)"/>:
+        /// the switch is at sin i = 1e-10 for orbits from 6 800 to 100 000 km, any speed and eccentricity (#368). To be
+        /// verified by S. Guillet on the OSCELT source.
+        /// </remarks>
+        internal const double EquatorialTolerance = 1e-10;
+
         protected override void ResetCache()
         {
             base.ResetCache();
@@ -125,7 +136,20 @@ namespace IO.Astrodynamics.OrbitalParameters
             {
                 // atan2 of the two components of h, well conditioned near 0 and π, where acos of h_z / |h| is not
                 var h = SpecificAngularMomentum();
-                _inclination = System.Math.Atan2(System.Math.Sqrt(h.X * h.X + h.Y * h.Y), h.Z);
+                double inclination = System.Math.Atan2(System.Math.Sqrt(h.X * h.X + h.Y * h.Y), h.Z);
+
+                // An orbit within EquatorialTolerance of the equator is equatorial: its node is undefined, so Ω = 0 and
+                // ω is measured from the x axis, as SPICE OSCELT does
+                if (inclination < EquatorialTolerance)
+                {
+                    inclination = 0.0;
+                }
+                else if (System.Math.PI - inclination < EquatorialTolerance)
+                {
+                    inclination = System.Math.PI;
+                }
+
+                _inclination = inclination;
             }
 
             return _inclination.Value;
@@ -246,13 +270,6 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
 
             _trueAnomaly = AngleInOrbitPlane(EccentricityVector(), sv.Position);
-
-            // On an open orbit the true anomaly lies within ±acos(-1/e), so it is given in (-π, π]: negative before the
-            // periapsis
-            if (!IsElliptical() && _trueAnomaly > System.Math.PI)
-            {
-                _trueAnomaly -= Constants._2PI;
-            }
 
             return _trueAnomaly.Value;
         }

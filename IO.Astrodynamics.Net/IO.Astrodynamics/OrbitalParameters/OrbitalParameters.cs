@@ -200,7 +200,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             return _ascendingNodeVector.Value;
         }
 
-        if (Inclination() == 0.0)
+        // Equatorial orbit, prograde or retrograde: the node is undefined and the x axis stands for it
+        if (Inclination() == 0.0 || Inclination() == System.Math.PI)
         {
             return Vector3.VectorX;
         }
