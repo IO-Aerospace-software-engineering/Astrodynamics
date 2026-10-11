@@ -109,12 +109,89 @@ public class ConjunctionRefinementTests
     }
 
     [Fact]
+    public void AZeroBeforeTheFirstCandidate_CannotBeBracketed_AndTheMinimumIsKept()
+    {
+        var candidates = Candidates(6);
+
+        Assert.Equal(candidates[1], Refine(candidates, 1, Step(-30.0)));
+    }
+
+    [Fact]
+    public void AZeroWithinAMicrosecondOfTheFirstCandidate_IsRefinedBetweenTheCandidates()
+    {
+        // The bracket checked around the secant estimate would cross the first candidate
+        var candidates = Candidates(6);
+
+        AssertWithinATick(5.0e-7, Refine(candidates, 1, Rectilinear(5.0e-7)));
+    }
+
+    [Fact]
+    public void ASecantOutOfReachOfTheCandidates_FallsBackToTheCandidates()
+    {
+        // Closing slowly at the minimum, so that the secant points a billion seconds away, then receding past 213.7 s
+        var candidates = Candidates(6);
+        Func<TimeSystem.Time, double> rangeRate = epoch =>
+        {
+            double t = (epoch - Epoch).TotalSeconds;
+            return t < 213.73456789 ? -1.0 + 1.0e-9 * t : 1.0;
+        };
+
+        AssertWithinATick(213.73456789, Refine(candidates, 1, rangeRate));
+    }
+
+    [Fact]
+    public void AMinimumThatIsNotACandidate_IsKept()
+    {
+        var candidates = Candidates(6);
+        var minimum = Epoch.AddSeconds(150.0);
+
+        var refined = ConjunctionAssessment.RefineOnRangeRate(new[] { minimum }, candidates, Rectilinear(170.0),
+            Tolerance);
+
+        Assert.Equal(minimum, refined.Single());
+    }
+
+    [Fact]
     public void AMinimumAtABoundaryOfTheCandidates_IsKept()
     {
         var candidates = Candidates(4);
 
         Assert.Equal(candidates[0], Refine(candidates, 0, Rectilinear(30.0)));
         Assert.Equal(candidates[3], Refine(candidates, 3, Rectilinear(270.0)));
+    }
+
+    /// <summary>
+    /// Range rates far from linear near their zero, so that a secant estimate, or the bracket checked around it, fails:
+    /// the refinement falls back to the candidates and still ends on the epoch of the bisection.
+    /// </summary>
+    [Theory]
+    [InlineData("cube root", 213.73456789)]
+    [InlineData("cube", 187.12345678)]
+    [InlineData("fast", 251.5)]
+    public void ARangeRateFarFromLinear_IsRefinedToTheEpochOfTheBisection(string shape, double zeroSeconds)
+    {
+        // Arrange
+        var candidates = Candidates(6);
+        Func<TimeSystem.Time, double> rangeRate = shape switch
+        {
+            // Steep at the zero: the secant from the minimum lands far from it
+            "cube root" => epoch => System.Math.Cbrt((epoch - Epoch).TotalSeconds - zeroSeconds),
+            // Flat at the zero: the secant overshoots, out of reach of the candidates
+            "cube" => epoch => System.Math.Pow((epoch - Epoch).TotalSeconds - zeroSeconds, 3.0),
+            // Linear far away, a sharp step within a microsecond of the zero
+            _ => epoch =>
+            {
+                double t = (epoch - Epoch).TotalSeconds - zeroSeconds;
+                return System.Math.Abs(t) < 1.0e-6 ? System.Math.Sign(t) * 1.0e6 : t;
+            }
+        };
+
+        // Act
+        var tca = Refine(candidates, 2, rangeRate);
+
+        // Assert
+        Assert.Equal(Refine(candidates, 2, Step(zeroSeconds)), tca);
+        AssertWithinATick(zeroSeconds, tca);
     }
 
     [Theory]
