@@ -9,7 +9,7 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 | SPICE API | Yes (global lock) | Safe but serialized — may limit parallel scaling |
 | Integrator instances | No | Use `IntegratorFactory` to create one per task |
 | `CelestialBody` without geopotential | Yes | Two-body gravity is stateless |
-| `CelestialBody` with `GeopotentialModelParameters` | **No** | Mutable Legendre/trig buffers are overwritten on every evaluation |
+| `CelestialBody` with `GeopotentialModelParameters` | **No** | Mutable Legendre/trig buffers, and the Cunningham tables of the partials when the state transition matrix is integrated, are overwritten on every evaluation |
 | Frame orientation cache of a propagation | Yes | Active only on the thread that propagates or evaluates the propagation; the shared `Frame` is never changed |
 | Third-body perturbation bodies (Sun, Moon, etc.) | Yes | Stateless — safe to share |
 | `Nrlmsise00Model` | Yes | Thread-safe atmospheric model |

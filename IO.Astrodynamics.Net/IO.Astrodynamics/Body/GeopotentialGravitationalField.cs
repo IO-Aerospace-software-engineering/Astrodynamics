@@ -1,5 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.Math;
@@ -80,15 +81,361 @@ public class GeopotentialGravitationalField : GravitationalField
     public double MaxDegrees => MaxDegree;
 
     /// <summary>
-    /// The geopotential has no analytic partials yet (they come with the Cunningham recursion of phase 2, step 5a):
-    /// returns false, so that the caller falls back to finite differences.
+    /// Largest degree of the analytic partials.
     /// </summary>
-    /// <param name="stateVector">The state, relative to the attracting body.</param>
-    /// <param name="dadr">Left untouched.</param>
-    /// <returns>False.</returns>
-    internal override bool TryAccumulatePositionPartials(StateVector stateVector, System.Span<double> dadr)
+    /// <remarks>
+    /// The partials use the unnormalized coefficients and Cunningham functions of the reference, whose range grows
+    /// with the degree: at the equatorial radius, V_(N+2,N+2) is about (2N + 3)!!, and the normalization factor of
+    /// C_NN about 1 / √((2N)!). At degree 120 they are near 1e238 and 1e-233, so more than ten orders of magnitude
+    /// remain on each side of the range of a double for states below the surface and for small coefficients
+    /// (<c>GeopotentialPartialsTests.AtTheGuardDegree_TheTablesStayWithinTheirMeasuredBounds</c>). Above it, the
+    /// partials throw instead of returning infinities or NaN; the degree of the partials can be reduced below it.
+    /// </remarks>
+    internal const int MaxPartialsDegree = 120;
+
+    // Tables of the analytic partials, allocated at the first call so that a propagation without them allocates nothing:
+    // the Cunningham functions V_nm and W_nm for n up to the degree + 2, row n at index n * _partialsStride, and the
+    // unnormalized coefficients
+    private int _partialsStride;
+    private double[] _v;
+    private double[] _w;
+    private double[][] _unnormalizedC;
+    private double[][] _unnormalizedS;
+
+    /// <summary>
+    /// The degree of the partials for a requested degree: the requested one, at most the degree of the field, or the
+    /// degree of the field when none is requested.
+    /// </summary>
+    /// <param name="requestedDegree">The requested degree, or null for the degree of the field.</param>
+    /// <returns>The degree of the partials.</returns>
+    /// <exception cref="NotSupportedException">The degree of the partials is above <see cref="MaxPartialsDegree"/>.
+    /// </exception>
+    internal int PartialsDegree(int? requestedDegree)
     {
-        return false;
+        int degree = requestedDegree.HasValue ? System.Math.Min(requestedDegree.Value, MaxDegree) : MaxDegree;
+        if (degree > MaxPartialsDegree)
+        {
+            throw new NotSupportedException(
+                $"The analytic partials of the geopotential are limited to degree {MaxPartialsDegree}, beyond which " +
+                $"their unnormalized terms leave the range of a double; this field has degree {MaxDegree}. Reduce the " +
+                "degree of the partials (GeopotentialPartialsDegree).");
+        }
+
+        return degree;
+    }
+
+    /// <summary>
+    /// Adds the analytic ∂a/∂r of <see cref="ComputeGravitationalAcceleration"/> to <paramref name="dadr"/>: the point
+    /// mass, plus the harmonics of degree 2 to <see cref="PartialsDegree"/> by the Cunningham recursion.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The harmonics are differentiated in the body-fixed frame, as the acceleration, with the Cunningham functions V_nm
+    /// and W_nm extended to degree n + 2: O. Montenbruck, E. Gill, Satellite Orbits, Springer (2000), chapter 3
+    /// (recursions of V_nm and W_nm, acceleration) and chapter 7 (partials of the acceleration); section and equation
+    /// numbers to be verified by S. Guillet. The block is brought back to the frame of the state by Rᵀ H R, with R the
+    /// rotation of the acceleration (<see cref="Frames.Frame.ToFrame"/>, the frame of the state to the body-fixed frame,
+    /// at the epoch of the state). It is symmetric by construction: the upper triangle is computed and mirrored.
+    /// </para>
+    /// <para>
+    /// The tables are kept by the instance and reused, so this method allocates nothing beyond the rotation, and is not
+    /// thread-safe, as the acceleration.
+    /// </para>
+    /// </remarks>
+    /// <param name="stateVector">The state, relative to the attracting body.</param>
+    /// <param name="dadr">3×3 row-major block the partials are added to, in 1/s², in the frame of the state.</param>
+    /// <param name="partialsDegree">The requested degree of the harmonics, or null for the degree of the field; see
+    /// <see cref="PartialsDegree"/>.</param>
+    /// <returns>True.</returns>
+    /// <exception cref="NotSupportedException">The degree of the partials is above <see cref="MaxPartialsDegree"/>.
+    /// </exception>
+    internal override bool TryAccumulatePositionPartials(StateVector stateVector, Span<double> dadr,
+        int? partialsDegree = null)
+    {
+        int degree = PartialsDegree(partialsDegree);
+        var observer = (CelestialBody)stateVector.Observer;
+        var position = stateVector.Position;
+
+        // R maps the frame of the state to the body-fixed frame, as in ComputeGravitationalAcceleration; its columns are
+        // the images of the unit vectors
+        Vector3 column0 = Vector3.VectorX, column1 = Vector3.VectorY, column2 = Vector3.VectorZ;
+        var fixedPosition = position;
+        if (stateVector.Frame != observer.Frame)
+        {
+            var rotation = stateVector.Frame.ToFrame(observer.Frame, stateVector.Epoch).Rotation;
+            column0 = column0.Rotate(rotation);
+            column1 = column1.Rotate(rotation);
+            column2 = column2.Rotate(rotation);
+            fixedPosition = position.Rotate(rotation);
+        }
+
+        Span<double> harmonics = stackalloc double[6];
+        HarmonicPartials(fixedPosition, observer.GM, observer.EquatorialRadius, degree, harmonics);
+        AddRotatedBack(harmonics, column0, column1, column2, dadr);
+        PointMassPartials.Accumulate(position, observer.GM, dadr);
+        return true;
+    }
+
+    /// <summary>
+    /// The second derivatives of the harmonic potential of degree 2 to <paramref name="degree"/> at a body-fixed
+    /// position: U_xx, U_yy, U_zz, U_xy, U_xz, U_yz, in 1/s².
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// With E_nm = V_nm + i W_nm and Montenbruck and Gill's potential U = (GM / R) Σ (C_nm V_nm + S_nm W_nm), the
+    /// derivatives of the Cunningham functions are linear combinations of the functions of degree n + 1
+    /// (Montenbruck and Gill, chapter 3, the relations behind their acceleration of the geopotential):
+    /// (∂x + i ∂y) E_nm = −E_(n+1,m+1) / R, (∂x − i ∂y) E_nm = (n − m + 2)(n − m + 1) E_(n+1,m−1) / R and
+    /// ∂z E_nm = −(n − m + 1) E_(n+1,m) / R. Applied twice, they give the second derivatives from the functions of
+    /// degree n + 2 and orders m − 2 to m + 2, the form of Montenbruck and Gill, chapter 7. For m = 0 and m = 1, the
+    /// orders below zero come from E_n0 being real: (∂x − i ∂y) E_n0 is the conjugate of (∂x + i ∂y) E_n0.
+    /// Compared term by term, without copying code, with CNES PATRIUS 4.16 (Apache 2.0),
+    /// <c>GravityToolbox.computeDAccDPos</c> and its cases m = 0, m = 1 and m ≥ 2: the same combinations.
+    /// </para>
+    /// <para>
+    /// Laplace's equation, U_xx + U_yy + U_zz = 0, holds term by term; the tests check it.
+    /// </para>
+    /// </remarks>
+    /// <param name="position">Body-fixed position, in m.</param>
+    /// <param name="gm">Gravitational parameter of the body, in m³/s².</param>
+    /// <param name="equatorialRadius">Reference radius of the coefficients, in m.</param>
+    /// <param name="degree">Highest degree of the harmonics.</param>
+    /// <param name="partials">The six second derivatives, in 1/s².</param>
+    private void HarmonicPartials(in Vector3 position, double gm, double equatorialRadius, int degree,
+        Span<double> partials)
+    {
+        EnsurePartialsTables();
+        CunninghamFunctions(position, equatorialRadius, degree + 2);
+
+        int stride = _partialsStride;
+        double xx = 0.0, yy = 0.0, zz = 0.0, xy = 0.0, xz = 0.0, yz = 0.0;
+
+        // From the highest degree down, so that the small terms are summed first
+        for (int n = degree; n >= 2; n--)
+        {
+            int row = (n + 2) * stride;
+            var cRow = _unnormalizedC[n];
+            var sRow = _unnormalizedS[n];
+            for (int m = 0; m <= n; m++)
+            {
+                double c = cRow[m];
+                double s = sRow[m];
+                if (c == 0.0 && s == 0.0)
+                {
+                    continue;
+                }
+
+                double k1 = n - m + 1;
+                double k2 = (n - m + 2) * k1;
+
+                // A = E_(n+2,m+2), B = E_(n+2,m), F = E_(n+2,m+1)
+                double aRe = _v[row + m + 2], aIm = _w[row + m + 2];
+                double bRe = _v[row + m], bIm = _w[row + m];
+                double fRe = k1 * _v[row + m + 1], fIm = k1 * _w[row + m + 1];
+
+                // (∂x − i ∂y)² E_nm and ∂z (∂x − i ∂y) E_nm
+                double dRe, dIm, gRe, gIm;
+                if (m >= 2)
+                {
+                    double k4 = (n - m + 4) * (n - m + 3) * k2;
+                    dRe = k4 * _v[row + m - 2];
+                    dIm = k4 * _w[row + m - 2];
+                    double k3 = -(n - m + 3) * k2;
+                    gRe = k3 * _v[row + m - 1];
+                    gIm = k3 * _w[row + m - 1];
+                }
+                else if (m == 1)
+                {
+                    // (∂x − i ∂y) E_n1 = (n + 1) n E_(n+1,0), real, so (∂x − i ∂y)² E_n1 = −(n + 1) n E_(n+2,1)*
+                    double k = -(n + 1.0) * n;
+                    dRe = k * _v[row + 1];
+                    dIm = -k * _w[row + 1];
+                    double k3 = -(n + 2.0) * k2;
+                    gRe = k3 * _v[row];
+                    gIm = k3 * _w[row];
+                }
+                else
+                {
+                    // E_n0 is real: the conjugates of (∂x + i ∂y)² E_n0 and ∂z (∂x + i ∂y) E_n0
+                    dRe = aRe;
+                    dIm = -aIm;
+                    gRe = fRe;
+                    gIm = -fIm;
+                }
+
+                // Re[(C − i S) X] and Re[(C − i S) X / i]
+                double aC = c * aRe + s * aIm, aI = c * aIm - s * aRe;
+                double bC = c * bRe + s * bIm;
+                double dC = c * dRe + s * dIm, dI = c * dIm - s * dRe;
+                double fC = c * fRe + s * fIm, fI = c * fIm - s * fRe;
+                double gC = c * gRe + s * gIm, gI = c * gIm - s * gRe;
+
+                // ∂x² = (∂₊² + 2 ∂₊∂₋ + ∂₋²) / 4 with ∂₊∂₋ E_nm = −(n − m + 2)(n − m + 1) E_(n+2,m), and so on
+                xx += 0.25 * (aC - 2.0 * k2 * bC + dC);
+                yy -= 0.25 * (aC + 2.0 * k2 * bC + dC);
+                zz += k2 * bC;
+                xy += 0.25 * (aI - dI);
+                xz += 0.5 * (fC + gC);
+                yz += 0.5 * (fI - gI);
+            }
+        }
+
+        double scale = gm / (equatorialRadius * equatorialRadius * equatorialRadius);
+        partials[0] = scale * xx;
+        partials[1] = scale * yy;
+        partials[2] = scale * zz;
+        partials[3] = scale * xy;
+        partials[4] = scale * xz;
+        partials[5] = scale * yz;
+    }
+
+    /// <summary>
+    /// The Cunningham functions V_nm and W_nm, for 0 ≤ m ≤ n ≤ <paramref name="highestDegree"/>, at a body-fixed
+    /// position, into the tables.
+    /// </summary>
+    /// <remarks>
+    /// Montenbruck and Gill, chapter 3: V_00 = R / r, W_00 = 0;
+    /// V_mm = (2m − 1) (x R / r² V_(m−1,m−1) − y R / r² W_(m−1,m−1)),
+    /// W_mm = (2m − 1) (x R / r² W_(m−1,m−1) + y R / r² V_(m−1,m−1));
+    /// V_nm = ((2n − 1) z R / r² V_(n−1,m) − (n + m − 1) R² / r² V_(n−2,m)) / (n − m), and the same for W, with
+    /// V_(m−1,m) = W_(m−1,m) = 0. Section and equation numbers to be verified by S. Guillet.
+    /// </remarks>
+    private void CunninghamFunctions(in Vector3 position, double equatorialRadius, int highestDegree)
+    {
+        int stride = _partialsStride;
+        double r2 = position.X * position.X + position.Y * position.Y + position.Z * position.Z;
+        double x0 = equatorialRadius * position.X / r2;
+        double y0 = equatorialRadius * position.Y / r2;
+        double z0 = equatorialRadius * position.Z / r2;
+        double rho = equatorialRadius * equatorialRadius / r2;
+
+        _v[0] = equatorialRadius / System.Math.Sqrt(r2);
+        _w[0] = 0.0;
+        for (int m = 0; m <= highestDegree; m++)
+        {
+            int diagonal = m * stride + m;
+            if (m > 0)
+            {
+                int previous = (m - 1) * stride + m - 1;
+                double factor = 2.0 * m - 1.0;
+                _v[diagonal] = factor * (x0 * _v[previous] - y0 * _w[previous]);
+                _w[diagonal] = factor * (x0 * _w[previous] + y0 * _v[previous]);
+            }
+
+            if (m + 1 <= highestDegree)
+            {
+                double factor = (2.0 * m + 1.0) * z0;
+                _v[diagonal + stride] = factor * _v[diagonal];
+                _w[diagonal + stride] = factor * _w[diagonal];
+            }
+
+            for (int n = m + 2; n <= highestDegree; n++)
+            {
+                int index = n * stride + m;
+                double a = (2.0 * n - 1.0) * z0;
+                double b = (n + m - 1.0) * rho;
+                double inverse = 1.0 / (n - m);
+                _v[index] = (a * _v[index - stride] - b * _v[index - 2 * stride]) * inverse;
+                _w[index] = (a * _w[index - stride] - b * _w[index - 2 * stride]) * inverse;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Allocates the tables of the partials and the unnormalized coefficients, at the first call.
+    /// </summary>
+    /// <remarks>
+    /// C_nm = N_nm C̄_nm and S_nm = N_nm S̄_nm, with the geodesy normalization of the field,
+    /// N_nm = √((2 − δ_0m)(2n + 1)(n − m)! / (n + m)!), the convention of <see cref="LegendreFunctions"/>. The
+    /// factorial ratio is a running product, square-rooted before it could overflow.
+    /// </remarks>
+    private void EnsurePartialsTables()
+    {
+        if (_v != null)
+        {
+            return;
+        }
+
+        int degree = System.Math.Min(MaxDegree, MaxPartialsDegree);
+        _partialsStride = degree + 3;
+        _v = new double[_partialsStride * _partialsStride];
+        _w = new double[_partialsStride * _partialsStride];
+        _unnormalizedC = new double[degree + 1][];
+        _unnormalizedS = new double[degree + 1][];
+        for (int n = 0; n <= degree; n++)
+        {
+            _unnormalizedC[n] = new double[n + 1];
+            _unnormalizedS[n] = new double[n + 1];
+            for (int m = 0; m <= n; m++)
+            {
+                double factor = NormalizationFactor(n, m);
+                _unnormalizedC[n][m] = factor * _coefficients[n][m].C;
+                _unnormalizedS[n][m] = factor * _coefficients[n][m].S;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The largest |V_nm| or |W_nm| of the last partials, for the measurement of the guard degree.
+    /// </summary>
+    internal double LargestCunninghamFunction()
+    {
+        double largest = 0.0;
+        for (int k = 0; k < _v.Length; k++)
+        {
+            largest = System.Math.Max(largest, System.Math.Max(System.Math.Abs(_v[k]), System.Math.Abs(_w[k])));
+        }
+
+        return largest;
+    }
+
+    /// <summary>
+    /// N_nm = √((2 − δ_0m)(2n + 1)(n − m)! / (n + m)!), the factor from the normalized to the unnormalized coefficients.
+    /// </summary>
+    internal static double NormalizationFactor(int n, int m)
+    {
+        double factor = System.Math.Sqrt((m == 0 ? 1.0 : 2.0) * (2 * n + 1));
+        double product = 1.0;
+        for (int k = n - m + 1; k <= n + m; k++)
+        {
+            product *= k;
+            if (product > 1e250)
+            {
+                factor /= System.Math.Sqrt(product);
+                product = 1.0;
+            }
+        }
+
+        return factor / System.Math.Sqrt(product);
+    }
+
+    /// <summary>
+    /// Adds Rᵀ H R to <paramref name="dadr"/>, for the symmetric H of <paramref name="harmonics"/> (xx, yy, zz, xy, xz,
+    /// yz) and the rotation R of columns <paramref name="c0"/>, <paramref name="c1"/>, <paramref name="c2"/>; the upper
+    /// triangle is computed and mirrored, so the block added is exactly symmetric.
+    /// </summary>
+    private static void AddRotatedBack(ReadOnlySpan<double> harmonics, in Vector3 c0, in Vector3 c1, in Vector3 c2,
+        Span<double> dadr)
+    {
+        // (Rᵀ H R)_ab = c_aᵀ H c_b
+        var h0 = new Vector3(harmonics[0], harmonics[3], harmonics[4]);
+        var h1 = new Vector3(harmonics[3], harmonics[1], harmonics[5]);
+        var h2 = new Vector3(harmonics[4], harmonics[5], harmonics[2]);
+        var hc0 = new Vector3(h0 * c0, h1 * c0, h2 * c0);
+        var hc1 = new Vector3(h0 * c1, h1 * c1, h2 * c1);
+        var hc2 = new Vector3(h0 * c2, h1 * c2, h2 * c2);
+
+        double e00 = c0 * hc0, e01 = c0 * hc1, e02 = c0 * hc2;
+        double e11 = c1 * hc1, e12 = c1 * hc2, e22 = c2 * hc2;
+        dadr[0] += e00;
+        dadr[1] += e01;
+        dadr[2] += e02;
+        dadr[3] += e01;
+        dadr[4] += e11;
+        dadr[5] += e12;
+        dadr[6] += e02;
+        dadr[7] += e12;
+        dadr[8] += e22;
     }
 
     /// <summary>

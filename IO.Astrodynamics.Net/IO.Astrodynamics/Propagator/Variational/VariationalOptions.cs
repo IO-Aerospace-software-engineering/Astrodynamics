@@ -16,7 +16,14 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// Whether the error of Φ and Ψ takes part in the step-size control. Off by default: the step is controlled on the
 /// state only, so the trajectory is the same with and without the variational equations.
 /// </param>
+/// <param name="GeopotentialPartialsDegree">
+/// The highest degree of the geopotential harmonics in the partials, at least 2; null (the default) for the degree of
+/// the field, so that the partials are those of the acceleration. A degree above that of the field is that of the field,
+/// and the option is ignored without a geopotential. Reducing it trades accuracy of the state transition matrix for
+/// speed; the trajectory does not change.
+/// </param>
 internal sealed record VariationalOptions(
     ForceParameters Parameters = ForceParameters.None,
     IProcessNoiseModel ProcessNoise = null,
-    bool IncludeInStepControl = false);
+    bool IncludeInStepControl = false,
+    int? GeopotentialPartialsDegree = null);

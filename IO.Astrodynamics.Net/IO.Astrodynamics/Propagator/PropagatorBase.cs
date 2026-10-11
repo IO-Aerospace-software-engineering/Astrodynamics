@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -60,6 +61,24 @@ public abstract class PropagatorBase : IPropagator
             throw new NotSupportedException(
                 "The state transition matrix is integrated by the RK7(8) integrator (RK78Integrator) only; this " +
                 $"propagator uses {Integrator.GetType().Name}.");
+        }
+
+        if (options.GeopotentialPartialsDegree < 2)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options),
+                "The degree of the geopotential partials must be at least 2, not " +
+                $"{options.GeopotentialPartialsDegree}.");
+        }
+
+        var gravities = rk78.ForceList.OfType<GravitationalAcceleration>().ToArray();
+        foreach (var gravity in gravities)
+        {
+            gravity.CelestialItem.ValidateGravitationalPartialsDegree(options.GeopotentialPartialsDegree);
+        }
+
+        foreach (var gravity in gravities)
+        {
+            gravity.PartialsDegree = options.GeopotentialPartialsDegree;
         }
 
         rk78.EnableVariationalEquations(options);

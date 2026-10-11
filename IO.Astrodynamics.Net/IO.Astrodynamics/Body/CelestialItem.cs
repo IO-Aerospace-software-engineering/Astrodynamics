@@ -574,11 +574,30 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="orbitalParameters">The state, relative to any observer: the partials do not depend on it, since
     /// changing the observer is a translation.</param>
     /// <param name="dadr">3×3 row-major block the partials are added to, in 1/s².</param>
+    /// <param name="partialsDegree">For a geopotential, the highest degree of the partials of its harmonics, or null for
+    /// the degree of the field (<see cref="GeopotentialGravitationalField.PartialsDegree"/>); ignored otherwise.</param>
     /// <returns>Whether the partials were added; when false, <paramref name="dadr"/> is untouched.</returns>
     internal bool TryAccumulateGravitationalPositionPartials(OrbitalParameters.OrbitalParameters orbitalParameters,
-        Span<double> dadr)
+        Span<double> dadr, int? partialsDegree = null)
     {
-        return GravitationalField.TryAccumulatePositionPartials(RelativeToThis(orbitalParameters), dadr);
+        return GravitationalField.TryAccumulatePositionPartials(RelativeToThis(orbitalParameters), dadr,
+            partialsDegree);
+    }
+
+    /// <summary>
+    /// Checks that the gravitational partials can be computed at <paramref name="partialsDegree"/>, so that a
+    /// propagation fails before it starts rather than at its first partials.
+    /// </summary>
+    /// <param name="partialsDegree">The requested degree of the partials of the harmonics, or null for the degree of
+    /// the field.</param>
+    /// <exception cref="NotSupportedException">The geopotential partials would be above
+    /// <see cref="GeopotentialGravitationalField.MaxPartialsDegree"/>.</exception>
+    internal void ValidateGravitationalPartialsDegree(int? partialsDegree)
+    {
+        if (GravitationalField is GeopotentialGravitationalField geopotential)
+        {
+            geopotential.PartialsDegree(partialsDegree);
+        }
     }
 
     private StateVector RelativeToThis(OrbitalParameters.OrbitalParameters orbitalParameters)
