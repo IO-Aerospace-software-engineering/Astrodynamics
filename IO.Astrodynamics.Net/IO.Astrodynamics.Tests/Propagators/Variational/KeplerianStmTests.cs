@@ -26,26 +26,23 @@ public class KeplerianStmTests : IClassFixture<ReferenceCases>
 
     public static TheoryData<double> TimesOfFlight => new() { 60.0, 3600.0, 21600.0, 86400.0 };
 
+    // Fractions of the two revolutions of R5, from its perigee: just after it, an apogee, a perigee, the end
+    public static TheoryData<double> R5Fractions => new() { 0.001, 0.25, 0.5, 1.0 };
+
     [Theory]
     [MemberData(nameof(TimesOfFlight))]
     public void State_EqualsTheTwoBodyPropagationOfTheLibrary(double dt)
     {
-        // Arrange: the library propagates through the Keplerian elements and Kepler's equation, an independent path
-        var start = _cases.R1.InitialState;
-        var epoch = start.Epoch.AddSeconds(dt);
-        var expected = start.AtEpoch(epoch).ToStateVector();
+        AssertStateEqualsTheLibrary(_cases.R1, dt, "R1", 1e-12);
+    }
 
-        // Act
-        var (state, _) = KeplerianStm.Propagate(_cases.R1.GravitationalParameter, start.Position, start.Velocity, dt);
-
-        // Assert
-        double positionError = (new Vector3(state[0], state[1], state[2]) - expected.Position).Magnitude() /
-                               expected.Position.Magnitude();
-        double velocityError = (new Vector3(state[3], state[4], state[5]) - expected.Velocity).Magnitude() /
-                               expected.Velocity.Magnitude();
-        _output.WriteLine($"Δt = {dt} s: position {positionError:E2}, velocity {velocityError:E2} (relative)");
-        Assert.True(positionError < 1e-12, $"position: {positionError:E2}");
-        Assert.True(velocityError < 1e-12, $"velocity: {velocityError:E2}");
+    [Theory]
+    [MemberData(nameof(R5Fractions))]
+    public void R5_State_EqualsTheTwoBodyPropagationOfTheLibrary(double fraction)
+    {
+        // Measured 9.7e-16 to 1.4e-14 relative (Linux, .NET 10, 2026-10-10): the threshold of R1
+        var referenceCase = _cases.TwoBody(_cases.R5);
+        AssertStateEqualsTheLibrary(referenceCase, fraction * referenceCase.Duration.TotalSeconds, "R5", 1e-12);
     }
 
     [Theory]
@@ -75,10 +72,48 @@ public class KeplerianStmTests : IClassFixture<ReferenceCases>
     [MemberData(nameof(TimesOfFlight))]
     public void Phi_EqualsCentralDifferencesOfTheClosedForm(double dt)
     {
-        // Arrange: steps of 1 m and 1 mm/s, about 1e-7 of the state; the truncation is of order 1e-14 relative and the
-        // rounding ε |x| / δ about 1e-9 relative
-        var start = _cases.R1.InitialState;
-        double mu = _cases.R1.GravitationalParameter;
+        // Steps of 1 m and 1 mm/s, about 1e-7 of the state; the truncation is of order 1e-14 relative and the rounding
+        // ε |x| / δ about 1e-9 relative
+        AssertPhiEqualsCentralDifferences(_cases.R1, dt, "R1", 1e-7);
+    }
+
+    [Theory]
+    [MemberData(nameof(R5Fractions))]
+    public void R5_Phi_EqualsCentralDifferencesOfTheClosedForm(double fraction)
+    {
+        // The same steps as R1, now 1e-7 of the perigee radius and 1e-7 of the perigee speed only, so the rounding grows:
+        // measured 1.1e-9 to 1.2e-8 (Linux, .NET 10, 2026-10-10), under the threshold of R1
+        var referenceCase = _cases.TwoBody(_cases.R5);
+        AssertPhiEqualsCentralDifferences(referenceCase, fraction * referenceCase.Duration.TotalSeconds, "R5", 1e-7);
+    }
+
+    private void AssertStateEqualsTheLibrary(ReferenceCase referenceCase, double dt, string name, double threshold)
+    {
+        // Arrange: the library propagates through the Keplerian elements and Kepler's equation, an independent path
+        var start = referenceCase.InitialState;
+        var epoch = start.Epoch.AddSeconds(dt);
+        var expected = start.AtEpoch(epoch).ToStateVector();
+
+        // Act: the time of flight of the epoch, which carries it to 100 ns (5e-11 relative at the perigee of R5 otherwise)
+        var (state, _) = KeplerianStm.Propagate(referenceCase.GravitationalParameter, start.Position, start.Velocity,
+            (epoch - start.Epoch).TotalSeconds);
+
+        // Assert
+        double positionError = (new Vector3(state[0], state[1], state[2]) - expected.Position).Magnitude() /
+                               expected.Position.Magnitude();
+        double velocityError = (new Vector3(state[3], state[4], state[5]) - expected.Velocity).Magnitude() /
+                               expected.Velocity.Magnitude();
+        _output.WriteLine($"{name}, Δt = {dt} s: position {positionError:E2}, velocity {velocityError:E2} (relative)");
+        Assert.True(positionError < threshold, $"position: {positionError:E2}");
+        Assert.True(velocityError < threshold, $"velocity: {velocityError:E2}");
+    }
+
+    private void AssertPhiEqualsCentralDifferences(ReferenceCase referenceCase, double dt, string name,
+        double threshold)
+    {
+        // Arrange
+        var start = referenceCase.InitialState;
+        double mu = referenceCase.GravitationalParameter;
         var (_, phi) = KeplerianStm.Propagate(mu, start.Position, start.Velocity, dt);
 
         // Act
@@ -96,8 +131,8 @@ public class KeplerianStmTests : IClassFixture<ReferenceCases>
 
         // Assert
         double error = StmMeasures.WorstBlockError(phi, expected);
-        _output.WriteLine($"Δt = {dt} s: Φ against central differences {error:E2} (worst 3×3 block)");
-        Assert.True(error < 1e-7, $"Φ: {error:E2}");
+        _output.WriteLine($"{name}, Δt = {dt} s: Φ against central differences {error:E2} (worst 3×3 block)");
+        Assert.True(error < threshold, $"Φ: {error:E2}");
     }
 
     [Fact]

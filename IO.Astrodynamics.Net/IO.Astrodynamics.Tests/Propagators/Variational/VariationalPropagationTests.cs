@@ -286,22 +286,13 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     [Fact]
     public void AtAManeuver_PhiIsContinuous_AndTheBurnIsRecorded()
     {
-        // Arrange: 400 × 1000 km LEO from apogee, apogee raised at the first perigee (the maneuver case of the golden,
-        // with a point-mass Earth).
-        var orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), _cases.Earth,
-            Start, Frames.Frame.ICRF);
-        var spacecraft = new Spacecraft(-1962, "STM", 1000.0, 3000.0, new Clock("stm", 65536), orbit);
-        var tank = new FuelTank("stmtank", "model", "sn1", 1000.0, 1000.0);
-        var engine = new Engine("stmengine", "model", "sn1", 300.0, 10.0, tank);
-        spacecraft.AddFuelTank(tank);
-        spacecraft.AddEngine(engine);
-        var maneuver = new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine);
-        spacecraft.SetStandbyManeuver(maneuver);
+        // Arrange: the maneuver case, with drag, so that Ψ is not zero on either side of the burn
+        var (spacecraft, maneuver) = ManeuverCase();
         double initialMass = spacecraft.GetTotalMass();
 
         // Act
         var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), Bodies,
-            new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(60.0), FullOptions);
+            new RK78Integrator(1e-11, 1e-11), true, false, TimeSpan.FromSeconds(60.0), FullOptions);
 
         // Assert: two segments, the burn recorded at the start of the second
         Assert.Equal(2, solution.Segments.Count);
@@ -339,6 +330,64 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
             new double[48], new double[VariationalEquations.CovarianceLength]);
         AssertSameBits(rkPosition, after.Steps[0].StartPosition, "position at te");
         AssertSameBits(rkVelocity + maneuver.DeltaV, after.Steps[0].StartVelocity, "velocity after the maneuver");
+    }
+
+    [Fact]
+    public void AfterAManeuver_PhiAndPsiMatchAnIndependentPropagationFromThePostBurnState()
+    {
+        // Arrange: the maneuver case with drag, at tight tolerances. A second propagation starts from the post-burn state
+        // at te, with the post-burn mass, and integrates its own Φ₂ and Ψ₂ from (I, 0); open-loop burn, so
+        // Φ(t2, t0) = Φ₂ Φ(te, t0) and Ψ(t2, t0) = Φ₂ Ψ(te, t0) + Ψ₂. Ψ goes through the post-burn ∂a/∂Cd, which depends
+        // on the mass, and through the term Φ₂ Ψ(te, t0) of the composition.
+        var options = new VariationalOptions(ForceParameters.DragCoefficient);
+        var (spacecraft, _) = ManeuverCase();
+        var t2 = Start.AddHours(2.0);
+        var whole = spacecraft.Propagate(new TimeSystem.Window(Start, t2), Bodies, new RK78Integrator(1e-13, 1e-13), true,
+            false, TimeSpan.FromSeconds(60.0), options);
+        Assert.Equal(2, whole.Segments.Count);
+        var after = whole.Segments[1];
+        var te = after.BaseEpoch;
+        var postBurn = new StateVector(after.Steps[0].StartPosition, after.Steps[0].StartVelocity, _cases.Earth, te,
+            Frames.Frame.ICRF);
+        var (independent, _) = ManeuverCase(-1963, postBurn, spacecraft.GetTotalMass() - 1000.0, false);
+        using var propagator = new ExactStartPropagator(new TimeSystem.Window(te, t2), independent,
+            new RK78Integrator(1e-13, 1e-13), Bodies, TimeSpan.FromSeconds(60.0), postBurn);
+        propagator.EnableVariationalEquations(options);
+        var second = propagator.Propagate();
+        AssertSameBits(postBurn.Position, second.Segments[0].Steps[0].StartPosition, "start position");
+        AssertSameBits(postBurn.Velocity, second.Segments[0].Steps[0].StartVelocity, "start velocity");
+        Assert.Single(second.Segments);
+        Assert.Equal(after.Context.Value.TotalMass, second.Segments[0].Context.Value.TotalMass);
+
+        // Act
+        var (phi20, psi20) = PhiAndPsi(whole, t2);
+        var (phiE0, psiE0) = PhiAndPsi(whole, te);
+        var (phi2, psi2) = PhiAndPsi(second, t2);
+
+        // Assert: the threshold of the specification (A5); measured Φ 3.0e-15 and Ψ 3.8e-12 (Linux, .NET 10, 2026-10-10)
+        var composedPhi = Multiply(phi2, phiE0);
+        var composedPsi = new double[6];
+        for (int i = 0; i < 6; i++)
+        {
+            double sum = psi2[i];
+            for (int k = 0; k < 6; k++)
+            {
+                sum += phi2[6 * i + k] * psiE0[k];
+            }
+
+            composedPsi[i] = sum;
+        }
+
+        double phiError = WorstBlockError(composedPhi, phi20);
+        double psiPositionError = RiddersDerivative.RelativeFrobeniusError(composedPsi[..3], psi20[..3]);
+        double psiVelocityError = RiddersDerivative.RelativeFrobeniusError(composedPsi[3..], psi20[3..]);
+        _output.WriteLine($"composition across the maneuver: Φ {phiError:E2} (worst 3×3 block), Ψ {psiPositionError:E2} " +
+                          $"(position), {psiVelocityError:E2} (velocity); |Ψ(te)| = {Norm(psiE0[..3]):E2} m, " +
+                          $"|Ψ(t2)| = {Norm(psi20[..3]):E2} m");
+        Assert.True(Norm(psiE0[..3]) > 0.0, "Ψ is zero before the burn");
+        Assert.True(phiError < 1e-10, $"Φ: {phiError:E2}");
+        Assert.True(psiPositionError < 1e-10, $"Ψ, position: {psiPositionError:E2}");
+        Assert.True(psiVelocityError < 1e-10, $"Ψ, velocity: {psiVelocityError:E2}");
     }
 
     [Fact]
@@ -413,6 +462,30 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     }
 
     [Fact]
+    public void EvaluateVariational_WithBuffersOfTheWrongLength_Throws()
+    {
+        // Arrange: Y holds 6 × 8 values with Cd and Cr, Q 21 with process noise and none without
+        var epoch = Start.AddMinutes(30.0);
+        var withNoise = PropagateLeo(Start.AddHours(1.0), FullOptions, true);
+        var withoutNoise = PropagateLeo(Start.AddHours(1.0), new VariationalOptions(), false);
+        var q = new double[VariationalEquations.CovarianceLength];
+
+        // Act and assert
+        Assert.Equal("y", Assert.Throws<ArgumentException>(() =>
+            withNoise.EvaluateVariational(epoch, new double[36], q)).ParamName);
+        Assert.Equal("y", Assert.Throws<ArgumentException>(() =>
+            withNoise.EvaluateVariational(epoch, new double[49], q)).ParamName);
+        Assert.Equal("q", Assert.Throws<ArgumentException>(() =>
+            withNoise.EvaluateVariational(epoch, new double[48], Array.Empty<double>())).ParamName);
+        Assert.Equal("q", Assert.Throws<ArgumentException>(() =>
+            withNoise.EvaluateVariational(epoch, new double[48], new double[20])).ParamName);
+        Assert.Equal("q", Assert.Throws<ArgumentException>(() =>
+            withoutNoise.EvaluateVariational(epoch, new double[36], q)).ParamName);
+        withNoise.EvaluateVariational(epoch, new double[48], q);
+        withoutNoise.EvaluateVariational(epoch, new double[36], Array.Empty<double>());
+    }
+
+    [Fact]
     public void WithTheVariationalEquations_TheTrajectoryIsBitIdentical()
     {
         // Act
@@ -482,6 +555,59 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         Assert.Throws<ArgumentException>(() => new VariationalSegmentData(36, true, 4, new double[36],
             new double[20], null));
     }
+
+    // 400 × 1000 km LEO from apogee, apogee raised at the first perigee (the maneuver case of the golden, with a
+    // point-mass Earth); without the maneuver, the same spacecraft from another state and with another fuel quantity
+    private (Spacecraft Spacecraft, ImpulseManeuver Maneuver) ManeuverCase(int naifId = -1962, StateVector orbit = null,
+        double fuel = 1000.0, bool withManeuver = true)
+    {
+        orbit ??= new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), _cases.Earth,
+            Start, Frames.Frame.ICRF);
+        var spacecraft = new Spacecraft(naifId, "STM", 1000.0, 3000.0, new Clock("stm", 65536), orbit);
+        var tank = new FuelTank("stmtank", "model", "sn1", 1000.0, fuel);
+        var engine = new Engine("stmengine", "model", "sn1", 300.0, 10.0, tank);
+        spacecraft.AddFuelTank(tank);
+        spacecraft.AddEngine(engine);
+        if (!withManeuver)
+        {
+            return (spacecraft, null);
+        }
+
+        var maneuver = new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine);
+        spacecraft.SetStandbyManeuver(maneuver);
+        return (spacecraft, maneuver);
+    }
+
+    // A propagation with drag that starts from exactly the given state: CentralBodyPropagator takes its initial state
+    // from OrbitalParameters.AtEpoch, which goes through the Keplerian elements even at the same epoch and moves a state
+    // at an apsis by about 1e-8 of its radius (0.1 m at the post-burn perigee of the maneuver case)
+    private sealed class ExactStartPropagator : CentralBodyPropagator
+    {
+        internal ExactStartPropagator(TimeSystem.Window window, Spacecraft spacecraft, Integrator integrator,
+            IEnumerable<CelestialItem> bodies, TimeSpan deltaT, StateVector start)
+            : base(window, spacecraft, integrator, bodies, true, false, deltaT)
+        {
+            InitialState = start;
+        }
+    }
+
+    // Φ (6×6) and Ψ (6×1) at the epoch, for a solution with one parameter and no process noise
+    private static (double[] Phi, double[] Psi) PhiAndPsi(PropagationSolution solution, TimeSystem.Time epoch)
+    {
+        var y = new double[42];
+        solution.EvaluateVariational(epoch, y, Array.Empty<double>());
+        var phi = new double[36];
+        var psi = new double[6];
+        for (int i = 0; i < 6; i++)
+        {
+            Array.Copy(y, 7 * i, phi, 6 * i, 6);
+            psi[i] = y[7 * i + 6];
+        }
+
+        return (phi, psi);
+    }
+
+    private static double Norm(double[] v) => System.Math.Sqrt(v.Sum(x => x * x));
 
     private PropagationSolution PropagateLeo(TimeSystem.Time end, VariationalOptions options, bool dragAndSrp,
         TimeSpan? outputStep = null, double tolerance = 1e-9)

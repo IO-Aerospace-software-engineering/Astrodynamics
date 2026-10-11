@@ -59,12 +59,34 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   the Sun at the default tolerance, the propagation takes about as long with outputs every 600 s, about twice as long
   every 60 s, and seven to nine times as long every 10 s. `PropagationSolution.InterpolateAt` of an RK7(8) solution
   evaluates the forces under a lock of the solution: like a propagation, it must not run concurrently with another one
-  that shares a `CelestialBody` with a geopotential.
+  that shares a `CelestialBody` with a geopotential. Solutions that share a central body without a geopotential may be
+  queried concurrently (see the entry on the orientation cache below).
 - **TCA of the conjunction analysis of two propagated trajectories (#363).** The polynomial search of the
   `PropagationSolution` overloads located the TCA on the cubic Hermite interpolation of the positions. Each TCA is now
   refined by bisection of the range rate on the states of the trajectories. On RK7(8) trajectories at the default
-  tolerance, the TCA moves from 2.6e-6 s to 1.3e-4 s away from the Keplerian reference to less than 1e-7 s; the miss
-  distance, already computed on the states, changes at second order only (by up to 2.8 mm in the test cases).
+  tolerance, the TCA moves from 2.6e-6 s to 1.3e-4 s away from the Keplerian reference to less than 1e-7 s; the
+  refinement itself changes the miss distance at second order only (by up to 2.8 mm in the test cases). Between
+  versions, however, the miss distance, and therefore the collision probability, on RK7(8) trajectories moves by up to
+  the error of the former cubic Hermite interpolation, since the states it is computed on now come from the shortened
+  RK7(8) step: metres to tens of metres in LEO (2.76 m and 63.6 m in two LEO cases with EGM2008 10×10, the Moon and the
+  Sun over one day), tens of metres in GEO. The local minima are selected on the polynomials and only refined on the
+  states, with secants checked by a bracket before the bisection: on two 400 km LEO trajectories over one day with
+  EGM2008 10×10, the Moon and the Sun, `Analyze` takes 15 to 20 ms, against 8 to 13 ms before and 190 to 200 ms with a
+  first version of the refinement that selected the minima on the states and bisected over whole steps (Release,
+  median of 21 calls). The bisection now stops once its bracket is one tick (100 ns) wide, the resolution of the
+  epochs: with the default `BisectionToleranceSeconds` of 1e-9 s it used to repeat the same evaluation up to its 80
+  iterations; the sampled search of the other overloads gains the same, with unchanged results.
+- **Orientation cache of the central body frame shared between propagations.** A propagation put its orientation
+  cache on the `Frame` of the central body when the propagator was built and removed it at the end of the
+  propagation, and each RK7(8) evaluation of a solution put it back for its duration. Every user of that body saw it:
+  two propagations or two RK7(8) solutions sharing an Earth, run or queried from two threads (`BatchPropagator`,
+  `Scenario.SimulateAsync`, `Parallel.ForEach`), read each other's cache, so their states were off by tens of metres
+  (21.7 m and 74.9 m in a reproduction with drag), and the frame could keep a cache whose window had ended, with every
+  later Earth-fixed orientation frozen at its edge (61° off a month later). Without any thread, a propagator built and
+  propagated after another one was built on the same body ran with the cache of the other. The cache is now kept by the
+  propagator and active only on the thread that propagates or evaluates, for that propagation's frame; the shared
+  `Frame` is never changed. Results are those of a propagation alone, bit for bit, and a `CelestialBody` without a
+  geopotential can be shared between concurrent propagations and evaluations; one with a geopotential still cannot.
 - **Velocity into and out of a rotating frame.** `ToFrame` computed `v' = R v - ω × r'` with the angular velocity
   `ω` expressed in the source frame and `r'` in the target frame. It now uses `R ω` and matches the states SPICE
   computes directly in ITRF93 to a few 1e-16. The error grew with the precession since J2000: in 2021, up to about

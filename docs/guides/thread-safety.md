@@ -10,14 +10,14 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 | Integrator instances | No | Use `IntegratorFactory` to create one per task |
 | `CelestialBody` without geopotential | Yes | Two-body gravity is stateless |
 | `CelestialBody` with `GeopotentialModelParameters` | **No** | Mutable Legendre/trig buffers, and the Cunningham tables of the partials when the state transition matrix is integrated, are overwritten on every evaluation |
-| `Frame.OrientationCache` | **No** | Propagator sets/clears an unsynchronized cache on the central body's `Frame` |
+| Frame orientation cache of a propagation | Yes | Active only on the thread that propagates or evaluates the propagation; the shared `Frame` is never changed |
 | Third-body perturbation bodies (Sun, Moon, etc.) | Yes | Stateless — safe to share |
 | `Nrlmsise00Model` | Yes | Thread-safe atmospheric model |
-| `PropagationSolution.InterpolateAt` of an RK7(8) solution | Serialized per solution | Evaluates the forces of the propagation (a shortened RK7(8) step) under a lock of the solution. Like a propagation, it must not run concurrently with another propagation or RK7(8) solution that shares a `CelestialBody` with a geopotential |
+| `PropagationSolution.InterpolateAt` of an RK7(8) solution | Serialized per solution | Evaluates the forces of the propagation (a shortened RK7(8) step) under a lock of the solution. Solutions that share a central body without a geopotential may be queried concurrently. Like a propagation, it must not run concurrently with another propagation or RK7(8) solution that shares a `CelestialBody` with a geopotential |
 
 ## Per-Task CelestialBody Pattern
 
-When using geopotential gravity, create a separate `CelestialBody` instance per task. This gives each task its own `GeopotentialGravitationalField` buffers and `Frame` orientation cache.
+When using geopotential gravity, create a separate `CelestialBody` instance per task. This gives each task its own `GeopotentialGravitationalField` buffers. A `CelestialBody` without geopotential, with or without an atmospheric model, can be shared.
 
 ```csharp
 var tasks = new List<PropagationTask>();
