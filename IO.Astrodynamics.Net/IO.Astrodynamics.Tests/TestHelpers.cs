@@ -69,12 +69,18 @@ namespace IO.Astrodynamics.Tests
                    so1.ReferenceFrame == so2.ReferenceFrame;
         }
 
+        /// <summary>The difference between two angles, rad, modulo 2π: 0 and 2π are the same angle.</summary>
+        internal static double AngleDifference(double a1, double a2)
+        {
+            return System.Math.Abs(System.Math.IEEERemainder(a1 - a2, IO.Astrodynamics.Constants._2PI));
+        }
+
         internal static bool KeplerComparer(KeplerianElements k1, KeplerianElements k2)
         {
             var tolerance = 1E-06;
             return (double.IsPositiveInfinity(k1.A) && double.IsPositiveInfinity(k2.A) || System.Math.Abs(k1.A - k2.A) < tolerance) &&
                    System.Math.Abs(k1.E - k2.E) < tolerance && System.Math.Abs(k1.I - k2.I) < tolerance &&
-                   System.Math.Abs(k1.RAAN - k2.RAAN) < tolerance && System.Math.Abs(k1.AOP - k2.AOP) < tolerance && System.Math.Abs(k1.M - k2.M) < tolerance &&
+                   AngleDifference(k1.RAAN, k2.RAAN) < tolerance && AngleDifference(k1.AOP, k2.AOP) < tolerance && AngleDifference(k1.M, k2.M) < tolerance &&
                    k1.Epoch == k2.Epoch && k1.Frame == k2.Frame && Equals(k1.Observer, k2.Observer);
         }
 
@@ -83,8 +89,8 @@ namespace IO.Astrodynamics.Tests
             var tolerance = 1E-06;
             return (double.IsPositiveInfinity(e1.SemiMajorAxis()) && double.IsPositiveInfinity(e2.SemiMajorAxis()) ||
                     System.Math.Abs(e1.SemiMajorAxis() - e2.SemiMajorAxis()) < tolerance) && System.Math.Abs(e1.Eccentricity() - e2.Eccentricity()) < tolerance &&
-                   System.Math.Abs(e1.Inclination() - e2.Inclination()) < tolerance && System.Math.Abs(e1.AscendingNode() - e2.AscendingNode()) < tolerance &&
-                   System.Math.Abs(e1.ArgumentOfPeriapsis() - e2.ArgumentOfPeriapsis()) < tolerance && System.Math.Abs(e1.MeanAnomaly() - e2.MeanAnomaly()) < tolerance &&
+                   System.Math.Abs(e1.Inclination() - e2.Inclination()) < tolerance && AngleDifference(e1.AscendingNode(), e2.AscendingNode()) < tolerance &&
+                   AngleDifference(e1.ArgumentOfPeriapsis(), e2.ArgumentOfPeriapsis()) < tolerance && AngleDifference(e1.MeanAnomaly(), e2.MeanAnomaly()) < tolerance &&
                    e1.Epoch == e2.Epoch && e1.Frame == e2.Frame && Equals(e1.Observer, e2.Observer);
         }
 

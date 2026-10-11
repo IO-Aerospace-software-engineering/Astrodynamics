@@ -578,9 +578,12 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         return (spacecraft, maneuver);
     }
 
-    // A propagation with drag that starts from exactly the given state: CentralBodyPropagator takes its initial state
-    // from OrbitalParameters.AtEpoch, which goes through the Keplerian elements even at the same epoch and moves a state
-    // at an apsis by about 1e-8 of its radius (0.1 m at the post-burn perigee of the maneuver case)
+    // A propagation with drag that starts from exactly the given state. CentralBodyPropagator takes its initial state
+    // from OrbitalParameters.AtEpoch, through the Keplerian elements: 0.1 m away at the post-burn perigee before #368,
+    // 5e-9 m since. Even that rounding changes the step sequence from the second step on, and the two Ψ then go through
+    // the central-difference drag partials at different points: they compose to 5.8e-9 only (Φ to 1.2e-13), the level
+    // of those partials until the analytic drag partials of step 5b. From the exact state, the steps are the same, and
+    // the test checks the composition itself.
     private sealed class ExactStartPropagator : CentralBodyPropagator
     {
         internal ExactStartPropagator(TimeSystem.Window window, Spacecraft spacecraft, Integrator integrator,

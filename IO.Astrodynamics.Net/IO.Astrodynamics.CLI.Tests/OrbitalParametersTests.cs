@@ -6,6 +6,14 @@ namespace IO.Astrodynamics.CLI.Tests;
 
 public class OrbitalParametersTests
 {
+    // The input of the state vector conversions, relative to the Sun, at J2000 TDB, in ICRF
+    private static OrbitalParameters.StateVector InputState()
+    {
+        return new OrbitalParameters.StateVector(new Math.Vector3(-26499033677.42509, 132757417338.33946, 57556718470.53819),
+            new Math.Vector3(-29794.26007, -5018.05231, -2175.39380), new Body.CelestialBody(10), TimeSystem.Time.J2000TDB,
+            Frames.Frame.ICRF);
+    }
+
     [Fact]
     public void SvToSv()
     {
@@ -24,9 +32,10 @@ public class OrbitalParametersTests
                 }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ICRF");
             var res = sb.ToString();
 
-            Assert.Equal(
-                $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -26499033676.707573 Y : 132757417338.4827 Z: 57556718470.538155 Velocity : X : -29794.260070027125 Y : -5018.052309838966 Z: -2175.393800000007 Frame : J2000{Environment.NewLine}",
-                res);
+            // The same epoch and frame: the input itself, to rounding (the Keplerian round trip moved it by 0.72 m, #368)
+            OutputAssert.EqualApprox(
+                $"{InputState()}{Environment.NewLine}",
+                res, 1e-14);
         }
     }
     
@@ -48,9 +57,12 @@ public class OrbitalParametersTests
                 }, true, false, false, new EpochParameters { Epoch = "0.0" }, "ECLIPJ2000");
             var res = sb.ToString();
 
-            Assert.Equal(
-                $"Epoch : 2000-01-01T12:00:00.0000000 TDB Position : X : -26499033676.707577 Y : 144697296792.6746 Z: -611149.4830513 Velocity : X : -29794.260070027125 Y : -5469.294939597997 Z: 0.18178668879363613 Frame : ECLIPJ2000{Environment.NewLine}",
-                res);
+            // The input rotated to the ecliptic, without the Keplerian round trip. Per number, relative: the rounding of
+            // the round trip, 1e-15 of the 1.4e11 m vector, is 6e-12 of its small ecliptic z (6e5 m); SvToSv checks the
+            // round trip itself at 1e-14
+            OutputAssert.EqualApprox(
+                $"{InputState().ToFrame(new Frames.Frame("ECLIPJ2000")).ToStateVector()}{Environment.NewLine}",
+                res, 1e-10);
         }
     }
 
@@ -73,9 +85,10 @@ public class OrbitalParametersTests
                 false, true, false, new EpochParameters());
             var res = sb.ToString();
 
-            Assert.Equal(
-                $"Epoch : 2000-01-01T12:00:00.0000000 TDB A : 149665479719.88266, Ecc. : 0.017121683001766336, Inc. : 0.4090876369492606, AN : 1.2954252300503235E-05, AOP : 1.776884894312699, M : 6.259056257481824, Frame : J2000{Environment.NewLine}",
-                res);
+            // Against SPICE OSCELT
+            OutputAssert.EqualApprox(
+                $"{SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(InputState())}{Environment.NewLine}",
+                res, 1e-14);
         }
     }
 

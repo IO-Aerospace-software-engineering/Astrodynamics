@@ -16,6 +16,17 @@ namespace IO.Astrodynamics.OrbitalParameters
     {
         private StateVector _inverse;
 
+        /// <summary>
+        /// Inclination, rad, below which (or within which of π) the orbit is equatorial: i is set to 0 (or π), Ω to 0,
+        /// and ω is measured from the x axis.
+        /// </summary>
+        /// <remarks>
+        /// The rule of SPICE OSCELT, measured on <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(StateVector)"/>:
+        /// the switch is at sin i = 1e-10 for orbits from 6 800 to 100 000 km, any speed and eccentricity (#368). To be
+        /// verified by S. Guillet on the OSCELT source.
+        /// </remarks>
+        internal const double EquatorialTolerance = 1e-10;
+
         protected override void ResetCache()
         {
             base.ResetCache();
@@ -121,7 +132,26 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns></returns>
         public override double Inclination()
         {
-            _inclination ??= SpecificAngularMomentum().Angle(Vector3.VectorZ);
+            if (!_inclination.HasValue)
+            {
+                // atan2 of the two components of h, well conditioned near 0 and π, where acos of h_z / |h| is not
+                var h = SpecificAngularMomentum();
+                double inclination = System.Math.Atan2(System.Math.Sqrt(h.X * h.X + h.Y * h.Y), h.Z);
+
+                // An orbit within EquatorialTolerance of the equator is equatorial: its node is undefined, so Ω = 0 and
+                // ω is measured from the x axis, as SPICE OSCELT does
+                if (inclination < EquatorialTolerance)
+                {
+                    inclination = 0.0;
+                }
+                else if (System.Math.PI - inclination < EquatorialTolerance)
+                {
+                    inclination = System.Math.PI;
+                }
+
+                _inclination = inclination;
+            }
+
             return _inclination.Value;
         }
 
@@ -144,12 +174,10 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _ascendingNode.Value;
             }
 
-            var omega = System.Math.Acos(n.X / n.Magnitude());
-
-
-            if (n.Y < 0.0)
+            var omega = System.Math.Atan2(n.Y, n.X);
+            if (omega < 0.0)
             {
-                omega = 2 * System.Math.PI - omega;
+                omega += Constants._2PI;
             }
 
             _ascendingNode = omega;
@@ -187,11 +215,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 }
             }
 
-            _periapsisArgument = System.Math.Acos(System.Math.Clamp((n * e) / (n.Magnitude() * e.Magnitude()), -1.0, 1.0));
-            if (e.Z < 0.0)
-            {
-                _periapsisArgument = System.Math.PI * 2.0 - _periapsisArgument;
-            }
+            _periapsisArgument = AngleInOrbitPlane(n, e);
 
             return _periapsisArgument.Value;
         }
@@ -245,15 +269,7 @@ namespace IO.Astrodynamics.OrbitalParameters
                 return _trueAnomaly.Value;
             }
 
-            var e = EccentricityVector();
-            var x = (e * sv.Position) / (e.Magnitude() * sv.Position.Magnitude());
-            if (x > 1.0) x = 1.0;
-            if (x < -1.0) x = -1.0;
-            _trueAnomaly = System.Math.Acos(x);
-            if (sv.Position * sv.Velocity < 0.0)
-            {
-                _trueAnomaly = System.Math.PI * 2.0 - _trueAnomaly;
-            }
+            _trueAnomaly = AngleInOrbitPlane(EccentricityVector(), sv.Position);
 
             return _trueAnomaly.Value;
         }
@@ -266,11 +282,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             var sv = ToStateVector();
             var omega = AscendingNodeVector();
-            var v = System.Math.Acos((omega * sv.Position) / (omega.Magnitude() * sv.Position.Magnitude()));
-            if (sv.Position.Z < 0.0)
-            {
-                v = Constants._2PI - v;
-            }
+            var v = AngleInOrbitPlane(omega, sv.Position);
 
             v -= ArgumentOfPeriapsis();
             if (v < 0.0)
@@ -288,11 +300,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         private double CircularNoInclinationTrueAnomaly()
         {
             var sv = ToStateVector();
-            var l = System.Math.Acos(sv.Position.X / sv.Position.Magnitude());
-            if (sv.Velocity.X > 0)
-            {
-                l = Constants._2PI - l;
-            }
+            var l = AngleInOrbitPlane(Vector3.VectorX, sv.Position);
 
             l = l - ArgumentOfPeriapsis() - AscendingNode();
             if (l < 0.0)
@@ -301,6 +309,21 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
 
             return l % Constants._2PI;
+        }
+
+        /// <summary>
+        /// The angle from <paramref name="from"/> to <paramref name="to"/>, in [0, 2π), counted positive about the
+        /// angular momentum: atan2(ĥ · (from × to), from · to).
+        /// </summary>
+        /// <remarks>
+        /// Well conditioned at every angle, where the acos of the normalized dot product loses about half the digits
+        /// near 0 and π: near an apsis, a node or the reference direction (#368).
+        /// </remarks>
+        private double AngleInOrbitPlane(in Vector3 from, in Vector3 to)
+        {
+            var hHat = SpecificAngularMomentum().Normalize();
+            double angle = System.Math.Atan2(hHat * from.Cross(to), from * to);
+            return angle < 0.0 ? angle + Constants._2PI : angle;
         }
 
         #region Operators

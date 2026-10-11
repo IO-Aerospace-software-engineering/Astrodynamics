@@ -76,24 +76,72 @@ public class ConjunctionAssessmentTests
     }
 
     [Fact]
-    public void FindCloseApproaches_ConstantRelativeState_ReturnsEmpty()
+    public void FindCloseApproaches_RangeDecreasingThroughoutTheWindow_ReturnsEmpty()
     {
+        // Two equatorial orbits 5 km apart; unpropagated, each follows its Keplerian orbit. Over the first 5 minutes
+        // the range decreases without a minimum (the closest approach comes at 449 s), as the closed-form
+        // two-body solution shows below: no range-rate zero crossing.
         var earth = CreateEarth();
-        // Un-propagated spacecraft have constant ephemeris → constant range-rate → no zero-crossing
-        var protected1 = CreateSpacecraft(-2301, "P", earth,
-            new Vector3(6_800_000.0, 0.0, 0.0),
-            new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var secondary1 = CreateSpacecraft(-2302, "S", earth,
-            new Vector3(6_800_000.0, 5000.0, 0.0),
-            new Vector3(0.0, 7_646.0, 0.0));
-
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
+        var (protectedPosition, protectedVelocity) = (new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
+        var (secondaryPosition, secondaryVelocity) = (new Vector3(6_800_000.0, 5000.0, 0.0), new Vector3(0.0, 7_646.0, 0.0));
+        var protected1 = CreateSpacecraft(-2301, "P", earth, protectedPosition, protectedVelocity);
+        var secondary1 = CreateSpacecraft(-2302, "S", earth, secondaryPosition, secondaryVelocity);
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(5.0));
+        for (double t = 5.0; t <= 300.0; t += 5.0)
+        {
+            Assert.True(ClosedFormRange(earth, protectedPosition, protectedVelocity, secondaryPosition, secondaryVelocity, t) <
+                        ClosedFormRange(earth, protectedPosition, protectedVelocity, secondaryPosition, secondaryVelocity, t - 5.0));
+        }
 
         var tcas = ConjunctionAssessment.FindCloseApproaches(
             protected1, secondary1, window,
             TimeSpan.FromSeconds(5), 1e-9, earth);
 
         Assert.Empty(tcas);
+    }
+
+    [Fact]
+    public void FindCloseApproaches_EquatorialOrbits_FindsTheTcaOfTheClosedForm()
+    {
+        // The same two equatorial orbits over 10 minutes: one closest approach, at the minimum of the closed-form
+        // two-body range. Before #368, the argument of periapsis of an equatorial orbit was taken in [0, π] only, and
+        // the secondary started 3 609 km away from its given state.
+        var earth = CreateEarth();
+        var (protectedPosition, protectedVelocity) = (new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
+        var (secondaryPosition, secondaryVelocity) = (new Vector3(6_800_000.0, 5000.0, 0.0), new Vector3(0.0, 7_646.0, 0.0));
+        var protected1 = CreateSpacecraft(-2391, "P", earth, protectedPosition, protectedVelocity);
+        var secondary1 = CreateSpacecraft(-2392, "S", earth, secondaryPosition, secondaryVelocity);
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
+
+        // Golden-section search of the closed-form range minimum
+        double lo = 400.0, hi = 500.0;
+        double g = (System.Math.Sqrt(5.0) - 1.0) / 2.0;
+        while (hi - lo > 1e-9)
+        {
+            double a = hi - g * (hi - lo), b = lo + g * (hi - lo);
+            if (ClosedFormRange(earth, protectedPosition, protectedVelocity, secondaryPosition, secondaryVelocity, a) <
+                ClosedFormRange(earth, protectedPosition, protectedVelocity, secondaryPosition, secondaryVelocity, b))
+                hi = b;
+            else
+                lo = a;
+        }
+
+        var tcas = ConjunctionAssessment.FindCloseApproaches(
+            protected1, secondary1, window,
+            TimeSpan.FromSeconds(5), 1e-9, earth);
+
+        var tca = Assert.Single(tcas);
+        double error = (tca - TimeSystem.Time.J2000TDB).TotalSeconds - 0.5 * (lo + hi);
+        // Measured 2.5e-5 s from the minimum at 449.2 s (Linux, .NET 10, 2026-10-11)
+        Assert.True(System.Math.Abs(error) < 1e-4, $"TCA {error:E2} s from the closed form");
+    }
+
+    // Range between two Keplerian orbits t seconds after J2000, from the closed-form two-body solution of the tests
+    private static double ClosedFormRange(CelestialBody earth, Vector3 r1, Vector3 v1, Vector3 r2, Vector3 v2, double t)
+    {
+        var (x1, _) = IO.Astrodynamics.Tests.Propagators.Variational.KeplerianStm.Propagate(earth.GM, r1, v1, t);
+        var (x2, _) = IO.Astrodynamics.Tests.Propagators.Variational.KeplerianStm.Propagate(earth.GM, r2, v2, t);
+        return new Vector3(x1[0] - x2[0], x1[1] - x2[1], x1[2] - x2[2]).Magnitude();
     }
 
     [Fact]
@@ -1348,15 +1396,23 @@ public class ConjunctionAssessmentTests
     [Fact]
     public void Screen_HigherProbabilityCandidateIsRankedFirst()
     {
+        // Two crossing encounters at 300 s, built with the closed-form two-body solution: at the encounter each
+        // secondary is radially offset from the protected spacecraft, 50 m and 100 m, on an orbit inclined by ±5°, so
+        // that it crosses at about 670 m/s. The close one has a tiny covariance (Pc ~ 0 at 50 m with the protected
+        // σ of 5 m), the far one a large one (σ 100 m at 100 m): the far one has the higher Pc and is ranked first.
         var earth = CreateEarth();
-        var protectedSpacecraft = CreateSpacecraft(-1204, "PROTECTED", earth,
-            new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0));
-        var lowProbabilityClose = CreateSpacecraft(-1205, "LOW_PC_CLOSE", earth,
-            new Vector3(6_800_000.0, 50.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0),
-            BuildCovariance(positionVariance: 1.0e-12, velocityVariance: 1.0e-6));
-        var highProbabilityFar = CreateSpacecraft(-1206, "HIGH_PC_FAR", earth,
-            new Vector3(6_800_000.0, 100.0, 0.0), new Vector3(0.0, 7_656.2204182967143, 0.0),
-            BuildCovariance(positionVariance: 10_000.0, velocityVariance: 0.01));
+        const double tca = 300.0;
+        double speed = 7_656.2204182967143;
+        var protectedAtTca = (new Vector3(6_800_000.0, 0.0, 0.0), new Vector3(0.0, speed, 0.0));
+        double tilt = 5.0 * IO.Astrodynamics.Constants.Deg2Rad;
+        var closeAtTca = (new Vector3(6_800_050.0, 0.0, 0.0), new Vector3(0.0, speed * System.Math.Cos(tilt), speed * System.Math.Sin(tilt)));
+        var farAtTca = (new Vector3(6_800_100.0, 0.0, 0.0), new Vector3(0.0, speed * System.Math.Cos(tilt), -speed * System.Math.Sin(tilt)));
+        var protectedSpacecraft = CreateSpacecraft(-1204, "PROTECTED", earth, Before(earth, protectedAtTca, tca).Position,
+            Before(earth, protectedAtTca, tca).Velocity);
+        var lowProbabilityClose = CreateSpacecraft(-1205, "LOW_PC_CLOSE", earth, Before(earth, closeAtTca, tca).Position,
+            Before(earth, closeAtTca, tca).Velocity, BuildCovariance(positionVariance: 1.0e-12, velocityVariance: 1.0e-6));
+        var highProbabilityFar = CreateSpacecraft(-1206, "HIGH_PC_FAR", earth, Before(earth, farAtTca, tca).Position,
+            Before(earth, farAtTca, tca).Velocity, BuildCovariance(positionVariance: 10_000.0, velocityVariance: 0.01));
         var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0));
 
@@ -1375,6 +1431,13 @@ public class ConjunctionAssessmentTests
         Assert.Equal("HIGH_PC_FAR", encounters[0].SecondaryObject.Name);
         Assert.True(encounters[0].CollisionRisk.ProbabilityOfCollision > encounters[1].CollisionRisk.ProbabilityOfCollision);
         Assert.True(encounters[0].EncounterState.MissDistanceMeters > encounters[1].EncounterState.MissDistanceMeters);
+    }
+
+    // The state dt seconds before the given one, from the closed-form two-body solution of the tests
+    private static (Vector3 Position, Vector3 Velocity) Before(CelestialBody earth, (Vector3 Position, Vector3 Velocity) state, double dt)
+    {
+        var (x, _) = IO.Astrodynamics.Tests.Propagators.Variational.KeplerianStm.Propagate(earth.GM, state.Position, state.Velocity, -dt);
+        return (new Vector3(x[0], x[1], x[2]), new Vector3(x[3], x[4], x[5]));
     }
 
     // ========== Covariance Quality Tests ==========

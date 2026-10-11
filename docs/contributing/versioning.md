@@ -114,6 +114,29 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   propagation, scenario, batch or Monte Carlo run whose bodies included the Sun, which is the usual case. The Sun is
   now ignored as an occulter. Every such propagation with SRP on changes: for a LEO spacecraft with an area-to-mass
   ratio of 0.1 m²/kg and Cr = 1.5, the position differs by about 25 m after 3 h.
+- **Orbital elements of a state vector** ([#368](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/368)).
+  `StateVector` computed its inclination, node, argument of periapsis and true anomaly with `acos`, which loses about
+  half the digits near 0 and π, and reflected the argument of periapsis on the sign of `e_z`, which is zero for an
+  equatorial orbit. Every conversion of a state to elements went through it, and so did every state at another epoch
+  (`AtEpoch`, `ToStateVector(epoch)`), including the initial state of a numerical propagation and the states of an
+  unpropagated spacecraft. An equatorial orbit with its periapsis in the lower half-plane had its argument of periapsis
+  mirrored: in a conjunction test, a spacecraft was put 3 609 km away from its given state. Near an apsis of an
+  eccentric orbit the round trip moved the state by up to 1 cm (0.1 m after a burn at perigee), and a state converted
+  to itself by 0.72 m at the scale of the Earth orbit. The angles now come from `atan2` and agree with SPICE OSCELT to a
+  few 1e-15 rad; the round trip is at rounding. An orbit within 1e-10 rad of the equator is equatorial, as in SPICE:
+  its inclination is 0 or π, its node 0, and its argument of periapsis is measured from the x axis. Numerical
+  propagations that start from a state vector change at the rounding level (1.4 µm at most in the golden of
+  `PropagationGoldenTests`, recaptured), and by much more for an equatorial orbit or a start near an apsis.
+- **Parabolic and hyperbolic orbits** ([#368](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/368)).
+  The parabolic anomaly from the true anomaly was `ν/2 - sinh(ν/2)` instead of Barker's `D = tan(ν/2)`, its inverse
+  solved `M = D/2 + D³/6` instead of Barker's equation `M = D + D³/3`, and the parabolic mean motion was
+  `2 √(μ/q³)` instead of `√(μ/(2q³))`: a parabolic state and its elements did not correspond, except at the periapsis.
+  They now follow Barker's equation, solved in closed form, and agree with its trigonometric solution to a few 1e-15.
+  On parabolic and hyperbolic orbits the mean anomaly is no longer reduced modulo 2π (`KeplerianElements`, `AtEpoch`,
+  `ToKeplerianElements`, `EpochAtMeanAnomaly`): it is negative before the periapsis and grows without bound after
+  it, as in SPICE OSCELT, where it used to put a state before the periapsis after it. The hyperbolic Kepler solver
+  starts from `asinh(M/e)` and converges for a negative mean anomaly, where its former guess was NaN. Hyperbolic
+  states and elements agree with SPICE OSCELT to 2e-13 relative.
 
 ### 10.1.0
 

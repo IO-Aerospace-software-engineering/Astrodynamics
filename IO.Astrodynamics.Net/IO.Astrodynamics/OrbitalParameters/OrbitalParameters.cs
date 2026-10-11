@@ -200,7 +200,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             return _ascendingNodeVector.Value;
         }
 
-        if (Inclination() == 0.0)
+        // Equatorial orbit, prograde or retrograde: the node is undefined and the x axis stands for it
+        if (Inclination() == 0.0 || Inclination() == System.Math.PI)
         {
             return Vector3.VectorX;
         }
@@ -384,19 +385,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     private double ParabolicAnomaly()
     {
-        double M = MeanAnomaly();
-
-        //Barker angle
-        double B = M;
-        double deltaB;
-
-        do
-        {
-            deltaB = (M - (0.5 * B + (1.0 / 6.0) * System.Math.Pow(B, 3))) / (0.5 + 0.5 * System.Math.Pow(B, 2));
-            B += deltaB;
-        } while (System.Math.Abs(deltaB) > 1e-06);
-
-        return B;
+        // Barker's equation M = D + D³/3, solved in closed form: with D = 2 sinh θ, D + D³/3 = (2/3) sinh 3θ, so
+        // θ = asinh(3M/2) / 3 (#368). The cubic has a single real root.
+        return 2.0 * System.Math.Sinh(System.Math.Asinh(1.5 * MeanAnomaly()) / 3.0);
     }
 
     /// <summary>
@@ -407,7 +398,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         double M = MeanAnomaly();
         double e = Eccentricity();
-        double H = System.Math.Log(2 * M / e + 1.8); // Estimation initiale
+        // Initial guess asinh(M / e), the root of e sinh H = M, valid for any sign of M (log(2M/e + 1.8) is NaN before
+        // the periapsis, M < 0, #368); F(H) = e sinh H - H - M is increasing, F' = e cosh H - 1 > 0
+        double H = System.Math.Asinh(M / e);
         double deltaH;
 
         do
@@ -486,7 +479,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns>The parabolic anomaly in radians.</returns>
     private double ParabolicAnomaly(double trueAnomaly)
     {
-        return (trueAnomaly * 0.5) - System.Math.Sinh(trueAnomaly * 0.5);
+        // Barker's parabolic anomaly D = tan(ν/2), the inverse of ParabolicTrueAnomaly (#368)
+        return System.Math.Tan(trueAnomaly * 0.5);
     }
 
     /// <summary>
@@ -513,6 +507,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             trueAnomaly += Constants._2PI;
         }
 
+        // On an open orbit the mean anomaly is not an angle: it grows without bound, negative before the periapsis, so it
+        // is not reduced modulo 2π (#368)
         if (eccentricity < 1)
         {
             if (System.Math.Abs(trueAnomaly - Constants.PI) < 1e-09)
@@ -525,13 +521,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
         else if (eccentricity > 1)
         {
-            var res = (eccentricity * System.Math.Sinh(eccentricAnomaly) - eccentricAnomaly) % Constants._2PI;
-            return res < 0 ? res + Constants._2PI : res;
+            return eccentricity * System.Math.Sinh(eccentricAnomaly) - eccentricAnomaly;
         }
         else
         {
-            var res = (eccentricAnomaly + System.Math.Pow(eccentricAnomaly, 3) / 3.0) % Constants._2PI;
-            return res < 0 ? res + Constants._2PI : res;
+            // Barker's equation
+            return eccentricAnomaly + System.Math.Pow(eccentricAnomaly, 3) / 3.0;
         }
     }
 
@@ -568,7 +563,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
         else if (IsParabolic())
         {
-            _meanMotion = 2 * System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / System.Math.Pow(PerigeeRadius(), 3));
+            // So that Barker's D + D³/3 = n (t - T): t - T = √(2q³/μ) (D + D³/3), with q the periapsis radius (#368)
+            _meanMotion = System.Math.Sqrt(Constants.G * (Observer.Mass + orbitingBodyMass) / (2.0 * System.Math.Pow(PerigeeRadius(), 3)));
         }
         else
         {
@@ -668,7 +664,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
         var res = meanAnomaly - MeanAnomaly();
-        if (res < 0.0)
+
+        // The next passage on an ellipse; an open orbit passes once
+        if (res < 0.0 && IsElliptical())
         {
             res += Constants._2PI;
         }
@@ -773,13 +771,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         var ke = this.ToKeplerianElements();
         var deltaT = epoch - Epoch;
         var meanAnomaly = ke.MeanAnomaly() + deltaT.TotalSeconds * MeanMotion();
-        if (meanAnomaly < 0.0)
-        {
-            meanAnomaly += Constants._2PI;
-        }
 
-        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly % Constants._2PI, Observer, epoch, Frame,
-            perigeeRadius: _perigeeRadius);
+        // An angle on an ellipse only (#368); KeplerianElements reduces it
+        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
+            perigeeRadius: IsParabolic() ? PerigeeRadius() : _perigeeRadius);
     }
 
     /// <summary>
@@ -863,12 +858,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     {
         double ellapsedTime = (epoch - Epoch).TotalSeconds;
         double m = MeanAnomaly() + MeanMotion() * ellapsedTime;
-        while (m < 0.0)
-        {
-            m += Constants._2PI;
-        }
 
-        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m % Constants._2PI, Observer, epoch, Frame,
+        // An angle on an ellipse only (#368); KeplerianElements reduces it
+        return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), m, Observer, epoch, Frame,
             perigeeRadius: PerigeeRadius());
     }
 

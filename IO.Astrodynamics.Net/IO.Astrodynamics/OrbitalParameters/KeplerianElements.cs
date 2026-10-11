@@ -83,7 +83,9 @@ namespace IO.Astrodynamics.OrbitalParameters
             I = inclination;
             RAAN = SpecialFunctions.NormalizeAngle(rigthAscendingNode);
             AOP = SpecialFunctions.NormalizeAngle(argumentOfPeriapsis);
-            M = SpecialFunctions.NormalizeAngle(meanAnomaly);
+
+            // An angle on an ellipse; on an open orbit it grows without bound, negative before the periapsis (#368)
+            M = eccentricity < 1.0 - 1E-06 ? SpecialFunctions.NormalizeAngle(meanAnomaly) : meanAnomaly;
             _period = period;
             _trueAnomaly = trueAnomaly;
             _perigeeRadius = perigeeRadius;

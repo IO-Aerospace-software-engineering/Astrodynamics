@@ -31,7 +31,10 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// (lots B and A), which must not move a single bit of the trajectory. Recaptured with the fix of #363: the output
 /// states, and the event and restart of a maneuver, come from shortened RK7(8) steps instead of a cubic Hermite
 /// interpolation. The accepted steps before the maneuver did not move; the output states moved by up to 13 m, 77 m and
-/// 63 m, and the maneuver by 99 µs. A golden holds on one platform only (the mathematical library differs between
+/// 63 m, and the maneuver by 99 µs. Recaptured with the fix of #368: the initial state goes through the Keplerian
+/// elements, whose angles now come from atan2 instead of acos, so it is closer to the given state (the GEO z velocity is
+/// now exactly the 10 m/s given, against 10 + 3.3e-11 before); the GEO and maneuver cases moved by 1.4 µm at most, the
+/// SRP case did not move, and the maneuver epoch is unchanged. A golden holds on one platform only (the mathematical library differs between
 /// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>
 /// <para>

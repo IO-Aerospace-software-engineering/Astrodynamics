@@ -342,9 +342,15 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
                 new StateVector(new Vector3(-26499033677.425095, 132757417338.33946, 57556718470.53819),
                     new Vector3(-29794.26007042197, -5018.052308786111, -2175.3938028266693), TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), sv);
             var ke = sv.ToKeplerianElements();
-            Assert.Equal(
-                new KeplerianElements(149665479724.91623, 0.01712168303475997, 0.4090876369675532, 1.2954012328856077E-05,
-                    1.77688489436688, 6.259056257653703, TestHelpers.Sun, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), ke);
+
+            // Against SPICE OSCELT: the node, 1.3e-5 rad, is where the former acos lost 5.8e-12 rad (#368)
+            var expected = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+            Assert.Equal(expected.A, ke.A, 1e-14 * expected.A);
+            Assert.Equal(expected.E, ke.E, 1e-14);
+            Assert.Equal(expected.I, ke.I, 1e-14);
+            Assert.Equal(expected.RAAN, ke.RAAN, 1e-14 * expected.RAAN);
+            Assert.Equal(expected.AOP, ke.AOP, 1e-14);
+            Assert.Equal(expected.M, ke.M, 1e-14);
         }
 
         [Fact]
