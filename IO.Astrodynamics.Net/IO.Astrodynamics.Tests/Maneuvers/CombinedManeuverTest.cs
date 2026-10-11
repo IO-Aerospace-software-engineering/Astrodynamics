@@ -79,10 +79,14 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             var maneuverPoint = orbitalParams.ToStateVector(orbitalParams.Epoch + orbitalParams.Period() * 0.5);
             var res = maneuver.TryExecute(maneuverPoint);
+            // The y and z parts of the quaternion are zero to rounding (1e-11): compared, not matched bit for bit
             Assert.Equal(
-                new StateOrientation(new Quaternion(0.21458639046372344, 0.9767050122876152, 0.0, -1.5886811778829925E-11), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame),
-                res.so);
-            Assert.Equal(new Vector3( 1.2478882737769584E-08, -1661.6798912062677, 767.1890047800779), maneuver.DeltaV);
+                new StateOrientation(new Quaternion(0.21458639046372344, 0.9767050122876152, 0.0, 0.0), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame),
+                res.so, TestHelpers.StateOrientationComparer);
+            // ΔV has no x component, to rounding (1e-8 m/s)
+            Assert.True(System.Math.Abs(maneuver.DeltaV.X) < 1e-7, $"ΔV x: {maneuver.DeltaV.X:E2}");
+            Assert.Equal(-1661.6798912062677, maneuver.DeltaV.Y);
+            Assert.Equal(767.1890047800779, maneuver.DeltaV.Z);
             Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323340").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296418").ToTDB()), maneuver.ManeuverWindow);
             Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323340").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296418").ToTDB()), maneuver.ThrustWindow);
             Assert.Equal(3394.8653913932048, maneuver.FuelBurned,3);
@@ -101,13 +105,17 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             var maneuverPoint = orbitalParams.ToStateVector(orbitalParams.Epoch + orbitalParams.Period() * 0.5);
             var res = maneuver.TryExecute(maneuverPoint);
+            // Equatorial after the maneuver: i, Ω and ω are zero (modulo 2π) to rounding, as SPICE OSCELT gives them
             Assert.Equal(
-                new KeplerianElements(24381999.95942269, 0.7293085058246275, 0, 0, 6.283185307179586, 3.141592653589793, maneuverPoint.Observer, maneuverPoint.Epoch,
-                    maneuverPoint.Frame), res.sv.ToKeplerianElements());
+                new KeplerianElements(24381999.95942269, 0.7293085058246275, 0, 0, 0, 3.141592653589793, maneuverPoint.Observer, maneuverPoint.Epoch,
+                    maneuverPoint.Frame), res.sv.ToKeplerianElements(), TestHelpers.KeplerComparer);
             Assert.Equal(
-                new StateOrientation(new Quaternion(0.617876643698767, 0.7862750493126097, 0.0, -1.27889752031036E-11), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame),
-                res.so);
-            Assert.Equal(new Vector3(1.2478535554197947E-08 , -186.70162770583374 , 767.1890047800779), maneuver.DeltaV);
+                new StateOrientation(new Quaternion(0.617876643698767, 0.7862750493126097, 0.0, 0.0), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame),
+                res.so, TestHelpers.StateOrientationComparer);
+            // ΔV has no x component, to rounding (1e-8 m/s)
+            Assert.True(System.Math.Abs(maneuver.DeltaV.X) < 1e-7, $"ΔV x: {maneuver.DeltaV.X:E2}");
+            Assert.Equal(-186.70162770583374, maneuver.DeltaV.Y);
+            Assert.Equal(767.1890047800779, maneuver.DeltaV.Z);
             Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299721").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956911").ToTDB()), maneuver.ThrustWindow);
             Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299721").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956911").ToTDB()), maneuver.ManeuverWindow);
             Assert.Equal(1638.2859502950841, maneuver.FuelBurned);
