@@ -244,4 +244,31 @@ public class OrientationCacheConcurrencyTests
         AssertSameOutputs(aloneB, builtFirstB);
         AssertNoCacheLeftOn(earth);
     }
+
+    [Fact]
+    public void APropagatorBuiltButNeverRun_DoesNotChangeTheNextPropagationOfTheBody()
+    {
+        // Arrange: the case found in #369, with EGM2008 10×10; the propagator that never runs ends 10 days earlier,
+        // so a cache left by it would freeze the Earth rotation at the edge of its window
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, EpochA,
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+        var bodies = new CelestialItem[] { earth };
+        var window = new TimeSystem.Window(EpochB, EpochB.AddHours(3.0));
+        var alone = LeoSpacecraft(earth, EpochB, -1983).Propagate(window, bodies, new RK78Integrator(), false, false,
+            TimeSpan.FromSeconds(60.0));
+
+        // Act
+        using (new CentralBodyPropagator(new TimeSystem.Window(EpochA, EpochA.AddHours(1.0)),
+                   LeoSpacecraft(earth, EpochA, -1984), new RK78Integrator(), bodies, false, false,
+                   TimeSpan.FromSeconds(60.0)))
+        {
+        }
+
+        var afterUnused = LeoSpacecraft(earth, EpochB, -1985).Propagate(window, bodies, new RK78Integrator(), false,
+            false, TimeSpan.FromSeconds(60.0));
+
+        // Assert
+        AssertSameOutputs(alone, afterUnused);
+        Assert.Null(earth.Frame.OrientationCache);
+    }
 }
