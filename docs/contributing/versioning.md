@@ -68,8 +68,14 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   refinement itself changes the miss distance at second order only (by up to 2.8 mm in the test cases). Between
   versions, however, the miss distance, and therefore the collision probability, on RK7(8) trajectories moves by up to
   the error of the former cubic Hermite interpolation, since the states it is computed on now come from the shortened
-  RK7(8) step: metres in LEO (2.76 m in a 400 km LEO case with EGM2008 10×10, the Moon and the Sun over one day),
-  tens of metres in GEO.
+  RK7(8) step: metres to tens of metres in LEO (2.76 m and 63.6 m in two LEO cases with EGM2008 10×10, the Moon and the
+  Sun over one day), tens of metres in GEO. The local minima are selected on the polynomials and only refined on the
+  states, with secants checked by a bracket before the bisection: on two 400 km LEO trajectories over one day with
+  EGM2008 10×10, the Moon and the Sun, `Analyze` takes 15 to 20 ms, against 8 to 13 ms before and 190 to 200 ms with a
+  first version of the refinement that selected the minima on the states and bisected over whole steps (Release,
+  median of 21 calls). The bisection now stops once its bracket is one tick (100 ns) wide, the resolution of the
+  epochs: with the default `BisectionToleranceSeconds` of 1e-9 s it used to repeat the same evaluation up to its 80
+  iterations; the sampled search of the other overloads gains the same, with unchanged results.
 - **Orientation cache of the central body frame shared between propagations.** A propagation put its orientation
   cache on the `Frame` of the central body when the propagator was built and removed it at the end of the
   propagation, and each RK7(8) evaluation of a solution put it back for its duration. Every user of that body saw it:
