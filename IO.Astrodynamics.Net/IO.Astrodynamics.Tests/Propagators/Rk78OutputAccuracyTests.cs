@@ -40,7 +40,8 @@ public class Rk78OutputAccuracyTests
 
     public static TheoryData<double, double> Tolerances => new()
     {
-        // Tolerance, and the bound on the worst output error relative to the worst error at the step ends (see below)
+        // Tolerance, and the bound on the worst output error relative to the worst error at the step ends, in position and
+        // in velocity (see below). Measured ratios: position 1.000, 1.000, 0.998; velocity 1.000, 1.000, 1.009
         { 1e-9, 1.5 },
         { 1e-11, 1.5 },
         { 1e-13, 1.5 }
@@ -51,7 +52,9 @@ public class Rk78OutputAccuracyTests
     /// The output states used to come from a cubic Hermite interpolation, off by up to 101 m at the default tolerance.
     /// An output is now a shortened step from the start of its accepted step, so its error is the error carried by the
     /// start of the step plus the local error of a step shorter than the accepted one: it stays at the level of the
-    /// errors at the step ends.
+    /// errors at the step ends. Measured worst errors, step ends then outputs: 1.477e-2 m and 1.670e-5 m/s for both at
+    /// 1e-9; 1.443e-4 m and 1.619e-7 m/s for both at 1e-11; 8.288e-7 m and 8.272e-7 m, 9.440e-10 m/s and 9.525e-10 m/s
+    /// at 1e-13. The cubic Hermite interpolation was off by 100.7 m, 18.5 m and 1.81 m.
     /// </summary>
     [Theory]
     [MemberData(nameof(Tolerances))]
@@ -72,6 +75,8 @@ public class Rk78OutputAccuracyTests
             PositionError(mu, initial, step.CumulativeTime + step.StepSize, step.EndPosition));
         double outputError = solution.StateVectors.Max(state =>
             PositionError(mu, initial, (state.Epoch - Start).TotalSeconds, state.Position));
+        double stepEndVelocityError = segment.Steps.Max(step =>
+            VelocityError(mu, initial, step.CumulativeTime + step.StepSize, step.EndVelocity));
         double outputVelocityError = solution.StateVectors.Max(state =>
             VelocityError(mu, initial, (state.Epoch - Start).TotalSeconds, state.Velocity));
         double hermiteError = solution.StateVectors.Max(state =>
@@ -81,10 +86,13 @@ public class Rk78OutputAccuracyTests
         });
         double medianStep = segment.Steps.Select(step => step.StepSize).OrderBy(h => h).ElementAt(segment.Steps.Count / 2);
         _output.WriteLine($"tolerance {tolerance:E0}, median step {medianStep:F1} s: worst position error at the step " +
-                          $"ends {stepEndError:E3} m, at the outputs {outputError:E3} m (velocity " +
-                          $"{outputVelocityError:E3} m/s); cubic Hermite at the outputs {hermiteError:E3} m");
+                          $"ends {stepEndError:E3} m, at the outputs {outputError:E3} m; velocity " +
+                          $"{stepEndVelocityError:E3} m/s and {outputVelocityError:E3} m/s; cubic Hermite at the " +
+                          $"outputs {hermiteError:E3} m");
         Assert.True(outputError <= bound * stepEndError,
             $"outputs {outputError:E3} m against {stepEndError:E3} m at the step ends");
+        Assert.True(outputVelocityError <= bound * stepEndVelocityError,
+            $"outputs {outputVelocityError:E3} m/s against {stepEndVelocityError:E3} m/s at the step ends");
     }
 
     /// <summary>
@@ -194,7 +202,8 @@ public class Rk78OutputAccuracyTests
             before.Duration);
         double semiMajorAxis = 1.0 / (2.0 / orbit.Position.Magnitude() - orbit.Velocity.MagnitudeSquared() / mu);
         double halfPeriod = System.Math.PI * System.Math.Sqrt(semiMajorAxis * semiMajorAxis * semiMajorAxis / mu);
-        // Measured 6.6e-8 s: the bisection tolerance (1e-10 s), then the move to the 100 ns grid of the epochs
+        // Measured 6.57e-8 s: the bisection tolerance (1e-10 s), then the move to the 100 ns grid of the epochs; the
+        // threshold is three times the measurement
         _output.WriteLine($"event {te - halfPeriod:E3} s from the Keplerian perigee");
         Assert.True(System.Math.Abs(te - halfPeriod) < 2e-7, $"event at {te - halfPeriod:E3} s from the perigee");
 
@@ -204,11 +213,11 @@ public class Rk78OutputAccuracyTests
         var restartVelocity = after.Steps[0].StartVelocity;
         double positionError = (restartPosition - Position(keplerAtEvent)).Magnitude();
         double velocityError = (restartVelocity - maneuver.DeltaV - Velocity(keplerAtEvent)).Magnitude();
-        // Measured 1.1e-5 m and 1.9e-9 m/s at the tolerance 1e-11, the error of the integration over 50 min; the
-        // cubic Hermite state was off by metres (#363)
+        // Measured 1.094e-5 m and 1.880e-9 m/s at the tolerance 1e-11, the error of the integration over 50 min; the
+        // cubic Hermite state was off by metres (#363). Thresholds about 2.7 times the measurements
         _output.WriteLine($"restart against Kepler: {positionError:E3} m, {velocityError:E3} m/s");
-        Assert.True(positionError < 1e-4, $"position {positionError:E3} m");
-        Assert.True(velocityError < 1e-7, $"velocity {velocityError:E3} m/s");
+        Assert.True(positionError < 3e-5, $"position {positionError:E3} m");
+        Assert.True(velocityError < 5e-9, $"velocity {velocityError:E3} m/s");
 
         // The same doubles as the shortened step of the variational values at the event
         var (rkPosition, rkVelocity) = solution.Dynamics.ShortenedStep(before, k, te - before.Steps[k].CumulativeTime,
@@ -221,9 +230,9 @@ public class Rk78OutputAccuracyTests
         var (keplerFinal, _) = KeplerianStm.Propagate(mu, Position(keplerAtEvent),
             Velocity(keplerAtEvent) + maneuver.DeltaV, (final.Epoch - after.BaseEpoch).TotalSeconds);
         double finalError = (final.Position - Position(keplerFinal)).Magnitude();
-        // Measured 8.4e-5 m after 2 h more
+        // Measured 8.368e-5 m after 2 h more; threshold three times the measurement
         _output.WriteLine($"last output against Kepler after the maneuver: {finalError:E3} m");
-        Assert.True(finalError < 1e-3, $"last output {finalError:E3} m");
+        Assert.True(finalError < 2.5e-4, $"last output {finalError:E3} m");
     }
 
     /// <summary>
@@ -242,7 +251,8 @@ public class Rk78OutputAccuracyTests
         var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)),
             new CelestialItem[] { _pointMassEarth }, new RK78Integrator(30.0), false, false, TimeSpan.FromSeconds(60.0));
 
-        // Assert: measured 6.6e-8 s from the Keplerian perigee
+        // Assert: measured 6.57e-8 s from the Keplerian perigee, and the restart 1.256e-8 m from the Keplerian state
+        // (a 30 s step); thresholds three and 2.4 times the measurements
         var after = solution.Segments[1];
         double te = (after.BaseEpoch - Start).TotalSeconds;
         double semiMajorAxis = 1.0 / (2.0 / orbit.Position.Magnitude() - orbit.Velocity.MagnitudeSquared() / mu);
@@ -250,7 +260,9 @@ public class Rk78OutputAccuracyTests
         _output.WriteLine($"fixed step: event {te - halfPeriod:E3} s from the Keplerian perigee");
         Assert.True(System.Math.Abs(te - halfPeriod) < 2e-7, $"event at {te - halfPeriod:E3} s from the perigee");
         var (keplerAtEvent, _) = KeplerianStm.Propagate(mu, orbit.Position, orbit.Velocity, te);
-        Assert.True((after.Steps[0].StartPosition - Position(keplerAtEvent)).Magnitude() < 1e-3);
+        double restartError = (after.Steps[0].StartPosition - Position(keplerAtEvent)).Magnitude();
+        _output.WriteLine($"fixed step: restart {restartError:E3} m from Kepler");
+        Assert.True(restartError < 3e-8, $"restart {restartError:E3} m");
     }
 
     /// <summary>
