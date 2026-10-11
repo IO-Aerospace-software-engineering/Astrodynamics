@@ -16,8 +16,8 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// <remarks>
 /// <para>
 /// With x = (r, v), a = a(r, v, t; p), G = ∂a/∂r, D = ∂a/∂v, A = [[0, I], [G, D]] and B = [0 ; I]:
-/// dΦ/dt = A Φ, Φ(t0) = I; dΨ/dt = A Ψ + B ∂a/∂p, Ψ(t0) = 0 (Montenbruck &amp; Gill, Satellite Orbits, 2000, §7.2,
-/// to be verified by S. Guillet); dQ/dt = A Q + Q Aᵀ + B Qc Bᵀ, Q(t0) = 0 (Gelb, Applied Optimal Estimation, 1974,
+/// dΦ/dt = A Φ, Φ(t0) = I; dΨ/dt = A Ψ + B ∂a/∂p, Ψ(t0) = 0 (Montenbruck &amp; Gill, Satellite Orbits, 2000, chapter 7,
+/// section number to be verified by S. Guillet); dQ/dt = A Q + Q Aᵀ + B Qc Bᵀ, Q(t0) = 0 (Gelb, Applied Optimal Estimation, 1974,
 /// chapter 4, and Tapley, Schutz &amp; Born, Statistical Orbit Determination, 2004, §4.9, to be verified by
 /// S. Guillet).
 /// </para>
