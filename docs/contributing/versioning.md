@@ -92,6 +92,19 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   propagation, scenario, batch or Monte Carlo run whose bodies included the Sun, which is the usual case. The Sun is
   now ignored as an occulter. Every such propagation with SRP on changes: for a LEO spacecraft with an area-to-mass
   ratio of 0.1 m²/kg and Cr = 1.5, the position differs by about 25 m after 3 h.
+- **Orbital elements of a state vector** ([#368](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/368)).
+  `StateVector` computed its inclination, node, argument of periapsis and true anomaly with `acos`, which loses about
+  half the digits near 0 and π, and reflected the argument of periapsis on the sign of `e_z`, which is zero for an
+  equatorial orbit. Every conversion of a state to elements went through it, and so did every state at another epoch
+  (`AtEpoch`, `ToStateVector(epoch)`), including the initial state of a numerical propagation and the states of an
+  unpropagated spacecraft. An equatorial orbit with its periapsis in the lower half-plane had its argument of periapsis
+  mirrored: in a conjunction test, a spacecraft was put 3 609 km away from its given state. Near an apsis of an
+  eccentric orbit the round trip moved the state by up to 1 cm (0.1 m after a burn at perigee), and a state converted
+  to itself by 0.72 m at the scale of the Earth orbit. The angles now come from `atan2` and agree with SPICE OSCELT to a
+  few 1e-15 rad; the round trip is at rounding. An orbit within 1e-10 rad of the equator is equatorial, as in SPICE:
+  its inclination is 0 or π, its node 0, and its argument of periapsis is measured from the x axis. Numerical
+  propagations that start from a state vector change at the rounding level (1.4 µm at most in the golden of
+  `PropagationGoldenTests`, recaptured), and by much more for an equatorial orbit or a start near an apsis.
 
 ### 10.1.0
 
