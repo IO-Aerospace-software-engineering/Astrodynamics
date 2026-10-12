@@ -40,7 +40,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     public void EnableVariationalEquations_DegreeBelowTwo_Throws(int degree)
     {
         // Arrange
-        using var propagator = Propagator(Earth(10), new RK78Integrator());
+        using var propagator = Propagator(_bodies.Earths[10], new RK78Integrator());
 
         // Act
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -55,7 +55,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     public void EnableVariationalEquations_AboveTheGuardDegree_Throws_AndAReducedDegreeIsAccepted()
     {
         // Arrange
-        var earth = Earth(GeopotentialGravitationalField.MaxPartialsDegree + 10);
+        var earth = _bodies.Earths[GeopotentialGravitationalField.MaxPartialsDegree + 10];
         var integrator = new RK78Integrator();
         using var propagator = Propagator(earth, integrator);
 
@@ -76,7 +76,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
         var withGeopotential = new RK78Integrator();
         var pointMass = new RK78Integrator();
         var pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
-        using var first = Propagator(Earth(10), withGeopotential);
+        using var first = Propagator(_bodies.Earths[10], withGeopotential);
         using var second = Propagator(pointMassEarth, pointMass);
 
         // Act
@@ -153,13 +153,6 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     }
 
     private static StateVector Leo(CelestialBody earth) => PartialsTestCases.State(PartialsTestCases.Leo400, earth);
-
-    /// <summary>
-    /// An Earth of its own for a propagator that is built but not run: such a propagator leaves the orientation cache
-    /// of its window on the Earth-fixed frame, which a later propagation of the same body would then read.
-    /// </summary>
-    private static CelestialBody Earth(int degree) => new(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
-        new GeopotentialModelParameters(GeopotentialPartialsBodies.Model, (ushort)degree));
 
     private CentralBodyPropagator Propagator(CelestialBody earth, RK78Integrator integrator)
     {
