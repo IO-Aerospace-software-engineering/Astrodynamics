@@ -41,7 +41,12 @@ public enum EventAction
     /// <summary>Stop the current segment and restart integration (e.g., impulse maneuver changes velocity).</summary>
     StopAndRestart,
 
-    /// <summary>Continue integration (e.g., attitude-only event with no state change).</summary>
+    /// <summary>
+    /// Continue integration past the event, with the state at the event unchanged (e.g., attitude-only event, or an
+    /// occurrence a maneuver skips because its precondition fails). The propagation goes on from the event with
+    /// <see cref="EventResult.NextDetector"/>, the detector itself to wait for its next crossing; the occurrence just
+    /// handled is not detected again. <see cref="EventResult.ModifiedState"/> is ignored.
+    /// </summary>
     Continue
 }
 

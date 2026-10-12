@@ -163,8 +163,10 @@ public class CentralBodyPropagator : PropagatorBase
     }
 
     /// <summary>
-    /// Gives the forces an ephemeris cache of the bodies relative to <paramref name="observer"/>, in
-    /// <paramref name="frame"/>, the frame of the propagated state, so that the forces combine vectors of one frame.
+    /// Gives the forces an ephemeris cache of the geometric positions of the bodies relative to
+    /// <paramref name="observer"/>, in <paramref name="frame"/>, the frame of the propagated state, so that the forces
+    /// combine vectors of one frame. Every force reads geometric positions (<see cref="Aberration.None"/>): the
+    /// radiation forces no longer apply the light time from the observer (#360).
     /// </summary>
     private static void InjectEphemerisCache(Window tdbWindow, List<ForceBase> forces,
         CelestialItem[] celestialBodies, ILocalizable observer, Frame frame)
@@ -175,7 +177,6 @@ public class CentralBodyPropagator : PropagatorBase
         foreach (var body in celestialBodies)
         {
             entries.Add((body, Aberration.None));
-            entries.Add((body, Aberration.LT));
         }
 
         var cache = new PropagationEphemerisCache(tdbWindow, entries, observer, frame, TimeSpan.FromSeconds(60));

@@ -29,7 +29,14 @@ When `Evaluate` changes sign in the specified `Direction` between two integratio
 | Value | Description |
 |-------|-------------|
 | `StopAndRestart` | Stop the current segment and begin a new one with updated state |
-| `Continue` | Continue integration without interruption |
+| `Continue` | Continue past the event with the state unchanged and the detector of `NextDetector`; the occurrence just handled is not detected again |
+
+On `Continue`, the propagation starts a new segment at the event; `ModifiedState` is ignored, and the state
+transition matrix is continuous across the boundary. `ManeuverEventDetector` returns `Continue`, with itself as next
+detector, when the precondition of its maneuver fails: the maneuver waits for its next crossing. `RK78Integrator`
+locates the event on the 100 ns grid of the epochs, possibly just before the root, so the next segment starts the
+detector from its g-value past that root (the rule Hipparchus applies to a zero at the start of a step);
+`VVIntegrator` locates it at the end of a step, already past the root.
 
 ## CrossingDirection
 
@@ -41,7 +48,7 @@ When `Evaluate` changes sign in the specified `Direction` between two integratio
 
 ## ManeuverEventDetector
 
-`ManeuverEventDetector` wraps an `ImpulseManeuver` and delegates to `ComputeEventValue()` for the g-function and `EventCrossingDirection` for the trigger direction. When the event fires, it applies the maneuver's delta-V and advances the maneuver chain.
+`ManeuverEventDetector` wraps an `ImpulseManeuver` and delegates to `ComputeEventValue()` for the g-function and `EventCrossingDirection` for the trigger direction. When the event fires, it applies the maneuver's delta-V and advances the maneuver chain. When the precondition of the maneuver (`CheckPreconditions`) fails, it returns `Continue` and the maneuver waits for its next crossing; if no crossing satisfies it within the window, the maneuver is not executed.
 
 ## BisectionEventFinder
 

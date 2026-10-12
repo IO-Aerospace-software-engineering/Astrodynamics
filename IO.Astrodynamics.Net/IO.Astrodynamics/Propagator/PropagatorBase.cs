@@ -204,33 +204,38 @@ public abstract class PropagatorBase : IPropagator
                     Spacecraft.Frame.AddStateOrientationToICRF(eventResult.Orientation);
                 }
 
-                if (eventResult.Action == EventAction.StopAndRestart)
+                // The next segment starts at the event: from the state after the maneuver on StopAndRestart, from the
+                // state at the event, unchanged, on Continue (#355: the same segment used to be integrated again, without
+                // end)
+                bool restart = eventResult.Action == EventAction.StopAndRestart;
+                var nextState = restart ? eventResult.ModifiedState : eventState;
+                currentPos = nextState.Position;
+                currentVel = nextState.Velocity;
+                currentEpoch = nextState.Epoch;
+
+                // Open loop: the maneuver is fixed in epoch and ΔV, so the variational values are continuous at the
+                // event and become the entry values of the next segment
+                if (variational != null)
                 {
-                    // Update state from post-maneuver
-                    currentPos = eventResult.ModifiedState.Position;
-                    currentVel = eventResult.ModifiedState.Velocity;
-                    currentEpoch = eventResult.ModifiedState.Epoch;
+                    entryY = eventY;
+                    entryQ = eventQ;
+                    entryManeuver = restart && detector is ManeuverEventDetector maneuverDetector
+                        ? new ManeuverRecord(eventEpoch, maneuverDetector.Maneuver.DeltaV)
+                        : null;
+                }
 
-                    // Open loop: the maneuver is fixed in epoch and ΔV, so the variational values are continuous at
-                    // the event and become the entry values of the next segment
-                    if (variational != null)
-                    {
-                        entryY = eventY;
-                        entryQ = eventQ;
-                        entryManeuver = detector is ManeuverEventDetector maneuverDetector
-                            ? new ManeuverRecord(eventEpoch, maneuverDetector.Maneuver.DeltaV)
-                            : null;
-                    }
+                // Update event detectors for next segment
+                eventDetectors = UpdateEventDetectors(eventResult.NextDetector);
 
-                    // Update event detectors for next segment
-                    eventDetectors = UpdateEventDetectors(eventResult.NextDetector);
+                // Re-initialize integrator for new dynamics
+                Integrator.Initialize(new StateVector(currentPos, currentVel, InitialState.Observer, currentEpoch,
+                    InitialState.Frame));
 
-                    // Re-initialize integrator for new dynamics
-                    var newState = new StateVector(currentPos, currentVel,
-                        InitialState.Observer, currentEpoch, InitialState.Frame);
-                    Integrator.Initialize(newState);
-
-                    continue;
+                // On Continue, the segment starts at the root just handled, which the detector must not find again;
+                // Velocity-Verlet locates the event at the end of a step, already past the root
+                if (!restart)
+                {
+                    rk78?.SkipRootOfLastEvent();
                 }
             }
             else

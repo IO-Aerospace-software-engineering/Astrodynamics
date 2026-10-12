@@ -34,7 +34,9 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// 63 m, and the maneuver by 99 µs. Recaptured with the fix of #368: the initial state goes through the Keplerian
 /// elements, whose angles now come from atan2 instead of acos, so it is closer to the given state (the GEO z velocity is
 /// now exactly the 10 m/s given, against 10 + 3.3e-11 before); the GEO and maneuver cases moved by 1.4 µm at most, the
-/// SRP case did not move, and the maneuver epoch is unchanged. A golden holds on one platform only (the mathematical library differs between
+/// SRP case did not move, and the maneuver epoch is unchanged. Recaptured with the fix of #360: SRP reads geometric
+/// positions instead of the light time from the observer, so the SRP case moved by 1.7 mm and 1.8e-6 m/s at most, with
+/// the same 102 steps; the two other cases have no SRP and did not move. A golden holds on one platform only (the mathematical library differs between
 /// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>
 /// <para>

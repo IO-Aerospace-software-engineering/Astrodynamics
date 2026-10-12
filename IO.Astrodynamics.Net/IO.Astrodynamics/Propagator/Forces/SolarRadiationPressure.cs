@@ -50,13 +50,8 @@ public class SolarRadiationPressure : ForceBase
     /// </summary>
     internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
-        // Get Sun position relative to the state vector observer
-        Vector3 sunFromObserver;
-        if (EphemerisCache != null && EphemerisCache.Contains(_sun.NaifId, Aberration.LT))
-            sunFromObserver = EphemerisCache.GetPosition(_sun.NaifId, Aberration.LT, stateVector.Epoch);
-        else
-            sunFromObserver = _sun.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT)
-                .ToStateVector().Position;
+        // Geometric Sun position relative to the state vector observer
+        var sunFromObserver = GeometricPosition(_sun, stateVector);
 
         var scPosition = stateVector.ToStateVector().Position;
 
@@ -70,12 +65,7 @@ public class SolarRadiationPressure : ForceBase
 
         foreach (var occultingBody in _occultingBodies)
         {
-            Vector3 occFromObserver;
-            if (EphemerisCache != null && EphemerisCache.Contains(occultingBody.NaifId, Aberration.LT))
-                occFromObserver = EphemerisCache.GetPosition(occultingBody.NaifId, Aberration.LT, stateVector.Epoch);
-            else
-                occFromObserver = occultingBody.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT)
-                    .ToStateVector().Position;
+            var occFromObserver = GeometricPosition(occultingBody, stateVector);
 
             var scToOcc = occFromObserver - scPosition;
             double occAngSize = occultingBody.AngularSize(scToOcc.Magnitude());

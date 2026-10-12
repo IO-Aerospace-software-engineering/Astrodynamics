@@ -287,7 +287,7 @@ public class ThermalRadiationPressureTests
 
         // Place SC toward the Sun so SRP is at full strength
         var epoch = TimeSystem.Time.J2000TDB;
-        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT)
+        var sunPos = Stars.SUN_BODY.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None)
             .ToStateVector().Position;
         var sunDir = sunPos.Normalize();
         var scPos = sunDir * rSc;

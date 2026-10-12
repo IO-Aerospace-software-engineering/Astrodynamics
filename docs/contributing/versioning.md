@@ -151,6 +151,34 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   CONICS at the epoch of the elements, as the overloads with an epoch already did; SPICE OSCELT finds the given
   elements in the state to 2.3e-14. Elliptic elements are unchanged, and no code of the library or the CLI calls this
   overload.
+- **A maneuver whose precondition fails no longer hangs the propagation** ([#355](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/355)).
+  When an event handler returned `EventAction.Continue`, which `ManeuverEventDetector` does when the precondition of
+  its maneuver fails (`CombinedManeuver`, whose apogee must lie near the line of nodes), the propagator ignored it and
+  integrated the same segment again, without end, adding a segment to the solution each time: with RK7(8) the
+  propagation was still running after 20 s with 431 MB allocated, and with Velocity-Verlet it ran out of memory in
+  about 1 s. `Continue` now does what its documentation says: the propagation goes on from the event with the state
+  unchanged and the detector of `NextDetector`, and the occurrence just handled is not detected again. The maneuver
+  fires at the first later occurrence whose precondition holds (for instance once the perturbations have turned the
+  line of apsides towards the nodes); if none does within the window, the propagation ends normally and the maneuver is
+  not executed: its `ThrustWindow` stays null and it remains the standby maneuver. The skipped occurrences split the
+  solution into segments, with the state transition matrix continuous across them. With RK7(8) the event time can
+  fall just before the root, on the 100 ns grid of the epochs, so the next segment starts the detector from its value
+  past that root, the rule Hipparchus applies to a zero at the start of a step; Velocity-Verlet locates the event at
+  the end of a step, already past the root. Propagations without `Continue` are unchanged bit for bit.
+- **SRP, albedo and thermal pressure independent of the observer of the state** ([#360](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/360)).
+  The three forces read the positions of the Sun and of the occulting, reflecting or emitting bodies with the light
+  time from the observer of the state, not from the spacecraft. Relative to the Sun, the central body of a
+  heliocentric propagation, the Earth was moved by its velocity times about 499 s, some 15,000 km: for the same
+  physical state 7000 km from the Earth, SRP in the umbra was 6.9e-7 m/s² instead of zero, and the albedo and thermal
+  accelerations were off by 90 % to 96 %. The forces now read geometric positions (`Aberration.None`), as the
+  cannonball model of Montenbruck and Gill does, and give the same acceleration relative to the Earth and relative to
+  the Sun, to 3.8e-12 relative (1.75e-10 in the penumbra, where the shadow varies over about 65 km). The light time and
+  the aberration from the spacecraft, of order v/c, are neglected: the shadow axis of the Earth is off by the annual
+  aberration, about 20", some 680 m at 7000 km, or about 0.1 s on an eclipse entry in LEO. Planet-centred propagations
+  with these forces change slightly: the Sun seen from the Earth moves by its own motion over the light time, about
+  6 km; the golden SRP case of `PropagationGoldenTests` moved by 1.7 mm and 1.8e-6 m/s over 3 h, with the same steps
+  (recaptured). The ephemeris cache of `CentralBodyPropagator` no longer holds light-time positions, which no force
+  reads any more: it is built in about 40 % of the time (11 ms instead of 27 ms per day for the Moon and the Sun).
 
 ### 10.1.0
 

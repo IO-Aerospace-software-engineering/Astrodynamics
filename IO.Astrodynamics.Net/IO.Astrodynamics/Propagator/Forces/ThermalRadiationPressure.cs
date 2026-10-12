@@ -56,21 +56,8 @@ public class ThermalRadiationPressure : ForceBase
     /// </summary>
     internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
-        // Get emitting body position relative to observer
-        Vector3 bodyFromObserver;
-        if (_emittingBody.Equals(stateVector.Observer))
-        {
-            bodyFromObserver = Vector3.Zero;
-        }
-        else if (EphemerisCache != null && EphemerisCache.Contains(_emittingBody.NaifId, Aberration.LT))
-        {
-            bodyFromObserver = EphemerisCache.GetPosition(_emittingBody.NaifId, Aberration.LT, stateVector.Epoch);
-        }
-        else
-        {
-            bodyFromObserver = _emittingBody.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT)
-                .ToStateVector().Position;
-        }
+        // Geometric emitting body position relative to the observer
+        var bodyFromObserver = GeometricPosition(_emittingBody, stateVector);
 
         var scPosition = stateVector.ToStateVector().Position;
 
