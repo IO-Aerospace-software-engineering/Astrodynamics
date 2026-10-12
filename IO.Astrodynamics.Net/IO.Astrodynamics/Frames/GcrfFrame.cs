@@ -21,6 +21,8 @@ public sealed class GcrfFrame : Frame
     {
     }
 
+    private protected override bool ReadsOrientationCache => true;
+
     public override StateOrientation GetStateOrientationToICRF(Time date)
     {
         if (OrientationCache != null)
