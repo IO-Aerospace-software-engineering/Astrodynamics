@@ -137,6 +137,12 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   it, as in SPICE OSCELT, where it used to put a state before the periapsis after it. The hyperbolic Kepler solver
   starts from `asinh(M/e)` and converges for a negative mean anomaly, where its former guess was NaN. Hyperbolic
   states and elements agree with SPICE OSCELT to 2e-13 relative.
+- **SPICE elements of a parabolic state** ([#373](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/373)).
+  `SpiceAPI.ConvertStateVectorToConicOrbitalElement` threw `ArgumentException` on a parabolic state: SPICE gives a
+  parabola its perifocal distance and no semi-major axis, which `KeplerianElements` requires to be infinite. The
+  elements now have an infinite semi-major axis and the perifocal distance of SPICE, and agree with the given
+  parabolic elements to 1.5e-15 (the mean anomaly relative to 1 + |M|: SPICE and the library follow the same
+  Barker's equation); back to a state, they give the state again within 8e-16 relative.
 
 ### 10.1.0
 

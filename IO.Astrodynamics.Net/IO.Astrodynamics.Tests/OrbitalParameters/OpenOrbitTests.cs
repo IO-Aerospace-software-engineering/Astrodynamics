@@ -92,7 +92,45 @@ public class OpenOrbitTests
         Assert.True(roundTrip < ParabolicTolerance * (1.0 + System.Math.Abs(m)), $"round trip M: {roundTrip:E2}");
     }
 
-    // Measured (Linux, .NET 10, 2026-10-11): the parabola within 3.6e-15 of Barker's trigonometric solution; the
+    [Theory]
+    [MemberData(nameof(ParabolicCases))]
+    public void Parabola_ElementsMatchSpice(double m)
+    {
+        // Arrange
+        var elements = new KeplerianElements(double.PositiveInfinity, 1.0, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
+            TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, perigeeRadius: PeriapsisRadius);
+        var state = elements.ToStateVector();
+
+        // Act: before #373, the conversion threw, SPICE giving no semi-major axis to a parabola
+        var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+
+        // Assert
+        double q = System.Math.Abs(spice.PerigeeRadius() - PeriapsisRadius) / PeriapsisRadius;
+        double e = System.Math.Abs(spice.E - 1.0);
+        double i = System.Math.Abs(spice.I - 0.3);
+        double node = TestHelpers.AngleDifference(spice.RAAN, 0.2);
+        double periapsis = TestHelpers.AngleDifference(spice.AOP, 0.4);
+        double meanAnomaly = System.Math.Abs(spice.M - m);
+        double trueAnomaly = TestHelpers.AngleDifference(spice.TrueAnomaly(), 2.0 * System.Math.Atan(Barker(m)));
+        var back = spice.ToStateVector();
+        double position = (back.Position - state.Position).Magnitude() / state.Position.Magnitude();
+        double velocity = (back.Velocity - state.Velocity).Magnitude() / state.Velocity.Magnitude();
+        _output.WriteLine($"M = {m}: q {q:E2} (relative), e {e:E2}, i {i:E2}, Ω {node:E2}, ω {periapsis:E2}, M {meanAnomaly:E2}, " +
+                          $"ν {trueAnomaly:E2}; back to the state, position {position:E2}, velocity {velocity:E2} (relative)");
+        Assert.True(double.IsPositiveInfinity(spice.A));
+        Assert.True(q < ParabolicTolerance, $"q: {q:E2}");
+        Assert.True(e < ParabolicTolerance, $"e: {e:E2}");
+        Assert.True(i < ParabolicTolerance, $"i: {i:E2}");
+        Assert.True(node < ParabolicTolerance, $"Ω: {node:E2}");
+        Assert.True(periapsis < ParabolicTolerance, $"ω: {periapsis:E2}");
+        Assert.True(meanAnomaly < ParabolicTolerance * (1.0 + System.Math.Abs(m)), $"M: {meanAnomaly:E2}");
+        Assert.True(trueAnomaly < ParabolicTolerance, $"ν: {trueAnomaly:E2}");
+        Assert.True(position < ParabolicTolerance, $"position: {position:E2}");
+        Assert.True(velocity < ParabolicTolerance, $"velocity: {velocity:E2}");
+    }
+
+    // Measured (Linux, .NET 10, 2026-10-11): the parabola within 3.6e-15 of Barker's trigonometric solution and, on
+    // 2026-10-12, its elements within 1.5e-15 of SPICE (M relative to 1 + |M|), its state back within 8e-16; the
     // hyperbola within 2e-13 of SPICE relative to 1 + |M|, the convergence of the hyperbolic Kepler solver (steps
     // below 1e-6, so a residual of order 1e-12)
     private const double ParabolicTolerance = 1e-14;
