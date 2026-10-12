@@ -676,6 +676,14 @@ public class SpiceAPI
 
     public IO.Astrodynamics.OrbitalParameters.StateVector ConvertConicElementsToStateVector(IO.Astrodynamics.OrbitalParameters.KeplerianElements keplerianElements)
     {
+        // The native conic elements solve the elliptic Kepler equation when they are built, an iteration that may never
+        // end on an open orbit (#372): an open orbit goes to SPICE CONICS at the epoch of its elements, as the other
+        // overloads
+        if (keplerianElements.E >= 1.0)
+        {
+            return ConvertConicElementsToStateVector(keplerianElements, keplerianElements.Epoch);
+        }
+
         lock (lockObject)
         {
             return ConvertConicElementsToStateVectorProxy(keplerianElements.Convert()).Convert();

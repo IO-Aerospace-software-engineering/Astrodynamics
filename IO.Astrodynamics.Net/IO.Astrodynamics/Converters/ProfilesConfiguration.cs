@@ -94,6 +94,16 @@ public static class ProfilesConfiguration
     internal static OrbitalParameters.KeplerianElements Convert(this DTO.KeplerianElements keplerianElements)
     {
         var observer = new CelestialBody(keplerianElements.CenterOfMotionId);
+
+        // A parabola has no semi-major axis: SPICE gives its perifocal distance, the library an infinite axis (#373)
+        if (System.Math.Abs(keplerianElements.Eccentricity - 1.0) < 1E-06)
+        {
+            return new KeplerianElements(double.PositiveInfinity, keplerianElements.Eccentricity, keplerianElements.Inclination,
+                keplerianElements.AscendingNodeLongitude, keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer,
+                Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame), new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly,
+                perigeeRadius: keplerianElements.PerifocalDistance);
+        }
+
         return new KeplerianElements(keplerianElements.SemiMajorAxis, keplerianElements.Eccentricity, keplerianElements.Inclination, keplerianElements.AscendingNodeLongitude,
             keplerianElements.PeriapsisArgument, keplerianElements.MeanAnomaly, observer, Time.Create(keplerianElements.Epoch, TimeFrame.TDBFrame),
             new Frame(keplerianElements.Frame), keplerianElements.TrueAnomaly, TimeSpan.FromSeconds(keplerianElements.OrbitalPeriod));

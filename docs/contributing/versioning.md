@@ -137,6 +137,20 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   it, as in SPICE OSCELT, where it used to put a state before the periapsis after it. The hyperbolic Kepler solver
   starts from `asinh(M/e)` and converges for a negative mean anomaly, where its former guess was NaN. Hyperbolic
   states and elements agree with SPICE OSCELT to 2e-13 relative.
+- **SPICE elements of a parabolic state** ([#373](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/373)).
+  `SpiceAPI.ConvertStateVectorToConicOrbitalElement` threw `ArgumentException` on a parabolic state: SPICE gives a
+  parabola its perifocal distance and no semi-major axis, which `KeplerianElements` requires to be infinite. The
+  elements now have an infinite semi-major axis and the perifocal distance of SPICE, and agree with the given
+  parabolic elements to 1.5e-15 (the mean anomaly relative to 1 + |M|: SPICE and the library follow the same
+  Barker's equation); back to a state, they give the state again within 8e-16 relative.
+- **SPICE state of an open orbit at the epoch of its elements** ([#372](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/372)).
+  `SpiceAPI.ConvertConicElementsToStateVector(KeplerianElements)`, the overload without an epoch, never returned on
+  some hyperbolas (before the periapsis, for instance M = -2 at e = 1.5): the native conic elements solved the
+  elliptic Kepler equation when they were built, by an iteration that does not converge for e > 1, and the call held
+  the SPICE lock, so every other SPICE call of the process waited. Parabolic and hyperbolic elements now go to SPICE
+  CONICS at the epoch of the elements, as the overloads with an epoch already did; SPICE OSCELT finds the given
+  elements in the state to 2.3e-14. Elliptic elements are unchanged, and no code of the library or the CLI calls this
+  overload.
 
 ### 10.1.0
 
