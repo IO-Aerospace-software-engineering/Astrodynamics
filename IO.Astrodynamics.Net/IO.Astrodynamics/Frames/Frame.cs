@@ -220,6 +220,64 @@ public class Frame : IEquatable<Frame>
         return new StateOrientation(rotation, angularVelocity, epoch, this);
     }
 
+    /// <summary>
+    /// The rotation of <see cref="ToFrame"/>, the same doubles, without allocating in the propagation's case.
+    /// </summary>
+    /// <remarks>
+    /// The same composition as <see cref="ToFrame"/>, <c>targetToICRF.Rotation.Conjugate() * sourceToICRF.Rotation</c>,
+    /// with each rotation to ICRF from <see cref="GetRotationToICRF"/>: the orientation cache active on the current thread
+    /// or the identity of ICRF allocate nothing, and the other frames go through
+    /// <see cref="GetStateOrientationToICRF(Time)"/>. Used by the forces that work in a body-fixed frame at every stage.
+    /// </remarks>
+    /// <param name="targetFrame">The frame the vectors are rotated to.</param>
+    /// <param name="epoch">Epoch of the transform.</param>
+    /// <returns>The rotation q such that <c>vectorInTarget = vectorInThis.Rotate(q)</c>.</returns>
+    internal Quaternion RotationTo(Frame targetFrame, in Time epoch)
+    {
+        if (targetFrame == this)
+        {
+            return Quaternion.Zero;
+        }
+
+        var sourceToICRF = GetRotationToICRF(epoch);
+        var targetToICRF = targetFrame.GetRotationToICRF(epoch);
+        return targetToICRF.Conjugate() * sourceToICRF;
+    }
+
+    /// <summary>
+    /// The rotation of <see cref="GetStateOrientationToICRF(Time)"/>, the same doubles, without allocating when it
+    /// comes from the orientation cache active on the current thread or when this frame is ICRF.
+    /// </summary>
+    /// <remarks>
+    /// ICRF to ICRF is the identity: SPICE returns exactly (1, 0, 0, 0), bit for bit
+    /// (<c>FrameRotationTests.IcrfToIcrf_IsTheIdentityBitForBit</c>), which is <see cref="Quaternion.Zero"/>; reading it
+    /// would otherwise store an orientation per epoch. The cache is used only by a frame whose
+    /// <see cref="GetStateOrientationToICRF(Time)"/> reads it (<see cref="ReadsOrientationCache"/>), so that the two
+    /// methods agree for every frame.
+    /// </remarks>
+    internal Quaternion GetRotationToICRF(in Time date)
+    {
+        // In the order of GetStateOrientationToICRF: the cache first, then the orientation of the frame
+        var cache = OrientationCache;
+        if (cache != null && ReadsOrientationCache)
+        {
+            return cache.GetRotation(date);
+        }
+
+        if (GetType() == typeof(Frame) && Name == ICRF.Name)
+        {
+            return Quaternion.Zero;
+        }
+
+        return GetStateOrientationToICRF(date).Rotation;
+    }
+
+    /// <summary>
+    /// Whether <see cref="GetStateOrientationToICRF(Time)"/> reads the orientation cache active on the current thread:
+    /// the base frame does; a subclass that overrides it says so.
+    /// </summary>
+    private protected virtual bool ReadsOrientationCache => GetType() == typeof(Frame);
+
     public void ClearStateOrientations()
     {
         _stateOrientationsToICRF.Clear();

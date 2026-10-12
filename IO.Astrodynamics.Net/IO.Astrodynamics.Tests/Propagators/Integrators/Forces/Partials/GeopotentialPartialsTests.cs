@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
@@ -175,6 +176,12 @@ public class GeopotentialPartialsTests : IClassFixture<GeopotentialPartialsBodie
         Assert.Equal(full, above);
     }
 
+    // Departure of the reduced block from degree 70 at LEO 400 km, relative to ‖G‖, as published on the provenance page
+    private static readonly System.Collections.Generic.Dictionary<int, double> LeoPublishedDepartures = new()
+    {
+        { 2, 4.7e-5 }, { 8, 3.1e-5 }, { 20, 3.2e-5 }
+    };
+
     [Theory]
     [InlineData(PartialsTestCases.Leo400, false)]
     [InlineData(PartialsTestCases.Geo, true)]
@@ -208,32 +215,48 @@ public class GeopotentialPartialsTests : IClassFixture<GeopotentialPartialsBodie
             {
                 Assert.True(difference < previous, $"degree {degree}: {difference:E2}");
             }
+            else
+            {
+                // The departures published on the provenance page, within a factor of 2
+                double published = LeoPublishedDepartures[degree];
+                Assert.True(difference > 0.5 * published && difference < 2.0 * published,
+                    $"degree {degree}: {difference:E2}, published {published:E1}");
+            }
 
             previous = difference;
         }
     }
 
     [Fact]
-    public void AnalyticPartials_AllocateNothingBeyondTheRotationToTheBodyFixedFrame()
+    public void AccelerationAndPartials_WithTheOrientationCacheOfAPropagation_AllocateNothing()
     {
-        // Arrange: Earth fixed frame orientations come from SPICE and are cached by epoch after the first call
+        // Arrange: the propagation's case, the orientation cache of the Earth-fixed frame active on this thread; the
+        // rotation is shared by the acceleration and the partials (Frame.RotationTo)
         var earth = _bodies.Earths[70];
         var state = State(PartialsTestCases.Leo400, earth);
+        var cache = new PropagationFrameOrientationCache(
+            new TimeSystem.Window(state.Epoch.AddHours(-1.0), state.Epoch.AddHours(1.0)), earth.Frame,
+            TimeSpan.FromSeconds(60.0));
         var dadr = new double[9];
-        earth.TryAccumulateGravitationalPositionPartials(state, dadr);
-        _ = state.Frame.ToFrame(earth.Frame, state.Epoch);
 
-        // Act
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        _ = state.Frame.ToFrame(earth.Frame, state.Epoch);
-        long rotation = GC.GetAllocatedBytesForCurrentThread() - before;
-        before = GC.GetAllocatedBytesForCurrentThread();
-        earth.TryAccumulateGravitationalPositionPartials(state, dadr);
-        long partials = GC.GetAllocatedBytesForCurrentThread() - before;
+        using (Frames.Frame.UseOrientationCache(earth.Frame, cache))
+        {
+            earth.TryAccumulateGravitationalPositionPartials(state, dadr);
+            _ = earth.EvaluateGravitationalAcceleration(state);
 
-        // Assert
-        _output.WriteLine($"rotation {rotation} bytes, partials {partials} bytes");
-        Assert.Equal(rotation, partials);
+            // Act
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            earth.TryAccumulateGravitationalPositionPartials(state, dadr);
+            long partials = GC.GetAllocatedBytesForCurrentThread() - before;
+            before = GC.GetAllocatedBytesForCurrentThread();
+            _ = earth.EvaluateGravitationalAcceleration(state);
+            long acceleration = GC.GetAllocatedBytesForCurrentThread() - before;
+
+            // Assert
+            _output.WriteLine($"partials {partials} bytes, acceleration {acceleration} bytes");
+            Assert.Equal(0, partials);
+            Assert.Equal(0, acceleration);
+        }
     }
 
     [Fact]

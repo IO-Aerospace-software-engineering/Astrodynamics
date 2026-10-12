@@ -44,8 +44,8 @@ public class GravitationalAcceleration : ForceBase
     /// Cunningham recursion (B3); otherwise the default central differences.
     /// </summary>
     /// <remarks>
-    /// For a state relative to the body, the propagator's case, the point-mass path allocates nothing, and the
-    /// geopotential path only the orientation records of its rotation to the body-fixed frame. For a state relative to
+    /// For a state relative to the body, the propagator's case, the point-mass path allocates nothing, and neither does
+    /// the geopotential path while the orientation cache of the propagation is active. For a state relative to
     /// another observer, the state relative to the body is built as in <see cref="Apply(StateVector)"/>: one
     /// <see cref="StateVector"/> from the ephemeris cache, or a SPICE call without it.
     /// </remarks>

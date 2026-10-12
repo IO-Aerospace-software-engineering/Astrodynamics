@@ -60,21 +60,37 @@ public sealed class PropagationFrameOrientationCache
     /// </summary>
     public StateOrientation GetOrientation(in Time epoch)
     {
+        Locate(epoch, out var p0, out var p1, out double ratio);
+        var rotation = p0.Rotation.SLERP(p1.Rotation, ratio);
+        var angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
+
+        return new StateOrientation(rotation, angularVelocity, epoch, Frame.ICRF);
+    }
+
+    /// <summary>
+    /// The rotation of <see cref="GetOrientation"/>, the same doubles, without allocating.
+    /// </summary>
+    internal Quaternion GetRotation(in Time epoch)
+    {
+        Locate(epoch, out var p0, out var p1, out double ratio);
+        return p0.Rotation.SLERP(p1.Rotation, ratio);
+    }
+
+    /// <summary>
+    /// The grid points around <paramref name="epoch"/> and its position between them, in [0, 1].
+    /// </summary>
+    private void Locate(in Time epoch, out OrientationPoint p0, out OrientationPoint p1, out double ratio)
+    {
         double t = epoch.TimeSpanFromJ2000().TotalSeconds;
 
         int idx = (int)((t - _startEpochSeconds) / _gridStepSeconds);
         idx = System.Math.Clamp(idx, 0, _gridSize - 2);
 
-        var p0 = _points[idx];
-        var p1 = _points[idx + 1];
+        p0 = _points[idx];
+        p1 = _points[idx + 1];
 
         double dt = p1.EpochSeconds - p0.EpochSeconds;
-        double ratio = dt > 0 ? (t - p0.EpochSeconds) / dt : 0.0;
+        ratio = dt > 0 ? (t - p0.EpochSeconds) / dt : 0.0;
         ratio = System.Math.Clamp(ratio, 0.0, 1.0);
-
-        var rotation = p0.Rotation.SLERP(p1.Rotation, ratio);
-        var angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
-
-        return new StateOrientation(rotation, angularVelocity, epoch, Frame.ICRF);
     }
 }

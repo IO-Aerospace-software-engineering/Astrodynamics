@@ -13,8 +13,9 @@ namespace IO.Astrodynamics.Body;
 /// Computes gravitational acceleration including spherical harmonic (geopotential) perturbations.
 /// <para>
 /// <b>Thread safety:</b> This class is <b>not</b> thread-safe. Internal buffers (Legendre tables,
-/// trig arrays) are reused across calls for performance. Create a separate instance per thread
-/// when propagating multiple spacecraft concurrently.
+/// trig arrays, and the Cunningham tables of the partials when the state transition matrix is integrated) are
+/// reused across calls for performance. Create a separate instance per thread when propagating multiple spacecraft
+/// concurrently.
 /// </para>
 /// </summary>
 public class GeopotentialGravitationalField : GravitationalField
@@ -134,12 +135,13 @@ public class GeopotentialGravitationalField : GravitationalField
     /// and W_nm extended to degree n + 2: O. Montenbruck, E. Gill, Satellite Orbits, Springer (2000), chapter 3
     /// (recursions of V_nm and W_nm, acceleration) and chapter 7 (partials of the acceleration); section and equation
     /// numbers to be verified by S. Guillet. The block is brought back to the frame of the state by Rᵀ H R, with R the
-    /// rotation of the acceleration (<see cref="Frames.Frame.ToFrame"/>, the frame of the state to the body-fixed frame,
-    /// at the epoch of the state). It is symmetric by construction: the upper triangle is computed and mirrored.
+    /// rotation of the acceleration (<see cref="Frames.Frame.RotationTo"/>, the frame of the state to the body-fixed
+    /// frame, at the epoch of the state). It is symmetric by construction: the upper triangle is computed and mirrored.
     /// </para>
     /// <para>
-    /// The tables are kept by the instance and reused, so this method allocates nothing beyond the rotation, and is not
-    /// thread-safe, as the acceleration.
+    /// The tables are kept by the instance and reused, and the rotation allocates nothing in the propagation's case (the
+    /// orientation cache active on the thread), so this method allocates nothing there; it is not thread-safe, as the
+    /// acceleration.
     /// </para>
     /// </remarks>
     /// <param name="stateVector">The state, relative to the attracting body.</param>
@@ -162,7 +164,7 @@ public class GeopotentialGravitationalField : GravitationalField
         var fixedPosition = position;
         if (stateVector.Frame != observer.Frame)
         {
-            var rotation = stateVector.Frame.ToFrame(observer.Frame, stateVector.Epoch).Rotation;
+            var rotation = stateVector.Frame.RotationTo(observer.Frame, stateVector.Epoch);
             column0 = column0.Rotate(rotation);
             column1 = column1.Rotate(rotation);
             column2 = column2.Rotate(rotation);
@@ -447,8 +449,13 @@ public class GeopotentialGravitationalField : GravitationalField
     public override Vector3 ComputeGravitationalAcceleration(StateVector stateVector)
     {
         var observer = (CelestialBody)stateVector.Observer;
-        var svFixedFrame = stateVector.ToFrame(observer.Frame).ToStateVector();
-        var position = svFixedFrame.Position;
+        var fixedFrame = observer.Frame;
+
+        // The position in the body-fixed frame, as OrbitalParameters.ToFrame gives it (the same rotation, and the
+        // position itself when the frames are the same), without allocating: see Frame.RotationTo
+        var position = stateVector.Frame == fixedFrame
+            ? stateVector.Position
+            : stateVector.Position.Rotate(stateVector.Frame.RotationTo(fixedFrame, stateVector.Epoch));
 
         double x = position.X;
         double y = position.Y;
@@ -549,6 +556,6 @@ public class GeopotentialGravitationalField : GravitationalField
         var bodyFixedAcceleration = new Vector3(ax, ay, az);
 
         // Rotate from body-fixed to original inertial frame
-        return bodyFixedAcceleration.Rotate(svFixedFrame.Frame.ToFrame(stateVector.Frame, stateVector.Epoch).Rotation);
+        return bodyFixedAcceleration.Rotate(fixedFrame.RotationTo(stateVector.Frame, stateVector.Epoch));
     }
 }
