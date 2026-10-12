@@ -57,29 +57,9 @@ public class AlbedoRadiationPressure : ForceBase
     /// </summary>
     internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
-        // Get Sun position relative to observer
-        Vector3 sunFromObserver;
-        if (EphemerisCache != null && EphemerisCache.Contains(_sun.NaifId, Aberration.LT))
-            sunFromObserver = EphemerisCache.GetPosition(_sun.NaifId, Aberration.LT, stateVector.Epoch);
-        else
-            sunFromObserver = _sun.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT)
-                .ToStateVector().Position;
-
-        // Get reflecting body position relative to observer
-        Vector3 bodyFromObserver;
-        if (_reflectingBody.Equals(stateVector.Observer))
-        {
-            bodyFromObserver = Vector3.Zero;
-        }
-        else if (EphemerisCache != null && EphemerisCache.Contains(_reflectingBody.NaifId, Aberration.LT))
-        {
-            bodyFromObserver = EphemerisCache.GetPosition(_reflectingBody.NaifId, Aberration.LT, stateVector.Epoch);
-        }
-        else
-        {
-            bodyFromObserver = _reflectingBody.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.LT)
-                .ToStateVector().Position;
-        }
+        // Geometric Sun and reflecting body positions relative to the observer
+        var sunFromObserver = GeometricPosition(_sun, stateVector);
+        var bodyFromObserver = GeometricPosition(_reflectingBody, stateVector);
 
         var scPosition = stateVector.ToStateVector().Position;
 

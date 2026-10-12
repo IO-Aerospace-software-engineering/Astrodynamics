@@ -48,6 +48,15 @@ propagator can pass its whole body list, Sun included.
 |----------|---------|-------------|
 | `SolarRadiationCoeff` (Cr) | 1.0 | Set on the `Spacecraft` constructor |
 
+!!! note "Geometric positions"
+    SRP, albedo and thermal pressure read the geometric positions (`Aberration.None`) of the Sun and of the occulting,
+    reflecting or emitting bodies, as the cannonball model of Montenbruck and Gill, *Satellite Orbits*, §3.4, does. The
+    acceleration therefore does not depend on the observer the state is expressed relative to: the same physical state
+    relative to the Earth or to the Sun gives the same acceleration. The light time and the aberration from the
+    spacecraft, of order v/c, are neglected: the shadow axis of the Earth is off by the annual aberration, about 20",
+    some 680 m at 7000 km from its centre (about 0.1 s on an eclipse entry in LEO). The positions do not depend on the
+    state of the spacecraft, so these forces do not depend on its velocity.
+
 ### GeopotentialGravitationalField
 
 EGM2008 spherical harmonics up to degree 70 with geodesy-normalized Legendre functions (no Condon-Shortley phase).

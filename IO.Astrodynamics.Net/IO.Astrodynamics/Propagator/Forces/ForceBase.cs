@@ -1,6 +1,7 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
@@ -45,6 +46,36 @@ public abstract class ForceBase
     /// </summary>
     internal PropagationEphemerisCache EphemerisCache { get; set; }
 
+    /// <summary>
+    /// Geometric position of <paramref name="body"/> relative to the observer of <paramref name="stateVector"/>, in
+    /// its frame, at its epoch: zero when the body is that observer, from the ephemeris cache when it holds the body,
+    /// otherwise from SPICE with <see cref="Aberration.None"/>.
+    /// </summary>
+    /// <remarks>
+    /// The radiation forces combine these positions with the position of the spacecraft. Geometric positions make the
+    /// acceleration independent of the observer the state is expressed relative to; a light time from that observer
+    /// moved the bodies by their velocity times the light time, about 15,000 km for the Earth seen from the Sun (#360).
+    /// The light time and the aberration from the spacecraft, of order v/c, are neglected, as in the cannonball model
+    /// of Montenbruck and Gill, <i>Satellite Orbits</i>, §3.4 (to be verified by S. Guillet): the shadow axis of the
+    /// Earth is off by the annual aberration, about 20", some 680 m at 7000 km. The positions do not depend on the
+    /// state of the spacecraft, so the radiation forces do not depend on its velocity.
+    /// </remarks>
+    /// <param name="body">The Sun, or an occulting, reflecting or emitting body.</param>
+    /// <param name="stateVector">The state of the spacecraft; the ephemeris cache, when set, is relative to its
+    /// observer and in its frame.</param>
+    /// <returns>The position of the body, in m.</returns>
+    private protected Vector3 GeometricPosition(CelestialItem body, StateVector stateVector)
+    {
+        if (body.Equals(stateVector.Observer))
+            return Vector3.Zero;
+
+        if (EphemerisCache != null && EphemerisCache.Contains(body.NaifId, Aberration.None))
+            return EphemerisCache.GetPosition(body.NaifId, Aberration.None, stateVector.Epoch);
+
+        return body.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None)
+            .ToStateVector().Position;
+    }
+
     public abstract Vector3 Apply(StateVector stateVector);
 
     /// <summary>
@@ -87,10 +118,10 @@ public abstract class ForceBase
     /// <para>
     /// Precondition: <paramref name="stateVector"/> is the state the integrator propagates, relative to the observer of
     /// the propagation and in its frame, the observer and frame of the ephemeris cache. The partials differentiate
-    /// <see cref="Apply(StateVector, in ForceEvaluationContext)"/>, which shares that precondition: some forces read
-    /// body positions relative to that observer (the third bodies), or apply the light time from it (SRP, albedo,
-    /// thermal), so the same physical state re-expressed relative to another observer can give another acceleration
-    /// and other partials.
+    /// <see cref="Apply(StateVector, in ForceEvaluationContext)"/>, which shares that precondition: the third bodies
+    /// read body positions relative to the central body, the observer of the propagation. The radiation forces (SRP,
+    /// albedo, thermal) read geometric positions relative to the observer of the state, so they give the same
+    /// acceleration whatever that observer (#360).
     /// </para>
     /// </remarks>
     /// <param name="stateVector">The state, relative to the observer of the propagation.</param>

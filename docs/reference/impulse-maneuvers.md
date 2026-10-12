@@ -8,7 +8,7 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 |--------|-------------|
 | `ComputeEventValue(StateVector)` | Scalar g-function evaluated at the current state |
 | `EventCrossingDirection` | `CrossingDirection` that triggers the burn |
-| `CheckPreconditions(StateVector)` | Optional additional constraints (returns `true` to allow firing) |
+| `CheckPreconditions(StateVector)` | Optional additional constraints (returns `true` to allow firing). When it returns `false`, the occurrence is skipped and the maneuver waits for its next crossing; if none satisfies it within the window, the maneuver is not executed (`ThrustWindow` stays null) |
 | `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state |
 | `ThrustWindow` | Window of the equivalent finite burn (see below) |
 | `ManeuverWindow` | Thrust window extended by the maneuver hold duration |

@@ -112,7 +112,6 @@ public sealed class PartialsTestCases
         foreach (var body in bodies)
         {
             entries.Add((body, Aberration.None));
-            entries.Add((body, Aberration.LT));
         }
 
         return new PropagationEphemerisCache(window, entries, observer, frame, TimeSpan.FromSeconds(60.0));

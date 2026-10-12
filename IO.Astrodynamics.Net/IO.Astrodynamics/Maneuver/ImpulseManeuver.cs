@@ -37,6 +37,12 @@ namespace IO.Astrodynamics.Maneuver
         /// Optional precondition check at event time (default: true).
         /// Override for maneuvers with additional constraints (e.g., CombinedManeuver).
         /// </summary>
+        /// <remarks>
+        /// When it returns false, the propagation skips this occurrence of the event and continues: the maneuver fires at
+        /// the first later occurrence whose precondition holds. If none does within the propagation window, the
+        /// maneuver is not executed: its <see cref="Maneuver.ThrustWindow"/> stays null and it remains the standby
+        /// maneuver of the spacecraft.
+        /// </remarks>
         public virtual bool CheckPreconditions(StateVector state) => true;
 
         protected ImpulseManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, Engine engine) : base(maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)

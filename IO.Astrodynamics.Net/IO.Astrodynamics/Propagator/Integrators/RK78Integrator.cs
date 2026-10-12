@@ -60,6 +60,12 @@ public sealed class RK78Integrator : Integrator
     private double[] _variationalEntryQ;
     private ManeuverRecord? _variationalEntryManeuver;
 
+    // The detector of the last event and its g-value at the end of the step that contained the root, on the side past
+    // the root; the next segment starts from that value when the propagation continues after the event (#355)
+    private IEventDetector _lastEventDetector;
+    private double _lastEventGPastRoot;
+    private bool _skipRootOfLastEvent;
+
     /// <summary>
     /// Create an adaptive RK7(8) integrator.
     /// Forces are added externally via <see cref="Integrator.AddForce"/>;
@@ -127,6 +133,25 @@ public sealed class RK78Integrator : Integrator
         // nearby events (e.g., a periapsis crossing immediately after a burn).
         _currentH = _initialH;
         _controller?.Reset();
+        _skipRootOfLastEvent = false;
+    }
+
+    /// <summary>
+    /// The next segment starts at the root of the last event, which the propagation continues past (an
+    /// <see cref="EventAction.Continue"/>): its detector starts from its g-value past that root, so the root is not
+    /// found again. Call it after <see cref="Initialize"/>.
+    /// </summary>
+    /// <remarks>
+    /// The event time is the midpoint of the last bisection bracket, moved to the 100 ns grid of the epochs, so the
+    /// state the segment starts from can be just before the root, on the side the g-function crossed from. Its g-value
+    /// would then make the first step cross the same root again, at the same epoch, without end. Starting from the sign
+    /// past the root is the rule Hipparchus applies to a zero of a g-function at the start of a step (its
+    /// <c>EventState</c>; to be verified by S. Guillet). A later crossing in the same direction needs a crossing in the
+    /// other direction first, which a step of the integrator does not hold without being detected, so no event is lost.
+    /// </remarks>
+    internal void SkipRootOfLastEvent()
+    {
+        _skipRootOfLastEvent = _lastEventDetector != null;
     }
 
     /// <summary>
@@ -206,8 +231,14 @@ public sealed class RK78Integrator : Integrator
             for (int i = 0; i < eventDetectors.Count; i++)
             {
                 prevG[i] = eventDetectors[i].IsActive ? eventDetectors[i].Evaluate(EvalState) : 0.0;
+                if (_skipRootOfLastEvent && ReferenceEquals(eventDetectors[i], _lastEventDetector))
+                {
+                    prevG[i] = _lastEventGPastRoot;
+                }
             }
         }
+
+        _skipRootOfLastEvent = false;
 
         while (true)
         {
@@ -374,6 +405,9 @@ public sealed class RK78Integrator : Integrator
     private EventInfo LocateEvent(PropagationSegment segment, IEventDetector detector, int detectorIndex, double gStart,
         double gEnd)
     {
+        _lastEventDetector = detector;
+        _lastEventGPastRoot = gEnd;
+
         var step = segment.Steps[^1];
         double stepEnd = step.CumulativeTime + step.StepSize;
         var baseEpoch = segment.BaseEpoch;
