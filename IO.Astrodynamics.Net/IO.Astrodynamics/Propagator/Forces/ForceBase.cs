@@ -48,8 +48,8 @@ public abstract class ForceBase
     /// acceleration independent of the observer the state is expressed relative to; a light time from that observer
     /// moved the bodies by their velocity times the light time, about 15,000 km for the Earth seen from the Sun (#360).
     /// The light time and the aberration from the spacecraft, of order v/c, are neglected, as in the cannonball model
-    /// of Montenbruck and Gill, <i>Satellite Orbits</i>, §3.4 (to be verified by S. Guillet): the shadow axis of the
-    /// Earth is off by the annual aberration, about 20", some 680 m at 7000 km. The positions do not depend on the
+    /// of Montenbruck and Gill, <i>Satellite Orbits</i>, §3.4 (confirmed by S. Guillet, 2026-10-13): the shadow axis of
+    /// the Earth is off by the annual aberration, about 20", some 680 m at 7000 km. The positions do not depend on the
     /// state of the spacecraft, so the radiation forces do not depend on its velocity.
     /// </remarks>
     /// <param name="body">The Sun, or an occulting, reflecting or emitting body.</param>
