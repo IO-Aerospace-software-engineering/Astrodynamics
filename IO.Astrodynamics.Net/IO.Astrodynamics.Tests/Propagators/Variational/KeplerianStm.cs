@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// c2(ψ) = (1 − cos √ψ) / ψ and c3(ψ) = (√ψ − sin √ψ) / ψ^(3/2).
 /// References: Goodyear, Astronomical Journal 70, 189 (1965); Vallado, Fundamentals of Astrodynamics and Applications,
 /// 4th ed. (2013), algorithm 8; Bate, Mueller &amp; White, Fundamentals of Astrodynamics (1971), sections 4.4 and 4.5;
-/// to be verified by S. Guillet. Compared, without copying code, with the open implementation of hapsira 0.18.0 (MIT
+/// confirmed by S. Guillet (2026-10-12). Compared, without copying code, with the open implementation of hapsira 0.18.0 (MIT
 /// license), hapsira/core/propagation/vallado.py and hapsira/_math/special.py, read on 2026-10-08.
 /// </para>
 /// <para>

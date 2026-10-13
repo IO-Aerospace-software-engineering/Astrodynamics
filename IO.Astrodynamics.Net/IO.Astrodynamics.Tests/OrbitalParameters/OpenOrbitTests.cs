@@ -190,7 +190,7 @@ public class OpenOrbitTests
 
     // The parabolic anomaly D of Barker's equation M = D + D³/3 by its trigonometric solution: cot 2s = 3M/2,
     // tan³ w = tan s, D = 2 cot 2w (D. A. Vallado, Fundamentals of Astrodynamics and Applications, 4th edition, 2013,
-    // algorithm 3; to be verified by S. Guillet). Independent of the closed form 2 sinh(asinh(3M/2)/3) of the library.
+    // algorithm 3; confirmed by S. Guillet, 2026-10-12). Independent of the closed form 2 sinh(asinh(3M/2)/3) of the library.
     private static double Barker(double m)
     {
         double s = 0.5 * System.Math.Atan2(1.0, 1.5 * m);

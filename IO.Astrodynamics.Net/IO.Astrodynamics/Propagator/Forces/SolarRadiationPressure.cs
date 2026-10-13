@@ -122,8 +122,8 @@ public class SolarRadiationPressure : ForceBase
     /// </summary>
     /// <remarks>
     /// The point-mass block (B2) with μ = −k Cr (A/m) (1 − ν). Reference: Montenbruck and Gill, Satellite Orbits,
-    /// Springer (2000), chapter 7 (partials of the solar radiation pressure; to be verified by S. Guillet, section and
-    /// equation numbers). Same block as the SRP rows of the A matrix of NASA GMAT (<c>SolarRadiationPressure.cpp</c>,
+    /// Springer (2000), chapter 7 (partials of the solar radiation pressure; confirmed by S. Guillet,
+    /// 2026-10-13). Same block as the SRP rows of the A matrix of NASA GMAT (<c>SolarRadiationPressure.cpp</c>,
     /// spherical model), compared on the source without copying code.
     /// </remarks>
     internal void AccumulateAnalyticStatePartials(StateVector stateVector, in ForceEvaluationContext context,

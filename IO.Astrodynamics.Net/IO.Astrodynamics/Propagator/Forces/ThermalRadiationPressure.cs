@@ -79,8 +79,7 @@ public class ThermalRadiationPressure : ForceBase
     /// </summary>
     /// <remarks>
     /// The acceleration has the inverse-square form of the cannonball solar radiation pressure, so its partials are those
-    /// of Montenbruck and Gill, Satellite Orbits, Springer (2000), chapter 7 (to be verified by S. Guillet, section and
-    /// equation numbers), with the emitting body as the source: the point-mass block (B2) with μ = −K Cr (A/m). Within
+    /// of Montenbruck and Gill, Satellite Orbits, Springer (2000), chapter 7 (confirmed by S. Guillet, 2026-10-13), with the emitting body as the source: the point-mass block (B2) with μ = −K Cr (A/m). Within
     /// 1 m of the centre of the body the acceleration is zero, and so are the partials.
     /// </remarks>
     private protected override void AccumulateStatePartialsCore(StateVector stateVector,
