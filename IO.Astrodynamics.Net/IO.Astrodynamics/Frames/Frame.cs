@@ -245,6 +245,58 @@ public class Frame : IEquatable<Frame>
     }
 
     /// <summary>
+    /// The angular velocity of <see cref="ToFrame"/>, the same doubles, without allocating in the propagation's case.
+    /// </summary>
+    /// <remarks>
+    /// The same composition as <see cref="ToFrame"/>,
+    /// <c>targetToICRF.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceToICRF.AngularVelocity</c>, with
+    /// the orientations to ICRF from <see cref="GetRotationAndAngularVelocityToICRF"/>, as <see cref="RotationTo"/>
+    /// does for the rotation. Used by atmospheric drag at every stage.
+    /// </remarks>
+    /// <param name="targetFrame">The target frame.</param>
+    /// <param name="epoch">Epoch of the transform.</param>
+    /// <returns>The angular velocity of the target frame relative to this one, in the axes of this frame, in rad/s.</returns>
+    internal Vector3 AngularVelocityTo(Frame targetFrame, in Time epoch)
+    {
+        if (targetFrame == this)
+        {
+            return Vector3.Zero;
+        }
+
+        GetRotationAndAngularVelocityToICRF(epoch, out var sourceRotation, out var sourceAngularVelocity);
+        targetFrame.GetRotationAndAngularVelocityToICRF(epoch, out var targetRotation, out var targetAngularVelocity);
+        var rotation = targetRotation.Conjugate() * sourceRotation;
+        return targetAngularVelocity.Inverse().Rotate(rotation.Conjugate()) + sourceAngularVelocity;
+    }
+
+    /// <summary>
+    /// The rotation and the angular velocity of <see cref="GetStateOrientationToICRF(Time)"/>, the same doubles,
+    /// without allocating when they come from the orientation cache active on the current thread or when this frame is
+    /// ICRF (the identity and a zero angular velocity, which SPICE returns exactly), in the order of
+    /// <see cref="GetRotationToICRF"/>.
+    /// </summary>
+    internal void GetRotationAndAngularVelocityToICRF(in Time date, out Quaternion rotation, out Vector3 angularVelocity)
+    {
+        var cache = OrientationCache;
+        if (cache != null && ReadsOrientationCache)
+        {
+            cache.GetRotationAndAngularVelocity(date, out rotation, out angularVelocity);
+            return;
+        }
+
+        if (GetType() == typeof(Frame) && Name == ICRF.Name)
+        {
+            rotation = Quaternion.Zero;
+            angularVelocity = Vector3.Zero;
+            return;
+        }
+
+        var orientation = GetStateOrientationToICRF(date);
+        rotation = orientation.Rotation;
+        angularVelocity = orientation.AngularVelocity;
+    }
+
+    /// <summary>
     /// The rotation of <see cref="GetStateOrientationToICRF(Time)"/>, the same doubles, without allocating when it
     /// comes from the orientation cache active on the current thread or when this frame is ICRF.
     /// </summary>

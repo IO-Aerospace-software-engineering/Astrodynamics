@@ -77,6 +77,16 @@ public sealed class PropagationFrameOrientationCache
     }
 
     /// <summary>
+    /// The rotation and the angular velocity of <see cref="GetOrientation"/>, the same doubles, without allocating.
+    /// </summary>
+    internal void GetRotationAndAngularVelocity(in Time epoch, out Quaternion rotation, out Vector3 angularVelocity)
+    {
+        Locate(epoch, out var p0, out var p1, out double ratio);
+        rotation = p0.Rotation.SLERP(p1.Rotation, ratio);
+        angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
+    }
+
+    /// <summary>
     /// The grid points around <paramref name="epoch"/> and its position between them, in [0, 1].
     /// </summary>
     private void Locate(in Time epoch, out OrientationPoint p0, out OrientationPoint p1, out double ratio)

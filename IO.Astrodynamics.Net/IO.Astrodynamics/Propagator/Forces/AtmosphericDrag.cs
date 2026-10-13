@@ -1,5 +1,4 @@
 using System;
-using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -159,15 +158,9 @@ public class AtmosphericDrag : ForceBase
         var planetodetic = _celestialBody.SubObserverPoint(bodyFixed, epoch, Aberration.None)
             .ToPlanetodetic(_celestialBody.Flattening, _celestialBody.EquatorialRadius);
 
-        // Create rich atmospheric context with time and position for complex models
-        var atmosphericContext = AtmosphericContext.FromPlanetodetic(
-            planetodetic.Altitude,
-            planetodetic.Latitude,
-            planetodetic.Longitude,
-            epoch
-        );
-
-        return _celestialBody.GetAirDensity(atmosphericContext);
+        // The density of the atmospheric context of the position and the epoch, without building it when the model
+        // allows (NRLMSISE-00)
+        return _celestialBody.GetAirDensity(planetodetic.Altitude, planetodetic.Latitude, planetodetic.Longitude, epoch);
     }
 
     /// <summary>
@@ -207,7 +200,7 @@ public class AtmosphericDrag : ForceBase
         // Angular velocity of the body frame relative to the inertial frame of the state, expressed in that frame
         // (Frame.ToFrame convention: target relative to source, in the source axes). It is the same vector for any
         // inertial frame, so drag does not depend on the frame of the propagation.
-        var omega = _celestialBody.GetOrientation(stateVector.Frame, stateVector.Epoch).AngularVelocity;
+        var omega = stateVector.Frame.AngularVelocityTo(_celestialBody.Frame, stateVector.Epoch);
 
         // Atmosphere-relative velocity: v_rel = v_body_centered - omega x r_body_centered
         return new RelativeState(position, omega, velocity - omega.Cross(position));

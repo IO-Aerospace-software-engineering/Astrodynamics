@@ -1,6 +1,7 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 
@@ -13,8 +14,11 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 /// NRLMSISE-00 (Naval Research Laboratory Mass Spectrometer and Incoherent Scatter Radar)
 /// is an empirical model of Earth's atmosphere from ground to space.
 /// </remarks>
-public class Nrlmsise00Model : IAtmosphericModel
+public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel
 {
+    // The default 3 hr AP indices, one instance: the model only reads them.
+    private static readonly ApArray DefaultApArray = ApArray.Default;
+
     private readonly NRLMSISE00 _model;
     private readonly NrlmsiseFlags _flags;
     private readonly SpaceWeather _spaceWeather;
@@ -129,8 +133,35 @@ public class Nrlmsise00Model : IAtmosphericModel
     /// <exception cref="ArgumentException">Thrown if context lacks required epoch or geodetic position.</exception>
     public double GetDensity(IAtmosphericContext context)
     {
-        var output = ComputeAtmosphere(context);
-        return output.D[5]; // Total mass density in kg/m³
+        Validate(context);
+        return GetDensity(context.Altitude, context.GeodeticLatitude.Value, context.GeodeticLongitude.Value,
+            context.Epoch.Value);
+    }
+
+    /// <summary>
+    /// Total mass density at a geodetic position and an epoch, the value of
+    /// <see cref="GetDensity(IAtmosphericContext)"/> for the same context, without allocating.
+    /// </summary>
+    /// <param name="altitude">Altitude, in m.</param>
+    /// <param name="geodeticLatitude">Geodetic latitude, in rad.</param>
+    /// <param name="geodeticLongitude">Geodetic longitude, in rad.</param>
+    /// <param name="epoch">Epoch.</param>
+    /// <returns>Density in kg/m³.</returns>
+    double IGeodeticDensityModel.GetDensity(double altitude, double geodeticLatitude, double geodeticLongitude,
+        in Time epoch)
+    {
+        return GetDensity(altitude, geodeticLatitude, geodeticLongitude, epoch);
+    }
+
+    private double GetDensity(double altitude, double geodeticLatitude, double geodeticLongitude, in Time epoch)
+    {
+        var input = BuildInput(altitude, geodeticLatitude, geodeticLongitude, epoch);
+
+        // Thread-safe call to model
+        lock (_lock)
+        {
+            return _model.CalculateMassDensity(input, _flags); // Total mass density in kg/m³
+        }
     }
 
     /// <summary>
@@ -140,6 +171,23 @@ public class Nrlmsise00Model : IAtmosphericModel
     /// <returns>NRLMSISE-00 output.</returns>
     /// <exception cref="ArgumentException">Thrown if context lacks required data.</exception>
     private NrlmsiseOutput ComputeAtmosphere(IAtmosphericContext context)
+    {
+        Validate(context);
+        var input = BuildInput(context.Altitude, context.GeodeticLatitude.Value, context.GeodeticLongitude.Value,
+            context.Epoch.Value);
+        var output = new NrlmsiseOutput();
+
+        // Thread-safe call to model
+        lock (_lock)
+        {
+            _model.Calculate(input, _flags, output);
+        }
+
+        return output;
+    }
+
+    /// <exception cref="ArgumentException">The context lacks the epoch or the geodetic position.</exception>
+    private static void Validate(IAtmosphericContext context)
     {
         if (!context.Epoch.HasValue)
         {
@@ -154,41 +202,25 @@ public class Nrlmsise00Model : IAtmosphericModel
                 "NRLMSISE-00 requires geodetic position. Ensure the atmospheric context includes GeodeticLatitude and GeodeticLongitude.",
                 nameof(context));
         }
+    }
 
-        var epoch = context.Epoch.Value;
+    /// <summary>
+    /// The inputs of the model, in its internal units, for a geodetic position in SI units at an epoch: day of year,
+    /// seconds of the day, local solar time and the space weather of the model.
+    /// </summary>
+    private NrlmsiseModelInput BuildInput(double altitude, double geodeticLatitude, double geodeticLongitude,
+        in Time epoch)
+    {
         var dateTime = epoch.DateTime;
-        var year = dateTime.Year;
         var doy = dateTime.DayOfYear;
         var sec = (dateTime.Hour * 3600.0) + (dateTime.Minute * 60.0) + dateTime.Second + (dateTime.Millisecond / 1000.0);
 
         // Calculate local solar time (hours)
-        double lst = (sec / 3600.0) + (context.GeodeticLongitude.Value * Constants.Rad2Deg / 15.0);
+        double lst = (sec / 3600.0) + (geodeticLongitude * Constants.Rad2Deg / 15.0);
         if (lst < 0) lst += 24.0;
         if (lst >= 24.0) lst -= 24.0;
 
-        var input = new NrlmsiseInput
-        {
-            Year = year,
-            Doy = doy,
-            Sec = sec,
-            Alt = context.Altitude,
-            GLat = context.GeodeticLatitude.Value,
-            GLong = context.GeodeticLongitude.Value,
-            Lst = lst,
-            F107A = _spaceWeather.F107A,
-            F107 = _spaceWeather.F107,
-            Ap = _spaceWeather.Ap,
-            ApA = _spaceWeather.ApArray ?? ApArray.Default
-        };
-
-        NrlmsiseOutput output;
-
-        // Thread-safe call to model
-        lock (_lock)
-        {
-            output = _model.Calculate(input, _flags);
-        }
-
-        return output;
+        return NrlmsiseModelInput.FromSi(doy, sec, altitude, geodeticLatitude, geodeticLongitude, lst,
+            _spaceWeather.F107A, _spaceWeather.F107, _spaceWeather.Ap, _spaceWeather.ApArray ?? DefaultApArray);
     }
 }
