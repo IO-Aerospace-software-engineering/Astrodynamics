@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Forces;
 using Xunit;
 using Xunit.Abstractions;
@@ -159,6 +160,45 @@ public class DragPartialsTests : IClassFixture<PartialsTestCases>
         _output.WriteLine($"{stateName}: dadr {dadrError:E2}, dadv {dadvError:E2}");
         Assert.True(dadrError < 1e-6, $"dadr relative error {dadrError:E2}");
         Assert.True(dadvError < 1e-6, $"dadv relative error {dadvError:E2}");
+    }
+
+    [Fact]
+    public void AccelerationAndPartials_WithTheOrientationCacheOfAPropagation_AllocateNothing()
+    {
+        // Arrange: the propagation's case, the orientation cache of the Earth-fixed frame active on this thread; the
+        // density through NRLMSISE-00 without a context, ω and the rotation without an orientation object
+        var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
+        var spacecraft = PartialsTestCases.Spacecraft(state);
+        var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
+        var force = new AtmosphericDrag(spacecraft, _cases.Earth);
+        var cache = new PropagationFrameOrientationCache(
+            new TimeSystem.Window(state.Epoch.AddHours(-1.0), state.Epoch.AddHours(1.0)), _cases.Earth.Frame,
+            TimeSpan.FromSeconds(60.0));
+        var dadr = new double[9];
+        var dadv = new double[9];
+        var dadCd = new double[3];
+        var dadCr = new double[3];
+
+        using (Frames.Frame.UseOrientationCache(_cases.Earth.Frame, cache))
+        {
+            _ = force.Apply(state, context);
+            force.AccumulateStatePartials(state, context, dadr, dadv);
+            force.AccumulateParameterPartials(state, context, dadCd, dadCr);
+
+            // Act
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            _ = force.Apply(state, context);
+            long acceleration = GC.GetAllocatedBytesForCurrentThread() - before;
+            before = GC.GetAllocatedBytesForCurrentThread();
+            force.AccumulateStatePartials(state, context, dadr, dadv);
+            force.AccumulateParameterPartials(state, context, dadCd, dadCr);
+            long partials = GC.GetAllocatedBytesForCurrentThread() - before;
+
+            // Assert: 3.4 kB and about 27 kB before, in NRLMSISE-00 and Frame.ToFrame
+            _output.WriteLine($"acceleration {acceleration} bytes, partials {partials} bytes");
+            Assert.Equal(0, acceleration);
+            Assert.Equal(0, partials);
+        }
     }
 
     [Fact]

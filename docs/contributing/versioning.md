@@ -31,6 +31,15 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   
 **Changed**
 
+- **NRLMSISE-00 without allocation.** `Nrlmsise00Model.GetDensity` no longer allocates (4.2 to 5.4 kB per call
+  before): the model keeps its work arrays and builds its working copies of the inputs as values. Its results are
+  unchanged bit for bit, checked against the previous implementation on 3,240 inputs through every branch of the
+  model and on the three public methods of `NRLMSISE00` (`Calculate`, `CalculateThermosphere`,
+  `CalculateWithDrag`), which still return a new output. Atmospheric drag reads the density and the angular velocity
+  of the body without allocating during a propagation: one day of LEO propagation with NRLMSISE-00 drag allocates
+  7.8 MB instead of 45 MB, and 8.3 MB instead of 279 MB with the state transition matrix, in about the same time.
+  `NRLMSISE00` instances, which already kept state between calls, are not thread-safe; `Nrlmsise00Model` serializes
+  its calls, as before.
 - **Covariance towards a rotating frame.** `ToFrame` now transforms a state covariance with the Jacobian of the
   state transformation, `J = [[R, 0], [-[(R ω)×] R, R]]`, instead of the block-diagonal rotation `diag(R, R)`.
   Towards ITRF93, TIRS or any body-fixed frame, the velocity covariance now includes the position uncertainty

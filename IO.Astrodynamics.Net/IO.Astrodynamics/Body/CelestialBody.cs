@@ -440,6 +440,25 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     }
 
     /// <summary>
+    /// Air density at a geodetic position and an epoch: the value of <see cref="GetAirDensity(IAtmosphericContext)"/>
+    /// for the same context, without allocating when the model supports it (NRLMSISE-00).
+    /// </summary>
+    /// <param name="altitude">Altitude, in m.</param>
+    /// <param name="geodeticLatitude">Geodetic latitude, in rad.</param>
+    /// <param name="geodeticLongitude">Geodetic longitude, in rad.</param>
+    /// <param name="epoch">Epoch.</param>
+    /// <returns>Density in kg/m³; 0 without an atmospheric model.</returns>
+    internal double GetAirDensity(double altitude, double geodeticLatitude, double geodeticLongitude, in Time epoch)
+    {
+        if (AtmosphericModel is IGeodeticDensityModel model)
+        {
+            return model.GetDensity(altitude, geodeticLatitude, geodeticLongitude, epoch);
+        }
+
+        return GetAirDensity(AtmosphericContext.FromPlanetodetic(altitude, geodeticLatitude, geodeticLongitude, epoch));
+    }
+
+    /// <summary>
     /// Get complete atmospheric data at given altitude (simple API).
     /// </summary>
     /// <param name="altitude">Altitude in meters.</param>
