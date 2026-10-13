@@ -50,7 +50,7 @@ public class SolarRadiationPressure : ForceBase
     /// </summary>
     internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
-        if (!TryGetIllumination(stateVector, out var posRelToSun, out double litFraction))
+        if (!TryGetIllumination(stateVector, out var posRelToSun, out double litFraction, out _))
             return Vector3.Zero;
 
         // SRP acceleration: spacecraft position relative to Sun
@@ -76,13 +76,14 @@ public class SolarRadiationPressure : ForceBase
     /// day in LEO 400 km (A/m = 0.1 m²/kg, against central differences of whole propagations: 5.3e-6 with the term,
     /// 1.1e-6 to 2.4e-6 without SRP). So the penumbra goes through the default central differences, which differentiate
     /// ν with the rest (decision of S. Guillet, 2026-10-12): about 1 % of a LEO orbit, at the cost of six evaluations of
-    /// the acceleration.
+    /// the acceleration. Their step is scaled by the distance to the occulting body (<see cref="PositionStepScale"/>),
+    /// not by the distance to the observer of the state, which is the Sun in SSB mode.
     /// </para>
     /// </remarks>
     private protected override void AccumulateStatePartialsCore(StateVector stateVector,
         in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)
     {
-        if (!TryGetIllumination(stateVector, out var posRelToSun, out double litFraction))
+        if (!TryGetIllumination(stateVector, out var posRelToSun, out double litFraction, out _))
             return;
 
         if (litFraction < 1.0)
@@ -108,7 +109,7 @@ public class SolarRadiationPressure : ForceBase
     internal void AccumulateAnalyticStatePartials(StateVector stateVector, in ForceEvaluationContext context,
         Span<double> dadr)
     {
-        if (TryGetIllumination(stateVector, out var posRelToSun, out double litFraction))
+        if (TryGetIllumination(stateVector, out var posRelToSun, out double litFraction, out _))
         {
             AddAnalyticBlock(posRelToSun, litFraction, context, dadr);
         }
@@ -123,10 +124,26 @@ public class SolarRadiationPressure : ForceBase
     }
 
     /// <summary>
-    /// The position of the spacecraft relative to the Sun and the lit fraction 1 − ν of the solar disc, ν the largest
-    /// shadow fraction of the occulting bodies; false in total eclipse. Shared by the acceleration and its partials.
+    /// In the penumbra, the distance to the occulting body that sets ν: the width of its penumbra, on which ν goes from
+    /// 0 to 1, is that distance times the angular diameter of the Sun, so the step of the default central differences
+    /// keeps the same ratio to it whatever the observer of the state (|r| for the Earth in the geocentric mode, bit for
+    /// bit). Elsewhere the default, |r|, which the default path does not use outside the penumbra but in the step study.
     /// </summary>
-    private bool TryGetIllumination(StateVector stateVector, out Vector3 posRelToSun, out double litFraction)
+    private protected override double PositionStepScale(StateVector stateVector)
+    {
+        return TryGetIllumination(stateVector, out _, out double litFraction, out double occultingDistance) &&
+               litFraction < 1.0
+            ? occultingDistance
+            : base.PositionStepScale(stateVector);
+    }
+
+    /// <summary>
+    /// The position of the spacecraft relative to the Sun and the lit fraction 1 − ν of the solar disc, ν the largest
+    /// shadow fraction of the occulting bodies, with the distance to the body that sets it (0 when none shadows the Sun);
+    /// false in total eclipse. Shared by the acceleration and its partials.
+    /// </summary>
+    private bool TryGetIllumination(StateVector stateVector, out Vector3 posRelToSun, out double litFraction,
+        out double occultingDistance)
     {
         // Geometric Sun position relative to the state vector observer
         var sunFromObserver = GeometricPosition(_sun, stateVector);
@@ -139,6 +156,7 @@ public class SolarRadiationPressure : ForceBase
 
         // Shadow fraction computation
         double maxShadowFraction = 0.0;
+        occultingDistance = 0.0;
         double sunAngSize = _sun.AngularSize(scToSunMag);
 
         foreach (var occultingBody in _occultingBodies)
@@ -146,7 +164,8 @@ public class SolarRadiationPressure : ForceBase
             var occFromObserver = GeometricPosition(occultingBody, stateVector);
 
             var scToOcc = occFromObserver - scPosition;
-            double occAngSize = occultingBody.AngularSize(scToOcc.Magnitude());
+            double occDistance = scToOcc.Magnitude();
+            double occAngSize = occultingBody.AngularSize(occDistance);
             double angSep = scToSun.Normalize().Angle(scToOcc.Normalize());
 
             double fraction = CelestialItem.ShadowFraction(angSep, sunAngSize, occAngSize);
@@ -158,7 +177,10 @@ public class SolarRadiationPressure : ForceBase
             }
 
             if (fraction > maxShadowFraction)
+            {
                 maxShadowFraction = fraction;
+                occultingDistance = occDistance;
+            }
         }
 
         posRelToSun = scPosition - sunFromObserver;

@@ -92,9 +92,29 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
         Assert.All(dadv, x => Assert.Equal(5.0, x));
     }
 
+    public static TheoryData<string, bool> StatesRelativeToTheEarthAndTheSun()
+    {
+        var data = new TheoryData<string, bool>();
+        foreach (var state in PartialsTestCases.StateNames)
+        {
+            data.Add(state, false);
+            data.Add(state, true);
+        }
+
+        return data;
+    }
+
+    public static TheoryData<string, bool> PenumbraOrbitsRelativeToTheEarthAndTheSun => new()
+    {
+        { PartialsTestCases.Leo400, false },
+        { PartialsTestCases.Leo400, true },
+        { PartialsTestCases.Geo, false },
+        { PartialsTestCases.Geo, true }
+    };
+
     [Theory]
-    [MemberData(nameof(States))]
-    public void Albedo_DefaultPartials_MatchRiddersWithin1e4(string stateName)
+    [MemberData(nameof(StatesRelativeToTheEarthAndTheSun))]
+    public void Albedo_DefaultPartials_MatchRiddersWithin1e4(string stateName, bool relativeToTheSun)
     {
         // Arrange
         var state = PartialsTestCases.State(stateName, _cases.Earth);
@@ -105,12 +125,16 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
         var dadv = Enumerable.Repeat(5.0, 9).ToArray();
 
         // Act
-        force.AccumulateStatePartials(state, context, dadr, dadv);
+        Partials(force, state, context, relativeToTheSun, dadr, dadv);
 
-        // Assert: the threshold of the specification for the default path
+        // Assert: the threshold of the specification for the default path. Relative to the Sun, as in SSB mode, the step
+        // scaled by |r| was 450 km and left 1.6e-4 to 7.1e-3 (H3 review of #378); it is now scaled by the distance to the
+        // Earth. The reference is Ridders' derivative of the acceleration relative to the Earth: a change of origin is a
+        // translation, so the partials are the same.
         var reference = RiddersDerivative.StatePartials(force, state, context, 1e-3 * state.Position.Magnitude(), 1.0);
         double error = RiddersDerivative.RelativeFrobeniusError(dadr, reference.Dadr);
-        _output.WriteLine($"{stateName}: relative error {error:E2}, reference {reference.DadrError:E2}");
+        _output.WriteLine($"{stateName}{(relativeToTheSun ? ", relative to the Sun" : "")}: relative error {error:E2}, " +
+                          $"reference {reference.DadrError:E2}");
         Assert.True(reference.DadrError < 1e-6, $"reference error {reference.DadrError:E2}");
         Assert.True(error < 1e-4, $"relative error {error:E2}");
         Assert.All(dadv, x => Assert.Equal(5.0, x));
@@ -166,8 +190,8 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
     }
 
     [Theory]
-    [MemberData(nameof(PenumbraOrbits))]
-    public void Penumbra_DefaultPartials_MatchRiddersWithin1e4(string orbit)
+    [MemberData(nameof(PenumbraOrbitsRelativeToTheEarthAndTheSun))]
+    public void Penumbra_DefaultPartials_MatchRiddersWithin1e4(string orbit, bool relativeToTheSun)
     {
         // Arrange: half the solar disc hidden by the Earth
         var state = ShadowState(orbit, 0.5);
@@ -178,12 +202,16 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
         var dadv = Enumerable.Repeat(5.0, 9).ToArray();
 
         // Act
-        force.AccumulateStatePartials(state, context, dadr, dadv);
+        Partials(force, state, context, relativeToTheSun, dadr, dadv);
 
-        // Assert: the threshold of the specification for the default path
+        // Assert: the threshold of the specification for the default path. Relative to the Sun, as in SSB mode, the step
+        // scaled by |r| was 450 km, wider than the penumbra, and the block was off by 66 % (GEO) to 100 % (LEO) (H3 review
+        // of #378); it is now scaled by the distance to the Earth. The reference is Ridders' derivative of the acceleration
+        // relative to the Earth, the same partials since a change of origin is a translation.
         var reference = RiddersDerivative.StatePartials(force, state, context, PenumbraStep(state), 1.0);
         double error = RiddersDerivative.RelativeFrobeniusError(dadr, reference.Dadr);
-        _output.WriteLine($"{orbit}: relative error {error:E2}, reference {reference.DadrError:E2}");
+        _output.WriteLine($"{orbit}{(relativeToTheSun ? ", relative to the Sun" : "")}: relative error {error:E2}, " +
+                          $"reference {reference.DadrError:E2}");
         Assert.True(reference.DadrError < 1e-7, $"reference error {reference.DadrError:E2}");
         Assert.True(error < 1e-4, $"relative error {error:E2}");
         Assert.All(dadv, x => Assert.Equal(5.0, x));
@@ -323,6 +351,21 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
         _output.WriteLine($"{stateName}: ∂a/∂Cr relative error {error:E2}");
         Assert.True(error < 1e-12, $"relative error {error:E2}");
         Assert.Equal(new double[3], dadCd);
+    }
+
+    // The state partials at the state relative to the Earth, or at the same physical state relative to the Sun with the
+    // Sun as observer and the Earth read from the ephemeris cache, as in SSB mode.
+    private void Partials(ForceBase force, StateVector state, ForceEvaluationContext context, bool relativeToTheSun,
+        double[] dadr, double[] dadv)
+    {
+        if (relativeToTheSun)
+        {
+            force.EphemerisCache = PartialsTestCases.Cache(_cases.Sun, _cases.Earth);
+            state = state.RelativeTo(_cases.Sun, Aberration.None).ToStateVector();
+        }
+
+        force.AccumulateStatePartials(state, context, dadr, dadv);
+        force.EphemerisCache = null;
     }
 
     // Ridders' initial step in the penumbra, 1e-4 of the radius (680 m in LEO, 4.2 km at GEO), below the width of the
