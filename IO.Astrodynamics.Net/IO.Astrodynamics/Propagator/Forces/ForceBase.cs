@@ -29,15 +29,6 @@ public abstract class ForceBase
     /// </remarks>
     internal const double DefaultVelocityRelativeStep = 3e-6;
 
-    /// <summary>
-    /// Relative step δ_p of the default central differences on a coefficient: h_p = δ_p max(|C|, 1).
-    /// </summary>
-    /// <remarks>
-    /// The built-in forces are linear in their coefficient, so the central difference has no truncation error and the
-    /// step only sets the rounding error, about ε / δ_p relative.
-    /// </remarks>
-    internal const double DefaultParameterRelativeStep = 1e-3;
-
     private StateVector _partialsWorkState;
 
     /// <summary>
@@ -189,25 +180,35 @@ public abstract class ForceBase
     }
 
     /// <summary>
-    /// Adds the parameter partials. The default is a central difference on each coefficient of
-    /// <see cref="Parameters"/> in the context.
+    /// Adds the parameter partials: ∂a/∂C is the acceleration with C = 1, the other quantities of the context
+    /// unchanged, for each coefficient C of <see cref="Parameters"/>.
     /// </summary>
+    /// <remarks>
+    /// Exact for an acceleration linear in its coefficient, which multiplies the rest of it: drag in Cd, and SRP,
+    /// albedo and thermal pressure in Cr, the only forces with a coefficient (<see cref="Parameters"/> is internal).
+    /// No division by the coefficient, so C = 0 is covered, no step and no truncation, and one evaluation per
+    /// coefficient against two for a central difference. A force whose acceleration is not linear in a coefficient must
+    /// override this method.
+    /// </remarks>
     private protected virtual void AccumulateParameterPartialsCore(StateVector stateVector,
         in ForceEvaluationContext context, Span<double> dadCd, Span<double> dadCr)
     {
         if ((Parameters & ForceParameters.DragCoefficient) != 0)
         {
-            var (plus, minus, step) = PerturbedCoefficients(context.DragCoefficient);
-            AddDifference(dadCd, Apply(stateVector, context with { DragCoefficient = plus }),
-                Apply(stateVector, context with { DragCoefficient = minus }), step);
+            AddVector(dadCd, Apply(stateVector, context with { DragCoefficient = 1.0 }));
         }
 
         if ((Parameters & ForceParameters.ReflectivityCoefficient) != 0)
         {
-            var (plus, minus, step) = PerturbedCoefficients(context.ReflectivityCoefficient);
-            AddDifference(dadCr, Apply(stateVector, context with { ReflectivityCoefficient = plus }),
-                Apply(stateVector, context with { ReflectivityCoefficient = minus }), step);
+            AddVector(dadCr, Apply(stateVector, context with { ReflectivityCoefficient = 1.0 }));
         }
+    }
+
+    private static void AddVector(Span<double> vector, in Vector3 value)
+    {
+        vector[0] += value.X;
+        vector[1] += value.Y;
+        vector[2] += value.Z;
     }
 
     /// <summary>
@@ -285,27 +286,12 @@ public abstract class ForceBase
         return _partialsWorkState;
     }
 
-    private static (double Plus, double Minus, double Step) PerturbedCoefficients(double coefficient)
-    {
-        double step = DefaultParameterRelativeStep * System.Math.Max(System.Math.Abs(coefficient), 1.0);
-        double plus = coefficient + step;
-        double minus = coefficient - step;
-        return (plus, minus, plus - minus);
-    }
-
     private static void AddDifferenceColumn(Span<double> block, int column, in Vector3 plus, in Vector3 minus,
         double step)
     {
         block[column] += (plus.X - minus.X) / step;
         block[3 + column] += (plus.Y - minus.Y) / step;
         block[6 + column] += (plus.Z - minus.Z) / step;
-    }
-
-    private static void AddDifference(Span<double> vector, in Vector3 plus, in Vector3 minus, double step)
-    {
-        vector[0] += (plus.X - minus.X) / step;
-        vector[1] += (plus.Y - minus.Y) / step;
-        vector[2] += (plus.Z - minus.Z) / step;
     }
 
     private static double Component(in Vector3 vector, int index)

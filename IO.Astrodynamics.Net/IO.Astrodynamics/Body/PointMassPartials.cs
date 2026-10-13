@@ -6,7 +6,8 @@ using IO.Astrodynamics.Math;
 namespace IO.Astrodynamics.Body;
 
 /// <summary>
-/// Position partials of a point-mass attraction, shared by the central body and the third bodies.
+/// Position partials of a point-mass attraction, shared by the central body and the third bodies, and of the
+/// inverse-square radiation pressures (SRP, thermal), a = c ρ / |ρ|³, with μ = −c.
 /// </summary>
 internal static class PointMassPartials
 {

@@ -56,16 +56,10 @@ public class ThermalRadiationPressure : ForceBase
     /// </summary>
     internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
-        // Geometric emitting body position relative to the observer
-        var bodyFromObserver = GeometricPosition(_emittingBody, stateVector);
+        if (!TryGetOffsetFromEmitter(stateVector, out var bodyToSc))
+            return Vector3.Zero;
 
-        var scPosition = stateVector.ToStateVector().Position;
-
-        // Vector from body center to spacecraft
-        var bodyToSc = scPosition - bodyFromObserver;
         double rSc = bodyToSc.Magnitude();
-
-        if (rSc < 1.0) return Vector3.Zero; // Avoid singularity
 
         // Area/mass ratio (dynamic mass)
         double areaMassRatio = _spacecraft.SectionalArea / context.TotalMass;
@@ -77,5 +71,42 @@ public class ThermalRadiationPressure : ForceBase
         var direction = bodyToSc / rSc;
 
         return direction * acceleration;
+    }
+
+    /// <summary>
+    /// Analytic ∂a/∂r of the isotropic emitter a = K Cr (A/m) ρ / |ρ|³, ρ the position relative to the emitting body:
+    /// ∂a/∂r = K Cr (A/m) (I / |ρ|³ − 3 ρ ρᵀ / |ρ|⁵), and ∂a/∂v = 0.
+    /// </summary>
+    /// <remarks>
+    /// The acceleration has the inverse-square form of the cannonball solar radiation pressure, so its partials are those
+    /// of Montenbruck and Gill, Satellite Orbits, Springer (2000), chapter 7 (to be verified by S. Guillet, section and
+    /// equation numbers), with the emitting body as the source: the point-mass block (B2) with μ = −K Cr (A/m). Within
+    /// 1 m of the centre of the body the acceleration is zero, and so are the partials.
+    /// </remarks>
+    private protected override void AccumulateStatePartialsCore(StateVector stateVector,
+        in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)
+    {
+        if (!TryGetOffsetFromEmitter(stateVector, out var bodyToSc))
+            return;
+
+        double areaMassRatio = _spacecraft.SectionalArea / context.TotalMass;
+        PointMassPartials.Accumulate(bodyToSc, -context.ReflectivityCoefficient * areaMassRatio * _thermalTerm, dadr);
+    }
+
+    /// <summary>
+    /// The position of the spacecraft relative to the emitting body; false within 1 m of its centre, where the
+    /// acceleration is set to zero. Shared by the acceleration and its partials.
+    /// </summary>
+    private bool TryGetOffsetFromEmitter(StateVector stateVector, out Vector3 bodyToSc)
+    {
+        // Geometric emitting body position relative to the observer
+        var bodyFromObserver = GeometricPosition(_emittingBody, stateVector);
+
+        var scPosition = stateVector.ToStateVector().Position;
+
+        // Vector from body center to spacecraft
+        bodyToSc = scPosition - bodyFromObserver;
+
+        return bodyToSc.Magnitude() >= 1.0; // Avoid singularity
     }
 }

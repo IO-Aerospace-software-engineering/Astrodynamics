@@ -132,6 +132,26 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH,
     albedo: 0.306, thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
 ```
 
+## Partial Derivatives
+
+When the state transition matrix is integrated (RK7(8)), each force also gives the partial derivatives of its
+acceleration with respect to the state and to the drag and reflectivity coefficients. They are internal until the
+public API of the covariance propagation, and do not change the trajectory.
+
+| Force | `∂a/∂r`, `∂a/∂v` | `∂a/∂Cd`, `∂a/∂Cr` |
+|-------|------------------|--------------------|
+| `GravitationalAcceleration` | Analytic: point mass; geopotential by the Cunningham functions | None |
+| `ThirdBodyPerturbation` | Analytic | None |
+| `AtmosphericDrag` | Analytic in the velocity and the co-rotation; density gradient by central differences of the density model alone | Exact (`∂a/∂Cd`) |
+| `SolarRadiationPressure` | Analytic outside the penumbra; central differences of the acceleration in the penumbra, so that the derivative of the shadow fraction is included | Exact (`∂a/∂Cr`) |
+| `ThermalRadiationPressure` | Analytic | Exact (`∂a/∂Cr`) |
+| `AlbedoRadiationPressure` | Central differences of the acceleration | Exact (`∂a/∂Cr`) |
+| A force written outside the library | Central differences of `Apply` | None |
+
+`Cr` is shared by SRP, albedo and thermal pressure, so its sensitivity sums the three. The formulas, their references,
+the finite-difference steps and the measured accuracy are in the
+[covariance propagation provenance](covariance-propagation-provenance.md).
+
 ## See Also
 
 - [Propagator Builder](propagator-builder.md)

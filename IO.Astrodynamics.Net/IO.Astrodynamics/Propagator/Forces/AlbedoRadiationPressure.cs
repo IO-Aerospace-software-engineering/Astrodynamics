@@ -13,6 +13,11 @@ namespace IO.Astrodynamics.Propagator.Forces;
 /// Albedo radiation pressure force model using a Lambertian sphere approximation.
 /// Models the perturbation from sunlight reflected off a celestial body onto a spacecraft.
 /// </summary>
+/// <remarks>
+/// The state partials take the default central differences of <see cref="ForceBase"/>: no published derivative of this
+/// model was found, and the default path is within 4.7e-11 of Ridders' reference at the four reference states (relative
+/// to the albedo block, 5.6e-19 of the point-mass block). ∂a/∂Cr is exact, the acceleration being linear in Cr.
+/// </remarks>
 public class AlbedoRadiationPressure : ForceBase
 {
     private readonly Spacecraft _spacecraft;

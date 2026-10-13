@@ -20,8 +20,10 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The reference is analytic for the point mass (B2) and the third bodies (B4), and Ridders' extrapolation for the
-/// forces without analytic partials yet (geopotential, drag, SRP, albedo, thermal).
+/// The reference is analytic for the point mass (B2), the third bodies (B4), SRP and thermal pressure (B6), and
+/// Ridders' extrapolation for the others (geopotential, drag, albedo). The geopotential (B3) and drag (B5) have
+/// analytic or semi-analytic partials, tested against Ridders' reference by their own tests; the study measures the
+/// default path, which every force keeps as a reference.
 /// </para>
 /// <para>
 /// Two errors are measured. The relative error ‖ΔJ‖_F / ‖J‖_F of the block of the force itself, and, for ∂a/∂r, the
@@ -167,9 +169,9 @@ public class FiniteDifferenceStepStudyTests : IClassFixture<PartialsTestCases>
 
             yield return new StudyCase(
                 new SolarRadiationPressure(spacecraft, new CelestialBody[] { _cases.Earth, _cases.Moon }), "", name,
-                state, context, false);
+                state, context, true);
             yield return new StudyCase(new AlbedoRadiationPressure(spacecraft, _cases.Earth), "", name, state, context, false);
-            yield return new StudyCase(new ThermalRadiationPressure(spacecraft, _cases.Earth), "", name, state, context, false);
+            yield return new StudyCase(new ThermalRadiationPressure(spacecraft, _cases.Earth), "", name, state, context, true);
         }
     }
 
