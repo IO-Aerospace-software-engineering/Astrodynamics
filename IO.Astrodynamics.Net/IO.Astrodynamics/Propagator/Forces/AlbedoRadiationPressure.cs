@@ -16,7 +16,8 @@ namespace IO.Astrodynamics.Propagator.Forces;
 /// <remarks>
 /// The state partials take the default central differences of <see cref="ForceBase"/>: no published derivative of this
 /// model was found, and the default path is within 4.7e-11 of Ridders' reference at the four reference states (relative
-/// to the albedo block, 5.6e-19 of the point-mass block). ∂a/∂Cr is exact, the acceleration being linear in Cr.
+/// to the albedo block, 5.6e-19 of the point-mass block), relative to the Earth as relative to the Sun, the step being
+/// scaled by the distance to the reflecting body. ∂a/∂Cr is exact, the acceleration being linear in Cr.
 /// </remarks>
 public class AlbedoRadiationPressure : ForceBase
 {
@@ -56,6 +57,15 @@ public class AlbedoRadiationPressure : ForceBase
     internal override bool DependsOnVelocity => false;
 
     internal override ForceParameters Parameters => ForceParameters.ReflectivityCoefficient;
+
+    /// <summary>
+    /// The distance to the reflecting body, on which the acceleration varies: the step of the default central
+    /// differences does not then depend on the observer of the state (|r| in the geocentric mode, bit for bit).
+    /// </summary>
+    private protected override double PositionStepScale(StateVector stateVector)
+    {
+        return (stateVector.ToStateVector().Position - GeometricPosition(_reflectingBody, stateVector)).Magnitude();
+    }
 
     /// <summary>
     /// Albedo acceleration with the mass and the reflectivity coefficient of <paramref name="context"/>.

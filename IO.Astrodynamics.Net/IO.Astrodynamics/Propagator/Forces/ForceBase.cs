@@ -10,7 +10,8 @@ namespace IO.Astrodynamics.Propagator.Forces;
 public abstract class ForceBase
 {
     /// <summary>
-    /// Relative step δ_r of the default central differences on the position: h_r = δ_r max(|r|, 1 m).
+    /// Relative step δ_r of the default central differences on the position: h_r = δ_r max(L, 1 m), L the length scale
+    /// of the force (<see cref="PositionStepScale"/>), |r| by default.
     /// </summary>
     /// <remarks>
     /// Chosen by the plateau study of phase 2, step 2 (<c>FiniteDifferenceStepStudyTests</c>, and the provenance matrix of
@@ -204,6 +205,24 @@ public abstract class ForceBase
         }
     }
 
+    /// <summary>
+    /// The length L on which the acceleration varies, which sets the position step of the default central differences,
+    /// h_r = δ_r max(L, 1 m). The default is |r|, the distance to the observer of the state: the central body.
+    /// </summary>
+    /// <remarks>
+    /// A force whose acceleration varies on the distance to another body overrides it, so that the step does not depend
+    /// on the observer the state is expressed relative to. In SSB mode the observer is the Sun, and |r| ≈ 1.5e11 m
+    /// gives a step of 450 km for a spacecraft near the Earth (H3 review of #378): the albedo partials were then off by
+    /// 7e-3, and the SRP partials in the penumbra of the Earth, some 20 km wide in LEO, by 100 %. In the geocentric
+    /// mode the overrides give |r| bit for bit, so the step study is unchanged.
+    /// </remarks>
+    /// <param name="stateVector">The state, relative to the observer of the propagation.</param>
+    /// <returns>L, in m.</returns>
+    private protected virtual double PositionStepScale(StateVector stateVector)
+    {
+        return stateVector.Position.Magnitude();
+    }
+
     private static void AddVector(Span<double> vector, in Vector3 value)
     {
         vector[0] += value.X;
@@ -236,7 +255,7 @@ public abstract class ForceBase
         var work = GetPartialsWorkState(stateVector);
         work.UpdateEpoch(stateVector.Epoch);
 
-        double positionStep = positionRelativeStep * System.Math.Max(position.Magnitude(), 1.0);
+        double positionStep = positionRelativeStep * System.Math.Max(PositionStepScale(stateVector), 1.0);
         work.UpdateVelocity(velocity);
         for (int j = 0; j < 3; j++)
         {

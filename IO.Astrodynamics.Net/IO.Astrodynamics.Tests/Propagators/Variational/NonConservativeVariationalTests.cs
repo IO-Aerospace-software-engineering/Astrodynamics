@@ -21,10 +21,25 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// </summary>
 /// <remarks>
 /// <para>
-/// RK7(8) at 1e-13, the tolerance of the reference propagations of F1. Steps of 1 m and 1 mm/s on the state, as in the
-/// conservative cases, and 1 % of the coefficient on Cd and Cr. The perturbed propagations choose their own steps, so the
-/// differences carry the integration error, which bounds what they resolve: R2 without its drag gives 1.1e-6 to 2.4e-6
-/// (measured on the LEO 400 km state, 2026-10-12).
+/// Φ and Ψ come from RK7(8) at 1e-13, the step controlled on the state only (A2). The reference propagations run at
+/// 1e-14: they choose their own steps, so the differences carry the noise of the integration, which bounds what they
+/// resolve. Steps of 1 m and 1 mm/s on the state, as in the conservative cases, and 1 % of the coefficient on Cd and Cr.
+/// </para>
+/// <para>
+/// Measured (Linux, .NET 10, 2026-10-13): R2, Φ 5.0e-7 and Ψ_Cd 1.1e-7; R3, Φ 6.2e-7 and Ψ_Cr 3.3e-5 (2.4e-6, 1.2e-7,
+/// 6.9e-6 and 5.3e-5 with the reference propagations at 1e-13, before the H3 review of #378).
+/// </para>
+/// <para>
+/// What each figure measures (H3 review of #378). The reference for Ψ_Cr of R3, 44 m per unit Cr after one day, is off by
+/// 6.1e-5, 6.6e-5, 3.0e-4 and 4.9e-5 at 1e-13 for steps of 1 %, 5 %, 10 % and 20 % of Cr, and by 2.2e-5, 3.7e-5, 7.5e-5
+/// and 7.2e-6 at 1e-14, against Ψ integrated with Φ and Ψ in the step control: noise, not the δ² truncation, which
+/// Richardson's extrapolation does not reduce. Ψ_Cd of R2 is resolved better: the 1 % reference is off by its δ²
+/// truncation only (1.2e-7, 1.2e-5 at 10 %). So the comparison with the reference checks the partials end to end only
+/// down to that noise. The integration error of Ψ itself, which is not in the step control, is measured against the same
+/// propagation with Φ and Ψ in the step control (<c>IncludeInStepControl</c>, consistent to 3e-9 at 1e-12 and 1e-13):
+/// 1.3e-5 for R3, asserted below, and 1.9e-10 for R2 (not asserted: that propagation takes 7 minutes). The partials
+/// themselves are checked against Ridders' derivative of the acceleration in <c>DragPartialsTests</c> and
+/// <c>RadiationPressurePartialsTests</c>.
 /// </para>
 /// <para>
 /// The full study of F1, with every case and block and the plateau of the steps, comes with step 9; this test checks
@@ -32,16 +47,13 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// penumbra twice per revolution: with the derivative of the shadow fraction neglected, Φ of a LEO case with SRP was off
 /// by 1.05e-4, which is why the SRP partials take the default central differences in the penumbra.
 /// </para>
-/// <para>
-/// Measured (Linux, .NET 10, 2026-10-12): R2, Φ 2.4e-6 and Ψ_Cd 1.2e-7; R3, Φ 6.9e-6 and Ψ_Cr 5.3e-5. The values are the
-/// same, to the digits shown, with the central-difference partials that preceded step 5b. Ψ_Cr of R3, 44 m per unit
-/// Cr after one day, is the smallest sensitivity here, so the error of the integration weighs most on it.
-/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
 {
     private const double Tolerance = 1e-13;
+
+    private const double ReferenceTolerance = 1e-14;
 
     private readonly ReferenceCases _cases;
     private readonly ITestOutputHelper _output;
@@ -60,26 +72,19 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
         // Arrange
         var referenceCase = _cases[name];
         var start = referenceCase.InitialState;
-        var end = start.Epoch.Add(referenceCase.Duration);
         var parameter = referenceCase.AtmosphericDrag ? ForceParameters.DragCoefficient : ForceParameters.ReflectivityCoefficient;
-        var solution = Propagate(referenceCase, start, 2.2, 1.5, new VariationalOptions(parameter));
-        var y = new double[42];
-        solution.EvaluateVariational(end, y, Array.Empty<double>());
-        var phi = new double[36];
-        var psi = new double[6];
-        for (int i = 0; i < 6; i++)
-        {
-            Array.Copy(y, 7 * i, phi, 6 * i, 6);
-            psi[i] = y[7 * i + 6];
-        }
+        var (phi, psi) = PhiAndPsi(Propagate(referenceCase, start, 2.2, 1.5, Tolerance,
+            new VariationalOptions(parameter)), referenceCase);
 
         // Act
         var expectedPhi = new double[36];
         for (int column = 0; column < 6; column++)
         {
             double delta = column < 3 ? 1.0 : 1e-3;
-            var plus = FinalState(Propagate(referenceCase, Perturbed(start, column, delta), 2.2, 1.5, null));
-            var minus = FinalState(Propagate(referenceCase, Perturbed(start, column, -delta), 2.2, 1.5, null));
+            var plus = FinalState(Propagate(referenceCase, Perturbed(start, column, delta), 2.2, 1.5, ReferenceTolerance,
+                null));
+            var minus = FinalState(Propagate(referenceCase, Perturbed(start, column, -delta), 2.2, 1.5,
+                ReferenceTolerance, null));
             for (int row = 0; row < 6; row++)
             {
                 expectedPhi[row * 6 + column] = (plus[row] - minus[row]) / (2.0 * delta);
@@ -89,8 +94,10 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
         bool drag = referenceCase.AtmosphericDrag;
         double coefficient = drag ? 2.2 : 1.5;
         double step = 0.01 * coefficient;
-        var psiPlus = FinalState(Propagate(referenceCase, start, drag ? 2.2 + step : 2.2, drag ? 1.5 : 1.5 + step, null));
-        var psiMinus = FinalState(Propagate(referenceCase, start, drag ? 2.2 - step : 2.2, drag ? 1.5 : 1.5 - step, null));
+        var psiPlus = FinalState(Propagate(referenceCase, start, drag ? 2.2 + step : 2.2, drag ? 1.5 : 1.5 + step,
+            ReferenceTolerance, null));
+        var psiMinus = FinalState(Propagate(referenceCase, start, drag ? 2.2 - step : 2.2, drag ? 1.5 : 1.5 - step,
+            ReferenceTolerance, null));
         var expectedPsi = psiPlus.Zip(psiMinus, (p, m) => (p - m) / (2.0 * step)).ToArray();
 
         // Assert: the threshold of the specification for R2 to R5 (F1)
@@ -98,20 +105,62 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
         double psiPositionError = RiddersDerivative.RelativeFrobeniusError(psi[..3], expectedPsi[..3]);
         double psiVelocityError = RiddersDerivative.RelativeFrobeniusError(psi[3..], expectedPsi[3..]);
         _output.WriteLine($"{name}: Φ {phiError:E2} (worst 3×3 block), Ψ_{(drag ? "Cd" : "Cr")} {psiPositionError:E2} " +
-                          $"(position), {psiVelocityError:E2} (velocity), |Ψ| = {Norm(expectedPsi[..3]):E2} m, " +
-                          $"{solution.Segments.Sum(s => s.Steps.Count)} steps");
+                          $"(position), {psiVelocityError:E2} (velocity), |Ψ| = {Norm(expectedPsi[..3]):E2} m");
         Assert.True(phiError < 1e-4, $"Φ: {phiError:E2}");
         Assert.True(psiPositionError < 1e-4, $"Ψ, position: {psiPositionError:E2}");
         Assert.True(psiVelocityError < 1e-4, $"Ψ, velocity: {psiVelocityError:E2}");
     }
 
+    [Fact]
+    public void R3_Psi_MatchesTheSamePropagationWithPsiInTheStepControl()
+    {
+        // Arrange: the integration error of Ψ, which the step control on the state does not see (A2), against the same
+        // propagation with Φ and Ψ in the step control, free of the noise of the central differences of propagations.
+        // It runs through the eclipses, where the SRP partials are continuous since the H3 review of #378: before, the
+        // step control on Φ and Ψ rejected 100 steps down to 1e-6 s at the first umbra entry.
+        const string name = "R3";
+        var referenceCase = _cases[name];
+        var start = referenceCase.InitialState;
+        var parameter = referenceCase.AtmosphericDrag ? ForceParameters.DragCoefficient : ForceParameters.ReflectivityCoefficient;
+
+        // Act
+        var (_, psi) = PhiAndPsi(Propagate(referenceCase, start, 2.2, 1.5, Tolerance,
+            new VariationalOptions(parameter)), referenceCase);
+        var (_, expected) = PhiAndPsi(Propagate(referenceCase, start, 2.2, 1.5, Tolerance,
+            new VariationalOptions(parameter, IncludeInStepControl: true)), referenceCase);
+
+        // Assert: the threshold of the specification for R2 to R5 (F1); measured 1.3e-5 (Linux, .NET 10, 2026-10-13)
+        double positionError = RiddersDerivative.RelativeFrobeniusError(psi[..3], expected[..3]);
+        double velocityError = RiddersDerivative.RelativeFrobeniusError(psi[3..], expected[3..]);
+        _output.WriteLine($"{name}: Ψ against Ψ in the step control {positionError:E2} (position), " +
+                          $"{velocityError:E2} (velocity)");
+        Assert.True(positionError < 1e-4, $"Ψ, position: {positionError:E2}");
+        Assert.True(velocityError < 1e-4, $"Ψ, velocity: {velocityError:E2}");
+    }
+
+    private static (double[] Phi, double[] Psi) PhiAndPsi(PropagationSolution solution, ReferenceCase referenceCase)
+    {
+        var y = new double[42];
+        solution.EvaluateVariational(referenceCase.InitialState.Epoch.Add(referenceCase.Duration), y,
+            Array.Empty<double>());
+        var phi = new double[36];
+        var psi = new double[6];
+        for (int i = 0; i < 6; i++)
+        {
+            Array.Copy(y, 7 * i, phi, 6 * i, 6);
+            psi[i] = y[7 * i + 6];
+        }
+
+        return (phi, psi);
+    }
+
     private static PropagationSolution Propagate(ReferenceCase referenceCase, StateVector start, double dragCoefficient,
-        double reflectivityCoefficient, VariationalOptions options)
+        double reflectivityCoefficient, double tolerance, VariationalOptions options)
     {
         var spacecraft = new Spacecraft(-1965, "NONCONSERVATIVE", 100.0, 1000.0, new Clock("nonconservative", 65536),
             start, 10.0, dragCoefficient, null, reflectivityCoefficient);
         return spacecraft.Propagate(new TimeSystem.Window(start.Epoch, start.Epoch.Add(referenceCase.Duration)),
-            referenceCase.Bodies, new RK78Integrator(Tolerance, Tolerance), referenceCase.AtmosphericDrag,
+            referenceCase.Bodies, new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
             referenceCase.SolarRadiationPressure, TimeSpan.FromSeconds(3600.0), options);
     }
 
