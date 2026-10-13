@@ -5,7 +5,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// <summary>
 /// A real number with its gradient with respect to the six components of an initial state: forward-mode automatic
 /// differentiation, in which each operation applies the chain rule to the gradient of its operands (Griewank &amp;
-/// Walther, Evaluating Derivatives, 2nd ed., SIAM 2008, chapter 3; to be verified by S. Guillet).
+/// Walther, Evaluating Derivatives, 2nd ed., SIAM 2008, chapter 3; confirmed by S. Guillet, 2026-10-12).
 /// </summary>
 /// <remarks>
 /// A constant holds no gradient. The derivatives are exact to the rounding of the operations: no step, no truncation.

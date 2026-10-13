@@ -62,7 +62,7 @@ public class AtmosphericDrag : ForceBase
     /// <remarks>
     /// <para>
     /// Reference: Montenbruck and Gill, Satellite Orbits, Springer (2000), chapter 7 (partials of the drag
-    /// acceleration; to be verified by S. Guillet, section and equation numbers). ω is constant at the fixed epoch of
+    /// acceleration; confirmed by S. Guillet, 2026-10-13). ω is constant at the fixed epoch of
     /// the state, so ∂v_rel/∂r = −[ω×] and ∂v_rel/∂v = I.
     /// </para>
     /// <para>

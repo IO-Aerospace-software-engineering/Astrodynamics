@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// volume, det Φ = 1 (Liouville's theorem); the two-body, geopotential and third-body accelerations derive from a
 /// potential, time-dependent for the rotating Earth and the moving bodies. Reference: Arnold, Mathematical Methods of
 /// Classical Mechanics, 2nd ed., Springer (1989), section 16 (Liouville's theorem) and chapter 8 (Hamiltonian phase
-/// flows preserve the symplectic structure); to be verified by S. Guillet.
+/// flows preserve the symplectic structure); confirmed by S. Guillet (2026-10-12).
 /// </para>
 /// <para>
 /// How the integrated Φ departs from it, derived: with A = [[0, I], [G, D]], d(ΦᵀJΦ)/dt = Φᵀ (AᵀJ + JA) Φ and

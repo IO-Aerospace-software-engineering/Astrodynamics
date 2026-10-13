@@ -483,7 +483,7 @@ public sealed class RK78Integrator : Integrator
     /// Position and velocity components are scaled independently.
     /// Uses infinity norm (max over all 6 components) — step accepted when result &lt;= 1.0.
     /// Reference: Hairer, Norsett, Wanner §II.4: sc_i = Atol + max(|y0i|, |y1i|) Rtol is Eq. (4.10), and the maximum
-    /// norm is the alternative given after the root-mean-square norm of Eq. (4.11); to be verified by S. Guillet.
+    /// norm is the alternative given after the root-mean-square norm of Eq. (4.11); confirmed by S. Guillet (2026-10-12).
     /// </summary>
     private double ComputeErrorNorm(
         in Vector3 pos0, in Vector3 posNew,

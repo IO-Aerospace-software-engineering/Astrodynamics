@@ -133,8 +133,8 @@ public class GeopotentialGravitationalField : GravitationalField
     /// <para>
     /// The harmonics are differentiated in the body-fixed frame, as the acceleration, with the Cunningham functions V_nm
     /// and W_nm extended to degree n + 2: O. Montenbruck, E. Gill, Satellite Orbits, Springer (2000), chapter 3
-    /// (recursions of V_nm and W_nm, acceleration) and chapter 7 (partials of the acceleration); section and equation
-    /// numbers to be verified by S. Guillet. The block is brought back to the frame of the state by Rᵀ H R, with R the
+    /// (recursions of V_nm and W_nm, acceleration) and chapter 7 (partials of the acceleration); confirmed by S.
+    /// Guillet (2026-10-12). The block is brought back to the frame of the state by Rᵀ H R, with R the
     /// rotation of the acceleration (<see cref="Frames.Frame.RotationTo"/>, the frame of the state to the body-fixed
     /// frame, at the epoch of the state). It is symmetric by construction: the upper triangle is computed and mirrored.
     /// </para>
@@ -300,7 +300,7 @@ public class GeopotentialGravitationalField : GravitationalField
     /// V_mm = (2m − 1) (x R / r² V_(m−1,m−1) − y R / r² W_(m−1,m−1)),
     /// W_mm = (2m − 1) (x R / r² W_(m−1,m−1) + y R / r² V_(m−1,m−1));
     /// V_nm = ((2n − 1) z R / r² V_(n−1,m) − (n + m − 1) R² / r² V_(n−2,m)) / (n − m), and the same for W, with
-    /// V_(m−1,m) = W_(m−1,m) = 0. Section and equation numbers to be verified by S. Guillet.
+    /// V_(m−1,m) = W_(m−1,m) = 0. Confirmed by S. Guillet (2026-10-12).
     /// </remarks>
     private void CunninghamFunctions(in Vector3 position, double equatorialRadius, int highestDegree)
     {
