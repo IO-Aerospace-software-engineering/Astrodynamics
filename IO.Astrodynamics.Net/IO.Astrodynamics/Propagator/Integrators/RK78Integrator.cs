@@ -146,8 +146,9 @@ public sealed class RK78Integrator : Integrator
     /// state the segment starts from can be just before the root, on the side the g-function crossed from. Its g-value
     /// would then make the first step cross the same root again, at the same epoch, without end. Starting from the sign
     /// past the root is the rule Hipparchus applies to a zero of a g-function at the start of a step (its
-    /// <c>EventState</c>; to be verified by S. Guillet). A later crossing in the same direction needs a crossing in the
-    /// other direction first, which a step of the integrator does not hold without being detected, so no event is lost.
+    /// <c>EventState</c>; confirmed by S. Guillet, 2026-10-13). A later crossing in the same direction needs a crossing
+    /// in the other direction first, which a step of the integrator does not hold without being detected, so no event
+    /// is lost.
     /// </remarks>
     internal void SkipRootOfLastEvent()
     {
