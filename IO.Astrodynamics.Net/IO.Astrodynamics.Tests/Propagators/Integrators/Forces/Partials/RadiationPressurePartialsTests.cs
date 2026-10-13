@@ -273,6 +273,39 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
         Assert.True(neglected > 0.99, $"the shadow term is not the whole block: {neglected:E2}");
     }
 
+    [Theory]
+    [InlineData(PartialsTestCases.Leo400, true)]
+    [InlineData(PartialsTestCases.Leo400, false)]
+    [InlineData(PartialsTestCases.Geo, true)]
+    [InlineData(PartialsTestCases.Geo, false)]
+    public void ShadowBoundaries_PartialsAreContinuous(string orbit, bool umbra)
+    {
+        // Arrange: the states 0.01 mm on either side of the inner contact (umbra) or the outer contact (sunlight) of the
+        // shadow of the Earth. Before the H3 review of #378, the partials switched there from the central differences
+        // of the penumbra to zero or to the analytic block, and jumped: at the umbra, where the exact partials tend to
+        // zero, the central difference straddling the boundary gives about a(r + h) / 2h; in sunlight, the analytic
+        // block, 1.1e-17 /s² in LEO, against 8.5e-13 /s² for the central differences that hold the derivative of ν.
+        var (inside, outside) = ContactStates(orbit, umbra, 1e-5);
+        var spacecraft = PartialsTestCases.Spacecraft(inside);
+        var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
+        var force = new SolarRadiationPressure(spacecraft, new[] { _cases.Earth });
+        var dadrInside = new double[9];
+        var dadrOutside = new double[9];
+
+        // Act
+        force.AccumulateStatePartials(inside, context, dadrInside, new double[9]);
+        force.AccumulateStatePartials(outside, context, dadrOutside, new double[9]);
+
+        // Assert: both sides take the central differences, which move by the 0.02 mm only. Measured (Linux, .NET 10,
+        // 2026-10-13) 7.1e-4 (LEO, sunlight) and 8.7e-4 (LEO, umbra), 1.0e-2 and 2.8e-3 over 2 mm, falling with the gap
+        // as a continuous function does; before the fix, 7.5e4 (LEO, sunlight) and infinite (umbra, zero partials)
+        double jump = RiddersDerivative.RelativeFrobeniusError(dadrInside, dadrOutside);
+        _output.WriteLine($"{orbit}, {(umbra ? "umbra" : "sunlight")}: |A| {Norm(dadrOutside):E3} /s², relative jump " +
+                          $"{jump:E2} over 0.02 mm");
+        Assert.True(Norm(dadrOutside) > 0.0);
+        Assert.True(jump < 1e-2, $"relative jump {jump:E2}");
+    }
+
     [Fact]
     public void Sunlit_TheAnalyticBlockIsThePartials()
     {
@@ -411,6 +444,47 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
         }
 
         return At(0.5 * (low + high));
+    }
+
+    /// <summary>
+    /// Two states of the radius of <paramref name="orbit"/>, in the plane of the Sun direction and the equator, at
+    /// <paramref name="distance"/> on either side of the inner contact (ν = 1 inside) or of the outer contact (ν = 0
+    /// outside) of the shadow of the Earth, found by bisection on the angle from the anti-Sun axis.
+    /// </summary>
+    private (StateVector Inside, StateVector Outside) ContactStates(string orbit, bool umbra, double distance)
+    {
+        double radius = PartialsTestCases.State(orbit, _cases.Earth).Position.Magnitude();
+        var sunDirection = _cases.Sun.GetEphemeris(PartialsTestCases.Epoch, _cases.Earth, Frames.Frame.ICRF,
+            Aberration.None).ToStateVector().Position.Normalize();
+        var side = sunDirection.Cross(Vector3.VectorZ).Normalize();
+        var velocity = Vector3.VectorZ * System.Math.Sqrt(_cases.Earth.GM / radius);
+
+        StateVector At(double angle) => new((sunDirection * -System.Math.Cos(angle) + side * System.Math.Sin(angle)) *
+                                            radius, velocity, _cases.Earth, PartialsTestCases.Epoch, Frames.Frame.ICRF);
+
+        bool Inside(double angle)
+        {
+            double nu = _cases.Sun.ShadowFraction(_cases.Earth, At(angle), Aberration.None);
+            return umbra ? nu >= 1.0 : nu > 0.0;
+        }
+
+        double low = 0.0;
+        double high = System.Math.PI / 2.0;
+        for (int k = 0; k < 200 && high - low > 1e-16; k++)
+        {
+            double middle = 0.5 * (low + high);
+            if (Inside(middle))
+            {
+                low = middle;
+            }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        double offset = distance / radius;
+        return (At(low - offset), At(high + offset));
     }
 
     private static StateVector WithPosition(StateVector state, int index, double value)
