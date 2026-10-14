@@ -521,20 +521,27 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         Propagator(Spacecraft(-2141), rk78, Window).Propagate();
         Propagator(PartialsTestCases.Spacecraft(Leo), rk78, Window).Propagate();
 
-        // Act
-        long Allocated(Spacecraft spacecraft, TimeSystem.Window window)
+        // Act: the least of three runs, since a shared cache (frame orientations, ephemerides) may be filled once by
+        // whichever propagation first reads an epoch, a test of another class included
+        long Allocated(Func<Spacecraft> spacecraft, TimeSystem.Window window)
         {
-            var propagator = Propagator(spacecraft, rk78, window);
-            long before = GC.GetAllocatedBytesForCurrentThread();
-            propagator.Propagate();
-            return GC.GetAllocatedBytesForCurrentThread() - before;
+            long least = long.MaxValue;
+            for (int run = 0; run < 3; run++)
+            {
+                var propagator = Propagator(spacecraft(), rk78, window);
+                long before = GC.GetAllocatedBytesForCurrentThread();
+                propagator.Propagate();
+                least = System.Math.Min(least, GC.GetAllocatedBytesForCurrentThread() - before);
+            }
+
+            return least;
         }
 
         var longWindow = new TimeSystem.Window(Start, Start.AddHours(3.0));
-        long shortDifference = Allocated(Spacecraft(-2142), Window) -
-                               Allocated(PartialsTestCases.Spacecraft(Leo), Window);
-        long longDifference = Allocated(Spacecraft(-2143), longWindow) -
-                              Allocated(PartialsTestCases.Spacecraft(Leo), longWindow);
+        long shortDifference = Allocated(() => Spacecraft(-2142), Window) -
+                               Allocated(() => PartialsTestCases.Spacecraft(Leo), Window);
+        long longDifference = Allocated(() => Spacecraft(-2143), longWindow) -
+                              Allocated(() => PartialsTestCases.Spacecraft(Leo), longWindow);
         _output.WriteLine($"{(rk78 ? "RK7(8)" : "VV")}: P0 adds {shortDifference} B over 1 h, {longDifference} B over 3 h");
 
         // Assert: what P0 adds does not grow with the number of steps

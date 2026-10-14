@@ -147,11 +147,19 @@ internal sealed class PropagationDynamics
     /// <param name="covariance">P, 36 values, or the extended covariance, m² values.</param>
     /// <param name="extended">Whether the extended covariance is wanted.</param>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance.</exception>
+    /// <exception cref="ArgumentException"><paramref name="covariance"/> does not hold 36 values, or m² values for the
+    /// extended covariance; checked before the evaluation.</exception>
     internal void EvaluateCovariance(PropagationSegment segment, double t, Span<double> covariance, bool extended)
     {
         if (Covariance == null)
             throw new InvalidOperationException(
                 "The solution holds no covariance: the propagation did not propagate the covariance.");
+
+        int dimension = extended ? Covariance.ExtendedDimension : VariationalEquations.StateDimension;
+        if (covariance.Length != dimension * dimension)
+            throw new ArgumentException(
+                $"The {(extended ? "extended covariance" : "covariance")} holds {dimension * dimension} values " +
+                $"({dimension}×{dimension}); got {covariance.Length}.", nameof(covariance));
 
         var data = VariationalData(segment);
         lock (_lock)

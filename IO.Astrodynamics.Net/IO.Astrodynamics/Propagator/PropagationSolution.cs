@@ -128,7 +128,8 @@ public sealed class PropagationSolution
     /// <see cref="IO.Astrodynamics.Body.CelestialBody"/> with a geopotential.
     /// </para>
     /// </remarks>
-    /// <param name="epoch">The epoch, within the propagation.</param>
+    /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
+    /// end, which reads the values at the end.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not integrate the state transition matrix
     /// (<see cref="CovariancePropagationOptions"/>).</exception>
@@ -156,7 +157,8 @@ public sealed class PropagationSolution
     /// Units: the position rows in m, the velocity rows in m/s, per unit of the dimensionless coefficient. Evaluated as
     /// <see cref="GetStateTransitionMatrix"/>.
     /// </remarks>
-    /// <param name="epoch">The epoch, within the propagation.</param>
+    /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
+    /// end, which reads the values at the end.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not integrate the state transition matrix, or
     /// has no force with a parameter (no drag, no radiation force).</exception>
@@ -190,7 +192,8 @@ public sealed class PropagationSolution
     /// Units: m², m²/s, m²/s². Inertial frame of the propagation, relative to its central body. At a maneuver, the value
     /// after it, its execution error included. Evaluated as <see cref="GetStateTransitionMatrix"/>.
     /// </remarks>
-    /// <param name="epoch">The epoch, within the propagation.</param>
+    /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
+    /// end, which reads the values at the end.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance
     /// (<see cref="CovariancePropagationMode.Covariance"/>).</exception>
@@ -210,7 +213,8 @@ public sealed class PropagationSolution
     /// Units: P in m², m²/s, m²/s²; the state-parameter blocks in m and m/s; the parameter block dimensionless.
     /// Evaluated as <see cref="GetStateTransitionMatrix"/>.
     /// </remarks>
-    /// <param name="epoch">The epoch, within the propagation.</param>
+    /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
+    /// end, which reads the values at the end.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance, or has no consider
     /// parameter.</exception>
@@ -233,7 +237,8 @@ public sealed class PropagationSolution
     /// and relative to its observer; with its covariance (<see cref="GetCovariance"/>) when the propagation propagated
     /// it, without otherwise.
     /// </summary>
-    /// <param name="epoch">The epoch, within the propagation.</param>
+    /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
+    /// end, which reads the values at the end.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>
     /// <exception cref="InvalidOperationException">The solution was not built by a propagator: it has no observer and
     /// frame.</exception>
@@ -302,7 +307,8 @@ public sealed class PropagationSolution
     /// Q (<see cref="VariationalEquations"/>). Picks the segment as <see cref="InterpolateAt"/> does, the later one at a
     /// maneuver.
     /// </summary>
-    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="epoch">The epoch, within the solution; up to one tick of <see cref="Time"/> (100 ns) after its end,
+    /// which reads the values at the end.</param>
     /// <param name="y">Y, 6n values.</param>
     /// <param name="q">Q, 21 values when it is carried (process noise or covariance), empty otherwise.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
@@ -320,7 +326,8 @@ public sealed class PropagationSolution
     /// the propagation (m², m²/s, m²/s²; <see cref="CovarianceModel"/>). Picks the segment as
     /// <see cref="InterpolateAt"/> does: at a maneuver, the covariance after it, its execution error included.
     /// </summary>
-    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="epoch">The epoch, within the solution; up to one tick of <see cref="Time"/> (100 ns) after its end,
+    /// which reads the values at the end.</param>
     /// <param name="covariance">P, 6×6 row-major.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance.</exception>
@@ -335,7 +342,8 @@ public sealed class PropagationSolution
     /// The extended covariance of the state and the consider parameters at <paramref name="epoch"/>,
     /// [[P, Ψc Pp], [Pp Ψcᵀ, Pp]], m×m with m = 6 + the number of consider parameters (Cd, then Cr).
     /// </summary>
-    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="epoch">The epoch, within the solution; up to one tick of <see cref="Time"/> (100 ns) after its end,
+    /// which reads the values at the end.</param>
     /// <param name="covariance">The extended covariance, m×m row-major.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance.</exception>
@@ -346,11 +354,17 @@ public sealed class PropagationSolution
         Dynamics.EvaluateCovariance(segment, t, covariance, true);
     }
 
-    // The segment of an epoch inside the solution, for the variational values
+    // One tick of Time (100 ns): the propagation ends at Window.StartDate.AddSeconds(duration), which AddSeconds
+    // truncates to the tick, so its last step can end one tick before the end of the window (H3 review of lots A to C)
+    private const double EpochTick = 1e-7;
+
+    // The segment of an epoch inside the solution, for the variational values; an epoch within one tick after the last
+    // step reads the values at its end
     private PropagationSegment VariationalSegmentAt(in Time epoch, out double t)
     {
         CheckWithin(epoch);
         var segment = SegmentAt(epoch, out t);
+        t = System.Math.Min(t, segment.Duration);
         if (Dynamics == null)
             throw new InvalidOperationException(
                 "The solution holds no variational data: the propagation did not integrate the variational equations.");
@@ -358,14 +372,14 @@ public sealed class PropagationSolution
         return segment;
     }
 
-    // An epoch inside the propagated span
+    // An epoch inside the propagated span, or within one tick after its end
     private void CheckWithin(in Time epoch)
     {
         if (_segments.Count == 0)
             throw new InvalidOperationException("Solution contains no segments.");
 
         var last = _segments[^1];
-        if (epoch < _segments[0].BaseEpoch || (epoch - last.BaseEpoch).TotalSeconds > last.Duration)
+        if (epoch < _segments[0].BaseEpoch || (epoch - last.BaseEpoch).TotalSeconds > last.Duration + EpochTick)
             throw new ArgumentOutOfRangeException(nameof(epoch), epoch,
                 "The epoch is outside the propagation.");
     }

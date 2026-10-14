@@ -15,7 +15,10 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// <param name="ProcessNoise">The acceleration noise whose covariance Q is integrated, or null for no Q.</param>
 /// <param name="IncludeInStepControl">
 /// Whether the error of Φ and Ψ takes part in the step-size control. Off by default: the step is controlled on the
-/// state only, so the trajectory is the same with and without the variational equations.
+/// state only, so the trajectory is the same with and without the variational equations. Ψ then carries an integration
+/// error the state control does not see, largest for Cr across the shadow crossings of SRP: in an eclipsing LEO over 6 h
+/// at a tolerance of 1e-12, Ψ_Cr was off by 4.0e-5 to 1.3e-3 depending on where the steps fell, against 1.6e-5 and
+/// 3.4e-6 at 1e-14 (H3 review of lots A to C). A tighter tolerance or this option brings it down.
 /// </param>
 /// <param name="GeopotentialPartialsDegree">
 /// The highest degree of the geopotential harmonics in the partials, at least 2; null (the default) for the degree of

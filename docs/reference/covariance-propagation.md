@@ -118,7 +118,7 @@ On `PropagationSolution`:
 
 | Case | Exception |
 |------|-----------|
-| The epoch is outside the propagation | `ArgumentOutOfRangeException` |
+| The epoch is outside the propagation (an epoch up to one tick, 100 ns, after its end reads the values at the end) | `ArgumentOutOfRangeException` |
 | The propagation did not integrate the matrices (no activation, another integrator, a solution built by hand) | `InvalidOperationException` |
 | `GetCovariance` or `GetExtendedCovariance` without the covariance mode | `InvalidOperationException` |
 | `GetParameterSensitivity` without drag or radiation force | `InvalidOperationException` |
