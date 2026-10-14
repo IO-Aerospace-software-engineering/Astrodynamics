@@ -12,8 +12,8 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// <remarks>
 /// <para>
 /// The unmodelled accelerations are a white noise whose spectral density is given in RTN (B. D. Tapley, B. E. Schutz,
-/// G. H. Born, <i>Statistical Orbit Determination</i>, Elsevier, 2004, section 4.9). The rows of R_rtn are the R, T and N
-/// unit vectors of the state, R = r̂, N = (r × v) / |r × v|, T = N × R, as in
+/// G. H. Born, <i>Statistical Orbit Determination</i>, Elsevier, 2004, section 4.9, confirmed by S. Guillet, 2026-10-14).
+/// The rows of R_rtn are the R, T and N unit vectors of the state, R = r̂, N = (r × v) / |r × v|, T = N × R, as in
 /// <see cref="StateVector.CreateRtnRotation"/>; Qc is written as q_R R Rᵀ + q_T T Tᵀ + q_N N Nᵀ, the same matrix,
 /// without allocation. It is evaluated at each stage state of the integration, relative to the central body of the
 /// propagation, so the axes follow the orbit.
