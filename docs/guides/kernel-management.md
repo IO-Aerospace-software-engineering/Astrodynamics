@@ -16,7 +16,7 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
 
 | Method | Description |
 |--------|-------------|
-| `SpiceAPI.Instance.LoadKernels(FileSystemInfo)` | Load a single kernel file or an entire directory |
+| `SpiceAPI.Instance.LoadKernels(FileSystemInfo)` | Load a single kernel file, or the kernel files of a directory and of its subdirectories (other files, such as a geopotential model, are left out) |
 | `SpiceAPI.Instance.UnloadKernels(FileSystemInfo)` | Unload a file or directory load |
 | `SpiceAPI.Instance.ClearKernels()` | Unload all kernels |
 | `SpiceAPI.Instance.GetLoadedKernels()` | List currently loaded kernels |
