@@ -263,7 +263,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
             solution.EvaluateExtendedCovariance(Start.AddHours(1.0).AddSeconds(1.0), new double[36]));
         Assert.Equal("covariance", Assert.Throws<ArgumentException>(() =>
             solution.EvaluateCovariance(Start.AddMinutes(10.0), new double[35])).ParamName);
-        Assert.Equal("extended", Assert.Throws<ArgumentException>(() =>
+        // The parameter of the caller, checked before the evaluation (H3 review of lots A to C; "extended", the parameter
+        // of CovarianceModel, before)
+        Assert.Equal("covariance", Assert.Throws<ArgumentException>(() =>
             solution.EvaluateExtendedCovariance(Start.AddMinutes(10.0), new double[37])).ParamName);
         Assert.Throws<InvalidOperationException>(() =>
             new PropagationSolution().EvaluateCovariance(Start, new double[36]));
@@ -430,6 +432,142 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         Assert.Empty(after.EntryQ);
         Assert.NotNull(after.EntryManeuver.Value.ExecutionCovariance);
         Assert.Equal(maneuver.DeltaV, after.EntryManeuver.Value.DeltaV);
+    }
+
+    [Fact]
+    public void AtTheEndOfAWindowThatStopsOneTickShort_TheEvaluationsReadTheValuesAtTheEnd()
+    {
+        // Arrange: a window of 21 600.3 s, whose last step ends one tick (100 ns) before its end, since Time.AddSeconds
+        // truncates to the tick; the evaluations used to throw there (H3 review of lots A to C)
+        var window = new TimeSystem.Window(Start, Start.AddSeconds(21600.3));
+        var solution = Propagate(WithCovariance(Leo), window.EndDate, new VariationalOptions(
+            ForceParameters.DragCoefficient, new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true,
+            ConsiderParameters: new ConsiderParameters(0.1)), true);
+        var last = solution.Segments[^1];
+        var atEnd = new double[36];
+        var atLastStep = new double[36];
+        var extendedAtEnd = new double[49];
+        var extendedAtLastStep = new double[49];
+        var yAtEnd = new double[42];
+        var yAtLastStep = new double[42];
+        var qAtEnd = new double[21];
+        var qAtLastStep = new double[21];
+        var lastStep = window.EndDate.AddSeconds(-1e-7);
+
+        // Act
+        solution.EvaluateCovariance(window.EndDate, atEnd);
+        solution.EvaluateCovariance(lastStep, atLastStep);
+        solution.EvaluateExtendedCovariance(window.EndDate, extendedAtEnd);
+        solution.EvaluateExtendedCovariance(lastStep, extendedAtLastStep);
+        solution.EvaluateVariational(window.EndDate, yAtEnd, qAtEnd);
+        solution.EvaluateVariational(lastStep, yAtLastStep, qAtLastStep);
+
+        // Assert: the window end is past the last step, by one tick, and reads its values bit for bit; beyond that tick,
+        // the epoch is outside the propagation
+        Assert.True((window.EndDate - last.BaseEpoch).TotalSeconds > last.Duration);
+        Assert.Equal(last.Duration, (lastStep - last.BaseEpoch).TotalSeconds);
+        Assert.Equal(atLastStep, atEnd);
+        Assert.Equal(extendedAtLastStep, extendedAtEnd);
+        Assert.Equal(yAtLastStep, yAtEnd);
+        Assert.Equal(qAtLastStep, qAtEnd);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            solution.EvaluateCovariance(window.EndDate.AddSeconds(1e-6), atEnd));
+    }
+
+    [Fact]
+    public void ABufferOfTheWrongLength_IsRejectedBeforeTheEvaluation()
+    {
+        // Arrange: an epoch inside a step, where an evaluation costs a shortened step
+        var solution = Propagate(WithCovariance(Leo), Start.AddHours(1.0), new VariationalOptions(
+            ForceParameters.DragCoefficient, PropagateCovariance: true,
+            ConsiderParameters: new ConsiderParameters(0.1)), true);
+        var epoch = Start.AddSeconds(1234.567);
+        long evaluations = solution.Dynamics.StageJacobianEvaluations;
+
+        // Act
+        var covariance = Assert.Throws<ArgumentException>(() => solution.EvaluateCovariance(epoch, new double[49]));
+        var extended = Assert.Throws<ArgumentException>(() =>
+            solution.EvaluateExtendedCovariance(epoch, new double[36]));
+
+        // Assert: no stage Jacobian was evaluated
+        Assert.Contains("36 values (6×6)", covariance.Message);
+        Assert.Contains("49 values (7×7)", extended.Message);
+        Assert.Equal(evaluations, solution.Dynamics.StageJacobianEvaluations);
+    }
+
+    [Theory]
+    [Trait("Category", "Validation")]
+    [InlineData("J2000")]
+    [InlineData("ECLIPJ2000")]
+    public void EclipsingLeoWithAManeuver_PsiCrNeedsATighterToleranceOrTheStepControl(string frameName)
+    {
+        // Arrange: LEO 400 × 1000 km from apogee, in the Earth's shadow at the start, apogee raised at the first perigee
+        // (0.82 h), drag and SRP, Cd and Cr, 6 h. The integration error of Ψ, which the step control on the state does
+        // not see (A2), against the same propagation at 1e-12 with Φ and Ψ in the step control (H3 review of lots A to
+        // C): it comes from the shadow crossings of SRP, and depends on where the steps fall, hence the two frames of the
+        // same physics
+        var parameters = ForceParameters.DragCoefficient | ForceParameters.ReflectivityCoefficient;
+        var frame = frameName == "J2000" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
+
+        // Act
+        var expected = EclipsingCase(-1963, frame, 1e-12, new VariationalOptions(parameters, IncludeInStepControl: true));
+        var y = EclipsingCase(-1964, frame, 1e-12, new VariationalOptions(parameters));
+        var tighter = EclipsingCase(-1965, frame, 1e-14, new VariationalOptions(parameters));
+
+        // Assert: at 1e-12, measured Ψ_Cr 4.0e-5 (J2000) and 9.8e-4 (ECLIPJ2000) in position, 4.9e-5 and 1.3e-3 in
+        // velocity, Φ below 3.1e-8 and Ψ_Cd below 3.4e-7; at 1e-14, the remedy of A2, Ψ_Cr 1.6e-5 and 3.4e-6 (Linux, .NET 10,
+        // 2026-10-14). At 1e-12 Ψ_Cr is above the 1e-4 of F1 in one frame, so it is bounded at about three times the worst;
+        // at 1e-14 it is held to the 1e-4 of F1
+        double phi = ColumnsError(y, expected, 0, 6, 0, 6);
+        double psiCd = ColumnsError(y, expected, 6, 7, 0, 6);
+        double psiCr = System.Math.Max(ColumnsError(y, expected, 7, 8, 0, 3), ColumnsError(y, expected, 7, 8, 3, 6));
+        double tighterPsiCr = System.Math.Max(ColumnsError(tighter, expected, 7, 8, 0, 3),
+            ColumnsError(tighter, expected, 7, 8, 3, 6));
+        _output.WriteLine($"{frameName}, 1e-12: Φ {phi:E2}, Ψ_Cd {psiCd:E2}, Ψ_Cr position " +
+                          $"{ColumnsError(y, expected, 7, 8, 0, 3):E2}, velocity {ColumnsError(y, expected, 7, 8, 3, 6):E2}; " +
+                          $"1e-14: Ψ_Cr {tighterPsiCr:E2}");
+        Assert.True(phi < 1e-7, $"Φ {phi:E2}");
+        Assert.True(psiCd < 1e-6, $"Ψ_Cd {psiCd:E2}");
+        Assert.True(psiCr < 4e-3, $"Ψ_Cr at 1e-12 {psiCr:E2}");
+        Assert.True(tighterPsiCr < 1e-4, $"Ψ_Cr at 1e-14 {tighterPsiCr:E2}");
+    }
+
+    // Y at 5.123 h of the eclipsing case, 6 × 8, in the frame of the propagation
+    private double[] EclipsingCase(int naifId, Frames.Frame frame, double tolerance, VariationalOptions options)
+    {
+        var orbit = (StateVector)new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4),
+            _cases.Earth, Start, Frames.Frame.ICRF).ToFrame(frame);
+        var spacecraft = new Spacecraft(naifId, "ECLIPSING" + -naifId, 1000.0, 3000.0,
+            new Clock("eclipsing" + -naifId, 65536), orbit, 10.0, 2.2, null, 1.5);
+        var tank = new FuelTank("tank" + -naifId, "model", "sn1", 1000.0, 1000.0);
+        var engine = new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank);
+        spacecraft.AddFuelTank(tank);
+        spacecraft.AddEngine(engine);
+        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine));
+        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(6.0)), Bodies,
+            new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(600.0), options);
+        Assert.Equal(2, solution.Segments.Count);
+        var y = new double[48];
+        solution.EvaluateVariational(Start.AddHours(5.123), y, Array.Empty<double>());
+        return y;
+    }
+
+    // Relative Frobenius error of columns [c0, c1) over rows [r0, r1) of two 6 × 8 matrices
+    private static double ColumnsError(double[] actual, double[] expected, int c0, int c1, int r0, int r1)
+    {
+        double difference = 0.0;
+        double norm = 0.0;
+        for (int i = r0; i < r1; i++)
+        {
+            for (int c = c0; c < c1; c++)
+            {
+                double e = expected[8 * i + c];
+                difference += (actual[8 * i + c] - e) * (actual[8 * i + c] - e);
+                norm += e * e;
+            }
+        }
+
+        return System.Math.Sqrt(difference / norm);
     }
 
     // 400 × 1000 km LEO from apogee, apogee raised at the first perigee, with a covariance on the initial state
