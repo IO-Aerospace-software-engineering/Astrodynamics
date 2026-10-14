@@ -29,7 +29,7 @@ internal readonly record struct ManeuverRecord(Time Epoch, Vector3 DeltaV, doubl
 /// </para>
 /// <para>
 /// Q is stored at each step only with process noise. The cumulative Q at the segment start is carried whenever the
-/// propagation carries a covariance (<see cref="VariationalEquations.CarriesCovariance"/>), with or without noise: it
+/// propagation carries a covariance (<see cref="VariationalEquations.CarriedCovarianceLength"/>), with or without noise: it
 /// holds the execution error of the maneuvers before the segment, and without noise Q_seg = 0.
 /// </para>
 /// <para>

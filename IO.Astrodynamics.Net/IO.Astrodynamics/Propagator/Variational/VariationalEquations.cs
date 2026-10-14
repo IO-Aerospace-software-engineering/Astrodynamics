@@ -119,12 +119,10 @@ internal sealed class VariationalEquations
     internal bool HasProcessNoise => _processNoise != null;
 
     /// <summary>
-    /// Whether the propagation carries the cumulative Q from segment to segment: with process noise, or when the
-    /// covariance is propagated, so that Q holds the execution errors of the maneuvers (C5) even without noise.
+    /// Number of elements of the cumulative Q carried from segment to segment: 21 with process noise, or when the
+    /// covariance is propagated, so that Q holds the execution errors of the maneuvers (C5) even without noise; 0
+    /// otherwise.
     /// </summary>
-    internal bool CarriesCovariance => _carriesCovariance;
-
-    /// <summary>Number of elements of the cumulative Q: 21 when it is carried, 0 otherwise.</summary>
     internal int CarriedCovarianceLength => _carriesCovariance ? CovarianceLength : 0;
 
     /// <summary>Number of stage Jacobian evaluations so far: 13 per step, each summing the partials of all forces.</summary>
