@@ -50,6 +50,13 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **Kernels of a directory.** `SpiceAPI.LoadKernels` on a directory now hands SPICE its kernel files only: binary
+  kernels (ID word `DAF/` or `DAS/`, or `NAIF/DAF` and `NAIF/DAS`) and text kernels (ID word `KPL/`, or a
+  `\begindata` block for an old kernel without ID word), in the order of the directory listing, as before. The other
+  files, from which SPICE loaded nothing, are left out: the native loader used to open the EGM2008 geopotential model
+  of the solar system directory, which on Windows could make the library fail to open it ("being used by another
+  process"). What SPICE loads is unchanged. A file path is still handed to SPICE as it is.
+
 - **States between the steps of an RK7(8) propagation (#363).** The output states, `PropagationSolution.InterpolateAt`,
   the location of the events and the state the propagation restarts from after an impulsive maneuver came from a cubic
   Hermite interpolation between the accepted steps, whose error grows as the fourth power of the step size. In a

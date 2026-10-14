@@ -192,6 +192,11 @@ public class SpiceAPI
     ///     Load kernel at given path
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
+    /// <remarks>
+    /// A file path is handed to SPICE as it is. For a directory, the kernel files of the directory and of its
+    /// subdirectories are loaded, in the order of the directory listing; the other files, from which SPICE would load
+    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>).
+    /// </remarks>
     public void LoadKernels(FileSystemInfo path)
     {
         if (path == null) throw new ArgumentNullException(nameof(path));
@@ -217,14 +222,105 @@ public class SpiceAPI
 
             if (path.Exists)
             {
-                if (!LoadKernelsProxy(path.FullName))
+                foreach (var kernel in KernelFiles(path))
                 {
-                    throw new InvalidOperationException($"Kernel {path.FullName} can't be loaded. You can have more details on standard output");
+                    if (!LoadKernelsProxy(kernel))
+                    {
+                        throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
+                    }
                 }
 
                 _kernels.Add(path);
             }
         }
+    }
+
+    // Length of the scan buffer of IsKernelFile, and the marker of the data of a text kernel
+    private const int KernelScanBufferLength = 65536;
+    private static readonly byte[] BeginData = "\\begindata"u8.ToArray();
+
+    /// <summary>
+    /// The files that <see cref="LoadKernels"/> hands to SPICE for <paramref name="path"/>: the file itself, or the
+    /// kernel files of a directory and of its subdirectories, in the order of the directory listing, as the native
+    /// loader walks it.
+    /// </summary>
+    /// <remarks>
+    /// The other files of a directory (a geopotential model, a readme) are left out: SPICE would load nothing from
+    /// them, and opening them from the native layer could lock them on Windows while the library reads them
+    /// (<see cref="IsKernelFile"/>).
+    /// </remarks>
+    internal static IEnumerable<string> KernelFiles(FileSystemInfo path)
+    {
+        if (path is not DirectoryInfo && !Directory.Exists(path.FullName))
+        {
+            yield return path.FullName;
+            yield break;
+        }
+
+        foreach (var entry in Directory.EnumerateFileSystemEntries(path.FullName))
+        {
+            if (Directory.Exists(entry))
+            {
+                foreach (var kernel in KernelFiles(new DirectoryInfo(entry)))
+                {
+                    yield return kernel;
+                }
+            }
+            else if (IsKernelFile(entry))
+            {
+                yield return entry;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Whether SPICE can load anything from <paramref name="file"/>: a binary kernel, whose file starts with the ID word
+    /// <c>DAF/</c> or <c>DAS/</c> (<c>NAIF/DAF</c> or <c>NAIF/DAS</c> for the oldest), or a text kernel, whose ID word is
+    /// <c>KPL/</c> or, for an old one without ID word, which holds a <c>\begindata</c> marker: SPICE reads the variables
+    /// of a text kernel only between <c>\begindata</c> and <c>\begintext</c> (NAIF, Kernel Required Reading, "SPICE
+    /// Kernel Type Identification" and "Text Kernel Specifications").
+    /// </summary>
+    /// <remarks>
+    /// The file is read with <see cref="FileShare.ReadWrite"/>, so the check never stands in the way of another reader
+    /// or writer of the file.
+    /// </remarks>
+    internal static bool IsKernelFile(string file)
+    {
+        using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        Span<byte> buffer = new byte[KernelScanBufferLength];
+        int read = stream.ReadAtLeast(buffer, buffer.Length, false);
+        var head = buffer[..read];
+        if (head.StartsWith("DAF/"u8) || head.StartsWith("DAS/"u8) || head.StartsWith("NAIF/DAF"u8) ||
+            head.StartsWith("NAIF/DAS"u8) || head.StartsWith("KPL/"u8))
+        {
+            return true;
+        }
+
+        // Scan for \begindata, keeping the end of each buffer so that a marker across two reads is found
+        int overlap = BeginData.Length - 1;
+        while (read > 0)
+        {
+            if (buffer[..read].IndexOf(BeginData) >= 0)
+            {
+                return true;
+            }
+
+            if (read < overlap)
+            {
+                return false;
+            }
+
+            buffer.Slice(read - overlap, overlap).CopyTo(buffer);
+            int next = stream.ReadAtLeast(buffer[overlap..], buffer.Length - overlap, false);
+            if (next == 0)
+            {
+                return false;
+            }
+
+            read = overlap + next;
+        }
+
+        return false;
     }
 
     /// <summary>
