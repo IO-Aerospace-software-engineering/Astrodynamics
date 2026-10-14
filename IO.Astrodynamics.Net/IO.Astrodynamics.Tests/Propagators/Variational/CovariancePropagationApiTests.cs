@@ -230,6 +230,9 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         Assert.Contains("did not propagate the covariance",
             Assert.Throws<InvalidOperationException>(() => solution.GetCovariance(Start)).Message);
         Assert.Throws<InvalidOperationException>(() => solution.GetExtendedCovariance(Start));
+        Assert.Throws<InvalidOperationException>(() => solution.StateAndCovarianceAt(Start));
+        Assert.Throws<InvalidOperationException>(() =>
+            Spacecraft().Propagate(Window, Bodies, false, false, Step).StateAndCovarianceAt(Start));
     }
 
     [Fact]
