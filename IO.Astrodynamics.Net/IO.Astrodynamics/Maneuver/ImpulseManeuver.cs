@@ -22,6 +22,12 @@ namespace IO.Astrodynamics.Maneuver
         public Vector3 DeltaV { get; internal set; }
 
         /// <summary>
+        /// The execution error of the maneuver (model of Gates), added to the velocity covariance after the burn when the
+        /// propagation carries a covariance; null for none (internal until the public API of step 8).
+        /// </summary>
+        internal ManeuverExecutionError ExecutionError { get; set; }
+
+        /// <summary>
         /// Industry-standard g-function. Zero-crossing triggers the maneuver.
         /// State is relative to ManeuverCenter (already transformed by ManeuverEventDetector).
         /// Must be continuous, smooth, and stateless — suitable for root-finding.

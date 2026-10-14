@@ -1,5 +1,6 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using System;
 using IO.Astrodynamics.Propagator.Forces;
 
 namespace IO.Astrodynamics.Propagator.Variational;
@@ -22,8 +23,61 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// and the option is ignored without a geopotential. Reducing it trades accuracy of the state transition matrix for
 /// speed; the trajectory does not change.
 /// </param>
+/// <param name="PropagateCovariance">
+/// Whether the covariance P(t) = Φ P0 Φᵀ + Ψ Pp Ψᵀ + Q is propagated (C2). P0 is the covariance of the initial
+/// orbital parameters of the spacecraft, which must be given at the start of the propagation. Off by default: Φ, Ψ and
+/// the noise covariance Q only.
+/// </param>
+/// <param name="ConsiderParameters">
+/// The standard deviations of the consider parameters, Pp = diag(σ²) (C4); null for none. Each needs the covariance and
+/// its column of Ψ in <paramref name="Parameters"/>.
+/// </param>
 internal sealed record VariationalOptions(
     ForceParameters Parameters = ForceParameters.None,
     IProcessNoiseModel ProcessNoise = null,
     bool IncludeInStepControl = false,
-    int? GeopotentialPartialsDegree = null);
+    int? GeopotentialPartialsDegree = null,
+    bool PropagateCovariance = false,
+    ConsiderParameters ConsiderParameters = null);
+
+/// <summary>
+/// The force parameters taken as consider parameters: uncertain, not estimated, constant, with their standard
+/// deviations.
+/// </summary>
+internal sealed record ConsiderParameters
+{
+    /// <summary>
+    /// Create the consider parameters.
+    /// </summary>
+    /// <param name="dragCoefficientSigma">Standard deviation of Cd, dimensionless; null when Cd is not one.</param>
+    /// <param name="reflectivityCoefficientSigma">Standard deviation of Cr, dimensionless; null when Cr is not one.
+    /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">A standard deviation is negative or not finite.</exception>
+    internal ConsiderParameters(double? dragCoefficientSigma = null, double? reflectivityCoefficientSigma = null)
+    {
+        DragCoefficientSigma = Validate(dragCoefficientSigma, nameof(dragCoefficientSigma));
+        ReflectivityCoefficientSigma = Validate(reflectivityCoefficientSigma, nameof(reflectivityCoefficientSigma));
+    }
+
+    /// <summary>Standard deviation of Cd; null when Cd is not a consider parameter.</summary>
+    internal double? DragCoefficientSigma { get; }
+
+    /// <summary>Standard deviation of Cr; null when Cr is not a consider parameter.</summary>
+    internal double? ReflectivityCoefficientSigma { get; }
+
+    /// <summary>The parameters with a standard deviation.</summary>
+    internal ForceParameters Parameters =>
+        (DragCoefficientSigma.HasValue ? ForceParameters.DragCoefficient : ForceParameters.None) |
+        (ReflectivityCoefficientSigma.HasValue ? ForceParameters.ReflectivityCoefficient : ForceParameters.None);
+
+    private static double? Validate(double? sigma, string name)
+    {
+        if (sigma.HasValue && (!(sigma.Value >= 0.0) || double.IsPositiveInfinity(sigma.Value)))
+        {
+            throw new ArgumentOutOfRangeException(name, sigma,
+                "A standard deviation must be finite and non-negative.");
+        }
+
+        return sigma;
+    }
+}

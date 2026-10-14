@@ -17,7 +17,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 
 /// <summary>
 /// Φ and Ψ of the reference cases with non-conservative forces, R2 (drag) and R3 (SRP, an eclipse on every revolution),
-/// against central differences of whole propagations over one day: the partials of step 5b (B5, B6) end to end.
+/// against central differences of whole propagations over one day: the partials of step 5b (B5, B6) end to end; and the
+/// covariance of C2 with the coefficient as a consider parameter, against the covariance through those differences.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -27,7 +28,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// </para>
 /// <para>
 /// Measured (Linux, .NET 10, 2026-10-13): R2, Φ 5.0e-7 and Ψ_Cd 1.1e-7; R3, Φ 6.2e-7 and Ψ_Cr 3.3e-5 (2.4e-6, 1.2e-7,
-/// 6.9e-6 and 5.3e-5 with the reference propagations at 1e-13, before the H3 review of #378).
+/// 6.9e-6 and 5.3e-5 with the reference propagations at 1e-13, before the H3 review of #378). The covariance through
+/// the reference, Φ_ref P0 Φ_refᵀ + σ² ψ_ref ψ_refᵀ: R2 1.2e-7, R3 3.6e-7 (2026-10-14).
 /// </para>
 /// <para>
 /// What each figure measures (H3 review of #378). The reference for Ψ_Cr of R3, 44 m per unit Cr after one day, is off by
@@ -67,14 +69,20 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
     [Theory]
     [InlineData("R2")]
     [InlineData("R3")]
-    public void PhiAndPsi_MatchCentralDifferencesOfWholePropagations(string name)
+    public void PhiPsiAndCovariance_MatchCentralDifferencesOfWholePropagations(string name)
     {
-        // Arrange
+        // Arrange: the covariance too (C2), from a P0 given in RTN and the coefficient as a consider parameter, σ = 10 %
         var referenceCase = _cases[name];
         var start = referenceCase.InitialState;
         var parameter = referenceCase.AtmosphericDrag ? ForceParameters.DragCoefficient : ForceParameters.ReflectivityCoefficient;
-        var (phi, psi) = PhiAndPsi(Propagate(referenceCase, start, 2.2, 1.5, Tolerance,
-            new VariationalOptions(parameter)), referenceCase);
+        double sigma = referenceCase.AtmosphericDrag ? 0.22 : 0.15;
+        var consider = referenceCase.AtmosphericDrag ? new ConsiderParameters(sigma) : new ConsiderParameters(null, sigma);
+        var withCovariance = CovariancePropagationTests.WithCovariance(start);
+        var solution = Propagate(referenceCase, withCovariance, 2.2, 1.5, Tolerance,
+            new VariationalOptions(parameter, PropagateCovariance: true, ConsiderParameters: consider));
+        var (phi, psi) = PhiAndPsi(solution, referenceCase);
+        var covariance = new double[36];
+        solution.EvaluateCovariance(referenceCase.InitialState.Epoch.Add(referenceCase.Duration), covariance);
 
         // Act
         var expectedPhi = new double[36];
@@ -100,8 +108,18 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
             ReferenceTolerance, null));
         var expectedPsi = psiPlus.Zip(psiMinus, (p, m) => (p - m) / (2.0 * step)).ToArray();
 
+        // The covariance through the reference: Φ_ref P0 Φ_refᵀ + σ² ψ_ref ψ_refᵀ
+        var phiReference = CovarianceAssert.ToMathNet(expectedPhi, 6);
+        var p0 = CovarianceAssert.ToMathNet(Symmetrized(withCovariance.Covariance.Value), 6);
+        var psiReference = MathNet.Numerics.LinearAlgebra.Vector<double>.Build.Dense(expectedPsi);
+        var expectedCovariance = CovarianceAssert.ToArray(phiReference * p0 * phiReference.Transpose() +
+                                                          sigma * sigma * psiReference.OuterProduct(psiReference));
+
         // Assert: the threshold of the specification for R2 to R5 (F1)
         double phiError = StmMeasures.WorstBlockError(phi, expectedPhi);
+        double covarianceError = StmMeasures.WorstBlockError(covariance, expectedCovariance);
+        _output.WriteLine($"{name}: P {covarianceError:E2} (worst 3×3 block)");
+        Assert.True(covarianceError < 1e-4, $"P: {covarianceError:E2}");
         double psiPositionError = RiddersDerivative.RelativeFrobeniusError(psi[..3], expectedPsi[..3]);
         double psiVelocityError = RiddersDerivative.RelativeFrobeniusError(psi[3..], expectedPsi[3..]);
         _output.WriteLine($"{name}: Φ {phiError:E2} (worst 3×3 block), Ψ_{(drag ? "Cd" : "Cr")} {psiPositionError:E2} " +
@@ -142,7 +160,7 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
     {
         var y = new double[42];
         solution.EvaluateVariational(referenceCase.InitialState.Epoch.Add(referenceCase.Duration), y,
-            Array.Empty<double>());
+            new double[solution.Dynamics.Options.PropagateCovariance ? VariationalEquations.CovarianceLength : 0]);
         var phi = new double[36];
         var psi = new double[6];
         for (int i = 0; i < 6; i++)
@@ -192,4 +210,18 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
     }
 
     private static double Norm(double[] v) => System.Math.Sqrt(v.Sum(x => x * x));
+
+    private static double[] Symmetrized(IO.Astrodynamics.Math.Matrix matrix)
+    {
+        var result = new double[36];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                result[6 * i + j] = 0.5 * (matrix.Get(i, j) + matrix.Get(j, i));
+            }
+        }
+
+        return result;
+    }
 }

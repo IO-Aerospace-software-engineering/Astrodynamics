@@ -182,7 +182,8 @@ public sealed class RK78Integrator : Integrator
     /// </summary>
     /// <param name="context">Mass and coefficients of the segment.</param>
     /// <param name="entryY">Cumulative Y at the segment start.</param>
-    /// <param name="entryQ">Cumulative Q at the segment start; empty without process noise.</param>
+    /// <param name="entryQ">Cumulative Q at the segment start; empty when Q is not carried (no process noise, no
+    /// covariance).</param>
     /// <param name="entryManeuver">The maneuver that starts the segment, if any.</param>
     /// <exception cref="InvalidOperationException">The variational equations are off.</exception>
     internal void BeginVariationalSegment(in ForceEvaluationContext context, double[] entryY, double[] entryQ,

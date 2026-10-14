@@ -84,12 +84,50 @@ public sealed class PropagationSolution
     /// </summary>
     /// <param name="epoch">The epoch, within the solution.</param>
     /// <param name="y">Y, 6n values.</param>
-    /// <param name="q">Q, 21 values, or empty without process noise.</param>
+    /// <param name="q">Q, 21 values when it is carried (process noise or covariance), empty otherwise.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not integrate the variational equations.</exception>
     /// <exception cref="ArgumentException"><paramref name="y"/> or <paramref name="q"/> does not have the length of the
     /// propagation's options.</exception>
     internal void EvaluateVariational(Time epoch, Span<double> y, Span<double> q)
+    {
+        var segment = VariationalSegmentAt(epoch, out double t);
+        Dynamics.Evaluate(segment, t, y, q);
+    }
+
+    /// <summary>
+    /// The propagated covariance at <paramref name="epoch"/>, P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q, symmetrized, in the frame of
+    /// the propagation (m², m²/s, m²/s²; <see cref="CovarianceModel"/>). Picks the segment as
+    /// <see cref="InterpolateAt"/> does: at a maneuver, the covariance after it, its execution error included.
+    /// </summary>
+    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="covariance">P, 6×6 row-major.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
+    /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance.</exception>
+    /// <exception cref="ArgumentException"><paramref name="covariance"/> does not hold 36 values.</exception>
+    internal void EvaluateCovariance(Time epoch, Span<double> covariance)
+    {
+        var segment = VariationalSegmentAt(epoch, out double t);
+        Dynamics.EvaluateCovariance(segment, t, covariance, false);
+    }
+
+    /// <summary>
+    /// The extended covariance of the state and the consider parameters at <paramref name="epoch"/>,
+    /// [[P, Ψc Pp], [Pp Ψcᵀ, Pp]], m×m with m = 6 + the number of consider parameters (Cd, then Cr).
+    /// </summary>
+    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="covariance">The extended covariance, m×m row-major.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
+    /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance.</exception>
+    /// <exception cref="ArgumentException"><paramref name="covariance"/> does not hold m² values.</exception>
+    internal void EvaluateExtendedCovariance(Time epoch, Span<double> covariance)
+    {
+        var segment = VariationalSegmentAt(epoch, out double t);
+        Dynamics.EvaluateCovariance(segment, t, covariance, true);
+    }
+
+    // The segment of an epoch inside the solution, for the variational values
+    private PropagationSegment VariationalSegmentAt(in Time epoch, out double t)
     {
         if (_segments.Count == 0)
             throw new InvalidOperationException("Solution contains no segments.");
@@ -99,12 +137,12 @@ public sealed class PropagationSolution
             throw new ArgumentOutOfRangeException(nameof(epoch), epoch,
                 "The epoch is outside the propagation.");
 
-        var segment = SegmentAt(epoch, out double t);
+        var segment = SegmentAt(epoch, out t);
         if (Dynamics == null)
             throw new InvalidOperationException(
                 "The solution holds no variational data: the propagation did not integrate the variational equations.");
 
-        Dynamics.Evaluate(segment, t, y, q);
+        return segment;
     }
 
     // The segment containing the epoch, the later one at boundaries (post-maneuver state), and the time from its start
