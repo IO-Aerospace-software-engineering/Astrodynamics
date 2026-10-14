@@ -34,6 +34,9 @@ public abstract class PropagatorBase : IPropagator
     // Options of the variational equations, null when they are off (internal until the public API of step 8)
     private VariationalOptions _variationalOptions;
 
+    // The propagated covariance, null when it is off
+    private CovarianceModel _covarianceModel;
+
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
     {
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
@@ -52,7 +55,19 @@ public abstract class PropagatorBase : IPropagator
     /// </summary>
     /// <param name="options">What to integrate.</param>
     /// <exception cref="ArgumentNullException"><paramref name="options"/> is null.</exception>
+    /// <remarks>
+    /// With <see cref="VariationalOptions.PropagateCovariance"/>, P0 is the covariance of
+    /// <see cref="Spacecraft.InitialOrbitalParameters"/>, as a state vector, which must be given at the start of the
+    /// window: the propagator does not carry a covariance from another epoch. It is in the frame of the propagation,
+    /// which is that of the initial orbital parameters, and relative to their observer; moving the origin to the central
+    /// body is a translation by a known ephemeris, of Jacobian I, which leaves P0 unchanged.
+    /// </remarks>
     /// <exception cref="NotSupportedException">The integrator is not an <see cref="RK78Integrator"/>.</exception>
+    /// <exception cref="ArgumentException">The options name consider parameters without the covariance, or a consider
+    /// parameter without its column of Ψ.</exception>
+    /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
+    /// none, or carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
+    /// semi-definite.</exception>
     internal void EnableVariationalEquations(VariationalOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -70,6 +85,8 @@ public abstract class PropagatorBase : IPropagator
                 $"{options.GeopotentialPartialsDegree}.");
         }
 
+        var covarianceModel = CreateCovarianceModel(options);
+
         var gravities = rk78.ForceList.OfType<GravitationalAcceleration>().ToArray();
         foreach (var gravity in gravities)
         {
@@ -83,6 +100,65 @@ public abstract class PropagatorBase : IPropagator
 
         rk78.EnableVariationalEquations(options);
         _variationalOptions = options;
+        _covarianceModel = covarianceModel;
+    }
+
+    // The covariance model of the options, after the checks of P0; null without the covariance
+    private CovarianceModel CreateCovarianceModel(VariationalOptions options)
+    {
+        if (!options.PropagateCovariance)
+        {
+            if (options.ConsiderParameters != null)
+            {
+                throw new ArgumentException(
+                    "Consider parameters enter the propagated covariance only: set PropagateCovariance.",
+                    nameof(options));
+            }
+
+            return null;
+        }
+
+        var initial = Spacecraft.InitialOrbitalParameters;
+        var covariance = initial.ToStateVector().Covariance;
+        if (!covariance.HasValue)
+        {
+            throw new InvalidOperationException(
+                "The covariance is propagated from that of the initial orbital parameters of the spacecraft, which " +
+                "carry none: give the initial state vector a covariance, or propagate the state transition matrix " +
+                "only.");
+        }
+
+        if ((initial.Epoch - Window.StartDate) != TimeSpan.Zero)
+        {
+            throw new InvalidOperationException(
+                $"The initial covariance is given at {initial.Epoch.ToTDB()}, and the propagation starts at " +
+                $"{Window.StartDate}: the propagator does not carry a covariance from another epoch. Start the window " +
+                "at the epoch of the initial orbital parameters.");
+        }
+
+        var p0 = covariance.Value;
+        if (p0.Rows != VariationalEquations.StateDimension || p0.Columns != VariationalEquations.StateDimension)
+        {
+            throw new InvalidOperationException(
+                $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.");
+        }
+
+        var values = new double[36];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                values[6 * i + j] = p0.Get(i, j);
+            }
+        }
+
+        var reason = CovarianceChecks.Validate(values, 6, "The initial covariance", out var symmetrized);
+        if (reason != null)
+        {
+            throw new InvalidOperationException(reason);
+        }
+
+        return new CovarianceModel(symmetrized, options);
     }
 
     /// <summary>
@@ -129,7 +205,8 @@ public abstract class PropagatorBase : IPropagator
         if (rk78 != null)
         {
             dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
-                InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations);
+                InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations,
+                _covarianceModel);
         }
 
         var variational = _variationalOptions != null ? rk78.VariationalEquations : null;
@@ -140,7 +217,7 @@ public abstract class PropagatorBase : IPropagator
         {
             entryY = new double[variational.YLength];
             variational.SetIdentity(entryY);
-            entryQ = new double[variational.HasProcessNoise ? VariationalEquations.CovarianceLength : 0];
+            entryQ = new double[variational.CarriedCovarianceLength];
         }
 
         // Compute required propagation duration (may exceed window for non-fitting step sizes)
@@ -214,13 +291,14 @@ public abstract class PropagatorBase : IPropagator
                 currentEpoch = nextState.Epoch;
 
                 // Open loop: the maneuver is fixed in epoch and ΔV, so the variational values are continuous at the
-                // event and become the entry values of the next segment
+                // event and become the entry values of the next segment; the execution error of the burn, if any, adds
+                // to the velocity block of the carried Q (C5)
                 if (variational != null)
                 {
                     entryY = eventY;
                     entryQ = eventQ;
                     entryManeuver = restart && detector is ManeuverEventDetector maneuverDetector
-                        ? new ManeuverRecord(eventEpoch, maneuverDetector.Maneuver.DeltaV)
+                        ? ManeuverRecordOf(eventEpoch, maneuverDetector.Maneuver, entryQ)
                         : null;
                 }
 
@@ -262,6 +340,34 @@ public abstract class PropagatorBase : IPropagator
         solution.SetOutputStates(outputStates);
 
         return solution;
+    }
+
+    /// <summary>
+    /// The record of an executed maneuver; with an execution error and a carried Q, its covariance L_e is added to the
+    /// velocity block of <paramref name="q"/>: Q⁺ = Q⁻ + B L_e Bᵀ, B = [0 ; I], the error being independent of the
+    /// state before the burn.
+    /// </summary>
+    private static ManeuverRecord ManeuverRecordOf(in Time epoch, ImpulseManeuver maneuver, double[] q)
+    {
+        if (maneuver.ExecutionError == null)
+        {
+            return new ManeuverRecord(epoch, maneuver.DeltaV);
+        }
+
+        var covariance = new double[9];
+        maneuver.ExecutionError.Covariance(maneuver.DeltaV, covariance);
+        if (q.Length > 0)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = i; j < 3; j++)
+                {
+                    q[VariationalEquations.CovarianceIndex(i + 3, j + 3)] += covariance[3 * i + j];
+                }
+            }
+        }
+
+        return new ManeuverRecord(epoch, maneuver.DeltaV, covariance);
     }
 
     /// <summary>

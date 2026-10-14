@@ -50,6 +50,7 @@ internal sealed class VariationalEquations
     private readonly bool _hasDragCoefficient;
     private readonly bool _hasReflectivityCoefficient;
     private readonly IProcessNoiseModel _processNoise;
+    private readonly bool _carriesCovariance;
 
     // Per stage: G and D (9 each, row-major), ∂a/∂p (3 per parameter), Qc (9)
     private readonly double[] _g = new double[Stages * 9];
@@ -89,6 +90,7 @@ internal sealed class VariationalEquations
         _hasDragCoefficient = (options.Parameters & ForceParameters.DragCoefficient) != 0;
         _hasReflectivityCoefficient = (options.Parameters & ForceParameters.ReflectivityCoefficient) != 0;
         _processNoise = options.ProcessNoise;
+        _carriesCovariance = _processNoise != null || options.PropagateCovariance;
 
         ParameterCount = (_hasDragCoefficient ? 1 : 0) + (_hasReflectivityCoefficient ? 1 : 0);
         ColumnCount = StateDimension + ParameterCount;
@@ -115,6 +117,13 @@ internal sealed class VariationalEquations
 
     /// <summary>Whether Q is integrated.</summary>
     internal bool HasProcessNoise => _processNoise != null;
+
+    /// <summary>
+    /// Number of elements of the cumulative Q carried from segment to segment: 21 with process noise, or when the
+    /// covariance is propagated, so that Q holds the execution errors of the maneuvers (C5) even without noise; 0
+    /// otherwise.
+    /// </summary>
+    internal int CarriedCovarianceLength => _carriesCovariance ? CovarianceLength : 0;
 
     /// <summary>Number of stage Jacobian evaluations so far: 13 per step, each summing the partials of all forces.</summary>
     internal long StageJacobianEvaluations { get; private set; }
@@ -267,11 +276,13 @@ internal sealed class VariationalEquations
     /// The variational equations are linear, so their solution from the start of the propagation is the solution from
     /// the segment start applied to the entry values: x(t) − x̄(t) = Φ_seg (x(te) − x̄(te)) + Ψ_seg δp, with
     /// x(te) − x̄(te) = Φ_entry δx0 + Ψ_entry δp, and the noise accumulated before te propagates through Φ_seg while the
-    /// noise after te is independent of it. The outputs must not overlap the inputs.
+    /// noise after te is independent of it. An empty <paramref name="segmentQ"/> with a cumulative Q stands for
+    /// Q_seg = 0: a segment without process noise, whose cumulative Q is that of its entry through Φ_seg. The outputs must
+    /// not overlap the inputs.
     /// </remarks>
     /// <param name="columns">Number of columns n of Y.</param>
     /// <param name="segmentY">Y relative to the segment start.</param>
-    /// <param name="segmentQ">Q relative to the segment start; empty without Q.</param>
+    /// <param name="segmentQ">Q relative to the segment start; empty without process noise.</param>
     /// <param name="entryY">Cumulative Y at the segment start.</param>
     /// <param name="entryQ">Cumulative Q at the segment start; empty without Q.</param>
     /// <param name="y">Cumulative Y.</param>
@@ -330,7 +341,7 @@ internal sealed class VariationalEquations
                     sum += t[6 * i + k] * segmentY[j * columns + k];
                 }
 
-                q[CovarianceIndex(i, j)] = sum + segmentQ[CovarianceIndex(i, j)];
+                q[CovarianceIndex(i, j)] = segmentQ.Length == 0 ? sum : sum + segmentQ[CovarianceIndex(i, j)];
             }
         }
     }

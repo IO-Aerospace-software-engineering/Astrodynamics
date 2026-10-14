@@ -44,6 +44,8 @@ internal sealed class PropagationDynamics
     private readonly double[] _zeroCovariance;
     private readonly double[] _segmentY;
     private readonly double[] _segmentQ;
+    private readonly double[] _cumulativeY;
+    private readonly double[] _cumulativeQ;
 
     /// <summary>
     /// Record the dynamics of a propagation.
@@ -56,9 +58,10 @@ internal sealed class PropagationDynamics
     /// <param name="orientationCache">That cache, or null.</param>
     /// <param name="options">The options of the variational equations, or null when they are off.</param>
     /// <param name="propagationEquations">The equations of the integrator, or null when they are off.</param>
+    /// <param name="covariance">The propagated covariance, or null when it is off.</param>
     internal PropagationDynamics(IReadOnlyList<ForceBase> forces, ILocalizable observer, Frame frame, in Time epoch,
         Frame orientationCacheFrame, PropagationFrameOrientationCache orientationCache, VariationalOptions options,
-        VariationalEquations propagationEquations)
+        VariationalEquations propagationEquations, CovarianceModel covariance = null)
     {
         ArgumentNullException.ThrowIfNull(forces);
         _forces = forces.ToArray();
@@ -68,6 +71,7 @@ internal sealed class PropagationDynamics
         _orientationCache = orientationCache;
         Options = options;
         _propagationEquations = propagationEquations;
+        Covariance = covariance;
 
         _stepper = new RK78Stepper(_forces);
         _stepper.Reset(observer, frame, epoch);
@@ -80,6 +84,8 @@ internal sealed class PropagationDynamics
             _zeroCovariance = new double[covarianceLength];
             _segmentY = new double[_evaluationEquations.YLength];
             _segmentQ = new double[covarianceLength];
+            _cumulativeY = new double[_evaluationEquations.YLength];
+            _cumulativeQ = new double[_evaluationEquations.CarriedCovarianceLength];
         }
     }
 
@@ -88,6 +94,9 @@ internal sealed class PropagationDynamics
 
     /// <summary>The options of the variational equations, or null when they were off.</summary>
     internal VariationalOptions Options { get; }
+
+    /// <summary>The propagated covariance, or null when it was off.</summary>
+    internal CovarianceModel Covariance { get; }
 
     /// <summary>
     /// Stage Jacobian evaluations of the propagation and of the evaluations after it (13 per step).
@@ -101,7 +110,7 @@ internal sealed class PropagationDynamics
     /// </summary>
     /// <exception cref="InvalidOperationException">The segment holds no variational data.</exception>
     /// <exception cref="ArgumentException"><paramref name="y"/> does not hold 6n values, or <paramref name="q"/> does
-    /// not hold 21 values with process noise and none without.</exception>
+    /// not hold 21 values when Q is carried (process noise or covariance) and none otherwise.</exception>
     internal void Evaluate(PropagationSegment segment, double t, Span<double> y, Span<double> q)
     {
         var data = VariationalData(segment);
@@ -109,18 +118,52 @@ internal sealed class PropagationDynamics
             throw new ArgumentException(
                 $"Y holds {_evaluationEquations.YLength} values (6 × {_evaluationEquations.ColumnCount}); got {y.Length}.",
                 nameof(y));
-        if (q.Length != _segmentQ.Length)
+        if (q.Length != _cumulativeQ.Length)
             throw new ArgumentException(
-                _segmentQ.Length == 0
-                    ? $"Q must be empty without process noise; got {q.Length} values."
-                    : $"Q holds {_segmentQ.Length} values with process noise; got {q.Length}.", nameof(q));
+                _cumulativeQ.Length == 0
+                    ? $"Q must be empty without process noise or covariance; got {q.Length} values."
+                    : $"Q holds {_cumulativeQ.Length} values with process noise or covariance; got {q.Length}.",
+                nameof(q));
 
         lock (_lock)
         {
-            SegmentValues(segment, data, t, _segmentY, _segmentQ);
-            VariationalEquations.Compose(_evaluationEquations.ColumnCount, _segmentY, _segmentQ, data.EntryY,
-                data.EntryQ, y, q);
+            EvaluateCore(segment, data, t, y, q);
         }
+    }
+
+    /// <summary>
+    /// The propagated covariance P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q at <paramref name="t"/> seconds from the base epoch of
+    /// <paramref name="segment"/> (<see cref="CovarianceModel.Covariance"/>), or the extended covariance
+    /// (<see cref="CovarianceModel.ExtendedCovariance"/>).
+    /// </summary>
+    /// <param name="segment">The segment.</param>
+    /// <param name="t">Seconds from its base epoch.</param>
+    /// <param name="covariance">P, 36 values, or the extended covariance, m² values.</param>
+    /// <param name="extended">Whether the extended covariance is wanted.</param>
+    /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance.</exception>
+    internal void EvaluateCovariance(PropagationSegment segment, double t, Span<double> covariance, bool extended)
+    {
+        if (Covariance == null)
+            throw new InvalidOperationException(
+                "The solution holds no covariance: the propagation did not propagate the covariance.");
+
+        var data = VariationalData(segment);
+        lock (_lock)
+        {
+            EvaluateCore(segment, data, t, _cumulativeY, _cumulativeQ);
+            if (extended)
+                Covariance.ExtendedCovariance(_cumulativeY, _cumulativeQ, covariance);
+            else
+                Covariance.Covariance(_cumulativeY, _cumulativeQ, covariance);
+        }
+    }
+
+    private void EvaluateCore(PropagationSegment segment, VariationalSegmentData data, double t, Span<double> y,
+        Span<double> q)
+    {
+        SegmentValues(segment, data, t, _segmentY, _segmentQ);
+        VariationalEquations.Compose(_evaluationEquations.ColumnCount, _segmentY, _segmentQ, data.EntryY, data.EntryQ,
+            y, q);
     }
 
     /// <summary>
