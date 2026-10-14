@@ -132,7 +132,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - `Nrlmsise00Model`: thread-safe, concurrent use OK
 - Force partials (internal, `ForceBase.AccumulateStatePartials`): a force keeps a work `StateVector` for its finite differences, so the partials path of one force instance is **not reentrant**, unlike `Apply`. Forces belong to one integrator, as the propagator builds them
 - Frame orientation cache: active only on the thread that propagates or evaluates a propagation (`Frame.UseOrientationCache`), never set on the shared `Frame`; propagations and RK7(8) evaluations sharing a central body without a geopotential may run concurrently
-- RK7(8) evaluations after a propagation (`PropagationSolution.InterpolateAt`, internal `EvaluateVariational`): serialized by a lock per solution; they evaluate the forces, so they must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential
+- RK7(8) evaluations after a propagation (`PropagationSolution.InterpolateAt`, internal `EvaluateVariational`, `EvaluateCovariance` and `EvaluateExtendedCovariance`): serialized by a lock per solution; they evaluate the forces, so they must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential
 
 ### Geopotential
 

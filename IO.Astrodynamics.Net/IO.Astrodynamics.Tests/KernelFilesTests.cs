@@ -110,6 +110,33 @@ public class KernelFilesTests : IDisposable
     }
 
     [Fact]
+    public void KernelFiles_SkipsWhatIsNotARegularFile_AndFollowsLinksToKernels()
+    {
+        // Arrange: an empty file everywhere; on Linux and macOS, as the native loader saw them, a dangling symbolic link,
+        // a cycle of links, a link to a kernel and a named pipe (H3 review of #384: the dangling link used to throw, the
+        // pipe to block the read)
+        var kernel = Write("kernel.tf", Encoding.ASCII.GetBytes("KPL/FK\n"));
+        Write("empty", Array.Empty<byte>());
+        var expected = new[] { kernel }.ToList();
+        if (!OperatingSystem.IsWindows())
+        {
+            File.CreateSymbolicLink(Path.Combine(_directory.FullName, "dangling"), "missing");
+            File.CreateSymbolicLink(Path.Combine(_directory.FullName, "cycle1"), "cycle2");
+            File.CreateSymbolicLink(Path.Combine(_directory.FullName, "cycle2"), "cycle1");
+            expected.Add(File.CreateSymbolicLink(Path.Combine(_directory.FullName, "link.tf"), kernel).FullName);
+            using var mkfifo = System.Diagnostics.Process.Start("mkfifo", Path.Combine(_directory.FullName, "pipe"));
+            mkfifo.WaitForExit();
+            Assert.Equal(0, mkfifo.ExitCode);
+        }
+
+        // Act
+        var kernels = SpiceAPI.KernelFiles(_directory).ToArray();
+
+        // Assert
+        Assert.Equal(expected.OrderBy(x => x), kernels.OrderBy(x => x));
+    }
+
+    [Fact]
     public void LoadKernels_OfADirectoryWithoutKernels_LoadsNothingAndRecordsIt()
     {
         // Arrange

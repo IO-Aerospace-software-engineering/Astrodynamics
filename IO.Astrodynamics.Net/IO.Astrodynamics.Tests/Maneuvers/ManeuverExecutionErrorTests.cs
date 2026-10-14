@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Linq;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using MathNet.Numerics.LinearAlgebra;
@@ -188,6 +189,41 @@ public class ManeuverExecutionErrorTests
         Assert.Equal(0.005 * 0.005, tiny[4], 1e-18);
         Assert.Equal(0.01 * 0.01, tiny[8], 1e-18);
         Assert.Equal(0.0, tiny[1], 1e-18);
+    }
+
+    [Theory]
+    [InlineData(1e-160)]
+    [InlineData(1e-300)]
+    [InlineData(double.Epsilon)]
+    public void AnyNonZeroDeltaV_TakesTheFixedTerms_WithoutOverflow(double magnitude)
+    {
+        // Arrange: ΔV so small that V² is subnormal or zero (H3 review of #384: (σ_r² − σ_a²) / V² overflowed below
+        // about 1e-154 m/s); along x and along a diagonal
+        var model = new ManeuverExecutionError(0.01, 0.02, 0.005, 0.03);
+        var alongX = new double[9];
+        var diagonal = new double[9];
+
+        // Act
+        model.Covariance(new Vector3(magnitude, 0.0, 0.0), alongX);
+        model.Covariance(new Vector3(magnitude, -magnitude, magnitude), diagonal);
+
+        // Assert: the fixed terms, σ_r² along ΔV and σ_a² across it, as for any non-zero ΔV (decision of S. Guillet,
+        // 2026-10-14)
+        double[] expectedAlongX = { 1e-4, 0.0, 0.0, 0.0, 2.5e-5, 0.0, 0.0, 0.0, 2.5e-5 };
+        for (int k = 0; k < 9; k++)
+        {
+            Assert.Equal(expectedAlongX[k], alongX[k], 1e-18);
+        }
+
+        var u = new[] { 1.0, -1.0, 1.0 }.Select(x => x / System.Math.Sqrt(3.0)).ToArray();
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                double expected = (1e-4 - 2.5e-5) * u[i] * u[j] + (i == j ? 2.5e-5 : 0.0);
+                Assert.Equal(expected, diagonal[3 * i + j], 1e-18);
+            }
+        }
     }
 
     [Fact]
