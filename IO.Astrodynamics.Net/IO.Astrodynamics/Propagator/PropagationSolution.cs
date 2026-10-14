@@ -82,7 +82,8 @@ public sealed class PropagationSolution
     /// Q (<see cref="VariationalEquations"/>). Picks the segment as <see cref="InterpolateAt"/> does, the later one at a
     /// maneuver.
     /// </summary>
-    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="epoch">The epoch, within the solution; up to one tick of <see cref="Time"/> (100 ns) after its end,
+    /// which reads the values at the end.</param>
     /// <param name="y">Y, 6n values.</param>
     /// <param name="q">Q, 21 values when it is carried (process noise or covariance), empty otherwise.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
@@ -100,7 +101,8 @@ public sealed class PropagationSolution
     /// the propagation (m², m²/s, m²/s²; <see cref="CovarianceModel"/>). Picks the segment as
     /// <see cref="InterpolateAt"/> does: at a maneuver, the covariance after it, its execution error included.
     /// </summary>
-    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="epoch">The epoch, within the solution; up to one tick of <see cref="Time"/> (100 ns) after its end,
+    /// which reads the values at the end.</param>
     /// <param name="covariance">P, 6×6 row-major.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance.</exception>
@@ -115,7 +117,8 @@ public sealed class PropagationSolution
     /// The extended covariance of the state and the consider parameters at <paramref name="epoch"/>,
     /// [[P, Ψc Pp], [Pp Ψcᵀ, Pp]], m×m with m = 6 + the number of consider parameters (Cd, then Cr).
     /// </summary>
-    /// <param name="epoch">The epoch, within the solution.</param>
+    /// <param name="epoch">The epoch, within the solution; up to one tick of <see cref="Time"/> (100 ns) after its end,
+    /// which reads the values at the end.</param>
     /// <param name="covariance">The extended covariance, m×m row-major.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the solution.</exception>
     /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance.</exception>
@@ -126,18 +129,24 @@ public sealed class PropagationSolution
         Dynamics.EvaluateCovariance(segment, t, covariance, true);
     }
 
-    // The segment of an epoch inside the solution, for the variational values
+    // One tick of Time (100 ns): the propagation ends at Window.StartDate.AddSeconds(duration), which AddSeconds
+    // truncates to the tick, so its last step can end one tick before the end of the window (H3 review of lots A to C)
+    private const double EpochTick = 1e-7;
+
+    // The segment of an epoch inside the solution, for the variational values; an epoch within one tick after the last
+    // step reads the values at its end
     private PropagationSegment VariationalSegmentAt(in Time epoch, out double t)
     {
         if (_segments.Count == 0)
             throw new InvalidOperationException("Solution contains no segments.");
 
         var last = _segments[^1];
-        if (epoch < _segments[0].BaseEpoch || (epoch - last.BaseEpoch).TotalSeconds > last.Duration)
+        if (epoch < _segments[0].BaseEpoch || (epoch - last.BaseEpoch).TotalSeconds > last.Duration + EpochTick)
             throw new ArgumentOutOfRangeException(nameof(epoch), epoch,
                 "The epoch is outside the propagation.");
 
         var segment = SegmentAt(epoch, out t);
+        t = System.Math.Min(t, segment.Duration);
         if (Dynamics == null)
             throw new InvalidOperationException(
                 "The solution holds no variational data: the propagation did not integrate the variational equations.");
