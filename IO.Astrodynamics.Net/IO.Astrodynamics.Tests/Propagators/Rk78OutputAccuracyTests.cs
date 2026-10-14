@@ -189,7 +189,7 @@ public class Rk78OutputAccuracyTests
         var end = Start.AddHours(3.0);
 
         // Act
-        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, end), new CelestialItem[] { _pointMassEarth },
+        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, end), new CelestialItem[] { _pointMassEarth },
             new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(60.0),
             new VariationalOptions(ForceParameters.None));
 

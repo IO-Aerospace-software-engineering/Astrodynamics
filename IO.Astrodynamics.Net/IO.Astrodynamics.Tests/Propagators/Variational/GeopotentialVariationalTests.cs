@@ -170,7 +170,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     {
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun);
-        return PartialsTestCases.Spacecraft(start).Propagate(new TimeSystem.Window(Start, end),
+        return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
             new CelestialItem[] { earth, moon, sun }, new RK78Integrator(tolerance, tolerance), false, false,
             TimeSpan.FromSeconds(600.0), options);
     }
@@ -178,7 +178,7 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
     private static PropagationSolution PropagateFixedStep(CelestialBody earth, StateVector start, TimeSystem.Time end,
         VariationalOptions options)
     {
-        return PartialsTestCases.Spacecraft(start).Propagate(new TimeSystem.Window(Start, end),
+        return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
             new CelestialItem[] { earth }, new RK78Integrator(30.0), false, false, TimeSpan.FromSeconds(60.0),
             options);
     }

@@ -94,7 +94,13 @@ public static class BatchPropagator
                     solution = task.Spacecraft.Propagate(
                         task.Window, task.CelestialBodies, integrator,
                         task.IncludeAtmosphericDrag, task.IncludeSolarRadiationPressure,
-                        task.DeltaT);
+                        task.DeltaT, task.CovariancePropagation);
+                }
+                else if (task.CovariancePropagation != null)
+                {
+                    throw new NotSupportedException(
+                        "The state transition matrix is integrated by the RK7(8) integrator (RK78Integrator) only; " +
+                        "give the task an IntegratorFactory that creates one.");
                 }
                 else
                 {

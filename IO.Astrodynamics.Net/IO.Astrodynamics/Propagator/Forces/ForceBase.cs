@@ -99,6 +99,13 @@ public abstract class ForceBase
     internal virtual ForceParameters Parameters => ForceParameters.None;
 
     /// <summary>
+    /// Number of calls to <see cref="AccumulateStatePartials"/> and <see cref="AccumulateParameterPartials"/>: the proof
+    /// that a propagation without the variational equations evaluates no partial (D6). Not synchronized, like the
+    /// partials path itself.
+    /// </summary>
+    internal long PartialsEvaluations { get; private set; }
+
+    /// <summary>
     /// Adds ∂a/∂r and ∂a/∂v at <paramref name="stateVector"/>, at its fixed epoch, to <paramref name="dadr"/> and
     /// <paramref name="dadv"/>.
     /// </summary>
@@ -126,6 +133,7 @@ public abstract class ForceBase
     {
         ValidateLength(dadr, 9, nameof(dadr));
         ValidateLength(dadv, 9, nameof(dadv));
+        PartialsEvaluations++;
         AccumulateStatePartialsCore(stateVector, context, dadr, dadv);
     }
 
@@ -143,6 +151,7 @@ public abstract class ForceBase
     {
         ValidateLength(dadCd, 3, nameof(dadCd));
         ValidateLength(dadCr, 3, nameof(dadCr));
+        PartialsEvaluations++;
         AccumulateParameterPartialsCore(stateVector, context, dadCd, dadCr);
     }
 

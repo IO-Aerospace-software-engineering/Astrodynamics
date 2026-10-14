@@ -35,8 +35,17 @@ namespace IO.Astrodynamics.Maneuver;
 /// G, is not defined there. Such a maneuver adds no error (decision of S. Guillet, 2026-10-14). Any non-zero ΔV takes
 /// the whole model, the fixed terms included.
 /// </para>
+/// <para>
+/// Set it on a maneuver with <see cref="ImpulseManeuver.ExecutionError"/>. It acts only on a propagation of the
+/// covariance (<see cref="Propagator.Variational.CovariancePropagationMode.Covariance"/>): L_e, rotated with ΔV in the
+/// inertial frame of the propagation, is added to the velocity block of the covariance at the burn. Otherwise it is
+/// ignored and costs nothing. The trajectory always follows the commanded ΔV (open loop).
+/// </para>
+/// <para>
+/// Immutable, so thread-safe.
+/// </para>
 /// </remarks>
-internal sealed class ManeuverExecutionError
+public sealed class ManeuverExecutionError
 {
     /// <summary>
     /// Create the model.
@@ -46,7 +55,7 @@ internal sealed class ManeuverExecutionError
     /// <param name="autopilotSigma">σ_a, fixed pointing error, in m/s on each axis perpendicular to ΔV.</param>
     /// <param name="pointingSigma">σ_p, pointing error proportional to |ΔV|, in rad on each axis.</param>
     /// <exception cref="ArgumentOutOfRangeException">A standard deviation is negative or not finite.</exception>
-    internal ManeuverExecutionError(double resolutionSigma, double shutoffSigma, double autopilotSigma,
+    public ManeuverExecutionError(double resolutionSigma, double shutoffSigma, double autopilotSigma,
         double pointingSigma)
     {
         ResolutionSigma = Validate(resolutionSigma, nameof(resolutionSigma));
@@ -56,16 +65,16 @@ internal sealed class ManeuverExecutionError
     }
 
     /// <summary>σ_r, fixed magnitude error, in m/s.</summary>
-    internal double ResolutionSigma { get; }
+    public double ResolutionSigma { get; }
 
     /// <summary>σ_s, magnitude error proportional to |ΔV|, dimensionless.</summary>
-    internal double ShutoffSigma { get; }
+    public double ShutoffSigma { get; }
 
     /// <summary>σ_a, fixed pointing error, in m/s on each axis perpendicular to ΔV.</summary>
-    internal double AutopilotSigma { get; }
+    public double AutopilotSigma { get; }
 
     /// <summary>σ_p, pointing error proportional to |ΔV|, in rad on each axis perpendicular to ΔV.</summary>
-    internal double PointingSigma { get; }
+    public double PointingSigma { get; }
 
     /// <summary>
     /// The covariance of the error of <paramref name="deltaV"/>, L_e of Gates, in the frame of

@@ -15,6 +15,8 @@ When propagating multiple spacecraft concurrently (via `BatchPropagator`, `Monte
 | `Nrlmsise00Model` | Yes | Thread-safe atmospheric model |
 | `NRLMSISE00` (the low-level model) | No | Keeps intermediate values and work arrays between calls; `Nrlmsise00Model` serializes its calls to its own instance |
 | `PropagationSolution.InterpolateAt` of an RK7(8) solution | Serialized per solution | Evaluates the forces of the propagation (a shortened RK7(8) step) under a lock of the solution. Solutions that share a central body without a geopotential may be queried concurrently. Like a propagation, it must not run concurrently with another propagation or RK7(8) solution that shares a `CelestialBody` with a geopotential |
+| `PropagationSolution.GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector` (and the internal `EvaluateVariational`, `EvaluateCovariance`, `EvaluateExtendedCovariance`) | Serialized per solution | Same lock and the same rule as `InterpolateAt`: they evaluate the forces inside a step, so they must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential |
+| `CovariancePropagationOptions`, `RtnProcessNoise`, `ConsiderParameters`, `ManeuverExecutionError` | Yes | Immutable |
 
 ## Per-Task CelestialBody Pattern
 

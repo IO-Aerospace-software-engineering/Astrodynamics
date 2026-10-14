@@ -42,9 +42,11 @@ internal sealed record VariationalOptions(
 
 /// <summary>
 /// The force parameters taken as consider parameters: uncertain, not estimated, constant, with their standard
-/// deviations.
+/// deviations. Their covariance Pp = diag(σ²) enters the propagated covariance through the sensitivity Ψ,
+/// P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q, and the extended covariance [[P, Ψc Pp], [Pp Ψcᵀ, Pp]]
+/// (<see cref="PropagationSolution.GetExtendedCovariance"/>).
 /// </summary>
-internal sealed record ConsiderParameters
+public sealed record ConsiderParameters
 {
     /// <summary>
     /// Create the consider parameters.
@@ -53,17 +55,17 @@ internal sealed record ConsiderParameters
     /// <param name="reflectivityCoefficientSigma">Standard deviation of Cr, dimensionless; null when Cr is not one.
     /// </param>
     /// <exception cref="ArgumentOutOfRangeException">A standard deviation is negative or not finite.</exception>
-    internal ConsiderParameters(double? dragCoefficientSigma = null, double? reflectivityCoefficientSigma = null)
+    public ConsiderParameters(double? dragCoefficientSigma = null, double? reflectivityCoefficientSigma = null)
     {
         DragCoefficientSigma = Validate(dragCoefficientSigma, nameof(dragCoefficientSigma));
         ReflectivityCoefficientSigma = Validate(reflectivityCoefficientSigma, nameof(reflectivityCoefficientSigma));
     }
 
-    /// <summary>Standard deviation of Cd; null when Cd is not a consider parameter.</summary>
-    internal double? DragCoefficientSigma { get; }
+    /// <summary>Standard deviation of Cd, dimensionless; null when Cd is not a consider parameter.</summary>
+    public double? DragCoefficientSigma { get; }
 
-    /// <summary>Standard deviation of Cr; null when Cr is not a consider parameter.</summary>
-    internal double? ReflectivityCoefficientSigma { get; }
+    /// <summary>Standard deviation of Cr, dimensionless; null when Cr is not a consider parameter.</summary>
+    public double? ReflectivityCoefficientSigma { get; }
 
     /// <summary>The parameters with a standard deviation.</summary>
     internal ForceParameters Parameters =>

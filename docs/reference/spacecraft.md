@@ -84,8 +84,9 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `GetTotalMass()` | Total mass including fuel |
 | `SetStandbyManeuver(Maneuver, Time?)` | Set maneuver to execute |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
+| `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
-| `WriteEphemeris(FileInfo)` | Write ephemeris to SPK file |
+| `WriteEphemeris(FileInfo)` | Write ephemeris to SPK file; positions and velocities only, never the covariance |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
 ## Components

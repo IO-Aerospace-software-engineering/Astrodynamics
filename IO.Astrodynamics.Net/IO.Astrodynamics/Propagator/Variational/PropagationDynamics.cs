@@ -98,6 +98,12 @@ internal sealed class PropagationDynamics
     /// <summary>The propagated covariance, or null when it was off.</summary>
     internal CovarianceModel Covariance { get; }
 
+    /// <summary>Number of columns of Y, 6 + p; 0 when the variational equations were off.</summary>
+    internal int ColumnCount => _evaluationEquations?.ColumnCount ?? 0;
+
+    /// <summary>Length of the cumulative Q: 21 when Q is carried (process noise or covariance), 0 otherwise.</summary>
+    internal int CarriedCovarianceLength => _cumulativeQ?.Length ?? 0;
+
     /// <summary>
     /// Stage Jacobian evaluations of the propagation and of the evaluations after it (13 per step).
     /// </summary>
@@ -158,12 +164,43 @@ internal sealed class PropagationDynamics
         }
     }
 
-    private void EvaluateCore(PropagationSegment segment, VariationalSegmentData data, double t, Span<double> y,
-        Span<double> q)
+    // The cumulative Y and Q at t, and the state there
+    private (Vector3 Position, Vector3 Velocity) EvaluateCore(PropagationSegment segment, VariationalSegmentData data,
+        double t, Span<double> y, Span<double> q)
     {
-        SegmentValues(segment, data, t, _segmentY, _segmentQ);
+        var state = SegmentValues(segment, data, t, _segmentY, _segmentQ);
         VariationalEquations.Compose(_evaluationEquations.ColumnCount, _segmentY, _segmentQ, data.EntryY, data.EntryQ,
             y, q);
+        return state;
+    }
+
+    /// <summary>
+    /// The state at <paramref name="t"/> seconds from the base epoch of <paramref name="segment"/>, the same as
+    /// <see cref="StateAt"/> bit for bit, and the propagated covariance there, from one shortened step inside a step: the
+    /// output states of a propagation of the covariance (D3).
+    /// </summary>
+    /// <param name="segment">The segment.</param>
+    /// <param name="t">Seconds from its base epoch.</param>
+    /// <param name="covariance">P, 36 values.</param>
+    /// <exception cref="InvalidOperationException">The propagation did not propagate the covariance, or the segment holds
+    /// no steps.</exception>
+    internal (Vector3 Position, Vector3 Velocity) StateAndCovarianceAt(PropagationSegment segment, double t,
+        Span<double> covariance)
+    {
+        if (Covariance == null)
+            throw new InvalidOperationException(
+                "The solution holds no covariance: the propagation did not propagate the covariance.");
+
+        var data = VariationalData(segment);
+        if (segment.Steps.Count == 0)
+            throw new InvalidOperationException("Segment contains no steps.");
+
+        lock (_lock)
+        {
+            var state = EvaluateCore(segment, data, t, _cumulativeY, _cumulativeQ);
+            Covariance.Covariance(_cumulativeY, _cumulativeQ, covariance);
+            return state;
+        }
     }
 
     /// <summary>
@@ -225,15 +262,18 @@ internal sealed class PropagationDynamics
         return segment.Variational;
     }
 
-    // Y and Q relative to the segment start at t: the stored values at a step boundary, a shortened step inside a step
-    private void SegmentValues(PropagationSegment segment, VariationalSegmentData data, double t, Span<double> y,
-        Span<double> q)
+    // Y and Q relative to the segment start at t, and the state there, as StateAt computes it: the stored values at a
+    // step boundary, a shortened step inside a step
+    private (Vector3 Position, Vector3 Velocity) SegmentValues(PropagationSegment segment, VariationalSegmentData data,
+        double t, Span<double> y, Span<double> q)
     {
         if (segment.Steps.Count == 0 || t <= 0.0)
         {
             _identity.AsSpan().CopyTo(y);
             _zeroCovariance.AsSpan().CopyTo(q);
-            return;
+            return segment.Steps.Count == 0
+                ? default
+                : (segment.Steps[0].StartPosition, segment.Steps[0].StartVelocity);
         }
 
         // The end of a step as the integrator computes it (t_k + h_k), so that its exact boundary reads the stored values
@@ -243,11 +283,10 @@ internal sealed class PropagationDynamics
         {
             data.StepEndY(k).CopyTo(y);
             data.StepEndQ(k).CopyTo(q);
+            return (step.EndPosition, step.EndVelocity);
         }
-        else
-        {
-            ShortenedStepCore(segment, data, k, t - step.CumulativeTime, y, q);
-        }
+
+        return ShortenedStepCore(segment, data, k, t - step.CumulativeTime, y, q);
     }
 
     private (Vector3 Position, Vector3 Velocity) ShortenedStepCore(PropagationSegment segment,

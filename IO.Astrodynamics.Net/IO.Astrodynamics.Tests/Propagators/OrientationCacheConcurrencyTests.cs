@@ -52,7 +52,7 @@ public class OrientationCacheConcurrencyTests
     private static PropagationSolution PropagateLeo(CelestialBody earth, TimeSystem.Time epoch, int naifId,
         VariationalOptions options = null)
     {
-        return LeoSpacecraft(earth, epoch, naifId).Propagate(new TimeSystem.Window(epoch, epoch + Duration),
+        return LeoSpacecraft(earth, epoch, naifId).PropagateWithVariationalEquations(new TimeSystem.Window(epoch, epoch + Duration),
             new CelestialItem[] { earth }, new RK78Integrator(), true, false, TimeSpan.FromSeconds(60.0), options);
     }
 

@@ -254,7 +254,7 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
     private static PropagationSolution Propagate(ReferenceCase referenceCase, double tolerance = Tolerance)
     {
         var start = referenceCase.InitialState;
-        return PartialsTestCases.Spacecraft(start).Propagate(
+        return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(
             new TimeSystem.Window(start.Epoch, start.Epoch + referenceCase.Duration), referenceCase.Bodies,
             new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
             referenceCase.SolarRadiationPressure, TimeSpan.FromHours(1.0), new VariationalOptions());

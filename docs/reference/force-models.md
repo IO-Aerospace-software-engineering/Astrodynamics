@@ -135,8 +135,9 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH,
 ## Partial Derivatives
 
 When the state transition matrix is integrated (RK7(8)), each force also gives the partial derivatives of its
-acceleration with respect to the state and to the drag and reflectivity coefficients. They are internal until the
-public API of the covariance propagation, and do not change the trajectory.
+acceleration with respect to the state and to the drag and reflectivity coefficients
+([Covariance Propagation](covariance-propagation.md)). They do not change the trajectory. The columns of the sensitivity
+Ψ follow the forces: Cd with `AtmosphericDrag`, Cr with a radiation force.
 
 | Force | `∂a/∂r`, `∂a/∂v` | `∂a/∂Cd`, `∂a/∂Cr` |
 |-------|------------------|--------------------|

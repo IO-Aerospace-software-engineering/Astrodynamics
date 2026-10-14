@@ -58,7 +58,7 @@ public class CovarianceValidationTests : IClassFixture<ReferenceCases>
             ConsiderParameters: parameters == ForceParameters.None ? null : consider);
         var spacecraft = new Spacecraft(-1966, "COVARIANCE", 100.0, 1000.0, new Clock("covariance", 65536), start, 10.0,
             2.2, null, 1.5);
-        var solution = spacecraft.Propagate(new TimeSystem.Window(start.Epoch, start.Epoch + referenceCase.Duration),
+        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(start.Epoch, start.Epoch + referenceCase.Duration),
             referenceCase.Bodies, new RK78Integrator(1e-11, 1e-11), referenceCase.AtmosphericDrag,
             referenceCase.SolarRadiationPressure, TimeSpan.FromHours(1.0), options);
         int columns = 6 + (parameters == ForceParameters.None ? 0 : 1);

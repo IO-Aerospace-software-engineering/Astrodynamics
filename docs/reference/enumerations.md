@@ -96,6 +96,24 @@ Used in the [event detection](event-detection.md) system for g-function zero-cro
 | `PositiveToNegative` | g-function crosses zero from positive to negative |
 | `Any` | g-function crosses zero in either direction |
 
+## CovariancePropagationMode
+
+What a propagation integrates besides the state ([Covariance Propagation](covariance-propagation.md)).
+
+| Value | Description |
+|-------|-------------|
+| `StateTransitionOnly` | The state transition matrix Φ and the sensitivity Ψ to the force parameters (default) |
+| `Covariance` | Φ, Ψ and the covariance P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q |
+
+## ForceParameter
+
+A force model parameter: a column of the sensitivity Ψ, or a consider parameter of the extended covariance.
+
+| Value | Description |
+|-------|-------------|
+| `DragCoefficient` | Drag coefficient Cd, with atmospheric drag |
+| `ReflectivityCoefficient` | Reflectivity coefficient Cr, with solar radiation, albedo or thermal radiation pressure |
+
 ## OrbitalDirection
 
 Used with [`OrbitalDirectionTarget`](attitudes.md#orbitaldirectiontarget) for TRIAD attitude targets.

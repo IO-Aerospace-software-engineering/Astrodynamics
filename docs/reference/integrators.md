@@ -86,6 +86,10 @@ When created with a fixed step size, `AdaptiveMode` is `false` and the integrato
 - **Adaptive PI step control**: Adjusts step size to maintain error within tolerances.
 - **Sub-step event refinement**: locates event times to ~1e-10 s within a step by bisection on states computed by shortened RK7(8) steps; the event time is then moved to the 100 ns grid of the epochs, so that the state at the event and the epoch the propagation restarts from are the same instant.
 - **States between the steps**: each output state inside a step costs one RK7(8) step (13 force evaluations); an output at a step boundary reads the stored state. Over one day at the default tolerance, with EGM2008 10×10, the Moon and the Sun, the propagation takes about the same time with outputs every 600 s, about twice as long with outputs every 60 s, and seven to nine times as long with outputs every 10 s, as with the former cubic interpolation (measured on 2026-10-08, Linux x64, .NET 10).
+- **State transition matrix and covariance**: the variational equations are integrated with the state, on the same
+  stages, when the propagation asks for them ([Covariance Propagation](covariance-propagation.md)). By default the step is
+  controlled on the state only, so the trajectory is the same bit for bit. Velocity-Verlet does not integrate them
+  (`NotSupportedException`).
 - **Accuracy**: on the 24-hour conformance cases, 3.6 m (SSO) to 13.1 m (LEO) from the GMAT
   references with tolerances 1e-11, the rest being model differences between the two tools; see
   [Validation](../guides/validation.md#measured-errors).

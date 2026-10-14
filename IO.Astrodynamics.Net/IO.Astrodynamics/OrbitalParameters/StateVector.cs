@@ -70,6 +70,12 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <see cref="RotateCovarianceToRtn"/> is a pure rotation into RTN, the convention of the conjunction
         /// analysis and of the CDM export.
         /// </para>
+        /// <para>
+        /// A propagation does not propagate the covariance of its initial state unless asked to
+        /// (<see cref="Propagator.Variational.CovariancePropagationOptions"/> with
+        /// <see cref="Propagator.Variational.CovariancePropagationMode.Covariance"/>): without it, the covariance stays on
+        /// the initial orbital parameters, the propagated states carry none, and no partial derivative is evaluated.
+        /// </para>
         /// </remarks>
         public Matrix? Covariance { get; }
 

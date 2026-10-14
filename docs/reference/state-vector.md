@@ -25,6 +25,7 @@ state.
 | `ToFrame(frame)` | Transformed with the Jacobian of the state transformation, `P' = J P Jᵀ`, symmetrized. Towards a rotating frame (ITRF93, TIRS, body-fixed frames) `J` includes the angular velocity term, so the velocity covariance also depends on the position covariance. See [Frames](frames.md#states-and-covariance). |
 | `RotateCovarianceToRtn(covariance)` / `RotateCovarianceFromRtn(covariance)` | Pure rotation `diag(R, R)` into or out of RTN; the rotation rate of the RTN frame is not applied. This is the convention of the conjunction analysis and of the CDM export. |
 | `Matrix.TransformCovariance(covariance, rotation)` | Pure rotation `diag(R, R)`, valid only between inertial frames. |
+| A propagation | Not propagated unless the covariance propagation is activated ([Covariance Propagation](covariance-propagation.md)): without it, the covariance stays on the initial orbital parameters, the propagated states carry none, and no partial derivative is evaluated. With it, in `CovariancePropagationMode.Covariance`, each output state carries its propagated covariance. |
 
 ## Properties
 

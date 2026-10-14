@@ -12,6 +12,13 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 | `DeltaV` | Burn delta-V vector, in the inertial frame of the propagated state |
 | `ThrustWindow` | Window of the equivalent finite burn (see below) |
 | `ManeuverWindow` | Thrust window extended by the maneuver hold duration |
+| `ExecutionError` | Optional execution error by the model of Gates (`ManeuverExecutionError`), set with an object initializer; added to the velocity covariance at the burn when the propagation propagates the covariance, ignored otherwise. See [Covariance Propagation](covariance-propagation.md#execution-error-of-an-impulsive-maneuver) |
+
+`ManeuverExecutionError(resolutionSigma, shutoffSigma, autopilotSigma, pointingSigma)`: σ_r, fixed magnitude error, in
+m/s; σ_s, magnitude error proportional to |ΔV|, dimensionless; σ_a, fixed pointing error, in m/s on each axis
+perpendicular to ΔV; σ_p, pointing error proportional to |ΔV|, in rad on each axis. All finite and non-negative. A ΔV of
+exactly zero adds no error; any non-zero ΔV takes the whole model, the fixed terms included. The trajectory follows the
+commanded ΔV (open loop).
 
 ## Thrust Window Convention
 

@@ -17,6 +17,22 @@ IO.Astrodynamics uses SI units throughout.
 | Pressure | Kilopascals | kPa |
 | Density | Kilograms per cubic meter | kg/m3 |
 
+### State Transition Matrix And Covariance
+
+| Quantity | Unit |
+|----------|------|
+| State transition matrix Φ | position-position and velocity-velocity blocks dimensionless; ∂r/∂v0 in s; ∂v/∂r0 in 1/s |
+| Sensitivity Ψ to Cd and Cr | m and m/s per unit of the coefficient |
+| State covariance P | m², m²/s, m²/s² |
+| Extended covariance, state-parameter and parameter blocks | m, m/s; dimensionless |
+| Process noise spectral densities q_R, q_T, q_N | m²/s³ |
+| Consider parameter standard deviations (Cd, Cr) | dimensionless |
+| Maneuver execution error (Gates): σ_r and σ_a | m/s (σ_a on each axis perpendicular to ΔV) |
+| Maneuver execution error (Gates): σ_s | dimensionless |
+| Maneuver execution error (Gates): σ_p | rad, on each axis perpendicular to ΔV |
+
+See [Covariance Propagation](reference/covariance-propagation.md).
+
 ## Physical Constants
 
 Defined in `IO.Astrodynamics.Constants`:

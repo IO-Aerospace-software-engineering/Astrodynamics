@@ -265,7 +265,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var first = PropagateLeo(t1, options, false, TimeSpan.FromHours(1.0), 1e-13);
         var lastStep = first.Segments.Single().Steps[^1];
         var middle = new StateVector(lastStep.EndPosition, lastStep.EndVelocity, _cases.Earth, t1, Frames.Frame.ICRF);
-        var second = PartialsTestCases.Spacecraft(middle).Propagate(new TimeSystem.Window(t1, t2), Bodies,
+        var second = PartialsTestCases.Spacecraft(middle).PropagateWithVariationalEquations(new TimeSystem.Window(t1, t2), Bodies,
             new RK78Integrator(1e-13, 1e-13), false, false, TimeSpan.FromHours(1.0), options);
 
         // Act
@@ -291,7 +291,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         double initialMass = spacecraft.GetTotalMass();
 
         // Act
-        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), Bodies,
+        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(2.0)), Bodies,
             new RK78Integrator(1e-11, 1e-11), true, false, TimeSpan.FromSeconds(60.0), FullOptions);
 
         // Assert: two segments, the burn recorded at the start of the second
@@ -342,7 +342,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var options = new VariationalOptions(ForceParameters.DragCoefficient);
         var (spacecraft, _) = ManeuverCase();
         var t2 = Start.AddHours(2.0);
-        var whole = spacecraft.Propagate(new TimeSystem.Window(Start, t2), Bodies, new RK78Integrator(1e-13, 1e-13), true,
+        var whole = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, t2), Bodies, new RK78Integrator(1e-13, 1e-13), true,
             false, TimeSpan.FromSeconds(60.0), options);
         Assert.Equal(2, whole.Segments.Count);
         var after = whole.Segments[1];
@@ -617,14 +617,14 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     private PropagationSolution PropagateLeo(TimeSystem.Time end, VariationalOptions options, bool dragAndSrp,
         TimeSpan? outputStep = null, double tolerance = 1e-9)
     {
-        return PartialsTestCases.Spacecraft(Leo).Propagate(new TimeSystem.Window(Start, end), Bodies,
+        return PartialsTestCases.Spacecraft(Leo).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end), Bodies,
             new RK78Integrator(tolerance, tolerance), dragAndSrp, dragAndSrp, outputStep ?? TimeSpan.FromSeconds(600.0),
             options);
     }
 
     private PropagationSolution PropagateTwoBody(StateVector start, TimeSystem.Time end, VariationalOptions options)
     {
-        return PartialsTestCases.Spacecraft(start).Propagate(new TimeSystem.Window(Start, end),
+        return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
             new CelestialItem[] { _cases.Earth }, new RK78Integrator(60.0), false, false, TimeSpan.FromSeconds(60.0),
             options);
     }

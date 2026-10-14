@@ -37,6 +37,9 @@ public abstract class PropagatorBase : IPropagator
     // The propagated covariance, null when it is off
     private CovarianceModel _covarianceModel;
 
+    // The public options of the variational equations, null when they are off or enabled through the internal options
+    private CovariancePropagationOptions _covariancePropagation;
+
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
     {
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
@@ -71,12 +74,7 @@ public abstract class PropagatorBase : IPropagator
     internal void EnableVariationalEquations(VariationalOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        if (Integrator is not RK78Integrator rk78)
-        {
-            throw new NotSupportedException(
-                "The state transition matrix is integrated by the RK7(8) integrator (RK78Integrator) only; this " +
-                $"propagator uses {Integrator.GetType().Name}.");
-        }
+        var rk78 = RequireRK78();
 
         if (options.GeopotentialPartialsDegree < 2)
         {
@@ -101,6 +99,44 @@ public abstract class PropagatorBase : IPropagator
         rk78.EnableVariationalEquations(options);
         _variationalOptions = options;
         _covarianceModel = covarianceModel;
+        _covariancePropagation = null;
+    }
+
+    /// <summary>
+    /// Propagate the state transition matrix, and the covariance in
+    /// <see cref="CovariancePropagationMode.Covariance"/>, with the state: the public activation of the variational
+    /// equations (D2). Null leaves them off. Called once the forces of the integrator are final, since the columns of Ψ
+    /// follow them.
+    /// </summary>
+    /// <param name="options">The options, or null for none.</param>
+    /// <exception cref="NotSupportedException">The integrator is not an <see cref="RK78Integrator"/>.</exception>
+    /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
+    /// parameter without its force.</exception>
+    /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
+    /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
+    /// semi-definite.</exception>
+    internal void EnableCovariancePropagation(CovariancePropagationOptions options)
+    {
+        if (options == null)
+        {
+            return;
+        }
+
+        var rk78 = RequireRK78();
+        EnableVariationalEquations(options.ToVariationalOptions(rk78.ForceList));
+        _covariancePropagation = options;
+    }
+
+    private RK78Integrator RequireRK78()
+    {
+        if (Integrator is not RK78Integrator rk78)
+        {
+            throw new NotSupportedException(
+                "The state transition matrix is integrated by the RK7(8) integrator (RK78Integrator) only; this " +
+                $"propagator uses {Integrator.GetType().Name}.");
+        }
+
+        return rk78;
     }
 
     // The covariance model of the options, after the checks of P0; null without the covariance
@@ -325,6 +361,9 @@ public abstract class PropagatorBase : IPropagator
 
         // 5. Generate output StateVectors at DeltaT epochs; in RK7(8), from the dynamics of the propagation
         solution.Dynamics = dynamics;
+        solution.Observer = InitialState.Observer;
+        solution.Frame = InitialState.Frame;
+        solution.CovariancePropagation = _covariancePropagation;
         var outputStates = GenerateOutput(solution, outputCount);
 
         // 6. Add final orientation
@@ -437,8 +476,16 @@ public abstract class PropagatorBase : IPropagator
         for (int i = 0; i < count; i++)
         {
             var epoch = Window.StartDate + (i * DeltaT);
-            var (pos, vel) = solution.InterpolateAt(epoch);
-            output[i] = new StateVector(pos, vel, InitialState.Observer, epoch, InitialState.Frame);
+            if (_covarianceModel != null)
+            {
+                // The state and its covariance from one shortened step: the state is that of InterpolateAt
+                output[i] = solution.StateAndCovarianceAt(epoch);
+            }
+            else
+            {
+                var (pos, vel) = solution.InterpolateAt(epoch);
+                output[i] = new StateVector(pos, vel, InitialState.Observer, epoch, InitialState.Frame);
+            }
 
             // Apply continuous attitude maneuver at each output epoch
             if (_continuousAttitude != null)
