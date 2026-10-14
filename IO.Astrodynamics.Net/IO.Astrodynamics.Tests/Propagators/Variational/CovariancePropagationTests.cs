@@ -86,9 +86,15 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         indefinite.Set(0, 1, 2.0);
         indefinite.Set(1, 0, 2.0);
 
+        // A negative velocity variance, −1e-9 m²/s², within 1e-12 of the trace (m²) but not a covariance (H3 review of
+        // #384)
+        var negativeVelocityVariance = InitialCovariance(Leo);
+        negativeVelocityVariance.Set(5, 5, -1e-9);
+
         // Act and assert
         Assert.Contains("symmetric", EnableWith(asymmetric).Message);
         Assert.Contains("positive semi-definite", EnableWith(indefinite).Message);
+        Assert.Contains("positive semi-definite", EnableWith(negativeVelocityVariance).Message);
         Assert.Contains("6×6", EnableWith(new IO.Astrodynamics.Math.Matrix(3, 3)).Message);
     }
 
@@ -202,8 +208,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
             var added = p.Zip(bare, (a, b) => a - b).ToArray();
             var symmetricAdded = CovarianceAssert.ToArray(
                 (CovarianceAssert.ToMathNet(added, 6) + CovarianceAssert.ToMathNet(added, 6).Transpose()) / 2.0);
-            double ratio = CovarianceAssert.SmallestEigenvalueOverTrace(symmetricAdded, 6);
-            _output.WriteLine($"{minutes} min: smallest eigenvalue of P − P(no noise, no consider) {ratio:E2} of the trace");
+            double ratio = CovarianceAssert.SmallestCorrelationEigenvalueOverTrace(symmetricAdded, 6);
+            _output.WriteLine($"{minutes} min: smallest eigenvalue of the correlation matrix of P − P(no noise, " +
+                              $"no consider) {ratio:E2} of its trace");
             Assert.True(ratio >= -1e-12, $"P − P(no noise, no consider) at {minutes} min: {ratio:E2}");
             Assert.True(added[0] + added[7] + added[14] > 0.0);
         }
@@ -402,7 +409,8 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         var difference = p.Zip(pReference, (a, b) => a - b).ToArray();
         double error = StmMeasures.WorstBlockError(difference, expected);
         _output.WriteLine($"propagated execution error against Φ_seg B L_e Bᵀ Φ_segᵀ: {error:E2} (worst 3×3 block)");
-        Assert.True(error < 1e-9, $"{error:E2}");
+        // The composition across segments of A5, 1e-10 (specification); measured 1.7e-16 (2026-10-14)
+        Assert.True(error < 1e-10, $"{error:E2}");
         CovarianceAssert.SymmetricPositiveSemiDefinite(p, 6, "P after the burn");
     }
 

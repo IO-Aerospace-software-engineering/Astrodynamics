@@ -13,12 +13,14 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 
 /// <summary>
 /// C3 and C6 on the five reference cases: with the RTN process noise and the consider parameters of each case, Q, P
-/// and the extended covariance stay symmetric and positive semi-definite (smallest eigenvalue at least −1e-12 of the
-/// trace) over the whole case, at each hour and inside the steps.
+/// and the extended covariance stay symmetric and positive semi-definite (smallest eigenvalue of the correlation matrix
+/// at least −1e-12 of its trace) over the whole case, at each hour and inside the steps.
 /// </summary>
 /// <remarks>
-/// Measured (Linux, .NET 10, 2026-10-14): the smallest eigenvalue is positive everywhere, at least 4.6e-13 (R5) to
-/// 2.2e-12 (R1) of the trace for Q, and 4.1e-16 (R5) to 2.9e-13 (R2) for P. The whole class runs in about 4 s.
+/// Measured (Linux, .NET 10, 2026-10-14), on the correlation matrix: the smallest eigenvalue is positive everywhere, at
+/// least 2.4e-7 (R5) to 7.8e-5 (R4) of the trace for Q, and 9.8e-10 (R3) to 1.0e-7 (R4) for P. On the covariance itself,
+/// where the position variances set the scale, 4.6e-13 to 2.2e-12 for Q and 4.1e-16 to 2.9e-13 for P (#384, before the
+/// H3 review). The whole class runs in about 4 s.
 /// </remarks>
 [Trait("Category", "Validation")]
 public class CovarianceValidationTests : IClassFixture<ReferenceCases>
@@ -86,16 +88,16 @@ public class CovarianceValidationTests : IClassFixture<ReferenceCases>
                 if (seconds > 0.0)
                 {
                     CovarianceAssert.SymmetricPositiveSemiDefinite(fullQ, 6, $"{name}, Q at {seconds} s");
-                    worstQ = System.Math.Min(worstQ, CovarianceAssert.SmallestEigenvalueOverTrace(fullQ, 6));
+                    worstQ = System.Math.Min(worstQ, CovarianceAssert.SmallestCorrelationEigenvalueOverTrace(fullQ, 6));
                 }
 
                 CovarianceAssert.SymmetricPositiveSemiDefinite(p, 6, $"{name}, P at {seconds} s");
                 CovarianceAssert.SymmetricPositiveSemiDefinite(extended, dimension,
                     $"{name}, extended covariance at {seconds} s");
-                worstP = System.Math.Min(worstP, CovarianceAssert.SmallestEigenvalueOverTrace(p, 6));
+                worstP = System.Math.Min(worstP, CovarianceAssert.SmallestCorrelationEigenvalueOverTrace(p, 6));
             }
         }
 
-        _output.WriteLine($"{name}: smallest eigenvalue over the trace, Q {worstQ:E2}, P {worstP:E2}");
+        _output.WriteLine($"{name}: smallest eigenvalue of the correlation matrix over its trace, Q {worstQ:E2}, P {worstP:E2}");
     }
 }

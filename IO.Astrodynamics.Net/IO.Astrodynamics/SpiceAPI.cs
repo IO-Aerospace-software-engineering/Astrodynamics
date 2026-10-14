@@ -266,10 +266,34 @@ public class SpiceAPI
                     yield return kernel;
                 }
             }
-            else if (IsKernelFile(entry))
+            else if (HasContent(entry) && IsKernelFile(entry))
             {
                 yield return entry;
             }
+        }
+    }
+
+    /// <summary>
+    /// Whether an entry of a directory, its symbolic links followed, is a file that holds at least one byte. The native
+    /// loader skipped what is not a regular file: a dangling link has no target, and a named pipe or a device reports no
+    /// length, while reading it could block. An empty file holds no ID word and no data, so SPICE loads nothing from it.
+    /// </summary>
+    private static bool HasContent(string entry)
+    {
+        try
+        {
+            var file = new FileInfo(entry);
+            if (file.LinkTarget != null && file.ResolveLinkTarget(true) is FileInfo target)
+            {
+                file = target;
+            }
+
+            return file.Exists && file.Length > 0;
+        }
+        catch (IOException)
+        {
+            // A cycle of symbolic links: no target either
+            return false;
         }
     }
 

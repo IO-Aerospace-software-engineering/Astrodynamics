@@ -56,6 +56,8 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   files, from which SPICE loaded nothing, are left out: the native loader used to open the EGM2008 geopotential model
   of the solar system directory, which on Windows could make the library fail to open it ("being used by another
   process"). What SPICE loads is unchanged. A file path is still handed to SPICE as it is.
+  Symbolic links are followed; an entry without content (a dangling link, a named pipe, an empty file) is skipped,
+  as the native loader skipped what was not a regular file.
 
 - **States between the steps of an RK7(8) propagation (#363).** The output states, `PropagationSolution.InterpolateAt`,
   the location of the events and the state the propagation restarts from after an impulsive maneuver came from a cubic

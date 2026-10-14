@@ -83,26 +83,38 @@ internal sealed class ManeuverExecutionError
         }
 
         covariance.Clear();
-        double v2 = deltaV.MagnitudeSquared();
-        if (v2 == 0.0)
+
+        // The unit vector u = v / V, by the largest component first, so that a tiny ΔV neither underflows V² nor
+        // overflows (σ_r² − σ_a²) / V²: L_v = V² u uᵀ and G = u uᵀ
+        double largest = System.Math.Max(System.Math.Abs(deltaV.X),
+            System.Math.Max(System.Math.Abs(deltaV.Y), System.Math.Abs(deltaV.Z)));
+        if (largest == 0.0)
         {
             return;
         }
 
+        Span<double> u = stackalloc double[] { deltaV.X / largest, deltaV.Y / largest, deltaV.Z / largest };
+        double norm = System.Math.Sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
+        for (int i = 0; i < 3; i++)
+        {
+            u[i] /= norm;
+        }
+
+        double magnitude = largest * norm;
+        double v2 = magnitude * magnitude;
         double sr2 = ResolutionSigma * ResolutionSigma;
         double ss2 = ShutoffSigma * ShutoffSigma;
         double sa2 = AutopilotSigma * AutopilotSigma;
         double sp2 = PointingSigma * PointingSigma;
 
-        // L_e = (σ_s² − σ_p²) v vᵀ + (σ_r² − σ_a²) v vᵀ / V² + (σ_p² V² + σ_a²) I
-        double outer = ss2 - sp2 + (sr2 - sa2) / v2;
+        // L_e = ((σ_s² − σ_p²) V² + σ_r² − σ_a²) u uᵀ + (σ_p² V² + σ_a²) I
+        double outer = (ss2 - sp2) * v2 + sr2 - sa2;
         double diagonal = sp2 * v2 + sa2;
-        Span<double> v = stackalloc double[] { deltaV.X, deltaV.Y, deltaV.Z };
         for (int i = 0; i < 3; i++)
         {
             for (int j = i; j < 3; j++)
             {
-                double value = outer * v[i] * v[j] + (i == j ? diagonal : 0.0);
+                double value = outer * u[i] * u[j] + (i == j ? diagonal : 0.0);
                 covariance[3 * i + j] = value;
                 covariance[3 * j + i] = value;
             }

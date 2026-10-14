@@ -14,18 +14,44 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 internal static class CovarianceAssert
 {
     /// <summary>
-    /// The smallest eigenvalue over the trace, by the symmetric eigenvalue decomposition of MathNet.
+    /// The smallest eigenvalue over the trace of the correlation matrix D^(-1/2) M D^(-1/2), D = diag(M), by the symmetric
+    /// eigenvalue decomposition of MathNet: the criterion of C6, free of the units of the blocks. A zero variance must
+    /// have a zero row; the correlation matrix leaves it out.
     /// </summary>
-    internal static double SmallestEigenvalueOverTrace(double[] matrix, int dimension)
+    internal static double SmallestCorrelationEigenvalueOverTrace(double[] matrix, int dimension)
     {
-        var m = ToMathNet(matrix, dimension);
-        double smallest = m.Evd(Symmetricity.Symmetric).EigenValues.Min(e => e.Real);
-        return smallest / m.Trace();
+        var positive = Enumerable.Range(0, dimension).Where(i => matrix[dimension * i + i] > 0.0).ToArray();
+        for (int i = 0; i < dimension; i++)
+        {
+            Assert.True(matrix[dimension * i + i] >= 0.0, $"variance {i}: {matrix[dimension * i + i]:E3}");
+            if (matrix[dimension * i + i] == 0.0)
+            {
+                for (int j = 0; j < dimension; j++)
+                {
+                    Assert.True(matrix[dimension * i + j] == 0.0,
+                        $"variance {i} is zero and covariance ({i}, {j}) is {matrix[dimension * i + j]:E3}");
+                }
+            }
+        }
+
+        if (positive.Length == 0)
+        {
+            return 0.0;
+        }
+
+        var correlation = Matrix<double>.Build.Dense(positive.Length, positive.Length, (a, b) =>
+            matrix[dimension * positive[a] + positive[b]] /
+            System.Math.Sqrt(matrix[dimension * positive[a] + positive[a]] *
+                             matrix[dimension * positive[b] + positive[b]]));
+        double smallest = correlation.Evd(Symmetricity.Symmetric).EigenValues.Min(e => e.Real);
+        return smallest / correlation.Trace();
     }
 
     /// <summary>
-    /// C6: <paramref name="matrix"/> is symmetric, element for element, and its smallest eigenvalue is at least
-    /// −1e-12 × its trace.
+    /// C6: <paramref name="matrix"/> is symmetric, element for element, its variances are not negative, and the smallest
+    /// eigenvalue of its correlation matrix is at least −1e-12 × the trace of that matrix. The criterion of the
+    /// specification is applied to the correlation matrix, so that the position variances (m²) do not set the tolerance
+    /// of the velocity block (m²/s²) (H3 review of #384, decision of S. Guillet, 2026-10-14).
     /// </summary>
     internal static void SymmetricPositiveSemiDefinite(double[] matrix, int dimension, string what)
     {
@@ -38,8 +64,8 @@ internal static class CovarianceAssert
             }
         }
 
-        double ratio = SmallestEigenvalueOverTrace(matrix, dimension);
-        Assert.True(ratio >= -1e-12, $"{what}: smallest eigenvalue {ratio:E2} of the trace");
+        double ratio = SmallestCorrelationEigenvalueOverTrace(matrix, dimension);
+        Assert.True(ratio >= -1e-12, $"{what}: smallest eigenvalue {ratio:E2} of the trace of the correlation matrix");
     }
 
     /// <summary>A row-major matrix as a MathNet matrix.</summary>

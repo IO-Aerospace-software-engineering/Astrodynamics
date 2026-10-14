@@ -15,10 +15,10 @@ internal sealed class ConstantProcessNoise : IProcessNoiseModel
     /// <summary>
     /// Create the noise from its spectral density.
     /// </summary>
-    /// <param name="qc">Qc, 3×3 row-major, in m²/s³. Symmetric and positive semi-definite, within 1e-12 relative; it is
-    /// stored symmetrized.</param>
+    /// <param name="qc">Qc, 3×3 row-major, in m²/s³. Symmetric and positive semi-definite, within 1e-12 relative, on its
+    /// correlation matrix (<see cref="CovarianceChecks"/>); it is stored symmetrized.</param>
     /// <exception cref="ArgumentException">
-    /// <paramref name="qc"/> does not hold 9 finite values, is not symmetric, or has a negative eigenvalue.
+    /// <paramref name="qc"/> does not hold 9 finite values, is not symmetric, or is not positive semi-definite.
     /// </exception>
     internal ConstantProcessNoise(ReadOnlySpan<double> qc)
     {

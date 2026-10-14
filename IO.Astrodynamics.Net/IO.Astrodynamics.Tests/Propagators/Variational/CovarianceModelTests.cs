@@ -141,6 +141,47 @@ public class CovarianceModelTests
         Assert.Equal(36, symmetrized.Length);
     }
 
+    [Fact]
+    public void CovarianceChecks_AreFreeOfTheUnitsOfTheBlocks()
+    {
+        // Arrange: σ = 100 m and 0.1 m/s (the example of F3). Scaled by the trace and the largest element, these defects
+        // of the velocity block were within the tolerance of the position variances (H3 review of #384)
+        double[] Diagonal()
+        {
+            var p = new double[36];
+            for (int i = 0; i < 3; i++)
+            {
+                p[7 * i] = 1e4;
+                p[7 * (i + 3)] = 1e-2;
+            }
+
+            return p;
+        }
+
+        var negativeVariance = Diagonal();
+        negativeVariance[35] = -2.9e-8;
+        var correlatedBeyondOne = Diagonal();
+        correlatedBeyondOne[6 * 3 + 4] = 1.0000001e-2;
+        correlatedBeyondOne[6 * 4 + 3] = 1.0000001e-2;
+        var asymmetricVelocity = Diagonal();
+        asymmetricVelocity[6 * 3 + 4] = 1e-9;
+        var zeroVarianceWithACovariance = Diagonal();
+        zeroVarianceWithACovariance[35] = 0.0;
+        zeroVarianceWithACovariance[6 * 5 + 0] = 1e-6;
+        zeroVarianceWithACovariance[6 * 0 + 5] = 1e-6;
+        var zeroRow = Diagonal();
+        zeroRow[35] = 0.0;
+
+        // Act and assert
+        Assert.Contains("diagonal element (5, 5)", CovarianceChecks.Validate(negativeVariance, 6, "P0", out _));
+        Assert.Contains("correlation matrix", CovarianceChecks.Validate(correlatedBeyondOne, 6, "P0", out _));
+        Assert.Contains("symmetric", CovarianceChecks.Validate(asymmetricVelocity, 6, "P0", out _));
+        Assert.Contains("variance 5 is zero", CovarianceChecks.Validate(zeroVarianceWithACovariance, 6, "P0", out _));
+        Assert.Null(CovarianceChecks.Validate(zeroRow, 6, "P0", out var accepted));
+        Assert.Equal(zeroRow, accepted);
+        Assert.Null(CovarianceChecks.Validate(new double[36], 6, "P0", out _));
+    }
+
     private static ForceParameters Parameters(int columns) => columns switch
     {
         6 => ForceParameters.None,
