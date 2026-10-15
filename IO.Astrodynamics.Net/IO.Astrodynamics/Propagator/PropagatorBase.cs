@@ -158,7 +158,7 @@ public abstract class PropagatorBase : IPropagator
         var covariance = initial.ToStateVector().Covariance;
         if (!covariance.HasValue)
         {
-            throw new InvalidOperationException(
+            throw InitialCovarianceError(
                 "The covariance is propagated from that of the initial orbital parameters of the spacecraft, which " +
                 "carry none: give the initial state vector a covariance, or propagate the state transition matrix " +
                 "only.");
@@ -166,7 +166,7 @@ public abstract class PropagatorBase : IPropagator
 
         if ((initial.Epoch - Window.StartDate) != TimeSpan.Zero)
         {
-            throw new InvalidOperationException(
+            throw InitialCovarianceError(
                 $"The initial covariance is given at {initial.Epoch.ToTDB()}, and the propagation starts at " +
                 $"{Window.StartDate}: the propagator does not carry a covariance from another epoch. Start the window " +
                 "at the epoch of the initial orbital parameters.");
@@ -175,7 +175,7 @@ public abstract class PropagatorBase : IPropagator
         var p0 = covariance.Value;
         if (p0.Rows != VariationalEquations.StateDimension || p0.Columns != VariationalEquations.StateDimension)
         {
-            throw new InvalidOperationException(
+            throw InitialCovarianceError(
                 $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.");
         }
 
@@ -191,11 +191,15 @@ public abstract class PropagatorBase : IPropagator
         var reason = CovarianceChecks.Validate(values, 6, "The initial covariance", out var symmetrized);
         if (reason != null)
         {
-            throw new InvalidOperationException(reason);
+            throw InitialCovarianceError(reason);
         }
 
         return new CovarianceModel(symmetrized, options);
     }
+
+    // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one
+    private InvalidOperationException InitialCovarianceError(string reason) =>
+        new($"The covariance of spacecraft '{Spacecraft.Name}' cannot be propagated: {reason}");
 
     /// <summary>
     /// The frame whose orientation cache the propagation uses, and that cache, active on the propagating thread during

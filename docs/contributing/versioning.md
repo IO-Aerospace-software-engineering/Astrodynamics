@@ -33,11 +33,11 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   `CentralBodyPropagatorBuilder.WithCovariancePropagation`, two new `CentralBodyPropagator` constructors,
   `PropagationTask.CovariancePropagation`, a `Spacecraft.Propagate` overload and a `Scenario.SimulateAsync` overload.
   Results on `PropagationSolution`: `GetStateTransitionMatrix`, `GetParameterSensitivity` (columns in
-  `SensitivityParameters`), `GetCovariance`, `GetExtendedCovariance`, `GetStateVector`; in covariance mode the output
-  states carry their covariance. Off by default: without it nothing changes, an initial covariance is not propagated and
-  no partial derivative is evaluated. Velocity-Verlet stays the default integrator and does not support it
-  (`NotSupportedException`). The SPK written from the propagated states does not carry the covariance. See
-  [Covariance Propagation](../reference/covariance-propagation.md).
+  `SensitivityParameters`), `GetCovariance`, `GetExtendedCovariance` (rows in `ExtendedCovarianceParameters`),
+  `GetStateVector`; in covariance mode the output states carry their covariance. Off by default: without it nothing
+  changes, an initial covariance is not propagated and no partial derivative is evaluated. Velocity-Verlet stays the
+  default integrator and does not support it (`NotSupportedException`). The SPK written from the propagated states does
+  not carry the covariance. See [Covariance Propagation](../reference/covariance-propagation.md).
 - **Integrator choice in `Scenario`.** New overload `Scenario.SimulateAsync(includeAtmosphericDrag,
   includeSolarRadiationPressure, propagatorStepSize, integratorFactory)`: the factory creates the integrator of each
   spacecraft, for example `() => new RK78Integrator()`. The existing overload and the default integrator,

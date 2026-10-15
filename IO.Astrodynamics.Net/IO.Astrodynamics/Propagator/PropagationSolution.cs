@@ -62,7 +62,7 @@ public sealed class PropagationSolution
     /// The consider parameters, in the order of the rows and columns 7 and after of the extended covariance
     /// (<see cref="GetExtendedCovariance"/>): Cd, then Cr. Empty without the covariance or without consider parameters.
     /// </summary>
-    public IReadOnlyList<ForceParameter> ConsiderParameters =>
+    public IReadOnlyList<ForceParameter> ExtendedCovarianceParameters =>
         ParametersOf(Dynamics?.Covariance != null
             ? Dynamics.Options.ConsiderParameters?.Parameters ?? ForceParameters.None
             : ForceParameters.None);
@@ -85,7 +85,7 @@ public sealed class PropagationSolution
     }
 
     /// <summary>
-    /// Position and velocity at the given epoch, in the frame of the propagation and relative to its observer.
+    /// Position and velocity at the given epoch, in the frame of the propagation and relative to its central body.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -208,7 +208,7 @@ public sealed class PropagationSolution
     /// <summary>
     /// The extended covariance of the state and of the consider parameters at <paramref name="epoch"/>,
     /// [[P, Ψc Pp], [Pp Ψcᵀ, Pp]], (6 + c)×(6 + c), the consider parameters in the order of
-    /// <see cref="ConsiderParameters"/>, constant.
+    /// <see cref="ExtendedCovarianceParameters"/>, constant.
     /// </summary>
     /// <remarks>
     /// Units: P in m², m²/s, m²/s²; the state-parameter blocks in m and m/s; the parameter block dimensionless.
@@ -235,9 +235,16 @@ public sealed class PropagationSolution
 
     /// <summary>
     /// The state at <paramref name="epoch"/>, as <see cref="InterpolateAt"/> computes it, in the frame of the propagation
-    /// and relative to its observer; with its covariance (<see cref="GetCovariance"/>) when the propagation propagated
+    /// and relative to its central body (the Sun when the initial orbital parameters are relative to a star or a
+    /// barycenter, not their observer); with its covariance (<see cref="GetCovariance"/>) when the propagation propagated
     /// it, without otherwise.
     /// </summary>
+    /// <remarks>
+    /// In covariance mode, inside an integration step, the state and its covariance cost one shortened RK7(8) step with
+    /// the variational equations: 13 evaluations of the forces and 13 of their partial derivatives. The output states
+    /// (<see cref="StateVectors"/>) are computed the same way, so a fine output grid makes a propagation of the
+    /// covariance markedly slower than one of the state transition matrix only (see the reference page).
+    /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="epoch"/> is outside the propagation.</exception>

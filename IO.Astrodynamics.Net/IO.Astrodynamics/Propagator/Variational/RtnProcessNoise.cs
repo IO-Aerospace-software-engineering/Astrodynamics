@@ -20,10 +20,10 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// a star or a barycenter), the axes are heliocentric, even for a spacecraft near a planet.
 /// </para>
 /// <para>
-/// Thread-safe: the model holds its three densities only.
+/// Thread-safe: the model holds its three densities only. A record: two models with the same densities are equal.
 /// </para>
 /// </remarks>
-public sealed class RtnProcessNoise : IProcessNoiseModel
+public sealed record RtnProcessNoise : IProcessNoiseModel
 {
     /// <summary>
     /// Create the noise from its spectral densities.

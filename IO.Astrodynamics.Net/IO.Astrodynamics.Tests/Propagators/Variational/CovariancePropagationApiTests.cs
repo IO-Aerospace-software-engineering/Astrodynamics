@@ -79,6 +79,25 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     }
 
     [Fact]
+    public void Options_WithTheSameValues_AreEqual()
+    {
+        // Act
+        var other = new CovariancePropagationOptions
+        {
+            Mode = CovariancePropagationMode.Covariance,
+            ProcessNoise = new RtnProcessNoise(1e-12, 1e-11, 1e-12),
+            ConsiderParameters = new ConsiderParameters(dragCoefficientSigma: 0.1, reflectivityCoefficientSigma: 0.05)
+        };
+
+        // Assert: value equality, the process noise included (H3 review of step 8)
+        Assert.Equal(new RtnProcessNoise(1e-12, 1e-11, 1e-12), new RtnProcessNoise(1e-12, 1e-11, 1e-12));
+        Assert.NotEqual(new RtnProcessNoise(1e-12, 1e-11, 1e-12), new RtnProcessNoise(1e-12, 1e-11, 2e-12));
+        Assert.Equal(Full, other);
+        Assert.Equal(Full.GetHashCode(), other.GetHashCode());
+        Assert.NotEqual(Full, other with { ProcessNoise = new RtnProcessNoise(1e-12, 1e-11, 2e-12) });
+    }
+
+    [Fact]
     public void Builder_Covariance_GivesTheValuesOfTheInternalPath_BitForBit()
     {
         // Arrange: the same propagation activated through the builder and through the internal options
@@ -99,8 +118,8 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         // Act and assert: at a step boundary, inside a step, and at the end
         Assert.Equal(new[] { ForceParameter.DragCoefficient, ForceParameter.ReflectivityCoefficient },
             publicSolution.SensitivityParameters);
-        Assert.Equal(publicSolution.SensitivityParameters, publicSolution.ConsiderParameters);
-        Assert.Same(Full.ProcessNoise.GetType(), publicSolution.CovariancePropagation.ProcessNoise.GetType());
+        Assert.Equal(publicSolution.SensitivityParameters, publicSolution.ExtendedCovarianceParameters);
+        Assert.Equal(Full, publicSolution.CovariancePropagation);
         foreach (var epoch in new[] { Start, Start.AddSeconds(1234.5), Start.AddHours(1.0) })
         {
             var y = new double[6 * 8];
@@ -222,7 +241,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
 
         // Assert
         Assert.Equal(new[] { ForceParameter.ReflectivityCoefficient }, solution.SensitivityParameters);
-        Assert.Empty(solution.ConsiderParameters);
+        Assert.Empty(solution.ExtendedCovarianceParameters);
         Assert.All(solution.StateVectors, s => Assert.Null(s.Covariance));
         Assert.Null(solution.GetStateVector(Start.AddSeconds(100.0)).Covariance);
         Assert.Equal(CovariancePropagationMode.StateTransitionOnly, solution.CovariancePropagation.Mode);
@@ -284,7 +303,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         {
             Assert.Null(solution.CovariancePropagation);
             Assert.Empty(solution.SensitivityParameters);
-            Assert.Empty(solution.ConsiderParameters);
+            Assert.Empty(solution.ExtendedCovarianceParameters);
             Assert.Throws<InvalidOperationException>(() => solution.GetStateTransitionMatrix(epoch));
             Assert.Throws<InvalidOperationException>(() => solution.GetParameterSensitivity(epoch));
             Assert.Throws<InvalidOperationException>(() => solution.GetCovariance(epoch));
@@ -443,6 +462,54 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
         Assert.All(spacecraft.PropagatedStates, s => Assert.NotNull(s.Covariance));
         Assert.Contains("'NOP0'", exception.Message);
         Assert.Contains("carry none", exception.Message);
+    }
+
+    [Fact]
+    public async Task Scenario_AFailureOtherThanTheCovariance_KeepsItsOwnMessage()
+    {
+        // Arrange: an integrator that cannot meet its tolerance, with the state transition matrix only (no P0 involved)
+        var scenario = new Scenario("failing", new Astrodynamics.Mission.Mission("failing"), Window);
+        scenario.AddSpacecraft(Spacecraft(-2113));
+
+        // Act
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => scenario.SimulateAsync(false, false,
+            Step, () => new RK78Integrator(1e-30, 1e-30, minStepSize: 1e-3), new CovariancePropagationOptions()));
+
+        // Assert: the failure of the integrator, not presented as one of the covariance (H3 review of step 8)
+        Assert.StartsWith("RK78 adaptive step failed", exception.Message);
+        Assert.DoesNotContain("covariance", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Spacecraft_ARejectedActivation_LeavesThePreviousPropagationAsItWas(bool covarianceWithoutP0)
+    {
+        // Arrange: a spacecraft without P0, propagated once
+        var spacecraft = PartialsTestCases.Spacecraft(Leo);
+        spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step);
+        var epoch = Start.AddSeconds(3000.0);
+        var before = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var states = spacecraft.PropagatedStates;
+        var options = covarianceWithoutP0
+            ? new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }
+            : new CovariancePropagationOptions { ProcessNoise = new RtnProcessNoise(1e-12, 1e-12, 1e-12) };
+
+        // Act: a second propagation whose activation is rejected (no P0; process noise without the covariance)
+        if (covarianceWithoutP0)
+            Assert.Throws<InvalidOperationException>(() =>
+                spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, options));
+        else
+            Assert.Throws<ArgumentException>(() =>
+                spacecraft.Propagate(Window, Bodies, new RK78Integrator(), true, true, Step, options));
+
+        // Assert: the previous propagation is untouched (H3 review of step 8: it was reset before the checks)
+        var after = spacecraft.GetEphemeris(epoch, _cases.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        Assert.True(spacecraft.IsPropagated);
+        Assert.Equal(states.Select(s => (s.Epoch, s.Position, s.Velocity)),
+            spacecraft.PropagatedStates.Select(s => (s.Epoch, s.Position, s.Velocity)));
+        Assert.Equal(before.Position, after.Position);
+        Assert.Equal(before.Velocity, after.Velocity);
     }
 
     [Fact]

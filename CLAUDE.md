@@ -75,6 +75,7 @@ The C++ proxy layer uses a `bool` return + `GetLastErrorProxy()` pattern instead
 - `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, VVIntegrator (Velocity-Verlet, fixed-step), RK78Integrator (adaptive Prince-Dormand 7(8))
 - `IO.Astrodynamics.Propagator.Forces`: AtmosphericDrag, SolarRadiationPressure, AlbedoRadiationPressure, ThermalRadiationPressure
 - `IO.Astrodynamics.Propagator.Events`: IEventDetector, ManeuverEventDetector, CrossingDirection
+- `IO.Astrodynamics.Propagator.Variational`: state transition matrix and covariance propagation (RK7(8) only, off by default): CovariancePropagationOptions (CovariancePropagationMode, RtnProcessNoise, ConsiderParameters, IncludeInStepControl), activated by `CentralBodyPropagatorBuilder.WithCovariancePropagation`, constructor overloads, `PropagationTask.CovariancePropagation`, `Spacecraft.Propagate` and `Scenario.SimulateAsync` overloads; results on `PropagationSolution`; see `docs/reference/covariance-propagation.md`
 - `IO.Astrodynamics.Maneuver`: Lambert, impulsive maneuvers, attitude maneuvers, IAttitudeTarget
 - `IO.Astrodynamics.Atmosphere`: IAtmosphericModel, EarthStandardAtmosphere, Nrlmsise00Model
 - `IO.Astrodynamics.Physics`: GeopotentialGravitationalField (EGM2008, up to degree 70)
@@ -132,7 +133,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - `Nrlmsise00Model`: thread-safe, concurrent use OK
 - Force partials (internal, `ForceBase.AccumulateStatePartials`): a force keeps a work `StateVector` for its finite differences, so the partials path of one force instance is **not reentrant**, unlike `Apply`. Forces belong to one integrator, as the propagator builds them
 - Frame orientation cache: active only on the thread that propagates or evaluates a propagation (`Frame.UseOrientationCache`), never set on the shared `Frame`; propagations and RK7(8) evaluations sharing a central body without a geopotential may run concurrently
-- RK7(8) evaluations after a propagation (`PropagationSolution.InterpolateAt`, internal `EvaluateVariational`, `EvaluateCovariance` and `EvaluateExtendedCovariance`): serialized by a lock per solution; they evaluate the forces, so they must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential
+- RK7(8) evaluations after a propagation (`PropagationSolution.InterpolateAt`, `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector`, and the internal `EvaluateVariational`, `EvaluateCovariance` and `EvaluateExtendedCovariance`): serialized by a lock per solution; they evaluate the forces, so they must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential
 
 ### Geopotential
 

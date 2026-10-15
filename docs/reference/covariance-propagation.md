@@ -75,9 +75,13 @@ the start of the window. This example runs as a smoke test against the packed Nu
   bit, with and without the variational equations. With `true`, the steps change, and so does the trajectory, within the
   tolerance of the integrator.
 - Without `IncludeInStepControl`, Ψ carries an integration error that the control of the state does not see, largest
-  for Cr across the shadow crossings of SRP: in an eclipsing LEO over 6 h at a tolerance of 1e-12, Ψ_Cr was off by
-  4.0e-5 to 1.3e-3 depending on where the steps fell, against 1.6e-5 and 3.4e-6 at 1e-14. A tighter tolerance or the
-  option brings it down. In the same case, Φ and Ψ_Cd stay below 3.1e-8 and 3.4e-7.
+  for Cr across the shadow crossings of SRP. In an eclipsing LEO 400 × 1000 km over 6 h, with a maneuver, drag and SRP,
+  at a tolerance of 1e-12, the error of Ψ_Cr over the arc, relative to the largest Ψ_Cr of the arc, was 6.0e-5 to
+  1.9e-3 depending on where the steps fell (the same physics in J2000 and in ECLIPJ2000), against 2.6e-5 at most at
+  1e-14. Relative to the local Ψ_Cr it is larger just after the first shadow exit, where Ψ_Cr is still below a
+  millimetre: up to 1.5e-2 at 1e-12 and 1.6e-4 at 1e-14. A tighter tolerance or the option brings it down. In the same
+  case, Φ and Ψ_Cd stay below 3.1e-8 and 3.4e-7 (at 5.123 h).
+- `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
 - The RTN axes of the process noise are those of the state relative to the central body of the propagation. When the
   central body is the Sun (initial orbital parameters relative to a star or a barycenter), they are heliocentric, even
   for a spacecraft near a planet.
@@ -106,7 +110,7 @@ On `PropagationSolution`:
 |--------|---------|-------|
 | `CovariancePropagation` | The options of the propagation; null when off | — |
 | `SensitivityParameters` | The columns of Ψ, in order | — |
-| `ConsiderParameters` | The consider parameters, rows and columns 7 and after of the extended covariance | — |
+| `ExtendedCovarianceParameters` | The consider parameters, in the order of the rows and columns 7 and after of the extended covariance | — |
 | `GetStateTransitionMatrix(Time)` | Φ(t, t0), 6×6 | position-position and velocity-velocity blocks dimensionless; ∂r/∂v0 in s; ∂v/∂r0 in 1/s |
 | `GetParameterSensitivity(Time)` | Ψ(t), 6×p | m and m/s per unit of the coefficient |
 | `GetCovariance(Time)` | P(t), 6×6 | m², m²/s, m²/s² |
@@ -134,6 +138,26 @@ On `PropagationSolution`:
 
 Each call allocates its result. The propagation itself allocates nothing per step or per stage; in covariance mode, each
 output state allocates its covariance matrix only.
+
+### Cost of the output states
+
+Inside an integration step, a value costs one shortened RK7(8) step from the start of that step: 13 evaluations of the
+forces for a state (`InterpolateAt`), and 13 evaluations of the forces and 13 of their partial derivatives for Φ, Ψ or P
+(the getters above). In covariance mode, every output state (`StateVectors`) carries its P, so it is computed the second
+way, and a fine output grid makes the propagation markedly slower than one of the state transition matrix only. Measured
+on a LEO 400 km over one day, with NRLMSISE-00 drag, the Moon and the Sun, RK7(8) at 1e-10 (about 500 steps; Release,
+informative):
+
+| Outputs every | Geopotential | Without | State transition matrix only | Covariance |
+|---------------|--------------|---------|------------------------------|------------|
+| 600 s | J2 | 70 ms | 331 ms | 473 ms |
+| 600 s | 20×20 | 110 ms | 474 ms | 544 ms |
+| 60 s | J2 | 235 ms | 432 ms | 1325 ms |
+| 60 s | 20×20 | 279 ms | 668 ms | 1495 ms |
+
+When P is needed at a few epochs only (a time of closest approach, for example), a coarse output step with
+`GetCovariance` or `GetStateVector` at those epochs costs less. A `Scenario` in covariance mode stores every output state
+with its P, so it pays this cost.
 
 ## Equations
 

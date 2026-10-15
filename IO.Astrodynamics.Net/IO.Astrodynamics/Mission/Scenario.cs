@@ -172,19 +172,10 @@ namespace IO.Astrodynamics.Mission
                         "The integrator factory must return a new instance for each spacecraft: the propagator adds the forces of each spacecraft to its integrator.");
                 }
 
-                return Task.Run(() =>
-                {
-                    try
-                    {
-                        return spacecraft.Propagate(Window, _celestialBodies, integrator, includeAtmosphericDrag,
-                            includeSolarRadiationPressure, propagatorStepSize, covariancePropagation);
-                    }
-                    catch (InvalidOperationException e) when (covariancePropagation != null)
-                    {
-                        throw new InvalidOperationException(
-                            $"The covariance of spacecraft '{spacecraft.Name}' cannot be propagated: {e.Message}", e);
-                    }
-                });
+                // A rejected initial covariance names its spacecraft (PropagatorBase); any other failure keeps its own
+                // message
+                return Task.Run(() => spacecraft.Propagate(Window, _celestialBodies, integrator, includeAtmosphericDrag,
+                    includeSolarRadiationPressure, propagatorStepSize, covariancePropagation));
             });
         }
 

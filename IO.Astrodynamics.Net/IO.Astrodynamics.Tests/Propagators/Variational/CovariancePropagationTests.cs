@@ -514,26 +514,70 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         var y = EclipsingCase(-1964, frame, 1e-12, new VariationalOptions(parameters));
         var tighter = EclipsingCase(-1965, frame, 1e-14, new VariationalOptions(parameters));
 
-        // Assert: at 1e-12, measured Ψ_Cr 4.0e-5 (J2000) and 9.8e-4 (ECLIPJ2000) in position, 4.9e-5 and 1.3e-3 in
-        // velocity, Φ below 3.1e-8 and Ψ_Cd below 3.4e-7; at 1e-14, the remedy of A2, Ψ_Cr 1.6e-5 and 3.4e-6 (Linux, .NET 10,
-        // 2026-10-14). At 1e-12 Ψ_Cr is above the 1e-4 of F1 in one frame, so it is bounded at about three times the worst;
-        // at 1e-14 it is held to the 1e-4 of F1
-        double phi = ColumnsError(y, expected, 0, 6, 0, 6);
-        double psiCd = ColumnsError(y, expected, 6, 7, 0, 6);
-        double psiCr = System.Math.Max(ColumnsError(y, expected, 7, 8, 0, 3), ColumnsError(y, expected, 7, 8, 3, 6));
-        double tighterPsiCr = System.Math.Max(ColumnsError(tighter, expected, 7, 8, 0, 3),
-            ColumnsError(tighter, expected, 7, 8, 3, 6));
-        _output.WriteLine($"{frameName}, 1e-12: Φ {phi:E2}, Ψ_Cd {psiCd:E2}, Ψ_Cr position " +
-                          $"{ColumnsError(y, expected, 7, 8, 0, 3):E2}, velocity {ColumnsError(y, expected, 7, 8, 3, 6):E2}; " +
-                          $"1e-14: Ψ_Cr {tighterPsiCr:E2}");
+        // Assert, at 5.123 h: Φ below 3.1e-8 and Ψ_Cd below 3.4e-7 at 1e-12 (Linux, .NET 10, 2026-10-14)
+        var atEpoch = Start.AddHours(5.123);
+        double phi = ColumnsError(Y(y, atEpoch), Y(expected, atEpoch), 0, 6, 0, 6);
+        double psiCd = ColumnsError(Y(y, atEpoch), Y(expected, atEpoch), 6, 7, 0, 6);
         Assert.True(phi < 1e-7, $"Φ {phi:E2}");
         Assert.True(psiCd < 1e-6, $"Ψ_Cd {psiCd:E2}");
-        Assert.True(psiCr < 4e-3, $"Ψ_Cr at 1e-12 {psiCr:E2}");
-        Assert.True(tighterPsiCr < 1e-4, $"Ψ_Cr at 1e-14 {tighterPsiCr:E2}");
+
+        // Assert, over the arc (every 0.05 h): the error of Ψ_Cr relative to the largest Ψ_Cr of the arc, in position and
+        // in velocity; relative to the local Ψ_Cr it is larger just after the first shadow exit, where Ψ_Cr is below a
+        // millimetre (decision of S. Guillet, H3 review of step 8). Measured at 1e-12, J2000 / ECLIPJ2000: 6.0e-5 / 1.0e-3
+        // in position, 7.6e-5 / 1.9e-3 in velocity; at 1e-14, the remedy of A2: 1.5e-5 / 5.2e-6 and 2.6e-5 / 9.3e-6
+        // (Linux, .NET 10, 2026-10-15). At 1e-12 Ψ_Cr is above the 1e-4 of F1 in one frame, so it is bounded at about
+        // twice the worst; at 1e-14 it is held to the 1e-4 of F1
+        var epochs = Enumerable.Range(1, 120).Select(i => Start.AddHours(0.05 * i)).ToArray();
+        var psiCr = PsiCrArcError(y, expected, epochs);
+        var tighterPsiCr = PsiCrArcError(tighter, expected, epochs);
+        _output.WriteLine($"{frameName}, 5.123 h, 1e-12: Φ {phi:E2}, Ψ_Cd {psiCd:E2}; over the arc, Ψ_Cr relative to its " +
+                          $"largest value: 1e-12 position {psiCr.Position:E2}, velocity {psiCr.Velocity:E2}; 1e-14 " +
+                          $"position {tighterPsiCr.Position:E2}, velocity {tighterPsiCr.Velocity:E2}");
+        Assert.True(System.Math.Max(psiCr.Position, psiCr.Velocity) < 4e-3, $"Ψ_Cr at 1e-12 {psiCr}");
+        Assert.True(System.Math.Max(tighterPsiCr.Position, tighterPsiCr.Velocity) < 1e-4, $"Ψ_Cr at 1e-14 {tighterPsiCr}");
     }
 
-    // Y at 5.123 h of the eclipsing case, 6 × 8, in the frame of the propagation
-    private double[] EclipsingCase(int naifId, Frames.Frame frame, double tolerance, VariationalOptions options)
+    // The worst error of the Ψ_Cr column over the epochs, position and velocity rows apart, relative to the largest norm
+    // of the expected column over the epochs
+    private static (double Position, double Velocity) PsiCrArcError(PropagationSolution actual,
+        PropagationSolution expected, TimeSystem.Time[] epochs)
+    {
+        var e = epochs.Select(t => Y(expected, t)).ToArray();
+        var a = epochs.Select(t => Y(actual, t)).ToArray();
+        double Worst(int r0)
+        {
+            double largest = 0.0;
+            double worst = 0.0;
+            for (int k = 0; k < epochs.Length; k++)
+            {
+                double norm = 0.0;
+                double difference = 0.0;
+                for (int i = r0; i < r0 + 3; i++)
+                {
+                    norm += e[k][8 * i + 7] * e[k][8 * i + 7];
+                    difference += (a[k][8 * i + 7] - e[k][8 * i + 7]) * (a[k][8 * i + 7] - e[k][8 * i + 7]);
+                }
+
+                largest = System.Math.Max(largest, System.Math.Sqrt(norm));
+                worst = System.Math.Max(worst, System.Math.Sqrt(difference));
+            }
+
+            return worst / largest;
+        }
+
+        return (Worst(0), Worst(3));
+    }
+
+    // Y at an epoch, 6 × 8, in the frame of the propagation
+    private static double[] Y(PropagationSolution solution, TimeSystem.Time epoch)
+    {
+        var y = new double[48];
+        solution.EvaluateVariational(epoch, y, Array.Empty<double>());
+        return y;
+    }
+
+    // The eclipsing case over 6 h
+    private PropagationSolution EclipsingCase(int naifId, Frames.Frame frame, double tolerance, VariationalOptions options)
     {
         var orbit = (StateVector)new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4),
             _cases.Earth, Start, Frames.Frame.ICRF).ToFrame(frame);
@@ -547,9 +591,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(6.0)), Bodies,
             new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(600.0), options);
         Assert.Equal(2, solution.Segments.Count);
-        var y = new double[48];
-        solution.EvaluateVariational(Start.AddHours(5.123), y, Array.Empty<double>());
-        return y;
+        return solution;
     }
 
     // Relative Frobenius error of columns [c0, c1) over rows [r0, r1) of two 6 × 8 matrices
