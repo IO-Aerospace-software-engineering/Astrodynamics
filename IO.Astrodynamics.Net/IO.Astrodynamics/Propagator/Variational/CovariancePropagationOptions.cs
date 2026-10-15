@@ -79,6 +79,12 @@ public sealed record CovariancePropagationOptions
     /// are controlled on the state only, so the trajectory is the same, bit for bit, with and without these options.
     /// True changes the steps, and so the trajectory, within the tolerance of the integrator.
     /// </summary>
+    /// <remarks>
+    /// Off, Ψ carries an integration error that the control of the state does not see, largest for Cr across the shadow
+    /// crossings of solar radiation pressure: in an eclipsing LEO over 6 h at a tolerance of 1e-12, Ψ_Cr was off by
+    /// 4.0e-5 to 1.3e-3 depending on where the steps fell, against 1.6e-5 and 3.4e-6 at 1e-14. A tighter tolerance or
+    /// this option brings it down.
+    /// </remarks>
     public bool IncludeInStepControl { get; init; }
 
     /// <summary>
