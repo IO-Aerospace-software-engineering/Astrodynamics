@@ -26,10 +26,11 @@
 
 Every fluent method returns the builder for chaining. Calling the same method twice throws `InvalidOperationException`.
 
-The bodies of the forces are those given to `WithPerturbingBody` and `WithPerturbingBodies`: atmospheric drag applies for
-the bodies among them that have an atmospheric model, so list the central body to have its drag. `Build` checks the
-covariance propagation options once all the forces are added, since the columns of Ψ follow them (Cd with drag, Cr with
-a radiation force).
+`Build` adds the central body of the spacecraft (the observer of its initial orbital parameters, or the Sun for a star or
+a barycenter) to the bodies given to `WithPerturbingBody` and `WithPerturbingBodies` when they do not hold it: atmospheric
+drag applies with its atmospheric model and solar radiation pressure with its shadow, whether or not it was listed. A body
+of the same NAIF identifier given by the caller is used as given. `Build` checks the covariance propagation options once
+all the forces are added, since the columns of Ψ follow them (Cd with drag, Cr with a radiation force).
 
 ## Example
 

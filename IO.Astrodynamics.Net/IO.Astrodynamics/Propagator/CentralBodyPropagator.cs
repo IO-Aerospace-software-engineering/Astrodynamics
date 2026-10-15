@@ -145,7 +145,7 @@ public class CentralBodyPropagator : PropagatorBase
     /// Resolves the central body from the spacecraft's observer.
     /// For Star or Barycenter observers, returns the Sun.
     /// </summary>
-    private static CelestialItem ResolveCentralBody(Spacecraft spacecraft)
+    internal static CelestialItem ResolveCentralBody(Spacecraft spacecraft)
     {
         var observer = spacecraft.InitialOrbitalParameters.Observer;
 

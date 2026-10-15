@@ -118,6 +118,12 @@ public class CentralBodyPropagatorBuilder
     /// <summary>
     /// Build the propagator.
     /// </summary>
+    /// <remarks>
+    /// The central body of the spacecraft (the observer of its initial orbital parameters, or the Sun for a star or a
+    /// barycenter) is added to the perturbing bodies when they do not hold it: atmospheric drag applies with its
+    /// atmospheric model and solar radiation pressure with its shadow, whether or not it was listed. A body of the same
+    /// NAIF identifier given to <see cref="WithPerturbingBody"/> is used as given.
+    /// </remarks>
     /// <exception cref="NotSupportedException">The covariance propagation is asked for with another integrator than
     /// <see cref="RK78Integrator"/>.</exception>
     /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
@@ -127,10 +133,21 @@ public class CentralBodyPropagatorBuilder
     /// semi-definite.</exception>
     public CentralBodyPropagator Build()
     {
+        // The central body takes part in the forces whether or not it was listed: its atmosphere for drag, its shadow
+        // for SRP. A body of the same NAIF identifier given by the caller is kept as given
+        var bodies = new List<CelestialItem>(_perturbingBodies.Count + 1);
+        var centralBody = CentralBodyPropagator.ResolveCentralBody(_spacecraft);
+        if (!_perturbingBodies.Contains(centralBody))
+        {
+            bodies.Add(centralBody);
+        }
+
+        bodies.AddRange(_perturbingBodies);
+
         // Create propagator via the auto-building constructor
         // (handles gravity, third-body, drag, SRP, ephemeris cache, integrator init)
         var propagator = new CentralBodyPropagator(_window, _spacecraft, _integrator,
-            _perturbingBodies, _includeAtmosphericDrag, _includeSolarRadiationPressure, _deltaT);
+            bodies, _includeAtmosphericDrag, _includeSolarRadiationPressure, _deltaT);
 
         // Add the radiation forces after construction (with ephemeris cache from existing forces)
         if (_albedoBody != null)
