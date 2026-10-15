@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.Maneuver
         /// velocity covariance at the burn when the propagation carries a covariance
         /// (<see cref="Propagator.Variational.CovariancePropagationMode.Covariance"/>); ignored otherwise. Null (the
         /// default) for none. Set it with an object initializer, for example
-        /// <c>new ApogeeHeightManeuver(…) { ExecutionError = new ManeuverExecutionError(…) }</c>.
+        /// <c>new ApogeeHeightManeuver(…) { ExecutionError = new ManeuverExecutionError { ShutoffSigma = 0.002 } }</c>.
         /// </summary>
         /// <remarks>
         /// A ΔV of exactly zero adds no error; any non-zero ΔV takes the whole model, the fixed terms included.

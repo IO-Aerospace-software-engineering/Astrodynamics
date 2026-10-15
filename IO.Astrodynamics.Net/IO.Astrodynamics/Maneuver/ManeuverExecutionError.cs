@@ -42,39 +42,53 @@ namespace IO.Astrodynamics.Maneuver;
 /// ignored and costs nothing. The trajectory always follows the commanded ΔV (open loop).
 /// </para>
 /// <para>
-/// Immutable, so thread-safe.
+/// The four standard deviations are set by name, so that two of different units cannot be swapped:
+/// <c>new ManeuverExecutionError { ResolutionSigma = 0.01, ShutoffSigma = 0.002, AutopilotSigma = 0.005,
+/// PointingSigma = 0.001 }</c>. A term left out is zero.
+/// </para>
+/// <para>
+/// Immutable once built, so thread-safe.
 /// </para>
 /// </remarks>
 public sealed class ManeuverExecutionError
 {
-    /// <summary>
-    /// Create the model.
-    /// </summary>
-    /// <param name="resolutionSigma">σ_r, fixed magnitude error, in m/s.</param>
-    /// <param name="shutoffSigma">σ_s, magnitude error proportional to |ΔV|, dimensionless.</param>
-    /// <param name="autopilotSigma">σ_a, fixed pointing error, in m/s on each axis perpendicular to ΔV.</param>
-    /// <param name="pointingSigma">σ_p, pointing error proportional to |ΔV|, in rad on each axis.</param>
-    /// <exception cref="ArgumentOutOfRangeException">A standard deviation is negative or not finite.</exception>
-    public ManeuverExecutionError(double resolutionSigma, double shutoffSigma, double autopilotSigma,
-        double pointingSigma)
+    private readonly double _resolutionSigma;
+    private readonly double _shutoffSigma;
+    private readonly double _autopilotSigma;
+    private readonly double _pointingSigma;
+
+    /// <summary>σ_r, fixed magnitude error, in m/s; 0 by default.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative or not finite.</exception>
+    public double ResolutionSigma
     {
-        ResolutionSigma = Validate(resolutionSigma, nameof(resolutionSigma));
-        ShutoffSigma = Validate(shutoffSigma, nameof(shutoffSigma));
-        AutopilotSigma = Validate(autopilotSigma, nameof(autopilotSigma));
-        PointingSigma = Validate(pointingSigma, nameof(pointingSigma));
+        get => _resolutionSigma;
+        init => _resolutionSigma = Validate(value, nameof(ResolutionSigma));
     }
 
-    /// <summary>σ_r, fixed magnitude error, in m/s.</summary>
-    public double ResolutionSigma { get; }
+    /// <summary>σ_s, magnitude error proportional to |ΔV|, dimensionless; 0 by default.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative or not finite.</exception>
+    public double ShutoffSigma
+    {
+        get => _shutoffSigma;
+        init => _shutoffSigma = Validate(value, nameof(ShutoffSigma));
+    }
 
-    /// <summary>σ_s, magnitude error proportional to |ΔV|, dimensionless.</summary>
-    public double ShutoffSigma { get; }
+    /// <summary>σ_a, fixed pointing error, in m/s on each axis perpendicular to ΔV; 0 by default.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative or not finite.</exception>
+    public double AutopilotSigma
+    {
+        get => _autopilotSigma;
+        init => _autopilotSigma = Validate(value, nameof(AutopilotSigma));
+    }
 
-    /// <summary>σ_a, fixed pointing error, in m/s on each axis perpendicular to ΔV.</summary>
-    public double AutopilotSigma { get; }
-
-    /// <summary>σ_p, pointing error proportional to |ΔV|, in rad on each axis perpendicular to ΔV.</summary>
-    public double PointingSigma { get; }
+    /// <summary>σ_p, pointing error proportional to |ΔV|, in rad on each axis perpendicular to ΔV; 0 by default.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is negative or not finite.</exception>
+    public double PointingSigma
+    {
+        get => _pointingSigma;
+        init => _pointingSigma = Validate(value, nameof(PointingSigma));
+    }
 
     /// <summary>
     /// The covariance of the error of <paramref name="deltaV"/>, L_e of Gates, in the frame of
