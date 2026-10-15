@@ -183,9 +183,16 @@ public class SpiceAPI
         }
     }
 
+    /// <summary>
+    /// The kernel paths loaded by <see cref="LoadKernels"/>, as they are at the call: a copy taken under the lock, so that
+    /// another thread may load or unload kernels while the caller enumerates it.
+    /// </summary>
     public IEnumerable<FileSystemInfo> GetLoadedKernels()
     {
-        return _kernels;
+        lock (lockObject)
+        {
+            return _kernels.ToArray();
+        }
     }
 
     /// <summary>

@@ -70,6 +70,10 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **Loaded kernels while another thread loads.** `SpiceAPI.GetLoadedKernels` returned its internal list, outside the
+  lock of `SpiceAPI`: enumerating it while another thread loaded or unloaded kernels could throw
+  `InvalidOperationException` ("Collection was modified"). It now returns a copy taken under the lock, the kernels
+  loaded at the call.
 - **Kernels of a directory.** `SpiceAPI.LoadKernels` on a directory now hands SPICE its kernel files only: binary
   kernels (ID word `DAF/` or `DAS/`, or `NAIF/DAF` and `NAIF/DAS`) and text kernels (ID word `KPL/`, or a
   `\begindata` block for an old kernel without ID word), in the order of the directory listing, as before. The other

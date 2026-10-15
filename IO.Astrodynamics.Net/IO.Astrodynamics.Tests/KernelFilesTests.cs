@@ -151,6 +151,42 @@ public class KernelFilesTests : IDisposable
         Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(), kernel => kernel.FullName == _directory.FullName);
     }
 
+    [Fact]
+    public async System.Threading.Tasks.Task GetLoadedKernels_WhileAnotherThreadLoadsKernels_GivesASnapshot()
+    {
+        // Arrange: a directory whose load and unload change the list of loaded kernels without touching SPICE
+        Write("model.txt", Encoding.ASCII.GetBytes("2 0 1.0\n"));
+        using var stop = new System.Threading.CancellationTokenSource();
+        var loader = System.Threading.Tasks.Task.Run(() =>
+        {
+            while (!stop.IsCancellationRequested)
+            {
+                SpiceAPI.Instance.LoadKernels(_directory);
+                SpiceAPI.Instance.UnloadKernels(_directory);
+            }
+        });
+
+        // Act: enumerate the loaded kernels while the other thread changes them (the list itself was returned, outside
+        // the lock, so the enumeration threw "Collection was modified"; Windows CI of #394)
+        var exception = Record.Exception(() =>
+        {
+            var deadline = DateTime.UtcNow.AddSeconds(2.0);
+            while (DateTime.UtcNow < deadline)
+            {
+                foreach (var kernel in SpiceAPI.Instance.GetLoadedKernels())
+                {
+                    _ = kernel.FullName;
+                }
+            }
+        });
+        stop.Cancel();
+        await loader;
+
+        // Assert
+        Assert.Null(exception);
+        Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(), kernel => kernel.FullName == _directory.FullName);
+    }
+
     private string Write(string name, byte[] content)
     {
         var path = Path.Combine(_directory.FullName, name);
