@@ -97,7 +97,10 @@ public class CentralBodyPropagatorBuilder
     /// Without this call, a covariance of the initial orbital parameters is not propagated: it stays on the initial
     /// state, the output states carry none, and no partial derivative is evaluated. The options are checked by
     /// <see cref="Build"/>, once the forces are known: the columns of Ψ follow them (Cd with drag, Cr with a radiation
-    /// force).
+    /// force). In <see cref="CovariancePropagationMode.Covariance"/>, <see cref="Build"/> also checks the covariance P0 of
+    /// the initial orbital parameters, the state of the spacecraft rather than an argument, and throws
+    /// <see cref="InvalidOperationException"/> when it is missing, given at another epoch than the start of the window,
+    /// not 6×6, not symmetric or not positive semi-definite.
     /// </remarks>
     /// <param name="options">The options.</param>
     /// <returns>This builder.</returns>

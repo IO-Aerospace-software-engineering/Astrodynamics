@@ -16,7 +16,8 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// The rows of R_rtn are the R, T and N unit vectors of the state, R = r̂, N = (r × v) / |r × v|, T = N × R, as in
 /// <see cref="StateVector.CreateRtnRotation"/>; Qc is written as q_R R Rᵀ + q_T T Tᵀ + q_N N Nᵀ, the same matrix,
 /// without allocation. It is evaluated at each stage state of the integration, relative to the central body of the
-/// propagation, so the axes follow the orbit.
+/// propagation, so the axes follow the orbit. When the central body is the Sun (initial orbital parameters relative to
+/// a star or a barycenter), the axes are heliocentric, even for a spacecraft near a planet.
 /// </para>
 /// <para>
 /// Thread-safe: the model holds its three densities only.

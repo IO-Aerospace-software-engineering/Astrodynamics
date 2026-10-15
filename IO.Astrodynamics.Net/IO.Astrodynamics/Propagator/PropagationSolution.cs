@@ -189,8 +189,9 @@ public sealed class PropagationSolution
     /// columns ordered x, y, z, vx, vy, vz.
     /// </summary>
     /// <remarks>
-    /// Units: m², m²/s, m²/s². Inertial frame of the propagation, relative to its central body. At a maneuver, the value
-    /// after it, its execution error included. Evaluated as <see cref="GetStateTransitionMatrix"/>.
+    /// Units: m², m²/s, m²/s². In the frame of the initial orbital parameters, which is the inertial frame of the
+    /// propagation, ICRF or another, relative to its central body. At a maneuver, the value after it, its execution error
+    /// included. Evaluated as <see cref="GetStateTransitionMatrix"/>.
     /// </remarks>
     /// <param name="epoch">The epoch, within the propagation; up to one tick of <see cref="Time"/> (100 ns) after its
     /// end, which reads the values at the end.</param>

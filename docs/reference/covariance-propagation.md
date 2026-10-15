@@ -74,6 +74,13 @@ the start of the window. This example runs as a smoke test against the packed Nu
 - With `IncludeInStepControl = false`, the steps are controlled on the state only, so the trajectory is the same, bit for
   bit, with and without the variational equations. With `true`, the steps change, and so does the trajectory, within the
   tolerance of the integrator.
+- Without `IncludeInStepControl`, Ψ carries an integration error that the control of the state does not see, largest
+  for Cr across the shadow crossings of SRP: in an eclipsing LEO over 6 h at a tolerance of 1e-12, Ψ_Cr was off by
+  4.0e-5 to 1.3e-3 depending on where the steps fell, against 1.6e-5 and 3.4e-6 at 1e-14. A tighter tolerance or the
+  option brings it down. In the same case, Φ and Ψ_Cd stay below 3.1e-8 and 3.4e-7.
+- The RTN axes of the process noise are those of the state relative to the central body of the propagation. When the
+  central body is the Sun (initial orbital parameters relative to a star or a barycenter), they are heliocentric, even
+  for a spacecraft near a planet.
 
 ### Columns of Ψ
 
@@ -106,8 +113,8 @@ On `PropagationSolution`:
 | `GetExtendedCovariance(Time)` | (6 + c)×(6 + c) | P as above; state-parameter blocks in m and m/s; parameter block dimensionless |
 | `GetStateVector(Time)` | The state of `InterpolateAt`, with its covariance in covariance mode | m, m/s |
 
-- Rows and columns are ordered x, y, z, vx, vy, vz, in the inertial frame of the propagation, relative to its central
-  body. Moving the origin from the observer of the initial state to the central body is a translation by a known
+- Rows and columns are ordered x, y, z, vx, vy, vz, in the frame of the initial orbital parameters, which is the
+  inertial frame of the propagation (ICRF or another), relative to its central body. Moving the origin from the observer of the initial state to the central body is a translation by a known
   ephemeris, of Jacobian I, which leaves P0 unchanged.
 - Inside an integration step, a value comes from a shortened RK7(8) step from the start of that step, at the accuracy of
   the integrator; at a step boundary, the stored value.
