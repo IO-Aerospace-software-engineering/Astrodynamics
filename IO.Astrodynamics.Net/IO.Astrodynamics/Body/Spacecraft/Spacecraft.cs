@@ -489,12 +489,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            ResetPropagation();
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
+            // Built before the reset, so that a rejected input leaves the previous propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
+            ResetPropagation();
 
             var solution = propagator.Propagate();
             _isPropagated = true;
@@ -531,15 +532,21 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; or the covariance is asked
         /// for, and the initial orbital parameters carry none, carry it at another epoch than the start of the window,
         /// or carry one that is not symmetric and positive semi-definite.</exception>
+        /// <remarks>
+        /// The options and the initial covariance are checked before anything changes: when they are rejected, the
+        /// states, maneuvers and fuel of a previous propagation are left as they were.
+        /// </remarks>
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator,
             bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan propagatorStepSize,
             CovariancePropagationOptions covariancePropagation)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            ResetPropagation();
 
+            // Built, and so the options and P0 checked, before the reset: a rejected activation leaves the previous
+            // propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, covariancePropagation);
+            ResetPropagation();
 
             var solution = propagator.Propagate();
             _isPropagated = true;
@@ -554,16 +561,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, VariationalOptions variationalOptions)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
-            ResetPropagation();
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
+            // Built and activated before the reset, so that a rejected input leaves the previous propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
             if (variationalOptions != null)
             {
                 propagator.EnableVariationalEquations(variationalOptions);
             }
+
+            ResetPropagation();
 
             var solution = propagator.Propagate();
             _isPropagated = true;

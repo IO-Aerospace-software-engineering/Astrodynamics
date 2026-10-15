@@ -55,7 +55,7 @@ derivative is evaluated.
 | `StateVectors` | Output state vectors at the requested cadence |
 | `InterpolateAt(Time epoch)` | State at any epoch within the solution window; returns `(Vector3 position, Vector3 velocity)`. RK7(8): a shortened RK7(8) step from the start of the accepted step (13 force evaluations inside a step, none at a boundary); Velocity-Verlet: cubic Hermite interpolation. At a maneuver, the state after it |
 | `GetStateVector(Time epoch)` | The state of `InterpolateAt` as a `StateVector`, with its covariance when the propagation propagated it; throws outside the propagation |
-| `CovariancePropagation`, `SensitivityParameters`, `ConsiderParameters` | The options of the covariance propagation (null when off), the columns of Ψ, the consider parameters |
+| `CovariancePropagation`, `SensitivityParameters`, `ExtendedCovarianceParameters` | The options of the covariance propagation (null when off), the columns of Ψ, the consider parameters of the extended covariance |
 | `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance` | Φ, Ψ, P and the extended covariance at any epoch; see [Covariance Propagation](covariance-propagation.md#results) |
 
 In covariance mode, the output states (`StateVectors`) carry their covariance. The SPK written from the propagated states

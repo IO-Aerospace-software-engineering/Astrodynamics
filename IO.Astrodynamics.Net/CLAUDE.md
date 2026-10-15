@@ -77,6 +77,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet), RK78Integrator (adaptive Prince-Dormand 7(8))
 - `IO.Astrodynamics.Propagator.Forces`: Force models (gravitational, atmospheric drag, solar radiation pressure, albedo and thermal radiation pressure)
 - `IO.Astrodynamics.Propagator.Events`: IEventDetector, ManeuverEventDetector, CrossingDirection
+- `IO.Astrodynamics.Propagator.Variational`: state transition matrix Φ, sensitivity Ψ to Cd and Cr, and covariance P propagated with the state by RK7(8) (`CovariancePropagationOptions`; off by default, an initial covariance is then not propagated); Φ, Ψ, P and the extended covariance read from `PropagationSolution` (`GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector`); maneuver execution error by `ImpulseManeuver.ExecutionError` (model of Gates). See `docs/reference/covariance-propagation.md`
 - `IO.Astrodynamics.Propagator.MonteCarlo`: MonteCarloPropagator, StateSampler, StatisticsAggregator, per-epoch statistics and RSS percentiles
 - `IO.Astrodynamics.SSA`: ConjunctionAssessment (Screen, Analyze, AnalyzeAll, EvaluateAvoidance), Foster 2D collision probability, maximum probability, encounter quality flags
 - `IO.Astrodynamics.Atmosphere`: Atmospheric density, temperature, and pressure models for Earth and Mars
@@ -516,7 +517,7 @@ PropagatorBase (abstract)
 **Key Classes**
 - `PropagatorBase`: Abstract base with segment-based propagation loop, event detection, and dense output
 - `CentralBodyPropagator`: Concrete implementation with auto force-building and ephemeris cache injection
-- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output: a shortened RK7(8) step from the start of the accepted step for RK7(8) (accuracy of the integrator, 13 force evaluations inside a step), cubic Hermite for Velocity-Verlet
+- `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output: a shortened RK7(8) step from the start of the accepted step for RK7(8) (accuracy of the integrator, 13 force evaluations inside a step), cubic Hermite for Velocity-Verlet. When the covariance propagation is on, Φ, Ψ and P at any epoch, by the same shortened step with the variational equations (the getters serialize on a lock of the solution and evaluate the forces, like `InterpolateAt`)
 - `PropagationSegment`: List of `AcceptedStep` records with Hermite interpolation
 - `AcceptedStep`: Start/end position, velocity, and acceleration for cubic Hermite dense output
 - `IntegrationResult`: Segment + optional `EventInfo` (detector index, precise event time and state)
