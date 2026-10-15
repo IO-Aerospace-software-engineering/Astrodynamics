@@ -333,7 +333,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         // Arrange: the maneuver case, with the covariance and without process noise, so that Q before the burn is zero
         // and the jump is the execution error alone
         var options = new VariationalOptions(PropagateCovariance: true);
-        var execution = new ManeuverExecutionError(0.05, 0.01, 0.02, 0.005);
+        var execution = new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
         var (spacecraft, maneuver) = ManeuverCase(execution);
 
         // Act
@@ -383,7 +383,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         // covariances differ by Φ(t, te) B L_e Bᵀ Φ(t, te)ᵀ, with Φ(t, te) the Φ of the second segment
         var options = new VariationalOptions(ProcessNoise: new RtnProcessNoise(1e-12, 1e-11, 1e-12),
             PropagateCovariance: true);
-        var execution = new ManeuverExecutionError(0.05, 0.01, 0.02, 0.005);
+        var execution = new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
         var window = new TimeSystem.Window(Start, Start.AddHours(2.0));
         var (withError, maneuver) = ManeuverCase(execution);
         var solution = withError.PropagateWithVariationalEquations(window, new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-11, 1e-11),
@@ -420,7 +420,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
     public void WithoutACarriedCovariance_TheExecutionErrorIsRecordedButNotApplied()
     {
         // Arrange: Φ only, so no Q is carried
-        var (spacecraft, maneuver) = ManeuverCase(new ManeuverExecutionError(0.05, 0.01, 0.02, 0.005));
+        var (spacecraft, maneuver) = ManeuverCase(new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 });
 
         // Act
         var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(2.0)),

@@ -74,7 +74,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
             new CovariancePropagationOptions { GeopotentialPartialsDegree = 1 });
         Assert.Throws<ArgumentOutOfRangeException>(() => new RtnProcessNoise(-1e-12, 0.0, 0.0));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ConsiderParameters(double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new ManeuverExecutionError(0.0, -1.0, 0.0, 0.0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ManeuverExecutionError { ResolutionSigma = 0.0, ShutoffSigma = -1.0, AutopilotSigma = 0.0, PointingSigma = 0.0 });
         Assert.Equal(20, new CovariancePropagationOptions { GeopotentialPartialsDegree = 20 }.GeopotentialPartialsDegree);
     }
 
@@ -449,7 +449,7 @@ public class CovariancePropagationApiTests : IClassFixture<PartialsTestCases>
     public void ExecutionError_PublicProperty_AddsToTheVelocityCovarianceAtTheBurn()
     {
         // Arrange: the same maneuver with and without its execution error
-        var error = new ManeuverExecutionError(0.01, 0.002, 0.005, 0.001);
+        var error = new ManeuverExecutionError { ResolutionSigma = 0.01, ShutoffSigma = 0.002, AutopilotSigma = 0.005, PointingSigma = 0.001 };
         var (withError, burnEpoch) = PropagateWithManeuver(-2121, error);
         var (withoutError, _) = PropagateWithManeuver(-2122, null);
         var after = burnEpoch.AddSeconds(1e-3);

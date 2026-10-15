@@ -14,9 +14,11 @@ Impulse maneuvers model instantaneous delta-V burns triggered by g-function zero
 | `ManeuverWindow` | Thrust window extended by the maneuver hold duration |
 | `ExecutionError` | Optional execution error by the model of Gates (`ManeuverExecutionError`), set with an object initializer; added to the velocity covariance at the burn when the propagation propagates the covariance, ignored otherwise. See [Covariance Propagation](covariance-propagation.md#execution-error-of-an-impulsive-maneuver) |
 
-`ManeuverExecutionError(resolutionSigma, shutoffSigma, autopilotSigma, pointingSigma)`: σ_r, fixed magnitude error, in
-m/s; σ_s, magnitude error proportional to |ΔV|, dimensionless; σ_a, fixed pointing error, in m/s on each axis
-perpendicular to ΔV; σ_p, pointing error proportional to |ΔV|, in rad on each axis. All finite and non-negative. A ΔV of
+`ManeuverExecutionError` takes its four standard deviations by name, so that two of different units cannot be swapped:
+`new ManeuverExecutionError { ResolutionSigma = 0.01, PointingSigma = 0.001 }`. `ResolutionSigma` (σ_r), fixed magnitude
+error, in m/s; `ShutoffSigma` (σ_s), magnitude error proportional to |ΔV|, dimensionless; `AutopilotSigma` (σ_a), fixed
+pointing error, in m/s on each axis perpendicular to ΔV; `PointingSigma` (σ_p), pointing error proportional to |ΔV|, in
+rad on each axis. Each finite and non-negative, zero when left out. A ΔV of
 exactly zero adds no error; any non-zero ΔV takes the whole model, the fixed terms included. The trajectory follows the
 commanded ΔV (open loop).
 

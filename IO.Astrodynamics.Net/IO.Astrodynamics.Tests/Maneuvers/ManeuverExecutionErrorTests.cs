@@ -41,7 +41,7 @@ public class ManeuverExecutionErrorTests
     {
         // Arrange
         var deltaV = new Vector3(x, y, z);
-        var model = new ManeuverExecutionError(resolution, shutoff, autopilot, pointing);
+        var model = new ManeuverExecutionError { ResolutionSigma = resolution, ShutoffSigma = shutoff, AutopilotSigma = autopilot, PointingSigma = pointing };
         var covariance = new double[9];
 
         // Act
@@ -71,7 +71,7 @@ public class ManeuverExecutionErrorTests
     {
         // Arrange: an orthonormal frame whose first axis is along ΔV
         var deltaV = new Vector3(x, y, z);
-        var model = new ManeuverExecutionError(resolution, shutoff, autopilot, pointing);
+        var model = new ManeuverExecutionError { ResolutionSigma = resolution, ShutoffSigma = shutoff, AutopilotSigma = autopilot, PointingSigma = pointing };
         var covariance = new double[9];
         var u = deltaV.Normalize();
         var helper = System.Math.Abs(u.X) < 0.9 ? new Vector3(1.0, 0.0, 0.0) : new Vector3(0.0, 1.0, 0.0);
@@ -103,7 +103,7 @@ public class ManeuverExecutionErrorTests
         // deviations σ_s and σ_r, u and w spherical Gaussian of σ_p and σ_a on each axis; 200 000 samples, fixed seed
         const int samples = 200_000;
         var deltaV = new Vector3(-250.0, 40.0, 7.0);
-        var model = new ManeuverExecutionError(0.2, 0.003, 0.1, 0.0175);
+        var model = new ManeuverExecutionError { ResolutionSigma = 0.2, ShutoffSigma = 0.003, AutopilotSigma = 0.1, PointingSigma = 0.0175 };
         var random = new Random(1963);
         double v = deltaV.Magnitude();
         var sum = new double[9];
@@ -151,7 +151,7 @@ public class ManeuverExecutionErrorTests
     public void EqualProportionalAndFixedErrors_GiveASphericalError()
     {
         // Arrange: the remark that ends section III, σ_s = σ_p and σ_r = σ_a make the error spherical for any ΔV
-        var model = new ManeuverExecutionError(0.003, 0.01, 0.003, 0.01);
+        var model = new ManeuverExecutionError { ResolutionSigma = 0.003, ShutoffSigma = 0.01, AutopilotSigma = 0.003, PointingSigma = 0.01 };
         var deltaV = new Vector3(12.0, -5.0, 3.0);
         var covariance = new double[9];
 
@@ -173,7 +173,7 @@ public class ManeuverExecutionErrorTests
     public void AZeroDeltaV_AddsNoError_AndATinyOneTakesTheFixedTerms()
     {
         // Arrange
-        var model = new ManeuverExecutionError(0.01, 0.02, 0.005, 0.03);
+        var model = new ManeuverExecutionError { ResolutionSigma = 0.01, ShutoffSigma = 0.02, AutopilotSigma = 0.005, PointingSigma = 0.03 };
         var zero = new double[9];
         var tiny = new double[9];
         var deltaV = new Vector3(0.0, 0.0, 1e-9);
@@ -199,7 +199,7 @@ public class ManeuverExecutionErrorTests
     {
         // Arrange: ΔV so small that V² is subnormal or zero (H3 review of #384: (σ_r² − σ_a²) / V² overflowed below
         // about 1e-154 m/s); along x and along a diagonal
-        var model = new ManeuverExecutionError(0.01, 0.02, 0.005, 0.03);
+        var model = new ManeuverExecutionError { ResolutionSigma = 0.01, ShutoffSigma = 0.02, AutopilotSigma = 0.005, PointingSigma = 0.03 };
         var alongX = new double[9];
         var diagonal = new double[9];
 
@@ -227,18 +227,49 @@ public class ManeuverExecutionErrorTests
     }
 
     [Fact]
+    public void UnsetTerms_AreZero()
+    {
+        // Arrange: the pointing term alone, by name
+        var pointing = new ManeuverExecutionError { PointingSigma = 0.001 };
+        var none = new ManeuverExecutionError();
+        var deltaV = new Vector3(3.0, -4.0, 12.0);
+        var covariance = new double[9];
+
+        // Act
+        pointing.Covariance(deltaV, covariance);
+
+        // Assert: σ_p² (V² I − v vᵀ), the pointing term of Gates, and no error without a term
+        Assert.Equal(0.0, pointing.ResolutionSigma);
+        Assert.Equal(0.0, pointing.ShutoffSigma);
+        Assert.Equal(0.0, pointing.AutopilotSigma);
+        double[] v = { deltaV.X, deltaV.Y, deltaV.Z };
+        double v2 = deltaV.Magnitude() * deltaV.Magnitude();
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                double expected = 1e-6 * ((i == j ? v2 : 0.0) - v[i] * v[j]);
+                Assert.Equal(expected, covariance[3 * i + j], 1e-18);
+            }
+        }
+
+        none.Covariance(deltaV, covariance);
+        Assert.All(covariance, c => Assert.Equal(0.0, c));
+    }
+
+    [Fact]
     public void InvalidArguments_Throw()
     {
-        Assert.Equal("resolutionSigma", Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new ManeuverExecutionError(-1e-3, 0.0, 0.0, 0.0)).ParamName);
-        Assert.Equal("shutoffSigma", Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new ManeuverExecutionError(0.0, double.NaN, 0.0, 0.0)).ParamName);
-        Assert.Equal("autopilotSigma", Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new ManeuverExecutionError(0.0, 0.0, double.PositiveInfinity, 0.0)).ParamName);
-        Assert.Equal("pointingSigma", Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new ManeuverExecutionError(0.0, 0.0, 0.0, -0.01)).ParamName);
+        Assert.Equal("ResolutionSigma", Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new ManeuverExecutionError { ResolutionSigma = -1e-3, ShutoffSigma = 0.0, AutopilotSigma = 0.0, PointingSigma = 0.0 }).ParamName);
+        Assert.Equal("ShutoffSigma", Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new ManeuverExecutionError { ResolutionSigma = 0.0, ShutoffSigma = double.NaN, AutopilotSigma = 0.0, PointingSigma = 0.0 }).ParamName);
+        Assert.Equal("AutopilotSigma", Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new ManeuverExecutionError { ResolutionSigma = 0.0, ShutoffSigma = 0.0, AutopilotSigma = double.PositiveInfinity, PointingSigma = 0.0 }).ParamName);
+        Assert.Equal("PointingSigma", Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new ManeuverExecutionError { ResolutionSigma = 0.0, ShutoffSigma = 0.0, AutopilotSigma = 0.0, PointingSigma = -0.01 }).ParamName);
         Assert.Equal("covariance", Assert.Throws<ArgumentException>(() =>
-            new ManeuverExecutionError(0.0, 0.0, 0.0, 0.0).Covariance(new Vector3(1.0, 0.0, 0.0), new double[8]))
+            new ManeuverExecutionError { ResolutionSigma = 0.0, ShutoffSigma = 0.0, AutopilotSigma = 0.0, PointingSigma = 0.0 }.Covariance(new Vector3(1.0, 0.0, 0.0), new double[8]))
             .ParamName);
     }
 
