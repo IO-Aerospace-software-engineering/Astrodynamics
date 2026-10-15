@@ -78,8 +78,11 @@ the start of the window. This example runs as a smoke test against the packed Nu
   for Cr across the shadow crossings of SRP. In an eclipsing LEO 400 × 1000 km over 6 h, with a maneuver, drag and SRP,
   at a tolerance of 1e-12, the error of Ψ_Cr over the arc, relative to the largest Ψ_Cr of the arc, was 6.0e-5 to
   1.9e-3 depending on where the steps fell (the same physics in J2000 and in ECLIPJ2000), against 2.6e-5 at most at
-  1e-14. Relative to the local Ψ_Cr it is larger just after the first shadow exit, where Ψ_Cr is still below a
-  millimetre: up to 1.5e-2 at 1e-12 and 1.6e-4 at 1e-14. A tighter tolerance or the option brings it down. In the same
+  1e-14. Relative to the local Ψ_Cr, it reaches 1.5e-2 at 1e-12 just after the first shadow exit, where Ψ_Cr is still
+  below a millimetre, but also 1.2e-2 at a later crossing (4.45 h), where Ψ_Cr is 0.28 m; at 1e-14, 1.6e-4 at that later
+  crossing. With the option, at 1e-12, Ψ_Cr is within 9.6e-8 of the same propagation at 1e-13, relative to the local
+  Ψ_Cr, over the whole arc. When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
+  tighter tolerance reduces the error about a hundredfold, not below 1e-4 at every crossing. In the same
   case, Φ and Ψ_Cd stay below 3.1e-8 and 3.4e-7 (at 5.123 h).
 - `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
 - The RTN axes of the process noise are those of the state relative to the central body of the propagation. When the
