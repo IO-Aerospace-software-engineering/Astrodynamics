@@ -21,9 +21,15 @@
 | `IncludeSolarRadiationPressure()` | Builder | Enable direct solar radiation pressure |
 | `IncludeAlbedo(CelestialBody)` | Builder | Enable albedo radiation pressure from a reflecting body |
 | `IncludeThermalRadiation(CelestialBody)` | Builder | Enable thermal radiation pressure from an emitting body |
+| `WithCovariancePropagation(CovariancePropagationOptions)` | Builder | Propagate the state transition matrix and, in covariance mode, the covariance ([Covariance Propagation](covariance-propagation.md)); needs an `RK78Integrator` |
 | `Build()` | `CentralBodyPropagator` | Construct the configured propagator |
 
 Every fluent method returns the builder for chaining. Calling the same method twice throws `InvalidOperationException`.
+
+The bodies of the forces are those given to `WithPerturbingBody` and `WithPerturbingBodies`: atmospheric drag applies for
+the bodies among them that have an atmospheric model, so list the central body to have its drag. `Build` checks the
+covariance propagation options once all the forces are added, since the columns of Ψ follow them (Cd with drag, Cr with
+a radiation force).
 
 ## Example
 

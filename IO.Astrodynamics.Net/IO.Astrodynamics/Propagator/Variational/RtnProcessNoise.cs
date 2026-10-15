@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// Thread-safe: the model holds its three densities only.
 /// </para>
 /// </remarks>
-internal sealed class RtnProcessNoise : IProcessNoiseModel
+public sealed class RtnProcessNoise : IProcessNoiseModel
 {
     /// <summary>
     /// Create the noise from its spectral densities.
@@ -31,7 +31,7 @@ internal sealed class RtnProcessNoise : IProcessNoiseModel
     /// <param name="transverse">q_T, in m²/s³.</param>
     /// <param name="normal">q_N, in m²/s³.</param>
     /// <exception cref="ArgumentOutOfRangeException">A density is negative or not finite.</exception>
-    internal RtnProcessNoise(double radial, double transverse, double normal)
+    public RtnProcessNoise(double radial, double transverse, double normal)
     {
         Radial = Validate(radial, nameof(radial));
         Transverse = Validate(transverse, nameof(transverse));
@@ -39,18 +39,18 @@ internal sealed class RtnProcessNoise : IProcessNoiseModel
     }
 
     /// <summary>q_R, the radial spectral density, in m²/s³.</summary>
-    internal double Radial { get; }
+    public double Radial { get; }
 
     /// <summary>q_T, the transverse spectral density, in m²/s³.</summary>
-    internal double Transverse { get; }
+    public double Transverse { get; }
 
     /// <summary>q_N, the normal spectral density, in m²/s³.</summary>
-    internal double Normal { get; }
+    public double Normal { get; }
 
     /// <inheritdoc />
     /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0): its RTN axes are not defined.
     /// </exception>
-    public void Accumulate(StateVector state, Span<double> qc)
+    void IProcessNoiseModel.Accumulate(StateVector state, Span<double> qc)
     {
         var position = state.Position;
         var momentum = position.Cross(state.Velocity);

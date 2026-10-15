@@ -134,7 +134,7 @@ public class PropagationGoldenTests
         var spacecraft = new Spacecraft(-1951, "GOLDEN1", 100.0, 1000.0, new Clock("golden1", 65536), orbit, 10.0, 2.2,
             null, 1.5);
 
-        return spacecraft.Propagate(new Window(Start, Start.AddHours(3.0)), new CelestialItem[] { earth, moon },
+        return spacecraft.PropagateWithVariationalEquations(new Window(Start, Start.AddHours(3.0)), new CelestialItem[] { earth, moon },
             new RK78Integrator(1e-11, 1e-11), true, true, TimeSpan.FromSeconds(60.0), options);
     }
 
@@ -149,7 +149,7 @@ public class PropagationGoldenTests
             Frames.Frame.ICRF);
         var spacecraft = new Spacecraft(-1952, "GOLDEN2", 2000.0, 5000.0, new Clock("golden2", 65536), orbit);
 
-        return spacecraft.Propagate(new Window(Start, Start.AddDays(1.0)), new CelestialItem[] { earth, moon, sun },
+        return spacecraft.PropagateWithVariationalEquations(new Window(Start, Start.AddDays(1.0)), new CelestialItem[] { earth, moon, sun },
             new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(600.0), options);
     }
 
@@ -170,7 +170,7 @@ public class PropagationGoldenTests
         spacecraft.AddEngine(engine);
         spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine));
 
-        return spacecraft.Propagate(new Window(Start, Start.AddHours(4.0)), new CelestialItem[] { earth, moon, sun },
+        return spacecraft.PropagateWithVariationalEquations(new Window(Start, Start.AddHours(4.0)), new CelestialItem[] { earth, moon, sun },
             new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(60.0), options);
     }
 

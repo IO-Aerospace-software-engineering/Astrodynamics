@@ -504,15 +504,53 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
-            return Propagate(window, celestialBodies, integrator, includeAtmosphericDrag, includeSolarRadiationPressure,
-                propagatorStepSize, null);
+            return PropagateWithVariationalEquations(window, celestialBodies, integrator, includeAtmosphericDrag,
+                includeSolarRadiationPressure, propagatorStepSize, null);
+        }
+
+        /// <summary>
+        /// Propagate the spacecraft with <paramref name="integrator"/>, and the state transition matrix and the covariance
+        /// of <paramref name="covariancePropagation"/> with it.
+        /// </summary>
+        /// <param name="window">The propagation window.</param>
+        /// <param name="celestialBodies">Celestial bodies used for gravity, third-body perturbations, drag, and SRP.</param>
+        /// <param name="integrator">The integrator, a new instance; the state transition matrix needs an
+        /// <see cref="RK78Integrator"/>.</param>
+        /// <param name="includeAtmosphericDrag">Whether to include atmospheric drag.</param>
+        /// <param name="includeSolarRadiationPressure">Whether to include solar radiation pressure.</param>
+        /// <param name="propagatorStepSize">The step of the output states.</param>
+        /// <param name="covariancePropagation">The propagation of the state transition matrix and, in
+        /// <see cref="CovariancePropagationMode.Covariance"/>, of the covariance of
+        /// <see cref="InitialOrbitalParameters"/>; null for none, as the overload without it.</param>
+        /// <returns>The solution, from which Φ, Ψ and P are read at any epoch of the window; in covariance mode, its
+        /// output states, which the spacecraft stores, carry their covariance.</returns>
+        /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator
+        /// is not an <see cref="RK78Integrator"/>.</exception>
+        /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a
+        /// consider parameter without its force.</exception>
+        /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; or the covariance is asked
+        /// for, and the initial orbital parameters carry none, carry it at another epoch than the start of the window,
+        /// or carry one that is not symmetric and positive semi-definite.</exception>
+        public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator,
+            bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan propagatorStepSize,
+            CovariancePropagationOptions covariancePropagation)
+        {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
+            ResetPropagation();
+
+            using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
+                includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize, covariancePropagation);
+
+            var solution = propagator.Propagate();
+            _isPropagated = true;
+            return solution;
         }
 
         /// <summary>
         /// Propagate the spacecraft with <paramref name="integrator"/>, integrating the variational equations of
         /// <paramref name="variationalOptions"/> when it is not null (internal until the public API of step 8).
         /// </summary>
-        internal PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
+        internal PropagationSolution PropagateWithVariationalEquations(Window window, IEnumerable<CelestialItem> celestialBodies, Integrator integrator, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, VariationalOptions variationalOptions)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
@@ -629,12 +667,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Writes CB-relative states directly — the DTO Convert() passes Observer.NaifId
         /// as SPK center body, so SPICE handles ephemeris chaining automatically.
         /// </summary>
+        /// <remarks>
+        /// The SPK holds positions and velocities only: the covariance of the propagated states, when the propagation
+        /// carried one (<see cref="CovariancePropagationMode.Covariance"/>), is not written. It is read from the
+        /// <see cref="PropagationSolution"/> (<see cref="PropagationSolution.GetCovariance"/>) or from the output states.
+        /// </remarks>
         public override void WriteEphemeris(FileInfo outputFile)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");
             var states = _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
             SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, states);
         }
+
+        /// <summary>
+        /// The stored propagated states, in epoch order: those of the last propagation, with their covariance when it
+        /// propagated the covariance. For the conjunction analysis and the tests.
+        /// </summary>
+        internal StateVector[] PropagatedStates => _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
 
         public void AddPropagatedStates(params StateVector[] stateVectors)
         {

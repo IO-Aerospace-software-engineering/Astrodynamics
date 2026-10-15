@@ -9,6 +9,7 @@ using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
@@ -48,6 +49,64 @@ public class CentralBodyPropagator : PropagatorBase
         }
 
         integrator.Initialize(InitialState);
+    }
+
+    /// <summary>
+    /// Instantiate a central-body propagator with a custom integrator and its forces, built as by the overload without
+    /// <paramref name="covariancePropagation"/>, which also propagates the state transition matrix and, in
+    /// <see cref="CovariancePropagationMode.Covariance"/>, the covariance of the initial orbital parameters.
+    /// </summary>
+    /// <param name="window">The propagation window.</param>
+    /// <param name="spacecraft">The spacecraft.</param>
+    /// <param name="integrator">The integrator; the state transition matrix needs an <see cref="RK78Integrator"/>.</param>
+    /// <param name="celestialBodies">The bodies of gravity, third-body perturbations, drag and SRP.</param>
+    /// <param name="includeAtmosphericDrag">Whether to include atmospheric drag.</param>
+    /// <param name="includeSolarRadiationPressure">Whether to include solar radiation pressure.</param>
+    /// <param name="deltaT">The step of the output states.</param>
+    /// <param name="covariancePropagation">The propagation of the state transition matrix and of the covariance; null
+    /// for none, as the overload without it. Without it, a covariance of the initial orbital parameters is not
+    /// propagated: the output states carry none, and no partial derivative is evaluated.</param>
+    /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator is
+    /// not an <see cref="RK78Integrator"/>.</exception>
+    /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
+    /// parameter without its force.</exception>
+    /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
+    /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
+    /// semi-definite.</exception>
+    public CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
+        IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
+        bool includeSolarRadiationPressure, TimeSpan deltaT, CovariancePropagationOptions covariancePropagation)
+        : this(window, spacecraft, integrator, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure,
+            deltaT)
+    {
+        EnableCovariancePropagation(covariancePropagation);
+    }
+
+    /// <summary>
+    /// Instantiate a central-body propagator with a custom integrator that already has its forces, as by the overload
+    /// without <paramref name="covariancePropagation"/>, which also propagates the state transition matrix and, in
+    /// <see cref="CovariancePropagationMode.Covariance"/>, the covariance of the initial orbital parameters. The columns
+    /// of Ψ follow the forces of the integrator at construction.
+    /// </summary>
+    /// <param name="window">The propagation window.</param>
+    /// <param name="spacecraft">The spacecraft.</param>
+    /// <param name="integrator">The integrator and its forces; the state transition matrix needs an
+    /// <see cref="RK78Integrator"/>.</param>
+    /// <param name="deltaT">The step of the output states.</param>
+    /// <param name="covariancePropagation">The propagation of the state transition matrix and of the covariance; null
+    /// for none.</param>
+    /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator is
+    /// not an <see cref="RK78Integrator"/>.</exception>
+    /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
+    /// parameter without its force.</exception>
+    /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
+    /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
+    /// semi-definite.</exception>
+    public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT,
+        CovariancePropagationOptions covariancePropagation)
+        : this(window, spacecraft, integrator, deltaT)
+    {
+        EnableCovariancePropagation(covariancePropagation);
     }
 
     /// <summary>

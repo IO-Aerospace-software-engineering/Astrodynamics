@@ -6,6 +6,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator;
@@ -27,6 +28,8 @@ public class CentralBodyPropagatorBuilder
 
     private CelestialBody _albedoBody;
     private CelestialBody _thermalBody;
+
+    private CovariancePropagationOptions _covariancePropagation;
 
     public CentralBodyPropagatorBuilder(Window window, Spacecraft spacecraft,
         Integrator integrator, TimeSpan deltaT)
@@ -85,6 +88,40 @@ public class CentralBodyPropagatorBuilder
         return this;
     }
 
+    /// <summary>
+    /// Propagate the state transition matrix Φ and the sensitivity Ψ to the force parameters with the state, and, in
+    /// <see cref="CovariancePropagationMode.Covariance"/>, the covariance of the initial orbital parameters of the
+    /// spacecraft, read afterwards from the <see cref="PropagationSolution"/>. Needs an <see cref="RK78Integrator"/>.
+    /// </summary>
+    /// <remarks>
+    /// Without this call, a covariance of the initial orbital parameters is not propagated: it stays on the initial
+    /// state, the output states carry none, and no partial derivative is evaluated. The options are checked by
+    /// <see cref="Build"/>, once the forces are known: the columns of Ψ follow them (Cd with drag, Cr with a radiation
+    /// force).
+    /// </remarks>
+    /// <param name="options">The options.</param>
+    /// <returns>This builder.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="options"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Already called.</exception>
+    public CentralBodyPropagatorBuilder WithCovariancePropagation(CovariancePropagationOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        if (_covariancePropagation != null)
+            throw new InvalidOperationException("WithCovariancePropagation already called");
+        _covariancePropagation = options;
+        return this;
+    }
+
+    /// <summary>
+    /// Build the propagator.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The covariance propagation is asked for with another integrator than
+    /// <see cref="RK78Integrator"/>.</exception>
+    /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
+    /// parameter without its force.</exception>
+    /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
+    /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
+    /// semi-definite.</exception>
     public CentralBodyPropagator Build()
     {
         // Create propagator via the auto-building constructor
@@ -107,6 +144,8 @@ public class CentralBodyPropagatorBuilder
             _integrator.AddForce(thermalForce);
         }
 
+        // Once the forces are final: the columns of Ψ follow them
+        propagator.EnableCovariancePropagation(_covariancePropagation);
         return propagator;
     }
 }

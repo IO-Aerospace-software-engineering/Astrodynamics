@@ -67,6 +67,13 @@ detector from its g-value past that root (the rule Hipparchus applies to a zero 
 | `PlaneAlignmentManeuver` | r . h_target | Adaptive | Nearest orbital node |
 | `ApsidalAlignmentManeuver` | r . (h x p) | `NegativeToPositive` | Nearest intersection |
 
+## Events And The State Transition Matrix
+
+When the propagation integrates the state transition matrix ([Covariance Propagation](covariance-propagation.md)), Φ, Ψ
+and the covariance at an event come from the same shortened RK7(8) step as the state there. The maneuvers are open loop:
+the ΔV is the nominal one and the firing time is not differentiated with respect to the state, so Φ and Ψ are continuous
+at the burn; the execution error of the maneuver, if any, is added to the velocity covariance after it.
+
 ## See Also
 
 - [Impulse Maneuvers](impulse-maneuvers.md)

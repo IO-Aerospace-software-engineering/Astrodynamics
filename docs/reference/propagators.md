@@ -38,6 +38,12 @@ integrator, whose error control scales each component separately.
 | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT)` | Full control: specify integrator, bodies, and perturbation flags |
 | `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added) |
 | `CentralBodyPropagator(window, spacecraft, celestialBodies, drag, srp, deltaT)` | Auto-creates a default VVIntegrator with specified forces |
+| `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT, covariancePropagation)` | As the first, and propagates the state transition matrix and, in covariance mode, the covariance ([Covariance Propagation](covariance-propagation.md)); null options for none |
+| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second, with the covariance propagation; the columns of Ψ follow the forces of the integrator |
+
+The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the
+initial orbital parameters is not propagated: it stays on the initial state, the output states carry none, and no partial
+derivative is evaluated.
 
 ### PropagationSolution
 
@@ -48,6 +54,12 @@ integrator, whose error control scales each component separately.
 | `Segments` | Read-only list of `PropagationSegment` objects |
 | `StateVectors` | Output state vectors at the requested cadence |
 | `InterpolateAt(Time epoch)` | State at any epoch within the solution window; returns `(Vector3 position, Vector3 velocity)`. RK7(8): a shortened RK7(8) step from the start of the accepted step (13 force evaluations inside a step, none at a boundary); Velocity-Verlet: cubic Hermite interpolation. At a maneuver, the state after it |
+| `GetStateVector(Time epoch)` | The state of `InterpolateAt` as a `StateVector`, with its covariance when the propagation propagated it; throws outside the propagation |
+| `CovariancePropagation`, `SensitivityParameters`, `ConsiderParameters` | The options of the covariance propagation (null when off), the columns of Ψ, the consider parameters |
+| `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance` | Φ, Ψ, P and the extended covariance at any epoch; see [Covariance Propagation](covariance-propagation.md#results) |
+
+In covariance mode, the output states (`StateVectors`) carry their covariance. The SPK written from the propagated states
+(`Spacecraft.WriteEphemeris`) holds positions and velocities only: the covariance is read from the solution.
 
 When conjunction assessment follows propagation, pass `PropagationSolution` directly to the SSA overloads to reuse the dense output.
 
@@ -105,6 +117,10 @@ foreach (var r in result.Results)
 | `Failed` | Number of failed tasks |
 | `ElapsedTime` | Wall-clock time for the batch |
 | `Results` | Per-task results with `Succeeded`, `Solution`, and `Error` |
+
+`PropagationTask.CovariancePropagation { get; init; }` propagates the state transition matrix and the covariance of a
+task; it needs an `IntegratorFactory` that creates an `RK78Integrator`, otherwise the task fails with a
+`NotSupportedException` in its result.
 
 Key features: fault isolation (a failed task does not corrupt others), `CancellationToken` via `BatchOptions`, `IProgress<BatchProgress>` for tracking, duplicate `Spacecraft` detection.
 

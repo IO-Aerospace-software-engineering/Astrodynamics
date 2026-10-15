@@ -131,9 +131,9 @@ public class EventContinueTests
         var expected = new double[36];
 
         // Act
-        var skipped = skipping.Propagate(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-11, 1e-11),
+        var skipped = skipping.PropagateWithVariationalEquations(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-11, 1e-11),
             false, false, TimeSpan.FromSeconds(60.0), new VariationalOptions());
-        var reference = free.Propagate(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-11, 1e-11),
+        var reference = free.PropagateWithVariationalEquations(window, new CelestialItem[] { _earth }, new RK78Integrator(1e-11, 1e-11),
             false, false, TimeSpan.FromSeconds(60.0), new VariationalOptions());
         skipped.EvaluateVariational(window.EndDate, phi, Array.Empty<double>());
         reference.EvaluateVariational(window.EndDate, expected, Array.Empty<double>());

@@ -40,7 +40,7 @@ public class RtnProcessNoiseTests : IClassFixture<PartialsTestCases>
         var qc = new double[9];
 
         // Act
-        noise.Accumulate(state, qc);
+        ((IProcessNoiseModel)noise).Accumulate(state, qc);
 
         // Assert: R_rtnᵀ diag(q) R_rtn with the RTN rotation of StateVector, through MathNet
         var rotation = CovarianceAssert.ToMathNet(Rows(state.CreateRtnRotation()), 3);
@@ -60,13 +60,13 @@ public class RtnProcessNoiseTests : IClassFixture<PartialsTestCases>
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
         var noise = new RtnProcessNoise(1.0, 2.0, 3.0);
         var once = new double[9];
-        noise.Accumulate(state, once);
+        ((IProcessNoiseModel)noise).Accumulate(state, once);
         var twice = new double[9];
-        noise.Accumulate(state, twice);
+        ((IProcessNoiseModel)noise).Accumulate(state, twice);
 
         // Act
         long before = GC.GetAllocatedBytesForCurrentThread();
-        noise.Accumulate(state, twice);
+        ((IProcessNoiseModel)noise).Accumulate(state, twice);
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
 
         // Assert: the trace of Qc is q_R + q_T + q_N, whatever the axes
@@ -104,7 +104,7 @@ public class RtnProcessNoiseTests : IClassFixture<PartialsTestCases>
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            new RtnProcessNoise(1e-12, 1e-12, 1e-12).Accumulate(state, new double[9]));
+            ((IProcessNoiseModel)new RtnProcessNoise(1e-12, 1e-12, 1e-12)).Accumulate(state, new double[9]));
 
         // Assert
         Assert.Contains("rectilinear", exception.Message);
@@ -122,7 +122,7 @@ public class RtnProcessNoiseTests : IClassFixture<PartialsTestCases>
         const double transverse = 1e-10;
         var start = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
         var qc = new double[9];
-        new RtnProcessNoise(0.0, transverse, 0.0).Accumulate(start, qc);
+        ((IProcessNoiseModel)new RtnProcessNoise(0.0, transverse, 0.0)).Accumulate(start, qc);
 
         double previous = double.PositiveInfinity;
         foreach (double arc in new[] { 10.0, 5.0, 2.5, 1.25 })
@@ -148,7 +148,7 @@ public class RtnProcessNoiseTests : IClassFixture<PartialsTestCases>
         // 9.6e-5 at 60, 30 and 15 s (Linux, .NET 10, 2026-10-14).
         var start = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
         var qc = new double[9];
-        new RtnProcessNoise(0.0, 1e-10, 0.0).Accumulate(start, qc);
+        ((IProcessNoiseModel)new RtnProcessNoise(0.0, 1e-10, 0.0)).Accumulate(start, qc);
 
         double previous = double.PositiveInfinity;
         foreach (double arc in new[] { 60.0, 30.0, 15.0 })

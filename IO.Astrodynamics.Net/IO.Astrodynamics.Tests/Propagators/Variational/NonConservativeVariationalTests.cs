@@ -177,7 +177,7 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
     {
         var spacecraft = new Spacecraft(-1965, "NONCONSERVATIVE", 100.0, 1000.0, new Clock("nonconservative", 65536),
             start, 10.0, dragCoefficient, null, reflectivityCoefficient);
-        return spacecraft.Propagate(new TimeSystem.Window(start.Epoch, start.Epoch.Add(referenceCase.Duration)),
+        return spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(start.Epoch, start.Epoch.Add(referenceCase.Duration)),
             referenceCase.Bodies, new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
             referenceCase.SolarRadiationPressure, TimeSpan.FromSeconds(3600.0), options);
     }

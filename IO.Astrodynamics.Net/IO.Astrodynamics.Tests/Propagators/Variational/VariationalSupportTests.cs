@@ -130,7 +130,7 @@ public class VariationalSupportTests : IClassFixture<PartialsTestCases>
     private PropagationSolution Propagate(StateVector start, VariationalOptions options)
     {
         var spacecraft = PartialsTestCases.Spacecraft(start);
-        return spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddDays(Days)),
+        return spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddDays(Days)),
             new CelestialItem[] { Stars.SUN_BODY, _cases.Earth }, new RK78Integrator(StepSize), false, false,
             TimeSpan.FromSeconds(StepSize), options);
     }

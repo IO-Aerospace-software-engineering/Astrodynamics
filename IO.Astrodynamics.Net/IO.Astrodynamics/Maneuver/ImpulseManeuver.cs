@@ -22,10 +22,16 @@ namespace IO.Astrodynamics.Maneuver
         public Vector3 DeltaV { get; internal set; }
 
         /// <summary>
-        /// The execution error of the maneuver (model of Gates), added to the velocity covariance after the burn when the
-        /// propagation carries a covariance; null for none (internal until the public API of step 8).
+        /// The execution error of the maneuver (model of Gates, <see cref="ManeuverExecutionError"/>), added to the
+        /// velocity covariance at the burn when the propagation carries a covariance
+        /// (<see cref="Propagator.Variational.CovariancePropagationMode.Covariance"/>); ignored otherwise. Null (the
+        /// default) for none. Set it with an object initializer, for example
+        /// <c>new ApogeeHeightManeuver(…) { ExecutionError = new ManeuverExecutionError(…) }</c>.
         /// </summary>
-        internal ManeuverExecutionError ExecutionError { get; set; }
+        /// <remarks>
+        /// A ΔV of exactly zero adds no error; any non-zero ΔV takes the whole model, the fixed terms included.
+        /// </remarks>
+        public ManeuverExecutionError ExecutionError { get; init; }
 
         /// <summary>
         /// Industry-standard g-function. Zero-crossing triggers the maneuver.

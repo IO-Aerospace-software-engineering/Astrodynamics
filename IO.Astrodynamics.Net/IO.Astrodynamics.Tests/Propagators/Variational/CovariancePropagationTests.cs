@@ -151,7 +151,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         // Φ_kep P0 Φ_kepᵀ, with the closed-form Keplerian STM (universal variables, automatic differentiation).
         var state = WithCovariance(Leo);
         var end = Start.AddHours(6.0);
-        var solution = PartialsTestCases.Spacecraft(state).Propagate(new TimeSystem.Window(Start, end),
+        var solution = PartialsTestCases.Spacecraft(state).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
             new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-12, 1e-12), false, false,
             TimeSpan.FromHours(1.0), Covariance);
         var p0 = CovarianceAssert.ToMathNet(Symmetrized(state.Covariance.Value), 6);
@@ -337,7 +337,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         var (spacecraft, maneuver) = ManeuverCase(execution);
 
         // Act
-        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)), new CelestialItem[]
+        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(2.0)), new CelestialItem[]
             { _cases.Earth }, new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(600.0), options);
 
         // Assert: P(after) − P(before) = B L_e Bᵀ at the burn (C5), L_e of the executed ΔV
@@ -386,10 +386,10 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         var execution = new ManeuverExecutionError(0.05, 0.01, 0.02, 0.005);
         var window = new TimeSystem.Window(Start, Start.AddHours(2.0));
         var (withError, maneuver) = ManeuverCase(execution);
-        var solution = withError.Propagate(window, new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-11, 1e-11),
+        var solution = withError.PropagateWithVariationalEquations(window, new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-11, 1e-11),
             false, false, TimeSpan.FromSeconds(600.0), options);
         var (withoutError, _) = ManeuverCase(null, -1963);
-        var reference = withoutError.Propagate(window, new CelestialItem[] { _cases.Earth },
+        var reference = withoutError.PropagateWithVariationalEquations(window, new CelestialItem[] { _cases.Earth },
             new RK78Integrator(1e-11, 1e-11), false, false, TimeSpan.FromSeconds(600.0), options);
         var after = solution.Segments[1];
         Assert.Equal(after.Steps[^1].EndPosition, reference.Segments[1].Steps[^1].EndPosition);
@@ -423,7 +423,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         var (spacecraft, maneuver) = ManeuverCase(new ManeuverExecutionError(0.05, 0.01, 0.02, 0.005));
 
         // Act
-        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)),
+        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(2.0)),
             new CelestialItem[] { _cases.Earth }, new RK78Integrator(1e-11, 1e-11), false, false,
             TimeSpan.FromSeconds(600.0), new VariationalOptions());
 
@@ -544,7 +544,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         spacecraft.AddFuelTank(tank);
         spacecraft.AddEngine(engine);
         spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine));
-        var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(6.0)), Bodies,
+        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(6.0)), Bodies,
             new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(600.0), options);
         Assert.Equal(2, solution.Segments.Count);
         var y = new double[48];
@@ -605,7 +605,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
     private PropagationSolution Propagate(StateVector state, TimeSystem.Time end, VariationalOptions options,
         bool dragAndSrp)
     {
-        return PartialsTestCases.Spacecraft(state).Propagate(new TimeSystem.Window(Start, end), Bodies,
+        return PartialsTestCases.Spacecraft(state).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end), Bodies,
             new RK78Integrator(1e-9, 1e-9), dragAndSrp, dragAndSrp, TimeSpan.FromSeconds(600.0), options);
     }
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 
@@ -124,6 +125,40 @@ namespace IO.Astrodynamics.Mission
         public async Task<ScenarioSummary> SimulateAsync(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
             TimeSpan propagatorStepSize, Func<Integrator> integratorFactory)
         {
+            return await SimulateAsync(includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize,
+                integratorFactory, null);
+        }
+
+        /// <summary>
+        /// Propagate this scenario with the integrator that <paramref name="integratorFactory"/> creates for each
+        /// spacecraft, and the state transition matrix and the covariance of <paramref name="covariancePropagation"/> for
+        /// every spacecraft.
+        /// </summary>
+        /// <param name="includeAtmosphericDrag">The drag will be computed relatively to initial spacecraft's center of motion</param>
+        /// <param name="includeSolarRadiationPressure">Radiation pressure will be computed from drag coefficient defined in spacecraft</param>
+        /// <param name="propagatorStepSize">Step of the propagated states. It is also the integration step of a
+        /// Velocity-Verlet integrator; an adaptive <see cref="RK78Integrator"/> chooses its own steps.</param>
+        /// <param name="integratorFactory">Creates the integrator of one spacecraft, for example
+        /// <c>() => new RK78Integrator()</c>, which the state transition matrix needs. It is called once per spacecraft
+        /// and must return a new instance each time.</param>
+        /// <param name="covariancePropagation">The propagation of the state transition matrix and of the covariance, for
+        /// every spacecraft; null for none, as the overload without it. In
+        /// <see cref="CovariancePropagationMode.Covariance"/>, every spacecraft needs a covariance on its initial orbital
+        /// parameters, at the start of the window; the stored states of each spacecraft then carry their covariance.
+        /// </param>
+        /// <returns>The summary of the simulation.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="integratorFactory"/> is null.</exception>
+        /// <exception cref="InvalidOperationException">There is nothing to simulate, or the factory returns null or an
+        /// instance it already returned for another spacecraft; or the covariance is asked for and a spacecraft has no
+        /// valid initial covariance at the start of the window (the message names the spacecraft).</exception>
+        /// <exception cref="NotSupportedException">The covariance propagation is asked for and the factory creates
+        /// another integrator than <see cref="RK78Integrator"/>.</exception>
+        /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a
+        /// consider parameter without its force.</exception>
+        public async Task<ScenarioSummary> SimulateAsync(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
+            TimeSpan propagatorStepSize, Func<Integrator> integratorFactory,
+            CovariancePropagationOptions covariancePropagation)
+        {
             if (integratorFactory == null) throw new ArgumentNullException(nameof(integratorFactory));
 
             var integrators = new HashSet<Integrator>(ReferenceEqualityComparer.Instance);
@@ -137,8 +172,19 @@ namespace IO.Astrodynamics.Mission
                         "The integrator factory must return a new instance for each spacecraft: the propagator adds the forces of each spacecraft to its integrator.");
                 }
 
-                return Task.Run(() => spacecraft.Propagate(Window, _celestialBodies, integrator, includeAtmosphericDrag,
-                    includeSolarRadiationPressure, propagatorStepSize));
+                return Task.Run(() =>
+                {
+                    try
+                    {
+                        return spacecraft.Propagate(Window, _celestialBodies, integrator, includeAtmosphericDrag,
+                            includeSolarRadiationPressure, propagatorStepSize, covariancePropagation);
+                    }
+                    catch (InvalidOperationException e) when (covariancePropagation != null)
+                    {
+                        throw new InvalidOperationException(
+                            $"The covariance of spacecraft '{spacecraft.Name}' cannot be propagated: {e.Message}", e);
+                    }
+                });
             });
         }
 

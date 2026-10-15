@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Propagator;
@@ -38,4 +39,12 @@ public sealed record PropagationTask(
     bool IncludeAtmosphericDrag,
     bool IncludeSolarRadiationPressure,
     TimeSpan DeltaT,
-    Func<Integrator> IntegratorFactory = null);
+    Func<Integrator> IntegratorFactory = null)
+{
+    /// <summary>
+    /// The propagation of the state transition matrix and of the covariance; null (the default) for none. It needs an
+    /// <see cref="RK78Integrator"/> from <see cref="IntegratorFactory"/>: with the default Velocity-Verlet integrator,
+    /// the task fails with a <see cref="NotSupportedException"/> in its <see cref="PropagationResult.Error"/>.
+    /// </summary>
+    public CovariancePropagationOptions CovariancePropagation { get; init; }
+}
