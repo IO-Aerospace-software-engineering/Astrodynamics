@@ -535,6 +535,29 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
                           $"position {tighterPsiCr.Position:E2}, velocity {tighterPsiCr.Velocity:E2}");
         Assert.True(System.Math.Max(psiCr.Position, psiCr.Velocity) < 4e-3, $"Ψ_Cr at 1e-12 {psiCr}");
         Assert.True(System.Math.Max(tighterPsiCr.Position, tighterPsiCr.Velocity) < 1e-4, $"Ψ_Cr at 1e-14 {tighterPsiCr}");
+
+        // Assert, over the arc, relative to the local Ψ_Cr: with Φ and Ψ in the step control, Ψ_Cr at 1e-12 against the
+        // same at 1e-13 holds the 1e-4 of F1 everywhere, the first shadow exit included, which a tighter tolerance alone
+        // does not (1.6e-4 at 1e-14 in J2000 at 4.45 h, relative to the local Ψ_Cr of 0.28 m; decision of S. Guillet,
+        // 2026-10-15). Measured 9.6e-8 (J2000) and 7.1e-8 (ECLIPJ2000), at 0.35 h (Linux, .NET 10, 2026-10-15). The
+        // reference at 1e-14 with the step control stops in the penumbra (100 rejections at 328 s), hence 1e-13
+        var reference = EclipsingCase(-1966, frame, 1e-13, new VariationalOptions(parameters, IncludeInStepControl: true));
+        double controlled = 0.0;
+        foreach (var epoch in epochs)
+        {
+            var e = Y(reference, epoch);
+            if (e[7] == 0.0 && e[15] == 0.0 && e[23] == 0.0)
+            {
+                continue; // in the shadow since the start: Ψ_Cr is zero
+            }
+
+            var a = Y(expected, epoch);
+            controlled = System.Math.Max(controlled,
+                System.Math.Max(ColumnsError(a, e, 7, 8, 0, 3), ColumnsError(a, e, 7, 8, 3, 6)));
+        }
+
+        _output.WriteLine($"{frameName}, step control at 1e-12 against 1e-13, Ψ_Cr relative to the local value: {controlled:E2}");
+        Assert.True(controlled < 1e-4, $"Ψ_Cr with the step control {controlled:E2}");
     }
 
     // The worst error of the Ψ_Cr column over the epochs, position and velocity rows apart, relative to the largest norm
