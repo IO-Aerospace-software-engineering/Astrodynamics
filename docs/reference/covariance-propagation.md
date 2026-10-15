@@ -17,7 +17,7 @@ even when the initial state carries a covariance ([see below](#an-initial-covari
 
 ```csharp
 var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-11, 1e-11), TimeSpan.FromSeconds(60))
-    .WithPerturbingBodies(new CelestialItem[] { earth, moon, sun })   // drag needs the body with the atmosphere
+    .WithPerturbingBodies(new CelestialItem[] { moon, sun })   // the central body, the observer of the spacecraft, is added
     .IncludeAtmosphericDrag()
     .WithCovariancePropagation(new CovariancePropagationOptions
     {

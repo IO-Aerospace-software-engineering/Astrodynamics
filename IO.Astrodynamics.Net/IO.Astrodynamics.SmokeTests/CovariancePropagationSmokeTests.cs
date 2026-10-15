@@ -55,7 +55,7 @@ public class CovariancePropagationSmokeTests
 
         var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-11, 1e-11),
                 TimeSpan.FromSeconds(60))
-            .WithPerturbingBodies(new CelestialItem[] { earth, moon, sun })
+            .WithPerturbingBodies(new CelestialItem[] { moon, sun })
             .IncludeAtmosphericDrag()
             .WithCovariancePropagation(new CovariancePropagationOptions
             {

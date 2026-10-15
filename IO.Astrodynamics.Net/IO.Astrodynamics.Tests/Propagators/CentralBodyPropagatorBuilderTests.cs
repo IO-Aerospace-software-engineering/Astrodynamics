@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using IO.Astrodynamics;
+using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -224,6 +227,80 @@ public class CentralBodyPropagatorBuilderTests
             .Build();
 
         Assert.NotNull(propagator);
+    }
+
+    [Fact]
+    public void Build_AddsTheCentralBody_SoThatDragApplies()
+    {
+        // Arrange: an Earth with an atmosphere, the observer of the spacecraft, not listed in the first builder
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB, null,
+            new Nrlmsise00Model(SpaceWeather.Nominal));
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromMinutes(90));
+        var deltaT = TimeSpan.FromSeconds(60);
+
+        (CentralBodyPropagator Propagator, Spacecraft Spacecraft) Build(bool listEarth, bool drag)
+        {
+            var spacecraft = CreateSpacecraft(earth);
+            var builder = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-12, 1e-12, 60.0),
+                deltaT);
+            if (listEarth)
+            {
+                builder.WithPerturbingBody(earth);
+            }
+
+            builder.WithPerturbingBody(Stars.SUN_BODY);
+            if (drag)
+            {
+                builder.IncludeAtmosphericDrag();
+            }
+
+            return (builder.Build(), spacecraft);
+        }
+
+        var (unlisted, _) = Build(false, true);
+        var (listed, _) = Build(true, true);
+        var (withoutDrag, _) = Build(false, false);
+
+        // Act
+        var unlistedStates = unlisted.Propagate().StateVectors;
+        var listedStates = listed.Propagate().StateVectors;
+        var withoutDragStates = withoutDrag.Propagate().StateVectors;
+
+        // Assert: the drag force is there, the propagation is the one with the Earth listed, and drag acts
+        Assert.Single(((Integrator)unlisted.Integrator).Forces.OfType<AtmosphericDrag>());
+        Assert.Equal(listedStates.Select(s => (s.Position, s.Velocity)), unlistedStates.Select(s => (s.Position, s.Velocity)));
+        Assert.NotEqual(withoutDragStates[^1].Position, unlistedStates[^1].Position);
+    }
+
+    [Fact]
+    public void Build_AddsTheCentralBody_AsAnOccultingBodyOfSrp()
+    {
+        // Arrange: SRP with the Sun only listed, and with the Earth listed too; one orbit crosses the Earth's shadow
+        var earth = CreateEarth();
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromMinutes(90));
+        var deltaT = TimeSpan.FromSeconds(60);
+
+        StateVector Final(bool listEarth)
+        {
+            var spacecraft = CreateSpacecraft(earth);
+            var builder = new CentralBodyPropagatorBuilder(window, spacecraft, new RK78Integrator(1e-12, 1e-12, 60.0),
+                deltaT);
+            if (listEarth)
+            {
+                builder.WithPerturbingBody(earth);
+            }
+
+            return builder.WithPerturbingBody(Stars.SUN_BODY).IncludeSolarRadiationPressure().Build().Propagate()
+                .StateVectors[^1];
+        }
+
+        // Act
+        var unlisted = Final(false);
+        var listed = Final(true);
+
+        // Assert
+        Assert.Equal(listed.Position, unlisted.Position);
+        Assert.Equal(listed.Velocity, unlisted.Velocity);
     }
 
     [Fact]

@@ -45,6 +45,12 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   
 **Changed**
 
+- **The propagator builder adds the central body.** `CentralBodyPropagatorBuilder.Build` adds the central body of the
+  spacecraft (the observer of its initial orbital parameters, or the Sun for a star or a barycenter) to the perturbing
+  bodies when they do not hold it. Before, a builder given the Sun and the Moon only, with `IncludeAtmosphericDrag()`,
+  added no drag, and its solar radiation pressure ignored the shadow of the central body; both now apply. A builder that
+  already listed the central body gives the same results, bit for bit. To keep the former behavior, build the
+  propagator with the `CentralBodyPropagator` constructor and the same bodies, which is unchanged.
 - **NRLMSISE-00 without allocation.** `Nrlmsise00Model.GetDensity` no longer allocates (4.2 to 5.4 kB per call
   before): the model keeps its work arrays and builds its working copies of the inputs as values. Its results are
   unchanged bit for bit, checked against the previous implementation on 3,240 inputs through every branch of the
