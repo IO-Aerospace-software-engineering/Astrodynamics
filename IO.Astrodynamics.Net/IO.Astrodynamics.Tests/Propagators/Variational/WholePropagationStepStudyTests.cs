@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Variational;
 using Xunit;
@@ -46,7 +48,7 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
     private const int NaifId = -1971;
 
     private static readonly double[] PositionSteps = { 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0 };
-    private static readonly double[] CoefficientSteps = { 0.001, 0.01, 0.05, 0.1, 0.2 };
+    private static readonly double[] CoefficientSteps = { 0.001, 0.01, 0.05, 0.1, 0.2, 0.3 };
 
     private readonly ReferenceCases _cases;
     private readonly ITestOutputHelper _output;
@@ -69,17 +71,40 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
         var referenceCase = _cases[name];
         var solution = referenceCase.Propagate(NaifId, ReferenceCases.Tolerance,
             new VariationalOptions(referenceCase.Parameters, IncludeInStepControl: referenceCase.SolarRadiationPressure));
+
+        // Act and assert
+        Study(referenceCase, solution, (start, cd, cr, tolerance) =>
+            referenceCase.PropagateReference(NaifId - 1, start, cd, cr, tolerance));
+    }
+
+    [Fact]
+    public void Eclipsing_ChosenSteps_LieOnThePlateau()
+    {
+        // Arrange: the reference fires the burn of the integrated trajectory in open loop, the model of Φ
+        var eclipsing = _cases.Eclipsing;
+        var (solution, maneuver) = _cases.PropagateEclipsing(NaifId, ReferenceCases.Tolerance,
+            new VariationalOptions(eclipsing.Parameters, IncludeInStepControl: true));
+        var openLoop = _cases.OpenLoop(solution.Segments[1].BaseEpoch, maneuver.DeltaV);
+
+        // Act and assert
+        Study(eclipsing, solution, (start, cd, cr, tolerance) =>
+            _cases.PropagateEclipsingReference(NaifId - 1, start, openLoop, cd, cr, tolerance));
+    }
+
+    private void Study(ReferenceCase referenceCase, PropagationSolution solution,
+        Func<StateVector, double, double, double, PropagationSolution> reference)
+    {
         var y = StmMeasures.Y(solution, referenceCase.Window.EndDate);
         var rows = new List<(string Quantity, double Step, double Error)>();
 
-        // Act: Φ with the reference at its tolerance, and at the 1e-13 of the specification for the comparison
+        // Φ with the reference at its tolerance, and at the 1e-13 of the specification for the comparison
         foreach (var (quantity, tolerance) in new[] { ("Phi", ReferenceCases.ReferenceTolerance), ("Phi_1e-13", 1e-13) })
         {
             foreach (double step in PositionSteps)
             {
                 var expected = WholePropagationDifferences.Phi(
-                    start => referenceCase.PropagateReference(NaifId - 1, start, ReferenceCases.DragCoefficient,
-                        ReferenceCases.ReflectivityCoefficient, tolerance),
+                    start => reference(start, ReferenceCases.DragCoefficient, ReferenceCases.ReflectivityCoefficient,
+                        tolerance),
                     referenceCase.InitialState, step, 1e-3 * step);
                 rows.Add((quantity, step, StmMeasures.WorstBlockError(StmMeasures.Phi(y), expected)));
             }
@@ -99,22 +124,20 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
             foreach (double relativeStep in CoefficientSteps)
             {
                 var expected = WholePropagationDifferences.Psi(
-                    c => referenceCase.PropagateReference(NaifId - 1, referenceCase.InitialState,
-                        drag ? c : ReferenceCases.DragCoefficient, drag ? ReferenceCases.ReflectivityCoefficient : c,
-                        ReferenceCases.ReferenceTolerance),
+                    c => reference(referenceCase.InitialState, drag ? c : ReferenceCases.DragCoefficient,
+                        drag ? ReferenceCases.ReflectivityCoefficient : c, ReferenceCases.ReferenceTolerance),
                     coefficient, relativeStep * coefficient);
                 var (position, velocity) = WholePropagationDifferences.PsiError(actual, expected);
                 rows.Add((drag ? "Psi_Cd" : "Psi_Cr", relativeStep, System.Math.Max(position, velocity)));
             }
         }
 
-        // Assert
         foreach (var row in rows)
         {
-            _output.WriteLine($"{name} {row.Quantity} step {row.Step:G3}: {row.Error:E2}");
+            _output.WriteLine($"{referenceCase.Name} {row.Quantity} step {row.Step:G3}: {row.Error:E2}");
         }
 
-        WriteCsvIfRequested(name, rows);
+        WriteCsvIfRequested(referenceCase.Name, rows);
         AssertOnThePlateau(rows, "Phi", referenceCase.PositionStep);
         double atReferenceTolerance = rows.Where(r => r.Quantity == "Phi").Min(r => r.Error);
         double atSpecificationTolerance = rows.Where(r => r.Quantity == "Phi_1e-13").Min(r => r.Error);

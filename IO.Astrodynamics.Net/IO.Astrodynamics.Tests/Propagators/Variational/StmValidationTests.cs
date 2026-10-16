@@ -86,8 +86,8 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
             ? referenceCase.Propagate(NaifId, ReferenceCases.Tolerance,
                 new VariationalOptions(referenceCase.Parameters, IncludeInStepControl: true))
             : null;
-        var penumbra = PenumbraEpochs(referenceCase, solution);
-        var epochs = ArcEpochs(referenceCase).Concat(penumbra).OrderBy(t => t).ToArray();
+        var penumbra = referenceCase.PenumbraEpochs(solution);
+        var epochs = referenceCase.ArcEpochs(Spacing).Concat(penumbra).OrderBy(t => t).ToArray();
         bool[] inPenumbra = epochs.Select(t => penumbra.Contains(t)).ToArray();
 
         // Act
@@ -156,78 +156,7 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
         return referenceCase.PropagateReference(NaifId - 1, start, cd, cr, ReferenceCases.ReferenceTolerance);
     }
 
-    // Every 10 min from the start, and the end
-    private static List<TimeSystem.Time> ArcEpochs(ReferenceCase referenceCase)
-    {
-        var epochs = new List<TimeSystem.Time>();
-        var end = referenceCase.Window.EndDate;
-        for (var t = referenceCase.InitialState.Epoch.Add(Spacing); t < end; t = t.Add(Spacing))
-        {
-            epochs.Add(t);
-        }
-
-        epochs.Add(end);
-        return epochs;
-    }
-
-    /// <summary>
-    /// The middle of each penumbra crossing of the nominal trajectory, where the shadow fraction of the Earth crosses
-    /// 0.5, by bisection to 0.1 s between samples 30 s apart; none without SRP.
-    /// </summary>
-    private static List<TimeSystem.Time> PenumbraEpochs(ReferenceCase referenceCase, PropagationSolution solution)
-    {
-        var epochs = new List<TimeSystem.Time>();
-        if (!referenceCase.SolarRadiationPressure)
-        {
-            return epochs;
-        }
-
-        var earth = (CelestialItem)referenceCase.InitialState.Observer;
-        var sun = referenceCase.Bodies.OfType<CelestialBody>().Single(b => b.NaifId == Stars.Sun.NaifId);
-        double Fraction(double seconds)
-        {
-            var epoch = referenceCase.InitialState.Epoch.AddSeconds(seconds);
-            var (position, velocity) = solution.InterpolateAt(epoch);
-            return sun.ShadowFraction(earth, new StateVector(position, velocity, earth, epoch, Frames.Frame.ICRF),
-                Aberration.None) - 0.5;
-        }
-
-        double duration = referenceCase.Duration.TotalSeconds;
-        double previous = Fraction(0.0);
-        for (double t = 30.0; t <= duration; t += 30.0)
-        {
-            double current = Fraction(t);
-            if (System.Math.Sign(current) != System.Math.Sign(previous))
-            {
-                double a = t - 30.0, b = t, fa = previous;
-                while (b - a > 0.1)
-                {
-                    double m = 0.5 * (a + b);
-                    double fm = Fraction(m);
-                    if (System.Math.Sign(fm) == System.Math.Sign(fa))
-                    {
-                        a = m;
-                        fa = fm;
-                    }
-                    else
-                    {
-                        b = m;
-                    }
-                }
-
-                var epoch = referenceCase.InitialState.Epoch.AddSeconds(System.Math.Round(0.5 * (a + b), 1));
-                double nu = Fraction((epoch - referenceCase.InitialState.Epoch).TotalSeconds) + 0.5;
-                Assert.InRange(nu, 1e-6, 1.0 - 1e-6);
-                epochs.Add(epoch);
-            }
-
-            previous = current;
-        }
-
-        return epochs;
-    }
-
-    private static double[][] PsiErrors(PropagationSolution solution, int column, TimeSystem.Time[] epochs,
+    internal static double[][] PsiErrors(PropagationSolution solution, int column, TimeSystem.Time[] epochs,
         double[][] expected)
     {
         var errors = new double[epochs.Length][];
@@ -241,7 +170,7 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
         return errors;
     }
 
-    private static double Worst(double[][] errors, bool[] inPenumbra, bool penumbra, Func<double[], double> select)
+    internal static double Worst(double[][] errors, bool[] inPenumbra, bool penumbra, Func<double[], double> select)
     {
         double worst = 0.0;
         for (int k = 0; k < errors.Length; k++)

@@ -118,6 +118,38 @@ internal static class WholePropagationDifferences
     }
 
     /// <summary>
+    /// The worst error of a Ψ column over the arc, position and velocity rows apart, each relative to the largest norm
+    /// of the expected rows over the arc rather than to the local one: the measure of #394 for a Ψ that starts from zero,
+    /// where the local value is below what the reference resolves.
+    /// </summary>
+    internal static (double Position, double Velocity) PsiArcError(IReadOnlyList<double[]> actual,
+        IReadOnlyList<double[]> expected)
+    {
+        double Worst(int r0)
+        {
+            double largest = 0.0;
+            double worst = 0.0;
+            for (int k = 0; k < expected.Count; k++)
+            {
+                double norm = 0.0;
+                double difference = 0.0;
+                for (int i = r0; i < r0 + 3; i++)
+                {
+                    norm += expected[k][i] * expected[k][i];
+                    difference += (actual[k][i] - expected[k][i]) * (actual[k][i] - expected[k][i]);
+                }
+
+                largest = System.Math.Max(largest, System.Math.Sqrt(norm));
+                worst = System.Math.Max(worst, System.Math.Sqrt(difference));
+            }
+
+            return worst / largest;
+        }
+
+        return (Worst(0), Worst(3));
+    }
+
+    /// <summary>
     /// A propagation that starts from exactly the state of its spacecraft: <see cref="CentralBodyPropagator"/> takes it
     /// through <c>OrbitalParameters.AtEpoch</c>, a round trip through the Keplerian elements that moves a near-circular,
     /// near-equatorial state by up to decimetres and is not smooth

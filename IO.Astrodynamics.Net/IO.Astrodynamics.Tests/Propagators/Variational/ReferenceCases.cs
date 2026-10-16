@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -92,6 +93,83 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
             NewSpacecraft(naifId, start, dragCoefficient, reflectivityCoefficient), new RK78Integrator(tolerance, tolerance),
             Bodies, AtmosphericDrag, SolarRadiationPressure, TimeSpan.FromSeconds(3600.0), start);
         return propagator.Propagate();
+    }
+
+    /// <summary>Every <paramref name="spacing"/> from the start, and the end of the case.</summary>
+    internal List<TimeSystem.Time> ArcEpochs(TimeSpan spacing)
+    {
+        var epochs = new List<TimeSystem.Time>();
+        var end = Window.EndDate;
+        for (var t = InitialState.Epoch.Add(spacing); t < end; t = t.Add(spacing))
+        {
+            epochs.Add(t);
+        }
+
+        epochs.Add(end);
+        return epochs;
+    }
+
+    /// <summary>
+    /// The middle of each penumbra crossing of the trajectory of <paramref name="solution"/>, where the shadow fraction
+    /// of the Earth (geometric positions, as SRP) crosses 0.5, by bisection to 0.1 s between samples 30 s apart; none
+    /// without SRP.
+    /// </summary>
+    internal List<TimeSystem.Time> PenumbraEpochs(PropagationSolution solution)
+    {
+        var epochs = new List<TimeSystem.Time>();
+        if (!SolarRadiationPressure)
+        {
+            return epochs;
+        }
+
+        var earth = (CelestialItem)InitialState.Observer;
+        var sun = Bodies.OfType<CelestialBody>().Single(b => b.NaifId == Stars.Sun.NaifId);
+        var frame = InitialState.Frame;
+        double Fraction(double seconds)
+        {
+            var epoch = InitialState.Epoch.AddSeconds(seconds);
+            var (position, velocity) = solution.InterpolateAt(epoch);
+            return sun.ShadowFraction(earth, new StateVector(position, velocity, earth, epoch, frame), Aberration.None) -
+                   0.5;
+        }
+
+        double duration = Duration.TotalSeconds;
+        double previous = Fraction(0.0);
+        for (double t = 30.0; t <= duration; t += 30.0)
+        {
+            double current = Fraction(t);
+            if (System.Math.Sign(current) != System.Math.Sign(previous))
+            {
+                double a = t - 30.0, b = t, fa = previous;
+                while (b - a > 0.1)
+                {
+                    double m = 0.5 * (a + b);
+                    double fm = Fraction(m);
+                    if (System.Math.Sign(fm) == System.Math.Sign(fa))
+                    {
+                        a = m;
+                        fa = fm;
+                    }
+                    else
+                    {
+                        b = m;
+                    }
+                }
+
+                var epoch = InitialState.Epoch.AddSeconds(System.Math.Round(0.5 * (a + b), 1));
+                double nu = Fraction((epoch - InitialState.Epoch).TotalSeconds) + 0.5;
+                if (nu <= 0.0 || nu >= 1.0)
+                {
+                    throw new InvalidOperationException($"{Name}: shadow fraction {nu} at a penumbra crossing");
+                }
+
+                epochs.Add(epoch);
+            }
+
+            previous = current;
+        }
+
+        return epochs;
     }
 
     public override string ToString() => Name;
@@ -213,7 +291,10 @@ public sealed class ReferenceCases
         Eclipsing = new ReferenceCase("Eclipsing",
             new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earthEclipsing,
                 Epoch, Frames.Frame.ICRF),
-            new CelestialItem[] { earthEclipsing, moon, sun }, TimeSpan.FromHours(6.0), true, true);
+            new CelestialItem[] { earthEclipsing, moon, sun }, TimeSpan.FromHours(6.0), true, true)
+        {
+            PositionStep = 10.0, VelocityStep = 1e-2, DragCoefficientStep = 0.3, ReflectivityCoefficientStep = 0.3
+        };
     }
 
     internal ReferenceCase R1 { get; }
@@ -235,12 +316,14 @@ public sealed class ReferenceCases
     /// <summary>
     /// The spacecraft of <see cref="Eclipsing"/> (1000 kg dry, 1000 kg of fuel, 10 m², Cd 2.2, Cr 1.5, an engine of
     /// 300 s), starting from <paramref name="orbit"/>, with the maneuver that <paramref name="maneuver"/> builds for its
-    /// engine: by default the apogee raise to <see cref="EclipsingApogeeRadius"/> at the first perigee.
+    /// engine: by default the apogee raise to <see cref="EclipsingApogeeRadius"/> at the first perigee. Cd and Cr may
+    /// be changed for the central differences of Ψ.
     /// </summary>
-    internal Spacecraft EclipsingSpacecraft(int naifId, StateVector orbit, Func<Engine, ImpulseManeuver> maneuver = null)
+    internal Spacecraft EclipsingSpacecraft(int naifId, StateVector orbit, Func<Engine, ImpulseManeuver> maneuver = null,
+        double dragCoefficient = DragCoefficient, double reflectivityCoefficient = ReflectivityCoefficient)
     {
         var spacecraft = new Spacecraft(naifId, "ECLIPSING" + -naifId, 1000.0, 3000.0,
-            new Clock("eclipsing" + -naifId, 65536), orbit, 10.0, 2.2, null, 1.5);
+            new Clock("eclipsing" + -naifId, 65536), orbit, 10.0, dragCoefficient, null, reflectivityCoefficient);
         var tank = new FuelTank("tank" + -naifId, "model", "sn1", 1000.0, 1000.0);
         var engine = new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank);
         spacecraft.AddFuelTank(tank);
@@ -248,6 +331,41 @@ public sealed class ReferenceCases
         spacecraft.SetStandbyManeuver(maneuver?.Invoke(engine) ?? new ApogeeHeightManeuver(
             (CelestialItem)Eclipsing.InitialState.Observer, Epoch, TimeSpan.Zero, EclipsingApogeeRadius, engine));
         return spacecraft;
+    }
+
+    /// <summary>
+    /// <see cref="Eclipsing"/> propagated by RK7(8) at <paramref name="tolerance"/> through the public path of its
+    /// spacecraft, with the apogee raise and the variational equations of <paramref name="options"/> (none when null).
+    /// </summary>
+    internal (PropagationSolution Solution, ImpulseManeuver Maneuver) PropagateEclipsing(int naifId, double tolerance,
+        VariationalOptions options)
+    {
+        var spacecraft = EclipsingSpacecraft(naifId, Eclipsing.InitialState);
+        var solution = spacecraft.PropagateWithVariationalEquations(Eclipsing.Window, Eclipsing.Bodies,
+            new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(600.0), options);
+        return (solution, (ImpulseManeuver)spacecraft.InitialManeuver);
+    }
+
+    /// <summary>
+    /// A reference propagation of <see cref="Eclipsing"/> for F1: from exactly <paramref name="start"/> (#398), at
+    /// <paramref name="tolerance"/>, with the maneuver of <paramref name="maneuver"/> (the apogee raise when null),
+    /// without the variational equations.
+    /// </summary>
+    internal PropagationSolution PropagateEclipsingReference(int naifId, StateVector start,
+        Func<Engine, ImpulseManeuver> maneuver, double dragCoefficient = DragCoefficient,
+        double reflectivityCoefficient = ReflectivityCoefficient, double tolerance = ReferenceTolerance)
+    {
+        var spacecraft = EclipsingSpacecraft(naifId, start, maneuver, dragCoefficient, reflectivityCoefficient);
+        var propagator = new WholePropagationDifferences.ExactStartPropagator(Eclipsing.Window, spacecraft,
+            new RK78Integrator(tolerance, tolerance), Eclipsing.Bodies, true, true,
+            TimeSpan.FromSeconds(600.0), start);
+        return propagator.Propagate();
+    }
+
+    /// <summary>The open-loop burn of <see cref="Eclipsing"/>: <paramref name="deltaV"/> at <paramref name="epoch"/>.</summary>
+    internal Func<Engine, ImpulseManeuver> OpenLoop(TimeSystem.Time epoch, Vector3 deltaV)
+    {
+        return engine => new FixedImpulse((CelestialItem)Eclipsing.InitialState.Observer, Epoch, epoch, deltaV, engine);
     }
 
     /// <summary>The case named <paramref name="name"/>.</summary>
