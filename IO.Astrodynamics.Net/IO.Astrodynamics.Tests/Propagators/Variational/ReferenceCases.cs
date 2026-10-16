@@ -4,9 +4,12 @@ using System;
 using System.Collections.Generic;
 using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
+using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Tests.Propagators.Variational;
 
@@ -55,6 +58,10 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
 /// 1 day.</description></item>
 /// <item><term>R5</term><description>HEO 300 × 36 000 km, EGM2008 10×10, Sun, Moon, drag (NRLMSISE-00),
 /// 2 revolutions.</description></item>
+/// <item><term>Eclipsing</term><description>LEO 400 × 1000 km from apogee, in the Earth's shadow at the start, its
+/// apogee raised to 2000 km at the first perigee (0.82 h), point-mass Earth with NRLMSISE-00, albedo and thermal
+/// emission, Sun, Moon, drag and SRP, 6 h (<see cref="EclipsingSpacecraft"/>). Asked by the final H3 review of lots A to
+/// C for F1, the case of the integration error of Ψ_Cr across the shadow crossings.</description></item>
 /// </list>
 /// <para>
 /// Shared by the tests of a class as an xUnit class fixture: the tests of a class run one after the other, so sharing the
@@ -114,6 +121,15 @@ public sealed class ReferenceCases
         R5 = new ReferenceCase("R5",
             State(semiMajorAxis, (apogee - perigee) / (apogee + perigee), 63.4, 20.0, 270.0, 0.0, earthR5),
             new CelestialItem[] { earthR5, sun, moon }, TimeSpan.FromSeconds(2.0 * period), true, false);
+
+        // The Earth of the force partials (PartialsTestCases.Earth), so that the tests that used it keep their figures
+        var earthEclipsing = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+            new Nrlmsise00Model(SpaceWeather.Nominal), albedo: 0.3, thermalEffectiveTemperature: 254.0,
+            thermalEmissivity: 0.95);
+        Eclipsing = new ReferenceCase("Eclipsing",
+            new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earthEclipsing,
+                Epoch, Frames.Frame.ICRF),
+            new CelestialItem[] { earthEclipsing, moon, sun }, TimeSpan.FromHours(6.0), true, true);
     }
 
     internal ReferenceCase R1 { get; }
@@ -126,6 +142,30 @@ public sealed class ReferenceCases
 
     internal ReferenceCase R5 { get; }
 
+    /// <summary>The eclipsing LEO with a maneuver; its spacecraft comes from <see cref="EclipsingSpacecraft"/>.</summary>
+    internal ReferenceCase Eclipsing { get; }
+
+    /// <summary>Apogee radius targeted by the maneuver of <see cref="Eclipsing"/>, m.</summary>
+    internal const double EclipsingApogeeRadius = 8378137.0;
+
+    /// <summary>
+    /// The spacecraft of <see cref="Eclipsing"/> (1000 kg dry, 1000 kg of fuel, 10 m², Cd 2.2, Cr 1.5, an engine of
+    /// 300 s), starting from <paramref name="orbit"/>, with the maneuver that <paramref name="maneuver"/> builds for its
+    /// engine: by default the apogee raise to <see cref="EclipsingApogeeRadius"/> at the first perigee.
+    /// </summary>
+    internal Spacecraft EclipsingSpacecraft(int naifId, StateVector orbit, Func<Engine, ImpulseManeuver> maneuver = null)
+    {
+        var spacecraft = new Spacecraft(naifId, "ECLIPSING" + -naifId, 1000.0, 3000.0,
+            new Clock("eclipsing" + -naifId, 65536), orbit, 10.0, 2.2, null, 1.5);
+        var tank = new FuelTank("tank" + -naifId, "model", "sn1", 1000.0, 1000.0);
+        var engine = new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank);
+        spacecraft.AddFuelTank(tank);
+        spacecraft.AddEngine(engine);
+        spacecraft.SetStandbyManeuver(maneuver?.Invoke(engine) ?? new ApogeeHeightManeuver(
+            (CelestialItem)Eclipsing.InitialState.Observer, Epoch, TimeSpan.Zero, EclipsingApogeeRadius, engine));
+        return spacecraft;
+    }
+
     /// <summary>The case named <paramref name="name"/>.</summary>
     internal ReferenceCase this[string name] => name switch
     {
@@ -134,6 +174,7 @@ public sealed class ReferenceCases
         "R3" => R3,
         "R4" => R4,
         "R5" => R5,
+        "Eclipsing" => Eclipsing,
         _ => throw new ArgumentOutOfRangeException(nameof(name))
     };
 
