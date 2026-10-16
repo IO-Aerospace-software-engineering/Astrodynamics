@@ -276,8 +276,8 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         // Assert
         var composedPhi = Multiply(phi21, phi10);
         var composedQ = Add(Multiply(Multiply(phi21, Full(q10)), Transpose(phi21)), Full(q21));
-        double phiError = WorstBlockError(composedPhi, phi20);
-        double qError = WorstBlockError(composedQ, Full(q20));
+        double phiError = StmMeasures.WorstBlockError(composedPhi, phi20);
+        double qError = StmMeasures.WorstBlockError(composedQ, Full(q20));
         _output.WriteLine($"composition: Φ {phiError:E2}, Q {qError:E2} (worst 3×3 block)");
         Assert.True(phiError < 1e-10, $"Φ: {phiError:E2}");
         Assert.True(qError < 1e-10, $"Q: {qError:E2}");
@@ -350,8 +350,16 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var postBurn = new StateVector(after.Steps[0].StartPosition, after.Steps[0].StartVelocity, _cases.Earth, te,
             Frames.Frame.ICRF);
         var (independent, _) = ManeuverCase(-1963, postBurn, spacecraft.GetTotalMass() - 1000.0, false);
-        using var propagator = new ExactStartPropagator(new TimeSystem.Window(te, t2), independent,
-            new RK78Integrator(1e-13, 1e-13), Bodies, TimeSpan.FromSeconds(60.0), postBurn);
+        // The second propagation starts from exactly the post-burn state. CentralBodyPropagator takes its initial state
+        // from OrbitalParameters.AtEpoch, through the Keplerian elements: 0.1 m away at the post-burn perigee before #368,
+        // 5e-9 m since. Even that rounding changes the step sequence from the second step on, and the two Ψ then compose to
+        // 5.8e-9 only (Φ to 1.3e-13). That is the integration error of Ψ, not its partials: Ψ, about 1 m per unit Cd here,
+        // is not in the step control (A2), so its relative error is the absolute error of the trajectory over its own size.
+        // Against a propagation at 1e-15, Ψ is off by 3.2e-7 at 1e-13 without Y in the step control, 2.3e-10 with it; the
+        // analytic drag partials of step 5b leave the 5.8e-9 unchanged (measured 2026-10-12). From the exact state, the
+        // steps are the same, and the test checks the composition itself.
+        using var propagator = new WholePropagationDifferences.ExactStartPropagator(new TimeSystem.Window(te, t2),
+            independent, new RK78Integrator(1e-13, 1e-13), Bodies, true, false, TimeSpan.FromSeconds(60.0), postBurn);
         propagator.EnableVariationalEquations(options);
         var second = propagator.Propagate();
         AssertSameBits(postBurn.Position, second.Segments[0].Steps[0].StartPosition, "start position");
@@ -378,7 +386,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
             composedPsi[i] = sum;
         }
 
-        double phiError = WorstBlockError(composedPhi, phi20);
+        double phiError = StmMeasures.WorstBlockError(composedPhi, phi20);
         double psiPositionError = RiddersDerivative.RelativeFrobeniusError(composedPsi[..3], psi20[..3]);
         double psiVelocityError = RiddersDerivative.RelativeFrobeniusError(composedPsi[3..], psi20[3..]);
         _output.WriteLine($"composition across the maneuver: Φ {phiError:E2} (worst 3×3 block), Ψ {psiPositionError:E2} " +
@@ -402,20 +410,10 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var (phi, _) = Evaluate(PropagateTwoBody(Leo, end, options), end, 6);
 
         // Act
-        var expected = new double[36];
-        for (int column = 0; column < 6; column++)
-        {
-            double delta = column < 3 ? 1.0 : 1e-3;
-            var plus = FinalState(PropagateTwoBody(Perturbed(Leo, column, delta), end, null));
-            var minus = FinalState(PropagateTwoBody(Perturbed(Leo, column, -delta), end, null));
-            for (int row = 0; row < 6; row++)
-            {
-                expected[row * 6 + column] = (plus[row] - minus[row]) / (2.0 * delta);
-            }
-        }
+        var expected = WholePropagationDifferences.Phi(state => PropagateTwoBody(state, end, null), Leo, 1.0, 1e-3);
 
         // Assert
-        double error = WorstBlockError(phi, expected);
+        double error = StmMeasures.WorstBlockError(phi, expected);
         _output.WriteLine($"Φ against central differences of propagations: {error:E2} (worst 3×3 block)");
         Assert.True(error < 1e-7, $"Φ: {error:E2}");
     }
@@ -578,24 +576,6 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         return (spacecraft, maneuver);
     }
 
-    // A propagation with drag that starts from exactly the given state. CentralBodyPropagator takes its initial state
-    // from OrbitalParameters.AtEpoch, through the Keplerian elements: 0.1 m away at the post-burn perigee before #368,
-    // 5e-9 m since. Even that rounding changes the step sequence from the second step on, and the two Ψ then compose to
-    // 5.8e-9 only (Φ to 1.3e-13). That is the integration error of Ψ, not its partials: Ψ, about 1 m per unit Cd here,
-    // is not in the step control (A2), so its relative error is the absolute error of the trajectory over its own size.
-    // Against a propagation at 1e-15, Ψ is off by 3.2e-7 at 1e-13 without Y in the step control, 2.3e-10 with it; the
-    // analytic drag partials of step 5b leave the 5.8e-9 unchanged (measured 2026-10-12). From the exact state, the
-    // steps are the same, and the test checks the composition itself.
-    private sealed class ExactStartPropagator : CentralBodyPropagator
-    {
-        internal ExactStartPropagator(TimeSystem.Window window, Spacecraft spacecraft, Integrator integrator,
-            IEnumerable<CelestialItem> bodies, TimeSpan deltaT, StateVector start)
-            : base(window, spacecraft, integrator, bodies, true, false, deltaT)
-        {
-            InitialState = start;
-        }
-    }
-
     // Φ (6×6) and Ψ (6×1) at the epoch, for a solution with one parameter and no process noise
     private static (double[] Phi, double[] Psi) PhiAndPsi(PropagationSolution solution, TimeSystem.Time epoch)
     {
@@ -627,37 +607,6 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
             new CelestialItem[] { _cases.Earth }, new RK78Integrator(60.0), false, false, TimeSpan.FromSeconds(60.0),
             options);
-    }
-
-    private static double[] FinalState(PropagationSolution solution)
-    {
-        var step = solution.Segments[^1].Steps[^1];
-        return new[]
-        {
-            step.EndPosition.X, step.EndPosition.Y, step.EndPosition.Z,
-            step.EndVelocity.X, step.EndVelocity.Y, step.EndVelocity.Z
-        };
-    }
-
-    private static StateVector Perturbed(StateVector state, int component, double delta)
-    {
-        var p = state.Position;
-        var v = state.Velocity;
-        var position = component switch
-        {
-            0 => new Vector3(p.X + delta, p.Y, p.Z),
-            1 => new Vector3(p.X, p.Y + delta, p.Z),
-            2 => new Vector3(p.X, p.Y, p.Z + delta),
-            _ => p
-        };
-        var velocity = component switch
-        {
-            3 => new Vector3(v.X + delta, v.Y, v.Z),
-            4 => new Vector3(v.X, v.Y + delta, v.Z),
-            5 => new Vector3(v.X, v.Y, v.Z + delta),
-            _ => v
-        };
-        return new StateVector(position, velocity, state.Observer, state.Epoch, state.Frame);
     }
 
     // Φ (6×6, the first 6 columns of Y) and the full Q (6×6, zero without process noise) at the epoch
@@ -738,32 +687,6 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
     private static double[] Add(double[] a, double[] b)
     {
         return a.Zip(b, (x, y) => x + y).ToArray();
-    }
-
-    // The worst relative error of the four 3×3 blocks of a 6×6 matrix, each against its own norm: the blocks have
-    // different units.
-    private static double WorstBlockError(double[] actual, double[] expected)
-    {
-        double worst = 0.0;
-        for (int block = 0; block < 4; block++)
-        {
-            int rowOffset = block < 2 ? 0 : 3;
-            int columnOffset = block % 2 == 0 ? 0 : 3;
-            var a = new double[9];
-            var e = new double[9];
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    a[3 * i + j] = actual[6 * (rowOffset + i) + columnOffset + j];
-                    e[3 * i + j] = expected[6 * (rowOffset + i) + columnOffset + j];
-                }
-            }
-
-            worst = System.Math.Max(worst, RiddersDerivative.RelativeFrobeniusError(a, e));
-        }
-
-        return worst;
     }
 
     private static void AssertSameBits(ReadOnlySpan<double> expected, ReadOnlySpan<double> actual, string what)

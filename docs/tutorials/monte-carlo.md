@@ -175,6 +175,16 @@ steps give smoother statistics curves but increase memory usage. For LEO,
 highly dispersed initial conditions. Investigate if the failure rate exceeds
 this --- it may indicate unrealistic covariance or force model instability.
 
+## Monte Carlo and the propagated covariance
+
+The covariance propagated with the state by the state transition matrix
+([Covariance Propagation](../reference/covariance-propagation.md)) is validated against this propagator: on 5000
+runs in LEO, the sample covariance is the propagated one along every direction of the state for about one revolution,
+and the distribution is Gaussian. Beyond it the curvature of the orbit bends the along-track spread: the sample
+variance leaves the propagated one along one direction of the state, while the position alone holds up to about 6 h.
+In inertial axes every element still agrees within its sampling noise over a whole day, because the along-track
+variance sets that noise. See [Validation](../guides/validation.md#state-transition-matrix-and-covariance).
+
 ## Summary
 
 - `MonteCarloPropagator.Propagate` runs a dispersion campaign by sampling

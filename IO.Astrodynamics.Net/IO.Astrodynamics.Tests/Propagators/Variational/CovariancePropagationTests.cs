@@ -23,14 +23,16 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// The propagated covariance (C2 to C6) in a propagation: the checks of P0, P at any epoch against the Keplerian STM,
 /// the RTN process noise, the consider parameters, and the execution error of a maneuver.
 /// </summary>
-public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
+public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, IClassFixture<ReferenceCases>
 {
     private readonly PartialsTestCases _cases;
+    private readonly ReferenceCases _referenceCases;
     private readonly ITestOutputHelper _output;
 
-    public CovariancePropagationTests(PartialsTestCases cases, ITestOutputHelper output)
+    public CovariancePropagationTests(PartialsTestCases cases, ReferenceCases referenceCases, ITestOutputHelper output)
     {
         _cases = cases;
+        _referenceCases = referenceCases;
         _output = output;
     }
 
@@ -599,20 +601,14 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>
         return y;
     }
 
-    // The eclipsing case over 6 h
+    // The eclipsing case of the reference cases, in the frame of propagation
     private PropagationSolution EclipsingCase(int naifId, Frames.Frame frame, double tolerance, VariationalOptions options)
     {
-        var orbit = (StateVector)new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4),
-            _cases.Earth, Start, Frames.Frame.ICRF).ToFrame(frame);
-        var spacecraft = new Spacecraft(naifId, "ECLIPSING" + -naifId, 1000.0, 3000.0,
-            new Clock("eclipsing" + -naifId, 65536), orbit, 10.0, 2.2, null, 1.5);
-        var tank = new FuelTank("tank" + -naifId, "model", "sn1", 1000.0, 1000.0);
-        var engine = new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank);
-        spacecraft.AddFuelTank(tank);
-        spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(_cases.Earth, Start, TimeSpan.Zero, 8378137.0, engine));
-        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.AddHours(6.0)), Bodies,
-            new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(600.0), options);
+        var eclipsing = _referenceCases.Eclipsing;
+        var orbit = (StateVector)eclipsing.InitialState.ToFrame(frame);
+        var spacecraft = _referenceCases.EclipsingSpacecraft(naifId, orbit);
+        var solution = spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(Start, Start.Add(eclipsing.Duration)),
+            eclipsing.Bodies, new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(600.0), options);
         Assert.Equal(2, solution.Segments.Count);
         return solution;
     }

@@ -37,47 +37,7 @@ public static class MonteCarloPropagator
 
         var perturbedStates = StateSampler.Sample(nominalSv, config.RunCount, config.Seed);
 
-        var tasks = new PropagationTask[config.RunCount];
-        for (int i = 0; i < config.RunCount; i++)
-        {
-            var bodies = config.CelestialBodiesFactory();
-            var bodiesList = bodies as IList<CelestialItem> ?? bodies.ToList();
-
-            // Find matching observer by NAIF ID in factory output
-            var nominalObserver = nominalSv.Observer;
-            var runObserver = bodiesList.FirstOrDefault(b => b.NaifId == nominalObserver.NaifId) ?? nominalObserver;
-
-            var runState = new StateVector(
-                perturbedStates[i].Position,
-                perturbedStates[i].Velocity,
-                runObserver,
-                perturbedStates[i].Epoch,
-                perturbedStates[i].Frame);
-
-            int naifId = config.BaseNaifId - i;
-            var clock = new Clock($"mc_clk_{i}", config.TemplateSpacecraft.Clock.Resolution);
-            var sc = new Spacecraft(
-                naifId,
-                $"MC_{i:D6}",
-                config.TemplateSpacecraft.DryOperatingMass,
-                config.TemplateSpacecraft.MaximumOperatingMass,
-                clock,
-                runState,
-                config.TemplateSpacecraft.SectionalArea,
-                config.TemplateSpacecraft.DragCoefficient,
-                solarRadiationCoeff: config.TemplateSpacecraft.SolarRadiationCoeff);
-
-            tasks[i] = new PropagationTask(
-                sc,
-                config.Window,
-                bodiesList,
-                config.IncludeAtmosphericDrag,
-                config.IncludeSolarRadiationPressure,
-                config.DeltaT,
-                config.IntegratorFactory);
-        }
-
-        var batchResult = BatchPropagator.Propagate(tasks, config.BatchOptions);
+        var batchResult = PropagateRuns(config, nominalSv, perturbedStates, 0);
 
         var successful = batchResult.Results
             .Where(r => r.Succeeded)
@@ -106,6 +66,61 @@ public static class MonteCarloPropagator
             failureCount,
             stopwatch.Elapsed,
             config.Seed);
+    }
+
+    /// <summary>
+    /// Propagates the runs <paramref name="firstRun"/> to <paramref name="firstRun"/> + n − 1 of a campaign, from their
+    /// initial states, each with a clone of the template spacecraft (NAIF ID <c>BaseNaifId − run</c>) and a fresh set of
+    /// celestial bodies; the coefficients, when given, replace the drag and reflectivity coefficients of the template,
+    /// run by run. The runs of <see cref="Propagate"/>, exposed internally so that the validation of the propagated
+    /// covariance can read the state of every run at any epoch, in batches.
+    /// </summary>
+    internal static BatchResult PropagateRuns(MonteCarloConfiguration config, StateVector nominal,
+        IReadOnlyList<StateVector> initialStates, int firstRun,
+        IReadOnlyList<(double DragCoefficient, double ReflectivityCoefficient)> coefficients = null)
+    {
+        var template = config.TemplateSpacecraft;
+        var tasks = new PropagationTask[initialStates.Count];
+        for (int k = 0; k < initialStates.Count; k++)
+        {
+            int i = firstRun + k;
+            var bodies = config.CelestialBodiesFactory();
+            var bodiesList = bodies as IList<CelestialItem> ?? bodies.ToList();
+
+            // Find matching observer by NAIF ID in factory output
+            var runObserver = bodiesList.FirstOrDefault(b => b.NaifId == nominal.Observer.NaifId) ?? nominal.Observer;
+
+            var runState = new StateVector(
+                initialStates[k].Position,
+                initialStates[k].Velocity,
+                runObserver,
+                initialStates[k].Epoch,
+                initialStates[k].Frame);
+
+            int naifId = config.BaseNaifId - i;
+            var clock = new Clock($"mc_clk_{i}", template.Clock.Resolution);
+            var sc = new Spacecraft(
+                naifId,
+                $"MC_{i:D6}",
+                template.DryOperatingMass,
+                template.MaximumOperatingMass,
+                clock,
+                runState,
+                template.SectionalArea,
+                coefficients?[k].DragCoefficient ?? template.DragCoefficient,
+                solarRadiationCoeff: coefficients?[k].ReflectivityCoefficient ?? template.SolarRadiationCoeff);
+
+            tasks[k] = new PropagationTask(
+                sc,
+                config.Window,
+                bodiesList,
+                config.IncludeAtmosphericDrag,
+                config.IncludeSolarRadiationPressure,
+                config.DeltaT,
+                config.IntegratorFactory);
+        }
+
+        return BatchPropagator.Propagate(tasks, config.BatchOptions);
     }
 
     /// <summary>

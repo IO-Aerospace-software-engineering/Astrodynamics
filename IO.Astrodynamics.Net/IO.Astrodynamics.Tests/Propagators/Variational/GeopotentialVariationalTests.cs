@@ -133,17 +133,8 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
         solution.EvaluateVariational(end, phi, Array.Empty<double>());
 
         // Act
-        var expected = new double[36];
-        for (int column = 0; column < 6; column++)
-        {
-            double delta = column < 3 ? 1.0 : 1e-3;
-            var plus = FinalState(PropagateFixedStep(earth, Perturbed(start, column, delta), end, null));
-            var minus = FinalState(PropagateFixedStep(earth, Perturbed(start, column, -delta), end, null));
-            for (int row = 0; row < 6; row++)
-            {
-                expected[row * 6 + column] = (plus[row] - minus[row]) / (2.0 * delta);
-            }
-        }
+        var expected = WholePropagationDifferences.Phi(state => PropagateFixedStep(earth, state, end, null), start, 1.0,
+            1e-3);
 
         // Assert
         double error = StmMeasures.WorstBlockError(phi, expected);
@@ -181,36 +172,5 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
         return PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(new TimeSystem.Window(Start, end),
             new CelestialItem[] { earth }, new RK78Integrator(30.0), false, false, TimeSpan.FromSeconds(60.0),
             options);
-    }
-
-    private static double[] FinalState(PropagationSolution solution)
-    {
-        var step = solution.Segments[^1].Steps[^1];
-        return new[]
-        {
-            step.EndPosition.X, step.EndPosition.Y, step.EndPosition.Z,
-            step.EndVelocity.X, step.EndVelocity.Y, step.EndVelocity.Z
-        };
-    }
-
-    private static StateVector Perturbed(StateVector state, int component, double delta)
-    {
-        var p = state.Position;
-        var v = state.Velocity;
-        var position = component switch
-        {
-            0 => new Vector3(p.X + delta, p.Y, p.Z),
-            1 => new Vector3(p.X, p.Y + delta, p.Z),
-            2 => new Vector3(p.X, p.Y, p.Z + delta),
-            _ => p
-        };
-        var velocity = component switch
-        {
-            3 => new Vector3(v.X + delta, v.Y, v.Z),
-            4 => new Vector3(v.X, v.Y + delta, v.Z),
-            5 => new Vector3(v.X, v.Y, v.Z + delta),
-            _ => v
-        };
-        return new StateVector(position, velocity, state.Observer, state.Epoch, state.Frame);
     }
 }

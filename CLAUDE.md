@@ -22,8 +22,14 @@ dotnet test
 # Run tests for a specific project
 dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj
 
-# Skip the Validation category (bit-for-bit goldens, heavy validations), which CI runs on Linux only
-dotnet test --filter "Category!=Validation"
+# Skip the LongValidation category (tests of more than 5 min each), which runs in the manual workflow long-validation.yml only
+dotnet test --filter "Category!=LongValidation"
+
+# Skip the Validation category too (bit-for-bit goldens, heavy validations), which CI runs on Linux only
+dotnet test --filter "Category!=Validation&Category!=LongValidation"
+
+# Run the LongValidation category (Linux, about 20 min)
+dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "Category=LongValidation"
 
 # Run a single test by name
 dotnet test --filter "FullyQualifiedName~IO.Astrodynamics.Tests.ClassName.TestName"
