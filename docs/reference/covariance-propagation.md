@@ -184,9 +184,24 @@ gives the implementation, the tests and the citation status of each equation.
 ## Modeling Assumptions
 
 - **Linear propagation.** P is the linear propagation of the deviations, valid while they stay small against the
-  non-linearities of the dynamics. Its domain of validity is measured against Monte Carlo in step 9 (F3).
+  non-linearities of the dynamics. Measured against a Monte Carlo of 5000 runs, with P0 of 100 m and 0.1 m/s on each
+  RTN axis in LEO (R1 two-body at 700 km, R2 at 400 km with drag, R3 sun-synchronous with SRP):
+  - The second moments hold over the whole day: every element of P agrees with the sample covariance within 2.3
+    standard deviations of its estimator, up to 24 h, with Cd or Cr sampled as well.
+  - The distribution stays Gaussian with covariance P for about one revolution only. The Kolmogorov-Smirnov test of
+    the Mahalanobis distances passes up to 1.67 h to 2.33 h depending on the case, and fails from 1.83 h to 2.5 h.
+  - The departure is the curvature of the orbit. The along-track spread lies on the curved orbit, so the samples sit
+    below the straight line of the linear model, by a mean radial offset of about −E[δT²] / (2 r): −104 m at 24 h for
+    R1, against −102 m predicted. P is very thin across that curve, so a few metres of curvature move the
+    Mahalanobis distances far beyond their spread. P stays the covariance of the deviations, but reading it as a
+    Gaussian density in Cartesian coordinates holds over about one revolution only for this P0.
+  - Figures and tests: [Validation](../guides/validation.md#state-transition-matrix-and-covariance).
 - **Open-loop maneuvers.** An impulsive maneuver applies its nominal ΔV at its epoch; its firing time is not
-  differentiated with respect to the state, so Φ and Ψ are continuous at the burn.
+  differentiated with respect to the state, so Φ and Ψ are continuous at the burn. That is the covariance of a burn
+  executed as commanded, with its execution error (Gates). A maneuver that retargets its ΔV from the state it finds,
+  as `ApogeeHeightManeuver` does at its perigee, removes part of the deviation: in the eclipsing LEO case of the
+  validation, Φ after the burn differs from that of the retargeted maneuver by 0.23 to 0.48 per block (Φ against the
+  open-loop reference: 2.9e-8).
 - **P0 at the start of the window.** The propagator does not carry a covariance from another epoch.
 - **No process noise by default.** Without it, P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ ignores the unmodelled accelerations and is
   usually optimistic.
