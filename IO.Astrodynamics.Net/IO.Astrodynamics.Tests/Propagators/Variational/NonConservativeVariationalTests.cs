@@ -85,28 +85,15 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
         solution.EvaluateCovariance(referenceCase.InitialState.Epoch.Add(referenceCase.Duration), covariance);
 
         // Act
-        var expectedPhi = new double[36];
-        for (int column = 0; column < 6; column++)
-        {
-            double delta = column < 3 ? 1.0 : 1e-3;
-            var plus = FinalState(Propagate(referenceCase, Perturbed(start, column, delta), 2.2, 1.5, ReferenceTolerance,
-                null));
-            var minus = FinalState(Propagate(referenceCase, Perturbed(start, column, -delta), 2.2, 1.5,
-                ReferenceTolerance, null));
-            for (int row = 0; row < 6; row++)
-            {
-                expectedPhi[row * 6 + column] = (plus[row] - minus[row]) / (2.0 * delta);
-            }
-        }
+        var expectedPhi = WholePropagationDifferences.Phi(
+            state => Propagate(referenceCase, state, 2.2, 1.5, ReferenceTolerance, null), start, 1.0, 1e-3);
 
         bool drag = referenceCase.AtmosphericDrag;
         double coefficient = drag ? 2.2 : 1.5;
         double step = 0.01 * coefficient;
-        var psiPlus = FinalState(Propagate(referenceCase, start, drag ? 2.2 + step : 2.2, drag ? 1.5 : 1.5 + step,
-            ReferenceTolerance, null));
-        var psiMinus = FinalState(Propagate(referenceCase, start, drag ? 2.2 - step : 2.2, drag ? 1.5 : 1.5 - step,
-            ReferenceTolerance, null));
-        var expectedPsi = psiPlus.Zip(psiMinus, (p, m) => (p - m) / (2.0 * step)).ToArray();
+        var expectedPsi = WholePropagationDifferences.Psi(
+            c => Propagate(referenceCase, start, drag ? c : 2.2, drag ? 1.5 : c, ReferenceTolerance, null),
+            coefficient, step);
 
         // The covariance through the reference: Φ_ref P0 Φ_refᵀ + σ² ψ_ref ψ_refᵀ
         var phiReference = CovarianceAssert.ToMathNet(expectedPhi, 6);
@@ -180,33 +167,6 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
         return spacecraft.PropagateWithVariationalEquations(new TimeSystem.Window(start.Epoch, start.Epoch.Add(referenceCase.Duration)),
             referenceCase.Bodies, new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
             referenceCase.SolarRadiationPressure, TimeSpan.FromSeconds(3600.0), options);
-    }
-
-    private static double[] FinalState(PropagationSolution solution)
-    {
-        var step = solution.Segments[^1].Steps[^1];
-        return new[]
-        {
-            step.EndPosition.X, step.EndPosition.Y, step.EndPosition.Z,
-            step.EndVelocity.X, step.EndVelocity.Y, step.EndVelocity.Z
-        };
-    }
-
-    private static StateVector Perturbed(StateVector state, int component, double delta)
-    {
-        var position = state.Position;
-        var velocity = state.Velocity;
-        switch (component)
-        {
-            case 0: position = new Vector3(position.X + delta, position.Y, position.Z); break;
-            case 1: position = new Vector3(position.X, position.Y + delta, position.Z); break;
-            case 2: position = new Vector3(position.X, position.Y, position.Z + delta); break;
-            case 3: velocity = new Vector3(velocity.X + delta, velocity.Y, velocity.Z); break;
-            case 4: velocity = new Vector3(velocity.X, velocity.Y + delta, velocity.Z); break;
-            default: velocity = new Vector3(velocity.X, velocity.Y, velocity.Z + delta); break;
-        }
-
-        return new StateVector(position, velocity, state.Observer, state.Epoch, state.Frame);
     }
 
     private static double Norm(double[] v) => System.Math.Sqrt(v.Sum(x => x * x));
