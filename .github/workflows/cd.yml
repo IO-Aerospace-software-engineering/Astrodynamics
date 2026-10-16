@@ -186,7 +186,8 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Test
-      run: dotnet test --no-build --verbosity ${{ inputs.logLevel || 'minimal' }} --configuration Release
+      # LongValidation runs in the manual workflow long-validation.yml only
+      run: dotnet test --no-build --verbosity ${{ inputs.logLevel || 'minimal' }} --configuration Release --filter "Category!=LongValidation"
 
     - name: Package Framework
       run: dotnet pack IO.Astrodynamics/IO.Astrodynamics.csproj --no-build --configuration Release

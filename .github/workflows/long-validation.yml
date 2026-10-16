@@ -1,0 +1,40 @@
+name: Long validation
+
+# The tests of the LongValidation category: validations that take more than 5 min each (the Monte Carlo of F3 on R2
+# and R3, phase 2, feature 1), excluded from the CI and the CD (decision of S. Guillet, 2026-10-06). Run by hand, on
+# Linux, with the native library built from the sources as in the CI.
+on:
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  long-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build C++
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
+
+    - name: Copy the native library
+      run: cp build/IO.Astrodynamics/libIO.Astrodynamics.so IO.Astrodynamics.Net/IO.Astrodynamics/resources/
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      working-directory: ./IO.Astrodynamics.Net
+      run: dotnet restore
+
+    - name: Test
+      working-directory: ./IO.Astrodynamics.Net
+      run: dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "Category=LongValidation" --logger "console;verbosity=detailed"

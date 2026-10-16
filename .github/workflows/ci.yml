@@ -132,7 +132,8 @@ jobs:
   # macOS runs on Apple Silicon only — the arm64 .NET host can load the arm64
   # dylib; the x64 dylib is validated by the Linux/Windows x64 .NET jobs.
   # Tests in the Validation category (bit-for-bit goldens, heavy statistical validations) run on Linux only: a golden
-  # holds on one platform, since the mathematical library differs between operating systems.
+  # holds on one platform, since the mathematical library differs between operating systems. Tests in the
+  # LongValidation category (more than 5 min each) run in the manual workflow long-validation.yml only.
   build-dotnet:
     needs: build-native
     strategy:
@@ -181,4 +182,4 @@ jobs:
       run: dotnet restore
 
     - name: Test
-      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release ${{ matrix.os != 'ubuntu-latest' && '--filter "Category!=Validation"' || '' }}
+      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release ${{ matrix.os != 'ubuntu-latest' && '--filter "Category!=Validation&Category!=LongValidation"' || '--filter "Category!=LongValidation"' }}

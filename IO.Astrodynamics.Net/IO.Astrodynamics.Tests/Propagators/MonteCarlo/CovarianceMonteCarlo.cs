@@ -81,7 +81,7 @@ internal static class CovarianceMonteCarlo
         // P0 in RTN, turned to the inertial frame; the template and the configuration of the public campaign
         var start = WithInitialCovariance(referenceCase.InitialState);
         var template = ReferenceCase.NewSpacecraft(naifId, start);
-        var config = Configuration(referenceCase, template, window, runCount, seed, naifId);
+        var config = Configuration(referenceCase, template, window, runCount, seed);
 
         // P and the nominal state by the public path
         var consider = dragCoefficientSigma.HasValue || reflectivityCoefficientSigma.HasValue
@@ -100,8 +100,7 @@ internal static class CovarianceMonteCarlo
 
     /// <summary>The configuration of the public campaign on <paramref name="referenceCase"/>.</summary>
     internal static MonteCarloConfiguration Configuration(ReferenceCase referenceCase,
-        IO.Astrodynamics.Body.Spacecraft.Spacecraft template, TimeSystem.Window window, int runCount, int seed,
-        int naifId)
+        IO.Astrodynamics.Body.Spacecraft.Spacecraft template, TimeSystem.Window window, int runCount, int seed)
     {
         return new MonteCarloConfiguration
         {
