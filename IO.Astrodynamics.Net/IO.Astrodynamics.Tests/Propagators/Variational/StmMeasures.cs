@@ -1,5 +1,8 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using System;
+using System.Linq;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 using MathNet.Numerics.LinearAlgebra;
 
@@ -76,7 +79,16 @@ internal static class StmMeasures
     /// <summary>The largest relative Frobenius error over the four 3×3 blocks of Φ.</summary>
     internal static double WorstBlockError(double[] actual, double[] expected)
     {
-        double worst = 0.0;
+        return BlockErrors(actual, expected).Max();
+    }
+
+    /// <summary>
+    /// The relative Frobenius error of each 3×3 block of Φ, each against its own norm (the blocks have different units):
+    /// Φ_rr, Φ_rv, Φ_vr, Φ_vv.
+    /// </summary>
+    internal static double[] BlockErrors(double[] actual, double[] expected)
+    {
+        var errors = new double[4];
         for (int block = 0; block < 4; block++)
         {
             int rowOffset = block < 2 ? 0 : 3;
@@ -92,9 +104,37 @@ internal static class StmMeasures
                 }
             }
 
-            worst = System.Math.Max(worst, RiddersDerivative.RelativeFrobeniusError(a, e));
+            errors[block] = RiddersDerivative.RelativeFrobeniusError(a, e);
         }
 
-        return worst;
+        return errors;
+    }
+
+    /// <summary>Y = [Φ | Ψ] (6 rows, row-major) of <paramref name="solution"/> at <paramref name="epoch"/>.</summary>
+    internal static double[] Y(PropagationSolution solution, TimeSystem.Time epoch)
+    {
+        var y = new double[6 * solution.Dynamics.ColumnCount];
+        solution.EvaluateVariational(epoch, y, Array.Empty<double>());
+        return y;
+    }
+
+    /// <summary>Φ, the first 6 columns of <paramref name="y"/>.</summary>
+    internal static double[] Phi(double[] y)
+    {
+        int columns = y.Length / 6;
+        var phi = new double[36];
+        for (int i = 0; i < 6; i++)
+        {
+            Array.Copy(y, columns * i, phi, 6 * i, 6);
+        }
+
+        return phi;
+    }
+
+    /// <summary>Column <paramref name="column"/> of <paramref name="y"/>.</summary>
+    internal static double[] Column(double[] y, int column)
+    {
+        int columns = y.Length / 6;
+        return Enumerable.Range(0, 6).Select(i => y[columns * i + column]).ToArray();
     }
 }
