@@ -364,4 +364,55 @@ public class StateSamplerTests
                 $"Component {comp}: variance {variance:F4} deviates from 1.0");
         }
     }
+
+    [Fact]
+    public void SampleWithCoefficients_DrawsTheCoefficientsWithTheirSigma_AndTheStateWithItsCovariance()
+    {
+        // Arrange
+        var nominal = CreateNominalWithCovariance(CreateDiagonalCovariance());
+        int n = 100_000;
+
+        // Act
+        var (states, coefficients) = StateSampler.SampleWithCoefficients(nominal, 2.2, 0.22, 1.5, 0.15, n, seed: 7);
+
+        // Assert: means within 5 standard errors, standard deviations within 2 %
+        Assert.Equal(n, states.Length);
+        Assert.Equal(n, coefficients.Length);
+        Assert.Equal(2.2, coefficients.Average(c => c.DragCoefficient), 5 * 0.22 / System.Math.Sqrt(n));
+        Assert.Equal(1.5, coefficients.Average(c => c.ReflectivityCoefficient), 5 * 0.15 / System.Math.Sqrt(n));
+        Assert.Equal(0.22, StandardDeviation(coefficients.Select(c => c.DragCoefficient)), 0.22 * 0.02);
+        Assert.Equal(0.15, StandardDeviation(coefficients.Select(c => c.ReflectivityCoefficient)), 0.15 * 0.02);
+        Assert.Equal(10.0, StandardDeviation(states.Select(s => s.Position.X)), 10.0 * 0.02);
+        Assert.Equal(0.1, StandardDeviation(states.Select(s => s.Velocity.Z)), 0.1 * 0.02);
+        Assert.All(states, s => Assert.Equal(nominal.Epoch, s.Epoch));
+    }
+
+    [Fact]
+    public void SampleWithCoefficients_WithZeroSigma_KeepsTheCoefficients()
+    {
+        var nominal = CreateNominalWithCovariance(CreateDiagonalCovariance());
+        var (_, coefficients) = StateSampler.SampleWithCoefficients(nominal, 2.2, 0.0, 1.5, 0.0, 10, seed: 7);
+        Assert.All(coefficients, c => Assert.Equal((2.2, 1.5), c));
+    }
+
+    [Fact]
+    public void SampleWithCoefficients_InvalidInput_Throws()
+    {
+        var nominal = CreateNominalWithCovariance(CreateDiagonalCovariance());
+        var withoutCovariance = new StateVector(nominal.Position, nominal.Velocity, nominal.Observer, nominal.Epoch,
+            nominal.Frame);
+        Assert.Throws<ArgumentNullException>(() => StateSampler.SampleWithCoefficients(null, 2.2, 0.1, 1.5, 0.1, 1, 1));
+        Assert.Throws<InvalidOperationException>(() =>
+            StateSampler.SampleWithCoefficients(withoutCovariance, 2.2, 0.1, 1.5, 0.1, 1, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => StateSampler.SampleWithCoefficients(nominal, 2.2, 0.1, 1.5, 0.1, 0, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => StateSampler.SampleWithCoefficients(nominal, 2.2, -0.1, 1.5, 0.1, 1, 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => StateSampler.SampleWithCoefficients(nominal, 2.2, 0.1, 1.5, -0.1, 1, 1));
+    }
+
+    private static double StandardDeviation(System.Collections.Generic.IEnumerable<double> values)
+    {
+        var array = values.ToArray();
+        double mean = array.Average();
+        return System.Math.Sqrt(array.Sum(x => (x - mean) * (x - mean)) / (array.Length - 1));
+    }
 }

@@ -25,9 +25,8 @@ namespace IO.Astrodynamics.Tests.Propagators.MonteCarlo;
 /// <para>
 /// The shape of the departure is the curvature of the orbit: the along-track spread (RMS 2.8 km at 2 h, 38 km at 24 h,
 /// from the offset below) lies on the curved orbit, so the samples sit below the straight line of the linear model, by a
-/// mean radial offset that
-/// follows −E[δT²] / (2 r) (−8.9 m against −6.8 m at 6 h, −104 m against −102 m at 24 h, around which the sampling noise
-/// moves it by about 1.4 m), the "banana" of J. L. Junkins, M. R. Akella, K. T. Alfriend, <i>Non-Gaussian error
+/// mean radial offset that follows −E[δT²] / (2 r) (−8.9 m against −6.8 m at 6 h, −104 m against −102 m at 24 h,
+/// around which the sampling noise moves it by about 1.4 m), the "banana" of J. L. Junkins, M. R. Akella, K. T. Alfriend, <i>Non-Gaussian error
 /// propagation in orbital mechanics</i>, Journal of the Astronautical Sciences 44(4), 1996 (to be verified by
 /// S. Guillet). Since P is very thin across that curve, a few metres move the Mahalanobis distances by far more than
 /// their spread. With the deviations from the sample mean the test fails from 2.17 h, and with the sample covariance
@@ -79,6 +78,31 @@ public class CovarianceMonteCarloTests : IClassFixture<ReferenceCases>
         var firstFailure = results.First(r => !r.Passes).Epoch;
         Assert.Equal(start.AddHours(2.0), firstFailure);
         Assert.All(results.Where(r => r.Epoch < firstFailure), r => Assert.True(r.Passes));
+    }
+
+    [Fact]
+    public void PropagateRuns_GivesEachRunItsCoefficients()
+    {
+        // Arrange: two runs of R1 over 10 min, with their own Cd and Cr
+        var r1 = _cases.R1;
+        var start = CovarianceMonteCarlo.WithInitialCovariance(r1.InitialState);
+        var window = new TimeSystem.Window(r1.InitialState.Epoch, r1.InitialState.Epoch.AddMinutes(10.0));
+        var config = CovarianceMonteCarlo.Configuration(r1, ReferenceCase.NewSpacecraft(NaifId - 3, start), window, 2,
+            Seed, NaifId - 3);
+        var (states, coefficients) = StateSampler.SampleWithCoefficients(start, 2.2, 0.22, 1.5, 0.15, 2, Seed);
+
+        // Act
+        var runs = MonteCarloPropagator.PropagateRuns(config, start, states, 7, coefficients);
+
+        // Assert
+        for (int k = 0; k < 2; k++)
+        {
+            Assert.True(runs.Results[k].Succeeded);
+            Assert.Equal(coefficients[k].DragCoefficient, runs.Results[k].Spacecraft.DragCoefficient);
+            Assert.Equal(coefficients[k].ReflectivityCoefficient, runs.Results[k].Spacecraft.SolarRadiationCoeff);
+            Assert.Equal(config.BaseNaifId - 7 - k, runs.Results[k].Spacecraft.NaifId);
+            Assert.Equal(states[k].Position, runs.Results[k].Spacecraft.InitialOrbitalParameters.ToStateVector().Position);
+        }
     }
 
     [Fact]
