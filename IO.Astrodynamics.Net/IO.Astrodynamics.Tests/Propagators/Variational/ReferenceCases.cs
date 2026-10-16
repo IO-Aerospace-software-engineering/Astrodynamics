@@ -52,6 +52,12 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
     /// <summary>Step of the central differences of Ψ_Cr, relative to Cr.</summary>
     internal double ReflectivityCoefficientStep { get; init; } = 0.01;
 
+    /// <summary>
+    /// A fresh set of the bodies of the case, equal to <see cref="Bodies"/> (geopotential and atmosphere included), for a
+    /// propagation on another thread (the geopotential is not thread-safe); null when not set.
+    /// </summary>
+    internal Func<IReadOnlyList<CelestialItem>> NewBodies { get; init; }
+
     /// <summary>The window of the case.</summary>
     internal TimeSystem.Window Window => new(InitialState.Epoch, InitialState.Epoch.Add(Duration));
 
@@ -241,14 +247,20 @@ public sealed class ReferenceCases
         _pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
         R1 = new ReferenceCase("R1",
             State(EarthEquatorialRadius + 700.0e3, 0.001, 45.0, 30.0, 60.0, 10.0, _pointMassEarth),
-            new CelestialItem[] { _pointMassEarth }, day, false, false) { PositionStep = 10.0, VelocityStep = 1e-2 };
+            new CelestialItem[] { _pointMassEarth }, day, false, false)
+        {
+            PositionStep = 10.0, VelocityStep = 1e-2,
+            NewBodies = () => new CelestialItem[] { new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch) }
+        };
 
         var earthR2 = Earth(10, true);
         R2 = new ReferenceCase("R2",
             State(EarthEquatorialRadius + 400.0e3, 0.0005, 51.6, 20.0, 15.0, 0.0, earthR2),
             new CelestialItem[] { earthR2, sun, moon }, day, true, false)
         {
-            PositionStep = 10.0, VelocityStep = 1e-2, DragCoefficientStep = 0.01
+            PositionStep = 10.0, VelocityStep = 1e-2, DragCoefficientStep = 0.01,
+            NewBodies = () => new CelestialItem[]
+                { Earth(10, true), new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch) }
         };
 
         // 98.19° is the sun-synchronous inclination at 700 km (a J2 nodal regression of 360° per year); the node at the
@@ -258,7 +270,9 @@ public sealed class ReferenceCases
             State(EarthEquatorialRadius + 700.0e3, 0.001, 98.19, 0.0, 90.0, 0.0, earthR3),
             new CelestialItem[] { earthR3, sun, moon }, day, false, true)
         {
-            PositionStep = 10.0, VelocityStep = 1e-2, ReflectivityCoefficientStep = 0.1
+            PositionStep = 10.0, VelocityStep = 1e-2, ReflectivityCoefficientStep = 0.1,
+            NewBodies = () => new CelestialItem[]
+                { Earth(10, false), new CelestialBody(Stars.Sun), new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch) }
         };
 
         var earthR4 = Earth(70, false);
