@@ -21,10 +21,11 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// The error is the worst 3×3 block of Φ over the arc (every 10 min and at the end). R2 has a 10×10 field: the option
 /// takes the smaller of the requested degree and the degree of the field, so 20 is the full degree there. The cost is
 /// the median of three propagations with Φ at 1e-13, against the median of three without, Release; informative (the
-/// benchmarks come with G1).
+/// benchmarks come with G1). The figures below were measured with this test alone: run with the other Validation classes
+/// in parallel, as in the CI, the same propagations come out up to twice as slow and the ratios move with the load.
 /// </para>
 /// <para>
-/// Measured (Linux, .NET 10, 2026-10-16), worst block over the arc, and the cost with Φ against without: R2 (10×10)
+/// Measured (Linux, .NET 10, 2026-10-16, this test alone), worst block over the arc, and the cost with Φ against without: R2 (10×10)
 /// 2.0e-3 at degree 2, 8.5e-4 at 8, 4.6e-8 at 10 (full), about 1 s against 0.17 s at every degree (5.5× to 6.0×: the drag
 /// partials dominate); R4 (70×70) 1.2e-6 at degree 2, 2.8e-8 at 8, 20 and 70, 0.17 to 0.19 s at degree 2 to 20 and
 /// 0.25 s at 70, against 0.17 s (1.0× to 1.5×). The accuracies are asserted as records within a factor of 2. The

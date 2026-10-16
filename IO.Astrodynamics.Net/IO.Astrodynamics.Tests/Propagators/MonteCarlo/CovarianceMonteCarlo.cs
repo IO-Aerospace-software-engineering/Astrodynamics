@@ -12,6 +12,7 @@ using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.Tests.Statistics;
 using MathNet.Numerics.LinearAlgebra;
+using Xunit;
 
 namespace IO.Astrodynamics.Tests.Propagators.MonteCarlo;
 
@@ -56,13 +57,29 @@ internal static class CovarianceMonteCarlo
 
     /// <summary>The statistics of a campaign at one epoch.</summary>
     /// <remarks>
+    /// <para>
     /// <c>KsPValueAboutTheMean</c> is the same test with the deviations from the sample mean: it separates a shift of the
     /// mean from a change of shape. <c>KsPValueOfTheSample</c> takes the sample mean and the sample covariance S instead of
-    /// P: it fails when the distribution itself is not Gaussian, whatever P.
+    /// P: it fails when the distribution itself is not Gaussian, whatever P. Both estimate their centre (and S) from the
+    /// runs while their significance is that of case 0 of Stephens (1974), a fully specified distribution, so their
+    /// p-values are too large: the epochs at which they fail are upper bounds.
+    /// </para>
+    /// <para>
+    /// <c>VarianceRatios</c> are the eigenvalues of L⁻¹ S L⁻ᵀ with P = L Lᵀ, in increasing order: the extreme ratios
+    /// uᵀ S u / uᵀ P u of the sample variance to the propagated variance over every direction u of the state. Unlike the
+    /// element-wise test, they do not depend on the axes. Under linearity S is a Wishart sample of P, and its ratios lie
+    /// in about (1 − √(6/N))² to (1 + √(6/N))², 0.93 to 1.07 for N = 5000: the support of the limiting distribution of the
+    /// eigenvalues of a sample covariance, V. A. Marchenko, L. A. Pastur, <i>Distribution of eigenvalues for some sets of
+    /// random matrices</i>, Mathematics of the USSR-Sbornik 1(4), 1967 (to be verified by S. Guillet).
+    /// <c>PositionVarianceRatios</c> are the same ratios over the directions of the position alone (the 3×3 position
+    /// blocks of S and P), what a collision probability projects on the encounter plane; <c>RadialVarianceRatio</c> is the
+    /// ratio along the radial axis of the nominal state.
+    /// </para>
     /// </remarks>
     internal sealed record EpochResult(TimeSystem.Time Epoch, double WorstZ, int WorstRow, int WorstColumn,
         double KsStatistic, double KsPValue, double KsPValueAboutTheMean, double KsPValueOfTheSample,
-        double MeanRadialOffset, double CurvatureOffset,
+        double MeanRadialOffset, double CurvatureOffset, double[] VarianceRatios, double[] PositionVarianceRatios,
+        double RadialVarianceRatio,
         double[] Covariance, double[] SampleCovariance)
     {
         /// <summary>Both tests pass: every |z| below 4 and the KS significance at least 0.01.</summary>
@@ -128,6 +145,42 @@ internal static class CovarianceMonteCarlo
 
         return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
             state.RotateCovarianceFromRtn(rtn));
+    }
+
+    /// <summary>One line of the statistics of <paramref name="r"/>, for the output of a test.</summary>
+    internal static string Describe(string label, TimeSystem.Time start, EpochResult r)
+    {
+        return $"{label} at {(r.Epoch - start).TotalHours:F3} h: worst |z| {r.WorstZ:F2} ({r.WorstRow}, {r.WorstColumn}); " +
+               $"S/P {r.VarianceRatios[0]:G4} to {r.VarianceRatios[^1]:G4}, position {r.PositionVarianceRatios[0]:G4} " +
+               $"to {r.PositionVarianceRatios[^1]:G4}, radial {r.RadialVarianceRatio:G4}; " +
+               $"KS D = {r.KsStatistic:E3}, p = {r.KsPValue:E3} (about the mean {r.KsPValueAboutTheMean:E3}, of the " +
+               $"sample {r.KsPValueOfTheSample:E3}); mean radial offset {r.MeanRadialOffset:F2} m, curvature " +
+               $"−E[δT²]/(2r) {r.CurvatureOffset:F2} m";
+    }
+
+    /// <summary>
+    /// Every ratio of the sample variance to P within the sampling band (1 ± √(6/N))², the support of Marchenko and
+    /// Pastur (see <see cref="EpochResult"/>), at each of <paramref name="results"/>.
+    /// </summary>
+    internal static void AssertWithinTheSamplingBand(IEnumerable<EpochResult> results, int runCount,
+        bool positionOnly = false)
+    {
+        double c = System.Math.Sqrt((positionOnly ? 3.0 : 6.0) / runCount);
+        foreach (var r in results)
+        {
+            var ratios = positionOnly ? r.PositionVarianceRatios : r.VarianceRatios;
+            Assert.InRange(ratios[0], (1.0 - c) * (1.0 - c), (1.0 + c) * (1.0 + c));
+            Assert.InRange(ratios[^1], (1.0 - c) * (1.0 - c), (1.0 + c) * (1.0 + c));
+        }
+    }
+
+    /// <summary>The largest ratio of S to P at <paramref name="epoch"/> within a factor of 2 of <paramref name="record"/>.</summary>
+    internal static void AssertLargestRatio(IEnumerable<EpochResult> results, TimeSystem.Time epoch, double record,
+        bool positionOnly = false)
+    {
+        var result = results.Single(r => r.Epoch == epoch);
+        double largest = positionOnly ? result.PositionVarianceRatios[^1] : result.VarianceRatios[^1];
+        Assert.InRange(largest, record / 2.0, 2.0 * record);
     }
 
     /// <summary>The sample covariance with Bessel's correction, row-major, of the states (6 components each).</summary>
@@ -274,7 +327,40 @@ internal static class CovarianceMonteCarlo
             alongTrack += delta.Y * delta.Y;
         }
 
+        // The radial variance of the samples against that of P, along the radial axis of the nominal state
+        var unit = state.Position.Normalize();
+        var u = new[] { unit.X, unit.Y, unit.Z };
+        double RadialVariance(double[] c)
+        {
+            double sum = 0.0;
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    sum += u[i] * c[6 * i + j] * u[j];
+                }
+            }
+
+            return sum;
+        }
+
         return new EpochResult(epoch, worst, worstRow, worstColumn, statistic, KolmogorovSmirnov.PValue(statistic, n),
-            aboutTheMean, ofTheSample, radial / n, -alongTrack / n / (2.0 * radius), covariance, s);
+            aboutTheMean, ofTheSample, radial / n, -alongTrack / n / (2.0 * radius), VarianceRatios(s, covariance, 6),
+            VarianceRatios(s, covariance, 3), RadialVariance(s) / RadialVariance(covariance), covariance, s);
+    }
+
+    // The eigenvalues of L⁻¹ S L⁻ᵀ (P = L Lᵀ) over the first size components (6: the state, 3: the position), in
+    // increasing order, through the correlation matrix of P, free of the units of the blocks: with D the diagonal of P,
+    // the same as those of Lc⁻¹ (D^(-1/2) S D^(-1/2)) Lc⁻ᵀ, Lc the Cholesky factor of D^(-1/2) P D^(-1/2)
+    private static double[] VarianceRatios(double[] sample, double[] covariance, int size)
+    {
+        var scale = Enumerable.Range(0, size).Select(i => 1.0 / System.Math.Sqrt(covariance[7 * i])).ToArray();
+        var correlation = Matrix<double>.Build.Dense(size, size, (i, j) => scale[i] * covariance[6 * i + j] * scale[j]);
+        var scaledSample = Matrix<double>.Build.Dense(size, size, (i, j) => scale[i] * sample[6 * i + j] * scale[j]);
+        var factor = correlation.Cholesky().Factor;
+        var left = factor.Solve(scaledSample);
+        var whitened = factor.Solve(left.Transpose());
+        whitened = 0.5 * (whitened + whitened.Transpose());
+        return whitened.Evd(Symmetricity.Symmetric).EigenValues.Select(x => x.Real).OrderBy(x => x).ToArray();
     }
 }

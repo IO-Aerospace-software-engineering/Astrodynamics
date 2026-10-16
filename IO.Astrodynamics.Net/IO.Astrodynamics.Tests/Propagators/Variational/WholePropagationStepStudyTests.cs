@@ -25,7 +25,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// that option, decision of S. Guillet, 2026-10-15; without SRP the option changes nothing that matters here and costs
 /// minutes for R2), at the end of the case: the worst 3×3 block
 /// of Φ, and the worst of the position and velocity rows of each Ψ column. Position steps from 1 cm to 1 km, the
-/// velocity step 1e-3 s⁻¹ times the position step, and the coefficients from 0.1 % to 20 %. On the left the
+/// velocity step 1e-3 s⁻¹ times the position step, and the coefficients from 0.1 % to 30 %. On the left the
 /// integration noise of the perturbed propagations, which choose their own steps, divided by the step; on the right the
 /// truncation of the central difference, of order δ² (<i>Numerical Recipes</i>, 3rd edition, section 5.7). The
 /// integrated Φ is checked independently (the Keplerian STM of F2, the partials against Ridders' derivative), so the
@@ -37,7 +37,15 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// justifies its tolerance (decision of S. Guillet, 2026-10-16). Measured (Linux, .NET 10, 2026-10-16), the smallest
 /// error of Φ at 1e-14 and at 1e-13: R1 1.7e-8 and 2.3e-8, R2 4.6e-8 and 1.4e-7, R3 1.9e-7 and 1.0e-6, R4 2.8e-8 and
 /// 5.6e-8, R5 6.7e-7 and 7.8e-7. Chosen steps: 10 m and 1 cm/s for R1 to R4, 1 m and 1 mm/s for R5 (6.7e-7, 8.7e-7 at
-/// 10 m); Cd 1 % for R2 (1.2e-7) and 5 % for R5 (5.3e-8); Cr 10 % for R3 (3.8e-6) and R4 (9.7e-10). To write the curves, set <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test writes
+/// 10 m); Cd 1 % for R2 (1.2e-7) and 5 % for R5 (5.3e-8); Cr 10 % for R3 (3.8e-6) and R4 (9.7e-10).
+/// </para>
+/// <para>
+/// For Φ every sweep has its minimum between the two sides. For Ψ two do not: the sweep of Ψ_Cr of R3 is not monotone
+/// (1.0e-5, 3.8e-6, 1.7e-5, 4.3e-6 at 5 %, 10 %, 20 % and 30 %), and the Ψ errors of the eclipsing case still fall at
+/// the edge of the sweep (Cd 1.1e-7, Cr 1.8e-5 at 30 %). There the sweep shows the noise floor of the reference rather
+/// than a plateau, and the factor of 2 holds at the edge. The study evaluates the end of the arc, while F1 asserts
+/// over the arc: <c>StmValidationTests</c> holds Ψ over the arc relative to its largest value, which does not depend on
+/// the step of the reference. To write the curves, set <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test writes
 /// <c>whole_propagation_step_study_{case}.csv</c> there (quantity, step, error).
 /// </para>
 /// </remarks>

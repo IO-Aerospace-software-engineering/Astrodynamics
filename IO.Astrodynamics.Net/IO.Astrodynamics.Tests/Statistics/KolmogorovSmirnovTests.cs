@@ -45,6 +45,23 @@ public class KolmogorovSmirnovTests
         Assert.Equal(0.0, KolmogorovSmirnov.Q(10.0), 1e-40);
     }
 
+    [Theory]
+    [InlineData(0.002)]
+    [InlineData(0.005)]
+    [InlineData(0.01)]
+    [InlineData(0.05)]
+    public void Q_ForASmallLambda_IsOne(double lambda)
+    {
+        // The alternating series, summed in 100 terms, gave 0.078, 0.40 and 0.87 at the first three
+        Assert.Equal(1.0, KolmogorovSmirnov.Q(lambda));
+    }
+
+    [Fact]
+    public void Q_IsContinuousAtTheCutoff()
+    {
+        Assert.Equal(1.0, KolmogorovSmirnov.Q(0.2), 1e-12);
+    }
+
     [Fact]
     public void Statistic_OfOnePoint_IsTheLargerGapOfTheStep()
     {

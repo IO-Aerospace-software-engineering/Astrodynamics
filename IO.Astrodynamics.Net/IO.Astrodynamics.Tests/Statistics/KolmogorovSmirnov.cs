@@ -61,9 +61,13 @@ internal static class KolmogorovSmirnov
     }
 
     /// <summary><c>Q_KS(λ)</c>, the probability that Kolmogorov's limit variable exceeds λ.</summary>
+    /// <remarks>
+    /// Below λ = 0.2 the alternating series converges too slowly to be summed in 100 terms (at λ = 0.01 its partial sum
+    /// gives 0.87), so 1 is returned there: Q_KS decreases with λ and Q_KS(0.2) = 1 − 5e-13 from the converged series.
+    /// </remarks>
     internal static double Q(double lambda)
     {
-        if (lambda < 1e-3)
+        if (lambda < 0.2)
         {
             return 1.0;
         }

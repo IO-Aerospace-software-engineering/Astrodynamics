@@ -179,9 +179,11 @@ this --- it may indicate unrealistic covariance or force model instability.
 
 The covariance propagated with the state by the state transition matrix
 ([Covariance Propagation](../reference/covariance-propagation.md)) is validated against this propagator: on 5000
-runs, the sample covariance agrees with the propagated one element by element over a whole day in LEO, while the
-distribution stays Gaussian in Cartesian coordinates for about one revolution only, the curvature of the orbit
-bending the along-track spread. See [Validation](../guides/validation.md#state-transition-matrix-and-covariance).
+runs in LEO, the sample covariance is the propagated one along every direction of the state for about one revolution,
+and the distribution is Gaussian. Beyond it the curvature of the orbit bends the along-track spread: the sample
+variance leaves the propagated one along one direction of the state, while the position alone holds up to about 6 h.
+In inertial axes every element still agrees within its sampling noise over a whole day, because the along-track
+variance sets that noise. See [Validation](../guides/validation.md#state-transition-matrix-and-covariance).
 
 ## Summary
 

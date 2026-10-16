@@ -32,7 +32,9 @@ stability improvements, but not new API surface: new capabilities belong in the 
   a conformance case is better still, see [Validation](../guides/validation.md).
 - Tests that hold on one platform only, or take minutes (bit-for-bit goldens, statistical validations), carry
   `[Trait("Category", "Validation")]`. The CI runs them on Linux only; on Windows or macOS, run
-  `dotnet test --filter "Category!=Validation"`. A golden is recaptured only for an intended change of results, which
+  `dotnet test --filter "Category!=Validation&Category!=LongValidation"`. Tests of more than 5 min each carry
+  `[Trait("Category", "LongValidation")]` instead: neither the CI nor the CD runs them, only the manual workflow
+  `long-validation.yml`, so skip them locally with `--filter "Category!=LongValidation"`. A golden is recaptured only for an intended change of results, which
   the pull request states: set `IO_ASTRODYNAMICS_GOLDEN_CAPTURE` to the `Data/Golden` directory of the test project and
   run `PropagationGoldenTests`.
 - XML documentation comments on every public member, and a documentation update when the public

@@ -42,10 +42,17 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// partials take central differences in and near the penumbra (#379), so the shadow function is differentiated.
 /// </para>
 /// <para>
-/// The 9.2e-5 of Ψ_Cr of R3 in velocity, at 9.5 h, measures the reference: the velocity part of Ψ_Cr passes there
-/// through a local minimum (7.9e-4 m/s per unit Cr), and the figure follows the step of the reference (3.3e-4 at 5 % of
-/// Cr, 9.9e-5 at 20 %; a fixed-step reference resolves worse, 2.9e-4 at 5 s, through the shadow crossings). Ψ_Cr itself
-/// is within 9.6e-8 of the same propagation at a tighter tolerance over the eclipsing arc (#396).
+/// Ψ is also held over the arc relative to its largest value, the measure of #394, which does not depend on what the
+/// reference resolves where Ψ is small: R2 Ψ_Cd 1.2e-7 (position and velocity), R3 Ψ_Cr 1.5e-6 and 2.1e-6, R4 Ψ_Cr
+/// 2.0e-9 and 1.9e-9, R5 Ψ_Cd 4.6e-8 and 5.3e-8.
+/// </para>
+/// <para>
+/// The local measure of Ψ_Cr of R3 in velocity is a record (1.8e-4), not held to the threshold: its 9.2e-5, at 9.5 h,
+/// measures the reference. The velocity part of Ψ_Cr passes there through a local minimum (7.9e-4 m/s per unit Cr),
+/// and the figure follows the step of the reference: 3.3e-4 at 5 % of Cr, 9.2e-5 at 10 %, 9.9e-5 at 20 %, while over
+/// the arc the same comparison gives 9.5e-6, 2.1e-6 and 9.4e-6 (asserted at each step). A fixed-step reference resolved
+/// worse, 2.9e-4 at 5 s, through the shadow crossings (a design measurement, not a committed test). Ψ_Cr itself is
+/// within 9.6e-8 of the same propagation at a tighter tolerance over the eclipsing arc (#396).
 /// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
@@ -63,20 +70,24 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
         _output = output;
     }
 
-    // Threshold outside the penumbra, and the record of the penumbra (0 when the case has no SRP)
-    public static TheoryData<string, double, double> Cases => new()
+    // Threshold outside the penumbra, the record of the penumbra (0 when the case has no SRP), and the record of the local
+    // measure of Ψ_Cr in velocity where the reference does not resolve it (0 when it is held to the threshold)
+    public static TheoryData<string, double, double, double> Cases => new()
     {
-        { "R1", 1e-7, 0.0 },
-        { "R2", 1e-4, 0.0 },
-        { "R3", 1e-4, 1.5e-5 },
-        { "R4", 1e-4, 2.5e-8 },
-        { "R5", 1e-4, 0.0 }
+        { "R1", 1e-7, 0.0, 0.0 },
+        { "R2", 1e-4, 0.0, 0.0 },
+        { "R3", 1e-4, 1.5e-5, 1.8e-4 },
+        { "R4", 1e-4, 2.5e-8, 0.0 },
+        { "R5", 1e-4, 0.0, 0.0 }
     };
+
+    // Steps of the reference of Ψ_Cr, relative to Cr, around the chosen one, for the cases whose local Ψ_Cr is a record
+    private static readonly double[] OtherReflectivitySteps = { 0.05, 0.2 };
 
     [Theory]
     [MemberData(nameof(Cases))]
     public void PhiAndPsi_MatchCentralDifferencesOfWholePropagations_OverTheArc(string name, double threshold,
-        double penumbraRecord)
+        double penumbraRecord, double localPsiCrRecord)
     {
         // Arrange
         var referenceCase = _cases[name];
@@ -99,15 +110,18 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
 
         // Assert: Φ, per block
         string[] blocks = { "Φ_rr", "Φ_rv", "Φ_vr", "Φ_vv" };
-        var worst = new List<(string What, double Outside, double Penumbra, double End)>();
+        var worst = new List<(string What, double Outside, double Penumbra, double End, double Bound)>();
         for (int b = 0; b < 4; b++)
         {
             worst.Add((blocks[b], Worst(phiErrors, inPenumbra, false, e => e[b]),
-                Worst(phiErrors, inPenumbra, true, e => e[b]), phiErrors[^1][b]));
+                Worst(phiErrors, inPenumbra, true, e => e[b]), phiErrors[^1][b], threshold));
         }
 
-        // Ψ, per column, position and velocity rows apart
+        // Ψ, per column, position and velocity rows apart: over the arc relative to its largest value (the measure of
+        // #394), held to the threshold in every case, and relative to the local value, held to the threshold except where
+        // the reference does not resolve it (R3, Ψ_Cr in velocity: a record)
         int column = 6;
+        var arcErrors = new List<(string What, double Position, double Velocity)>();
         foreach (var parameter in new[] { ForceParameters.DragCoefficient, ForceParameters.ReflectivityCoefficient })
         {
             if ((referenceCase.Parameters & parameter) == 0)
@@ -117,17 +131,23 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
 
             bool drag = parameter == ForceParameters.DragCoefficient;
             double coefficient = drag ? ReferenceCases.DragCoefficient : ReferenceCases.ReflectivityCoefficient;
-            double step = coefficient * (drag ? referenceCase.DragCoefficientStep : referenceCase.ReflectivityCoefficientStep);
-            var expectedPsi = WholePropagationDifferences.Psi(
-                c => Reference(referenceCase, referenceCase.InitialState, drag ? c : ReferenceCases.DragCoefficient,
-                    drag ? ReferenceCases.ReflectivityCoefficient : c), coefficient, step, epochs);
+            double relativeStep = drag ? referenceCase.DragCoefficientStep : referenceCase.ReflectivityCoefficientStep;
             string label = drag ? "Ψ_Cd" : "Ψ_Cr";
             int c = column++;
-            var psiErrors = PsiErrors(drag ? solution : controlled, c, epochs, expectedPsi);
+            var psiSolution = drag ? solution : controlled;
+            var actual = epochs.Select(t => StmMeasures.Column(StmMeasures.Y(psiSolution, t), c)).ToArray();
+            double[][] ExpectedPsi(double step) => WholePropagationDifferences.Psi(
+                v => Reference(referenceCase, referenceCase.InitialState, drag ? v : ReferenceCases.DragCoefficient,
+                    drag ? ReferenceCases.ReflectivityCoefficient : v), coefficient, coefficient * step, epochs);
+            var expectedPsi = ExpectedPsi(relativeStep);
+            var psiErrors = PsiErrors(psiSolution, c, epochs, expectedPsi);
+            double velocityBound = !drag && localPsiCrRecord > 0.0 ? localPsiCrRecord : threshold;
             worst.Add((label + " position", Worst(psiErrors, inPenumbra, false, e => e[0]),
-                Worst(psiErrors, inPenumbra, true, e => e[0]), psiErrors[^1][0]));
+                Worst(psiErrors, inPenumbra, true, e => e[0]), psiErrors[^1][0], threshold));
             worst.Add((label + " velocity", Worst(psiErrors, inPenumbra, false, e => e[1]),
-                Worst(psiErrors, inPenumbra, true, e => e[1]), psiErrors[^1][1]));
+                Worst(psiErrors, inPenumbra, true, e => e[1]), psiErrors[^1][1], velocityBound));
+            var arc = WholePropagationDifferences.PsiArcError(actual, expectedPsi);
+            arcErrors.Add((label, arc.Position, arc.Velocity));
             if (!drag)
             {
                 // Without the option, published only: the bounds of the eclipsing case record it (#394, #396)
@@ -136,18 +156,54 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
                                   $"{Worst(free, inPenumbra, false, e => e[0]):E2}, velocity " +
                                   $"{Worst(free, inPenumbra, false, e => e[1]):E2}");
             }
+
+            if (!drag && localPsiCrRecord > 0.0)
+            {
+                // Where the local measure reaches its worst: the velocity part of Ψ_Cr passes through a local minimum
+                int k = Enumerable.Range(0, epochs.Length).Where(i => !inPenumbra[i]).MaxBy(i => psiErrors[i][1]);
+                double speed = System.Math.Sqrt(expectedPsi[k][3] * expectedPsi[k][3] +
+                                                expectedPsi[k][4] * expectedPsi[k][4] +
+                                                expectedPsi[k][5] * expectedPsi[k][5]);
+                _output.WriteLine($"{name} Ψ_Cr velocity, worst local error at " +
+                                  $"{(epochs[k] - referenceCase.InitialState.Epoch).TotalHours:F2} h, where |Ψ_Cr| in " +
+                                  $"velocity is {speed:E2} m/s per unit Cr");
+
+                // The local measure follows the step of the reference; the measure over the arc does not
+                foreach (double other in OtherReflectivitySteps)
+                {
+                    var otherExpected = ExpectedPsi(other);
+                    var otherLocal = PsiErrors(psiSolution, c, epochs, otherExpected);
+                    var otherArc = WholePropagationDifferences.PsiArcError(actual, otherExpected);
+                    _output.WriteLine($"{name} Ψ_Cr with a reference step of {100.0 * other:F0} % of Cr: local, " +
+                                      $"outside the penumbra, position {Worst(otherLocal, inPenumbra, false, e => e[0]):E2}, " +
+                                      $"velocity {Worst(otherLocal, inPenumbra, false, e => e[1]):E2}; over the arc " +
+                                      $"relative to its largest value, position {otherArc.Position:E2}, velocity " +
+                                      $"{otherArc.Velocity:E2}");
+                    Assert.True(otherArc.Position < threshold && otherArc.Velocity < threshold,
+                        $"{name} Ψ_Cr over the arc at a step of {other:P0}: {otherArc.Position:E2}, {otherArc.Velocity:E2}");
+                }
+            }
         }
 
         _output.WriteLine($"{name}: {epochs.Length} epochs, {penumbra.Count} in the penumbra");
-        foreach (var (what, outside, inside, end) in worst)
+        foreach (var (what, outside, inside, end, bound) in worst)
         {
             _output.WriteLine($"{name} {what}: worst over the arc outside the penumbra {outside:E2}, in the penumbra " +
-                              $"{(penumbra.Count > 0 ? inside.ToString("E2") : "-")}, at the end {end:E2}");
-            Assert.True(outside < threshold, $"{name} {what}: {outside:E2} outside the penumbra");
+                              $"{(penumbra.Count > 0 ? inside.ToString("E2") : "-")}, at the end {end:E2}" +
+                              (bound != threshold ? $" (local measure, a record: {bound:E1})" : ""));
+            Assert.True(outside < bound, $"{name} {what}: {outside:E2} outside the penumbra");
             if (penumbra.Count > 0 && penumbraRecord > 0.0)
             {
                 Assert.True(inside < penumbraRecord, $"{name} {what}: {inside:E2} in the penumbra");
             }
+        }
+
+        foreach (var (what, position, velocity) in arcErrors)
+        {
+            _output.WriteLine($"{name} {what} over the arc relative to its largest value: position {position:E2}, " +
+                              $"velocity {velocity:E2}");
+            Assert.True(position < threshold, $"{name} {what} over the arc, position: {position:E2}");
+            Assert.True(velocity < threshold, $"{name} {what} over the arc, velocity: {velocity:E2}");
         }
     }
 

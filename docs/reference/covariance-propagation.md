@@ -186,15 +186,26 @@ gives the implementation, the tests and the citation status of each equation.
 - **Linear propagation.** P is the linear propagation of the deviations, valid while they stay small against the
   non-linearities of the dynamics. Measured against a Monte Carlo of 5000 runs, with P0 of 100 m and 0.1 m/s on each
   RTN axis in LEO (R1 two-body at 700 km, R2 at 400 km with drag, R3 sun-synchronous with SRP):
-  - The second moments hold over the whole day: every element of P agrees with the sample covariance within 2.3
-    standard deviations of its estimator, up to 24 h, with Cd or Cr sampled as well.
-  - The distribution stays Gaussian with covariance P for about one revolution only. The Kolmogorov-Smirnov test of
-    the Mahalanobis distances passes up to 1.67 h to 2.33 h depending on the case, and fails from 1.83 h to 2.5 h.
+  - For about one revolution, P is the covariance of the deviations along every direction of the state, and the
+    distribution is Gaussian with covariance P. The ratios of the sample variance to the variance of P stay within
+    the sampling noise up to 1 h to 2.2 h depending on the case, and the Kolmogorov-Smirnov test of the Mahalanobis
+    distances passes up to 1.67 h to 2.33 h.
+  - Beyond about one revolution, P is only the linear covariance. Along one direction of the state the sample
+    variance grows away from P: about 1.15 times at one revolution, 350 to 610 times at 6 h, 1.3e6 to 2.4e6 times at
+    24 h (2.2 and 87 with Cd sampled). Every element of P in inertial axes still agrees with the sample covariance
+    within the noise of its estimator up to 24 h, but that noise is set by the along-track variance, which hides the
+    thin directions of P.
+  - The position, what a collision probability projects on the encounter plane, holds longer: its variances agree
+    with the Monte Carlo up to 6 h. At 24 h one direction of the position has 3.3 to 5.0 times the variance of P (the
+    radial variance alone 1.08 to 1.17 times). For this P0 a collision probability computed with P more than a few
+    hours before the encounter therefore rests on a covariance that underestimates the spread in part of the
+    encounter plane; how much this moves the probability is measured with the conjunction analysis (step 10).
   - The departure is the curvature of the orbit. The along-track spread lies on the curved orbit, so the samples sit
     below the straight line of the linear model, by a mean radial offset of about −E[δT²] / (2 r): −104 m at 24 h for
     R1, against −102 m predicted. P is very thin across that curve, so a few metres of curvature move the
-    Mahalanobis distances far beyond their spread. P stays the covariance of the deviations, but reading it as a
-    Gaussian density in Cartesian coordinates holds over about one revolution only for this P0.
+    Mahalanobis distances far beyond their spread.
+  - The curvature term scales with the along-track variance over the radius, σ_T² / r, and σ_T grows mainly with the
+    velocity uncertainty (0.1 m/s here): a smaller P0 should delay the departure, which has not been measured.
   - Figures and tests: [Validation](../guides/validation.md#state-transition-matrix-and-covariance).
 - **Open-loop maneuvers.** An impulsive maneuver applies its nominal ΔV at its epoch; its firing time is not
   differentiated with respect to the state, so Φ and Ψ are continuous at the burn. That is the covariance of a burn

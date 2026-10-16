@@ -138,18 +138,26 @@ with SRP. Thresholds of the specification: R1 below 1e-7, R2 to R5 below 1e-4 ou
 | R4 | 1.8e-8 | 2.7e-8 | 2.8e-8 | 2.2e-8 | Cr 4.9e-7 | Cr 3.1e-8 | 2 crossings: Φ 1.3e-8, Ψ_Cr 9.8e-9 |
 | R5 | 6.7e-7 | 3.3e-7 | 6.7e-7 | 3.3e-7 | Cd 5.6e-8 | Cd 6.4e-8 | |
 
-Worst over the arc, outside the penumbra (`StmValidationTests`). The errors in the penumbra are no larger than outside:
-the SRP partials take central differences in and near the penumbra, so the shadow function is differentiated. The
-9.2e-5 of Ψ_Cr of R3 in velocity, at 9.5 h, measures the reference, not Ψ. The velocity part of Ψ_Cr passes there through
-a local minimum, and the figure follows the step of the reference (3.3e-4 at 5 % of Cr, 9.9e-5 at 20 %). Without
+Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). The errors in the
+penumbra are no larger than outside: the SRP partials take central differences in and near the penumbra, so the
+shadow function is differentiated.
+
+Ψ is also held over the arc relative to its largest value, a measure that does not depend on what the reference
+resolves where Ψ is small: R2 Ψ_Cd 1.2e-7 (position and velocity), R3 Ψ_Cr 1.5e-6 and 2.1e-6, R4 Ψ_Cr 2.0e-9 and
+1.9e-9, R5 Ψ_Cd 4.6e-8 and 5.3e-8. The local 9.2e-5 of Ψ_Cr of R3 in velocity, at 9.5 h, measures the reference, not
+Ψ, and is published as a record rather than held to the threshold. The velocity part of Ψ_Cr passes there through a
+local minimum, 7.9e-4 m/s per unit Cr, and the local figure follows the step of the reference: 3.3e-4 at 5 % of Cr,
+9.2e-5 at 10 %, 9.9e-5 at 20 %. Over the arc the same comparisons give 9.5e-6, 2.1e-6 and 9.4e-6. Without
 `IncludeInStepControl`, Ψ_Cr is off by 2.2e-5 (position) and 2.2e-4 (velocity) over the arc of R3, and by 4.9e-7 and
-3.1e-8 for R4.
+3.1e-8 for R4, relative to the local reference.
 
 **Steps of the reference** (`WholePropagationStepStudyTests`): position steps from 1 cm to 1 km (the velocity step 1e-3
 s⁻¹ times the position step), and the coefficients from 0.1 % to 30 %. On the small steps the integration noise of the
 perturbed propagations dominates, on the large ones the δ² truncation. The chosen steps are within a factor of 2 of the
-smallest error of each sweep: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 % (R2), 5 % (R5), 30 %
-(Eclipsing); Cr 10 % (R3, R4), 30 % (Eclipsing). The reference runs at 1e-14 rather than the 1e-13 of the
+smallest error of each sweep, at the end of the arc: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 %
+(R2), 5 % (R5), 30 % (Eclipsing); Cr 10 % (R3, R4), 30 % (Eclipsing). For Φ each sweep has its minimum between the two
+sides. For Ψ two sweeps show the noise floor of the reference rather than a plateau: Ψ_Cr of R3 is not monotone, and the
+errors of the eclipsing case still fall at the 30 % edge. The reference runs at 1e-14 rather than the 1e-13 of the
 specification. Its smallest error on Φ is lower in every case: R1 1.7e-8 against 2.3e-8, R2 4.6e-8 against 1.4e-7, R3
 1.9e-7 against 1.0e-6, R4 2.8e-8 against 5.6e-8, R5 6.7e-7 against 7.8e-7.
 
@@ -176,7 +184,8 @@ that of a burn executed as commanded, with its execution error, not that of a ma
 **Reduced degree of the geopotential partials** (`GeopotentialPartialsDegreeTests`). The internal option
 `GeopotentialPartialsDegree` keeps the full degree in the acceleration but reduces it in the partials. Worst block of Φ
 over the arc, and the cost of the propagation with Φ against the propagation without it (median of 3, Release,
-informative):
+informative, measured with the test alone: run in parallel with the other Validation classes, the times move with the
+load):
 
 | Case | Degree 2 | Degree 8 | Degree 20 | Full degree | Cost |
 |------|----------|----------|-----------|-------------|------|
@@ -205,18 +214,48 @@ mode, with the same integrator. Two tests are applied every 10 min up to 6 h, at
 | R3, Cr sampled (σ = 0.15) | 2.14: passes up to 24 h | p = 0.011 (1.646 h) | up to 1.67 h; fails from 1.83 h (p = 3.2e-3) | `CovarianceMonteCarloLongTests` |
 
 With Cd or Cr sampled, P holds the coefficient as a consider parameter, `Ψc Pp Ψcᵀ`, so the element-wise test also
-validates Ψ. The second moments of P are those of the Monte Carlo over the whole day, in every case. The shape of the
-distribution is not: beyond about one revolution the Kolmogorov-Smirnov test fails, and then fails massively
-(D = 0.62 at 6 h and 0.94 at 24 h for R1). The sampled Cd widens the along-track spread, which the thin direction of P
-tolerates longer: the test of R2 with Cd sampled even passes again at 3.17 h and 3.33 h before failing for good from
-3.5 h. The departure is the curvature of the orbit. The along-track spread (RMS 2.8 km at 2 h, 38 km at 24 h
-for R1) lies on the curved orbit, so the runs sit below the straight line of the linear model. Their mean radial
-offset follows −E[δT²] / (2 r): for R1, −8.9 m against −6.8 m at 6 h and −104 m against −102 m at 24 h; at 24 h,
-−129 m against −124 m for R2 and −104 m against −102 m for R3. P is very thin across
-that curve, so a few metres move the Mahalanobis distances far beyond their spread. Taken about the sample mean, or
-with S itself in place of P, the test fails from 2.2 h and 2.3 h for R1: the distribution itself is no longer
-Gaussian in Cartesian coordinates. The domain of validity is quoted in the
-[reference page](../reference/covariance-propagation.md#modeling-assumptions).
+validates Ψ.
+
+The element-wise test passing up to 24 h does not mean that the second moments of P hold for a day. In inertial axes
+the along-track variance (38 km RMS at 24 h for R1) sets the scale of every element, so the test cannot see the thin
+directions of P. The ratios of S to P along every direction of the state do not depend on the axes: the eigenvalues
+of L⁻¹ S L⁻ᵀ, with P = L Lᵀ, all 1 under linearity up to the sampling band, (1 ± √(6/N))², 0.93 to 1.07 for N = 5000
+(Marchenko and Pastur). The same ratios over the position alone, what a collision probability projects on the
+encounter plane, have the band 0.95 to 1.05.
+
+| Case | Ratios of S to P, state, up to 1 h | Largest at one revolution | 6 h | 24 h | Position, up to 6 h | Position, 24 h (radial alone) |
+|------|------------------------------------|---------------------------|-----|------|---------------------|-------------------------------|
+| R1 | 0.947 to 1.050 | 1.16 | 350 | 1.3e6 | 0.96 to 1.03 | 3.29 (1.08) |
+| R2 | 0.947 to 1.040 | 1.15 | 609 | 2.4e6 | 0.95 to 1.04 | 4.99 (1.17) |
+| R2, Cd sampled | 0.954 to 1.056 | 1.05 | 2.17 | 87 | 0.96 to 1.05 | 3.93 (1.11) |
+| R3, Cr sampled | 0.954 to 1.056 | 1.13 | 362 | 1.3e6 | 0.96 to 1.05 | 4.32 (1.11) |
+
+- Up to about one revolution S is P along every direction of the state, within the sampling noise. From about one
+  revolution, the sample variance along one direction of the state leaves its band and grows by orders of magnitude
+  (for R1 the five others stay between 0.96 and 1.03). Beyond about one revolution P is the linear covariance of the
+  deviations, not their covariance.
+- The position holds longer: within its band, or at its edge (1.051 for R3 with Cr at 2 h), up to 6 h in every case.
+  At 24 h one direction of the position has 3.3 to 5.0 times the variance of P, while the radial variance alone is
+  1.08 to 1.17 times that of P.
+
+The shape of the distribution departs at the same time: beyond about one revolution the Kolmogorov-Smirnov test fails,
+and then fails massively (D = 0.62 at 6 h and 0.94 at 24 h for R1). The sampled Cd widens the along-track spread, which
+the thin direction of P tolerates longer: the test of R2 with Cd sampled even passes again at 3.17 h and 3.33 h before
+failing for good from 3.5 h. The departure is the curvature of the orbit. The along-track spread (RMS 2.8 km at 2 h,
+38 km at 24 h for R1) lies on the curved orbit, so the runs sit below the straight line of the linear model, and fill
+the thin direction of P. Their mean radial offset follows −E[δT²] / (2 r) once it exceeds the sampling noise, about
+1.4 m: for R1, −8.9 m against −6.8 m at 6 h and −104 m against −102 m at 24 h; at 24 h, −129 m against −124 m for R2
+and −104 m against −102 m for R3. At the boundary of the domain the offset is still within that noise (+1.46 m against
+−0.54 m at 2.0 h for R1): there the evidence is the variance along the thin direction. P is very thin across the
+curve, so a few metres move the Mahalanobis distances far beyond their spread. Taken about the sample mean, or with S
+itself in place of P, the test fails from 2.2 h and 2.3 h for R1: the distribution itself is no longer Gaussian in
+Cartesian coordinates. These two epochs are upper bounds, since both variants estimate their centre, and S, from the
+runs while their significance is that of a fully specified distribution.
+
+The boundary epochs come from a significance that crosses α = 0.01 by a few samples (R1 at 1.83 h, p = 0.011; R3 with
+Cr at 1.67 h, p = 0.0100), so the tests assert them within half an hour. Up to 1 h every case has margin (p = 0.88,
+0.92, 0.12 and 0.53), and the ratios of S to P stay within their band (asserted). The domain of validity is quoted in
+the [reference page](../reference/covariance-propagation.md#modeling-assumptions).
 
 The Monte Carlo of R1 runs in the Linux CI (about 2.5 min). Those of R2 and R3 run in the manual workflow
 `long-validation.yml` (category `LongValidation`, 5 to 6.5 min each).
