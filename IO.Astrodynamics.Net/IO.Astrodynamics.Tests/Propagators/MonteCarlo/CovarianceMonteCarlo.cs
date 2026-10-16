@@ -32,7 +32,7 @@ namespace IO.Astrodynamics.Tests.Propagators.MonteCarlo;
 /// Element-wise test: under linearity the deviations are Gaussian of covariance P, so (N − 1) S follows the Wishart
 /// distribution W(N − 1, P), and the sample covariance S about the sample mean (Bessel's correction) has
 /// <c>Var(S_ij) = (P_ij² + P_ii P_jj) / (N − 1)</c>: T. W. Anderson, <i>An Introduction to Multivariate Statistical
-/// Analysis</i>, 3rd edition, Wiley, 2003, section 7.3 (to be verified by S. Guillet). Each of the 21 distinct elements is
+/// Analysis</i>, 3rd edition, Wiley, 2003, section 7.3 (confirmed by S. Guillet, 2026-10-16). Each of the 21 distinct elements is
 /// held within 4 standard deviations.
 /// </para>
 /// <para>

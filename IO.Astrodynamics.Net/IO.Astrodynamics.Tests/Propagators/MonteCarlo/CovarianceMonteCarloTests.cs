@@ -27,8 +27,8 @@ namespace IO.Astrodynamics.Tests.Propagators.MonteCarlo;
 /// from the offset below) lies on the curved orbit, so the samples sit below the straight line of the linear model, by a
 /// mean radial offset that follows −E[δT²] / (2 r) (−8.9 m against −6.8 m at 6 h, −104 m against −102 m at 24 h,
 /// around which the sampling noise moves it by about 1.4 m), the "banana" of J. L. Junkins, M. R. Akella, K. T. Alfriend, <i>Non-Gaussian error
-/// propagation in orbital mechanics</i>, Journal of the Astronautical Sciences 44(4), 1996 (to be verified by
-/// S. Guillet). Since P is very thin across that curve, a few metres move the Mahalanobis distances by far more than
+/// propagation in orbital mechanics</i>, Journal of the Astronautical Sciences 44(4), 1996 (confirmed by
+/// S. Guillet, 2026-10-16). Since P is very thin across that curve, a few metres move the Mahalanobis distances by far more than
 /// their spread. With the deviations from the sample mean the test fails from 2.17 h, and with the sample covariance
 /// instead of P from 2.33 h (p = 5.8e-5): the distribution itself is no longer Gaussian in Cartesian coordinates.
 /// </para>
