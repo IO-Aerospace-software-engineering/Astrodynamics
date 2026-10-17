@@ -25,6 +25,9 @@ public class AtmosphericDrag : ForceBase
     private readonly Spacecraft _spacecraft;
     private readonly CelestialBody _celestialBody;
 
+    /// <summary>The body whose atmosphere slows the spacecraft.</summary>
+    internal CelestialBody CelestialBody => _celestialBody;
+
     public AtmosphericDrag(Spacecraft spacecraft, CelestialBody celestialBody)
     {
         _spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));

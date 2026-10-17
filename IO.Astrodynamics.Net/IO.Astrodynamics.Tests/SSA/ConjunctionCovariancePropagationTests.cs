@@ -33,12 +33,25 @@ public sealed class ConjunctionCovarianceCase
     {
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
-        var protectedOrbit = new KeplerianElements(7078137.0, 0.001, 98.2 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1,
-            0.3, Earth, Start, Frames.Frame.ICRF).ToStateVector();
-        var protectedAtTca = protectedOrbit.ToStateVector(Tca);
+        var (protectedOrbit, secondaryOrbit) = Pair(Earth, Start, Tca);
 
-        // At the TCA: 200 m from the protected object, mostly radial and across, with a velocity turned by 70° about the
-        // radial direction
+        ProtectedStart = WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });
+        SecondaryStart = WithRtnCovariance(secondaryOrbit, new[] { 80.0, 300.0, 60.0, 0.3, 0.08, 0.05 });
+    }
+
+    internal CelestialBody Earth { get; }
+
+    /// <summary>
+    /// The initial states at <paramref name="start"/> of the protected object, a LEO at 700 km inclined by 98.2°, and of
+    /// a secondary object that passes, in the two-body problem of <paramref name="earth"/>, 200 m from it at
+    /// <paramref name="tca"/> (120 m radial, 160 m normal), with a velocity turned by 70° about the radial direction.
+    /// </summary>
+    internal static (StateVector Protected, StateVector Secondary) Pair(CelestialBody earth, TimeSystem.Time start,
+        TimeSystem.Time tca)
+    {
+        var protectedOrbit = new KeplerianElements(7078137.0, 0.001, 98.2 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1,
+            0.3, earth, start, Frames.Frame.ICRF).ToStateVector();
+        var protectedAtTca = protectedOrbit.ToStateVector(tca);
         var radial = protectedAtTca.Position.Normalize();
         var normal = protectedAtTca.Position.Cross(protectedAtTca.Velocity).Normalize();
         var position = protectedAtTca.Position + radial * 120.0 + normal * 160.0;
@@ -46,14 +59,9 @@ public sealed class ConjunctionCovarianceCase
         var v = protectedAtTca.Velocity;
         var velocity = v * System.Math.Cos(angle) + radial.Cross(v) * System.Math.Sin(angle) +
                        radial * (radial * v) * (1.0 - System.Math.Cos(angle));
-        var secondaryAtTca = new StateVector(position, velocity, Earth, Tca, Frames.Frame.ICRF);
-        var secondaryOrbit = secondaryAtTca.ToStateVector(Start);
-
-        ProtectedStart = WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });
-        SecondaryStart = WithRtnCovariance(secondaryOrbit, new[] { 80.0, 300.0, 60.0, 0.3, 0.08, 0.05 });
+        var secondaryAtTca = new StateVector(position, velocity, earth, tca, Frames.Frame.ICRF);
+        return (protectedOrbit, secondaryAtTca.ToStateVector(start));
     }
-
-    internal CelestialBody Earth { get; }
 
     internal StateVector ProtectedStart { get; }
 
