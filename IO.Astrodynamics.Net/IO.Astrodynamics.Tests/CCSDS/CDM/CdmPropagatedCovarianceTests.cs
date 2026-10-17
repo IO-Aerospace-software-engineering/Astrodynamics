@@ -23,13 +23,13 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Tests.CCSDS.CDM;
 
 /// <summary>
-/// A conjunction 6 h after the initial states, both participants propagated in RK7(8) with EGM2008 10×10, NRLMSISE-00
+/// A conjunction 2 h after the initial states, both participants propagated in RK7(8) with EGM2008 10×10, NRLMSISE-00
 /// drag, the Moon, the Sun and solar radiation pressure.
 /// </summary>
 public sealed class CdmPropagatedCovarianceCase
 {
     internal static readonly TimeSystem.Time Start = new(2024, 3, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
-    internal static readonly TimeSystem.Time Tca = Start.AddHours(6.0);
+    internal static readonly TimeSystem.Time Tca = Start.AddHours(2.0);
 
     internal static readonly CovariancePropagationOptions Options = new()
     {
@@ -44,8 +44,18 @@ public sealed class CdmPropagatedCovarianceCase
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        Bodies = new CelestialItem[]
-            { earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
+        var sun = new CelestialBody(Stars.Sun);
+        Bodies = new CelestialItem[] { earth, moon, sun };
+
+        // The same without the geopotential, whose harmonics move the two-body geometry of the encounter by about 100 km
+        // in 2 h: the case of the avoidance options, which need the encounter
+        var pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start, null,
+            new Nrlmsise00Model(SpaceWeather.Nominal));
+        PointMassBodies = new CelestialItem[] { pointMassEarth, moon, sun };
+        var (protectedPointMass, secondaryPointMass) = ConjunctionCovarianceCase.Pair(pointMassEarth, Start, Tca);
+        PointMassProtectedStart = ConjunctionCovarianceCase.WithRtnCovariance(protectedPointMass, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });
+        PointMassSecondaryStart = ConjunctionCovarianceCase.WithRtnCovariance(secondaryPointMass, new[] { 80.0, 300.0, 60.0, 0.3, 0.08, 0.05 });
         var (protectedOrbit, secondaryOrbit) = ConjunctionCovarianceCase.Pair(earth, Start, Tca);
         ProtectedStart = ConjunctionCovarianceCase.WithRtnCovariance(protectedOrbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });
         SecondaryStart = ConjunctionCovarianceCase.WithRtnCovariance(secondaryOrbit, new[] { 80.0, 300.0, 60.0, 0.3, 0.08, 0.05 });
@@ -53,16 +63,24 @@ public sealed class CdmPropagatedCovarianceCase
 
     internal IReadOnlyList<CelestialItem> Bodies { get; }
 
+    /// <summary>The bodies with a point-mass Earth (NRLMSISE-00 kept).</summary>
+    internal IReadOnlyList<CelestialItem> PointMassBodies { get; }
+
+    internal StateVector PointMassProtectedStart { get; }
+
+    internal StateVector PointMassSecondaryStart { get; }
+
     internal StateVector ProtectedStart { get; }
 
     internal StateVector SecondaryStart { get; }
 
     internal static Window AnalysisWindow => new(Tca.AddMinutes(-30.0), Tca.AddMinutes(30.0));
 
-    internal PropagationSolution Propagate(Spacecraft spacecraft, CovariancePropagationOptions options = null)
+    internal PropagationSolution Propagate(Spacecraft spacecraft, CovariancePropagationOptions options = null,
+        bool pointMass = false)
     {
-        return spacecraft.Propagate(new Window(Start, Start.AddHours(7.0)), Bodies, new RK78Integrator(1e-11, 1e-11), true,
-            true, TimeSpan.FromSeconds(60.0), options);
+        return spacecraft.Propagate(new Window(Start, Start.AddHours(3.0)), pointMass ? PointMassBodies : Bodies,
+            new RK78Integrator(1e-11, 1e-11), true, true, TimeSpan.FromSeconds(60.0), options);
     }
 }
 

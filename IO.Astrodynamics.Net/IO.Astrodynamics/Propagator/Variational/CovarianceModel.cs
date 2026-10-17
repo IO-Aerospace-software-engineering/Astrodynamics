@@ -8,7 +8,8 @@ namespace IO.Astrodynamics.Propagator.Variational;
 
 /// <summary>
 /// The propagated covariance from the variational values: P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q (C2), and the extended
-/// covariance of the state and the consider parameters, [[P, Ψc Pp], [Pp Ψcᵀ, Pp]] (C4).
+/// covariance of the state and the consider parameters, [[P, Ψc Pp], [Pp Ψcᵀ, Pp]] (C4); with an initial
+/// state–parameter covariance C0, P = Φ P0 Φᵀ + Φ C0 Ψcᵀ + Ψc C0ᵀ Φᵀ + Ψc Pp Ψcᵀ + Q and the cross block Φ C0 + Ψc Pp.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -17,6 +18,13 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// linear maps, Cov(J x) = J Cov(x) Jᵀ (Tapley, Schutz and Born, <i>Statistical Orbit Determination</i>, 2004,
 /// chapter 4). Ψc holds the columns of Ψ of the consider parameters and Pp = diag(σ²) their covariance, the parameters
 /// being constant. The extended covariance is that of (δx, δp) = M (δx0, δp) + (w, 0), M = [[Φ, Ψc], [0, I]].
+/// </para>
+/// <para>
+/// The initial deviation and the parameters are independent at the start of a propagation from an initial state
+/// (C0 = 0). A propagation that starts from a state already propagated with the same consider parameters, such as an
+/// avoidance option from the state at its burn (step 10, E4), starts from the extended covariance
+/// [[P0, C0], [C0ᵀ, Pp]] instead, C0 = cov(δx0, δp): the same relation Cov(J x) = J Cov(x) Jᵀ with J = M gives the
+/// cross terms Φ C0 Ψcᵀ + Ψc C0ᵀ Φᵀ in P and Φ C0 in the cross block.
 /// </para>
 /// <para>
 /// Each matrix is symmetrized, (P + Pᵀ) / 2. Nothing else is corrected: a published covariance that is not positive
@@ -34,6 +42,10 @@ internal sealed class CovarianceModel
     private readonly int[] _considerColumns;
     private readonly double[] _considerVariances;
     private readonly double[] _work = new double[N * N];
+
+    // The initial state–parameter covariance C0, 6 × the number of consider parameters, row-major; null when zero
+    private double[] _initialCross;
+    private double[] _crossWork;
 
     /// <summary>
     /// Create the model.
@@ -93,6 +105,33 @@ internal sealed class CovarianceModel
     /// <summary>Number of columns of Y, 6 + p.</summary>
     internal int ColumnCount { get; }
 
+    /// <summary>
+    /// Set the initial state–parameter covariance C0 = cov(δx0, δp), 6 × the number of consider parameters, row-major, the
+    /// consider parameters in the order of the extended covariance (Cd, then Cr); in the frame of P0.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="cross"/> does not hold 6 × the number of consider parameters
+    /// values, or a value is not finite.</exception>
+    internal void SetInitialCrossCovariance(ReadOnlySpan<double> cross)
+    {
+        if (cross.Length != N * ConsiderCount)
+        {
+            throw new ArgumentException(
+                $"C0 holds {N * ConsiderCount} values (6 × {ConsiderCount} consider parameters); got {cross.Length}.",
+                nameof(cross));
+        }
+
+        foreach (var value in cross)
+        {
+            if (!double.IsFinite(value))
+            {
+                throw new ArgumentException("C0 must hold finite values.", nameof(cross));
+            }
+        }
+
+        _initialCross = cross.ToArray();
+        _crossWork = new double[N * ConsiderCount];
+    }
+
     /// <summary>Number of consider parameters.</summary>
     internal int ConsiderCount => _considerColumns.Length;
 
@@ -140,7 +179,13 @@ internal sealed class CovarianceModel
             double variance = _considerVariances[c];
             for (int i = 0; i < N; i++)
             {
+                // Ψc Pp, and Φ C0 with an initial cross covariance
                 double value = y[i * n + column] * variance;
+                if (_initialCross != null)
+                {
+                    value += _crossWork[i * ConsiderCount + c];
+                }
+
                 extended[i * m + N + c] = value;
                 extended[(N + c) * m + i] = value;
             }
@@ -173,6 +218,24 @@ internal sealed class CovarianceModel
             }
         }
 
+        // With an initial cross covariance, Φ C0, kept for the cross block of the extended covariance
+        if (_initialCross != null)
+        {
+            for (int i = 0; i < N; i++)
+            {
+                for (int c = 0; c < ConsiderCount; c++)
+                {
+                    double sum = 0.0;
+                    for (int k = 0; k < N; k++)
+                    {
+                        sum += y[i * n + k] * _initialCross[k * ConsiderCount + c];
+                    }
+
+                    _crossWork[i * ConsiderCount + c] = sum;
+                }
+            }
+        }
+
         // P = T Φᵀ + Σ σ² ψ ψᵀ + Q, on the upper triangle, then mirrored: the symmetrization of the specification
         for (int i = 0; i < N; i++)
         {
@@ -200,6 +263,12 @@ internal sealed class CovarianceModel
                 {
                     int column = _considerColumns[c];
                     symmetric += _considerVariances[c] * y[i * n + column] * y[j * n + column];
+                    if (_initialCross != null)
+                    {
+                        // Φ C0 Ψcᵀ + Ψc C0ᵀ Φᵀ, symmetric by construction
+                        symmetric += _crossWork[i * ConsiderCount + c] * y[j * n + column] +
+                                     y[i * n + column] * _crossWork[j * ConsiderCount + c];
+                    }
                 }
 
                 symmetric += q[VariationalEquations.CovarianceIndex(i, j)];

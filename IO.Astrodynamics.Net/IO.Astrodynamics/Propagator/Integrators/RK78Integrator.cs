@@ -156,6 +156,19 @@ public sealed class RK78Integrator : Integrator
     }
 
     /// <summary>
+    /// A new integrator with the settings of this one (tolerances, step sizes and controller, or the fixed step), without
+    /// forces or variational equations: the integrator of the propagation of an avoidance option from the state at its
+    /// burn (step 10, E4).
+    /// </summary>
+    internal RK78Integrator WithSameSettings()
+    {
+        return AdaptiveMode
+            ? new RK78Integrator(AbsoluteTolerance, RelativeTolerance, _initialH, _controller.MinStepSize,
+                _controller.MaxStepSize, _controller.SafetyFactor, _controller.MinFactor, _controller.MaxFactor)
+            : new RK78Integrator(_initialH);
+    }
+
+    /// <summary>
     /// The variational equations integrated with the state, null when they are off.
     /// </summary>
     internal VariationalEquations VariationalEquations => _variational;

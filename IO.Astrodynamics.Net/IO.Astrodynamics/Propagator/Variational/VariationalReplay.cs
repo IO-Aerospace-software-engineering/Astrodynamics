@@ -79,7 +79,7 @@ internal static class VariationalReplay
         var equations = new VariationalEquations(variationalOptions);
         var dynamics = new PropagationDynamics(forces, source.Observer, source.Frame, source.Epoch,
             source.OrientationCacheFrame, source.OrientationCache, variationalOptions, equations, covariance,
-            source.SyncRoot);
+            source.SyncRoot) { Integrator = source.Integrator };
         var replayed = new PropagationSolution
         {
             Dynamics = dynamics,

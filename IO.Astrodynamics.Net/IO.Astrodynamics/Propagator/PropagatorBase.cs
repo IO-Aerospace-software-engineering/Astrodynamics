@@ -127,6 +127,21 @@ public abstract class PropagatorBase : IPropagator
         _covariancePropagation = options;
     }
 
+    /// <summary>
+    /// The initial covariance of the state and the consider parameters, C0 = cov(δx0, δp), 6 × the number of consider
+    /// parameters, row-major (<see cref="CovarianceModel.SetInitialCrossCovariance"/>): for a propagation from a state
+    /// already propagated with the same consider parameters (step 10, E4). Call it after the activation of the
+    /// covariance, before <see cref="Propagate"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The covariance is not propagated.</exception>
+    internal void SetInitialCrossCovariance(ReadOnlySpan<double> cross)
+    {
+        if (_covarianceModel == null)
+            throw new InvalidOperationException("The covariance is not propagated: there is no consider covariance to set.");
+
+        _covarianceModel.SetInitialCrossCovariance(cross);
+    }
+
     private RK78Integrator RequireRK78()
     {
         if (Integrator is not RK78Integrator rk78)
@@ -259,7 +274,7 @@ public abstract class PropagatorBase : IPropagator
         {
             dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
                 InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations,
-                _covarianceModel);
+                _covarianceModel) { Integrator = rk78 };
         }
 
         var variational = _variationalOptions != null ? rk78.VariationalEquations : null;

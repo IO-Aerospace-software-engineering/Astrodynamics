@@ -126,6 +126,12 @@ internal sealed class PropagationDynamics
     /// <summary>The lock that serializes the evaluations, shared with the replay of the variational equations.</summary>
     internal object SyncRoot => _lock;
 
+    /// <summary>
+    /// The integrator of the propagation, for its settings only (<see cref="RK78Integrator.WithSameSettings"/>); null for
+    /// dynamics built without it.
+    /// </summary>
+    internal RK78Integrator Integrator { get; init; }
+
     /// <summary>The options of the variational equations, or null when they were off.</summary>
     internal VariationalOptions Options { get; }
 
