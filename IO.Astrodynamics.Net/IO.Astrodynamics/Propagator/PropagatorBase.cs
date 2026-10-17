@@ -140,7 +140,19 @@ public abstract class PropagatorBase : IPropagator
     }
 
     // The covariance model of the options, after the checks of P0; null without the covariance
-    private CovarianceModel CreateCovarianceModel(VariationalOptions options)
+    private CovarianceModel CreateCovarianceModel(VariationalOptions options) =>
+        CreateCovarianceModel(Spacecraft, Window.StartDate, options);
+
+    /// <summary>
+    /// The covariance model of <paramref name="options"/> for a propagation of <paramref name="spacecraft"/> from
+    /// <paramref name="start"/>, after the checks of P0, the covariance of its initial orbital parameters; null without
+    /// the covariance. Shared with the replay of the variational equations by the conjunction analysis.
+    /// </summary>
+    /// <exception cref="ArgumentException">Consider parameters without the covariance.</exception>
+    /// <exception cref="InvalidOperationException">The initial orbital parameters carry no covariance, carry it at another
+    /// epoch than <paramref name="start"/>, or carry one that is not 6×6, symmetric and positive semi-definite.</exception>
+    internal static CovarianceModel CreateCovarianceModel(Spacecraft spacecraft, in Time start,
+        VariationalOptions options)
     {
         if (!options.PropagateCovariance)
         {
@@ -154,28 +166,28 @@ public abstract class PropagatorBase : IPropagator
             return null;
         }
 
-        var initial = Spacecraft.InitialOrbitalParameters;
+        var initial = spacecraft.InitialOrbitalParameters;
         var covariance = initial.ToStateVector().Covariance;
         if (!covariance.HasValue)
         {
-            throw InitialCovarianceError(
+            throw InitialCovarianceError(spacecraft,
                 "The covariance is propagated from that of the initial orbital parameters of the spacecraft, which " +
                 "carry none: give the initial state vector a covariance, or propagate the state transition matrix " +
                 "only.");
         }
 
-        if ((initial.Epoch - Window.StartDate) != TimeSpan.Zero)
+        if ((initial.Epoch - start) != TimeSpan.Zero)
         {
-            throw InitialCovarianceError(
+            throw InitialCovarianceError(spacecraft,
                 $"The initial covariance is given at {initial.Epoch.ToTDB()}, and the propagation starts at " +
-                $"{Window.StartDate}: the propagator does not carry a covariance from another epoch. Start the window " +
+                $"{start}: the propagator does not carry a covariance from another epoch. Start the window " +
                 "at the epoch of the initial orbital parameters.");
         }
 
         var p0 = covariance.Value;
         if (p0.Rows != VariationalEquations.StateDimension || p0.Columns != VariationalEquations.StateDimension)
         {
-            throw InitialCovarianceError(
+            throw InitialCovarianceError(spacecraft,
                 $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.");
         }
 
@@ -191,15 +203,15 @@ public abstract class PropagatorBase : IPropagator
         var reason = CovarianceChecks.Validate(values, 6, "The initial covariance", out var symmetrized);
         if (reason != null)
         {
-            throw InitialCovarianceError(reason);
+            throw InitialCovarianceError(spacecraft, reason);
         }
 
         return new CovarianceModel(symmetrized, options);
     }
 
     // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one
-    private InvalidOperationException InitialCovarianceError(string reason) =>
-        new($"The covariance of spacecraft '{Spacecraft.Name}' cannot be propagated: {reason}");
+    private static InvalidOperationException InitialCovarianceError(Spacecraft spacecraft, string reason) =>
+        new($"The covariance of spacecraft '{spacecraft.Name}' cannot be propagated: {reason}");
 
     /// <summary>
     /// The frame whose orientation cache the propagation uses, and that cache, active on the propagating thread during
@@ -253,6 +265,10 @@ public abstract class PropagatorBase : IPropagator
         double[] entryY = null;
         double[] entryQ = null;
         ManeuverRecord? entryManeuver = null;
+
+        // In RK7(8), the maneuver that starts each segment, recorded with or without the variational equations for their
+        // replay by the conjunction analysis
+        ManeuverRecord? segmentManeuver = null;
         if (variational != null)
         {
             entryY = new double[variational.YLength];
@@ -287,6 +303,10 @@ public abstract class PropagatorBase : IPropagator
             var result = Integrator.IntegrateSegment(
                 currentPos, currentVel, currentEpoch, remaining, eventDetectors);
             result.Segment.Context = context;
+            if (rk78 != null)
+            {
+                result.Segment.EntryManeuver = segmentManeuver;
+            }
 
             // b. Add segment to solution
             solution.AddSegment(result.Segment);
@@ -340,6 +360,18 @@ public abstract class PropagatorBase : IPropagator
                     entryManeuver = restart && detector is ManeuverEventDetector maneuverDetector
                         ? ManeuverRecordOf(eventEpoch, maneuverDetector.Maneuver, entryQ)
                         : null;
+                    segmentManeuver = entryManeuver;
+                }
+                else if (rk78 != null)
+                {
+                    segmentManeuver = restart && detector is ManeuverEventDetector maneuverDetector
+                        ? ManeuverRecordOf(eventEpoch, maneuverDetector.Maneuver, Array.Empty<double>())
+                        : null;
+                }
+
+                if (rk78 != null)
+                {
+                    result.Segment.EventTime = evt.EventTime;
                 }
 
                 // Update event detectors for next segment
@@ -381,6 +413,9 @@ public abstract class PropagatorBase : IPropagator
 
         // 8. Attach sampled output to solution
         solution.SetOutputStates(outputStates);
+
+        // 9. The spacecraft keeps it, for the conjunction analysis that reads its propagated states (step 10, E2)
+        Spacecraft.LastPropagation = solution;
 
         return solution;
     }

@@ -33,7 +33,7 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// </remarks>
 internal sealed class PropagationDynamics
 {
-    private readonly object _lock = new();
+    private readonly object _lock;
     private readonly ForceBase[] _forces;
     private readonly Frame _orientationCacheFrame;
     private readonly PropagationFrameOrientationCache _orientationCache;
@@ -62,11 +62,27 @@ internal sealed class PropagationDynamics
     internal PropagationDynamics(IReadOnlyList<ForceBase> forces, ILocalizable observer, Frame frame, in Time epoch,
         Frame orientationCacheFrame, PropagationFrameOrientationCache orientationCache, VariationalOptions options,
         VariationalEquations propagationEquations, CovarianceModel covariance = null)
+        : this(forces, observer, frame, epoch, orientationCacheFrame, orientationCache, options, propagationEquations,
+            covariance, new object())
+    {
+    }
+
+    /// <summary>
+    /// Record dynamics that share the forces, and the lock, of another propagation: those of the replay of its
+    /// variational equations (<see cref="VariationalReplay"/>), whose evaluations must not run concurrently with its own,
+    /// since the force partials reuse buffers.
+    /// </summary>
+    /// <param name="syncRoot">The lock of the dynamics whose forces these share.</param>
+    internal PropagationDynamics(IReadOnlyList<ForceBase> forces, ILocalizable observer, Frame frame, in Time epoch,
+        Frame orientationCacheFrame, PropagationFrameOrientationCache orientationCache, VariationalOptions options,
+        VariationalEquations propagationEquations, CovarianceModel covariance, object syncRoot)
     {
         ArgumentNullException.ThrowIfNull(forces);
+        _lock = syncRoot ?? throw new ArgumentNullException(nameof(syncRoot));
         _forces = forces.ToArray();
         Observer = observer ?? throw new ArgumentNullException(nameof(observer));
-        ArgumentNullException.ThrowIfNull(frame);
+        Frame = frame ?? throw new ArgumentNullException(nameof(frame));
+        Epoch = epoch;
         _orientationCacheFrame = orientationCacheFrame;
         _orientationCache = orientationCache;
         Options = options;
@@ -91,6 +107,24 @@ internal sealed class PropagationDynamics
 
     /// <summary>Observer of the integrated state.</summary>
     internal ILocalizable Observer { get; }
+
+    /// <summary>Frame of the integrated state.</summary>
+    internal Frame Frame { get; }
+
+    /// <summary>Initial epoch of the propagation.</summary>
+    internal Time Epoch { get; }
+
+    /// <summary>The forces of the integrator, in their order.</summary>
+    internal IReadOnlyList<ForceBase> Forces => _forces;
+
+    /// <summary>The frame whose orientation cache the propagation used, or null.</summary>
+    internal Frame OrientationCacheFrame => _orientationCacheFrame;
+
+    /// <summary>That cache, or null.</summary>
+    internal PropagationFrameOrientationCache OrientationCache => _orientationCache;
+
+    /// <summary>The lock that serializes the evaluations, shared with the replay of the variational equations.</summary>
+    internal object SyncRoot => _lock;
 
     /// <summary>The options of the variational equations, or null when they were off.</summary>
     internal VariationalOptions Options { get; }

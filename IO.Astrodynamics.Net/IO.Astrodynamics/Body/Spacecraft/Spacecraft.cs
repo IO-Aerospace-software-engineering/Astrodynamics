@@ -694,6 +694,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         internal StateVector[] PropagatedStates => _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
 
+        /// <summary>
+        /// The solution of the last propagation, whose output states the spacecraft stores; null before any propagation
+        /// and after a reset. The conjunction analysis reads the covariance at the TCA from it, or replays its variational
+        /// equations (step 10, E2). It keeps the forces of the propagation, and their ephemeris cache, alive until the
+        /// next propagation.
+        /// </summary>
+        internal PropagationSolution LastPropagation { get; set; }
+
         public void AddPropagatedStates(params StateVector[] stateVectors)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
@@ -820,6 +828,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         private void ResetPropagation()
         {
+            LastPropagation = null;
             if (IsPropagated)
             {
                 _isPropagated = false;
