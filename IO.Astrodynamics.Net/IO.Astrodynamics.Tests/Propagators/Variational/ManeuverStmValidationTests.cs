@@ -35,7 +35,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// <para>
 /// Ψ starts from zero (in the shadow for Cr, at 1000 km for Cd), where the reference does not resolve it relative to
 /// its local value: Ψ is held to F1 over the arc relative to its largest value, the measure of #394, and relative to the
-/// local value after the burn, once it is resolved. The steps come from <c>WholePropagationStepStudyTests</c>.
+/// local value after the burn, once it is resolved, except Ψ_Cr locally, a record since #398. The steps come from
+/// <c>WholePropagationStepStudyTests</c>.
 /// </para>
 /// <para>
 /// Measured (Linux, .NET 10, 2026-10-16), burn at 0.823 h, |ΔV| = 233.8 m/s, 7 penumbra crossings. Open loop: Φ per
@@ -45,6 +46,15 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// their largest values. The apogee raise retargets its ΔV from the state it finds at its own perigee, which removes
 /// most of the deviation of the apogee: the covariance of a targeted maneuver is not the open-loop one. The open-loop
 /// model is that of a burn executed as commanded (epoch and ΔV fixed), with its execution error (Gates).
+/// </para>
+/// <para>
+/// Since #398 (2026-10-17) the propagations start from exactly the state given, about 1e-9 m from the start through the
+/// Keplerian elements before. Φ and Ψ_Cd do not move beyond their noise (Φ 5.5e-8 at most per block, Ψ_Cd 7.5e-8 and
+/// 3.7e-6), but the reference of Ψ_Cr does: over the arc 5.2e-5 and 9.4e-5 (position, velocity; 4.4e-6 before), locally
+/// after the burn 3.7e-4, 7.8e-5 in the penumbra (1.3e-5 and 4.1e-6 before), and 1.4e-4 and 1.9e-4 with steps of 10 % and
+/// 20 % of Cr. On <c>main</c> before the fix, a start moved by 2e-9 m alone took the local figure from 1.3e-5 to 2.9e-5
+/// and reordered the whole sweep of the step: it is the noise of the reference. Ψ_Cr locally after the burn is therefore
+/// a record (decision of S. Guillet, 2026-10-17), as the local Ψ_Cr of R3 in velocity; over the arc it is held to F1.
 /// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
@@ -145,8 +155,10 @@ public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
                               $"outside the penumbra {localOutside:E2}, in the penumbra {localInside:E2}");
             Assert.True(position < 1e-4, $"open loop {what} position: {position:E2}");
             Assert.True(velocity < 1e-4, $"open loop {what} velocity: {velocity:E2}");
-            Assert.True(localOutside < 1e-4, $"open loop {what} after the burn: {localOutside:E2}");
-            Assert.True(localInside < PsiPenumbraRecord, $"open loop {what} after the burn, in the penumbra: {localInside:E2}");
+            // Ψ_Cr locally after the burn: a record, the noise of its reference (#398); held over the arc above
+            Assert.True(localOutside < (drag ? 1e-4 : PsiCrLocalRecord), $"open loop {what} after the burn: {localOutside:E2}");
+            Assert.True(localInside < (drag ? PsiPenumbraRecord : PsiCrPenumbraLocalRecord),
+                $"open loop {what} after the burn, in the penumbra: {localInside:E2}");
 
             // The closed loop for Ψ: the coefficient also moves the perigee and so the burn
             var closed = WholePropagationDifferences.Psi(
@@ -191,6 +203,13 @@ public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
     private const double PenumbraRecord = 6e-8;
 
     private const double PsiPenumbraRecord = 1e-5;
+
+    // Records of Ψ_Cr relative to its local value after the burn, outside and in the penumbra, about twice the
+    // measurements of 2026-10-17 (3.7e-4 and 7.8e-5): the noise of the reference, which a shift of the start by 2e-9 m
+    // moves by a factor of 2 to 30 (#398)
+    private const double PsiCrLocalRecord = 7.5e-4;
+
+    private const double PsiCrPenumbraLocalRecord = 1.6e-4;
 
     // The measurements: Φ_rr, Φ_rv, Φ_vr, Φ_vv after the burn, then Ψ_Cd and Ψ_Cr over the arc
     private static readonly double[] ClosedLoopRecords = { 0.477, 0.332, 0.419, 0.230, 0.368, 1.17 };
