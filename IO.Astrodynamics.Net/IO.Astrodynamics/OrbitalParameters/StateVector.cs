@@ -283,7 +283,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <remarks>
         /// The argument of latitude is the special case of D. A. Vallado, <i>Fundamentals of Astrodynamics and
         /// Applications</i>, 4th edition, Microcosm Press, 2013, section 2.5, algorithm 9 (RV2COE) for a circular
-        /// inclined orbit (to be verified by S. Guillet). It holds at every inclination: an equatorial orbit has the x
+        /// inclined orbit (confirmed by S. Guillet, 2026-10-17). It holds at every inclination: an equatorial orbit has the x
         /// axis for node (<see cref="OrbitalParameters.AscendingNodeVector"/>). The x axis lies in the orbit plane only
         /// when the orbit is equatorial or its node is on it, so a true longitude counted from it moved a near-circular
         /// orbit inclined by 1e-10 to 1e-3 rad along its orbit, by up to decimetres in GEO (#398).
