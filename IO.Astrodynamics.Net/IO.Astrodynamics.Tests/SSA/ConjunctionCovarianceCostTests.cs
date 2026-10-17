@@ -57,16 +57,24 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         double replay = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = false }));
         double withIndex = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window), 3);
-        var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
+        // The avoidance burns must lie in the screening window: three lead times from the TCA found, up to 6 h, with the
+        // default magnitudes and directions (up to 54 options; those below the minimum lead time of 10 min are skipped)
+        var screening = new TimeSystem.Window(start.AddHours(12.0), start.AddHours(24.0));
+        var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, screening,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = false });
+        double lead = System.Math.Min(6.0 * 3600.0, (encounter.EncounterState.Epoch - screening.StartDate).TotalSeconds - 60.0);
+        var leads = new[] { lead / 3.0, 2.0 * lead / 3.0, lead }.Select(TimeSpan.FromSeconds).ToArray();
         watch.Restart();
-        var options = ConjunctionAssessment.EvaluateAvoidance(encounter);
+        var options = ConjunctionAssessment.EvaluateAvoidance(encounter,
+            new AvoidanceSearchOptions { LeadTimes = leads, MaxReturnedOptions = 54 });
         double avoidance = watch.Elapsed.TotalMilliseconds;
 
         // Assert
         _output.WriteLine($"R2-like participants over one day: propagation {propagation:F0} ms each (RK7(8) at 1e-11, without the covariance)");
         _output.WriteLine($"Analyze, covariance held in RTN: {held:F0} ms; replay of both participants: {replay:F0} ms; with the index: {withIndex:F0} ms");
-        _output.WriteLine($"EvaluateAvoidance, default grid: {options.Count} options returned in {avoidance:F0} ms");
+        _output.WriteLine($"EvaluateAvoidance, default magnitudes and directions, lead times up to {lead / 3600.0:F2} h: " +
+                          $"{options.Count} options in {avoidance:F0} ms, each propagated with the covariance from its burn " +
+                          $"to the end of the window ({(screening.EndDate - encounter.EncounterState.Epoch).TotalHours:F1} h after the TCA)");
         Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.ProtectedCovariance.Source);
         Assert.NotEmpty(options);
     }

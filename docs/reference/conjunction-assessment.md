@@ -63,6 +63,13 @@ settings of the participant's propagation: the dominant cost of the guard, which
 turns off. It is not computed for a propagation with maneuvers (null), nor for the avoidance options.
 `EncounterQualityFlags.NonlinearCovariancePropagation` is raised above `NonlinearityIndexThreshold`.
 
+**Cost** (`ConjunctionCovarianceCostTests`, Release, Intel Xeon 2.1 GHz, 4 cores, 2026-10-17, informative). Two
+participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag), each propagated over one day in RK7(8) at 1e-11 in
+0.67 s; `Analyze` over a 2 h window 23 h after the start: 0.55 s with the covariance held in RTN, 1.5 s with the replay
+of both participants, 10.1 s with the non-linearity index (24 STM propagations of 23 h). `EvaluateAvoidance` with the
+default magnitudes and directions: 36 options in 21.7 s, about 0.6 s per option propagated with the covariance from its
+burn to the end of the window (12 h). Turn the index off (`ComputeNonlinearityIndex = false`) when the cost matters.
+
 **Measurement of the threshold** (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17). Two-body
 encounters, the secondary crossing at 70° and passing 151 m from the protected object at TCA, both initial covariances
 isotropic in RTN (σ 100 m and 0.1 m/s, then scaled), combined hard-body radius 500 m. Foster with the covariance
