@@ -149,23 +149,6 @@ internal static class WholePropagationDifferences
         return (Worst(0), Worst(3));
     }
 
-    /// <summary>
-    /// A propagation that starts from exactly the state of its spacecraft: <see cref="CentralBodyPropagator"/> takes it
-    /// through <c>OrbitalParameters.AtEpoch</c>, a round trip through the Keplerian elements that moves a near-circular,
-    /// near-equatorial state by up to decimetres and is not smooth
-    /// (<a href="https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398">#398</a>); the
-    /// differences would differentiate it with the flow.
-    /// </summary>
-    internal sealed class ExactStartPropagator : CentralBodyPropagator
-    {
-        internal ExactStartPropagator(TimeSystem.Window window, Spacecraft spacecraft, Integrator integrator,
-            IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan deltaT, StateVector start)
-            : base(window, spacecraft, integrator, bodies, drag, srp, deltaT)
-        {
-            InitialState = start;
-        }
-    }
-
     private static double[][] Phi(Func<StateVector, PropagationSolution> propagate, StateVector start,
         double positionStep, double velocityStep, Func<PropagationSolution, double[][]> states, int count)
     {

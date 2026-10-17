@@ -70,6 +70,19 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **True anomaly of a near-circular, slightly inclined state vector, and the start of a propagation.** A
+  `StateVector` on a circular orbit (e < 1e-3) inclined by less than 1e-3 rad counted its true anomaly from the x
+  axis, which lies in the orbit plane only if the orbit is equatorial or its node is on it. Its mean anomaly, its
+  Keplerian elements and every state derived from them (`AtEpoch`, `ToStateVector(Time)`, `TrueAnomaly(Time)`) were
+  moved along the orbit: a GEO state inclined by 0.05° with z moved by 1 km came back 0.38 m away at its own epoch, and
+  the map was 2.6 away from the identity in its derivative. The true anomaly of every circular orbit is now counted
+  from the node, as it already was above 1e-3 rad, and agrees with SPICE OSCELT to 8.9e-16 rad on the mean longitude;
+  the round trip returns the state to 1.4e-15 of its radius. Orbits with e ≥ 1e-3 or i ≥ 1e-3 rad are unchanged, bit
+  for bit. `CentralBodyPropagator` now takes a state vector given at the start of its window as it is, instead of
+  through the Keplerian elements, so a propagation starts from exactly that state: the start used to move by about
+  1e-9 m (the rounding of the round trip), which changes the steps of an adaptive propagation, by 6.0 mm after 3 h on
+  the LEO case with drag and SRP of the golden tests. Other orbital parameters, and a state vector at another epoch,
+  still go through `AtEpoch`. [#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398)
 - **Loaded kernels while another thread loads.** `SpiceAPI.GetLoadedKernels` returned its internal list, outside the
   lock of `SpiceAPI`: enumerating it while another thread loaded or unloaded kernels could throw
   `InvalidOperationException` ("Collection was modified"). It now returns a copy taken under the lock, the kernels
