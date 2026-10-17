@@ -263,14 +263,10 @@ namespace IO.Astrodynamics.OrbitalParameters
 
             var sv = ToStateVector();
 
+            // A circular orbit, inclined or not, counts it from the node (#398): an equatorial orbit has the x axis for node
+            // and Ω = 0 (Inclination), so the same formula gives its true longitude
             if (IsCircular())
             {
-                if (Inclination() < 1E-03)
-                {
-                    _trueAnomaly = CircularNoInclinationTrueAnomaly();
-                    return _trueAnomaly.Value;
-                }
-
                 _trueAnomaly = CircularTrueAnomaly();
                 return _trueAnomaly.Value;
             }
@@ -281,8 +277,17 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Calculates the true anomaly for a circular orbit.
+        /// Calculates the true anomaly for a circular orbit: the argument of latitude u, the angle from the node to the
+        /// position, less the argument of periapsis.
         /// </summary>
+        /// <remarks>
+        /// The argument of latitude is the special case of D. A. Vallado, <i>Fundamentals of Astrodynamics and
+        /// Applications</i>, 4th edition, Microcosm Press, 2013, section 2.5, algorithm 9 (RV2COE) for a circular
+        /// inclined orbit (to be verified by S. Guillet). It holds at every inclination: an equatorial orbit has the x
+        /// axis for node (<see cref="OrbitalParameters.AscendingNodeVector"/>). The x axis lies in the orbit plane only
+        /// when the orbit is equatorial or its node is on it, so a true longitude counted from it moved a near-circular
+        /// orbit inclined by 1e-10 to 1e-3 rad along its orbit, by up to decimetres in GEO (#398).
+        /// </remarks>
         /// <returns>The true anomaly in radians.</returns>
         private double CircularTrueAnomaly()
         {
@@ -297,24 +302,6 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
 
             return v % Constants._2PI;
-        }
-
-        /// <summary>
-        /// Calculates the true anomaly for a circular orbit with no inclination.
-        /// </summary>
-        /// <returns>The true anomaly in radians.</returns>
-        private double CircularNoInclinationTrueAnomaly()
-        {
-            var sv = ToStateVector();
-            var l = AngleInOrbitPlane(Vector3.VectorX, sv.Position);
-
-            l = l - ArgumentOfPeriapsis() - AscendingNode();
-            if (l < 0.0)
-            {
-                l += Constants._2PI;
-            }
-
-            return l % Constants._2PI;
         }
 
         /// <summary>

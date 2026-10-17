@@ -89,15 +89,16 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
     }
 
     /// <summary>
-    /// A propagation of the reference of F1: from exactly <paramref name="start"/> (#398), without the variational
+    /// A propagation of the reference of F1: from <paramref name="start"/>, which the propagator takes as it is (#398),
+    /// without the variational
     /// equations, with the coefficients given.
     /// </summary>
     internal PropagationSolution PropagateReference(int naifId, StateVector start, double dragCoefficient,
         double reflectivityCoefficient, double tolerance)
     {
-        var propagator = new WholePropagationDifferences.ExactStartPropagator(Window,
+        var propagator = new CentralBodyPropagator(Window,
             NewSpacecraft(naifId, start, dragCoefficient, reflectivityCoefficient), new RK78Integrator(tolerance, tolerance),
-            Bodies, AtmosphericDrag, SolarRadiationPressure, TimeSpan.FromSeconds(3600.0), start);
+            Bodies, AtmosphericDrag, SolarRadiationPressure, TimeSpan.FromSeconds(3600.0));
         return propagator.Propagate();
     }
 
@@ -361,7 +362,7 @@ public sealed class ReferenceCases
     }
 
     /// <summary>
-    /// A reference propagation of <see cref="Eclipsing"/> for F1: from exactly <paramref name="start"/> (#398), at
+    /// A reference propagation of <see cref="Eclipsing"/> for F1: from <paramref name="start"/> as it is (#398), at
     /// <paramref name="tolerance"/>, with the maneuver of <paramref name="maneuver"/> (the apogee raise when null),
     /// without the variational equations.
     /// </summary>
@@ -370,9 +371,9 @@ public sealed class ReferenceCases
         double reflectivityCoefficient = ReflectivityCoefficient, double tolerance = ReferenceTolerance)
     {
         var spacecraft = EclipsingSpacecraft(naifId, start, maneuver, dragCoefficient, reflectivityCoefficient);
-        var propagator = new WholePropagationDifferences.ExactStartPropagator(Eclipsing.Window, spacecraft,
+        var propagator = new CentralBodyPropagator(Eclipsing.Window, spacecraft,
             new RK78Integrator(tolerance, tolerance), Eclipsing.Bodies, true, true,
-            TimeSpan.FromSeconds(600.0), start);
+            TimeSpan.FromSeconds(600.0));
         return propagator.Propagate();
     }
 

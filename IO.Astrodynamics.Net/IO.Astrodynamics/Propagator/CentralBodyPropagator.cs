@@ -120,8 +120,28 @@ public class CentralBodyPropagator : PropagatorBase
     {
         _centralBody = ResolveCentralBody(spacecraft);
 
-        InitialState = Spacecraft.InitialOrbitalParameters.AtEpoch(Window.StartDate).ToStateVector()
+        InitialState = StartState(Spacecraft.InitialOrbitalParameters, Window.StartDate)
             .RelativeTo(_centralBody, Aberration.None).ToStateVector();
+    }
+
+    /// <summary>
+    /// The state of <paramref name="orbitalParameters"/> at <paramref name="start"/>: a state vector given at that instant
+    /// as it is, any other orbital parameters through <see cref="OrbitalParameters.AtEpoch"/>.
+    /// </summary>
+    /// <remarks>
+    /// A state vector at the start of the window is not taken through the Keplerian elements: that round trip returns
+    /// it only to its rounding (about 1e-8 m), which would move the start and the steps of the propagation, and its
+    /// derivative would not be exactly the identity (#398). The covariance of the state is not carried, as through the
+    /// Keplerian elements before: the initial covariance is read from the initial orbital parameters of the spacecraft.
+    /// </remarks>
+    private static StateVector StartState(OrbitalParameters.OrbitalParameters orbitalParameters, in Time start)
+    {
+        if (orbitalParameters is StateVector state && state.Epoch.CompareTo(start) == 0)
+        {
+            return new StateVector(state.Position, state.Velocity, state.Observer, start, state.Frame);
+        }
+
+        return orbitalParameters.AtEpoch(start).ToStateVector();
     }
 
     /// <summary>
@@ -167,7 +187,7 @@ public class CentralBodyPropagator : PropagatorBase
         var centralBody = ResolveCentralBody(spacecraft);
 
         var tdbStartDate = window.StartDate.ToTDB();
-        var initialState = spacecraft.InitialOrbitalParameters.AtEpoch(tdbStartDate).ToStateVector()
+        var initialState = StartState(spacecraft.InitialOrbitalParameters, tdbStartDate)
             .RelativeTo(centralBody, Aberration.None).ToStateVector();
         var items = (celestialItems ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
         var forces = BuildCentralBodyForces(centralBody, items, spacecraft, includeAtmosphericDrag,
