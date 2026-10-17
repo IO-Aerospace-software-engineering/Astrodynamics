@@ -1,5 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 
 namespace IO.Astrodynamics.SSA;
 
@@ -36,8 +38,51 @@ public sealed record ConjunctionAnalysisOptions
     /// <summary>
     /// Gets the covariance age beyond which <see cref="EncounterQualityFlags.StaleCovarianceUsed"/> is raised.
     /// The age is the time between the epoch of a participant's initial-state covariance, used when no covariance
-    /// is available at the encounter epoch, and the encounter epoch. Covariance is not propagated: it is held fixed
-    /// in the RTN frame. Default: 60 seconds.
+    /// is available at the encounter epoch, and the encounter epoch; that covariance is not propagated, it is held fixed
+    /// in the RTN frame (<see cref="CovarianceSource.InitialStateHeldInRtn"/>). A propagated covariance is at the
+    /// encounter epoch and is never stale. Default: 60 seconds.
     /// </summary>
     public TimeSpan StaleCovarianceThreshold { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Gets the propagation of the covariance of the participants to the encounter epoch; null restores the covariance
+    /// of the initial state held in RTN (<see cref="CovarianceSource.InitialStateHeldInRtn"/>) for every participant.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The covariance of a participant is propagated when the library propagates it in RK7(8) (a
+    /// <see cref="PropagationSolution"/> passed to the analysis, or a spacecraft whose last propagation was RK7(8)), its
+    /// initial state, at the start of that propagation, carries a covariance, and the analysis computes a probability of
+    /// collision (<see cref="ConjunctionAssessment.Screen"/> never propagates it). The variational equations are then
+    /// replayed along the steps of that propagation, from its start to the last encounter retained, without a second
+    /// propagation; a propagation that already propagated the covariance is read as it is. Other participants keep the
+    /// fallback (<see cref="CovarianceSource.InitialStateHeldInRtn"/>).
+    /// </para>
+    /// <para>
+    /// Default: <see cref="CovariancePropagationMode.Covariance"/>, without process noise and without consider
+    /// parameters, the same options for every participant. <see cref="CovariancePropagationMode.StateTransitionOnly"/>
+    /// and <see cref="CovariancePropagationOptions.IncludeInStepControl"/>, which would change the steps of the
+    /// propagation, are rejected; a consider parameter needs its force in the propagation of each participant whose
+    /// covariance is propagated.
+    /// </para>
+    /// </remarks>
+    public CovariancePropagationOptions CovariancePropagation { get; init; } =
+        new() { Mode = CovariancePropagationMode.Covariance };
+
+    /// <summary>
+    /// Gets whether the non-linearity index of each propagated covariance is computed at the encounter epoch
+    /// (<see cref="ParticipantCovariance.NonlinearityIndex"/>). It costs twelve propagations of the state transition
+    /// matrix per participant, from its initial state to the encounter epoch. Default: true.
+    /// </summary>
+    public bool ComputeNonlinearityIndex { get; init; } = true;
+
+    /// <summary>
+    /// Gets the non-linearity index above which <see cref="EncounterQualityFlags.NonlinearCovariancePropagation"/> is
+    /// raised: the index at which the Foster probability of collision leaves the band of a Monte Carlo of the probability
+    /// (see the conjunction assessment reference). Default: the measured value.
+    /// </summary>
+    public double NonlinearityIndexThreshold { get; init; } = DefaultNonlinearityIndexThreshold;
+
+    /// <summary>The measured threshold of the non-linearity index.</summary>
+    internal const double DefaultNonlinearityIndexThreshold = 0.1;
 }

@@ -10,6 +10,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.SSA;
@@ -36,14 +37,20 @@ public static class ConjunctionAssessment
         public StateSamplingSource(
             Func<Time, StateVector> getState,
             IReadOnlyList<Time> searchKnots,
-            DenseTrajectorySource denseTrajectory = null)
+            DenseTrajectorySource denseTrajectory = null,
+            PropagationSolution solution = null)
         {
             GetState = getState;
             SearchKnots = searchKnots;
             DenseTrajectory = denseTrajectory;
+            Solution = solution;
         }
 
         public Func<Time, StateVector> GetState { get; }
+
+        // The propagation of the participant, from which its covariance is propagated to the encounter (E2); null when
+        // the library does not propagate it
+        public PropagationSolution Solution { get; }
 
         public IReadOnlyList<Time> SearchKnots { get; }
 
@@ -134,7 +141,10 @@ public static class ConjunctionAssessment
                     SampleStep = options.SampleStep,
                     MaximumEventSearchStep = options.MaximumEventSearchStep,
                     SecondaryHardBodyRadiusMeters = options.DefaultSecondaryHardBodyRadiusMeters,
-                    LowRelativeSpeedThresholdMetersPerSecond = options.LowRelativeSpeedThresholdMetersPerSecond
+                    LowRelativeSpeedThresholdMetersPerSecond = options.LowRelativeSpeedThresholdMetersPerSecond,
+
+                    // The screening ranks many candidates and never propagates the covariance (E2)
+                    CovariancePropagation = null
                 });
 
             if (encounter.EncounterState.MissDistanceMeters <= options.MaxMissDistanceMeters)
@@ -334,7 +344,8 @@ public static class ConjunctionAssessment
                             SampleStep = options.AnalysisSampleStep,
                             MaximumEventSearchStep = options.MaximumEventSearchStep,
                             SecondaryHardBodyRadiusMeters = options.SecondaryHardBodyRadiusMeters,
-                            LowRelativeSpeedThresholdMetersPerSecond = options.LowRelativeSpeedThresholdMetersPerSecond
+                            LowRelativeSpeedThresholdMetersPerSecond = options.LowRelativeSpeedThresholdMetersPerSecond,
+                            CovariancePropagation = null
                         });
 
                     var fuelCost = EstimateFuelCost(encounterCase.ProtectedAsset.Spacecraft, magnitude);
@@ -374,7 +385,16 @@ public static class ConjunctionAssessment
             options.BisectionToleranceSeconds);
 
         Time tca = SelectBestTcaEpoch(tcaEpochs, screeningWindow, protectedSource, secondarySource);
-        return BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource, secondarySource);
+        return BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource, secondarySource,
+            CreateResolver(protectedAsset.Spacecraft, protectedSource, options, tca),
+            CreateResolver(secondaryObject, secondarySource, options, tca));
+    }
+
+    // The covariance of a participant at the encounter epochs of the analysis, propagated up to the last one (E2)
+    private static EncounterCovarianceResolver CreateResolver(ILocalizable participant, StateSamplingSource source,
+        ConjunctionAnalysisOptions options, in Time lastEncounter)
+    {
+        return new EncounterCovarianceResolver(participant, source.Solution, options.CovariancePropagation, lastEncounter);
     }
 
     private static IReadOnlyList<EncounterCase> AnalyzeAllInternal(
@@ -401,8 +421,12 @@ public static class ConjunctionAssessment
             };
         }
 
+        var lastTca = tcaEpochs.Max();
+        var protectedResolver = CreateResolver(protectedAsset.Spacecraft, protectedSource, options, lastTca);
+        var secondaryResolver = CreateResolver(secondaryObject, secondarySource, options, lastTca);
         return tcaEpochs
-            .Select(tca => BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource, secondarySource))
+            .Select(tca => BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource,
+                secondarySource, protectedResolver, secondaryResolver))
             .ToArray();
     }
 
@@ -1306,7 +1330,9 @@ public static class ConjunctionAssessment
         Time tca,
         ConjunctionAnalysisOptions options,
         StateSamplingSource protectedSource,
-        StateSamplingSource secondarySource)
+        StateSamplingSource secondarySource,
+        EncounterCovarianceResolver protectedResolver,
+        EncounterCovarianceResolver secondaryResolver)
     {
         var qualityFlags = EncounterQualityFlags.None;
         var protectedState = protectedSource.GetState(tca);
@@ -1318,8 +1344,11 @@ public static class ConjunctionAssessment
             qualityFlags |= EncounterQualityFlags.LowRelativeVelocityEncounter;
         }
 
-        var protectedCovariance = EncounterCovariance.Resolve(protectedAsset.Spacecraft, protectedState);
-        var secondaryCovariance = EncounterCovariance.Resolve(secondaryObject, secondaryState);
+        // The covariance at the final TCA only, propagated when the conditions of E2 hold (E1)
+        var protectedCovariance = protectedResolver.Resolve(protectedState);
+        var secondaryCovariance = secondaryResolver.Resolve(secondaryState);
+        protectedState = WithCovarianceUsed(protectedState, protectedCovariance);
+        secondaryState = WithCovarianceUsed(secondaryState, secondaryCovariance);
         if (protectedCovariance.IsStale(options.StaleCovarianceThreshold) ||
             secondaryCovariance.IsStale(options.StaleCovarianceThreshold))
         {
@@ -1348,9 +1377,9 @@ public static class ConjunctionAssessment
             relativeState,
             relativeState.RelativePositionInertial.Magnitude(),
             combinedCovarianceRtn,
-            qualityFlags,
-            protectedCovariance.Age,
-            secondaryCovariance.Age);
+            protectedCovariance.ToParticipantCovariance(),
+            secondaryCovariance.ToParticipantCovariance(),
+            qualityFlags);
 
         return new EncounterCase(
             protectedAsset,
@@ -1359,7 +1388,21 @@ public static class ConjunctionAssessment
             encounterState,
             collisionRisk,
             protectedState,
-            secondaryState);
+            secondaryState)
+        {
+            ProtectedCovariance = protectedCovariance,
+            SecondaryCovariance = secondaryCovariance
+        };
+    }
+
+    // The state retained by the encounter case carries the covariance the analysis used when it was propagated, so that
+    // the CDM exports what the probability used; the other states are left as the source gave them
+    private static StateVector WithCovarianceUsed(StateVector state, EncounterCovariance covariance)
+    {
+        return covariance.Source == CovarianceSource.Propagated
+            ? new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
+                covariance.CovarianceInertial)
+            : state;
     }
 
     private static double CaseProbabilitySortKey(EncounterCase encounterCase)
@@ -1972,6 +2015,31 @@ public static class ConjunctionAssessment
         {
             throw new ArgumentOutOfRangeException(nameof(options.MaximumEventSearchStep), "Maximum event search step must be positive.");
         }
+
+        if (options.CovariancePropagation is { } covariance)
+        {
+            if (covariance.Mode != CovariancePropagationMode.Covariance)
+            {
+                throw new ArgumentException(
+                    "The conjunction analysis propagates the covariance: CovariancePropagation.Mode must be " +
+                    $"{nameof(CovariancePropagationMode.Covariance)}, or the options null to hold the initial covariance " +
+                    "in RTN.", nameof(options));
+            }
+
+            if (covariance.IncludeInStepControl)
+            {
+                throw new ArgumentException(
+                    "The conjunction analysis replays the variational equations along the steps of the propagation of each " +
+                    "participant, controlled on the state only: IncludeInStepControl cannot be set. Propagate the " +
+                    "participant with the covariance and this option instead, and pass its solution.", nameof(options));
+            }
+        }
+
+        if (!(options.NonlinearityIndexThreshold > 0.0) || double.IsInfinity(options.NonlinearityIndexThreshold))
+        {
+            throw new ArgumentOutOfRangeException(nameof(options.NonlinearityIndexThreshold),
+                "The non-linearity index threshold must be positive and finite.");
+        }
     }
 
     private static void ValidateTrajectoryCoverage(PropagationSolution trajectory, Window window, string paramName)
@@ -1994,9 +2062,11 @@ public static class ConjunctionAssessment
 
     private static StateSamplingSource CreateLocalizableStateSource(ILocalizable localizable, ILocalizable observer)
     {
+        // A spacecraft keeps its last propagation, whose output states its ephemeris interpolates
         return new StateSamplingSource(
             epoch => GetState(localizable, epoch, observer),
-            Array.Empty<Time>());
+            Array.Empty<Time>(),
+            solution: (localizable as Spacecraft)?.LastPropagation);
     }
 
     private static StateSamplingSource CreateTrajectoryStateSource(
@@ -2027,7 +2097,8 @@ public static class ConjunctionAssessment
                     : state.RelativeTo(observer, Aberration.None).ToStateVector();
             },
             searchKnots,
-            denseTrajectory);
+            denseTrajectory,
+            trajectory);
     }
 
     private static ILocalizable ResolveTrajectoryObserver(ILocalizable localizable, PropagationSolution trajectory)

@@ -50,5 +50,14 @@ public enum EncounterQualityFlags
     /// <summary>
     /// A single-covariance maximum-probability model was used because only one participant covariance was available.
     /// </summary>
-    SingleCovarianceMaximumPcUsed = 1 << 6
+    SingleCovarianceMaximumPcUsed = 1 << 6,
+
+    /// <summary>
+    /// The covariance of a participant was propagated to the encounter epoch (<see cref="CovarianceSource.Propagated"/>)
+    /// past the domain where its linear propagation holds: its non-linearity index
+    /// (<see cref="ParticipantCovariance.NonlinearityIndex"/>) exceeds the threshold measured against a Monte Carlo of
+    /// the probability of collision (<see cref="ConjunctionAnalysisOptions.NonlinearityIndexThreshold"/>). The Foster
+    /// probability is then not to be trusted: a Monte Carlo is needed.
+    /// </summary>
+    NonlinearCovariancePropagation = 1 << 7
 }

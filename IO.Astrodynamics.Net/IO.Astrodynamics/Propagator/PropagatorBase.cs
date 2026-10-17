@@ -144,14 +144,14 @@ public abstract class PropagatorBase : IPropagator
         CreateCovarianceModel(Spacecraft, Window.StartDate, options);
 
     /// <summary>
-    /// The covariance model of <paramref name="options"/> for a propagation of <paramref name="spacecraft"/> from
+    /// The covariance model of <paramref name="options"/> for a propagation of <paramref name="participant"/> from
     /// <paramref name="start"/>, after the checks of P0, the covariance of its initial orbital parameters; null without
     /// the covariance. Shared with the replay of the variational equations by the conjunction analysis.
     /// </summary>
     /// <exception cref="ArgumentException">Consider parameters without the covariance.</exception>
     /// <exception cref="InvalidOperationException">The initial orbital parameters carry no covariance, carry it at another
     /// epoch than <paramref name="start"/>, or carry one that is not 6×6, symmetric and positive semi-definite.</exception>
-    internal static CovarianceModel CreateCovarianceModel(Spacecraft spacecraft, in Time start,
+    internal static CovarianceModel CreateCovarianceModel(ILocalizable participant, in Time start,
         VariationalOptions options)
     {
         if (!options.PropagateCovariance)
@@ -166,11 +166,11 @@ public abstract class PropagatorBase : IPropagator
             return null;
         }
 
-        var initial = spacecraft.InitialOrbitalParameters;
+        var initial = participant.InitialOrbitalParameters;
         var covariance = initial.ToStateVector().Covariance;
         if (!covariance.HasValue)
         {
-            throw InitialCovarianceError(spacecraft,
+            throw InitialCovarianceError(participant,
                 "The covariance is propagated from that of the initial orbital parameters of the spacecraft, which " +
                 "carry none: give the initial state vector a covariance, or propagate the state transition matrix " +
                 "only.");
@@ -178,7 +178,7 @@ public abstract class PropagatorBase : IPropagator
 
         if ((initial.Epoch - start) != TimeSpan.Zero)
         {
-            throw InitialCovarianceError(spacecraft,
+            throw InitialCovarianceError(participant,
                 $"The initial covariance is given at {initial.Epoch.ToTDB()}, and the propagation starts at " +
                 $"{start}: the propagator does not carry a covariance from another epoch. Start the window " +
                 "at the epoch of the initial orbital parameters.");
@@ -187,7 +187,7 @@ public abstract class PropagatorBase : IPropagator
         var p0 = covariance.Value;
         if (p0.Rows != VariationalEquations.StateDimension || p0.Columns != VariationalEquations.StateDimension)
         {
-            throw InitialCovarianceError(spacecraft,
+            throw InitialCovarianceError(participant,
                 $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.");
         }
 
@@ -203,15 +203,16 @@ public abstract class PropagatorBase : IPropagator
         var reason = CovarianceChecks.Validate(values, 6, "The initial covariance", out var symmetrized);
         if (reason != null)
         {
-            throw InitialCovarianceError(spacecraft, reason);
+            throw InitialCovarianceError(participant, reason);
         }
 
         return new CovarianceModel(symmetrized, options);
     }
 
     // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one
-    private static InvalidOperationException InitialCovarianceError(Spacecraft spacecraft, string reason) =>
-        new($"The covariance of spacecraft '{spacecraft.Name}' cannot be propagated: {reason}");
+    private static InvalidOperationException InitialCovarianceError(ILocalizable participant, string reason) =>
+        new($"The covariance of {(participant is Spacecraft ? "spacecraft" : "object")} '{participant.Name}' cannot be " +
+            $"propagated: {reason}");
 
     /// <summary>
     /// The frame whose orientation cache the propagation uses, and that cache, active on the propagating thread during

@@ -2,7 +2,7 @@
 
 using System;
 using System.Linq;
-using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Integrators;
@@ -36,19 +36,19 @@ internal static class VariationalReplay
     /// <summary>
     /// Replay the variational equations of <paramref name="options"/> along <paramref name="solution"/>, from its start
     /// to the step that contains <paramref name="end"/>, P0 being the covariance of the initial orbital parameters of
-    /// <paramref name="spacecraft"/>.
+    /// <paramref name="participant"/>, the object the solution propagates.
     /// </summary>
     /// <returns>A solution over the replayed steps, from which Φ, Ψ and P are read as from a propagation with
     /// <paramref name="options"/>.</returns>
     /// <exception cref="ArgumentException"><paramref name="options"/> put Φ and Ψ in the step control, which would change
     /// the steps; or name a consider parameter whose force the propagation lacks.</exception>
     /// <exception cref="InvalidOperationException">The solution is not an RK7(8) propagation, already holds variational
-    /// data, or does not reach <paramref name="end"/>; or P0 is rejected (<see cref="PropagatorBase.CreateCovarianceModel(Spacecraft, in Time, VariationalOptions)"/>).</exception>
-    internal static PropagationSolution Replay(PropagationSolution solution, Spacecraft spacecraft,
+    /// data, or does not reach <paramref name="end"/>; or P0 is rejected (<see cref="PropagatorBase.CreateCovarianceModel(ILocalizable, in Time, VariationalOptions)"/>).</exception>
+    internal static PropagationSolution Replay(PropagationSolution solution, ILocalizable participant,
         CovariancePropagationOptions options, in Time end)
     {
         ArgumentNullException.ThrowIfNull(solution);
-        ArgumentNullException.ThrowIfNull(spacecraft);
+        ArgumentNullException.ThrowIfNull(participant);
         ArgumentNullException.ThrowIfNull(options);
         var source = solution.Dynamics ?? throw new InvalidOperationException(
             "Only an RK7(8) propagation can be replayed: its solution keeps the dynamics of the propagation.");
@@ -70,7 +70,7 @@ internal static class VariationalReplay
 
         var forces = source.Forces;
         var variationalOptions = options.ToVariationalOptions(forces);
-        var covariance = PropagatorBase.CreateCovarianceModel(spacecraft, segments[0].BaseEpoch, variationalOptions);
+        var covariance = PropagatorBase.CreateCovarianceModel(participant, segments[0].BaseEpoch, variationalOptions);
         foreach (var gravity in forces.OfType<GravitationalAcceleration>())
         {
             gravity.CelestialItem.ValidateGravitationalPartialsDegree(variationalOptions.GeopotentialPartialsDegree);
