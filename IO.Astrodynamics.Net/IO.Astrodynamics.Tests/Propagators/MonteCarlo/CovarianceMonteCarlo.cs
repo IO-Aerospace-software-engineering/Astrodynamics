@@ -70,7 +70,7 @@ internal static class CovarianceMonteCarlo
     /// element-wise test, they do not depend on the axes. Under linearity S is a Wishart sample of P, and its ratios lie
     /// in about (1 − √(6/N))² to (1 + √(6/N))², 0.93 to 1.07 for N = 5000: the support of the limiting distribution of the
     /// eigenvalues of a sample covariance, V. A. Marchenko, L. A. Pastur, <i>Distribution of eigenvalues for some sets of
-    /// random matrices</i>, Mathematics of the USSR-Sbornik 1(4), 1967 (to be verified by S. Guillet).
+    /// random matrices</i>, Mathematics of the USSR-Sbornik 1(4), 1967 (confirmed by S. Guillet, 2026-10-17).
     /// <c>PositionVarianceRatios</c> are the same ratios over the directions of the position alone (the 3×3 position
     /// blocks of S and P), what a collision probability projects on the encounter plane; <c>RadialVarianceRatio</c> is the
     /// ratio along the radial axis of the nominal state.
