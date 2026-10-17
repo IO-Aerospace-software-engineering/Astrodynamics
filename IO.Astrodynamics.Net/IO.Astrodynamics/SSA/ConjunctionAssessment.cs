@@ -508,7 +508,10 @@ public static class ConjunctionAssessment
                 MaximumEventSearchStep = _options.MaximumEventSearchStep,
                 SecondaryHardBodyRadiusMeters = _options.SecondaryHardBodyRadiusMeters,
                 LowRelativeSpeedThresholdMetersPerSecond = _options.LowRelativeSpeedThresholdMetersPerSecond,
-                CovariancePropagation = _covariancePropagation with { IncludeInStepControl = false }
+                CovariancePropagation = _covariancePropagation with { IncludeInStepControl = false },
+
+                // Twelve propagations per option: the index is that of the encounter, not of each option
+                ComputeNonlinearityIndex = false
             };
             var protectedSource = CreateTrajectoryStateSource(trial, trajectory, _observer, window);
             var profile = new ProtectedSpacecraftProfile(trial, _encounterCase.ProtectedAsset.ManeuverConstraints);
@@ -574,7 +577,8 @@ public static class ConjunctionAssessment
     private static EncounterCovarianceResolver CreateResolver(ILocalizable participant, StateSamplingSource source,
         ConjunctionAnalysisOptions options, in Time lastEncounter)
     {
-        return new EncounterCovarianceResolver(participant, source.Solution, options.CovariancePropagation, lastEncounter);
+        return new EncounterCovarianceResolver(participant, source.Solution, options.CovariancePropagation, lastEncounter,
+            options.ComputeNonlinearityIndex);
     }
 
     private static IReadOnlyList<EncounterCase> AnalyzeAllInternal(
@@ -1533,6 +1537,13 @@ public static class ConjunctionAssessment
             secondaryCovariance.IsStale(options.StaleCovarianceThreshold))
         {
             qualityFlags |= EncounterQualityFlags.StaleCovarianceUsed;
+        }
+
+        // Beyond the domain of the linear propagation, measured against a Monte Carlo of the probability (the guard)
+        if (protectedCovariance.NonlinearityIndex > options.NonlinearityIndexThreshold ||
+            secondaryCovariance.NonlinearityIndex > options.NonlinearityIndexThreshold)
+        {
+            qualityFlags |= EncounterQualityFlags.NonlinearCovariancePropagation;
         }
 
         var combinedCovarianceIcrf = BuildCombinedCovarianceIcrf(protectedCovariance, secondaryCovariance, ref qualityFlags);

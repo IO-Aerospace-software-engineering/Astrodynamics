@@ -21,7 +21,7 @@ For conjunction assessment and CDM workflows:
 
 1. **Validate collision-probability behavior** against trusted SSA references for the probability method family being used.
 2. **Inspect `EncounterQualityFlags`** before using Pc values in operational decision support. Flags such as low relative velocity or covariance remediation are applicability warnings.
-3. **Confirm covariance realism** — verify that participant covariances and hard-body radii are realistic and current. The library does not propagate covariance to TCA; see [Conjunction Assessment](../reference/conjunction-assessment.md).
+3. **Confirm covariance realism** — verify that participant covariances and hard-body radii are realistic and current. The library propagates to TCA the covariance of the participants it propagates in RK7(8), linearly and without process noise by default, which is often optimistic: check `EncounterState.ProtectedCovariance` and `SecondaryCovariance` for the source of each covariance (`Propagated`, or the initial covariance held in RTN for the others), whether a process noise was applied, and the non-linearity index; see [Conjunction Assessment](../reference/conjunction-assessment.md#covariance-at-tca).
 4. **Schema-validate CDM products** using `Cdm.ValidateSchema()` or `Cdm.ValidateSchemaFromXml()` before exchanging them with external systems.
 5. **Treat edge cases carefully** — low-relative-velocity encounters may require analysis beyond the standard 2D Pc workflow.
 

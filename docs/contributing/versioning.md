@@ -42,8 +42,30 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   includeSolarRadiationPressure, propagatorStepSize, integratorFactory)`: the factory creates the integrator of each
   spacecraft, for example `() => new RK78Integrator()`. The existing overload and the default integrator,
   Velocity-Verlet, are unchanged.
+- **Propagated covariance in the conjunction analysis.** `ConjunctionAnalysisOptions.CovariancePropagation`
+  (`CovariancePropagationOptions`, covariance mode without process noise by default), `ComputeNonlinearityIndex` and
+  `NonlinearityIndexThreshold`; `CovarianceSource` and `ParticipantCovariance` (source, age, `ProcessNoiseApplied`,
+  `NonlinearityIndex`) on `EncounterState.ProtectedCovariance` and `SecondaryCovariance`, with a new constructor
+  overload; `EncounterQualityFlags.NonlinearCovariancePropagation`; `AvoidanceSearchOptions.ExecutionError`. The CDM
+  export of a propagated covariance carries the rows `CDRG_*` and `CSRP_*` of the consider parameters, the force model
+  used (`GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS`, `SOLAR_RAD_PRESSURE`) and the process noise in a
+  comment. See [Conjunction Assessment](../reference/conjunction-assessment.md#covariance-at-tca).
   
 **Changed**
+
+- **The conjunction analysis propagates the covariance to TCA.** For a participant propagated in RK7(8) (a
+  `PropagationSolution` passed to the analysis, or the last propagation of a `Spacecraft`) whose initial state vector
+  carries a covariance at the start of that propagation, `Analyze` and `AnalyzeAll` use the covariance propagated to TCA,
+  by a replay of the variational equations along the steps of that propagation, instead of the initial covariance held
+  fixed in RTN: its Pc changes, and becomes the Pc of the propagated covariance (on the two-body conjunction of the tests,
+  24 h after the initial states, the in-track σ at TCA is 21.7 km against 232 m, the Pc 2.0e-6 against 1.9e-4), and
+  `StaleCovarianceUsed` is no longer raised for it. `Screen` and the other participants (Velocity-Verlet, not
+  propagated, TLE, SPICE) give the same results as before, bit for bit. To restore the former behavior, set
+  `ConjunctionAnalysisOptions.CovariancePropagation = null`.
+- **Avoidance options propagated numerically.** When the covariance of the protected participant is propagated,
+  `EvaluateAvoidance` propagates each option in RK7(8) from the state and the covariance at its burn, with the force
+  model of the trajectory, instead of taking the two-body orbit of the state after the burn without covariance: the miss
+  distance and the Pc of every option change. Otherwise the options are unchanged.
 
 - **The propagator builder adds the central body.** `CentralBodyPropagatorBuilder.Build` adds the central body of the
   spacecraft (the observer of its initial orbital parameters, or the Sun for a star or a barycenter) to the perturbing

@@ -101,19 +101,24 @@ internal sealed class EncounterCovarianceResolver
     private readonly PropagationSolution _solution;
     private readonly CovariancePropagationOptions _options;
     private readonly Time _replayEnd;
+    private readonly bool _computeNonlinearityIndex;
     private PropagationSolution _replayed;
+    private NonlinearityIndex _nonlinearityIndex;
+    private bool _nonlinearityIndexCreated;
 
     /// <param name="participant">The participant.</param>
     /// <param name="solution">Its propagation, null when it has none.</param>
     /// <param name="options">The propagation of the covariance, null for none.</param>
     /// <param name="lastEncounter">The last encounter epoch of the analysis, where a replay ends.</param>
+    /// <param name="computeNonlinearityIndex">Whether the non-linearity index of a propagated covariance is computed.</param>
     internal EncounterCovarianceResolver(ILocalizable participant, PropagationSolution solution,
-        CovariancePropagationOptions options, in Time lastEncounter)
+        CovariancePropagationOptions options, in Time lastEncounter, bool computeNonlinearityIndex = false)
     {
         _participant = participant ?? throw new ArgumentNullException(nameof(participant));
         _solution = solution;
         _options = options;
         _replayEnd = lastEncounter;
+        _computeNonlinearityIndex = computeNonlinearityIndex;
     }
 
     /// <summary>The replay of the variational equations of the participant, once made; null before, and when its
@@ -174,7 +179,32 @@ internal sealed class EncounterCovarianceResolver
         if (state.Frame != encounterState.Frame)
             state = state.ToFrame(encounterState.Frame).ToStateVector();
 
-        return new EncounterCovariance(state.Covariance!.Value, TimeSpan.Zero, CovarianceSource.Propagated, solution);
+        return new EncounterCovariance(state.Covariance!.Value, TimeSpan.Zero, CovarianceSource.Propagated, solution)
+        {
+            NonlinearityIndex = NonlinearityIndexAt(solution, encounterState.Epoch)
+        };
+    }
+
+    // The non-linearity index at the encounter epoch, from the twelve perturbed propagations made once up to the last
+    // encounter; null when it is not asked for or cannot be computed
+    private double? NonlinearityIndexAt(PropagationSolution solution, in Time epoch)
+    {
+        if (!_computeNonlinearityIndex)
+            return null;
+
+        if (!_nonlinearityIndexCreated)
+        {
+            var last = solution.Segments[^1];
+            var end = last.BaseEpoch.AddSeconds(last.Duration);
+            if (_replayEnd < end && _replayEnd >= epoch)
+                end = _replayEnd;
+            if (end < epoch)
+                end = epoch;
+            _nonlinearityIndex = NonlinearityIndex.Create(solution, _participant, end);
+            _nonlinearityIndexCreated = true;
+        }
+
+        return _nonlinearityIndex?.At(solution, epoch);
     }
 
     private static bool Covers(PropagationSolution solution, in Time epoch)
