@@ -63,7 +63,35 @@ settings of the participant's propagation: the dominant cost of the guard, which
 turns off. It is not computed for a propagation with maneuvers (null), nor for the avoidance options.
 `EncounterQualityFlags.NonlinearCovariancePropagation` is raised above `NonlinearityIndexThreshold`.
 
-NONLINEARITY_MEASUREMENT
+**Measurement of the threshold** (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17). Two-body
+encounters, the secondary crossing at 70° and passing 151 m from the protected object at TCA, both initial covariances
+isotropic in RTN (σ 100 m and 0.1 m/s, then scaled), combined hard-body radius 500 m. Foster with the covariance
+propagated by RK7(8), against a Monte Carlo of N pairs of initial states, each propagated exactly in the two-body problem
+to its own closest approach; agreement when Foster lies in the 99 % Clopper–Pearson interval of the Monte Carlo
+(C. J. Clopper, E. S. Pearson, *Biometrika* 26, 1934; to be verified).
+
+| TCA after the initial states | P0 | ν | Foster | Monte Carlo (hits, N) | 99 % interval | |
+|---|---|---|---|---|---|---|
+| 6 h | × 1 | 9.5e-4 | 3.359e-2 | 3.357e-2 (335 708, 1e7) | [3.342e-2, 3.372e-2] | agrees |
+| 24 h | × 1 | 3.6e-3 | 8.624e-3 | 8.605e-3 (86 051, 1e7) | [8.530e-3, 8.681e-3] | agrees |
+| 72 h | × 1 | 1.1e-2 | 2.908e-3 | 2.920e-3 (29 200, 1e7) | [2.876e-3, 2.964e-3] | agrees |
+| 6 h | × 10 | 8.2e-3 | 1.345e-3 | 1.331e-3 (13 313, 1e7) | [1.302e-3, 1.361e-3] | agrees |
+| 24 h | × 10 | 3.8e-2 | 3.010e-4 | 2.989e-4 (2 989, 1e7) | [2.850e-4, 3.133e-4] | agrees |
+| 72 h | × 10 | 0.12 | 1.380e-4 | 1.432e-4 (1 432, 1e7) | [1.336e-4, 1.532e-4] | agrees |
+| 7 days | × 10 | 0.23 | 4.143e-5 | 4.077e-5 (4 077, 1e8) | [3.914e-5, 4.244e-5] | agrees |
+| 72 h | × 30 | 0.33 | 1.664e-5 | 1.740e-5 (1 740, 1e8) | [1.634e-5, 1.850e-5] | agrees |
+| 7 days | × 30 | 0.75 | 4.779e-6 | 4.680e-6 (468, 1e8) | [4.142e-6, 5.267e-6] | agrees |
+| 72 h | × 100 | 1.04 | 1.513e-6 | 1.310e-6 (131, 1e8) | [1.034e-6, 1.635e-6] | agrees |
+| 7 days | × 100 | 1.94 | 4.319e-7 | 4.000e-7 (40, 1e8) | [2.559e-7, 5.936e-7] | agrees |
+
+Foster agrees with the Monte Carlo in every case, up to ν = 1.94, although the in-track spread reaches 28 000 km and
+the distribution of the positions at TCA is far from Gaussian: on these encounters, the probability depends on the
+density near the encounter point, which the linear covariance keeps, not on the curvature of the distant spread. The
+measurement does not find where Foster departs. The default threshold, 0.75, is the largest index at which the
+agreement is established with a few hundred hits (the interval within ±13 %); beyond it the Monte Carlo resolves the
+probability only to ±50 % or worse. `NonlinearCovariancePropagation` therefore marks a covariance beyond the measured
+domain, not a measured failure. The measurement covers two-body crossing encounters only: low relative velocities
+(`LowRelativeVelocityEncounter`), drag and the other forces are outside it.
 
 ## ConjunctionAssessment Methods
 
@@ -168,7 +196,7 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 | `StaleCovarianceThreshold` | 60 s | Covariance age beyond which `StaleCovarianceUsed` is raised (covariance held in RTN) |
 | `CovariancePropagation` | `Covariance` mode, no noise, no consider parameter | Propagation of the covariance of the participants to TCA; null for the covariance held in RTN. `StateTransitionOnly` and `IncludeInStepControl` are rejected (`ArgumentException`), as is a consider parameter whose force a propagated participant lacks |
 | `ComputeNonlinearityIndex` | true | Whether the non-linearity index of each propagated covariance is computed |
-| `NonlinearityIndexThreshold` | NONLINEARITY_THRESHOLD | Index above which `NonlinearCovariancePropagation` is raised |
+| `NonlinearityIndexThreshold` | 0.75 | Index above which `NonlinearCovariancePropagation` is raised |
 
 ## Practical Limits
 

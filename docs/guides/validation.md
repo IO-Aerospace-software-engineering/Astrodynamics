@@ -25,6 +25,14 @@ For conjunction assessment and CDM workflows:
 4. **Schema-validate CDM products** using `Cdm.ValidateSchema()` or `Cdm.ValidateSchemaFromXml()` before exchanging them with external systems.
 5. **Treat edge cases carefully** — low-relative-velocity encounters may require analysis beyond the standard 2D Pc workflow.
 
+### Foster against a Monte Carlo of the probability
+
+With the covariance propagated to TCA, the Foster probability of collision agreed with a Monte Carlo of the probability
+(pairs of initial states propagated exactly to their own closest approach, 99 % Clopper–Pearson interval) on two-body
+crossing encounters 6 h to 7 days after the initial states, initial covariances of 100 m and 0.1 m/s up to 10 km and
+10 m/s, non-linearity indices from 9.5e-4 to 1.94 (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17); the
+table and the threshold it sets are in [Conjunction Assessment](../reference/conjunction-assessment.md#non-linearity-index).
+
 ## Conformance Tests
 
 The conformance cases come from the
