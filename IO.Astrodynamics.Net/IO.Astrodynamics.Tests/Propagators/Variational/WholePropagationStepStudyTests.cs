@@ -43,7 +43,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// For Φ every sweep has its minimum between the two sides. For Ψ two do not: the sweep of Ψ_Cr of R3 is not monotone
 /// (1.0e-5, 3.8e-6, 1.7e-5, 4.3e-6 at 5 %, 10 %, 20 % and 30 %), and the Ψ errors of the eclipsing case still fall at
 /// the edge of the sweep (Cd 1.1e-7, Cr 1.8e-5 at 30 %). There the sweep shows the noise floor of the reference rather
-/// than a plateau, and the factor of 2 holds at the edge. The study evaluates the end of the arc, while F1 asserts
+/// than a plateau, and the factor of 2 holds at the edge. Since #398 (2026-10-17) the sweep of Ψ_Cr of the eclipsing case
+/// is published and not asserted (decision of S. Guillet, 2026-10-17): the propagations start from exactly the state
+/// given, about 1e-9 m from the start through the Keplerian elements before, and the sweep became 1.4e-3, 7.2e-4,
+/// 2.4e-4, 1.1e-5, 1.3e-4, 4.7e-5 from 0.1 % to 30 %; on <c>main</c> before the fix, a start moved by 2e-9 m alone
+/// reordered it the same way (1.5e-4, 1.9e-3, 2.5e-5, 2.1e-5, 2.6e-5, 6.9e-5), the noise of the reference, so no step is
+/// on a plateau there. The study evaluates the end of the arc, while F1 asserts
 /// over the arc: <c>StmValidationTests</c> holds Ψ over the arc relative to its largest value, which does not depend on
 /// the step of the reference. To write the curves, set <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test writes
 /// <c>whole_propagation_step_study_{case}.csv</c> there (quantity, step, error).
@@ -96,11 +101,11 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
 
         // Act and assert
         Study(eclipsing, solution, (start, cd, cr, tolerance) =>
-            _cases.PropagateEclipsingReference(NaifId - 1, start, openLoop, cd, cr, tolerance));
+            _cases.PropagateEclipsingReference(NaifId - 1, start, openLoop, cd, cr, tolerance), assertPsiCr: false);
     }
 
     private void Study(ReferenceCase referenceCase, PropagationSolution solution,
-        Func<StateVector, double, double, double, PropagationSolution> reference)
+        Func<StateVector, double, double, double, PropagationSolution> reference, bool assertPsiCr = true)
     {
         var y = StmMeasures.Y(solution, referenceCase.Window.EndDate);
         var rows = new List<(string Quantity, double Step, double Error)>();
@@ -152,7 +157,10 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
         Assert.True(atReferenceTolerance <= atSpecificationTolerance,
             $"the reference at 1e-14 resolves {atReferenceTolerance:E2}, at 1e-13 {atSpecificationTolerance:E2}");
         AssertOnThePlateau(rows, "Psi_Cd", referenceCase.DragCoefficientStep);
-        AssertOnThePlateau(rows, "Psi_Cr", referenceCase.ReflectivityCoefficientStep);
+        if (assertPsiCr)
+        {
+            AssertOnThePlateau(rows, "Psi_Cr", referenceCase.ReflectivityCoefficientStep);
+        }
     }
 
     private static void AssertOnThePlateau(List<(string Quantity, double Step, double Error)> rows, string quantity,

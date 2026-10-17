@@ -157,15 +157,21 @@ perturbed propagations dominates, on the large ones the δ² truncation. The cho
 smallest error of each sweep, at the end of the arc: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 %
 (R2), 5 % (R5), 30 % (Eclipsing); Cr 10 % (R3, R4), 30 % (Eclipsing). For Φ each sweep has its minimum between the two
 sides. For Ψ two sweeps show the noise floor of the reference rather than a plateau: Ψ_Cr of R3 is not monotone, and the
-errors of the eclipsing case still fall at the 30 % edge. The reference runs at 1e-14 rather than the 1e-13 of the
+errors of the eclipsing case still fall at the 30 % edge. Since #398 the sweep of Ψ_Cr of the eclipsing case is
+published and not asserted: a start moved by 1e-9 m reorders it (1.1e-5 at 10 %, 1.3e-4 at 20 %, 4.7e-5 at 30 %), so
+no step lies on a plateau there. The reference runs at 1e-14 rather than the 1e-13 of the
 specification. Its smallest error on Φ is lower in every case: R1 1.7e-8 against 2.3e-8, R2 4.6e-8 against 1.4e-7, R3
 1.9e-7 against 1.0e-6, R4 2.8e-8 against 5.6e-8, R5 6.7e-7 against 7.8e-7.
 
-**Start of the reference.** A propagation takes its initial state through `OrbitalParameters.AtEpoch`. For a
-near-circular, near-equatorial orbit (R4) this round trip moves a perturbed state by millimetres to decimetres, and not
-smoothly, so central differences through it left a floor of 2.0e-5 on Φ of R4. The reference propagations therefore
-start from the exact perturbed state. The defect is
-[#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398).
+**Start of the reference.** A propagation takes a state vector given at the start of its window as it is, so each
+reference propagation starts from exactly its perturbed state. Until
+[#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398), the initial state went through
+the Keplerian elements (`OrbitalParameters.AtEpoch`). For a near-circular orbit inclined by less than 1e-3 rad (R4),
+the true anomaly was wrong, which moved a perturbed state by millimetres to decimetres. Its derivative was not the
+identity either, so central differences through it left a floor of 2.0e-5 on Φ of R4 (2.2e-4 with the references of
+step 9). With the true anomaly fixed, the round trip returns the state to its rounding, about 1e-8 m. That is enough
+for R4 (Φ 3.3e-8), but still too much for two references: Ψ_Cr of R3, which is resolved only to the noise of its
+reference, and the test after a maneuver, which compares the states bit for bit.
 
 **Across a maneuver** (`ManeuverStmValidationTests`, Eclipsing case). Φ and Ψ model the burn in open loop: the epoch
 and the ΔV are those of the nominal trajectory. Against a reference that fires that nominal burn (fixed in epoch and
@@ -173,7 +179,14 @@ and the ΔV are those of the nominal trajectory. Against a reference that fires 
 
 - Φ: 2.9e-8 at most per block, in and out of the 7 penumbra crossings;
 - Ψ_Cd: 6.4e-7 over the arc relative to its largest value, and 3.7e-6 relative to the local value after the burn;
-- Ψ_Cr: 4.4e-6 over the arc, and 1.3e-5 relative to the local value after the burn.
+- Ψ_Cr: 5.2e-5 in position and 9.4e-5 in velocity over the arc (4.4e-6 before #398), and 3.7e-4 relative to the
+  local value after the burn (1.3e-5 before #398), a record rather than an F1 figure.
+
+Since [#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398) the propagations start
+from exactly the state given, about 1e-9 m from where they started before. That shift alone moves the reference of
+Ψ_Cr, whose propagations choose their own steps, by a factor of 2 to 30: on the code before the fix, a start moved by
+2e-9 m took the local figure from 1.3e-5 to 2.9e-5 and reordered the whole sweep of its step. Ψ_Cr is therefore held
+to F1 over the arc only, and its local measure after the burn is published as a record.
 
 Ψ starts from zero (in the shadow for Cr, at 1000 km for Cd), where the reference does not resolve it relative to its
 local value. Against a reference that retargets the apogee raise at its own perigee (closed loop), Φ is the same

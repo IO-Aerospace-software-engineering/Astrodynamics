@@ -350,16 +350,13 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var postBurn = new StateVector(after.Steps[0].StartPosition, after.Steps[0].StartVelocity, _cases.Earth, te,
             Frames.Frame.ICRF);
         var (independent, _) = ManeuverCase(-1963, postBurn, spacecraft.GetTotalMass() - 1000.0, false);
-        // The second propagation starts from exactly the post-burn state. CentralBodyPropagator takes its initial state
-        // from OrbitalParameters.AtEpoch, through the Keplerian elements: 0.1 m away at the post-burn perigee before #368,
-        // 5e-9 m since. Even that rounding changes the step sequence from the second step on, and the two Ψ then compose to
-        // 5.8e-9 only (Φ to 1.3e-13). That is the integration error of Ψ, not its partials: Ψ, about 1 m per unit Cd here,
-        // is not in the step control (A2), so its relative error is the absolute error of the trajectory over its own size.
-        // Against a propagation at 1e-15, Ψ is off by 3.2e-7 at 1e-13 without Y in the step control, 2.3e-10 with it; the
-        // analytic drag partials of step 5b leave the 5.8e-9 unchanged (measured 2026-10-12). From the exact state, the
-        // steps are the same, and the test checks the composition itself.
-        using var propagator = new WholePropagationDifferences.ExactStartPropagator(new TimeSystem.Window(te, t2),
-            independent, new RK78Integrator(1e-13, 1e-13), Bodies, true, false, TimeSpan.FromSeconds(60.0), postBurn);
+        // The second propagation starts from exactly the post-burn state, which CentralBodyPropagator takes as it is at
+        // the start of its window (#398). Through the Keplerian elements it came back 5e-9 m away (since #368), and even
+        // that rounding changed the step sequence from the second step on, so the two Ψ composed to 5.8e-9 only (Φ to
+        // 1.3e-13): the integration error of Ψ, which is not in the step control (A2), not its partials. From the exact
+        // state, the steps are the same, and the test checks the composition itself.
+        using var propagator = new CentralBodyPropagator(new TimeSystem.Window(te, t2), independent,
+            new RK78Integrator(1e-13, 1e-13), Bodies, true, false, TimeSpan.FromSeconds(60.0));
         propagator.EnableVariationalEquations(options);
         var second = propagator.Propagate();
         AssertSameBits(postBurn.Position, second.Segments[0].Steps[0].StartPosition, "start position");

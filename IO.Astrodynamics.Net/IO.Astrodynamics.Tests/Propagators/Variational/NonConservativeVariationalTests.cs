@@ -32,6 +32,13 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// the reference, Φ_ref P0 Φ_refᵀ + σ² ψ_ref ψ_refᵀ: R2 1.2e-7, R3 3.6e-7 (2026-10-14).
 /// </para>
 /// <para>
+/// Since #398 (2026-10-17) the propagations start from exactly the state given, about 1e-9 m from the start through
+/// the Keplerian elements before, and the reference of Ψ_Cr of R3 takes the step of the plateau study of step 9, 10 % of
+/// Cr, instead of 1 %. At 1 % that shift of the start alone moved its error from 3.3e-5 to 6.9e-4, the noise of the
+/// reference: 6.9e-4, 2.4e-5, 1.1e-5 and 2.7e-6 at 1 %, 5 %, 10 % and 20 % (3.3e-5, 5.0e-5, 8.8e-5 and 5.6e-6 before,
+/// not monotone either). R3 then: Φ 8.0e-7, Ψ_Cr 1.1e-5.
+/// </para>
+/// <para>
 /// What each figure measures (H3 review of #378). The reference for Ψ_Cr of R3, 44 m per unit Cr after one day, is off by
 /// 6.1e-5, 6.6e-5, 3.0e-4 and 4.9e-5 at 1e-13 for steps of 1 %, 5 %, 10 % and 20 % of Cr, and by 2.2e-5, 3.7e-5, 7.5e-5
 /// and 7.2e-6 at 1e-14, against Ψ integrated with Φ and Ψ in the step control: noise, not the δ² truncation, which
@@ -90,7 +97,9 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
 
         bool drag = referenceCase.AtmosphericDrag;
         double coefficient = drag ? 2.2 : 1.5;
-        double step = 0.01 * coefficient;
+        // The steps of the plateau study of step 9 (WholePropagationStepStudyTests): Cd 1 % for R2, Cr 10 % for R3, whose
+        // reference at 1 % is resolved only to its noise (#398)
+        double step = (drag ? referenceCase.DragCoefficientStep : referenceCase.ReflectivityCoefficientStep) * coefficient;
         var expectedPsi = WholePropagationDifferences.Psi(
             c => Propagate(referenceCase, start, drag ? c : 2.2, drag ? 1.5 : c, ReferenceTolerance, null),
             coefficient, step);
