@@ -46,9 +46,9 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// than a plateau, and the factor of 2 holds at the edge. Since #398 (2026-10-17) the sweep of Ψ_Cr of the eclipsing case
 /// is published and not asserted (decision of S. Guillet, 2026-10-17): the propagations start from exactly the state
 /// given, about 1e-9 m from the start through the Keplerian elements before, and the sweep became 1.4e-3, 7.2e-4,
-/// 2.4e-4, 1.1e-5, 1.3e-4, 4.7e-5 from 0.1 % to 30 %; on <c>main</c> before the fix, a start moved by 2e-9 m alone
-/// reordered it the same way (1.5e-4, 1.9e-3, 2.5e-5, 2.1e-5, 2.6e-5, 6.9e-5), the noise of the reference, so no step is
-/// on a plateau there. The study evaluates the end of the arc, while F1 asserts
+/// 2.4e-4, 1.1e-5, 1.3e-4, 4.7e-5 from 0.1 % to 30 %; on <c>main</c> before the fix, the start of the reference moved by
+/// 2e-9 m along x alone took it from 3.7e-3, 1.8e-4, 2.3e-4, 1.3e-4, 3.4e-5, 1.8e-5 to 2.1e-2, 7.0e-5, 2.4e-5, 8.1e-5,
+/// 7.2e-6, 1.5e-5 (H3 review of #399), the noise of the reference, so no step is on a plateau there. The study evaluates the end of the arc, while F1 asserts
 /// over the arc: <c>StmValidationTests</c> holds Ψ over the arc relative to its largest value, which does not depend on
 /// the step of the reference. To write the curves, set <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test writes
 /// <c>whole_propagation_step_study_{case}.csv</c> there (quantity, step, error).

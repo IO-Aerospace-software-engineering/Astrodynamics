@@ -37,7 +37,8 @@ public class NearCircularRoundTripTests
     }
 
     // Eccentricities and inclinations on both sides of the thresholds of the circular orbit (1e-3) and of the former
-    // branch (1e-3 rad), and inside the equatorial tolerance (1e-10 rad) of #368 excluded: there the tilt is dropped
+    // branch (1e-3 rad), down to 5e-10 rad, and retrograde orbits within 1e-3 rad of π, which never took the former
+    // branch; inside the equatorial tolerance (1e-10 rad) of #368 excluded: there the tilt is dropped
     public static TheoryData<double, double> Grid
     {
         get
@@ -45,7 +46,11 @@ public class NearCircularRoundTripTests
             var data = new TheoryData<double, double>();
             foreach (double e in new[] { 1e-7, 2e-4, 9.99e-4, 1.001e-3 })
             {
-                foreach (double i in new[] { 1e-9, 1e-6, 1e-4, 0.05 * Deg, 9.99e-4, 1.001e-3, 3e-2 })
+                foreach (double i in new[]
+                         {
+                             5e-10, 1e-9, 1e-6, 1e-4, 0.05 * Deg, 9.99e-4, 1.001e-3, 3e-2, System.Math.PI - 9.99e-4,
+                             System.Math.PI - 1e-6
+                         })
                 {
                     data.Add(e, i);
                 }

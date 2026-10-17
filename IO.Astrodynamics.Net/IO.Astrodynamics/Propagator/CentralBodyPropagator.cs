@@ -131,7 +131,8 @@ public class CentralBodyPropagator : PropagatorBase
     /// <remarks>
     /// A state vector at the start of the window is not taken through the Keplerian elements: that round trip returns
     /// it only to its rounding (about 1e-8 m), which would move the start and the steps of the propagation, and its
-    /// derivative would not be exactly the identity (#398).
+    /// derivative would not be exactly the identity (#398). The covariance of the state is not carried, as through the
+    /// Keplerian elements before: the initial covariance is read from the initial orbital parameters of the spacecraft.
     /// </remarks>
     private static StateVector StartState(OrbitalParameters.OrbitalParameters orbitalParameters, in Time start)
     {
