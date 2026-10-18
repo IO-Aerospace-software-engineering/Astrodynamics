@@ -40,6 +40,12 @@ public abstract class PropagatorBase : IPropagator
     // The public options of the variational equations, null when they are off or enabled through the internal options
     private CovariancePropagationOptions _covariancePropagation;
 
+    /// <summary>
+    /// In RK7(8), the lock of the dynamics of the solution: null for a lock of its own; the lock of another propagation
+    /// whose forces this one shares (an avoidance option, a perturbed propagation of the non-linearity index).
+    /// </summary>
+    private protected object DynamicsSyncRoot { get; set; }
+
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
     {
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
@@ -127,6 +133,21 @@ public abstract class PropagatorBase : IPropagator
         _covariancePropagation = options;
     }
 
+    /// <summary>
+    /// The initial covariance of the state and the consider parameters, C0 = cov(δx0, δp), 6 × the number of consider
+    /// parameters, row-major (<see cref="CovarianceModel.SetInitialCrossCovariance"/>): for a propagation from a state
+    /// already propagated with the same consider parameters (step 10, E4). Call it after the activation of the
+    /// covariance, before <see cref="Propagate"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The covariance is not propagated.</exception>
+    internal void SetInitialCrossCovariance(ReadOnlySpan<double> cross)
+    {
+        if (_covarianceModel == null)
+            throw new InvalidOperationException("The covariance is not propagated: there is no consider covariance to set.");
+
+        _covarianceModel.SetInitialCrossCovariance(cross);
+    }
+
     private RK78Integrator RequireRK78()
     {
         if (Integrator is not RK78Integrator rk78)
@@ -140,7 +161,25 @@ public abstract class PropagatorBase : IPropagator
     }
 
     // The covariance model of the options, after the checks of P0; null without the covariance
-    private CovarianceModel CreateCovarianceModel(VariationalOptions options)
+    private CovarianceModel CreateCovarianceModel(VariationalOptions options) =>
+        CreateCovarianceModel(Spacecraft, Window.StartDate, options);
+
+    /// <summary>
+    /// The covariance model of <paramref name="options"/> for a propagation of <paramref name="participant"/> from
+    /// <paramref name="start"/>, after the checks of P0, the covariance of its initial orbital parameters; null without
+    /// the covariance. Shared with the replay of the variational equations by the conjunction analysis, which gives
+    /// <paramref name="initialCovariance"/> when it remediated P0.
+    /// </summary>
+    /// <param name="participant">The participant.</param>
+    /// <param name="start">The start of the propagation.</param>
+    /// <param name="options">The options of the variational equations.</param>
+    /// <param name="initialCovariance">P0 in place of the covariance of the initial orbital parameters, at their epoch;
+    /// null for that covariance.</param>
+    /// <exception cref="ArgumentException">Consider parameters without the covariance.</exception>
+    /// <exception cref="InvalidOperationException">The initial orbital parameters carry no covariance, carry it at another
+    /// epoch than <paramref name="start"/>, or carry one that is not 6×6, symmetric and positive semi-definite.</exception>
+    internal static CovarianceModel CreateCovarianceModel(ILocalizable participant, in Time start,
+        VariationalOptions options, Math.Matrix? initialCovariance = null)
     {
         if (!options.PropagateCovariance)
         {
@@ -154,29 +193,43 @@ public abstract class PropagatorBase : IPropagator
             return null;
         }
 
-        var initial = Spacecraft.InitialOrbitalParameters;
+        var initial = participant.InitialOrbitalParameters;
         var covariance = initial.ToStateVector().Covariance;
         if (!covariance.HasValue)
         {
-            throw InitialCovarianceError(
+            throw InitialCovarianceError(participant,
                 "The covariance is propagated from that of the initial orbital parameters of the spacecraft, which " +
                 "carry none: give the initial state vector a covariance, or propagate the state transition matrix " +
                 "only.");
         }
 
-        if ((initial.Epoch - Window.StartDate) != TimeSpan.Zero)
+        if ((initial.Epoch - start) != TimeSpan.Zero)
         {
-            throw InitialCovarianceError(
+            throw InitialCovarianceError(participant,
                 $"The initial covariance is given at {initial.Epoch.ToTDB()}, and the propagation starts at " +
-                $"{Window.StartDate}: the propagator does not carry a covariance from another epoch. Start the window " +
+                $"{start}: the propagator does not carry a covariance from another epoch. Start the window " +
                 "at the epoch of the initial orbital parameters.");
         }
 
-        var p0 = covariance.Value;
+        var reason = InitialCovarianceRejection(initialCovariance ?? covariance.Value, out var symmetrized);
+        if (reason != null)
+        {
+            throw InitialCovarianceError(participant, reason);
+        }
+
+        return new CovarianceModel(symmetrized, options);
+    }
+
+    /// <summary>
+    /// Why the initial covariance <paramref name="p0"/> is rejected: not 6×6, symmetric and positive semi-definite
+    /// (<see cref="CovarianceChecks.Validate"/>); null when it is accepted, with its symmetrized values.
+    /// </summary>
+    internal static string InitialCovarianceRejection(Math.Matrix p0, out double[] symmetrized)
+    {
+        symmetrized = null;
         if (p0.Rows != VariationalEquations.StateDimension || p0.Columns != VariationalEquations.StateDimension)
         {
-            throw InitialCovarianceError(
-                $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.");
+            return $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.";
         }
 
         var values = new double[36];
@@ -188,18 +241,13 @@ public abstract class PropagatorBase : IPropagator
             }
         }
 
-        var reason = CovarianceChecks.Validate(values, 6, "The initial covariance", out var symmetrized);
-        if (reason != null)
-        {
-            throw InitialCovarianceError(reason);
-        }
-
-        return new CovarianceModel(symmetrized, options);
+        return CovarianceChecks.Validate(values, 6, "The initial covariance", out symmetrized);
     }
 
     // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one
-    private InvalidOperationException InitialCovarianceError(string reason) =>
-        new($"The covariance of spacecraft '{Spacecraft.Name}' cannot be propagated: {reason}");
+    private static InvalidOperationException InitialCovarianceError(ILocalizable participant, string reason) =>
+        new($"The covariance of {(participant is Spacecraft ? "spacecraft" : "object")} '{participant.Name}' cannot be " +
+            $"propagated: {reason}");
 
     /// <summary>
     /// The frame whose orientation cache the propagation uses, and that cache, active on the propagating thread during
@@ -246,13 +294,17 @@ public abstract class PropagatorBase : IPropagator
         {
             dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
                 InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations,
-                _covarianceModel);
+                _covarianceModel, DynamicsSyncRoot ?? new object()) { Integrator = rk78 };
         }
 
         var variational = _variationalOptions != null ? rk78.VariationalEquations : null;
         double[] entryY = null;
         double[] entryQ = null;
         ManeuverRecord? entryManeuver = null;
+
+        // In RK7(8), the maneuver that starts each segment, recorded with or without the variational equations for their
+        // replay by the conjunction analysis
+        ManeuverRecord? segmentManeuver = null;
         if (variational != null)
         {
             entryY = new double[variational.YLength];
@@ -287,6 +339,10 @@ public abstract class PropagatorBase : IPropagator
             var result = Integrator.IntegrateSegment(
                 currentPos, currentVel, currentEpoch, remaining, eventDetectors);
             result.Segment.Context = context;
+            if (rk78 != null)
+            {
+                result.Segment.EntryManeuver = segmentManeuver;
+            }
 
             // b. Add segment to solution
             solution.AddSegment(result.Segment);
@@ -340,6 +396,18 @@ public abstract class PropagatorBase : IPropagator
                     entryManeuver = restart && detector is ManeuverEventDetector maneuverDetector
                         ? ManeuverRecordOf(eventEpoch, maneuverDetector.Maneuver, entryQ)
                         : null;
+                    segmentManeuver = entryManeuver;
+                }
+                else if (rk78 != null)
+                {
+                    segmentManeuver = restart && detector is ManeuverEventDetector maneuverDetector
+                        ? ManeuverRecordOf(eventEpoch, maneuverDetector.Maneuver, Array.Empty<double>())
+                        : null;
+                }
+
+                if (rk78 != null)
+                {
+                    result.Segment.EventTime = evt.EventTime;
                 }
 
                 // Update event detectors for next segment
@@ -381,6 +449,10 @@ public abstract class PropagatorBase : IPropagator
 
         // 8. Attach sampled output to solution
         solution.SetOutputStates(outputStates);
+
+        // 9. In RK7(8), the spacecraft keeps it, for the conjunction analysis that reads its propagated states (step 10,
+        // E2); another integrator leaves nothing to replay, so its solution is not kept (H3 review of step 10, B2)
+        Spacecraft.LastPropagation = solution.Dynamics != null ? solution : null;
 
         return solution;
     }

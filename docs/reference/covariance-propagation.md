@@ -270,6 +270,17 @@ ephemeris queries of the spacecraft (`GetEphemeris`, `GetGeometricStateRelativeT
 states) and SPICE reading the SPK carry no covariance. The covariance is read from the `PropagationSolution` and from its
 output states. An OEM export with covariance is planned for a later release.
 
+## In the Conjunction Analysis
+
+`ConjunctionAssessment.Analyze` and `AnalyzeAll` propagate the covariance of a participant propagated in RK7(8) whose
+initial state vector carries a covariance at the start of the propagation: they read it from the solution in covariance
+mode, or replay the variational equations along the steps of a solution propagated without the covariance (without the
+variational equations, or with the state transition matrix only), up to the last TCA
+(`ConjunctionAnalysisOptions.CovariancePropagation`, on by default). The replay gives the values of a propagation run
+with the covariance from the start, bit for bit, and does not change the solution. See
+[Conjunction Assessment](conjunction-assessment.md#covariance-at-tca) and, for the avoidance options propagated from the
+covariance at their burn, [Avoidance Studies](avoidance.md).
+
 ## Thread Safety
 
 The evaluations of a solution (`InterpolateAt` and the getters above) run under a lock of the solution. They evaluate the

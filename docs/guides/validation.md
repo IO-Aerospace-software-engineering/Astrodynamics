@@ -21,9 +21,17 @@ For conjunction assessment and CDM workflows:
 
 1. **Validate collision-probability behavior** against trusted SSA references for the probability method family being used.
 2. **Inspect `EncounterQualityFlags`** before using Pc values in operational decision support. Flags such as low relative velocity or covariance remediation are applicability warnings.
-3. **Confirm covariance realism** — verify that participant covariances and hard-body radii are realistic and current. The library does not propagate covariance to TCA; see [Conjunction Assessment](../reference/conjunction-assessment.md).
+3. **Confirm covariance realism** — verify that participant covariances and hard-body radii are realistic and current. The library propagates to TCA the covariance of the participants it propagates in RK7(8), linearly and without process noise by default, which is often optimistic: check `EncounterState.ProtectedCovariance` and `SecondaryCovariance` for the source of each covariance (`Propagated`, or the initial covariance held in RTN for the others), whether a process noise was applied, and the non-linearity index; see [Conjunction Assessment](../reference/conjunction-assessment.md#covariance-at-tca).
 4. **Schema-validate CDM products** using `Cdm.ValidateSchema()` or `Cdm.ValidateSchemaFromXml()` before exchanging them with external systems.
 5. **Treat edge cases carefully** — low-relative-velocity encounters may require analysis beyond the standard 2D Pc workflow.
+
+### Foster against a Monte Carlo of the probability
+
+With the covariance propagated to TCA, the Foster probability of collision agreed with a Monte Carlo of the probability
+(pairs of initial states propagated exactly to their own closest approach, 99 % Clopper–Pearson interval) on two-body
+crossing encounters 6 h to 7 days after the initial states, initial covariances of 100 m and 0.1 m/s up to 10 km and
+10 m/s, non-linearity indices from 1.3e-3 to 1.42 (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17, ν measured again on 2026-10-18); the
+table and the threshold it sets are in [Conjunction Assessment](../reference/conjunction-assessment.md#non-linearity-index).
 
 ## Conformance Tests
 

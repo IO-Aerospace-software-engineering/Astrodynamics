@@ -11,25 +11,15 @@ Collision probability needs a position and velocity covariance on the
 protected (primary) and secondary objects. Covariance is attached to the
 initial `StateVector` as a 6x6 matrix.
 
-!!! warning "Covariance is not propagated to TCA"
-    The covariance used at the time of closest approach (TCA) is resolved in this order, for each
-    participant:
-
-    1. the covariance carried by the participant's state at TCA, when there is one (age zero). The
-       `ILocalizable` and `PropagationSolution` entry points sample states without covariance, so in
-       practice this applies to hand-built states only;
-    2. otherwise the covariance of the participant's initial `StateVector`, **held fixed in the RTN
-       frame**: rotated into RTN with the initial state, then back into the inertial frame with the
-       state at TCA. It is not propagated. Its age, the time between its epoch and TCA, is reported in
-       `EncounterState.ProtectedCovarianceAge` / `SecondaryCovarianceAge`, and
-       `EncounterQualityFlags.StaleCovarianceUsed` is raised when it exceeds
-       `ConjunctionAnalysisOptions.StaleCovarianceThreshold` (60 s by default);
-    3. otherwise no covariance: `MissingProtectedCovariance` or `MissingSecondaryCovariance`, and
-       `CovarianceUnavailable` when both are missing.
-
-    Holding the covariance in RTN keeps its shape relative to the orbit (large along-track, small
-    radial), but its size does not grow with time as a propagated covariance would. Keep the initial
-    epoch close to the TCA, or supply covariances from a recent orbit determination.
+!!! note "Covariance at TCA"
+    When the library propagates a participant in RK7(8) and its initial `StateVector` carries a covariance at the
+    start of that propagation, `Analyze` and `AnalyzeAll` propagate the covariance to the time of closest approach (TCA):
+    P = Φ P0 Φᵀ (+ process noise and consider parameters when configured), by replaying the variational equations
+    along the steps of the propagation, without a second propagation. Otherwise (Velocity-Verlet, a spacecraft not
+    propagated, TLE, SPICE), the initial covariance is **held fixed in RTN** up to TCA, its size not growing with time,
+    and `EncounterQualityFlags.StaleCovarianceUsed` is raised beyond 60 s. `EncounterState.ProtectedCovariance` and
+    `SecondaryCovariance` give the source of each covariance; see
+    [Conjunction Assessment](../reference/conjunction-assessment.md#covariance-at-tca).
 
 ```csharp
 // Build a 6x6 covariance matrix (diagonal for simplicity)
@@ -173,6 +163,39 @@ var encounter = ConjunctionAssessment.Analyze(
 The profile itself caches nothing: each call samples the trajectories it is
 given.
 
+### With the propagated covariance
+
+Propagate the participants with RK7(8) and give their initial state vectors a
+covariance at the start of the propagation: the analysis then uses the
+covariance propagated to TCA (on by default):
+
+```csharp
+var integrator = new RK78Integrator(1e-11, 1e-11);
+protectedSpacecraft.Propagate(window, perturbingBodies, integrator, true, true, step, null);
+secondarySpacecraft.Propagate(window, perturbingBodies, new RK78Integrator(1e-11, 1e-11), true, true, step, null);
+
+var encounter = ConjunctionAssessment.Analyze(
+    new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft, window,
+    new ConjunctionAnalysisOptions
+    {
+        // The default is the covariance without process noise: add the noise and the consider parameters you trust
+        CovariancePropagation = new CovariancePropagationOptions
+        {
+            Mode = CovariancePropagationMode.Covariance,
+            ProcessNoise = new RtnProcessNoise(1e-12, 1e-11, 1e-12),
+            ConsiderParameters = new ConsiderParameters(dragCoefficientSigma: 0.2)
+        },
+
+        // Off by default: twelve propagations of the state transition matrix per participant
+        ComputeNonlinearityIndex = true
+    });
+
+var source = encounter.EncounterState.ProtectedCovariance;
+Console.WriteLine($"{source.Source}, process noise {source.ProcessNoiseApplied}, ν {source.NonlinearityIndex:E2}");
+```
+
+`CovariancePropagation = null` restores the covariance held in RTN.
+
 ## Avoidance trade study
 
 Once a conjunction is identified, `EvaluateAvoidance` generates a matrix of
@@ -268,11 +291,17 @@ Watch for these indicators:
   between axes. Depending on the geometry, that can raise or lower the
   probability, so neither direction is a safe bound. Use full 6x6 matrices
   from orbit determination when available.
-- **Covariance age**: The library does not propagate covariance: it holds the
-  initial covariance fixed in RTN up to TCA, so its size does not grow with
-  time. Check `EncounterState.ProtectedCovarianceAge` and
-  `SecondaryCovarianceAge`, and prefer covariances from a recent orbit
-  determination.
+- **Covariance source and age**: the covariance of a participant propagated in
+  RK7(8) is propagated to TCA; the others keep their initial covariance held
+  fixed in RTN, whose size does not grow with time. Check
+  `EncounterState.ProtectedCovariance.Source` and `SecondaryCovariance.Source`,
+  and the ages, and prefer covariances from a recent orbit determination.
+- **Process noise**: a propagated covariance without process noise
+  (`ProcessNoiseApplied` false, the default) is the linear propagation of the
+  initial covariance only, often optimistic.
+- **Non-linearity**: `NonlinearCovariancePropagation` warns that the
+  propagated covariance has left the domain where the Foster probability was
+  measured to agree with a Monte Carlo.
 - **Hard-body radius**: Setting this too large inflates probability
   artificially. Use realistic physical dimensions.
 

@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
 using System.Collections.Generic;
+using IO.Astrodynamics.Maneuver;
 
 namespace IO.Astrodynamics.SSA;
 
@@ -59,4 +60,12 @@ public sealed record AvoidanceSearchOptions
     /// Gets the relative-speed threshold below which a post-maneuver encounter is flagged as low velocity.
     /// </summary>
     public double LowRelativeSpeedThresholdMetersPerSecond { get; init; } = 1.0;
+
+    /// <summary>
+    /// Gets the execution error of the avoidance burns, by the model of Gates (<see cref="ManeuverExecutionError"/>);
+    /// null (the default) for none. When the covariance of the protected participant was propagated
+    /// (<see cref="CovarianceSource.Propagated"/>), its covariance B L_e Bᵀ for the ΔV of each option is added to the
+    /// velocity block of the covariance at the burn, and the option is propagated from there; otherwise it is not used.
+    /// </summary>
+    public ManeuverExecutionError ExecutionError { get; init; }
 }

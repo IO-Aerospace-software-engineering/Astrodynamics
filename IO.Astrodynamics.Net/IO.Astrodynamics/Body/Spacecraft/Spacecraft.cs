@@ -694,6 +694,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         internal StateVector[] PropagatedStates => _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
 
+        /// <summary>
+        /// The solution of the last propagation, whose output states the spacecraft stores, when it was an RK7(8)
+        /// propagation; null before any propagation, after a reset and after a propagation by another integrator, which
+        /// leaves nothing to replay. The conjunction analysis reads the covariance at the TCA from it, or replays its
+        /// variational equations (step 10, E2). It keeps the accepted steps, the forces of the propagation and their
+        /// ephemeris cache alive until the next propagation (about 0.55 MB for one day in LEO with EGM2008 10×10, the
+        /// Moon, the Sun and drag, RK7(8) at 1e-11).
+        /// </summary>
+        internal PropagationSolution LastPropagation { get; set; }
+
         public void AddPropagatedStates(params StateVector[] stateVectors)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
@@ -820,6 +830,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         private void ResetPropagation()
         {
+            LastPropagation = null;
             if (IsPropagated)
             {
                 _isPropagated = false;

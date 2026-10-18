@@ -34,14 +34,35 @@ public sealed class EncounterState
         EncounterQualityFlags qualityFlags,
         TimeSpan? protectedCovarianceAge,
         TimeSpan? secondaryCovarianceAge)
+        : this(epoch, relativeState, missDistanceMeters, combinedCovarianceRtn,
+            ParticipantCovariance.FromAge(protectedCovarianceAge), ParticipantCovariance.FromAge(secondaryCovarianceAge),
+            qualityFlags)
+    {
+    }
+
+    /// <summary>
+    /// Initializes an encounter-state snapshot, with the covariance of each participant: its source, its age, whether a
+    /// process noise was applied and its non-linearity index. The quality flags come last, so that this overload and the
+    /// one with the ages never compete for the same arguments.
+    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="relativeState"/>, <paramref name="protectedCovariance"/>
+    /// or <paramref name="secondaryCovariance"/> is null.</exception>
+    public EncounterState(
+        Time epoch,
+        RelativeState relativeState,
+        double missDistanceMeters,
+        Matrix combinedCovarianceRtn,
+        ParticipantCovariance protectedCovariance,
+        ParticipantCovariance secondaryCovariance,
+        EncounterQualityFlags qualityFlags)
     {
         Epoch = epoch;
         RelativeState = relativeState ?? throw new ArgumentNullException(nameof(relativeState));
         MissDistanceMeters = missDistanceMeters;
         CombinedCovarianceRtn = combinedCovarianceRtn;
         QualityFlags = qualityFlags;
-        ProtectedCovarianceAge = protectedCovarianceAge;
-        SecondaryCovarianceAge = secondaryCovarianceAge;
+        ProtectedCovariance = protectedCovariance ?? throw new ArgumentNullException(nameof(protectedCovariance));
+        SecondaryCovariance = secondaryCovariance ?? throw new ArgumentNullException(nameof(secondaryCovariance));
     }
 
     /// <summary>
@@ -71,14 +92,26 @@ public sealed class EncounterState
 
     /// <summary>
     /// Gets the time between the epoch of the protected object's covariance and the encounter epoch:
-    /// zero when the covariance was available at the encounter epoch, the distance to the initial state epoch
-    /// when the initial covariance was used, null when the protected object has no covariance.
+    /// zero when the covariance was available at, or propagated to, the encounter epoch, the distance to the initial
+    /// state epoch when the initial covariance was held in RTN, null when the protected object has no covariance.
     /// </summary>
-    public TimeSpan? ProtectedCovarianceAge { get; }
+    public TimeSpan? ProtectedCovarianceAge => ProtectedCovariance.Age;
 
     /// <summary>
     /// Gets the time between the epoch of the secondary object's covariance and the encounter epoch, with the same
     /// conventions as <see cref="ProtectedCovarianceAge"/>.
     /// </summary>
-    public TimeSpan? SecondaryCovarianceAge { get; }
+    public TimeSpan? SecondaryCovarianceAge => SecondaryCovariance.Age;
+
+    /// <summary>
+    /// Gets the covariance of the protected object at the encounter epoch: its source, its age, whether a process noise
+    /// was applied and its non-linearity index.
+    /// </summary>
+    public ParticipantCovariance ProtectedCovariance { get; }
+
+    /// <summary>
+    /// Gets the covariance of the secondary object at the encounter epoch, with the same conventions as
+    /// <see cref="ProtectedCovariance"/>.
+    /// </summary>
+    public ParticipantCovariance SecondaryCovariance { get; }
 }

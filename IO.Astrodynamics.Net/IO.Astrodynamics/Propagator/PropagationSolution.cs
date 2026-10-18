@@ -284,6 +284,12 @@ public sealed class PropagationSolution
             new Matrix(VariationalEquations.StateDimension, VariationalEquations.StateDimension, covariance));
     }
 
+    /// <summary>
+    /// The mass and coefficients of the spacecraft in the segment that holds <paramref name="epoch"/>, the later one at a
+    /// maneuver; null outside RK7(8). Read by the CDM export (A/m of the consider parameters).
+    /// </summary>
+    internal ForceEvaluationContext? ContextAt(in Time epoch) => SegmentAt(epoch, out _).Context;
+
     // The cumulative Y at an epoch, in a buffer of its size
     private double[] EvaluateY(in Time epoch, out int columns)
     {

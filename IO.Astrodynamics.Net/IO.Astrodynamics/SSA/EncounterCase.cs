@@ -89,6 +89,15 @@ public sealed class EncounterCase
     public StateVector SecondaryState { get; }
 
     /// <summary>
+    /// The covariance of the protected participant used by the analysis, with its source and, when propagated, the
+    /// solution it was read from; null for a case built by hand. Read by the CDM export (E5).
+    /// </summary>
+    internal EncounterCovariance ProtectedCovariance { get; init; }
+
+    /// <summary>The covariance of the secondary participant used by the analysis; see <see cref="ProtectedCovariance"/>.</summary>
+    internal EncounterCovariance SecondaryCovariance { get; init; }
+
+    /// <summary>
     /// Exports this encounter as a CCSDS Conjunction Data Message.
     /// </summary>
     /// <param name="options">Optional CDM export overrides.</param>

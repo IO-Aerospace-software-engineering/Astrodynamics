@@ -3,11 +3,14 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SSA;
 
 namespace IO.Astrodynamics.CCSDS.CDM;
@@ -25,10 +28,12 @@ internal static class CdmExporter
                 "EncounterCase does not retain participant TCA states. Re-run conjunction assessment with the current version before exporting to CDM.");
         }
 
-        // Same resolution as the conjunction analysis: covariance at TCA, otherwise the initial-state covariance
-        // held fixed in RTN.
-        var protectedCovariance = EncounterCovariance.Resolve(encounterCase.ProtectedAsset.Spacecraft, encounterCase.ProtectedState);
-        var secondaryCovariance = EncounterCovariance.Resolve(encounterCase.SecondaryObject, encounterCase.SecondaryState);
+        // The covariance the analysis used, with its source; for a case built by hand, the same resolution as the analysis
+        // without propagation: covariance at TCA, otherwise the initial-state covariance held fixed in RTN.
+        var protectedCovariance = encounterCase.ProtectedCovariance ??
+                                  EncounterCovariance.Resolve(encounterCase.ProtectedAsset.Spacecraft, encounterCase.ProtectedState);
+        var secondaryCovariance = encounterCase.SecondaryCovariance ??
+                                  EncounterCovariance.Resolve(encounterCase.SecondaryObject, encounterCase.SecondaryState);
 
         if (protectedCovariance.CovarianceInertial == null)
         {
@@ -147,13 +152,19 @@ internal static class CdmExporter
         double hardBodyRadiusMeters,
         EncounterCovariance covariance)
     {
-        var dataComments = covariance.FromInitialState
-            ? new[]
-            {
-                $"Covariance taken from the participant's initial state, {FormatAge(covariance.Age)} from TCA, " +
-                "held fixed in the RTN frame (not propagated)."
-            }
-            : Array.Empty<string>();
+        var dataComments = new List<string>();
+        if (covariance.FromInitialState)
+        {
+            dataComments.Add($"Covariance taken from the participant's initial state, {FormatAge(covariance.Age)} from TCA, " +
+                             "held fixed in the RTN frame (not propagated).");
+        }
+
+        var covarianceMatrix = CdmCovarianceMatrix.FromRtnCovariance(covarianceRtn);
+        if (covariance.Source == CovarianceSource.Propagated && covariance.Solution != null)
+        {
+            dataComments.AddRange(PropagatedCovarianceComments(covariance));
+            covarianceMatrix = WithConsiderParameters(covarianceMatrix, source, state, covariance.Solution);
+        }
 
         return new CdmSegment
         {
@@ -167,9 +178,112 @@ internal static class CdmExporter
                     PositionMeters = state.Position,
                     VelocityMetersPerSecond = state.Velocity
                 },
-                CovarianceMatrix = CdmCovarianceMatrix.FromRtnCovariance(covarianceRtn)
+                CovarianceMatrix = covarianceMatrix
             }
         };
+    }
+
+    // The source of a propagated covariance, its process noise and its non-linearity index, in the comments of the data
+    private static IEnumerable<string> PropagatedCovarianceComments(EncounterCovariance covariance)
+    {
+        var options = covariance.Solution!.CovariancePropagation;
+        yield return "Covariance propagated to TCA by the variational equations of the RK7(8) propagation of the " +
+                     "participant, from the covariance of its initial state (IO.Astrodynamics).";
+        yield return options?.ProcessNoise is { } noise
+            ? string.Create(CultureInfo.InvariantCulture,
+                $"Process noise applied: RTN white acceleration noise q_R = {noise.Radial:E3}, q_T = {noise.Transverse:E3}, " +
+                $"q_N = {noise.Normal:E3} m**2/s**3.")
+            : "No process noise applied: linear propagation of the initial covariance only, which is often optimistic.";
+        if (options?.ConsiderParameters is { } consider)
+        {
+            yield return string.Create(CultureInfo.InvariantCulture,
+                $"Consider parameters: Cd sigma {FormatSigma(consider.DragCoefficientSigma)}, Cr sigma " +
+                $"{FormatSigma(consider.ReflectivityCoefficientSigma)}.");
+        }
+
+        if (covariance.NonlinearityIndex is { } index)
+        {
+            yield return string.Create(CultureInfo.InvariantCulture,
+                $"Non-linearity index of the propagation (Junkins and Singla, 2004): {index:E3}.");
+        }
+    }
+
+    private static string FormatSigma(double? sigma) =>
+        sigma.HasValue ? sigma.Value.ToString("G6", CultureInfo.InvariantCulture) : "none";
+
+    /// <summary>
+    /// The rows CDRG and CSRP of the CDM covariance from the extended covariance at TCA (C4; CCSDS 508.0-B-1, §3.5 and
+    /// annex: the parameters are Cd·A/m and Cr·A/m). The cross terms cov(x, C) of the state and of a coefficient are
+    /// rotated to RTN as the state block, a pure rotation (CDM convention), and scaled by A/m; the variance of a
+    /// coefficient by (A/m)². A is the sectional area of the spacecraft, m its total mass at TCA. Cd and Cr are
+    /// independent consider parameters, so CSRP_DRG is zero when both are.
+    /// </summary>
+    private static CdmCovarianceMatrix WithConsiderParameters(CdmCovarianceMatrix matrix, ILocalizable source,
+        StateVector encounterState, PropagationSolution solution)
+    {
+        var tca = encounterState.Epoch;
+        var parameters = solution.ExtendedCovarianceParameters;
+        if (parameters.Count == 0 || source is not Spacecraft spacecraft || solution.ContextAt(tca) is not { } context ||
+            !(context.TotalMass > 0.0))
+        {
+            return matrix;
+        }
+
+        // The cross terms in the frame of the propagation, rotated to the RTN frame of the state block: that of the
+        // encounter state when it is in the same frame, otherwise that of the propagated state (the RTN axes do not depend
+        // on the inertial frame)
+        var extended = solution.GetExtendedCovariance(tca);
+        var state = encounterState.Frame == solution.Frame ? encounterState : solution.GetStateVector(tca);
+        double areaOverMass = spacecraft.SectionalArea / context.TotalMass;
+
+        // Row 6 + c: cov(x, C_c), rotated to RTN, times A/m; the variances and covariances of the parameters times (A/m)²
+        (double[] Row, double[] Parameters) RowOf(int c)
+        {
+            int k = 6 + c;
+            var position = state.ToRtn(new Vector3(extended.Get(k, 0), extended.Get(k, 1), extended.Get(k, 2)));
+            var velocity = state.ToRtn(new Vector3(extended.Get(k, 3), extended.Get(k, 4), extended.Get(k, 5)));
+            var row = new[] { position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z }
+                .Select(value => value * areaOverMass).ToArray();
+            var block = Enumerable.Range(0, parameters.Count)
+                .Select(j => extended.Get(k, 6 + j) * areaOverMass * areaOverMass).ToArray();
+            return (row, block);
+        }
+
+        int drag = IndexOf(parameters, ForceParameter.DragCoefficient);
+        int reflectivity = IndexOf(parameters, ForceParameter.ReflectivityCoefficient);
+        if (drag >= 0)
+        {
+            var (row, block) = RowOf(drag);
+            matrix = matrix with
+            {
+                CdrgR = row[0], CdrgT = row[1], CdrgN = row[2], CdrgRdot = row[3], CdrgTdot = row[4], CdrgNdot = row[5],
+                CdrgDrg = block[drag]
+            };
+        }
+
+        if (reflectivity >= 0)
+        {
+            var (row, block) = RowOf(reflectivity);
+            matrix = matrix with
+            {
+                CsrpR = row[0], CsrpT = row[1], CsrpN = row[2], CsrpRdot = row[3], CsrpTdot = row[4], CsrpNdot = row[5],
+                CsrpDrg = drag >= 0 ? block[drag] : null,
+                CsrpSrp = block[reflectivity]
+            };
+        }
+
+        return matrix;
+    }
+
+    private static int IndexOf(IReadOnlyList<ForceParameter> parameters, ForceParameter parameter)
+    {
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            if (parameters[i] == parameter)
+                return i;
+        }
+
+        return -1;
     }
 
     private static CdmAdditionalParameters? BuildAdditionalParameters(ILocalizable source, double hardBodyRadiusMeters)
@@ -222,6 +336,11 @@ internal static class CdmExporter
             comments.Add("Participant ephemeris is backed by SPICE.");
         }
 
+        // The force model the propagation of a propagated covariance actually used (E5)
+        var forceModel = covariance.Source == CovarianceSource.Propagated && covariance.Solution?.Dynamics is { } dynamics
+            ? CdmForceModel.From(dynamics)
+            : null;
+
         var maneuverable = role == CdmObjectRole.Object1
             ? encounterCase.ProtectedAsset.ManeuverConstraints.MaxDeltaVMetersPerSecond > 0.0
                 ? CdmManeuverable.Yes
@@ -244,7 +363,11 @@ internal static class CdmExporter
             Maneuverable = maneuverable,
             OrbitCenter = state.Observer.Name,
             ReferenceFrame = MapReferenceFrame(state.Frame.Name),
-            SolarRadPressure = source is Spacecraft spacecraft ? spacecraft.SolarRadiationCoeff > 0.0 : null,
+            GravityModel = forceModel?.GravityModel,
+            AtmosphericModel = forceModel?.AtmosphericModel,
+            NBodyPerturbations = forceModel?.NBodyPerturbations,
+            SolarRadPressure = forceModel?.SolarRadiationPressure ??
+                               (source is Spacecraft spacecraft ? spacecraft.SolarRadiationCoeff > 0.0 : null),
             IntrackThrust = source is Spacecraft craft ? craft.Engines.Count > 0 : null
         };
     }

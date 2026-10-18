@@ -5,25 +5,131 @@
 
 `ConjunctionAssessment` is the main SSA facade for screening, analyzing, and evaluating conjunction events between a protected spacecraft and candidate secondary objects.
 
-!!! warning "Covariance is not propagated to TCA"
-    The covariance used at the time of closest approach (TCA) is resolved in this order, for each
-    participant:
+## Covariance at TCA
 
-    1. the covariance carried by the participant's state at TCA, when there is one (age zero). The
-       `ILocalizable` and `PropagationSolution` entry points sample states without covariance, so in
-       practice this applies to hand-built states only;
-    2. otherwise the covariance of the participant's initial `StateVector`, **held fixed in the RTN
-       frame**: rotated into RTN with the initial state, then back into the inertial frame with the
-       state at TCA. It is not propagated. Its age, the time between its epoch and TCA, is reported in
-       `EncounterState.ProtectedCovarianceAge` / `SecondaryCovarianceAge`, and
-       `EncounterQualityFlags.StaleCovarianceUsed` is raised when it exceeds
-       `ConjunctionAnalysisOptions.StaleCovarianceThreshold` (60 s by default);
-    3. otherwise no covariance: `MissingProtectedCovariance` or `MissingSecondaryCovariance`, and
-       `CovarianceUnavailable` when both are missing.
+The covariance of each participant at the time of closest approach (TCA) is resolved once, at the final TCA, never
+during the search, in this order:
 
-    Holding the covariance in RTN keeps its shape relative to the orbit (large along-track, small
-    radial), but its size does not grow with time as a propagated covariance would. Keep the initial
-    epoch close to the TCA, or supply covariances from a recent orbit determination.
+1. **Propagated** (`CovarianceSource.Propagated`). The library propagates the participant in RK7(8), its initial
+   `StateVector` carries a covariance at the start of that propagation, and the analysis computes a probability of
+   collision. The participant's propagation is either the `PropagationSolution` passed to the analysis or, for a
+   `Spacecraft` passed as an `ILocalizable`, its last propagation.
+    - When that propagation already propagated the covariance (`CovariancePropagationMode.Covariance`, for example a
+      `Scenario` or a `Spacecraft.Propagate` with `CovariancePropagationOptions`), P is read from it at TCA.
+    - Otherwise the variational equations are **replayed along the steps of that propagation**, from its start to the
+      last TCA of the analysis, without a second propagation: with the step controlled on the state only, the replay
+      gives the values of a propagation run with the covariance from the start, bit for bit (`CovarianceReplayTests`).
+      Your solution is not changed. A propagation with the state transition matrix only
+      (`CovariancePropagationMode.StateTransitionOnly`) is replayed in the same way: its Φ are not read, so the
+      covariance at TCA takes the options of the analysis, the process noise and the consider parameters included.
+    - P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q at TCA, with the options of `ConjunctionAnalysisOptions.CovariancePropagation`
+      (see [Covariance Propagation](covariance-propagation.md)). Its age is zero, it is never stale, and the state at TCA
+      retained by the `EncounterCase` carries it.
+    - An initial covariance that rounding made indefinite (symmetric, finite, non-negative variances, but not positive
+      semi-definite, as from the rounded values of a CDM) is **remediated** before its propagation, by eigenvalue
+      clipping (D. T. Hall, M. D. Hejduk, L. C. Johnson, *Remediating non-positive definite state covariances for
+      collision probability estimation*, AAS 17-567, 2017; citation to be verified): the negative eigenvalues of its
+      correlation matrix are set to zero, so that the result does not depend on the units, and
+      `EncounterQualityFlags.CovarianceRemediated` is raised (decision of S. Guillet, 2026-10-18). A propagation by
+      `CentralBodyPropagator` still rejects such a covariance.
+2. **Provided at the encounter** (`ProvidedAtEncounter`): the state of the participant at TCA carries a covariance,
+   for a hand-built `ILocalizable` whose ephemeris gives one (age zero).
+3. **Initial state held in RTN** (`InitialStateHeldInRtn`), the fallback for a participant that the library does not
+   propagate in RK7(8) (Velocity-Verlet, not propagated and so two-body, TLE, SPICE), for an initial covariance at another
+   epoch than the start of the propagation, for one that rounding does not explain (a negative variance, a value that is
+   not finite: the analysis does not throw, it holds that covariance in RTN as before 10.2.0), and for every participant
+   when `CovariancePropagation` is null. The
+   covariance of the initial `StateVector` is rotated into RTN with the initial state, then back into the inertial frame
+   with the state at TCA. It is **not propagated**: its shape relative to the orbit is kept, its size does not grow. Its
+   age is reported, and `EncounterQualityFlags.StaleCovarianceUsed` is raised beyond
+   `ConjunctionAnalysisOptions.StaleCovarianceThreshold` (60 s by default).
+4. **None**: `MissingProtectedCovariance` or `MissingSecondaryCovariance`, and `CovarianceUnavailable` when both are
+   missing.
+
+The source is reported for each participant in `EncounterState.ProtectedCovariance` and `SecondaryCovariance`
+(`ParticipantCovariance`), with `ProcessNoiseApplied`, false for a propagated covariance without process noise: a purely
+linear covariance, often optimistic. `Screen` never propagates the covariance: it ranks candidates with the covariance
+held in RTN.
+
+!!! note "Change of results in 10.2.0"
+    The covariance propagation is on by default (`CovariancePropagationMode.Covariance`, no process noise, no consider
+    parameter): the Pc of `Analyze` and `AnalyzeAll` changes for a participant propagated in RK7(8) with an initial
+    covariance, and becomes the Pc of the propagated covariance. Set
+    `ConjunctionAnalysisOptions.CovariancePropagation = null` to restore the covariance held in RTN. On the two-body
+    conjunction of the tests, 24 h after the initial states (σ 50 to 300 m and 0.03 to 0.3 m/s), the in-track σ at TCA
+    is 21.7 km propagated against 232 m held in RTN, and the Pc 2.0e-6 against 1.9e-4.
+
+### Non-linearity index
+
+The covariance is propagated linearly. For each propagated covariance, the analysis reports a non-linearity index at TCA,
+`ParticipantCovariance.NonlinearityIndex`, the index of Junkins and Singla (J. L. Junkins, P. Singla, *How nonlinear is
+it? A tutorial on nonlinearity of orbit and attitude dynamics*, J. Astronaut. Sci. 52, 2004; citation to be verified):
+
+ν(t) = sup over the 1σ boundary of P0 of ‖Φ(t, t0; x̄0 + δx) − Φ(t, t0; x̄0)‖_F / ‖Φ(t, t0; x̄0)‖_F.
+
+It is zero for a linear flow and grows as the tangent map changes across the initial uncertainty. The supremum is taken
+over the whole boundary, δx = P0^(1/2) u with ‖u‖ = 1, on the first-order variation of Φ: with the columns sₖ of the
+symmetric square root P0^(1/2), M = [(Φ(x̄0 + sₖ) − Φ(x̄0 − sₖ)) / 2]ₖ (36 × 6) and ν = σ_max(M) / ‖Φ(x̄0)‖_F, the
+largest singular value of M. It does not depend on the basis: P0^(1/2) is unique even when P0 has repeated eigenvalues,
+and any other orthonormal basis of the boundary changes M into M Q, of the same singular values (H3 review of step 10,
+decision of S. Guillet, 2026-10-18: the twelve points ±√λₖ eₖ on the principal axes, used before, depended on the axes
+the eigensolver returned within a repeated eigenspace, by up to ±6 % on the case that set the threshold). The
+second-order part of the variation cancels in the central differences. Φ at the twelve points ±sₖ comes from twelve
+propagations of the state transition matrix from the perturbed initial states to the last TCA, with the forces and
+settings of the participant's propagation: its cost is that of the guard. It is **off by default**: set
+`ComputeNonlinearityIndex = true` to compute it (decision of S. Guillet, 2026-10-18, after the measurement below, where
+Foster agreed with the Monte Carlo far beyond the threshold). It is not computed (null) for a propagation of more than one
+segment (with maneuvers, or with an event that restarts the integration), nor for the avoidance options. `EncounterQualityFlags.NonlinearCovariancePropagation` is raised above
+`NonlinearityIndexThreshold`.
+
+What the operator can do with it, and its limits:
+
+- read ν for each participant at TCA: near 0 the propagation is close to linear; the larger it is, the further the
+  covariance has left what the linearization assumes;
+- the flag means *beyond the validated domain*, not *wrong Pc*: Foster stayed right up to ν = 1.42 in the measurement;
+- that domain is two-body crossing encounters at high relative velocity. Slow encounters, drag and the other forces are
+  not covered, and the index does not necessarily detect where Foster would be wrong there; confirm a Pc that matters by a
+  Monte Carlo of your own ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403) is the
+  measurement of those encounters).
+
+**Cost** (`ConjunctionCovarianceCostTests`, Release, Intel Xeon 2.1 GHz, 4 cores, 2026-10-17, informative). Two
+participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag), each propagated over one day in RK7(8) at 1e-11 in
+0.67 s; `Analyze` over a 2 h window 23 h after the start: 0.55 s with the covariance held in RTN, 1.5 s with the replay
+of both participants, 10.1 s with the non-linearity index (24 STM propagations of 23 h). `EvaluateAvoidance` with the
+default magnitudes and directions, on the TCA found in a 12 h screening window, 12.3 h after the start (lead times up to
+0.32 h, the shortest below the minimum lead time skipped): 36 options in 21.7 s, about 0.6 s per option propagated with
+the covariance from its burn to the end of the window (about 12 h). The index is off by default for that cost.
+
+**Measurement of the threshold** (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17; ν measured again
+with the definition independent of the basis on 2026-10-18, Foster and the Monte Carlo unchanged). Two-body
+encounters, the secondary crossing at 70° and passing 151 m from the protected object at TCA, both initial covariances
+isotropic in RTN (σ 100 m and 0.1 m/s, then scaled), combined hard-body radius 500 m. Foster with the covariance
+propagated by RK7(8), against a Monte Carlo of N pairs of initial states, each propagated exactly in the two-body problem
+to its own closest approach; agreement when Foster lies in the 99 % Clopper–Pearson interval of the Monte Carlo
+(C. J. Clopper, E. S. Pearson, *Biometrika* 26, 1934; to be verified).
+
+| TCA after the initial states | σ scale (P0 × scale²) | ν | Foster | Monte Carlo (hits, N) | 99 % interval | |
+|---|---|---|---|---|---|---|
+| 6 h | × 1 | 1.3e-3 | 3.359e-2 | 3.357e-2 (335 708, 1e7) | [3.342e-2, 3.372e-2] | agrees |
+| 24 h | × 1 | 5.3e-3 | 8.624e-3 | 8.605e-3 (86 051, 1e7) | [8.530e-3, 8.681e-3] | agrees |
+| 72 h | × 1 | 1.6e-2 | 2.908e-3 | 2.920e-3 (29 200, 1e7) | [2.876e-3, 2.964e-3] | agrees |
+| 6 h | × 10 | 1.3e-2 | 1.345e-3 | 1.331e-3 (13 313, 1e7) | [1.302e-3, 1.361e-3] | agrees |
+| 24 h | × 10 | 5.3e-2 | 3.010e-4 | 2.989e-4 (2 989, 1e7) | [2.850e-4, 3.133e-4] | agrees |
+| 72 h | × 10 | 0.16 | 1.380e-4 | 1.432e-4 (1 432, 1e7) | [1.336e-4, 1.532e-4] | agrees |
+| 7 days | × 10 | 0.37 | 4.143e-5 | 4.077e-5 (4 077, 1e8) | [3.914e-5, 4.244e-5] | agrees |
+| 72 h | × 30 | 0.47 | 1.664e-5 | 1.740e-5 (1 740, 1e8) | [1.634e-5, 1.850e-5] | agrees |
+| 7 days | × 30 | 1.03 | 4.779e-6 | 4.680e-6 (468, 1e8) | [4.142e-6, 5.267e-6] | agrees |
+| 72 h | × 100 | 1.37 | 1.513e-6 | 1.310e-6 (131, 1e8) | [1.034e-6, 1.635e-6] | agrees |
+| 7 days | × 100 | 1.42 | 4.319e-7 | 4.000e-7 (40, 1e8) | [2.559e-7, 5.936e-7] | agrees |
+
+Foster agrees with the Monte Carlo in every case, up to ν = 1.42, although the in-track spread reaches 28 000 km and
+the distribution of the positions at TCA is far from Gaussian: on these encounters, the probability depends on the
+density near the encounter point, which the linear covariance keeps, not on the curvature of the distant spread. The
+measurement does not find where Foster departs. The default threshold, 1.0 (0.75 with the former points), is the largest index, rounded down, at which the
+agreement is established with a few hundred hits (the interval within ±13 %); beyond it the Monte Carlo resolves the
+probability only to ±50 % or worse. `NonlinearCovariancePropagation` therefore marks a covariance beyond the measured
+domain, not a measured failure. The measurement covers two-body crossing encounters only: low relative velocities
+(`LowRelativeVelocityEncounter`), drag and the other forces are outside it.
 
 ## ConjunctionAssessment Methods
 
@@ -71,7 +177,7 @@ Top-level conjunction result packaging all assessment products.
 | `ScreeningWindow` | `Window` | The searched window |
 | `EncounterState` | `EncounterState` | Geometry and covariance at TCA |
 | `CollisionRisk` | `CollisionRisk` | Collision probability products |
-| `ProtectedState` / `SecondaryState` | `StateVector` | Participant states at TCA |
+| `ProtectedState` / `SecondaryState` | `StateVector` | Participant states at TCA; with the covariance used when it was propagated |
 | `ToCdm(CdmExportOptions)` | `Cdm` | Export to CCSDS CDM |
 
 ## EncounterState
@@ -83,7 +189,20 @@ Top-level conjunction result packaging all assessment products.
 | `RelativeState` | `RelativeState` | Relative position and velocity |
 | `CombinedCovarianceRtn` | `Matrix` | Combined 6x6 covariance in the protected object's RTN frame |
 | `QualityFlags` | `EncounterQualityFlags` | Covariance and applicability warnings |
-| `ProtectedCovarianceAge` / `SecondaryCovarianceAge` | `TimeSpan?` | Time between the epoch of the covariance used and TCA: zero when it was available at TCA, null when there is none |
+| `ProtectedCovarianceAge` / `SecondaryCovarianceAge` | `TimeSpan?` | Time between the epoch of the covariance used and TCA: zero when it was available at, or propagated to, TCA, null when there is none |
+| `ProtectedCovariance` / `SecondaryCovariance` | `ParticipantCovariance` | Source of the covariance (`CovarianceSource`), age, `ProcessNoiseApplied`, `NonlinearityIndex` |
+
+The constructor overload with the two `ParticipantCovariance` takes the quality flags last; the overloads with the ages
+infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherwise `InitialStateHeldInRtn`).
+
+## ParticipantCovariance
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `Source` | `CovarianceSource` | `None`, `ProvidedAtEncounter`, `InitialStateHeldInRtn` or `Propagated` |
+| `Age` | `TimeSpan?` | As `ProtectedCovarianceAge` |
+| `ProcessNoiseApplied` | `bool` | For a propagated covariance, whether a process noise was added |
+| `NonlinearityIndex` | `double?` | For a propagated covariance, ν at TCA (dimensionless); null otherwise or when not computed |
 
 ## RelativeState
 
@@ -112,13 +231,25 @@ Top-level conjunction result packaging all assessment products.
 | `SecondaryHardBodyRadiusMeters` | 5 m | Secondary hard-body radius when the object does not expose one |
 | `BisectionToleranceSeconds` | 1e-9 s | TCA refinement tolerance; the epochs have a resolution of 100 ns, which bounds the refinement below this value |
 | `LowRelativeSpeedThresholdMetersPerSecond` | 1 m/s | Below this relative speed, `LowRelativeVelocityEncounter` is raised |
-| `StaleCovarianceThreshold` | 60 s | Covariance age beyond which `StaleCovarianceUsed` is raised |
+| `StaleCovarianceThreshold` | 60 s | Covariance age beyond which `StaleCovarianceUsed` is raised (covariance held in RTN) |
+| `CovariancePropagation` | `Covariance` mode, no noise, no consider parameter | Propagation of the covariance of the participants to TCA; null for the covariance held in RTN. `StateTransitionOnly` and `IncludeInStepControl` are rejected (`ArgumentException`), as is a consider parameter whose force a propagated participant lacks |
+| `ComputeNonlinearityIndex` | false | Whether the non-linearity index of each propagated covariance is computed (12 STM propagations per participant) |
+| `NonlinearityIndexThreshold` | 1.0 | Index above which `NonlinearCovariancePropagation` is raised |
 
 ## Practical Limits
 
 - Collision probability uses a 2D Foster-style encounter-plane method.
 - `EncounterQualityFlags.LowRelativeVelocityEncounter` is an applicability warning that the 2D assumption may be degraded.
-- Covariance is not propagated to TCA; see the warning at the top of this page.
+- The covariance is propagated to TCA for the participants the library propagates in RK7(8); the others keep their
+  initial covariance held in RTN (see [Covariance at TCA](#covariance-at-tca)).
+- The propagated covariance is linear: see the [non-linearity index](#non-linearity-index).
+- The replay evaluates the forces and their partials of the participant's propagation: like `PropagationSolution`
+  evaluations, an analysis must not run concurrently with another propagation or evaluation sharing a `CelestialBody`
+  with a geopotential (see [Thread Safety](../guides/thread-safety.md)).
+- Memory: to replay it, a `Spacecraft` propagated in RK7(8) keeps its last propagation (the accepted steps, the forces
+  and their ephemeris cache) until it is propagated again, about 0.55 MB for one day in LEO with EGM2008 10×10, the Moon,
+  the Sun and drag at 1e-11 (H3 review of step 10). A propagation by Velocity-Verlet keeps nothing beyond its output
+  states.
 - With both covariances, Pc is the Foster 2D probability of the combined covariance.
 - With only one covariance, Pc is the maximum probability over the unknown covariance (Frisbee's
   method), an upper bound, and `SingleCovarianceMaximumPcUsed` is raised.
@@ -139,6 +270,7 @@ Console.WriteLine($"Pc: {encounter.CollisionRisk.ProbabilityOfCollision:E3}");
 
 ## See Also
 
+- [Covariance Propagation](covariance-propagation.md)
 - [Avoidance Studies](avoidance.md)
 - [CDM](cdm.md)
 - [Propagators](propagators.md)

@@ -30,7 +30,9 @@ public enum EncounterQualityFlags
     CovarianceUnavailable = 1 << 2,
 
     /// <summary>
-    /// The encounter-plane covariance required numerical remediation before risk evaluation.
+    /// The encounter-plane covariance required numerical remediation before risk evaluation, or the initial covariance of
+    /// a participant, not positive semi-definite (as from rounded values), was remediated by eigenvalue clipping before
+    /// its propagation to the encounter.
     /// </summary>
     CovarianceRemediated = 1 << 3,
 
@@ -50,5 +52,15 @@ public enum EncounterQualityFlags
     /// <summary>
     /// A single-covariance maximum-probability model was used because only one participant covariance was available.
     /// </summary>
-    SingleCovarianceMaximumPcUsed = 1 << 6
+    SingleCovarianceMaximumPcUsed = 1 << 6,
+
+    /// <summary>
+    /// The covariance of a participant was propagated to the encounter epoch (<see cref="CovarianceSource.Propagated"/>)
+    /// past the domain where its linear propagation holds: its non-linearity index
+    /// (<see cref="ParticipantCovariance.NonlinearityIndex"/>) exceeds the threshold measured against a Monte Carlo of
+    /// the probability of collision (<see cref="ConjunctionAnalysisOptions.NonlinearityIndexThreshold"/>). The encounter
+    /// is then beyond the domain where the Foster probability was validated against a Monte Carlo; the probability is
+    /// not necessarily wrong: confirm one that matters by a Monte Carlo.
+    /// </summary>
+    NonlinearCovariancePropagation = 1 << 7
 }

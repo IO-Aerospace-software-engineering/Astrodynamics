@@ -47,6 +47,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </summary>
     protected GravitationalField GravitationalField { get; }
 
+    /// <summary>The gravitational field of the body, for the description of a force model (CDM export).</summary>
+    internal GravitationalField Field => GravitationalField;
+
     /// <summary>
     /// Gets or sets the initial orbital parameters of the celestial item.
     /// </summary>

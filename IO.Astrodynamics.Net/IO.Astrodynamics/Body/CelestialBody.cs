@@ -82,6 +82,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// </summary>
     public bool HasAtmosphericModel => AtmosphericModel != null;
 
+    /// <summary>The atmospheric model of the body, null without one; for the description of a force model (CDM export).</summary>
+    internal IAtmosphericModel Atmosphere => AtmosphericModel;
+
     /// <summary>
     /// NRLMSISE-00 model instance for Earth with full atmospheric context.
     /// </summary>

@@ -67,10 +67,23 @@ Used in geometry-finder constraint searches.
 | `MissingProtectedCovariance` | Protected object has no covariance |
 | `MissingSecondaryCovariance` | Secondary object has no covariance |
 | `CovarianceUnavailable` | No covariance for either participant |
-| `CovarianceRemediated` | Covariance was remediated |
+| `CovarianceRemediated` | Covariance was remediated: the encounter-plane covariance before the probability, or the initial covariance of a participant, indefinite from rounding, by eigenvalue clipping before its propagation |
 | `StaleCovarianceUsed` | An initial-state covariance older than `ConjunctionAnalysisOptions.StaleCovarianceThreshold` (60 s by default) was used at TCA, held fixed in RTN |
 | `LowRelativeVelocityEncounter` | 2D assumption may be degraded |
 | `SingleCovarianceMaximumPcUsed` | Single-covariance maximum Pc was used |
+| `NonlinearCovariancePropagation` | A propagated covariance has a non-linearity index above `ConjunctionAnalysisOptions.NonlinearityIndexThreshold`: beyond the domain where Foster was validated against a Monte Carlo, not a wrong Pc; confirm a Pc that matters by a Monte Carlo |
+
+## CovarianceSource
+
+Where the covariance of one participant at TCA comes from, in the order the conjunction analysis resolves it
+([Conjunction Assessment](conjunction-assessment.md#covariance-at-tca)); in the `IO.Astrodynamics.SSA` namespace.
+
+| Value | Description |
+|-------|-------------|
+| `None` | No covariance |
+| `ProvidedAtEncounter` | The state at TCA carried its covariance (age zero) |
+| `InitialStateHeldInRtn` | The initial covariance held fixed in RTN, not propagated (the fallback) |
+| `Propagated` | The initial covariance propagated to TCA by the variational equations of RK7(8) |
 
 ## CDM Enumerations
 

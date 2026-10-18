@@ -45,6 +45,20 @@ public sealed class PropagationSegment
     /// </summary>
     internal VariationalSegmentData Variational { get; set; }
 
+    /// <summary>
+    /// The impulsive maneuver that starts the segment, set by the propagator in RK7(8) with or without the variational
+    /// equations; null for the first segment and after an event without a maneuver. The replay of the variational
+    /// equations by the conjunction analysis adds its execution error there (C5).
+    /// </summary>
+    internal ManeuverRecord? EntryManeuver { get; set; }
+
+    /// <summary>
+    /// The time of the event that ends the segment, in seconds from <see cref="BaseEpoch"/>, as the propagator handled
+    /// it, set in RK7(8); null when no event ends it. The replay evaluates the variational values there, as the
+    /// propagation did, so that the next segment starts from the same doubles.
+    /// </summary>
+    internal double? EventTime { get; set; }
+
     public PropagationSegment(Time baseEpoch)
     {
         BaseEpoch = baseEpoch;
