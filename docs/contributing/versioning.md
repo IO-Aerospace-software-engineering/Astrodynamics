@@ -43,8 +43,8 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   spacecraft, for example `() => new RK78Integrator()`. The existing overload and the default integrator,
   Velocity-Verlet, are unchanged.
 - **Propagated covariance in the conjunction analysis.** `ConjunctionAnalysisOptions.CovariancePropagation`
-  (`CovariancePropagationOptions`, covariance mode without process noise by default), `ComputeNonlinearityIndex` and
-  `NonlinearityIndexThreshold`; `CovarianceSource` and `ParticipantCovariance` (source, age, `ProcessNoiseApplied`,
+  (`CovariancePropagationOptions`, covariance mode without process noise by default), `ComputeNonlinearityIndex` (off by
+  default) and `NonlinearityIndexThreshold` (0.75); `CovarianceSource` and `ParticipantCovariance` (source, age, `ProcessNoiseApplied`,
   `NonlinearityIndex`) on `EncounterState.ProtectedCovariance` and `SecondaryCovariance`, with a new constructor
   overload; `EncounterQualityFlags.NonlinearCovariancePropagation`; `AvoidanceSearchOptions.ExecutionError`. The CDM
   export of a propagated covariance carries the rows `CDRG_*` and `CSRP_*` of the consider parameters, the force model

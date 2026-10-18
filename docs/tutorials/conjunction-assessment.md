@@ -184,7 +184,10 @@ var encounter = ConjunctionAssessment.Analyze(
             Mode = CovariancePropagationMode.Covariance,
             ProcessNoise = new RtnProcessNoise(1e-12, 1e-11, 1e-12),
             ConsiderParameters = new ConsiderParameters(dragCoefficientSigma: 0.2)
-        }
+        },
+
+        // Off by default: twelve propagations of the state transition matrix per participant
+        ComputeNonlinearityIndex = true
     });
 
 var source = encounter.EncounterState.ProtectedCovariance;

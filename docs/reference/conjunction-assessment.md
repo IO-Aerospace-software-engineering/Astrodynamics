@@ -59,16 +59,27 @@ it? A tutorial on nonlinearity of orbit and attitude dynamics*, J. Astronaut. Sc
 the δxᵢ being the twelve points ±√λₖ eₖ on the principal axes of P0, its 1σ boundary. It is zero for a linear flow
 and grows as the tangent map changes across the initial uncertainty. Φ at the twelve points comes from twelve
 propagations of the state transition matrix from the perturbed initial states to the last TCA, with the forces and
-settings of the participant's propagation: the dominant cost of the guard, which `ComputeNonlinearityIndex = false`
-turns off. It is not computed for a propagation with maneuvers (null), nor for the avoidance options.
-`EncounterQualityFlags.NonlinearCovariancePropagation` is raised above `NonlinearityIndexThreshold`.
+settings of the participant's propagation: its cost is that of the guard. It is **off by default**: set
+`ComputeNonlinearityIndex = true` to compute it (decision of S. Guillet, 2026-10-18, after the measurement below, where
+Foster agreed with the Monte Carlo far beyond the threshold). It is not computed for a propagation with maneuvers (null),
+nor for the avoidance options. `EncounterQualityFlags.NonlinearCovariancePropagation` is raised above
+`NonlinearityIndexThreshold`.
+
+What the operator can do with it, and its limits:
+
+- read ν for each participant at TCA: near 0 the propagation is close to linear; the larger it is, the further the
+  covariance has left what the linearization assumes;
+- the flag means *beyond the validated domain*, not *wrong Pc*: Foster stayed right up to ν = 1.94 in the measurement;
+- that domain is two-body crossing encounters at high relative velocity. Slow encounters, drag and the other forces are
+  not covered, and the index does not necessarily detect where Foster would be wrong there; confirm a Pc that matters by a
+  Monte Carlo of your own.
 
 **Cost** (`ConjunctionCovarianceCostTests`, Release, Intel Xeon 2.1 GHz, 4 cores, 2026-10-17, informative). Two
 participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag), each propagated over one day in RK7(8) at 1e-11 in
 0.67 s; `Analyze` over a 2 h window 23 h after the start: 0.55 s with the covariance held in RTN, 1.5 s with the replay
 of both participants, 10.1 s with the non-linearity index (24 STM propagations of 23 h). `EvaluateAvoidance` with the
 default magnitudes and directions: 36 options in 21.7 s, about 0.6 s per option propagated with the covariance from its
-burn to the end of the window (12 h). Turn the index off (`ComputeNonlinearityIndex = false`) when the cost matters.
+burn to the end of the window (12 h). The index is off by default for that cost.
 
 **Measurement of the threshold** (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17). Two-body
 encounters, the secondary crossing at 70° and passing 151 m from the protected object at TCA, both initial covariances
@@ -202,7 +213,7 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 | `LowRelativeSpeedThresholdMetersPerSecond` | 1 m/s | Below this relative speed, `LowRelativeVelocityEncounter` is raised |
 | `StaleCovarianceThreshold` | 60 s | Covariance age beyond which `StaleCovarianceUsed` is raised (covariance held in RTN) |
 | `CovariancePropagation` | `Covariance` mode, no noise, no consider parameter | Propagation of the covariance of the participants to TCA; null for the covariance held in RTN. `StateTransitionOnly` and `IncludeInStepControl` are rejected (`ArgumentException`), as is a consider parameter whose force a propagated participant lacks |
-| `ComputeNonlinearityIndex` | true | Whether the non-linearity index of each propagated covariance is computed |
+| `ComputeNonlinearityIndex` | false | Whether the non-linearity index of each propagated covariance is computed (12 STM propagations per participant) |
 | `NonlinearityIndexThreshold` | 0.75 | Index above which `NonlinearCovariancePropagation` is raised |
 
 ## Practical Limits

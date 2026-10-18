@@ -86,7 +86,7 @@ public class FosterMonteCarloValidationTests : IClassFixture<ConjunctionCovarian
         // Act: Foster with the propagated covariance; the Monte Carlo at its TCA
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
             new TimeSystem.Window(tca.AddMinutes(-20.0), tca.AddMinutes(20.0)),
-            new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = CombinedRadius });
+            new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = CombinedRadius, ComputeNonlinearityIndex = true });
         double foster = encounter.CollisionRisk.ProbabilityOfCollision!.Value;
         double nu = System.Math.Max(encounter.EncounterState.ProtectedCovariance.NonlinearityIndex!.Value,
             encounter.EncounterState.SecondaryCovariance.NonlinearityIndex!.Value);

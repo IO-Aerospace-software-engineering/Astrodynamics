@@ -72,9 +72,13 @@ public sealed record ConjunctionAnalysisOptions
     /// <summary>
     /// Gets whether the non-linearity index of each propagated covariance is computed at the encounter epoch
     /// (<see cref="ParticipantCovariance.NonlinearityIndex"/>). It costs twelve propagations of the state transition
-    /// matrix per participant, from its initial state to the encounter epoch. Default: true.
+    /// matrix per participant, from its initial state to the encounter epoch: on two LEO participants over one day,
+    /// <see cref="ConjunctionAssessment.Analyze(ProtectedSpacecraftProfile, IO.Astrodynamics.Body.ILocalizable, TimeSystem.Window, ConjunctionAnalysisOptions)"/>
+    /// takes 10.1 s with it against 1.5 s without. Default: false (decision of S. Guillet, 2026-10-18): the Foster
+    /// probability was measured to agree with a Monte Carlo far beyond the threshold, so the index is an indicator to ask
+    /// for, not a default alarm.
     /// </summary>
-    public bool ComputeNonlinearityIndex { get; init; } = true;
+    public bool ComputeNonlinearityIndex { get; init; }
 
     /// <summary>
     /// Gets the non-linearity index above which <see cref="EncounterQualityFlags.NonlinearCovariancePropagation"/> is
