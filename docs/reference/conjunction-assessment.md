@@ -25,9 +25,6 @@ during the search, in this order:
     - P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q at TCA, with the options of `ConjunctionAnalysisOptions.CovariancePropagation`
       (see [Covariance Propagation](covariance-propagation.md)). Its age is zero, it is never stale, and the state at TCA
       retained by the `EncounterCase` carries it.
-    - For that replay, a `Spacecraft` propagated in RK7(8) keeps its last propagation (steps, forces, ephemeris and
-      orientation caches) until its next one, even when you discard the solution: about 0.55 MB per spacecraft over one
-      day of a LEO with EGM2008 10×10, Moon, Sun and drag at 1e-11. A Velocity-Verlet propagation keeps nothing.
 2. **Provided at the encounter** (`ProvidedAtEncounter`): the state of the participant at TCA carries a covariance,
    for a hand-built `ILocalizable` whose ephemeris gives one (age zero).
 3. **Initial state held in RTN** (`InitialStateHeldInRtn`), the fallback for a participant that the library does not
@@ -241,6 +238,10 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 - The replay evaluates the forces and their partials of the participant's propagation: like `PropagationSolution`
   evaluations, an analysis must not run concurrently with another propagation or evaluation sharing a `CelestialBody`
   with a geopotential (see [Thread Safety](../guides/thread-safety.md)).
+- Memory: to replay it, a `Spacecraft` propagated in RK7(8) keeps its last propagation (the accepted steps, the forces
+  and their ephemeris cache) until it is propagated again, about 0.55 MB for one day in LEO with EGM2008 10×10, the Moon,
+  the Sun and drag at 1e-11 (H3 review of step 10). A propagation by Velocity-Verlet keeps nothing beyond its output
+  states.
 - With both covariances, Pc is the Foster 2D probability of the combined covariance.
 - With only one covariance, Pc is the maximum probability over the unknown covariance (Frisbee's
   method), an upper bound, and `SingleCovarianceMaximumPcUsed` is raised.

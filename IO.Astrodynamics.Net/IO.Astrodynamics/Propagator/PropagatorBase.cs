@@ -444,9 +444,9 @@ public abstract class PropagatorBase : IPropagator
         // 8. Attach sampled output to solution
         solution.SetOutputStates(outputStates);
 
-        // 9. In RK7(8), the spacecraft keeps it, for the conjunction analysis that replays its variational equations
-        // (step 10, E2); a Velocity-Verlet solution cannot be replayed, and is not kept
-        Spacecraft.LastPropagation = dynamics != null ? solution : null;
+        // 9. In RK7(8), the spacecraft keeps it, for the conjunction analysis that reads its propagated states (step 10,
+        // E2); another integrator leaves nothing to replay, so its solution is not kept (H3 review of step 10, B2)
+        Spacecraft.LastPropagation = solution.Dynamics != null ? solution : null;
 
         return solution;
     }

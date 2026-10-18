@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 
 /// <summary>
 /// The edges of the propagated covariance in the conjunction analysis (step 10): the checks of the initial cross
-/// covariance, another inertial frame of the propagation, a last encounter past the propagation, the index of a
+/// covariance, the last propagation kept by a spacecraft in RK7(8) only, another inertial frame of the propagation, a last encounter past the propagation, the index of a
 /// propagation with maneuvers, and the names of the force model of the CDM.
 /// </summary>
 public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianceCase>, IClassFixture<ReferenceCases>
@@ -93,21 +93,32 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     }
 
     [Fact]
-    public void LastPropagation_IsKeptInRk78Only()
+    public void Spacecraft_KeepsItsLastPropagation_InRk78Only()
     {
-        // Arrange: a spacecraft propagated in RK7(8), then in Velocity-Verlet
-        var spacecraft = ConjunctionCovarianceCase.NewSpacecraft(-6951, _case.ProtectedStart);
+        // Arrange: one spacecraft propagated in RK7(8), then by Velocity-Verlet (H3 review of step 10, finding B2)
+        var spacecraft = ConjunctionCovarianceCase.NewSpacecraft(-6921, _case.ProtectedStart);
+
+        // Act, assert: the RK7(8) solution is kept, for the replay of the conjunction analysis
         var rk78 = _case.Propagate(spacecraft);
-        var kept = spacecraft.LastPropagation;
+        Assert.Same(rk78, spacecraft.LastPropagation);
 
-        // Act
-        spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new CelestialItem[] { _case.Earth }, false, false,
-            TimeSpan.FromSeconds(10.0));
-
-        // Assert: the RK7(8) solution is kept for the replay; the Velocity-Verlet one cannot be replayed, and is not
-        // kept, nor is the previous one (H3 review, B2)
-        Assert.Same(rk78, kept);
+        // A Velocity-Verlet solution leaves nothing to replay: none is kept, and the RK7(8) one is released
+        var verlet = PropagateWithVelocityVerlet(spacecraft);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         Assert.Null(spacecraft.LastPropagation);
+        Assert.False(verlet.IsAlive, "the spacecraft keeps the Velocity-Verlet solution");
+        Assert.True(spacecraft.IsPropagated);
+    }
+
+    // The Velocity-Verlet propagation of the spacecraft, its solution discarded; a weak reference to it
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private WeakReference PropagateWithVelocityVerlet(IO.Astrodynamics.Body.Spacecraft.Spacecraft spacecraft)
+    {
+        var solution = spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new CelestialItem[] { _case.Earth },
+            false, false, TimeSpan.FromSeconds(10.0));
+        return new WeakReference(solution);
     }
 
     [Fact]

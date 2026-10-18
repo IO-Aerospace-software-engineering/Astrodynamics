@@ -63,11 +63,9 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   propagated, TLE, SPICE) give the same results as before, bit for bit, and so does an initial covariance that the
   propagation would reject (not symmetric and positive semi-definite): it is held in RTN, without an exception. To
   restore the former behavior, set
-  `ConjunctionAnalysisOptions.CovariancePropagation = null`.
-- **A spacecraft keeps its last RK7(8) propagation.** For that replay, a `Spacecraft` propagated in RK7(8) keeps its
-  last `PropagationSolution` (its steps, forces, ephemeris and orientation caches) until its next propagation, even when
-  the caller discards it: about 0.55 MB per spacecraft over one day of a LEO with EGM2008 10×10, Moon, Sun and drag at
-  1e-11. A Velocity-Verlet propagation keeps nothing.
+  `ConjunctionAnalysisOptions.CovariancePropagation = null`. To replay it, a `Spacecraft` propagated in RK7(8) keeps its
+  last propagation until it is propagated again (about 0.55 MB for one day in LEO with drag); a propagation by
+  Velocity-Verlet keeps nothing more than before.
 - **Avoidance options propagated numerically.** When the covariance of the protected participant is propagated,
   `EvaluateAvoidance` propagates each option in RK7(8) from the state and the covariance at its burn, with the force
   model of the trajectory, instead of taking the two-body orbit of the state after the burn without covariance: the miss
