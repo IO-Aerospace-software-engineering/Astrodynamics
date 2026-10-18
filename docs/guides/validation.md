@@ -30,7 +30,7 @@ For conjunction assessment and CDM workflows:
 With the covariance propagated to TCA, the Foster probability of collision agreed with a Monte Carlo of the probability
 (pairs of initial states propagated exactly to their own closest approach, 99 % Clopper–Pearson interval) on two-body
 crossing encounters 6 h to 7 days after the initial states, initial covariances of 100 m and 0.1 m/s up to 10 km and
-10 m/s, non-linearity indices from 9.5e-4 to 1.94 (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17); the
+10 m/s, non-linearity indices from 1.3e-3 to 1.42 (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17, ν measured again on 2026-10-18); the
 table and the threshold it sets are in [Conjunction Assessment](../reference/conjunction-assessment.md#non-linearity-index).
 
 ## Conformance Tests

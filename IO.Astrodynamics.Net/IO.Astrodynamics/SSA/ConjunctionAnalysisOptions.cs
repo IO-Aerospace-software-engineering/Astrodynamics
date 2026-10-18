@@ -82,7 +82,7 @@ public sealed record ConjunctionAnalysisOptions
 
     /// <summary>
     /// Gets the non-linearity index above which <see cref="EncounterQualityFlags.NonlinearCovariancePropagation"/> is
-    /// raised. Default: 0.75, the largest index at which the Foster probability of collision was measured to agree with
+    /// raised. Default: 1.0, the largest index, rounded down, at which the Foster probability of collision was measured to agree with
     /// a Monte Carlo of the probability with enough hits (two-body encounters, see the conjunction assessment
     /// reference): the flag marks a propagated covariance beyond the domain where Foster was validated, not a measured
     /// failure of Foster.
@@ -91,5 +91,5 @@ public sealed record ConjunctionAnalysisOptions
 
     /// <summary>The default threshold of the non-linearity index, set by the measurement of
     /// <c>FosterMonteCarloValidationTests</c>.</summary>
-    internal const double DefaultNonlinearityIndexThreshold = 0.75;
+    internal const double DefaultNonlinearityIndexThreshold = 1.0;
 }
