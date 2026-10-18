@@ -56,8 +56,9 @@ public enum EncounterQualityFlags
     /// The covariance of a participant was propagated to the encounter epoch (<see cref="CovarianceSource.Propagated"/>)
     /// past the domain where its linear propagation holds: its non-linearity index
     /// (<see cref="ParticipantCovariance.NonlinearityIndex"/>) exceeds the threshold measured against a Monte Carlo of
-    /// the probability of collision (<see cref="ConjunctionAnalysisOptions.NonlinearityIndexThreshold"/>). The Foster
-    /// probability is then not to be trusted: a Monte Carlo is needed.
+    /// the probability of collision (<see cref="ConjunctionAnalysisOptions.NonlinearityIndexThreshold"/>). The encounter
+    /// is then beyond the domain where the Foster probability was validated against a Monte Carlo; the probability is
+    /// not necessarily wrong: confirm one that matters by a Monte Carlo.
     /// </summary>
     NonlinearCovariancePropagation = 1 << 7
 }

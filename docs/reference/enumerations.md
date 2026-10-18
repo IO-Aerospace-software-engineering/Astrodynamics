@@ -71,7 +71,7 @@ Used in geometry-finder constraint searches.
 | `StaleCovarianceUsed` | An initial-state covariance older than `ConjunctionAnalysisOptions.StaleCovarianceThreshold` (60 s by default) was used at TCA, held fixed in RTN |
 | `LowRelativeVelocityEncounter` | 2D assumption may be degraded |
 | `SingleCovarianceMaximumPcUsed` | Single-covariance maximum Pc was used |
-| `NonlinearCovariancePropagation` | A propagated covariance has a non-linearity index above `ConjunctionAnalysisOptions.NonlinearityIndexThreshold`: the Foster Pc is not to be trusted, a Monte Carlo is needed |
+| `NonlinearCovariancePropagation` | A propagated covariance has a non-linearity index above `ConjunctionAnalysisOptions.NonlinearityIndexThreshold`: beyond the domain where Foster was validated against a Monte Carlo, not a wrong Pc; confirm a Pc that matters by a Monte Carlo |
 
 ## CovarianceSource
 

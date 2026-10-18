@@ -34,7 +34,9 @@ namespace IO.Astrodynamics.SSA;
 /// </para>
 /// <para>
 /// The twelve propagations run once per participant and per analysis, to its last encounter epoch, under the lock of
-/// the dynamics of the nominal propagation, whose forces they share.
+/// the dynamics of the nominal propagation, whose forces they share; their solutions evaluate Φ under that lock too.
+/// The index is computed for a propagation of a single segment only (no maneuver, no event that restarts the
+/// integration).
 /// </para>
 /// </remarks>
 internal sealed class NonlinearityIndex
@@ -124,7 +126,7 @@ internal sealed class NonlinearityIndex
         }
 
         using var propagator = new CentralBodyPropagator(window, spacecraft, integrator, window.Length, options,
-            dynamics.OrientationCache);
+            dynamics.OrientationCache, dynamics.SyncRoot);
         return propagator.Propagate();
     }
 

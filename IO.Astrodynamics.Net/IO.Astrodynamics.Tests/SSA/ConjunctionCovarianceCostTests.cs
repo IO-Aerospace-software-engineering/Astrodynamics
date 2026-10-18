@@ -57,8 +57,10 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         double replay = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window));
         double withIndex = Median(() => ConjunctionAssessment.Analyze(profile, secondaryCraft, window,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = true }), 3);
-        // The avoidance burns must lie in the screening window: three lead times from the TCA found, up to 6 h, with the
-        // default magnitudes and directions (up to 54 options; those below the minimum lead time of 10 min are skipped)
+        // The avoidance burns must lie in the screening window: three lead times from the TCA found in it, up to 6 h, with
+        // the default magnitudes and directions (up to 54 options; those below the minimum lead time of 10 min are
+        // skipped). The pair meets more than once in the window: the TCA found is the best one, 12.3 h after the start,
+        // not the crossing near 23 h, so the lead times reach 0.32 h only
         var screening = new TimeSystem.Window(start.AddHours(12.0), start.AddHours(24.0));
         var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, screening,
             new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = false });

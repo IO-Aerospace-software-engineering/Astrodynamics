@@ -55,6 +55,24 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     }
 
     [Fact]
+    public void LastPropagation_IsKeptInRk78Only()
+    {
+        // Arrange: a spacecraft propagated in RK7(8), then in Velocity-Verlet
+        var spacecraft = ConjunctionCovarianceCase.NewSpacecraft(-6951, _case.ProtectedStart);
+        var rk78 = _case.Propagate(spacecraft);
+        var kept = spacecraft.LastPropagation;
+
+        // Act
+        spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new CelestialItem[] { _case.Earth }, false, false,
+            TimeSpan.FromSeconds(10.0));
+
+        // Assert: the RK7(8) solution is kept for the replay; the Velocity-Verlet one cannot be replayed, and is not
+        // kept, nor is the previous one (H3 review, B2)
+        Assert.Same(rk78, kept);
+        Assert.Null(spacecraft.LastPropagation);
+    }
+
+    [Fact]
     public void Resolver_PropagationInAnotherInertialFrame_RotatesTheCovarianceToTheFrameOfTheEncounter()
     {
         // Arrange: the protected participant in ECLIPJ2000, and its encounter state in ICRF

@@ -410,18 +410,19 @@ public static class ConjunctionAssessment
         private readonly EncounterCovarianceResolver _secondaryResolver;
 
         private PropagatedAvoidance(EncounterCase encounterCase, AvoidanceSearchOptions options, ILocalizable observer,
-            PropagationSolution solution)
+            EncounterCovariance covariance)
         {
             _encounterCase = encounterCase;
             _options = options;
             _observer = observer;
-            _solution = solution;
-            _dynamics = solution.Dynamics;
-            _covariancePropagation = solution.CovariancePropagation;
+            _solution = covariance.Solution;
+            _dynamics = _solution.Dynamics;
+            _covariancePropagation = _solution.CovariancePropagation;
 
             // The options are propagated within the window and within the force model of the trajectory (its ephemeris
-            // and orientation caches)
-            var source = encounterCase.ProtectedAsset.Spacecraft.LastPropagation ?? solution;
+            // and orientation caches): up to the end of the propagation the covariance comes from, past the last
+            // encounter where its replay may end
+            var source = covariance.Propagation ?? _solution;
             var last = source.Segments[^1];
             var sourceEnd = last.BaseEpoch.AddSeconds(last.Duration);
             _end = encounterCase.ScreeningWindow.EndDate < sourceEnd ? encounterCase.ScreeningWindow.EndDate : sourceEnd;
@@ -440,7 +441,7 @@ public static class ConjunctionAssessment
                 return null;
             }
 
-            return new PropagatedAvoidance(encounterCase, options, observer, covariance.Solution);
+            return new PropagatedAvoidance(encounterCase, options, observer, covariance);
         }
 
         // A burn the solution covers, before the end of the options
@@ -483,21 +484,25 @@ public static class ConjunctionAssessment
                 integrator.AddForce(force);
             }
 
-            // The forces are those of the trajectory: the propagation of the option and its analysis run under the lock of
-            // its dynamics. The analysis reads the steps, not the output states: two outputs, at the ends.
+            // The forces are those of the trajectory: the propagation of the option runs under the lock of its dynamics,
+            // and the solution of the option evaluates them under that lock. The analysis takes no other lock inside it:
+            // the lock of the secondary participant is never taken under that of the protected one. The analysis reads
+            // the steps, not the output states: two outputs, at the ends.
             var window = new Window(burnEpoch, _end);
+            PropagationSolution trajectory;
             lock (_dynamics.SyncRoot)
             {
                 using var propagator = new CentralBodyPropagator(window, trial, integrator, window.Length,
-                    _covariancePropagation, _dynamics.OrientationCache);
+                    _covariancePropagation, _dynamics.OrientationCache, _dynamics.SyncRoot);
                 if (_solution.ExtendedCovarianceParameters.Count > 0)
                 {
                     propagator.SetInitialCrossCovariance(CrossCovariance(_solution.GetExtendedCovariance(burnEpoch)));
                 }
 
-                var trajectory = propagator.Propagate();
-                return AnalyzeOption(trial, trajectory, window);
+                trajectory = propagator.Propagate();
             }
+
+            return AnalyzeOption(trial, trajectory, window);
         }
 
         private EncounterCase AnalyzeOption(Spacecraft trial, PropagationSolution trajectory, in Window window)

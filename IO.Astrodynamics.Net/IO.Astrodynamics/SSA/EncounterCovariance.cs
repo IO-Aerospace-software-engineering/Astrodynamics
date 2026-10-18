@@ -29,6 +29,10 @@ internal sealed record EncounterCovariance(Matrix? CovarianceInertial, TimeSpan?
     /// <summary>The non-linearity index of a propagated covariance, null when not computed.</summary>
     internal double? NonlinearityIndex { get; init; }
 
+    /// <summary>For a propagated covariance, the propagation of the participant, whose variational equations
+    /// <see cref="Solution"/> may replay up to the last encounter only; null otherwise.</summary>
+    internal PropagationSolution Propagation { get; init; }
+
     /// <summary>The public view of this covariance on <see cref="EncounterState"/>.</summary>
     internal ParticipantCovariance ToParticipantCovariance() =>
         new(Source, Age, Source == CovarianceSource.Propagated && ProcessNoiseApplied,
@@ -181,7 +185,8 @@ internal sealed class EncounterCovarianceResolver
 
         return new EncounterCovariance(state.Covariance!.Value, TimeSpan.Zero, CovarianceSource.Propagated, solution)
         {
-            NonlinearityIndex = NonlinearityIndexAt(solution, encounterState.Epoch)
+            NonlinearityIndex = NonlinearityIndexAt(solution, encounterState.Epoch),
+            Propagation = _solution
         };
     }
 

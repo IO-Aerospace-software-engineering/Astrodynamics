@@ -74,6 +74,10 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             Assert.Equal(CovarianceSource.Propagated, encounterWith.EncounterState.ProtectedCovariance.Source);
             Assert.Equal(CovarianceSource.Propagated, encounterWith.EncounterState.SecondaryCovariance.Source);
 
+            // The option evaluates the forces of the trajectory under its lock (H3 review, lock nit)
+            Assert.Same(encounter.ProtectedCovariance.Solution.Dynamics.SyncRoot,
+                encounterWith.ProtectedCovariance.Solution.Dynamics.SyncRoot);
+
             var tca = encounterWith.EncounterState.Epoch;
             var phi = encounterWith.ProtectedCovariance.Solution.GetStateTransitionMatrix(tca);
             var le = new double[9];
@@ -125,11 +129,13 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
 
         // Assert: each option against the same spacecraft propagated from the start with a burn fixed in epoch and ΔV and
-        // its execution error, the open-loop model (FixedImpulse): the state and the covariance at the TCA of the option,
-        // the correlation of the state and the consider parameters at the burn carried over
+        // its execution error, the open-loop model (FixedImpulse): the state, the covariance and the extended covariance at
+        // the TCA of the option, the correlation of the state and the consider parameters at the burn carried over (the
+        // cross block Φ C0 + Ψc Pp, H3 review, N4)
         Assert.Equal(6, avoidance.Count);
         double worstState = 0.0;
         double worstCovariance = 0.0;
+        double worstExtended = 0.0;
         foreach (var option in avoidance.Take(3))
         {
             var reference = WithEngine(-6413, _full.PointMassProtectedStart, out var engine);
@@ -142,13 +148,18 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             var expected = solution.GetStateVector(tca);
             double stateError = (post.ProtectedState.Position - expected.Position).Magnitude();
             double covarianceError = RelativeError(expected.Covariance.Value, post.ProtectedState.Covariance.Value);
+            double extendedError = RelativeError(solution.GetExtendedCovariance(tca),
+                post.ProtectedCovariance.Solution.GetExtendedCovariance(tca), 8);
             worstState = System.Math.Max(worstState, stateError);
             worstCovariance = System.Math.Max(worstCovariance, covarianceError);
-            _output.WriteLine($"option {option.DeltaVInertial}: state {stateError:E2} m, P {covarianceError:E2}");
+            worstExtended = System.Math.Max(worstExtended, extendedError);
+            _output.WriteLine($"option {option.DeltaVInertial}: state {stateError:E2} m, P {covarianceError:E2}, " +
+                              $"extended {extendedError:E2}");
         }
 
         Assert.True(worstState < 1e-3, $"{worstState:E2} m");
         Assert.True(worstCovariance < 1e-8, $"{worstCovariance:E2}");
+        Assert.True(worstExtended < 1e-8, $"{worstExtended:E2}");
     }
 
     [Fact]
@@ -203,13 +214,15 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         return d;
     }
 
-    private static double RelativeError(Matrix expected, Matrix actual)
+    private static double RelativeError(Matrix expected, Matrix actual, int size = 6)
     {
+        Assert.Equal(size, expected.Rows);
+        Assert.Equal(size, actual.Rows);
         double difference = 0.0;
         double norm = 0.0;
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < size; i++)
         {
-            for (int j = 0; j < 6; j++)
+            for (int j = 0; j < size; j++)
             {
                 double e = actual.Get(i, j) - expected.Get(i, j);
                 difference += e * e;

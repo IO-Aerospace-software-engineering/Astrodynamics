@@ -40,6 +40,12 @@ public abstract class PropagatorBase : IPropagator
     // The public options of the variational equations, null when they are off or enabled through the internal options
     private CovariancePropagationOptions _covariancePropagation;
 
+    /// <summary>
+    /// In RK7(8), the lock of the dynamics of the solution: null for a lock of its own; the lock of another propagation
+    /// whose forces this one shares (an avoidance option, a perturbed propagation of the non-linearity index).
+    /// </summary>
+    private protected object DynamicsSyncRoot { get; set; }
+
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
     {
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
@@ -274,7 +280,7 @@ public abstract class PropagatorBase : IPropagator
         {
             dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
                 InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations,
-                _covarianceModel) { Integrator = rk78 };
+                _covarianceModel, DynamicsSyncRoot ?? new object()) { Integrator = rk78 };
         }
 
         var variational = _variationalOptions != null ? rk78.VariationalEquations : null;
@@ -430,8 +436,9 @@ public abstract class PropagatorBase : IPropagator
         // 8. Attach sampled output to solution
         solution.SetOutputStates(outputStates);
 
-        // 9. The spacecraft keeps it, for the conjunction analysis that reads its propagated states (step 10, E2)
-        Spacecraft.LastPropagation = solution;
+        // 9. In RK7(8), the spacecraft keeps it, for the conjunction analysis that replays its variational equations
+        // (step 10, E2); a Velocity-Verlet solution cannot be replayed, and is not kept
+        Spacecraft.LastPropagation = dynamics != null ? solution : null;
 
         return solution;
     }

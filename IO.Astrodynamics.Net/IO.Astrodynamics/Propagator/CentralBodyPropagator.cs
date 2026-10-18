@@ -113,12 +113,15 @@ public class CentralBodyPropagator : PropagatorBase
     /// A central-body propagator with an integrator that already has its forces, the forces of another propagation, and
     /// the orientation cache of that propagation, which must cover <paramref name="window"/>: the propagation of an
     /// avoidance option from the state at its burn, with the force model of the trajectory it leaves (step 10, E4).
+    /// The solution evaluates those forces under <paramref name="syncRoot"/>, the lock of that propagation.
     /// </summary>
     internal CentralBodyPropagator(in Window window, Spacecraft spacecraft, RK78Integrator integrator, TimeSpan deltaT,
-        CovariancePropagationOptions covariancePropagation, PropagationFrameOrientationCache orientationCache)
+        CovariancePropagationOptions covariancePropagation, PropagationFrameOrientationCache orientationCache,
+        object syncRoot)
         : this(window, spacecraft, integrator, deltaT)
     {
         _orientationCache = orientationCache;
+        DynamicsSyncRoot = syncRoot ?? throw new ArgumentNullException(nameof(syncRoot));
         integrator.Initialize(InitialState);
         EnableCovariancePropagation(covariancePropagation);
     }

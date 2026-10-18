@@ -25,6 +25,9 @@ during the search, in this order:
     - P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q at TCA, with the options of `ConjunctionAnalysisOptions.CovariancePropagation`
       (see [Covariance Propagation](covariance-propagation.md)). Its age is zero, it is never stale, and the state at TCA
       retained by the `EncounterCase` carries it.
+    - For that replay, a `Spacecraft` propagated in RK7(8) keeps its last propagation (steps, forces, ephemeris and
+      orientation caches) until its next one, even when you discard the solution: about 0.55 MB per spacecraft over one
+      day of a LEO with EGM2008 10×10, Moon, Sun and drag at 1e-11. A Velocity-Verlet propagation keeps nothing.
 2. **Provided at the encounter** (`ProvidedAtEncounter`): the state of the participant at TCA carries a covariance,
    for a hand-built `ILocalizable` whose ephemeris gives one (age zero).
 3. **Initial state held in RTN** (`InitialStateHeldInRtn`), the fallback for a participant that the library does not
@@ -63,8 +66,8 @@ and grows as the tangent map changes across the initial uncertainty. Φ at the t
 propagations of the state transition matrix from the perturbed initial states to the last TCA, with the forces and
 settings of the participant's propagation: its cost is that of the guard. It is **off by default**: set
 `ComputeNonlinearityIndex = true` to compute it (decision of S. Guillet, 2026-10-18, after the measurement below, where
-Foster agreed with the Monte Carlo far beyond the threshold). It is not computed for a propagation with maneuvers (null),
-nor for the avoidance options. `EncounterQualityFlags.NonlinearCovariancePropagation` is raised above
+Foster agreed with the Monte Carlo far beyond the threshold). It is not computed (null) for a propagation of more than one
+segment (with maneuvers, or with an event that restarts the integration), nor for the avoidance options. `EncounterQualityFlags.NonlinearCovariancePropagation` is raised above
 `NonlinearityIndexThreshold`.
 
 What the operator can do with it, and its limits:
@@ -80,8 +83,9 @@ What the operator can do with it, and its limits:
 participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag), each propagated over one day in RK7(8) at 1e-11 in
 0.67 s; `Analyze` over a 2 h window 23 h after the start: 0.55 s with the covariance held in RTN, 1.5 s with the replay
 of both participants, 10.1 s with the non-linearity index (24 STM propagations of 23 h). `EvaluateAvoidance` with the
-default magnitudes and directions: 36 options in 21.7 s, about 0.6 s per option propagated with the covariance from its
-burn to the end of the window (12 h). The index is off by default for that cost.
+default magnitudes and directions, on the TCA found in a 12 h screening window, 12.3 h after the start (lead times up to
+0.32 h, the shortest below the minimum lead time skipped): 36 options in 21.7 s, about 0.6 s per option propagated with
+the covariance from its burn to the end of the window (about 12 h). The index is off by default for that cost.
 
 **Measurement of the threshold** (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17). Two-body
 encounters, the secondary crossing at 70° and passing 151 m from the protected object at TCA, both initial covariances
@@ -90,7 +94,7 @@ propagated by RK7(8), against a Monte Carlo of N pairs of initial states, each p
 to its own closest approach; agreement when Foster lies in the 99 % Clopper–Pearson interval of the Monte Carlo
 (C. J. Clopper, E. S. Pearson, *Biometrika* 26, 1934; to be verified).
 
-| TCA after the initial states | P0 | ν | Foster | Monte Carlo (hits, N) | 99 % interval | |
+| TCA after the initial states | σ scale (P0 × scale²) | ν | Foster | Monte Carlo (hits, N) | 99 % interval | |
 |---|---|---|---|---|---|---|
 | 6 h | × 1 | 9.5e-4 | 3.359e-2 | 3.357e-2 (335 708, 1e7) | [3.342e-2, 3.372e-2] | agrees |
 | 24 h | × 1 | 3.6e-3 | 8.624e-3 | 8.605e-3 (86 051, 1e7) | [8.530e-3, 8.681e-3] | agrees |
