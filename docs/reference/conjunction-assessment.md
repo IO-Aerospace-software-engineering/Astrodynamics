@@ -228,6 +228,10 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
 - The replay evaluates the forces and their partials of the participant's propagation: like `PropagationSolution`
   evaluations, an analysis must not run concurrently with another propagation or evaluation sharing a `CelestialBody`
   with a geopotential (see [Thread Safety](../guides/thread-safety.md)).
+- Memory: to replay it, a `Spacecraft` propagated in RK7(8) keeps its last propagation (the accepted steps, the forces
+  and their ephemeris cache) until it is propagated again, about 0.55 MB for one day in LEO with EGM2008 10×10, the Moon,
+  the Sun and drag at 1e-11 (H3 review of step 10). A propagation by Velocity-Verlet keeps nothing beyond its output
+  states.
 - With both covariances, Pc is the Foster 2D probability of the combined covariance.
 - With only one covariance, Pc is the maximum probability over the unknown covariance (Frisbee's
   method), an upper bound, and `SingleCovarianceMaximumPcUsed` is raised.
