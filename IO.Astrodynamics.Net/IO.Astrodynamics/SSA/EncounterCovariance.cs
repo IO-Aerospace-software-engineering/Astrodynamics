@@ -139,8 +139,12 @@ internal sealed class EncounterCovarianceResolver
         if (_solution.CovariancePropagation?.Mode == CovariancePropagationMode.Covariance)
             return _solution;
 
+        // An initial covariance at another epoch, or one that the propagation would reject (not symmetric and positive
+        // semi-definite, as from rounded values): held in RTN, as without the propagation (decision of S. Guillet,
+        // 2026-10-18, H3 review N2)
         if (_participant.InitialOrbitalParameters is not StateVector { Covariance: not null } initial ||
-            (initial.Epoch - _solution.Segments[0].BaseEpoch) != TimeSpan.Zero)
+            (initial.Epoch - _solution.Segments[0].BaseEpoch) != TimeSpan.Zero ||
+            PropagatorBase.InitialCovarianceRejection(initial.Covariance.Value, out _) != null)
             return null;
 
         if (_replayed == null)

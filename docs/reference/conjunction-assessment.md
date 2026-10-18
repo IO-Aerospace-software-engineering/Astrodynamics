@@ -32,7 +32,9 @@ during the search, in this order:
    for a hand-built `ILocalizable` whose ephemeris gives one (age zero).
 3. **Initial state held in RTN** (`InitialStateHeldInRtn`), the fallback for a participant that the library does not
    propagate in RK7(8) (Velocity-Verlet, not propagated and so two-body, TLE, SPICE), for an initial covariance at another
-   epoch than the start of the propagation, and for every participant when `CovariancePropagation` is null. The
+   epoch than the start of the propagation, for one that a propagation of the covariance would reject (not symmetric and
+   positive semi-definite, as from rounded values: the analysis does not throw, it holds that covariance in RTN as before
+   10.2.0), and for every participant when `CovariancePropagation` is null. The
    covariance of the initial `StateVector` is rotated into RTN with the initial state, then back into the inertial frame
    with the state at TCA. It is **not propagated**: its shape relative to the orbit is kept, its size does not grow. Its
    age is reported, and `EncounterQualityFlags.StaleCovarianceUsed` is raised beyond
@@ -77,7 +79,14 @@ What the operator can do with it, and its limits:
 - the flag means *beyond the validated domain*, not *wrong Pc*: Foster stayed right up to ν = 1.94 in the measurement;
 - that domain is two-body crossing encounters at high relative velocity. Slow encounters, drag and the other forces are
   not covered, and the index does not necessarily detect where Foster would be wrong there; confirm a Pc that matters by a
-  Monte Carlo of your own.
+  Monte Carlo of your own;
+- the twelve points need unique principal axes. When P0 has repeated eigenvalues, an initial covariance with the same σ
+  on several RTN axes as in the measurement below, the axes within each repeated eigenspace are those the eigensolver
+  returns, and ν depends on them: on the 7 days × 30 case, ν ranges from 0.706 to 0.794 over random bases of those
+  eigenspaces (H3 review, two-body, numpy), against 0.75 published. ν near the threshold, and the flag, can then change
+  with the version or the platform of the eigensolver. A definition independent of the basis (the supremum over the 1σ
+  boundary, as Junkins and Singla take it) and the measurement of the threshold with it are a follow-up
+  ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403)).
 
 **Cost** (`ConjunctionCovarianceCostTests`, Release, Intel Xeon 2.1 GHz, 4 cores, 2026-10-17, informative). Two
 participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag), each propagated over one day in RK7(8) at 1e-11 in

@@ -205,11 +205,25 @@ public abstract class PropagatorBase : IPropagator
                 "at the epoch of the initial orbital parameters.");
         }
 
-        var p0 = covariance.Value;
+        var reason = InitialCovarianceRejection(covariance.Value, out var symmetrized);
+        if (reason != null)
+        {
+            throw InitialCovarianceError(participant, reason);
+        }
+
+        return new CovarianceModel(symmetrized, options);
+    }
+
+    /// <summary>
+    /// Why the initial covariance <paramref name="p0"/> is rejected: not 6×6, symmetric and positive semi-definite
+    /// (<see cref="CovarianceChecks.Validate"/>); null when it is accepted, with its symmetrized values.
+    /// </summary>
+    internal static string InitialCovarianceRejection(Math.Matrix p0, out double[] symmetrized)
+    {
+        symmetrized = null;
         if (p0.Rows != VariationalEquations.StateDimension || p0.Columns != VariationalEquations.StateDimension)
         {
-            throw InitialCovarianceError(participant,
-                $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.");
+            return $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.";
         }
 
         var values = new double[36];
@@ -221,13 +235,7 @@ public abstract class PropagatorBase : IPropagator
             }
         }
 
-        var reason = CovarianceChecks.Validate(values, 6, "The initial covariance", out var symmetrized);
-        if (reason != null)
-        {
-            throw InitialCovarianceError(participant, reason);
-        }
-
-        return new CovarianceModel(symmetrized, options);
+        return CovarianceChecks.Validate(values, 6, "The initial covariance", out symmetrized);
     }
 
     // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one

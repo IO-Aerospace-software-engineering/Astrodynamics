@@ -55,6 +55,44 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     }
 
     [Fact]
+    public void Analyze_InitialCovarianceThePropagationRejects_IsHeldInRtn()
+    {
+        // Arrange: the protected object with a T–Ṙ correlation of −1.0001, as from rounded values: not positive
+        // semi-definite, rejected by a propagation of the covariance
+        var state = _case.ProtectedStart;
+        var sigma = new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
+        var rtn = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            rtn.Set(i, i, sigma[i] * sigma[i]);
+        }
+
+        rtn.Set(1, 3, -1.0001 * sigma[1] * sigma[3]);
+        rtn.Set(3, 1, -1.0001 * sigma[1] * sigma[3]);
+        var rejected = new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
+            state.RotateCovarianceFromRtn(rtn));
+        Assert.NotNull(PropagatorBase.InitialCovarianceRejection(rejected.Covariance.Value, out _));
+        var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6961, rejected);
+        var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6962, _case.SecondaryStart);
+        _case.Propagate(protectedCraft);
+        _case.Propagate(secondaryCraft);
+        var profile = new ProtectedSpacecraftProfile(protectedCraft);
+
+        // Act
+        var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow);
+        var held = ConjunctionAssessment.Analyze(profile, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow,
+            new ConjunctionAnalysisOptions { CovariancePropagation = null });
+
+        // Assert: no exception; the covariance of the protected object held in RTN, as without the propagation, and
+        // stale; that of the secondary propagated (decision of S. Guillet, 2026-10-18, H3 review N2)
+        Assert.Equal(CovarianceSource.InitialStateHeldInRtn, encounter.EncounterState.ProtectedCovariance.Source);
+        Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.SecondaryCovariance.Source);
+        Assert.Equal(held.ProtectedCovariance.CovarianceInertial.Value.ToArray(),
+            encounter.ProtectedCovariance.CovarianceInertial.Value.ToArray());
+        Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
+    }
+
+    [Fact]
     public void LastPropagation_IsKeptInRk78Only()
     {
         // Arrange: a spacecraft propagated in RK7(8), then in Velocity-Verlet

@@ -33,6 +33,11 @@ namespace IO.Astrodynamics.SSA;
 /// perturbed trajectories would need the maneuvers of the nominal one.
 /// </para>
 /// <para>
+/// Limit: the points need unique principal axes. When P0 has repeated eigenvalues, the axes within each repeated
+/// eigenspace are those of the eigensolver, and ν depends on them (0.706 to 0.794 over random bases on the case that
+/// sets the threshold, H3 review of step 10); a definition independent of the basis is a follow-up (#403).
+/// </para>
+/// <para>
 /// The twelve propagations run once per participant and per analysis, to its last encounter epoch, under the lock of
 /// the dynamics of the nominal propagation, whose forces they share; their solutions evaluate Φ under that lock too.
 /// The index is computed for a propagation of a single segment only (no maneuver, no event that restarts the
