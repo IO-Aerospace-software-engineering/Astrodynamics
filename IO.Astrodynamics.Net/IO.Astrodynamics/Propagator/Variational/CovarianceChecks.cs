@@ -116,7 +116,7 @@ internal static class CovarianceChecks
     /// <summary>
     /// Remediate a covariance that is not positive semi-definite, as from rounded values, by eigenvalue clipping (D. T.
     /// Hall, M. D. Hejduk, L. C. Johnson, <i>Remediating non-positive definite state covariances for collision
-    /// probability estimation</i>, AAS 17-567, 2017; to be verified by S. Guillet): the negative eigenvalues set to zero.
+    /// probability estimation</i>, AAS 17-567, 2017; confirmed by S. Guillet, 2026-10-18): the negative eigenvalues set to zero.
     /// The clipping is made on the correlation matrix C, as the check, so that it does not depend on the units:
     /// C' = V max(Λ, 0) Vᵀ, M'_ij = C'_ij √(M_ii M_jj); the covariances of a zero variance are set to zero.
     /// </summary>

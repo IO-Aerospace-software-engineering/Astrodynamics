@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.SSA;
 /// <remarks>
 /// <para>
 /// The index of Junkins and Singla (J. L. Junkins, P. Singla, <i>How nonlinear is it? A tutorial on nonlinearity of
-/// orbit and attitude dynamics</i>, Journal of the Astronautical Sciences 52, 2004, to be verified by S. Guillet):
+/// orbit and attitude dynamics</i>, Journal of the Astronautical Sciences 52, 2004, confirmed by S. Guillet, 2026-10-18):
 /// ν(t) = sup over δx on the 1σ boundary of the initial covariance P0 of
 /// ‖Φ(t, t0; x̄0 + δx) − Φ(t, t0; x̄0)‖_F / ‖Φ(t, t0; x̄0)‖_F. It measures how much the linear map that carries P0 to
 /// the encounter changes across the initial uncertainty: zero for a linear flow, so that the linear propagation

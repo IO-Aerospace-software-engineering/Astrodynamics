@@ -34,7 +34,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// <para>
 /// Agreement: Foster within the 99 % Clopper–Pearson interval of the Monte Carlo (C. J. Clopper, E. S. Pearson, <i>The
 /// use of confidence or fiducial limits illustrated in the case of the binomial</i>, Biometrika 26, 1934; the interval
-/// from the quantiles of the beta distribution; to be verified by S. Guillet).
+/// from the quantiles of the beta distribution; confirmed by S. Guillet, 2026-10-18).
 /// </para>
 /// </remarks>
 [Trait("Category", "LongValidation")]

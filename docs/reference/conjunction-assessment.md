@@ -28,7 +28,7 @@ during the search, in this order:
     - An initial covariance that rounding made indefinite (symmetric, finite, non-negative variances, but not positive
       semi-definite, as from the rounded values of a CDM) is **remediated** before its propagation, by eigenvalue
       clipping (D. T. Hall, M. D. Hejduk, L. C. Johnson, *Remediating non-positive definite state covariances for
-      collision probability estimation*, AAS 17-567, 2017; citation to be verified): the negative eigenvalues of its
+      collision probability estimation*, AAS 17-567, 2017; confirmed by S. Guillet, 2026-10-18): the negative eigenvalues of its
       correlation matrix are set to zero, so that the result does not depend on the units, and
       `EncounterQualityFlags.CovarianceRemediated` is raised (decision of S. Guillet, 2026-10-18). A propagation by
       `CentralBodyPropagator` still rejects such a covariance.
@@ -63,7 +63,7 @@ held in RTN.
 
 The covariance is propagated linearly. For each propagated covariance, the analysis reports a non-linearity index at TCA,
 `ParticipantCovariance.NonlinearityIndex`, the index of Junkins and Singla (J. L. Junkins, P. Singla, *How nonlinear is
-it? A tutorial on nonlinearity of orbit and attitude dynamics*, J. Astronaut. Sci. 52, 2004; citation to be verified):
+it? A tutorial on nonlinearity of orbit and attitude dynamics*, J. Astronaut. Sci. 52, 2004; confirmed by S. Guillet, 2026-10-18):
 
 ν(t) = sup over the 1σ boundary of P0 of ‖Φ(t, t0; x̄0 + δx) − Φ(t, t0; x̄0)‖_F / ‖Φ(t, t0; x̄0)‖_F.
 
@@ -106,7 +106,7 @@ encounters, the secondary crossing at 70° and passing 151 m from the protected 
 isotropic in RTN (σ 100 m and 0.1 m/s, then scaled), combined hard-body radius 500 m. Foster with the covariance
 propagated by RK7(8), against a Monte Carlo of N pairs of initial states, each propagated exactly in the two-body problem
 to its own closest approach; agreement when Foster lies in the 99 % Clopper–Pearson interval of the Monte Carlo
-(C. J. Clopper, E. S. Pearson, *Biometrika* 26, 1934; to be verified).
+(C. J. Clopper, E. S. Pearson, *Biometrika* 26, 1934; confirmed by S. Guillet, 2026-10-18).
 
 | TCA after the initial states | σ scale (P0 × scale²) | ν | Foster | Monte Carlo (hits, N) | 99 % interval | |
 |---|---|---|---|---|---|---|
