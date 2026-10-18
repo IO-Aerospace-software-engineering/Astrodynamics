@@ -11,9 +11,11 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.Propagator.Variational;
 
 /// <summary>
-/// The replay of the variational equations along the accepted steps of an RK7(8) propagation that did not integrate
-/// them: the conjunction analysis propagates the covariance of a participant this way, without a second propagation
-/// (step 10, E2; decisions of 2026-10-06 and 2026-10-07).
+/// The replay of the variational equations along the accepted steps of an RK7(8) propagation that did not propagate the
+/// covariance, without the variational equations or with the state transition matrix only: the conjunction analysis
+/// propagates the covariance of a participant this way, without a second propagation (step 10, E2; decisions of
+/// 2026-10-06 and 2026-10-07; a propagation with the state transition matrix only, H3 review of step 10, decision of
+/// S. Guillet, 2026-10-18).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -24,6 +26,13 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// values are evaluated at the event time the propagation handled (<see cref="PropagationSegment.EventTime"/>), and the
 /// execution error of a maneuver is added to Q there (<see cref="PropagationSegment.EntryManeuver"/>, C5), as the
 /// propagator does.
+/// </para>
+/// <para>
+/// A propagation with the state transition matrix only (<see cref="CovariancePropagationMode.StateTransitionOnly"/>) is
+/// replayed in the same way: its stored Φ and Ψ are not read, so the replay applies the options given (the process
+/// noise and the consider parameters included) and, with its step controlled on the state only, gives the values of a
+/// propagation with the covariance bit for bit. A propagation that already propagated the covariance is read from its
+/// solution, never replayed.
 /// </para>
 /// <para>
 /// The result is a separate solution over the steps up to the one that contains the end epoch: the solution replayed is
@@ -42,8 +51,8 @@ internal static class VariationalReplay
     /// <paramref name="options"/>.</returns>
     /// <exception cref="ArgumentException"><paramref name="options"/> put Φ and Ψ in the step control, which would change
     /// the steps; or name a consider parameter whose force the propagation lacks.</exception>
-    /// <exception cref="InvalidOperationException">The solution is not an RK7(8) propagation, already holds variational
-    /// data, or does not reach <paramref name="end"/>; or P0 is rejected (<see cref="PropagatorBase.CreateCovarianceModel(ILocalizable, in Time, VariationalOptions)"/>).</exception>
+    /// <exception cref="InvalidOperationException">The solution is not an RK7(8) propagation, already propagated the
+    /// covariance, or does not reach <paramref name="end"/>; or P0 is rejected (<see cref="PropagatorBase.CreateCovarianceModel(ILocalizable, in Time, VariationalOptions)"/>).</exception>
     internal static PropagationSolution Replay(PropagationSolution solution, ILocalizable participant,
         CovariancePropagationOptions options, in Time end)
     {
@@ -52,9 +61,9 @@ internal static class VariationalReplay
         ArgumentNullException.ThrowIfNull(options);
         var source = solution.Dynamics ?? throw new InvalidOperationException(
             "Only an RK7(8) propagation can be replayed: its solution keeps the dynamics of the propagation.");
-        if (source.Options != null)
+        if (source.Options?.PropagateCovariance == true)
             throw new InvalidOperationException(
-                "The propagation already integrated the variational equations: read them from its solution.");
+                "The propagation already propagated the covariance: read it from its solution.");
         if (options.IncludeInStepControl)
             throw new ArgumentException(
                 "The replay follows the steps of the propagation, controlled on the state only: Φ and Ψ cannot take part " +

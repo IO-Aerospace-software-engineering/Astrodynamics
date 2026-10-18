@@ -162,6 +162,40 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
     }
 
     [Fact]
+    public void Analyze_ParticipantsPropagatedWithTheStateTransitionMatrixOnly_UseTheCovarianceOfTheirReplay()
+    {
+        // Arrange: both participants propagated in RK7(8) with the state transition matrix only (as a Scenario with
+        // StateTransitionOnly options leaves them), and the same participants propagated with the covariance and the
+        // process noise of the analysis, the reference (H3 review of step 10, finding B1)
+        var noisy = Covariance with { ProcessNoise = new RtnProcessNoise(1e-12, 1e-11, 1e-12) };
+        var stateTransitionOnly = new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly };
+        var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6231, _case.ProtectedStart);
+        var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6232, _case.SecondaryStart);
+        _case.Propagate(protectedCraft, stateTransitionOnly);
+        _case.Propagate(secondaryCraft, stateTransitionOnly);
+        var protectedReference = _case.Propagate(ConjunctionCovarianceCase.NewSpacecraft(-6233, _case.ProtectedStart), noisy);
+        var secondaryReference = _case.Propagate(ConjunctionCovarianceCase.NewSpacecraft(-6234, _case.SecondaryStart), noisy);
+
+        // Act: with the process noise of the analysis, then the former behaviour
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = noisy });
+        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            ConjunctionCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
+
+        // Assert: the stored Φ are not read; the replay applies the options of the analysis, the process noise included,
+        // and gives the covariance of the propagation with the covariance at the TCA, bit for bit
+        var state = encounter.EncounterState;
+        Assert.Equal(CovarianceSource.Propagated, state.ProtectedCovariance.Source);
+        Assert.Equal(CovarianceSource.Propagated, state.SecondaryCovariance.Source);
+        Assert.True(state.ProtectedCovariance.ProcessNoiseApplied);
+        Assert.True(state.SecondaryCovariance.ProcessNoiseApplied);
+        Assert.Equal(protectedReference.GetCovariance(state.Epoch).ToArray(), encounter.ProtectedState.Covariance.Value.ToArray());
+        Assert.Equal(secondaryReference.GetCovariance(state.Epoch).ToArray(), encounter.SecondaryState.Covariance.Value.ToArray());
+        Assert.Equal(CovarianceSource.InitialStateHeldInRtn, held.EncounterState.ProtectedCovariance.Source);
+        Assert.Equal(held.EncounterState.Epoch, state.Epoch);
+    }
+
+    [Fact]
     public void Analyze_TwoBodyPropagatedCovariance_IsPhiP0PhiTOfTheKeplerianStm()
     {
         // Arrange

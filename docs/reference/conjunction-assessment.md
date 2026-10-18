@@ -19,7 +19,9 @@ during the search, in this order:
     - Otherwise the variational equations are **replayed along the steps of that propagation**, from its start to the
       last TCA of the analysis, without a second propagation: with the step controlled on the state only, the replay
       gives the values of a propagation run with the covariance from the start, bit for bit (`CovarianceReplayTests`).
-      Your solution is not changed.
+      Your solution is not changed. A propagation with the state transition matrix only
+      (`CovariancePropagationMode.StateTransitionOnly`) is replayed in the same way: its Φ are not read, so the
+      covariance at TCA takes the options of the analysis, the process noise and the consider parameters included.
     - P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q at TCA, with the options of `ConjunctionAnalysisOptions.CovariancePropagation`
       (see [Covariance Propagation](covariance-propagation.md)). Its age is zero, it is never stale, and the state at TCA
       retained by the `EncounterCase` carries it.

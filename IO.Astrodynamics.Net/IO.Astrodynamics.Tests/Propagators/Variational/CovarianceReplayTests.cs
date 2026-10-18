@@ -64,6 +64,32 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
     }
 
     [Fact]
+    public void Replay_OfAPropagationWithTheStateTransitionMatrixOnly_IsThePropagationWithTheCovariance()
+    {
+        // Arrange: the eclipsing case with its burn and the execution error of Gates, propagated with the state transition
+        // matrix only, and with the covariance, process noise and both consider parameters, the reference
+        var orbit = CovariancePropagationTests.WithCovariance(_cases.Eclipsing.InitialState);
+        var execution = new ManeuverExecutionError
+            { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
+        var stmOnly = EclipsingSpacecraft(-6109, orbit, execution);
+        var propagated = EclipsingSpacecraft(-6110, orbit, execution);
+        var withStm = Propagate(stmOnly,
+            new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly });
+        var withCovariance = Propagate(propagated, NoisyOptions);
+
+        // Act
+        var replayed = VariationalReplay.Replay(withStm, stmOnly, NoisyOptions, _cases.Eclipsing.Window.EndDate);
+
+        // Assert: the stored Φ and Ψ are not read; the replay applies the options given and gives the values of the
+        // propagation with the covariance, bit for bit; the solution replayed keeps its own Φ
+        AssertSameVariationalData(withCovariance, replayed);
+        AssertSameEvaluations(withCovariance, replayed, _cases.Eclipsing.Window, TimeSpan.FromSeconds(997.3));
+        Assert.Equal(CovariancePropagationMode.StateTransitionOnly, withStm.CovariancePropagation.Mode);
+        Assert.Equal(withCovariance.GetStateTransitionMatrix(_cases.Eclipsing.Window.EndDate).ToArray(),
+            withStm.GetStateTransitionMatrix(_cases.Eclipsing.Window.EndDate).ToArray());
+    }
+
+    [Fact]
     public void Replay_OfR2WithProcessNoise_IsThePropagationWithTheCovariance()
     {
         // Arrange: R2 (EGM2008 10×10, Sun, Moon, drag), Cd as a consider parameter
@@ -126,8 +152,8 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
         var vv = vvSpacecraft.Propagate(_cases.Eclipsing.Window, _cases.Eclipsing.Bodies, true, true,
             TimeSpan.FromSeconds(600.0));
 
-        // Act, assert: the step control on Φ and Ψ would change the steps; a solution with the equations already, or
-        // of another integrator, is not replayed; an end outside the propagation is rejected
+        // Act, assert: the step control on Φ and Ψ would change the steps; a solution that already propagated the
+        // covariance, or of another integrator, is not replayed; an end outside the propagation is rejected
         Assert.Throws<ArgumentException>(() => VariationalReplay.Replay(solution, plain,
             covariance with { IncludeInStepControl = true }, end));
         Assert.Throws<InvalidOperationException>(() => VariationalReplay.Replay(withStm, withStmSpacecraft, covariance, end));
