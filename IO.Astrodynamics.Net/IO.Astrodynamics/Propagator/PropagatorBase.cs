@@ -167,13 +167,19 @@ public abstract class PropagatorBase : IPropagator
     /// <summary>
     /// The covariance model of <paramref name="options"/> for a propagation of <paramref name="participant"/> from
     /// <paramref name="start"/>, after the checks of P0, the covariance of its initial orbital parameters; null without
-    /// the covariance. Shared with the replay of the variational equations by the conjunction analysis.
+    /// the covariance. Shared with the replay of the variational equations by the conjunction analysis, which gives
+    /// <paramref name="initialCovariance"/> when it remediated P0.
     /// </summary>
+    /// <param name="participant">The participant.</param>
+    /// <param name="start">The start of the propagation.</param>
+    /// <param name="options">The options of the variational equations.</param>
+    /// <param name="initialCovariance">P0 in place of the covariance of the initial orbital parameters, at their epoch;
+    /// null for that covariance.</param>
     /// <exception cref="ArgumentException">Consider parameters without the covariance.</exception>
     /// <exception cref="InvalidOperationException">The initial orbital parameters carry no covariance, carry it at another
     /// epoch than <paramref name="start"/>, or carry one that is not 6×6, symmetric and positive semi-definite.</exception>
     internal static CovarianceModel CreateCovarianceModel(ILocalizable participant, in Time start,
-        VariationalOptions options)
+        VariationalOptions options, Math.Matrix? initialCovariance = null)
     {
         if (!options.PropagateCovariance)
         {
@@ -205,7 +211,7 @@ public abstract class PropagatorBase : IPropagator
                 "at the epoch of the initial orbital parameters.");
         }
 
-        var reason = InitialCovarianceRejection(covariance.Value, out var symmetrized);
+        var reason = InitialCovarianceRejection(initialCovariance ?? covariance.Value, out var symmetrized);
         if (reason != null)
         {
             throw InitialCovarianceError(participant, reason);

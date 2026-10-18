@@ -60,8 +60,9 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   fixed in RTN: its Pc changes, and becomes the Pc of the propagated covariance (on the two-body conjunction of the tests,
   24 h after the initial states, the in-track σ at TCA is 21.7 km against 232 m, the Pc 2.0e-6 against 1.9e-4), and
   `StaleCovarianceUsed` is no longer raised for it. `Screen` and the other participants (Velocity-Verlet, not
-  propagated, TLE, SPICE) give the same results as before, bit for bit, and so does an initial covariance that the
-  propagation would reject (not symmetric and positive semi-definite): it is held in RTN, without an exception. To
+  propagated, TLE, SPICE) give the same results as before, bit for bit. An initial covariance that rounding made
+  indefinite is remediated by eigenvalue clipping before its propagation, and `CovarianceRemediated` is raised; one that
+  rounding does not explain (a negative variance, not finite) is held in RTN as before, without an exception. To
   restore the former behavior, set
   `ConjunctionAnalysisOptions.CovariancePropagation = null`. To replay it, a `Spacecraft` propagated in RK7(8) keeps its
   last propagation until it is propagated again (about 0.55 MB for one day in LEO with drag); a propagation by

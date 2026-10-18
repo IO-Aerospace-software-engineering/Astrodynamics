@@ -1649,6 +1649,12 @@ public static class ConjunctionAssessment
             qualityFlags |= EncounterQualityFlags.MissingSecondaryCovariance;
         }
 
+        // An initial covariance remediated before its propagation (H3 review of step 10, N2)
+        if (protectedCovariance.InitialCovarianceRemediated || secondaryCovariance.InitialCovarianceRemediated)
+        {
+            qualityFlags |= EncounterQualityFlags.CovarianceRemediated;
+        }
+
         return hasCovariance ? combined : new Matrix(6, 6);
     }
 

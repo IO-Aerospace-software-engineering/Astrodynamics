@@ -30,7 +30,9 @@ public enum EncounterQualityFlags
     CovarianceUnavailable = 1 << 2,
 
     /// <summary>
-    /// The encounter-plane covariance required numerical remediation before risk evaluation.
+    /// The encounter-plane covariance required numerical remediation before risk evaluation, or the initial covariance of
+    /// a participant, not positive semi-definite (as from rounded values), was remediated by eigenvalue clipping before
+    /// its propagation to the encounter.
     /// </summary>
     CovarianceRemediated = 1 << 3,
 

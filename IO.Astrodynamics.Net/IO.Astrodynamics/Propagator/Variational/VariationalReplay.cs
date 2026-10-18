@@ -47,6 +47,8 @@ internal static class VariationalReplay
     /// to the step that contains <paramref name="end"/>, P0 being the covariance of the initial orbital parameters of
     /// <paramref name="participant"/>, the object the solution propagates.
     /// </summary>
+    /// <param name="initialCovariance">P0 in place of the covariance of the initial orbital parameters of
+    /// <paramref name="participant"/> (a remediated one); null for that covariance.</param>
     /// <returns>A solution over the replayed steps, from which Φ, Ψ and P are read as from a propagation with
     /// <paramref name="options"/>.</returns>
     /// <exception cref="ArgumentException"><paramref name="options"/> put Φ and Ψ in the step control, which would change
@@ -54,7 +56,7 @@ internal static class VariationalReplay
     /// <exception cref="InvalidOperationException">The solution is not an RK7(8) propagation, already propagated the
     /// covariance, or does not reach <paramref name="end"/>; or P0 is rejected (<see cref="PropagatorBase.CreateCovarianceModel(ILocalizable, in Time, VariationalOptions)"/>).</exception>
     internal static PropagationSolution Replay(PropagationSolution solution, ILocalizable participant,
-        CovariancePropagationOptions options, in Time end)
+        CovariancePropagationOptions options, in Time end, Math.Matrix? initialCovariance = null)
     {
         ArgumentNullException.ThrowIfNull(solution);
         ArgumentNullException.ThrowIfNull(participant);
@@ -79,7 +81,8 @@ internal static class VariationalReplay
 
         var forces = source.Forces;
         var variationalOptions = options.ToVariationalOptions(forces);
-        var covariance = PropagatorBase.CreateCovarianceModel(participant, segments[0].BaseEpoch, variationalOptions);
+        var covariance = PropagatorBase.CreateCovarianceModel(participant, segments[0].BaseEpoch, variationalOptions,
+            initialCovariance);
         foreach (var gravity in forces.OfType<GravitationalAcceleration>())
         {
             gravity.CelestialItem.ValidateGravitationalPartialsDegree(variationalOptions.GeopotentialPartialsDegree);

@@ -29,6 +29,10 @@ internal sealed record EncounterCovariance(Matrix? CovarianceInertial, TimeSpan?
     /// <summary>The non-linearity index of a propagated covariance, null when not computed.</summary>
     internal double? NonlinearityIndex { get; init; }
 
+    /// <summary>For a propagated covariance, whether the initial covariance was remediated before its propagation (not
+    /// positive semi-definite, as from rounded values).</summary>
+    internal bool InitialCovarianceRemediated { get; init; }
+
     /// <summary>For a propagated covariance, the propagation of the participant, whose variational equations
     /// <see cref="Solution"/> may replay up to the last encounter only; null otherwise.</summary>
     internal PropagationSolution Propagation { get; init; }
@@ -107,6 +111,9 @@ internal sealed class EncounterCovarianceResolver
     private readonly Time _replayEnd;
     private readonly bool _computeNonlinearityIndex;
     private PropagationSolution _replayed;
+    private bool _initialCovarianceResolved;
+    private bool _initialCovarianceUsable;
+    private Matrix? _remediatedInitialCovariance;
     private NonlinearityIndex _nonlinearityIndex;
     private bool _nonlinearityIndexCreated;
 
@@ -139,12 +146,10 @@ internal sealed class EncounterCovarianceResolver
         if (_solution.CovariancePropagation?.Mode == CovariancePropagationMode.Covariance)
             return _solution;
 
-        // An initial covariance at another epoch, or one that the propagation would reject (not symmetric and positive
-        // semi-definite, as from rounded values): held in RTN, as without the propagation (decision of S. Guillet,
-        // 2026-10-18, H3 review N2)
+        // An initial covariance at another epoch, or one that cannot be propagated nor remediated: held in RTN
         if (_participant.InitialOrbitalParameters is not StateVector { Covariance: not null } initial ||
             (initial.Epoch - _solution.Segments[0].BaseEpoch) != TimeSpan.Zero ||
-            PropagatorBase.InitialCovarianceRejection(initial.Covariance.Value, out _) != null)
+            !ResolveInitialCovariance(initial.Covariance.Value))
             return null;
 
         if (_replayed == null)
@@ -158,7 +163,8 @@ internal sealed class EncounterCovarianceResolver
 
             try
             {
-                _replayed = VariationalReplay.Replay(_solution, _participant, _options, end > epoch ? end : epoch);
+                _replayed = VariationalReplay.Replay(_solution, _participant, _options, end > epoch ? end : epoch,
+                    _remediatedInitialCovariance);
             }
             catch (ArgumentException e)
             {
@@ -169,6 +175,47 @@ internal sealed class EncounterCovarianceResolver
         }
 
         return _replayed;
+    }
+
+    // P0 as the propagation takes it, or, when rounding made it indefinite (the propagation would reject it), remediated by
+    // eigenvalue clipping (decision of S. Guillet, 2026-10-18, H3 review of step 10, N2); false when it is not one that
+    // rounding explains (a negative variance, not finite), then held in RTN
+    private bool ResolveInitialCovariance(Matrix p0)
+    {
+        if (_initialCovarianceResolved)
+            return _initialCovarianceUsable;
+
+        _initialCovarianceResolved = true;
+        if (PropagatorBase.InitialCovarianceRejection(p0, out _) == null)
+            return _initialCovarianceUsable = true;
+
+        if (p0.Rows != 6 || p0.Columns != 6)
+            return false;
+
+        var values = new double[36];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                values[6 * i + j] = p0.Get(i, j);
+            }
+        }
+
+        var remediated = CovarianceChecks.RemediateByEigenvalueClipping(values, 6);
+        if (remediated == null)
+            return false;
+
+        var matrix = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                matrix.Set(i, j, remediated[6 * i + j]);
+            }
+        }
+
+        _remediatedInitialCovariance = matrix;
+        return _initialCovarianceUsable = true;
     }
 
     /// <summary>
@@ -190,7 +237,8 @@ internal sealed class EncounterCovarianceResolver
         return new EncounterCovariance(state.Covariance!.Value, TimeSpan.Zero, CovarianceSource.Propagated, solution)
         {
             NonlinearityIndex = NonlinearityIndexAt(solution, encounterState.Epoch),
-            Propagation = _solution
+            Propagation = _solution,
+            InitialCovarianceRemediated = solution == _replayed && _remediatedInitialCovariance != null
         };
     }
 
@@ -209,7 +257,8 @@ internal sealed class EncounterCovarianceResolver
                 end = _replayEnd;
             if (end < epoch)
                 end = epoch;
-            _nonlinearityIndex = NonlinearityIndex.Create(solution, _participant, end);
+            _nonlinearityIndex = NonlinearityIndex.Create(solution, _participant, end,
+                solution == _replayed ? _remediatedInitialCovariance : null);
             _nonlinearityIndexCreated = true;
         }
 

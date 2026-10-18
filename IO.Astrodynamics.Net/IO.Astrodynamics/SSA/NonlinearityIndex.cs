@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
@@ -20,28 +21,31 @@ namespace IO.Astrodynamics.SSA;
 /// <para>
 /// The index of Junkins and Singla (J. L. Junkins, P. Singla, <i>How nonlinear is it? A tutorial on nonlinearity of
 /// orbit and attitude dynamics</i>, Journal of the Astronautical Sciences 52, 2004, to be verified by S. Guillet):
-/// ν(t) = max over i of ‖Φ(t, t0; x̄0 + δx_i) − Φ(t, t0; x̄0)‖_F / ‖Φ(t, t0; x̄0)‖_F, the δx_i on the 1σ boundary of
-/// the initial covariance P0. It measures how much the linear map that carries P0 to the encounter changes across the
-/// initial uncertainty: zero for a linear flow, so that the linear propagation P = Φ P0 Φᵀ holds; larger as the
-/// trajectories of the uncertainty region depart from the tangent map.
+/// ν(t) = sup over δx on the 1σ boundary of the initial covariance P0 of
+/// ‖Φ(t, t0; x̄0 + δx) − Φ(t, t0; x̄0)‖_F / ‖Φ(t, t0; x̄0)‖_F. It measures how much the linear map that carries P0 to
+/// the encounter changes across the initial uncertainty: zero for a linear flow, so that the linear propagation
+/// P = Φ P0 Φᵀ holds; larger as the trajectories of the uncertainty region depart from the tangent map.
 /// </para>
 /// <para>
-/// The points are the twelve ±√λ_k e_k on the principal axes of P0 (its eigenvectors e_k and eigenvalues λ_k), and
-/// Φ(t, t0; x̄0 + δx_i) the state transition matrix of the RK7(8) propagation from the perturbed state, with the forces,
-/// the integrator settings, the mass and the coefficients of the nominal propagation. Φ and its Frobenius norm are taken
-/// in SI units, as the state transition matrix of the library. Computed for a propagation without maneuvers only: the
-/// perturbed trajectories would need the maneuvers of the nominal one.
+/// The supremum is taken over the whole boundary, δx = S u with ‖u‖ = 1 and S = P0^(1/2) the symmetric square root
+/// (V Λ^(1/2) Vᵀ, unique even when P0 has repeated eigenvalues), on the first-order variation of Φ:
+/// Φ(x̄0 + S u) − Φ(x̄0) ≈ M u, the columns of M (36 × 6) being m_k = [Φ(x̄0 + s_k) − Φ(x̄0 − s_k)] / 2, central
+/// differences along the columns s_k of S. Then ν = σ_max(M) / ‖Φ(x̄0)‖_F, the largest singular value of M. It does not
+/// depend on the basis: along the columns of S Q, Q orthogonal, M becomes M Q, of the same singular values (H3 review of
+/// step 10, N1, decision of S. Guillet, 2026-10-18; the twelve points ±√λ_k e_k on the principal axes, used before,
+/// depended on the axes the eigensolver returned within a repeated eigenspace). The second-order part of the variation
+/// cancels in the central differences and is not in the supremum.
 /// </para>
 /// <para>
-/// Limit: the points need unique principal axes. When P0 has repeated eigenvalues, the axes within each repeated
-/// eigenspace are those of the eigensolver, and ν depends on them (0.706 to 0.794 over random bases on the case that
-/// sets the threshold, H3 review of step 10); a definition independent of the basis is a follow-up (#403).
+/// Φ(t, t0; x̄0 ± s_k) is the state transition matrix of the RK7(8) propagation from the perturbed state, with the
+/// forces, the integrator settings, the mass and the coefficients of the nominal propagation. Φ and its Frobenius norm
+/// are taken in SI units, as the state transition matrix of the library.
 /// </para>
 /// <para>
 /// The twelve propagations run once per participant and per analysis, to its last encounter epoch, under the lock of
 /// the dynamics of the nominal propagation, whose forces they share; their solutions evaluate Φ under that lock too.
 /// The index is computed for a propagation of a single segment only (no maneuver, no event that restarts the
-/// integration).
+/// integration): the perturbed trajectories would need the maneuvers of the nominal one.
 /// </para>
 /// </remarks>
 internal sealed class NonlinearityIndex
@@ -61,7 +65,10 @@ internal sealed class NonlinearityIndex
     /// <param name="nominal">The propagation of the participant, or the replay of its variational equations.</param>
     /// <param name="participant">The participant, whose initial state carries P0.</param>
     /// <param name="end">The last encounter epoch.</param>
-    internal static NonlinearityIndex Create(PropagationSolution nominal, ILocalizable participant, in Time end)
+    /// <param name="initialCovariance">P0 in place of the covariance of the initial state (a remediated one); null for
+    /// that covariance.</param>
+    internal static NonlinearityIndex Create(PropagationSolution nominal, ILocalizable participant, in Time end,
+        Math.Matrix? initialCovariance = null)
     {
         var dynamics = nominal.Dynamics;
         if (dynamics?.Integrator == null || nominal.Segments.Count != 1 || nominal.Segments[0].Context is not { } context ||
@@ -74,9 +81,7 @@ internal sealed class NonlinearityIndex
         var start = segment.BaseEpoch;
         var x0Position = segment.Steps[0].StartPosition;
         var x0Velocity = segment.Steps[0].StartVelocity;
-        var p0 = initial.Covariance.Value;
-        var matrix = Matrix<double>.Build.Dense(6, 6, (i, j) => 0.5 * (p0.Get(i, j) + p0.Get(j, i)));
-        var evd = matrix.Evd(MathNet.Numerics.LinearAlgebra.Symmetricity.Symmetric);
+        var root = SquareRoot(initialCovariance ?? initial.Covariance.Value);
 
         var perturbed = new PropagationSolution[12];
         var window = new Window(start, end);
@@ -85,14 +90,15 @@ internal sealed class NonlinearityIndex
         {
             for (int k = 0; k < 6; k++)
             {
-                double scale = System.Math.Sqrt(System.Math.Max(evd.EigenValues[k].Real, 0.0));
+                var offsetPosition = new Math.Vector3(root[0, k], root[1, k], root[2, k]);
+                var offsetVelocity = new Math.Vector3(root[3, k], root[4, k], root[5, k]);
                 for (int sign = 0; sign < 2; sign++)
                 {
-                    double s = sign == 0 ? scale : -scale;
-                    var offsetPosition = new Math.Vector3(evd.EigenVectors[0, k], evd.EigenVectors[1, k], evd.EigenVectors[2, k]) * s;
-                    var offsetVelocity = new Math.Vector3(evd.EigenVectors[3, k], evd.EigenVectors[4, k], evd.EigenVectors[5, k]) * s;
-                    var state = new StateVector(x0Position + offsetPosition, x0Velocity + offsetVelocity, dynamics.Observer,
-                        start, dynamics.Frame);
+                    var state = sign == 0
+                        ? new StateVector(x0Position + offsetPosition, x0Velocity + offsetVelocity, dynamics.Observer,
+                            start, dynamics.Frame)
+                        : new StateVector(x0Position - offsetPosition, x0Velocity - offsetVelocity, dynamics.Observer,
+                            start, dynamics.Frame);
                     perturbed[2 * k + sign] = Propagate(dynamics, context, state, window, options);
                 }
             }
@@ -102,19 +108,39 @@ internal sealed class NonlinearityIndex
     }
 
     /// <summary>
-    /// ν at <paramref name="epoch"/>, against Φ of the nominal propagation there.
+    /// ν at <paramref name="epoch"/>: σ_max(M) / ‖Φ(x̄0)‖_F, M of the central differences of Φ along the columns of
+    /// P0^(1/2).
     /// </summary>
     internal double At(PropagationSolution nominal, in Time epoch)
     {
-        var phi = nominal.GetStateTransitionMatrix(epoch);
-        double norm = Frobenius(phi, null);
-        double largest = 0.0;
-        foreach (var solution in _perturbed)
+        double norm = Frobenius(nominal.GetStateTransitionMatrix(epoch));
+        var m = Matrix<double>.Build.Dense(36, 6);
+        for (int k = 0; k < 6; k++)
         {
-            largest = System.Math.Max(largest, Frobenius(solution.GetStateTransitionMatrix(epoch), phi) / norm);
+            var plus = _perturbed[2 * k].GetStateTransitionMatrix(epoch);
+            var minus = _perturbed[2 * k + 1].GetStateTransitionMatrix(epoch);
+            for (int i = 0; i < 6; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    m[6 * i + j, k] = 0.5 * (plus.Get(i, j) - minus.Get(i, j));
+                }
+            }
         }
 
-        return largest;
+        // σ_max(M)² is the largest eigenvalue of Mᵀ M, 6 × 6
+        double largest = m.TransposeThisAndMultiply(m).Evd(Symmetricity.Symmetric).EigenValues.Max(e => e.Real);
+        return System.Math.Sqrt(System.Math.Max(largest, 0.0)) / norm;
+    }
+
+    // The symmetric square root V Λ^(1/2) Vᵀ of P0, unique whatever the eigenvectors within a repeated eigenspace; the
+    // negative eigenvalues of rounding clipped to zero
+    private static Matrix<double> SquareRoot(Math.Matrix p0)
+    {
+        var matrix = Matrix<double>.Build.Dense(6, 6, (i, j) => 0.5 * (p0.Get(i, j) + p0.Get(j, i)));
+        var evd = matrix.Evd(Symmetricity.Symmetric);
+        var roots = Vector<double>.Build.Dense(6, k => System.Math.Sqrt(System.Math.Max(evd.EigenValues[k].Real, 0.0)));
+        return evd.EigenVectors * Matrix<double>.Build.DenseOfDiagonalVector(roots) * evd.EigenVectors.Transpose();
     }
 
     // The STM-only propagation from a perturbed initial state, with the forces, settings and context of the nominal one
@@ -139,16 +165,15 @@ internal sealed class NonlinearityIndex
 
     private static int NextId() => System.Threading.Interlocked.Decrement(ref _nextId);
 
-    // ‖A − B‖_F, or ‖A‖_F when B is null
-    private static double Frobenius(Math.Matrix a, Math.Matrix? b)
+    // ‖A‖_F
+    private static double Frobenius(Math.Matrix a)
     {
         double sum = 0.0;
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                double value = a.Get(i, j) - (b?.Get(i, j) ?? 0.0);
-                sum += value * value;
+                sum += a.Get(i, j) * a.Get(i, j);
             }
         }
 

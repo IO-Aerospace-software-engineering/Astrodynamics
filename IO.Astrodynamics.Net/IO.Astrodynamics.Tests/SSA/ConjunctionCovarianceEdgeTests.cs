@@ -55,41 +55,178 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     }
 
     [Fact]
-    public void Analyze_InitialCovarianceThePropagationRejects_IsHeldInRtn()
+    public void Analyze_InitialCovarianceThePropagationRejects_IsRemediatedThenPropagated()
     {
         // Arrange: the protected object with a T–Ṙ correlation of −1.0001, as from rounded values: not positive
         // semi-definite, rejected by a propagation of the covariance
-        var state = _case.ProtectedStart;
-        var sigma = new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
-        var rtn = new Matrix(6, 6);
-        for (int i = 0; i < 6; i++)
-        {
-            rtn.Set(i, i, sigma[i] * sigma[i]);
-        }
-
-        rtn.Set(1, 3, -1.0001 * sigma[1] * sigma[3]);
-        rtn.Set(3, 1, -1.0001 * sigma[1] * sigma[3]);
-        var rejected = new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
-            state.RotateCovarianceFromRtn(rtn));
+        var rejected = WithTrCorrelation(_case.ProtectedStart, -1.0001, 1.0);
         Assert.NotNull(PropagatorBase.InitialCovarianceRejection(rejected.Covariance.Value, out _));
         var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6961, rejected);
         var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6962, _case.SecondaryStart);
         _case.Propagate(protectedCraft);
         _case.Propagate(secondaryCraft);
-        var profile = new ProtectedSpacecraftProfile(protectedCraft);
+
+        // The reference: P0 remediated independently (eigenvalue clipping of the correlation matrix, Hall et al. 2017),
+        // propagated with the covariance from the start
+        var remediated = ClipCorrelation(rejected.Covariance.Value);
+        var reference = ConjunctionCovarianceCase.NewSpacecraft(-6963, new StateVector(rejected.Position, rejected.Velocity,
+            rejected.Observer, rejected.Epoch, rejected.Frame, remediated));
+        var referenceSolution = _case.Propagate(reference, Covariance);
 
         // Act
-        var encounter = ConjunctionAssessment.Analyze(profile, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow);
-        var held = ConjunctionAssessment.Analyze(profile, secondaryCraft, ConjunctionCovarianceCase.AnalysisWindow,
-            new ConjunctionAnalysisOptions { CovariancePropagation = null });
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            ConjunctionCovarianceCase.AnalysisWindow);
 
-        // Assert: no exception; the covariance of the protected object held in RTN, as without the propagation, and
-        // stale; that of the secondary propagated (decision of S. Guillet, 2026-10-18, H3 review N2)
+        // Assert: no exception; the covariance of the protected object propagated from the remediated P0, and
+        // CovarianceRemediated raised (decision of S. Guillet, 2026-10-18, H3 review of step 10, N2)
+        Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.ProtectedCovariance.Source);
+        Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.CovarianceRemediated));
+        Assert.True(encounter.ProtectedCovariance.InitialCovarianceRemediated);
+        Assert.False(encounter.SecondaryCovariance.InitialCovarianceRemediated);
+        var expected = referenceSolution.GetCovariance(encounter.EncounterState.Epoch);
+        var actual = encounter.ProtectedCovariance.CovarianceInertial.Value;
+        double difference = 0.0, norm = 0.0;
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                difference += (actual.Get(i, j) - expected.Get(i, j)) * (actual.Get(i, j) - expected.Get(i, j));
+                norm += expected.Get(i, j) * expected.Get(i, j);
+            }
+        }
+
+        Assert.True(System.Math.Sqrt(difference / norm) < 1e-10, $"{System.Math.Sqrt(difference / norm):E2}");
+    }
+
+    [Fact]
+    public void Analyze_InitialCovarianceThatRoundingDoesNotExplain_IsHeldInRtn()
+    {
+        // Arrange: a negative variance, which no remediation of rounding repairs
+        var state = _case.ProtectedStart;
+        var p0 = state.Covariance.Value;
+        var negative = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                negative.Set(i, j, i == 4 && j == 4 ? -p0.Get(4, 4) : i == 4 || j == 4 ? 0.0 : p0.Get(i, j));
+            }
+        }
+
+        var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6966, new StateVector(state.Position, state.Velocity,
+            state.Observer, state.Epoch, state.Frame, negative));
+        var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6967, _case.SecondaryStart);
+        _case.Propagate(protectedCraft);
+        _case.Propagate(secondaryCraft);
+
+        // Act
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            ConjunctionCovarianceCase.AnalysisWindow);
+
+        // Assert: no exception, the covariance held in RTN as without the propagation
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, encounter.EncounterState.ProtectedCovariance.Source);
-        Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.SecondaryCovariance.Source);
-        Assert.Equal(held.ProtectedCovariance.CovarianceInertial.Value.ToArray(),
-            encounter.ProtectedCovariance.CovarianceInertial.Value.ToArray());
-        Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
+        Assert.False(encounter.ProtectedCovariance.InitialCovarianceRemediated);
+    }
+
+    [Fact]
+    public void RemediateByEigenvalueClipping_RepairsRoundingOnly()
+    {
+        // A positive semi-definite matrix comes back as it is, to rounding
+        var p0 = _case.ProtectedStart.Covariance.Value;
+        var values = Values(p0);
+        var same = CovarianceChecks.RemediateByEigenvalueClipping(values, 6);
+        for (int i = 0; i < 36; i++)
+        {
+            Assert.True(System.Math.Abs(same[i] - values[i]) <= 1e-12 * System.Math.Sqrt(values[7 * (i / 6)] * values[7 * (i % 6)]));
+        }
+
+        // A correlation beyond −1: remediated, positive semi-definite, close to the input, and that of the test reference
+        var rejected = Values(WithTrCorrelation(_case.ProtectedStart, -1.0001, 1.0).Covariance.Value);
+        var remediated = CovarianceChecks.RemediateByEigenvalueClipping(rejected, 6);
+        Assert.Null(CovarianceChecks.Validate(remediated, 6, "remediated", out _));
+        var reference = Values(ClipCorrelation(WithTrCorrelation(_case.ProtectedStart, -1.0001, 1.0).Covariance.Value));
+        for (int i = 0; i < 36; i++)
+        {
+            double scale = System.Math.Sqrt(rejected[7 * (i / 6)] * rejected[7 * (i % 6)]);
+            Assert.True(System.Math.Abs(remediated[i] - rejected[i]) < 1e-4 * scale);
+            Assert.True(System.Math.Abs(remediated[i] - reference[i]) < 1e-12 * scale);
+        }
+
+        // A zero variance: its covariances set to zero
+        var zero = (double[])values.Clone();
+        zero[0] = 0.0;
+        var cleared = CovarianceChecks.RemediateByEigenvalueClipping(zero, 6);
+        Assert.All(Enumerable.Range(0, 6), j => Assert.Equal(0.0, cleared[j]));
+        Assert.Null(CovarianceChecks.Validate(cleared, 6, "remediated", out _));
+
+        // Not rounding: wrong size, not finite, a negative variance, asymmetric
+        Assert.Null(CovarianceChecks.RemediateByEigenvalueClipping(new double[35], 6));
+        var nan = (double[])values.Clone();
+        nan[1] = double.NaN;
+        Assert.Null(CovarianceChecks.RemediateByEigenvalueClipping(nan, 6));
+        var negative = (double[])values.Clone();
+        negative[14] = -negative[14];
+        Assert.Null(CovarianceChecks.RemediateByEigenvalueClipping(negative, 6));
+        var asymmetric = (double[])values.Clone();
+        asymmetric[1] += 1e-6 * System.Math.Sqrt(values[0] * values[7]);
+        Assert.Null(CovarianceChecks.RemediateByEigenvalueClipping(asymmetric, 6));
+    }
+
+    // The RTN covariance of the case (σ 50, 200, 30 m and 0.2, 0.05, 0.03 m/s) with a T–Ṙ correlation ρ, scaled by s²
+    private static StateVector WithTrCorrelation(StateVector state, double rho, double s)
+    {
+        var sigma = new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
+        var rtn = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            rtn.Set(i, i, sigma[i] * sigma[i] * s * s);
+        }
+
+        rtn.Set(1, 3, rho * sigma[1] * sigma[3] * s * s);
+        rtn.Set(3, 1, rho * sigma[1] * sigma[3] * s * s);
+        return new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame,
+            state.RotateCovarianceFromRtn(rtn));
+    }
+
+    // Eigenvalue clipping of the correlation matrix, independently of the library (the sum of its rank-one terms λ⁺ v vᵀ)
+    private static Matrix ClipCorrelation(Matrix p)
+    {
+        var sigma = Enumerable.Range(0, 6).Select(i => System.Math.Sqrt(p.Get(i, i))).ToArray();
+        var c = MathNet.Numerics.LinearAlgebra.Matrix<double>.Build.Dense(6, 6,
+            (i, j) => 0.5 * (p.Get(i, j) + p.Get(j, i)) / (sigma[i] * sigma[j]));
+        var evd = c.Evd(MathNet.Numerics.LinearAlgebra.Symmetricity.Symmetric);
+        var clipped = MathNet.Numerics.LinearAlgebra.Matrix<double>.Build.Dense(6, 6);
+        for (int k = 0; k < 6; k++)
+        {
+            double lambda = System.Math.Max(evd.EigenValues[k].Real, 0.0);
+            var v = evd.EigenVectors.Column(k);
+            clipped += lambda * v.OuterProduct(v);
+        }
+
+        var result = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                result.Set(i, j, 0.5 * (clipped[i, j] + clipped[j, i]) * sigma[i] * sigma[j]);
+            }
+        }
+
+        return result;
+    }
+
+    private static double[] Values(Matrix m)
+    {
+        var values = new double[36];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                values[6 * i + j] = m.Get(i, j);
+            }
+        }
+
+        return values;
     }
 
     [Fact]

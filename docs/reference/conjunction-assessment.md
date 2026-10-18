@@ -25,13 +25,20 @@ during the search, in this order:
     - P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ + Q at TCA, with the options of `ConjunctionAnalysisOptions.CovariancePropagation`
       (see [Covariance Propagation](covariance-propagation.md)). Its age is zero, it is never stale, and the state at TCA
       retained by the `EncounterCase` carries it.
+    - An initial covariance that rounding made indefinite (symmetric, finite, non-negative variances, but not positive
+      semi-definite, as from the rounded values of a CDM) is **remediated** before its propagation, by eigenvalue
+      clipping (D. T. Hall, M. D. Hejduk, L. C. Johnson, *Remediating non-positive definite state covariances for
+      collision probability estimation*, AAS 17-567, 2017; citation to be verified): the negative eigenvalues of its
+      correlation matrix are set to zero, so that the result does not depend on the units, and
+      `EncounterQualityFlags.CovarianceRemediated` is raised (decision of S. Guillet, 2026-10-18). A propagation by
+      `CentralBodyPropagator` still rejects such a covariance.
 2. **Provided at the encounter** (`ProvidedAtEncounter`): the state of the participant at TCA carries a covariance,
    for a hand-built `ILocalizable` whose ephemeris gives one (age zero).
 3. **Initial state held in RTN** (`InitialStateHeldInRtn`), the fallback for a participant that the library does not
    propagate in RK7(8) (Velocity-Verlet, not propagated and so two-body, TLE, SPICE), for an initial covariance at another
-   epoch than the start of the propagation, for one that a propagation of the covariance would reject (not symmetric and
-   positive semi-definite, as from rounded values: the analysis does not throw, it holds that covariance in RTN as before
-   10.2.0), and for every participant when `CovariancePropagation` is null. The
+   epoch than the start of the propagation, for one that rounding does not explain (a negative variance, a value that is
+   not finite: the analysis does not throw, it holds that covariance in RTN as before 10.2.0), and for every participant
+   when `CovariancePropagation` is null. The
    covariance of the initial `StateVector` is rotated into RTN with the initial state, then back into the inertial frame
    with the state at TCA. It is **not propagated**: its shape relative to the orbit is kept, its size does not grow. Its
    age is reported, and `EncounterQualityFlags.StaleCovarianceUsed` is raised beyond
