@@ -1,0 +1,562 @@
+{
+  "comment": "Written by GmatCasesFileTests from ReferenceCases and PartialsTestCases; read by tools/gmat_reference/generate_scripts.py and gmat_partials.py.",
+  "cases": [
+    {
+      "name": "G1",
+      "from": "R1",
+      "epoch_tdb": "2021-03-20T12:00:00.000",
+      "duration_s": 86400,
+      "output_interval_s": 3600,
+      "fixed_step_s": 10,
+      "state_m_m_s": [
+        -257096.3198745416,
+        5277645.366269342,
+        4699123.119291749,
+        -7021.270941283006,
+        -1957.0361257840318,
+        1815.7924695886527
+      ],
+      "earth": {
+        "gm_m3_s2": 398600435507022.6,
+        "equatorial_radius_m": 6378136.6,
+        "flattening": 0.0033528131084554157,
+        "geopotential_degree": 0
+      },
+      "third_bodies": [],
+      "spacecraft": {
+        "mass_kg": 100,
+        "area_m2": 10,
+        "drag_coefficient": 2.2,
+        "reflectivity_coefficient": 1.5
+      },
+      "drag": false,
+      "srp": false,
+      "sun_equatorial_radius_m": 695700000,
+      "srp_flux_at_1_au_w_m2": 1361.1664654085755,
+      "au_m": 149597870700,
+      "space_weather": {
+        "f107": 150,
+        "f107a": 150,
+        "kp": 1
+      },
+      "central_differences": {
+        "position_step_m": 10,
+        "velocity_step_m_s": 0.01,
+        "drag_coefficient_step": 0,
+        "reflectivity_coefficient_step": 0
+      },
+      "covariance": {
+        "p0_si": [
+          35062.92749700415,
+          9483.017286193372,
+          -8868.929874131638,
+          -1.2659215225384688,
+          25.102816219358548,
+          22.372637313765775,
+          9483.017286193375,
+          4447.928287494431,
+          -1668.9126153210873,
+          0.5308555731260186,
+          7.246918505974397,
+          6.010587738766387,
+          -8868.929874131638,
+          -1668.9126153210875,
+          3889.1442155014283,
+          1.092695173336914,
+          -6.2753925843498735,
+          -5.980996983435927,
+          -1.265921522538469,
+          0.5308555731260186,
+          1.092695173336914,
+          0.0023495725029958636,
+          -0.000671208802686712,
+          -0.0013060701258683608,
+          25.10281621935855,
+          7.246918505974396,
+          -6.2753925843498735,
+          -0.000671208802686712,
+          0.02278957171250558,
+          0.019292529582334423,
+          22.37263731376578,
+          6.010587738766387,
+          -5.980996983435927,
+          -0.0013060701258683608,
+          0.019292529582334423,
+          0.018260855784498573
+        ],
+        "tangential_noise_m2_s3": 1E-11,
+        "noise_steps_s": [
+          20,
+          10,
+          5,
+          2.5
+        ],
+        "noise_p0_diagonal_si": [
+          1E-06,
+          1E-06,
+          1E-06,
+          1E-12,
+          1E-12,
+          1E-12
+        ]
+      }
+    },
+    {
+      "name": "G2",
+      "from": "R2",
+      "epoch_tdb": "2021-03-20T12:00:00.000",
+      "duration_s": 86400,
+      "output_interval_s": 3600,
+      "fixed_step_s": 10,
+      "state_m_m_s": [
+        5776749.959692773,
+        3261605.2187414523,
+        1374154.5894227438,
+        -3440.4278507247145,
+        3646.519559567989,
+        5807.923128665473
+      ],
+      "earth": {
+        "gm_m3_s2": 398600435507022.6,
+        "equatorial_radius_m": 6378136.6,
+        "flattening": 0.0033528131084554157,
+        "geopotential_degree": 10
+      },
+      "third_bodies": [
+        {
+          "name": "SUN",
+          "naif_id": 10,
+          "gm_m3_s2": 1.3271244004127939E+20
+        },
+        {
+          "name": "MOON",
+          "naif_id": 301,
+          "gm_m3_s2": 4902800118457.549
+        }
+      ],
+      "spacecraft": {
+        "mass_kg": 100,
+        "area_m2": 10,
+        "drag_coefficient": 2.2,
+        "reflectivity_coefficient": 1.5
+      },
+      "drag": false,
+      "srp": false,
+      "sun_equatorial_radius_m": 695700000,
+      "srp_flux_at_1_au_w_m2": 1361.1664654085755,
+      "au_m": 149597870700,
+      "space_weather": {
+        "f107": 150,
+        "f107a": 150,
+        "kp": 1
+      },
+      "central_differences": {
+        "position_step_m": 10,
+        "velocity_step_m_s": 0.01,
+        "drag_coefficient_step": 0,
+        "reflectivity_coefficient_step": 0
+      },
+      "covariance": {
+        "p0_si": [
+          9925.449436928266,
+          -7676.265881850694,
+          -12995.638199838006,
+          14.242895907735956,
+          7.265232985181421,
+          2.4675152963580453,
+          -7676.265881850694,
+          10103.114288353181,
+          14223.662703191407,
+          -14.319652379489865,
+          -8.523387168783218,
+          -3.9260570420346315,
+          -12995.638199838007,
+          14223.662703191407,
+          23371.43627471856,
+          -23.12346052219521,
+          -13.240410505814179,
+          -5.719508738952741,
+          14.242895907735956,
+          -14.319652379489865,
+          -23.12346052219521,
+          0.029650464029875624,
+          0.01571012760433838,
+          0.006219422023282661,
+          7.265232985181421,
+          -8.523387168783218,
+          -13.240410505814179,
+          0.015710127604338382,
+          0.010324032038091095,
+          0.004393838231237547,
+          2.4675152963580453,
+          -3.9260570420346315,
+          -5.719508738952741,
+          0.006219422023282661,
+          0.004393838231237547,
+          0.0034255039320332924
+        ],
+        "tangential_noise_m2_s3": 1E-11,
+        "noise_steps_s": [
+          20,
+          10,
+          5,
+          2.5
+        ],
+        "noise_p0_diagonal_si": [
+          1E-06,
+          1E-06,
+          1E-06,
+          1E-12,
+          1E-12,
+          1E-12
+        ]
+      }
+    },
+    {
+      "name": "G3",
+      "from": "R4",
+      "epoch_tdb": "2021-03-20T12:00:00.000",
+      "duration_s": 86400,
+      "output_interval_s": 3600,
+      "fixed_step_s": 60,
+      "state_m_m_s": [
+        36507910.72789326,
+        21077844.06044936,
+        18393.893573089175,
+        -1537.638129248968,
+        2663.266349417397,
+        2.3241389227228653
+      ],
+      "earth": {
+        "gm_m3_s2": 398600435507022.6,
+        "equatorial_radius_m": 6378136.6,
+        "flattening": 0.0033528131084554157,
+        "geopotential_degree": 70
+      },
+      "third_bodies": [
+        {
+          "name": "SUN",
+          "naif_id": 10,
+          "gm_m3_s2": 1.3271244004127939E+20
+        },
+        {
+          "name": "MOON",
+          "naif_id": 301,
+          "gm_m3_s2": 4902800118457.549
+        },
+        {
+          "name": "MERCURY BARYCENTER",
+          "naif_id": 1,
+          "gm_m3_s2": 22031868551400.004
+        },
+        {
+          "name": "VENUS BARYCENTER",
+          "naif_id": 2,
+          "gm_m3_s2": 324858592000000
+        },
+        {
+          "name": "MARS BARYCENTER",
+          "naif_id": 4,
+          "gm_m3_s2": 42828375815756.09
+        },
+        {
+          "name": "JUPITER BARYCENTER",
+          "naif_id": 5,
+          "gm_m3_s2": 1.267127640999999E+17
+        },
+        {
+          "name": "SATURN BARYCENTER",
+          "naif_id": 6,
+          "gm_m3_s2": 37940584841799990
+        },
+        {
+          "name": "URANUS BARYCENTER",
+          "naif_id": 7,
+          "gm_m3_s2": 5794556399999998
+        },
+        {
+          "name": "NEPTUNE BARYCENTER",
+          "naif_id": 8,
+          "gm_m3_s2": 6836527100580398
+        }
+      ],
+      "spacecraft": {
+        "mass_kg": 100,
+        "area_m2": 10,
+        "drag_coefficient": 2.2,
+        "reflectivity_coefficient": 1.5
+      },
+      "drag": false,
+      "srp": false,
+      "sun_equatorial_radius_m": 695700000,
+      "srp_flux_at_1_au_w_m2": 1361.1664654085755,
+      "au_m": 149597870700,
+      "space_weather": {
+        "f107": 150,
+        "f107a": 150,
+        "kp": 1
+      },
+      "central_differences": {
+        "position_step_m": 10,
+        "velocity_step_m_s": 0.01,
+        "drag_coefficient_step": 0,
+        "reflectivity_coefficient_step": 0
+      }
+    },
+    {
+      "name": "G4",
+      "from": "R5",
+      "epoch_tdb": "2021-03-20T12:00:00.000",
+      "duration_s": 76460.6216121,
+      "output_interval_s": 3600,
+      "fixed_step_s": 10,
+      "state_m_m_s": [
+        1022707.4463037077,
+        -2809865.615427541,
+        -5971284.492743747,
+        9542.577317636915,
+        3473.214101803656,
+        -1.667993755897103E-12
+      ],
+      "earth": {
+        "gm_m3_s2": 398600435507022.6,
+        "equatorial_radius_m": 6378136.6,
+        "flattening": 0.0033528131084554157,
+        "geopotential_degree": 10
+      },
+      "third_bodies": [
+        {
+          "name": "SUN",
+          "naif_id": 10,
+          "gm_m3_s2": 1.3271244004127939E+20
+        },
+        {
+          "name": "MOON",
+          "naif_id": 301,
+          "gm_m3_s2": 4902800118457.549
+        }
+      ],
+      "spacecraft": {
+        "mass_kg": 100,
+        "area_m2": 10,
+        "drag_coefficient": 2.2,
+        "reflectivity_coefficient": 1.5
+      },
+      "drag": false,
+      "srp": false,
+      "sun_equatorial_radius_m": 695700000,
+      "srp_flux_at_1_au_w_m2": 1361.1664654085755,
+      "au_m": 149597870700,
+      "space_weather": {
+        "f107": 150,
+        "f107a": 150,
+        "kp": 1
+      },
+      "central_differences": {
+        "position_step_m": 1,
+        "velocity_step_m_s": 0.001,
+        "drag_coefficient_step": 0,
+        "reflectivity_coefficient_step": 0
+      }
+    },
+    {
+      "name": "G5",
+      "from": "R3",
+      "epoch_tdb": "2021-03-20T12:00:00.000",
+      "duration_s": 86400,
+      "output_interval_s": 3600,
+      "fixed_step_s": 2.5,
+      "state_m_m_s": [
+        4.3297748015777367E-10,
+        -1007316.0553428811,
+        6998941.906364084,
+        -7511.794473508701,
+        -6.552482300834879E-14,
+        4.552736226408277E-13
+      ],
+      "earth": {
+        "gm_m3_s2": 398600435507022.6,
+        "equatorial_radius_m": 6378136.6,
+        "flattening": 0.0033528131084554157,
+        "geopotential_degree": 10
+      },
+      "third_bodies": [
+        {
+          "name": "SUN",
+          "naif_id": 10,
+          "gm_m3_s2": 1.3271244004127939E+20
+        },
+        {
+          "name": "MOON",
+          "naif_id": 301,
+          "gm_m3_s2": 4902800118457.549
+        }
+      ],
+      "spacecraft": {
+        "mass_kg": 100,
+        "area_m2": 10,
+        "drag_coefficient": 2.2,
+        "reflectivity_coefficient": 1.5
+      },
+      "drag": false,
+      "srp": true,
+      "sun_equatorial_radius_m": 695700000,
+      "srp_flux_at_1_au_w_m2": 1361.1664654085755,
+      "au_m": 149597870700,
+      "space_weather": {
+        "f107": 150,
+        "f107a": 150,
+        "kp": 1
+      },
+      "central_differences": {
+        "position_step_m": 10,
+        "velocity_step_m_s": 0.01,
+        "drag_coefficient_step": 0,
+        "reflectivity_coefficient_step": 0.1
+      }
+    },
+    {
+      "name": "G6",
+      "from": "R2",
+      "epoch_tdb": "2021-03-20T12:00:00.000",
+      "duration_s": 86400,
+      "output_interval_s": 3600,
+      "fixed_step_s": 10,
+      "state_m_m_s": [
+        5776749.959692773,
+        3261605.2187414523,
+        1374154.5894227438,
+        -3440.4278507247145,
+        3646.519559567989,
+        5807.923128665473
+      ],
+      "earth": {
+        "gm_m3_s2": 398600435507022.6,
+        "equatorial_radius_m": 6378136.6,
+        "flattening": 0.0033528131084554157,
+        "geopotential_degree": 10
+      },
+      "third_bodies": [
+        {
+          "name": "SUN",
+          "naif_id": 10,
+          "gm_m3_s2": 1.3271244004127939E+20
+        },
+        {
+          "name": "MOON",
+          "naif_id": 301,
+          "gm_m3_s2": 4902800118457.549
+        }
+      ],
+      "spacecraft": {
+        "mass_kg": 100,
+        "area_m2": 10,
+        "drag_coefficient": 2.2,
+        "reflectivity_coefficient": 1.5
+      },
+      "drag": true,
+      "srp": false,
+      "sun_equatorial_radius_m": 695700000,
+      "srp_flux_at_1_au_w_m2": 1361.1664654085755,
+      "au_m": 149597870700,
+      "space_weather": {
+        "f107": 150,
+        "f107a": 150,
+        "kp": 1
+      },
+      "central_differences": {
+        "position_step_m": 10,
+        "velocity_step_m_s": 0.01,
+        "drag_coefficient_step": 0.01,
+        "reflectivity_coefficient_step": 0
+      }
+    }
+  ],
+  "partials": {
+    "epoch_tdb": "2021-03-20T12:00:00.000",
+    "geopotential_degree": 70,
+    "moon_gm_m3_s2": 4902800118457.549,
+    "sun_gm_m3_s2": 1.3271244004127939E+20,
+    "states": [
+      {
+        "name": "LEO 400 km",
+        "id": "leo400",
+        "state_m_m_s": [
+          5776749.959692773,
+          3261605.2187414523,
+          1374154.5894227438,
+          -3440.4278507247145,
+          3646.519559567989,
+          5807.923128665473
+        ],
+        "forces": [
+          "earth_point_mass",
+          "earth_geopotential",
+          "moon",
+          "sun",
+          "srp",
+          "drag"
+        ]
+      },
+      {
+        "name": "LEO 800 km",
+        "id": "leo800",
+        "state_m_m_s": [
+          5529508.285786404,
+          4396735.01280647,
+          1231223.115206758,
+          -286.1608166878376,
+          -1674.082770133573,
+          7263.368293100451
+        ],
+        "forces": [
+          "earth_point_mass",
+          "earth_geopotential",
+          "moon",
+          "sun",
+          "srp",
+          "drag"
+        ]
+      },
+      {
+        "name": "GEO",
+        "id": "geo",
+        "state_m_m_s": [
+          36507910.72789326,
+          21077844.06044936,
+          18393.893573089175,
+          -1537.638129248968,
+          2663.266349417397,
+          2.3241389227228653
+        ],
+        "forces": [
+          "earth_point_mass",
+          "earth_geopotential",
+          "moon",
+          "sun",
+          "srp"
+        ]
+      },
+      {
+        "name": "HEO perigee",
+        "id": "heo_perigee",
+        "state_m_m_s": [
+          1053335.9717833048,
+          -2894016.7975739255,
+          -6150115.340111621,
+          9440.729367794187,
+          3436.144479639866,
+          -1.6501912546719246E-12
+        ],
+        "forces": [
+          "earth_point_mass",
+          "earth_geopotential",
+          "moon",
+          "sun",
+          "srp",
+          "drag"
+        ]
+      }
+    ]
+  }
+}

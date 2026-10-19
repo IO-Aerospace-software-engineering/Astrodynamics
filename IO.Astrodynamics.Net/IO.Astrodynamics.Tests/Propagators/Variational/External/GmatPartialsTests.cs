@@ -1,0 +1,137 @@
+// Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
+
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Propagator.Forces;
+using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace IO.Astrodynamics.Tests.Propagators.Variational.External;
+
+/// <summary>
+/// H2: the partials of each force at the four states of B7 against GMAT's A matrix, computed by the official GMAT API of
+/// the R2026a build (<c>tools/gmat_reference/gmat_partials.py</c>; design of #408, decision 9).
+/// </summary>
+/// <remarks>
+/// GMAT's derivative array with the A matrix on is the derivative of the state, then A = [0, I; ∂a/∂r, ∂a/∂v], 6×6
+/// row-major, in km and s: ∂a/∂r in 1/s² and ∂a/∂v in 1/s, the same in SI. For drag, the density of the two tools
+/// differs (<c>GmatReferenceTests.Density_AlongTheDragCase_AgainstGmat</c>): GMAT's partials are scaled by the ratio of
+/// the drag accelerations, which takes the density ratio out of ∂a/∂v and of the co-rotation term of ∂a/∂r, and out of
+/// the density-gradient term to the extent that ∇ρ/ρ agrees (decision 6).
+/// </remarks>
+[Trait("Category", "Validation")]
+public class GmatPartialsTests : IClassFixture<PartialsTestCases>
+{
+    private static readonly ForceEvaluationContext Context = new(100.0, ReferenceCases.DragCoefficient,
+        ReferenceCases.ReflectivityCoefficient);
+
+    private readonly PartialsTestCases _cases;
+    private readonly ITestOutputHelper _output;
+
+    public GmatPartialsTests(PartialsTestCases cases, ITestOutputHelper output)
+    {
+        _cases = cases;
+        _output = output;
+    }
+
+    public static TheoryData<string, string> Cases()
+    {
+        var data = new TheoryData<string, string>();
+        foreach (var state in PartialsTestCases.StateNames)
+        {
+            foreach (var force in GmatCases.ForcesAt(state))
+            {
+                data.Add(state, force);
+            }
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(Cases))]
+    public void Partials_AgainstGmatAMatrix(string stateName, string forceName)
+    {
+        // Arrange
+        var earth = forceName switch
+        {
+            "earth_geopotential" => new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch,
+                new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree",
+                    GmatCases.PartialsGeopotentialDegree)),
+            "drag" => new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch, null,
+                new Nrlmsise00Model(SpaceWeather.Nominal)),
+            _ => new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch)
+        };
+        var state = PartialsTestCases.State(stateName, earth);
+        var spacecraft = PartialsTestCases.Spacecraft(state);
+        ForceBase force = forceName switch
+        {
+            "earth_point_mass" or "earth_geopotential" => new GravitationalAcceleration(earth),
+            "moon" => new ThirdBodyPerturbation(_cases.Moon, earth),
+            "sun" => new ThirdBodyPerturbation(_cases.Sun, earth),
+            "srp" => new SolarRadiationPressure(spacecraft, new[] { earth }),
+            "drag" => new AtmosphericDrag(spacecraft, earth),
+            _ => throw new System.ArgumentOutOfRangeException(nameof(forceName))
+        };
+        var gmat = Read(stateName, forceName);
+
+        // Act
+        var dadr = new double[9];
+        var dadv = new double[9];
+        force.AccumulateStatePartials(state, Context, dadr, dadv);
+        var acceleration = force.Apply(state, Context);
+
+        // Assert
+        var gmatAcceleration = new[] { gmat[3], gmat[4], gmat[5] }.Select(x => x * 1000.0).ToArray();
+        double accelerationError = RiddersDerivative.RelativeFrobeniusError(
+            new[] { acceleration.X, acceleration.Y, acceleration.Z }, gmatAcceleration);
+        double scale = forceName == "drag"
+            ? acceleration.Magnitude() / System.Math.Sqrt(gmatAcceleration.Sum(x => x * x))
+            : 1.0;
+        var gmatDadr = new double[9];
+        var gmatDadv = new double[9];
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                gmatDadr[3 * i + j] = scale * gmat[6 + 6 * (3 + i) + j];
+                gmatDadv[3 * i + j] = scale * gmat[6 + 6 * (3 + i) + 3 + j];
+            }
+        }
+
+        double dadrError = RiddersDerivative.RelativeFrobeniusError(dadr, gmatDadr);
+        string dadvText = gmatDadv.All(x => x == 0.0) && dadv.All(x => x == 0.0)
+            ? "both zero"
+            : RiddersDerivative.RelativeFrobeniusError(dadv, gmatDadv).ToString("E2");
+        _output.WriteLine($"{stateName}, {forceName}: acceleration {accelerationError:E2}, ∂a/∂r {dadrError:E2}, " +
+                          $"∂a/∂v {dadvText}" + (forceName == "drag" ? $", GMAT scaled by {scale:F6}" : ""));
+
+        // Assert: the analytic threshold of B (1e-6) wherever the models agree; for drag, ∂a/∂v to it once the density
+        // ratio is out, and the acceleration and ∂a/∂r, which carry the departure of the densities and of their
+        // gradients, as records at twice the measurement of 2026-10-19
+        bool drag = forceName == "drag";
+        Assert.True(accelerationError < (drag ? 1e-1 : 1e-6), $"acceleration {accelerationError:E2}");
+        Assert.True(dadrError < (drag ? 2e-2 : 1e-6), $"∂a/∂r {dadrError:E2}");
+        if (dadvText != "both zero")
+        {
+            Assert.True(RiddersDerivative.RelativeFrobeniusError(dadv, gmatDadv) < 1e-6, $"∂a/∂v {dadvText}");
+        }
+        else
+        {
+            Assert.False(drag, "drag has a velocity partial");
+        }
+    }
+
+    private static double[] Read(string stateName, string forceName)
+    {
+        var path = Path.Combine(GmatCasesFileTests.DataDirectory, "partials",
+            $"{GmatCases.StateId(stateName)}_{forceName}.txt");
+        return File.ReadAllText(path).Split(' ', System.StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => double.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture)).ToArray();
+    }
+}
