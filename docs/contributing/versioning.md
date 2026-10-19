@@ -97,6 +97,15 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **Drag with the U.S. Standard Atmosphere 1976 or the Mars standard atmosphere without allocation.** Atmospheric drag
+  built an atmospheric context (80 bytes) for each density with `EarthStandardAtmosphere` and
+  `MarsStandardAtmosphere`, once for the acceleration and eight times for its partial derivatives: 720 bytes per
+  integration stage with the state transition matrix. It now reads their density from the altitude, as for
+  NRLMSISE-00, and allocates nothing per stage. One day of LEO propagation with US 1976 drag in RK7(8) allocates
+  0.87 MB instead of 7.3 MB with the state transition matrix, and 0.37 MB instead of 1.2 MB without it, in about the
+  same time; Mars the same. Results unchanged, bit for bit. A class derived from either model that re-implements
+  `IAtmosphericModel` is not used by drag, as for `Nrlmsise00Model`.
+  [#404](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/404)
 - **True anomaly of a near-circular, slightly inclined state vector, and the start of a propagation.** A
   `StateVector` on a circular orbit (e < 1e-3) inclined by less than 1e-3 rad counted its true anomaly from the x
   axis, which lies in the orbit plane only if the orbit is equatorial or its node is on it. Its mean anomaly, its
