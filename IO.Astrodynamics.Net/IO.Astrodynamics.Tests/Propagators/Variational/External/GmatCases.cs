@@ -120,7 +120,8 @@ internal static class GmatCases
     /// <summary>
     /// The content of <c>cases.json</c>: for each case the epoch (TDB), the duration, the initial state (m, m/s, ICRF), the
     /// models with their parameters as the library holds them, the steps of the central differences, and P0 for the
-    /// cases of the covariance. Numbers are written to the shortest round-trip form of their double.
+    /// cases of the covariance. Numbers are written to the shortest round-trip form of their double, lines end with LF
+    /// on every platform (the committed file).
     /// </summary>
     internal static string ToJson(ReferenceCases cases)
     {
@@ -131,7 +132,7 @@ internal static class GmatCases
             ["cases"] = new JsonArray(Names.Select(name => (JsonNode)CaseNode(Get(cases, name))).ToArray()),
             ["partials"] = PartialsNode(cases)
         };
-        return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n";
+        return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true, NewLine = "\n" }) + "\n";
     }
 
     private static JsonObject CaseNode(GmatCase gmatCase)
