@@ -322,7 +322,7 @@ departure from the library, hence 2.5 s.
 | Earth orientation | `ITRF93`, `earth_latest_high_prec.bpc` | IAU-1976/FK5 with GMAT's EOP file | about 2.6e-8 rad at the epoch of the cases |
 | Third bodies | `de440s.bsp` | the same SPK through SPICE, the same GM | none measurable |
 | SRP | cannonball, two-circle shadow | spherical, the same flux at 1 AU, AU, Earth and Sun radii | Φ: GMAT leaves out the derivative of the shadow function (its own warning) |
-| Drag | NRLMSISE-00, F10.7 = F10.7A = 150, Ap = 4 | NRLMSISE-00, the same F10.7, Kp = 1 (ap = 4) | density of the library from 2.8 % lower to 0.13 % higher along G6, the departure growing with the latitude |
+| Drag | NRLMSISE-00, F10.7 = F10.7A = 150, Ap = 4 | NRLMSISE-00, the same F10.7, Kp = 1 (ap = 4) | density of the library from 2.8 % lower to 0.13 % higher along G6, the departure growing with the latitude: the geodetic altitude of the library, up to 1.7 km too high above the surface ([#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411)); with exact geodetic coordinates, within 2.2e-3, the size of its TDB taken as UT ([#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)) |
 
 **Φ.** Worst block over the arc (every hour and at the end), relative Frobenius norms. Total: the library against GMAT.
 Models: the central differences of whole propagations of the library against GMAT's own, with the same steps (no
@@ -343,7 +343,8 @@ variational equation enters). Computation: each tool's Φ against its own centra
   penumbra, which the library differentiates (the SRP partials take central differences there); left out, the library
   departed by 1.05e-4 after one day in step 5b. The models agree to 1.9e-7.
 - G6: the densities differ, so the departure is the models'; the library's Φ holds its own central differences to
-  4.6e-8.
+  4.6e-8. G6 and the drag partials in position are records until #411 and #409 are fixed (decision of S. Guillet,
+  2026-10-19); the density gate of 1e-3 is then measured again.
 
 **Ψ**, over the arc relative to its largest value, against GMAT's central differences on the coefficient (GMAT has no
 Ψ): Ψ_Cr of G5 5.5e-6 (position) and 7.9e-6 (velocity), the central differences of the two tools against each other
@@ -352,7 +353,8 @@ variational equation enters). Computation: each tool's Φ against its own centra
 **P**, from the correlated P0 of `CovariancePropagationTests` (σ 50, 200 and 30 m, 0.2, 0.05 and 0.03 m/s in RTN),
 over the arc: G1 4.4e-9 relative Frobenius, 4.5e-9 on the correlation matrix; G2 2.1e-8 and 1.3e-6. GMAT propagates P
 step by step, and its P departs from its own Φ P0 Φᵀ by 4.4e-9 (G1) and 2.3e-8 (G2) on the correlation matrix: on G1 the
-departure is GMAT's. GMAT has no consider parameter, so Ψ Pp Ψᵀ has no reference here.
+departure is GMAT's, so P on G1 is held to 1e-8 rather than the 1e-10 of the design (decision of S. Guillet,
+2026-10-19). GMAT has no consider parameter, so Ψ Pp Ψᵀ has no reference here.
 
 **Q**, the state noise compensation of q_T = 1e-11 m²/s³ alone, at the end of the day. GMAT adds the discrete form of
 Tapley, Schutz and Born §4.9 at every integration step, its RTN axes held over the step; the library integrates the
@@ -380,7 +382,8 @@ best.
 | Drag, GMAT's scaled by the ratio of the accelerations | 3.5e-3 to 5.5e-3 | 5.5e-8 to 7.7e-8 |
 
 The geopotential departure is the Earth orientation of the two tools. With the density ratio out, the drag partials
-agree in velocity; in position they keep the departure of the density gradients of the two NRLMSISE-00. The analytic
+agree in velocity; in position they keep the departure of the density gradients of the two NRLMSISE-00 (the geodetic altitude,
+#411). The analytic
 threshold of B (1e-6) is asserted wherever the models agree, the other figures as records at twice the measurement.
 
 ## Reference Validations
@@ -394,7 +397,7 @@ Beyond the conformance cases, the test suite compares the library with published
 | Frisbee, maximum Pc with a single covariance | Critical covariance matrix and Table 1 outcomes | `SingleCovarianceMaximumPc_FrisbeeCriticalCovarianceMatchesPublishedMatrix`, `SingleCovarianceMaximumPc_FrisbeeTable1_MatchesPublishedApproximateOutcomes` | 1e-6 absolute on the matrix; 3 % relative on the four Table 1 cases |
 | Central differences of whole propagations (F1), *Numerical Recipes* §5.7 | Φ per 3×3 block and Ψ over the arc on R1 to R5, across a maneuver, and with a reduced degree of the geopotential partials; the plateau of the steps | `StmValidationTests`, `ManeuverStmValidationTests`, `GeopotentialPartialsDegreeTests`, `WholePropagationStepStudyTests` | R1 1e-7, R2 to R5 1e-4 outside the penumbra (specification); see [State Transition Matrix and Covariance](#state-transition-matrix-and-covariance) |
 | Monte Carlo of the initial state (F3): Wishart variance (Anderson, 2003, §7.3) and Kolmogorov-Smirnov against χ²(6) (*Numerical Recipes* §14.3.3) | Propagated covariance against 5000 runs, R1 to R3 | `CovarianceMonteCarloTests`, `CovarianceMonteCarloLongTests`, `KolmogorovSmirnovTests` | 4 standard deviations element-wise; α = 0.01 |
-| GMAT R2026a (H2), `GmatConsole` and GMAT's Python API | Φ per block over the arc on G1 to G6, Ψ_Cr and Ψ_Cd, P, the limit of GMAT's discrete process noise, and the partials of each force at the B7 states | `GmatReferenceTests`, `GmatPartialsTests`; the `stm` conformance case, `StmCaseTests` | G1 1e-10 on Φ; the library's own computation to F1; the analytic partials to 1e-6 (B); the rest records at twice the measurement; see [Against GMAT](#against-gmat-h2) |
+| GMAT R2026a (H2), `GmatConsole` and GMAT's Python API | Φ per block over the arc on G1 to G6, Ψ_Cr and Ψ_Cd, P, the limit of GMAT's discrete process noise, and the partials of each force at the B7 states | `GmatReferenceTests`, `GmatPartialsTests`; the `stm` conformance case, `StmCaseTests` | G1 1e-10 on Φ, 1e-8 on P; the library's own computation to F1; the analytic partials to 1e-6 (B); the rest records at twice the measurement; see [Against GMAT](#against-gmat-h2) |
 | IAU SOFA, release 2023-10-11 | Frame bias, precession, nutation, CIP, CIO locator, Earth rotation angle, GCRS to CIRS and to TIRS | `Iau2006ModelTests`, `Iau2006FundamentalArgumentsTests`, `FrameChainIntegrationTests`, `Iau2006SofaSweepTests` (300 epochs, 1990 to 2040), with reference values from the harnesses in `tools/sofa_reference` | From 1e-14 rad (precession angles) to 5e-9 rad (IAU 2000B against SOFA's IAU 2000A); see [Standards & Units](../standards-and-units.md#measured-agreement-with-sofa) |
 
 ## See Also

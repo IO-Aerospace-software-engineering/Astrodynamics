@@ -225,13 +225,16 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         _output.WriteLine($"G6 density, library against GMAT: worst {worst:E2}, mean {mean:E2}");
 
         // Assert: a record at twice the measurement; above the gate of the design (1e-3), so drag is compared at the
-        // B7 states with the density ratio taken out (decision 6)
+        // B7 states with the density ratio taken out (decision 6). The departure is the geodetic altitude of the library
+        // (#411) and its TDB taken as UT (#409); kept as a record until both are fixed (decision of S. Guillet,
+        // 2026-10-19)
         Assert.True(worst < 6e-2, $"G6 density {worst:E2}");
     }
 
     // Bounds of P (relative Frobenius, on the correlation matrix) and of Q (the first-order limit of GMAT's discrete
     // noise against the library, relative Frobenius), at twice the measurement of 2026-10-19; GMAT's P resolves no
-    // better than its drift from its own Φ P0 Φᵀ, so the 1e-10 of the design does not hold for P (pending decision)
+    // better than its drift from its own Φ P0 Φᵀ (4.4e-9 on G1), so P on G1 is held to 1e-8 rather than the 1e-10 of the
+    // design (decision of S. Guillet, 2026-10-19)
     public static TheoryData<string, double, double, double> CovarianceCases => new()
     {
         { "G1", 1e-8, 1e-8, 3e-8 },
