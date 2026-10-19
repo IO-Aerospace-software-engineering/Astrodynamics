@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------------------
+# tolerances.yaml — default pass/fail thresholds for every metric.
+#
+# Pass/fail logic is OR-based: a metric PASSES when EITHER threshold is met.
+#
+#   PASS  ⟺  |computed − golden| ≤ abs_tol
+#          OR |computed − golden| / |golden| ≤ rel_tol
+#
+# Per-case overrides (tolerances_override in cases/*.yaml) take precedence
+# over the values below.  See spec.md §6 for the full rule.
+# ---------------------------------------------------------------------------
+
+version: "1.0.0"
+
+defaults:
+  # Position — 1e-6 km = 1 mm
+  position_km:
+    abs_tol: 1.0e-6
+    rel_tol: 1.0e-9
+
+  # Velocity — 1e-9 km/s = 1 µm/s
+  velocity_km_s:
+    abs_tol: 1.0e-9
+    rel_tol: 1.0e-9
+
+  # Quaternion components — unit quaternions are tightly constrained;
+  # 1e-10 corresponds to ~0.02 micro-arcseconds of pointing error.
+  attitude_quaternion:
+    abs_tol: 1.0e-10
+    rel_tol: 1.0e-10
+
+  # Angles — 1e-6 deg ≈ 3.6 milli-arcseconds
+  angle_deg:
+    abs_tol: 1.0e-6
+    rel_tol: 1.0e-9
+
+  # Eclipse entry/exit epoch — 10 ms is the minimum operationally
+  # meaningful granularity for LEO eclipse prediction.
+  eclipse_time_s:
+    abs_tol: 1.0e-2
+    rel_tol: 1.0e-6
+
+  # Eclipse duration — 100 ms accounts for error accumulation at both
+  # endpoints.  For long eclipses (~2000 s) rel_tol becomes the tighter gate.
+  penumbra_duration_s:
+    abs_tol: 1.0e-1
+    rel_tol: 1.0e-5
+
+  umbra_duration_s:
+    abs_tol: 1.0e-1
+    rel_tol: 1.0e-5
+
+  # Propagator final position — component-wise
+  propagator_position_km:
+    abs_tol: 1.0e-6
+    rel_tol: 1.0e-9
+
+  # Propagator final velocity — component-wise
+  propagator_velocity_km_s:
+    abs_tol: 1.0e-9
+    rel_tol: 1.0e-9
+
+  # Geosynchronous orbit semi-major axis — 1e-3 km = 1 m
+  semi_major_axis_km:
+    abs_tol: 1.0e-3
+    rel_tol: 1.0e-9
+
+  # Eccentricity — circular orbit tolerance
+  eccentricity:
+    abs_tol: 1.0e-10
+    rel_tol: 1.0e-6
+
+  # State transition matrix (stm category): the Frobenius norm of the difference of each 3 x 3 block,
+  # absolute or relative to the norm of the golden block. 1e-7 relative: the threshold of the two-body
+  # case R1 of the validation of IO.Astrodynamics against central differences of whole propagations.
+  stm_block:
+    abs_tol: 0.0
+    rel_tol: 1.0e-7
