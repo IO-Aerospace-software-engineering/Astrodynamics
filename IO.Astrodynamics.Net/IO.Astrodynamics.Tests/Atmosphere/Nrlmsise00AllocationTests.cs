@@ -139,8 +139,8 @@ public class Nrlmsise00AllocationTests
         // Arrange: NRLMSISE-00 through the position, a model without it through a context, and no model
         var nrlmsise = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal));
-        var standard = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
-            new EarthStandardAtmosphere());
+        var contextOnly = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
+            new ContextOnlyModel());
         var none = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
 
         foreach (var context in Grid())
@@ -152,11 +152,8 @@ public class Nrlmsise00AllocationTests
             // Act and assert
             AssertSameBits(nrlmsise.GetAirDensity(context),
                 nrlmsise.GetAirDensity(context.Altitude, latitude, longitude, epoch));
-            if (context.Altitude <= 80e3)
-            {
-                AssertSameBits(standard.GetAirDensity(context),
-                    standard.GetAirDensity(context.Altitude, latitude, longitude, epoch));
-            }
+            AssertSameBits(contextOnly.GetAirDensity(context),
+                contextOnly.GetAirDensity(context.Altitude, latitude, longitude, epoch));
 
             Assert.Equal(0.0, none.GetAirDensity(context.Altitude, latitude, longitude, epoch));
         }
@@ -196,6 +193,27 @@ public class Nrlmsise00AllocationTests
                     ApArray = new ApArray { A = new[] { 20.0, 15.0, 25.0, 30.0, 18.0, 12.0, 10.0 } }
                 });
         }
+    }
+
+    /// <summary>
+    /// A model with the context API only, as a user's model: its density comes from the context the body builds.
+    /// </summary>
+    private sealed class ContextOnlyModel : IAtmosphericModel
+    {
+        public IO.Astrodynamics.Atmosphere.Atmosphere GetAtmosphere(IAtmosphericContext context) => new()
+        {
+            Temperature = GetTemperature(context), Pressure = GetPressure(context), Density = GetDensity(context)
+        };
+
+        public double GetTemperature(IAtmosphericContext context) => -50.0;
+
+        public double GetPressure(IAtmosphericContext context) => 0.0;
+
+        // Every field of the context enters the density, so a context built with another field would show
+        public double GetDensity(IAtmosphericContext context) =>
+            System.Math.Exp(-context.Altitude / 7000.0) * (2.0 + System.Math.Sin(context.GeodeticLatitude!.Value)) *
+            (2.0 + System.Math.Cos(context.GeodeticLongitude!.Value)) *
+            (1.0 + context.Epoch!.Value.TimeSpanFromJ2000().TotalDays * 1e-6);
     }
 
     private static void AssertSameBits(double expected, double actual)
