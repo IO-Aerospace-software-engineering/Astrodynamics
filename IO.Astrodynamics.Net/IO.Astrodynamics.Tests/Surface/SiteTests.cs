@@ -43,8 +43,11 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            Assert.Equal(117.89632948355492, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(16.790605205512946, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            // SPICE in the topocentric frame of the library, built from the geodetic coordinates of DSS-13 on the
+            // ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c); before #411 the frame took the latitude of
+            // the relation of the surface, 3.05e-5° too far north
+            Assert.Equal(117.89632135112616, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(16.790619489720385, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
             Assert.Equal(400552679.30400002, hor.Range, 3);
         }
 
@@ -55,8 +58,11 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            Assert.Equal(100.01880265664781, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(-23.236014363706865, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            // SPICE in the topocentric frame of the library, built from the geodetic coordinates of DSS-13 on the
+            // ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c); before #411 the frame took the latitude of
+            // the relation of the surface, 3.05e-5° too far north
+            Assert.Equal(100.01881556283226, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(-23.236009058726474, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
             Assert.Equal(408535095.85179406, hor.Range, 3);
         }
 
@@ -67,8 +73,11 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            Assert.Equal(41.608271377272878, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(-63.020715259069014, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            // SPICE in the topocentric frame of the library, built from the geodetic coordinates of DSS-13 on the
+            // ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c); before #411 the frame took the latitude of
+            // the relation of the surface, 3.05e-5° too far north
+            Assert.Equal(41.608311183520655, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(-63.020738075776627, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
             Assert.Equal(401248015.68691534, hor.Range, 3);
         }
 
@@ -79,8 +88,11 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            Assert.Equal(312.54264512355752, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(-33.61891613059521, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            // SPICE in the topocentric frame of the library, built from the geodetic coordinates of DSS-13 on the
+            // ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c); before #411 the frame took the latitude of
+            // the relation of the surface, 3.05e-5° too far north
+            Assert.Equal(312.54263018434767, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(-33.618936771066764, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
             Assert.Equal(376638211.11299998, hor.Range, 3);
         }
 
@@ -88,11 +100,16 @@ namespace IO.Astrodynamics.Tests.Surface
         public void GetHorizontalCoordinates5()
         {
             var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0);
-            var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
+            // A custom site at the geodetic coordinates of DSS-13 on the ellipsoid of pck00011 (SPICE recgeo_c of the
+            // kernel station at J2000 TDB, tools/geodetic_reference/dss13_topo.c) sees what the kernel station sees;
+            // before #411 these coordinates were 1073.24 m and 35.24719501°, and the custom site was 1.3 m away
+            var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000,
+                new Planetodetic(-116.79445837193671 * IO.Astrodynamics.Constants.Deg2Rad,
+                    35.247164496550241 * IO.Astrodynamics.Constants.Deg2Rad, 1070.8505951920122));
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            Assert.Equal(312.54264512355752, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(-33.61891613059521, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(376638212.43274897, hor.Range, 3);
+            Assert.Equal(312.54263018434767, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(-33.618936771066764, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(376638211.1128177, hor.Range, 3);
         }
 
         [Fact]
@@ -313,20 +330,22 @@ namespace IO.Astrodynamics.Tests.Surface
             site.WriteEphemeris(window,new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName,"sitetest339.spk")));
             SpiceAPI.Instance.LoadKernels(new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Sites").CreateSubdirectory(site.Name).FullName, "sitetest339.spk")));
             var orbitalParametersEnumerable = SpiceAPI.Instance.ReadEphemeris(window, site.CelestialBody.NaifId, site.NaifId, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1));
-            Assert.Equal(new Vector3(4054783.094777815, -4799280.900382741, 1100391.2394741199), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Position,
+            // SPICE georec_c on the ellipsoid of pck00011, then sxform_c from ITRF93 to J2000, the site of
+            // ScenarioTests.PropagateSite (tools/spice_reference/spice_ref.c); before #411 the site was 1.15 m away
+            Assert.Equal(new Vector3(4054782.9682010966, -4799280.7492771307, 1100392.3676426695), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Position,
                 TestHelpers.VectorComparer);
-            Assert.Equal(new Vector3(349.9668418905813, 295.68160979710234, 0.01769212826071784), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
+            Assert.Equal(new Vector3(349.96683087822703, 295.68160057531139, 0.01769212216143207), orbitalParametersEnumerable.ElementAt(0).ToStateVector().Velocity,
                 TestHelpers.VectorComparer);
             Assert.Equal(TimeSystem.Time.J2000TDB, orbitalParametersEnumerable.ElementAt(0).Epoch);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(0).Frame);
             Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(0).Observer);
 
-            Assert.Equal(5675531.4452713095, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.X, 6);
-            Assert.Equal(2694837.374336319, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Y, 6);
-            Assert.Equal(1100644.5048255159, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Z, 6);
-            Assert.Equal(-196.51288777966315, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.X, 6);
-            Assert.Equal(413.86844022899953, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Y, 6);
-            Assert.Equal(0.0062996708938248122, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Z, 6);
+            Assert.Equal(5675531.2672095764, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.X, 6);
+            Assert.Equal(2694837.2897740607, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Y, 6);
+            Assert.Equal(1100645.6327681679, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Position.Z, 6);
+            Assert.Equal(-196.51288168954599, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.X, 6);
+            Assert.Equal(413.86842722249719, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Y, 6);
+            Assert.Equal(0.0062996653421883994, orbitalParametersEnumerable.ElementAt(5).ToStateVector().Velocity.Z, 6);
             Assert.Equal(18000.0, orbitalParametersEnumerable.ElementAt(5).Epoch.TimeSpanFromJ2000().TotalSeconds);
             Assert.Equal(Frames.Frame.ICRF, orbitalParametersEnumerable.ElementAt(5).Frame);
             Assert.Equal(TestHelpers.EarthAtJ2000, orbitalParametersEnumerable.ElementAt(5).Observer);
@@ -349,7 +368,9 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            Assert.Equal(2.1862895154409667, res,6);
+            // SPICE: the angle of the Sun to the zenith of the frame of the library, from the geodetic coordinates of DSS-13
+            // on the ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c)
+            Assert.Equal(2.1862894689515753, res, 12);
         }
 
         [Fact]
@@ -357,7 +378,9 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            Assert.Equal(2.1862895154409667, res,6);
+            // SPICE: the angle of the Sun to the zenith of the frame of the library, from the geodetic coordinates of DSS-13
+            // on the ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c)
+            Assert.Equal(2.1862894689515753, res, 12);
         }
 
         [Fact]
@@ -373,7 +396,9 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            Assert.Equal(2.1862895154409667, res,6);
+            // SPICE: the angle of the Sun to the zenith of the frame of the library, from the geodetic coordinates of DSS-13
+            // on the ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c)
+            Assert.Equal(2.1862894689515753, res, 12);
         }
 
         [Fact]
@@ -381,7 +406,8 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Moon, Aberration.None);
-            Assert.Equal(1.2777449825556335, res,6);
+            // SPICE, as for the Sun (tools/geodetic_reference/dss13_topo.c)
+            Assert.Equal(1.2777447332497456, res, 12);
         }
 
         [Fact]

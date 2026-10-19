@@ -93,8 +93,12 @@ public class InitialOrbitDeterminationTests
         var obs3 = new Equatorial(76.1 * Astrodynamics.Constants.Deg2Rad, 165.75 * Astrodynamics.Constants.Deg2Rad, 7250000.0, ut3);
         var orbitalParams =
             InitialOrbitDetermination.CreateFromObservation_Gauss(obs1, obs2, obs3, site, PlanetsAndMoons.EARTH_BODY, 7_250_000.0);
-        StateVector referenceOrbit = new(new Vector3(3520477.0118993367, -4310404.2221997585, 4645118.5764311915),
-            new Vector3(-4026.2486947722973, 2615.67401249017, 5468.113004203227),
+        // A regression value of the library. Recaptured with #411: the site, at 53 m of altitude, moved by 0.174 m to its
+        // exact place (SPICE georec_c on the ellipsoid of pck00011), and the determined state by 0.171 m with it; before:
+        // (3520477.0118993367, -4310404.2221997585, 4645118.5764311915) m,
+        // (-4026.2486947722973, 2615.67401249017, 5468.113004203227) m/s
+        StateVector referenceOrbit = new(new Vector3(3520476.9338886105, -4310404.12792936, 4645118.695703175),
+            new Vector3(-4026.24854927701, 2615.673924909288, 5468.112801525727),
             TestHelpers.EarthAtJ2000, ut2, Frames.Frame.ICRF);
         Assert.Equal(referenceOrbit, orbitalParams.OrbitalParameters.ToStateVector(), TestHelpers.StateVectorComparer);
     }

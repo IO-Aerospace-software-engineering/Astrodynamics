@@ -1,6 +1,7 @@
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -151,15 +152,15 @@ public class AtmosphericDrag : ForceBase
 
     /// <summary>
     /// The density at a position relative to the body, in the frame of the state: rotated to the body-fixed frame by
-    /// <paramref name="rotation"/> (none when the state is in that frame), then planetocentric and planetodetic
-    /// coordinates and the atmospheric model, at <paramref name="epoch"/>. The chain of
-    /// <see cref="OrbitalParameters.OrbitalParameters.ToPlanetocentric"/>, with the same doubles.
+    /// <paramref name="rotation"/> (none when the state is in that frame), then the exact geodetic coordinates on the
+    /// ellipsoid of the body (<see cref="GeodeticCoordinates"/>, a closed form, smooth for the central differences of
+    /// <see cref="DensityGradient"/>) and the atmospheric model, at <paramref name="epoch"/>.
     /// </summary>
     internal double Density(in Vector3 position, in Quaternion? rotation, in Time epoch)
     {
         var bodyFixed = rotation.HasValue ? position.Rotate(rotation.Value) : position;
-        var planetodetic = _celestialBody.SubObserverPoint(bodyFixed, epoch, Aberration.None)
-            .ToPlanetodetic(_celestialBody.Flattening, _celestialBody.EquatorialRadius);
+        var planetodetic = GeodeticCoordinates.FromBodyFixed(bodyFixed, _celestialBody.EquatorialRadius,
+            _celestialBody.Flattening);
 
         // The density of the atmospheric context of the position and the epoch, without building it when the model
         // allows (NRLMSISE-00)

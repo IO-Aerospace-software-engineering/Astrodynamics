@@ -48,8 +48,12 @@ public class PlanetocentricTests
     {
         var plan = new Planetocentric(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.06601815 * Astrodynamics.Constants.Deg2Rad, 6372125.09695);
         var res = plan.ToPlanetodetic(TestHelpers.EarthAtJ2000.Flattening, TestHelpers.EarthAtJ2000.EquatorialRadius);
-        Assert.Equal(new Planetodetic(-116.79445837000002, 35.24719500924553, 1073.2434613695368),
-            new Planetodetic(res.Longitude * Astrodynamics.Constants.Rad2Deg, res.Latitude * Astrodynamics.Constants.Rad2Deg, res.Altitude));
+        // SPICE recgeo_c on the ellipsoid of pck00011 (tools/geodetic_reference/test_values_ref.c): the geodetic
+        // coordinates of DSS-13 in earth_topo_201023.tf on the WGS84 spheroid are 35.2471635434595° and 1070.44 m.
+        // Before #411: 35.24719500924553° and 1073.2434613695368 m, the latitude relation of the surface
+        Assert.Equal(-116.79445837000002, res.Longitude * Astrodynamics.Constants.Rad2Deg, 12);
+        Assert.Equal(35.247164493137795, res.Latitude * Astrodynamics.Constants.Rad2Deg, 12);
+        Assert.Equal(1070.8505933064296, res.Altitude, 6);
     }
 
     [Fact]

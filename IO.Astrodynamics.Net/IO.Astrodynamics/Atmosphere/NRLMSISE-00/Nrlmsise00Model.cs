@@ -206,14 +206,21 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel
 
     /// <summary>
     /// The inputs of the model, in its internal units, for a geodetic position in SI units at an epoch: day of year,
-    /// seconds of the day, local solar time and the space weather of the model.
+    /// seconds of the day, local solar time and the space weather of the model. The model takes universal time (the
+    /// notes on the input variables of the model, <see cref="NrlmsiseInput"/>: seconds in day (UT), and lst =
+    /// sec/3600 + longitude/15° for consistency; J. M. Picone, A. E. Hedin, D. P. Drob, A. C. Aikin, "NRLMSISE-00
+    /// empirical model of the atmosphere: Statistical comparisons and scientific issues", J. Geophys. Res. 107(A12),
+    /// 1468, 2002, to be verified by S. Guillet): the epoch is taken in UTC whatever its time scale (#409; a
+    /// propagation evaluates drag at TDB epochs, 69.2 s ahead of UTC in 2021). UT1 is not used: |UT1 − UTC| stays
+    /// below 0.9 s.
     /// </summary>
     private NrlmsiseModelInput BuildInput(double altitude, double geodeticLatitude, double geodeticLongitude,
         in Time epoch)
     {
-        var dateTime = epoch.DateTime;
+        var dateTime = (epoch.Frame == TimeFrame.UTCFrame ? epoch : epoch.ToUTC()).DateTime;
         var doy = dateTime.DayOfYear;
-        var sec = (dateTime.Hour * 3600.0) + (dateTime.Minute * 60.0) + dateTime.Second + (dateTime.Millisecond / 1000.0);
+        // The time of day to the tick (100 ns); it used to be truncated to the millisecond
+        var sec = dateTime.TimeOfDay.TotalSeconds;
 
         // Calculate local solar time (hours)
         double lst = (sec / 3600.0) + (geodeticLongitude * Constants.Rad2Deg / 15.0);
