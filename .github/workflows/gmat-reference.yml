@@ -1,0 +1,77 @@
+name: GMAT reference
+
+# The comparison of IO.Astrodynamics with GMAT R2026a (H2 and F4 of phase 2, feature 1; design of #408): downloads
+# the official GMAT build from SourceForge, checks its checksums, runs the GMAT scripts of tools/gmat_reference again,
+# checks that GMAT writes the committed reports byte for byte, and runs the tests that compare the library with them.
+# Run by hand, on Linux; the tests themselves run in the CI from the committed reports, without GMAT.
+on:
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: Release
+  GMAT_URL: https://sourceforge.net/projects/gmat/files/GMAT/GMAT-R2026a
+
+jobs:
+  gmat-reference:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download GMAT R2026a
+      run: |
+        mkdir -p "$RUNNER_TEMP/gmat-archives" "$RUNNER_TEMP/gmat"
+        cd "$RUNNER_TEMP/gmat-archives"
+        curl -sSL --retry 4 -o gmat-ubuntu-x64-R2026a.tar.gz "$GMAT_URL/gmat-ubuntu-x64-R2026a.tar.gz/download"
+        curl -sSL --retry 4 -o GMAT-datafiles-R2026a.tar.gz "$GMAT_URL/GMAT-datafiles-R2026a.tar.gz/download"
+        # The checksums of tools/gmat_reference/README.md
+        printf '%s\n' \
+          "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754  gmat-ubuntu-x64-R2026a.tar.gz" \
+          "6c0bae7229b3333f8ca20fbf68861f97e26c8fd1f8dcb5fb5855183f594c89a8  GMAT-datafiles-R2026a.tar.gz" \
+          | sha256sum -c
+        tar -xzf gmat-ubuntu-x64-R2026a.tar.gz -C "$RUNNER_TEMP/gmat"
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build C++
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 2
+
+    - name: Copy the native library
+      run: cp build/IO.Astrodynamics/libIO.Astrodynamics.so IO.Astrodynamics.Net/IO.Astrodynamics/resources/
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: The cases and the converted field are those of the library
+      working-directory: ./IO.Astrodynamics.Net
+      run: dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "FullyQualifiedName~GmatCasesFileTests"
+
+    - name: Run GMAT
+      run: tools/gmat_reference/run_gmat.sh "$RUNNER_TEMP/gmat/GMAT/R2026a" "$RUNNER_TEMP/gmat-reports"
+
+    - name: GMAT writes the committed reports
+      run: |
+        committed=IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GmatReference
+        status=0
+        for file in $(cd "$committed" && find . -name "*.txt"); do
+          cmp -s "$committed/$file" "$RUNNER_TEMP/gmat-reports/$file" || { echo "differs: $file"; status=1; }
+        done
+        git diff --exit-code -- tools/gmat_reference/scripts || status=1
+        exit $status
+
+    - name: Compare the library with GMAT
+      working-directory: ./IO.Astrodynamics.Net
+      run: |
+        dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "FullyQualifiedName~Variational.External" --logger "console;verbosity=detailed"
+        dotnet test IO.Astrodynamics.ConformanceRunner.Tests/IO.Astrodynamics.ConformanceRunner.Tests.csproj -c Release --logger "console;verbosity=detailed"
+
+    - name: Upload the reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: gmat-reports
+        path: ${{ runner.temp }}/gmat-reports
