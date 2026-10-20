@@ -334,9 +334,6 @@ public static class ConjunctionAssessment
             // The fuel from the mass at the burn, not the mass of the spacecraft after its whole propagation (#415)
             var massAtBurn = propagated?.Context(burnEpoch).TotalMass ?? fallback.MassAt(burnEpoch);
 
-            // The fuel from the mass at the burn, not the mass of the spacecraft after its whole propagation (#415)
-            var massAtBurn = propagated?.Context(burnEpoch).TotalMass ?? encounterCase.ProtectedAsset.Spacecraft.GetTotalMass();
-
             foreach (var magnitude in options.DeltaVMagnitudesMetersPerSecond.Where(mag => mag > 0.0 && mag <= constraints.MaxDeltaVMetersPerSecond))
             {
                 foreach (var direction in burnDirections)
