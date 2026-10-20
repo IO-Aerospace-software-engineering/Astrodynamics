@@ -13,8 +13,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational.External;
 /// </summary>
 /// <remarks>
 /// With <c>IO_ASTRODYNAMICS_GMAT_CASES_CAPTURE</c> set to a directory, the test writes the file there and fails, as
-/// <c>PropagationGoldenTests</c> does for its goldens; <c>tools/gmat_reference/README.md</c> gives the procedure.
+/// <c>PropagationGoldenTests</c> does for its goldens; <c>tools/gmat_reference/README.md</c> gives the procedure. Like a
+/// golden, the file holds on one platform only: the initial states come from the elements of the cases through the
+/// mathematical library of the operating system, which changes their last digit on Windows. The test is therefore in
+/// the <c>Validation</c> category, which the CI runs on Linux only, the platform of the GMAT workflow.
 /// </remarks>
+[Trait("Category", "Validation")]
 public class GmatCasesFileTests : IClassFixture<ReferenceCases>
 {
     private const string CaptureVariable = "IO_ASTRODYNAMICS_GMAT_CASES_CAPTURE";
