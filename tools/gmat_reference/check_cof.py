@@ -1,7 +1,7 @@
 """Check that the committed .cof is the conversion of the EGM2008 file of IO.Astrodynamics with the GM and the radius
 of cases.json (every case has the same Earth), to degree 70, byte for byte.
 
-Usage: python3 -I check_cof.py <EGM2008 file> <committed .cof> <cases.json>
+Usage: python3 -I -B check_cof.py <EGM2008 file> <committed .cof> <cases.json>
 """
 import json
 import os

@@ -9,7 +9,7 @@ m > 0, S_nm, each as %21.14e.
 The header carries the GM and the reference radius with which IO.Astrodynamics evaluates the field (those of its SPICE
 kernels, written in cases.json), not the constants of EGM2008, so that both tools evaluate the same field.
 
-Usage: python3 -I egm2008_to_cof.py <EGM2008 file> <output .cof> <GM, m^3/s^2> <radius, m> <degree>
+Usage: python3 -I -B egm2008_to_cof.py <EGM2008 file> <output .cof> <GM, m^3/s^2> <radius, m> <degree>
 """
 import sys
 

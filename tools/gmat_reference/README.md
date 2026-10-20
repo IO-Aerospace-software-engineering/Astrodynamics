@@ -34,6 +34,7 @@ OpenFrames, Python 3.9, 3.10 and 3.14) are not used. The partials use GMAT's own
 | `egm2008_to_cof.py` | Converts the EGM2008 field of the library into GMAT's `.cof` format, with the GM and the radius of the library |
 | `check_cof.py` | Checks that the committed `.cof` is that conversion, byte for byte |
 | `run_gmat.sh` | Runs all of it and collects the reports in the test data |
+| `compare_run.sh` | Checks that a run wrote the committed reports, partials and logs, both ways |
 
 In the test data:
 
@@ -57,7 +58,7 @@ IO_ASTRODYNAMICS_GMAT_CASES_CAPTURE=/tmp/gmat-cases dotnet test \
 cp /tmp/gmat-cases/cases.json IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GmatReference/
 
 # 2. Only when the field or the Earth of the cases changes: convert EGM2008 again
-python3 -I tools/gmat_reference/egm2008_to_cof.py \
+python3 -I -B tools/gmat_reference/egm2008_to_cof.py \
     IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/SolarSystem/EGM2008_to70_TideFree \
     IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GmatReference/EGM2008_to70_TideFree_IO.cof \
     398600435507022.6 6378136.6 70     # the GM and the radius of cases.json
@@ -69,7 +70,8 @@ dotnet test IO.Astrodynamics.Net/IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.c
 ```
 
 `run_gmat.sh <GMAT> <directory>` writes the reports into another directory, to compare a new run with the committed
-one.
+one: `tools/gmat_reference/compare_run.sh IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GmatReference <directory>`,
+as the workflow `gmat-reference.yml` does.
 
 ## Alignment of the models
 
@@ -78,7 +80,7 @@ departures are in `docs/guides/validation.md`):
 
 - **Frame.** The state is given in GMAT's `EarthICRF`, whose axes are those of SPICE `J2000`: the Sun of `de440s.bsp` in
   `EarthICRF` equals SPICE to 2e-16. GMAT integrates in `EarthMJ2000Eq`, which it turns from ICRF by a slowly varying
-  rotation (2.1e-7 rad in 2021, drifting by about 1e-10 rad a day). The scripts report in `EarthMJ2000Eq`, and the tests
+  rotation (2.1e-7 rad in 2021, drifting by 9.3e-10 rad over the day of the cases). The scripts report in `EarthMJ2000Eq`, and the tests
   turn every report to ICRF by the constant rotation R0 of the start. Taking the coordinates of `J2000` as those of
   `EarthMJ2000Eq`, as first designed, left the third bodies and the Sun 2.1e-7 rad away (31 km for the Sun), visible in
   their partials (2e-7 to 5e-7).
@@ -89,7 +91,8 @@ departures are in `docs/guides/validation.md`):
 - **Third bodies.** The same SPK through SPICE, the GM of the library; the barycentres of the planets as user-defined
   bodies on their NAIF identifiers.
 - **SRP.** Spherical model, the flux at 1 AU (`L☉ / (4π AU²)`) and the AU of the library, the Earth and Sun radii of its
-  PCK. GMAT's Φ leaves out the derivative of the shadow function (its own warning), which the library keeps.
+  PCK. GMAT's Φ leaves out the derivative of the shadow function, which the library keeps: GMAT's own warning in the
+  console logs of G5, against §4.2.4 and §4.2.5 of its Mathematical Specification.
 - **Drag.** NRLMSISE-00 with constant F10.7, F10.7A and Kp (ap 4). The densities of the two tools differ by up to 2.8 %
   along the drag case; drag is compared at the B7 states with the density ratio taken out.
 - **Integrator.** PrinceDormand78 at the fixed step of each case: GMAT propagates the covariance at a fixed step only, and

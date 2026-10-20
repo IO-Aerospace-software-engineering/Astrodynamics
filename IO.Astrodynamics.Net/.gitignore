@@ -86,6 +86,8 @@ StyleCopReport.xml
 *.tmp_proj
 *_wpftmp.csproj
 *.log
+# The console logs of GMAT, part of the reference data of the comparison with GMAT (#408)
+!IO.Astrodynamics.Tests/Data/GmatReference/**/*.log
 *.vspscc
 *.vssscc
 .builds

@@ -17,7 +17,7 @@ Forces, with the models aligned as in generate_scripts.py:
                        run of earth_point_mass, is subtracted
 
 Usage, from GMAT's bin directory or any directory:
-  python3 -I gmat_partials.py <GMAT bin directory> <cases.json> <SPK> <.cof> <output directory> <state id> <force>
+  python3 -I -B gmat_partials.py <GMAT bin directory> <cases.json> <SPK> <.cof> <output directory> <state id> <force>
 One state and one force per process: the API keeps its objects for the life of the process.
 """
 import json

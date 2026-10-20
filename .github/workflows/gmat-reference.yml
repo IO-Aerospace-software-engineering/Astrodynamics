@@ -2,7 +2,8 @@ name: GMAT reference
 
 # The comparison of IO.Astrodynamics with GMAT R2026a (H2 and F4 of phase 2, feature 1; design of #408): downloads
 # the official GMAT build from SourceForge, checks its checksums, runs the GMAT scripts of tools/gmat_reference again,
-# checks that GMAT writes the committed reports byte for byte, and runs the tests that compare the library with them.
+# checks that GMAT writes the committed reports byte for byte (and the committed console logs but for the date and
+# the duration of the run), and runs the tests that compare the library with them.
 # Run by hand, on Linux; the tests themselves run in the CI from the committed reports, without GMAT.
 on:
   workflow_dispatch:
@@ -54,14 +55,7 @@ jobs:
       run: tools/gmat_reference/run_gmat.sh "$RUNNER_TEMP/gmat/GMAT/R2026a" "$RUNNER_TEMP/gmat-reports"
 
     - name: GMAT writes the committed reports
-      run: |
-        committed=IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GmatReference
-        status=0
-        for file in $(cd "$committed" && find . -name "*.txt"); do
-          cmp -s "$committed/$file" "$RUNNER_TEMP/gmat-reports/$file" || { echo "differs: $file"; status=1; }
-        done
-        git diff --exit-code -- tools/gmat_reference/scripts || status=1
-        exit $status
+      run: tools/gmat_reference/compare_run.sh IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GmatReference "$RUNNER_TEMP/gmat-reports"
 
     - name: Compare the library with GMAT
       working-directory: ./IO.Astrodynamics.Net

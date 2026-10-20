@@ -15,7 +15,7 @@ Written into <output>:
 
 This is the extension proposed to the conformance-tests suite; the fixture lets the runner be tested on it before.
 
-Usage: python3 -I make_stm_case.py <conformance-tests schemas/v1> <conformance-tests tolerances.yaml> <cases.json>
+Usage: python3 -I -B make_stm_case.py <conformance-tests schemas/v1> <conformance-tests tolerances.yaml> <cases.json>
                                   <GMAT G1/nominal.txt> <output directory>
 """
 import json

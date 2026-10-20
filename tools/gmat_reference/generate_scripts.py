@@ -32,7 +32,7 @@ Models, as aligned in the design of #408:
 The scripts carry three placeholders, replaced by run_gmat.sh: @SPK@ (the SPK file), @COF@ (the .cof file) and @OUT@
 (the directory of the reports).
 
-Usage: python3 -I generate_scripts.py <cases.json> <output directory>
+Usage: python3 -I -B generate_scripts.py <cases.json> <output directory>
 """
 import json
 import os

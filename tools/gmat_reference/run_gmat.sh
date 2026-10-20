@@ -23,11 +23,11 @@ spk="$data/SolarSystem/de440s.bsp"
 
 # The scripts and the reports are written again from scratch, so that none is left from an earlier set of cases
 rm -rf "$tool/scripts"
-python3 -I "$tool/generate_scripts.py" "$cases" "$tool/scripts"
+python3 -I -B "$tool/generate_scripts.py" "$cases" "$tool/scripts"
 for directory in "$tool"/scripts/*/; do
   rm -rf "${out:?}/$(basename "$directory")"
 done
-python3 -I "$tool/check_cof.py" "$data/SolarSystem/EGM2008_to70_TideFree" "$cof" "$cases"
+python3 -I -B "$tool/check_cof.py" "$data/SolarSystem/EGM2008_to70_TideFree" "$cof" "$cases"
 
 for script in "$tool"/scripts/*/*.script; do
   case=$(basename "$(dirname "$script")")
@@ -51,12 +51,12 @@ done
 
 # The A matrix of each force at the B7 states, through GMAT's own Python API (its startup file with absolute paths
 # first, as GMAT's api/API_README.txt asks), one process per state and force, earth_point_mass first
-(cd "$gmat/api" && python3 -I BuildApiStartupFile.py > /dev/null)
+(cd "$gmat/api" && python3 -I -B BuildApiStartupFile.py > /dev/null)
 rm -rf "${out:?}/partials"
-python3 -I -c 'import json, sys
+python3 -I -B -c 'import json, sys
 for s in json.load(open(sys.argv[1]))["partials"]["states"]:
     for f in s["forces"]:
         print(s["id"], f)' "$cases" | while read -r state force; do
-  python3 -I "$tool/gmat_partials.py" "$gmat/bin" "$cases" "$spk" "$cof" "$out" "$state" "$force" > /dev/null
+  python3 -I -B "$tool/gmat_partials.py" "$gmat/bin" "$cases" "$spk" "$cof" "$out" "$state" "$force" > /dev/null
   echo "partials/${state}_${force}"
 done
