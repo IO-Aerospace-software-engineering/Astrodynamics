@@ -70,7 +70,10 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 - **Avoidance options propagated numerically.** When the covariance of the protected participant is propagated,
   `EvaluateAvoidance` propagates each option in RK7(8) from the state and the covariance at its burn, with the force
   model of the trajectory, instead of taking the two-body orbit of the state after the burn without covariance: the miss
-  distance and the Pc of every option change. Otherwise the options are unchanged.
+  distance and the Pc of every option change. The state of an option and its covariance are integrated with the mass of
+  the trajectory at the burn less the fuel of the option, and that fuel is estimated from the mass at the burn
+  ([#415](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/415)). Otherwise the options are
+  unchanged.
 
 - **The propagator builder adds the central body.** `CentralBodyPropagatorBuilder.Build` adds the central body of the
   spacecraft (the observer of its initial orbital parameters, or the Sun for a star or a barycenter) to the perturbing

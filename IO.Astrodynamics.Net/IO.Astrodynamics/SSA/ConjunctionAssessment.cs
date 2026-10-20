@@ -327,12 +327,15 @@ public static class ConjunctionAssessment
 
             var burnState = propagated?.BurnState(burnEpoch) ?? GetState(encounterCase.ProtectedAsset.Spacecraft, burnEpoch, observer);
 
+            // The fuel from the mass at the burn, not the mass of the spacecraft after its whole propagation (#415)
+            var massAtBurn = propagated?.Context(burnEpoch).TotalMass ?? encounterCase.ProtectedAsset.Spacecraft.GetTotalMass();
+
             foreach (var magnitude in options.DeltaVMagnitudesMetersPerSecond.Where(mag => mag > 0.0 && mag <= constraints.MaxDeltaVMetersPerSecond))
             {
                 foreach (var direction in burnDirections)
                 {
                     var deltaV = burnState.FromRtn(direction * magnitude);
-                    var fuelCost = EstimateFuelCost(encounterCase.ProtectedAsset.Spacecraft, magnitude);
+                    var fuelCost = EstimateFuelCost(encounterCase.ProtectedAsset.Spacecraft, massAtBurn, magnitude);
                     var postEncounter = propagated != null
                         ? propagated.Analyze(burnState, deltaV, fuelCost)
                         : AnalyzeTwoBodyTrial(encounterCase, options, burnState, deltaV, constraints);
@@ -455,6 +458,10 @@ public static class ConjunctionAssessment
         // The state at the burn, with its covariance, in the frame of the propagation and relative to its central body
         internal StateVector BurnState(in Time burnEpoch) => _solution.GetStateVector(burnEpoch);
 
+        // The mass and coefficients of the trajectory at the burn: those of its segment there
+        internal ForceEvaluationContext Context(in Time burnEpoch) =>
+            _solution.ContextAt(burnEpoch) ?? ForceEvaluationContext.FromSpacecraft(_encounterCase.ProtectedAsset.Spacecraft);
+
         internal EncounterCase Analyze(StateVector burnState, Vector3 deltaV, double fuelCost)
         {
             var burnEpoch = burnState.Epoch;
@@ -474,11 +481,13 @@ public static class ConjunctionAssessment
 
             var postBurn = new StateVector(burnState.Position, burnState.Velocity + deltaV, burnState.Observer, burnEpoch,
                 burnState.Frame, covariance);
-            var context = _solution.ContextAt(burnEpoch) ?? ForceEvaluationContext.FromSpacecraft(_encounterCase.ProtectedAsset.Spacecraft);
+            var context = Context(burnEpoch);
             var trial = CloneSpacecraft(_encounterCase.ProtectedAsset.Spacecraft, postBurn,
                 System.Math.Max(context.TotalMass - fuelCost, 0.0), context.DragCoefficient, context.ReflectivityCoefficient);
 
+            // The state integrated with the mass and coefficients of the option, as its variational equations (#415)
             var integrator = _dynamics.Integrator.WithSameSettings();
+            integrator.EvaluateForcesWith(ForceEvaluationContext.FromSpacecraft(trial));
             foreach (var force in _dynamics.Forces)
             {
                 integrator.AddForce(force);
@@ -2404,7 +2413,7 @@ public static class ConjunctionAssessment
             template.HardBodyRadius);
     }
 
-    private static double EstimateFuelCost(Spacecraft spacecraft, double deltaVMetersPerSecond)
+    private static double EstimateFuelCost(Spacecraft spacecraft, double massAtBurn, double deltaVMetersPerSecond)
     {
         if (spacecraft.Engines.Count == 0)
         {
@@ -2417,7 +2426,7 @@ public static class ConjunctionAssessment
             return 0.0;
         }
 
-        return Tsiolkovski.DeltaM(isp, spacecraft.GetTotalMass(), deltaVMetersPerSecond);
+        return Tsiolkovski.DeltaM(isp, massAtBurn, deltaVMetersPerSecond);
     }
 
     private static double SafeSqrt(double value)

@@ -169,6 +169,18 @@ public sealed class RK78Integrator : Integrator
     }
 
     /// <summary>
+    /// Evaluate the forces with this mass and these coefficients at every step, instead of the live spacecraft each force
+    /// was built for (the default). For the propagation of an avoidance option, which reuses the forces of the
+    /// trajectory it leaves: they would read the protected spacecraft as it is now, not the option after its burn
+    /// (#415). A propagation without maneuver only: the context does not change along it.
+    /// </summary>
+    /// <param name="context">Mass and coefficients of the propagated spacecraft.</param>
+    internal void EvaluateForcesWith(in ForceEvaluationContext context)
+    {
+        _stepper.Context = context;
+    }
+
+    /// <summary>
     /// The variational equations integrated with the state, null when they are off.
     /// </summary>
     internal VariationalEquations VariationalEquations => _variational;

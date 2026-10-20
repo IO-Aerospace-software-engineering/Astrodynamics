@@ -61,7 +61,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
 
         /// <summary>The altitudes above which the mixing of a species is dropped, with flag 15, in m, increasing.</summary>
         internal static readonly double[] MixingCutoffAltitudes =
-            { 160000.0, 200000.0, 240000.0, 250000.0, 300000.0, 320000.0, 450000.0 };
+            Array.ConvertAll(MixingCutoffKilometres, k => k * 1000.0);
 
         /// <summary>
         /// The number of mixing cutoffs below an altitude, with the comparisons of <c>Gts7Internal</c>: the mixing of He
