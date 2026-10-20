@@ -73,6 +73,16 @@ Used in geometry-finder constraint searches.
 | `SingleCovarianceMaximumPcUsed` | Single-covariance maximum Pc was used |
 | `NonlinearCovariancePropagation` | A propagated covariance has a non-linearity index above `ConjunctionAnalysisOptions.NonlinearityIndexThreshold`: beyond the domain where Foster was validated against a Monte Carlo, not a wrong Pc; confirm a Pc that matters by a Monte Carlo |
 
+## AvoidanceTrajectory
+
+How the trajectory of an avoidance option after its burn is computed (`AvoidanceOption.Trajectory`,
+[Avoidance Studies](avoidance.md)); in the `IO.Astrodynamics.SSA` namespace.
+
+| Value | Description |
+|-------|-------------|
+| `Propagated` | Propagated from the state after the burn with the force model of the protected participant's propagation (RK7(8) or Velocity-Verlet) |
+| `TwoBody` | The two-body orbit of the state after the burn: the participant has no numerical propagation (not propagated, TLE, SPICE kernel) |
+
 ## CovarianceSource
 
 Where the covariance of one participant at TCA comes from, in the order the conjunction analysis resolves it
