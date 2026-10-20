@@ -78,9 +78,11 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         var solution = PartialsTestCases.Spacecraft(Leo).Propagate(new TimeSystem.Window(Start, Start.AddHours(0.5)),
             Bodies, false, false, TimeSpan.FromSeconds(60.0));
 
-        // Assert
+        // Assert: no dynamics; the segments carry their mass and coefficients, for the force model the solution keeps for
+        // the avoidance options (#402)
         Assert.Null(solution.Dynamics);
-        Assert.All(solution.Segments, segment => Assert.Null(segment.Context));
+        Assert.All(solution.Segments, segment => Assert.NotNull(segment.Context));
+        Assert.NotNull(solution.ForceModel);
         var exception = Assert.Throws<InvalidOperationException>(() =>
             solution.EvaluateVariational(Start.AddMinutes(10.0), new double[36], Array.Empty<double>()));
         Assert.Contains("variational", exception.Message);
