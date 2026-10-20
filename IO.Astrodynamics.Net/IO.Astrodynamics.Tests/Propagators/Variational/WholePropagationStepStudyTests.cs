@@ -54,9 +54,11 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// (2026-10-20) Ψ_Cd of the eclipsing case is held at its chosen step to a record instead of the factor of 2 (decision of
 /// S. Guillet, 2026-10-20): its references fire the burn of the tested propagation in open loop, whose epoch moves at the
 /// level of the noise with the steps of the variational equations, and moving that burn by one tick of 100 ns reshuffles
-/// the sweep (from 5 % to 30 %: 2.8e-7, 3.0e-7, 1.1e-8, 1.5e-7 as tested; 2.7e-7, 3.7e-7, 2.2e-7, 3.5e-7 one tick
-/// earlier; 9.4e-7, 8.0e-7, 4.3e-7, 2.8e-7 one tick later), its tested Ψ_Cd unchanged to 3e-11. The record is twice the
-/// worst at 30 % over seven burns from −20 to +20 ticks (3.5e-7), rounded up at the second significant digit. The study
+/// the sweep, its tested Ψ_Cd unchanged to 3e-11. Re-measured with #411 and #409 (2026-10-20), from 5 % to 30 %:
+/// 3.4e-7, 2.5e-8, 3.7e-7, 1.3e-8 as tested; 3.0e-7, 7.9e-8, 2.6e-7, 1.0e-7 one tick earlier; 6.7e-7, 1.6e-7, 2.6e-7,
+/// 2.1e-7 one tick later; at 30 % over the seven burns from −20 to +20 ticks, 3.2e-8, 1.4e-7, 1.0e-7, 1.3e-8, 2.1e-7,
+/// 1.2e-8 and 1.8e-7 (before them: 3.5e-7 at worst, a record of 7.0e-7). The record is twice the worst at 30 % over the
+/// seven burns (2.05e-7, one tick later), rounded up at the second significant digit. The study
 /// evaluates the end of the arc, while F1 asserts
 /// over the arc: <c>StmValidationTests</c> holds Ψ over the arc relative to its largest value, which does not depend on
 /// the step of the reference. To write the curves, set <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test writes
@@ -121,8 +123,9 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
     private const double R5ReferenceResolutionRecord = 1.7e-6;
 
     // Ψ_Cd of the eclipsing case at its chosen step: twice the worst of seven open-loop burns moved by −20 to +20 ticks,
-    // rounded up at the second significant digit (decision of S. Guillet, 2026-10-20; remarks of the class)
-    private const double EclipsingPsiCdRecord = 7.0e-7;
+    // rounded up at the second significant digit (decision of S. Guillet, 2026-10-20; remarks of the class), re-measured
+    // with #411 and #409
+    private const double EclipsingPsiCdRecord = 4.1e-7;
 
     private void Study(ReferenceCase referenceCase, PropagationSolution solution,
         Func<StateVector, double, double, double, PropagationSolution> reference, bool assertPsiCr = true,

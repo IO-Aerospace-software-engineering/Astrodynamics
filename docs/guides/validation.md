@@ -169,12 +169,15 @@ monotone, and Ψ_Cr of the eclipsing case. Since #398 the latter is published an
 1.1e-5, 1.3e-4 and 4.7e-5 from 0.1 % to 30 %, so no step lies on a plateau there. On the code before #398, the start of
 the reference moved by 2e-9 m along x alone takes that sweep from 3.7e-3, 1.8e-4, 2.3e-4, 1.3e-4, 3.4e-5, 1.8e-5 to
 2.1e-2, 7.0e-5, 2.4e-5, 8.1e-5, 7.2e-6, 1.5e-5. Ψ_Cd of the eclipsing case is held at its chosen step, 30 %, to a
-record of 7.0e-7 since [#413](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/413) (decision of
+record since [#413](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/413) (decision of
 S. Guillet, 2026-10-20), rather than within a factor of 2 of the smallest error of its sweep. Its references fire the burn
 of the tested propagation in open loop, and that burn moves at the level of the noise with the steps of the variational
-equations: moved by one tick of 100 ns, it takes the sweep from 5 % to 30 % from 2.8e-7, 3.0e-7, 1.1e-8, 1.5e-7 to
-2.7e-7, 3.7e-7, 2.2e-7, 3.5e-7 (one tick earlier) or 9.4e-7, 8.0e-7, 4.3e-7, 2.8e-7 (one tick later), while the tested
-Ψ_Cd moves by 3e-11. The record is twice the worst at 30 % of seven burns from −20 to +20 ticks. The reference runs at
+equations: moved by one tick of 100 ns, it takes the sweep from 5 % to 30 % from 3.4e-7, 2.5e-8, 3.7e-7, 1.3e-8 to
+3.0e-7, 7.9e-8, 2.6e-7, 1.0e-7 (one tick earlier) or 6.7e-7, 1.6e-7, 2.6e-7, 2.1e-7 (one tick later), while the tested
+Ψ_Cd moves by 3e-11 (measured 2026-10-20, with
+[#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411) and
+[#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)). The record is twice the worst at
+30 % of seven burns from −20 to +20 ticks: 2.05e-7, a record of 4.1e-7 (3.5e-7 and 7.0e-7 before #411 and #409). The reference runs at
 1e-14 rather than the 1e-13 of the specification. Its smallest error on Φ is lower in R1 to R4: R1 1.7e-8 against
 2.3e-8, R2 4.6e-8 against 1.4e-7, R3 1.9e-7 against 1.0e-6, R4 2.8e-8 against 5.6e-8. Both resolve R5 alike: over five
 starts moved by −2e-9 to 2e-9 m along x, 4.1e-7 to 8.0e-7 at 1e-14 and 1.1e-7 to 7.0e-7 at 1e-13 (6.7e-7 and 7.8e-7
