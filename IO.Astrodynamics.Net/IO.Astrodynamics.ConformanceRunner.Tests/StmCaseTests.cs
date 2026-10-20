@@ -140,6 +140,12 @@ public sealed class StmCaseTests : IDisposable
         Assert.Throws<ArgumentException>(() => StmComparer.Compare(identity, shortRow, tolerance));
     }
 
+    [Fact]
+    public void StmSolver_HandlesTheStmCategory()
+    {
+        Assert.Equal("stm", new IO.Astrodynamics.ConformanceRunner.Solvers.StmSolver(KernelsPath).Category);
+    }
+
     private void EditGolden(Action<JsonObject> edit)
     {
         var path = Path.Combine(_directory, "cases", "stm", "001", "expected-result.json");
