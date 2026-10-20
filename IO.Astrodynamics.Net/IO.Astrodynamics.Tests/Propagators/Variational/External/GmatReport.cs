@@ -17,9 +17,10 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational.External;
 /// EarthICRF equals SPICE to 2e-16, measured), and GMAT integrates and reports in EarthMJ2000Eq, which it turns from
 /// ICRF by a rotation of 2.1e-7 rad in 2021. Every report is turned to ICRF by the constant rotation R0 of the start,
 /// taken from the triads of the initial state in both frames: x = R0 x_MJ2000, Φ = R0 Φ_MJ2000 R0ᵀ and
-/// P = R0 P_MJ2000 R0ᵀ, block by block. GMAT's rotation drifts by about 1e-10 rad over a day (measured); that drift moves
-/// only the ephemerides of the third bodies in GMAT's integration frame, while turning the reports at each epoch by R(t)
-/// would put it on the whole state (G1: 6 mm and 8e-10 on Φ after one day, against 42 µm and 6e-12 with R0).
+/// P = R0 P_MJ2000 R0ᵀ, block by block. GMAT's rotation drifts by 9.3e-10 rad over the day of the cases (measured);
+/// that drift moves only the ephemerides of the third bodies in GMAT's integration frame, while turning the reports at
+/// each epoch by R(t) would put it on the whole state (G1: 6 mm and 8e-10 on Φ after one day, against 42 µm and 6e-12
+/// with R0).
 /// </para>
 /// <para>
 /// GMAT writes km and km/s; Φ is the same in km and km/s as in m and m/s (Φ_rv in s, Φ_vr in 1/s); every element of P

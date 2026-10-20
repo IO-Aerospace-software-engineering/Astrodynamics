@@ -49,4 +49,16 @@ public class GmatCasesFileTests : IClassFixture<ReferenceCases>
 
         Assert.Equal(File.ReadAllText(Path.Combine(DataDirectory, "cases.json")).ReplaceLineEndings("\n"), actual);
     }
+
+    [Fact]
+    public void Epoch_OnTheMillisecondGridOfGmat()
+    {
+        // Arrange
+        var onTheGrid = new TimeSystem.Time(2021, 3, 20, 12, 0, 0, 1, frame: TimeSystem.TimeFrame.TDBFrame);
+        var offTheGrid = new TimeSystem.Time(2021, 3, 20, 12, 0, 0, 1, 500, TimeSystem.TimeFrame.TDBFrame);
+
+        // Act and assert
+        Assert.Equal("2021-03-20T12:00:00.001", GmatCases.TdbEpoch(onTheGrid));
+        Assert.Throws<ArgumentException>(() => GmatCases.TdbEpoch(offTheGrid));
+    }
 }

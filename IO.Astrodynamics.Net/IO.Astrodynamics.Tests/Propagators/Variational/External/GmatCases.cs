@@ -145,7 +145,7 @@ internal static class GmatCases
         {
             ["name"] = gmatCase.Name,
             ["from"] = referenceCase.Name,
-            ["epoch_tdb"] = state.Epoch.ToTDB().DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture),
+            ["epoch_tdb"] = TdbEpoch(state.Epoch),
             ["duration_s"] = referenceCase.Duration.TotalSeconds,
             ["output_interval_s"] = GmatCase.OutputInterval,
             ["fixed_step_s"] = gmatCase.FixedStep,
@@ -244,8 +244,7 @@ internal static class GmatCases
         var sun = new CelestialBody(Stars.Sun);
         return new JsonObject
         {
-            ["epoch_tdb"] = PartialsTestCases.Epoch.ToTDB().DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fff",
-                CultureInfo.InvariantCulture),
+            ["epoch_tdb"] = TdbEpoch(PartialsTestCases.Epoch),
             ["geopotential_degree"] = PartialsGeopotentialDegree,
             ["moon_gm_m3_s2"] = moon.GM,
             ["sun_gm_m3_s2"] = sun.GM,
@@ -262,6 +261,19 @@ internal static class GmatCases
                 };
             }).ToArray())
         };
+    }
+
+    // GMAT takes its Gregorian epochs to the millisecond (20 Mar 2021 12:00:00.000): an epoch off that grid would be cut
+    // short without notice, so it is refused (H3 review of #408, nit 5)
+    internal static string TdbEpoch(TimeSystem.Time epoch)
+    {
+        var dateTime = epoch.ToTDB().DateTime;
+        if (dateTime.Ticks % TimeSpan.TicksPerMillisecond != 0)
+        {
+            throw new ArgumentException($"{dateTime:O} TDB is not on the millisecond grid of GMAT's epochs", nameof(epoch));
+        }
+
+        return dateTime.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture);
     }
 
     private static JsonArray Numbers(params double[] values) =>

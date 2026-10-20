@@ -113,10 +113,10 @@ public class GmatPartialsTests : IClassFixture<PartialsTestCases>
 
         // Assert: the analytic threshold of B (1e-6) wherever the models agree; for drag, ∂a/∂v to it once the density
         // ratio is out, and the acceleration and ∂a/∂r, which carry the departure of the densities and of their
-        // gradients, as records at twice the measurement of 2026-10-19
+        // gradients, as records at twice the measurement of 2026-10-20, rounded up at the second significant digit
         bool drag = forceName == "drag";
-        Assert.True(accelerationError < (drag ? 1e-1 : 1e-6), $"acceleration {accelerationError:E2}");
-        Assert.True(dadrError < (drag ? 2e-2 : 1e-6), $"∂a/∂r {dadrError:E2}");
+        Assert.True(accelerationError < (drag ? 8.6e-2 : 1e-6), $"acceleration {accelerationError:E2}");
+        Assert.True(dadrError < (drag ? 1.1e-2 : 1e-6), $"∂a/∂r {dadrError:E2}");
         if (dadvText != "both zero")
         {
             Assert.True(RiddersDerivative.RelativeFrobeniusError(dadv, gmatDadv) < 1e-6, $"∂a/∂v {dadvText}");

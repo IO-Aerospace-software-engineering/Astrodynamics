@@ -50,15 +50,16 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
 
     // Bounds of Φ per case: total, models, GMAT's computation, the library's computation, and the state departure in
     // position (m) and velocity (m/s). G1: the threshold of the design (1e-10); the library's computation: the F1
-    // thresholds (1e-7 for R1, 1e-4 otherwise); every other bound a record at twice the measurement of 2026-10-19
+    // thresholds (1e-7 for R1, 1e-4 otherwise); every other bound a record at twice the measurement of 2026-10-20,
+    // rounded up at the second significant digit (H3 review of #408, N5)
     public static TheoryData<string, double, double, double, double, double, double> PhiCases => new()
     {
-        { "G1", 1e-10, 2e-8, 4e-8, 1e-7, 2e-4, 2e-7 },
-        { "G2", 2e-8, 3e-8, 4e-8, 1e-4, 0.2, 2e-4 },
-        { "G3", 1e-11, 4e-8, 3e-8, 1e-4, 2e-4, 6e-9 },
-        { "G4", 8e-8, 2e-7, 2e-7, 1e-4, 0.6, 4e-4 },
-        { "G5", 3e-4, 4e-7, 3e-4, 1e-4, 2e-2, 2e-5 },
-        { "G6", 2e-3, 2e-3, 2e-4, 1e-4, 8e3, 9.0 }
+        { "G1", 1e-10, 1.4e-8, 3.5e-8, 1e-7, 1.1e-4, 1.2e-7 },
+        { "G2", 1.7e-8, 2.6e-8, 3.3e-8, 1e-4, 0.12, 1.3e-4 },
+        { "G3", 9.8e-12, 3.6e-8, 2.7e-8, 1e-4, 1.2e-4, 5.6e-9 },
+        { "G4", 7.6e-8, 1.2e-7, 1.1e-7, 1e-4, 0.51, 3.7e-4 },
+        { "G5", 2.1e-4, 3.8e-7, 2.0e-4, 1e-4, 1.7e-2, 1.9e-5 },
+        { "G6", 1.4e-3, 1.5e-3, 1.1e-4, 1e-4, 7.8e3, 8.8 }
     };
 
     [Theory]
@@ -117,10 +118,23 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         Assert.True(velocity < velocityBound, $"{name} velocity {velocity:E2} m/s");
     }
 
+    // Bounds of GMAT's Φ (worst block over the arc) and position (m) at its fixed step against half the step, records at
+    // twice the measurement of 2026-10-20, rounded up at the second significant digit (H3 review of #408, N6). On G6
+    // the departure between the two steps, 4.2e-5, is most of GMAT's computation (5.3e-5): there that share is GMAT's
+    // step error at 10 s
+    public static TheoryData<string, double, double> StepCases => new()
+    {
+        { "G1", 4.0e-12, 2.0e-5 },
+        { "G2", 5.8e-12, 3.7e-5 },
+        { "G3", 8.2e-14, 7.6e-7 },
+        { "G4", 2.2e-11, 1.3e-4 },
+        { "G5", 1.0e-10, 7.0e-4 },
+        { "G6", 8.4e-5, 4.7e-3 }
+    };
+
     [Theory]
-    [MemberData(nameof(PhiCases))]
-    public void Phi_AtTheFixedStepOfGmat_IsSettled(string name, double totalBound, double modelsBound,
-        double gmatBound, double ioBound, double positionBound, double velocityBound)
+    [MemberData(nameof(StepCases))]
+    public void Phi_AtTheFixedStepOfGmat_IsSettled(string name, double phiBound, double positionBound)
     {
         // Arrange
         var gmatCase = GmatCases.Get(_cases, name);
@@ -130,8 +144,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         var full = GmatReport.Read(name, "nominal", true, false, rotation);
         var half = GmatReport.Read(name, "nominal_half", true, false, rotation);
 
-        // Assert: GMAT's Φ at its fixed step against half the step, worst block over the arc, well below the total
-        // departure from the library, which it must not explain (a tenth of its bound)
+        // Assert: GMAT's Φ at its fixed step against half the step, worst block over the arc
         double worst = 0.0, position = 0.0;
         for (int k = 1; k < full.Phi.Length; k++)
         {
@@ -141,17 +154,17 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
 
         _output.WriteLine($"{name} GMAT at {gmatCase.FixedStep} s against {gmatCase.FixedStep / 2.0} s: Φ {worst:E2}, " +
                           $"position {position:E2} m");
-        Assert.True(worst < 0.1 * totalBound, $"{name} Φ at the step against half of it: {worst:E2}");
-        Assert.True(position < 0.1 * positionBound, $"{name} position at the step against half of it: {position:E2} m");
+        Assert.True(worst < phiBound, $"{name} Φ at the step against half of it: {worst:E2}");
+        Assert.True(position < positionBound, $"{name} position at the step against half of it: {position:E2} m");
     }
 
     // Bounds of Ψ over the arc relative to its largest value: against GMAT's central differences, the central
-    // differences of the library against GMAT's (records at twice the measurement), and the library against its own
-    // (F1, 1e-4)
+    // differences of the library against GMAT's (records at twice the measurement of 2026-10-20, rounded up at the
+    // second significant digit), and the library against its own (F1, 1e-4)
     public static TheoryData<string, double, double, double> PsiCases => new()
     {
-        { "G5", 2e-5, 2e-5, 1e-4 },
-        { "G6", 3e-2, 3e-2, 1e-4 }
+        { "G5", 1.6e-5, 1.2e-5, 1e-4 },
+        { "G6", 2.7e-2, 2.7e-2, 1e-4 }
     };
 
     [Theory]
@@ -224,21 +237,21 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
 
         _output.WriteLine($"G6 density, library against GMAT: worst {worst:E2}, mean {mean:E2}");
 
-        // Assert: a record at twice the measurement; above the gate of the design (1e-3), so drag is compared at the
-        // B7 states with the density ratio taken out (decision 6). The departure is the geodetic altitude of the library
-        // (#411) and its TDB taken as UT (#409); kept as a record until both are fixed (decision of S. Guillet,
-        // 2026-10-19)
-        Assert.True(worst < 6e-2, $"G6 density {worst:E2}");
+        // Assert: a record at twice the measurement of 2026-10-20, rounded up at the second significant digit; above the
+        // gate of the design (1e-3), so drag is compared at the B7 states with the density ratio taken out (decision 6).
+        // The departure is the geodetic altitude of the library (#411) and its TDB taken as UT (#409); kept as a record
+        // until both are fixed (decision of S. Guillet, 2026-10-19)
+        Assert.True(worst < 5.7e-2, $"G6 density {worst:E2}");
     }
 
     // Bounds of P (relative Frobenius, on the correlation matrix) and of Q (the first-order limit of GMAT's discrete
-    // noise against the library, relative Frobenius), at twice the measurement of 2026-10-19; GMAT's P resolves no
-    // better than its drift from its own Φ P0 Φᵀ (4.4e-9 on G1), so P on G1 is held to 1e-8 rather than the 1e-10 of the
-    // design (decision of S. Guillet, 2026-10-19)
+    // noise against the library, relative Frobenius), at twice the measurement of 2026-10-20, rounded up at the second
+    // significant digit; GMAT's P resolves no better than its drift from its own Φ P0 Φᵀ (4.4e-9 on G1), so P on G1 is
+    // held to 1e-8 rather than the 1e-10 of the design (decision of S. Guillet, 2026-10-19)
     public static TheoryData<string, double, double, double> CovarianceCases => new()
     {
-        { "G1", 1e-8, 1e-8, 3e-8 },
-        { "G2", 5e-8, 3e-6, 5e-8 }
+        { "G1", 1e-8, 1e-8, 2.1e-8 },
+        { "G2", 4.2e-8, 2.6e-6, 4.3e-8 }
     };
 
     [Theory]
@@ -261,22 +274,58 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         // GMAT rejects a zero sigma: R and N at 1e-13 km/s^1.5, a density of 1e-20 m²/s³, the same here
         var noisy = Propagate(referenceCase, start, new RtnProcessNoise(1e-20, GmatCases.TangentialNoise, 1e-20));
 
-        // Assert: P
-        double pRelative = 0.0, pCorrelation = 0.0, drift = 0.0;
+        // Assert: P, and the parts of its departure on the correlation matrix (H3 review of #408, N4): GMAT's P against
+        // its own Φ P0 Φᵀ, which it propagates step by step; the library's P against its own Φ P0 Φᵀ; and Φ P0 Φᵀ of
+        // the library against that of GMAT, the departure of Φ alone, with the element where its worst falls
+        double pRelative = 0.0, pCorrelation = 0.0, drift = 0.0, ioDrift = 0.0;
+        var phiOnly = new CorrelationElement(0.0, 0, 0, 0);
         var p0 = Elements(start.Covariance!.Value);
+        var phi = epochs.Select(t => Elements(solution.GetStateTransitionMatrix(t))).ToArray();
         for (int k = 0; k < epochs.Length; k++)
         {
             var p = Elements(solution.GetCovariance(epochs[k]));
             pRelative = System.Math.Max(pRelative, RelativeFrobenius(p, gmat.Covariance[k + 1]));
             pCorrelation = System.Math.Max(pCorrelation, CorrelationError(p, gmat.Covariance[k + 1]));
-            // GMAT's computation: its P against its own Φ P0 Φᵀ, which it propagates step by step
-            drift = System.Math.Max(drift, CorrelationError(gmat.Covariance[k + 1], Propagated(gmat.Phi[k + 1], p0)));
+            var gmatPropagated = Propagated(gmat.Phi[k + 1], p0);
+            drift = System.Math.Max(drift, CorrelationError(gmat.Covariance[k + 1], gmatPropagated));
+            var ioPropagated = Propagated(phi[k], p0);
+            ioDrift = System.Math.Max(ioDrift, CorrelationError(p, ioPropagated));
+            var element = WorstCorrelationElement(ioPropagated, gmatPropagated, k);
+            if (element.Error > phiOnly.Error)
+            {
+                phiOnly = element;
+            }
         }
 
         _output.WriteLine($"{name} P against GMAT over {epochs.Length} epochs: relative Frobenius {pRelative:E2}, " +
                           $"on the correlation matrix {pCorrelation:E2}");
         _output.WriteLine($"{name} GMAT's computation, its P against its own Φ P0 Φᵀ, on the correlation matrix: " +
                           $"{drift:E2}");
+        _output.WriteLine($"{name} library's computation, its P against its own Φ P0 Φᵀ, on the correlation matrix: " +
+                          $"{ioDrift:E2}");
+        _output.WriteLine($"{name} Φ alone, Φ P0 Φᵀ of the library against GMAT's, on the correlation matrix: " +
+                          $"{phiOnly.Error:E2}, element ({phiOnly.Row}, {phiOnly.Column}) at " +
+                          $"{gmatCase.Offsets[phiOnly.Epoch]} s");
+
+        // The element (i, j) of Φ P0 Φᵀ is the product of the rows i and j of Φ whitened by P0, so its departure on the
+        // correlation matrix is bounded by the relative departures of these two rows in the metric of P0,
+        // e_i = √(δΦ_i P0 δΦ_iᵀ / (Φ_i P0 Φ_iᵀ)): large where the variance of the row is small against that of its
+        // block, whatever the departure of the block
+        var ioPhi = phi[phiOnly.Epoch];
+        var gmatPhi = gmat.Phi[phiOnly.Epoch + 1];
+        var gmatP = Propagated(gmatPhi, p0);
+        int row = phiOnly.Row, column = phiOnly.Column;
+        double rowI = WhitenedRowError(ioPhi, gmatPhi, p0, row);
+        double rowJ = WhitenedRowError(ioPhi, gmatPhi, p0, column);
+        _output.WriteLine($"{name} Φ alone at the worst element: rows {row} and {column} whitened by P0 departing by " +
+                          $"{rowI:E2} and {rowJ:E2}; Φ per block {StmMeasures.WorstBlockError(ioPhi, gmatPhi):E2}; " +
+                          $"σ of the rows {System.Math.Sqrt(gmatP[7 * row]):E3} and {System.Math.Sqrt(gmatP[7 * column]):E3}, " +
+                          $"largest σ of their blocks {LargestSigma(gmatP, row):E3} and {LargestSigma(gmatP, column):E3}");
+        Assert.True(phiOnly.Error <= 1.0001 * (rowI + rowJ), $"{name} the bound of the whitened rows");
+
+        // The parts close: the departure of P is within the sum of its parts (design of #408, section 2)
+        Assert.True(pCorrelation <= 1.0001 * (drift + ioDrift + phiOnly.Error),
+            $"{name} P departs by {pCorrelation:E2}, above its parts {drift:E2} + {ioDrift:E2} + {phiOnly.Error:E2}");
         Assert.True(pRelative < pBound, $"{name} P {pRelative:E2}");
         Assert.True(pCorrelation < pCorrelationBound, $"{name} P on the correlation matrix {pCorrelation:E2}");
 
@@ -427,20 +476,54 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
 
     // max |ΔP_ij| / √(P_ii P_jj), with the diagonal of the expected matrix: the error on the correlation matrix,
     // independent of the units of the blocks (C6, #387)
-    private static double CorrelationError(double[] actual, double[] expected)
+    private static double CorrelationError(double[] actual, double[] expected) =>
+        WorstCorrelationElement(actual, expected, 0).Error;
+
+    // The worst element of CorrelationError, with where it falls
+    private static CorrelationElement WorstCorrelationElement(double[] actual, double[] expected, int epoch)
     {
-        double worst = 0.0;
+        var worst = new CorrelationElement(0.0, 0, 0, epoch);
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
                 double scale = System.Math.Sqrt(expected[7 * i] * expected[7 * j]);
-                worst = System.Math.Max(worst, System.Math.Abs(actual[6 * i + j] - expected[6 * i + j]) / scale);
+                double error = System.Math.Abs(actual[6 * i + j] - expected[6 * i + j]) / scale;
+                if (error > worst.Error)
+                {
+                    worst = new CorrelationElement(error, i, j, epoch);
+                }
             }
         }
 
         return worst;
     }
+
+    // √(δΦ_i P0 δΦ_iᵀ / (Φ_i P0 Φ_iᵀ)), δΦ = actual − expected, Φ the expected
+    private static double WhitenedRowError(double[] actual, double[] expected, double[] p0, int row)
+    {
+        double departure = 0.0, variance = 0.0;
+        for (int k = 0; k < 6; k++)
+        {
+            for (int m = 0; m < 6; m++)
+            {
+                double d = (actual[6 * row + k] - expected[6 * row + k]) * (actual[6 * row + m] - expected[6 * row + m]);
+                departure += d * p0[6 * k + m];
+                variance += expected[6 * row + k] * p0[6 * k + m] * expected[6 * row + m];
+            }
+        }
+
+        return System.Math.Sqrt(departure / variance);
+    }
+
+    // The largest σ of the position (rows 0 to 2) or velocity (rows 3 to 5) block of a covariance
+    private static double LargestSigma(double[] covariance, int row)
+    {
+        int first = row < 3 ? 0 : 3;
+        return System.Math.Sqrt(Enumerable.Range(first, 3).Max(i => covariance[7 * i]));
+    }
+
+    private readonly record struct CorrelationElement(double Error, int Row, int Column, int Epoch);
 
     private static double Distance(double[] a, double[] b, int offset)
     {
