@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 /// NRLMSISE-00 (Naval Research Laboratory Mass Spectrometer and Incoherent Scatter Radar)
 /// is an empirical model of Earth's atmosphere from ground to space.
 /// </remarks>
-public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel
+public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensityDiscontinuities
 {
     // The default 3 hr AP indices, one instance: the model only reads them.
     private static readonly ApArray DefaultApArray = ApArray.Default;
@@ -152,6 +152,23 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel
     {
         return GetDensity(altitude, geodeticLatitude, geodeticLongitude, epoch);
     }
+
+    /// <summary>
+    /// The altitudes above which the model drops the mixing of a species (<c>altl</c>, 160 to 450 km), where the density
+    /// jumps, when flag 15 is on; none when it is off (#413).
+    /// </summary>
+    ReadOnlySpan<double> IDensityDiscontinuities.DensityDiscontinuities =>
+        MixingCutoffsApply ? NRLMSISE00.MixingCutoffAltitudes : ReadOnlySpan<double>.Empty;
+
+    /// <summary>
+    /// The interval between the mixing cutoffs in which the model places an altitude, from the altitude in km as the model
+    /// takes it (<see cref="NrlmsiseModelInput.FromSi(int, double, double, double, double, double, double, double, double, ApArray)"/>).
+    /// </summary>
+    int IDensityDiscontinuities.DensityInterval(double altitude) =>
+        MixingCutoffsApply ? NRLMSISE00.MixingInterval(altitude / 1000.0) : 0;
+
+    // Flag 15 on, as the model reads it (Tselec: Sw[15] = 1 when Switches[15] is 1)
+    private bool MixingCutoffsApply => _flags.Switches[15] == 1;
 
     private double GetDensity(double altitude, double geodeticLatitude, double geodeticLongitude, in Time epoch)
     {

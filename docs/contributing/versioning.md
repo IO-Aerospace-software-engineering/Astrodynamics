@@ -113,6 +113,15 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **Drag partials across the altitude cutoffs of NRLMSISE-00.** NRLMSISE-00 drops the mixing contribution of a species
+  above 160, 200, 240, 250, 300, 320 and 450 km (flag 15, as in its reference implementation), so its density jumps
+  there, by up to 1.8e-4. The density gradient of the drag partials, a central difference over about 4 m, added that
+  jump divided by its step whenever its stencil straddled one of these altitudes: the gradient was off by up to 230 %,
+  and RK7(8) with the state transition matrix in the step control (`IncludeInStepControl`) could stop after 100
+  rejections at its minimum step. There the gradient is now the one-sided difference on the side of the state, the
+  gradient of the model on that side (within 3.2e-8 of Ridders' derivative); elsewhere it is unchanged, bit for bit.
+  The trajectories do not depend on the partials and are unchanged.
+  [#413](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/413)
 - **Drag with the U.S. Standard Atmosphere 1976 or the Mars standard atmosphere without allocation.** Atmospheric drag
   built an atmospheric context (80 bytes) for each density with `EarthStandardAtmosphere` and
   `MarsStandardAtmosphere`, once for the acceleration and eight times for its partial derivatives: 720 bytes per

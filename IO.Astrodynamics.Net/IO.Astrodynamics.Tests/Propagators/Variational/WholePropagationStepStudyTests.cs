@@ -48,7 +48,14 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// given, about 1e-9 m from the start through the Keplerian elements before, and the sweep became 1.4e-3, 7.2e-4,
 /// 2.4e-4, 1.1e-5, 1.3e-4, 4.7e-5 from 0.1 % to 30 %; on <c>main</c> before the fix, the start of the reference moved by
 /// 2e-9 m along x alone took it from 3.7e-3, 1.8e-4, 2.3e-4, 1.3e-4, 3.4e-5, 1.8e-5 to 2.1e-2, 7.0e-5, 2.4e-5, 8.1e-5,
-/// 7.2e-6, 1.5e-5 (H3 review of #399), the noise of the reference, so no step is on a plateau there. The study evaluates the end of the arc, while F1 asserts
+/// 7.2e-6, 1.5e-5 (H3 review of #399), the noise of the reference, so no step is on a plateau there. Since #413
+/// (2026-10-20) Ψ_Cd of the eclipsing case is held at its chosen step to a record instead of the factor of 2 (decision of
+/// S. Guillet, 2026-10-20): its references fire the burn of the tested propagation in open loop, whose epoch moves at the
+/// level of the noise with the steps of the variational equations, and moving that burn by one tick of 100 ns reshuffles
+/// the sweep (from 5 % to 30 %: 2.8e-7, 3.0e-7, 1.1e-8, 1.5e-7 as tested; 2.7e-7, 3.7e-7, 2.2e-7, 3.5e-7 one tick
+/// earlier; 9.4e-7, 8.0e-7, 4.3e-7, 2.8e-7 one tick later), its tested Ψ_Cd unchanged to 3e-11. The record is twice the
+/// worst at 30 % over seven burns from −20 to +20 ticks (3.5e-7), rounded up at the second significant digit. The study
+/// evaluates the end of the arc, while F1 asserts
 /// over the arc: <c>StmValidationTests</c> holds Ψ over the arc relative to its largest value, which does not depend on
 /// the step of the reference. To write the curves, set <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test writes
 /// <c>whole_propagation_step_study_{case}.csv</c> there (quantity, step, error).
@@ -101,11 +108,17 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
 
         // Act and assert
         Study(eclipsing, solution, (start, cd, cr, tolerance) =>
-            _cases.PropagateEclipsingReference(NaifId - 1, start, openLoop, cd, cr, tolerance), assertPsiCr: false);
+            _cases.PropagateEclipsingReference(NaifId - 1, start, openLoop, cd, cr, tolerance), assertPsiCr: false,
+            psiCdRecord: EclipsingPsiCdRecord);
     }
 
+    // Ψ_Cd of the eclipsing case at its chosen step: twice the worst of seven open-loop burns moved by −20 to +20 ticks,
+    // rounded up at the second significant digit (decision of S. Guillet, 2026-10-20; remarks of the class)
+    private const double EclipsingPsiCdRecord = 7.0e-7;
+
     private void Study(ReferenceCase referenceCase, PropagationSolution solution,
-        Func<StateVector, double, double, double, PropagationSolution> reference, bool assertPsiCr = true)
+        Func<StateVector, double, double, double, PropagationSolution> reference, bool assertPsiCr = true,
+        double? psiCdRecord = null)
     {
         var y = StmMeasures.Y(solution, referenceCase.Window.EndDate);
         var rows = new List<(string Quantity, double Step, double Error)>();
@@ -156,7 +169,16 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
         double atSpecificationTolerance = rows.Where(r => r.Quantity == "Phi_1e-13").Min(r => r.Error);
         Assert.True(atReferenceTolerance <= atSpecificationTolerance,
             $"the reference at 1e-14 resolves {atReferenceTolerance:E2}, at 1e-13 {atSpecificationTolerance:E2}");
-        AssertOnThePlateau(rows, "Psi_Cd", referenceCase.DragCoefficientStep);
+        if (psiCdRecord.HasValue)
+        {
+            double atChosen = rows.Single(r => r.Quantity == "Psi_Cd" && r.Step == referenceCase.DragCoefficientStep).Error;
+            Assert.True(atChosen < psiCdRecord.Value, $"Psi_Cd: {atChosen:E2} at the chosen step");
+        }
+        else
+        {
+            AssertOnThePlateau(rows, "Psi_Cd", referenceCase.DragCoefficientStep);
+        }
+
         if (assertPsiCr)
         {
             AssertOnThePlateau(rows, "Psi_Cr", referenceCase.ReflectivityCoefficientStep);
