@@ -122,7 +122,8 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   model 69.2 s late (in 2021), up to 2.8e-3 on the density at 400 km. The epoch is now converted to UTC, and the seconds
   of the day are taken to the 100 ns tick instead of the millisecond. An epoch given in UTC gives the same density, to
   the rounding of the seconds of the day; the LEO case with drag and SRP of the golden tests moves by 1.06 m after 3 h on
-  top of the geodetic fix. [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)
+  top of the geodetic fix. UT1 is not used: UTC stands for it, and the 0.9 s that UT1 − UTC can reach move the density
+  by 3.6e-5 at most at 400 km. [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)
 - **Drag partials across the altitude cutoffs of NRLMSISE-00.** NRLMSISE-00 drops the mixing contribution of a species
   above 160, 200, 240, 250, 300, 320 and 450 km (flag 15, as in its reference implementation), so its density jumps
   there, by up to 1.8e-4. The density gradient of the drag partials, a central difference over about 4 m, added that

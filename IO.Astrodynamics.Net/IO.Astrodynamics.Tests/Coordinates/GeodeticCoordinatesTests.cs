@@ -14,7 +14,8 @@ namespace IO.Astrodynamics.Tests.Coordinates;
 /// The exact geodetic conversions (#411) against CSPICE <c>georec_c</c>/<c>recgeo_c</c> and SOFA
 /// <c>iauGd2gce</c>/<c>iauGc2gde</c>: <c>Data/GeodeticReference/geodetic_reference.json</c>, written by
 /// <c>tools/geodetic_reference/geodetic_ref.c</c> on the Earth, Mars, the Moon (radii of <c>pck00011.tpc</c>) and the
-/// prolate comet 103P/Hartley 2 (1000041), from −5 km to 384 400 km of altitude, and inside the evolute.
+/// prolate comet 103P/Hartley 2 (1000041), from −5 km to 384 400 km of altitude, and inside the evolute, where the
+/// reference is the nearest foot point in binary128.
 /// </summary>
 public class GeodeticCoordinatesTests
 {
@@ -34,7 +35,7 @@ public class GeodeticCoordinatesTests
         Vector3 SpiceXyz, double[] SpiceGeodetic, Vector3? SofaXyz, double[] SofaGeodetic);
 
     private sealed record InteriorPoint(string Body, double A, double F, Vector3 Xyz, double[] SpiceGeodetic,
-        Vector3 SpiceBack);
+        Vector3 SpiceBack, double[] ExactGeodetic);
 
     private static (IReadOnlyList<GridPoint>, IReadOnlyList<InteriorPoint>) Load()
     {
@@ -51,7 +52,8 @@ public class GeodeticCoordinatesTests
         var interior = document.RootElement.GetProperty("interior").EnumerateArray().Select(p => new InteriorPoint(
             p.GetProperty("body").GetString(), p.GetProperty("equatorial_radius").GetDouble(),
             p.GetProperty("flattening").GetDouble(), Vector(p.GetProperty("xyz")),
-            Numbers(p.GetProperty("spice_geodetic")), Vector(p.GetProperty("spice_back")))).ToArray();
+            Numbers(p.GetProperty("spice_geodetic")), Vector(p.GetProperty("spice_back")),
+            Numbers(p.GetProperty("exact_geodetic")))).ToArray();
         return (grid, interior);
     }
 
@@ -179,9 +181,10 @@ public class GeodeticCoordinatesTests
     public void InsideTheEvolute_TheGeodeticPointGivesThePositionBack()
     {
         // Arrange: Cartesian points from the centre to half the equatorial radius, where several normals to the
-        // ellipsoid meet; the geodetic coordinates must give the position back, and agree with SPICE's
+        // ellipsoid meet; the geodetic coordinates must give the position back, and be those of the nearest foot point,
+        // computed in binary128 by tools/geodetic_reference/geodetic_ref.c (ExactGeodetic)
         var interior = Reference.Value.Interior;
-        double closure = 0.0, latitude = 0.0, altitude = 0.0;
+        double closure = 0.0, latitude = 0.0, altitude = 0.0, spiceLatitude = 0.0;
 
         // Act
         foreach (var p in interior)
@@ -192,22 +195,25 @@ public class GeodeticCoordinatesTests
             closure = System.Math.Max(closure, (back - p.Xyz).Magnitude() / p.A);
             if (!(p.F == 0.0 && p.Xyz.Magnitude() == 0.0))
             {
-                // Every latitude holds at the centre of a sphere: SPICE gives 0, the library π/2 as on an ellipsoid
-                latitude = System.Math.Max(latitude, System.Math.Abs(geodetic.Latitude - p.SpiceGeodetic[1]));
+                // Every latitude holds at the centre of a sphere: the reference gives 0, the library π/2 as on an
+                // ellipsoid
+                latitude = System.Math.Max(latitude, System.Math.Abs(geodetic.Latitude - p.ExactGeodetic[0]));
+                spiceLatitude = System.Math.Max(spiceLatitude, System.Math.Abs(p.SpiceGeodetic[1] - p.ExactGeodetic[0]));
             }
 
-            altitude = System.Math.Max(altitude, System.Math.Abs(geodetic.Altitude - p.SpiceGeodetic[2]) / p.A);
+            altitude = System.Math.Max(altitude, System.Math.Abs(geodetic.Altitude - p.ExactGeodetic[1]) / p.A);
         }
 
         // Assert
-        _output.WriteLine($"Inside the evolute, {interior.Count} points: closure {closure:E2} of a; against SPICE " +
-                          $"latitude {latitude:E2} rad, altitude {altitude:E2} of a");
-        // Measured 2026-10-19: closure 1.8e-15 of a, altitude 1.8e-15 of a. The latitude departs from SPICE's by
-        // 2.4e-10 rad, SPICE's: near the evolute the height is stationary in the latitude, so the latitude is
-        // ill-conditioned, and SPICE's own closure there (georec_c of its recgeo_c) is 1.9e-12 of a against the
-        // library's 1.8e-15; a record at twice the measurement
+        _output.WriteLine($"Inside the evolute, {interior.Count} points: closure {closure:E2} of a; against the " +
+                          $"nearest foot point, latitude {latitude:E2} rad, altitude {altitude:E2} of a; SPICE's " +
+                          $"latitude {spiceLatitude:E2} rad");
+        // Measured 2026-10-20: closure 1.8e-15 of a; against the nearest foot point, latitude 2.8e-16 rad and altitude
+        // 1.8e-15 of a. SPICE's recgeo_c departs from that foot point by up to 2.4e-10 rad, near the equatorial plane
+        // of the Earth and Mars (1e-3° of geocentric latitude), where its own closure (georec_c of its recgeo_c) is
+        // 1.9e-12 of a: the departure is the error of its iteration, the latitude being resolved to 2.8e-16 rad there
         Assert.True(closure < 4e-15, $"closure {closure:E2}");
-        Assert.True(latitude < 5e-10, $"latitude {latitude:E2}");
+        Assert.True(latitude < 4e-15, $"latitude {latitude:E2}");
         Assert.True(altitude < 4e-15, $"altitude {altitude:E2}");
     }
 
@@ -224,6 +230,24 @@ public class GeodeticCoordinatesTests
         Assert.Equal(System.Math.Atan2(-4.0, 3.0), geodetic.Longitude, 15);
         Assert.Equal(System.Math.Atan2(1.2e23, 5e22), geodetic.Latitude, 15);
         Assert.Equal(position.Magnitude(), geodetic.Altitude);
+    }
+
+    [Theory]
+    [InlineData(-7e6, 0.0, 1e5, System.Math.PI)]
+    [InlineData(-7e6, -0.0, 1e5, System.Math.PI)]
+    [InlineData(0.0, 0.0, 6.4e6, 0.0)]
+    [InlineData(-0.0, 0.0, 6.4e6, 0.0)]
+    [InlineData(-0.0, -0.0, -6.4e6, 0.0)]
+    [InlineData(7e6, -0.0, 1e5, 0.0)]
+    public void FromBodyFixed_TheLongitudeIsInTheHalfOpenInterval_AndZeroOnTheAxis(double x, double y, double z,
+        double expected)
+    {
+        // Act: the signed zeros, on which atan2 gives −π or ±π
+        var geodetic = GeodeticCoordinates.FromBodyFixed(new Vector3(x, y, z), 6378136.6, 1.0 / 298.257);
+
+        // Assert: (−π, π], and 0 (not −0) on the rotation axis
+        Assert.Equal(expected, geodetic.Longitude);
+        Assert.False(double.IsNegative(geodetic.Longitude));
     }
 
     [Theory]

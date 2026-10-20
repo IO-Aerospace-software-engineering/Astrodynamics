@@ -247,7 +247,7 @@ mode, with the same integrator. Two tests are applied every 10 min up to 6 h, at
 |------|---------------------------|----------------------|--------------------------------------|------|
 | R1 | 1.38 at 10 min, 0.29 at 24 h: passes up to 24 h | p = 0.058 (1.646 h) | up to 1.83 h; fails from 2.0 h (p = 1.9e-4) | `CovarianceMonteCarloTests` |
 | R2 | 1.89: passes up to 24 h | p = 0.032 (1.543 h) | up to 1.67 h; fails from 1.83 h (p = 5.3e-4) | `CovarianceMonteCarloLongTests` |
-| R2, Cd sampled (σ = 0.22) | 2.26: passes up to 24 h | p = 0.34 | up to 2.33 h; fails from 2.5 h | `CovarianceMonteCarloLongTests` |
+| R2, Cd sampled (σ = 0.22) | 2.26: passes up to 24 h | p = 0.37 | up to 2.33 h; fails from 2.5 h | `CovarianceMonteCarloLongTests` |
 | R3, Cr sampled (σ = 0.15) | 2.14: passes up to 24 h | p = 0.011 (1.646 h) | up to 1.67 h; fails from 1.83 h (p = 3.2e-3) | `CovarianceMonteCarloLongTests` |
 
 With Cd or Cr sampled, P holds the coefficient as a consider parameter, `Ψc Pp Ψcᵀ`, so the element-wise test also
@@ -263,9 +263,16 @@ encounter plane, have the band 0.95 to 1.05.
 | Case | Ratios of S to P, state, up to 1 h | Largest at one revolution | 6 h | 24 h | Position, up to 6 h | Position, 24 h (radial alone) |
 |------|------------------------------------|---------------------------|-----|------|---------------------|-------------------------------|
 | R1 | 0.947 to 1.050 | 1.16 | 350 | 1.3e6 | 0.96 to 1.03 | 3.29 (1.08) |
-| R2 | 0.947 to 1.040 | 1.15 | 609 | 2.4e6 | 0.95 to 1.04 | 4.99 (1.17) |
-| R2, Cd sampled | 0.954 to 1.056 | 1.05 | 2.17 | 87 | 0.96 to 1.05 | 3.93 (1.11) |
+| R2 | 0.947 to 1.040 | 1.15 | 609 | 2.4e6 | 0.95 to 1.04 | 5.00 (1.17) |
+| R2, Cd sampled | 0.954 to 1.056 | 1.05 | 2.16 | 87 | 0.96 to 1.05 | 3.96 (1.11) |
 | R3, Cr sampled | 0.954 to 1.056 | 1.13 | 362 | 1.3e6 | 0.96 to 1.05 | 4.32 (1.11) |
+
+The figures of R2 were re-measured on 2026-10-20 after
+[#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411) and
+[#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409), which move the density of the
+drag cases: with Cd sampled, p at one revolution from 0.34 to 0.37, the largest ratio at 6 h from 2.17 to 2.16, the
+position at 24 h from 3.93 to 3.96, the mean radial offset at 24 h from −198 m against −186 m to −200 m against
+−188 m; without, the position at 24 h from 4.99 to 5.00. The other figures are unchanged.
 
 - Up to about one revolution S is P along every direction of the state, within the sampling noise. From about one
   revolution, the sample variance along one direction of the state leaves its band and grows by orders of magnitude
@@ -281,8 +288,8 @@ the thin direction of P tolerates longer: the test of R2 with Cd sampled even pa
 failing for good from 3.5 h. The departure is the curvature of the orbit. The along-track spread (RMS 2.8 km at 2 h,
 38 km at 24 h for R1) lies on the curved orbit, so the runs sit below the straight line of the linear model, and fill
 the thin direction of P. Their mean radial offset follows −E[δT²] / (2 r) once it exceeds the sampling noise, about
-1.4 m: for R1, −8.9 m against −6.8 m at 6 h and −104 m against −102 m at 24 h; at 24 h, −129 m against −124 m for R2
-and −104 m against −102 m for R3. At the boundary of the domain the offset is still within that noise (+1.46 m against
+1.4 m: for R1, −8.9 m against −6.8 m at 6 h and −104 m against −102 m at 24 h; at 24 h, −129 m against −124 m for R2,
+−200 m against −188 m for R2 with Cd sampled and −104 m against −102 m for R3. At the boundary of the domain the offset is still within that noise (+1.46 m against
 −0.54 m at 2.0 h for R1): there the evidence is the variance along the thin direction. P is very thin across the
 curve, so a few metres move the Mahalanobis distances far beyond their spread. Taken about the sample mean, or with S
 itself in place of P, the test fails from 2.2 h and 2.3 h for R1: the distribution itself is no longer Gaussian in
@@ -428,7 +435,7 @@ Beyond the conformance cases, the test suite compares the library with published
 | Central differences of whole propagations (F1), *Numerical Recipes* §5.7 | Φ per 3×3 block and Ψ over the arc on R1 to R5, across a maneuver, and with a reduced degree of the geopotential partials; the plateau of the steps | `StmValidationTests`, `ManeuverStmValidationTests`, `GeopotentialPartialsDegreeTests`, `WholePropagationStepStudyTests` | R1 1e-7, R2 to R5 1e-4 outside the penumbra (specification); see [State Transition Matrix and Covariance](#state-transition-matrix-and-covariance) |
 | Monte Carlo of the initial state (F3): Wishart variance (Anderson, 2003, §7.3) and Kolmogorov-Smirnov against χ²(6) (*Numerical Recipes* §14.3.3) | Propagated covariance against 5000 runs, R1 to R3 | `CovarianceMonteCarloTests`, `CovarianceMonteCarloLongTests`, `KolmogorovSmirnovTests` | 4 standard deviations element-wise; α = 0.01 |
 | GMAT R2026a (H2), `GmatConsole` and GMAT's Python API | Φ per block over the arc on G1 to G6, Ψ_Cr and Ψ_Cd, P, the limit of GMAT's discrete process noise, and the partials of each force at the B7 states | `GmatReferenceTests`, `GmatPartialsTests`; the `stm` conformance case, `StmCaseTests` | G1 1e-10 on Φ, 1e-8 on P; the library's own computation to F1; the analytic partials to 1e-6 (B); the rest records at twice the measurement; see [Against GMAT](#against-gmat-h2) |
-| CSPICE N0067 `georec_c`/`recgeo_c` and IAU SOFA `iauGd2gce`/`iauGc2gde` (`tools/geodetic_reference`) | Geodetic to body-fixed Cartesian coordinates and back on the Earth, Mars, the Moon and the prolate comet 103P/Hartley 2, from −5 km to 384 400 km of altitude (3744 points), and inside the evolute near the centre (292 points); the topocentric coordinates of DSS-13 and the states of a custom site against SPICE | `GeodeticCoordinatesTests`, `PlanetocentricTests`, `PlanetodeticTests`, `SiteTests`, `ScenarioTests.PropagateSite` | Measured 2026-10-19: position 4.4e-16 of the distance, latitude 1.0e-15 rad, altitude 5.7e-16 of max(\|h\|, a); asserted at 1e-15 (latitude 2e-15); inside the evolute, SPICE's own closure is 1.9e-12 of a against the library's 1.8e-15 (latitude a record, 5e-10 rad) |
+| CSPICE N0067 `georec_c`/`recgeo_c` and IAU SOFA `iauGd2gce`/`iauGc2gde` (`tools/geodetic_reference`) | Geodetic to body-fixed Cartesian coordinates and back on the Earth, Mars, the Moon and the prolate comet 103P/Hartley 2, from −5 km to 384 400 km of altitude (3744 points), and inside the evolute near the centre (292 points, with the nearest foot point in binary128); the topocentric coordinates of DSS-13 and the states of a custom site against SPICE; the method of Gauss on observations built by SPICE from a reference orbit seen from the exact site (`iod_observations.c`) | `GeodeticCoordinatesTests`, `PlanetocentricTests`, `PlanetodeticTests`, `SiteTests`, `ScenarioTests.PropagateSite`, `InitialOrbitDeterminationTests.FromTheExactSite*` | Measured 2026-10-19: position 4.4e-16 of the distance, latitude 1.0e-15 rad, altitude 5.7e-16 of max(\|h\|, a); asserted at 1e-15 (latitude 2e-15); inside the evolute, against the nearest foot point computed in binary128 (`ExactGeodetic` of `geodetic_ref.c`, measured 2026-10-20), latitude 2.8e-16 rad and altitude 1.8e-15 of a, asserted at 4e-15; SPICE departs from that foot point by up to 2.4e-10 rad, its own closure there being 1.9e-12 of a against the library's 1.8e-15; the site of the Gauss observations within 2.8e-4 m of SPICE's, the determined state 9.58e3 m and 77.5 m/s from the reference orbit at 3 min of spacing, the error of the method, of second order in the spacing (ratio 4.00 per halving), held to twice that |
 | IAU SOFA, release 2023-10-11 | Frame bias, precession, nutation, CIP, CIO locator, Earth rotation angle, GCRS to CIRS and to TIRS | `Iau2006ModelTests`, `Iau2006FundamentalArgumentsTests`, `FrameChainIntegrationTests`, `Iau2006SofaSweepTests` (300 epochs, 1990 to 2040), with reference values from the harnesses in `tools/sofa_reference` | From 1e-14 rad (precession angles) to 5e-9 rad (IAU 2000B against SOFA's IAU 2000A); see [Standards & Units](../standards-and-units.md#measured-agreement-with-sofa) |
 
 ## See Also

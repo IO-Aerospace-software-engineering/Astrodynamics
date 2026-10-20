@@ -70,7 +70,8 @@ internal static class GeodeticCoordinates
         CheckEllipsoid(equatorialRadius, flattening);
         double x = position.X, y = position.Y, z = position.Z;
         double distanceToAxis = System.Math.Sqrt(x * x + y * y);
-        double longitude = System.Math.Atan2(y, x);
+        // atan2 of the signed zeros would give −π for y = −0 and x < 0, and ±π on the axis for x = −0
+        double longitude = y == 0.0 ? (x < 0.0 ? System.Math.PI : 0.0) : System.Math.Atan2(y, x);
         double distance = System.Math.Sqrt(distanceToAxis * distanceToAxis + z * z);
 
         double e2 = flattening * (2.0 - flattening);
