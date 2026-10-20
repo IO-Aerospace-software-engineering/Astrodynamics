@@ -1,0 +1,63 @@
+id: "propagator_1sd_geo_twobody_004"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-03-31"
+description: >
+  Geosynchronous orbit validation, equatorial case.
+  Analytical GEO orbit at inclination 0 degrees, computed from
+  Kepler's third law using Earth's sidereal rotation period
+  (86164.0998101 s from SPICE IAU_EARTH at J2000) and
+  GM = 398600.4355070226 km^3/s^2 (SPICE DE440).
+  Two-body propagation for one sidereal period verifies the
+  satellite returns to its initial state (period correctness).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "EME2000"   # GMAT EarthMJ2000Eq; differs from ICRF by the ~23 mas frame bias
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2025-06-15T00:00:00.000 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [42164.172439443049, 0.0, 0.0]
+    velocity_km_s: [0.0, 3.0746599725961645, 0.0]
+  propagation_window:
+    start: "2025-06-15T00:00:00.000 UTC"
+    end:   "2025-06-15T23:56:04.0998101 UTC"
+  central_body: "Earth"
+  geopotential_degree: 0
+  geopotential_model: "none"
+  perturbation_bodies: []
+  force_model:
+    drag: false
+    srp: false
+  step_size_s: 60.0
+  notes:
+    gm_km3_s2: 398600.4355070226
+    sidereal_period_s: 86164.0998101
+    geo_sma_km: 42164.172439443049
+    geo_velocity_km_s: 3.0746599725961645
+    propagation_duration_s: 86164.0998101
+    description: >
+      Equatorial circular geosynchronous orbit. Satellite placed
+      on +X axis of ICRF (RAAN=0, AOP=0, TA=0). After exactly one
+      sidereal rotation period with two-body dynamics, the state
+      should return to initial.
+
+tolerances_override:
+  position_km:
+    abs_tol: 1.0e-4
+    rel_tol: 1.0e-9
+    justification: >-
+      Two-body golden from Kepler's third law (GM of DE440): the only differences come from the
+      numerical integration of the runner. IO.Astrodynamics 10.0.0, runner report of 2026-10-04
+      (RK7(8), tolerances 1e-11): largest component delta 8.1e-5 km (8 cm). abs_tol is 1.2 times
+      that.
+  velocity_km_s:
+    abs_tol: 1.0e-8
+    rel_tol: 1.0e-9
+    justification: >-
+      Two-body golden, as for the position. IO.Astrodynamics 10.0.0, runner report of 2026-10-04:
+      largest component delta 5.9e-9 km/s. abs_tol is 1.7 times that.

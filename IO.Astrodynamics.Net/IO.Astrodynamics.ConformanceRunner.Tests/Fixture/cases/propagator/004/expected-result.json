@@ -1,0 +1,23 @@
+{
+  "id": "propagator_1sd_geo_twobody_004",
+  "category": "propagator",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "analytical",
+    "tool_version": "Kepler-3rd-law",
+    "kernel": "none",
+    "gravity_model": "point-mass Earth, GM = 398600.4355070226 km^3/s^2 (SPICE DE440)",
+    "perturbations": "None (two-body only)",
+    "integrator": "PrinceDormand78 (RK7/8), accuracy 1e-13, MaxStep 60s",
+    "date": "2026-03-31",
+    "reference_frame": "EarthMJ2000Eq"
+  },
+  "outputs": {
+    "final_x_km": 42164.172439443049,
+    "final_y_km": 0.0,
+    "final_z_km": 0.0,
+    "final_vx_km_s": 0.0,
+    "final_vy_km_s": 3.0746599725961645,
+    "final_vz_km_s": 0.0
+  }
+}
