@@ -97,6 +97,32 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **Geodetic coordinates above and below the surface.** `Planetocentric.ToPlanetodetic` took the geodetic latitude
+  from the relation of the surface, tan φ = tan φc / (1 − f)², at any altitude, and the altitude from that latitude:
+  above the surface the latitude came out too large by about f sin 2φ · h / (a + h). On the Earth the altitude was up
+  to 5.2 km off between 100 and 800 km (1.7 km at 400 km and 51.5°), 234 km at GEO, and 33 m within 5 km of the
+  surface; drag read its density at that altitude, up to 2.8 % too low in LEO at mid-latitudes. The conversion is now
+  the exact closed form of Vermeille (2002) with the changes of Karney (2011), for oblate, spherical and prolate bodies,
+  and agrees with CSPICE `recgeo_c` to 1.0e-15 rad and 5.7e-16 of the altitude scale; drag takes it directly from the
+  body-fixed position. Every propagation with drag changes: 118 m after 3 h on the LEO case with drag and SRP of the
+  golden tests. The geodetic coordinates of a site read from a kernel, and of a state (the coordinate constraints of the
+  geometry finder, the `ephemeris` command of the CLI) change with it: DSS-13 moves from 1073.24 m and 35.24719501° to
+  1070.85 m and 35.24716449°, its topocentric frame by 3.05e-5° in latitude, its azimuths and elevations by up to
+  4e-5°. [#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411)
+- **Custom sites above the surface and on other bodies than the Earth.** `Planetodetic.ToPlanetocentric`, which places
+  every site given by geodetic coordinates, returned the planetocentric latitude of the surface point below the site
+  with the radius of the site itself, and took N with the WGS84 e² (0.00669437999014) whatever the body. A site at 1 km
+  of altitude on the Earth was 1.1 to 3.4 m away from its place (16.8 m at 5 km, 1.6 cm at most at the surface); on
+  Mars and the Moon every site was kilometres away (8.3 km and 5.7 km). The conversion is now the exact closed form
+  with the e² of the body, and agrees with CSPICE `georec_c` to 4.4e-16 of the distance; the ephemeris, horizontal
+  coordinates, illumination angles and tracking data of custom sites change with it.
+  [#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411)
+- **NRLMSISE-00 in universal time.** `Nrlmsise00Model` read the day of year and the seconds of the day from the calendar
+  of the epoch in its own time scale and gave them to the model as UT: a propagation, whose epochs are TDB, ran the
+  model 69.2 s late (in 2021), up to 2.8e-3 on the density at 400 km. The epoch is now converted to UTC, and the seconds
+  of the day are taken to the 100 ns tick instead of the millisecond. An epoch given in UTC gives the same density, to
+  the rounding of the seconds of the day; the LEO case with drag and SRP of the golden tests moves by 1.06 m after 3 h on
+  top of the geodetic fix. [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)
 - **Drag with the U.S. Standard Atmosphere 1976 or the Mars standard atmosphere without allocation.** Atmospheric drag
   built an atmospheric context (80 bytes) for each density with `EarthStandardAtmosphere` and
   `MarsStandardAtmosphere`, once for the acceleration and eight times for its partial derivatives: 720 bytes per
