@@ -323,7 +323,7 @@ departure from the library, hence 2.5 s.
 | Earth orientation | `ITRF93`, `earth_latest_high_prec.bpc` | IAU-1976/FK5 with GMAT's EOP file | about 2.6e-8 rad at the epoch of the cases |
 | Third bodies | `de440s.bsp` | the same SPK through SPICE, the same GM | none measurable |
 | SRP | cannonball, two-circle shadow | spherical, the same flux at 1 AU, AU, Earth and Sun radii | Φ: GMAT leaves out the derivative of the shadow function (its own warning, quoted under the Φ table) |
-| Drag | NRLMSISE-00, F10.7 = F10.7A = 150, Ap = 4 | NRLMSISE-00, the same F10.7, Kp = 1 (ap = 4) | density of the library from 2.8 % lower to 0.13 % higher along G6, the departure growing with the latitude: the geodetic altitude of the library, up to 1.7 km too high above the surface ([#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411)); with exact geodetic coordinates, within 2.2e-3, the size of its TDB taken as UT ([#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)) |
+| Drag | NRLMSISE-00, F10.7 = F10.7A = 150, Ap = 4 | NRLMSISE-00, the same F10.7, Kp = 1 (ap = 4) | density within 5.0e-6 along G6 (mean −4.8e-7). Before [#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411) and [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409) were fixed, the library's was 2.8 % lower to 0.13 % higher: its geodetic altitude, up to 1.7 km too high above the surface, then its TDB taken as UT (2.2e-3) |
 
 **Φ.** Worst block over the arc (every hour and at the end), relative Frobenius norms. Total: the library against GMAT.
 Models: the central differences of whole propagations of the library against GMAT's own, with the same steps (no
@@ -336,7 +336,7 @@ variational equation enters). Computation: each tool's Φ against its own centra
 | G3 | 4.9e-12 | 1.8e-8 | 1.3e-8 | 4.6e-9 | 58 µm, 2.8e-9 m/s |
 | G4 | 3.8e-8 | 6.0e-8 | 5.2e-8 | 2.1e-8 | 25 cm, 1.8e-4 m/s |
 | G5 | 1.0e-4 | 1.9e-7 | 9.9e-5 | 5.2e-7 | 8.2 mm, 9.4e-6 m/s |
-| G6 | 6.9e-4 | 7.1e-4 | 5.3e-5 | 4.6e-8 | 3.9 km, 4.4 m/s |
+| G6 | 5.4e-5 | 9.0e-7 | 5.3e-5 | 4.9e-8 | 11 cm, 1.3e-4 m/s |
 
 - On G1 to G4 the two tools agree within what central differences of whole propagations resolve, 1e-8 to 6e-8, which
   bounds the model column; on G1 and G3 the total, 5e-12 to 8e-12, is the integration error of the two tools.
@@ -347,14 +347,14 @@ variational equation enters). Computation: each tool's Φ against its own centra
   currently contain SRP contributions from shadow partial derivatives when using Spherical SRP."* On this point the
   R2026a build departs from its Mathematical Specification, whose SRP partials include the derivative of the shadow
   function (§4.2.4 and §4.2.5, eqs. 4.79 and 4.83).
-- G6: the densities differ, so the departure is the models'; the library's Φ holds its own central differences to
-  4.6e-8. GMAT's computation, 5.3e-5, is mostly GMAT's step error at 10 s: its Φ moves by 4.2e-5 between 10 s and 5 s.
-  G6 and the drag partials in position are records until #411 and #409 are fixed (decision of S. Guillet, 2026-10-19);
-  the density gate of 1e-3 is then measured again.
+- G6: the total departure is GMAT's computation, 5.3e-5, mostly GMAT's step error at 10 s: its Φ moves by 4.2e-5
+  between 10 s and 5 s. The models agree to 9.0e-7, the library's Φ holds its own central differences to 4.9e-8. Before
+  #411 and #409 were fixed, the densities differed and the models departed by 7.1e-4 (total 6.9e-4, state 3.9 km).
 
 **Ψ**, over the arc relative to its largest value, against GMAT's central differences on the coefficient (GMAT has no
 Ψ): Ψ_Cr of G5 5.5e-6 (position) and 7.9e-6 (velocity), the central differences of the two tools against each other
-4.1e-6 and 5.7e-6; Ψ_Cd of G6 1.3e-2, the density.
+4.1e-6 and 5.7e-6; Ψ_Cd of G6 7.7e-7 and 7.6e-7, the central differences of the two tools against each
+other 8.1e-7 and 8.0e-7 (1.3e-2 before #411 and #409, the density).
 
 **P**, from the correlated P0 of `CovariancePropagationTests` (σ 50, 200 and 30 m, 0.2, 0.05 and 0.03 m/s in RTN),
 over the arc: G1 4.4e-9 relative Frobenius, 4.5e-9 on the correlation matrix; G2 2.1e-8 and 1.3e-6. The departure on
@@ -398,12 +398,13 @@ best.
 | EGM2008 70×70 | 2.2e-12 (GEO) to 2.2e-10 (HEO perigee) | zero in both |
 | Moon, Sun | 3.0e-16 to 9.6e-16 | zero in both |
 | SRP, in sunlight | 3.0e-16 to 6.7e-16 | zero in both |
-| Drag, GMAT's scaled by the ratio of the accelerations | 3.5e-3 to 5.5e-3 | 5.5e-8 to 7.7e-8 |
+| Drag | 3.3e-3 to 3.6e-3 | 6.9e-8 to 3.6e-7 |
 
-The geopotential departure is the Earth orientation of the two tools. With the density ratio out, the drag partials
-agree in velocity; in position they keep the departure of the density gradients of the two NRLMSISE-00 (the geodetic altitude,
-#411). The analytic
-threshold of B (1e-6) is asserted wherever the models agree, the other figures as records at twice the measurement,
+The geopotential departure is the Earth orientation of the two tools. The drag acceleration agrees to 6.7e-8 to 4.0e-7
+and its velocity partials as well; in position the drag partials keep the departure of GMAT's density gradient, since
+the library's agrees with Ridders' reference to 5e-10 (B5). Before #411 and #409 were fixed, the drag partials were
+compared with GMAT's scaled by the ratio of the accelerations (4.3 % at the HEO perigee). The analytic threshold of B
+(1e-6) is asserted wherever the models agree, drag included; the other figures as records at twice the measurement,
 rounded up at the second significant digit.
 
 ## Reference Validations

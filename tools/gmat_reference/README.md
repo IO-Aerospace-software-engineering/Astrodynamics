@@ -93,8 +93,8 @@ departures are in `docs/guides/validation.md`):
 - **SRP.** Spherical model, the flux at 1 AU (`L☉ / (4π AU²)`) and the AU of the library, the Earth and Sun radii of its
   PCK. GMAT's Φ leaves out the derivative of the shadow function, which the library keeps: GMAT's own warning in the
   console logs of G5, against §4.2.4 and §4.2.5 of its Mathematical Specification.
-- **Drag.** NRLMSISE-00 with constant F10.7, F10.7A and Kp (ap 4). The densities of the two tools differ by up to 2.8 %
-  along the drag case; drag is compared at the B7 states with the density ratio taken out.
+- **Drag.** NRLMSISE-00 with constant F10.7, F10.7A and Kp (ap 4). The densities of the two tools agree to 5.0e-6
+  along the drag case since #411 and #409 (2.8 % before).
 - **Integrator.** PrinceDormand78 at the fixed step of each case: GMAT propagates the covariance at a fixed step only, and
   resolves Φ best there. GMAT adds its discrete process noise at every integration step, so the noise cases sweep the
   step itself.
