@@ -127,7 +127,7 @@ internal sealed class PropagationDynamics
     internal object SyncRoot => _lock;
 
     /// <summary>
-    /// The integrator of the propagation, for its settings only (<see cref="RK78Integrator.WithSameSettings"/>); null for
+    /// The integrator of the propagation, for its settings only (<see cref="Integrator.WithSameSettings"/>); null for
     /// dynamics built without it.
     /// </summary>
     internal RK78Integrator Integrator { get; init; }
