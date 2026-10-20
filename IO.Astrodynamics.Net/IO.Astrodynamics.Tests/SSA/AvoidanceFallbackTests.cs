@@ -44,17 +44,29 @@ public sealed class AvoidanceFallbackCase
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));
         Bodies = new CelestialItem[] { Earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+        PointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
         var orbit = new KeplerianElements(6778137.0, 0.001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.4, 1.1, 0.3, Earth,
             Start, Frames.Frame.ICRF).ToStateVector();
         ProtectedStart = ConjunctionCovarianceCase.WithRtnCovariance(orbit, new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 });
         ProtectedStartWithoutCovariance = orbit;
 
+        // Relative to the point-mass Earth, the central body of its propagation on its two-body orbit
         var reference = ReferenceCase.NewSpacecraft(-6700, ProtectedStart);
         Propagate(reference, true);
-        SecondaryAtTca = SecondaryNear(reference.GetEphemeris(Tca, Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector());
+        var secondary = SecondaryNear(reference.GetEphemeris(Tca, Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector());
+        SecondaryAtTca = new StateVector(secondary.Position, secondary.Velocity, PointMassEarth, Tca, secondary.Frame,
+            secondary.Covariance);
     }
 
     internal CelestialBody Earth { get; }
+
+    /// <summary>The Earth without geopotential, for the secondary object propagated on its two-body orbit.</summary>
+    internal CelestialBody PointMassEarth { get; }
+
+    /// <summary>The secondary spacecraft propagated in RK7(8) on its two-body orbit over the window.</summary>
+    internal PropagationSolution PropagateTwoBody(Spacecraft secondary) =>
+        secondary.Propagate(PropagationWindow, new CelestialItem[] { PointMassEarth }, new RK78Integrator(1e-12, 1e-12), false,
+            false, TimeSpan.FromSeconds(60.0));
 
     internal CelestialItem[] Bodies { get; }
 
@@ -163,8 +175,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var protectedCraft = AvoidanceFallbackCase.WithEngine(id, _case.ProtectedStart, out _);
         var protectedTrajectory = _case.Propagate(protectedCraft, rk78);
         var secondary = Secondary(id - 1);
-        var secondaryTrajectory = secondary.Propagate(AvoidanceFallbackCase.PropagationWindow, new CelestialItem[] { _case.Earth },
-            new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(60.0));
+        var secondaryTrajectory = _case.PropagateTwoBody(secondary);
         var encounter = ConjunctionAssessment.AnalyzeAll(new ProtectedSpacecraftProfile(protectedCraft), protectedTrajectory,
                 secondary, secondaryTrajectory, AvoidanceFallbackCase.ScreeningWindow, HeldInRtn)
             .OrderBy(e => e.EncounterState.MissDistanceMeters).First();
@@ -229,8 +240,8 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             referenceFirst.SetNextManeuver(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
                 option.BurnEpoch, option.DeltaVInertial, referenceEngine));
             reference.SetStandbyManeuver(referenceFirst);
-            _case.Propagate(reference, true);
-            AssertOptionIsItsReference(option, reference, secondary, true);
+            var referenceSolution = _case.Propagate(reference, true);
+            AssertOptionIsItsReference(option, reference, referenceSolution, secondary, true);
         }
     }
 
@@ -303,8 +314,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var secondaryAtStart = _case.SecondaryAtTca.ToStateVector(AvoidanceFallbackCase.Start);
         var secondary = ReferenceCase.NewSpacecraft(-6801, new StateVector(secondaryAtStart.Position, secondaryAtStart.Velocity,
             secondaryAtStart.Observer, secondaryAtStart.Epoch, secondaryAtStart.Frame, _case.ProtectedStart.Covariance));
-        secondary.Propagate(AvoidanceFallbackCase.PropagationWindow, new CelestialItem[] { _case.Earth },
-            new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(60.0));
+        _case.PropagateTwoBody(secondary);
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
             AvoidanceFallbackCase.ScreeningWindow);
         Assert.Equal(CovarianceSource.InitialStateHeldInRtn, encounter.EncounterState.ProtectedCovariance.Source);
@@ -379,17 +389,53 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         Assert.Equal(6, avoidance.Count);
         foreach (var option in avoidance.Take(2))
         {
-            var reference = AvoidanceFallbackCase.WithEngine(referenceId--, start, out var engine);
-            reference.SetStandbyManeuver(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
-                option.BurnEpoch, option.DeltaVInertial, engine));
-            _case.Propagate(reference, rk78);
-            AssertOptionIsItsReference(option, reference, secondary, rk78);
+            var (reference, referenceSolution) = rk78
+                ? BurnPropagatedFromTheStart(option, start, referenceId--)
+                : BurnPropagatedInTwoParts(option, start, referenceId--);
+            AssertOptionIsItsReference(option, reference, referenceSolution, secondary, rk78);
         }
     }
 
+    // In RK7(8), the spacecraft propagated from the start with the burn of the option, located by the event detection
+    private (Spacecraft, PropagationSolution) BurnPropagatedFromTheStart(AvoidanceOption option, StateVector start, int naifId)
+    {
+        var reference = AvoidanceFallbackCase.WithEngine(naifId, start, out var engine);
+        reference.SetStandbyManeuver(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start, option.BurnEpoch,
+            option.DeltaVInertial, engine));
+        return (reference, _case.Propagate(reference, true));
+    }
+
+    // By Velocity-Verlet, which executes a burn only at the end of a step while the burn of an option is off the grid of the
+    // steps: the spacecraft propagated from the start to the burn (the last step shortened to end there), then a new
+    // spacecraft, with its mass less the fuel of the option, from the state after the burn, each with forces of its own
+    private (Spacecraft, PropagationSolution) BurnPropagatedInTwoParts(AvoidanceOption option, StateVector start, int naifId)
+    {
+        var before = AvoidanceFallbackCase.WithEngine(naifId, start, out _);
+        before.Propagate(new Window(AvoidanceFallbackCase.Start, option.BurnEpoch), _case.Bodies, true, true,
+            AvoidanceFallbackCase.VelocityVerletStep);
+        var atBurn = before.GetEphemeris(option.BurnEpoch, _case.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var afterBurn = new StateVector(atBurn.Position, atBurn.Velocity + option.DeltaVInertial, _case.Earth, option.BurnEpoch,
+            Frames.Frame.ICRF);
+
+        // With the initial covariance held in RTN, as the option carries it
+        if (start.Covariance.HasValue)
+        {
+            afterBurn = new StateVector(afterBurn.Position, afterBurn.Velocity, afterBurn.Observer, afterBurn.Epoch, afterBurn.Frame,
+                afterBurn.RotateCovarianceFromRtn(start.RotateCovarianceToRtn(start.Covariance.Value)));
+        }
+        var after = ReferenceCase.NewSpacecraft(naifId - 50, afterBurn);
+        var tank = new FuelTank("tank" + -naifId, "model", "sn1", 100.0, 100.0 - option.FuelCostEstimateKilograms);
+        after.AddFuelTank(tank);
+        after.AddEngine(new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank));
+        var solution = after.Propagate(new Window(option.BurnEpoch, AvoidanceFallbackCase.PropagationWindow.EndDate),
+            _case.Bodies, true, true, AvoidanceFallbackCase.VelocityVerletStep);
+        return (after, solution);
+    }
+
     // The option against the reference spacecraft propagated from the start with its burn, analyzed with the covariance
-    // held in RTN
-    private void AssertOptionIsItsReference(AvoidanceOption option, Spacecraft reference, Spacecraft secondary, bool rk78)
+    // held in RTN: the state on the steps of the reference, the TCA, the miss distance and the probability of its analysis
+    private void AssertOptionIsItsReference(AvoidanceOption option, Spacecraft reference, PropagationSolution referenceSolution,
+        Spacecraft secondary, bool rk78)
     {
         var post = option.PostManeuverEncounter;
         var expected = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(reference), secondary,
@@ -397,9 +443,8 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             new ConjunctionAnalysisOptions { CovariancePropagation = null });
         var tca = post.EncounterState.Epoch;
         double tcaError = System.Math.Abs((tca - expected.EncounterState.Epoch).TotalSeconds);
-        double stateError = (post.ProtectedState.Position -
-                             reference.GetEphemeris(tca, _case.Earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position)
-            .Magnitude();
+        // The state on the steps of the reference; its analysis samples its ephemeris, interpolated between its outputs
+        double stateError = (post.ProtectedState.Position - referenceSolution.InterpolateAt(tca).position).Magnitude();
         double missError = System.Math.Abs(post.EncounterState.MissDistanceMeters - expected.EncounterState.MissDistanceMeters);
         double pcError = System.Math.Abs(post.CollisionRisk.ProbabilityOfCollision.Value - expected.CollisionRisk.ProbabilityOfCollision.Value) /
                          expected.CollisionRisk.ProbabilityOfCollision.Value;
@@ -408,10 +453,22 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
                           $"({pcError:E2}), fuel {option.FuelCostEstimateKilograms:E4} kg");
         Assert.Equal(AvoidanceTrajectory.Propagated, option.Trajectory);
         Assert.Equal(expected.EncounterState.ProtectedCovariance.Source, post.EncounterState.ProtectedCovariance.Source);
-        Assert.Equal(expected.EncounterState.ProtectedCovarianceAge, post.EncounterState.ProtectedCovarianceAge);
-        Assert.True(tcaError < 1e-2, $"{tcaError:E2} s");
-        Assert.True(stateError < 1.0, $"{stateError:E2} m");
-        Assert.True(pcError < 1e-2, $"{pcError:E2}");
+
+        if (post.EncounterState.ProtectedCovarianceAge.HasValue)
+        {
+            Assert.Equal((tca - AvoidanceFallbackCase.Start).Duration(), post.EncounterState.ProtectedCovarianceAge);
+        }
+
+        // Set on the measurement, about twice the largest departure (2026-10-20): in RK7(8) at 1e-13 the state 5.8e-6 m, the
+        // miss distance 4.5e-6 m and the Pc 6.2e-8 relative, the burn of the reference located by the event detection; by
+        // Velocity-Verlet at 1 s the state 1.8e-4 m, the miss distance 1.5e-4 m and the Pc 1.5e-6, the burn state of a
+        // trajectory passed to the analysis being its cubic Hermite interpolation (3.8e-8 m from the ephemeris of the
+        // spacecraft); the TCA 0 in both
+        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (1e-5, 1e-5, 1e-7) : (4e-4, 3e-4, 3e-6);
+        Assert.True(tcaError < 1e-5, $"{tcaError:E2} s");
+        Assert.True(stateError < stateThreshold, $"{stateError:E2} m");
+        Assert.True(missError < missThreshold, $"{missError:E2} m");
+        Assert.True(pcError < pcThreshold, $"{pcError:E2}");
     }
 
     // The covariance at the TCA of the option is the initial covariance held in RTN: its RTN components with the state
@@ -420,12 +477,18 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
     {
         var expected = initial.RotateCovarianceToRtn(initial.Covariance.Value);
         var rtn = atTca.RotateCovarianceToRtn(actual);
+        double largest = 0.0;
+        double difference = 0.0;
         for (int i = 0; i < 6; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                Assert.Equal(expected.Get(i, j), rtn.Get(i, j), System.Math.Abs(expected.Get(i, j)) * 1e-12 + 1e-15);
+                largest = System.Math.Max(largest, System.Math.Abs(expected.Get(i, j)));
+                difference = System.Math.Max(difference, System.Math.Abs(rtn.Get(i, j) - expected.Get(i, j)));
             }
         }
+
+        // Two rotations of a 6×6 matrix whose entries span 1e-3 to 9e4: rounding, relative to the largest entry
+        Assert.True(difference < 1e-12 * largest, $"{difference / largest:E2}");
     }
 }
