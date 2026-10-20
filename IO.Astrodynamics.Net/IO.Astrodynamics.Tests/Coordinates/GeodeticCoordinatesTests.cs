@@ -210,4 +210,48 @@ public class GeodeticCoordinatesTests
         Assert.True(latitude < 5e-10, $"latitude {latitude:E2}");
         Assert.True(altitude < 4e-15, $"altitude {altitude:E2}");
     }
+
+    [Fact]
+    public void BeyondTwoRadiiOverTheRoundoff_TheBodyIsAPoint()
+    {
+        // Arrange: beyond 2a/ε the ellipsoid is a point, the latitude the geocentric one and the altitude the distance
+        var position = new Vector3(3e22, -4e22, 1.2e23);
+
+        // Act
+        var geodetic = GeodeticCoordinates.FromBodyFixed(position, 6378136.6, 1.0 / 298.257);
+
+        // Assert
+        Assert.Equal(System.Math.Atan2(-4.0, 3.0), geodetic.Longitude, 15);
+        Assert.Equal(System.Math.Atan2(1.2e23, 5e22), geodetic.Latitude, 15);
+        Assert.Equal(position.Magnitude(), geodetic.Altitude);
+    }
+
+    [Theory]
+    [InlineData(0.0, 0.003)]
+    [InlineData(-1.0, 0.003)]
+    [InlineData(double.NaN, 0.003)]
+    [InlineData(6378136.6, 1.0)]
+    [InlineData(6378136.6, double.NaN)]
+    public void InvalidEllipsoid_Throws(double equatorialRadius, double flattening)
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            GeodeticCoordinates.ToBodyFixed(0.1, 0.2, 100.0, equatorialRadius, flattening));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            GeodeticCoordinates.FromBodyFixed(new Vector3(7e6, 0.0, 1e5), equatorialRadius, flattening));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new Planetodetic(0.1, 0.2, 100.0).ToPlanetocentric(flattening, equatorialRadius));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new Planetocentric(0.1, 0.2, 7e6).ToPlanetodetic(flattening, equatorialRadius));
+    }
+
+    [Fact]
+    public void ToPlanetodetic_KeepsTheGivenLongitude_OnTheAxis()
+    {
+        // Act: a point on the rotation axis, where the Cartesian position carries no longitude
+        var geodetic = new Planetocentric(1.25, System.Math.PI / 2.0, 6.4e6).ToPlanetodetic(1.0 / 298.257, 6378136.6);
+
+        // Assert
+        Assert.Equal(1.25, geodetic.Longitude);
+        Assert.Equal(System.Math.PI / 2.0, geodetic.Latitude, 15);
+    }
 }
