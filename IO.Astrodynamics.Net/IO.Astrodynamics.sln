@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO.Astrodynamics.CLI.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO.Astrodynamics.ConformanceRunner", "IO.Astrodynamics.ConformanceRunner\IO.Astrodynamics.ConformanceRunner.csproj", "{82EE7CC7-A464-4313-AD4C-C7EBB360EB43}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO.Astrodynamics.ConformanceRunner.Tests", "IO.Astrodynamics.ConformanceRunner.Tests\IO.Astrodynamics.ConformanceRunner.Tests.csproj", "{65B851B4-2CB2-469A-BC2E-194B6428EF12}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,6 +96,18 @@ Global
 		{82EE7CC7-A464-4313-AD4C-C7EBB360EB43}.Release|x64.Build.0 = Release|Any CPU
 		{82EE7CC7-A464-4313-AD4C-C7EBB360EB43}.Release|x86.ActiveCfg = Release|Any CPU
 		{82EE7CC7-A464-4313-AD4C-C7EBB360EB43}.Release|x86.Build.0 = Release|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Debug|x64.Build.0 = Debug|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Debug|x86.Build.0 = Debug|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Release|x64.ActiveCfg = Release|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Release|x64.Build.0 = Release|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Release|x86.ActiveCfg = Release|Any CPU
+		{65B851B4-2CB2-469A-BC2E-194B6428EF12}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
