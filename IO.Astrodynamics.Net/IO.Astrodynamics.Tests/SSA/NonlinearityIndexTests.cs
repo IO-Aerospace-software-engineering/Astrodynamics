@@ -4,11 +4,13 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SSA;
+using IO.Astrodynamics.Tests.CCSDS.CDM;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using MathNet.Numerics.LinearAlgebra;
 using Xunit;
@@ -20,14 +22,16 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// <summary>
 /// The non-linearity index of a propagated covariance (Junkins and Singla, 2004; step 10, the guard).
 /// </summary>
-public class NonlinearityIndexTests : IClassFixture<ConjunctionCovarianceCase>
+public class NonlinearityIndexTests : IClassFixture<ConjunctionCovarianceCase>, IClassFixture<CdmPropagatedCovarianceCase>
 {
     private readonly ConjunctionCovarianceCase _case;
+    private readonly CdmPropagatedCovarianceCase _full;
     private readonly ITestOutputHelper _output;
 
-    public NonlinearityIndexTests(ConjunctionCovarianceCase @case, ITestOutputHelper output)
+    public NonlinearityIndexTests(ConjunctionCovarianceCase @case, CdmPropagatedCovarianceCase full, ITestOutputHelper output)
     {
         _case = @case;
+        _full = full;
         _output = output;
     }
 
@@ -88,6 +92,27 @@ public class NonlinearityIndexTests : IClassFixture<ConjunctionCovarianceCase>
     }
 
     // P0 × scale²
+    [Fact]
+    public void Index_WithDragAndSrp_IsThatOfThePropagationAfterTheSpacecraftChanges()
+    {
+        // Arrange: the LEO with drag and SRP of the CDM case (point-mass Earth, Moon, Sun), one segment; its index at the
+        // TCA, 2 h after the start
+        var spacecraft = ReferenceCase.NewSpacecraft(-6531, _full.PointMassProtectedStart);
+        var solution = _full.Propagate(spacecraft, new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance },
+            pointMass: true);
+        var epoch = CdmPropagatedCovarianceCase.Tca;
+        double before = NonlinearityIndex.Create(solution, spacecraft, epoch).At(solution, epoch);
+
+        // Act: a payload doubles the mass of the spacecraft after its propagation
+        spacecraft.AddPayload(new Payload("payload6531", 100.0, "sn6531"));
+        double after = NonlinearityIndex.Create(solution, spacecraft, epoch).At(solution, epoch);
+
+        // Assert: the perturbed propagations take the mass of the propagation, as their variational equations, not the
+        // live mass of the spacecraft (#418)
+        _output.WriteLine($"ν {before:E6} before the change, {after:E6} after it ({System.Math.Abs(after - before) / before:E2})");
+        Assert.Equal(before, after);
+    }
+
     private static StateVector Scaled(StateVector state, double scale)
     {
         var covariance = state.Covariance.Value;
