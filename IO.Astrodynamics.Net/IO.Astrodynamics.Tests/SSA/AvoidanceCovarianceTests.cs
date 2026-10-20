@@ -37,6 +37,11 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         _output = output;
     }
 
+    // The options and their references propagated at 1e-13, where the option of the same model is the reference bit for
+    // bit in state: at 1e-11 the step sequences of the two propagations part, and their differences (up to 8.5e-6 m and
+    // 1.4e-8 in P) are not those of the models (#415)
+    private const double AvoidanceTolerance = 1e-13;
+
     private static readonly ManeuverExecutionError Gates = new()
         { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
 
@@ -107,11 +112,12 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
     public void EvaluateAvoidance_AnOption_IsThePropagationFromTheStartWithAFixedBurn()
     {
         // Arrange: the LEO with drag and SRP (point-mass Earth, Moon, Sun), Cd and Cr as consider parameters and process noise; the protected spacecraft
-        // with an engine, so that its burn spends fuel
+        // with an engine, so that its burn spends fuel: the state of the option integrated with its mass after the burn
+        // (#415; with the mass of the protected spacecraft as it is now, 5.7e-4 m off at 1e-11)
         var protectedCraft = WithEngine(-6411, _full.PointMassProtectedStart, out _);
         var secondaryCraft = ReferenceCase.NewSpacecraft(-6412, _full.PointMassSecondaryStart);
-        _full.Propagate(protectedCraft, pointMass: true);
-        _full.Propagate(secondaryCraft, pointMass: true);
+        _full.Propagate(protectedCraft, pointMass: true, tolerance: AvoidanceTolerance);
+        _full.Propagate(secondaryCraft, pointMass: true, tolerance: AvoidanceTolerance);
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
             new Window(CdmPropagatedCovarianceCase.Start.AddMinutes(30.0), CdmPropagatedCovarianceCase.Start.AddHours(2.5)),
             new ConjunctionAnalysisOptions { CovariancePropagation = CdmPropagatedCovarianceCase.Options });
@@ -141,7 +147,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             var reference = WithEngine(-6413, _full.PointMassProtectedStart, out var engine);
             reference.SetStandbyManeuver(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
                 CdmPropagatedCovarianceCase.Start, option.BurnEpoch, option.DeltaVInertial, engine) { ExecutionError = Gates });
-            var solution = _full.Propagate(reference, CdmPropagatedCovarianceCase.Options, pointMass: true);
+            var solution = _full.Propagate(reference, CdmPropagatedCovarianceCase.Options, pointMass: true, tolerance: AvoidanceTolerance);
 
             var post = option.PostManeuverEncounter;
             var tca = post.EncounterState.Epoch;
@@ -160,6 +166,62 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         Assert.True(worstState < 1e-3, $"{worstState:E2} m");
         Assert.True(worstCovariance < 1e-8, $"{worstCovariance:E2}");
         Assert.True(worstExtended < 1e-8, $"{worstExtended:E2}");
+    }
+
+    [Fact]
+    public void EvaluateAvoidance_AnOption_IgnoresTheFuelTheProtectedSpacecraftSpendsLater()
+    {
+        // Arrange: the LEO with drag and SRP of the previous test; the protected spacecraft spends 40 % of its mass in a
+        // burn after the screening window, so that its mass when the avoidance is evaluated is not its mass at the burns
+        // of the options (#415)
+        var protectedCraft = WithEngine(-6431, _full.PointMassProtectedStart, out var protectedEngine);
+        protectedCraft.SetStandbyManeuver(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
+            CdmPropagatedCovarianceCase.Start, CdmPropagatedCovarianceCase.Start.AddHours(2.9),
+            _full.PointMassProtectedStart.Velocity.Normalize() * 1500.0, protectedEngine));
+        var secondaryCraft = ReferenceCase.NewSpacecraft(-6432, _full.PointMassSecondaryStart);
+        _full.Propagate(protectedCraft, pointMass: true, tolerance: AvoidanceTolerance);
+        _full.Propagate(secondaryCraft, pointMass: true, tolerance: AvoidanceTolerance);
+        var window = new Window(CdmPropagatedCovarianceCase.Start.AddMinutes(30.0), CdmPropagatedCovarianceCase.Start.AddHours(2.5));
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            window, new ConjunctionAnalysisOptions { CovariancePropagation = CdmPropagatedCovarianceCase.Options });
+        var options = new AvoidanceSearchOptions
+        {
+            LeadTimes = new[] { TimeSpan.FromHours(1.0) },
+            DeltaVMagnitudesMetersPerSecond = new[] { 0.25 },
+            MaxReturnedOptions = 6
+        };
+
+        // Act
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
+
+        // Assert: each option against the spacecraft propagated from the start with the burn of the option alone, the
+        // open-loop model: the later burn of the protected spacecraft is not part of the option, nor is its fuel
+        Assert.True(protectedCraft.GetTotalMass() < 0.65 * 200.0, $"{protectedCraft.GetTotalMass()} kg");
+        Assert.Equal(6, avoidance.Count);
+        double worstState = 0.0;
+        double worstCovariance = 0.0;
+        foreach (var option in avoidance.Take(3))
+        {
+            var reference = WithEngine(-6433, _full.PointMassProtectedStart, out var engine);
+            reference.SetStandbyManeuver(new FixedImpulse((CelestialItem)_full.PointMassProtectedStart.Observer,
+                CdmPropagatedCovarianceCase.Start, option.BurnEpoch, option.DeltaVInertial, engine));
+            var solution = _full.Propagate(reference, CdmPropagatedCovarianceCase.Options, pointMass: true, tolerance: AvoidanceTolerance);
+
+            var post = option.PostManeuverEncounter;
+            var tca = post.EncounterState.Epoch;
+            var expected = solution.GetStateVector(tca);
+            double stateError = (post.ProtectedState.Position - expected.Position).Magnitude();
+            double covarianceError = RelativeError(expected.Covariance.Value, post.ProtectedState.Covariance.Value);
+            worstState = System.Math.Max(worstState, stateError);
+            worstCovariance = System.Math.Max(worstCovariance, covarianceError);
+            _output.WriteLine($"option {option.DeltaVInertial}: state {stateError:E2} m, P {covarianceError:E2}");
+
+            // The fuel of the option, estimated from the mass at its burn: the fuel the reference burn spends
+            Assert.Equal(200.0 - reference.GetTotalMass(), option.FuelCostEstimateKilograms, 1e-12);
+        }
+
+        Assert.True(worstState < 1e-3, $"{worstState:E2} m");
+        Assert.True(worstCovariance < 1e-8, $"{worstCovariance:E2}");
     }
 
     [Fact]
