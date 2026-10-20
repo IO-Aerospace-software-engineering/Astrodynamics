@@ -299,6 +299,103 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         Assert.True(crossings > 0, "the propagation crosses no cutoff");
     }
 
+    [Fact]
+    public void TwoDiscontinuitiesWithinTheStencil_TheGradientIsTheCentralDifference()
+    {
+        // Arrange: an exponential atmosphere whose density jumps at two altitudes 1 m apart, the point between them, so
+        // that neither point of a straddling stencil (h ≈ 2 m) is in the interval of the point
+        var (direction, rotation, epoch) = RadialLine();
+        var (earth, drag, model) = SteppedEarth(400000.0, 400001.0);
+        double radius = CutoffRadius(drag, model, direction, rotation, epoch, 0) + 0.5;
+        var position = direction * radius;
+        var gradient = new double[3];
+
+        // Act
+        drag.DensityGradient(position, rotation, epoch, gradient);
+
+        // Assert: the central difference, for every column
+        Assert.Equal(1, model.DensityInterval(drag.Geodetic(position, rotation, epoch).Altitude));
+        Assert.Equal(CentralGradient(drag, position, rotation, epoch), gradient);
+        GC.KeepAlive(earth);
+    }
+
+    [Fact]
+    public void SecondPointAcrossAnotherDiscontinuity_TheGradientIsTheCentralDifference()
+    {
+        // Arrange: jumps at two altitudes 3 m apart, the point 0.5 m above the first: along the most radial component the
+        // stencil straddles the first, and the second point of the one-sided difference, 2 h away, crosses the other
+        var (direction, rotation, epoch) = RadialLine();
+        var (earth, drag, model) = SteppedEarth(400000.0, 400003.0);
+        double radius = CutoffRadius(drag, model, direction, rotation, epoch, 0) + 0.5;
+        var position = direction * radius;
+        int j = Enumerable.Range(0, 3).OrderByDescending(k => System.Math.Abs(RiddersDerivative.Component(direction, k)))
+            .First();
+        double step = AtmosphericDrag.DensityGradientRelativeStep * position.Magnitude();
+        double plusAltitude = drag.Geodetic(With(position, j, RiddersDerivative.Component(position, j) + step), rotation,
+            epoch).Altitude;
+        double secondAltitude = drag.Geodetic(With(position, j, RiddersDerivative.Component(position, j) + 2.0 * step),
+            rotation, epoch).Altitude;
+        int directionSign = System.Math.Sign(plusAltitude - drag.Geodetic(position, rotation, epoch).Altitude);
+        var gradient = new double[3];
+
+        // Act
+        drag.DensityGradient(position, rotation, epoch, gradient);
+
+        // Assert: the geometry of the case, then the central difference along that component
+        double first = directionSign > 0 ? plusAltitude
+            : drag.Geodetic(With(position, j, RiddersDerivative.Component(position, j) - step), rotation, epoch).Altitude;
+        double second = directionSign > 0 ? secondAltitude
+            : drag.Geodetic(With(position, j, RiddersDerivative.Component(position, j) - 2.0 * step), rotation, epoch)
+                .Altitude;
+        Assert.Equal(1, model.DensityInterval(first));
+        Assert.Equal(2, model.DensityInterval(second));
+        Assert.Equal(CentralGradient(drag, position, rotation, epoch)[j], gradient[j]);
+        GC.KeepAlive(earth);
+    }
+
+    private (Vector3 Direction, Quaternion? Rotation, TimeSystem.Time Epoch) RadialLine()
+    {
+        var (_, _, direction, rotation, epoch) = Geometry(PartialsTestCases.Leo400);
+        return (direction, rotation, epoch);
+    }
+
+    private static (CelestialBody Earth, AtmosphericDrag Drag, IDensityDiscontinuities Model) SteppedEarth(
+        params double[] discontinuities)
+    {
+        var model = new SteppedAtmosphere(discontinuities);
+        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF,
+            PartialsTestCases.Epoch, null, model);
+        var state = PartialsTestCases.State(PartialsTestCases.Leo400, earth);
+        return (earth, new AtmosphericDrag(PartialsTestCases.Spacecraft(state), earth), model);
+    }
+
+    // An exponential atmosphere (scale height 60 km) whose density jumps by 1e-4 at each of the given altitudes
+    private sealed class SteppedAtmosphere : IAtmosphericModel, IGeodeticDensityModel, IDensityDiscontinuities
+    {
+        private readonly double[] _discontinuities;
+
+        public SteppedAtmosphere(double[] discontinuities) => _discontinuities = discontinuities;
+
+        public ReadOnlySpan<double> DensityDiscontinuities => _discontinuities;
+
+        public int DensityInterval(double altitude) => _discontinuities.Count(d => altitude > d);
+
+        double IGeodeticDensityModel.GetDensity(double altitude, double geodeticLatitude, double geodeticLongitude,
+            in TimeSystem.Time epoch) => Density(altitude);
+
+        private double Density(double altitude) =>
+            1e-12 * System.Math.Exp(-(altitude - 400000.0) / 60000.0) * (1.0 + 1e-4 * DensityInterval(altitude));
+
+        public IO.Astrodynamics.Atmosphere.Atmosphere GetAtmosphere(IAtmosphericContext context) => new()
+            { Temperature = 0.0, Pressure = 0.0, Density = Density(context.Altitude) };
+
+        public double GetTemperature(IAtmosphericContext context) => 0.0;
+
+        public double GetPressure(IAtmosphericContext context) => 0.0;
+
+        public double GetDensity(IAtmosphericContext context) => Density(context.Altitude);
+    }
+
     private static Vector3 With(in Vector3 vector, int index, double value)
     {
         return index switch

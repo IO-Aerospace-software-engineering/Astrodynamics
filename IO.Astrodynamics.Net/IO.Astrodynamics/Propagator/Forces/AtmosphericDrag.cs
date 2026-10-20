@@ -156,6 +156,7 @@ public class AtmosphericDrag : ForceBase
         Span<double> gradient, double relativeStep = DensityGradientRelativeStep)
     {
         double step = relativeStep * System.Math.Max(position.Magnitude(), 1.0);
+        Planetodetic? origin = null;
         for (int j = 0; j < 3; j++)
         {
             double component = Component(position, j);
@@ -166,17 +167,21 @@ public class AtmosphericDrag : ForceBase
             if (_discontinuities != null && _discontinuities.DensityInterval(plusCoordinates.Altitude) !=
                 _discontinuities.DensityInterval(minusCoordinates.Altitude))
             {
-                gradient[j] = OneSidedDensityDerivative(position, j, step, rotation, epoch);
+                // The coordinates of r once, for every column whose stencil straddles a cutoff
+                origin ??= Geodetic(position, rotation, epoch);
+                gradient[j] = OneSidedDensityDerivative(position, j, step, rotation, epoch, origin.Value,
+                    plusCoordinates, minusCoordinates);
                 continue;
             }
 
-            gradient[j] = (Density(plusCoordinates, epoch) - Density(minusCoordinates, epoch)) / (plus - minus);
+            gradient[j] = CentralDensityDerivative(component, step, plusCoordinates, minusCoordinates, epoch);
         }
     }
 
     /// <summary>
     /// ∂ρ/∂r_j on the side of <paramref name="position"/> of the altitudes at which the density jumps: the three-point
-    /// difference on r, r + s h e_j and r + 2 s h e_j, s = ±1 the direction whose two points stay in the interval of r.
+    /// difference on r, r + s h e_j and r + 2 s h e_j, s = ±1 the direction whose first point, r ± h e_j of the central
+    /// stencil, is in the interval of r.
     /// </summary>
     /// <remarks>
     /// The weights are those of the first derivative on the three points as stored, x0 = r_j, x1 and x2, with d1 = x1 − x0
@@ -184,35 +189,51 @@ public class AtmosphericDrag : ForceBase
     /// (−3 ρ0 + 4 ρ1 − ρ2) / (2 s h) for equal spacings, of second order in h like the central difference (B. Fornberg,
     /// "Generation of finite difference formulas on arbitrarily spaced grids", Mathematics of Computation 51 (1988),
     /// 699–706, to be verified by S. Guillet). The side of r is that of the model: a point exactly at a cutoff is where
-    /// the model's comparison places it. When neither direction keeps both points in the interval of r, which would need
-    /// two discontinuities within 4 h, the central difference is kept.
+    /// the model's comparison places it. The first point is that of the central stencil, already converted; only the
+    /// second is new. When neither point of the stencil is in the interval of r, or the second point is not, which would
+    /// need two discontinuities within 3 h, the central difference is kept.
     /// </remarks>
     private double OneSidedDensityDerivative(in Vector3 position, int j, double step, in Quaternion? rotation,
-        in Time epoch)
+        in Time epoch, in Planetodetic origin, in Planetodetic plusCoordinates, in Planetodetic minusCoordinates)
     {
-        var origin = Geodetic(position, rotation, epoch);
         int interval = _discontinuities.DensityInterval(origin.Altitude);
         double x0 = Component(position, j);
-        foreach (double direction in stackalloc double[] { 1.0, -1.0 })
+        double direction;
+        Planetodetic first;
+        if (_discontinuities.DensityInterval(plusCoordinates.Altitude) == interval)
         {
-            double x1 = x0 + direction * step;
-            double x2 = x0 + 2.0 * direction * step;
-            var first = Geodetic(WithComponent(position, j, x1), rotation, epoch);
-            var second = Geodetic(WithComponent(position, j, x2), rotation, epoch);
-            if (_discontinuities.DensityInterval(first.Altitude) != interval ||
-                _discontinuities.DensityInterval(second.Altitude) != interval)
-            {
-                continue;
-            }
-
-            double d1 = x1 - x0;
-            double d2 = x2 - x0;
-            return -(d1 + d2) / (d1 * d2) * Density(origin, epoch) + d2 / (d1 * (d2 - d1)) * Density(first, epoch) -
-                   d1 / (d2 * (d2 - d1)) * Density(second, epoch);
+            direction = 1.0;
+            first = plusCoordinates;
+        }
+        else if (_discontinuities.DensityInterval(minusCoordinates.Altitude) == interval)
+        {
+            direction = -1.0;
+            first = minusCoordinates;
+        }
+        else
+        {
+            return CentralDensityDerivative(x0, step, plusCoordinates, minusCoordinates, epoch);
         }
 
-        return (Density(WithComponent(position, j, x0 + step), rotation, epoch) -
-                Density(WithComponent(position, j, x0 - step), rotation, epoch)) / ((x0 + step) - (x0 - step));
+        double x1 = x0 + direction * step;
+        double x2 = x0 + 2.0 * direction * step;
+        var second = Geodetic(WithComponent(position, j, x2), rotation, epoch);
+        if (_discontinuities.DensityInterval(second.Altitude) != interval)
+        {
+            return CentralDensityDerivative(x0, step, plusCoordinates, minusCoordinates, epoch);
+        }
+
+        double d1 = x1 - x0;
+        double d2 = x2 - x0;
+        return -(d1 + d2) / (d1 * d2) * Density(origin, epoch) + d2 / (d1 * (d2 - d1)) * Density(first, epoch) -
+               d1 / (d2 * (d2 - d1)) * Density(second, epoch);
+    }
+
+    // The central difference on the points of the stencil already converted
+    private double CentralDensityDerivative(double x0, double step, in Planetodetic plusCoordinates,
+        in Planetodetic minusCoordinates, in Time epoch)
+    {
+        return (Density(plusCoordinates, epoch) - Density(minusCoordinates, epoch)) / ((x0 + step) - (x0 - step));
     }
 
     /// <summary>
