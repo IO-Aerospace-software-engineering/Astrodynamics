@@ -227,6 +227,11 @@ orbital rate: in LEO 400 km with `q_T` alone, 0.8 % over 10 s, 4.8 % over 60 s, 
 fixed in inertial axes, the two agree to second order (`RtnProcessNoiseTests`). Neither form is wrong: they model
 different noises, and the comparison of a propagated covariance with a filter covariance should take this into account.
 
+GMAT R2026a applies that discrete form at every integration step. Over one day, its Q departs from the propagated one by
+2.35e-4 at a step of 20 s, then by half as much at each halving of the step, and its first-order limit is the propagated
+Q to 1e-8 (LEO 700 km two-body) and 2e-8 (LEO 400 km, EGM2008 10×10, Sun, Moon): the propagated Q is the limit of the
+discrete form along the arc ([Validation](../guides/validation.md#against-gmat-h2)).
+
 ## Execution Error of an Impulsive Maneuver
 
 `ImpulseManeuver.ExecutionError` (`ManeuverExecutionError`, namespace `IO.Astrodynamics.Maneuver`) describes the error of

@@ -21,7 +21,8 @@ When the covariance of the protected participant was propagated to the encounter
 
 - each option is **propagated numerically in RK7(8)** from the state after its burn to the end of the screening window
   (or of the participant's propagation), with the forces, the integrator settings and the orientation cache of the
-  trajectory it leaves, its mass after the burn (the fuel of the estimate below) and its coefficients;
+  trajectory it leaves, its mass after the burn (the mass of the trajectory at the burn less the fuel of the estimate
+  below) and its coefficients, for the state as for its covariance;
 - its initial covariance is the covariance at the burn plus the execution error of the burn, P(t_b) + B L_e Bᵀ,
   B = [0 ; I], L_e the covariance of the model of Gates for the ΔV of the option (`AvoidanceSearchOptions.ExecutionError`,
   `ManeuverExecutionError`; none by default);
@@ -30,9 +31,13 @@ When the covariance of the protected participant was propagated to the encounter
 - the secondary participant keeps one resolution of its covariance for all the options.
 
 Each option is a ΔV fixed in epoch and in direction: the open-loop model of the propagated covariance. Against the
-propagation of the same spacecraft from the start with that burn fixed and its execution error, the covariance of an
-option at its TCA agrees to 1.9e-9 and its state to 0.6 mm (LEO with drag, SRP, Moon and Sun, Cd and Cr as consider
-parameters and process noise, `AvoidanceCovarianceTests`); the execution error adds Φ B L_e Bᵀ Φᵀ at the TCA to 1.3e-11.
+propagation of the same spacecraft from the start with that burn fixed and its execution error, both at 1e-13, the
+state of an option at its TCA is that of the propagation bit for bit and its covariance agrees to 5.2e-15 (LEO with
+drag, SRP, Moon and Sun, Cd and Cr as consider parameters and process noise, `AvoidanceCovarianceTests`), also when the
+protected spacecraft spends fuel after the burns of the options: the mass of an option is that of the trajectory at its
+burn, not that of the spacecraft at the end of its propagation
+([#415](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/415)). The execution error adds
+Φ B L_e Bᵀ Φᵀ at the TCA to 1.3e-11.
 A burn retargeted in operations (a miss distance aimed at rather than a fixed ΔV) does not have this covariance after it:
 against a retargeted burn, Φ after the burn was off by 0.23 to 0.48 in the validation of the state transition matrix
 ([#397](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/397)).

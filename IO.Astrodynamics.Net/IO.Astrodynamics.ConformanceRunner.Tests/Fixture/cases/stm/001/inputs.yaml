@@ -1,0 +1,41 @@
+id: "stm_24h_leo_twobody_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "stm"
+created: "2026-10-19"
+description: >
+  State transition matrix of a 24-hour two-body propagation, LEO 700 km, e = 0.001, i = 45 deg
+  (the reference case R1 of IO.Astrodynamics). Golden: GMAT R2026a, Sat.OrbitSTM, PrinceDormand78
+  at a fixed step of 10 s, the GM of DE440, turned from EarthMJ2000Eq to ICRF.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  orbit:
+    type: "state_vector"
+    position_km: [-257.0963198745416, 5277.645366269342, 4699.1231192917485]
+    velocity_km_s: [-7.0212709412830066, -1.9570361257840319, 1.8157924695886527]
+  propagation_window:
+    start: "2021-03-20T12:00:00.000 TDB"
+    end:   "2021-03-21T12:00:00.000 TDB"
+  central_body: "Earth"
+  geopotential_degree: 0
+  geopotential_model: "none"
+  perturbation_bodies: []
+  force_model:
+    drag: false
+    srp: false
+  step_size_s: 3600.0
+
+tolerances_override:
+  stm_block:
+    abs_tol: 0.0
+    rel_tol: 1.0e-10
+    justification: >-
+      Two-body, the same model in both tools: IO.Astrodynamics against GMAT R2026a, worst block 7.6e-12
+      over the day (GmatReferenceTests, 2026-10-19); GMAT's Phi at 10 s against 5 s, 2.0e-12. The
+      threshold of the design of IO.Astrodynamics #408. rel_tol is binding, abs_tol 0.
