@@ -169,15 +169,15 @@ public sealed class RK78Integrator : Integrator
     }
 
     /// <summary>
-    /// The mass and coefficients the forces are evaluated with at every step, or null (the default) to read the live
-    /// spacecraft each force was built for. Set for the propagation of an avoidance option, which reuses the forces of
-    /// the trajectory it leaves: they would read the protected spacecraft as it is now, not the option after its burn
+    /// Evaluate the forces with this mass and these coefficients at every step, instead of the live spacecraft each force
+    /// was built for (the default). For the propagation of an avoidance option, which reuses the forces of the
+    /// trajectory it leaves: they would read the protected spacecraft as it is now, not the option after its burn
     /// (#415). A propagation without maneuver only: the context does not change along it.
     /// </summary>
-    internal ForceEvaluationContext? ForceContext
+    /// <param name="context">Mass and coefficients of the propagated spacecraft.</param>
+    internal void EvaluateForcesWith(in ForceEvaluationContext context)
     {
-        get => _stepper.Context;
-        set => _stepper.Context = value;
+        _stepper.Context = context;
     }
 
     /// <summary>

@@ -487,7 +487,7 @@ public static class ConjunctionAssessment
 
             // The state integrated with the mass and coefficients of the option, as its variational equations (#415)
             var integrator = _dynamics.Integrator.WithSameSettings();
-            integrator.ForceContext = ForceEvaluationContext.FromSpacecraft(trial);
+            integrator.EvaluateForcesWith(ForceEvaluationContext.FromSpacecraft(trial));
             foreach (var force in _dynamics.Forces)
             {
                 integrator.AddForce(force);

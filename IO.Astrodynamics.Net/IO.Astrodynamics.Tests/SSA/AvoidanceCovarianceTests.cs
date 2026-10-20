@@ -42,6 +42,12 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
     // 1.4e-8 in P) are not those of the models (#415)
     private const double AvoidanceTolerance = 1e-13;
 
+    // Set on that measurement (decision of S. Guillet, 2026-10-20): the state 0 m, against about ten units in the last
+    // place of a LEO position (9.3e-10 m at 7e6 m); P and the extended covariance 5.2e-15 at most, against 1e-13 (before:
+    // 1e-3 m and 1e-8, set at 1e-11, which the state of #415, 5.7e-4 m, passed)
+    private const double StateThresholdMeters = 1e-8;
+    private const double CovarianceThreshold = 1e-13;
+
     private static readonly ManeuverExecutionError Gates = new()
         { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
 
@@ -163,9 +169,9 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
                               $"extended {extendedError:E2}");
         }
 
-        Assert.True(worstState < 1e-3, $"{worstState:E2} m");
-        Assert.True(worstCovariance < 1e-8, $"{worstCovariance:E2}");
-        Assert.True(worstExtended < 1e-8, $"{worstExtended:E2}");
+        Assert.True(worstState < StateThresholdMeters, $"{worstState:E2} m");
+        Assert.True(worstCovariance < CovarianceThreshold, $"{worstCovariance:E2}");
+        Assert.True(worstExtended < CovarianceThreshold, $"{worstExtended:E2}");
     }
 
     [Fact]
@@ -220,8 +226,8 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             Assert.Equal(200.0 - reference.GetTotalMass(), option.FuelCostEstimateKilograms, 1e-12);
         }
 
-        Assert.True(worstState < 1e-3, $"{worstState:E2} m");
-        Assert.True(worstCovariance < 1e-8, $"{worstCovariance:E2}");
+        Assert.True(worstState < StateThresholdMeters, $"{worstState:E2} m");
+        Assert.True(worstCovariance < CovarianceThreshold, $"{worstCovariance:E2}");
     }
 
     [Fact]
