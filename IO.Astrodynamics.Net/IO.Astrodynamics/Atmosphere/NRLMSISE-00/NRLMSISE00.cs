@@ -55,6 +55,33 @@ namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00
         private static readonly double[] Alpha = { -0.38, 0.0, 0.0, 0.0, 0.17, 0.0, -0.38, 0.0, 0.0 };
         private static readonly double[] Altl = { 200.0, 300.0, 160.0, 250.0, 240.0, 450.0, 320.0, 450.0 };
 
+        // The distinct values of Altl that Gts7Internal uses, in km, increasing (450 km twice, index 5 unused). Above each
+        // one the model drops the mixing of a species when flag 15 is on, so the density is discontinuous there (#413)
+        private static readonly double[] MixingCutoffKilometres = { 160.0, 200.0, 240.0, 250.0, 300.0, 320.0, 450.0 };
+
+        /// <summary>The altitudes above which the mixing of a species is dropped, with flag 15, in m, increasing.</summary>
+        internal static readonly double[] MixingCutoffAltitudes =
+            { 160000.0, 200000.0, 240000.0, 250000.0, 300000.0, 320000.0, 450000.0 };
+
+        /// <summary>
+        /// The number of mixing cutoffs below an altitude, with the comparisons of <c>Gts7Internal</c>: the mixing of He
+        /// holds for z &lt; 200 km, that of the other species for z &lt;= altl.
+        /// </summary>
+        /// <param name="altitude">Altitude, in km, as the model takes it.</param>
+        internal static int MixingInterval(double altitude)
+        {
+            int interval = 0;
+            foreach (double cutoff in MixingCutoffKilometres)
+            {
+                if (cutoff == Altl[0] ? altitude >= cutoff : altitude > cutoff)
+                {
+                    interval++;
+                }
+            }
+
+            return interval;
+        }
+
         /// <summary>
         /// TSELEC - Set switches based on flags.
         /// </summary>

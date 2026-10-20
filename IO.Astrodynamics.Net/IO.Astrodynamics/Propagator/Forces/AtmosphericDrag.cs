@@ -1,6 +1,8 @@
 using System;
+using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -25,6 +27,9 @@ public class AtmosphericDrag : ForceBase
     private readonly Spacecraft _spacecraft;
     private readonly CelestialBody _celestialBody;
 
+    // The altitudes at which the density of the atmosphere jumps, when its model gives them (NRLMSISE-00, #413)
+    private readonly IDensityDiscontinuities _discontinuities;
+
     /// <summary>The body whose atmosphere slows the spacecraft.</summary>
     internal CelestialBody CelestialBody => _celestialBody;
 
@@ -36,6 +41,8 @@ public class AtmosphericDrag : ForceBase
         {
             throw new ArgumentException($"The celestial body {_celestialBody.Name} does not have an atmospheric model.");
         }
+
+        _discontinuities = _celestialBody.Atmosphere as IDensityDiscontinuities;
     }
 
     public override Vector3 Apply(StateVector stateVector)
@@ -128,12 +135,22 @@ public class AtmosphericDrag : ForceBase
 
     /// <summary>
     /// ∇ρ with respect to the position relative to the body, in the frame of the state, by central differences of the
-    /// density chain at the fixed epoch and rotation, with the step <see cref="DensityGradientRelativeStep"/>.
+    /// density chain at the fixed epoch and rotation, with the step <see cref="DensityGradientRelativeStep"/>; on the side
+    /// of the point where the stencil straddles an altitude at which the density jumps.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Column j is (ρ(r + h e_j) − ρ(r − h e_j)) / ((r_j + h) − (r_j − h)), the division by the difference of the
     /// perturbed components as stored removing the representation error of the step (Press, Teukolsky, Vetterling and
     /// Flannery, Numerical Recipes, 3rd edition (2007), section 5.7, as the default partials of <see cref="ForceBase"/>).
+    /// </para>
+    /// <para>
+    /// NRLMSISE-00 drops the mixing of a species above an altitude (160 to 450 km), where its density jumps by up to
+    /// 1.8e-4 (<see cref="IDensityDiscontinuities"/>). A central difference across such an altitude adds the jump divided
+    /// by the step to the gradient, tens of percent of it, which stalls the step control of the variational equations
+    /// (#413). There the column is the second-order one-sided difference on the side of r, the gradient of the model on
+    /// that side (<see cref="OneSidedDensityDerivative"/>); everywhere else the central difference, bit for bit.
+    /// </para>
     /// </remarks>
     internal void DensityGradient(in Vector3 position, in Quaternion? rotation, in Time epoch,
         Span<double> gradient, double relativeStep = DensityGradientRelativeStep)
@@ -144,9 +161,58 @@ public class AtmosphericDrag : ForceBase
             double component = Component(position, j);
             double plus = component + step;
             double minus = component - step;
-            gradient[j] = (Density(WithComponent(position, j, plus), rotation, epoch) -
-                           Density(WithComponent(position, j, minus), rotation, epoch)) / (plus - minus);
+            var plusCoordinates = Geodetic(WithComponent(position, j, plus), rotation, epoch);
+            var minusCoordinates = Geodetic(WithComponent(position, j, minus), rotation, epoch);
+            if (_discontinuities != null && _discontinuities.DensityInterval(plusCoordinates.Altitude) !=
+                _discontinuities.DensityInterval(minusCoordinates.Altitude))
+            {
+                gradient[j] = OneSidedDensityDerivative(position, j, step, rotation, epoch);
+                continue;
+            }
+
+            gradient[j] = (Density(plusCoordinates, epoch) - Density(minusCoordinates, epoch)) / (plus - minus);
         }
+    }
+
+    /// <summary>
+    /// ∂ρ/∂r_j on the side of <paramref name="position"/> of the altitudes at which the density jumps: the three-point
+    /// difference on r, r + s h e_j and r + 2 s h e_j, s = ±1 the direction whose two points stay in the interval of r.
+    /// </summary>
+    /// <remarks>
+    /// The weights are those of the first derivative on the three points as stored, x0 = r_j, x1 and x2, with d1 = x1 − x0
+    /// and d2 = x2 − x0: −(d1 + d2) / (d1 d2), d2 / (d1 (d2 − d1)) and −d1 / (d2 (d2 − d1)), that is
+    /// (−3 ρ0 + 4 ρ1 − ρ2) / (2 s h) for equal spacings, of second order in h like the central difference (B. Fornberg,
+    /// "Generation of finite difference formulas on arbitrarily spaced grids", Mathematics of Computation 51 (1988),
+    /// 699–706, to be verified by S. Guillet). The side of r is that of the model: a point exactly at a cutoff is where
+    /// the model's comparison places it. When neither direction keeps both points in the interval of r, which would need
+    /// two discontinuities within 4 h, the central difference is kept.
+    /// </remarks>
+    private double OneSidedDensityDerivative(in Vector3 position, int j, double step, in Quaternion? rotation,
+        in Time epoch)
+    {
+        var origin = Geodetic(position, rotation, epoch);
+        int interval = _discontinuities.DensityInterval(origin.Altitude);
+        double x0 = Component(position, j);
+        foreach (double direction in stackalloc double[] { 1.0, -1.0 })
+        {
+            double x1 = x0 + direction * step;
+            double x2 = x0 + 2.0 * direction * step;
+            var first = Geodetic(WithComponent(position, j, x1), rotation, epoch);
+            var second = Geodetic(WithComponent(position, j, x2), rotation, epoch);
+            if (_discontinuities.DensityInterval(first.Altitude) != interval ||
+                _discontinuities.DensityInterval(second.Altitude) != interval)
+            {
+                continue;
+            }
+
+            double d1 = x1 - x0;
+            double d2 = x2 - x0;
+            return -(d1 + d2) / (d1 * d2) * Density(origin, epoch) + d2 / (d1 * (d2 - d1)) * Density(first, epoch) -
+                   d1 / (d2 * (d2 - d1)) * Density(second, epoch);
+        }
+
+        return (Density(WithComponent(position, j, x0 + step), rotation, epoch) -
+                Density(WithComponent(position, j, x0 - step), rotation, epoch)) / ((x0 + step) - (x0 - step));
     }
 
     /// <summary>
@@ -157,13 +223,25 @@ public class AtmosphericDrag : ForceBase
     /// </summary>
     internal double Density(in Vector3 position, in Quaternion? rotation, in Time epoch)
     {
-        var bodyFixed = rotation.HasValue ? position.Rotate(rotation.Value) : position;
-        var planetodetic = _celestialBody.SubObserverPoint(bodyFixed, epoch, Aberration.None)
-            .ToPlanetodetic(_celestialBody.Flattening, _celestialBody.EquatorialRadius);
+        return Density(Geodetic(position, rotation, epoch), epoch);
+    }
 
-        // The density of the atmospheric context of the position and the epoch, without building it when the model
-        // allows (NRLMSISE-00)
-        return _celestialBody.GetAirDensity(planetodetic.Altitude, planetodetic.Latitude, planetodetic.Longitude, epoch);
+    /// <summary>
+    /// The planetodetic coordinates of a position relative to the body, in the frame of the state, as the density chain
+    /// takes them.
+    /// </summary>
+    internal Planetodetic Geodetic(in Vector3 position, in Quaternion? rotation, in Time epoch)
+    {
+        var bodyFixed = rotation.HasValue ? position.Rotate(rotation.Value) : position;
+        return _celestialBody.SubObserverPoint(bodyFixed, epoch, Aberration.None)
+            .ToPlanetodetic(_celestialBody.Flattening, _celestialBody.EquatorialRadius);
+    }
+
+    // The density of the atmospheric context of the coordinates and the epoch, without building it when the model allows
+    // (NRLMSISE-00)
+    private double Density(in Planetodetic coordinates, in Time epoch)
+    {
+        return _celestialBody.GetAirDensity(coordinates.Altitude, coordinates.Latitude, coordinates.Longitude, epoch);
     }
 
     /// <summary>

@@ -143,7 +143,7 @@ acceleration with respect to the state and to the drag and reflectivity coeffici
 |-------|------------------|--------------------|
 | `GravitationalAcceleration` | Analytic: point mass; geopotential by the Cunningham functions | None |
 | `ThirdBodyPerturbation` | Analytic | None |
-| `AtmosphericDrag` | Analytic in the velocity and the co-rotation; density gradient by central differences of the density model alone | Exact (`∂a/∂Cd`) |
+| `AtmosphericDrag` | Analytic in the velocity and the co-rotation; density gradient by central differences of the density model alone, one-sided on the side of the state where the stencil straddles an altitude at which the density of NRLMSISE-00 jumps (the cutoffs of its mixing, 160 to 450 km) | Exact (`∂a/∂Cd`) |
 | `SolarRadiationPressure` | Analytic outside the penumbra; central differences of the acceleration in the penumbra, so that the derivative of the shadow fraction is included | Exact (`∂a/∂Cr`) |
 | `ThermalRadiationPressure` | Analytic | Exact (`∂a/∂Cr`) |
 | `AlbedoRadiationPressure` | Central differences of the acceleration | Exact (`∂a/∂Cr`) |

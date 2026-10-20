@@ -81,4 +81,46 @@ public class Nrlmsise00CutoffTests
             Assert.True(jump < 2.0 * smooth, $"{kilometres} km: {jump:E2} against {smooth:E2}");
         }
     }
+
+    [Fact]
+    public void Discontinuities_AreTheCutoffsOfTheMixing_WithTheComparisonsOfTheModel()
+    {
+        // Arrange
+        IDensityDiscontinuities model = new Nrlmsise00Model(SpaceWeather.Nominal);
+
+        // Act and assert: the distinct values of altl, in m
+        Assert.Equal(new[] { 160000.0, 200000.0, 240000.0, 250000.0, 300000.0, 320000.0, 450000.0 },
+            model.DensityDiscontinuities.ToArray());
+
+        // The intervals: the mixing of He holds for z < 200 km, the others for z <= altl, so 200 km exactly is above
+        // its cutoff and 450 km exactly below its own
+        Assert.Equal(0, model.DensityInterval(100000.0));
+        Assert.Equal(0, model.DensityInterval(160000.0));
+        Assert.Equal(1, model.DensityInterval(160000.001));
+        Assert.Equal(1, model.DensityInterval(199999.999));
+        Assert.Equal(2, model.DensityInterval(200000.0));
+        Assert.Equal(6, model.DensityInterval(450000.0));
+        Assert.Equal(7, model.DensityInterval(450000.001));
+        Assert.Equal(7, model.DensityInterval(800000.0));
+
+        // The jumps are where the intervals change: the density is continuous within an interval (the test above)
+        foreach (double cutoff in model.DensityDiscontinuities)
+        {
+            Assert.NotEqual(model.DensityInterval(cutoff - 1e-3), model.DensityInterval(cutoff + 1e-3));
+        }
+    }
+
+    [Fact]
+    public void WithoutTheMixingSwitch_NoDiscontinuity()
+    {
+        // Arrange
+        var flags = NrlmsiseFlags.CreateStandard();
+        flags.Switches[15] = 0;
+        IDensityDiscontinuities model = new Nrlmsise00Model(flags, SpaceWeather.Nominal);
+
+        // Act and assert
+        Assert.True(model.DensityDiscontinuities.IsEmpty);
+        Assert.Equal(0, model.DensityInterval(160000.001));
+        Assert.Equal(0, model.DensityInterval(800000.0));
+    }
 }
