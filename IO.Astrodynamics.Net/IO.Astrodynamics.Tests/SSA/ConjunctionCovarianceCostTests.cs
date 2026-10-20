@@ -81,6 +81,41 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         Assert.NotEmpty(options);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Cost_OfTheAvoidanceWithoutAPropagatedCovariance_OnR2(bool rk78)
+    {
+        // Arrange: the protected participant of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag) with its initial covariance,
+        // over 8 h in RK7(8) at 1e-11 or by Velocity-Verlet at 1 s; the secondary a two-body orbit given at the TCA, 6 h
+        // after the start, 200 m away; the covariance held in RTN (#402)
+        var r2 = _cases.R2;
+        var start = r2.InitialState.Epoch;
+        var tca = start.AddHours(6.0);
+        var propagation = new TimeSystem.Window(start, start.AddHours(8.0));
+        var sigma = new[] { 50.0, 200.0, 30.0, 0.2, 0.05, 0.03 };
+        var protectedCraft = ReferenceCase.NewSpacecraft(rk78 ? -6811 : -6812, ConjunctionCovarianceCase.WithRtnCovariance(r2.InitialState, sigma));
+        if (rk78)
+            protectedCraft.Propagate(propagation, r2.Bodies, new RK78Integrator(1e-11, 1e-11), true, false, TimeSpan.FromSeconds(60.0), null);
+        else
+            protectedCraft.Propagate(propagation, r2.Bodies, true, false, TimeSpan.FromSeconds(1.0));
+        var secondaryCraft = ReferenceCase.NewSpacecraft(rk78 ? -6813 : -6814, AvoidanceFallbackCase.SecondaryNear(
+            protectedCraft.GetEphemeris(tca, r2.InitialState.Observer, r2.InitialState.Frame, Aberration.None).ToStateVector()));
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            new TimeSystem.Window(start, start.AddHours(7.0)), new ConjunctionAnalysisOptions { CovariancePropagation = null });
+
+        // Act: the default grid (lead times 1 h, 3 h and 6 h; 0.05, 0.10 and 0.25 m/s; six directions)
+        var watch = Stopwatch.StartNew();
+        var options = ConjunctionAssessment.EvaluateAvoidance(encounter, new AvoidanceSearchOptions { MaxReturnedOptions = 54 });
+        double avoidance = watch.Elapsed.TotalMilliseconds;
+
+        // Assert
+        _output.WriteLine($"EvaluateAvoidance without a propagated covariance, {(rk78 ? "RK7(8) at 1e-11" : "Velocity-Verlet at 1 s")}: " +
+                          $"{options.Count} options in {avoidance:F0} ms, each propagated from its burn to the end of the window");
+        Assert.NotEmpty(options);
+        Assert.All(options, o => Assert.Equal(AvoidanceTrajectory.Propagated, o.Trajectory));
+    }
+
     // The median of the elapsed time of several calls after one warm-up call, in ms
     private static double Median(Func<EncounterCase> analysis, int calls = 5)
     {
