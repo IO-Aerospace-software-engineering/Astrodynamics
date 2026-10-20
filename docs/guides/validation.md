@@ -175,8 +175,12 @@ of the tested propagation in open loop, and that burn moves at the level of the 
 equations: moved by one tick of 100 ns, it takes the sweep from 5 % to 30 % from 2.8e-7, 3.0e-7, 1.1e-8, 1.5e-7 to
 2.7e-7, 3.7e-7, 2.2e-7, 3.5e-7 (one tick earlier) or 9.4e-7, 8.0e-7, 4.3e-7, 2.8e-7 (one tick later), while the tested
 Ψ_Cd moves by 3e-11. The record is twice the worst at 30 % of seven burns from −20 to +20 ticks. The reference runs at
-1e-14 rather than the 1e-13 of the specification. Its smallest error on Φ is lower in every case: R1 1.7e-8 against 2.3e-8, R2 4.6e-8 against 1.4e-7, R3
-1.9e-7 against 1.0e-6, R4 2.8e-8 against 5.6e-8, R5 6.7e-7 against 7.8e-7.
+1e-14 rather than the 1e-13 of the specification. Its smallest error on Φ is lower in R1 to R4: R1 1.7e-8 against
+2.3e-8, R2 4.6e-8 against 1.4e-7, R3 1.9e-7 against 1.0e-6, R4 2.8e-8 against 5.6e-8. Both resolve R5 alike: over five
+starts moved by −2e-9 to 2e-9 m along x, 4.1e-7 to 8.0e-7 at 1e-14 and 1.1e-7 to 7.0e-7 at 1e-13 (6.7e-7 and 7.8e-7
+before [#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411) and
+[#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)), so R5 is held at 1e-14 to a
+record of 1.7e-6, twice the worst (decision of S. Guillet, 2026-10-20).
 
 **Start of the reference.** A propagation takes a state vector given at the start of its window as it is, so each
 reference propagation starts from exactly its perturbed state. Until
