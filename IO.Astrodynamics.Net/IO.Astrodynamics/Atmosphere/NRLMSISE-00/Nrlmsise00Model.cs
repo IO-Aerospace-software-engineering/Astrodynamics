@@ -2,6 +2,7 @@
 
 using System;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 
@@ -217,7 +218,7 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel
     private NrlmsiseModelInput BuildInput(double altitude, double geodeticLatitude, double geodeticLongitude,
         in Time epoch)
     {
-        var dateTime = (epoch.Frame == TimeFrame.UTCFrame ? epoch : epoch.ToUTC()).DateTime;
+        var dateTime = (epoch.Frame is UTCTimeFrame ? epoch : epoch.ToUTC()).DateTime;
         var doy = dateTime.DayOfYear;
         // The time of day to the tick (100 ns); it used to be truncated to the millisecond
         var sec = dateTime.TimeOfDay.TotalSeconds;
