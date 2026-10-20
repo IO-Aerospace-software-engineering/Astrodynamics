@@ -85,7 +85,8 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   `AvoidanceOption.Trajectory` (`AvoidanceTrajectory`). The secondary participant of the options keeps the resolution of
   its covariance of the encounter. A spacecraft keeps the force model of its last propagation by RK7(8) or
   Velocity-Verlet, without its steps (about 0.2 MB for one day in LEO), until it is propagated again. Cost: one
-  propagation per option from its burn (27 options: 2.8 s in RK7(8), 5.1 s by Velocity-Verlet at 1 s, against 0.5 s).
+  propagation per option from its burn (the 36 options of the default grid on R2 over 8 h: 1.8 s in RK7(8), 4.5 s by
+  Velocity-Verlet at 1 s, against about 0.5 s).
 
 - **The propagator builder adds the central body.** `CentralBodyPropagatorBuilder.Build` adds the central body of the
   spacecraft (the observer of its initial orbital parameters, or the Sun for a star or a barycenter) to the perturbing

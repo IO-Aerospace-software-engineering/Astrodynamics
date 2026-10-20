@@ -64,9 +64,6 @@ internal sealed class PropagationForceModel
     /// <summary>End of the propagation, which its ephemeris and orientation caches cover.</summary>
     internal Time End { get; }
 
-    /// <summary>The forces, in their order.</summary>
-    internal IReadOnlyCollection<ForceBase> Forces => _integrator.Forces;
-
     /// <summary>
     /// The force model of a propagation by RK7(8) or Velocity-Verlet, null for another integrator (its settings cannot be
     /// copied) or when no segment was integrated.
@@ -86,10 +83,8 @@ internal sealed class PropagationForceModel
         var contexts = new ForceEvaluationContext[solution.Segments.Count];
         for (int i = 0; i < epochs.Length; i++)
         {
+            // Every segment carries its context (PropagatorBase)
             var segment = solution.Segments[i];
-            if (segment.Context == null)
-                return null;
-
             epochs[i] = segment.BaseEpoch;
             contexts[i] = segment.Context.Value;
         }

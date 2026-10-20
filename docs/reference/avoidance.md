@@ -90,7 +90,9 @@ Moon, Sun, SRP, in RK7(8) and by Velocity-Verlet).
     encounter at 151 m, Pc 1.9e-4), the two-body option was 4.0 km (1 h lead) to 58.6 km (3 h lead) off at its TCA,
     with miss distances of 1.9 to 23 km and Pc of 4e-6 to 5e-5, where the propagated burn passes at 89 m to 2.9 km with
     Pc of 5e-33 to 3.4e-4: an option ranked safe (23.2 km, Pc 4.1e-6) passed at 89 m, Pc 3.0e-4. Cost: one propagation
-    per option from its burn (27 options: 2.8 s in RK7(8), 5.1 s by Velocity-Verlet at 1 s, against 0.5 s before).
+    per option from its burn; the 36 options of the default grid on R2 over 8 h in 1.8 s in RK7(8) at 1e-11 and 4.5 s
+    by Velocity-Verlet at 1 s (`ConjunctionCovarianceCostTests`, Release, informative), against about 0.5 s for the
+    two-body trials.
 
 ## AvoidanceSearchOptions
 
