@@ -77,10 +77,10 @@ public sealed class CdmPropagatedCovarianceCase
     internal static Window AnalysisWindow => new(Tca.AddMinutes(-30.0), Tca.AddMinutes(30.0));
 
     internal PropagationSolution Propagate(Spacecraft spacecraft, CovariancePropagationOptions options = null,
-        bool pointMass = false)
+        bool pointMass = false, double tolerance = 1e-11)
     {
         return spacecraft.Propagate(new Window(Start, Start.AddHours(3.0)), pointMass ? PointMassBodies : Bodies,
-            new RK78Integrator(1e-11, 1e-11), true, true, TimeSpan.FromSeconds(60.0), options);
+            new RK78Integrator(tolerance, tolerance), true, true, TimeSpan.FromSeconds(60.0), options);
     }
 }
 
