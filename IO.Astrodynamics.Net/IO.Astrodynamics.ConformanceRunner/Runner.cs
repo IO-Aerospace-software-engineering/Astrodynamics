@@ -31,6 +31,7 @@ public class Runner
             ["pointing_triad"] = new TriadSolver(),
             ["eclipse"] = new EclipseSolver(),
             ["propagator"] = new PropagatorSolver(spiceKernelsPath),
+            ["stm"] = new StmSolver(spiceKernelsPath),
             ["tracking_data"] = new TrackingDataSolver(conformanceTestsPath),
             ["geosynchronous"] = new GeosynchronousSolver()
         };
@@ -240,6 +241,16 @@ public class Runner
 
             switch (metricName)
             {
+                case "final_stm":
+                    var stmTol = ToleranceComparer.ResolveTolerance(StmComparer.ToleranceKey, toleranceConfig?.Defaults, caseOverrides);
+                    foreach (var (block, delta) in StmComparer.Compare((double[])computedVal, goldenVal, stmTol))
+                    {
+                        deltas[block] = delta;
+                        if (!delta.Passed) allPass = false;
+                    }
+
+                    continue;
+
                 case "attitude_quaternion":
                     var computedQ = (double[])computedVal;
                     var goldenQ = ParseQuaternionArray(goldenVal);
@@ -400,6 +411,7 @@ public class Runner
             "penumbra_duration_s" or "umbra_duration_s"             => ("s",   1.0),
             "attitude_quaternion"                                   => ("rad", 1.0),
             "target_in_fov"                                         => ("-",   1.0),
+            "stm_rr" or "stm_rv" or "stm_vr" or "stm_vv"            => ("-",   1.0),
             _ when metric.StartsWith("arc_") && (metric.EndsWith("_rise") || metric.EndsWith("_fall"))
                                                                     => ("s",   1.0),
             "arc_count"                                             => ("-",   1.0),

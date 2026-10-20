@@ -1,0 +1,111 @@
+
+********************************************
+***  GMAT Console Application
+********************************************
+
+General Mission Analysis Tool
+Console Based Version
+Build Date: Mar 30 2026  10:09:27
+
+
+Moderator is updating data files...
+Moderator is creating core engine...
+
+libmex.so: cannot open shared object file: No such file or directory
+*** Library "../plugins/libMatlabInterface" did not open.
+Skipping "../plugins/libOpenFramesInterface": GUI plugins are skipped in console mode
+
+libOpenFramesInterface.so.R2026a: cannot open shared object file: No such file or directory
+*** Library "../plugins/libOVtoOFI" did not open.
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: DE405
+Setting nutation file to ../data/planetary_coeff/NUTATION.DAT
+Setting leap seconds file to ../data/time/tai-utc.dat
+2026-10-19 14:02:58 GMAT Moderator successfully created core engine
+
+Interpreting scripts from the file.
+***** file: @SCRATCH@/G2/cd_vzm.script
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: DE405
+Successfully interpreted the script
+.................... Print out the whole sequence ........................................
+   Command::NoOp
+   Command::BeginMissionSequence
+   Command::GMAT
+   Command::GMAT
+   Command::GMAT
+   Command::GMAT
+   Command::GMAT
+   Command::GMAT
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+   Command::Propagate
+   Command::Report
+.................... End sequence ........................................................
+Running mission...
+Successfully set Planetary Source to use: DE405
+Successfully set Planetary Source to use: SPICE
+Kernel @SPK@ has been loaded.
+Kernel ../data/planetary_coeff/SPICEPlanetaryConstantsKernel.tpc has been loaded.
+Kernel ../data/time/SPICELeapSecondKernel.tls has been loaded.
+Kernel ../data/planetary_coeff/SPICEEarthPredictedKernel.bpc has been loaded.
+Kernel ../data/planetary_coeff/SPICEEarthCurrentKernel.bpc has been loaded.
+Kernel ../data/planetary_coeff/earth_latest_high_prec.bpc has been loaded.
+Kernel ../data/planetary_coeff/SPICELunaCurrentKernel.bpc has been loaded.
+Kernel ../data/planetary_coeff/SPICELunaFrameKernel.tf has been loaded.
+
+Mission run completed.
+===> Total Run Time: 2.137 seconds
+
+========================================
+
+
+*** GMAT Integration test (Console version) successful! ***
+
+Moderator is deleting core engine...

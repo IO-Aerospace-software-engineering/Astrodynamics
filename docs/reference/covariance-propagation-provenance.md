@@ -182,6 +182,31 @@ asserts the relative criterion at each tolerance). Relative to `‖Φ‖²` it i
 asserts `‖ΦᵀJΦ - J‖ / ‖Φ‖² < 1e-14`. The other cases keep the absolute threshold; relative to `‖Φ‖²` they are at
 5.4e-16 (R2), 4.9e-16 (R3) and 3.0e-15 (R4).
 
+## Third-Party Reference (H2)
+
+GMAT R2026a, the official Ubuntu x64 build of the GMAT project on SourceForge (`gmat-ubuntu-x64-R2026a.tar.gz`,
+SHA-256 `fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754`), run by
+`tools/gmat_reference/run_gmat.sh`; its reports are committed in `IO.Astrodynamics.Tests/Data/GmatReference`. GMAT's
+own documentation of the quantities: its Mathematical Specification for R2026a, §4.1.3 (Φ̇ = A Φ) and §4.2 (the partials
+of the forces), and its user guide (the `STM` and `Covariance` options of `Propagate`, `ProcessNoiseModel`). The figures
+and the models given to GMAT are in [Validation](../guides/validation.md#against-gmat-h2).
+
+On the shadow function, the R2026a build departs from its own specification. §4.2.4 and §4.2.5 of the Mathematical
+Specification include the derivative of the shadow function in the SRP partials (eqs. 4.79 and 4.83), while the
+spherical SRP model of the build leaves it out of the STM. GMAT says so in the console log of each G5 run
+(`G5/nominal.log`, `G5/nominal_half.log`, committed with the reports), 23 times:
+*"Warning: The orbit state transition matrix does not currently contain SRP contributions from shadow partial
+derivatives when using Spherical SRP."*
+
+| Quantity | GMAT output | Compared by | Measured (2026-10-19) | Not covered by GMAT |
+|----------|-------------|-------------|-----------------------|---------------------|
+| Φ (A1, B2 to B6) | `Sat.OrbitSTM`, PrinceDormand78 at a fixed step | `GmatReferenceTests.Phi_AgainstGmat_ModelsAndComputationApart`, G1 to G6 | G1 7.6e-12, G2 8.4e-9, G3 4.9e-12, G4 3.8e-8 worst block over the arc; G5 1.0e-4, GMAT's Φ leaving out the derivative of the shadow function; G6 6.9e-4, the densities ([#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411), [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)) | the derivative of the shadow function in GMAT's Φ (its warning, above) |
+| Ψ (A1, B5, B6) | none; GMAT's central differences on Cd and Cr | `GmatReferenceTests.Psi_AgainstGmatCentralDifferences` | Ψ_Cr of G5 7.9e-6, Ψ_Cd of G6 1.3e-2 (the densities) | Ψ itself (`OrbitSTM` is 6×6) |
+| ∂a/∂r, ∂a/∂v of each force (B1 to B6) | the A matrix of GMAT's Python API (`PropagationStateManager` with `AMatrix`) | `GmatPartialsTests`, the four B7 states | point mass, Moon, Sun, SRP below 1e-15; EGM2008 70×70 2.2e-12 to 2.2e-10; drag ∂a/∂v 7.7e-8, ∂a/∂r 5.5e-3 (the density gradients) | SRP in the penumbra |
+| P = Φ P0 Φᵀ (C2) | `Sat.OrbitErrorCovariance`, the `Covariance` option of `Propagate` | `GmatReferenceTests.CovarianceAndProcessNoise_AgainstGmat`, G1 and G2 | G1 4.5e-9 on the correlation matrix, GMAT's own drift from its Φ P0 Φᵀ (held to 1e-8); G2 1.3e-6, the departure of Φ (8.4e-9 per block) in a direction of small variance | Ψ Pp Ψᵀ and the extended covariance (C4): no consider parameter in GMAT |
+| Q of the RTN noise (C3) | `ProcessNoiseModel` `StateNoiseCompensation`: the discrete form of Tapley, Schutz and Born §4.9 at each integration step | the same test, GMAT's step swept from 20 s to 2.5 s | departure halved at each halving; the first-order limit is the library's Q to 1.0e-8 (G1) and 2.1e-8 (G2) | the Lyapunov integral itself (GMAT has its discrete form only) |
+| Execution error of Gates (C5) | none | not compared | | no execution error: the `ImpulsiveBurn` and `FiniteBurn` resources of the R2026a user guide have no uncertainty field (its `ErrorModel` is that of measurements) |
+
 ## Modeling Assumptions
 
 The assumptions of the feature are listed here with their reference and measured effect as the lots implementing

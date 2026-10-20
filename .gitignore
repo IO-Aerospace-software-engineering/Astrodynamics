@@ -25,6 +25,10 @@ build/
 /.idea/
 build_release/
 /.vs
+
+# Python bytecode of the tools
+__pycache__/
+*.pyc
 /IO.Astrodynamics.Net/IO.Astrodynamics/pykep
 pykep/src/epoch.cpp
 pykep/src/lambert_problem.cpp
