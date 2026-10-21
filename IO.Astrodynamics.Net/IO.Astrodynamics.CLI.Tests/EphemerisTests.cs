@@ -100,9 +100,15 @@ public class EphemerisTests
             Console.SetOut(sw);
             command.SubPoint("Data", 301, 399, new EpochParameters{Epoch = "0.0"}, planetodetic: true);
 
-            var res = sb.ToString();
-            Assert.Equal($"Planetodetic {{ Longitude = -1.0078683256327345, Latitude = -0.1914579069599901, Altitude = 396166994.9749323 }}{Environment.NewLine}"
-                , res);
+            // SPICE recgeo_c of the Moon relative to the Earth in ITRF93 at J2000 TDB, on the ellipsoid of pck00011
+            // (tools/geodetic_reference/test_values_ref.c). Before #411: latitude −0.1914579069599901 rad and altitude
+            // 396 166 994.97 m, the latitude relation of the surface applied 396 000 km above it
+            var match = System.Text.RegularExpressions.Regex.Match(sb.ToString(),
+                @"^Planetodetic \{ Longitude = (?<lon>[^,]+), Latitude = (?<lat>[^,]+), Altitude = (?<alt>[^ ]+) \}\r?\n$");
+            Assert.True(match.Success, sb.ToString());
+            Assert.Equal(-1.0078683256327345, double.Parse(match.Groups["lon"].Value, CultureInfo.InvariantCulture), 15);
+            Assert.Equal(-0.19022670497171018, double.Parse(match.Groups["lat"].Value, CultureInfo.InvariantCulture), 15);
+            Assert.Equal(396071266.51515061, double.Parse(match.Groups["alt"].Value, CultureInfo.InvariantCulture), 6);
         }
     }
 

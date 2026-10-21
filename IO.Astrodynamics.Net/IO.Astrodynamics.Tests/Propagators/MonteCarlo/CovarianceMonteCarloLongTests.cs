@@ -24,14 +24,20 @@ namespace IO.Astrodynamics.Tests.Propagators.MonteCarlo;
 /// at 24 h. Element-wise, every epoch within 4 standard deviations: worst |z| 1.89 (R2), 2.26 (R2, Cd sampled), 2.14
 /// (R3, Cr sampled), a noise set by the along-track variance in inertial axes. Along every direction of the state
 /// (<see cref="CovarianceMonteCarlo.EpochResult"/>) the ratios of S to P stay within their sampling band up to 1 h
-/// (asserted), then the largest is 1.15, 1.05 and 1.13 at one revolution, 609, 2.17 and 362 at 6 h, 2.4e6, 87 and
-/// 1.3e6 at 24 h; over the position alone 0.95 to 1.05 up to 6 h, and 4.99, 3.93 and 4.32 at 24 h (radial alone 1.17,
-/// 1.11 and 1.11). Kolmogorov-Smirnov at one revolution: p = 0.032 (R2, 1.543 h), 0.34 (R2, Cd sampled), 0.011 (R3,
+/// (asserted), then the largest is 1.15, 1.05 and 1.13 at one revolution, 609, 2.16 and 362 at 6 h, 2.4e6, 87 and
+/// 1.3e6 at 24 h; over the position alone 0.95 to 1.05 up to 6 h, and 5.00, 3.96 and 4.32 at 24 h (radial alone 1.17,
+/// 1.11 and 1.11). Kolmogorov-Smirnov at one revolution: p = 0.032 (R2, 1.543 h), 0.37 (R2, Cd sampled), 0.011 (R3,
 /// Cr sampled, 1.646 h). Both tests pass up to 1.67 h and fail from 1.83 h for R2 and for R3 with Cr sampled; with Cd
 /// sampled up to 2.33 h, failing from 2.5 h (asserted within half an hour: at 1.67 h the significance of R3 is 0.01003). The sampled Cd widens the along-track spread, which the thin direction of
 /// P across the curved orbit then tolerates longer; the test even passes again at 3.17 h and 3.33 h before failing for
 /// good from 3.5 h. The departure follows the curvature of the orbit, as for R1: at 24 h a mean radial offset of
-/// −129 m against −124 m (R2), −198 m against −186 m (Cd sampled), −104 m against −102 m (R3).
+/// −129 m against −124 m (R2), −200 m against −188 m (Cd sampled), −104 m against −102 m (R3).
+/// </para>
+/// <para>
+/// Re-measured 2026-10-20 after #411 and #409 (exact geodetic coordinates, NRLMSISE-00 in UTC), which move the density
+/// of the drag cases: with Cd sampled, the Kolmogorov-Smirnov p at one revolution from 0.34 to 0.37, the largest ratio
+/// at 6 h from 2.17 to 2.16, the position at 24 h from 3.93 to 3.96, the mean radial offset at 24 h from −198 m against
+/// −186 m to −200 m against −188 m; R2, the position at 24 h from 4.99 to 5.00. The other figures are unchanged.
 /// </para>
 /// </remarks>
 [Trait("Category", "LongValidation")]

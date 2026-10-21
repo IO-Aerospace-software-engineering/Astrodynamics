@@ -527,15 +527,17 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // in velocity; relative to the local Ψ_Cr it is larger just after the first shadow exit, where Ψ_Cr is below a
         // millimetre (decision of S. Guillet, H3 review of step 8). Measured at 1e-12, J2000 / ECLIPJ2000: 6.0e-5 / 1.0e-3
         // in position, 7.6e-5 / 1.9e-3 in velocity; at 1e-14, the remedy of A2: 1.5e-5 / 5.2e-6 and 2.6e-5 / 9.3e-6
-        // (Linux, .NET 10, 2026-10-15). At 1e-12 Ψ_Cr is above the 1e-4 of F1 in one frame, so it is bounded at about
-        // twice the worst; at 1e-14 it is held to the 1e-4 of F1
+        // (Linux, .NET 10, 2026-10-15). At 1e-12 Ψ_Cr is above the 1e-4 of F1 in one frame, so it is bounded by a record;
+        // at 1e-14 it is held to the 1e-4 of F1. Since #411 and #409 the record is twice the worst of five starts moved by
+        // −2e-9 to 2e-9 m along x in both frames, 5.6e-5 to 3.7e-3 at 1e-12 (1.6e-6 to 3.2e-5 at 1e-14), rounded up at the
+        // second significant digit (decision (b) of S. Guillet, 2026-10-20)
         var epochs = Enumerable.Range(1, 120).Select(i => Start.AddHours(0.05 * i)).ToArray();
         var psiCr = PsiCrArcError(y, expected, epochs);
         var tighterPsiCr = PsiCrArcError(tighter, expected, epochs);
         _output.WriteLine($"{frameName}, 5.123 h, 1e-12: Φ {phi:E2}, Ψ_Cd {psiCd:E2}; over the arc, Ψ_Cr relative to its " +
                           $"largest value: 1e-12 position {psiCr.Position:E2}, velocity {psiCr.Velocity:E2}; 1e-14 " +
                           $"position {tighterPsiCr.Position:E2}, velocity {tighterPsiCr.Velocity:E2}");
-        Assert.True(System.Math.Max(psiCr.Position, psiCr.Velocity) < 4e-3, $"Ψ_Cr at 1e-12 {psiCr}");
+        Assert.True(System.Math.Max(psiCr.Position, psiCr.Velocity) < 7.4e-3, $"Ψ_Cr at 1e-12 {psiCr}");
         Assert.True(System.Math.Max(tighterPsiCr.Position, tighterPsiCr.Velocity) < 1e-4, $"Ψ_Cr at 1e-14 {tighterPsiCr}");
 
         // Assert, over the arc, relative to the local Ψ_Cr: with Φ and Ψ in the step control, Ψ_Cr at 1e-12 against the

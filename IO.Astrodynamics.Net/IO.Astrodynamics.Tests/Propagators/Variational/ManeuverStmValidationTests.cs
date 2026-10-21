@@ -183,7 +183,11 @@ public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
         // Ψ_Cr held to F1 against the same propagation at 1e-14 with Φ and Ψ in the step control, without central
         // differences, which resolve it only to their noise (decision of S. Guillet, 2026-10-17, #398): over the arc
         // relative to its largest value, and relative to its local value wherever it is not zero
-        Assert.Equal(burnEpoch, tighter.Segments[1].BaseEpoch);
+        // The burn of the two propagations compared is the same, to the tick; the burn of the propagation without the step
+        // control on Φ and Ψ is placed on the 100 ns grid of the epochs one tick away in 3 of 5 starts moved by −2e-9 to
+        // 2e-9 m along x: a record at twice that (decision (b) of S. Guillet, 2026-10-20, #412)
+        Assert.Equal(controlled.Segments[1].BaseEpoch, tighter.Segments[1].BaseEpoch);
+        Assert.InRange((tighter.Segments[1].BaseEpoch - burnEpoch).TotalSeconds, -2e-7, 2e-7);
         var tighterPsiCr = epochs.Select(t => StmMeasures.Column(StmMeasures.Y(tighter, t), 7)).ToArray();
         var controlledPsiCr = epochs.Select(t => StmMeasures.Column(StmMeasures.Y(controlled, t), 7)).ToArray();
         var (crPosition, crVelocity) = WholePropagationDifferences.PsiArcError(controlledPsiCr, tighterPsiCr);

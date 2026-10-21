@@ -59,7 +59,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         { "G3", 9.8e-12, 3.6e-8, 2.7e-8, 1e-4, 1.2e-4, 5.6e-9 },
         { "G4", 7.6e-8, 1.2e-7, 1.1e-7, 1e-4, 0.51, 3.7e-4 },
         { "G5", 2.1e-4, 3.8e-7, 2.0e-4, 1e-4, 1.7e-2, 1.9e-5 },
-        { "G6", 1.4e-3, 1.5e-3, 1.1e-4, 1e-4, 7.8e3, 8.8 }
+        { "G6", 1.1e-4, 1.8e-6, 1.1e-4, 1e-4, 0.23, 2.6e-4 }
     };
 
     [Theory]
@@ -164,7 +164,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
     public static TheoryData<string, double, double, double> PsiCases => new()
     {
         { "G5", 1.6e-5, 1.2e-5, 1e-4 },
-        { "G6", 2.7e-2, 2.7e-2, 1e-4 }
+        { "G6", 1.6e-6, 1.7e-6, 1e-4 }
     };
 
     [Theory]
@@ -237,11 +237,10 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
 
         _output.WriteLine($"G6 density, library against GMAT: worst {worst:E2}, mean {mean:E2}");
 
-        // Assert: a record at twice the measurement of 2026-10-20, rounded up at the second significant digit; above the
-        // gate of the design (1e-3), so drag is compared at the B7 states with the density ratio taken out (decision 6).
-        // The departure is the geodetic altitude of the library (#411) and its TDB taken as UT (#409); kept as a record
-        // until both are fixed (decision of S. Guillet, 2026-10-19)
-        Assert.True(worst < 5.7e-2, $"G6 density {worst:E2}");
+        // Assert: the gate of the design (1e-3, decision 6 of #408), passed since #411 and #409 fixed the geodetic altitude
+        // of the library and its TDB taken as UT (worst 5.0e-6 on 2026-10-20, 2.8e-2 before); G6 and the drag partials
+        // are therefore compared as they are
+        Assert.True(worst < 1e-3, $"G6 density {worst:E2}");
     }
 
     // Bounds of P (relative Frobenius, on the correlation matrix) and of Q (the first-order limit of GMAT's discrete

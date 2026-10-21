@@ -40,7 +40,11 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// at the start of the window is taken as it is, instead of through the Keplerian elements, so each case starts from
 /// exactly the state given (1.9e-9 m and 2.1e-12 m/s away before, at most); the SRP case moved by 6.0 mm and 6.1e-6 m/s
 /// at most, with 99 steps instead of 102 (the step control took other steps from the start), the GEO case by 9.2e-7 m,
-/// the maneuver case by 5.8e-7 m, with the maneuver epoch unchanged. A golden holds on one platform only (the mathematical library differs between
+/// the maneuver case by 5.8e-7 m, with the maneuver epoch unchanged. Recaptured with the fixes of #411 and #409: drag
+/// takes the exact geodetic altitude, which the relation of the surface used to put up to 1.7 km too high at 400 km and
+/// mid-latitudes, and NRLMSISE-00 takes the epoch in UTC instead of the TDB calendar; the SRP case, the only one with
+/// drag, moved by 118 m and 0.133 m/s at most over the 3 h (117 m from the altitude, 1.06 m from the time scale), with
+/// 102 steps instead of 99; the two other cases did not move. A golden holds on one platform only (the mathematical library differs between
 /// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>
 /// <para>

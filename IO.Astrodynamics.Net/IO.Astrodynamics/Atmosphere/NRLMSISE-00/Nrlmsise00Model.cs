@@ -2,6 +2,7 @@
 
 using System;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 
@@ -223,14 +224,23 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
 
     /// <summary>
     /// The inputs of the model, in its internal units, for a geodetic position in SI units at an epoch: day of year,
-    /// seconds of the day, local solar time and the space weather of the model.
+    /// seconds of the day, local solar time and the space weather of the model. The model takes universal time (the
+    /// notes on the input variables of the model, <see cref="NrlmsiseInput"/>: seconds in day (UT), and lst =
+    /// sec/3600 + longitude/15° for consistency; J. M. Picone, A. E. Hedin, D. P. Drob, A. C. Aikin, "NRLMSISE-00
+    /// empirical model of the atmosphere: Statistical comparisons and scientific issues", J. Geophys. Res. 107(A12),
+    /// 1468, 2002, to be verified by S. Guillet): the epoch is taken in UTC whatever its time scale (#409; a
+    /// propagation evaluates drag at TDB epochs, 69.2 s ahead of UTC in 2021). UT1 is not used: |UT1 − UTC| stays
+    /// below 0.9 s, which moves the density by 3.6e-5 at most at 400 km
+    /// (<c>Nrlmsise00TimeScaleTests.UtcForUt1_DepartureMeasured</c>, 2026-10-20), against 2.8e-3 for the 69.2 s of #409
+    /// on the same grid.
     /// </summary>
     private NrlmsiseModelInput BuildInput(double altitude, double geodeticLatitude, double geodeticLongitude,
         in Time epoch)
     {
-        var dateTime = epoch.DateTime;
+        var dateTime = (epoch.Frame is UTCTimeFrame ? epoch : epoch.ToUTC()).DateTime;
         var doy = dateTime.DayOfYear;
-        var sec = (dateTime.Hour * 3600.0) + (dateTime.Minute * 60.0) + dateTime.Second + (dateTime.Millisecond / 1000.0);
+        // The time of day to the tick (100 ns); it used to be truncated to the millisecond
+        var sec = dateTime.TimeOfDay.TotalSeconds;
 
         // Calculate local solar time (hours)
         double lst = (sec / 3600.0) + (geodeticLongitude * Constants.Rad2Deg / 15.0);
