@@ -50,6 +50,27 @@ harnesses run them:
 Both evaluate the final state at the exact end of the window, whose UTC epoch is converted to TDB,
 like the reference tool's elapsed time, and report the magnitude of the position and velocity errors.
 
+### Running the Suite
+
+The suite keeps its kernels and the data of its goldens in Git LFS. A clone without LFS holds
+pointer files of about 130 bytes in their place. Clone it next to the repository (`../conformance-tests`
+from its root) and fetch the files:
+
+```bash
+git clone https://github.com/IO-Aerospace-software-engineering/conformance-tests
+cd conformance-tests
+git lfs install && git lfs pull
+```
+
+Then, from `IO.Astrodynamics.Net/`:
+
+```bash
+dotnet run --project IO.Astrodynamics.ConformanceRunner -c Release -- \
+  ../../conformance-tests IO.Astrodynamics.Tests/Data/SolarSystem conformance-report.json
+```
+
+The exit code is the number of failed cases plus the number of errors.
+
 ### Measured Errors
 
 Measured on 2026-10-04. RK7(8): conformance runner report (IO.Astrodynamics 10.x, the framework
