@@ -7,7 +7,9 @@ using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Solvers;
+using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using Xunit;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -127,7 +129,74 @@ public class PropagationCaseTests
         Assert.True(propagationCase.SolarRadiationPressure);
         Assert.Equal(TimeSpan.FromSeconds(30.0), propagationCase.StepSize);
         Assert.Equal(TimeSpan.FromHours(6.0), propagationCase.Window.Length);
+        Assert.Equal(propagationCase.Window.Length, propagationCase.OutputStep);
     }
+
+    [Fact]
+    public void PropagatorSolver_GivesTheFinalStateOfAPropagationWithOutputsAtTheStepOfTheCase()
+    {
+        // Arrange: a case with a geopotential and perturbing bodies, and the same propagation with an output at every
+        // step of the case (30 s), as the solver did before #426
+        CaseInput Case() => Parse(KeplerianOrbit, Geopotential10, "[\"Moon\", \"Sun\"]", NoForces);
+        var reference = PropagationCase.Build(Case(), KernelsPath);
+        var (position, velocity) = new CentralBodyPropagator(reference.Window, reference.Spacecraft,
+                PropagatorSolver.CreateIntegrator(), reference.Bodies, reference.Drag, reference.SolarRadiationPressure,
+                reference.StepSize)
+            .Propagate().InterpolateAt(reference.Window.EndDate.ToTDB());
+
+        // Act
+        var computed = new PropagatorSolver(KernelsPath).Solve(Case());
+
+        // Assert: the same, bit for bit, since the accepted steps do not depend on the outputs
+        Assert.Equal(UnitConversion.MToKm(position.X), computed["final_x_km"]);
+        Assert.Equal(UnitConversion.MToKm(position.Y), computed["final_y_km"]);
+        Assert.Equal(UnitConversion.MToKm(position.Z), computed["final_z_km"]);
+        Assert.Equal(UnitConversion.MSToKmS(velocity.X), computed["final_vx_km_s"]);
+        Assert.Equal(UnitConversion.MSToKmS(velocity.Y), computed["final_vy_km_s"]);
+        Assert.Equal(UnitConversion.MSToKmS(velocity.Z), computed["final_vz_km_s"]);
+    }
+
+    [Fact]
+    public void GeopotentialModelLeftAsAGitLfsPointer_IsAnError()
+    {
+        // Arrange: a data directory whose geopotential model is a Git LFS pointer
+        var directory = Directory.CreateTempSubdirectory("lfs-pointer-").FullName;
+        var path = Path.Combine(directory, "EGM2008_to70_TideFree");
+        File.WriteAllText(path, SuiteDataFile.LfsPointerHeader + "v1\noid sha256:0\nsize 257852\n");
+        var caseInput = Parse(KeplerianOrbit, Geopotential10, "[]", NoForces);
+
+        try
+        {
+            // Act and assert
+            var exception = Assert.Throws<InvalidOperationException>(() => PropagationCase.Build(caseInput, directory));
+            Assert.Contains(path, exception.Message);
+            Assert.Contains("git lfs pull", exception.Message);
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
+    private const string KeplerianOrbit = """
+                                              type: "keplerian"
+                                              a_km: 6778.137
+                                              e: 0.001
+                                              i_deg: 51.6
+                                              raan_deg: 30.0
+                                              argp_deg: 40.0
+                                              ma_deg: 50.0
+                                          """;
+
+    private const string Geopotential10 = """
+                                            geopotential_degree: 10
+                                            geopotential_model: "EGM2008_to70_TideFree"
+                                          """;
+
+    private const string NoForces = """
+                                        drag: false
+                                        srp: false
+                                    """;
 
     [Fact]
     public void Tle_TheOsculatingStateOfSgp4_InTheFrameOfTheCase()

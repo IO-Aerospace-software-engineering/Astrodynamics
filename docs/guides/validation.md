@@ -69,7 +69,15 @@ dotnet run --project IO.Astrodynamics.ConformanceRunner -c Release -- \
   ../../conformance-tests IO.Astrodynamics.Tests/Data/SolarSystem conformance-report.json
 ```
 
-The exit code is the number of failed cases plus the number of errors.
+The exit code is the number of failed cases plus the number of errors. A data file left as an LFS
+pointer makes its case an ERROR that names the file. The suite (10 cases) takes about 45 s in
+Release on Linux (4 cores, 2026-10-21), 44 s of them for the eclipse case. The runner asks the
+propagator for the end of the window only: an output every `step_size_s` (1 s) cost a shortened
+RK7(8) step each and took the suite to 107 s (#426).
+
+The `conformance` job of the CI runs the latest version of the suite on Linux, Windows and macOS
+arm64 and keeps each report as an artifact. The suite is private: the job reads it with the
+secret `CONFORMANCE_TESTS_TOKEN` and is skipped without it.
 
 ### Measured Errors
 
