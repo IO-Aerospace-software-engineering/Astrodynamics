@@ -5,22 +5,23 @@ namespace IO.Astrodynamics.Coordinates
     public readonly record struct Planetocentric(double Longitude, double Latitude, double Radius)
     {
         /// <summary>
-        /// Convert to planetodetic coordinates
+        /// Convert to planetodetic (geodetic) coordinates on the ellipsoid of revolution of the body, exactly at any
+        /// altitude: the latitude of the normal to the ellipsoid through the point and the height along it.
         /// </summary>
-        /// <param name="flattening"></param>
-        /// <param name="equatorialRadius"></param>
-        /// <returns></returns>
+        /// <param name="flattening">Flattening f = (a − c) / a of the body, below 1; negative for a prolate body.</param>
+        /// <param name="equatorialRadius">Equatorial radius a of the body, m.</param>
+        /// <returns>The geodetic longitude and latitude (rad) and altitude (m) of the point.</returns>
+        /// <remarks>Closed form of Vermeille (2002) with the changes of Karney (2011); see
+        /// <see cref="GeodeticCoordinates"/>. Before #411 the latitude came from the relation of the surface,
+        /// tan φ = tan φc / (1 − f)², which put the altitude up to 5 km off in LEO.</remarks>
+        /// <exception cref="System.ArgumentOutOfRangeException">The radius is not positive or the flattening not below 1.</exception>
         public Planetodetic ToPlanetodetic(double flattening, double equatorialRadius)
         {
-            double f2 = (1 - flattening) * (1 - flattening);
-            double lat = System.Math.Atan((1.0 / f2) * System.Math.Tan(Latitude));
-            var geocentricCoords = ToCartesianCoordinates();
-            double x = geocentricCoords.X;
-            double y = geocentricCoords.Y;
-            double e2 = 2 * flattening - System.Math.Pow(flattening, 2);
-            double p = System.Math.Sqrt(System.Math.Pow(x, 2) + System.Math.Pow(y, 2));
-            double altitude = (p / System.Math.Cos(lat)) - equatorialRadius / System.Math.Sqrt(1 - e2 * System.Math.Pow(System.Math.Sin(lat), 2));
-            return new Planetodetic(Longitude, lat, altitude);
+            // The longitude is the same in both systems: kept as given, also on the axis
+            return GeodeticCoordinates.FromBodyFixed(ToCartesianCoordinates(), equatorialRadius, flattening) with
+            {
+                Longitude = Longitude
+            };
         }
 
         /// <summary>

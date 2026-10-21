@@ -108,6 +108,15 @@ Console.WriteLine($"Altitude:  {coords.Altitude:F0} m");
 
 Longitude and latitude are in radians; altitude is in meters above the reference ellipsoid.
 
+Convert between geodetic and planetocentric coordinates with the ellipsoid of the body; the conversion is exact at any
+altitude, on the surface as in orbit:
+
+```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
+var planetocentric = coords.ToPlanetocentric(earth.Flattening, earth.EquatorialRadius);
+var back = planetocentric.ToPlanetodetic(earth.Flattening, earth.EquatorialRadius); // coords, to about 1e-15
+```
+
 ## Summary
 
 - All frame transforms pivot through ICRF. Use `ToFrame` to convert between any supported frames.

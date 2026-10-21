@@ -53,17 +53,17 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(new TimeSystem.Time("2021-06-02T02:51:10.7077003z").ToTDB(), firstWindow.Window.StartDate, TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-06-02T02:51:10.7077003z").ToTDB(), firstWindow.Window.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(135.19503938478633, firstWindow.InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(137.4474615185942, firstWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            Assert.Equal(137.44746151989264, firstWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
             Assert.Equal(7667.0268499482199, firstWindow.InertialInsertionVelocity, 6);
-            Assert.Equal(7384.4763654599719, firstWindow.NonInertialInsertionVelocity, 6);
+            Assert.Equal(7384.4763653063428, firstWindow.NonInertialInsertionVelocity, 6);
 
             var secondWindow = launchWindows.ElementAt(1);
             Assert.Equal(new TimeSystem.Time("2021-06-02T18:12:40.1968381 TDB"), secondWindow.Window.StartDate, TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-06-02T18:12:40.1968381 TDB").ToTDB(), secondWindow.Window.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(44.804960615213673, secondWindow.InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(42.552538481405811, secondWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            Assert.Equal(42.552538480107366, secondWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
             Assert.Equal(7667.02685, secondWindow.InertialInsertionVelocity, 6);
-            Assert.Equal(7384.4763654599719, secondWindow.NonInertialInsertionVelocity, 6);
+            Assert.Equal(7384.4763653063428, secondWindow.NonInertialInsertionVelocity, 6);
         }
 
         [Fact]
@@ -86,9 +86,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(new TimeSystem.Time("2021-06-02T18:11:31.0119753Z"), firstWindow.Window.StartDate.ToUTC(), TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-06-02T18:11:31.0119753Z"), firstWindow.Window.EndDate.ToUTC(), TestHelpers.TimeComparer);
             Assert.Equal(44.804960615213673, firstWindow.InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(42.552538481405811, firstWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            Assert.Equal(42.552538480107366, firstWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
             Assert.Equal(7667.02685, firstWindow.InertialInsertionVelocity, 6);
-            Assert.Equal(7384.4763654599719, firstWindow.NonInertialInsertionVelocity, 6);
+            Assert.Equal(7384.4763653063428, firstWindow.NonInertialInsertionVelocity, 6);
         }
 
         [Fact]
@@ -112,9 +112,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(new TimeSystem.Time("2021-06-02T15:08:24.4541548Z"), firstWindow.Window.StartDate.ToUTC(), TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-06-02T15:08:24.4541548Z"), firstWindow.Window.EndDate.ToUTC(), TestHelpers.TimeComparer);
             Assert.Equal(55.142763550082414, firstWindow.InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(53.583070771466289, firstWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            Assert.Equal(53.58307076976331, firstWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
             Assert.Equal(7667.02685, firstWindow.InertialInsertionVelocity, 6);
-            Assert.Equal(7381.3088268229048, firstWindow.NonInertialInsertionVelocity, 6);
+            Assert.Equal(7381.3088265255128, firstWindow.NonInertialInsertionVelocity, 6);
         }
 
         [Fact]
@@ -137,17 +137,17 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(new TimeSystem.Time("2021-06-02T08:55:43.6080970z"), firstWindow.Window.StartDate.ToUTC(), TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-06-02T08:55:43.6080970z"), firstWindow.Window.EndDate.ToUTC(), TestHelpers.TimeComparer);
             Assert.Equal(124.85723644991758, firstWindow.InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(126.41692922853372, firstWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            Assert.Equal(126.41692923023668, firstWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
             Assert.Equal(7667.02685, firstWindow.InertialInsertionVelocity, 6);
-            Assert.Equal(7381.3088268229048, firstWindow.NonInertialInsertionVelocity, 6);
+            Assert.Equal(7381.3088265255128, firstWindow.NonInertialInsertionVelocity, 6);
 
             var secondWindow = res.ElementAt(1);
             Assert.Equal(new TimeSystem.Time("2021-06-02T15:08:24.4541548Z"), secondWindow.Window.StartDate.ToUTC(), TestHelpers.TimeComparer);
             Assert.Equal(new TimeSystem.Time("2021-06-02T15:08:24.4541548Z"), secondWindow.Window.EndDate.ToUTC(), TestHelpers.TimeComparer);
             Assert.Equal(55.142763550082414, secondWindow.InertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
-            Assert.Equal(53.583070771466289, secondWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
+            Assert.Equal(53.58307076976331, secondWindow.NonInertialAzimuth * IO.Astrodynamics.Constants.Rad2Deg, 6);
             Assert.Equal(7667.02685, secondWindow.InertialInsertionVelocity, 6);
-            Assert.Equal(7381.3088268229048, secondWindow.NonInertialInsertionVelocity, 6);
+            Assert.Equal(7381.3088265255128, secondWindow.NonInertialInsertionVelocity, 6);
         }
     }
 }

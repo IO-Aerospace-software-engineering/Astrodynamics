@@ -36,7 +36,9 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// their sweep, and that the reference at 1e-14 resolves Φ at least as well as at the 1e-13 of the specification, which
 /// justifies its tolerance (decision of S. Guillet, 2026-10-16). Measured (Linux, .NET 10, 2026-10-16), the smallest
 /// error of Φ at 1e-14 and at 1e-13: R1 1.7e-8 and 2.3e-8, R2 4.6e-8 and 1.4e-7, R3 1.9e-7 and 1.0e-6, R4 2.8e-8 and
-/// 5.6e-8, R5 6.7e-7 and 7.8e-7. Chosen steps: 10 m and 1 cm/s for R1 to R4, 1 m and 1 mm/s for R5 (6.7e-7, 8.7e-7 at
+/// 5.6e-8, R5 6.7e-7 and 7.8e-7. Since #411 and #409 both tolerances resolve R5 alike (4.1e-7 to 8.0e-7 at 1e-14,
+/// 1.1e-7 to 7.0e-7 at 1e-13 over five starts moved by −2e-9 to 2e-9 m along x), so R5 is held at 1e-14 to a record,
+/// twice the worst, instead of the comparison (decision (b) of S. Guillet, 2026-10-20). Chosen steps: 10 m and 1 cm/s for R1 to R4, 1 m and 1 mm/s for R5 (6.7e-7, 8.7e-7 at
 /// 10 m); Cd 1 % for R2 (1.2e-7) and 5 % for R5 (5.3e-8); Cr 10 % for R3 (3.8e-6) and R4 (9.7e-10).
 /// </para>
 /// <para>
@@ -52,9 +54,11 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// (2026-10-20) Ψ_Cd of the eclipsing case is held at its chosen step to a record instead of the factor of 2 (decision of
 /// S. Guillet, 2026-10-20): its references fire the burn of the tested propagation in open loop, whose epoch moves at the
 /// level of the noise with the steps of the variational equations, and moving that burn by one tick of 100 ns reshuffles
-/// the sweep (from 5 % to 30 %: 2.8e-7, 3.0e-7, 1.1e-8, 1.5e-7 as tested; 2.7e-7, 3.7e-7, 2.2e-7, 3.5e-7 one tick
-/// earlier; 9.4e-7, 8.0e-7, 4.3e-7, 2.8e-7 one tick later), its tested Ψ_Cd unchanged to 3e-11. The record is twice the
-/// worst at 30 % over seven burns from −20 to +20 ticks (3.5e-7), rounded up at the second significant digit. The study
+/// the sweep, its tested Ψ_Cd unchanged to 3e-11. Re-measured with #411 and #409 (2026-10-20), from 5 % to 30 %:
+/// 3.4e-7, 2.5e-8, 3.7e-7, 1.3e-8 as tested; 3.0e-7, 7.9e-8, 2.6e-7, 1.0e-7 one tick earlier; 6.7e-7, 1.6e-7, 2.6e-7,
+/// 2.1e-7 one tick later; at 30 % over the seven burns from −20 to +20 ticks, 3.2e-8, 1.4e-7, 1.0e-7, 1.3e-8, 2.1e-7,
+/// 1.2e-8 and 1.8e-7 (before them: 3.5e-7 at worst, a record of 7.0e-7). The record is twice the worst at 30 % over the
+/// seven burns (2.05e-7, one tick later), rounded up at the second significant digit. The study
 /// evaluates the end of the arc, while F1 asserts
 /// over the arc: <c>StmValidationTests</c> holds Ψ over the arc relative to its largest value, which does not depend on
 /// the step of the reference. To write the curves, set <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test writes
@@ -94,7 +98,8 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
 
         // Act and assert
         Study(referenceCase, solution, (start, cd, cr, tolerance) =>
-            referenceCase.PropagateReference(NaifId - 1, start, cd, cr, tolerance));
+            referenceCase.PropagateReference(NaifId - 1, start, cd, cr, tolerance),
+            referenceResolutionRecord: name == "R5" ? R5ReferenceResolutionRecord : null);
     }
 
     [Fact]
@@ -112,13 +117,19 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
             psiCdRecord: EclipsingPsiCdRecord);
     }
 
+    // The smallest error of Φ of R5 with the reference at 1e-14: twice the worst of five starts moved by −2e-9 to 2e-9 m
+    // along x (4.1e-7 to 8.0e-7; at 1e-13 1.1e-7 to 7.0e-7, so neither tolerance resolves R5 better), rounded up at the
+    // second significant digit, in place of the comparison with 1e-13 (decision (b) of S. Guillet, 2026-10-20, #412)
+    private const double R5ReferenceResolutionRecord = 1.7e-6;
+
     // Ψ_Cd of the eclipsing case at its chosen step: twice the worst of seven open-loop burns moved by −20 to +20 ticks,
-    // rounded up at the second significant digit (decision of S. Guillet, 2026-10-20; remarks of the class)
-    private const double EclipsingPsiCdRecord = 7.0e-7;
+    // rounded up at the second significant digit (decision of S. Guillet, 2026-10-20; remarks of the class), re-measured
+    // with #411 and #409
+    private const double EclipsingPsiCdRecord = 4.1e-7;
 
     private void Study(ReferenceCase referenceCase, PropagationSolution solution,
         Func<StateVector, double, double, double, PropagationSolution> reference, bool assertPsiCr = true,
-        double? psiCdRecord = null)
+        double? psiCdRecord = null, double? referenceResolutionRecord = null)
     {
         var y = StmMeasures.Y(solution, referenceCase.Window.EndDate);
         var rows = new List<(string Quantity, double Step, double Error)>();
@@ -167,8 +178,16 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
         AssertOnThePlateau(rows, "Phi", referenceCase.PositionStep);
         double atReferenceTolerance = rows.Where(r => r.Quantity == "Phi").Min(r => r.Error);
         double atSpecificationTolerance = rows.Where(r => r.Quantity == "Phi_1e-13").Min(r => r.Error);
-        Assert.True(atReferenceTolerance <= atSpecificationTolerance,
-            $"the reference at 1e-14 resolves {atReferenceTolerance:E2}, at 1e-13 {atSpecificationTolerance:E2}");
+        if (referenceResolutionRecord.HasValue)
+        {
+            Assert.True(atReferenceTolerance < referenceResolutionRecord.Value,
+                $"the reference at 1e-14 resolves {atReferenceTolerance:E2}");
+        }
+        else
+        {
+            Assert.True(atReferenceTolerance <= atSpecificationTolerance,
+                $"the reference at 1e-14 resolves {atReferenceTolerance:E2}, at 1e-13 {atSpecificationTolerance:E2}");
+        }
         if (psiCdRecord.HasValue)
         {
             double atChosen = rows.Single(r => r.Quantity == "Psi_Cd" && r.Step == referenceCase.DragCoefficientStep).Error;

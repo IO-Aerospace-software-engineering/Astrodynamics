@@ -19,10 +19,10 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational.External;
 /// </summary>
 /// <remarks>
 /// GMAT's derivative array with the A matrix on is the derivative of the state, then A = [0, I; ∂a/∂r, ∂a/∂v], 6×6
-/// row-major, in km and s: ∂a/∂r in 1/s² and ∂a/∂v in 1/s, the same in SI. For drag, the density of the two tools
-/// differs (<c>GmatReferenceTests.Density_AlongTheDragCase_AgainstGmat</c>): GMAT's partials are scaled by the ratio of
-/// the drag accelerations, which takes the density ratio out of ∂a/∂v and of the co-rotation term of ∂a/∂r, and out of
-/// the density-gradient term to the extent that ∇ρ/ρ agrees (decision 6).
+/// row-major, in km and s: ∂a/∂r in 1/s² and ∂a/∂v in 1/s, the same in SI. For drag, the densities of the two tools
+/// agree to 5e-6 since #411 and #409 (<c>GmatReferenceTests.Density_AlongTheDragCase_AgainstGmat</c>), so GMAT's
+/// partials are compared as they are, without the scaling by the ratio of the accelerations that took the density ratio
+/// out before (decision 6 of #408).
 /// </remarks>
 [Trait("Category", "Validation")]
 public class GmatPartialsTests : IClassFixture<PartialsTestCases>
@@ -90,17 +90,14 @@ public class GmatPartialsTests : IClassFixture<PartialsTestCases>
         var gmatAcceleration = new[] { gmat[3], gmat[4], gmat[5] }.Select(x => x * 1000.0).ToArray();
         double accelerationError = RiddersDerivative.RelativeFrobeniusError(
             new[] { acceleration.X, acceleration.Y, acceleration.Z }, gmatAcceleration);
-        double scale = forceName == "drag"
-            ? acceleration.Magnitude() / System.Math.Sqrt(gmatAcceleration.Sum(x => x * x))
-            : 1.0;
         var gmatDadr = new double[9];
         var gmatDadv = new double[9];
         for (int i = 0; i < 3; i++)
         {
             for (int j = 0; j < 3; j++)
             {
-                gmatDadr[3 * i + j] = scale * gmat[6 + 6 * (3 + i) + j];
-                gmatDadv[3 * i + j] = scale * gmat[6 + 6 * (3 + i) + 3 + j];
+                gmatDadr[3 * i + j] = gmat[6 + 6 * (3 + i) + j];
+                gmatDadv[3 * i + j] = gmat[6 + 6 * (3 + i) + 3 + j];
             }
         }
 
@@ -109,14 +106,15 @@ public class GmatPartialsTests : IClassFixture<PartialsTestCases>
             ? "both zero"
             : RiddersDerivative.RelativeFrobeniusError(dadv, gmatDadv).ToString("E2");
         _output.WriteLine($"{stateName}, {forceName}: acceleration {accelerationError:E2}, ∂a/∂r {dadrError:E2}, " +
-                          $"∂a/∂v {dadvText}" + (forceName == "drag" ? $", GMAT scaled by {scale:F6}" : ""));
+                          $"∂a/∂v {dadvText}");
 
-        // Assert: the analytic threshold of B (1e-6) wherever the models agree; for drag, ∂a/∂v to it once the density
-        // ratio is out, and the acceleration and ∂a/∂r, which carry the departure of the densities and of their
-        // gradients, as records at twice the measurement of 2026-10-20, rounded up at the second significant digit
+        // Assert: the analytic threshold of B (1e-6) wherever the models agree, drag included since #411 and #409
+        // (acceleration 6.7e-8 to 4.0e-7, ∂a/∂v 6.9e-8 to 3.6e-7 on 2026-10-20). The drag ∂a/∂r keeps the departure of
+        // GMAT's density gradient, the library's agreeing with Ridders' reference to 5e-10 (B5): a record at twice the
+        // measurement of 2026-10-20, rounded up at the second significant digit
         bool drag = forceName == "drag";
-        Assert.True(accelerationError < (drag ? 8.6e-2 : 1e-6), $"acceleration {accelerationError:E2}");
-        Assert.True(dadrError < (drag ? 1.1e-2 : 1e-6), $"∂a/∂r {dadrError:E2}");
+        Assert.True(accelerationError < 1e-6, $"acceleration {accelerationError:E2}");
+        Assert.True(dadrError < (drag ? 7.3e-3 : 1e-6), $"∂a/∂r {dadrError:E2}");
         if (dadvText != "both zero")
         {
             Assert.True(RiddersDerivative.RelativeFrobeniusError(dadv, gmatDadv) < 1e-6, $"∂a/∂v {dadvText}");

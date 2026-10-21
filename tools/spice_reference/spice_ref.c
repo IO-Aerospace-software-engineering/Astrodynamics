@@ -5,8 +5,9 @@
  *
  * The state transformation comes from sxform_c alone: the 6x6 matrix [[R, 0], [dR/dt, R]] applied to the state.
  * It is independent of the path of the library, which goes through a quaternion, the angular velocity of xf2rav_c and
- * v' = R v - (R w) x r'. The inputs (epochs, body-fixed site positions, launch parameters) are the values the
- * library computes for each test; the PR that introduced this harness does not change them.
+ * v' = R v - (R w) x r'. The inputs (epochs, launch parameters) are the values the library computes for each test;
+ * the body-fixed positions of the sites come from their geodetic coordinates by georec_c, on the ellipsoid of
+ * pck00011 (#411: they used to be the positions the library computed, with a site at 1000 m of altitude 1.15 m away).
  */
 #include <stdio.h>
 #include <math.h>
@@ -70,8 +71,15 @@ int main(int argc, char **argv) {
     print_state("StateVectorTests.ToNonInertialFrame", inItrf);
     printf(",\n");
 
+    /* The Earth ellipsoid of pck00011, in m */
+    SpiceDouble radii[3];
+    SpiceInt n;
+    bodvrd_c("EARTH", "RADII", 3, &n, radii);
+    double a = radii[0] * 1000.0, f = (radii[0] - radii[2]) / radii[0];
+
     /* ScenarioTests.PropagateSite: site S333 (30 deg E, 10 deg N, 1000 m), fixed in ITRF93, seen in ICRF. */
-    double site[6] = {5441114.152206729, 3141428.720468037, 1100420.993647475, 0.0, 0.0, 0.0};
+    double site[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    georec_c(30.0 * rpd_c(), 10.0 * rpd_c(), 1000.0, a, f, site);
     double inIcrf[6];
     transform("ITRF93", "J2000", 0.0, site, inIcrf);
     print_state("ScenarioTests.PropagateSite et=0", inIcrf);
@@ -81,10 +89,11 @@ int main(int argc, char **argv) {
     printf(",\n");
 
     /* LaunchTests: launch sites at (81 deg W, 28.5 deg N) and (104 deg W, 41 deg S), altitude 0. */
-    double north[3] = {877517.9049003018, -5540430.001218749, 3025316.612926567};
+    double north[3], south[3];
+    georec_c(-81.0 * rpd_c(), 28.5 * rpd_c(), 0.0, a, f, north);
+    georec_c(-104.0 * rpd_c(), -41.0 * rpd_c(), 0.0, a, f, south);
     print_launch("LaunchTests site 81W 28.5N", north, 0.7819940839618628, 7667.02684994822);
     printf(",\n");
-    double south[3] = {-1166206.4432640779, -4677398.567210214, -4162422.9192307717};
     print_launch("LaunchTests site 104W 41S", south, 0.9624227825976552, 7667.02684994822);
     printf("\n}\n");
 
