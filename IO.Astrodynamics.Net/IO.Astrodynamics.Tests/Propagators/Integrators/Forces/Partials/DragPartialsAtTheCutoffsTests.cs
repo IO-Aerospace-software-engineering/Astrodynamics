@@ -487,7 +487,7 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         _output.WriteLine($"{parallel / 1000.0:F1} km from the polar axis: ∇ρ {error:E2}, reference " +
                           $"{referenceError:E2}, Cartesian differences {former:E2}");
         Assert.True(referenceError < 1e-10, $"reference {referenceError:E2}");
-        if (System.OperatingSystem.IsWindows()) Assert.Fail($"MEASURE polar Ridders {parallel / 1000.0:F1} km: {error:E3}, reference {referenceError:E3}");
+        if (System.OperatingSystem.IsMacOS()) Assert.Fail($"MEASURE polar Ridders {parallel / 1000.0:F1} km: {error:E3}, reference {referenceError:E3}");
     }
 
     [Fact]
@@ -540,7 +540,7 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         _output.WriteLine($"∇ρ against ∂ρ/∂h ∇h (Ridders): {error:E2}, reference {referenceError:E2}; altitude " +
                           $"{altitude:F3} m");
         Assert.True(referenceError < 1e-9, $"reference {referenceError:E2}");
-        if (System.OperatingSystem.IsWindows()) Assert.Fail($"MEASURE grad h: {error:E3}, reference {referenceError:E3}");
+        if (System.OperatingSystem.IsMacOS()) Assert.Fail($"MEASURE grad h: {error:E3}, reference {referenceError:E3}");
     }
 
     private (Vector3 Direction, Quaternion? Rotation, TimeSystem.Time Epoch) RadialLine()

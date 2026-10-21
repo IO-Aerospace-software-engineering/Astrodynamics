@@ -108,7 +108,7 @@ public class DenseAirStepControlTests
         // Assert: the propagation reaches the end of its window within twice the steps measured (2026-10-21, Linux)
         _output.WriteLine($"{model}, {altitude / 1000.0} km, {tolerance:E0}: {steps} steps, {withoutTheOption} " +
                           "without the option");
-        if (System.OperatingSystem.IsWindows()) Assert.Fail($"MEASURE dense air {model} {altitude / 1000.0} km {tolerance:E0}: {steps} steps");
+        if (System.OperatingSystem.IsMacOS()) Assert.Fail($"MEASURE dense air {model} {altitude / 1000.0} km {tolerance:E0}: {steps} steps");
         Assert.NotNull(solution.GetStateTransitionMatrix(Window.EndDate));
     }
 
@@ -194,7 +194,7 @@ public class DenseAirStepControlTests
         int steps = Steps(solution);
         _output.WriteLine($"Ψ_Cd and Ψ_Cr through the shadow: {steps} steps, {shadowed} minutes in the shadow cylinder");
         Assert.True(shadowed > 0, "the orbit never enters the shadow");
-        if (System.OperatingSystem.IsWindows()) Assert.Fail($"MEASURE drag and SRP with eclipses: {steps} steps");
+        if (System.OperatingSystem.IsMacOS()) Assert.Fail($"MEASURE drag and SRP with eclipses: {steps} steps");
         Assert.Equal((6, 2), (solution.GetParameterSensitivity(window.EndDate).Rows,
             solution.GetParameterSensitivity(window.EndDate).Columns));
     }
