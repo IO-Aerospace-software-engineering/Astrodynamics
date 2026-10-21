@@ -33,8 +33,10 @@ public sealed class AvoidanceFallbackCase
     internal static readonly ManeuverExecutionError Gates = new()
         { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
 
-    // The options and their references at 1e-13 in RK7(8), at 1 s by Velocity-Verlet
+    // The options at 1e-13 in RK7(8), their references at 1e-14 (a reference at 1e-13 is off by up to 1.8e-5 m at the TCA,
+    // its own integration error); by Velocity-Verlet at 1 s
     internal const double Tolerance = 1e-13;
+    internal const double ReferenceTolerance = 1e-14;
     internal static readonly TimeSpan VelocityVerletStep = TimeSpan.FromSeconds(1.0);
 
     public AvoidanceFallbackCase()
@@ -105,10 +107,11 @@ public sealed class AvoidanceFallbackCase
     }
 
     /// <summary>The spacecraft propagated over the window, in RK7(8) or by Velocity-Verlet, with drag and SRP.</summary>
-    internal PropagationSolution Propagate(Spacecraft spacecraft, bool rk78, CovariancePropagationOptions options = null)
+    internal PropagationSolution Propagate(Spacecraft spacecraft, bool rk78, CovariancePropagationOptions options = null,
+        double tolerance = Tolerance)
     {
         return rk78
-            ? spacecraft.Propagate(PropagationWindow, Bodies, new RK78Integrator(Tolerance, Tolerance), true, true,
+            ? spacecraft.Propagate(PropagationWindow, Bodies, new RK78Integrator(tolerance, tolerance), true, true,
                 TimeSpan.FromSeconds(60.0), options)
             : spacecraft.Propagate(PropagationWindow, Bodies, true, true, VelocityVerletStep);
     }
@@ -240,7 +243,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             referenceFirst.SetNextManeuver(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start,
                 option.BurnEpoch, option.DeltaVInertial, referenceEngine));
             reference.SetStandbyManeuver(referenceFirst);
-            var referenceSolution = _case.Propagate(reference, true);
+            var referenceSolution = _case.Propagate(reference, true, tolerance: AvoidanceFallbackCase.ReferenceTolerance);
             AssertOptionIsItsReference(option, reference, referenceSolution, secondary, true);
         }
     }
@@ -402,7 +405,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var reference = AvoidanceFallbackCase.WithEngine(naifId, start, out var engine);
         reference.SetStandbyManeuver(new FixedImpulse(_case.Earth, AvoidanceFallbackCase.Start, option.BurnEpoch,
             option.DeltaVInertial, engine));
-        return (reference, _case.Propagate(reference, true));
+        return (reference, _case.Propagate(reference, true, tolerance: AvoidanceFallbackCase.ReferenceTolerance));
     }
 
     // By Velocity-Verlet, which executes a burn only at the end of a step while the burn of an option is off the grid of the
@@ -459,12 +462,14 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             Assert.Equal((tca - AvoidanceFallbackCase.Start).Duration(), post.EncounterState.ProtectedCovarianceAge);
         }
 
-        // Set on the measurement, about twice the largest departure (2026-10-20): in RK7(8) at 1e-13 the state 5.8e-6 m, the
-        // miss distance 4.5e-6 m and the Pc 6.2e-8 relative, the burn of the reference located by the event detection; by
-        // Velocity-Verlet at 1 s the state 1.8e-4 m, the miss distance 1.5e-4 m and the Pc 1.5e-6, the burn state of a
-        // trajectory passed to the analysis being its cubic Hermite interpolation (3.8e-8 m from the ephemeris of the
-        // spacecraft); the TCA 0 in both
-        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (1e-5, 1e-5, 1e-7) : (4e-4, 3e-4, 3e-6);
+        // Set on the measurement, about twice the largest departure (decision of S. Guillet, 2026-10-21): in RK7(8), the
+        // option at 1e-13 against its reference at 1e-14 (a reference at 1e-13 is off by up to 1.8e-5 m, its own
+        // integration error), the state 2.2e-5 m, the miss distance 1.9e-5 m and the Pc 1.2e-7 relative, the integration
+        // error of the option (before: 1e-5 m, 1e-5 m and 1e-7, set against references at 1e-13, which measured how close
+        // the steps of two propagations at one tolerance fall); by Velocity-Verlet at 1 s the state 1.9e-4 m, the miss
+        // distance 1.5e-4 m and the Pc 1.5e-6, the burn state of a trajectory passed to the analysis being its cubic
+        // Hermite interpolation (4.4e-8 m from the ephemeris of the spacecraft); the TCA 0 in both
+        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (5e-5, 4e-5, 3e-7) : (4e-4, 3e-4, 3e-6);
         Assert.True(tcaError < 1e-5, $"{tcaError:E2} s");
         Assert.True(stateError < stateThreshold, $"{stateError:E2} m");
         Assert.True(missError < missThreshold, $"{missError:E2} m");
