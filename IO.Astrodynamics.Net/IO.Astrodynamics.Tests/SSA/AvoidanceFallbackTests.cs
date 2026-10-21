@@ -246,8 +246,6 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             var referenceSolution = _case.Propagate(reference, true, tolerance: AvoidanceFallbackCase.ReferenceTolerance);
             AssertOptionIsItsReference(option, reference, referenceSolution, secondary, true);
         }
-
-        Assert.Fail(string.Join(" | ", _measured));
     }
 
     [Fact]
@@ -399,8 +397,6 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
                 : BurnPropagatedInTwoParts(option, start, referenceId--);
             AssertOptionIsItsReference(option, reference, referenceSolution, secondary, rk78);
         }
-
-        Assert.Fail(string.Join(" | ", _measured));
     }
 
     // In RK7(8), the spacecraft propagated from the start with the burn of the option, located by the event detection
@@ -474,12 +470,11 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         // distance 1.5e-4 m and the Pc 1.5e-6, the burn state of a trajectory passed to the analysis being its cubic
         // Hermite interpolation (4.4e-8 m from the ephemeris of the spacecraft); the TCA 0 in both
         var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (5e-5, 4e-5, 3e-7) : (4e-4, 3e-4, 3e-6);
-        // TEMPORARY measurement on every platform (not to be merged): the departures recorded, the test fails with them
-        _ = (stateThreshold, missThreshold, pcThreshold);
-        _measured.Add($"MEASURE {(rk78 ? "RK78" : "VV")} tca={tcaError:E2} state={stateError:E2} miss={missError:E2} pc={pcError:E2}");
+        Assert.True(tcaError < 1e-5, $"{tcaError:E2} s");
+        Assert.True(stateError < stateThreshold, $"{stateError:E2} m");
+        Assert.True(missError < missThreshold, $"{missError:E2} m");
+        Assert.True(pcError < pcThreshold, $"{pcError:E2}");
     }
-
-    private readonly System.Collections.Generic.List<string> _measured = new();
 
     // The covariance at the TCA of the option is the initial covariance held in RTN: its RTN components with the state
     // there are those of the initial covariance with the initial state

@@ -137,7 +137,6 @@ jobs:
   build-dotnet:
     needs: build-native
     strategy:
-      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
