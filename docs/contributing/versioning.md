@@ -113,6 +113,19 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **The step control of the variational equations in dense air.** With `IncludeInStepControl`, RK7(8) took ever
+  smaller steps as the density grew and never failed: the US Standard Atmosphere 1976 at 200 km took 107 290 steps over
+  2 min at 1e-11, and at 1e-12 and 1e-13 the propagation did not finish (memory grew to an `OutOfMemoryException` over
+  1 h); NRLMSISE-00 at 400 km, 6 362 steps at 1e-13, against 2 without the option. The cause was the rounding noise of
+  the density gradient of the drag partials (about 4e-10 of ∇ρ, from the geodetic conversion of each perturbed position
+  of the Cartesian differences), which the embedded error estimate of Φ cannot cancel. The gradient is now taken in
+  geodetic coordinates: dρ/dh in closed form for the US 1976 and Mars atmospheres, and for NRLMSISE-00 the derivatives
+  of the model in its own inputs (fourth order in altitude), within 1.5e-12 to 8.4e-12 of Ridders' reference instead of
+  3.3e-10 to 9.7e-10. The same cases take 8 to 33 steps (US 1976, 200 km, 1e-11 to 1e-13) and 6 to 342 steps
+  (NRLMSISE-00, 200 to 400 km). Φ, Ψ and P with drag change by the change of the gradient; trajectories without the
+  option are unchanged. A collapse of the step from another cause now stops with an `InvalidOperationException` that
+  names the option and the remedies, after 10 000 consecutive steps within 100 s of flight, instead of exhausting the
+  memory; it applies with `IncludeInStepControl` only. See [Covariance Propagation](../reference/covariance-propagation.md).
 - **Geodetic coordinates above and below the surface.** `Planetocentric.ToPlanetodetic` took the geodetic latitude
   from the relation of the surface, tan φ = tan φc / (1 − f)², at any altitude, and the altitude from that latitude:
   above the surface the latitude came out too large by about f sin 2φ · h / (a + h). On the Earth the altitude was up

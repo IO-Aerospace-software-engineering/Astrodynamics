@@ -115,6 +115,45 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
     }
 
     [Fact]
+    public void EvaluateAvoidance_ProtectedPropagatedWithPhiAndPsiInTheStepControl_ItsOptionsKeepTheOption()
+    {
+        // Arrange: the protected participant propagated with Φ in the step control; its options are propagated with the
+        // options of its solution (#420: the guard against a collapse of the step applies to them). The secondary
+        // participant without an initial covariance: one with a covariance would be replayed with the options of the
+        // protected solution, which the replay rejects with this option (#424)
+        var stepControl = new CovariancePropagationOptions
+            { Mode = CovariancePropagationMode.Covariance, IncludeInStepControl = true };
+        var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6421, _twoBody.ProtectedStart);
+        var secondary = _twoBody.SecondaryStart;
+        var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6422, new StateVector(secondary.Position,
+            secondary.Velocity, secondary.Observer, secondary.Epoch, secondary.Frame));
+        _twoBody.Propagate(protectedCraft, stepControl);
+        _twoBody.Propagate(secondaryCraft);
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            AvoidanceWindow);
+        var options = new AvoidanceSearchOptions
+        {
+            LeadTimes = new[] { TimeSpan.FromHours(3.0) },
+            DeltaVMagnitudesMetersPerSecond = new[] { 0.1 },
+            MaxReturnedOptions = 6
+        };
+
+        // Act
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
+
+        // Assert
+        _output.WriteLine($"{avoidance.Count} options");
+        Assert.NotEmpty(avoidance);
+        Assert.All(avoidance, option =>
+        {
+            Assert.True(option.PostManeuverEncounter.ProtectedCovariance.Solution.CovariancePropagation
+                .IncludeInStepControl);
+            Assert.Equal(CovarianceSource.Propagated,
+                option.PostManeuverEncounter.EncounterState.ProtectedCovariance.Source);
+        });
+    }
+
+    [Fact]
     public void EvaluateAvoidance_AnOption_IsThePropagationFromTheStartWithAFixedBurn()
     {
         // Arrange: the LEO with drag and SRP (point-mass Earth, Moon, Sun), Cd and Cr as consider parameters and process noise; the protected spacecraft

@@ -85,6 +85,23 @@ the start of the window. This example runs as a smoke test against the packed Nu
   tighter tolerance reduces the error about a hundredfold, not below 1e-4 at every crossing. In the same
   case, Φ and Ψ_Cd stay below 3.1e-8 and 3.4e-7 (at 5.123 h).
 - `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
+- With `IncludeInStepControl`, the step follows the error of Φ and Ψ, so it needs partial derivatives that are smooth
+  along the trajectory. The density gradient of the drag partials is taken in geodetic coordinates, without rounding
+  noise of its own (dρ/dh in closed form for the US 1976 and Mars atmospheres, the derivatives of NRLMSISE-00 in its
+  inputs): in dense air the steps stay ordinary. Over 2 min of flight on a circular orbit with drag alone (A/m =
+  0.1 m²/kg): US 1976 at 200 km, 8, 10 and 33 steps at 1e-11, 1e-12 and 1e-13; NRLMSISE-00 at 200 km (on its 200 km
+  cutoff), 6, 38 and 342; at 400 km, 11 at 1e-13; 2 steps without the option. Before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420) the same cases took 107 290
+  steps or did not finish.
+- When the step collapses all the same (a force whose partials are not smooth at the tolerance), RK7(8) stops with an
+  `InvalidOperationException` after 10 000 consecutive accepted steps within 100 s of flight, a mean step below 10 ms,
+  instead of running until the memory is exhausted. Its message names the option, the epoch, the mean and last step
+  and the errors of Y and of the state, and suggests relaxing the tolerance or setting `IncludeInStepControl` to
+  false. The threshold is 60 times below the smallest mean step measured on a legitimate propagation (an eclipsing LEO
+  with SRP at 1e-13, at its shadow crossings, 0.595 s; see [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)), and 50 times above the mildest collapse measured
+  before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420). Without the option the guard does not apply.
+- In SSB mode (initial orbital parameters relative to a barycenter or a star), the columns of Y are scaled by |r0|
+  relative to the barycenter, about 1.5e11 m for a spacecraft near the Earth: with the option the step control then
+  fails, with or without drag ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)).
 - The RTN axes of the process noise are those of the state relative to the central body of the propagation. When the
   central body is the Sun (initial orbital parameters relative to a star or a barycenter), they are heliocentric, even
   for a spacecraft near a planet.

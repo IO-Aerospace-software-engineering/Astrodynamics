@@ -13,22 +13,47 @@ namespace IO.Astrodynamics.Propagator.Forces;
 public class AtmosphericDrag : ForceBase
 {
     /// <summary>
-    /// Relative step δ_ρ of the central differences of the density gradient: h_ρ = δ_ρ max(|r|, 1 m), r the position
-    /// relative to the body.
+    /// Relative step δ_ρ of the Cartesian central differences of the density (<see cref="CartesianDensityGradient"/>):
+    /// h_ρ = δ_ρ max(|r|, 1 m), r the position relative to the body. Also the step of the one-sided altitude derivative
+    /// across the altitudes at which the density jumps (#413).
     /// </summary>
     /// <remarks>
-    /// Chosen by the plateau study of phase 2, step 5b (<c>DensityGradientStepStudyTests</c>, and the provenance matrix
-    /// of the documentation): with NRLMSISE-00 at LEO 400 km, LEO 800 km and the HEO perigee, the worst relative error
-    /// of ∇ρ is below 4e-9 from 1e-7 to 1e-6, and 5.6e-10 at 3e-7 (h ≈ 2 m in LEO). Larger steps leave the truncation of
-    /// the density scale height H, of order (h / H)², 1.7e-7 at 1e-5; smaller ones the rounding of the model.
+    /// Chosen by the plateau study of phase 2, step 5b, for the Cartesian differences: with NRLMSISE-00 at LEO 400 km,
+    /// LEO 800 km and the HEO perigee, the worst relative error of ∇ρ is below 4e-9 from 1e-7 to 1e-6, and 5.6e-10 at
+    /// 3e-7 (h ≈ 2 m in LEO). Larger steps leave the truncation of the density scale height H, of order (h / H)², 1.7e-7
+    /// at 1e-5; smaller ones the rounding of the model.
     /// </remarks>
     internal const double DensityGradientRelativeStep = 3e-7;
+
+    /// <summary>
+    /// Relative step δ_h of the fourth-order derivative of the density in altitude (<see cref="DensityGradient"/>):
+    /// h = δ_h max(|r|, 1 m), about 20 m in LEO.
+    /// </summary>
+    /// <remarks>
+    /// Chosen by the plateau study of #420 (<c>DensityGradientStepStudyTests</c>): with NRLMSISE-00 at LEO 400 km, LEO
+    /// 800 km and the HEO perigee, ∇ρ within 1.4e-12 to 9.0e-12 of Ridders' derivative of the density chain from 1e-6 to
+    /// 3e-5, the resolution of that reference (1.4e-12 to 1.6e-12).
+    /// </remarks>
+    internal const double AltitudeRelativeStep = 3e-6;
+
+    /// <summary>
+    /// Relative step δ_H of the derivatives of the density along the meridian and the parallel
+    /// (<see cref="DensityGradient"/>): a length of δ_H max(|r|, 1 m), about 200 m in LEO.
+    /// </summary>
+    /// <remarks>
+    /// The density varies horizontally over thousands of kilometres, so the step can be a hundred times that of the
+    /// altitude, which divides the rounding of the model by as much (#420): plateau from 3e-6 to 3e-5 in the study.
+    /// </remarks>
+    internal const double HorizontalRelativeStep = 3e-5;
 
     private readonly Spacecraft _spacecraft;
     private readonly CelestialBody _celestialBody;
 
     // The altitudes at which the density of the atmosphere jumps, when its model gives them (NRLMSISE-00, #413)
     private readonly IDensityDiscontinuities _discontinuities;
+
+    // dρ/dh in closed form, when the density depends on the altitude alone (US 1976, Mars; #420)
+    private readonly IAltitudeDensityDerivative _altitudeDerivative;
 
     /// <summary>The body whose atmosphere slows the spacecraft.</summary>
     internal CelestialBody CelestialBody => _celestialBody;
@@ -43,6 +68,7 @@ public class AtmosphericDrag : ForceBase
         }
 
         _discontinuities = _celestialBody.Atmosphere as IDensityDiscontinuities;
+        _altitudeDerivative = _celestialBody.Atmosphere as IAltitudeDensityDerivative;
     }
 
     public override Vector3 Apply(StateVector stateVector)
@@ -76,10 +102,10 @@ public class AtmosphericDrag : ForceBase
     /// </para>
     /// <para>
     /// The gradient term multiplies ∇ρ by the acceleration per unit density rather than dividing the acceleration by ρ,
-    /// so ρ = 0 is covered. ∇ρ comes from central differences of the density chain alone, the one of
-    /// <see cref="Apply(StateVector, in ForceEvaluationContext)"/>: rotation to the body-fixed frame computed once, then
-    /// planetodetic coordinates and the atmospheric model, without ephemeris or orientation. No published gradient of
-    /// the density models exists. At |v_rel| = 0 the acceleration and both blocks vanish.
+    /// so ρ = 0 is covered. ∇ρ comes from the density chain alone, the one of
+    /// <see cref="Apply(StateVector, in ForceEvaluationContext)"/>, in geodetic coordinates (<see cref="DensityGradient"/>),
+    /// without ephemeris or orientation. No published gradient of NRLMSISE-00 exists. At |v_rel| = 0 the acceleration and
+    /// both blocks vanish.
     /// </para>
     /// </remarks>
     private protected override void AccumulateStatePartialsCore(StateVector stateVector,
@@ -134,15 +160,222 @@ public class AtmosphericDrag : ForceBase
     }
 
     /// <summary>
+    /// ∇ρ with respect to the position relative to the body, in the frame of the state, from the derivatives of the
+    /// density in the geodetic coordinates of the position (#420).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// With h, φ, λ the geodetic altitude, latitude and longitude, dr = dh n̂ + (M + h) dφ ê_N + (N + h) cos φ dλ ê_E, so
+    /// ∇ρ = (∂ρ/∂h) n̂ + (∂ρ/∂φ) / (M + h) ê_N + (∂ρ/∂λ) / ((N + h) cos φ) ê_E, with n̂ the normal of the ellipsoid, ê_N
+    /// and ê_E the north and east unit vectors, N and M the radii of curvature of the prime vertical and of the meridian,
+    /// in the body-fixed frame, rotated back to the frame of the state (W. Torge, J. Müller, Geodesy, 4th edition, de
+    /// Gruyter (2012), and B. Hofmann-Wellenhof, H. Moritz, Physical Geodesy, 2nd edition, Springer (2006), ellipsoidal
+    /// coordinates; to be verified by S. Guillet). The geodetic Jacobian is analytic, so the conversion of perturbed
+    /// positions to geodetic coordinates, whose rounding the Cartesian differences divided by their step (about 4e-10 of
+    /// |∇ρ|), no longer enters.
+    /// </para>
+    /// <para>
+    /// A model whose density depends on the altitude alone gives dρ/dh in closed form (<see cref="IAltitudeDensityDerivative"/>);
+    /// otherwise ∂ρ/∂h is the fourth-order central difference with the step <see cref="AltitudeRelativeStep"/>, and
+    /// ∂ρ/∂φ, ∂ρ/∂λ the second-order central differences over the length <see cref="HorizontalRelativeStep"/> along the
+    /// meridian and the parallel. Within that length of the polar axis, where the east step is not defined, the Cartesian
+    /// central differences of the density chain are kept (<see cref="CartesianDensityGradient"/>).
+    /// </para>
+    /// </remarks>
+    internal void DensityGradient(in Vector3 position, in Quaternion? rotation, in Time epoch, Span<double> gradient)
+    {
+        DensityGradient(position, rotation, epoch, gradient, AltitudeRelativeStep, HorizontalRelativeStep);
+    }
+
+    /// <summary>
+    /// <see cref="DensityGradient(in Vector3, in Quaternion?, in Time, Span{double})"/> with given relative steps, for the
+    /// plateau study.
+    /// </summary>
+    internal void DensityGradient(in Vector3 position, in Quaternion? rotation, in Time epoch, Span<double> gradient,
+        double altitudeRelativeStep, double horizontalRelativeStep)
+    {
+        double scale = System.Math.Max(position.Magnitude(), 1.0);
+        var origin = Geodetic(position, rotation, epoch);
+        double sinLatitude = System.Math.Sin(origin.Latitude);
+        double cosLatitude = System.Math.Cos(origin.Latitude);
+        double sinLongitude = System.Math.Sin(origin.Longitude);
+        double cosLongitude = System.Math.Cos(origin.Longitude);
+        double e2 = _celestialBody.Flattening * (2.0 - _celestialBody.Flattening);
+        double w = System.Math.Sqrt(1.0 - e2 * sinLatitude * sinLatitude);
+        double parallelRadius = (_celestialBody.EquatorialRadius / w + origin.Altitude) * cosLatitude;
+        double horizontalLength = horizontalRelativeStep * scale;
+
+        double up;
+        double north = 0.0;
+        double east = 0.0;
+        if (_altitudeDerivative != null)
+        {
+            up = _altitudeDerivative.GetDensityAltitudeDerivative(origin.Altitude);
+        }
+        else
+        {
+            if (parallelRadius < horizontalLength)
+            {
+                CartesianDensityGradient(position, rotation, epoch, gradient);
+                return;
+            }
+
+            up = AltitudeDerivative(origin, epoch, altitudeRelativeStep * scale, DensityGradientRelativeStep * scale);
+
+            double meridianRadius = _celestialBody.EquatorialRadius * (1.0 - e2) / (w * w * w) + origin.Altitude;
+            double latitudeStep = horizontalLength / meridianRadius;
+            double northPlus = origin.Latitude + latitudeStep;
+            double northMinus = origin.Latitude - latitudeStep;
+            north = (Density(origin with { Latitude = northPlus }, epoch) -
+                     Density(origin with { Latitude = northMinus }, epoch)) / ((northPlus - northMinus) * meridianRadius);
+
+            double longitudeStep = horizontalLength / parallelRadius;
+            double eastPlus = origin.Longitude + longitudeStep;
+            double eastMinus = origin.Longitude - longitudeStep;
+            east = (Density(origin with { Longitude = eastPlus }, epoch) -
+                    Density(origin with { Longitude = eastMinus }, epoch)) / ((eastPlus - eastMinus) * parallelRadius);
+        }
+
+        // n̂ up + ê_N north + ê_E east, in the body-fixed frame
+        var bodyFixed = new Vector3(
+            cosLatitude * cosLongitude * up - sinLatitude * cosLongitude * north - sinLongitude * east,
+            cosLatitude * sinLongitude * up - sinLatitude * sinLongitude * north + cosLongitude * east,
+            sinLatitude * up + cosLatitude * north);
+        var inFrame = rotation.HasValue ? bodyFixed.Rotate(rotation.Value.Conjugate()) : bodyFixed;
+        gradient[0] = inFrame.X;
+        gradient[1] = inFrame.Y;
+        gradient[2] = inFrame.Z;
+    }
+
+    /// <summary>
+    /// ∂ρ/∂h at a position relative to the body, in the frame of the state, as <see cref="DensityGradient"/> takes it:
+    /// in closed form when the model gives it, otherwise by differences in altitude.
+    /// </summary>
+    internal double DensityAltitudeDerivative(in Vector3 position, in Quaternion? rotation, in Time epoch)
+    {
+        var origin = Geodetic(position, rotation, epoch);
+        if (_altitudeDerivative != null)
+        {
+            return _altitudeDerivative.GetDensityAltitudeDerivative(origin.Altitude);
+        }
+
+        double scale = System.Math.Max(position.Magnitude(), 1.0);
+        return AltitudeDerivative(origin, epoch, AltitudeRelativeStep * scale, DensityGradientRelativeStep * scale);
+    }
+
+    /// <summary>
+    /// ∂ρ/∂h at the geodetic coordinates <paramref name="origin"/>: the fourth-order central difference
+    /// (−ρ(h + 2δ) + 8 ρ(h + δ) − 8 ρ(h − δ) + ρ(h − 2δ)) / (12 δ), with the weights of the points as stored. Where that
+    /// stencil straddles an altitude at which the density jumps (#413), the third-order one-sided difference on h, h + s δ,
+    /// h + 2 s δ and h + 3 s δ, s the side whose three points stay in the interval of h; when neither side has them (two
+    /// discontinuities within 6 δ), the rule of the Cartesian differences in altitude with the step
+    /// <paramref name="cutoffStep"/>: the central difference when its stencil does not straddle a discontinuity, the
+    /// second-order one-sided difference on the side of h when it does (<see cref="OneSidedAltitudeDerivative"/>).
+    /// </summary>
+    /// <remarks>
+    /// Weights of the points as stored, from the derivative at h of the Lagrange polynomial through them: B. Fornberg,
+    /// "Generation of finite difference formulas on arbitrarily spaced grids", Mathematics of Computation 51 (1988),
+    /// 699–706, to be verified by S. Guillet. The third order keeps the truncation over δ_h ≈ 20 m below the
+    /// resolution of Ridders' reference across the cutoffs, and the larger step keeps the rounding of the model small,
+    /// which the step control of the variational equations follows (#420).
+    /// </remarks>
+    private double AltitudeDerivative(in Planetodetic origin, in Time epoch, double step, double cutoffStep)
+    {
+        double h = origin.Altitude;
+        double plus2 = h + 2.0 * step;
+        double minus2 = h - 2.0 * step;
+        if (_discontinuities != null &&
+            _discontinuities.DensityInterval(plus2) != _discontinuities.DensityInterval(minus2))
+        {
+            int interval = _discontinuities.DensityInterval(h);
+            foreach (double direction in stackalloc double[] { 1.0, -1.0 })
+            {
+                double x1 = h + direction * step;
+                double x2 = h + 2.0 * direction * step;
+                double x3 = h + 3.0 * direction * step;
+                if (_discontinuities.DensityInterval(x1) == interval &&
+                    _discontinuities.DensityInterval(x2) == interval &&
+                    _discontinuities.DensityInterval(x3) == interval)
+                {
+                    return ThirdOrderOneSided(origin, epoch, x1, x2, x3);
+                }
+            }
+
+            var plusCoordinates = origin with { Altitude = h + cutoffStep };
+            var minusCoordinates = origin with { Altitude = h - cutoffStep };
+            if (_discontinuities.DensityInterval(plusCoordinates.Altitude) == interval &&
+                _discontinuities.DensityInterval(minusCoordinates.Altitude) == interval)
+            {
+                return (Density(plusCoordinates, epoch) - Density(minusCoordinates, epoch)) /
+                       (plusCoordinates.Altitude - minusCoordinates.Altitude);
+            }
+
+            return OneSidedAltitudeDerivative(origin, epoch, cutoffStep, plusCoordinates, minusCoordinates);
+        }
+
+        double plus = h + step;
+        double minus = h - step;
+        return (-Density(origin with { Altitude = plus2 }, epoch) + 8.0 * Density(origin with { Altitude = plus }, epoch) -
+                8.0 * Density(origin with { Altitude = minus }, epoch) + Density(origin with { Altitude = minus2 }, epoch)) /
+               (6.0 * (plus - minus));
+    }
+
+    // The third-order one-sided difference on h and the three points x1, x2, x3 on one side, with the weights of the
+    // points as stored (Lagrange's derivative at h of the cubic through the four points; Fornberg, op. cit.)
+    private double ThirdOrderOneSided(in Planetodetic origin, in Time epoch, double x1, double x2, double x3)
+    {
+        double h = origin.Altitude;
+        double d1 = x1 - h;
+        double d2 = x2 - h;
+        double d3 = x3 - h;
+        double w1 = d2 * d3 / (d1 * (d2 - d1) * (d3 - d1));
+        double w2 = -d1 * d3 / (d2 * (d2 - d1) * (d3 - d2));
+        double w3 = d1 * d2 / (d3 * (d3 - d1) * (d3 - d2));
+        double w0 = -(w1 + w2 + w3);
+        return w0 * Density(origin, epoch) + w1 * Density(origin with { Altitude = x1 }, epoch) +
+               w2 * Density(origin with { Altitude = x2 }, epoch) + w3 * Density(origin with { Altitude = x3 }, epoch);
+    }
+
+    // The one-sided difference of #413 in altitude: on h, h + s δ and h + 2 s δ, s the side whose two points stay in the
+    // interval of h; the central difference when neither does
+    private double OneSidedAltitudeDerivative(in Planetodetic origin, in Time epoch, double step,
+        in Planetodetic plusCoordinates, in Planetodetic minusCoordinates)
+    {
+        double h = origin.Altitude;
+        int interval = _discontinuities.DensityInterval(h);
+        foreach (double direction in stackalloc double[] { 1.0, -1.0 })
+        {
+            var first = direction > 0.0 ? plusCoordinates : minusCoordinates;
+            var second = origin with { Altitude = h + 2.0 * direction * step };
+            if (_discontinuities.DensityInterval(first.Altitude) != interval ||
+                _discontinuities.DensityInterval(second.Altitude) != interval)
+            {
+                continue;
+            }
+
+            double d1 = first.Altitude - h;
+            double d2 = second.Altitude - h;
+            return -(d1 + d2) / (d1 * d2) * Density(origin, epoch) + d2 / (d1 * (d2 - d1)) * Density(first, epoch) -
+                   d1 / (d2 * (d2 - d1)) * Density(second, epoch);
+        }
+
+        return (Density(plusCoordinates, epoch) - Density(minusCoordinates, epoch)) /
+               (plusCoordinates.Altitude - minusCoordinates.Altitude);
+    }
+
+    /// <summary>
     /// ∇ρ with respect to the position relative to the body, in the frame of the state, by central differences of the
     /// density chain at the fixed epoch and rotation, with the step <see cref="DensityGradientRelativeStep"/>; on the side
-    /// of the point where the stencil straddles an altitude at which the density jumps.
+    /// of the point where the stencil straddles an altitude at which the density jumps. The gradient of the drag partials
+    /// before #420, kept within <see cref="HorizontalRelativeStep"/> of the polar axis.
     /// </summary>
     /// <remarks>
     /// <para>
     /// Column j is (ρ(r + h e_j) − ρ(r − h e_j)) / ((r_j + h) − (r_j − h)), the division by the difference of the
     /// perturbed components as stored removing the representation error of the step (Press, Teukolsky, Vetterling and
     /// Flannery, Numerical Recipes, 3rd edition (2007), section 5.7, as the default partials of <see cref="ForceBase"/>).
+    /// Each perturbed position goes through the geodetic conversion, whose rounding leaves a noise of about 4e-10 of
+    /// |∇ρ| at the default step, which the step control of the variational equations follows in dense air (#420).
     /// </para>
     /// <para>
     /// NRLMSISE-00 drops the mixing of a species above an altitude (160 to 450 km), where its density jumps by up to
@@ -152,7 +385,7 @@ public class AtmosphericDrag : ForceBase
     /// that side (<see cref="OneSidedDensityDerivative"/>); everywhere else the central difference, bit for bit.
     /// </para>
     /// </remarks>
-    internal void DensityGradient(in Vector3 position, in Quaternion? rotation, in Time epoch,
+    internal void CartesianDensityGradient(in Vector3 position, in Quaternion? rotation, in Time epoch,
         Span<double> gradient, double relativeStep = DensityGradientRelativeStep)
     {
         double step = relativeStep * System.Math.Max(position.Magnitude(), 1.0);
