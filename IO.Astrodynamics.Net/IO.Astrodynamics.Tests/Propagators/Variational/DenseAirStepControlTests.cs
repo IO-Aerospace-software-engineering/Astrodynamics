@@ -257,6 +257,41 @@ public class DenseAirStepControlTests
         public double GetDensity(IAtmosphericContext context) => Density(context.Altitude);
     }
 
+    // An acceleration of noise in time alone, up to 5e-8 m/s²: the force is not smooth, its partials, taken at a fixed
+    // epoch, are zero
+    private sealed class JitterForce : ForceBase
+    {
+        public override Vector3 Apply(StateVector stateVector)
+        {
+            double noise = System.Math.Sin(stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds * 1000.0) * 43758.5453;
+            noise -= System.Math.Floor(noise) + 0.5;
+            return new Vector3(1e-7 * noise, 0.0, 0.0);
+        }
+    }
+
+    [Fact]
+    public void NoisyForce_TheStepCollapse_ThrowsAClearExceptionNamingTheState()
+    {
+        // Arrange: the noise of the force reaches the state, not Φ (error of the state 0.56, of Y 8.2e-8, measured
+        // 2026-10-21)
+        var body = Body("US 1976");
+        var integrator = new RK78Integrator(1e-12, 1e-12);
+        integrator.AddForce(new JitterForce());
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window,
+            NewSpacecraft(body, 400e3), integrator, new CelestialItem[] { body }, false, false, Window.Length,
+            new CovariancePropagationOptions { IncludeInStepControl = true }).Propagate());
+
+        // Assert
+        _output.WriteLine(exception.Message);
+        Assert.StartsWith("RK7(8) with the variational equations in the step control (IncludeInStepControl): 10000 " +
+                          "consecutive steps over ", exception.Message);
+        Assert.EndsWith("The error of the state keeps the step small, not that of Φ and Ψ: a force is not smooth " +
+                        "enough at this tolerance (a discontinuity of the force model or noise in it). Relax the " +
+                        "tolerance.", exception.Message);
+    }
+
     [Fact]
     public void NoisyPartials_TheStepCollapse_ThrowsAClearException()
     {

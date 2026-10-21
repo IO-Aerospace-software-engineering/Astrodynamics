@@ -56,7 +56,7 @@ public class StandardAtmosphereDerivativeTests
     [Fact]
     public void Earth_AboveTheTemperatureClamp_TheDensityIsConstant()
     {
-        // Arrange: the temperature is held at 2200 °C above 779.5 km, so the density no longer varies
+        // Arrange: the temperature is held at 2200 °C above 779.67 km, so the density no longer varies
         var model = new EarthStandardAtmosphere();
 
         // Act

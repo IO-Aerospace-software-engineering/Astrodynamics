@@ -76,7 +76,7 @@ public class EarthStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel,
     /// dρ/dh, by differentiation of the closed form of the branch the altitude falls in. With T_K the absolute
     /// temperature: below 11 km, ρ ∝ T_K^(5.256 − 1) with dT/dh = −0.00649 K/m; from 11 to 25 km, T is constant and
     /// ρ ∝ exp(−0.000157 h); above 25 km, ρ ∝ T_K^(−11.388 − 1) with dT/dh = 0.00299 K/m, and dρ/dh = 0 where the
-    /// temperature is held at 2200 °C (above 779.5 km), where the density is constant.
+    /// temperature is held at 2200 °C (above 779.67 km), where the density is constant.
     /// </summary>
     double IAltitudeDensityDerivative.GetDensityAltitudeDerivative(double altitude)
     {

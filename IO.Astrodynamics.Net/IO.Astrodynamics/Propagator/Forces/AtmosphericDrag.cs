@@ -41,10 +41,19 @@ public class AtmosphericDrag : ForceBase
     /// (<see cref="DensityGradient"/>): a length of δ_H max(|r|, 1 m), about 200 m in LEO.
     /// </summary>
     /// <remarks>
-    /// The density varies horizontally over thousands of kilometres, so the step can be a hundred times that of the
+    /// The density varies horizontally over thousands of kilometres, so the step can be ten times that of the
     /// altitude, which divides the rounding of the model by as much (#420): plateau from 3e-6 to 3e-5 in the study.
     /// </remarks>
     internal const double HorizontalRelativeStep = 3e-5;
+
+    /// <summary>
+    /// The largest longitude step of the east difference of <see cref="DensityGradient"/>, in rad: the chord between its
+    /// two points on the parallel cuts the curvature of the parallel, which leaves a truncation of s² / (2 p) times the
+    /// second derivative of the density, s the length of the step and p the distance from the polar axis. Without it,
+    /// 8.1e-9 of |∇ρ| against Ridders at 1 km from the axis, 8.2e-10 at 10 km; with it, 7.6e-11 and 5.5e-12, for a
+    /// noise of 1.6e-11 and 2.0e-12 (NRLMSISE-00, 400 km, measured 2026-10-21, #421).
+    /// </summary>
+    internal const double MaximumLongitudeStep = 1e-3;
 
     private readonly Spacecraft _spacecraft;
     private readonly CelestialBody _celestialBody;
@@ -178,8 +187,10 @@ public class AtmosphericDrag : ForceBase
     /// A model whose density depends on the altitude alone gives dρ/dh in closed form (<see cref="IAltitudeDensityDerivative"/>);
     /// otherwise ∂ρ/∂h is the fourth-order central difference with the step <see cref="AltitudeRelativeStep"/>, and
     /// ∂ρ/∂φ, ∂ρ/∂λ the second-order central differences over the length <see cref="HorizontalRelativeStep"/> along the
-    /// meridian and the parallel. Within that length of the polar axis, where the east step is not defined, the Cartesian
-    /// central differences of the density chain are kept (<see cref="CartesianDensityGradient"/>).
+    /// meridian and the parallel, the east one divided by the chord between its two points on the parallel and its
+    /// longitude step at most <see cref="MaximumLongitudeStep"/>. Within that length of the polar axis, where the east
+    /// step is not defined, the Cartesian central differences of the density chain are kept
+    /// (<see cref="CartesianDensityGradient"/>).
     /// </para>
     /// </remarks>
     internal void DensityGradient(in Vector3 position, in Quaternion? rotation, in Time epoch, Span<double> gradient)
@@ -229,11 +240,14 @@ public class AtmosphericDrag : ForceBase
             north = (Density(origin with { Latitude = northPlus }, epoch) -
                      Density(origin with { Latitude = northMinus }, epoch)) / ((northPlus - northMinus) * meridianRadius);
 
-            double longitudeStep = horizontalLength / parallelRadius;
+            // Along the parallel, divided by the chord between the two points (#421, H3 B1): the arc would leave a
+            // truncation of Δλ² / 6, Δλ reaching 1 rad near the polar axis
+            double longitudeStep = System.Math.Min(horizontalLength / parallelRadius, MaximumLongitudeStep);
             double eastPlus = origin.Longitude + longitudeStep;
             double eastMinus = origin.Longitude - longitudeStep;
             east = (Density(origin with { Longitude = eastPlus }, epoch) -
-                    Density(origin with { Longitude = eastMinus }, epoch)) / ((eastPlus - eastMinus) * parallelRadius);
+                    Density(origin with { Longitude = eastMinus }, epoch)) /
+                   (2.0 * System.Math.Sin(0.5 * (eastPlus - eastMinus)) * parallelRadius);
         }
 
         // n̂ up + ê_N north + ê_E east, in the body-fixed frame

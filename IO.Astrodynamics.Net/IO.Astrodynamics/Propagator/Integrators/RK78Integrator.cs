@@ -31,7 +31,9 @@ public sealed class RK78Integrator : Integrator
     /// steps is 0.595 s (an eclipsing LEO with SRP at 1e-13 over a day, at its shadow crossings), and no other
     /// propagation reaches 10 000 steps in a segment; the collapses of the step in dense air before #420 had a mean step
     /// of 2e-4 s to 2e-6 s. The threshold, a mean step of 10 ms, is 60 times below the first and 50 times above the
-    /// mildest of the second.
+    /// mildest of the second. The steps are counted in disjoint blocks from the start of the segment, so a collapse that
+    /// begins within a block is caught at the end of the next one, after 10 000 to 20 000 steps. The message names the
+    /// error, of Y or of the state, that held the last step.
     /// </remarks>
     internal const int CollapseStepCount = 10000;
 
@@ -422,9 +424,12 @@ public sealed class RK78Integrator : Integrator
                " s of flight at t = " + t.ToString("F3", culture) + " s (mean step " +
                (flightTime / CollapseStepCount).ToString("E2", culture) + " s, last " + h.ToString("E2", culture) +
                " s, error of Y " + variationalError.ToString("E2", culture) + ", of the state " +
-               stateError.ToString("E2", culture) + "). The error of Φ and Ψ keeps the step small: a partial " +
-               "derivative of a force is not smooth enough at this tolerance (finite differences, a shadow boundary " +
-               "or a discontinuity of the force model). Relax the tolerance, or set IncludeInStepControl to false.";
+               stateError.ToString("E2", culture) + "). " + (variationalError > stateError
+                   ? "The error of Φ and Ψ keeps the step small: a partial derivative of a force is not smooth enough " +
+                     "at this tolerance (finite differences, a shadow boundary or a discontinuity of the force model). " +
+                     "Relax the tolerance, or set IncludeInStepControl to false."
+                   : "The error of the state keeps the step small, not that of Φ and Ψ: a force is not smooth enough " +
+                     "at this tolerance (a discontinuity of the force model or noise in it). Relax the tolerance.");
     }
 
     // The variational data of the segment, when BeginVariationalSegment prepared it; Y and Q restart at [I | 0] and 0

@@ -148,4 +148,33 @@ public class DensityGradientNoiseTests
         // 2026-10-21, Linux); bound at twice the worst
         Assert.True(noise < 2e-12, $"noise {noise:E2}");
     }
+
+    [Theory]
+    [InlineData(1000.0)]
+    [InlineData(10000.0)]
+    [InlineData(100000.0)]
+    public void GradientNearThePolarAxis_IsSmooth(double axisDistance)
+    {
+        // Arrange: NRLMSISE-00 400 km above the north pole, at a distance from the polar axis, longitude 40°, along the
+        // parallel
+        var (drag, _, _, rotation) = Geometry("NRLMSISE-00", 400e3);
+        double longitude = 40.0 * IO.Astrodynamics.Constants.Deg2Rad;
+        var bodyFixed = new Vector3(axisDistance * System.Math.Cos(longitude),
+            axisDistance * System.Math.Sin(longitude), 6356752.0 + 400e3);
+        var bodyFixedDirection = new Vector3(-System.Math.Sin(longitude), System.Math.Cos(longitude), 0.0);
+        var start = rotation.HasValue ? bodyFixed.Rotate(rotation.Value.Conjugate()) : bodyFixed;
+        var direction = rotation.HasValue
+            ? bodyFixedDirection.Rotate(rotation.Value.Conjugate())
+            : bodyFixedDirection;
+
+        // Act
+        double noise = Noise((in Vector3 p, double[] g) => drag.DensityGradient(p, rotation, Epoch, g), start,
+            direction);
+
+        _output.WriteLine($"{axisDistance / 1000.0} km from the polar axis: noise {noise:E2} of |∇ρ|");
+
+        // Assert: 1.6e-11 at 1 km, the longitude step capped to 1e-3 rad, 2.0e-12 at 10 km and 1.0e-12 at 100 km
+        // (measured 2026-10-21, Linux), 25 times less than the Cartesian differences at 1 km; bound at twice the worst
+        Assert.True(noise < 3.2e-11, $"noise {noise:E2}");
+    }
 }

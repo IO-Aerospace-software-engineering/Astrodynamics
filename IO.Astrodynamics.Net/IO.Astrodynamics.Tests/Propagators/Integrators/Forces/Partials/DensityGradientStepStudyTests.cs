@@ -27,7 +27,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// Bounds at the default step: relative error of ∇ρ and of ∂a/∂r below 1e-8, two orders of magnitude inside the 1e-6
 /// of the specification for the analytic partials (B7), and Ridders' error estimate below 1e-8. In-sample, as the
 /// study of the default steps: it guards the plateau against a change of the atmospheric model. The gradient in geodetic
-/// coordinates is measured at 1.5e-12 to 8.4e-12 at its steps (#420), at the resolution of Ridders' derivative of ∇ρ
+/// coordinates is measured at 1.5e-12 to 8.2e-12 at its steps (#420), at the resolution of Ridders' derivative of ∇ρ
 /// (1.4e-12 to 1.6e-12): bound 2e-11, twice the worst rounded up.
 /// </para>
 /// <para>

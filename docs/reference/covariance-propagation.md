@@ -90,13 +90,23 @@ the start of the window. This example runs as a smoke test against the packed Nu
   noise of its own (dρ/dh in closed form for the US 1976 and Mars atmospheres, the derivatives of NRLMSISE-00 in its
   inputs): in dense air the steps stay ordinary. Over 2 min of flight on a circular orbit with drag alone (A/m =
   0.1 m²/kg): US 1976 at 200 km, 8, 10 and 33 steps at 1e-11, 1e-12 and 1e-13; NRLMSISE-00 at 200 km (on its 200 km
-  cutoff), 6, 38 and 342; at 400 km, 11 at 1e-13; 2 steps without the option. Before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420) the same cases took 107 290
-  steps or did not finish.
+  cutoff), 6, 26 and 321; at 400 km, 11 at 1e-13; 2 steps without the option. Before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420) the same cases took 107 290
+  steps or did not finish. On a whole propagation (R2: LEO 400 km, EGM2008 10×10, Sun, Moon, NRLMSISE-00 drag, one
+  day, with Ψ_Cd; Linux, Release, best of 3, measured 2026-10-21): without the option, the same steps and 15 % (1e-12)
+  to 22 % (1e-13) more time than before, for the two more model evaluations of each drag partials call; with the
+  option, 1 084 steps in 2.15 s at 1e-12 against 1 247 in 1.95 s before, and 1 681 steps in 3.27 s at 1e-13 against
+  38 678 in 60.6 s.
+- With SRP and the option, the step control fails at 1e-14 on an eclipsing orbit: R3 (Sun-synchronous 700 km, eclipses
+  on every revolution, Cr) stops on the guard below at 13.3 h, where it stopped on 100 rejections at 15.0 h before
+  [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420); at 1e-13 it completes in 23 967 steps a day. The penumbra is
+  [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423).
 - When the step collapses all the same (a force whose partials are not smooth at the tolerance), RK7(8) stops with an
   `InvalidOperationException` after 10 000 consecutive accepted steps within 100 s of flight, a mean step below 10 ms,
-  instead of running until the memory is exhausted. Its message names the option, the epoch, the mean and last step
-  and the errors of Y and of the state, and suggests relaxing the tolerance or setting `IncludeInStepControl` to
-  false. The threshold is 60 times below the smallest mean step measured on a legitimate propagation (an eclipsing LEO
+  instead of running until the memory is exhausted. The steps are counted in disjoint blocks of 10 000 from the start
+  of the segment, so a collapse is caught after 10 000 to 20 000 steps. Its message names the option, the epoch, the
+  mean and last step and the errors of Y and of the state, and the remedies for the error that held the step: relax
+  the tolerance or set `IncludeInStepControl` to false when it is that of Y, relax the tolerance when it is that of
+  the state (a force that is not smooth itself). The threshold is 60 times below the smallest mean step measured on a legitimate propagation (an eclipsing LEO
   with SRP at 1e-13, at its shadow crossings, 0.595 s; see [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)), and 50 times above the mildest collapse measured
   before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420). Without the option the guard does not apply.
 - In SSB mode (initial orbital parameters relative to a barycenter or a star), the columns of Y are scaled by |r0|

@@ -431,6 +431,65 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         Assert.Equal(cartesian, gradient);
     }
 
+    [Theory]
+    [InlineData(1000.0, 0.0)]
+    [InlineData(10000.0, 0.0)]
+    [InlineData(100000.0, 0.0)]
+    [InlineData(0.0, 89.0)]
+    public void NearThePolarAxis_TheGradientMatchesRidders(double axisDistance, double latitude)
+    {
+        // Arrange: 400 km above the north pole, at a distance from the polar axis or at a geodetic latitude, longitude
+        // 40°, where the horizontal step spans up to 0.2 rad of the parallel and the longitude step is capped
+        var (_, _, _, rotation, epoch) = Geometry(PartialsTestCases.Leo400);
+        var reference = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
+        var drag = new AtmosphericDrag(PartialsTestCases.Spacecraft(reference), _cases.Earth);
+        double longitude = 40.0 * IO.Astrodynamics.Constants.Deg2Rad;
+        double parallel, polar;
+        if (axisDistance > 0.0)
+        {
+            parallel = axisDistance;
+            polar = 6356752.0 + 400000.0;
+        }
+        else
+        {
+            double phi = latitude * IO.Astrodynamics.Constants.Deg2Rad;
+            double e2 = _cases.Earth.Flattening * (2.0 - _cases.Earth.Flattening);
+            double n = _cases.Earth.EquatorialRadius / System.Math.Sqrt(1.0 - e2 * System.Math.Sin(phi) * System.Math.Sin(phi));
+            parallel = (n + 400000.0) * System.Math.Cos(phi);
+            polar = (n * (1.0 - e2) + 400000.0) * System.Math.Sin(phi);
+        }
+
+        var bodyFixed = new Vector3(parallel * System.Math.Cos(longitude), parallel * System.Math.Sin(longitude), polar);
+        var position = rotation.HasValue ? bodyFixed.Rotate(rotation.Value.Conjugate()) : bodyFixed;
+        var gradient = new double[3];
+        var cartesian = new double[3];
+        var expected = new double[3];
+        var errors = new double[3];
+        for (int j = 0; j < 3; j++)
+        {
+            int column = j;
+            (expected[j], errors[j]) = RiddersDerivative.Derivative(
+                t => drag.Density(With(position, column, t), rotation, epoch),
+                RiddersDerivative.Component(position, j), System.Math.Min(0.1 * parallel, 200.0));
+        }
+
+        // Act
+        drag.DensityGradient(position, rotation, epoch, gradient);
+        drag.CartesianDensityGradient(position, rotation, epoch, cartesian);
+
+        // Assert: Ridders on each component, from steps of a tenth of the distance to the axis. Measured 2026-10-21:
+        // 7.6e-11 at 1 km, 5.5e-12 at 10 km, 4.6e-11 at 100 km and 4.8e-11 at 89°, the resolution of that reference
+        // (1.5e-11 to 4.0e-11); 1.1e-6, 1.2e-8, 2.5e-10 and 1.9e-10 with the arc of the parallel, 8.1e-9, 8.2e-10,
+        // 1.1e-10 and 8.7e-11 with the chord without the cap of the longitude step
+        double error = RiddersDerivative.RelativeFrobeniusError(gradient, expected);
+        double referenceError = System.Math.Sqrt(errors.Sum(e => e * e) / expected.Sum(e => e * e));
+        double former = RiddersDerivative.RelativeFrobeniusError(cartesian, expected);
+        _output.WriteLine($"{parallel / 1000.0:F1} km from the polar axis: ∇ρ {error:E2}, reference " +
+                          $"{referenceError:E2}, Cartesian differences {former:E2}");
+        Assert.True(referenceError < 1e-10, $"reference {referenceError:E2}");
+        Assert.True(error < 1.6e-10, $"{error:E2}");
+    }
+
     [Fact]
     public void AltitudeDerivative_OfAModelOfTheAltitudeAlone_IsItsClosedForm()
     {
