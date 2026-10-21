@@ -32,7 +32,8 @@ public static class SuiteDataFile
 
         var header = new byte[LfsPointerHeader.Length];
         int read;
-        using (var stream = File.OpenRead(path))
+        // Shared for reading and writing: on Windows, a kernel SPICE has already opened cannot be opened otherwise
+        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
         {
             read = stream.ReadAtLeast(header, header.Length, throwOnEndOfStream: false);
         }
