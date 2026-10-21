@@ -462,14 +462,20 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             Assert.Equal((tca - AvoidanceFallbackCase.Start).Duration(), post.EncounterState.ProtectedCovarianceAge);
         }
 
-        // Set on the measurement, about twice the largest departure (decision of S. Guillet, 2026-10-21): in RK7(8), the
-        // option at 1e-13 against its reference at 1e-14 (a reference at 1e-13 is off by up to 1.8e-5 m, its own
-        // integration error), the state 2.2e-5 m, the miss distance 1.9e-5 m and the Pc 1.2e-7 relative, the integration
-        // error of the option (before: 1e-5 m, 1e-5 m and 1e-7, set against references at 1e-13, which measured how close
-        // the steps of two propagations at one tolerance fall); by Velocity-Verlet at 1 s the state 1.9e-4 m, the miss
-        // distance 1.5e-4 m and the Pc 1.5e-6, the burn state of a trajectory passed to the analysis being its cubic
-        // Hermite interpolation (4.4e-8 m from the ephemeris of the spacecraft); the TCA 0 in both
-        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (5e-5, 4e-5, 3e-7) : (4e-4, 3e-4, 3e-6);
+        // Twice the worst departure over Linux, macOS arm64 and Windows, rounded up at the second significant digit
+        // (decision of S. Guillet, 2026-10-21; the integration error of the option at 1e-13 depends on the platform, its
+        // steps parting differently with the floating point of arm64). Measured by the CI of every platform:
+        // - RK7(8), the option at 1e-13 against its reference at 1e-14 (a reference at 1e-13 is off by up to 1.8e-5 m, its
+        //   own integration error): state 2.24e-5 / 4.14e-5 / 2.42e-5 m, miss distance 1.90e-5 / 3.37e-5 / 1.99e-5 m, Pc
+        //   1.24e-7 / 3.18e-7 / 1.87e-7 relative (Linux / macOS arm64 / Windows);
+        // - Velocity-Verlet at 1 s, against the reference in two parts: state 1.86e-4 m, miss distance 1.52e-4 m, Pc
+        //   1.53e-6 on the three platforms, the burn state of a trajectory passed to the analysis being its cubic Hermite
+        //   interpolation (9e-8 m at most from the ephemeris of the spacecraft);
+        // - the TCA 0 on the three platforms.
+        // Before: RK7(8) 5e-5 m, 4e-5 m and 3e-7, set on Linux alone (and first 1e-5 m, 1e-5 m and 1e-7 against references at
+        // 1e-13, which measured how close the steps of two propagations at one tolerance fall); Velocity-Verlet 4e-4 m,
+        // 3e-4 m and 3e-6
+        var (stateThreshold, missThreshold, pcThreshold) = rk78 ? (8.3e-5, 6.8e-5, 6.4e-7) : (3.8e-4, 3.1e-4, 3.1e-6);
         Assert.True(tcaError < 1e-5, $"{tcaError:E2} s");
         Assert.True(stateError < stateThreshold, $"{stateError:E2} m");
         Assert.True(missError < missThreshold, $"{missError:E2} m");
