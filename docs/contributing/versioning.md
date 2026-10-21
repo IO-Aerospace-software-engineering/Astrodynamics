@@ -80,13 +80,13 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   of that state, and the protected participant of each option carries its initial covariance held in RTN instead of none
   ([#402](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/402)): the miss distance, the TCA
   and the Pc of every such option change. On a LEO at 400 km with drag and geopotential, the two-body option was 4.0 to
-  58.6 km off at its TCA, and an option ranked safe (miss 23.2 km, Pc 4.1e-6) passed at 89 m, Pc 3.0e-4. A participant
+  58.5 km off at its TCA, and an option ranked safe (miss 23.2 km, Pc 4.1e-6) passed at 89 m, Pc 3.0e-4. A participant
   not propagated, by a TLE or a SPICE kernel keeps the two-body orbit, now stated by the new
   `AvoidanceOption.Trajectory` (`AvoidanceTrajectory`). The secondary participant of the options keeps the resolution of
   its covariance of the encounter. A spacecraft keeps the force model of its last propagation by RK7(8) or
   Velocity-Verlet, without its steps (about 0.2 MB for one day in LEO), until it is propagated again. Cost: one
-  propagation per option from its burn (the 36 options of the default grid on R2 over 8 h: 1.8 s in RK7(8), 4.5 s by
-  Velocity-Verlet at 1 s, against about 0.5 s).
+  propagation per option from its burn (the 36 options of the default grid on R2 over 8 h: 2.2 s in RK7(8), 5.5 s by
+  Velocity-Verlet at 1 s, against about 0.4 s).
 
 - **The propagator builder adds the central body.** `CentralBodyPropagatorBuilder.Build` adds the central body of the
   spacecraft (the observer of its initial orbital parameters, or the Sun for a star or a barycenter) to the perturbing

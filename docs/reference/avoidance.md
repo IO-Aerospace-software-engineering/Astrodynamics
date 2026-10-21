@@ -87,11 +87,11 @@ Moon, Sun, SRP, in RK7(8) and by Velocity-Verlet).
     Without a propagated covariance, the options of a participant propagated in RK7(8) or by Velocity-Verlet follow its
     force model instead of the two-body orbit, and the protected participant of every option carries its initial
     covariance held in RTN instead of none. On a LEO at 400 km with drag and geopotential (TCA 6 h after the start,
-    encounter at 151 m, Pc 1.9e-4), the two-body option was 4.0 km (1 h lead) to 58.6 km (3 h lead) off at its TCA,
+    encounter at 151 m, Pc 1.9e-4), the two-body option was 4.0 km (1 h lead) to 58.5 km (3 h lead) off at its TCA,
     with miss distances of 1.9 to 23 km and Pc of 4e-6 to 5e-5, where the propagated burn passes at 89 m to 2.9 km with
     Pc of 5e-33 to 3.4e-4: an option ranked safe (23.2 km, Pc 4.1e-6) passed at 89 m, Pc 3.0e-4. Cost: one propagation
-    per option from its burn; the 36 options of the default grid on R2 over 8 h in 1.8 s in RK7(8) at 1e-11 and 4.5 s
-    by Velocity-Verlet at 1 s (`ConjunctionCovarianceCostTests`, Release, informative), against about 0.5 s for the
+    per option from its burn; the 36 options of the default grid on R2 over 8 h in 2.2 s in RK7(8) at 1e-11 and 5.5 s
+    by Velocity-Verlet at 1 s (`ConjunctionCovarianceCostTests`, Release, informative), against about 0.4 s for the
     two-body trials.
 
 ## AvoidanceSearchOptions
