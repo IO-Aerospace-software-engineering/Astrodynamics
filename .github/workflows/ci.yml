@@ -183,3 +183,88 @@ jobs:
 
     - name: Test
       run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release ${{ matrix.os != 'ubuntu-latest' && '--filter "Category!=Validation&Category!=LongValidation"' || '--filter "Category!=LongValidation"' }}
+
+  # Job 3: the conformance suite (conformance-tests, private) run by the conformance runner on its latest version, on
+  # the three platforms, with freshly built native libraries. The suite is checked out with a read-only token, the
+  # secret CONFORMANCE_TESTS_TOKEN (contents: read on conformance-tests); without it (forks), the job only says so.
+  # Its kernels are in Git LFS. The exit code of the runner is the number of failed cases plus the number of errors.
+  conformance:
+    needs: build-native
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: windows-latest
+          - os: macos-14        # Apple Silicon (arm64)
+            osx_arch: arm64
+    runs-on: ${{ matrix.os }}
+    env:
+      CONFORMANCE_TESTS_TOKEN: ${{ secrets.CONFORMANCE_TESTS_TOKEN }}
+    defaults:
+      run:
+        working-directory: ./IO.Astrodynamics.Net
+        shell: bash
+
+    steps:
+    - name: No access to the conformance suite
+      if: env.CONFORMANCE_TESTS_TOKEN == ''
+      working-directory: .
+      run: echo "::notice::CONFORMANCE_TESTS_TOKEN is not set; the conformance suite is not run."
+
+    - uses: actions/checkout@v4
+      if: env.CONFORMANCE_TESTS_TOKEN != ''
+
+    - name: Checkout the conformance suite
+      if: env.CONFORMANCE_TESTS_TOKEN != ''
+      uses: actions/checkout@v4
+      with:
+        repository: IO-Aerospace-software-engineering/conformance-tests
+        token: ${{ secrets.CONFORMANCE_TESTS_TOKEN }}
+        path: conformance-tests
+        lfs: true
+
+    - name: Download native Linux library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-linux
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+      if: env.CONFORMANCE_TESTS_TOKEN != '' && matrix.os == 'ubuntu-latest'
+
+    - name: Download native Windows library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-windows
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+      if: env.CONFORMANCE_TESTS_TOKEN != '' && matrix.os == 'windows-latest'
+
+    - name: Download native macOS library
+      uses: actions/download-artifact@v4
+      with:
+        name: native-osx-${{ matrix.osx_arch }}
+        path: IO.Astrodynamics.Net/IO.Astrodynamics/resources
+      if: env.CONFORMANCE_TESTS_TOKEN != '' && matrix.osx_arch
+
+    - name: Setup .NET
+      if: env.CONFORMANCE_TESTS_TOKEN != ''
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Run the conformance suite
+      if: env.CONFORMANCE_TESTS_TOKEN != ''
+      run: |
+        dotnet run --project IO.Astrodynamics.ConformanceRunner -c Release -- \
+          ../conformance-tests IO.Astrodynamics.Tests/Data/SolarSystem conformance-report-${{ matrix.os }}.json
+
+    - name: Print the report
+      if: always() && env.CONFORMANCE_TESTS_TOKEN != ''
+      run: cat conformance-report-${{ matrix.os }}.json
+
+    - name: Upload the report
+      if: always() && env.CONFORMANCE_TESTS_TOKEN != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: conformance-report-${{ matrix.os }}
+        path: IO.Astrodynamics.Net/conformance-report-${{ matrix.os }}.json
+        retention-days: 30

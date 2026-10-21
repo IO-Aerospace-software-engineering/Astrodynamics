@@ -322,6 +322,13 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   6 km; the golden SRP case of `PropagationGoldenTests` moved by 1.7 mm and 1.8e-6 m/s over 3 h, with the same steps
   (recaptured). The ephemeris cache of `CentralBodyPropagator` no longer holds light-time positions, which no force
   reads any more: it is built in about 40 % of the time (11 ms instead of 27 ms per day for the Moon and the Sun).
+- **Conformance runner: the end of the window only, and LFS pointers as errors** ([#426](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/426),
+  [#425](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/425)). The `propagator` and `stm`
+  solvers asked for an output state every `step_size_s` (1 s in the suite) and read only the end of the window; since
+  #363 each output inside an RK7(8) step costs a shortened step, so the GEO 70x70 case took 58 s instead of 1.1 s and
+  the suite 107 s instead of 45 s. They now ask for the end of the window only, with the same results, bit for bit. A
+  data file of the suite left as a Git LFS pointer (a clone without `git lfs pull`) made its case a FAIL, as if the
+  library were wrong; it is now an ERROR that names the file. The library is unchanged.
 
 ### 10.1.0
 

@@ -33,6 +33,7 @@ public class TrackingDataSolver : ICategorySolver
 
         // Load the BSP kernel (path is relative to conformance-tests root)
         var bspPath = Path.Combine(_conformanceTestsPath, bspOrbit.Filename);
+        SuiteDataFile.EnsureContent(bspPath);
         SpiceAPI.Instance.LoadKernels(new FileInfo(bspPath));
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);

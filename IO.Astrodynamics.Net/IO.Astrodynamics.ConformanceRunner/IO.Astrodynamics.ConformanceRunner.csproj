@@ -17,6 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <InternalsVisibleTo Include="IO.Astrodynamics.ConformanceRunner.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\IO.Astrodynamics\IO.Astrodynamics.csproj" />
     </ItemGroup>
 

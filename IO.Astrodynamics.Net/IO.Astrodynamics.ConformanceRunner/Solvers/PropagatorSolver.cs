@@ -17,18 +17,21 @@ public class PropagatorSolver : ICategorySolver
 
     public string Category => "propagator";
 
+    /// <summary>The RK7(8) integrator of the category: tolerances 1e-11, steps from 1 ms to 300 s.</summary>
+    internal static RK78Integrator CreateIntegrator() => new(
+        absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
+        initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
+
     public Dictionary<string, object> Solve(CaseInput caseInput)
     {
         var propagationCase = PropagationCase.Build(caseInput, _dataPath);
 
-        var integrator = new RK78Integrator(
-            absoluteTolerance: 1e-11, relativeTolerance: 1e-11,
-            initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0);
+        var integrator = CreateIntegrator();
 
         // Propagate
         var propagator = new CentralBodyPropagator(
             propagationCase.Window, propagationCase.Spacecraft, integrator, propagationCase.Bodies,
-            propagationCase.Drag, propagationCase.SolarRadiationPressure, propagationCase.StepSize);
+            propagationCase.Drag, propagationCase.SolarRadiationPressure, propagationCase.OutputStep);
 
         var res=propagator.Propagate();
 
