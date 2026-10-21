@@ -325,15 +325,12 @@ public abstract class PropagatorBase : IPropagator
             double remaining = (propagationEnd - currentEpoch).TotalSeconds;
             if (remaining <= 0.0) break;
 
-            // a. Integrate segment, with the mass and coefficients of the segment in RK7(8)
-            ForceEvaluationContext? context = null;
-            if (rk78 != null)
+            // a. Integrate segment, with the mass and coefficients of the segment, recorded for the force model of the
+            // propagation (#402) and, in RK7(8), for the evaluations of its solution
+            var context = ForceEvaluationContext.FromSpacecraft(Spacecraft);
+            if (variational != null)
             {
-                context = ForceEvaluationContext.FromSpacecraft(Spacecraft);
-                if (variational != null)
-                {
-                    rk78.BeginVariationalSegment(context.Value, entryY, entryQ, entryManeuver);
-                }
+                rk78.BeginVariationalSegment(context, entryY, entryQ, entryManeuver);
             }
 
             var result = Integrator.IntegrateSegment(
@@ -433,6 +430,8 @@ public abstract class PropagatorBase : IPropagator
 
         // 5. Generate output StateVectors at DeltaT epochs; in RK7(8), from the dynamics of the propagation
         solution.Dynamics = dynamics;
+        solution.ForceModel = PropagationForceModel.TryCreate(Integrator, solution, InitialState, cache,
+            dynamics?.SyncRoot ?? DynamicsSyncRoot);
         solution.Observer = InitialState.Observer;
         solution.Frame = InitialState.Frame;
         solution.CovariancePropagation = _covariancePropagation;
@@ -453,6 +452,10 @@ public abstract class PropagatorBase : IPropagator
         // 9. In RK7(8), the spacecraft keeps it, for the conjunction analysis that reads its propagated states (step 10,
         // E2); another integrator leaves nothing to replay, so its solution is not kept (H3 review of step 10, B2)
         Spacecraft.LastPropagation = solution.Dynamics != null ? solution : null;
+
+        // With any integrator whose settings can be copied, the spacecraft keeps the force model of the propagation, without
+        // its steps, for the avoidance options of the conjunction assessment (#402)
+        Spacecraft.LastForceModel = solution.ForceModel;
 
         return solution;
     }

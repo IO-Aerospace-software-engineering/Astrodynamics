@@ -38,6 +38,12 @@ public sealed class PropagationSolution
     /// </summary>
     internal PropagationDynamics Dynamics { get; set; }
 
+    /// <summary>
+    /// The force model of the propagation, kept without the steps by RK7(8) and Velocity-Verlet, for the avoidance
+    /// options of the conjunction assessment (#402); null for another integrator.
+    /// </summary>
+    internal PropagationForceModel ForceModel { get; set; }
+
     /// <summary>Observer of the propagated states, set by the propagator; null for a solution built by hand.</summary>
     internal ILocalizable Observer { get; set; }
 

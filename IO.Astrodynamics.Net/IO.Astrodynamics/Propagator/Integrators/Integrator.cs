@@ -26,6 +26,9 @@ public abstract class Integrator : IIntegrator
     // Reusable StateVector for force evaluation (avoids per-step allocation)
     protected StateVector EvalState { get; private set; }
 
+    // The mass and coefficients the forces are evaluated with, or null to read the spacecraft each force was built for
+    private ForceEvaluationContext? _forceContext;
+
     public Integrator(IEnumerable<ForceBase> forces)
     {
         _forces = new List<ForceBase>(forces);
@@ -70,6 +73,17 @@ public abstract class Integrator : IIntegrator
     public Vector3 ComputeAcceleration(StateVector stateVector)
     {
         Vector3 res = Vector3.Zero;
+        if (_forceContext.HasValue)
+        {
+            var context = _forceContext.Value;
+            foreach (var force in Forces)
+            {
+                res += force.Apply(stateVector, context);
+            }
+
+            return res;
+        }
+
         foreach (var force in Forces)
         {
             res += force.Apply(stateVector);
@@ -77,6 +91,25 @@ public abstract class Integrator : IIntegrator
 
         return res;
     }
+
+    /// <summary>
+    /// Evaluate the forces with this mass and these coefficients at every step, instead of the live spacecraft each force
+    /// was built for (the default). For the propagation of an avoidance option, which reuses the forces of the
+    /// trajectory it leaves: they would read the protected spacecraft as it is now, not the option after its burn
+    /// (#415). A propagation without maneuver only: the context does not change along it.
+    /// </summary>
+    /// <param name="context">Mass and coefficients of the propagated spacecraft.</param>
+    internal virtual void EvaluateForcesWith(in ForceEvaluationContext context)
+    {
+        _forceContext = context;
+    }
+
+    /// <summary>
+    /// A new integrator with the settings of this one, without forces: the integrator of the propagation of an avoidance
+    /// option with the forces of the trajectory it leaves (step 10, E4; #402). Null for an integrator whose settings
+    /// cannot be copied.
+    /// </summary>
+    internal virtual Integrator WithSameSettings() => null;
 
     /// <summary>
     /// Update the reusable EvalState with new position, velocity, and epoch.

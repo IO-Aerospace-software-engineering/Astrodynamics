@@ -56,7 +56,13 @@ internal sealed record EncounterCovariance(Matrix? CovarianceInertial, TimeSpan?
     /// </list>
     /// A propagated covariance is resolved first by <see cref="EncounterCovarianceResolver"/>.
     /// </remarks>
-    internal static EncounterCovariance Resolve(ILocalizable source, StateVector encounterState)
+    /// <param name="source">The participant.</param>
+    /// <param name="encounterState">Its state at the encounter epoch.</param>
+    /// <param name="heldCovarianceEpoch">For the trial spacecraft of an avoidance option, whose initial state at its burn
+    /// carries the covariance of the protected participant held in RTN, the epoch of that covariance, from which its age
+    /// is counted; null for the epoch of the initial state.</param>
+    internal static EncounterCovariance Resolve(ILocalizable source, StateVector encounterState,
+        Time? heldCovarianceEpoch = null)
     {
         if (encounterState.Covariance.HasValue)
         {
@@ -68,7 +74,7 @@ internal sealed record EncounterCovariance(Matrix? CovarianceInertial, TimeSpan?
         {
             var covarianceRtn = initialState.RotateCovarianceToRtn(initialState.Covariance.Value);
             var covarianceInertial = encounterState.RotateCovarianceFromRtn(covarianceRtn);
-            var age = (encounterState.Epoch - initialState.Epoch).Duration();
+            var age = (encounterState.Epoch - (heldCovarianceEpoch ?? initialState.Epoch)).Duration();
             return new EncounterCovariance(covarianceInertial, age, CovarianceSource.InitialStateHeldInRtn);
         }
 
@@ -110,6 +116,7 @@ internal sealed class EncounterCovarianceResolver
     private readonly CovariancePropagationOptions _options;
     private readonly Time _replayEnd;
     private readonly bool _computeNonlinearityIndex;
+    private readonly Time? _heldCovarianceEpoch;
     private PropagationSolution _replayed;
     private bool _initialCovarianceResolved;
     private bool _initialCovarianceUsable;
@@ -122,14 +129,18 @@ internal sealed class EncounterCovarianceResolver
     /// <param name="options">The propagation of the covariance, null for none.</param>
     /// <param name="lastEncounter">The last encounter epoch of the analysis, where a replay ends.</param>
     /// <param name="computeNonlinearityIndex">Whether the non-linearity index of a propagated covariance is computed.</param>
+    /// <param name="heldCovarianceEpoch">The epoch of a covariance held in RTN, when it is not that of the initial state
+    /// of the participant (<see cref="EncounterCovariance.Resolve"/>).</param>
     internal EncounterCovarianceResolver(ILocalizable participant, PropagationSolution solution,
-        CovariancePropagationOptions options, in Time lastEncounter, bool computeNonlinearityIndex = false)
+        CovariancePropagationOptions options, in Time lastEncounter, bool computeNonlinearityIndex = false,
+        Time? heldCovarianceEpoch = null)
     {
         _participant = participant ?? throw new ArgumentNullException(nameof(participant));
         _solution = solution;
         _options = options;
         _replayEnd = lastEncounter;
         _computeNonlinearityIndex = computeNonlinearityIndex;
+        _heldCovarianceEpoch = heldCovarianceEpoch;
     }
 
     /// <summary>The replay of the variational equations of the participant, once made; null before, and when its
@@ -226,7 +237,7 @@ internal sealed class EncounterCovarianceResolver
     {
         var solution = PropagatedSolution(encounterState.Epoch);
         if (solution == null)
-            return EncounterCovariance.Resolve(_participant, encounterState);
+            return EncounterCovariance.Resolve(_participant, encounterState, _heldCovarianceEpoch);
 
         // P in the frame of the propagation, relative to its central body: a change of origin by a known ephemeris has
         // the Jacobian I, and a change of inertial frame is a rotation of P (ToFrame)

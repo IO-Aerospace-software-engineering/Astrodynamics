@@ -10,6 +10,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Forces;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
@@ -309,8 +310,11 @@ public static class ConjunctionAssessment
         var tca = encounterCase.EncounterState.Epoch;
 
         // With the covariance of the protected participant propagated, each option is propagated numerically from the
-        // state and the covariance at its burn (E4); otherwise, as before, from the state at the burn alone
+        // state and the covariance at its burn (E4); otherwise with the force model of the participant's propagation when
+        // it has one, or on the two-body orbit of the state after the burn, the covariance held in RTN (#402)
         var propagated = PropagatedAvoidance.TryCreate(encounterCase, options, observer);
+        var fallback = propagated == null ? new FallbackAvoidance(encounterCase, options, observer) : null;
+        var trajectory = propagated != null || fallback.Propagated ? AvoidanceTrajectory.Propagated : AvoidanceTrajectory.TwoBody;
 
         foreach (var leadTime in options.LeadTimes.Where(lead => lead >= constraints.MinimumLeadTime && lead <= constraints.MaximumLeadTime))
         {
@@ -320,15 +324,15 @@ public static class ConjunctionAssessment
                 continue;
             }
 
-            if (propagated != null && !propagated.Covers(burnEpoch))
+            if (propagated != null ? !propagated.Covers(burnEpoch) : !fallback.Covers(burnEpoch))
             {
                 continue;
             }
 
-            var burnState = propagated?.BurnState(burnEpoch) ?? GetState(encounterCase.ProtectedAsset.Spacecraft, burnEpoch, observer);
+            var burnState = propagated?.BurnState(burnEpoch) ?? fallback.BurnState(burnEpoch);
 
             // The fuel from the mass at the burn, not the mass of the spacecraft after its whole propagation (#415)
-            var massAtBurn = propagated?.Context(burnEpoch).TotalMass ?? encounterCase.ProtectedAsset.Spacecraft.GetTotalMass();
+            var massAtBurn = propagated?.Context(burnEpoch).TotalMass ?? fallback.MassAt(burnEpoch);
 
             foreach (var magnitude in options.DeltaVMagnitudesMetersPerSecond.Where(mag => mag > 0.0 && mag <= constraints.MaxDeltaVMetersPerSecond))
             {
@@ -338,7 +342,7 @@ public static class ConjunctionAssessment
                     var fuelCost = EstimateFuelCost(encounterCase.ProtectedAsset.Spacecraft, massAtBurn, magnitude);
                     var postEncounter = propagated != null
                         ? propagated.Analyze(burnState, deltaV, fuelCost)
-                        : AnalyzeTwoBodyTrial(encounterCase, options, burnState, deltaV, constraints);
+                        : fallback.Analyze(burnState, deltaV, fuelCost);
 
                     var probability = postEncounter.CollisionRisk?.ProbabilityOfCollision ?? 1.0;
                     var rankingScore = (probability <= options.PcThreshold ? 0.0 : 1e9) + magnitude;
@@ -348,7 +352,7 @@ public static class ConjunctionAssessment
                         deltaV,
                         fuelCost,
                         postEncounter,
-                        rankingScore));
+                        rankingScore) { Trajectory = trajectory });
                 }
             }
         }
@@ -359,36 +363,159 @@ public static class ConjunctionAssessment
             .ToArray();
     }
 
-    // The former trial: the spacecraft cloned at the state after the burn, not propagated, so that its ephemeris is the
-    // two-body orbit of that state; the covariance held in RTN
-    private static EncounterCase AnalyzeTwoBodyTrial(EncounterCase encounterCase, AvoidanceSearchOptions options,
-        StateVector burnState, Vector3 deltaV, ManeuverConstraints constraints)
+    /// <summary>
+    /// The avoidance options of an encounter whose protected covariance is not propagated (#402). Each option is
+    /// propagated from the state after its burn with the force model of the propagation of the protected participant the
+    /// analysis sampled (<see cref="EncounterCase.ProtectedTrajectory"/>, or the force model the spacecraft keeps from
+    /// its last propagation, <see cref="Spacecraft.LastForceModel"/>): its forces, its integrator and step settings
+    /// (RK7(8) or Velocity-Verlet), its orientation cache, under its lock, with the mass of the trajectory at the burn
+    /// less the fuel of the option. Without such a propagation (not propagated, TLE, SPICE kernel), the option is the
+    /// two-body orbit of the state after the burn, as before (<see cref="AvoidanceTrajectory.TwoBody"/>).
+    /// </summary>
+    /// <remarks>
+    /// The covariance of the protected participant is the one the analysis resolves for it at the burn (given there by
+    /// its ephemeris, or its initial covariance held in RTN), held in RTN from the burn to the TCA of the option: rotated
+    /// into RTN with the state before the burn, back with the state of the option at its TCA. With the initial
+    /// covariance, that is the initial covariance held in RTN up to the TCA of the option, the same rotation at the burn
+    /// cancelling, and its age is counted from the initial state. The execution error of the burn is not added: a
+    /// velocity covariance at the burn held in RTN never reaches the position covariance at the TCA. The secondary
+    /// participant keeps the resolution of its covariance of the encounter, propagated with the same options when it
+    /// was, for all the options.
+    /// </remarks>
+    private sealed class FallbackAvoidance
     {
-        var postBurnState = new StateVector(
-            burnState.Position,
-            burnState.Velocity + deltaV,
-            burnState.Observer,
-            burnState.Epoch,
-            burnState.Frame,
-            burnState.Covariance);
+        private readonly EncounterCase _encounterCase;
+        private readonly AvoidanceSearchOptions _options;
+        private readonly ILocalizable _observer;
+        private readonly Spacecraft _spacecraft;
+        private readonly PropagationSolution _trajectory;
+        private readonly PropagationForceModel _forceModel;
+        private readonly Time _end;
+        private readonly StateSamplingSource _secondarySource;
+        private readonly EncounterCovarianceResolver _secondaryResolver;
 
-        var trialSpacecraft = CloneSpacecraft(encounterCase.ProtectedAsset.Spacecraft, postBurnState);
-        var trialProfile = new ProtectedSpacecraftProfile(
-            trialSpacecraft,
-            constraints);
+        internal FallbackAvoidance(EncounterCase encounterCase, AvoidanceSearchOptions options, ILocalizable observer)
+        {
+            _encounterCase = encounterCase;
+            _options = options;
+            _observer = observer;
+            _spacecraft = encounterCase.ProtectedAsset.Spacecraft;
+            _trajectory = encounterCase.ProtectedTrajectory;
+            _forceModel = _trajectory != null ? _trajectory.ForceModel : _spacecraft.LastForceModel;
 
-        return Analyze(
-            trialProfile,
-            encounterCase.SecondaryObject,
-            new Window(burnState.Epoch, encounterCase.ScreeningWindow.EndDate),
-            new ConjunctionAnalysisOptions
+            // Within the window and the force model of the propagation, whose ephemeris and orientation caches cover it
+            _end = encounterCase.ScreeningWindow.EndDate;
+            if (_forceModel != null && _forceModel.End < _end)
             {
-                SampleStep = options.AnalysisSampleStep,
-                MaximumEventSearchStep = options.MaximumEventSearchStep,
-                SecondaryHardBodyRadiusMeters = options.SecondaryHardBodyRadiusMeters,
-                LowRelativeSpeedThresholdMetersPerSecond = options.LowRelativeSpeedThresholdMetersPerSecond,
+                _end = _forceModel.End;
+            }
+
+            _secondarySource = CreateLocalizableStateSource(encounterCase.SecondaryObject, observer);
+            var secondary = encounterCase.SecondaryCovariance;
+            var secondaryPropagation = secondary?.Source == CovarianceSource.Propagated ? secondary.Solution.CovariancePropagation : null;
+            _secondaryResolver = new EncounterCovarianceResolver(encounterCase.SecondaryObject, _secondarySource.Solution,
+                secondaryPropagation, _end);
+        }
+
+        /// <summary>Whether the options are propagated with a force model, rather than the two-body orbit.</summary>
+        internal bool Propagated => _forceModel != null;
+
+        // A burn the propagation covers, before the end of the options
+        internal bool Covers(in Time burnEpoch) => _forceModel == null || (_forceModel.Covers(burnEpoch) && burnEpoch < _end);
+
+        // The state at the burn: on the trajectory the analysis sampled, in the frame of its propagation and relative to its
+        // central body; on the ephemeris of the spacecraft without one
+        internal StateVector BurnState(in Time burnEpoch)
+        {
+            if (_forceModel == null)
+                return GetState(_spacecraft, burnEpoch, _observer);
+
+            if (_trajectory != null)
+            {
+                var (position, velocity) = _trajectory.InterpolateAt(burnEpoch);
+                return new StateVector(position, velocity, _forceModel.Observer, burnEpoch, _forceModel.Frame);
+            }
+
+            return _spacecraft.GetEphemeris(burnEpoch, _forceModel.Observer, _forceModel.Frame, Aberration.None).ToStateVector();
+        }
+
+        // The mass of the trajectory at the burn, that of the spacecraft without a propagation
+        internal double MassAt(in Time burnEpoch) => _forceModel?.ContextAt(burnEpoch).TotalMass ?? _spacecraft.GetTotalMass();
+
+        internal EncounterCase Analyze(StateVector burnState, Vector3 deltaV, double fuelCost)
+        {
+            var burnEpoch = burnState.Epoch;
+            var held = EncounterCovariance.Resolve(_spacecraft, burnState);
+            Matrix? covarianceRtn = held.CovarianceInertial.HasValue ? burnState.RotateCovarianceToRtn(held.CovarianceInertial.Value) : null;
+            Time? heldEpoch = held.Source switch
+            {
+                CovarianceSource.InitialStateHeldInRtn => _spacecraft.InitialOrbitalParameters.Epoch,
+                CovarianceSource.ProvidedAtEncounter => burnEpoch,
+                _ => null
+            };
+
+            var afterBurn = new StateVector(burnState.Position, burnState.Velocity + deltaV, burnState.Observer, burnEpoch,
+                burnState.Frame);
+            var postBurn = covarianceRtn.HasValue
+                ? new StateVector(afterBurn.Position, afterBurn.Velocity, afterBurn.Observer, burnEpoch, afterBurn.Frame,
+                    afterBurn.RotateCovarianceFromRtn(covarianceRtn.Value))
+                : afterBurn;
+
+            var window = new Window(burnEpoch, _end);
+            Spacecraft trial;
+            StateSamplingSource protectedSource;
+            if (_forceModel == null)
+            {
+                // Not propagated: its ephemeris is the two-body orbit of the state after the burn
+                trial = CloneSpacecraft(_spacecraft, postBurn);
+                protectedSource = CreateLocalizableStateSource(trial, _observer);
+            }
+            else
+            {
+                var context = _forceModel.ContextAt(burnEpoch);
+                trial = CloneSpacecraft(_spacecraft, postBurn, System.Math.Max(context.TotalMass - fuelCost, 0.0),
+                    context.DragCoefficient, context.ReflectivityCoefficient);
+                var trajectory = PropagateOption(trial, _forceModel.NewIntegrator(ForceEvaluationContext.FromSpacecraft(trial)),
+                    window, null, _forceModel.OrientationCache, _forceModel.SyncRoot);
+                protectedSource = CreateTrajectoryStateSource(trial, trajectory, _observer, window);
+            }
+
+            var analysisOptions = new ConjunctionAnalysisOptions
+            {
+                SampleStep = _options.AnalysisSampleStep,
+                MaximumEventSearchStep = _options.MaximumEventSearchStep,
+                SecondaryHardBodyRadiusMeters = _options.SecondaryHardBodyRadiusMeters,
+                LowRelativeSpeedThresholdMetersPerSecond = _options.LowRelativeSpeedThresholdMetersPerSecond,
                 CovariancePropagation = null
-            });
+            };
+            var profile = new ProtectedSpacecraftProfile(trial, _encounterCase.ProtectedAsset.ManeuverConstraints);
+            var protectedResolver = new EncounterCovarianceResolver(trial, protectedSource.Solution, null, window.EndDate,
+                heldCovarianceEpoch: heldEpoch);
+            return AnalyzeInternal(profile, _encounterCase.SecondaryObject, window, analysisOptions, protectedSource,
+                _secondarySource, protectedResolver, _secondaryResolver);
+        }
+    }
+
+    // The propagation of an avoidance option with the forces of the trajectory it leaves, under the lock of those forces;
+    // the solution of the option evaluates them under that lock afterwards. Its analysis takes no lock inside it: the lock of
+    // the secondary participant is never taken under that of the protected one. Two outputs, at the ends: the analysis
+    // reads the steps.
+    private static PropagationSolution PropagateOption(Spacecraft trial, Integrator integrator, in Window window,
+        CovariancePropagationOptions covariancePropagation, PropagationFrameOrientationCache orientationCache,
+        object syncRoot, Func<double[]> crossCovariance = null)
+    {
+        lock (syncRoot)
+        {
+            using var propagator = new CentralBodyPropagator(window, trial, integrator, window.Length,
+                covariancePropagation, orientationCache, syncRoot);
+            var cross = crossCovariance?.Invoke();
+            if (cross != null)
+            {
+                propagator.SetInitialCrossCovariance(cross);
+            }
+
+            return propagator.Propagate();
+        }
     }
 
     /// <summary>
@@ -493,23 +620,13 @@ public static class ConjunctionAssessment
                 integrator.AddForce(force);
             }
 
-            // The forces are those of the trajectory: the propagation of the option runs under the lock of its dynamics,
-            // and the solution of the option evaluates them under that lock. The analysis takes no other lock inside it:
-            // the lock of the secondary participant is never taken under that of the protected one. The analysis reads
-            // the steps, not the output states: two outputs, at the ends.
+            // The forces are those of the trajectory, under the lock of its dynamics
             var window = new Window(burnEpoch, _end);
-            PropagationSolution trajectory;
-            lock (_dynamics.SyncRoot)
-            {
-                using var propagator = new CentralBodyPropagator(window, trial, integrator, window.Length,
-                    _covariancePropagation, _dynamics.OrientationCache, _dynamics.SyncRoot);
-                if (_solution.ExtendedCovarianceParameters.Count > 0)
-                {
-                    propagator.SetInitialCrossCovariance(CrossCovariance(_solution.GetExtendedCovariance(burnEpoch)));
-                }
-
-                trajectory = propagator.Propagate();
-            }
+            var trajectory = PropagateOption(trial, integrator, window, _covariancePropagation, _dynamics.OrientationCache,
+                _dynamics.SyncRoot,
+                _solution.ExtendedCovarianceParameters.Count > 0
+                    ? () => CrossCovariance(_solution.GetExtendedCovariance(burnEpoch))
+                    : null);
 
             return AnalyzeOption(trial, trajectory, window);
         }
@@ -571,6 +688,7 @@ public static class ConjunctionAssessment
         ConjunctionAnalysisOptions options,
         StateSamplingSource protectedSource,
         StateSamplingSource secondarySource,
+        EncounterCovarianceResolver protectedResolver = null,
         EncounterCovarianceResolver secondaryResolver = null)
     {
         var tcaEpochs = FindCloseApproaches(
@@ -583,7 +701,7 @@ public static class ConjunctionAssessment
 
         Time tca = SelectBestTcaEpoch(tcaEpochs, screeningWindow, protectedSource, secondarySource);
         return BuildEncounterCase(protectedAsset, secondaryObject, screeningWindow, tca, options, protectedSource, secondarySource,
-            CreateResolver(protectedAsset.Spacecraft, protectedSource, options, tca),
+            protectedResolver ?? CreateResolver(protectedAsset.Spacecraft, protectedSource, options, tca),
             secondaryResolver ?? CreateResolver(secondaryObject, secondarySource, options, tca));
     }
 
@@ -1596,7 +1714,8 @@ public static class ConjunctionAssessment
             secondaryState)
         {
             ProtectedCovariance = protectedCovariance,
-            SecondaryCovariance = secondaryCovariance
+            SecondaryCovariance = secondaryCovariance,
+            ProtectedTrajectory = protectedSource.Solution
         };
     }
 
