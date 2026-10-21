@@ -480,13 +480,14 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         // Assert: Ridders on each component, from steps of a tenth of the distance to the axis. Measured 2026-10-21:
         // 7.6e-11 at 1 km, 5.5e-12 at 10 km, 4.6e-11 at 100 km and 4.8e-11 at 89°, the resolution of that reference
         // (1.5e-11 to 4.0e-11); 1.1e-6, 1.2e-8, 2.5e-10 and 1.9e-10 with the arc of the parallel, 8.1e-9, 8.2e-10,
-        // 1.1e-10 and 8.7e-11 with the chord without the cap of the longitude step
+        // 1.1e-10 and 8.7e-11 with the chord without the cap of the longitude step. The same on Linux, Windows and macOS
+        // arm64; bounds at twice the worst
         double error = RiddersDerivative.RelativeFrobeniusError(gradient, expected);
         double referenceError = System.Math.Sqrt(errors.Sum(e => e * e) / expected.Sum(e => e * e));
         double former = RiddersDerivative.RelativeFrobeniusError(cartesian, expected);
         _output.WriteLine($"{parallel / 1000.0:F1} km from the polar axis: ∇ρ {error:E2}, reference " +
                           $"{referenceError:E2}, Cartesian differences {former:E2}");
-        Assert.True(referenceError < 1e-10, $"reference {referenceError:E2}");
+        Assert.True(referenceError < 8.1e-11, $"reference {referenceError:E2}");
         Assert.True(error < 1.6e-10, $"{error:E2}");
     }
 
@@ -533,14 +534,15 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         double derivative = drag.DensityAltitudeDerivative(position, rotation, epoch);
 
         // Assert: ∇h by Ridders on the geodetic conversion, against the normal of the gradient; agreement 1.2e-10, the
-        // resolution of that reference (1.3e-10, measured 2026-10-21)
+        // resolution of that reference (1.3e-10, measured 2026-10-21, the same on Linux, Windows and macOS arm64); bounds at
+        // twice them
         var expected = normal.Select(n => n * derivative).ToArray();
         double error = RiddersDerivative.RelativeFrobeniusError(gradient, expected);
         double referenceError = System.Math.Sqrt(normalErrors.Sum(e => e * e));
         _output.WriteLine($"∇ρ against ∂ρ/∂h ∇h (Ridders): {error:E2}, reference {referenceError:E2}; altitude " +
                           $"{altitude:F3} m");
-        Assert.True(referenceError < 1e-9, $"reference {referenceError:E2}");
-        Assert.True(error < 1e-9, $"{error:E2}");
+        Assert.True(referenceError < 2.6e-10, $"reference {referenceError:E2}");
+        Assert.True(error < 2.5e-10, $"{error:E2}");
     }
 
     private (Vector3 Direction, Quaternion? Rotation, TimeSystem.Time Epoch) RadialLine()

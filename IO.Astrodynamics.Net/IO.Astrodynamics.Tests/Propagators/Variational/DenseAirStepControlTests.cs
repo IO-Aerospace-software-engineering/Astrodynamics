@@ -75,7 +75,8 @@ public class DenseAirStepControlTests
             new VariationalOptions(parameters, IncludeInStepControl: includeInStepControl));
     }
 
-    // Budgets at twice the steps measured (2026-10-21, Linux, Release). Before #420: US 1976 at 200 km, 107 290 steps at
+    // Budgets at twice the worst steps measured on Linux, Windows and macOS arm64 (2026-10-21, Release, CI); the steps
+    // differ between the platforms by up to a third (NRLMSISE-00 at 200 km and 1e-12: 26, 21 and 35). Before #420: US 1976 at 200 km, 107 290 steps at
     // 1e-11, more than 400 000 in 8.8 s and 0.71 s of flight at 1e-12 and 1e-13; NRLMSISE-00 at 200 km, 6 030 at 1e-11,
     // 28 699 in 24.7 s of flight at 1e-12; at 400 km, 6 362 at 1e-13; Mars at 100 km, more than 400 000 in 5.3 s of
     // flight at 1e-11, and 100 rejections at the start at 1e-12 and 1e-13. NRLMSISE-00 at 200 km starts on its 200 km
@@ -86,14 +87,14 @@ public class DenseAirStepControlTests
     [InlineData("US 1976", 200000.0, 1e-13, 66)]
     [InlineData("US 1976", 400000.0, 1e-13, 18)]
     [InlineData("NRLMSISE-00", 200000.0, 1e-11, 12)]
-    [InlineData("NRLMSISE-00", 200000.0, 1e-12, 76)]
-    [InlineData("NRLMSISE-00", 200000.0, 1e-13, 684)]
-    [InlineData("NRLMSISE-00", 220000.0, 1e-13, 200)]
-    [InlineData("NRLMSISE-00", 400000.0, 1e-13, 22)]
+    [InlineData("NRLMSISE-00", 200000.0, 1e-12, 70)]
+    [InlineData("NRLMSISE-00", 200000.0, 1e-13, 674)]
+    [InlineData("NRLMSISE-00", 220000.0, 1e-13, 198)]
+    [InlineData("NRLMSISE-00", 400000.0, 1e-13, 28)]
     [InlineData("Mars", 100000.0, 1e-11, 58)]
     [InlineData("Mars", 100000.0, 1e-12, 156)]
     [InlineData("Mars", 100000.0, 1e-13, 1884)]
-    [InlineData("Mars", 80000.0, 1e-13, 284)]
+    [InlineData("Mars", 80000.0, 1e-13, 286)]
     public void IncludeInStepControl_InDenseAir_CompletesWithinItsBudget(string model, double altitude,
         double tolerance, int budget)
     {
@@ -105,7 +106,7 @@ public class DenseAirStepControlTests
         int steps = Steps(solution);
         int withoutTheOption = Steps(Propagate(body, altitude, tolerance, false));
 
-        // Assert: the propagation reaches the end of its window within twice the steps measured (2026-10-21, Linux)
+        // Assert: the propagation reaches the end of its window within its budget
         _output.WriteLine($"{model}, {altitude / 1000.0} km, {tolerance:E0}: {steps} steps, {withoutTheOption} " +
                           "without the option");
         Assert.True(steps <= budget, $"{steps} steps, budget {budget}");
@@ -190,11 +191,11 @@ public class DenseAirStepControlTests
                                                                state.Position.Z * state.Position.Z) < body.EquatorialRadius;
         });
 
-        // Assert: within twice the steps measured (120, 2026-10-21, Linux)
+        // Assert: within twice the worst steps measured (120, 121 and 119 on Linux, Windows and macOS arm64, 2026-10-21)
         int steps = Steps(solution);
         _output.WriteLine($"Ψ_Cd and Ψ_Cr through the shadow: {steps} steps, {shadowed} minutes in the shadow cylinder");
         Assert.True(shadowed > 0, "the orbit never enters the shadow");
-        Assert.True(steps <= 240, $"{steps} steps");
+        Assert.True(steps <= 242, $"{steps} steps");
         Assert.Equal((6, 2), (solution.GetParameterSensitivity(window.EndDate).Rows,
             solution.GetParameterSensitivity(window.EndDate).Columns));
     }

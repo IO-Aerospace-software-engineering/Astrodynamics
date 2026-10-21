@@ -145,7 +145,7 @@ public class DensityGradientNoiseTests
 
         // Assert: 1.8e-14 to 3.5e-14 for US 1976 (dρ/dh in closed form), 1.5e-13 for Mars, 4.0e-13 to 9.8e-13 for
         // NRLMSISE-00 (differences in its inputs), 365 to 20 000 times less than the Cartesian differences (measured
-        // 2026-10-21, Linux); bound at twice the worst
+        // 2026-10-21, the same to three digits on Linux, Windows and macOS arm64); bound at twice the worst
         Assert.True(noise < 2e-12, $"noise {noise:E2}");
     }
 
@@ -174,7 +174,7 @@ public class DensityGradientNoiseTests
         _output.WriteLine($"{axisDistance / 1000.0} km from the polar axis: noise {noise:E2} of |∇ρ|");
 
         // Assert: 1.6e-11 at 1 km, the longitude step capped to 1e-3 rad, 2.0e-12 at 10 km and 1.0e-12 at 100 km
-        // (measured 2026-10-21, Linux), 25 times less than the Cartesian differences at 1 km; bound at twice the worst
-        Assert.True(noise < 3.2e-11, $"noise {noise:E2}");
+        // (measured 2026-10-21, the same to three digits on Linux, Windows and macOS arm64), 25 times less than the Cartesian differences at 1 km; bound at twice the worst
+        Assert.True(noise < 3.3e-11, $"noise {noise:E2}");
     }
 }
