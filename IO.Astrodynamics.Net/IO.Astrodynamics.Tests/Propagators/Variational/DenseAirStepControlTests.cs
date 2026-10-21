@@ -223,6 +223,14 @@ public class DenseAirStepControlTests
         _output.WriteLine(exception.Message);
         Assert.StartsWith("RK7(8) with the variational equations in the step control (IncludeInStepControl)",
             exception.Message);
+
+        // At 1e-11 the rejections stop it at the start, their message naming the variational equations
+        var rejections = Assert.Throws<InvalidOperationException>(() => ssb.PropagateWithVariationalEquations(Window,
+            bodies, new RK78Integrator(1e-11, 1e-11), true, false, Window.Length,
+            new VariationalOptions(ForceParameters.DragCoefficient, IncludeInStepControl: true)));
+        Assert.StartsWith("RK78 adaptive step failed: 100 consecutive rejections", rejections.Message);
+        Assert.EndsWith("The error of the variational equations (IncludeInStepControl) drove the rejections.",
+            rejections.Message);
     }
 
     // An exponential atmosphere whose density carries a deterministic relative noise of 1e-10, far above the rounding of

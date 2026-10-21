@@ -80,10 +80,10 @@ the start of the window. This example runs as a smoke test against the packed Nu
   1.9e-3 depending on where the steps fell (the same physics in J2000 and in ECLIPJ2000), against 2.6e-5 at most at
   1e-14. Relative to the local Ψ_Cr, it reaches 1.5e-2 at 1e-12 just after the first shadow exit, where Ψ_Cr is still
   below a millimetre, but also 1.2e-2 at a later crossing (4.45 h), where Ψ_Cr is 0.28 m; at 1e-14, 1.6e-4 at that later
-  crossing. With the option, at 1e-12, Ψ_Cr is within 9.6e-8 of the same propagation at 1e-13, relative to the local
+  crossing. With the option, at 1e-12, Ψ_Cr is within 7.1e-8 (J2000) and 3.4e-8 (ECLIPJ2000) of the same propagation at 1e-13, relative to the local
   Ψ_Cr, over the whole arc. When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
   tighter tolerance reduces the error about a hundredfold, not below 1e-4 at every crossing. In the same
-  case, Φ and Ψ_Cd stay below 3.1e-8 and 3.4e-7 (at 5.123 h).
+  case, Φ and Ψ_Cd stay below 2.2e-8 and 7.6e-7 (at 5.123 h; measured 2026-10-21).
 - `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
 - With `IncludeInStepControl`, the step follows the error of Φ and Ψ, so it needs partial derivatives that are smooth
   along the trajectory. The density gradient of the drag partials is taken in geodetic coordinates, without rounding

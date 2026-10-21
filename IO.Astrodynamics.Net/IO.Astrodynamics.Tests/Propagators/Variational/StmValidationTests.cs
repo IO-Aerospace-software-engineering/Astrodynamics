@@ -52,7 +52,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// and the figure follows the step of the reference: 3.3e-4 at 5 % of Cr, 9.2e-5 at 10 %, 9.9e-5 at 20 %, while over
 /// the arc the same comparison gives 9.5e-6, 2.1e-6 and 9.4e-6 (asserted at each step). A fixed-step reference resolved
 /// worse, 2.9e-4 at 5 s, through the shadow crossings (a design measurement, not a committed test). Ψ_Cr itself is
-/// within 9.6e-8 of the same propagation at a tighter tolerance over the eclipsing arc (#396).
+/// within 7.1e-8 of the same propagation at a tighter tolerance over the eclipsing arc (#396; 9.6e-8 before #420).
 /// </para>
 /// </remarks>
 [Trait("Category", "Validation")]

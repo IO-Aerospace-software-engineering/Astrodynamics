@@ -393,6 +393,63 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
     }
 
     [Fact]
+    public void BetweenTwoDiscontinuitiesWithinTheFourthOrderStencil_TheAltitudeDerivativeIsTheCentralDifference()
+    {
+        // Arrange: jumps at two altitudes 50 m apart, the point midway: the fourth-order stencil (± 2 δ_h ≈ 40 m) and the
+        // third-order one-sided ones (3 δ_h ≈ 60 m) reach a jump on each side, the central difference over 2 h ≈ 4 m none
+        var (direction, rotation, epoch) = RadialLine();
+        var (earth, drag, model) = SteppedEarth(400000.0, 400050.0);
+        double radius = CutoffRadius(drag, model, direction, rotation, epoch, 0) + 25.0;
+        var position = direction * radius;
+
+        // Act
+        double derivative = drag.DensityAltitudeDerivative(position, rotation, epoch);
+
+        // Assert
+        Assert.Equal(1, model.DensityInterval(drag.Geodetic(position, rotation, epoch).Altitude));
+        Assert.Equal(CentralAltitudeDerivative(drag, earth, position, rotation, epoch), derivative);
+    }
+
+    [Fact]
+    public void NearThePolarAxis_TheGradientIsTheCartesianDifference()
+    {
+        // Arrange: a position 100 m from the polar axis, within the horizontal step, where the east step is not defined
+        var (_, _, _, rotation, epoch) = Geometry(PartialsTestCases.Leo400);
+        var reference = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
+        var drag = new AtmosphericDrag(PartialsTestCases.Spacecraft(reference), _cases.Earth);
+        var axis = rotation.HasValue ? new Vector3(0.0, 0.0, 1.0).Rotate(rotation.Value.Conjugate()) : new Vector3(0.0, 0.0, 1.0);
+        var across = rotation.HasValue ? new Vector3(1.0, 0.0, 0.0).Rotate(rotation.Value.Conjugate()) : new Vector3(1.0, 0.0, 0.0);
+        var position = axis * (6356752.0 + 400000.0) + across * 100.0;
+        var gradient = new double[3];
+        var cartesian = new double[3];
+
+        // Act
+        drag.DensityGradient(position, rotation, epoch, gradient);
+        drag.CartesianDensityGradient(position, rotation, epoch, cartesian);
+
+        // Assert
+        Assert.Equal(cartesian, gradient);
+    }
+
+    [Fact]
+    public void AltitudeDerivative_OfAModelOfTheAltitudeAlone_IsItsClosedForm()
+    {
+        // Arrange: the US 1976 atmosphere gives dρ/dh in closed form
+        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF,
+            PartialsTestCases.Epoch, null, new EarthStandardAtmosphere());
+        var state = PartialsTestCases.State(PartialsTestCases.Leo400, earth);
+        var drag = new AtmosphericDrag(PartialsTestCases.Spacecraft(state), earth);
+        var rotation = drag.BodyFixedRotation(state);
+        double altitude = drag.Geodetic(state.Position, rotation, state.Epoch).Altitude;
+
+        // Act
+        double derivative = drag.DensityAltitudeDerivative(state.Position, rotation, state.Epoch);
+
+        // Assert
+        Assert.Equal(((IAltitudeDensityDerivative)earth.Atmosphere).GetDensityAltitudeDerivative(altitude), derivative);
+    }
+
+    [Fact]
     public void Gradient_IsTheAltitudeDerivativeAlongTheNormal_ForAModelOfTheAltitudeAlone()
     {
         // Arrange: the stepped atmosphere depends on the altitude alone, so its horizontal differences vanish and ∇ρ is

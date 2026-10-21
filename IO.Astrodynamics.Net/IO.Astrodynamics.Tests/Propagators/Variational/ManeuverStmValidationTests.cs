@@ -59,7 +59,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// same on <c>main</c> and since #398 to 2.5e-10 of its largest value, while its reference moves by up to 6.7e-5 (H3
 /// review of #399). Ψ_Cr against the central differences is therefore a record, over the arc and locally (decisions of
 /// S. Guillet, 2026-10-17), and Ψ_Cr is held to F1 against the same propagation at 1e-14 with Φ and Ψ in the step
-/// control: 2.1e-12 and 3.0e-12 over the arc, 1.2e-8 at most relative to the local value wherever it is not zero. The
+/// control: 3.7e-11 and 6.5e-11 over the arc, 5.2e-9 at most relative to the local value wherever it is not zero, with
+/// the density gradient of #420 (2.0e-10, 3.7e-10 and 2.4e-7 on `main` before it; 2.1e-12, 3.0e-12 and 1.2e-8 at #399). The
 /// reference at 1e-14 with the step control takes 36 850 steps (4762 at 1e-13) and about 30 s. The record of Φ in the
 /// penumbra is twice its new measurement.
 /// </para>
