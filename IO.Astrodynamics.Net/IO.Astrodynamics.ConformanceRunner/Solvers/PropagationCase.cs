@@ -18,11 +18,19 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// <summary>
 /// A propagation case of the conformance suite, built from the inputs shared by the <c>propagator</c> and <c>stm</c>
 /// categories: the window, the spacecraft at its initial state, the bodies (the central body first), the
-/// non-conservative forces and the output step.
+/// non-conservative forces and the step of the case (<c>step_size_s</c>).
 /// </summary>
 public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IReadOnlyList<CelestialItem> Bodies,
     bool Drag, bool SolarRadiationPressure, TimeSpan StepSize)
 {
+    /// <summary>
+    /// The output step of the propagation: the length of the window, so that no output falls inside it. The solvers
+    /// read only the end of the window, and since #363 each RK7(8) output inside a step costs a shortened step (13
+    /// force evaluations): <see cref="StepSize"/>, 1 s in the suite, made the GEO 70x70 case 41 times slower (#426).
+    /// The accepted steps do not depend on the outputs, so the results are the same, bit for bit.
+    /// </summary>
+    public TimeSpan OutputStep => Window.Length;
+
     /// <summary>
     /// Builds the case of <paramref name="caseInput"/>, the geopotential model read from <paramref name="dataPath"/>.
     /// </summary>
@@ -37,6 +45,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
         if (inputs.GeopotentialDegree > 0 && !string.Equals(inputs.GeopotentialModel, "none", StringComparison.OrdinalIgnoreCase))
         {
             var geoModelPath = Path.Combine(dataPath, inputs.GeopotentialModel);
+            SuiteDataFile.EnsureContent(geoModelPath);
             geoParams = new GeopotentialModelParameters(geoModelPath, (ushort)inputs.GeopotentialDegree);
         }
         IAtmosphericModel atmosphericModel = inputs.ForceModel.Drag ? new EarthStandardAtmosphere() : null;

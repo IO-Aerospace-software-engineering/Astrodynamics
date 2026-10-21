@@ -37,7 +37,7 @@ public class StmSolver : ICategorySolver
         var integrator = new RK78Integrator(Tolerance, Tolerance);
         var propagator = new CentralBodyPropagator(
             propagationCase.Window, propagationCase.Spacecraft, integrator, propagationCase.Bodies,
-            propagationCase.Drag, propagationCase.SolarRadiationPressure, propagationCase.StepSize,
+            propagationCase.Drag, propagationCase.SolarRadiationPressure, propagationCase.OutputStep,
             new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly });
         var solution = propagator.Propagate();
 

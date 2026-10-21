@@ -7,8 +7,15 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using IO.Astrodynamics.ConformanceRunner.Comparison;
 using IO.Astrodynamics.ConformanceRunner.Models;
+using IO.Astrodynamics.ConformanceRunner.Solvers;
+using IO.Astrodynamics.ConformanceRunner.Utilities;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
+using IO.Astrodynamics.Propagator.Variational;
 using Xunit;
 using Xunit.Abstractions;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace IO.Astrodynamics.ConformanceRunner.Tests;
 
@@ -141,9 +148,40 @@ public sealed class StmCaseTests : IDisposable
     }
 
     [Fact]
+    public void StmSolver_GivesTheStmAndTheStateOfAPropagationWithOutputsAtTheStepOfTheCase()
+    {
+        // Arrange: the stm case of the fixture, and the same propagation with an output at every step of the case, as
+        // the solver did before #426
+        CaseInput Case() => new DeserializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build()
+            .Deserialize<CaseInput>(File.ReadAllText(Path.Combine(_directory, "cases", "stm", "001", "inputs.yaml")));
+        var reference = PropagationCase.Build(Case(), KernelsPath);
+        var solution = new CentralBodyPropagator(reference.Window, reference.Spacecraft,
+            new RK78Integrator(StmSolver.Tolerance, StmSolver.Tolerance), reference.Bodies, reference.Drag,
+            reference.SolarRadiationPressure, reference.StepSize,
+            new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly }).Propagate();
+        var end = reference.Window.EndDate.ToTDB();
+        var phi = solution.GetStateTransitionMatrix(end);
+        var (position, velocity) = solution.InterpolateAt(end);
+
+        // Act
+        var computed = new StmSolver(KernelsPath).Solve(Case());
+
+        // Assert: the same, bit for bit, since the accepted steps do not depend on the outputs
+        Assert.True(reference.StepSize < reference.Window.Length);
+        var stm = (double[])computed["final_stm"];
+        Assert.All(Enumerable.Range(0, 36), k => Assert.Equal(phi.Get(k / 6, k % 6), stm[k]));
+        Assert.Equal(UnitConversion.MToKm(position.X), computed["final_x_km"]);
+        Assert.Equal(UnitConversion.MToKm(position.Y), computed["final_y_km"]);
+        Assert.Equal(UnitConversion.MToKm(position.Z), computed["final_z_km"]);
+        Assert.Equal(UnitConversion.MSToKmS(velocity.X), computed["final_vx_km_s"]);
+        Assert.Equal(UnitConversion.MSToKmS(velocity.Y), computed["final_vy_km_s"]);
+        Assert.Equal(UnitConversion.MSToKmS(velocity.Z), computed["final_vz_km_s"]);
+    }
+
+    [Fact]
     public void StmSolver_HandlesTheStmCategory()
     {
-        Assert.Equal("stm", new IO.Astrodynamics.ConformanceRunner.Solvers.StmSolver(KernelsPath).Category);
+        Assert.Equal("stm", new StmSolver(KernelsPath).Category);
     }
 
     private void EditGolden(Action<JsonObject> edit)
