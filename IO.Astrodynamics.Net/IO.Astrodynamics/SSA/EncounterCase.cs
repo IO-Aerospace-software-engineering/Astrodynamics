@@ -3,6 +3,7 @@ using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.CCSDS.CDM;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.SSA;
@@ -96,6 +97,13 @@ public sealed class EncounterCase
 
     /// <summary>The covariance of the secondary participant used by the analysis; see <see cref="ProtectedCovariance"/>.</summary>
     internal EncounterCovariance SecondaryCovariance { get; init; }
+
+    /// <summary>
+    /// The propagation of the protected participant the analysis sampled: the solution passed to it, or the last
+    /// propagation of the spacecraft in RK7(8); null otherwise. The avoidance options are propagated with its force model
+    /// (#402).
+    /// </summary>
+    internal PropagationSolution ProtectedTrajectory { get; init; }
 
     /// <summary>
     /// Exports this encounter as a CCSDS Conjunction Data Message.

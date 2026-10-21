@@ -160,7 +160,7 @@ public sealed class RK78Integrator : Integrator
     /// forces or variational equations: the integrator of the propagation of an avoidance option from the state at its
     /// burn (step 10, E4).
     /// </summary>
-    internal RK78Integrator WithSameSettings()
+    internal override Integrator WithSameSettings()
     {
         return AdaptiveMode
             ? new RK78Integrator(AbsoluteTolerance, RelativeTolerance, _initialH, _controller.MinStepSize,
@@ -168,15 +168,10 @@ public sealed class RK78Integrator : Integrator
             : new RK78Integrator(_initialH);
     }
 
-    /// <summary>
-    /// Evaluate the forces with this mass and these coefficients at every step, instead of the live spacecraft each force
-    /// was built for (the default). For the propagation of an avoidance option, which reuses the forces of the
-    /// trajectory it leaves: they would read the protected spacecraft as it is now, not the option after its burn
-    /// (#415). A propagation without maneuver only: the context does not change along it.
-    /// </summary>
-    /// <param name="context">Mass and coefficients of the propagated spacecraft.</param>
-    internal void EvaluateForcesWith(in ForceEvaluationContext context)
+    /// <inheritdoc />
+    internal override void EvaluateForcesWith(in ForceEvaluationContext context)
     {
+        base.EvaluateForcesWith(context);
         _stepper.Context = context;
     }
 

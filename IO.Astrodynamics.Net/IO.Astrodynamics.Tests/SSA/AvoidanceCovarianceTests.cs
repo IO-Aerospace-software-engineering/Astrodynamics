@@ -231,7 +231,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
     }
 
     [Fact]
-    public void EvaluateAvoidance_ProtectedCovarianceNotPropagated_KeepsTheTwoBodyTrial()
+    public void EvaluateAvoidance_ProtectedCovarianceNotPropagated_PropagatesTheTrialWithoutTheExecutionError()
     {
         // Arrange: the covariance held in RTN
         var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6421, _twoBody.ProtectedStart);
@@ -247,11 +247,15 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         var without = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
         var with = ConjunctionAssessment.EvaluateAvoidance(encounter, options with { ExecutionError = Gates });
 
-        // Assert: the execution error is not used; the trial is not propagated, its covariance not either
+        // Assert: the execution error is not used; the trial is propagated with the force model of the trajectory (#402),
+        // its covariance is not
         Assert.Equal(without.Select(o => o.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision),
             with.Select(o => o.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision));
-        Assert.All(with, o => Assert.NotEqual(CovarianceSource.Propagated,
-            o.PostManeuverEncounter.EncounterState.ProtectedCovariance.Source));
+        Assert.All(with, o =>
+        {
+            Assert.Equal(AvoidanceTrajectory.Propagated, o.Trajectory);
+            Assert.NotEqual(CovarianceSource.Propagated, o.PostManeuverEncounter.EncounterState.ProtectedCovariance.Source);
+        });
     }
 
     // The screening window of the two-body encounter, which must hold the burns: four hours before the TCA, one after

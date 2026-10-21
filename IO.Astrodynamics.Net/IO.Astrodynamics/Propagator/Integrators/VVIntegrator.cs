@@ -35,6 +35,9 @@ public sealed class VVIntegrator : Integrator
         HalfDeltaTs = DeltaTs * 0.5;
     }
 
+    /// <inheritdoc />
+    internal override Integrator WithSameSettings() => new VVIntegrator(DeltaT);
+
     public override IntegrationResult IntegrateSegment(
         Vector3 startPosition, Vector3 startVelocity,
         Time baseEpoch, double duration,

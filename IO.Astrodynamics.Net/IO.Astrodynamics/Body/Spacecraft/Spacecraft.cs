@@ -704,6 +704,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         internal PropagationSolution LastPropagation { get; set; }
 
+        /// <summary>
+        /// The force model of the last propagation by RK7(8) or Velocity-Verlet (forces with their ephemeris cache,
+        /// integrator settings, orientation cache, mass and coefficients of each segment), without its steps, for the
+        /// avoidance options of the conjunction assessment (#402); null after another integrator or none. About 0.2 MB for
+        /// one day in LEO with EGM2008 10×10, NRLMSISE-00, the Moon and the Sun, kept until the next propagation.
+        /// </summary>
+        internal PropagationForceModel LastForceModel { get; set; }
+
         public void AddPropagatedStates(params StateVector[] stateVectors)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
@@ -831,6 +839,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private void ResetPropagation()
         {
             LastPropagation = null;
+            LastForceModel = null;
             if (IsPropagated)
             {
                 _isPropagated = false;

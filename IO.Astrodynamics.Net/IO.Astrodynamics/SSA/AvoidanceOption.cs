@@ -56,4 +56,11 @@ public sealed class AvoidanceOption
     /// Gets the internal ranking score used to sort options. Lower values indicate a better candidate.
     /// </summary>
     public double RankingScore { get; }
+
+    /// <summary>
+    /// Gets how the trajectory of the option after its burn was computed: propagated with the force model of the protected
+    /// participant, or its two-body orbit when the participant has no numerical propagation. Set by
+    /// <see cref="ConjunctionAssessment.EvaluateAvoidance"/>; <see cref="AvoidanceTrajectory.TwoBody"/> unless set.
+    /// </summary>
+    public AvoidanceTrajectory Trajectory { get; init; } = AvoidanceTrajectory.TwoBody;
 }
