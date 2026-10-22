@@ -184,8 +184,12 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
+    # The detailed console logger prints the output of the tests that pass, the MEASURE lines among them, so that the
+    # measurements of every platform reach the logs of ordinary pushes (lesson 13 of #364: noise-level records are set
+    # at twice the worst over Linux, Windows and macOS arm64). The minimal and normal verbosities print it only for a
+    # failing test.
     - name: Test
-      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} -c Release ${{ matrix.os != 'ubuntu-latest' && '--filter "Category!=Validation&Category!=LongValidation"' || '--filter "Category!=LongValidation"' }}
+      run: dotnet test --verbosity ${{ inputs.logLevel || 'minimal' }} --logger "console;verbosity=detailed" -c Release ${{ matrix.os != 'ubuntu-latest' && '--filter "Category!=Validation&Category!=LongValidation"' || '--filter "Category!=LongValidation"' }}
 
   # Job 3: the conformance suite (conformance-tests, private) run by the conformance runner on its latest version, on
   # the three platforms, with freshly built native libraries. The suite is checked out with a read-only token, the
