@@ -125,13 +125,15 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
                               $"{centralNoise:E2}, analytic {analyticNoise:E2} of their block; of ν {shadowNoise:E2}");
         }
 
-        // Assert, Linux .NET 10 (2026-10-22): the central differences, the cause, 5.0e-7 of their block at ν = 0.5 to
-        // 1.6e-3 at 2 m from the contacts, ν 4.0e-10 to 3.8e-8; the derivative of the shadow function 1.4e-15 at ν = 0.5,
-        // 2.9e-13 at ν = 0.01 and 0.99, 6.4e-12 at 1e-4 and 1 − 1e-4, and 3.4e-10 at 2 m from the contacts, where the
-        // rounding of the angular separation (about 1e-16 rad) enters the square root of the half chord, a + b − c being
-        // some 3e-7 rad there. Bounds at twice the worst over Linux, Windows and macOS arm64 (lesson 13 of #364)
-        Assert.True(worstCentral < 3.2e-3, $"noise of the central differences {worstCentral:E2}");
-        Assert.True(worstAnalytic < 6.8e-10, $"noise of the derivative of the shadow function {worstAnalytic:E2}");
+        // Assert, .NET 10 (CI of aed79f2, 2026-10-22): the central differences, the cause, 5.0e-7, 5.1e-7 and 4.9e-7 of
+        // their block at ν = 0.5 to 1.6e-3, 1.6e-3 and 1.6e-3 at 2 m from the contacts on Linux, Windows and macOS arm64,
+        // ν 3.9e-10 to 3.8e-8; the derivative of the shadow function 1.2e-15 to 1.8e-15 at ν = 0.5, 2.9e-13 to 3.2e-13 at
+        // ν = 0.01 and 0.99, 5.7e-12 to 6.6e-12 at 1e-4 and 1 − 1e-4, and 3.2e-10 to 3.7e-10 at 2 m from the contacts,
+        // where the rounding of the angular separation (about 1e-16 rad) enters the square root of the half chord,
+        // a + b − c being some 3e-7 rad there. Bounds at twice the worst over the three platforms (lesson 13 of #364):
+        // 1.64e-3 (macOS arm64), 3.66e-10 (Windows) and 3.77e-8 (Linux)
+        Assert.True(worstCentral < 3.3e-3, $"noise of the central differences {worstCentral:E2}");
+        Assert.True(worstAnalytic < 7.4e-10, $"noise of the derivative of the shadow function {worstAnalytic:E2}");
         Assert.True(worstShadow < 7.6e-8, $"noise of ν {worstShadow:E2}");
     }
 
