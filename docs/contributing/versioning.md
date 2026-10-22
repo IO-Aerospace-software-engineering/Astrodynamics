@@ -127,6 +127,13 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   option are unchanged. A collapse of the step from another cause now stops with an `InvalidOperationException` that
   names the option and the remedies, after 10 000 consecutive steps within 100 s of flight, instead of exhausting the
   memory; it applies with `IncludeInStepControl` only. See [Covariance Propagation](../reference/covariance-propagation.md).
+- **Avoidance with the protected participant propagated with Φ in the step control.** `EvaluateAvoidance` threw an
+  `ArgumentException` when the protected participant was propagated with the covariance and `IncludeInStepControl`
+  and the secondary participant had an initial covariance but no propagated one: the replay of its variational
+  equations took the options of the protected solution, the option included, which the replay rejects. It now
+  takes them without it, as the analysis of each option already did; the covariance of the secondary participant at
+  the TCA of each option is that of its propagation with the covariance, bit for bit. See
+  [Avoidance](../reference/avoidance.md).
 - **Geodetic coordinates above and below the surface.** `Planetocentric.ToPlanetodetic` took the geodetic latitude
   from the relation of the surface, tan φ = tan φc / (1 − f)², at any altitude, and the altitude from that latitude:
   above the surface the latitude came out too large by about f sin 2φ · h / (a + h). On the Earth the altitude was up

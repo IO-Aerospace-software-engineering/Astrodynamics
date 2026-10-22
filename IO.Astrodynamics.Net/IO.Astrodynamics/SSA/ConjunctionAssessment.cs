@@ -535,6 +535,10 @@ public static class ConjunctionAssessment
         private readonly PropagationSolution _solution;
         private readonly PropagationDynamics _dynamics;
         private readonly CovariancePropagationOptions _covariancePropagation;
+
+        // The options of the replays, the secondary participant's and those of the analysis of each option: controlled on
+        // the state only, the steps being those of the propagation (#424)
+        private readonly CovariancePropagationOptions _replayPropagation;
         private readonly Time _end;
         private readonly StateSamplingSource _secondarySource;
         private readonly EncounterCovarianceResolver _secondaryResolver;
@@ -548,6 +552,7 @@ public static class ConjunctionAssessment
             _solution = covariance.Solution;
             _dynamics = _solution.Dynamics;
             _covariancePropagation = _solution.CovariancePropagation;
+            _replayPropagation = _covariancePropagation with { IncludeInStepControl = false };
 
             // The options are propagated within the window and within the force model of the trajectory (its ephemeris
             // and orientation caches): up to the end of the propagation the covariance comes from, past the last
@@ -558,7 +563,7 @@ public static class ConjunctionAssessment
             _end = encounterCase.ScreeningWindow.EndDate < sourceEnd ? encounterCase.ScreeningWindow.EndDate : sourceEnd;
             _secondarySource = CreateLocalizableStateSource(encounterCase.SecondaryObject, observer);
             _secondaryResolver = new EncounterCovarianceResolver(encounterCase.SecondaryObject, _secondarySource.Solution,
-                _covariancePropagation, _end);
+                _replayPropagation, _end);
         }
 
         internal static PropagatedAvoidance TryCreate(EncounterCase encounterCase, AvoidanceSearchOptions options,
@@ -639,7 +644,7 @@ public static class ConjunctionAssessment
                 MaximumEventSearchStep = _options.MaximumEventSearchStep,
                 SecondaryHardBodyRadiusMeters = _options.SecondaryHardBodyRadiusMeters,
                 LowRelativeSpeedThresholdMetersPerSecond = _options.LowRelativeSpeedThresholdMetersPerSecond,
-                CovariancePropagation = _covariancePropagation with { IncludeInStepControl = false },
+                CovariancePropagation = _replayPropagation,
 
                 // Twelve propagations per option: the index is that of the encounter, not of each option
                 ComputeNonlinearityIndex = false

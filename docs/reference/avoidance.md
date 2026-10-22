@@ -28,7 +28,10 @@ When the covariance of the protected participant was propagated to the encounter
   `ManeuverExecutionError`; none by default);
 - with consider parameters, it starts from the extended covariance at the burn, so that the correlation of the state
   and of Cd and Cr carries over: P = Φ P0 Φᵀ + Φ C0 Ψcᵀ + Ψc C0ᵀ Φᵀ + Ψc Pp Ψcᵀ + Q, C0 = cov(δx(t_b), δp);
-- the secondary participant keeps one resolution of its covariance for all the options.
+- the secondary participant keeps one resolution of its covariance for all the options; without a propagated
+  covariance, its variational equations are replayed along the steps of its propagation with the options of the
+  protected solution, without `IncludeInStepControl`, which the replay cannot apply (its steps are those of the
+  propagation; [#424](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/424)).
 
 Each option is a ΔV fixed in epoch and in direction: the open-loop model of the propagated covariance. Against the
 propagation of the same spacecraft from the start with that burn fixed and its execution error, both at 1e-13, the
