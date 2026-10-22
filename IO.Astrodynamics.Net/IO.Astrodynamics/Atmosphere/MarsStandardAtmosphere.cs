@@ -23,8 +23,14 @@ namespace IO.Astrodynamics.Atmosphere;
 /// and drag pushed a spacecraft along its velocity (#422).
 /// </para>
 /// <para>
-/// Domain: the density is positive and continuous at every altitude, and decreasing except at 7 km, where the two
-/// branches of the curve fit do not meet (+0.41 %). Against Seiff's nominal northern
+/// The two branches of the curve fit do not meet at 7 km (−37.99 °C below, −38.94 °C above): the density rose by
+/// 0.41 % there, and RK7(8) stopped there (#433). Over 2 <see cref="CurveFitTransitionHalfWidth"/> (500 m) centred on
+/// 7 km, T goes from one branch to the other by the same smootherstep, the pressure being the same on both: the density
+/// and its first two derivatives are continuous, within 0.20 % of the curve fit, which is unchanged bit for bit outside
+/// that interval.
+/// </para>
+/// <para>
+/// Domain: the density is positive, continuous and decreasing at every altitude. Against Seiff's nominal northern
 /// summer mid-latitude model it is within 0.96 to 1.11 up to 20 km and within a factor 2.81 from 20 to 100 km. Above
 /// about 100 km the layer extrapolates a 139 K mesosphere: the thermosphere, warmer and denser, is not modelled, so
 /// drag in orbit above about 120 km is underestimated by orders of magnitude.
@@ -126,19 +132,33 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
     /// </summary>
     internal const double TransitionWidth = 5000.0;
 
-    // Weight of the layer in the transition and its derivative in altitude: the quintic smootherstep
-    // w = 10x³ − 15x⁴ + 6x⁵, x = (h − h_b) / width, 0 at the base and 1 at its end, with w′ and w″ zero at both ends
-    // (K. Perlin, "Improving noise", ACM Transactions on Graphics 21(3) (2002); to be verified by S. Guillet)
-    private static (double Weight, double Slope) Blend(double altitude)
-    {
-        double x = (altitude - IsothermalLayerBase) / TransitionWidth;
-        if (x >= 1.0)
-        {
-            return (1.0, 0.0);
-        }
+    // Weight of the layer in the transition and its derivative in altitude: the quintic smootherstep, 0 at the base and 1
+    // at the end of the transition
+    private static (double Weight, double Slope) Blend(double altitude) =>
+        Smootherstep.At(altitude, IsothermalLayerBase, TransitionWidth);
 
-        return (x * x * x * (10.0 + x * (-15.0 + 6.0 * x)), 30.0 * x * x * (1.0 - x) * (1.0 - x) / TransitionWidth);
-    }
+    /// <summary>
+    /// Half-width of the transition between the two branches of the curve fit, m: over 500 m centred on 7 km, T goes
+    /// from −31 − 0.000998 h to −23.4 − 0.00222 h °C by the quintic smootherstep, so that the density and its first two
+    /// derivatives are continuous (#433); the branches do not meet (−37.99 °C below, −38.94 °C above, the density
+    /// rising by 0.41 %), and the pressure of the curve fit is the same on both.
+    /// </summary>
+    internal const double CurveFitTransitionHalfWidth = 250.0;
+
+    private const double CurveFitBoundary = 7000.0;
+
+    // Weight of the upper branch of the curve fit around 7 km and its derivative in altitude
+    private static (double Weight, double Slope) CurveFitBlend(double altitude) =>
+        Smootherstep.At(altitude, CurveFitBoundary - CurveFitTransitionHalfWidth, 2.0 * CurveFitTransitionHalfWidth);
+
+    private static bool InCurveFitTransition(double altitude) =>
+        altitude >= CurveFitBoundary - CurveFitTransitionHalfWidth &&
+        altitude < CurveFitBoundary + CurveFitTransitionHalfWidth;
+
+    // Temperatures of the branches of the curve fit below and above 7 km, °C
+    private static double LowerCurveFitTemperature(double altitude) => -31.0 - 0.000998 * altitude;
+
+    private static double UpperCurveFitTemperature(double altitude) => -23.4 - 0.00222 * altitude;
 
     private static double CurveFitLogPressure(double altitude) => System.Math.Log(0.699) - 0.00009 * altitude;
 
@@ -152,8 +172,10 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
     /// <summary>
     /// dρ/dh, by differentiation of the closed form of the branch the altitude falls in. Below
     /// <see cref="IsothermalLayerBase"/>: ρ = P / (0.1921 T_K), P ∝ exp(−0.00009 h), so dρ/dh = ρ (−0.00009 − T_K′ / T_K),
-    /// with T_K′ = −0.000998 K/m below 7 km and −0.00222 K/m above. In the transition: d ln p/dh = (1 − w) s_fit + w s_layer
-    /// + w′ (ln p_layer − ln p_fit) and T_K′ = (1 − w)(−0.00222) + w′ (139 − T_fit), so dρ/dh = ρ (d ln p/dh − T_K′ / T_K).
+    /// with T_K′ = −0.000998 K/m below 7 km and −0.00222 K/m above; in the transition around 7 km,
+    /// T_K′ = (1 − w)(−0.000998) + w (−0.00222) + w′ (T_above − T_below). In the transition to the layer:
+    /// d ln p/dh = (1 − w) s_fit + w s_layer + w′ (ln p_layer − ln p_fit) and T_K′ = (1 − w)(−0.00222) + w′ (139 − T_fit),
+    /// so dρ/dh = ρ (d ln p/dh − T_K′ / T_K).
     /// In the isothermal layer: d ln p/dh = −(GM / (R T_b)) / (R_M + h)², so dρ/dh = −ρ (GM / (R T_b)) / (R_M + h)².
     /// </summary>
     double IAltitudeDensityDerivative.GetDensityAltitudeDerivative(double altitude)
@@ -176,20 +198,35 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
             return Density(altitude) * (logPressureSlope - temperatureSlope / temperature);
         }
 
-        double slope = altitude < 7000.0 ? -0.000998 : -0.00222;
+        if (InCurveFitTransition(altitude))
+        {
+            var (w, dw) = CurveFitBlend(altitude);
+            double lower = LowerCurveFitTemperature(altitude);
+            double upper = UpperCurveFitTemperature(altitude);
+            double temperatureSlope = (1.0 - w) * -0.000998 + w * -0.00222 + dw * (upper - lower);
+            return Density(altitude) * (-0.00009 - temperatureSlope / (Temperature(altitude) + Constants.Kelvin));
+        }
+
+        double slope = altitude < CurveFitBoundary ? -0.000998 : -0.00222;
         return Density(altitude) * (-0.00009 - slope / (Temperature(altitude) + Constants.Kelvin));
     }
 
     private static double Temperature(double altitude)
     {
-        if (altitude < 7000.0)
+        if (altitude < CurveFitBoundary - CurveFitTransitionHalfWidth)
         {
-            return -31.0 - 0.000998 * altitude;
+            return LowerCurveFitTemperature(altitude);
+        }
+
+        if (altitude < CurveFitBoundary + CurveFitTransitionHalfWidth)
+        {
+            var (weight, _) = CurveFitBlend(altitude);
+            return (1.0 - weight) * LowerCurveFitTemperature(altitude) + weight * UpperCurveFitTemperature(altitude);
         }
 
         if (altitude < IsothermalLayerBase)
         {
-            return -23.4 - 0.00222 * altitude;
+            return UpperCurveFitTemperature(altitude);
         }
 
         var (w, _) = Blend(altitude);
