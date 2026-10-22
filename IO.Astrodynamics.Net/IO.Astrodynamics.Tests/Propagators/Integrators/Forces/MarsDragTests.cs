@@ -201,6 +201,7 @@ public class MarsDragTests
         int steps = solution.Segments.Sum(s => s.Steps.Count);
         _output.WriteLine($"{tolerance:E0}: {steps} steps, lowest geodetic altitude {lowest / 1000.0:F3} km");
         Assert.True(lowest < MarsStandardAtmosphere.IsothermalLayerBase, $"lowest {lowest} m");
-        Assert.NotNull(solution.GetStateTransitionMatrix(window.EndDate));
+        Assert.Equal((6, 6), (solution.GetStateTransitionMatrix(window.EndDate).Rows,
+            solution.GetStateTransitionMatrix(window.EndDate).Columns));
     }
 }
