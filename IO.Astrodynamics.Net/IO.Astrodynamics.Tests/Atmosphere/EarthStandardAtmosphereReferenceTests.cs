@@ -137,4 +137,99 @@ public class EarthStandardAtmosphereReferenceTests
         _output.WriteLine($"MEASURE {altitude / 1000.0} km: {ratio:F5} of the U.S. Standard Atmosphere 1976");
         Assert.InRange(ratio, lower, upper);
     }
+
+    // Table I, geometric altitude, ρ/ρ0 (ρ0 = 1.225 kg/m³) from 86 to 1000 km, read from the document (2026-10-22, #437)
+    private static readonly (double Km, double Ratio)[] UpperTable =
+    {
+        (86.0, 5.680e-6),
+        (90.0, 2.789e-6),
+        (95.0, 1.137e-6),
+        (100.0, 4.575e-7),
+        (110.0, 7.925e-8),
+        (120.0, 1.814e-8),
+        (130.0, 6.655e-9),
+        (140.0, 3.128e-9),
+        (150.0, 1.694e-9),
+        (160.0, 1.007e-9),
+        (170.0, 6.380e-10),
+        (180.0, 4.240e-10),
+        (190.0, 2.923e-10),
+        (200.0, 2.074e-10),
+        (210.0, 1.507e-10),
+        (220.0, 1.116e-10),
+        (230.0, 8.402e-11),
+        (240.0, 6.415e-11),
+        (250.0, 4.957e-11),
+        (260.0, 3.871e-11),
+        (270.0, 3.052e-11),
+        (280.0, 2.425e-11),
+        (290.0, 1.941e-11),
+        (300.0, 1.564e-11),
+        (320.0, 1.032e-11),
+        (340.0, 6.941e-12),
+        (360.0, 4.739e-12),
+        (380.0, 3.276e-12),
+        (400.0, 2.288e-12),
+        (420.0, 1.612e-12),
+        (440.0, 1.144e-12),
+        (460.0, 8.180e-13),
+        (480.0, 5.884e-13),
+        (500.0, 4.257e-13),
+        (550.0, 1.946e-13),
+        (600.0, 9.219e-14),
+        (650.0, 4.663e-14),
+        (700.0, 2.506e-14),
+        (750.0, 1.460e-14),
+        (800.0, 9.272e-15),
+        (850.0, 6.387e-15),
+        (900.0, 4.701e-15),
+        (950.0, 3.635e-15),
+        (1000.0, 2.907e-15)
+    };
+
+    [Fact]
+    public void UpperTable_DecreasesWithAPhysicalScaleHeight()
+    {
+        // Arrange: a check of the transcription; between two rows the density scale height, Δh / ln(ρ₁ / ρ₂), lies
+        // between 5 km at 86 km and 300 km at 1000 km, and grows with the altitude except where the temperature profile
+        // of the model bends (91 to 120 km)
+        double previousHeight = 0.0;
+
+        // Act and assert
+        for (int k = 1; k < UpperTable.Length; k++)
+        {
+            double height = (UpperTable[k].Km - UpperTable[k - 1].Km) / System.Math.Log(UpperTable[k - 1].Ratio / UpperTable[k].Ratio);
+            _output.WriteLine($"{UpperTable[k - 1].Km} to {UpperTable[k].Km} km: scale height {height:F2} km");
+            Assert.InRange(height, 5.0, 300.0);
+            Assert.True(height > previousHeight || UpperTable[k].Km <= 120.0, $"{UpperTable[k].Km} km");
+            previousHeight = height;
+        }
+    }
+
+    [Fact]
+    public void Density_FromTheStratosphereTo1000Km_DepartsFromThe1976Tables()
+    {
+        // Arrange: the upper stratosphere of the curve fit, T = −131.21 + 0.00299 h °C, is one line from 25 km to the
+        // 2200 °C clamp at 779.67 km, where the tables of 1976 follow seven layers to 86 km and a thermosphere tending to
+        // 1000 K (#437)
+        var model = new EarthStandardAtmosphere();
+        double worst = 1.0, worstKm = 0.0;
+
+        // Act
+        foreach (var (km, ratio) in UpperTable)
+        {
+            double departure = model.GetDensity(AtmosphericContext.FromAltitude(km * 1000.0)) / (ratio * 1.225);
+            _output.WriteLine($"MEASURE {km} km: {departure:G4} of the U.S. Standard Atmosphere 1976");
+            if (departure > worst)
+            {
+                worst = departure;
+                worstKm = km;
+            }
+        }
+
+        // Assert: a factor 2.97 at 86 km, 80.1 at 140 km, 38.7 at 200 km, 2.28 at 400 km, then 0.28 at 750 and 800 km
+        _output.WriteLine($"worst {worst:G4} at {worstKm} km");
+        Assert.InRange(worst, 80.0, 80.2);
+        Assert.Equal(140.0, worstKm);
+    }
 }
