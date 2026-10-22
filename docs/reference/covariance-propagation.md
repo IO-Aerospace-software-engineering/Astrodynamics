@@ -96,19 +96,30 @@ the start of the window. This example runs as a smoke test against the packed Nu
   to 22 % (1e-13) more time than before, for the two more model evaluations of each drag partials call; with the
   option, 1 084 steps in 2.15 s at 1e-12 against 1 247 in 1.95 s before, and 1 681 steps in 3.27 s at 1e-13 against
   38 678 in 60.6 s.
-- With SRP and the option, the step control fails at 1e-14 on an eclipsing orbit: R3 (Sun-synchronous 700 km, eclipses
-  on every revolution, Cr) stops on the guard below at 13.3 h, where it stopped on 100 rejections at 15.0 h before
-  [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420); at 1e-13 it completes in 23 967 steps a day. The penumbra is
-  [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423).
+- Through the SRP penumbra, the partials take the analytic derivative of the shadow function, so the steps stay
+  ordinary with the option on an eclipsing orbit too
+  ([#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)). R3 (Sun-synchronous 700 km,
+  eclipses on every revolution, Cr, one day; Linux, Release, 2026-10-22) takes 1 692, 2 247, 3 017 and 4 757 steps at
+  1e-11, 1e-12, 1e-13 and 1e-14 with the option, against 748, 1 010, 1 344 and 1 821 without it; R4 (GEO in eclipse
+  season) 252 and 458 at 1e-13 and 1e-14. Before #423 the central differences of the acceleration carried the
+  rounding of the shadow fraction, which the step of the velocity rows of Φ followed: R3 took 1 947, 4 379 and 23 967
+  steps, 21 596 of them in its 265 s of penumbra at 1e-13, and stopped on the guard below at 13.3 h at 1e-14 (on 100
+  rejections at 15.0 h before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420)); R4
+  took 2 402 steps at 1e-14. Without the option the trajectory does not change, and Φ and Ψ move only through the steps
+  that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9).
 - When the step collapses all the same (a force whose partials are not smooth at the tolerance), RK7(8) stops with an
   `InvalidOperationException` after 10 000 consecutive accepted steps within 100 s of flight, a mean step below 10 ms,
   instead of running until the memory is exhausted. The steps are counted in disjoint blocks of 10 000 from the start
   of the segment, so a collapse is caught after 10 000 to 20 000 steps. Its message names the option, the epoch, the
   mean and last step and the errors of Y and of the state, and the remedies for the error that held the step: relax
   the tolerance or set `IncludeInStepControl` to false when it is that of Y, relax the tolerance when it is that of
-  the state (a force that is not smooth itself). The threshold is 60 times below the smallest mean step measured on a legitimate propagation (an eclipsing LEO
-  with SRP at 1e-13, at its shadow crossings, 0.595 s; see [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)), and 50 times above the mildest collapse measured
-  before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420). Without the option the guard does not apply.
+  the state (a force that is not smooth itself). No legitimate propagation measured takes 10 000 steps with the option:
+  the closest before [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423), R3 at 1e-13,
+  took 10 000 consecutive steps over 5 947 s at its shadow crossings (a mean of 0.595 s, 60 times the threshold), and
+  1 000 over 0.174 s; it now takes 3 017 steps a day, and at 1e-14 its shortest 1 000 consecutive steps cover
+  16 368 s. The threshold is 50 times above the mildest collapse measured before
+  [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420). Without the option the guard
+  does not apply.
 - In SSB mode (initial orbital parameters relative to a barycenter or a star), the columns of Y are scaled by |r0|
   relative to the barycenter, about 1.5e11 m for a spacecraft near the Earth: with the option the step control then
   fails, with or without drag ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)).

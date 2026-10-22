@@ -12,10 +12,10 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 
 /// <summary>
-/// Partials of the radiation pressures (B6): SRP analytic outside the penumbra and by the default central differences
-/// inside it, thermal pressure analytic, albedo by the default central differences, ∂a/∂Cr exact, against Ridders'
-/// derivative of the acceleration; in the penumbra, the term of the shadow function that the analytic SRP block leaves
-/// out, measured against Ridders' derivative of the shadow function.
+/// Partials of the radiation pressures (B6): SRP analytic, with the derivative of the shadow function in the penumbra
+/// (#423; <see cref="ShadowFunctionPartialsTests"/>), thermal pressure analytic, albedo by the default central
+/// differences, ∂a/∂Cr exact, against Ridders' derivative of the acceleration; in the penumbra, the term of the shadow
+/// function that the analytic SRP block leaves out, measured against Ridders' derivative of the shadow function.
 /// </summary>
 public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
 {
@@ -191,7 +191,7 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
 
     [Theory]
     [MemberData(nameof(PenumbraOrbitsRelativeToTheEarthAndTheSun))]
-    public void Penumbra_DefaultPartials_MatchRiddersWithin1e4(string orbit, bool relativeToTheSun)
+    public void Penumbra_PartialsMatchRiddersWithin1e6(string orbit, bool relativeToTheSun)
     {
         // Arrange: half the solar disc hidden by the Earth
         var state = ShadowState(orbit, 0.5);
@@ -204,16 +204,18 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
         // Act
         Partials(force, state, context, relativeToTheSun, dadr, dadv);
 
-        // Assert: the threshold of the specification for the default path. Relative to the Sun, as in SSB mode, the step
-        // scaled by |r| was 450 km, wider than the penumbra, and the block was off by 66 % (GEO) to 100 % (LEO) (H3 review
-        // of #378); it is now scaled by the distance to the Earth. The reference is Ridders' derivative of the acceleration
-        // relative to the Earth, the same partials since a change of origin is a translation.
+        // Assert: the threshold of the specification for an analytic form (B6), since #423 the derivative of the shadow
+        // function: measured 2.0e-8 (LEO) and 5.6e-10 (GEO), relative to the Earth and to the Sun alike, the resolution of
+        // the reference (Linux, .NET 10, 2026-10-22); 9.4e-7 and 7.3e-8 with the central differences of #379, against the
+        // 1e-4 of the default path. Relative to the Sun, as in SSB mode, the central differences with their step scaled by
+        // |r| were off by 66 % (GEO) to 100 % (LEO) (H3 review of #378). The reference is Ridders' derivative of the
+        // acceleration relative to the Earth, the same partials since a change of origin is a translation.
         var reference = RiddersDerivative.StatePartials(force, state, context, PenumbraStep(state), 1.0);
         double error = RiddersDerivative.RelativeFrobeniusError(dadr, reference.Dadr);
         _output.WriteLine($"{orbit}{(relativeToTheSun ? ", relative to the Sun" : "")}: relative error {error:E2}, " +
                           $"reference {reference.DadrError:E2}");
         Assert.True(reference.DadrError < 1e-7, $"reference error {reference.DadrError:E2}");
-        Assert.True(error < 1e-4, $"relative error {error:E2}");
+        Assert.True(error < 1e-6, $"relative error {error:E2}");
         Assert.All(dadv, x => Assert.Equal(5.0, x));
     }
 
@@ -223,8 +225,8 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
     {
         // Arrange: half the solar disc hidden by the Earth. The acceleration is a = (1 − ν) a_lit, a_lit the acceleration
         // without occulting body, so ∂a/∂r = (1 − ν) ∂a_lit/∂r − a_lit (∇ν)ᵀ: the analytic block holds ν constant and
-        // leaves out the last term, which comes here from Ridders' derivative of the shadow function of the Sun. This is
-        // why the penumbra goes through the default central differences.
+        // leaves out the last term, which comes here from Ridders' derivative of the shadow function of the Sun. It is the
+        // term of ∇ν that the partials add in the penumbra (#423).
         var state = ShadowState(orbit, 0.5);
         var spacecraft = PartialsTestCases.Spacecraft(state);
         var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
@@ -280,30 +282,44 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
     [InlineData(PartialsTestCases.Geo, false)]
     public void ShadowBoundaries_PartialsAreContinuous(string orbit, bool umbra)
     {
-        // Arrange: the states 0.01 mm on either side of the inner contact (umbra) or the outer contact (sunlight) of the
-        // shadow of the Earth. Before the H3 review of #378, the partials switched there from the central differences
-        // of the penumbra to zero or to the analytic block, and jumped: at the umbra, where the exact partials tend to
-        // zero, the central difference straddling the boundary gives about a(r + h) / 2h; in sunlight, the analytic
-        // block, 1.1e-17 /s² in LEO, against 8.5e-13 /s² for the central differences that hold the derivative of ν.
-        var (inside, outside) = ContactStates(orbit, umbra, 1e-5);
-        var spacecraft = PartialsTestCases.Spacecraft(inside);
+        // Arrange: states on either side of the inner contact (umbra) or the outer contact (sunlight) of the shadow of the
+        // Earth, 2 mm, 0.2 mm and 0.02 mm apart. Before the H3 review of #378, the partials switched there from the central
+        // differences of the penumbra to zero or to the analytic block, and jumped: at the umbra, where the exact partials
+        // tend to zero, the central difference straddling the boundary gives about a(r + h) / 2h; in sunlight, the analytic
+        // block, 1.1e-17 /s² in LEO, against 8.5e-13 /s² for the central differences that hold the derivative of ν. From
+        // #379 to #423 the central differences also ran within two steps of each contact. Since #423 the partials take the
+        // analytic block in sunlight and zero in total eclipse up to the contacts, and inside the penumbra the derivative
+        // of the shadow function, which tends to zero at both contacts as the square root of the distance to them (the
+        // half chord of the two discs), as does 1 − ν at the inner one.
+        var halfShadow = ShadowState(orbit, 0.5);
+        var spacecraft = PartialsTestCases.Spacecraft(halfShadow);
         var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
         var force = new SolarRadiationPressure(spacecraft, new[] { _cases.Earth });
-        var dadrInside = new double[9];
-        var dadrOutside = new double[9];
+        var scale = new double[9];
+        force.AccumulateStatePartials(halfShadow, context, scale, new double[9]);
 
         // Act
-        force.AccumulateStatePartials(inside, context, dadrInside, new double[9]);
-        force.AccumulateStatePartials(outside, context, dadrOutside, new double[9]);
+        var jumps = new[] { 1e-3, 1e-4, 1e-5 }.Select(distance =>
+        {
+            var (inside, outside) = ContactStates(orbit, umbra, distance);
+            var dadrInside = new double[9];
+            var dadrOutside = new double[9];
+            force.AccumulateStatePartials(inside, context, dadrInside, new double[9]);
+            force.AccumulateStatePartials(outside, context, dadrOutside, new double[9]);
+            return Norm(dadrInside.Zip(dadrOutside, (x, y) => x - y).ToArray()) / Norm(scale);
+        }).ToArray();
 
-        // Assert: both sides take the central differences, which move by the 0.02 mm only. Measured (Linux, .NET 10,
-        // 2026-10-13) 7.1e-4 (LEO, sunlight) and 8.7e-4 (LEO, umbra), 1.0e-2 and 2.8e-3 over 2 mm, falling with the gap
-        // as a continuous function does; before the fix, 7.5e4 (LEO, sunlight) and infinite (umbra, zero partials)
-        double jump = RiddersDerivative.RelativeFrobeniusError(dadrInside, dadrOutside);
-        _output.WriteLine($"{orbit}, {(umbra ? "umbra" : "sunlight")}: |A| {Norm(dadrOutside):E3} /s², relative jump " +
-                          $"{jump:E2} over 0.02 mm");
-        Assert.True(Norm(dadrOutside) > 0.0);
-        Assert.True(jump < 1e-2, $"relative jump {jump:E2}");
+        // Assert: the jump relative to the partials at half shadow falls with the gap as its square root, a factor of
+        // 0.316 per decade, the behaviour of the exact partials. Measured (Linux, .NET 10, 2026-10-22) over 2 mm, 0.2 mm
+        // and 0.02 mm: LEO 2.5e-4, 7.9e-5, 2.5e-5 at both contacts; GEO 1.0e-4, 3.2e-5, 1.0e-5. The bound over 0.02 mm at
+        // twice the worst. With the central differences of #379 the jump over 0.02 mm relative to the side of the
+        // penumbra was 7.1e-4 to 8.7e-4 in LEO, and before the H3 review of #378, 7.5e4 (LEO, sunlight) and infinite
+        // (umbra, zero partials)
+        _output.WriteLine($"MEASURE #423 {orbit}, {(umbra ? "umbra" : "sunlight")}: jump relative to the partials at half " +
+                          $"shadow {jumps[0]:E2}, {jumps[1]:E2}, {jumps[2]:E2} over 2 mm, 0.2 mm and 0.02 mm");
+        Assert.True(jumps[2] < 5.1e-5, $"relative jump {jumps[2]:E2} over 0.02 mm");
+        Assert.True(jumps[1] / jumps[0] is > 0.25 and < 0.4 && jumps[2] / jumps[1] is > 0.25 and < 0.4,
+            $"the jump does not fall as the square root of the gap: {jumps[0]:E2}, {jumps[1]:E2}, {jumps[2]:E2}");
     }
 
     [Fact]
@@ -406,85 +422,25 @@ public class RadiationPressurePartialsTests : IClassFixture<PartialsTestCases>
     private static double PenumbraStep(StateVector state) => 1e-4 * state.Position.Magnitude();
 
     /// <summary>
-    /// A state of the radius of <paramref name="orbit"/> in the plane of the Sun direction and the equator, behind the
-    /// Earth, where the shadow fraction of the Sun is <paramref name="shadowFraction"/>: 1 on the anti-Sun axis, or
-    /// found by bisection on the angle from that axis.
+    /// A state of the radius of <paramref name="orbit"/> behind the Earth where the shadow fraction of the Sun is
+    /// <paramref name="shadowFraction"/> (<see cref="PenumbraStates"/>).
     /// </summary>
     private StateVector ShadowState(string orbit, double shadowFraction)
     {
-        double radius = PartialsTestCases.State(orbit, _cases.Earth).Position.Magnitude();
-        var sunDirection = _cases.Sun.GetEphemeris(PartialsTestCases.Epoch, _cases.Earth, Frames.Frame.ICRF,
-            Aberration.None).ToStateVector().Position.Normalize();
-        var side = sunDirection.Cross(Vector3.VectorZ).Normalize();
-        var velocity = Vector3.VectorZ * System.Math.Sqrt(_cases.Earth.GM / radius);
-
-        StateVector At(double angle) => new((sunDirection * -System.Math.Cos(angle) + side * System.Math.Sin(angle)) *
-                                            radius, velocity, _cases.Earth, PartialsTestCases.Epoch, Frames.Frame.ICRF);
-
-        double Shadow(double angle) => _cases.Sun.ShadowFraction(_cases.Earth, At(angle), Aberration.None);
-
-        if (shadowFraction >= 1.0)
-        {
-            return At(0.0);
-        }
-
-        double low = 0.0;
-        double high = System.Math.PI / 2.0;
-        for (int k = 0; k < 100 && high - low > 1e-15; k++)
-        {
-            double middle = 0.5 * (low + high);
-            if (Shadow(middle) > shadowFraction)
-            {
-                low = middle;
-            }
-            else
-            {
-                high = middle;
-            }
-        }
-
-        return At(0.5 * (low + high));
+        return PenumbraStates.At(_cases, orbit, PenumbraStates.AngleOfShadowFraction(_cases, orbit, shadowFraction));
     }
 
     /// <summary>
-    /// Two states of the radius of <paramref name="orbit"/>, in the plane of the Sun direction and the equator, at
-    /// <paramref name="distance"/> on either side of the inner contact (ν = 1 inside) or of the outer contact (ν = 0
-    /// outside) of the shadow of the Earth, found by bisection on the angle from the anti-Sun axis.
+    /// Two states of the radius of <paramref name="orbit"/> at <paramref name="distance"/> on either side of the inner
+    /// contact (in total eclipse inside) or of the outer contact (in sunlight outside) of the shadow of the Earth.
     /// </summary>
     private (StateVector Inside, StateVector Outside) ContactStates(string orbit, bool umbra, double distance)
     {
-        double radius = PartialsTestCases.State(orbit, _cases.Earth).Position.Magnitude();
-        var sunDirection = _cases.Sun.GetEphemeris(PartialsTestCases.Epoch, _cases.Earth, Frames.Frame.ICRF,
-            Aberration.None).ToStateVector().Position.Normalize();
-        var side = sunDirection.Cross(Vector3.VectorZ).Normalize();
-        var velocity = Vector3.VectorZ * System.Math.Sqrt(_cases.Earth.GM / radius);
-
-        StateVector At(double angle) => new((sunDirection * -System.Math.Cos(angle) + side * System.Math.Sin(angle)) *
-                                            radius, velocity, _cases.Earth, PartialsTestCases.Epoch, Frames.Frame.ICRF);
-
-        bool Inside(double angle)
-        {
-            double nu = _cases.Sun.ShadowFraction(_cases.Earth, At(angle), Aberration.None);
-            return umbra ? nu >= 1.0 : nu > 0.0;
-        }
-
-        double low = 0.0;
-        double high = System.Math.PI / 2.0;
-        for (int k = 0; k < 200 && high - low > 1e-16; k++)
-        {
-            double middle = 0.5 * (low + high);
-            if (Inside(middle))
-            {
-                low = middle;
-            }
-            else
-            {
-                high = middle;
-            }
-        }
-
-        double offset = distance / radius;
-        return (At(low - offset), At(high + offset));
+        var (inner, outer) = PenumbraStates.ContactAngles(_cases, orbit);
+        double offset = distance / PartialsTestCases.State(orbit, _cases.Earth).Position.Magnitude();
+        return umbra
+            ? (PenumbraStates.At(_cases, orbit, inner - offset), PenumbraStates.At(_cases, orbit, inner + offset))
+            : (PenumbraStates.At(_cases, orbit, outer - offset), PenumbraStates.At(_cases, orbit, outer + offset));
     }
 
     private static StateVector WithPosition(StateVector state, int index, double value)

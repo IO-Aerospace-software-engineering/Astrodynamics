@@ -113,6 +113,20 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **The step control of the variational equations through the SRP penumbra.** With `IncludeInStepControl`, RK7(8) took
+  thousands of steps in the penumbra of the Earth: a Sun-synchronous LEO with SRP over one day (R3) took 23 967 steps
+  at 1e-13, 21 596 of them in its 265 s of penumbra, and stopped at 1e-14 on the guard below. The SRP partials in the
+  penumbra were the central differences of the acceleration, which divided the rounding of the shadow fraction (a few
+  1e-10 at half shadow, a few 1e-8 at the contacts) by their step, a noise of 5.3e-7 to 1.2e-3 of the block that the
+  step of Φ followed. They now take the analytic derivative of the shadow function of the GMAT Mathematical
+  Specification, R2026a, §4.2.5, in a form without cancellation, and the shadow regime from the angles of the discs:
+  R3 takes 1 692, 2 247, 3 017 and 4 757 steps at 1e-11 to 1e-14 with the option (748 to 1 821 without it), R4 (GEO
+  in eclipse season) 458 at 1e-14 instead of 2 402. The partials agree with Ridders' derivative of the acceleration
+  within its resolution across the penumbra (2.0e-8 at half shadow in LEO, against 9.4e-7), and a call costs 21 µs
+  instead of 85 µs. Without the option the trajectories do not change, bit for bit; Φ and Ψ move only through the
+  steps that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9). See
+  [Covariance Propagation](../reference/covariance-propagation.md)
+  ([#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)).
 - **The step control of the variational equations in dense air.** With `IncludeInStepControl`, RK7(8) took ever
   smaller steps as the density grew and never failed: the US Standard Atmosphere 1976 at 200 km took 107 290 steps over
   2 min at 1e-11, and at 1e-12 and 1e-13 the propagation did not finish (memory grew to an `OutOfMemoryException` over
