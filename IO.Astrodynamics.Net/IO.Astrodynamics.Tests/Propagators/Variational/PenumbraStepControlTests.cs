@@ -34,16 +34,17 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
 
     private static int Steps(PropagationSolution solution) => solution.Segments.Sum(s => s.Steps.Count);
 
-    // Budgets at twice the worst steps measured on Linux, Windows and macOS arm64 (lesson 13 of #364). Linux (2026-10-22):
-    // R3 1 692, 2 247, 3 017 and 4 757 steps at 1e-11 to 1e-14 (748, 1 010, 1 344 and 1 821 without the option); R4 252
-    // and 458 at 1e-13 and 1e-14 (119 and 171)
+    // Budgets at twice the worst steps measured on Linux, Windows and macOS arm64 (lesson 13 of #364; CI of 129088b,
+    // 2026-10-22). R3 at 1e-11 to 1e-14: 1 692, 2 247, 3 017, 4 757 (Linux), 1 672, 2 243, 3 025, 4 766 (Windows), 1 660,
+    // 2 253, 3 025, 4 753 (macOS arm64), against 744 to 1 839 without the option; R4 at 1e-13 and 1e-14: 252, 458;
+    // 250, 458; 250, 465 (113 to 174 without the option)
     [Theory]
     [InlineData("R3", 1e-11, 3384)]
-    [InlineData("R3", 1e-12, 4494)]
-    [InlineData("R3", 1e-13, 6034)]
-    [InlineData("R3", 1e-14, 9514)]
+    [InlineData("R3", 1e-12, 4506)]
+    [InlineData("R3", 1e-13, 6050)]
+    [InlineData("R3", 1e-14, 9532)]
     [InlineData("R4", 1e-13, 504)]
-    [InlineData("R4", 1e-14, 916)]
+    [InlineData("R4", 1e-14, 930)]
     public void IncludeInStepControl_ThroughThePenumbra_CompletesWithinItsBudget(string name, double tolerance,
         int budget)
     {
@@ -64,13 +65,13 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
         Assert.Equal(6, solution.GetStateTransitionMatrix(referenceCase.Window.EndDate).Rows);
     }
 
-    // The eclipsing LEO with its apogee raise, drag and SRP, Ψ_Cd and Ψ_Cr, 6 h, in the shadow at the start. Linux
-    // (2026-10-22): 547, 771 and 1 064 steps at 1e-12 to 1e-14 (571, 837 and 1 335 before #423; 213, 286 and 394
-    // without the option)
+    // The eclipsing LEO with its apogee raise, drag and SRP, Ψ_Cd and Ψ_Cr, 6 h, in the shadow at the start. At 1e-12 to
+    // 1e-14: 547, 771, 1 064 (Linux), 550, 754, 1 059 (Windows), 548, 738, 1 068 (macOS arm64) (571, 837 and 1 335 before
+    // #423 on Linux; 213, 286 and 394 without the option). Budgets at twice the worst
     [Theory]
-    [InlineData(1e-12, 1094)]
+    [InlineData(1e-12, 1100)]
     [InlineData(1e-13, 1542)]
-    [InlineData(1e-14, 2128)]
+    [InlineData(1e-14, 2136)]
     public void IncludeInStepControl_EclipsingCaseWithAManeuver_CompletesWithinItsBudget(double tolerance, int budget)
     {
         // Act
@@ -149,7 +150,9 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
         var solution = r3.Propagate(-1431, ReferenceCases.Tolerance, options);
         var reference = r3.Propagate(-1432, ReferenceCases.ReferenceTolerance, options);
 
-        // Assert: F1 (1e-4) over the arc, every half hour, relative to the largest Ψ_Cr of the arc and to the local value
+        // Assert: F1 (1e-4) over the arc, every half hour, relative to the largest Ψ_Cr of the arc and to the local value.
+        // Measured (2026-10-22) over the arc in position and velocity, then locally: 2.5e-10, 3.6e-10, 2.8e-9 (Linux);
+        // 6.5e-11, 9.5e-11, 7.9e-10 (Windows); 8.3e-11, 1.2e-10, 2.1e-9 (macOS arm64)
         double largestPosition = 0.0;
         double largestVelocity = 0.0;
         double worstPosition = 0.0;

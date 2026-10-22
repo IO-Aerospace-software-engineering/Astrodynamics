@@ -43,7 +43,7 @@ public class ShadowFunctionPartialsTests : IClassFixture<PartialsTestCases>
 
     [Theory]
     [MemberData(nameof(PenumbraGrid))]
-    public void Penumbra_PartialsMatchRiddersOfTheAcceleration(string orbit, double shadowFraction,
+    public void Penumbra_PartialsMatchRiddersOfACancellationFreeShadowFunction(string orbit, double shadowFraction,
         bool relativeToTheSun)
     {
         // Arrange
@@ -68,13 +68,16 @@ public class ShadowFunctionPartialsTests : IClassFixture<PartialsTestCases>
             force.AccumulateStatePartials(state, context, dadr, dadv);
         }
 
-        // Assert: Ridders' derivative of the acceleration relative to the Earth (a change of origin is a translation),
-        // its initial step within the penumbra and a quarter of the distance to the nearest contact
-        var reference = RiddersDerivative.StatePartials(force, state, context, RiddersStep(orbit, angle), 1.0);
-        double error = RiddersDerivative.RelativeFrobeniusError(dadr, reference.Dadr);
+        // Assert: Ridders' derivative of the acceleration relative to the Earth (a change of origin is a translation), with
+        // the shadow fraction evaluated without cancellation (PenumbraStates): on the shadow fraction of the library it
+        // resolved only about 1e-6 at ν = 0.99 in LEO, its rounding (1.2e-9) divided by the steps of the extrapolation,
+        // and its error estimate missed it (2.4e-6 against an estimate of 1.7e-7 on macOS arm64, 2026-10-22). The
+        // initial step within the penumbra and a quarter of the distance to the nearest contact
+        var (reference, resolution) = CancellationFreeReference(state, context, RiddersStep(orbit, angle));
+        double error = RiddersDerivative.RelativeFrobeniusError(dadr, reference);
         _output.WriteLine($"MEASURE #423 {orbit}, ν {shadowFraction:E1}{(relativeToTheSun ? ", relative to the Sun" : "")}: " +
-                          $"against Ridders {error:E2}, reference {reference.DadrError:E2}");
-        Assert.True(error < 1e-6 || error < 10.0 * reference.DadrError, $"relative error {error:E2}");
+                          $"against Ridders {error:E2}, reference {resolution:E2}");
+        Assert.True(error < 1e-6, $"relative error {error:E2}");
         Assert.All(dadv, x => Assert.Equal(5.0, x));
     }
 
@@ -110,35 +113,14 @@ public class ShadowFunctionPartialsTests : IClassFixture<PartialsTestCases>
         var spacecraft = PartialsTestCases.Spacecraft(state);
         var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
         var force = new SolarRadiationPressure(spacecraft, new[] { _cases.Earth });
-        var unshadowed = new SolarRadiationPressure(spacecraft, Array.Empty<CelestialBody>());
         var dadr = new double[9];
 
         // Act
         force.AccumulateStatePartials(state, context, dadr, new double[9]);
 
         // Assert
-        var reference = new double[9];
-        double referenceError = 0.0;
-        for (int j = 0; j < 3; j++)
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                int row = i;
-                int column = j;
-                var (derivative, error) = RiddersDerivative.Derivative(x =>
-                {
-                    var perturbed = WithPosition(state, column, x);
-                    var (a, b, c) = PenumbraStates.Discs(_cases, perturbed, _cases.Earth);
-                    return RiddersDerivative.Component(unshadowed.Apply(perturbed, context), row) *
-                           (1.0 - PenumbraStates.CancellationFreeShadowFraction(a, b, c));
-                }, RiddersDerivative.Component(state.Position, j), 0.25 * distance);
-                reference[3 * i + j] = derivative;
-                referenceError += error * error;
-            }
-        }
-
+        var (reference, resolution) = CancellationFreeReference(state, context, 0.25 * distance);
         double relative = RiddersDerivative.RelativeFrobeniusError(dadr, reference);
-        double resolution = System.Math.Sqrt(referenceError) / System.Math.Sqrt(reference.Sum(x => x * x));
         var (sa, sb, sc) = PenumbraStates.Discs(_cases, state, _cases.Earth);
         _output.WriteLine($"MEASURE #423 {orbit}, {distance} m inside the {(inner ? "inner" : "outer")} contact, ν " +
                           $"{PenumbraStates.CancellationFreeShadowFraction(sa, sb, sc):E3}: against Ridders {relative:E2}, " +
@@ -294,6 +276,35 @@ public class ShadowFunctionPartialsTests : IClassFixture<PartialsTestCases>
 
         // Assert
         Assert.Equal(0, allocated);
+    }
+
+    // ∂a/∂r by Ridders' derivative of a_lit (1 − ν), ν the shadow fraction of the Earth evaluated without cancellation,
+    // and its resolution, the Frobenius norm of the error estimates relative to that of the block
+    private (double[] Partials, double Resolution) CancellationFreeReference(StateVector state,
+        ForceEvaluationContext context, double initialStep)
+    {
+        var unshadowed = new SolarRadiationPressure(PartialsTestCases.Spacecraft(state), Array.Empty<CelestialBody>());
+        var reference = new double[9];
+        double errorSum = 0.0;
+        for (int j = 0; j < 3; j++)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                int row = i;
+                int column = j;
+                var (derivative, error) = RiddersDerivative.Derivative(x =>
+                {
+                    var perturbed = WithPosition(state, column, x);
+                    var (a, b, c) = PenumbraStates.Discs(_cases, perturbed, _cases.Earth);
+                    return RiddersDerivative.Component(unshadowed.Apply(perturbed, context), row) *
+                           (1.0 - PenumbraStates.CancellationFreeShadowFraction(a, b, c));
+                }, RiddersDerivative.Component(state.Position, j), initialStep);
+                reference[3 * i + j] = derivative;
+                errorSum += error * error;
+            }
+        }
+
+        return (reference, System.Math.Sqrt(errorSum) / System.Math.Sqrt(reference.Sum(x => x * x)));
     }
 
     // Ridders' initial step: 1e-4 of the radius (680 m in LEO, 4.2 km at GEO), within the penumbra, and at most a quarter
