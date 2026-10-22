@@ -80,7 +80,12 @@ public class DenseAirStepControlTests
     // 1e-11, more than 400 000 in 8.8 s and 0.71 s of flight at 1e-12 and 1e-13; NRLMSISE-00 at 200 km, 6 030 at 1e-11,
     // 28 699 in 24.7 s of flight at 1e-12; at 400 km, 6 362 at 1e-13; Mars at 100 km, more than 400 000 in 5.3 s of
     // flight at 1e-11, and 100 rejections at the start at 1e-12 and 1e-13. NRLMSISE-00 at 200 km starts on its 200 km
-    // cutoff. Mars below 112.5 km, where its model is defined (#422).
+    // cutoff. The Mars budgets set again after #422 (2026-10-22, Release, CI): the states lie at 84.0 and 104.0 km of
+    // geodetic altitude, in the isothermal layer of Seiff, whose density falls with a scale height of 7.4 km (d ln ρ/dh
+    // −1.33e-4 /m) where the curve fit gave −5.5e-5 /m at 84 km and a density rising with the altitude above 101.4 km;
+    // the steps follow that slope, not the density (Cd from 0.22 to 22: 257 to 294 steps at 80 km, 147 to 183 before).
+    // 100 km at 1e-11, 1e-12, 1e-13: 11, 16, 121 (Linux), 11, 17, 150 (Windows), 11, 15, 155 (macOS arm64), 29, 78, 942
+    // on Linux before #422; 80 km at 1e-13: 272, 294, 304, 142 on Linux before #422.
     [Theory]
     [InlineData("US 1976", 200000.0, 1e-11, 16)]
     [InlineData("US 1976", 200000.0, 1e-12, 20)]
@@ -91,10 +96,10 @@ public class DenseAirStepControlTests
     [InlineData("NRLMSISE-00", 200000.0, 1e-13, 674)]
     [InlineData("NRLMSISE-00", 220000.0, 1e-13, 198)]
     [InlineData("NRLMSISE-00", 400000.0, 1e-13, 28)]
-    [InlineData("Mars", 100000.0, 1e-11, 58)]
-    [InlineData("Mars", 100000.0, 1e-12, 156)]
-    [InlineData("Mars", 100000.0, 1e-13, 1884)]
-    [InlineData("Mars", 80000.0, 1e-13, 286)]
+    [InlineData("Mars", 100000.0, 1e-11, 22)]
+    [InlineData("Mars", 100000.0, 1e-12, 34)]
+    [InlineData("Mars", 100000.0, 1e-13, 310)]
+    [InlineData("Mars", 80000.0, 1e-13, 608)]
     public void IncludeInStepControl_InDenseAir_CompletesWithinItsBudget(string model, double altitude,
         double tolerance, int budget)
     {
