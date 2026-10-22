@@ -48,6 +48,16 @@ propagator can pass its whole body list, Sun included.
 |----------|---------|-------------|
 | `SolarRadiationCoeff` (Cr) | 1.0 | Set on the `Spacecraft` constructor |
 
+!!! note "Shadow fraction"
+    The SRP is scaled by `1 − ν`, `ν` the largest shadow fraction of the occulting bodies
+    (`CelestialItem.ShadowFraction`): the fraction of the solar disc covered by the disc of the body, 0 in sunlight, 1
+    in total eclipse, `b² / a²` in an annular eclipse of angular radii `a` (the Sun) and `b`. In the penumbra it is the
+    sum of the two circular segments cut by the common chord, computed without cancellation (Heron's half chord in the
+    form of Kahan, the half angles from atan2): within a few 1e-16 of the exact value of the angles everywhere, and
+    always in [0, 1]. Before 10.2.0 a closed form of the same area cancelled near the contacts of the penumbra, by up to
+    1.7e-4 in LEO, and could return values outside [0, 1]
+    ([#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434)).
+
 !!! note "Geometric positions"
     SRP, albedo and thermal pressure read the geometric positions (`Aberration.None`) of the Sun and of the occulting,
     reflecting or emitting bodies, as the cannonball model of Montenbruck and Gill, *Satellite Orbits*, §3.4, does. The

@@ -139,6 +139,21 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   steps that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9). See
   [Covariance Propagation](../reference/covariance-propagation.md)
   ([#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)).
+- **The shadow fraction near the contacts of the penumbra.** `CelestialItem.ShadowFraction` computed the two-circle
+  area in a closed form that cancels near the contacts: against the exact value, its error grew from up to 4e-9 across
+  the penumbra in LEO to 1.7e-4 within 1e-12 of its width of a contact, and it returned values below 0 or above 1 on
+  states inside the penumbra (about 350 of 16 000 within 15 m of the contacts of a Sun-synchronous LEO), or NaN where
+  an acos argument passed 1 by rounding, which SRP took as sunlight. It now sums the two circular segments cut by the
+  common chord, with Heron's half chord in the form of Kahan and the half angles from atan2: within 2.2e-16 of the exact
+  value of its inputs everywhere, and always in [0, 1] for finite inputs, as documented; the SRP partials take ν and its
+  gradient from the same geometry. Outside the penumbra the results do not change, bit for bit, and neither do the
+  Velocity-Verlet trajectories measured (the change of the acceleration is below the precision of the velocity). The SRP
+  acceleration in the penumbra changes by the former rounding, a few 1e-9 of the unshadowed acceleration away from the
+  contacts and up to 1.9e-5 within a millimetre of them; RK7(8) trajectories that cross a penumbra move by the
+  integration noise of the steps this changes: 2.8 mm over a day of a Sun-synchronous LEO at 1e-13, 0.41 mm over the
+  3 h of the LEO golden with drag and SRP, recaptured (the other goldens bit for bit). A call in the penumbra costs
+  82 ns instead of 37 ns. No public API change
+  ([#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434)).
 - **The step control of the variational equations in dense air.** With `IncludeInStepControl`, RK7(8) took ever
   smaller steps as the density grew and never failed: the US Standard Atmosphere 1976 at 200 km took 107 290 steps over
   2 min at 1e-11, and at 1e-12 and 1e-13 the propagation did not finish (memory grew to an `OutOfMemoryException` over

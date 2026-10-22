@@ -160,10 +160,13 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
 
     // Bounds of Ψ over the arc relative to its largest value: against GMAT's central differences, the central
     // differences of the library against GMAT's (records at twice the measurement of 2026-10-20, rounded up at the
-    // second significant digit), and the library against its own (F1, 1e-4)
+    // second significant digit), and the library against its own (F1, 1e-4). G5 models set again with #434 at twice
+    // 1.37e-5 (Linux, 2026-10-22; 5.7e-6 before): the shadow fraction without cancellation reshuffled the steps of the
+    // central differences of the library through the penumbra, while the library against GMAT did not move (5.52e-6,
+    // 7.85e-6; decision of S. Guillet, 2026-10-22)
     public static TheoryData<string, double, double, double> PsiCases => new()
     {
-        { "G5", 1.6e-5, 1.2e-5, 1e-4 },
+        { "G5", 1.6e-5, 2.8e-5, 1e-4 },
         { "G6", 1.6e-6, 1.7e-6, 1e-4 }
     };
 

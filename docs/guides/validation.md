@@ -181,6 +181,15 @@ and near the penumbra when these figures were measured, analytically since
 [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423), which moves Φ of R3 in the third
 digit and Ψ_Cr not to three digits (Linux, 2026-10-22).
 
+The shadow fraction without cancellation of
+[#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434) changes the acceleration in the
+penumbra by the rounding of the former closed form, and so the steps of every propagation that crosses it, the
+references included. Measured again on R3 (Linux, 2026-10-22): Φ 4.2e-7, 5.2e-7, 4.2e-7, 5.3e-7 over the arc and 4.0e-7
+to 5.2e-7 in the penumbra; Ψ_Cr 2.3e-5 (position) and 4.0e-4 (velocity) locally outside the penumbra, 1.4e-5 and 1.8e-5
+in it, 3.8e-6 and 5.5e-6 over the arc. The local velocity figure is the record of the reference described below, set
+again at twice its measurement, 8.1e-4, and the penumbra record at 3.6e-5 (decision of S. Guillet); Ψ_Cr of the library
+itself does not move against GMAT (G5 below).
+
 Ψ is also held over the arc relative to its largest value, a measure that does not depend on what the reference
 resolves where Ψ is small: R2 Ψ_Cd 1.2e-7 (position and velocity), R3 Ψ_Cr 1.5e-6 and 2.1e-6, R4 Ψ_Cr 2.0e-9 and
 1.9e-9, R5 Ψ_Cd 4.6e-8 and 5.3e-8. The local 9.2e-5 of Ψ_Cr of R3 in velocity, at 9.5 h, measures the reference, not
@@ -387,7 +396,7 @@ variational equation enters). Computation: each tool's Φ against its own centra
 | G2 | 8.4e-9 | 1.3e-8 | 1.6e-8 | 2.0e-8 | 5.7 cm, 6.4e-5 m/s |
 | G3 | 4.9e-12 | 1.8e-8 | 1.3e-8 | 4.6e-9 | 58 µm, 2.8e-9 m/s |
 | G4 | 3.8e-8 | 6.0e-8 | 5.2e-8 | 2.1e-8 | 25 cm, 1.8e-4 m/s |
-| G5 | 1.0e-4 | 1.9e-7 | 9.9e-5 | 5.2e-7 | 8.2 mm, 9.4e-6 m/s |
+| G5 | 1.0e-4 | 2.8e-7 | 9.9e-5 | 5.3e-7 | 7.5 mm, 8.5e-6 m/s |
 | G6 | 5.4e-5 | 9.0e-7 | 5.3e-5 | 4.9e-8 | 11 cm, 1.3e-4 m/s |
 
 - On G1 to G4 the two tools agree within what central differences of whole propagations resolve, 1e-8 to 6e-8, which
@@ -395,7 +404,8 @@ variational equation enters). Computation: each tool's Φ against its own centra
 - G5: the total departure is GMAT's computation. Its Φ leaves out the derivative of the shadow function in the
   penumbra, which the library differentiates (analytically since #423, by central differences before; GMAT's
   Mathematical Specification, §4.2.5, has the derivative that its build leaves out); left out, the library
-  departed by 1.05e-4 after one day in step 5b. The models agree to 1.9e-7. GMAT prints, 23 times in the console log of
+  departed by 1.05e-4 after one day in step 5b. The models agree to 2.8e-7 (1.9e-7 before #434, which reshuffled the
+  steps of the central differences of the library through the penumbra). GMAT prints, 23 times in the console log of
   each G5 run (`G5/nominal.log`, committed with the reports): *"Warning: The orbit state transition matrix does not
   currently contain SRP contributions from shadow partial derivatives when using Spherical SRP."* On this point the
   R2026a build departs from its Mathematical Specification, whose SRP partials include the derivative of the shadow
@@ -406,7 +416,8 @@ variational equation enters). Computation: each tool's Φ against its own centra
 
 **Ψ**, over the arc relative to its largest value, against GMAT's central differences on the coefficient (GMAT has no
 Ψ): Ψ_Cr of G5 5.5e-6 (position) and 7.9e-6 (velocity), the central differences of the two tools against each other
-4.1e-6 and 5.7e-6; Ψ_Cd of G6 7.7e-7 and 7.6e-7, the central differences of the two tools against each
+9.6e-6 and 1.4e-5 (4.1e-6 and 5.7e-6 before #434: the library's central differences moved, its Ψ against GMAT did not,
+to three digits); Ψ_Cd of G6 7.7e-7 and 7.6e-7, the central differences of the two tools against each
 other 8.1e-7 and 8.0e-7 (1.3e-2 before #411 and #409, the density).
 
 **P**, from the correlated P0 of `CovariancePropagationTests` (σ 50, 200 and 30 m, 0.2, 0.05 and 0.03 m/s in RTN),

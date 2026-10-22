@@ -11,8 +11,10 @@ read on 2026-10-22):
 and nu = A / (pi a^2); nu = 1 when c <= b - a (total), b^2 / a^2 when c <= a - b (annular), 0 when c >= a + b.
 
 The geometries are those of the library's cases: the Sun seen from 1 au, the Earth from a LEO at 400 km and 700 km and
-from GEO, the Moon slightly smaller and slightly larger than the Sun. For each, separations at relative depths of 1e-12
-to 1e-2 of the width of the penumbra inside each contact, and at fractions of that width across it. Each input is the
+from GEO, the Moon slightly smaller and slightly larger than the Sun, and two equal discs. For each, separations at
+relative depths of 1e-12 to 1e-2 of the width of the penumbra inside each contact (for equal discs, the inner contact is
+at a separation of 0), at fractions of that width across it, and where the computation changes form: a half angle
+through pi/2 and through 0.05, the bound of the series of u - sin u (lesson 14 of #364). Each input is the
 double nearest to its target, written with 17 significant digits; the reference is the exact shadow fraction of these
 doubles, evaluated with mpmath at 60 digits, so that it does not share the rounding of a computation in doubles.
 
@@ -36,6 +38,7 @@ GEOMETRIES = {
     'GEO': (SUN, math.asin(EARTH_RADIUS / 42164137.0)),
     'Moon smaller than the Sun': (SUN, 4.3e-3),
     'Moon larger than the Sun': (SUN, 4.66e-3),
+    'Equal discs': (SUN, SUN),
 }
 
 DEPTHS = [1e-12, 1e-10, 1e-8, 1e-6, 1e-4, 1e-2]
@@ -57,6 +60,27 @@ def exact(a, b, c):
     return area / (mp.pi * a * a)
 
 
+def singular(name, a, b):
+    """Separations where the computation changes form (lesson 14 of #364): a half angle through pi/2, where c1 or
+    c - c1 changes sign, and a half angle through 0.05, where u = 2 theta crosses the bound 0.1 of the series of
+    u - sin u; each at the point and one part in 1e12 on either side."""
+    targets = []
+    if b > a:
+        targets.append(('alpha at pi/2', math.sqrt(b * b - a * a)))
+    if a > b:
+        targets.append(('beta at pi/2', math.sqrt(a * a - b * b)))
+    h = a * math.sin(0.05)
+    targets.append(('u = 2 alpha at 0.1', a * math.cos(0.05) + math.sqrt(b * b - h * h)))
+    if b < 30 * a:
+        h = b * math.sin(0.05)
+        targets.append(('u = 2 beta at 0.1', b * math.cos(0.05) + math.sqrt(a * a - h * h)))
+    separations = []
+    for label, c in targets:
+        for shift, where in ((-1e-12, 'below'), (0.0, 'at'), (1e-12, 'above')):
+            separations.append((f'singular: {label}, {where}', c * (1.0 + shift)))
+    return separations
+
+
 def main():
     points = []
     for name, (a, b) in GEOMETRIES.items():
@@ -69,6 +93,7 @@ def main():
             separations.append((f'inner contact, {depth:.0e} of the width inside', inner + depth * width))
         for fraction in FRACTIONS:
             separations.append((f'{fraction} of the width', inner + fraction * width))
+        separations.extend(singular(name, a, b))
         for label, c in separations:
             points.append({'geometry': name, 'where': label, 'a': a, 'b': b,
                            'c': c, 'inner_depth': mp.nstr(mp.mpf(c) - mp.mpf(inner), 20),

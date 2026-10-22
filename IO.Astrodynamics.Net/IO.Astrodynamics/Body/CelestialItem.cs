@@ -498,9 +498,18 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
-    /// Compute the shadow fraction caused by an occluding body.
-    /// Returns a value in [0, 1] where 0 = full illumination and 1 = total eclipse.
+    /// Compute the shadow fraction caused by an occluding body: the fraction of the disc of the light source covered by
+    /// the disc of the occluding body. Returns a value in [0, 1], guaranteed for finite inputs, where 0 = full
+    /// illumination and 1 = total eclipse.
     /// </summary>
+    /// <remarks>
+    /// The regime comes from the angles: 0 when the discs do not overlap, 1 when the occluding disc covers the source
+    /// disc, the ratio of their areas in an annular eclipse. In the penumbra the covered area is the sum of the two
+    /// circular segments cut by the common chord, without cancellation near the contacts (#434), within a few 1e-16 of
+    /// the exact fraction of the given angles; see <see cref="DiscOverlap"/> for the formulas and their references.
+    /// Before #434 the closed form of the two-circle area lost its precision near the contacts (up to 1e-4 in LEO) and
+    /// could return values outside [0, 1].
+    /// </remarks>
     /// <param name="angularSeparation">Angular separation between the light source and occluding body as seen from the observer (radians)</param>
     /// <param name="backSize">Angular diameter of the background body (light source) as seen from the observer (radians)</param>
     /// <param name="bySize">Angular diameter of the occluding body as seen from the observer (radians)</param>
@@ -511,42 +520,19 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         double rOcc = bySize * 0.5;    // angular radius of occluding body
         double d = angularSeparation;  // angular separation between centers
 
-        // No occultation
-        if (d >= rSun + rOcc)
+        return DiscOverlap.Regime(rSun, rOcc, d) switch
         {
-            return 0.0;
-        }
-
-        // Total eclipse: occluding body completely covers the light source
-        if (d <= rOcc - rSun && rOcc >= rSun)
-        {
-            return 1.0;
-        }
-
-        // Annular eclipse: occluding body fully inside the light source disc
-        if (d <= rSun - rOcc && rOcc < rSun)
-        {
-            return (rOcc * rOcc) / (rSun * rSun);
-        }
-
-        // Partial eclipse: two-circle intersection area / sun disc area
-        double r1Sq = rSun * rSun;
-        double r2Sq = rOcc * rOcc;
-        double dSq = d * d;
-
-        double part1 = r1Sq * System.Math.Acos((dSq + r1Sq - r2Sq) / (2.0 * d * rSun));
-        double part2 = r2Sq * System.Math.Acos((dSq + r2Sq - r1Sq) / (2.0 * d * rOcc));
-        double part3 = 0.5 * System.Math.Sqrt((-d + rSun + rOcc) * (d + rSun - rOcc) * (d - rSun + rOcc) * (d + rSun + rOcc));
-
-        double intersectionArea = part1 + part2 - part3;
-        double sunArea = System.Math.PI * r1Sq;
-
-        return intersectionArea / sunArea;
+            ShadowRegime.None => 0.0,
+            ShadowRegime.Total => 1.0,
+            ShadowRegime.Annular => (rOcc * rOcc) / (rSun * rSun),
+            _ => new DiscOverlap(rSun, rOcc, d).Fraction
+        };
     }
 
     /// <summary>
     /// Compute the shadow fraction caused by an occluding body on this celestial item as seen from a given position.
-    /// Returns a value in [0, 1] where 0 = full illumination and 1 = total eclipse.
+    /// Returns a value in [0, 1], guaranteed for finite inputs, where 0 = full illumination and 1 = total eclipse (see
+    /// <see cref="ShadowFraction(double, double, double)"/>).
     /// </summary>
     /// <param name="by">The occluding body</param>
     /// <param name="from">The observer's orbital parameters</param>
