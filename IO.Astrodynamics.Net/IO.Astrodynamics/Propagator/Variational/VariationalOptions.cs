@@ -20,7 +20,8 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// at a tolerance of 1e-12, the error of Ψ_Cr over the arc, relative to its largest value on the arc, was 6.0e-5 to
 /// 1.9e-3 depending on where the steps fell, against 2.6e-5 at most at 1e-14 (H3 reviews of lots A to C and of step 8).
 /// Relative to the local Ψ_Cr, up to 1.5e-2 at 1e-12 and 1.6e-4 at 1e-14; with this option, 7.1e-8 at 1e-12. This
-/// option, not a tighter tolerance, holds Ψ_Cr to 1e-4 at every shadow crossing. With it, a collapse of the step stops
+/// option, not a tighter tolerance, holds Ψ_Cr to 1e-4 at every shadow crossing; with the analytic derivative of the
+/// shadow function in the SRP partials (#423), it completes at 1e-14 on an eclipsing orbit. With it, a collapse of the step stops
 /// with an <see cref="System.InvalidOperationException"/> after <see cref="Integrators.RK78Integrator.CollapseStepCount"/>
 /// consecutive accepted steps within <see cref="Integrators.RK78Integrator.CollapseFlightTime"/> s of flight (#420).
 /// </param>

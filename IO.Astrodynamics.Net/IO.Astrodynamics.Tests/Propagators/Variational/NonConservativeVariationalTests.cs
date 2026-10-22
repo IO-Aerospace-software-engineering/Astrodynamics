@@ -54,7 +54,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// The full study of F1, with every case and block and the plateau of the steps, comes with step 9; this test checks
 /// the partials of drag and SRP against the threshold of the specification for R2 to R5 (1e-4). R3 crosses the
 /// penumbra twice per revolution: with the derivative of the shadow fraction neglected, Φ of a LEO case with SRP was off
-/// by 1.05e-4, which is why the SRP partials take the default central differences in the penumbra.
+/// by 1.05e-4, which is why the SRP partials hold it, by the default central differences from #378 to #423 and by its
+/// analytic form since.
 /// </para>
 /// </remarks>
 [Trait("Category", "Validation")]

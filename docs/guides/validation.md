@@ -176,8 +176,10 @@ with SRP. Thresholds of the specification: R1 below 1e-7, R2 to R5 below 1e-4 ou
 | R5 | 6.7e-7 | 3.3e-7 | 6.7e-7 | 3.3e-7 | Cd 5.6e-8 | Cd 6.4e-8 | |
 
 Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). The errors in the
-penumbra are no larger than outside: the SRP partials take central differences in and near the penumbra, so the
-shadow function is differentiated.
+penumbra are no larger than outside: the SRP partials differentiate the shadow function, by central differences in
+and near the penumbra when these figures were measured, analytically since
+[#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423), which moves Φ of R3 in the third
+digit and Ψ_Cr not to three digits (Linux, 2026-10-22).
 
 Ψ is also held over the arc relative to its largest value, a measure that does not depend on what the reference
 resolves where Ψ is small: R2 Ψ_Cd 1.2e-7 (position and velocity), R3 Ψ_Cr 1.5e-6 and 2.1e-6, R4 Ψ_Cr 2.0e-9 and
@@ -391,7 +393,8 @@ variational equation enters). Computation: each tool's Φ against its own centra
 - On G1 to G4 the two tools agree within what central differences of whole propagations resolve, 1e-8 to 6e-8, which
   bounds the model column; on G1 and G3 the total, 5e-12 to 8e-12, is the integration error of the two tools.
 - G5: the total departure is GMAT's computation. Its Φ leaves out the derivative of the shadow function in the
-  penumbra, which the library differentiates (the SRP partials take central differences there); left out, the library
+  penumbra, which the library differentiates (analytically since #423, by central differences before; GMAT's
+  Mathematical Specification, §4.2.5, has the derivative that its build leaves out); left out, the library
   departed by 1.05e-4 after one day in step 5b. The models agree to 1.9e-7. GMAT prints, 23 times in the console log of
   each G5 run (`G5/nominal.log`, committed with the reports): *"Warning: The orbit state transition matrix does not
   currently contain SRP contributions from shadow partial derivatives when using Spherical SRP."* On this point the

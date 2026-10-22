@@ -557,8 +557,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // same at 1e-13 holds the 1e-4 of F1 everywhere, the first shadow exit included, which a tighter tolerance alone
         // does not (1.6e-4 at 1e-14 in J2000 at 4.45 h, relative to the local Ψ_Cr of 0.28 m; decision of S. Guillet,
         // 2026-10-15). Measured 7.1e-8 (J2000) and 3.4e-8 (ECLIPJ2000) with the density gradient of #420 (Linux, .NET 10,
-        // 2026-10-21; 9.6e-8 and 7.1e-8, at 0.35 h, on 2026-10-15). The
-        // reference at 1e-14 with the step control stops in the penumbra (100 rejections at 328 s), hence 1e-13
+        // 2026-10-21; 9.6e-8 and 7.1e-8, at 0.35 h, on 2026-10-15; 7.6e-8 and 3.4e-8 with the derivative of the shadow
+        // function, #423, 2026-10-22). The reference at 1e-14 with the step control stopped in the penumbra when this test
+        // was written (100 rejections at 328 s), hence 1e-13; it completes since #421 and #423 (1 064 steps in J2000)
         var reference = EclipsingCase(-1966, frame, 1e-13, new VariationalOptions(parameters, IncludeInStepControl: true));
         double controlled = 0.0;
         foreach (var epoch in epochs)

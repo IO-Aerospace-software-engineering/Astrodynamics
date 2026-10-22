@@ -50,7 +50,7 @@ public class SolarRadiationPressure : ForceBase
     /// </summary>
     internal override Vector3 Apply(StateVector stateVector, in ForceEvaluationContext context)
     {
-        if (!TryGetIllumination(stateVector, out var posRelToSun, out double litFraction, out _))
+        if (!TryGetIllumination(stateVector, out var posRelToSun, out double litFraction))
             return Vector3.Zero;
 
         // SRP acceleration: spacecraft position relative to Sun
@@ -61,64 +61,170 @@ public class SolarRadiationPressure : ForceBase
 
     /// <summary>
     /// ∂a/∂r of the cannonball acceleration a = k Cr (A/m) (1 − ν) ρ / |ρ|³, ρ = r − r_sun, ν the shadow fraction:
-    /// analytic in sunlight, zero in total eclipse, the default central differences in the penumbra and wherever their
-    /// stencil reaches a shadow boundary; ∂a/∂v = 0.
+    /// the analytic block in sunlight, zero in total eclipse, and in the penumbra the analytic block with the derivative
+    /// of the shadow function; ∂a/∂v = 0.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// In sunlight (ν = 0), the analytic block of <see cref="AccumulateAnalyticStatePartials"/> is exact. In total
-    /// eclipse the acceleration is zero, and so are the partials.
+    /// In the penumbra (0 &lt; ν &lt; 1), ∂a/∂r = (1 − ν) ∂a_lit/∂r − a_lit (∇ν)ᵀ, a_lit the acceleration without shadow:
+    /// eq. 4.79 of the GMAT Mathematical Specification, R2026a, §4.2.4, with ν the eclipse factor of its eq. 4.78. The
+    /// second term dominates: ν goes from 0 to 1 across a penumbra some 20 km wide in LEO. ∇ν is that of §4.2.5 (see
+    /// <see cref="AddShadowTerm"/>), the gradient of the two-circle area of its §3.2.28, the model of
+    /// <see cref="CelestialItem.ShadowFraction(double, double, double)"/> (to be verified by S. Guillet). Neglected, it
+    /// moved Φ by 1.05e-4 after one day in LEO 400 km (decision of S. Guillet, 2026-10-12).
     /// </para>
     /// <para>
-    /// In the penumbra (0 &lt; ν &lt; 1), ∂a/∂r = (1 − ν) ∂a_lit/∂r − a_lit (∇ν)ᵀ, and the second term dominates: ν goes
-    /// from 0 to 1 across a penumbra some 20 km wide in LEO, against 1.5e8 km for the scale of a_lit. No published
-    /// derivative of the shadow function of this model was found; NASA GMAT neglects it (its A matrix warns that it
-    /// lacks the shadow partials), Orekit differentiates the lighting ratio. Neglected, it moved Φ by 1.05e-4 after one
-    /// day in LEO 400 km (A/m = 0.1 m²/kg, against central differences of whole propagations: 5.3e-6 with the term,
-    /// 1.1e-6 to 2.4e-6 without SRP). So the penumbra goes through the default central differences, which differentiate
-    /// ν with the rest (decision of S. Guillet, 2026-10-12): about 1 % of a LEO orbit, at the cost of six evaluations of
-    /// the acceleration. Their step is scaled by the distance to the nearest occulting body
-    /// (<see cref="PositionStepScale"/>), not by the distance to the observer of the state, which is the Sun in SSB
-    /// mode.
+    /// The regime comes from the angles, as in eqs. 3.148 and 3.149 of the specification: sunlit when the angular
+    /// separation reaches the sum of the angular radii, total when it is at most their difference, the penumbra
+    /// otherwise. These are the branches of <see cref="CelestialItem.ShadowFraction(double, double, double)"/>, never its
+    /// value: near a contact its terms cancel to a rounding of a few 1e-8, sometimes below zero inside the penumbra, where
+    /// the exact gradient already grows as the square root of the distance to the contact (#423). With the derivative of
+    /// the shadow function the partials are continuous across both contacts without any band around them: it tends to
+    /// zero there, and so does 1 − ν at the inner contact.
     /// </para>
     /// <para>
-    /// The central differences also run within two steps of a shadow boundary, sunlit or in total eclipse, so that the
-    /// partials are continuous along the trajectory. At the boundary of the umbra, 1 − ν vanishes as d^(3/2), d the
-    /// distance to the boundary, so the exact partials tend to zero; a central difference whose stencil straddles the
-    /// boundary gives about a(r + h) / 2h instead, 5.5e-13 /s² in the umbra of R3, and switching to zero at the
-    /// boundary made the partials jump there. The jump does not move Φ measurably, but the step-size control on Φ and
-    /// Ψ (<c>IncludeInStepControl</c>) cannot resolve it: it rejected 100 steps down to 1e-6 s at the first umbra
-    /// entry of R3 (H3 review of #378). With the central differences on both sides of each boundary, the partials are
-    /// continuous: zero where the stencil lies in the umbra, and the analytic block to the truncation of the central
-    /// difference, of order (h / |ρ|)², where it lies in sunlight.
+    /// Before #423 the penumbra, and a band of two steps around each contact, took the default central differences
+    /// (#379), which divided the rounding of ν by their stencil: 5.0e-7 to 1.6e-3 of the block, which the step control
+    /// on Φ and Ψ (<c>IncludeInStepControl</c>) followed with thousands of steps per day on an eclipsing orbit.
     /// </para>
     /// </remarks>
     private protected override void AccumulateStatePartialsCore(StateVector stateVector,
         in ForceEvaluationContext context, Span<double> dadr, Span<double> dadv)
     {
-        bool illuminated = TryGetIllumination(stateVector, out var posRelToSun, out double litFraction,
-            out var shadow);
-        double step = DefaultPositionRelativeStep * System.Math.Max(StepScale(stateVector, shadow), 1.0);
-        bool stencilInOneRegime = shadow.BoundaryDistance > 2.0 * step;
+        var sunFromObserver = GeometricPosition(_sun, stateVector);
+        var scPosition = stateVector.ToStateVector().Position;
+        var scToSun = sunFromObserver - scPosition;
+        double scToSunMag = scToSun.Magnitude();
+        double sunRadius = 0.5 * _sun.AngularSize(scToSunMag);
 
-        if (illuminated && litFraction == 1.0 && stencilInOneRegime)
+        // The occulting body with the largest shadow fraction, as in the acceleration
+        double shadowFraction = 0.0;
+        Occultation shadowing = default;
+        bool inPenumbra = false;
+        foreach (var occultingBody in _occultingBodies)
         {
-            AddAnalyticBlock(posRelToSun, litFraction, context, dadr);
-            return;
+            var occultation = Occult(occultingBody, stateVector, scPosition, scToSun, sunRadius);
+            if (occultation.Separation >= sunRadius + occultation.Radius)
+                continue;
+
+            if (occultation.Separation <= occultation.Radius - sunRadius && occultation.Radius >= sunRadius)
+                return;
+
+            double fraction = System.Math.Clamp(CelestialItem.ShadowFraction(occultation.Separation, 2.0 * sunRadius,
+                2.0 * occultation.Radius), 0.0, 1.0);
+            if (!inPenumbra || fraction > shadowFraction)
+            {
+                shadowFraction = fraction;
+                shadowing = occultation;
+                inPenumbra = true;
+            }
         }
 
-        if (!illuminated && stencilInOneRegime)
+        var posRelToSun = scPosition - sunFromObserver;
+        AddAnalyticBlock(posRelToSun, 1.0 - shadowFraction, context, dadr);
+        if (inPenumbra)
         {
-            return;
+            AddShadowTerm(posRelToSun, scToSun, scToSunMag, sunRadius, shadowing, shadowFraction, context, dadr);
+        }
+    }
+
+    /// <summary>
+    /// Adds −a_lit (∇ν)ᵀ, the term of the derivative of the shadow function, to <paramref name="dadr"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// GMAT Mathematical Specification, R2026a, §4.2.5 (to be verified by S. Guillet), with R⊙′ = a, R_B′ = b the angular
+    /// radii of the Sun and of the occulting body and D′ = c their angular separation (§3.2.28, eqs. 3.145 to 3.147):
+    /// ∇ν = ∇A / (π a²) − 2 ν ∇a / a in a partial eclipse (eq. 4.87, ν = p / 100), A the area of the overlap of the two
+    /// discs (eq. 3.150), and ∇ν = 2 b ∇b / a² − 2 b² ∇a / a³ in an annular eclipse (eq. 4.88). At the fixed epoch of
+    /// the partials, ∇a = R⊙ ŝ / (d √(d² − R⊙²)) and ∇b = R_B ô / (d_B √(d_B² − R_B²)) (eqs. 4.97 and 4.98 with
+    /// ∂d/∂r = −I and ∂s/∂r = I), ŝ and ô the directions of the Sun and of the occulting body from the spacecraft, at
+    /// the distances d and d_B; ∇c = ((ô − cos c ŝ) / d + (ŝ − cos c ô) / d_B) / sin c, the derivative of the angle
+    /// between the two directions (eq. 4.99).
+    /// </para>
+    /// <para>
+    /// ∇A = −2 c₂ ∇c + 2 a α ∇a + 2 b β ∇b, with c₂ the half chord of the two circles and α, β the half angles that the
+    /// chord subtends at the centres of the Sun and of the occulting body: the derivative of eq. 3.150, eq. 4.100
+    /// reduced, its terms in ∂c₁ and ∂c₂ cancelling (checked with sympy, <c>tools/shadow_function/area_derivatives.py</c>:
+    /// the symbolic difference is 0). The half chord comes from Heron's product
+    /// c₂ = √((a + b − c)(b + c − a)(c + a − b)(a + b + c)) / (2c), and the half angles from atan2, α = atan2(c₂, c₁) and
+    /// β = atan2(c₂, c − c₁), c₁ = ((c − b)(c + b) + a²) / (2c) (eq. 3.151). Written as in eq. 4.100, the derivative
+    /// divides by √(1 − c₁² / a²) = c₂ / a, which vanishes at both contacts, and takes the acos of arguments within
+    /// 1e-5 of 1 in LEO; this form has neither, and tends to zero at the contacts.
+    /// </para>
+    /// </remarks>
+    private void AddShadowTerm(in Vector3 posRelToSun, in Vector3 scToSun, double scToSunMag, double a,
+        in Occultation occultation, double shadowFraction, in ForceEvaluationContext context, Span<double> dadr)
+    {
+        var sunDirection = scToSun / scToSunMag;
+        var bodyDirection = occultation.Direction;
+        double sunRadius = _sun.EquatorialRadius;
+        double bodyRadius = occultation.BodyRadius;
+        double d = scToSunMag;
+        double dB = occultation.Distance;
+        double b = occultation.Radius;
+        double c = occultation.Separation;
+
+        var gradA = sunDirection * (sunRadius / (d * System.Math.Sqrt(d * d - sunRadius * sunRadius)));
+        var gradB = bodyDirection * (bodyRadius / (dB * System.Math.Sqrt(dB * dB - bodyRadius * bodyRadius)));
+        Vector3 gradNu;
+        if (b < a && c <= a - b)
+        {
+            // Annular eclipse (eq. 4.88)
+            gradNu = gradB * (2.0 * b / (a * a)) - gradA * (2.0 * b * b / (a * a * a));
+        }
+        else
+        {
+            // Partial eclipse (eq. 4.87), the area by its reduced derivative
+            double cosC = System.Math.Cos(c);
+            var gradC = ((bodyDirection - sunDirection * cosC) / d + (sunDirection - bodyDirection * cosC) / dB) /
+                        System.Math.Sin(c);
+            var (dAdc, dAda, dAdb) = OverlapAreaDerivatives(a, b, c);
+            var gradArea = gradC * dAdc + gradA * dAda + gradB * dAdb;
+            gradNu = gradArea / (System.Math.PI * a * a) - gradA * (2.0 * shadowFraction / a);
         }
 
-        base.AccumulateStatePartialsCore(stateVector, context, dadr, dadv);
+        double areaMassRatio = _spacecraft.SectionalArea / context.TotalMass;
+        var litAcceleration = posRelToSun * (_term1 * areaMassRatio * context.ReflectivityCoefficient /
+                                             System.Math.Pow(posRelToSun.Magnitude(), 3.0));
+        AddOuterProduct(litAcceleration, gradNu, -1.0, dadr);
+    }
+
+    /// <summary>
+    /// The partial derivatives of the area A of the overlap of two discs of angular radii <paramref name="a"/> and
+    /// <paramref name="b"/> whose centres are <paramref name="c"/> apart (GMAT Mathematical Specification, R2026a,
+    /// eq. 3.150), when they overlap partially: ∂A/∂c = −2 c₂, ∂A/∂a = 2 a α, ∂A/∂b = 2 b β, the reduced form of its
+    /// eq. 4.100 (see <see cref="AddShadowTerm"/>), without cancellation.
+    /// </summary>
+    /// <returns>∂A/∂c, ∂A/∂a, ∂A/∂b, in rad.</returns>
+    internal static (double DAdc, double DAda, double DAdb) OverlapAreaDerivatives(double a, double b, double c)
+    {
+        double heron = (a + b - c) * (b + c - a) * (c + a - b) * (a + b + c);
+        double halfChord = System.Math.Sqrt(System.Math.Max(heron, 0.0)) / (2.0 * c);
+        double c1 = ((c - b) * (c + b) + a * a) / (2.0 * c);
+        double alpha = System.Math.Atan2(halfChord, c1);
+        double beta = System.Math.Atan2(halfChord, c - c1);
+        return (-2.0 * halfChord, 2.0 * a * alpha, 2.0 * b * beta);
+    }
+
+    // block += factor u vᵀ, row-major
+    private static void AddOuterProduct(in Vector3 u, in Vector3 v, double factor, Span<double> block)
+    {
+        block[0] += factor * u.X * v.X;
+        block[1] += factor * u.X * v.Y;
+        block[2] += factor * u.X * v.Z;
+        block[3] += factor * u.Y * v.X;
+        block[4] += factor * u.Y * v.Y;
+        block[5] += factor * u.Y * v.Z;
+        block[6] += factor * u.Z * v.X;
+        block[7] += factor * u.Z * v.Y;
+        block[8] += factor * u.Z * v.Z;
     }
 
     /// <summary>
     /// The analytic block with the shadow fraction held constant, ∂a/∂r = k Cr (A/m) (1 − ν) (I / |ρ|³ − 3 ρ ρᵀ / |ρ|⁵),
-    /// whatever the illumination: exact outside the penumbra, without the term of ∇ν inside. Used by
-    /// <see cref="AccumulateStatePartialsCore"/> in sunlight, and by the tests to measure that term.
+    /// whatever the illumination: exact outside the penumbra, without the term of ∇ν inside. Used by the tests to
+    /// measure that term.
     /// </summary>
     /// <remarks>
     /// The point-mass block (B2) with μ = −k Cr (A/m) (1 − ν). Reference: Montenbruck and Gill, Satellite Orbits,
@@ -129,7 +235,7 @@ public class SolarRadiationPressure : ForceBase
     internal void AccumulateAnalyticStatePartials(StateVector stateVector, in ForceEvaluationContext context,
         Span<double> dadr)
     {
-        if (TryGetIllumination(stateVector, out var posRelToSun, out double litFraction, out _))
+        if (TryGetIllumination(stateVector, out var posRelToSun, out double litFraction))
         {
             AddAnalyticBlock(posRelToSun, litFraction, context, dadr);
         }
@@ -145,37 +251,29 @@ public class SolarRadiationPressure : ForceBase
 
     /// <summary>
     /// The distance to the nearest occulting body: the width of its penumbra, on which ν goes from 0 to 1, is that
-    /// distance times the angular diameter of the Sun, so the step of the default central differences keeps the same
-    /// ratio to it whatever the observer of the state (|r| for the Earth in the geocentric mode, bit for bit). Without
-    /// occulting body, the default, |r|.
+    /// distance times the angular diameter of the Sun, so the step of the default central differences
+    /// (<see cref="ForceBase.AccumulateStatePartialsByCentralDifferences"/>) keeps the same ratio to it whatever the
+    /// observer of the state (|r| for the Earth in the geocentric mode, bit for bit). Without occulting body, the
+    /// default, |r|.
     /// </summary>
     private protected override double PositionStepScale(StateVector stateVector)
     {
-        TryGetIllumination(stateVector, out _, out _, out var shadow);
-        return StepScale(stateVector, shadow);
-    }
+        var scPosition = stateVector.ToStateVector().Position;
+        double nearest = 0.0;
+        foreach (var occultingBody in _occultingBodies)
+        {
+            double distance = (GeometricPosition(occultingBody, stateVector) - scPosition).Magnitude();
+            nearest = nearest == 0.0 ? distance : System.Math.Min(nearest, distance);
+        }
 
-    private double StepScale(StateVector stateVector, in ShadowGeometry shadow)
-    {
-        return shadow.OccultingDistance > 0.0 ? shadow.OccultingDistance : base.PositionStepScale(stateVector);
+        return nearest > 0.0 ? nearest : base.PositionStepScale(stateVector);
     }
 
     /// <summary>
     /// The position of the spacecraft relative to the Sun and the lit fraction 1 − ν of the solar disc, ν the largest
-    /// shadow fraction of the occulting bodies; false in total eclipse. Shared by the acceleration and its partials,
-    /// which also read the geometry of the shadow boundaries in <paramref name="shadow"/>.
+    /// shadow fraction of the occulting bodies; false in total eclipse.
     /// </summary>
-    /// <remarks>
-    /// The distance to the nearest boundary is a first-order lower bound: a displacement δ of the spacecraft turns the
-    /// directions of the Sun and of an occulting body by at most δ / D_sun and δ / D_occ, and changes their angular radii
-    /// asin(R / D) by at most δ R / (D √(D² − R²)), so the angular margin m to a boundary (the outer contact
-    /// d = r_sun + r_occ in sunlight, the inner contact d = r_occ − r_sun in total eclipse, d the angular separation)
-    /// is not crossed before δ = m / (1 / D_sun + R_sun / (D_sun √(D_sun² − R_sun²)) + 1 / D_occ +
-    /// R_occ / (D_occ √(D_occ² − R_occ²))). It is not computed in the penumbra, where the partials always take the
-    /// central differences, and is NaN inside an occulting body.
-    /// </remarks>
-    private bool TryGetIllumination(StateVector stateVector, out Vector3 posRelToSun, out double litFraction,
-        out ShadowGeometry shadow)
+    private bool TryGetIllumination(StateVector stateVector, out Vector3 posRelToSun, out double litFraction)
     {
         // Geometric Sun position relative to the state vector observer
         var sunFromObserver = GeometricPosition(_sun, stateVector);
@@ -189,55 +287,48 @@ public class SolarRadiationPressure : ForceBase
         // Shadow fraction computation
         double maxShadowFraction = 0.0;
         double sunAngSize = _sun.AngularSize(scToSunMag);
-        double sunRate = AngularRate(scToSunMag, _sun.EquatorialRadius);
-        double occultingDistance = 0.0;
-        double boundaryDistance = double.PositiveInfinity;
 
         foreach (var occultingBody in _occultingBodies)
         {
-            var occFromObserver = GeometricPosition(occultingBody, stateVector);
-
-            var scToOcc = occFromObserver - scPosition;
-            double occDistance = scToOcc.Magnitude();
-            double occAngSize = occultingBody.AngularSize(occDistance);
-            double angSep = scToSun.Normalize().Angle(scToOcc.Normalize());
-            occultingDistance = occultingDistance == 0.0 ? occDistance : System.Math.Min(occultingDistance, occDistance);
-            double rate = sunRate + AngularRate(occDistance, occultingBody.EquatorialRadius);
-
-            double fraction = CelestialItem.ShadowFraction(angSep, sunAngSize, occAngSize);
+            var occultation = Occult(occultingBody, stateVector, scPosition, scToSun, 0.5 * sunAngSize);
+            double fraction = CelestialItem.ShadowFraction(occultation.Separation, sunAngSize,
+                2.0 * occultation.Radius);
             if (fraction >= 1.0)
             {
-                // Margin to the inner contact of this occulting body, which alone sets the total eclipse
                 posRelToSun = Vector3.Zero;
                 litFraction = 0.0;
-                shadow = new ShadowGeometry(occultingDistance,
-                    (0.5 * (occAngSize - sunAngSize) - angSep) / rate);
                 return false;
             }
 
             if (fraction > maxShadowFraction)
                 maxShadowFraction = fraction;
-
-            // Margin to the outer contact
-            boundaryDistance = System.Math.Min(boundaryDistance, (angSep - 0.5 * (sunAngSize + occAngSize)) / rate);
         }
 
         posRelToSun = scPosition - sunFromObserver;
         litFraction = 1.0 - maxShadowFraction;
-        shadow = new ShadowGeometry(occultingDistance, boundaryDistance);
         return true;
     }
 
-    // Bound on the rate of change, per metre of displacement, of the direction of a body at distance D (1 / D) and of
-    // its angular radius asin(R / D) (R / (D √(D² − R²))).
-    private static double AngularRate(double distance, double radius)
+    /// <summary>
+    /// The geometry of one occulting body seen from the spacecraft, shared by the acceleration and its partials: its
+    /// direction and distance, its angular radius and its angular separation from the Sun (GMAT Mathematical
+    /// Specification, R2026a, eqs. 3.146 and 3.147).
+    /// </summary>
+    private Occultation Occult(CelestialBody occultingBody, StateVector stateVector, in Vector3 scPosition,
+        in Vector3 scToSun, double sunRadius)
     {
-        return 1.0 / distance + radius / (distance * System.Math.Sqrt(distance * distance - radius * radius));
+        var scToOcc = GeometricPosition(occultingBody, stateVector) - scPosition;
+        double occDistance = scToOcc.Magnitude();
+        double occAngSize = occultingBody.AngularSize(occDistance);
+        double angSep = scToSun.Normalize().Angle(scToOcc.Normalize());
+        return new Occultation(scToOcc / occDistance, occDistance, occultingBody.EquatorialRadius, 0.5 * occAngSize,
+            angSep);
     }
 
     /// <summary>
-    /// The distance to the nearest occulting body (0 without occulting body) and a lower bound on the displacement
-    /// that reaches a shadow boundary (infinite without occulting body), in m.
+    /// An occulting body seen from the spacecraft: its direction (unit vector), its distance and radius in m, its angular
+    /// radius and its angular separation from the Sun in rad.
     /// </summary>
-    private readonly record struct ShadowGeometry(double OccultingDistance, double BoundaryDistance);
+    private readonly record struct Occultation(Vector3 Direction, double Distance, double BodyRadius, double Radius,
+        double Separation);
 }
