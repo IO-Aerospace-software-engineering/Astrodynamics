@@ -113,6 +113,18 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
 
 **Fixed**
 
+- **The Mars standard atmosphere above 50 km.** `MarsStandardAtmosphere` took the temperature of the NASA Glenn curve
+  fit, −23.4 − 0.00222 h °C, at every altitude: it reached 0 K at 112.5 km, so the density was infinite there and
+  negative above, and it rose with the altitude from 101.4 km. Drag pushed every Mars orbit above 112.5 km of geodetic
+  altitude along its velocity: one day in Velocity-Verlet raised a 150 km orbit by 312 km and a 200 km orbit by 17 km,
+  through every propagation path and `astro propagate -a`. Above 49.887 km, where the curve fit reaches 139 K, the model
+  is now the isothermal layer of Seiff (1982): the temperature held at 139 K and the hydrostatic pressure with the
+  inverse-square gravity, reached over a transition of 5 km that keeps the density and its first two derivatives
+  continuous, so RK7(8) with `IncludeInStepControl` crosses it. The density is positive and decreasing at every altitude,
+  within a factor 2.23 to 2.81 of Seiff's nominal model from 50 to 100 km where the curve fit departed by up to 101, and
+  drag opposes the relative velocity everywhere; `GetTemperature` and `GetPressure` follow. Unchanged bit for bit below
+  49.887 km. Above about 100 km the layer extrapolates a 139 K mesosphere: the thermosphere is not modelled, so drag in
+  orbit above about 120 km is underestimated (#431). No public API change.
 - **The step control of the variational equations in dense air.** With `IncludeInStepControl`, RK7(8) took ever
   smaller steps as the density grew and never failed: the US Standard Atmosphere 1976 at 200 km took 107 290 steps over
   2 min at 1e-11, and at 1e-12 and 1e-13 the propagation did not finish (memory grew to an `OutOfMemoryException` over

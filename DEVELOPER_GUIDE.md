@@ -1847,7 +1847,10 @@ Space weather data for NRLMSISE-00.
 
 #### MarsStandardAtmosphere
 
-Simple Mars atmospheric model using altitude only.
+Simple Mars atmospheric model using altitude only: the NASA Glenn curve fit below 49.9 km, the isothermal layer of
+Seiff (1982) at 139 K above it (reached over a smooth transition of 5 km). The density is positive and decreasing at
+every altitude, within a factor 2.8 of Seiff's nominal model up to 100 km; the thermosphere is not modelled, so drag in
+orbit above about 120 km is underestimated (#431).
 
 ```csharp
 var model = new MarsStandardAtmosphere();
@@ -1890,7 +1893,7 @@ if (atm2.Details is NrlmsiseDetails details)
 | High-altitude modeling (> 100 km) | `Nrlmsise00Model` |
 | Time-varying density (drag analysis) | `Nrlmsise00Model` |
 | Space weather effects | `Nrlmsise00Model` |
-| Mars atmospheric entry | `MarsStandardAtmosphere` |
+| Mars atmospheric entry (below about 100 km) | `MarsStandardAtmosphere` |
 | Via `CelestialBody` with full context | Automatic NRLMSISE-00 |
 
 ---

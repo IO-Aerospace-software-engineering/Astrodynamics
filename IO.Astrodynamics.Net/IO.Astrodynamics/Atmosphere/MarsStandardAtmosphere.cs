@@ -16,13 +16,16 @@ namespace IO.Astrodynamics.Atmosphere;
 /// isothermal at 139 K from 72 to 100 km: the temperature held at 139 K and the hydrostatic pressure of Seiff's
 /// equation at constant temperature with the inverse-square gravity, p = p_b exp(−(GM / (R T_b)) (h − h_b) /
 /// ((R_M + h_b)(R_M + h))), R = 192.1 J/(kg K) the gas constant of the curve fit, GM and R_M the gravitational
-/// parameter and the volumetric mean radius of Mars of the NSSDC Mars fact sheet (to be verified by S. Guillet).
+/// parameter and the volumetric mean radius of Mars of the NSSDC Mars fact sheet (to be verified by S. Guillet). The
+/// curve fit is not hydrostatic, so the layer is reached over <see cref="TransitionWidth"/> (5 km), where ln p and T go
+/// from one to the other by a quintic smootherstep: the density and its first two derivatives are continuous.
 /// Without it the absolute temperature reached 0 K at 112.5 km, the density was infinite there and negative above,
 /// and drag pushed a spacecraft along its velocity (#422).
 /// </para>
 /// <para>
-/// Domain: the density is positive, decreasing and continuous at every altitude. Against Seiff's nominal northern
-/// summer mid-latitude model it is within 0.96 to 1.11 up to 20 km and within a factor 2.7 from 20 to 100 km. Above
+/// Domain: the density is positive and continuous at every altitude, and decreasing except at 7 km, where the two
+/// branches of the curve fit do not meet (+0.41 %). Against Seiff's nominal northern
+/// summer mid-latitude model it is within 0.96 to 1.11 up to 20 km and within a factor 2.81 from 20 to 100 km. Above
 /// about 100 km the layer extrapolates a 139 K mesosphere: the thermosphere, warmer and denser, is not modelled, so
 /// drag in orbit above about 120 km is underestimated by orders of magnitude.
 /// </para>
