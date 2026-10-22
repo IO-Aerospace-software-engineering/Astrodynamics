@@ -191,11 +191,12 @@ public class DenseAirStepControlTests
                                                                state.Position.Z * state.Position.Z) < body.EquatorialRadius;
         });
 
-        // Assert: within twice the worst steps measured (120, 121 and 119 on Linux, Windows and macOS arm64, 2026-10-21)
+        // Assert: within twice the worst steps measured (98, 99 and 99 on Linux, Windows and macOS arm64, CI of aed79f2,
+        // 2026-10-22, with the derivative of the shadow function of #423; 120, 121 and 119 before it, 2026-10-21)
         int steps = Steps(solution);
         _output.WriteLine($"Ψ_Cd and Ψ_Cr through the shadow: {steps} steps, {shadowed} minutes in the shadow cylinder");
         Assert.True(shadowed > 0, "the orbit never enters the shadow");
-        Assert.True(steps <= 242, $"{steps} steps");
+        Assert.True(steps <= 198, $"{steps} steps");
         Assert.Equal((6, 2), (solution.GetParameterSensitivity(window.EndDate).Rows,
             solution.GetParameterSensitivity(window.EndDate).Columns));
     }
