@@ -22,19 +22,21 @@ public class StandardAtmosphereAllocationTests
 {
     private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
 
-    // Every branch and boundary of the Earth model: below 11 km, 11 to 25 km, above 25 km, and the temperature clamp
-    // of 2200 °C from (2200 + 131.21) / 0.00299 m, about 779.67 km; a negative altitude
+    // Every branch and boundary of the Earth model: below 11 km, 11 to 25 km, above 25 km, the ends of the transitions
+    // of 500 m centred on 11 and 25 km (#433), and the temperature clamp of 2200 °C from (2200 + 131.21) / 0.00299 m,
+    // about 779.67 km; a negative altitude
     private static readonly double[] EarthAltitudes =
     {
-        -1000.0, 0.0, 5000.0, 10999.999, 11000.0, 18000.0, 24999.999, 25000.0, 86e3, 350e3, 779e3, 779668.0,
-        779669.0, 780e3, 2000e3
+        -1000.0, 0.0, 5000.0, 10749.999, 10750.0, 10999.999, 11000.0, 11249.999, 11250.0, 18000.0, 24749.999, 24750.0,
+        24999.999, 25000.0, 25249.999, 25250.0, 86e3, 350e3, 779e3, 779668.0, 779669.0, 780e3, 2000e3
     };
 
-    // Every branch and boundary of the Mars model: below and above 7 km, the base of the isothermal layer (#422), about
-    // 49.887 km, and 112.5 km, where the curve fit reached 0 K; a negative altitude
+    // Every branch and boundary of the Mars model: below and above 7 km, the ends of the transition of 500 m centred on
+    // 7 km (#433), the base of the isothermal layer (#422), about 49.887 km, and 112.5 km, where the curve fit reached
+    // 0 K; a negative altitude
     private static readonly double[] MarsAltitudes =
     {
-        -500.0, 0.0, 6999.999, 7000.0, 30e3, 49887.0, MarsStandardAtmosphere.IsothermalLayerBase, 49888.0, 112.5e3,
+        -500.0, 0.0, 6749.999, 6750.0, 6999.999, 7000.0, 7249.999, 7250.0, 30e3, 49887.0, MarsStandardAtmosphere.IsothermalLayerBase, 49888.0, 112.5e3,
         200e3, 1000e3
     };
 
@@ -87,11 +89,23 @@ public class StandardAtmosphereAllocationTests
         before = GC.GetAllocatedBytesForCurrentThread();
         _ = geodetic.GetDensity(30e3, 0.5, 1.0, Epoch);
         _ = geodetic.GetDensity(5e3, 0.5, 1.0, Epoch);
+        _ = geodetic.GetDensity(7e3, 0.5, 1.0, Epoch);
+        _ = geodetic.GetDensity(11e3, 0.5, 1.0, Epoch);
+        _ = geodetic.GetDensity(25e3, 0.5, 1.0, Epoch);
         long fromPosition = GC.GetAllocatedBytesForCurrentThread() - before;
+        var derivative = (IAltitudeDensityDerivative)model;
+        _ = derivative.GetDensityAltitudeDerivative(7e3);
+        before = GC.GetAllocatedBytesForCurrentThread();
+        _ = derivative.GetDensityAltitudeDerivative(5e3);
+        _ = derivative.GetDensityAltitudeDerivative(7e3);
+        _ = derivative.GetDensityAltitudeDerivative(11e3);
+        _ = derivative.GetDensityAltitudeDerivative(25e3);
+        long fromDerivative = GC.GetAllocatedBytesForCurrentThread() - before;
 
         // Assert
         Assert.Equal(0, fromContext);
         Assert.Equal(0, fromPosition);
+        Assert.Equal(0, fromDerivative);
     }
 
     [Theory]

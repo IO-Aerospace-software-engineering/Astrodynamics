@@ -125,6 +125,17 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   drag opposes the relative velocity everywhere; `GetTemperature` and `GetPressure` follow. Unchanged bit for bit below
   49.887 km. Above about 100 km the layer extrapolates a 139 K mesosphere: the thermosphere is not modelled, so drag in
   orbit above about 120 km is underestimated (#431). No public API change.
+- **The branches of the standard atmospheres meet.** `EarthStandardAtmosphere` and `MarsStandardAtmosphere` switched
+  from one branch of their NASA Glenn curve fits to the next at once: the density jumped by −0.023 % at 11 km and
+  −1.82 % at 25 km on the Earth, and rose by 0.41 % at 7 km on Mars. RK7(8) stopped there (100 consecutive rejections)
+  at every tolerance with `IncludeInStepControl`, and at 1e-12 and 1e-13 without it when the drag is strong. Over 500 m
+  centred on each boundary, the pressure and the temperature now go from one branch to the next by a quintic
+  smootherstep: the density and its first two derivatives are continuous, dρ/dh is in closed form, and RK7(8)
+  completes, with and without the option, through every propagation path. Outside these intervals both models are
+  unchanged bit for bit, so is every propagation that stays above 25.25 km on the Earth or 7.25 km on Mars. Inside
+  them, the Earth density stays within +0.12 to +0.24 % of the U.S. Standard Atmosphere 1976 around 11 km and −0.96 to
+  +1.20 % around 25 km, the departure of the curve fit there, and the Mars density within 0.20 % of the curve fit
+  (#433). No public API change.
 - **The step control of the variational equations through the SRP penumbra.** With `IncludeInStepControl`, RK7(8) took
   thousands of steps in the penumbra of the Earth: a Sun-synchronous LEO with SRP over one day (R3) took 23 967 steps
   at 1e-13, 21 596 of them in its 265 s of penumbra, and stopped at 1e-14 on the guard below. The SRP partials in the

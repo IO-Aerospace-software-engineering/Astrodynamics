@@ -29,12 +29,18 @@ public class MarsStandardAtmosphereDomainTests
     [Fact]
     public void Density_IsPositiveFiniteAndDecreasing_AtEveryAltitude()
     {
-        // Arrange: every 10 m from −1 km to 10 000 km, the base of the layer within 1 m, and 101.39 km and 112.5 km,
-        // where the curve fit stopped decreasing and became infinite
+        // Arrange: every 10 m from −1 km to 10 000 km, every 0.1 m from 6.7 to 7.3 km, where the branches of the curve fit
+        // jumped (#433), the base of the layer within 1 m, and 101.39 km and 112.5 km, where the curve fit stopped
+        // decreasing and became infinite
         var altitudes = new System.Collections.Generic.List<double>();
         for (int k = -100; k <= 1_000_000; k++)
         {
             altitudes.Add(10.0 * k);
+        }
+
+        for (int k = 67_000; k <= 73_000; k++)
+        {
+            altitudes.Add(0.1 * k);
         }
 
         altitudes.AddRange(new[] { Base - 1.0, Base - 1e-3, Base, Base + 1e-3, Base + 1.0, 101390.0, 112500.0 });
@@ -50,28 +56,57 @@ public class MarsStandardAtmosphereDomainTests
             Assert.True(atmosphere.Temperature + IO.Astrodynamics.Constants.Kelvin > 0.0,
                 $"{altitude} m: temperature {atmosphere.Temperature} °C");
             Assert.True(atmosphere.Pressure > 0.0, $"{altitude} m: pressure {atmosphere.Pressure}");
-            // The branches of the curve fit do not meet at 7 km (−37.99 °C below, −38.94 °C above): the density rises by
-            // 0.41 % there, on main too, outside the scope of #422
-            Assert.True(atmosphere.Density < previous || altitude == 7000.0,
-                $"{altitude} m: {atmosphere.Density} after {previous}");
+            Assert.True(atmosphere.Density < previous, $"{altitude} m: {atmosphere.Density} after {previous}");
             previous = atmosphere.Density;
         }
 
         _output.WriteLine($"10 000 km: {Density(1e7):E3} kg/m³");
     }
 
+    // The branches of the curve fit, as published by the NASA Glenn Research Center, with the code's 273.15
+    private static double LowerBranch(double h) => 0.699 * System.Math.Exp(-0.00009 * h) /
+                                                    (0.1921 * (-31.0 - 0.000998 * h + IO.Astrodynamics.Constants.Kelvin));
+
+    private static double UpperBranch(double h) => 0.699 * System.Math.Exp(-0.00009 * h) /
+                                                    (0.1921 * (-23.4 - 0.00222 * h + IO.Astrodynamics.Constants.Kelvin));
+
     [Fact]
-    public void CurveFit_JumpsAt7Km()
+    public void CurveFit_IsContinuousAcross7Km()
     {
-        // Arrange: the jump of the curve fit at the boundary of its branches, 4.07e-3 measured (2026-10-22), kept as it is
-        double below = Density(System.Math.BitDecrement(7000.0));
+        // Arrange: the branches of the curve fit do not meet at 7 km (−37.99 °C below, −38.94 °C above), so the density
+        // rose there by 4.07e-3 (#433); over 500 m centred on 7 km the temperature goes from one to the other
+        const double start = 7000.0 - MarsStandardAtmosphere.CurveFitTransitionHalfWidth;
+        const double end = 7000.0 + MarsStandardAtmosphere.CurveFitTransitionHalfWidth;
 
-        // Act
-        double above = Density(7000.0);
+        // Act and assert: the published branches outside the transition, joined at both of its ends to the rounding
+        Assert.Equal(4.07e-3, UpperBranch(7000.0) / LowerBranch(7000.0) - 1.0, 5);
+        foreach (double h in new[] { 0.0, 3000.0, System.Math.BitDecrement(start) })
+        {
+            Assert.True(System.Math.Abs(Density(h) / LowerBranch(h) - 1.0) < 1e-15, $"{h} m");
+        }
 
-        // Assert
-        _output.WriteLine($"7 km: {above / below - 1.0:E3}");
-        Assert.InRange(above / below - 1.0, 4.0e-3, 4.1e-3);
+        foreach (double h in new[] { end, 20000.0, 40000.0 })
+        {
+            Assert.True(System.Math.Abs(Density(h) / UpperBranch(h) - 1.0) < 1e-15, $"{h} m");
+        }
+
+        Assert.True(System.Math.Abs(Density(start) / LowerBranch(start) - 1.0) < 1e-15);
+        Assert.True(System.Math.Abs(Density(System.Math.BitDecrement(end)) / UpperBranch(end) - 1.0) < 1e-12);
+
+        // Inside, the density lies between the two branches, within 0.20 % of the published model, which takes the lower
+        // branch below 7 km and the upper one above (measured 2.03e-3 and 2.02e-3, 2026-10-22)
+        double worst = 0.0;
+        for (int k = 1; k < 5000; k++)
+        {
+            double h = start + 0.1 * k;
+            double density = Density(h);
+            Assert.InRange(density, LowerBranch(h), UpperBranch(h));
+            double published = h < 7000.0 ? LowerBranch(h) : UpperBranch(h);
+            worst = System.Math.Max(worst, System.Math.Abs(density / published - 1.0));
+        }
+
+        _output.WriteLine($"7 km: the transition within {worst:E3} of the curve fit");
+        Assert.True(worst < 2.1e-3, $"{worst:E3}");
     }
 
     [Fact]

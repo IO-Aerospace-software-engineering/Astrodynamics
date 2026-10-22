@@ -120,8 +120,8 @@ new ThermalRadiationPressure(spacecraft, emittingBody)
 | Model | Description |
 |-------|-------------|
 | `IAtmosphericModel` | Common interface for density queries |
-| `EarthStandardAtmosphere` | Low-altitude analytical Earth model |
-| `MarsStandardAtmosphere` | Simple Mars atmospheric model of the altitude: the NASA Glenn curve fit below 49.9 km, the isothermal layer of Seiff (1982) at 139 K above; positive and decreasing at every altitude, but no thermosphere, so drag in orbit above about 120 km is underestimated (#431) |
+| `EarthStandardAtmosphere` | Low-altitude analytical Earth model of the altitude, the NASA Glenn curve fit, its branches joined over 500 m at 11 and 25 km (#433) |
+| `MarsStandardAtmosphere` | Simple Mars atmospheric model of the altitude: the NASA Glenn curve fit below 49.9 km, its branches joined over 500 m at 7 km (#433), the isothermal layer of Seiff (1982) at 139 K above; positive and decreasing at every altitude, but no thermosphere, so drag in orbit above about 120 km is underestimated (#431) |
 | `Nrlmsise00Model` | Time-varying Earth model for drag analysis (thread-safe) |
 
 ## Example
