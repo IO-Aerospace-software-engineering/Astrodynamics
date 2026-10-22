@@ -117,7 +117,7 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   thousands of steps in the penumbra of the Earth: a Sun-synchronous LEO with SRP over one day (R3) took 23 967 steps
   at 1e-13, 21 596 of them in its 265 s of penumbra, and stopped at 1e-14 on the guard below. The SRP partials in the
   penumbra were the central differences of the acceleration, which divided the rounding of the shadow fraction (a few
-  1e-10 at half shadow, a few 1e-8 at the contacts) by their step, a noise of 5.3e-7 to 1.2e-3 of the block that the
+  1e-10 at half shadow, a few 1e-8 at the contacts) by their step, a noise of 5.0e-7 to 1.6e-3 of the block that the
   step of Φ followed. They now take the analytic derivative of the shadow function of the GMAT Mathematical
   Specification, R2026a, §4.2.5, in a form without cancellation, and the shadow regime from the angles of the discs:
   R3 takes 1 692, 2 247, 3 017 and 4 757 steps at 1e-11 to 1e-14 with the option (748 to 1 821 without it), R4 (GEO

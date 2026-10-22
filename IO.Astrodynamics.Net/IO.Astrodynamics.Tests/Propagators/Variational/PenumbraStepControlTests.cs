@@ -16,8 +16,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// derivative of the shadow function, the step no longer follows the rounding of the central differences there.
 /// </summary>
 /// <remarks>
-/// Before #423 the SRP partials in the penumbra were the central differences of the acceleration, whose noise, 5.3e-7 to
-/// 1.2e-3 of their block (<c>SrpPenumbraNoiseTests</c>), held the step of the velocity rows of Φ: R3 took 1 947, 4 379
+/// Before #423 the SRP partials in the penumbra were the central differences of the acceleration, whose noise, 5.0e-7 to
+/// 1.6e-3 of their block (<c>SrpPenumbraNoiseTests</c>), held the step of the velocity rows of Φ: R3 took 1 947, 4 379
 /// and 23 967 steps a day at 1e-11, 1e-12 and 1e-13, 21 596 of them in its 265 s of penumbra at 1e-13, and stopped on
 /// the guard of #420 at 13.3 h at 1e-14; R4 took 2 402 steps at 1e-14. Linux, Release, 2026-10-22.
 /// </remarks>

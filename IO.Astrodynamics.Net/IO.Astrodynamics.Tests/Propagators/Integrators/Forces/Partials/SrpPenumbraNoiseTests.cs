@@ -17,7 +17,7 @@ using Vector3 = IO.Astrodynamics.Math.Vector3;
 namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 
 /// <summary>
-/// The rounding noise of the SRP partials in the penumbra, along the first shadow exit of R3 (Sun-synchronous 700 km,
+/// The rounding noise of the SRP partials in the penumbra, along the first shadow crossing of R3 (Sun-synchronous 700 km,
 /// SRP with Cr): that of the central differences of the acceleration, the cause of the thousands of steps that RK7(8)
 /// took there with the variational equations in the step control before #423, and that of the derivative of the shadow
 /// function that replaced them.
@@ -34,13 +34,15 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// rounding of ν by a step.
 /// </para>
 /// <para>
-/// The noise is the root mean square of the second difference of each element along 2000 points 0.1 mm apart along the
+/// The noise is the root mean square of the second difference of each element along 2000 points 10 µm apart along the
 /// velocity, divided by √6 (the variance of the second difference of a white noise) and by the Frobenius norm of the
-/// block, at points where ν is 1e-6 to 1 − 1e-6. The partials vary over the width of the penumbra, about 20 km, so over
-/// 0.1 mm their second difference is noise alone. Near a contact the exact partials grow as the square root of the
-/// distance to it, so the 0.2 m of the points must stay inside the penumbra: at ν = 1e-6 the contact is about 2 m away.
-/// With 2000 points 1 mm apart the window reached the inner contact on macOS arm64, where the point nearest to
-/// 1 − 1e-6 fell closer to it, and the second difference measured the square root (1.9e-2 against 1.3e-3 on Linux).
+/// block, at points where ν is 1e-4 to 1 − 1e-4 and 2 m inside each contact. The partials vary over the width of the
+/// penumbra, about 20 km, so over 10 µm their second difference is noise alone. Near a contact the exact partials grow
+/// as the square root of the distance d to it, whose second difference over a spacing δ is about δ² / (4 d²) of them:
+/// 6e-12 at 2 m for 10 µm, 6e-10 for 0.1 mm. The 2 cm of the points must stay inside the penumbra. The two points
+/// near the contacts are placed from the contacts found on the geometry of the discs: the points of the trajectory 1 ms
+/// apart (7.5 m) nearest to ν = 1e-6 and 1 − 1e-6, first taken, fell within 0.1 m of the inner contact on Windows and
+/// macOS arm64, and the second difference measured the square root (8.0e-3 and 1.9e-2 against 1.3e-3 on Linux).
 /// </para>
 /// </remarks>
 public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
@@ -57,7 +59,7 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
     [Fact]
     public void Penumbra_OfR3_TheDerivativeOfTheShadowFunctionIsFreeOfTheNoiseOfTheCentralDifferences()
     {
-        // Arrange: the first hour of R3, its first shadow exit at about 415 s
+        // Arrange: the first hour of R3, its first shadow crossing, an entry, at about 415 s
         var r3 = _cases.R3;
         var start = r3.InitialState;
         var spacecraft = new Spacecraft(-1423, "PENUMBRA", 100.0, 1000.0, new Clock("penumbra", 65536), start, 10.0,
@@ -78,6 +80,16 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
 
         double Shadow(StateVector state) => 1.0 - srp.Apply(state).Magnitude() / unshadowed.Apply(state).Magnitude();
 
+        // The contacts in time, by bisection on the angles of the discs, as in the partials
+        var earth = (CelestialBody)start.Observer;
+        var sun = r3.Bodies.OfType<CelestialBody>().First(body => body.NaifId == 10);
+        bool InsideTheOuterContact(double t) => Discs(sun, earth, At(t)) is var (a, b, c) && c < a + b;
+        bool InsideTheInnerContact(double t) => Discs(sun, earth, At(t)) is var (a, b, c) && c <= b - a;
+        // A shadow entry: the outer contact at about 415.7 s, the inner one at about 424.5 s
+        double outer = Bisect(t => !InsideTheOuterContact(t), 400.0, 440.0);
+        double inner = Bisect(t => !InsideTheInnerContact(t), 400.0, 440.0);
+        double twoMetres = 2.0 / start.Velocity.Magnitude();
+
         var crossing = new List<(double T, double Nu)>();
         for (double t = 400.0; t < 440.0; t += 1e-3)
         {
@@ -97,9 +109,12 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
         double worstCentral = 0.0;
         double worstAnalytic = 0.0;
         double worstShadow = 0.0;
-        foreach (double target in new[] { 1e-6, 1e-4, 1e-2, 0.5, 1.0 - 1e-2, 1.0 - 1e-4, 1.0 - 1e-6 })
+        var times = new[] { 1e-4, 1e-2, 0.5, 1.0 - 1e-2, 1.0 - 1e-4 }
+            .Select(target => crossing.OrderBy(sample => System.Math.Abs(sample.Nu - target)).First().T)
+            .Prepend(outer + twoMetres).Append(inner - twoMetres);
+        foreach (double time in times)
         {
-            var state = At(crossing.OrderBy(sample => System.Math.Abs(sample.Nu - target)).First().T);
+            var state = At(time);
             var (centralNoise, shadowNoise, nu, inside) = Noise(CentralDifferences, state, Shadow);
             var (analyticNoise, _, _, _) = Noise(Analytic, state, Shadow);
             Assert.True(inside, $"the points around ν = {nu:E3} leave the penumbra");
@@ -110,18 +125,49 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
                               $"{centralNoise:E2}, analytic {analyticNoise:E2} of their block; of ν {shadowNoise:E2}");
         }
 
-        // Assert, Linux .NET 10 (2026-10-22): the central differences, the cause, 5.3e-7 of their block at ν = 0.5 to
-        // 1.2e-3 within a few metres of the contacts, ν 4.3e-10 to 2.2e-8 (with 1 mm between the points, Windows and
-        // macOS arm64 gave the same to 3 % at the six points that stayed inside the penumbra); the derivative of the
-        // shadow function, 2.9e-15 of its block at ν = 0.5 to 1.2e-10 within a few metres of the contacts, where the
-        // exact partials grow as the square root of the distance to them. Bounds at twice the worst over Linux, Windows
-        // and macOS arm64 (lesson 13 of #364)
-        Assert.True(worstCentral < 2.6e-3, $"noise of the central differences {worstCentral:E2}");
-        Assert.True(worstAnalytic < 2.4e-10, $"noise of the derivative of the shadow function {worstAnalytic:E2}");
-        Assert.True(worstShadow < 4.9e-8, $"noise of ν {worstShadow:E2}");
+        // Assert, Linux .NET 10 (2026-10-22): the central differences, the cause, 5.0e-7 of their block at ν = 0.5 to
+        // 1.6e-3 at 2 m from the contacts, ν 4.0e-10 to 3.8e-8; the derivative of the shadow function 1.4e-15 at ν = 0.5,
+        // 2.9e-13 at ν = 0.01 and 0.99, 6.4e-12 at 1e-4 and 1 − 1e-4, and 3.4e-10 at 2 m from the contacts, where the
+        // rounding of the angular separation (about 1e-16 rad) enters the square root of the half chord, a + b − c being
+        // some 3e-7 rad there. Bounds at twice the worst over Linux, Windows and macOS arm64 (lesson 13 of #364)
+        Assert.True(worstCentral < 3.2e-3, $"noise of the central differences {worstCentral:E2}");
+        Assert.True(worstAnalytic < 6.8e-10, $"noise of the derivative of the shadow function {worstAnalytic:E2}");
+        Assert.True(worstShadow < 7.6e-8, $"noise of ν {worstShadow:E2}");
     }
 
     private delegate void Partials(StateVector state, double[] dadr);
+
+    // The angular radii of the Sun and of the Earth and their angular separation seen from the state, in rad
+    private static (double SunRadius, double BodyRadius, double Separation) Discs(CelestialBody sun, CelestialBody earth,
+        StateVector state)
+    {
+        var toSun = sun.GetEphemeris(state.Epoch, state.Observer, state.Frame, Aberration.None).ToStateVector().Position -
+                    state.Position;
+        var toEarth = earth.Equals(state.Observer) ? state.Position * -1.0 : earth.GetEphemeris(state.Epoch,
+            state.Observer, state.Frame, Aberration.None).ToStateVector().Position - state.Position;
+        return (System.Math.Asin(sun.EquatorialRadius / toSun.Magnitude()),
+            System.Math.Asin(earth.EquatorialRadius / toEarth.Magnitude()),
+            System.Math.Atan2(toSun.Cross(toEarth).Magnitude(), toSun * toEarth));
+    }
+
+    // The time in [low, high] where the predicate turns from true to false
+    private static double Bisect(Func<double, bool> before, double low, double high)
+    {
+        for (int k = 0; k < 100 && high - low > 1e-9; k++)
+        {
+            double middle = 0.5 * (low + high);
+            if (before(middle))
+            {
+                low = middle;
+            }
+            else
+            {
+                high = middle;
+            }
+        }
+
+        return 0.5 * (low + high);
+    }
 
     private static (double Partials, double Shadow, double Nu, bool Inside) Noise(Partials partials, StateVector state,
         Func<StateVector, double> shadow)
@@ -133,7 +179,7 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
         var nus = new double[count];
         for (int k = 0; k < count; k++)
         {
-            work.UpdatePosition(state.Position + direction * (1e-4 * (k - count / 2)));
+            work.UpdatePosition(state.Position + direction * (1e-5 * (k - count / 2)));
             blocks[k] = new double[9];
             partials(work, blocks[k]);
             nus[k] = shadow(work);

@@ -84,7 +84,7 @@ public class SolarRadiationPressure : ForceBase
     /// </para>
     /// <para>
     /// Before #423 the penumbra, and a band of two steps around each contact, took the default central differences
-    /// (#379), which divided the rounding of ν by their stencil: 5.3e-7 to 1.2e-3 of the block, which the step control
+    /// (#379), which divided the rounding of ν by their stencil: 5.0e-7 to 1.6e-3 of the block, which the step control
     /// on Φ and Ψ (<c>IncludeInStepControl</c>) followed with thousands of steps per day on an eclipsing orbit.
     /// </para>
     /// </remarks>
