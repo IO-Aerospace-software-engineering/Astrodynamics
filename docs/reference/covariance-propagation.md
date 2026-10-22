@@ -80,11 +80,38 @@ the start of the window. This example runs as a smoke test against the packed Nu
   1.9e-3 depending on where the steps fell (the same physics in J2000 and in ECLIPJ2000), against 2.6e-5 at most at
   1e-14. Relative to the local Ψ_Cr, it reaches 1.5e-2 at 1e-12 just after the first shadow exit, where Ψ_Cr is still
   below a millimetre, but also 1.2e-2 at a later crossing (4.45 h), where Ψ_Cr is 0.28 m; at 1e-14, 1.6e-4 at that later
-  crossing. With the option, at 1e-12, Ψ_Cr is within 9.6e-8 of the same propagation at 1e-13, relative to the local
+  crossing. With the option, at 1e-12, Ψ_Cr is within 7.1e-8 (J2000) and 3.4e-8 (ECLIPJ2000) of the same propagation at 1e-13, relative to the local
   Ψ_Cr, over the whole arc. When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
   tighter tolerance reduces the error about a hundredfold, not below 1e-4 at every crossing. In the same
-  case, Φ and Ψ_Cd stay below 3.1e-8 and 3.4e-7 (at 5.123 h).
+  case, Φ and Ψ_Cd stay below 2.2e-8 and 7.6e-7 (at 5.123 h; measured 2026-10-21).
 - `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
+- With `IncludeInStepControl`, the step follows the error of Φ and Ψ, so it needs partial derivatives that are smooth
+  along the trajectory. The density gradient of the drag partials is taken in geodetic coordinates, without rounding
+  noise of its own (dρ/dh in closed form for the US 1976 and Mars atmospheres, the derivatives of NRLMSISE-00 in its
+  inputs): in dense air the steps stay ordinary. Over 2 min of flight on a circular orbit with drag alone (A/m =
+  0.1 m²/kg): US 1976 at 200 km, 8, 10 and 33 steps at 1e-11, 1e-12 and 1e-13; NRLMSISE-00 at 200 km (on its 200 km
+  cutoff), 6, 26 and 321; at 400 km, 11 at 1e-13; 2 steps without the option. Before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420) the same cases took 107 290
+  steps or did not finish. On a whole propagation (R2: LEO 400 km, EGM2008 10×10, Sun, Moon, NRLMSISE-00 drag, one
+  day, with Ψ_Cd; Linux, Release, best of 3, measured 2026-10-21): without the option, the same steps and 15 % (1e-12)
+  to 22 % (1e-13) more time than before, for the two more model evaluations of each drag partials call; with the
+  option, 1 084 steps in 2.15 s at 1e-12 against 1 247 in 1.95 s before, and 1 681 steps in 3.27 s at 1e-13 against
+  38 678 in 60.6 s.
+- With SRP and the option, the step control fails at 1e-14 on an eclipsing orbit: R3 (Sun-synchronous 700 km, eclipses
+  on every revolution, Cr) stops on the guard below at 13.3 h, where it stopped on 100 rejections at 15.0 h before
+  [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420); at 1e-13 it completes in 23 967 steps a day. The penumbra is
+  [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423).
+- When the step collapses all the same (a force whose partials are not smooth at the tolerance), RK7(8) stops with an
+  `InvalidOperationException` after 10 000 consecutive accepted steps within 100 s of flight, a mean step below 10 ms,
+  instead of running until the memory is exhausted. The steps are counted in disjoint blocks of 10 000 from the start
+  of the segment, so a collapse is caught after 10 000 to 20 000 steps. Its message names the option, the epoch, the
+  mean and last step and the errors of Y and of the state, and the remedies for the error that held the step: relax
+  the tolerance or set `IncludeInStepControl` to false when it is that of Y, relax the tolerance when it is that of
+  the state (a force that is not smooth itself). The threshold is 60 times below the smallest mean step measured on a legitimate propagation (an eclipsing LEO
+  with SRP at 1e-13, at its shadow crossings, 0.595 s; see [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)), and 50 times above the mildest collapse measured
+  before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420). Without the option the guard does not apply.
+- In SSB mode (initial orbital parameters relative to a barycenter or a star), the columns of Y are scaled by |r0|
+  relative to the barycenter, about 1.5e11 m for a spacecraft near the Earth: with the option the step control then
+  fails, with or without drag ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)).
 - The RTN axes of the process noise are those of the state relative to the central body of the propagation. When the
   central body is the Sun (initial orbital parameters relative to a star or a barycenter), they are heliocentric, even
   for a spacecraft near a planet.

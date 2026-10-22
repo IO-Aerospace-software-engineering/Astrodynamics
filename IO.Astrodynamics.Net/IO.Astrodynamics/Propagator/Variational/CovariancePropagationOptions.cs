@@ -86,8 +86,17 @@ public sealed record CovariancePropagationOptions
     /// over the arc, relative to its largest value on the arc, was 6.0e-5 to 1.9e-3 depending on where the steps fell,
     /// against 2.6e-5 at most at 1e-14; relative to the local Ψ_Cr, up to 1.5e-2 at 1e-12 (just after the first shadow
     /// exit, where Ψ_Cr is below a millimetre, and 1.2e-2 at a later crossing, where it is 0.28 m) and 1.6e-4 at 1e-14.
-    /// With this option, 9.6e-8 at 1e-12. When Ψ_Cr matters (Cr as a consider parameter, with eclipses), turn it on: a
+    /// With this option, 7.1e-8 at 1e-12. When Ψ_Cr matters (Cr as a consider parameter, with eclipses), turn it on: a
     /// tighter tolerance alone does not hold Ψ_Cr to 1e-4 at every shadow crossing.
+    /// <para>
+    /// On, the step follows the error of Φ and Ψ, so it needs partials that are smooth along the trajectory. The density
+    /// gradient of the drag partials is taken in geodetic coordinates, without rounding noise of its own, so the steps
+    /// stay ordinary in dense air (US 1976 at 200 km over 2 min: 8 to 33 steps from 1e-11 to 1e-13, against 107 290 at
+    /// 1e-11 and no end at 1e-13 before #420). When the step collapses all the same, the propagation stops with an
+    /// <see cref="InvalidOperationException"/> after 10 000 consecutive accepted steps within 100 s of flight, whose
+    /// message names this option. In SSB mode the columns of Φ are scaled by the distance to the barycenter, and the step
+    /// control fails (#389).
+    /// </para>
     /// </remarks>
     public bool IncludeInStepControl { get; init; }
 

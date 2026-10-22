@@ -21,6 +21,24 @@ namespace IO.Astrodynamics.Propagator.Integrators;
 public sealed class RK78Integrator : Integrator
 {
     private const int MaxRejections = 100;
+
+    /// <summary>
+    /// With the variational equations in the step control, the number of consecutive accepted steps that must cover at
+    /// least <see cref="CollapseFlightTime"/> of flight, or the step is taken as collapsed (#420).
+    /// </summary>
+    /// <remarks>
+    /// Set by measurement (#420): over the test suite with the option, the smallest mean step over 10 000 consecutive
+    /// steps is 0.595 s (an eclipsing LEO with SRP at 1e-13 over a day, at its shadow crossings), and no other
+    /// propagation reaches 10 000 steps in a segment; the collapses of the step in dense air before #420 had a mean step
+    /// of 2e-4 s to 2e-6 s. The threshold, a mean step of 10 ms, is 60 times below the first and 50 times above the
+    /// mildest of the second. The steps are counted in disjoint blocks from the start of the segment, so a collapse that
+    /// begins within a block is caught at the end of the next one, after 10 000 to 20 000 steps. The message names the
+    /// error, of Y or of the state, that held the last step.
+    /// </remarks>
+    internal const int CollapseStepCount = 10000;
+
+    /// <summary>The flight time, in s, that <see cref="CollapseStepCount"/> consecutive accepted steps must cover.</summary>
+    internal const double CollapseFlightTime = 100.0;
     private const double LandingTolerance = 1e-12;
 
     /// <summary>Absolute error tolerance (meters for position, m/s for velocity).</summary>
@@ -242,6 +260,11 @@ public sealed class RK78Integrator : Integrator
         double h = System.Math.Min(_currentH, duration);
         int rejections = 0;
 
+        // The guard against a collapse of the step held by the variational equations (#420): the accepted steps since
+        // the last check and the time they started at
+        int collapseSteps = 0;
+        double collapseStart = 0.0;
+
         // Initialize event detector g-values
         double[] prevG = null;
         double[] currG = null;
@@ -275,11 +298,14 @@ public sealed class RK78Integrator : Integrator
             // Compute one RK78 step
             var (posNew, velNew, err) = ComputeRK78Step(pos, vel, baseEpoch, t, h);
 
+            double stateError = err;
+            double variationalError = 0.0;
             if (variational != null && _variationalInStepControl)
             {
                 AdvanceVariational(h);
-                err = System.Math.Max(err, _variational.ScaledError(_variationalY0, _variationalY1, _variationalScales,
-                    AbsoluteTolerance, RelativeTolerance));
+                variationalError = _variational.ScaledError(_variationalY0, _variationalY1, _variationalScales,
+                    AbsoluteTolerance, RelativeTolerance);
+                err = System.Math.Max(err, variationalError);
             }
 
             if (AdaptiveMode)
@@ -292,7 +318,10 @@ public sealed class RK78Integrator : Integrator
                     if (rejections > MaxRejections)
                         throw new InvalidOperationException(
                             $"RK78 adaptive step failed: {MaxRejections} consecutive rejections at t={t:F6}s. " +
-                            $"Error={err:E3}, h={h:E6}s. Consider relaxing tolerances or checking force model.");
+                            $"Error={err:E3}, h={h:E6}s. Consider relaxing tolerances or checking force model." +
+                            (variationalError > stateError
+                                ? " The error of the variational equations (IncludeInStepControl) drove the rejections."
+                                : string.Empty));
 
                     h = hNew;
                     continue;
@@ -316,6 +345,18 @@ public sealed class RK78Integrator : Integrator
                 t += h;
                 pos = posNew;
                 vel = velNew;
+
+                if (_variationalInStepControl && ++collapseSteps == CollapseStepCount)
+                {
+                    if (t - collapseStart < CollapseFlightTime)
+                    {
+                        throw new InvalidOperationException(CollapseMessage(t - collapseStart, t, h,
+                            variationalError, stateError));
+                    }
+
+                    collapseSteps = 0;
+                    collapseStart = t;
+                }
 
                 // Check event detectors
                 if (eventDetectors != null && eventDetectors.Count > 0)
@@ -371,6 +412,24 @@ public sealed class RK78Integrator : Integrator
         }
 
         return new IntegrationResult(segment, null);
+    }
+
+    // The message of the guard against a collapse of the step held by the variational equations (#420)
+    private static string CollapseMessage(double flightTime, double t, double h, double variationalError,
+        double stateError)
+    {
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+        return "RK7(8) with the variational equations in the step control (IncludeInStepControl): " +
+               CollapseStepCount.ToString(culture) + " consecutive steps over " + flightTime.ToString("F3", culture) +
+               " s of flight at t = " + t.ToString("F3", culture) + " s (mean step " +
+               (flightTime / CollapseStepCount).ToString("E2", culture) + " s, last " + h.ToString("E2", culture) +
+               " s, error of Y " + variationalError.ToString("E2", culture) + ", of the state " +
+               stateError.ToString("E2", culture) + "). " + (variationalError > stateError
+                   ? "The error of Φ and Ψ keeps the step small: a partial derivative of a force is not smooth enough " +
+                     "at this tolerance (finite differences, a shadow boundary or a discontinuity of the force model). " +
+                     "Relax the tolerance, or set IncludeInStepControl to false."
+                   : "The error of the state keeps the step small, not that of Φ and Ψ: a force is not smooth enough " +
+                     "at this tolerance (a discontinuity of the force model or noise in it). Relax the tolerance.");
     }
 
     // The variational data of the segment, when BeginVariationalSegment prepared it; Y and Q restart at [I | 0] and 0

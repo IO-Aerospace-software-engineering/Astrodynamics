@@ -90,6 +90,10 @@ When created with a fixed step size, `AdaptiveMode` is `false` and the integrato
   stages, when the propagation asks for them ([Covariance Propagation](covariance-propagation.md)). By default the step is
   controlled on the state only, so the trajectory is the same bit for bit. Velocity-Verlet does not integrate them
   (`NotSupportedException`).
+- **Failures**: the adaptive step fails with an `InvalidOperationException` after 100 consecutive rejections; with the
+  variational equations in the step control (`IncludeInStepControl`), also after 10 000 consecutive accepted steps
+  within 100 s of flight, a collapse of the step that the rejections never catch
+  ([Covariance Propagation](covariance-propagation.md#options)).
 - **Accuracy**: on the 24-hour conformance cases, 3.6 m (SSO) to 13.1 m (LEO) from the GMAT
   references with tolerances 1e-11, the rest being model differences between the two tools; see
   [Validation](../guides/validation.md#measured-errors).

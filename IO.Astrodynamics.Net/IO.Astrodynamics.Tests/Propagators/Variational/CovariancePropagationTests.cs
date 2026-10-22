@@ -516,7 +516,8 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         var y = EclipsingCase(-1964, frame, 1e-12, new VariationalOptions(parameters));
         var tighter = EclipsingCase(-1965, frame, 1e-14, new VariationalOptions(parameters));
 
-        // Assert, at 5.123 h: Φ below 3.1e-8 and Ψ_Cd below 3.4e-7 at 1e-12 (Linux, .NET 10, 2026-10-14)
+        // Assert, at 5.123 h: Φ 7.8e-9 / 2.1e-8 and Ψ_Cd 2.8e-7 / 7.6e-7 at 1e-12, J2000 / ECLIPJ2000 (Linux, .NET 10,
+        // 2026-10-21, with the density gradient of #420; below 3.1e-8 and 3.4e-7 on 2026-10-14)
         var atEpoch = Start.AddHours(5.123);
         double phi = ColumnsError(Y(y, atEpoch), Y(expected, atEpoch), 0, 6, 0, 6);
         double psiCd = ColumnsError(Y(y, atEpoch), Y(expected, atEpoch), 6, 7, 0, 6);
@@ -543,7 +544,8 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // Assert, over the arc, relative to the local Ψ_Cr: with Φ and Ψ in the step control, Ψ_Cr at 1e-12 against the
         // same at 1e-13 holds the 1e-4 of F1 everywhere, the first shadow exit included, which a tighter tolerance alone
         // does not (1.6e-4 at 1e-14 in J2000 at 4.45 h, relative to the local Ψ_Cr of 0.28 m; decision of S. Guillet,
-        // 2026-10-15). Measured 9.6e-8 (J2000) and 7.1e-8 (ECLIPJ2000), at 0.35 h (Linux, .NET 10, 2026-10-15). The
+        // 2026-10-15). Measured 7.1e-8 (J2000) and 3.4e-8 (ECLIPJ2000) with the density gradient of #420 (Linux, .NET 10,
+        // 2026-10-21; 9.6e-8 and 7.1e-8, at 0.35 h, on 2026-10-15). The
         // reference at 1e-14 with the step control stops in the penumbra (100 rejections at 328 s), hence 1e-13
         var reference = EclipsingCase(-1966, frame, 1e-13, new VariationalOptions(parameters, IncludeInStepControl: true));
         double controlled = 0.0;

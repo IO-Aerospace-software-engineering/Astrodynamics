@@ -12,9 +12,10 @@ namespace IO.Astrodynamics.Atmosphere;
 /// use Nrlmsise00Model.
 /// Atmospheric drag reads the density from the altitude without building a context
 /// (<see cref="IGeodeticDensityModel"/>), so a derived class that re-implements <see cref="IAtmosphericModel"/> is not
-/// used by drag, as for <see cref="NRLMSISE_00.Nrlmsise00Model"/>.
+/// used by drag, as for <see cref="NRLMSISE_00.Nrlmsise00Model"/>. Its density depends on the altitude alone, so the drag
+/// partials take its derivative in closed form (<see cref="IAltitudeDensityDerivative"/>).
 /// </remarks>
-public class EarthStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel
+public class EarthStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, IAltitudeDensityDerivative
 {
     /// <summary>
     /// Get complete atmospheric data at given context.
@@ -69,6 +70,34 @@ public class EarthStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel
         in TimeSystem.Time epoch)
     {
         return Density(altitude);
+    }
+
+    /// <summary>
+    /// dρ/dh, by differentiation of the closed form of the branch the altitude falls in. With T_K the absolute
+    /// temperature: below 11 km, ρ ∝ T_K^(5.256 − 1) with dT/dh = −0.00649 K/m; from 11 to 25 km, T is constant and
+    /// ρ ∝ exp(−0.000157 h); above 25 km, ρ ∝ T_K^(−11.388 − 1) with dT/dh = 0.00299 K/m, and dρ/dh = 0 where the
+    /// temperature is held at 2200 °C (above 779.67 km), where the density is constant.
+    /// </summary>
+    double IAltitudeDensityDerivative.GetDensityAltitudeDerivative(double altitude)
+    {
+        double absoluteTemperature = Temperature(altitude) + Constants.Kelvin;
+        double logarithmicDerivative;
+        if (altitude < 11000.0)
+        {
+            logarithmicDerivative = (5.256 - 1.0) * -0.00649 / absoluteTemperature;
+        }
+        else if (altitude < 25000.0)
+        {
+            logarithmicDerivative = -0.000157;
+        }
+        else
+        {
+            logarithmicDerivative = -131.21 + 0.00299 * altitude < 2200.0
+                ? (-11.388 - 1.0) * 0.00299 / absoluteTemperature
+                : 0.0;
+        }
+
+        return Density(altitude) * logarithmicDerivative;
     }
 
     private static double Temperature(double altitude)

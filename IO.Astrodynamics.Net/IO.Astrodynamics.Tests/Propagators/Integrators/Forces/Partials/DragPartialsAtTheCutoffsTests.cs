@@ -19,8 +19,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 
 /// <summary>
 /// The density gradient of the drag partials across the altitudes at which NRLMSISE-00 drops the mixing of a species,
-/// where its density jumps (#413): on the side of the point where the central stencil straddles one of them, the central
-/// difference everywhere else.
+/// where its density jumps (#413): on the side of the point where the stencil in altitude straddles one of them, the
+/// fourth-order difference in altitude of the gradient in geodetic coordinates everywhere else (#420).
 /// </summary>
 /// <remarks>
 /// The points are placed on the radial line of the LEO states of B7, at the altitude where the density chain of the
@@ -189,8 +189,34 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         return derivative;
     }
 
+    // ∂ρ/∂h by the fourth-order central difference of the density of the body at the geodetic coordinates of a position,
+    // with the altitude step of the gradient: the rule away from the cutoffs (#420)
+    private static double FourthOrderAltitudeDerivative(AtmosphericDrag drag, CelestialBody body, in Vector3 position,
+        in Quaternion? rotation, TimeSystem.Time epoch)
+    {
+        var origin = drag.Geodetic(position, rotation, epoch);
+        double step = AtmosphericDrag.AltitudeRelativeStep * position.Magnitude();
+        double Rho(double altitude) => body.GetAirDensity(altitude, origin.Latitude, origin.Longitude, epoch);
+        double plus = origin.Altitude + step;
+        double minus = origin.Altitude - step;
+        return (-Rho(origin.Altitude + 2.0 * step) + 8.0 * Rho(plus) - 8.0 * Rho(minus) +
+                Rho(origin.Altitude - 2.0 * step)) / (6.0 * (plus - minus));
+    }
+
+    // ∂ρ/∂h by the central difference of the density of the body over the step of the cutoffs
+    private static double CentralAltitudeDerivative(AtmosphericDrag drag, CelestialBody body, in Vector3 position,
+        in Quaternion? rotation, TimeSystem.Time epoch)
+    {
+        var origin = drag.Geodetic(position, rotation, epoch);
+        double step = AtmosphericDrag.DensityGradientRelativeStep * position.Magnitude();
+        double plus = origin.Altitude + step;
+        double minus = origin.Altitude - step;
+        return (body.GetAirDensity(plus, origin.Latitude, origin.Longitude, epoch) -
+                body.GetAirDensity(minus, origin.Latitude, origin.Longitude, epoch)) / (plus - minus);
+    }
+
     [Fact]
-    public void Gradient_AwayFromTheCutoffs_IsTheCentralDifference()
+    public void Gradient_AwayFromTheCutoffs_IsTheFourthOrderDifferenceInAltitude()
     {
         foreach (string name in PartialsTestCases.StateNames.Where(n => n != PartialsTestCases.Geo))
         {
@@ -198,18 +224,18 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
             var state = PartialsTestCases.State(name, _cases.Earth);
             var drag = new AtmosphericDrag(PartialsTestCases.Spacecraft(state), _cases.Earth);
             var rotation = drag.BodyFixedRotation(state);
-            var gradient = new double[3];
 
             // Act
-            drag.DensityGradient(state.Position, rotation, state.Epoch, gradient);
+            double derivative = drag.DensityAltitudeDerivative(state.Position, rotation, state.Epoch);
 
-            // Assert: bit for bit the central difference of B5
-            Assert.Equal(CentralGradient(drag, state.Position, rotation, state.Epoch), gradient);
+            // Assert: bit for bit the fourth-order difference of the model in altitude
+            Assert.Equal(FourthOrderAltitudeDerivative(drag, _cases.Earth, state.Position, rotation, state.Epoch),
+                derivative);
         }
     }
 
     [Fact]
-    public void WithoutTheMixingSwitch_TheGradientIsTheCentralDifference()
+    public void WithoutTheMixingSwitch_TheAltitudeDerivativeIsTheFourthOrderDifference()
     {
         // Arrange: flag 15 off, the density continuous at the altitudes of the cutoffs
         var flags = NrlmsiseFlags.CreateStandard();
@@ -221,14 +247,13 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
         var state = PartialsTestCases.State(PartialsTestCases.Leo400, earth);
         var unmixed = new AtmosphericDrag(PartialsTestCases.Spacecraft(state), earth);
         var position = direction * (radius + 0.5);
-        var gradient = new double[3];
 
         // Act
-        unmixed.DensityGradient(position, rotation, epoch, gradient);
+        double derivative = unmixed.DensityAltitudeDerivative(position, rotation, epoch);
 
         // Assert
         Assert.True(((IDensityDiscontinuities)earth.Atmosphere).DensityDiscontinuities.IsEmpty);
-        Assert.Equal(CentralGradient(unmixed, position, rotation, epoch), gradient);
+        Assert.Equal(FourthOrderAltitudeDerivative(unmixed, earth, position, rotation, epoch), derivative);
     }
 
     [Fact]
@@ -300,57 +325,224 @@ public class DragPartialsAtTheCutoffsTests : IClassFixture<PartialsTestCases>
     }
 
     [Fact]
-    public void TwoDiscontinuitiesWithinTheStencil_TheGradientIsTheCentralDifference()
+    public void TwoDiscontinuitiesWithinTheStencil_TheAltitudeDerivativeIsTheCentralDifference()
     {
         // Arrange: an exponential atmosphere whose density jumps at two altitudes 1 m apart, the point between them, so
-        // that neither point of a straddling stencil (h ≈ 2 m) is in the interval of the point
+        // that neither point of the one-sided stencil (h ≈ 2 m) is in the interval of the point
         var (direction, rotation, epoch) = RadialLine();
         var (earth, drag, model) = SteppedEarth(400000.0, 400001.0);
         double radius = CutoffRadius(drag, model, direction, rotation, epoch, 0) + 0.5;
         var position = direction * radius;
-        var gradient = new double[3];
 
         // Act
-        drag.DensityGradient(position, rotation, epoch, gradient);
+        double derivative = drag.DensityAltitudeDerivative(position, rotation, epoch);
 
-        // Assert: the central difference, for every column
+        // Assert: the central difference over the step of the cutoffs
         Assert.Equal(1, model.DensityInterval(drag.Geodetic(position, rotation, epoch).Altitude));
-        Assert.Equal(CentralGradient(drag, position, rotation, epoch), gradient);
-        GC.KeepAlive(earth);
+        Assert.Equal(CentralAltitudeDerivative(drag, earth, position, rotation, epoch), derivative);
     }
 
     [Fact]
-    public void SecondPointAcrossAnotherDiscontinuity_TheGradientIsTheCentralDifference()
+    public void SecondPointAcrossAnotherDiscontinuity_TheAltitudeDerivativeIsTheCentralDifference()
     {
-        // Arrange: jumps at two altitudes 3 m apart, the point 0.5 m above the first: along the most radial component the
-        // stencil straddles the first, and the second point of the one-sided difference, 2 h away, crosses the other
+        // Arrange: jumps at two altitudes 3 m apart, the point 0.5 m above the first: the central stencil (h ≈ 2 m)
+        // straddles the first, and the second point of the one-sided difference upwards, 2 h away, crosses the other
         var (direction, rotation, epoch) = RadialLine();
         var (earth, drag, model) = SteppedEarth(400000.0, 400003.0);
         double radius = CutoffRadius(drag, model, direction, rotation, epoch, 0) + 0.5;
         var position = direction * radius;
-        int j = Enumerable.Range(0, 3).OrderByDescending(k => System.Math.Abs(RiddersDerivative.Component(direction, k)))
-            .First();
+        double altitude = drag.Geodetic(position, rotation, epoch).Altitude;
         double step = AtmosphericDrag.DensityGradientRelativeStep * position.Magnitude();
-        double plusAltitude = drag.Geodetic(With(position, j, RiddersDerivative.Component(position, j) + step), rotation,
-            epoch).Altitude;
-        double secondAltitude = drag.Geodetic(With(position, j, RiddersDerivative.Component(position, j) + 2.0 * step),
-            rotation, epoch).Altitude;
-        int directionSign = System.Math.Sign(plusAltitude - drag.Geodetic(position, rotation, epoch).Altitude);
+
+        // Act
+        double derivative = drag.DensityAltitudeDerivative(position, rotation, epoch);
+
+        // Assert: the geometry of the case, then the central difference
+        Assert.Equal(1, model.DensityInterval(altitude + step));
+        Assert.Equal(2, model.DensityInterval(altitude + 2.0 * step));
+        Assert.Equal(0, model.DensityInterval(altitude - step));
+        Assert.Equal(CentralAltitudeDerivative(drag, earth, position, rotation, epoch), derivative);
+    }
+
+    [Fact]
+    public void AnotherDiscontinuityWithinTheThirdOrderStencil_TheAltitudeDerivativeIsTheSecondOrderOneSided()
+    {
+        // Arrange: jumps at two altitudes 50 m apart, the point 0.5 m above the first: the third-order one-sided stencil
+        // upwards (3 δ_h ≈ 60 m) reaches the second, so the one-sided difference of #413 over 2 h ≈ 4 m is taken
+        var (direction, rotation, epoch) = RadialLine();
+        var (earth, drag, model) = SteppedEarth(400000.0, 400050.0);
+        double radius = CutoffRadius(drag, model, direction, rotation, epoch, 0) + 0.5;
+        var position = direction * radius;
+        var origin = drag.Geodetic(position, rotation, epoch);
+        double step = AtmosphericDrag.DensityGradientRelativeStep * position.Magnitude();
+        double x1 = origin.Altitude + step;
+        double x2 = origin.Altitude + 2.0 * step;
+        double Rho(double altitude) => earth.GetAirDensity(altitude, origin.Latitude, origin.Longitude, epoch);
+        double d1 = x1 - origin.Altitude;
+        double d2 = x2 - origin.Altitude;
+        double expected = -(d1 + d2) / (d1 * d2) * Rho(origin.Altitude) + d2 / (d1 * (d2 - d1)) * Rho(x1) -
+                          d1 / (d2 * (d2 - d1)) * Rho(x2);
+
+        // Act
+        double derivative = drag.DensityAltitudeDerivative(position, rotation, epoch);
+
+        // Assert
+        Assert.Equal(2, model.DensityInterval(origin.Altitude + 3.0 * AtmosphericDrag.AltitudeRelativeStep *
+            position.Magnitude()));
+        Assert.Equal(expected, derivative);
+    }
+
+    [Fact]
+    public void BetweenTwoDiscontinuitiesWithinTheFourthOrderStencil_TheAltitudeDerivativeIsTheCentralDifference()
+    {
+        // Arrange: jumps at two altitudes 50 m apart, the point midway: the fourth-order stencil (± 2 δ_h ≈ 40 m) and the
+        // third-order one-sided ones (3 δ_h ≈ 60 m) reach a jump on each side, the central difference over 2 h ≈ 4 m none
+        var (direction, rotation, epoch) = RadialLine();
+        var (earth, drag, model) = SteppedEarth(400000.0, 400050.0);
+        double radius = CutoffRadius(drag, model, direction, rotation, epoch, 0) + 25.0;
+        var position = direction * radius;
+
+        // Act
+        double derivative = drag.DensityAltitudeDerivative(position, rotation, epoch);
+
+        // Assert
+        Assert.Equal(1, model.DensityInterval(drag.Geodetic(position, rotation, epoch).Altitude));
+        Assert.Equal(CentralAltitudeDerivative(drag, earth, position, rotation, epoch), derivative);
+    }
+
+    [Fact]
+    public void NearThePolarAxis_TheGradientIsTheCartesianDifference()
+    {
+        // Arrange: a position 100 m from the polar axis, within the horizontal step, where the east step is not defined
+        var (_, _, _, rotation, epoch) = Geometry(PartialsTestCases.Leo400);
+        var reference = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
+        var drag = new AtmosphericDrag(PartialsTestCases.Spacecraft(reference), _cases.Earth);
+        var axis = rotation.HasValue ? new Vector3(0.0, 0.0, 1.0).Rotate(rotation.Value.Conjugate()) : new Vector3(0.0, 0.0, 1.0);
+        var across = rotation.HasValue ? new Vector3(1.0, 0.0, 0.0).Rotate(rotation.Value.Conjugate()) : new Vector3(1.0, 0.0, 0.0);
+        var position = axis * (6356752.0 + 400000.0) + across * 100.0;
         var gradient = new double[3];
+        var cartesian = new double[3];
 
         // Act
         drag.DensityGradient(position, rotation, epoch, gradient);
+        drag.CartesianDensityGradient(position, rotation, epoch, cartesian);
 
-        // Assert: the geometry of the case, then the central difference along that component
-        double first = directionSign > 0 ? plusAltitude
-            : drag.Geodetic(With(position, j, RiddersDerivative.Component(position, j) - step), rotation, epoch).Altitude;
-        double second = directionSign > 0 ? secondAltitude
-            : drag.Geodetic(With(position, j, RiddersDerivative.Component(position, j) - 2.0 * step), rotation, epoch)
-                .Altitude;
-        Assert.Equal(1, model.DensityInterval(first));
-        Assert.Equal(2, model.DensityInterval(second));
-        Assert.Equal(CentralGradient(drag, position, rotation, epoch)[j], gradient[j]);
-        GC.KeepAlive(earth);
+        // Assert
+        Assert.Equal(cartesian, gradient);
+    }
+
+    [Theory]
+    [InlineData(1000.0, 0.0)]
+    [InlineData(10000.0, 0.0)]
+    [InlineData(100000.0, 0.0)]
+    [InlineData(0.0, 89.0)]
+    public void NearThePolarAxis_TheGradientMatchesRidders(double axisDistance, double latitude)
+    {
+        // Arrange: 400 km above the north pole, at a distance from the polar axis or at a geodetic latitude, longitude
+        // 40°, where the horizontal step spans up to 0.2 rad of the parallel and the longitude step is capped
+        var (_, _, _, rotation, epoch) = Geometry(PartialsTestCases.Leo400);
+        var reference = PartialsTestCases.State(PartialsTestCases.Leo400, _cases.Earth);
+        var drag = new AtmosphericDrag(PartialsTestCases.Spacecraft(reference), _cases.Earth);
+        double longitude = 40.0 * IO.Astrodynamics.Constants.Deg2Rad;
+        double parallel, polar;
+        if (axisDistance > 0.0)
+        {
+            parallel = axisDistance;
+            polar = 6356752.0 + 400000.0;
+        }
+        else
+        {
+            double phi = latitude * IO.Astrodynamics.Constants.Deg2Rad;
+            double e2 = _cases.Earth.Flattening * (2.0 - _cases.Earth.Flattening);
+            double n = _cases.Earth.EquatorialRadius / System.Math.Sqrt(1.0 - e2 * System.Math.Sin(phi) * System.Math.Sin(phi));
+            parallel = (n + 400000.0) * System.Math.Cos(phi);
+            polar = (n * (1.0 - e2) + 400000.0) * System.Math.Sin(phi);
+        }
+
+        var bodyFixed = new Vector3(parallel * System.Math.Cos(longitude), parallel * System.Math.Sin(longitude), polar);
+        var position = rotation.HasValue ? bodyFixed.Rotate(rotation.Value.Conjugate()) : bodyFixed;
+        var gradient = new double[3];
+        var cartesian = new double[3];
+        var expected = new double[3];
+        var errors = new double[3];
+        for (int j = 0; j < 3; j++)
+        {
+            int column = j;
+            (expected[j], errors[j]) = RiddersDerivative.Derivative(
+                t => drag.Density(With(position, column, t), rotation, epoch),
+                RiddersDerivative.Component(position, j), System.Math.Min(0.1 * parallel, 200.0));
+        }
+
+        // Act
+        drag.DensityGradient(position, rotation, epoch, gradient);
+        drag.CartesianDensityGradient(position, rotation, epoch, cartesian);
+
+        // Assert: Ridders on each component, from steps of a tenth of the distance to the axis. Measured 2026-10-21:
+        // 7.6e-11 at 1 km, 5.5e-12 at 10 km, 4.6e-11 at 100 km and 4.8e-11 at 89°, the resolution of that reference
+        // (1.5e-11 to 4.0e-11); 1.1e-6, 1.2e-8, 2.5e-10 and 1.9e-10 with the arc of the parallel, 8.1e-9, 8.2e-10,
+        // 1.1e-10 and 8.7e-11 with the chord without the cap of the longitude step. The same on Linux, Windows and macOS
+        // arm64; bounds at twice the worst
+        double error = RiddersDerivative.RelativeFrobeniusError(gradient, expected);
+        double referenceError = System.Math.Sqrt(errors.Sum(e => e * e) / expected.Sum(e => e * e));
+        double former = RiddersDerivative.RelativeFrobeniusError(cartesian, expected);
+        _output.WriteLine($"{parallel / 1000.0:F1} km from the polar axis: ∇ρ {error:E2}, reference " +
+                          $"{referenceError:E2}, Cartesian differences {former:E2}");
+        Assert.True(referenceError < 8.1e-11, $"reference {referenceError:E2}");
+        Assert.True(error < 1.6e-10, $"{error:E2}");
+    }
+
+    [Fact]
+    public void AltitudeDerivative_OfAModelOfTheAltitudeAlone_IsItsClosedForm()
+    {
+        // Arrange: the US 1976 atmosphere gives dρ/dh in closed form
+        var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH, Frames.Frame.ICRF,
+            PartialsTestCases.Epoch, null, new EarthStandardAtmosphere());
+        var state = PartialsTestCases.State(PartialsTestCases.Leo400, earth);
+        var drag = new AtmosphericDrag(PartialsTestCases.Spacecraft(state), earth);
+        var rotation = drag.BodyFixedRotation(state);
+        double altitude = drag.Geodetic(state.Position, rotation, state.Epoch).Altitude;
+
+        // Act
+        double derivative = drag.DensityAltitudeDerivative(state.Position, rotation, state.Epoch);
+
+        // Assert
+        Assert.Equal(((IAltitudeDensityDerivative)earth.Atmosphere).GetDensityAltitudeDerivative(altitude), derivative);
+    }
+
+    [Fact]
+    public void Gradient_IsTheAltitudeDerivativeAlongTheNormal_ForAModelOfTheAltitudeAlone()
+    {
+        // Arrange: the stepped atmosphere depends on the altitude alone, so its horizontal differences vanish and ∇ρ is
+        // ∂ρ/∂h along the normal of the ellipsoid, the gradient of the geodetic altitude
+        var (direction, rotation, epoch) = RadialLine();
+        var (_, drag, _) = SteppedEarth(500000.0);
+        var position = direction * (6378137.0 + 400000.0);
+        var gradient = new double[3];
+        var normal = new double[3];
+        var normalErrors = new double[3];
+        double altitude = drag.Geodetic(position, rotation, epoch).Altitude;
+        for (int j = 0; j < 3; j++)
+        {
+            int column = j;
+            (normal[j], normalErrors[j]) = RiddersDerivative.Derivative(
+                t => drag.Geodetic(With(position, column, t), rotation, epoch).Altitude,
+                RiddersDerivative.Component(position, j), 10.0);
+        }
+
+        // Act
+        drag.DensityGradient(position, rotation, epoch, gradient);
+        double derivative = drag.DensityAltitudeDerivative(position, rotation, epoch);
+
+        // Assert: ∇h by Ridders on the geodetic conversion, against the normal of the gradient; agreement 1.2e-10, the
+        // resolution of that reference (1.3e-10, measured 2026-10-21, the same on Linux, Windows and macOS arm64); bounds at
+        // twice them
+        var expected = normal.Select(n => n * derivative).ToArray();
+        double error = RiddersDerivative.RelativeFrobeniusError(gradient, expected);
+        double referenceError = System.Math.Sqrt(normalErrors.Sum(e => e * e));
+        _output.WriteLine($"∇ρ against ∂ρ/∂h ∇h (Ridders): {error:E2}, reference {referenceError:E2}; altitude " +
+                          $"{altitude:F3} m");
+        Assert.True(referenceError < 2.6e-10, $"reference {referenceError:E2}");
+        Assert.True(error < 2.5e-10, $"{error:E2}");
     }
 
     private (Vector3 Direction, Quaternion? Rotation, TimeSystem.Time Epoch) RadialLine()
