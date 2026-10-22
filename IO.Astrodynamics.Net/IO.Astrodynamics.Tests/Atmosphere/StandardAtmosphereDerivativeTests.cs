@@ -33,8 +33,14 @@ public class StandardAtmosphereDerivativeTests
     [InlineData("Earth", 200000.0)]
     [InlineData("Earth", 400000.0)]
     [InlineData("Mars", 3000.0)] // below 7 km
-    [InlineData("Mars", 50000.0)] // above 7 km
+    [InlineData("Mars", 30000.0)] // above 7 km
+    [InlineData("Mars", 49700.0)] // below the isothermal layer (49.887 km), Ridders' steps within the branch
+    [InlineData("Mars", 50100.0)] // the isothermal layer of Seiff (1982), #422
     [InlineData("Mars", 100000.0)]
+    [InlineData("Mars", 150000.0)]
+    [InlineData("Mars", 200000.0)]
+    [InlineData("Mars", 400000.0)]
+    [InlineData("Mars", 1000000.0)]
     public void Derivative_MatchesRidders(string body, double altitude)
     {
         // Arrange
