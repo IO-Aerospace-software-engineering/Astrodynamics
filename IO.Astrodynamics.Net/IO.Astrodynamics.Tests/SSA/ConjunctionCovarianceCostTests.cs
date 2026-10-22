@@ -17,7 +17,10 @@ namespace IO.Astrodynamics.Tests.SSA;
 /// equations, the non-linearity index and the avoidance options, measured and published, not asserted beyond their
 /// results being there (informative timings, Release).
 /// </summary>
-[Trait("Category", "Validation")]
+/// <remarks>
+/// In the <c>LongValidation</c> category since 2026-10-22 (decision of S. Guillet): timings, about 3 min.
+/// </remarks>
+[Trait("Category", "LongValidation")]
 public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
 {
     private readonly ReferenceCases _cases;
@@ -29,7 +32,7 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         _output = output;
     }
 
-    [Fact]
+    [LongValidationFact]
     public void Cost_OfTheReplay_OfTheIndexAndOfTheAvoidance_OnR2()
     {
         // Arrange: two participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag), crossing a day after the start,
@@ -81,7 +84,7 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
         Assert.NotEmpty(options);
     }
 
-    [Theory]
+    [LongValidationTheory]
     [InlineData(true)]
     [InlineData(false)]
     public void Cost_OfTheAvoidanceWithoutAPropagatedCovariance_OnR2(bool rk78)

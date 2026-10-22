@@ -22,14 +22,15 @@ dotnet test
 # Run tests for a specific project
 dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj
 
-# Skip the LongValidation category (tests of more than 5 min each), which runs in the manual workflow long-validation.yml only
+# The LongValidation category (validations and studies of minutes each) is skipped unless IO_ASTRODYNAMICS_LONG_VALIDATION=1;
+# the manual workflow long-validation.yml sets it, before each release and on a PR that changes the dynamics it measures
 dotnet test --filter "Category!=LongValidation"
 
 # Skip the Validation category too (bit-for-bit goldens, heavy validations), which CI runs on Linux only
 dotnet test --filter "Category!=Validation&Category!=LongValidation"
 
-# Run the LongValidation category (Linux, about 20 min)
-dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "Category=LongValidation"
+# Run the LongValidation category (Linux, about 35 min on 4 cores)
+IO_ASTRODYNAMICS_LONG_VALIDATION=1 dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "Category=LongValidation"
 
 # Run a single test by name
 dotnet test --filter "FullyQualifiedName~IO.Astrodynamics.Tests.ClassName.TestName"

@@ -52,7 +52,7 @@ public class FosterMonteCarloValidationTests : IClassFixture<ConjunctionCovarian
         _output = output;
     }
 
-    [Theory]
+    [LongValidationTheory]
     [InlineData(6.0, 1.0, 10_000_000)]
     [InlineData(24.0, 1.0, 10_000_000)]
     [InlineData(72.0, 1.0, 10_000_000)]

@@ -21,8 +21,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// The error is the worst 3×3 block of Φ over the arc (every 10 min and at the end). R2 has a 10×10 field: the option
 /// takes the smaller of the requested degree and the degree of the field, so 20 is the full degree there. The cost is
 /// the median of three propagations with Φ at 1e-13, against the median of three without, Release; informative (the
-/// benchmarks come with G1). The figures below were measured with this test alone: run with the other Validation classes
-/// in parallel, as in the CI, the same propagations come out up to twice as slow and the ratios move with the load.
+/// benchmarks come with G1). The figures below were measured with this test alone: run with other test classes
+/// in parallel, the same propagations come out up to twice as slow and the ratios move with the load.
 /// </para>
 /// <para>
 /// Measured (Linux, .NET 10, 2026-10-16, this test alone), worst block over the arc, and the cost with Φ against without: R2 (10×10)
@@ -33,8 +33,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// the 1e-4 of F1 after one day and saves nothing; at GEO the high degrees vanish, so from degree 8 Φ is that of the
 /// full degree, a third cheaper.
 /// </para>
+/// <para>
+/// In the <c>LongValidation</c> category since 2026-10-22 (decision of S. Guillet): a measurement for B3, decided on
+/// 2026-10-16, about 2 min.
+/// </para>
 /// </remarks>
-[Trait("Category", "Validation")]
+[Trait("Category", "LongValidation")]
 public class GeopotentialPartialsDegreeTests : IClassFixture<ReferenceCases>
 {
     private const int NaifId = -1976;
@@ -56,7 +60,7 @@ public class GeopotentialPartialsDegreeTests : IClassFixture<ReferenceCases>
         { "R4", new[] { 2, 8, 20, 70 }, new[] { 1.16e-6, 2.76e-8, 2.76e-8, 2.76e-8 } }
     };
 
-    [Theory]
+    [LongValidationTheory]
     [MemberData(nameof(Cases))]
     public void ReducedDegree_AccuracyAndCost(string name, int[] degrees, double[] records)
     {

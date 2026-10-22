@@ -63,7 +63,7 @@ public class CovarianceMonteCarloLongTests : IClassFixture<ReferenceCases>
         { "R3", 0.0, 0.15, 11.0 / 6.0 }
     };
 
-    [Theory]
+    [LongValidationTheory]
     [MemberData(nameof(Cases))]
     public void PropagatedCovariance_MatchesMonteCarlo(string name, double dragCoefficientSigma,
         double reflectivityCoefficientSigma, double firstFailureHours)
