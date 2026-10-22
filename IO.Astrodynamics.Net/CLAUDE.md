@@ -397,7 +397,9 @@ All models implement `IAtmosphericModel` with these methods:
      - Direct access via `NRLMSISE00` class for low-level control
 
 **Mars Models:**
-- **MarsStandardAtmosphere**: Simplified analytical model using altitude only
+- **MarsStandardAtmosphere**: Simplified analytical model using altitude only: the NASA Glenn curve fit below 49.887 km,
+  the isothermal layer of Seiff (1982) at 139 K above (5 km C² transition); positive and decreasing at every altitude;
+  no thermosphere, so drag in orbit above about 120 km is underestimated (#431)
 
 **Usage Pattern**
 ```csharp
@@ -433,7 +435,7 @@ var atm = earth.GetAtmosphere(context);  // Uses NRLMSISE-00 automatically
 - Use `EarthStandardAtmosphere` for quick calculations below 86 km without time-dependent effects
 - Use `Nrlmsise00Model` for accurate high-altitude modeling, time-varying conditions, or space weather effects
 - Use `CelestialBody.GetAtmosphere(context)` with full context for automatic NRLMSISE-00 selection
-- Use `MarsStandardAtmosphere` for preliminary Mars mission analysis
+- Use `MarsStandardAtmosphere` for preliminary Mars mission analysis below about 100 km (entry); not for orbit lifetime
 
 ### Geopotential Gravity Model
 

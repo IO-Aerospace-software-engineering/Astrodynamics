@@ -30,8 +30,13 @@ public class StandardAtmosphereAllocationTests
         779669.0, 780e3, 2000e3
     };
 
-    // Both branches and the boundary of the Mars model: below and above 7 km; a negative altitude
-    private static readonly double[] MarsAltitudes = { -500.0, 0.0, 6999.999, 7000.0, 30e3, 200e3, 1000e3 };
+    // Every branch and boundary of the Mars model: below and above 7 km, the base of the isothermal layer (#422), about
+    // 49.887 km, and 112.5 km, where the curve fit reached 0 K; a negative altitude
+    private static readonly double[] MarsAltitudes =
+    {
+        -500.0, 0.0, 6999.999, 7000.0, 30e3, 49887.0, MarsStandardAtmosphere.IsothermalLayerBase, 49888.0, 112.5e3,
+        200e3, 1000e3
+    };
 
     private readonly ITestOutputHelper _output;
 

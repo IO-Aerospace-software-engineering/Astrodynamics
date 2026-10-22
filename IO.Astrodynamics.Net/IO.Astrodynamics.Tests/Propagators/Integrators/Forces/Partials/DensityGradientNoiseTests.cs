@@ -143,7 +143,8 @@ public class DensityGradientNoiseTests
         _output.WriteLine($"{model}, {altitude / 1000.0} km: noise {noise:E2} of |∇ρ|, {former / noise:F0} times " +
                           "less than the Cartesian differences");
 
-        // Assert: 1.8e-14 to 3.5e-14 for US 1976 (dρ/dh in closed form), 1.5e-13 for Mars, 4.0e-13 to 9.8e-13 for
+        // Assert: 1.8e-14 to 3.5e-14 for US 1976 (dρ/dh in closed form), 4.4e-14 for Mars (1.5e-13 before #422; 4.38e-14 to
+        // 4.40e-14 on Linux, Windows and macOS arm64, 2026-10-22), 4.0e-13 to 9.8e-13 for
         // NRLMSISE-00 (differences in its inputs), 365 to 20 000 times less than the Cartesian differences (measured
         // 2026-10-21, the same to three digits on Linux, Windows and macOS arm64); bound at twice the worst
         Assert.True(noise < 2e-12, $"noise {noise:E2}");
