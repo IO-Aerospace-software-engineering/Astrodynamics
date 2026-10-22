@@ -119,8 +119,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
     {
         // Arrange: the protected participant propagated with Φ in the step control; its options are propagated with the
         // options of its solution (#420: the guard against a collapse of the step applies to them). The secondary
-        // participant without an initial covariance: one with a covariance would be replayed with the options of the
-        // protected solution, which the replay rejects with this option (#424)
+        // participant without an initial covariance; with one, see the test below (#424)
         var stepControl = new CovariancePropagationOptions
             { Mode = CovariancePropagationMode.Covariance, IncludeInStepControl = true };
         var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6421, _twoBody.ProtectedStart);
@@ -150,6 +149,55 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
                 .IncludeInStepControl);
             Assert.Equal(CovarianceSource.Propagated,
                 option.PostManeuverEncounter.EncounterState.ProtectedCovariance.Source);
+        });
+    }
+
+    [Theory]
+    [InlineData("without the variational equations")]
+    [InlineData("with the state transition matrix")]
+    [InlineData("with the state transition matrix in the step control")]
+    public void EvaluateAvoidance_ProtectedWithPhiInTheStepControl_TheSecondaryIsReplayedOnItsSteps(string secondaryPropagation)
+    {
+        // Arrange: the protected participant propagated with the covariance and Φ in the step control, the secondary
+        // participant with an initial covariance and without a propagated one, so that the avoidance replays its
+        // variational equations with the options of the protected solution. Before #424 the replay rejected the option of
+        // the step control, which the protected solution carries, and EvaluateAvoidance threw
+        var stepControl = new CovariancePropagationOptions
+            { Mode = CovariancePropagationMode.Covariance, IncludeInStepControl = true };
+        var protectedCraft = ConjunctionCovarianceCase.NewSpacecraft(-6431, _twoBody.ProtectedStart);
+        var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6432, _twoBody.SecondaryStart);
+        bool secondaryStepControl = secondaryPropagation == "with the state transition matrix in the step control";
+        _twoBody.Propagate(protectedCraft, stepControl);
+        _twoBody.Propagate(secondaryCraft, secondaryPropagation == "without the variational equations"
+            ? null
+            : new CovariancePropagationOptions { IncludeInStepControl = secondaryStepControl });
+
+        // The secondary participant propagated with the covariance and the options of the protected solution, on the
+        // steps of its own propagation (the covariance adds no term to the step control): the covariance its replay gives
+        var reference = _twoBody.Propagate(ConjunctionCovarianceCase.NewSpacecraft(-6433, _twoBody.SecondaryStart),
+            stepControl with { IncludeInStepControl = secondaryStepControl });
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
+            AvoidanceWindow);
+        var options = new AvoidanceSearchOptions
+        {
+            LeadTimes = new[] { TimeSpan.FromHours(3.0) },
+            DeltaVMagnitudesMetersPerSecond = new[] { 0.1 },
+            MaxReturnedOptions = 6
+        };
+
+        // Act
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, options);
+
+        // Assert: every option keeps the step control of the protected participant, and the covariance of the secondary
+        // participant at its TCA is that of the reference, bit for bit
+        Assert.Equal(6, avoidance.Count);
+        Assert.All(avoidance, option =>
+        {
+            var post = option.PostManeuverEncounter;
+            Assert.True(post.ProtectedCovariance.Solution.CovariancePropagation.IncludeInStepControl);
+            Assert.Equal(CovarianceSource.Propagated, post.EncounterState.SecondaryCovariance.Source);
+            Assert.Equal(reference.GetCovariance(post.EncounterState.Epoch).ToArray(),
+                post.SecondaryState.Covariance.Value.ToArray());
         });
     }
 
