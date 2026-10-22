@@ -380,7 +380,8 @@ All models implement `IAtmosphericModel` with these methods:
 
 **Earth Models:**
 1. **EarthStandardAtmosphere** (U.S. Standard Atmosphere 1976)
-   - Simple analytical model valid up to ~86 km altitude
+   - Simple analytical model valid up to ~86 km altitude: the NASA Glenn curve fit, its branches joined over 500 m
+     centred on 11 and 25 km (C² transitions, #433), so RK7(8) crosses them
    - Uses only altitude (ignores time and space weather)
    - Fast and suitable for preliminary analysis
    - Details property is null
@@ -398,7 +399,8 @@ All models implement `IAtmosphericModel` with these methods:
 
 **Mars Models:**
 - **MarsStandardAtmosphere**: Simplified analytical model using altitude only: the NASA Glenn curve fit below 49.887 km,
-  the isothermal layer of Seiff (1982) at 139 K above (5 km C² transition); positive and decreasing at every altitude;
+  the isothermal layer of Seiff (1982) at 139 K above (5 km C² transition), the branches of the curve fit joined over
+  500 m at 7 km (#433); positive and decreasing at every altitude;
   no thermosphere, so drag in orbit above about 120 km is underestimated (#431)
 
 **Usage Pattern**
