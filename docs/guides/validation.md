@@ -188,7 +188,7 @@ local minimum, 7.9e-4 m/s per unit Cr, and the local figure follows the step of 
 `IncludeInStepControl`, Ψ_Cr is off by 2.2e-5 (position) and 2.2e-4 (velocity) over the arc of R3, and by 4.9e-7 and
 3.1e-8 for R4, relative to the local reference.
 
-**Steps of the reference** (`WholePropagationStepStudyTests`): position steps from 1 cm to 1 km (the velocity step 1e-3
+**Steps of the reference** (`WholePropagationStepStudyTests`, `LongValidation`): position steps from 1 cm to 1 km (the velocity step 1e-3
 s⁻¹ times the position step), and the coefficients from 0.1 % to 30 %. On the small steps the integration noise of the
 perturbed propagations dominates, on the large ones the δ² truncation. The chosen steps are within a factor of 2 of the
 smallest error of each sweep, at the end of the arc: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 %
@@ -250,10 +250,10 @@ before the burn (below 6.8e-9) and off by 0.48, 0.33, 0.42 and 0.23 per block af
 by 1.2 of their largest values. This is the measured effect of the open-loop assumption: the propagated covariance is
 that of a burn executed as commanded, with its execution error, not that of a maneuver that retargets its ΔV.
 
-**Reduced degree of the geopotential partials** (`GeopotentialPartialsDegreeTests`). The internal option
+**Reduced degree of the geopotential partials** (`GeopotentialPartialsDegreeTests`, `LongValidation`). The internal option
 `GeopotentialPartialsDegree` keeps the full degree in the acceleration but reduces it in the partials. Worst block of Φ
 over the arc, and the cost of the propagation with Φ against the propagation without it (median of 3, Release,
-informative, measured with the test alone: run in parallel with the other Validation classes, the times move with the
+informative, measured with the test alone: run in parallel with other test classes, the times move with the
 load):
 
 | Case | Degree 2 | Degree 8 | Degree 20 | Full degree | Cost |
@@ -334,7 +334,9 @@ Cr at 1.67 h, p = 0.0100), so the tests assert them within half an hour. Up to 1
 the [reference page](../reference/covariance-propagation.md#modeling-assumptions).
 
 The Monte Carlo of R1 runs in the Linux CI (about 2.5 min). Those of R2 and R3 run in the manual workflow
-`long-validation.yml` (category `LongValidation`, 5 to 6.5 min each).
+`long-validation.yml` (category `LongValidation`, 5 to 6.5 min each). The tests of that category are skipped unless
+`IO_ASTRODYNAMICS_LONG_VALIDATION` is 1, which the workflow sets; it runs before each release, and on a pull request
+that changes the dynamics they measure.
 
 ### Against GMAT (H2)
 

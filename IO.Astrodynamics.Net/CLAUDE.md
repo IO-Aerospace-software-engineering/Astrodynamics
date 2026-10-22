@@ -21,8 +21,11 @@ dotnet build IO.Astrodynamics.sln
 
 ### Test
 ```bash
-# Run all tests
+# Run all tests (the LongValidation category is skipped unless IO_ASTRODYNAMICS_LONG_VALIDATION=1)
 dotnet test
+
+# Skip the Validation category (goldens, heavy validations; the CI runs it on Linux only)
+dotnet test --filter "Category!=Validation&Category!=LongValidation"
 
 # Run specific project tests
 dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj

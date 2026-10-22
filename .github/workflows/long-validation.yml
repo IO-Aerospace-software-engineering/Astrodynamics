@@ -1,8 +1,11 @@
 name: Long validation
 
-# The tests of the LongValidation category: validations that take more than 5 min each (the Monte Carlo of F3 on R2
-# and R3, phase 2, feature 1), excluded from the CI and the CD (decision of S. Guillet, 2026-10-06). Run by hand, on
-# Linux, with the native library built from the sources as in the CI.
+# The tests of the LongValidation category: validations and studies of minutes each (the Monte Carlo of F3 on R2 and
+# R3, Foster against a Monte Carlo of the probability, the step study of F1, the reduced degree of the geopotential
+# partials, the cost of the conjunction analysis; phase 2, feature 1), excluded from the CI and the CD (decisions of
+# S. Guillet, 2026-10-06 and 2026-10-22). They are skipped unless IO_ASTRODYNAMICS_LONG_VALIDATION is 1, which this
+# workflow sets. Run by hand, on Linux, with the native library built from the sources as in the CI: before each
+# release, and on a pull request that changes the dynamics these tests measure.
 on:
   workflow_dispatch:
 
@@ -37,4 +40,6 @@ jobs:
 
     - name: Test
       working-directory: ./IO.Astrodynamics.Net
+      env:
+        IO_ASTRODYNAMICS_LONG_VALIDATION: '1'
       run: dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "Category=LongValidation" --logger "console;verbosity=detailed"

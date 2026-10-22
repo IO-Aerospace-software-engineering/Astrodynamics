@@ -64,8 +64,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// the step of the reference. To write the curves, set <c>IO_ASTRODYNAMICS_STUDY_OUTPUT</c> to a directory: the test writes
 /// <c>whole_propagation_step_study_{case}.csv</c> there (quantity, step, error).
 /// </para>
+/// <para>
+/// In the <c>LongValidation</c> category since 2026-10-22 (decision of S. Guillet): the study checks steps chosen once,
+/// and takes about 11 min on 4 cores, R4 alone 8 min.
+/// </para>
 /// </remarks>
-[Trait("Category", "Validation")]
+[Trait("Category", "LongValidation")]
 public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
 {
     private const string OutputVariable = "IO_ASTRODYNAMICS_STUDY_OUTPUT";
@@ -83,7 +87,7 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
         _output = output;
     }
 
-    [Theory]
+    [LongValidationTheory]
     [InlineData("R1")]
     [InlineData("R2")]
     [InlineData("R3")]
@@ -102,7 +106,7 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
             referenceResolutionRecord: name == "R5" ? R5ReferenceResolutionRecord : null);
     }
 
-    [Fact]
+    [LongValidationFact]
     public void Eclipsing_ChosenSteps_LieOnThePlateau()
     {
         // Arrange: the reference fires the burn of the integrated trajectory in open loop, the model of Φ
