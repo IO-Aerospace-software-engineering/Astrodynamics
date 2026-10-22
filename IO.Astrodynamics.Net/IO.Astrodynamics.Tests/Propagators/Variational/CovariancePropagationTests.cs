@@ -279,27 +279,39 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
     }
 
     [Fact]
-    public void EvaluateCovariance_AtAStepBoundary_AllocatesNothing()
+    public void EvaluateCovariance_InsideAStep_AllocatesNothing()
     {
-        // Arrange
+        // Arrange: an epoch in the middle of a step, where each evaluation costs a shortened step, the forces and the
+        // variational equations included. An epoch reaches the end of a step only at the end of the propagation, since
+        // Time.AddSeconds truncates to the tick (AtTheEndOfAWindowThatStopsOneTickShort_…); this test used to take the
+        // start of step 3, which the tick put inside step 2 (#429)
         var solution = Propagate(WithCovariance(Leo), Start.AddHours(1.0),
             new VariationalOptions(ForceParameters.DragCoefficient, new RtnProcessNoise(1e-12, 1e-11, 1e-12),
                 PropagateCovariance: true, ConsiderParameters: new ConsiderParameters(0.1)), true);
-        var segment = solution.Segments.Single();
-        var boundary = Start.AddSeconds(segment.Steps[3].CumulativeTime);
+        var step = solution.Segments.Single().Steps[3];
+        var epoch = Start.AddSeconds(step.CumulativeTime + 0.5 * step.StepSize);
         var p = new double[36];
         var extended = new double[49];
-        solution.EvaluateCovariance(boundary, p);
-        solution.EvaluateExtendedCovariance(boundary, extended);
+        solution.EvaluateCovariance(epoch, p);
+        solution.EvaluateExtendedCovariance(epoch, extended);
+        long stageJacobians = solution.Dynamics.StageJacobianEvaluations;
 
-        // Act
-        long before = GC.GetAllocatedBytesForCurrentThread();
-        solution.EvaluateCovariance(boundary, p);
-        solution.EvaluateExtendedCovariance(boundary, extended);
-        long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        // Act: the least of three runs. The counter of the thread also counts the one-off work of the runtime on it (the
+        // first call of a method that allocates nothing counted 1 992 B, the next ones 0); the test failed once, with
+        // 1 848 B, 29.8 s into a run of the CI, and passed on its rerun (#429). An allocation at each evaluation shows in
+        // every run
+        long allocated = long.MaxValue;
+        for (int run = 0; run < 3; run++)
+        {
+            long before = GC.GetAllocatedBytesForCurrentThread();
+            solution.EvaluateCovariance(epoch, p);
+            solution.EvaluateExtendedCovariance(epoch, extended);
+            allocated = System.Math.Min(allocated, GC.GetAllocatedBytesForCurrentThread() - before);
+        }
 
-        // Assert
+        // Assert: nothing allocated, and each evaluation ran a shortened step (13 stage Jacobians)
         Assert.Equal(0, allocated);
+        Assert.Equal(3 * 2 * 13, solution.Dynamics.StageJacobianEvaluations - stageJacobians);
     }
 
     [Fact]
