@@ -1,0 +1,856 @@
+{
+ "generated_by": "tools/shadow_function/shadow_fraction_reference.py, mpmath 1.3.0 at 60 digits",
+ "units": "rad",
+ "points": [
+  {
+   "geometry": "LEO 400 km",
+   "where": "outer contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2301845685309736,
+   "inner_depth": "0.0093009680472206923696",
+   "outer_depth": "9.3258734068513149396e-15",
+   "shadow_fraction": "1.692240324470277491993815438e-18"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "inner contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2208836004837622,
+   "inner_depth": "9.3258734068513149396e-15",
+   "outer_depth": "0.0093009680472206923696",
+   "shadow_fraction": "0.999999999999999998301325970423"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "outer contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2301845685300528,
+   "inner_depth": "0.009300968046299873393",
+   "outer_depth": "9.3014485003095614957e-13",
+   "shadow_fraction": "1.69448208193490022736472652747e-15"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "inner contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.220883600484683,
+   "inner_depth": "9.3014485003095614957e-13",
+   "outer_depth": "0.009300968046299873393",
+   "shadow_fraction": "0.999999999999998299075690052"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "outer contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2301845684379733,
+   "inner_depth": "0.0093009679542204182212",
+   "outer_depth": "9.3009600021787264268e-11",
+   "shadow_fraction": "1.69443775354554323306470643369e-12"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "inner contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2208836005767625,
+   "inner_depth": "9.3009600021787264268e-11",
+   "outer_depth": "0.0093009679542204182212",
+   "shadow_fraction": "0.999999999998299120187049525831"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "outer contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.230184559230015,
+   "inner_depth": "0.0093009587462620224585",
+   "outer_depth": "9.3009679957845037279e-9",
+   "shadow_fraction": "0.00000000169444033017269953336523973583"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "inner contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2208836097847209,
+   "inner_depth": "9.3009679957845037279e-9",
+   "outer_depth": "0.0093009587462620224585",
+   "shadow_fraction": "0.999999998299117608294163000282"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "outer contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2301836384341782,
+   "inner_depth": "0.0093000379504253327667",
+   "outer_depth": "9.3009680468547628607e-7",
+   "shadow_fraction": "0.00000169439040699662673531801113054"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "inner contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2208845305805576,
+   "inner_depth": "9.3009680468547628607e-7",
+   "outer_depth": "0.0093000379504253327667",
+   "shadow_fraction": "0.999998299168488028741465373718"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "outer contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2300915588505106,
+   "inner_depth": "0.0092079583667576958561",
+   "outer_depth": "0.00009300968047232238689",
+   "shadow_fraction": "0.00168938664730347351863826531129"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "inner contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2209766101642252,
+   "inner_depth": "0.00009300968047232238689",
+   "outer_depth": "0.0092079583667576958561",
+   "shadow_fraction": "0.998304267672670893541632943344"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "0.1 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2218136972884759,
+   "inner_depth": "0.0009300968047230018243",
+   "outer_depth": "0.0083708712425070164187",
+   "shadow_fraction": "0.947868814969376537355860629171"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "0.25 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2232088424955605,
+   "inner_depth": "0.0023252420118076155831",
+   "outer_depth": "0.0069757260354224026599",
+   "shadow_fraction": "0.804237004580548235892015278219"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "0.5 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.225534084507368,
+   "inner_depth": "0.0046504840236150091215",
+   "outer_depth": "0.0046504840236150091215",
+   "shadow_fraction": "0.499597374023332455646613217844"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "0.75 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.2278593265191753,
+   "inner_depth": "0.0069757260354224026599",
+   "outer_depth": "0.0023252420118076155831",
+   "shadow_fraction": "0.195239967803728079982496257611"
+  },
+  {
+   "geometry": "LEO 400 km",
+   "where": "0.9 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.225534084507368,
+   "c": 1.22925447172626,
+   "inner_depth": "0.0083708712425070164187",
+   "outer_depth": "0.0009300968047230018243",
+   "shadow_fraction": "0.0519572496469454790361944675232"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "outer contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1269592123869738,
+   "inner_depth": "0.0093009680472206923696",
+   "outer_depth": "9.3258734068513149396e-15",
+   "shadow_fraction": "1.69194620705490173418116314762e-18"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "inner contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1176582443397625,
+   "inner_depth": "9.3258734068513149396e-15",
+   "outer_depth": "0.0093009680472206923696",
+   "shadow_fraction": "0.99999999999999999830102832985"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "outer contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.126959212386053,
+   "inner_depth": "0.009300968046299873393",
+   "outer_depth": "9.3014485003095614957e-13",
+   "shadow_fraction": "1.69418757489410122144893843397e-15"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "inner contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1176582443406833,
+   "inner_depth": "9.3014485003095614957e-13",
+   "outer_depth": "0.009300968046299873393",
+   "shadow_fraction": "0.999999999999998298777655187017"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "outer contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1269592122939736,
+   "inner_depth": "0.0093009679542204182212",
+   "outer_depth": "9.3009600021787264268e-11",
+   "shadow_fraction": "1.69414325421264735237404889061e-12"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "inner contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1176582444327627,
+   "inner_depth": "9.3009600021787264268e-11",
+   "outer_depth": "0.0093009679542204182212",
+   "shadow_fraction": "0.999999999998298822159984847445"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "outer contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1269592030860152,
+   "inner_depth": "0.0093009587462620224585",
+   "outer_depth": "9.3009679957845037279e-9",
+   "shadow_fraction": "0.00000000169414583073904310970797957855"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "inner contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1176582536407211,
+   "inner_depth": "9.3009679957845037279e-9",
+   "outer_depth": "0.0093009587462620224585",
+   "shadow_fraction": "0.999999998298819581134543730495"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "outer contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1269582822901785,
+   "inner_depth": "0.0093000379504253327667",
+   "outer_depth": "9.3009680468547628607e-7",
+   "shadow_fraction": "0.00000169409595094524264878100797794"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "inner contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1176591744365578,
+   "inner_depth": "9.3009680468547628607e-7",
+   "outer_depth": "0.0093000379504253327667",
+   "shadow_fraction": "0.999998298870505473618595797192"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "outer contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1268662027065108,
+   "inner_depth": "0.0092079583667576958561",
+   "outer_depth": "0.00009300968047232238689",
+   "shadow_fraction": "0.00168909651944043427403448047959"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "inner contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1177512540202255,
+   "inner_depth": "0.00009300968047232238689",
+   "outer_depth": "0.0092079583667576958561",
+   "shadow_fraction": "0.998303974139354994087077247283"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "0.1 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1185883411444761,
+   "inner_depth": "0.0009300968047230018243",
+   "outer_depth": "0.0083708712425070164187",
+   "shadow_fraction": "0.947860777830687466301547417147"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "0.25 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1199834863515608,
+   "inner_depth": "0.0023252420118076155831",
+   "outer_depth": "0.0069757260354224026599",
+   "shadow_fraction": "0.804212879871032488550908633476"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "0.5 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1223087283633681,
+   "inner_depth": "0.0046504840236150091215",
+   "outer_depth": "0.0046504840236150091215",
+   "shadow_fraction": "0.499560342106033939038559852178"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "0.75 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1246339703751755,
+   "inner_depth": "0.0069757260354224026599",
+   "outer_depth": "0.0023252420118076155831",
+   "shadow_fraction": "0.195215986300281638762700861266"
+  },
+  {
+   "geometry": "LEO 700 km",
+   "where": "0.9 of the width",
+   "a": 0.004650484023614976,
+   "b": 1.1223087283633681,
+   "c": 1.1260291155822602,
+   "inner_depth": "0.0083708712425070164187",
+   "outer_depth": "0.0009300968047230018243",
+   "shadow_fraction": "0.0519492887068276039936555771907"
+  },
+  {
+   "geometry": "GEO",
+   "where": "outer contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.15650263809238166,
+   "inner_depth": "0.009300968047220664614",
+   "outer_depth": "9.298117831235686026e-15",
+   "shadow_fraction": "1.67006789402896783900312535688e-18"
+  },
+  {
+   "geometry": "GEO",
+   "where": "inner contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.1472016700451703,
+   "inner_depth": "9.298117831235686026e-15",
+   "outer_depth": "0.009300968047220664614",
+   "shadow_fraction": "0.999999999999999998277978419399"
+  },
+  {
+   "geometry": "GEO",
+   "where": "outer contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.15650263809146087,
+   "inner_depth": "0.009300968046299873393",
+   "outer_depth": "9.3008933887972489174e-13",
+   "shadow_fraction": "1.67220542556251693136731635428e-15"
+  },
+  {
+   "geometry": "GEO",
+   "where": "inner contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.14720167004609108,
+   "inner_depth": "9.3008933887972489174e-13",
+   "outer_depth": "0.009300968046299873393",
+   "shadow_fraction": "0.999999999999998275774391986182"
+  },
+  {
+   "geometry": "GEO",
+   "where": "outer contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.15650263799938127,
+   "inner_depth": "0.0093009679542202794433",
+   "outer_depth": "9.3009683288514111155e-11",
+   "shadow_fraction": "1.67223952587541631539094958755e-12"
+  },
+  {
+   "geometry": "GEO",
+   "where": "inner contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.14720167013817068,
+   "inner_depth": "9.3009683288514111155e-11",
+   "outer_depth": "0.0093009679542202794433",
+   "shadow_fraction": "0.999999999998275739231484164946"
+  },
+  {
+   "geometry": "GEO",
+   "where": "outer contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.1565026287914229,
+   "inner_depth": "0.0093009587462619114362",
+   "outer_depth": "9.3009680512956549592e-9",
+   "shadow_fraction": "0.00000000167223912237772633500622773855"
+  },
+  {
+   "geometry": "GEO",
+   "where": "inner contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.14720167934612904,
+   "inner_depth": "9.3009680512956549592e-9",
+   "outer_depth": "0.0093009587462619114362",
+   "shadow_fraction": "0.999999998275739710355549375625"
+  },
+  {
+   "geometry": "GEO",
+   "where": "outer contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.15650170799558624,
+   "inner_depth": "0.0093000379504252495",
+   "outer_depth": "9.3009680471323186168e-7",
+   "shadow_fraction": "0.00000167219236257012927690561011323"
+  },
+  {
+   "geometry": "GEO",
+   "where": "inner contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.1472026001419657,
+   "inner_depth": "9.3009680471323186168e-7",
+   "outer_depth": "0.0093000379504252495",
+   "shadow_fraction": "0.999998275794206714281997514393"
+  },
+  {
+   "geometry": "GEO",
+   "where": "outer contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.15640962841191866,
+   "inner_depth": "0.0092079583667576681005",
+   "outer_depth": "0.000093009680472294631315",
+   "shadow_fraction": "0.00166750653519103651967005115229"
+  },
+  {
+   "geometry": "GEO",
+   "where": "inner contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.1472946797256333,
+   "inner_depth": "0.000093009680472294631315",
+   "outer_depth": "0.0092079583667576681005",
+   "shadow_fraction": "0.998281251726862436414929471922"
+  },
+  {
+   "geometry": "GEO",
+   "where": "0.1 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.148131766849884,
+   "inner_depth": "0.0009300968047230018243",
+   "outer_depth": "0.0083708712425069609075",
+   "shadow_fraction": "0.94724093330816024076218072313"
+  },
+  {
+   "geometry": "GEO",
+   "where": "0.25 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.1495269120569685,
+   "inner_depth": "0.0023252420118075045607",
+   "outer_depth": "0.0069757260354224581711",
+   "shadow_fraction": "0.802363738994773376238752370258"
+  },
+  {
+   "geometry": "GEO",
+   "where": "0.5 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.15185215406877597,
+   "inner_depth": "0.0046504840236149813659",
+   "outer_depth": "0.0046504840236149813659",
+   "shadow_fraction": "0.496750502133697371609320083285"
+  },
+  {
+   "geometry": "GEO",
+   "where": "0.75 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.15417739608058345,
+   "inner_depth": "0.0069757260354224581711",
+   "outer_depth": "0.0023252420118075045607",
+   "shadow_fraction": "0.193414445450186503612573058961"
+  },
+  {
+   "geometry": "GEO",
+   "where": "0.9 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.15185215406877597,
+   "c": 0.15557254128766795,
+   "inner_depth": "0.0083708712425069609075",
+   "outer_depth": "0.0009300968047230018243",
+   "shadow_fraction": "0.0513547777848170666739285534162"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "outer contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.008950484023606375,
+   "inner_depth": "0.0085999999999913992466",
+   "outer_depth": "8.6007589938930095741e-15",
+   "shadow_fraction": "1.04633983839005226699576811571e-18"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "inner contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.00035048402362357616,
+   "inner_depth": "8.600000052372269721e-15",
+   "outer_depth": "0.0085999999999914000055",
+   "shadow_fraction": "0.854949765848253292352916495882"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "outer contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.008950484022754977,
+   "inner_depth": "0.008599999999140000434",
+   "outer_depth": "8.599995715563579779e-13",
+   "shadow_fraction": "1.04620055459698622510823271478e-15"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "inner contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.00035048402447497616,
+   "inner_depth": "8.600000052372269721e-13",
+   "outer_depth": "0.0085999999991400000003",
+   "shadow_fraction": "0.854949765848248010699369267618"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "outer contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.008950483937614976,
+   "inner_depth": "0.0085999999139999994818",
+   "outer_depth": "8.600000052372269721e-11",
+   "shadow_fraction": "1.0462013444626871470914108989e-12"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "inner contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.00035048410961497614,
+   "inner_depth": "8.5999999981621610967e-11",
+   "outer_depth": "0.0085999999140000000239",
+   "shadow_fraction": "0.854949765842966357781247329989"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "outer contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.008950475423614976,
+   "inner_depth": "0.008599991399999999675",
+   "outer_depth": "8.6000000003305654417e-9",
+   "shadow_fraction": "0.00000000104620118477201330180882994584"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "inner contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.00035049262361497616,
+   "inner_depth": "8.6000000000053047899e-9",
+   "outer_depth": "0.0085999914000000000002",
+   "shadow_fraction": "0.854949760561371348635993540417"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "outer contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.008949624023614976,
+   "inner_depth": "0.0085991399999999999088",
+   "outer_depth": "8.6000000000009679813e-7",
+   "shadow_fraction": "0.00000104618616514984904579288405936"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "inner contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.00035134402361497615,
+   "inner_depth": "8.5999999999998837791e-7",
+   "outer_depth": "0.0085991400000000000172",
+   "shadow_fraction": "0.854944484747741768860797287185"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "outer contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.008864484023614977,
+   "inner_depth": "0.0085140000000000007341",
+   "outer_depth": "0.000085999999999999271472",
+   "shadow_fraction": "0.00104468284653796832592815070543"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "inner contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.0004364840236149762,
+   "inner_depth": "0.000086000000000000030413",
+   "outer_depth": "0.0085139999999999999751",
+   "shadow_fraction": "0.850165143400820479822335697078"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "0.1 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.0012104840236149762,
+   "inner_depth": "0.00086000000000000008729",
+   "outer_depth": "0.0077399999999999999183",
+   "shadow_fraction": "0.761707510734876956870463692911"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "0.25 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.002500484023614976,
+   "inner_depth": "0.0021500000000000000014",
+   "outer_depth": "0.0064500000000000000042",
+   "shadow_fraction": "0.599043010514793851995641082599"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "0.5 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.004650484023614976,
+   "inner_depth": "0.0043000000000000000028",
+   "outer_depth": "0.0043000000000000000028",
+   "shadow_fraction": "0.341668704475268799089040218975"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "0.75 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.006800484023614976,
+   "inner_depth": "0.0064500000000000000042",
+   "outer_depth": "0.0021500000000000000014",
+   "shadow_fraction": "0.125919933102674236452925650908"
+  },
+  {
+   "geometry": "Moon smaller than the Sun",
+   "where": "0.9 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.0043,
+   "c": 0.008090484023614977,
+   "inner_depth": "0.0077400000000000003519",
+   "outer_depth": "0.00085999999999999965361",
+   "shadow_fraction": "0.0325995907270388318862463388467"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "outer contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.009310484023605674,
+   "inner_depth": "0.0093009680472206498689",
+   "outer_depth": "9.3015872781876396402e-15",
+   "shadow_fraction": "1.20132301371130803960199837217e-18"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "inner contact, 1e-12 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 9.515976394324885e-06,
+   "inner_depth": "9.3009672500702494924e-15",
+   "outer_depth": "0.0093009680472206504889",
+   "shadow_fraction": "0.999999999999999962432259118347"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "outer contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.009310484022684879,
+   "inner_depth": "0.0093009680462998551784",
+   "outer_depth": "9.3009627777362879897e-13",
+   "shadow_fraction": "1.20103571572592642030692386589e-15"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "inner contact, 1e-10 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 9.515977315120723e-06,
+   "inner_depth": "9.3009680462812199114e-13",
+   "outer_depth": "0.0093009680462998546515",
+   "shadow_fraction": "0.999999999999962432255930186817"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "outer contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.009310483930605296,
+   "inner_depth": "0.0093009679542202716371",
+   "outer_depth": "9.3009679819067159201e-11",
+   "shadow_fraction": "1.20103505872940616794936266379e-12"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "inner contact, 1e-08 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 9.516069394704391e-06,
+   "inner_depth": "9.3009680472976594481e-11",
+   "outer_depth": "0.0093009679542202709832",
+   "shadow_fraction": "0.999999999962432419505952229547"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "outer contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.009310474722646928,
+   "inner_depth": "0.0093009587462619036299",
+   "outer_depth": "9.3009680478262080072e-9",
+   "shadow_fraction": "0.00000000120103487669314293287752177432"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "inner contact, 1e-06 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 9.525277353071148e-06,
+   "inner_depth": "9.3009680472298968124e-9",
+   "outer_depth": "0.0093009587462619042262",
+   "shadow_fraction": "0.999999962448766763500279056046"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "outer contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.009309553926810252,
+   "inner_depth": "0.0093000379504252278159",
+   "outer_depth": "9.3009680472364020254e-7",
+   "shadow_fraction": "0.00000120101705903603833269628118632"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "inner contact, 1e-04 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 1.0446073189746913e-05,
+   "inner_depth": "9.3009680472299476343e-7",
+   "outer_depth": "0.0093000379504252284614",
+   "shadow_fraction": "0.999963981757081088940822897022"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "outer contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.009217474343142676,
+   "inner_depth": "0.0092079583667576516207",
+   "outer_depth": "0.000093009680472299835485",
+   "shadow_fraction": "0.0011992337291550805310483900746"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "inner contact, 1e-02 of the width inside",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.00010252565685732344,
+   "inner_depth": "0.000093009680472299523777",
+   "outer_depth": "0.0092079583667576519324",
+   "shadow_fraction": "0.987938620110436199504933503527"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "0.1 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.0009396127811080192,
+   "inner_depth": "0.00093009680472299531909",
+   "outer_depth": "0.0083708712425069561371",
+   "shadow_fraction": "0.873502361240821534504164385273"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "0.25 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.002334757988192512,
+   "inner_depth": "0.0023252420118074880809",
+   "outer_depth": "0.0069757260354224633753",
+   "shadow_fraction": "0.685491560345186370431680438144"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "0.5 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.00466,
+   "inner_depth": "0.0046504840236149761618",
+   "outer_depth": "0.0046504840236149752944",
+   "shadow_fraction": "0.391237700172608518849335841202"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "0.75 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.006985242011807488,
+   "inner_depth": "0.0069757260354224642426",
+   "outer_depth": "0.0023252420118074872135",
+   "shadow_fraction": "0.144373334002495928392590036964"
+  },
+  {
+   "geometry": "Moon larger than the Sun",
+   "where": "0.9 of the width",
+   "a": 0.004650484023614976,
+   "b": 0.00466,
+   "c": 0.00838038721889198,
+   "inner_depth": "0.0083708712425069565707",
+   "outer_depth": "0.00093009680472299488541",
+   "shadow_fraction": "0.0374057645687212633629520737076"
+  }
+ ]
+}
