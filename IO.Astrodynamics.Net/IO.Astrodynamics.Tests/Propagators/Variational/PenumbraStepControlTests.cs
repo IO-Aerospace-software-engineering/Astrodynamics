@@ -37,7 +37,9 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
     // Budgets at twice the worst steps measured on Linux, Windows and macOS arm64 (lesson 13 of #364; CI of 129088b,
     // 2026-10-22). R3 at 1e-11 to 1e-14: 1 692, 2 247, 3 017, 4 757 (Linux), 1 672, 2 243, 3 025, 4 766 (Windows), 1 660,
     // 2 253, 3 025, 4 753 (macOS arm64), against 744 to 1 839 without the option; R4 at 1e-13 and 1e-14: 252, 458;
-    // 250, 458; 250, 465 (113 to 174 without the option)
+    // 250, 458; 250, 465 (113 to 174 without the option). Measured again with the shadow fraction of #434 (CI of
+    // 3340116, 2026-10-22), within 3 % of these, budgets unchanged (decision of S. Guillet, 2026-10-22): R3 1 657, 2 246, 2 972, 4 604 (Linux), 1 693,
+    // 2 243, 2 974, 4 595 (Windows), 1 643, 2 230, 2 919, 4 584 (macOS arm64); R4 258, 464; 250, 466; 253, 466
     [Theory]
     [InlineData("R3", 1e-11, 3384)]
     [InlineData("R3", 1e-12, 4506)]
@@ -67,7 +69,8 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
 
     // The eclipsing LEO with its apogee raise, drag and SRP, Ψ_Cd and Ψ_Cr, 6 h, in the shadow at the start. At 1e-12 to
     // 1e-14: 547, 771, 1 064 (Linux), 550, 754, 1 059 (Windows), 548, 738, 1 068 (macOS arm64) (571, 837 and 1 335 before
-    // #423 on Linux; 213, 286 and 394 without the option). Budgets at twice the worst
+    // #423 on Linux; 213, 286 and 394 without the option); with #434, 559, 763, 1 056; 551, 750, 1 056; 552, 759,
+    // 1 063. Budgets at twice the worst
     [Theory]
     [InlineData(1e-12, 1100)]
     [InlineData(1e-13, 1542)]
@@ -152,7 +155,8 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
 
         // Assert: F1 (1e-4) over the arc, every half hour, relative to the largest Ψ_Cr of the arc and to the local value.
         // Measured (2026-10-22) over the arc in position and velocity, then locally: 2.5e-10, 3.6e-10, 2.8e-9 (Linux);
-        // 6.5e-11, 9.5e-11, 7.9e-10 (Windows); 8.3e-11, 1.2e-10, 2.1e-9 (macOS arm64)
+        // 6.5e-11, 9.5e-11, 7.9e-10 (Windows); 8.3e-11, 1.2e-10, 2.1e-9 (macOS arm64). With the shadow fraction of #434
+        // (CI of 3340116): 1.1e-10, 1.5e-10, 7.0e-10; 1.5e-10, 2.3e-10, 2.7e-9; 3.7e-10, 5.5e-10, 4.2e-9
         double largestPosition = 0.0;
         double largestVelocity = 0.0;
         double worstPosition = 0.0;

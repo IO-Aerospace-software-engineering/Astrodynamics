@@ -103,9 +103,9 @@ public class ShadowFractionPrecisionTests : IClassFixture<ReferenceCases>, IClas
         _output.WriteLine($"MEASURE #434 worst error of ν {absolute:E2}; relative to ν below 1e-6 ({small.Count} " +
                           $"points) {relative:E2}");
 
-        // .NET 10, Linux, 2026-10-22: 2.2e-16 absolute (1 ulp of 1), 8.7e-16 relative to ν below 1e-6 (on main 1.7e-4,
-        // and relative errors far above 1, the closed form cancelling). Provisional bounds at twice the measurement, to be
-        // set at twice the worst of the three platforms (lesson 13 of #364)
+        // .NET 10 (CI of 3340116, 2026-10-22): 2.2e-16 absolute (1 ulp of 1), 8.7e-16 relative to ν below 1e-6, the same
+        // on Linux, Windows and macOS arm64 (on main 1.7e-4, and relative errors far above 1, the closed form
+        // cancelling). Bounds at twice the worst of the three platforms (lesson 13 of #364)
         Assert.All(errors, e => Assert.InRange(e.Value, 0.0, 1.0));
         Assert.True(absolute < 4.5e-16, $"worst error of ν {absolute:E2}");
         Assert.True(relative < 1.8e-15, $"worst error relative to ν below 1e-6 {relative:E2}");

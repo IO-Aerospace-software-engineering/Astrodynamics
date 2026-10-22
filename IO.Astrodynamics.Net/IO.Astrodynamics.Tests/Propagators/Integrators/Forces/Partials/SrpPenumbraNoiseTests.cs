@@ -132,14 +132,14 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
         // and macOS arm64, ν 3.9e-10 to 3.8e-8; the derivative of the shadow function 1.2e-15 to 1.8e-15 at ν = 0.5,
         // 2.9e-13 to 3.2e-13 at ν = 0.01 and 0.99, 5.7e-12 to 6.6e-12 at 1e-4 and 1 − 1e-4, and 3.2e-10 to 3.7e-10 at 2 m
         // from the contacts, where the rounding of the angular separation (about 1e-16 rad) enters the square root of the
-        // half chord, a + b − c being some 3e-7 rad there. With the shadow fraction of #434 (Linux, 2026-10-22): the
-        // central differences 2.6e-11 to 4.4e-11 of their block, the derivative of the shadow function 5.1e-16 to
-        // 3.4e-10, ν 2.8e-16 to 2.5e-14. The bound of the derivative unchanged (its noise is that of the angles); those of the
-        // central differences and of ν provisional at twice the Linux figures, to be set at twice the worst over the
-        // three platforms (lesson 13 of #364)
-        Assert.True(worstCentral < 8.8e-11, $"noise of the central differences {worstCentral:E2}");
-        Assert.True(worstAnalytic < 7.4e-10, $"noise of the derivative of the shadow function {worstAnalytic:E2}");
-        Assert.True(worstShadow < 5.0e-14, $"noise of ν {worstShadow:E2}");
+        // half chord, a + b − c being some 3e-7 rad there. With the shadow fraction of #434 (CI of 3340116, 2026-10-22), on
+        // Linux, Windows and macOS arm64: the central differences 2.6e-11 to 4.4e-11, 2.8e-11 to 4.6e-11 and 2.6e-11 to
+        // 4.4e-11 of their block, the derivative of the shadow function 5.1e-16 to 3.4e-10, 5.2e-16 to 3.5e-10 and
+        // 5.1e-16 to 3.4e-10, ν 2.8e-16 to 2.5e-14, 3.0e-16 to 2.6e-14 and 2.8e-16 to 2.5e-14. Bounds at twice the worst
+        // over the three platforms (lesson 13 of #364): 4.57e-11, 3.45e-10 and 2.61e-14 (Windows)
+        Assert.True(worstCentral < 9.2e-11, $"noise of the central differences {worstCentral:E2}");
+        Assert.True(worstAnalytic < 6.9e-10, $"noise of the derivative of the shadow function {worstAnalytic:E2}");
+        Assert.True(worstShadow < 5.3e-14, $"noise of ν {worstShadow:E2}");
     }
 
     private delegate void Partials(StateVector state, double[] dadr);
