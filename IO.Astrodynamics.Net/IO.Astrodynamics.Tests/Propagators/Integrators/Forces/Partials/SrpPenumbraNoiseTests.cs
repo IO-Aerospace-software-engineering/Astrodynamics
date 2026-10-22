@@ -30,11 +30,13 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// error estimate of Y is first order in the step for a noisy derivative, as for the density gradient of #420.
 /// </para>
 /// <para>
-/// The noise is the root mean square of the second difference of each element along 2000 points 1 mm apart along the
+/// The noise is the root mean square of the second difference of each element along 2000 points 0.1 mm apart along the
 /// velocity, divided by √6 (the variance of the second difference of a white noise) and by the Frobenius norm of the
 /// block, at points where ν is 1e-6 to 1 − 1e-6. The partials vary over the width of the penumbra, about 20 km, so over
-/// 1 mm their second difference is noise alone, except within a few metres of a contact, where the exact partials grow
-/// as the square root of the distance to it.
+/// 0.1 mm their second difference is noise alone. Near a contact the exact partials grow as the square root of the
+/// distance to it, so the 0.2 m of the points must stay inside the penumbra: at ν = 1e-6 the contact is about 2 m away.
+/// With 2000 points 1 mm apart the window reached the inner contact on macOS arm64, where the point nearest to
+/// 1 − 1e-6 fell closer to it, and the second difference measured the square root (1.9e-2 against 1.3e-3 on Linux).
 /// </para>
 /// </remarks>
 public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
@@ -88,7 +90,8 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
         foreach (double target in new[] { 1e-6, 1e-4, 1e-2, 0.5, 1.0 - 1e-2, 1.0 - 1e-4, 1.0 - 1e-6 })
         {
             var state = At(crossing.OrderBy(sample => System.Math.Abs(sample.Nu - target)).First().T);
-            var (partialsNoise, shadowNoise, nu) = Noise(srp, context, state, Shadow);
+            var (partialsNoise, shadowNoise, nu, inside) = Noise(srp, context, state, Shadow);
+            Assert.True(inside, $"the points around ν = {nu:E3} leave the penumbra");
             worstPartials = System.Math.Max(worstPartials, partialsNoise);
             worstShadow = System.Math.Max(worstShadow, shadowNoise);
             _output.WriteLine($"MEASURE #423 R3 penumbra ν {nu:E3}: noise of the SRP partials {partialsNoise:E2} " +
@@ -96,13 +99,14 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
         }
 
         // Assert: the noise of the cause, Linux .NET 10 (2026-10-22): partials 5.3e-7 of their block at ν = 0.5 to
-        // 1.3e-3 within a few metres of the contacts, ν 4.4e-10 to 2.4e-8; bounds at twice the worst, to be set on the
-        // three platforms of the CI (lesson 13 of #364)
+        // 1.2e-3 within a few metres of the contacts, ν 4.3e-10 to 2.2e-8; with 1 mm between the points, Windows and
+        // macOS arm64 gave the same to 3 % at the six points that stayed inside the penumbra. Bounds at twice the worst
+        // on Linux, to be set on the three platforms of the CI (lesson 13 of #364)
         Assert.True(worstPartials < 2.6e-3, $"noise of the SRP partials {worstPartials:E2}");
         Assert.True(worstShadow < 4.9e-8, $"noise of ν {worstShadow:E2}");
     }
 
-    private static (double Partials, double Shadow, double Nu) Noise(ForceBase force, ForceEvaluationContext context,
+    private static (double Partials, double Shadow, double Nu, bool Inside) Noise(ForceBase force, ForceEvaluationContext context,
         StateVector state, Func<StateVector, double> shadow)
     {
         const int count = 2000;
@@ -112,7 +116,7 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
         var nus = new double[count];
         for (int k = 0; k < count; k++)
         {
-            work.UpdatePosition(state.Position + direction * (1e-3 * (k - count / 2)));
+            work.UpdatePosition(state.Position + direction * (1e-4 * (k - count / 2)));
             blocks[k] = new double[9];
             force.AccumulateStatePartials(work, context, blocks[k], new double[9]);
             nus[k] = shadow(work);
@@ -134,6 +138,6 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
 
         double norm = System.Math.Sqrt(blocks[count / 2].Sum(value => value * value));
         return (System.Math.Sqrt(partials / ((count - 2) * 6.0)) / norm, System.Math.Sqrt(shadows / ((count - 2) * 6.0)),
-            nus[count / 2]);
+            nus[count / 2], nus.All(nu => nu > 0.0 && nu < 1.0));
     }
 }
