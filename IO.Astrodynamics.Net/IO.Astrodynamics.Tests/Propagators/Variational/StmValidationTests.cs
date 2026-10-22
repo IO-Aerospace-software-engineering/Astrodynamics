@@ -39,7 +39,9 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// R3 7.3e-7, 9.1e-7, 7.3e-7, 9.1e-7, Ψ_Cr 9.1e-6, 9.2e-5; R4 1.8e-8, 2.7e-8, 2.8e-8, 2.2e-8, Ψ_Cr 4.9e-7, 3.1e-8;
 /// R5 6.7e-7, 3.3e-7, 6.7e-7, 3.3e-7, Ψ_Cd 5.6e-8, 6.4e-8. In the penumbra (R3: 30 crossings; R4: 2), no larger than
 /// outside: R3 Φ 7.1e-7 to 9.0e-7, Ψ_Cr 5.8e-6 and 7.2e-6; R4 Φ 3.4e-9 to 1.3e-8, Ψ_Cr 9.8e-9 and 7.0e-9. The SRP
-/// partials take central differences in and near the penumbra (#379), so the shadow function is differentiated.
+/// partials differentiate the shadow function in the penumbra: by central differences in and near it from #379, by its
+/// analytic derivative since #423, which moved Φ of R3 in the third digit (3.31e-7 to 5.18e-7 per block over the arc
+/// before, 3.34e-7 to 5.20e-7 after; Linux, .NET 10, 2026-10-22) and Ψ_Cr not to three digits.
 /// </para>
 /// <para>
 /// Ψ is also held over the arc relative to its largest value, the measure of #394, which does not depend on what the

@@ -102,6 +102,31 @@ public class NonIcrfFramePartialsTests : IClassFixture<PartialsTestCases>
         Assert.True(dadvError < 1e-6, $"{stateName}: dadv relative error {dadvError:E2}");
     }
 
+    [Theory]
+    [InlineData(PartialsTestCases.Leo400)]
+    [InlineData(PartialsTestCases.Geo)]
+    public void SrpInThePenumbra_StateInEclipticJ2000_GivesTheRotatedIcrfPartials(string orbit)
+    {
+        // Arrange: half the solar disc hidden by the Earth, where the derivative of the shadow function is the whole
+        // block (#423)
+        var icrfState = PenumbraStates.At(_cases, orbit, PenumbraStates.AngleOfShadowFraction(_cases, orbit, 0.5));
+        var state = icrfState.ToFrame(Ecliptic).ToStateVector();
+        var spacecraft = PartialsTestCases.Spacecraft(icrfState);
+        var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
+        var force = new SolarRadiationPressure(spacecraft, new[] { _cases.Earth, _cases.Moon });
+        var icrfDadr = new double[9];
+        var dadr = new double[9];
+
+        // Act
+        force.AccumulateStatePartials(icrfState, context, icrfDadr, new double[9]);
+        force.AccumulateStatePartials(state, context, dadr, new double[9]);
+
+        // Assert
+        double error = RiddersDerivative.RelativeFrobeniusError(dadr, Conjugate(Rotation(Ecliptic), icrfDadr));
+        _output.WriteLine($"MEASURE #423 {orbit}, SRP in the penumbra: relative error {error:E2}");
+        Assert.True(error < 1e-9, $"{orbit}: relative error {error:E2}");
+    }
+
     /// <summary>
     /// R, row-major, such that x_frame = R x_ICRF: its columns are the ICRF axes expressed in the frame.
     /// </summary>
