@@ -8,9 +8,10 @@ namespace IO.Astrodynamics.Tests.Atmosphere;
 
 /// <summary>
 /// The density of <see cref="MarsStandardAtmosphere"/> against an independent reference (#422): the nominal northern
-/// summer mid-latitude model of A. Seiff, "Post-Viking models for the structure of the summer atmosphere of Mars",
-/// Advances in Space Research 2 (1982), 3–17, as tabulated by C. Ho et al., "Radio Wave Propagation Handbook for
-/// Communication on and Around Mars", JPL Publication 02-5 (2002), table 3-1 (surface pressure 6.36 mb).
+/// summer mid-latitude model of A. Seiff, "Post-Viking models for the structure of the summer atmosphere of Mars", in
+/// The Mars Reference Atmosphere, A. J. Kliore (ed.), Advances in Space Research 2(2) (1982), as tabulated in the JPL
+/// DESCANSO Mars propagation handbook, section 3, "Martian Atmosphere and Its Effects on Propagation", table 3-1
+/// (surface pressure 6.36 mb); to be verified by S. Guillet.
 /// </summary>
 /// <remarks>
 /// The model is the curve fit of the NASA Glenn Research Center ("Mars Atmosphere Model - Metric Units"), surface
