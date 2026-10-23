@@ -427,28 +427,30 @@ public class CelestialBodyTests
         Assert.Equal(0.0, CelestialItem.ShadowFraction(3.0, 2.0, 4.0));
     }
 
+    // The U.S. Standard Atmosphere 1976, table I (#437): at 0, 12 and 30 km, T = 288.150, 216.650 and 226.509 K, p = 1013.25,
+    // 193.99 and 11.970 mb, ρ = 1.2250, 0.31194 and 1.8410e-2 kg/m³
     [Fact]
     public void EarthAirTemperature()
     {
-        Assert.Equal(15.04, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirTemperature(0.0), 9);
-        Assert.Equal(-56.46, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirTemperature(12000.0), 9);
-        Assert.Equal(-41.51, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirTemperature(30000.0), 9);
+        Assert.Equal(15.0, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirTemperature(0.0), 3);
+        Assert.Equal(-56.5, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirTemperature(12000.0), 3);
+        Assert.Equal(226.509 - IO.Astrodynamics.Constants.Kelvin, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirTemperature(30000.0), 3);
     }
 
     [Fact]
     public void EarthAirPressure()
     {
-        Assert.Equal(101.49344845410143, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirPressure(0.0));
-        Assert.Equal(19.417211275909512, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirPressure(12000.0));
-        Assert.Equal(1.1583293266743089, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirPressure(30000.0));
+        Assert.Equal(101.325, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirPressure(0.0), 9);
+        Assert.Equal(1.0, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirPressure(12000.0) / 19.399, 4);
+        Assert.Equal(1.0, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirPressure(30000.0) / 1.1970, 4);
     }
 
     [Fact]
     public void EarthAirDensity()
     {
-        Assert.Equal(1.2275199342947976, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirDensity(0.0));
-        Assert.Equal(0.3123326876175731, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirDensity(12000.0));
-        Assert.Equal(0.017429621153374267, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirDensity(30000.0));
+        Assert.Equal(1.0, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirDensity(0.0) / 1.2250, 4);
+        Assert.Equal(1.0, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirDensity(12000.0) / 0.31194, 4);
+        Assert.Equal(1.0, TestHelpers.EarthWithAtmAndGeoAtJ2000.GetAirDensity(30000.0) / 1.8410e-2, 4);
     }
 
     [Fact]

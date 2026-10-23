@@ -7,22 +7,28 @@ namespace IO.Astrodynamics.Atmosphere;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Simple analytical model valid for altitudes up to approximately 86 km.
-/// Uses only altitude - ignores time, position, and space weather.
-/// For more accurate modeling at higher altitudes or with time-varying conditions,
-/// use Nrlmsise00Model.
+/// U.S. Standard Atmosphere, 1976, NOAA, NASA and USAF (1976), NASA-TM-X-74335, from −5 km to 1000 km of geometric
+/// altitude. Uses only altitude - ignores time, position, and space weather. For time-varying conditions, and for
+/// orbits, use Nrlmsise00Model.
 /// </para>
 /// <para>
-/// The curve fit of the NASA Glenn Research Center, "Earth Atmosphere Model - Metric Units" (Beginner's Guide to
-/// Aeronautics), in three branches: below 11 km, T = 15.04 − 0.00649 h °C and p = 101.29 (T_K / 288.08)^5.256 kPa; from
-/// 11 to 25 km, T = −56.46 °C and p = 22.65 exp(1.73 − 0.000157 h); above 25 km, T = −131.21 + 0.00299 h °C, held at
-/// 2200 °C above 779.67 km, and p = 2.488 (T_K / 216.6)^−11.388; ρ = p / (0.2869 T_K). The branches do not meet: the
-/// density jumped by −0.023 % at 11 km and −1.82 % at 25 km, and RK7(8) stopped there (#433). Over
-/// 2 <see cref="TransitionHalfWidth"/> (500 m) centred on each boundary, ln p and T go from one branch to the next by a
-/// quintic smootherstep, so that the density and its first two derivatives are continuous; the model is unchanged bit
-/// for bit outside these intervals. Against the tables of the U.S. Standard Atmosphere 1976 (NASA-TM-X-74335), the
-/// density is within +0.20 to +0.25 % below 11 km, +0.12 to +0.24 % in the 11 km transition and −0.96 to +1.20 % in
-/// the 25 km one.
+/// Below 86 km, its defining equations: seven layers of linear molecular-scale temperature in geopotential altitude
+/// H = r₀ Z / (r₀ + Z) (its table 4), the hydrostatic pressure of eq. (33a) and (33b) from 101 325 Pa at sea level,
+/// ρ = p M₀ / (R* T_M), eq. (42). From 86 to 1000 km, the number densities of its section 1.3
+/// (<see cref="Thermosphere1976"/>). Above 1000 km, where the standard stops, ln ρ and ln p are continued with their
+/// slopes at 1000 km (a scale height of 237 km). The temperature is the kinetic temperature: T_M times M/M₀ of its
+/// table 8 between 80 and 86 km.
+/// </para>
+/// <para>
+/// The density of the standard is continuous, but its slope jumps at the base of each layer (+23.5 % at 11 km of
+/// geopotential altitude), and RK7(8) with the variational equations in the step control stops there. Over
+/// ±<see cref="TransitionHalfWidth"/> (100 m) of geometric altitude around each base, ln p and T_M go from one layer to
+/// the next by a quintic smootherstep, so that the density and its first two derivatives are continuous, within 2.1e-4
+/// of the equations; from 86 to 86.2 km the equations below 86 km go to the thermosphere the same way (they differ by
+/// 8.1e-6 at 86 km). Against table I of the standard the density is within 4.2e-4, the rounding of the table, from
+/// −1.05 to 1000 km (#437). Before #437 the model was the curve fit of the NASA Glenn Research Center, "Earth
+/// Atmosphere Model - Metric Units", whose upper-stratosphere line extended to every altitude gave 38.7 times the
+/// density of the standard at 200 km and 80.1 times at 140 km.
 /// </para>
 /// <para>
 /// Atmospheric drag reads the density from the altitude without building a context
@@ -88,147 +94,177 @@ public class EarthStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel,
         return Density(altitude);
     }
 
-    // Boundaries of the branches of the curve fit, m
-    private const double TroposphereTop = 11000.0;
-    private const double LowerStratosphereTop = 25000.0;
-
     /// <summary>
-    /// Half-width of the transitions, m: over 500 m centred on 11 km and on 25 km, ln p and T go from one branch of the
-    /// curve fit to the next by a quintic smootherstep, so that the density and its first two derivatives are
-    /// continuous (#433); the branches do not meet (the density jumped by −0.023 % at 11 km and −1.82 % at 25 km).
-    /// </summary>
-    internal const double TransitionHalfWidth = 250.0;
-
-    /// <summary>
-    /// dρ/dh, by differentiation of the closed form of the branch the altitude falls in. With T_K the absolute
-    /// temperature: below 11 km, ρ ∝ T_K^(5.256 − 1) with dT/dh = −0.00649 K/m; from 11 to 25 km, T is constant and
-    /// ρ ∝ exp(−0.000157 h); above 25 km, ρ ∝ T_K^(−11.388 − 1) with dT/dh = 0.00299 K/m, and dρ/dh = 0 where the
-    /// temperature is held at 2200 °C (above 779.67 km), where the density is constant. In a transition between branches
-    /// 0 and 1: d ln p/dh = (1 − w) s₀ + w s₁ + w′ (ln p₁ − ln p₀) and T_K′ = (1 − w) T₀′ + w T₁′ + w′ (T₁ − T₀), so
-    /// dρ/dh = ρ (d ln p/dh − T_K′ / T_K).
+    /// dρ/dh = ρ d ln ρ/dh in closed form: below 86 km, d ln ρ/dZ = −(g₀ M₀ / R* + L) / T_M (r₀ / (r₀ + Z))² in a layer of
+    /// gradient L, and in a transition d ln p/dZ and T_M′ blended as ln p and T_M, plus w′ times the difference of the
+    /// two layers; above 86 km, the derivative of the spline of ln ρ (<see cref="Thermosphere1976"/>).
     /// </summary>
     double IAltitudeDensityDerivative.GetDensityAltitudeDerivative(double altitude)
     {
-        int transition = Transition(altitude);
-        if (transition >= 0)
-        {
-            var (w, dw) = Weight(altitude, transition);
-            double lowerLogPressure = System.Math.Log(BranchPressure(transition, altitude));
-            double upperLogPressure = System.Math.Log(BranchPressure(transition + 1, altitude));
-            double lowerTemperature = BranchTemperature(transition, altitude);
-            double upperTemperature = BranchTemperature(transition + 1, altitude);
-            double logPressureSlope = (1.0 - w) * BranchLogPressureSlope(transition, altitude) +
-                                      w * BranchLogPressureSlope(transition + 1, altitude) +
-                                      dw * (upperLogPressure - lowerLogPressure);
-            double temperatureSlope = (1.0 - w) * BranchTemperatureSlope(transition, altitude) +
-                                      w * BranchTemperatureSlope(transition + 1, altitude) +
-                                      dw * (upperTemperature - lowerTemperature);
-            double temperature = (1.0 - w) * lowerTemperature + w * upperTemperature + Constants.Kelvin;
-            return Density(altitude) * (logPressureSlope - temperatureSlope / temperature);
-        }
-
-        double absoluteTemperature = Temperature(altitude) + Constants.Kelvin;
-        double logarithmicDerivative;
-        if (altitude < TroposphereTop)
-        {
-            logarithmicDerivative = (5.256 - 1.0) * -0.00649 / absoluteTemperature;
-        }
-        else if (altitude < LowerStratosphereTop)
-        {
-            logarithmicDerivative = -0.000157;
-        }
-        else
-        {
-            logarithmicDerivative = -131.21 + 0.00299 * altitude < 2200.0
-                ? (-11.388 - 1.0) * 0.00299 / absoluteTemperature
-                : 0.0;
-        }
-
-        return Density(altitude) * logarithmicDerivative;
+        var (logDensity, slope) = LogDensity(altitude);
+        return System.Math.Exp(logDensity) * slope;
     }
 
-    // The transition the altitude falls in: 0 around 11 km, 1 around 25 km, −1 outside both
-    private static int Transition(double altitude)
+    // Defining constants of table 2 and the layers of table 4: g₀ (m/s²), R* (J/(kmol K)), M₀ (kg/kmol), r₀ (m), the bases
+    // H_b (m') and the gradients L_M,b (K/m') of the molecular-scale temperature
+    private const double G0 = 9.80665;
+    private const double GasConstant = 8.31432e3;
+    private const double SeaLevelMolecularWeight = 28.9644;
+    private const double EarthRadius = 6356766.0;
+    private const double HydrostaticConstant = G0 * SeaLevelMolecularWeight / GasConstant;
+    private static readonly double[] LayerBase = { 0.0, 11000.0, 20000.0, 32000.0, 47000.0, 51000.0, 71000.0 };
+    private static readonly double[] LapseRate = { -6.5e-3, 0.0, 1.0e-3, 2.8e-3, 0.0, -2.8e-3, -2.0e-3 };
+    private static readonly double[] BaseTemperature = new double[7];
+    private static readonly double[] BaseLogPressure = new double[7];
+    private static readonly double[] GeometricLayerBase = new double[7];
+
+    // M/M₀ of table 8 from 80 to 86 km of geometric altitude, every 500 m
+    private static readonly double[] MolecularWeightRatio =
     {
-        if (altitude >= TroposphereTop - TransitionHalfWidth && altitude < TroposphereTop + TransitionHalfWidth)
+        1.000000, 0.999996, 0.999989, 0.999971, 0.999941, 0.999909, 0.999870, 0.999829, 0.999786, 0.999741, 0.999694,
+        0.999641, 0.999579
+    };
+
+    /// <summary>
+    /// Half-width of the transitions at the bases of the layers, m of geometric altitude.
+    /// </summary>
+    internal const double TransitionHalfWidth = 100.0;
+
+    /// <summary>
+    /// Width of the junction above 86 km from the equations of the layers to the thermosphere, m.
+    /// </summary>
+    internal const double JunctionWidth = 200.0;
+
+    static EarthStandardAtmosphere()
+    {
+        BaseTemperature[0] = 288.15;
+        BaseLogPressure[0] = System.Math.Log(101325.0);
+        for (int i = 0; i < 6; i++)
         {
-            return 0;
+            (BaseTemperature[i + 1], BaseLogPressure[i + 1]) = Layer(i, LayerBase[i + 1]);
         }
 
-        if (altitude >= LowerStratosphereTop - TransitionHalfWidth && altitude < LowerStratosphereTop + TransitionHalfWidth)
+        for (int i = 0; i < 7; i++)
         {
-            return 1;
+            GeometricLayerBase[i] = EarthRadius * LayerBase[i] / (EarthRadius - LayerBase[i]);
         }
-
-        return -1;
     }
 
-    // Weight of the upper branch in a transition and its derivative in altitude
-    private static (double Weight, double Slope) Weight(double altitude, int transition)
+    /// <summary>
+    /// The geometric altitudes of the bases of the layers above the first, m: 11.019, 20.063, 32.162, 47.350, 51.413 and
+    /// 71.802 km.
+    /// </summary>
+    internal static System.ReadOnlySpan<double> LayerBases => System.MemoryExtensions.AsSpan(GeometricLayerBase, 1);
+
+    // T_M (K) and ln p (Pa) of layer i at the geopotential altitude h, eq. (23), (33a) and (33b)
+    private static (double Temperature, double LogPressure) Layer(int i, double h)
     {
-        double boundary = transition == 0 ? TroposphereTop : LowerStratosphereTop;
-        return Smootherstep.At(altitude, boundary - TransitionHalfWidth, 2.0 * TransitionHalfWidth);
+        double temperature = BaseTemperature[i] + LapseRate[i] * (h - LayerBase[i]);
+        double logPressure = LapseRate[i] == 0.0
+            ? BaseLogPressure[i] - HydrostaticConstant * (h - LayerBase[i]) / BaseTemperature[i]
+            : BaseLogPressure[i] + HydrostaticConstant / LapseRate[i] * System.Math.Log(BaseTemperature[i] / temperature);
+        return (temperature, logPressure);
     }
 
-    // The branches of the curve fit at any altitude: 0 the troposphere, 1 the lower stratosphere, 2 the upper
-    // stratosphere; the temperature in °C and its derivative, the pressure in kPa and the derivative of its logarithm
-    private static double BranchTemperature(int branch, double altitude) => branch switch
+    // Layer i at the geometric altitude z: T_M, ln p (Pa) and their derivatives in z
+    private static (double T, double LogP, double DT, double DLogP) Branch(int i, double z)
     {
-        0 => 15.04 - 0.00649 * altitude,
-        1 => -56.46,
-        _ => double.Min(-131.21 + 0.00299 * altitude, 2200.0)
-    };
-
-    private static double BranchTemperatureSlope(int branch, double altitude) => branch switch
-    {
-        0 => -0.00649,
-        1 => 0.0,
-        _ => -131.21 + 0.00299 * altitude < 2200.0 ? 0.00299 : 0.0
-    };
-
-    private static double BranchPressure(int branch, double altitude) => branch switch
-    {
-        0 => 101.29 * System.Math.Pow((BranchTemperature(0, altitude) + Constants.Kelvin) / 288.08, 5.256),
-        1 => 22.65 * System.Math.Exp(1.73 - .000157 * altitude),
-        _ => 2.488 * System.Math.Pow((BranchTemperature(2, altitude) + Constants.Kelvin) / 216.6, -11.388)
-    };
-
-    private static double BranchLogPressureSlope(int branch, double altitude) => branch switch
-    {
-        0 => 5.256 * -0.00649 / (BranchTemperature(0, altitude) + Constants.Kelvin),
-        1 => -0.000157,
-        _ => -11.388 * BranchTemperatureSlope(2, altitude) / (BranchTemperature(2, altitude) + Constants.Kelvin)
-    };
-
-    private static int Branch(double altitude) => altitude < TroposphereTop ? 0 : altitude < LowerStratosphereTop ? 1 : 2;
-
-    private static double Temperature(double altitude)
-    {
-        int transition = Transition(altitude);
-        if (transition < 0)
-        {
-            return BranchTemperature(Branch(altitude), altitude);
-        }
-
-        var (w, _) = Weight(altitude, transition);
-        return (1.0 - w) * BranchTemperature(transition, altitude) + w * BranchTemperature(transition + 1, altitude);
+        double ratio = EarthRadius / (EarthRadius + z);
+        var (t, logP) = Layer(i, EarthRadius * z / (EarthRadius + z));
+        return (t, logP, LapseRate[i] * ratio * ratio, -HydrostaticConstant / t * ratio * ratio);
     }
 
-    private static double Pressure(double altitude)
+    // The layers below 86 km with their transitions, at the geometric altitude z
+    private static (double T, double LogP, double DT, double DLogP) Lower(double z)
     {
-        int transition = Transition(altitude);
-        if (transition < 0)
+        for (int i = 1; i < 7; i++)
         {
-            return BranchPressure(Branch(altitude), altitude);
+            if (z < GeometricLayerBase[i] - TransitionHalfWidth)
+            {
+                return Branch(i - 1, z);
+            }
+
+            if (z < GeometricLayerBase[i] + TransitionHalfWidth)
+            {
+                var (w, dw) = Smootherstep.At(z, GeometricLayerBase[i] - TransitionHalfWidth, 2.0 * TransitionHalfWidth);
+                var below = Branch(i - 1, z);
+                var above = Branch(i, z);
+                return ((1.0 - w) * below.T + w * above.T, (1.0 - w) * below.LogP + w * above.LogP,
+                    (1.0 - w) * below.DT + w * above.DT + dw * (above.T - below.T),
+                    (1.0 - w) * below.DLogP + w * above.DLogP + dw * (above.LogP - below.LogP));
+            }
         }
 
-        var (w, _) = Weight(altitude, transition);
-        return System.Math.Exp((1.0 - w) * System.Math.Log(BranchPressure(transition, altitude)) +
-                               w * System.Math.Log(BranchPressure(transition + 1, altitude)));
+        return Branch(6, z);
+    }
+
+    // ln ρ (kg/m³) and its derivative in altitude
+    private static (double Value, double Slope) LogDensity(double altitude)
+    {
+        if (altitude >= Thermosphere1976.Base + JunctionWidth)
+        {
+            return Thermosphere1976.Density(altitude);
+        }
+
+        var lower = Lower(altitude);
+        double value = lower.LogP + System.Math.Log(SeaLevelMolecularWeight / (GasConstant * lower.T));
+        double slope = lower.DLogP - lower.DT / lower.T;
+        if (altitude < Thermosphere1976.Base)
+        {
+            return (value, slope);
+        }
+
+        var upper = Thermosphere1976.Density(altitude);
+        var (w, dw) = Smootherstep.At(altitude, Thermosphere1976.Base, JunctionWidth);
+        return ((1.0 - w) * value + w * upper.Value, (1.0 - w) * slope + w * upper.Slope + dw * (upper.Value - value));
     }
 
     private static double Density(double altitude)
     {
-        return Pressure(altitude) / (0.2869 * (Temperature(altitude) + Constants.Kelvin));
+        return System.Math.Exp(LogDensity(altitude).Value);
+    }
+
+    // kPa
+    private static double Pressure(double altitude)
+    {
+        if (altitude >= Thermosphere1976.Base + JunctionWidth)
+        {
+            return System.Math.Exp(Thermosphere1976.Pressure(altitude).Value);
+        }
+
+        double lower = Lower(altitude).LogP - System.Math.Log(1000.0);
+        if (altitude < Thermosphere1976.Base)
+        {
+            return System.Math.Exp(lower);
+        }
+
+        var (w, _) = Smootherstep.At(altitude, Thermosphere1976.Base, JunctionWidth);
+        return System.Math.Exp((1.0 - w) * lower + w * Thermosphere1976.Pressure(altitude).Value);
+    }
+
+    // °C: the kinetic temperature, T_M (M/M₀) below 86 km
+    private static double Temperature(double altitude)
+    {
+        if (altitude >= Thermosphere1976.Base + JunctionWidth)
+        {
+            return Thermosphere1976.KineticTemperature(altitude) - Constants.Kelvin;
+        }
+
+        double ratio = 1.0;
+        if (altitude >= 80000.0)
+        {
+            double position = System.Math.Min((altitude - 80000.0) / 500.0, MolecularWeightRatio.Length - 1.0);
+            int k = System.Math.Min((int)position, MolecularWeightRatio.Length - 2);
+            ratio = MolecularWeightRatio[k] + (position - k) * (MolecularWeightRatio[k + 1] - MolecularWeightRatio[k]);
+        }
+
+        double lower = Lower(altitude).T * ratio;
+        if (altitude < Thermosphere1976.Base)
+        {
+            return lower - Constants.Kelvin;
+        }
+
+        var (w, _) = Smootherstep.At(altitude, Thermosphere1976.Base, JunctionWidth);
+        return (1.0 - w) * lower + w * Thermosphere1976.KineticTemperature(altitude) - Constants.Kelvin;
     }
 }

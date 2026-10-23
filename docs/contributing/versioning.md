@@ -125,17 +125,30 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   drag opposes the relative velocity everywhere; `GetTemperature` and `GetPressure` follow. Unchanged bit for bit below
   49.887 km. Above about 100 km the layer extrapolates a 139 K mesosphere: the thermosphere is not modelled, so drag in
   orbit above about 120 km is underestimated (#431). No public API change.
-- **The branches of the standard atmospheres meet.** `EarthStandardAtmosphere` and `MarsStandardAtmosphere` switched
-  from one branch of their NASA Glenn curve fits to the next at once: the density jumped by −0.023 % at 11 km and
-  −1.82 % at 25 km on the Earth, and rose by 0.41 % at 7 km on Mars. RK7(8) stopped there (100 consecutive rejections)
-  at every tolerance with `IncludeInStepControl`, and at 1e-12 and 1e-13 without it when the drag is strong. Over 500 m
-  centred on each boundary, the pressure and the temperature now go from one branch to the next by a quintic
-  smootherstep: the density and its first two derivatives are continuous, dρ/dh is in closed form, and RK7(8)
-  completes, with and without the option, through every propagation path. Outside these intervals both models are
-  unchanged bit for bit, so is every propagation that stays above 25.25 km on the Earth or 7.25 km on Mars. Inside
-  them, the Earth density stays within +0.12 to +0.24 % of the U.S. Standard Atmosphere 1976 around 11 km and −0.96 to
-  +1.20 % around 25 km, the departure of the curve fit there, and the Mars density within 0.20 % of the curve fit
-  (#433). No public API change.
+- **The Earth standard atmosphere is the U.S. Standard Atmosphere 1976.** `EarthStandardAtmosphere`, documented and
+  exported to the CDM (`ATMOSPHERIC_MODEL = US STANDARD ATMOSPHERE 1976`) as the U.S. Standard Atmosphere 1976, was the
+  curve fit of the NASA Glenn Research Center, whose upper-stratosphere line ran from 25 km to every altitude: against
+  the tables of the standard its density was 2.97 times theirs at 86 km, 80.1 at 140 km, 38.7 at 200 km, 2.28 at 400 km
+  and 0.28 at 750 km, and its temperature 399 K at 86 km against 187 K. Every propagation with drag on this model,
+  `astro propagate` included, used those densities (one day at 300 km, A = 10 m², m = 100 kg: re-entry within the day
+  where the standard gives −18.3 km of semi-major axis). It is now the standard itself, NASA-TM-X-74335, from −5 to
+  1000 km: below 86 km its seven layers in geopotential altitude, from 86 to 1000 km the number densities of N₂, O, O₂,
+  Ar, He and H of its diffusion equations, integrated once when the type loads; the density within 4.2e-4 of its table I
+  (the rounding of the table), the temperature and the pressure to its last digit. The slope of its density jumps at the
+  base of each layer (+23.5 % at 11 km), where RK7(8) with `IncludeInStepControl` stopped: transitions of ±100 m keep
+  the density and its first two derivatives continuous, within 2.1e-4 of the equations; the junction at 86 km, the
+  switch of the mean molecular weight at 100 km and the entry of hydrogen at 150 km are smoothed the same way. Above
+  1000 km, where the standard stops, ln ρ is continued with its slope (a scale height of 237 km); the density no longer
+  stays constant above 779.67 km. `GetTemperature` gives the kinetic temperature and `GetPressure` the pressure of the
+  standard. No public API change (#437).
+- **The branches of the Mars standard atmosphere meet.** `MarsStandardAtmosphere` switched from one branch of the NASA
+  Glenn curve fit to the next at once: its density rose by 0.41 % at 7 km, and RK7(8) stopped there (100 consecutive
+  rejections) at every tolerance with `IncludeInStepControl`, and at 1e-12 and 1e-13 without it when the drag is strong.
+  Over 500 m centred on 7 km, the temperature now goes from one branch to the next by a quintic smootherstep: the density
+  and its first two derivatives are continuous, dρ/dh is in closed form, and RK7(8) completes, with and without the
+  option, through every propagation path. Outside that interval the model is unchanged bit for bit; inside, the density
+  stays within 0.20 % of the curve fit (#433). The same transitions joined the branches of the Earth curve fit at 11 and
+  25 km, before that model became the U.S. Standard Atmosphere 1976 (#437). No public API change.
 - **The step control of the variational equations through the SRP penumbra.** With `IncludeInStepControl`, RK7(8) took
   thousands of steps in the penumbra of the Earth: a Sun-synchronous LEO with SRP over one day (R3) took 23 967 steps
   at 1e-13, 21 596 of them in its 265 s of penumbra, and stopped at 1e-14 on the guard below. The SRP partials in the
@@ -158,7 +171,7 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   of the Cartesian differences), which the embedded error estimate of Φ cannot cancel. The gradient is now taken in
   geodetic coordinates: dρ/dh in closed form for the US 1976 and Mars atmospheres, and for NRLMSISE-00 the derivatives
   of the model in its own inputs (fourth order in altitude), within 1.5e-12 to 8.2e-12 of Ridders' reference instead of
-  3.3e-10 to 9.7e-10. The same cases take 8 to 33 steps (US 1976, 200 km, 1e-11 to 1e-13) and 6 to 321 steps
+  3.3e-10 to 9.7e-10. The same cases take 6 to 10 steps (US 1976, 200 km, 1e-11 to 1e-13, with the U.S. Standard Atmosphere 1976 of #437) and 6 to 321 steps
   (NRLMSISE-00, 200 to 400 km). A day of LEO with NRLMSISE-00 drag and Ψ_Cd takes 15 % to 22 % more time without the
   option (1e-12 to 1e-13, the same steps), and with it 3.3 s instead of 61 s at 1e-13. Φ, Ψ and P with drag change by the change of the gradient; trajectories without the
   option are unchanged. A collapse of the step from another cause now stops with an `InvalidOperationException` that
