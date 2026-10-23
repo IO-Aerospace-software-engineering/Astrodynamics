@@ -321,7 +321,13 @@ The figures of R2 were re-measured on 2026-10-20 after
 [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409), which move the density of the
 drag cases: with Cd sampled, p at one revolution from 0.34 to 0.37, the largest ratio at 6 h from 2.17 to 2.16, the
 position at 24 h from 3.93 to 3.96, the mean radial offset at 24 h from −198 m against −186 m to −200 m against
-−188 m; without, the position at 24 h from 4.99 to 5.00. The other figures are unchanged.
+−188 m; without, the position at 24 h from 4.99 to 5.00. The other figures are unchanged. The figures of R3 with Cr sampled were
+re-measured on 2026-10-23 after
+[#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434), which changes the SRP
+acceleration in the penumbra by the rounding of the former shadow fraction and so the steps through it (run
+39907481180 of `long-validation.yml`): unchanged at the precision of the tables, worst |z| 2.14, p = 0.011 at one
+revolution (1.646 h), the domain of validity up to 1.67 h (p = 3.3e-3 at 1.83 h), the ratios 0.954 to 1.056 up to 1 h,
+1.13 at one revolution, 362 at 6 h and 1.3e6 at 24 h, the position at 24 h 4.32 (radial 1.11).
 
 - Up to about one revolution S is P along every direction of the state, within the sampling noise. From about one
   revolution, the sample variance along one direction of the state leaves its band and grows by orders of magnitude
