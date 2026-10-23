@@ -44,7 +44,13 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// takes the exact geodetic altitude, which the relation of the surface used to put up to 1.7 km too high at 400 km and
 /// mid-latitudes, and NRLMSISE-00 takes the epoch in UTC instead of the TDB calendar; the SRP case, the only one with
 /// drag, moved by 118 m and 0.133 m/s at most over the 3 h (117 m from the altitude, 1.06 m from the time scale), with
-/// 102 steps instead of 99; the two other cases did not move. A golden holds on one platform only (the mathematical library differs between
+/// 102 steps instead of 99; the two other cases did not move. Recaptured with the fix of #434: the shadow fraction is
+/// the sum of two circular segments instead of the closed form of the two-circle area, which cancelled near the
+/// contacts of the penumbra; the acceleration in the penumbra changed by the rounding of the former form (a few 1e-9 of
+/// ν, up to 1e-5 within a millimetre of a contact), and the step control took other steps from the first step whose
+/// acceleration changed (step 13, at 1 646 s): the SRP case moved by 0.41 mm and 4.6e-7 m/s at most over the 3 h, with
+/// the same 102 steps, less than its own integration error (1.19 mm at 1e-11 against 1e-13); the two other cases have
+/// no SRP and did not move. A golden holds on one platform only (the mathematical library differs between
 /// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>
 /// <para>

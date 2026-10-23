@@ -81,6 +81,8 @@ public class StandardAtmosphereAllocationTests
         var context = AtmosphericContext.FromPlanetodetic(30e3, 0.5, 1.0, Epoch);
         _ = model.GetDensity(context);
         _ = geodetic.GetDensity(30e3, 0.5, 1.0, Epoch);
+        // and in the thermosphere, whose tables are integrated when Thermosphere1976 loads (2.4 MB, #441)
+        _ = geodetic.GetDensity(400e3, 0.5, 1.0, Epoch);
 
         // Act
         long before = GC.GetAllocatedBytesForCurrentThread();

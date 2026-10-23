@@ -199,8 +199,9 @@ public class DenseAirStepControlTests
                                                                state.Position.Z * state.Position.Z) < body.EquatorialRadius;
         });
 
-        // Assert: within the budget of 198 steps: 102, 101 and 100 on Linux, Windows and macOS arm64 with the U.S. Standard
-        // Atmosphere 1976 (#437, CI of 945e92d; the budget kept, decision of S. Guillet, 2026-10-23); 98, 99 and 99 with
+        // Assert: within the budget of 198 steps: 99, 101 and 101 on Linux, Windows and macOS arm64 with the shadow fraction
+        // of #434 (CI of ab411fb); 102, 101 and 100 before it with the U.S. Standard Atmosphere 1976 (#437, CI of 945e92d;
+        // the budget kept, decision of S. Guillet, 2026-10-23); 98, 99 and 99 with
         // the NASA Glenn curve fit (CI of aed79f2, 2026-10-22, with the derivative of the shadow function of #423); 120, 121
         // and 119 before it, 2026-10-21
         int steps = Steps(solution);

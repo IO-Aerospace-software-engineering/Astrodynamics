@@ -26,12 +26,14 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// <para>
 /// From #379 to #423 the SRP partials in the penumbra were the central differences of the whole acceleration (the default
 /// path, <see cref="ForceBase.AccumulateStatePartialsByCentralDifferences"/> with its default steps), whose shadow
-/// fraction ν comes from the two-circle area of <see cref="CelestialItem.ShadowFraction(double, double, double)"/>: its
-/// terms of order R_occ² acos(…) cancel down to the area of the solar disc that is covered, so ν carries a rounding of a
-/// few 1e-10 inside the penumbra, up to a few 1e-8 at its contacts (#434), which the stencil (2 h ≈ 42 m) divides. The
-/// embedded error estimate of Y is first order in the step for a noisy derivative, as for the density gradient of #420.
-/// The derivative of the shadow function in its reduced form (<see cref="SolarRadiationPressure"/>) does not divide the
-/// rounding of ν by a step.
+/// fraction ν came from the closed form of the two-circle area in <see cref="CelestialItem.ShadowFraction(double,
+/// double, double)"/>: its terms of order R_occ² acos(…) cancelled down to the area of the solar disc that is covered, so
+/// ν carried a rounding of a few 1e-10 inside the penumbra, up to a few 1e-8 at its contacts, which the stencil
+/// (2 h ≈ 42 m) divided. The embedded error estimate of Y is first order in the step for a noisy derivative, as for the
+/// density gradient of #420. The derivative of the shadow function in its reduced form (<see cref="SolarRadiationPressure"/>)
+/// does not divide the rounding of ν by a step. Since #434 the shadow fraction itself is the sum of two circular segments,
+/// without cancellation: the noise of ν falls to a few 1e-16 to a few 1e-14, and with it that of the central
+/// differences, which only ever divided it.
 /// </para>
 /// <para>
 /// The noise is the root mean square of the second difference of each element along 2000 points 10 µm apart along the
@@ -125,16 +127,19 @@ public class SrpPenumbraNoiseTests : IClassFixture<ReferenceCases>
                               $"{centralNoise:E2}, analytic {analyticNoise:E2} of their block; of ν {shadowNoise:E2}");
         }
 
-        // Assert, .NET 10 (CI of aed79f2, 2026-10-22): the central differences, the cause, 5.0e-7, 5.1e-7 and 4.9e-7 of
-        // their block at ν = 0.5 to 1.6e-3, 1.6e-3 and 1.6e-3 at 2 m from the contacts on Linux, Windows and macOS arm64,
-        // ν 3.9e-10 to 3.8e-8; the derivative of the shadow function 1.2e-15 to 1.8e-15 at ν = 0.5, 2.9e-13 to 3.2e-13 at
-        // ν = 0.01 and 0.99, 5.7e-12 to 6.6e-12 at 1e-4 and 1 − 1e-4, and 3.2e-10 to 3.7e-10 at 2 m from the contacts,
-        // where the rounding of the angular separation (about 1e-16 rad) enters the square root of the half chord,
-        // a + b − c being some 3e-7 rad there. Bounds at twice the worst over the three platforms (lesson 13 of #364):
-        // 1.64e-3 (macOS arm64), 3.66e-10 (Windows) and 3.77e-8 (Linux)
-        Assert.True(worstCentral < 3.3e-3, $"noise of the central differences {worstCentral:E2}");
-        Assert.True(worstAnalytic < 7.4e-10, $"noise of the derivative of the shadow function {worstAnalytic:E2}");
-        Assert.True(worstShadow < 7.6e-8, $"noise of ν {worstShadow:E2}");
+        // Assert, .NET 10. Before #434 (CI of aed79f2, 2026-10-22): the central differences, the cause, 5.0e-7, 5.1e-7
+        // and 4.9e-7 of their block at ν = 0.5 to 1.6e-3, 1.6e-3 and 1.6e-3 at 2 m from the contacts on Linux, Windows
+        // and macOS arm64, ν 3.9e-10 to 3.8e-8; the derivative of the shadow function 1.2e-15 to 1.8e-15 at ν = 0.5,
+        // 2.9e-13 to 3.2e-13 at ν = 0.01 and 0.99, 5.7e-12 to 6.6e-12 at 1e-4 and 1 − 1e-4, and 3.2e-10 to 3.7e-10 at 2 m
+        // from the contacts, where the rounding of the angular separation (about 1e-16 rad) enters the square root of the
+        // half chord, a + b − c being some 3e-7 rad there. With the shadow fraction of #434 (CI of 3340116, 2026-10-22), on
+        // Linux, Windows and macOS arm64: the central differences 2.6e-11 to 4.4e-11, 2.8e-11 to 4.6e-11 and 2.6e-11 to
+        // 4.4e-11 of their block, the derivative of the shadow function 5.1e-16 to 3.4e-10, 5.2e-16 to 3.5e-10 and
+        // 5.1e-16 to 3.4e-10, ν 2.8e-16 to 2.5e-14, 3.0e-16 to 2.6e-14 and 2.8e-16 to 2.5e-14. Bounds at twice the worst
+        // over the three platforms (lesson 13 of #364): 4.57e-11, 3.45e-10 and 2.61e-14 (Windows)
+        Assert.True(worstCentral < 9.2e-11, $"noise of the central differences {worstCentral:E2}");
+        Assert.True(worstAnalytic < 6.9e-10, $"noise of the derivative of the shadow function {worstAnalytic:E2}");
+        Assert.True(worstShadow < 5.3e-14, $"noise of ν {worstShadow:E2}");
     }
 
     private delegate void Partials(StateVector state, double[] dadr);

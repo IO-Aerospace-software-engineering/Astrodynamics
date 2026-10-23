@@ -56,6 +56,18 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// worse, 2.9e-4 at 5 s, through the shadow crossings (a design measurement, not a committed test). Ψ_Cr itself is
 /// within 7.1e-8 of the same propagation at a tighter tolerance over the eclipsing arc (#396; 9.6e-8 before #420).
 /// </para>
+/// <para>
+/// The shadow fraction without cancellation of #434 moved the acceleration in the penumbra by its rounding, a few 1e-9
+/// of ν at most away from the contacts, and so the steps of every propagation through it, the references at Cr ± 10 %
+/// included: their noise was reshuffled. Measured again (Linux, .NET 10, 2026-10-22), R3: Φ 4.2e-7, 5.2e-7, 4.2e-7,
+/// 5.3e-7 over the arc, 4.0e-7 to 5.2e-7 in the penumbra; Ψ_Cr locally 2.3e-5 and 4.0e-4 outside the penumbra (still at
+/// the local minimum, 9.50 h), 1.4e-5 and 1.8e-5 in the penumbra; over the arc 3.8e-6 and 5.5e-6. The local measure
+/// follows the step of the reference as before, 3.4e-4 at 5 % of Cr and 2.4e-5 at 20 %, while Ψ_Cr of the library is
+/// unchanged against GMAT (G5, 5.5e-6 and 7.9e-6 over the arc) and, with the option, within 1.5e-10 over the arc of
+/// the same propagation at 1e-14 (<c>PenumbraStepControlTests</c>). The local record and the penumbra record of R3 were set
+/// again at twice these measurements, 8.1e-4 and 3.6e-5 (decision of S. Guillet, 2026-10-22); the tests of the
+/// Validation category run on Linux only.
+/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class StmValidationTests : IClassFixture<ReferenceCases>
@@ -78,7 +90,7 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
     {
         { "R1", 1e-7, 0.0, 0.0 },
         { "R2", 1e-4, 0.0, 0.0 },
-        { "R3", 1e-4, 1.5e-5, 1.8e-4 },
+        { "R3", 1e-4, 3.6e-5, 8.1e-4 },
         { "R4", 1e-4, 2.5e-8, 0.0 },
         { "R5", 1e-4, 0.0, 0.0 }
     };

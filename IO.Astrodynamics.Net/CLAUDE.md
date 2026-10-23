@@ -505,10 +505,10 @@ var srp = new SolarRadiationPressure(spacecraft, [earth]);
 ```
 
 **Shadow Fraction (`CelestialItem.ShadowFraction`)**
-- Static method: `ShadowFraction(double angularSeparation, double backSize, double bySize)` → `[0, 1]`
+- Static method: `ShadowFraction(double angularSeparation, double backSize, double bySize)` → `[0, 1]`, guaranteed for finite inputs
 - Instance method: `ShadowFraction(CelestialItem by, OrbitalParameters from, Aberration aberration)` → `[0, 1]`
-- Returns 0.0 for full illumination, 1.0 for total eclipse
-- Uses the standard two-circle intersection area formula for partial eclipses
+- Returns 0.0 for full illumination, 1.0 for total eclipse, `b² / a²` for an annular one; the regime from the angles
+- Partial eclipses: the sum of the two circular segments cut by the common chord (`Body/DiscOverlap.cs`), Heron's half chord in Kahan's form and the half angles from atan2, without cancellation near the contacts (#434: the closed two-circle formula cancelled there, up to 1.7e-4 in LEO, and left [0, 1]); the SRP partials take ν and ∇ν from the same `DiscOverlap`
 
 ### Propagator Architecture
 

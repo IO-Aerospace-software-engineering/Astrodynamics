@@ -177,24 +177,15 @@ public class ShadowFunctionPartialsTests : IClassFixture<PartialsTestCases>
     [Theory]
     [InlineData(PartialsTestCases.Leo400)]
     [InlineData(PartialsTestCases.Geo)]
-    public void InsideThePenumbra_WhereTheComputedShadowFractionIsNotPositive_ThePartialsHoldTheShadowTerm(string orbit)
+    public void JustInsideTheOuterContact_TheShadowFractionIsPositive_AndThePartialsHoldTheShadowTerm(string orbit)
     {
-        // Arrange: near the outer contact the shadow fraction of the library is rounding alone, at times zero or below
-        // zero where the geometry is in the penumbra (#423). The first such state inside the contact.
+        // Arrange: 0.1 mm inside the outer contact, found on the geometry of the discs. Before #434 the shadow fraction
+        // of the library was rounding alone there, at times zero or below zero (#423); it is now the exact one, positive
         var (_, outerAngle) = PenumbraStates.ContactAngles(_cases, orbit);
         double radius = PartialsTestCases.State(orbit, _cases.Earth).Position.Magnitude();
-        StateVector state = null;
-        for (int k = 1; k <= 100000 && state == null; k++)
-        {
-            var candidate = PenumbraStates.At(_cases, orbit, outerAngle - k * 1e-4 / radius);
-            var (a, b, c) = PenumbraStates.Discs(_cases, candidate, _cases.Earth);
-            if (c < a + b && _cases.Sun.ShadowFraction(_cases.Earth, candidate, Aberration.None) <= 0.0)
-            {
-                state = candidate;
-            }
-        }
-
-        Assert.NotNull(state);
+        var state = PenumbraStates.At(_cases, orbit, outerAngle - 1e-4 / radius);
+        var (a, b, c) = PenumbraStates.Discs(_cases, state, _cases.Earth);
+        double nu = _cases.Sun.ShadowFraction(_cases.Earth, state, Aberration.None);
         var spacecraft = PartialsTestCases.Spacecraft(state);
         var context = ForceEvaluationContext.FromSpacecraft(spacecraft);
         var force = new SolarRadiationPressure(spacecraft, new[] { _cases.Earth });
@@ -205,13 +196,17 @@ public class ShadowFunctionPartialsTests : IClassFixture<PartialsTestCases>
         force.AccumulateStatePartials(state, context, dadr, new double[9]);
         force.AccumulateAnalyticStatePartials(state, context, sunlit);
 
-        // Assert: the term of ∇ν is there, the partials are not the sunlit block
+        // Assert: inside the penumbra by the geometry, ν positive and that of the cancellation-free reference of the
+        // tests, and the term of ∇ν there: the partials are not the sunlit block. The reference takes the separation
+        // from atan2 and the library from the acos of the dot product: some 1e-16 rad apart, 4e-5 to 7e-6 of the depth
+        // of 2.4e-12 rad (GEO) and 1.5e-11 rad (LEO), and ν goes as its power 3/2, measured 1.5e-4 of ν in GEO
         double shadowTerm = RiddersDerivative.RelativeFrobeniusError(sunlit, dadr);
-        var (sa, sb, sc) = PenumbraStates.Discs(_cases, state, _cases.Earth);
-        _output.WriteLine($"MEASURE #423 {orbit}: {(PenumbraStates.Discs(_cases, state, _cases.Earth).SunRadius + sb - sc):E2} rad " +
-                          $"inside the outer contact, ν of the library {_cases.Sun.ShadowFraction(_cases.Earth, state, Aberration.None):E2}, " +
-                          $"without cancellation {PenumbraStates.CancellationFreeShadowFraction(sa, sb, sc):E2}; the sunlit " +
-                          $"block misses {shadowTerm:E2} of the partials");
+        double reference = PenumbraStates.CancellationFreeShadowFraction(a, b, c);
+        _output.WriteLine($"MEASURE #434 {orbit}: {a + b - c:E2} rad inside the outer contact, ν {nu:E3}, the reference " +
+                          $"without cancellation {reference:E3}; the sunlit block misses {shadowTerm:E2} of the partials");
+        Assert.True(c < a + b, $"{a + b - c:E2} rad inside the outer contact");
+        Assert.True(nu > 0.0, $"ν {nu:E2}");
+        Assert.True(System.Math.Abs(nu - reference) < 1e-3 * reference, $"ν {nu:E3} against {reference:E3}");
         Assert.True(shadowTerm > 0.5, $"the sunlit block misses {shadowTerm:E2} of the partials");
     }
 

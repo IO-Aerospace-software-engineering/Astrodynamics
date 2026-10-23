@@ -70,17 +70,20 @@ public class SolarRadiationPressure : ForceBase
     /// eq. 4.79 of the GMAT Mathematical Specification, R2026a, §4.2.4, with ν the eclipse factor of its eq. 4.78. The
     /// second term dominates: ν goes from 0 to 1 across a penumbra some 20 km wide in LEO. ∇ν is that of §4.2.5 (see
     /// <see cref="AddShadowTerm"/>), the gradient of the two-circle area of its §3.2.28, the model of
-    /// <see cref="CelestialItem.ShadowFraction(double, double, double)"/> (to be verified by S. Guillet). Neglected, it
+    /// <see cref="CelestialItem.ShadowFraction(double, double, double)"/> (to be verified by S. Guillet): ν and ∇ν come
+    /// from the same geometry of the discs (<see cref="DiscOverlap"/>), so the partials are the derivative of the shadow
+    /// fraction that scales the acceleration (#434). Neglected, it
     /// moved Φ by 1.05e-4 after one day in LEO 400 km (decision of S. Guillet, 2026-10-12).
     /// </para>
     /// <para>
     /// The regime comes from the angles, as in eqs. 3.148 and 3.149 of the specification: sunlit when the angular
     /// separation reaches the sum of the angular radii, total when it is at most their difference, the penumbra
-    /// otherwise. These are the branches of <see cref="CelestialItem.ShadowFraction(double, double, double)"/>, never its
-    /// value: near a contact its terms cancel to a rounding of a few 1e-8, sometimes below zero inside the penumbra, where
-    /// the exact gradient already grows as the square root of the distance to the contact (#423). With the derivative of
-    /// the shadow function the partials are continuous across both contacts without any band around them: it tends to
-    /// zero there, and so does 1 − ν at the inner contact.
+    /// otherwise (<see cref="DiscOverlap.Regime"/>, the branches of
+    /// <see cref="CelestialItem.ShadowFraction(double, double, double)"/>), never from the value of ν (#423). With the
+    /// derivative of the shadow function the partials are continuous across both contacts without any band around them:
+    /// it tends to zero there, and so does 1 − ν at the inner contact. Before #434 the shadow fraction itself cancelled
+    /// near a contact to a rounding of a few 1e-8, sometimes below zero inside the penumbra; it is now within a few
+    /// 1e-16 of the exact value and always in [0, 1].
     /// </para>
     /// <para>
     /// Before #423 the penumbra, and a band of two steps around each contact, took the default central differences
@@ -97,34 +100,49 @@ public class SolarRadiationPressure : ForceBase
         double scToSunMag = scToSun.Magnitude();
         double sunRadius = 0.5 * _sun.AngularSize(scToSunMag);
 
-        // The occulting body with the largest shadow fraction, as in the acceleration
+        // The occulting body with the largest shadow fraction, as in the acceleration; ν and its gradient from the same
+        // geometry of the discs
         double shadowFraction = 0.0;
         Occultation shadowing = default;
-        bool inPenumbra = false;
+        ShadowRegime shadowRegime = ShadowRegime.None;
+        DiscOverlap shadowOverlap = default;
         foreach (var occultingBody in _occultingBodies)
         {
             var occultation = Occult(occultingBody, stateVector, scPosition, scToSun, sunRadius);
-            if (occultation.Separation >= sunRadius + occultation.Radius)
+            var regime = DiscOverlap.Regime(sunRadius, occultation.Radius, occultation.Separation);
+            if (regime == ShadowRegime.None)
                 continue;
 
-            if (occultation.Separation <= occultation.Radius - sunRadius && occultation.Radius >= sunRadius)
+            if (regime == ShadowRegime.Total)
                 return;
 
-            double fraction = System.Math.Clamp(CelestialItem.ShadowFraction(occultation.Separation, 2.0 * sunRadius,
-                2.0 * occultation.Radius), 0.0, 1.0);
-            if (!inPenumbra || fraction > shadowFraction)
+            DiscOverlap overlap = default;
+            double fraction;
+            if (regime == ShadowRegime.Annular)
+            {
+                fraction = occultation.Radius * occultation.Radius / (sunRadius * sunRadius);
+            }
+            else
+            {
+                overlap = new DiscOverlap(sunRadius, occultation.Radius, occultation.Separation);
+                fraction = overlap.Fraction;
+            }
+
+            if (shadowRegime == ShadowRegime.None || fraction > shadowFraction)
             {
                 shadowFraction = fraction;
                 shadowing = occultation;
-                inPenumbra = true;
+                shadowRegime = regime;
+                shadowOverlap = overlap;
             }
         }
 
         var posRelToSun = scPosition - sunFromObserver;
         AddAnalyticBlock(posRelToSun, 1.0 - shadowFraction, context, dadr);
-        if (inPenumbra)
+        if (shadowRegime != ShadowRegime.None)
         {
-            AddShadowTerm(posRelToSun, scToSun, scToSunMag, sunRadius, shadowing, shadowFraction, context, dadr);
+            AddShadowTerm(posRelToSun, scToSun, scToSunMag, sunRadius, shadowing, shadowRegime, shadowOverlap,
+                shadowFraction, context, dadr);
         }
     }
 
@@ -146,15 +164,16 @@ public class SolarRadiationPressure : ForceBase
     /// ∇A = −2 c₂ ∇c + 2 a α ∇a + 2 b β ∇b, with c₂ the half chord of the two circles and α, β the half angles that the
     /// chord subtends at the centres of the Sun and of the occulting body: the derivative of eq. 3.150, eq. 4.100
     /// reduced, its terms in ∂c₁ and ∂c₂ cancelling (checked with sympy, <c>tools/shadow_function/area_derivatives.py</c>:
-    /// the symbolic difference is 0). The half chord comes from Heron's product
-    /// c₂ = √((a + b − c)(b + c − a)(c + a − b)(a + b + c)) / (2c), and the half angles from atan2, α = atan2(c₂, c₁) and
-    /// β = atan2(c₂, c − c₁), c₁ = ((c − b)(c + b) + a²) / (2c) (eq. 3.151). Written as in eq. 4.100, the derivative
+    /// the symbolic difference is 0). The half chord comes from Heron's product in the form of Kahan, and the half angles
+    /// from atan2, α = atan2(c₂, c₁) and β = atan2(c₂, c − c₁), c₁ = ((c − b)(c + b) + a²) / (2c) (eq. 3.151): the
+    /// geometry of <see cref="DiscOverlap"/>, computed once for ν and ∇A. Written as in eq. 4.100, the derivative
     /// divides by √(1 − c₁² / a²) = c₂ / a, which vanishes at both contacts, and takes the acos of arguments within
     /// 1e-5 of 1 in LEO; this form has neither, and tends to zero at the contacts.
     /// </para>
     /// </remarks>
     private void AddShadowTerm(in Vector3 posRelToSun, in Vector3 scToSun, double scToSunMag, double a,
-        in Occultation occultation, double shadowFraction, in ForceEvaluationContext context, Span<double> dadr)
+        in Occultation occultation, ShadowRegime regime, in DiscOverlap overlap, double shadowFraction,
+        in ForceEvaluationContext context, Span<double> dadr)
     {
         var sunDirection = scToSun / scToSunMag;
         var bodyDirection = occultation.Direction;
@@ -168,7 +187,7 @@ public class SolarRadiationPressure : ForceBase
         var gradA = sunDirection * (sunRadius / (d * System.Math.Sqrt(d * d - sunRadius * sunRadius)));
         var gradB = bodyDirection * (bodyRadius / (dB * System.Math.Sqrt(dB * dB - bodyRadius * bodyRadius)));
         Vector3 gradNu;
-        if (b < a && c <= a - b)
+        if (regime == ShadowRegime.Annular)
         {
             // Annular eclipse (eq. 4.88)
             gradNu = gradB * (2.0 * b / (a * a)) - gradA * (2.0 * b * b / (a * a * a));
@@ -179,7 +198,7 @@ public class SolarRadiationPressure : ForceBase
             double cosC = System.Math.Cos(c);
             var gradC = ((bodyDirection - sunDirection * cosC) / d + (sunDirection - bodyDirection * cosC) / dB) /
                         System.Math.Sin(c);
-            var (dAdc, dAda, dAdb) = OverlapAreaDerivatives(a, b, c);
+            var (dAdc, dAda, dAdb) = overlap.AreaDerivatives;
             var gradArea = gradC * dAdc + gradA * dAda + gradB * dAdb;
             gradNu = gradArea / (System.Math.PI * a * a) - gradA * (2.0 * shadowFraction / a);
         }
@@ -194,17 +213,12 @@ public class SolarRadiationPressure : ForceBase
     /// The partial derivatives of the area A of the overlap of two discs of angular radii <paramref name="a"/> and
     /// <paramref name="b"/> whose centres are <paramref name="c"/> apart (GMAT Mathematical Specification, R2026a,
     /// eq. 3.150), when they overlap partially: ∂A/∂c = −2 c₂, ∂A/∂a = 2 a α, ∂A/∂b = 2 b β, the reduced form of its
-    /// eq. 4.100 (see <see cref="AddShadowTerm"/>), without cancellation.
+    /// eq. 4.100 (see <see cref="AddShadowTerm"/>), without cancellation; those of <see cref="DiscOverlap"/>.
     /// </summary>
     /// <returns>∂A/∂c, ∂A/∂a, ∂A/∂b, in rad.</returns>
     internal static (double DAdc, double DAda, double DAdb) OverlapAreaDerivatives(double a, double b, double c)
     {
-        double heron = (a + b - c) * (b + c - a) * (c + a - b) * (a + b + c);
-        double halfChord = System.Math.Sqrt(System.Math.Max(heron, 0.0)) / (2.0 * c);
-        double c1 = ((c - b) * (c + b) + a * a) / (2.0 * c);
-        double alpha = System.Math.Atan2(halfChord, c1);
-        double beta = System.Math.Atan2(halfChord, c - c1);
-        return (-2.0 * halfChord, 2.0 * a * alpha, 2.0 * b * beta);
+        return new DiscOverlap(a, b, c).AreaDerivatives;
     }
 
     // block += factor u vᵀ, row-major

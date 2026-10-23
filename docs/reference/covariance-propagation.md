@@ -99,9 +99,11 @@ the start of the window. This example runs as a smoke test against the packed Nu
 - Through the SRP penumbra, the partials take the analytic derivative of the shadow function, so the steps stay
   ordinary with the option on an eclipsing orbit too
   ([#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)). R3 (Sun-synchronous 700 km,
-  eclipses on every revolution, Cr, one day; Linux, Release, 2026-10-22) takes 1 692, 2 247, 3 017 and 4 757 steps at
-  1e-11, 1e-12, 1e-13 and 1e-14 with the option, against 748, 1 010, 1 344 and 1 821 without it; R4 (GEO in eclipse
-  season) 252 and 458 at 1e-13 and 1e-14. Before #423 the central differences of the acceleration carried the
+  eclipses on every revolution, Cr, one day; Linux, Release, 2026-10-22, with the shadow fraction of
+  [#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434)) takes 1 657, 2 246, 2 972 and
+  4 604 steps at 1e-11, 1e-12, 1e-13 and 1e-14 with the option (1 643 to 4 595 on Windows and macOS arm64), against
+  738, 1 005, 1 337 and 1 817 without it; R4 (GEO in eclipse season) 258 and 464 at 1e-13 and 1e-14 (1 692 to 4 757,
+  and 252 and 458, before #434). Before #423 the central differences of the acceleration carried the
   rounding of the shadow fraction, which the step of the velocity rows of Φ followed: R3 took 1 947, 4 379 and 23 967
   steps, 21 596 of them in its 265 s of penumbra at 1e-13, and stopped on the guard below at 13.3 h at 1e-14 (on 100
   rejections at 15.0 h before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420)); R4
@@ -116,8 +118,8 @@ the start of the window. This example runs as a smoke test against the packed Nu
   the state (a force that is not smooth itself). No legitimate propagation measured takes 10 000 steps with the option:
   the closest before [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423), R3 at 1e-13,
   took 10 000 consecutive steps over 5 947 s at its shadow crossings (a mean of 0.595 s, 60 times the threshold), and
-  1 000 over 0.174 s; it now takes 3 017 steps a day, and at 1e-14 its shortest 1 000 consecutive steps cover
-  16 368 s. The threshold is 50 times above the mildest collapse measured before
+  1 000 over 0.174 s; it now takes 2 972 steps a day, and at 1e-14 its shortest 1 000 consecutive steps cover
+  17 666 s (16 368 s before #434). The threshold is 50 times above the mildest collapse measured before
   [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420). Without the option the guard
   does not apply.
 - In SSB mode (initial orbital parameters relative to a barycenter or a star), the columns of Y are scaled by |r0|

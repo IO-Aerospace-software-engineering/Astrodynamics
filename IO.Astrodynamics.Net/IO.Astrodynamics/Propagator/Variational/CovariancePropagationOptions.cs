@@ -93,7 +93,7 @@ public sealed record CovariancePropagationOptions
     /// gradient of the drag partials is taken in geodetic coordinates, without rounding noise of its own, so the steps
     /// stay ordinary in dense air (US 1976 at 200 km over 2 min: 6 to 10 steps from 1e-11 to 1e-13, against 107 290 at
     /// 1e-11 and no end at 1e-13 before #420). The SRP partials take the analytic derivative of the shadow function in
-    /// the penumbra, so the steps stay ordinary through eclipses too (a Sun-synchronous LEO over one day: 1 692 to 4 757
+    /// the penumbra, so the steps stay ordinary through eclipses too (a Sun-synchronous LEO over one day: 1 643 to 4 604
     /// steps from 1e-11 to 1e-14, against 23 967 at 1e-13 and a failure at 1e-14 before #423). When the step collapses
     /// all the same, the propagation stops with an
     /// <see cref="InvalidOperationException"/> after 10 000 consecutive accepted steps within 100 s of flight, whose
