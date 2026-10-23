@@ -171,7 +171,7 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   of the Cartesian differences), which the embedded error estimate of Φ cannot cancel. The gradient is now taken in
   geodetic coordinates: dρ/dh in closed form for the US 1976 and Mars atmospheres, and for NRLMSISE-00 the derivatives
   of the model in its own inputs (fourth order in altitude), within 1.5e-12 to 8.2e-12 of Ridders' reference instead of
-  3.3e-10 to 9.7e-10. The same cases take 8 to 33 steps (US 1976, 200 km, 1e-11 to 1e-13) and 6 to 321 steps
+  3.3e-10 to 9.7e-10. The same cases take 6 to 10 steps (US 1976, 200 km, 1e-11 to 1e-13, with the U.S. Standard Atmosphere 1976 of #437) and 6 to 321 steps
   (NRLMSISE-00, 200 to 400 km). A day of LEO with NRLMSISE-00 drag and Ψ_Cd takes 15 % to 22 % more time without the
   option (1e-12 to 1e-13, the same steps), and with it 3.3 s instead of 61 s at 1e-13. Φ, Ψ and P with drag change by the change of the gradient; trajectories without the
   option are unchanged. A collapse of the step from another cause now stops with an `InvalidOperationException` that
