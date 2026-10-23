@@ -49,8 +49,17 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// contacts of the penumbra; the acceleration in the penumbra changed by the rounding of the former form (a few 1e-9 of
 /// ν, up to 1e-5 within a millimetre of a contact), and the step control took other steps from the first step whose
 /// acceleration changed (step 13, at 1 646 s): the SRP case moved by 0.41 mm and 4.6e-7 m/s at most over the 3 h, with
-/// the same 102 steps, less than its own integration error (1.19 mm at 1e-11 against 1e-13); the two other cases have
-/// no SRP and did not move. A golden holds on one platform only (the mathematical library differs between
+/// the same 102 steps, less than its own integration error (1.19 mm at 1e-11 against 1e-13 then, one draw: see #410 below); the two other cases have
+/// no SRP and did not move. Recaptured with the fix of #410: the harmonics of EGM2008 take its own GM and reference
+/// radius (3.986004415e14 m³/s², 6378136.3 m) instead of those of the kernels (3.98600435507e14 m³/s², 6378136.6 m),
+/// 7.9e-8 of the harmonics; every case has a geopotential and moved. The GEO case by 1.6 mm and 1.2e-7 m/s at most,
+/// with 46 steps instead of 45; the maneuver case by 24.6 mm and 2.4e-5 m/s, the same 22 and 72 steps, the maneuver
+/// 0.36 µs later; the SRP case by 13.4 mm and 1.7e-5 m/s, 99 steps instead of 102. The change of the field alone moves
+/// that case by 11.6 mm (the same propagation at 1e-13 with the old and the new constants); the rest is its integration
+/// error at 1e-11 against 1e-13, which is not one figure: it depends on where the steps fall around the shadow passage,
+/// 1.3 mm with the old field, 24.4 mm with the new one, and from 0.9 to 36 mm over the 3 h for radii of the field from
+/// 6378136.2 to 6378136.7 m (98 to 103 steps), building up over 30 to 60 min in the middle of the arc (#445).
+/// A golden holds on one platform only (the mathematical library differs between
 /// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>
 /// <para>
