@@ -197,35 +197,11 @@ internal sealed class EncounterCovarianceResolver
             return _initialCovarianceUsable;
 
         _initialCovarianceResolved = true;
-        if (PropagatorBase.InitialCovarianceRejection(p0, out _) == null)
-            return _initialCovarianceUsable = true;
-
-        if (p0.Rows != 6 || p0.Columns != 6)
+        // The implementation shared with StateVector.WithRemediatedCovariance (#405)
+        if (PropagatorBase.RemediateInitialCovariance(p0, out var remediated, out _) != null)
             return false;
 
-        var values = new double[36];
-        for (int i = 0; i < 6; i++)
-        {
-            for (int j = 0; j < 6; j++)
-            {
-                values[6 * i + j] = p0.Get(i, j);
-            }
-        }
-
-        var remediated = CovarianceChecks.RemediateByEigenvalueClipping(values, 6);
-        if (remediated == null)
-            return false;
-
-        var matrix = new Matrix(6, 6);
-        for (int i = 0; i < 6; i++)
-        {
-            for (int j = 0; j < 6; j++)
-            {
-                matrix.Set(i, j, remediated[6 * i + j]);
-            }
-        }
-
-        _remediatedInitialCovariance = matrix;
+        _remediatedInitialCovariance = remediated;
         return _initialCovarianceUsable = true;
     }
 
