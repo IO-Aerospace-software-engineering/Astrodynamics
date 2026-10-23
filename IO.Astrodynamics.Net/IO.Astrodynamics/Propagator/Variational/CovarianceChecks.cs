@@ -10,8 +10,10 @@ namespace IO.Astrodynamics.Propagator.Variational;
 /// <summary>
 /// The checks of a covariance given to the propagation (an initial covariance, a noise spectral density): finite,
 /// symmetric and positive semi-definite. The propagation rejects a matrix that fails them, never corrects it; only the
-/// conjunction analysis remediates an initial covariance that rounding made indefinite
-/// (<see cref="RemediateByEigenvalueClipping"/>), and says so.
+/// conjunction analysis, which says so, and <see cref="OrbitalParameters.StateVector.WithRemediatedCovariance"/>, which
+/// the user calls, remediate an initial covariance that rounding made indefinite
+/// (<see cref="RemediateByEigenvalueClipping(ReadOnlySpan{double}, int)"/>), by the same code
+/// (<see cref="PropagatorBase.RemediateInitialCovariance"/>).
 /// </summary>
 /// <remarks>
 /// A covariance of the state mixes units (m², m²/s, m²/s²), so the checks are made on the correlation matrix
@@ -37,9 +39,25 @@ internal static class CovarianceChecks
     /// <param name="name">The name of the matrix in the messages.</param>
     /// <param name="symmetrized">The symmetrized matrix, n² values; null when the check fails.</param>
     /// <returns>Null when the matrix passes, the reason otherwise.</returns>
-    internal static string Validate(ReadOnlySpan<double> matrix, int dimension, string name, out double[] symmetrized)
+    internal static string Validate(ReadOnlySpan<double> matrix, int dimension, string name, out double[] symmetrized) =>
+        Validate(matrix, dimension, name, out symmetrized, out _);
+
+    /// <summary>
+    /// Check <paramref name="matrix"/>, n×n row-major, and return it symmetrized, (M + Mᵀ) / 2, with the smallest
+    /// eigenvalue of its correlation matrix.
+    /// </summary>
+    /// <param name="matrix">The matrix.</param>
+    /// <param name="dimension">Its dimension n.</param>
+    /// <param name="name">The name of the matrix in the messages.</param>
+    /// <param name="symmetrized">The symmetrized matrix, n² values; null when the check fails.</param>
+    /// <param name="smallestEigenvalue">The smallest eigenvalue of the correlation matrix of its positive variances;
+    /// zero when none is positive, NaN when the check fails before it is computed.</param>
+    /// <returns>Null when the matrix passes, the reason otherwise.</returns>
+    internal static string Validate(ReadOnlySpan<double> matrix, int dimension, string name, out double[] symmetrized,
+        out double smallestEigenvalue)
     {
         symmetrized = null;
+        smallestEigenvalue = double.NaN;
         int length = dimension * dimension;
         if (matrix.Length != length)
         {
@@ -92,6 +110,7 @@ internal static class CovarianceChecks
             }
         }
 
+        smallestEigenvalue = 0.0;
         if (positive.Length > 0)
         {
             var correlation = Matrix<double>.Build.Dense(positive.Length, positive.Length, (a, b) =>
@@ -102,6 +121,7 @@ internal static class CovarianceChecks
                        System.Math.Sqrt(result[dimension * i + i] * result[dimension * j + j]);
             });
             double smallest = correlation.Evd(Symmetricity.Symmetric).EigenValues.Min(e => e.Real);
+            smallestEigenvalue = smallest;
             if (smallest < -RelativeTolerance * correlation.Trace())
             {
                 return $"{name} must be positive semi-definite; the smallest eigenvalue of its correlation matrix is " +
@@ -122,13 +142,33 @@ internal static class CovarianceChecks
     /// </summary>
     /// <param name="matrix">The matrix, n×n row-major.</param>
     /// <param name="dimension">Its dimension n.</param>
-    /// <returns>The remediated matrix, n² values, which passes <see cref="Validate"/>; null when the matrix is not one
-    /// that rounding explains: wrong size, not finite, a negative variance, or asymmetric beyond the tolerance.</returns>
-    internal static double[] RemediateByEigenvalueClipping(ReadOnlySpan<double> matrix, int dimension)
+    /// <returns>The remediated matrix, n² values, which passes
+    /// <see cref="Validate(ReadOnlySpan{double}, int, string, out double[])"/>; null when the matrix is not one that
+    /// rounding explains: wrong size, not finite, a negative variance, or asymmetric beyond the tolerance.</returns>
+    internal static double[] RemediateByEigenvalueClipping(ReadOnlySpan<double> matrix, int dimension) =>
+        RemediateByEigenvalueClipping(matrix, dimension, out _, out _);
+
+    /// <summary>
+    /// <see cref="RemediateByEigenvalueClipping(ReadOnlySpan{double}, int)"/>, with the reason of a refusal and the
+    /// smallest eigenvalue of the correlation matrix before the clipping.
+    /// </summary>
+    /// <param name="matrix">The matrix, n×n row-major.</param>
+    /// <param name="dimension">Its dimension n.</param>
+    /// <param name="refusal">Null when the matrix is remediated; otherwise why it is not one that rounding explains,
+    /// the message of <see cref="Validate(ReadOnlySpan{double}, int, string, out double[])"/>.</param>
+    /// <param name="smallestEigenvalue">The smallest eigenvalue of the correlation matrix of the input, its positive
+    /// variances; NaN when it is refused.</param>
+    /// <returns>The remediated matrix, n² values; null when it is refused.</returns>
+    internal static double[] RemediateByEigenvalueClipping(ReadOnlySpan<double> matrix, int dimension,
+        out string refusal, out double smallestEigenvalue)
     {
+        smallestEigenvalue = double.NaN;
         int length = dimension * dimension;
         if (matrix.Length != length)
+        {
+            refusal = Validate(matrix, dimension, "The covariance", out _);
             return null;
+        }
 
         var result = new double[length];
         for (int i = 0; i < dimension; i++)
@@ -142,6 +182,8 @@ internal static class CovarianceChecks
                 if (!double.IsFinite(a) || matrix[dimension * i + i] < 0.0 ||
                     (scale > 0.0 && System.Math.Abs(a - b) > RelativeTolerance * scale))
                 {
+                    // The check names the first defect, among those that refuse the remediation
+                    refusal = Validate(matrix, dimension, "The covariance", out _);
                     return null;
                 }
 
@@ -154,6 +196,7 @@ internal static class CovarianceChecks
         var correlation = Matrix<double>.Build.Dense(positive.Length, positive.Length,
             (a, b) => result[dimension * positive[a] + positive[b]] / (sigma[a] * sigma[b]));
         var evd = correlation.Evd(Symmetricity.Symmetric);
+        smallestEigenvalue = evd.EigenValues.Min(e => e.Real);
         var clipped = Vector<double>.Build.Dense(positive.Length, k => System.Math.Max(evd.EigenValues[k].Real, 0.0));
         var remediated = evd.EigenVectors * Matrix<double>.Build.DenseOfDiagonalVector(clipped) * evd.EigenVectors.Transpose();
 
@@ -168,6 +211,10 @@ internal static class CovarianceChecks
             }
         }
 
-        return Validate(result, dimension, "The remediated covariance", out var symmetrized) == null ? symmetrized : null;
+        refusal = Validate(result, dimension, "The remediated covariance", out var symmetrized);
+        if (refusal != null)
+            smallestEigenvalue = double.NaN;
+
+        return symmetrized;
     }
 }

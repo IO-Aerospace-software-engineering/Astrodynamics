@@ -222,11 +222,18 @@ public abstract class PropagatorBase : IPropagator
 
     /// <summary>
     /// Why the initial covariance <paramref name="p0"/> is rejected: not 6×6, symmetric and positive semi-definite
-    /// (<see cref="CovarianceChecks.Validate"/>); null when it is accepted, with its symmetrized values.
+    /// (<see cref="CovarianceChecks.Validate(ReadOnlySpan{double}, int, string, out double[])"/>); null when it is
+    /// accepted, with its symmetrized values.
     /// </summary>
-    internal static string InitialCovarianceRejection(Math.Matrix p0, out double[] symmetrized)
+    internal static string InitialCovarianceRejection(Math.Matrix p0, out double[] symmetrized) =>
+        InitialCovarianceRejection(p0, out symmetrized, out _);
+
+    // The same, with the smallest eigenvalue of the correlation matrix (NaN when it is not computed)
+    private static string InitialCovarianceRejection(Math.Matrix p0, out double[] symmetrized,
+        out double smallestEigenvalue)
     {
         symmetrized = null;
+        smallestEigenvalue = double.NaN;
         if (p0.Rows != VariationalEquations.StateDimension || p0.Columns != VariationalEquations.StateDimension)
         {
             return $"The initial covariance must be 6×6; it is {p0.Rows}×{p0.Columns}.";
@@ -241,7 +248,58 @@ public abstract class PropagatorBase : IPropagator
             }
         }
 
-        return CovarianceChecks.Validate(values, 6, "The initial covariance", out symmetrized);
+        return CovarianceChecks.Validate(values, 6, "The initial covariance", out symmetrized, out smallestEigenvalue);
+    }
+
+    /// <summary>
+    /// The initial covariance <paramref name="p0"/> as the propagation takes it, or, when rounding made it indefinite
+    /// (the propagation would reject it), remediated by eigenvalue clipping
+    /// (<see cref="CovarianceChecks.RemediateByEigenvalueClipping(ReadOnlySpan{double}, int)"/>). The one implementation
+    /// of the conjunction analysis and of <see cref="StateVector.WithRemediatedCovariance"/> (#405); the propagation
+    /// itself never calls it.
+    /// </summary>
+    /// <param name="p0">The initial covariance.</param>
+    /// <param name="remediated">The remediated covariance; null when <paramref name="p0"/> is accepted as it is, or
+    /// refused.</param>
+    /// <param name="smallestEigenvalue">The smallest eigenvalue of the correlation matrix of <paramref name="p0"/>, its
+    /// positive variances (zero when none is); NaN when it is refused.</param>
+    /// <returns>Null when <paramref name="p0"/> is accepted or remediated; otherwise why it is not one that rounding
+    /// explains: not 6×6, not finite, a negative variance, an asymmetry beyond the tolerance.</returns>
+    internal static string RemediateInitialCovariance(Math.Matrix p0, out Math.Matrix? remediated,
+        out double smallestEigenvalue)
+    {
+        remediated = null;
+        var rejection = InitialCovarianceRejection(p0, out _, out smallestEigenvalue);
+        if (rejection == null)
+            return null;
+
+        if (p0.Rows != VariationalEquations.StateDimension || p0.Columns != VariationalEquations.StateDimension)
+            return rejection;
+
+        var values = new double[36];
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                values[6 * i + j] = p0.Get(i, j);
+            }
+        }
+
+        var clipped = CovarianceChecks.RemediateByEigenvalueClipping(values, 6, out var refusal, out smallestEigenvalue);
+        if (clipped == null)
+            return refusal;
+
+        var matrix = new Math.Matrix(6, 6);
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                matrix.Set(i, j, clipped[6 * i + j]);
+            }
+        }
+
+        remediated = matrix;
+        return null;
     }
 
     // A rejected initial covariance, naming the spacecraft, so that a scenario of several spacecraft says which one

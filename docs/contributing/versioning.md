@@ -56,6 +56,13 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   and `ReferenceRadius` (null with the constructors without constants), and the same on `GeopotentialGravitationalField`,
   the constants its harmonics take. See [Force Models](../reference/force-models.md#geopotentialgravitationalfield)
   ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
+- **Remediation of an initial covariance made indefinite by rounding.** `StateVector.WithRemediatedCovariance()` returns
+  a `CovarianceRemediation` (`State`, `Remediated`, `SmallestCorrelationEigenvalue`): the state with its covariance
+  remediated by the eigenvalue clipping of the conjunction analysis, the same code and tolerances, so that an explicit
+  propagation of the covariance accepts it; a covariance that the propagation accepts is returned as it is, the state
+  itself. It refuses, with `InvalidOperationException`, a covariance that rounding does not explain (not 6×6, not finite,
+  a negative variance, an asymmetry beyond the tolerance). The propagation itself stays strict and still rejects such a
+  covariance. See [Covariance Propagation](../reference/covariance-propagation.md#an-initial-covariance-indefinite-from-rounding).
   
 **Changed**
 

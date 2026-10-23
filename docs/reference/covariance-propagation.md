@@ -144,7 +144,7 @@ lists them in order. A consider parameter needs its force.
 | `Mode` is not a defined value | `ArgumentOutOfRangeException` (when the options are built) |
 | `ProcessNoise` or `ConsiderParameters` with `StateTransitionOnly` | `ArgumentException`: they act on P only |
 | A consider parameter without its force | `ArgumentException` |
-| Covariance mode, and the initial orbital parameters carry no covariance, carry it at another epoch than the start of the window, or carry one that is not 6×6, finite, symmetric and positive semi-definite | `InvalidOperationException` |
+| Covariance mode, and the initial orbital parameters carry no covariance, carry it at another epoch than the start of the window, or carry one that is not 6×6, finite, symmetric and positive semi-definite (one that rounding made indefinite: see [below](#an-initial-covariance-indefinite-from-rounding)) | `InvalidOperationException` |
 
 ## Results
 
@@ -308,6 +308,54 @@ When the initial orbital parameters carry a covariance and the propagation is no
 initial orbital parameters, the output states carry none, and no partial derivative is evaluated: the propagation costs
 and allocates the same as without the initial covariance, and gives the same states bit for bit
 (`CovariancePropagationApiTests.WithoutActivation_*`).
+
+## An Initial Covariance Indefinite From Rounding
+
+The propagation checks the initial covariance P0 on its correlation matrix C = D^(-1/2) P0 D^(-1/2), D = diag(P0), so
+that the check does not depend on the units: each asymmetry within 1e-12 of √(P_ii P_jj), the smallest eigenvalue of C
+at least −1e-12 of its trace. A covariance that fails is rejected with `InvalidOperationException`, never corrected:
+the user asks for this covariance to be propagated, and `PropagationSolution` has no channel to report a correction.
+Rounded values can make a covariance indefinite, for example a correlation of −1 written as −1.0001 in a message.
+
+`StateVector.WithRemediatedCovariance()` remediates such a covariance, explicitly, before the propagation. It is the
+remediation of the [conjunction analysis](conjunction-assessment.md#covariance-at-tca), the same code and the same
+tolerances: eigenvalue clipping (D. T. Hall, M. D. Hejduk, L. C. Johnson, *Remediating non-positive definite state
+covariances for collision probability estimation*, AAS 17-567, 2017; confirmed by S. Guillet, 2026-10-18), on the
+correlation matrix:
+
+- C' = V max(Λ, 0) Vᵀ, the negative eigenvalues of C = V Λ Vᵀ set to zero, then P'_ij = C'_ij √(P_ii P_jj);
+- the covariances of a zero variance set to zero;
+- the result symmetric to the bit and accepted by the check of the propagation.
+
+```csharp
+var remediation = state.WithRemediatedCovariance();
+if (remediation.Remediated)
+    Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");
+
+var spacecraft = new Spacecraft(-1001, "SAT", 100.0, 1000.0, clock, remediation.State);
+var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0),
+    new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+```
+
+| Covariance of the state | Result |
+|------|--------|
+| Accepted by the propagation | `Remediated` false, `State` the state itself, its covariance untouched |
+| Symmetric within the tolerance, finite, non-negative variances, not positive semi-definite | `Remediated` true, `State` a new state with the same position, velocity, observer, epoch and frame, and the remediated covariance |
+| None, not 6×6, a value that is not finite, a negative variance, an asymmetry beyond the tolerance | `InvalidOperationException`, with the reason: rounding does not explain it |
+
+- `SmallestCorrelationEigenvalue` is that of the correlation matrix of the covariance given, over its positive
+  variances: negative when it was remediated. The remediation has no bound on this depth: a correlation of −1.0001
+  changes the covariance by 7.1e-5 of √(P_ii P_jj), one of −10 by 5.5 times it, both remediated. A caller who wants a
+  bound tests this value ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443) will set
+  one for the analysis and this method together).
+- The clipping is made in the frame of the state, the frame in which the propagation takes P0, and depends on the
+  axes: the same covariance clipped in RTN comes out different, by 4.2e-5 of √(P_ii P_jj) for a correlation of −1.0001.
+  A covariance known in RTN (a CDM) is given to the state in its inertial frame (`RotateCovarianceFromRtn`), then
+  remediated there, as the analysis does.
+- The conjunction analysis, given the remediated state, propagates the same covariance bit for bit as when it
+  remediates the original state itself, but does not raise `EncounterQualityFlags.CovarianceRemediated`: the covariance
+  it is given is valid.
+- One 6×6 eigendecomposition, about 18 µs and 7.6 kB, once before the propagation.
 
 ## Ephemeris Files
 
