@@ -31,7 +31,9 @@ during the search, in this order:
       collision probability estimation*, AAS 17-567, 2017; confirmed by S. Guillet, 2026-10-18): the negative eigenvalues of its
       correlation matrix are set to zero, so that the result does not depend on the units, and
       `EncounterQualityFlags.CovarianceRemediated` is raised (decision of S. Guillet, 2026-10-18). A propagation by
-      `CentralBodyPropagator` still rejects such a covariance.
+      `CentralBodyPropagator` still rejects such a covariance: `StateVector.WithRemediatedCovariance()` applies the same
+      remediation beforehand (see [Covariance Propagation](covariance-propagation.md#an-initial-covariance-indefinite-from-rounding));
+      the analysis then gives the same covariance bit for bit, without the flag.
 2. **Provided at the encounter** (`ProvidedAtEncounter`): the state of the participant at TCA carries a covariance,
    for a hand-built `ILocalizable` whose ephemeris gives one (age zero).
 3. **Initial state held in RTN** (`InitialStateHeldInRtn`), the fallback for a participant that the library does not

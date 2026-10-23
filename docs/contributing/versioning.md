@@ -50,6 +50,13 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   export of a propagated covariance carries the rows `CDRG_*` and `CSRP_*` of the consider parameters, the force model
   used (`GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS`, `SOLAR_RAD_PRESSURE`) and the process noise in a
   comment. See [Conjunction Assessment](../reference/conjunction-assessment.md#covariance-at-tca).
+- **Remediation of an initial covariance made indefinite by rounding.** `StateVector.WithRemediatedCovariance()` returns
+  a `CovarianceRemediation` (`State`, `Remediated`, `SmallestCorrelationEigenvalue`): the state with its covariance
+  remediated by the eigenvalue clipping of the conjunction analysis, the same code and tolerances, so that an explicit
+  propagation of the covariance accepts it; a covariance that the propagation accepts is returned as it is, the state
+  itself. It refuses, with `InvalidOperationException`, a covariance that rounding does not explain (not 6×6, not finite,
+  a negative variance, an asymmetry beyond the tolerance). The propagation itself stays strict and still rejects such a
+  covariance. See [Covariance Propagation](../reference/covariance-propagation.md#an-initial-covariance-indefinite-from-rounding).
   
 **Changed**
 
