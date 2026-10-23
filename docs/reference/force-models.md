@@ -71,6 +71,31 @@ propagator can pass its whole body list, Sun included.
 
 EGM2008 spherical harmonics up to degree 70 with geodesy-normalized Legendre functions (no Condon-Shortley phase).
 
+The coefficients of a model are normalized to its own GM and reference radius, which the coefficient file does not
+carry. The harmonics are evaluated with them, and the central term with the GM of the SPICE kernels:
+
+```
+a = −GM_kernel r / r³ + ∇[(GM_model / r) Σ_(n≥2) (a_model / r)ⁿ Σ_m P̄_nm(sin φ) (C̄_nm cos mλ + S̄_nm sin mλ)]
+```
+
+| Body | `GeopotentialModelParameters` | GM_model, a_model |
+|------|-------------------------------|-------------------|
+| Earth (NAIF 399) | `(path, degree)` or `(stream, degree)` | EGM2008: 3.986004415e14 m³/s², 6378136.3 m (Pavlis et al., 2012) |
+| Any other body | `(path, degree)` or `(stream, degree)` | the GM and the equatorial radius of its kernels |
+| Any body | `(path, degree, gravitationalParameter, referenceRadius)` or the same with a stream | the given ones |
+
+The central term keeps the GM of the kernels (DE440's for the Earth, 3.98600435507e14 m³/s²), TDB-compatible like the
+time and the positions of the propagation, and the GM of every other point-mass computation of the library. The GM of
+EGM2008 is a TT-compatible value; scaled to TDB-compatible units it is within 2.3e-10 of DE440's (Klioner et al., 2010).
+Before 10.2.0 the harmonics took the GM and the equatorial radius of the kernels (6378136.6 m), 7.9e-8 of the
+harmonics away from EGM2008 ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
+
+```csharp
+// A model other than EGM2008, in the same file format, with its own constants
+var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, epoch,
+    new GeopotentialModelParameters("mars_model", 20, 4.282837362069909e13, 3396000.0));
+```
+
 | Degree | Use Case |
 |--------|----------|
 | 2 | Fast J2-only preliminary analysis |

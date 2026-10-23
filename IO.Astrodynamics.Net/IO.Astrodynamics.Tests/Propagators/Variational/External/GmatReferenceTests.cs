@@ -120,13 +120,16 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
 
     // Bounds of GMAT's Φ (worst block over the arc) and position (m) at its fixed step against half the step, records at
     // twice the measurement of 2026-10-20, rounded up at the second significant digit (H3 review of #408, N6). On G6
-    // the departure between the two steps, 4.2e-5, is most of GMAT's computation (5.3e-5): there that share is GMAT's
-    // step error at 10 s
+    // the departure between the two steps, 2.6e-5 (4.2e-5 before #410), is most of GMAT's computation (3.6e-5): there
+    // that share is GMAT's step error at 10 s. G2 and G3 set again with the field of #410 at twice its measurement (G2 Φ
+    // 7.24e-12, position 4.76e-5 m; G3 3.51e-13, 1.40e-5 m), decision of S. Guillet, 2026-10-23: at a fixed step that
+    // departure is set by the last digits of the field GMAT is given, and seven fields within 0.4 m of radius and 1.5e-8
+    // of GM gave 3.4e-7 to 1.4e-5 m on G3, so the bounds before (7.6e-7 m on G3) were twice one draw of GMAT's rounding
     public static TheoryData<string, double, double> StepCases => new()
     {
         { "G1", 4.0e-12, 2.0e-5 },
-        { "G2", 5.8e-12, 3.7e-5 },
-        { "G3", 8.2e-14, 7.6e-7 },
+        { "G2", 1.5e-11, 9.6e-5 },
+        { "G3", 7.1e-13, 2.8e-5 },
         { "G4", 2.2e-11, 1.3e-4 },
         { "G5", 1.0e-10, 7.0e-4 },
         { "G6", 8.4e-5, 4.7e-3 }

@@ -50,6 +50,12 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   export of a propagated covariance carries the rows `CDRG_*` and `CSRP_*` of the consider parameters, the force model
   used (`GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS`, `SOLAR_RAD_PRESSURE`) and the process noise in a
   comment. See [Conjunction Assessment](../reference/conjunction-assessment.md#covariance-at-tca).
+- **The constants of a geopotential model.** `GeopotentialModelParameters(path, degree, gravitationalParameter,
+  referenceRadius)` and the same with a `Stream`, for a model whose coefficients are normalized to other constants than
+  EGM2008's (finite and positive, `ArgumentOutOfRangeException` otherwise); `GeopotentialModelParameters.GravitationalParameter`
+  and `ReferenceRadius` (null with the constructors without constants), and the same on `GeopotentialGravitationalField`,
+  the constants its harmonics take. See [Force Models](../reference/force-models.md#geopotentialgravitationalfield)
+  ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
 - **Remediation of an initial covariance made indefinite by rounding.** `StateVector.WithRemediatedCovariance()` returns
   a `CovarianceRemediation` (`State`, `Remediated`, `SmallestCorrelationEigenvalue`): the state with its covariance
   remediated by the eigenvalue clipping of the conjunction analysis, the same code and tolerances, so that an explicit
@@ -185,6 +191,22 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   3 h of the LEO golden with drag and SRP, recaptured (the other goldens bit for bit). A call in the penumbra costs
   82 ns instead of 37 ns. No public API change
   ([#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434)).
+- **The geopotential of EGM2008 with its own constants.** The coefficients of a model are normalized to its GM and
+  reference radius, which the coefficient file does not carry; the harmonics were evaluated with the GM and the
+  equatorial radius of the SPICE kernels (3.98600435507e14 m³/s² of `gm_de440.tpc`, 6378136.6 m of `pck00011.tpc`)
+  instead of those of EGM2008 (3.986004415e14 m³/s², 6378136.3 m; Pavlis et al., 2012): 7.9e-8 of the harmonics at
+  degree 2 (9.5e-10 m/s² in LEO at 400 km), about 4.7e-8 more per degree, in the acceleration and in its partials alike.
+  They now take the constants of EGM2008 for the Earth, and the central term keeps the GM of the kernels, TDB-compatible
+  like the propagation (EGM2008's is TT-compatible, and within 2.3e-10 of DE440's once scaled; with it, a LEO would move
+  by 20 m a day). Against the closed form of the potential of degree 2 with EGM2008's constants, the field agrees to
+  2.8e-14 to 1.0e-12 of the harmonics (7.9e-8 before). Every propagation around the Earth with a geopotential moves, with
+  either integrator: over one day, 7.8 cm in LEO at 400 km (10×10, drag), 16.6 cm on a Sun-synchronous orbit at 700 km,
+  1.6 mm in GEO (70×70), 43 cm over two revolutions of a 300 × 36 000 km orbit; the three RK7(8) goldens by 13.4 mm,
+  1.6 mm and 24.6 mm, recaptured; the conformance cases 001 to 003 stay within their tolerances (their residuals against
+  the GMAT goldens change by 0.15 m at most). Bodies without a geopotential, and another body's geopotential (its kernel
+  constants, as before), do not change, bit for bit. The CDM names the field `EGM2008: nD nO`. The comparison with
+  GMAT gives GMAT the same field, through a `.cof` whose coefficients are scaled to the kernel GM of its header
+  ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
 - **The step control of the variational equations in dense air.** With `IncludeInStepControl`, RK7(8) took ever
   smaller steps as the density grew and never failed: the US Standard Atmosphere 1976 at 200 km took 107 290 steps over
   2 min at 1e-11, and at 1e-12 and 1e-13 the propagation did not finish (memory grew to an `OutOfMemoryException` over

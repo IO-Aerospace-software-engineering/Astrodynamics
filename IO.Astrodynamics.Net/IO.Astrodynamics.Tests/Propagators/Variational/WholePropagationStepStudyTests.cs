@@ -52,7 +52,14 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// <c>long-validation.yml</c>), the chosen 10 % 2.2 times the smallest; Ψ_Cr of the library is unchanged against GMAT
 /// (G5) and, with the option, within 5.5e-10 over the arc of the same propagation at 1e-14 on the three platforms
 /// (<c>PenumbraStepControlTests</c>). The factor of 2 still holds
-/// for Φ of R3 and for every other sweep. Since #398 (2026-10-17) the sweep of Ψ_Cr of the eclipsing case
+/// for Φ of R3 and for every other sweep. Since #410 (2026-10-23) the sweeps of Ψ_Cr of R4 and of Ψ_Cd of R2 are
+/// published and not asserted too (decision of S. Guillet, 2026-10-23): the constants of the geopotential changed the
+/// steps of the reference propagations (run 39977618859 of <c>long-validation.yml</c>). Ψ_Cr of R4 became 3.12e-7,
+/// 1.51e-8, 5.68e-8, 4.14e-9, 1.65e-9, 1.77e-9 from 0.1 % to 30 % (2.76e-7, 3.56e-8, 1.05e-8, 1.63e-9, 1.28e-9, 9.2e-10
+/// before), not monotone, the chosen 10 % 2.5 times the smallest; Ψ_Cd of R2 1.90e-8, 1.24e-7, 3.04e-6, 1.22e-5,
+/// 4.87e-5, 1.10e-4 (7.13e-8 at 0.1 % before, the rest within 3 %), the chosen 1 % unchanged and 6.5 times the 0.1 %,
+/// whose noise moved. The chosen steps stay (10 % of Cr, 1 % of Cd); the factor of 2 still holds for Φ and for every
+/// other sweep. Since #398 (2026-10-17) the sweep of Ψ_Cr of the eclipsing case
 /// is published and not asserted (decision of S. Guillet, 2026-10-17): the propagations start from exactly the state
 /// given, about 1e-9 m from the start through the Keplerian elements before, and the sweep became 1.4e-3, 7.2e-4,
 /// 2.4e-4, 1.1e-5, 1.3e-4, 4.7e-5 from 0.1 % to 30 %; on <c>main</c> before the fix, the start of the reference moved by
@@ -108,10 +115,11 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
             new VariationalOptions(referenceCase.Parameters, IncludeInStepControl: referenceCase.SolarRadiationPressure));
 
         // Act and assert
-        // The sweep of Ψ_Cr of R3 is published, not asserted: the noise floor of its reference (decision of S. Guillet,
-        // 2026-10-23, below)
+        // The sweeps of Ψ_Cr of R3 and R4 and of Ψ_Cd of R2 are published, not asserted: the noise floor of their
+        // reference (decisions of S. Guillet, 2026-10-23, below)
         Study(referenceCase, solution, (start, cd, cr, tolerance) =>
-            referenceCase.PropagateReference(NaifId - 1, start, cd, cr, tolerance), assertPsiCr: name != "R3",
+            referenceCase.PropagateReference(NaifId - 1, start, cd, cr, tolerance),
+            assertPsiCr: name != "R3" && name != "R4", assertPsiCd: name != "R2",
             referenceResolutionRecord: name == "R5" ? R5ReferenceResolutionRecord : null);
     }
 
@@ -142,7 +150,7 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
 
     private void Study(ReferenceCase referenceCase, PropagationSolution solution,
         Func<StateVector, double, double, double, PropagationSolution> reference, bool assertPsiCr = true,
-        double? psiCdRecord = null, double? referenceResolutionRecord = null)
+        double? psiCdRecord = null, double? referenceResolutionRecord = null, bool assertPsiCd = true)
     {
         var y = StmMeasures.Y(solution, referenceCase.Window.EndDate);
         var rows = new List<(string Quantity, double Step, double Error)>();
@@ -206,7 +214,7 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
             double atChosen = rows.Single(r => r.Quantity == "Psi_Cd" && r.Step == referenceCase.DragCoefficientStep).Error;
             Assert.True(atChosen < psiCdRecord.Value, $"Psi_Cd: {atChosen:E2} at the chosen step");
         }
-        else
+        else if (assertPsiCd)
         {
             AssertOnThePlateau(rows, "Psi_Cd", referenceCase.DragCoefficientStep);
         }

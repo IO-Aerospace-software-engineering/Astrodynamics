@@ -1,5 +1,6 @@
-"""Check that the committed .cof is the conversion of the EGM2008 file of IO.Astrodynamics with the GM and the radius
-of cases.json (every case has the same Earth), to degree 70, byte for byte.
+"""Check that the committed .cof is the conversion of the EGM2008 file of IO.Astrodynamics with the constants of
+cases.json (the GM of the central term, and the GM and the reference radius of the harmonics; every case with a
+geopotential has the same Earth), to degree 70, byte for byte.
 
 Usage: python3 -I -B check_cof.py <EGM2008 file> <committed .cof> <cases.json>
 """
@@ -19,13 +20,15 @@ def main():
         sys.exit(__doc__)
     source, committed, cases_path = sys.argv[1:]
     with open(cases_path) as f:
-        earths = {(c["earth"]["gm_m3_s2"], c["earth"]["equatorial_radius_m"]) for c in json.load(f)["cases"]}
+        earths = {(c["earth"]["gm_m3_s2"], c["earth"]["geopotential_gm_m3_s2"],
+                   c["earth"]["geopotential_reference_radius_m"])
+                  for c in json.load(f)["cases"] if "geopotential_gm_m3_s2" in c["earth"]}
     if len(earths) != 1:
         sys.exit("The cases do not share one Earth: %s" % sorted(earths))
-    gm, radius = earths.pop()
+    gm, model_gm, radius = earths.pop()
     with tempfile.TemporaryDirectory() as scratch:
         expected = os.path.join(scratch, "expected.cof")
-        convert(source, expected, gm, radius, DEGREE)
+        convert(source, expected, gm, model_gm, radius, DEGREE)
         with open(expected, "rb") as a, open(committed, "rb") as b:
             if a.read() != b.read():
                 sys.exit("%s is not the conversion of %s; run egm2008_to_cof.py again" % (committed, source))

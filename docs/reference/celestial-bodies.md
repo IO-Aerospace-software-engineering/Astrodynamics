@@ -32,6 +32,7 @@
 |-------------|-------------|
 | `CelestialBody(NaifObject naifObject)` | Create from NAIF object |
 | `CelestialBody(NaifObject, Frame, Time, GeopotentialModelParameters)` | Create with geopotential |
+| `GeopotentialModelParameters(path, degree)` / `(path, degree, gravitationalParameter, referenceRadius)` | The geopotential of a body: its harmonics with the constants of EGM2008 for the Earth, of the kernels for another body, or the given ones; see [Force Models](force-models.md#geopotentialgravitationalfield) |
 | `CelestialBody(NaifObject, albedo, thermalEffectiveTemperature, thermalEmissivity)` | Create with radiation properties |
 
 ### Methods

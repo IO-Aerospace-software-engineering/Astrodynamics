@@ -22,7 +22,8 @@ Models, as aligned in the design of #408:
     every report turned to ICRF by the constant rotation R0 of the start (decision 1, corrected by the measurement:
     see GmatReport);
   - the GM of the Earth and of every third body set to those of IO.Astrodynamics;
-  - the EGM2008 field of IO.Astrodynamics converted to .cof with its GM and radius (egm2008_to_cof.py, decision 2);
+  - the EGM2008 field of IO.Astrodynamics converted to .cof, the kernel GM in its header, the radius of the model and
+    the coefficients rescaled to the GM of the model (egm2008_to_cof.py, decision 2, #410);
   - the ephemerides of the same SPK (de440s.bsp) through SPICE; the barycentres of the planets as user-defined bodies
     on their NAIF identifiers (decision 4);
   - SRP: spherical model, the flux at 1 AU and the AU of IO.Astrodynamics, the Earth and Sun radii of its PCK;

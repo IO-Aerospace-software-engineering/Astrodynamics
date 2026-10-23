@@ -150,6 +150,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - Pass `GeopotentialModelParameters(filePath, degree)` to `CelestialBody` constructor
 - Legendre functions: geodesy normalization, no Condon-Shortley phase
 - Degree 0 and 1 are absent from the file; handled as zeros internally
+- Constants (#410): the harmonics take the GM and reference radius of the model, EGM2008's (3.986004415e14 m³/s², 6378136.3 m) for the Earth by default, the kernel GM and equatorial radius for any other body, or those given to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`; the central term always takes the kernel GM. The `.cof` given to GMAT (`tools/gmat_reference`) carries the kernel GM, the model radius and coefficients times GM_model / GM_kernel
 
 ### CCSDS OMM/OPM
 

@@ -31,7 +31,7 @@ OpenFrames, Python 3.9, 3.10 and 3.14) are not used. The partials use GMAT's own
 | `generate_scripts.py` | Writes the GMAT scripts of the cases G1 to G6 from `cases.json` into `scripts/`: the nominal propagation with Φ, the 12 to 14 propagations of GMAT's own central differences, the density along the drag case, the covariance and the process noise |
 | `scripts/` | The scripts it wrote, committed; `@SPK@`, `@COF@` and `@OUT@` are replaced by `run_gmat.sh` |
 | `gmat_partials.py` | GMAT's A matrix of each force at the four states of the force partials (B7), through GMAT's Python API |
-| `egm2008_to_cof.py` | Converts the EGM2008 field of the library into GMAT's `.cof` format, with the GM and the radius of the library |
+| `egm2008_to_cof.py` | Converts the EGM2008 field of the library into GMAT's `.cof` format: the GM of the central term in the header, the reference radius of the model, every coefficient times GM of the model / GM of the header (#410) |
 | `check_cof.py` | Checks that the committed `.cof` is that conversion, byte for byte |
 | `run_gmat.sh` | Runs all of it and collects the reports in the test data |
 | `compare_run.sh` | Checks that a run wrote the committed reports, partials and logs, both ways |
@@ -61,7 +61,7 @@ cp /tmp/gmat-cases/cases.json IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/G
 python3 -I -B tools/gmat_reference/egm2008_to_cof.py \
     IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/SolarSystem/EGM2008_to70_TideFree \
     IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GmatReference/EGM2008_to70_TideFree_IO.cof \
-    398600435507022.6 6378136.6 70     # the GM and the radius of cases.json
+    398600435507022.6 398600441500000 6378136.3 70   # gm_m3_s2, geopotential_gm_m3_s2, geopotential_reference_radius_m of cases.json
 
 # 3. Run GMAT (about 5 min) and compare
 tools/gmat_reference/run_gmat.sh <GMAT>
@@ -84,8 +84,11 @@ departures are in `docs/guides/validation.md`):
   turn every report to ICRF by the constant rotation R0 of the start. Taking the coordinates of `J2000` as those of
   `EarthMJ2000Eq`, as first designed, left the third bodies and the Sun 2.1e-7 rad away (31 km for the Sun), visible in
   their partials (2e-7 to 5e-7).
-- **Geopotential.** The EGM2008 field of the library, converted to `.cof` with the GM and the reference radius of the
-  library; `Earth.Mu` the same GM.
+- **Geopotential.** The EGM2008 field of the library, converted to `.cof`. The library evaluates the central term with
+  the GM of its kernels and the harmonics with the GM and the reference radius of EGM2008 (#410); GMAT applies the GM
+  of the header to both, so the header carries the kernel GM and the radius of EGM2008, and every coefficient is
+  multiplied by GM_EGM2008 / GM_kernel (1 + 1.5035e-8): GMAT evaluates the field of the library, to the 15 significant
+  digits of the format. `Earth.Mu` is the kernel GM, the same as the header.
 - **Earth orientation.** GMAT's own (IAU-1976/FK5 with its EOP file); from `EarthICRF`, its Earth-fixed frame is within
   about 2.6e-8 rad of the library's `ITRF93` at the epoch of the cases.
 - **Third bodies.** The same SPK through SPICE, the GM of the library; the barycentres of the planets as user-defined

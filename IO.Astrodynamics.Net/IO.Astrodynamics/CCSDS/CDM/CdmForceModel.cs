@@ -16,8 +16,10 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 /// <c>GRAVITY_MODEL</c>, <c>ATMOSPHERIC_MODEL</c>, <c>N_BODY_PERTURBATIONS</c>, <c>SOLAR_RAD_PRESSURE</c>), from the
 /// forces the propagation actually used (step 10, E5).
 /// </summary>
-/// <param name="GravityModel">The gravity of the central body: <c>GEOPOTENTIAL: nD nO</c> for spherical harmonics to
-/// degree and order n, <c>POINT MASS</c> otherwise.</param>
+/// <param name="GravityModel">The gravity of the central body: <c>EGM2008: nD nO</c> for the harmonics of EGM2008 to
+/// degree and order n with its own constants (the Earth's default), <c>GEOPOTENTIAL: nD nO</c> for other harmonics, as
+/// in the example of CCSDS 508.0-B-1, §3.3 (<c>EGM-96: 36D 36O</c>; verified by S. Guillet, 2026-10-23), and
+/// <c>POINT MASS</c> otherwise.</param>
 /// <param name="AtmosphericModel">The atmosphere of the drag, <c>NONE</c> without drag.</param>
 /// <param name="NBodyPerturbations">The third bodies, comma-separated, <c>NONE</c> without any.</param>
 /// <param name="SolarRadiationPressure">Whether solar radiation pressure was modeled.</param>
@@ -34,7 +36,8 @@ internal sealed record CdmForceModel(string GravityModel, string AtmosphericMode
 
         var central = forces.OfType<GravitationalAcceleration>().FirstOrDefault(g => g.CelestialItem.NaifId == centralId);
         string gravity = central?.CelestialItem.Field is GeopotentialGravitationalField geopotential
-            ? string.Create(CultureInfo.InvariantCulture, $"GEOPOTENTIAL: {geopotential.MaxDegree}D {geopotential.MaxDegree}O")
+            ? string.Create(CultureInfo.InvariantCulture,
+                $"{geopotential.ModelName ?? "GEOPOTENTIAL"}: {geopotential.MaxDegree}D {geopotential.MaxDegree}O")
             : "POINT MASS";
 
         var drag = forces.OfType<AtmosphericDrag>().FirstOrDefault();

@@ -276,7 +276,8 @@ public class PropagatorTests
         var expectedPosition = new Vector3(-5276164.48141924, 4263291.396350933, -404558.956106471);
         var expectedVelocity = new Vector3(-2724.567057501992, -3933.747338841648, -5983.827775625323);
 
-        // Measured on 2026-10-04: 294.3 m and 332.0 mm/s.
+        // Measured on 2026-10-04: 294.3 m and 332.0 mm/s; 294.4 m and 332.1 mm/s with the constants of the geopotential
+        // of #410 (2026-10-23).
         const double PositionLimitMeters = 300.0;
         const double VelocityLimitMetersPerSecond = 0.35;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_leo_grav10_001 (Verlet 1 s)", solution, propWindow,
@@ -329,7 +330,8 @@ public class PropagatorTests
         var expectedPosition = new Vector3(22035054.64841816, 36415074.44453181, -382421.9052105268);
         var expectedVelocity = new Vector3(-2617.90823218342, 1584.740384557747, 51.26063967862107);
 
-        // Measured on 2026-10-04: 8.48 m and 0.606 mm/s.
+        // Measured on 2026-10-04: 8.48 m and 0.606 mm/s; the same with the constants of the geopotential of #410
+        // (2026-10-23).
         const double PositionLimitMeters = 9.0;
         const double VelocityLimitMetersPerSecond = 0.0007;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_geo_grav70_002 (Verlet 1 s)", solution, propWindow,
@@ -374,7 +376,8 @@ public class PropagatorTests
         var expectedPosition = new Vector3(-608631.5307021005, 1650694.083265209, -6887696.349104228);
         var expectedVelocity = new Vector3(1985.415757873638, 7042.412568889923, 1515.859902259437);
 
-        // Measured on 2026-10-04: 246.4 m and 258.4 mm/s.
+        // Measured on 2026-10-04: 246.4 m and 258.4 mm/s; 246.2 m and 258.3 mm/s with the constants of the geopotential
+        // of #410 (2026-10-23).
         const double PositionLimitMeters = 250.0;
         const double VelocityLimitMetersPerSecond = 0.26;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_sso_grav10_003 (Verlet 1 s)", solution, propWindow,

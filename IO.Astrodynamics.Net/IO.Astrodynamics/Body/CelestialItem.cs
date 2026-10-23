@@ -149,9 +149,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         Mass = ExtendedInformation.GM / Constants.G;
         GM = ExtendedInformation.GM;
-        GravitationalField = geopotentialModelParameters != null
-            ? new GeopotentialGravitationalField(geopotentialModelParameters.GeopotentialModelPath, geopotentialModelParameters.GeopotentialDegree)
-            : new GravitationalField();
+        GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
 
         BarycenterOfMotionId = FindBarycenterOfMotionId(this);
         CenterOfMotionId = FindCenterOfMotionId(this);
@@ -194,9 +192,38 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
 
         (InitialOrbitalParameters?.Observer as CelestialBody)?._satellites.Add(this);
-        GravitationalField = geopotentialModelParameters != null
-            ? new GeopotentialGravitationalField(geopotentialModelParameters.GeopotentialModelPath, geopotentialModelParameters.GeopotentialDegree)
-            : new GravitationalField();
+        GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
+    }
+
+    // The NAIF identifier of the Earth, whose geopotential is EGM2008 unless its parameters give other constants
+    private const int EarthNaifId = 399;
+
+    /// <summary>
+    /// The gravitational field of a body: the point mass, or the geopotential of <paramref name="parameters"/>, its
+    /// harmonics with the constants of the model. Without constants in the parameters, those of EGM2008 for the Earth
+    /// (NAIF 399), the model shipped with the library, and the GM and the equatorial radius of the kernels for any
+    /// other body; the central term with <paramref name="gm"/>, the GM of the body (decisions D2 and D3 of #444).
+    /// </summary>
+    private static GravitationalField CreateGravitationalField(int naifId, double gm,
+        GeopotentialModelParameters parameters)
+    {
+        if (parameters == null)
+        {
+            return new GravitationalField();
+        }
+
+        double? gravitationalParameter = parameters.GravitationalParameter;
+        double? referenceRadius = parameters.ReferenceRadius;
+        string modelName = null;
+        if (!gravitationalParameter.HasValue && naifId == EarthNaifId)
+        {
+            gravitationalParameter = GeopotentialModelParameters.Egm2008GravitationalParameter;
+            referenceRadius = GeopotentialModelParameters.Egm2008ReferenceRadius;
+            modelName = "EGM2008";
+        }
+
+        return new GeopotentialGravitationalField(parameters.GeopotentialModelPath, parameters.GeopotentialDegree,
+            gravitationalParameter, referenceRadius, gm, modelName);
     }
 
     public static CelestialItem Create(int naifId)

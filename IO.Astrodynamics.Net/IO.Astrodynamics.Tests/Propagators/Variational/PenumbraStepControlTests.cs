@@ -39,7 +39,10 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
     // 2 253, 3 025, 4 753 (macOS arm64), against 744 to 1 839 without the option; R4 at 1e-13 and 1e-14: 252, 458;
     // 250, 458; 250, 465 (113 to 174 without the option). Measured again with the shadow fraction of #434 (CI of
     // 3340116, 2026-10-22), within 3 % of these, budgets unchanged (decision of S. Guillet, 2026-10-22): R3 1 657, 2 246, 2 972, 4 604 (Linux), 1 693,
-    // 2 243, 2 974, 4 595 (Windows), 1 643, 2 230, 2 919, 4 584 (macOS arm64); R4 258, 464; 250, 466; 253, 466
+    // 2 243, 2 974, 4 595 (Windows), 1 643, 2 230, 2 919, 4 584 (macOS arm64); R4 258, 464; 250, 466; 253, 466. Measured
+    // again with the constants of the geopotential of #410 (CI of ad40b45, 2026-10-23), budgets unchanged: R3 1 645,
+    // 2 214, 2 970, 4 639 (Linux), 1 652, 2 231, 2 983, 4 615 (Windows), 1 681, 2 234, 2 968, 4 610 (macOS arm64);
+    // R4 256, 466; 247, 465; 247, 469
     [Theory]
     [InlineData("R3", 1e-11, 3384)]
     [InlineData("R3", 1e-12, 4506)]
@@ -157,6 +160,8 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
         // Measured (2026-10-22) over the arc in position and velocity, then locally: 2.5e-10, 3.6e-10, 2.8e-9 (Linux);
         // 6.5e-11, 9.5e-11, 7.9e-10 (Windows); 8.3e-11, 1.2e-10, 2.1e-9 (macOS arm64). With the shadow fraction of #434
         // (CI of 3340116): 1.1e-10, 1.5e-10, 7.0e-10; 1.5e-10, 2.3e-10, 2.7e-9; 3.7e-10, 5.5e-10, 4.2e-9
+        // With the constants of the geopotential of #410 (CI of ad40b45): 8.0e-11, 1.2e-10, 1.3e-9; 1.7e-10, 2.5e-10,
+        // 1.7e-9; 2.1e-10, 3.1e-10, 2.4e-9
         double largestPosition = 0.0;
         double largestVelocity = 0.0;
         double worstPosition = 0.0;
