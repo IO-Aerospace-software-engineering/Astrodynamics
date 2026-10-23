@@ -86,9 +86,9 @@ commit is recorded in the report). Velocity-Verlet: output of the `PropagatorTes
 
 | Case | Orbit and force model (inputs) | Golden | RK7(8), 1e-11 | Velocity-Verlet, 1 s |
 |------|--------------------------------|--------|---------------|----------------------|
-| `propagator_24h_leo_grav10_001` | LEO about 6,800 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2025a, JGM3 10x10 | 13.13 m, 14.8 mm/s | 294.3 m, 332.0 mm/s |
+| `propagator_24h_leo_grav10_001` | LEO about 6,800 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2025a, JGM3 10x10 | 13.21 m, 14.9 mm/s | 294.4 m, 332.1 mm/s |
 | `propagator_24h_geo_grav70_002` | GEO (INTELSAT 901), 24 h; EGM2008 70x70, Moon, Sun, planets | GMAT R2025a, JGM3 70x70 | 8.02 m, 0.57 mm/s | 8.48 m, 0.61 mm/s |
-| `propagator_24h_sso_grav10_003` | SSO 700 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2025a, JGM3 10x10 | 3.56 m, 3.84 mm/s | 246.4 m, 258.4 mm/s |
+| `propagator_24h_sso_grav10_003` | SSO 700 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2025a, JGM3 10x10 | 3.40 m, 3.67 mm/s | 246.2 m, 258.3 mm/s |
 | `propagator_1sd_geo_twobody_004` | GEO equatorial, one sidereal day; two-body | Kepler's third law | 0.08 m, 0.006 mm/s | not run |
 | `propagator_1sd_geo_i30_twobody_005` | GEO inclined 30 deg, one sidereal day; two-body | Kepler's third law | 0.08 m, 0.006 mm/s | not run |
 
@@ -170,12 +170,16 @@ with SRP. Thresholds of the specification: R1 below 1e-7, R2 to R5 below 1e-4 ou
 | Case | Φ_rr | Φ_rv | Φ_vr | Φ_vv | Ψ, position | Ψ, velocity | In the penumbra |
 |------|------|------|------|------|-------------|-------------|-----------------|
 | R1 | 1.3e-8 | 1.6e-8 | 1.4e-8 | 1.7e-8 | | | |
-| R2 | 4.6e-8 | 3.6e-8 | 4.6e-8 | 3.6e-8 | Cd 1.6e-7 | Cd 1.3e-7 | |
-| R3 | 7.3e-7 | 9.1e-7 | 7.3e-7 | 9.1e-7 | Cr 9.1e-6 | Cr 9.2e-5 | 30 crossings: Φ 7.1e-7 to 9.0e-7, Ψ_Cr 7.2e-6 |
-| R4 | 1.8e-8 | 2.7e-8 | 2.8e-8 | 2.2e-8 | Cr 4.9e-7 | Cr 3.1e-8 | 2 crossings: Φ 1.3e-8, Ψ_Cr 9.8e-9 |
-| R5 | 6.7e-7 | 3.3e-7 | 6.7e-7 | 3.3e-7 | Cd 5.6e-8 | Cd 6.4e-8 | |
+| R2 | 2.0e-8 | 2.4e-8 | 2.0e-8 | 2.4e-8 | Cd 1.2e-7 | Cd 1.2e-7 | |
+| R3 | 1.9e-7 | 2.1e-7 | 1.9e-7 | 2.1e-7 | Cr 2.9e-5 | Cr 2.6e-4 (local, a record) | 30 crossings: Φ 1.9e-7 to 2.1e-7, Ψ_Cr 1.3e-5 |
+| R4 | 6.1e-8 | 2.1e-9 | 4.8e-8 | 1.9e-9 | Cr 1.9e-6 | Cr 2.4e-8 | 2 crossings: Φ 3.6e-10 to 4.0e-9, Ψ_Cr 2.5e-9 |
+| R5 | 1.5e-7 | 3.0e-7 | 1.5e-7 | 3.0e-7 | Cd 1.7e-7 | Cd 1.8e-7 | |
 
-Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). The errors in the
+Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). R1 as measured
+on 2026-10-16; R2 to R5 measured again on 2026-10-23 with the constants of the geopotential of
+[#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410) (Linux): they move within what
+the central differences of whole propagations resolve, by up to a factor of 6 either way (R4 Φ_rr 9.3e-9 before, 6.1e-8
+after; R3 Φ 4.2e-7 to 5.3e-7 before, 1.9e-7 to 2.1e-7 after), all below the thresholds. The errors in the
 penumbra are no larger than outside: the SRP partials differentiate the shadow function, by central differences in
 and near the penumbra when these figures were measured, analytically since
 [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423), which moves Φ of R3 in the third
@@ -189,6 +193,16 @@ to 5.2e-7 in the penumbra; Ψ_Cr 2.3e-5 (position) and 4.0e-4 (velocity) locally
 in it, 3.8e-6 and 5.5e-6 over the arc. The local velocity figure is the record of the reference described below, set
 again at twice its measurement, 8.1e-4, and the penumbra record at 3.6e-5 (decision of S. Guillet); Ψ_Cr of the library
 itself does not move against GMAT (G5 below).
+
+The constants of the geopotential of
+[#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410) change the field by 7.9e-8 of its
+harmonics, and so the steps of every propagation with a geopotential, the references included. Measured again (Linux,
+2026-10-23), within the thresholds and records above: R3 Φ 1.9e-7, 2.1e-7, 1.9e-7, 2.1e-7 over the arc and 1.9e-7 to
+2.1e-7 in the penumbra; Ψ_Cr 2.9e-5 (position) and 2.6e-4 (velocity) locally outside the penumbra, 1.1e-5 and 1.3e-5 in
+it, 6.0e-6 and 8.8e-6 over the arc; over the arc relative to the largest value, R2 Ψ_Cd 1.2e-7, R4 Ψ_Cr 3.2e-9 and
+3.9e-9, R5 Ψ_Cd 5.8e-8 and 8.3e-8; the local figure of Ψ_Cr of R3 in velocity 5.5e-4 at 5 % of Cr and 1.6e-4 at 20 %
+(over the arc 1.6e-5 and 6.2e-6); without `IncludeInStepControl`, Ψ_Cr off by 2.5e-5 and 1.4e-4 (R3), 1.9e-6 and
+2.4e-8 (R4). The figures of the next paragraph are those of 2026-10-16.
 
 Ψ is also held over the arc relative to its largest value, a measure that does not depend on what the reference
 resolves where Ψ is small: R2 Ψ_Cd 1.2e-7 (position and velocity), R3 Ψ_Cr 1.5e-6 and 2.1e-6, R4 Ψ_Cr 2.0e-9 and

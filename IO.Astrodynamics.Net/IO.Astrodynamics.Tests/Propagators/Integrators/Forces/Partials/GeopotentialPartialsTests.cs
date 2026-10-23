@@ -110,9 +110,9 @@ public class GeopotentialPartialsTests : IClassFixture<GeopotentialPartialsBodie
         _output.WriteLine($"{stateName}, degree {degree}, latitude {Latitude(state, earth):F2}°: whole block " +
                           $"{totalError:E2} (reference {total.DadrError:E2}), harmonics {harmonicsError:E2} " +
                           $"(reference {harmonicsReferenceError:E2})");
-        // The references resolve the tolerance: measured 1.7e-12 at most on the whole block, and on the harmonics 8e-11
+        // The references resolve the tolerance: measured 1.3e-12 at most on the whole block, and on the harmonics 1.1e-10
         // at most except at GEO, 2.0e-9, where they are 1e-5 of the central term and the difference that isolates them
-        // loses five digits
+        // loses five digits (measured again with the constants of #410, 2026-10-23)
         Assert.True(total.DadrError < 1e-10, $"reference error {total.DadrError:E2}");
         Assert.True(harmonicsReferenceError < 5e-9, $"harmonic reference error {harmonicsReferenceError:E2}");
         Assert.True(totalError < 1e-8, $"whole block: {totalError:E2}");
