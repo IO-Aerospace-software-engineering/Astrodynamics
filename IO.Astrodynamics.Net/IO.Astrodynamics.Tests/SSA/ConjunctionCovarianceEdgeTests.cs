@@ -20,7 +20,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 
 /// <summary>
 /// The edges of the propagated covariance in the conjunction analysis (step 10): the checks of the initial cross
-/// covariance, the last propagation kept by a spacecraft in RK7(8) only, another inertial frame of the propagation, a last encounter past the propagation, the index of a
+/// covariance, an initial covariance remediated by the analysis or beforehand (#405), the last propagation kept by a spacecraft in RK7(8) only, another inertial frame of the propagation, a last encounter past the propagation, the index of a
 /// propagation with maneuvers, and the names of the force model of the CDM.
 /// </summary>
 public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianceCase>, IClassFixture<ReferenceCases>
@@ -96,6 +96,37 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         }
 
         Assert.True(System.Math.Sqrt(difference / norm) < 1e-10, $"{System.Math.Sqrt(difference / norm):E2}");
+    }
+
+    [Fact]
+    public void Analyze_StateRemediatedByWithRemediatedCovariance_GivesTheCovarianceTheAnalysisRemediates()
+    {
+        // Arrange: the same indefinite P0, remediated inside the analysis for one pair, by
+        // StateVector.WithRemediatedCovariance beforehand for the other (#405)
+        var rejected = WithTrCorrelation(_case.ProtectedStart, -1.0001, 1.0);
+        var remediation = rejected.WithRemediatedCovariance();
+        Assert.True(remediation.Remediated);
+        var inside = ConjunctionCovarianceCase.NewSpacecraft(-6971, rejected);
+        var beforehand = ConjunctionCovarianceCase.NewSpacecraft(-6972, remediation.State);
+        var secondary = ConjunctionCovarianceCase.NewSpacecraft(-6973, _case.SecondaryStart);
+        _case.Propagate(inside);
+        _case.Propagate(beforehand);
+        _case.Propagate(secondary);
+
+        // Act
+        var remediatedInside = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(inside), secondary,
+            ConjunctionCovarianceCase.AnalysisWindow);
+        var remediatedBeforehand = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(beforehand), secondary,
+            ConjunctionCovarianceCase.AnalysisWindow);
+
+        // Assert: one implementation, the same covariance at TCA bit for bit; the flag raised by the analysis only, the
+        // covariance it was given being valid in the second case
+        Assert.Equal(remediatedInside.EncounterState.Epoch, remediatedBeforehand.EncounterState.Epoch);
+        Assert.Equal(remediatedInside.ProtectedCovariance.CovarianceInertial.Value.ToArray(),
+            remediatedBeforehand.ProtectedCovariance.CovarianceInertial.Value.ToArray());
+        Assert.True(remediatedInside.ProtectedCovariance.InitialCovarianceRemediated);
+        Assert.False(remediatedBeforehand.ProtectedCovariance.InitialCovarianceRemediated);
+        Assert.False(remediatedBeforehand.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.CovarianceRemediated));
     }
 
     [Fact]
@@ -189,7 +220,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     }
 
     // Eigenvalue clipping of the correlation matrix, independently of the library (the sum of its rank-one terms λ⁺ v vᵀ)
-    private static Matrix ClipCorrelation(Matrix p)
+    internal static Matrix ClipCorrelation(Matrix p)
     {
         var sigma = Enumerable.Range(0, 6).Select(i => System.Math.Sqrt(p.Get(i, i))).ToArray();
         var c = MathNet.Numerics.LinearAlgebra.Matrix<double>.Build.Dense(6, 6,

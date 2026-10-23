@@ -442,6 +442,52 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
+        /// Remediate the covariance of this state when rounding made it indefinite, so that a propagation of the
+        /// covariance accepts it: the negative eigenvalues of its correlation matrix C = D^(-1/2) P D^(-1/2), D = diag(P),
+        /// set to zero, C' = V max(Λ, 0) Vᵀ, P'_ij = C'_ij √(P_ii P_jj), the covariances of a zero variance set to zero
+        /// (eigenvalue clipping, D. T. Hall, M. D. Hejduk, L. C. Johnson, <i>Remediating non-positive definite state
+        /// covariances for collision probability estimation</i>, AAS 17-567, 2017; confirmed by S. Guillet, 2026-10-18).
+        /// </summary>
+        /// <returns>The state to propagate, whether the covariance was remediated, and the smallest eigenvalue of its
+        /// correlation matrix.</returns>
+        /// <remarks>
+        /// <para>
+        /// The propagation of the covariance (<see cref="Propagator.Variational.CovariancePropagationOptions"/> with
+        /// <see cref="Propagator.Variational.CovariancePropagationMode.Covariance"/>) rejects a covariance that is not
+        /// positive semi-definite, and never corrects it; the conjunction analysis remediates it, and raises
+        /// <see cref="SSA.EncounterQualityFlags.CovarianceRemediated"/>. This method is the remediation of the analysis,
+        /// the same code and tolerances, for a user who wants to propagate such a covariance explicitly: call it first,
+        /// then propagate <see cref="CovarianceRemediation.State"/>.
+        /// </para>
+        /// <para>
+        /// A covariance that the propagation accepts (each asymmetry within 1e-12 of √(P_ii P_jj), the smallest eigenvalue
+        /// of C at least −1e-12 of its trace) is returned as it is: the state itself, not remediated. The clipping is made
+        /// in the frame of this state, as the analysis and the propagator take the covariance, and depends on the axes:
+        /// clipped in RTN, the same covariance comes out different (by 4.2e-5 of √(P_ii P_jj) for a correlation of −1.0001).
+        /// The depth of the defect is not bounded (#443): <see cref="CovarianceRemediation.SmallestCorrelationEigenvalue"/>
+        /// says how far from positive semi-definite the covariance was.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The state carries no covariance, or one that rounding does not
+        /// explain: not 6×6, a value that is not finite, a negative variance, or an asymmetry beyond the tolerance.</exception>
+        public CovarianceRemediation WithRemediatedCovariance()
+        {
+            if (!Covariance.HasValue)
+                throw new InvalidOperationException("The state vector carries no covariance to remediate.");
+
+            var refusal = Propagator.PropagatorBase.RemediateInitialCovariance(Covariance.Value, out var remediated,
+                out double smallestEigenvalue);
+            if (refusal != null)
+                throw new InvalidOperationException(
+                    $"The covariance of the state vector cannot be remediated, rounding does not explain it: {refusal}");
+
+            return remediated.HasValue
+                ? new CovarianceRemediation(new StateVector(Position, Velocity, Observer, Epoch, Frame, remediated),
+                    true, smallestEigenvalue)
+                : new CovarianceRemediation(this, false, smallestEigenvalue);
+        }
+
+        /// <summary>
         /// Rotates a 6x6 position-velocity covariance matrix from the RTN frame defined by this state to the inertial frame.
         /// Inverse of <see cref="RotateCovarianceToRtn"/>: C_ICRF = R_6x6^T * C_RTN * R_6x6.
         /// </summary>
