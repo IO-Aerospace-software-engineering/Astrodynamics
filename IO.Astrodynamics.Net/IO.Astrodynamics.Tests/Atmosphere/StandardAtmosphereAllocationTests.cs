@@ -22,13 +22,13 @@ public class StandardAtmosphereAllocationTests
 {
     private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0);
 
-    // Every branch and boundary of the Earth model: below 11 km, 11 to 25 km, above 25 km, the ends of the transitions
-    // of 500 m centred on 11 and 25 km (#433), and the temperature clamp of 2200 °C from (2200 + 131.21) / 0.00299 m,
-    // about 779.67 km; a negative altitude
+    // Every layer and transition of the Earth model (#437): below sea level, the ends and the bases of the transitions at
+    // the bases of the 1976 layers (11.019 km ± 100 m), the junction from 86 to 86.2 km, the switch of the mean molecular
+    // weight at 100 km, the entry of H at 150 km, nodes and mid-cells of the grid of the thermosphere, 1000 km and above
     private static readonly double[] EarthAltitudes =
     {
-        -1000.0, 0.0, 5000.0, 10749.999, 10750.0, 10999.999, 11000.0, 11249.999, 11250.0, 18000.0, 24749.999, 24750.0,
-        24999.999, 25000.0, 25249.999, 25250.0, 86e3, 350e3, 779e3, 779668.0, 779669.0, 780e3, 2000e3
+        -5000.0, 0.0, 5000.0, 10919.0, 11019.07, 11119.1, 30000.0, 71802.0, 85999.999, 86000.0, 86100.0, 86200.0,
+        99950.0, 100000.0, 150000.0, 150050.0, 400000.0, 400050.0, 999999.0, 1000000.0, 2000000.0
     };
 
     // Every branch and boundary of the Mars model: below and above 7 km, the ends of the transition of 500 m centred on
@@ -91,7 +91,8 @@ public class StandardAtmosphereAllocationTests
         _ = geodetic.GetDensity(5e3, 0.5, 1.0, Epoch);
         _ = geodetic.GetDensity(7e3, 0.5, 1.0, Epoch);
         _ = geodetic.GetDensity(11e3, 0.5, 1.0, Epoch);
-        _ = geodetic.GetDensity(25e3, 0.5, 1.0, Epoch);
+        _ = geodetic.GetDensity(86.1e3, 0.5, 1.0, Epoch);
+        _ = geodetic.GetDensity(400e3, 0.5, 1.0, Epoch);
         long fromPosition = GC.GetAllocatedBytesForCurrentThread() - before;
         var derivative = (IAltitudeDensityDerivative)model;
         _ = derivative.GetDensityAltitudeDerivative(7e3);
@@ -99,7 +100,8 @@ public class StandardAtmosphereAllocationTests
         _ = derivative.GetDensityAltitudeDerivative(5e3);
         _ = derivative.GetDensityAltitudeDerivative(7e3);
         _ = derivative.GetDensityAltitudeDerivative(11e3);
-        _ = derivative.GetDensityAltitudeDerivative(25e3);
+        _ = derivative.GetDensityAltitudeDerivative(86.1e3);
+        _ = derivative.GetDensityAltitudeDerivative(400e3);
         long fromDerivative = GC.GetAllocatedBytesForCurrentThread() - before;
 
         // Assert

@@ -85,11 +85,14 @@ public class DenseAirStepControlTests
     // −1.33e-4 /m) where the curve fit gave −5.5e-5 /m at 84 km and a density rising with the altitude above 101.4 km;
     // the steps follow that slope, not the density (Cd from 0.22 to 22: 257 to 294 steps at 80 km, 147 to 183 before).
     // 100 km at 1e-11, 1e-12, 1e-13: 11, 16, 121 (Linux), 11, 17, 150 (Windows), 11, 15, 155 (macOS arm64), 29, 78, 942
-    // on Linux before #422; 80 km at 1e-13: 272, 294, 304, 142 on Linux before #422.
+    // on Linux before #422; 80 km at 1e-13: 272, 294, 304, 142 on Linux before #422. The US 1976 budgets at 200 km set
+    // again when the model became the U.S. Standard Atmosphere 1976 (#437; decision of S. Guillet, 2026-10-23): 6, 7, 10
+    // steps at 1e-11, 1e-12, 1e-13 on Linux, Windows and macOS arm64 (CI of 945e92d), where the NASA Glenn curve fit,
+    // 38.7 times denser at 200 km, took 8, 10 and 33 (budgets 16, 20, 66); at 400 km 9, as before.
     [Theory]
-    [InlineData("US 1976", 200000.0, 1e-11, 16)]
-    [InlineData("US 1976", 200000.0, 1e-12, 20)]
-    [InlineData("US 1976", 200000.0, 1e-13, 66)]
+    [InlineData("US 1976", 200000.0, 1e-11, 12)]
+    [InlineData("US 1976", 200000.0, 1e-12, 14)]
+    [InlineData("US 1976", 200000.0, 1e-13, 20)]
     [InlineData("US 1976", 400000.0, 1e-13, 18)]
     [InlineData("NRLMSISE-00", 200000.0, 1e-11, 12)]
     [InlineData("NRLMSISE-00", 200000.0, 1e-12, 70)]
@@ -196,8 +199,10 @@ public class DenseAirStepControlTests
                                                                state.Position.Z * state.Position.Z) < body.EquatorialRadius;
         });
 
-        // Assert: within twice the worst steps measured (98, 99 and 99 on Linux, Windows and macOS arm64, CI of aed79f2,
-        // 2026-10-22, with the derivative of the shadow function of #423; 120, 121 and 119 before it, 2026-10-21)
+        // Assert: within the budget of 198 steps: 102, 101 and 100 on Linux, Windows and macOS arm64 with the U.S. Standard
+        // Atmosphere 1976 (#437, CI of 945e92d; the budget kept, decision of S. Guillet, 2026-10-23); 98, 99 and 99 with
+        // the NASA Glenn curve fit (CI of aed79f2, 2026-10-22, with the derivative of the shadow function of #423); 120, 121
+        // and 119 before it, 2026-10-21
         int steps = Steps(solution);
         _output.WriteLine($"Ψ_Cd and Ψ_Cr through the shadow: {steps} steps, {shadowed} minutes in the shadow cylinder");
         Assert.True(shadowed > 0, "the orbit never enters the shadow");

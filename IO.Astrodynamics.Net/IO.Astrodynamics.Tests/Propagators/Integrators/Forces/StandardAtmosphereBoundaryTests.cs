@@ -21,7 +21,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces;
 /// Drag across the boundaries of the branches of the standard atmospheres (#433): the density of
 /// <see cref="EarthStandardAtmosphere"/> jumped by −0.023 % at 11 km and −1.82 % at 25 km, that of
 /// <see cref="MarsStandardAtmosphere"/> by +0.41 % at 7 km, and RK7(8) stopped there (100 consecutive rejections) at
-/// every tolerance with <c>IncludeInStepControl</c>, and at 1e-12 and 1e-13 without it when the drag is strong.
+/// every tolerance with <c>IncludeInStepControl</c>, and at 1e-12 and 1e-13 without it when the drag is strong. Since #437
+/// the Earth model is the U.S. Standard Atmosphere 1976, whose density is continuous but whose slope jumps at the base of
+/// each layer (+23.5 % at 11.019 km): the Earth passes cross those bases and their transitions of ±100 m, the junction
+/// at 86 km, the switch of the mean molecular weight at 100 km, the bends of the temperature at 91, 110 and 120 km and
+/// the entry of H at 150 km; without the transitions RK7(8) with <c>IncludeInStepControl</c> stopped on the bases at
+/// every tolerance.
 /// </summary>
 /// <remarks>
 /// Elliptical orbits with apoapsis R_eq + 400 km, inclined by 45° in ICRF, 10 min from 300 s before the perigee, a

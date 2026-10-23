@@ -89,7 +89,7 @@ the start of the window. This example runs as a smoke test against the packed Nu
   along the trajectory. The density gradient of the drag partials is taken in geodetic coordinates, without rounding
   noise of its own (dρ/dh in closed form for the US 1976 and Mars atmospheres, the derivatives of NRLMSISE-00 in its
   inputs): in dense air the steps stay ordinary. Over 2 min of flight on a circular orbit with drag alone (A/m =
-  0.1 m²/kg): US 1976 at 200 km, 8, 10 and 33 steps at 1e-11, 1e-12 and 1e-13; NRLMSISE-00 at 200 km (on its 200 km
+  0.1 m²/kg): US 1976 at 200 km, 6, 7 and 10 steps at 1e-11, 1e-12 and 1e-13; NRLMSISE-00 at 200 km (on its 200 km
   cutoff), 6, 26 and 321; at 400 km, 11 at 1e-13; 2 steps without the option. Before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420) the same cases took 107 290
   steps or did not finish. On a whole propagation (R2: LEO 400 km, EGM2008 10×10, Sun, Moon, NRLMSISE-00 drag, one
   day, with Ψ_Cd; Linux, Release, best of 3, measured 2026-10-21): without the option, the same steps and 15 % (1e-12)

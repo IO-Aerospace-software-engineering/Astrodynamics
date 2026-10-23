@@ -380,8 +380,10 @@ All models implement `IAtmosphericModel` with these methods:
 
 **Earth Models:**
 1. **EarthStandardAtmosphere** (U.S. Standard Atmosphere 1976)
-   - Simple analytical model valid up to ~86 km altitude: the NASA Glenn curve fit, its branches joined over 500 m
-     centred on 11 and 25 km (C² transitions, #433), so RK7(8) crosses them
+   - The standard itself (NASA-TM-X-74335) from −5 to 1000 km (#437): its seven layers below 86 km, joined by C²
+     transitions of ±100 m, and its thermosphere from 86 to 1000 km (number densities of its diffusion equations,
+     integrated once when the type loads, `Thermosphere1976`); within 4.2e-4 of its table I; above 1000 km ln ρ is
+     continued with its slope. Before #437 it was the NASA Glenn curve fit, up to 80 times the tables above 86 km
    - Uses only altitude (ignores time and space weather)
    - Fast and suitable for preliminary analysis
    - Details property is null
@@ -434,7 +436,7 @@ var atm = earth.GetAtmosphere(context);  // Uses NRLMSISE-00 automatically
 ```
 
 **Model Selection Guidelines**
-- Use `EarthStandardAtmosphere` for quick calculations below 86 km without time-dependent effects
+- Use `EarthStandardAtmosphere` for quick calculations without time-dependent effects (the mean 1976 standard, to 1000 km)
 - Use `Nrlmsise00Model` for accurate high-altitude modeling, time-varying conditions, or space weather effects
 - Use `CelestialBody.GetAtmosphere(context)` with full context for automatic NRLMSISE-00 selection
 - Use `MarsStandardAtmosphere` for preliminary Mars mission analysis below about 100 km (entry); not for orbit lifetime
