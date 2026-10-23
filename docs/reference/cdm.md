@@ -61,12 +61,13 @@ For a participant whose covariance was propagated (`CovarianceSource.Propagated`
   parameters are Cd·A/m and Cr·A/m (CCSDS 508.0-B-1), so each cross term cov(x, C) is rotated to RTN as the state block
   (a pure rotation) and multiplied by A/m, and `CDRG_DRG`, `CSRP_SRP` are σ² (A/m)². A is the sectional area of the
   spacecraft, m its total mass at TCA. Cd and Cr are independent consider parameters: `CSRP_DRG` is 0 when both are;
-- `GRAVITY_MODEL` (`GEOPOTENTIAL: nD nO` for spherical harmonics to degree and order n, `POINT MASS` otherwise),
-  `ATMOSPHERIC_MODEL` (`NRLMSISE-00`, `US STANDARD ATMOSPHERE 1976`, `MARS STANDARD ATMOSPHERE`, `NONE` without drag),
-  `N_BODY_PERTURBATIONS` (the third bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` describe the forces the
-  propagation actually used. The geopotential is named generically: the library does not know the name of the model
-  file; set it through `ProtectedParticipantMetadata` or `SecondaryParticipantMetadata` (`GravityModel = "EGM2008: 10D 10O"`),
-  which take precedence;
+- `GRAVITY_MODEL` (`EGM2008: nD nO` for the Earth's harmonics to degree and order n evaluated with the constants of
+  EGM2008, its default; `GEOPOTENTIAL: nD nO` for harmonics evaluated with other constants, given to
+  `GeopotentialModelParameters` or those of another body; `POINT MASS` otherwise), `ATMOSPHERIC_MODEL` (`NRLMSISE-00`,
+  `US STANDARD ATMOSPHERE 1976`, `MARS STANDARD ATMOSPHERE`, `NONE` without drag), `N_BODY_PERTURBATIONS` (the third
+  bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` describe the forces the propagation actually used. The library
+  does not know the name of a model whose constants are given; set it through `ProtectedParticipantMetadata` or
+  `SecondaryParticipantMetadata` (`GravityModel = "EGM-96: 36D 36O"`), which take precedence;
 - comments of the data give the source of the covariance, the process noise applied (q_R, q_T, q_N in m²/s³) or
   "No process noise applied", the consider parameters and the non-linearity index.
 
