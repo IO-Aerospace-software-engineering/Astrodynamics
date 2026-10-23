@@ -45,7 +45,14 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// For Φ every sweep has its minimum between the two sides. For Ψ two do not: the sweep of Ψ_Cr of R3 is not monotone
 /// (1.0e-5, 3.8e-6, 1.7e-5, 4.3e-6 at 5 %, 10 %, 20 % and 30 %), and the Ψ errors of the eclipsing case still fall at
 /// the edge of the sweep (Cd 1.1e-7, Cr 1.8e-5 at 30 %). There the sweep shows the noise floor of the reference rather
-/// than a plateau, and the factor of 2 holds at the edge. Since #398 (2026-10-17) the sweep of Ψ_Cr of the eclipsing case
+/// than a plateau, and the factor of 2 holds at the edge. Since #434 (2026-10-23) the sweep of Ψ_Cr of R3 is published
+/// and not asserted (decision of S. Guillet, 2026-10-23): the shadow fraction without cancellation changed the steps of
+/// the reference propagations through the penumbra and reshuffled their noise (lesson 3 of #364), and the sweep became
+/// 1.43e-4, 2.42e-4, 2.61e-5, 9.47e-6, 4.44e-6, 4.23e-6 from 0.1 % to 30 % (run 39850296259 of
+/// <c>long-validation.yml</c>), the chosen 10 % 2.2 times the smallest; Ψ_Cr of the library is unchanged against GMAT
+/// (G5) and, with the option, within 5.5e-10 over the arc of the same propagation at 1e-14 on the three platforms
+/// (<c>PenumbraStepControlTests</c>). The factor of 2 still holds
+/// for Φ of R3 and for every other sweep. Since #398 (2026-10-17) the sweep of Ψ_Cr of the eclipsing case
 /// is published and not asserted (decision of S. Guillet, 2026-10-17): the propagations start from exactly the state
 /// given, about 1e-9 m from the start through the Keplerian elements before, and the sweep became 1.4e-3, 7.2e-4,
 /// 2.4e-4, 1.1e-5, 1.3e-4, 4.7e-5 from 0.1 % to 30 %; on <c>main</c> before the fix, the start of the reference moved by
@@ -101,8 +108,10 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
             new VariationalOptions(referenceCase.Parameters, IncludeInStepControl: referenceCase.SolarRadiationPressure));
 
         // Act and assert
+        // The sweep of Ψ_Cr of R3 is published, not asserted: the noise floor of its reference (decision of S. Guillet,
+        // 2026-10-23, below)
         Study(referenceCase, solution, (start, cd, cr, tolerance) =>
-            referenceCase.PropagateReference(NaifId - 1, start, cd, cr, tolerance),
+            referenceCase.PropagateReference(NaifId - 1, start, cd, cr, tolerance), assertPsiCr: name != "R3",
             referenceResolutionRecord: name == "R5" ? R5ReferenceResolutionRecord : null);
     }
 

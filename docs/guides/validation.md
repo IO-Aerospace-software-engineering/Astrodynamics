@@ -205,7 +205,13 @@ perturbed propagations dominates, on the large ones the δ² truncation. The cho
 smallest error of each sweep, at the end of the arc: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 %
 (R2), 5 % (R5), 30 % (Eclipsing); Cr 10 % (R3, R4), 30 % (Eclipsing). For Φ each sweep has its minimum between the two
 sides. For Ψ two sweeps show the noise floor of the reference rather than a plateau: Ψ_Cr of R3, which is not
-monotone, and Ψ_Cr of the eclipsing case. Since #398 the latter is published and not asserted: 1.4e-3, 7.2e-4, 2.4e-4,
+monotone, and Ψ_Cr of the eclipsing case. Since
+[#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434) the sweep of Ψ_Cr of R3 is
+published and not asserted (decision of S. Guillet, 2026-10-23): the shadow fraction without cancellation changed the
+steps of the reference propagations through the penumbra and reshuffled their noise, and the sweep became 1.43e-4,
+2.42e-4, 2.61e-5, 9.47e-6, 4.44e-6 and 4.23e-6 from 0.1 % to 30 % (1.0e-5, 3.8e-6, 1.7e-5 and 4.3e-6 from 5 % to 30 %
+before), the chosen 10 % at 2.2 times the smallest; Ψ_Cr of the library does not move against GMAT (G5). The factor
+of 2 holds for Φ of R3 and every other sweep. Since #398 the latter is published and not asserted: 1.4e-3, 7.2e-4, 2.4e-4,
 1.1e-5, 1.3e-4 and 4.7e-5 from 0.1 % to 30 %, so no step lies on a plateau there. On the code before #398, the start of
 the reference moved by 2e-9 m along x alone takes that sweep from 3.7e-3, 1.8e-4, 2.3e-4, 1.3e-4, 3.4e-5, 1.8e-5 to
 2.1e-2, 7.0e-5, 2.4e-5, 8.1e-5, 7.2e-6, 1.5e-5. Ψ_Cd of the eclipsing case is held at its chosen step, 30 %, to a
