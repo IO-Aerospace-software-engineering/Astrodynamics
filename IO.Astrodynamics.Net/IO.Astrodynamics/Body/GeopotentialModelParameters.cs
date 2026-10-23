@@ -1,5 +1,6 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using System;
 using System.IO;
 
 namespace IO.Astrodynamics.Body
@@ -7,8 +8,28 @@ namespace IO.Astrodynamics.Body
     /// <summary>
     /// Represents the parameters for a geopotential model.
     /// </summary>
+    /// <remarks>
+    /// The coefficients of a model are normalized to its own gravitational parameter and reference radius, which the
+    /// coefficient file does not carry. Without them (the constructors without constants), the harmonics of the Earth
+    /// (NAIF 399) are evaluated with those of EGM2008 (<see cref="Egm2008GravitationalParameter"/>,
+    /// <see cref="Egm2008ReferenceRadius"/>), the model shipped with the library, and the harmonics of any other body
+    /// with the GM and the equatorial radius of its kernels. The central term always takes the GM of the kernels.
+    /// </remarks>
     public class GeopotentialModelParameters
     {
+        /// <summary>
+        /// The gravitational parameter of EGM2008, 3.986004415e14 m³/s², to which its coefficients are normalized: the
+        /// <c>earth_gravity_constant</c> of the ICGEM distribution of the model (Pavlis, Holmes, Kenyon and Factor,
+        /// 2012, Journal of Geophysical Research 117, B04406; verified by S. Guillet, 2026-10-23). A TT-compatible value.
+        /// </summary>
+        internal const double Egm2008GravitationalParameter = 3.986004415e14;
+
+        /// <summary>
+        /// The reference radius of EGM2008, 6378136.3 m, to which its coefficients are normalized: the <c>radius</c> of
+        /// the ICGEM distribution of the model (Pavlis et al., 2012; verified by S. Guillet, 2026-10-23).
+        /// </summary>
+        internal const double Egm2008ReferenceRadius = 6378136.3;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="GeopotentialModelParameters"/> class with the specified geopotential model path and degree.
         /// </summary>
@@ -32,6 +53,38 @@ namespace IO.Astrodynamics.Body
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="GeopotentialModelParameters"/> class for a model whose
+        /// coefficients are normalized to the given gravitational parameter and reference radius.
+        /// </summary>
+        /// <param name="geopotentialModelPath">The file path to the geopotential model.</param>
+        /// <param name="geopotentialDegree">The degree of the geopotential model.</param>
+        /// <param name="gravitationalParameter">The gravitational parameter of the model, in m³/s².</param>
+        /// <param name="referenceRadius">The reference radius of the model, in m.</param>
+        /// <exception cref="ArgumentOutOfRangeException">A constant is not finite and positive.</exception>
+        public GeopotentialModelParameters(string geopotentialModelPath, ushort geopotentialDegree,
+            double gravitationalParameter, double referenceRadius) : this(
+            new FileStream(geopotentialModelPath, FileMode.Open, FileAccess.Read, FileShare.Read), geopotentialDegree,
+            gravitationalParameter, referenceRadius)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GeopotentialModelParameters"/> class for a model whose
+        /// coefficients are normalized to the given gravitational parameter and reference radius.
+        /// </summary>
+        /// <param name="geopotentialModelStream">The stream of the geopotential model.</param>
+        /// <param name="geopotentialDegree">The degree of the geopotential model.</param>
+        /// <param name="gravitationalParameter">The gravitational parameter of the model, in m³/s².</param>
+        /// <param name="referenceRadius">The reference radius of the model, in m.</param>
+        /// <exception cref="ArgumentOutOfRangeException">A constant is not finite and positive.</exception>
+        public GeopotentialModelParameters(Stream geopotentialModelStream, ushort geopotentialDegree,
+            double gravitationalParameter, double referenceRadius) : this(geopotentialModelStream, geopotentialDegree)
+        {
+            GravitationalParameter = Positive(gravitationalParameter, nameof(gravitationalParameter));
+            ReferenceRadius = Positive(referenceRadius, nameof(referenceRadius));
+        }
+
+        /// <summary>
         /// Gets the stream reader for the geopotential model.
         /// </summary>
         public StreamReader GeopotentialModelPath { get; }
@@ -40,5 +93,26 @@ namespace IO.Astrodynamics.Body
         /// Gets the degree of the geopotential model.
         /// </summary>
         public ushort GeopotentialDegree { get; }
+
+        /// <summary>
+        /// Gets the gravitational parameter of the model, in m³/s², or null when none was given (see the remarks of
+        /// the class).
+        /// </summary>
+        public double? GravitationalParameter { get; }
+
+        /// <summary>
+        /// Gets the reference radius of the model, in m, or null when none was given (see the remarks of the class).
+        /// </summary>
+        public double? ReferenceRadius { get; }
+
+        private static double Positive(double value, string name)
+        {
+            if (!double.IsFinite(value) || value <= 0.0)
+            {
+                throw new ArgumentOutOfRangeException(name, value, "The constant of the model must be finite and positive.");
+            }
+
+            return value;
+        }
     }
 }

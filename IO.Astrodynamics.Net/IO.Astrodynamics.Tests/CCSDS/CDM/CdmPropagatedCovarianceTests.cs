@@ -179,7 +179,7 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         // The force model actually used and the process noise
         var metadata = cdm.Segments[0].Metadata;
         Assert.Equal(CdmCovarianceMethod.Calculated, metadata.CovarianceMethod);
-        Assert.Equal("GEOPOTENTIAL: 10D 10O", metadata.GravityModel);
+        Assert.Equal("EGM2008: 10D 10O", metadata.GravityModel);
         Assert.Equal("NRLMSISE-00", metadata.AtmosphericModel);
         Assert.Equal("MOON, SUN", metadata.NBodyPerturbations);
         Assert.True(metadata.SolarRadPressure);

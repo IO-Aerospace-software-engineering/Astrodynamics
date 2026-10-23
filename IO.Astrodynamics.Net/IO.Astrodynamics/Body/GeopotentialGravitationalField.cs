@@ -44,8 +44,42 @@ public class GeopotentialGravitationalField : GravitationalField
     /// </summary>
     /// <param name="geopotentialModelFile">The stream reader for the geopotential model file.</param>
     /// <param name="maxDegrees">The maximum degrees for the geopotential model. Default is 70.</param>
+    /// <remarks>
+    /// The harmonics of this field are evaluated with the GM and the equatorial radius of the body they are evaluated
+    /// for; a <see cref="CelestialBody"/> built with <see cref="GeopotentialModelParameters"/> gives its field the
+    /// constants of the model instead.
+    /// </remarks>
     public GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees = 70)
+        : this(geopotentialModelFile, maxDegrees, null, null, 1.0, null)
     {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GeopotentialGravitationalField"/> class whose harmonics are
+    /// evaluated with the constants of the model.
+    /// </summary>
+    /// <param name="geopotentialModelFile">The stream reader for the geopotential model file.</param>
+    /// <param name="maxDegrees">The maximum degrees for the geopotential model.</param>
+    /// <param name="gravitationalParameter">The GM to which the coefficients are normalized, in m³/s², or null for
+    /// that of the body.</param>
+    /// <param name="referenceRadius">The reference radius of the coefficients, in m, or null for the equatorial radius
+    /// of the body.</param>
+    /// <param name="centralGravitationalParameter">The GM of the central term, that of the body (its kernels).</param>
+    /// <param name="modelName">The name of the model, for the CDM, or null when it is not known.</param>
+    internal GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees,
+        double? gravitationalParameter, double? referenceRadius, double centralGravitationalParameter,
+        string modelName)
+    {
+        GravitationalParameter = gravitationalParameter;
+        ReferenceRadius = referenceRadius;
+        ModelName = modelName;
+
+        // k = GM_model / GM_kernel, once: exactly 1 without a GM of the model, so that every product of the
+        // acceleration is then the one of a field evaluated with the GM of the body
+        _harmonicsScale = gravitationalParameter.HasValue
+            ? gravitationalParameter.Value / centralGravitationalParameter
+            : 1.0;
+
         MaxDegree = maxDegrees;
         _geopotentialModelReader = new GeopotentialModelReader(geopotentialModelFile);
 
@@ -74,6 +108,36 @@ public class GeopotentialGravitationalField : GravitationalField
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// The GM to which the coefficients are normalized, with which the harmonics are evaluated, in m³/s²; null when
+    /// they take the GM of the body. The central term always takes the GM of the body.
+    /// </summary>
+    public double? GravitationalParameter { get; }
+
+    /// <summary>
+    /// The reference radius of the coefficients, with which the harmonics are evaluated, in m; null when they take the
+    /// equatorial radius of the body.
+    /// </summary>
+    public double? ReferenceRadius { get; }
+
+    /// <summary>
+    /// The name of the model when the field is evaluated with its known constants (EGM2008 for the Earth by default),
+    /// or null; the <c>GRAVITY_MODEL</c> of the CDM.
+    /// </summary>
+    internal string ModelName { get; }
+
+    // GM_model / GM_kernel, the factor of the harmonics in the acceleration, 1 without a GM of the model
+    private readonly double _harmonicsScale;
+
+    /// <summary>
+    /// The GM and the reference radius of the harmonics for a body: the constants of the model, or those of the body
+    /// when the model has none. Read by the acceleration and its partials alike.
+    /// </summary>
+    private (double GravitationalParameter, double ReferenceRadius) HarmonicsConstants(CelestialBody observer)
+    {
+        return (GravitationalParameter ?? observer.GM, ReferenceRadius ?? observer.EquatorialRadius);
     }
 
     /// <summary>
@@ -172,7 +236,8 @@ public class GeopotentialGravitationalField : GravitationalField
         }
 
         Span<double> harmonics = stackalloc double[6];
-        HarmonicPartials(fixedPosition, observer.GM, observer.EquatorialRadius, degree, harmonics);
+        var (harmonicsGm, referenceRadius) = HarmonicsConstants(observer);
+        HarmonicPartials(fixedPosition, harmonicsGm, referenceRadius, degree, harmonics);
         AddRotatedBack(harmonics, column0, column1, column2, dadr);
         PointMassPartials.Accumulate(position, observer.GM, dadr);
         return true;
@@ -468,8 +533,11 @@ public class GeopotentialGravitationalField : GravitationalField
         double cosPhi = rhoXY / r;
         double lambda = System.Math.Atan2(y, x);
 
+        // The central term with the GM of the body; the harmonics with the constants of the model, their GM as
+        // k GM, k = GM_model / GM_body (Pavlis et al., 2012, for EGM2008)
         double GM = observer.GM;
-        double Re = observer.EquatorialRadius;
+        double Re = HarmonicsConstants(observer).ReferenceRadius;
+        double k = _harmonicsScale;
 
         // Compute Legendre table with derivatives
         LegendreFunctions.ComputeGeodesyNormalizedLegendreTable(MaxDegree, sinPhi, cosPhi, _P, _dP);
@@ -533,16 +601,16 @@ public class GeopotentialGravitationalField : GravitationalField
         }
 
         // Convert to acceleration in spherical coordinates:
-        //   a_r = -(GM/r²) * [1 + dVdr_sum]  (central body + harmonics)
-        //   a_φ = (GM/r²) * dVdPhi_sum
-        //   a_λ = (GM/r²) * dVdLambda_sum / cosφ
+        //   a_r = -(GM/r²) * [1 + k dVdr_sum]  (central body + harmonics)
+        //   a_φ = (GM/r²) * k dVdPhi_sum
+        //   a_λ = (GM/r²) * k dVdLambda_sum / cosφ
         double GMoverR2 = GM / (r * r);
-        double ar = -GMoverR2 * (1.0 + dVdr);
-        double aPhi = GMoverR2 * dVdPhi;
+        double ar = -GMoverR2 * (1.0 + k * dVdr);
+        double aPhi = GMoverR2 * (k * dVdPhi);
 
         const double cosPhiEpsilon = 1.0e-15;
         double aLambda = System.Math.Abs(cosPhi) > cosPhiEpsilon
-            ? GMoverR2 * dVdLambda / cosPhi
+            ? GMoverR2 * (k * dVdLambda) / cosPhi
             : 0.0;
 
         // Transform spherical (r, φ, λ) → body-fixed Cartesian (x, y, z)

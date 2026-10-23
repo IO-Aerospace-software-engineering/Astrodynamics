@@ -338,6 +338,29 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         Assert.Equal("TESTATMOSPHERE", NameOf(new TestAtmosphere()));
     }
 
+    [Fact]
+    public void CdmForceModel_NamesEgm2008_OnlyWithItsOwnConstants()
+    {
+        // Arrange: the Earth's geopotential with the constants of EGM2008 by default, with other constants given, and
+        // the Moon's, which takes its kernel constants (#410)
+        var epoch = ConjunctionCovarianceCase.Start;
+        string model = System.IO.Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree");
+        string GravityOf(CelestialBody body)
+        {
+            var dynamics = new PropagationDynamics(new ForceBase[] { new GravitationalAcceleration(body) }, body,
+                Frames.Frame.ICRF, epoch, null, null, null, null);
+            return CdmForceModel.From(dynamics).GravityModel;
+        }
+
+        // Act, assert
+        Assert.Equal("EGM2008: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+            new GeopotentialModelParameters(model, 8))));
+        Assert.Equal("GEOPOTENTIAL: 8D 8O", GravityOf(new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+            new GeopotentialModelParameters(model, 8, 3.986004418e14, 6378137.0))));
+        Assert.Equal("GEOPOTENTIAL: 4D 4O", GravityOf(new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, epoch,
+            new GeopotentialModelParameters(model, 4))));
+    }
+
     private sealed class TestAtmosphere : IAtmosphericModel
     {
         public double GetTemperature(IAtmosphericContext context) => 0.0;
