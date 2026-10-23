@@ -120,7 +120,9 @@
         "gm_m3_s2": 398600435507022.6,
         "equatorial_radius_m": 6378136.6,
         "flattening": 0.0033528131084554157,
-        "geopotential_degree": 10
+        "geopotential_degree": 10,
+        "geopotential_gm_m3_s2": 398600441500000,
+        "geopotential_reference_radius_m": 6378136.3
       },
       "third_bodies": [
         {
@@ -231,7 +233,9 @@
         "gm_m3_s2": 398600435507022.6,
         "equatorial_radius_m": 6378136.6,
         "flattening": 0.0033528131084554157,
-        "geopotential_degree": 70
+        "geopotential_degree": 70,
+        "geopotential_gm_m3_s2": 398600441500000,
+        "geopotential_reference_radius_m": 6378136.3
       },
       "third_bodies": [
         {
@@ -322,7 +326,9 @@
         "gm_m3_s2": 398600435507022.6,
         "equatorial_radius_m": 6378136.6,
         "flattening": 0.0033528131084554157,
-        "geopotential_degree": 10
+        "geopotential_degree": 10,
+        "geopotential_gm_m3_s2": 398600441500000,
+        "geopotential_reference_radius_m": 6378136.3
       },
       "third_bodies": [
         {
@@ -378,7 +384,9 @@
         "gm_m3_s2": 398600435507022.6,
         "equatorial_radius_m": 6378136.6,
         "flattening": 0.0033528131084554157,
-        "geopotential_degree": 10
+        "geopotential_degree": 10,
+        "geopotential_gm_m3_s2": 398600441500000,
+        "geopotential_reference_radius_m": 6378136.3
       },
       "third_bodies": [
         {
@@ -434,7 +442,9 @@
         "gm_m3_s2": 398600435507022.6,
         "equatorial_radius_m": 6378136.6,
         "flattening": 0.0033528131084554157,
-        "geopotential_degree": 10
+        "geopotential_degree": 10,
+        "geopotential_gm_m3_s2": 398600441500000,
+        "geopotential_reference_radius_m": 6378136.3
       },
       "third_bodies": [
         {

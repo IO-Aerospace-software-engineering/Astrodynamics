@@ -210,6 +210,14 @@ internal static class GmatCases
             };
         }
 
+        // The constants of the harmonics, those of the model (#410), with which egm2008_to_cof.py writes the .cof
+        if (earth.Field is GeopotentialGravitationalField geopotential)
+        {
+            var earthNode = node["earth"]!.AsObject();
+            earthNode["geopotential_gm_m3_s2"] = geopotential.GravitationalParameter ?? earth.GM;
+            earthNode["geopotential_reference_radius_m"] = geopotential.ReferenceRadius ?? earth.EquatorialRadius;
+        }
+
         return node;
     }
 
