@@ -224,8 +224,14 @@ monotone, and Ψ_Cr of the eclipsing case. Since
 published and not asserted (decision of S. Guillet, 2026-10-23): the shadow fraction without cancellation changed the
 steps of the reference propagations through the penumbra and reshuffled their noise, and the sweep became 1.43e-4,
 2.42e-4, 2.61e-5, 9.47e-6, 4.44e-6 and 4.23e-6 from 0.1 % to 30 % (1.0e-5, 3.8e-6, 1.7e-5 and 4.3e-6 from 5 % to 30 %
-before), the chosen 10 % at 2.2 times the smallest; Ψ_Cr of the library does not move against GMAT (G5). The factor
-of 2 holds for Φ of R3 and every other sweep. Since #398 the latter is published and not asserted: 1.4e-3, 7.2e-4, 2.4e-4,
+before), the chosen 10 % at 2.2 times the smallest; Ψ_Cr of the library does not move against GMAT (G5). Since
+[#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410) the sweeps of Ψ_Cr of R4 and of
+Ψ_Cd of R2 are published and not asserted as well (decision of S. Guillet, 2026-10-23): the constants of the
+geopotential changed the steps of the reference propagations, and Ψ_Cr of R4 became 3.1e-7, 1.5e-8, 5.7e-8, 4.1e-9,
+1.7e-9 and 1.8e-9 from 0.1 % to 30 % (2.8e-7, 3.6e-8, 1.1e-8, 1.6e-9, 1.3e-9, 9.2e-10 before), not monotone, the chosen
+10 % at 2.5 times the smallest; Ψ_Cd of R2 1.9e-8, 1.2e-7, 3.0e-6, 1.2e-5, 4.9e-5 and 1.1e-4 (7.1e-8 at 0.1 % before),
+the chosen 1 % unchanged and 6.5 times the 0.1 %, whose noise moved. The chosen steps stay. The factor of 2 holds for
+Φ of R3 and R4 and every other sweep. Since #398 the latter is published and not asserted: 1.4e-3, 7.2e-4, 2.4e-4,
 1.1e-5, 1.3e-4 and 4.7e-5 from 0.1 % to 30 %, so no step lies on a plateau there. On the code before #398, the start of
 the reference moved by 2e-9 m along x alone takes that sweep from 3.7e-3, 1.8e-4, 2.3e-4, 1.3e-4, 3.4e-5, 1.8e-5 to
 2.1e-2, 7.0e-5, 2.4e-5, 8.1e-5, 7.2e-6, 1.5e-5. Ψ_Cd of the eclipsing case is held at its chosen step, 30 %, to a
@@ -239,7 +245,9 @@ equations: moved by one tick of 100 ns, it takes the sweep from 5 % to 30 % from
 [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)). The record is twice the worst at
 30 % of seven burns from −20 to +20 ticks: 2.05e-7, a record of 4.1e-7 (3.5e-7 and 7.0e-7 before #411 and #409). The reference runs at
 1e-14 rather than the 1e-13 of the specification. Its smallest error on Φ is lower in R1 to R4: R1 1.7e-8 against
-2.3e-8, R2 4.6e-8 against 1.4e-7, R3 1.9e-7 against 1.0e-6, R4 2.8e-8 against 5.6e-8. Both resolve R5 alike: over five
+2.3e-8, R2 2.4e-8 against 1.0e-7, R3 1.4e-7 against 1.8e-6, R4 4.6e-8 against 5.6e-8 (run 39977618859 of
+`long-validation.yml`, with the constants of #410; R2 4.6e-8 against 1.4e-7, R3 1.9e-7 against 1.0e-6, R4 2.8e-8
+against 5.6e-8 on 2026-10-16). Both resolve R5 alike: over five
 starts moved by −2e-9 to 2e-9 m along x, 4.1e-7 to 8.0e-7 at 1e-14 and 1.1e-7 to 7.0e-7 at 1e-13 (6.7e-7 and 7.8e-7
 before [#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411) and
 [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)), so R5 is held at 1e-14 to a
@@ -291,6 +299,13 @@ load):
 |------|----------|----------|-----------|-------------|------|
 | R2 (10×10) | 2.0e-3 | 8.5e-4 | 4.6e-8 (the full degree) | 4.6e-8 | 5.5× to 6.0× at every degree (0.93 to 1.03 s, against 0.17 s): the drag partials dominate |
 | R4 (70×70) | 1.2e-6 | 2.8e-8 | 2.8e-8 | 2.8e-8 | 1.0× to 1.1× up to degree 20, 1.5× at 70 (0.25 s, against 0.17 s) |
+
+Measured on 2026-10-16. With the constants of the geopotential of
+[#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410) (run 39977618859 of
+`long-validation.yml`): R2 2.0e-3, 8.5e-4 and 2.4e-8 at degrees 2, 8 and 20 and at the full degree; R4 1.2e-6 at
+degree 2 and 6.1e-8 at degree 8, the F1 noise of R4, which moves the same way on the full degree (9.3e-9 to 6.1e-8
+in `StmValidationTests`): its records at degrees 8, 20 and 70 are set at 6.1e-8 (decision of S. Guillet,
+2026-10-23).
 
 In LEO the partials keep a contribution of every degree, so a reduced degree leaves Φ above the threshold after one day
 and saves nothing. At GEO the high degrees vanish, and from degree 8 Φ is that of the full degree, a third cheaper.
