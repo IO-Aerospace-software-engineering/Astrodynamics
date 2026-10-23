@@ -102,7 +102,8 @@ the start of the window. This example runs as a smoke test against the packed Nu
   eclipses on every revolution, Cr, one day; Linux, Release, 2026-10-22, with the shadow fraction of
   [#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434), and with the constants of the
   geopotential of [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410), 2026-10-23)
-  takes 1 645, 2 214, 2 970 and 4 639 steps at 1e-11, 1e-12, 1e-13 and 1e-14 with the option, against 746, 1 005, 1 331
+  takes 1 645, 2 214, 2 970 and 4 639 steps at 1e-11, 1e-12, 1e-13 and 1e-14 with the option (1 652 to 4 615 on Windows,
+  1 681 to 4 610 on macOS arm64), against 746, 1 005, 1 331
   and 1 807 without it; R4 (GEO in eclipse season) 256 and 466 at 1e-13 and 1e-14 (1 657 to 4 604 and 258, 464 before
   #410; 1 692 to 4 757, and 252 and 458, before #434). Before #423 the central differences of the acceleration carried the
   rounding of the shadow fraction, which the step of the velocity rows of Φ followed: R3 took 1 947, 4 379 and 23 967
