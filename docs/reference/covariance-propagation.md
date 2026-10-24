@@ -230,7 +230,8 @@ participants up to the TCA (`ConjunctionCovarianceBenchmarks`, same machine and 
 sun-synchronous orbit in the force model of R2, crossing 23 h after the start, propagated over one day at 1e-11 without
 the variational equations; `Analyze` over a 2 h window around the crossing takes 1.71 ± 0.08 s with the covariance
 propagated to TCA against 0.83 ± 0.08 s with the covariance held in RTN (`CovariancePropagation = null`), 2.1 times.
-Each call allocates about 403 MB either way, so the replay adds little memory. See
+Each call allocates about 403 MB either way, so the replay adds little memory; that allocation, which grows with the
+number of pairs of `AnalyzeAll`, is [#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447). See
 [Conjunction Assessment](conjunction-assessment.md#covariance-at-tca).
 
 ## Equations
