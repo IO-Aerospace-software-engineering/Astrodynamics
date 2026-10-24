@@ -83,17 +83,18 @@ public sealed record CovariancePropagationOptions
     /// <remarks>
     /// Off, Ψ carries an integration error that the control of the state does not see, largest for Cr across the shadow
     /// crossings of solar radiation pressure: in an eclipsing LEO over 6 h at a tolerance of 1e-12, the error of Ψ_Cr
-    /// over the arc, relative to its largest value on the arc, was 6.0e-5 to 1.9e-3 depending on where the steps fell,
-    /// against 2.6e-5 at most at 1e-14; relative to the local Ψ_Cr, up to 1.5e-2 at 1e-12 (just after the first shadow
-    /// exit, where Ψ_Cr is below a millimetre, and 1.2e-2 at a later crossing, where it is 0.28 m) and 1.6e-4 at 1e-14.
-    /// With this option, 7.1e-8 at 1e-12. When Ψ_Cr matters (Cr as a consider parameter, with eclipses), turn it on: a
+    /// over the arc, relative to its largest value on the arc, is 1.1e-3 to 3.5e-3 depending on where the steps fall,
+    /// against 1.2e-5 at most at 1e-14 (measured 2026-10-24, at deb26b9); relative to the local Ψ_Cr, it reached 1.5e-2
+    /// at 1e-12 (just after the first shadow exit, where Ψ_Cr is below a millimetre, and 1.2e-2 at a later crossing,
+    /// where it is 0.28 m) and 1.6e-4 at 1e-14 (measured 2026-10-15, before #423 and #434). With this option, 7.7e-8 at
+    /// 1e-12 relative to the local Ψ_Cr. When Ψ_Cr matters (Cr as a consider parameter, with eclipses), turn it on: a
     /// tighter tolerance alone does not hold Ψ_Cr to 1e-4 at every shadow crossing.
     /// <para>
     /// On, the step follows the error of Φ and Ψ, so it needs partials that are smooth along the trajectory. The density
     /// gradient of the drag partials is taken in geodetic coordinates, without rounding noise of its own, so the steps
     /// stay ordinary in dense air (US 1976 at 200 km over 2 min: 6 to 10 steps from 1e-11 to 1e-13, against 107 290 at
     /// 1e-11 and no end at 1e-13 before #420). The SRP partials take the analytic derivative of the shadow function in
-    /// the penumbra, so the steps stay ordinary through eclipses too (a Sun-synchronous LEO over one day: 1 643 to 4 604
+    /// the penumbra, so the steps stay ordinary through eclipses too (a Sun-synchronous LEO over one day: 1 645 to 4 639
     /// steps from 1e-11 to 1e-14, against 23 967 at 1e-13 and a failure at 1e-14 before #423). When the step collapses
     /// all the same, the propagation stops with an
     /// <see cref="InvalidOperationException"/> after 10 000 consecutive accepted steps within 100 s of flight, whose
