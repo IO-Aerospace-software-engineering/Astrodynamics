@@ -35,8 +35,8 @@ public class ConjunctionCovarianceCostTests : IClassFixture<ReferenceCases>
     [LongValidationFact]
     public void Cost_OfTheReplay_OfTheIndexAndOfTheAvoidance_OnR2()
     {
-        // Arrange: two participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag), crossing a day after the start,
-        // propagated in RK7(8) at 1e-11
+        // Arrange: two participants on the 700 km sun-synchronous orbit of ConjunctionCovarianceCase.Pair in the force model
+        // of R2 (EGM2008 10×10, Sun, Moon, drag), crossing a day after the start, propagated in RK7(8) at 1e-11
         var r2 = _cases.R2;
         var start = r2.InitialState.Epoch;
         var tca = start.AddHours(23.0);

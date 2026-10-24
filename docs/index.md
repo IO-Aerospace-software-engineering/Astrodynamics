@@ -21,14 +21,15 @@ It is free and open source under LGPL-3.0-or-later, published as a single packag
 - Attitude control: single-vector attitudes, TRIAD fully-constrained pointing, instrument-based pointing
 - Geometry searches such as occultations, eclipses, visibility windows, and distance constraints
 - Atmospheric drag (NRLMSISE-00, U.S. Standard), geopotential (EGM2008), solar radiation pressure, and third-body perturbations
+- State transition matrix, sensitivity to Cd and Cr, and covariance propagation in RK7(8), with RTN process noise, consider parameters and maneuver execution errors
 - Velocity-Verlet fixed-step symplectic integrator, and the adaptive RK7(8) Prince-Dormand integrator with sub-step event refinement
 - Fluent propagator builder for declarative force-model assembly
 - CIO-based Earth orientation frames GCRF, CIRS, and TIRS
 - Albedo and thermal radiation pressure modeling
 - Batch propagation with fault isolation and progress reporting
 - Monte Carlo dispersion analysis with covariance-based initial-state sampling and per-epoch statistics
-- Conjunction screening, conjunction assessment, and simple avoidance trade studies
-- CCSDS OMM, OPM and CDM reading, writing, and validation
+- Conjunction screening, conjunction assessment with the covariance propagated to the time of closest approach, and avoidance trade studies
+- CCSDS OMM, OPM and CDM reading, writing, and validation, the CDM with a propagated covariance and its consider parameters
 
 ## Non-Goals
 

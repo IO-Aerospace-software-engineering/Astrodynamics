@@ -81,7 +81,8 @@ secret `CONFORMANCE_TESTS_TOKEN` and is skipped without it.
 
 ### Measured Errors
 
-Measured on 2026-10-04. RK7(8): conformance runner report (IO.Astrodynamics 10.x, the framework
+Measured on 2026-10-04; cases 001 and 003 measured again on 2026-10-23 with the constants of the geopotential of
+[#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410). RK7(8): conformance runner report (IO.Astrodynamics 10.x, the framework
 commit is recorded in the report). Velocity-Verlet: output of the `PropagatorTests.Conformance00x_*` tests.
 
 | Case | Orbit and force model (inputs) | Golden | RK7(8), 1e-11 | Velocity-Verlet, 1 s |
@@ -135,7 +136,7 @@ None of them has been isolated yet; each open point is tracked.
 | Inertial frame | `Frame.ICRF` (SPICE `J2000`, ICRF-aligned) | `EarthMJ2000Eq` (EME2000) | Measured with GMAT R2026a (2026-10-19): GMAT turns `EarthICRF`, whose axes are those of `J2000`, to `EarthMJ2000Eq` by 2.1e-7 rad (43.7 mas) at 2021-03-20 12:00 TDB, mostly about y, drifting by 9.3e-10 rad over the day; about 1.5 m at 7000 km and 8.9 m in GEO ([Against GMAT](#against-gmat-h2)) | Measured at the epoch of the H2 cases; the effect on the goldens of cases 001 to 003, at their own epochs, not isolated |
 | Ephemerides | `de440s.bsp` | `de440s.bsp`, the same file (identical MD5) | None | Verified |
 | Constants (Earth GM, reference radius of the field) | The central term with the GM of `gm_de440.tpc` (3.98600435507e14 m³/s², TDB-compatible); the harmonics of EGM2008 with its own GM and reference radius (3.986004415e14 m³/s², 6378136.3 m) since #410, before which they took the GM of the kernels and the equatorial radius of `pck00011.tpc` (6378136.6 m) | GMAT defaults and the JGM3 file; `Earth.Mu` is not overridden in the scripts of cases 001 to 003 | Measured (2026-10-23): the old constants put the harmonics 7.9e-8 away from EGM2008 at degree 2 (9.5e-10 m/s² in LEO 400 km): over one day 7.8 cm on R2 and 1.6 mm on R4; the residuals of cases 001 to 003 against their goldens changed by 0.15 m at most. Remaining: the GM and the radius of EGM2008 are TT-compatible values, used with the TDB-compatible coordinates of the propagation, as GMAT and the ICGEM convention do; scaled to TDB-compatible values (Klioner et al., 2010), the harmonics would change by 4.5e-8, about 4.5 cm a day on R2 | Fixed ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)); the TDB scaling a known approximation |
-| Time scales | UTC window converted to TDB | Elapsed time `ElapsedSecs = 86400` | Sampling the end of the window in the wrong scale shifts it by about 18 µs, i.e. 0.14 m in LEO (measured: 12.99 m against 13.13 m) | Resolved: tests and runner both use the UTC end converted to TDB |
+| Time scales | UTC window converted to TDB | Elapsed time `ElapsedSecs = 86400` | Sampling the end of the window in the wrong scale shifts it by about 18 µs, i.e. 0.14 m in LEO (measured before #410: 12.99 m against 13.13 m) | Resolved: tests and runner both use the UTC end converted to TDB |
 | Integration error | RK7(8), tolerances 1e-11 | PrinceDormand78, accuracy 1e-13 | 0.08 m over one sidereal day at GEO (two-body cases 004 and 005) | Measured |
 
 ## State Transition Matrix and Covariance
@@ -263,15 +264,21 @@ step 9). The true anomaly fixed alone, the round trip would return the state to 
 enough for R4 (Φ 3.3e-8), but not for two references: Ψ_Cr of R3, which is resolved only to the noise of its reference,
 and the test after a maneuver, which compares the states bit for bit. Hence the state taken as it is: R4 Φ 2.8e-8.
 
-**Across a maneuver** (`ManeuverStmValidationTests`, Eclipsing case). Φ and Ψ model the burn in open loop: the epoch
+**Across a maneuver** (`ManeuverStmValidationTests`, Eclipsing case; measured again on 2026-10-24, after
+[#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423),
+[#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434) and the density of
+[#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411) and
+[#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409); the figures of 2026-10-17 in
+parentheses). Φ and Ψ model the burn in open loop: the epoch
 and the ΔV are those of the nominal trajectory. Against a reference that fires that nominal burn (fixed in epoch and
 ΔV), the errors are as follows:
 
-- Φ: 5.5e-8 at most per block, 5.2e-8 in the 7 penumbra crossings (published as a record, 1.1e-7; 2.9e-8 before
-  #398);
-- Ψ_Cd: 7.5e-8 over the arc relative to its largest value, and 3.7e-6 relative to the local value after the burn;
-- Ψ_Cr: 5.2e-5 in position and 9.4e-5 in velocity over the arc (4.4e-6 before #398), and 3.7e-4 relative to the
-  local value after the burn (1.3e-5 before #398), records rather than F1 figures.
+- Φ: 3.2e-8 at most per block, 3.0e-8 in the 7 penumbra crossings (5.5e-8 and 5.2e-8; published as a record, 1.1e-7;
+  2.9e-8 before #398);
+- Ψ_Cd: 1.1e-7 over the arc relative to its largest value (7.5e-8), and 1.4e-6 relative to the local value after the
+  burn (3.7e-6);
+- Ψ_Cr: 1.6e-6 in position and 2.3e-6 in velocity over the arc (5.2e-5 and 9.4e-5; 4.4e-6 before #398), and 1.5e-5
+  relative to the local value after the burn (3.7e-4; 1.3e-5 before #398), records rather than F1 figures.
 
 Since [#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398) the propagations start
 from exactly the state given, about 1e-9 m from where they started before. That shift alone moves the reference of
@@ -279,13 +286,14 @@ from exactly the state given, about 1e-9 m from where they started before. That 
 reference moved by 2e-9 m along x takes Ψ_Cr over the arc from 4.4e-6 to 9.3e-6, locally after the burn from 1.3e-5 to
 5.4e-5, and Φ from 2.9e-8 to 4.3e-8. The Ψ_Cr under test does not move: with Φ and Ψ in the step control it is the same
 before and after the fix to 2.5e-10 of its largest value, while its reference moves by up to 6.7e-5. Ψ_Cr is therefore
-held to F1 against the same propagation at 1e-14 with Φ and Ψ in the step control, without central differences: 2.1e-12
-in position and 3.0e-12 in velocity over the arc, 1.2e-8 at most relative to the local value wherever it is not zero.
+held to F1 against the same propagation at 1e-14 with Φ and Ψ in the step control, without central differences: 9.8e-11
+in position and 1.8e-10 in velocity over the arc, 5.2e-7 at most relative to the local value wherever it is not zero
+(2.1e-12, 3.0e-12 and 1.2e-8 on 2026-10-17).
 Against the central differences it is published as a record, over the arc and locally.
 
 Ψ starts from zero (in the shadow for Cr, at 1000 km for Cd), where the reference does not resolve it relative to its
 local value. Against a reference that retargets the apogee raise at its own perigee (closed loop), Φ is the same
-before the burn (below 6.8e-9) and off by 0.48, 0.33, 0.42 and 0.23 per block after it. Ψ_Cd is off by 0.37 and Ψ_Cr
+before the burn (below 8.9e-9; 6.8e-9 on 2026-10-17) and off by 0.48, 0.33, 0.42 and 0.23 per block after it. Ψ_Cd is off by 0.37 and Ψ_Cr
 by 1.2 of their largest values. This is the measured effect of the open-loop assumption: the propagated covariance is
 that of a burn executed as commanded, with its execution error, not that of a maneuver that retargets its ΔV.
 
@@ -356,7 +364,10 @@ re-measured on 2026-10-23 after
 acceleration in the penumbra by the rounding of the former shadow fraction and so the steps through it (run
 39907481180 of `long-validation.yml`): unchanged at the precision of the tables, worst |z| 2.14, p = 0.011 at one
 revolution (1.646 h), the domain of validity up to 1.67 h (p = 3.3e-3 at 1.83 h), the ratios 0.954 to 1.056 up to 1 h,
-1.13 at one revolution, 362 at 6 h and 1.3e6 at 24 h, the position at 24 h 4.32 (radial 1.11).
+1.13 at one revolution, 362 at 6 h and 1.3e6 at 24 h, the position at 24 h 4.32 (radial 1.11). These figures were
+published before [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410), the
+constants of the geopotential, which moves R2 by 7.85 cm and R3 by 16.6 cm over one day; the run of
+`long-validation.yml` before the release checks them again.
 
 - Up to about one revolution S is P along every direction of the state, within the sampling noise. From about one
   revolution, the sample variance along one direction of the state leaves its band and grows by orders of magnitude
@@ -398,7 +409,9 @@ Ubuntu build of the GMAT project, run from the command line (`GmatConsole`), and
 scripts that wrote them, so the tests (`GmatReferenceTests`, `GmatPartialsTests`, category `Validation`) do not need
 GMAT; the manual workflow `gmat-reference.yml` runs GMAT again and checks that it writes the same reports byte for byte,
 and the same console logs but for the date of the run and its duration. Every figure below was measured on 2026-10-20;
-those published on 2026-10-19 came out with the same digits.
+those published on 2026-10-19 came out with the same digits. The figures of P, Q and the partials were measured again on
+2026-10-24, after [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410), with the same
+digits.
 
 **Cases.** The reference cases where GMAT can be given the models of the library:
 

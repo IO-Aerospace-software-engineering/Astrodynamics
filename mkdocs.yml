@@ -51,6 +51,7 @@ nav:
     - Geometry & Visibility: tutorials/geometry-and-visibility.md
     - Mission Design: tutorials/mission-design.md
     - Conjunction Assessment: tutorials/conjunction-assessment.md
+    - Covariance Propagation: tutorials/covariance-propagation.md
     - Monte Carlo: tutorials/monte-carlo.md
     - Batch Propagation: tutorials/batch-propagation.md
 

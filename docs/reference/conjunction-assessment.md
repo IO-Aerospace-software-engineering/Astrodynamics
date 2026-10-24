@@ -95,12 +95,17 @@ What the operator can do with it, and its limits:
   measurement of those encounters).
 
 **Cost** (`ConjunctionCovarianceCostTests`, Release, Intel Xeon 2.1 GHz, 4 cores, 2026-10-17, informative). Two
-participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, drag), each propagated over one day in RK7(8) at 1e-11 in
+participants on a 700 km sun-synchronous orbit in the force model of R2 (EGM2008 10×10, Sun, Moon, NRLMSISE-00 drag),
+crossing 23 h after the start, each propagated over one day in RK7(8) at 1e-11 in
 0.67 s; `Analyze` over a 2 h window 23 h after the start: 0.55 s with the covariance held in RTN, 1.5 s with the replay
 of both participants, 10.1 s with the non-linearity index (24 STM propagations of 23 h). `EvaluateAvoidance` with the
 default magnitudes and directions, on the TCA found in a 12 h screening window, 12.3 h after the start (lead times up to
 0.32 h, the shortest below the minimum lead time skipped): 36 options in 21.7 s, about 0.6 s per option propagated with
-the covariance from its burn to the end of the window (about 12 h). The index is off by default for that cost.
+the covariance from its burn to the end of the window (about 12 h). The index is off by default for that cost. These
+figures were measured before the changes of the force models of #420, #437 and #410; measured again on 2026-10-24 with
+BenchmarkDotNet (`ConjunctionCovarianceBenchmarks`, the same pair and window, library at `deb26b9`), `Analyze` takes
+0.83 ± 0.08 s with the covariance held in RTN and 1.71 ± 0.08 s with the replay, 2.1 times
+([Cost](covariance-propagation.md#cost)).
 
 **Measurement of the threshold** (`FosterMonteCarloValidationTests`, `LongValidation`, 2026-10-17; ν measured again
 with the definition independent of the basis on 2026-10-18, Foster and the Monte Carlo unchanged). Two-body
@@ -161,10 +166,14 @@ Packages the protected `Spacecraft` with maneuver constraints used by avoidance 
 
 ## ScreeningOptions
 
-| Property | Description |
-|----------|-------------|
-| `MaxMissDistanceMeters` | Filter threshold for miss distance |
-| `MaxResults` | Maximum number of ranked results to return |
+| Property | Default | Description |
+|----------|---------|-------------|
+| `SampleStep` | 5 min | Coarse search cadence for each candidate pair (1 min in `ConjunctionAnalysisOptions`) |
+| `MaximumEventSearchStep` | 60 s | Largest interval subdivided while refining the event detection |
+| `MaxMissDistanceMeters` | 25 000 m | Filter threshold for miss distance |
+| `MaxResults` | 25 | Maximum number of ranked results to return |
+| `DefaultSecondaryHardBodyRadiusMeters` | 5 m | Hard-body radius of a secondary that does not expose one |
+| `LowRelativeSpeedThresholdMetersPerSecond` | 1 m/s | Relative speed below which an encounter is flagged as a low-velocity case |
 
 Results are ordered by descending collision probability, then by miss distance.
 

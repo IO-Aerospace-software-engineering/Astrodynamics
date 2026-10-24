@@ -19,6 +19,7 @@ namespace IO.Astrodynamics.SmokeTests;
 /// The example of the covariance propagation reference page, against the packed package: activation through the
 /// builder, Φ and P read from the solution.
 /// </summary>
+[Collection(KernelCollection.Name)]
 public class CovariancePropagationSmokeTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");

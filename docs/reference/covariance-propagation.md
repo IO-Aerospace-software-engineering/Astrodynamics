@@ -76,14 +76,17 @@ the start of the window. This example runs as a smoke test against the packed Nu
   tolerance of the integrator.
 - Without `IncludeInStepControl`, Ψ carries an integration error that the control of the state does not see, largest
   for Cr across the shadow crossings of SRP. In an eclipsing LEO 400 × 1000 km over 6 h, with a maneuver, drag and SRP,
-  at a tolerance of 1e-12, the error of Ψ_Cr over the arc, relative to the largest Ψ_Cr of the arc, was 6.0e-5 to
-  1.9e-3 depending on where the steps fell (the same physics in J2000 and in ECLIPJ2000), against 2.6e-5 at most at
-  1e-14. Relative to the local Ψ_Cr, it reaches 1.5e-2 at 1e-12 just after the first shadow exit, where Ψ_Cr is still
-  below a millimetre, but also 1.2e-2 at a later crossing (4.45 h), where Ψ_Cr is 0.28 m; at 1e-14, 1.6e-4 at that later
-  crossing. With the option, at 1e-12, Ψ_Cr is within 7.1e-8 (J2000) and 3.4e-8 (ECLIPJ2000) of the same propagation at 1e-13, relative to the local
-  Ψ_Cr, over the whole arc. When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
-  tighter tolerance reduces the error about a hundredfold, not below 1e-4 at every crossing. In the same
-  case, Φ and Ψ_Cd stay below 2.2e-8 and 7.6e-7 (at 5.123 h; measured 2026-10-21).
+  at a tolerance of 1e-12, the error of Ψ_Cr over the arc, relative to the largest Ψ_Cr of the arc, is 1.1e-3 to
+  3.5e-3 depending on where the steps fall (position and velocity rows, the same physics in J2000 and in ECLIPJ2000),
+  against 1.2e-5 at most at 1e-14 (measured 2026-10-24, `CovariancePropagationTests`). Relative to the local Ψ_Cr, it
+  reached 1.5e-2 at 1e-12 just after the first shadow exit, where Ψ_Cr is still below a millimetre, but also 1.2e-2 at a
+  later crossing (4.45 h), where Ψ_Cr is 0.28 m; at 1e-14, 1.6e-4 at that later crossing (measured 2026-10-15, before
+  [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423) and
+  [#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434)). With the option, at 1e-12,
+  Ψ_Cr is within 7.7e-8 (J2000) and 1.9e-8 (ECLIPJ2000) of the same propagation at 1e-13, relative to the local Ψ_Cr,
+  over the whole arc. When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
+  tighter tolerance reduces the error a hundredfold or more, not below 1e-4 at every crossing. In the same case, Φ and
+  Ψ_Cd stay below 2.1e-8 and 4.4e-7 (at 5.123 h; measured 2026-10-24).
 - `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
 - With `IncludeInStepControl`, the step follows the error of Φ and Ψ, so it needs partial derivatives that are smooth
   along the trajectory. The density gradient of the drag partials is taken in geodetic coordinates, without rounding
@@ -95,7 +98,9 @@ the start of the window. This example runs as a smoke test against the packed Nu
   day, with Ψ_Cd; Linux, Release, best of 3, measured 2026-10-21): without the option, the same steps and 15 % (1e-12)
   to 22 % (1e-13) more time than before, for the two more model evaluations of each drag partials call; with the
   option, 1 084 steps in 2.15 s at 1e-12 against 1 247 in 1.95 s before, and 1 681 steps in 3.27 s at 1e-13 against
-  38 678 in 60.6 s.
+  38 678 in 60.6 s (before the geopotential constants of
+  [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410); for the cost of the
+  variational equations on R2 now, see [Cost](#cost)).
 - Through the SRP penumbra, the partials take the analytic derivative of the shadow function, so the steps stay
   ordinary with the option on an eclipsing orbit too
   ([#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)). R3 (Sun-synchronous 700 km,
@@ -110,7 +115,8 @@ the start of the window. This example runs as a smoke test against the packed Nu
   steps, 21 596 of them in its 265 s of penumbra at 1e-13, and stopped on the guard below at 13.3 h at 1e-14 (on 100
   rejections at 15.0 h before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420)); R4
   took 2 402 steps at 1e-14. Without the option the trajectory does not change, and Φ and Ψ move only through the steps
-  that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9).
+  that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9; measured 2026-10-22, before #434 and
+  #410).
 - When the step collapses all the same (a force whose partials are not smooth at the tolerance), RK7(8) stops with an
   `InvalidOperationException` after 10 000 consecutive accepted steps within 100 s of flight, a mean step below 10 ms,
   instead of running until the memory is exhausted. The steps are counted in disjoint blocks of 10 000 from the start
@@ -184,25 +190,49 @@ On `PropagationSolution`:
 Each call allocates its result. The propagation itself allocates nothing per step or per stage; in covariance mode, each
 output state allocates its covariance matrix only.
 
-### Cost of the output states
+### Cost
 
 Inside an integration step, a value costs one shortened RK7(8) step from the start of that step: 13 evaluations of the
 forces for a state (`InterpolateAt`), and 13 evaluations of the forces and 13 of their partial derivatives for Φ, Ψ or P
 (the getters above). In covariance mode, every output state (`StateVectors`) carries its P, so it is computed the second
-way, and a fine output grid makes the propagation markedly slower than one of the state transition matrix only. Measured
-on a LEO 400 km over one day, with NRLMSISE-00 drag, the Moon and the Sun, RK7(8) at 1e-10 (about 500 steps; Release,
-informative):
+way; with the state transition matrix only, the output states are computed the first way.
 
-| Outputs every | Geopotential | Without | State transition matrix only | Covariance |
-|---------------|--------------|---------|------------------------------|------------|
-| 600 s | J2 | 70 ms | 331 ms | 473 ms |
-| 600 s | 20×20 | 110 ms | 474 ms | 544 ms |
-| 60 s | J2 | 235 ms | 432 ms | 1325 ms |
-| 60 s | 20×20 | 279 ms | 668 ms | 1495 ms |
+Measured with BenchmarkDotNet (`CovariancePropagationBenchmarks` of `IO.Astrodynamics.Performance`): one cold
+propagation over one day per iteration, RK7(8) at 1e-11, P0 of 100 m and 0.1 m/s on each axis, the spacecraft of the
+reference cases (100 kg, 10 m², Cd 2.2, Cr 1.5), Cd (R2) or Cr (R4) as consider parameter with a σ of 0.1 in covariance
+mode. R2: LEO 400 km, EGM2008 10×10, Sun, Moon, NRLMSISE-00 drag. R4: GEO, EGM2008 70×70, Sun, Moon, the barycentres of
+Mercury to Neptune, SRP. Mean ± standard deviation of 10 iterations after 2 warm-up ones, and the memory allocated per
+propagation. Intel Xeon 2.10 GHz, 4 cores, Ubuntu 24.04, .NET 10.0.13, Release, library at `deb26b9`, 2026-10-24;
+**informative**: a shared container is noisy (the standard deviations reach 20 %), and no test asserts a time.
 
-When P is needed at a few epochs only (a time of closest approach, for example), a coarse output step with
-`GetCovariance` or `GetStateVector` at those epochs costs less. A `Scenario` in covariance mode stores every output state
-with its P, so it pays this cost.
+| Case | Outputs every | Without | State transition matrix only | Covariance |
+|------|---------------|---------|------------------------------|------------|
+| R2 | 3600 s | 76 ± 13 ms, 0.26 MB | 653 ± 78 ms, 0.74 MB | 595 ± 38 ms, 0.76 MB |
+| R2 | 60 s | 253 ± 51 ms, 1.4 MB | 762 ± 48 ms, 2.1 MB | 2046 ± 114 ms, 2.9 MB |
+| R4 | 3600 s | 71 ± 15 ms, 0.26 MB | 106 ± 15 ms, 0.74 MB | 122 ± 22 ms, 0.76 MB |
+| R4 | 60 s | 875 ± 44 ms, 1.4 MB | 965 ± 35 ms, 2.1 MB | 1793 ± 73 ms, 2.8 MB |
+
+- **The dominant cost depends on the force model.** In LEO with drag (R2), the partial derivatives of the drag along the
+  steps: with hourly outputs, the variational equations make the propagation 8.6 times longer. In GEO with the 70×70
+  geopotential (R4), the output states: each one inside a step costs 13 evaluations of the 70×70 field, so outputs every
+  minute make the propagation 12 times longer than hourly ones without the variational equations, 9 times with the
+  state transition matrix only.
+- **Covariance mode with a fine output grid** adds the partial derivatives of every output state: 2.7 times the state
+  transition matrix only on R2, 1.9 times on R4, at 60 s.
+- **Memory**: no allocation per step or per stage; what a propagation allocates grows with its output states (each one
+  in covariance mode allocates its P).
+- When P is needed at a few epochs only (a time of closest approach, for example), a coarse output step with
+  `GetCovariance` or `GetStateVector` at those epochs costs less. A `Scenario` in covariance mode stores every output
+  state with its P, so it pays the cost of the output grid.
+
+The conjunction analysis with the covariance propagated to TCA costs the replay of the variational equations of both
+participants up to the TCA (`ConjunctionCovarianceBenchmarks`, same machine and date): two participants on a 700 km
+sun-synchronous orbit in the force model of R2, crossing 23 h after the start, propagated over one day at 1e-11 without
+the variational equations; `Analyze` over a 2 h window around the crossing takes 1.71 ± 0.08 s with the covariance
+propagated to TCA against 0.83 ± 0.08 s with the covariance held in RTN (`CovariancePropagation = null`), 2.1 times.
+Each call allocates about 403 MB either way, so the replay adds little memory; that allocation, which grows with the
+number of pairs of `AnalyzeAll`, is [#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447). See
+[Conjunction Assessment](conjunction-assessment.md#covariance-at-tca).
 
 ## Equations
 
@@ -248,13 +278,14 @@ gives the implementation, the tests and the citation status of each equation.
     Mahalanobis distances far beyond their spread.
   - The curvature term scales with the along-track variance over the radius, σ_T² / r, and σ_T grows mainly with the
     velocity uncertainty (0.1 m/s here): a smaller P0 should delay the departure, which has not been measured.
-  - Figures and tests: [Validation](../guides/validation.md#state-transition-matrix-and-covariance).
+  - Figures and tests: [Validation](../guides/validation.md#state-transition-matrix-and-covariance), published before
+    the constants of the geopotential of [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410).
 - **Open-loop maneuvers.** An impulsive maneuver applies its nominal ΔV at its epoch; its firing time is not
   differentiated with respect to the state, so Φ and Ψ are continuous at the burn. That is the covariance of a burn
   executed as commanded, with its execution error (Gates). A maneuver that retargets its ΔV from the state it finds,
   as `ApogeeHeightManeuver` does at its perigee, removes part of the deviation: in the eclipsing LEO case of the
   validation, Φ after the burn differs from that of the retargeted maneuver by 0.23 to 0.48 per block (Φ against the
-  open-loop reference: 2.9e-8).
+  open-loop reference: 3.2e-8 at most per block).
 - **P0 at the start of the window.** The propagator does not carry a covariance from another epoch.
 - **No process noise by default.** Without it, P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ ignores the unmodelled accelerations and is
   usually optimistic.
@@ -271,7 +302,7 @@ different noises, and the comparison of a propagated covariance with a filter co
 
 GMAT R2026a applies that discrete form at every integration step. Over one day, its Q departs from the propagated one by
 2.35e-4 at a step of 20 s, then by half as much at each halving of the step, and its first-order limit is the propagated
-Q to 1e-8 (LEO 700 km two-body) and 2e-8 (LEO 400 km, EGM2008 10×10, Sun, Moon): the propagated Q is the limit of the
+Q to 1e-8 (LEO 700 km two-body) and 2.7e-8 (LEO 400 km, EGM2008 10×10, Sun, Moon): the propagated Q is the limit of the
 discrete form along the arc ([Validation](../guides/validation.md#against-gmat-h2)).
 
 ## Execution Error of an Impulsive Maneuver

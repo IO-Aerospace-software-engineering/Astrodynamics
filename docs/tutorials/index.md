@@ -19,6 +19,7 @@ Each tutorial is self-contained and includes working code examples. Tutorials ar
 | [Geometry & Visibility](geometry-and-visibility.md) | Intermediate | Occultations, eclipses, FOV analysis, and ground tracking |
 | [Mission Design](mission-design.md) | Advanced | Lambert transfers, launch windows, and mission scenarios |
 | [Conjunction Assessment](conjunction-assessment.md) | Advanced | SSA screening, analysis, avoidance, and CDM export |
+| [Covariance Propagation](covariance-propagation.md) | Advanced | State transition matrix, covariance to another epoch, to a Pc and a CDM |
 | [Monte Carlo](monte-carlo.md) | Advanced | Dispersion analysis with covariance-based sampling |
 | [Batch Propagation](batch-propagation.md) | Advanced | Parallel multi-spacecraft propagation |
 
