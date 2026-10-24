@@ -24,8 +24,8 @@ references and their tests. The code of this tutorial runs as a smoke test again
 - **The tolerance.** Φ, Ψ and P come from the stages of the state step, at the accuracy of the integrator.
 - **`IncludeInStepControl` when Ψ_Cr matters.** By default the steps are controlled on the state only, so the trajectory
   is the same with and without the variational equations; Ψ then carries an integration error that the control does
-  not see, largest for Cr across the shadow crossings of SRP (up to about 1e-2 of the local Ψ_Cr at 1e-12 in an
-  eclipsing LEO). When Cr is a consider parameter in an orbit with eclipses, set it: the step then follows Φ and Ψ too
+  not see, largest for Cr across the shadow crossings of SRP (up to 3.5e-3 of its largest value over the arc at 1e-12 in
+  an eclipsing LEO). When Cr is a consider parameter in an orbit with eclipses, set it: the step then follows Φ and Ψ too
   ([Options](../reference/covariance-propagation.md#options)).
 
 ## The case
@@ -172,6 +172,16 @@ written as −1.0001 for example. `StateVector.WithRemediatedCovariance()` remed
 propagation, by the eigenvalue clipping of the conjunction analysis (Hall, Hejduk and Johnson, AAS 17-567):
 
 ```csharp
+var rounded = new Matrix(6, 6);
+for (int i = 0; i < 3; i++)
+{
+    rounded.Set(i, i, 100.0 * 100.0);
+    rounded.Set(i + 3, i + 3, 0.1 * 0.1);
+}
+rounded.Set(1, 3, -1.0001 * 100.0 * 0.1);   // a correlation of −1 written as −1.0001
+rounded.Set(3, 1, -1.0001 * 100.0 * 0.1);
+var indefinite = new StateVector(initialState.Position, initialState.Velocity, earth, epoch, Frame.ICRF, rounded);
+
 var remediation = indefinite.WithRemediatedCovariance();
 if (remediation.Remediated)
     Console.WriteLine($"Smallest eigenvalue of the correlation matrix: {remediation.SmallestCorrelationEigenvalue:E3}");
@@ -225,8 +235,9 @@ var source = encounter.EncounterState.ProtectedCovariance.Source;   // Covarianc
   (`CovarianceSource`): `Propagated`, `ProvidedAtEncounter`, `InitialStateHeldInRtn` (the participant is not propagated
   in RK7(8): Velocity-Verlet, TLE, SPICE) or `None`; with the age and whether a process noise was applied.
 - `CovariancePropagation = null` gives the former behaviour: the initial covariance held fixed in RTN up to the TCA,
-  its size not growing, flagged `StaleCovarianceUsed`. On this case the propagated covariance gives a Pc of {PC_PROPAGATED}
-  where the covariance held in RTN gave {PC_HELD}: the along-track uncertainty grown over 24 h spreads the probability.
+  its size not growing, flagged `StaleCovarianceUsed`. On this case (miss distance 151 m) the propagated covariance gives
+  a Pc of 2.0e-6 where the covariance held in RTN gave 1.9e-4: the along-track uncertainty grown over 24 h spreads the
+  probability, two orders of magnitude lower here.
 - The analysis takes its own options for the propagated covariance (`ConjunctionAnalysisOptions.CovariancePropagation`,
   covariance mode by default, no process noise, no consider parameters): set them there to add process noise or consider
   parameters to the covariance at TCA.

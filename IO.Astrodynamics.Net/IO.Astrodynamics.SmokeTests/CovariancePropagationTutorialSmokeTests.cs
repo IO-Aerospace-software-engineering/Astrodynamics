@@ -24,6 +24,7 @@ namespace IO.Astrodynamics.SmokeTests;
 /// The code of the covariance propagation tutorial (docs/tutorials/covariance-propagation.md), section by section,
 /// against the packed package. Keep both in step: a change to one is a change to the other.
 /// </summary>
+[Collection(KernelCollection.Name)]
 public class CovariancePropagationTutorialSmokeTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");

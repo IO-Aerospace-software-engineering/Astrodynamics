@@ -22,6 +22,7 @@ namespace IO.Astrodynamics.SmokeTests;
 /// These tests verify that the native P/Invoke layer is correctly loaded
 /// and all entry points are reachable.
 /// </summary>
+[Collection(KernelCollection.Name)]
 public class SpiceAPISmokeTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");

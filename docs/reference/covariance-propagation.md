@@ -284,7 +284,7 @@ gives the implementation, the tests and the citation status of each equation.
   executed as commanded, with its execution error (Gates). A maneuver that retargets its ΔV from the state it finds,
   as `ApogeeHeightManeuver` does at its perigee, removes part of the deviation: in the eclipsing LEO case of the
   validation, Φ after the burn differs from that of the retargeted maneuver by 0.23 to 0.48 per block (Φ against the
-  open-loop reference: 5.5e-8 at most per block).
+  open-loop reference: 3.2e-8 at most per block).
 - **P0 at the start of the window.** The propagator does not carry a covariance from another epoch.
 - **No process noise by default.** Without it, P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ ignores the unmodelled accelerations and is
   usually optimistic.
