@@ -184,25 +184,48 @@ On `PropagationSolution`:
 Each call allocates its result. The propagation itself allocates nothing per step or per stage; in covariance mode, each
 output state allocates its covariance matrix only.
 
-### Cost of the output states
+### Cost
 
 Inside an integration step, a value costs one shortened RK7(8) step from the start of that step: 13 evaluations of the
 forces for a state (`InterpolateAt`), and 13 evaluations of the forces and 13 of their partial derivatives for Φ, Ψ or P
 (the getters above). In covariance mode, every output state (`StateVectors`) carries its P, so it is computed the second
-way, and a fine output grid makes the propagation markedly slower than one of the state transition matrix only. Measured
-on a LEO 400 km over one day, with NRLMSISE-00 drag, the Moon and the Sun, RK7(8) at 1e-10 (about 500 steps; Release,
-informative):
+way; with the state transition matrix only, the output states are computed the first way.
 
-| Outputs every | Geopotential | Without | State transition matrix only | Covariance |
-|---------------|--------------|---------|------------------------------|------------|
-| 600 s | J2 | 70 ms | 331 ms | 473 ms |
-| 600 s | 20×20 | 110 ms | 474 ms | 544 ms |
-| 60 s | J2 | 235 ms | 432 ms | 1325 ms |
-| 60 s | 20×20 | 279 ms | 668 ms | 1495 ms |
+Measured with BenchmarkDotNet (`CovariancePropagationBenchmarks` of `IO.Astrodynamics.Performance`): one cold
+propagation over one day per iteration, RK7(8) at 1e-11, P0 of 100 m and 0.1 m/s on each axis, the spacecraft of the
+reference cases (100 kg, 10 m², Cd 2.2, Cr 1.5), Cd (R2) or Cr (R4) as consider parameter with a σ of 0.1 in covariance
+mode. R2: LEO 400 km, EGM2008 10×10, Sun, Moon, NRLMSISE-00 drag. R4: GEO, EGM2008 70×70, Sun, Moon, the barycentres of
+Mercury to Neptune, SRP. Mean ± standard deviation of 10 iterations after 2 warm-up ones, and the memory allocated per
+propagation. Intel Xeon 2.10 GHz, 4 cores, Ubuntu 24.04, .NET 10.0.13, Release, library at `deb26b9`, 2026-10-24;
+**informative**: a shared container is noisy (the standard deviations reach 20 %), and no test asserts a time.
 
-When P is needed at a few epochs only (a time of closest approach, for example), a coarse output step with
-`GetCovariance` or `GetStateVector` at those epochs costs less. A `Scenario` in covariance mode stores every output state
-with its P, so it pays this cost.
+| Case | Outputs every | Without | State transition matrix only | Covariance |
+|------|---------------|---------|------------------------------|------------|
+| R2 | 3600 s | 76 ± 13 ms, 0.26 MB | 653 ± 78 ms, 0.74 MB | 595 ± 38 ms, 0.76 MB |
+| R2 | 60 s | 253 ± 51 ms, 1.4 MB | 762 ± 48 ms, 2.1 MB | 2046 ± 114 ms, 2.9 MB |
+| R4 | 3600 s | 71 ± 15 ms, 0.26 MB | 106 ± 15 ms, 0.74 MB | 122 ± 22 ms, 0.76 MB |
+| R4 | 60 s | 875 ± 44 ms, 1.4 MB | 965 ± 35 ms, 2.1 MB | 1793 ± 73 ms, 2.8 MB |
+
+- **The dominant cost depends on the force model.** In LEO with drag (R2), the partial derivatives of the drag along the
+  steps: with hourly outputs, the variational equations make the propagation 8.6 times longer. In GEO with the 70×70
+  geopotential (R4), the output states: each one inside a step costs 13 evaluations of the 70×70 field, so outputs every
+  minute make the propagation 12 times longer than hourly ones without the variational equations, 9 times with the
+  state transition matrix only.
+- **Covariance mode with a fine output grid** adds the partial derivatives of every output state: 2.7 times the state
+  transition matrix only on R2, 1.9 times on R4, at 60 s.
+- **Memory**: no allocation per step or per stage; what a propagation allocates grows with its output states (each one
+  in covariance mode allocates its P).
+- When P is needed at a few epochs only (a time of closest approach, for example), a coarse output step with
+  `GetCovariance` or `GetStateVector` at those epochs costs less. A `Scenario` in covariance mode stores every output
+  state with its P, so it pays the cost of the output grid.
+
+The conjunction analysis with the covariance propagated to TCA costs the replay of the variational equations of both
+participants up to the TCA (`ConjunctionCovarianceBenchmarks`, same machine and date): two participants on a 700 km
+sun-synchronous orbit in the force model of R2, crossing 23 h after the start, propagated over one day at 1e-11 without
+the variational equations; `Analyze` over a 2 h window around the crossing takes 1.71 ± 0.08 s with the covariance
+propagated to TCA against 0.83 ± 0.08 s with the covariance held in RTN (`CovariancePropagation = null`), 2.1 times.
+Each call allocates about 403 MB either way, so the replay adds little memory. See
+[Conjunction Assessment](conjunction-assessment.md#covariance-at-tca).
 
 ## Equations
 
@@ -254,7 +277,7 @@ gives the implementation, the tests and the citation status of each equation.
   executed as commanded, with its execution error (Gates). A maneuver that retargets its ΔV from the state it finds,
   as `ApogeeHeightManeuver` does at its perigee, removes part of the deviation: in the eclipsing LEO case of the
   validation, Φ after the burn differs from that of the retargeted maneuver by 0.23 to 0.48 per block (Φ against the
-  open-loop reference: 2.9e-8).
+  open-loop reference: 5.5e-8 at most per block).
 - **P0 at the start of the window.** The propagator does not carry a covariance from another epoch.
 - **No process noise by default.** Without it, P = Φ P0 Φᵀ + Ψc Pp Ψcᵀ ignores the unmodelled accelerations and is
   usually optimistic.
@@ -271,7 +294,7 @@ different noises, and the comparison of a propagated covariance with a filter co
 
 GMAT R2026a applies that discrete form at every integration step. Over one day, its Q departs from the propagated one by
 2.35e-4 at a step of 20 s, then by half as much at each halving of the step, and its first-order limit is the propagated
-Q to 1e-8 (LEO 700 km two-body) and 2e-8 (LEO 400 km, EGM2008 10×10, Sun, Moon): the propagated Q is the limit of the
+Q to 1e-8 (LEO 700 km two-body) and 2.7e-8 (LEO 400 km, EGM2008 10×10, Sun, Moon): the propagated Q is the limit of the
 discrete form along the arc ([Validation](../guides/validation.md#against-gmat-h2)).
 
 ## Execution Error of an Impulsive Maneuver

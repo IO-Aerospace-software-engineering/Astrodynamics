@@ -275,6 +275,13 @@ The exported CDM includes:
   covariance for both participants, so the single-covariance maximum Pc is
   never exported; `CdmExportOptions.CollisionProbabilityMethod` overrides the
   method name
+- **Propagated covariance**: for a participant whose covariance was
+  propagated to TCA, `COVARIANCE_METHOD` `CALCULATED`, the force model of its
+  propagation (`GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS`,
+  `SOLAR_RAD_PRESSURE`), the `CDRG_*` and `CSRP_*` rows when Cd or Cr are
+  consider parameters, and comments giving the source of the covariance and
+  the process noise applied; see [CDM](../reference/cdm.md) and the
+  [Covariance Propagation tutorial](covariance-propagation.md#the-cdm)
 - **Covariance age**: when a participant's covariance comes from its initial
   state, a comment gives its age at TCA. An encounter flagged
   `StaleCovarianceUsed` is refused unless `CdmExportOptions.AllowStaleCovariance`

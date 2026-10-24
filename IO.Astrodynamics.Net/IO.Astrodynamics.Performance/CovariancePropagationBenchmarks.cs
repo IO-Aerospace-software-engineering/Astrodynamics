@@ -47,7 +47,7 @@ public enum VariationalMode
 /// </remarks>
 [MarkdownExporterAttribute.GitHub]
 [MemoryDiagnoser]
-[SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, iterationCount: 5)]
+[SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, iterationCount: 10)]
 public class CovariancePropagationBenchmarks
 {
     internal static readonly Time Epoch = new(2021, 3, 20, 12, 0, 0);
@@ -153,7 +153,8 @@ public class CovariancePropagationBenchmarks
 
 /// <summary>
 /// The cost of the covariance propagated to TCA in <see cref="ConjunctionAssessment.Analyze(ProtectedSpacecraftProfile, ILocalizable, Window, ConjunctionAnalysisOptions)"/>:
-/// two participants of R2 (LEO 400 km, EGM2008 10×10, Sun, Moon, NRLMSISE-00 drag) crossing 23 h after the start, each
+/// two participants on a sun-synchronous orbit at 700 km in the force model of R2 (EGM2008 10×10, Sun, Moon,
+/// NRLMSISE-00 drag) crossing 23 h after the start, each
 /// propagated once over one day in RK7(8) at 1e-11 without the variational equations, with an RTN covariance at the start;
 /// the analysis over 2 h around the crossing, with the covariance propagated to TCA (the default: the replay of the
 /// variational equations along the steps of both participants) and held in RTN. The geometry of
@@ -161,7 +162,7 @@ public class CovariancePropagationBenchmarks
 /// </summary>
 [MarkdownExporterAttribute.GitHub]
 [MemoryDiagnoser]
-[SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 1, iterationCount: 5)]
+[SimpleJob(RunStrategy.Monitoring, launchCount: 1, warmupCount: 2, iterationCount: 10)]
 public class ConjunctionCovarianceBenchmarks
 {
     private ProtectedSpacecraftProfile _protected = null!;
@@ -201,12 +202,13 @@ public class ConjunctionCovarianceBenchmarks
     [Benchmark(Description = "Analyze, covariance propagated to TCA")]
     public EncounterCase Propagated() => ConjunctionAssessment.Analyze(_protected, _secondary, _window);
 
-    // The protected object, the R2 orbit, and a secondary object passing, in the two-body problem, 200 m from it at tca
-    // (120 m radial, 160 m normal) with its velocity turned by 70° about the radial direction
+    // The protected object, a LEO at 700 km inclined by 98.2°, and a secondary object passing, in the two-body problem,
+    // 200 m from it at tca (120 m radial, 160 m normal) with its velocity turned by 70° about the radial direction: the
+    // pair of ConjunctionCovarianceCase in the tests
     private static (StateVector Protected, StateVector Secondary) Pair(CelestialBody earth, Time start, Time tca)
     {
-        var protectedOrbit = CovariancePropagationBenchmarks.State(
-            CovariancePropagationBenchmarks.EarthEquatorialRadius + 400.0e3, 0.0005, 51.6, 20.0, 15.0, 0.0, earth);
+        var protectedOrbit = new KeplerianElements(7078137.0, 0.001, 98.2 * Constants.Deg2Rad, 0.4, 1.1, 0.3, earth,
+            start, Frame.ICRF).ToStateVector();
         var protectedAtTca = protectedOrbit.ToStateVector(tca);
         var radial = protectedAtTca.Position.Normalize();
         var normal = protectedAtTca.Position.Cross(protectedAtTca.Velocity).Normalize();

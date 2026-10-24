@@ -1537,10 +1537,23 @@ Numerical orbit propagator using a segment-based architecture with event-driven 
 | `CentralBodyPropagator(Window window, Spacecraft spacecraft, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Create propagator with auto force-building and default VV integrator |
 | `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step)` | Create propagator with custom integrator (forces pre-configured) |
 | `CentralBodyPropagator(Window window, Spacecraft spacecraft, Integrator integrator, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Create propagator with custom integrator and auto force-building |
+| `CentralBodyPropagator(Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan step, CovariancePropagationOptions covariancePropagation)` and `CentralBodyPropagator(Window window, Spacecraft spacecraft, Integrator integrator, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step, CovariancePropagationOptions covariancePropagation)` | The same, with the state transition matrix, the sensitivity to Cd and Cr and the covariance propagated with the state (RK7(8) only; null for off) |
 
 | Method | Description |
 |--------|-------------|
 | `Propagate()` | Execute propagation with event detection and dense output, returns `PropagationSolution` |
+
+**State transition matrix and covariance** (`IO.Astrodynamics.Propagator.Variational`, off by default): with
+`CovariancePropagationOptions` (`Mode` `StateTransitionOnly` or `Covariance`, `ProcessNoise` an `RtnProcessNoise`,
+`ConsiderParameters` the σ of Cd and Cr, `IncludeInStepControl`), activated by the constructors above,
+`CentralBodyPropagatorBuilder.WithCovariancePropagation`, `Spacecraft.Propagate`, `PropagationTask.CovariancePropagation`
+or `Scenario.SimulateAsync`, an `RK78Integrator` propagates Φ, Ψ and P with the state. They are read from the solution
+at any epoch: `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`,
+`GetStateVector`. `ImpulseManeuver.ExecutionError` (`ManeuverExecutionError`, namespace `IO.Astrodynamics.Maneuver`)
+adds the execution error of a burn, `StateVector.WithRemediatedCovariance()` remediates an initial covariance that
+rounding made indefinite, and `ConjunctionAssessment.Analyze` propagates the covariance of a participant propagated in
+RK7(8) to the time of closest approach. See `docs/reference/covariance-propagation.md`,
+`docs/tutorials/covariance-propagation.md` and `docs/reference/conjunction-assessment.md`.
 
 **Propagation Architecture:**
 1. **Build event detectors** from the spacecraft's maneuver chain (leading attitudes execute immediately)
@@ -1610,7 +1623,7 @@ SGP4/SDP4 propagator for TLE elements.
 
 | Constructor | Description |
 |------------|-------------|
-| `TLEPropagator(Window window, TLE tle, TimeSpan step)` | Create propagator |
+| `TLEPropagator(Window window, Spacecraft spacecraft, TimeSpan step)` | Create propagator for a spacecraft whose initial orbital parameters are a TLE |
 
 | Method | Description |
 |--------|-------------|
@@ -1630,11 +1643,13 @@ Configuration for enabling geopotential gravity on a `CelestialBody`.
 |------------|-------------|
 | `GeopotentialModelParameters(string path, ushort degree = 60)` | Load model from file path |
 | `GeopotentialModelParameters(Stream stream, ushort degree = 60)` | Load model from stream |
+| `GeopotentialModelParameters(string path, ushort degree, double gravitationalParameter, double referenceRadius)` and its `Stream` form | Load a model whose harmonics take the given GM (m³/s²) and reference radius (m) |
 
 | Property | Description |
 |----------|-------------|
 | `GeopotentialModelPath` | Stream reader for the model file |
 | `GeopotentialDegree` | Maximum degree/order to use |
+| `GravitationalParameter`, `ReferenceRadius` | The constants given to the four-argument constructors; null otherwise. The harmonics then take EGM2008's GM (3.986004415e14 m³/s²) and radius (6378136.3 m) for the Earth, the kernel GM and equatorial radius for another body; the central term always takes the kernel GM (#410) |
 
 #### GeopotentialGravitationalField
 
@@ -1662,7 +1677,7 @@ Computes the full 3D gravitational acceleration including spherical harmonic per
 
 **Thread safety:** `GeopotentialGravitationalField` is **not** thread-safe. Pre-allocated buffers (`_P`, `_dP` Legendre tables and `_cosMLambda`, `_sinMLambda` trig arrays) are overwritten on every acceleration evaluation. Create a separate `CelestialBody` instance per thread when propagating concurrently.
 
-Additionally, `CentralBodyPropagator` sets an `OrientationCache` on the central body's `Frame` during propagation and clears it on completion. This cache is a plain unsynchronized property, so sharing the same `Frame` instance across concurrent propagations can cause data races. When each propagation uses its own `CelestialBody` instance (and therefore its own `Frame`), this is not an issue.
+The orientation cache of a propagation is active only on the thread that propagates (`Frame.UseOrientationCache`), never set on the shared `Frame`, so propagations sharing a central body without geopotential may run concurrently.
 
 `CelestialBody` instances *without* geopotential are safe to share across threads — two-body gravity is stateless, and the `Frame.GetStateOrientationToICRF` fallback uses a `ConcurrentDictionary` cache. Third-body perturbation bodies (Sun, Moon, etc.) that do not use geopotential can also be shared safely.
 
@@ -1753,7 +1768,7 @@ Context record for atmospheric calculations.
 
 #### EarthStandardAtmosphere
 
-U.S. Standard Atmosphere 1976 model. Simple analytical model valid up to ~86 km. Uses only altitude from context.
+U.S. Standard Atmosphere 1976 (NASA-TM-X-74335) from −5 to 1000 km: its seven layers below 86 km and its thermosphere from 86 to 1000 km (#437); above 1000 km ln ρ is continued with its slope. Uses only altitude from context.
 
 ```csharp
 var model = new EarthStandardAtmosphere();
@@ -1889,7 +1904,7 @@ if (atm2.Details is NrlmsiseDetails details)
 
 | Scenario | Recommended Model |
 |----------|-------------------|
-| Quick calculations below 86 km | `EarthStandardAtmosphere` |
+| Quick calculations without time or space weather (mean 1976 standard, to 1000 km) | `EarthStandardAtmosphere` |
 | High-altitude modeling (> 100 km) | `Nrlmsise00Model` |
 | Time-varying density (drag analysis) | `Nrlmsise00Model` |
 | Space weather effects | `Nrlmsise00Model` |

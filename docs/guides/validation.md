@@ -81,7 +81,8 @@ secret `CONFORMANCE_TESTS_TOKEN` and is skipped without it.
 
 ### Measured Errors
 
-Measured on 2026-10-04. RK7(8): conformance runner report (IO.Astrodynamics 10.x, the framework
+Measured on 2026-10-04; cases 001 and 003 measured again on 2026-10-23 with the constants of the geopotential of
+[#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410). RK7(8): conformance runner report (IO.Astrodynamics 10.x, the framework
 commit is recorded in the report). Velocity-Verlet: output of the `PropagatorTests.Conformance00x_*` tests.
 
 | Case | Orbit and force model (inputs) | Golden | RK7(8), 1e-11 | Velocity-Verlet, 1 s |
@@ -135,7 +136,7 @@ None of them has been isolated yet; each open point is tracked.
 | Inertial frame | `Frame.ICRF` (SPICE `J2000`, ICRF-aligned) | `EarthMJ2000Eq` (EME2000) | Measured with GMAT R2026a (2026-10-19): GMAT turns `EarthICRF`, whose axes are those of `J2000`, to `EarthMJ2000Eq` by 2.1e-7 rad (43.7 mas) at 2021-03-20 12:00 TDB, mostly about y, drifting by 9.3e-10 rad over the day; about 1.5 m at 7000 km and 8.9 m in GEO ([Against GMAT](#against-gmat-h2)) | Measured at the epoch of the H2 cases; the effect on the goldens of cases 001 to 003, at their own epochs, not isolated |
 | Ephemerides | `de440s.bsp` | `de440s.bsp`, the same file (identical MD5) | None | Verified |
 | Constants (Earth GM, reference radius of the field) | The central term with the GM of `gm_de440.tpc` (3.98600435507e14 m³/s², TDB-compatible); the harmonics of EGM2008 with its own GM and reference radius (3.986004415e14 m³/s², 6378136.3 m) since #410, before which they took the GM of the kernels and the equatorial radius of `pck00011.tpc` (6378136.6 m) | GMAT defaults and the JGM3 file; `Earth.Mu` is not overridden in the scripts of cases 001 to 003 | Measured (2026-10-23): the old constants put the harmonics 7.9e-8 away from EGM2008 at degree 2 (9.5e-10 m/s² in LEO 400 km): over one day 7.8 cm on R2 and 1.6 mm on R4; the residuals of cases 001 to 003 against their goldens changed by 0.15 m at most. Remaining: the GM and the radius of EGM2008 are TT-compatible values, used with the TDB-compatible coordinates of the propagation, as GMAT and the ICGEM convention do; scaled to TDB-compatible values (Klioner et al., 2010), the harmonics would change by 4.5e-8, about 4.5 cm a day on R2 | Fixed ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)); the TDB scaling a known approximation |
-| Time scales | UTC window converted to TDB | Elapsed time `ElapsedSecs = 86400` | Sampling the end of the window in the wrong scale shifts it by about 18 µs, i.e. 0.14 m in LEO (measured: 12.99 m against 13.13 m) | Resolved: tests and runner both use the UTC end converted to TDB |
+| Time scales | UTC window converted to TDB | Elapsed time `ElapsedSecs = 86400` | Sampling the end of the window in the wrong scale shifts it by about 18 µs, i.e. 0.14 m in LEO (measured before #410: 12.99 m against 13.13 m) | Resolved: tests and runner both use the UTC end converted to TDB |
 | Integration error | RK7(8), tolerances 1e-11 | PrinceDormand78, accuracy 1e-13 | 0.08 m over one sidereal day at GEO (two-body cases 004 and 005) | Measured |
 
 ## State Transition Matrix and Covariance
