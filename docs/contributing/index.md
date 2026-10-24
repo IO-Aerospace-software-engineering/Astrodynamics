@@ -30,6 +30,8 @@ stability improvements, but not new API surface: new capabilities belong in the 
   above 95 percent.
 - Numerical work validated against an authoritative source. Say which one and quote the residuals;
   a conformance case is better still, see [Validation](../guides/validation.md).
+- Expected values from SPICE or another independent reference, never a snapshot of the code under test.
+  Thresholds are set from a measurement on Linux, Windows and macOS arm64, and never relaxed to make a test pass.
 - Tests that hold on one platform only, or take minutes (bit-for-bit goldens, statistical validations), carry
   `[Trait("Category", "Validation")]`. The CI runs them on Linux only; on Windows or macOS, run
   `dotnet test --filter "Category!=Validation&Category!=LongValidation"`. Validations and studies of
