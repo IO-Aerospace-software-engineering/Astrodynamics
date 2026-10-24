@@ -140,7 +140,7 @@ public class InitialOrbitDeterminationTests
         // Measured 2026-10-20: the site within 2.8e-4 m of SPICE's. The determined state departs from the reference
         // orbit by 9.58e3 m and 77.5 m/s: the error of the method, whose f and g series are cut after their τ² and τ³
         // terms in the polynomial of the range (H. D. Curtis, Orbital Mechanics for Engineering Students, algorithm
-        // 5.5, to be verified by S. Guillet), of second order in the spacing
+        // 5.5, confirmed by S. Guillet, 2026-10-24), of second order in the spacing
         // (FromTheExactSite_TheErrorIsOfSecondOrderInTheSpacing); held to twice that
         Assert.True(siteError < 1e-3, $"site {siteError:E2} m");
         Assert.True(position < 2.0e4, $"position {position:E3} m");

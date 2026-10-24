@@ -10,17 +10,23 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 | Component | Version |
 |-----------|---------|
-| NuGet (`IO.Astrodynamics`) | `10.1.0` |
-| CLI tool (`IO.Astrodynamics.CLI`) | `10.1.0` |
+| NuGet (`IO.Astrodynamics`) | `10.2.0-preview-1` |
+| CLI tool (`IO.Astrodynamics.CLI`) | `10.2.0-preview-1` |
 | .NET framework | `.NET 10.0` |
 | SPICE toolkit | `CSPICE N0067` |
 | License | `LGPL-3.0-or-later` |
 
 ## Release Notes
 
-### 10.2.0 (in development)
+### 10.2.0-preview-1
 
-Phase 2, feature 1: propagation of the state transition matrix and of the covariance. Entries are added lot by lot.
+A preview of 10.2.0, published on NuGet as a prerelease (`dotnet add package IO.Astrodynamics --prerelease`,
+`dotnet tool install -g IO.Astrodynamics.CLI --prerelease`); the documentation site is not updated by a preview.
+
+Propagation of the state transition matrix, of the sensitivity to the drag and reflectivity coefficients and of the
+covariance in RK7(8), and their use by the conjunction analysis, the avoidance options and the CDM, with the defects
+its validation found in older code. No breaking change to the public API. Several results change: see **Changed**
+and **Fixed**. The open issues known at this preview are listed under **Known limitations**.
 
 **Added**
 
@@ -445,6 +451,35 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   the suite 107 s instead of 45 s. They now ask for the end of the window only, with the same results, bit for bit. A
   data file of the suite left as a Git LFS pointer (a clone without `git lfs pull`) made its case a FAIL, as if the
   library were wrong; it is now an ERROR that names the file. The library is unchanged.
+
+**Known limitations**
+
+Open issues, to be handled after the 10.2.0 release.
+
+- **SSB mode in low orbit** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)). An RK7(8) propagation of a LEO state in SSB mode (central body
+  the Sun) takes about 5 500 times more steps than relative to the Earth (125 641 steps against 23 for one hour at
+  1e-10), and fails at 1e-12, with or without the covariance propagation.
+- **Threshold of the non-linearity index** ([#403](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/403)). The threshold of 1.0 is measured on two-body
+  crossing encounters only, where Foster agreed with the Monte Carlo in all 11 cases up to ν = 1.42. Slow encounters,
+  drag and radial miss offsets are not measured, so the index stays off by default.
+- **No Martian thermosphere** ([#431](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/431)). Above Seiff's 100 km, `MarsStandardAtmosphere` extends its
+  isothermal layer at 139 K: at 400 km its density is 4.6e7 times below the Mars-GRAM sample (2.6e-15 kg/m³), so drag
+  in Mars orbit above about 120 km is underestimated by orders of magnitude.
+- **Kelvin offset of the Mars curve fit** ([#438](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/438)). `MarsStandardAtmosphere` takes 273.15 where the NASA
+  Glenn curve fit takes 273.1, which moves its density by about 0.02 %. The Earth model, the U.S. Standard Atmosphere
+  1976 since [#437](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/437), is not concerned.
+- **Velocity-Verlet with drag** ([#439](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/439)). The default integrator is of first order with drag: on a dense
+  pass its error against RK7(8) at 1e-13 is 267 m, 27.2 m and 2.72 m at steps of 1, 0.1 and 0.01 s (1.10 m, 1.10e-2 m
+  and 1.12e-4 m without drag). Use RK7(8) when drag matters.
+- **No bound on the remediation of a covariance** ([#443](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/443)). The eigenvalue clipping of the conjunction
+  analysis and of `StateVector.WithRemediatedCovariance()` remediates any indefinite covariance that passes the other
+  checks, however deep the defect: a correlation of −10 is accepted, with a largest relative change of 5.5.
+- **RK7(8) across shadow passages** ([#445](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/445)). At a tolerance of 1e-11, the global error over 3 h in LEO
+  with drag and SRP spans 0.94 to 36.2 mm with the placement of the steps around the eclipse: the tolerance bounds the
+  global error only to within a factor of about 40.
+- **Memory of the conjunction analysis** ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447)). `ConjunctionAssessment.Analyze` allocates about
+  403 MB per pair over a 2 h window (0.83 s with the covariance held in RTN, 1.71 s propagated), from the sampling of
+  the trajectories during the search of TCA. Results are unaffected.
 
 ### 10.1.0
 

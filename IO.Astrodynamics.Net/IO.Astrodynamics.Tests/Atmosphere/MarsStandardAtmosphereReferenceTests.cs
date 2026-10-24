@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.Tests.Atmosphere;
 /// summer mid-latitude model of A. Seiff, "Post-Viking models for the structure of the summer atmosphere of Mars", in
 /// The Mars Reference Atmosphere, A. J. Kliore (ed.), Advances in Space Research 2(2) (1982), as tabulated in the JPL
 /// DESCANSO Mars propagation handbook, section 3, "Martian Atmosphere and Its Effects on Propagation", table 3-1
-/// (surface pressure 6.36 mb); to be verified by S. Guillet.
+/// (surface pressure 6.36 mb); confirmed by S. Guillet, 2026-10-24.
 /// </summary>
 /// <remarks>
 /// Below 49.887 km the model is the curve fit of the NASA Glenn Research Center ("Mars Atmosphere Model - Metric

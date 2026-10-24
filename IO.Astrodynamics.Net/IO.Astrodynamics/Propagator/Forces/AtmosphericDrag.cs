@@ -179,7 +179,7 @@ public class AtmosphericDrag : ForceBase
     /// and ê_E the north and east unit vectors, N and M the radii of curvature of the prime vertical and of the meridian,
     /// in the body-fixed frame, rotated back to the frame of the state (W. Torge, J. Müller, Geodesy, 4th edition, de
     /// Gruyter (2012), and B. Hofmann-Wellenhof, H. Moritz, Physical Geodesy, 2nd edition, Springer (2006), ellipsoidal
-    /// coordinates; to be verified by S. Guillet). The geodetic Jacobian is analytic, so the conversion of perturbed
+    /// coordinates; confirmed by S. Guillet, 2026-10-24). The geodetic Jacobian is analytic, so the conversion of perturbed
     /// positions to geodetic coordinates, whose rounding the Cartesian differences divided by their step (about 4e-10 of
     /// |∇ρ|), no longer enters.
     /// </para>
@@ -289,7 +289,7 @@ public class AtmosphericDrag : ForceBase
     /// <remarks>
     /// Weights of the points as stored, from the derivative at h of the Lagrange polynomial through them: B. Fornberg,
     /// "Generation of finite difference formulas on arbitrarily spaced grids", Mathematics of Computation 51 (1988),
-    /// 699–706, to be verified by S. Guillet. The third order keeps the truncation over δ_h ≈ 20 m below the
+    /// 699–706, confirmed by S. Guillet, 2026-10-24. The third order keeps the truncation over δ_h ≈ 20 m below the
     /// resolution of Ridders' reference across the cutoffs, and the larger step keeps the rounding of the model small,
     /// which the step control of the variational equations follows (#420).
     /// </remarks>
@@ -435,7 +435,7 @@ public class AtmosphericDrag : ForceBase
     /// and d2 = x2 − x0: −(d1 + d2) / (d1 d2), d2 / (d1 (d2 − d1)) and −d1 / (d2 (d2 − d1)), that is
     /// (−3 ρ0 + 4 ρ1 − ρ2) / (2 s h) for equal spacings, of second order in h like the central difference (B. Fornberg,
     /// "Generation of finite difference formulas on arbitrarily spaced grids", Mathematics of Computation 51 (1988),
-    /// 699–706, to be verified by S. Guillet). The side of r is that of the model: a point exactly at a cutoff is where
+    /// 699–706, confirmed by S. Guillet, 2026-10-24). The side of r is that of the model: a point exactly at a cutoff is where
     /// the model's comparison places it. The first point is that of the central stencil, already converted; only the
     /// second is new. When neither point of the stencil is in the interval of r, or the second point is not, which would
     /// need two discontinuities within 3 h, the central difference is kept.

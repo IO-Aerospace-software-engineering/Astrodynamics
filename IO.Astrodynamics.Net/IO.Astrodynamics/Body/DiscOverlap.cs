@@ -32,7 +32,7 @@ internal enum ShadowRegime
 /// b² (β − sin β cos β), α and β the half angles the chord subtends at the centres of the two discs: E. W. Weisstein,
 /// "Circle-Circle Intersection", MathWorld, eqs. 10 and 13 (read on 2026-10-22); the same area as eq. 3.150 of the GMAT
 /// Mathematical Specification, R2026a, §3.2.28, and as the occulted area of Montenbruck and Gill, Satellite Orbits,
-/// §3.4.2 (to be verified by S. Guillet). The closed form of these references, a² acos(c₁/a) + b² acos((c − c₁)/b) − c c₂,
+/// §3.4.2 (confirmed by S. Guillet, 2026-10-24). The closed form of these references, a² acos(c₁/a) + b² acos((c − c₁)/b) − c c₂,
 /// cancels near the contacts of the penumbra: its terms, of order b² a in LEO, cancel down to the covered part of the
 /// solar disc, and its acos take arguments within rounding of 1. Each segment here is r² (u − sin u) / 2 with u = 2θ,
 /// non-negative, so the sum cannot cancel.
@@ -138,7 +138,7 @@ internal readonly struct DiscOverlap
 
     /// <summary>
     /// The partial derivatives of the area A of the overlap: ∂A/∂c = −2 c₂, ∂A/∂a = 2 a α, ∂A/∂b = 2 b β, the reduced form
-    /// of eq. 4.100 of the GMAT Mathematical Specification, R2026a, §4.2.5 (to be verified by S. Guillet; sympy check in
+    /// of eq. 4.100 of the GMAT Mathematical Specification, R2026a, §4.2.5 (confirmed by S. Guillet, 2026-10-24; sympy check in
     /// <c>tools/shadow_function/area_derivatives.py</c>), in rad.
     /// </summary>
     internal (double DAdc, double DAda, double DAdb) AreaDerivatives =>

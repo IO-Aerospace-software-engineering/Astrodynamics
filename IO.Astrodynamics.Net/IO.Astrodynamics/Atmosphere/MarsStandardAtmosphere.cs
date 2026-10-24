@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Atmosphere;
 /// isothermal at 139 K from 72 to 100 km: the temperature held at 139 K and the hydrostatic pressure of Seiff's
 /// equation at constant temperature with the inverse-square gravity, p = p_b exp(−(GM / (R T_b)) (h − h_b) /
 /// ((R_M + h_b)(R_M + h))), R = 192.1 J/(kg K) the gas constant of the curve fit, GM and R_M the gravitational
-/// parameter and the volumetric mean radius of Mars of the NSSDC Mars fact sheet (to be verified by S. Guillet). The
+/// parameter and the volumetric mean radius of Mars of the NSSDC Mars fact sheet (confirmed by S. Guillet, 2026-10-24). The
 /// curve fit is not hydrostatic, so the layer is reached over <see cref="TransitionWidth"/> (5 km), where ln p and T go
 /// from one to the other by a quintic smootherstep: the density and its first two derivatives are continuous.
 /// Without it the absolute temperature reached 0 K at 112.5 km, the density was infinite there and negative above,
@@ -53,7 +53,7 @@ public class MarsStandardAtmosphere : IAtmosphericModel, IGeodeticDensityModel, 
     /// </summary>
     internal const double IsothermalLayerBase = (Constants.Kelvin - 23.4 - IsothermalLayerTemperature) / 0.00222;
 
-    // GM (m³/s²) and volumetric mean radius (m) of Mars, NSSDC Mars fact sheet (to be verified by S. Guillet)
+    // GM (m³/s²) and volumetric mean radius (m) of Mars, NSSDC Mars fact sheet (confirmed by S. Guillet, 2026-10-24)
     private const double MarsGravitationalParameter = 4.2828e13;
     private const double MarsMeanRadius = 3389.5e3;
 
