@@ -277,7 +277,7 @@ gives the implementation, the tests and the citation status of each equation.
     Mahalanobis distances far beyond their spread.
   - The curvature term scales with the along-track variance over the radius, σ_T² / r, and σ_T grows mainly with the
     velocity uncertainty (0.1 m/s here): a smaller P0 should delay the departure, which has not been measured.
-  - Figures and tests: [Validation](../guides/validation.md#state-transition-matrix-and-covariance), measured before
+  - Figures and tests: [Validation](../guides/validation.md#state-transition-matrix-and-covariance), published before
     the constants of the geopotential of [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410).
 - **Open-loop maneuvers.** An impulsive maneuver applies its nominal ΔV at its epoch; its firing time is not
   differentiated with respect to the state, so Φ and Ψ are continuous at the burn. That is the covariance of a burn
