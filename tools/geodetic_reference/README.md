@@ -21,7 +21,7 @@ flattening, so the comet has SPICE only. Then 292 points inside the evolute of t
 (from 0 to half the equatorial radius), with their SPICE geodetic coordinates and the position SPICE gives back from
 them, and the exact geodetic coordinates of each, those of the nearest foot point on the meridian ellipse, computed in
 binary128 (`__float128`, libquadmath) by the bisection of D. Eberly, "Distance from a point to an ellipse, an ellipsoid,
-or a hyperellipsoid", Geometric Tools (2013, revised 2020), its case of the ellipse (to be verified by S. Guillet); the one of
+or a hyperellipsoid", Geometric Tools (2013, revised 2020), its case of the ellipse (confirmed by S. Guillet, 2026-10-24); the one of
 positive latitude where two foot points tie, on the equatorial disc and at the centre.
 
 Build and run from the repository root:

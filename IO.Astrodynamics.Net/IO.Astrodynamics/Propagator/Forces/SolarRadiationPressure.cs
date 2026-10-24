@@ -70,7 +70,7 @@ public class SolarRadiationPressure : ForceBase
     /// eq. 4.79 of the GMAT Mathematical Specification, R2026a, §4.2.4, with ν the eclipse factor of its eq. 4.78. The
     /// second term dominates: ν goes from 0 to 1 across a penumbra some 20 km wide in LEO. ∇ν is that of §4.2.5 (see
     /// <see cref="AddShadowTerm"/>), the gradient of the two-circle area of its §3.2.28, the model of
-    /// <see cref="CelestialItem.ShadowFraction(double, double, double)"/> (to be verified by S. Guillet): ν and ∇ν come
+    /// <see cref="CelestialItem.ShadowFraction(double, double, double)"/> (confirmed by S. Guillet, 2026-10-24): ν and ∇ν come
     /// from the same geometry of the discs (<see cref="DiscOverlap"/>), so the partials are the derivative of the shadow
     /// fraction that scales the acceleration (#434). Neglected, it
     /// moved Φ by 1.05e-4 after one day in LEO 400 km (decision of S. Guillet, 2026-10-12).
@@ -151,7 +151,7 @@ public class SolarRadiationPressure : ForceBase
     /// </summary>
     /// <remarks>
     /// <para>
-    /// GMAT Mathematical Specification, R2026a, §4.2.5 (to be verified by S. Guillet), with R⊙′ = a, R_B′ = b the angular
+    /// GMAT Mathematical Specification, R2026a, §4.2.5 (confirmed by S. Guillet, 2026-10-24), with R⊙′ = a, R_B′ = b the angular
     /// radii of the Sun and of the occulting body and D′ = c their angular separation (§3.2.28, eqs. 3.145 to 3.147):
     /// ∇ν = ∇A / (π a²) − 2 ν ∇a / a in a partial eclipse (eq. 4.87, ν = p / 100), A the area of the overlap of the two
     /// discs (eq. 3.150), and ∇ν = 2 b ∇b / a² − 2 b² ∇a / a³ in an annular eclipse (eq. 4.88). At the fixed epoch of

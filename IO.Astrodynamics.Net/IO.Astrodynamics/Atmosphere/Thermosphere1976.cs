@@ -43,7 +43,7 @@ internal static class Thermosphere1976
     internal const double Step = 100.0;
 
     // Constants of table 2 (k, N_A, R*, g₀, r₀) and molecular weights (kg/kmol) of table 3; O and H are not in table 3:
-    // the atomic weights of the carbon-12 scale the standard adopts (to be verified by S. Guillet)
+    // the atomic weights of the carbon-12 scale the standard adopts (confirmed by S. Guillet, 2026-10-24)
     private const double Boltzmann = 1.380622e-23;
     private const double Avogadro = 6.022169e26;
     private const double GasConstant = 8.31432e3;

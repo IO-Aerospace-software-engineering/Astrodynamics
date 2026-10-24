@@ -43,7 +43,7 @@ static const double InteriorLatitudesDeg[] = {-90.0, -30.0, 0.0, 1e-3, 10.0, 45.
  * along the coordinates y0 and y1 (e0 = a along p on an oblate body, e0 = c along z on a prolate one), the foot point is
  * x_i = e_i^2 y_i / (t + e_i^2) at the largest root t of F(t) = (e0 y0 / (t + e0^2))^2 + (e1 y1 / (t + e1^2))^2 - 1,
  * which is decreasing beyond -e1^2: D. Eberly, "Distance from a point to an ellipse, an ellipsoid, or a
- * hyperellipsoid", Geometric Tools (2013, revised 2020), its case of the ellipse (to be verified by S. Guillet). The root is
+ * hyperellipsoid", Geometric Tools (2013, revised 2020), its case of the ellipse (confirmed by S. Guillet, 2026-10-24). The root is
  * bracketed in s = t + e1^2 by [e1 y1, sqrt(e0^2 y0^2 + e1^2 y1^2)] and bisected to the last bit. When y1 = 0 and
  * y0 < (e0^2 - e1^2) / e0, on the segment of the major axis inside the evolute, the two nearest foot points are
  * symmetric and the one of positive y1 is taken (the north, as the library maps the equatorial disc and the centre).

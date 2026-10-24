@@ -5,7 +5,7 @@ namespace IO.Astrodynamics.Atmosphere;
 /// <summary>
 /// The quintic smootherstep w = 10x³ − 15x⁴ + 6x⁵, 0 at x = 0 and 1 at x = 1, with w′ and w″ zero at both ends, which
 /// blends two branches of an atmospheric model so that the density and its first two derivatives stay continuous
-/// (K. Perlin, "Improving noise", ACM Transactions on Graphics 21(3) (2002); to be verified by S. Guillet).
+/// (K. Perlin, "Improving noise", ACM Transactions on Graphics 21(3) (2002); confirmed by S. Guillet, 2026-10-24).
 /// </summary>
 internal static class Smootherstep
 {

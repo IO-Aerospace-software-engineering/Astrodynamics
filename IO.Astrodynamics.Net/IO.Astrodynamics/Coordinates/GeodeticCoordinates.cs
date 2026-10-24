@@ -11,15 +11,15 @@ namespace IO.Astrodynamics.Coordinates;
 /// <para>
 /// Geodetic to Cartesian, closed form: N = a / √(1 − e² sin² φ), x = (N + h) cos φ cos λ, y = (N + h) cos φ sin λ,
 /// z = (N (1 − e²) + h) sin φ, with e² = f (2 − f). Reference: Explanatory Supplement to the Astronomical Almanac,
-/// P. K. Seidelmann (ed.), University Science Books (1992), §4.22, as cited by SOFA <c>iauGd2gce</c> (to be verified
-/// by S. Guillet: the book could not be read from the development environment).
+/// P. K. Seidelmann (ed.), University Science Books (1992), §4.22, as cited by SOFA <c>iauGd2gce</c> (confirmed by
+/// S. Guillet, 2026-10-24; the book could not be read from the development environment).
 /// </para>
 /// <para>
 /// Cartesian to geodetic, closed form without iteration: H. Vermeille, "Direct transformation from geocentric
 /// coordinates to geodetic coordinates", Journal of Geodesy 76, 451–454 (2002), with the changes of C. F. F. Karney,
 /// "Geodesics on an ellipsoid of revolution", arXiv:1102.1215v1 (2011), appendix B, that keep it accurate for every
 /// finite point: the trigonometric root inside the evolute of the meridian ellipse (near the centre), the rearranged
-/// expressions that avoid cancellation, the equatorial limit and prolate bodies (to be verified by S. Guillet: neither
+/// expressions that avoid cancellation, the equatorial limit and prolate bodies (confirmed by S. Guillet, 2026-10-24; neither
 /// paper could be read from the development environment; the formulas were read on the implementation of the same
 /// method, GeographicLib <c>Geocentric::IntReverse</c>, MIT licence, commit 48959df, 2025-11-14, on 2026-10-19).
 /// Being a closed form, the result is a smooth function of the position, which the density gradient of drag takes by
