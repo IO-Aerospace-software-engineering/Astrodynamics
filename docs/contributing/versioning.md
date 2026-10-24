@@ -16,6 +16,30 @@ Current version information and release notes since 8.0. Breaking changes are ca
 | SPICE toolkit | `CSPICE N0067` |
 | License | `LGPL-3.0-or-later` |
 
+## Releasing
+
+1. **The release PR**, `chore(release): prepare <version>`, sets the version in `IO.Astrodynamics.csproj`,
+   `IO.Astrodynamics.CLI.csproj`, the table above and the "Version Information" of `DEVELOPER_GUIDE.md`. The CI docs
+   job runs `tools/ci/check-versions.sh`, which fails when they disagree. The PR also finalizes the release notes,
+   with the issues still open under **Known limitations**.
+2. **Before it merges**:
+   - `long-validation.yml` green on the tree being released, or on a tree that differs from it only in comments
+     and documentation;
+   - `gmat-reference.yml` green if what GMAT reads has changed;
+   - the conformance job green on the three platforms;
+   - no citation left "to be verified".
+3. **After the merge**, tag the merge commit with the version itself, without a `v`: `10.1.0`, or
+   `10.2.0-preview-1` for a preview (the suffix of the earlier previews).
+   - The CD workflow (`cd.yml`) takes the version from the tag and writes it into both csproj. A tag that differs
+     from the documented version (`10.2.0-preview1` for `10.2.0-preview-1`) therefore publishes that other version.
+     nuget.org can unlist a version but never delete it, so cancel such a run before its `publish` job.
+   - Push the tag once: every push of a tag starts a run. The publish step skips a version that is already on
+     nuget.org, so a second run publishes nothing.
+4. **A tag with a hyphen is a prerelease.** The packages are published as prereleases, and the CD does not deploy
+   the documentation site.
+5. **The packages appear on nuget.org** a few minutes after the `publish` job. The versions listed in
+   `https://api.nuget.org/v3-flatcontainer/io.astrodynamics/index.json` (and `io.astrodynamics.cli`) confirm it.
+
 ## Release Notes
 
 ### 10.2.0-preview-1

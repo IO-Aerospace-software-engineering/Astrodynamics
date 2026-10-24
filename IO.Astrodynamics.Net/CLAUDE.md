@@ -827,4 +827,7 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
 Per CONTRIBUTING.md:
 - OOP, SOLID, and DRY principles required
 - Unit test coverage must exceed 95%
+
+The rules for expected values, references and thresholds, and the repository process (authorship, design first,
+citations, releases), are in the root `CLAUDE.md`: "Validation and Thresholds" and "Repository Process".
 - Feature branches required before merge
