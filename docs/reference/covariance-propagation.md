@@ -76,14 +76,17 @@ the start of the window. This example runs as a smoke test against the packed Nu
   tolerance of the integrator.
 - Without `IncludeInStepControl`, Ψ carries an integration error that the control of the state does not see, largest
   for Cr across the shadow crossings of SRP. In an eclipsing LEO 400 × 1000 km over 6 h, with a maneuver, drag and SRP,
-  at a tolerance of 1e-12, the error of Ψ_Cr over the arc, relative to the largest Ψ_Cr of the arc, was 6.0e-5 to
-  1.9e-3 depending on where the steps fell (the same physics in J2000 and in ECLIPJ2000), against 2.6e-5 at most at
-  1e-14. Relative to the local Ψ_Cr, it reaches 1.5e-2 at 1e-12 just after the first shadow exit, where Ψ_Cr is still
-  below a millimetre, but also 1.2e-2 at a later crossing (4.45 h), where Ψ_Cr is 0.28 m; at 1e-14, 1.6e-4 at that later
-  crossing. With the option, at 1e-12, Ψ_Cr is within 7.1e-8 (J2000) and 3.4e-8 (ECLIPJ2000) of the same propagation at 1e-13, relative to the local
-  Ψ_Cr, over the whole arc. When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
-  tighter tolerance reduces the error about a hundredfold, not below 1e-4 at every crossing. In the same
-  case, Φ and Ψ_Cd stay below 2.2e-8 and 7.6e-7 (at 5.123 h; measured 2026-10-21).
+  at a tolerance of 1e-12, the error of Ψ_Cr over the arc, relative to the largest Ψ_Cr of the arc, is 1.1e-3 to
+  3.5e-3 depending on where the steps fall (position and velocity rows, the same physics in J2000 and in ECLIPJ2000),
+  against 1.2e-5 at most at 1e-14 (measured 2026-10-24, `CovariancePropagationTests`). Relative to the local Ψ_Cr, it
+  reached 1.5e-2 at 1e-12 just after the first shadow exit, where Ψ_Cr is still below a millimetre, but also 1.2e-2 at a
+  later crossing (4.45 h), where Ψ_Cr is 0.28 m; at 1e-14, 1.6e-4 at that later crossing (measured 2026-10-15, before
+  [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423) and
+  [#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434)). With the option, at 1e-12,
+  Ψ_Cr is within 7.7e-8 (J2000) and 1.9e-8 (ECLIPJ2000) of the same propagation at 1e-13, relative to the local Ψ_Cr,
+  over the whole arc. When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
+  tighter tolerance reduces the error a hundredfold or more, not below 1e-4 at every crossing. In the same case, Φ and
+  Ψ_Cd stay below 2.1e-8 and 4.4e-7 (at 5.123 h; measured 2026-10-24).
 - `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
 - With `IncludeInStepControl`, the step follows the error of Φ and Ψ, so it needs partial derivatives that are smooth
   along the trajectory. The density gradient of the drag partials is taken in geodetic coordinates, without rounding
@@ -95,7 +98,9 @@ the start of the window. This example runs as a smoke test against the packed Nu
   day, with Ψ_Cd; Linux, Release, best of 3, measured 2026-10-21): without the option, the same steps and 15 % (1e-12)
   to 22 % (1e-13) more time than before, for the two more model evaluations of each drag partials call; with the
   option, 1 084 steps in 2.15 s at 1e-12 against 1 247 in 1.95 s before, and 1 681 steps in 3.27 s at 1e-13 against
-  38 678 in 60.6 s.
+  38 678 in 60.6 s (before the geopotential constants of
+  [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410); for the cost of the
+  variational equations on R2 now, see [Cost](#cost)).
 - Through the SRP penumbra, the partials take the analytic derivative of the shadow function, so the steps stay
   ordinary with the option on an eclipsing orbit too
   ([#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)). R3 (Sun-synchronous 700 km,
@@ -110,7 +115,8 @@ the start of the window. This example runs as a smoke test against the packed Nu
   steps, 21 596 of them in its 265 s of penumbra at 1e-13, and stopped on the guard below at 13.3 h at 1e-14 (on 100
   rejections at 15.0 h before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420)); R4
   took 2 402 steps at 1e-14. Without the option the trajectory does not change, and Φ and Ψ move only through the steps
-  that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9).
+  that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9; measured 2026-10-22, before #434 and
+  #410).
 - When the step collapses all the same (a force whose partials are not smooth at the tolerance), RK7(8) stops with an
   `InvalidOperationException` after 10 000 consecutive accepted steps within 100 s of flight, a mean step below 10 ms,
   instead of running until the memory is exhausted. The steps are counted in disjoint blocks of 10 000 from the start
@@ -271,7 +277,8 @@ gives the implementation, the tests and the citation status of each equation.
     Mahalanobis distances far beyond their spread.
   - The curvature term scales with the along-track variance over the radius, σ_T² / r, and σ_T grows mainly with the
     velocity uncertainty (0.1 m/s here): a smaller P0 should delay the departure, which has not been measured.
-  - Figures and tests: [Validation](../guides/validation.md#state-transition-matrix-and-covariance).
+  - Figures and tests: [Validation](../guides/validation.md#state-transition-matrix-and-covariance), measured before
+    the constants of the geopotential of [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410).
 - **Open-loop maneuvers.** An impulsive maneuver applies its nominal ΔV at its epoch; its firing time is not
   differentiated with respect to the state, so Φ and Ψ are continuous at the burn. That is the covariance of a burn
   executed as commanded, with its execution error (Gates). A maneuver that retargets its ΔV from the state it finds,

@@ -173,7 +173,8 @@ Phase 2, feature 1: propagation of the state transition matrix and of the covari
   in eclipse season) 458 at 1e-14 instead of 2 402. The partials agree with Ridders' derivative of the acceleration
   within its resolution across the penumbra (2.0e-8 at half shadow in LEO, against 9.4e-7), and a call costs 11 µs
   instead of 73 µs (Linux, without the ephemeris cache). Without the option the trajectories do not change, bit for bit; Φ and Ψ move only through the
-  steps that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9). See
+  steps that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9). The step counts after #434 and
+  #410 are in [Covariance Propagation](../reference/covariance-propagation.md#options). See
   [Covariance Propagation](../reference/covariance-propagation.md)
   ([#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423)).
 - **The shadow fraction near the contacts of the penumbra.** `CelestialItem.ShadowFraction` computed the two-circle

@@ -357,7 +357,10 @@ re-measured on 2026-10-23 after
 acceleration in the penumbra by the rounding of the former shadow fraction and so the steps through it (run
 39907481180 of `long-validation.yml`): unchanged at the precision of the tables, worst |z| 2.14, p = 0.011 at one
 revolution (1.646 h), the domain of validity up to 1.67 h (p = 3.3e-3 at 1.83 h), the ratios 0.954 to 1.056 up to 1 h,
-1.13 at one revolution, 362 at 6 h and 1.3e6 at 24 h, the position at 24 h 4.32 (radial 1.11).
+1.13 at one revolution, 362 at 6 h and 1.3e6 at 24 h, the position at 24 h 4.32 (radial 1.11). None of these figures was
+measured again after [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410), the
+constants of the geopotential, which moves R2 by 7.85 cm and R3 by 16.6 cm over one day; the run of
+`long-validation.yml` before the release measures them again.
 
 - Up to about one revolution S is P along every direction of the state, within the sampling noise. From about one
   revolution, the sample variance along one direction of the state leaves its band and grows by orders of magnitude
@@ -399,7 +402,9 @@ Ubuntu build of the GMAT project, run from the command line (`GmatConsole`), and
 scripts that wrote them, so the tests (`GmatReferenceTests`, `GmatPartialsTests`, category `Validation`) do not need
 GMAT; the manual workflow `gmat-reference.yml` runs GMAT again and checks that it writes the same reports byte for byte,
 and the same console logs but for the date of the run and its duration. Every figure below was measured on 2026-10-20;
-those published on 2026-10-19 came out with the same digits.
+those published on 2026-10-19 came out with the same digits. The figures of P, Q and the partials were measured again on
+2026-10-24, after [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410), with the same
+digits.
 
 **Cases.** The reference cases where GMAT can be given the models of the library:
 
