@@ -1,0 +1,49 @@
+{
+  "id": "orbital_elements_retrograde_011",
+  "category": "orbital_elements",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (two-body conversion)",
+    "date": "2026-10-25",
+    "method": "GMAT parameters of a Cartesian state entered in EarthMJ2000Eq with the case numbers, Earth.Mu = gm_km3_s2, one Report per parameter; an output derived from several parameters (sources.py) is their closed formula evaluated at 60 digits from GMAT's printed decimals and rounded once",
+    "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
+    "script": "orbital_elements_retrograde_011.script",
+    "log": "orbital_elements_retrograde_011.log"
+  },
+  "outputs": {
+    "semi_major_axis_km": 7500.000000000001,
+    "eccentricity": 0.09999999999999992,
+    "inclination_deg": 119.99999999999999,
+    "raan_deg": 40.00000000000001,
+    "argp_deg": 60.00000000000006,
+    "true_anomaly_deg": 109.99999999999994,
+    "eccentric_anomaly_deg": 104.51247870602458,
+    "mean_anomaly_deg": 98.9657139055084,
+    "argument_of_latitude_deg": 170.0,
+    "longitude_of_periapsis_deg": 100.00000000000007,
+    "true_longitude_deg": 209.99999999999997,
+    "mean_longitude_deg": 198.96571390550844,
+    "periapsis_radius_km": 6750.000000000002,
+    "apoapsis_radius_km": 8250.0,
+    "semi_latus_rectum_km": 7425.000000000003,
+    "period_s": 6464.02279093475,
+    "specific_energy_km2_s2": -26.573362367134838,
+    "angular_momentum_km2_s": [
+      30284.139767748544,
+      -36091.23236683952,
+      -27201.14075567255
+    ],
+    "periapsis_speed_km_s": 8.059597260940016,
+    "apoapsis_speed_km_s": 6.594215940769105,
+    "mean_motion_rad_s": 0.000972024002760514,
+    "mod_equinoctial_f": -0.017364817766693106,
+    "mod_equinoctial_g": 0.09848077530122072,
+    "mod_equinoctial_h": 1.3268278963378763,
+    "mod_equinoctial_k": 1.1133407984528383,
+    "right_ascension_deg": 225.0383687732975,
+    "declination_deg": 8.64916510528759
+  }
+}

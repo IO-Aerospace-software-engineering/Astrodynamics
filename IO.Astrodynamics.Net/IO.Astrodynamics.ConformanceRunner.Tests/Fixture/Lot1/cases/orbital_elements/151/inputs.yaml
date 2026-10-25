@@ -1,0 +1,28 @@
+id: "orbital_elements_modeq2cart_generic_151"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  Modified equinoctial elements to the state: generic LEO ellipse (the elements of 101).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "modified_equinoctial"
+    p_km: 7425.0
+    f: -0.01736481776669301
+    g: 0.09848077530122082
+    h: 0.35721239031346064
+    k: 0.2997367849639794
+    true_longitude_deg: 210.0
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   every element output (semi_major_axis_km to declination_deg): outputs of a state_vector input

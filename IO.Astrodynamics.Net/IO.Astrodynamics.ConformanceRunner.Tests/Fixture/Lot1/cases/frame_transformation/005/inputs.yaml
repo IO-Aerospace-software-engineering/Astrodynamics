@@ -1,0 +1,23 @@
+id: "frame_transformation_itrf93_zero_velocity_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-10-25"
+description: >
+  ICRF to ITRF93 of a position at rest in ICRF: the velocity is the transport term alone.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ITRF93"       # the frame of the golden (spec.md section 10)
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  from_frame: "ICRF"
+  to_frame: "ITRF93"
+  from_center: "Earth"
+  to_center: "Earth"
+  state:
+    position_km: [7000.0, 1000.0, 500.0]
+    velocity_km_s: [0.0, 0.0, 0.0]
+  kernels: ["earth_latest_high_prec.bpc"]

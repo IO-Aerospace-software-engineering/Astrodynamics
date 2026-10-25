@@ -1,0 +1,23 @@
+id: "frame_transformation_earth_to_moon_me_016"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-10-25"
+description: >
+  A LEO state about the Earth in ICRF to MOON_ME about the Moon: centre change, then rotation.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "MOON_ME"      # the frame of the golden (spec.md section 10)
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  from_frame: "ICRF"
+  to_frame: "MOON_ME"
+  from_center: "Earth"
+  to_center: "Moon"
+  state:
+    position_km: [7000.0, 1000.0, 500.0]
+    velocity_km_s: [-0.5, 7.2, 1.1]
+  kernels: ["de440s.bsp", "moon_pa_de421_1900-2050.bpc", "moon_080317.tf"]

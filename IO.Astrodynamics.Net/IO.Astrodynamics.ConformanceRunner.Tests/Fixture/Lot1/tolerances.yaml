@@ -1,0 +1,130 @@
+# ---------------------------------------------------------------------------
+# tolerances.yaml — default pass/fail thresholds for every metric.
+#
+# Pass/fail logic is OR-based: a metric PASSES when EITHER threshold is met.
+#
+#   PASS  ⟺  |computed − golden| ≤ abs_tol
+#          OR |computed − golden| / |golden| ≤ rel_tol
+#
+# Per-case overrides (tolerances_override in cases/*.yaml) take precedence
+# over the values below.  See spec.md §6 for the full rule.
+# ---------------------------------------------------------------------------
+
+version: "1.0.0"
+
+defaults:
+  # Position — 1e-6 km = 1 mm
+  position_km:
+    abs_tol: 1.0e-6
+    rel_tol: 1.0e-9
+
+  # Velocity — 1e-9 km/s = 1 µm/s
+  velocity_km_s:
+    abs_tol: 1.0e-9
+    rel_tol: 1.0e-9
+
+  # Quaternion components — unit quaternions are tightly constrained;
+  # 1e-10 corresponds to ~0.02 micro-arcseconds of pointing error.
+  attitude_quaternion:
+    abs_tol: 1.0e-10
+    rel_tol: 1.0e-10
+
+  # Angles — 1e-6 deg ≈ 3.6 milli-arcseconds
+  angle_deg:
+    abs_tol: 1.0e-6
+    rel_tol: 1.0e-9
+
+  # Eclipse entry/exit epoch — 10 ms is the minimum operationally
+  # meaningful granularity for LEO eclipse prediction.
+  eclipse_time_s:
+    abs_tol: 1.0e-2
+    rel_tol: 1.0e-6
+
+  # Eclipse duration — 100 ms accounts for error accumulation at both
+  # endpoints.  For long eclipses (~2000 s) rel_tol becomes the tighter gate.
+  penumbra_duration_s:
+    abs_tol: 1.0e-1
+    rel_tol: 1.0e-5
+
+  umbra_duration_s:
+    abs_tol: 1.0e-1
+    rel_tol: 1.0e-5
+
+  # Propagator final position — component-wise
+  propagator_position_km:
+    abs_tol: 1.0e-6
+    rel_tol: 1.0e-9
+
+  # Propagator final velocity — component-wise
+  propagator_velocity_km_s:
+    abs_tol: 1.0e-9
+    rel_tol: 1.0e-9
+
+  # Geosynchronous orbit semi-major axis — 1e-3 km = 1 m
+  semi_major_axis_km:
+    abs_tol: 1.0e-3
+    rel_tol: 1.0e-9
+
+  # Eccentricity — circular orbit tolerance
+  eccentricity:
+    abs_tol: 1.0e-10
+    rel_tol: 1.0e-6
+
+  # ---- Lot 1: conversions without propagation (spec.md sections 6 and 11) --------------------------------------
+  # One active threshold per key (#7): rel_tol 0 = absolute, abs_tol 0 = relative. Value: ceil2(2 max(E_run over Linux,
+  # Windows and macOS arm64; E_ref, golden vs a 60-digit or CSPICE evaluation; conditioning floor)).
+  # PROVISIONAL: Linux 2026-10-24, replaced after the three-platform measurement.
+  oe_length_km:              # a, rp, ra, p; SMA of the inbound hyperbola (017): E_ref 1.34e-15
+    abs_tol: 0.0
+    rel_tol: 2.7e-15
+  oe_eccentricity:           # outbound hyperbola (016): E_run 6.66e-16
+    abs_tol: 1.4e-15
+    rel_tol: 0.0
+  oe_angle_deg:              # polar (010), eccentric anomaly: E_run 1.07e-12, floor 7.13e-13
+    abs_tol: 2.2e-12
+    rel_tol: 0.0
+  oe_period_s:               # Period() is in 100 ns ticks: E_run 9.54e-8 (003, 004, 008, 009)
+    abs_tol: 2.0e-7
+    rel_tol: 0.0
+  oe_energy_km2_s2:          # 017: E_ref 1.35e-15
+    abs_tol: 0.0
+    rel_tol: 2.8e-15
+  oe_angular_momentum_km2_s: # vector; 012: E_run 2.67e-16
+    abs_tol: 0.0
+    rel_tol: 5.4e-16
+  oe_speed_km_s:             # 013, apoapsis speed: E_run 5.39e-16
+    abs_tol: 0.0
+    rel_tol: 1.1e-15
+  oe_mean_motion_rad_s:      # 017: E_ref 1.95e-15
+    abs_tol: 0.0
+    rel_tol: 4.0e-15
+  oe_equinoctial:            # 016, g: E_run 1.11e-15
+    abs_tol: 2.3e-15
+    rel_tol: 0.0
+  oe_position_km:            # vector; modified equinoctial e 0.9 (152): E_run 1.12e-15
+    abs_tol: 0.0
+    rel_tol: 2.3e-15
+  oe_velocity_km_s:          # vector; true-anomaly input e 0.9 (102): floor 1.86e-15
+    abs_tol: 0.0
+    rel_tol: 3.8e-15
+  time_s:                    # floor 1 ulp of tdb_s at 2100 (4.77e-7 s); E_ref <= 3.42e-7, E_run <= 3.58e-7
+    abs_tol: 9.6e-7
+    rel_tol: 0.0
+  time_tdb_s:                # outputs crossing TDB<->TT: GMAT series - ERFA dtdb 37.5676 us + GMAT print 0.364 us
+    abs_tol: 7.6e-5
+    rel_tol: 0.0
+  frame_position_km:         # vector; ITRF93 2016-12-31 (008): E_run 9.05e-16
+    abs_tol: 0.0
+    rel_tol: 1.9e-15
+  frame_velocity_km_s:       # vector, absolute (GEO in ITRF93: |v| 3.5e-5 km/s); MOON_ME (013): E_run 2.20e-15
+    abs_tol: 4.4e-15
+    rel_tol: 0.0
+  geodetic_latitude_deg:     # GMAT's 1e-7 iteration: E_ref 2.571e-8 (lat 20, h -10 km)
+    abs_tol: 5.2e-8
+    rel_tol: 0.0
+  geodetic_longitude_deg:    # lat 70, h 20000 km: E_ref 1.756e-14
+    abs_tol: 3.6e-14
+    rel_tol: 0.0
+  geodetic_altitude_km:      # lat 70, h 20000 km: E_ref 1.381e-6
+    abs_tol: 2.8e-6
+    rel_tol: 0.0

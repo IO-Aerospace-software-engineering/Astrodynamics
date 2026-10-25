@@ -1,0 +1,15 @@
+id: "time_conversion_utc_010"
+schema_version: "v1"
+version: "0.1.0"
+category: "time_conversion"
+created: "2026-10-25"
+description: >
+  The first entry of the leap-second table, 1972-01-01 (TAI - UTC = 10 s).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "1972-01-01T00:00:00.000 UTC"

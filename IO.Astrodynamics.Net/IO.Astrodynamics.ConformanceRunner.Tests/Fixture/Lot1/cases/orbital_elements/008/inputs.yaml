@@ -1,0 +1,29 @@
+id: "orbital_elements_circular_equatorial_008"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, circular equatorial prograde orbit (e = 0 to rounding, i = 0): only the true and mean
+  longitudes locate the satellite.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [1811.7333157176452, 6761.480784023478, 0.0]
+    velocity_km_s: [-7.28892770193083, 1.9530622914212048, 0.0]
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   raan_deg, argp_deg, argument_of_latitude_deg: undefined for an equatorial orbit
+#   true_anomaly_deg, eccentric_anomaly_deg, mean_anomaly_deg, longitude_of_periapsis_deg: ill-conditioned
+#     (conditioning floor 73.4 deg, above 1e-6 deg)
+#   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only
+#   position_km, velocity_km_s: outputs of an elements input

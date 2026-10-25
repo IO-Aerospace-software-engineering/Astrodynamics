@@ -1,0 +1,62 @@
+id: "orbital_elements_geo_018"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, geostationary orbit (e = 2e-4, i = 0.05 deg).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [14423.697752729668, -39628.804210731505, -18.401045016010976]
+    velocity_km_s: [2.888619498750686, 1.0515958719781886, -0.002323144801816037]
+
+tolerances_override:
+  argp_deg:
+    abs_tol: 5.7e-11
+    rel_tol: 0.0
+    justification: >-
+      Geostationary orbit (e = 2e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
+      2.33e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 2.82e-11 deg. T
+      = ceil2(2 max(E_run, E_ref, floor)) = 5.7e-11.
+  true_anomaly_deg:
+    abs_tol: 5.7e-11
+    rel_tol: 0.0
+    justification: >-
+      Geostationary orbit (e = 2e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
+      2.33e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 2.82e-11 deg. T
+      = ceil2(2 max(E_run, E_ref, floor)) = 5.7e-11.
+  eccentric_anomaly_deg:
+    abs_tol: 5.7e-11
+    rel_tol: 0.0
+    justification: >-
+      Geostationary orbit (e = 2e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
+      2.33e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 2.82e-11 deg. T
+      = ceil2(2 max(E_run, E_ref, floor)) = 5.7e-11.
+  mean_anomaly_deg:
+    abs_tol: 5.7e-11
+    rel_tol: 0.0
+    justification: >-
+      Geostationary orbit (e = 2e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
+      2.33e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 2.82e-11 deg. T
+      = ceil2(2 max(E_run, E_ref, floor)) = 5.7e-11.
+  longitude_of_periapsis_deg:
+    abs_tol: 5.7e-11
+    rel_tol: 0.0
+    justification: >-
+      Geostationary orbit (e = 2e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
+      2.33e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 2.82e-11 deg. T
+      = ceil2(2 max(E_run, E_ref, floor)) = 5.7e-11.
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only
+#   position_km, velocity_km_s: outputs of an elements input

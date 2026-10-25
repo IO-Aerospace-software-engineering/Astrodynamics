@@ -1,0 +1,27 @@
+id: "orbital_elements_hyperbolic_outbound_016"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, outbound hyperbola (e = 1.5, TA = 60 deg): the hyperbolic anomalies; the outputs defined for e
+  < 1 only are left out.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [7940.350253380517, 8853.770366573215, 7914.74704603319]
+    velocity_km_s: [-1.7747338420960206, 8.31936675743179, 1.8364474649148699]
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   eccentric_anomaly_deg, mean_anomaly_deg: defined for 0 < e < 1 only
+#   mean_longitude_deg, apoapsis_radius_km, period_s, apoapsis_speed_km_s: defined for e < 1 only
+#   position_km, velocity_km_s: outputs of an elements input

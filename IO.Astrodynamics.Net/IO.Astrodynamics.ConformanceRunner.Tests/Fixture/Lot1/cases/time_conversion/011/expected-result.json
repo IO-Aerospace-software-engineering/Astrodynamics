@@ -1,0 +1,23 @@
+{
+  "id": "time_conversion_utc_011",
+  "category": "time_conversion",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (GMAT data/time/tai-utc.dat)",
+    "date": "2026-10-25",
+    "method": "TAI, UTC, TT and TDB ModJulian reported at 17 digits; seconds = (MJD - 21545) x 86400 in exact decimal arithmetic, rounded once; gps_s = tai_s - 19 s (derived: GMAT has no GPS scale)",
+    "reference_frame": "none",
+    "script": "time_conversion_utc_011.script",
+    "log": "time_conversion_utc_011.log"
+  },
+  "outputs": {
+    "tai_s": 394372833.9990002,
+    "utc_s": 394372799.9990002,
+    "tt_s": 394372866.18300015,
+    "tdb_s": 394372866.18310547,
+    "gps_s": 394372814.9990002
+  }
+}

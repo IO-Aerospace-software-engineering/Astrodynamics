@@ -1,0 +1,23 @@
+id: "frame_transformation_ecliptic_inverse_017"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-10-25"
+description: >
+  ECLIPJ2000 to ICRF of a LEO state, the inverse direction.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the frame of the golden (spec.md section 10)
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  from_frame: "ECLIPJ2000"
+  to_frame: "ICRF"
+  from_center: "Earth"
+  to_center: "Earth"
+  state:
+    position_km: [7000.0, 1000.0, 500.0]
+    velocity_km_s: [-0.5, 7.2, 1.1]
+  kernels: []

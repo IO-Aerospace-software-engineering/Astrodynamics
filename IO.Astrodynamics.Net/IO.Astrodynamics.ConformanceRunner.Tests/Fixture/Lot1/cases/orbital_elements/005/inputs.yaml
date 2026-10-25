@@ -1,0 +1,26 @@
+id: "orbital_elements_nearequatorial_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, near-equatorial orbit (i = 1e-5 deg): GMAT computes INC with acos, so the inclination comes
+  from EquinoctialP and Q.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [-6624.052821239536, 3824.3986794689717, 0.0013146858292732556]
+    velocity_km_s: [-3.8397960643287097, -6.2973455546621695, 2.5384225682165174e-7]
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only
+#   position_km, velocity_km_s: outputs of an elements input

@@ -1,0 +1,28 @@
+id: "frame_transformation_geodetic_south_023"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-10-25"
+description: >
+  Geodetic latitude, longitude and altitude of a body-fixed position in the southern hemisphere, at negative
+  longitude, on the ellipsoid of the case (the Earth radii of pck00011).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ITRF93"       # the frame of the golden (spec.md section 10)
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  from_frame: "ITRF93"
+  to_frame: "ITRF93"
+  from_center: "Earth"
+  to_center: "Earth"
+  state:
+    position_km: [-2000.0, -5500.0, -3200.0]
+    velocity_km_s: [0.0, 0.0, 0.0]
+  ellipsoid: {equatorial_radius_km: 6378.1366, flattening: 0.0033528131084554157}
+  kernels: []
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   position_km, velocity_km_s: identity transformation (ITRF93 to ITRF93); the case checks the geodetic outputs

@@ -1,0 +1,15 @@
+id: "time_conversion_utc_006"
+schema_version: "v1"
+version: "0.1.0"
+category: "time_conversion"
+created: "2026-10-25"
+description: >
+  Half a second before the leap second at the end of 2016, given in UTC, in the five calendars.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2016-12-31T23:59:59.500 UTC"

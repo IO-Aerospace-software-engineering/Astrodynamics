@@ -1,0 +1,21 @@
+{
+  "id": "frame_transformation_geodetic_lat45_022",
+  "category": "frame_transformation",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (body-fixed position; ellipsoid of the case)",
+    "date": "2026-10-25",
+    "method": "Position entered in EarthFixed with Earth.EquatorialRadius and Earth.Flattening of the case; Sat.Earth.Latitude, Longitude (taken in (-180, 180]) and Altitude",
+    "reference_frame": "EarthFixed (body-fixed; the conversion does not depend on its orientation)",
+    "script": "frame_transformation_geodetic_lat45_022.script",
+    "log": "frame_transformation_geodetic_lat45_022.log"
+  },
+  "outputs": {
+    "latitude_deg": 44.00752075242093,
+    "longitude_deg": 36.869897645844034,
+    "altitude_km": 563.2328653401828
+  }
+}

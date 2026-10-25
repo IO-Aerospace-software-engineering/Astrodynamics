@@ -1,0 +1,28 @@
+{
+  "id": "orbital_elements_kep2cart_e1p01_in_107",
+  "category": "orbital_elements",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (two-body conversion)",
+    "date": "2026-10-25",
+    "method": "GMAT Keplerian state with the true anomaly entered with the case numbers, Earth.Mu = gm_km3_s2; Cartesian state reported in EarthMJ2000Eq",
+    "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
+    "script": "orbital_elements_kep2cart_e1p01_in_107.script",
+    "log": "orbital_elements_kep2cart_e1p01_in_107.log"
+  },
+  "outputs": {
+    "position_km": [
+      8595.130613449752,
+      3526.41181055426,
+      -1043.5068979925059
+    ],
+    "velocity_km_s": [
+      -6.097178317260319,
+      4.172928267188194,
+      5.590460215590778
+    ]
+  }
+}

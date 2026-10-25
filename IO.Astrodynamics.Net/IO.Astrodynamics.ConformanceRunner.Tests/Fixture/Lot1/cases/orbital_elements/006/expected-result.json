@@ -1,0 +1,46 @@
+{
+  "id": "orbital_elements_equatorial_006",
+  "category": "orbital_elements",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (two-body conversion)",
+    "date": "2026-10-25",
+    "method": "GMAT parameters of a Cartesian state entered in EarthMJ2000Eq with the case numbers, Earth.Mu = gm_km3_s2, one Report per parameter; an output derived from several parameters (sources.py) is their closed formula evaluated at 60 digits from GMAT's printed decimals and rounded once",
+    "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
+    "script": "orbital_elements_equatorial_006.script",
+    "log": "orbital_elements_equatorial_006.log"
+  },
+  "outputs": {
+    "semi_major_axis_km": 8000.0000000000055,
+    "eccentricity": 0.05000000000000042,
+    "inclination_deg": 0.0,
+    "true_anomaly_deg": 29.99999999999975,
+    "eccentric_anomaly_deg": 28.597171872369934,
+    "mean_anomaly_deg": 27.22594486907241,
+    "longitude_of_periapsis_deg": 120.00000000000024,
+    "true_longitude_deg": 149.99999999999997,
+    "mean_longitude_deg": 147.22594486907263,
+    "periapsis_radius_km": 7600.000000000002,
+    "apoapsis_radius_km": 8400.00000000001,
+    "semi_latus_rectum_km": 7980.0000000000055,
+    "period_s": 7121.081633790721,
+    "specific_energy_km2_s2": -24.912527219188895,
+    "angular_momentum_km2_s": [
+      0.0,
+      0.0,
+      56398.86058552994
+    ],
+    "periapsis_speed_km_s": 7.420902708622359,
+    "apoapsis_speed_km_s": 6.714150069705938,
+    "mean_motion_rad_s": 0.0008823358065950016,
+    "mod_equinoctial_f": -0.025000000000000386,
+    "mod_equinoctial_g": 0.04330127018922219,
+    "mod_equinoctial_h": 0.0,
+    "mod_equinoctial_k": 0.0,
+    "right_ascension_deg": 149.99999999999997,
+    "declination_deg": 0.0
+  }
+}

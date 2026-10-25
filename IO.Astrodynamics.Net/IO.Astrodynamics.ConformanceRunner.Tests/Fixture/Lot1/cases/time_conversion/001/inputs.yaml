@@ -1,0 +1,15 @@
+id: "time_conversion_tdb_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "time_conversion"
+created: "2026-10-25"
+description: >
+  A TDB epoch, the epoch shared by the suite, as seconds from J2000 in the TAI, UTC, TT, TDB and GPS calendars.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"

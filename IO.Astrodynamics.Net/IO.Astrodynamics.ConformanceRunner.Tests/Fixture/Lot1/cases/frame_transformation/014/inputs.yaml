@@ -1,0 +1,33 @@
+id: "frame_transformation_moon_me_inverse_014"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-10-25"
+description: >
+  MOON_ME to ICRF of a low lunar orbit state, the inverse direction.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the frame of the golden (spec.md section 10)
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  from_frame: "MOON_ME"
+  to_frame: "ICRF"
+  from_center: "Moon"
+  to_center: "Moon"
+  state:
+    position_km: [1838.0, 0.0, 0.0]
+    velocity_km_s: [0.0, 1.0, 1.3]
+  kernels: ["moon_pa_de421_1900-2050.bpc", "moon_080317.tf"]
+
+tolerances_override:
+  position_km:
+    abs_tol: 0.0
+    rel_tol: 4.2e-14
+    justification: >-
+      A state 1838 km from the Moon: GMAT loses 2e-11 to 4e-11 km on Moon-centred states (presumably through its
+      Earth-centred internal state; not shown), well above the rounding of the transformation. Measured: E_ref
+      2.07e-14 relative (GMAT against CSPICE with the same kernels), conditioning floor 1.11e-16 relative. T =
+      ceil2(2 max(E_run, E_ref, floor)) = 4.2e-14.
