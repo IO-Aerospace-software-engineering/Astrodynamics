@@ -1,0 +1,15 @@
+id: "time_conversion_utc_007"
+schema_version: "v1"
+version: "0.1.0"
+category: "time_conversion"
+created: "2026-10-25"
+description: >
+  The first instant after the leap second at the end of 2016 (TAI - UTC = 37 s), given in UTC.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2017-01-01T00:00:00.000 UTC"

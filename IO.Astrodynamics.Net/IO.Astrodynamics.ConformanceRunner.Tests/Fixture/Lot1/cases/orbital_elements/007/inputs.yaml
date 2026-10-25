@@ -1,0 +1,30 @@
+id: "orbital_elements_retrograde_equatorial_007"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, equatorial retrograde orbit (i = 180 exactly): the in-plane angles are measured about -z
+  (spec.md section 11.1); GMAT stops on TLONG, MLONG and the equinoctial parameters.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [4.683537601475086e-13, 7648.797358938018, 0.0]
+    velocity_km_s: [7.373559258910804, 0.17668815972910332, 0.0]
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   raan_deg, argp_deg, argument_of_latitude_deg: undefined for an equatorial orbit
+#   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only
+#   mod_equinoctial_f, mod_equinoctial_g: GMAT R2026a stops on ModEquinoctialF and ModEquinoctialG ("Utility
+#     Exception: Singularity occurs during calculate Modified Equinoctial element h and k.")
+#   mod_equinoctial_h, mod_equinoctial_k: defined for i < 180 deg only
+#   position_km, velocity_km_s: outputs of an elements input

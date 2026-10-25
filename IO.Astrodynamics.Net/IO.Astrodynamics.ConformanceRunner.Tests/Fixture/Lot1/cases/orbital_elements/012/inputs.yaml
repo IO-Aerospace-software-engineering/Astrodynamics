@@ -1,0 +1,40 @@
+id: "orbital_elements_nearretrograde_012"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, nearly retrograde equatorial orbit (i = 179.99 deg): GMAT stops on TLONG and the modified
+  equinoctial parameters.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [-4941.714608409733, -5889.306106995362, 0.23300098560474203]
+    velocity_km_s: [-5.863330984356583, 4.021140693844992, -0.0011954194740892423]
+
+tolerances_override:
+  inclination_deg:
+    abs_tol: 3.9e-11
+    rel_tol: 0.0
+    justification: >-
+      i = 179.99 deg: GMAT computes INC with acos, which loses accuracy near 180 deg; its derivation from
+      EquinoctialP and Q is coarser still. Measured: E_ref 1.91e-11 deg (the golden against the 60-digit evaluation
+      of spec.md 11.1; GMAT R2026a run of 2026-10-25), conditioning floor 1.32e-18 deg, E_run linux 1.91e-11,
+      windows 1.91e-11, macos 1.91e-11 (IO.Astrodynamics minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref,
+      floor)) = 3.9e-11.
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only
+#   mod_equinoctial_f, mod_equinoctial_g, mod_equinoctial_h, mod_equinoctial_k: GMAT R2026a stops on
+#     ModEquinoctialF, ModEquinoctialG, ModEquinoctialH and ModEquinoctialK ("Utility Exception: Singularity occurs
+#     during calculate Modified Equinoctial element h and k.")
+#   position_km, velocity_km_s: outputs of an elements input

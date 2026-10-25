@@ -1,0 +1,49 @@
+{
+  "id": "orbital_elements_higheccentric_015",
+  "category": "orbital_elements",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (two-body conversion)",
+    "date": "2026-10-25",
+    "method": "GMAT parameters of a Cartesian state entered in EarthMJ2000Eq with the case numbers, Earth.Mu = gm_km3_s2, one Report per parameter; an output derived from several parameters (sources.py) is their closed formula evaluated at 60 digits from GMAT's printed decimals and rounded once",
+    "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
+    "script": "orbital_elements_higheccentric_015.script",
+    "log": "orbital_elements_higheccentric_015.log"
+  },
+  "outputs": {
+    "semi_major_axis_km": 69999.99999999993,
+    "eccentricity": 0.9000000000000006,
+    "inclination_deg": 63.4,
+    "raan_deg": 9.999999999999975,
+    "argp_deg": 270.0,
+    "true_anomaly_deg": 170.00000000000003,
+    "eccentric_anomaly_deg": 138.2508753373051,
+    "mean_anomaly_deg": 103.91447488269019,
+    "argument_of_latitude_deg": 80.00000000000003,
+    "longitude_of_periapsis_deg": 280.0,
+    "true_longitude_deg": 90.0,
+    "mean_longitude_deg": 23.91447488269016,
+    "periapsis_radius_km": 6999.999999999953,
+    "apoapsis_radius_km": 132999.9999999999,
+    "semi_latus_rectum_km": 13299.99999999996,
+    "period_s": 184313.8810076863,
+    "specific_energy_km2_s2": -2.8471459679073075,
+    "angular_momentum_km2_s": [
+      11305.177192267249,
+      -64114.84587806204,
+      32601.614974218326
+    ],
+    "periapsis_speed_km_s": 10.401516561563431,
+    "apoapsis_speed_km_s": 0.5474482400822825,
+    "mean_motion_rad_s": 3.4089593647683886e-05,
+    "mod_equinoctial_f": 0.15628335990023695,
+    "mod_equinoctial_g": -0.8863269777109878,
+    "mod_equinoctial_h": 0.6082296648834359,
+    "mod_equinoctial_k": 0.10724730038621771,
+    "right_ascension_deg": 78.50554047339055,
+    "declination_deg": 61.71120179648583
+  }
+}

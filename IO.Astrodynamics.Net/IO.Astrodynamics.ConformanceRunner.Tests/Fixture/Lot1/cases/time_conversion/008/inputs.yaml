@@ -1,0 +1,18 @@
+id: "time_conversion_tai_008"
+schema_version: "v1"
+version: "0.1.0"
+category: "time_conversion"
+created: "2026-10-25"
+description: >
+  An instant inside the leap second 2016-12-31T23:59:60 UTC, given in TAI: it has no utc_s.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "TAI"
+
+inputs:
+  epoch: "2017-01-01T00:00:36.500 TAI"
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   utc_s: the instant falls inside a leap second, which has no utc_s (spec.md 11.2)

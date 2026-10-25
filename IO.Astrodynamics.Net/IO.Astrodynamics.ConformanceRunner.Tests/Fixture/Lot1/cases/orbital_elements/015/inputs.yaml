@@ -1,0 +1,51 @@
+id: "orbital_elements_higheccentric_015"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, highly eccentric ellipse (e = 0.9).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [11049.547690617623, 54337.1565908107, 103028.67905137103]
+    velocity_km_s: [-0.5311393258147672, 0.3385671848866956, 0.850013322726862]
+
+tolerances_override:
+  periapsis_radius_km:
+    abs_tol: 0.0
+    rel_tol: 7.9e-15
+    justification: >-
+      e = 0.9: GMAT's RadPer, a(1 - e), amplifies the rounding of its eccentricity. Measured: E_ref 3.94e-15
+      relative (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 2.77e-16 relative, E_run linux 3.25e-15, windows 3.25e-15, macos 3.25e-15 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 7.9e-15.
+  periapsis_speed_km_s:
+    abs_tol: 0.0
+    rel_tol: 4.4e-15
+    justification: >-
+      e = 0.9: GMAT's periapsis and apoapsis speeds carry the rounding of its a and e. Measured: E_ref 2.16e-15
+      relative (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.75e-16 relative, E_run linux 1.71e-15, windows 1.71e-15, macos 1.71e-15 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 4.4e-15.
+  apoapsis_speed_km_s:
+    abs_tol: 0.0
+    rel_tol: 4.5e-15
+    justification: >-
+      e = 0.9: GMAT's periapsis and apoapsis speeds carry the rounding of its a and e. Measured: E_ref 1.89e-15
+      relative (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.02e-16 relative, E_run linux 2.23e-15, windows 2.23e-15, macos 2.23e-15 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 4.5e-15.
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only
+#   position_km, velocity_km_s: outputs of an elements input

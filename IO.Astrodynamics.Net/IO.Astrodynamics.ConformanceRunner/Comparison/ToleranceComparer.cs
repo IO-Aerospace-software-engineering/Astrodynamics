@@ -14,6 +14,15 @@ public static class ToleranceComparer
         absDelta = System.Math.Abs(computed - golden);
         relDelta = golden != 0.0 ? absDelta / System.Math.Abs(golden) : (absDelta == 0.0 ? 0.0 : double.PositiveInfinity);
 
+        return Passes(absDelta, relDelta, tol);
+    }
+
+    /// <summary>
+    /// The OR rule on deltas already computed: PASS if absDelta &lt;= abs_tol OR relDelta &lt;= rel_tol. A NaN relative
+    /// delta, that of a kind without one (an angle, a time) or of a zero golden, passes by abs_tol only.
+    /// </summary>
+    public static bool Passes(double absDelta, double relDelta, TolerancePair tol)
+    {
         return absDelta <= tol.AbsTol || relDelta <= tol.RelTol;
     }
 

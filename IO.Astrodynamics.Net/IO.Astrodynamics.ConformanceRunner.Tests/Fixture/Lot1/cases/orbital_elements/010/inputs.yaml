@@ -1,0 +1,25 @@
+id: "orbital_elements_polar_010"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, polar orbit (i = 90 deg).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [-6985.632629716955, -2542.5623447357066, -1310.806834799181]
+    velocity_km_s: [-1.0548636922730155, -0.38393898519552094, 7.155538526579391]
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only
+#   position_km, velocity_km_s: outputs of an elements input

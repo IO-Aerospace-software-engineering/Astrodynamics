@@ -26,7 +26,9 @@
     </ItemGroup>
 
     <!-- The fixture: the schemas of the conformance-tests suite extended with the stm category, and two cases;
-         written by tools/gmat_reference/make_stm_case.py -->
+         written by tools/gmat_reference/make_stm_case.py. Fixture/Lot1: the cases of orbital_elements, time_conversion
+         and frame_transformation with the schemas and tolerances of the suite, and the kernels that differ from the
+         runner's; written by tools/conformance/sync_lot1_fixture.py -->
     <ItemGroup>
         <None Update="Fixture\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

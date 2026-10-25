@@ -1,0 +1,15 @@
+id: "time_conversion_tdb_003"
+schema_version: "v1"
+version: "0.1.0"
+category: "time_conversion"
+created: "2026-10-25"
+description: >
+  A TDB epoch near the maximum of TDB - TT (+1.658 ms), in the five calendars.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-04-04T00:00:00.000 TDB"

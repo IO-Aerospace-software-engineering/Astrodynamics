@@ -1,0 +1,44 @@
+{
+  "id": "orbital_elements_circular_004",
+  "category": "orbital_elements",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (two-body conversion)",
+    "date": "2026-10-25",
+    "method": "GMAT parameters of a Cartesian state entered in EarthMJ2000Eq with the case numbers, Earth.Mu = gm_km3_s2, one Report per parameter; an output derived from several parameters (sources.py) is their closed formula evaluated at 60 digits from GMAT's printed decimals and rounded once",
+    "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
+    "script": "orbital_elements_circular_004.script",
+    "log": "orbital_elements_circular_004.log"
+  },
+  "outputs": {
+    "semi_major_axis_km": 6999.999999999999,
+    "eccentricity": 1.2478157842436859e-16,
+    "inclination_deg": 16.601549599020224,
+    "raan_deg": 296.565051177078,
+    "argument_of_latitude_deg": 90.0,
+    "true_longitude_deg": 26.56505117707799,
+    "mean_longitude_deg": 26.56505117707799,
+    "periapsis_radius_km": 6999.999999999998,
+    "apoapsis_radius_km": 7000.000000000001,
+    "semi_latus_rectum_km": 6999.999999999999,
+    "period_s": 5828.516683695401,
+    "specific_energy_km2_s2": -28.471459679073046,
+    "angular_momentum_km2_s": [
+      -13498.790388255811,
+      -6749.395194127906,
+      50620.46395595929
+    ],
+    "periapsis_speed_km_s": 7.5460532305401955,
+    "apoapsis_speed_km_s": 7.546053230540192,
+    "mean_motion_rad_s": 0.001078007604362885,
+    "mod_equinoctial_f": -1.116080366786437e-16,
+    "mod_equinoctial_g": -5.580401833932185e-17,
+    "mod_equinoctial_h": 0.06524758424985279,
+    "mod_equinoctial_k": -0.13049516849970558,
+    "right_ascension_deg": 26.56505117707799,
+    "declination_deg": 16.601549599020235
+  }
+}

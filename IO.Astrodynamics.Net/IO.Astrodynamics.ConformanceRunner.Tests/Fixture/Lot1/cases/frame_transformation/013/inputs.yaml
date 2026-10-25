@@ -1,0 +1,23 @@
+id: "frame_transformation_moon_me_013"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-10-25"
+description: >
+  ICRF to MOON_ME (mean Earth / polar axis) of a state about the Moon, 399,675 km away.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "MOON_ME"      # the frame of the golden (spec.md section 10)
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  from_frame: "ICRF"
+  to_frame: "MOON_ME"
+  from_center: "Moon"
+  to_center: "Moon"
+  state:
+    position_km: [-79718.1012142888, -358313.09990042244, -158104.73563385216]
+    velocity_km_s: [0.45177571636072333, 7.071032445964434, 0.9510108509407523]
+  kernels: ["moon_pa_de421_1900-2050.bpc", "moon_080317.tf"]

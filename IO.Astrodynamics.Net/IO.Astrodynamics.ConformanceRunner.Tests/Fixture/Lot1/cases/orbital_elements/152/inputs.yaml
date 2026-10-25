@@ -1,0 +1,28 @@
+id: "orbital_elements_modeq2cart_highecc_152"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  Modified equinoctial elements to the state: e = 0.9.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "modified_equinoctial"
+    p_km: 13299.999999999996
+    f: 0.15628335990023698
+    g: -0.8863269777109873
+    h: 0.608229664883436
+    k: 0.10724730038621773
+    true_longitude_deg: 90.0
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   every element output (semi_major_axis_km to declination_deg): outputs of a state_vector input

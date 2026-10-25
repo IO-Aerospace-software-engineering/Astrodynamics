@@ -1,0 +1,25 @@
+id: "orbital_elements_retrograde_011"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  State to elements, retrograde orbit (i = 120 deg).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "state_vector"
+    position_km: [-5370.774462355238, -5377.972484617859, 1156.1415900998036]
+    velocity_km_s: [-3.6620248241052797, 1.3977261689657365, -5.931623714048699]
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only
+#   position_km, velocity_km_s: outputs of an elements input

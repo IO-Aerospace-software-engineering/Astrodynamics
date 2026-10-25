@@ -1,0 +1,439 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conformance-tests.local/schemas/v1/case.schema.json",
+  "title": "Conformance Test Case",
+  "description": "Validates a single astrodynamics conformance-test case file (after YAML-to-JSON conversion).",
+  "type": "object",
+
+  "$defs": {
+    "vec3": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "quaternion": {
+      "description": "Unit quaternion in scalar-first order [w, x, y, z]. See spec.md §4.",
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "tolerance_pair": {
+      "type": "object",
+      "properties": {
+        "abs_tol": { "type": "number" },
+        "rel_tol": { "type": "number" }
+      },
+      "required": ["abs_tol", "rel_tol"],
+      "additionalProperties": false
+    },
+    "tolerance_override": {
+      "description": "Per-case override of a default tolerance. It must say why the case needs it: tool and model differences, measured deltas with their source and date.",
+      "type": "object",
+      "properties": {
+        "abs_tol": { "type": "number" },
+        "rel_tol": { "type": "number" },
+        "justification": { "type": "string", "minLength": 20 }
+      },
+      "required": ["abs_tol", "rel_tol", "justification"],
+      "additionalProperties": false
+    },
+    "target_body": {
+      "type": "string",
+      "description": "Name of a solar system body (e.g. Sun, Moon, Earth)"
+    },
+    "field_of_view": {
+      "type": "object",
+      "properties": {
+        "half_angle_deg": { "type": "number" },
+        "axis_body":      { "$ref": "#/$defs/vec3" }
+      },
+      "required": ["half_angle_deg", "axis_body"],
+      "additionalProperties": false
+    },
+    "keplerian_orbit": {
+      "type": "object",
+      "properties": {
+        "type":     { "type": "string", "const": "keplerian" },
+        "a_km":     { "type": "number" },
+        "e":        { "type": "number", "minimum": 0.0 },
+        "i_deg":    { "type": "number" },
+        "raan_deg": { "type": "number" },
+        "argp_deg": { "type": "number" },
+        "ma_deg":   { "type": "number" }
+      },
+      "required": ["type", "a_km", "e", "i_deg", "raan_deg", "argp_deg", "ma_deg"],
+      "additionalProperties": false
+    },
+    "state_vector_orbit": {
+      "type": "object",
+      "properties": {
+        "type":          { "type": "string", "const": "state_vector" },
+        "position_km":   { "$ref": "#/$defs/vec3" },
+        "velocity_km_s": { "$ref": "#/$defs/vec3" }
+      },
+      "required": ["type", "position_km", "velocity_km_s"],
+      "additionalProperties": false
+    },
+    "spacecraft": {
+      "type": "object",
+      "properties": {
+        "mass_kg":                          { "type": "number", "exclusiveMinimum": 0 },
+        "max_mass_kg":                      { "type": "number", "exclusiveMinimum": 0 },
+        "sectional_area_m2":                { "type": "number", "exclusiveMinimum": 0 },
+        "drag_coefficient":                 { "type": "number", "minimum": 0 },
+        "radiation_pressure_coefficient":   { "type": "number", "minimum": 0 }
+      },
+      "required": ["mass_kg", "sectional_area_m2", "drag_coefficient", "radiation_pressure_coefficient"],
+      "additionalProperties": false
+    },
+    "search_window": {
+      "type": "object",
+      "properties": {
+        "start":       { "type": "string" },
+        "end":         { "type": "string" },
+        "step_size_s": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "required": ["start", "end"],
+      "additionalProperties": false
+    },
+    "pointing_triad_inputs": {
+      "type": "object",
+      "properties": {
+        "epoch": { "type": "string" },
+        "orbit": {
+          "oneOf": [
+            { "$ref": "#/$defs/keplerian_orbit" },
+            { "$ref": "#/$defs/state_vector_orbit" }
+          ]
+        },
+        "primary_target":      { "$ref": "#/$defs/target_body" },
+        "secondary_target":    { "$ref": "#/$defs/target_body" },
+        "primary_body_vector":   { "$ref": "#/$defs/vec3" },
+        "secondary_body_vector": { "$ref": "#/$defs/vec3" },
+        "field_of_view":         { "$ref": "#/$defs/field_of_view" }
+      },
+      "required": [
+        "epoch",
+        "orbit",
+        "primary_target",
+        "secondary_target",
+        "primary_body_vector",
+        "secondary_body_vector",
+        "field_of_view"
+      ],
+      "additionalProperties": false
+    },
+    "eclipse_inputs": {
+      "type": "object",
+      "properties": {
+        "epoch": { "type": "string" },
+        "orbit": {
+          "oneOf": [
+            { "$ref": "#/$defs/keplerian_orbit" },
+            { "$ref": "#/$defs/state_vector_orbit" }
+          ]
+        },
+        "search_window":  { "$ref": "#/$defs/search_window" },
+        "occulting_body": { "type": "string" },
+        "light_source":   { "type": "string" }
+      },
+      "required": ["epoch", "orbit", "search_window", "occulting_body", "light_source"],
+      "additionalProperties": false
+    },
+    "force_model": {
+      "type": "object",
+      "properties": {
+        "drag": { "type": "boolean" },
+        "srp":  { "type": "boolean" }
+      },
+      "required": ["drag", "srp"],
+      "additionalProperties": false
+    },
+    "propagator_inputs": {
+      "type": "object",
+      "properties": {
+        "epoch": { "type": "string" },
+        "orbit": {
+          "oneOf": [
+            { "$ref": "#/$defs/keplerian_orbit" },
+            { "$ref": "#/$defs/state_vector_orbit" }
+          ]
+        },
+        "propagation_window":  { "$ref": "#/$defs/search_window" },
+        "central_body":        { "type": "string" },
+        "geopotential_degree": { "type": "integer", "minimum": 0 },
+        "geopotential_model":  { "type": "string" },
+        "perturbation_bodies": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "force_model":   { "$ref": "#/$defs/force_model" },
+        "spacecraft":    { "$ref": "#/$defs/spacecraft" },
+        "step_size_s":   { "type": "number", "exclusiveMinimum": 0 },
+        "notes":         { "type": "object" }
+      },
+      "required": ["epoch", "orbit", "propagation_window", "central_body",
+                    "geopotential_degree", "geopotential_model",
+                    "perturbation_bodies", "force_model", "step_size_s"],
+      "additionalProperties": false
+    },
+    "bsp_source_orbit": {
+        "type": "object",
+        "properties": {
+          "type":  { "type": "string", "const": "bsp_source" },
+          "naif_id": { "type": "integer" },
+          "filename": { "type": "string" },
+          "aberration": { "type": ["string", "null"] }
+        },
+        "required": ["type", "naif_id", "filename"],
+        "additionalProperties": false
+      },
+    "location": {
+        "type": "object",
+        "properties": {
+          "reference_frame": { "type": "string" },
+          "latitude_deg": { "type": "number" },
+          "longitude_deg": { "type": "number" },
+          "height_km": { "type": "number" }
+        }
+    },
+    "tracking_data_inputs": {
+          "type": "object",
+          "properties": {
+            "epoch": { "type": "string" },
+            "orbit": {
+              "oneOf": [
+                { "$ref": "#/$defs/keplerian_orbit" },
+                { "$ref": "#/$defs/state_vector_orbit" },
+                { "$ref": "#/$defs/bsp_source_orbit" }
+              ]
+            },
+            "search_window":  { "$ref": "#/$defs/search_window" },
+            "occulting_body": { "type": "string" },
+            "location": { "$ref": "#/$defs/location" }
+          },
+          "required": ["epoch", "orbit", "search_window", "occulting_body", "location"],
+          "additionalProperties": false
+        },
+    "geosynchronous_inputs": {
+          "type": "object",
+          "properties": {
+            "epoch":         { "type": "string" },
+            "central_body":  { "type": "string" },
+            "longitude_deg": { "type": "number" },
+            "latitude_deg":  { "type": "number" }
+          },
+          "required": ["epoch", "central_body", "longitude_deg", "latitude_deg"],
+          "additionalProperties": false
+        },
+    "tagged_epoch": {
+      "description": "An instant: ISO 8601 date and time in the calendar of the scale of its tag, 0 to 3 decimals, never second 60 (spec.md section 3).",
+      "type": "string",
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\\.[0-9]{1,3})? (UTC|TAI|TT|TDB)$"
+    },
+    "keplerian_true_anomaly_orbit": {
+      "description": "Osculating Keplerian elements with the true anomaly; a_km < 0 for e > 1 (spec.md section 11.1).",
+      "type": "object",
+      "properties": {
+        "type":     { "type": "string", "const": "keplerian_true_anomaly" },
+        "a_km":     { "type": "number" },
+        "e":        { "type": "number", "minimum": 0.0 },
+        "i_deg":    { "type": "number", "minimum": 0.0, "maximum": 180.0 },
+        "raan_deg": { "type": "number" },
+        "argp_deg": { "type": "number" },
+        "ta_deg":   { "type": "number" }
+      },
+      "required": ["type", "a_km", "e", "i_deg", "raan_deg", "argp_deg", "ta_deg"],
+      "additionalProperties": false
+    },
+    "modified_equinoctial_orbit": {
+      "description": "Prograde modified equinoctial elements: p, f = e cos(RAAN + AOP), g = e sin(RAAN + AOP), h = tan(i/2) cos RAAN, k = tan(i/2) sin RAAN, L = RAAN + AOP + TA (spec.md section 11.1).",
+      "type": "object",
+      "properties": {
+        "type":               { "type": "string", "const": "modified_equinoctial" },
+        "p_km":               { "type": "number", "exclusiveMinimum": 0.0 },
+        "f":                  { "type": "number" },
+        "g":                  { "type": "number" },
+        "h":                  { "type": "number" },
+        "k":                  { "type": "number" },
+        "true_longitude_deg": { "type": "number" }
+      },
+      "required": ["type", "p_km", "f", "g", "h", "k", "true_longitude_deg"],
+      "additionalProperties": false
+    },
+    "orbital_elements_inputs": {
+      "type": "object",
+      "properties": {
+        "epoch":        { "$ref": "#/$defs/tagged_epoch" },
+        "central_body": { "enum": ["Earth"] },
+        "gm_km3_s2":    { "type": "number", "exclusiveMinimum": 0.0 },
+        "orbit": {
+          "oneOf": [
+            { "$ref": "#/$defs/state_vector_orbit" },
+            { "$ref": "#/$defs/keplerian_orbit", "properties": { "i_deg": { "minimum": 0.0, "maximum": 180.0 } } },
+            { "$ref": "#/$defs/keplerian_true_anomaly_orbit" },
+            { "$ref": "#/$defs/modified_equinoctial_orbit" }
+          ]
+        }
+      },
+      "required": ["epoch", "central_body", "gm_km3_s2", "orbit"],
+      "additionalProperties": false
+    },
+    "time_conversion_inputs": {
+      "type": "object",
+      "properties": {
+        "epoch": { "$ref": "#/$defs/tagged_epoch" }
+      },
+      "required": ["epoch"],
+      "additionalProperties": false
+    },
+    "frame_name": {
+      "description": "A frame of spec.md section 2.1.",
+      "enum": ["ICRF", "ECLIPJ2000", "ITRF93", "IAU_EARTH", "MOON_PA", "MOON_ME", "IAU_MOON"]
+    },
+    "frame_center": {
+      "enum": ["Earth", "Moon"]
+    },
+    "ellipsoid": {
+      "type": "object",
+      "properties": {
+        "equatorial_radius_km": { "type": "number", "exclusiveMinimum": 0.0 },
+        "flattening":           { "type": "number", "minimum": 0.0, "exclusiveMaximum": 1.0 }
+      },
+      "required": ["equatorial_radius_km", "flattening"],
+      "additionalProperties": false
+    },
+    "frame_transformation_inputs": {
+      "type": "object",
+      "properties": {
+        "epoch":       { "$ref": "#/$defs/tagged_epoch" },
+        "from_frame":  { "$ref": "#/$defs/frame_name" },
+        "to_frame":    { "$ref": "#/$defs/frame_name" },
+        "from_center": { "$ref": "#/$defs/frame_center" },
+        "to_center":   { "$ref": "#/$defs/frame_center" },
+        "state": {
+          "type": "object",
+          "properties": {
+            "position_km":   { "$ref": "#/$defs/vec3" },
+            "velocity_km_s": { "$ref": "#/$defs/vec3" }
+          },
+          "required": ["position_km", "velocity_km_s"],
+          "additionalProperties": false
+        },
+        "kernels": {
+          "description": "Files of data/ the golden depends on (spec.md section 2.1); the runner loads them for this case.",
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+          "uniqueItems": true
+        },
+        "ellipsoid": { "$ref": "#/$defs/ellipsoid" }
+      },
+      "required": ["epoch", "from_frame", "to_frame", "from_center", "to_center", "state", "kernels"],
+      "additionalProperties": false,
+      "if": { "required": ["ellipsoid"] },
+      "then": {
+        "properties": {
+          "from_frame":  { "const": "ITRF93" },
+          "to_frame":    { "const": "ITRF93" },
+          "from_center": { "const": "Earth" },
+          "to_center":   { "const": "Earth" }
+        }
+      }
+    }
+      },
+
+  "required": ["id", "schema_version", "version", "category", "created", "description", "metadata", "inputs"],
+
+  "properties": {
+    "id":              { "type": "string" },
+    "schema_version":  { "type": "string" },
+    "version":         { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$" },
+    "category":        { "type": "string", "enum": ["pointing_triad", "eclipse", "propagator", "tracking_data", "geosynchronous", "orbital_elements", "time_conversion", "frame_transformation"] },
+    "created":         { "type": "string", "format": "date" },
+    "description":     { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "ephemeris_kernel": { "type": "string" },
+        "reference_frame":  { "type": "string" },
+        "time_scale":       { "type": "string", "enum": ["TDB", "UTC", "TAI", "TT"] }
+      },
+      "required": ["ephemeris_kernel", "reference_frame", "time_scale"],
+      "additionalProperties": false
+    },
+    "inputs": { "type": "object" },
+    "tolerances_override": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/tolerance_override" }
+    }
+  },
+  "additionalProperties": false,
+
+  "if": {
+    "properties": { "category": { "const": "pointing_triad" } }
+  },
+  "then": {
+    "properties": { "inputs": { "$ref": "#/$defs/pointing_triad_inputs" } }
+  },
+  "else": {
+    "if": {
+      "properties": { "category": { "const": "eclipse" } }
+    },
+    "then": {
+      "properties": { "inputs": { "$ref": "#/$defs/eclipse_inputs" } }
+    },
+    "else": {
+      "if": {
+        "properties": { "category": { "const": "propagator" } }
+      },
+      "then": {
+        "properties": { "inputs": { "$ref": "#/$defs/propagator_inputs" } }
+      },
+      "else": {
+        "if": {
+          "properties": { "category": { "const": "tracking_data" } }
+        },
+        "then": {
+          "properties": { "inputs": { "$ref": "#/$defs/tracking_data_inputs" } }
+        },
+        "else": {
+          "if": {
+            "properties": { "category": { "const": "geosynchronous" } }
+          },
+          "then": {
+            "properties": { "inputs": { "$ref": "#/$defs/geosynchronous_inputs" } }
+          }
+        }
+      }
+    }
+  },
+
+  "allOf": [
+    {
+      "if": {
+        "properties": { "category": { "const": "orbital_elements" } }
+      },
+      "then": {
+        "properties": { "inputs": { "$ref": "#/$defs/orbital_elements_inputs" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "category": { "const": "time_conversion" } }
+      },
+      "then": {
+        "properties": { "inputs": { "$ref": "#/$defs/time_conversion_inputs" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "category": { "const": "frame_transformation" } }
+      },
+      "then": {
+        "properties": { "inputs": { "$ref": "#/$defs/frame_transformation_inputs" } }
+      }
+    }
+  ]
+}

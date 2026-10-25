@@ -26,15 +26,18 @@ public class Runner
     {
         _conformanceTestsPath = conformanceTestsPath;
         _spiceKernelsPath = spiceKernelsPath;
-        _solvers = new Dictionary<string, ICategorySolver>
+        _solvers = new ICategorySolver[]
         {
-            ["pointing_triad"] = new TriadSolver(),
-            ["eclipse"] = new EclipseSolver(),
-            ["propagator"] = new PropagatorSolver(spiceKernelsPath),
-            ["stm"] = new StmSolver(spiceKernelsPath),
-            ["tracking_data"] = new TrackingDataSolver(conformanceTestsPath),
-            ["geosynchronous"] = new GeosynchronousSolver()
-        };
+            new TriadSolver(),
+            new EclipseSolver(),
+            new PropagatorSolver(spiceKernelsPath),
+            new StmSolver(spiceKernelsPath),
+            new TrackingDataSolver(conformanceTestsPath),
+            new GeosynchronousSolver(),
+            new OrbitalElementsSolver(),
+            new TimeConversionSolver(),
+            new FrameTransformationSolver(conformanceTestsPath)
+        }.ToDictionary(solver => solver.Category);
         _schemaValidator = new SchemaValidator(conformanceTestsPath);
     }
 
@@ -194,7 +197,9 @@ public class Runner
             var computed = solver.Solve(caseInput);
 
             // Compare outputs
-            return CompareOutputs(caseId, caseInput.Category, computed, expected.Outputs, toleranceConfig, caseInput.TolerancesOverride);
+            var result = CompareOutputs(caseId, caseInput.Category, computed, expected.Outputs, toleranceConfig, caseInput.TolerancesOverride, caseInput);
+            result.Category = caseInput.Category;
+            return result;
         }
         catch (Exception ex)
         {
@@ -213,8 +218,24 @@ public class Runner
         Dictionary<string, object> computed,
         JsonElement golden,
         ToleranceConfig toleranceConfig,
-        Dictionary<string, TolerancePair> caseOverrides)
+        Dictionary<string, TolerancePair> caseOverrides,
+        CaseInput caseInput)
     {
+        // The conversion categories: the kinds and keys of their outputs, the outputs present in the golden, no fallback
+        // tolerance
+        if (MetricTable.Covers(category))
+        {
+            var measures = OutputComparer.Compare(caseInput, computed, golden, toleranceConfig?.Defaults);
+            return new ResultEntry
+            {
+                CaseId = caseId,
+                Status = measures.All(m => m.Passed) ? "PASS" : "FAIL",
+                Deltas = measures.ToDictionary(m => m.Output,
+                    m => new DeltaValue { MaxAbsDelta = m.AbsoluteDelta, MaxRelDelta = m.RelativeDelta, Passed = m.Passed }),
+                Measures = measures
+            };
+        }
+
         // Flatten nested tracking_data outputs to match solver's flat dictionary
         if (category == "tracking_data")
             golden = FlattenTrackingDataOutputs(golden);
@@ -386,8 +407,10 @@ public class Runner
             foreach (var kv in result.Deltas)
             {
                 if (double.IsNaN(kv.Value.MaxAbsDelta)) continue;
-                if (!metricData.TryGetValue(kv.Key, out var list))
-                    metricData[kv.Key] = list = new List<(DeltaValue, bool)>();
+                // The outputs of the conversion categories by category: semi_major_axis_km is not the geosynchronous one
+                var metric = MetricTable.Covers(result.Category) ? MetricTable.SummaryKey(result.Category, kv.Key) : kv.Key;
+                if (!metricData.TryGetValue(metric, out var list))
+                    metricData[metric] = list = new List<(DeltaValue, bool)>();
                 // If case passed, every metric in it passed; otherwise use stored Passed flag
                 list.Add((kv.Value, casePassed || kv.Value.Passed));
             }
@@ -419,6 +442,9 @@ public class Runner
                                                                     => ("km",  1.0),
             _ when metric.StartsWith("doppler_") && metric.EndsWith("_km_s")
                                                                     => ("km/s", 1.0),
+            // <category>/<output> of the conversion categories, in the units of spec.md section 11
+            _ when MetricTable.TryGetSummaryUnit(metric, out var unit)
+                                                                    => (unit,  1.0),
             _                                                       => ("-",   1.0)
         };
 

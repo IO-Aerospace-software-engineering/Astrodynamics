@@ -1,0 +1,45 @@
+{
+  "id": "orbital_elements_hyperbolic_outbound_016",
+  "category": "orbital_elements",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (two-body conversion)",
+    "date": "2026-10-25",
+    "method": "GMAT parameters of a Cartesian state entered in EarthMJ2000Eq with the case numbers, Earth.Mu = gm_km3_s2, one Report per parameter; an output derived from several parameters (sources.py) is their closed formula evaluated at 60 digits from GMAT's printed decimals and rounded once",
+    "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
+    "script": "orbital_elements_hyperbolic_outbound_016.script",
+    "log": "orbital_elements_hyperbolic_outbound_016.log"
+  },
+  "outputs": {
+    "semi_major_axis_km": -20000.000000000015,
+    "eccentricity": 1.4999999999999996,
+    "inclination_deg": 35.000000000000014,
+    "raan_deg": 300.0,
+    "argp_deg": 44.99999999999998,
+    "true_anomaly_deg": 60.00000000000001,
+    "hyperbolic_anomaly_deg": 30.272532381082122,
+    "hyperbolic_mean_anomaly_deg": 17.278667589376408,
+    "argument_of_latitude_deg": 104.99999999999999,
+    "longitude_of_periapsis_deg": 345.0,
+    "true_longitude_deg": 44.99999999999999,
+    "periapsis_radius_km": 9999.999999999998,
+    "semi_latus_rectum_km": 25000.0,
+    "specific_energy_km2_s2": 9.965010887675557,
+    "angular_momentum_km2_s": [
+      -49586.199323618195,
+      -28628.605527581407,
+      81771.77184004334
+    ],
+    "periapsis_speed_km_s": 9.982490114032451,
+    "mean_motion_rad_s": 0.00022321526479696167,
+    "mod_equinoctial_f": 1.448888739433602,
+    "mod_equinoctial_g": -0.38822856765378133,
+    "mod_equinoctial_h": 0.15764939443949175,
+    "mod_equinoctial_k": -0.27305676095166614,
+    "right_ascension_deg": 48.113208734762644,
+    "declination_deg": 33.644087380866615
+  }
+}

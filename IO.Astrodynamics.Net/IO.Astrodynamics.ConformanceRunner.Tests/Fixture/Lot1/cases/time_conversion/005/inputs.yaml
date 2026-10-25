@@ -1,0 +1,18 @@
+id: "time_conversion_tdb_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "time_conversion"
+created: "2026-10-25"
+description: >
+  A TDB epoch in 2100, beyond the UTC range of spec.md section 3: TAI, TT, TDB and GPS only.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2100-01-01T00:00:00.000 TDB"
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   utc_s: UTC is defined from 1972-01-01 to 2025-12-31 only (spec.md section 3)

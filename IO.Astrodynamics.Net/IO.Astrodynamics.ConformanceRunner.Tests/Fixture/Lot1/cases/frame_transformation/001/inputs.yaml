@@ -1,0 +1,23 @@
+id: "frame_transformation_ecliptic_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-10-25"
+description: >
+  ICRF to ECLIPJ2000 of a LEO state: the constant rotation R1(84381.448 arcsec).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ECLIPJ2000"   # the frame of the golden (spec.md section 10)
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  from_frame: "ICRF"
+  to_frame: "ECLIPJ2000"
+  from_center: "Earth"
+  to_center: "Earth"
+  state:
+    position_km: [7000.0, 1000.0, 500.0]
+    velocity_km_s: [-0.5, 7.2, 1.1]
+  kernels: []

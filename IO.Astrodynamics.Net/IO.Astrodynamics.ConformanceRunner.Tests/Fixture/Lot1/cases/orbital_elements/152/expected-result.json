@@ -1,0 +1,28 @@
+{
+  "id": "orbital_elements_modeq2cart_highecc_152",
+  "category": "orbital_elements",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (two-body conversion)",
+    "date": "2026-10-25",
+    "method": "GMAT ModifiedEquinoctial state entered with the case numbers, Earth.Mu = gm_km3_s2; Cartesian state reported in EarthMJ2000Eq",
+    "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
+    "script": "orbital_elements_modeq2cart_highecc_152.script",
+    "log": "orbital_elements_modeq2cart_highecc_152.log"
+  },
+  "outputs": {
+    "position_km": [
+      11049.547690617628,
+      54337.15659081076,
+      103028.67905137116
+    ],
+    "velocity_km_s": [
+      -0.5311393258147676,
+      0.338567184886695,
+      0.850013322726861
+    ]
+  }
+}

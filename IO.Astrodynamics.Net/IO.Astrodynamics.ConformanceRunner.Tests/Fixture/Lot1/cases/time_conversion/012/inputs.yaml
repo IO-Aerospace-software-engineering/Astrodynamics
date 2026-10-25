@@ -1,0 +1,15 @@
+id: "time_conversion_tai_012"
+schema_version: "v1"
+version: "0.1.0"
+category: "time_conversion"
+created: "2026-10-25"
+description: >
+  A millisecond after the leap second at the end of June 2012, given in TAI.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "TAI"
+
+inputs:
+  epoch: "2012-07-01T00:00:35.001 TAI"
