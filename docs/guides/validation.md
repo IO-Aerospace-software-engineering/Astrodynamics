@@ -37,18 +37,30 @@ table and the threshold it sets are in [Conjunction Assessment](../reference/con
 
 The conformance cases come from the
 [conformance-tests](https://github.com/IO-Aerospace-software-engineering/conformance-tests)
-suite: inputs, golden outputs produced by an external reference tool, and tolerances. Two
-harnesses run them:
+suite: inputs, golden outputs produced by an external reference tool, and tolerances. It holds
+91 cases: ten propagation, eclipse, geosynchronous, tracking and pointing cases, and the 81 cases
+of lot 1 ([#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457)):
+41 orbital-element conversions, 12 time-scale conversions and 28 frame transformations, whose
+goldens come from GMAT R2026a, each checked against an independent reference. A tolerance of
+lot 1 is twice the largest of the framework's delta on Linux, Windows and macOS arm64, the
+golden's distance to the reference and the conditioning floor of the output, rounded up at the
+second significant digit (the suite's `spec.md` §6.4, measured 2026-10-25). Three harnesses run
+the cases:
 
-- the conformance runner `IO.Astrodynamics.ConformanceRunner` runs every case with the adaptive
-  RK7(8) integrator (absolute and relative tolerances 1e-11) and writes a report,
-  `IO.Astrodynamics.Net/conformance-report.json`;
+- the conformance runner `IO.Astrodynamics.ConformanceRunner` runs every case and writes a report,
+  `IO.Astrodynamics.Net/conformance-report.json`; it propagates with the adaptive RK7(8) integrator
+  (absolute and relative tolerances 1e-11);
 - unit tests run the three 24-hour propagation cases with RK7(8) (`RK78IntegratorTests.Conformance00x_*`)
   and with Velocity-Verlet at a fixed 1 s step (`PropagatorTests.Conformance00x_*`), and print the
-  errors they measure.
+  errors they measure;
+- `Lot1CaseTests` runs the runner on the cases of lot 1, copied with the schemas and the tolerances
+  of the suite into `IO.Astrodynamics.ConformanceRunner.Tests/Fixture/Lot1` by
+  `tools/conformance/sync_lot1_fixture.py` (its `SOURCE` file records the suite commit), and prints
+  one `MEASURE` line per output: the delta, the tolerance and their ratio.
 
-Both evaluate the final state at the exact end of the window, whose UTC epoch is converted to TDB,
-like the reference tool's elapsed time, and report the magnitude of the position and velocity errors.
+The first two evaluate the final state of a propagation at the exact end of the window, whose UTC
+epoch is converted to TDB, like the reference tool's elapsed time, and report the magnitude of the
+position and velocity errors.
 
 ### Running the Suite
 
@@ -70,10 +82,10 @@ dotnet run --project IO.Astrodynamics.ConformanceRunner -c Release -- \
 ```
 
 The exit code is the number of failed cases plus the number of errors. A data file left as an LFS
-pointer makes its case an ERROR that names the file. The suite (10 cases) takes about 45 s in
-Release on Linux (4 cores, 2026-10-21), 44 s of them for the eclipse case. The runner asks the
-propagator for the end of the window only: an output every `step_size_s` (1 s) cost a shortened
-RK7(8) step each and took the suite to 107 s (#426).
+pointer makes its case an ERROR that names the file. The suite (91 cases) takes about 46 s in
+Release on Linux (4 cores, 2026-10-25): 44 s for the eclipse case, about 2 s for the 81 cases of
+lot 1. The runner asks the propagator for the end of the window only: an output every
+`step_size_s` (1 s) cost a shortened RK7(8) step each and took the suite to 107 s (#426).
 
 The `conformance` job of the CI runs the latest version of the suite on Linux, Windows and macOS
 arm64 and keeps each report as an artifact. The suite is private: the job reads it with the
