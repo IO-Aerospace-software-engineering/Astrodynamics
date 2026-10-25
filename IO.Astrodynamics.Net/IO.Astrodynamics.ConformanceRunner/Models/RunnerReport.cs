@@ -62,6 +62,20 @@ public class ResultEntry
     [JsonPropertyName("message")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Message { get; set; }
+
+    /// <summary>
+    /// The category of the case, once its inputs are read: the rows of <c>accuracy_by_metric</c> of the conversion
+    /// categories are named after it. Not written to the report.
+    /// </summary>
+    [JsonIgnore]
+    public string Category { get; set; }
+
+    /// <summary>
+    /// The comparison of each output of a conversion case (<see cref="Comparison.OutputComparer"/>), for the
+    /// <c>MEASURE</c> lines of the tests; empty for the other categories. Not written to the report.
+    /// </summary>
+    [JsonIgnore]
+    public IReadOnlyList<Comparison.OutputMeasure> Measures { get; set; } = new List<Comparison.OutputMeasure>();
 }
 
 public class DeltaValue

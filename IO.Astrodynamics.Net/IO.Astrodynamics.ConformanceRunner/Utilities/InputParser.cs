@@ -140,6 +140,52 @@ public static class InputParser
         };
     }
 
+    public static OrbitalElementsInputs ParseOrbitalElementsInputs(Dictionary<string, object> inputs)
+    {
+        return new OrbitalElementsInputs
+        {
+            Epoch = GetString(inputs, "epoch"),
+            CentralBody = GetString(inputs, "central_body"),
+            GmKm3S2 = ToDouble(inputs["gm_km3_s2"]),
+            Orbit = ParseOrbit(inputs["orbit"] as Dictionary<object, object>)
+        };
+    }
+
+    public static TimeConversionInputs ParseTimeConversionInputs(Dictionary<string, object> inputs)
+    {
+        return new TimeConversionInputs
+        {
+            Epoch = GetString(inputs, "epoch")
+        };
+    }
+
+    public static FrameTransformationInputs ParseFrameTransformationInputs(Dictionary<string, object> inputs)
+    {
+        var state = inputs["state"] as Dictionary<object, object>;
+        var result = new FrameTransformationInputs
+        {
+            Epoch = GetString(inputs, "epoch"),
+            FromFrame = GetString(inputs, "from_frame"),
+            ToFrame = GetString(inputs, "to_frame"),
+            FromCenter = GetString(inputs, "from_center"),
+            ToCenter = GetString(inputs, "to_center"),
+            PositionKm = ParseVec3(state["position_km"]),
+            VelocityKmS = ParseVec3(state["velocity_km_s"]),
+            Kernels = (inputs["kernels"] as List<object>)?.ConvertAll(k => k.ToString()) ?? new List<string>()
+        };
+
+        if (inputs.TryGetValue("ellipsoid", out var ellipsoidObj) && ellipsoidObj is Dictionary<object, object> ellipsoid)
+        {
+            result.Ellipsoid = new EllipsoidInputs
+            {
+                EquatorialRadiusKm = ToDouble(ellipsoid["equatorial_radius_km"]),
+                Flattening = ToDouble(ellipsoid["flattening"])
+            };
+        }
+
+        return result;
+    }
+
     private static object ParseOrbit(Dictionary<object, object> orbit)
     {
         var type = orbit["type"]?.ToString();
@@ -154,6 +200,34 @@ public static class InputParser
                 RaanDeg = ToDouble(orbit["raan_deg"]),
                 ArgpDeg = ToDouble(orbit["argp_deg"]),
                 MaDeg = ToDouble(orbit["ma_deg"])
+            };
+        }
+
+        if (type == "keplerian_true_anomaly")
+        {
+            return new KeplerianTrueAnomalyOrbit
+            {
+                Type = type,
+                AKm = ToDouble(orbit["a_km"]),
+                E = ToDouble(orbit["e"]),
+                IDeg = ToDouble(orbit["i_deg"]),
+                RaanDeg = ToDouble(orbit["raan_deg"]),
+                ArgpDeg = ToDouble(orbit["argp_deg"]),
+                TaDeg = ToDouble(orbit["ta_deg"])
+            };
+        }
+
+        if (type == "modified_equinoctial")
+        {
+            return new ModifiedEquinoctialOrbit
+            {
+                Type = type,
+                PKm = ToDouble(orbit["p_km"]),
+                F = ToDouble(orbit["f"]),
+                G = ToDouble(orbit["g"]),
+                H = ToDouble(orbit["h"]),
+                K = ToDouble(orbit["k"]),
+                TrueLongitudeDeg = ToDouble(orbit["true_longitude_deg"])
             };
         }
 
