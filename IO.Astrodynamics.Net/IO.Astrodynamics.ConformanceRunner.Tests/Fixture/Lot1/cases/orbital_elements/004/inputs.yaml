@@ -4,8 +4,8 @@ version: "0.1.0"
 category: "orbital_elements"
 created: "2026-10-25"
 description: >
-  State to elements, circular inclined orbit (e = 0 to rounding, i = 30 deg): the angles measured from the periapsis
-  are left out (ill-conditioned).
+  State to elements, circular inclined orbit (e = 0 to rounding, i = 16.6 deg): the angles measured from the
+  periapsis are left out (ill-conditioned).
 
 metadata:
   ephemeris_kernel: "none"

@@ -27,36 +27,41 @@ tolerances_override:
     rel_tol: 0.0
     justification: >-
       Near-circular orbit (e = 1e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
-      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 1.18e-10 deg. T =
-      ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
+      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.18e-10 deg, E_run linux 5.29e-11, windows 5.29e-11, macos 5.29e-11 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
   true_anomaly_deg:
     abs_tol: 2.4e-10
     rel_tol: 0.0
     justification: >-
       Near-circular orbit (e = 1e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
-      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 1.18e-10 deg. T =
-      ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
+      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.18e-10 deg, E_run linux 5.29e-11, windows 5.29e-11, macos 5.29e-11 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
   eccentric_anomaly_deg:
     abs_tol: 2.4e-10
     rel_tol: 0.0
     justification: >-
       Near-circular orbit (e = 1e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
-      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 1.18e-10 deg. T =
-      ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
+      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.18e-10 deg, E_run linux 5.3e-11, windows 5.3e-11, macos 5.3e-11 (IO.Astrodynamics minus
+      golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
   mean_anomaly_deg:
     abs_tol: 2.4e-10
     rel_tol: 0.0
     justification: >-
       Near-circular orbit (e = 1e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
-      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 1.18e-10 deg. T =
-      ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
+      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.18e-10 deg, E_run linux 5.3e-11, windows 5.3e-11, macos 5.3e-11 (IO.Astrodynamics minus
+      golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
   longitude_of_periapsis_deg:
     abs_tol: 2.4e-10
     rel_tol: 0.0
     justification: >-
       Near-circular orbit (e = 1e-4): the angles measured from the periapsis are ill-conditioned. Measured: E_ref
-      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 1.18e-10 deg. T =
-      ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
+      3.9e-11 deg (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.18e-10 deg, E_run linux 5.29e-11, windows 5.29e-11, macos 5.29e-11 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 2.4e-10.
 
 # Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
 #   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only

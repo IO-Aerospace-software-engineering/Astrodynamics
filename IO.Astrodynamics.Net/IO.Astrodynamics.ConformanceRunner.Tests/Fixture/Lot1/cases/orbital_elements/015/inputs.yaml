@@ -26,22 +26,25 @@ tolerances_override:
     rel_tol: 7.9e-15
     justification: >-
       e = 0.9: GMAT's RadPer, a(1 - e), amplifies the rounding of its eccentricity. Measured: E_ref 3.94e-15
-      relative (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 2.77e-16 relative. T
-      = ceil2(2 max(E_run, E_ref, floor)) = 7.9e-15.
+      relative (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 2.77e-16 relative, E_run linux 3.25e-15, windows 3.25e-15, macos 3.25e-15 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 7.9e-15.
   periapsis_speed_km_s:
     abs_tol: 0.0
     rel_tol: 4.4e-15
     justification: >-
       e = 0.9: GMAT's periapsis and apoapsis speeds carry the rounding of its a and e. Measured: E_ref 2.16e-15
-      relative (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 1.75e-16 relative. T
-      = ceil2(2 max(E_run, E_ref, floor)) = 4.4e-15.
+      relative (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.75e-16 relative, E_run linux 1.71e-15, windows 1.71e-15, macos 1.71e-15 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 4.4e-15.
   apoapsis_speed_km_s:
     abs_tol: 0.0
-    rel_tol: 3.8e-15
+    rel_tol: 4.5e-15
     justification: >-
       e = 0.9: GMAT's periapsis and apoapsis speeds carry the rounding of its a and e. Measured: E_ref 1.89e-15
-      relative (the golden against the 60-digit evaluation of spec.md 11.1), conditioning floor 1.02e-16 relative. T
-      = ceil2(2 max(E_run, E_ref, floor)) = 3.8e-15.
+      relative (the golden against the 60-digit evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25),
+      conditioning floor 1.02e-16 relative, E_run linux 2.23e-15, windows 2.23e-15, macos 2.23e-15 (IO.Astrodynamics
+      minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 4.5e-15.
 
 # Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
 #   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only

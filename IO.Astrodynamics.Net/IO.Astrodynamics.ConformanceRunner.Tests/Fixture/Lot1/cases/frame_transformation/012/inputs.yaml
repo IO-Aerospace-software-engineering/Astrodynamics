@@ -29,5 +29,6 @@ tolerances_override:
     justification: >-
       A state 1838 km from the Moon: GMAT loses 2e-11 to 4e-11 km on Moon-centred states (presumably through its
       Earth-centred internal state; not shown), well above the rounding of the transformation. Measured: E_ref
-      1.1e-14 relative (GMAT against CSPICE with the same kernels), conditioning floor 1.11e-16 relative. T =
-      ceil2(2 max(E_run, E_ref, floor)) = 2.3e-14.
+      1.1e-14 relative (GMAT against CSPICE with the same kernels; GMAT R2026a run of 2026-10-25), conditioning
+      floor 1.11e-16 relative, E_run linux 1.1e-14, windows 1.1e-14, macos 1.1e-14 (IO.Astrodynamics minus golden,
+      2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 2.3e-14.

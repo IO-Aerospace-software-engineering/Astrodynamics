@@ -28,7 +28,9 @@ tolerances_override:
     justification: >-
       i = 179.99 deg: GMAT computes INC with acos, which loses accuracy near 180 deg; its derivation from
       EquinoctialP and Q is coarser still. Measured: E_ref 1.91e-11 deg (the golden against the 60-digit evaluation
-      of spec.md 11.1), conditioning floor 1.32e-18 deg. T = ceil2(2 max(E_run, E_ref, floor)) = 3.9e-11.
+      of spec.md 11.1; GMAT R2026a run of 2026-10-25), conditioning floor 1.32e-18 deg, E_run linux 1.91e-11,
+      windows 1.91e-11, macos 1.91e-11 (IO.Astrodynamics minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref,
+      floor)) = 3.9e-11.
 
 # Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
 #   hyperbolic_anomaly_deg, hyperbolic_mean_anomaly_deg: defined for e > 1 only

@@ -31,14 +31,18 @@ tolerances_override:
     justification: >-
       e = 0.999: the state of the elements is ill-conditioned (the 1 - e^2 of the semilatus rectum, rounded alike by
       GMAT and the framework). Measured: E_ref 1.38e-14 relative (the golden against the 60-digit evaluation of
-      spec.md 11.1), conditioning floor 1.1e-13 relative. T = ceil2(2 max(E_run, E_ref, floor)) = 2.3e-13.
+      spec.md 11.1; GMAT R2026a run of 2026-10-25), conditioning floor 1.1e-13 relative, E_run linux 3.31e-16,
+      windows 3.31e-16, macos 3.31e-16 (IO.Astrodynamics minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref,
+      floor)) = 2.3e-13.
   velocity_km_s:
     abs_tol: 0.0
     rel_tol: 1.2e-13
     justification: >-
       e = 0.999: the state of the elements is ill-conditioned (the 1 - e^2 of the semilatus rectum, rounded alike by
       GMAT and the framework). Measured: E_ref 7.03e-15 relative (the golden against the 60-digit evaluation of
-      spec.md 11.1), conditioning floor 5.55e-14 relative. T = ceil2(2 max(E_run, E_ref, floor)) = 1.2e-13.
+      spec.md 11.1; GMAT R2026a run of 2026-10-25), conditioning floor 5.55e-14 relative, E_run linux 1.14e-16,
+      windows 1.14e-16, macos 1.14e-16 (IO.Astrodynamics minus golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref,
+      floor)) = 1.2e-13.
 
 # Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
 #   every element output (semi_major_axis_km to declination_deg): outputs of a state_vector input

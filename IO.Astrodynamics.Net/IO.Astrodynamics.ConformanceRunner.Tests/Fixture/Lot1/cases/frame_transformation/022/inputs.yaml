@@ -4,7 +4,7 @@ version: "0.1.0"
 category: "frame_transformation"
 created: "2026-10-25"
 description: >
-  Geodetic latitude, longitude and altitude of a body-fixed position at mid latitude (44 deg), 370 km up, on the
+  Geodetic latitude, longitude and altitude of a body-fixed position at mid latitude (44 deg), 563 km up, on the
   ellipsoid of the case (the Earth radii of pck00011).
 
 metadata:
