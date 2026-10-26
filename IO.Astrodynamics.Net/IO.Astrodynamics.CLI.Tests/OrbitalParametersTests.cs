@@ -219,9 +219,9 @@ public class OrbitalParametersTests
         }
     }
 
-    // The bounds of EquinoctialToSv_CircularAndEquatorial, relative: provisional, Linux only until the three-platform
-    // CI, and measured again after #453, twice the worst, 4.37e-16 and 4.09e-16 (suite 156, 600 s; Linux, .NET 10,
-    // 2026-10-25)
+    // The bounds of EquinoctialToSv_CircularAndEquatorial, relative: twice the worst over Linux, Windows and macOS
+    // arm64 (CI run 40280932636, 2026-10-26), and measured again after #453: 4.37e-16 and 4.09e-16 (suite 156, 600 s;
+    // Linux)
     private const double EquinoctialPosition = 8.8e-16;
     private const double EquinoctialVelocity = 8.2e-16;
 

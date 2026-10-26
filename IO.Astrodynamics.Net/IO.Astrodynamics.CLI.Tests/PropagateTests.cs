@@ -85,15 +85,15 @@ public class PropagateTests
             }
         }
 
-        // Assert against the 60-digit state, with the GM of the kernels of these tests (gm_de431). Provisional, Linux
-        // only until the three-platform CI, and measured again after #453: twice 1.60e-16 (suite 156) and 2.80e-16
-        // (suite 155; Linux, .NET 10, 2026-10-25)
+        // Assert against the 60-digit state, with the GM of the kernels of these tests (gm_de431). Twice the worst over
+        // Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26), and measured again after #453: 2.55e-16
+        // (suite 156, macOS arm64) and 2.80e-16 (suite 155)
         Assert.Contains("Propagation completed", sb.ToString());
         Assert.Equal(reference.Gm["gm_de431"], gm);
         var (position, velocity) = c.At(0.0).RelativeError(start);
         _output.WriteLine($"MEASURE #452 PropagateFromEquinoctial_StartsAtTheReference, {name}: position " +
                           $"{position:E2}, velocity {velocity:E2} (relative)");
-        Assert.True(position < 3.3e-16, $"position {position:E2}");
+        Assert.True(position < 5.2e-16, $"position {position:E2}");
         Assert.True(velocity < 5.7e-16, $"velocity {velocity:E2}");
     }
 }
