@@ -25,12 +25,14 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// <para>
 /// Every test prints its measures (MEASURE #452), relative to the norm of the reference state. The thresholds are
 /// twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26), rounded up at the second
-/// significant digit.
+/// significant digit, apart from the (K) measures that the Kepler solver of #453 moved.
 /// </para>
 /// <para>
 /// The paths marked (K) solve Kepler's equation (<see cref="OrbitalParameters.ToKeplerianElements()"/>,
-/// <see cref="OrbitalParameters.AtEpoch"/>, a true anomaly from a mean anomaly): their measures carry the error of the
-/// solver, whose stop at 1e-6 is #453. They are measured again, and their thresholds tightened, once #453 is merged.
+/// <see cref="OrbitalParameters.AtEpoch"/>, a true anomaly from a mean anomaly). They were measured again on the
+/// Kepler solver of #453, which solves it to the rounding floor (Linux, .NET 10, 2026-10-26), provisional until the CI
+/// of the three platforms: the thresholds of the measures it moved are twice the Linux value, rounded up at the second
+/// significant digit from the upper bound of the printed value; the others keep those of CI run 40280932636.
 /// </para>
 /// </remarks>
 public class EquinoctialElementsSingularityTests
@@ -127,14 +129,16 @@ public class EquinoctialElementsSingularityTests
             Frames.Frame.ICRF).AtEpoch(Epoch).ToStateVector()))).ToList();
 
         // Assert; before #452, up to 2r for the special cases and those whose products of ω underflow (1.22 |r| for
-        // h = k = 5e-324). Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26), and
-        // measured again after #453: 1.19e-15 (e = 0.9) and 7.25e-16 (h = −6.73e-320), the same on both paths
+        // h = k = 5e-324). Measured again on the Kepler solver of #453 (Linux, .NET 10, 2026-10-26), provisional until
+        // the CI of the three platforms, the same on both paths, h = −6.73e-320: the position 7.10e-16 (1.19e-15 at
+        // e = 0.9 before), twice the Linux value; the velocity 7.25e-16, unchanged, its threshold twice the worst over
+        // Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26)
         var worstKeplerian = Report("KeplerianPath_MatchesTheReference, ToKeplerianElements", throughKeplerian);
         var worstAtEpoch = Report("KeplerianPath_MatchesTheReference, AtEpoch", atEpoch);
         Assert.Equal(53, cases.Count);
         foreach (var worst in new[] { worstKeplerian, worstAtEpoch })
         {
-            Assert.True(worst.Position < 2.4e-15, $"position {worst.Position:E2}");
+            Assert.True(worst.Position < 1.5e-15, $"position {worst.Position:E2}");
             Assert.True(worst.Velocity < 1.5e-15, $"velocity {worst.Velocity:E2}");
         }
     }
@@ -154,16 +158,17 @@ public class EquinoctialElementsSingularityTests
         var atEpoch = cases.Select(c => (c.Name, Error: c.At(0.0).RelativeError(c.Elements(_earth, Epoch,
             Frames.Frame.ICRF).AtEpoch(Epoch).ToStateVector()))).ToList();
 
-        // Assert: the direct state within its bounds. Twice the worst over Linux, Windows and macOS arm64 (CI run
-        // 40280932636, 2026-10-26), and measured again after #453: 1.39e-15 and 1.28e-15 (L = 40 rad) through the
-        // Keplerian elements and AtEpoch
+        // Assert: the direct state within its bounds. Through the Keplerian elements and AtEpoch, measured again on
+        // the Kepler solver of #453 (Linux, .NET 10, 2026-10-26), provisional until the CI of the three platforms,
+        // twice the Linux value: 8.35e-16 and 8.53e-16 (L = 1e10 rad, equatorial e 0.05; 1.39e-15 and 1.28e-15 at
+        // L = 40 rad before)
         var worstDirect = Report("KeplerianPath_AtALargeTrueLongitude, direct", direct);
         var worst = Report("KeplerianPath_AtALargeTrueLongitude, ToKeplerianElements and AtEpoch",
             throughKeplerian.Concat(atEpoch).ToList());
         Assert.Equal(5, cases.Count);
         Assert.True(worstDirect.Position < DirectPosition && worstDirect.Velocity < DirectVelocity, $"direct {worstDirect}");
-        Assert.True(worst.Position < 2.8e-15, $"position {worst.Position:E2}");
-        Assert.True(worst.Velocity < 2.6e-15, $"velocity {worst.Velocity:E2}");
+        Assert.True(worst.Position < 1.7e-15, $"position {worst.Position:E2}");
+        Assert.True(worst.Velocity < 1.8e-15, $"velocity {worst.Velocity:E2}");
     }
 
     [Fact]
@@ -173,10 +178,13 @@ public class EquinoctialElementsSingularityTests
         var cases = KeplerianCases.Concat(LargeTrueLongitudes).ToList();
         var bounds = new Dictionary<string, (double Position, double Velocity)>
         {
-            // Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26), and measured again
-            // after #453: 1.59e-15 and 1.57e-15 (f = 1e-12, −3000 s); 8.35e-15, 4.74e-15; 4.67e-14, 1.37e-14; 1.55e-15,
-            // 1.60e-15 (L = 1e3 rad, Windows)
-            ["e <= 0.05"] = (3.2e-15, 3.2e-15), ["e 0.9"] = (1.7e-14, 9.5e-15), ["hyperbola"] = (9.4e-14, 2.8e-14),
+            // Measured again on the Kepler solver of #453 (Linux, .NET 10, 2026-10-26), provisional until the CI of
+            // the three platforms. e <= 0.05 and large L, unchanged, keep twice the worst over Linux, Windows and
+            // macOS arm64 (CI run 40280932636, 2026-10-26): 1.59e-15 and 1.57e-15 (f = 1e-12, −3000 s); 1.55e-15 and
+            // 1.60e-15 (L = 1e3 rad, Windows; 1.45e-15 and 1.51e-15 on Linux). e 0.9 and the hyperbola, twice the
+            // Linux value, −3000 s: 3.13e-15 and 1.76e-15 (8.35e-15 and 4.74e-15 before); 6.25e-16 and 1.86e-16
+            // (4.67e-14 and 1.37e-14 before)
+            ["e <= 0.05"] = (3.2e-15, 3.2e-15), ["e 0.9"] = (6.3e-15, 3.6e-15), ["hyperbola"] = (1.3e-15, 3.8e-16),
             ["large L"] = (3.2e-15, 3.3e-15)
         };
 
@@ -197,12 +205,13 @@ public class EquinoctialElementsSingularityTests
             Assert.True(worst.Velocity < bounds[group.Key].Velocity, $"{group.Key}: velocity {worst.Velocity:E2}");
         }
 
-        // The true longitude at the other epoch, in rad. Twice the worst over Linux, Windows and macOS arm64 (CI run
-        // 40280932636, 2026-10-26), and measured again after #453: 2.25e-14 rad (the hyperbola, −3000 s)
+        // The true longitude at the other epoch, in rad. Measured again on the Kepler solver of #453 (Linux, .NET 10,
+        // 2026-10-26), provisional until the CI of the three platforms, twice the Linux value: 2.72e-15 rad (e = 0.9,
+        // −3000 s; 2.25e-14 rad for the hyperbola before)
         var worstLongitude = errors.MaxBy(e => Worst(e.Longitude));
         _output.WriteLine($"MEASURE #452 AtAnotherEpoch_MatchesTheTwoBodyReference, TrueLongitude(Time), worst: " +
                           $"{worstLongitude.Longitude:E2} rad ({worstLongitude.Name})");
-        Assert.True(Worst(worstLongitude.Longitude) < 4.6e-14, $"{worstLongitude.Longitude:E2} rad ({worstLongitude.Name})");
+        Assert.True(Worst(worstLongitude.Longitude) < 5.5e-15, $"{worstLongitude.Longitude:E2} rad ({worstLongitude.Name})");
     }
 
     [Fact]
@@ -224,13 +233,19 @@ public class EquinoctialElementsSingularityTests
                 Error: c.AtTrueAnomaly.MovedBy(delta, _earth.GM).RelativeError(state));
         }).ToList();
 
-        // Assert. Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26), and measured
-        // again after #453: 1.29e-15 and 1.29e-15 (h = −6.73e-320); 1.30e-14, 6.79e-15 (e = 0.9); 3.51e-16 (Linux),
-        // 8.43e-17 (Windows and macOS arm64) (the hyperbola); 8.15e-16, 8.59e-16 (L = 1e10 rad). The epoch within a
-        // tick of the time, 100 ns: 9.43e-8 s
+        // Assert. Measured again on the Kepler solver of #453 (Linux, .NET 10, 2026-10-26), provisional until the CI
+        // of the three platforms. Unchanged, twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636,
+        // 2026-10-26): 1.29e-15 and 1.29e-15 (h = −6.73e-320); 8.15e-16, 8.59e-16 (L = 1e10 rad); the epoch within a
+        // tick of the time, 100 ns, 9.43e-8 s. Twice the Linux value: the hyperbola, 2.14e-16 (3.51e-16 before); its
+        // velocity, 5.39e-17 (4.22e-17 before), keeps twice 8.43e-17 (Windows and macOS arm64, CI run 40280932636).
+        // e = 0.9, 1.34e-14 and 7.16e-15 (1.30e-14 and 6.79e-15 before), rose by rounding with the solver of #453: at
+        // ν = 0.5 rad (M = 0.0119 rad) it puts E 6.9 ulp below the 50-digit root, within the rounding floor of Kepler's
+        // equation there (1 − e cos E = 0.106), where the former stop at 1e-6 landed 1.1 ulp above. The position keeps
+        // 2.7e-14, twice either value; the velocity goes from 1.4e-14 to 1.5e-14, twice the Linux value. The test
+        // passed with 1.4e-14: a re-measurement after an intended change of results, not a relaxation
         var bounds = new Dictionary<string, (double Position, double Velocity)>
         {
-            ["e <= 0.05"] = (2.6e-15, 2.6e-15), ["e 0.9"] = (2.7e-14, 1.4e-14), ["hyperbola"] = (7.1e-16, 1.7e-16),
+            ["e <= 0.05"] = (2.6e-15, 2.6e-15), ["e 0.9"] = (2.7e-14, 1.5e-14), ["hyperbola"] = (4.3e-16, 1.7e-16),
             ["large L"] = (1.7e-15, 1.8e-15)
         };
         Assert.Equal(58, cases.Count);
@@ -293,14 +308,16 @@ public class EquinoctialElementsSingularityTests
         var later = cases.Select(c => (c.Name, Error: c.At(600.0).RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
             .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
 
-        // Assert. Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26), and measured
-        // again after #453: 1.14e-15 and 1.09e-15; 1.23e-15 and 1.22e-15 (h = −0.0, macOS arm64)
+        // Assert. Measured again on the Kepler solver of #453 (Linux, .NET 10, 2026-10-26), provisional until the CI
+        // of the three platforms, h = −0.0 for both. Through the Keplerian elements, unchanged, twice the worst over
+        // Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26): 1.14e-15 and 1.09e-15. 600 s later, twice
+        // the Linux value: 7.80e-16 and 8.37e-16 (9.73e-16 and 1.07e-15 before, 1.23e-15 and 1.22e-15 on macOS arm64)
         var worstKeplerian = Report("KeplerianToEquinoctial, ToKeplerianElements", throughKeplerian);
         var worstLater = Report("KeplerianToEquinoctial, ToStateVector(epoch + 600 s)", later);
         Assert.True(worstKeplerian.Position < 2.3e-15, $"position {worstKeplerian.Position:E2}");
         Assert.True(worstKeplerian.Velocity < 2.2e-15, $"velocity {worstKeplerian.Velocity:E2}");
-        Assert.True(worstLater.Position < 2.5e-15, $"position {worstLater.Position:E2}");
-        Assert.True(worstLater.Velocity < 2.5e-15, $"velocity {worstLater.Velocity:E2}");
+        Assert.True(worstLater.Position < 1.6e-15, $"position {worstLater.Position:E2}");
+        Assert.True(worstLater.Velocity < 1.7e-15, $"velocity {worstLater.Velocity:E2}");
     }
 
     [Fact]
@@ -317,15 +334,17 @@ public class EquinoctialElementsSingularityTests
         var later = cases.Select(c => (c.Name, Error: c.At(600.0).RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
             .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
 
-        // Assert. Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26), and measured
-        // again after #453: 1.43e-14 and 1.23e-14; 2.92e-14 and 2.53e-14 (Windows); 2.04e-14 and 1.80e-14 (e = 0.9)
+        // Assert. Measured again on the Kepler solver of #453 (Linux, .NET 10, 2026-10-26), provisional until the CI
+        // of the three platforms, twice the Linux value, e = 0.9 for all: 1.63e-15 and 1.23e-15; 1.69e-15 and
+        // 1.33e-15; 1.23e-15 and 1.24e-15 (before, 1.43e-14 and 1.23e-14; 2.92e-14 and 2.53e-14, Windows; 2.04e-14 and
+        // 1.80e-14)
         var worstDirect = Report("KeplerianToEquinoctial_HighEccentricity, ToStateVector", direct);
         var worstKeplerian = Report("KeplerianToEquinoctial_HighEccentricity, ToKeplerianElements", throughKeplerian);
         var worstLater = Report("KeplerianToEquinoctial_HighEccentricity, ToStateVector(epoch + 600 s)", later);
         Assert.Equal(2, cases.Count);
-        Assert.True(worstDirect.Position < 2.9e-14 && worstDirect.Velocity < 2.5e-14, $"direct {worstDirect}");
-        Assert.True(worstKeplerian.Position < 5.9e-14 && worstKeplerian.Velocity < 5.1e-14, $"Keplerian {worstKeplerian}");
-        Assert.True(worstLater.Position < 4.1e-14 && worstLater.Velocity < 3.7e-14, $"600 s {worstLater}");
+        Assert.True(worstDirect.Position < 3.3e-15 && worstDirect.Velocity < 2.5e-15, $"direct {worstDirect}");
+        Assert.True(worstKeplerian.Position < 3.4e-15 && worstKeplerian.Velocity < 2.7e-15, $"Keplerian {worstKeplerian}");
+        Assert.True(worstLater.Position < 2.5e-15 && worstLater.Velocity < 2.5e-15, $"600 s {worstLater}");
     }
 
     [Fact]
@@ -417,8 +436,13 @@ public class EquinoctialElementsSingularityTests
         // Assert. Within the equatorial tolerance StateVector drops the tilt, as SPICE does, so the out-of-plane
         // velocity does not come back: the rule of StateVectorAngleTests (5.00e-11 measured at a tilt of 5e-11).
         // Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26): 7.41e-16 for the
-        // position, (K) 1.41e-15 (retrograde, tilt 1e-9), and 5.77e-16 for the velocity (retrograde, tilt 0), (K)
-        // 1.31e-15 (retrograde, tilt 1e-9)
+        // position, (K) 1.41e-15 (retrograde, tilt 1e-9), and 5.77e-16 for the velocity (retrograde, tilt 0). (K)
+        // measured again on the Kepler solver of #453 (Linux, .NET 10, 2026-10-26), provisional until the CI of the
+        // three platforms, retrograde, tilt 1e-9: the position unchanged; the velocity 1.36e-15 (1.31e-15 before) rose
+        // by rounding with the solver of #453, which puts E 0.52 ulp below the 50-digit root (3.48 ulp above before):
+        // the rest of the conversion dominates, and the former error of E offset part of it. Its threshold goes from
+        // 2.7e-15 to 2.8e-15, twice the Linux value; the test passed with 2.7e-15: a re-measurement after an intended
+        // change of results, not a relaxation
         var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
         bool droppedTilt = spice.RAAN == 0.0 && (spice.I == 0.0 || spice.I == System.Math.PI) &&
                            state.SpecificAngularMomentum().X != 0.0;
@@ -433,7 +457,7 @@ public class EquinoctialElementsSingularityTests
         Assert.True(position < 1.5e-15, $"position {position:E2}");
         Assert.True(positionK < 2.9e-15, $"(K) position {positionK:E2}");
         Assert.True(velocity < (droppedTilt ? StateVector.EquatorialTolerance : 1.2e-15), $"velocity {velocity:E2}");
-        Assert.True(velocityK < (droppedTilt ? StateVector.EquatorialTolerance : 2.7e-15), $"(K) velocity {velocityK:E2}");
+        Assert.True(velocityK < (droppedTilt ? StateVector.EquatorialTolerance : 2.8e-15), $"(K) velocity {velocityK:E2}");
     }
 
     public static TheoryData<double, double> NearParabolicStates => new()
@@ -572,13 +596,15 @@ public class EquinoctialElementsSingularityTests
                 Epoch + TimeSpan.FromSeconds(600.0), _earth, Frames.Frame.ICRF, Aberration.None).ToStateVector())));
         }
 
-        // Assert; the OPM, in km, gives the same doubles here. Twice the worst over Linux, Windows and macOS arm64 (CI
-        // run 40280932636, 2026-10-26), and (K) measured again after #453: 1.19e-15 and 5.53e-16 at the epoch, 1.09e-15
-        // and 6.50e-16 600 s later (e = 0.9)
+        // Assert; the OPM, in km, gives the same doubles here. (K) measured again on the Kepler solver of #453 (Linux,
+        // .NET 10, 2026-10-26), provisional until the CI of the three platforms. At the epoch, twice the Linux value:
+        // 2.52e-16 and 2.79e-16 (circular, i 51.6°, Ω 200°; 1.19e-15 and 5.53e-16 at e = 0.9 before). 600 s later,
+        // unchanged, twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26): 1.09e-15
+        // and 6.50e-16 (e = 0.9)
         var worst = Report("Spacecraft_NotPropagated_AndItsOpm", errors);
         var worstLater = Report("Spacecraft_NotPropagated, at another epoch", later);
         Assert.Equal(11, cases.Count);
-        Assert.True(worst.Position < 2.4e-15 && worst.Velocity < 1.2e-15, $"{worst}");
+        Assert.True(worst.Position < 5.1e-16 && worst.Velocity < 5.6e-16, $"{worst}");
         Assert.True(worstLater.Position < 2.2e-15 && worstLater.Velocity < 1.4e-15, $"{worstLater}");
     }
 

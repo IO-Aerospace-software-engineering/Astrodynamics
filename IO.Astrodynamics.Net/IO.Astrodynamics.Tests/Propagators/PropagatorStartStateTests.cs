@@ -117,8 +117,9 @@ public class PropagatorStartStateTests
         var solution = propagator.Propagate();
 
         // Assert against the 60-digit state of the elements. Twice the worst over Linux, Windows and macOS arm64 (CI
-        // run 40280932636, 2026-10-26), and measured again after #453: 1.34e-16 and 1.93e-16 (suite 155), the same for
-        // both constructors and both time frames
+        // run 40280932636, 2026-10-26): 1.34e-16 and 1.93e-16 (suite 155), the same for both constructors and both time
+        // frames. The start goes through AtEpoch (K): measured again on the Kepler solver of #453 (Linux, .NET 10,
+        // 2026-10-26), unchanged, provisional until the CI of the three platforms
         var first = solution.Segments[0].Steps[0];
         var (position, velocity) = c.At(0.0).RelativeError(new StateVector(first.StartPosition, first.StartVelocity,
             _earth, Epoch, Frames.Frame.ICRF));

@@ -219,11 +219,16 @@ public class OrbitalParametersTests
         }
     }
 
-    // The bounds of EquinoctialToSv_CircularAndEquatorial, relative: twice the worst over Linux, Windows and macOS
-    // arm64 (CI run 40280932636, 2026-10-26), and measured again after #453: 4.37e-16 and 4.09e-16 (suite 156, 600 s;
-    // Linux)
-    private const double EquinoctialPosition = 8.8e-16;
-    private const double EquinoctialVelocity = 8.2e-16;
+    // The bounds of EquinoctialToSv_CircularAndEquatorial, relative, through AtEpoch (K): measured again on the Kepler
+    // solver of #453 (Linux, .NET 10, 2026-10-26), provisional until the CI of the three platforms, twice the Linux
+    // value: 5.56e-16 and 7.36e-16 (suite 151, 600 s). They rose by rounding with the solver of #453, from 8.8e-16 and
+    // 8.2e-16, twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26): 4.37e-16 and
+    // 4.09e-16 (suite 156, 600 s), suite 151 at 600 s giving 7.45e-17 and 1.64e-16. There the solver of #453 puts E
+    // 0.54 ulp above the 50-digit root, the former stop at 1e-6 0.46 ulp below: one ulp, on the other side of the
+    // root. The test passed with the former bounds: a re-measurement after an intended change of results, not a
+    // relaxation
+    private const double EquinoctialPosition = 1.2e-15;
+    private const double EquinoctialVelocity = 1.5e-15;
 
     private static readonly Regex StateRx = new(
         @"Position : X : (\S+) Y : (\S+) Z: (\S+) Velocity : X : (\S+) Y : (\S+) Z: (\S+) Frame");
