@@ -218,8 +218,7 @@ public class OrbitalElementsSolverTests
         var outputs = _solver.Solve(Case(orbit));
 
         // Assert: GMAT's 17 digits and the conditioning of the conversion allow a few 1e-16 (5.3e-16 at most, Linux);
-        // the Kepler solver of the mean-anomaly input, which stops at a correction of 1e-6 rad (#453), is exact enough
-        // at e = 0.097
+        // the Kepler solver of the mean-anomaly input is at its rounding floor (#453)
         Assert.Equal(new[] { "position_km", "velocity_km_s" }, outputs.Keys.OrderBy(k => k));
         AssertRelative(R, (double[])outputs["position_km"], 1e-14);
         AssertRelative(V, (double[])outputs["velocity_km_s"], 1e-14);

@@ -259,6 +259,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get the true anomaly
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the true anomaly is computed from the mean anomaly and the mean anomaly or the eccentricity is not
+    /// finite (#453).
+    /// </exception>
     public virtual double TrueAnomaly()
     {
         if (_trueAnomaly.HasValue)
@@ -327,6 +331,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch"></param>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the mean anomaly at the epoch or the eccentricity is not finite (#453).
+    /// </exception>
     public double TrueAnomaly(Time epoch)
     {
         return AtEpoch(epoch).TrueAnomaly();
@@ -336,6 +343,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get the eccentric anomaly
     /// </summary>
     /// <returns></returns>
+    /// <remarks>
+    /// On an ellipse and a hyperbola, the root of Kepler's equation for the mean anomaly, to its rounding floor (#453).
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the mean anomaly or the eccentricity is not finite (#453).
+    /// </exception>
     public double EccentricAnomaly()
     {
         if (_eccentricAnomaly.HasValue)
@@ -396,21 +409,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     private double HyperbolicAnomaly()
     {
-        double M = MeanAnomaly();
-        double e = Eccentricity();
-        // Initial guess asinh(M / e), the root of e sinh H = M, valid for any sign of M (log(2M/e + 1.8) is NaN before
-        // the periapsis, M < 0, #368); F(H) = e sinh H - H - M is increasing, F' = e cosh H - 1 > 0
-        double H = System.Math.Asinh(M / e);
-        double deltaH;
-
-        do
-        {
-            // Calcul de la nouvelle valeur de H
-            deltaH = (e * System.Math.Sinh(H) - H - M) / (e * System.Math.Cosh(H) - 1);
-            H -= deltaH;
-        } while (System.Math.Abs(deltaH) > 1e-06);
-
-        return H;
+        // Monotone Newton to the rounding floor, bounded (#453); of the sign of M, negative before the periapsis (#368)
+        return KeplerEquation.HyperbolicAnomaly(MeanAnomaly(), Eccentricity());
     }
 
     /// <summary>
@@ -419,19 +419,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns></returns>
     private double EllipticAnomaly()
     {
-        double M = MeanAnomaly();
-        double E = M;
-        double e = Eccentricity();
-        double deltaE;
-
-        do
-        {
-            // Calcul de la nouvelle valeur d'E
-            deltaE = (E - e * System.Math.Sin(E) - M) / (1 - e * System.Math.Cos(E));
-            E -= deltaE;
-        } while (System.Math.Abs(deltaE) > 1e-06);
-
-        return E;
+        // Monotone Newton to the rounding floor, bounded (#453); the root within e of M, for any M
+        return KeplerEquation.EllipticAnomaly(MeanAnomaly(), Eccentricity());
     }
 
     /// <summary>
@@ -583,6 +572,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Thrown when attempting to convert mean elements directly to a state vector.
     /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.
     /// For TLE data, use <see cref="TLE.TLE.ToOsculating()"/> or <see cref="TLE.TLE.ToOsculating(Time)"/> instead.
+    /// Also thrown when the true anomaly is computed from the mean anomaly and the mean anomaly or the eccentricity is
+    /// not finite (#453).
     /// </exception>
     public virtual StateVector ToStateVector()
     {
@@ -632,6 +623,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="InvalidOperationException">
     /// Thrown when attempting to convert mean elements directly to a state vector.
     /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.
+    /// Also thrown when the mean anomaly at the epoch or the eccentricity is not finite (#453).
     /// </exception>
     public virtual StateVector ToStateVector(Time epoch)
     {
@@ -651,6 +643,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="trueAnomaly">The true anomaly at which to compute the state vector.</param>
     /// <returns>The state vector at the given true anomaly.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the mean anomaly at that epoch or the eccentricity is not finite (#453).
+    /// </exception>
     public StateVector ToStateVector(double trueAnomaly)
     {
         return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), EccentricAnomaly(trueAnomaly))));
@@ -781,6 +776,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get the true longitude
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the true anomaly is computed from the mean anomaly and the mean anomaly or the eccentricity is not
+    /// finite (#453).
+    /// </exception>
     public double TrueLongitude()
     {
         _trueLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly()) % Constants._2PI;
@@ -792,6 +791,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch"></param>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the mean anomaly at the epoch or the eccentricity is not finite (#453).
+    /// </exception>
     public double TrueLongitude(Time epoch)
     {
         return (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly(epoch)) % Constants._2PI;

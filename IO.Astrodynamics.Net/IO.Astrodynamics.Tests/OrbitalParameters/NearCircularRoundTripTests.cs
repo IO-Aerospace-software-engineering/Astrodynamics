@@ -86,8 +86,9 @@ public class NearCircularRoundTripTests
 
         _output.WriteLine($"e {eccentricity:E3}, i {inclination:E3}: mean longitude against SPICE {worstLongitude:E2} rad; " +
                           $"round trip, position {worstPosition:E2}, velocity {worstVelocity:E2} (relative)");
-        // Measured (Linux, .NET 10, 2026-10-17): mean longitude 8.9e-16 rad, round trip 7.9e-16 at most; before #398,
-        // every cell with e < 1e-3 and 1e-6 <= i < 1e-3 failed. The 1e-14 of the round trip of #368
+        // Measured (Linux, .NET 10, 2026-10-17): mean longitude 8.9e-16 rad, round trip 7.9e-16 at most (8.2e-16 on
+        // 2026-10-25, the Kepler solver of #453); before #398, every cell with e < 1e-3 and 1e-6 <= i < 1e-3 failed.
+        // The 1e-14 of the round trip of #368
         Assert.True(worstLongitude < 1e-14, $"mean longitude: {worstLongitude:E2}");
         Assert.True(worstPosition < 1e-14, $"position: {worstPosition:E2}");
         Assert.True(worstVelocity < 1e-14, $"velocity: {worstVelocity:E2}");
@@ -113,8 +114,8 @@ public class NearCircularRoundTripTests
         double position = (back.Position - state.Position).Magnitude();
         double velocity = (back.Velocity - state.Velocity).Magnitude();
         _output.WriteLine($"{name}: position {position:E2} m, velocity {velocity:E2} m/s");
-        // Measured (Linux, .NET 10, 2026-10-17): 5.8e-8 m at most (1.4e-15 of r), against 3.8 mm (z + 10 m), 3.0 cm
-        // (v_z + 1 cm/s) and 0.38 m (z + 1 km) before #398
+        // Measured (Linux, .NET 10, 2026-10-25, the Kepler solver of #453): 8.0e-8 m at most (1.9e-15 of r, y - 10 m;
+        // 5.8e-8 m on 2026-10-17), against 3.8 mm (z + 10 m), 3.0 cm (v_z + 1 cm/s) and 0.38 m (z + 1 km) before #398
         Assert.True(position / state.Position.Magnitude() < 1e-14, $"{name}, position: {position:E2} m");
         Assert.True(velocity / state.Velocity.Magnitude() < 1e-14, $"{name}, velocity: {velocity:E2} m/s");
     }
@@ -147,8 +148,9 @@ public class NearCircularRoundTripTests
 
         // Assert
         _output.WriteLine($"largest |∂x0'/∂x0 - I|: {worst:E2} (row {where.Item1}, column {where.Item2})");
-        // Measured (Linux, .NET 10, 2026-10-17): 2.6e-6 (y against v_x), the rounding of the round trip over the step,
-        // smaller at larger steps; 2.6 before #398 (y against v_z), whatever the step
+        // Measured (Linux, .NET 10, 2026-10-25, the Kepler solver of #453): 2.8e-6 (y against v_z; 2.6e-6, y against
+        // v_x, on 2026-10-17), the rounding of the round trip over the step, smaller at larger steps; 2.6 before #398
+        // (y against v_z), whatever the step
         Assert.True(worst < 1e-5, $"largest |∂x0'/∂x0 - I|: {worst:E2} at row {where.Item1}, column {where.Item2}");
 
         static StateVector RoundTrip(StateVector s) => s.AtEpoch(s.Epoch).ToStateVector();
