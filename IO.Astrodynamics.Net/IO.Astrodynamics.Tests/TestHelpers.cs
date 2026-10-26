@@ -84,6 +84,10 @@ namespace IO.Astrodynamics.Tests
                    k1.Epoch == k2.Epoch && k1.Frame == k2.Frame && Equals(k1.Observer, k2.Observer);
         }
 
+        /// <summary>
+        /// Compares the derived Keplerian angles, defined for regular elements only (e > 0 and i > 0); tests of circular
+        /// or equatorial elements compare P, F, G, H, K, L0 or the states (#452).
+        /// </summary>
         internal static bool EquinoctialComparer(EquinoctialElements e1, EquinoctialElements e2)
         {
             var tolerance = 1E-06;

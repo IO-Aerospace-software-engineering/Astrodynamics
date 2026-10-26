@@ -43,7 +43,7 @@
 
 ## EquinoctialElements
 
-`EquinoctialElements` avoids singularities for circular and equatorial orbits.
+`EquinoctialElements` has no singularity for circular or equatorial orbits: `ToStateVector()` computes the state from the elements directly, and `ToKeplerianElements()` takes ω = 0 for an exactly circular orbit (f = g = 0) and Ω = 0 for an exactly equatorial one (h = k = 0).
 
 | Method | Description |
 |--------|-------------|

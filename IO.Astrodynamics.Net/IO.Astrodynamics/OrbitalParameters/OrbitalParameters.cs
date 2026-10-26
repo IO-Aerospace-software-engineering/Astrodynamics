@@ -577,13 +577,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </exception>
     public virtual StateVector ToStateVector()
     {
-        if (ElementsType == OrbitalElementsType.Mean)
-        {
-            throw new InvalidOperationException(
-                "Cannot convert mean elements directly to a state vector. " +
-                "Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations. " +
-                "For TLE data, use TLE.ToOsculating() instead.");
-        }
+        ThrowIfMeanElements();
 
         if (_stateVector is null)
         {
@@ -613,6 +607,22 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
 
         return _stateVector;
+    }
+
+    /// <summary>
+    /// The check of <see cref="ToStateVector()"/> and of its overrides: mean elements have no state vector of their
+    /// own.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when the elements are mean elements.</exception>
+    private protected void ThrowIfMeanElements()
+    {
+        if (ElementsType == OrbitalElementsType.Mean)
+        {
+            throw new InvalidOperationException(
+                "Cannot convert mean elements directly to a state vector. " +
+                "Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations. " +
+                "For TLE data, use TLE.ToOsculating() instead.");
+        }
     }
 
     /// <summary>

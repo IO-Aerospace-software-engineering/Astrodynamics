@@ -531,7 +531,7 @@ Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
 
 #### EquinoctialElements
 
-Equinoctial orbital elements (avoid singularities for circular/equatorial orbits).
+Equinoctial orbital elements, without singularity for circular or equatorial orbits (`ToStateVector()` uses them directly; `ToKeplerianElements()` takes ω = 0 when f = g = 0 exactly and Ω = 0 when h = k = 0 exactly).
 
 | Property | Description |
 |----------|-------------|
