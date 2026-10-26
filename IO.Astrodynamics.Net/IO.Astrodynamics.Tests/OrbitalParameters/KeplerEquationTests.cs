@@ -44,8 +44,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// is measured without the rounding of the reference.
 /// </para>
 /// <para>
-/// Every threshold is provisional (#453): twice the worst value measured on Linux (.NET 10, 2026-10-25), until the
-/// MEASURE #453 lines of the CI on Linux, Windows and macOS arm64 set it at twice the worst of the three platforms.
+/// Every threshold is twice the worst over Linux, Windows and macOS arm64 (CI run 40272754260, 2026-10-26), read from
+/// the MEASURE #453 lines of the three logs (#453).
 /// </para>
 /// </remarks>
 public class KeplerEquationTests
@@ -57,33 +57,35 @@ public class KeplerEquationTests
     // 2π − fl(2π)
     private const double TwoPiRest = 2.4492935982947064e-16;
 
-    // Provisional (#453), Linux only: twice the worst value of the three ellipse families, rounded up to two digits:
-    // 0.504 of the floor (e = 0.999), 0.451 of the reduced floor (e = 0.9999), 2.079 of the floor of ν (M < 0,
-    // e = 0.999999) and 9 iterations (.NET 10, 2026-10-25), until the three platforms of the CI
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 40272754260, 2026-10-26) of the three ellipse
+    // families, rounded up to two digits (#453): 0.504 of the floor (e = 0.999, on all three), 0.451 of the reduced
+    // floor (e = 0.9999, Linux and Windows; 0.414 on macOS arm64) and 2.079 of the floor of ν (M < 0, e = 0.999999,
+    // on all three)
     private const double EllipseFloor = 1.1;
     private const double EllipseReducedFloor = 0.91;
     private const double EllipseTrueAnomalyFloor = 4.2;
 
-    // Provisional (#453), Linux only: twice the worst value of the hyperbola family, rounded up to two digits: 2.103 of
-    // the floor and 0.678 of the reduced floor (e = 1.000002), 2.837 of the floor of ν (e = 10) and 9 iterations
-    // (.NET 10, 2026-10-25), until the three platforms of the CI
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 40272754260, 2026-10-26) of the hyperbola family,
+    // rounded up to two digits (#453): 2.135 of the floor (e = 1.01, Windows and macOS arm64; 2.103 on Linux), 0.678 of
+    // the reduced floor (e = 1.000002, on all three) and 2.901 of the floor of ν (e = 10, Windows; 2.837 on Linux and
+    // macOS arm64)
     private const double HyperbolaFloor = 4.3;
     private const double HyperbolaReducedFloor = 1.4;
-    private const double HyperbolaTrueAnomalyFloor = 5.7;
+    private const double HyperbolaTrueAnomalyFloor = 5.9;
 
-    // Provisional (#453), Linux only: twice the most iterations of every family, 9 (.NET 10, 2026-10-25; 71447 at
-    // e = 0.999999 before #453)
+    // Twice the most iterations of every family over Linux, Windows and macOS arm64 (CI run 40272754260, 2026-10-26):
+    // 9 on all three (#453; 71447 at e = 0.999999 before #453)
     private const int Iterations = 18;
 
-    // Provisional (#453), Linux only: twice the worst error of the states against the state at 60 digits, rounded up to
-    // two digits: 1.652 of the floor of the position and 1.677 of that of the velocity, at the NaN regression, whose
-    // p = a (1 − e²) loses 4.1e-13 (.NET 10, 2026-10-25), until the three platforms of the CI
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 40272754260, 2026-10-26) of the error of the states
+    // against the state at 60 digits, rounded up to two digits (#453): 1.652 of the floor of the position and 1.677 of
+    // that of the velocity on all three, at the NaN regression, whose p = a (1 − e²) loses 4.1e-13
     private const double StatePositionFloor = 3.4;
     private const double StateVelocityFloor = 3.4;
 
-    // Provisional (#453), Linux only: twice the worst difference of the states and SPICE CONICS where CONICS resolves
-    // them, rounded up to two digits: 0.841 of the floor of the position and 0.863 of that of the velocity, at e = 0.99
-    // (.NET 10, 2026-10-25), until the three platforms of the CI
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 40272754260, 2026-10-26) of the difference of the
+    // states and SPICE CONICS where CONICS resolves them, rounded up to two digits (#453): 0.841 of the floor of the
+    // position and 0.863 of that of the velocity, at e = 0.99, on Linux and Windows (0.762 and 0.703 on macOS arm64)
     private const double ConicsPositionFloor = 1.7;
     private const double ConicsVelocityFloor = 1.8;
 
