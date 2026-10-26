@@ -42,6 +42,31 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 ## Release Notes
 
+### 10.2.0 (in development)
+
+Changes since 10.2.0-preview-1. Entries are added as they merge.
+
+**Fixed**
+
+- **RK7(8) with `IncludeInStepControl` no longer stops at random on the first steps of a segment in dense air.** At the
+  start of a segment, the elements of Φ that start at 0 carry an error estimate that is the rounding noise of the drag
+  Jacobian across the 13 stages, which no smaller step lowers. In dense air at a tight tolerance it could exceed the
+  tolerance at every attempt down to the minimum step: at 1e-13, 22 km above the Earth with A/m = 1e-3 m²/kg (a drag of
+  400 g), 1 to 13 times the tolerance. RK7(8) then stopped with "100 consecutive rejections" at its minimum step,
+  depending on the last bits of the start and of the step sizes: 3 of 201 initial steps 60 s ± 100 ulp of that case on
+  Linux, and on macOS arm64 at the start of #467, moved by 1e-5 m, so the same input could pass on one platform and
+  stop on another; each segment after a maneuver was a new draw. At the minimum step size, a step that only the error
+  of Φ and Ψ rejects, the state meeting its tolerance, is now accepted on the error of the state (decided by
+  S. Guillet, 2026-10-26), the step that Hipparchus, Orekit and GMAT take, which keep Φ out of the step control. Φ of
+  such a start stays within 1.3e-7 of central differences of whole propagations at 1e-14, the resolution of that
+  reference, and within 4.6e-11 of Φ at 1e-14 on the steps of the state. Only a step that its retry would repeat is
+  accepted so, and only with a minimum step size below 10 ms, where the guard of 10 000 steps within 100 s can stop a Φ
+  that stays noisy (its message naming Y). A propagation that completed before takes the same steps, bit for bit, and
+  without `IncludeInStepControl` nothing changes. In SSB mode at 1e-11 that guard now stops the propagation, where the
+  100 rejections stopped it at the start. A state that misses its tolerance at the minimum step still stops on the 100
+  rejections, whose message now names Y only when the state met its tolerance. No public API change.
+  [#468](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/468)
+
 ### 10.2.0-preview-1
 
 A preview of 10.2.0, published on NuGet as a prerelease (`dotnet add package IO.Astrodynamics --prerelease`,

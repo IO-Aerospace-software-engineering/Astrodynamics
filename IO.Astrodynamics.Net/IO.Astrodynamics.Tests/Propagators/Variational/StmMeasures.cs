@@ -110,6 +110,12 @@ internal static class StmMeasures
         return errors;
     }
 
+    /// <summary>The 36 elements of a 6×6 matrix, row-major.</summary>
+    internal static double[] Elements(IO.Astrodynamics.Math.Matrix matrix)
+    {
+        return matrix.ToArray().Cast<double>().ToArray();
+    }
+
     /// <summary>Y = [Φ | Ψ] (6 rows, row-major) of <paramref name="solution"/> at <paramref name="epoch"/>.</summary>
     internal static double[] Y(PropagationSolution solution, TimeSystem.Time epoch)
     {

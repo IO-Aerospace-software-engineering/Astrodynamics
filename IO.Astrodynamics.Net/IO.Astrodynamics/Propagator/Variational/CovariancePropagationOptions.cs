@@ -95,8 +95,11 @@ public sealed record CovariancePropagationOptions
     /// stay ordinary in dense air (US 1976 at 200 km over 2 min: 6 to 10 steps from 1e-11 to 1e-13, against 107 290 at
     /// 1e-11 and no end at 1e-13 before #420). The SRP partials take the analytic derivative of the shadow function in
     /// the penumbra, so the steps stay ordinary through eclipses too (a Sun-synchronous LEO over one day: 1 645 to 4 639
-    /// steps from 1e-11 to 1e-14, against 23 967 at 1e-13 and a failure at 1e-14 before #423). When the step collapses
-    /// all the same, the propagation stops with an
+    /// steps from 1e-11 to 1e-14, against 23 967 at 1e-13 and a failure at 1e-14 before #423). At the minimum step size
+    /// of <see cref="Integrators.RK78Integrator"/> (below 10 ms), a step that only the error of Φ and Ψ rejects, the
+    /// state meeting its tolerance, is accepted on the error of the state: on the first steps of a segment in dense air
+    /// that error is the rounding noise of the drag Jacobian, which no smaller step lowers (#468, decided by S. Guillet,
+    /// 2026-10-26). When the step collapses all the same, the propagation stops with an
     /// <see cref="InvalidOperationException"/> after 10 000 consecutive accepted steps within 100 s of flight, whose
     /// message names this option. In SSB mode the columns of Φ are scaled by the distance to the barycenter, and the step
     /// control fails (#389).
