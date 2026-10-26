@@ -69,8 +69,8 @@ public class MinimumStepNoiseTests
     /// The central differences resolve Φ to about 1e-7: the same comparison gives the same errors, to three digits, for
     /// the propagation at 1e-14 with the step on the state only, which takes no step at the minimum step size (its
     /// smallest is 7.5e-4 s). That propagation, the reference of Ψ_Cr at the noise floor (A2), resolves what the steps
-    /// accepted on the error of the state can change, so the test also bounds Φ against it: within 3.8e-11
-    /// (2026-10-26, Linux).
+    /// accepted on the error of the state can change, so the test also bounds Φ against it: within 4.6e-11
+    /// (2026-10-26: 3.8e-11 on Linux, 4.0e-11 on Windows, 4.5e-11 on macOS arm64).
     /// </para>
     /// </remarks>
     [Fact]
@@ -87,9 +87,10 @@ public class MinimumStepNoiseTests
         var expected = WholePropagationDifferences.Phi(state => Propagate(body, state, ReferenceTolerance, null), start,
             3.0, 0.3, epochs);
 
-        // Assert: the thresholds, provisional, are twice the worst errors measured on Linux (2026-10-26), rounded up at
-        // the second significant digit, until the CI of the three platforms gives theirs: 1.26e-7 against the central
-        // differences (Φ_vv at 150 s), 3.80e-11 against Φ at 1e-14 on the steps of the state (at 60 s)
+        // Assert: the thresholds are twice the worst errors over Linux, Windows and macOS arm64 (CI run 40317789704,
+        // 2026-10-26), rounded up at the second significant digit: 1.26e-7 against the central differences
+        // (Φ_vv at 150 s on Linux; 1.16e-7 on Windows, 6.10e-8 on macOS arm64), 4.53e-11 against Φ at 1e-14 on the
+        // steps of the state (at 150 s on macOS arm64; 3.80e-11 on Linux, 4.04e-11 on Windows)
         double worst = 0.0;
         double worstOnTheStateSteps = 0.0;
         for (int k = 0; k < epochs.Length; k++)
@@ -109,7 +110,7 @@ public class MinimumStepNoiseTests
         _output.WriteLine($"MEASURE #468 Φ of the former failure, worst over the epochs: {worst:E2} against the " +
                           $"central differences, {worstOnTheStateSteps:E2} against Φ at 1e-14 on the steps of the state");
         Assert.True(worst < 2.6e-7, $"Φ against the central differences: {worst:E2}");
-        Assert.True(worstOnTheStateSteps < 7.6e-11, $"Φ against Φ at 1e-14: {worstOnTheStateSteps:E2}");
+        Assert.True(worstOnTheStateSteps < 9.1e-11, $"Φ against Φ at 1e-14: {worstOnTheStateSteps:E2}");
     }
 
     [Fact]

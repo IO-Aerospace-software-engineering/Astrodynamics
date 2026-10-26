@@ -128,7 +128,8 @@ the start of the window. This example runs as a smoke test against the packed Nu
   moved by 1e-5 m (the CI of [#467](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/467)). The
   state is never accepted above its tolerance: the step accepted is the one Hipparchus, Orekit and GMAT take, which keep
   Φ out of the step control. Φ of such a start stays within 1.3e-7 of central differences of whole propagations at
-  1e-14, the resolution of that reference, and within 3.8e-11 of Φ at 1e-14 on the steps of the state.
+  1e-14, the resolution of that reference, and within 4.6e-11 of Φ at 1e-14 on the steps of the state (Linux,
+  Windows and macOS arm64).
   - Only a step that its retry would repeat is accepted so: the step at the minimum step size, or the time remaining
     below it. A first step below the minimum step size (`initialStepSize`) is retried at the minimum step size, as
     before. So a propagation that completed before takes the same steps, bit for bit (on Linux, 586 of 586 initial
@@ -138,7 +139,8 @@ the start of the window. This example runs as a smoke test against the packed Nu
     could not stop a Y that stays noisy: the step is not accepted, and the 100 rejections stop the propagation as
     before (the noisy atmosphere of the tests ran to the end of its window with errors of Y up to 637 when the steps
     were accepted). Below 10 ms, the start of #468 that stopped at t = 0 takes 13, 32 and 53 such steps with a minimum
-    step size of 1e-4, 1e-3 and 9.9e-3 s, Φ within 3.9e-11, 3.7e-11 and 3.8e-11 of Φ at 1e-14 (3.8e-11 at 1e-6 s).
+    step size of 1e-4, 1e-3 and 9.9e-3 s, Φ within 3.9e-11, 3.7e-11 and 3.8e-11 of Φ at 1e-14 (3.8e-11 at 1e-6 s;
+    Linux).
   - A Y that stays noisy at the minimum step is stopped by the guard below, after 10 000 to 20 000 accepted steps (in
     SSB mode at 1e-11, 1.7 s against 0.1 s for the 100 rejections before). A state that misses its tolerance at the
     minimum step is stopped by the 100 rejections, whose message names Φ and Ψ only when the state met its tolerance

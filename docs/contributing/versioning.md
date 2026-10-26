@@ -59,7 +59,7 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   of Φ and Ψ rejects, the state meeting its tolerance, is now accepted on the error of the state (decided by
   S. Guillet, 2026-10-26), the step that Hipparchus, Orekit and GMAT take, which keep Φ out of the step control. Φ of
   such a start stays within 1.3e-7 of central differences of whole propagations at 1e-14, the resolution of that
-  reference, and within 3.8e-11 of Φ at 1e-14 on the steps of the state. Only a step that its retry would repeat is
+  reference, and within 4.6e-11 of Φ at 1e-14 on the steps of the state. Only a step that its retry would repeat is
   accepted so, and only with a minimum step size below 10 ms, where the guard of 10 000 steps within 100 s can stop a Φ
   that stays noisy (its message naming Y). A propagation that completed before takes the same steps, bit for bit, and
   without `IncludeInStepControl` nothing changes. In SSB mode at 1e-11 that guard now stops the propagation, where the
