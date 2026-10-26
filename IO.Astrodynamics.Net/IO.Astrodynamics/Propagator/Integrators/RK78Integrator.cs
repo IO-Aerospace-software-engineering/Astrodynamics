@@ -20,6 +20,13 @@ namespace IO.Astrodynamics.Propagator.Integrators;
 /// </summary>
 public sealed class RK78Integrator : Integrator
 {
+    /// <summary>
+    /// The consecutive rejections of a step after which the adaptive step fails. With the variational equations in the
+    /// step control and a minimum step size below 10 ms, a step whose retry would repeat it (at the minimum step size, or
+    /// the time remaining below it) is accepted when its state meets its tolerance, whatever the error of Y (#468), so
+    /// there the guard stops a state that misses its tolerance only. The message names Y when the state met its
+    /// tolerance at the last rejection, the error of Y alone rejecting the step.
+    /// </summary>
     private const int MaxRejections = 100;
 
     /// <summary>
@@ -52,6 +59,11 @@ public sealed class RK78Integrator : Integrator
 
     // Step controller (null in fixed mode)
     private readonly RK78StepController _controller;
+
+    // Whether the collapse guard can stop a run of steps at the minimum step size: CollapseStepCount of them cover less
+    // than CollapseFlightTime, a minimum step size below 10 ms (#468)
+    private bool CollapseGuardCoversTheMinimumStep =>
+        _controller.MinStepSize * CollapseStepCount < CollapseFlightTime;
 
     // Initial step size for reset at segment boundaries
     private readonly double _initialH;
@@ -312,6 +324,18 @@ public sealed class RK78Integrator : Integrator
             {
                 var (accepted, hNew) = _controller.Evaluate(h, err);
 
+                // When the retry would repeat this very step (h at the minimum step size, or the time remaining below it),
+                // a rejection on the error of Y alone would repeat it with the same error until the guard below throws:
+                // that error is the rounding noise of the stage Jacobians, which no smaller step lowers (#468). The step
+                // is accepted on the error of the state, which meets its tolerance, where the collapse guard can still
+                // stop a Y that stays noisy, a minimum step size below 10 ms (decided by S. Guillet, 2026-10-26). Every
+                // other rejection is the one it was before #468, so a propagation that completed takes the same steps
+                if (!accepted && variationalError > 1.0 && stateError <= 1.0 && System.Math.Min(hNew, remaining) == h &&
+                    CollapseGuardCoversTheMinimumStep)
+                {
+                    (accepted, hNew) = _controller.Evaluate(h, stateError);
+                }
+
                 if (!accepted)
                 {
                     rejections++;
@@ -319,7 +343,7 @@ public sealed class RK78Integrator : Integrator
                         throw new InvalidOperationException(
                             $"RK78 adaptive step failed: {MaxRejections} consecutive rejections at t={t:F6}s. " +
                             $"Error={err:E3}, h={h:E6}s. Consider relaxing tolerances or checking force model." +
-                            (variationalError > stateError
+                            (stateError <= 1.0
                                 ? " The error of the variational equations (IncludeInStepControl) drove the rejections."
                                 : string.Empty));
 

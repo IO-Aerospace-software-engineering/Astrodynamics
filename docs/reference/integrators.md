@@ -91,9 +91,11 @@ When created with a fixed step size, `AdaptiveMode` is `false` and the integrato
   controlled on the state only, so the trajectory is the same bit for bit. Velocity-Verlet does not integrate them
   (`NotSupportedException`).
 - **Failures**: the adaptive step fails with an `InvalidOperationException` after 100 consecutive rejections; with the
-  variational equations in the step control (`IncludeInStepControl`), also after 10 000 consecutive accepted steps
-  within 100 s of flight, a collapse of the step that the rejections never catch
-  ([Covariance Propagation](covariance-propagation.md#options)).
+  variational equations in the step control (`IncludeInStepControl`), a step at the minimum step size that their error
+  alone rejects is accepted on the error of the state when the minimum step size is below 10 ms
+  ([#468](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/468)), and the adaptive step also
+  fails after 10 000 consecutive accepted steps within 100 s of flight, a collapse of the step that the rejections
+  never catch ([Covariance Propagation](covariance-propagation.md#options)).
 - **Accuracy**: on the 24-hour conformance cases, 3.4 m (SSO) to 13.2 m (LEO) from the GMAT
   references with tolerances 1e-11, the rest being model differences between the two tools; see
   [Validation](../guides/validation.md#measured-errors).

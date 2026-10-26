@@ -117,6 +117,32 @@ the start of the window. This example runs as a smoke test against the packed Nu
   took 2 402 steps at 1e-14. Without the option the trajectory does not change, and Φ and Ψ move only through the steps
   that touch the penumbra (R3 at 1e-13 after one day: Φ by 2.6e-9, Ψ_Cr by 8.7e-9; measured 2026-10-22, before #434 and
   #410).
+- At the minimum step size of the integrator (1e-6 s by default), a step that the error of Φ and Ψ alone rejects, the
+  state meeting its tolerance, is accepted on the error of the state
+  ([#468](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/468), decided by S. Guillet,
+  2026-10-26). On the first steps of a segment in dense air, the error estimate of the elements of Φ that start at 0
+  (the velocity rows of the position columns) is the rounding noise of the drag Jacobian across the 13 stages, which no
+  smaller step lowers: at 1e-13, 22 km above the Earth with A/m = 1e-3 m²/kg (a drag of 400 g), 1 to 13 times the
+  tolerance down to the minimum step. RK7(8) rejected that step until it stopped after 100 rejections, at random: for 3
+  of 201 initial steps 60 s ± 100 ulp of that case on Linux (measured 2026-10-26), and on macOS arm64 for its start
+  moved by 1e-5 m (the CI of [#467](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/467)). The
+  state is never accepted above its tolerance: the step accepted is the one Hipparchus, Orekit and GMAT take, which keep
+  Φ out of the step control. Φ of such a start stays within 1.3e-7 of central differences of whole propagations at
+  1e-14, the resolution of that reference, and within 3.8e-11 of Φ at 1e-14 on the steps of the state.
+  - Only a step that its retry would repeat is accepted so: the step at the minimum step size, or the time remaining
+    below it. A first step below the minimum step size (`initialStepSize`) is retried at the minimum step size, as
+    before. So a propagation that completed before takes the same steps, bit for bit (on Linux, 586 of 586 initial
+    steps 60 s ± 300 ulp of that case, 294 of 294 maneuvers that split it in dense air, 9 of 9 starts with a first step
+    of 9.5e-7 s; the 15, 6 and 391 that stopped now complete).
+  - With a minimum step size of 10 ms or more, 10 000 steps at it cover 100 s of flight or more, and the guard below
+    could not stop a Y that stays noisy: the step is not accepted, and the 100 rejections stop the propagation as
+    before (the noisy atmosphere of the tests ran to the end of its window with errors of Y up to 637 when the steps
+    were accepted). Below 10 ms, the start of #468 that stopped at t = 0 takes 13, 32 and 53 such steps with a minimum
+    step size of 1e-4, 1e-3 and 9.9e-3 s, Φ within 3.9e-11, 3.7e-11 and 3.8e-11 of Φ at 1e-14 (3.8e-11 at 1e-6 s).
+  - A Y that stays noisy at the minimum step is stopped by the guard below, after 10 000 to 20 000 accepted steps (in
+    SSB mode at 1e-11, 1.7 s against 0.1 s for the 100 rejections before). A state that misses its tolerance at the
+    minimum step is stopped by the 100 rejections, whose message names Φ and Ψ only when the state met its tolerance
+    at the last rejection.
 - When the step collapses all the same (a force whose partials are not smooth at the tolerance), RK7(8) stops with an
   `InvalidOperationException` after 10 000 consecutive accepted steps within 100 s of flight, a mean step below 10 ms,
   instead of running until the memory is exhausted. The steps are counted in disjoint blocks of 10 000 from the start

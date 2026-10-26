@@ -237,13 +237,103 @@ public class DenseAirStepControlTests
         Assert.StartsWith("RK7(8) with the variational equations in the step control (IncludeInStepControl)",
             exception.Message);
 
-        // At 1e-11 the rejections stop it at the start, their message naming the variational equations
-        var rejections = Assert.Throws<InvalidOperationException>(() => ssb.PropagateWithVariationalEquations(Window,
+        // At 1e-11 the error of Y exceeds the tolerance at the minimum step, that of the state does not: the steps are
+        // accepted there on the error of the state (#468), and the collapse guard stops it, its message naming Y (error
+        // of Y 35.8, of the state 3.9e-4 at the last step; 2026-10-26, Linux). Before #468 the 100 rejections stopped it
+        // at the start (error of Y 15.45 at 1e-6 s)
+        var collapse = Assert.Throws<InvalidOperationException>(() => ssb.PropagateWithVariationalEquations(Window,
             bodies, new RK78Integrator(1e-11, 1e-11), true, false, Window.Length,
             new VariationalOptions(ForceParameters.DragCoefficient, IncludeInStepControl: true)));
-        Assert.StartsWith("RK78 adaptive step failed: 100 consecutive rejections", rejections.Message);
+        _output.WriteLine(collapse.Message);
+        Assert.StartsWith("RK7(8) with the variational equations in the step control (IncludeInStepControl): 10000 " +
+                          "consecutive steps over ", collapse.Message);
+        Assert.EndsWith("Relax the tolerance, or set IncludeInStepControl to false.", collapse.Message);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void StateDrivenRejections_AtTheMinimumStep_StillStopAfter100Rejections(bool includeInStepControl)
+    {
+        // Arrange: a force noisy in time of up to 0.5 m/s², whose noise the error of the state sees at every step (above
+        // 1 at the minimum step of 1e-6 s at 1e-12), and not Φ, its partials being zero. The acceptance at the minimum
+        // step of #468 needs the state to meet its tolerance, so the 100-rejection guard still stops the propagation,
+        // with or without the option, its message not naming Y
+        var body = Body("US 1976");
+        var integrator = new RK78Integrator(1e-12, 1e-12);
+        integrator.AddForce(new JitterForce(1.0));
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window,
+            NewSpacecraft(body, 400e3), integrator, new CelestialItem[] { body }, false, false, Window.Length,
+            new CovariancePropagationOptions { IncludeInStepControl = includeInStepControl }).Propagate());
+
+        // Assert
+        _output.WriteLine(exception.Message);
+        Assert.StartsWith("RK78 adaptive step failed: 100 consecutive rejections at t=0.000000s. ", exception.Message);
+        Assert.Contains("h=1.000000E-006s", exception.Message);
+        Assert.EndsWith("Consider relaxing tolerances or checking force model.", exception.Message);
+    }
+
+    [Fact]
+    public void YAndTheStateAboveTheTolerance_AtTheMinimumStep_TheRejectionsStillStopIt_WithoutNamingY()
+    {
+        // Arrange: two-body motion at 1e-20, below the rounding of the state: at the minimum step of 1e-6 s both the
+        // error of the state (64.75) and that of Y (282) exceed 1 (2026-10-26, Linux). The state missing its tolerance, the
+        // step is not accepted (#468), and the 100-rejection guard stops the propagation. Its message does not name Y: the
+        // same propagation with the step on the state only stops on the same step, t = 0 and h = 1e-6 s, so the option is
+        // not what stops it
+        var body = Body("US 1976");
+        InvalidOperationException Propagate(bool includeInStepControl) => Assert.Throws<InvalidOperationException>(
+            () => NewSpacecraft(body, 400e3).Propagate(Window, new CelestialItem[] { body },
+                new RK78Integrator(1e-20, 1e-20), false, false, Window.Length,
+                new CovariancePropagationOptions { IncludeInStepControl = includeInStepControl }));
+        static string Error(Exception exception) =>
+            exception.Message.Split(' ').Single(word => word.StartsWith("Error=")).TrimEnd(',');
+
+        // Act
+        var exception = Propagate(true);
+        var onTheState = Propagate(false);
+
+        // Assert: the state misses its tolerance at the minimum step, and the rejections stop the propagation there
+        _output.WriteLine(exception.Message);
+        _output.WriteLine(onTheState.Message);
+        _output.WriteLine($"MEASURE #468 two-body at 1e-20, the step of 1e-6 s at t = 0: {Error(onTheState)} for the " +
+                          $"state, {Error(exception)} for the state and Y");
+        foreach (var message in new[] { onTheState.Message, exception.Message })
+        {
+            Assert.StartsWith("RK78 adaptive step failed: 100 consecutive rejections at t=0.000000s. ", message);
+            Assert.Contains("h=1.000000E-006s", message);
+            Assert.EndsWith("Consider relaxing tolerances or checking force model.", message);
+        }
+    }
+
+    [Theory]
+    [InlineData(1e-2)]
+    [InlineData(2e-2)]
+    public void NoisyPartials_AMinimumStepOf10MsOrMore_TheRejectionsStillStopIt_NamingY(double minStepSize)
+    {
+        // Arrange: the noisy atmosphere at 1e-12, with a minimum step size of 10 ms or more. 10 000 steps at the minimum
+        // step size then cover 100 s or more of flight, so the collapse guard cannot stop a run of them: the step that
+        // only the error of Y rejects at the minimum step is not accepted on the error of the state (#468), and the
+        // 100-rejection guard stops the propagation at the start, as before #468, its message naming Y, the state meeting
+        // its tolerance (error of Y 121.8 at 10 ms, 331.7 at 20 ms; 2026-10-26, Linux). Accepted, the steps ran to the end
+        // of the window, in 9 704 and 5 138 steps, with errors of Y up to 327 and 637
+        var body = Body("noisy");
+
+        // Act
+        var exception = Assert.Throws<InvalidOperationException>(() => NewSpacecraft(body, 200e3)
+            .PropagateWithVariationalEquations(Window, new CelestialItem[] { body },
+                new RK78Integrator(1e-12, 1e-12, minStepSize: minStepSize), true, false, Window.Length,
+                new VariationalOptions(ForceParameters.DragCoefficient, IncludeInStepControl: true)));
+
+        // Assert
+        _output.WriteLine($"MEASURE #468 noisy atmosphere, minimum step {minStepSize} s: {exception.Message}");
+        Assert.StartsWith("RK78 adaptive step failed: 100 consecutive rejections at t=0.000000s. ", exception.Message);
+        Assert.Contains($"h={minStepSize.ToString("E6", System.Globalization.CultureInfo.InvariantCulture)}s",
+            exception.Message);
         Assert.EndsWith("The error of the variational equations (IncludeInStepControl) drove the rejections.",
-            rejections.Message);
+            exception.Message);
     }
 
     // An exponential atmosphere whose density carries a deterministic relative noise of 1e-10, far above the rounding of
@@ -270,15 +360,15 @@ public class DenseAirStepControlTests
         public double GetDensity(IAtmosphericContext context) => Density(context.Altitude);
     }
 
-    // An acceleration of noise in time alone, up to 5e-8 m/s²: the force is not smooth, its partials, taken at a fixed
-    // epoch, are zero
-    private sealed class JitterForce : ForceBase
+    // An acceleration of noise in time alone, up to half its amplitude: the force is not smooth, its partials, taken at
+    // a fixed epoch, are zero
+    private sealed class JitterForce(double amplitude) : ForceBase
     {
         public override Vector3 Apply(StateVector stateVector)
         {
             double noise = System.Math.Sin(stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds * 1000.0) * 43758.5453;
             noise -= System.Math.Floor(noise) + 0.5;
-            return new Vector3(1e-7 * noise, 0.0, 0.0);
+            return new Vector3(amplitude * noise, 0.0, 0.0);
         }
     }
 
@@ -289,7 +379,7 @@ public class DenseAirStepControlTests
         // 2026-10-21)
         var body = Body("US 1976");
         var integrator = new RK78Integrator(1e-12, 1e-12);
-        integrator.AddForce(new JitterForce());
+        integrator.AddForce(new JitterForce(1e-7));
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window,
