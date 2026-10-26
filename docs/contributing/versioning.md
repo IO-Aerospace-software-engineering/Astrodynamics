@@ -67,6 +67,29 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   rejections, whose message now names Y only when the state met its tolerance. No public API change.
   [#468](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/468)
 
+- **Kepler's equation from the mean anomaly.** `EccentricAnomaly()`, `TrueAnomaly()`, `TrueLongitude()` and
+  `ToStateVector()` of orbital parameters given by their mean anomaly, `StateVector.EccentricAnomaly()`, the state and
+  anomalies read at another epoch (`AtEpoch`, `ToStateVector(Time)`, `TrueAnomaly(Time)`, `TrueLongitude(Time)`; a TLE's
+  go through SGP4), and the start of a propagation from anything other than a state vector at its start solved Kepler's
+  equation by Newton's method from E = M and stopped at a step of 1e-6, without a bound. That left about 1000 times the
+  rounding error: for a periapsis at 7000 km, 7.1e-6 m at e = 0.9, 3.9e-4 m at e = 0.999 and 1.5e-5 m on a hyperbola at
+  e = 1.01. The loop took up to 71447 iterations at e = 0.999999 and returned NaN for some mean anomalies at e ≥
+  0.99999. The ellipse is now solved for M reduced to [−π, π] with 2π in two parts (reduced once more, exactly, beyond
+  2^52 rad), and both conics by Newton's method from an upper bound of the root where the equation is convex. The loop
+  stops at the rounding floor and takes at most 50 iterations (11 measured on the issue's grids). On those grids the
+  eccentric anomaly is within 0.60 of the rounding floor on ellipses and 2.2 on hyperbolas (1124 before), and the same
+  states are within 7.7e-8 m, 1.4e-7 m and 2.5e-8 m. A non-finite mean anomaly or eccentricity of orbital parameters
+  given by M now throws `InvalidOperationException`, naming e and M, where NaN was returned: from these paths, from the
+  constructors of `CentralBodyPropagator` (Velocity-Verlet propagated NaN, RK7(8) failed after 100 rejected steps), and
+  from `Equals`, `==` and `!=` of two such parameters typed `OrbitalParameters`, which compare their states (they
+  compared equal). With a NaN eccentricity only `EccentricAnomaly()` changes: `TrueAnomaly()` and `ToStateVector()`
+  already threw `InvalidOperationException`. A hyperbola with e < 2 and |M| above max(3.0e307, 1.8e308 (e − 1)) rad
+  throws too, its start overflowing (a finite H was returned; no orbit reaches such a mean anomaly). M = 0 and e = 0 are
+  unchanged, bit for bit; other states move by up to the former error, so a propagation started from elements takes
+  slightly different steps. The round trip of a near-circular state of #398 now returns it to 1.9e-15 of its radius
+  (1.4e-15 in 10.2.0-preview-1).
+  [#453](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/453)
+
 ### 10.2.0-preview-1
 
 A preview of 10.2.0, published on NuGet as a prerelease (`dotnet add package IO.Astrodynamics --prerelease`,

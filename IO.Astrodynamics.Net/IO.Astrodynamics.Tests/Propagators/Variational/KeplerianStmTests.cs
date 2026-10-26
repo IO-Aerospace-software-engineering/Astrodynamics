@@ -40,7 +40,8 @@ public class KeplerianStmTests : IClassFixture<ReferenceCases>
     [MemberData(nameof(R5Fractions))]
     public void R5_State_EqualsTheTwoBodyPropagationOfTheLibrary(double fraction)
     {
-        // Measured 9.7e-16 to 1.4e-14 relative (Linux, .NET 10, 2026-10-10): the threshold of R1
+        // Measured 4.1e-16 to 1.7e-14 relative (Linux, .NET 10, 2026-10-25, the Kepler solver of #453; 9.7e-16 to
+        // 1.4e-14 before): the threshold of R1
         var referenceCase = _cases.TwoBody(_cases.R5);
         AssertStateEqualsTheLibrary(referenceCase, fraction * referenceCase.Duration.TotalSeconds, "R5", 1e-12);
     }

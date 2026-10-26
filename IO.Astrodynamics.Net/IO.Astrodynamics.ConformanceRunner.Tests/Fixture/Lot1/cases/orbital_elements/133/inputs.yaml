@@ -1,0 +1,46 @@
+id: "orbital_elements_kepler_e0p9_ta300_133"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  Keplerian elements with the mean anomaly to the state: Kepler's equation at e = 0.9, M of TA = 300 deg.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "keplerian"
+    a_km: 70000.0
+    e: 0.9
+    i_deg: 63.4
+    raan_deg: 10.0
+    argp_deg: 270.0
+    ma_deg: 358.3345142773625
+
+tolerances_override:
+  position_km:
+    abs_tol: 0.0
+    rel_tol: 4.1e-14
+    justification: >-
+      e = 0.9, true anomaly 300 deg: the state of a mean anomaly near periapsis is ill-conditioned (Kepler's
+      equation divides by 1 - e cos E). Measured: E_ref 1.38e-14 relative (the golden against the 60-digit
+      evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25), conditioning floor 2.01e-14 relative. T = ceil2(2
+      max(E_run, E_ref, floor)) = 4.1e-14.
+  velocity_km_s:
+    abs_tol: 0.0
+    rel_tol: 2.2e-14
+    justification: >-
+      e = 0.9, true anomaly 300 deg: the state of a mean anomaly near periapsis is ill-conditioned (Kepler's
+      equation divides by 1 - e cos E). Measured: E_ref 7.11e-15 relative (the golden against the 60-digit
+      evaluation of spec.md 11.1; GMAT R2026a run of 2026-10-25), conditioning floor 1.07e-14 relative. T = ceil2(2
+      max(E_run, E_ref, floor)) = 2.2e-14.
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   every element output (semi_major_axis_km to declination_deg): outputs of a state_vector input

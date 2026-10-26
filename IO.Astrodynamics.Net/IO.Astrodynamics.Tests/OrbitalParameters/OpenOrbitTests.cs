@@ -178,9 +178,13 @@ public class OpenOrbitTests
     }
 
     // Measured (Linux, .NET 10, 2026-10-11): the parabola within 3.6e-15 of Barker's trigonometric solution and, on
-    // 2026-10-12, its elements within 1.5e-15 of SPICE (M relative to 1 + |M|), its state back within 8e-16; the
-    // hyperbola within 2e-13 of SPICE relative to 1 + |M|, the convergence of the hyperbolic Kepler solver (steps
-    // below 1e-6, so a residual of order 1e-12)
+    // 2026-10-12, its elements within 1.5e-15 of SPICE (M relative to 1 + |M|), its state back within 8e-16. The
+    // hyperbola, on 2026-10-25 with the Kepler solver of #453: M within 4.7e-14 of SPICE and 9.6e-15 of itself after
+    // the round trip (relative to 1 + |M|; 1.1e-14 on macOS arm64), 3.7e-14 after 1 h (relative to 1 + |M| + n Δt);
+    // 2e-13 before #453. That is SPICE OSCELT's own error: against 60 digits, the state of the library is within
+    // 2.7e-15 of the exact state and its M within 2.5e-15 of the exact M of that state, and OSCELT's M within 4.9e-14
+    // of it (3.8e-14 one hour later). OSCELT does not resolve the solver, so the bound stays; KeplerEquationTests
+    // measures the solver against 60 digits
     private const double ParabolicTolerance = 1e-14;
     private const double HyperbolicTolerance = 1e-12;
 
