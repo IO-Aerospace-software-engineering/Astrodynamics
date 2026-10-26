@@ -87,8 +87,8 @@ public class NearCircularRoundTripTests
         _output.WriteLine($"e {eccentricity:E3}, i {inclination:E3}: mean longitude against SPICE {worstLongitude:E2} rad; " +
                           $"round trip, position {worstPosition:E2}, velocity {worstVelocity:E2} (relative)");
         // Measured (Linux, .NET 10, 2026-10-17): mean longitude 8.9e-16 rad, round trip 7.9e-16 at most (8.2e-16 on
-        // 2026-10-25, the Kepler solver of #453); before #398, every cell with e < 1e-3 and 1e-6 <= i < 1e-3 failed.
-        // The 1e-14 of the round trip of #368
+        // 2026-10-25, the Kepler solver of #453, and 8.3e-16 on Windows); before #398, every cell with e < 1e-3 and
+        // 1e-6 <= i < 1e-3 failed. The 1e-14 of the round trip of #368
         Assert.True(worstLongitude < 1e-14, $"mean longitude: {worstLongitude:E2}");
         Assert.True(worstPosition < 1e-14, $"position: {worstPosition:E2}");
         Assert.True(worstVelocity < 1e-14, $"velocity: {worstVelocity:E2}");

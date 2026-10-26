@@ -58,10 +58,11 @@ public class StateVectorAngleTests
         // Measured (Linux, .NET 10, 2026-10-11): 3e-15 at most against SPICE, 8e-16 at most for the round trip, except
         // within the equatorial tolerance, where the tilt is dropped as SPICE does, so the out-of-plane velocity, at
         // most EquatorialTolerance of the speed (5e-11 measured at a tilt of 5e-11), does not come back. On 2026-10-25
-        // (#453) the round trip of the HEO 1 µs after apogee is 2.3e-15 in velocity (8.3e-16 elsewhere): the Kepler
-        // solver returns the double nearest the root, 2.2e-16 below it, and TrueAnomaly() adds fl(2π), 2.45e-16 short
-        // of 2π, to the negative ν; before #453 the solver was 2.3e-16 above the root and the two cancelled (6e-18 of
-        // ν), now they add (4.4e-16 of ν, 1/(1 − e) on the velocity at apogee)
+        // (#453) the round trip of the HEO 1 µs after apogee is 2.3e-15 in velocity (8.3e-16 elsewhere on Linux,
+        // 1.4e-15 on Windows and macOS arm64): the Kepler solver returns the double nearest the root, 2.2e-16 below it,
+        // and TrueAnomaly() adds fl(2π), 2.45e-16 short of 2π, to the negative ν; before #453 the solver was 2.3e-16
+        // above the root and the two cancelled (6e-18 of ν), now they add (4.4e-16 of ν, 1/(1 − e) on the velocity at
+        // apogee)
         bool droppedTilt = expected.RAAN == 0.0 && (expected.I == 0.0 || expected.I == System.Math.PI) &&
                            state.SpecificAngularMomentum().X != 0.0;
         double roundTrip = droppedTilt ? StateVector.EquatorialTolerance : 1e-14;
