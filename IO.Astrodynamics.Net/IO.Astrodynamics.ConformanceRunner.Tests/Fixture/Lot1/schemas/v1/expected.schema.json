@@ -90,8 +90,8 @@
       "additionalProperties": false
     },
     "nullable_quaternion": {
-      "description": "Unit quaternion in scalar-first order [w, x, y, z]. See spec.md §4.",
-      "type": "array",
+      "description": "Unit quaternion in scalar-first order [w, x, y, z], or null; null anywhere means SKIP (spec.md sections 4 and 7).",
+      "type": ["array", "null"],
       "items": {
         "anyOf": [
           {

@@ -1,0 +1,28 @@
+{
+  "id": "orbital_elements_kepler_e0p999_ta30_135",
+  "category": "orbital_elements",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "none (two-body conversion)",
+    "date": "2026-10-25",
+    "method": "GMAT Delaunay state (l = M, g = AOP, h = RAAN, L, G, H from a, e, i at 60 digits) entered with the case numbers, Earth.Mu = gm_km3_s2; Cartesian state reported in EarthMJ2000Eq",
+    "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
+    "script": "orbital_elements_kepler_e0p999_ta30_135.script",
+    "log": "orbital_elements_kepler_e0p999_ta30_135.log"
+  },
+  "outputs": {
+    "position_km": [
+      -1701.669885571339,
+      5552.902901105524,
+      4749.127634321729
+    ],
+    "velocity_km_s": [
+      -9.75685991200148,
+      -1.7817420982181287,
+      2.798729583597192
+    ]
+  }
+}
