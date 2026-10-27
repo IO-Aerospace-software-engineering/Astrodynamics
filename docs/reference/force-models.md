@@ -84,11 +84,12 @@ a = −GM_kernel r / r³ + ∇[(GM_model / r) Σ_(n≥2) (a_model / r)ⁿ Σ_m P
 | Any other body | `(path, degree)` or `(stream, degree)` | the GM and the equatorial radius of its kernels |
 | Any body | `(path, degree, gravitationalParameter, referenceRadius)` or the same with a stream | the given ones |
 
-The central term keeps the GM of the kernels (DE440's for the Earth, 3.98600435507e14 m³/s²), TDB-compatible like the
-time and the positions of the propagation, and the GM of every other point-mass computation of the library. The GM of
-EGM2008 is a TT-compatible value; scaled to TDB-compatible units it is within 2.3e-10 of DE440's (Klioner et al., 2010).
-Before 10.2.0 the harmonics took the GM and the equatorial radius of the kernels (6378136.6 m), 7.9e-8 of the
-harmonics away from EGM2008 ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
+By default the central term keeps the GM of the kernels (DE440's for the Earth, 3.98600435507e14 m³/s²),
+TDB-compatible like the time and the positions of the propagation, and the GM of every other point-mass computation of
+the library. The GM of EGM2008 is a TT-compatible value; scaled to TDB-compatible units it is within 2.3e-10 of
+DE440's (Klioner et al., 2010). Before 10.2.0 the harmonics took the GM and the equatorial radius of the kernels
+(6378136.6 m), 7.9e-8 of the harmonics away from EGM2008
+([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
 
 ```csharp
 // A model other than EGM2008, in the same file format, with its own constants
@@ -105,6 +106,42 @@ var mars = new CelestialBody(PlanetsAndMoons.MARS, Frames.Frame.ICRF, epoch,
 
 !!! warning "Thread Safety"
     `GeopotentialGravitationalField` is **not** thread-safe. Create one `CelestialBody` with geopotential per propagation task.
+
+#### The central term with the GM of the model
+
+`GeopotentialModelParameters.CentralTerm` chooses the GM of the central term (`GeopotentialCentralTerm`):
+
+| `CentralTerm` | Field |
+|---------------|-------|
+| `BodyGravitationalParameter` (the default) | `a = −GM_kernel r / r³ + ∇[(GM_model / r) Σ …]`, above |
+| `ModelGravitationalParameter` | `a = −GM_model r / r³ + ∇[(GM_model / r) Σ …]`: the whole field takes the constants of the model |
+
+The second is GMAT's convention: GMAT applies the GM of the header of a `.cof` file to the central term and to the
+harmonics. It is an opt-in (decided by S. Guillet, 2026-10-27), for comparisons with a tool or a reference that applies
+the model's GM to the whole field, such as the propagators 001 to 003 of the conformance suite, whose goldens are
+regenerated with GMAT and EGM2008 (decision 17 of
+[#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457)). The acceleration and its
+partials (the state transition matrix and the covariance) take the same GM, and a field of degree 0 is the point mass
+of the model's GM. The option changes the field only: `CelestialItem.GM`, the third-body perturbations, the
+conversions of orbital parameters (a Keplerian orbit given to the propagation) and the two-body orbits of the library
+keep the GM of the kernels. For a body whose harmonics take the kernel GM (any body
+other than the Earth without constants of the model), both choices give the same field, bit for bit.
+
+```csharp
+// EGM2008 with its own GM in the central term too, as GMAT evaluates EGM2008 from a .cof header
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
+    {
+        CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+    });
+```
+
+For the Earth with EGM2008, the TT-compatible 3.986004415e14 m³/s² in a TDB propagation moves the whole acceleration by
+1.5e-8 of itself: about 20 m a day in LEO and 8 m a day in GEO, 15.6 m, 6.8 m and 18.5 m on the propagators 001 to 003
+of the conformance suite. With the option, the library reproduces GMAT R2026a's runs of those cases (EGM2008 from a
+`.cof` with the model's GM) to 8.8 cm, 6.0 cm and 15.6 cm by RK7(8) at 1e-11, and 002 to 33.7 cm by Velocity-Verlet at
+1 s (`GmatConformancePropagatorTests`, Linux, 2026-10-27); the rest is the orientation of the Earth and the GMs of the
+third bodies in the two tools.
 
 ## Radiation From The Central Body
 

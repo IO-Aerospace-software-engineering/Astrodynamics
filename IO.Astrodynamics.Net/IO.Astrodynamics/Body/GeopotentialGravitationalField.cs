@@ -46,8 +46,9 @@ public class GeopotentialGravitationalField : GravitationalField
     /// <param name="maxDegrees">The maximum degrees for the geopotential model. Default is 70.</param>
     /// <remarks>
     /// The harmonics of this field are evaluated with the GM and the equatorial radius of the body they are evaluated
-    /// for; a <see cref="CelestialBody"/> built with <see cref="GeopotentialModelParameters"/> gives its field the
-    /// constants of the model instead.
+    /// for, and its central term with the GM of that body; a <see cref="CelestialBody"/> built with
+    /// <see cref="GeopotentialModelParameters"/> gives its field the constants of the model instead, and its choice of
+    /// <see cref="GeopotentialModelParameters.CentralTerm"/>.
     /// </remarks>
     public GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees = 70)
         : this(geopotentialModelFile, maxDegrees, null, null, 1.0, null)
@@ -64,20 +65,31 @@ public class GeopotentialGravitationalField : GravitationalField
     /// that of the body.</param>
     /// <param name="referenceRadius">The reference radius of the coefficients, in m, or null for the equatorial radius
     /// of the body.</param>
-    /// <param name="centralGravitationalParameter">The GM of the central term, that of the body (its kernels).</param>
+    /// <param name="bodyGravitationalParameter">The GM of the body (its kernels), that of the central term by
+    /// default.</param>
     /// <param name="modelName">The name of the model, for the CDM, or null when it is not known.</param>
+    /// <param name="centralTerm">The GM of the central term: that of the body, or that of the model.</param>
     internal GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees,
-        double? gravitationalParameter, double? referenceRadius, double centralGravitationalParameter,
-        string modelName)
+        double? gravitationalParameter, double? referenceRadius, double bodyGravitationalParameter,
+        string modelName, GeopotentialCentralTerm centralTerm = GeopotentialCentralTerm.BodyGravitationalParameter)
     {
         GravitationalParameter = gravitationalParameter;
         ReferenceRadius = referenceRadius;
         ModelName = modelName;
+        CentralTerm = centralTerm;
 
-        // k = GM_model / GM_kernel, once: exactly 1 without a GM of the model, so that every product of the
-        // acceleration is then the one of a field evaluated with the GM of the body
-        _harmonicsScale = gravitationalParameter.HasValue
-            ? gravitationalParameter.Value / centralGravitationalParameter
+        // The GM of the central term when it is that of the model, null when it is that of the body, read from the
+        // body at each evaluation; without a GM of the model, the harmonics take that of the body, and so does the
+        // central term with either choice
+        _modelCentralGravitationalParameter = centralTerm == GeopotentialCentralTerm.ModelGravitationalParameter
+            ? gravitationalParameter
+            : null;
+
+        // k = GM_model / GM_central, once: GM_model / GM_kernel with the GM of the body in the central term, exactly 1
+        // without a GM of the model or with the GM of the model in the central term, so that every product of the
+        // acceleration is then the one of a field evaluated with a single GM, the D2-A path bit for bit as before
+        _harmonicsScale = gravitationalParameter.HasValue && !_modelCentralGravitationalParameter.HasValue
+            ? gravitationalParameter.Value / bodyGravitationalParameter
             : 1.0;
 
         MaxDegree = maxDegrees;
@@ -112,9 +124,17 @@ public class GeopotentialGravitationalField : GravitationalField
 
     /// <summary>
     /// The GM to which the coefficients are normalized, with which the harmonics are evaluated, in m³/s²; null when
-    /// they take the GM of the body. The central term always takes the GM of the body.
+    /// they take the GM of the body. The central term takes it too with
+    /// <see cref="GeopotentialCentralTerm.ModelGravitationalParameter"/>, and the GM of the body otherwise.
     /// </summary>
     public double? GravitationalParameter { get; }
+
+    /// <summary>
+    /// The GM of the central term: that of the body (<see cref="GeopotentialCentralTerm.BodyGravitationalParameter"/>,
+    /// the default), or that of the model (<see cref="GeopotentialCentralTerm.ModelGravitationalParameter"/>), the GM
+    /// of the harmonics, <see cref="GravitationalParameter"/> or the body's when it is null.
+    /// </summary>
+    public GeopotentialCentralTerm CentralTerm { get; }
 
     /// <summary>
     /// The reference radius of the coefficients, with which the harmonics are evaluated, in m; null when they take the
@@ -128,8 +148,22 @@ public class GeopotentialGravitationalField : GravitationalField
     /// </summary>
     internal string ModelName { get; }
 
-    // GM_model / GM_kernel, the factor of the harmonics in the acceleration, 1 without a GM of the model
+    // GM_model / GM_central, the factor of the harmonics in the acceleration: GM_model / GM_kernel with the GM of the
+    // body in the central term, 1 without a GM of the model or with it in the central term
     private readonly double _harmonicsScale;
+
+    // The GM of the model when the central term takes it, null when the central term takes the GM of the body
+    private readonly double? _modelCentralGravitationalParameter;
+
+    /// <summary>
+    /// The GM of the central term for a body: that of the model with
+    /// <see cref="GeopotentialCentralTerm.ModelGravitationalParameter"/>, that of the body otherwise and when the model
+    /// has none. Read by the acceleration and its partials alike.
+    /// </summary>
+    private double CentralGravitationalParameter(CelestialBody observer)
+    {
+        return _modelCentralGravitationalParameter ?? observer.GM;
+    }
 
     /// <summary>
     /// The GM and the reference radius of the harmonics for a body: the constants of the model, or those of the body
@@ -191,7 +225,8 @@ public class GeopotentialGravitationalField : GravitationalField
 
     /// <summary>
     /// Adds the analytic ∂a/∂r of <see cref="ComputeGravitationalAcceleration"/> to <paramref name="dadr"/>: the point
-    /// mass, plus the harmonics of degree 2 to <see cref="PartialsDegree"/> by the Cunningham recursion.
+    /// mass with the GM of the central term (<see cref="CentralTerm"/>), plus the harmonics of degree 2 to
+    /// <see cref="PartialsDegree"/> by the Cunningham recursion, with the GM and the radius of the model.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -239,7 +274,7 @@ public class GeopotentialGravitationalField : GravitationalField
         var (harmonicsGm, referenceRadius) = HarmonicsConstants(observer);
         HarmonicPartials(fixedPosition, harmonicsGm, referenceRadius, degree, harmonics);
         AddRotatedBack(harmonics, column0, column1, column2, dadr);
-        PointMassPartials.Accumulate(position, observer.GM, dadr);
+        PointMassPartials.Accumulate(position, CentralGravitationalParameter(observer), dadr);
         return true;
     }
 
@@ -533,9 +568,9 @@ public class GeopotentialGravitationalField : GravitationalField
         double cosPhi = rhoXY / r;
         double lambda = System.Math.Atan2(y, x);
 
-        // The central term with the GM of the body; the harmonics with the constants of the model, their GM as
-        // k GM, k = GM_model / GM_body (Pavlis et al., 2012, for EGM2008)
-        double GM = observer.GM;
+        // The central term with the GM of the body, or of the model (CentralTerm); the harmonics with the constants of
+        // the model, their GM as k GM, k = GM_model / GM_central (Pavlis et al., 2012, for EGM2008)
+        double GM = CentralGravitationalParameter(observer);
         double Re = HarmonicsConstants(observer).ReferenceRadius;
         double k = _harmonicsScale;
 
@@ -600,7 +635,7 @@ public class GeopotentialGravitationalField : GravitationalField
             }
         }
 
-        // Convert to acceleration in spherical coordinates:
+        // Convert to acceleration in spherical coordinates, GM that of the central term:
         //   a_r = -(GM/r²) * [1 + k dVdr_sum]  (central body + harmonics)
         //   a_φ = (GM/r²) * k dVdPhi_sum
         //   a_λ = (GM/r²) * k dVdLambda_sum / cosφ

@@ -457,6 +457,7 @@ The framework supports spherical harmonic gravity modeling using EGM2008 coeffic
 - Coefficients: fully-normalized C_nm and S_nm from EGM2008 (tide-free)
 - Model file starts at degree 2 (degrees 0 and 1 are absent; handled as zeros)
 - Constants: the file carries none; the harmonics take EGM2008's GM and reference radius for the Earth by default (the kernel GM for the central term), the kernel constants for another body, or explicit ones (#410)
+- Central term: the kernel GM by default; the model GM with `GeopotentialModelParameters.CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter` (opt-in, decision 18 of #457), so that the whole field takes the model's constants as GMAT applies a `.cof` header, in the acceleration and the partials alike
 
 **Usage**
 ```csharp
@@ -812,7 +813,7 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
    - `GeopotentialGravitationalField` is NOT thread-safe — one instance per thread
    - Legendre functions use geodesy normalization without Condon-Shortley phase
    - The model file starts at degree 2; degrees 0 and 1 are handled as zeros internally
-   - The harmonics take the constants of the model (#410): EGM2008's GM 3.986004415e14 m³/s² and radius 6378136.3 m for the Earth by default, the kernel GM and equatorial radius for another body, or those given to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`; the central term always takes the GM of the kernels
+   - The harmonics take the constants of the model (#410): EGM2008's GM 3.986004415e14 m³/s² and radius 6378136.3 m for the Earth by default, the kernel GM and equatorial radius for another body, or those given to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`; the central term takes the GM of the kernels by default, or the GM of the model with `CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter` (GMAT's `.cof` convention; acceleration and partials alike; `CelestialItem.GM` unchanged)
 12. **Force Models (Drag & SRP)**: When working with atmospheric drag or solar radiation pressure:
    - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3
    - Atmospheric drag uses **atmosphere-relative velocity** (body-centered velocity minus co-rotation)

@@ -137,6 +137,16 @@ A force model parameter: a column of the sensitivity Ψ, or a consider parameter
 | `DragCoefficient` | Drag coefficient Cd, with atmospheric drag |
 | `ReflectivityCoefficient` | Reflectivity coefficient Cr, with solar radiation, albedo or thermal radiation pressure |
 
+## GeopotentialCentralTerm
+
+The GM of the central term of a geopotential (`GeopotentialModelParameters.CentralTerm`); the harmonics always take
+the constants of the model. See [Force Models](force-models.md#the-central-term-with-the-gm-of-the-model).
+
+| Value | Description |
+|-------|-------------|
+| `BodyGravitationalParameter` | The GM of the body, from its kernels (the default) |
+| `ModelGravitationalParameter` | The GM of the model: the whole field takes the constants of the model, as GMAT applies a `.cof` header |
+
 ## OrbitalDirection
 
 Used with [`OrbitalDirectionTarget`](attitudes.md#orbitaldirectiontarget) for TRIAD attitude targets.

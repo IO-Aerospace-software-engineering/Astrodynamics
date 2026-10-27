@@ -1,0 +1,4 @@
+SC.UTCGregorian                SC.EarthICRF.X                 SC.EarthICRF.Y                 SC.EarthICRF.Z                 SC.EarthICRF.VX                SC.EarthICRF.VY                SC.EarthICRF.VZ                
+25 Aug 2025 11:55:44.000       5442.1625926801826             -4068.9498468206248            -13.456851447751516            2.8581975428173836             3.8097859312745794             6.0021266931226886             
+SC.UTCGregorian                SC.EarthICRF.X                 SC.EarthICRF.Y                 SC.EarthICRF.Z                 SC.EarthICRF.VX                SC.EarthICRF.VY                SC.EarthICRF.VZ                
+26 Aug 2025 11:55:44.000       -5276.1662497699799            4263.2876969221661             -404.56444921697005            -2.7245612544545916            -3.9337524250974072            -5.9838279101981398            

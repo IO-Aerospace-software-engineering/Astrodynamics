@@ -143,6 +143,46 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
         Assert.True(error < 1e-7, $"Φ: {error:E2}");
     }
 
+    /// <summary>
+    /// With the GM of the model in the central term (decision 18 of #457): Φ of RK7(8) at 1e-13 against central
+    /// differences of whole propagations at 1e-14 from the exact perturbed state (#398), each with its own steps, per
+    /// 3×3 block every hour and at the end of 6 h; EGM2008 10×10, the Moon and the Sun, LEO 400 km. Steps of 10 m and
+    /// 1 cm/s, those of R2 (<c>WholePropagationStepStudyTests</c>).
+    /// </summary>
+    [Fact]
+    public void Leo_WithTheModelCentralTerm_PhiMatchesCentralDifferencesOfWholePropagations()
+    {
+        // Arrange
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
+            new GeopotentialModelParameters(GeopotentialPartialsBodies.Model, 10)
+                { CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter });
+        var bodies = new CelestialItem[]
+            { earth, new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start), new CelestialBody(Stars.Sun) };
+        var start = Leo(earth);
+        var window = new TimeSystem.Window(Start, Start.AddHours(6.0));
+        var solution = PartialsTestCases.Spacecraft(start).PropagateWithVariationalEquations(window, bodies,
+            new RK78Integrator(1e-13, 1e-13), false, false, TimeSpan.FromSeconds(600.0), new VariationalOptions());
+        var epochs = Enumerable.Range(1, 6).Select(h => Start.AddHours(h)).ToArray();
+
+        // Act
+        var expected = WholePropagationDifferences.Phi(state => new CentralBodyPropagator(window,
+                PartialsTestCases.Spacecraft(state), new RK78Integrator(1e-14, 1e-14), bodies, false, false,
+                TimeSpan.FromSeconds(600.0)).Propagate(), start, 10.0, 1e-2, epochs);
+        var errors = epochs.Select((t, k) =>
+            StmMeasures.BlockErrors(StmMeasures.Phi(StmMeasures.Y(solution, t)), expected[k])).ToArray();
+
+        // Assert
+        var worst = Enumerable.Range(0, 4).Select(b => errors.Max(e => e[b])).ToArray();
+        _output.WriteLine($"MEASURE central term with the model GM (decision 18 of #457), Φ against central " +
+                          $"differences of whole propagations at 1e-14, worst over 6 h per block (rr, rv, vr, vv): " +
+                          $"{worst[0]:E2}, {worst[1]:E2}, {worst[2]:E2}, {worst[3]:E2}; at the end " +
+                          $"{string.Join(", ", errors[^1].Select(e => e.ToString("E2")))}");
+        // Bound, twice the worst block over Linux, Windows and macOS arm64 rounded up at the second significant digit
+        // (CI of 77b509c, 2026-10-27: 2.45e-9, Φ_rv, on Linux; 2.33e-9 at most elsewhere). With the GM of the body in the point-mass partials and the GM of the model in the acceleration,
+        // the same comparison gives 4.4e-6 (measured on a scratch build)
+        Assert.All(worst, e => Assert.True(e < 5.0e-9, $"Φ: {e:E2}"));
+    }
+
     private static StateVector Leo(CelestialBody earth) => PartialsTestCases.State(PartialsTestCases.Leo400, earth);
 
     private CentralBodyPropagator Propagator(CelestialBody earth, RK78Integrator integrator)

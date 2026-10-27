@@ -16,7 +16,8 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 
 /// <summary>
 /// The bodies of <see cref="GeopotentialPartialsTests"/>: Earths with EGM2008 to degree 2, 10, 70, at the guard degree
-/// of the partials and above it (the coefficients missing from the file are zeros).
+/// of the partials and above it (the coefficients missing from the file are zeros), and to degree 2, 10 and 70 with the
+/// GM of the model in the central term.
 /// </summary>
 /// <remarks>
 /// Shared by the tests of the class as an xUnit class fixture: they run one after the other, so sharing the fields,
@@ -35,9 +36,19 @@ public sealed class GeopotentialPartialsBodies
             Earths[degree] = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, PartialsTestCases.Epoch,
                 new GeopotentialModelParameters(Model, (ushort)degree));
         }
+
+        foreach (int degree in new[] { 2, 10, 70 })
+        {
+            ModelCentralTermEarths[degree] = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF,
+                PartialsTestCases.Epoch, new GeopotentialModelParameters(Model, (ushort)degree)
+                    { CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter });
+        }
     }
 
     internal Dictionary<int, CelestialBody> Earths { get; } = new();
+
+    /// <summary>Earths whose central term takes the GM of EGM2008 (decision 18 of #457).</summary>
+    internal Dictionary<int, CelestialBody> ModelCentralTermEarths { get; } = new();
 }
 
 /// <summary>
@@ -117,6 +128,53 @@ public class GeopotentialPartialsTests : IClassFixture<GeopotentialPartialsBodie
         Assert.True(harmonicsReferenceError < 5e-9, $"harmonic reference error {harmonicsReferenceError:E2}");
         Assert.True(totalError < 1e-8, $"whole block: {totalError:E2}");
         Assert.True(harmonicsError < 1e-8, $"harmonics: {harmonicsError:E2}");
+        Assert.All(dadv, x => Assert.Equal(0.0, x));
+    }
+
+    /// <summary>
+    /// With the GM of the model in the central term (decision 18 of #457), the partials against Ridders' derivative of
+    /// the acceleration with the same option: the whole block, and the harmonics alone, the point mass of the GM of
+    /// EGM2008 taken out of both. The point-mass partials with the GM of the body would leave 1.5e-8 of the block.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(StatesAndDegrees))]
+    public void AnalyticPartials_WithTheModelCentralTerm_MatchRidders(string stateName, int degree)
+    {
+        // Arrange
+        const double modelGm = 3.986004415e14;
+        var earth = _bodies.ModelCentralTermEarths[degree];
+        var state = State(stateName, earth);
+        var force = new GravitationalAcceleration(earth);
+        var dadr = new double[9];
+        var dadv = new double[9];
+
+        // Act
+        force.AccumulateStatePartials(state, Context, dadr, dadv);
+
+        // Assert: the whole block, the harmonics alone, and what the GM of the body in the point-mass partials would
+        // leave against the same reference
+        double scale = state.Position.Magnitude();
+        var total = RiddersDerivative.StatePartials(force, state, Context, 1e-3 * scale, 1.0);
+        double totalError = RiddersDerivative.RelativeFrobeniusError(dadr, total.Dadr);
+        var harmonics = Harmonics(dadr, state, modelGm);
+        var (expectedHarmonics, harmonicsReferenceError) = HarmonicReference(force, state, modelGm, 1e-2 * scale);
+        double harmonicsError = RiddersDerivative.RelativeFrobeniusError(harmonics, expectedHarmonics);
+        var withTheBodyGm = Harmonics(dadr, state, modelGm);
+        PointMassPartials.Accumulate(state.Position, earth.GM, withTheBodyGm);
+        double bodyGmError = RiddersDerivative.RelativeFrobeniusError(withTheBodyGm, total.Dadr);
+        _output.WriteLine($"MEASURE central term with the model GM (decision 18 of #457), partials, {stateName}, " +
+                          $"degree {degree}: whole block {totalError:E2} (reference {total.DadrError:E2}), harmonics " +
+                          $"{harmonicsError:E2} (reference {harmonicsReferenceError:E2}); the GM of the body in the " +
+                          $"point mass {bodyGmError:E2}");
+        Assert.True(total.DadrError < 1e-10, $"reference error {total.DadrError:E2}");
+        Assert.True(harmonicsReferenceError < 5e-9, $"harmonic reference error {harmonicsReferenceError:E2}");
+        // Bounds, twice the worst of the 18 cases over Linux, Windows and macOS arm64 (CI of 77b509c, 2026-10-27): whole block 1.8e-12
+        // (Linux, polar 89.9°, degree 70), harmonics 1.94e-9 (GEO, degree 70, where the reference resolves no better;
+        // 1.73e-9 on Linux, 7.6e-11 elsewhere). The GM of the body in the point mass leaves 1.50e-8 to 1.51e-8, the ratio of
+        // the two GMs less one, which the reference resolves
+        Assert.True(totalError < 3.6e-12, $"whole block: {totalError:E2}");
+        Assert.True(harmonicsError < 3.9e-9, $"harmonics: {harmonicsError:E2}");
+        Assert.True(bodyGmError > 1e-8, $"the GM of the body: {bodyGmError:E2}");
         Assert.All(dadv, x => Assert.Equal(0.0, x));
     }
 
@@ -227,12 +285,14 @@ public class GeopotentialPartialsTests : IClassFixture<GeopotentialPartialsBodie
         }
     }
 
-    [Fact]
-    public void AccelerationAndPartials_WithTheOrientationCacheOfAPropagation_AllocateNothing()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AccelerationAndPartials_WithTheOrientationCacheOfAPropagation_AllocateNothing(bool modelCentralTerm)
     {
         // Arrange: the propagation's case, the orientation cache of the Earth-fixed frame active on this thread; the
         // rotation is shared by the acceleration and the partials (Frame.RotationTo)
-        var earth = _bodies.Earths[70];
+        var earth = modelCentralTerm ? _bodies.ModelCentralTermEarths[70] : _bodies.Earths[70];
         var state = State(PartialsTestCases.Leo400, earth);
         var cache = new PropagationFrameOrientationCache(
             new TimeSystem.Window(state.Epoch.AddHours(-1.0), state.Epoch.AddHours(1.0)), earth.Frame,
@@ -403,12 +463,12 @@ public class GeopotentialPartialsTests : IClassFixture<GeopotentialPartialsBodie
     }
 
     /// <summary>
-    /// The block less the point-mass partials.
+    /// The block less the point-mass partials of <paramref name="gm"/>.
     /// </summary>
     private static double[] Harmonics(double[] dadr, StateVector state, double gm)
     {
         var pointMass = new double[9];
-        new GravitationalField().TryAccumulatePositionPartials(state, pointMass);
+        PointMassPartials.Accumulate(state.Position, gm, pointMass);
         var harmonics = new double[9];
         for (int k = 0; k < 9; k++)
         {
