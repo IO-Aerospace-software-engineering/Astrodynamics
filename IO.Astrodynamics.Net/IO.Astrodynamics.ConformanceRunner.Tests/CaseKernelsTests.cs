@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.ConformanceRunner.Tests;
 public sealed class CaseKernelsTests : IDisposable
 {
     private const string Kernel = "earth_latest_high_prec.bpc";
-    private const string Pointer = SuiteDataFile.LfsPointerHeader + "v1\noid sha256:3f6ce47a0a\nsize 4939776\n";
+    private const string Pointer = SuiteDataFile.LfsPointerHeader + "v1\noid sha256:a3e65d8acf\nsize 5153792\n";
     private static readonly Time Epoch = new(new DateTime(2021, 3, 20, 12, 0, 0), TimeFrame.TDBFrame);
 
     private readonly string _directory;
@@ -57,7 +57,7 @@ public sealed class CaseKernelsTests : IDisposable
 
         var after = Itrf93();
 
-        // Assert: moved by the version spread of the two files (4.68e-12 rad at this epoch), then restored bit for bit
+        // Assert: moved by the version spread of the two files (1.82e-10 rad at this epoch), then restored bit for bit
         Assert.NotEqual(before.Rotation, inside.Rotation);
         Assert.Equal(before.Rotation, after.Rotation);
         Assert.Equal(before.AngularVelocity, after.AngularVelocity);

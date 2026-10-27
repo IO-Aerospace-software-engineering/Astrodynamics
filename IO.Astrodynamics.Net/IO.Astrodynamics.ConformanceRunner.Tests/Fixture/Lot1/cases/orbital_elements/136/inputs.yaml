@@ -24,23 +24,5 @@ inputs:
     argp_deg: 50.0
     ma_deg: 0.05356114140401497
 
-tolerances_override:
-  position_km:
-    abs_tol: 0.0
-    rel_tol: 6.5e-14
-    justification: >-
-      e = 0.999, true anomaly 150 deg: the state of a mean anomaly is ill-conditioned (Kepler's equation divides by
-      1 - e cos E). Measured: E_ref 7.72e-15 relative (the golden against the 60-digit evaluation of spec.md 11.1;
-      GMAT R2026a run of 2026-10-25), conditioning floor 3.21e-14 relative. T = ceil2(2 max(E_run, E_ref, floor)) =
-      6.5e-14.
-  velocity_km_s:
-    abs_tol: 0.0
-    rel_tol: 3.2e-14
-    justification: >-
-      e = 0.999, true anomaly 150 deg: the state of a mean anomaly is ill-conditioned (Kepler's equation divides by
-      1 - e cos E). Measured: E_ref 4.13e-15 relative (the golden against the 60-digit evaluation of spec.md 11.1;
-      GMAT R2026a run of 2026-10-25), conditioning floor 1.6e-14 relative. T = ceil2(2 max(E_run, E_ref, floor)) =
-      3.2e-14.
-
 # Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
 #   every element output (semi_major_axis_km to declination_deg): outputs of a state_vector input

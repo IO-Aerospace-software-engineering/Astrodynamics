@@ -27,8 +27,9 @@ public sealed record OutputMeasure(
     bool Passed)
 {
     /// <summary>
-    /// The line the tests print for every compared output, read from the CI logs of the three platforms to set the
-    /// tolerances (design of #458, section 7.2):
+    /// The line the tests print for every compared output, which the CI logs of the three platforms carry (design of
+    /// #458, section 7.2; since conformance-tests#19 the suite sets its lot-1 tolerances without them, decision 16 of
+    /// #457), in the format of the suite's tolerance tool:
     /// <c>MEASURE &lt;case_id&gt; &lt;output&gt; abs=&lt;a&gt; rel=&lt;r&gt; tol=&lt;t&gt; ratio=&lt;q&gt; key=&lt;k&gt;</c>, every number in the
     /// round-trip format of the invariant culture.
     /// </summary>

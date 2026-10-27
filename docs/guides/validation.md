@@ -38,14 +38,31 @@ table and the threshold it sets are in [Conjunction Assessment](../reference/con
 The conformance cases come from the
 [conformance-tests](https://github.com/IO-Aerospace-software-engineering/conformance-tests)
 suite: inputs, golden outputs produced by an external reference tool, and tolerances. It holds
-91 cases: ten propagation, eclipse, geosynchronous, tracking and pointing cases, and the 81 cases
+98 cases: ten propagation, eclipse, geosynchronous, tracking and pointing cases, and the 88 cases
 of lot 1 ([#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457)):
-41 orbital-element conversions, 12 time-scale conversions and 28 frame transformations, whose
-goldens come from GMAT R2026a, each checked against an independent reference. A tolerance of
-lot 1 is twice the largest of the framework's delta on Linux, Windows and macOS arm64, the
-golden's distance to the reference and the conditioning floor of the output, rounded up at the
-second significant digit (the suite's `spec.md` §6.4, measured 2026-10-25). Three harnesses run
-the cases:
+48 orbital-element conversions, 12 time-scale conversions and 28 frame transformations, whose
+goldens come from GMAT R2026a, each checked against an independent reference and against CSPICE,
+the second reference. Lot 1 is independent of any framework (decision 16 of #457,
+conformance-tests#19): no framework's delta enters its tolerances. Eight of the ten other cases
+keep overrides set from the deltas of IO.Astrodynamics (runner reports of 2026-10-04 and
+2026-10-21) until the suite reworks these cases (decision 16). A tolerance of lot 1 is the
+operational need of its key: 1 mm for lengths and positions, 1 µm/s for speeds and velocities,
+1e-9 deg for angles, 1e-11 for the eccentricity and the equinoctial f, g, h, k, 1 µs for the
+period and the time scales, 1e-12 relative for the mean motion, the energy and the angular
+momentum. It is raised only where the references cannot do better, to twice the largest of
+CSPICE's delta on Linux, Windows and macOS arm64, the golden's distance to the independent
+reference and the conditioning floor of the output, rounded up at the second significant digit
+(the suite's `spec.md` §6.4, measured 2026-10-27). Three keys are raised: the geodetic latitude
+(5.2e-8 deg) and the geodetic altitude (2.8e-6 km), both limited by GMAT's own golden, and the
+time outputs that cross TDB and TT (7.6e-5 s), whose key also covers the spread of the TDB − TT
+series between GMAT and ERFA (37.57 µs) plus GMAT's printing of TDB. The runner passes the 88
+cases of the suite at d4e9905 with at most 0.495 of the tolerance, on these geodetic outputs
+(cases 029 and 030), 0.36 on the time scales and below 0.10 elsewhere (Linux, 2026-10-27). These
+worst ratios are the same on Windows and macOS arm64: the `MEASURE` lines of the CI of 2026-10-26
+(the tree of 1f226ea, the suite at 371c515) give them on the three platforms, from cases whose
+goldens conformance-tests#24 left unchanged. That PR regenerated the ITRF93 cases 002 to
+008 with a new Earth orientation file; they pass at 2.9e-5 of the tolerance at most, measured on
+Linux only. Three harnesses run the cases:
 
 - the conformance runner `IO.Astrodynamics.ConformanceRunner` runs every case and writes a report,
   `IO.Astrodynamics.Net/conformance-report.json`; it propagates with the adaptive RK7(8) integrator
@@ -55,8 +72,10 @@ the cases:
   errors they measure;
 - `Lot1CaseTests` runs the runner on the cases of lot 1, copied with the schemas and the tolerances
   of the suite into `IO.Astrodynamics.ConformanceRunner.Tests/Fixture/Lot1` by
-  `tools/conformance/sync_lot1_fixture.py` (its `SOURCE` file records the suite commit), and prints
-  one `MEASURE` line per output: the delta, the tolerance and their ratio.
+  `tools/conformance/sync_lot1_fixture.py`, with the suite's Earth orientation file, which differs
+  from the runner's (NAIF's `earth_000101_270122_261026.bpc` since conformance-tests#24); its
+  `SOURCE` file records the suite commit, d4e9905 (2026-10-27). The test prints one `MEASURE` line
+  per output: the delta, the tolerance and their ratio.
 
 The first two evaluate the final state of a propagation at the exact end of the window, whose UTC
 epoch is converted to TDB, like the reference tool's elapsed time, and report the magnitude of the
@@ -82,10 +101,11 @@ dotnet run --project IO.Astrodynamics.ConformanceRunner -c Release -- \
 ```
 
 The exit code is the number of failed cases plus the number of errors. A data file left as an LFS
-pointer makes its case an ERROR that names the file. The suite (91 cases) takes about 46 s in
-Release on Linux (4 cores, 2026-10-25): 44 s for the eclipse case, about 2 s for the 81 cases of
-lot 1. The runner asks the propagator for the end of the window only: an output every
-`step_size_s` (1 s) cost a shortened RK7(8) step each and took the suite to 107 s (#426).
+pointer makes its case an ERROR that names the file. The suite (98 cases) takes about 48 s in
+Release on Linux (4 cores, 2026-10-27, median of three runs), nearly all of it for the eclipse
+case (48 s alone); the 88 cases of lot 1 take about 3 s. The runner asks the propagator for the
+end of the window only: an output every `step_size_s` (1 s) cost a shortened RK7(8) step each and
+took the suite to 107 s (#426).
 
 The `conformance` job of the CI runs the latest version of the suite on Linux, Windows and macOS
 arm64 and keeps each report as an artifact. The suite is private: the job reads it with the
