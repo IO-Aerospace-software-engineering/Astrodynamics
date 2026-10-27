@@ -226,8 +226,9 @@ namespace IO.Astrodynamics.Tests.Surface
                 TestHelpers.Sun, ShapeType.Ellipsoid, TestHelpers.MoonAtJ2000, ShapeType.Ellipsoid, OccultationType.Partial, Aberration.None, TimeSpan.FromSeconds(360.0));
             var windows = res as Window[] ?? res.ToArray();
             Assert.Single(windows);
-            Assert.Equal("2005-10-03T08:37:48.2812500 TDB", windows.ElementAt(0).StartDate.ToString());
-            Assert.Equal("2005-10-03T10:15:20.0201799 TDB", windows.ElementAt(0).EndDate.ToString());
+            // CSPICE gfoclt (tools/occultation_reference, converged to 1e-9 s), TDB seconds past J2000
+            Assert.Equal(TimeSystem.Time.CreateTDB(181600668.40108371), windows.ElementAt(0).StartDate, TestHelpers.TimeComparer);
+            Assert.Equal(TimeSystem.Time.CreateTDB(181606520.06240487), windows.ElementAt(0).EndDate, TestHelpers.TimeComparer);
         }
 
         [Fact]

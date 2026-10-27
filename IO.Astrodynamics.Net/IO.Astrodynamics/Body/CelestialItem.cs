@@ -7,6 +7,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
@@ -475,27 +476,56 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
-    /// Know if the celestialItem is occulted by another celestialItem
+    /// Know if the celestialItem is occulted by another celestialItem, as seen from a position.
     /// </summary>
-    /// <param name="by"></param>
-    /// <param name="from"></param>
-    /// <param name="aberration"></param>
-    /// <returns></returns>
+    /// <remarks>
+    /// The geometry of the occultation searches (<see cref="FindWindowsOnOccultationConstraint(in Window, ILocalizable, ShapeType, INaifObject, ShapeType, OccultationType, Aberration, in TimeSpan, OccultationSearchOptions)"/>):
+    /// a <see cref="CelestialBody"/> is the ellipsoid of its radii oriented by its own frame, any other item a point. The
+    /// positions are those of the bodies relative to the observer of <paramref name="from"/>, with the aberration
+    /// correction, minus the position of <paramref name="from"/>; each frame is read at the epoch minus the light time
+    /// from the position when the correction has one. Before #277 the bodies were spheres of their equatorial radius,
+    /// in front of each other by the distance of their centers.
+    /// </remarks>
+    /// <param name="by">The occulting item.</param>
+    /// <param name="from">The position of the observer.</param>
+    /// <param name="aberration">The aberration correction.</param>
+    /// <returns>The type of occultation of this item by <paramref name="by"/>; <see cref="OccultationType.None"/> when
+    /// their discs do not overlap or this item is in front, or when both are points.</returns>
+    /// <exception cref="InvalidOperationException">The position is inside one of the bodies.</exception>
     public OccultationType? IsOcculted(CelestialItem by, OrbitalParameters.OrbitalParameters from, Aberration aberration = Aberration.LT)
     {
-        var observerPos = from.ToStateVector().Position;
-        double backDistance = (GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - observerPos).Magnitude();
-        double byDistance = (by.GetEphemeris(from.Epoch, from.Observer, from.Frame, aberration).ToStateVector().Position - observerPos).Magnitude();
-
-        // The occluding body must be closer than the target for a true occultation.
-        // If the target is closer, it's a transit, not an occultation.
-        if (byDistance >= backDistance)
+        ArgumentNullException.ThrowIfNull(by);
+        ArgumentNullException.ThrowIfNull(from);
+        var backModel = new OccultationBodyModel(this, OccultationShape(this), null);
+        var frontModel = new OccultationBodyModel(by, OccultationShape(by), null);
+        if (backModel.IsPoint && frontModel.IsPoint)
+        {
             return OccultationType.None;
+        }
 
-        double backSize = AngularSize(backDistance);
-        double bySize = by.AngularSize(byDistance);
-        var angularSeparation = this.AngularSeparation(from.Epoch, by, from, aberration);
-        return IsOcculted(angularSeparation, backSize, bySize);
+        var observer = from.ToStateVector().ToFrame(Frame.ICRF).ToStateVector().Position;
+        var back = OccultationBodyAt(backModel, from, observer, aberration);
+        var front = OccultationBodyAt(frontModel, from, observer, aberration);
+        return OccultationGeometry.Evaluate(front, back, OccultationGeometry.SphereIsFront(front, back),
+            OccultationMargin.Overlap | OccultationMargin.BackInside | OccultationMargin.FrontInside, true).Type;
+    }
+
+    private static ShapeType OccultationShape(CelestialItem item)
+    {
+        return item is CelestialBody body && body.Radii.X > 0.0 && body.Radii.Y > 0.0 && body.Radii.Z > 0.0 ? ShapeType.Ellipsoid : ShapeType.Point;
+    }
+
+    private static OccultationBody OccultationBodyAt(OccultationBodyModel model, OrbitalParameters.OrbitalParameters from, in Vector3 observer,
+        Aberration aberration)
+    {
+        var position = model.Item.GetEphemeris(from.Epoch, from.Observer, Frame.ICRF, aberration).ToStateVector().Position - observer;
+        double lightTime = aberration switch
+        {
+            Aberration.None => 0.0,
+            Aberration.XLT or Aberration.XLTS or Aberration.XCN or Aberration.XCNS => position.Magnitude() / Constants.C,
+            _ => -position.Magnitude() / Constants.C
+        };
+        return model.ToBody(position, OccultationEvaluator.Shift(from.Epoch, lightTime));
     }
 
     /// <summary>
@@ -726,39 +756,78 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
-    /// Find windows on occultation constraint
+    /// Find the windows when <paramref name="frontBody"/> occults this item (the target, or back body) as
+    /// <paramref name="observer"/> sees them, with the bodies' own frames and a convergence tolerance of 1 µs; see the
+    /// overload with <see cref="OccultationSearchOptions"/>.
     /// </summary>
-    /// <param name="searchWindow"></param>
-    /// <param name="observer"></param>
-    /// <param name="targetShape"></param>
-    /// <param name="frontBody"></param>
-    /// <param name="frontShape"></param>
-    /// <param name="occultationType"></param>
-    /// <param name="aberration"></param>
-    /// <param name="stepSize"></param>
-    /// <returns></returns>
+    /// <param name="searchWindow">The search window.</param>
+    /// <param name="observer">The observer.</param>
+    /// <param name="targetShape">The shape of this item.</param>
+    /// <param name="frontBody">The occulting body.</param>
+    /// <param name="frontShape">The shape of the occulting body.</param>
+    /// <param name="occultationType">The type of occultation.</param>
+    /// <param name="aberration">The aberration correction.</param>
+    /// <param name="stepSize">The step of the search.</param>
+    /// <returns>The windows, in TDB.</returns>
     public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
         ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
     {
+        return FindWindowsOnOccultationConstraint(searchWindow, observer, targetShape, frontBody, frontShape, occultationType, aberration, stepSize,
+            OccultationSearchOptions.Default);
+    }
+
+    /// <summary>
+    /// Find the windows when <paramref name="frontBody"/> occults this item (the target, or back body) as
+    /// <paramref name="observer"/> sees them.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The types have the meaning of CSPICE's <c>gfoclt</c>: <see cref="OccultationType.Full"/>, the target is hidden;
+    /// <see cref="OccultationType.Annular"/>, the front body is seen within the target's disc;
+    /// <see cref="OccultationType.Partial"/>, the front body hides part of the target's limb;
+    /// <see cref="OccultationType.Any"/>, any of them; and <see cref="OccultationType.None"/>, the rest of the search
+    /// window. A body modeled as <see cref="ShapeType.Ellipsoid"/> is the ellipsoid of its radii
+    /// (<see cref="CelestialBody.Radii"/>) oriented by its body-fixed frame (<see cref="OccultationSearchOptions"/>). A
+    /// point target can only be hidden (<see cref="OccultationType.Full"/> or <see cref="OccultationType.Any"/>), a
+    /// point front body can only transit (<see cref="OccultationType.Any"/> or <see cref="OccultationType.Annular"/>);
+    /// the other types give no window.
+    /// </para>
+    /// <para>
+    /// When the observer and this item are in the kernels and one of them is a spacecraft, CSPICE's <c>gfoclt</c>
+    /// searches. Otherwise, for a propagated spacecraft, a site or two natural bodies, the library searches: the
+    /// geometry of the ellipsoids (the method of CSPICE's <c>zzocced</c>) gives continuous margins, located by Brent's
+    /// root finder to <see cref="OccultationSearchOptions.ConvergenceTolerance"/>; it reads the states and the
+    /// orientations, never writes a kernel, and keeps no state, so searches on separate propagations may run
+    /// concurrently. Its step rule: every window, even shorter than the step, is found when the step is at most half the
+    /// time between the extremes of the margins (a quarter of the period for the eclipses of a satellite); see the
+    /// reference page on occultations.
+    /// </para>
+    /// </remarks>
+    /// <param name="searchWindow">The search window.</param>
+    /// <param name="observer">The observer.</param>
+    /// <param name="targetShape">The shape of this item.</param>
+    /// <param name="frontBody">The occulting body.</param>
+    /// <param name="frontShape">The shape of the occulting body.</param>
+    /// <param name="occultationType">The type of occultation.</param>
+    /// <param name="aberration">The aberration correction: none or a light time (LT, CN, XLT, XCN); the stellar
+    /// aberration of the "+S" corrections is ignored, as <c>gfoclt</c> does.</param>
+    /// <param name="stepSize">The step of the search.</param>
+    /// <param name="options">The frames of the ellipsoids and the convergence tolerance; null for the defaults.</param>
+    /// <returns>The windows, in TDB.</returns>
+    /// <exception cref="ArgumentException">Both bodies are points, or a body modeled as an ellipsoid has no radii.</exception>
+    public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable observer,
+        ShapeType targetShape, INaifObject frontBody, ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize,
+        OccultationSearchOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(observer);
+        ArgumentNullException.ThrowIfNull(frontBody);
         if (IsSpiceBacked && observer is CelestialItem ci2 && ci2.IsSpiceBacked
             && frontBody is ILocalizable fb && fb.IsSpiceBacked
             && (IsSpacecraft || ci2.IsSpacecraft))
-            return SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
-                searchWindow, observer.NaifId, NaifId, targetShape,
-                frontBody.NaifId, frontShape, occultationType, aberration, stepSize);
+            return OccultationSearch.Spice(searchWindow, observer.NaifId, NaifId, targetShape, frontBody.NaifId, frontShape, occultationType, aberration,
+                stepSize, options);
 
-        Func<Time, bool> calculateOccultation = date =>
-        {
-            var occultation = IsOcculted(frontBody as CelestialItem, new StateVector(Vector3.Zero, Vector3.Zero, observer, date, Frame.ICRF), aberration);
-            if (occultationType == OccultationType.Any)
-            {
-                return occultation is OccultationType.Partial or OccultationType.Annular or OccultationType.Full;
-            }
-
-            return occultation == occultationType;
-        };
-
-        return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateOccultation, RelationnalOperator.Equal, true, stepSize);
+        return OccultationSearch.Managed(searchWindow, observer, this, targetShape, frontBody, frontShape, occultationType, aberration, stepSize, options);
     }
 
     /// <summary>

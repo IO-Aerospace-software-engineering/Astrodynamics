@@ -427,13 +427,39 @@ public class SpiceAPI
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
     {
+        return FindWindowsOnOccultationConstraint(searchWindow, observerId, targetId, targetShape, frontBodyId, frontShape, occultationType,
+            aberration, stepSize, null, null);
+    }
+
+    /// <summary>
+    /// Find time windows based on occultation constraint (CSPICE's <c>gfoclt</c>), with the body-fixed frames that
+    /// orient the ellipsoids
+    /// </summary>
+    /// <param name="searchWindow"></param>
+    /// <param name="observerId"></param>
+    /// <param name="targetId"></param>
+    /// <param name="targetShape"></param>
+    /// <param name="frontBodyId"></param>
+    /// <param name="frontShape"></param>
+    /// <param name="occultationType"></param>
+    /// <param name="aberration"></param>
+    /// <param name="stepSize"></param>
+    /// <param name="frontFrame">The body-fixed frame of the front body's ellipsoid (<c>fframe</c>), or null for the
+    /// frame the kernels associate with the body.</param>
+    /// <param name="targetFrame">The body-fixed frame of the target's ellipsoid (<c>bframe</c>), or null for the frame
+    /// the kernels associate with the body.</param>
+    /// <returns></returns>
+    public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
+        int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
+        OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
+    {
         lock (lockObject)
         {
-            string frontFrame = frontShape == ShapeType.Ellipsoid
-                ? GetCelestialBodyInfoProxy(frontBodyId).FrameName
+            string frontFrameName = frontShape == ShapeType.Ellipsoid
+                ? frontFrame?.Name ?? GetCelestialBodyInfoProxy(frontBodyId).FrameName
                 : string.Empty;
-            string targetFrame = targetShape == ShapeType.Ellipsoid
-                ? GetCelestialBodyInfoProxy(targetId).FrameName
+            string targetFrameName = targetShape == ShapeType.Ellipsoid
+                ? targetFrame?.Name ?? GetCelestialBodyInfoProxy(targetId).FrameName
                 : string.Empty;
             var windows = new Window[1000];
             for (var i = 0; i < 1000; i++)
@@ -441,8 +467,8 @@ public class SpiceAPI
                 windows[i] = new Window(double.NaN, double.NaN);
             }
 
-            FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrame, targetShape.GetDescription(),
-                frontBodyId, frontFrame, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
+                frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows);
             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
         }
     }

@@ -82,8 +82,9 @@ public class CelestialBodyTests
             ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, TimeSpan.FromMinutes(60.0)).ToArray();
         Assert.Single(res);
 
-        Assert.Equal(new TimeSystem.Time(new DateTime(2001, 12, 14, 20, 10, 50, 413), TimeFrame.TDBFrame), res[0].StartDate, TestHelpers.TimeComparer);
-        Assert.Equal(new TimeSystem.Time(new DateTime(2001, 12, 14, 21, 36, 32, 393), TimeFrame.TDBFrame), res[0].EndDate, TestHelpers.TimeComparer);
+        // CSPICE gfoclt (tools/occultation_reference, converged to 1e-9 s), TDB seconds past J2000
+        Assert.Equal(TimeSystem.Time.CreateTDB(61632650.573219478), res[0].StartDate, TestHelpers.TimeComparer);
+        Assert.Equal(TimeSystem.Time.CreateTDB(61637793.019317344), res[0].EndDate, TestHelpers.TimeComparer);
     }
 
     [Fact]
