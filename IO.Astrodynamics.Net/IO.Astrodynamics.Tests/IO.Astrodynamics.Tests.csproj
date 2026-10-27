@@ -122,6 +122,9 @@
       <None Update="Data\GmatReference\**\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Data\GmatConformancePropagators\**\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="Data\SolarSystem\EGM2008_to70_TideFree">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

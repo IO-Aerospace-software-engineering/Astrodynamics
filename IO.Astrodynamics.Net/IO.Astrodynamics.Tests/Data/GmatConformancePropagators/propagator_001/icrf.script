@@ -1,0 +1,99 @@
+%--------------------------------------------------------------
+%  GMAT Script: propagator_24h_geo10_001
+%
+%  Description:
+%    24-hour propagation with:
+%    JGM3 degree-10 geopotential, Sun, Moon point-mass
+%    perturbations. No SRP. No drag.
+%
+%  Propagation: 2025-08-25 11:55:44.000 -> 2025-08-26 11:55:44.000 (24h)
+%  Integrator: PrinceDormand78 (RK7/8)
+%--------------------------------------------------------------
+
+%----------------------------------------
+%---------- Spacecraft
+%----------------------------------------
+
+Create Spacecraft SC;
+
+SC.DateFormat       = UTCGregorian;
+SC.Epoch            = '25 Aug 2025 11:55:44.000';
+SC.CoordinateSystem = EarthICRF;
+SC.DisplayStateType = Cartesian;
+
+SC.X  =  5442.1625926801835;
+SC.Y  = -4068.9498468206248;
+SC.Z  =   -13.456851447751518;
+SC.VX =     2.8581975428173836;
+SC.VY =     3.8097859312745794;
+SC.VZ =     6.0021266931226886;
+
+%----------------------------------------
+%---------- Force Model
+%----------------------------------------
+
+% Use DE440s planetary ephemeris via SPICE
+GMAT SolarSystem.EphemerisSource = 'SPICE';
+GMAT SolarSystem.SPKFilename     = '@SPK@';
+
+Create ForceModel FM;
+
+FM.CentralBody   = Earth;
+FM.PrimaryBodies = {Earth};
+
+% JGM3 geopotential, degree/order 10
+FM.GravityField.Earth.Degree        = 10;
+FM.GravityField.Earth.Order         = 10;
+FM.GravityField.Earth.PotentialFile = '@COF@';
+
+% Third-body point masses: Moon and Sun only
+FM.PointMasses = {Luna, Sun};
+
+% No SRP, no drag
+
+% Error control
+FM.ErrorControl = RSSStep;
+
+%----------------------------------------
+%---------- Propagator
+%----------------------------------------
+
+Create Propagator Prop_RK78;
+
+Prop_RK78.FM              = FM;
+Prop_RK78.Type            = PrinceDormand78;
+Prop_RK78.InitialStepSize = 1;
+Prop_RK78.Accuracy        = 1e-13;
+Prop_RK78.MinStep         = 0.001;
+Prop_RK78.MaxStep         = 1;
+Prop_RK78.MaxStepAttempts = 50;
+
+%----------------------------------------
+%---------- Subscribers (output)
+%----------------------------------------
+
+Create ReportFile FinalStateReport;
+FinalStateReport.Filename     = '@OUT@/propagator_24h_geo10_001_output.txt';
+FinalStateReport.WriteHeaders = true;
+FinalStateReport.ColumnWidth  = 28;
+FinalStateReport.Precision    = 17;
+FinalStateReport.WriteReport  = true;
+
+%----------------------------------------
+%---------- Mission Sequence
+%----------------------------------------
+
+BeginMissionSequence;
+
+% Report initial state
+Report FinalStateReport SC.UTCGregorian ...
+    SC.EarthICRF.X  SC.EarthICRF.Y  SC.EarthICRF.Z ...
+    SC.EarthICRF.VX SC.EarthICRF.VY SC.EarthICRF.VZ;
+
+% Propagate for exactly 24 hours (86400 seconds)
+Propagate Prop_RK78(SC) {SC.ElapsedSecs = 86400.0};
+
+% Report final state
+Report FinalStateReport SC.UTCGregorian ...
+    SC.EarthICRF.X  SC.EarthICRF.Y  SC.EarthICRF.Z ...
+    SC.EarthICRF.VX SC.EarthICRF.VY SC.EarthICRF.VZ;

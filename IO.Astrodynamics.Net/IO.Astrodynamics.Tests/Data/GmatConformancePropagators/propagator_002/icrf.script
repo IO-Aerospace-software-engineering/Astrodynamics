@@ -1,0 +1,129 @@
+%--------------------------------------------------------------
+%  GMAT Script: propagator_24h_geo70_full_002
+%
+%  Description:
+%    24-hour propagation of INTELSAT 901 (GEO) with:
+%    JGM3 degree-70 geopotential, Sun, Moon, all planetary point
+%    masses. No SRP. No drag.
+%    Spacecraft: 3000 kg.
+%
+%  Initial state derived from TLE at epoch via SGP4 (TEME->J2000):
+%    TLE Line 1: 1 26824U 01024A   26040.43262683 -.00000207  00000-0  00000+0 0  9994
+%    TLE Line 2: 2 26824   0.9230  86.6125 0002726 324.4840  12.2632  0.98820941 21659
+%    Epoch: 2026-02-09 10:22:58.958 UTC
+%
+%  Propagation: 2026-02-09 10:22:58.958 -> 2026-02-10 10:22:58.958 (24h)
+%  Integrator: PrinceDormand78 (RK7/8)
+%--------------------------------------------------------------
+
+%----------------------------------------
+%---------- Spacecraft
+%----------------------------------------
+
+Create Spacecraft INTELSAT901;
+
+INTELSAT901.DateFormat       = UTCGregorian;
+INTELSAT901.Epoch            = '09 Feb 2026 10:22:58.958';
+INTELSAT901.CoordinateSystem = EarthICRF;
+INTELSAT901.DisplayStateType = Cartesian;
+
+% J2000/ICRF Cartesian state from SGP4 TLE conversion
+INTELSAT901.X  =  19283.848018390324;
+INTELSAT901.Y  =  37944.390563573960;
+INTELSAT901.Z  =   -328.553515505210;
+INTELSAT901.VX =     -2.727809889171343;
+INTELSAT901.VY =      1.386957738048448;
+INTELSAT901.VZ =      0.052987319351738;
+
+% Spacecraft physical properties
+INTELSAT901.DryMass  = 3000.0;
+INTELSAT901.Cd       = 2.2;
+INTELSAT901.Cr       = 1.5;
+INTELSAT901.DragArea = 50.0;
+INTELSAT901.SRPArea  = 50.0;
+
+%----------------------------------------
+%---------- Force Model
+%----------------------------------------
+
+% Use DE440s planetary ephemeris via SPICE
+GMAT SolarSystem.EphemerisSource = 'SPICE';
+GMAT SolarSystem.SPKFilename     = '@SPK@';
+
+% Remap outer-planet NAIF IDs to barycenters (DE440s has barycenters, not planet centers)
+GMAT Mars.NAIFId    = 4;
+GMAT Jupiter.NAIFId = 5;
+GMAT Saturn.NAIFId  = 6;
+GMAT Uranus.NAIFId  = 7;
+GMAT Neptune.NAIFId = 8;
+GMAT Pluto.NAIFId   = 9;
+
+Create ForceModel FM_FullModel;
+
+FM_FullModel.CentralBody  = Earth;
+FM_FullModel.PrimaryBodies = {Earth};
+
+% JGM3 geopotential, degree/order 70
+FM_FullModel.GravityField.Earth.Degree        = 70;
+FM_FullModel.GravityField.Earth.Order         = 70;
+FM_FullModel.GravityField.Earth.PotentialFile = '@COF@';
+
+% Third-body point masses: Moon, Sun, and all planetary barycenters
+FM_FullModel.PointMasses = {Luna, Sun, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto};
+
+% No SRP, no drag
+
+% Error control
+FM_FullModel.ErrorControl = RSSStep;
+
+%----------------------------------------
+%---------- Propagator
+%----------------------------------------
+
+Create Propagator Prop_RK78;
+
+Prop_RK78.FM              = FM_FullModel;
+Prop_RK78.Type            = PrinceDormand78;
+Prop_RK78.InitialStepSize = 60;
+Prop_RK78.Accuracy        = 1e-13;
+Prop_RK78.MinStep         = 0.001;
+Prop_RK78.MaxStep         = 60;
+Prop_RK78.MaxStepAttempts = 50;
+
+%----------------------------------------
+%---------- Subscribers (output)
+%----------------------------------------
+
+% Report file: initial and final state
+Create ReportFile FinalStateReport;
+FinalStateReport.Filename       = '@OUT@/propagator_24h_geo70_full_002_output.txt';
+FinalStateReport.WriteHeaders   = true;
+FinalStateReport.ColumnWidth    = 28;
+FinalStateReport.Precision      = 17;
+FinalStateReport.WriteReport    = true;
+
+% Ephemeris file (optional, for analysis)
+%Create EphemerisFile Ephem;
+%Ephem.Spacecraft    = INTELSAT901;
+%Ephem.Filename      = 'propagator_24h_geo70_full_002.bsp';
+%Ephem.FileFormat    = SPK;
+%Ephem.StepSize      = 60;
+
+%----------------------------------------
+%---------- Mission Sequence
+%----------------------------------------
+
+BeginMissionSequence;
+
+% Report initial state
+Report FinalStateReport INTELSAT901.UTCGregorian ...
+    INTELSAT901.EarthICRF.X  INTELSAT901.EarthICRF.Y  INTELSAT901.EarthICRF.Z ...
+    INTELSAT901.EarthICRF.VX INTELSAT901.EarthICRF.VY INTELSAT901.EarthICRF.VZ;
+
+% Propagate for exactly 24 hours (86400 seconds)
+Propagate Prop_RK78(INTELSAT901) {INTELSAT901.ElapsedSecs = 86400.0};
+
+% Report final state
+Report FinalStateReport INTELSAT901.UTCGregorian ...
+    INTELSAT901.EarthICRF.X  INTELSAT901.EarthICRF.Y  INTELSAT901.EarthICRF.Z ...
+    INTELSAT901.EarthICRF.VX INTELSAT901.EarthICRF.VY INTELSAT901.EarthICRF.VZ;

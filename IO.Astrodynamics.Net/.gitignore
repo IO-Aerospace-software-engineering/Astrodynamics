@@ -88,6 +88,8 @@ StyleCopReport.xml
 *.log
 # The console logs of GMAT, part of the reference data of the comparison with GMAT (#408)
 !IO.Astrodynamics.Tests/Data/GmatReference/**/*.log
+# and of the GMAT runs of the conformance propagators 001 to 003 (decision 18 of #457)
+!IO.Astrodynamics.Tests/Data/GmatConformancePropagators/**/*.log
 *.vspscc
 *.vssscc
 .builds
