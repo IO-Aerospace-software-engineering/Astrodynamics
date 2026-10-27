@@ -24,15 +24,5 @@ inputs:
   ellipsoid: {equatorial_radius_km: 6378.1366, flattening: 0.0033528131084554157}
   kernels: []
 
-tolerances_override:
-  longitude_deg:
-    abs_tol: 1.5e-12
-    rel_tol: 0.0
-    justification: >-
-      Close to the polar axis (latitude 89.9 deg), GMAT's longitude is coarser than the conditioning of the case.
-      Measured: E_ref 7.49e-13 deg (the golden against the 50-digit evaluation; GMAT R2026a run of 2026-10-25),
-      conditioning floor 2.54e-15 deg, E_run linux 7.5e-13, windows 7.5e-13, macos 7.5e-13 (IO.Astrodynamics minus
-      golden, 2026-10-25). T = ceil2(2 max(E_run, E_ref, floor)) = 1.5e-12.
-
 # Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
 #   position_km, velocity_km_s: identity transformation (ITRF93 to ITRF93); the case checks the geodetic outputs

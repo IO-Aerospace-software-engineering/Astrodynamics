@@ -1,0 +1,110 @@
+%--------------------------------------------------------------
+%  GMAT Script: propagator_24h_sso_003
+%
+%  Description:
+%    24-hour propagation of a Sun-synchronous satellite at 700 km altitude with:
+%    JGM3 degree-10 geopotential, Sun, Moon point-mass perturbations.
+%    No SRP. No drag. Frozen orbit: e=0.001, AoP=90 deg.
+%
+%  SSO validation metric:
+%    J2 nodal precession for a=7078.137 km, e=0.001, i=98.186 deg:
+%      dOmega/dt ~ +0.9857 deg/day  (Earth mean solar motion: +0.9856 deg/day)
+%    Expected RAAN change over 24 h: ~+0.9857 deg
+%
+%  Propagation: 2025-06-01 10:30:00.000 -> 2025-06-02 10:30:00.000 (24h)
+%  Integrator: PrinceDormand78 (RK7/8)
+%--------------------------------------------------------------
+
+%----------------------------------------
+%---------- Spacecraft
+%----------------------------------------
+
+Create Spacecraft SC;
+
+SC.DateFormat       = UTCGregorian;
+SC.Epoch            = '01 Jun 2025 10:30:00.000';
+SC.CoordinateSystem = EarthICRF;
+SC.DisplayStateType = Keplerian;
+
+% Classical Keplerian elements (EME2000/ICRF equatorial, UTC epoch)
+% Frozen orbit: e=0.001, AoP=90 deg (eccentricity vector pointing north)
+% SSO inclination: i=98.186 deg -> dOmega/dt ~ +0.9857 deg/day
+SC.SMA  = 7078.137;
+SC.ECC  = 0.001;
+SC.INC  = 98.186;
+SC.RAAN = 75.0;
+SC.AOP  = 90.0;
+SC.TA   = 0.0;
+
+% Note: inputs.yaml specifies MA=0. For e=0.001 at MA=0, TA=0 exactly.
+
+%----------------------------------------
+%---------- Force Model
+%----------------------------------------
+
+% Use DE440s planetary ephemeris via SPICE
+GMAT SolarSystem.EphemerisSource = 'SPICE';
+GMAT SolarSystem.SPKFilename     = '@SPK@';
+
+Create ForceModel FM;
+
+FM.CentralBody   = Earth;
+FM.PrimaryBodies = {Earth};
+
+% JGM3 geopotential, degree/order 10
+FM.GravityField.Earth.Degree        = 10;
+FM.GravityField.Earth.Order         = 10;
+FM.GravityField.Earth.PotentialFile = '@COF@';
+
+% Third-body point masses: Moon and Sun only
+FM.PointMasses = {Luna, Sun};
+
+% No SRP, no drag
+
+% Error control
+FM.ErrorControl = RSSStep;
+
+%----------------------------------------
+%---------- Propagator
+%----------------------------------------
+
+Create Propagator Prop_RK78;
+
+Prop_RK78.FM              = FM;
+Prop_RK78.Type            = PrinceDormand78;
+Prop_RK78.InitialStepSize = 1;
+Prop_RK78.Accuracy        = 1e-13;
+Prop_RK78.MinStep         = 0.001;
+Prop_RK78.MaxStep         = 1;
+Prop_RK78.MaxStepAttempts = 50;
+
+%----------------------------------------
+%---------- Subscribers (output)
+%----------------------------------------
+
+Create ReportFile FinalStateReport;
+FinalStateReport.Filename     = '@OUT@/propagator_24h_sso_003_output.txt';
+FinalStateReport.WriteHeaders = true;
+FinalStateReport.ColumnWidth  = 28;
+FinalStateReport.Precision    = 17;
+FinalStateReport.WriteReport  = true;
+
+%----------------------------------------
+%---------- Mission Sequence
+%----------------------------------------
+
+BeginMissionSequence;
+
+% Report initial state (Cartesian, EarthMJ2000Eq = EME2000/ICRF)
+Report FinalStateReport SC.UTCGregorian ...
+    SC.EarthICRF.X  SC.EarthICRF.Y  SC.EarthICRF.Z ...
+    SC.EarthICRF.VX SC.EarthICRF.VY SC.EarthICRF.VZ;
+
+% Propagate for exactly 24 hours (86400 seconds)
+Propagate Prop_RK78(SC) {SC.ElapsedSecs = 86400.0};
+
+% Report final state
+% RAAN should have advanced ~+0.9857 deg (SSO nodal precession validation).
+Report FinalStateReport SC.UTCGregorian ...
+    SC.EarthICRF.X  SC.EarthICRF.Y  SC.EarthICRF.Z ...
+    SC.EarthICRF.VX SC.EarthICRF.VY SC.EarthICRF.VZ;

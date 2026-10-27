@@ -212,7 +212,7 @@ public class GeopotentialConstantsTests
     /// C₂ₘ = N₂ₘ C̄₂ₘ, N₂₀ = √5, N₂₁ = √(5/3), N₂₂ = √(5/12) (Montenbruck and Gill, 2000, §3.2; EGM2008's C̄₂ₘ, S̄₂ₘ):
     /// ∇(f / r⁵) = ∇f / r⁵ − 5 f r / r⁷ for each polynomial f.
     /// </summary>
-    private static Vector3 DegreeTwo(in Vector3 p, double gm, double a)
+    internal static Vector3 DegreeTwo(in Vector3 p, double gm, double a)
     {
         double c20 = System.Math.Sqrt(5.0) * -0.484165143790815e-03;
         double c21 = System.Math.Sqrt(5.0 / 3.0) * -0.206615509074176e-09;

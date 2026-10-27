@@ -202,7 +202,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// The gravitational field of a body: the point mass, or the geopotential of <paramref name="parameters"/>, its
     /// harmonics with the constants of the model. Without constants in the parameters, those of EGM2008 for the Earth
     /// (NAIF 399), the model shipped with the library, and the GM and the equatorial radius of the kernels for any
-    /// other body; the central term with <paramref name="gm"/>, the GM of the body (decisions D2 and D3 of #444).
+    /// other body; the central term with <paramref name="gm"/>, the GM of the body (decisions D2 and D3 of #444), or with
+    /// the GM of the model when the parameters ask for it (<see cref="GeopotentialModelParameters.CentralTerm"/>,
+    /// decision 18 of #457).
     /// </summary>
     private static GravitationalField CreateGravitationalField(int naifId, double gm,
         GeopotentialModelParameters parameters)
@@ -223,7 +225,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         return new GeopotentialGravitationalField(parameters.GeopotentialModelPath, parameters.GeopotentialDegree,
-            gravitationalParameter, referenceRadius, gm, modelName);
+            gravitationalParameter, referenceRadius, gm, modelName, parameters.CentralTerm);
     }
 
     public static CelestialItem Create(int naifId)

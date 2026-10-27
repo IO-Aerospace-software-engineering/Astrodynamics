@@ -45,6 +45,10 @@ In the test data:
 | `G1/` to `G6/` | GMAT: one report (`.txt`) and one console log (`.log`) per script |
 | `partials/` | `gmat_partials.py`: one line of 42 numbers per state and force |
 
+`IO.Astrodynamics.Tests/Data/GmatConformancePropagators` holds other GMAT R2026a runs, those of the conformance
+propagators 001 to 003 with EGM2008's GM in the header of the `.cof` (decision 18 of #457,
+`GmatConformancePropagatorTests`). These tools neither write nor compare them: see the README of that directory.
+
 ## Running
 
 From the repository root, with GMAT R2026a extracted in `<GMAT>` (the directory that holds `bin/`):

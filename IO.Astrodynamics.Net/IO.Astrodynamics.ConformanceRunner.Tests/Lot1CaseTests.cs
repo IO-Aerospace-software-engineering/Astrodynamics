@@ -22,14 +22,16 @@ namespace IO.Astrodynamics.ConformanceRunner.Tests;
 /// <remarks>
 /// Each test writes its own suite from the fixture (<see cref="Lot1Fixture"/>), so that its edits touch no other; the
 /// suite is deleted at the end. Only <see cref="EveryCaseOfTheFixture_Passes"/> prints <c>MEASURE</c> lines, one per
-/// compared output, which the CI logs of the three platforms carry and from which the tolerances are set (design of
-/// #458, sections 2 and 10); the negative tests, whose goldens are edited, print none.
+/// compared output, which the CI logs of the three platforms carry: the framework's margin to each tolerance. The lot-1
+/// tolerances were set from them under the design of #458 (sections 2 and 10); since conformance-tests#19 the suite
+/// sets them without any framework's deltas (decision 16 of #457, which supersedes decision 7). The negative tests,
+/// whose goldens are edited, print none.
 /// </remarks>
 public sealed class Lot1CaseTests : IDisposable
 {
     private const string KernelsPath = Lot1Fixture.KernelsPath;
     private const string Kernel = "earth_latest_high_prec.bpc";
-    private const string Pointer = SuiteDataFile.LfsPointerHeader + "v1\noid sha256:3f6ce47a0a\nsize 4939776\n";
+    private const string Pointer = SuiteDataFile.LfsPointerHeader + "v1\noid sha256:a3e65d8acf\nsize 5153792\n";
 
     private readonly string _directory;
     private readonly ITestOutputHelper _output;
@@ -84,7 +86,8 @@ public sealed class Lot1CaseTests : IDisposable
     }
 
     [Theory]
-    [InlineData(Lot1Fixture.ElementsCase, "semi_major_axis_km", -1, MetricKind.Scalar, "oe_length_km")] // relative key
+    [InlineData(Lot1Fixture.ElementsCase, "semi_major_axis_km", -1, MetricKind.Scalar, "oe_length_km")] // absolute key (1 mm)
+    [InlineData(Lot1Fixture.ElementsCase, "mean_motion_rad_s", -1, MetricKind.Scalar, "oe_mean_motion_rad_s")] // relative key
     [InlineData(Lot1Fixture.ElementsCase, "eccentricity", -1, MetricKind.Scalar, "oe_eccentricity")] // absolute key
     [InlineData(Lot1Fixture.ElementsCase, "raan_deg", -1, MetricKind.WrappedAngle, "oe_angle_deg")]
     [InlineData(Lot1Fixture.ElementsCase, "declination_deg", -1, MetricKind.Angle, "oe_angle_deg")]
@@ -288,14 +291,16 @@ public sealed class Lot1CaseTests : IDisposable
     [Fact]
     public void AnOverrideNamingTheOutput_PrecedesAnOverrideNamingItsKey_WhichPrecedesTheDefault()
     {
-        // Arrange
+        // Arrange: three distinct thresholds, the default of oe_angle_deg (1e-9 deg since conformance-tests#19) included
         Lot1Fixture.WriteSuite(_directory, Lot1Fixture.ElementsCase);
+        var defaults = Lot1Fixture.ReadTolerances(_directory).Defaults;
+        Assert.DoesNotContain(defaults["oe_angle_deg"].AbsTol, new[] { 2e-9, 1e-8 });
         var path = Path.Combine(_directory, Lot1Fixture.ElementsCase, "inputs.yaml");
         File.AppendAllText(path, """
 
                                  tolerances_override:
                                    raan_deg:
-                                     abs_tol: 1.0e-9
+                                     abs_tol: 2.0e-9
                                      rel_tol: 0.0
                                      justification: "An override naming the output, written by the test."
                                    oe_angle_deg:
@@ -311,11 +316,13 @@ public sealed class Lot1CaseTests : IDisposable
         // Assert
         Assert.Equal("PASS", result.Status);
         var raan = result.Measures.Single(m => m.Output == "raan_deg");
-        Assert.Equal(("raan_deg", 1e-9), (raan.ToleranceName, raan.Threshold));
+        Assert.Equal(("raan_deg", 2e-9), (raan.ToleranceName, raan.Threshold));
         var argp = result.Measures.Single(m => m.Output == "argp_deg");
         Assert.Equal(("oe_angle_deg", 1e-8), (argp.ToleranceName, argp.Threshold));
+        // No override names semi_major_axis_km or oe_length_km: the default of the key, absolute or relative
         var sma = result.Measures.Single(m => m.Output == "semi_major_axis_km");
-        Assert.Equal(("oe_length_km", Lot1Fixture.ReadTolerances(_directory).Defaults["oe_length_km"].RelTol),
-            (sma.ToleranceName, sma.Threshold));
+        var length = defaults["oe_length_km"];
+        Assert.Equal(("oe_length_km", length.AbsTol, length.RelTol),
+            (sma.ToleranceName, sma.Tolerance.AbsTol, sma.Tolerance.RelTol));
     }
 }
