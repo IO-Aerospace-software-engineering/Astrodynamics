@@ -43,9 +43,10 @@ of lot 1 ([#457](https://github.com/IO-Aerospace-software-engineering/Astrodynam
 48 orbital-element conversions, 12 time-scale conversions and 28 frame transformations, whose
 goldens come from GMAT R2026a, each checked against an independent reference and against CSPICE,
 the second reference. Lot 1 is independent of any framework (decision 16 of #457,
-conformance-tests#19): no framework's delta enters its tolerances. Eight of the ten other cases
-keep overrides set from the deltas of IO.Astrodynamics (runner reports of 2026-10-04 and
-2026-10-21) until the suite reworks these cases (decision 16). A tolerance of lot 1 is the
+conformance-tests#19): no framework's delta enters its tolerances. On the suite's main (d4e9905),
+eight of the ten other cases keep overrides set from the deltas of IO.Astrodynamics (runner
+reports of 2026-10-04 and 2026-10-21); conformance-tests#25 reworks them in the same way (see
+[The earlier categories](#the-earlier-categories)). A tolerance of lot 1 is the
 operational need of its key: 1 mm for lengths and positions, 1 µm/s for speeds and velocities,
 1e-9 deg for angles, 1e-11 for the eccentricity and the equinoctial f, g, h, k, 1 µs for the
 period and the time scales, 1e-12 relative for the mean motion, the energy and the angular
@@ -68,7 +69,8 @@ Linux only. Three harnesses run the cases:
   `IO.Astrodynamics.Net/conformance-report.json`; it propagates with the adaptive RK7(8) integrator
   (absolute and relative tolerances 1e-11);
 - unit tests run the three 24-hour propagation cases with RK7(8) (`RK78IntegratorTests.Conformance00x_*`)
-  and with Velocity-Verlet at a fixed 1 s step (`PropagatorTests.Conformance00x_*`), and print the
+  and with Velocity-Verlet at a fixed 1 s step (`PropagatorTests.Conformance00x_*`), against the
+  GMAT goldens of conformance-tests#25 with the model's GM in the central term, and print the
   errors they measure;
 - `Lot1CaseTests` runs the runner on the cases of lot 1, copied with the schemas and the tolerances
   of the suite into `IO.Astrodynamics.ConformanceRunner.Tests/Fixture/Lot1` by
@@ -101,11 +103,46 @@ dotnet run --project IO.Astrodynamics.ConformanceRunner -c Release -- \
 ```
 
 The exit code is the number of failed cases plus the number of errors. A data file left as an LFS
-pointer makes its case an ERROR that names the file. The suite (98 cases) takes about 48 s in
-Release on Linux (4 cores, 2026-10-27, median of three runs), nearly all of it for the eclipse
-case (48 s alone); the 88 cases of lot 1 take about 3 s. The runner asks the propagator for the
-end of the window only: an output every `step_size_s` (1 s) cost a shortened RK7(8) step each and
-took the suite to 107 s (#426).
+pointer makes its case an ERROR that names the file. The suite (98 cases) takes about 5 s in
+Release on Linux (4 cores, 2026-10-27: 4.3 s for d4e9905, 4.8 s for conformance-tests#25, one
+run each, the start of the process included); the eclipse case took 48 s alone before the managed
+occultation search of #495. The runner asks the propagator for the end of the window only: an
+output every `step_size_s` (1 s) cost a shortened RK7(8) step each and took the suite to 107 s
+(#426).
+
+### The Earlier Categories
+
+conformance-tests#25 (draft, c1af386) gives the five earlier categories a model each (its `spec.md`
+§12), goldens from GMAT R2026a or CSPICE in ICRF, the keys of §12 with their operational
+tolerances and no override. The runner computes them as §12 says, from the optional inputs that
+the PR adds, and keeps what the cases of the suite's main need where they lack them, so that it
+passes both:
+
+| Category | The runner's model | Inputs of conformance-tests#25 | Without them (main) |
+|----------|--------------------|--------------------------------|---------------------|
+| `propagator` | EGM2008 of the suite's `data/` with its GM and radius applied to the whole field (`GeopotentialCentralTerm.ModelGravitationalParameter`), third bodies as point masses, RK7(8) at 1e-11, ICRF | `kernels`: the Earth orientation file and `gm_de440.tpc` of `data/`, loaded for the case | the runner's kernels |
+| `eclipse` | two-body trajectory, the managed occultation search of #495 (the pck00011 ellipsoid oriented by `IAU_EARTH`, the Sun's sphere), geometric, transitions to 1 µs | `gm_km3_s2`: the GM of the trajectory, applied as a field of degree 0 whose central term takes it, the state of the elements with it (velocity scaled by √GM); `kernels` | the kernel GM |
+| `tracking_data` | the station on the Earth's kernel ellipsoid in ITRF93, the UTC grid of the window, the Moon's sphere, geometric | `location.ellipsoid`: checked against the kernel radii (1 µm), ERROR otherwise, since a `Site` takes no other ellipsoid; `kernels` | the kernel ellipsoid |
+| `pointing_triad` | TRIAD of the instrument's boresight and reference vector towards `CelestialAttitudeTarget`s with `Aberration.LT` (LT-corrected from the Earth's centre), compared by the rotation angle 4·atan2(‖q − s·g‖, ‖q + s·g‖) | — | the same |
+| `geosynchronous` | `CelestialBody.GeosynchronousOrbit` with a declared period (#494), the lot-1 keys of its quantities | `sidereal_period_s`, `gm_km3_s2` (checked against the kernel GM, ERROR otherwise), `kernels` | the period of ITRF93 at the epoch |
+
+Every output of these categories takes its key from the table of §12 (the eclipse instants by
+their difference in seconds, the arcs and the field-of-view flag exact), and a missing key is an
+ERROR; an override of the suite's main that names a former key (`position_km`, `velocity_km_s`,
+`attitude_quaternion`, `penumbra_duration_s`) applies after the overrides of the output and of
+its key. Release, Linux, 2026-10-27, the largest ratio of a delta to its tolerance:
+
+| Category | conformance-tests#25 (c1af386) | main (d4e9905) |
+|----------|--------------------------------|----------------|
+| `propagator` | 0.173 (003, vz: 1.73e-7 km/s; 001 to 003 within 15.6 cm and 0.173 mm/s per component) | 0.815 (004, y: 8.15e-5 km against the override of 1e-4 km) |
+| `eclipse` | 0.046 (umbra exit, 4.6e-4 s) | 0.0019 (penumbra duration against the override of 1 s) |
+| `tracking_data` | 0.0033 (median range rate, 3.3e-10 km/s) | 0.78 (minimum range, 2.3e-3 km against the override of 3e-3 km) |
+| `pointing_triad` | 3.8e-11 (3.8e-16 rad) | 3.8e-12 |
+| `geosynchronous` | 0.0011 (argp of 001, 1.1e-12 deg) | 0.0013 (inclination of 001) |
+
+98 cases pass on each suite. On main, the propagators 001 to 003 keep their JGM3 goldens: with
+the model's GM in the central term, 003 is 15.2 m from its golden (y), beyond its `abs_tol` of
+4 m but within its `rel_tol` of 1e-4 (OR rule, ratio 0.092); 001 and 002 pass on `abs_tol`.
 
 The `conformance` job of the CI runs the latest version of the suite on Linux, Windows and macOS
 arm64 and keeps each report as an artifact. The suite is private: the job reads it with the
@@ -113,28 +150,33 @@ secret `CONFORMANCE_TESTS_TOKEN` and is skipped without it.
 
 ### Measured Errors
 
-Measured on 2026-10-04; cases 001 and 003 measured again on 2026-10-23 with the constants of the geopotential of
-[#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410). RK7(8): conformance runner report (IO.Astrodynamics 10.x, the framework
-commit is recorded in the report). Velocity-Verlet: output of the `PropagatorTests.Conformance00x_*` tests.
+Against the goldens of conformance-tests#25 (GMAT R2026a, the state entered and read in EarthICRF, EGM2008 from a
+`.cof` whose header carries the model's GM and radius; two-body cases 004 and 005 with the GM of `gm_de440.tpc`), the
+magnitude of the error of the final state, with the model's GM in the central term
+(`GeopotentialCentralTerm.ModelGravitationalParameter`, as the runner computes them). Measured on Linux, Release,
+2026-10-27: RK7(8), the `RK78IntegratorTests.Conformance00x_*` tests (the runner gives the same within its kernels:
+its per-component deltas are in [The earlier categories](#the-earlier-categories)), and the runner for 004 and 005;
+Velocity-Verlet, the `PropagatorTests.Conformance00x_*` tests.
 
 | Case | Orbit and force model (inputs) | Golden | RK7(8), 1e-11 | Velocity-Verlet, 1 s |
 |------|--------------------------------|--------|---------------|----------------------|
-| `propagator_24h_leo_grav10_001` | LEO about 6,800 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2025a, JGM3 10x10 | 13.21 m, 14.9 mm/s | 294.4 m, 332.1 mm/s |
-| `propagator_24h_geo_grav70_002` | GEO (INTELSAT 901), 24 h; EGM2008 70x70, Moon, Sun, planets | GMAT R2025a, JGM3 70x70 | 8.02 m, 0.57 mm/s | 8.48 m, 0.61 mm/s |
-| `propagator_24h_sso_grav10_003` | SSO 700 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2025a, JGM3 10x10 | 3.40 m, 3.67 mm/s | 246.2 m, 258.3 mm/s |
-| `propagator_1sd_geo_twobody_004` | GEO equatorial, one sidereal day; two-body | Kepler's third law | 0.08 m, 0.006 mm/s | not run |
-| `propagator_1sd_geo_i30_twobody_005` | GEO inclined 30 deg, one sidereal day; two-body | Kepler's third law | 0.08 m, 0.006 mm/s | not run |
+| `propagator_24h_leo_grav10_001` | LEO about 6,800 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2026a, EGM2008 10x10 | 0.111 m, 0.126 mm/s | 281.3 m, 317.3 mm/s |
+| `propagator_24h_geo_grav70_002` | GEO (INTELSAT 901), 24 h; EGM2008 70x70, Moon, Sun, planets | GMAT R2026a, EGM2008 70x70 | 0.071 m, 0.0051 mm/s | 0.394 m, 0.028 mm/s |
+| `propagator_24h_sso_grav10_003` | SSO 700 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2026a, EGM2008 10x10 | 0.169 m, 0.178 mm/s | 243.0 m, 254.8 mm/s |
+| `propagator_1sd_geo_twobody_004` | GEO equatorial, one sidereal day; two-body | GMAT R2026a, two-body | 0.08 m, 0.006 mm/s | not run |
+| `propagator_1sd_geo_i30_twobody_005` | GEO inclined 30 deg, one sidereal day; two-body | GMAT R2026a, two-body | 0.08 m, 0.006 mm/s | not run |
 
-The test limits are non-regression guards set a few percent above these values, not accuracy
-specifications:
+The test limits are non-regression guards at twice these values, rounded up at the second significant digit, measured
+on Linux only, not accuracy specifications:
 
 | Case | RK7(8) limits | Velocity-Verlet limits |
 |------|---------------|------------------------|
-| `propagator_24h_leo_grav10_001` | 13.5 m, 15.5 mm/s | 300 m, 350 mm/s |
-| `propagator_24h_geo_grav70_002` | 8.3 m, 0.6 mm/s | 9 m, 0.7 mm/s |
-| `propagator_24h_sso_grav10_003` | 4 m, 4 mm/s | 250 m, 260 mm/s |
+| `propagator_24h_leo_grav10_001` | 0.23 m, 0.26 mm/s | 570 m, 640 mm/s |
+| `propagator_24h_geo_grav70_002` | 0.15 m, 0.011 mm/s | 0.79 m, 0.057 mm/s |
+| `propagator_24h_sso_grav10_003` | 0.34 m, 0.36 mm/s | 490 m, 510 mm/s |
 
-With RK7(8), the remaining few meters come from the differences between the models of the two
+Before conformance-tests#25 the goldens of 001 to 003 were GMAT R2025a runs with JGM3 in EarthMJ2000Eq, 3.4 m to 13.2 m
+from the library. With RK7(8), the remaining decimeters come from the differences between the models of the two
 tools (see [Error Budget](#error-budget)). With Velocity-Verlet at 1 s, the LEO and SSO errors are
 almost entirely the truncation error of the integrator: 279.5 m over 24 h on the two-body LEO orbit
 alone (see [Integrators](../reference/integrators.md#accuracy-and-cost)). At GEO the orbital motion
@@ -142,9 +184,10 @@ is slow enough for a 1 s step to be nearly exact.
 
 ### Against GMAT With EGM2008's GM In The Central Term
 
-The goldens of cases 001 to 003 are being regenerated with GMAT R2026a and EGM2008, from a `.cof` whose header carries
-the GM and the radius of the model, which GMAT applies to the central term as well as to the harmonics (decision 17 of
-[#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457)). The library evaluates the
+The goldens of cases 001 to 003 of conformance-tests#25 are GMAT R2026a runs with EGM2008, from a `.cof` whose header
+carries the GM and the radius of the model, which GMAT applies to the central term as well as to the harmonics (decision
+17 of [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457)); the runner computes them with
+the option below. The library evaluates the
 central term with the GM of its kernels by default; with
 `GeopotentialCentralTerm.ModelGravitationalParameter` it takes the model's GM there too
 ([Force Models](../reference/force-models.md#the-central-term-with-the-gm-of-the-model)). Against GMAT's runs of the
@@ -180,16 +223,16 @@ dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj \
 
 ## Error Budget
 
-Known sources of the few-meter residual between IO.Astrodynamics (RK7(8)) and the GMAT goldens.
-None of them has been isolated yet; each open point is tracked.
+Known sources of the decimeter residual between IO.Astrodynamics (RK7(8)) and the GMAT goldens of conformance-tests#25
+(the meters of the JGM3 goldens before it). Each open point is tracked.
 
 | Source | IO.Astrodynamics | Golden (GMAT) | Effect | Status |
 |--------|------------------|---------------|--------|--------|
-| Gravity field | EGM2008, tide-free, truncated to the case degree | JGM3 at the same degree | Not measured; expected to dominate | Open: goldens to regenerate with EGM2008 ([conformance-tests#5](https://github.com/IO-Aerospace-software-engineering/conformance-tests/issues/5)) |
+| Gravity field | EGM2008, tide-free, truncated to the case degree | The same file, written as GMAT's `.cof` with the model's GM and radius in its header (conformance-tests#25); JGM3 before | None since conformance-tests#25 | Resolved ([conformance-tests#5](https://github.com/IO-Aerospace-software-engineering/conformance-tests/issues/5), conformance-tests#25) |
 | Earth orientation of the gravity field | SPICE `ITRF93` with `earth_latest_high_prec.bpc`, EOP included | GMAT's own Earth-fixed reduction and EOP file | Measured with GMAT R2026a (2026-10-19): from `EarthICRF`, GMAT's Earth-fixed frame is within about 2.6e-8 rad of `ITRF93`; from `EarthMJ2000Eq` coordinates taken as ICRF, as in the scripts of cases 001 to 003, 1.8e-7 rad ([Against GMAT](#against-gmat-h2)) | Measured; the effect on the goldens of cases 001 to 003 not isolated |
-| Inertial frame | `Frame.ICRF` (SPICE `J2000`, ICRF-aligned) | `EarthMJ2000Eq` (EME2000) | Measured with GMAT R2026a (2026-10-19): GMAT turns `EarthICRF`, whose axes are those of `J2000`, to `EarthMJ2000Eq` by 2.1e-7 rad (43.7 mas) at 2021-03-20 12:00 TDB, mostly about y, drifting by 9.3e-10 rad over the day; about 1.5 m at 7000 km and 8.9 m in GEO ([Against GMAT](#against-gmat-h2)) | Measured at the epoch of the H2 cases; the effect on the goldens of cases 001 to 003, at their own epochs, not isolated |
+| Inertial frame | `Frame.ICRF` (SPICE `J2000`, ICRF-aligned) | The state entered and read in `EarthICRF` since conformance-tests#25, integrated in GMAT's `EarthMJ2000Eq`, whose rotation to `EarthICRF` changes by 1e-10 to 2e-10 rad in a day (8.3e-6 km on 002, counted in the golden's spread); `EarthMJ2000Eq` (EME2000) before | Measured with GMAT R2026a (2026-10-19): GMAT turns `EarthICRF`, whose axes are those of `J2000`, to `EarthMJ2000Eq` by 2.1e-7 rad (43.7 mas) at 2021-03-20 12:00 TDB, mostly about y, drifting by 9.3e-10 rad over the day; about 1.5 m at 7000 km and 8.9 m in GEO ([Against GMAT](#against-gmat-h2)) | Measured at the epoch of the H2 cases; the effect on the goldens of cases 001 to 003, at their own epochs, not isolated |
 | Ephemerides | `de440s.bsp` | `de440s.bsp`, the same file (identical MD5) | None | Verified |
-| Constants (Earth GM, reference radius of the field) | The central term with the GM of `gm_de440.tpc` (3.98600435507e14 m³/s², TDB-compatible); the harmonics of EGM2008 with its own GM and reference radius (3.986004415e14 m³/s², 6378136.3 m) since #410, before which they took the GM of the kernels and the equatorial radius of `pck00011.tpc` (6378136.6 m) | GMAT defaults and the JGM3 file; `Earth.Mu` is not overridden in the scripts of cases 001 to 003 | Measured (2026-10-23): the old constants put the harmonics 7.9e-8 away from EGM2008 at degree 2 (9.5e-10 m/s² in LEO 400 km): over one day 7.8 cm on R2 and 1.6 mm on R4; the residuals of cases 001 to 003 against their goldens changed by 0.15 m at most. Remaining: the GM and the radius of EGM2008 are TT-compatible values, used with the TDB-compatible coordinates of the propagation, as GMAT and the ICGEM convention do; scaled to TDB-compatible values (Klioner et al., 2010), the harmonics would change by 4.5e-8, about 4.5 cm a day on R2. The central term takes the model's GM on request, GMAT's convention for a `.cof` header (decision 18 of #457; [above](#against-gmat-with-egm2008s-gm-in-the-central-term)) | Fixed ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)); the TDB scaling a known approximation |
+| Constants (Earth GM, reference radius of the field) | The central term with the GM of `gm_de440.tpc` (3.98600435507e14 m³/s², TDB-compatible); the harmonics of EGM2008 with its own GM and reference radius (3.986004415e14 m³/s², 6378136.3 m) since #410, before which they took the GM of the kernels and the equatorial radius of `pck00011.tpc` (6378136.6 m) | The GM and the radius of EGM2008 in the header of the `.cof`, applied to the whole field (conformance-tests#25); GMAT defaults and the JGM3 file before | Measured (2026-10-23): the old constants put the harmonics 7.9e-8 away from EGM2008 at degree 2 (9.5e-10 m/s² in LEO 400 km): over one day 7.8 cm on R2 and 1.6 mm on R4; the residuals of cases 001 to 003 against their goldens changed by 0.15 m at most. Remaining: the GM and the radius of EGM2008 are TT-compatible values, used with the TDB-compatible coordinates of the propagation, as GMAT and the ICGEM convention do; scaled to TDB-compatible values (Klioner et al., 2010), the harmonics would change by 4.5e-8, about 4.5 cm a day on R2. The central term takes the model's GM on request, GMAT's convention for a `.cof` header (decision 18 of #457; [above](#against-gmat-with-egm2008s-gm-in-the-central-term)), which the runner applies to the propagator cases | Fixed ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)); the TDB scaling a known approximation |
 | Time scales | UTC window converted to TDB | Elapsed time `ElapsedSecs = 86400` | Sampling the end of the window in the wrong scale shifts it by about 18 µs, i.e. 0.14 m in LEO (measured before #410: 12.99 m against 13.13 m) | Resolved: tests and runner both use the UTC end converted to TDB |
 | Integration error | RK7(8), tolerances 1e-11 | PrinceDormand78, accuracy 1e-13 | 0.08 m over one sidereal day at GEO (two-body cases 004 and 005) | Measured |
 

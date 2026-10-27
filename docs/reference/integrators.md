@@ -96,8 +96,9 @@ When created with a fixed step size, `AdaptiveMode` is `false` and the integrato
   ([#468](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/468)), and the adaptive step also
   fails after 10 000 consecutive accepted steps within 100 s of flight, a collapse of the step that the rejections
   never catch ([Covariance Propagation](covariance-propagation.md#options)).
-- **Accuracy**: on the 24-hour conformance cases, 3.4 m (SSO) to 13.2 m (LEO) from the GMAT
-  references with tolerances 1e-11, the rest being model differences between the two tools; see
+- **Accuracy**: on the 24-hour conformance cases, 7 cm (GEO) to 17 cm (SSO) from the GMAT R2026a
+  goldens of conformance-tests#25 with tolerances 1e-11 and the model's GM in the central term, the
+  rest being model differences between the two tools; see
   [Validation](../guides/validation.md#measured-errors).
 
 ```csharp
@@ -144,7 +145,7 @@ Velocity-Verlet is second order: halving the step divides the global error by fo
 | Velocity-Verlet, 0.5 s | 69.9 m | 21.0 ms |
 | Velocity-Verlet, 1 s | 279.5 m | 10.5 ms |
 | Velocity-Verlet, 2 s | 1,118 m | about 5 ms or about 24 ms, bimodal ([#346](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/346)) |
-| RK7(8), tolerances 1e-11 | not measured in two-body; 13.2 m from the full-model reference | 5.5 ms |
+| RK7(8), tolerances 1e-11 | not measured in two-body; 0.11 m from the full-model reference (13.2 m from the JGM3 golden before conformance-tests#25) | 5.5 ms |
 
 Sources: errors from `VVIntegratorTests.GlobalErrorIsSecondOrderInTheStep`, against the analytic
 Keplerian solution; times from `VVBenchmarks` and `RK78Benchmarks.LeoOneOrbit_EGM10_SunMoon`
