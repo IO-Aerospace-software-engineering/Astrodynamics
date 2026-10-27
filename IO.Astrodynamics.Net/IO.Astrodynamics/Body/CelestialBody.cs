@@ -252,6 +252,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// The latitude parameter defines the orbital inclination — for non-zero latitude, the satellite follows
     /// an inclined geosynchronous orbit tracing a figure-eight ground track. The specified (longitude, latitude)
     /// is the sub-satellite point only at the given epoch.
+    /// The period of the orbit is the sidereal rotation period of the body frame at the epoch,
+    /// <see cref="SideralRotationPeriod"/>, which depends on the orientation data loaded (for the Earth, the binary PCK
+    /// of ITRF93); <see cref="GeosynchronousOrbit(double, double, Time, TimeSpan)"/> takes a declared period instead.
     /// </summary>
     /// <param name="longitude">Planetocentric longitude in radians, in range [-π, π].</param>
     /// <param name="latitude">Planetocentric latitude in radians, in range [-π/2, π/2]. Defines the orbital inclination.</param>
@@ -260,16 +263,53 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when longitude or latitude is out of range.</exception>
     public KeplerianElements GeosynchronousOrbit(double longitude, double latitude, Time epoch)
     {
+        CheckGeosynchronousPoint(longitude, latitude);
+        return GeosynchronousOrbitOfPeriod(longitude, latitude, epoch, SideralRotationPeriod(epoch));
+    }
+
+    /// <summary>
+    /// Computes the Keplerian elements for a geosynchronous orbit of a declared period at the specified longitude and
+    /// latitude: the circular orbit of radius a = (GM T² / 4π²)^(1/3), GM the body's, whose position at the epoch is
+    /// the point (longitude, latitude, a) of the body frame and whose velocity, of magnitude √(GM / a), is normal to the
+    /// rotation axis of the body frame and to the position. As for
+    /// <see cref="GeosynchronousOrbit(double, double, Time)"/>, the latitude defines the inclination, the point is the
+    /// sub-satellite point at the epoch only, the elements are in ICRF, and the argument of periapsis is the argument
+    /// of latitude, with a mean anomaly of 0.
+    /// </summary>
+    /// <param name="longitude">Planetocentric longitude in radians, in range [-π, π].</param>
+    /// <param name="latitude">Planetocentric latitude in radians, in range [-π/2, π/2]. Defines the orbital inclination.</param>
+    /// <param name="epoch">The epoch at which to compute the orbit.</param>
+    /// <param name="siderealRotationPeriod">The period of the orbit, a sidereal rotation period of the body given by the
+    /// caller (for instance a constant such as 86164.0998101 s for the Earth), so that the radius does not depend on the
+    /// orientation data at the epoch. It is used at the resolution of <see cref="TimeSpan"/>, 100 ns.</param>
+    /// <returns>Keplerian elements for the geosynchronous orbit.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when longitude or latitude is out of range, or when the
+    /// period is not positive.</exception>
+    public KeplerianElements GeosynchronousOrbit(double longitude, double latitude, Time epoch, TimeSpan siderealRotationPeriod)
+    {
+        CheckGeosynchronousPoint(longitude, latitude);
+        if (siderealRotationPeriod <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(siderealRotationPeriod), siderealRotationPeriod, "The sidereal rotation period must be positive.");
+
+        return GeosynchronousOrbitOfPeriod(longitude, latitude, epoch, siderealRotationPeriod);
+    }
+
+    private static void CheckGeosynchronousPoint(double longitude, double latitude)
+    {
         if (longitude < -Constants.PI || longitude > Constants.PI)
             throw new ArgumentOutOfRangeException(nameof(longitude), longitude, "Longitude must be in range [-π, π] radians.");
         if (latitude < -Constants.PI2 || latitude > Constants.PI2)
             throw new ArgumentOutOfRangeException(nameof(latitude), latitude, "Latitude must be in range [-π/2, π/2] radians.");
+    }
 
-        var sideralRotation2 = System.Math.Pow(SideralRotationPeriod(epoch).TotalSeconds, 2);
+    private KeplerianElements GeosynchronousOrbitOfPeriod(double longitude, double latitude, Time epoch, TimeSpan siderealRotationPeriod)
+    {
+        var sideralRotation2 = System.Math.Pow(siderealRotationPeriod.TotalSeconds, 2);
         var radius = System.Math.Cbrt((GM * sideralRotation2) / (4 * Constants.PI * Constants.PI));
         var bodyfFixedCoordinates = new Planetocentric(longitude, latitude, radius).ToCartesianCoordinates();
-        var icrfPos = bodyfFixedCoordinates.Rotate(Frame.ToFrame(Frame.ICRF, epoch).Rotation);
-        var icrfRot = Vector3.VectorZ.Rotate(Frame.ToFrame(Frame.ICRF, epoch).Rotation);
+        var toIcrf = Frame.ToFrame(Frame.ICRF, epoch).Rotation;
+        var icrfPos = bodyfFixedCoordinates.Rotate(toIcrf);
+        var icrfRot = Vector3.VectorZ.Rotate(toIcrf);
         var inertialVelocity = icrfRot.Cross(icrfPos).Normalize() * System.Math.Sqrt(GM / radius);
         var sv = new StateVector(icrfPos, inertialVelocity, this, epoch, Frame.ICRF);
         return new KeplerianElements(radius, 0.0, sv.Inclination(), sv.AscendingNode(), sv.ArgumentOfPeriapsis() + sv.MeanAnomaly(), 0.0, this, epoch, sv.Frame);

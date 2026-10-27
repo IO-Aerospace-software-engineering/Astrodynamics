@@ -95,16 +95,24 @@ They are preferred for numerical orbit determination and low-eccentricity orbits
 
 ### Geosynchronous Orbit
 
-Generate a GEO orbit at a given longitude:
+Generate a GEO orbit at a given longitude (the latitude sets the inclination):
 
 ```csharp
 var geoOrbit = earth.GeosynchronousOrbit(
     longitude: 0.0,
-    inclination: 0.0,
+    latitude: 0.0,
     epoch: epoch);
 
 Console.WriteLine($"GEO semi-major axis: {geoOrbit.SemiMajorAxis():F0} m");
 Console.WriteLine($"GEO period: {geoOrbit.Period().TotalHours:F4} hours");
+```
+
+The period of this orbit is the sidereal rotation period of the body frame at the epoch, which follows the
+orientation data loaded (for the Earth, the binary PCK of ITRF93). To take a declared period instead, so that the
+radius a = (GM T² / 4π²)^(1/3) does not depend on the orientation data, pass it:
+
+```csharp
+var geoOrbit = earth.GeosynchronousOrbit(0.0, 0.0, epoch, TimeSpan.FromSeconds(86164.0998101));
 ```
 
 ### Sun-Synchronous Orbit

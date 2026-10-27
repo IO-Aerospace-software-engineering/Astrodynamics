@@ -46,6 +46,17 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 Changes since 10.2.0-preview-1. Entries are added as they merge.
 
+**Added**
+
+- **`CelestialBody.GeosynchronousOrbit(longitude, latitude, epoch, siderealRotationPeriod)`: a geosynchronous orbit of
+  a declared period.** The radius is a = (GM T² / 4π²)^(1/3) with the period given (for instance 86164.0998101 s for
+  the Earth), so that it does not depend on the orientation data at the epoch; the rest is the method without the
+  period: position from the planetocentric (longitude, latitude, a) rotated to ICRF, velocity √(GM / a) along
+  ẑ × r, argument of periapsis equal to the argument of latitude and mean anomaly 0. The method without the period
+  is unchanged (2π / |ω| of the body frame at the epoch); with the Earth's binary PCK of the tests, the two radii
+  differ by 0.48 m at 2021-01-01. Against CSPICE (geosynchronous 001 of the conformance suite, the test kernels), the
+  state agrees to 3.3e-8 m and 2.3e-12 m/s. Decision 18 of #457.
+
 **Fixed**
 
 - **RK7(8) with `IncludeInStepControl` no longer stops at random on the first steps of a segment in dense air.** At the
