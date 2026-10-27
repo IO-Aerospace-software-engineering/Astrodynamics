@@ -177,7 +177,7 @@ public static class Program
                     ["light_source"] = "Sun"
                 }
             };
-            var eclipseResult = new EclipseSolver().Solve(eclipseInput);
+            var eclipseResult = new EclipseSolver(null).Solve(eclipseInput);
             Console.WriteLine($"OK  penumbra=[{eclipseResult["penumbra_entry"]} → {eclipseResult["penumbra_exit"]}]  umbra=[{eclipseResult["umbra_entry"]} → {eclipseResult["umbra_exit"]}]");
             Console.WriteLine($"          penumbra_dur={eclipseResult["penumbra_duration_s"]}s  umbra_dur={eclipseResult["umbra_duration_s"]}s");
 
@@ -214,7 +214,7 @@ public static class Program
                     ["step_size_s"] = 1.0
                 }
             };
-            var propagatorResult = new PropagatorSolver(kernelsPath).Solve(propagatorInput);
+            var propagatorResult = new PropagatorSolver(null, kernelsPath).Solve(propagatorInput);
             Console.WriteLine($"OK  final_pos_km=({propagatorResult["final_x_km"]:F6}, {propagatorResult["final_y_km"]:F6}, {propagatorResult["final_z_km"]:F6})");
 
             Console.WriteLine();

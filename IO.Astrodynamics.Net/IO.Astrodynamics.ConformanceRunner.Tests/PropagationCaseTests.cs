@@ -10,6 +10,7 @@ using IO.Astrodynamics.ConformanceRunner.Solvers;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.SolarSystemObjects;
 using Xunit;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -119,6 +120,19 @@ public class PropagationCaseTests
         double departure = (acceleration - pointMass).Magnitude() / pointMass.Magnitude();
         Assert.InRange(departure, 1e-4, 1e-2);
 
+        // The field of spec.md section 12.1: EGM2008's GM and radius for the whole field, central term included, bit
+        // for bit; the GM of the kernels in the central term (the library's default) is 1.5e-8 of it away
+        var model = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, state.Epoch,
+            new GeopotentialModelParameters(Path.Combine(KernelsPath, "EGM2008_to70_TideFree"), 10, 3.986004415e14, 6378136.3)
+            {
+                CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+            });
+        var kernelCentralTerm = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, state.Epoch,
+            new GeopotentialModelParameters(Path.Combine(KernelsPath, "EGM2008_to70_TideFree"), 10));
+        Assert.Equal(model.EvaluateGravitationalAcceleration(state), acceleration);
+        Assert.InRange((kernelCentralTerm.EvaluateGravitationalAcceleration(state) - acceleration).Magnitude() / acceleration.Magnitude(),
+            1.4e-8, 1.6e-8);
+
         // The spacecraft and the forces
         Assert.Equal(500.0, propagationCase.Spacecraft.DryOperatingMass);
         Assert.Equal(800.0, propagationCase.Spacecraft.MaximumOperatingMass);
@@ -145,7 +159,7 @@ public class PropagationCaseTests
             .Propagate().InterpolateAt(reference.Window.EndDate.ToTDB());
 
         // Act
-        var computed = new PropagatorSolver(KernelsPath).Solve(Case());
+        var computed = new PropagatorSolver(null, KernelsPath).Solve(Case());
 
         // Assert: the same, bit for bit, since the accepted steps do not depend on the outputs
         Assert.Equal(UnitConversion.MToKm(position.X), computed["final_x_km"]);

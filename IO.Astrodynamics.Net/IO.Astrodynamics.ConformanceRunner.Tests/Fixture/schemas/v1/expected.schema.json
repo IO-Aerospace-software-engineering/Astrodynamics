@@ -90,8 +90,11 @@
    "additionalProperties": false
   },
   "nullable_quaternion": {
-   "description": "Unit quaternion in scalar-first order [w, x, y, z]. See spec.md §4.",
-   "type": "array",
+   "description": "Unit quaternion in scalar-first order [w, x, y, z], or null; null anywhere means SKIP (spec.md sections 4 and 7).",
+   "type": [
+    "array",
+    "null"
+   ],
    "items": {
     "anyOf": [
      {
@@ -257,6 +260,163 @@
    ],
    "additionalProperties": false
   },
+  "nullable_vec3": {
+   "description": "Three numbers, or null; null anywhere means SKIP (spec.md section 7).",
+   "type": [
+    "array",
+    "null"
+   ],
+   "items": {
+    "$ref": "#/$defs/nullable_number"
+   },
+   "minItems": 3,
+   "maxItems": 3
+  },
+  "orbital_elements_outputs": {
+   "description": "The outputs a case checks are the keys present (spec.md section 7); spec.md section 11.1 defines each.",
+   "type": "object",
+   "properties": {
+    "semi_major_axis_km": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "eccentricity": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "inclination_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "raan_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "argp_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "true_anomaly_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "mean_anomaly_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "eccentric_anomaly_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "hyperbolic_anomaly_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "hyperbolic_mean_anomaly_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "argument_of_latitude_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "longitude_of_periapsis_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "true_longitude_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "mean_longitude_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "periapsis_radius_km": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "apoapsis_radius_km": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "semi_latus_rectum_km": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "period_s": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "specific_energy_km2_s2": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "angular_momentum_km2_s": {
+     "$ref": "#/$defs/nullable_vec3"
+    },
+    "periapsis_speed_km_s": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "apoapsis_speed_km_s": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "mean_motion_rad_s": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "mod_equinoctial_f": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "mod_equinoctial_g": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "mod_equinoctial_h": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "mod_equinoctial_k": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "right_ascension_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "declination_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "position_km": {
+     "$ref": "#/$defs/nullable_vec3"
+    },
+    "velocity_km_s": {
+     "$ref": "#/$defs/nullable_vec3"
+    }
+   },
+   "minProperties": 1,
+   "additionalProperties": false
+  },
+  "time_conversion_outputs": {
+   "type": "object",
+   "properties": {
+    "tai_s": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "utc_s": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "tt_s": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "tdb_s": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "gps_s": {
+     "$ref": "#/$defs/nullable_number"
+    }
+   },
+   "minProperties": 1,
+   "additionalProperties": false
+  },
+  "frame_transformation_outputs": {
+   "type": "object",
+   "properties": {
+    "position_km": {
+     "$ref": "#/$defs/nullable_vec3"
+    },
+    "velocity_km_s": {
+     "$ref": "#/$defs/nullable_vec3"
+    },
+    "latitude_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "longitude_deg": {
+     "$ref": "#/$defs/nullable_number"
+    },
+    "altitude_km": {
+     "$ref": "#/$defs/nullable_number"
+    }
+   },
+   "minProperties": 1,
+   "additionalProperties": false
+  },
   "stm_outputs": {
    "description": "Phi(t_end, t_start), 6 rows of 6 numbers, in the frame of the case; the same in km and km/s as in m and m/s (the rv block in s, the vr block in 1/s). Compared by 3 x 3 block (stm_block). The final state is optional, compared as for the propagator category.",
    "type": "object",
@@ -318,6 +478,9 @@
     "propagator",
     "tracking_data",
     "geosynchronous",
+    "orbital_elements",
+    "time_conversion",
+    "frame_transformation",
     "stm"
    ]
   },
@@ -355,6 +518,18 @@
     "reference_frame": {
      "type": "string",
      "description": "Frame in which the reference tool produced the golden, e.g. EarthMJ2000Eq (GMAT) or J2000 (SPICE)."
+    },
+    "tool_sha256": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{64}$"
+    },
+    "script": {
+     "type": "string",
+     "description": "File name of the reference script, next to the case."
+    },
+    "log": {
+     "type": "string",
+     "description": "File name of the reference run's console log, next to the case."
     }
    },
    "required": [
@@ -449,6 +624,54 @@
   }
  },
  "allOf": [
+  {
+   "if": {
+    "properties": {
+     "category": {
+      "const": "orbital_elements"
+     }
+    }
+   },
+   "then": {
+    "properties": {
+     "outputs": {
+      "$ref": "#/$defs/orbital_elements_outputs"
+     }
+    }
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "category": {
+      "const": "time_conversion"
+     }
+    }
+   },
+   "then": {
+    "properties": {
+     "outputs": {
+      "$ref": "#/$defs/time_conversion_outputs"
+     }
+    }
+   }
+  },
+  {
+   "if": {
+    "properties": {
+     "category": {
+      "const": "frame_transformation"
+     }
+    }
+   },
+   "then": {
+    "properties": {
+     "outputs": {
+      "$ref": "#/$defs/frame_transformation_outputs"
+     }
+    }
+   }
+  },
   {
    "if": {
     "properties": {

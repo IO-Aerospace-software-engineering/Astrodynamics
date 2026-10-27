@@ -12,7 +12,8 @@ public static class InputParser
         {
             Epoch = GetString(inputs, "epoch"),
             OccultingBody = GetString(inputs, "occulting_body"),
-            LightSource = GetString(inputs, "light_source")
+            LightSource = GetString(inputs, "light_source"),
+            GmKm3S2 = OptionalDouble(inputs, "gm_km3_s2")
         };
 
         var orbit = inputs["orbit"] as Dictionary<object, object>;
@@ -125,6 +126,10 @@ public static class InputParser
             LongitudeDeg = ToDouble(loc["longitude_deg"]),
             HeightKm = ToDouble(loc["height_km"])
         };
+        if (loc.TryGetValue("ellipsoid", out var ellipsoidObj) && ellipsoidObj is Dictionary<object, object> ellipsoid)
+        {
+            result.Location.Ellipsoid = ParseEllipsoid(ellipsoid);
+        }
 
         return result;
     }
@@ -136,7 +141,9 @@ public static class InputParser
             Epoch = GetString(inputs, "epoch"),
             CentralBody = GetString(inputs, "central_body"),
             LongitudeDeg = ToDouble(inputs["longitude_deg"]),
-            LatitudeDeg = ToDouble(inputs["latitude_deg"])
+            LatitudeDeg = ToDouble(inputs["latitude_deg"]),
+            GmKm3S2 = OptionalDouble(inputs, "gm_km3_s2"),
+            SiderealPeriodS = OptionalDouble(inputs, "sidereal_period_s")
         };
     }
 
@@ -176,14 +183,36 @@ public static class InputParser
 
         if (inputs.TryGetValue("ellipsoid", out var ellipsoidObj) && ellipsoidObj is Dictionary<object, object> ellipsoid)
         {
-            result.Ellipsoid = new EllipsoidInputs
-            {
-                EquatorialRadiusKm = ToDouble(ellipsoid["equatorial_radius_km"]),
-                Flattening = ToDouble(ellipsoid["flattening"])
-            };
+            result.Ellipsoid = ParseEllipsoid(ellipsoid);
         }
 
         return result;
+    }
+
+    private static EllipsoidInputs ParseEllipsoid(Dictionary<object, object> ellipsoid)
+    {
+        return new EllipsoidInputs
+        {
+            EquatorialRadiusKm = ToDouble(ellipsoid["equatorial_radius_km"]),
+            Flattening = ToDouble(ellipsoid["flattening"])
+        };
+    }
+
+    /// <summary>
+    /// The files of the suite's <c>data/</c> a case lists in <c>inputs.kernels</c> (spec.md sections 2.1 and 10); none
+    /// when the case lists none, as the cases of the earlier categories before conformance-tests#25.
+    /// </summary>
+    public static List<string> ParseKernels(Dictionary<string, object> inputs)
+    {
+        return inputs.TryGetValue("kernels", out var kernels) && kernels is List<object> list
+            ? list.ConvertAll(k => k.ToString())
+            : new List<string>();
+    }
+
+    /// <summary>The value of an optional number of the inputs, or null.</summary>
+    public static double? OptionalDouble(Dictionary<string, object> inputs, string key)
+    {
+        return inputs.TryGetValue(key, out var value) && value != null ? ToDouble(value) : null;
     }
 
     private static object ParseOrbit(Dictionary<object, object> orbit)

@@ -1,23 +1,27 @@
 {
   "id": "propagator_1sd_geo_twobody_004",
   "category": "propagator",
-  "case_version": "0.1.0",
+  "case_version": "0.2.0",
   "generated_by": {
-    "tool": "analytical",
-    "tool_version": "Kepler-3rd-law",
-    "kernel": "none",
-    "gravity_model": "point-mass Earth, GM = 398600.4355070226 km^3/s^2 (SPICE DE440)",
-    "perturbations": "None (two-body only)",
-    "integrator": "PrinceDormand78 (RK7/8), accuracy 1e-13, MaxStep 60s",
-    "date": "2026-03-31",
-    "reference_frame": "EarthMJ2000Eq"
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-10-27",
+    "gravity_model": "point-mass Earth, GM 398600.4355070226 km^3/s^2 (BODY399_GM of data/gm_de440.tpc)",
+    "perturbations": "None (two-body).",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: point-mass Earth with BODY399_GM of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; state entered and reported in EarthICRF.",
+    "reference_frame": "EarthICRF",
+    "script": "propagator_1sd_geo_twobody_004.script",
+    "log": "propagator_1sd_geo_twobody_004.log"
   },
   "outputs": {
-    "final_x_km": 42164.172439443049,
-    "final_y_km": 0.0,
-    "final_z_km": 0.0,
-    "final_vx_km_s": 0.0,
-    "final_vy_km_s": 3.0746599725961645,
-    "final_vz_km_s": 0.0
+    "final_x_km": 42164.17243944201,
+    "final_y_km": -4.7311142402752636e-07,
+    "final_z_km": 4.251395566038513e-06,
+    "final_vx_km_s": 3.449992019887092e-11,
+    "final_vy_km_s": 3.0746599725962294,
+    "final_vz_km_s": 2.6447773429277406e-10
   }
 }

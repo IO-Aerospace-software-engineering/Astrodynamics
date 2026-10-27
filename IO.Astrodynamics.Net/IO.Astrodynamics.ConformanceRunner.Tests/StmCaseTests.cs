@@ -21,9 +21,11 @@ namespace IO.Astrodynamics.ConformanceRunner.Tests;
 
 /// <summary>
 /// The <c>stm</c> category of the conformance runner (F4 of phase 2, feature 1; design of #408), run on the fixture
-/// written by <c>tools/gmat_reference/make_stm_case.py</c>: the schemas of the conformance-tests suite extended with the
-/// category, and the case <c>stm_24h_leo_twobody_001</c>, whose golden is GMAT R2026a's Φ of the reference case R1
-/// turned to ICRF, an independent value; and the two-body propagator case 004 of the suite, unchanged.
+/// written by <c>tools/gmat_reference/make_stm_case.py</c>: the schemas and the tolerances of the conformance-tests suite
+/// (conformance-tests#25, c1af386) extended with the category, and the case <c>stm_24h_leo_twobody_001</c>, whose golden
+/// is GMAT R2026a's Φ of the reference case R1 turned to ICRF, an independent value; and the two-body propagator case
+/// 004 of the suite, as conformance-tests#25 writes it (its GMAT golden, the kernel it lists in the fixture's
+/// <c>data/</c>). The final state of the stm case takes the keys of the propagator's (spec.md section 12.1).
 /// </summary>
 /// <remarks>
 /// Each test runs the runner on its own copy of the fixture, so that the variants (a perturbed, a missing or a

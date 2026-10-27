@@ -31,6 +31,12 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
     /// </summary>
     public TimeSpan OutputStep => Window.Length;
 
+    /// <summary>The GM of EGM2008, 3.986004415e14 m³/s² (spec.md section 12.1).</summary>
+    public const double Egm2008GravitationalParameter = 3.986004415e14;
+
+    /// <summary>The reference radius of EGM2008, 6378136.3 m (spec.md section 12.1).</summary>
+    public const double Egm2008ReferenceRadius = 6378136.3;
+
     /// <summary>
     /// Builds the case of <paramref name="caseInput"/>, the geopotential model read from <paramref name="dataPath"/>.
     /// </summary>
@@ -46,7 +52,13 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
         {
             var geoModelPath = Path.Combine(dataPath, inputs.GeopotentialModel);
             SuiteDataFile.EnsureContent(geoModelPath);
-            geoParams = new GeopotentialModelParameters(geoModelPath, (ushort)inputs.GeopotentialDegree);
+            // spec.md section 12.1: the GM and the reference radius of EGM2008 apply to the whole field, central term
+            // included, as GMAT applies the header of a .cof (decision 18 of #457)
+            geoParams = new GeopotentialModelParameters(geoModelPath, (ushort)inputs.GeopotentialDegree,
+                Egm2008GravitationalParameter, Egm2008ReferenceRadius)
+            {
+                CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+            };
         }
         IAtmosphericModel atmosphericModel = inputs.ForceModel.Drag ? new EarthStandardAtmosphere() : null;
         var centralBody = new CelestialBody(

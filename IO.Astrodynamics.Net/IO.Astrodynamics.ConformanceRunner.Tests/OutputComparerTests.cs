@@ -8,6 +8,7 @@ using System.Text.Json;
 using IO.Astrodynamics.ConformanceRunner.Comparison;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
+using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
 namespace IO.Astrodynamics.ConformanceRunner.Tests;
@@ -32,7 +33,9 @@ public class OutputComparerTests
         ["frame_velocity_km_s"] = Absolute(4.4e-15),
         ["geodetic_latitude_deg"] = Absolute(5.2e-8),
         [MetricTable.TimeKey] = Absolute(9.6e-7),
-        [MetricTable.TdbTimeKey] = Absolute(7.6e-5)
+        [MetricTable.TdbTimeKey] = Absolute(7.6e-5),
+        ["eclipse_time_s"] = Absolute(1e-2),
+        ["attitude_angle_rad"] = Absolute(1e-5)
     };
 
     private static TolerancePair Absolute(double tolerance) => new() { AbsTol = tolerance, RelTol = 0.0 };
@@ -304,18 +307,164 @@ public class OutputComparerTests
     }
 
     [Fact]
-    public void TheTable_CoversTheConversionCategoriesOnly_AndNamesTheirSummaryRows()
+    public void TheTable_CoversEveryCategoryOfTheSuiteAndStm_AndNamesTheirSummaryRows()
     {
-        Assert.All(Lot1Fixture.Categories, category => Assert.True(MetricTable.Covers(category)));
-        Assert.False(MetricTable.Covers("geosynchronous"));
+        Assert.All(Lot1Fixture.Categories.Concat(new[] { "propagator", "eclipse", "tracking_data", "pointing_triad", "geosynchronous", "stm" }),
+            category => Assert.True(MetricTable.Covers(category), category));
+        Assert.False(MetricTable.Covers("unknown"));
         Assert.False(MetricTable.Covers(null));
-        Assert.False(MetricTable.TryGet("geosynchronous", "semi_major_axis_km", out _));
+
+        // The geosynchronous outputs take the lot-1 keys of their quantities (spec.md section 12.5), in rows of their own
+        Assert.True(MetricTable.TryGet("geosynchronous", "semi_major_axis_km", out var sma));
+        Assert.Equal("oe_length_km", sma.Key);
+        Assert.True(MetricTable.TryGet("geosynchronous", "raan_deg", out var raan));
+        Assert.Equal((MetricKind.WrappedAngle, "oe_angle_deg"), (raan.Kind, raan.Key));
+        Assert.True(MetricTable.TryGet("geosynchronous", "inclination_deg", out var inclination));
+        Assert.Equal(MetricKind.Angle, inclination.Kind);
+        Assert.True(MetricTable.TryGet("geosynchronous", "velocity_z_km_s", out var velocity));
+        Assert.Equal("oe_velocity_km_s", velocity.Key);
+        Assert.NotEqual(MetricTable.SummaryKey("geosynchronous", "semi_major_axis_km"), MetricTable.SummaryKey("orbital_elements", "semi_major_axis_km"));
+
+        // The keys of spec.md section 12 and the former keys of the suite before conformance-tests#25
+        Assert.True(MetricTable.TryGet("propagator", "final_y_km", out var position));
+        Assert.Equal("propagator_position_km", position.Key);
+        Assert.Equal(new[] { "position_km" }, position.FormerKeys);
+        Assert.True(MetricTable.TryGet("stm", "final_vz_km_s", out var stmVelocity));
+        Assert.Equal("propagator_velocity_km_s", stmVelocity.Key);
+        Assert.Equal(new[] { "velocity_km_s" }, stmVelocity.FormerKeys);
+        Assert.True(MetricTable.TryGet("eclipse", "umbra_exit", out var instant));
+        Assert.Equal((MetricKind.Instant, "eclipse_time_s"), (instant.Kind, instant.Key));
+        Assert.True(MetricTable.TryGet("eclipse", "umbra_duration_s", out var duration));
+        Assert.Equal("eclipse_duration_s", duration.Key);
+        Assert.Equal(new[] { "umbra_duration_s" }, duration.FormerKeys);
+        Assert.True(MetricTable.TryGet("tracking_data", "range (km).median", out var range));
+        Assert.Equal("tracking_range_km", range.Key);
+        Assert.True(MetricTable.TryGet("tracking_data", "doppler (km/s).max", out var rangeRate));
+        Assert.Equal("tracking_range_rate_km_s", rangeRate.Key);
+        Assert.True(MetricTable.TryGet("tracking_data", "arcs", out var arcs));
+        Assert.Equal((MetricKind.Exact, null), (arcs.Kind, arcs.Key));
+        Assert.True(MetricTable.TryGet("pointing_triad", "attitude_quaternion", out var attitude));
+        Assert.Equal((MetricKind.RotationAngle, "attitude_angle_rad"), (attitude.Kind, attitude.Key));
+        Assert.True(MetricTable.TryGet("pointing_triad", "target_in_fov", out var inFov));
+        Assert.Equal(MetricKind.Exact, inFov.Kind);
+        Assert.False(MetricTable.TryGet("propagator", "final_stm", out _));
 
         Assert.Equal("orbital_elements/period_s", MetricTable.SummaryKey("orbital_elements", "period_s"));
         Assert.True(MetricTable.TryGetSummaryUnit("orbital_elements/specific_energy_km2_s2", out var unit));
         Assert.Equal("km2/s2", unit);
+        Assert.True(MetricTable.TryGetSummaryUnit("pointing_triad/attitude_quaternion", out unit));
+        Assert.Equal("rad", unit);
         Assert.False(MetricTable.TryGetSummaryUnit("semi_major_axis_km", out _));
         Assert.False(MetricTable.TryGetSummaryUnit("orbital_elements/c3_energy_km2_s2", out _));
+    }
+
+    [Theory]
+    [InlineData("\"2026-03-20T00:18:37.494 UTC\"")] // the tagged form of spec.md section 3
+    [InlineData("\"2026-03-20T00:18:37.494Z\"")] // the form of the goldens before conformance-tests#25
+    public void AnInstant_IsComparedInSeconds_ByItsAbsoluteDeltaOnly(string golden)
+    {
+        // Arrange: 4 ms after the golden, and an override whose relative threshold must not apply
+        var computed = new Time(new DateTime(2026, 3, 20, 0, 18, 37, 498), TimeFrame.UTCFrame);
+        var caseInput = Case("eclipse", overrides: new Dictionary<string, TolerancePair>
+        {
+            ["eclipse_time_s"] = new() { AbsTol = 3e-3, RelTol = 1e-6, Justification = "a relative threshold that must not apply" }
+        });
+
+        // Act
+        var measure = CompareOne("eclipse", "umbra_exit", computed, golden, caseInput);
+        var underTheDefault = CompareOne("eclipse", "umbra_exit", computed, golden);
+
+        // Assert
+        Assert.Equal(MetricKind.Instant, measure.Kind);
+        Assert.Equal(4e-3, measure.AbsoluteDelta, 12);
+        Assert.True(double.IsNaN(measure.RelativeDelta));
+        Assert.False(measure.Passed);
+        Assert.True(underTheDefault.Passed);
+        Assert.Equal(("eclipse_time_s", 0.4), (underTheDefault.ToleranceName, System.Math.Round(underTheDefault.Ratio, 12)));
+    }
+
+    [Fact]
+    public void TheRotationAngle_IsTheAngleBetweenTheAttitudes_WhateverTheSignOfTheQuaternions()
+    {
+        // Arrange: two rotations about the same axis, 1e-9 rad apart, and a half turn
+        static double[] About(double angle) =>
+            [System.Math.Cos(angle / 2.0), 0.6 * System.Math.Sin(angle / 2.0), 0.0, 0.8 * System.Math.Sin(angle / 2.0)];
+        var golden = About(0.3);
+        var computed = About(0.3 + 1e-9);
+        var opposite = computed.Select(x => -x).ToArray();
+
+        // Act
+        var measure = CompareOne("pointing_triad", "attitude_quaternion", computed, JsonSerializer.Serialize(golden));
+        var sameAttitude = CompareOne("pointing_triad", "attitude_quaternion", opposite, JsonSerializer.Serialize(golden));
+
+        // Assert: 2·acos|q·g| would resolve about 1e-8 rad there
+        Assert.Equal(MetricKind.RotationAngle, measure.Kind);
+        Assert.InRange(measure.AbsoluteDelta, 1e-9 - 1e-15, 1e-9 + 1e-15);
+        Assert.Equal(measure.AbsoluteDelta, sameAttitude.AbsoluteDelta);
+        Assert.True(double.IsNaN(measure.RelativeDelta));
+        Assert.Equal("attitude_angle_rad", measure.ToleranceName);
+        Assert.True(measure.Passed);
+        Assert.Equal(System.Math.PI, OutputComparer.RotationAngle(About(0.0), About(System.Math.PI)), 15);
+        Assert.Throws<InvalidOperationException>(() => CompareOne("pointing_triad", "attitude_quaternion", golden, "[1.0, 0.0, 0.0]"));
+    }
+
+    [Fact]
+    public void AnExactOutput_PassesWhenItEqualsTheGolden_WithoutATolerance()
+    {
+        // Arrange: arcs of a 60 s grid
+        static Time Utc(int hour, int minute) => new(new DateTime(2023, 12, 15, hour, minute, 0), TimeFrame.UTCFrame);
+        const string golden = "[{\"rise\": \"2023-12-15T00:25:00 UTC\", \"fall\": \"2023-12-15T01:36:00 UTC\"}," +
+                              " {\"rise\": \"2023-12-15T02:22:00 UTC\", \"fall\": \"2023-12-15T03:33:00 UTC\"}]";
+        var arcs = new[] { new Window(Utc(0, 25), Utc(1, 36)), new Window(Utc(2, 22), Utc(3, 33)) };
+        var withinTheResolution = new[] { new Window(Utc(0, 25).Add(TimeSpan.FromTicks(5)), Utc(1, 36)), arcs[1] };
+        var oneSampleLate = new[] { arcs[0], new Window(Utc(2, 23), Utc(3, 33)) };
+
+        // Act and assert
+        var same = CompareOne("tracking_data", "arcs", arcs, golden);
+        Assert.Equal((MetricKind.Exact, 0.0, "exact", true), (same.Kind, same.AbsoluteDelta, same.ToleranceName, same.Passed));
+        Assert.Null(same.Tolerance);
+        Assert.True(double.IsNaN(same.Ratio));
+        Assert.True(CompareOne("tracking_data", "arcs", withinTheResolution, golden).Passed);
+        var late = CompareOne("tracking_data", "arcs", oneSampleLate, golden);
+        Assert.Equal((1.0, false), (late.AbsoluteDelta, late.Passed));
+        Assert.False(CompareOne("tracking_data", "arcs", arcs.Take(1).ToArray(), golden).Passed);
+        Assert.True(CompareOne("pointing_triad", "target_in_fov", true, "true").Passed);
+        Assert.False(CompareOne("pointing_triad", "target_in_fov", false, "true").Passed);
+        Assert.Throws<InvalidOperationException>(() => CompareOne("pointing_triad", "target_in_fov", 1.0, "true"));
+        Assert.Throws<InvalidOperationException>(() =>
+            CompareOne("tracking_data", "arcs", arcs.Take(1).ToArray(), "[{\"rise\": \"2023-12-15T00:25:00 UTC\"}]"));
+    }
+
+    [Fact]
+    public void TheLeavesOfAnObjectOfTheGolden_AreOutputsNamedByTheirPath()
+    {
+        var golden = Golden("{\"arcs\": [], \"statistics\": {\"range (km)\": {\"mean\": 1.0, \"max\": 2.0}, \"doppler (km/s)\": {\"min\": 3.0}}}");
+
+        Assert.Equal(new[] { "arcs", "range (km).mean", "range (km).max", "doppler (km/s).min" },
+            OutputComparer.Outputs(golden).Select(o => o.Output));
+    }
+
+    [Fact]
+    public void AFormerKey_ComesAfterTheOverridesOfTheOutputAndOfTheKey_AndItsDefaultAfterThatOfTheKey()
+    {
+        // The overrides of the propagator cases before conformance-tests#25 name position_km
+        var output = new TolerancePair { AbsTol = 1.0 };
+        var key = new TolerancePair { AbsTol = 2.0 };
+        var former = new TolerancePair { AbsTol = 3.0 };
+        var keyDefault = new TolerancePair { AbsTol = 4.0 };
+        var formerDefault = new TolerancePair { AbsTol = 5.0 };
+        string[] formerKeys = ["position_km"];
+        var defaults = new Dictionary<string, TolerancePair> { ["propagator_position_km"] = keyDefault, ["position_km"] = formerDefault };
+
+        (TolerancePair, string) Resolve(Dictionary<string, TolerancePair> overrides, Dictionary<string, TolerancePair> d) =>
+            OutputComparer.ResolveTolerance("final_x_km", "propagator_position_km", overrides, d, formerKeys);
+
+        Assert.Equal((output, "final_x_km"), Resolve(new() { ["final_x_km"] = output, ["propagator_position_km"] = key, ["position_km"] = former }, defaults));
+        Assert.Equal((key, "propagator_position_km"), Resolve(new() { ["propagator_position_km"] = key, ["position_km"] = former }, defaults));
+        Assert.Equal((former, "position_km"), Resolve(new() { ["position_km"] = former }, defaults));
+        Assert.Equal((keyDefault, "propagator_position_km"), Resolve(null, defaults));
+        Assert.Equal((formerDefault, "position_km"), Resolve(null, new() { ["position_km"] = formerDefault }));
+        Assert.Throws<InvalidOperationException>(() => Resolve(null, new()));
     }
 
     [Fact]

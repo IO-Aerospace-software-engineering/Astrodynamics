@@ -84,6 +84,9 @@ public class EclipseInputs
     public SearchWindow SearchWindow { get; set; }
     public string OccultingBody { get; set; }
     public string LightSource { get; set; }
+
+    /// <summary>The GM of the two-body trajectory, km³/s² (spec.md section 12.2); null when the case gives none.</summary>
+    public double? GmKm3S2 { get; set; }
 }
 
 public class TriadInputs
@@ -156,6 +159,9 @@ public class LocationInput
     public double LatitudeDeg { get; set; }
     public double LongitudeDeg { get; set; }
     public double HeightKm { get; set; }
+
+    /// <summary>The ellipsoid of the station (spec.md section 12.3); null when the case gives none.</summary>
+    public EllipsoidInputs Ellipsoid { get; set; }
 }
 
 public class GeosynchronousInputs
@@ -164,4 +170,10 @@ public class GeosynchronousInputs
     public string CentralBody { get; set; }
     public double LongitudeDeg { get; set; }
     public double LatitudeDeg { get; set; }
+
+    /// <summary>The GM of the central body, km³/s² (spec.md section 12.5); null when the case gives none.</summary>
+    public double? GmKm3S2 { get; set; }
+
+    /// <summary>The declared sidereal period, s (spec.md section 12.5); null when the case gives none.</summary>
+    public double? SiderealPeriodS { get; set; }
 }
