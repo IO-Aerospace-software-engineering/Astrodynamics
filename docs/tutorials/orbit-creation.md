@@ -77,7 +77,7 @@ Console.WriteLine($"Mean anomaly after 1 day: {laterKep.MeanAnomaly() * Constant
 
 ## Equinoctial Elements
 
-Equinoctial elements avoid singularities at zero eccentricity and zero inclination:
+Equinoctial elements have no singularity at zero eccentricity or zero inclination: `ToStateVector()` computes the state from them directly. Their Keplerian angles take ω = 0 for an exactly circular orbit, f = g = 0 (ν is then the argument of latitude), and Ω = 0 for an exactly equatorial one, h = k = 0, as `StateVector` does. Their only singular orbit is the retrograde equatorial one (i = 180°), where h and k grow without bound:
 
 ```csharp
 var equinoctial = sv.ToEquinoctial();
@@ -124,7 +124,7 @@ The inclination is computed to produce the required nodal precession rate (~0.98
 
 ## Summary
 
-- Use `StateVector` for Cartesian, `KeplerianElements` for classical, and `ToEquinoctial` for singularity-free representations.
+- Use `StateVector` for Cartesian, `KeplerianElements` for classical, and `ToEquinoctial` for a representation without singularity at e = 0 or i = 0.
 - All representations share the same property methods (`SemiMajorAxis()`, `Eccentricity()`, `Period()`, etc.).
 - `AtEpoch` provides fast two-body analytical propagation from Keplerian elements.
 - `GeosynchronousOrbit` and `HelioSynchronousOrbit` are convenience builders for common orbit types.

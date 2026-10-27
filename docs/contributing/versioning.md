@@ -90,6 +90,48 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   (1.4e-15 in 10.2.0-preview-1).
   [#453](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/453)
 
+- **Equinoctial elements of a circular or an equatorial orbit.** `EquinoctialElements` with f = g = 0 or h = k = 0
+  exactly (either sign of zero) moved the satellite along its orbit:
+  - by Ω for a circular orbit: 4 788 km for i = 30°, Ω = 40° at 7 000 km;
+  - by ϖ for an equatorial orbit: 13 248 km for e = 0.05, ϖ = 120°;
+  - by 2r for some circular equatorial orbits, such as a `KeplerianElements` with e = 0, i = 0, Ω = 0° and ω = 180°
+    through `ToEquinoctial()`.
+
+  `ToStateVector()` now computes the state directly from the elements, without angles (GMAT Mathematical
+  Specification R2026a, §3.1.4). It is within 2.1e-16 of |r| of a 60-digit reference on the cases of the tests; GMAT
+  R2026a agrees with that reference to 1.7e-9 m, the resolution of its output. The Keplerian angles take Ω = 0 for an
+  equatorial orbit, and ω = 0 for a circular one, with ν the argument of latitude, as `StateVector` does; they are
+  then reduced to [0, 2π] from the true longitude itself, so that they keep their precision for any L.
+
+  This fixes every path through these elements:
+  - `ToKeplerianElements()`, `AtEpoch` and `ToStateVector(Time)`;
+  - the start of a propagation;
+  - `ToTLE` of a state within 1e-10 rad of the TEME equator, which threw after 15 iterations and now fits as at
+    1e-9 rad, with the same two lines (1.6 m in the case of the tests);
+  - `ToTLE` of such elements given in a frame other than TEME, which fitted the wrong state without an error;
+  - `TLE.Create` with mean equinoctial elements;
+  - the state of a spacecraft whose initial orbit is such elements before it is propagated (`GetEphemeris`, which the
+    conjunction analysis reads), and its OPM export;
+  - `TrueLongitude()`, `TrueLongitude(Time)`, `MeanLongitude()` and `ToStateVector(ν)`, which maneuvers take from
+    their target orbit;
+  - the CLI with `--from-equinoctial` (`orbital-parameters-converter` and `propagate`).
+
+  The same paths are fixed for elements whose argument of periapsis lost its precision, or was 0 or π, because its
+  products underflow (e·tan(i/2) below the smallest normal double, 2.2e-308).
+
+  Within the parabolic band, |e − 1| < 1e-6, the state took p = 2q, which put its periapsis up to 5e-7 of q away from
+  the perigee radius (3.2 m at e = 1 − 9e-7 for q = 7 000 km). It now takes P when P is finite, and otherwise
+  q (1 + e), the conic of the eccentricity with its periapsis at q, as SPICE CONICS. A near-parabolic `StateVector`
+  comes back from `ToEquinoctial().ToStateVector()` within 5.6e-16 of |r| (1.75 m off at e = 1 − 5e-7 before).
+
+  For all other equinoctial elements, the state moves by rounding only: the largest error against the 60-digit
+  reference goes from 3.5e-15 to 2.6e-15 of |r| on 20 000 elements. Their angles, Keplerian elements, `AtEpoch`, the
+  TLE fit of a state vector and `TLE.Create` are unchanged, bit for bit.
+
+  A parabolic `EquinoctialElements` with no perigee radius overflowed the stack. With a finite `P` it now returns its
+  state; without one, it throws `InvalidOperationException`.
+  [#452](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/452)
+
 ### 10.2.0-preview-1
 
 A preview of 10.2.0, published on NuGet as a prerelease (`dotnet add package IO.Astrodynamics --prerelease`,

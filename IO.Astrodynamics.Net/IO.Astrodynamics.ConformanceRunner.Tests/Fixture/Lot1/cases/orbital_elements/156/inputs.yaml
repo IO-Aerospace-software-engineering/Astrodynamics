@@ -1,0 +1,28 @@
+id: "orbital_elements_modeq2cart_eq_pro_156"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_elements"
+created: "2026-10-25"
+description: >
+  Modified equinoctial elements to the state: equatorial prograde orbit (h = k = 0).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the conversion is the same in any inertial axes
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2021-03-20T12:00:00.000 TDB"
+  central_body: "Earth"
+  gm_km3_s2: 398600.4355070226    # BODY399_GM of data/gm_de440.tpc as CSPICE reads it (spec.md section 11)
+  orbit:
+    type: "modified_equinoctial"
+    p_km: 7980.0
+    f: -0.02499999999999999
+    g: 0.04330127018922194
+    h: 0.0
+    k: 0.0
+    true_longitude_deg: 150.0
+
+# Outputs left out of the golden (written by tools/gmat_goldens/generate.py; spec.md section 11):
+#   every element output (semi_major_axis_km to declination_deg): outputs of a state_vector input
