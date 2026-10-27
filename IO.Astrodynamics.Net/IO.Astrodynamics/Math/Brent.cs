@@ -13,7 +13,7 @@ namespace IO.Astrodynamics.Math;
 /// Both are transcriptions of R. P. Brent, <i>Algorithms for Minimization without Derivatives</i>, Prentice-Hall,
 /// 1973: the procedure <c>zero</c> of chapter 4 (inverse quadratic interpolation, secant and bisection, the bracket
 /// kept at every step) and <c>localmin</c> of chapter 5 (golden section and successive parabolic interpolation), in
-/// the form of their Fortran versions <c>zeroin</c> and <c>fmin</c> of Netlib (to be verified by S. Guillet).
+/// the form of their Fortran versions <c>zeroin</c> and <c>fmin</c> of Netlib (confirmed by S. Guillet, 2026-10-27).
 /// </para>
 /// <para>
 /// <see cref="FindRoot"/> returns a point within <c>tolerance + 4 ε |x|</c> of a sign change of the function in the

@@ -65,7 +65,7 @@ internal static class KeplerEquation
         CheckFinite(meanAnomaly, e);
 
         // r = M − 2πk, |r| ≤ π up to about 1e13 rad: M − k TwoPiHigh is exact for |k| < 2^22 (Sterbenz's lemma:
-        // P. H. Sterbenz, Floating-Point Computation, Prentice-Hall, 1974, to be verified by S. Guillet), and
+        // P. H. Sterbenz, Floating-Point Computation, Prentice-Hall, 1974, confirmed by S. Guillet, 2026-10-27), and
         // k TwoPiLow within 4.1e-26 |k| of the rest of 2πk; M is kept as it is in [−π, π]
         double k = System.Math.Abs(meanAnomaly) <= Constants.PI ? 0.0 : System.Math.Round(meanAnomaly / Constants._2PI);
         double r = k == 0.0 ? meanAnomaly : (meanAnomaly - k * TwoPiHigh) - k * TwoPiLow;
