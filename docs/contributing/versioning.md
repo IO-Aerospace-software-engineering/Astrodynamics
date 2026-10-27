@@ -46,6 +46,24 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 Changes since 10.2.0-preview-1. Entries are added as they merge.
 
+**Added**
+
+- **The central term of a geopotential with the GM of the model, on request.** `GeopotentialModelParameters.CentralTerm`
+  (`init`) and `GeopotentialGravitationalField.CentralTerm` take a `GeopotentialCentralTerm`: `BodyGravitationalParameter`,
+  the default, keeps the GM of the kernels in the central term as before, bit for bit; `ModelGravitationalParameter`
+  gives the whole field the constants of the model, as GMAT applies the GM of a `.cof` header to its central term and to
+  its harmonics (decided by S. Guillet, 2026-10-27). The acceleration and its partials take the same GM, so that the
+  state transition matrix and the covariance follow: Φ against central differences of whole propagations at 1e-14,
+  2.45e-9 (worst block, LEO 400 km, 10×10, 6 h). A field of degree 0 is then the point mass of the model's GM. For the
+  Earth with EGM2008 the TT-compatible 3.986004415e14 m³/s² replaces the 3.98600435507e14 m³/s² of the kernels in the
+  central term: 1.5e-8 of the acceleration, 15.6 m, 6.8 m and 18.5 m over the day of the propagators 001 to 003 of the
+  conformance suite, whose GMAT runs with EGM2008's GM the library then reproduces to 8.8 cm, 6.0 cm and 15.6 cm
+  (RK7(8) at 1e-11). `CelestialItem.GM`, the third bodies and the conversions of orbital parameters keep the GM of the
+  kernels; for another body without constants of the model both choices give the same field. A value outside the
+  enumeration throws `ArgumentOutOfRangeException`. See
+  [Force Models](../reference/force-models.md#the-central-term-with-the-gm-of-the-model)
+  ([#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), decision 18).
+
 **Fixed**
 
 - **RK7(8) with `IncludeInStepControl` no longer stops at random on the first steps of a segment in dense air.** At the
