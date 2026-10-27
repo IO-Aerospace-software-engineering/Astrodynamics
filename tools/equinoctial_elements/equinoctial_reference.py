@@ -11,9 +11,9 @@ state is
 
 f̂ and ĝ are the first two columns of Q in the GMAT Mathematical Specification R2026a, section 3.1.4, eqs 3.44 to 3.47,
 with j = 1 (GMAT's p is k here and its q is h); the radius and the velocity with the true longitude are the form of
-Walker, Ireland and Owens, "A set of modified equinoctial orbit elements", Celestial Mechanics 36, 1985 (to be verified
-by S. Guillet). Each state is checked here against the classical route Rz(Ω) Rx(i) Rz(ω) applied to the perifocal state,
-with any consistent choice of the angles where they are undefined; the largest difference is written to the file.
+Walker, Ireland and Owens, "A set of modified equinoctial orbit elements", Celestial Mechanics 36, 1985 (confirmed
+by S. Guillet, 2026-10-27). Each state is checked here against the classical route Rz(Ω) Rx(i) Rz(ω) applied to the
+perifocal state, with any consistent choice of the angles where they are undefined; the largest difference is written to the file.
 
 The states at another epoch are the exact two-body states: the mean anomaly of the elements, advanced by n Δt, Kepler's
 equation solved at 60 digits (elliptic and hyperbolic, by Newton's method to 1e-55; Barker's equation in closed form),

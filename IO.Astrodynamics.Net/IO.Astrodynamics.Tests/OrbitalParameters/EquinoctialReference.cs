@@ -20,8 +20,8 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// The 60-digit reference of the tests of #452, <c>Data/EquinoctialElementsReference/equinoctial_reference.json</c>,
 /// written by <c>tools/equinoctial_elements/equinoctial_reference.py</c>: the states of equinoctial and Keplerian
 /// elements given as doubles, from the closed form of the GMAT Mathematical Specification R2026a, §3.1.4, Eqs 3.44 to
-/// 3.47, with the true longitude of Walker, Ireland and Owens (1985; to be verified by S. Guillet), checked against the
-/// classical rotations, and the exact two-body states at other epochs, all evaluated with mpmath at 60 digits.
+/// 3.47, with the true longitude of Walker, Ireland and Owens (1985; confirmed by S. Guillet, 2026-10-27), checked
+/// against the classical rotations, and the exact two-body states at other epochs, all evaluated with mpmath at 60 digits.
 /// </summary>
 /// <remarks>
 /// Each component of a state is a pair of doubles whose sum is the 60-digit value, so that the error of a state in

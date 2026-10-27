@@ -220,7 +220,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// and ĝ = (2HK, 1 + K² − H², 2H) / s²: the first two columns of Q in the GMAT Mathematical Specification
         /// R2026a, §3.1.4, Eqs 3.44 to 3.47, with the retrograde factor j = 1 (GMAT's p is <see cref="K"/> and its q
         /// is <see cref="H"/>). With the true longitude L = <see cref="L0"/> (Walker, Ireland and Owens, "A set of
-        /// modified equinoctial orbit elements", Celestial Mechanics 36, 1985; to be verified by S. Guillet):
+        /// modified equinoctial orbit elements", Celestial Mechanics 36, 1985; confirmed by S. Guillet, 2026-10-27):
         /// r = p / (1 + F cos L + G sin L), r = r (cos L f̂ + sin L ĝ),
         /// v = √(μ/p) (−(G + sin L) f̂ + (F + cos L) ĝ).
         /// </para>
