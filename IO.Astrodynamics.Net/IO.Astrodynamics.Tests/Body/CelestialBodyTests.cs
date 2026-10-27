@@ -271,6 +271,63 @@ public class CelestialBodyTests
     }
 
     [Fact]
+    public void GeosynchronousOrbitOfDeclaredPeriod()
+    {
+        // Geosynchronous 001 of the conformance suite: (0, 0) at 2021-01-01 00:00:00 TDB, T = 86164.0998101 s.
+        var earth = TestHelpers.EarthAtJ2000;
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var period = TimeSpan.FromTicks(861640998101);
+        var orbit = earth.GeosynchronousOrbit(0.0, 0.0, epoch, period);
+
+        // Closed form a = (GM T² / 4π²)^(1/3)
+        var a = System.Math.Cbrt(earth.GM * 86164.0998101 * 86164.0998101 / (4.0 * System.Math.PI * System.Math.PI));
+        Assert.Equal(a, orbit.SemiMajorAxis(), 1e-15 * a);
+        Assert.Equal(0.0, orbit.Eccentricity());
+        Assert.Equal(0.0, orbit.MeanAnomaly());
+        Assert.Equal(Frames.Frame.ICRF, orbit.Frame);
+
+        // CSPICE N0067 (spiceypy), the method of the geosynchronous study of Astrodynamics#457 with the radius of the
+        // declared period, on the kernels of Data/SolarSystem (gm_de440.tpc, earth_latest_high_prec.bpc),
+        // computed 2026-10-27: a = 42164.172439443049 km, r and v in J2000 below, i = 0.0020078681590275779 rad,
+        // RAAN = 1.5712262609961554 rad. Deltas measured on Linux (2026-10-27): a 2.2e-8 m, position 3.3e-8 m,
+        // velocity 2.3e-12 m/s, i 1.3e-17 rad, RAAN 3.6e-15 rad; thresholds provisional at twice these, until the CI
+        // logs of Windows and macOS arm64.
+        Assert.Equal(42164172.439443049, orbit.SemiMajorAxis(), 5e-8);
+        var sv = orbit.ToStateVector();
+        var position = new Vector3(-7546190.0544189948, 41483396.976059448, 15115.963054568274);
+        var velocity = new Vector3(-3025.0109437580854, -550.27796615719915, 6.0743057843516786);
+        Assert.True((sv.Position - position).Magnitude() < 7e-8, $"position delta {(sv.Position - position).Magnitude()} m");
+        Assert.True((sv.Velocity - velocity).Magnitude() < 5e-12, $"velocity delta {(sv.Velocity - velocity).Magnitude()} m/s");
+        Assert.Equal(0.0020078681590275779, orbit.Inclination(), 3e-17);
+        Assert.Equal(1.5712262609961554, orbit.AscendingNode(), 8e-15);
+    }
+
+    [Fact]
+    public void GeosynchronousOrbitOfDeclaredPeriodEqualsSiderealPeriodOrbit()
+    {
+        var earth = TestHelpers.EarthAtJ2000;
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var expected = earth.GeosynchronousOrbit(1.0, 1.0, epoch);
+        var orbit = earth.GeosynchronousOrbit(1.0, 1.0, epoch, earth.SideralRotationPeriod(epoch));
+        Assert.Equal(expected.SemiMajorAxis(), orbit.SemiMajorAxis());
+        Assert.Equal(expected.Inclination(), orbit.Inclination());
+        Assert.Equal(expected.AscendingNode(), orbit.AscendingNode());
+        Assert.Equal(expected.ArgumentOfPeriapsis(), orbit.ArgumentOfPeriapsis());
+    }
+
+    [Fact]
+    public void GeosynchronousOrbitOfDeclaredPeriodThrowsOnInvalidArguments()
+    {
+        var earth = TestHelpers.EarthAtJ2000;
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);
+        var period = TimeSpan.FromSeconds(86164.0998101);
+        Assert.Throws<ArgumentOutOfRangeException>(() => earth.GeosynchronousOrbit(4.0, 0.0, epoch, period));
+        Assert.Throws<ArgumentOutOfRangeException>(() => earth.GeosynchronousOrbit(0.0, -2.0, epoch, period));
+        Assert.Throws<ArgumentOutOfRangeException>(() => earth.GeosynchronousOrbit(0.0, 0.0, epoch, TimeSpan.Zero));
+        Assert.Throws<ArgumentOutOfRangeException>(() => earth.GeosynchronousOrbit(0.0, 0.0, epoch, TimeSpan.FromSeconds(-1.0)));
+    }
+
+    [Fact]
     public void GeosynchronousOrbitThrowsOnInvalidLongitude()
     {
         var epoch = new TimeSystem.Time(new DateTime(2021, 1, 1, 0, 0, 0, DateTimeKind.Unspecified), TimeFrame.TDBFrame);

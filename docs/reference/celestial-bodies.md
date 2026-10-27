@@ -43,7 +43,8 @@
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state at epoch |
 | `GetEphemeris(Window, ILocalizable, Frame, Aberration, TimeSpan)` | Get states over window |
 | `GetOrientation(Frame, Time)` | Get body orientation |
-| `GeosynchronousOrbit(double, double, Time)` | Compute geosynchronous orbit |
+| `GeosynchronousOrbit(double, double, Time)` | Compute geosynchronous orbit, of the sidereal rotation period of the body frame at the epoch |
+| `GeosynchronousOrbit(double, double, Time, TimeSpan)` | Compute geosynchronous orbit of a declared period |
 | `HelioSynchronousOrbit(double, double, Time)` | Compute helio-synchronous orbit |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation/eclipse windows |
