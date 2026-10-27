@@ -30,6 +30,13 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     public double Flattening { get; }
 
     /// <summary>
+    /// Gets the semi-axes of the body's reference ellipsoid along the X, Y and Z axes of its body-fixed frame, in
+    /// meters: the <c>BODYnnn_RADII</c> of the kernels, or (equatorial, equatorial, polar) for a body built from its
+    /// radii. The occultation searches model the body as this ellipsoid.
+    /// </summary>
+    public Vector3 Radii { get; }
+
+    /// <summary>
     /// Gets or sets the sphere of influence of the celestial body.
     /// </summary>
     public double SphereOfInfluence { get; private set; }
@@ -142,6 +149,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     {
         PolarRadius = ExtendedInformation.Radii.Z;
         EquatorialRadius = ExtendedInformation.Radii.X;
+        Radii = new Vector3(ExtendedInformation.Radii.X, ExtendedInformation.Radii.Y, ExtendedInformation.Radii.Z);
         Flattening = (EquatorialRadius - PolarRadius) / EquatorialRadius;
         J2 = ExtendedInformation.J2;
         J3 = ExtendedInformation.J3;
@@ -179,6 +187,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     {
         PolarRadius = polarRadius;
         EquatorialRadius = equatorialRadius;
+        Radii = new Vector3(equatorialRadius, equatorialRadius, polarRadius);
         Flattening = (EquatorialRadius - PolarRadius) / EquatorialRadius;
         if (double.IsNaN(Flattening))
         {

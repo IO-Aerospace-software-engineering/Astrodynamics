@@ -9,6 +9,7 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
@@ -260,7 +261,9 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Find when occultation constraint occurs
+        /// Find when occultation constraint occurs: the windows when <paramref name="frontBody"/> occults
+        /// <paramref name="target"/> as this site sees them, with the bodies' own frames and a convergence tolerance of
+        /// 1 µs; see the overload with <see cref="OccultationSearchOptions"/>.
         /// </summary>
         /// <param name="searchWindow"></param>
         /// <param name="target"></param>
@@ -270,17 +273,41 @@ namespace IO.Astrodynamics.Surface
         /// <param name="occultationType"></param>
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
-        /// <returns></returns>
+        /// <returns>The windows, in TDB.</returns>
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
         {
+            return FindWindowsOnOccultationConstraint(searchWindow, target, targetShape, frontBody, frontShape, occultationType, aberration, stepSize,
+                OccultationSearchOptions.Default);
+        }
+
+        /// <summary>
+        /// Find when occultation constraint occurs: the windows when <paramref name="frontBody"/> occults
+        /// <paramref name="target"/> as this site sees them. CSPICE's <c>gfoclt</c> searches when the site, the target
+        /// (a spacecraft) and the front body are in the kernels, the library otherwise, with the same rules as
+        /// <see cref="CelestialItem.FindWindowsOnOccultationConstraint(in Window, ILocalizable, ShapeType, INaifObject, ShapeType, OccultationType, Aberration, in TimeSpan, OccultationSearchOptions)"/>.
+        /// </summary>
+        /// <param name="searchWindow"></param>
+        /// <param name="target"></param>
+        /// <param name="targetShape"></param>
+        /// <param name="frontBody"></param>
+        /// <param name="frontShape"></param>
+        /// <param name="occultationType"></param>
+        /// <param name="aberration"></param>
+        /// <param name="stepSize"></param>
+        /// <param name="options">The frames of the ellipsoids and the convergence tolerance; null for the defaults.</param>
+        /// <returns>The windows, in TDB.</returns>
+        public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
+            ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize, OccultationSearchOptions options)
+        {
+            ArgumentNullException.ThrowIfNull(target);
+            ArgumentNullException.ThrowIfNull(frontBody);
             if (IsSpiceBacked && target is CelestialItem ciTgt && ciTgt.IsSpiceBacked && ciTgt.IsSpacecraft
                 && frontBody is ILocalizable fb && fb.IsSpiceBacked)
-                return SpiceAPI.Instance.FindWindowsOnOccultationConstraint(
-                    searchWindow, NaifId, target.NaifId, targetShape,
-                    frontBody.NaifId, frontShape, occultationType, aberration, stepSize);
+                return OccultationSearch.Spice(searchWindow, NaifId, target.NaifId, targetShape, frontBody.NaifId, frontShape, occultationType, aberration,
+                    stepSize, options);
 
-            return target.FindWindowsOnOccultationConstraint(searchWindow, this, targetShape, frontBody, frontShape, occultationType, aberration, stepSize);
+            return OccultationSearch.Managed(searchWindow, this, target, targetShape, frontBody, frontShape, occultationType, aberration, stepSize, options);
         }
 
         /// <summary>

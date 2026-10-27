@@ -28,7 +28,7 @@ Ground-based observation or tracking site.
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
-| `FindWindowsOnOccultationConstraint(...)` | Find occultation windows |
+| `FindWindowsOnOccultationConstraint(...)` | Find occultation windows ([Occultations](occultations.md)) |
 | `FindWindowsOnIlluminationConstraint(...)` | Find illumination windows |
 | `FindDayWindows(Window, double)` | Find daylight windows |
 

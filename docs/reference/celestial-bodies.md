@@ -47,7 +47,7 @@
 | `GeosynchronousOrbit(double, double, Time, TimeSpan)` | Compute geosynchronous orbit of a declared period |
 | `HelioSynchronousOrbit(double, double, Time)` | Compute helio-synchronous orbit |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
-| `FindWindowsOnOccultationConstraint(...)` | Find occultation/eclipse windows |
+| `FindWindowsOnOccultationConstraint(...)` | Find occultation/eclipse windows ([Occultations](occultations.md)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Compute angular separation |
 | `SubObserverPoint(CelestialBody, Time, Aberration)` | Get sub-observer point |
 | `GetAtmosphere(double)` / `GetAtmosphere(IAtmosphericContext)` | Get atmospheric data |
@@ -68,7 +68,7 @@ var state = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).
 |--------|-------------|
 | `GetGeometricStateRelativeTo(Time, CelestialItem)` | Get geometric state relative to a reference body in ICRF |
 | `AngularSize(double distance)` | Compute angular diameter |
-| `IsOcculted(CelestialItem, OrbitalParameters, Aberration)` | Check if occulted |
+| `IsOcculted(CelestialItem, OrbitalParameters, Aberration)` | Type of occultation at an instant ([Occultations](occultations.md)) |
 | `WriteEphemeris(FileInfo)` | Write ephemeris to SPK file |
 
 The implementation uses a reference-body strategy for relative ephemerides to avoid numerical issues from subtracting large SSB vectors.

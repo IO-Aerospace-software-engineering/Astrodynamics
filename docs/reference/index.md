@@ -16,6 +16,7 @@ Foundation services for kernel loading, time, frames, celestial bodies, and spac
 - [Celestial Bodies](celestial-bodies.md) — `CelestialBody`, `CelestialItem`, physical properties
 - [Spacecraft](spacecraft.md) — spacecraft modeling, components, body axes
 - [Sites](sites.md) — ground sites, launch sites, horizontal coordinates
+- [Occultations & Eclipses](occultations.md) — `FindWindowsOnOccultationConstraint`, shapes, frames, step rule, accuracy
 
 ## Orbital Mechanics
 
