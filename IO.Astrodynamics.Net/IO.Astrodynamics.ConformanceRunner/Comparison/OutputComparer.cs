@@ -4,17 +4,21 @@ using System.Linq;
 using System.Text.Json;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
+using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.ConformanceRunner.Comparison;
 
 /// <summary>
-/// Compares the outputs of a conversion case (<see cref="MetricTable"/>) with its golden, by the kinds of spec.md
-/// section 6.1 and the OR rule of <see cref="ToleranceComparer.Passes(double, double, TolerancePair)"/>.
+/// Compares the outputs of a case (<see cref="MetricTable"/>) with its golden, by the kinds of spec.md section 6.1 and
+/// the OR rule of <see cref="ToleranceComparer.Passes(double, double, TolerancePair)"/>.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The case checks the outputs present in its golden (spec.md section 7). The tolerance of an output is, in order, an
-/// override of the case naming the output, an override naming its key, then the key's default; there is no fallback.
+/// The case checks the outputs present in its golden (spec.md section 7); the leaves of an object of the golden (the
+/// <c>statistics</c> of <c>tracking_data</c>) are its outputs, named <c>&lt;block&gt;.&lt;leaf&gt;</c>. The tolerance of an
+/// output is, in order, an override of the case naming the output, an override naming its key, then an override naming
+/// one of its former keys (<see cref="Metric.FormerKeys"/>), the key's default, then the default of a former key; there
+/// is no fallback. An exact output has no tolerance.
 /// </para>
 /// <para>
 /// The case is an ERROR, by an <see cref="InvalidOperationException"/> naming the output, when an output of the golden
@@ -42,9 +46,8 @@ public static class OutputComparer
         IReadOnlyDictionary<string, TolerancePair> defaults)
     {
         var measures = new List<OutputMeasure>();
-        foreach (var property in golden.EnumerateObject())
+        foreach (var (output, goldenValue) in Outputs(golden))
         {
-            string output = property.Name;
             if (!MetricTable.TryGet(caseInput.Category, output, out var metric))
             {
                 throw new InvalidOperationException(
@@ -70,10 +73,16 @@ public static class OutputComparer
                     failure);
             }
 
+            if (metric.Kind == MetricKind.Exact)
+            {
+                measures.Add(ExactMeasure(output, value, goldenValue));
+                continue;
+            }
+
             string inputScale = metric.TimeScale == null ? null : EpochParser.Scale(caseInput.Inputs["epoch"]?.ToString());
             string key = MetricTable.ToleranceKey(metric, inputScale);
-            var (tolerance, toleranceName) = ResolveTolerance(output, key, caseInput.TolerancesOverride, defaults);
-            var (absolute, relative) = Deltas(metric.Kind, value, property.Value, output);
+            var (tolerance, toleranceName) = ResolveTolerance(output, key, caseInput.TolerancesOverride, defaults, metric.FormerKeys);
+            var (absolute, relative) = Deltas(metric.Kind, value, goldenValue, output);
             measures.Add(Measure(output, metric.Kind, absolute, relative, toleranceName, tolerance));
         }
 
@@ -81,29 +90,130 @@ public static class OutputComparer
     }
 
     /// <summary>
-    /// The tolerance of an output and its name: an override naming the output, then an override naming its key, then
-    /// the key's default.
+    /// The outputs of a golden, in its order: its properties, and for a property that is an object, the leaves below it,
+    /// named by their path below it joined by dots (<c>range (km).mean</c>).
     /// </summary>
-    /// <exception cref="InvalidOperationException">None of the three exists.</exception>
+    internal static IEnumerable<(string Output, JsonElement Golden)> Outputs(JsonElement golden)
+    {
+        foreach (var property in golden.EnumerateObject())
+        {
+            if (property.Value.ValueKind != JsonValueKind.Object)
+            {
+                yield return (property.Name, property.Value);
+                continue;
+            }
+
+            foreach (var leaf in Leaves(property.Value, null))
+            {
+                yield return leaf;
+            }
+        }
+    }
+
+    private static IEnumerable<(string Output, JsonElement Golden)> Leaves(JsonElement element, string prefix)
+    {
+        foreach (var property in element.EnumerateObject())
+        {
+            string name = prefix == null ? property.Name : $"{prefix}.{property.Name}";
+            if (property.Value.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var leaf in Leaves(property.Value, name))
+                {
+                    yield return leaf;
+                }
+            }
+            else
+            {
+                yield return (name, property.Value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The measure of an exact output (spec.md section 6.1): an absolute delta of 0 when the output equals the golden, 1
+    /// otherwise; no tolerance, a ratio of NaN. A boolean equals its golden; the arcs of a grid (an array of
+    /// <c>{rise, fall}</c> instants) equal theirs when they are as many and each instant is the same sample of the grid,
+    /// within 1 µs.
+    /// </summary>
+    internal static OutputMeasure ExactMeasure(string output, object computed, JsonElement golden)
+    {
+        bool passed = computed switch
+        {
+            bool flag when golden.ValueKind is JsonValueKind.True or JsonValueKind.False => flag == golden.GetBoolean(),
+            IReadOnlyList<Window> arcs when golden.ValueKind == JsonValueKind.Array => SameArcs(arcs, golden, output),
+            _ => throw new InvalidOperationException(
+                $"The solver gives {output} as {computed?.GetType().Name ?? "null"} and the golden as {golden.ValueKind}: they cannot be compared.")
+        };
+        return new OutputMeasure(output, MetricKind.Exact, passed ? 0.0 : 1.0, double.NaN, "exact", null, double.NaN, double.NaN, passed);
+    }
+
+    private static bool SameArcs(IReadOnlyList<Window> arcs, JsonElement golden, string output)
+    {
+        if (arcs.Count != golden.GetArrayLength())
+        {
+            return false;
+        }
+
+        int i = 0;
+        foreach (var arc in golden.EnumerateArray())
+        {
+            if (arc.ValueKind != JsonValueKind.Object || !arc.TryGetProperty("rise", out var rise) || !arc.TryGetProperty("fall", out var fall))
+            {
+                throw new InvalidOperationException($"The golden gives an arc of {output} as {arc}, not a rise and a fall.");
+            }
+
+            if (!SameSample(arcs[i].StartDate, Instant(rise, output)) || !SameSample(arcs[i].EndDate, Instant(fall, output)))
+            {
+                return false;
+            }
+
+            i++;
+        }
+
+        return true;
+    }
+
+    private static bool SameSample(Time computed, Time golden)
+    {
+        return System.Math.Abs((computed - golden).TotalSeconds) < SameSampleSeconds;
+    }
+
+    // Two instants of a grid are the same sample within 1 µs, far below any step
+    private const double SameSampleSeconds = 1e-6;
+
+    /// <summary>
+    /// The tolerance of an output and its name: an override naming the output, then an override naming its key, then an
+    /// override naming one of its former keys, in their order, then the key's default, then the default of a former key.
+    /// </summary>
+    /// <param name="output">The output.</param>
+    /// <param name="key">Its key.</param>
+    /// <param name="overrides">The overrides of the case.</param>
+    /// <param name="defaults">The defaults of <c>tolerances.yaml</c>.</param>
+    /// <param name="formerKeys">The keys of the output before conformance-tests#25 (<see cref="Metric.FormerKeys"/>),
+    /// or null.</param>
+    /// <exception cref="InvalidOperationException">None of them exists.</exception>
     internal static (TolerancePair Tolerance, string Name) ResolveTolerance(
         string output,
         string key,
         IReadOnlyDictionary<string, TolerancePair> overrides,
-        IReadOnlyDictionary<string, TolerancePair> defaults)
+        IReadOnlyDictionary<string, TolerancePair> defaults,
+        IReadOnlyList<string> formerKeys = null)
     {
         if (overrides != null && overrides.TryGetValue(output, out var outputOverride))
         {
             return (outputOverride, output);
         }
 
-        if (overrides != null && overrides.TryGetValue(key, out var keyOverride))
+        var keys = new[] { key }.Concat(formerKeys ?? Array.Empty<string>()).ToList();
+        foreach (var source in new[] { overrides, defaults })
         {
-            return (keyOverride, key);
-        }
-
-        if (defaults != null && defaults.TryGetValue(key, out var keyDefault))
-        {
-            return (keyDefault, key);
+            foreach (var name in keys)
+            {
+                if (source != null && source.TryGetValue(name, out var tolerance))
+                {
+                    return (tolerance, name);
+                }
+            }
         }
 
         throw new InvalidOperationException(
@@ -147,6 +257,18 @@ public static class OutputComparer
             return (absoluteDelta, Relative(absoluteDelta, System.Math.Sqrt(norm)));
         }
 
+        if (kind == MetricKind.Instant)
+        {
+            var computedInstant = computed as Time? ??
+                                  throw new InvalidOperationException($"The solver gives {output} as {computed?.GetType().Name ?? "null"}, not an instant.");
+            return (System.Math.Abs((computedInstant - Instant(golden, output)).TotalSeconds), double.NaN);
+        }
+
+        if (kind == MetricKind.RotationAngle)
+        {
+            return (RotationAngle(Quaternion(computed, output), Quaternion(golden, output)), double.NaN);
+        }
+
         double computedValue = Scalar(computed, output);
         double goldenValue = Scalar(golden, output);
         return kind switch
@@ -156,6 +278,55 @@ public static class OutputComparer
             MetricKind.WrappedAngle => (System.Math.Abs(System.Math.IEEERemainder(computedValue - goldenValue, 360.0)), double.NaN),
             _ => (System.Math.Abs(computedValue - goldenValue), double.NaN)
         };
+    }
+
+    /// <summary>
+    /// The angle of the rotation between two attitudes given as unit quaternions (spec.md section 6.1), in rad, in
+    /// [0, π]: θ = 4·atan2(‖q − s·g‖, ‖q + s·g‖), s = sign(q·g), which is accurate at small angles, unlike 2·acos|q·g|.
+    /// </summary>
+    internal static double RotationAngle(double[] q, double[] g)
+    {
+        double dot = 0.0;
+        for (int i = 0; i < 4; i++)
+        {
+            dot += q[i] * g[i];
+        }
+
+        double s = dot < 0.0 ? -1.0 : 1.0;
+        double difference = 0.0;
+        double sum = 0.0;
+        for (int i = 0; i < 4; i++)
+        {
+            difference += (q[i] - s * g[i]) * (q[i] - s * g[i]);
+            sum += (q[i] + s * g[i]) * (q[i] + s * g[i]);
+        }
+
+        return 4.0 * System.Math.Atan2(System.Math.Sqrt(difference), System.Math.Sqrt(sum));
+    }
+
+    private static Time Instant(JsonElement golden, string output)
+    {
+        return golden.ValueKind == JsonValueKind.String
+            ? EpochParser.ParseInstant(golden.GetString())
+            : throw new InvalidOperationException($"The golden gives {output} as {golden.ValueKind}, not an instant.");
+    }
+
+    private static double[] Quaternion(object computed, string output)
+    {
+        return computed is double[] { Length: 4 } quaternion
+            ? quaternion
+            : throw new InvalidOperationException($"The solver gives {output} as {computed?.GetType().Name ?? "null"}, not four numbers.");
+    }
+
+    private static double[] Quaternion(JsonElement golden, string output)
+    {
+        if (golden.ValueKind != JsonValueKind.Array || golden.GetArrayLength() != 4 ||
+            golden.EnumerateArray().Any(component => component.ValueKind != JsonValueKind.Number))
+        {
+            throw new InvalidOperationException($"The golden gives {output} as {golden}, not four numbers.");
+        }
+
+        return golden.EnumerateArray().Select(component => component.GetDouble()).ToArray();
     }
 
     private static double Relative(double absolute, double goldenMagnitude)

@@ -29,8 +29,8 @@ internal static class ConformanceCaseAssert
         double velocityError = (velocity - expectedVelocity).Magnitude();
 
         output.WriteLine(
-            $"{caseName}: position error {positionError:F3} m (limit {positionLimitMeters} m), " +
-            $"velocity error {velocityError * 1000.0:F3} mm/s (limit {velocityLimitMetersPerSecond * 1000.0} mm/s)");
+            $"{caseName}: position error {positionError:G4} m (limit {positionLimitMeters} m), " +
+            $"velocity error {velocityError * 1000.0:G4} mm/s (limit {velocityLimitMetersPerSecond * 1000.0:G4} mm/s)");
 
         Assert.True(positionError < positionLimitMeters,
             $"{caseName}: position error {positionError:F3} m, limit {positionLimitMeters} m");

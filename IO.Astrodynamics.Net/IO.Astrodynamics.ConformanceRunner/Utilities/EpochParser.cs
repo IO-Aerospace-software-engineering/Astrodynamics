@@ -55,6 +55,29 @@ public static class EpochParser
     }
 
     /// <summary>
+    /// An instant of a golden (spec.md section 3): a tagged epoch, or, in the goldens of the earlier categories before
+    /// conformance-tests#25, an ISO 8601 UTC instant ending in <c>Z</c> (<c>2026-03-20T00:18:37.494Z</c>), with up to 7
+    /// decimals.
+    /// </summary>
+    /// <exception cref="FormatException">The instant is neither form.</exception>
+    public static Time ParseInstant(string instant)
+    {
+        if (instant != null && instant.EndsWith('Z'))
+        {
+            var dateTime = DateTime.ParseExact(instant[..^1], ZuluFormats, CultureInfo.InvariantCulture, DateTimeStyles.None);
+            return new Time(dateTime, TimeFrame.UTCFrame);
+        }
+
+        return Parse(instant);
+    }
+
+    private static readonly string[] ZuluFormats =
+    {
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm:ss'.'FFFFFFF"
+    };
+
+    /// <summary>
     /// The tag of a tagged epoch: UTC, TAI, TT or TDB.
     /// </summary>
     /// <exception cref="FormatException">The epoch is not a tagged epoch of spec.md section 3.</exception>

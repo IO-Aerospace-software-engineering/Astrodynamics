@@ -27,62 +27,8 @@ public static class ToleranceComparer
     }
 
     /// <summary>
-    /// Compare quaternions by rotation angle distance.
-    /// Both arrays are scalar-first [w, x, y, z].
-    /// Handles q vs -q ambiguity via |dot|.
-    /// Reports angular distance in radians as the delta.
-    /// </summary>
-    public static bool CompareQuaternion(double[] computed, double[] golden, TolerancePair tol, out double maxAbsDelta, out double maxRelDelta)
-    {
-        // 4D dot product — |dot| = 1 means identical rotation, 0 means 180° apart
-        double dot = 0;
-        for (int i = 0; i < 4; i++)
-            dot += computed[i] * golden[i];
-
-        // Angular distance in radians (handles q/-q ambiguity via |dot|)
-        double absDot = System.Math.Min(System.Math.Abs(dot), 1.0);
-        double angularDistance = 2.0 * System.Math.Acos(absDot);
-
-        maxAbsDelta = angularDistance;
-        maxRelDelta = angularDistance; // no meaningful relative delta for angles
-
-        return angularDistance <= tol.AbsTol || angularDistance <= tol.RelTol;
-    }
-
-    /// <summary>
-    /// Compare time values numerically (as seconds difference).
-    /// </summary>
-    public static bool CompareTime(TimeSystem.Time computed, TimeSystem.Time golden, TolerancePair tol, out double absDelta, out double relDelta)
-    {
-        double computedSeconds = (computed - TimeSystem.Time.J2000TDB).TotalSeconds;
-        double goldenSeconds = (golden - TimeSystem.Time.J2000TDB).TotalSeconds;
-        return Passes(computedSeconds, goldenSeconds, tol, out absDelta, out relDelta);
-    }
-
-    /// <summary>
-    /// Exact match for string values (e.g., eclipse type).
-    /// </summary>
-    public static bool ExactMatch(string computed, string golden, out double absDelta, out double relDelta)
-    {
-        bool match = string.Equals(computed, golden, StringComparison.OrdinalIgnoreCase);
-        absDelta = match ? 0.0 : 1.0;
-        relDelta = match ? 0.0 : 1.0;
-        return match;
-    }
-
-    /// <summary>
-    /// Exact match for boolean values.
-    /// </summary>
-    public static bool ExactMatch(bool computed, bool golden, out double absDelta, out double relDelta)
-    {
-        bool match = computed == golden;
-        absDelta = match ? 0.0 : 1.0;
-        relDelta = match ? 0.0 : 1.0;
-        return match;
-    }
-
-    /// <summary>
-    /// Resolve tolerance for a metric: case override takes precedence over defaults.
+    /// Resolve the tolerance of the stm blocks: case override takes precedence over defaults. The categories of the suite
+    /// resolve theirs without fallback (<see cref="OutputComparer"/>).
     /// </summary>
     public static TolerancePair ResolveTolerance(
         string metricName,

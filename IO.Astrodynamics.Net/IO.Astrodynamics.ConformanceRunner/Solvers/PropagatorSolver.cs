@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Propagator;
@@ -6,13 +7,22 @@ using IO.Astrodynamics.Propagator.Integrators;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
+/// <summary>
+/// The <c>propagator</c> category (spec.md section 12.1): the final state of a propagation of the case's state in ICRF
+/// about the Earth, with EGM2008 of the suite's <c>data/</c> (its GM and radius applied to the whole field) and the third
+/// bodies as point masses, computed with the files of <c>data/</c> the case lists (<see cref="CaseKernels"/>).
+/// </summary>
 public class PropagatorSolver : ICategorySolver
 {
+    private readonly string _conformanceTestsPath;
     private readonly string _dataPath;
 
-    public PropagatorSolver(string dataPath)
+    /// <param name="conformanceTestsPath">The root of the suite, whose <c>data/</c> holds the kernels of the cases.</param>
+    /// <param name="dataPath">The directory of the field files; the suite's <c>data/</c> when null.</param>
+    public PropagatorSolver(string conformanceTestsPath, string dataPath = null)
     {
-        _dataPath = dataPath;
+        _conformanceTestsPath = conformanceTestsPath;
+        _dataPath = dataPath ?? Path.Combine(conformanceTestsPath, "data");
     }
 
     public string Category => "propagator";
@@ -24,6 +34,7 @@ public class PropagatorSolver : ICategorySolver
 
     public Dictionary<string, object> Solve(CaseInput caseInput)
     {
+        using var kernels = new CaseKernels(_conformanceTestsPath, InputParser.ParseKernels(caseInput.Inputs));
         var propagationCase = PropagationCase.Build(caseInput, _dataPath);
 
         var integrator = CreateIntegrator();

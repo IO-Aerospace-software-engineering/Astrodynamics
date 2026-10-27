@@ -592,7 +592,10 @@ public class RK78IntegratorTests
         var utcEpoch = new TimeSystem.Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
+            {
+                CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+            });
 
         var orbit = new StateVector(
             new Vector3(5442162.5926801835, -4068949.8468206248, -13456.851447751518),
@@ -614,13 +617,14 @@ public class RK78IntegratorTests
 
         var res = propagator.Propagate();
 
-        var expectedPosition = new Vector3(-5276164.48141924, 4263291.396350933, -404558.956106471);
-        var expectedVelocity = new Vector3(-2724.567057501992, -3933.747338841648, -5983.827775625323);
+        var expectedPosition = new Vector3(-5276.166249806454, 4263.287696867372, -404.56444929731526) * 1000.0;
+        var expectedVelocity = new Vector3(-2.724561254362544, -3.933752425169912, -5.983827910193672) * 1000.0;
 
-        // Measured on 2026-10-04: 13.13 m and 14.81 mm/s; 13.21 m and 14.90 mm/s with the constants of the geopotential
-        // of #410 (2026-10-23).
-        const double PositionLimitMeters = 13.5;
-        const double VelocityLimitMetersPerSecond = 0.0155;
+        // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
+        // 2026-10-27: 0.1111 m and 0.1259 mm/s; the limits are twice these values, rounded up at the second significant digit.
+        const double PositionLimitMeters = 0.23;
+        const double VelocityLimitMetersPerSecond = 2.6e-4;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_leo_grav10_001 (RK7(8))", res, propWindow,
             expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
@@ -639,7 +643,10 @@ public class RK78IntegratorTests
         var utcEpoch = new TimeSystem.Time(2026, 2, 9, 10, 22, 58, millisecond: 958, frame: TimeFrame.UTCFrame);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70));
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 70)
+            {
+                CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+            });
 
         var orbit = new StateVector(
             new Vector3(19283848.018390323, 37944390.563573960, -328553.51550521),
@@ -674,13 +681,14 @@ public class RK78IntegratorTests
 
         var res= propagator.Propagate();
 
-        var expectedPosition = new Vector3(22035054.64841816, 36415074.44453181, -382421.9052105268);
-        var expectedVelocity = new Vector3(-2617.90823218342, 1584.740384557747, 51.26063967862107);
+        var expectedPosition = new Vector3(22035.05468573585, 36415.074430780434, -382.4219127743028) * 1000.0;
+        var expectedVelocity = new Vector3(-2.6179082304622505, 1.584740386819964, 0.051260640408016526) * 1000.0;
 
-        // Measured on 2026-10-04: 8.02 m and 0.573 mm/s; the same with the constants of the geopotential of #410
-        // (8.020 m, 2026-10-23).
-        const double PositionLimitMeters = 8.3;
-        const double VelocityLimitMetersPerSecond = 0.0006;
+        // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
+        // 2026-10-27: 0.07059 m and 0.005086 mm/s; the limits are twice these values, rounded up at the second significant digit.
+        const double PositionLimitMeters = 0.15;
+        const double VelocityLimitMetersPerSecond = 1.1e-5;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_geo_grav70_002 (RK7(8))", res, propWindow,
             expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
@@ -698,16 +706,15 @@ public class RK78IntegratorTests
         var utcEpoch = new TimeSystem.Time(2025, 6, 1, 10, 30, 0, frame: TimeFrame.UTCFrame);
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, utcEpoch,
-            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10)
+            {
+                CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter
+            });
 
-        var keplerianOrbit = new KeplerianElements(
-            7078137.0, 0.001,
-            98.186 * System.Math.PI / 180.0,
-            75.0 * System.Math.PI / 180.0,
-            90.0 * System.Math.PI / 180.0,
-            0.0,
+        var orbit = new StateVector(
+            new Vector3(972.5206216644625, -260.5861151976055, 6999.012213235124) * 1000.0,
+            new Vector3(-1.9441954872554523, -7.255836338283476, 4.534910638063485e-16) * 1000.0,
             earth, utcEpoch, Frames.Frame.ICRF);
-        var orbit = keplerianOrbit.ToStateVector();
 
         Spacecraft spc = new Spacecraft(-1001, "SSO_SAT_CB", 100.0, 1000.0, clk, orbit);
 
@@ -724,13 +731,14 @@ public class RK78IntegratorTests
 
         var res=propagator.Propagate();
 
-        var expectedPosition = new Vector3(-608631.5307021005, 1650694.083265209, -6887696.349104228);
-        var expectedVelocity = new Vector3(1985.415757873638, 7042.412568889923, 1515.859902259437);
+        var expectedPosition = new Vector3(-608.631165932607, 1650.695661501674, -6887.695996757752) * 1000.0;
+        var expectedVelocity = new Vector3(1.9854154176234544, 7.042412295817178, 1.5158616109621321) * 1000.0;
 
-        // Measured on 2026-10-04: 3.56 m and 3.84 mm/s; 3.40 m and 3.67 mm/s with the constants of the geopotential of
-        // #410 (2026-10-23).
-        const double PositionLimitMeters = 4.0;
-        const double VelocityLimitMetersPerSecond = 0.004;
+        // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
+        // 2026-10-27: 0.1692 m and 0.1779 mm/s; the limits are twice these values, rounded up at the second significant digit.
+        const double PositionLimitMeters = 0.34;
+        const double VelocityLimitMetersPerSecond = 3.6e-4;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_sso_grav10_003 (RK7(8))", res, propWindow,
             expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }

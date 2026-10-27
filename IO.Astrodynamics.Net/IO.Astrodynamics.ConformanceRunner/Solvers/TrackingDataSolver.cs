@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.ConformanceRunner.Comparison;
 using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -15,8 +15,20 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
+/// <summary>
+/// The <c>tracking_data</c> category (spec.md section 12.3): the range and range-rate statistics of a spacecraft of an
+/// SPK seen from a station on the Earth, over the visible samples of a UTC grid, and the arcs of visibility, geometric.
+/// </summary>
+/// <remarks>
+/// The case computes with the files of the suite's <c>data/</c> it lists (<see cref="CaseKernels"/>). The library's
+/// <see cref="Site"/> lies on the ellipsoid of its body's kernel radii: the case's ellipsoid must be that one, to the
+/// rounding of its flattening, or the case is an ERROR.
+/// </remarks>
 public class TrackingDataSolver : ICategorySolver
 {
+    // The station on the declared ellipsoid: its radii those of the body within 1 µm
+    private const double EllipsoidToleranceMetres = 1e-6;
+
     private readonly string _conformanceTestsPath;
 
     public string Category => "tracking_data";
@@ -30,6 +42,7 @@ public class TrackingDataSolver : ICategorySolver
     {
         var inputs = InputParser.ParseTrackingDataInputs(caseInput.Inputs);
         var bspOrbit = (BspSourceOrbit)inputs.Orbit;
+        using var kernels = new CaseKernels(_conformanceTestsPath, InputParser.ParseKernels(caseInput.Inputs));
 
         // Load the BSP kernel (path is relative to conformance-tests root)
         var bspPath = Path.Combine(_conformanceTestsPath, bspOrbit.Filename);
@@ -38,6 +51,7 @@ public class TrackingDataSolver : ICategorySolver
 
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        CheckEllipsoid(inputs.Location.Ellipsoid, earth);
 
         // Create site from location inputs
         var site = new Site(888, "ConformanceSite", earth,
@@ -47,8 +61,8 @@ public class TrackingDataSolver : ICategorySolver
                 UnitConversion.KmToM(inputs.Location.HeightKm)));
 
         // Create kernel-backed spacecraft
-        var windowStart = ParseTime(inputs.SearchWindow.Start);
-        var windowEnd = ParseTime(inputs.SearchWindow.End);
+        var windowStart = EpochParser.Parse(inputs.SearchWindow.Start);
+        var windowEnd = EpochParser.Parse(inputs.SearchWindow.End);
         var searchWindow = new Window(windowStart, windowEnd);
         var spacecraft = new Spacecraft(bspOrbit.NaifId, "TrackingTarget", epoch: windowStart);
 
@@ -60,34 +74,51 @@ public class TrackingDataSolver : ICategorySolver
         // Collect observables
         var (rangeKm, rangeRateKmS) = CollectTrackingObservables(spacecraft, site, arcs, searchWindow, step);
 
-        // Build flat output dictionary
+        // The outputs of spec.md section 12.3: the arcs, and the statistics named <block>.<statistic>
         var result = new Dictionary<string, object>
         {
-            ["arc_count"] = arcs.Count
+            ["arcs"] = arcs
         };
-
-        for (int i = 0; i < arcs.Count; i++)
-        {
-            result[$"arc_{i}_rise"] = arcs[i].StartDate.ToUTC().ToString();
-            result[$"arc_{i}_fall"] = arcs[i].EndDate.ToUTC().ToString();
-        }
-
-        if (rangeKm.Count > 0)
-        {
-            var sortedRange = rangeKm.OrderBy(x => x).ToList();
-            result["range_mean_km"] = rangeKm.Average();
-            result["range_median_km"] = sortedRange[sortedRange.Count / 2];
-            result["range_min_km"] = sortedRange[0];
-            result["range_max_km"] = sortedRange[^1];
-
-            var sortedDoppler = rangeRateKmS.OrderBy(x => x).ToList();
-            result["doppler_mean_km_s"] = rangeRateKmS.Average();
-            result["doppler_median_km_s"] = sortedDoppler[sortedDoppler.Count / 2];
-            result["doppler_min_km_s"] = sortedDoppler[0];
-            result["doppler_max_km_s"] = sortedDoppler[^1];
-        }
-
+        AddStatistics(result, MetricTable.TrackingRangeBlock, rangeKm);
+        AddStatistics(result, MetricTable.TrackingRangeRateBlock, rangeRateKmS);
         return result;
+    }
+
+    // The mean, the median sorted[n/2] counted from 0, the minimum and the maximum; none without a visible sample
+    private static void AddStatistics(Dictionary<string, object> outputs, string block, List<double> samples)
+    {
+        if (samples.Count == 0)
+        {
+            return;
+        }
+
+        var sorted = samples.OrderBy(x => x).ToList();
+        outputs[$"{block}.mean"] = samples.Average();
+        outputs[$"{block}.median"] = sorted[sorted.Count / 2];
+        outputs[$"{block}.min"] = sorted[0];
+        outputs[$"{block}.max"] = sorted[^1];
+    }
+
+    /// <summary>
+    /// Checks that the declared ellipsoid is that of the body's kernel radii, on which the library places the station.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">An equatorial or polar radius differs by more than 1 µm.</exception>
+    internal static void CheckEllipsoid(EllipsoidInputs ellipsoid, CelestialBody body)
+    {
+        if (ellipsoid == null)
+        {
+            return;
+        }
+
+        double equatorial = UnitConversion.KmToM(ellipsoid.EquatorialRadiusKm);
+        double polar = equatorial * (1.0 - ellipsoid.Flattening);
+        if (System.Math.Abs(equatorial - body.EquatorialRadius) > EllipsoidToleranceMetres ||
+            System.Math.Abs(polar - body.PolarRadius) > EllipsoidToleranceMetres)
+        {
+            throw new InvalidOperationException(
+                $"The station's ellipsoid ({equatorial:R} m, flattening {ellipsoid.Flattening:R}) is not that of the kernel radii of {body.Name} " +
+                $"({body.EquatorialRadius:R} m, {body.PolarRadius:R} m), the only one on which the library places a site.");
+        }
     }
 
     private static List<Window> ComputeTrackingArcs(
@@ -186,20 +217,5 @@ public class TrackingDataSolver : ICategorySolver
         }
 
         return (rangeKm, rangeRateKmS);
-    }
-
-    /// <summary>
-    /// Parses a time string, handling "UTC" suffix that the Time(string) constructor doesn't support.
-    /// </summary>
-    private static Time ParseTime(string timeString)
-    {
-        if (timeString.EndsWith(" UTC", StringComparison.OrdinalIgnoreCase))
-        {
-            var dateStr = timeString[..^4];
-            var dt = DateTime.Parse(dateStr, CultureInfo.InvariantCulture);
-            return new Time(dt, TimeFrame.UTCFrame);
-        }
-
-        return new Time(timeString);
     }
 }

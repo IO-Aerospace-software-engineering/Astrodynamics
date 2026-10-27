@@ -25,8 +25,9 @@
         <ProjectReference Include="..\IO.Astrodynamics.ConformanceRunner\IO.Astrodynamics.ConformanceRunner.csproj" />
     </ItemGroup>
 
-    <!-- The fixture: the schemas of the conformance-tests suite extended with the stm category, and two cases;
-         written by tools/gmat_reference/make_stm_case.py. Fixture/Lot1: the cases of orbital_elements, time_conversion
+    <!-- The fixture: the schemas and the tolerances of the conformance-tests suite extended with the stm category,
+         written by tools/gmat_reference/make_stm_case.py from conformance-tests#25 (c1af386), the stm case it writes, and
+         the propagator case 004 (inputs.yaml, expected-result.json) and data/gm_de440.tpc copied from c1af386. Fixture/Lot1: the cases of orbital_elements, time_conversion
          and frame_transformation with the schemas and tolerances of the suite, and the kernels that differ from the
          runner's; written by tools/conformance/sync_lot1_fixture.py -->
     <ItemGroup>

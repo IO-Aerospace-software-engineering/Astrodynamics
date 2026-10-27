@@ -13,6 +13,13 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 
+/// <summary>
+/// The <c>pointing_triad</c> category (spec.md section 12.4): the TRIAD attitude that points the instrument's boresight
+/// (the primary body vector) at the primary target and keeps its reference vector (the secondary body vector) towards the
+/// secondary target, with the directions of the targets LT-corrected from the Earth's centre minus the spacecraft's
+/// geometric position (<see cref="CelestialAttitudeTarget"/> with <see cref="Aberration.LT"/>, whose observer is the
+/// centre of the state); and whether the primary direction lies within the instrument's field of view.
+/// </summary>
 public class TriadSolver : ICategorySolver
 {
     public string Category => "pointing_triad";
@@ -21,13 +28,13 @@ public class TriadSolver : ICategorySolver
     {
         var inputs = InputParser.ParseTriadInputs(caseInput.Inputs);
         var frame = FrameMapper.Map(caseInput.Metadata.ReferenceFrame);
-        var epoch = new Time(inputs.Epoch);
+        var epoch = EpochParser.Parse(inputs.Epoch);
 
         var earth = BodyResolver.Resolve("Earth");
         var sv = BuildStateVector(inputs.Orbit, earth, epoch, frame);
 
-        var primaryTarget = BodyResolver.Resolve(inputs.PrimaryTarget);
-        var secondaryTarget = BodyResolver.Resolve(inputs.SecondaryTarget);
+        var primaryTarget = new CelestialAttitudeTarget(BodyResolver.Resolve(inputs.PrimaryTarget), Aberration.LT);
+        var secondaryTarget = new CelestialAttitudeTarget(BodyResolver.Resolve(inputs.SecondaryTarget), Aberration.LT);
 
         // Parse body vectors (instrument boresight and clock/refVector)
         var boresight = new Vector3(inputs.PrimaryBodyVector[0], inputs.PrimaryBodyVector[1], inputs.PrimaryBodyVector[2]);
@@ -43,14 +50,16 @@ public class TriadSolver : ICategorySolver
         var fovRad = UnitConversion.DegToRad(inputs.FieldOfView.HalfAngleDeg);
         spacecraft.AddCircularInstrument(-99900, "ConfInst", "ConfModel",
             fovRad, boresight, refVector, Vector3.Zero);
+        var instrument = spacecraft.Instruments.First();
 
-        // Use the single-instrument TriadAttitude constructor:
-        // boresight → primary target, clock/refVector → secondary target
-        var triadAttitude = new TriadAttitude(
+        // The TRIAD of the IAttitudeTarget constructor: the instrument's boresight towards the primary target, its
+        // reference vector towards the secondary one
+        var triadAttitude = new TriadAttitude(earth,
             new Time(DateTime.MinValue, TimeFrame.TDBFrame),
             TimeSpan.FromSeconds(10.0),
-            spacecraft.Instruments.First(),
+            instrument.GetBoresightInSpacecraftFrame(),
             primaryTarget,
+            instrument.GetRefVectorInSpacecraftFrame(),
             secondaryTarget,
             spacecraft.Engines.First());
 
@@ -59,15 +68,9 @@ public class TriadSolver : ICategorySolver
         var attitudeQuat = stateOrientation.Rotation;
         var quatArray = UnitConversion.QuaternionToArray(attitudeQuat);
 
-        // FOV check: rotate instrument boresight by the attitude quaternion
-        var boresightInertial = boresight.Rotate(attitudeQuat);
-
-        // Compute primary target direction from ephemeris
-        var primaryEph = primaryTarget.GetEphemeris(epoch, sv.Observer, sv.Frame, Aberration.LT);
-        var primaryRefVec = (primaryEph.ToStateVector().Position - sv.Position).Normalize();
-
-        var angle = boresightInertial.Angle(primaryRefVec);
-        var targetInFov = angle <= fovRad;
+        // The field of view: the primary direction within the half angle of the axis of the field, rotated to the frame
+        var axis = new Vector3(inputs.FieldOfView.AxisBody[0], inputs.FieldOfView.AxisBody[1], inputs.FieldOfView.AxisBody[2]);
+        var targetInFov = axis.Rotate(attitudeQuat).Angle(primaryTarget.GetDirection(sv)) <= fovRad;
 
         return new Dictionary<string, object>
         {

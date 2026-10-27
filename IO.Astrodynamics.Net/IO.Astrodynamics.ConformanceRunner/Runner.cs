@@ -29,11 +29,11 @@ public class Runner
         _solvers = new ICategorySolver[]
         {
             new TriadSolver(),
-            new EclipseSolver(),
-            new PropagatorSolver(spiceKernelsPath),
+            new EclipseSolver(conformanceTestsPath),
+            new PropagatorSolver(conformanceTestsPath),
             new StmSolver(spiceKernelsPath),
             new TrackingDataSolver(conformanceTestsPath),
-            new GeosynchronousSolver(),
+            new GeosynchronousSolver(conformanceTestsPath),
             new OrbitalElementsSolver(),
             new TimeConversionSolver(),
             new FrameTransformationSolver(conformanceTestsPath)
@@ -221,175 +221,57 @@ public class Runner
         Dictionary<string, TolerancePair> caseOverrides,
         CaseInput caseInput)
     {
-        // The conversion categories: the kinds and keys of their outputs, the outputs present in the golden, no fallback
-        // tolerance
-        if (MetricTable.Covers(category))
+        if (!MetricTable.Covers(category))
         {
-            var measures = OutputComparer.Compare(caseInput, computed, golden, toleranceConfig?.Defaults);
-            return new ResultEntry
-            {
-                CaseId = caseId,
-                Status = measures.All(m => m.Passed) ? "PASS" : "FAIL",
-                Deltas = measures.ToDictionary(m => m.Output,
-                    m => new DeltaValue { MaxAbsDelta = m.AbsoluteDelta, MaxRelDelta = m.RelativeDelta, Passed = m.Passed }),
-                Measures = measures
-            };
+            throw new InvalidOperationException($"No comparison for the category {category}.");
         }
 
-        // Flatten nested tracking_data outputs to match solver's flat dictionary
-        if (category == "tracking_data")
-            golden = FlattenTrackingDataOutputs(golden);
-
+        // The state transition matrix of the stm category, by blocks; its final state as the propagator's
         var deltas = new Dictionary<string, DeltaValue>();
         bool allPass = true;
-
-        foreach (var prop in golden.EnumerateObject())
+        if (category == "stm" && golden.TryGetProperty("final_stm", out var stmGolden))
         {
-            string metricName = prop.Name;
-
-            if (!computed.ContainsKey(metricName))
+            var stmTol = ToleranceComparer.ResolveTolerance(StmComparer.ToleranceKey, toleranceConfig?.Defaults, caseOverrides);
+            foreach (var (block, delta) in StmComparer.Compare((double[])computed["final_stm"], stmGolden, stmTol))
             {
-                deltas[metricName] = new DeltaValue { MaxAbsDelta = double.NaN, MaxRelDelta = double.NaN };
-                allPass = false;
-                continue;
+                deltas[block] = delta;
+                allPass &= delta.Passed;
             }
 
-            var computedVal = computed[metricName];
-            var goldenVal = prop.Value;
+            golden = Without(golden, "final_stm");
+        }
 
-            bool pass;
-            double maxAbsDelta, maxRelDelta;
-
-            switch (metricName)
+        // The kinds and keys of the outputs (spec.md sections 6.1, 11 and 12), the outputs present in the golden, no
+        // fallback tolerance
+        var measures = OutputComparer.Compare(caseInput, computed, golden, toleranceConfig?.Defaults);
+        var goldens = OutputComparer.Outputs(golden).ToDictionary(o => o.Output, o => o.Golden);
+        foreach (var m in measures)
+        {
+            // The golden of a component of the final state, for the magnitude rows of accuracy_by_metric
+            deltas[m.Output] = new DeltaValue
             {
-                case "final_stm":
-                    var stmTol = ToleranceComparer.ResolveTolerance(StmComparer.ToleranceKey, toleranceConfig?.Defaults, caseOverrides);
-                    foreach (var (block, delta) in StmComparer.Compare((double[])computedVal, goldenVal, stmTol))
-                    {
-                        deltas[block] = delta;
-                        if (!delta.Passed) allPass = false;
-                    }
-
-                    continue;
-
-                case "attitude_quaternion":
-                    var computedQ = (double[])computedVal;
-                    var goldenQ = ParseQuaternionArray(goldenVal);
-                    // Canonicalize both
-                    computedQ = UnitConversion.CanonicalizeQuaternion(computedQ);
-                    goldenQ = UnitConversion.CanonicalizeQuaternion(goldenQ);
-                    var tol = ToleranceComparer.ResolveTolerance(metricName, toleranceConfig?.Defaults, caseOverrides);
-                    pass = ToleranceComparer.CompareQuaternion(computedQ, goldenQ, tol, out maxAbsDelta, out maxRelDelta);
-                    break;
-
-                case "target_in_fov":
-                    var computedBool = (bool)computedVal;
-                    var goldenBool = goldenVal.GetBoolean();
-                    pass = ToleranceComparer.ExactMatch(computedBool, goldenBool, out maxAbsDelta, out maxRelDelta);
-                    break;
-
-                case "penumbra_entry":
-                case "umbra_entry":
-                case "umbra_exit":
-                case "penumbra_exit":
-                    var computedTimeStr = (string)computedVal;
-                    var goldenTimeStr = goldenVal.GetString();
-                    var computedTime = new Time(computedTimeStr);
-                    var goldenTime = new Time(goldenTimeStr);
-                    var timeTol = ToleranceComparer.ResolveTolerance("eclipse_time_s", toleranceConfig?.Defaults, caseOverrides);
-                    pass = ToleranceComparer.CompareTime(computedTime, goldenTime, timeTol, out maxAbsDelta, out maxRelDelta);
-                    break;
-
-                case "penumbra_duration_s":
-                case "umbra_duration_s":
-                    var computedDur = Convert.ToDouble(computedVal);
-                    var goldenDur = goldenVal.GetDouble();
-                    var durTol = ToleranceComparer.ResolveTolerance(metricName, toleranceConfig?.Defaults, caseOverrides);
-                    pass = ToleranceComparer.Passes(computedDur, goldenDur, durTol, out maxAbsDelta, out maxRelDelta);
-                    break;
-
-                case "final_x_km":
-                case "final_y_km":
-                case "final_z_km":
-                case "position_x_km":
-                case "position_y_km":
-                case "position_z_km":
-                    var posTol = ToleranceComparer.ResolveTolerance("position_km", toleranceConfig?.Defaults, caseOverrides);
-                    pass = ToleranceComparer.Passes(Convert.ToDouble(computedVal), goldenVal.GetDouble(), posTol, out maxAbsDelta, out maxRelDelta);
-                    deltas[metricName] = new DeltaValue { MaxAbsDelta = maxAbsDelta, MaxRelDelta = maxRelDelta, Passed = pass, GoldenValue = goldenVal.GetDouble() };
-                    if (!pass) allPass = false;
-                    continue;
-
-                case "final_vx_km_s":
-                case "final_vy_km_s":
-                case "final_vz_km_s":
-                case "velocity_x_km_s":
-                case "velocity_y_km_s":
-                case "velocity_z_km_s":
-                    var velTol = ToleranceComparer.ResolveTolerance("velocity_km_s", toleranceConfig?.Defaults, caseOverrides);
-                    pass = ToleranceComparer.Passes(Convert.ToDouble(computedVal), goldenVal.GetDouble(), velTol, out maxAbsDelta, out maxRelDelta);
-                    deltas[metricName] = new DeltaValue { MaxAbsDelta = maxAbsDelta, MaxRelDelta = maxRelDelta, Passed = pass, GoldenValue = goldenVal.GetDouble() };
-                    if (!pass) allPass = false;
-                    continue;
-
-                case "semi_major_axis_km":
-                    var smaTol = ToleranceComparer.ResolveTolerance("semi_major_axis_km", toleranceConfig?.Defaults, caseOverrides);
-                    pass = ToleranceComparer.Passes(Convert.ToDouble(computedVal), goldenVal.GetDouble(), smaTol, out maxAbsDelta, out maxRelDelta);
-                    deltas[metricName] = new DeltaValue { MaxAbsDelta = maxAbsDelta, MaxRelDelta = maxRelDelta, Passed = pass, GoldenValue = goldenVal.GetDouble() };
-                    if (!pass) allPass = false;
-                    continue;
-
-                case "eccentricity":
-                    var eccTol = ToleranceComparer.ResolveTolerance("eccentricity", toleranceConfig?.Defaults, caseOverrides);
-                    pass = ToleranceComparer.Passes(Convert.ToDouble(computedVal), goldenVal.GetDouble(), eccTol, out maxAbsDelta, out maxRelDelta);
-                    break;
-
-                case "inclination_deg":
-                case "raan_deg":
-                case "argp_deg":
-                case "mean_anomaly_deg":
-                    var angTol = ToleranceComparer.ResolveTolerance("angle_deg", toleranceConfig?.Defaults, caseOverrides);
-                    pass = ToleranceComparer.Passes(Convert.ToDouble(computedVal), goldenVal.GetDouble(), angTol, out maxAbsDelta, out maxRelDelta);
-                    break;
-
-                default:
-                    if (metricName == "arc_count")
-                    {
-                        var computedInt = Convert.ToInt32(computedVal);
-                        var goldenInt = goldenVal.GetInt32();
-                        pass = computedInt == goldenInt;
-                        maxAbsDelta = System.Math.Abs(computedInt - goldenInt);
-                        maxRelDelta = goldenInt != 0 ? maxAbsDelta / goldenInt : (maxAbsDelta == 0 ? 0.0 : double.PositiveInfinity);
-                        break;
-                    }
-
-                    if (metricName.StartsWith("arc_") && (metricName.EndsWith("_rise") || metricName.EndsWith("_fall")))
-                    {
-                        var computedTimeStr2 = (string)computedVal;
-                        var goldenTimeStr2 = goldenVal.GetString();
-                        var computedTime2 = ParseTimeString(computedTimeStr2);
-                        var goldenTime2 = ParseTimeString(goldenTimeStr2);
-                        var arcTimeTol = ToleranceComparer.ResolveTolerance("arc_time_s", toleranceConfig?.Defaults, caseOverrides);
-                        pass = ToleranceComparer.CompareTime(computedTime2, goldenTime2, arcTimeTol, out maxAbsDelta, out maxRelDelta);
-                        break;
-                    }
-
-                    // Resolve tolerance: try exact metric name, then category-based fallbacks
-                    var defTol = ResolveTrackingTolerance(metricName, toleranceConfig, caseOverrides);
-                    pass = ToleranceComparer.Passes(Convert.ToDouble(computedVal), goldenVal.GetDouble(), defTol, out maxAbsDelta, out maxRelDelta);
-                    break;
-            }
-
-            deltas[metricName] = new DeltaValue { MaxAbsDelta = maxAbsDelta, MaxRelDelta = maxRelDelta, Passed = pass };
-            if (!pass) allPass = false;
+                MaxAbsDelta = m.AbsoluteDelta, MaxRelDelta = m.RelativeDelta, Passed = m.Passed,
+                GoldenValue = m.Output.StartsWith("final_") && goldens[m.Output].ValueKind == JsonValueKind.Number
+                    ? goldens[m.Output].GetDouble()
+                    : null
+            };
+            allPass &= m.Passed;
         }
 
         return new ResultEntry
         {
             CaseId = caseId,
             Status = allPass ? "PASS" : "FAIL",
-            Deltas = deltas
+            Deltas = deltas,
+            Measures = measures
         };
+    }
+
+    // The outputs of a golden without one of them
+    private static JsonElement Without(JsonElement outputs, string name)
+    {
+        var rest = outputs.EnumerateObject().Where(p => p.Name != name).ToDictionary(p => p.Name, p => p.Value);
+        return JsonSerializer.SerializeToElement(rest);
     }
 
     private static List<AccuracyMetricSummary> BuildAccuracySummary(List<ResultEntry> results, ToleranceConfig toleranceConfig)
@@ -407,8 +289,8 @@ public class Runner
             foreach (var kv in result.Deltas)
             {
                 if (double.IsNaN(kv.Value.MaxAbsDelta)) continue;
-                // The outputs of the conversion categories by category: semi_major_axis_km is not the geosynchronous one
-                var metric = MetricTable.Covers(result.Category) ? MetricTable.SummaryKey(result.Category, kv.Key) : kv.Key;
+                // The outputs by category: semi_major_axis_km of orbital_elements is not the geosynchronous one
+                var metric = MetricTable.TryGet(result.Category, kv.Key, out _) ? MetricTable.SummaryKey(result.Category, kv.Key) : kv.Key;
                 if (!metricData.TryGetValue(metric, out var list))
                     metricData[metric] = list = new List<(DeltaValue, bool)>();
                 // If case passed, every metric in it passed; otherwise use stored Passed flag
@@ -419,30 +301,8 @@ public class Runner
         // Resolve display unit and scale factor for each metric
         static (string unit, double scale) ResolveUnit(string metric) => metric switch
         {
-            "final_x_km" or "final_y_km" or "final_z_km"
-                or "position_x_km" or "position_y_km" or "position_z_km"
-                                                                  => ("m",   1000.0),
-            "final_vx_km_s" or "final_vy_km_s" or "final_vz_km_s"
-                or "velocity_x_km_s" or "velocity_y_km_s" or "velocity_z_km_s"
-                                                                  => ("m/s", 1000.0),
-            "semi_major_axis_km"                                  => ("m",   1000.0),
-            "eccentricity"                                        => ("-",   1.0),
-            "inclination_deg" or "raan_deg" or "argp_deg" or "mean_anomaly_deg"
-                                                                  => ("deg", 1.0),
-            "penumbra_entry" or "umbra_entry"
-                or "umbra_exit" or "penumbra_exit"                  => ("s",   1.0),
-            "penumbra_duration_s" or "umbra_duration_s"             => ("s",   1.0),
-            "attitude_quaternion"                                   => ("rad", 1.0),
-            "target_in_fov"                                         => ("-",   1.0),
             "stm_rr" or "stm_rv" or "stm_vr" or "stm_vv"            => ("-",   1.0),
-            _ when metric.StartsWith("arc_") && (metric.EndsWith("_rise") || metric.EndsWith("_fall"))
-                                                                    => ("s",   1.0),
-            "arc_count"                                             => ("-",   1.0),
-            _ when metric.StartsWith("range_") && metric.EndsWith("_km")
-                                                                    => ("km",  1.0),
-            _ when metric.StartsWith("doppler_") && metric.EndsWith("_km_s")
-                                                                    => ("km/s", 1.0),
-            // <category>/<output> of the conversion categories, in the units of spec.md section 11
+            // <category>/<output>, in the units of spec.md sections 11 and 12
             _ when MetricTable.TryGetSummaryUnit(metric, out var unit)
                                                                     => (unit,  1.0),
             _                                                       => ("-",   1.0)
@@ -549,107 +409,6 @@ public class Runner
             MaxRelDelta    = finiteRel.Max(),
             AvgRelDelta    = finiteRel.Average()
         });
-    }
-
-    /// <summary>
-    /// Resolves tolerance for tracking data metrics, mapping flattened metric names back
-    /// to case override keys (e.g., "range_mean_km" → "range (km)").
-    /// </summary>
-    private static TolerancePair ResolveTrackingTolerance(
-        string metricName,
-        ToleranceConfig toleranceConfig,
-        Dictionary<string, TolerancePair> caseOverrides)
-    {
-        // Try exact metric name first
-        var tol = ToleranceComparer.ResolveTolerance(metricName, toleranceConfig?.Defaults, caseOverrides);
-        if (tol.AbsTol > 1e-12 || tol.RelTol > 1e-12)
-            return tol;
-
-        // Map flattened names back to override keys — try multiple conventions
-        if (metricName.StartsWith("range_") && metricName.EndsWith("_km"))
-        {
-            foreach (var key in new[] { "range (km)", "position_km" })
-            {
-                tol = ToleranceComparer.ResolveTolerance(key, toleranceConfig?.Defaults, caseOverrides);
-                if (tol.AbsTol > 1e-12 || tol.RelTol > 1e-12)
-                    return tol;
-            }
-        }
-        else if (metricName.StartsWith("doppler_") && metricName.EndsWith("_km_s"))
-        {
-            foreach (var key in new[] { "doppler (km/s)", "velocity_km_s" })
-            {
-                tol = ToleranceComparer.ResolveTolerance(key, toleranceConfig?.Defaults, caseOverrides);
-                if (tol.AbsTol > 1e-12 || tol.RelTol > 1e-12)
-                    return tol;
-            }
-        }
-
-        return tol;
-    }
-
-    /// <summary>
-    /// Parses a time string, handling "UTC" suffix that the Time(string) constructor doesn't support.
-    /// </summary>
-    private static Time ParseTimeString(string timeString)
-    {
-        if (timeString.EndsWith(" UTC", StringComparison.OrdinalIgnoreCase))
-        {
-            var dateStr = timeString[..^4];
-            var dt = DateTime.Parse(dateStr, System.Globalization.CultureInfo.InvariantCulture);
-            return new Time(dt, TimeFrame.UTCFrame);
-        }
-
-        return new Time(timeString);
-    }
-
-    private static JsonElement FlattenTrackingDataOutputs(JsonElement outputs)
-    {
-        var flat = new Dictionary<string, JsonElement>();
-
-        if (outputs.TryGetProperty("arcs", out var arcs))
-        {
-            int i = 0;
-            foreach (var arc in arcs.EnumerateArray())
-            {
-                flat[$"arc_{i}_rise"] = arc.GetProperty("rise");
-                flat[$"arc_{i}_fall"] = arc.GetProperty("fall");
-                i++;
-            }
-            // Add arc_count as a number
-            flat["arc_count"] = JsonDocument.Parse(i.ToString()).RootElement;
-        }
-
-        if (outputs.TryGetProperty("statistics", out var stats))
-        {
-            if (stats.TryGetProperty("range (km)", out var range))
-            {
-                foreach (var prop in range.EnumerateObject())
-                    flat[$"range_{prop.Name}_km"] = prop.Value;
-            }
-
-            if (stats.TryGetProperty("doppler (km/s)", out var doppler))
-            {
-                foreach (var prop in doppler.EnumerateObject())
-                    flat[$"doppler_{prop.Name}_km_s"] = prop.Value;
-            }
-        }
-
-        // Serialize back to a JsonElement
-        var json = JsonSerializer.Serialize(flat);
-        return JsonDocument.Parse(json).RootElement;
-    }
-
-    private static double[] ParseQuaternionArray(JsonElement element)
-    {
-        var arr = new double[4];
-        int i = 0;
-        foreach (var item in element.EnumerateArray())
-        {
-            arr[i++] = item.GetDouble();
-        }
-
-        return arr;
     }
 
     private ToleranceConfig LoadTolerances()
