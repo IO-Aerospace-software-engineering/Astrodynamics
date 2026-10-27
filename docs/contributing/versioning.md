@@ -132,6 +132,28 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   state; without one, it throws `InvalidOperationException`.
   [#452](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/452)
 
+**Changed**
+
+- **The occultation searches of a propagated spacecraft, a site or two natural bodies run in managed code, with the
+  ellipsoids and the types of `gfoclt`.** `FindWindowsOnOccultationConstraint` of a `CelestialItem` or a `Site`, when
+  CSPICE cannot search (the observer or the target not in the kernels, or no spacecraft among them), modeled the bodies
+  as spheres of their equatorial radius in front of each other by the distance of their centers, sampled a boolean
+  condition and refined it to about 1 s: the solar eclipse of 2001-12-14 seen from the Earth's center started 0.16 s
+  before `gfoclt`'s, that of 2005-10-03 from DSS-13 0.12 s, and a window holding at the start of the search started
+  up to one step before it ([#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461)).
+  The library now models each body as the triaxial ellipsoid of its radii (`CelestialBody.Radii`) oriented by a
+  body-fixed frame, the body's own or the one given in `OccultationSearchOptions` (`FrontFrame`, `TargetFrame`), and
+  locates each contact of the apparent discs (the method of CSPICE's `zzocced`) by Brent's method to
+  `OccultationSearchOptions.ConvergenceTolerance`, 1 µs by default. The types are `gfoclt`'s (`Full`, `Annular`,
+  `Partial`, `Any`, and `None` for the rest of the window), with `Aberration.None` or a light time. A window is
+  clamped to the search window, and an event shorter than the step is found when the step is at most half the time
+  between the extremes of the margins (a quarter of the period for the eclipses of a satellite). Against `gfoclt`
+  converged to 1e-9 s: 1.2e-7 s geometric, 1.3e-6 s with the light time; eclipse 001 of a propagated spacecraft within
+  4.8e-4 s of GMAT R2026a. The search reads the states and orientations, never writes a kernel and keeps no state:
+  searches on separate propagations may run concurrently. `CelestialItem.IsOcculted` takes the same geometry. See
+  [Occultations](../reference/occultations.md).
+  [#277](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/277)
+
 ### 10.2.0-preview-1
 
 A preview of 10.2.0, published on NuGet as a prerelease (`dotnet add package IO.Astrodynamics --prerelease`,

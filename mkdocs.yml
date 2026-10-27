@@ -64,6 +64,7 @@ nav:
       - Celestial Bodies: reference/celestial-bodies.md
       - Spacecraft: reference/spacecraft.md
       - Sites: reference/sites.md
+      - Occultations & Eclipses: reference/occultations.md
     - Orbital Mechanics:
       - StateVector: reference/state-vector.md
       - Keplerian Elements: reference/keplerian-elements.md
