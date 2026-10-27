@@ -175,10 +175,11 @@ public sealed class FrameTransformationSolverTests : IDisposable
         var withCaseKernel = _solver.Solve(Case("ICRF", "ITRF93", R, V, kernels: $"[\"{Kernel}\"]"));
         var withRunnerKernel = _solver.Solve(Case("ICRF", "ITRF93", R, V));
 
-        // Assert: 4.68e-12 rad between the two files at this epoch, 3.3e-8 km at 7088 km (design of #458, section 1)
+        // Assert: 1.82e-10 rad between the two files at this epoch, 1.268e-6 km at 7089 km (CSPICE N0067 sxform, spiceypy
+        // 8.3.0: the suite's file since conformance-tests#24 against the runner's); the bounds lie a decade on either side
         double difference = Distance((double[])withCaseKernel["position_km"], (double[])withRunnerKernel["position_km"]);
         _output.WriteLine($"suite bpc - runner bpc: {difference:E2} km");
-        Assert.InRange(difference, 1e-9, 1e-6);
+        Assert.InRange(difference, 1e-7, 1e-5);
         Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(),
             k => k.FullName == new FileInfo(Path.Combine(_directory, "data", Kernel)).FullName);
     }

@@ -4,8 +4,8 @@ version: "0.1.0"
 category: "frame_transformation"
 created: "2026-10-25"
 description: >
-  ICRF to ITRF93 of a LEO state on 2025-04-01, the last epoch allowed inside the measured span of the Earth
-  orientation file.
+  ICRF to ITRF93 of a LEO state on 2025-04-01, the latest ITRF93 epoch of the category, in the measured part of the
+  Earth orientation file and at least one year before its last datum (spec.md section 10.1).
 
 metadata:
   ephemeris_kernel: "none"

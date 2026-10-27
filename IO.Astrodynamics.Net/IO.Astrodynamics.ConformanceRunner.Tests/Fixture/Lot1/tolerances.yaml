@@ -71,59 +71,62 @@ defaults:
     rel_tol: 1.0e-6
 
   # ---- Lot 1: conversions without propagation (spec.md sections 6 and 11) --------------------------------------
-  # One active threshold per key (#7): rel_tol 0 = absolute, abs_tol 0 = relative. Value: ceil2(2 max(E_run over
-  # linux, windows, macos; E_ref, golden vs a 60-digit or CSPICE evaluation; conditioning floor)), measured 2026-10-25.
-  oe_length_km:              # a, rp, ra, p; orbital_elements_hyperbolic_inbound_017 semi_major_axis_km: E_ref 1.34e-15
-    abs_tol: 0.0
-    rel_tol: 2.7e-15
-  oe_eccentricity:           # e; orbital_elements_hyperbolic_outbound_016 eccentricity: E_run 6.66e-16 (windows)
-    abs_tol: 1.4e-15
+  # One active threshold per key (#7): rel_tol 0 = absolute, abs_tol 0 = relative. Value (spec.md 6.4):
+  # T = max(T_op, ceil2(2 max(E_CSPICE, E_ref, floor))), each term in the unit of the key. T_op: the operational
+  # tolerance of the key. E_CSPICE: tools/cspice_runner against the golden over linux, windows, macos, measured
+  # 2026-10-27. E_ref: golden vs a 60-digit evaluation, the exact time chain or CSPICE. floor: the
+  # conditioning floor.
+  oe_length_km:              # a, rp, ra, p; T_op 1.0e-6 km (1 mm)
+    abs_tol: 1.0e-6
     rel_tol: 0.0
-  oe_angle_deg:              # every orbital_elements angle; orbital_elements_polar_010 eccentric_anomaly_deg: E_run 1.08e-12 (windows)
-    abs_tol: 2.2e-12
+  oe_eccentricity:           # e; T_op 1.0e-11 (0.42 mm at GEO's a)
+    abs_tol: 1.0e-11
     rel_tol: 0.0
-  oe_period_s:               # period (100 ns ticks in IO); orbital_elements_nearcircular_003 period_s: E_run 9.54e-08 (windows)
-    abs_tol: 2.0e-7
+  oe_angle_deg:              # every orbital_elements angle; T_op 1.0e-9 deg (0.12 mm in LEO, 0.74 mm in GEO)
+    abs_tol: 1.0e-9
     rel_tol: 0.0
-  oe_energy_km2_s2:          # specific energy; orbital_elements_hyperbolic_inbound_017 specific_energy_km2_s2: E_ref 1.35e-15
-    abs_tol: 0.0
-    rel_tol: 2.8e-15
-  oe_angular_momentum_km2_s: # vector h; orbital_elements_nearretrograde_012 angular_momentum_km2_s: E_run 2.67e-16 (windows)
-    abs_tol: 0.0
-    rel_tol: 5.4e-16
-  oe_speed_km_s:             # periapsis and apoapsis speeds; orbital_elements_periapsis_013 apoapsis_speed_km_s: E_run 5.39e-16 (windows)
-    abs_tol: 0.0
-    rel_tol: 1.1e-15
-  oe_mean_motion_rad_s:      # mean motion; orbital_elements_hyperbolic_inbound_017 mean_motion_rad_s: E_ref 1.95e-15
-    abs_tol: 0.0
-    rel_tol: 4.0e-15
-  oe_equinoctial:            # f, g, h, k; orbital_elements_hyperbolic_outbound_016 mod_equinoctial_g: E_run 1.11e-15 (windows)
-    abs_tol: 2.3e-15
+  oe_period_s:               # period; T_op 1.0e-6 s (1 mm on a in LEO, δT/T = 1.5 δa/a)
+    abs_tol: 1.0e-6
     rel_tol: 0.0
-  oe_position_km:            # vector, elements to state; orbital_elements_modeq2cart_highecc_152 position_km: E_run 1.12e-15 (windows)
+  oe_energy_km2_s2:          # specific energy; T_op 1.0e-12 relative (as n)
     abs_tol: 0.0
-    rel_tol: 2.3e-15
-  oe_velocity_km_s:          # vector, elements to state; orbital_elements_kep2cart_e0p9_102 velocity_km_s: floor 1.86e-15
+    rel_tol: 1.0e-12
+  oe_angular_momentum_km2_s: # vector h; T_op 1.0e-12 relative (as n)
     abs_tol: 0.0
-    rel_tol: 3.8e-15
-  time_s:                    # time outputs not crossing TDB<->TT; time_conversion_tdb_005 tdb_s: floor 4.77e-07
-    abs_tol: 9.6e-7
+    rel_tol: 1.0e-12
+  oe_speed_km_s:             # periapsis and apoapsis speeds; T_op 1.0e-9 km/s (1 µm/s)
+    abs_tol: 1.0e-9
     rel_tol: 0.0
-  time_tdb_s:                # time outputs crossing TDB<->TT; GMAT series - ERFA dtdb 37.5676 us + GMAT print 0.287 us
+  oe_mean_motion_rad_s:      # mean motion; T_op 1.0e-12 relative (0.66 mm along-track after one day in LEO)
+    abs_tol: 0.0
+    rel_tol: 1.0e-12
+  oe_equinoctial:            # f, g, h, k; T_op 1.0e-11 (as e)
+    abs_tol: 1.0e-11
+    rel_tol: 0.0
+  oe_position_km:            # position, elements to state; T_op 1.0e-6 km (1 mm)
+    abs_tol: 1.0e-6
+    rel_tol: 0.0
+  oe_velocity_km_s:          # velocity, elements to state; T_op 1.0e-9 km/s (1 µm/s)
+    abs_tol: 1.0e-9
+    rel_tol: 0.0
+  time_s:                    # time outputs not crossing TDB<->TT; T_op 1.0e-6 s (1 µs)
+    abs_tol: 1.0e-6
+    rel_tol: 0.0
+  time_tdb_s:                # time outputs crossing TDB<->TT; T_op 1.0e-6 s (1 µs); set by the reference term, GMAT series - ERFA dtdb 37.5676 us + GMAT print 0.287 us
     abs_tol: 7.6e-5
     rel_tol: 0.0
-  frame_position_km:         # vector; frame_transformation_itrf93_2016_008 position_km: E_run 9.05e-16 (windows)
-    abs_tol: 0.0
-    rel_tol: 1.9e-15
-  frame_velocity_km_s:       # vector, absolute; frame_transformation_earth_to_moon_me_016 velocity_km_s: E_ref 2.34e-15
-    abs_tol: 4.7e-15
+  frame_position_km:         # position; T_op 1.0e-6 km (1 mm)
+    abs_tol: 1.0e-6
     rel_tol: 0.0
-  geodetic_latitude_deg:     # geodetic latitude; frame_transformation_geodetic_lat20_m10km_029 latitude_deg: E_run 2.57e-08 (windows)
+  frame_velocity_km_s:       # velocity; T_op 1.0e-9 km/s (1 µm/s)
+    abs_tol: 1.0e-9
+    rel_tol: 0.0
+  geodetic_latitude_deg:     # geodetic latitude; T_op 1.0e-9 deg (0.1 mm); set by the reference term, frame_transformation_geodetic_lat20_m10km_029 latitude_deg: E_CSPICE 2.5714218310213255e-08 (linux, windows, macos)
     abs_tol: 5.2e-8
     rel_tol: 0.0
-  geodetic_longitude_deg:    # geodetic longitude; frame_transformation_geodetic_lat70_20000km_030 longitude_deg: E_run 1.78e-14 (windows)
-    abs_tol: 3.6e-14
+  geodetic_longitude_deg:    # geodetic longitude; T_op 1.0e-9 deg (0.1 mm at the equator)
+    abs_tol: 1.0e-9
     rel_tol: 0.0
-  geodetic_altitude_km:      # geodetic altitude; frame_transformation_geodetic_lat70_20000km_030 altitude_km: E_run 1.38e-06 (windows)
+  geodetic_altitude_km:      # geodetic altitude; T_op 1.0e-6 km (1 mm); set by the reference term, frame_transformation_geodetic_lat70_20000km_030 altitude_km: E_CSPICE 1.380845787934959e-06 (linux, windows, macos)
     abs_tol: 2.8e-6
     rel_tol: 0.0

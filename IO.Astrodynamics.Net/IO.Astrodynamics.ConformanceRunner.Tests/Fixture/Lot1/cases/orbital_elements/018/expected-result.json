@@ -7,7 +7,7 @@
     "tool_version": "R2026a",
     "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
     "kernel": "none (two-body conversion)",
-    "date": "2026-10-25",
+    "date": "2026-10-27",
     "method": "GMAT parameters of a Cartesian state entered in EarthMJ2000Eq with the case numbers, Earth.Mu = gm_km3_s2, one Report per parameter; an output derived from several parameters (sources.py) is their closed formula evaluated at 60 digits from GMAT's printed decimals and rounded once",
     "reference_frame": "EarthMJ2000Eq (axes of the input numbers; the conversion does not depend on them)",
     "script": "orbital_elements_geo_018.script",
@@ -16,7 +16,7 @@
   "outputs": {
     "semi_major_axis_km": 42164.16999999999,
     "eccentricity": 0.0002000000000000859,
-    "inclination_deg": 0.05000000000000002,
+    "inclination_deg": 0.049999999993073134,
     "raan_deg": 80.0,
     "argp_deg": 10.000000000004556,
     "true_anomaly_deg": 199.99999999999548,

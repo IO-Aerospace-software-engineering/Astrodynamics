@@ -21,7 +21,9 @@ public class OutputComparerTests
 {
     private const string TdbEpoch = "2021-03-20T12:00:00.000 TDB";
 
-    // One active threshold per key, as the lot-1 keys of tolerances.yaml
+    // One active threshold per key, as the lot-1 keys of tolerances.yaml. The values and kinds are the test's own, so
+    // that a relative key stays tested on a scalar and on a vector: the suite's oe_length_km and frame_position_km are
+    // absolute since conformance-tests#19
     private static readonly Dictionary<string, TolerancePair> Defaults = new()
     {
         ["oe_angle_deg"] = Absolute(2.2e-12),
