@@ -56,10 +56,9 @@ public class GmatConformancePropagatorTests
     /// component (m) and of the largest velocity component (m/s) with the GM of the model in the central term.
     /// </summary>
     /// <remarks>
-    /// Provisional bounds, twice the Linux measurement rounded up at the second significant digit (Linux x64, .NET 10,
-    /// 2026-10-27): RK7(8) 001 8.834e-2 m and 1.015e-4 m/s, 002 5.951e-2 m and 4.287e-6 m/s, 003 1.562e-1 m and
-    /// 1.728e-4 m/s; Velocity-Verlet 002 3.371e-1 m and 2.397e-5 m/s. To be set again from the MEASURE lines of the CI
-    /// on Linux, Windows and macOS arm64. Of the RK7(8) figures, the integration at 1e-11 is about 5 mm (1e-13: 9.36 cm,
+    /// Bounds, twice the worst over Linux, Windows and macOS arm64 rounded up at the second significant digit (CI of 77b509c, 2026-10-27;
+    /// the same on the three platforms or worst on Linux): RK7(8) 001 8.834e-2 m and 1.015e-4 m/s, 002 5.951e-2 m and 4.287e-6 m/s, 003 1.562e-1 m and
+    /// 1.728e-4 m/s; Velocity-Verlet 002 3.371e-1 m and 2.397e-5 m/s. Of the RK7(8) figures, the integration at 1e-11 is about 5 mm (1e-13: 9.36 cm,
     /// 5.95 cm and 16.3 cm), the rest the models of the two tools. Velocity-Verlet only for 002: in LEO its error at
     /// 1 s, about 300 m a day, hides the central term.
     /// </remarks>

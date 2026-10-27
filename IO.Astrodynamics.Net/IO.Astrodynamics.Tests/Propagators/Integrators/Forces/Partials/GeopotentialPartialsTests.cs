@@ -168,12 +168,12 @@ public class GeopotentialPartialsTests : IClassFixture<GeopotentialPartialsBodie
                           $"point mass {bodyGmError:E2}");
         Assert.True(total.DadrError < 1e-10, $"reference error {total.DadrError:E2}");
         Assert.True(harmonicsReferenceError < 5e-9, $"harmonic reference error {harmonicsReferenceError:E2}");
-        // Provisional bounds, twice the worst of the 18 cases on Linux (2026-10-27): whole block 1.8e-12 (polar 89.9°,
-        // degree 70), harmonics 1.7e-9 (GEO, degree 70, where the reference resolves no better; 7.6e-11 elsewhere), to
-        // be set from the three platforms. The GM of the body in the point mass leaves 1.50e-8 to 1.51e-8, the ratio of
+        // Bounds, twice the worst of the 18 cases over Linux, Windows and macOS arm64 (CI of 77b509c, 2026-10-27): whole block 1.8e-12
+        // (Linux, polar 89.9°, degree 70), harmonics 1.94e-9 (GEO, degree 70, where the reference resolves no better;
+        // 1.73e-9 on Linux, 7.6e-11 elsewhere). The GM of the body in the point mass leaves 1.50e-8 to 1.51e-8, the ratio of
         // the two GMs less one, which the reference resolves
         Assert.True(totalError < 3.6e-12, $"whole block: {totalError:E2}");
-        Assert.True(harmonicsError < 3.5e-9, $"harmonics: {harmonicsError:E2}");
+        Assert.True(harmonicsError < 3.9e-9, $"harmonics: {harmonicsError:E2}");
         Assert.True(bodyGmError > 1e-8, $"the GM of the body: {bodyGmError:E2}");
         Assert.All(dadv, x => Assert.Equal(0.0, x));
     }

@@ -171,8 +171,8 @@ public class GeopotentialCentralTermTests
         _output.WriteLine($"MEASURE central term with the model GM (decision 18 of #457), degree 0, {centralTerm}, " +
                           $"{stateName}, {(earthFixed ? "Earth-fixed" : "ICRF")}: acceleration {error:E2}, partials " +
                           $"{partialsError:E2} from the point mass; {fromTheOther:E3} from the point mass of the other GM");
-        // Provisional bounds, twice the worst of the twelve cases on Linux (2026-10-27: acceleration 8.2e-16, partials
-        // 5.9e-16, the rounding of the rotation to the Earth-fixed frame and back), to be set from the three platforms
+        // Bounds, twice the worst of the twelve cases over Linux, Windows and macOS arm64 (CI of 77b509c, 2026-10-27, the worst on Linux:
+        // acceleration 8.2e-16, partials 5.9e-16, the rounding of the rotation to the Earth-fixed frame and back)
         Assert.True(error < 1.7e-15, $"acceleration {error:E2}");
         Assert.True(partialsError < 1.2e-15, $"partials {partialsError:E2}");
         Assert.Equal(samePartials, partials);
@@ -227,9 +227,9 @@ public class GeopotentialCentralTermTests
         _output.WriteLine($"MEASURE central term with the model GM (decision 18 of #457), degree 2 at {radius:F0} m, " +
                           $"{latitude}°, {longitude}°: acceleration {error:E2}, partials {partialsError:E2} from the " +
                           "closed form of EGM2008");
-        // Provisional bounds, twice the worst of the four positions on Linux (2026-10-27: acceleration 3.8e-16, partials
-        // 2.9e-10 at GEO, where the central differences of the closed form lose ε r / h, 4.7e-10), to be set from the three
-        // platforms; the GM of the body in the central term would leave 1.5e-8 in both
+        // Bounds, twice the worst of the four positions over Linux, Windows and macOS arm64 (CI of 77b509c, 2026-10-27, the worst on Linux:
+        // acceleration 3.8e-16, partials 2.9e-10 at GEO, where the central differences of the closed form lose ε r / h,
+        // 4.7e-10); the GM of the body in the central term would leave 1.5e-8 in both
         Assert.True(error < 7.7e-16, $"acceleration {error:E2}");
         Assert.True(partialsError < 5.9e-10, $"partials {partialsError:E2}");
     }
@@ -263,8 +263,8 @@ public class GeopotentialCentralTermTests
         double partialsError = RelativeFrobenius(partials, expectedPartials);
         _output.WriteLine($"MEASURE central term with the model GM (decision 18 of #457), {stateName} relative to the " +
                           $"SSB: acceleration {error:E2}, partials {partialsError:E2} from the same state relative to the Earth");
-        // Provisional bounds, twice the worst of the three states on Linux (2026-10-27: acceleration 1.7e-12, partials
-        // 2.6e-12, LEO), to be set from the three platforms; the other GM would leave 1.5e-8
+        // Bounds, twice the worst of the three states over Linux, Windows and macOS arm64 (CI of 77b509c, 2026-10-27, the worst on Linux:
+        // acceleration 1.7e-12, partials 2.6e-12, LEO); the other GM would leave 1.5e-8
         Assert.True(error < 3.5e-12, $"acceleration {error:E2}");
         Assert.True(partialsError < 5.3e-12, $"partials {partialsError:E2}");
     }

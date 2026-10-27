@@ -177,8 +177,8 @@ public class GeopotentialVariationalTests : IClassFixture<GeopotentialPartialsBo
                           $"differences of whole propagations at 1e-14, worst over 6 h per block (rr, rv, vr, vv): " +
                           $"{worst[0]:E2}, {worst[1]:E2}, {worst[2]:E2}, {worst[3]:E2}; at the end " +
                           $"{string.Join(", ", errors[^1].Select(e => e.ToString("E2")))}");
-        // Provisional bound, twice the worst block on Linux rounded up at the second significant digit (2026-10-27:
-        // 2.45e-9, Φ_rv), to be set from the three platforms. With the GM of the body in the point-mass partials and the GM of the model in the acceleration,
+        // Bound, twice the worst block over Linux, Windows and macOS arm64 rounded up at the second significant digit
+        // (CI of 77b509c, 2026-10-27: 2.45e-9, Φ_rv, on Linux; 2.33e-9 at most elsewhere). With the GM of the body in the point-mass partials and the GM of the model in the acceleration,
         // the same comparison gives 4.4e-6 (measured on a scratch build)
         Assert.All(worst, e => Assert.True(e < 5.0e-9, $"Φ: {e:E2}"));
     }
