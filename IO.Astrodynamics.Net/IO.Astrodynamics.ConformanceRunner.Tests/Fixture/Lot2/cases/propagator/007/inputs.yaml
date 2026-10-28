@@ -1,0 +1,62 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_6h_leo250_grav10_drag_007"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  6-hour propagation of a 250 km circular orbit inclined at 96.5 deg (r = 6628.137 km, RAAN 270 deg, argument of
+  latitude 0 at the epoch), in dense air over all latitudes, across the density steps of NRLMSISE-00 at 250 km, with
+  atmospheric drag: NRLMSISE-00 at constant space weather (F10.7 120 sfu, F10.7A 130 sfu, Ap 9) on a spacecraft of
+  500 kg, 10 m^2 and Cd 2.2. The EGM2008 field of data/ to degree and order 10 (the model's GM and radius applied to
+  the whole field, oriented by ITRF93 of data/'s Earth orientation file) and the Moon and the Sun as point masses.
+  State in ICRF about the Earth; the model is that of spec.md section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2025-06-21T03:00:00.000 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [0.0, -6628.137, 0.0]
+    velocity_km_s: [-0.8778734322458116, 0.0, 7.704996228410299]
+  propagation_window:
+    start: "2025-06-21T03:00:00.000 UTC"
+    end: "2025-06-21T09:00:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag:
+      model: "NRLMSISE-00"
+      f107_sfu: 120.0
+      f107a_sfu: 130.0
+      ap: 9.0
+    srp: false
+  spacecraft:
+    mass_kg: 500.0
+    sectional_area_m2: 10.0
+    drag_coefficient: 2.2
+    radiation_pressure_coefficient: 1.0   # informative (no SRP)
+  step_size_s: 30.0                     # informative (spec.md 12.1)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]
+
+tolerances_override:
+  propagator_position_km:
+    abs_tol: 0.00025
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x window / 86400 s) = 0.25 m
+      for this window of 21600 TT seconds; reference term 0.019 m (E_2nd of final_z_km, reference-check.json: GMAT
+      R2026a, pymsis 0.13.0, 2026-10-28)
+  propagator_velocity_km_s:
+    abs_tol: 2.5e-7
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x window / 86400 s) = 0.25
+      mm/s for this window of 21600 TT seconds; reference term 0.023 mm/s (E_2nd of final_vy_km_s,
+      reference-check.json: GMAT R2026a, pymsis 0.13.0, 2026-10-28)

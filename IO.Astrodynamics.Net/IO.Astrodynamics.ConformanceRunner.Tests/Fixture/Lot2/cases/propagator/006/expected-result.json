@@ -1,0 +1,27 @@
+{
+  "id": "propagator_24h_leo400_grav10_drag_006",
+  "category": "propagator",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-10-28",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 10, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS)",
+    "perturbations": "Moon, Sun as point masses (de440s positions, GMs of data/gm_de440.tpc). Drag: NRLMSISE-00, F10.7 160.0, F10.7A 145.0, Ap 15.0. No SRP. No relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: the user-defined planet EarthS (NAIF 399 at its de440s position, its body-fixed frame ITRF93 of data/'s bpc through SPICE), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 10, third bodies Moon, Sun at their de440s positions with the GMs of data/gm_de440.tpc, EarthS's radius and flattening those of data/pck00011.tpc, NRLMSISE-00 drag (ConstantFluxAndGeoMag, F107 160.0, F107A 145.0, MagneticIndex 3.0 for Ap 15.0), PrinceDormand78 at 1e-13, MaxStep 60 s; the window integrated over its TT seconds; state entered in EarthSICRF, read in EarthSMJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch.",
+    "reference_frame": "EarthSMJ2000Eq rotated to ICRF",
+    "script": "propagator_24h_leo400_grav10_drag_006.script",
+    "log": "propagator_24h_leo400_grav10_drag_006.log"
+  },
+  "outputs": {
+    "final_x_km": -5855.369160989908,
+    "final_y_km": -1784.030107308751,
+    "final_z_km": -2883.4514415060307,
+    "final_vx_km_s": 3.8117895336311785,
+    "final_vy_km_s": -4.353947758795733,
+    "final_vz_km_s": -5.048664027781239
+  }
+}

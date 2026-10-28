@@ -63,21 +63,27 @@ worst ratios are the same on Windows and macOS arm64: the `MEASURE` lines of the
 (the tree of 1f226ea, the suite at 371c515) give them on the three platforms, from cases whose
 goldens conformance-tests#24 left unchanged. That PR regenerated the ITRF93 cases 002 to
 008 with a new Earth orientation file; they pass at 2.9e-5 of the tolerance at most, measured on
-Linux only. Three harnesses run the cases:
+Linux only. Lot 2 adds 13 propagator cases (see [Lot 2](#lot-2-drag-srp-heo-and-other-central-bodies)).
+Four harnesses run the cases:
 
 - the conformance runner `IO.Astrodynamics.ConformanceRunner` runs every case and writes a report,
   `IO.Astrodynamics.Net/conformance-report.json`; it propagates with the adaptive RK7(8) integrator
-  (absolute and relative tolerances 1e-11);
+  (absolute and relative tolerances 1e-13, steps from 1 ms to 300 s; 1e-11 before lot 2);
 - unit tests run the three 24-hour propagation cases with RK7(8) (`RK78IntegratorTests.Conformance00x_*`)
   and with Velocity-Verlet at a fixed 1 s step (`PropagatorTests.Conformance00x_*`), against the
   GMAT goldens of conformance-tests#25 with the model's GM in the central term, and print the
   errors they measure;
 - `Lot1CaseTests` runs the runner on the cases of lot 1, copied with the schemas and the tolerances
   of the suite into `IO.Astrodynamics.ConformanceRunner.Tests/Fixture/Lot1` by
-  `tools/conformance/sync_lot1_fixture.py`, with the suite's Earth orientation file, which differs
+  `tools/conformance/sync_fixture.py --lot 1`, with the suite's Earth orientation file, which differs
   from the runner's (NAIF's `earth_000101_270122_261026.bpc` since conformance-tests#24); its
   `SOURCE` file records the suite commit, d4e9905 (2026-10-27). The test prints one `MEASURE` line
-  per output: the delta, the tolerance and their ratio.
+  per output: the delta, the tolerance and their ratio;
+- `Lot2CaseTests` runs the runner on the 13 propagator cases of lot 2, copied into `Fixture/Lot2` by
+  `tools/conformance/sync_fixture.py --lot 2` with the data files that differ from the runner's and
+  from `Fixture/Lot1` (the lunar and Martian fields, the Mars cut, `moon_assoc_pa.tf`); its `SOURCE`
+  records the suite commit, 8b5a347 of the suite's lot-2 branch, [conformance-tests#28](https://github.com/IO-Aerospace-software-engineering/conformance-tests/pull/28) (2026-10-28). It prints the same
+  `MEASURE` lines, which the CI logs carry on the three platforms.
 
 The first two evaluate the final state of a propagation at the exact end of the window, whose UTC
 epoch is converted to TDB, like the reference tool's elapsed time, and report the magnitude of the
@@ -105,8 +111,9 @@ dotnet run --project IO.Astrodynamics.ConformanceRunner -c Release -- \
 The exit code is the number of failed cases plus the number of errors. A data file left as an LFS
 pointer makes its case an ERROR that names the file. The suite (98 cases) takes about 5 s in
 Release on Linux (4 cores, 2026-10-27: 4.3 s for d4e9905, 4.8 s for conformance-tests#25, one
-run each, the start of the process included); the eclipse case took 48 s alone before the managed
-occultation search of #495. The runner asks the propagator for the end of the window only: an
+run each, the start of the process included); with the integrator at 1e-13, 6.1 s for the suite's
+main (4a7c20f) and 12.2 s for the 111 cases of the lot-2 branch (e6fafe4, the same cases as 8b5a347), one run each
+(2026-10-28); the eclipse case took 48 s alone before the managed occultation search of #495. The runner asks the propagator for the end of the window only: an
 output every `step_size_s` (1 s) cost a shortened RK7(8) step each and took the suite to 107 s
 (#426).
 
@@ -120,7 +127,7 @@ passes both:
 
 | Category | The runner's model | Inputs of conformance-tests#25 | Without them (main) |
 |----------|--------------------|--------------------------------|---------------------|
-| `propagator` | EGM2008 of the suite's `data/` with its GM and radius applied to the whole field (`GeopotentialCentralTerm.ModelGravitationalParameter`), third bodies as point masses, RK7(8) at 1e-11, ICRF | `kernels`: the Earth orientation file and `gm_de440.tpc` of `data/`, loaded for the case | the runner's kernels |
+| `propagator` | EGM2008 of the suite's `data/` with its GM and radius applied to the whole field (`GeopotentialCentralTerm.ModelGravitationalParameter`), third bodies as point masses, RK7(8) at 1e-13 (1e-11 before lot 2), ICRF | `kernels`: the Earth orientation file and `gm_de440.tpc` of `data/`, loaded for the case | the runner's kernels |
 | `eclipse` | two-body trajectory, the managed occultation search of #495 (the pck00011 ellipsoid oriented by `IAU_EARTH`, the Sun's sphere), geometric, transitions to 1 µs | `gm_km3_s2`: the GM of the trajectory, applied as a field of degree 0 whose central term takes it, the state of the elements with it (velocity scaled by √GM); `kernels` | the kernel GM |
 | `tracking_data` | the station on the Earth's kernel ellipsoid in ITRF93, the UTC grid of the window, the Moon's sphere, geometric | `location.ellipsoid`: checked against the kernel radii (1 µm), ERROR otherwise, since a `Site` takes no other ellipsoid; `kernels` | the kernel ellipsoid |
 | `pointing_triad` | TRIAD of the instrument's boresight and reference vector towards `CelestialAttitudeTarget`s with `Aberration.LT` (LT-corrected from the Earth's centre), compared by the rotation angle 4·atan2(‖q − s·g‖, ‖q + s·g‖) | — | the same |
@@ -134,7 +141,7 @@ its key. Release, Linux, 2026-10-27, the largest ratio of a delta to its toleran
 
 | Category | conformance-tests#25 (c1af386) | main (d4e9905) |
 |----------|--------------------------------|----------------|
-| `propagator` | 0.173 (003, vz: 1.73e-7 km/s; 001 to 003 within 15.6 cm and 0.173 mm/s per component) | 0.815 (004, y: 8.15e-5 km against the override of 1e-4 km) |
+| `propagator` | 0.173 (003, vz: 1.73e-7 km/s; 001 to 003 within 15.6 cm and 0.173 mm/s per component); with the integrator at 1e-13 of lot 2, 0.180 (003, vz: 1.80e-7 km/s; 001 to 003 within 16.3 cm and 0.180 mm/s per component; measured again on 2026-10-28 on the suite's main, 4a7c20f, which holds these cases) | 0.815 (004, y: 8.15e-5 km against the override of 1e-4 km), the same at 1e-13 |
 | `eclipse` | 0.046 (umbra exit, 4.6e-4 s) | 0.0019 (penumbra duration against the override of 1 s) |
 | `tracking_data` | 0.0033 (median range rate, 3.3e-10 km/s) | 0.78 (minimum range, 2.3e-3 km against the override of 3e-3 km) |
 | `pointing_triad` | 3.8e-11 (3.8e-16 rad) | 3.8e-12 |
@@ -147,6 +154,60 @@ the model's GM in the central term, 003 is 15.2 m from its golden (y), beyond it
 The `conformance` job of the CI runs the latest version of the suite on Linux, Windows and macOS
 arm64 and keeps each report as an artifact. The suite is private: the job reads it with the
 secret `CONFORMANCE_TESTS_TOKEN` and is skipped without it.
+
+### Lot 2: Drag, SRP, HEO and Other Central Bodies
+
+Lot 2 of [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457) (design in
+[#500](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/500), decisions 21 to 23, S. Guillet,
+2026-10-28) adds 13 `propagator` cases, in [conformance-tests#28](https://github.com/IO-Aerospace-software-engineering/conformance-tests/pull/28) (8b5a347) until it merges: NRLMSISE-00 drag
+(006 to 009), solar radiation pressure with the shadows of the Earth and the Moon (010 to 012), high eccentric orbits
+over 3 days (013 and 014, and 015 with drag and SRP), and the Moon (016, LP165P 20×20 in MOON_PA), Mars (017, GMM-2B
+20×20 in IAU_MARS) and the Sun (018, 30 days, the Sun and the planets) as central bodies. Their goldens are GMAT R2026a
+runs with the Earth, the Moon and Mars oriented through SPICE by the kernels of the suite's `data/`, read back in ICRF;
+018 is also checked against an independent n-body integration. The runner computes them as the suite's `spec.md`
+§12.1 specifies, and reports an ERROR for what the library cannot compute that way:
+
+| Item | The runner | ERROR |
+|------|------------|-------|
+| Field | the table of §12.1 by `geopotential_model` (`GeopotentialFieldCatalog`): EGM2008 (3.986004415e14 m³/s², 6378136.3 m), LP165P (4.902801056e12 m³/s², 1738 km), GMM-2B (4.28283719012840e13 m³/s², 3397 km), read from `data/`, the model's GM and radius on the whole field (`GeopotentialCentralTerm.ModelGravitationalParameter`), at degree 0 the point mass of the model's GM; `"none"`, the point mass of the kernel GM | an unknown model, the field of another body than the central body, a degree beyond the file's, `"none"` with a degree other than 0 |
+| Drag | `Nrlmsise00Model` at the case's constant F10.7, F10.7A and Ap, every switch on (switch 9 = 1: the daily Ap alone), in place of the US 1976 atmosphere, which put 006 to 009 1.9 to 67 km off | drag about another body than the Earth, another atmosphere model, `drag: true` |
+| SRP | the library's cannonball with its occulters, every celestial body of the propagation but the Sun | SRP about another body than the Earth, `shadow_bodies` other than those occulters, `srp: true` |
+| Spacecraft | the case's mass, area and coefficients; without drag and SRP a case may omit them | drag or SRP without the spacecraft block, which the runner defaulted before |
+| Epochs | `EpochParser`: the tags of §3 (UTC, TAI, TT, TDB), a window end with up to 7 decimals (004, 005) | another form |
+| Kernels | the case's `kernels`, loaded after the runner's (`CaseKernels`): the Mars cut that gives the centre of Mars (499), `moon_assoc_pa.tf`, which associates the Moon with MOON_PA in place of MOON_ME | a file missing or left as an LFS pointer |
+| Integrator | RK7(8) at 1e-13, steps from 1 ms to 300 s (open choice 18 of the design): at 1e-11 the error estimate misses the jumps of the shadow function's derivative at the contacts, 0.21 m on 015 | — |
+
+The tolerance of a case is the operational one per day of its window (decision 23): T_op = ceil2(1 m × Δt / 86400 s)
+for the positions and ceil2(1 mm/s × Δt / 86400 s) for the velocities, Δt the length of the window in TT seconds about
+the Earth and in TDB seconds otherwise, raised to twice the largest reference term where that is larger (it is not, on
+any case). `tolerances.yaml` keeps the one-day values, 1e-3 km and 1e-6 km/s; the suite writes the others as overrides
+of the case: 0.25 m and 0.25 mm/s for 007 (6 h), 2 m and 2 mm/s for 012 (2 days), 3 m and 3 mm/s for 010 and 013 to
+015 (3 days), 30 m and 30 mm/s for 018 (30 days). Release, Linux, 2026-10-28, the largest component of the error of the
+final state and the largest ratio to its tolerance (`Lot2CaseTests`, the same as the runner on the suite's branch):
+
+| Case | Position | Velocity | Tolerance | Largest ratio |
+|------|----------|----------|-----------|---------------|
+| `propagator_24h_leo400_grav10_drag_006` | 0.030 m | 0.045 mm/s | 1 m, 1 mm/s | 0.045 |
+| `propagator_6h_leo250_grav10_drag_007` | 0.073 m | 0.085 mm/s | 0.25 m, 0.25 mm/s | 0.34 |
+| `propagator_24h_leo500_grav10_drag_008` | 0.072 m | 0.074 mm/s | 1 m, 1 mm/s | 0.074 |
+| `propagator_24h_leo200x800_grav10_drag_009` | 0.108 m | 0.120 mm/s | 1 m, 1 mm/s | 0.12 |
+| `propagator_72h_geo_grav10_srp_010` | 0.022 m | 0.0016 mm/s | 3 m, 3 mm/s | 0.0075 |
+| `propagator_24h_sso700_grav10_srp_011` | 0.045 m | 0.047 mm/s | 1 m, 1 mm/s | 0.047 |
+| `propagator_48h_meo_grav10_srp_012` | 0.046 m | 0.0082 mm/s | 2 m, 2 mm/s | 0.023 |
+| `propagator_72h_molniya_grav10_013` | 0.518 m | 0.256 mm/s | 3 m, 3 mm/s | 0.17 |
+| `propagator_72h_gto_grav10_014` | 0.303 m | 0.054 mm/s | 3 m, 3 mm/s | 0.10 |
+| `propagator_72h_gto_grav10_drag_srp_015` | 0.328 m | 0.048 mm/s | 3 m, 3 mm/s | 0.11 |
+| `propagator_24h_llo_grav20_016` | 0.44 mm | 4.8e-4 mm/s | 1 m, 1 mm/s | 4.8e-4 |
+| `propagator_24h_lmo_grav20_017` | 3.6 mm | 0.0030 mm/s | 1 m, 1 mm/s | 0.0036 |
+| `propagator_30d_helio_nbody_018` | 4.6 mm | 8.8e-6 mm/s | 30 m, 30 mm/s | 1.5e-4 |
+
+About the Earth, much of these errors is the time argument: the suite propagates over the TT seconds of the window,
+GMAT's native A1 rate, the library over its TDB seconds, which moves the goldens of 006 to 012 by 2.3 cm to 8.1 cm and
+those of 013 to 015 by 0.30 m to 0.52 m (the suite's `spec.md` §12.1;
+[#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)); about the Moon, Mars and the Sun
+both integrate over TDB seconds. The field files of `data/` end without a final newline, which the library's reader needs
+([#502](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/502)). The CI logs of `Lot2CaseTests`
+give the ratios on Windows and macOS arm64.
 
 ### Measured Errors
 
@@ -165,6 +226,10 @@ Velocity-Verlet, the `PropagatorTests.Conformance00x_*` tests.
 | `propagator_24h_sso_grav10_003` | SSO 700 km, 24 h; EGM2008 10x10, Moon, Sun | GMAT R2026a, EGM2008 10x10 | 0.169 m, 0.178 mm/s | 243.0 m, 254.8 mm/s |
 | `propagator_1sd_geo_twobody_004` | GEO equatorial, one sidereal day; two-body | GMAT R2026a, two-body | 0.08 m, 0.006 mm/s | not run |
 | `propagator_1sd_geo_i30_twobody_005` | GEO inclined 30 deg, one sidereal day; two-body | GMAT R2026a, two-body | 0.08 m, 0.006 mm/s | not run |
+
+Since lot 2 the runner integrates at 1e-13 (see [Lot 2](#lot-2-drag-srp-heo-and-other-central-bodies)): 0.118 m and
+0.133 mm/s on 001, 0.071 m and 0.0051 mm/s on 002, 0.177 m and 0.186 mm/s on 003, 0.081 m and 0.0059 mm/s on 004,
+0.083 m and 0.0061 mm/s on 005 (Linux, Release, 2026-10-28, the suite's main 4a7c20f). The library's tests keep 1e-11.
 
 The test limits are non-regression guards at twice these values, rounded up at the second significant digit, measured
 on Linux only, not accuracy specifications:

@@ -29,7 +29,8 @@
          written by tools/gmat_reference/make_stm_case.py from conformance-tests#25 (c1af386), the stm case it writes, and
          the propagator case 004 (inputs.yaml, expected-result.json) and data/gm_de440.tpc copied from c1af386. Fixture/Lot1: the cases of orbital_elements, time_conversion
          and frame_transformation with the schemas and tolerances of the suite, and the kernels that differ from the
-         runner's; written by tools/conformance/sync_lot1_fixture.py -->
+         runner's; Fixture/Lot2: the propagator cases 006 to 018 of lot 2, their schemas and tolerances, and the data
+         files that differ from the runner's and from Fixture/Lot1; both written by tools/conformance/sync_fixture.py -->
     <ItemGroup>
         <None Update="Fixture\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

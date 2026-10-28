@@ -77,8 +77,17 @@ public static class InputParser
         var fm = inputs["force_model"] as Dictionary<object, object>;
         result.ForceModel = new PropagatorForceModel
         {
-            Drag = Convert.ToBoolean(fm["drag"]),
-            Srp = Convert.ToBoolean(fm["srp"])
+            Drag = Force(fm["drag"], "drag", drag => new DragInputs
+            {
+                Model = drag["model"]?.ToString(),
+                F107Sfu = ToDouble(drag["f107_sfu"]),
+                F107aSfu = ToDouble(drag["f107a_sfu"]),
+                Ap = ToDouble(drag["ap"])
+            }),
+            Srp = Force(fm["srp"], "srp", srp => new SrpInputs
+            {
+                ShadowBodies = (srp["shadow_bodies"] as List<object>)?.ConvertAll(b => b.ToString()) ?? new List<string>()
+            })
         };
 
         var bodies = inputs["perturbation_bodies"] as List<object>;
@@ -207,6 +216,27 @@ public static class InputParser
         return inputs.TryGetValue("kernels", out var kernels) && kernels is List<object> list
             ? list.ConvertAll(k => k.ToString())
             : new List<string>();
+    }
+
+    /// <summary>
+    /// A force of <c>force_model</c> (spec.md section 12.1): null when it is <c>false</c>, the definition read from its
+    /// object otherwise.
+    /// </summary>
+    /// <exception cref="ArgumentException">The force is neither false nor an object (<c>true</c>, null, another value):
+    /// the suite defines every force it turns on, and turns off none by omission.</exception>
+    private static T Force<T>(object value, string name, Func<Dictionary<object, object>, T> read) where T : class
+    {
+        if (value is Dictionary<object, object> definition)
+        {
+            return read(definition);
+        }
+
+        // false as YAML gives it (a string) or as a caller builds it (a bool)
+        bool off = value is false || value is string text && bool.TryParse(text, out bool on) && !on;
+        return off
+            ? null
+            : throw new ArgumentException(
+                $"force_model.{name} is '{value ?? "null"}': it is false or the object that defines the force (spec.md section 12.1).");
     }
 
     /// <summary>The value of an optional number of the inputs, or null.</summary>

@@ -1,0 +1,44 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_24h_sso700_grav10_srp_011"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  24-hour propagation of a 700 km circular orbit inclined at 98.2 deg with its plane facing the Sun (RAAN = the
+  Sun's right ascension + 180 deg, beta about 0, argument of latitude 30 deg at the epoch), with solar radiation
+  pressure: a cannonball of 500 kg, 20 m^2 and Cr 1.3 in the dual-cone shadows of the Earth and the Moon, across 15
+  Earth eclipses (the first under way at the epoch) whose penumbrae of 8 to 9 s the spacecraft crosses at LEO speed.
+  The EGM2008 field of data/ to degree and order 10 (the model's GM and radius applied to the whole field, oriented
+  by ITRF93 of data/'s Earth orientation file) and the Moon and the Sun as point masses. State in ICRF about the
+  Earth; the model is that of spec.md section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2025-09-19T00:00:00.000 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [6084.458024, -899.546805, 3502.885881]
+    velocity_km_s: [-3.804167684, -0.682707319, 6.432459455]
+  propagation_window:
+    start: "2025-09-19T00:00:00.000 UTC"
+    end: "2025-09-20T00:00:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp:
+      shadow_bodies: ["Earth", "Moon"]
+  spacecraft:
+    mass_kg: 500.0
+    sectional_area_m2: 20.0
+    drag_coefficient: 2.2               # informative (no drag)
+    radiation_pressure_coefficient: 1.3
+  step_size_s: 60.0                     # informative (spec.md 12.1)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]

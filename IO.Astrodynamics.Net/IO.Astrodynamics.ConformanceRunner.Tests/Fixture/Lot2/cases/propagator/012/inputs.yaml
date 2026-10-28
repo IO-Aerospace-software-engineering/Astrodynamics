@@ -1,0 +1,59 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_48h_meo_grav10_srp_012"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  48-hour propagation of a circular MEO (a = 26559.7 km, i 55 deg, RAAN = the Sun's right ascension, argument of
+  latitude 0 at the epoch), with solar radiation pressure: a cannonball of 1500 kg, 15 m^2 and Cr 1.4 in the
+  dual-cone shadows of the Earth and the Moon, across four Earth eclipses. The EGM2008 field of data/ to degree and
+  order 10 (the model's GM and radius applied to the whole field, oriented by ITRF93 of data/'s Earth orientation
+  file) and the Moon and the Sun as point masses. State in ICRF about the Earth; the model is that of spec.md
+  section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2025-09-19T00:00:00.000 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [-26504.26837, 1715.05751, 0.0]
+    velocity_km_s: [-0.143484216, -2.217385798, 3.173378131]
+  propagation_window:
+    start: "2025-09-19T00:00:00.000 UTC"
+    end: "2025-09-21T00:00:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp:
+      shadow_bodies: ["Earth", "Moon"]
+  spacecraft:
+    mass_kg: 1500.0
+    sectional_area_m2: 15.0
+    drag_coefficient: 2.2               # informative (no drag)
+    radiation_pressure_coefficient: 1.4
+  step_size_s: 60.0                     # informative (spec.md 12.1)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]
+
+tolerances_override:
+  propagator_position_km:
+    abs_tol: 0.002
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x window / 86400 s) = 2 m for
+      this window of 172800 TT seconds; reference term 0.0019 m (S_gen of final_z_km, reference-check.json: GMAT
+      R2026a, 2026-10-28)
+  propagator_velocity_km_s:
+    abs_tol: 2.0e-6
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x window / 86400 s) = 2
+      mm/s for this window of 172800 TT seconds; reference term 0.00034 mm/s (S_gen of final_vx_km_s,
+      reference-check.json: GMAT R2026a, 2026-10-28)

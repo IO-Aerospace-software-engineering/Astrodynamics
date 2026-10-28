@@ -1,0 +1,27 @@
+{
+  "id": "propagator_24h_lmo_grav20_017",
+  "category": "propagator",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: GMM2B_to20.cof (SHA-256 6add485bd0e7adec36d105d2ece608eb171e03bb89709a3cb8f239992bbbd506), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), mar099s_20260119_20260123.bsp (SHA-256 7cd37b0ca919b5b1ddc98f64ca9e05f93fdcf2700a63f76c212dddffe9b130e1), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-10-28",
+    "gravity_model": "GMM2B_to20 (data/GMM2B_to20.cof, from data/GMM2B_to20), degree and order 20, GM 42828371901284.0 m^3/s^2 and R 3397.0 km of the model applied to the whole field, oriented by IAU_MARS of data/pck00011.tpc through SPICE (GMAT's user-defined body MarsS)",
+    "perturbations": "Sun, Jupiter Barycenter as point masses (de440s positions, GMs of data/gm_de440.tpc). No drag. No SRP. No relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: the user-defined planet MarsS (NAIF 499 from data/'s Mars cut and de440s, its body-fixed frame IAU_MARS of data/pck00011.tpc through SPICE, Mu BODY499_GM), GMM2B_to20 of data/ (GMM2B_to20.cof, the model GM and radius) to degree and order 20, third bodies Sun, Jupiter Barycenter at their de440s positions with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; the window integrated over its TDB seconds; state entered in MarsSICRF, read in MarsSMJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch.",
+    "reference_frame": "MarsSMJ2000Eq rotated to ICRF",
+    "script": "propagator_24h_lmo_grav20_017.script",
+    "log": "propagator_24h_lmo_grav20_017.log"
+  },
+  "outputs": {
+    "final_x_km": 313.1080112955395,
+    "final_y_km": -2438.1833144644297,
+    "final_z_km": 2887.0192900118413,
+    "final_vx_km_s": 2.7142960753980168,
+    "final_vy_km_s": 1.6447068961365792,
+    "final_vz_km_s": 1.092570913109464
+  }
+}
