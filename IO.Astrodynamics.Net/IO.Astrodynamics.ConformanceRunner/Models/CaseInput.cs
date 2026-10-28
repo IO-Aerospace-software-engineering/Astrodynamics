@@ -129,10 +129,45 @@ public class PropagatorInputs
     public double StepSizeS { get; set; }
 }
 
+/// <summary>
+/// The non-gravitational forces of a propagator case (spec.md section 12.1): each is off (<c>false</c> in the case) or
+/// the object that defines it.
+/// </summary>
 public class PropagatorForceModel
 {
-    public bool Drag { get; set; }
-    public bool Srp { get; set; }
+    /// <summary>The atmospheric drag; null when the case has none.</summary>
+    public DragInputs Drag { get; set; }
+
+    /// <summary>The solar radiation pressure; null when the case has none.</summary>
+    public SrpInputs Srp { get; set; }
+}
+
+/// <summary>
+/// The atmospheric drag of a propagator case (spec.md section 12.1): an atmosphere model at constant space weather.
+/// </summary>
+public class DragInputs
+{
+    /// <summary>The atmosphere model; <c>NRLMSISE-00</c>, the only one of the suite.</summary>
+    public string Model { get; set; }
+
+    /// <summary>F10.7 of the previous day, sfu.</summary>
+    public double F107Sfu { get; set; }
+
+    /// <summary>The 81-day centred mean of F10.7, sfu.</summary>
+    public double F107aSfu { get; set; }
+
+    /// <summary>The daily Ap.</summary>
+    public double Ap { get; set; }
+}
+
+/// <summary>
+/// The solar radiation pressure of a propagator case (spec.md section 12.1): a cannonball with the shadows of its
+/// occulters.
+/// </summary>
+public class SrpInputs
+{
+    /// <summary>The bodies whose shadows the case models, by name.</summary>
+    public List<string> ShadowBodies { get; set; }
 }
 
 public class BspSourceOrbit

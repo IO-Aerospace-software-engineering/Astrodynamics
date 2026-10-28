@@ -6,8 +6,9 @@ using IO.Astrodynamics.TimeSystem;
 namespace IO.Astrodynamics.ConformanceRunner.Utilities;
 
 /// <summary>
-/// The tagged epoch of spec.md section 3, used by the conversion categories: <c>YYYY-MM-DDThh:mm:ss[.fff] TAG</c>, with
-/// 0 to 3 decimals, exactly one space and a tag among UTC, TAI, TT and TDB. Second 60 is never written.
+/// The tagged epoch of spec.md section 3, used by the conversion categories and by the propagation cases:
+/// <c>YYYY-MM-DDThh:mm:ss[.fff] TAG</c>, with 0 to 3 decimals (up to 7 at the end of a propagation window), exactly one
+/// space and a tag among UTC, TAI, TT and TDB. Second 60 is never written.
 /// </summary>
 /// <remarks>
 /// The epoch is first matched against the pattern of <c>tagged_epoch</c> in <c>schemas/v1/case.schema.json</c>, so that
@@ -24,14 +25,27 @@ public static class EpochParser
     public const string Pattern =
         @"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,3})? (UTC|TAI|TT|TDB)$";
 
-    private static readonly Regex Expression = new(Pattern, RegexOptions.CultureInvariant);
+    /// <summary>
+    /// The pattern of the end of a propagation window, which may carry up to 7 decimals (spec.md sections 3 and 12.1:
+    /// 004 and 005 end one declared sidereal period after their start); otherwise <see cref="Pattern"/>.
+    /// </summary>
+    public const string WindowEndPattern =
+        @"^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]{1,7})? (UTC|TAI|TT|TDB)$";
 
+    private static readonly Regex Expression = new(Pattern, RegexOptions.CultureInvariant);
+    private static readonly Regex WindowEndExpression = new(WindowEndPattern, RegexOptions.CultureInvariant);
+
+    // 0 to 7 decimals, 7 being the tick of DateTime (100 ns): the decimals are read exactly
     private static readonly string[] Formats =
     {
         "yyyy-MM-dd'T'HH:mm:ss",
         "yyyy-MM-dd'T'HH:mm:ss'.'f",
         "yyyy-MM-dd'T'HH:mm:ss'.'ff",
-        "yyyy-MM-dd'T'HH:mm:ss'.'fff"
+        "yyyy-MM-dd'T'HH:mm:ss'.'fff",
+        "yyyy-MM-dd'T'HH:mm:ss'.'ffff",
+        "yyyy-MM-dd'T'HH:mm:ss'.'fffff",
+        "yyyy-MM-dd'T'HH:mm:ss'.'ffffff",
+        "yyyy-MM-dd'T'HH:mm:ss'.'fffffff"
     };
 
     /// <summary>
@@ -40,7 +54,22 @@ public static class EpochParser
     /// <exception cref="FormatException">The epoch is not a tagged epoch of spec.md section 3.</exception>
     public static Time Parse(string epoch)
     {
-        var (calendar, scale) = Split(epoch);
+        return Read(epoch, Expression);
+    }
+
+    /// <summary>
+    /// The instant of the end of a propagation window (spec.md section 12.1): a tagged epoch with up to 7 decimals.
+    /// </summary>
+    /// <exception cref="FormatException">The epoch is not a tagged epoch of spec.md section 3 with up to 7
+    /// decimals.</exception>
+    public static Time ParseWindowEnd(string epoch)
+    {
+        return Read(epoch, WindowEndExpression);
+    }
+
+    private static Time Read(string epoch, Regex expression)
+    {
+        var (calendar, scale) = Split(epoch, expression);
         DateTime dateTime;
         try
         {
@@ -83,18 +112,19 @@ public static class EpochParser
     /// <exception cref="FormatException">The epoch is not a tagged epoch of spec.md section 3.</exception>
     public static string Scale(string epoch)
     {
-        return Split(epoch).Scale;
+        return Split(epoch, Expression).Scale;
     }
 
-    private static (string Calendar, string Scale) Split(string epoch)
+    private static (string Calendar, string Scale) Split(string epoch, Regex expression)
     {
         // In .NET, $ also matches before a final newline, which the schema's ECMA-262 pattern does not: the match must
         // cover the whole string
-        var match = epoch == null ? Match.Empty : Expression.Match(epoch);
+        var match = epoch == null ? Match.Empty : expression.Match(epoch);
         if (!match.Success || match.Length != epoch.Length)
         {
+            string decimals = expression == Expression ? "0 to 3" : "0 to 7";
             throw new FormatException(
-                $"The epoch '{epoch}' is not a tagged epoch of spec.md section 3: YYYY-MM-DDThh:mm:ss with 0 to 3 decimals, one space and UTC, TAI, TT or TDB.");
+                $"The epoch '{epoch}' is not a tagged epoch of spec.md section 3: YYYY-MM-DDThh:mm:ss with {decimals} decimals, one space and UTC, TAI, TT or TDB.");
         }
 
         int space = epoch.IndexOf(' ');

@@ -69,6 +69,38 @@ public class EpochParserTests
         Assert.Throws<FormatException>(() => EpochParser.Scale(epoch));
     }
 
+    [Theory]
+    [InlineData("2025-06-15T23:56:04.0998101 UTC", 40_998_101L)] // the end of 004 (spec.md section 12.1)
+    [InlineData("2025-06-15T23:56:04.0998 UTC", 40_998_000L)]
+    [InlineData("2025-06-15T23:56:04 UTC", 40_000_000L)]
+    public void AWindowEnd_TakesUpToSevenDecimals_ReadExactly(string epoch, long ticks)
+    {
+        var time = EpochParser.ParseWindowEnd(epoch);
+
+        Assert.Equal(new DateTime(2025, 6, 15, 23, 56, 0).Ticks + ticks, time.DateTime.Ticks);
+        Assert.Equal(TimeFrame.UTCFrame, time.Frame);
+    }
+
+    [Theory]
+    [InlineData("2025-06-15T23:56:04.09981012 UTC")] // eight decimals
+    [InlineData("2025-06-15T23:56:04.0998101 GPS")]
+    [InlineData("2025-06-15T23:56:04.0998101")]
+    [InlineData(null)]
+    public void AWindowEnd_BeyondSevenDecimalsOrWithoutItsTag_IsRejected(string epoch)
+    {
+        var exception = Assert.Throws<FormatException>(() => EpochParser.ParseWindowEnd(epoch));
+
+        Assert.Contains("0 to 7 decimals", exception.Message);
+    }
+
+    [Fact]
+    public void AnEpoch_OtherThanAWindowEnd_TakesThreeDecimalsAtMost()
+    {
+        var exception = Assert.Throws<FormatException>(() => EpochParser.Parse("2025-06-15T23:56:04.0998101 UTC"));
+
+        Assert.Contains("0 to 3 decimals", exception.Message);
+    }
+
     [Fact]
     public void ThePattern_IsThatOfTheCaseSchemaOfTheFixture()
     {
