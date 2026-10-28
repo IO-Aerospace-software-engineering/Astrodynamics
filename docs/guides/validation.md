@@ -82,7 +82,7 @@ Four harnesses run the cases:
 - `Lot2CaseTests` runs the runner on the 13 propagator cases of lot 2, copied into `Fixture/Lot2` by
   `tools/conformance/sync_fixture.py --lot 2` with the data files that differ from the runner's and
   from `Fixture/Lot1` (the lunar and Martian fields, the Mars cut, `moon_assoc_pa.tf`); its `SOURCE`
-  records the suite commit, e6fafe4 of the suite's lot-2 branch (2026-10-28). It prints the same
+  records the suite commit, 8b5a347 of the suite's lot-2 branch, [conformance-tests#28](https://github.com/IO-Aerospace-software-engineering/conformance-tests/pull/28) (2026-10-28). It prints the same
   `MEASURE` lines, which the CI logs carry on the three platforms.
 
 The first two evaluate the final state of a propagation at the exact end of the window, whose UTC
@@ -112,7 +112,7 @@ The exit code is the number of failed cases plus the number of errors. A data fi
 pointer makes its case an ERROR that names the file. The suite (98 cases) takes about 5 s in
 Release on Linux (4 cores, 2026-10-27: 4.3 s for d4e9905, 4.8 s for conformance-tests#25, one
 run each, the start of the process included); with the integrator at 1e-13, 6.1 s for the suite's
-main (4a7c20f) and 12.2 s for the 111 cases of the lot-2 branch (e6fafe4), one run each
+main (4a7c20f) and 12.2 s for the 111 cases of the lot-2 branch (e6fafe4, the same cases as 8b5a347), one run each
 (2026-10-28); the eclipse case took 48 s alone before the managed occultation search of #495. The runner asks the propagator for the end of the window only: an
 output every `step_size_s` (1 s) cost a shortened RK7(8) step each and took the suite to 107 s
 (#426).
@@ -159,7 +159,7 @@ secret `CONFORMANCE_TESTS_TOKEN` and is skipped without it.
 
 Lot 2 of [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457) (design in
 [#500](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/500), decisions 21 to 23, S. Guillet,
-2026-10-28) adds 13 `propagator` cases, on the suite's lot-2 branch (e6fafe4) until its PR merges: NRLMSISE-00 drag
+2026-10-28) adds 13 `propagator` cases, in [conformance-tests#28](https://github.com/IO-Aerospace-software-engineering/conformance-tests/pull/28) (8b5a347) until it merges: NRLMSISE-00 drag
 (006 to 009), solar radiation pressure with the shadows of the Earth and the Moon (010 to 012), high eccentric orbits
 over 3 days (013 and 014, and 015 with drag and SRP), and the Moon (016, LP165P 20×20 in MOON_PA), Mars (017, GMM-2B
 20×20 in IAU_MARS) and the Sun (018, 30 days, the Sun and the planets) as central bodies. Their goldens are GMAT R2026a

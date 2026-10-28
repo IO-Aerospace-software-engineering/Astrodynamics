@@ -51,12 +51,12 @@ tolerances_override:
     rel_tol: 0.0
     justification: >-
       spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x window / 86400 s) = 30 m for
-      this window of 2.592e+06 TDB seconds; reference term 0.018 m (S_gen of final_x_km, reference-check.json: GMAT
+      this window of 2592000 TDB seconds; reference term 0.018 m (S_gen of final_x_km, reference-check.json: GMAT
       R2026a, 2026-10-28)
   propagator_velocity_km_s:
     abs_tol: 3.0e-5
     rel_tol: 0.0
     justification: >-
       spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x window / 86400 s) = 30
-      mm/s for this window of 2.592e+06 TDB seconds; reference term 8.7e-06 mm/s (E_2nd of final_vz_km_s,
+      mm/s for this window of 2592000 TDB seconds; reference term 8.7e-06 mm/s (E_2nd of final_vz_km_s,
       reference-check.json: GMAT R2026a, tools/legacy_goldens/nbody.py, 2026-10-28)
