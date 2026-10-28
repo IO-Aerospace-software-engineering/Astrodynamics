@@ -1,0 +1,27 @@
+{
+  "id": "propagator_24h_llo_grav20_016",
+  "category": "propagator",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: LP165P_to20.cof (SHA-256 7c604b7f64f962815d04bc3b74bc1fea03cd32e062743db6108bf4c7d8b5ffa9), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), moon_080317.tf (SHA-256 78732477b96f9863e7b0d65bcee3c22b8707ca5ed0db56d1173319cb2e8c7993), moon_assoc_pa.tf (SHA-256 beab41733f538147f6c82435d5276dd10673ac27f50036cd3081b077be93b592), moon_pa_de421_1900-2050.bpc (SHA-256 656f90616403d75a75f0cd6c8830fc5b44f8cb4facb5ccb8915e752b397520cf), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-10-28",
+    "gravity_model": "LP165P_to20 (data/LP165P_to20.cof, from data/LP165P_to20), degree and order 20, GM 4902801056000.0 m^3/s^2 and R 1738.0 km of the model applied to the whole field, oriented by MOON_PA of data/'s lunar bpc and moon_080317.tf through SPICE (GMAT's user-defined body LunaS)",
+    "perturbations": "Earth, Sun as point masses (de440s positions, GMs of data/gm_de440.tpc). No drag. No SRP. No relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: the user-defined moon LunaS (NAIF 301 at its de440s position, its body-fixed frame MOON_PA of data/'s lunar bpc and moon_080317.tf through SPICE, Mu BODY301_GM), LP165P_to20 of data/ (LP165P_to20.cof, the model GM and radius) to degree and order 20, third bodies Earth, Sun at their de440s positions with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; the window integrated over its TDB seconds; state entered in LunaSICRF, read in LunaSMJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch.",
+    "reference_frame": "LunaSMJ2000Eq rotated to ICRF",
+    "script": "propagator_24h_llo_grav20_016.script",
+    "log": "propagator_24h_llo_grav20_016.log"
+  },
+  "outputs": {
+    "final_x_km": -181.3622041853933,
+    "final_y_km": -533.861864235095,
+    "final_z_km": 1745.3152583063745,
+    "final_vx_km_s": 1.2715759314562562,
+    "final_vy_km_s": -1.0134890557512561,
+    "final_vz_km_s": -0.1797527953088144
+  }
+}

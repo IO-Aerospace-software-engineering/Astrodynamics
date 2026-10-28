@@ -1,0 +1,37 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_24h_lmo_grav20_017"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  24-hour propagation of a 400 km circular orbit about Mars inclined at 93 deg to the IAU_MARS equator (r = 3796.19
+  km on the IAU_MARS x axis at the epoch, the ascending node, the velocity sqrt(GM / r) with BODY499_GM), with the
+  GMM-2B field of data/ to degree and order 20 (the model's GM and radius applied to the whole field, oriented by
+  IAU_MARS of data/pck00011.tpc), the centre of Mars (NAIF 499) from data/'s Mars cut, and the Sun and the Jupiter
+  barycentre as point masses. No drag, no SRP. State in ICRF about Mars, window tagged TDB; the model is that of
+  spec.md section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 TDB"
+  orbit:
+    type: "state_vector"
+    position_km: [-2670.247827, -2695.659973, 119.383279]
+    velocity_km_s: [1.399140024, -1.262822035, 2.780220129]
+  propagation_window:
+    start: "2026-01-20T06:00:00.000 TDB"
+    end: "2026-01-21T06:00:00.000 TDB"
+  central_body: "Mars"
+  geopotential_degree: 20
+  geopotential_model: "GMM2B_to20"
+  perturbation_bodies: ["Sun", "Jupiter Barycenter"]
+  force_model:
+    drag: false
+    srp: false
+  step_size_s: 60.0                     # informative (spec.md 12.1)
+  kernels: ["gm_de440.tpc", "mar099s_20260119_20260123.bsp", "pck00011.tpc"]

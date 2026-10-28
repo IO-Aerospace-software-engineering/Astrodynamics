@@ -1,0 +1,27 @@
+{
+  "id": "propagator_30d_helio_nbody_018",
+  "category": "propagator",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-10-28",
+    "gravity_model": "point-mass Sun, GM BODY10_GM of data/gm_de440.tpc",
+    "perturbations": "Mercury Barycenter, Venus Barycenter, Earth, Moon, Mars Barycenter, Jupiter Barycenter, Saturn Barycenter, Uranus Barycenter, Neptune Barycenter as point masses (de440s positions, GMs of data/gm_de440.tpc). No drag. No SRP. No relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 3600 s",
+    "method": "GMAT R2026a: GMAT's Sun with BODY10_GM of data/gm_de440.tpc, third bodies Mercury Barycenter, Venus Barycenter, Earth, Moon, Mars Barycenter, Jupiter Barycenter, Saturn Barycenter, Uranus Barycenter, Neptune Barycenter at their de440s positions with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 3600 s; the window integrated over its TDB seconds; state entered in SunICRF, read in SunMJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch.",
+    "reference_frame": "SunMJ2000Eq rotated to ICRF",
+    "script": "propagator_30d_helio_nbody_018.script",
+    "log": "propagator_30d_helio_nbody_018.log"
+  },
+  "outputs": {
+    "final_x_km": -125380563.4825598,
+    "final_y_km": 113047440.77422534,
+    "final_z_km": 50748472.16364424,
+    "final_vx_km_s": -23.707953231978145,
+    "final_vy_km_s": -14.342061055916451,
+    "final_vz_km_s": -6.149701281679412
+  }
+}

@@ -1,0 +1,112 @@
+# ---------------------------------------------------------------------------
+# tolerances.yaml — default pass/fail thresholds for every metric.
+#
+# A metric PASSES when |computed − golden| ≤ abs_tol OR |computed − golden| / |golden| ≤ rel_tol (spec.md
+# section 6); every key has one active threshold (spec.md 6.2): rel_tol 0.0 for an absolute key, abs_tol 0.0 for a
+# relative one, so that the rule reduces to one test. The delta of each output is that of its kind (spec.md 6.1).
+#
+# Per-case overrides (tolerances_override in cases/*.yaml) take precedence
+# over the values below.  See spec.md §6 for the full rule.
+# ---------------------------------------------------------------------------
+
+version: "1.0.0"
+
+defaults:
+  # ---- Earlier categories (spec.md sections 6 and 12) ---------------------------------------------------
+  # Written by tools/legacy_goldens/generate.py. One active threshold per key (rel_tol 0.0, spec.md 6.2).
+  # T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))) over the outputs of the key (spec.md 6.4): T_op the
+  # operational tolerance; reference term: the largest max(S_gen, E_2nd, floor), from the
+  # reference-check.json of the cases. The geosynchronous outputs use the lot-1 keys below.
+  # The T_op of the propagator keys scales with the window: ceil2(1 m, or 1 mm/s, x window / 86400 s), the
+  # window in the seconds of its time argument (spec.md 6.4 and 12.1). Their defaults are the T of a one-day
+  # window; a case whose T differs carries it as an override in its inputs.yaml, and the reference term below
+  # is over the cases without one.
+  propagator_position_km:
+    # T_op 0.001 km (1 m per day of the window); reference term 0.00015 km (propagator_24h_leo200x800_grav10_drag_009 final_z_km)
+    abs_tol: 0.001
+    rel_tol: 0.0
+  propagator_velocity_km_s:
+    # T_op 1.0e-6 km/s (1 mm/s per day of the window); reference term 1.7e-07 km/s (propagator_24h_leo200x800_grav10_drag_009 final_vx_km_s)
+    abs_tol: 1.0e-6
+    rel_tol: 0.0
+  eclipse_time_s:
+    # T_op 0.01 s (10 ms); reference term 0.00046 s (eclipse_simple_001 umbra_exit)
+    abs_tol: 0.01
+    rel_tol: 0.0
+  eclipse_duration_s:
+    # T_op 0.1 s (100 ms); reference term 0.00039 s (eclipse_simple_001 umbra_duration_s)
+    abs_tol: 0.1
+    rel_tol: 0.0
+  tracking_range_km:
+    # T_op 0.001 km (1 m); reference term 1.3e-09 km (tracking_data_001 range (km).mean)
+    abs_tol: 0.001
+    rel_tol: 0.0
+  tracking_range_rate_km_s:
+    # T_op 1.0e-7 km/s (0.1 mm/s); reference term 1e-11 km/s (tracking_data_001 doppler (km/s).mean)
+    abs_tol: 1.0e-7
+    rel_tol: 0.0
+  attitude_angle_rad:
+    # T_op 1.0e-5 rad (2 arcsec); reference term 3.5e-16 rad (pointing_triad_001 attitude_quaternion)
+    abs_tol: 1.0e-5
+    rel_tol: 0.0
+
+  # ---- Lot 1: conversions without propagation (spec.md sections 6 and 11) --------------------------------------
+  # One active threshold per key (#7): rel_tol 0 = absolute, abs_tol 0 = relative. Value (spec.md 6.4):
+  # T = max(T_op, ceil2(2 max(E_CSPICE, E_ref, floor))), each term in the unit of the key. T_op: the operational
+  # tolerance of the key. E_CSPICE: tools/cspice_runner against the golden over linux, windows, macos, measured
+  # 2026-10-27. E_ref: golden vs a 60-digit evaluation, the exact time chain or CSPICE. floor: the
+  # conditioning floor.
+  oe_length_km:              # a, rp, ra, p; T_op 1.0e-6 km (1 mm)
+    abs_tol: 1.0e-6
+    rel_tol: 0.0
+  oe_eccentricity:           # e; T_op 1.0e-11 (0.42 mm at GEO's a)
+    abs_tol: 1.0e-11
+    rel_tol: 0.0
+  oe_angle_deg:              # every orbital_elements angle; T_op 1.0e-9 deg (0.12 mm in LEO, 0.74 mm in GEO)
+    abs_tol: 1.0e-9
+    rel_tol: 0.0
+  oe_period_s:               # period; T_op 1.0e-6 s (1 mm on a in LEO, δT/T = 1.5 δa/a)
+    abs_tol: 1.0e-6
+    rel_tol: 0.0
+  oe_energy_km2_s2:          # specific energy; T_op 1.0e-12 relative (as n)
+    abs_tol: 0.0
+    rel_tol: 1.0e-12
+  oe_angular_momentum_km2_s: # vector h; T_op 1.0e-12 relative (as n)
+    abs_tol: 0.0
+    rel_tol: 1.0e-12
+  oe_speed_km_s:             # periapsis and apoapsis speeds; T_op 1.0e-9 km/s (1 µm/s)
+    abs_tol: 1.0e-9
+    rel_tol: 0.0
+  oe_mean_motion_rad_s:      # mean motion; T_op 1.0e-12 relative (0.66 mm along-track after one day in LEO)
+    abs_tol: 0.0
+    rel_tol: 1.0e-12
+  oe_equinoctial:            # f, g, h, k; T_op 1.0e-11 (as e)
+    abs_tol: 1.0e-11
+    rel_tol: 0.0
+  oe_position_km:            # position, elements to state; T_op 1.0e-6 km (1 mm)
+    abs_tol: 1.0e-6
+    rel_tol: 0.0
+  oe_velocity_km_s:          # velocity, elements to state; T_op 1.0e-9 km/s (1 µm/s)
+    abs_tol: 1.0e-9
+    rel_tol: 0.0
+  time_s:                    # time outputs not crossing TDB<->TT; T_op 1.0e-6 s (1 µs)
+    abs_tol: 1.0e-6
+    rel_tol: 0.0
+  time_tdb_s:                # time outputs crossing TDB<->TT; T_op 1.0e-6 s (1 µs); set by the reference term, GMAT series - ERFA dtdb 37.5676 us + GMAT print 0.287 us
+    abs_tol: 7.6e-5
+    rel_tol: 0.0
+  frame_position_km:         # position; T_op 1.0e-6 km (1 mm)
+    abs_tol: 1.0e-6
+    rel_tol: 0.0
+  frame_velocity_km_s:       # velocity; T_op 1.0e-9 km/s (1 µm/s)
+    abs_tol: 1.0e-9
+    rel_tol: 0.0
+  geodetic_latitude_deg:     # geodetic latitude; T_op 1.0e-9 deg (0.1 mm); set by the reference term, frame_transformation_geodetic_lat20_m10km_029 latitude_deg: E_CSPICE 2.5714218310213255e-08 (linux, windows, macos)
+    abs_tol: 5.2e-8
+    rel_tol: 0.0
+  geodetic_longitude_deg:    # geodetic longitude; T_op 1.0e-9 deg (0.1 mm at the equator)
+    abs_tol: 1.0e-9
+    rel_tol: 0.0
+  geodetic_altitude_km:      # geodetic altitude; T_op 1.0e-6 km (1 mm); set by the reference term, frame_transformation_geodetic_lat70_20000km_030 altitude_km: E_CSPICE 1.380845787934959e-06 (linux, windows, macos)
+    abs_tol: 2.8e-6
+    rel_tol: 0.0

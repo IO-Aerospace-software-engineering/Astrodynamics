@@ -1,0 +1,46 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_24h_leo200x800_grav10_drag_009"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  24-hour propagation of a 200 x 800 km orbit (rp = 6578.137 km, ra = 7178.137 km, i 63.4 deg, RAAN 40 deg, argument
+  of perigee 270 deg, from perigee at 63.4 deg S), the largest drag lever, with atmospheric drag: NRLMSISE-00 at
+  constant space weather (F10.7 140 sfu, F10.7A 150 sfu, Ap 12) on a spacecraft of 500 kg, 10 m^2 and Cd 2.2. The
+  EGM2008 field of data/ to degree and order 10 (the model's GM and radius applied to the whole field, oriented by
+  ITRF93 of data/'s Earth orientation file) and the Moon and the Sun as point masses. State in ICRF about the Earth;
+  the model is that of spec.md section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2025-09-10T18:00:00.000 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [1893.279881650059, -2256.3231007428008, -5881.86906905981]
+    velocity_km_s: [6.091746994328665, 5.111582656166486, 0.0]
+  propagation_window:
+    start: "2025-09-10T18:00:00.000 UTC"
+    end: "2025-09-11T18:00:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag:
+      model: "NRLMSISE-00"
+      f107_sfu: 140.0
+      f107a_sfu: 150.0
+      ap: 12.0
+    srp: false
+  spacecraft:
+    mass_kg: 500.0
+    sectional_area_m2: 10.0
+    drag_coefficient: 2.2
+    radiation_pressure_coefficient: 1.0   # informative (no SRP)
+  step_size_s: 60.0                     # informative (spec.md 12.1)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]

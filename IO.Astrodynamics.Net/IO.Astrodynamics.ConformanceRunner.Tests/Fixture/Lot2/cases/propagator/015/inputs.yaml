@@ -1,0 +1,64 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_72h_gto_grav10_drag_srp_015"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  72-hour propagation of the geostationary transfer orbit of case 014 with RAAN 107 deg (its perigee towards the
+  anti-Sun direction of July), with atmospheric drag at 10 km/s, NRLMSISE-00 at constant space weather (F10.7 150
+  sfu, F10.7A 140 sfu, Ap 15), and solar radiation pressure in the dual-cone shadows of the Earth and the Moon,
+  across seven Earth shadows around perigee (22 minutes each, the first under way at the epoch); a spacecraft of
+  2000 kg, 20 m^2, Cd 2.2 and Cr 1.5. The EGM2008 field of data/ to degree and order 10 (the model's GM and radius
+  applied to the whole field, oriented by ITRF93 of data/'s Earth orientation file) and the Moon and the Sun as
+  point masses. State in ICRF about the Earth; the model is that of spec.md section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2025-07-04T13:20:00.000 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [1739.5986580836275, -6394.917367811312, 105.01646741297377]
+    velocity_km_s: [8.785565513221652, 2.3139619926161825, -4.62558162768363]
+  propagation_window:
+    start: "2025-07-04T13:20:00.000 UTC"
+    end: "2025-07-07T13:20:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag:
+      model: "NRLMSISE-00"
+      f107_sfu: 150.0
+      f107a_sfu: 140.0
+      ap: 15.0
+    srp:
+      shadow_bodies: ["Earth", "Moon"]
+  spacecraft:
+    mass_kg: 2000.0
+    sectional_area_m2: 20.0
+    drag_coefficient: 2.2
+    radiation_pressure_coefficient: 1.5
+  step_size_s: 60.0                     # informative (spec.md 12.1)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]
+
+tolerances_override:
+  propagator_position_km:
+    abs_tol: 0.003
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x window / 86400 s) = 3 m for
+      this window of 259200 TT seconds; reference term 0.1 m (S_gen of final_y_km, reference-check.json: GMAT
+      R2026a, 2026-10-28)
+  propagator_velocity_km_s:
+    abs_tol: 3.0e-6
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x window / 86400 s) = 3
+      mm/s for this window of 259200 TT seconds; reference term 0.015 mm/s (S_gen of final_vx_km_s,
+      reference-check.json: GMAT R2026a, 2026-10-28)

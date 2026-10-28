@@ -1,0 +1,36 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_24h_llo_grav20_016"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  24-hour propagation of a 100 km circular orbit about the Moon, polar to the MOON_PA equator (r = 1837.4 km on the
+  MOON_PA x axis at the epoch, the velocity sqrt(GM / r) with BODY301_GM along the MOON_PA z axis), with the LP165P
+  field of data/ to degree and order 20 (the model's GM and radius applied to the whole field, oriented by MOON_PA
+  of data/'s lunar orientation file) and the Earth and the Sun as point masses. No drag, no SRP. State in ICRF about
+  the Moon, window tagged TDB; the model is that of spec.md section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 TDB"
+  orbit:
+    type: "state_vector"
+    position_km: [-1433.637099, 1061.617523, 440.104149]
+    velocity_km_s: [0.013064284, -0.610454985, 1.515093988]
+  propagation_window:
+    start: "2026-01-20T06:00:00.000 TDB"
+    end: "2026-01-21T06:00:00.000 TDB"
+  central_body: "Moon"
+  geopotential_degree: 20
+  geopotential_model: "LP165P_to20"
+  perturbation_bodies: ["Earth", "Sun"]
+  force_model:
+    drag: false
+    srp: false
+  step_size_s: 60.0                     # informative (spec.md 12.1)
+  kernels: ["gm_de440.tpc", "moon_080317.tf", "moon_assoc_pa.tf", "moon_pa_de421_1900-2050.bpc"]

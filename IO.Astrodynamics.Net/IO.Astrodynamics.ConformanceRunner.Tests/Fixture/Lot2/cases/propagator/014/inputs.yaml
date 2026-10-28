@@ -1,0 +1,53 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_72h_gto_grav10_014"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  72-hour propagation of a geostationary transfer orbit (perigee altitude 250 km, apogee altitude 35786 km, rp =
+  6628.137 km, ra = 42164.137 km, i = 27 deg, RAAN 300 deg, argument of perigee 178 deg, from perigee), seven
+  perigee passes at 10.2 km/s and the lunisolar perturbation at apogee. The EGM2008 field of data/ to degree and
+  order 10 (the model's GM and radius applied to the whole field, oriented by ITRF93 of data/'s Earth orientation
+  file) and the Moon and the Sun as point masses. No drag, no SRP. State in ICRF about the Earth; the model is that
+  of spec.md section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2025-07-04T13:20:00.000 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [-3133.556261508302, 5839.6914976994485, 105.01646741297377]
+    velocity_km_s: [-8.039863848342069, -4.230977521862314, -4.62558162768363]
+  propagation_window:
+    start: "2025-07-04T13:20:00.000 UTC"
+    end: "2025-07-07T13:20:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp: false
+  step_size_s: 60.0                     # informative (spec.md 12.1)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc"]
+
+tolerances_override:
+  propagator_position_km:
+    abs_tol: 0.003
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x window / 86400 s) = 3 m for
+      this window of 259200 TT seconds; reference term 0.0012 m (S_gen of final_y_km, reference-check.json: GMAT
+      R2026a, 2026-10-28)
+  propagator_velocity_km_s:
+    abs_tol: 3.0e-6
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x window / 86400 s) = 3
+      mm/s for this window of 259200 TT seconds; reference term 0.00021 mm/s (S_gen of final_vx_km_s,
+      reference-check.json: GMAT R2026a, 2026-10-28)

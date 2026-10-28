@@ -1,0 +1,62 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/propagator.yaml; do not edit.
+id: "propagator_30d_helio_nbody_018"
+schema_version: "v1"
+version: "0.1.0"
+category: "propagator"
+created: "2026-10-28"
+description: >
+  30-day heliocentric propagation of an Earth-Mars transfer arc, 1.55e7 km from the Earth at the epoch: the state 60
+  days after a virtual departure from the Earth's centre on 2026-11-10 00:00 TDB with the Earth's heliocentric
+  velocity plus 2.95 km/s along it and 0.30 km/s along the normal of the Earth's orbit, propagated two-body with
+  BODY10_GM. The Sun as central point mass (BODY10_GM), the barycentres of Mercury, Venus, Mars, Jupiter, Saturn,
+  Uranus and Neptune, the Earth and the Moon as point masses. No field, no drag, no SRP, no relativity. State in
+  ICRF about the Sun, window tagged TDB; the model is that of spec.md section 12.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2027-01-09T00:00:00.000 TDB"
+  orbit:
+    type: "state_vector"
+    position_km: [-54833094.835257, 139181304.83377, 61754952.096474]
+    velocity_km_s: [-30.160517512, -5.116575541, -2.035636583]
+  propagation_window:
+    start: "2027-01-09T00:00:00.000 TDB"
+    end: "2027-02-08T00:00:00.000 TDB"
+  central_body: "Sun"
+  geopotential_degree: 0
+  geopotential_model: "none"
+  perturbation_bodies:
+    - "Mercury Barycenter"
+    - "Venus Barycenter"
+    - "Earth"
+    - "Moon"
+    - "Mars Barycenter"
+    - "Jupiter Barycenter"
+    - "Saturn Barycenter"
+    - "Uranus Barycenter"
+    - "Neptune Barycenter"
+  force_model:
+    drag: false
+    srp: false
+  step_size_s: 600.0                    # informative (spec.md 12.1)
+  kernels: ["gm_de440.tpc"]
+
+tolerances_override:
+  propagator_position_km:
+    abs_tol: 0.03
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x window / 86400 s) = 30 m for
+      this window of 2.592e+06 TDB seconds; reference term 0.018 m (S_gen of final_x_km, reference-check.json: GMAT
+      R2026a, 2026-10-28)
+  propagator_velocity_km_s:
+    abs_tol: 3.0e-5
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x window / 86400 s) = 30
+      mm/s for this window of 2.592e+06 TDB seconds; reference term 8.7e-06 mm/s (E_2nd of final_vz_km_s,
+      reference-check.json: GMAT R2026a, tools/legacy_goldens/nbody.py, 2026-10-28)
