@@ -222,8 +222,8 @@ public static class InputParser
     /// A force of <c>force_model</c> (spec.md section 12.1): null when it is <c>false</c>, the definition read from its
     /// object otherwise.
     /// </summary>
-    /// <exception cref="ArgumentException">The force is <c>true</c>, or neither false nor an object: the suite defines
-    /// every force it turns on.</exception>
+    /// <exception cref="ArgumentException">The force is neither false nor an object (<c>true</c>, null, another value):
+    /// the suite defines every force it turns on, and turns off none by omission.</exception>
     private static T Force<T>(object value, string name, Func<Dictionary<object, object>, T> read) where T : class
     {
         if (value is Dictionary<object, object> definition)
@@ -231,20 +231,12 @@ public static class InputParser
             return read(definition);
         }
 
-        bool on;
-        try
-        {
-            on = Convert.ToBoolean(value);
-        }
-        catch (FormatException)
-        {
-            on = true;
-        }
-
-        return on
-            ? throw new ArgumentException(
-                $"force_model.{name} is '{value}': it is false or the object that defines the force (spec.md section 12.1).")
-            : null;
+        // false as YAML gives it (a string) or as a caller builds it (a bool)
+        bool off = value is false || value is string text && bool.TryParse(text, out bool on) && !on;
+        return off
+            ? null
+            : throw new ArgumentException(
+                $"force_model.{name} is '{value ?? "null"}': it is false or the object that defines the force (spec.md section 12.1).");
     }
 
     /// <summary>The value of an optional number of the inputs, or null.</summary>

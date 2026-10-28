@@ -132,7 +132,7 @@ public sealed class Lot2CaseTests : IDisposable
     }
 
     [Fact]
-    public void TheMarsCase_WithoutTheMarsCut_IsAnError()
+    public void TheMarsCase_WithoutTheMarsCut_DoesNotPass()
     {
         // Arrange: de440s holds the Mars barycentre, not the centre of Mars (499), which the suite's cut gives
         SuiteFixture.Lot2.WriteSuite(_directory, MarsCase);
@@ -141,8 +141,10 @@ public sealed class Lot2CaseTests : IDisposable
         // Act
         var result = new Runner(_directory, KernelsPath).Run().Results.Single();
 
-        // Assert
-        Assert.Equal("ERROR", result.Status);
+        // Assert: the case reads the cut. Not ERROR alone: the library reports no ephemeris read outside the coverage of
+        // the kernels (ReadEphemerisAtGivenEpochProxy drops the SPICE error and returns its uninitialized state), so the
+        // propagation starts from whatever that state holds: on Linux, the integrator stops on a NaN error (ERROR)
+        Assert.Contains(result.Status, new[] { "ERROR", "FAIL" });
     }
 
     [Fact]

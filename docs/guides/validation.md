@@ -169,9 +169,9 @@ runs with the Earth, the Moon and Mars oriented through SPICE by the kernels of 
 
 | Item | The runner | ERROR |
 |------|------------|-------|
-| Field | the table of §12.1 by `geopotential_model` (`GeopotentialFieldCatalog`): EGM2008 (3.986004415e14 m³/s², 6378136.3 m), LP165P (4.902801056e12 m³/s², 1738 km), GMM-2B (4.28283719012840e13 m³/s², 3397 km), read from `data/`, the model's GM and radius on the whole field (`GeopotentialCentralTerm.ModelGravitationalParameter`) | an unknown model, the field of another body than the central body, a degree beyond the file's |
+| Field | the table of §12.1 by `geopotential_model` (`GeopotentialFieldCatalog`): EGM2008 (3.986004415e14 m³/s², 6378136.3 m), LP165P (4.902801056e12 m³/s², 1738 km), GMM-2B (4.28283719012840e13 m³/s², 3397 km), read from `data/`, the model's GM and radius on the whole field (`GeopotentialCentralTerm.ModelGravitationalParameter`), at degree 0 the point mass of the model's GM; `"none"`, the point mass of the kernel GM | an unknown model, the field of another body than the central body, a degree beyond the file's, `"none"` with a degree other than 0 |
 | Drag | `Nrlmsise00Model` at the case's constant F10.7, F10.7A and Ap, every switch on (switch 9 = 1: the daily Ap alone), in place of the US 1976 atmosphere, which put 006 to 009 1.9 to 67 km off | drag about another body than the Earth, another atmosphere model, `drag: true` |
-| SRP | the library's cannonball with its occulters, every celestial body of the propagation but the Sun | `shadow_bodies` other than those occulters, `srp: true` |
+| SRP | the library's cannonball with its occulters, every celestial body of the propagation but the Sun | SRP about another body than the Earth, `shadow_bodies` other than those occulters, `srp: true` |
 | Spacecraft | the case's mass, area and coefficients; without drag and SRP a case may omit them | drag or SRP without the spacecraft block, which the runner defaulted before |
 | Epochs | `EpochParser`: the tags of §3 (UTC, TAI, TT, TDB), a window end with up to 7 decimals (004, 005) | another form |
 | Kernels | the case's `kernels`, loaded after the runner's (`CaseKernels`): the Mars cut that gives the centre of Mars (499), `moon_assoc_pa.tf`, which associates the Moon with MOON_PA in place of MOON_ME | a file missing or left as an LFS pointer |

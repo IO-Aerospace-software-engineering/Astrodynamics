@@ -23,10 +23,12 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// </summary>
 /// <remarks>
 /// The model is that of spec.md section 12.1: the field of the table of <see cref="GeopotentialFieldCatalog"/> with the
-/// model's constants on the whole field; drag, about the Earth only, with NRLMSISE-00 at the constant space weather of
-/// the case; SRP with the shadows of the case's <c>shadow_bodies</c>, which must be the bodies that occult the Sun in the
-/// framework; the spacecraft of the case, required when drag or SRP is on. A case the framework cannot compute as the
-/// suite specifies it is an <see cref="InvalidOperationException"/>, which the runner reports as ERROR.
+/// model's constants on the whole field, at any degree of the file (degree 0 is the point mass of the model's GM), or no
+/// field (<c>"none"</c>, degree 0); drag, about the Earth only, with NRLMSISE-00 at the constant space weather of the
+/// case; SRP, about the Earth only, with the shadows of the case's <c>shadow_bodies</c>, which must be the bodies that
+/// occult the Sun in the framework; the spacecraft of the case, required when drag or SRP is on. A case the framework
+/// cannot compute as the suite specifies it is an <see cref="InvalidOperationException"/>, which the runner reports as
+/// ERROR.
 /// </remarks>
 public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IReadOnlyList<CelestialItem> Bodies,
     bool Drag, bool SolarRadiationPressure, TimeSpan StepSize)
@@ -46,10 +48,11 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
     /// Builds the case of <paramref name="caseInput"/>, the geopotential model read from <paramref name="dataPath"/>.
     /// </summary>
     /// <exception cref="InvalidOperationException">The case is not one the framework computes as spec.md section 12.1
-    /// specifies it: an unknown field or the field of another body, drag about another body than the Earth or with
-    /// another model, drag or SRP without the spacecraft, shadow bodies that are not the framework's occulters.</exception>
-    /// <exception cref="ArgumentException">A force is turned on without its definition (<c>true</c>), or a body is
-    /// unknown.</exception>
+    /// specifies it: an unknown field, the field of another body or a degree beyond its file, no field with a degree
+    /// other than 0, drag or SRP about another body than the Earth, drag with another model, drag or SRP without the
+    /// spacecraft, shadow bodies that are not the framework's occulters.</exception>
+    /// <exception cref="ArgumentException">A force is neither <c>false</c> nor its definition (<c>true</c>, null), or
+    /// a body is unknown.</exception>
     /// <exception cref="FormatException">An epoch is not a tagged epoch of spec.md section 3.</exception>
     public static PropagationCase Build(CaseInput caseInput, string dataPath)
     {
@@ -59,12 +62,21 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
         var centralNaif = BodyResolver.ResolveNaif(inputs.CentralBody);
 
         // The field of the table of spec.md section 12.1, its GM and radius on the whole field, central term included,
-        // as GMAT applies the header of a .cof (decision 18 of #457)
+        // as GMAT applies the header of a .cof (decision 18 of #457), at every degree of the file, 0 included; without a
+        // field ("none" and 0), the central body is a point mass with its kernel GM
         GeopotentialModelParameters geoParams = null;
-        if (!string.Equals(inputs.GeopotentialModel, GeopotentialFieldCatalog.None, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(inputs.GeopotentialModel, GeopotentialFieldCatalog.None, StringComparison.OrdinalIgnoreCase))
         {
-            var field = GeopotentialFieldCatalog.Resolve(inputs.GeopotentialModel, centralNaif.NaifId);
-            geoParams = inputs.GeopotentialDegree > 0 ? field.Parameters(dataPath, inputs.GeopotentialDegree) : null;
+            if (inputs.GeopotentialDegree != 0)
+            {
+                throw new InvalidOperationException(
+                    $"The case has no field (geopotential_model \"{inputs.GeopotentialModel}\") and the degree {inputs.GeopotentialDegree}: spec.md section 12.1 takes \"none\" with degree 0 only.");
+            }
+        }
+        else
+        {
+            geoParams = GeopotentialFieldCatalog.Resolve(inputs.GeopotentialModel, centralNaif.NaifId)
+                .Parameters(dataPath, inputs.GeopotentialDegree);
         }
 
         var centralBody = new CelestialBody(centralNaif, frame, epoch, geoParams, DragAtmosphere(inputs.ForceModel.Drag, centralNaif));
@@ -86,6 +98,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
 
         if (inputs.ForceModel.Srp != null)
         {
+            AboutTheEarthOnly("SRP", centralNaif);
             CheckShadowBodies(inputs.ForceModel.Srp.ShadowBodies, bodies);
         }
 
@@ -113,12 +126,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
             return null;
         }
 
-        if (centralBody.NaifId != PlanetsAndMoons.EARTH.NaifId)
-        {
-            throw new InvalidOperationException(
-                $"The case has drag about {centralBody.Name}: spec.md section 12.1 models drag about the Earth only.");
-        }
-
+        AboutTheEarthOnly("drag", centralBody);
         if (drag.Model != DragModel)
         {
             throw new InvalidOperationException(
@@ -127,6 +135,16 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
 
         return new Nrlmsise00Model(NrlmsiseFlags.CreateStandard(),
             new SpaceWeather { F107 = drag.F107Sfu, F107A = drag.F107aSfu, Ap = drag.Ap });
+    }
+
+    // Drag and SRP are modelled about the Earth only (spec.md section 12.1)
+    private static void AboutTheEarthOnly(string force, NaifObject centralBody)
+    {
+        if (centralBody.NaifId != PlanetsAndMoons.EARTH.NaifId)
+        {
+            throw new InvalidOperationException(
+                $"The case has {force} about {centralBody.Name}: spec.md section 12.1 models {force} about the Earth only.");
+        }
     }
 
     // The case's shadow bodies must be the framework's occulters: the framework takes them from the bodies of the

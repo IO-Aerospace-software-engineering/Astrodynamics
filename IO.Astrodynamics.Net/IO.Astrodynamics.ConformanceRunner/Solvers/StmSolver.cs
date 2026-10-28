@@ -13,9 +13,10 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// </summary>
 /// <remarks>
 /// Φ comes from the variational equations integrated with the state by RK7(8) at 1e-13, the tolerance of the
-/// validation of the matrix against central differences of whole propagations (F1), rather than the 1e-11 of the
-/// <c>propagator</c> cases. The end of the window, a UTC epoch, is converted to TDB, as for the final state. Φ is the
-/// same in km and km/s as in m and m/s (its rv block in s, its vr block in 1/s).
+/// validation of the matrix against central differences of whole propagations (F1); the <c>propagator</c> cases take it
+/// too since lot 2 (design of #500, open choice 18), with their own steps. The end of the window, a UTC epoch, is
+/// converted to TDB, as for the final state. Φ is the same in km and km/s as in m and m/s (its rv block in s, its vr
+/// block in 1/s).
 /// </remarks>
 public class StmSolver : ICategorySolver
 {

@@ -26,13 +26,14 @@ public sealed record GeopotentialField(
     /// <summary>
     /// The field to <paramref name="degree"/> with order = degree, read from <paramref name="dataPath"/>: the model's
     /// GM and radius on the harmonics and on the central term (<see cref="GeopotentialCentralTerm.ModelGravitationalParameter"/>),
-    /// as GMAT applies the header of a <c>.cof</c> (decision 18 of #457).
+    /// as GMAT applies the header of a <c>.cof</c> (decision 18 of #457). At degree 0 or 1 the field is the point mass
+    /// of the model's GM (degrees 0 and 1 are absent from the file).
     /// </summary>
     /// <exception cref="InvalidOperationException">The degree is not one of the file, or the file is missing or is a
     /// Git LFS pointer.</exception>
     public GeopotentialModelParameters Parameters(string dataPath, int degree)
     {
-        if (degree < 1 || degree > MaximumDegree)
+        if (degree < 0 || degree > MaximumDegree)
         {
             throw new InvalidOperationException(
                 $"The field {Model} goes to degree {MaximumDegree}: degree {degree} is not one of its degrees (spec.md section 12.1).");

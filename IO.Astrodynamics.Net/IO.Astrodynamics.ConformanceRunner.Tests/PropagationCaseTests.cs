@@ -304,6 +304,22 @@ public class PropagationCaseTests
     }
 
     [Fact]
+    public void Srp_AboutTheMoon_IsAnError()
+    {
+        // Arrange: the shadow bodies are the framework's occulters, but spec.md section 12.1 models SRP about the Earth
+        // only
+        var caseInput = Parse(StateVectorOrbit, NoField, "[\"Earth\", \"Sun\"]", """
+                                                                             drag: false
+                                                                             srp:
+                                                                               shadow_bodies: ["Moon", "Earth"]
+                                                                         """, Spacecraft, centralBody: "Moon");
+
+        // Act and assert
+        var exception = Assert.Throws<InvalidOperationException>(() => PropagationCase.Build(caseInput, KernelsPath));
+        Assert.Contains("SRP about the Earth only", exception.Message);
+    }
+
+    [Fact]
     public void Drag_AboutTheMoon_IsAnError()
     {
         // Arrange
@@ -338,9 +354,13 @@ public class PropagationCaseTests
                     drag: "yes please"
                     srp: false
                 """, "force_model.drag")]
+    [InlineData("""
+                    drag: false
+                    srp: null
+                """, "force_model.srp")]
     public void AForceTurnedOnWithoutItsDefinition_IsAnError(string forces, string force)
     {
-        // Arrange: true gives neither the space weather nor the shadow bodies
+        // Arrange: true gives neither the space weather nor the shadow bodies, and null turns no force off
         var caseInput = Parse(KeplerianOrbit, Geopotential10, "[]", forces, Spacecraft);
 
         // Act and assert
@@ -364,6 +384,45 @@ public class PropagationCaseTests
         // Act and assert
         var exception = Assert.Throws<InvalidOperationException>(() => PropagationCase.Build(caseInput, Lot2Data));
         Assert.Contains(message, exception.Message);
+    }
+
+    [Fact]
+    public void NoField_WithADegree_IsAnError()
+    {
+        // Arrange: a degree without its file would be dropped
+        var caseInput = Parse(KeplerianOrbit, """
+                                                geopotential_degree: 10
+                                                geopotential_model: "none"
+                                              """, "[]", NoForces);
+
+        // Act and assert
+        var exception = Assert.Throws<InvalidOperationException>(() => PropagationCase.Build(caseInput, KernelsPath));
+        Assert.Contains("takes \"none\" with degree 0 only", exception.Message);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void AFieldToDegree0Or1_IsThePointMassOfTheModelsGm(int degree)
+    {
+        // Arrange: EGM2008 without its harmonics (spec.md section 12.1: the model's GM on the whole field)
+        var caseInput = Parse(KeplerianOrbit, $"""
+                                                 geopotential_degree: {degree}
+                                                 geopotential_model: "EGM2008_to70_TideFree"
+                                               """, "[]", NoForces);
+
+        // Act
+        var propagationCase = PropagationCase.Build(caseInput, KernelsPath);
+
+        // Assert: the point mass of EGM2008's GM to the rounding, 1.5e-8 from that of the kernel GM
+        var earth = (CelestialBody)propagationCase.Bodies.Single();
+        var state = propagationCase.Spacecraft.InitialOrbitalParameters.ToStateVector();
+        var acceleration = earth.EvaluateGravitationalAcceleration(state);
+        double r3 = System.Math.Pow(state.Position.Magnitude(), 3.0);
+        var model = state.Position * (-3.986004415e14 / r3);
+        var kernel = state.Position * (-earth.GM / r3);
+        Assert.InRange((acceleration - model).Magnitude() / model.Magnitude(), 0.0, 1e-15);
+        Assert.InRange((acceleration - kernel).Magnitude() / kernel.Magnitude(), 1.4e-8, 1.6e-8);
     }
 
     [Fact]
