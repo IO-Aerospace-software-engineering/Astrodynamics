@@ -18,12 +18,16 @@ public class GeopotentialModelReader
         ModelFile = modelFile;
         using (var stream =  ModelFile)
         {
-            var data = stream.ReadToEnd().Replace('D', 'E');
-            var lines = data.Split(Environment.NewLine);
-            
-            foreach (var line in lines)
+            // ReadLine ends a line on LF, CRLF or CR on every platform, and a blank line holds no coefficient (#502)
+            string line;
+            while ((line = stream.ReadLine()) != null)
             {
-                var tmp = line.Split(' ').ToList();
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
+
+                var tmp = line.Replace('D', 'E').Split(' ').ToList();
                 tmp.RemoveAll(string.IsNullOrEmpty);
                 var coeff = new GeopotentialCoefficient(ushort.Parse(tmp[0],CultureInfo.InvariantCulture), ushort.Parse(tmp[1],CultureInfo.InvariantCulture), double.Parse(tmp[2],CultureInfo.InvariantCulture), double.Parse(tmp[3],CultureInfo.InvariantCulture), double.Parse(tmp[4],CultureInfo.InvariantCulture),
                     double.Parse(tmp[5],CultureInfo.InvariantCulture));
