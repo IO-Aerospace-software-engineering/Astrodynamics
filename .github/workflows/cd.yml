@@ -49,15 +49,19 @@ jobs:
         include:
           - os: ubuntu-latest
           - os: windows-latest
-          - os: macos-14        # Apple Silicon — native arm64
+          - os: macos-15        # Apple Silicon — native arm64
             osx_arch: arm64
             osx_cc_arch: arm64
             cmake_extra: -DCMAKE_OSX_ARCHITECTURES=arm64 -DOSX_ARCH=arm64
-          - os: macos-14        # Apple Silicon — cross-compiled x64
+          - os: macos-15        # Apple Silicon — cross-compiled x64
             osx_arch: x64
             osx_cc_arch: x86_64
             cmake_extra: -DCMAKE_OSX_ARCHITECTURES=x86_64 -DOSX_ARCH=x86_64
     runs-on: ${{ matrix.os }}
+    # The published dylibs require macOS 14.0 (the minos of 10.2.0-preview-1); on the macos-15 runner they would
+    # otherwise require macOS 15. Read by the cc of SOFA and by CMake (CMAKE_OSX_DEPLOYMENT_TARGET).
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '14.0'
 
     steps:
     - uses: actions/checkout@v4
@@ -214,7 +218,7 @@ jobs:
     needs: package-dotnet
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-15]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
