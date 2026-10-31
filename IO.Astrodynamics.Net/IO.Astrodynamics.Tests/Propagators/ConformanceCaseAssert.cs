@@ -9,7 +9,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <summary>
 /// Checks a propagation against the golden of a conformance case the way the conformance runner does
 /// (IO.Astrodynamics.ConformanceRunner, PropagatorSolver): the final state is interpolated at the exact end of the
-/// window, whose UTC epoch is converted to TDB, and the errors are vector magnitudes. The limits are non-regression
+/// window, read at its tag, and the errors are vector magnitudes. The limits are non-regression
 /// guards set from the measured errors, not accuracy specifications.
 /// </summary>
 internal static class ConformanceCaseAssert
@@ -24,7 +24,7 @@ internal static class ConformanceCaseAssert
         double positionLimitMeters,
         double velocityLimitMetersPerSecond)
     {
-        var (position, velocity) = solution.InterpolateAt(window.EndDate.ToTDB());
+        var (position, velocity) = solution.InterpolateAt(window.EndDate);
         double positionError = (position - expectedPosition).Magnitude();
         double velocityError = (velocity - expectedVelocity).Magnitude();
 

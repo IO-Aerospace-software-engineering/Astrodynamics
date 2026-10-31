@@ -161,7 +161,7 @@ public sealed class StmCaseTests : IDisposable
             new RK78Integrator(StmSolver.Tolerance, StmSolver.Tolerance), reference.Bodies, reference.Drag,
             reference.SolarRadiationPressure, reference.StepSize,
             new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly }).Propagate();
-        var end = reference.Window.EndDate.ToTDB();
+        var end = reference.Window.EndDate;
         var phi = solution.GetStateTransitionMatrix(end);
         var (position, velocity) = solution.InterpolateAt(end);
 
