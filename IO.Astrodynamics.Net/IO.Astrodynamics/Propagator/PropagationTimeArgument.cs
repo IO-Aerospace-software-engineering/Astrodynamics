@@ -60,6 +60,21 @@ internal abstract class PropagationTimeArgument
         centralBody is CelestialItem { NaifId: 399 } ? Tt : Tdb;
 
     /// <summary>
+    /// The seconds of the dynamical time of <paramref name="centralBody"/> from <paramref name="from"/> to
+    /// <paramref name="to"/>, the time of a two-body motion about it: TT about the Earth, TDB about any other body, as
+    /// the numerical propagation counts them, whatever the frames of the two epochs (#501, #508); zero when they name
+    /// the same instant (<see cref="Time.CompareTo(Time)"/>), so that orbital parameters taken at their own epoch in
+    /// another frame, or at its TDB label, are the parameters themselves.
+    /// </summary>
+    /// <remarks>
+    /// Before #508 the two-body time arguments (<see cref="OrbitalParameters.OrbitalParameters.AtEpoch"/>, the time of
+    /// flight of the Lambert solver, the intervals of the Gauss method) were <c>(to - from)</c>: TDB seconds for two TDB
+    /// epochs, UTC calendar seconds for two UTC epochs, without their leap seconds, and TT seconds otherwise.
+    /// </remarks>
+    internal static double ElapsedSeconds(ILocalizable centralBody, in Time from, in Time to) =>
+        from.CompareTo(to) == 0 ? 0.0 : For(centralBody).SecondsBetween(from, to);
+
+    /// <summary>
     /// The length of a propagation window, in seconds of this time argument: TDB, the length of
     /// <paramref name="tdbWindow"/>; TT, the TT seconds between the ends of <paramref name="window"/> as they are tagged
     /// (exact in ticks between UTC, TAI, GPS, local or TT tags, leap seconds counted; through the series in double for a

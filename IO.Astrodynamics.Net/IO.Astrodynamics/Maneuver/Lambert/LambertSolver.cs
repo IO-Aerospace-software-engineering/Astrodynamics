@@ -2,6 +2,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;
 using System;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 
 namespace IO.Astrodynamics.Maneuver.Lambert;
 
@@ -36,7 +37,8 @@ public class LambertSolver
         // Compute the position vectors in ICRF frame and the time of flight
         Vector3 r1 = startICRF.Position;
         Vector3 r2 = finalICRF.Position;
-        double tof = (finalICRF.Epoch - startICRF.Epoch).TotalSeconds;
+        // The time of flight in the dynamical time of the centre of motion, TT about the Earth, TDB otherwise (#508)
+        double tof = PropagationTimeArgument.ElapsedSeconds(centerOfMotion, startICRF.Epoch, finalICRF.Epoch);
         if (tof <= 0)
             throw new ArgumentException("Time of flight must be positive (final epoch after start epoch).");
 
