@@ -151,8 +151,21 @@ public readonly record struct Time : IComparable<Time>, IComparable
         return leftTai.DateTime.Subtract(rightTai.DateTime);
     }
 
+    /// <summary>
+    /// This time in <paramref name="targetReference"/>, through TAI; this time itself when it is already in that frame.
+    /// </summary>
+    /// <remarks>
+    /// The round trip through TAI of a TDB time truncates TDB − TT to the 100 ns tick twice, at two arguments of the
+    /// series, so it could move the time by a tick (2 of the 935 041 TT instants every 0.05 day from 1972 to 2100,
+    /// #510); a conversion to the frame of the time is the identity.
+    /// </remarks>
     public Time ConvertTo(ITimeFrame targetReference)
     {
+        if (Frame.Equals(targetReference))
+        {
+            return this;
+        }
+
         var taiTimeWithRef = Frame.ConvertToTAI(this);
         return targetReference.ConvertFromTAI(taiTimeWithRef);
     }
