@@ -186,6 +186,10 @@ public sealed class PropagationSolution
     /// At a maneuver, the state after the maneuver is returned for epochs at or after it. Before the solution, its
     /// first state; after it, its last state.
     /// </para>
+    /// <para>
+    /// The epoch may be in any time frame: an epoch and its conversion to another frame read the same instant, to the
+    /// tick of their labels, and so do the other readers of the solution (#507).
+    /// </para>
     /// </remarks>
     public (Vector3 position, Vector3 velocity) InterpolateAt(Time epoch)
     {

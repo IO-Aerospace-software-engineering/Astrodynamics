@@ -28,8 +28,8 @@ namespace IO.Astrodynamics.Propagator;
 /// (<see cref="Length"/>) carry no truncation of the offset.
 /// </para>
 /// <para>
-/// The TDB time argument is the code it replaces, expression for expression, so that a propagation about any other body
-/// is bit for bit what it was.
+/// The TDB time argument is the code it replaces, expression for expression on TDB labels, so that a propagation about
+/// any other body is bit for bit what it was; an epoch in another frame is converted to TDB before it is read (#507).
 /// </para>
 /// </remarks>
 internal abstract class PropagationTimeArgument
@@ -81,8 +81,18 @@ internal abstract class PropagationTimeArgument
     /// <paramref name="baseEpoch"/>, as the conjunction analysis samples them.</summary>
     internal abstract (Time Start, Time End) StepEpochs(in Time baseEpoch, double cumulativeTime, double stepSize);
 
-    /// <summary>The seconds of this time argument from <paramref name="baseEpoch"/> to <paramref name="epoch"/>, in
-    /// any frame: TDB, <c>(epoch - baseEpoch).TotalSeconds</c>; TT, through TAI for UTC, so leap seconds count.</summary>
+    /// <summary>
+    /// The seconds of this time argument from <paramref name="baseEpoch"/> to <paramref name="epoch"/>, in any frame:
+    /// TDB, the difference of the two epochs converted to TDB, the frame of the labels, <c>(epoch - baseEpoch)</c> for
+    /// two TDB labels (#507); TT, through TAI for UTC, so leap seconds count.
+    /// </summary>
+    /// <remarks>
+    /// A difference of two <see cref="Time"/>s in different frames is a difference of TAI, so TT seconds: a UTC epoch
+    /// read on a TDB solution as <c>(epoch - baseEpoch)</c> would name another instant, by the change of TDB − TT
+    /// since the base (0.22 m after a day in LEO, #507). The TDB time argument converts the epoch to the frame of the
+    /// labels first, as the propagator converts its window (<c>ToTDB</c>), so an epoch read in the frame the caller
+    /// gave reads the state of its label.
+    /// </remarks>
     internal abstract double SecondsBetween(in Time baseEpoch, in Time epoch);
 
     /// <summary>
@@ -188,10 +198,12 @@ internal abstract class PropagationTimeArgument
             return (start, start + TimeSpan.FromSeconds(stepSize));
         }
 
-        internal override double SecondsBetween(in Time baseEpoch, in Time epoch) => (epoch - baseEpoch).TotalSeconds;
+        // ToTDB is the identity on a TDB label (#510): two labels give (epoch - baseEpoch), the former expression
+        internal override double SecondsBetween(in Time baseEpoch, in Time epoch) =>
+            (epoch.ToTDB() - baseEpoch.ToTDB()).TotalSeconds;
 
         internal override double SecondsIntoStep(in Time segmentBase, in Time stepStart, double cumulativeTime,
-            in Time epoch) => (epoch - stepStart).TotalSeconds;
+            in Time epoch) => SecondsBetween(stepStart, epoch);
 
         internal override double Remaining(in Time start, double duration, in Time end, in Time current) =>
             (end - current).TotalSeconds;
