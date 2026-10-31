@@ -168,8 +168,7 @@ internal sealed class EncounterCovarianceResolver
             var end = _replayEnd;
             if (!Covers(_solution, end))
             {
-                var last = _solution.Segments[^1];
-                end = last.BaseEpoch.AddSeconds(last.Duration);
+                end = _solution.End;
             }
 
             try
@@ -238,8 +237,7 @@ internal sealed class EncounterCovarianceResolver
 
         if (!_nonlinearityIndexCreated)
         {
-            var last = solution.Segments[^1];
-            var end = last.BaseEpoch.AddSeconds(last.Duration);
+            var end = solution.End;
             if (_replayEnd < end && _replayEnd >= epoch)
                 end = _replayEnd;
             if (end < epoch)
@@ -259,6 +257,6 @@ internal sealed class EncounterCovarianceResolver
 
         var last = solution.Segments[^1];
         return epoch >= solution.Segments[0].BaseEpoch &&
-               (epoch - last.BaseEpoch).TotalSeconds <= last.Duration + EpochTick;
+               solution.TimeArgument.SecondsBetween(last.BaseEpoch, epoch) <= last.Duration + EpochTick;
     }
 }

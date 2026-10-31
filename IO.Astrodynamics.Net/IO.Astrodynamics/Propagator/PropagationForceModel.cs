@@ -89,9 +89,8 @@ internal sealed class PropagationForceModel
             contexts[i] = segment.Context.Value;
         }
 
-        var last = solution.Segments[^1];
         return new PropagationForceModel((Integrator)integrator, initialState.Observer, initialState.Frame, orientationCache,
-            syncRoot ?? new object(), epochs, contexts, last.BaseEpoch.AddSeconds(last.Duration));
+            syncRoot ?? new object(), epochs, contexts, solution.End);
     }
 
     /// <summary>Whether the propagation covers <paramref name="epoch"/>, its end excluded.</summary>

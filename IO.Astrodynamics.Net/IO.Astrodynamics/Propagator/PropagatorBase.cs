@@ -46,7 +46,28 @@ public abstract class PropagatorBase : IPropagator
     /// </summary>
     private protected object DynamicsSyncRoot { get; set; }
 
+    /// <summary>
+    /// The time argument of the propagation (#501): TT about the Earth and TDB about any other central body for a
+    /// <see cref="CentralBodyPropagator"/>, TDB for a propagator derived from this class by a user. Every epoch it
+    /// produces is a TDB label.
+    /// </summary>
+    internal PropagationTimeArgument TimeArgument { get; }
+
+    // The length of the window in seconds of the time argument, between its ends as the caller tagged them
+    private readonly double _windowLength;
+
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
+        : this(window, spacecraft, integrator, deltaT, PropagationTimeArgument.Tdb)
+    {
+    }
+
+    /// <summary>
+    /// A propagator whose integration variable counts the seconds of <paramref name="timeArgument"/> (#501). The window
+    /// keeps the TDB labels of its ends (<see cref="Window"/>, the start of the propagation and the caches); its length is
+    /// that of the time argument between the ends as the caller tagged them.
+    /// </summary>
+    private protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT,
+        PropagationTimeArgument timeArgument)
     {
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
@@ -55,6 +76,12 @@ public abstract class PropagatorBase : IPropagator
         OriginalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
         DeltaT = deltaT;
+        TimeArgument = timeArgument ?? throw new ArgumentNullException(nameof(timeArgument));
+        _windowLength = TimeArgument.Length(window, Window);
+        if (integrator is Integrator integratorWithForces)
+        {
+            integratorWithForces.TimeArgument = TimeArgument;
+        }
     }
 
     /// <summary>
@@ -339,7 +366,7 @@ public abstract class PropagatorBase : IPropagator
         }
 
         // 3. Create solution
-        var solution = new PropagationSolution();
+        var solution = new PropagationSolution { TimeArgument = TimeArgument };
 
         var currentPos = InitialState.Position;
         var currentVel = InitialState.Velocity;
@@ -352,7 +379,7 @@ public abstract class PropagatorBase : IPropagator
         {
             dynamics = new PropagationDynamics(rk78.ForceList, InitialState.Observer, InitialState.Frame,
                 InitialState.Epoch, cacheFrame, cache, _variationalOptions, rk78.VariationalEquations,
-                _covarianceModel, DynamicsSyncRoot ?? new object()) { Integrator = rk78 };
+                _covarianceModel, DynamicsSyncRoot ?? new object()) { Integrator = rk78, TimeArgument = TimeArgument };
         }
 
         var variational = _variationalOptions != null ? rk78.VariationalEquations : null;
@@ -370,17 +397,20 @@ public abstract class PropagatorBase : IPropagator
             entryQ = new double[variational.CarriedCovarianceLength];
         }
 
-        // Compute required propagation duration (may exceed window for non-fitting step sizes)
-        uint outputCount = (uint)System.Math.Round(Window.Length.TotalSeconds / DeltaT.TotalSeconds,
+        // Compute required propagation duration (may exceed window for non-fitting step sizes), in seconds of the time
+        // argument. In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the
+        // window, its last output labelled with the end of the window as the caller gave it
+        uint outputCount = (uint)System.Math.Round(_windowLength / DeltaT.TotalSeconds,
             MidpointRounding.AwayFromZero) + 1;
         double outputDuration = (outputCount - 1) * DeltaT.TotalSeconds;
-        double propagationDuration = System.Math.Max(Window.Length.TotalSeconds, outputDuration);
-        var propagationEnd = Window.StartDate.AddSeconds(propagationDuration);
+        bool endsAtWindowEnd = TimeArgument.EndsAtWindowEnd(_windowLength, outputDuration);
+        double propagationDuration = endsAtWindowEnd ? _windowLength : System.Math.Max(_windowLength, outputDuration);
+        var propagationEnd = endsAtWindowEnd ? Window.EndDate : TimeArgument.EpochAt(Window.StartDate, propagationDuration);
 
         // 4. Segment loop
         while (true)
         {
-            double remaining = (propagationEnd - currentEpoch).TotalSeconds;
+            double remaining = TimeArgument.Remaining(Window.StartDate, propagationDuration, propagationEnd, currentEpoch);
             if (remaining <= 0.0) break;
 
             // a. Integrate segment, with the mass and coefficients of the segment, recorded for the force model of the
@@ -406,7 +436,7 @@ public abstract class PropagatorBase : IPropagator
             if (result.Event.HasValue)
             {
                 var evt = result.Event.Value;
-                var eventEpoch = currentEpoch.AddSeconds(evt.EventTime);
+                var eventEpoch = TimeArgument.EpochAt(currentEpoch, evt.EventTime);
 
                 // Create StateVector at event epoch
                 var eventState = new StateVector(evt.EventPosition, evt.EventVelocity,
@@ -487,13 +517,18 @@ public abstract class PropagatorBase : IPropagator
         }
 
         // 5. Generate output StateVectors at DeltaT epochs; in RK7(8), from the dynamics of the propagation
+        if (endsAtWindowEnd)
+        {
+            solution.WindowEnd = Window.EndDate;
+        }
+
         solution.Dynamics = dynamics;
         solution.ForceModel = PropagationForceModel.TryCreate(Integrator, solution, InitialState, cache,
             dynamics?.SyncRoot ?? DynamicsSyncRoot);
         solution.Observer = InitialState.Observer;
         solution.Frame = InitialState.Frame;
         solution.CovariancePropagation = _covariancePropagation;
-        var outputStates = GenerateOutput(solution, outputCount);
+        var outputStates = GenerateOutput(solution, outputCount, endsAtWindowEnd);
 
         // 6. Add final orientation
         var latestOrientation = Spacecraft.Frame.GetLatestStateOrientationToICRF();
@@ -606,13 +641,20 @@ public abstract class PropagatorBase : IPropagator
     /// Output may extend slightly past the window end when the step size doesn't evenly divide the window.
     /// Also computes continuous attitude orientations at each output epoch if a standalone attitude maneuver exists.
     /// </summary>
-    private StateVector[] GenerateOutput(PropagationSolution solution, uint count)
+    /// <remarks>
+    /// The outputs are uniform in the time argument and labelled TDB (<see cref="PropagationTimeArgument.OutputEpoch"/>);
+    /// each state is the solution at its label, which in TT holds i·ΔT to the tick only. With
+    /// <paramref name="lastAtWindowEnd"/>, the last output is labelled with the end of the window.
+    /// </remarks>
+    private StateVector[] GenerateOutput(PropagationSolution solution, uint count, bool lastAtWindowEnd)
     {
         var output = new StateVector[count];
 
         for (int i = 0; i < count; i++)
         {
-            var epoch = Window.StartDate + (i * DeltaT);
+            var epoch = lastAtWindowEnd && i == count - 1
+                ? Window.EndDate
+                : TimeArgument.OutputEpoch(Window.StartDate, i, DeltaT);
             if (_covarianceModel != null)
             {
                 // The state and its covariance from one shortened step: the state is that of InterpolateAt

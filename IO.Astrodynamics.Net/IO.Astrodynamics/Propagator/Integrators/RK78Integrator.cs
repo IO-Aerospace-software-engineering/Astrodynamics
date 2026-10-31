@@ -385,7 +385,7 @@ public sealed class RK78Integrator : Integrator
                 // Check event detectors
                 if (eventDetectors != null && eventDetectors.Count > 0)
                 {
-                    UpdateEvalState(pos, vel, baseEpoch.AddSeconds(t));
+                    UpdateEvalState(pos, vel, TimeArgument.EpochAt(baseEpoch, t));
                     int detIdx = CheckEventDetectors(eventDetectors, EvalState, prevG, currG);
 
                     if (detIdx >= 0)
@@ -421,7 +421,7 @@ public sealed class RK78Integrator : Integrator
                 // Check event detectors
                 if (eventDetectors != null && eventDetectors.Count > 0)
                 {
-                    UpdateEvalState(pos, vel, baseEpoch.AddSeconds(t));
+                    UpdateEvalState(pos, vel, TimeArgument.EpochAt(baseEpoch, t));
                     int detIdx = CheckEventDetectors(eventDetectors, EvalState, prevG, currG);
 
                     if (detIdx >= 0)
@@ -520,10 +520,11 @@ public sealed class RK78Integrator : Integrator
         double eventT = BisectionEventFinder.FindRoot(step.CumulativeTime, stepEnd, t =>
         {
             var (p, v) = StateInsideStep(step, baseEpoch, t);
-            return detector.Evaluate(CreateTempState(p, v, baseEpoch.AddSeconds(t)));
+            return detector.Evaluate(CreateTempState(p, v, TimeArgument.EpochAt(baseEpoch, t)));
         }, gStart, gEnd);
 
-        eventT = OnEpochGrid(baseEpoch, baseEpoch.AddSeconds(eventT), step.CumulativeTime, stepEnd);
+        eventT = TimeArgument.OnEpochGrid(baseEpoch, TimeArgument.EpochAt(baseEpoch, eventT), step.CumulativeTime,
+            stepEnd);
         var (eventPos, eventVel) = StateInsideStep(step, baseEpoch, eventT);
         return new EventInfo(detectorIndex, eventT, eventPos, eventVel);
     }
@@ -542,21 +543,20 @@ public sealed class RK78Integrator : Integrator
     /// <paramref name="baseEpoch"/>, as the propagator does with the event time; the time of
     /// <paramref name="epoch"/> clamped to the interval when there is none.
     /// </summary>
-    internal static double OnEpochGrid(in Time baseEpoch, in Time epoch, double tStart, double tEnd)
+    /// <remarks>The TDB time argument; the integrator calls <see cref="PropagationTimeArgument.OnEpochGrid"/> of its
+    /// own time argument (#501).</remarks>
+    internal static double OnEpochGrid(in Time baseEpoch, in Time epoch, double tStart, double tEnd) =>
+        PropagationTimeArgument.Tdb.OnEpochGrid(baseEpoch, epoch, tStart, tEnd);
+
+    /// <inheritdoc />
+    internal override PropagationTimeArgument TimeArgument
     {
-        const int maxAdjustments = 64;
-        double t = System.Math.Clamp((epoch - baseEpoch).TotalSeconds, tStart, tEnd);
-        double onGrid = t;
-        for (int i = 0; i < maxAdjustments && onGrid >= tStart && onGrid <= tEnd; i++)
+        get => base.TimeArgument;
+        set
         {
-            var found = baseEpoch.AddSeconds(onGrid);
-            if (found == epoch)
-                return onGrid;
-
-            onGrid = found < epoch ? System.Math.BitIncrement(onGrid) : System.Math.BitDecrement(onGrid);
+            base.TimeArgument = value;
+            _stepper.TimeArgument = value;
         }
-
-        return t;
     }
 
     /// <summary>

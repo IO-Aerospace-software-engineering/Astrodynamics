@@ -133,8 +133,15 @@ public class CentralBodyPropagator : PropagatorBase
     /// The central body is inferred from the spacecraft's orbital parameters observer.
     /// When the observer is a Star or Barycenter, the Sun is used as the central body.
     /// </summary>
+    /// <remarks>
+    /// The time argument follows the central body (#501): about the Earth the propagation integrates over the TT seconds
+    /// between the instants of the window, the forces at t being those of TT₀ + t; about any other central body, the Sun
+    /// of a star or barycentre observer included, over TDB seconds. The epochs of the segments, the steps, the events and
+    /// the output states are TDB labels in both cases, and the velocities are per second of the time argument.
+    /// </remarks>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
-        : base(window, spacecraft, integrator, deltaT)
+        : base(window, spacecraft, integrator, deltaT,
+            PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
         _centralBody = ResolveCentralBody(spacecraft);
 

@@ -8,6 +8,11 @@ namespace IO.Astrodynamics.Propagator;
 /// Represents one accepted integration step, storing the start and end states
 /// plus accelerations for cubic Hermite interpolation.
 /// </summary>
+/// <remarks>
+/// <see cref="CumulativeTime"/>, the start of the step from the base epoch of its segment, and <see cref="StepSize"/>
+/// are in seconds of the time argument of the propagation: TT seconds about the Earth, TDB seconds about any other
+/// central body (#501). The velocities and accelerations are per second of that time argument.
+/// </remarks>
 public readonly record struct AcceptedStep(
     double CumulativeTime,
     double StepSize,

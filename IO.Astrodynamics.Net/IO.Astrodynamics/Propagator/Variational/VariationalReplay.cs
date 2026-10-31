@@ -76,7 +76,8 @@ internal static class VariationalReplay
             throw new InvalidOperationException("The solution holds no steps.");
 
         var last = segments[^1];
-        if (end < segments[0].BaseEpoch || (end - last.BaseEpoch).TotalSeconds > last.Duration + EpochTick)
+        var timeArgument = solution.TimeArgument;
+        if (end < segments[0].BaseEpoch || timeArgument.SecondsBetween(last.BaseEpoch, end) > last.Duration + EpochTick)
             throw new ArgumentOutOfRangeException(nameof(end), end, "The epoch is outside the propagation.");
 
         var forces = source.Forces;
@@ -91,16 +92,17 @@ internal static class VariationalReplay
         var equations = new VariationalEquations(variationalOptions);
         var dynamics = new PropagationDynamics(forces, source.Observer, source.Frame, source.Epoch,
             source.OrientationCacheFrame, source.OrientationCache, variationalOptions, equations, covariance,
-            source.SyncRoot) { Integrator = source.Integrator };
+            source.SyncRoot) { Integrator = source.Integrator, TimeArgument = timeArgument };
         var replayed = new PropagationSolution
         {
+            TimeArgument = timeArgument,
             Dynamics = dynamics,
             Observer = solution.Observer,
             Frame = solution.Frame,
             CovariancePropagation = options
         };
 
-        var stepper = new RK78Stepper(forces);
+        var stepper = new RK78Stepper(forces) { TimeArgument = timeArgument };
         stepper.Reset(source.Observer, source.Frame, source.Epoch);
         int covarianceLength = equations.HasProcessNoise ? VariationalEquations.CovarianceLength : 0;
         var y0 = new double[equations.YLength];
@@ -134,7 +136,7 @@ internal static class VariationalReplay
                         AddExecutionError(execution, entryQ);
                     }
 
-                    double endOffset = (end - segment.BaseEpoch).TotalSeconds;
+                    double endOffset = timeArgument.SecondsBetween(segment.BaseEpoch, end);
                     var copy = new PropagationSegment(segment.BaseEpoch, segment.Steps.Count)
                     {
                         Context = context,

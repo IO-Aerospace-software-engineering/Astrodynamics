@@ -28,10 +28,18 @@ public interface IIntegrator
     /// evaluating event detectors after each step. On event detection, the segment
     /// is terminated early and event information is returned.
     /// </summary>
+    /// <remarks>
+    /// The integrators of the library evaluate the forces at the TDB label of each instant of the time argument. An
+    /// integrator implemented outside the library, a bare <see cref="IIntegrator"/> or a subclass of
+    /// <see cref="Integrator"/>, builds its own epochs, usually <c>baseEpoch.AddSeconds(t)</c>, in TDB seconds: about
+    /// the Earth, its epochs then drift from those of the propagation by at most 3.4e-10 of the elapsed time (the rate of
+    /// TDB − TT).
+    /// </remarks>
     /// <param name="startPosition">Initial position.</param>
     /// <param name="startVelocity">Initial velocity.</param>
     /// <param name="baseEpoch">Absolute start time of the segment.</param>
-    /// <param name="duration">Duration in seconds to integrate.</param>
+    /// <param name="duration">Duration to integrate, in seconds of the time argument of the propagation: TT seconds
+    /// about the Earth, TDB seconds about any other central body (#501).</param>
     /// <param name="eventDetectors">Optional event detectors to evaluate each step.</param>
     /// <returns>The propagation segment and optional event info.</returns>
     IntegrationResult IntegrateSegment(
