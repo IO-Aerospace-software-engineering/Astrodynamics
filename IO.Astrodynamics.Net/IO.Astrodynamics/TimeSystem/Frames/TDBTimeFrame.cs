@@ -15,21 +15,26 @@ public class TDBTimeFrame : TimeFrame
     public override Time ConvertToTAI(Time time)
     {
         var tempTAI = time.Add(TimeSpan.FromSeconds(-32.184));
-        var g = this.G(time.Centuries());
-        var epoch = tempTAI.DateTime.Add(TimeSpan.FromSeconds(0.001658 * System.Math.Sin(g + t3 * System.Math.Sin(g))).Negate());
+        var epoch = tempTAI.DateTime.Add(TimeSpan.FromSeconds(TdbMinusTt(time.Centuries())).Negate());
         return new TimeSystem.Time(epoch, TAIFrame);
     }
 
     public override Time ConvertFromTAI(Time time)
     {
         var tdt = time.ToTDT();
-        var g = this.G(tdt.Centuries());
-        var epoch = tdt.DateTime.Add(TimeSpan.FromSeconds(0.001658 * System.Math.Sin(g + t3 * System.Math.Sin(g))));
+        var epoch = tdt.DateTime.Add(TimeSpan.FromSeconds(TdbMinusTt(tdt.Centuries())));
         return new TimeSystem.Time(epoch, TDBFrame);
     }
 
-    private double G(double t)
+    /// <summary>
+    /// TDB − TT in seconds by the series of this frame, 0.001658 sin(g + 0.0167 sin g), in double: the conversions of
+    /// <see cref="Time"/> truncate it to the 100 ns tick, the time argument of the propagation (#501) does not.
+    /// </summary>
+    /// <param name="centuries">Julian centuries from J2000 at which g is evaluated: those of the TDB time converted to
+    /// TAI (<see cref="ConvertToTAI"/>), those of the TT time converted to TDB (<see cref="ConvertFromTAI"/>).</param>
+    internal static double TdbMinusTt(double centuries)
     {
-        return Constants._2PI * (t1 + t2 * t) / 360.0;
+        var g = Constants._2PI * (t1 + t2 * centuries) / 360.0;
+        return 0.001658 * System.Math.Sin(g + t3 * System.Math.Sin(g));
     }
 }
