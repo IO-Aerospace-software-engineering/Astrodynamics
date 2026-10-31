@@ -138,14 +138,25 @@ public readonly record struct Time : IComparable<Time>, IComparable
         return left.Add(right.Negate());
     }
 
+    /// <summary>
+    /// The time elapsed from <paramref name="right"/> to <paramref name="left"/>: the difference of their calendars in a
+    /// uniform frame (TDB, TT, TAI, GPS), otherwise the difference of their TAI, so that the leap seconds between two UTC
+    /// (or local) times count (#508).
+    /// </summary>
+    /// <remarks>
+    /// A UTC calendar skips the leap seconds: from 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z, 121 s elapse, the
+    /// leap second 2016-12-31T23:59:60 included, while the calendars differ by 120 s. Between two frames, the difference
+    /// is that of TAI, so TT seconds, as before.
+    /// </remarks>
     public static TimeSpan operator -(Time left, Time right)
     {
-        if (left.Frame.Equals(right.Frame))
+        if (left.Frame.Equals(right.Frame) && left.Frame is not (UTCTimeFrame or LocalTimeFrame))
         {
             return left.DateTime.Subtract(right.DateTime);
         }
+
         // Convert both times to TAI to ensure correct physical time difference
-        // when the times are in different frames (e.g., UTC vs TDB)
+        // when the times are in different frames (e.g., UTC vs TDB) or in a frame with leap seconds
         var leftTai = left.ToTAI();
         var rightTai = right.ToTAI();
         return leftTai.DateTime.Subtract(rightTai.DateTime);
