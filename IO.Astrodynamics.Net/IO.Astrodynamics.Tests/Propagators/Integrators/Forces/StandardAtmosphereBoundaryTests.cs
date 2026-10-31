@@ -119,8 +119,7 @@ public class StandardAtmosphereBoundaryTests
         _output.WriteLine($"MEASURE {model}, perigee R_eq + {perigee / 1000.0} km, A = {area} m², {tolerance:E0}, " +
                           $"IncludeInStepControl {includeInStepControl}: {steps} steps, lowest {lowest / 1000.0:F3} km");
         Assert.True(lowest < (model == "Earth" ? 11000.0 : 7000.0), $"lowest {lowest} m");
-        var last = solution.Segments[^1];
-        Assert.Equal(Window.EndDate, last.BaseEpoch.AddSeconds(last.Steps[^1].CumulativeTime + last.Steps[^1].StepSize));
+        WindowEndAssert.ReachesTheEndOf(Window, solution);
         if (includeInStepControl)
         {
             Assert.Equal((6, 6), (solution.GetStateTransitionMatrix(Window.EndDate).Rows,
@@ -261,10 +260,10 @@ public class StandardAtmosphereBoundaryTests
             {
                 var solution = NewSpacecraft(body, 8e3, 1.0, -4330).Propagate(Window, new CelestialItem[] { body },
                     new RK78Integrator(1e-13, 1e-13, initialStep), true, false, Window.Length, options);
-                var last = solution.Segments[^1];
-                if (last.BaseEpoch.AddSeconds(last.Steps[^1].CumulativeTime + last.Steps[^1].StepSize) != Window.EndDate)
+                if (!WindowEndAssert.Reaches(Window, solution))
                 {
-                    failures.Add($"k = {k}: ends at {last.BaseEpoch.AddSeconds(last.Steps[^1].CumulativeTime)}");
+                    failures.Add($"k = {k}: ends at {solution.End}, " +
+                                 $"{WindowEndAssert.IntegratedSeconds(solution):R} s integrated");
                 }
 
                 int steps = solution.Segments.Sum(s => s.Steps.Count);
@@ -379,9 +378,7 @@ public class StandardAtmosphereBoundaryTests
         Assert.Equal(ecliptic ? Frames.Frame.ECLIPTIC_J2000 : Frames.Frame.ICRF, end.Frame);
         if (solution != null)
         {
-            var last = solution.Segments[^1];
-            Assert.Equal(Window.EndDate,
-                last.BaseEpoch.AddSeconds(last.Steps[^1].CumulativeTime + last.Steps[^1].StepSize));
+            WindowEndAssert.ReachesTheEndOf(Window, solution);
             if (path != "RK7(8)")
             {
                 Assert.Equal((6, 6), (solution.GetStateTransitionMatrix(Window.EndDate).Rows,

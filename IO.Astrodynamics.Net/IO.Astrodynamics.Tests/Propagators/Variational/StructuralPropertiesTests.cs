@@ -35,6 +35,11 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// Φ is measured in canonical units (<see cref="StmMeasures.Canonical"/>), with the initial radius and the matching
 /// time unit, so that its components are of order one to a few hundred after a day.
 /// </para>
+/// <para>
+/// The Keplerian STM is taken over the TT seconds from the start to the epoch read, the time argument of a propagation
+/// about the Earth (#501), which is the time the solution reads there; the TDB seconds between the two labels departed
+/// from it by n·δ, 1.96e-9 after 6 h.
+/// </para>
 /// </remarks>
 public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
 {
@@ -102,7 +107,7 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
                 : start.Epoch + referenceCase.Duration;
             var phi = Phi(solution, epoch);
             var (_, expected) = KeplerianStm.Propagate(referenceCase.GravitationalParameter, start.Position,
-                start.Velocity, (epoch - start.Epoch).TotalSeconds);
+                start.Velocity, PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, epoch));
 
             // Assert
             double error = StmMeasures.WorstBlockError(phi, expected);
@@ -159,7 +164,7 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
                 : start.Epoch + referenceCase.Duration;
             var phi = Phi(solution, epoch);
             var (_, expected) = KeplerianStm.Propagate(referenceCase.GravitationalParameter, start.Position,
-                start.Velocity, (epoch - start.Epoch).TotalSeconds);
+                start.Velocity, PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, epoch));
 
             double error = StmMeasures.WorstBlockError(phi, expected);
             _output.WriteLine($"R5 two-body at {fraction:F2} of two revolutions: Φ against the Keplerian STM " +
@@ -207,7 +212,7 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
         var start = referenceCase.InitialState;
         var end = start.Epoch + referenceCase.Duration;
         var (_, keplerian) = KeplerianStm.Propagate(referenceCase.GravitationalParameter, start.Position,
-            start.Velocity, referenceCase.Duration.TotalSeconds);
+            start.Velocity, PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, end));
         var previous = (Symplectic: double.MaxValue, Determinant: double.MaxValue, Keplerian: double.MaxValue);
 
         foreach (double tolerance in new[] { 1e-9, 1e-11, 1e-13 })

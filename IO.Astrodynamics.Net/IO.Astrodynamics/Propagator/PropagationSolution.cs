@@ -98,6 +98,36 @@ public sealed class PropagationSolution
         return Dynamics != null ? Dynamics.StateAt(segment, local) : segment.InterpolateAt(local);
     }
 
+    /// <summary>
+    /// <see cref="EvaluateVariational"/> at <paramref name="t"/> seconds of the time argument from the start of the
+    /// propagation, as <see cref="InterpolateAtElapsed"/> reads the state: the reads of the references at an exact
+    /// elapsed time (Φ to 1e-12 against GMAT, where a label leaves 1e-10).
+    /// </summary>
+    internal void EvaluateVariationalAtElapsed(double t, Span<double> y, Span<double> q)
+    {
+        var segment = VariationalSegmentAtElapsed(t, out double local);
+        Dynamics.Evaluate(segment, local, y, q);
+    }
+
+    /// <summary><see cref="EvaluateCovariance"/> at <paramref name="t"/> seconds of the time argument from the start of
+    /// the propagation.</summary>
+    internal void EvaluateCovarianceAtElapsed(double t, Span<double> covariance)
+    {
+        var segment = VariationalSegmentAtElapsed(t, out double local);
+        Dynamics.EvaluateCovariance(segment, local, covariance, false);
+    }
+
+    private PropagationSegment VariationalSegmentAtElapsed(double t, out double local)
+    {
+        var segment = SegmentAtElapsed(t, out local);
+        local = System.Math.Min(local, segment.Duration);
+        if (Dynamics == null)
+            throw new InvalidOperationException(
+                "The solution holds no variational data: the propagation did not integrate the variational equations.");
+
+        return segment;
+    }
+
     // The segment that holds t seconds of the time argument from the start, the later one at a boundary as SegmentAt
     // picks it, and the seconds from its base; a segment base is SecondsBetween(start, base) from the start, which the
     // event time carried to the tick grid (OnEpochGrid) makes the event time to the rounding

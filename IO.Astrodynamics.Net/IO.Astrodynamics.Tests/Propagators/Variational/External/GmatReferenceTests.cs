@@ -33,6 +33,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational.External;
 /// <item><description><b>GMAT's computation</b>: Φ of GMAT against GMAT's own central differences;</description></item>
 /// <item><description><b>the library's computation</b>: Φ against the library's central differences (F1).</description></item>
 /// </list>
+/// <para>
+/// GMAT's rows are at elapsed A1 seconds from the start, TT seconds, the time argument of the library about the Earth
+/// (#501). The library is read at the same elapsed times, by its dense output and the variational equations at an exact
+/// t (<see cref="PropagationSolution.InterpolateAtElapsed"/>), not at <see cref="TimeSystem.Time"/> labels: a label
+/// holds TT₀ + t to 1e-7 s only, 7.5e-4 m in LEO against the 1.1e-4 m bound of G1 and about 1e-10 on Φ.
+/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class GmatReferenceTests : IClassFixture<ReferenceCases>
@@ -71,7 +77,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         var gmatCase = GmatCases.Get(_cases, name);
         var referenceCase = gmatCase.Case;
         var start = referenceCase.InitialState;
-        var epochs = gmatCase.Offsets.Select(t => start.Epoch.AddSeconds(t)).ToArray();
+        var offsets = gmatCase.Offsets;
         var rotation = GmatReport.InitialRotation(gmatCase);
         var gmat = GmatReport.Read(name, "nominal", true, false, rotation);
         var gmatDifferences = GmatReport.CentralDifferencePhi(name, referenceCase.PositionStep, referenceCase.VelocityStep,
@@ -80,21 +86,21 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         // Act
         var solution = referenceCase.Propagate(NaifId, ReferenceCases.Tolerance,
             new VariationalOptions(referenceCase.Parameters));
-        var phi = epochs.Select(t => StmMeasures.Phi(StmMeasures.Y(solution, t))).ToArray();
-        var states = epochs.Select(t => WholePropagationDifferences.State(solution, t)).ToArray();
-        var differences = WholePropagationDifferences.Phi(
+        var phi = offsets.Select(t => StmMeasures.Phi(StmMeasures.YAtElapsed(solution, t))).ToArray();
+        var states = offsets.Select(t => WholePropagationDifferences.StateAtElapsed(solution, t)).ToArray();
+        var differences = WholePropagationDifferences.PhiAtElapsed(
             s => referenceCase.PropagateReference(NaifId - 1, s, ReferenceCases.DragCoefficient,
                 ReferenceCases.ReflectivityCoefficient, ReferenceCases.ReferenceTolerance),
-            start, referenceCase.PositionStep, referenceCase.VelocityStep, epochs);
+            start, referenceCase.PositionStep, referenceCase.VelocityStep, offsets);
 
         // Assert
-        Assert.Equal(epochs.Length + 1, gmat.States.Length);
+        Assert.Equal(offsets.Length + 1, gmat.States.Length);
         var total = new double[4];
         var models = new double[4];
         var gmatComputation = new double[4];
         var ioComputation = new double[4];
         double position = 0.0, velocity = 0.0;
-        for (int k = 0; k < epochs.Length; k++)
+        for (int k = 0; k < offsets.Length; k++)
         {
             Max(total, StmMeasures.BlockErrors(phi[k], gmat.Phi[k + 1]));
             Max(models, StmMeasures.BlockErrors(differences[k], gmatDifferences[k]));
@@ -104,7 +110,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
             velocity = System.Math.Max(velocity, Distance(states[k], gmat.States[k + 1], 3));
         }
 
-        _output.WriteLine($"{name}: worst over {epochs.Length} epochs, blocks rr, rv, vr, vv");
+        _output.WriteLine($"{name}: worst over {offsets.Length} epochs, blocks rr, rv, vr, vv");
         _output.WriteLine($"{name} total, library against GMAT: {Format(total)}");
         _output.WriteLine($"{name} models, central differences of the library against GMAT's: {Format(models)}");
         _output.WriteLine($"{name} GMAT's computation, its Φ against its central differences: {Format(gmatComputation)}");
@@ -181,7 +187,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         var gmatCase = GmatCases.Get(_cases, name);
         var referenceCase = gmatCase.Case;
         var start = referenceCase.InitialState;
-        var epochs = gmatCase.Offsets.Select(t => start.Epoch.AddSeconds(t)).ToArray();
+        var offsets = gmatCase.Offsets;
         bool drag = referenceCase.AtmosphericDrag;
         double coefficient = drag ? ReferenceCases.DragCoefficient : ReferenceCases.ReflectivityCoefficient;
         double relativeStep = drag ? referenceCase.DragCoefficientStep : referenceCase.ReflectivityCoefficientStep;
@@ -191,11 +197,11 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         // Act: Ψ_Cr held with IncludeInStepControl, as in F1
         var solution = referenceCase.Propagate(NaifId, ReferenceCases.Tolerance,
             new VariationalOptions(referenceCase.Parameters, IncludeInStepControl: !drag));
-        var psi = epochs.Select(t => StmMeasures.Column(StmMeasures.Y(solution, t), 6)).ToArray();
-        var differences = WholePropagationDifferences.Psi(
+        var psi = offsets.Select(t => StmMeasures.Column(StmMeasures.YAtElapsed(solution, t), 6)).ToArray();
+        var differences = WholePropagationDifferences.PsiAtElapsed(
             v => referenceCase.PropagateReference(NaifId - 1, start, drag ? v : ReferenceCases.DragCoefficient,
                 drag ? ReferenceCases.ReflectivityCoefficient : v, ReferenceCases.ReferenceTolerance),
-            coefficient, coefficient * relativeStep, epochs);
+            coefficient, coefficient * relativeStep, offsets);
 
         // Assert
         var total = WholePropagationDifferences.PsiArcError(psi, gmatPsi);
@@ -227,8 +233,8 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         double worst = 0.0, mean = 0.0;
         for (int k = 0; k < rows.Length; k++)
         {
-            var epoch = start.Epoch.AddSeconds(k == rows.Length - 1 ? referenceCase.Duration.TotalSeconds
-                : k * GmatCase.OutputInterval);
+            var epoch = PropagationTimeArgument.Tt.EpochAt(start.Epoch,
+                k == rows.Length - 1 ? referenceCase.Duration.TotalSeconds : k * GmatCase.OutputInterval);
             var s = GmatReport.State(rows[k], rotation);
             var state = new IO.Astrodynamics.OrbitalParameters.StateVector(
                 new IO.Astrodynamics.Math.Vector3(s[0], s[1], s[2]), new IO.Astrodynamics.Math.Vector3(s[3], s[4], s[5]),
@@ -272,7 +278,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         // GMAT takes P0 in MJ2000Eq axes only: the scripts give it the P0 of cases.json there, so the library starts
         // from the same P0 turned to ICRF, R0 P0 R0ᵀ
         var start = WithRotatedCovariance(GmatCases.WithCovariance(referenceCase.InitialState), rotation);
-        var epochs = gmatCase.Offsets.Select(t => start.Epoch.AddSeconds(t)).ToArray();
+        var offsets = gmatCase.Offsets;
 
         // Act
         var solution = Propagate(referenceCase, start, null);
@@ -285,10 +291,10 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         double pRelative = 0.0, pCorrelation = 0.0, drift = 0.0, ioDrift = 0.0;
         var phiOnly = new CorrelationElement(0.0, 0, 0, 0);
         var p0 = Elements(start.Covariance!.Value);
-        var phi = epochs.Select(t => Elements(solution.GetStateTransitionMatrix(t))).ToArray();
-        for (int k = 0; k < epochs.Length; k++)
+        var phi = offsets.Select(t => StmMeasures.Phi(StmMeasures.YAtElapsed(solution, t))).ToArray();
+        for (int k = 0; k < offsets.Length; k++)
         {
-            var p = Elements(solution.GetCovariance(epochs[k]));
+            var p = CovarianceAtElapsed(solution, offsets[k]);
             pRelative = System.Math.Max(pRelative, RelativeFrobenius(p, gmat.Covariance[k + 1]));
             pCorrelation = System.Math.Max(pCorrelation, CorrelationError(p, gmat.Covariance[k + 1]));
             var gmatPropagated = Propagated(gmat.Phi[k + 1], p0);
@@ -302,7 +308,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
             }
         }
 
-        _output.WriteLine($"{name} P against GMAT over {epochs.Length} epochs: relative Frobenius {pRelative:E2}, " +
+        _output.WriteLine($"{name} P against GMAT over {offsets.Length} epochs: relative Frobenius {pRelative:E2}, " +
                           $"on the correlation matrix {pCorrelation:E2}");
         _output.WriteLine($"{name} GMAT's computation, its P against its own Φ P0 Φᵀ, on the correlation matrix: " +
                           $"{drift:E2}");
@@ -335,8 +341,8 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
         Assert.True(pCorrelation < pCorrelationBound, $"{name} P on the correlation matrix {pCorrelation:E2}");
 
         // Q = P with the noise − P without, in both tools, at the end of the arc
-        var end = epochs[^1];
-        var q = Subtract(Elements(noisy.GetCovariance(end)), Elements(solution.GetCovariance(end)));
+        double end = offsets[^1];
+        var q = Subtract(CovarianceAtElapsed(noisy, end), CovarianceAtElapsed(solution, end));
         var qGmat = new List<double[]>();
         foreach (double update in GmatCases.NoiseSteps)
         {
@@ -363,7 +369,7 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
 
         var tight = Propagate(referenceCase, start, new RtnProcessNoise(1e-20, GmatCases.TangentialNoise, 1e-20), 1e-14);
         var plain = Propagate(referenceCase, start, null, 1e-14);
-        var qTight = Subtract(Elements(tight.GetCovariance(end)), Elements(plain.GetCovariance(end)));
+        var qTight = Subtract(CovarianceAtElapsed(tight, end), CovarianceAtElapsed(plain, end));
         _output.WriteLine($"{name} Q of the library at 1e-13 against 1e-14: {RelativeFrobenius(q, qTight):E2}");
     }
 
@@ -375,6 +381,14 @@ public class GmatReferenceTests : IClassFixture<ReferenceCases>
             new RK78Integrator(tolerance, tolerance), referenceCase.AtmosphericDrag,
             referenceCase.SolarRadiationPressure, TimeSpan.FromHours(1.0),
             new VariationalOptions(ForceParameters.None, noise, PropagateCovariance: true));
+    }
+
+    // P at t seconds of the time argument from the start, at the elapsed time of GMAT's rows (A1, so TT, seconds; #501)
+    private static double[] CovarianceAtElapsed(PropagationSolution solution, double t)
+    {
+        var covariance = new double[36];
+        solution.EvaluateCovarianceAtElapsed(t, covariance);
+        return covariance;
     }
 
     // The state with its covariance P0 replaced by R0 P0 R0ᵀ, R0 applied to each 3×3 block

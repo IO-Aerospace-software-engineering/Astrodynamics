@@ -124,6 +124,17 @@ internal static class StmMeasures
         return y;
     }
 
+    /// <summary>
+    /// Y = [Φ | Ψ] of <paramref name="solution"/> at <paramref name="t"/> seconds of its time argument from its start,
+    /// without a <see cref="TimeSystem.Time"/> label (#501): the read of a reference at an exact elapsed time.
+    /// </summary>
+    internal static double[] YAtElapsed(PropagationSolution solution, double t)
+    {
+        var y = new double[6 * solution.Dynamics.ColumnCount];
+        solution.EvaluateVariationalAtElapsed(t, y, new double[solution.Dynamics.CarriedCovarianceLength]);
+        return y;
+    }
+
     /// <summary>Φ, the first 6 columns of <paramref name="y"/>.</summary>
     internal static double[] Phi(double[] y)
     {
