@@ -586,9 +586,7 @@ public static class ConjunctionAssessment
         // A burn the solution covers, before the end of the options
         internal bool Covers(in Time burnEpoch)
         {
-            var last = _solution.Segments[^1];
-            return burnEpoch >= _solution.Segments[0].BaseEpoch && burnEpoch < _end &&
-                   _solution.TimeArgument.SecondsBetween(last.BaseEpoch, burnEpoch) <= last.Duration;
+            return burnEpoch < _end && _solution.Covers(burnEpoch, 0.0);
         }
 
         // The state at the burn, with its covariance, in the frame of the propagation and relative to its central body
@@ -2393,9 +2391,10 @@ public static class ConjunctionAssessment
             throw new ArgumentException("Trajectory must contain at least one propagation segment.", paramName);
         }
 
-        var trajectoryStart = trajectory.Segments[0].BaseEpoch;
-        var trajectoryEnd = trajectory.EndBySpan;
-        if (trajectoryStart > window.StartDate || trajectoryEnd < window.EndDate)
+        // In the seconds of the time argument of the trajectory (#507): a window in another frame than the TDB labels
+        // of the trajectory compares with them through TAI, one tick off at some instants
+        if (!trajectory.Covers(window.StartDate, PropagationSolution.EpochTick) ||
+            !trajectory.Covers(window.EndDate, PropagationSolution.EpochTick))
         {
             throw new ArgumentException("Trajectory must cover the entire screening window.", paramName);
         }

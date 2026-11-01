@@ -62,9 +62,9 @@ internal abstract class PropagationTimeArgument
     /// <summary>
     /// The seconds of the dynamical time of <paramref name="centralBody"/> from <paramref name="from"/> to
     /// <paramref name="to"/>, the time of a two-body motion about it: TT about the Earth, TDB about any other body, as
-    /// the numerical propagation counts them, whatever the frames of the two epochs (#501, #508); zero when they name
-    /// the same instant (<see cref="Time.CompareTo(Time)"/>), so that orbital parameters taken at their own epoch in
-    /// another frame, or at its TDB label, are the parameters themselves.
+    /// the numerical propagation counts them, whatever the frames of the two epochs (#501, #508); zero when they have
+    /// the same TDB label, so that orbital parameters taken at their own epoch in another frame, or at its TDB label,
+    /// are the parameters themselves (a comparison through TAI can put a UTC epoch a tick off its own label, #510).
     /// </summary>
     /// <remarks>
     /// Before #508 the two-body time arguments (<see cref="OrbitalParameters.OrbitalParameters.AtEpoch"/>, the time of
@@ -72,7 +72,7 @@ internal abstract class PropagationTimeArgument
     /// epochs, UTC calendar seconds for two UTC epochs, without their leap seconds, and TT seconds otherwise.
     /// </remarks>
     internal static double ElapsedSeconds(ILocalizable centralBody, in Time from, in Time to) =>
-        from.CompareTo(to) == 0 ? 0.0 : For(centralBody).SecondsBetween(from, to);
+        from.ToTDB() == to.ToTDB() ? 0.0 : For(centralBody).SecondsBetween(from, to);
 
     /// <summary>
     /// The epoch, in the frame of <paramref name="from"/>, <paramref name="seconds"/> of the dynamical time of
@@ -110,10 +110,6 @@ internal abstract class PropagationTimeArgument
     /// <summary>The epoch, a TDB label, <paramref name="t"/> seconds of this time argument after
     /// <paramref name="baseEpoch"/>: TDB, <c>baseEpoch.AddSeconds(t)</c>.</summary>
     internal abstract Time EpochAt(in Time baseEpoch, double t);
-
-    /// <summary>The same, in the form the conjunction analysis uses: TDB, <c>baseEpoch + TimeSpan.FromSeconds(t)</c>,
-    /// which differs from <see cref="Time.AddSeconds"/> by one tick for about 0.1 % of the values.</summary>
-    internal abstract Time EpochAtBySpan(in Time baseEpoch, double t);
 
     /// <summary>The epochs of the start and of the end of an accepted step of a segment from
     /// <paramref name="baseEpoch"/>, as the conjunction analysis samples them.</summary>
@@ -228,8 +224,6 @@ internal abstract class PropagationTimeArgument
 
         internal override Time EpochAt(in Time baseEpoch, double t) => baseEpoch.AddSeconds(t);
 
-        internal override Time EpochAtBySpan(in Time baseEpoch, double t) => baseEpoch + TimeSpan.FromSeconds(t);
-
         internal override (Time Start, Time End) StepEpochs(in Time baseEpoch, double cumulativeTime, double stepSize)
         {
             var start = baseEpoch + TimeSpan.FromSeconds(cumulativeTime);
@@ -266,8 +260,6 @@ internal abstract class PropagationTimeArgument
             var label = baseEpoch.Frame is TDBTimeFrame ? baseEpoch : new Time(new DateTime(ticks), TimeFrame.TDBFrame);
             return label.AddSeconds(t + (offset + correction));
         }
-
-        internal override Time EpochAtBySpan(in Time baseEpoch, double t) => EpochAt(baseEpoch, t);
 
         internal override (Time Start, Time End) StepEpochs(in Time baseEpoch, double cumulativeTime, double stepSize) =>
             (EpochAt(baseEpoch, cumulativeTime), EpochAt(baseEpoch, cumulativeTime + stepSize));

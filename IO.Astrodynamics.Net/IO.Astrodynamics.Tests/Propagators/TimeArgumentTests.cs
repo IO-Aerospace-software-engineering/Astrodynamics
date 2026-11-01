@@ -517,10 +517,8 @@ public class TimeArgumentTests
         rk78.EvaluateVariationalAtElapsed(0.0, y, Array.Empty<double>());
         Assert.Equal(1.0, y[0]);
 
-        // The form of the conjunction analysis is the same mapping in TT
+        // The step epochs of the conjunction analysis are the same mapping in TT
         var label = rk78.Segments[0].BaseEpoch;
-        Assert.Equal(PropagationTimeArgument.Tt.EpochAt(label, 1234.5),
-            PropagationTimeArgument.Tt.EpochAtBySpan(label, 1234.5));
         Assert.Equal((PropagationTimeArgument.Tt.EpochAt(label, 60.0), PropagationTimeArgument.Tt.EpochAt(label, 180.0)),
             PropagationTimeArgument.Tt.StepEpochs(label, 60.0, 120.0));
     }

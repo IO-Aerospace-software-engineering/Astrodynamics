@@ -8,6 +8,7 @@ using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using IO.Astrodynamics.Tests.Time;
@@ -160,6 +161,106 @@ public class PropagationSolutionTimeFrameTests
             Assert.Equal(labelPosition, position);
         else
             Assert.True(departure <= velocity.Magnitude() * 1e-7, $"{departure} m from the TDB label of the end.");
+    }
+
+    // UTC instants whose TDB label, converted to TAI, is not their own TAI: the conversion of the label truncates
+    // TDB − TT to the tick a second time. Found by the review of #505 over 8e6 random UTC instants of 2021 (the first
+    // one whose label is a tick later in TAI) and over a scan of 2021-03-20 by steps of 4999 ticks (one a tick off)
+    private static readonly TimeSystem.Time LabelLaterInTai =
+        new(new DateTime(2021, 6, 2, 14, 51, 26).AddTicks(1940007), TimeFrame.UTCFrame);
+
+    private static readonly TimeSystem.Time LabelOffInTai =
+        new(new DateTime(2021, 3, 20, 0, 5, 5).AddTicks(969684), TimeFrame.UTCFrame);
+
+    [Theory]
+    [InlineData("Earth")]
+    [InlineData("Moon")]
+    public void TheUtcStartOfAUtcWindow_IsInsideTheSolution(string body)
+    {
+        // Arrange: a UTC window starting at an instant whose TDB label, the start of the solution, compares a tick after
+        // it through TAI; before the start bound was read in the time argument, the readers below threw
+        // ArgumentOutOfRangeException there, as on main (#507)
+        var start = LabelLaterInTai;
+        Assert.True(start.ToTDB().ToTAI() > start.ToTAI());
+        var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON,
+            Frames.Frame.ICRF, start);
+        var orbit = new KeplerianElements(body == "Earth" ? 6778137.0 : 1837400.0, 0.001, 0.9, 0.2, 0.3, 0.0,
+            centralBody, start.ToTDB(), Frames.Frame.ICRF).ToStateVector();
+        var initial = new StateVector(orbit.Position, orbit.Velocity, centralBody, orbit.Epoch, Frames.Frame.ICRF,
+            Diagonal(100.0, 1e-4));
+        var spacecraft = ReferenceCase.NewSpacecraft(body == "Earth" ? -1509 : -1510, initial);
+        var window = new Window(start, start.AddHours(1.0));
+        using var propagator = new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-12, 1e-12),
+            new CelestialItem[] { centralBody }, false, false, TimeSpan.FromMinutes(10.0),
+            new CovariancePropagationOptions());
+        var solution = propagator.Propagate();
+
+        // Act
+        var phi = solution.GetStateTransitionMatrix(start);
+        var state = solution.GetStateVector(start);
+        var (position, _) = solution.InterpolateAt(start);
+        var replayed = VariationalReplay.Replay(solution, spacecraft,
+            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }, start);
+
+        // Assert: the start of the propagation, less than a tick after its label (identity of Φ to its first-order term,
+        // |v| / |r| × 1e-7 s); the screening window of a conjunction analysis covers it at both ends
+        Assert.Equal(position, state.Position);
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                Assert.True(System.Math.Abs(phi.Get(i, j) - (i == j ? 1.0 : 0.0)) < 1e-6, $"Φ[{i},{j}] = {phi.Get(i, j)}");
+            }
+        }
+
+        Assert.Single(replayed.Segments);
+        Assert.True(solution.Covers(window.StartDate, 0.0));
+        Assert.True(solution.Covers(window.EndDate, PropagationSolution.EpochTick));
+        Assert.False(solution.Covers(start.AddSeconds(-1e-6), 0.0));
+    }
+
+    [Theory]
+    [InlineData("Earth")]
+    [InlineData("Moon")]
+    public void ACovarianceGivenAtTheUtcStartOfItsWindow_IsPropagatedFromTheStateAsGiven(string body)
+    {
+        // Arrange: a UTC initial state with its covariance, at an instant whose TDB label is a tick off it in TAI;
+        // before the epochs were compared as TDB labels the propagation of the covariance was rejected there, with a
+        // message printing two equal epochs, and the start state went through the Keplerian round trip (#510)
+        var start = LabelOffInTai;
+        Assert.NotEqual(start.ToTAI(), start.ToTDB().ToTAI());
+        var centralBody = new CelestialBody(body == "Earth" ? PlanetsAndMoons.EARTH : PlanetsAndMoons.MOON,
+            Frames.Frame.ICRF, start);
+        var orbit = new KeplerianElements(body == "Earth" ? 6778137.0 : 1837400.0, 0.001, 0.9, 0.2, 0.3, 0.0,
+            centralBody, start, Frames.Frame.ICRF);
+        var orbitState = orbit.ToStateVector();
+        var initial = new StateVector(orbitState.Position, orbitState.Velocity, centralBody, start, Frames.Frame.ICRF,
+            Diagonal(100.0, 1e-4));
+        var window = new Window(start, start.AddHours(1.0));
+        var bodies = new CelestialItem[] { centralBody };
+        var spacecraft = ReferenceCase.NewSpacecraft(body == "Earth" ? -1511 : -1512, initial);
+        using var covariancePropagator = new CentralBodyPropagator(window, spacecraft, new RK78Integrator(1e-12, 1e-12),
+            bodies, false, false, TimeSpan.FromMinutes(10.0),
+            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        var replayedCraft = ReferenceCase.NewSpacecraft(body == "Earth" ? -1513 : -1514, initial);
+        using var transitionPropagator = new CentralBodyPropagator(window, replayedCraft,
+            new RK78Integrator(1e-12, 1e-12), bodies, false, false, TimeSpan.FromMinutes(10.0),
+            new CovariancePropagationOptions());
+
+        // Act
+        var solution = covariancePropagator.Propagate();
+        var transitionOnly = transitionPropagator.Propagate();
+        var resolver = new EncounterCovarianceResolver(replayedCraft, transitionOnly,
+            new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance }, start.AddMinutes(30.0));
+
+        // Assert: the propagation starts at the state as given (no Keplerian round trip), the initial covariance of
+        // the replay is accepted at the same epoch, and orbital parameters taken at the TDB label of their UTC epoch
+        // are the parameters themselves (no two-body motion over the sub-tick residual of the label)
+        Assert.Equal(initial.Position, solution.StateVectors[0].Position);
+        Assert.Equal(initial.Velocity, solution.StateVectors[0].Velocity);
+        Assert.NotNull(resolver.PropagatedSolution(start.AddMinutes(30.0)));
+        Assert.NotNull(resolver.Replayed);
+        Assert.Equal(orbitState.Position, orbit.AtEpoch(start.ToTDB()).ToStateVector().Position);
     }
 
     private static PropagationSolution Propagate(string body, bool rk78, out StateVector initial,

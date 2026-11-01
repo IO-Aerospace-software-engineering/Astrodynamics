@@ -70,19 +70,6 @@ public sealed class PropagationSolution
         }
     }
 
-    /// <summary>
-    /// <see cref="End"/> in the form the conjunction analysis uses (<see cref="PropagationTimeArgument.EpochAtBySpan"/>),
-    /// <c>BaseEpoch + TimeSpan.FromSeconds(Duration)</c> in TDB.
-    /// </summary>
-    internal Time EndBySpan
-    {
-        get
-        {
-            var last = LastSegment;
-            return WindowEnd ?? TimeArgument.EpochAtBySpan(last.BaseEpoch, last.Duration);
-        }
-    }
-
     private PropagationSegment LastSegment =>
         _segments.Count > 0 ? _segments[^1] : throw new InvalidOperationException("Solution contains no segments.");
 
@@ -489,7 +476,29 @@ public sealed class PropagationSolution
     // truncates to the tick, so its last step can end one tick before the end of the window (H3 review of lots A to C);
     // in TT the label of the end of the window maps to its length plus the sub-tick residuals of the labels of the start
     // and of the end, below 1e-7 s (#501)
-    private const double EpochTick = 1e-7;
+    internal const double EpochTick = 1e-7;
+
+    /// <summary>
+    /// Whether <paramref name="epoch"/>, in any frame, is inside the propagated span as the time argument reads it
+    /// (<see cref="PropagationTimeArgument.SecondsBetween"/>, #507): from one tick (<see cref="EpochTick"/>) before the
+    /// start of the first segment to <paramref name="endAllowance"/> seconds after the end of the last one.
+    /// </summary>
+    /// <remarks>
+    /// The two bounds are read in the seconds of the time argument, never by comparing <see cref="Time"/>s: the start of
+    /// the first segment is the TDB label of the start of the window, and a comparison of a UTC epoch with it goes through
+    /// TAI, which truncates TDB − TT to the tick a second time, so the UTC start of a UTC window could compare one tick
+    /// before its own label. The tick allowed before the start absorbs the rounding of the seconds; an epoch there reads
+    /// the start of the propagation.
+    /// </remarks>
+    internal bool Covers(in Time epoch, double endAllowance)
+    {
+        if (_segments.Count == 0)
+            return false;
+
+        var last = _segments[^1];
+        return TimeArgument.SecondsBetween(_segments[0].BaseEpoch, epoch) >= -EpochTick &&
+               TimeArgument.SecondsBetween(last.BaseEpoch, epoch) <= last.Duration + endAllowance;
+    }
 
     // The segment of an epoch inside the solution, for the variational values; an epoch within one tick after the last
     // step reads the values at its end
@@ -511,9 +520,7 @@ public sealed class PropagationSolution
         if (_segments.Count == 0)
             throw new InvalidOperationException("Solution contains no segments.");
 
-        var last = _segments[^1];
-        if (epoch < _segments[0].BaseEpoch ||
-            TimeArgument.SecondsBetween(last.BaseEpoch, epoch) > last.Duration + EpochTick)
+        if (!Covers(epoch, EpochTick))
             throw new ArgumentOutOfRangeException(nameof(epoch), epoch,
                 "The epoch is outside the propagation.");
     }

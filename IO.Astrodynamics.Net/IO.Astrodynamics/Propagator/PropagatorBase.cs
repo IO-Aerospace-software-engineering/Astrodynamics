@@ -230,7 +230,9 @@ public abstract class PropagatorBase : IPropagator
                 "only.");
         }
 
-        if ((initial.Epoch - start) != TimeSpan.Zero)
+        // Compared as TDB labels, as the message prints them: a UTC epoch and its TDB label differ through TAI by a tick
+        // at some instants (#510)
+        if (initial.Epoch.ToTDB() != start.ToTDB())
         {
             throw InitialCovarianceError(participant,
                 $"The initial covariance is given at {initial.Epoch.ToTDB()}, and the propagation starts at " +
