@@ -16,7 +16,7 @@ In the output directory (`IO.Astrodynamics.Tests/Data/FieldOfViewReference`):
 | `fovleo.tf`, `fovpolar.tf` | the spacecraft frames, as the library's `FrameTemplate.tf` (`<NAME>_FRAME`, identifier NAIF ID × 1000) |
 | `*_instruments.tf`, `*_instruments.ti` | the instrument frames (TK, Euler angles 1-2-3 relative to the spacecraft frame, zero or about one axis only, where the library's rotation vector agrees) and their IKs (`ANGLES` class) |
 
-The spacecraft: FOVLEO, an inclined LEO (a = 6 800 km, e = 0.001, i = 51.6°, RAAN = 30°), with 23 instruments; FOVPOLAR,
+The spacecraft: FOVLEO, an inclined LEO (a = 6 800 km, e = 0.001, i = 51.6°, RAAN = 30°), with 27 instruments; FOVPOLAR,
 a polar LEO (a = 7 000 km, circular), with 3 instruments whose boresight is J2000's Z, so that the Earth's limb crosses
 them near the pole; FOVTARGET (-470102), a LEO (a = 7 200 km, e = 0.002, i = 45°), an SPK only, a spacecraft target.
 
@@ -24,8 +24,9 @@ The fields: circles, ellipses with REF > CROSS, REF < CROSS and an aspect ratio 
 rectangles both ways and turned 30° about the boresight, a field narrower than the Earth and one that holds it, a
 reference vector not perpendicular to the boresight, a single-axis orientation; narrow fields whose boresights the tool
 puts on the apparent (LT+S) directions of the Moon and of the Sun at chosen epochs, narrower than the body, holding it,
-or crossed by its limb; two fields crossed by a star, FOVSTAR1, a direction of J2000. Every definition is written to the
-JSON with 17 significant digits, and the tests build the same instruments from it.
+or crossed by its limb; an ellipse and a rectangle on the apparent direction of DSS-13 and two on that of FOVTARGET,
+which the fields of the Earth do not cross; two fields crossed by a star, FOVSTAR1, a direction of J2000. Every
+definition is written to the JSON with 17 significant digits, and the tests build the same instruments from it.
 
 ## What it prints
 
@@ -34,15 +35,23 @@ JSON with 17 significant digits, and the tests build the same instruments from i
   <abcorr>"`, a list of [start, end] in TDB seconds from J2000. The Earth, the Moon and the Sun as points and as
   ellipsoids (ITRF93 and IAU_EARTH, MOON_ME, IAU_SUN), with NONE, LT and LT+S on every field and the six other
   corrections on a circle, a rectangle, the Moon, the Sun, DSS-13 and the spacecraft target; DSS-13, FOVTARGET, the
-  Earth-Moon barycenter and L1 as points.
+  Earth-Moon barycenter and L1 as points, every shape against DSS-13 and FOVTARGET.
 - `gfrfov`: the windows of `gfrfov_c` for the star, with NONE, S and XS.
+- `rayscan`: the windows of FOVPOLAR's rectangle against the Earth's ellipsoid, NONE, LT and LT+S, which `gftfov` cannot
+  give (below): `gfudb_c` at a step of 10 s, converged to 1e-9 s, on a condition built from `surfpt_c` alone. A convex
+  pyramid and a convex ellipsoid in front of the observer meet when a ray of a face of the pyramid meets the ellipsoid,
+  or when the ellipsoid lies inside the pyramid, its center then inside; each face is scanned by 100 000 rays between its
+  corners (`getfov_c`), so that a contact on a face is missed by the sagitta of the limb between two rays, about 1e-11
+  rad, 1e-8 s at the limb's motion; a contact at a corner is on a ray. 50 000 and 200 000 rays give the same windows. The
+  center is read by `spkezp_c` with the correction, the ellipsoid oriented by ITRF93 at the light-time corrected epoch,
+  as `gftfov` reads them.
 - `fovtrg`, `fovray`: `fovtrg_c` (POINT) and `fovray_c` on a grid, its first epoch, its step and a string of `0` and
   `1`: every 30 s over the whole window, or every second over 200 s for the narrow fields.
 
 One limitation of CSPICE N0067 shows here: `gftfov` with ELLIPSOID and a RECTANGLE field seen from above the pole stops
 on `SPICE(INVALIDELLIPSE)` (the semi-axes `edlimb` returns for an almost circular limb are up to 1.3e-9 rad from
 orthogonal, which `inelpl` rejects inside `zzelvupy`), whatever the rectangle's orientation: FOVPOLAR's rectangle has no
-ELLIPSOID reference.
+`gftfov` ELLIPSOID reference, and the ray scan above takes its place.
 
 ## Build and run
 
@@ -55,4 +64,4 @@ gcc -O2 -I external-lib/includeLinux tools/fov_reference/fov_ref.c external-lib/
     > IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/FieldOfViewReference/fov_reference.json
 ```
 
-It takes about 50 s on Linux x64. Two runs give byte-identical kernels and JSON.
+It takes about 90 s on Linux x64. Two runs give byte-identical kernels and JSON.

@@ -34,6 +34,8 @@
  *   "gfrfov": the windows of gfrfov for the star, key "<instrument> <star> <abcorr>" (NONE, S, XS);
  *   "fovtrg": fovtrg POINT on a grid, key "<instrument> <target> <abcorr>": its first epoch, its step and a string of
  *             '0' and '1' (in view or not at each epoch of the grid); "fovray": fovray for the star, likewise.
+ *   "rayscan": FOVPOLAR's rectangle against the Earth's ellipsoid, which gftfov cannot search there, by gfudb on a scan of
+ *             the rays of the faces of its pyramid (rayscan below), key "<instrument> EARTH ITRF93 <abcorr>".
  *
  * Build from the repository root with the vendored CSPICE (N0067):
  *   gcc -O2 -I external-lib/includeLinux tools/fov_reference/fov_ref.c external-lib/cspice.a -lm -o fov_ref
@@ -230,8 +232,8 @@ static void add(int spacecraft, int number, const char *name, const char *shape,
     vequ_c(o, in->orientation);
 }
 
-/* The apparent direction of a body from FOVLEO at an epoch, in its turning frame, moved towards the spin axis by an
- * angle: the field then sees the body pass that far from its boresight, across the reference plane */
+/* The apparent direction of a body, a site or a spacecraft from FOVLEO at an epoch, in its turning frame, moved towards the
+ * spin axis by an angle: the field then sees it pass that far from its boresight, across the reference plane */
 static void direction_in_frame(const char *target, double et, double offset, double out[3]) {
     double pos[3], lt, dir[3], towards[3], cmat[3][3], av[3];
     spkpos_c(target, et, "J2000", "LT+S", "-470101", pos, &lt);
@@ -347,6 +349,101 @@ static void fovray(const instrument *in, const char *star, const double ray[3], 
     printf("\"}");
 }
 
+/* The rectangle of FOVPOLAR against the Earth's ellipsoid, which gftfov cannot search (SPICE(INVALIDELLIPSE), above),
+ * searched by gfudb on a condition built from surfpt alone: a convex pyramid and a convex ellipsoid in front of the
+ * observer meet when a ray of a face of the pyramid meets the ellipsoid, or when the ellipsoid lies inside the pyramid,
+ * its center then inside. Each face is scanned by SCANRAYS rays between its corners (getfov), so that a contact on a
+ * face is missed by the sagitta of the limb between two rays, (d / 2)^2 / (2 R), d the angle between two rays and R the
+ * angular radius of curvature of the limb: about 1e-11 rad at 1e5 rays, 1e-8 s at the limb's motion of 1e-3 rad/s; a
+ * contact at a corner is on a ray. The target is read as gftfov reads it: its center by spkezp with the correction, its
+ * ellipsoid oriented by the body-fixed frame at the light-time corrected epoch */
+#define SCANRAYS 100000
+
+static SpiceInt scan_id;
+static double scan_bounds[4][3], scan_boresight[3], scan_normals[4][3], scan_radius;
+static char scan_frame[64];
+static const char *scan_abcorr;
+static double scan_radii[3];
+
+static void scan_value(SpiceDouble et, SpiceDouble *value) {
+    (void)et;
+    *value = 0.0;
+}
+
+static void scan_in_view(void (*udfuns)(SpiceDouble et, SpiceDouble *value), SpiceDouble et, SpiceBoolean *in_view) {
+    (void)udfuns;
+    double pos[3], lt, to_body[3][3], to_j2000[3][3], obs[3], dir[3];
+    spkezp_c(399, et, "J2000", scan_abcorr, scan_id / 1000, pos, &lt);
+    pxform_c("J2000", "ITRF93", et - lt, to_body);
+    pxform_c(scan_frame, "J2000", et, to_j2000);
+    /* The center in the instrument frame; far from the field, no ray meets the ellipsoid */
+    mtxv_c(to_j2000, pos, dir);
+    double reach = scan_radius + asin(fmin(1.0, scan_radii[0] / vnorm_c(pos))) + 1e-3;
+    *in_view = SPICEFALSE;
+    if (vsep_c(dir, scan_boresight) > reach) {
+        return;
+    }
+
+    int inside = 1;
+    for (int i = 0; i < 4; i++) {
+        inside = inside && vdot_c(scan_normals[i], dir) >= 0.0;
+    }
+
+    if (inside) {
+        *in_view = SPICETRUE;
+        return;
+    }
+
+    /* The observer from the center, and the rays, in the body-fixed frame */
+    double rotation[3][3];
+    mxv_c(to_body, pos, obs);
+    vminus_c(obs, obs);
+    mxm_c(to_body, to_j2000, rotation);
+    for (int i = 0; i < 4; i++) {
+        double a[3], b[3];
+        mxv_c(rotation, scan_bounds[i], a);
+        mxv_c(rotation, scan_bounds[(i + 1) % 4], b);
+        for (int k = 0; k < SCANRAYS; k++) {
+            double ray[3], point[3];
+            SpiceBoolean found;
+            double f = (double)k / SCANRAYS;
+            vlcom_c(1.0 - f, a, f, b, ray);
+            surfpt_c(obs, ray, scan_radii[0], scan_radii[1], scan_radii[2], point, &found);
+            if (found) {
+                *in_view = SPICETRUE;
+                return;
+            }
+        }
+    }
+}
+
+static void rayscan(const instrument *in, const char *abcorr) {
+    SPICEDOUBLE_CELL(cnfine, 2);
+    SPICEDOUBLE_CELL(result, 4000);
+    char shape[32];
+    SpiceInt n, dim;
+    scan_id = in->id;
+    scan_abcorr = abcorr;
+    getfov_c(in->id, 4, sizeof shape, sizeof scan_frame, shape, scan_frame, scan_boresight, &n, scan_bounds);
+    bodvrd_c("EARTH", "RADII", 3, &dim, scan_radii);
+    scan_radius = 0.0;
+    for (int i = 0; i < 4; i++) {
+        scan_radius = fmax(scan_radius, vsep_c(scan_bounds[i], scan_boresight));
+        vcrss_c(scan_bounds[i], scan_bounds[(i + 1) % 4], scan_normals[i]);
+        if (vdot_c(scan_normals[i], scan_boresight) < 0.0) {
+            vminus_c(scan_normals[i], scan_normals[i]);
+        }
+    }
+
+    scard_c(0, &cnfine);
+    scard_c(0, &result);
+    wninsd_c(t0, t0 + SPAN, &cnfine);
+    gfudb_c(scan_value, scan_in_view, 10.0, &cnfine, &result);
+    printf("%s\n    \"%d EARTH ITRF93 %s\": ", first_entry ? "" : ",", in->id, abcorr);
+    first_entry = 0;
+    print_window_list(&result);
+}
+
 static const instrument *find(const char *name) {
     for (int i = 0; i < ninst; i++) {
         if (strcmp(insts[i].name, name) == 0) {
@@ -423,6 +520,15 @@ int main(int argc, char **argv) {
     add(s, 35, "CIRCLE35", "CIRCLE", 0.05, 0.05, b, z, zero);          /* the Sun inside; and the Lagrange point L1 */
     add(s, 41, "STAR41", "CIRCLE", 0.005, 0.005, y, z, zero);
     add(s, 42, "RECTANGLE42", "RECTANGLE", 0.005, 0.002, y, z, zero);
+
+    /* An ellipse and a rectangle on the apparent direction of DSS-13, and two on that of FOVTARGET, which the fields of
+     * the Earth do not cross: the other shapes against a site and a spacecraft */
+    direction_in_frame("399013", t0 + 3000.0, 0.05, b);
+    add(s, 12, "ELLIPSE12", "ELLIPSE", 0.3, 0.1, b, z, zero);
+    add(s, 13, "RECTANGLE13", "RECTANGLE", 0.3, 0.1, b, turned, zero);
+    direction_in_frame("-470102", t0 + 5000.0, 0.05, b);
+    add(s, 14, "ELLIPSE14", "ELLIPSE", 0.3, 0.1, b, z, zero);
+    add(s, 15, "RECTANGLE15", "RECTANGLE", 0.3, 0.1, b, turned, zero);
 
     /* The star: the direction of STAR41's boresight at T0 + 4000 s, 0.002 rad towards the spin axis */
     double cmat[3][3], av[3], star[3], towards[3], radius;
@@ -518,6 +624,12 @@ int main(int argc, char **argv) {
     for (int a = 0; a < 3; a++) {
         gftfov(find("CIRCLE35"), "391", NULL, three[a]);
     }
+    for (int a = 0; a < 3; a++) {
+        gftfov(find("ELLIPSE12"), "399013", NULL, three[a]);
+        gftfov(find("RECTANGLE13"), "399013", NULL, three[a]);
+        gftfov(find("ELLIPSE14"), "-470102", NULL, three[a]);
+        gftfov(find("RECTANGLE15"), "-470102", NULL, three[a]);
+    }
     key_close();
 
     /* gfrfov for the star */
@@ -546,6 +658,12 @@ int main(int argc, char **argv) {
                 fovtrg(in, "-470102", three[a]);
             }
         }
+    }
+    key_close();
+    /* The ray scan of FOVPOLAR's rectangle against the Earth's ellipsoid, at gftfov's tolerance (gfstol, above) */
+    key_open("rayscan");
+    for (int a = 0; a < 3; a++) {
+        rayscan(&insts[ninst - 1], three[a]);
     }
     key_close();
     key_open("fovray");

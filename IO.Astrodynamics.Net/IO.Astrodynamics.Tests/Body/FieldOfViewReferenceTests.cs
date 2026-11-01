@@ -64,17 +64,18 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
 {
     // PROVISIONAL limits, twice the worst value over the rows on Linux x64 (2026-11-01), rounded up at the second digit,
     // until the three platforms of the CI have printed their MEASURE lines (#515, choice 9).
-    // Geometric (NONE, and a star, read as a direction without light time): 4.77e-7 s against gftfov and gfrfov at
-    // 1e-9 s, the managed search at 1 µs (its tolerance) and the 119 ns ulp of an ET of 8.3e8 s.
+    // Geometric (NONE, and a star, read as a direction without light time): 8.34e-7 s against gftfov and gfrfov at
+    // 1e-9 s (-470101013, a rectangle, DSS-13), the managed search at 1 µs (its tolerance) and the 119 ns ulp of an ET of
+    // 8.3e8 s.
     // With the light time: 2.15e-6 s (-470101002, the Earth as an ellipsoid, LT). The trace of choice 10: the light-time
     // corrected epoch is a double ET in gftfov (et - lt) and in the library (its ticks converted for SPICE), each rounded
     // up to half its ulp, 6e-8 s, which moves the Earth by up to 1.8 mm from the barycenter; the two positions differ by
     // 0.25 to 1.5 mm at the edges of these rows, and the zero of the library's margin computed on gftfov's positions is
     // within 1.5e-7 s of gftfov's edge, its axes equal to SPICE's.
-    // The public path, gftfov at 1e-6 s in the process: 9.54e-7 s against the reference
-    private const double ReferenceLimit = 9.6e-7;
+    // The public path, gftfov at 1e-6 s in the process: 9.54e-7 s against the reference (-470101010 3 POINT LT+S)
+    private const double ReferenceLimit = 1.7e-6;
     private const double LightTimeReferenceLimit = 4.3e-6;
-    private const double PublicPathLimit = 1.9e-6;
+    private const double PublicPathLimit = 2.0e-6;
 
     // An epoch of the grids within this much of an edge of the reference is not compared: the edges are known to the
     // limits above, the grid is every 30 s, or every 1 s for the narrow fields
@@ -93,7 +94,9 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
         "-470101001 EARTH POINT XLT", "-470101001 EARTH ITRF93 XCN", "-470101001 EARTH POINT XCN+S", "-470101021 MOON MOON_ME LT+S",
         "-470101022 MOON POINT LT", "-470101023 MOON MOON_ME NONE", "-470101024 MOON MOON_ME LT", "-470101025 MOON POINT LT+S",
         "-470101031 SUN IAU_SUN LT+S", "-470101033 SUN POINT LT", "-470101034 SUN IAU_SUN NONE", "-470101035 391 POINT LT",
-        "-470103001 EARTH ITRF93 LT", "-470103002 EARTH POINT LT+S", "-470103003 EARTH POINT LT", "-470101011 399013 POINT LT+S"
+        "-470103001 EARTH ITRF93 LT", "-470103002 EARTH POINT LT+S", "-470103003 EARTH POINT LT", "-470101011 399013 POINT LT+S",
+        "-470101004 EARTH ITRF93 NONE", "-470101012 399013 POINT LT", "-470101013 399013 POINT LT+S", "-470101014 -470102 POINT LT",
+        "-470101015 -470102 POINT NONE", "-470101014 EARTH ITRF93 LT", "-470101013 399013 POINT NONE"
     ];
 
     private readonly ITestOutputHelper _output;
@@ -303,6 +306,29 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
                           $"{worstManaged:E2} s, |public path (step {spiceStep.TotalSeconds} s) - gftfov (1e-9 s)| {worstPublic:E2} s");
         Assert.True(worstManaged < (aberration == Aberration.None ? ReferenceLimit : LightTimeReferenceLimit), $"{worstManaged:E2} s");
         Assert.True(worstPublic < PublicPathLimit, $"{worstPublic:E2} s");
+    }
+
+    /// <summary>
+    /// The rectangle of FOVPOLAR against the Earth's ellipsoid, the limb crossing its field near the pole, where gftfov
+    /// stops on SPICE(INVALIDELLIPSE) (<c>tools/fov_reference</c>): the managed search against the harness's ray scan,
+    /// gfudb on surfpt along the faces of the pyramid, converged to 1e-9 s (5e4, 1e5 and 2e5 rays a face give the same
+    /// windows), the closed form of the rectangle against an independent condition where its coordinates are singular.
+    /// </summary>
+    [Theory]
+    [InlineData("NONE")]
+    [InlineData("LT")]
+    [InlineData("LT+S")]
+    public void PolarRectangle_MatchesTheRayScan(string correction)
+    {
+        var instrument = InstrumentOf(-470103003);
+        var reference = Windows(_root.GetProperty("rayscan").GetProperty($"-470103003 EARTH ITRF93 {correction}"));
+        var aberration = ParseAberration(correction);
+        var managed = FieldOfViewSearch.Managed(instrument, SearchWindow, Target("EARTH"), ShapeType.Ellipsoid, new Frames.Frame("ITRF93"), aberration,
+            ManagedStep(instrument));
+        double worst = WorstEdge(managed, reference);
+        _output.WriteLine($"MEASURE #515 reference -470103003 EARTH ITRF93 {correction}, {reference.Length} windows: |managed - ray scan (1e-9 s)| {worst:E2} s");
+        Assert.Equal(2, reference.Length);
+        Assert.True(worst < (aberration == Aberration.None ? ReferenceLimit : LightTimeReferenceLimit), $"{worst:E2} s");
     }
 
     /// <summary>
