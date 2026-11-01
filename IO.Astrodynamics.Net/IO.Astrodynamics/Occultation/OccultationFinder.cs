@@ -53,6 +53,63 @@ internal static class OccultationFinder
         OccultationType type, in TimeSpan step, in TimeSpan tolerance)
     {
         ArgumentNullException.ThrowIfNull(evaluator);
+        CheckStep(step, tolerance);
+        var margins = MarginsOf(type, evaluator.FrontIsPoint, evaluator.BackIsPoint);
+        if (margins == OccultationMargin.None)
+        {
+            return Array.Empty<Window>();
+        }
+
+        var samples = new Sampling(searchWindow, step, tolerance);
+        var states = samples.Offsets.Select(x => evaluator.Evaluate(samples.At(x), margins, false)).ToArray();
+
+        List<(double Start, double End)> Search(OccultationMargin margin)
+        {
+            Func<double, double> f = x => evaluator.Evaluate(samples.At(x), margin, false)[margin];
+            return PositiveWindows(samples.Offsets, states.Select(s => s[margin]).ToArray(), f, samples.Tolerance);
+        }
+
+        // Overlap is the condition of Any (and the base of Partial); a point body has one condition, held in Overlap
+        var primary = (margins & OccultationMargin.Overlap) != 0 ? OccultationMargin.Overlap : margins;
+        var windows = Search(primary)
+            .Where(w => evaluator.Evaluate(samples.At(0.5 * (w.Start + w.End)), OccultationMargin.None, true).FrontIsInFront)
+            .ToList();
+
+        if (type == OccultationType.Partial && primary == OccultationMargin.Overlap && margins != OccultationMargin.Overlap)
+        {
+            var inside = Search(OccultationMargin.BackInside).Concat(Search(OccultationMargin.FrontInside)).OrderBy(w => w.Start).ToList();
+            windows = Subtract(windows, inside);
+        }
+
+        return samples.ToWindows(windows);
+    }
+
+    /// <summary>
+    /// The windows, in TDB, where a continuous margin is non-negative within the search window, by the rules of the
+    /// occultation search (the step rule and the transitions above): samples at every step from the start and at the end,
+    /// the extremes between them, Brent's root finder on each sign change, and no margin evaluated outside the search
+    /// window.
+    /// </summary>
+    /// <param name="margin">The margin at an epoch, in TDB: positive or zero where the condition holds, continuous.</param>
+    /// <param name="searchWindow">The search window.</param>
+    /// <param name="step">The step of the samples, positive.</param>
+    /// <param name="tolerance">The convergence tolerance of the transitions, positive.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The step or the tolerance is not positive.</exception>
+    /// <exception cref="ArgumentException">The search window ends before it starts.</exception>
+    internal static IReadOnlyList<Window> FindWindows(Func<Time, double> margin, in Window searchWindow, in TimeSpan step, in TimeSpan tolerance)
+    {
+        ArgumentNullException.ThrowIfNull(margin);
+        CheckStep(step, tolerance);
+        var samples = new Sampling(searchWindow, step, tolerance);
+        Func<double, double> f = x => margin(samples.At(x));
+        var values = samples.Offsets.Select(f).ToArray();
+        return samples.ToWindows(PositiveWindows(samples.Offsets, values, f, samples.Tolerance));
+    }
+
+    /// <summary>The checks of the step and of the convergence tolerance of a search.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The step or the tolerance is not positive.</exception>
+    internal static void CheckStep(in TimeSpan step, in TimeSpan tolerance)
+    {
         if (step <= TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(nameof(step), "The step must be positive.");
@@ -62,53 +119,65 @@ internal static class OccultationFinder
         {
             throw new ArgumentOutOfRangeException(nameof(tolerance), "The convergence tolerance must be positive.");
         }
+    }
 
-        var margins = MarginsOf(type, evaluator.FrontIsPoint, evaluator.BackIsPoint);
-        if (margins == OccultationMargin.None)
-        {
-            return Array.Empty<Window>();
-        }
-
-        var start = searchWindow.StartDate.ToTDB();
-        var end = searchWindow.EndDate.ToTDB();
-        long totalTicks = (end - start).Ticks;
-        if (totalTicks < 0)
+    /// <summary>The check of a search window.</summary>
+    /// <exception cref="ArgumentException">The search window ends before it starts.</exception>
+    internal static void CheckWindow(in Window searchWindow)
+    {
+        if ((searchWindow.EndDate.ToTDB() - searchWindow.StartDate.ToTDB()).Ticks < 0)
         {
             throw new ArgumentException("The search window must not end before it starts.", nameof(searchWindow));
         }
+    }
 
-        // The samples: every step from the start, and the end
-        var offsets = new List<double>();
-        for (long ticks = 0; ticks < totalTicks; ticks += step.Ticks)
+    /// <summary>
+    /// The samples of a search: the offsets in seconds from the start of the search window, in TDB, at every step and at
+    /// the end, and the conversions of offsets to epochs and of intervals of offsets to windows.
+    /// </summary>
+    private sealed class Sampling
+    {
+        private readonly Time _start;
+        private readonly Time _end;
+
+        internal Sampling(in Window searchWindow, in TimeSpan step, in TimeSpan tolerance)
         {
-            offsets.Add(ticks / (double)TimeSpan.TicksPerSecond);
+            CheckWindow(searchWindow);
+            _start = searchWindow.StartDate.ToTDB();
+            _end = searchWindow.EndDate.ToTDB();
+            long totalTicks = (_end - _start).Ticks;
+
+            // The samples: every step from the start, and the end
+            var offsets = new List<double>();
+            for (long ticks = 0; ticks < totalTicks; ticks += step.Ticks)
+            {
+                offsets.Add(ticks / (double)TimeSpan.TicksPerSecond);
+            }
+
+            offsets.Add(totalTicks / (double)TimeSpan.TicksPerSecond);
+            Offsets = offsets;
+            Tolerance = tolerance.Ticks / (double)TimeSpan.TicksPerSecond;
         }
 
-        offsets.Add(totalTicks / (double)TimeSpan.TicksPerSecond);
-        var states = offsets.Select(x => evaluator.Evaluate(ApparentPositionReader.Shift(start, x), margins, false)).ToArray();
-        double toleranceSeconds = tolerance.Ticks / (double)TimeSpan.TicksPerSecond;
+        /// <summary>The offsets of the samples, s, increasing; the last is the end of the search window.</summary>
+        internal IReadOnlyList<double> Offsets { get; }
 
-        List<(double Start, double End)> Search(OccultationMargin margin)
+        /// <summary>The convergence tolerance, s.</summary>
+        internal double Tolerance { get; }
+
+        /// <summary>The epoch of an offset, to the 100 ns of a <see cref="Time"/>.</summary>
+        internal Time At(double offset)
         {
-            Func<double, double> f = x => evaluator.Evaluate(ApparentPositionReader.Shift(start, x), margin, false)[margin];
-            return PositiveWindows(offsets, states.Select(s => s[margin]).ToArray(), f, toleranceSeconds);
+            return ApparentPositionReader.Shift(_start, offset);
         }
 
-        // Overlap is the condition of Any (and the base of Partial); a point body has one condition, held in Overlap
-        var primary = (margins & OccultationMargin.Overlap) != 0 ? OccultationMargin.Overlap : margins;
-        var windows = Search(primary)
-            .Where(w => evaluator.Evaluate(ApparentPositionReader.Shift(start, 0.5 * (w.Start + w.End)), OccultationMargin.None, true).FrontIsInFront)
-            .ToList();
-
-        if (type == OccultationType.Partial && primary == OccultationMargin.Overlap && margins != OccultationMargin.Overlap)
+        /// <summary>The windows of intervals of offsets; an interval at a bound of the search ends exactly there.</summary>
+        internal Window[] ToWindows(IEnumerable<(double Start, double End)> intervals)
         {
-            var inside = Search(OccultationMargin.BackInside).Concat(Search(OccultationMargin.FrontInside)).OrderBy(w => w.Start).ToList();
-            windows = Subtract(windows, inside);
+            return intervals.Select(w => new Window(
+                w.Start == 0.0 ? _start : At(w.Start),
+                w.End == Offsets[^1] ? _end : At(w.End))).ToArray();
         }
-
-        return windows.Select(w => new Window(
-            w.Start == 0.0 ? start : ApparentPositionReader.Shift(start, w.Start),
-            w.End == offsets[^1] ? end : ApparentPositionReader.Shift(start, w.End))).ToArray();
     }
 
     /// <summary>
