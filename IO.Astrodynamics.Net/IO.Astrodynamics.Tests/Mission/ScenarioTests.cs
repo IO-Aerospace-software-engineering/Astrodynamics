@@ -169,7 +169,10 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1573978 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(18.3896996, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 2);
             Assert.Equal(new Vector3(-373.24910751995867, -125.23695719049852, 201.38103911830422), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
-            Assert.Equal(919.4849820926962, maneuver1.FuelBurned, 2);
+            // 919.4849820926962 kg before #501: the parking orbit is given 47.3 h before the window, and the start state
+            // is the two-body motion over the TT seconds to it, 2.96e-5 s fewer than the TDB seconds, 0.169 m along the
+            // orbit (choice 8 of #501), then integrated in TT
+            Assert.Equal(919.4852155798366, maneuver1.FuelBurned, 2);
 
             maneuver1 = maneuver1.NextManeuver;
 
@@ -387,7 +390,10 @@ namespace IO.Astrodynamics.Tests.Mission
                 Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1573978 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
                 Assert.Equal(18.3896996, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 2);
                 Assert.Equal(new Vector3(-373.24910751995867, -125.23695719049852, 201.38103911830422), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
-                Assert.Equal(919.4849820926962, maneuver1.FuelBurned, 2);
+                // 919.4849820926962 kg before #501: the parking orbit is given 47.3 h before the window, and the start state
+            // is the two-body motion over the TT seconds to it, 2.96e-5 s fewer than the TDB seconds, 0.169 m along the
+            // orbit (choice 8 of #501), then integrated in TT
+            Assert.Equal(919.4852155798366, maneuver1.FuelBurned, 2);
 
                 maneuver1 = maneuver1.NextManeuver;
 
@@ -441,7 +447,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1573978 TDB"), maneuver2.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(18.3896996, maneuver2.ThrustWindow.Value.Length.TotalSeconds, 2);
             Assert.Equal(new Vector3(-373.24910751995867, -125.23695719049852, 201.38103911830422), ((ImpulseManeuver)maneuver2).DeltaV, TestHelpers.VectorComparer);
-            Assert.Equal(919.4849820926962, maneuver2.FuelBurned, 2);
+            Assert.Equal(919.4852155798366, maneuver2.FuelBurned, 2);
 
             maneuver2 = maneuver2.NextManeuver;
 
