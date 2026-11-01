@@ -69,8 +69,8 @@
 
 | Operator | Description |
 |----------|-------------|
-| `Time + TimeSpan` | Add duration to time |
-| `Time - TimeSpan` | Subtract duration from time |
+| `Time + TimeSpan` | Add duration to time: calendar arithmetic in the frame of the time, so across a leap second a UTC (or local) time and the time a span after it are the span plus the leap second apart, `(t + d) - t` is `d + 1 s` |
+| `Time - TimeSpan` | Subtract duration from time, calendar arithmetic as `+` |
 | `Time - Time` | Duration between two instants: the difference of the calendars in TDB, TT, TAI and GPS, through TAI for UTC and local times, so that leap seconds count ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)) |
 | `<`, `>`, `<=`, `>=` | Comparison operators |
 
@@ -102,7 +102,7 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
 | Member | Description |
 |--------|-------------|
 | `StartDate` / `EndDate` | Interval boundaries |
-| `Length` | Window duration, `EndDate - StartDate`: 121 s for the two UTC minutes around the leap second of 2016-12-31 |
+| `Length` | Window duration, `EndDate - StartDate`: 121 s for the two UTC minutes around the leap second of 2016-12-31; the length given to `Window(Time, TimeSpan)`, whose `EndDate` is `start + length` in calendar arithmetic, so a UTC window built from a length across a leap second keeps that length while `EndDate - StartDate`, and a propagation over it, count the leap second |
 | `Merge(Window)` | Merge two overlapping windows |
 | `Intersects(Window)` / `Intersects(Time)` | Check overlap |
 | `GetIntersection(Window)` | Get overlapping portion |
@@ -120,8 +120,11 @@ A numerical propagation integrates over the seconds of the dynamical time of its
 ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)):
 
 - **about the Earth** (the resolved central body is NAIF 399), the TT seconds between the instants of its window. TT is
-  the coordinate time of the geocentric reference system, which GMAT counts (elapsed A1 seconds) and the conformance
-  suite prescribes (spec.md §12.1). The forces at t are those of the instant TT₀ + t: the bodies and the orientation of
+  the coordinate time of the geocentric reference system, a scaled TCG, and TDB the barycentric time of the
+  ephemerides (IERS Conventions (2010), G. Petit and B. Luzum (eds.), IERS Technical Note 36, chapter 10; confirmed by S. Guillet, 2026-10-29). GMAT counts TT: GMAT R2026a evaluates the
+  derivatives at the epoch plus the elapsed seconds in A1 (`src/base/forcemodel/ODEModel.cpp:3201`), and A1 is TAI
+  plus a constant (`src/gmatutil/util/TimeSystemConverter.cpp:282-286`), so its seconds are TT seconds. The conformance
+  suite prescribes TT (spec.md §12.1). The forces at t are those of the instant TT₀ + t: the bodies and the orientation of
   the Earth at its TDB, the drag at its UTC;
 - **about any other body**, SSB mode included (a star or a barycentre resolves to the Sun), the TDB seconds of the
   window, as before 10.2.0, bit for bit.
@@ -151,7 +154,8 @@ and local tags, through IO's TDB − TT series for a TDB tag.
   TDB epoch is then interpolated, and an exact-key lookup of a `Time` misses the output epochs. The TDB gaps between
   the labels vary by a tick, so `Spacecraft.WriteEphemeris` writes an SPK segment of type 9 (Lagrange, unequal steps)
   for a propagation about the Earth, where it wrote type 8 (equal steps) before (measured on UTC and TDB windows of an
-  hour and a day, 2026-11-01); about any other body it still writes type 8.
+  hour and a day, 2026-11-01); about any other body the labels are those of before 10.2.0, bit for bit, so the segment
+  type is unchanged.
 - **End**: when the output grid misses the length of the window by less than 1e-9 of it (three times the largest rate
   of TDB − TT), the propagation ends at the end of the window, and its last output is labelled with the end of the
   window as the caller gave it. Otherwise the propagation runs to the larger of the window and of its grid, as before.
@@ -166,8 +170,12 @@ exact elapsed time instead.
 
 A solution is read at an epoch in any frame
 ([#507](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/507)): a UTC, TAI, TT or GPS epoch
-names the same instant as its TDB label, to the tick. Before 10.2.0 a non-TDB epoch read on a solution about the Moon or
-any other body was taken as a TAI difference from the TDB base, another instant by the change of TDB − TT (2.1 cm about the Moon in the tests of the fix).
+names the same instant as its TDB label, to the tick, and the bounds of the solution are read in the seconds of the time
+argument, so the UTC start and end of a UTC window are inside it. Before 10.2.0 a non-TDB epoch read on a solution about
+any central body was taken as a TAI difference from the TDB base, another instant by the change of TDB − TT (0.22 m after
+a day in LEO), and the UTC start or end of a UTC window could compare a tick outside the solution through TAI, where the
+getters threw `ArgumentOutOfRangeException`. About the Earth the TT time argument reads the TT seconds of the epoch;
+about any other body the epoch is converted to TDB first (2.1 cm about the Moon in the tests of the fix).
 
 ### Velocities
 
@@ -183,8 +191,10 @@ TT seconds about the Earth, TDB seconds about any other body, whatever the tags 
 two UTC epochs included, and none at the same instant
 ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)). A `TimeSpan` added to a TDB
 epoch is a span of TDB: about the Earth, `elements.ToStateVector(elements.Epoch + elements.Period())` from a TDB epoch is
-off the start by the change of TDB − TT over the period (1.2e-6 s of motion over an hour at J2000); from a UTC or TT
-epoch it returns there.
+off the start by the change of TDB − TT over the period (1.2e-6 s of motion over an hour at J2000); from a TT epoch it
+returns there, and from a UTC epoch away from a leap second. `Time + TimeSpan` stays calendar arithmetic on UTC: from a
+UTC epoch whose period holds a leap second, `Epoch + Period()` is a period and one second of TT later, and the state
+is one second of motion past the start.
 
 ## See Also
 

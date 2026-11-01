@@ -89,8 +89,9 @@ every other point-mass computation of the library (`CelestialItem.GM`, the third
 That GM is TDB-compatible, while a propagation about the Earth counts TT seconds
 ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501),
 [Time & Windows](time-and-windows.md#the-time-argument-of-a-propagation)): the default pairs a TDB-compatible GM with the
-TT time argument, 1.5e-8 from the TT-compatible value. The TT-compatible value is the GM of EGM2008, which GMAT applies
-from the header of a `.cof`: `GeopotentialCentralTerm.ModelGravitationalParameter` below. Scaled to TDB-compatible units
+TT time argument, 1.5e-8 from the TT-compatible value (the compatibility of a GM is that of the time scale it is used
+with: IERS Conventions (2010), G. Petit and B. Luzum (eds.), IERS Technical Note 36, chapter 10 and Table 1.1; confirmed by S. Guillet, 2026-10-29). The TT-compatible value is the GM of
+EGM2008, which GMAT applies from the header of a `.cof`: `GeopotentialCentralTerm.ModelGravitationalParameter` below. Scaled to TDB-compatible units
 it is within 2.3e-10 of DE440's (Klioner et al., 2010). The GMs and the DE440 positions of the third bodies are not
 scaled either, as GMAT and the suite do not scale them: 1.48e-8 of the third-body acceleration, about 1e-14 m/s² in LEO
 for the Moon's tidal term (computed). Before 10.2.0 the harmonics took the GM and the equatorial radius of the kernels

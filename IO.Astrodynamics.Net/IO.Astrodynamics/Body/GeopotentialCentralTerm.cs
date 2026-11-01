@@ -12,8 +12,9 @@ public enum GeopotentialCentralTerm
     /// The GM of the body (<see cref="CelestialItem.GM"/>, from its kernels), the GM of every other point-mass
     /// computation of the library: the default (decision D2-A of #444). For the Earth that GM is TDB-compatible, while
     /// the propagation about the Earth counts TT seconds (#501): the default pairs a TDB-compatible GM with the TT time
-    /// argument, 1.5e-8 from the TT-compatible value, which <see cref="ModelGravitationalParameter"/> gives. A field of
-    /// degree 0 is then the point mass of the body.
+    /// argument, 1.5e-8 from the TT-compatible value, which <see cref="ModelGravitationalParameter"/> gives (the
+    /// compatibility of a GM is that of the time scale it is used with: IERS Conventions (2010), G. Petit and B. Luzum (eds.), IERS Technical Note 36, chapter 10 and Table 1.1; confirmed
+    /// by S. Guillet, 2026-10-29). A field of degree 0 is then the point mass of the body.
     /// </summary>
     BodyGravitationalParameter,
 

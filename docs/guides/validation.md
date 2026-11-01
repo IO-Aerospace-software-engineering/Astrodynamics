@@ -141,7 +141,7 @@ its key. Release, Linux, 2026-10-27, the largest ratio of a delta to its toleran
 
 | Category | conformance-tests#25 (c1af386) | main (d4e9905) |
 |----------|--------------------------------|----------------|
-| `propagator` | 0.173 (003, vz: 1.73e-7 km/s; 001 to 003 within 15.6 cm and 0.173 mm/s per component); with the integrator at 1e-13 of lot 2, 0.180 (003, vz: 1.80e-7 km/s; 001 to 003 within 16.3 cm and 0.180 mm/s per component; measured again on 2026-10-28 on the suite's main, 4a7c20f, which holds these cases) | 0.815 (004, y: 8.15e-5 km against the override of 1e-4 km), the same at 1e-13 |
+| `propagator` | 0.173 (003, vz: 1.73e-7 km/s; 001 to 003 within 15.6 cm and 0.173 mm/s per component); with the integrator at 1e-13 of lot 2, 0.180 (003, vz: 1.80e-7 km/s; 001 to 003 within 16.3 cm and 0.180 mm/s per component; measured again on 2026-10-28 on the suite's main, 4a7c20f, which holds these cases); with the TT time argument of [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501), at 1e-13 on the suite at 09d10cd (2026-11-01), 0.0186 (001, the largest velocity component: 1.86e-8 km/s; 001 to 003 within 1.41 cm and 0.0186 mm/s per component) | 0.815 (004, y: 8.15e-5 km against the override of 1e-4 km), the same at 1e-13 |
 | `eclipse` | 0.046 (umbra exit, 4.6e-4 s) | 0.0019 (penumbra duration against the override of 1 s) |
 | `tracking_data` | 0.0033 (median range rate, 3.3e-10 km/s) | 0.78 (minimum range, 2.3e-3 km against the override of 3e-3 km) |
 | `pointing_triad` | 3.8e-11 (3.8e-16 rad) | 3.8e-12 |
@@ -207,7 +207,9 @@ About the Earth the library integrates over the TT seconds of the window since #
 ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)): over the TDB seconds, the
 errors of 006 to 012 were 2.2 cm to 10.8 cm and those of 013 to 015 0.30 m to 0.52 m (2026-10-28), the largest ratio
 0.34 (007); the move of each final state is |v|·δ, δ the change of TDB − TT over the window, within 0.13 % for the
-gravity and two-body cases and within −1.4 % to +2.0 % for the drag and SRP cases. About the Moon, Mars and the Sun
+gravity and two-body cases and within −1.4 % to +2.0 % for the drag and SRP cases (measured on the prototype of #501,
+2026-10-31; the implementation moves the deltas of the Earth cases against the prototype by 0.59 mm at most, on 007,
+whose move is about 5 cm, so these ratios hold to about 1 %). About the Moon, Mars and the Sun
 both integrate over TDB seconds. The field files of `data/` end without a final newline, which the library's reader needs
 ([#502](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/502)). The CI logs of `Lot2CaseTests`
 give the ratios on Windows and macOS arm64.
@@ -236,8 +238,11 @@ Since lot 2 the runner integrates at 1e-13 (see [Lot 2](#lot-2-drag-srp-heo-and-
 before #501: 0.118 m, 0.071 m, 0.177 m, 0.081 m and 0.083 m (2026-10-28). The library's tests keep 1e-11; their
 figures over the TDB seconds were 0.111 m, 0.071 m and 0.169 m for RK7(8), 0.394 m on 002 for Velocity-Verlet.
 
-The test limits are non-regression guards at twice these values, rounded up at the second significant digit, measured
-on Linux only, not accuracy specifications:
+The test limits are still the non-regression guards set before #501, twice the figures over the TDB seconds above,
+rounded up at the second significant digit, on Linux; they are to be set again at twice the worst over Linux, Windows and
+macOS arm64 from the `MEASURE` lines of the CI of
+[#505](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/505). They are not accuracy
+specifications:
 
 | Case | RK7(8) limits | Velocity-Verlet limits |
 |------|---------------|------------------------|
@@ -272,10 +277,12 @@ of the final state (`GmatConformancePropagatorTests`, Linux, 2026-11-01, over th
 | 003, SSO, 10×10, Moon, Sun | 1.14 cm, 0.0087 mm/s | 18.36 m, 20.0 mm/s | not run (truncation about 250 m) |
 
 Over the TDB seconds of the day, before #501, the RK7(8) figures were 8.83 cm, 5.95 cm and 15.6 cm and Velocity-Verlet
-33.7 cm (2026-10-27): the change of TDB − TT, |v|·δ, was most of them; the δ term had cancelled part of the step error
-of Velocity-Verlet. What remains is the models of the two tools, chiefly the orientation of the Earth (GMAT's FK5 with its EOP file, the library's `ITRF93`;
+33.7 cm (2026-10-27): the change of TDB − TT, |v|·δ, was most of them; probably, the δ term had cancelled part of the
+step error of Velocity-Verlet (an inference from the magnitudes alone, not traced). What remains is the models of the two tools, chiefly the orientation of the Earth (GMAT's FK5 with its EOP file, the library's `ITRF93`;
 the study measured GMAT's own spread over the Earth-orientation data at up to 4.4 cm) and the GMs of the third bodies.
-The bounds of the test are provisional, twice the Linux figures, until measured on the three platforms of the CI.
+The bounds of the test are still those set before #501, twice the worst over Linux, Windows and macOS arm64 over the TDB
+seconds (0.18 m, 0.12 m and 0.32 m for RK7(8), 0.68 m for Velocity-Verlet; CI of 77b509c, 2026-10-27), until they are set
+again from the three-platform logs of the CI of #505.
 
 Run the conformance runner, next to a clone of conformance-tests:
 
@@ -306,7 +313,7 @@ Known sources of the centimeter residual between IO.Astrodynamics (RK7(8)) and t
 | Ephemerides | `de440s.bsp` | `de440s.bsp`, the same file (identical MD5) | None | Verified |
 | Constants (Earth GM, reference radius of the field) | The central term with the GM of `gm_de440.tpc` (3.98600435507e14 m³/s², TDB-compatible); the harmonics of EGM2008 with its own GM and reference radius (3.986004415e14 m³/s², 6378136.3 m) since #410, before which they took the GM of the kernels and the equatorial radius of `pck00011.tpc` (6378136.6 m) | The GM and the radius of EGM2008 in the header of the `.cof`, applied to the whole field (conformance-tests#25); GMAT defaults and the JGM3 file before | Measured (2026-10-23): the old constants put the harmonics 7.9e-8 away from EGM2008 at degree 2 (9.5e-10 m/s² in LEO 400 km): over one day 7.8 cm on R2 and 1.6 mm on R4; the residuals of cases 001 to 003 against their goldens changed by 0.15 m at most. Remaining: the GM and the radius of EGM2008 are TT-compatible values, used with the TDB-compatible coordinates of the propagation, as GMAT and the ICGEM convention do; scaled to TDB-compatible values (Klioner et al., 2010), the harmonics would change by 4.5e-8, about 4.5 cm a day on R2. The central term takes the model's GM on request, GMAT's convention for a `.cof` header (decision 18 of #457; [above](#against-gmat-with-egm2008s-gm-in-the-central-term)), which the runner applies to the propagator cases | Fixed ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)); the TDB scaling a known approximation |
 | Time scales | The TT seconds between the instants of the window about the Earth, the forces at TT₀ + t (#501); the end read as tagged | Elapsed time `ElapsedSecs = 86400`, A1 (TT) seconds | Over the TDB seconds the library integrated before #501, the final state moved by |v|·δ, δ the change of TDB − TT over the day: 5.1 cm in LEO from 2021-03-20, most of the decimeter residuals of 001 to 003; sampling the end of the window in the wrong scale shifted it by about 18 µs, 0.14 m in LEO (before #410) | Resolved ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)) |
-| Integration error | RK7(8), tolerances 1e-11 (1e-13 in the runner) | PrinceDormand78, accuracy 1e-13 | 4.3 mm and 4.1 mm over one sidereal day at GEO (two-body cases 004 and 005, the runner at 1e-13; 0.08 m over the TDB seconds before #501) | Measured |
+| Integration error | RK7(8), tolerances 1e-11 (1e-13 in the runner) | PrinceDormand78, accuracy 1e-13 | The library's integration error on the GEO of the two-body cases is 8.1e-6 m over the TT length against Kepler (design of #501, §9), while 004 and 005 are 4.3 mm and 4.1 mm from GMAT over one sidereal day (the runner at 1e-13): the residual is not the library's integration, but GMAT's integration, its handling of the epochs or its constants. The 0.08 m of 004 and 005 over the TDB seconds before #501 was mostly |v|·δ | Not attributed |
 
 ## State Transition Matrix and Covariance
 
@@ -621,7 +628,7 @@ variational equation enters). Computation: each tool's Φ against its own centra
 | G2 | 8.4e-9 | 1.4e-8 | 1.7e-8 | 1.9e-8 | 5.7 cm, 6.4e-5 m/s |
 | G3 | 4.8e-12 | 2.2e-8 | 1.7e-8 | 7.7e-9 | 58 µm, 2.8e-9 m/s |
 | G4 | 3.8e-8 | 7.9e-8 | 4.6e-8 | 1.5e-8 | 25 cm, 1.8e-4 m/s |
-| G5 | 1.0e-4 | 2.5e-7 | 1.0e-4 | 2.5e-7 | 8.0 mm, 9.1e-6 m/s |
+| G5 | 1.0e-4 | 2.5e-7 | 9.9e-5 | 2.5e-7 | 8.0 mm, 9.1e-6 m/s |
 | G6 | 3.7e-5 | 1.1e-6 | 3.6e-5 | 3.0e-8 | 11 cm, 1.3e-4 m/s |
 
 Measured on 2026-11-01 with the TT time argument of
@@ -629,10 +636,13 @@ Measured on 2026-11-01 with the TT time argument of
 TT, seconds; the library integrates over TT seconds about the Earth and is read at the same elapsed times, through its
 dense output and the variational equations at an exact t (`InterpolateAtElapsed`), not at `Time` labels, which hold
 TT₀ + t to 1e-7 s only (7.5e-4 m in LEO, about 1e-10 on Φ). The window of the cases is the duration in TT seconds, its
-end one tick after the label of its end. Read at TDB offsets, G1's total would be 7.2e-9 and G5's state 5.5 cm. The
-totals and the states are those of 2026-10-23 at the digits of the table but G5's state, 8.0 mm (8.2 mm); the models and
-computation columns, central differences of whole propagations, moved within what they resolve (G3's models 2.2e-8,
-1.2e-8 before; G5's 2.5e-7, 1.5e-7 before).
+end one tick after the label of its end. Read at TDB offsets, G1's total would be 7.2e-9 and G5's state 5.5 cm. Only
+the columns that depend on the library moved; GMAT's computation is GMAT's Φ against GMAT's own central differences,
+which #501 does not touch. The totals are those of 2026-10-23 at the digits of the table. The cells that moved, the
+value of 2026-10-23 in parentheses: G1's state 53 µm (5.25e-5 m; 52 µm); G5's state 8.0 mm and 9.1e-6 m/s (8.2 mm and
+9.2e-6 m/s); and, within what central differences of whole propagations resolve, the models of G3 2.2e-8 (1.2e-8), G4
+7.9e-8 (7.2e-8) and G5 2.5e-7 (1.5e-7), and the library's computation of G3 7.7e-9 (7.8e-9), G4 1.5e-8 (1.4e-8), G5
+2.5e-7 (2.1e-7) and G6 3.0e-8 (2.4e-8).
 
 Measured on 2026-10-23 with the field of #410 (the harmonics with the constants of EGM2008), GMAT run again with it:
 the totals and the states of G1 to G4 moved by one unit of the third digit at most; G5's state moved from 7.5 mm, G6's total from 5.4e-5

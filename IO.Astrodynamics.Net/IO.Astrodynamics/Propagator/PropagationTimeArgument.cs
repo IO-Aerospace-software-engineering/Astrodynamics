@@ -11,7 +11,10 @@ namespace IO.Astrodynamics.Propagator;
 /// The time argument of a numerical propagation: the scale of its integration variable t, the seconds from the base
 /// epoch of a segment, and every mapping between t and the epochs (#501). About the Earth (NAIF 399) it is TT, the
 /// coordinate time of the geocentric reference system, which the conformance suite and GMAT count; about any other
-/// central body, the Sun of a star or barycentre observer (SSB mode) included, TDB.
+/// central body, the Sun of a star or barycentre observer (SSB mode) included, TDB, the barycentric time of the
+/// ephemerides (IERS Conventions (2010), G. Petit and B. Luzum (eds.), IERS Technical Note 36, chapter 10; confirmed by S. Guillet, 2026-10-29). GMAT R2026a evaluates the derivatives at
+/// the epoch plus the elapsed seconds in A1, TAI plus a constant (<c>src/base/forcemodel/ODEModel.cpp:3201</c>,
+/// <c>src/gmatutil/util/TimeSystemConverter.cpp:282-286</c>).
 /// </summary>
 /// <remarks>
 /// <para>

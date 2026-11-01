@@ -781,7 +781,9 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <see cref="Epoch"/>, the leap seconds between two UTC epochs included; none at the same instant
     /// (#501, #508). A <see cref="TimeSpan"/> added to a TDB epoch is a span of TDB, so about the Earth
     /// <c>AtEpoch(Epoch + Period())</c> from a TDB epoch is off the start by the change of TDB − TT over the period
-    /// (1.2e-6 s of motion over an hour at most); from a UTC or TT epoch it returns there.
+    /// (1.2e-6 s of motion over an hour at most); from a TT epoch it returns there, and from a UTC epoch away from a leap
+    /// second: <see cref="Time"/> + <see cref="TimeSpan"/> adds calendar seconds to a UTC time, so across a leap second
+    /// <c>Epoch + Period()</c> is a period and one second of TT later.
     /// </remarks>
     public virtual OrbitalParameters AtEpoch(Time epoch)
     {
