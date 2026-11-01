@@ -157,9 +157,11 @@ namespace IO.Astrodynamics.Tests.Body
             Directory.CreateDirectory(directory);
             var files = new[] { "sc179.tsc", "sc179.tf", "camera789.tf", "camera789.ti", "sc179.bsp", "sc179.ck" }
                 .Select(name => new FileInfo(Path.Combine(directory, name))).ToArray();
-            foreach (var file in files.Where(f => f.Exists))
+            // Deleted by path: a FileInfo keeps the state it first read, and LoadKernels skips a kernel whose FileInfo
+            // read it as missing, as on the first run in a new output directory (SPICE(KERNELVARNOTFOUND) at the CK)
+            foreach (var file in files)
             {
-                file.Delete();
+                File.Delete(file.FullName);
             }
 
             // The clock and the frames first: the orientation is written in ticks of the clock
