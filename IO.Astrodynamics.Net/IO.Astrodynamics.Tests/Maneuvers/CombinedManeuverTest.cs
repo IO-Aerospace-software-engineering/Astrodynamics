@@ -4,6 +4,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 
@@ -77,7 +78,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 42164000.0, 0.0, spc.Engines.First());
 
-            var maneuverPoint = orbitalParams.ToStateVector(orbitalParams.Epoch + orbitalParams.Period() * 0.5);
+            // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
+            // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee
+            var maneuverPoint = orbitalParams.ToStateVector(
+                PropagationTimeArgument.Tt.EpochAt(orbitalParams.Epoch, orbitalParams.Period().TotalSeconds * 0.5));
             var res = maneuver.TryExecute(maneuverPoint);
             // The y and z parts of the quaternion are zero to rounding (1e-11): compared, not matched bit for bit
             Assert.Equal(
@@ -87,8 +91,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.True(System.Math.Abs(maneuver.DeltaV.X) < 1e-7, $"ΔV x: {maneuver.DeltaV.X:E2}");
             Assert.Equal(-1661.6798912062677, maneuver.DeltaV.Y);
             Assert.Equal(767.1890047800779, maneuver.DeltaV.Z);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323340").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296418").ToTDB()), maneuver.ManeuverWindow);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323340").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296418").ToTDB()), maneuver.ThrustWindow);
+            // The window at the apogee, half a period in TT seconds: 6.4e-6 s after that at the half period in TDB
+            // seconds (17:15:44.8323340), the change of TDB − TT over the 5 h 16 min (#501, #508)
+            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323404").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296482").ToTDB()), maneuver.ManeuverWindow);
+            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:15:44.8323404").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:52.7296482").ToTDB()), maneuver.ThrustWindow);
             Assert.Equal(3394.8653913932048, maneuver.FuelBurned,3);
         }
 
@@ -103,7 +109,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             var maneuver = new CombinedManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 6600000.0, 0.0, spc.Engines.First());
 
-            var maneuverPoint = orbitalParams.ToStateVector(orbitalParams.Epoch + orbitalParams.Period() * 0.5);
+            // The apogee, half a period after the perigee in TT seconds, the time of a two-body motion about the Earth
+            // (#501, #508); Epoch + Period() * 0.5 adds TDB seconds, n·δ off the apogee
+            var maneuverPoint = orbitalParams.ToStateVector(
+                PropagationTimeArgument.Tt.EpochAt(orbitalParams.Epoch, orbitalParams.Period().TotalSeconds * 0.5));
             var res = maneuver.TryExecute(maneuverPoint);
             // Equatorial after the maneuver: i, Ω and ω are zero (modulo 2π) to rounding, as SPICE OSCELT gives them
             Assert.Equal(
@@ -116,8 +125,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.True(System.Math.Abs(maneuver.DeltaV.X) < 1e-7, $"ΔV x: {maneuver.DeltaV.X:E2}");
             Assert.Equal(-186.70162770583374, maneuver.DeltaV.Y);
             Assert.Equal(767.1890047800779, maneuver.DeltaV.Z);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299721").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956911").ToTDB()), maneuver.ThrustWindow);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299721").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956911").ToTDB()), maneuver.ManeuverWindow);
+            // 6.4e-6 s after the window at the half period in TDB seconds (17:16:08.2299721) (#501, #508)
+            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299785").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956975").ToTDB()), maneuver.ThrustWindow);
+            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T17:16:08.2299785").ToTDB(), new TimeSystem.Time("2000-01-01T17:16:40.9956975").ToTDB()), maneuver.ManeuverWindow);
             Assert.Equal(1638.2859502950841, maneuver.FuelBurned);
         }
     }

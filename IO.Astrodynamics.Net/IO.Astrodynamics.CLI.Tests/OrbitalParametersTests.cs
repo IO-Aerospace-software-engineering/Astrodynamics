@@ -169,8 +169,16 @@ public class OrbitalParametersTests
             }, false, true, false, new EpochParameters{Epoch = "3600.0"});
             var res = sb.ToString();
 
+            // M + n Δt, Δt the TT seconds of the hour of TDB labels, the time of a two-body motion about the Earth (#501,
+            // #508): 1.21e-6 s short of 3600 s from J2000, 1.36e-9 rad of M (4.845168091449668 over 3600 s)
+            var elements = new IO.Astrodynamics.OrbitalParameters.KeplerianElements(6800803.5449581668,
+                0.001353139738203394, 0.90267066832323262, 0.56855938608714662, 1.8545420365902201, 0.7925932793200029,
+                new Body.CelestialBody(399), TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            double dt = Propagator.PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000TDB,
+                TimeSystem.Time.J2000TDB.AddSeconds(3600.0));
+            double m = IO.Astrodynamics.Math.SpecialFunctions.NormalizeAngle(elements.M + dt * elements.MeanMotion());
             Assert.Equal(
-                $"Epoch : 2000-01-01T13:00:00.0000000 TDB A : 6800803.544958167, Ecc. : 0.001353139738203394, Inc. : 0.9026706683232326, AN : 0.5685593860871466, AOP : 1.85454203659022, M : 4.845168091449668, Frame : J2000{Environment.NewLine}",
+                $"Epoch : 2000-01-01T13:00:00.0000000 TDB A : 6800803.544958167, Ecc. : 0.001353139738203394, Inc. : 0.9026706683232326, AN : 0.5685593860871466, AOP : 1.85454203659022, M : {m}, Frame : J2000{Environment.NewLine}",
                 res);
         }
     }
@@ -210,8 +218,11 @@ public class OrbitalParametersTests
             var earth = new Body.CelestialBody(399);
             Assert.Equal(reference.Gm["gm_de431"], earth.GM);
             Assert.Contains("Frame : J2000", res);
-            var state = ParseState(res, earth, TimeSystem.Time.J2000TDB.AddSeconds(dt));
-            var (position, velocity) = c.At(dt).RelativeError(state);
+            var epoch = TimeSystem.Time.J2000TDB.AddSeconds(dt);
+            var state = ParseState(res, earth, epoch);
+            // The reference at the TT seconds to the epoch, the time of a two-body motion about the Earth (#501, #508)
+            double elapsed = Propagator.PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000TDB, epoch);
+            var (position, velocity) = c.At(dt).MovedBy(elapsed - dt, earth.GM).RelativeError(state);
             _output.WriteLine($"MEASURE #452 EquinoctialToSv_CircularAndEquatorial, {name}, dt {dt} s: position " +
                               $"{position:E2}, velocity {velocity:E2} (relative)");
             Assert.True(position < EquinoctialPosition, $"position {position:E2}");

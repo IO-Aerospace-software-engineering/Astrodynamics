@@ -7,6 +7,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -36,6 +37,24 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 public class EquinoctialElementsSingularityTests
 {
     private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, frame: TimeFrame.TDBFrame);
+
+    // The TT seconds from the epoch, the time of a two-body motion about the Earth (#501, #508): Epoch + dt is dt TDB
+    // seconds later, dt + δ of TT, δ = 4.7e-8 s for 600 s and −2.3e-7 s for −3000 s
+    private static double Elapsed(TimeSystem.Time epoch) => PropagationTimeArgument.Tt.SecondsBetween(Epoch, epoch);
+
+    // The reference state of dt seconds, at the TT seconds from the epoch to epoch, which the elements count there
+    private EquinoctialReference.ReferenceState At(EquinoctialReference.ReferenceState state, TimeSystem.Time epoch) =>
+        state.MovedBy(Elapsed(epoch) - state.Dt, _earth.GM);
+
+    // The reference true longitude of dt seconds, moved as the state by its rate |r × v| / r²
+    private static (double High, double Low) TrueLongitudeAt(EquinoctialReference.ReferenceState state,
+        TimeSystem.Time epoch)
+    {
+        var r = new Vector3(state.PositionHigh[0], state.PositionHigh[1], state.PositionHigh[2]);
+        var v = new Vector3(state.VelocityHigh[0], state.VelocityHigh[1], state.VelocityHigh[2]);
+        var (high, low) = state.TrueLongitude!.Value;
+        return (high, low + r.Cross(v).Magnitude() / r.MagnitudeSquared() * (Elapsed(epoch) - state.Dt));
+    }
 
     // The bounds of the direct state, relative: twice the worst over Linux, Windows and macOS arm64 (CI run
     // 40280932636, 2026-10-26) of DirectState_MatchesTheReference, 3.07e-16 (suite 153, Windows) and 2.67e-16
@@ -185,10 +204,11 @@ public class EquinoctialElementsSingularityTests
 
         // Act: ToStateVector(Time) is AtEpoch(Time).ToStateVector(); TrueLongitude(Time) takes the true anomaly there
         var errors = cases.SelectMany(c => new[] { 600.0, -3000.0 }.Select(dt => (Class: EccentricityClass(c),
-            Name: $"{c.Name}, dt {dt} s", Error: c.At(dt).RelativeError(c.Elements(_earth, Epoch, Frames.Frame.ICRF)
-                .ToStateVector(Epoch + TimeSpan.FromSeconds(dt))), Longitude: EquinoctialReference.AngleError(
+            Name: $"{c.Name}, dt {dt} s", Error: At(c.At(dt), Epoch + TimeSpan.FromSeconds(dt)).RelativeError(c
+                .Elements(_earth, Epoch, Frames.Frame.ICRF).ToStateVector(Epoch + TimeSpan.FromSeconds(dt))),
+            Longitude: EquinoctialReference.AngleError(
                 c.Elements(_earth, Epoch, Frames.Frame.ICRF).TrueLongitude(Epoch + TimeSpan.FromSeconds(dt)),
-                c.At(dt).TrueLongitude!.Value)))).ToList();
+                TrueLongitudeAt(c.At(dt), Epoch + TimeSpan.FromSeconds(dt)))))).ToList();
 
         // Assert
         Assert.Equal(58, cases.Count);
@@ -223,7 +243,7 @@ public class EquinoctialElementsSingularityTests
             var dt = c.TimeToTrueAnomaly!.Value;
 
             // The epoch is a whole number of 100 ns: the state is compared with the reference moved by the same δ
-            double delta = (state.Epoch - Epoch).TotalSeconds - dt.High - dt.Low;
+            double delta = Elapsed(state.Epoch) - dt.High - dt.Low;
             return (Class: EccentricityClass(c), c.Name, Delta: System.Math.Abs(delta),
                 Error: c.AtTrueAnomaly.MovedBy(delta, _earth.GM).RelativeError(state));
         }).ToList();
@@ -236,10 +256,13 @@ public class EquinoctialElementsSingularityTests
         // (M = 0.0119 rad) it puts E 6.9 ulp below the 50-digit root, within the rounding floor of Kepler's equation
         // there (1 − e cos E = 0.106), where the former stop at 1e-6 landed 1.1 ulp above. The position keeps 2.7e-14,
         // twice either value; the velocity went from 1.4e-14 to 1.5e-14. The test passed with 1.4e-14: a
-        // re-measurement after an intended change of results, not a relaxation
+        // re-measurement after an intended change of results, not a relaxation. With #501 the epoch of ν counts TT
+        // seconds, so the state of the hyperbola is computed at another label, another draw of the rounding: 1.69e-16 on
+        // Linux (2026-10-31), against 5.39e-17 before. Provisional, twice the Linux
+        // measurement, to be set at twice the worst over Linux, Windows and macOS arm64 from the CI logs of #505
         var bounds = new Dictionary<string, (double Position, double Velocity)>
         {
-            ["e <= 0.05"] = (2.6e-15, 2.6e-15), ["e 0.9"] = (2.7e-14, 1.5e-14), ["hyperbola"] = (4.3e-16, 1.1e-16),
+            ["e <= 0.05"] = (2.6e-15, 2.6e-15), ["e 0.9"] = (2.7e-14, 1.5e-14), ["hyperbola"] = (4.3e-16, 3.4e-16),
             ["large L"] = (1.7e-15, 1.8e-15)
         };
         Assert.Equal(58, cases.Count);
@@ -299,8 +322,9 @@ public class EquinoctialElementsSingularityTests
         // Act
         var throughKeplerian = cases.Select(c => (c.Name, Error: c.At(0.0).RelativeError(c.Elements(_earth, Epoch)
             .ToEquinoctial().ToKeplerianElements().ToStateVector()))).ToList();
-        var later = cases.Select(c => (c.Name, Error: c.At(600.0).RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
-            .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
+        var later = cases.Select(c => (c.Name, Error: At(c.At(600.0), Epoch + TimeSpan.FromSeconds(600.0))
+            .RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
+                .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
 
         // Assert. Measured again on the Kepler solver of #453; twice the worst over Linux, Windows and macOS arm64 (CI
         // run 40413920226, 2026-10-26), h = −0.0 for both: 1.14e-15 and 1.09e-15 through the Keplerian elements;
@@ -325,8 +349,9 @@ public class EquinoctialElementsSingularityTests
             .ToStateVector()))).ToList();
         var throughKeplerian = cases.Select(c => (c.Name, Error: c.At(0.0).RelativeError(c.Elements(_earth, Epoch)
             .ToEquinoctial().ToKeplerianElements().ToStateVector()))).ToList();
-        var later = cases.Select(c => (c.Name, Error: c.At(600.0).RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
-            .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
+        var later = cases.Select(c => (c.Name, Error: At(c.At(600.0), Epoch + TimeSpan.FromSeconds(600.0))
+            .RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
+                .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
 
         // Assert. Measured again on the Kepler solver of #453; twice the worst over Linux, Windows and macOS arm64 (CI
         // run 40413920226, 2026-10-26), e = 0.9 for all: 1.63e-15 and 1.23e-15; 1.69e-15 and 1.33e-15; 1.23e-15 and
@@ -585,8 +610,9 @@ public class EquinoctialElementsSingularityTests
                 new Vector3(opm.XDot * 1000.0, opm.YDot * 1000.0, opm.ZDot * 1000.0), _earth, Epoch, Frames.Frame.ICRF);
             errors.Add(($"{c.Name}, GetEphemeris", c.At(0.0).RelativeError(ephemeris)));
             errors.Add(($"{c.Name}, OPM", c.At(0.0).RelativeError(fromOpm)));
-            later.Add(($"{c.Name}, GetEphemeris at +600 s", c.At(600.0).RelativeError(spacecraft.GetEphemeris(
-                Epoch + TimeSpan.FromSeconds(600.0), _earth, Frames.Frame.ICRF, Aberration.None).ToStateVector())));
+            later.Add(($"{c.Name}, GetEphemeris at +600 s", At(c.At(600.0), Epoch + TimeSpan.FromSeconds(600.0))
+                .RelativeError(spacecraft.GetEphemeris(Epoch + TimeSpan.FromSeconds(600.0), _earth, Frames.Frame.ICRF,
+                    Aberration.None).ToStateVector())));
         }
 
         // Assert; the OPM, in km, gives the same doubles here. (K) measured again on the Kepler solver of #453; twice
