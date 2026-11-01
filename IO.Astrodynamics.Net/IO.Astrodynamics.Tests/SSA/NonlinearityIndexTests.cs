@@ -53,8 +53,9 @@ public class NonlinearityIndexTests : IClassFixture<ConjunctionCovarianceCase>, 
         double nu = index.At(solution, epoch);
         watch.Stop();
 
-        // Assert: ν of the Keplerian STM (Lagrange f and g in universal variables, F2), on the same definition
-        double expected = KeplerianIndex(start, hours * 3600.0);
+        // Assert: ν of the Keplerian STM (Lagrange f and g in universal variables, F2), on the same definition, over the TT
+        // seconds to the epoch, the time argument about the Earth (#501)
+        double expected = KeplerianIndex(start, PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, epoch));
         double error = System.Math.Abs(nu - expected) / expected;
         _output.WriteLine($"{hours} h, P0 × {scale}²: ν {nu:E4} against {expected:E4} (Keplerian), {error:E2}; {watch.ElapsedMilliseconds} ms");
         Assert.True(error < 1e-8, $"{error:E2}");
@@ -148,7 +149,7 @@ public class NonlinearityIndexTests : IClassFixture<ConjunctionCovarianceCase>, 
         for (int trial = 0; trial < 8; trial++)
         {
             var q = Matrix<double>.Build.Random(6, 6, new MathNet.Numerics.Distributions.Normal(0.0, 1.0, random)).QR().Q;
-            double expected = KeplerianIndex(start, hours * 3600.0, q);
+            double expected = KeplerianIndex(start, PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, epoch), q);
             worst = System.Math.Max(worst, System.Math.Abs(nu - expected) / expected);
         }
 

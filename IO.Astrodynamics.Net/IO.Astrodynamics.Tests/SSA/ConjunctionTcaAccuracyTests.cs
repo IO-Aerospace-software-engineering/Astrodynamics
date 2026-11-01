@@ -93,7 +93,8 @@ public class ConjunctionTcaAccuracyTests
             protectedTrajectory, secondarySpacecraft, secondaryTrajectory, window);
 
         // Assert
-        double tcaError = (encounter.EncounterState.Epoch - Start).TotalSeconds - referenceTca;
+        // The TCA in TT seconds from the start, the time argument of the trajectories and of the Keplerian reference (#501)
+        double tcaError = PropagationTimeArgument.Tt.SecondsBetween(Start, encounter.EncounterState.Epoch) - referenceTca;
         double missError = encounter.EncounterState.MissDistanceMeters - referenceMiss;
         _output.WriteLine($"Keplerian TCA {referenceTca:F6} s, miss {referenceMiss:F6} m; analysis: TCA {tcaError:E3} s, " +
                           $"miss {missError:E3} m from the reference");

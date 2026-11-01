@@ -314,7 +314,7 @@ public class VariationalPropagationTests : IClassFixture<PartialsTestCases>
         // starts at the instant of the values of the first: the same doubles (#363; 1e-9 before, when the epoch carried
         // te to 100 ns only).
         int k = before.Steps.Count - 1;
-        double te = RK78Integrator.OnEpochGrid(before.BaseEpoch, after.BaseEpoch, before.Steps[k].CumulativeTime,
+        double te = solution.TimeArgument.OnEpochGrid(before.BaseEpoch, after.BaseEpoch, before.Steps[k].CumulativeTime,
             before.Duration);
         var yBefore = new double[48];
         var qBefore = new double[VariationalEquations.CovarianceLength];

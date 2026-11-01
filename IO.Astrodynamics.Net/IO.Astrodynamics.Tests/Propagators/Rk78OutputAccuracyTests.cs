@@ -74,14 +74,14 @@ public class Rk78OutputAccuracyTests
         double stepEndError = segment.Steps.Max(step =>
             PositionError(mu, initial, step.CumulativeTime + step.StepSize, step.EndPosition));
         double outputError = solution.StateVectors.Max(state =>
-            PositionError(mu, initial, (state.Epoch - Start).TotalSeconds, state.Position));
+            PositionError(mu, initial, Elapsed(state.Epoch), state.Position));
         double stepEndVelocityError = segment.Steps.Max(step =>
             VelocityError(mu, initial, step.CumulativeTime + step.StepSize, step.EndVelocity));
         double outputVelocityError = solution.StateVectors.Max(state =>
-            VelocityError(mu, initial, (state.Epoch - Start).TotalSeconds, state.Velocity));
+            VelocityError(mu, initial, Elapsed(state.Epoch), state.Velocity));
         double hermiteError = solution.StateVectors.Max(state =>
         {
-            double t = (state.Epoch - Start).TotalSeconds;
+            double t = Elapsed(state.Epoch);
             return PositionError(mu, initial, t, segment.InterpolateAt(t).position);
         });
         double medianStep = segment.Steps.Select(step => step.StepSize).OrderBy(h => h).ElementAt(segment.Steps.Count / 2);
@@ -198,7 +198,7 @@ public class Rk78OutputAccuracyTests
         var before = solution.Segments[0];
         var after = solution.Segments[1];
         int k = before.Steps.Count - 1;
-        double te = RK78Integrator.OnEpochGrid(Start, after.BaseEpoch, before.Steps[k].CumulativeTime,
+        double te = PropagationTimeArgument.Tt.OnEpochGrid(Start, after.BaseEpoch, before.Steps[k].CumulativeTime,
             before.Duration);
         double semiMajorAxis = 1.0 / (2.0 / orbit.Position.Magnitude() - orbit.Velocity.MagnitudeSquared() / mu);
         double halfPeriod = System.Math.PI * System.Math.Sqrt(semiMajorAxis * semiMajorAxis * semiMajorAxis / mu);
@@ -228,7 +228,7 @@ public class Rk78OutputAccuracyTests
         // After the maneuver: the Keplerian solution from the state at the event, plus ΔV
         var final = solution.StateVectors[^1];
         var (keplerFinal, _) = KeplerianStm.Propagate(mu, Position(keplerAtEvent),
-            Velocity(keplerAtEvent) + maneuver.DeltaV, (final.Epoch - after.BaseEpoch).TotalSeconds);
+            Velocity(keplerAtEvent) + maneuver.DeltaV, PropagationTimeArgument.Tt.SecondsBetween(after.BaseEpoch, final.Epoch));
         double finalError = (final.Position - Position(keplerFinal)).Magnitude();
         // Measured 8.368e-5 m after 2 h more; threshold three times the measurement
         _output.WriteLine($"last output against Kepler after the maneuver: {finalError:E3} m");
@@ -253,8 +253,10 @@ public class Rk78OutputAccuracyTests
 
         // Assert: measured 6.57e-8 s from the Keplerian perigee, and the restart 1.256e-8 m from the Keplerian state
         // (a 30 s step); thresholds three and 2.4 times the measurements
+        var before = solution.Segments[0];
         var after = solution.Segments[1];
-        double te = (after.BaseEpoch - Start).TotalSeconds;
+        double te = PropagationTimeArgument.Tt.OnEpochGrid(Start, after.BaseEpoch, before.Steps[^1].CumulativeTime,
+            before.Duration);
         double semiMajorAxis = 1.0 / (2.0 / orbit.Position.Magnitude() - orbit.Velocity.MagnitudeSquared() / mu);
         double halfPeriod = System.Math.PI * System.Math.Sqrt(semiMajorAxis * semiMajorAxis * semiMajorAxis / mu);
         _output.WriteLine($"fixed step: event {te - halfPeriod:E3} s from the Keplerian perigee");
@@ -312,7 +314,7 @@ public class Rk78OutputAccuracyTests
 
         // Assert
         Assert.Null(solution.Dynamics);
-        var (hermitePosition, hermiteVelocity) = solution.Segments.Single().InterpolateAt(1234.5);
+        var (hermitePosition, hermiteVelocity) = solution.Segments.Single().InterpolateAt(Elapsed(epoch));
         AssertSameBits(hermitePosition, position, "position");
         AssertSameBits(hermiteVelocity, velocity, "velocity");
     }
@@ -328,6 +330,10 @@ public class Rk78OutputAccuracyTests
         spacecraft.SetStandbyManeuver(maneuver);
         return (spacecraft, maneuver);
     }
+
+    // The seconds of the time argument from the start to an epoch, TT about the Earth (#501): the time at which the
+    // solution reads the epoch, and the time of the two-body reference there
+    private static double Elapsed(TimeSystem.Time epoch) => PropagationTimeArgument.Tt.SecondsBetween(Start, epoch);
 
     private static double PositionError(double mu, StateVector initial, double t, Vector3 position)
     {

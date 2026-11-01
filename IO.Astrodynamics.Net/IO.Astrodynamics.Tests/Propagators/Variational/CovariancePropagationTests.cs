@@ -167,7 +167,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
 
             // Assert: far within what the conjunction analysis needs (a covariance within 1 %); measured 4.5e-13 to
             // 1.2e-11 (Linux, .NET 10, 2026-10-14)
-            var (_, phi) = KeplerianStm.Propagate(_cases.Earth.GM, state.Position, state.Velocity, seconds);
+            // over the TT seconds to the epoch, the time argument about the Earth (#501)
+            var (_, phi) = KeplerianStm.Propagate(_cases.Earth.GM, state.Position, state.Velocity,
+                PropagationTimeArgument.Tt.SecondsBetween(Start, epoch));
             var phiKep = CovarianceAssert.ToMathNet(phi, 6);
             var expected = CovarianceAssert.ToArray(phiKep * p0 * phiKep.Transpose());
             double error = StmMeasures.WorstBlockError(p, expected);
@@ -363,7 +365,7 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         Assert.Equal(expected, after.Variational.EntryManeuver.Value.ExecutionCovariance);
         Assert.True(maneuver.DeltaV.Magnitude() > 100.0);
 
-        double te = RK78Integrator.OnEpochGrid(before.BaseEpoch, after.BaseEpoch, before.Steps[^1].CumulativeTime,
+        double te = solution.TimeArgument.OnEpochGrid(before.BaseEpoch, after.BaseEpoch, before.Steps[^1].CumulativeTime,
             before.Duration);
         var pBefore = new double[36];
         var pAfter = new double[36];
@@ -451,41 +453,90 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
     [Fact]
     public void AtTheEndOfAWindowThatStopsOneTickShort_TheEvaluationsReadTheValuesAtTheEnd()
     {
-        // Arrange: a window of 21 600.3 s, whose last step ends one tick (100 ns) before its end, since Time.AddSeconds
-        // truncates to the tick; the evaluations used to throw there (H3 review of lots A to C)
+        // Arrange: about the Earth the propagation integrates the TT length of its window and ends there (#501); the
+        // TDB label of the end of a UTC window maps to that length plus the sub-tick residuals of the labels of its start
+        // and of its end, so its last step ends before the label of its end when the start label falls further below
+        // its instant. The residual of a label follows the fraction of a tick of TDB − UTC, which turns in about 20 min:
+        // the start the second, among 2 000 from 12:00 TDB, whose label falls furthest below it, the end the first second
+        // from 21 600.3 s later whose label falls less; the evaluations used to throw past the last step (H3 review of
+        // lots A to C, where Time.AddSeconds left a TDB window one tick short)
+        double Residual(TimeSystem.Time utc) => PropagationTimeArgument.Tt.SecondsBetween(utc.ToTDB(), utc);
+        var start = Enumerable.Range(0, 2000).Select(k => Start.ToUTC().AddSeconds(k)).MaxBy(Residual);
+        var end = Enumerable.Range(0, 2000).Select(k => start.AddSeconds(21600.3 + k))
+            .First(e => Residual(e) < Residual(start));
+
+        var window = new TimeSystem.Window(start, end);
+        var state = Leo;
+        var solution = PartialsTestCases.Spacecraft(WithCovariance(new StateVector(state.Position, state.Velocity,
+                state.Observer, start.ToTDB(), state.Frame)))
+            .PropagateWithVariationalEquations(window, Bodies, new RK78Integrator(1e-9, 1e-9), true, true,
+                TimeSpan.FromSeconds(600.0), new VariationalOptions(ForceParameters.DragCoefficient,
+                    new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true,
+                    ConsiderParameters: new ConsiderParameters(0.1)));
+        var endLabel = window.EndDate.ToTDB();
+
+        // Act and assert: the end label is past the last step, by less than a tick, and reads the values at the end of
+        // the window bit for bit, as the end tag does; beyond that tick, the epoch is outside the propagation
+        double past = PropagationTimeArgument.Tt.SecondsBetween(solution.Segments[0].BaseEpoch, endLabel) -
+                      WindowEndAssert.IntegratedSeconds(solution);
+        _output.WriteLine($"end label {past:E3} s past the last step");
+        Assert.InRange(past, double.Epsilon, 1e-7);
+        Assert.InRange(WindowEndAssert.IntegratedSeconds(solution) - WindowEndAssert.LengthOf(window, solution), -1e-9,
+            1e-9);
+        AssertTheSameValuesAt(solution, endLabel, window.EndDate, 7);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            solution.EvaluateCovariance(endLabel.AddSeconds(1e-6), new double[36]));
+    }
+
+    [Fact]
+    public void AtTheEndOfATdbWindowThatStopsOneTickShort_AboutTheMoon_TheEvaluationsReadTheValuesAtTheEnd()
+    {
+        // Arrange: about any other body the time argument is TDB (#501), and a window of 21 600.3 s stops one tick
+        // (100 ns) before its end, since Time.AddSeconds truncates to the tick; the evaluations used to throw there (H3
+        // review of lots A to C). A 100 km lunar orbit, the Earth and the Sun as third bodies
+        var moon = _cases.Moon;
+        var orbit = new KeplerianElements(1837400.0, 0.001, 0.5, 0.2, 0.3, 0.0, moon, Start, Frames.Frame.ICRF)
+            .ToStateVector();
         var window = new TimeSystem.Window(Start, Start.AddSeconds(21600.3));
-        var solution = Propagate(WithCovariance(Leo), window.EndDate, new VariationalOptions(
-            ForceParameters.DragCoefficient, new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true,
-            ConsiderParameters: new ConsiderParameters(0.1)), true);
+        var solution = PartialsTestCases.Spacecraft(WithCovariance(orbit)).PropagateWithVariationalEquations(window,
+            new CelestialItem[] { moon, _cases.Earth, _cases.Sun }, new RK78Integrator(1e-9, 1e-9), false, false,
+            TimeSpan.FromSeconds(600.0), new VariationalOptions(ForceParameters.None,
+                new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true));
         var last = solution.Segments[^1];
-        var atEnd = new double[36];
-        var atLastStep = new double[36];
-        var extendedAtEnd = new double[49];
-        var extendedAtLastStep = new double[49];
-        var yAtEnd = new double[42];
-        var yAtLastStep = new double[42];
-        var qAtEnd = new double[21];
-        var qAtLastStep = new double[21];
         var lastStep = window.EndDate.AddSeconds(-1e-7);
 
-        // Act
-        solution.EvaluateCovariance(window.EndDate, atEnd);
-        solution.EvaluateCovariance(lastStep, atLastStep);
-        solution.EvaluateExtendedCovariance(window.EndDate, extendedAtEnd);
-        solution.EvaluateExtendedCovariance(lastStep, extendedAtLastStep);
-        solution.EvaluateVariational(window.EndDate, yAtEnd, qAtEnd);
-        solution.EvaluateVariational(lastStep, yAtLastStep, qAtLastStep);
-
-        // Assert: the window end is past the last step, by one tick, and reads its values bit for bit; beyond that tick,
-        // the epoch is outside the propagation
+        // Act and assert: the window end is past the last step, by one tick, and reads its values bit for bit; beyond that
+        // tick, the epoch is outside the propagation
+        Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
         Assert.True((window.EndDate - last.BaseEpoch).TotalSeconds > last.Duration);
         Assert.Equal(last.Duration, (lastStep - last.BaseEpoch).TotalSeconds);
-        Assert.Equal(atLastStep, atEnd);
-        Assert.Equal(extendedAtLastStep, extendedAtEnd);
-        Assert.Equal(yAtLastStep, yAtEnd);
-        Assert.Equal(qAtLastStep, qAtEnd);
+        AssertTheSameValuesAt(solution, window.EndDate, lastStep, 6);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            solution.EvaluateCovariance(window.EndDate.AddSeconds(1e-6), atEnd));
+            solution.EvaluateCovariance(window.EndDate.AddSeconds(1e-6), new double[36]));
+    }
+
+    // P, the extended covariance of m parameters and Y, Q of the solution read at two epochs: the same doubles
+    private static void AssertTheSameValuesAt(PropagationSolution solution, TimeSystem.Time epoch,
+        TimeSystem.Time other, int extended)
+    {
+        var at = new double[36];
+        var atOther = new double[36];
+        var extendedAt = new double[extended * extended];
+        var extendedAtOther = new double[extended * extended];
+        var y = new double[6 * solution.Dynamics.ColumnCount];
+        var yOther = new double[y.Length];
+        var q = new double[21];
+        var qOther = new double[21];
+        solution.EvaluateCovariance(epoch, at);
+        solution.EvaluateCovariance(other, atOther);
+        solution.EvaluateExtendedCovariance(epoch, extendedAt);
+        solution.EvaluateExtendedCovariance(other, extendedAtOther);
+        solution.EvaluateVariational(epoch, y, q);
+        solution.EvaluateVariational(other, yOther, qOther);
+        Assert.Equal(atOther, at);
+        Assert.Equal(extendedAtOther, extendedAt);
+        Assert.Equal(yOther, y);
+        Assert.Equal(qOther, q);
     }
 
     [Fact]
