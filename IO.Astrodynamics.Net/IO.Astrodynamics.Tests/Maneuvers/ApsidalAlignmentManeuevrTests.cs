@@ -62,8 +62,11 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targtOrbitalParams, spc.Engines.First());
             var res = maneuver.TryExecute(orbitalParams.ToStateVector(156.5 * Astrodynamics.Constants.Deg2Rad));
             Assert.Equal(maneuver.DeltaV, new Vector3(-1352.4744534060974, 564.6811827253609, 0.0),TestHelpers.VectorComparer);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T13:55:44.2314095"), TimeSpan.FromSeconds(10.7386318)), maneuver.ManeuverWindow);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T13:55:44.2314095"), TimeSpan.FromSeconds(10.7386318)), maneuver.ThrustWindow);
+            // The epoch of the true anomaly counts TT seconds from the epoch of the elements, the time of a two-body
+            // motion about the Earth (#501, #508): 2.4e-6 s after the 13:55:44.2314095 of the TDB seconds, the change of
+            // TDB − TT over the 2 h to it
+            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T13:55:44.2314119"), TimeSpan.FromSeconds(10.7386318)), maneuver.ManeuverWindow);
+            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T13:55:44.2314119"), TimeSpan.FromSeconds(10.7386318)), maneuver.ThrustWindow);
             Assert.Equal(536.93159217329242, maneuver.FuelBurned, 3);
         }
 
@@ -81,8 +84,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 new ApsidalAlignmentManeuver(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, targetOrbitalParams, spc.Engines.First());
             var res = maneuver.TryExecute(orbitalParams.ToStateVector(341.77 * Astrodynamics.Constants.Deg2Rad));
             Assert.Equal(maneuver.DeltaV, new Vector3(-1368.8299700588411, 498.1271161206587, 0.0), TestHelpers.VectorComparer);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T16:57:15.7421764"), TimeSpan.FromSeconds(10.6831353)), maneuver.ManeuverWindow);
-            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T16:57:15.7421764"), TimeSpan.FromSeconds(10.6831353)), maneuver.ThrustWindow);
+            // 6.0e-6 s after the 16:57:15.7421764 of the TDB seconds, the change of TDB − TT over the 5 h to the true
+            // anomaly (#501, #508)
+            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T16:57:15.7421824"), TimeSpan.FromSeconds(10.6831353)), maneuver.ManeuverWindow);
+            Assert.Equal(new Window(new TimeSystem.Time("2000-01-01T16:57:15.7421824"), TimeSpan.FromSeconds(10.6831353)), maneuver.ThrustWindow);
             Assert.Equal(534.15676737769638, maneuver.FuelBurned, 6);
         }
     }

@@ -75,6 +75,29 @@ internal abstract class PropagationTimeArgument
         from.CompareTo(to) == 0 ? 0.0 : For(centralBody).SecondsBetween(from, to);
 
     /// <summary>
+    /// The epoch, in the frame of <paramref name="from"/>, <paramref name="seconds"/> of the dynamical time of
+    /// <paramref name="centralBody"/> after <paramref name="from"/>: the inverse of <see cref="ElapsedSeconds"/> to the
+    /// tick, so that the epoch at which a two-body motion reaches a mean anomaly is the epoch that
+    /// <see cref="OrbitalParameters.OrbitalParameters.AtEpoch"/> carries there (#501, #508).
+    /// </summary>
+    /// <remarks>
+    /// About the Earth, a TDB epoch gives the TDB label of TT + <paramref name="seconds"/> (<see cref="EpochAt"/>), and any
+    /// other frame its TT, exact in ticks, plus the span, back in its frame: a UTC epoch therefore gets
+    /// <c>from + TimeSpan.FromSeconds(seconds)</c>, as before, away from a leap second, and counts the leap second across
+    /// one. About any other body, a TDB epoch gets <c>from + TimeSpan.FromSeconds(seconds)</c>, as before, and any other
+    /// frame its TDB plus the span, back in its frame.
+    /// </remarks>
+    internal static Time EpochAfter(ILocalizable centralBody, in Time from, double seconds)
+    {
+        var argument = For(centralBody);
+        var span = TimeSpan.FromSeconds(seconds);
+        if (from.Frame is TDBTimeFrame)
+            return argument == Tt ? Tt.EpochAt(from, seconds) : from + span;
+
+        return argument == Tt ? (from.ToTDT() + span).ConvertTo(from.Frame) : (from.ToTDB() + span).ConvertTo(from.Frame);
+    }
+
+    /// <summary>
     /// The length of a propagation window, in seconds of this time argument: TDB, the length of
     /// <paramref name="tdbWindow"/>; TT, the TT seconds between the ends of <paramref name="window"/> as they are tagged
     /// (exact in ticks between UTC, TAI, GPS, local or TT tags, leap seconds counted; through the series in double for a

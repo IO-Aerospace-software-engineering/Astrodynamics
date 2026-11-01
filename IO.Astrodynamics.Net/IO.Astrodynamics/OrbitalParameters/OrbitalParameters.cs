@@ -665,7 +665,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Computes the epoch time at a given mean anomaly.
     /// </summary>
     /// <param name="meanAnomaly">The mean anomaly at which to compute the epoch time.</param>
-    /// <returns>The epoch time at the given mean anomaly.</returns>
+    /// <returns>The epoch time at the given mean anomaly, in the frame of <see cref="Epoch"/>.</returns>
+    /// <remarks>The time to the mean anomaly is counted in the dynamical time of the observer, as
+    /// <see cref="AtEpoch"/> counts it: TT seconds about the Earth, TDB seconds about any other body (#501, #508), so that
+    /// <c>AtEpoch(EpochAtMeanAnomaly(m))</c> is at <c>m</c> to the tick of the epoch. About the Earth from a TDB epoch,
+    /// the epoch is not <c>Epoch + TimeSpan.FromSeconds(Δt)</c>, which adds TDB seconds.</remarks>
     public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
         var res = meanAnomaly - MeanAnomaly();
@@ -676,7 +680,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             res += Constants._2PI;
         }
 
-        return Epoch + TimeSpan.FromSeconds(res / MeanMotion());
+        return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch, res / MeanMotion());
     }
 
     /// <summary>

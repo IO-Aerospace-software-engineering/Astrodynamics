@@ -133,6 +133,63 @@ public class TwoBodyDynamicalTimeTests
         }
     }
 
+    public static TheoryData<string, string> BodiesAndTags
+    {
+        get
+        {
+            var data = new TheoryData<string, string>();
+            foreach (var body in new[] { "Earth", "Moon" })
+            foreach (var tag in Tags)
+                data.Add(body, tag);
+            return data;
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(BodiesAndTags))]
+    public void EpochAtMeanAnomaly_IsTheEpochAtWhichTheMotionReachesIt(string body, string tag)
+    {
+        // Arrange: half a turn after the epoch of the elements, in the frame of the elements
+        var elements = Orbit(body, Tagged(StartUtc, tag));
+        double halfTurn = System.Math.PI / elements.MeanMotion();
+
+        // Act
+        var epoch = elements.EpochAtMeanAnomaly(elements.MeanAnomaly() + System.Math.PI);
+        double elapsed = Elapsed(elements, elements.AtEpoch(epoch).MeanAnomaly(), halfTurn);
+
+        // Assert: the epoch, in the frame of the elements, is half a turn of the dynamical time of the central body
+        // after them, to the tick of the epoch; the TDB seconds of main about the Earth from a TDB epoch were 9.0e-7 s
+        // off for this half turn (measured with the former expression, 2026-11-01), and about the Moon from the other
+        // tags they counted TT seconds
+        double reference = ReferenceSeconds(body, elements.Epoch, epoch);
+        _output.WriteLine($"MEASURE {body} {tag}: the half turn {elapsed - halfTurn:E3} s, the reference " +
+                          $"{reference - halfTurn:E3} s");
+        Assert.Equal(elements.Epoch.Frame, epoch.Frame);
+        Assert.InRange(elapsed - halfTurn, -1e-7, 1e-7);
+        Assert.InRange(reference - halfTurn, -1e-7 - Bound(body, tag, tag), 1e-7 + Bound(body, tag, tag));
+    }
+
+    [Fact]
+    public void EpochAtMeanAnomaly_AcrossTheLeapSecond_CountsIt()
+    {
+        // Arrange: elements a minute before the leap second, about the Earth and about the Moon, in UTC
+        var before = new TimeSystem.Time(2016, 12, 31, 23, 59, 0, frame: TimeFrame.UTCFrame);
+        foreach (var body in new[] { "Earth", "Moon" })
+        {
+            var elements = Orbit(body, before);
+
+            // Act: the epoch 121 s of motion later
+            var epoch = elements.EpochAtMeanAnomaly(elements.MeanAnomaly() + 121.0 * elements.MeanMotion());
+
+            // Assert: 2017-01-01T00:01:00 UTC, the calendar 120 s later: about the Earth to the tick of the span; about
+            // the Moon through TDB and back, two conversions of a tick each, and TDB − TT changes by 4e-8 s in the two
+            // minutes
+            double bound = body == "Earth" ? 1e-7 : 2.4e-7;
+            Assert.Equal(TimeFrame.UTCFrame, epoch.Frame);
+            Assert.InRange((epoch.DateTime - new DateTime(2017, 1, 1, 0, 1, 0)).TotalSeconds, -bound, bound);
+        }
+    }
+
     private static KeplerianElements Orbit(string body, TimeSystem.Time epoch)
     {
         // A LEO about the Earth, a low lunar orbit about the Moon, both inclined
