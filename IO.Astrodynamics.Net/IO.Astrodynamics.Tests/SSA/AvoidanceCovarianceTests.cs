@@ -44,7 +44,8 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
 
     // Set on that measurement (decision of S. Guillet, 2026-10-20): the state 0 m, against about ten units in the last
     // place of a LEO position (9.3e-10 m at 7e6 m); P and the extended covariance 5.2e-15 at most, against 1e-13 (before:
-    // 1e-3 m and 1e-8, set at 1e-11, which the state of #415, 5.7e-4 m, passed)
+    // 1e-3 m and 1e-8, set at 1e-11, which the state of #415, 5.7e-4 m, passed). With the TT time argument of #501: the
+    // state 0 m, P and the extended covariance 4.1e-15 at most (Linux, 2026-11-01; 2.9e-15 on main the same day)
     private const double StateThresholdMeters = 1e-8;
     private const double CovarianceThreshold = 1e-13;
 

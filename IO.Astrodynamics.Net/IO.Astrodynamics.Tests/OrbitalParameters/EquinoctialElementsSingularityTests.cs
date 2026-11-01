@@ -257,9 +257,14 @@ public class EquinoctialElementsSingularityTests
         // there (1 − e cos E = 0.106), where the former stop at 1e-6 landed 1.1 ulp above. The position keeps 2.7e-14,
         // twice either value; the velocity went from 1.4e-14 to 1.5e-14. The test passed with 1.4e-14: a
         // re-measurement after an intended change of results, not a relaxation. With #501 the epoch of ν counts TT
-        // seconds, so the state of the hyperbola is computed at another label, another draw of the rounding: 1.69e-16 on
-        // Linux (2026-10-31), against 5.39e-17 before. Provisional, twice the Linux
-        // measurement, to be set at twice the worst over Linux, Windows and macOS arm64 from the CI logs of #505
+        // seconds, so the state of the hyperbola is computed at another elapsed time: its label falls 1.0e-9 s after the
+        // time to ν, against 6.19e-8 s before, and the velocity is 1.69e-16 from the reference moved by that δ (Linux,
+        // 2026-11-01), against 5.39e-17 before (the position 1.20e-16, against 2.14e-16). The figure of main was a low
+        // draw of the rounding: over the 401 epochs within ±200 ticks of the label, each against the reference moved to
+        // it, the velocity error of main has a median of 1.38e-16 and reaches 4.26e-16, above 1.1e-16 at 65 % of them, and
+        // that of the branch a median of 1.43e-16 and 4.68e-16 (the position 6.26e-16 and 5.81e-16 at most; a probe
+        // of the review of #505, not a committed test). Provisional, twice the Linux measurement, to be set at twice
+        // the worst over Linux, Windows and macOS arm64 from the CI logs of #505
         var bounds = new Dictionary<string, (double Position, double Velocity)>
         {
             ["e <= 0.05"] = (2.6e-15, 2.6e-15), ["e 0.9"] = (2.7e-14, 1.5e-14), ["hyperbola"] = (4.3e-16, 3.4e-16),

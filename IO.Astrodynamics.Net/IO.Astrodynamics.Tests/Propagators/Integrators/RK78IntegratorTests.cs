@@ -622,7 +622,10 @@ public class RK78IntegratorTests
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
         // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-10-27: 0.1111 m and 0.1259 mm/s; the limits are twice these values, rounded up at the second significant digit.
+        // 2026-11-01, with the TT time argument (#501): 0.02659 m and 0.03065 mm/s (2026-10-27, over the TDB seconds before
+        // #501: 0.1111 m and 0.1259 mm/s). The limits are still twice the figures of 2026-10-27, rounded up at the second
+        // significant digit; to be set again at twice the worst over Linux, Windows and macOS arm64 from the MEASURE lines
+        // of the CI of #505.
         const double PositionLimitMeters = 0.23;
         const double VelocityLimitMetersPerSecond = 2.6e-4;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_leo_grav10_001 (RK7(8))", res, propWindow,
@@ -686,7 +689,10 @@ public class RK78IntegratorTests
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
         // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-10-27: 0.07059 m and 0.005086 mm/s; the limits are twice these values, rounded up at the second significant digit.
+        // 2026-11-01, with the TT time argument (#501): 0.008324 m and 0.000688 mm/s (2026-10-27, over the TDB seconds
+        // before #501: 0.07059 m and 0.005086 mm/s). The limits are still twice the figures of 2026-10-27, rounded up at
+        // the second significant digit; to be set again at twice the worst over Linux, Windows and macOS arm64 from the
+        // MEASURE lines of the CI of #505.
         const double PositionLimitMeters = 0.15;
         const double VelocityLimitMetersPerSecond = 1.1e-5;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_geo_grav70_002 (RK7(8))", res, propWindow,
@@ -736,7 +742,10 @@ public class RK78IntegratorTests
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
         // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-10-27: 0.1692 m and 0.1779 mm/s; the limits are twice these values, rounded up at the second significant digit.
+        // 2026-11-01, with the TT time argument (#501): 0.01472 m and 0.009766 mm/s (2026-10-27, over the TDB seconds
+        // before #501: 0.1692 m and 0.1779 mm/s). The limits are still twice the figures of 2026-10-27, rounded up at the
+        // second significant digit; to be set again at twice the worst over Linux, Windows and macOS arm64 from the
+        // MEASURE lines of the CI of #505.
         const double PositionLimitMeters = 0.34;
         const double VelocityLimitMetersPerSecond = 3.6e-4;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_sso_grav10_003 (RK7(8))", res, propWindow,

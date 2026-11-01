@@ -68,6 +68,21 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// again at twice these measurements, 8.1e-4 and 3.6e-5 (decision of S. Guillet, 2026-10-22); the tests of the
 /// Validation category run on Linux only.
 /// </para>
+/// <para>
+/// The TT time argument of #501 moves the forces of every case at t by the change of TDB − TT, and so the steps of the
+/// propagations and of their references: another draw of their noise. Measured again (Linux, .NET 10, 2026-11-01; main
+/// e8f0d5f the same day in parentheses), worst outside the penumbra, Φ per block: R1 1.3e-8, 1.6e-8, 1.4e-8, 1.7e-8
+/// (the same); R2 3.0e-8, 1.3e-8, 3.0e-8, 1.2e-8 (2.0e-8, 2.4e-8, 2.0e-8, 2.4e-8), Ψ_Cd 1.2e-7, 1.2e-7 (the same); R3
+/// 2.3e-7, 2.5e-7, 2.3e-7, 2.5e-7 (1.9e-7, 2.1e-7, 1.9e-7, 2.1e-7), Ψ_Cr 1.6e-5 and, locally at 9.50 h, 2.3e-4 (2.9e-5
+/// and 2.6e-4); R4 9.0e-9, 2.4e-9, 8.9e-9, 2.2e-9 (6.1e-8, 2.1e-9, 4.8e-8, 1.9e-9), Ψ_Cr 1.4e-6, 1.6e-8 (1.9e-6,
+/// 2.4e-8); R5 2.4e-7, 2.4e-7, 2.4e-7, 2.4e-7 (1.5e-7, 3.0e-7, 1.5e-7, 3.0e-7), Ψ_Cd 1.4e-7, 1.4e-7 (1.7e-7, 1.8e-7).
+/// In the penumbra: R3 Φ 2.3e-7 to 2.5e-7, Ψ_Cr 6.4e-6 and 7.9e-6 (1.9e-7 to 2.1e-7, 1.1e-5 and 1.3e-5); R4 Φ 5.1e-10
+/// to 5.7e-9, Ψ_Cr 2.1e-9 and 5.1e-9 (3.6e-10 to 4.0e-9, 2.5e-9 and 1.1e-9). Over the arc: R2 Ψ_Cd 1.2e-7 and 1.2e-7,
+/// R3 Ψ_Cr 2.5e-6 and 3.4e-6 (6.0e-6 and 8.8e-6), R4 Ψ_Cr 2.7e-9 and 3.5e-9 (3.2e-9 and 3.9e-9), R5 Ψ_Cd 7.5e-8 and
+/// 7.7e-8 (5.8e-8 and 8.3e-8). The records are set again at twice these measurements, rounded up at the second
+/// significant digit (choice 17 of #501, the Linux rule of the Validation category): R3 in the penumbra 1.6e-5 (3.6e-5
+/// before), the local Ψ_Cr of R3 4.5e-4 (8.1e-4), R4 in the penumbra 1.2e-8 (2.5e-8).
+/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class StmValidationTests : IClassFixture<ReferenceCases>
@@ -90,8 +105,8 @@ public class StmValidationTests : IClassFixture<ReferenceCases>
     {
         { "R1", 1e-7, 0.0, 0.0 },
         { "R2", 1e-4, 0.0, 0.0 },
-        { "R3", 1e-4, 3.6e-5, 8.1e-4 },
-        { "R4", 1e-4, 2.5e-8, 0.0 },
+        { "R3", 1e-4, 1.6e-5, 4.5e-4 },
+        { "R4", 1e-4, 1.2e-8, 0.0 },
         { "R5", 1e-4, 0.0, 0.0 }
     };
 

@@ -63,7 +63,8 @@ public class GmatConformancePropagatorTests
     /// 1 s, about 300 m a day, hides the central term. With the TT time argument of #501, measured again on Linux
     /// (2026-11-01): RK7(8) 001 1.911e-2 m and 2.323e-5 m/s, 002 8.279e-3 m and 7.025e-7 m/s, 003 1.144e-2 m and
     /// 8.729e-6 m/s, the change of TDB − TT having been most of the RK7(8) residual; Velocity-Verlet 002 3.973e-1 m and
-    /// 2.830e-5 m/s (+0.060 m: the δ term had cancelled part of its step error). The bounds are set again from the
+    /// 2.830e-5 m/s (+0.060 m: probably, the δ term had cancelled part of its step error, an inference from the
+    /// magnitudes alone, not traced). The bounds are set again from the
     /// three-platform logs of the CI of #505.
     /// </remarks>
     public static TheoryData<string, bool, double, double> Cases => new()

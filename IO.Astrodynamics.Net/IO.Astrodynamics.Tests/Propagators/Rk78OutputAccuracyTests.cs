@@ -202,8 +202,10 @@ public class Rk78OutputAccuracyTests
             before.Duration);
         double semiMajorAxis = 1.0 / (2.0 / orbit.Position.Magnitude() - orbit.Velocity.MagnitudeSquared() / mu);
         double halfPeriod = System.Math.PI * System.Math.Sqrt(semiMajorAxis * semiMajorAxis * semiMajorAxis / mu);
-        // Measured 6.57e-8 s: the bisection tolerance (1e-10 s), then the move to the 100 ns grid of the epochs; the
-        // threshold is three times the measurement
+        // Measured −5.28e-9 s with the TT time argument of #501 (Linux, 2026-11-01; 6.57e-8 s over the TDB seconds
+        // before): the bisection tolerance (1e-10 s), then the move to the label of the event, which holds its instant to
+        // the tick (100 ns), so the measurement is a draw within a tick. The threshold, 2e-7 s, is twice that tick, which
+        // bounds the move whatever the draw, and no longer three times the measurement
         _output.WriteLine($"event {te - halfPeriod:E3} s from the Keplerian perigee");
         Assert.True(System.Math.Abs(te - halfPeriod) < 2e-7, $"event at {te - halfPeriod:E3} s from the perigee");
 
@@ -214,7 +216,8 @@ public class Rk78OutputAccuracyTests
         double positionError = (restartPosition - Position(keplerAtEvent)).Magnitude();
         double velocityError = (restartVelocity - maneuver.DeltaV - Velocity(keplerAtEvent)).Magnitude();
         // Measured 1.094e-5 m and 1.880e-9 m/s at the tolerance 1e-11, the error of the integration over 50 min; the
-        // cubic Hermite state was off by metres (#363). Thresholds about 2.7 times the measurements
+        // cubic Hermite state was off by metres (#363). Thresholds about 2.7 times the measurements (1.082e-5 m and
+        // 1.664e-9 m/s with the TT time argument of #501, Linux, 2026-11-01)
         _output.WriteLine($"restart against Kepler: {positionError:E3} m, {velocityError:E3} m/s");
         Assert.True(positionError < 3e-5, $"position {positionError:E3} m");
         Assert.True(velocityError < 5e-9, $"velocity {velocityError:E3} m/s");
@@ -230,7 +233,8 @@ public class Rk78OutputAccuracyTests
         var (keplerFinal, _) = KeplerianStm.Propagate(mu, Position(keplerAtEvent),
             Velocity(keplerAtEvent) + maneuver.DeltaV, PropagationTimeArgument.Tt.SecondsBetween(after.BaseEpoch, final.Epoch));
         double finalError = (final.Position - Position(keplerFinal)).Magnitude();
-        // Measured 8.368e-5 m after 2 h more; threshold three times the measurement
+        // Measured 8.368e-5 m after 2 h more (8.253e-5 m with the TT time argument of #501, Linux, 2026-11-01); threshold
+        // three times the measurement
         _output.WriteLine($"last output against Kepler after the maneuver: {finalError:E3} m");
         Assert.True(finalError < 2.5e-4, $"last output {finalError:E3} m");
     }
@@ -251,8 +255,10 @@ public class Rk78OutputAccuracyTests
         var solution = spacecraft.Propagate(new TimeSystem.Window(Start, Start.AddHours(2.0)),
             new CelestialItem[] { _pointMassEarth }, new RK78Integrator(30.0), false, false, TimeSpan.FromSeconds(60.0));
 
-        // Assert: measured 6.57e-8 s from the Keplerian perigee, and the restart 1.256e-8 m from the Keplerian state
-        // (a 30 s step); thresholds three and 2.4 times the measurements
+        // Assert: measured −5.28e-9 s from the Keplerian perigee with the TT time argument of #501 (Linux, 2026-11-01;
+        // 6.57e-8 s before), a draw within the tick of the label of the event, held to twice that tick (2e-7 s), and the
+        // restart 1.286e-8 m from the Keplerian state (a 30 s step; 1.256e-8 m before), held to 2.4 times the measurement
+        // of before
         var before = solution.Segments[0];
         var after = solution.Segments[1];
         double te = PropagationTimeArgument.Tt.OnEpochGrid(Start, after.BaseEpoch, before.Steps[^1].CumulativeTime,

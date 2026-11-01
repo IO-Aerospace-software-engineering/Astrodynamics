@@ -15,12 +15,15 @@ namespace IO.Astrodynamics.Tests.Body
 {
     public class InstrumentTests
     {
-        // The windows of the library against gftfov on the kernels of the same propagation, s: the precision of the
-        // bisection of the search of the library (GeometryFinder, 1 s); gftfov converges to 1e-6 s. A point target: the
-        // search of the library takes the direction of the centre of the target, whatever its shape, within the field
-        // of view in azimuth and in elevation, which is the circular field of view of the kernel where the Earth crosses
-        // it, the Earth moving in elevation only in the frame of the instrument (measured 0.91 s, 0.21 s and 0.18 s, Linux,
-        // 2026-10-31)
+        // The windows of the library against gftfov on the kernels of the same propagation, s: the bracket of the
+        // bisection of the search of the library (GeometryFinder, 1 s), which returns the earlier end of its bracket, so
+        // each transition of the library is up to 1 s before the transition it brackets; gftfov converges to 1e-6 s. A
+        // bound by construction, not a record of a measurement. Both searches take a point target, the direction of the
+        // centre of the Earth: the library tests it within the field of view in azimuth and in elevation, which is the
+        // circular field of view of the kernel where the Earth crosses it, the Earth moving in elevation only in the frame
+        // of the instrument (measured −0.91 s, −0.21 s and −0.18 s, Linux, 2026-10-31 and 2026-11-01). The managed search
+        // ignores the shape of the target (an ellipsoid gives the windows of a point), where gftfov with ELLIPSOID differs
+        // by up to 1 080 s: a defect outside #501, not asserted here
         private const double FieldOfViewTolerance = 1.0;
 
         private readonly ITestOutputHelper _output;
@@ -101,8 +104,9 @@ namespace IO.Astrodynamics.Tests.Body
 
             // The reference: SPICE gftfov on the kernels that the library writes from the same propagation, the SPK of
             // the spacecraft, its clock, frame and orientation, and the frame and the kernel of the instrument; written
-            // before the search of the library, whose evaluations add orientations to the frame of the spacecraft, among
-            // them at instants it holds in another frame, which the CK writer then rejects (SPICE(TIMESOUTOFORDER), #512)
+            // before the search of the library, whose evaluations add orientations to the frame of the spacecraft, after
+            // which the CK writer rejects them (SPICE(TIMESOUTOFORDER), three more entries at the first epoch; the cause is
+            // not traced)
             var searchWindow = new Window(start, end);
             var instrument = spacecraft.Instruments.First();
             var expected = FieldOfViewWindowsBySpice(spacecraft, instrument, searchWindow, TimeSpan.FromSeconds(360.0));
@@ -113,7 +117,7 @@ namespace IO.Astrodynamics.Tests.Body
             // between the two time arguments, a literal no time argument made a reference
             var res = instrument.FindWindowsInFieldOfViewConstraint(searchWindow, spacecraft,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame,
-                ShapeType.Ellipsoid, Aberration.LT,
+                ShapeType.Point, Aberration.LT,
                 TimeSpan.FromSeconds(360.0)).ToArray();
 
             //Read results: the windows of gftfov, to the 1 s to which the search of the library brackets its

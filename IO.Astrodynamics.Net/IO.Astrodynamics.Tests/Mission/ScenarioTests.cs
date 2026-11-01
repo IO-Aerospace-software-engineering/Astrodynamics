@@ -24,6 +24,10 @@ namespace IO.Astrodynamics.Tests.Mission
 {
     public class ScenarioTests
     {
+        // The fuel of the apsidal alignment, in kg: the half unit of the second decimal to which it was compared before
+        // #501, an explicit band around the literal rather than a rounding whose boundary a move of 2.3e-4 kg crossed
+        private const double FuelTolerance = 5e-3;
+
         public ScenarioTests()
         {
             SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
@@ -171,8 +175,9 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(new Vector3(-373.24910751995867, -125.23695719049852, 201.38103911830422), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
             // 919.4849820926962 kg before #501: the parking orbit is given 47.3 h before the window, and the start state
             // is the two-body motion over the TT seconds to it, 2.96e-5 s fewer than the TDB seconds, 0.169 m along the
-            // orbit (choice 8 of #501), then integrated in TT
-            Assert.Equal(919.4852155798366, maneuver1.FuelBurned, 2);
+            // orbit (choice 8 of #501), then integrated in TT: 2.3e-4 kg more, 1.4e-3 kg per metre of the start. Held to
+            // FuelTolerance, not to two decimals, whose rounding boundary the move crossed
+            Assert.Equal(919.4852155798366, maneuver1.FuelBurned, FuelTolerance);
 
             maneuver1 = maneuver1.NextManeuver;
 
@@ -390,10 +395,8 @@ namespace IO.Astrodynamics.Tests.Mission
                 Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1573978 TDB"), maneuver1.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
                 Assert.Equal(18.3896996, maneuver1.ThrustWindow.Value.Length.TotalSeconds, 2);
                 Assert.Equal(new Vector3(-373.24910751995867, -125.23695719049852, 201.38103911830422), ((ImpulseManeuver)maneuver1).DeltaV, TestHelpers.VectorComparer);
-                // 919.4849820926962 kg before #501: the parking orbit is given 47.3 h before the window, and the start state
-            // is the two-body motion over the TT seconds to it, 2.96e-5 s fewer than the TDB seconds, 0.169 m along the
-            // orbit (choice 8 of #501), then integrated in TT
-            Assert.Equal(919.4852155798366, maneuver1.FuelBurned, 2);
+                // 919.4849820926962 kg before #501: the start state of choice 8, as above
+                Assert.Equal(919.4852155798366, maneuver1.FuelBurned, FuelTolerance);
 
                 maneuver1 = maneuver1.NextManeuver;
 
@@ -447,7 +450,7 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.Equal(new TimeSystem.Time("2021-03-04T01:19:37.1573978 TDB"), maneuver2.ThrustWindow!.Value.EndDate, TestHelpers.TimeComparer);
             Assert.Equal(18.3896996, maneuver2.ThrustWindow.Value.Length.TotalSeconds, 2);
             Assert.Equal(new Vector3(-373.24910751995867, -125.23695719049852, 201.38103911830422), ((ImpulseManeuver)maneuver2).DeltaV, TestHelpers.VectorComparer);
-            Assert.Equal(919.4852155798366, maneuver2.FuelBurned, 2);
+            Assert.Equal(919.4852155798366, maneuver2.FuelBurned, FuelTolerance);
 
             maneuver2 = maneuver2.NextManeuver;
 
