@@ -104,7 +104,11 @@ the windows of CSPICE's `gftfov`, to 1 µs.
   spacecraft and the target both come from kernels, asks the step to be
   shorter than every window and gap.
 - **Accuracy.** Within a few microseconds of `gftfov`, except where the field
-  grazes the limb of the target. See
+  grazes the limb of the target, for a spacecraft whose kernels describe what
+  the library reads. A spacecraft with a nadir attitude differs by up to its
+  output step, and the kernels the library writes for an attitude other than
+  the identity, or for an initial state in ECLIPJ2000, do not describe what it
+  reads: `gftfov` on them differs by up to hundreds of seconds. See
   [Field-of-view search](../reference/spacecraft.md#field-of-view-search).
 
 ### Setting up an instrument

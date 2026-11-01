@@ -190,7 +190,8 @@ requires a body-fixed frame centered on the target. It is ignored for a point, a
 Both paths return TDB windows, whatever the time frame of the search window, and count the step in TDB seconds. A
 window that holds at the start or the end of the search window, or whose transition lies within 1 µs of them, starts or
 ends there. The managed path reads no state outside the search window, except the target at its light-time corrected
-epoch.
+epoch: up to its light time before the start (reception, `LT` and `CN`) or after the end (transmission, `XLT` and
+`XCN`).
 
 **Domain.** The overlap margin samples the limb of the field in the space of the target. It was measured for targets of
 aspect ratio up to 1.0034 (the Earth, the Moon, the Sun) and fields of aspect ratio up to 10 311: no sign error. An
@@ -219,36 +220,56 @@ search for a `+S` correction.
 
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
-light time before the start, milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when
+light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
+milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when
 the observer is inside the ellipsoid of the target. On the CSPICE path an error of `gftfov` (a missing kernel, a
 coverage) gives no window, no exception (the native layer drops it).
 
-`IsInFOV` is the `POINT` condition with the same field and corrections, and the same field errors; the search does not
-call it, so an override does not change the search.
+`IsInFOV` is the `POINT` condition with the same field and corrections, and the same field errors
+(`InvalidOperationException`) and target error (`ArgumentException`, the instrument's own spacecraft); the search does
+not call it, so an override does not change the search.
 
 ##### Accuracy
 
-Against CSPICE N0067, on Linux x64 (2026-11-01). The limits of the tests are twice the worst value over Linux, Windows
-and macOS arm64.
+Against CSPICE N0067, measured on Linux x64 (2026-11-01). The limits of the tests are for now twice these figures,
+provisional: they become twice the worst over Linux, Windows and macOS arm64 once the CI has measured the three
+platforms.
 
 | Scenario | Reference | Worst edge |
 |----------|-----------|-----------:|
-| Kernel-backed observers, managed search (`tools/fov_reference`: an inclined LEO with a turning attitude and a polar LEO, 26 fields of each shape; the Earth, the Moon, the Sun, DSS-13, a spacecraft, a barycenter), geometric | `gftfov` converged to 1e-9 s | 4.8e-7 s |
+| Kernel-backed observers, managed search (`tools/fov_reference`: an inclined LEO with a turning attitude and a polar LEO, 30 fields, circles, ellipses and rectangles; the Earth, the Moon, the Sun, DSS-13, a spacecraft, the Earth-Moon barycenter, L1), geometric | `gftfov` converged to 1e-9 s | 8.3e-7 s |
 | The same, with the light time and `+S` | same | 2.2e-6 s |
+| A rectangle against the Earth's ellipsoid near the pole, where `gftfov` stops on `SPICE(INVALIDELLIPSE)` | a scan of the rays of the pyramid's faces (`surfpt`), `gfudb` converged to 1e-9 s | 4.8e-7 s |
 | A star, `None`, `S`, `XS` | `gfrfov` converged to 1e-9 s | 4.8e-7 s |
-| The CSPICE path on the same kernels (`gftfov` at its 1 µs) | same | 9.5e-7 s |
-| Propagated spacecraft, the public managed path and its kernel-backed twin: 22 fields, both target shapes, the Earth, the Moon, the Sun, DSS-13, a site given by its coordinates, a spacecraft, the nine aberrations (206 searches) | `gftfov` at 1 µs on the kernels the library writes | 1.3e-6 s |
-| RK7(8), an impulse followed by a TRIAD attitude, SSB mode, an initial state in ECLIPJ2000, a TLE | same | 1.2e-6 s |
+| The CSPICE path on the same kernels (`gftfov` at its 1 µs) | `gftfov` converged to 1e-9 s | 9.5e-7 s |
+| Propagated spacecraft, the public managed path and its kernel-backed twin: 26 fields, both target shapes, the Earth, the Moon, the Sun, DSS-13, a site given by its coordinates, a spacecraft, the Earth-Moon barycenter, L1, a star; `None`, `LT` and `LT+S` on every field, the nine aberrations on a circle and a narrow field (221 searches off the grazing and slow edges) | `gftfov` at 1 µs on the kernels the library writes | 1.3e-6 s |
+| RK7(8), SSB mode, a TLE | same (for the TLE, an SPK of its states, which the library does not write for a TLE that is not propagated) | 1.2e-6 s |
+| An impulse followed by a TRIAD attitude, an initial state in ECLIPJ2000 | `gftfov` at 1 µs on kernels of the states and orientations the library reads | 1.0e-6 s |
+| The same, on the kernels the library writes | `gftfov` at 1 µs | 9.7e-3 to 972 s, or another window count (below) |
 | Fields that graze the Earth's limb (a margin of slope 1.2e-6 rad/s at the contact) | `gftfov` at a step of 1 s | 2.5e-4 s |
 | A slow edge (an ellipse, slope 6.1e-4 per second, `LT+S`) | same | 4.4e-6 s |
-| A nadir attitude | same | 0.885 s |
+| A nadir attitude | `gftfov` on kernels of the orientations the library reads | 0.885 s |
 | `IsInFOV` on a grid of epochs more than 1 ms from an edge | `fovtrg` and `fovray` | every epoch equal |
 
 Off the grazing and slow edges, the differences are the rounding of the light-time corrected epochs to a double ET on
 both sides (up to 1.8 mm on the Earth's position). At a grazing contact the margin changes slowly, and the same
 millimetres cost up to 2.5e-4 s. The nadir attitude row is the attitude model of the library: it holds each orientation
-of its output steps, where the CK that `gftfov` reads interpolates between them. The dynamics rows compare with kernels
-written from the states and the orientations the library reads.
+of its output steps, where the CK that `gftfov` reads interpolates between them, so an edge moves by up to the output
+step.
+
+The kernels the library writes describe what it reads for a propagated spacecraft whose attitude is the identity of
+ICRF and whose initial state is in ICRF. Otherwise they do not, because of three defects outside the field-of-view
+search, each measured (2026-11-01) and each its own issue, and `gftfov` on those kernels differs from both paths of the
+library:
+
+- the CK that `Spacecraft.WriteOrientation` writes holds the inverse of the library's attitude: for a nadir attitude
+  `gftfov` finds no window where the library finds the Sun and the Moon entering a wide field, and the CK points the
+  front at the zenith;
+- the CK interpolates across a discrete attitude change, such as a `TriadAttitude` maneuver, which the library holds from
+  the maneuver on: 268 to 972 s on the edges, and one window where the library finds two;
+- a propagated spacecraft whose initial state is in ECLIPJ2000 stores its states in that frame and reads them as ICRF,
+  up to 2.5e6 m from the SPK the library writes from them, which CSPICE reads right: 9.7e-3 s to 0.77 s on the Earth's
+  edges, 216 s and 233 s on DSS-13's.
 
 Before 10.2.0 the managed search tested the direction of the target's center, whatever its shape, the circle as a
 square, the ellipse with its half-angles swapped, the rectangle on the axes of ICRF, and the reference vector without

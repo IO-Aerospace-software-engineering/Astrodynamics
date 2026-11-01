@@ -206,9 +206,11 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   - a rectangle was tested on the ICRF components of the target's direction, never on the axes of the instrument: no
     window where `gftfov` finds two, 401 of 1 290 epochs wrong against `fovtrg` for the Earth
     ([#519](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/519));
-  - the reference vector was not made perpendicular to the boresight, as `getfov` does: −756 s on a spacecraft target,
-    and no window for the Moon and the Sun in such a field ([#520](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/520));
-  - the windows were located by a 1 s bisection, about 0.9 s before every edge, and the first one was searched a step
+  - the reference vector was not made perpendicular to the boresight, as `getfov` does: 193 s and 198 s on an ellipse
+    whose reference vector is 63° from its boresight, against the Earth and a spacecraft target, measured with the
+    half-angles of #518 corrected (−756 s and one window instead of two with them)
+    ([#520](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/520));
+  - the windows were located by a 1 s bisection, up to 1 s before every edge (0.2 to 0.9 s measured), and the first one was searched a step
     before the search window, starting 60 s early at a 60 s step ([#521](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/521); [#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461) for this path,
     `GeometryFinder` and its other constraints unchanged).
 
@@ -216,9 +218,14 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   the field (for a circle or an ellipse, `gftfov`'s field ellipsoid and the overlap margin of the occultation search;
   for a rectangle against an ellipsoid, the largest discriminant of the ray over the rectangle, in closed form), located
   by the root finder of the occultations to 1 µs. `targetShape` and `targetFrame` mean what `gftfov`'s `tshape` and
-  `tframe` mean. Against `gftfov` converged to 1e-9 s on its own kernels (`tools/fov_reference`): 4.8e-7 s geometric,
-  2.2e-6 s with the light time and `+S`; a propagated spacecraft against `gftfov` on the kernels the library writes,
-  1.3e-6 s on 206 searches of every field, target and aberration; 2.5e-4 s where the field grazes the Earth's limb.
+  `tframe` mean. Against `gftfov` converged to 1e-9 s on its own kernels (`tools/fov_reference`): 8.3e-7 s geometric,
+  2.2e-6 s with the light time and `+S`, every field shape against the Earth, the Moon, the Sun, DSS-13, a spacecraft,
+  the Earth-Moon barycenter and L1; a propagated spacecraft against `gftfov` on the kernels the library writes, 1.3e-6 s
+  on 221 searches off the grazing and slow edges, every target kind, `None`, `LT` and `LT+S` on every field and the nine
+  aberrations on a circle and a narrow field; 2.5e-4 s where the field grazes the Earth's limb (Linux x64). The kernels
+  the library writes for an attitude other than the identity, or for an initial state in ECLIPJ2000, do not describe
+  what it reads (an inverted CK, interpolated across a discrete attitude change; ECLIPJ2000 states read as ICRF):
+  `gftfov` on them differs from both paths by up to 972 s, three defects outside this change, each its own issue.
   The CSPICE path is unchanged. See
   [Spacecraft](../reference/spacecraft.md#field-of-view-search).
 
@@ -301,7 +308,10 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
     aberration alone for their `+S` forms;
   - `IsInFOV` is the `POINT` condition of `fovtrg` with the same field and corrections, and stays virtual; the search no
     longer calls it, so an override no longer changes the search. The overrides of `EllipticalInstrument` and
-    `RectangularInstrument` are removed;
+    `RectangularInstrument` are removed. Where it returned a value, it now throws `InvalidOperationException` for a field
+    the search rejects (below: a boresight zero or parallel to the reference vector, a half-angle not positive, an
+    angular radius above π/2 − 1e-6, a circle of half-angle π/2 included, a non-circular instrument of another
+    subclass), and `ArgumentException` when the target is the instrument's own spacecraft;
   - both paths check the same rules before the search and throw where they returned no window, or one computed on an
     extrapolation: a step that is not positive (`ArgumentOutOfRangeException`); a search window that ends before it
     starts, a target that is the instrument's spacecraft, an ellipsoid target without radii (a site, a spacecraft, a
@@ -309,7 +319,8 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
     half-angle that is not positive, a field whose angular radius exceeds π/2 − 1e-6, a non-circular instrument of
     another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
     states of the instrument's spacecraft or of a spacecraft target (`ArgumentException`), and an observer inside the
-    target's ellipsoid (`InvalidOperationException`).
+    target's ellipsoid (`InvalidOperationException`). A spacecraft target is still read up to its light time before the
+    start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, extrapolated.
 
   A search on a propagated spacecraft takes 0.1 to 1 s (0.1 to 0.7 s before). The occultation searches share the
   light time and the root finder, bit for bit. No public signature changes

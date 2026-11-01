@@ -124,7 +124,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// aspect ratio up to 10 311; for a rectangle, the largest discriminant over the rectangle of the ray through the
         /// ellipsoid, in closed form), sampled at the step, its extremes searched between the samples, and its sign changes
         /// located by Brent's method to 1 µs, CSPICE's <c>SPICE_GF_CNVTOL</c>. No state outside the search window is read,
-        /// except the light-time corrected epoch of the target; a window holding at a bound of the search starts or ends there.
+        /// except the light-time corrected epoch of the target, up to its light time before the start (reception) or after
+        /// the end (transmission, XLT and XCN), which for a propagated spacecraft target is extrapolated; a window holding
+        /// at a bound of the search starts or ends there.
         /// </para>
         /// <para>
         /// <b>Corrections.</b> The light time of CSPICE's <c>spkltc</c> (LT, CN and their transmission forms) and, for "+S",
