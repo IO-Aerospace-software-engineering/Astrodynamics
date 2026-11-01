@@ -22,7 +22,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// The managed field-of-view search of spacecraft propagated in every way the public surface allows (#515, §7 "Observer
 /// dynamics"), each against CSPICE's <c>gftfov</c> in the process on the SPK and CK the library writes from the same
 /// propagation (choice 9 (b)): RK7(8), an impulsive maneuver followed by a TRIAD attitude inside the window (a discrete
-/// attitude), a nadir attitude (a continuous one), SSB mode, initial states in ECLIPJ2000 and in TEME, and a TLE.
+/// attitude), a nadir attitude (a continuous one), SSB mode, an initial state in ECLIPJ2000, and a TLE. A TEME initial state
+/// is not on the public surface: the propagator rejects it ("must be defined in inertial frame").
 /// </summary>
 /// <remarks>
 /// The fields: a circle, an ellipse and a rectangle whose boresight is -X of the frame (the fields of
@@ -127,12 +128,6 @@ public class FieldOfViewDynamicsTests
             case "ECLIPJ2000":
             {
                 var (spacecraft, _) = Create(-5175, leo.ToFrame(Frames.Frame.ECLIPTIC_J2000).ToStateVector());
-                spacecraft.Propagate(propagation, bodies, false, false, oneSecond);
-                return (spacecraft, window);
-            }
-            case "TEME":
-            {
-                var (spacecraft, _) = Create(-5176, leo.ToFrame(Frames.Frame.TEME).ToStateVector());
                 spacecraft.Propagate(propagation, bodies, false, false, oneSecond);
                 return (spacecraft, window);
             }
