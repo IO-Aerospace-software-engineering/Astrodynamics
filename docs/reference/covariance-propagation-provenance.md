@@ -78,7 +78,7 @@ this page is a defect.
 
 The relative steps of the default central differences come from a plateau study: the error of the default path
 against a reference, for relative steps from 1e-12 to 1e-2 (half decades), for every built-in force at the four
-reference states (LEO 400 km, LEO 800 km, GEO, perigee of a 500 × 40 000 km HEO; 2021-03-20 12:00 UTC, all in
+reference states (LEO 400 km, LEO 800 km, GEO, perigee of a 500 × 40 000 km HEO; 2021-03-20 12:00 TDB, all in
 sunlight). The reference is analytic for the point mass and the third bodies, and Ridders' extrapolation for the
 others. The test `FiniteDifferenceStepStudyTests` reruns it and writes the curves when the environment variable
 `IO_ASTRODYNAMICS_STUDY_OUTPUT` names a directory.
@@ -154,7 +154,7 @@ as the study above.
 ## Structural Properties (F2)
 
 `StructuralPropertiesTests` checks the state transition matrix integrated by RK7(8) on the reference cases R1 to R5
-of the specification (`ReferenceCases`, 2021-03-20 12:00 UTC), without drag and SRP, so that the dynamics are
+of the specification (`ReferenceCases`, 2021-03-20 12:00 TDB), without drag and SRP, so that the dynamics are
 conservative. `Φ` is measured in canonical units, with the initial radius and the matching time unit, at the end of
 the arc: one day, two revolutions for R5. The values below are from Linux, .NET 10, 2026-10-08, and each one is written
 by a committed test to its output; replayed on 2026-10-10 with the same values, identical in Debug and Release.

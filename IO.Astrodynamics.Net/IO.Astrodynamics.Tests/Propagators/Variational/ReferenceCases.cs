@@ -194,7 +194,7 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
 /// </summary>
 /// <remarks>
 /// <para>
-/// All start at 2021-03-20 12:00 UTC, close to the March equinox, with the spacecraft of the force partials (100 kg,
+/// All start at 2021-03-20 12:00 TDB, close to the March equinox, with the spacecraft of the force partials (100 kg,
 /// 10 m², Cd 2.2, Cr 1.5). The Earth is the observer of the state and the first of the bodies: each case with a
 /// geopotential has its own Earth instance, and R1 and the point-mass variants (<see cref="WithPointMassEarth"/>) share
 /// a point-mass Earth.

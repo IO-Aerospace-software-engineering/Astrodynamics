@@ -81,7 +81,7 @@ def plot_fd_study(directory):
     for state, line in STYLES.items():
         axes[0].plot([], [], line, color=INK, label=state)
     figure.suptitle("Default central differences of the force partials: error against the relative step "
-                    "(2021-03-20 12:00 UTC)", color=INK)
+                    "(2021-03-20 12:00 TDB)", color=INK)
     legend(figure, axes, 5)
     figure.tight_layout(rect=(0, 0.14, 1, 0.95))
     figure.savefig(directory / "fd-step-study.png", dpi=110, facecolor=SURFACE)
@@ -102,7 +102,7 @@ def plot_density_study(directory):
         default_step(axis, 3e-7, "default δ_ρ = 3e-7")
         style(axis, title, "relative error" if axis is axes[0] else None)
     figure.suptitle("Density gradient of the drag partials: error against the relative step "
-                    "(NRLMSISE-00, 2021-03-20 12:00 UTC)", color=INK)
+                    "(NRLMSISE-00, 2021-03-20 12:00 TDB)", color=INK)
     legend(figure, axes, 4)
     figure.tight_layout(rect=(0, 0.08, 1, 0.94))
     figure.savefig(directory / "density-step-study.png", dpi=110, facecolor=SURFACE)

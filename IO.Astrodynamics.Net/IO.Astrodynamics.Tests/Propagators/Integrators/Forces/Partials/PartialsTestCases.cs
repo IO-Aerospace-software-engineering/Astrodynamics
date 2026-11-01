@@ -17,7 +17,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces.Partials;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The states are at 2021-03-20 12:00 UTC, close to the March equinox, so the Sun is near +X of ICRF; every state is on
+/// The states are at 2021-03-20 12:00 TDB, close to the March equinox, so the Sun is near +X of ICRF; every state is on
 /// the day side, away from the subsolar direction and from any shadow, so that SRP, albedo and thermal pressure are
 /// smooth there.
 /// </para>

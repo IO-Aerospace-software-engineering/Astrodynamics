@@ -306,7 +306,7 @@ Known sources of the decimeter residual between IO.Astrodynamics (RK7(8)) and th
 The state transition matrix Φ, the sensitivity Ψ to Cd and Cr and the propagated covariance P
 ([Covariance Propagation](../reference/covariance-propagation.md)) are validated end to end, against references
 independent of the variational equations: central differences of whole propagations (F1) and a Monte Carlo of the
-initial state (F3). The cases are those of the specification of phase 2, feature 1, all on 2021-03-20 at 12:00 UTC
+initial state (F3). The cases are those of the specification of phase 2, feature 1, all on 2021-03-20 at 12:00 TDB
 with a spacecraft of 100 kg, 10 m², Cd 2.2 and Cr 1.5:
 
 | Case | Orbit | Force model | Arc |
