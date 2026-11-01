@@ -41,6 +41,13 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// degrees 20 and 10 2.38e-8, within its record.
 /// </para>
 /// <para>
+/// With the TT time argument of #501 (run 41268727370 of <c>long-validation.yml</c>, 2026-11-01, and the same figures
+/// measured in a session the same day), R4 at degrees 8, 20 and 70 is 9.0e-9, the F1 noise of R4 that moves the same way
+/// on the Φ of the full degree (<c>StmValidationTests</c>, Φ_rr 6.1e-8 to 9.0e-9): the records of degrees 8, 20 and 70
+/// are set at 9.0e-9, as on 2026-10-23. Degree 2 1.17e-6; R2 1.98e-3, 8.50e-4 and 2.98e-8 at degrees 2, 8 and 20 and at
+/// the full degree, within its records.
+/// </para>
+/// <para>
 /// In the <c>LongValidation</c> category since 2026-10-22 (decision of S. Guillet): a measurement for B3, decided on
 /// 2026-10-16, about 2 min.
 /// </para>
@@ -64,7 +71,7 @@ public class GeopotentialPartialsDegreeTests : IClassFixture<ReferenceCases>
     public static TheoryData<string, int[], double[]> Cases => new()
     {
         { "R2", new[] { 2, 8, 20, 10 }, new[] { 1.98e-3, 8.49e-4, 4.56e-8, 4.56e-8 } },
-        { "R4", new[] { 2, 8, 20, 70 }, new[] { 1.16e-6, 6.1e-8, 6.1e-8, 6.1e-8 } }
+        { "R4", new[] { 2, 8, 20, 70 }, new[] { 1.16e-6, 9.0e-9, 9.0e-9, 9.0e-9 } }
     };
 
     [LongValidationTheory]

@@ -14,8 +14,8 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// <remarks>
 /// Φ comes from the variational equations integrated with the state by RK7(8) at 1e-13, the tolerance of the
 /// validation of the matrix against central differences of whole propagations (F1); the <c>propagator</c> cases take it
-/// too since lot 2 (design of #500, open choice 18), with their own steps. The end of the window, a UTC epoch, is
-/// converted to TDB, as for the final state. Φ is the same in km and km/s as in m and m/s (its rv block in s, its vr
+/// too since lot 2 (design of #500, open choice 18), with their own steps. Φ and the final state are read at the end of
+/// the window as the case tags it, the instant of the end (#501). Φ is the same in km and km/s as in m and m/s (its rv block in s, its vr
 /// block in 1/s).
 /// </remarks>
 public class StmSolver : ICategorySolver
@@ -42,7 +42,7 @@ public class StmSolver : ICategorySolver
             new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly });
         var solution = propagator.Propagate();
 
-        var end = propagationCase.Window.EndDate.ToTDB();
+        var end = propagationCase.Window.EndDate;
         var phi = solution.GetStateTransitionMatrix(end);
         var values = new double[36];
         for (int i = 0; i < 6; i++)

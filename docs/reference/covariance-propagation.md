@@ -78,15 +78,17 @@ the start of the window. This example runs as a smoke test against the packed Nu
   for Cr across the shadow crossings of SRP. In an eclipsing LEO 400 × 1000 km over 6 h, with a maneuver, drag and SRP,
   at a tolerance of 1e-12, the error of Ψ_Cr over the arc, relative to the largest Ψ_Cr of the arc, is 1.1e-3 to
   3.5e-3 depending on where the steps fall (position and velocity rows, the same physics in J2000 and in ECLIPJ2000),
-  against 1.2e-5 at most at 1e-14 (measured 2026-10-24, `CovariancePropagationTests`). Relative to the local Ψ_Cr, it
+  against 1.2e-5 at most at 1e-14 (measured 2026-10-24, `CovariancePropagationTests`); with the TT time argument of
+  [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501), 9.6e-4 to 2.3e-3 at 1e-12 and
+  2.5e-5 at most at 1e-14 (Linux, 2026-11-01), another draw of where the steps fall. Relative to the local Ψ_Cr, it
   reached 1.5e-2 at 1e-12 just after the first shadow exit, where Ψ_Cr is still below a millimetre, but also 1.2e-2 at a
   later crossing (4.45 h), where Ψ_Cr is 0.28 m; at 1e-14, 1.6e-4 at that later crossing (measured 2026-10-15, before
   [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423) and
   [#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434)). With the option, at 1e-12,
   Ψ_Cr is within 7.7e-8 (J2000) and 1.9e-8 (ECLIPJ2000) of the same propagation at 1e-13, relative to the local Ψ_Cr,
-  over the whole arc. When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
+  over the whole arc (1.5e-8 and 2.7e-8 with the TT time argument, 2026-11-01). When Ψ_Cr matters (Cr as a consider parameter, in an orbit with eclipses), use the option: a
   tighter tolerance reduces the error a hundredfold or more, not below 1e-4 at every crossing. In the same case, Φ and
-  Ψ_Cd stay below 2.1e-8 and 4.4e-7 (at 5.123 h; measured 2026-10-24).
+  Ψ_Cd stay below 2.1e-8 and 4.4e-7 (at 5.123 h; measured 2026-10-24; 2.0e-8 and 3.6e-7 on 2026-11-01).
 - `IncludeInStepControl` has no effect with a fixed-step `RK78Integrator(fixedStepSize)`, which controls no step.
 - With `IncludeInStepControl`, the step follows the error of Φ and Ψ, so it needs partial derivatives that are smooth
   along the trajectory. The density gradient of the drag partials is taken in geodetic coordinates, without rounding
@@ -110,7 +112,11 @@ the start of the window. This example runs as a smoke test against the packed Nu
   takes 1 645, 2 214, 2 970 and 4 639 steps at 1e-11, 1e-12, 1e-13 and 1e-14 with the option (1 652 to 4 615 on Windows,
   1 681 to 4 610 on macOS arm64), against 746, 1 005, 1 331
   and 1 807 without it; R4 (GEO in eclipse season) 256 and 466 at 1e-13 and 1e-14 (1 657 to 4 604 and 258, 464 before
-  #410; 1 692 to 4 757, and 252 and 458, before #434). Before #423 the central differences of the acceleration carried the
+  #410; 1 692 to 4 757, and 252 and 458, before #434). With the TT time argument of
+  [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501) (Linux, Release, 2026-11-01,
+  `PenumbraStepControlTests`), another draw of the steps: R3 1 644, 2 197, 2 984 and 4 612 with the option, 758, 1 003,
+  1 332 and 1 813 without it; R4 254 and 460 (124 and 170 without it); the Windows and macOS arm64 figures above are those
+  before #501. Before #423 the central differences of the acceleration carried the
   rounding of the shadow fraction, which the step of the velocity rows of Φ followed: R3 took 1 947, 4 379 and 23 967
   steps, 21 596 of them in its 265 s of penumbra at 1e-13, and stopped on the guard below at 13.3 h at 1e-14 (on 100
   rejections at 15.0 h before [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420)); R4
@@ -154,8 +160,9 @@ the start of the window. This example runs as a smoke test against the packed Nu
   the state (a force that is not smooth itself). No legitimate propagation measured takes 10 000 steps with the option:
   the closest before [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423), R3 at 1e-13,
   took 10 000 consecutive steps over 5 947 s at its shadow crossings (a mean of 0.595 s, 60 times the threshold), and
-  1 000 over 0.174 s; it now takes 2 970 steps a day (2 972 before #410), and at 1e-14 its shortest 1 000 consecutive steps cover
-  17 666 s (16 368 s before #434). The threshold is 50 times above the mildest collapse measured before
+  1 000 over 0.174 s; it now takes 2 984 steps a day with the TT time argument of #501 (2 970 before it, 2 972 before
+  #410), and at 1e-14 its shortest 1 000 consecutive steps covered 17 666 s before #501 (16 368 s before #434; not
+  measured again). The threshold is 50 times above the mildest collapse measured before
   [#420](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/420). Without the option the guard
   does not apply.
 - In SSB mode (initial orbital parameters relative to a barycenter or a star), the columns of Y are scaled by |r0|

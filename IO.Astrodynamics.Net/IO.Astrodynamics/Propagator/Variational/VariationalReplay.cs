@@ -75,8 +75,8 @@ internal static class VariationalReplay
         if (segments.Count == 0 || segments[0].Steps.Count == 0)
             throw new InvalidOperationException("The solution holds no steps.");
 
-        var last = segments[^1];
-        if (end < segments[0].BaseEpoch || (end - last.BaseEpoch).TotalSeconds > last.Duration + EpochTick)
+        var timeArgument = solution.TimeArgument;
+        if (!solution.Covers(end, PropagationSolution.EpochTick))
             throw new ArgumentOutOfRangeException(nameof(end), end, "The epoch is outside the propagation.");
 
         var forces = source.Forces;
@@ -91,16 +91,17 @@ internal static class VariationalReplay
         var equations = new VariationalEquations(variationalOptions);
         var dynamics = new PropagationDynamics(forces, source.Observer, source.Frame, source.Epoch,
             source.OrientationCacheFrame, source.OrientationCache, variationalOptions, equations, covariance,
-            source.SyncRoot) { Integrator = source.Integrator };
+            source.SyncRoot) { Integrator = source.Integrator, TimeArgument = timeArgument };
         var replayed = new PropagationSolution
         {
+            TimeArgument = timeArgument,
             Dynamics = dynamics,
             Observer = solution.Observer,
             Frame = solution.Frame,
             CovariancePropagation = options
         };
 
-        var stepper = new RK78Stepper(forces);
+        var stepper = new RK78Stepper(forces) { TimeArgument = timeArgument };
         stepper.Reset(source.Observer, source.Frame, source.Epoch);
         int covarianceLength = equations.HasProcessNoise ? VariationalEquations.CovarianceLength : 0;
         var y0 = new double[equations.YLength];
@@ -124,7 +125,7 @@ internal static class VariationalReplay
                 for (int s = 0; s < segments.Count; s++)
                 {
                     var segment = segments[s];
-                    if (s > 0 && segment.BaseEpoch > end)
+                    if (s > 0 && timeArgument.SecondsBetween(segment.BaseEpoch, end) < 0.0)
                         break;
 
                     var context = segment.Context ??
@@ -134,7 +135,7 @@ internal static class VariationalReplay
                         AddExecutionError(execution, entryQ);
                     }
 
-                    double endOffset = (end - segment.BaseEpoch).TotalSeconds;
+                    double endOffset = timeArgument.SecondsBetween(segment.BaseEpoch, end);
                     var copy = new PropagationSegment(segment.BaseEpoch, segment.Steps.Count)
                     {
                         Context = context,
@@ -165,7 +166,8 @@ internal static class VariationalReplay
 
                     // The values at the event that ends the segment become the entry values of the next one, evaluated
                     // as the propagator did, by a shortened step at the event time
-                    if (s + 1 < segments.Count && segments[s + 1].BaseEpoch <= end && segment.EventTime is { } eventTime)
+                    if (s + 1 < segments.Count && timeArgument.SecondsBetween(segments[s + 1].BaseEpoch, end) >= 0.0 &&
+                        segment.EventTime is { } eventTime)
                     {
                         entryY = new double[equations.YLength];
                         entryQ = new double[equations.CarriedCovarianceLength];
@@ -178,9 +180,6 @@ internal static class VariationalReplay
         replayed.SetOutputStates(Array.Empty<OrbitalParameters.StateVector>());
         return replayed;
     }
-
-    // One tick of Time (100 ns), as PropagationSolution allows past the end of the last step
-    private const double EpochTick = 1e-7;
 
     // Q⁺ = Q⁻ + B L_e Bᵀ, B = [0 ; I]: the execution error of a burn on the velocity block (C5, model of Gates), as the
     // propagator adds it

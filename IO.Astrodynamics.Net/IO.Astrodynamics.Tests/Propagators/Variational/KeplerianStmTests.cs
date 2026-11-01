@@ -3,6 +3,7 @@
 using System;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using Xunit;
 using Xunit.Abstractions;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
@@ -95,9 +96,10 @@ public class KeplerianStmTests : IClassFixture<ReferenceCases>
         var epoch = start.Epoch.AddSeconds(dt);
         var expected = start.AtEpoch(epoch).ToStateVector();
 
-        // Act: the time of flight of the epoch, which carries it to 100 ns (5e-11 relative at the perigee of R5 otherwise)
+        // Act: the time of flight of the epoch, which carries it to 100 ns (5e-11 relative at the perigee of R5 otherwise),
+        // in TT seconds, the time of a two-body motion about the Earth (#501, #508)
         var (state, _) = KeplerianStm.Propagate(referenceCase.GravitationalParameter, start.Position, start.Velocity,
-            (epoch - start.Epoch).TotalSeconds);
+            PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, epoch));
 
         // Assert
         double positionError = (new Vector3(state[0], state[1], state[2]) - expected.Position).Magnitude() /

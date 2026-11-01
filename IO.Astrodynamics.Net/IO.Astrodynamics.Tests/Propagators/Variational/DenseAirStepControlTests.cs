@@ -410,7 +410,6 @@ public class DenseAirStepControlTests
         Assert.StartsWith("RK7(8) with the variational equations in the step control (IncludeInStepControl): 10000 " +
                           "consecutive steps over ", exception.Message);
         Assert.EndsWith("Relax the tolerance, or set IncludeInStepControl to false.", exception.Message);
-        Assert.Equal(Window.EndDate, withoutTheOption.Segments[^1].BaseEpoch.AddSeconds(
-            withoutTheOption.Segments[^1].Steps[^1].CumulativeTime + withoutTheOption.Segments[^1].Steps[^1].StepSize));
+        WindowEndAssert.ReachesTheEndOf(Window, withoutTheOption);
     }
 }

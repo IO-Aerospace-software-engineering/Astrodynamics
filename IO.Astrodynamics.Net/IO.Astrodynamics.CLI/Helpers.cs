@@ -15,6 +15,7 @@ using IO.Astrodynamics.Atmosphere;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.CLI;
 
@@ -102,16 +103,17 @@ public class Helpers
                 input = Time.CreateTDB(doubleInput);
             }
         }
+        else if (isutc)
+        {
+            // A calendar epoch tagged UTC, in any case and with or without a space, is a UTC calendar (#509): without
+            // its tag, removed above, the calendar parses as an untagged epoch, which is TDB (69.18 s off in 2025); one
+            // ending in Z already parses as UTC
+            var parsed = new Time(epoch);
+            input = parsed.Frame is TDBTimeFrame ? new Time(parsed.DateTime, TimeFrame.UTCFrame) : parsed;
+        }
         else
         {
-            if (isutc)
-            {
-                input = new (epoch);
-            }
-            else
-            {
-                input = new (epoch);
-            }
+            input = new(epoch);
         }
 
         return input;

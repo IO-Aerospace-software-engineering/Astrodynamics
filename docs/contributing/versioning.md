@@ -58,7 +58,8 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   Earth with EGM2008 the TT-compatible 3.986004415e14 m³/s² replaces the 3.98600435507e14 m³/s² of the kernels in the
   central term: 1.5e-8 of the acceleration, 15.6 m, 6.8 m and 18.5 m over the day of the propagators 001 to 003 of the
   conformance suite, whose GMAT runs with EGM2008's GM the library then reproduces to 8.8 cm, 6.0 cm and 15.6 cm
-  (RK7(8) at 1e-11). `CelestialItem.GM`, the third bodies and the conversions of orbital parameters keep the GM of the
+  (RK7(8) at 1e-11), and to 1.9 cm, 0.83 cm and 1.1 cm over the TT seconds of the day (#501, under Changed; the GM of
+  the kernels 15.5 m, 6.9 m and 18.4 m away). `CelestialItem.GM`, the third bodies and the conversions of orbital parameters keep the GM of the
   kernels; for another body without constants of the model both choices give the same field. A value outside the
   enumeration throws `ArgumentOutOfRangeException`. See
   [Force Models](../reference/force-models.md#the-central-term-with-the-gm-of-the-model)
@@ -74,6 +75,39 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
 
 **Fixed**
 
+- **A propagation solution is read at an epoch in any time frame.** A UTC, TAI, TT or GPS epoch read on a solution
+  about any central body was taken as the TAI difference from its TDB base, another instant by the change of TDB − TT
+  (0.22 m after a day and 6.4 m after 30 days in LEO), and the UTC start or end of a UTC window could compare a tick
+  outside the solution through TAI, where `GetStateTransitionMatrix`, `GetStateVector` and the other getters threw
+  `ArgumentOutOfRangeException` (at the start, at 2021-06-02T14:51:26.1940007 UTC for instance). About the Earth the TT
+  time argument now reads the TT seconds of the epoch; about any other body the epoch is converted to TDB, the frame of
+  the labels, first (2.1 cm about the Moon in the tests). `InterpolateAt`, `GetStateVector`,
+  `GetStateTransitionMatrix`, `GetCovariance`, the other getters, the replay of the variational equations and the
+  coverage checks of the conjunction analysis read both bounds of the solution in the seconds of its time argument
+  ([#507](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/507)).
+- **The difference of two UTC times counts the leap seconds, and two-body time arguments no longer depend on the
+  tags.** `Time - Time` subtracted the calendars of two UTC times: `new Window(utc1, utc2).Length` was 120 s for the two
+  minutes around the leap second of 2016-12-31, and is now 121 s; it goes through TAI for UTC and local times, so a
+  difference of local times now also counts the hour of a daylight-saving change. `Time + TimeSpan` is unchanged,
+  calendar arithmetic: across a leap second `(t + d) - t` is now `d + 1 s` for a UTC time `t`, and
+  `new Window(utcStart, length)` keeps `Length` equal to `length` while `EndDate - StartDate`, and a propagation over
+  the window about the Earth, count the leap second. `AtEpoch` counted TDB seconds
+  between two TDB epochs, UTC calendar seconds between two UTC epochs (7.7 km off in LEO across a leap second) and TT
+  seconds otherwise; it now counts the dynamical time of the central body, TT about the Earth and TDB about any other
+  body, whatever the tags, as do the time of flight of the Lambert solver and the intervals of the initial orbit
+  determination ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)).
+- **The command line reads a calendar epoch tagged UTC as UTC.** "2025-01-01T00:00:00 UTC" was read as a TDB calendar,
+  69.18 s early; only the form ending in Z was UTC. Any case, with or without a space
+  ([#509](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/509)).
+- **A conversion to the frame of a time returns it unchanged.** `ToTDB()` of a TDB time went through TAI and back,
+  one tick off at 2 of 935 041 instants of a grid (2024-05-09T12:00 TDB and 2078-02-02T18:00 TDB): the start of a
+  propagation moved by a tick, and a covariance propagation from such an epoch was rejected with a message that printed
+  two equal epochs. A UTC (or TAI, TT, GPS) initial epoch is now compared with the start of its window as TDB labels:
+  through TAI it could be a tick off its own label (2021-03-20T00:05:05.0969684 UTC), where its covariance was rejected
+  the same way and its start state went through the Keplerian round trip
+  ([#510](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/510)).
+- **The documentation gave 12:00 UTC for the epoch of the reference cases**, which is 12:00 TDB, 69.19 s earlier
+  ([#511](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/511)).
 - **RK7(8) with `IncludeInStepControl` no longer stops at random on the first steps of a segment in dense air.** At the
   start of a segment, the elements of Φ that start at 0 carry an error estimate that is the rounding noise of the drag
   Jacobian across the 13 stages, which no smaller step lowers. In dense air at a tight tolerance it could exceed the
@@ -179,6 +213,47 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   searches on separate propagations may run concurrently. `CelestialItem.IsOcculted` takes the same geometry. See
   [Occultations](../reference/occultations.md).
   [#277](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/277)
+- **Propagations about the Earth integrate over TT seconds.** Every numerical propagation integrated over TDB seconds,
+  whatever its central body. About the Earth (the resolved central body NAIF 399) it now integrates over the TT seconds
+  between the instants of its window, as GMAT (elapsed A1 seconds) and the conformance suite (spec.md §12.1) do, the
+  forces at the instant TT₀ + t: the bodies and the orientation of the Earth at its TDB, the drag at its UTC. The state
+  transition matrix, the covariance, the replay of the conjunction analysis, the avoidance options, the non-linearity
+  index and Monte Carlo follow, with both integrators, through every activation path. A final state moves by |v|·δ, δ
+  the change of TDB − TT over the window: at most 0.22 m a day in LEO, 0.67 m over the 3-day Molniya of the suite.
+  Against GMAT R2026a, the largest component of the final state of the conformance propagators 001 and 003 goes from
+  0.093 m to 0.014 m and from 0.163 m to 0.011 m, and that of 013 from 0.518 m to 0.35 mm; with the model's GM in the
+  central term (`GmatConformancePropagatorTests`, RK7(8) at 1e-11, largest components) 8.8 cm, 6.0 cm and 15.6 cm
+  become 1.9 cm, 0.83 cm and 1.1 cm, and Velocity-Verlet at 1 s on 002 goes from 33.7 cm to 39.7 cm (probably, the δ
+  term had cancelled part of its step error: an inference from the magnitudes alone, not traced). The three RK7(8) goldens are recaptured: 20.8 mm
+  (GEO, a day), 8.3 mm (the maneuver case) and 31.1 mm (drag and SRP, 103 steps instead of 99, of which 6.6 mm the
+  dynamics and 24.4 mm the integration error of the former steps). About the Moon, Mars, the Sun and in SSB mode the
+  propagations are bit for bit. The conventions:
+  - the labels stay TDB: segment bases, stage, event and output epochs are TDB `Time`s; `PropagationSegment.Duration`,
+    `AcceptedStep.CumulativeTime` and `StepSize`, the event time and the duration of `IIntegrator.IntegrateSegment`
+    count the seconds of the time argument. A custom integrator that builds its own epochs keeps TDB seconds (3.4e-10
+    relative);
+  - a window has the TT seconds between its instants, whatever their tags: a UTC day is 86 400 s, 86 401 s across a leap
+    second, a TDB-tagged day from 2021-03-20 12:00 86 399.99999324768 s. The outputs are uniform in TT: those of a UTC
+    window fall on its UTC grid, those of a TDB-tagged window leave its TDB grid by δ (29 µs a day), so an exact lookup
+    of a round TDB epoch misses them. The TDB gaps of the labels of every propagation about the Earth, UTC or TDB window,
+    vary by a tick, so `Spacecraft.WriteEphemeris` writes an SPK segment of type 9 where it wrote type 8. A window whose
+    output grid misses its length by less than 1e-9 of it ends at its end, its last output labelled with the end as
+    given;
+  - a label holds its instant to the tick: chaining propagations or reading a solution through the labels a user
+    receives keeps up to 1e-7 s, about 1e-10 relative on Φ and 0.75 mm in LEO;
+  - the velocities of the input and output states are per TT second: a state from a TDB-rate source differs by up to
+    3.4e-10 relative, about 0.65 m a day along-track in LEO as an initial condition (computed);
+  - two-body motion about the Earth counts TT seconds too: `AtEpoch`, `ToKeplerianElements(epoch)`,
+    `ToStateVector(epoch)`, `EpochAtMeanAnomaly` and `ToStateVector(trueAnomaly)` (with the Fixed entry of #508 below).
+    A `TimeSpan` added to a TDB epoch is a span of TDB: `elements.ToStateVector(elements.Epoch + elements.Period())`
+    from a TDB epoch is off the start by n·δ (1.2e-6 s of motion over an hour at J2000), not from a TT epoch, nor from
+    a UTC epoch away from a leap second (across one, `Epoch + Period()` adds calendar seconds: see #508 below);
+  - the default central term keeps the GM of the kernels, TDB-compatible, against the TT time argument: 1.5e-8 from the
+    TT-compatible GM of EGM2008, which `GeopotentialCentralTerm.ModelGravitationalParameter` gives.
+
+  The conformance runner reads the final state at the end of the window as the case tags it, and the `stm/001` fixture
+  is a UTC window. See [Time & Windows](../reference/time-and-windows.md#the-time-argument-of-a-propagation)
+  ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)).
 
 ### 10.2.0-preview-1
 

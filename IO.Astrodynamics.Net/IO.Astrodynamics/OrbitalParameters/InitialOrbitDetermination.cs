@@ -4,6 +4,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters;
@@ -49,9 +50,9 @@ public class InitialOrbitDetermination
 
         var score = CheckObservationQuality(new[] { R1, R2, R3 }, new[] { rhoHat1, rhoHat2, rhoHat3 }, new[] { observation1.Epoch, observation2.Epoch, observation3.Epoch });
 
-        // Step 3: Time differences with improved precision
-        double tau1 = (observation1.Epoch - observation2.Epoch).TotalSeconds;
-        double tau3 = (observation3.Epoch - observation2.Epoch).TotalSeconds;
+        // Step 3: Time differences in the dynamical time of the centre of motion, TT about the Earth, TDB otherwise (#508)
+        double tau1 = PropagationTimeArgument.ElapsedSeconds(expectedCenterOfMotion, observation2.Epoch, observation1.Epoch);
+        double tau3 = PropagationTimeArgument.ElapsedSeconds(expectedCenterOfMotion, observation2.Epoch, observation3.Epoch);
         double tau = tau3 - tau1;
 
         // Step 4: Compute determinants with improved numerical stability

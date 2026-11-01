@@ -31,11 +31,11 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// PrinceDormand78 at 1e-13 and a step of at most 1 s (60 s for 002), in EarthICRF.
 /// </para>
 /// <para>
-/// The library runs as the conformance runner does: RK7(8) at 1e-11, the final state at the UTC end of the day converted
-/// to TDB (<see cref="ConformanceCaseAssert"/>). What remains between the two tools is the orientation of the Earth
+/// The library runs as the conformance runner does: RK7(8) at 1e-11, the final state at the UTC end of the day as it is
+/// tagged (<see cref="ConformanceCaseAssert"/>), the end of the TT day the library integrates about the Earth (#501). What remains between the two tools is the orientation of the Earth
 /// (GMAT's FK5 with its EOP file, the library's ITRF93 of its bpc) and the GMs of the third bodies: the study measured
 /// GMAT's own spread over the Earth-orientation data at up to 4.4e-5 km. With the GM of the kernels in the central term
-/// (the default, D2-A of #444), the library is 6.8 m to 18.5 m away, so the reference resolves the choice.
+/// (the default, D2-A of #444), the library is 6.9 m to 18.4 m away, so the reference resolves the choice.
 /// </para>
 /// </remarks>
 public class GmatConformancePropagatorTests
@@ -56,18 +56,27 @@ public class GmatConformancePropagatorTests
     /// component (m) and of the largest velocity component (m/s) with the GM of the model in the central term.
     /// </summary>
     /// <remarks>
-    /// Bounds, twice the worst over Linux, Windows and macOS arm64 rounded up at the second significant digit (CI of 77b509c, 2026-10-27;
-    /// the same on the three platforms or worst on Linux): RK7(8) 001 8.834e-2 m and 1.015e-4 m/s, 002 5.951e-2 m and 4.287e-6 m/s, 003 1.562e-1 m and
-    /// 1.728e-4 m/s; Velocity-Verlet 002 3.371e-1 m and 2.397e-5 m/s. Of the RK7(8) figures, the integration at 1e-11 is about 5 mm (1e-13: 9.36 cm,
-    /// 5.95 cm and 16.3 cm), the rest the models of the two tools. Velocity-Verlet only for 002: in LEO its error at
-    /// 1 s, about 300 m a day, hides the central term.
+    /// Bounds, twice the worst over Linux, Windows and macOS arm64, rounded up at the second significant digit, with the TT
+    /// time argument of #501 (CI run 41268715428, 2026-11-01; Linux, Windows, macOS arm64): RK7(8) 001 1.911e-2,
+    /// 1.910e-2 and 1.911e-2 m, 2.323e-5, 2.323e-5 and 2.324e-5 m/s; 002 8.279e-3 m and 7.025e-7 m/s on the three; 003
+    /// 1.144e-2, 1.144e-2 and 1.143e-2 m, 8.729e-6, 8.732e-6 and 8.724e-6 m/s; Velocity-Verlet 002 3.973e-1 m and
+    /// 2.830e-5 m/s on the three. Velocity-Verlet only for 002: in LEO its error at 1 s, about 300 m a day, hides the
+    /// central term. Over the TDB seconds before #501 (CI of 77b509c, 2026-10-27; the same on the three platforms or
+    /// worst on Linux): RK7(8) 001 8.834e-2 m and 1.015e-4 m/s, 002 5.951e-2 m and 4.287e-6 m/s, 003 1.562e-1 m and
+    /// 1.728e-4 m/s; Velocity-Verlet 002 3.371e-1 m and 2.397e-5 m/s; bounds 0.18 m and 2.1e-4 m/s, 0.12 m and
+    /// 8.6e-6 m/s, 0.32 m and 3.5e-4 m/s, 0.68 m and 4.8e-5 m/s. The change of TDB − TT had been most of the RK7(8)
+    /// residual; of the RK7(8) figures of before, the integration at 1e-11 was about 5 mm (1e-13: 9.36 cm, 5.95 cm and
+    /// 16.3 cm), the rest the models of the two tools. The bounds of Velocity-Verlet rise with #501, from 0.68 m and
+    /// 4.8e-5 m/s to 0.80 m and 5.7e-5 m/s: its error grew by 0.060 m as the TT time argument took the δ term out of the
+    /// RK7(8) error of the same case (5.95 cm to 0.83 cm); probably, the δ term had cancelled part of the error of the
+    /// 1 s step, an inference from the magnitudes alone, not traced.
     /// </remarks>
     public static TheoryData<string, bool, double, double> Cases => new()
     {
-        { "001", false, 0.18, 2.1e-4 },
-        { "002", false, 0.12, 8.6e-6 },
-        { "003", false, 0.32, 3.5e-4 },
-        { "002", true, 0.68, 4.8e-5 }
+        { "001", false, 0.039, 4.7e-5 },
+        { "002", false, 0.017, 1.5e-6 },
+        { "003", false, 0.023, 1.8e-5 },
+        { "002", true, 0.80, 5.7e-5 }
     };
 
     [Theory]
@@ -102,7 +111,7 @@ public class GmatConformancePropagatorTests
         Assert.True(position < positionBound, $"position {position:E3} m");
         Assert.True(velocity < velocityBound, $"velocity {velocity:E3} m/s");
         // The reference resolves the choice: the GM of the body in the central term, the default, is more than ten
-        // times farther from GMAT (measured 6.8 m to 18.5 m)
+        // times farther from GMAT (measured 6.888 m to 18.36 m, 2026-11-01)
         Assert.True(bodyPosition > 10.0 * position, $"the GM of the body: {bodyPosition:E3} m");
     }
 
@@ -159,7 +168,7 @@ public class GmatConformancePropagatorTests
             : new CentralBodyPropagator(window, spacecraft, new RK78Integrator(absoluteTolerance: 1e-11,
                     relativeTolerance: 1e-11, initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 300.0),
                 gmatCase.ThirdBodies(), false, false, TimeSpan.FromSeconds(10.0));
-        var (position, velocity) = propagator.Propagate().InterpolateAt(window.EndDate.ToTDB());
+        var (position, velocity) = propagator.Propagate().InterpolateAt(window.EndDate);
         return new[] { position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z };
     }
 

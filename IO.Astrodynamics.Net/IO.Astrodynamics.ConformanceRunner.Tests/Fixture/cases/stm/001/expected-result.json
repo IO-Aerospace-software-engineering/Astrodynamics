@@ -1,7 +1,7 @@
 {
   "id": "stm_24h_leo_twobody_001",
   "category": "stm",
-  "case_version": "0.1.0",
+  "case_version": "0.2.0",
   "generated_by": {
     "tool": "GMAT",
     "tool_version": "R2026a",

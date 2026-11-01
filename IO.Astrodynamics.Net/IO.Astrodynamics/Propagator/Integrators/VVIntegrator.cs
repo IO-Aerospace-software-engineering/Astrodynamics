@@ -79,7 +79,7 @@ public sealed class VVIntegrator : Integrator
             var newPos = pos + halfVel * h;
 
             // Compute acceleration at new position
-            UpdateEvalState(newPos, halfVel, baseEpoch.AddSeconds(t + h));
+            UpdateEvalState(newPos, halfVel, TimeArgument.EpochAt(baseEpoch, t + h));
             accel = ComputeAcceleration(EvalState);
             var newVel = halfVel + accel * halfH;
 
@@ -93,7 +93,7 @@ public sealed class VVIntegrator : Integrator
             // Check event detectors
             if (eventDetectors != null && eventDetectors.Count > 0)
             {
-                UpdateEvalState(pos, vel, baseEpoch.AddSeconds(t));
+                UpdateEvalState(pos, vel, TimeArgument.EpochAt(baseEpoch, t));
                 int detIdx = CheckEventDetectors(eventDetectors, EvalState, prevG, currG);
 
                 if (detIdx >= 0)

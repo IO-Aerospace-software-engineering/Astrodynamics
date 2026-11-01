@@ -108,9 +108,6 @@ internal sealed record EncounterCovariance(Matrix? CovarianceInertial, TimeSpan?
 /// </remarks>
 internal sealed class EncounterCovarianceResolver
 {
-    // One tick of Time (100 ns), as PropagationSolution allows past the end of the last step
-    private const double EpochTick = 1e-7;
-
     private readonly ILocalizable _participant;
     private readonly PropagationSolution _solution;
     private readonly CovariancePropagationOptions _options;
@@ -159,7 +156,7 @@ internal sealed class EncounterCovarianceResolver
 
         // An initial covariance at another epoch, or one that cannot be propagated nor remediated: held in RTN
         if (_participant.InitialOrbitalParameters is not StateVector { Covariance: not null } initial ||
-            (initial.Epoch - _solution.Segments[0].BaseEpoch) != TimeSpan.Zero ||
+            initial.Epoch.ToTDB() != _solution.Segments[0].BaseEpoch ||
             !ResolveInitialCovariance(initial.Covariance.Value))
             return null;
 
@@ -168,8 +165,7 @@ internal sealed class EncounterCovarianceResolver
             var end = _replayEnd;
             if (!Covers(_solution, end))
             {
-                var last = _solution.Segments[^1];
-                end = last.BaseEpoch.AddSeconds(last.Duration);
+                end = _solution.End;
             }
 
             try
@@ -238,8 +234,7 @@ internal sealed class EncounterCovarianceResolver
 
         if (!_nonlinearityIndexCreated)
         {
-            var last = solution.Segments[^1];
-            var end = last.BaseEpoch.AddSeconds(last.Duration);
+            var end = solution.End;
             if (_replayEnd < end && _replayEnd >= epoch)
                 end = _replayEnd;
             if (end < epoch)
@@ -252,13 +247,6 @@ internal sealed class EncounterCovarianceResolver
         return _nonlinearityIndex?.At(solution, epoch);
     }
 
-    private static bool Covers(PropagationSolution solution, in Time epoch)
-    {
-        if (solution.Segments.Count == 0)
-            return false;
-
-        var last = solution.Segments[^1];
-        return epoch >= solution.Segments[0].BaseEpoch &&
-               (epoch - last.BaseEpoch).TotalSeconds <= last.Duration + EpochTick;
-    }
+    private static bool Covers(PropagationSolution solution, in Time epoch) =>
+        solution.Covers(epoch, PropagationSolution.EpochTick);
 }

@@ -18,7 +18,7 @@ public sealed class PropagationSegment
     private readonly List<AcceptedStep> _steps;
 
     /// <summary>
-    /// Absolute start time of this segment.
+    /// Absolute start time of this segment, a TDB label.
     /// </summary>
     public Time BaseEpoch { get; }
 
@@ -28,7 +28,8 @@ public sealed class PropagationSegment
     public IReadOnlyList<AcceptedStep> Steps => _steps;
 
     /// <summary>
-    /// Total elapsed time in seconds from BaseEpoch to the end of the last step.
+    /// Total elapsed time from BaseEpoch to the end of the last step, in seconds of the time argument of the propagation:
+    /// TT seconds about the Earth, TDB seconds about any other central body (#501).
     /// </summary>
     public double Duration => _steps.Count > 0
         ? _steps[^1].CumulativeTime + _steps[^1].StepSize
@@ -53,9 +54,9 @@ public sealed class PropagationSegment
     internal ManeuverRecord? EntryManeuver { get; set; }
 
     /// <summary>
-    /// The time of the event that ends the segment, in seconds from <see cref="BaseEpoch"/>, as the propagator handled
-    /// it, set in RK7(8); null when no event ends it. The replay evaluates the variational values there, as the
-    /// propagation did, so that the next segment starts from the same doubles.
+    /// The time of the event that ends the segment, in seconds of the time argument from <see cref="BaseEpoch"/>, as the
+    /// propagator handled it, set in RK7(8); null when no event ends it. The replay evaluates the variational values
+    /// there, as the propagation did, so that the next segment starts from the same doubles.
     /// </summary>
     internal double? EventTime { get; set; }
 

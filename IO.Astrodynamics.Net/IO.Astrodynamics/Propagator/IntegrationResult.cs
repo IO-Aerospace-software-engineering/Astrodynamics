@@ -13,7 +13,9 @@ public record struct IntegrationResult(
     EventInfo? Event);
 
 /// <summary>
-/// Information about an event detected during integration.
+/// Information about an event detected during integration; <see cref="EventTime"/> is in seconds of the time argument
+/// of the propagation from the base epoch of the segment: TT seconds about the Earth, TDB seconds about any other central
+/// body (#501).
 /// </summary>
 public record struct EventInfo(
     int DetectorIndex,

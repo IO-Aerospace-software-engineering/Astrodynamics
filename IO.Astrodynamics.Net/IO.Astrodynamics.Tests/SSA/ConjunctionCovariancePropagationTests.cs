@@ -208,13 +208,14 @@ public class ConjunctionCovariancePropagationTests : IClassFixture<ConjunctionCo
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
             ConjunctionCovarianceCase.AnalysisWindow);
 
-        // Assert: P = Φ P0 Φᵀ with Φ the Keplerian STM of Lagrange's f and g (F2), at the C2 threshold
+        // Assert: P = Φ P0 Φᵀ with Φ the Keplerian STM of Lagrange's f and g (F2), at the C2 threshold, over the TT seconds
+        // from the start to the TCA, the time argument about the Earth (#501; the TDB seconds departed by n·δ, 2.31e-8)
         foreach (var (start, state) in new[]
                  {
                      (_case.ProtectedStart, encounter.ProtectedState), (_case.SecondaryStart, encounter.SecondaryState)
                  })
         {
-            double dt = (state.Epoch - start.Epoch).TotalSeconds;
+            double dt = PropagationTimeArgument.Tt.SecondsBetween(start.Epoch, state.Epoch);
             var (_, phi) = KeplerianStm.Propagate(_case.Earth.GM, start.Position, start.Velocity, dt);
             var phiMatrix = new Matrix(6, 6, phi);
             var expected = phiMatrix * start.Covariance.Value * phiMatrix.Transpose();

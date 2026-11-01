@@ -39,6 +39,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// not monotone either). R3 then: Φ 8.0e-7, Ψ_Cr 1.1e-5.
 /// </para>
 /// <para>
+/// With the TT time argument of #501, another draw of the steps (Linux, .NET 10, 2026-11-01; main e8f0d5f the same day in
+/// parentheses): R2, Φ 2.3e-7 and Ψ_Cd 1.2e-7 (2.2e-7 and 1.2e-7), P 1.5e-7 (1.7e-7); R3, Φ 1.3e-6 and Ψ_Cr 2.3e-5 and
+/// 2.0e-5 (4.0e-6, 1.3e-5 and 1.2e-5), P 4.6e-7 (9.6e-7); Ψ of R3 against the same propagation with Φ and Ψ in the step
+/// control 2.2e-5 and 1.9e-5 (2.9e-6 and 2.6e-6), within the threshold of the specification, 1e-4.
+/// </para>
+/// <para>
 /// What each figure measures (H3 review of #378). The reference for Ψ_Cr of R3, 44 m per unit Cr after one day, is off by
 /// 6.1e-5, 6.6e-5, 3.0e-4 and 4.9e-5 at 1e-13 for steps of 1 %, 5 %, 10 % and 20 % of Cr, and by 2.2e-5, 3.7e-5, 7.5e-5
 /// and 7.2e-6 at 1e-14, against Ψ integrated with Φ and Ψ in the step control: noise, not the δ² truncation, which
@@ -144,7 +150,8 @@ public class NonConservativeVariationalTests : IClassFixture<ReferenceCases>
         var (_, expected) = PhiAndPsi(Propagate(referenceCase, start, 2.2, 1.5, Tolerance,
             new VariationalOptions(parameter, IncludeInStepControl: true)), referenceCase);
 
-        // Assert: the threshold of the specification for R2 to R5 (F1); measured 1.3e-5 (Linux, .NET 10, 2026-10-13)
+        // Assert: the threshold of the specification for R2 to R5 (F1); measured 1.3e-5 (Linux, .NET 10, 2026-10-13),
+        // 2.17e-5 with the TT time argument of #501 (2026-11-01; 2.93e-6 on main the same day)
         double positionError = RiddersDerivative.RelativeFrobeniusError(psi[..3], expected[..3]);
         double velocityError = RiddersDerivative.RelativeFrobeniusError(psi[3..], expected[3..]);
         _output.WriteLine($"{name}: Ψ against Ψ in the step control {positionError:E2} (position), " +

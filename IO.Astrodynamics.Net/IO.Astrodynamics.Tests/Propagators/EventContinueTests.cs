@@ -25,7 +25,8 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <remarks>
 /// The orbit is Keplerian (point-mass Earth), a = 11,480 km and e = 0.5, starting 0.15 rad of mean anomaly before
 /// apogee, with the apogee 90° from the ascending node: the precondition of <see cref="CombinedManeuver"/> fails at every
-/// apogee. The apogees are at t0 + (π − M0 + 2πk) / n, the reference of the event epochs.
+/// apogee. The apogees are at t0 + (π − M0 + 2πk) / n, the reference of the event epochs, in TT seconds, the time
+/// argument of a propagation about the Earth (#501).
 /// </remarks>
 public class EventContinueTests
 {
@@ -68,7 +69,7 @@ public class EventContinueTests
         double tolerance = rk78 ? Rk78EventTolerance : VelocityVerletStep;
         for (int k = 0; k < apogees.Length; k++)
         {
-            double error = (solution.Segments[k + 1].BaseEpoch - apogees[k]).TotalSeconds;
+            double error = Elapsed(solution.Segments[k + 1].BaseEpoch) - apogees[k];
             _output.WriteLine($"rk78 = {rk78}, apogee {k}: {error:E3} s from the Keplerian apogee");
             Assert.InRange(error, rk78 ? -tolerance : 0.0, tolerance);
         }
@@ -99,22 +100,30 @@ public class EventContinueTests
             false, false, TimeSpan.FromSeconds(60.0));
 
         // Assert
-        var thirdApogee = ApogeesWithin(window)[2];
+        double thirdApogee = ApogeesWithin(window)[2];
         var burn = skipped.Segments[^1].BaseEpoch;
-        _output.WriteLine($"burn {(burn - thirdApogee).TotalSeconds:E3} s from the Keplerian apogee, " +
+        _output.WriteLine($"burn {Elapsed(burn) - thirdApogee:E3} s from the Keplerian apogee, " +
                           $"{(burn - reference.Segments[^1].BaseEpoch).TotalSeconds:E3} s from the reference");
         Assert.Equal(3, skippingManeuver.Checks);
         Assert.Equal(4, skipped.Segments.Count);
-        Assert.InRange((burn - thirdApogee).TotalSeconds, -Rk78EventTolerance, Rk78EventTolerance);
+        Assert.InRange(Elapsed(burn) - thirdApogee, -Rk78EventTolerance, Rk78EventTolerance);
         Assert.InRange((burn - reference.Segments[^1].BaseEpoch).TotalSeconds, -Rk78EventTolerance,
             Rk78EventTolerance);
         Assert.NotNull(skippingManeuver.ThrustWindow);
 
-        double deltaV = (skippingManeuver.DeltaV - armedManeuver.DeltaV).Magnitude();
+        // The ΔV of the two at the same instant: about the Earth the two burns can fall on labels a tick apart (choice 7
+        // of #501, measured 1e-7 s), and the ΔV moves by 2e-8 m/s over a tick at the apogee, so the maneuver is computed
+        // again on the trajectory whose burn is the later one, at the label of the earlier burn
+        double deltaV = (DeltaVAt(skipped, reference) - (burn >
+            reference.Segments[^1].BaseEpoch ? armedManeuver.DeltaV : skippingManeuver.DeltaV)).Magnitude();
+        double ownBurns = (skippingManeuver.DeltaV - armedManeuver.DeltaV).Magnitude();
         double position = (skipped.StateVectors[^1].Position - reference.StateVectors[^1].Position).Magnitude();
         double velocity = (skipped.StateVectors[^1].Velocity - reference.StateVectors[^1].Velocity).Magnitude();
-        _output.WriteLine($"ΔV {deltaV:E3} m/s apart; final states {position:E3} m and {velocity:E3} m/s apart");
+        _output.WriteLine($"ΔV {deltaV:E3} m/s apart at the same instant, {ownBurns:E3} m/s at their own burns; final " +
+                          $"states {position:E3} m and {velocity:E3} m/s apart");
         Assert.True(deltaV < DeltaVTolerance, $"ΔV {deltaV:E3} m/s apart");
+        _output.WriteLine($"MEASURE EventContinue, the ΔV of the two own burns: {ownBurns:E3} m/s");
+        Assert.True(ownBurns < OwnBurnsTolerance, $"ΔV at their own burns {ownBurns:E3} m/s apart");
         Assert.True(position < PositionTolerance, $"final positions {position:E3} m apart");
         Assert.True(velocity < VelocityTolerance, $"final velocities {velocity:E3} m/s apart");
     }
@@ -157,6 +166,11 @@ public class EventContinueTests
     // ΔV 2.0e-9 m/s, final state 1.3e-4 m and 4.7e-8 m/s apart (RK7(8) at 1e-11, 12 h), Φ 4.5e-11 relative. The
     // tolerances are about four to five times these.
     private const double DeltaVTolerance = 1e-8;
+
+    // The ΔV of the two at their own burns, a tick apart about the Earth (choice 7 of #501): 2.080e-8 m/s on Linux,
+    // Windows and macOS arm64 (CI run 41268715428, 2026-11-01), 1.98e-9 m/s on main, where they fell on the same tick.
+    // Twice the worst over the three platforms, rounded up at the second significant digit
+    private const double OwnBurnsTolerance = 4.2e-8;
     private const double PositionTolerance = 5e-4;
     private const double VelocityTolerance = 2e-7;
     private const double PhiTolerance = 2e-10;
@@ -174,15 +188,35 @@ public class EventContinueTests
         return (spacecraft, engine);
     }
 
-    // The Keplerian apogees within the window
-    private TimeSystem.Time[] ApogeesWithin(TimeSystem.Window window)
+    // The ΔV of a perigee height maneuver of the same target computed on the trajectory whose burn is the later one,
+    // before its burn, at the burn of the other
+    private IO.Astrodynamics.Math.Vector3 DeltaVAt(PropagationSolution first, PropagationSolution second)
+    {
+        bool firstLater = first.Segments[^1].BaseEpoch > second.Segments[^1].BaseEpoch;
+        var later = firstLater ? first : second;
+        var epoch = (firstLater ? second : first).Segments[^1].BaseEpoch;
+        var segment = later.Segments[^2];
+        var (position, velocity) = later.Dynamics.StateAt(segment,
+            PropagationTimeArgument.Tt.SecondsBetween(segment.BaseEpoch, epoch));
+        var (spacecraft, engine) = CreateSpacecraft(-1360);
+        var maneuver = new PerigeeHeightManeuver(_earth, Start, TimeSpan.Zero, 9000000.0, engine);
+        spacecraft.SetStandbyManeuver(maneuver);
+        maneuver.TryExecute(new StateVector(position, velocity, _earth, epoch, Frames.Frame.ICRF));
+        return maneuver.DeltaV;
+    }
+
+    // The Keplerian apogees within the window, in TT seconds from the start
+    private double[] ApogeesWithin(TimeSystem.Window window)
     {
         double n = System.Math.Sqrt(_earth.GM / (SemiMajorAxis * SemiMajorAxis * SemiMajorAxis));
         return Enumerable.Range(0, 100)
-            .Select(k => Start.AddSeconds((System.Math.PI - MeanAnomaly + 2.0 * System.Math.PI * k) / n))
-            .TakeWhile(epoch => epoch < window.EndDate)
+            .Select(k => (System.Math.PI - MeanAnomaly + 2.0 * System.Math.PI * k) / n)
+            .TakeWhile(t => t < Elapsed(window.EndDate))
             .ToArray();
     }
+
+    // The TT seconds from the start to an epoch
+    private static double Elapsed(TimeSystem.Time epoch) => PropagationTimeArgument.Tt.SecondsBetween(Start, epoch);
 
     /// <summary>
     /// A perigee height maneuver whose precondition fails at its first <c>skips</c> apogees.

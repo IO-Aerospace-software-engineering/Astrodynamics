@@ -665,7 +665,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Computes the epoch time at a given mean anomaly.
     /// </summary>
     /// <param name="meanAnomaly">The mean anomaly at which to compute the epoch time.</param>
-    /// <returns>The epoch time at the given mean anomaly.</returns>
+    /// <returns>The epoch time at the given mean anomaly, in the frame of <see cref="Epoch"/>.</returns>
+    /// <remarks>The time to the mean anomaly is counted in the dynamical time of the observer, as
+    /// <see cref="AtEpoch"/> counts it: TT seconds about the Earth, TDB seconds about any other body (#501, #508), so that
+    /// <c>AtEpoch(EpochAtMeanAnomaly(m))</c> is at <c>m</c> to the tick of the epoch. About the Earth from a TDB epoch,
+    /// the epoch is not <c>Epoch + TimeSpan.FromSeconds(Δt)</c>, which adds TDB seconds.</remarks>
     public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
         var res = meanAnomaly - MeanAnomaly();
@@ -676,7 +680,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             res += Constants._2PI;
         }
 
-        return Epoch + TimeSpan.FromSeconds(res / MeanMotion());
+        return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch, res / MeanMotion());
     }
 
     /// <summary>
@@ -771,11 +775,21 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch"></param>
     /// <returns></returns>
+    /// <remarks>
+    /// The two-body motion counts the dynamical time of the observer, as the numerical propagation does: TT seconds
+    /// about the Earth, TDB seconds about any other body, whatever the frames of <paramref name="epoch"/> and of
+    /// <see cref="Epoch"/>, the leap seconds between two UTC epochs included; none at the same instant
+    /// (#501, #508). A <see cref="TimeSpan"/> added to a TDB epoch is a span of TDB, so about the Earth
+    /// <c>AtEpoch(Epoch + Period())</c> from a TDB epoch is off the start by the change of TDB − TT over the period
+    /// (1.2e-6 s of motion over an hour at most); from a TT epoch it returns there, and from a UTC epoch away from a leap
+    /// second: <see cref="Time"/> + <see cref="TimeSpan"/> adds calendar seconds to a UTC time, so across a leap second
+    /// <c>Epoch + Period()</c> is a period and one second of TT later.
+    /// </remarks>
     public virtual OrbitalParameters AtEpoch(Time epoch)
     {
         var ke = this.ToKeplerianElements();
-        var deltaT = epoch - Epoch;
-        var meanAnomaly = ke.MeanAnomaly() + deltaT.TotalSeconds * MeanMotion();
+        double elapsed = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
+        var meanAnomaly = ke.MeanAnomaly() + elapsed * MeanMotion();
 
         // An angle on an ellipse only (#368); KeplerianElements reduces it
         return new KeplerianElements(SemiMajorAxis(), Eccentricity(), Inclination(), AscendingNode(), ArgumentOfPeriapsis(), meanAnomaly, Observer, epoch, Frame,
@@ -866,9 +880,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch">The epoch time at which to compute the Keplerian elements.</param>
     /// <returns>The Keplerian elements at the given epoch.</returns>
+    /// <remarks>The elapsed time is that of <see cref="AtEpoch"/>: the dynamical time of the observer, TT seconds about
+    /// the Earth, TDB seconds about any other body (#501, #508).</remarks>
     public KeplerianElements ToKeplerianElements(Time epoch)
     {
-        double ellapsedTime = (epoch - Epoch).TotalSeconds;
+        double ellapsedTime = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
         double m = MeanAnomaly() + MeanMotion() * ellapsedTime;
 
         // An angle on an ellipse only (#368); KeplerianElements reduces it

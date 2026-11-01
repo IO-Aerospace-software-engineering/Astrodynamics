@@ -77,13 +77,18 @@ public static class ConjunctionAssessment
 
     private sealed class DenseTrajectoryStep
     {
-        public DenseTrajectoryStep(Time segmentBaseEpoch, AcceptedStep step, Time startEpoch, Time endEpoch)
+        public DenseTrajectoryStep(Time segmentBaseEpoch, AcceptedStep step, Time startEpoch, Time endEpoch,
+            PropagationTimeArgument timeArgument)
         {
+            TimeArgument = timeArgument;
             SegmentBaseEpoch = segmentBaseEpoch;
             Step = step;
             StartEpoch = startEpoch;
             EndEpoch = endEpoch;
         }
+
+        // The time argument of the trajectory, which maps an epoch to the seconds of the step (#501)
+        public PropagationTimeArgument TimeArgument { get; }
 
         public Time SegmentBaseEpoch { get; }
 
@@ -558,8 +563,7 @@ public static class ConjunctionAssessment
             // and orientation caches): up to the end of the propagation the covariance comes from, past the last
             // encounter where its replay may end
             var source = covariance.Propagation ?? _solution;
-            var last = source.Segments[^1];
-            var sourceEnd = last.BaseEpoch.AddSeconds(last.Duration);
+            var sourceEnd = source.End;
             _end = encounterCase.ScreeningWindow.EndDate < sourceEnd ? encounterCase.ScreeningWindow.EndDate : sourceEnd;
             _secondarySource = CreateLocalizableStateSource(encounterCase.SecondaryObject, observer);
             _secondaryResolver = new EncounterCovarianceResolver(encounterCase.SecondaryObject, _secondarySource.Solution,
@@ -582,9 +586,7 @@ public static class ConjunctionAssessment
         // A burn the solution covers, before the end of the options
         internal bool Covers(in Time burnEpoch)
         {
-            var last = _solution.Segments[^1];
-            return burnEpoch >= _solution.Segments[0].BaseEpoch && burnEpoch < _end &&
-                   (burnEpoch - last.BaseEpoch).TotalSeconds <= last.Duration;
+            return burnEpoch < _end && _solution.Covers(burnEpoch, 0.0);
         }
 
         // The state at the burn, with its covariance, in the frame of the propagation and relative to its central body
@@ -985,7 +987,8 @@ public static class ConjunctionAssessment
         }
 
         var step = steps[lo];
-        return PropagationSegment.HermiteInterpolate(step.Step, (epoch - step.SegmentBaseEpoch).TotalSeconds).position;
+        return PropagationSegment.HermiteInterpolate(step.Step,
+            step.TimeArgument.SecondsBetween(step.SegmentBaseEpoch, epoch)).position;
     }
 
     /// <summary>
@@ -1278,7 +1281,10 @@ public static class ConjunctionAssessment
         double intervalDurationSeconds)
     {
         double stepSize = denseStep.Step.StepSize;
-        double intervalOffsetSeconds = (intervalStart - denseStep.StartEpoch).TotalSeconds;
+        // In the seconds of the time argument from the start of the step (#501); the scale, intervalDurationSeconds, is
+        // in seconds of the labels, which differ from TT seconds by 3.4e-10 at most
+        double intervalOffsetSeconds = denseStep.TimeArgument.SecondsIntoStep(denseStep.SegmentBaseEpoch,
+            denseStep.StartEpoch, denseStep.Step.CumulativeTime, intervalStart);
         double affineConstant = intervalOffsetSeconds / stepSize;
         double affineScale = intervalDurationSeconds / stepSize;
 
@@ -2385,11 +2391,10 @@ public static class ConjunctionAssessment
             throw new ArgumentException("Trajectory must contain at least one propagation segment.", paramName);
         }
 
-        var firstSegment = trajectory.Segments[0];
-        var lastSegment = trajectory.Segments[^1];
-        var trajectoryStart = firstSegment.BaseEpoch;
-        var trajectoryEnd = lastSegment.BaseEpoch + TimeSpan.FromSeconds(lastSegment.Duration);
-        if (trajectoryStart > window.StartDate || trajectoryEnd < window.EndDate)
+        // In the seconds of the time argument of the trajectory (#507): a window in another frame than the TDB labels
+        // of the trajectory compares with them through TAI, one tick off at some instants
+        if (!trajectory.Covers(window.StartDate, PropagationSolution.EpochTick) ||
+            !trajectory.Covers(window.EndDate, PropagationSolution.EpochTick))
         {
             throw new ArgumentException("Trajectory must cover the entire screening window.", paramName);
         }
@@ -2463,8 +2468,8 @@ public static class ConjunctionAssessment
         {
             foreach (var step in segment.Steps)
             {
-                var stepStart = segment.BaseEpoch + TimeSpan.FromSeconds(step.CumulativeTime);
-                var stepEnd = stepStart + TimeSpan.FromSeconds(step.StepSize);
+                var (stepStart, stepEnd) =
+                    trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
                 if (stepStart >= screeningWindow.StartDate && stepStart <= screeningWindow.EndDate)
                 {
                     knots.Add(stepStart);
@@ -2492,14 +2497,14 @@ public static class ConjunctionAssessment
         {
             foreach (var step in segment.Steps)
             {
-                var stepStart = segment.BaseEpoch + TimeSpan.FromSeconds(step.CumulativeTime);
-                var stepEnd = stepStart + TimeSpan.FromSeconds(step.StepSize);
+                var (stepStart, stepEnd) =
+                    trajectory.TimeArgument.StepEpochs(segment.BaseEpoch, step.CumulativeTime, step.StepSize);
                 if (stepEnd < screeningWindow.StartDate || stepStart > screeningWindow.EndDate)
                 {
                     continue;
                 }
 
-                steps.Add(new DenseTrajectoryStep(segment.BaseEpoch, step, stepStart, stepEnd));
+                steps.Add(new DenseTrajectoryStep(segment.BaseEpoch, step, stepStart, stepEnd, trajectory.TimeArgument));
             }
         }
 

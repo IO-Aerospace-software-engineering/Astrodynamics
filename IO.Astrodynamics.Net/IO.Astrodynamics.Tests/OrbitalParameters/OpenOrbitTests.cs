@@ -3,6 +3,7 @@
 using System;
 using System.Threading.Tasks;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -36,6 +37,12 @@ public class OpenOrbitTests
 
     public static TheoryData<double> ParabolicCases => new() { -10.0, -2.0, -0.1, 0.0, 0.5, 3.0, 10.0 };
 
+    // The TT seconds from J2000 TDB to an epoch, the time of a two-body motion about the Earth (#501, #508): an hour of
+    // TDB labels from J2000 is 1.21e-6 s short of an hour of TT, n·δ of M off a reference in TDB seconds, up to 3.7e-9
+    // for the hyperbolas and 2.5e-10 for the parabolas
+    private static double Elapsed(TimeSystem.Time epoch) =>
+        PropagationTimeArgument.Tt.SecondsBetween(TimeSystem.Time.J2000TDB, epoch);
+
     [Theory]
     [MemberData(nameof(HyperbolicCases))]
     public void Hyperbola_StateAndMeanAnomalyMatchSpice(double e, double m)
@@ -43,13 +50,13 @@ public class OpenOrbitTests
         // Arrange
         var elements = new KeplerianElements(PeriapsisRadius / (1.0 - e), e, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
-        const double dt = 3600.0;
+        var laterEpoch = TimeSystem.Time.J2000TDB.AddSeconds(3600.0);
+        double dt = Elapsed(laterEpoch);
 
         // Act
         var state = elements.ToStateVector();
         var spice = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
-        var later = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(
-            elements.ToStateVector(TimeSystem.Time.J2000TDB.AddSeconds(dt)));
+        var later = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(elements.ToStateVector(laterEpoch));
         double back = state.ToKeplerianElements().M;
 
         // Assert: the state has the given elements for SPICE, M included, and M grows by n Δt
@@ -70,11 +77,12 @@ public class OpenOrbitTests
         // Arrange
         var elements = new KeplerianElements(double.PositiveInfinity, 1.0, 0.3, 0.2, 0.4, m, TestHelpers.EarthAtJ2000,
             TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, perigeeRadius: PeriapsisRadius);
-        const double dt = 3600.0;
+        var laterEpoch = TimeSystem.Time.J2000TDB.AddSeconds(3600.0);
+        double dt = Elapsed(laterEpoch);
 
         // Act
         var state = elements.ToStateVector();
-        var later = elements.ToStateVector(TimeSystem.Time.J2000TDB.AddSeconds(dt));
+        var later = elements.ToStateVector(laterEpoch);
         double back = state.ToKeplerianElements().M;
 
         // Assert: r = q (1 + D²) and ν = 2 atan D, with D from the trigonometric solution of Barker's equation, at M and

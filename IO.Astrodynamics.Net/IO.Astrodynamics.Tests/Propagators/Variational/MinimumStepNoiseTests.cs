@@ -137,7 +137,7 @@ public class MinimumStepNoiseTests
         _output.WriteLine($"{steps.Length} steps, the first " +
                           string.Join(", ", steps.Take(3).Select(s => s.StepSize.ToString("R"))));
         Assert.Equal(1e-6, steps[0].StepSize);
-        Assert.Equal(window.EndDate, Epoch.AddSeconds(steps[^1].CumulativeTime + steps[^1].StepSize));
+        WindowEndAssert.ReachesTheEndOf(window, solution);
     }
 
     [Fact]
@@ -175,7 +175,7 @@ public class MinimumStepNoiseTests
                           string.Join(", ", last.Steps.Take(3).Select(s => s.StepSize.ToString("E2"))));
         Assert.Equal(2, solution.Segments.Count);
         Assert.True(maneuver.DeltaV.Magnitude() > 1.0, $"ΔV {maneuver.DeltaV.Magnitude()} m/s");
-        Assert.Equal(Window.EndDate, last.BaseEpoch.AddSeconds(last.Steps[^1].CumulativeTime + last.Steps[^1].StepSize));
+        WindowEndAssert.ReachesTheEndOf(Window, solution);
         var phi = solution.GetStateTransitionMatrix(Window.EndDate);
         Assert.True(Enumerable.Range(0, 36).All(i => double.IsFinite(phi.Get(i / 6, i % 6))));
     }

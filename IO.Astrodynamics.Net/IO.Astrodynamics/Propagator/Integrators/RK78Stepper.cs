@@ -51,6 +51,12 @@ internal sealed class RK78Stepper
     /// </summary>
     internal ForceEvaluationContext? Context { get; set; }
 
+    /// <summary>
+    /// The time argument that maps the offsets of the stages to their epochs (#501); TDB by default
+    /// (<c>baseEpoch.AddSeconds</c>).
+    /// </summary>
+    internal PropagationTimeArgument TimeArgument { get; set; } = PropagationTimeArgument.Tdb;
+
     /// <summary>The 13 stage states of the last step, in stage order.</summary>
     internal IReadOnlyList<StateVector> StageStates => _stageStates;
 
@@ -97,7 +103,7 @@ internal sealed class RK78Stepper
         var e = RK78ButcherTableau.E;
 
         // Stage 0: evaluate at current point
-        Integrator.UpdateStateVector(_stageStates[0], pos0, vel0, baseEpoch.AddSeconds(tOffset));
+        Integrator.UpdateStateVector(_stageStates[0], pos0, vel0, TimeArgument.EpochAt(baseEpoch, tOffset));
         _kPos[0] = vel0;
         _kVel[0] = ComputeAcceleration(_stageStates[0]);
 
@@ -119,7 +125,7 @@ internal sealed class RK78Stepper
                 }
             }
 
-            Integrator.UpdateStateVector(_stageStates[s], rS, vS, baseEpoch.AddSeconds(tOffset + c[s] * h));
+            Integrator.UpdateStateVector(_stageStates[s], rS, vS, TimeArgument.EpochAt(baseEpoch, tOffset + c[s] * h));
             _kPos[s] = vS;
             _kVel[s] = ComputeAcceleration(_stageStates[s]);
         }

@@ -7,6 +7,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -25,7 +26,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// <para>
 /// Every test prints its measures (MEASURE #452), relative to the norm of the reference state. The thresholds are
 /// twice the worst over Linux, Windows and macOS arm64, rounded up at the second significant digit from the upper bound
-/// of the printed value: CI run 40280932636 (2026-10-26), and CI run 40413920226 (2026-10-26) for the (K) paths.
+/// of the printed value: CI run 40280932636 (2026-10-26), and CI run 40413920226 (2026-10-26) for the (K) paths, CI run
+/// 41268715428 of #505 (2026-11-01) for AtAnotherEpoch_MatchesTheTwoBodyReference and AtATrueAnomaly_MatchesTheReference,
+/// whose references count the TT seconds of #501.
 /// </para>
 /// <para>
 /// The paths marked (K) solve Kepler's equation (<see cref="OrbitalParameters.ToKeplerianElements()"/>,
@@ -36,6 +39,24 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 public class EquinoctialElementsSingularityTests
 {
     private static readonly TimeSystem.Time Epoch = new(2021, 3, 20, 12, 0, 0, frame: TimeFrame.TDBFrame);
+
+    // The TT seconds from the epoch, the time of a two-body motion about the Earth (#501, #508): Epoch + dt is dt TDB
+    // seconds later, dt + δ of TT, δ = 4.7e-8 s for 600 s and −2.3e-7 s for −3000 s
+    private static double Elapsed(TimeSystem.Time epoch) => PropagationTimeArgument.Tt.SecondsBetween(Epoch, epoch);
+
+    // The reference state of dt seconds, at the TT seconds from the epoch to epoch, which the elements count there
+    private EquinoctialReference.ReferenceState At(EquinoctialReference.ReferenceState state, TimeSystem.Time epoch) =>
+        state.MovedBy(Elapsed(epoch) - state.Dt, _earth.GM);
+
+    // The reference true longitude of dt seconds, moved as the state by its rate |r × v| / r²
+    private static (double High, double Low) TrueLongitudeAt(EquinoctialReference.ReferenceState state,
+        TimeSystem.Time epoch)
+    {
+        var r = new Vector3(state.PositionHigh[0], state.PositionHigh[1], state.PositionHigh[2]);
+        var v = new Vector3(state.VelocityHigh[0], state.VelocityHigh[1], state.VelocityHigh[2]);
+        var (high, low) = state.TrueLongitude!.Value;
+        return (high, low + r.Cross(v).Magnitude() / r.MagnitudeSquared() * (Elapsed(epoch) - state.Dt));
+    }
 
     // The bounds of the direct state, relative: twice the worst over Linux, Windows and macOS arm64 (CI run
     // 40280932636, 2026-10-26) of DirectState_MatchesTheReference, 3.07e-16 (suite 153, Windows) and 2.67e-16
@@ -175,20 +196,33 @@ public class EquinoctialElementsSingularityTests
         var cases = KeplerianCases.Concat(LargeTrueLongitudes).ToList();
         var bounds = new Dictionary<string, (double Position, double Velocity)>
         {
-            // Measured again on the Kepler solver of #453; twice the worst over Linux, Windows and macOS arm64 (CI
-            // run 40413920226, 2026-10-26), −3000 s: 1.59e-15 and 1.57e-15 (f = 1e-12); 3.13e-15 and 1.76e-15 (8.35e-15
-            // and 4.74e-15 before #453); 6.25e-16 and 1.86e-16 (4.67e-14 and 1.37e-14 before); 1.55e-15 and 1.60e-15
-            // (L = 1e3 rad, Windows; 1.45e-15 and 1.51e-15 on Linux)
-            ["e <= 0.05"] = (3.2e-15, 3.2e-15), ["e 0.9"] = (6.3e-15, 3.6e-15), ["hyperbola"] = (1.3e-15, 3.8e-16),
-            ["large L"] = (3.2e-15, 3.3e-15)
+            // Twice the worst over Linux, Windows and macOS arm64, rounded up at the second significant digit (CI run
+            // 41268715428 of #505, 2026-11-01): e <= 0.05 2.27e-15 and 2.27e-15 on the three (h = −6.73e-320 and the
+            // retrograde equatorial h = −tan(π/2), −3000 s); e 0.9 5.80e-15 and 3.40e-15 on the three (−3000 s); the
+            // hyperbola 2.69e-16 on Linux and Windows (−3000 s), 4.32e-16 on macOS arm64 (600 s), and 9.38e-17 on the
+            // three (600 s); large L 7.64e-16 and 7.79e-16 on Linux and Windows, 4.11e-16 and 4.66e-16 on macOS arm64
+            // (L = −1e10 rad, −3000 s). Before (on the Kepler solver of #453, CI run 40413920226, 2026-10-26), −3000 s:
+            // 1.59e-15 and 1.57e-15 (f = 1e-12), bounds 3.2e-15; 3.13e-15 and 1.76e-15 (8.35e-15 and 4.74e-15 before
+            // #453), bounds 6.3e-15 and 3.6e-15; 6.25e-16 and 1.86e-16 (4.67e-14 and 1.37e-14 before), bounds 1.3e-15
+            // and 3.8e-16; 1.55e-15 and 1.60e-15 (L = 1e3 rad, Windows), bounds 3.2e-15 and 3.3e-15. With #501 the
+            // reference and the elements count the TT seconds from the epoch, dt + δ (δ = 4.7e-8 s for 600 s, −2.3e-7 s
+            // for −3000 s), not dt: the state is that of another elapsed time, another draw of the rounding. Over the 401
+            // epochs within ±200 ticks of the label, each against the reference moved to it, e 0.9 at −3000 s has a
+            // median of 3.43e-15 and 1.99e-15 and reaches 9.42e-15 and 5.40e-15, h = −6.73e-320 at −3000 s 1.09e-15 and
+            // 9.93e-16 and 2.59e-15 and 2.55e-15 (Linux, Release; a probe of the review of #505, not a committed test).
+            // The bounds of e <= 0.05 rise from 3.2e-15 to 4.6e-15 and of e 0.9 from 6.3e-15 and 3.6e-15 to 1.2e-14 and
+            // 6.9e-15, by that draw; those of the hyperbola and large L fall
+            ["e <= 0.05"] = (4.6e-15, 4.6e-15), ["e 0.9"] = (1.2e-14, 6.9e-15), ["hyperbola"] = (8.7e-16, 1.9e-16),
+            ["large L"] = (1.6e-15, 1.6e-15)
         };
 
         // Act: ToStateVector(Time) is AtEpoch(Time).ToStateVector(); TrueLongitude(Time) takes the true anomaly there
         var errors = cases.SelectMany(c => new[] { 600.0, -3000.0 }.Select(dt => (Class: EccentricityClass(c),
-            Name: $"{c.Name}, dt {dt} s", Error: c.At(dt).RelativeError(c.Elements(_earth, Epoch, Frames.Frame.ICRF)
-                .ToStateVector(Epoch + TimeSpan.FromSeconds(dt))), Longitude: EquinoctialReference.AngleError(
+            Name: $"{c.Name}, dt {dt} s", Error: At(c.At(dt), Epoch + TimeSpan.FromSeconds(dt)).RelativeError(c
+                .Elements(_earth, Epoch, Frames.Frame.ICRF).ToStateVector(Epoch + TimeSpan.FromSeconds(dt))),
+            Longitude: EquinoctialReference.AngleError(
                 c.Elements(_earth, Epoch, Frames.Frame.ICRF).TrueLongitude(Epoch + TimeSpan.FromSeconds(dt)),
-                c.At(dt).TrueLongitude!.Value)))).ToList();
+                TrueLongitudeAt(c.At(dt), Epoch + TimeSpan.FromSeconds(dt)))))).ToList();
 
         // Assert
         Assert.Equal(58, cases.Count);
@@ -200,13 +234,15 @@ public class EquinoctialElementsSingularityTests
             Assert.True(worst.Velocity < bounds[group.Key].Velocity, $"{group.Key}: velocity {worst.Velocity:E2}");
         }
 
-        // The true longitude at the other epoch, in rad. Measured again on the Kepler solver of #453; twice the worst
-        // over Linux, Windows and macOS arm64 (CI run 40413920226, 2026-10-26): 2.72e-15 rad (e = 0.9, −3000 s;
-        // 2.25e-14 rad for the hyperbola before #453)
+        // The true longitude at the other epoch, in rad, against the reference moved by its rate over the TT seconds of
+        // #501. Twice the worst over Linux, Windows and macOS arm64 (CI run 41268715428 of #505, 2026-11-01): 3.67e-15
+        // rad on the three (e = 0.9, −3000 s), the state of another elapsed time as above; before, 2.72e-15 rad (e = 0.9,
+        // −3000 s, on the Kepler solver of #453, CI run 40413920226, 2026-10-26; 2.25e-14 rad for the hyperbola before
+        // #453), a bound of 5.5e-15 rad, now 7.4e-15 rad
         var worstLongitude = errors.MaxBy(e => Worst(e.Longitude));
         _output.WriteLine($"MEASURE #452 AtAnotherEpoch_MatchesTheTwoBodyReference, TrueLongitude(Time), worst: " +
                           $"{worstLongitude.Longitude:E2} rad ({worstLongitude.Name})");
-        Assert.True(Worst(worstLongitude.Longitude) < 5.5e-15, $"{worstLongitude.Longitude:E2} rad ({worstLongitude.Name})");
+        Assert.True(Worst(worstLongitude.Longitude) < 7.4e-15, $"{worstLongitude.Longitude:E2} rad ({worstLongitude.Name})");
     }
 
     [Fact]
@@ -223,24 +259,41 @@ public class EquinoctialElementsSingularityTests
             var dt = c.TimeToTrueAnomaly!.Value;
 
             // The epoch is a whole number of 100 ns: the state is compared with the reference moved by the same δ
-            double delta = (state.Epoch - Epoch).TotalSeconds - dt.High - dt.Low;
+            double delta = Elapsed(state.Epoch) - dt.High - dt.Low;
             return (Class: EccentricityClass(c), c.Name, Delta: System.Math.Abs(delta),
                 Error: c.AtTrueAnomaly.MovedBy(delta, _earth.GM).RelativeError(state));
         }).ToList();
 
-        // Assert. Measured again on the Kepler solver of #453; twice the worst over Linux, Windows and macOS arm64 (CI
-        // run 40413920226, 2026-10-26): 1.29e-15 and 1.29e-15 (h = −6.73e-320); 1.34e-14 and 7.16e-15 (e = 0.9);
-        // 2.14e-16 and 5.39e-17 (the hyperbola; 3.51e-16 on Linux and 8.43e-17 on Windows and macOS arm64 before
-        // #453); 8.15e-16 and 8.59e-16 (L = 1e10 rad); the epoch within a tick of the time, 100 ns, 9.43e-8 s. At
-        // e = 0.9 (1.30e-14 and 6.79e-15 before), the velocity rose by rounding with the solver of #453: at ν = 0.5 rad
-        // (M = 0.0119 rad) it puts E 6.9 ulp below the 50-digit root, within the rounding floor of Kepler's equation
-        // there (1 − e cos E = 0.106), where the former stop at 1e-6 landed 1.1 ulp above. The position keeps 2.7e-14,
-        // twice either value; the velocity went from 1.4e-14 to 1.5e-14. The test passed with 1.4e-14: a
-        // re-measurement after an intended change of results, not a relaxation
+        // Assert. Twice the worst over Linux, Windows and macOS arm64, rounded up at the second significant digit (CI run
+        // 41268715428 of #505, 2026-11-01). With #501 the epoch of ν counts TT seconds, so each state is computed at
+        // another elapsed time and compared with the reference moved by another δ: another draw of the rounding.
+        // e <= 0.05: 1.47e-15 and 1.39e-15 on Linux and Windows (the retrograde equatorial h = −tan(π/2), and
+        // h = −6.73e-320), 1.61e-15 and 1.50e-15 on macOS arm64 (h = −6.73e-320), against 1.29e-15 and 1.29e-15 before
+        // (h = −6.73e-320): the bounds rise from 2.6e-15 to 3.3e-15 and 3.1e-15, by that draw (over the 401 epochs
+        // within ±200 ticks of the label, each against the reference moved to it, h = −6.73e-320 has a median of
+        // 9.63e-16 and 9.86e-16 and reaches 1.50e-15 and 1.50e-15 on Linux). e 0.9: 3.61e-15 and 1.89e-15 on the three,
+        // against 1.34e-14 and 7.16e-15 before, the bounds from 2.7e-14 and 1.5e-14 to 7.3e-15 and 3.8e-15; a low draw
+        // (a median of 8.85e-15 and 4.73e-15 over the 401 epochs, up to 2.20e-14 and 1.16e-14), so a change of the
+        // rounding of the epoch of ν can take it above them: a re-measurement then, not a relaxation. The hyperbola:
+        // 1.20e-16 (1.202574e-16 on Linux, Release) and 1.69e-16 on the three, against 2.14e-16 and 5.39e-17 before; its
+        // label falls 1.0e-9 s after the time to ν, against 6.19e-8 s before. The figure of main was a low draw of the
+        // rounding: over the 401 epochs, the velocity error of main has a median of 1.38e-16 and reaches 4.26e-16, above
+        // 1.1e-16 at 65 % of them, and that of the branch a median of 1.43e-16 and 4.68e-16 (the position 6.26e-16 and
+        // 5.81e-16 at most). The bounds of the hyperbola go from 4.3e-16 to 2.5e-16 for the position and from 1.1e-16 to
+        // 3.4e-16 for the velocity, the rise explained by that draw. Large L: 4.80e-16 and 4.61e-16 on Linux, 4.06e-16
+        // and 4.04e-16 on Windows, 5.12e-16 and 4.86e-16 on macOS arm64 (L = 1e6 rad, circular, i 30°, node 40°), against
+        // 8.15e-16 and 8.59e-16 before (L = 1e10 rad), the bounds from 1.7e-15 and 1.8e-15 to 1.1e-15 and 9.8e-16. The
+        // epoch within a tick of the time, 100 ns: 9.66e-8 s on the three (L = 1e6 rad; 8.94e-8 s for e <= 0.05,
+        // 1.36e-8 s for e 0.9, 9.97e-10 s for the hyperbola), against 9.43e-8 s before, the bound from 1.9e-7 s to
+        // 2.0e-7 s. The probes over the 401 epochs: the review of #505, Linux, Release, not a committed test. Before #501
+        // the figures were those of the Kepler solver of #453 (CI run 40413920226, 2026-10-26), where at e = 0.9 the
+        // velocity had risen by rounding (1.30e-14 and 6.79e-15 before #453): at ν = 0.5 rad (M = 0.0119 rad) the solver
+        // put E 6.9 ulp below the 50-digit root, within the rounding floor of Kepler's equation there
+        // (1 − e cos E = 0.106); for the hyperbola, 3.51e-16 on Linux and 8.43e-17 on Windows and macOS arm64 before #453
         var bounds = new Dictionary<string, (double Position, double Velocity)>
         {
-            ["e <= 0.05"] = (2.6e-15, 2.6e-15), ["e 0.9"] = (2.7e-14, 1.5e-14), ["hyperbola"] = (4.3e-16, 1.1e-16),
-            ["large L"] = (1.7e-15, 1.8e-15)
+            ["e <= 0.05"] = (3.3e-15, 3.1e-15), ["e 0.9"] = (7.3e-15, 3.8e-15), ["hyperbola"] = (2.5e-16, 3.4e-16),
+            ["large L"] = (1.1e-15, 9.8e-16)
         };
         Assert.Equal(58, cases.Count);
         foreach (var group in results.GroupBy(r => r.Class))
@@ -252,7 +305,7 @@ public class EquinoctialElementsSingularityTests
                               $"{worstDelta.Delta:E2} s ({worstDelta.Name})");
             Assert.True(worst.Position < bounds[group.Key].Position, $"{group.Key}: position {worst.Position:E2}");
             Assert.True(worst.Velocity < bounds[group.Key].Velocity, $"{group.Key}: velocity {worst.Velocity:E2}");
-            Assert.True(Worst(worstDelta.Delta) < 1.9e-7, $"{group.Key}: epoch {worstDelta.Delta:E2} s");
+            Assert.True(Worst(worstDelta.Delta) < 2.0e-7, $"{group.Key}: epoch {worstDelta.Delta:E2} s");
         }
     }
 
@@ -299,8 +352,9 @@ public class EquinoctialElementsSingularityTests
         // Act
         var throughKeplerian = cases.Select(c => (c.Name, Error: c.At(0.0).RelativeError(c.Elements(_earth, Epoch)
             .ToEquinoctial().ToKeplerianElements().ToStateVector()))).ToList();
-        var later = cases.Select(c => (c.Name, Error: c.At(600.0).RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
-            .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
+        var later = cases.Select(c => (c.Name, Error: At(c.At(600.0), Epoch + TimeSpan.FromSeconds(600.0))
+            .RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
+                .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
 
         // Assert. Measured again on the Kepler solver of #453; twice the worst over Linux, Windows and macOS arm64 (CI
         // run 40413920226, 2026-10-26), h = −0.0 for both: 1.14e-15 and 1.09e-15 through the Keplerian elements;
@@ -325,8 +379,9 @@ public class EquinoctialElementsSingularityTests
             .ToStateVector()))).ToList();
         var throughKeplerian = cases.Select(c => (c.Name, Error: c.At(0.0).RelativeError(c.Elements(_earth, Epoch)
             .ToEquinoctial().ToKeplerianElements().ToStateVector()))).ToList();
-        var later = cases.Select(c => (c.Name, Error: c.At(600.0).RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
-            .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
+        var later = cases.Select(c => (c.Name, Error: At(c.At(600.0), Epoch + TimeSpan.FromSeconds(600.0))
+            .RelativeError(c.Elements(_earth, Epoch).ToEquinoctial()
+                .ToStateVector(Epoch + TimeSpan.FromSeconds(600.0))))).ToList();
 
         // Assert. Measured again on the Kepler solver of #453; twice the worst over Linux, Windows and macOS arm64 (CI
         // run 40413920226, 2026-10-26), e = 0.9 for all: 1.63e-15 and 1.23e-15; 1.69e-15 and 1.33e-15; 1.23e-15 and
@@ -585,8 +640,9 @@ public class EquinoctialElementsSingularityTests
                 new Vector3(opm.XDot * 1000.0, opm.YDot * 1000.0, opm.ZDot * 1000.0), _earth, Epoch, Frames.Frame.ICRF);
             errors.Add(($"{c.Name}, GetEphemeris", c.At(0.0).RelativeError(ephemeris)));
             errors.Add(($"{c.Name}, OPM", c.At(0.0).RelativeError(fromOpm)));
-            later.Add(($"{c.Name}, GetEphemeris at +600 s", c.At(600.0).RelativeError(spacecraft.GetEphemeris(
-                Epoch + TimeSpan.FromSeconds(600.0), _earth, Frames.Frame.ICRF, Aberration.None).ToStateVector())));
+            later.Add(($"{c.Name}, GetEphemeris at +600 s", At(c.At(600.0), Epoch + TimeSpan.FromSeconds(600.0))
+                .RelativeError(spacecraft.GetEphemeris(Epoch + TimeSpan.FromSeconds(600.0), _earth, Frames.Frame.ICRF,
+                    Aberration.None).ToStateVector())));
         }
 
         // Assert; the OPM, in km, gives the same doubles here. (K) measured again on the Kepler solver of #453; twice

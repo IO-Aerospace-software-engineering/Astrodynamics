@@ -67,6 +67,16 @@ internal static class WholePropagationDifferences
     }
 
     /// <summary>
+    /// The state of <paramref name="solution"/> at <paramref name="t"/> seconds of its time argument from its start,
+    /// without a <see cref="TimeSystem.Time"/> label (#501).
+    /// </summary>
+    internal static double[] StateAtElapsed(PropagationSolution solution, double t)
+    {
+        var (position, velocity) = solution.InterpolateAtElapsed(t);
+        return new[] { position.X, position.Y, position.Z, velocity.X, velocity.Y, velocity.Z };
+    }
+
+    /// <summary>
     /// Φ (6×6, row-major) at the end of the propagation: 12 propagations from <paramref name="start"/> perturbed by
     /// ±<paramref name="positionStep"/> on each position component and ±<paramref name="velocityStep"/> on each velocity
     /// component.
@@ -84,6 +94,15 @@ internal static class WholePropagationDifferences
         return Phi(propagate, start, positionStep, velocityStep, solution => States(solution, epochs), epochs.Count);
     }
 
+    /// <summary>Φ at each of <paramref name="elapsed"/>, seconds of the time argument from the start, from the same 12
+    /// propagations.</summary>
+    internal static double[][] PhiAtElapsed(Func<StateVector, PropagationSolution> propagate, StateVector start,
+        double positionStep, double velocityStep, IReadOnlyList<double> elapsed)
+    {
+        return Phi(propagate, start, positionStep, velocityStep, solution => StatesAtElapsed(solution, elapsed),
+            elapsed.Count);
+    }
+
     /// <summary>
     /// Ψ (6 components) at the end of the propagation: 2 propagations with the coefficient at
     /// <paramref name="coefficient"/> ± <paramref name="step"/>.
@@ -97,10 +116,22 @@ internal static class WholePropagationDifferences
     internal static double[][] Psi(Func<double, PropagationSolution> propagate, double coefficient, double step,
         IReadOnlyList<TimeSystem.Time> epochs)
     {
-        var plus = States(propagate(coefficient + step), epochs);
-        var minus = States(propagate(coefficient - step), epochs);
-        var psi = new double[epochs.Count][];
-        for (int k = 0; k < epochs.Count; k++)
+        return Psi(States(propagate(coefficient + step), epochs), States(propagate(coefficient - step), epochs), step);
+    }
+
+    /// <summary>Ψ at each of <paramref name="elapsed"/>, seconds of the time argument from the start, from the same 2
+    /// propagations.</summary>
+    internal static double[][] PsiAtElapsed(Func<double, PropagationSolution> propagate, double coefficient, double step,
+        IReadOnlyList<double> elapsed)
+    {
+        return Psi(StatesAtElapsed(propagate(coefficient + step), elapsed),
+            StatesAtElapsed(propagate(coefficient - step), elapsed), step);
+    }
+
+    private static double[][] Psi(double[][] plus, double[][] minus, double step)
+    {
+        var psi = new double[plus.Length][];
+        for (int k = 0; k < plus.Length; k++)
         {
             psi[k] = Difference(plus[k], minus[k], step);
         }
@@ -181,6 +212,17 @@ internal static class WholePropagationDifferences
         for (int k = 0; k < epochs.Count; k++)
         {
             states[k] = State(solution, epochs[k]);
+        }
+
+        return states;
+    }
+
+    private static double[][] StatesAtElapsed(PropagationSolution solution, IReadOnlyList<double> elapsed)
+    {
+        var states = new double[elapsed.Count][];
+        for (int k = 0; k < elapsed.Count; k++)
+        {
+            states[k] = StateAtElapsed(solution, elapsed[k]);
         }
 
         return states;

@@ -105,6 +105,16 @@ internal sealed class PropagationDynamics
         }
     }
 
+    /// <summary>
+    /// The time argument of the propagation, which maps the offsets of the recomputed steps to the epochs of the forces
+    /// (#501); TDB by default.
+    /// </summary>
+    internal PropagationTimeArgument TimeArgument
+    {
+        get => _stepper.TimeArgument;
+        init => _stepper.TimeArgument = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
     /// <summary>Observer of the integrated state.</summary>
     internal ILocalizable Observer { get; }
 

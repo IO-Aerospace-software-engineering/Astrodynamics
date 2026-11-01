@@ -5,6 +5,14 @@ public readonly record struct Window
 {
     public Time StartDate { get; }
     public Time EndDate { get; }
+
+    /// <summary>
+    /// The time elapsed from <see cref="StartDate"/> to <see cref="EndDate"/> (<c>EndDate - StartDate</c>): the leap
+    /// seconds between two UTC ends count (#508), so a window from 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z lasts
+    /// 121 s; the length given to the constructor that takes one, whose end is the start plus the length in calendar
+    /// arithmetic (<see cref="Time.Add"/>): across a leap second a UTC window built from a length keeps that length,
+    /// while <c>EndDate - StartDate</c> counts the leap second.
+    /// </summary>
     public TimeSpan Length { get; }
 
     /// <summary>

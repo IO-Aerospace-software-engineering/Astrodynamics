@@ -133,8 +133,15 @@ public class CentralBodyPropagator : PropagatorBase
     /// The central body is inferred from the spacecraft's orbital parameters observer.
     /// When the observer is a Star or Barycenter, the Sun is used as the central body.
     /// </summary>
+    /// <remarks>
+    /// The time argument follows the central body (#501): about the Earth the propagation integrates over the TT seconds
+    /// between the instants of the window, the forces at t being those of TT₀ + t; about any other central body, the Sun
+    /// of a star or barycentre observer included, over TDB seconds. The epochs of the segments, the steps, the events and
+    /// the output states are TDB labels in both cases, and the velocities are per second of the time argument.
+    /// </remarks>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
-        : base(window, spacecraft, integrator, deltaT)
+        : base(window, spacecraft, integrator, deltaT,
+            PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
         _centralBody = ResolveCentralBody(spacecraft);
 
@@ -151,10 +158,12 @@ public class CentralBodyPropagator : PropagatorBase
     /// it only to its rounding (about 1e-8 m), which would move the start and the steps of the propagation, and its
     /// derivative would not be exactly the identity (#398). The covariance of the state is not carried, as through the
     /// Keplerian elements before: the initial covariance is read from the initial orbital parameters of the spacecraft.
+    /// The two epochs are compared as TDB labels: a UTC epoch compared with its own TDB label through TAI can be a tick
+    /// off it (#510).
     /// </remarks>
     private static StateVector StartState(OrbitalParameters.OrbitalParameters orbitalParameters, in Time start)
     {
-        if (orbitalParameters is StateVector state && state.Epoch.CompareTo(start) == 0)
+        if (orbitalParameters is StateVector state && state.Epoch.ToTDB() == start.ToTDB())
         {
             return new StateVector(state.Position, state.Velocity, state.Observer, start, state.Frame);
         }

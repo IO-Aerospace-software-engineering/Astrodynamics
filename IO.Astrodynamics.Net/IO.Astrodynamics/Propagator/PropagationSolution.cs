@@ -44,6 +44,100 @@ public sealed class PropagationSolution
     /// </summary>
     internal PropagationForceModel ForceModel { get; set; }
 
+    /// <summary>
+    /// The time argument of the propagation, which maps an epoch to the seconds of its segments (#501): TT about the
+    /// Earth, TDB about any other central body; TDB for a solution built by hand.
+    /// </summary>
+    internal PropagationTimeArgument TimeArgument { get; set; } = PropagationTimeArgument.Tdb;
+
+    /// <summary>
+    /// The label of the end of the window, set by the propagator when the propagation ends there rather than on its
+    /// output grid (<see cref="PropagationTimeArgument.EndsAtWindowEnd"/>); null otherwise.
+    /// </summary>
+    internal Time? WindowEnd { get; set; }
+
+    /// <summary>
+    /// The epoch of the end of the propagation: the end of its window when it ends there
+    /// (<see cref="WindowEnd"/>), otherwise the end of the last segment as the time argument maps it,
+    /// <c>BaseEpoch.AddSeconds(Duration)</c> in TDB.
+    /// </summary>
+    internal Time End
+    {
+        get
+        {
+            var last = LastSegment;
+            return WindowEnd ?? TimeArgument.EpochAt(last.BaseEpoch, last.Duration);
+        }
+    }
+
+    private PropagationSegment LastSegment =>
+        _segments.Count > 0 ? _segments[^1] : throw new InvalidOperationException("Solution contains no segments.");
+
+    /// <summary>
+    /// The state at <paramref name="t"/> seconds of the time argument from the start of the propagation, without going
+    /// through a <see cref="Time"/> label, which holds TT₀ + t to the tick only (up to 7.5e-4 m in LEO): the reads of the
+    /// references at an exact elapsed time. The segment is the last one whose base is at or before t, as
+    /// <see cref="InterpolateAt"/> picks it.
+    /// </summary>
+    internal (Vector3 position, Vector3 velocity) InterpolateAtElapsed(double t)
+    {
+        var segment = SegmentAtElapsed(t, out double local);
+        return Dynamics != null ? Dynamics.StateAt(segment, local) : segment.InterpolateAt(local);
+    }
+
+    /// <summary>
+    /// <see cref="EvaluateVariational"/> at <paramref name="t"/> seconds of the time argument from the start of the
+    /// propagation, as <see cref="InterpolateAtElapsed"/> reads the state: the reads of the references at an exact
+    /// elapsed time (Φ to 1e-12 against GMAT, where a label leaves 1e-10).
+    /// </summary>
+    internal void EvaluateVariationalAtElapsed(double t, Span<double> y, Span<double> q)
+    {
+        var segment = VariationalSegmentAtElapsed(t, out double local);
+        Dynamics.Evaluate(segment, local, y, q);
+    }
+
+    /// <summary><see cref="EvaluateCovariance"/> at <paramref name="t"/> seconds of the time argument from the start of
+    /// the propagation.</summary>
+    internal void EvaluateCovarianceAtElapsed(double t, Span<double> covariance)
+    {
+        var segment = VariationalSegmentAtElapsed(t, out double local);
+        Dynamics.EvaluateCovariance(segment, local, covariance, false);
+    }
+
+    private PropagationSegment VariationalSegmentAtElapsed(double t, out double local)
+    {
+        var segment = SegmentAtElapsed(t, out local);
+        local = System.Math.Min(local, segment.Duration);
+        if (Dynamics == null)
+            throw new InvalidOperationException(
+                "The solution holds no variational data: the propagation did not integrate the variational equations.");
+
+        return segment;
+    }
+
+    // The segment that holds t seconds of the time argument from the start, the later one at a boundary as SegmentAt
+    // picks it, and the seconds from its base; a segment base is SecondsBetween(start, base) from the start, which the
+    // event time carried to the tick grid (OnEpochGrid) makes the event time to the rounding
+    private PropagationSegment SegmentAtElapsed(double t, out double local)
+    {
+        if (_segments.Count == 0)
+            throw new InvalidOperationException("Solution contains no segments.");
+
+        var start = _segments[0].BaseEpoch;
+        for (int i = _segments.Count - 1; i > 0; i--)
+        {
+            double offset = TimeArgument.SecondsBetween(start, _segments[i].BaseEpoch);
+            if (t - offset >= 0.0)
+            {
+                local = t - offset;
+                return _segments[i];
+            }
+        }
+
+        local = System.Math.Max(t, 0.0);
+        return _segments[0];
+    }
+
     /// <summary>Observer of the propagated states, set by the propagator; null for a solution built by hand.</summary>
     internal ILocalizable Observer { get; set; }
 
@@ -108,6 +202,10 @@ public sealed class PropagationSolution
     /// <para>
     /// At a maneuver, the state after the maneuver is returned for epochs at or after it. Before the solution, its
     /// first state; after it, its last state.
+    /// </para>
+    /// <para>
+    /// The epoch may be in any time frame: an epoch and its conversion to another frame read the same instant, to the
+    /// tick of their labels, and so do the other readers of the solution (#507).
     /// </para>
     /// </remarks>
     public (Vector3 position, Vector3 velocity) InterpolateAt(Time epoch)
@@ -374,9 +472,33 @@ public sealed class PropagationSolution
         Dynamics.EvaluateCovariance(segment, t, covariance, true);
     }
 
-    // One tick of Time (100 ns): the propagation ends at Window.StartDate.AddSeconds(duration), which AddSeconds
-    // truncates to the tick, so its last step can end one tick before the end of the window (H3 review of lots A to C)
-    private const double EpochTick = 1e-7;
+    // One tick of Time (100 ns): in TDB the propagation ends at Window.StartDate.AddSeconds(duration), which AddSeconds
+    // truncates to the tick, so its last step can end one tick before the end of the window (H3 review of lots A to C);
+    // in TT the label of the end of the window maps to its length plus the sub-tick residuals of the labels of the start
+    // and of the end, below 1e-7 s (#501)
+    internal const double EpochTick = 1e-7;
+
+    /// <summary>
+    /// Whether <paramref name="epoch"/>, in any frame, is inside the propagated span as the time argument reads it
+    /// (<see cref="PropagationTimeArgument.SecondsBetween"/>, #507): from one tick (<see cref="EpochTick"/>) before the
+    /// start of the first segment to <paramref name="endAllowance"/> seconds after the end of the last one.
+    /// </summary>
+    /// <remarks>
+    /// The two bounds are read in the seconds of the time argument, never by comparing <see cref="Time"/>s: the start of
+    /// the first segment is the TDB label of the start of the window, and a comparison of a UTC epoch with it goes through
+    /// TAI, which truncates TDB − TT to the tick a second time, so the UTC start of a UTC window could compare one tick
+    /// before its own label. The tick allowed before the start absorbs the rounding of the seconds; an epoch there reads
+    /// the start of the propagation.
+    /// </remarks>
+    internal bool Covers(in Time epoch, double endAllowance)
+    {
+        if (_segments.Count == 0)
+            return false;
+
+        var last = _segments[^1];
+        return TimeArgument.SecondsBetween(_segments[0].BaseEpoch, epoch) >= -EpochTick &&
+               TimeArgument.SecondsBetween(last.BaseEpoch, epoch) <= last.Duration + endAllowance;
+    }
 
     // The segment of an epoch inside the solution, for the variational values; an epoch within one tick after the last
     // step reads the values at its end
@@ -398,8 +520,7 @@ public sealed class PropagationSolution
         if (_segments.Count == 0)
             throw new InvalidOperationException("Solution contains no segments.");
 
-        var last = _segments[^1];
-        if (epoch < _segments[0].BaseEpoch || (epoch - last.BaseEpoch).TotalSeconds > last.Duration + EpochTick)
+        if (!Covers(epoch, EpochTick))
             throw new ArgumentOutOfRangeException(nameof(epoch), epoch,
                 "The epoch is outside the propagation.");
     }
@@ -413,7 +534,7 @@ public sealed class PropagationSolution
         for (int i = _segments.Count - 1; i >= 0; i--)
         {
             var segment = _segments[i];
-            t = (epoch - segment.BaseEpoch).TotalSeconds;
+            t = TimeArgument.SecondsBetween(segment.BaseEpoch, epoch);
 
             if (t >= 0.0)
             {

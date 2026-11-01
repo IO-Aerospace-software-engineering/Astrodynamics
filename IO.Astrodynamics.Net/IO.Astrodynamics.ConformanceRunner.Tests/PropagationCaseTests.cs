@@ -158,7 +158,7 @@ public class PropagationCaseTests
         var (position, velocity) = new CentralBodyPropagator(reference.Window, reference.Spacecraft,
                 PropagatorSolver.CreateIntegrator(), reference.Bodies, reference.Drag, reference.SolarRadiationPressure,
                 reference.StepSize)
-            .Propagate().InterpolateAt(reference.Window.EndDate.ToTDB());
+            .Propagate().InterpolateAt(reference.Window.EndDate);
 
         // Act
         var computed = new PropagatorSolver(null, KernelsPath).Solve(Case());

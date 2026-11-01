@@ -18,7 +18,9 @@ This is the extension proposed to the conformance-tests suite; the fixture lets 
 Usage: python3 -I -B make_stm_case.py <conformance-tests schemas/v1> <conformance-tests tolerances.yaml> <cases.json>
                                   <GMAT G1/nominal.txt> <output directory>
 """
+import datetime
 import json
+import math
 import os
 import sys
 
@@ -80,6 +82,22 @@ def km(value):
     return value / 1000.0
 
 
+def tdb_to_utc(calendar_tdb):
+    """The UTC calendar, to the millisecond, of a TDB calendar epoch of 2017 or later: ET - TAI = DELTA_T_A + K sin E,
+    E = M + EB sin M, M = M0 + M1 ET, the formula and constants of the leap seconds kernel (naif0012.tls), and
+    TAI - UTC = 37 s from 2017-01-01 (IERS Bulletin C). About the Earth the window is tagged UTC (spec.md section 3 of
+    the suite): its TT length is then the GMAT duration exactly, whatever the TDB - TT series (#501)."""
+    tdb = datetime.datetime.fromisoformat(calendar_tdb)
+    if tdb < datetime.datetime(2017, 1, 1):
+        sys.exit("TAI - UTC is 37 s from 2017-01-01 only")
+    et = (tdb - datetime.datetime(2000, 1, 1, 12)).total_seconds()
+    m = 6.239996 + 1.99096871e-7 * et
+    tai = et - 32.184 - 1.657e-3 * math.sin(m + 1.671e-2 * math.sin(m))
+    utc = tdb - datetime.timedelta(seconds=et - (tai - 37.0))
+    rounded = utc + datetime.timedelta(microseconds=500)
+    return rounded.replace(microsecond=rounded.microsecond // 1000 * 1000)
+
+
 def main():
     if len(sys.argv) != 6:
         sys.exit(__doc__)
@@ -125,19 +143,22 @@ def main():
     state = case["state_m_m_s"]
     directory = os.path.join(output, "cases", "stm", "001")
     os.makedirs(directory, exist_ok=True)
-    epoch = case["epoch_tdb"] + " TDB"
-    end_seconds = case["duration_s"]
-    end = "2021-03-21T12:00:00.000 TDB" if end_seconds == 86400 else None
-    if end is None or not case["epoch_tdb"].startswith("2021-03-20T12:00:00"):
+    if case["duration_s"] != 86400 or not case["epoch_tdb"].startswith("2021-03-20T12:00:00"):
         sys.exit("The case G1 no longer starts on 2021-03-20 12:00 TDB for one day; update the end of the window")
+    # A UTC window (#501): the start is 12:00 TDB to the millisecond; the case is two-body in inertial axes, so Phi
+    # depends on the initial state and the elapsed time only, and the 0.4 ms between the two does not enter. One UTC
+    # day without a leap second is 86 400 TT seconds, GMAT's ElapsedSecs
+    start = tdb_to_utc(case["epoch_tdb"])
+    epoch = start.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + " UTC"
+    end = (start + datetime.timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + " UTC"
     with open(os.path.join(directory, "inputs.yaml"), "w", newline="\n") as f:
         f.write('id: "%s"\n' % CASE_ID)
-        f.write('schema_version: "v1"\nversion: "0.1.0"\ncategory: "stm"\ncreated: "2026-10-19"\n')
+        f.write('schema_version: "v1"\nversion: "0.2.0"\ncategory: "stm"\ncreated: "2026-10-19"\n')
         f.write("description: >\n"
                 "  State transition matrix of a 24-hour two-body propagation, LEO 700 km, e = 0.001, i = 45 deg\n"
                 "  (the reference case R1 of IO.Astrodynamics). Golden: GMAT R2026a, Sat.OrbitSTM, PrinceDormand78\n"
                 "  at a fixed step of 10 s, the GM of DE440, turned from EarthMJ2000Eq to ICRF.\n\n")
-        f.write('metadata:\n  ephemeris_kernel: "de440s.bsp"\n  reference_frame: "ICRF"\n  time_scale: "TDB"\n\n')
+        f.write('metadata:\n  ephemeris_kernel: "de440s.bsp"\n  reference_frame: "ICRF"\n  time_scale: "UTC"\n\n')
         f.write("inputs:\n")
         f.write('  epoch: "%s"\n' % epoch)
         f.write('  orbit:\n    type: "state_vector"\n')
@@ -152,12 +173,13 @@ def main():
                 "    rel_tol: 1.0e-10\n"
                 "    justification: >-\n"
                 "      Two-body, the same model in both tools: IO.Astrodynamics against GMAT R2026a, worst block 7.6e-12\n"
-                "      over the day (GmatReferenceTests, 2026-10-19); GMAT's Phi at 10 s against 5 s, 2.0e-12. The\n"
-                "      threshold of the design of IO.Astrodynamics #408. rel_tol is binding, abs_tol 0.\n")
+                "      over the day (GmatReferenceTests, 2026-10-19), 7.63e-12 at the end of this UTC window\n"
+                "      (StmCaseTests, 2026-11-01); GMAT's Phi at 10 s against 5 s, 2.0e-12. The threshold of the design\n"
+                "      of IO.Astrodynamics #408. rel_tol is binding, abs_tol 0.\n")
     expected = {
         "id": CASE_ID,
         "category": "stm",
-        "case_version": "0.1.0",
+        "case_version": "0.2.0",
         "generated_by": {
             "tool": "GMAT",
             "tool_version": "R2026a",

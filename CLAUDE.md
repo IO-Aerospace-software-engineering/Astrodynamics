@@ -134,6 +134,11 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - SRP uses **continuous shadow fraction** (partial/annular eclipses scale SRP proportionally)
 - Both forces use **dynamic mass** via `GetTotalMass()` (dry + fuel + payload)
 
+### Time Argument
+
+- A numerical propagation whose resolved central body is the Earth integrates over the TT seconds between the instants of its window (#501): the forces at t are those of TT₀ + t (bodies and orientation at its TDB, drag at its UTC). Any other central body, SSB mode included, integrates over TDB seconds, bit for bit as before
+- Labels (segment bases, stages, events, outputs) stay TDB; `Duration`, `CumulativeTime`, the event time and the `IIntegrator` duration count the seconds of the argument; `AtEpoch`, `EpochAtMeanAnomaly`, Lambert and IOD count TT seconds about the Earth, TDB otherwise, whatever the tags (#508)
+
 ### Thread Safety
 
 - CSPICE P/Invoke calls: use shared lock — **not thread-safe**
@@ -174,6 +179,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 Rules learned during the state transition matrix and covariance work (10.2.0, tracking issue #364 and its "Lessons learned"):
 
 - Expected values come from SPICE or an independent reference (GMAT, a closed form, an extended-precision computation), never from a snapshot of the code. A golden is recaptured only for an intended change of results, which the PR states.
+- A reference about the Earth counts TT seconds between its epochs (`PropagationTimeArgument.Tt.SecondsBetween`, or an exact elapsed time through `InterpolateAtElapsed`), never a TDB epoch difference; the SPICE occultation references of `tools/occultation_reference`, which count ET within their bounds, are the stated exception.
 - A reference must resolve better than what it measures. Central differences of whole propagations take a tolerance of 1e-14 and start from the exact perturbed state; a sensitivity at the noise floor (Ψ_Cr) is measured against the same propagation with the variational equations in the step control. Otherwise the test measures its reference.
 - Thresholds are set from a measurement and never relaxed to make a test pass: a failing test is first a bug to understand. A record at the noise level is twice the worst value over Linux, Windows and macOS arm64, read from the CI logs (integration noise differs between platforms); a figure measured on Linux alone has already failed on macOS arm64.
 - Test every combination the public surface allows: both integrators, every activation path, participants propagated or not, maneuvers, SSB mode, a non-ICRF frame. Test a new coordinate rule where its coordinates are singular (poles, polar axis, equator).

@@ -29,6 +29,13 @@ public abstract class Integrator : IIntegrator
     // The mass and coefficients the forces are evaluated with, or null to read the spacecraft each force was built for
     private ForceEvaluationContext? _forceContext;
 
+    /// <summary>
+    /// The time argument of the integration variable, which maps t to the epoch of the forces (#501): set by the
+    /// propagator from its central body (<see cref="PropagatorBase"/>), TDB by default. A subclass outside the library
+    /// does not read it and builds its own epochs (<see cref="IIntegrator.IntegrateSegment"/>).
+    /// </summary>
+    internal virtual PropagationTimeArgument TimeArgument { get; set; } = PropagationTimeArgument.Tdb;
+
     public Integrator(IEnumerable<ForceBase> forces)
     {
         _forces = new List<ForceBase>(forces);

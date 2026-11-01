@@ -15,8 +15,9 @@ namespace IO.Astrodynamics.ConformanceRunner.Solvers;
 /// the Earth orientation file, the Mars cut, MOON_PA.
 /// </summary>
 /// <remarks>
-/// The framework integrates over the TDB seconds of the window. The suite propagates about the Earth over its TT seconds
-/// (spec.md section 12.1), which moves its goldens by 2.3 cm to 0.52 m; the framework's deviation is #501.
+/// The framework integrates about the Earth over the TT seconds between the instants of the window and about the Moon,
+/// Mars and the Sun over its TDB seconds (#501), the time arguments of the suite (spec.md section 12.1). The final state
+/// is read at the end of the window as the case tags it, the instant of the end whatever its frame.
 /// </remarks>
 public class PropagatorSolver : ICategorySolver
 {
@@ -60,7 +61,7 @@ public class PropagatorSolver : ICategorySolver
         var res = propagator.Propagate();
 
         // Interpolate at exact window end to avoid DeltaT sampling gap
-        var (finalPos, finalVel) = res.InterpolateAt(propagationCase.Window.EndDate.ToTDB());
+        var (finalPos, finalVel) = res.InterpolateAt(propagationCase.Window.EndDate);
 
         // Return position (km) and velocity (km/s)
         return new Dictionary<string, object>

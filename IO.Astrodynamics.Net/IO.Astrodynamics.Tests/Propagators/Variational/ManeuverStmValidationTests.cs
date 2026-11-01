@@ -64,6 +64,18 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// reference at 1e-14 with the step control takes 36 850 steps (4762 at 1e-13) and about 30 s. The record of Φ in the
 /// penumbra is twice its new measurement.
 /// </para>
+/// <para>
+/// The TT time argument of #501 moves the forces at t by the change of TDB − TT, so the steps of the propagation and of
+/// its references: another draw of their noise. Measured again (Linux, .NET 10, 2026-11-01; main e8f0d5f the same day in
+/// parentheses), open loop: Φ per block 3.0e-8, 3.2e-8, 2.9e-8, 2.7e-8 outside the penumbra, 3.2e-8 at most in it
+/// (2.5e-8, 3.2e-8, 2.4e-8, 3.1e-8; 3.2e-8); Ψ_Cd 1.2e-6 and 1.3e-6 over the arc, 1.8e-6 locally after the burn, 1.8e-6
+/// in the penumbra (1.1e-7 and 1.0e-7, 1.4e-6, 2.0e-7); Ψ_Cr against the central differences 3.3e-6 and 5.7e-6 over the
+/// arc, 3.9e-5 locally after the burn, 7.9e-6 in the penumbra (1.6e-6 and 2.3e-6, 1.5e-5, 3.1e-6); Ψ_Cr against the same
+/// propagation at 1e-14 with the step control 1.0e-9 and 1.8e-9 over the arc, 4.3e-6 relative to the local value
+/// (9.8e-11 and 1.8e-10, 5.2e-7), within F1. Closed loop: Φ before the burn below 8.9e-9 (the same), after it and Ψ the
+/// same to three digits. The records are set again at twice these measurements, rounded up at the second significant
+/// digit (choice 17 of #501, the Linux rule of the Validation category).
+/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
@@ -243,20 +255,22 @@ public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
     // The propagation of reference of Ψ_Cr, at 1e-14 with Φ and Ψ in the step control
     private const int TighterNaifId = -1986;
 
-    // Records at about twice the measurement: Φ in the penumbra 5.2e-8 since #398 (2.9e-8 on 2026-10-16, 4.3e-8 on
-    // main with the start moved by 2e-9 m along x, the noise of its reference; Linux, .NET 10, 2026-10-17)
-    private const double PenumbraRecord = 1.1e-7;
+    // Records at about twice the measurement: Φ in the penumbra 3.2e-8 with the TT time argument of #501 (Linux, .NET 10,
+    // 2026-11-01; 1.1e-7 before, twice the 5.2e-8 of #398), and Ψ_Cd relative to its local value in the penumbra 1.8e-6
+    // (1e-5 before)
+    private const double PenumbraRecord = 6.4e-8;
 
-    private const double PsiPenumbraRecord = 1e-5;
+    private const double PsiPenumbraRecord = 3.6e-6;
 
-    // Records of Ψ_Cr against the central differences over the arc, relative to its largest value (twice the 9.4e-5 of
-    // 2026-10-17, in velocity), and relative to its local value after the burn, outside and in the penumbra (twice 3.7e-4
-    // and 7.8e-5): the noise of the reference, which a shift of the start by 2e-9 m moves by a factor of 2 to 30 (#398)
-    private const double PsiCrArcRecord = 1.9e-4;
+    // Records of Ψ_Cr against the central differences over the arc, relative to its largest value (twice the 5.7e-6 of
+    // 2026-11-01, in velocity; 1.9e-4 before, twice the 9.4e-5 of 2026-10-17), and relative to its local value after the
+    // burn, outside and in the penumbra (twice 3.9e-5 and 7.9e-6; 7.5e-4 and 1.6e-4 before): the noise of the reference,
+    // which a shift of the start by 2e-9 m moves by a factor of 2 to 30 (#398)
+    private const double PsiCrArcRecord = 1.2e-5;
 
-    private const double PsiCrLocalRecord = 7.5e-4;
+    private const double PsiCrLocalRecord = 7.8e-5;
 
-    private const double PsiCrPenumbraLocalRecord = 1.6e-4;
+    private const double PsiCrPenumbraLocalRecord = 1.6e-5;
 
     // The measurements: Φ_rr, Φ_rv, Φ_vr, Φ_vv after the burn, then Ψ_Cd and Ψ_Cr over the arc
     private static readonly double[] ClosedLoopRecords = { 0.477, 0.332, 0.419, 0.230, 0.368, 1.17 };
