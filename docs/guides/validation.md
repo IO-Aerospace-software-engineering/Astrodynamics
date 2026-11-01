@@ -288,7 +288,10 @@ the study measured GMAT's own spread over the Earth-orientation data at up to 4.
 The bounds of the test are twice the worst over Linux, Windows and macOS arm64 (run 41268715428), rounded up at the
 second significant digit: 3.9 cm, 1.7 cm and 2.3 cm (0.047 mm/s, 0.0015 mm/s and 0.018 mm/s) for RK7(8), 0.80 m
 (0.057 mm/s) for Velocity-Verlet. Before #501, over the TDB seconds, they were 0.18 m, 0.12 m and 0.32 m, and 0.68 m
-(0.048 mm/s; CI of 77b509c, 2026-10-27): the bound of Velocity-Verlet rises with the step error that the δ term no longer offsets.
+(0.048 mm/s; CI of 77b509c, 2026-10-27). The bound of Velocity-Verlet rises because its error grew from 33.7 cm to
+39.7 cm, by 6.0 cm, as the TT time argument took the δ term out of the RK7(8) error of the same case, from 5.95 cm to
+0.83 cm; probably, the δ term had offset part of the error of the 1 s step, an inference from these two magnitudes
+alone, not traced.
 
 Run the conformance runner, next to a clone of conformance-tests:
 
@@ -442,9 +445,12 @@ record of 1.7e-6, twice the worst (decision of S. Guillet, 2026-10-20).
 With the TT time argument of [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)
 (run 41268727370 of `long-validation.yml`, 2026-11-01), which moves the steps of the reference propagations about the
 Earth, the smallest error on Φ at 1e-14 and at 1e-13 is R1 1.7e-8 and 2.3e-8 (unchanged), R2 3.0e-8 and 2.2e-7, R3
-9.5e-8 and 7.2e-7, R4 8.9e-9 and 5.7e-8, R5 2.4e-7 and 8.3e-7, the eclipsing case 5.3e-8 and 1.4e-7, and every chosen
-step of Φ is the smallest of its sweep. Ψ_Cd of R5 at 5 % is 7.7e-8, the smallest of its sweep; Ψ_Cd of the eclipsing
-case at 30 % 9.5e-8, against its record of 4.1e-7. The sweeps published and not asserted, from 0.1 % to 30 %: Ψ_Cr of
+9.5e-8 and 7.2e-7, R4 8.9e-9 and 5.7e-8, R5 2.4e-7 and 8.3e-7, the eclipsing case 5.3e-8 and 1.4e-7. At 1e-14 every
+chosen step of Φ is the smallest of its sweep; at 1e-13 the 100 m step is smaller for R4 (5.65e-8, against 1.27e-7 at
+10 m) and the eclipsing case (1.41e-7, against 5.09e-7), and the 1 m step for R1 (2.30e-8, against 2.31e-8), so the
+figures at 1e-13 are the smallest of each sweep, those of 100 m for R4 and the eclipsing case. Ψ_Cd of R5 at 5 % is
+7.7e-8, the smallest of its sweep; Ψ_Cd of the eclipsing case at 30 % 9.5e-8, against its record of 4.1e-7, while its
+sweep is smallest at 20 %, 1.7e-8, 5.7 times below (published, not asserted: the case is held to its record). The sweeps published and not asserted, from 0.1 % to 30 %: Ψ_Cr of
 R3 1.8e-3, 3.7e-4, 3.1e-5, 9.2e-7, 1.3e-5 and 8.8e-6, the chosen 10 % now the smallest; Ψ_Cr of R4 1.6e-7, 1.1e-8,
 2.2e-9, 3.7e-9, 9.4e-9 and 1.3e-9, the chosen 10 % 3.0 times the smallest; Ψ_Cd of R2 5.4e-8, 1.2e-7, 3.0e-6, 1.2e-5,
 4.9e-5 and 1.1e-4, the chosen 1 % 2.3 times the 0.1 %; Ψ_Cr of the eclipsing case 2.5e-3, 1.2e-3, 4.4e-4, 2.3e-4,
@@ -532,7 +538,7 @@ mode, with the same integrator. Two tests are applied every 10 min up to 6 h, at
 | R1 | 1.38 at 10 min, 0.29 at 24 h: passes up to 24 h | p = 0.058 (1.646 h) | up to 1.83 h; fails from 2.0 h (p = 1.9e-4) | `CovarianceMonteCarloTests` |
 | R2 | 1.89: passes up to 24 h | p = 0.032 (1.543 h) | up to 1.67 h; fails from 1.83 h (p = 5.3e-4) | `CovarianceMonteCarloLongTests` |
 | R2, Cd sampled (σ = 0.22) | 2.26: passes up to 24 h | p = 0.37 | up to 2.33 h; fails from 2.5 h | `CovarianceMonteCarloLongTests` |
-| R3, Cr sampled (σ = 0.15) | 2.14: passes up to 24 h | p = 0.011 (1.646 h) | up to 1.67 h; fails from 1.83 h (p = 3.2e-3) | `CovarianceMonteCarloLongTests` |
+| R3, Cr sampled (σ = 0.15) | 2.14: passes up to 24 h | p = 0.011 (1.646 h) | up to 1.67 h; fails from 1.83 h (p = 3.3e-3) | `CovarianceMonteCarloLongTests` |
 
 With Cd or Cr sampled, P holds the coefficient as a consider parameter, `Ψc Pp Ψcᵀ`, so the element-wise test also
 validates Ψ.
