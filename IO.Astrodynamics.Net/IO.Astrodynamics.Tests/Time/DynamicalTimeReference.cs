@@ -29,6 +29,20 @@ internal static class DynamicalTimeReference
     /// <summary>The bound of a difference through a TDB tag: twice the largest departure of the two series.</summary>
     internal const double SeriesBound = 2.49e-6;
 
+    /// <summary>
+    /// The bound of a difference between two TDB tags <paramref name="seconds"/> apart, which carries the change of the
+    /// departure of the two series over the interval only, not the departure itself.
+    /// </summary>
+    /// <remarks>
+    /// Both series are A sin(M + e sin M) of the mean anomaly of the Earth, with A, e and the rate of M a few 1e-4
+    /// apart, so their departure is, to 1e-10 s, a trigonometric polynomial of the annual and semi-annual frequencies.
+    /// By Bernstein's inequality its rate is at most the semi-annual angular frequency (2 M1) times its largest value
+    /// (1.2423 µs, half of <see cref="SeriesBound"/>): 4.95e-13 s per second, 1.78e-9 s over an hour. The largest rate
+    /// sampled from 1972 to 2100 is 2.0e-13 s per second (computed, 2026-11-01).
+    /// </remarks>
+    internal static double SeriesChangeBound(double seconds) =>
+        2.0 * M1 * (SeriesBound / 2.0) * System.Math.Abs(seconds);
+
     /// <summary>The TT seconds from <paramref name="from"/> to <paramref name="to"/>.</summary>
     internal static double TtSecondsBetween(TimeSystem.Time from, TimeSystem.Time to)
     {

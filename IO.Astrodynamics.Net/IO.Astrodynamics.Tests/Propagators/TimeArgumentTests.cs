@@ -37,7 +37,10 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// </para>
 /// <para>
 /// Over an hour from 2021-03-20 12:00 TDB, TDB − TT changes by 2.8e-7 s, 2.2 mm of a LEO: the Kepler bound below, ten
-/// times smaller, tells the two time arguments apart.
+/// times smaller, tells the two time arguments apart, and so does the bound of the length (1.8e-9 s between two TDB
+/// tags, the change of the departure of the two series over the hour, <see cref="DynamicalTimeReference.SeriesChangeBound"/>).
+/// A window from a TDB tag to a UTC tag carries the departure of the series at its TDB end, up to 1.2 µs, and is checked
+/// to that resolution only.
 /// </para>
 /// </remarks>
 public class TimeArgumentTests
@@ -85,11 +88,14 @@ public class TimeArgumentTests
         var solution = Spacecraft(-5011, initial).Propagate(window, new CelestialItem[] { _earth },
             rk78 ? new RK78Integrator(1e-13, 1e-13) : new VVIntegrator(TimeSpan.FromSeconds(10.0)), false, false, Step);
 
-        // Assert: the TT seconds between the instants, exact in ticks without a TDB tag, within the departure of the two
-        // series with one (2.49e-6 s); the propagation of the leap second runs to its 3 601 s past its grid of 3 600 s
+        // Assert: the TT seconds between the instants, exact in ticks without a TDB tag, within the change of the
+        // departure of the two series between two TDB tags (1.8e-9 s over the hour), within the departure itself from a
+        // TDB tag to a UTC tag (2.49e-6 s); the propagation of the leap second runs to its 3 601 s past its grid of
+        // 3 600 s
         double reference = DynamicalTimeReference.TtSecondsBetween(window.StartDate, window.EndDate);
         double integrated = WindowEndAssert.IntegratedSeconds(solution);
-        double bound = tags.Contains("TDB") ? DynamicalTimeReference.SeriesBound : 1e-9;
+        double bound = tags == "TDB" ? DynamicalTimeReference.SeriesChangeBound(reference)
+            : tags.Contains("TDB") ? DynamicalTimeReference.SeriesBound : 1e-9;
         _output.WriteLine($"{tags}, {(rk78 ? "RK7(8)" : "Velocity-Verlet")}: {integrated:R} s integrated, " +
                           $"{integrated - reference:E3} s from the reference");
         Assert.Same(PropagationTimeArgument.Tt, solution.TimeArgument);
@@ -105,11 +111,14 @@ public class TimeArgumentTests
             Assert.Equal(window.EndDate.ToTDB(), solution.StateVectors[^1].Epoch);
         }
 
+        // Kepler over the reference seconds, so that the dynamics are checked at the reference time too: the bound of the
+        // length moves the end by up to |v| times it
         if (rk78)
         {
-            double error = KeplerError(initial, solution, integrated);
-            _output.WriteLine($"MEASURE {tags}: RK7(8) at 1e-13 against Kepler over the TT length {error:E3} m");
-            Assert.True(error < KeplerBound, $"{error:E3} m from Kepler");
+            double error = KeplerError(initial, solution, reference);
+            double keplerBound = KeplerBound + initial.Velocity.Magnitude() * bound;
+            _output.WriteLine($"MEASURE {tags}: RK7(8) at 1e-13 against Kepler over the reference TT length {error:E3} m");
+            Assert.True(error < keplerBound, $"{error:E3} m from Kepler (bound {keplerBound:E3} m)");
         }
     }
 
@@ -151,7 +160,7 @@ public class TimeArgumentTests
         foreach (string path in new[]
                  {
                      "builder", "constructor", "constructor with options", "constructor with an integrator and its forces",
-                     "Velocity-Verlet constructor", "Spacecraft.Propagate", "Spacecraft.Propagate with an integrator",
+                     "constructor with an integrator, its forces and options", "Velocity-Verlet constructor", "Spacecraft.Propagate", "Spacecraft.Propagate with an integrator",
                      "Spacecraft.Propagate with options", "Spacecraft.PropagateAsync", "PropagationTask",
                      "PropagationTask with options", "builder with options"
                  })
@@ -185,7 +194,8 @@ public class TimeArgumentTests
                 false, false, Step).Propagate(),
             "constructor with options" => new CentralBodyPropagator(window, spacecraft,
                 new RK78Integrator(1e-13, 1e-13), bodies, false, false, Step, options).Propagate(),
-            "constructor with an integrator and its forces" => WithItsForces(window, spacecraft, body),
+            "constructor with an integrator and its forces" => WithItsForces(window, spacecraft, body, null),
+            "constructor with an integrator, its forces and options" => WithItsForces(window, spacecraft, body, options),
             "Velocity-Verlet constructor" => new CentralBodyPropagator(window, spacecraft, bodies, false, false, Step)
                 .Propagate(),
             "Spacecraft.Propagate" => spacecraft.Propagate(window, bodies, false, false, Step),
@@ -362,10 +372,10 @@ public class TimeArgumentTests
             rk78 ? new RK78Integrator(1e-11, 1e-11) : new VVIntegrator(TimeSpan.FromSeconds(10.0)), false, false,
             TimeSpan.FromSeconds(60.0));
 
-        // Assert: the event time of the first segment, in TT seconds, carried to its label (OnEpochGrid), is the TT
-        // seconds between the two bases, exactly; the segments together span the TT length of the window
-        // seconds between the two bases to the rounding of the seconds (one ulp, 4.5e-13 s); Velocity-Verlet ends its
-        // segment at the end of the step that holds the root, which the next base labels to the tick, as every label
+        // Assert: in RK7(8) the event time of the first segment, in TT seconds, carried to its label (OnEpochGrid), is
+        // the TT seconds between the two bases to the rounding of the seconds (one ulp, 4.5e-13 s; bound 1e-12 s);
+        // Velocity-Verlet ends its segment at the end of the step that holds the root, which the next base labels up to
+        // a tick before it, as every label (within [−1e-7, 0] s); the segments together span the TT length of the window
         Assert.Equal(2, solution.Segments.Count);
         var before = solution.Segments[0];
         var after = solution.Segments[1];
@@ -578,11 +588,14 @@ public class TimeArgumentTests
         new(naifId, "TIME" + -naifId, 100.0, 1000.0, new Clock("time" + -naifId, 65536), state, 1.0);
 
     // The integrator with its own forces, the point mass of the central body
-    private static PropagationSolution WithItsForces(TimeSystem.Window window, Spacecraft spacecraft, CelestialBody body)
+    private static PropagationSolution WithItsForces(TimeSystem.Window window, Spacecraft spacecraft, CelestialBody body,
+        CovariancePropagationOptions options)
     {
         var integrator = new RK78Integrator(1e-13, 1e-13);
         integrator.AddForce(new GravitationalAcceleration(body));
-        var propagator = new CentralBodyPropagator(window, spacecraft, integrator, Step);
+        var propagator = options == null
+            ? new CentralBodyPropagator(window, spacecraft, integrator, Step)
+            : new CentralBodyPropagator(window, spacecraft, integrator, Step, options);
         integrator.Initialize(spacecraft.InitialOrbitalParameters.ToStateVector());
         return propagator.Propagate();
     }

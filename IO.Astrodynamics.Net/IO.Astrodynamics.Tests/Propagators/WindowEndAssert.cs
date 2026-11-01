@@ -16,19 +16,38 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// </remarks>
 internal static class WindowEndAssert
 {
-    // The resolution of the former assertion, an equality of labels
+    // The resolution of the former assertion, an equality of labels: the allowance of an end that is not the end of the
+    // window (TDB time argument, or an output grid beyond the drift bound, where the end is the label of the last step)
     private const double Tick = 1e-7;
+
+    // An end at the end of the window (choice 6 of #501) is t = L: the durations of the segments add up to the length
+    // but for the rounding of their sum, an ulp or two of L
+    private const int EndUlps = 4;
 
     internal static void ReachesTheEndOf(TimeSystem.Window window, PropagationSolution solution)
     {
-        Assert.Equal(window.EndDate.ToTDB(), solution.End);
-        Assert.InRange(IntegratedSeconds(solution) - LengthOf(window, solution), -Tick, Tick);
+        Assert.True(Reaches(window, solution, out string failure), failure);
     }
 
     /// <summary>Whether <see cref="ReachesTheEndOf"/> holds, for the tests that count the propagations that hold it.</summary>
     internal static bool Reaches(TimeSystem.Window window, PropagationSolution solution) =>
-        solution.End == window.EndDate.ToTDB() &&
-        System.Math.Abs(IntegratedSeconds(solution) - LengthOf(window, solution)) <= Tick;
+        Reaches(window, solution, out _);
+
+    private static bool Reaches(TimeSystem.Window window, PropagationSolution solution, out string failure)
+    {
+        double length = LengthOf(window, solution);
+        double departure = IntegratedSeconds(solution) - length;
+        var endLabel = window.EndDate.ToTDB();
+        double allowance = solution.WindowEnd != null
+            ? EndUlps * (System.Math.BitIncrement(length) - length)
+            : Tick;
+        failure = $"The propagation ends at {solution.End}, {departure:E3} s from the length of the window " +
+                  $"(allowance {allowance:E3} s), whose end is {endLabel}.";
+
+        // With the end of the window (WindowEnd), its label is the one the propagator was given; without it, the end of
+        // the last segment is mapped to its label
+        return solution.End == endLabel && System.Math.Abs(departure) <= allowance;
+    }
 
     /// <summary>The seconds of the time argument from the start of the solution to the end of its last segment.</summary>
     internal static double IntegratedSeconds(PropagationSolution solution)
