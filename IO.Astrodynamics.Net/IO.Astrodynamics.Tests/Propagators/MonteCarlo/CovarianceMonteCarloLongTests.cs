@@ -39,6 +39,12 @@ namespace IO.Astrodynamics.Tests.Propagators.MonteCarlo;
 /// at 6 h from 2.17 to 2.16, the position at 24 h from 3.93 to 3.96, the mean radial offset at 24 h from −198 m against
 /// −186 m to −200 m against −188 m; R2, the position at 24 h from 4.99 to 5.00. The other figures are unchanged.
 /// </para>
+/// <para>
+/// Re-measured with the constants of the geopotential of #410 and the TT time argument of #501 (run 41268727370 of
+/// <c>long-validation.yml</c>, 2026-11-01): the figures above are unchanged at their precision (87.5 with Cd sampled and
+/// 4.325, radial 1.105, for R3 at 24 h, printed to four digits, at the edge of the rounding of 87, 4.32 and 1.11), except
+/// the significance of R3 with Cr sampled at 1.67 h, 0.01004 (0.01003 before).
+/// </para>
 /// </remarks>
 [Trait("Category", "LongValidation")]
 public class CovarianceMonteCarloLongTests : IClassFixture<ReferenceCases>

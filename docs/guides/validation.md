@@ -439,6 +439,17 @@ before [#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics
 [#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409)), so R5 is held at 1e-14 to a
 record of 1.7e-6, twice the worst (decision of S. Guillet, 2026-10-20).
 
+With the TT time argument of [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)
+(run 41268727370 of `long-validation.yml`, 2026-11-01), which moves the steps of the reference propagations about the
+Earth, the smallest error on Φ at 1e-14 and at 1e-13 is R1 1.7e-8 and 2.3e-8 (unchanged), R2 3.0e-8 and 2.2e-7, R3
+9.5e-8 and 7.2e-7, R4 8.9e-9 and 5.7e-8, R5 2.4e-7 and 8.3e-7, the eclipsing case 5.3e-8 and 1.4e-7, and every chosen
+step of Φ is the smallest of its sweep. Ψ_Cd of R5 at 5 % is 7.7e-8, the smallest of its sweep; Ψ_Cd of the eclipsing
+case at 30 % 9.5e-8, against its record of 4.1e-7. The sweeps published and not asserted, from 0.1 % to 30 %: Ψ_Cr of
+R3 1.8e-3, 3.7e-4, 3.1e-5, 9.2e-7, 1.3e-5 and 8.8e-6, the chosen 10 % now the smallest; Ψ_Cr of R4 1.6e-7, 1.1e-8,
+2.2e-9, 3.7e-9, 9.4e-9 and 1.3e-9, the chosen 10 % 3.0 times the smallest; Ψ_Cd of R2 5.4e-8, 1.2e-7, 3.0e-6, 1.2e-5,
+4.9e-5 and 1.1e-4, the chosen 1 % 2.3 times the 0.1 %; Ψ_Cr of the eclipsing case 2.5e-3, 1.2e-3, 4.4e-4, 2.3e-4,
+9.3e-5 and 1.2e-5. The chosen steps stay.
+
 **Start of the reference.** A propagation takes a state vector given at the start of its window as it is, so each
 reference propagation starts from exactly its perturbed state. Until
 [#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398), the initial state went through
@@ -553,8 +564,12 @@ acceleration in the penumbra by the rounding of the former shadow fraction and s
 revolution (1.646 h), the domain of validity up to 1.67 h (p = 3.3e-3 at 1.83 h), the ratios 0.954 to 1.056 up to 1 h,
 1.13 at one revolution, 362 at 6 h and 1.3e6 at 24 h, the position at 24 h 4.32 (radial 1.11). These figures were
 published before [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410), the
-constants of the geopotential, which moves R2 by 7.85 cm and R3 by 16.6 cm over one day; the run of
-`long-validation.yml` before the release checks them again.
+constants of the geopotential, which moves R2 by 7.85 cm and R3 by 16.6 cm over one day. Measured again with those
+constants and the TT time argument of [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)
+(run 41268727370 of `long-validation.yml`, 2026-11-01): unchanged at the precision of the tables, the domains of
+validity and the mean radial offsets at 24 h included (87.5 with Cd sampled and 4.325, radial 1.105, for R3 at 24 h,
+printed to four digits, at the edge of the rounding of 87, 4.32 and 1.11); the significance of R3 with Cr sampled at
+1.67 h is 0.01004 (0.01003 before).
 
 - Up to about one revolution S is P along every direction of the state, within the sampling noise. From about one
   revolution, the sample variance along one direction of the state leaves its band and grows by orders of magnitude

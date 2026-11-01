@@ -79,6 +79,18 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// <c>whole_propagation_step_study_{case}.csv</c> there (quantity, step, error).
 /// </para>
 /// <para>
+/// With the TT time argument of #501 (run 41268727370 of <c>long-validation.yml</c>, 2026-11-01), which moves the steps
+/// of the reference propagations about the Earth, the smallest error of Φ at 1e-14 and at 1e-13: R1 1.7e-8 and 2.3e-8
+/// (unchanged), R2 3.0e-8 and 2.2e-7, R3 9.5e-8 and 7.2e-7, R4 8.9e-9 and 5.7e-8, R5 2.4e-7 and 8.3e-7, the eclipsing
+/// case 5.3e-8 and 1.4e-7; every chosen step of Φ is the smallest of its sweep (R5 2.4e-7 at 1 m, 8.7e-7 at 10 m). Ψ_Cd
+/// of R2 at 1 % 1.2e-7 (unchanged), of R5 at 5 % 7.7e-8, the smallest of its sweep; Ψ_Cd of the eclipsing case at 30 %
+/// 9.5e-8, against its record of 4.1e-7. The sweeps published and not asserted: Ψ_Cr of R3 1.83e-3, 3.67e-4, 3.05e-5,
+/// 9.24e-7, 1.30e-5, 8.78e-6 from 0.1 % to 30 %, the chosen 10 % now the smallest; Ψ_Cr of R4 1.58e-7, 1.10e-8,
+/// 2.21e-9, 3.71e-9, 9.36e-9, 1.25e-9, the chosen 10 % 3.0 times the smallest; Ψ_Cd of R2 5.38e-8, 1.24e-7, 3.04e-6,
+/// 1.22e-5, 4.87e-5, 1.10e-4, the chosen 1 % 2.3 times the 0.1 %; Ψ_Cr of the eclipsing case 2.49e-3, 1.18e-3,
+/// 4.39e-4, 2.32e-4, 9.34e-5, 1.22e-5. The chosen steps stay.
+/// </para>
+/// <para>
 /// In the <c>LongValidation</c> category since 2026-10-22 (decision of S. Guillet): the study checks steps chosen once,
 /// and takes about 11 min on 4 cores, R4 alone 8 min.
 /// </para>
