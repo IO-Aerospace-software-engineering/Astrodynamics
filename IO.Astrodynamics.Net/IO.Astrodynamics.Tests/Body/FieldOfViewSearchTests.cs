@@ -114,8 +114,12 @@ internal static class FieldOfViewKernels
 /// <summary>
 /// The trajectory of <c>InstrumentTests.FindWindowInFieldOfView</c> (a 6 800 km circular equatorial LEO from
 /// 676555199.9846829 TDB, 6 448 s, Velocity-Verlet at 1 s, ICRF, constant attitude), propagated once for the class with
-/// the 22 instruments of the design of #515 (§10) and a spacecraft target on a 7 000 km orbit, their kernels written by
-/// the library and loaded, and the same trajectories as kernel-backed spacecraft read from those kernels.
+/// the 22 instruments of the design of #515 (§10), two crossed by the Lagrange point L1 and two by a star, and a spacecraft
+/// target on a 7 000 km orbit, their kernels written by the library and loaded, and the same trajectories as kernel-backed
+/// spacecraft read from those kernels. The star, at 1 pc without proper motion, has its SPK too (Star.WriteEphemeris), over
+/// the light time before and after the window: gftfov reads it at its light-time corrected epoch, where it has not moved,
+/// so that its windows with LT, CN and their "+S" and transmission forms are those of the direction the library reads,
+/// with stelab's stellar aberration (choice 13).
 /// </summary>
 public sealed class PropagatedFieldOfViewCase
 {
@@ -136,6 +140,11 @@ public sealed class PropagatedFieldOfViewCase
         Dss13 = new Site(13, "DSS-13", Earth);
         // A site given by its coordinates (the managed path; its SPK written by Site.WriteEphemeris for gftfov)
         CoordinateSite = new Site(151, "FOVSITE151", Earth, new Planetodetic(-116.8 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 0.0));
+        Barycenter = new Barycenter(3);
+        L1 = new LagrangePoint(LagrangePoints.L1);
+        Star = new Star(515002, "FOVSTAR5152", 1.989e30, "G2V", 5.0, 1.0, new Equatorial(1.2, 0.3, Start), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Start);
+        // A light time of 1.03e8 s
+        Star.Propagate(new Window(Start.AddSeconds(-1.2e8), End.AddSeconds(1.2e8)), TimeSpan.FromSeconds(1.0e6));
 
         var scenario = new Scenario("FieldOfView515", new IO.Astrodynamics.Mission.Mission("fov515"), new Window(Start, End));
         scenario.AddCelestialItem(Moon);
@@ -152,6 +161,10 @@ public sealed class PropagatedFieldOfViewCase
         scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0)).GetAwaiter().GetResult();
 
         FieldOfViewKernels.WriteAndLoad(KernelDirectory, Propagated, [PropagatedTarget], [CoordinateSite], new Window(Start.AddSeconds(-600.0), End.AddSeconds(600.0)));
+        var starSpk = new FileInfo(Path.Combine(KernelDirectory, "fovstar515.bsp"));
+        File.Delete(starSpk.FullName);
+        Star.WriteEphemeris(new FileInfo(starSpk.FullName));
+        SpiceAPI.Instance.LoadKernels(new FileInfo(starSpk.FullName));
         Kernel = new Spacecraft(ObserverId, "FOV5151", Start, 1000.0, 3000.0, new Clock("FOV5151_CLK", 65536));
         AddInstruments(Kernel);
         KernelTarget = new Spacecraft(TargetId, "FOV5152", Start, 1000.0, 3000.0, new Clock("FOV5152_CLK", 65536));
@@ -165,6 +178,9 @@ public sealed class PropagatedFieldOfViewCase
     internal CelestialBody Sun { get; }
     internal Site Dss13 { get; }
     internal Site CoordinateSite { get; }
+    internal Barycenter Barycenter { get; }
+    internal LagrangePoint L1 { get; }
+    internal Star Star { get; }
     internal Spacecraft Propagated { get; }
     internal Spacecraft PropagatedTarget { get; }
     internal Spacecraft Kernel { get; }
@@ -172,7 +188,10 @@ public sealed class PropagatedFieldOfViewCase
 
     private static Vector3 N(double x, double y, double z) => new Vector3(x, y, z).Normalize();
 
-    /// <summary>The 22 instruments of the design of #515 (§10), numbered n as the spacecraft identifier times 1000 minus n.</summary>
+    /// <summary>
+    /// The 22 instruments of the design of #515 (§10), and those of L1 and of the star, numbered n as the spacecraft
+    /// identifier times 1000 minus n.
+    /// </summary>
     internal static void AddInstruments(Spacecraft spacecraft)
     {
         var m3 = N(0.28117852, 0.87853543, 0.386153); // the apparent Moon at S + 3000 s (LT)
@@ -215,13 +234,26 @@ public sealed class PropagatedFieldOfViewCase
         spacecraft.AddCircularInstrument(Id(821), "CIR821", "fov515", 0.0002, sEdge, Vector3.VectorZ, zero);
         spacecraft.AddEllipticalInstrument(Id(822), "ELL822", "fov515", 0.0003, 0.0001, sEdge, e, zero);
         spacecraft.AddRectangularInstrument(Id(823), "REC823", "fov515", 0.0003, 0.0001, sEdge, e + Vector3.VectorZ * 0.5, zero);
+        // L1, the boresight on its apparent direction at S + 3000 s (LT, spkpos): the parallax of the orbit moves it by up
+        // to 8.4e-3 rad, in and out of the fields
+        var l1 = N(0.19333405, 0.900347, 0.38986822);
+        spacecraft.AddCircularInstrument(Id(824), "CIR824", "fov515", 0.004, l1, Vector3.VectorZ, zero);
+        spacecraft.AddRectangularInstrument(Id(825), "REC825", "fov515", 0.004, 0.002, l1, Vector3.VectorZ, zero);
+        // The star: the stellar aberration of the orbital velocity moves its apparent direction by about 2.5e-5 rad about
+        // its mean (stelab, spiceypy, over the window); a circle 2.5e-5 rad from the mean "S" direction, and a rectangle
+        // 2e-5 rad from the mean "XS" direction (stlabx), each crossed twice; the geometric direction stays outside both
+        spacecraft.AddCircularInstrument(Id(830), "CIR830", "fov515", 2.5e-5, N(0.3462671531, 0.1070470016, 0.9320085827), Vector3.VectorZ, zero);
+        spacecraft.AddRectangularInstrument(Id(831), "REC831", "fov515", 2.5e-5, 1.5e-5, N(0.3460816294, 0.107124567, 0.9320685774), Vector3.VectorZ, zero);
     }
 
     internal Instrument PropagatedInstrument(int number) => Propagated.Instruments.First(x => x.NaifId == ObserverId * 1000 - number);
 
     internal Instrument KernelInstrument(int number) => Kernel.Instruments.First(x => x.NaifId == ObserverId * 1000 - number);
 
-    /// <summary>A target by its name in the case keys: 399, 301, 10, 399013, 399151 or -5152; the spacecraft propagated or kernel-backed.</summary>
+    /// <summary>
+    /// A target by its NAIF identifier in the case keys: 399, 301, 10, 399013, 399151, 3, 391, the star or -5152; the
+    /// spacecraft propagated or kernel-backed.
+    /// </summary>
     internal ILocalizable Target(string name, bool kernel) => name switch
     {
         "399" => Earth,
@@ -229,7 +261,10 @@ public sealed class PropagatedFieldOfViewCase
         "10" => Sun,
         "399013" => Dss13,
         "399151" => CoordinateSite,
+        "3" => Barycenter,
+        "391" => L1,
         "-5152" => kernel ? KernelTarget : PropagatedTarget,
+        _ when name == Star.NaifId.ToString() => Star,
         _ => throw new ArgumentException(name)
     };
 
@@ -245,7 +280,7 @@ public sealed class PropagatedFieldOfViewCase
     internal Window[] Gftfov(int number, string target, ShapeType shape, Aberration aberration, TimeSpan step, Window? window = null)
     {
         var frame = shape == ShapeType.Point ? Frames.Frame.ICRF : TargetFrame(target);
-        int targetId = target switch { "399" => 399, "301" => 301, "10" => 10, "399013" => 399013, "399151" => 399151, _ => TargetId };
+        int targetId = Target(target, true).NaifId;
         return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window ?? SearchWindow, ObserverId, ObserverId * 1000 - number, targetId, frame, shape, aberration, step)
             .ToArray();
     }
@@ -256,7 +291,7 @@ public sealed class PropagatedFieldOfViewCase
 /// kernels the library writes from the same propagation (choice 9 (b)): the public managed path of the propagated
 /// spacecraft, the internal managed search of the same trajectory as a kernel-backed spacecraft, and the public SPICE path
 /// of that one; every field of the design's grid as a point and as an ellipsoid, the Earth, the Moon, the Sun, DSS-13, a
-/// site given by its coordinates and a spacecraft target; the grazing and slow edges, the events shorter than the step,
+/// site given by its coordinates, a spacecraft target, the Earth-Moon barycenter, L1 and a star; the grazing and slow edges, the events shorter than the step,
 /// the edges of the search window, the time frame of the windows, the argument errors of both paths, the regressions of
 /// #518 to #521, and concurrent searches.
 /// </summary>
@@ -269,21 +304,21 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 {
     // PROVISIONAL limits, twice the worst value over the rows on Linux x64 (2026-11-01), rounded up at the second digit,
     // until the three platforms of the CI have printed their MEASURE lines (#515, choice 9 (b)): gftfov at 1e-6 s in the
-    // process against the managed search at 1 µs, off the grazing and slow edges: 1.3e-6 s on the 206 rows, propagated,
+    // process against the managed search at 1 µs, off the grazing and slow edges: 1.3e-6 s on the 221 rows, propagated,
     // kernel-backed and between the two public paths alike (789 ELLIPSOID XCN+S); the times are ticks, 100 ns
     private const double PropagatedLimit = 2.6e-6;
     private const double KernelLimit = 2.6e-6;
     private const double PublicPathsLimit = 2.6e-6;
 
-    // PROVISIONAL, the grazing fields 801 and 802 and the slow edges of 811 POINT LT+S (choice 10): the slope of their
-    // margin is 1.2e-6 rad/s (801), 3.1e-5 rad/s (802's gaps) and 3.7e-6 rad/s (811), where the 0.5 to 4 mm by which the
-    // apparent Earth of the library and that of gftfov round their light-time corrected epochs to a double ET (half its
-    // 119 ns ulp, the Earth's barycentric motion) move the edge by 1e-6 to 1e-3 s; traced in the log of #515, the library's
-    // geometry on gftfov's positions within 2.5e-6 s of gftfov's edges, its axes equal to SPICE's. Measured, propagated /
-    // kernel-backed: 801 ELLIPSOID LT 2.17e-4 / 2.52e-4 s; 802 ELLIPSOID LT+S 4.16e-5 / 1.75e-4 s, LT 2.2e-6 / 3.0e-6 s;
-    // 811 POINT LT+S 1.6e-6 / 4.4e-6 s
-    private const double GrazingLimit = 5.1e-4;
-    private const double SlowEdgeLimit = 8.8e-6;
+    // PROVISIONAL, a kernel-backed observer with a propagated spacecraft target: 5e-7 s on its 9 rows (Linux x64, 2026-11-01)
+    private const double KernelObserverLimit = 1.0e-6;
+
+    // The grazing fields 801 and 802 and the slow edges of 811 POINT LT+S (choice 10): the slope of their margin is
+    // 1.2e-6 rad/s (801), 3.1e-5 rad/s (802's gaps) and 3.7e-6 rad/s (811), where the 0.5 to 4 mm by which the apparent
+    // Earth of the library and that of gftfov round their light-time corrected epochs to a double ET (half its 119 ns ulp,
+    // the Earth's barycentric motion) move the edge by 1e-6 to 1e-3 s; traced in the log of #515, the library's geometry on
+    // gftfov's positions within 2.5e-6 s of gftfov's edges, its axes equal to SPICE's. Each row has its own limits, twice
+    // its measured edge, propagated and kernel-backed (PROVISIONAL, Linux x64, 2026-11-01)
 
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
     private static readonly TimeSpan ShortStep = TimeSpan.FromSeconds(1.0);
@@ -344,7 +379,38 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 }
             }
         }
+
+        // The Earth-Moon barycenter, in the fields it crosses
+        foreach (int n in new[] { 789, 795, 796 })
+        {
+            foreach (var aberration in Three)
+            {
+                yield return $"{n} 3 POINT {aberration}";
+            }
+        }
+
+        foreach (int n in new[] { 824, 825 })
+        {
+            foreach (var aberration in Three)
+            {
+                yield return $"{n} 391 POINT {aberration}";
+            }
+        }
+
+        // The star: "+S" moves it across the fields, the geometric direction stays outside (gftfov on its SPK, choice 13)
+        foreach (var aberration in new[] { "NONE", "LT", "LT+S", "CN+S", "XLT+S" })
+        {
+            yield return $"830 {StarKey} POINT {aberration}";
+        }
+
+        foreach (var aberration in new[] { "NONE", "LT+S", "XLT+S", "XCN+S" })
+        {
+            yield return $"831 {StarKey} POINT {aberration}";
+        }
     }
+
+    // The NAIF identifier of the fixture's star
+    private const string StarKey = "1000515002";
 
     // The uncategorized rows: every field shape against both target shapes, each kind of target, each aberration, and the
     // worst row of each limit (Linux, 2026-11-01)
@@ -356,7 +422,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         "822 10 POINT LT", "823 10 ELLIPSOID LT", "789 399 ELLIPSOID CN", "789 399 POINT CN+S", "821 10 POINT XLT",
         "789 399 ELLIPSOID XLT+S", "821 10 ELLIPSOID XCN", "789 399 POINT XCN+S", "789 399 ELLIPSOID XCN+S", "813 301 POINT LT+S",
         "797 399 ELLIPSOID LT", "789 399013 POINT LT", "797 399151 POINT LT+S",
-        "796 -5152 POINT LT"
+        "796 -5152 POINT LT", "789 3 POINT LT", "824 391 POINT LT+S", "825 391 POINT LT", "830 " + StarKey + " POINT LT+S",
+        "831 " + StarKey + " POINT XLT+S", "830 " + StarKey + " POINT NONE"
     ];
 
     public static IEnumerable<object[]> WorstRows() => WorstCases.Select(x => new object[] { x });
@@ -394,12 +461,14 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         return (worstManaged, worstKernel, worstPaths, expected.Length);
     }
 
-    private void AssertWithin(string key, double propagatedLimit, double kernelLimit, double pathsLimit, TimeSpan spiceStep)
+    /// <summary>The comparison of a row, its edges within the limits; returns the number of windows of gftfov.</summary>
+    private int AssertWithin(string key, double propagatedLimit, double kernelLimit, double pathsLimit, TimeSpan spiceStep)
     {
-        var (managed, kernel, paths, _) = Compare(key, spiceStep);
+        var (managed, kernel, paths, count) = Compare(key, spiceStep);
         Assert.True(managed < propagatedLimit, $"propagated {managed:E2} s");
         Assert.True(kernel < kernelLimit, $"kernel-backed {kernel:E2} s");
         Assert.True(paths < pathsLimit, $"public paths {paths:E2} s");
+        return count;
     }
 
     [Theory]
@@ -420,35 +489,36 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     /// <summary>
     /// The grazing fields (801 grazes the Earth's limb, 802's side grazes it) against gftfov at a step of 1 s, which their
     /// events of 10.8 s and gaps of 24.8 s and 3.2 s require, and the slow edges of 811 POINT LT+S (a gap that exists by
-    /// 2 % of the field): their own limits (choice 10), their window counts exact.
+    /// 2 % of the field): their own limits (choice 10), twice the measured edge of each row, propagated and kernel-backed
+    /// (PROVISIONAL, Linux x64, 2026-11-01), those at the level of the other rows under their limits; their window counts
+    /// exact. Measured, propagated / kernel-backed: 801 ELLIPSOID LT 2.17e-4 / 2.52e-4 s; 802 ELLIPSOID NONE 3e-7 /
+    /// 4e-7 s, LT 2.2e-6 / 3.0e-6 s, LT+S 4.16e-5 / 1.75e-4 s; 811 POINT LT+S 1.6e-6 / 4.4e-6 s; the other rows have no
+    /// window. The two public paths differ as the propagated spacecraft does from gftfov, which the SPICE path is.
     /// </summary>
     [Theory]
-    [InlineData("801 399 POINT NONE", 0)]
-    [InlineData("801 399 ELLIPSOID NONE", 0)]
-    [InlineData("801 399 ELLIPSOID LT", 1)]
-    [InlineData("801 399 ELLIPSOID LT+S", 0)]
-    [InlineData("802 399 ELLIPSOID NONE", 2)]
-    [InlineData("802 399 ELLIPSOID LT", 1)]
-    [InlineData("802 399 ELLIPSOID LT+S", 2)]
-    [InlineData("802 399 POINT LT", 0)]
-    public void Grazing_MatchesGftfov(string key, int count)
+    [InlineData("801 399 POINT NONE", 0, PropagatedLimit, KernelLimit)]
+    [InlineData("801 399 ELLIPSOID NONE", 0, PropagatedLimit, KernelLimit)]
+    [InlineData("801 399 ELLIPSOID LT", 1, 4.4e-4, 5.1e-4)]
+    [InlineData("801 399 ELLIPSOID LT+S", 0, PropagatedLimit, KernelLimit)]
+    [InlineData("802 399 ELLIPSOID NONE", 2, PropagatedLimit, KernelLimit)]
+    [InlineData("802 399 ELLIPSOID LT", 1, 4.4e-6, 6.0e-6)]
+    [InlineData("802 399 ELLIPSOID LT+S", 2, 8.4e-5, 3.5e-4)]
+    [InlineData("802 399 POINT LT", 0, PropagatedLimit, KernelLimit)]
+    public void Grazing_MatchesGftfov(string key, int count, double propagatedLimit, double kernelLimit)
     {
-        var (_, _, _, actualCount) = Compare(key, ShortStep);
-        Assert.Equal(count, actualCount);
-        AssertWithin(key, GrazingLimit, GrazingLimit, GrazingLimit, ShortStep);
+        Assert.Equal(count, AssertWithin(key, propagatedLimit, kernelLimit, propagatedLimit, ShortStep));
     }
 
     [Fact]
     public void SlowEdges_MatchGftfov()
     {
-        var (_, _, _, count) = Compare("811 301 POINT LT+S", Step);
-        Assert.Equal(2, count);
-        AssertWithin("811 301 POINT LT+S", SlowEdgeLimit, SlowEdgeLimit, SlowEdgeLimit, Step);
+        Assert.Equal(2, AssertWithin("811 301 POINT LT+S", 3.2e-6, 8.8e-6, 3.2e-6, Step));
     }
 
     /// <summary>
     /// Events shorter than the step (choice 12), on purpose: at 60 s the managed search finds 801's window of 10.8 s and
-    /// 802's gap of 24.8 s, which gftfov finds at 1 s only; the two public paths differ with this step, as documented.
+    /// 802's gap of 24.8 s, which gftfov finds at 1 s only; the two public paths differ with this step, as documented. The
+    /// limits are those of the rows of <see cref="Grazing_MatchesGftfov"/>.
     /// </summary>
     [Fact]
     public void ShortEvents_FoundByTheManagedSearch_MissedByGftfovAtTheSameStep()
@@ -461,7 +531,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var fine = _case.Gftfov(801, "399", ShapeType.Ellipsoid, Aberration.LT, ShortStep);
         Assert.Single(fine);
         Assert.InRange((fine[0].EndDate - fine[0].StartDate).TotalSeconds, 10.0, 11.0);
-        Assert.True(FieldOfViewKernels.WorstEdge(grazing, fine) < GrazingLimit);
+        Assert.True(FieldOfViewKernels.WorstEdge(grazing, fine) < 4.4e-4);
 
         var gap = _case.PropagatedInstrument(802).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Propagated, earth, itrf, ShapeType.Ellipsoid, Aberration.None, Step)
             .ToArray();
@@ -469,7 +539,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         var fineGap = _case.Gftfov(802, "399", ShapeType.Ellipsoid, Aberration.None, ShortStep);
         Assert.Equal(2, fineGap.Length);
         Assert.InRange((fineGap[1].StartDate - fineGap[0].EndDate).TotalSeconds, 24.0, 26.0);
-        Assert.True(FieldOfViewKernels.WorstEdge(gap, fineGap) < GrazingLimit);
+        Assert.True(FieldOfViewKernels.WorstEdge(gap, fineGap) < PropagatedLimit);
     }
 
     /// <summary>
@@ -490,7 +560,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             double worst = FieldOfViewKernels.WorstEdge(actual, expected);
             _output.WriteLine($"MEASURE #515 kernel observer, propagated target {number} {aberration}, {expected.Length} windows: |managed - gftfov (1e-6 s)| {worst:E2} s");
             Assert.NotEmpty(expected);
-            Assert.True(worst < KernelLimit, $"{worst:E2} s");
+            Assert.True(worst < KernelObserverLimit, $"{worst:E2} s");
         }
     }
 
@@ -735,7 +805,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
                 return (kernel, () => FieldOfViewSearch.Managed(instrument, window, earth, shape, itrf, Aberration.LT, Step));
             }
 
-            int id = -5160 - 10 * generation - i;
+            // Identifiers no other test class loads kernels for (FieldOfViewDynamicsTests: -5171 to -5177)
+            int id = -5180 - 10 * generation - i;
             var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, _case.Start, Frames.Frame.ICRF);
             var spacecraft = new Spacecraft(id, $"FOV{-id}", 1000.0, 3000.0, new Clock($"FOV{-id}_CLK", 65536), orbit);
             PropagatedFieldOfViewCase.AddInstruments(spacecraft);
