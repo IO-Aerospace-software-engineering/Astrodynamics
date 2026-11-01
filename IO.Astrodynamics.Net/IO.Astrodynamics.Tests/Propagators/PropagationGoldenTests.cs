@@ -59,6 +59,17 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// error at 1e-11 against 1e-13, which is not one figure: it depends on where the steps fall around the shadow passage,
 /// 1.3 mm with the old field, 24.4 mm with the new one, and from 0.9 to 36 mm over the 3 h for radii of the field from
 /// 6378136.2 to 6378136.7 m (98 to 103 steps), building up over 30 to 60 min in the middle of the arc (#445).
+/// Recaptured with #501: about the Earth the propagation integrates over TT seconds, the forces at the TDB label of
+/// TT₀ + t; the window ends at its end label. The GEO case moved by 20.8 mm at the end of its day (|v|·δ with δ, the
+/// change of TDB − TT, 6.68e-6 s), the same 46 steps; the maneuver case by 8.3 mm at the end (|v|·δ, 7.7 mm), the same
+/// 22 and 72 steps, the maneuver 2.4e-7 s later, at the perigee in TT seconds; the SRP case by 31.1 mm, with 103 steps
+/// instead of 99. Traced (choice 14): the steps are bit for bit up to step 2; the TT labels of stages 1 and 4 of step 2
+/// fall one tick after those of main (TDB − TT has changed by 1.6e-8 and 1.8e-8 s, which carried TDB₀ + t across a
+/// tick), where the Earth has turned by 7.3e-12 rad: the geopotential acceleration moves by 2e-16 to 8e-16 of itself,
+/// the error estimate of step 2 by 8.27e-5 (its z position, of a scale of 1.7e-5 m), and step 3 is 1.03e-5 shorter;
+/// from there the steps differ. With the stage labels of main and the TT length (a counterfactual build), the 98 first
+/// steps are bit for bit those of main. Of the 31.1 mm, 6.6 mm are the dynamics (the case at 1e-13 on main and on the
+/// branch) and 24.4 mm the integration error of main's 99 steps at 1e-11, which the 103 steps do not have (0.07 mm).
 /// A golden holds on one platform only (the mathematical library differs between
 /// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>
