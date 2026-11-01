@@ -84,10 +84,11 @@ public sealed record CovariancePropagationOptions
     /// Off, Ψ carries an integration error that the control of the state does not see, largest for Cr across the shadow
     /// crossings of solar radiation pressure: in an eclipsing LEO over 6 h at a tolerance of 1e-12, the error of Ψ_Cr
     /// over the arc, relative to its largest value on the arc, is 1.1e-3 to 3.5e-3 depending on where the steps fall,
-    /// against 1.2e-5 at most at 1e-14 (measured 2026-10-24, at deb26b9); relative to the local Ψ_Cr, it reached 1.5e-2
+    /// against 1.2e-5 at most at 1e-14 (measured 2026-10-24, at deb26b9; 9.6e-4 to 2.3e-3 and 2.5e-5 with the TT time
+    /// argument of #501, 2026-11-01); relative to the local Ψ_Cr, it reached 1.5e-2
     /// at 1e-12 (just after the first shadow exit, where Ψ_Cr is below a millimetre, and 1.2e-2 at a later crossing,
     /// where it is 0.28 m) and 1.6e-4 at 1e-14 (measured 2026-10-15, before #423 and #434). With this option, 7.7e-8 at
-    /// 1e-12 relative to the local Ψ_Cr. When Ψ_Cr matters (Cr as a consider parameter, with eclipses), turn it on: a
+    /// 1e-12 relative to the local Ψ_Cr (2.7e-8 with the TT time argument). When Ψ_Cr matters (Cr as a consider parameter, with eclipses), turn it on: a
     /// tighter tolerance alone does not hold Ψ_Cr to 1e-4 at every shadow crossing.
     /// <para>
     /// On, the step follows the error of Φ and Ψ, so it needs partials that are smooth along the trajectory. The density

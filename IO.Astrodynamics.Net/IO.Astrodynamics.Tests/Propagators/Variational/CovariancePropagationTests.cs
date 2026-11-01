@@ -594,7 +594,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // (Linux, .NET 10, 2026-10-15). At 1e-12 Ψ_Cr is above the 1e-4 of F1 in one frame, so it is bounded by a record;
         // at 1e-14 it is held to the 1e-4 of F1. Since #411 and #409 the record is twice the worst of five starts moved by
         // −2e-9 to 2e-9 m along x in both frames, 5.6e-5 to 3.7e-3 at 1e-12 (1.6e-6 to 3.2e-5 at 1e-14), rounded up at the
-        // second significant digit (decision (b) of S. Guillet, 2026-10-20)
+        // second significant digit (decision (b) of S. Guillet, 2026-10-20). With the TT time argument of #501, J2000 /
+        // ECLIPJ2000: 9.6e-4 / 1.3e-3 in position and 1.7e-3 / 2.3e-3 in velocity at 1e-12, 1.4e-5 / 5.8e-6 and 2.5e-5 /
+        // 1.0e-5 at 1e-14 (Linux, 2026-11-01)
         var epochs = Enumerable.Range(1, 120).Select(i => Start.AddHours(0.05 * i)).ToArray();
         var psiCr = PsiCrArcError(y, expected, epochs);
         var tighterPsiCr = PsiCrArcError(tighter, expected, epochs);
