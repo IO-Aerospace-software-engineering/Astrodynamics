@@ -85,19 +85,19 @@ internal static class OccultationFinder
         }
 
         offsets.Add(totalTicks / (double)TimeSpan.TicksPerSecond);
-        var states = offsets.Select(x => evaluator.Evaluate(OccultationEvaluator.Shift(start, x), margins, false)).ToArray();
+        var states = offsets.Select(x => evaluator.Evaluate(ApparentPositionReader.Shift(start, x), margins, false)).ToArray();
         double toleranceSeconds = tolerance.Ticks / (double)TimeSpan.TicksPerSecond;
 
         List<(double Start, double End)> Search(OccultationMargin margin)
         {
-            Func<double, double> f = x => evaluator.Evaluate(OccultationEvaluator.Shift(start, x), margin, false)[margin];
+            Func<double, double> f = x => evaluator.Evaluate(ApparentPositionReader.Shift(start, x), margin, false)[margin];
             return PositiveWindows(offsets, states.Select(s => s[margin]).ToArray(), f, toleranceSeconds);
         }
 
         // Overlap is the condition of Any (and the base of Partial); a point body has one condition, held in Overlap
         var primary = (margins & OccultationMargin.Overlap) != 0 ? OccultationMargin.Overlap : margins;
         var windows = Search(primary)
-            .Where(w => evaluator.Evaluate(OccultationEvaluator.Shift(start, 0.5 * (w.Start + w.End)), OccultationMargin.None, true).FrontIsInFront)
+            .Where(w => evaluator.Evaluate(ApparentPositionReader.Shift(start, 0.5 * (w.Start + w.End)), OccultationMargin.None, true).FrontIsInFront)
             .ToList();
 
         if (type == OccultationType.Partial && primary == OccultationMargin.Overlap && margins != OccultationMargin.Overlap)
@@ -107,8 +107,8 @@ internal static class OccultationFinder
         }
 
         return windows.Select(w => new Window(
-            w.Start == 0.0 ? start : OccultationEvaluator.Shift(start, w.Start),
-            w.End == offsets[^1] ? end : OccultationEvaluator.Shift(start, w.End))).ToArray();
+            w.Start == 0.0 ? start : ApparentPositionReader.Shift(start, w.Start),
+            w.End == offsets[^1] ? end : ApparentPositionReader.Shift(start, w.End))).ToArray();
     }
 
     /// <summary>
