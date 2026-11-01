@@ -202,6 +202,19 @@ asserts the relative criterion at each tolerance). Relative to `‖Φ‖²` it i
 asserts `‖ΦᵀJΦ - J‖ / ‖Φ‖² < 1e-14`. The other cases keep the absolute threshold; relative to `‖Φ‖²` they are at
 5.4e-16 (R2), 4.9e-16 (R3) and 3.0e-15 (R4).
 
+With the TT time argument of [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501),
+the Keplerian STM taken over the TT seconds of the arc, measured again by the CI of
+[#505](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/505) (run 41268715428, 2026-11-01;
+Linux, Windows, macOS arm64), all below the thresholds, unchanged: on R1 at 1e-9, 1e-11 and 1e-13 the
+symplectic defect is 3.1e-7 on the three platforms, 2.8e-9, 2.9e-9 and 2.9e-9, 3.9e-10, 1.0e-10 and 9.9e-11; the
+determinant defect 3.8e-8, then 3.2e-10, 3.2e-10 and 2.9e-10, 1.0e-10, 1.3e-11 and 3.4e-11; the Keplerian error
+1.2e-7, 9.9e-10, then 8.2e-12, 7.4e-12 and 8.0e-12. `R5TwoBody_PhiMatchesTheKeplerianStm`: 2.78e-14, 8.75e-13,
+2.29e-12 and 2.59e-12 on Linux, 2.78e-14, 8.45e-13, 2.56e-12 and 4.29e-12 on Windows and macOS arm64, the threshold
+2.3 times the largest. The relative symplectic defect of R5 around a point-mass Earth at 1e-12, 1e-13 and 1e-14:
+4.6e-17 to 1.9e-16 of `‖Φ‖²` over the three platforms. The worst relative defect of the cases, 2.86e-15 on Linux
+(R4, point-mass Earth and third bodies), 2.91e-15 on Windows and 2.96e-15 on macOS arm64 (R4 with its geopotential
+only), against 1e-14.
+
 ## Third-Party Reference (H2)
 
 GMAT R2026a, the official Ubuntu x64 build of the GMAT project on SourceForge (`gmat-ubuntu-x64-R2026a.tar.gz`,

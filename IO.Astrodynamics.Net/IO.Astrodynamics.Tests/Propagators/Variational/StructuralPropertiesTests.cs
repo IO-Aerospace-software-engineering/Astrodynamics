@@ -46,9 +46,11 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
     // The tolerance of the reference propagations of F1 in the specification. The defects decrease with it, so they are
     // the error of the integration (R1_DefectsDecreaseWithTheTolerance): on R1 after a day, symplectic defect 3.0e-7,
     // 2.8e-9 and 2.1e-10, determinant defect 3.8e-8, 2.6e-10 and 4.8e-11, Keplerian error 1.2e-7, 9.9e-10 and 8.2e-12,
-    // at 1e-9, 1e-11 and 1e-13. With the TT time argument of #501 (Linux, 2026-11-01; main e8f0d5f the same day in
-    // parentheses): 3.1e-7, 2.8e-9 and 3.9e-10 (3.1e-7, 2.8e-9 and 4.3e-10), 3.8e-8, 3.2e-10 and 1.0e-10 (3.8e-8,
-    // 3.1e-10 and 1.1e-10), the Keplerian error unchanged to two digits
+    // at 1e-9, 1e-11 and 1e-13. With the TT time argument of #501 (CI run 41268715428, 2026-11-01; Linux, Windows,
+    // macOS arm64): symplectic defect 3.1e-7 on the three, 2.8e-9, 2.9e-9 and 2.9e-9, 3.9e-10, 1.0e-10 and 9.9e-11;
+    // determinant defect 3.8e-8 on the three, 3.2e-10, 3.2e-10 and 2.9e-10, 1.0e-10, 1.3e-11 and 3.4e-11; Keplerian error
+    // 1.2e-7 and 9.9e-10 on the three, 8.2e-12, 7.4e-12 and 8.0e-12 (main e8f0d5f on Linux the same day: 3.1e-7, 2.8e-9
+    // and 4.3e-10, 3.8e-8, 3.1e-10 and 1.1e-10)
     private const double Tolerance = 1e-13;
 
     private readonly ReferenceCases _cases;
@@ -63,9 +65,11 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
     // R5 is checked relative to ‖Φ‖² (decision of S. Guillet, 2026-10-08): after two revolutions of a 300 × 36 000 km
     // orbit, ‖Φ‖ = 2.7e3 in canonical units and the rounding of the integration alone gives 1.05e-9, 1.09e-9 and 2.3e-9
     // at 1e-12, 1e-13 and 1e-14, which no longer decrease with the tolerance; relative to ‖Φ‖² that is 1.5e-16, ε (with
-    // the TT time argument of #501, 1.25e-9, 1.08e-9 and 1.17e-9, 1.5e-16 to 1.8e-16 of ‖Φ‖²; main e8f0d5f 1.01e-9,
-    // 1.19e-9 and 1.76e-9; Linux, 2026-11-01). The worst relative defect of the cases is 2.86e-15 (R4, point-mass Earth
-    // and third bodies; 3.02e-15 on main, R4 with its geopotential), against 1e-14
+    // the TT time argument of #501, CI run 41268715428, 2026-11-01: 1.25e-9, 1.08e-9 and 1.17e-9 on Linux, 8.6e-10,
+    // 1.24e-9 and 3.3e-10 on Windows, 6.6e-10, 1.34e-9 and 8.5e-10 on macOS arm64, 4.6e-17 to 1.9e-16 of ‖Φ‖²; main
+    // e8f0d5f on Linux the same day 1.01e-9, 1.19e-9 and 1.76e-9). The worst relative defect of the cases is 2.86e-15 on
+    // Linux (R4, point-mass Earth and third bodies), 2.91e-15 on Windows and 2.96e-15 on macOS arm64 (R4 with its
+    // geopotential only; 3.02e-15 on main on Linux, R4 with its geopotential), against 1e-14
     public static TheoryData<string, bool> PointMassCases => new()
     {
         { "R2", false }, { "R3", false }, { "R4", false }, { "R5", true }
@@ -161,7 +165,9 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
         var solution = Propagate(referenceCase);
 
         // Act and assert: at the apogees and the perigees. Measured 2.7e-14, 7.8e-13, 2.4e-12 and 3.5e-12 (Linux, .NET 10,
-        // 2026-10-10), growing with Φ; the threshold is about three times the largest
+        // 2026-10-10), growing with Φ; the threshold is about three times the largest. With the TT time argument of #501
+        // (CI run 41268715428, 2026-11-01): 2.78e-14, 8.75e-13, 2.29e-12 and 2.59e-12 on Linux, 2.78e-14, 8.45e-13,
+        // 2.56e-12 and 4.29e-12 on Windows and macOS arm64, the threshold 2.3 times the largest
         foreach (double fraction in new[] { 0.25, 0.5, 0.75, 1.0 })
         {
             var epoch = fraction < 1.0
