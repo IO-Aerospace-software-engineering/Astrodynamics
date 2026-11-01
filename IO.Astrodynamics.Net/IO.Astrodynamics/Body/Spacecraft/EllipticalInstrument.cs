@@ -4,9 +4,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
 
@@ -40,19 +38,5 @@ public class EllipticalInstrument : Instrument
             .Replace("{cangle}", CrossAngle.ToString(CultureInfo.InvariantCulture));
         await using var sw = new StreamWriter(outputFile.FullName);
         await sw.WriteAsync(data);
-    }
-
-    public override bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
-    {
-        var (azimuth, elevation, isInFov) = PositionInFOV(date, target, aberration);
-        if (!isInFov) return false;
-
-        // Check if the object is within the camera's horizontal and vertical FOV
-        if (System.Math.Pow(azimuth / (FieldOfView), 2) + System.Math.Pow(elevation / (CrossAngle), 2) <= 1)
-        {
-            return true;
-        }
-
-        return false;
     }
 }

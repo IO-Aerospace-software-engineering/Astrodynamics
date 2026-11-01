@@ -12,8 +12,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
 {
     public abstract class Instrument : INaifObject, IEquatable<Instrument>
     {
-        private readonly GeometryFinder _geometryFinder = new GeometryFinder();
-
         /// <summary>
         /// Naif identifier
         /// </summary>
@@ -102,16 +100,63 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        ///     Find time window when a target is in instrument's field of view
+        /// The windows, in TDB, where the target is in the field of view of the instrument, its spacecraft the observer:
+        /// the windows of CSPICE's <c>gftfov</c>.
         /// </summary>
-        /// <param name="searchWindow"></param>
-        /// <param name="observer"></param>
-        /// <param name="target"></param>
-        /// <param name="targetFrame"></param>
-        /// <param name="targetShape"></param>
-        /// <param name="aberration"></param>
-        /// <param name="stepSize"></param>
-        /// <returns></returns>
+        /// <remarks>
+        /// <para>
+        /// <b>The condition.</b> A <see cref="ShapeType.Point"/> target is in view when the direction of its center is within
+        /// the field; an <see cref="ShapeType.Ellipsoid"/> target when its apparent disc, the ellipsoid of the radii of a
+        /// <see cref="CelestialBody"/> oriented by <paramref name="targetFrame"/> at the light-time corrected epoch, overlaps
+        /// the field, partly or whole. The field is that of the instrument kernel: <see cref="FieldOfView"/> is the half-angle
+        /// in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), the cross angle of an ellipse or a
+        /// rectangle the half-angle across it (<c>FOV_CROSS_ANGLE</c>), the reference vector is made perpendicular to the
+        /// boresight, and the axes are read at the epoch through the spacecraft's attitude.
+        /// </para>
+        /// <para>
+        /// <b>The two paths.</b> When the instrument's spacecraft and the target are both in the kernels, the search is
+        /// CSPICE's <c>gftfov</c>, which reads the instrument and frame kernels loaded under <see cref="NaifId"/>. Otherwise
+        /// it is the managed search of the library, which computes what <c>gftfov</c> computes, without writing a kernel: a
+        /// continuous margin of the target in the field, positive in view and zero at the contact (for a circle or an ellipse,
+        /// <c>gftfov</c>'s construction, an ellipsoid whose limb is the field's cone, and the overlap margin of the occultation
+        /// search, with the target mapped to the unit sphere, measured for targets of aspect ratio up to 1.0034 and fields of
+        /// aspect ratio up to 10 311; for a rectangle, the largest discriminant over the rectangle of the ray through the
+        /// ellipsoid, in closed form), sampled at the step, its extremes searched between the samples, and its sign changes
+        /// located by Brent's method to 1 µs, CSPICE's <c>SPICE_GF_CNVTOL</c>. No state outside the search window is read,
+        /// except the light-time corrected epoch of the target; a window holding at a bound of the search starts or ends there.
+        /// </para>
+        /// <para>
+        /// <b>Corrections.</b> The light time of CSPICE's <c>spkltc</c> (LT, CN and their transmission forms) and, for "+S",
+        /// the stellar aberration of <c>stelab</c> (<c>stlabx</c> for transmission), as <c>gftfov</c> applies them. A
+        /// <see cref="Star"/> is a direction: no light time, the stellar aberration applied, as <c>gfrfov</c> reads a ray.
+        /// </para>
+        /// <para>
+        /// <b>Step.</b> <c>gftfov</c> finds every window and gap longer than the step. The managed search finds every window
+        /// and gap, however short, when the step is at most half the time between the extremes of the margin; with a step
+        /// longer than an event, the two paths may then differ, the managed one finding the event.
+        /// </para>
+        /// <para>
+        /// <b>Target frame.</b> Used as given for an ellipsoid, without a check of its center; <c>gftfov</c> requires a
+        /// body-fixed frame centered on the target. Ignored for a point, as <c>gftfov</c> ignores it.
+        /// </para>
+        /// </remarks>
+        /// <param name="searchWindow">The search window.</param>
+        /// <param name="observer">Not used: the observer is the instrument's spacecraft.</param>
+        /// <param name="target">The target.</param>
+        /// <param name="targetFrame">The body-fixed frame of the target's ellipsoid; ignored for a point.</param>
+        /// <param name="targetShape">The target's shape.</param>
+        /// <param name="aberration">The aberration correction.</param>
+        /// <param name="stepSize">The step of the search, positive.</param>
+        /// <returns>The windows, in TDB.</returns>
+        /// <exception cref="ArgumentNullException">An argument is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">On the managed path, the step is not positive.</exception>
+        /// <exception cref="ArgumentException">On the managed path, the search window ends before it starts, or the target is
+        /// the instrument's spacecraft or an ellipsoid without radii (a site, a spacecraft, a barycenter, a Lagrange point, a
+        /// star).</exception>
+        /// <exception cref="InvalidOperationException">On the managed path, the field of view cannot be searched: a boresight
+        /// zero or parallel to the reference vector, a half-angle not positive, an angular radius above π/2 − 1e-6, or a shape
+        /// other than a circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a
+        /// <see cref="RectangularInstrument"/>; or the observer is inside the ellipsoid of the target.</exception>
         public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
             Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
         {
@@ -119,14 +164,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (targetFrame == null) throw new ArgumentNullException(nameof(targetFrame));
 
-            if (Spacecraft.IsSpiceBacked && target.IsSpiceBacked)
-                return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
-                    searchWindow, Spacecraft.NaifId, NaifId, target.NaifId,
-                    targetFrame, targetShape, aberration, stepSize);
+            if (!(Spacecraft.IsSpiceBacked && target.IsSpiceBacked))
+            {
+                return FieldOfViewSearch.Managed(this, searchWindow, target, targetShape, targetFrame, aberration, stepSize);
+            }
 
-            Func<Time, bool> calculateInFov = date => IsInFOV(date, target, aberration);
-
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, calculateInFov, RelationnalOperator.Equal, true, stepSize);
+            return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
+                searchWindow, Spacecraft.NaifId, NaifId, target.NaifId,
+                targetFrame, targetShape, aberration, stepSize);
         }
 
         public Vector3 GetBoresightInSpacecraftFrame()
@@ -143,16 +188,28 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         public Vector3 GetBoresightInICRFFrame(in Time date)
         {
-            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
-            q = Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * q.Conjugate();
-            return Boresight.Rotate(q);
+            return Boresight.Rotate(RotationToICRF(date));
         }
 
         public Vector3 GetRefVectorInICRFFrame(in Time date)
         {
+            return RefVector.Rotate(RotationToICRF(date));
+        }
+
+        /// <summary>
+        /// The axes of the field of view in ICRF at an epoch, from one read of the spacecraft's attitude: the boresight, the
+        /// reference vector made perpendicular to it, and their cross product.
+        /// </summary>
+        internal FieldOfViewAxes GetFieldOfViewAxesInICRFFrame(in Time date)
+        {
+            var q = RotationToICRF(date);
+            return FieldOfViewGeometry.Axes(Boresight.Rotate(q), RefVector.Rotate(q));
+        }
+
+        private Quaternion RotationToICRF(in Time date)
+        {
             Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
-            q = Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * q.Conjugate();
-            return RefVector.Rotate(q);
+            return Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * q.Conjugate();
         }
 
         public async Task WriteFrameAsync(FileInfo outputFile)
@@ -174,15 +231,28 @@ namespace IO.Astrodynamics.Body.Spacecraft
             await sw.WriteAsync(data);
         }
 
+        /// <summary>
+        /// Whether the center of the target is in the field of view at an epoch: the condition of CSPICE's <c>fovtrg</c> with
+        /// the shape <c>POINT</c>, and the point condition of <see cref="FindWindowsInFieldOfViewConstraint"/>, with the
+        /// same field, the same corrections ("+S" included) and a <see cref="Star"/> read as a direction. The search does not
+        /// call this method.
+        /// </summary>
+        /// <param name="date">The epoch.</param>
+        /// <param name="target">The target.</param>
+        /// <param name="aberration">The aberration correction.</param>
+        /// <exception cref="ArgumentException">The target is the instrument's spacecraft.</exception>
+        /// <exception cref="InvalidOperationException">The field of view cannot be searched (see
+        /// <see cref="FindWindowsInFieldOfViewConstraint"/>).</exception>
         public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
         {
-            var (azimuth, elevation, isInFov) = PositionInFOV(date, target, aberration);
-            if (!isInFov) return false;
-
-            // Check if the object is within the horizontal and vertical field of view
-            return (System.Math.Abs(azimuth) <= FieldOfView) && (System.Math.Abs(elevation) <= FieldOfView);
+            return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(date) >= 0.0;
         }
 
+        /// <summary>
+        /// The azimuth and elevation of the target in the instrument's axes before #515: its reference vector is not made
+        /// perpendicular to the boresight, and its corrections are those of <see cref="CelestialItem.GetEphemeris"/>.
+        /// </summary>
+        [Obsolete("PositionInFOV does not make the reference vector perpendicular to the boresight; use IsInFOV, CSPICE's fovtrg condition. It will be removed in 11.0.")]
         protected (double azimuth, double elevation, bool isInFov) PositionInFOV(Time date, ILocalizable target, Aberration aberration)
         {
             var objectPosition = target.GetEphemeris(date, Spacecraft, Frame.ICRF, aberration).ToStateVector();
