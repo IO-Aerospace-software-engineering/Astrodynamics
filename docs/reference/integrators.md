@@ -162,8 +162,9 @@ Keplerian solution; times from `VVBenchmarks` and `RK78Benchmarks.LeoOneOrbit_EG
 (BenchmarkDotNet 0.14.0, medium run, AMD Ryzen 7 5800X, Fedora Linux 44, .NET 10). The step of
 `VVIntegrator` is also the output cadence of the propagator; RK7(8) outputs every 10 s here.
 
-With the full force model, the 1 s Velocity-Verlet error on this case is 294 m, of which 280 m is
-truncation. For results below about ten meters, use `RK78Integrator`: on this case it is both more
+With the full force model, the 1 s Velocity-Verlet error on this case is 281 m, of which 280 m is
+truncation (281.1 m against the GMAT golden of conformance propagator 001 over the TT day, Linux, Windows and macOS
+arm64, 2026-11-01; 294 m against the JGM3 golden before conformance-tests#25). For results below about ten meters, use `RK78Integrator`: on this case it is both more
 accurate and faster than Velocity-Verlet at 1 s.
 
 ## See Also
