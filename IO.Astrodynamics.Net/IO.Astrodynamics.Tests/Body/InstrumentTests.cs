@@ -14,6 +14,14 @@ namespace IO.Astrodynamics.Tests.Body
 {
     public class InstrumentTests
     {
+        // The windows of the library against gftfov on the kernels of the same propagation, s: the precision of the
+        // bisection of the search of the library (GeometryFinder, 1 s); gftfov converges to 1e-6 s. A point target: the
+        // search of the library takes the direction of the centre of the target, whatever its shape, within the field
+        // of view in azimuth and in elevation, which is the circular field of view of the kernel where the Earth crosses
+        // it, the Earth moving in elevation only in the frame of the instrument (measured 0.91 s, 0.21 s and 0.18 s, Linux,
+        // 2026-10-31)
+        private const double FieldOfViewTolerance = 1.0;
+
         public InstrumentTests()
         {
             SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
@@ -84,25 +92,46 @@ namespace IO.Astrodynamics.Tests.Body
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
             scenario.AddSpacecraft(spacecraft);
 
-            var root = Constants.OutputPath;
-
             //Execute scenario
             await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 
-            //Find windows when the earth is in field of view of camera 600 
-            var res = spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
-                new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561646.0, TimeFrame.TDBFrame)), spacecraft,
+            // The reference: SPICE gftfov on the kernels that the library writes from the same propagation, the SPK of
+            // the spacecraft, its clock, frame and orientation, and the frame and the kernel of the instrument; written
+            // before the search of the library, whose evaluations add orientations to the frame of the spacecraft, among
+            // them at instants it holds in another frame, which the CK writer then rejects (SPICE(TIMESOUTOFORDER), #512)
+            var searchWindow = new Window(start, end);
+            var instrument = spacecraft.Instruments.First();
+            var expected = FieldOfViewWindowsBySpice(spacecraft, instrument, searchWindow, TimeSpan.FromSeconds(360.0));
+
+            // Find windows when the earth is in field of view of the camera, over the propagated states: the search
+            // starts at the first state (choice 16 of #501). It started 0.02 s after it, and its bisection then read the
+            // trajectory 6 minutes before it, an extrapolation of the 8-point Lagrange interpolation 1.18e6 m apart
+            // between the two time arguments, a literal no time argument made a reference
+            var res = instrument.FindWindowsInFieldOfViewConstraint(searchWindow, spacecraft,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame,
                 ShapeType.Ellipsoid, Aberration.LT,
                 TimeSpan.FromSeconds(360.0)).ToArray();
 
-            //Read results
-            Assert.Equal(2, res.Length);
+            //Read results: the windows of gftfov, to the 1 s to which the search of the library brackets its
+            // transitions (GeometryFinder); the first starts at the first state, where the Earth is in the field of view,
+            // and the library looks for that transition one step before the search window, on the trajectory before the
+            // propagation (design of #501, §7), so that start is not compared
+            Assert.Equal(2, expected.Length);
+            Assert.Equal(expected.Length, res.Length);
+            Assert.Equal(searchWindow.StartDate, expected[0].StartDate);
+            for (int i = 0; i < res.Length; i++)
+            {
+                double startError = (res[i].StartDate - expected[i].StartDate).TotalSeconds;
+                double endError = (res[i].EndDate - expected[i].EndDate).TotalSeconds;
+                Console.WriteLine($"MEASURE window {i}: {res[i].StartDate} to {res[i].EndDate}, gftfov " +
+                                  $"{expected[i].StartDate} to {expected[i].EndDate}: {startError:E2} s and {endError:E2} s");
+                if (i > 0)
+                {
+                    Assert.InRange(startError, -FieldOfViewTolerance, FieldOfViewTolerance);
+                }
 
-            Assert.Equal(new TimeSystem.Time("2021-06-09T23:54:02.1093750 TDB"), res.ElementAt(0).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-06-10T00:11:05.7896804 TDB"), res.ElementAt(0).EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-06-10T01:21:54.1406250 TDB"), res.ElementAt(1).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-06-10T01:44:06.2898178 TDB"), res.ElementAt(1).EndDate, TestHelpers.TimeComparer);
+                Assert.InRange(endError, -FieldOfViewTolerance, FieldOfViewTolerance);
+            }
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
                 new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), null,
@@ -113,6 +142,51 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
                 new Window(TimeSystem.Time.Create(676555200.0, TimeFrame.TDBFrame), TimeSystem.Time.Create(676561647.0, TimeFrame.TDBFrame)), spacecraft,
                 TestHelpers.EarthAtJ2000, null, ShapeType.Ellipsoid, Aberration.LT, TimeSpan.FromHours(1.0)));
+        }
+
+        // The windows of SPICE gftfov over the kernels written from the propagation of the spacecraft, unloaded after
+        private static Window[] FieldOfViewWindowsBySpice(Spacecraft spacecraft, Instrument instrument, Window searchWindow,
+            TimeSpan step)
+        {
+            // Relative paths, as the kernels of the other tests: the native writers take a bounded file name
+            const string directory = "Data/User/FieldOfViewReference";
+            Directory.CreateDirectory(directory);
+            var files = new[] { "sc179.tsc", "sc179.tf", "camera789.tf", "camera789.ti", "sc179.bsp", "sc179.ck" }
+                .Select(name => new FileInfo(Path.Combine(directory, name))).ToArray();
+            foreach (var file in files.Where(f => f.Exists))
+            {
+                file.Delete();
+            }
+
+            // The clock and the frames first: the orientation is written in ticks of the clock
+            spacecraft.Clock.WriteAsync(files[0]).GetAwaiter().GetResult();
+            ((SpacecraftFrame)spacecraft.Frame).WriteAsync(files[1]).GetAwaiter().GetResult();
+            instrument.WriteFrameAsync(files[2]).GetAwaiter().GetResult();
+            instrument.WriteKernelAsync(files[3]).GetAwaiter().GetResult();
+            foreach (var file in files.Take(4))
+            {
+                SpiceAPI.Instance.LoadKernels(file);
+            }
+
+            spacecraft.WriteEphemeris(files[4]);
+            SpiceAPI.Instance.LoadKernels(files[4]);
+
+            spacecraft.WriteOrientation(files[5]);
+            SpiceAPI.Instance.LoadKernels(files[5]);
+
+            try
+            {
+                return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(searchWindow, spacecraft.NaifId,
+                    instrument.NaifId, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.EarthAtJ2000.Frame,
+                    ShapeType.Point, Aberration.LT, step).ToArray();
+            }
+            finally
+            {
+                foreach (var file in files.Reverse())
+                {
+                    SpiceAPI.Instance.UnloadKernels(file);
+                }
+            }
         }
 
         [Fact]
