@@ -11,8 +11,8 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 
 /// <summary>
 /// The field-of-view search behind <see cref="Instrument.FindWindowsInFieldOfViewConstraint"/>: the managed search of the
-/// library (<see cref="FieldOfViewEvaluator"/> and the root finder of the occultations), and the rules of the field of
-/// view; CSPICE's <c>gftfov</c> is the other path.
+/// library (<see cref="FieldOfViewEvaluator"/> and the root finder of the occultations), and the rules both paths apply
+/// before the search, CSPICE's <c>gftfov</c> on the other one.
 /// </summary>
 internal static class FieldOfViewSearch
 {
@@ -26,25 +26,52 @@ internal static class FieldOfViewSearch
     /// The managed search: the windows, in TDB, where the target is in the field of view of the instrument, its
     /// spacecraft the observer.
     /// </summary>
-    /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
-    /// <exception cref="ArgumentException">The search window ends before it starts, the target is the instrument's
-    /// spacecraft, or the target is modeled as an ellipsoid without radii.</exception>
+    /// <exception cref="ArgumentException">An argument of <see cref="Check"/>, or the search window leaves the propagated
+    /// states of the observer or of a spacecraft target (<see cref="CheckCoverage"/>).</exception>
     /// <exception cref="InvalidOperationException">The field of view cannot be searched (<see cref="CheckField"/>).</exception>
     internal static IReadOnlyList<Window> Managed(Instrument instrument, in Window searchWindow, ILocalizable target, ShapeType targetShape, Frame targetFrame,
         Aberration aberration, in TimeSpan stepSize)
     {
+        Check(instrument, searchWindow, target, targetShape, stepSize);
+        CheckCoverage(instrument.Spacecraft, searchWindow);
+        if (target is Spacecraft spacecraft)
+        {
+            CheckCoverage(spacecraft, searchWindow);
+        }
+
         var evaluator = new FieldOfViewEvaluator(instrument, target, targetShape, targetFrame, aberration);
         return OccultationFinder.FindWindows(t => evaluator.Margin(t), searchWindow, stepSize, ConvergenceTolerance);
     }
 
-    /// <summary>The target: not the instrument's spacecraft.</summary>
-    /// <exception cref="ArgumentException">The target is the instrument's spacecraft.</exception>
-    internal static void CheckTarget(Instrument instrument, ILocalizable target)
+    /// <summary>
+    /// The rules of a search, checked before either path: the step, the search window, the target and its shape, the field
+    /// of view. <c>gftfov</c> would swallow their errors and return no window (the native proxy drops them).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
+    /// <exception cref="ArgumentException">The search window ends before it starts, the target is the instrument's
+    /// spacecraft, or the target is modeled as an ellipsoid without radii.</exception>
+    /// <exception cref="InvalidOperationException">The field of view cannot be searched (<see cref="CheckField"/>).</exception>
+    internal static void Check(Instrument instrument, in Window searchWindow, ILocalizable target, ShapeType targetShape, in TimeSpan stepSize)
+    {
+        ArgumentNullException.ThrowIfNull(instrument);
+        ArgumentNullException.ThrowIfNull(target);
+        OccultationFinder.CheckStep(stepSize, ConvergenceTolerance);
+        OccultationFinder.CheckWindow(searchWindow);
+        CheckTarget(instrument, target, targetShape);
+        CheckField(instrument);
+    }
+
+    /// <summary>The target: not the instrument's spacecraft, and with radii when it is an ellipsoid.</summary>
+    /// <exception cref="ArgumentException">The target is the instrument's spacecraft, or is modeled as an ellipsoid without
+    /// radii (a site, a spacecraft, a barycenter, a Lagrange point, a star).</exception>
+    internal static void CheckTarget(Instrument instrument, ILocalizable target, ShapeType targetShape)
     {
         if (target.NaifId == instrument.Spacecraft.NaifId)
         {
             throw new ArgumentException("The target cannot be the instrument's spacecraft.", nameof(target));
         }
+
+        OccultationBodyModel.CheckShape(target, targetShape);
     }
 
     /// <summary>
@@ -90,5 +117,29 @@ internal static class FieldOfViewSearch
         }
 
         return crossAngle;
+    }
+
+    /// <summary>
+    /// The search window within the propagated states of a spacecraft that <see cref="Spacecraft.GetGeometricStateRelativeTo"/>
+    /// would otherwise extrapolate; nothing to check for a kernel-backed spacecraft, a TLE, or a spacecraft whose initial
+    /// orbital parameters are propagated in two-body motion (<see cref="Spacecraft.InterpolatedStatesWindow"/>). The light
+    /// time of a spacecraft target reads it up to the light time before the search window, which is extrapolated.
+    /// </summary>
+    /// <exception cref="ArgumentException">The search window leaves the propagated states.</exception>
+    internal static void CheckCoverage(Spacecraft spacecraft, in Window searchWindow)
+    {
+        if (spacecraft.InterpolatedStatesWindow is not { } states)
+        {
+            return;
+        }
+
+        var start = searchWindow.StartDate.ToTDB();
+        var end = searchWindow.EndDate.ToTDB();
+        if ((start - states.StartDate.ToTDB()).Ticks < 0 || (states.EndDate.ToTDB() - end).Ticks < 0)
+        {
+            throw new ArgumentException(
+                $"The search window [{start}, {end}] leaves the propagated states of {spacecraft.Name}, [{states.StartDate.ToTDB()}, {states.EndDate.ToTDB()}]: they would be extrapolated.",
+                nameof(searchWindow));
+        }
     }
 }

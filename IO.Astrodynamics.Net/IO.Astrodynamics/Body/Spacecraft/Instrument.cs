@@ -149,14 +149,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="stepSize">The step of the search, positive.</param>
         /// <returns>The windows, in TDB.</returns>
         /// <exception cref="ArgumentNullException">An argument is null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">On the managed path, the step is not positive.</exception>
-        /// <exception cref="ArgumentException">On the managed path, the search window ends before it starts, or the target is
-        /// the instrument's spacecraft or an ellipsoid without radii (a site, a spacecraft, a barycenter, a Lagrange point, a
-        /// star).</exception>
-        /// <exception cref="InvalidOperationException">On the managed path, the field of view cannot be searched: a boresight
-        /// zero or parallel to the reference vector, a half-angle not positive, an angular radius above π/2 − 1e-6, or a shape
-        /// other than a circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a
-        /// <see cref="RectangularInstrument"/>; or the observer is inside the ellipsoid of the target.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
+        /// <exception cref="ArgumentException">The search window ends before it starts, the target is the instrument's
+        /// spacecraft or is an ellipsoid without radii (a site, a spacecraft, a barycenter, a Lagrange point, a star), or, on the
+        /// managed path, the search window leaves the propagated states of the instrument's spacecraft or of a spacecraft
+        /// target, which would be extrapolated.</exception>
+        /// <exception cref="InvalidOperationException">The field of view cannot be searched: a boresight zero or parallel to
+        /// the reference vector, a half-angle not positive, an angular radius above π/2 − 1e-6, or a shape other than a
+        /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
+        /// or, on the managed path, the observer is inside the ellipsoid of the target.</exception>
         public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
             Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
         {
@@ -169,6 +170,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 return FieldOfViewSearch.Managed(this, searchWindow, target, targetShape, targetFrame, aberration, stepSize);
             }
 
+            FieldOfViewSearch.Check(this, searchWindow, target, targetShape, stepSize);
             return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(
                 searchWindow, Spacecraft.NaifId, NaifId, target.NaifId,
                 targetFrame, targetShape, aberration, stepSize);

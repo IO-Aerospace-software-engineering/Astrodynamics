@@ -29,14 +29,22 @@ internal sealed class OccultationBodyModel
             return;
         }
 
-        if (item is not CelestialBody body || !(body.Radii.X > 0.0 && body.Radii.Y > 0.0 && body.Radii.Z > 0.0))
-        {
-            throw new ArgumentException($"{item.Name} has no radii: it cannot be modeled as an ellipsoid.");
-        }
-
+        CheckShape(item, shape);
+        var body = (CelestialBody)item;
         _radii = body.Radii;
         _isSphere = _radii.X == _radii.Y && _radii.Y == _radii.Z;
         _frame = frame ?? body.Frame;
+    }
+
+    /// <summary>Checks that a body can take a shape: an ellipsoid needs the radii of a <see cref="CelestialBody"/>.</summary>
+    /// <exception cref="ArgumentException">An ellipsoid is asked for a body without radii.</exception>
+    internal static void CheckShape(ILocalizable item, ShapeType shape)
+    {
+        if (shape != ShapeType.Point &&
+            (item is not CelestialBody body || !(body.Radii.X > 0.0 && body.Radii.Y > 0.0 && body.Radii.Z > 0.0)))
+        {
+            throw new ArgumentException($"{item.Name} has no radii: it cannot be modeled as an ellipsoid.");
+        }
     }
 
     /// <summary>The body.</summary>

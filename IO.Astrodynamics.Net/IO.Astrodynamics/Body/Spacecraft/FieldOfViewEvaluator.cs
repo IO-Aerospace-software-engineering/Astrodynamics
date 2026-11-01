@@ -40,7 +40,7 @@ internal sealed class FieldOfViewEvaluator
     {
         ArgumentNullException.ThrowIfNull(instrument);
         ArgumentNullException.ThrowIfNull(target);
-        FieldOfViewSearch.CheckTarget(instrument, target);
+        FieldOfViewSearch.CheckTarget(instrument, target, targetShape);
         _crossAngle = FieldOfViewSearch.CheckField(instrument);
         _instrument = instrument;
         _target = new OccultationBodyModel(target, targetShape, targetFrame);

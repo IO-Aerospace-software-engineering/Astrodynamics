@@ -695,6 +695,25 @@ namespace IO.Astrodynamics.Body.Spacecraft
         internal StateVector[] PropagatedStates => _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
 
         /// <summary>
+        /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo"/> interpolates, from the first
+        /// to the last; null when it reads no such states: a kernel-backed spacecraft, a TLE, or fewer than two states
+        /// (the initial orbital parameters are then propagated in two-body motion to the epoch).
+        /// </summary>
+        internal Window? InterpolatedStatesWindow
+        {
+            get
+            {
+                if (_isFromKernel || InitialOrbitalParameters is TLE || _propagatedStates.Count < 2)
+                {
+                    return null;
+                }
+
+                var epochs = _propagatedStates.Keys.ToArray();
+                return new Window(epochs.Min(), epochs.Max());
+            }
+        }
+
+        /// <summary>
         /// The solution of the last propagation, whose output states the spacecraft stores, when it was an RK7(8)
         /// propagation; null before any propagation, after a reset and after a propagation by another integrator, which
         /// leaves nothing to replay. The conjunction analysis reads the covariance at the TCA from it, or replays its
