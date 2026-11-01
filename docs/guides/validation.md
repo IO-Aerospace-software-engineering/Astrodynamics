@@ -347,13 +347,16 @@ with SRP. Thresholds of the specification: R1 below 1e-7, R2 to R5 below 1e-4 ou
 | Case | Φ_rr | Φ_rv | Φ_vr | Φ_vv | Ψ, position | Ψ, velocity | In the penumbra |
 |------|------|------|------|------|-------------|-------------|-----------------|
 | R1 | 1.3e-8 | 1.6e-8 | 1.4e-8 | 1.7e-8 | | | |
-| R2 | 2.0e-8 | 2.4e-8 | 2.0e-8 | 2.4e-8 | Cd 1.2e-7 | Cd 1.2e-7 | |
-| R3 | 1.9e-7 | 2.1e-7 | 1.9e-7 | 2.1e-7 | Cr 2.9e-5 | Cr 2.6e-4 (local, a record) | 30 crossings: Φ 1.9e-7 to 2.1e-7, Ψ_Cr 1.3e-5 |
-| R4 | 6.1e-8 | 2.1e-9 | 4.8e-8 | 1.9e-9 | Cr 1.9e-6 | Cr 2.4e-8 | 2 crossings: Φ 3.6e-10 to 4.0e-9, Ψ_Cr 2.5e-9 |
-| R5 | 1.5e-7 | 3.0e-7 | 1.5e-7 | 3.0e-7 | Cd 1.7e-7 | Cd 1.8e-7 | |
+| R2 | 3.0e-8 | 1.3e-8 | 3.0e-8 | 1.2e-8 | Cd 1.2e-7 | Cd 1.2e-7 | |
+| R3 | 2.3e-7 | 2.5e-7 | 2.3e-7 | 2.5e-7 | Cr 1.6e-5 | Cr 2.3e-4 (local, a record) | 30 crossings: Φ 2.3e-7 to 2.5e-7, Ψ_Cr 7.9e-6 |
+| R4 | 9.0e-9 | 2.4e-9 | 8.9e-9 | 2.2e-9 | Cr 1.4e-6 | Cr 1.6e-8 | 2 crossings: Φ 5.1e-10 to 5.7e-9, Ψ_Cr 5.1e-9 |
+| R5 | 2.4e-7 | 2.4e-7 | 2.4e-7 | 2.4e-7 | Cd 1.4e-7 | Cd 1.4e-7 | |
 
-Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). R1 as measured
-on 2026-10-16; R2 to R5 measured again on 2026-10-23 with the constants of the geopotential of
+Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). R1 to R5
+measured again on 2026-11-01 with the TT time argument of
+[#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501) (Linux), another draw of the noise
+of the central differences (R4 Φ_rr 6.1e-8 to 9.0e-9; R3 Φ 1.9e-7 to 2.1e-7 before, 2.3e-7 to 2.5e-7 after). Before,
+R1 as measured on 2026-10-16 and R2 to R5 measured again on 2026-10-23 with the constants of the geopotential of
 [#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410) (Linux): they move within what
 the central differences of whole propagations resolve, by up to a factor of 6 either way (R4 Φ_rr 9.3e-9 before, 6.1e-8
 after; R3 Φ 4.2e-7 to 5.3e-7 before, 1.9e-7 to 2.1e-7 after), all below the thresholds. The errors in the
@@ -489,7 +492,9 @@ Measured on 2026-10-16. With the constants of the geopotential of
 `long-validation.yml`): R2 2.0e-3, 8.5e-4 and 2.4e-8 at degrees 2, 8 and 20 and at the full degree; R4 1.2e-6 at
 degree 2 and 6.1e-8 at degree 8, the F1 noise of R4, which moves the same way on the full degree (9.3e-9 to 6.1e-8
 in `StmValidationTests`): its records at degrees 8, 20 and 70 are set at 6.1e-8 (decision of S. Guillet,
-2026-10-23).
+2026-10-23). With the TT time argument of #501 (run 41268727370 of `long-validation.yml`, 2026-11-01), R4 is 1.2e-6 at
+degree 2 and 9.0e-9 at degrees 8, 20 and 70, the F1 noise of R4 again (Φ_rr 6.1e-8 to 9.0e-9 in `StmValidationTests`),
+and its records are set at 9.0e-9; R2 2.0e-3, 8.5e-4 and 3.0e-8, within its records.
 
 In LEO the partials keep a contribution of every degree, so a reduced degree leaves Φ above the threshold after one day
 and saves nothing. At GEO the high degrees vanish, and from degree 8 Φ is that of the full degree, a third cheaper.
