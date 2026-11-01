@@ -473,6 +473,28 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     }
 
     /// <summary>
+    /// A kernel-backed observer with a propagated spacecraft target: the public method takes the managed path (the target
+    /// is not in the kernels), against gftfov on the target's SPK.
+    /// </summary>
+    [Theory]
+    [InlineData(789)]
+    [InlineData(796)]
+    [InlineData(797)]
+    public void KernelObserver_PropagatedTarget_MatchesGftfov(int number)
+    {
+        foreach (var aberration in new[] { Aberration.None, Aberration.LT, Aberration.LTS })
+        {
+            var actual = _case.KernelInstrument(number).FindWindowsInFieldOfViewConstraint(_case.SearchWindow, _case.Kernel, _case.PropagatedTarget, Frames.Frame.ICRF,
+                ShapeType.Point, aberration, Step).ToArray();
+            var expected = _case.Gftfov(number, "-5152", ShapeType.Point, aberration, Step);
+            double worst = FieldOfViewKernels.WorstEdge(actual, expected);
+            _output.WriteLine($"MEASURE #515 kernel observer, propagated target {number} {aberration}, {expected.Length} windows: |managed - gftfov (1e-6 s)| {worst:E2} s");
+            Assert.NotEmpty(expected);
+            Assert.True(worst < KernelLimit, $"{worst:E2} s");
+        }
+    }
+
+    /// <summary>
     /// The edges of the search window: a field in view at the start starts there (the managed path looked one step before
     /// it, #461 for this path, and its bisection returned the earlier end of a 1 s bracket, #521), and one in view at the
     /// end ends there; a search window inside a window is returned whole, on both paths.
