@@ -22,8 +22,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </summary>
         /// <remarks>
         /// The rule of SPICE OSCELT, measured on <see cref="SpiceAPI.ConvertStateVectorToConicOrbitalElement(StateVector)"/>:
-        /// the switch is at sin i = 1e-10 for orbits from 6 800 to 100 000 km, any speed and eccentricity (#368). To be
-        /// verified by S. Guillet on the OSCELT source.
+        /// the switch is at sin i = 1e-10 for orbits from 6 800 to 100 000 km, any speed and eccentricity (#368).
+        /// Confirmed by S. Guillet on the OSCELT source, 2026-10-31.
         /// </remarks>
         internal const double EquatorialTolerance = 1e-10;
 

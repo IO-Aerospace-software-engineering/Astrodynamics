@@ -26,9 +26,9 @@ internal static class KeplerEquation
     /// </summary>
     internal const int MaximumIterations = 50;
 
-    // 2π in two doubles (W. J. Cody, W. Waite, Software Manual for the Elementary Functions, Prentice-Hall, 1980, to be
-    // verified by S. Guillet; four times pio2_1 and pio2_1t of fdlibm's e_rem_pio2.c, Sun Microsystems, 1993, to be
-    // verified by S. Guillet): TwoPiHigh, 2π truncated to 33 bits (31 significant), so k TwoPiHigh is exact for
+    // 2π in two doubles (W. J. Cody, W. Waite, Software Manual for the Elementary Functions, Prentice-Hall, 1980,
+    // confirmed by S. Guillet, 2026-10-31; four times pio2_1 and pio2_1t of fdlibm's e_rem_pio2.c, Sun Microsystems,
+    // 1993, confirmed by S. Guillet, 2026-10-31): TwoPiHigh, 2π truncated to 33 bits (31 significant), so k TwoPiHigh is exact for
     // |k| < 2^22; TwoPiLow = fl(2π − TwoPiHigh); 2π − TwoPiHigh − TwoPiLow = 1.4e-26 (mpmath at 80 digits, #453)
     private const double TwoPiHigh = 6.2831853069365025;
     private const double TwoPiLow = 2.430840202602477e-10;
