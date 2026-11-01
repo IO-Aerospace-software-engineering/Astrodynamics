@@ -71,6 +71,10 @@ internal static class DynamicalTimeReference
                 return (ticks + Seconds(19.0 + 32.184), 0.0);
             case UTCTimeFrame:
                 return (ticks + Seconds(TaiMinusUtc(time.DateTime) + 32.184), 0.0);
+            case LocalTimeFrame:
+                // The UTC of the local time, by the time zone of the system
+                var utc = DateTime.SpecifyKind(time.DateTime, DateTimeKind.Local).ToUniversalTime();
+                return (utc.Ticks + Seconds(TaiMinusUtc(utc) + 32.184), 0.0);
             case TDBTimeFrame:
                 return (ticks, -TdbMinusTtAtTdb((ticks - J2000Ticks) / (double)TimeSpan.TicksPerSecond));
             default:
