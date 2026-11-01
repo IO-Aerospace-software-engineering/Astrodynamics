@@ -794,8 +794,9 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => IO.Astrodynamics.Occultation.OccultationFinder.CheckStep(Step, TimeSpan.Zero));
         Assert.Throws<ArgumentOutOfRangeException>(() => new IO.Astrodynamics.Occultation.ApparentPositionReader(_case.Propagated, (Aberration)99, true, true));
-        var position = new Vector3(1.0e7, 2.0e6, -3.0e6);
-        Assert.Equal(position, IO.Astrodynamics.Occultation.ApparentPositionReader.StellarAberration(position, position * 1.0e-3));
+        // Along an axis, so that the position and the velocity are parallel to the last bit: u × v / c is exactly zero
+        var position = new Vector3(1.0e11, 0.0, 0.0);
+        Assert.Equal(position, IO.Astrodynamics.Occultation.ApparentPositionReader.StellarAberration(position, new Vector3(-3.0e4, 0.0, 0.0)));
         Assert.Empty(IO.Astrodynamics.Occultation.OccultationFinder.PositiveWindows([0.0], [-1.0], _ => -1.0, 1e-6));
     }
 }

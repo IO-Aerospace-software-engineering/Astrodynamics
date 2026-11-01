@@ -261,6 +261,44 @@ namespace IO.Astrodynamics.Tests.Body
         }
 
         [Fact]
+        public void GetRefVectorInICRF()
+        {
+            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+            StateVector parkingOrbit = new StateVector(
+                new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
+            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+
+            // The rotation of pi/2 about +Y leaves the reference vector +Y, and the attitude is the identity
+            var instrument = spacecraft.Instruments.First();
+            var refVectorICRF = instrument.GetRefVectorInICRFFrame(start);
+            Assert.Equal(Vector3.VectorY, refVectorICRF, TestHelpers.VectorComparer);
+            Assert.Equal(refVectorICRF, instrument.GetFieldOfViewAxesInICRFFrame(start).Ref, TestHelpers.VectorComparer);
+        }
+
+        [Fact]
+        public void GetRefVectorInICRF2()
+        {
+            TimeSystem.Time start = TimeSystem.Time.J2000TDB;
+            StateVector parkingOrbit = new StateVector(
+                new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
+                start, Frames.Frame.ICRF);
+            Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
+            spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, Frames.Frame.ICRF));
+
+            // The attitude takes the boresight -X to +Y (GetBoresightInICRF2): a rotation of -pi/2 about +Z, which takes +Y to +X
+            var instrument = spacecraft.Instruments.First();
+            var refVectorICRF = instrument.GetRefVectorInICRFFrame(start);
+            Assert.Equal(Vector3.VectorX, refVectorICRF, TestHelpers.VectorComparer);
+            var axes = instrument.GetFieldOfViewAxesInICRFFrame(start);
+            Assert.Equal(Vector3.VectorY, axes.Boresight, TestHelpers.VectorComparer);
+            Assert.Equal(refVectorICRF, axes.Ref, TestHelpers.VectorComparer);
+            Assert.Equal(new Vector3(0.0, 0.0, -1.0), axes.Cross, TestHelpers.VectorComparer);
+        }
+
+        [Fact]
         public void GetRefVectorInSpacecraftFrame()
         {
             var spc = TestHelpers.Spacecraft;
