@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
@@ -18,10 +19,11 @@ namespace IO.Astrodynamics.Tests.Body
         // The windows of the library against gftfov on the kernels of the same propagation, s: the managed search converges
         // to 1 µs and gftfov to 1e-6 s, and their apparent Earths differ by the rounding of the light-time corrected epoch to
         // a double ET, up to half its 119 ns ulp in each (1.8 mm of the Earth's barycentric motion; #515, choice 10).
-        // PROVISIONAL, twice the Linux worst of FieldOfViewSearchTests (1.3e-6 s, 2026-11-01), the limit of its rows, until
-        // the three platforms of the CI have printed their MEASURE lines. Before #515 it was 1 s by construction, the
-        // bisection of GeometryFinder, the first start was not compared, and the ellipsoid was a point (up to 1 080 s)
-        private const double FieldOfViewTolerance = 2.6e-6;
+        // PROVISIONAL, twice the worst of this test's edges on Linux x64 (2026-11-01: POINT 4e-7, 4e-7 and 6e-7 s, ELLIPSOID
+        // 5e-7 and 4e-7 s), until the three platforms of the CI have printed their MEASURE lines. Before #515 it was 1 s by
+        // construction, the bisection of GeometryFinder, the first start was not compared, and the ellipsoid was a point
+        // (up to 1 080 s)
+        private const double FieldOfViewTolerance = 1.2e-6;
 
         private readonly ITestOutputHelper _output;
 
@@ -70,6 +72,55 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.False(instrument.Equals((object)instrument2));
             Assert.True(instrument.Equals((object)instrument));
             Assert.False(instrument.Equals((object)null));
+        }
+
+        /// <summary>An instrument of a user's subclass that reads the deprecated <c>PositionInFOV</c>.</summary>
+        private sealed class LegacyInstrument : Instrument
+        {
+            public LegacyInstrument(Spacecraft spacecraft, Vector3 refVector) : base(spacecraft, spacecraft.NaifId * 1000 - 1, "LEGACY1", "model", 0.3,
+                InstrumentShape.Circular, Vector3.VectorZ, refVector, new Vector3(0.0, System.Math.PI * 0.5, 0.0))
+            {
+            }
+
+#pragma warning disable CS0618
+            public (double azimuth, double elevation, bool isInFov) Position(TimeSystem.Time date, ILocalizable target) => PositionInFOV(date, target, Aberration.None);
+#pragma warning restore CS0618
+
+            public override Task WriteKernelAsync(FileInfo outputFile) => Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// The deprecated <c>PositionInFOV</c> (#515, kept until 11.0) against a closed form: an observer and a target at
+        /// the epoch of their initial states, the boresight along -X of ICRF (Z turned about Y), the azimuth and elevation of
+        /// the target's offset (-1 000, 1 000, 500) km on the right vector b × ref and on the reference vector as given,
+        /// not made perpendicular; a target behind the instrument is not in view.
+        /// </summary>
+        [Fact]
+        public void PositionInFOV_ReadsTheReferenceVectorAsGiven()
+        {
+            var start = TimeSystem.Time.CreateTDB(676555199.9846829);
+            var earth = TestHelpers.EarthAtJ2000;
+            StateVector At(double x, double y, double z) => new(new Vector3(x, y, z), new Vector3(0.0, 7656.2204182967143, 0.0), earth, start, Frames.Frame.ICRF);
+            var observer = new Spacecraft(-5201, "LEGACY5201", 1000.0, 3000.0, new Clock("LEGACY5201_CLK", 65536), At(6800000.0, 0.0, 0.0));
+            var target = new Spacecraft(-5202, "LEGACY5202", 1000.0, 3000.0, new Clock("LEGACY5202_CLK", 65536), At(5800000.0, 1000000.0, 500000.0));
+            var behind = new Spacecraft(-5203, "LEGACY5203", 1000.0, 3000.0, new Clock("LEGACY5203_CLK", 65536), At(7800000.0, 1000000.0, 500000.0));
+
+            // The reference vector Y, perpendicular to the boresight: the right vector is -X × Y = -Z
+            var (azimuth, elevation, inView) = new LegacyInstrument(observer, Vector3.VectorY).Position(start, target);
+            Assert.True(inView);
+            Assert.Equal(System.Math.Atan2(-500.0, 1000.0), azimuth, 1e-12);
+            Assert.Equal(System.Math.PI / 4.0, elevation, 1e-12);
+
+            // Y + Z in the instrument frame, -X + Y in ICRF, 45° from the boresight, used without being made perpendicular:
+            // its right vector is (0, 0, -1), its elevation the projection on (-1, 1, 0)/√2
+            (azimuth, elevation, inView) = new LegacyInstrument(observer, new Vector3(0.0, 1.0, 1.0)).Position(start, target);
+            Assert.True(inView);
+            Assert.Equal(System.Math.Atan2(-500.0, 1000.0), azimuth, 1e-12);
+            Assert.Equal(System.Math.Atan2(2000.0 / System.Math.Sqrt(2.0), 1000.0), elevation, 1e-12);
+
+            (azimuth, elevation, inView) = new LegacyInstrument(observer, Vector3.VectorY).Position(start, behind);
+            Assert.False(inView);
+            Assert.True(double.IsNaN(azimuth) && double.IsNaN(elevation));
         }
 
         [Theory]
