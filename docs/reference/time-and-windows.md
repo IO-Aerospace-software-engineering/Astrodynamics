@@ -34,7 +34,7 @@
 
 | Method | Description |
 |--------|-------------|
-| `ConvertTo(ITimeFrame frame)` | Convert to any time frame |
+| `ConvertTo(ITimeFrame frame)` | Convert to any time frame; to the frame of the time, the time itself ([#510](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/510)) |
 | `ToTDB()` | Convert to TDB |
 | `ToUTC()` | Convert to UTC |
 | `ToTAI()` | Convert to TAI |
@@ -71,7 +71,7 @@
 |----------|-------------|
 | `Time + TimeSpan` | Add duration to time |
 | `Time - TimeSpan` | Subtract duration from time |
-| `Time - Time` | Duration between two instants |
+| `Time - Time` | Duration between two instants: the difference of the calendars in TDB, TT, TAI and GPS, through TAI for UTC and local times, so that leap seconds count ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)) |
 | `<`, `>`, `<=`, `>=` | Comparison operators |
 
 ### Example
@@ -102,7 +102,7 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
 | Member | Description |
 |--------|-------------|
 | `StartDate` / `EndDate` | Interval boundaries |
-| `Length` | Window duration |
+| `Length` | Window duration, `EndDate - StartDate`: 121 s for the two UTC minutes around the leap second of 2016-12-31 |
 | `Merge(Window)` | Merge two overlapping windows |
 | `Intersects(Window)` / `Intersects(Time)` | Check overlap |
 | `GetIntersection(Window)` | Get overlapping portion |
@@ -113,6 +113,75 @@ var fromJD = Time.CreateFromJD(2451545.0, TimeFrame.TDBFrame);
 var window = new Window(new Time(2024, 1, 1), new Time(2024, 1, 31));
 Console.WriteLine($"Duration: {window.Length.TotalDays} days");
 ```
+
+## The Time Argument of a Propagation
+
+A numerical propagation integrates over the seconds of the dynamical time of its central body
+([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)):
+
+- **about the Earth** (the resolved central body is NAIF 399), the TT seconds between the instants of its window. TT is
+  the coordinate time of the geocentric reference system, which GMAT counts (elapsed A1 seconds) and the conformance
+  suite prescribes (spec.md §12.1). The forces at t are those of the instant TT₀ + t: the bodies and the orientation of
+  the Earth at its TDB, the drag at its UTC;
+- **about any other body**, SSB mode included (a star or a barycentre resolves to the Sun), the TDB seconds of the
+  window, as before 10.2.0, bit for bit.
+
+The labels stay TDB: every segment base, stage epoch, event epoch and output epoch is a TDB `Time`, which the caches,
+SPICE and the stored states read as they did. About the Earth only the instant a label names changes. `PropagationSegment.Duration`,
+`AcceptedStep.CumulativeTime` and `StepSize`, the event time and the duration passed to `IIntegrator.IntegrateSegment`
+count the seconds of the time argument (TT about the Earth).
+
+### The Length of a Window
+
+The window has the TT seconds between its two instants, whatever their tags: exact in ticks between UTC, TAI, TT, GPS
+and local tags, through IO's TDB − TT series for a TDB tag.
+
+| Window about the Earth | TT length |
+|------------------------|-----------|
+| A UTC day without a leap second | 86 400 s |
+| The UTC day across the leap second of 2016-12-31 | 86 401 s |
+| A TDB-tagged day from 2021-03-20 12:00 | 86 399.99999324768 s |
+
+### The Outputs and the End
+
+- **Output grid**: uniform in TT, label i the TDB label of TT₀ + i·ΔT, each output the state at its label. The outputs
+  of a UTC window fall on its UTC grid; after a leap second inside the window they sit one second off the UTC minute
+  marks (the grid of a UTC day across 2016-12-31 ends at 86 400 s, one second before the end). Those of a TDB-tagged
+  window leave its TDB grid by the change of TDB − TT, up to 29 µs a day and 0.86 ms over 30 days: a read at a round
+  TDB epoch is then interpolated, and an exact-key lookup of a `Time` misses the output epochs.
+- **End**: when the output grid misses the length of the window by less than 1e-9 of it (three times the largest rate
+  of TDB − TT), the propagation ends at the end of the window, and its last output is labelled with the end of the
+  window as the caller gave it. Otherwise the propagation runs to the larger of the window and of its grid, as before.
+- **Start**: the TDB label of the start, as before, 0 to 1 tick (100 ns) from the instant of a UTC start.
+
+### The Tick
+
+A label holds its instant to the tick of `Time`: at or before it by less than 1.0012e-7 s. Reading a solution, or
+chaining propagations, through the labels a user receives therefore keeps a sub-tick time: up to 1e-7 s, about 1e-10
+relative on the state transition matrix and 0.75 mm in LEO. The references of the library's own validation read at an
+exact elapsed time instead.
+
+A solution is read at an epoch in any frame
+([#507](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/507)): a UTC, TAI, TT or GPS epoch
+names the same instant as its TDB label, to the tick. Before 10.2.0 a non-TDB epoch read on a solution about the Moon or
+any other body was taken as a TAI difference from the TDB base, another instant by the change of TDB − TT (2.1 cm about the Moon in the tests of the fix).
+
+### Velocities
+
+About the Earth the velocities of the input and output states are per TT second, as GMAT and the suite take them. A
+state from a TDB-rate source (an SPK, an OEM or OPM in TDB) differs from dx/dTT by up to 3.4e-10 relative: as an initial
+condition, about 0.65 m a day along-track in LEO (computed). The velocities are not scaled.
+
+### Two-Body Motion
+
+`AtEpoch`, `ToKeplerianElements(epoch)`, `ToStateVector(epoch)`, `EpochAtMeanAnomaly` and `ToStateVector(trueAnomaly)`,
+the time of flight of the Lambert solver and the intervals of the initial orbit determination count the same time:
+TT seconds about the Earth, TDB seconds about any other body, whatever the tags of the epochs, the leap seconds between
+two UTC epochs included, and none at the same instant
+([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)). A `TimeSpan` added to a TDB
+epoch is a span of TDB: about the Earth, `elements.ToStateVector(elements.Epoch + elements.Period())` from a TDB epoch is
+off the start by the change of TDB − TT over the period (1.2e-6 s of motion over an hour at J2000); from a UTC or TT
+epoch it returns there.
 
 ## See Also
 

@@ -11,6 +11,15 @@ Integrators advance spacecraft state through time under configured force models.
 
 `IntegrationResult` contains the completed `PropagationSegment` and optional event information if a detector triggered during the segment.
 
+The `duration` of `IntegrateSegment`, `PropagationSegment.Duration`, the `CumulativeTime` and `StepSize` of an
+`AcceptedStep` and the time of an event count the seconds of the time argument of the propagation: TT about the Earth,
+TDB about any other central body ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501),
+[Time & Windows](time-and-windows.md#the-time-argument-of-a-propagation)). The base epoch and the epochs the forces
+receive are TDB labels. The two built-in integrators map the seconds to the epochs through the time argument the
+propagator sets on them. A custom integrator, a bare `IIntegrator` or a subclass of `Integrator` whose
+`IntegrateSegment` builds its own epochs from `baseEpoch`, keeps TDB seconds about the Earth too: its forces are then
+evaluated up to 3.4e-10 relative in time from the instants of the propagation.
+
 ## AcceptedStep
 
 Both integrators record `AcceptedStep` entries containing position, velocity, and acceleration at the start and end of each step. These records enable cubic Hermite interpolation between steps (`PropagationSegment.InterpolateAt`), which is exact at the step ends only.
@@ -96,9 +105,10 @@ When created with a fixed step size, `AdaptiveMode` is `false` and the integrato
   ([#468](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/468)), and the adaptive step also
   fails after 10 000 consecutive accepted steps within 100 s of flight, a collapse of the step that the rejections
   never catch ([Covariance Propagation](covariance-propagation.md#options)).
-- **Accuracy**: on the 24-hour conformance cases, 7 cm (GEO) to 17 cm (SSO) from the GMAT R2026a
-  goldens of conformance-tests#25 with tolerances 1e-11 and the model's GM in the central term, the
-  rest being model differences between the two tools; see
+- **Accuracy**: on the 24-hour conformance cases, 0.8 cm (GEO) to 2.7 cm (LEO) from the GMAT R2026a
+  goldens of conformance-tests#25 with tolerances 1e-11 and the model's GM in the central term, over
+  the TT seconds of the day (7 cm to 17 cm over its TDB seconds before #501), the rest being model
+  differences between the two tools; see
   [Validation](../guides/validation.md#measured-errors).
 
 ```csharp
@@ -145,7 +155,7 @@ Velocity-Verlet is second order: halving the step divides the global error by fo
 | Velocity-Verlet, 0.5 s | 69.9 m | 21.0 ms |
 | Velocity-Verlet, 1 s | 279.5 m | 10.5 ms |
 | Velocity-Verlet, 2 s | 1,118 m | about 5 ms or about 24 ms, bimodal ([#346](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/346)) |
-| RK7(8), tolerances 1e-11 | not measured in two-body; 0.11 m from the full-model reference (13.2 m from the JGM3 golden before conformance-tests#25) | 5.5 ms |
+| RK7(8), tolerances 1e-11 | not measured in two-body; 0.027 m from the full-model reference over the TT day (0.11 m over the TDB seconds before #501; 13.2 m from the JGM3 golden before conformance-tests#25) | 5.5 ms |
 
 Sources: errors from `VVIntegratorTests.GlobalErrorIsSecondOrderInTheStep`, against the analytic
 Keplerian solution; times from `VVBenchmarks` and `RK78Benchmarks.LeoOneOrbit_EGM10_SunMoon`

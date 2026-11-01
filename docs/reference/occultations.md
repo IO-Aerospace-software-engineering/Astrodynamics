@@ -72,7 +72,11 @@ Against `gfoclt` converged to 1e-9 s (`tools/occultation_reference`), on Linux x
 | Eclipse 001 of a propagated spacecraft, against GMAT R2026a's `EclipseLocator` (epochs to the millisecond) | 4.8e-4 s |
 
 The last row includes the difference of the Earth GM of the two trajectories (the kernel's, GMAT's 398600.4415
-km³/s²), 3.2e-4 s after 12 h.
+km³/s²), 3.2e-4 s after 12 h; measured again with the TT time argument of the propagation
+([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)), 4.83e-4 s (Linux, 2026-11-01).
+The references of `tools/occultation_reference` are two-body SPKs propagated by `conics_c` over ET, TDB seconds about
+the Earth: they depart from the time argument of the library by the change of TDB − TT, at most 3.6e-6 s over their 12 h,
+within the bounds of the tests (5.2e-5 s and more), and are kept as they are.
 
 `CelestialItem.IsOcculted(by, from, aberration)` gives the type at one instant with the same geometry.
 

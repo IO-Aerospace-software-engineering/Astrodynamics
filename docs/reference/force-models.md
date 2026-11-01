@@ -84,10 +84,16 @@ a = −GM_kernel r / r³ + ∇[(GM_model / r) Σ_(n≥2) (a_model / r)ⁿ Σ_m P
 | Any other body | `(path, degree)` or `(stream, degree)` | the GM and the equatorial radius of its kernels |
 | Any body | `(path, degree, gravitationalParameter, referenceRadius)` or the same with a stream | the given ones |
 
-By default the central term keeps the GM of the kernels (DE440's for the Earth, 3.98600435507e14 m³/s²),
-TDB-compatible like the time and the positions of the propagation, and the GM of every other point-mass computation of
-the library. The GM of EGM2008 is a TT-compatible value; scaled to TDB-compatible units it is within 2.3e-10 of
-DE440's (Klioner et al., 2010). Before 10.2.0 the harmonics took the GM and the equatorial radius of the kernels
+By default the central term keeps the GM of the kernels (DE440's for the Earth, 3.98600435507e14 m³/s²), the GM of
+every other point-mass computation of the library (`CelestialItem.GM`, the third bodies, the element conversions).
+That GM is TDB-compatible, while a propagation about the Earth counts TT seconds
+([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501),
+[Time & Windows](time-and-windows.md#the-time-argument-of-a-propagation)): the default pairs a TDB-compatible GM with the
+TT time argument, 1.5e-8 from the TT-compatible value. The TT-compatible value is the GM of EGM2008, which GMAT applies
+from the header of a `.cof`: `GeopotentialCentralTerm.ModelGravitationalParameter` below. Scaled to TDB-compatible units
+it is within 2.3e-10 of DE440's (Klioner et al., 2010). The GMs and the DE440 positions of the third bodies are not
+scaled either, as GMAT and the suite do not scale them: 1.48e-8 of the third-body acceleration, about 1e-14 m/s² in LEO
+for the Moon's tidal term (computed). Before 10.2.0 the harmonics took the GM and the equatorial radius of the kernels
 (6378136.6 m), 7.9e-8 of the harmonics away from EGM2008
 ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
 
@@ -136,12 +142,13 @@ var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
     });
 ```
 
-For the Earth with EGM2008, the TT-compatible 3.986004415e14 m³/s² in a TDB propagation moves the whole acceleration by
-1.5e-8 of itself: about 20 m a day in LEO and 8 m a day in GEO, 15.6 m, 6.8 m and 18.5 m on the propagators 001 to 003
-of the conformance suite. With the option, the library reproduces GMAT R2026a's runs of those cases (EGM2008 from a
-`.cof` with the model's GM) to 8.8 cm, 6.0 cm and 15.6 cm by RK7(8) at 1e-11, and 002 to 33.7 cm by Velocity-Verlet at
-1 s (`GmatConformancePropagatorTests`, Linux, 2026-10-27); the rest is the orientation of the Earth and the GMs of the
-third bodies in the two tools.
+For the Earth with EGM2008, the TT-compatible 3.986004415e14 m³/s² moves the whole acceleration by 1.5e-8 of itself:
+about 20 m a day in LEO and 8 m a day in GEO, 15.5 m, 6.9 m and 18.4 m on the propagators 001 to 003 of the conformance
+suite. With the option, the library reproduces GMAT R2026a's runs of those cases (EGM2008 from a `.cof` with the
+model's GM, over the TT seconds of the day) to 1.9 cm, 0.83 cm and 1.1 cm by RK7(8) at 1e-11, and 002 to 39.7 cm by
+Velocity-Verlet at 1 s (`GmatConformancePropagatorTests`, Linux, 2026-11-01); the rest is the orientation of the Earth
+and the GMs of the third bodies in the two tools. Before the TT time argument of #501 it was 8.8 cm, 6.0 cm, 15.6 cm
+and 33.7 cm (2026-10-27): the change of TDB − TT over the day, |v|·δ, was most of the RK7(8) residual.
 
 ## Radiation From The Central Body
 
