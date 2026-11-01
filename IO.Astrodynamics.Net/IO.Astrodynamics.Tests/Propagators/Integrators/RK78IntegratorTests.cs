@@ -621,13 +621,13 @@ public class RK78IntegratorTests
         var expectedVelocity = new Vector3(-2.724561254362544, -3.933752425169912, -5.983827910193672) * 1000.0;
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
-        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-11-01, with the TT time argument (#501): 0.02659 m and 0.03065 mm/s (2026-10-27, over the TDB seconds before
-        // #501: 0.1111 m and 0.1259 mm/s). The limits are still twice the figures of 2026-10-27, rounded up at the second
-        // significant digit; to be set again at twice the worst over Linux, Windows and macOS arm64 from the MEASURE lines
-        // of the CI of #505.
-        const double PositionLimitMeters = 0.23;
-        const double VelocityLimitMetersPerSecond = 2.6e-4;
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured with the TT time argument
+        // (#501), Release, CI run 41268715428 (2026-11-01): 0.02659 m and 0.03065 mm/s on Linux, 0.02659 m and
+        // 0.03064 mm/s on Windows, 0.0266 m and 0.03065 mm/s on macOS arm64 (2026-10-27, over the TDB seconds before #501:
+        // 0.1111 m and 0.1259 mm/s, limits 0.23 m and 0.26 mm/s). The limits are twice the worst over the three
+        // platforms, rounded up at the second significant digit.
+        const double PositionLimitMeters = 0.054;
+        const double VelocityLimitMetersPerSecond = 6.2e-5;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_leo_grav10_001 (RK7(8))", res, propWindow,
             expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
@@ -688,13 +688,13 @@ public class RK78IntegratorTests
         var expectedVelocity = new Vector3(-2.6179082304622505, 1.584740386819964, 0.051260640408016526) * 1000.0;
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
-        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-11-01, with the TT time argument (#501): 0.008324 m and 0.000688 mm/s (2026-10-27, over the TDB seconds
-        // before #501: 0.07059 m and 0.005086 mm/s). The limits are still twice the figures of 2026-10-27, rounded up at
-        // the second significant digit; to be set again at twice the worst over Linux, Windows and macOS arm64 from the
-        // MEASURE lines of the CI of #505.
-        const double PositionLimitMeters = 0.15;
-        const double VelocityLimitMetersPerSecond = 1.1e-5;
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured with the TT time argument
+        // (#501), Release, CI run 41268715428 (2026-11-01): 0.008324 m and 0.000688 mm/s on Linux, Windows and macOS
+        // arm64 (2026-10-27, over the TDB seconds before #501: 0.07059 m and 0.005086 mm/s, limits 0.15 m and
+        // 0.011 mm/s). The limits are twice the worst over the three platforms, rounded up at the second significant
+        // digit.
+        const double PositionLimitMeters = 0.017;
+        const double VelocityLimitMetersPerSecond = 1.4e-6;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_geo_grav70_002 (RK7(8))", res, propWindow,
             expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
@@ -741,13 +741,13 @@ public class RK78IntegratorTests
         var expectedVelocity = new Vector3(1.9854154176234544, 7.042412295817178, 1.5158616109621321) * 1000.0;
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
-        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-11-01, with the TT time argument (#501): 0.01472 m and 0.009766 mm/s (2026-10-27, over the TDB seconds
-        // before #501: 0.1692 m and 0.1779 mm/s). The limits are still twice the figures of 2026-10-27, rounded up at the
-        // second significant digit; to be set again at twice the worst over Linux, Windows and macOS arm64 from the
-        // MEASURE lines of the CI of #505.
-        const double PositionLimitMeters = 0.34;
-        const double VelocityLimitMetersPerSecond = 3.6e-4;
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured with the TT time argument
+        // (#501), Release, CI run 41268715428 (2026-11-01): 0.01472 m and 0.009766 mm/s on Linux, 0.01472 m and
+        // 0.009769 mm/s on Windows, 0.01472 m and 0.009761 mm/s on macOS arm64 (2026-10-27, over the TDB seconds before
+        // #501: 0.1692 m and 0.1779 mm/s, limits 0.34 m and 0.36 mm/s). The limits are twice the worst over the three
+        // platforms, rounded up at the second significant digit.
+        const double PositionLimitMeters = 0.030;
+        const double VelocityLimitMetersPerSecond = 2.0e-5;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_sso_grav10_003 (RK7(8))", res, propWindow,
             expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }

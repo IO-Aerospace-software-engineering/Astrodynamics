@@ -220,9 +220,11 @@ Against the goldens of conformance-tests#25 (GMAT R2026a, the state entered and 
 `.cof` whose header carries the model's GM and radius; two-body cases 004 and 005 with the GM of `gm_de440.tpc`), the
 magnitude of the error of the final state, with the model's GM in the central term
 (`GeopotentialCentralTerm.ModelGravitationalParameter`, as the runner computes them), over the TT seconds of the day
-(#501). Measured on Linux, Release, 2026-11-01: RK7(8), the `RK78IntegratorTests.Conformance00x_*` tests (the runner gives the same within its kernels:
-its per-component deltas are in [The earlier categories](#the-earlier-categories)), and the runner for 004 and 005;
-Velocity-Verlet, the `PropagatorTests.Conformance00x_*` tests.
+(#501). Measured in Release, 2026-11-01: RK7(8), the `RK78IntegratorTests.Conformance00x_*` tests (the runner gives the same within its kernels:
+its per-component deltas are in [The earlier categories](#the-earlier-categories)), and the runner for 004 and 005 (Linux);
+Velocity-Verlet, the `PropagatorTests.Conformance00x_*` tests. The figures of the tests are those of the CI of
+[#505](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/505) (run 41268715428), the same on
+Linux, Windows and macOS arm64 to the digits of the table.
 
 | Case | Orbit and force model (inputs) | Golden | RK7(8), 1e-11 | Velocity-Verlet, 1 s |
 |------|--------------------------------|--------|---------------|----------------------|
@@ -238,17 +240,19 @@ Since lot 2 the runner integrates at 1e-13 (see [Lot 2](#lot-2-drag-srp-heo-and-
 before #501: 0.118 m, 0.071 m, 0.177 m, 0.081 m and 0.083 m (2026-10-28). The library's tests keep 1e-11; their
 figures over the TDB seconds were 0.111 m, 0.071 m and 0.169 m for RK7(8), 0.394 m on 002 for Velocity-Verlet.
 
-The test limits are still the non-regression guards set before #501, twice the figures over the TDB seconds above,
-rounded up at the second significant digit, on Linux; they are to be set again at twice the worst over Linux, Windows and
-macOS arm64 from the `MEASURE` lines of the CI of
-[#505](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/505). They are not accuracy
-specifications:
+The test limits are non-regression guards, twice the worst over Linux, Windows and macOS arm64 of the `MEASURE` lines of
+the CI of #505 (run 41268715428, 2026-11-01), rounded up at the second significant digit; in parentheses, the limits
+set before #501, twice the figures over the TDB seconds above, on Linux. They are not accuracy specifications:
 
 | Case | RK7(8) limits | Velocity-Verlet limits |
 |------|---------------|------------------------|
-| `propagator_24h_leo_grav10_001` | 0.23 m, 0.26 mm/s | 570 m, 640 mm/s |
-| `propagator_24h_geo_grav70_002` | 0.15 m, 0.011 mm/s | 0.79 m, 0.057 mm/s |
-| `propagator_24h_sso_grav10_003` | 0.34 m, 0.36 mm/s | 490 m, 510 mm/s |
+| `propagator_24h_leo_grav10_001` | 0.054 m, 0.062 mm/s (0.23 m, 0.26 mm/s) | 570 m, 640 mm/s (the same) |
+| `propagator_24h_geo_grav70_002` | 0.017 m, 0.0014 mm/s (0.15 m, 0.011 mm/s) | 0.93 m, 0.067 mm/s (0.79 m, 0.057 mm/s) |
+| `propagator_24h_sso_grav10_003` | 0.030 m, 0.020 mm/s (0.34 m, 0.36 mm/s) | 490 m, 510 mm/s (the same) |
+
+The Velocity-Verlet limits of 002 rise with #501: its error grew from 0.394 m to 0.464 m when the TT time argument took
+the δ term out of the RK7(8) error of the same case (0.071 m to 0.0083 m); probably, the δ term had cancelled part of
+the error of the 1 s step (an inference from the magnitudes alone, not traced).
 
 Before conformance-tests#25 the goldens of 001 to 003 were GMAT R2025a runs with JGM3 in EarthMJ2000Eq, 3.4 m to 13.2 m
 from the library. With RK7(8), the remaining centimeters come from the differences between the models of the two
@@ -268,7 +272,8 @@ central term with the GM of its kernels by default; with
 `GeopotentialCentralTerm.ModelGravitationalParameter` it takes the model's GM there too
 ([Force Models](../reference/force-models.md#the-central-term-with-the-gm-of-the-model)). Against GMAT's runs of the
 study of those cases (copied with their scripts and logs into `Data/GmatConformancePropagators`), the largest component
-of the final state (`GmatConformancePropagatorTests`, Linux, 2026-11-01, over the TT seconds of the day):
+of the final state (`GmatConformancePropagatorTests`, over the TT seconds of the day; CI run 41268715428 of #505,
+2026-11-01, the same on Linux, Windows and macOS arm64 to the digits of the table):
 
 | Case | With the model's GM, RK7(8) 1e-11 | With the kernel GM (default), RK7(8) 1e-11 | With the model's GM, Velocity-Verlet 1 s |
 |------|-----------------------------------|--------------------------------------------|------------------------------------------|
@@ -280,9 +285,10 @@ Over the TDB seconds of the day, before #501, the RK7(8) figures were 8.83 cm, 5
 33.7 cm (2026-10-27): the change of TDB − TT, |v|·δ, was most of them; probably, the δ term had cancelled part of the
 step error of Velocity-Verlet (an inference from the magnitudes alone, not traced). What remains is the models of the two tools, chiefly the orientation of the Earth (GMAT's FK5 with its EOP file, the library's `ITRF93`;
 the study measured GMAT's own spread over the Earth-orientation data at up to 4.4 cm) and the GMs of the third bodies.
-The bounds of the test are still those set before #501, twice the worst over Linux, Windows and macOS arm64 over the TDB
-seconds (0.18 m, 0.12 m and 0.32 m for RK7(8), 0.68 m for Velocity-Verlet; CI of 77b509c, 2026-10-27), until they are set
-again from the three-platform logs of the CI of #505.
+The bounds of the test are twice the worst over Linux, Windows and macOS arm64 (run 41268715428), rounded up at the
+second significant digit: 3.9 cm, 1.7 cm and 2.3 cm (0.047 mm/s, 0.0015 mm/s and 0.018 mm/s) for RK7(8), 0.80 m
+(0.057 mm/s) for Velocity-Verlet. Before #501, over the TDB seconds, they were 0.18 m, 0.12 m and 0.32 m, and 0.68 m
+(0.048 mm/s; CI of 77b509c, 2026-10-27): the bound of Velocity-Verlet rises with the step error that the δ term no longer offsets.
 
 Run the conformance runner, next to a clone of conformance-tests:
 

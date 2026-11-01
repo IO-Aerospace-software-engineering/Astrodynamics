@@ -56,23 +56,27 @@ public class GmatConformancePropagatorTests
     /// component (m) and of the largest velocity component (m/s) with the GM of the model in the central term.
     /// </summary>
     /// <remarks>
-    /// Bounds, twice the worst over Linux, Windows and macOS arm64 rounded up at the second significant digit (CI of 77b509c, 2026-10-27;
-    /// the same on the three platforms or worst on Linux): RK7(8) 001 8.834e-2 m and 1.015e-4 m/s, 002 5.951e-2 m and 4.287e-6 m/s, 003 1.562e-1 m and
-    /// 1.728e-4 m/s; Velocity-Verlet 002 3.371e-1 m and 2.397e-5 m/s. Of the RK7(8) figures, the integration at 1e-11 is about 5 mm (1e-13: 9.36 cm,
-    /// 5.95 cm and 16.3 cm), the rest the models of the two tools. Velocity-Verlet only for 002: in LEO its error at
-    /// 1 s, about 300 m a day, hides the central term. With the TT time argument of #501, measured again on Linux
-    /// (2026-11-01): RK7(8) 001 1.911e-2 m and 2.323e-5 m/s, 002 8.279e-3 m and 7.025e-7 m/s, 003 1.144e-2 m and
-    /// 8.729e-6 m/s, the change of TDB − TT having been most of the RK7(8) residual; Velocity-Verlet 002 3.973e-1 m and
-    /// 2.830e-5 m/s (+0.060 m: probably, the δ term had cancelled part of its step error, an inference from the
-    /// magnitudes alone, not traced). The bounds are set again from the
-    /// three-platform logs of the CI of #505.
+    /// Bounds, twice the worst over Linux, Windows and macOS arm64, rounded up at the second significant digit, with the TT
+    /// time argument of #501 (CI run 41268715428, 2026-11-01; Linux, Windows, macOS arm64): RK7(8) 001 1.911e-2,
+    /// 1.910e-2 and 1.911e-2 m, 2.323e-5, 2.323e-5 and 2.324e-5 m/s; 002 8.279e-3 m and 7.025e-7 m/s on the three; 003
+    /// 1.144e-2, 1.144e-2 and 1.143e-2 m, 8.729e-6, 8.732e-6 and 8.724e-6 m/s; Velocity-Verlet 002 3.973e-1 m and
+    /// 2.830e-5 m/s on the three. Velocity-Verlet only for 002: in LEO its error at 1 s, about 300 m a day, hides the
+    /// central term. Over the TDB seconds before #501 (CI of 77b509c, 2026-10-27; the same on the three platforms or
+    /// worst on Linux): RK7(8) 001 8.834e-2 m and 1.015e-4 m/s, 002 5.951e-2 m and 4.287e-6 m/s, 003 1.562e-1 m and
+    /// 1.728e-4 m/s; Velocity-Verlet 002 3.371e-1 m and 2.397e-5 m/s; bounds 0.18 m and 2.1e-4 m/s, 0.12 m and
+    /// 8.6e-6 m/s, 0.32 m and 3.5e-4 m/s, 0.68 m and 4.8e-5 m/s. The change of TDB − TT had been most of the RK7(8)
+    /// residual; of the RK7(8) figures of before, the integration at 1e-11 was about 5 mm (1e-13: 9.36 cm, 5.95 cm and
+    /// 16.3 cm), the rest the models of the two tools. The bounds of Velocity-Verlet rise with #501, from 0.68 m and
+    /// 4.8e-5 m/s to 0.80 m and 5.7e-5 m/s: its error grew by 0.060 m as the TT time argument took the δ term out of the
+    /// RK7(8) error of the same case (5.95 cm to 0.83 cm); probably, the δ term had cancelled part of the error of the
+    /// 1 s step, an inference from the magnitudes alone, not traced.
     /// </remarks>
     public static TheoryData<string, bool, double, double> Cases => new()
     {
-        { "001", false, 0.18, 2.1e-4 },
-        { "002", false, 0.12, 8.6e-6 },
-        { "003", false, 0.32, 3.5e-4 },
-        { "002", true, 0.68, 4.8e-5 }
+        { "001", false, 0.039, 4.7e-5 },
+        { "002", false, 0.017, 1.5e-6 },
+        { "003", false, 0.023, 1.8e-5 },
+        { "002", true, 0.80, 5.7e-5 }
     };
 
     [Theory]

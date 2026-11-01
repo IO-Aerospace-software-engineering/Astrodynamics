@@ -147,7 +147,7 @@ For the Earth with EGM2008, the TT-compatible 3.986004415e14 m³/s² moves the w
 about 20 m a day in LEO and 8 m a day in GEO, 15.5 m, 6.9 m and 18.4 m on the propagators 001 to 003 of the conformance
 suite. With the option, the library reproduces GMAT R2026a's runs of those cases (EGM2008 from a `.cof` with the
 model's GM, over the TT seconds of the day) to 1.9 cm, 0.83 cm and 1.1 cm by RK7(8) at 1e-11, and 002 to 39.7 cm by
-Velocity-Verlet at 1 s (`GmatConformancePropagatorTests`, Linux, 2026-11-01); the rest is the orientation of the Earth
+Velocity-Verlet at 1 s (`GmatConformancePropagatorTests`, Linux, Windows and macOS arm64, 2026-11-01); the rest is the orientation of the Earth
 and the GMs of the third bodies in the two tools. Before the TT time argument of #501 it was 8.8 cm, 6.0 cm, 15.6 cm
 and 33.7 cm (2026-10-27): the change of TDB − TT over the day, |v|·δ, was most of the RK7(8) residual.
 

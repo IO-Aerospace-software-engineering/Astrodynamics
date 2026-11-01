@@ -167,9 +167,9 @@ public class EventContinueTests
     // tolerances are about four to five times these.
     private const double DeltaVTolerance = 1e-8;
 
-    // The ΔV of the two at their own burns, a tick apart about the Earth (choice 7 of #501): measured 2.08e-8 m/s on
-    // Linux (2026-10-31), 1.98e-9 m/s on main, where they fell on the same tick. Provisional, twice the Linux
-    // measurement rounded up, to be set at twice the worst over Linux, Windows and macOS arm64 from the CI logs of #505
+    // The ΔV of the two at their own burns, a tick apart about the Earth (choice 7 of #501): 2.080e-8 m/s on Linux,
+    // Windows and macOS arm64 (CI run 41268715428, 2026-11-01), 1.98e-9 m/s on main, where they fell on the same tick.
+    // Twice the worst over the three platforms, rounded up at the second significant digit
     private const double OwnBurnsTolerance = 4.2e-8;
     private const double PositionTolerance = 5e-4;
     private const double VelocityTolerance = 2e-7;

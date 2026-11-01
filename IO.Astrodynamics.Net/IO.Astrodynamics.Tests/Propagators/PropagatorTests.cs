@@ -280,11 +280,11 @@ public class PropagatorTests
         var expectedVelocity = new Vector3(-2.724561254362544, -3.933752425169912, -5.983827910193672) * 1000.0;
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
-        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-11-01, with the TT time argument (#501): 281.1 m and 317.2 mm/s, nearly all the truncation of the 1 s step
-        // (2026-10-27, over the TDB seconds before #501: 281.3 m and 317.3 mm/s). The limits are still twice the figures
-        // of 2026-10-27, rounded up at the second significant digit; to be set again at twice the worst over Linux,
-        // Windows and macOS arm64 from the MEASURE lines of the CI of #505.
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured in Release with
+        // the TT time argument (#501), CI run 41268715428 (2026-11-01): 281.1 m and 317.2 mm/s on Linux, Windows and
+        // macOS arm64, nearly all the truncation of the 1 s step (2026-10-27, over the TDB seconds before #501: 281.3 m and
+        // 317.3 mm/s, the same limits). The limits are twice the worst over the three platforms, rounded up at the second
+        // significant digit.
         const double PositionLimitMeters = 570.0;
         const double VelocityLimitMetersPerSecond = 0.64;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_leo_grav10_001 (Verlet 1 s)", solution, propWindow,
@@ -341,13 +341,16 @@ public class PropagatorTests
         var expectedVelocity = new Vector3(-2.6179082304622505, 1.584740386819964, 0.051260640408016526) * 1000.0;
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
-        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-11-01, with the TT time argument (#501): 0.464 m and 0.03307 mm/s (2026-10-27, over the TDB seconds before
-        // #501: 0.3936 m and 0.02801 mm/s). The limits are still twice the figures of 2026-10-27, rounded up at the
-        // second significant digit; to be set again at twice the worst over Linux, Windows and macOS arm64 from the
-        // MEASURE lines of the CI of #505.
-        const double PositionLimitMeters = 0.79;
-        const double VelocityLimitMetersPerSecond = 5.7e-5;
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured in Release with
+        // the TT time argument (#501), CI run 41268715428 (2026-11-01): 0.464 m and 0.03307 mm/s on Linux, Windows
+        // and macOS arm64. The limits are twice the worst over the three platforms, rounded up at the second significant
+        // digit. They rise with #501 from 0.79 m and 0.057 mm/s, twice the figures over the TDB seconds before it
+        // (2026-10-27: 0.3936 m and 0.02801 mm/s): the TT time argument removed the change of TDB − TT, |v|·δ, which
+        // took the RK7(8) error of the same case from 0.07059 m to 0.008324 m, and the Velocity-Verlet error grew by
+        // about as much, 0.070 m; probably the δ term had cancelled part of the error of the 1 s step (an inference from
+        // the magnitudes alone, not traced), as in GmatConformancePropagatorTests.
+        const double PositionLimitMeters = 0.93;
+        const double VelocityLimitMetersPerSecond = 6.7e-5;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_geo_grav70_002 (Verlet 1 s)", solution, propWindow,
             expectedPosition, expectedVelocity, PositionLimitMeters, VelocityLimitMetersPerSecond);
     }
@@ -390,11 +393,11 @@ public class PropagatorTests
         var expectedVelocity = new Vector3(1.9854154176234544, 7.042412295817178, 1.5158616109621321) * 1000.0;
 
         // Against the golden of conformance-tests#25 (GMAT R2026a, EGM2008 with its GM and radius applied to the whole
-        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured on Linux, Release,
-        // 2026-11-01, with the TT time argument (#501): 242.8 m and 254.6 mm/s, nearly all the truncation of the 1 s step
-        // (2026-10-27, over the TDB seconds before #501: 243.0 m and 254.8 mm/s). The limits are still twice the figures
-        // of 2026-10-27, rounded up at the second significant digit; to be set again at twice the worst over Linux,
-        // Windows and macOS arm64 from the MEASURE lines of the CI of #505.
+        // field, ICRF), the GM of the model in the central term (decision 18 of #457). Measured in Release with
+        // the TT time argument (#501), CI run 41268715428 (2026-11-01): 242.8 m and 254.6 mm/s on Linux, Windows and
+        // macOS arm64, nearly all the truncation of the 1 s step (2026-10-27, over the TDB seconds before #501: 243.0 m and
+        // 254.8 mm/s, the same limits). The limits are twice the worst over the three platforms, rounded up at the second
+        // significant digit.
         const double PositionLimitMeters = 490.0;
         const double VelocityLimitMetersPerSecond = 0.51;
         ConformanceCaseAssert.FinalStateWithin(_output, "propagator_24h_sso_grav10_003 (Verlet 1 s)", solution, propWindow,
