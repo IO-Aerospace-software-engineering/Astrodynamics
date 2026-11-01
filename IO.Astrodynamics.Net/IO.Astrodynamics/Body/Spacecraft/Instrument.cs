@@ -28,7 +28,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public string Model { get; }
 
         /// <summary>
-        /// Field of view
+        /// The half-angle of the field of view in the plane of the boresight and the reference vector, rad: the
+        /// <c>FOV_REF_ANGLE</c> of the instrument kernel, the half-angle of a circle
         /// </summary>
         public double FieldOfView { get; }
 

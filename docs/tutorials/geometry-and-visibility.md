@@ -74,9 +74,9 @@ negations.
 
 ## Instrument field of view
 
-Spacecraft instruments have a defined field-of-view cone. Use
-`FindWindowsInFieldOfViewConstraint` to determine when a target body enters
-that cone:
+Spacecraft instruments have a field of view: a circle, an ellipse or a
+rectangle about their boresight. Use `FindWindowsInFieldOfViewConstraint` to
+determine when a target is in it:
 
 ```csharp
 var visibilityWindows = spacecraft.Instruments.First()
@@ -90,8 +90,22 @@ var visibilityWindows = spacecraft.Instruments.First()
         TimeSpan.FromSeconds(60));
 ```
 
-The method returns a collection of `Window` objects representing contiguous
-intervals when the target is inside the instrument's field of view.
+The method returns a collection of `Window` objects, in TDB, representing
+contiguous intervals when the target is inside the instrument's field of view:
+the windows of CSPICE's `gftfov`, to 1 µs.
+
+- **Shape.** With `ShapeType.Ellipsoid` the target is in view as soon as any
+  part of its ellipsoid (the radii of a `CelestialBody`, oriented by the frame
+  given) overlaps the field; with `ShapeType.Point`, when its center is in it.
+  Sites, spacecraft and stars are points.
+- **Step.** The step samples a continuous margin of the target in the field; a
+  window or a gap shorter than the step is found when the step is at most half
+  the time between the extremes of that margin. CSPICE, which searches when the
+  spacecraft and the target both come from kernels, asks the step to be
+  shorter than every window and gap.
+- **Accuracy.** Within a few microseconds of `gftfov`, except where the field
+  grazes the limb of the target. See
+  [Field-of-view search](../reference/spacecraft.md#field-of-view-search).
 
 ### Setting up an instrument
 
@@ -191,7 +205,8 @@ var coords = mySite.GetHorizontalCoordinates(epoch, iss, Aberration.None);
 
 - Use `FindWindowsOnOccultationConstraint` for eclipse and occultation searches.
 - Use `FindWindowsOnDistanceConstraint` for range-based event detection.
-- Instrument FOV analysis uses `FindWindowsInFieldOfViewConstraint`.
+- Instrument FOV analysis uses `FindWindowsInFieldOfViewConstraint`: the
+  windows of CSPICE's `gftfov`, with the target's shape, for every field shape.
 - Ground sites provide horizontal coordinates (azimuth, elevation, range).
 - TLE-based spacecraft work with all geometry functions through SGP4/SDP4
   propagation.

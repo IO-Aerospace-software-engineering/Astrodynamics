@@ -10,6 +10,10 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 
 public class EllipticalInstrument : Instrument
 {
+    /// <summary>
+    /// The half-angle of the field of view across the plane of the boresight and the reference vector, rad: the
+    /// <c>FOV_CROSS_ANGLE</c> of the instrument kernel
+    /// </summary>
     public double CrossAngle { get; }
 
     internal EllipticalInstrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, double crossAngle, Vector3 boresight, Vector3 refVector,

@@ -245,8 +245,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="naifId"></param>
         /// <param name="name"></param>
         /// <param name="model"></param>
-        /// <param name="fieldOfView"></param>
-        /// <param name="crossAngle"></param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
+        /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad</param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">Expressed as Euler angle</param>
@@ -266,8 +266,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="naifId"></param>
         /// <param name="name"></param>
         /// <param name="model"></param>
-        /// <param name="fieldOfView"></param>
-        /// <param name="crossAngle"></param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
+        /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad</param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">Expressed as Euler angle</param>
