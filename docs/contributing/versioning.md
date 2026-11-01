@@ -224,7 +224,8 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   - a window has the TT seconds between its instants, whatever their tags: a UTC day is 86 400 s, 86 401 s across a leap
     second, a TDB-tagged day from 2021-03-20 12:00 86 399.99999324768 s. The outputs are uniform in TT: those of a UTC
     window fall on its UTC grid, those of a TDB-tagged window leave its TDB grid by δ (29 µs a day), so an exact lookup
-    of a round TDB epoch misses them. A window whose output grid misses its length by less than 1e-9 of it ends at its
+    of a round TDB epoch misses them, and `Spacecraft.WriteEphemeris` writes an SPK segment of type 9 where it wrote
+    type 8, the TDB gaps of the labels varying by a tick. A window whose output grid misses its length by less than 1e-9 of it ends at its
     end, its last output labelled with the end as given;
   - a label holds its instant to the tick: chaining propagations or reading a solution through the labels a user
     receives keeps up to 1e-7 s, about 1e-10 relative on Φ and 0.75 mm in LEO;

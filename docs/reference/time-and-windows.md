@@ -148,7 +148,10 @@ and local tags, through IO's TDB − TT series for a TDB tag.
   of a UTC window fall on its UTC grid; after a leap second inside the window they sit one second off the UTC minute
   marks (the grid of a UTC day across 2016-12-31 ends at 86 400 s, one second before the end). Those of a TDB-tagged
   window leave its TDB grid by the change of TDB − TT, up to 29 µs a day and 0.86 ms over 30 days: a read at a round
-  TDB epoch is then interpolated, and an exact-key lookup of a `Time` misses the output epochs.
+  TDB epoch is then interpolated, and an exact-key lookup of a `Time` misses the output epochs. The TDB gaps between
+  the labels vary by a tick, so `Spacecraft.WriteEphemeris` writes an SPK segment of type 9 (Lagrange, unequal steps)
+  for a propagation about the Earth, where it wrote type 8 (equal steps) before (measured on UTC and TDB windows of an
+  hour and a day, 2026-11-01); about any other body it still writes type 8.
 - **End**: when the output grid misses the length of the window by less than 1e-9 of it (three times the largest rate
   of TDB − TT), the propagation ends at the end of the window, and its last output is labelled with the end of the
   window as the caller gave it. Otherwise the propagation runs to the larger of the window and of its grid, as before.
