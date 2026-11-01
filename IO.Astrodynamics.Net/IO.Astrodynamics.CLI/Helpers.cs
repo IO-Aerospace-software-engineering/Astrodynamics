@@ -27,8 +27,9 @@ public class Helpers
 
         if (objectId is > 100_000 and < 999_999)
         {
-            var id = int.Parse(objectId.ToString().Skip(3).ToString()!);
-            localizableObject = new Site(id, $"site{id}", new CelestialBody((int)double.Truncate(objectId * 1E-03)));
+            // A site's NAIF identifier is its body's times 1000 plus its own (399013 is DSS-13 on the Earth)
+            var id = objectId % 1000;
+            localizableObject = new Site(id, $"site{id}", new CelestialBody(objectId / 1000));
         }
         else
         {

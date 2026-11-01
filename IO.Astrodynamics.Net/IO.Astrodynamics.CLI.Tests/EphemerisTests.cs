@@ -56,6 +56,33 @@ public class EphemerisTests
     }
 
     [Fact]
+    public void CallFromASite()
+    {
+        // A site is given by its NAIF identifier, here 399013, DSS-13 on the Earth; the expected states are SPICE's
+        // spkezr("301", et, "J2000", "NONE", "399013") on the kernels of Data/SolarSystem (spiceypy, CSPICE N0067)
+        using (Configuration.Lock())
+        {
+            var command = new EphemerisCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+            command.Ephemeris("Data", 301, 399013, new WindowParameters
+            {
+                Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame).ToString(),
+                End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeFrame.TDBFrame).ToString()
+            }, TimeSpan.FromMinutes(1));
+            var res = sb.ToString();
+
+            OutputAssert.EqualApprox(
+                $"Epoch : 2023-01-01T01:00:00.0000000 TDB Position : X : 318432518.66904956 Y : 201167633.45658574 Z: 78470616.8558369 Velocity : X : -525.6735216135344 Y : 374.6728331151655 Z: 423.04259903334116 Frame : j2000{
+                    Environment.NewLine
+                }Epoch : 2023-01-01T01:01:00.0000000 TDB Position : X : 318401024.1503668 Y : 201190109.75510025 Z: 78495998.30144708 Velocity : X : -524.1437266303659 Y : 374.538327456151 Z: 423.00558627606205 Frame : j2000{
+                    Environment.NewLine}"
+                , res);
+        }
+    }
+
+    [Fact]
     public void SubPoint()
     {
         using (Configuration.Lock())
