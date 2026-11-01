@@ -643,8 +643,9 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     }
 
     /// <summary>
-    /// #520: the reference vector was not made perpendicular to the boresight (756 s on the spacecraft target); the ellipse
-    /// 797, whose reference vector is 63° from its boresight, now equals gftfov on the Earth and on the spacecraft target.
+    /// #520: the reference vector was not made perpendicular to the boresight (193 s on the Earth and 198 s on the spacecraft
+    /// target with the half-angles of #518 corrected, 756 s with them); the ellipse 797, whose reference vector is 63° from
+    /// its boresight, now equals gftfov on the Earth and on the spacecraft target.
     /// </summary>
     [Fact]
     public void ReferenceVector_MadePerpendicular_520()
