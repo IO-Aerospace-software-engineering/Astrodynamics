@@ -15,16 +15,13 @@ namespace IO.Astrodynamics.Tests.Body
 {
     public class InstrumentTests
     {
-        // The windows of the library against gftfov on the kernels of the same propagation, s: the bracket of the
-        // bisection of the search of the library (GeometryFinder, 1 s), which returns the earlier end of its bracket, so
-        // each transition of the library is up to 1 s before the transition it brackets; gftfov converges to 1e-6 s. A
-        // bound by construction, not a record of a measurement. Both searches take a point target, the direction of the
-        // centre of the Earth: the library tests it within the field of view in azimuth and in elevation, which is the
-        // circular field of view of the kernel where the Earth crosses it, the Earth moving in elevation only in the frame
-        // of the instrument (measured −0.91 s, −0.21 s and −0.18 s, Linux, 2026-10-31 and 2026-11-01). The managed search
-        // ignores the shape of the target (an ellipsoid gives the windows of a point), where gftfov with ELLIPSOID differs
-        // by up to 1 080 s: a defect outside #501, not asserted here
-        private const double FieldOfViewTolerance = 1.0;
+        // The windows of the library against gftfov on the kernels of the same propagation, s: the managed search converges
+        // to 1 µs and gftfov to 1e-6 s, and their apparent Earths differ by the rounding of the light-time corrected epoch to
+        // a double ET, up to half its 119 ns ulp in each (1.8 mm of the Earth's barycentric motion; #515, choice 10).
+        // PROVISIONAL, twice the Linux worst of FieldOfViewSearchTests (1.3e-6 s, 2026-11-01), the limit of its rows, until
+        // the three platforms of the CI have printed their MEASURE lines. Before #515 it was 1 s by construction, the
+        // bisection of GeometryFinder, the first start was not compared, and the ellipsoid was a point (up to 1 080 s)
+        private const double FieldOfViewTolerance = 2.6e-6;
 
         private readonly ITestOutputHelper _output;
 
@@ -75,8 +72,10 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.False(instrument.Equals((object)null));
         }
 
-        [Fact]
-        public async Task FindWindowInFieldOfView()
+        [Theory]
+        [InlineData(ShapeType.Point)]
+        [InlineData(ShapeType.Ellipsoid)]
+        public async Task FindWindowInFieldOfView(ShapeType shape)
         {
             TimeSystem.Time start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
             TimeSystem.Time end = start.AddSeconds(6448.0);
@@ -104,41 +103,38 @@ namespace IO.Astrodynamics.Tests.Body
 
             // The reference: SPICE gftfov on the kernels that the library writes from the same propagation, the SPK of
             // the spacecraft, its clock, frame and orientation, and the frame and the kernel of the instrument; written
-            // before the search of the library, whose evaluations add orientations to the frame of the spacecraft, after
-            // which the CK writer rejects them (SPICE(TIMESOUTOFORDER), three more entries at the first epoch; the cause is
-            // not traced)
+            // before the search of the library, whose evaluations add orientations to the frame of the spacecraft
             var searchWindow = new Window(start, end);
             var instrument = spacecraft.Instruments.First();
-            var expected = FieldOfViewWindowsBySpice(spacecraft, instrument, searchWindow, TimeSpan.FromSeconds(360.0));
+            var expected = FieldOfViewWindowsBySpice(spacecraft, instrument, searchWindow, shape, TimeSpan.FromSeconds(360.0));
 
             // Find windows when the earth is in field of view of the camera, over the propagated states: the search
-            // starts at the first state (choice 16 of #501). It started 0.02 s after it, and its bisection then read the
-            // trajectory 6 minutes before it, an extrapolation of the 8-point Lagrange interpolation 1.18e6 m apart
-            // between the two time arguments, a literal no time argument made a reference
+            // starts at the first state (choice 16 of #501); it reads nothing before it (#515)
             var res = instrument.FindWindowsInFieldOfViewConstraint(searchWindow, spacecraft,
                 TestHelpers.EarthAtJ2000, TestHelpers.EarthAtJ2000.Frame,
-                ShapeType.Point, Aberration.LT,
+                shape, Aberration.LT,
                 TimeSpan.FromSeconds(360.0)).ToArray();
 
-            //Read results: the windows of gftfov, to the 1 s to which the search of the library brackets its
-            // transitions (GeometryFinder); the first starts at the first state, where the Earth is in the field of view,
-            // and the library looks for that transition one step before the search window, on the trajectory before the
-            // propagation (design of #501, §7), so that start is not compared
+            //Read results: the windows of gftfov, every edge, the first start included: the Earth is in the field of view
+            // at the first state, and both searches start there. As an ellipsoid, the Earth is in view 1 080 s longer
+            // (gftfov: [S, 676556946.944] [676559033.610, E])
             Assert.Equal(2, expected.Length);
             Assert.Equal(expected.Length, res.Length);
             Assert.Equal(searchWindow.StartDate, expected[0].StartDate);
+            Assert.Equal(searchWindow.StartDate, res[0].StartDate);
             for (int i = 0; i < res.Length; i++)
             {
                 double startError = (res[i].StartDate - expected[i].StartDate).TotalSeconds;
                 double endError = (res[i].EndDate - expected[i].EndDate).TotalSeconds;
-                _output.WriteLine($"MEASURE window {i}: {res[i].StartDate} to {res[i].EndDate}, gftfov " +
+                _output.WriteLine($"MEASURE #515 {shape} window {i}: {res[i].StartDate} to {res[i].EndDate}, gftfov " +
                                   $"{expected[i].StartDate} to {expected[i].EndDate}: {startError:E2} s and {endError:E2} s");
-                if (i > 0)
-                {
-                    Assert.InRange(startError, -FieldOfViewTolerance, FieldOfViewTolerance);
-                }
-
+                Assert.InRange(startError, -FieldOfViewTolerance, FieldOfViewTolerance);
                 Assert.InRange(endError, -FieldOfViewTolerance, FieldOfViewTolerance);
+            }
+
+            if (shape == ShapeType.Ellipsoid)
+            {
+                Assert.Equal(searchWindow.EndDate, res[1].EndDate);
             }
 
             Assert.Throws<ArgumentNullException>(() => spacecraft.Instruments.First().FindWindowsInFieldOfViewConstraint(
@@ -154,10 +150,10 @@ namespace IO.Astrodynamics.Tests.Body
 
         // The windows of SPICE gftfov over the kernels written from the propagation of the spacecraft, unloaded after
         private static Window[] FieldOfViewWindowsBySpice(Spacecraft spacecraft, Instrument instrument, Window searchWindow,
-            TimeSpan step)
+            ShapeType shape, TimeSpan step)
         {
             // Relative paths, as the kernels of the other tests: the native writers take a bounded file name
-            const string directory = "Data/User/FieldOfViewReference";
+            string directory = $"Data/User/FieldOfViewReference/{shape}";
             Directory.CreateDirectory(directory);
             var files = new[] { "sc179.tsc", "sc179.tf", "camera789.tf", "camera789.ti", "sc179.bsp", "sc179.ck" }
                 .Select(name => new FileInfo(Path.Combine(directory, name))).ToArray();
@@ -188,7 +184,7 @@ namespace IO.Astrodynamics.Tests.Body
             {
                 return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(searchWindow, spacecraft.NaifId,
                     instrument.NaifId, TestHelpers.EarthAtJ2000.NaifId, TestHelpers.EarthAtJ2000.Frame,
-                    ShapeType.Point, Aberration.LT, step).ToArray();
+                    shape, Aberration.LT, step).ToArray();
             }
             finally
             {
