@@ -60,6 +60,21 @@ public class EpochInputTests
         Assert.NotEqual(SecondsFromJ2000InTdb("631152000.0 UTC"), SecondsFromJ2000InTdb("631152000.0"));
     }
 
+    [Theory]
+    [InlineData("2458850.0 JD UTC")]
+    [InlineData("2458850.0 jd utc")]
+    public void AJulianDateTaggedUtc_IsUtc(string epoch)
+    {
+        // Unchanged by #509: JD 2458850.0 is 2020-01-01T12:00:00, 7305 days after JD 2451545.0
+        Assert.Equal($"{UtcNoonInTdbSeconds}{Environment.NewLine}", SecondsFromJ2000InTdb(epoch));
+    }
+
+    [Fact]
+    public void AnUntaggedJulianDate_IsTdb()
+    {
+        Assert.Equal($"{7305 * 86400.0}{Environment.NewLine}", SecondsFromJ2000InTdb("2458850.0 JD"));
+    }
+
     private static string SecondsFromJ2000InTdb(string epoch)
     {
         using (Configuration.Lock())
