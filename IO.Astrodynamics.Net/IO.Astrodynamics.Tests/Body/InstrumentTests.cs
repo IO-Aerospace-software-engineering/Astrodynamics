@@ -8,6 +8,7 @@ using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 
 namespace IO.Astrodynamics.Tests.Body
@@ -22,8 +23,11 @@ namespace IO.Astrodynamics.Tests.Body
         // 2026-10-31)
         private const double FieldOfViewTolerance = 1.0;
 
-        public InstrumentTests()
+        private readonly ITestOutputHelper _output;
+
+        public InstrumentTests(ITestOutputHelper output)
         {
+            _output = output;
             SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
@@ -123,7 +127,7 @@ namespace IO.Astrodynamics.Tests.Body
             {
                 double startError = (res[i].StartDate - expected[i].StartDate).TotalSeconds;
                 double endError = (res[i].EndDate - expected[i].EndDate).TotalSeconds;
-                Console.WriteLine($"MEASURE window {i}: {res[i].StartDate} to {res[i].EndDate}, gftfov " +
+                _output.WriteLine($"MEASURE window {i}: {res[i].StartDate} to {res[i].EndDate}, gftfov " +
                                   $"{expected[i].StartDate} to {expected[i].EndDate}: {startError:E2} s and {endError:E2} s");
                 if (i > 0)
                 {

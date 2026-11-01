@@ -376,6 +376,15 @@ public class TimeArgumentTests
         Assert.Equal(after.BaseEpoch, PropagationTimeArgument.Tt.EpochAt(before.BaseEpoch, eventTime));
         Assert.InRange(between - eventTime, rk78 ? -1e-12 : -1e-7, rk78 ? 1e-12 : 0.0);
         WindowEndAssert.ReachesTheEndOf(window, solution);
+
+        // An exact elapsed time reads the segment that holds it: at the base of the second, its first state (after the
+        // burn) bit for bit; a millisecond before, the first segment, 1 ms of flight away (8 m) and before the burn
+        var (atBurn, velocityAtBurn) = solution.InterpolateAtElapsed(between);
+        var (beforeBurn, velocityBeforeBurn) = solution.InterpolateAtElapsed(between - 1e-3);
+        Assert.Equal(after.Steps[0].StartPosition, atBurn);
+        Assert.Equal(after.Steps[0].StartVelocity, velocityAtBurn);
+        Assert.InRange((beforeBurn - atBurn).Magnitude(), 1.0, 10.0);
+        Assert.True((velocityBeforeBurn - velocityAtBurn).Magnitude() > 1.0);
     }
 
     [Theory]
@@ -485,6 +494,56 @@ public class TimeArgumentTests
         double error = (state.Position - new Vector3(k[0], k[1], k[2])).Magnitude();
         _output.WriteLine($"MEASURE not propagated: {error:E3} m from Kepler over {elapsed:R} s");
         Assert.True(error < KeplerBound, $"{error:E3} m");
+    }
+
+    [Fact]
+    public void TheReadsAtAnExactElapsedTime_NeedTheirData()
+    {
+        // Arrange
+        var window = WindowOf("UTC");
+        var velocityVerlet = Spacecraft(-5111, Leo(window.StartDate.ToTDB())).Propagate(window,
+            new CelestialItem[] { _earth }, false, false, Step);
+        var rk78 = Spacecraft(-5112, Leo(window.StartDate.ToTDB())).Propagate(window, new CelestialItem[] { _earth },
+            new RK78Integrator(1e-11, 1e-11), false, false, Step, new CovariancePropagationOptions());
+
+        // Act and assert: without segments, without the variational equations; the dynamics of RK7(8) take the time
+        // argument of the propagation
+        Assert.Throws<InvalidOperationException>(() => new PropagationSolution().InterpolateAtElapsed(0.0));
+        Assert.Throws<InvalidOperationException>(() =>
+            velocityVerlet.EvaluateVariationalAtElapsed(60.0, new double[36], Array.Empty<double>()));
+        Assert.Throws<InvalidOperationException>(() => velocityVerlet.EvaluateCovarianceAtElapsed(60.0, new double[36]));
+        Assert.Same(PropagationTimeArgument.Tt, rk78.Dynamics.TimeArgument);
+        var y = new double[36];
+        rk78.EvaluateVariationalAtElapsed(0.0, y, Array.Empty<double>());
+        Assert.Equal(1.0, y[0]);
+
+        // The form of the conjunction analysis is the same mapping in TT
+        var label = rk78.Segments[0].BaseEpoch;
+        Assert.Equal(PropagationTimeArgument.Tt.EpochAt(label, 1234.5),
+            PropagationTimeArgument.Tt.EpochAtBySpan(label, 1234.5));
+        Assert.Equal((PropagationTimeArgument.Tt.EpochAt(label, 60.0), PropagationTimeArgument.Tt.EpochAt(label, 180.0)),
+            PropagationTimeArgument.Tt.StepEpochs(label, 60.0, 120.0));
+    }
+
+    [Fact]
+    public void Sgp4_KeepsItsOwnTime()
+    {
+        // Arrange: the TLE propagator is not a PropagatorBase; SGP4 counts minutes from the epoch of the TLE (§3.2 of
+        // the design of #501), and its solution keeps the TDB time argument of a solution built by hand
+        var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS",
+            "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        var spacecraft = new Spacecraft(-5101, "TIME5101", 100.0, 10000.0, new Clock("time5101", 256), tle);
+        var start = spacecraft.InitialOrbitalParameters.Epoch.ToTDB();
+        var end = start.AddHours(2.0);
+
+        // Act
+        var solution = new TLEPropagator(new TimeSystem.Window(start, end), spacecraft, TimeSpan.FromHours(1.0)).Propagate();
+
+        // Assert: the states of SGP4 at the TDB grid of the window, the first and the last bit for bit
+        Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
+        Assert.Equal(tle.ToStateVector(start), solution.StateVectors.First(x => x.Epoch == start));
+        Assert.Equal(tle.ToStateVector(end), solution.StateVectors.First(x => x.Epoch == end));
     }
 
     // An hour from 2021-03-20 12:00 TDB, by the tags of its ends; the UTC hour across the leap second of 2016-12-31
