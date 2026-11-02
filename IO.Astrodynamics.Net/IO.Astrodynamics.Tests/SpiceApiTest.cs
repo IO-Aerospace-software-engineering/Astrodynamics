@@ -960,4 +960,61 @@ public class SpiceApiTest
             SpiceAPI.Instance.UnloadKernels(sclkFile);
         }
     }
+
+    [Fact]
+    void WriteOrientationAndEphemeris_OfNoRecord_AreRejected()
+    {
+        var file = new FileInfo(Path.Combine(Constants.OutputPath.FullName, "empty_records.bsp"));
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteOrientation(file, -1106, Array.Empty<StateOrientation>()));
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(file, -1106, Array.Empty<StateVector>()));
+    }
+
+    /// <summary>
+    /// The overloads of the two-body propagation and of the conic conversion: the duration, the target epoch and the
+    /// observer's GM give the call with the explicit GM bit for bit; the elliptic conversion without an epoch and the
+    /// equinoctial conversion, on a circular equatorial orbit at the periapsis, its closed form r = (a, 0, 0),
+    /// v = (0, √(GM / a), 0).
+    /// </summary>
+    [Fact]
+    void Propagate2BodiesAndConicOverloads()
+    {
+        var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
+            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var explicitGm = SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
+        var byDuration = SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0));
+        var byEpoch = SpiceAPI.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0));
+        Assert.Equal(explicitGm.Position, byDuration.Position);
+        Assert.Equal(explicitGm.Velocity, byDuration.Velocity);
+        Assert.Equal(explicitGm.Position, byEpoch.Position);
+        Assert.Equal(explicitGm.Velocity, byEpoch.Velocity);
+
+        const double a = 6800000.0;
+        var ke = new KeplerianElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke);
+        double positionError = (state.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
+        double velocityError = (state.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
+        _output?.WriteLine($"MEASURE conic e = 0 against its closed form: {positionError:E3} m, {velocityError:E3} m/s");
+        Assert.True(positionError <= ConicPositionLimit, $"{positionError:E3} m");
+        Assert.True(velocityError <= ConicVelocityLimit, $"{velocityError:E3} m/s");
+
+        // The same circular equatorial orbit as equinoctial elements (p = a, f = g = h = k = 0, the longitude 0), through eqncpv
+        var equinoctial = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var fromEquinoctial = SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(equinoctial);
+        double equinoctialPositionError = (fromEquinoctial.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
+        double equinoctialVelocityError = (fromEquinoctial.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
+        _output?.WriteLine($"MEASURE equinoctial e = 0 against its closed form: {equinoctialPositionError:E3} m, {equinoctialVelocityError:E3} m/s");
+        Assert.True(equinoctialPositionError <= EquinoctialPositionLimit, $"{equinoctialPositionError:E3} m");
+        Assert.True(equinoctialVelocityError <= EquinoctialVelocityLimit, $"{equinoctialVelocityError:E3} m/s");
+    }
+
+    // PROVISIONAL: 0 m and 0 m/s on Linux x64 (2026-11-02); two units in the last place of a (9.3e-10 m) and of √(GM / a)
+    // (9.1e-13 m/s) until the CI logs of Windows and macOS arm64
+    private const double ConicPositionLimit = 1.9e-9;
+    private const double ConicVelocityLimit = 1.9e-12;
+
+    // PROVISIONAL: twice the measurement on Linux x64 (2026-11-02), 4.16e-10 m and 1.13e-12 m/s, until the CI logs of Windows
+    // and macOS arm64
+    private const double EquinoctialPositionLimit = 8.4e-10;
+    private const double EquinoctialVelocityLimit = 2.3e-12;
 }

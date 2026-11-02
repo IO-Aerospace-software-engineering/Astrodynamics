@@ -573,6 +573,68 @@ namespace IO.Astrodynamics.Tests.Body
                 "Quaternion Z components should match.");
         }
 
+        [Fact]
+        public void BodyAxes_NotPerpendicularToUp_AreRejected()
+        {
+            var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            // Front and up not perpendicular, front and right perpendicular
+            var frontUp = Assert.Throws<ArgumentException>(() => new Spacecraft(-1101, "Axes1101", 1000.0, 3000.0, new Clock("Clk1101", 256), sv,
+                bodyFront: Vector3.VectorY, bodyRight: Vector3.VectorX, bodyUp: new Vector3(0.0, 1.0, 1.0)));
+            Assert.Contains("BodyFront and BodyUp", frontUp.Message);
+            // Right and up not perpendicular, front perpendicular to both
+            var rightUp = Assert.Throws<ArgumentException>(() => new Spacecraft(-1102, "Axes1102", 1000.0, 3000.0, new Clock("Clk1102", 256), sv,
+                bodyFront: Vector3.VectorY, bodyRight: Vector3.VectorX, bodyUp: new Vector3(1.0, 0.0, 1.0)));
+            Assert.Contains("BodyRight and BodyUp", rightUp.Message);
+        }
+
         #endregion
+
+        [Fact]
+        public void AnInstrumentAddedTwice_IsRejected()
+        {
+            var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var spc = new Spacecraft(-1103, "Instruments1103", 1000.0, 3000.0, new Clock("Clk1103", 256), sv);
+            spc.AddRectangularInstrument(-1103001, "REC", "model", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            spc.AddEllipticalInstrument(-1103002, "ELL", "model", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            Assert.Throws<ArgumentException>(() => spc.AddRectangularInstrument(-1103001, "REC", "model", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero));
+            Assert.Throws<ArgumentException>(() => spc.AddEllipticalInstrument(-1103002, "ELL", "model", 0.2, 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero));
+            Assert.Equal(2, spc.Instruments.Count);
+        }
+
+        [Fact]
+        public void ToOpm_WithoutCosparId_Throws()
+        {
+            var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var spc = new Spacecraft(-1104, "Opm1104", 1000.0, 3000.0, new Clock("Clk1104", 256), sv);
+            Assert.Throws<InvalidOperationException>(() => spc.ToOpm());
+        }
+
+        /// <summary>
+        /// The OPM of a spacecraft carries its executed impulses, as their own OPM parameters in the frame of the state.
+        /// </summary>
+        [Fact]
+        public void ToOpm_CarriesTheExecutedImpulses()
+        {
+            var sv = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var spc = new Spacecraft(-1105, "Opm1105", 1000.0, 3000.0, new Clock("Clk1105", 65536), sv, cosparId: "2024-001A");
+            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var impulse = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 42164000.0,
+                spc.Engines.First());
+            spc.SetStandbyManeuver(impulse);
+            impulse.TryExecute(sv);
+
+            var opm = spc.ToOpm();
+            var maneuver = Assert.Single(opm.Data.Maneuvers);
+            var expected = impulse.ToOpmManeuverParameters(Frames.Frame.ICRF.Name);
+            Assert.Equal(expected.ManEpochIgnition, maneuver.ManEpochIgnition);
+            Assert.Equal(expected.ManDv2, maneuver.ManDv2);
+            Assert.Equal(Frames.Frame.ICRF.Name, maneuver.ManRefFrame);
+            Assert.Null(spc.ToOpm(includeManeuvers: false).Data.Maneuvers.FirstOrDefault());
+        }
     }
 }

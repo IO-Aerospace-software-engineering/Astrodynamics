@@ -143,5 +143,16 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             // Act & Assert
             Assert.Throws<ArgumentException>(() => initialOrientation.Interpolate(finalOrientation, date));
         }
+
+        [Fact]
+        public void ToString_NamesItsEpochRotationAngularVelocityAndSourceFrame()
+        {
+            var so = new StateOrientation(new Quaternion(1, 0, 0, 0), Vector3.VectorX, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
+            var text = so.ToString();
+            Assert.Contains(TimeSystem.Time.J2000TDB.ToString(), text);
+            Assert.Contains(so.Rotation.ToString(), text);
+            Assert.Contains(Vector3.VectorX.ToString(), text);
+            Assert.EndsWith("Frame : ECLIPJ2000", text);
+        }
     }
 }
