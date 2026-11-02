@@ -103,8 +103,16 @@ public class FieldOfViewDynamicsTests
     }
 
     /// <summary>A propagated spacecraft of the variant and its search window.</summary>
-    private static (Spacecraft spacecraft, Window window) Build(string variant)
+    private static (Spacecraft spacecraft, Window window) Build(string name)
     {
+        // A variant "name@FRAME" starts from the same state in another inertial frame (#535): the same trajectory and the same
+        // attitude, under other identifiers
+        var parts = name.Split('@');
+        string variant = parts[0];
+        var initialFrame = parts.Length > 1 ? new Frames.Frame(parts[1]) : Frames.Frame.ICRF;
+        int offset = parts.Length > 1 ? 100 * (Array.IndexOf(InitialFrames, parts[1]) + 1) : 0;
+        StateVector In(StateVector state) => initialFrame == Frames.Frame.ICRF ? state : state.ToFrame(initialFrame).ToStateVector();
+        (Spacecraft, Engine) Create(int naifId, StateVector orbit) => FieldOfViewDynamicsTests.Create(naifId - offset, In(orbit));
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Start);
         var sun = new CelestialBody(Stars.Sun, Frames.Frame.ICRF, Start);
@@ -157,6 +165,19 @@ public class FieldOfViewDynamicsTests
                 spacecraft.Propagate(propagation, bodies, false, false, oneSecond);
                 return (spacecraft, window);
             }
+            case "NadirScenario":
+            {
+                // The nadir attitude through Scenario.SimulateAsync
+                var (spacecraft, engine) = Create(-5178, leo);
+                spacecraft.SetStandbyManeuver(new NadirAttitude(earth, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, engine));
+                var scenario = new IO.Astrodynamics.Mission.Scenario($"FovDyn{spacecraft.NaifId}", new IO.Astrodynamics.Mission.Mission($"fovdyn{spacecraft.NaifId}"), propagation);
+                scenario.AddCelestialItem(moon);
+                scenario.AddCelestialItem(earth);
+                scenario.AddCelestialItem(sun);
+                scenario.AddSpacecraft(spacecraft);
+                scenario.SimulateAsync(false, false, oneSecond).GetAwaiter().GetResult();
+                return (spacecraft, window);
+            }
             case "TLE":
             {
                 // Not propagated: the spacecraft reads SGP4 at each epoch, and its SPK holds the SGP4 states every 10 s
@@ -177,12 +198,6 @@ public class FieldOfViewDynamicsTests
     {
         public override string ToString() => $"{Number} {Target} {Shape} {Aberration}";
     }
-
-    /// <summary>
-    /// A disagreement of the kernels the library writes with the library's reads, measured on Linux x64 (2026-11-01):
-    /// the window counts of gftfov and of the managed search, and, when they are equal, the worst edge, in seconds.
-    /// </summary>
-    private sealed record Defect(int GftfovWindows, int ManagedWindows, double Worst = 0.0);
 
     private static readonly Row[] ConstantAttitude =
     [
@@ -209,8 +224,8 @@ public class FieldOfViewDynamicsTests
         // decided in its own issue, #529. The Earth stays in place in a nadir frame: no edge
         ["Nadir"] =
         [
-            new(792, "SUN", ShapeType.Point, Aberration.LTS, 1, 1.8), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1, 0.67),
-            new(792, "MOON", ShapeType.Point, Aberration.LT, 1, 1.1)
+            new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1),
+            new(792, "MOON", ShapeType.Point, Aberration.LT, 1)
         ],
         ["TLE"] =
         [
@@ -220,32 +235,20 @@ public class FieldOfViewDynamicsTests
         ]
     };
 
-    // The disagreements on the kernels the library writes, by row, pinned until the defects are fixed (#529, #534, #535):
-    // measured on Linux x64 (2026-11-01), the window counts and the worst edges the same on Linux, Windows and macOS arm64
-    // to the printed digit (CI run 41365060160, 2026-11-02; worst 971.8 s, ImpulseThenTriad 792 DSS-13 Point LT); a row
-    // not listed agrees within its limit. The worst edge is asserted within a factor of two of the measurement
-    private static readonly Dictionary<string, Dictionary<string, Defect>> Defects = new()
-    {
-        // The CK holds the inverse attitude and interpolates across the TRIAD change
-        ["ImpulseThenTriad"] = new()
-        {
-            ["789 EARTH Ellipsoid LT"] = new(1, 2), ["790 EARTH Point LT"] = new(1, 1, 500.2), ["791 EARTH Ellipsoid LTS"] = new(1, 2),
-            ["792 DSS-13 Point LT"] = new(2, 2, 971.8), ["792 SUN Point LTS"] = new(1, 1, 268.0), ["792 SUN Ellipsoid LTS"] = new(1, 1, 268.0)
-        },
-        // The CK holds the inverse attitude: the Sun and the Moon never enter the field of gftfov
-        ["Nadir"] = new()
-        {
-            ["792 SUN Point LTS"] = new(0, 1), ["792 SUN Ellipsoid LTS"] = new(0, 1), ["792 MOON Point LT"] = new(0, 1)
-        },
-        // The states stored in ECLIPJ2000 are read as ICRF; CSPICE reads the SPK right
-        ["ECLIPJ2000"] = new()
-        {
-            ["789 EARTH Ellipsoid LT"] = new(1, 1, 0.699), ["790 EARTH Point LT"] = new(1, 1, 9.66e-3), ["791 EARTH Ellipsoid LTS"] = new(1, 1, 0.770),
-            ["789 DSS-13 Point LT"] = new(1, 1, 215.8), ["792 DSS-13 Point LT"] = new(2, 2, 232.6), ["792 EARTH Ellipsoid LT"] = new(2, 2, 0.322)
-        }
-    };
+    private static readonly string[] InitialFrames = ["ECLIPJ2000", "B1950", "FK4", "ECLIPB1950", "GALACTIC"];
 
     [Theory]
+    [InlineData("NadirScenario")]
+    [InlineData("Nadir@ECLIPJ2000")]
+    [InlineData("Nadir@GALACTIC")]
+    [InlineData("Nadir@B1950")]
+    [InlineData("ImpulseThenTriad@ECLIPJ2000")]
+    [InlineData("ImpulseThenTriad@GALACTIC")]
+    [InlineData("ImpulseThenTriad@FK4")]
+    [InlineData("ImpulseThenTriad@ECLIPB1950")]
+    [InlineData("RK78@GALACTIC")]
+    [InlineData("SSB@ECLIPJ2000")]
+    [InlineData("SSB@GALACTIC")]
     [InlineData("RK78")]
     [InlineData("ImpulseThenTriad")]
     [InlineData("Nadir")]
@@ -260,28 +263,30 @@ public class FieldOfViewDynamicsTests
         {
             ["EARTH"] = earth, ["SUN"] = new CelestialBody(Stars.Sun), ["MOON"] = new CelestialBody(PlanetsAndMoons.MOON), ["DSS-13"] = new Site(13, "DSS-13", earth)
         };
-        string directory = $"Data/User/FieldOfViewDynamics515/{variant}";
-        // Both sets of kernels are built before the searches, which add orientations to the spacecraft's frame; the
-        // attitude changes the CK of the reads holds until 1 ms before them (the TRIAD attitude)
-        var jumps = variant == "ImpulseThenTriad"
-            ? spacecraft.Frame.GetStateOrientationsToICRF().Select(x => x.Epoch).Where(x => x > window.StartDate && x < window.EndDate).ToArray()
-            : [];
-        var writeReads = PrepareReadKernels(variant, directory + "/Read", spacecraft, window);
-        var rows = Rows[variant];
-
-        // The kernels the library writes, loaded first: those of the reads, loaded after, take precedence
-        var libraryWindows = new Window[rows.Length][];
-        if (variant != "TLE")
+        string directory = $"Data/User/FieldOfViewDynamics515/{variant.Replace('@', '_')}";
+        // The kernels the library writes (#529, #534, #535 fixed): a read of the spacecraft no longer changes its attitude
+        // (#523), so they may be written after or before the searches. The TLE spacecraft is not propagated: its SPK holds the
+        // SGP4 states every 10 s, its CK the identity of ICRF, the attitude of a spacecraft without one
+        if (variant == "TLE")
         {
-            FieldOfViewKernels.WriteAndLoad(directory + "/Library", spacecraft, [], [], window);
-            for (int i = 0; i < rows.Length; i++)
+            var earthBody = new CelestialBody(PlanetsAndMoons.EARTH);
+            var states = new List<StateVector>();
+            var orientations = new List<StateOrientation>();
+            for (var epoch = window.StartDate.AddSeconds(-60.0); epoch <= window.EndDate.AddSeconds(60.0); epoch = epoch.AddSeconds(10.0))
             {
-                libraryWindows[i] = Gftfov(spacecraft, window, rows[i], targets);
+                var state = spacecraft.GetGeometricStateRelativeTo(epoch, earthBody);
+                states.Add(new StateVector(state.Position, state.Velocity, earthBody, epoch, Frames.Frame.ICRF));
+                orientations.Add(new StateOrientation(Quaternion.Zero, Vector3.Zero, epoch, Frames.Frame.ICRF));
             }
+
+            FieldOfViewKernels.WriteAndLoad(directory, spacecraft, [], [], window, file => SpiceAPI.Instance.WriteEphemeris(file, spacecraft.NaifId, states.ToArray()), orientations);
+        }
+        else
+        {
+            FieldOfViewKernels.WriteAndLoad(directory, spacecraft, [], [], window);
         }
 
-        writeReads();
-        Defects.TryGetValue(variant, out var defects);
+        var rows = Rows[variant.Split('@')[0] == "NadirScenario" ? "Nadir" : variant.Split('@')[0]];
         for (int i = 0; i < rows.Length; i++)
         {
             var row = rows[i];
@@ -289,42 +294,11 @@ public class FieldOfViewDynamicsTests
             var actual = instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, targets[row.Target], TargetFrame(row), row.Shape, row.Aberration, Step).ToArray();
             var expected = Gftfov(spacecraft, window, row, targets);
             _output.WriteLine($"  {variant} {row}: managed {FieldOfViewKernels.Format(actual)}; gftfov {FieldOfViewKernels.Format(expected)}");
-
-            // An edge of gftfov at an attitude change is the change itself
-            var reference = expected.Select(x => new Window(AtJump(x.StartDate, jumps), AtJump(x.EndDate, jumps))).ToArray();
             Assert.Equal(row.Windows, expected.Length);
             Assert.Contains(expected, x => x.StartDate > window.StartDate || x.EndDate < window.EndDate);
-            double worst = FieldOfViewKernels.WorstEdge(actual, reference);
-            _output.WriteLine($"MEASURE #515 dynamics {variant} {row}, {expected.Length} windows: |managed propagated - gftfov (1e-6 s)| {worst:E2} s");
+            double worst = FieldOfViewKernels.WorstEdge(actual, expected);
+            _output.WriteLine($"MEASURE #515 dynamics {variant} {row}, {expected.Length} windows, the kernels the library writes: |managed propagated - gftfov (1e-6 s)| {worst:E2} s");
             Assert.True(worst < row.Limit, $"{row}: {worst:E2} s");
-
-            if (libraryWindows[i] is not { } library)
-            {
-                continue;
-            }
-
-            string key = row.ToString();
-            if (defects != null && defects.TryGetValue(key, out var defect))
-            {
-                Assert.Equal(defect.GftfovWindows, library.Length);
-                Assert.Equal(defect.ManagedWindows, actual.Length);
-                if (library.Length == actual.Length)
-                {
-                    double off = FieldOfViewKernels.WorstEdge(actual, library);
-                    _output.WriteLine($"MEASURE #515 dynamics {variant} {row}, the kernels the library writes (a defect outside #515): |managed propagated - gftfov| {off:E3} s");
-                    Assert.InRange(off, defect.Worst / 2.0, defect.Worst * 2.0);
-                }
-                else
-                {
-                    _output.WriteLine($"MEASURE #515 dynamics {variant} {row}, the kernels the library writes (a defect outside #515): gftfov {library.Length} windows, managed {actual.Length}");
-                }
-            }
-            else
-            {
-                double off = FieldOfViewKernels.WorstEdge(actual, library);
-                _output.WriteLine($"MEASURE #515 dynamics {variant} {row}, the kernels the library writes: |managed propagated - gftfov (1e-6 s)| {off:E2} s");
-                Assert.True(off < row.Limit, $"{row}, the kernels the library writes: {off:E2} s");
-            }
         }
     }
 
@@ -335,63 +309,5 @@ public class FieldOfViewDynamicsTests
     {
         return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, spacecraft.NaifId, spacecraft.NaifId * 1000 - row.Number, targets[row.Target].NaifId,
             TargetFrame(row), row.Shape, row.Aberration, Step).ToArray();
-    }
-
-    /// <summary>An edge of gftfov within the 1 ms before an attitude change the CK holds is the change itself.</summary>
-    private static TimeSystem.Time AtJump(TimeSystem.Time edge, IReadOnlyList<TimeSystem.Time> jumps)
-    {
-        foreach (var jump in jumps)
-        {
-            double before = (jump - edge).TotalSeconds;
-            if (before >= 0.0 && before <= 1.0e-3)
-            {
-                return jump;
-            }
-        }
-
-        return edge;
-    }
-
-    /// <summary>
-    /// The writing of the kernels of what the library reads (the remarks of the class), from what it holds before any
-    /// search.
-    /// </summary>
-    private static Action PrepareReadKernels(string variant, string directory, Spacecraft spacecraft, Window window)
-    {
-        var stored = spacecraft.Frame.GetStateOrientationsToICRF().OrderBy(x => x.Epoch).ToArray();
-        Action<FileInfo> sampledEphemeris = null;
-        if (variant is "TLE" or "ECLIPJ2000")
-        {
-            // The states the library reads, every 10 s; and, for the TLE, which is not propagated, its frame's orientations at
-            // the same epochs (that of ICRF, without attitude)
-            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-            var states = new List<StateVector>();
-            for (var epoch = window.StartDate.AddSeconds(-60.0); epoch <= window.EndDate.AddSeconds(60.0); epoch = epoch.AddSeconds(10.0))
-            {
-                var state = spacecraft.GetGeometricStateRelativeTo(epoch, earth);
-                states.Add(new StateVector(state.Position, state.Velocity, earth, epoch, Frames.Frame.ICRF));
-                if (variant == "TLE")
-                {
-                    spacecraft.Frame.GetStateOrientationToICRF(epoch);
-                }
-            }
-
-            sampledEphemeris = file => SpiceAPI.Instance.WriteEphemeris(file, spacecraft.NaifId, states.ToArray());
-            stored = spacecraft.Frame.GetStateOrientationsToICRF().OrderBy(x => x.Epoch).ToArray();
-        }
-
-        var orientations = new List<StateOrientation>();
-        for (int i = 0; i < stored.Length; i++)
-        {
-            var frame = variant == "ECLIPJ2000" ? Frames.Frame.ICRF : stored[i].ReferenceFrame;
-            if (variant == "ImpulseThenTriad" && i > 0)
-            {
-                orientations.Add(new StateOrientation(stored[i - 1].Rotation.Conjugate(), stored[i - 1].AngularVelocity, stored[i].Epoch.AddSeconds(-1e-3), frame));
-            }
-
-            orientations.Add(new StateOrientation(stored[i].Rotation.Conjugate(), stored[i].AngularVelocity, stored[i].Epoch, frame));
-        }
-
-        return () => FieldOfViewKernels.WriteAndLoad(directory, spacecraft, [], [], window, sampledEphemeris, orientations);
     }
 }
