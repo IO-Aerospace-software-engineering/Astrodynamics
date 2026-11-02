@@ -44,14 +44,15 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// pointing, the minimal rotation taking the boresight in the spacecraft frame (<c>pxform(instrument, SC)</c>) to the Moon;
 /// the impulse, the front along the delta-V rotated to ICRF by <c>pxform</c>. The state they take: the solution of the
 /// propagation, rotated from its frame to ICRF by <c>pxform</c> (the SPK's Lagrange interpolation across an impulse is
-/// off by up to 15 m over the steps around it, item 3 of §8 of the design, out of scope), never the SPK the library wrote.
-/// In SSB mode the solution is relative to the Sun: less the Earth's state of <c>spkezr</c> on the planetary ephemeris.
+/// off by up to 15 m over the steps around it, item 3 of §8 of the design, #540, out of scope), never the SPK the library
+/// wrote. In SSB mode the solution is relative to the Sun: less the Earth's state of <c>spkezr</c> on the planetary
+/// ephemeris.
 /// The Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: that of a twin propagated by
 /// <c>Spacecraft.Propagate</c> with the scenario's bodies, whose stored states equal the scenario's to the bit. The
 /// directions of the Sun and the Moon: <c>spkezr</c> from the Earth, geometric, as the attitudes read them
 /// (<c>Aberration.None</c>; for the instrument pointing, whose light time is not applied to a celestial target, a pin of a
-/// defect outside #537 with its own issue, <see cref="PropagatedCase.LawAt"/>). The angular velocity of a law: the rotation
-/// of its closed form over 0.1 s.
+/// defect outside #537 with its own issue, #549, <see cref="PropagatedCase.LawAt"/>). The angular velocity of a law: the
+/// rotation of its closed form over 0.1 s.
 /// </para>
 /// <para>
 /// <b>The case</b> of the prototype probe: an inclined LEO (a = 6 778 137 m, e = 0.001, i = 51.6°) from 2024-03-01 12:00
@@ -179,7 +180,7 @@ public class AttitudeRecordTests
     internal const double SlerpResidualAtSixtySeconds = 4.2e-3;
 
     /// <summary>The tolerance of RK7(8) in SSB mode: about the Sun, 1e-12 does not finish in minutes (item 7 of §8 of the
-    /// design); 1e-9 takes seconds.</summary>
+    /// design, #544); 1e-9 takes seconds.</summary>
     internal const double SsbRk78Tolerance = 1e-9;
 
     private const double Length = 3600.0;
@@ -360,7 +361,7 @@ public class AttitudeRecordTests
         var m = new Measures { Entries = record.Length, Reads = epochs.Count, TwinStates = run.TwinStates };
         var instrumentFrames = sc.Instruments.Select(x => new Frame(sc.Name.ToUpper() + "_" + x.Name.ToUpper())).ToArray();
         // The positions do not depend on the attitude: off the impulses, whose output steps the library's Lagrange interpolation
-        // and the SPK's both cross (item 3 of §8 of the design, out of scope)
+        // and the SPK's both cross (item 3 of §8 of the design, #540, out of scope)
         bool positions = !run.Law.Contains("Impulse") && run.Law != "Custom";
 
         foreach (var t in epochs)
@@ -709,8 +710,8 @@ public class AttitudeRecordTests
     /// <c>TLEPropagator</c> (public): its SPK is written in J2000 (on the base, SPICE(INVALIDREFFRAME), TEME), and holds the
     /// states <c>Spacecraft.AddPropagatedStates</c> stored, the SGP4 states converted from TEME to ICRF by the library,
     /// read by <c>spkezr</c> at its records. The expected states take the same conversion: a check of the frame and of the
-    /// content of the SPK, not of the conversion, which the TLE tests check. Its CK is left to its own issue (item 10 of §8
-    /// of the design: its identity attitudes go to a dictionary nothing reads).
+    /// content of the SPK, not of the conversion, which the TLE tests check. Its CK is left to its own issue, #546 (item
+    /// 10 of §8 of the design: its identity attitudes go to a dictionary nothing reads).
     /// </summary>
     [Fact]
     public void TlePropagator_WritesItsSpkInJ2000()
@@ -1159,7 +1160,8 @@ public class AttitudeRecordTests
 
             string name = $"AR{-naifId}";
             var sc = Build(naifId, name);
-            // RK7(8) in SSB mode: about the Sun, a tolerance of 1e-12 does not finish in minutes (item 7 of §8 of the design)
+            // RK7(8) in SSB mode: about the Sun, a tolerance of 1e-12 does not finish in minutes (item 7 of §8
+            // of the design, #544)
             double tolerance = ssb ? SsbRk78Tolerance : 1e-12;
 
             hooks.Before?.Invoke(sc);
@@ -1345,12 +1347,12 @@ public class AttitudeRecordTests
         /// <summary>The closed form of the attitude at <paramref name="t"/> (a map of vectors from the spacecraft frame to
         /// ICRF) and whether it is a continuous law; null where the attitude has no closed form here: after the TRIAD that
         /// follows a nadir attitude, whose continuous attitude resumes at the next output (the attitude timeline, item 2 of
-        /// §8 of the design, its own issue).</summary>
+        /// §8 of the design, its own issue, #539).</summary>
         /// <remarks>Two expectations pin the behaviour of the library where it departs from its documentation, each a
         /// defect outside #537 with its own issue, listed in the description of #537: the instrument pointing at the
         /// Moon takes its geometric direction, although the maneuver asks for <c>Aberration.LT</c> (its light time is not
-        /// applied to a celestial target, 4.4e-5 rad from this LEO); the TRIAD after an impulse is held inertially from the
-        /// change (item 2 of §8 of the design), not recomputed.</remarks>
+        /// applied to a celestial target, 4.4e-5 rad from this LEO, #549); the TRIAD after an impulse is held inertially from
+        /// the change (item 2 of §8 of the design, #539), not recomputed.</remarks>
         internal (Func<Vector3, Vector3> Law, bool Continuous) LawAt(Time t)
         {
             switch (Law)
@@ -1367,7 +1369,7 @@ public class AttitudeRecordTests
                 case "ImpulseAlone":
                     return t < Change ? (v => v, false) : (MinimalRotation(Spacecraft.Front, ImpulseInIcrf()), false);
                 case "ImpulseTriad":
-                    // Pin: the TRIAD held from the change (item 2 of §8 of the design)
+                    // Pin: the TRIAD held from the change (item 2 of §8 of the design, #539)
                     return t < Change ? (v => v, false) : (TriadAtChange(), false);
                 case "NadirImpulseTriad":
                     return t < Change ? (ContinuousLaw(t), true) : (null, false);
@@ -1394,7 +1396,7 @@ public class AttitudeRecordTests
                 }
                 case "InstrumentPointing":
                 {
-                    // Pin: the geometric direction of the Moon, the light time not applied (above)
+                    // Pin: the geometric direction of the Moon, the light time not applied (#549, above)
                     var (b1, _) = InstrumentAxesInSpacecraft();
                     return MinimalRotation(b1, FromEarth(Moon, t) - StateAt(t).Position);
                 }

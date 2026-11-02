@@ -60,7 +60,7 @@ public class InstrumentPointingAttitudeTests
         // The closed form: the minimal rotation taking the boresight, in the spacecraft frame by the Euler angles of the frame
         // kernel (Rx(-x) Ry(-y) Rz(-z), Frames Required Reading, written in the test, #524), to the direction of the Moon
         // less the spacecraft's position, compared as a rotation, the roll included. The direction is the geometric one of
-        // spkezr: a pin of a defect outside #537, listed in its description with its own issue. The maneuver asks for
+        // spkezr: a pin of a defect outside #537, listed in its description with its own issue, #549. The maneuver asks for
         // Aberration.LT, but the state is made relative to the Moon, the centre of the maneuver, so the light time is not
         // applied (the Moon's LT-corrected direction from a LEO is 4.4e-5 rad from the geometric one). Before, the attitude
         // was the inverse rotation: the boresight 2 alpha from the Moon, alpha its angle from the boresight (137.5 deg at

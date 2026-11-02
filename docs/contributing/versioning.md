@@ -287,8 +287,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   test asserted a snapshot 95.8° from the Moon. It now takes the boresight to the target: 4.4e-16 rad from the minimal
   rotation of the frame kernel's boresight onto the Moon's direction from `spkezr`, for five orientations. The light
   time it requests is not applied to a celestial target, whose direction stays geometric (4.3e-5 to 4.5e-5 rad from the
-  light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue
-  ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
+  light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue,
+  [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
 
 **Changed**
 
