@@ -79,10 +79,11 @@ public class SpacecraftFrame : Frame
             int index = Find(date);
             if (index >= 0)
             {
-                return _record[index].Orientation;
+                var entry = _record[index].Orientation;
+                return WithRate(entry.Rotation, NodeRate(index), date);
             }
 
-            // The entry before the date, ~index - 1, and the one after, ~index
+            // The entry before the date, ~index - 1, and the one after, ~index; outside the record, the first or the last held
             int next = ~index;
             if (next == 0)
             {
@@ -96,18 +97,50 @@ public class SpacecraftFrame : Frame
 
             var before = _record[next - 1];
             var after = _record[next];
-            if (!Interpolates(before, after))
+            double fromBefore = (date - before.Orientation.Epoch).TotalSeconds;
+            double span = (after.Orientation.Epoch - before.Orientation.Epoch).TotalSeconds;
+            if (Interpolates(before, after) || before.Orientation.Rotation == after.Orientation.Rotation)
             {
-                return At(before.Orientation, date);
+                double fraction = fromBefore / span;
+                var (rotation, _) = Slerp(before.Orientation.Rotation, after.Orientation.Rotation, fraction, span);
+                return WithRate(rotation, NodeRate(next - 1) * (1.0 - fraction) + NodeRate(next) * fraction, date);
             }
 
-            double span = (after.Orientation.Epoch - before.Orientation.Epoch).TotalSeconds;
-            double fraction = (date - before.Orientation.Epoch).TotalSeconds / span;
-            var (rotation, rate) = Slerp(before.Orientation.Rotation, after.Orientation.Rotation, fraction, span);
-            // Rate: the spacecraft relative to ICRF in ICRF; the convention of the frames is ICRF relative to the spacecraft,
-            // in the spacecraft frame
-            return new StateOrientation(rotation, rate.Inverse().Rotate(rotation.Conjugate()), date, ICRF);
+            // A discrete change: the earlier entry held; the rate of the CK, from the rate of the earlier record to zero at
+            // the record DiscreteChangeLead before the change
+            double hold = span - DiscreteChangeLead;
+            var rate = fromBefore < hold ? NodeRate(next - 1) * (1.0 - fromBefore / hold) : Vector3.Zero;
+            return WithRate(before.Orientation.Rotation, rate, date);
         }
+    }
+
+    // A rotation to ICRF with the rate of the spacecraft relative to ICRF in ICRF; the convention of the frames is that of
+    // ICRF relative to the spacecraft, in the spacecraft frame
+    private static StateOrientation WithRate(in Quaternion rotation, in Vector3 rate, in Time date) =>
+        new(rotation, rate.Inverse().Rotate(rotation.Conjugate()), date, ICRF);
+
+    // The rate of the interpolation over the interval (i - 1, i): zero for a hold or a discrete change
+    private Vector3 IntervalRate(int i)
+    {
+        if (i <= 0 || i >= _record.Count || !Interpolates(_record[i - 1], _record[i]))
+        {
+            return Vector3.Zero;
+        }
+
+        double span = (_record[i].Orientation.Epoch - _record[i - 1].Orientation.Epoch).TotalSeconds;
+        return Slerp(_record[i - 1].Orientation.Rotation, _record[i].Orientation.Rotation, 1.0, span).Rate;
+    }
+
+    // The angular velocity written with entry i (that of ckw03_c, the spacecraft relative to J2000 in J2000): the mean of the
+    // rates of the interpolated intervals on either side, zero when neither is
+    private Vector3 NodeRate(int i)
+    {
+        bool hasBefore = i > 0 && Interpolates(_record[i - 1], _record[i]);
+        bool hasAfter = i + 1 < _record.Count && Interpolates(_record[i], _record[i + 1]);
+        if (hasBefore && hasAfter) return (IntervalRate(i) + IntervalRate(i + 1)) * 0.5;
+        if (hasBefore) return IntervalRate(i);
+        if (hasAfter) return IntervalRate(i + 1);
+        return Vector3.Zero;
     }
 
     // A held entry at another epoch: the same rotation, no angular velocity
@@ -282,36 +315,25 @@ public class SpacecraftFrame : Frame
             if (_record.Count == 0)
                 throw new InvalidOperationException($"Spacecraft {Spacecraft.Name} has no attitude to write: it has not been propagated.");
 
-            // The rate of each interval (i - 1, i), zero for a hold
-            var rates = new Vector3[_record.Count];
-            for (int i = 1; i < _record.Count; i++)
-            {
-                double span = (_record[i].Orientation.Epoch - _record[i - 1].Orientation.Epoch).TotalSeconds;
-                if (span < 2.0 * DiscreteChangeLead)
-                    throw new InvalidOperationException(
-                        $"The attitudes of {Spacecraft.Name} at {_record[i - 1].Orientation.Epoch} and {_record[i].Orientation.Epoch} are {span:E3} s apart: a CK needs them at least {2.0 * DiscreteChangeLead:E1} s apart.");
-                rates[i] = Interpolates(_record[i - 1], _record[i])
-                    ? Slerp(_record[i - 1].Orientation.Rotation, _record[i].Orientation.Rotation, 1.0, span).Rate
-                    : Vector3.Zero;
-            }
-
             var records = new List<StateOrientation>(_record.Count + 8);
             for (int i = 0; i < _record.Count; i++)
             {
                 var entry = _record[i].Orientation;
-                bool discrete = i > 0 && !Interpolates(_record[i - 1], _record[i]);
-                if (discrete && _record[i - 1].Orientation.Rotation != entry.Rotation)
+                if (i > 0)
+                {
+                    double span = (entry.Epoch - _record[i - 1].Orientation.Epoch).TotalSeconds;
+                    if (span < 2.0 * DiscreteChangeLead)
+                        throw new InvalidOperationException(
+                            $"The attitudes of {Spacecraft.Name} at {_record[i - 1].Orientation.Epoch} and {entry.Epoch} are {span:E3} s apart: a CK needs them at least {2.0 * DiscreteChangeLead:E1} s apart.");
+                }
+
+                if (i > 0 && !Interpolates(_record[i - 1], _record[i]) && _record[i - 1].Orientation.Rotation != entry.Rotation)
                 {
                     var held = _record[i - 1].Orientation;
                     records.Add(new StateOrientation(held.Rotation.Conjugate(), Vector3.Zero, entry.Epoch.AddSeconds(-DiscreteChangeLead), ICRF));
                 }
 
-                var before = i > 0 ? rates[i] : Vector3.Zero;
-                var after = i + 1 < _record.Count ? rates[i + 1] : Vector3.Zero;
-                bool hasBefore = i > 0 && !discrete && Interpolates(_record[i - 1], _record[i]);
-                bool hasAfter = i + 1 < _record.Count && Interpolates(_record[i], _record[i + 1]);
-                var rate = hasBefore && hasAfter ? (before + after) * 0.5 : hasBefore ? before : hasAfter ? after : Vector3.Zero;
-                records.Add(new StateOrientation(entry.Rotation.Conjugate(), rate, entry.Epoch, ICRF));
+                records.Add(new StateOrientation(entry.Rotation.Conjugate(), NodeRate(i), entry.Epoch, ICRF));
             }
 
             return records.ToArray();
