@@ -62,17 +62,19 @@ public sealed class FieldOfViewReferenceKernels
 /// </remarks>
 public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKernels>
 {
-    // PROVISIONAL limits, twice the worst value over the rows on Linux x64 (2026-11-01), rounded up at the second digit,
-    // until the three platforms of the CI have printed their MEASURE lines (#515, choice 9).
-    // Geometric (NONE, and a star, read as a direction without light time): 8.34e-7 s against gftfov and gfrfov at
-    // 1e-9 s (-470101013, a rectangle, DSS-13), the managed search at 1 µs (its tolerance) and the 119 ns ulp of an ET of
-    // 8.3e8 s.
-    // With the light time: 2.15e-6 s (-470101002, the Earth as an ellipsoid, LT). The trace of choice 10: the light-time
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02), rounded up at the second
+    // significant digit (#515, choice 9), L / W / M below: every row the same on the three platforms; the rows of the
+    // Validation theory, Linux only, under the worst rows of the uncategorized one.
+    // Geometric (NONE, and a star, read as a direction without light time): 8.34e-7 / 8.34e-7 / 8.34e-7 s against gftfov
+    // and gfrfov at 1e-9 s (-470101013, a rectangle, DSS-13), the managed search at 1 µs (its tolerance) and the 119 ns
+    // ulp of an ET of 8.3e8 s.
+    // With the light time: 2.15e-6 / 2.15e-6 / 2.15e-6 s (-470101002, the Earth as an ellipsoid, LT). The trace of choice 10: the light-time
     // corrected epoch is a double ET in gftfov (et - lt) and in the library (its ticks converted for SPICE), each rounded
     // up to half its ulp, 6e-8 s, which moves the Earth by up to 1.8 mm from the barycenter; the two positions differ by
     // 0.25 to 1.5 mm at the edges of these rows, and the zero of the library's margin computed on gftfov's positions is
     // within 1.5e-7 s of gftfov's edge, its axes equal to SPICE's.
-    // The public path, gftfov at 1e-6 s in the process: 9.54e-7 s against the reference (-470101010 3 POINT LT+S)
+    // The public path, gftfov at 1e-6 s in the process: 9.54e-7 / 9.54e-7 / 9.54e-7 s against the reference
+    // (-470101010 3 POINT LT+S)
     private const double ReferenceLimit = 1.7e-6;
     private const double LightTimeReferenceLimit = 4.3e-6;
     private const double PublicPathLimit = 2.0e-6;

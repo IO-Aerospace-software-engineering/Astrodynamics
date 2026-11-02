@@ -19,8 +19,8 @@ namespace IO.Astrodynamics.Tests.Body
         // The windows of the library against gftfov on the kernels of the same propagation, s: the managed search converges
         // to 1 µs and gftfov to 1e-6 s, and their apparent Earths differ by the rounding of the light-time corrected epoch to
         // a double ET, up to half its 119 ns ulp in each (1.8 mm of the Earth's barycentric motion; #515, choice 10).
-        // PROVISIONAL, twice the worst of this test's edges on Linux x64 (2026-11-01: POINT 4e-7, 4e-7 and 6e-7 s, ELLIPSOID
-        // 5e-7 and 4e-7 s), until the three platforms of the CI have printed their MEASURE lines. Before #515 it was 1 s by
+        // Twice the worst of this test's edges over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02):
+        // 6e-7 / 6e-7 / 6e-7 s (POINT 4e-7, 4e-7 and 6e-7 s, ELLIPSOID 5e-7 and 4e-7 s on each). Before #515 it was 1 s by
         // construction, the bisection of GeometryFinder, the first start was not compared, and the ellipsoid was a point
         // (up to 1 080 s)
         private const double FieldOfViewTolerance = 1.2e-6;

@@ -231,9 +231,10 @@ not call it, so an override does not change the search.
 
 ##### Accuracy
 
-Against CSPICE N0067, measured on Linux x64 (2026-11-01). The limits of the tests are for now twice these figures,
-provisional: they become twice the worst over Linux, Windows and macOS arm64 once the CI has measured the three
-platforms.
+Against CSPICE N0067, the worst over Linux x64, Windows x64 and macOS arm64 (CI run 41365060160, 2026-11-02): every
+row the same on the three platforms. The grids of the kernel-backed observers and of the propagated spacecraft run on
+Linux only (the `Validation` category), their worst rows on the three. The limit of each test is twice the worst of the
+rows it bounds, rounded up at the second significant digit.
 
 | Scenario | Reference | Worst edge |
 |----------|-----------|-----------:|

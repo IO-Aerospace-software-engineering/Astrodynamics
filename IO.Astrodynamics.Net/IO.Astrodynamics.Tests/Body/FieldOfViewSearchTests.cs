@@ -302,15 +302,17 @@ public sealed class PropagatedFieldOfViewCase
 /// </remarks>
 public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 {
-    // PROVISIONAL limits, twice the worst value over the rows on Linux x64 (2026-11-01), rounded up at the second digit,
-    // until the three platforms of the CI have printed their MEASURE lines (#515, choice 9 (b)): gftfov at 1e-6 s in the
-    // process against the managed search at 1 µs, off the grazing and slow edges: 1.3e-6 s on the 221 rows, propagated,
-    // kernel-backed and between the two public paths alike (789 ELLIPSOID XCN+S); the times are ticks, 100 ns
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02), rounded up at the second
+    // significant digit (#515, choice 9 (b)): gftfov at 1e-6 s in the process against the managed search at 1 µs, off the
+    // grazing and slow edges: 1.3e-6 / 1.3e-6 / 1.3e-6 s, propagated, kernel-backed and between the two public paths alike
+    // (789 ELLIPSOID XCN+S), on the 221 rows on Linux (the Validation grid included) and the 35 uncategorized ones on
+    // Windows and macOS, every row the same on the three; the times are ticks, 100 ns
     private const double PropagatedLimit = 2.6e-6;
     private const double KernelLimit = 2.6e-6;
     private const double PublicPathsLimit = 2.6e-6;
 
-    // PROVISIONAL, a kernel-backed observer with a propagated spacecraft target: 5e-7 s on its 9 rows (Linux x64, 2026-11-01)
+    // A kernel-backed observer with a propagated spacecraft target, its 9 rows: twice the worst over Linux, Windows and
+    // macOS arm64 (CI run 41365060160, 2026-11-02): 5e-7 / 5e-7 / 5e-7 s
     private const double KernelObserverLimit = 1.0e-6;
 
     // The grazing fields 801 and 802 and the slow edges of 811 POINT LT+S (choice 10): the slope of their margin is
@@ -318,7 +320,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     // Earth of the library and that of gftfov round their light-time corrected epochs to a double ET (half its 119 ns ulp,
     // the Earth's barycentric motion) move the edge by 1e-6 to 1e-3 s; traced in the log of #515, the library's geometry on
     // gftfov's positions within 2.5e-6 s of gftfov's edges, its axes equal to SPICE's. Each row has its own limits, twice
-    // its measured edge, propagated and kernel-backed (PROVISIONAL, Linux x64, 2026-11-01)
+    // its worst edge over Linux, Windows and macOS arm64, propagated and kernel-backed (CI run 41365060160, 2026-11-02,
+    // the same edges on the three)
 
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
     private static readonly TimeSpan ShortStep = TimeSpan.FromSeconds(1.0);
@@ -489,9 +492,9 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     /// <summary>
     /// The grazing fields (801 grazes the Earth's limb, 802's side grazes it) against gftfov at a step of 1 s, which their
     /// events of 10.8 s and gaps of 24.8 s and 3.2 s require, and the slow edges of 811 POINT LT+S (a gap that exists by
-    /// 2 % of the field): their own limits (choice 10), twice the measured edge of each row, propagated and kernel-backed
-    /// (PROVISIONAL, Linux x64, 2026-11-01), those at the level of the other rows under their limits; their window counts
-    /// exact. Measured, propagated / kernel-backed: 801 ELLIPSOID LT 2.17e-4 / 2.52e-4 s; 802 ELLIPSOID NONE 3e-7 /
+    /// 2 % of the field): their own limits (choice 10), twice the worst edge of each row over Linux, Windows and macOS
+    /// arm64, propagated and kernel-backed (CI run 41365060160, 2026-11-02), those at the level of the other rows under
+    /// their limits; their window counts exact. Measured, propagated / kernel-backed, the same on the three: 801 ELLIPSOID LT 2.17e-4 / 2.52e-4 s; 802 ELLIPSOID NONE 3e-7 /
     /// 4e-7 s, LT 2.2e-6 / 3.0e-6 s, LT+S 4.16e-5 / 1.75e-4 s; 811 POINT LT+S 1.6e-6 / 4.4e-6 s; the other rows have no
     /// window. The two public paths differ as the propagated spacecraft does from gftfov, which the SPICE path is.
     /// </summary>

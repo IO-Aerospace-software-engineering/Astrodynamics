@@ -30,9 +30,9 @@ namespace IO.Astrodynamics.Tests.Body;
 /// Two sets of kernels, for each variant. <b>The kernels the library writes</b> (<c>Spacecraft.WriteEphemeris</c> and
 /// <c>WriteOrientation</c>), what a user gives CSPICE or another tool: for RK7(8) and SSB mode, whose attitude is the
 /// identity of ICRF, the two public paths agree within <see cref="Limit"/>. For the TRIAD attitude, the nadir attitude and
-/// the ECLIPJ2000 initial state they do not, because of three defects outside #515, each measured (2026-11-01, Linux) and
-/// pinned below with its measured disagreement (PROVISIONAL, until the defects are fixed in their own issues, #529, #534
-/// and #535 in the order below):
+/// the ECLIPJ2000 initial state they do not, because of three defects outside #515, each measured (2026-11-01, Linux; the
+/// same on Linux, Windows and macOS arm64, CI run 41365060160, 2026-11-02) and pinned below with its measured
+/// disagreement until the defects are fixed in their own issues, #529, #534 and #535 in the order below:
 /// </para>
 /// <list type="bullet">
 /// <item>The CK the library writes holds the inverse of the library's attitude: <c>Spacecraft.WriteOrientation</c> passes
@@ -63,10 +63,10 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </remarks>
 public class FieldOfViewDynamicsTests
 {
-    // PROVISIONAL, twice the worst value over the rows below, off the nadir attitude, on Linux x64 (2026-11-01), until the
-    // three platforms of the CI have printed their MEASURE lines: 1.2e-6 s (SSB 789 EARTH Ellipsoid LT) on the kernels of
-    // what the library reads, and on the kernels the library writes for RK7(8) and SSB mode; gftfov at 1e-6 s, the managed
-    // search at 1 µs, the times in ticks of 100 ns
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02) over the rows below, off the
+    // nadir attitude: 1.2e-6 / 1.2e-6 / 1.2e-6 s (SSB 789 EARTH Ellipsoid LT), every row the same on the three, on the
+    // kernels of what the library reads, and on the kernels the library writes for RK7(8) and SSB mode; gftfov at 1e-6 s,
+    // the managed search at 1 µs, the times in ticks of 100 ns
     private const double Limit = 2.4e-6;
 
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
@@ -202,9 +202,10 @@ public class FieldOfViewDynamicsTests
             new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 2),
             new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1)
         ],
-        // PROVISIONAL, the nadir attitude (#529): the library holds each orientation of its 1 s output steps
+        // The nadir attitude (#529): the library holds each orientation of its 1 s output steps
         // with a zero angular velocity, where the CK interpolates between them, so an edge moves by up to the output step;
-        // twice the measured edge of each row (Linux, 2026-11-01: 0.885 s, 0.335 s, 0.550 s), until the attitude model is
+        // twice the worst edge of each row over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02:
+        // 0.885 / 0.885 / 0.885 s, 0.335 / 0.335 / 0.335 s, 0.550 / 0.550 / 0.550 s), until the attitude model is
         // decided in its own issue, #529. The Earth stays in place in a nadir frame: no edge
         ["Nadir"] =
         [
@@ -219,8 +220,10 @@ public class FieldOfViewDynamicsTests
         ]
     };
 
-    // PROVISIONAL, the disagreements on the kernels the library writes, by row, measured on Linux x64 (2026-11-01); a
-    // row not listed agrees within its limit. The worst edge is asserted within a factor of two of the measurement
+    // The disagreements on the kernels the library writes, by row, pinned until the defects are fixed (#529, #534, #535):
+    // measured on Linux x64 (2026-11-01), the window counts and the worst edges the same on Linux, Windows and macOS arm64
+    // to the printed digit (CI run 41365060160, 2026-11-02; worst 971.8 s, ImpulseThenTriad 792 DSS-13 Point LT); a row
+    // not listed agrees within its limit. The worst edge is asserted within a factor of two of the measurement
     private static readonly Dictionary<string, Dictionary<string, Defect>> Defects = new()
     {
         // The CK holds the inverse attitude and interpolates across the TRIAD change
