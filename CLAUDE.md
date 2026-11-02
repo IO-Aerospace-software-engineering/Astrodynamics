@@ -145,7 +145,8 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - `GeopotentialGravitationalField`: **NOT thread-safe** — create one instance per thread/propagator
 - `Nrlmsise00Model`: thread-safe, concurrent use OK
 - Force partials (internal, `ForceBase.AccumulateStatePartials`): a force keeps a work `StateVector` for its finite differences, so the partials path of one force instance is **not reentrant**, unlike `Apply`. Forces belong to one integrator, as the propagator builds them
-- Managed occultation and field-of-view searches: no state, kernels read under the shared lock; searches on separate propagations may run concurrently. A spacecraft frame stores every orientation it is asked for (`SpacecraftFrame`, #523), so a search's attitude can depend, in its last bits, on earlier reads of the same spacecraft
+- Managed occultation and field-of-view searches: no state, kernels read under the shared lock; searches on separate propagations may run concurrently
+- Attitude record of a managed spacecraft (`SpacecraftFrame`): filled by its propagation only (and `AddStateOrientationToICRF`), read under a lock of the record; a read stores nothing (#523), so reads from any thread, before, during or after the propagation, leave the attitude and its CK unchanged. A kernel-backed spacecraft frame reads SPICE at each call, under the shared lock, and caches nothing
 - Frame orientation cache: active only on the thread that propagates or evaluates a propagation (`Frame.UseOrientationCache`), never set on the shared `Frame`; propagations and RK7(8) evaluations sharing a central body without a geopotential may run concurrently
 - RK7(8) evaluations after a propagation (`PropagationSolution.InterpolateAt`, `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector`, and the internal `EvaluateVariational`, `EvaluateCovariance` and `EvaluateExtendedCovariance`): serialized by a lock per solution; they evaluate the forces, so they must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential
 - Conjunction analysis with a propagated covariance (`ConjunctionAssessment.Analyze`, `AnalyzeAll`) and `EvaluateAvoidance`: the replay of the variational equations, the propagations of the non-linearity index and of the avoidance options (with or without a propagated covariance, RK7(8) or Velocity-Verlet) use the forces of the participant's propagation under the lock of its solution or of the force model its spacecraft keeps, with the same rule
@@ -174,6 +175,14 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - `IAttitudeTarget` mixes orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial bodies (`CelestialAttitudeTarget`); `CelestialAttitudeTarget` defaults to `Aberration.None` (geometric), configurable to `Aberration.LT` for photon-based scenarios
 - Factory methods: `TriadAttitude.CreateLVLH()`, `TriadAttitude.CreateProgradeWithSunTracking()`
 - Configurable body axes per spacecraft instance (`BodyFront`, `BodyRight`, `BodyUp`); must be orthogonal and right-handed
+- `Instrument.Orientation` is the Euler angles (x, y, z) about the axes 1, 2, 3 of the frame kernel: `pxform(instrument, spacecraft) = eul2m(x, y, z, 1, 2, 3)` (Frames Required Reading, "Defining a TK Frame Using Euler Angles"), `Instrument.RotationToSpacecraft`, used by the managed field of view, the spacecraft-frame getters, `TriadAttitude` and `InstrumentPointingToAttitude` (#524)
+
+### Spacecraft Attitude and Kernels
+
+- A propagated spacecraft stores its states and its attitude in ICRF whatever the inertial frame of the initial state; the integration and `PropagationSolution` stay in that frame (#529, #535). Attitudes are computed on the ICRF state
+- The attitude record (`SpacecraftFrame`) holds spacecraft → ICRF, labelled with the spacecraft frame (its source); the exact SLERP between samples of the same law, the earlier attitude held up to a discrete change, the law sampled 1 µs (`DiscreteChangeLead`) before a change that follows it, entries within 2 µs one epoch (#523, #529, #534)
+- `WriteOrientation` writes the C-matrix (J2000 → spacecraft, the conjugate of the record) in J2000 with the CK's rate, the earlier attitude repeated 1 µs before each discrete change; `WriteEphemeris` writes J2000. `SpiceAPI.ReadOrientation`/`WriteOrientation` stay the raw C-matrix pair of `ckgpav_c`/`ckw03_c`
+- Tests compare rotation angles, never quaternion components (the sign of a quaternion is free), against `pxform`/`sxform`/`spkezr` on the kernels the library writes and the closed forms of the laws; see `docs/reference/spacecraft.md#attitude-and-kernels`
 
 ## Validation and Thresholds
 

@@ -462,7 +462,7 @@ public class TriadAttitudeTests
         Assert.True(triadAlignment > 0.9999, $"TRIAD should point at Moon (alignment: {triadAlignment})");
 
         // Compute what a simple single-vector solution would give (using Vector3.To directly)
-        // This is similar to what InstrumentPointingToAttitude computes
+        // InstrumentPointingToAttitude computes the conjugate of this, boresight.To(targetDirection)
         var singleVectorQ = targetDirection.To(boresight);
 
         // Verify they produce the same primary pointing but potentially different roll

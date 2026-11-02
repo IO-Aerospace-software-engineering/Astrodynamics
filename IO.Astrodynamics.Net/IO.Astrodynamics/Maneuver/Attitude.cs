@@ -38,8 +38,14 @@ public abstract class Attitude : Maneuver
             Engine.FuelTank.Spacecraft.SetStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
         }
 
+        // Computed in ICRF, whatever the frame of the state (#529, #535): the rotation from the spacecraft frame to ICRF
         var localSv = stateVector.RelativeTo(ManeuverCenter, Aberration.None).ToStateVector();
-        StateOrientation = new StateOrientation(ComputeOrientation(localSv), Vector3.Zero, stateVector.Epoch, stateVector.Frame);
+        if (localSv.Frame != Frames.Frame.ICRF)
+        {
+            localSv = localSv.ToFrame(Frames.Frame.ICRF).ToStateVector();
+        }
+
+        StateOrientation = new StateOrientation(ComputeOrientation(localSv), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF);
         
         //Return state vector and computed state orientation
         return (stateVector, StateOrientation);

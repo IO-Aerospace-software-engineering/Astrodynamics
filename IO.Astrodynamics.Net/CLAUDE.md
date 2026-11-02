@@ -537,7 +537,7 @@ PropagatorBase (abstract)
 1. Build event detectors from maneuver chain (leading attitudes execute immediately)
 2. Segment loop: `Integrator.IntegrateSegment()` advances with event detection
 3. On event: `IEventDetector.HandleEvent()` → execute maneuver, reinitialize integrator
-4. Output: interpolate solution at fixed `DeltaT` epochs, recompute continuous attitudes
+4. Output: interpolate solution at fixed `DeltaT` epochs, sample the leading (continuous) attitude on the ICRF state at each, and once more 1 µs before each discrete change that follows it; the spacecraft stores its states and attitude record in ICRF (#523, #529, #534, #535; `docs/reference/spacecraft.md#attitude-and-kernels`)
 
 **Integrator Interface**
 ```csharp

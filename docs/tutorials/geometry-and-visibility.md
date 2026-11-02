@@ -104,26 +104,40 @@ the windows of CSPICE's `gftfov`, to 1 µs.
   spacecraft and the target both come from kernels, asks the step to be
   shorter than every window and gap.
 - **Accuracy.** Within a few microseconds of `gftfov`, except where the field
-  grazes the limb of the target, for a spacecraft whose kernels describe what
-  the library reads. A spacecraft with a nadir attitude differs by up to its
-  output step, and the kernels the library writes for an attitude other than
-  the identity, or for an initial state in ECLIPJ2000, do not describe what it
-  reads: `gftfov` on them differs by up to hundreds of seconds. See
+  grazes the limb of the target. A propagated spacecraft's kernels
+  (`WriteEphemeris`, `WriteOrientation`) describe what the library reads,
+  whatever its attitude and the frame of its initial state, so `gftfov` on
+  them finds the same windows. See
   [Field-of-view search](../reference/spacecraft.md#field-of-view-search).
 
 ### Setting up an instrument
 
-Instruments are attached to a spacecraft at construction. Each instrument has a
-name, boresight direction, field-of-view shape, and angular half-width:
+Instruments are added to a spacecraft by `AddCircularInstrument`,
+`AddEllipticalInstrument` or `AddRectangularInstrument`. Each has a NAIF
+identifier, a name, a model, its half-angles, and three vectors: the boresight
+and the reference vector in the instrument frame, and the orientation of the
+instrument frame in the spacecraft frame:
 
 ```csharp
-var instrument = new Instrument(
-    naifId: -1001,
+spacecraft.AddCircularInstrument(
+    naifId: -1001001,
     name: "Camera",
-    shape: InstrumentShape.Circular,
-    orientation: new Vector3(0, 0, 1),   // boresight along +Z
-    fovHalfAngle: 5.0 * Constants.Deg2Rad);
+    model: "Imager",
+    fieldOfView: 5.0 * Constants.Deg2Rad,       // half-angle
+    boresight: Vector3.VectorZ,                 // +Z of the instrument frame
+    refVector: Vector3.VectorX,
+    orientation: new Vector3(0.0, Constants.PI2, 0.0));
 ```
+
+The orientation is not a direction: it is the Euler angles (x, y, z), in
+radians, of the frame kernel the library writes for the instrument, as NAIF's
+Frames Required Reading defines them in "Defining a TK Frame Using Euler Angles"
+(https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html): `pxform(instrument, spacecraft)` =
+`eul2m(x, y, z, 1, 2, 3)`. Here a rotation of the frame by π/2 about Y puts
+the boresight, +Z of the instrument, along −X of the spacecraft;
+the instrument's `GetBoresightInSpacecraftFrame()` returns it. A zero orientation keeps
+the instrument frame on the spacecraft frame. See
+[Instrument orientation](../reference/spacecraft.md#instrument-orientation).
 
 ## Ground site operations
 

@@ -9,6 +9,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 using FuelTank = IO.Astrodynamics.Body.Spacecraft.FuelTank;
 using KeplerianElements = IO.Astrodynamics.OrbitalParameters.KeplerianElements;
 using NadirAttitude = IO.Astrodynamics.Maneuver.NadirAttitude;
@@ -26,8 +27,11 @@ namespace IO.Astrodynamics.Tests;
 
 public class SpiceApiTest
 {
-    public SpiceApiTest()
+    private readonly ITestOutputHelper _output;
+
+    public SpiceApiTest(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
@@ -242,23 +246,42 @@ public class SpiceApiTest
 
         spacecraft.WriteOrientation(ckFile);
         SpiceAPI.Instance.LoadKernels(ckFile);
+        // The SPK of the same propagation: the reference of the attitude is the nadir of its positions (spkezr)
+        var spkFile = new FileInfo(root + "/EphemerisTestFile.bsp");
+        spacecraft.WriteEphemeris(spkFile);
+        SpiceAPI.Instance.LoadKernels(spkFile);
         //Read spacecraft orientation
 
         var res = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray();
-        var resICRF = spacecraft.Frame.GetStateOrientationsToICRF().ElementAt(1).RelativeToICRF();
+
+        // The CK holds the C-matrix, J2000 to the spacecraft frame (#529): the inverse of the nadir attitude, the minimal
+        // rotation taking the front (+Y) to -r, r the position of spkezr on the SPK of the same propagation (choice 14 of
+        // the design of #537), compared as a rotation angle. ckgpav's angular velocity is that of the spacecraft relative to
+        // J2000 in J2000: the rotation of the positions, from spkezr 1 s before and after (the output step), about their
+        // normal. Not the closed form pi/2 + n t of the circular orbit: Velocity-Verlet turns its positions at
+        // n (1 + (n h)^2 / 6), 2.4e-10 rad/s faster than v / r (the review of the design)
+        Vector3 Position(TimeSystem.Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        double worstRotation = 0.0, worstRate = 0.0;
+        for (int i = 1; i < res.Length - 1; i++)
+        {
+            var t = res[i].Epoch;
+            var nadir = Body.AttitudeRecordTests.MinimalRotation(Spacecraft.Front, Position(t).Inverse());
+            worstRotation = System.Math.Max(worstRotation, Body.AttitudeRecordTests.RotationAngle(nadir, v => v.Rotate(res[i].Rotation.Conjugate())));
+            var before = Position(t.AddSeconds(-1.0));
+            var after = Position(t.AddSeconds(1.0));
+            var normal = before.Cross(after);
+            var rate = normal.Normalize() * (System.Math.Atan2(normal.Magnitude(), before * after) / 2.0);
+            worstRate = System.Math.Max(worstRate, (res[i].AngularVelocity - rate).Magnitude());
+        }
+
+        SpiceAPI.Instance.UnloadKernels(spkFile);
         SpiceAPI.Instance.UnloadKernels(ckFile);
         SpiceAPI.Instance.UnloadKernels(clckFile);
 
-        //Read results — new system computes NadirAttitude at every output epoch (not just t=0,1)
-        // The quaternion at t=10s reflects 10 seconds of orbital motion
-        Assert.Equal(0.70311488671322719, res.ElementAt(1).Rotation.W, 3);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 3);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 3);
-        Assert.Equal(0.71107626600966340, res.ElementAt(1).Rotation.VectorPart.Z, 3);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 3);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 3);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Z, 3);
+        _output?.WriteLine($"MEASURE #529 ReadOrientation: the C-matrix read - the inverse of the nadir of spkezr {worstRotation:E2} rad, the rate - the rotation of spkezr's positions {worstRate:E2} rad/s");
+        Assert.True(worstRotation <= ReadOrientationRotation, $"{worstRotation:E3} rad");
+        Assert.True(worstRate <= ReadOrientationRate, $"{worstRate:E3} rad/s");
         Assert.Equal(window.StartDate, res.ElementAt(0).Epoch, TestHelpers.TimeComparer);
         Assert.Equal(Frames.Frame.ICRF, res.ElementAt(0).ReferenceFrame);
 
@@ -266,6 +289,11 @@ public class SpiceApiTest
             TimeSpan.FromSeconds(10.0), null,
             TimeSpan.FromSeconds(10.0)).ToArray());
     }
+
+    // The limits of ReadOrientation, twice the worst over its five records over Linux, Windows and macOS arm64 (CI run
+    // 41522747911, 2026-11-02): 2.57e-16 / 2.57e-16 / 2.57e-16 rad, 3.08e-12 / 3.08e-12 / 3.08e-12 rad/s
+    private const double ReadOrientationRotation = 5.2e-16;
+    private const double ReadOrientationRate = 6.2e-12;
 
     [Fact]
     public void ReadOrientationFromExternalCKKernel()
@@ -442,7 +470,27 @@ public class SpiceApiTest
         Assert.Equal(Vector3.Zero, stateOrientation[9].AngularVelocity);
         Assert.Equal(9.0, stateOrientation[9].Epoch.TimeSpanFromJ2000().TotalSeconds);
         Assert.Equal(Frames.Frame.ICRF, stateOrientation[9].ReferenceFrame);
+
+        // pxform(J2000, SC) on the written CK, with the frame kernel of the spacecraft: the C-matrix written, J2000 to the
+        // spacecraft frame (choice 7 of the design of #537), at its records
+        var frameFile = new FileInfo("OrientationTestFrame.tf");
+        await ((SpacecraftFrame)spacecraft.Frame).WriteAsync(frameFile);
+        SpiceAPI.Instance.LoadKernels(frameFile);
+        double worst = 0.0;
+        foreach (var written in so)
+        {
+            var pxform = SpiceAPI.Instance.TransformFrame(written.Epoch, Frames.Frame.ICRF, spacecraft.Frame).Rotation;
+            worst = System.Math.Max(worst, Body.AttitudeRecordTests.RotationAngle(written.Rotation.Normalize(), pxform));
+        }
+
+        SpiceAPI.Instance.UnloadKernels(frameFile);
+        _output?.WriteLine($"MEASURE #537 WriteOrientation: pxform(J2000, SC) - the C-matrix written {worst:E2} rad");
+        // Twice the worst over its ten records over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
+        // 3.31e-16 / 3.31e-16 / 3.31e-16 rad
+        Assert.True(worst <= WriteOrientationPxform, $"{worst:E3} rad");
     }
+
+    private const double WriteOrientationPxform = 6.7e-16;
 
     [Fact]
     void GetCelestialBodyInformation()
@@ -912,4 +960,57 @@ public class SpiceApiTest
             SpiceAPI.Instance.UnloadKernels(sclkFile);
         }
     }
+
+    [Fact]
+    void WriteOrientationAndEphemeris_OfNoRecord_AreRejected()
+    {
+        var file = new FileInfo(Path.Combine(Constants.OutputPath.FullName, "empty_records.bsp"));
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteOrientation(file, -1106, Array.Empty<StateOrientation>()));
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemeris(file, -1106, Array.Empty<StateVector>()));
+    }
+
+    /// <summary>
+    /// The overloads of the two-body propagation and of the conic conversion: the duration, the target epoch and the
+    /// observer's GM give the call with the explicit GM bit for bit; the elliptic conversion without an epoch and the
+    /// equinoctial conversion, on a circular equatorial orbit at the periapsis, its closed form r = (a, 0, 0),
+    /// v = (0, √(GM / a), 0).
+    /// </summary>
+    [Fact]
+    void Propagate2BodiesAndConicOverloads()
+    {
+        var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0),
+            TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var gm = TestHelpers.EarthAtJ2000.GM;
+        var explicitGm = SpiceAPI.Instance.Propagate2Bodies(sv, gm, TimeSpan.FromSeconds(60.0));
+        var byDuration = SpiceAPI.Instance.Propagate2Bodies(sv, TimeSpan.FromSeconds(60.0));
+        var byEpoch = SpiceAPI.Instance.Propagate2Bodies(sv, TimeSystem.Time.J2000TDB.AddSeconds(60.0));
+        Assert.Equal(explicitGm.Position, byDuration.Position);
+        Assert.Equal(explicitGm.Velocity, byDuration.Velocity);
+        Assert.Equal(explicitGm.Position, byEpoch.Position);
+        Assert.Equal(explicitGm.Velocity, byEpoch.Velocity);
+
+        const double a = 6800000.0;
+        var ke = new KeplerianElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var state = SpiceAPI.Instance.ConvertConicElementsToStateVector(ke);
+        double positionError = (state.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
+        double velocityError = (state.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
+        _output?.WriteLine($"MEASURE conic e = 0 against its closed form: {positionError:E3} m, {velocityError:E3} m/s");
+        // 0 m and 0 m/s on Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02): the closed form to the bit
+        Assert.Equal(0.0, positionError);
+        Assert.Equal(0.0, velocityError);
+
+        // The same circular equatorial orbit as equinoctial elements (p = a, f = g = h = k = 0, the longitude 0), through eqncpv
+        var equinoctial = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+        var fromEquinoctial = SpiceAPI.Instance.ConvertEquinoctialElementsToStateVector(equinoctial);
+        double equinoctialPositionError = (fromEquinoctial.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
+        double equinoctialVelocityError = (fromEquinoctial.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
+        _output?.WriteLine($"MEASURE equinoctial e = 0 against its closed form: {equinoctialPositionError:E3} m, {equinoctialVelocityError:E3} m/s");
+        Assert.True(equinoctialPositionError <= EquinoctialPositionLimit, $"{equinoctialPositionError:E3} m");
+        Assert.True(equinoctialVelocityError <= EquinoctialVelocityLimit, $"{equinoctialVelocityError:E3} m/s");
+    }
+
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02): 4.164e-10 / 4.164e-10 /
+    // 4.164e-10 m and 1.125e-12 / 1.125e-12 / 1.125e-12 m/s
+    private const double EquinoctialPositionLimit = 8.4e-10;
+    private const double EquinoctialVelocityLimit = 2.3e-12;
 }

@@ -165,4 +165,28 @@ public class FrameTests
         Assert.False(Frames.Frame.ECLIPTIC_J2000.Equals((object)null));
         Assert.False(Frames.Frame.ECLIPTIC_J2000.Equals("null"));
     }
+
+    [Fact]
+    public void TheOrientationsAddedToAFrame_AreKeptByEpoch_TheFirstAtAnEpochKept()
+    {
+        // The members of Frame that the attitude record of a spacecraft overrides (#523, virtual since #537): on another
+        // frame they keep the orientations added, in epoch order, the first one at an epoch, until they are cleared
+        var frame = new Frames.Frame("FRAME_ORIENTATIONS_TEST");
+        var t0 = TimeSystem.Time.J2000TDB;
+        var t1 = t0.AddSeconds(10.0);
+        var later = new StateOrientation(new Quaternion(Vector3.VectorZ, 0.1), Vector3.Zero, t1, frame);
+        var earlier = new StateOrientation(new Quaternion(Vector3.VectorZ, 0.2), Vector3.Zero, t0, frame);
+        var sameEpoch = new StateOrientation(new Quaternion(Vector3.VectorZ, 0.3), Vector3.Zero, t1, frame);
+
+        Assert.True(frame.AddStateOrientationToICRF(later));
+        Assert.True(frame.AddStateOrientationToICRF(earlier));
+        Assert.False(frame.AddStateOrientationToICRF(sameEpoch));
+        Assert.Equal(new[] { earlier, later }, frame.GetStateOrientationsToICRF());
+        Assert.Equal(later, frame.GetLatestStateOrientationToICRF());
+
+        frame.ClearStateOrientations();
+        Assert.Empty(frame.GetStateOrientationsToICRF());
+        Assert.Null(frame.GetLatestStateOrientationToICRF());
+        Assert.Equal(new Frames.Frame("FRAME_ORIENTATIONS_TEST").GetHashCode(), frame.GetHashCode());
+    }
 }

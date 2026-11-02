@@ -23,8 +23,9 @@ The angular velocity of a frame transform follows the SPICE convention (`xf2rav_
 With `R` the rotation `frame -> ICRF` and `ω` the angular velocity of `GetStateOrientationToICRF`, the rotation
 evolves as `R(t + dt) = R(t) exp(-[ω×] dt)`. The SPICE frames, TIRS, CIRS and the site frames all follow this
 convention, which the tests check on ITRF93, IAU_MOON, MOON_ME and a DSN topocentric frame.
-`StateOrientation.AtDate` applies its angular velocity in the destination axes, the convention of spacecraft
-attitudes: it does not extrapolate a frame transform.
+`StateOrientation.AtDate` applies its angular velocity in the destination axes, as the angular velocity of the source
+relative to the destination, `−R ω`: it extrapolates neither a frame transform nor the attitude of a spacecraft, whose
+frame follows the convention above ([Attitude and kernels](spacecraft.md#attitude-and-kernels)).
 
 ### States And Covariance
 

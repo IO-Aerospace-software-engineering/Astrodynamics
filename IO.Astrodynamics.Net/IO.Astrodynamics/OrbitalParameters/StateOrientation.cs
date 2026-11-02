@@ -15,12 +15,13 @@ namespace IO.Astrodynamics.OrbitalParameters
     /// <c>frame → ICRF</c>.
     /// </param>
     /// <param name="AngularVelocity">
-    /// Angular velocity associated with <paramref name="Rotation"/>.
-    /// In this codebase it is used with left-multiplied incremental rotations in <see cref="AtDate"/>,
-    /// so it is expressed in the same inertial/destination frame as the returned rotation acts into.
-    /// A frame transform from <see cref="Frame.ToFrame(Frame, Time)"/> or
-    /// <see cref="Frame.GetStateOrientationToICRF(Time)"/> follows the SPICE convention instead: angular velocity of
-    /// the destination frame relative to the source frame, expressed in the source frame.
+    /// Angular velocity associated with <paramref name="Rotation"/>, in rad/s. The library returns it in the SPICE
+    /// convention (<c>xf2rav_c</c>): the angular velocity of the destination frame relative to the source frame, expressed
+    /// in the source frame. So do <see cref="Frame.ToFrame(Frame, Time)"/>,
+    /// <see cref="Frame.GetStateOrientationToICRF(Time)"/> (the frame of a spacecraft included: ICRF relative to the
+    /// spacecraft, in the spacecraft frame, managed or kernel-backed), <c>Spacecraft.GetOrientation</c> and
+    /// <see cref="SpiceAPI.ReadOrientation"/> (the spacecraft relative to the reference frame, in the reference frame, for
+    /// the C-matrix of a CK). <see cref="AtDate"/> takes the other convention.
     /// </param>
     /// <param name="Epoch">The time at which the state is defined.</param>
     /// <param name="ReferenceFrame">Source frame of the rotation.</param>
@@ -64,8 +65,11 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// Propagates the orientation to another epoch using constant angular velocity.
         /// </summary>
         /// <remarks>
-        /// The incremental rotation is left-multiplied, so callers providing angular velocities manually
-        /// should keep that destination-frame convention in mind.
+        /// The incremental rotation is left-multiplied: <see cref="AngularVelocity"/> is taken as the angular velocity of
+        /// the source frame relative to the destination frame, expressed in the destination frame, the opposite of the
+        /// convention in which the library returns it (−R ω, R the rotation and ω the angular velocity of
+        /// <see cref="Frame.GetStateOrientationToICRF(Time)"/>). It therefore does not extrapolate a frame transform nor the
+        /// attitude of a spacecraft as the library returns them; the attitude record of a spacecraft does not use it.
         /// </remarks>
         public StateOrientation AtDate(in Time date)
         {

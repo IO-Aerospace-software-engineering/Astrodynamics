@@ -84,5 +84,48 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 52, 841, 699).AddTicks(3), TimeSpan.FromSeconds(10.7481993)), maneuver.ManeuverWindow);
             Assert.Equal(537.40996740060154, maneuver.FuelBurned);
         }
+
+        /// <summary>
+        /// The OPM parameters of an executed impulse are its own ignition, duration, mass and delta-V in CCSDS units (km/s,
+        /// the delta-V divided by 1000, the mass expelled negative); an impulse not executed has none.
+        /// </summary>
+        [Fact]
+        public void ToOpmManeuverParameters_AreTheExecutedImpulseInCcsdsUnits()
+        {
+            var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var spc = new Spacecraft(-1108, "GenericSpacecraft1108", 1000.0, 3000.0, new Clock("GenericClk1108", 65536), orbitalParams);
+            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 42164000.0,
+                spc.Engines.First());
+
+            Assert.Throws<InvalidOperationException>(() => maneuver.ToOpmManeuverParameters());
+
+            maneuver.TryExecute(orbitalParams);
+            var parameters = maneuver.ToOpmManeuverParameters("ICRF", new[] { "apogee" });
+            Assert.Equal(maneuver.ThrustWindow!.Value.StartDate.DateTime, parameters.ManEpochIgnition);
+            Assert.Equal(maneuver.ThrustWindow.Value.Length.TotalSeconds, parameters.ManDuration);
+            Assert.Equal(-maneuver.FuelBurned, parameters.ManDeltaMass);
+            Assert.Equal("ICRF", parameters.ManRefFrame);
+            Assert.Equal(maneuver.DeltaV.X / 1000.0, parameters.ManDv1);
+            Assert.Equal(maneuver.DeltaV.Y / 1000.0, parameters.ManDv2);
+            Assert.Equal(maneuver.DeltaV.Z / 1000.0, parameters.ManDv3);
+            Assert.Equal(new[] { "apogee" }, parameters.Comments);
+        }
+
+        /// <summary>A target orbit in another frame than the spacecraft's initial state is rejected.</summary>
+        [Fact]
+        public void ATargetOrbitInAnotherFrame_IsRejected()
+        {
+            var orbitalParams = new StateVector(new Vector3(6678000.0, 0.0, 0.0), new Vector3(0.0, 7727.0, 0.0), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF);
+            var spc = new Spacecraft(-1109, "GenericSpacecraft1109", 1000.0, 3000.0, new Clock("GenericClk1109", 65536), orbitalParams);
+            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var target = new KeplerianElements(42164000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
+
+            Assert.Throws<ArgumentException>(() => new PlaneAlignmentManeuver(TimeSystem.Time.J2000TDB, TimeSpan.Zero, target, spc.Engines.First()));
+        }
     }
 }

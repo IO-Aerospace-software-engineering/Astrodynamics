@@ -177,17 +177,17 @@ public class Frame : IEquatable<Frame>
         return _stateOrientationsToICRF.GetOrAdd(date, dt => _dataProvider.FrameTransformationToICRF(dt, this));
     }
 
-    public bool AddStateOrientationToICRF(StateOrientation stateOrientation)
+    public virtual bool AddStateOrientationToICRF(StateOrientation stateOrientation)
     {
         return _stateOrientationsToICRF.TryAdd(stateOrientation.Epoch, stateOrientation);
     }
 
-    public StateOrientation GetLatestStateOrientationToICRF()
+    public virtual StateOrientation GetLatestStateOrientationToICRF()
     {
         return _stateOrientationsToICRF.Values.OrderBy(x => x.Epoch).LastOrDefault();
     }
 
-    public IEnumerable<StateOrientation> GetStateOrientationsToICRF()
+    public virtual IEnumerable<StateOrientation> GetStateOrientationsToICRF()
     {
         return _stateOrientationsToICRF.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
     }
@@ -330,7 +330,7 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     private protected virtual bool ReadsOrientationCache => GetType() == typeof(Frame);
 
-    public void ClearStateOrientations()
+    public virtual void ClearStateOrientations()
     {
         _stateOrientationsToICRF.Clear();
     }

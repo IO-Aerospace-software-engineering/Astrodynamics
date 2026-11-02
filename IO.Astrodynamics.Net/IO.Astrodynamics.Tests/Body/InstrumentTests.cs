@@ -255,7 +255,7 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clock = new Clock("clk1", 65536);
             Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, Frames.Frame.ICRF));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, spacecraft.Frame));
 
 
             var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame(start);
@@ -288,7 +288,7 @@ namespace IO.Astrodynamics.Tests.Body
                 start, Frames.Frame.ICRF);
             Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, Frames.Frame.ICRF));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, spacecraft.Frame));
 
             // The attitude takes the boresight -X to +Y (GetBoresightInICRF2): a rotation of -pi/2 about +Z, which takes +Y to +X
             var instrument = spacecraft.Instruments.First();
@@ -310,11 +310,12 @@ namespace IO.Astrodynamics.Tests.Body
             var refVector1 = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
             Assert.Equal(Vector3.VectorY, refVector1, TestHelpers.VectorComparer);
 
-            // Instrument with 90-degree rotation around Z - refVector (X) should rotate to +Y
+            // Euler angles (0, 0, pi/2) of the frame kernel (#524): pxform(instrument, spacecraft) = eul2m(0, 0, pi/2, 1, 2, 3),
+            // the frame rotation [pi/2]_3, takes the reference vector X to -Y
             spc.AddCircularInstrument(-1700, "inst2", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
                 new Vector3(0.0, 0.0, Astrodynamics.Constants.PI2));
             var refVector2 = spc.Instruments.ElementAt(1).GetRefVectorInSpacecraftFrame();
-            Assert.Equal(new Vector3(0.0, 1.0, 0.0), refVector2, TestHelpers.VectorComparer);
+            Assert.Equal(new Vector3(0.0, -1.0, 0.0), refVector2, TestHelpers.VectorComparer);
         }
 
         [Fact]
@@ -322,12 +323,13 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var spc = TestHelpers.Spacecraft;
 
-            // Instrument with 90-degree rotation around Y axis
-            // Original refVector is VectorX, rotating 90 deg around Y maps X -> -Z
+            // Euler angles (0, pi/2, 0) of the frame kernel (#524): eul2m(0, pi/2, 0, 1, 2, 3), the frame rotation [pi/2]_2,
+            // takes the reference vector X to +Z (and the boresight Z to -X, the managed path's value before #524)
             spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
                 new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0));
             var refVector = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
-            Assert.Equal(new Vector3(0.0, 0.0, -1.0), refVector, TestHelpers.VectorComparer);
+            Assert.Equal(new Vector3(0.0, 0.0, 1.0), refVector, TestHelpers.VectorComparer);
+            Assert.Equal(new Vector3(-1.0, 0.0, 0.0), spc.Instruments.First().GetBoresightInSpacecraftFrame(), TestHelpers.VectorComparer);
         }
 
         [Fact]
@@ -356,6 +358,71 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Equal(
                 $"KPL/IK{Environment.NewLine}\\begindata{Environment.NewLine}INS-1001600_FOV_CLASS_SPEC       = 'ANGLES'{Environment.NewLine}INS-1001600_FOV_SHAPE            = 'CIRCLE'{Environment.NewLine}INS-1001600_FOV_FRAME            = 'MYSPACECRAFT_CAM600'{Environment.NewLine}INS-1001600_BORESIGHT            = ( 0, 0, 1 ){Environment.NewLine}INS-1001600_FOV_REF_VECTOR       = ( 0, 1, 0 ){Environment.NewLine}INS-1001600_FOV_REF_ANGLE        = 1.5{Environment.NewLine}INS-1001600_FOV_ANGLE_UNITS      = 'RADIANS'{Environment.NewLine}\\begintext{Environment.NewLine}",
                 res);
+        }
+
+        // Twice the worst over the orientations below over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
+        // 3.04e-16 / 4.67e-16 / 2.94e-16 rad, the vectors against pxform, of (-0.7, 1.1, 2.3) on Linux and macOS arm64, of
+        // (0.3, +/-pi/2, +/-0.2) on Windows, whose pxform at y = +/-pi/2 is 4.4e-16 to 4.7e-16 rad from RotationToSpacecraft
+        // (2.2e-16 to 2.5e-16 rad on the other two)
+        private const double EulerAgainstFrameKernel = 9.4e-16;
+
+        /// <summary>
+        /// The rotation of <see cref="Instrument.Orientation"/> (#524) against the definition of Frames Required Reading,
+        /// written in the test (M = [x]1 [y]2 [z]3 = Rx(-x) Ry(-y) Rz(-z), "Defining a TK Frame Using Euler Angles"), and
+        /// against <c>pxform(instrument, spacecraft)</c> on the frame kernels the library writes: each axis alone in both
+        /// senses, y = +/-pi/2 (where the angles about X and Z share an axis), and two general orientations; the boresight
+        /// and the reference vector in the spacecraft frame with it.
+        /// </summary>
+        [Fact]
+        public async Task RotationToSpacecraft_IsTheFrameKernel()
+        {
+            Vector3[] orientations =
+            [
+                Vector3.Zero, new(0.4, 0.0, 0.0), new(-0.4, 0.0, 0.0), new(0.0, 0.4, 0.0), new(0.0, -0.4, 0.0), new(0.0, 0.0, 0.4), new(0.0, 0.0, -0.4),
+                new(0.0, Astrodynamics.Constants.PI2, 0.0), new(0.0, -Astrodynamics.Constants.PI2, 0.0), new(0.3, Astrodynamics.Constants.PI2, 0.2),
+                new(0.3, -Astrodynamics.Constants.PI2, -0.2), new(0.3, 0.5, 0.2), new(-0.7, 1.1, 2.3)
+            ];
+            var start = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+            var spacecraft = new Spacecraft(-8601, "EUL8601", 1000.0, 3000.0, new Clock("EUL8601_CLK", 65536),
+                new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000, start, Frames.Frame.ICRF));
+            for (int i = 0; i < orientations.Length; i++)
+            {
+                spacecraft.AddCircularInstrument(-8601001 - i, $"E{i}", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, orientations[i]);
+            }
+
+            string directory = "Data/User/AttitudeRecord537/EUL8601";
+            Directory.CreateDirectory(directory);
+            var files = new System.Collections.Generic.List<FileInfo> { new(Path.Combine(directory, "eul8601.tf")) };
+            await ((SpacecraftFrame)spacecraft.Frame).WriteAsync(files[0]);
+            foreach (var instrument in spacecraft.Instruments)
+            {
+                var file = new FileInfo(Path.Combine(directory, $"eul8601_{instrument.Name.ToLowerInvariant()}.tf"));
+                await instrument.WriteFrameAsync(file);
+                files.Add(file);
+            }
+
+            files.ForEach(x => SpiceAPI.Instance.LoadKernels(x));
+            try
+            {
+                double worst = 0.0;
+                foreach (var instrument in spacecraft.Instruments)
+                {
+                    var o = instrument.Orientation;
+                    double definition = AttitudeRecordTests.RotationAngle(v => AttitudeRecordTests.EulerToSpacecraft(o, v), v => v.Rotate(instrument.RotationToSpacecraft));
+                    var pxform = SpiceAPI.Instance.TransformFrame(start, new Frames.Frame("EUL8601_" + instrument.Name), spacecraft.Frame).Rotation;
+                    double kernel = AttitudeRecordTests.RotationAngle(pxform, instrument.RotationToSpacecraft);
+                    double vectors = System.Math.Max(AttitudeRecordTests.Angle(instrument.GetBoresightInSpacecraftFrame(), instrument.Boresight.Rotate(pxform)),
+                        AttitudeRecordTests.Angle(instrument.GetRefVectorInSpacecraftFrame(), instrument.RefVector.Rotate(pxform)));
+                    _output.WriteLine($"MEASURE #524 Euler ({o.X}, {o.Y}, {o.Z}): RotationToSpacecraft - Frames Required Reading {definition:E2} rad, - pxform {kernel:E2} rad, the vectors - pxform {vectors:E2} rad");
+                    worst = System.Math.Max(worst, System.Math.Max(definition, System.Math.Max(kernel, vectors)));
+                }
+
+                Assert.True(worst <= EulerAgainstFrameKernel, $"{worst:E3} rad");
+            }
+            finally
+            {
+                files.ForEach(x => SpiceAPI.Instance.UnloadKernels(x));
+            }
         }
     }
 }

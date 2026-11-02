@@ -297,7 +297,8 @@ public class CentralBodyPropagator : PropagatorBase
 
     protected override void StorePropagatedStates(StateVector[] outputStates)
     {
-        // Store CB-relative states directly; conversion to SSB happens on demand
-        Spacecraft.AddPropagatedStates(outputStates);
+        // Store CB-relative states in ICRF (#535), the frame every reader of the spacecraft assumes; the solution keeps
+        // the frame of the propagation. Conversion to SSB happens on demand
+        Spacecraft.AddPropagatedStates(outputStates.Select(ToIcrf).ToArray());
     }
 }

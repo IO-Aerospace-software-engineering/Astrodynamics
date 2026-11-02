@@ -87,8 +87,120 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
-| `WriteEphemeris(FileInfo)` | Write ephemeris to SPK file; positions and velocities only, never the covariance |
+| `GetOrientation(Frame, Time)` | The rotation from the frame to the spacecraft frame (the C-matrix of a CK), with the angular velocity of the spacecraft relative to the frame, in the frame ([Attitude and kernels](#attitude-and-kernels)) |
+| `WriteEphemeris(FileInfo)` | Write ephemeris to SPK file, in J2000; positions and velocities only, never the covariance |
+| `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
+
+## Attitude and kernels
+
+A propagated spacecraft keeps the states and the attitude that the library reads (`GetEphemeris`, the instruments, the
+field-of-view and occultation searches, sites, conjunctions) and that it writes as an SPK and a CK. Both are in ICRF,
+whatever the inertial frame of the initial state (ICRF, ECLIPJ2000, B1950, FK4, ECLIPB1950 or GALACTIC): the integration
+and the `PropagationSolution` stay in that frame, bit for bit, and each output state is rotated to ICRF when it is stored,
+its covariance through the Jacobian of the rotation. The states of a spacecraft propagated from another frame, read back
+in that frame, are therefore a rotation round trip, no longer bit for bit those of the solution. Before 11.0.0 they were
+stored in the initial frame and read as ICRF: up to 1.18e7 m off from GALACTIC, 1.86e11 m in SSB mode
+([#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535),
+[#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)).
+
+### The attitude record
+
+`Spacecraft.Frame` holds the attitude record of a managed spacecraft: the rotation from the spacecraft frame to ICRF at
+each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the spacecraft frame, its source, as
+`GetStateOrientationToICRF` returns it.
+
+- **What fills it.** The propagation only: the initial attitude (the identity of ICRF without an attitude maneuver),
+  each attitude at its activation, the attitude of an impulse (its front along ΔV) at its event, the samples of the
+  leading attitude at every output epoch, and the latest attitude at the end of the window. Every attitude is computed
+  on the state in ICRF ([Attitudes](attitudes.md#frames-and-interpolation)). `AddStateOrientationToICRF` adds a discrete
+  attitude, labelled with the spacecraft frame (`ArgumentException` otherwise); it replaces an entry at the same epoch.
+  A read never adds an entry, and reads before, during or after a propagation leave the record and the CK unchanged
+  ([#523](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/523)).
+- **Between two samples of the same attitude law,** the attitude is the exact spherical linear interpolation of the two,
+  the interpolation of a type-3 CK
+  ([#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)).
+- **A discrete change** (an attitude activated after an impulse, an impulse's attitude, an added one): the earlier
+  attitude holds until the change. Before a change that follows a continuous law, the propagation samples the law once
+  more, on the state of the solution 1 µs before the change, so that the law is interpolated up to it
+  ([#534](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/534)).
+- **The same epoch.** Two entries less than 2 µs apart are one epoch: an attitude activated later in the maneuver chain
+  replaces an earlier one and keeps its own epoch, an output sample never replaces an activation, and the attitude of an
+  impulse does not replace the attitude chained after it. A chained attitude counts its hold in TDB seconds while the
+  outputs about the Earth sit on the TT grid (#501): the two fall 1e-7 to 2e-7 s apart, one epoch.
+- **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF.
+- **The angular velocity** is that of the CK: at each entry the mean of the rates of the interpolated intervals on either
+  side, linear between two samples of a law. Over a hold it is zero between discrete entries; after a sample of a law
+  that no lead follows (an attitude added by `AddStateOrientationToICRF` after a propagation, or a lead whose change was
+  replaced), it ramps linearly from the law's rate at that sample (about 1.1e-3 rad/s for a nadir attitude in LEO) to
+  zero 1 µs before the next entry, the CK's own model. It is returned in the convention of the frames
+  ([Frames](frames.md#angular-velocity)): ICRF relative to the spacecraft, in the spacecraft frame. The entries of
+  `GetStateOrientationsToICRF` and `GetLatestStateOrientationToICRF` carry the rate that `GetStateOrientationToICRF`
+  gives at their epochs; the rate an orientation given to `AddStateOrientationToICRF` carries is not kept. A velocity
+  expressed in the spacecraft frame (`ToFrame`, `GetEphemeris`, `GetOrientation`) takes this rotation,
+  v' = R v − (R ω) × r': 7.7e3 m/s for the Earth's centre seen from a nadir-pointing LEO (it was 0 before 11.0.0).
+
+A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at every call, and keeps nothing.
+
+### The kernels
+
+- **`WriteEphemeris`** writes the stored states, in J2000.
+- **`WriteOrientation`** writes the record as a type-3 CK in J2000, one interval: at each entry the C-matrix, J2000 to
+  the spacecraft frame (the conjugate of the record's rotation, as `ckw03_c` takes it), with the angular velocity of the
+  spacecraft relative to J2000, in J2000; before each discrete change, the earlier attitude repeated 1 µs before it (the
+  law's sample there, when the propagation took one). The CK then gives the library's attitude everywhere but over that
+  microsecond, where it turns to the new attitude (up to 0.79 rad in the tests); a field-of-view edge moves by at most
+  that microsecond and the rounding of its encoded SCLK. The spacecraft clock kernel must be loaded.
+  `InvalidOperationException` for a kernel-backed spacecraft or one never propagated.
+- **The encoded SCLK.** The CK's epochs are the spacecraft clock of the library, 65 536 ticks per second from 1957: a
+  double whose spacing is 2.4e-7 s up to 2025-01-19 03:13 TDB and 4.8e-7 s from then to 2093. It is the floor of the
+  attitude read from the CK.
+- **Accuracy** (CSPICE N0067 in the test process on the kernels the library writes, against the closed forms of the
+  attitude laws on the solution of the propagation, never on the SPK the library wrote; 8 attitude cases, Velocity-Verlet
+  and RK7(8), the six inertial frames, the scenario path in three frames, SSB mode (RK7(8) at 1e-9), an epoch after
+  2025-01-19, `AttitudeRecordTests`; the worst over Linux x64, Windows x64 and macOS arm64, CI run 41522747911,
+  2026-11-02, the same on the three: the whole grid on Linux, the case of each worst on the three):
+
+  | Quantity | Worst |
+  |---|---:|
+  | The library's attitude against `pxform` on its CK, outside the 1 µs before the changes | 6.1e-10 rad (2024), 1.3e-9 rad (2026) |
+  | The instrument axes against `pxform(instrument, J2000)` | 6.1e-10 rad (2024), 1.3e-9 rad (2026) |
+  | The attitude at the entries against the law | 1.3e-15 rad; 3.5e-12 rad in SSB mode, where the reference state relative to the Earth is the difference of two states 1.5e11 m from the Sun |
+  | Between the entries, against the law (the interpolation residual at 10 s outputs) | 5.7e-5 rad |
+  | A discrete attitude against its closed form | 4.8e-16 rad; 3.5e-12 rad in SSB mode |
+  | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
+  | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
+  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode |
+  | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.3e-2 m, 1.4e-3 m/s in SSB mode |
+  | The managed occultation of the Sun by the Earth from GALACTIC, against its ICRF twin and `gfoclt` on the SPK | within one tick (100 ns); 4.0e-7 s |
+
+  The angular velocity of the CK's model is the rate of the SLERP of each interval, its mean at the samples, linear in
+  between: a property of the output step, like the interpolation residual. Two further figures are agreements, not
+  accuracies: the library's angular velocity against `xf2rav` of `sxform` on the CK it wrote with that rate, 9.9e-13 rad/s
+  (1.5e-12 rad/s in 2026), and its positions against `spkezr` on its SPK, two interpolations of the same stored states,
+  7.4e-4 m (2.3e-2 m in SSB mode).
+
+  The interpolation residual grows as the square of the output step: on the orbit of the tests (a = 6 778 km,
+  e = 0.001, i = 51.6°, the TRIAD of an instrument, its worst attitude) 5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and
+  60 s outputs, a nadir attitude 4.0e-7 and 1.4e-3 rad at 1 and 60 s (`AttitudeRecordTests`); on the worst inclined
+  state of the design of #537 (its reader 3, a probe on the DLLs of the base and of the prototype), 8.1e-7, 8.1e-5 and
+  2.9e-3 rad; on a circular equatorial orbit, where the attitude turns at a constant rate about a fixed axis, 1.1e-10 rad
+  (the same reader). A shorter output step lowers it.
+
+`SpiceAPI.ReadOrientation` and `SpiceAPI.WriteOrientation` are the raw C-matrix pair of `ckgpav_c` and `ckw03_c`
+([SpiceAPI](spice-api.md#orientation-kernels)). `ReadOrientation` of a CK written by 11.0.0 returns the C-matrix of the
+attitude.
+
+**CKs written before 11.0.0** hold the inverse of the attitude (3.14 rad off for a nadir attitude), in the initial frame
+of the propagation, interpolated across the discrete changes (107.5° on the case of #534): every reader, SPICE,
+Cosmographia, `ReadOrientation` and a kernel-backed spacecraft, reads them as before. They cannot be repaired from their
+content: regenerate them by propagating again. SPKs written before are right (in the initial frame, which SPICE
+converts). A CK of the identity attitude from ICRF is unaffected.
+
+**Not covered.** `TLEPropagator`, which `Spacecraft.Propagate` does not use, records no attitude: its SPK is written (in
+J2000), its CK is not (`InvalidOperationException`). The attitude laws after an impulse (a TRIAD held inertially, the
+leading attitude resumed from the next output) are those of the library before 11.0.0
+([Attitudes](attitudes.md#frames-and-interpolation)).
 
 ## Components
 
@@ -137,7 +249,8 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `Shape` | `InstrumentShape` (Circular, Rectangular, Elliptical) |
 | `Boresight` | Boresight direction in instrument frame |
 | `RefVector` | Reference vector in instrument frame |
-| `Orientation` | Instrument orientation relative to spacecraft |
+| `Orientation` | Instrument orientation relative to spacecraft: the Euler angles (x, y, z), in radians, about the axes 1, 2, 3 of the frame kernel ([Instrument orientation](#instrument-orientation)) |
+| `RotationToSpacecraft` | The rotation from the instrument frame to the spacecraft frame of `Orientation`, `vectorInSpacecraft = vectorInInstrument.Rotate(q)` |
 
 | Method | Description |
 |--------|-------------|
@@ -145,6 +258,21 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `FindWindowsInFieldOfViewConstraint(Window, Spacecraft, ILocalizable, Frame, ShapeType, Aberration, TimeSpan)` | The windows, in TDB, where the target is in the field: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
 | `GetBoresightInSpacecraftFrame()` | Transform boresight to spacecraft body frame |
 | `GetRefVectorInSpacecraftFrame()` | Transform reference vector to spacecraft body frame |
+
+#### Instrument orientation
+
+`Orientation` holds the Euler angles (x, y, z), in radians, of the frame kernel the library writes for the instrument
+(`WriteFrameAsync`): `TKFRAME_<id>_ANGLES = (x, y, z)`, `TKFRAME_<id>_AXES = (1, 2, 3)`, `UNITS = 'RADIANS'`, relative to
+the spacecraft frame. NAIF's Frames Required Reading defines them in "Defining a TK Frame Using Euler Angles"
+(https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html): "If M is the matrix that converts vectors relative
+to the TK frame to the RELATIVE frame by left multiplication, then the angles and axes must satisfy the following
+relationship: M = [angle_1]<sub>axis_1</sub> [angle_2]<sub>axis_2</sub> [angle_3]<sub>axis_3</sub> where the symbol
+[ A ]<sub>i</sub> stands for a rotation by the angle A about the i'th axis". Its matrices of [A]<sub>i</sub> are the
+rotations of the frame, the transposes of the rotations of a vector by A. So `pxform(instrument, spacecraft)` = [x]1 [y]2 [z]3 = `eul2m(x, y, z, 1, 2, 3)`: a vector of the
+instrument frame is rotated by −z about Z, then by −y about Y, then by −x about X, into the spacecraft frame.
+`RotationToSpacecraft` is that rotation; the managed field-of-view path, `GetBoresightInSpacecraftFrame`,
+`GetRefVectorInSpacecraftFrame`, and the attitudes built from an instrument (`TriadAttitude`,
+`InstrumentPointingToAttitude`) all use it, so they agree with SPICE reading the frame kernel (#524).
 
 #### Field-of-view search
 
@@ -245,33 +373,25 @@ rows it bounds, rounded up at the second significant digit.
 | The CSPICE path on the same kernels (`gftfov` at its 1 µs) | `gftfov` converged to 1e-9 s | 9.5e-7 s |
 | Propagated spacecraft, the public managed path and its kernel-backed twin: 26 fields, both target shapes, the Earth, the Moon, the Sun, DSS-13, a site given by its coordinates, a spacecraft, the Earth-Moon barycenter, L1, a star; `None`, `LT` and `LT+S` on every field, the nine aberrations on a circle and a narrow field (221 searches off the grazing and slow edges) | `gftfov` at 1 µs on the kernels the library writes | 1.3e-6 s |
 | RK7(8), SSB mode, a TLE | same (for the TLE, an SPK of its states, which the library does not write for a TLE that is not propagated) | 1.2e-6 s |
-| An impulse followed by a TRIAD attitude, an initial state in ECLIPJ2000 | `gftfov` at 1 µs on kernels of the states and orientations the library reads | 1.0e-6 s |
-| The same, on the kernels the library writes | `gftfov` at 1 µs | 9.7e-3 to 972 s, or another window count (below) |
+| An impulse followed by a TRIAD attitude, a nadir attitude, the six inertial initial frames, the path of `Scenario.SimulateAsync` (CI run 41522747911, 2026-11-02: the variants of #515 the same on the three platforms, those of #537 on Linux only) | `gftfov` at 1 µs on the kernels the library writes | 1.2e-6 s (SSB mode); TRIAD 1.0e-6 s, nadir 4e-7 s |
 | Fields that graze the Earth's limb (a margin of slope 1.2e-6 rad/s at the contact) | `gftfov` at a step of 1 s | 2.5e-4 s |
 | A slow edge (an ellipse, slope 6.1e-4 per second, `LT+S`) | same | 4.4e-6 s |
-| A nadir attitude | `gftfov` on kernels of the orientations the library reads | 0.885 s |
 | `IsInFOV` on a grid of epochs more than 1 ms from an edge | `fovtrg` and `fovray` | every epoch equal |
 
 Off the grazing and slow edges, the differences are the rounding of the light-time corrected epochs to a double ET on
 both sides (up to 1.8 mm on the Earth's position). At a grazing contact the margin changes slowly, and the same
-millimetres cost up to 2.5e-4 s. The nadir attitude row is the attitude model of the library: it holds each orientation
-of its output steps, where the CK that `gftfov` reads interpolates between them, so an edge moves by up to the output
-step.
+millimetres cost up to 2.5e-4 s.
 
-The kernels the library writes describe what it reads for a propagated spacecraft whose attitude is the identity of
-ICRF and whose initial state is in ICRF. Otherwise they do not, because of three defects outside the field-of-view
-search, each measured (2026-11-01) and each its own issue ([#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529), [#534](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/534) and
-[#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535), in the order below), and `gftfov` on those kernels differs from both paths of the
-library:
-
-- the CK that `Spacecraft.WriteOrientation` writes holds the inverse of the library's attitude: for a nadir attitude
-  `gftfov` finds no window where the library finds the Sun and the Moon entering a wide field, and the CK points the
-  front at the zenith;
-- the CK interpolates across a discrete attitude change, such as a `TriadAttitude` maneuver, which the library holds from
-  the maneuver on: 268 to 972 s on the edges, and one window where the library finds two;
-- a propagated spacecraft whose initial state is in ECLIPJ2000 stores its states in that frame and reads them as ICRF,
-  up to 2.5e6 m from the SPK the library writes from them, which CSPICE reads right: 9.7e-3 s to 0.77 s on the Earth's
-  edges, 216 s and 233 s on DSS-13's.
+The kernels the library writes describe what it reads ([Attitude and kernels](#attitude-and-kernels)): the CK repeats
+the earlier attitude 1 µs before a discrete change, which moves an edge by at most that microsecond and the rounding of
+its encoded SCLK. Before 11.0.0 they did not, for an attitude other than the identity or an initial state outside ICRF,
+and `gftfov` on them differed from both paths of the library: the CK held the inverse attitude
+([#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)), interpolated across a discrete
+change (971.8 s on an edge,
+[#534](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/534)), a spacecraft from ECLIPJ2000 was
+read 2.5e6 m off its SPK (232.6 s,
+[#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535)), and the library held a nadir
+attitude over each output step where the CK interpolates (0.885 s).
 
 Before 11.0.0 the managed search tested the direction of the target's center, whatever its shape, the circle as a
 square, the ellipse with its half-angles swapped, the rectangle on the axes of ICRF, and the reference vector without

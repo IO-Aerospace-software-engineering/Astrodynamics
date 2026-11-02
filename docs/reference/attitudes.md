@@ -1,6 +1,6 @@
 # Attitudes
 
-Attitudes define spacecraft orientation during propagation. They are processed immediately in the maneuver chain (not via event detection) and recomputed at each output epoch.
+Attitudes define spacecraft orientation during propagation. They are processed immediately in the maneuver chain (not via event detection). The leading attitude of the chain is recomputed at each output epoch, and interpolated between them; see [Frames and interpolation](#frames-and-interpolation).
 
 ## Attitude Base Class
 
@@ -8,8 +8,8 @@ All attitude maneuvers inherit from the abstract `Attitude` class.
 
 | Member | Type | Description |
 |--------|------|-------------|
-| `ComputeOrientation(StateVector)` | Method | Compute the orientation quaternion at the given state (abstract, public) |
-| `StateOrientation` | Property | The computed spacecraft orientation after execution |
+| `ComputeOrientation(StateVector)` | Method | Compute the orientation quaternion at the given state (abstract, public): the rotation from the spacecraft frame to the frame of the state |
+| `StateOrientation` | Property | The computed spacecraft orientation after execution: the rotation from the spacecraft frame to ICRF, labelled ICRF, whatever the frame of the state |
 | `ManeuverCenter` | Property | The central body for the maneuver frame |
 | `MinimumEpoch` | Property | Earliest epoch at which the attitude can activate |
 | `ManeuverHoldDuration` | Property | How long the attitude is held |
@@ -48,7 +48,7 @@ new AntiNormalAttitude(maneuverCenter, minimumEpoch, holdDuration, engine);
 
 ## InstrumentPointingToAttitude
 
-Points an instrument boresight at a celestial target. This is a single-vector attitude (roll unconstrained).
+Points an instrument boresight at a celestial target: the minimal rotation that takes the boresight, in the spacecraft frame (`Instrument.GetBoresightInSpacecraftFrame()`, through the Euler angles of the frame kernel, [Instrument orientation](spacecraft.md#instrument-orientation)), to the direction of the target. This is a single-vector attitude (roll unconstrained). Before 11.0.0 it returned the inverse rotation, which took the target's direction to the boresight: at zero orientation the boresight landed at twice the angle between them from the target.
 
 | Property | Description |
 |----------|-------------|
@@ -79,7 +79,7 @@ var pointing = new InstrumentPointingToAttitude(
 
 ### Constructors
 
-**Single instrument** — uses instrument boresight as primary body vector and reference vector as secondary:
+**Single instrument** — uses instrument boresight as primary body vector and reference vector as secondary, both in the spacecraft frame through the Euler angles of the frame kernel ([Instrument orientation](spacecraft.md#instrument-orientation)), so that the boresight the field-of-view search and SPICE see is the one aimed:
 
 ```csharp
 var attitude = new TriadAttitude(
@@ -144,6 +144,34 @@ Each spacecraft has configurable body axes that define the physical orientation 
 | `Spacecraft.Down` | Nadir-facing | -Z |
 
 Instance-level overrides can be set via the `Spacecraft` constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be orthogonal and right-handed. All attitude maneuvers use `GetBodyFront()` which reads per-instance axes with fallback to the static default.
+
+## Frames and interpolation
+
+**Computed in ICRF.** Every attitude is computed on the state of the spacecraft in ICRF, whatever the inertial frame
+of the initial state, and recorded as the rotation from the spacecraft frame to ICRF
+([Attitude and kernels](spacecraft.md#attitude-and-kernels)); `Attitude.TryExecute` and `ImpulseManeuver.TryExecute`
+return that rotation, labelled ICRF. One orbit therefore gives one attitude in any frame: the roll left free by a
+single-vector or an impulse attitude is the minimal rotation in ICRF. Before 11.0.0 it was taken in the axes of the
+initial frame, 0.48 to 0.87 rad apart between ICRF and ECLIPJ2000 on the same orbit.
+
+**Between output epochs.** The leading attitude of the chain (the last attitude before the first impulse) is sampled
+at every output epoch; between two samples the attitude is their exact spherical linear interpolation, which a type-3
+CK computes. Its residual against the law grows as the square of the output step: on the inclined LEO of the tests
+5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and 60 s outputs (an instrument TRIAD, the worst of the attitudes tested;
+[Attitude and kernels](spacecraft.md#attitude-and-kernels) gives the other figures and their sources). Its angular
+velocity, that of the CK, is the rate of the interpolation: 2.3e-5 rad/s from the rate of the law at 10 s outputs. Before 11.0.0 the latest sample held over the step, ω·Δt off (6.4e-2 rad at
+60 s, a field-of-view edge 53.8 s late).
+
+**At a discrete change.** An attitude activated after an impulse, and the attitude of an impulse (its front along ΔV),
+are discrete: each holds until the next entry. Before a discrete change, the leading attitude is sampled once more, 1 µs
+before it, so that it is interpolated up to the change: over the partial step before an RK7(8) event between outputs it
+is within the interpolation residual (1.2e-4 rad at 60 s outputs), where it was held (7.1e-2 rad before 11.0.0). At an epoch shared
+within 2 µs, the attitude activated later in the chain holds: the one chained after an impulse, not the impulse's own.
+
+**Not changed by 11.0.0.** An attitude chained after an impulse is computed once, on the state of the impulse's event
+(also when the hold of an earlier attitude puts its activation later), and held inertially; the leading attitude,
+sampled at every output, takes over again from the next output epoch after it. The
+attitude of an impulse applies from the impulse, not from the opening of its thrust window.
 
 ## IAttitudeTarget
 

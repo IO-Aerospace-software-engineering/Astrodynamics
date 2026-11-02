@@ -229,7 +229,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="fieldOfView"></param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
-        /// <param name="orientation">Expressed as Euler angle</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
         /// <exception cref="ArgumentException"></exception>
         public void AddCircularInstrument(int naifId, string name, string model, double fieldOfView, in Vector3 boresight, in Vector3 refVector, in Vector3 orientation)
         {
@@ -249,7 +249,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad</param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
-        /// <param name="orientation">Expressed as Euler angle</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
         /// <exception cref="ArgumentException"></exception>
         public void AddRectangularInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
             in Vector3 orientation)
@@ -270,7 +270,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad</param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
-        /// <param name="orientation">Expressed as Euler angle</param>
+        /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
         /// <exception cref="ArgumentException"></exception>
         public void AddEllipticalInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
             in Vector3 orientation)
@@ -437,11 +437,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
 
         /// <summary>
-        /// Get orientation relative to reference frame
+        /// The orientation of the spacecraft relative to <paramref name="referenceFrame"/>:
+        /// <c>referenceFrame.ToFrame(Frame, epoch)</c>, the rotation from <paramref name="referenceFrame"/> to the spacecraft
+        /// frame (the C-matrix of a CK), labelled with <paramref name="referenceFrame"/>, its source, with the angular
+        /// velocity of the spacecraft relative to <paramref name="referenceFrame"/>, expressed in it.
         /// </summary>
-        /// <param name="referenceFrame"></param>
-        /// <param name="epoch"></param>
-        /// <returns></returns>
+        /// <param name="referenceFrame">The frame the orientation is relative to.</param>
+        /// <param name="epoch">The epoch.</param>
+        /// <returns>The rotation <paramref name="referenceFrame"/> to the spacecraft frame.</returns>
         public StateOrientation GetOrientation(Frame referenceFrame, in Time epoch)
         {
             return referenceFrame.ToFrame(Frame, epoch);
@@ -465,6 +468,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
             await (Frame as SpacecraftFrame)!.WriteAsync(outputFile);
         }
 
+        /// <summary>
+        /// Writes the attitude of the last propagation as a type-3 CK (<see cref="SpacecraftFrame"/>'s remarks): the
+        /// C-matrix, J2000 to the spacecraft frame, with the angular velocity of the spacecraft relative to J2000 in J2000,
+        /// at each entry of the attitude record, and the earlier attitude repeated 1 µs before each discrete change. The
+        /// spacecraft's clock kernel must be loaded.
+        /// </summary>
+        /// <param name="outputFile">The CK to write.</param>
+        /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed, or it has not been propagated.</exception>
         public void WriteOrientation(FileInfo outputFile)
         {
             Frame.WriteOrientation(outputFile, this);
@@ -595,9 +606,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Not enough cached states
+            // Not enough cached states: the two-body orbit, in ICRF as every reader assumes (#535)
             if (_propagatedStates.Count < 2)
                 return InitialOrbitalParameters.ToStateVector(epoch)
+                    .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
             // Interpolate from cache
@@ -674,7 +686,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <summary>
         /// Write spacecraft ephemeris from propagated states.
         /// Writes CB-relative states directly — the DTO Convert() passes Observer.NaifId
-        /// as SPK center body, so SPICE handles ephemeris chaining automatically.
+        /// as SPK center body, so SPICE handles ephemeris chaining automatically. The states are stored in ICRF whatever
+        /// the frame of the initial state, so the SPK is in J2000 (#535).
         /// </summary>
         /// <remarks>
         /// The SPK holds positions and velocities only: the covariance of the propagated states, when the propagation
@@ -734,9 +747,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public void AddPropagatedStates(params StateVector[] stateVectors)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
+            // Kept in ICRF, the frame of the readers (#535)
             foreach (var sv in stateVectors)
             {
-                _propagatedStates[sv.Epoch] = sv;
+                _propagatedStates[sv.Epoch] = sv.Frame == Frames.Frame.ICRF ? sv : sv.ToFrame(Frames.Frame.ICRF).ToStateVector();
             }
         }
 
