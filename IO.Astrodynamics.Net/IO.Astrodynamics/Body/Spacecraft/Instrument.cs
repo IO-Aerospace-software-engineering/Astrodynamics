@@ -50,8 +50,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Vector3 RefVector { get; }
 
         /// <summary>
-        /// Instrument rotation relative to instrument platform: the Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel (see <see cref="RotationToSpacecraft"/>)
+        /// The orientation of the instrument relative to the spacecraft: the Euler angles (x, y, z), in radians, about the
+        /// axes 1, 2, 3, as the frame kernel the library writes defines them (<c>TKFRAME_..._ANGLES = (x, y, z)</c>,
+        /// <c>AXES = (1, 2, 3)</c>, <c>UNITS = 'RADIANS'</c>, relative to the spacecraft frame).
         /// </summary>
+        /// <remarks>
+        /// NAIF's Frames Required Reading, "Defining a TK Frame Using Euler Angles" (https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html):
+        /// "If M is the matrix that converts vectors relative to the TK frame to the RELATIVE frame by left
+        /// multiplication, then M = [angle_1]axis_1 [angle_2]axis_2 [angle_3]axis_3", where [A]i is the frame rotation by
+        /// the angle A about the i-th axis. Here M = [x]1 [y]2 [z]3 = <c>eul2m(x, y, z, 1, 2, 3)</c> =
+        /// <c>pxform(instrument, spacecraft)</c>: a vector in the instrument frame is rotated by -z about Z, then by -y
+        /// about Y, then by -x about X, into the spacecraft frame (<see cref="RotationToSpacecraft"/>, #524).
+        /// </remarks>
         public Vector3 Orientation { get; }
 
         public Spacecraft Spacecraft { get; }
@@ -183,9 +193,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <summary>
         /// The rotation from the instrument frame to the spacecraft frame, <c>vectorInSpacecraft =
         /// vectorInInstrument.Rotate(q)</c>, of the Euler angles <see cref="Orientation"/> (x, y, z) about the axes 1, 2, 3,
-        /// as SPICE defines the frame kernel the library writes (<c>TKFRAME_..._ANGLES</c>, <c>AXES = (1, 2, 3)</c>):
-        /// <c>pxform(instrument, spacecraft) = eul2m(x, y, z, 1, 2, 3)</c>, the vector rotated by -z about Z, then -y about Y,
-        /// then -x about X (#524).
+        /// as SPICE defines the frame kernel the library writes (<c>TKFRAME_..._ANGLES</c>, <c>AXES = (1, 2, 3)</c>;
+        /// Frames Required Reading, "Defining a TK Frame Using Euler Angles", https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html):
+        /// <c>pxform(instrument, spacecraft) = eul2m(x, y, z, 1, 2, 3)</c> = [x]1 [y]2 [z]3, the vector rotated by -z about
+        /// Z, then -y about Y, then -x about X (#524).
         /// </summary>
         public Quaternion RotationToSpacecraft { get; }
 

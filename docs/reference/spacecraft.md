@@ -137,7 +137,8 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `Shape` | `InstrumentShape` (Circular, Rectangular, Elliptical) |
 | `Boresight` | Boresight direction in instrument frame |
 | `RefVector` | Reference vector in instrument frame |
-| `Orientation` | Instrument orientation relative to spacecraft |
+| `Orientation` | Instrument orientation relative to spacecraft: the Euler angles (x, y, z), in radians, about the axes 1, 2, 3 of the frame kernel ([Instrument orientation](#instrument-orientation)) |
+| `RotationToSpacecraft` | The rotation from the instrument frame to the spacecraft frame of `Orientation`, `vectorInSpacecraft = vectorInInstrument.Rotate(q)` |
 
 | Method | Description |
 |--------|-------------|
@@ -145,6 +146,19 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 | `FindWindowsInFieldOfViewConstraint(Window, Spacecraft, ILocalizable, Frame, ShapeType, Aberration, TimeSpan)` | The windows, in TDB, where the target is in the field: those of CSPICE's `gftfov` ([Field-of-view search](#field-of-view-search)) |
 | `GetBoresightInSpacecraftFrame()` | Transform boresight to spacecraft body frame |
 | `GetRefVectorInSpacecraftFrame()` | Transform reference vector to spacecraft body frame |
+
+#### Instrument orientation
+
+`Orientation` holds the Euler angles (x, y, z), in radians, of the frame kernel the library writes for the instrument
+(`WriteFrameAsync`): `TKFRAME_<id>_ANGLES = (x, y, z)`, `TKFRAME_<id>_AXES = (1, 2, 3)`, `UNITS = 'RADIANS'`, relative to
+the spacecraft frame. NAIF's Frames Required Reading defines them in "Defining a TK Frame Using Euler Angles"
+(https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html): "If M is the matrix that converts vectors relative to the TK frame to the RELATIVE frame by left
+multiplication, then M = [angle_1]axis_1 [angle_2]axis_2 [angle_3]axis_3", [A]i being the frame rotation by the angle A
+about the i-th axis. So `pxform(instrument, spacecraft)` = [x]1 [y]2 [z]3 = `eul2m(x, y, z, 1, 2, 3)`: a vector of the
+instrument frame is rotated by −z about Z, then by −y about Y, then by −x about X, into the spacecraft frame.
+`RotationToSpacecraft` is that rotation; the managed field-of-view path, `GetBoresightInSpacecraftFrame`,
+`GetRefVectorInSpacecraftFrame`, and the attitudes built from an instrument (`TriadAttitude`,
+`InstrumentPointingToAttitude`) all use it, so they agree with SPICE reading the frame kernel (#524).
 
 #### Field-of-view search
 
