@@ -661,6 +661,20 @@ public class SpiceAPI
     /// <param name="tolerance">Search tolerance — data within this duration of each step epoch will be returned</param>
     /// <param name="referenceFrame">Reference frame for the returned orientations</param>
     /// <param name="stepSize">Time step between successive query epochs</param>
+    /// <returns>
+    ///     The records of the CK, as <c>ckgpav_c</c> returns them: the C-matrix, the rotation from
+    ///     <paramref name="referenceFrame"/> to the spacecraft frame, labelled with <paramref name="referenceFrame"/>, its
+    ///     source (<c>vectorInSpacecraft = vectorInReference.Rotate(Rotation)</c>), and the angular velocity of the
+    ///     spacecraft relative to <paramref name="referenceFrame"/>, expressed in <paramref name="referenceFrame"/>: the
+    ///     convention of <see cref="Frame.ToFrame"/> (<c>xf2rav_c</c>) for that rotation, and that of
+    ///     <see cref="Body.Spacecraft.Spacecraft.GetOrientation"/>.
+    /// </returns>
+    /// <remarks>
+    ///     The rotation of a spacecraft's attitude in the frames' convention, spacecraft to reference, is its conjugate,
+    ///     which <c>GetStateOrientationToICRF</c> of the frame of a kernel-backed spacecraft returns. On a CK written by
+    ///     <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> before 11.0.0, which holds the inverse of the
+    ///     attitude (#529), this method returns that inverse.
+    /// </remarks>
     public IEnumerable<OrbitalParameters.StateOrientation> ReadOrientation(TimeSystem.Window searchWindow,
         int naifId, TimeSpan tolerance,
         Frame referenceFrame, TimeSpan stepSize)
@@ -710,12 +724,23 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// Write orientation file using a NAIF ID directly.
+    /// Writes the given records as a type-3 CK for the spacecraft <paramref name="naifId"/> (frame
+    /// <c>naifId * 1000</c>), unchanged, in one interval of one segment (<c>ckw03_c</c>).
     /// </summary>
-    /// <param name="filePath"></param>
-    /// <param name="naifId"></param>
-    /// <param name="stateOrientations"></param>
-    /// <returns></returns>
+    /// <param name="filePath">The CK to write.</param>
+    /// <param name="naifId">The NAIF identifier of the spacecraft; its clock kernel must be loaded.</param>
+    /// <param name="stateOrientations">
+    /// The records in increasing epoch order, each the C-matrix: the rotation from its
+    /// <see cref="OrbitalParameters.StateOrientation.ReferenceFrame"/> to the spacecraft frame, with the angular velocity of
+    /// the spacecraft relative to that frame, expressed in it, as <see cref="ReadOrientation"/> returns them. The segment
+    /// is tagged with the frame of the first record, so every record carries the same frame. Their epochs, encoded in the
+    /// spacecraft clock, must be strictly increasing.
+    /// </param>
+    /// <returns>True when the CK is written.</returns>
+    /// <remarks>
+    /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
+    /// convention, the conjugate of the record's rotation, in J2000.
+    /// </remarks>
     public bool WriteOrientation(FileInfo filePath, int naifId, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
