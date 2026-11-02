@@ -8,6 +8,7 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 using Spacecraft = IO.Astrodynamics.Body.Spacecraft.Spacecraft;
 
 namespace IO.Astrodynamics.Tests.Body;
@@ -25,12 +26,27 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </summary>
 public class SpacecraftFrameRecordTests
 {
-    // The arithmetic of the rotations: a few ulps
-    private const double Exact = 1e-15;
+    // PROVISIONAL: twice the worst over the rotations of these tests on Linux x64 (2026-11-02: 1.42e-16 rad, the entry from
+    // ECLIPJ2000), the arithmetic of the quaternions; to be set from the Windows and macOS arm64 CI logs
+    private const double Exact = 2.9e-16;
 
-    // The rate of a SLERP is its angle over its span: the angle between two samples (1.1e-2 rad) from their quaternions to
-    // a few ulps, a relative error of about 1e-16 / 1.1e-2 on the rate
-    private const double RateTolerance = Omega * 1e-13;
+    // PROVISIONAL: twice the worst over the rates of these tests on Linux x64 (2026-11-02: 6.85e-18 rad/s), the rate of a
+    // SLERP being its angle (1.1e-2 rad between two samples) over its span
+    private const double RateTolerance = 1.4e-17;
+
+    private readonly ITestOutputHelper _output;
+
+    private void Rotation(double angle, string what)
+    {
+        _output.WriteLine($"MEASURE #537 record rotation {what}: {angle:E2} rad");
+        Assert.True(angle <= Exact, $"{what}: {angle:E3} rad");
+    }
+
+    private void Rate(double delta, string what)
+    {
+        _output.WriteLine($"MEASURE #537 record rate {what}: {delta:E2} rad/s");
+        Assert.True(delta <= RateTolerance, $"{what}: {delta:E3} rad/s");
+    }
 
     private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
     private static readonly Vector3 Axis = new Vector3(1.0, 2.0, 3.0).Normalize();
@@ -40,8 +56,9 @@ public class SpacecraftFrameRecordTests
     // A law: any object, compared by reference
     private static readonly object Law = new();
 
-    public SpacecraftFrameRecordTests()
+    public SpacecraftFrameRecordTests(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
@@ -135,8 +152,8 @@ public class SpacecraftFrameRecordTests
             var epoch = Start.AddSeconds(seconds);
             double t = (epoch - Start).TotalSeconds;
             var read = frame.GetStateOrientationToICRF(epoch);
-            Assert.True(Angle(At(t), read.Rotation) <= Exact, $"{t} s: {Angle(At(t), read.Rotation):E3} rad");
-            Assert.True((read.AngularVelocity - rate).Magnitude() <= RateTolerance, $"{t} s: rate {read.AngularVelocity}");
+            Rotation(Angle(At(t), read.Rotation), $"interpolated at {t} s");
+            Rate((read.AngularVelocity - rate).Magnitude(), $"interpolated at {t} s");
             Assert.Equal(frame, read.ReferenceFrame);
         }
 
@@ -146,9 +163,9 @@ public class SpacecraftFrameRecordTests
         frame.RecordEnd(Start.AddSeconds(30.0));
         Assert.Equal(4, frame.GetStateOrientationsToICRF().Count());
         var held = frame.GetStateOrientationToICRF(Start.AddSeconds(25.0));
-        Assert.True(Angle(At(20.0), held.Rotation) <= Exact);
+        Rotation(Angle(At(20.0), held.Rotation), "held after the end");
         // The rate of the CK: at the entry of 20 s, the mean of the law's rate and of the hold's (zero)
-        Assert.True((frame.GetStateOrientationToICRF(Start.AddSeconds(20.0)).AngularVelocity - rate * 0.5).Magnitude() <= RateTolerance);
+        Rate((frame.GetStateOrientationToICRF(Start.AddSeconds(20.0)).AngularVelocity - rate * 0.5).Magnitude(), "at the last sample, mean with the hold");
     }
 
     [Fact]
@@ -191,12 +208,12 @@ public class SpacecraftFrameRecordTests
         {
             double t = (epoch - Start).TotalSeconds;
             var read = frame.GetStateOrientationToICRF(epoch);
-            Assert.True(Angle(At(t), read.Rotation) <= Exact, $"{t} s");
-            Assert.True((read.AngularVelocity - rate).Magnitude() <= RateTolerance, $"{t} s");
+            Rotation(Angle(At(t), read.Rotation), $"{t} s");
+            Rate((read.AngularVelocity - rate).Magnitude(), $"{t} s");
         }
 
         var inLead = frame.GetStateOrientationToICRF(change.AddSeconds(-0.5e-6));
-        Assert.True(Angle(lead.Rotation, inLead.Rotation) <= Exact);
+        Rotation(Angle(lead.Rotation, inLead.Rotation), "in the lead");
         Assert.Equal(Vector3.Zero, inLead.AngularVelocity);
         Assert.Equal(discrete.Rotation, frame.GetStateOrientationToICRF(change).Rotation);
 
@@ -204,10 +221,10 @@ public class SpacecraftFrameRecordTests
         var records = frame.CkRecords();
         Assert.Equal(new[] { Start, Start.AddSeconds(10.0), change.AddSeconds(-1e-6), change }, records.Select(x => x.Epoch));
         Assert.All(records, x => Assert.Equal(Frame.ICRF, x.ReferenceFrame));
-        Assert.True(Angle(lead.Rotation.Conjugate(), records[2].Rotation) <= Exact);
-        Assert.True(Angle(discrete.Rotation.Conjugate(), records[3].Rotation) <= Exact);
+        Rotation(Angle(lead.Rotation.Conjugate(), records[2].Rotation), "CK record of the lead");
+        Rotation(Angle(discrete.Rotation.Conjugate(), records[3].Rotation), "CK record of the change");
         // ckw03's rate, the spacecraft relative to J2000 in J2000: +ω about the axis, zero at the change
-        Assert.True((records[1].AngularVelocity - Axis * Omega).Magnitude() <= RateTolerance);
+        Rate((records[1].AngularVelocity - Axis * Omega).Magnitude(), "CK rate at a sample");
         Assert.Equal(Vector3.Zero, records[3].AngularVelocity);
 
         // A discrete attitude replacing the change 1.5 µs after it: the lead, 2.5 µs before it, is an ordinary sample of its
@@ -217,12 +234,12 @@ public class SpacecraftFrameRecordTests
         // A third of the hold of 1.5 µs (the 2.5 µs to the new attitude less the 1 µs of the repeated record), in ticks of
         // 100 ns: the rate at the lead is the law's (the interval before it), two thirds of it there
         var ramp = frame.GetStateOrientationToICRF(change.AddSeconds(-0.5e-6));
-        Assert.True(Angle(lead.Rotation, ramp.Rotation) <= Exact);
-        Assert.True((ramp.AngularVelocity - rate * (2.0 / 3.0)).Magnitude() <= RateTolerance, $"rate {ramp.AngularVelocity}");
+        Rotation(Angle(lead.Rotation, ramp.Rotation), "demoted lead held");
+        Rate((ramp.AngularVelocity - rate * (2.0 / 3.0)).Magnitude(), "demoted lead ramp");
         records = frame.CkRecords();
         Assert.Equal(new[] { Start, Start.AddSeconds(10.0), change.AddSeconds(-1e-6), change.AddSeconds(0.5e-6), change.AddSeconds(1.5e-6) },
             records.Select(x => x.Epoch));
-        Assert.True(Angle(lead.Rotation.Conjugate(), records[3].Rotation) <= Exact);
+        Rotation(Angle(lead.Rotation.Conjugate(), records[3].Rotation), "CK repeated record after demotion");
     }
 
     [Fact]
@@ -236,7 +253,7 @@ public class SpacecraftFrameRecordTests
         var entry = frame.GetStateOrientationsToICRF().Single();
         // pxform(ECLIPJ2000, J2000) after the rotation to ECLIPJ2000
         var toIcrf = SpiceAPI.Instance.TransformFrame(Start, Frame.ECLIPTIC_J2000, Frame.ICRF).Rotation;
-        Assert.True(AttitudeRecordTests.RotationAngle(v => v.Rotate(q).Rotate(toIcrf), v => v.Rotate(entry.Rotation)) <= Exact);
+        Rotation(AttitudeRecordTests.RotationAngle(v => v.Rotate(q).Rotate(toIcrf), v => v.Rotate(entry.Rotation)), "ECLIPJ2000 entry");
         Assert.True((entry.AngularVelocity - w.Rotate(toIcrf)).Magnitude() <= 1e-3 * Exact);
         Assert.Equal(spacecraft.Frame, entry.ReferenceFrame);
     }

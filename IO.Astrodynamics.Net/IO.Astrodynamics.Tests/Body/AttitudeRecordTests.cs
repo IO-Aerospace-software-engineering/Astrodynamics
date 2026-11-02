@@ -304,9 +304,15 @@ public class AttitudeRecordTests
     /// SPICE(TIMESOUTOFORDER)) or aborted the process (ECLIPJ2000).
     /// </summary>
     [Theory]
-    [InlineData("ICRF", -8401)]
     [InlineData("ECLIPJ2000", -8403)]
-    public void Reads_BeforeDuringAfter_LeaveTheRecordAndTheCk(string frame, int naifId)
+    public void Reads_BeforeDuringAfter_LeaveTheRecordAndTheCk(string frame, int naifId) => Reads(frame, naifId);
+
+    [Theory]
+    [Trait("Category", "Validation")]
+    [InlineData("ICRF", -8401)]
+    public void Reads_BeforeDuringAfter_LeaveTheRecordAndTheCk_Icrf(string frame, int naifId) => Reads(frame, naifId);
+
+    private void Reads(string frame, int naifId)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var sun = new CelestialBody(Stars.Sun);
@@ -421,9 +427,15 @@ public class AttitudeRecordTests
     /// </summary>
     [Theory]
     [InlineData(290.0, -8421)]
+    public void NearEpochChain_WritesItsCk(double hold, int naifId) => NearEpochChain(hold, naifId);
+
+    [Theory]
+    [Trait("Category", "Validation")]
     [InlineData(300.0, -8422)]
     [InlineData(600.0, -8423)]
-    public void NearEpochChain_WritesItsCk(double hold, int naifId)
+    public void NearEpochChain_OtherHolds_WriteTheirCk(double hold, int naifId) => NearEpochChain(hold, naifId);
+
+    private void NearEpochChain(double hold, int naifId)
     {
         var hooks = new PropagatedCase.Hooks
         {
@@ -469,9 +481,15 @@ public class AttitudeRecordTests
     /// <c>Attitude.TryExecute</c> (public) on a state in each inertial frame: the rotation from the spacecraft frame to ICRF,
     /// labelled ICRF, that of the closed form of the law on the same orbit in ICRF (#529, #535; choice 6).
     /// </summary>
+    [Fact]
+    public void AttitudeTryExecute_FromB1950_IsTheRotationToIcrf() => TryExecute("B1950");
+
     [Theory]
+    [Trait("Category", "Validation")]
     [MemberData(nameof(FrameNames))]
-    public void AttitudeTryExecute_FromEachFrame_IsTheRotationToIcrf(string frame)
+    public void AttitudeTryExecute_FromEachFrame_IsTheRotationToIcrf(string frame) => TryExecute(frame);
+
+    private void TryExecute(string frame)
     {
         var start = new Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
@@ -512,7 +530,8 @@ public class AttitudeRecordTests
         }
     }
 
-    public static IEnumerable<object[]> FrameNames() => Frames.Select(x => new object[] { x });
+    // B1950 holds the worst (Linux x64, 2026-11-02) and runs in every job
+    public static IEnumerable<object[]> FrameNames() => Frames.Where(x => x != "B1950").Select(x => new object[] { x });
 
     // PROVISIONAL: twice the worst (Linux x64, 2026-11-02: 3.73e-9 m, 3.28e-12 m/s), m and m/s
     internal const double TlePosition = 7.5e-9;
