@@ -255,6 +255,11 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   is a UTC window. See [Time & Windows](../reference/time-and-windows.md#the-time-argument-of-a-propagation)
   ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)).
 
+**Removed**
+
+- **`LowThrustManeuver`.** It was never implemented: every member threw `NotImplementedException`. It was marked
+  `[Obsolete]` in 10.1.0 (see its Deprecated entry). Finite thrust is planned as a separate feature.
+
 ### 10.2.0-preview-1
 
 A preview of 10.2.0, published on NuGet as a prerelease (`dotnet add package IO.Astrodynamics --prerelease`,
