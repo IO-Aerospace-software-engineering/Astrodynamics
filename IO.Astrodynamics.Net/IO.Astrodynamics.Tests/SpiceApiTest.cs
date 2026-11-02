@@ -261,15 +261,15 @@ public class SpiceApiTest
         double n = 7656.2204182967143 / 6800000.0;
         double t = (res.ElementAt(1).Epoch - start).TotalSeconds;
         double half = (System.Math.PI / 2.0 + n * t) / 2.0;
-        _output?.WriteLine($"MEASURE ReadOrientation: |W - closed form| {System.Math.Abs(res.ElementAt(1).Rotation.W - System.Math.Cos(half)):E3}, |Z - closed form| {System.Math.Abs(res.ElementAt(1).Rotation.VectorPart.Z + System.Math.Sin(half)):E3}, |AVz - n| {System.Math.Abs(res.ElementAt(1).AngularVelocity.Z - n):E3}");
-        // Twice the measured differences (Linux x64, 2026-11-02: 8.4e-10, 8.3e-10 and 2.4e-10 rad/s), the Moon's effect on
+        _output?.WriteLine($"MEASURE ReadOrientation: |W - closed form| {System.Math.Abs(res.ElementAt(1).Rotation.W - System.Math.Cos(half)):E3}, |Z - closed form| {System.Math.Abs(res.ElementAt(1).Rotation.VectorPart.Z + System.Math.Sin(half)):E3}, |AVz - n| {System.Math.Abs(res.ElementAt(1).AngularVelocity.Z - n):E3}, X {res.ElementAt(1).Rotation.VectorPart.X:E3}, Y {res.ElementAt(1).Rotation.VectorPart.Y:E3}, AVx {res.ElementAt(1).AngularVelocity.X:E3}, AVy {res.ElementAt(1).AngularVelocity.Y:E3}");
+        // Twice the measured differences (Linux x64, 2026-11-02: W 8.4e-10, Z 8.3e-10, X 2.1e-12, Y 0, rate 2.4e-10 about Z and 6.0e-13 rad/s about X and Y), the Moon's effect on
         // the orbit; to be read on Windows and macOS arm64 from the CI logs
         Assert.Equal(System.Math.Cos(half), res.ElementAt(1).Rotation.W, 1.7e-9);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 1e-12);
+        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 4.3e-12);
         Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 1e-12);
         Assert.Equal(-System.Math.Sin(half), res.ElementAt(1).Rotation.VectorPart.Z, 1.7e-9);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 1e-12);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 1e-12);
+        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 1.2e-12);
+        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 1.3e-12);
         Assert.Equal(n, res.ElementAt(1).AngularVelocity.Z, 4.8e-10);
         Assert.Equal(window.StartDate, res.ElementAt(0).Epoch, TestHelpers.TimeComparer);
         Assert.Equal(Frames.Frame.ICRF, res.ElementAt(0).ReferenceFrame);
