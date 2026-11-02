@@ -50,7 +50,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public Vector3 RefVector { get; }
 
         /// <summary>
-        /// Instrument rotation relative to instrument platform. The orientation is expressed in euler angles
+        /// Instrument rotation relative to instrument platform: the Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel (see <see cref="RotationToSpacecraft"/>)
         /// </summary>
         public Vector3 Orientation { get; }
 
@@ -96,6 +96,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             Boresight = boresight;
             RefVector = refVector;
             Orientation = orientation;
+            RotationToSpacecraft = EulerToSpacecraft(orientation);
             Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
             NaifId = naifId;
         }
@@ -179,16 +180,34 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 targetFrame, targetShape, aberration, stepSize);
         }
 
+        /// <summary>
+        /// The rotation from the instrument frame to the spacecraft frame, <c>vectorInSpacecraft =
+        /// vectorInInstrument.Rotate(q)</c>, of the Euler angles <see cref="Orientation"/> (x, y, z) about the axes 1, 2, 3,
+        /// as SPICE defines the frame kernel the library writes (<c>TKFRAME_..._ANGLES</c>, <c>AXES = (1, 2, 3)</c>):
+        /// <c>pxform(instrument, spacecraft) = eul2m(x, y, z, 1, 2, 3)</c>, the vector rotated by -z about Z, then -y about Y,
+        /// then -x about X (#524).
+        /// </summary>
+        public Quaternion RotationToSpacecraft { get; }
+
         public Vector3 GetBoresightInSpacecraftFrame()
         {
-            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
-            return Boresight.Rotate(q);
+            return Boresight.Rotate(RotationToSpacecraft);
         }
 
         public Vector3 GetRefVectorInSpacecraftFrame()
         {
-            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
-            return RefVector.Rotate(q);
+            return RefVector.Rotate(RotationToSpacecraft);
+        }
+
+        // The rotation of RotationToSpacecraft
+        internal static Quaternion EulerToSpacecraft(in Vector3 orientation)
+        {
+            if (orientation == Vector3.Zero)
+            {
+                return Quaternion.Zero;
+            }
+
+            return (new Quaternion(Vector3.VectorX, -orientation.X) * new Quaternion(Vector3.VectorY, -orientation.Y) * new Quaternion(Vector3.VectorZ, -orientation.Z)).Normalize();
         }
 
         public Vector3 GetBoresightInICRFFrame(in Time date)
@@ -213,8 +232,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         private Quaternion RotationToICRF(in Time date)
         {
-            Quaternion q = Orientation == Vector3.Zero ? Quaternion.Zero : new Quaternion(Orientation.Normalize(), Orientation.Magnitude());
-            return Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * q.Conjugate();
+            return Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * RotationToSpacecraft;
         }
 
         public async Task WriteFrameAsync(FileInfo outputFile)
