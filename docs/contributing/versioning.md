@@ -280,8 +280,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
   (0.3, 0.5, 0.2) and 53.9° for (−0.7, 1.1, 2.3), the getters 180° off for (0, π/2, 0), and a TRIAD attitude built from
   an instrument aimed another vector than the one the field-of-view search sees (66.3° for (0.3, 0.5, 0.2)). Every path
   now takes `RotationToSpacecraft`, `eul2m(x, y, z, 1, 2, 3)` as Frames Required Reading defines a TK frame
-  ("Defining a TK Frame Using Euler Angles"): 4.7e-16 rad from the closed form and from `pxform(instrument, spacecraft)`
-  on the frame kernels the library writes ([#524](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/524)).
+  ("Defining a TK Frame Using Euler Angles"): 2.2e-16 rad from the closed form, and 4.7e-16 rad from
+  `pxform(instrument, spacecraft)` on the frame kernels the library writes (Windows x64; 3.0e-16 rad on Linux x64,
+  2.9e-16 rad on macOS arm64) ([#524](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/524)).
 - **`InstrumentPointingToAttitude` returned the inverse rotation** ([#538](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/538)), the one that takes the target's direction to the
   boresight: at zero orientation the boresight landed 137.519° from the target, twice the 68.759° between them, and its
   test asserted a snapshot 95.8° from the Moon. It now takes the boresight to the target: 4.4e-16 rad from the minimal

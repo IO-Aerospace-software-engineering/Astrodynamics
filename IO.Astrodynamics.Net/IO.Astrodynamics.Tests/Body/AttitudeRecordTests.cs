@@ -79,7 +79,9 @@ public class AttitudeRecordTests
     // macOS arm64, and the chains of NearEpochChain (managed - CK and its rate); every worst below is the same on the three,
     // L / W / M equal to the printed digit, and the case of each worst is in WorstCase_MatchesSpice. The SLERP residual at
     // 1 s outputs, in the Validation category, is twice the Linux worst; the occultation against its twin, measured 0 on
-    // the three, keeps its one tick
+    // the three, keeps its one tick. Where twice the printed worst falls on a rounding boundary, the Linux worst is read at
+    // six digits from the same 162 cases with only the format of the MEASURE line changed (Linux x64, 2026-11-02, every
+    // row equal to CI Linux at the printed digits): FrameVelocity, FramePositionSunAfter2025, RateAgainstCkAfter2025
 
     /// <summary>The managed rotation against the CK (<c>pxform</c>), off the leads, before 2025-01-19: the encoded SCLK's
     /// spacing (2.4e-7 s) times the angular velocity. Worst 6.14e-10 rad (Prograde, VV, ICRF).</summary>
@@ -93,7 +95,9 @@ public class AttitudeRecordTests
     /// Worst 9.86e-13 rad/s (InstrumentTriad, RK7(8), B1950).</summary>
     internal const double RateAgainstCk = 2.0e-12;
 
-    /// <summary>The same from 2025-01-19, rad/s. Worst 1.45e-12 rad/s (Prograde, RK7(8), ECLIPJ2000, 2026).</summary>
+    /// <summary>The same from 2025-01-19, rad/s. Worst 1.45e-12 rad/s (Prograde, RK7(8), ECLIPJ2000, 2026; 1.447735e-12
+    /// rad/s on Linux at six digits; Windows and macOS arm64 print 1.45e-12, which does not settle 2.9e-12 against
+    /// 3.0e-12).</summary>
     internal const double RateAgainstCkAfter2025 = 2.9e-12;
 
     /// <summary>The CK at the entries of a continuous law (its samples) against the closed form of the law on the solution
@@ -149,12 +153,12 @@ public class AttitudeRecordTests
 
     /// <summary>The state of the spacecraft relative to the Earth in its own frame (<c>GetEphemeris</c>) against <c>spkezr</c>
     /// in the spacecraft frame on the written kernels, m and m/s: the floor of the CK times the distance, and the SPK's
-    /// interpolation. Worst 3.93e-3 m and 1.00e-5 m/s (Prograde, RK7(8), B1950); 8.84e-3 m and 2.12e-5 m/s from
-    /// 2025-01-19 (Prograde, RK7(8), ECLIPJ2000, 2026); 2.26e-2 m (InstrumentTriad, VV, ECLIPJ2000) and 1.44e-3 m/s
-    /// (InstrumentTriad, RK7(8), ICRF) in SSB mode.</summary>
+    /// interpolation. Worst 3.93e-3 m and 1.00e-5 m/s (Prograde, RK7(8), B1950; 1.003777e-5 m/s on Linux at six digits,
+    /// twice 2.0076e-5 m/s); 8.84e-3 m and 2.12e-5 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000, 2026); 2.26e-2 m
+    /// (InstrumentTriad, VV, ECLIPJ2000) and 1.44e-3 m/s (InstrumentTriad, RK7(8), ICRF) in SSB mode.</summary>
     internal const double FramePosition = 7.9e-3;
 
-    internal const double FrameVelocity = 2.0e-5;
+    internal const double FrameVelocity = 2.1e-5;
     internal const double FramePositionAfter2025 = 1.8e-2;
     internal const double FrameVelocityAfter2025 = 4.3e-5;
     internal const double FramePositionSsb = 4.6e-2;
@@ -162,11 +166,11 @@ public class AttitudeRecordTests
 
     /// <summary>The same relative to the Sun, 1.5e11 m away: the floor of the CK's rotation times the distance. Worst 88.2 m
     /// and 0.249 m/s (Prograde, RK7(8), B1950); 185 m and 0.527 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000,
-    /// 2026).</summary>
+    /// 2026; 185.4724 m on Linux at six digits, twice 370.94 m).</summary>
     internal const double FramePositionSun = 1.8e2;
 
     internal const double FrameVelocitySun = 5.0e-1;
-    internal const double FramePositionSunAfter2025 = 3.7e2;
+    internal const double FramePositionSunAfter2025 = 3.8e2;
     internal const double FrameVelocitySunAfter2025 = 1.1;
 
     /// <summary>The managed occultation from GALACTIC against its ICRF twin, s: measured 0 on the three platforms, below the
