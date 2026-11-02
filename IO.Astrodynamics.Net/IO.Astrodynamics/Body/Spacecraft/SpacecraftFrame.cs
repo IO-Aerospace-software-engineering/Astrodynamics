@@ -40,6 +40,14 @@ public class SpacecraftFrame : Frame
     /// </summary>
     internal const double DiscreteChangeLead = 1.0e-6;
 
+    /// <summary>
+    /// Two entries of the record closer than this, 2 µs (twice <see cref="DiscreteChangeLead"/>), are one epoch: a record
+    /// repeated <see cref="DiscreteChangeLead"/> before an entry then follows the previous one by at least
+    /// <see cref="DiscreteChangeLead"/>. The propagation itself records entries 1e-7 to 2e-7 s apart: an attitude chained
+    /// after a held one, at its epoch plus the hold counted in TDB seconds, and an output sample on the TT grid (#501).
+    /// </summary>
+    internal const double SameEpochTolerance = 2.0 * DiscreteChangeLead;
+
     private readonly IDataProvider _dataProvider;
     private readonly List<AttitudeEntry> _record = new();
     private readonly object _recordLock = new();
@@ -196,8 +204,9 @@ public class SpacecraftFrame : Frame
     /// converted to ICRF.</param>
     /// <param name="law">The continuous attitude law it samples, or null for a discrete attitude (an attitude executed once,
     /// an impulse's, the initial one).</param>
-    /// <param name="replace">Whether it replaces an entry at the same epoch: an attitude activated later in the maneuver
-    /// chain does; a sample never replaces an activation.</param>
+    /// <param name="replace">Whether it replaces the entries at the same epoch, within <see cref="SameEpochTolerance"/>:
+    /// an attitude activated later in the maneuver chain does, and is kept at its own epoch; a sample never replaces an
+    /// activation, and is dropped.</param>
     /// <returns>Whether the entry was recorded.</returns>
     internal bool Record(StateOrientation orientation, object law, bool replace)
     {
@@ -205,24 +214,50 @@ public class SpacecraftFrame : Frame
         var entry = new AttitudeEntry(ToIcrf(orientation), law);
         lock (_recordLock)
         {
-            int index = Find(entry.Orientation.Epoch);
-            if (index >= 0)
+            var (first, end) = Near(entry.Orientation.Epoch);
+            if (end > first)
             {
                 if (!replace)
                 {
                     return false;
                 }
 
-                _record[index] = entry;
-                return true;
+                _record.RemoveRange(first, end - first);
             }
 
-            _record.Insert(~index, entry);
+            _record.Insert(first, entry);
             return true;
         }
     }
 
-    /// <summary>The latest entry held until <paramref name="end"/>, recorded there unless an entry is.</summary>
+    // The range [First, End) of the entries within SameEpochTolerance of the date: First is also where an entry at the date
+    // goes once they are removed
+    private (int First, int End) Near(in Time date)
+    {
+        var from = date.AddSeconds(-SameEpochTolerance);
+        var to = date.AddSeconds(SameEpochTolerance);
+        int first = LowerBound(from, strict: true);
+        int end = LowerBound(to, strict: false);
+        return (first, System.Math.Max(first, end));
+    }
+
+    // The index of the first entry after the date (strict), or at or after it
+    private int LowerBound(in Time date, bool strict)
+    {
+        int lo = 0, hi = _record.Count;
+        while (lo < hi)
+        {
+            int mid = (lo + hi) >> 1;
+            int c = _record[mid].Orientation.Epoch.CompareTo(date);
+            if (c < 0 || (strict && c == 0)) lo = mid + 1;
+            else hi = mid;
+        }
+
+        return lo;
+    }
+
+    /// <summary>The latest entry held until <paramref name="end"/>, recorded there unless an entry is, within
+    /// <see cref="SameEpochTolerance"/>.</summary>
     internal void RecordEnd(in Time end)
     {
         lock (_recordLock)
@@ -233,7 +268,7 @@ public class SpacecraftFrame : Frame
             }
 
             var latest = _record[^1];
-            if (latest.Orientation.Epoch >= end)
+            if (latest.Orientation.Epoch > end.AddSeconds(-SameEpochTolerance))
             {
                 return;
             }
@@ -257,7 +292,7 @@ public class SpacecraftFrame : Frame
 
     /// <summary>
     /// Adds an orientation to the attitude record of a managed spacecraft, as a discrete attitude: held until the next
-    /// entry. It replaces an entry at the same epoch.
+    /// entry. It replaces the entries at the same epoch, within 2 µs.
     /// </summary>
     public override bool AddStateOrientationToICRF(StateOrientation stateOrientation)
     {
