@@ -22,7 +22,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// <summary>
 /// The kernels a propagated spacecraft gives CSPICE (choice 9 (b) of #515): its clock, its frame, the frames and kernels of
 /// its instruments, its SPK and its CK, and the SPKs of its spacecraft and site targets, written by the library before
-/// any search (a search adds orientations to the spacecraft's frame, §8 item 2 of #515), then loaded and kept loaded.
+/// any search (a search adds orientations to the spacecraft's frame, #523), then loaded and kept loaded.
 /// </summary>
 internal static class FieldOfViewKernels
 {
@@ -783,7 +783,7 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     /// Twelve searches in parallel, each on a fresh spacecraft (six propagated, three of them with a nadir attitude, and six
     /// kernel-backed; circles, ellipses and rectangles), equal the same searches run one after the other on other fresh
     /// spacecraft, to the tick; the CK of a propagated one is still written after its search (the search reads nothing
-    /// before the search window, §8 item 2 of #515).
+    /// before the search window, #523).
     /// </summary>
     [Fact]
     public async Task ConcurrentSearches_EqualSequentialSearches()

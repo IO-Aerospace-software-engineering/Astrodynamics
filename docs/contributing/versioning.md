@@ -225,7 +225,8 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   aberrations on a circle and a narrow field; 2.5e-4 s where the field grazes the Earth's limb (Linux x64). The kernels
   the library writes for an attitude other than the identity, or for an initial state in ECLIPJ2000, do not describe
   what it reads (an inverted CK, interpolated across a discrete attitude change; ECLIPJ2000 states read as ICRF):
-  `gftfov` on them differs from both paths by up to 972 s, three defects outside this change, each its own issue.
+  `gftfov` on them differs from both paths by up to 972 s, three defects outside this change, each its own issue
+  ([#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529), [#534](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/534), [#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535)).
   The CSPICE path is unchanged. See
   [Spacecraft](../reference/spacecraft.md#field-of-view-search).
 

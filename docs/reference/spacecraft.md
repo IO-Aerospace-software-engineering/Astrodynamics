@@ -259,7 +259,8 @@ step.
 
 The kernels the library writes describe what it reads for a propagated spacecraft whose attitude is the identity of
 ICRF and whose initial state is in ICRF. Otherwise they do not, because of three defects outside the field-of-view
-search, each measured (2026-11-01) and each its own issue, and `gftfov` on those kernels differs from both paths of the
+search, each measured (2026-11-01) and each its own issue ([#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529), [#534](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/534) and
+[#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535), in the order below), and `gftfov` on those kernels differs from both paths of the
 library:
 
 - the CK that `Spacecraft.WriteOrientation` writes holds the inverse of the library's attitude: for a nadir attitude

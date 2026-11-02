@@ -31,7 +31,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// <c>WriteOrientation</c>), what a user gives CSPICE or another tool: for RK7(8) and SSB mode, whose attitude is the
 /// identity of ICRF, the two public paths agree within <see cref="Limit"/>. For the TRIAD attitude, the nadir attitude and
 /// the ECLIPJ2000 initial state they do not, because of three defects outside #515, each measured (2026-11-01, Linux) and
-/// pinned below with its measured disagreement (PROVISIONAL, until the defects are fixed in their own issues):
+/// pinned below with its measured disagreement (PROVISIONAL, until the defects are fixed in their own issues, #529, #534
+/// and #535 in the order below):
 /// </para>
 /// <list type="bullet">
 /// <item>The CK the library writes holds the inverse of the library's attitude: <c>Spacecraft.WriteOrientation</c> passes
@@ -48,8 +49,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// <b>The kernels of what the library reads</b>, so that <c>gftfov</c> measures the field-of-view search and not those
 /// defects: the CK holds the inverse of the library's rotations; for the TRIAD attitude, each orientation is held until
 /// 1 ms before the next one, the attitude the library defines; for ECLIPJ2000 and the TLE, the SPK holds the states the
-/// library reads every 10 s, and the CK the orientations as ICRF. The nadir attitude keeps the library's model (§8 item 9 of
-/// #515): an orientation every output step, held with a zero angular velocity, where the CK interpolates; its edges differ
+/// library reads every 10 s, and the CK the orientations as ICRF. The nadir attitude keeps the library's model (#529):
+/// an orientation every output step, held with a zero angular velocity, where the CK interpolates; its edges differ
 /// by up to the output step, the limit of each of its rows. A TLE spacecraft that is not propagated has no states the
 /// library would write: its SPK is that of its reads.
 /// </para>
@@ -201,10 +202,10 @@ public class FieldOfViewDynamicsTests
             new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 2),
             new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1)
         ],
-        // PROVISIONAL, the nadir attitude (§8 item 9 of #515): the library holds each orientation of its 1 s output steps
+        // PROVISIONAL, the nadir attitude (#529): the library holds each orientation of its 1 s output steps
         // with a zero angular velocity, where the CK interpolates between them, so an edge moves by up to the output step;
         // twice the measured edge of each row (Linux, 2026-11-01: 0.885 s, 0.335 s, 0.550 s), until the attitude model is
-        // decided in its own issue. The Earth stays in place in a nadir frame: no edge
+        // decided in its own issue, #529. The Earth stays in place in a nadir frame: no edge
         ["Nadir"] =
         [
             new(792, "SUN", ShapeType.Point, Aberration.LTS, 1, 1.8), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1, 0.67),
