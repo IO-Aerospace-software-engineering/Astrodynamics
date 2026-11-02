@@ -58,20 +58,23 @@ public class InstrumentPointingAttitudeTests
         maneuver.TryExecute(orbitalParams.ToStateVector());
 
         // The closed form: the minimal rotation taking the boresight, in the spacecraft frame by the Euler angles of the frame
-        // kernel (Rx(-x) Ry(-y) Rz(-z), Frames Required Reading, written in the test, #524), to the direction of the Moon,
-        // its geometric position from spkezr (the state is made relative to the Moon, the centre of the maneuver, so the light
-        // time it requests is not applied: a defect outside #537, its own issue) less the spacecraft's; compared as a rotation, the roll included. Before, the attitude was the inverse
-        // rotation: the boresight 2 alpha from the Moon, alpha its angle from the boresight (137.5 deg at zero
-        // orientation, reader 4 of the design of #537), and the test asserted a snapshot of it, 95.8 deg from the Moon
+        // kernel (Rx(-x) Ry(-y) Rz(-z), Frames Required Reading, written in the test, #524), to the direction of the Moon
+        // less the spacecraft's position, compared as a rotation, the roll included. The direction is the geometric one of
+        // spkezr: a pin of a defect outside #537, listed in its description with its own issue. The maneuver asks for
+        // Aberration.LT, but the state is made relative to the Moon, the centre of the maneuver, so the light time is not
+        // applied (the Moon's LT-corrected direction from a LEO is 4.4e-5 rad from the geometric one). Before, the attitude
+        // was the inverse rotation: the boresight 2 alpha from the Moon, alpha its angle from the boresight (137.5 deg at
+        // zero orientation, reader 4 of the design of #537), and the test asserted a snapshot of it, 95.8 deg from the Moon
         var moon = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
         var toMoon = moon - orbitalParams.Position;
         var boresight = Body.AttitudeRecordTests.EulerToSpacecraft(new Vector3(x, y, z), Vector3.VectorZ);
         double angle = Body.AttitudeRecordTests.RotationAngle(Body.AttitudeRecordTests.MinimalRotation(boresight, toMoon), v => v.Rotate(maneuver.StateOrientation.Rotation));
         double pointing = Body.AttitudeRecordTests.Angle(boresight.Rotate(maneuver.StateOrientation.Rotation), toMoon);
         _output.WriteLine($"MEASURE InstrumentPointing ({x}, {y}, {z}): attitude - closed form {angle:E3} rad, boresight from the Moon {pointing:E3} rad");
-        // PROVISIONAL: twice the worst over the five orientations on Linux x64 (2026-11-02: 4.42e-16 rad at (-pi/2, 0, 0)); to
-        // be set from the Windows and macOS arm64 CI logs
+        // PROVISIONAL: twice the worst over the five orientations on Linux x64 (2026-11-02: 4.42e-16 rad at (-pi/2, 0, 0);
+        // the boresight 3.93e-16 rad from the Moon at (0.3, 0.5, 0.2)); to be set from the Windows and macOS arm64 CI logs
         Assert.True(angle <= InstrumentPointingTolerance, $"attitude {angle:E3} rad from the closed form");
+        Assert.True(pointing <= BoresightTolerance, $"boresight {pointing:E3} rad from the Moon");
         Assert.Equal(Frames.Frame.ICRF, maneuver.StateOrientation.ReferenceFrame);
         Assert.Equal(0.0, maneuver.FuelBurned);
         Assert.Equal(new Window(epoch, TimeSpan.FromSeconds(10.0)), maneuver.ManeuverWindow);
@@ -79,4 +82,5 @@ public class InstrumentPointingAttitudeTests
     }
 
     private const double InstrumentPointingTolerance = 8.9e-16;
+    private const double BoresightTolerance = 7.9e-16;
 }
