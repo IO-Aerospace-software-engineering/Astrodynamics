@@ -20,53 +20,43 @@ namespace IO.Astrodynamics.Tests.Body;
 
 /// <summary>
 /// The managed field-of-view search of spacecraft propagated in every way the public surface allows (#515, §7 "Observer
-/// dynamics"), each against CSPICE's <c>gftfov</c> in the process (choice 9 (b)): RK7(8), an impulsive maneuver followed by
-/// a TRIAD attitude inside the window (a discrete attitude), a nadir attitude (a continuous one), SSB mode, an initial state
-/// in ECLIPJ2000, and a TLE. A TEME initial state is not on the public surface: the propagator rejects it ("must be defined
-/// in inertial frame").
+/// dynamics"), each against CSPICE's <c>gftfov</c> in the process (choice 9 (b)) on the kernels the library writes
+/// (<c>Spacecraft.WriteEphemeris</c> and <c>WriteOrientation</c>), what a user gives CSPICE or another tool: RK7(8), an
+/// impulsive maneuver followed by a TRIAD attitude inside the window (a discrete attitude), a nadir attitude (a continuous
+/// one), SSB mode, the six inertial initial frames, the path of <c>Scenario.SimulateAsync</c>, and a TLE. A TEME initial
+/// state is not on the public surface: the propagator rejects it ("must be defined in inertial frame").
 /// </summary>
 /// <remarks>
 /// <para>
-/// Two sets of kernels, for each variant. <b>The kernels the library writes</b> (<c>Spacecraft.WriteEphemeris</c> and
-/// <c>WriteOrientation</c>), what a user gives CSPICE or another tool: for RK7(8) and SSB mode, whose attitude is the
-/// identity of ICRF, the two public paths agree within <see cref="Limit"/>. For the TRIAD attitude, the nadir attitude and
-/// the ECLIPJ2000 initial state they do not, because of three defects outside #515, each measured (2026-11-01, Linux; the
-/// same on Linux, Windows and macOS arm64, CI run 41365060160, 2026-11-02) and pinned below with its measured
-/// disagreement until the defects are fixed in their own issues, #529, #534 and #535 in the order below:
+/// Until #537, three defects made the two public paths disagree, and this test pinned their disagreement (CI run
+/// 41365060160, 2026-11-02): the CK held the inverse of the library's attitude (#529), interpolated across a discrete
+/// change (#534: 971.8 s on an edge of the TRIAD variant), and a spacecraft propagated from ECLIPJ2000 stored its states
+/// in that frame, read as ICRF (#535: 232.6 s); the nadir attitude, held between its outputs by the library where the CK
+/// interpolates, had limits of 1.8, 0.67 and 1.1 s. The kernels of what the library read stood in for those it writes.
+/// Fixed, every variant compares the managed search with <c>gftfov</c> on the kernels the library writes, at the limit of
+/// #515, the nadir rows included: the CK repeats the earlier attitude 1 µs before a discrete change, which moves an edge
+/// by at most that microsecond and the rounding of its encoded SCLK.
 /// </para>
-/// <list type="bullet">
-/// <item>The CK the library writes holds the inverse of the library's attitude: <c>Spacecraft.WriteOrientation</c> passes
-/// the rotation from the spacecraft frame to ICRF where a CK holds the C-matrix (the CK of a nadir attitude points the front
-/// at the zenith at the start). For an identity attitude both are the same.</item>
-/// <item>The CK interpolates linearly between the stored orientations, across a discrete attitude change: after the TRIAD
-/// attitude, the CK turns over 2 731 s from the identity to the new attitude, which the library holds from the maneuver
-/// on.</item>
-/// <item>A propagated spacecraft whose initial state is in ECLIPJ2000 stores its states and orientations in that frame,
-/// and <c>Spacecraft.GetGeometricStateRelativeTo</c> and its frame return them as ICRF: positions up to 2.5e6 m from those
-/// of the SPK the library writes from the same states, which CSPICE reads right.</item>
-/// </list>
 /// <para>
-/// <b>The kernels of what the library reads</b>, so that <c>gftfov</c> measures the field-of-view search and not those
-/// defects: the CK holds the inverse of the library's rotations; for the TRIAD attitude, each orientation is held until
-/// 1 ms before the next one, the attitude the library defines; for ECLIPJ2000 and the TLE, the SPK holds the states the
-/// library reads every 10 s, and the CK the orientations as ICRF. The nadir attitude keeps the library's model (#529):
-/// an orientation every output step, held with a zero angular velocity, where the CK interpolates; its edges differ
-/// by up to the output step, the limit of each of its rows. A TLE spacecraft that is not propagated has no states the
-/// library would write: its SPK is that of its reads.
+/// A TLE spacecraft is not propagated by <c>Spacecraft.Propagate</c>: its SPK holds the SGP4 states every 10 s, and its
+/// CK the identity of ICRF, the attitude of a spacecraft without an attitude maneuver, both written by the test with the
+/// raw writers (a read no longer adds to the attitude record, #523).
 /// </para>
 /// <para>
 /// The fields: a circle, an ellipse and a rectangle whose boresight is -X of the frame (the fields of
 /// <c>InstrumentTests.FindWindowInFieldOfView</c>), and a circle of 1.3 rad about the front of the spacecraft. The rows of a
-/// variant are those with an edge inside the search window on the kernels of what the library reads, their window counts
-/// asserted: with a constant attitude, the Sun and the Moon stay where they are in the field.
+/// variant are those with an edge inside the search window, their window counts asserted: with a constant attitude, the
+/// Sun and the Moon stay where they are in the field. The variants of #515 run in every CI job; those added by #537 (the
+/// other initial frames, the scenario path) are in the Validation category, under the same limit.
 /// </para>
 /// </remarks>
 public class FieldOfViewDynamicsTests
 {
     // Twice the worst over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02) over the rows below, off the
     // nadir attitude: 1.2e-6 / 1.2e-6 / 1.2e-6 s (SSB 789 EARTH Ellipsoid LT), every row the same on the three, on the
-    // kernels of what the library reads, and on the kernels the library writes for RK7(8) and SSB mode; gftfov at 1e-6 s,
-    // the managed search at 1 µs, the times in ticks of 100 ns
+    // kernels of what the library read before #537, and on the kernels the library writes for RK7(8) and SSB mode; gftfov at
+    // 1e-6 s, the managed search at 1 µs, the times in ticks of 100 ns. On the kernels the library writes with #537, the worst
+    // over every variant is the same row, 1.2e-6 s (Linux x64, 2026-11-02; the nadir rows 4e-7 s, the TRIAD rows 1.0e-6 s)
     private const double Limit = 2.4e-6;
 
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
@@ -217,11 +207,7 @@ public class FieldOfViewDynamicsTests
             new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 2),
             new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1)
         ],
-        // The nadir attitude (#529): the library holds each orientation of its 1 s output steps
-        // with a zero angular velocity, where the CK interpolates between them, so an edge moves by up to the output step;
-        // twice the worst edge of each row over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02:
-        // 0.885 / 0.885 / 0.885 s, 0.335 / 0.335 / 0.335 s, 0.550 / 0.550 / 0.550 s), until the attitude model is
-        // decided in its own issue, #529. The Earth stays in place in a nadir frame: no edge
+        // The nadir attitude: the Earth stays in place in a nadir frame, no edge
         ["Nadir"] =
         [
             new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1),
@@ -238,24 +224,35 @@ public class FieldOfViewDynamicsTests
     private static readonly string[] InitialFrames = ["ECLIPJ2000", "B1950", "FK4", "ECLIPB1950", "GALACTIC"];
 
     [Theory]
-    [InlineData("NadirScenario")]
-    [InlineData("Nadir@ECLIPJ2000")]
-    [InlineData("Nadir@GALACTIC")]
-    [InlineData("Nadir@B1950")]
-    [InlineData("ImpulseThenTriad@ECLIPJ2000")]
-    [InlineData("ImpulseThenTriad@GALACTIC")]
-    [InlineData("ImpulseThenTriad@FK4")]
-    [InlineData("ImpulseThenTriad@ECLIPB1950")]
-    [InlineData("RK78@GALACTIC")]
-    [InlineData("SSB@ECLIPJ2000")]
-    [InlineData("SSB@GALACTIC")]
     [InlineData("RK78")]
     [InlineData("ImpulseThenTriad")]
     [InlineData("Nadir")]
     [InlineData("SSB")]
     [InlineData("ECLIPJ2000")]
     [InlineData("TLE")]
-    public void Variant_MatchesGftfov(string variant)
+    public void Variant_MatchesGftfov(string variant) => Check(variant);
+
+    /// <summary>The variants added by #537: the nadir and TRIAD attitudes from the five other inertial frames, RK7(8) and
+    /// SSB mode from other frames, the nadir attitude through <c>Scenario.SimulateAsync</c>.</summary>
+    [Theory]
+    [Trait("Category", "Validation")]
+    [InlineData("NadirScenario")]
+    [InlineData("Nadir@ECLIPJ2000")]
+    [InlineData("Nadir@B1950")]
+    [InlineData("Nadir@FK4")]
+    [InlineData("Nadir@ECLIPB1950")]
+    [InlineData("Nadir@GALACTIC")]
+    [InlineData("ImpulseThenTriad@ECLIPJ2000")]
+    [InlineData("ImpulseThenTriad@B1950")]
+    [InlineData("ImpulseThenTriad@FK4")]
+    [InlineData("ImpulseThenTriad@ECLIPB1950")]
+    [InlineData("ImpulseThenTriad@GALACTIC")]
+    [InlineData("RK78@GALACTIC")]
+    [InlineData("SSB@ECLIPJ2000")]
+    [InlineData("SSB@GALACTIC")]
+    public void VariantFromAnotherFrameOrPath_MatchesGftfov(string variant) => Check(variant);
+
+    private void Check(string variant)
     {
         var (spacecraft, window) = Build(variant);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -264,9 +261,9 @@ public class FieldOfViewDynamicsTests
             ["EARTH"] = earth, ["SUN"] = new CelestialBody(Stars.Sun), ["MOON"] = new CelestialBody(PlanetsAndMoons.MOON), ["DSS-13"] = new Site(13, "DSS-13", earth)
         };
         string directory = $"Data/User/FieldOfViewDynamics515/{variant.Replace('@', '_')}";
-        // The kernels the library writes (#529, #534, #535 fixed): a read of the spacecraft no longer changes its attitude
-        // (#523), so they may be written after or before the searches. The TLE spacecraft is not propagated: its SPK holds the
-        // SGP4 states every 10 s, its CK the identity of ICRF, the attitude of a spacecraft without one
+        // The kernels the library writes: a read of the spacecraft no longer changes its attitude (#523), so they may be
+        // written after or before the searches. The TLE spacecraft is not propagated: its SPK holds the SGP4 states every
+        // 10 s, its CK the identity of ICRF, the attitude of a spacecraft without one
         if (variant == "TLE")
         {
             var earthBody = new CelestialBody(PlanetsAndMoons.EARTH);
