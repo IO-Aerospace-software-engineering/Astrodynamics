@@ -35,8 +35,11 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 public class SpacecraftFrame : Frame
 {
     /// <summary>
-    /// The lead before a discrete attitude change at which the CK repeats the earlier attitude: 1 µs, above the double
-    /// resolution of the encoded spacecraft clock (about 1.2e-7 s at 65 536 ticks per second 21 years from its start).
+    /// The lead before a discrete attitude change at which the CK repeats the earlier attitude: 1 µs. The CK's epochs are
+    /// the encoded SCLK of the spacecraft's clock, a double counting 65 536 ticks per second from 1957-01-01
+    /// (Templates/ClockTemplate.tsc), whose spacing is 2.4e-7 s up to 2^47 ticks (2025-01-19 03:13 TDB) and 4.8e-7 s from
+    /// then to the end of its partition (2^48 ticks, 2093): the lead is 2.1 spacings from 2025-01-19 (4.2 before), so the
+    /// records stay strictly increasing.
     /// </summary>
     internal const double DiscreteChangeLead = 1.0e-6;
 
