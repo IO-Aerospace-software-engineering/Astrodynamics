@@ -75,7 +75,7 @@ The C++ proxy layer uses a `bool` return + `GetLastErrorProxy()` pattern instead
 
 ### Key Namespaces
 
-- `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments
+- `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments; `Instrument.FindWindowsInFieldOfViewConstraint` gives the windows of CSPICE's `gftfov` on both paths (#515): CSPICE when the spacecraft and the target both come from kernels, otherwise a managed search (`FieldOfViewEvaluator`, the continuous margin of `FieldOfViewGeometry`, the root finder of the occultations to 1 µs, TDB windows), the target as a point or as its ellipsoid; see `docs/reference/spacecraft.md`
 - `IO.Astrodynamics.OrbitalParameters`: StateVector, KeplerianElements, TLE, EquinoctialElements
 - `IO.Astrodynamics.CCSDS.OMM` / `.OPM`: CCSDS standards (read/write/validate/convert)
 - `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution
@@ -145,6 +145,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - `GeopotentialGravitationalField`: **NOT thread-safe** — create one instance per thread/propagator
 - `Nrlmsise00Model`: thread-safe, concurrent use OK
 - Force partials (internal, `ForceBase.AccumulateStatePartials`): a force keeps a work `StateVector` for its finite differences, so the partials path of one force instance is **not reentrant**, unlike `Apply`. Forces belong to one integrator, as the propagator builds them
+- Managed occultation and field-of-view searches: no state, kernels read under the shared lock; searches on separate propagations may run concurrently. A spacecraft frame stores every orientation it is asked for (`SpacecraftFrame`, #523), so a search's attitude can depend, in its last bits, on earlier reads of the same spacecraft
 - Frame orientation cache: active only on the thread that propagates or evaluates a propagation (`Frame.UseOrientationCache`), never set on the shared `Frame`; propagations and RK7(8) evaluations sharing a central body without a geopotential may run concurrently
 - RK7(8) evaluations after a propagation (`PropagationSolution.InterpolateAt`, `GetStateTransitionMatrix`, `GetParameterSensitivity`, `GetCovariance`, `GetExtendedCovariance`, `GetStateVector`, and the internal `EvaluateVariational`, `EvaluateCovariance` and `EvaluateExtendedCovariance`): serialized by a lock per solution; they evaluate the forces, so they must not run concurrently with another propagation or evaluation that shares a `CelestialBody` with a geopotential
 - Conjunction analysis with a propagated covariance (`ConjunctionAssessment.Analyze`, `AnalyzeAll`) and `EvaluateAvoidance`: the replay of the variational equations, the propagations of the non-linearity index and of the avoidance options (with or without a propagated covariance, RK7(8) or Velocity-Verlet) use the forces of the participant's propagation under the lock of its solution or of the force model its spacecraft keeps, with the same rule
