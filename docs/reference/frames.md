@@ -124,7 +124,9 @@ OPM with `REF_FRAME = EME2000`, is read in `Frame.ICRF`, and the bias is ignored
 
 Use `Frame.ICRF` for everything that comes from SPICE: ephemerides, propagation, geometry. Use
 `Frame.GCRF` when you want to name the celestial end of the `GCRF -> CIRS -> TIRS` chain
-explicitly; coordinates are the same in both.
+explicitly; coordinates are the same in both. SPICE has no GCRF frame: an ephemeris read in
+`Frame.GCRF` is read from SPICE in `J2000` and labelled GCRF, the same numbers, and a state in GCRF
+propagates as its ICRF twin (#543).
 
 ### Example
 
