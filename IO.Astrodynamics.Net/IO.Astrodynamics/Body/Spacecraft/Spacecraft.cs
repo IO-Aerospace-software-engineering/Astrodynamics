@@ -595,9 +595,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Not enough cached states
+            // Not enough cached states: the two-body orbit, in ICRF as every reader assumes (#535)
             if (_propagatedStates.Count < 2)
                 return InitialOrbitalParameters.ToStateVector(epoch)
+                    .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
             // Interpolate from cache
@@ -734,9 +735,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public void AddPropagatedStates(params StateVector[] stateVectors)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
+            // Kept in ICRF, the frame of the readers (#535)
             foreach (var sv in stateVectors)
             {
-                _propagatedStates[sv.Epoch] = sv;
+                _propagatedStates[sv.Epoch] = sv.Frame == Frames.Frame.ICRF ? sv : sv.ToFrame(Frames.Frame.ICRF).ToStateVector();
             }
         }
 

@@ -15,6 +15,7 @@ using IO.Astrodynamics.Propagator.Variational;
 using IO.Astrodynamics.TimeSystem;
 using Quaternion = IO.Astrodynamics.Math.Quaternion;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
+using Matrix = IO.Astrodynamics.Math.Matrix;
 
 namespace IO.Astrodynamics.Propagator;
 
@@ -360,11 +361,11 @@ public abstract class PropagatorBase : IPropagator
         var eventDetectors = BuildEventDetectors();
 
         // 1. Add initial orientation (skip zero-quaternion sentinel when continuous attitude provides the real one)
+        // The attitude without an attitude maneuver: the identity of ICRF (#529, #535), as the frame of a spacecraft not
+        // propagated
         if (_continuousAttitude == null)
         {
-            Spacecraft.Frame.AddStateOrientationToICRF(
-                new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate,
-                    Spacecraft.InitialOrbitalParameters.Frame));
+            Spacecraft.Frame.Record(new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Frame.ICRF), null, false);
         }
 
         // 3. Create solution
@@ -459,9 +460,10 @@ public abstract class PropagatorBase : IPropagator
                 var detector = eventDetectors[evt.DetectorIndex];
                 var eventResult = detector.HandleEvent(eventState, Spacecraft);
 
+                // The impulse's attitude, unless an attitude chained after it, later in the chain, was recorded at its epoch
                 if (eventResult.Orientation != null)
                 {
-                    Spacecraft.Frame.AddStateOrientationToICRF(eventResult.Orientation);
+                    Spacecraft.Frame.Record(eventResult.Orientation, null, false);
                 }
 
                 // The next segment starts at the event: from the state after the maneuver on StopAndRestart, from the
@@ -533,10 +535,7 @@ public abstract class PropagatorBase : IPropagator
         var outputStates = GenerateOutput(solution, outputCount, endsAtWindowEnd);
 
         // 6. Add final orientation
-        var latestOrientation = Spacecraft.Frame.GetLatestStateOrientationToICRF();
-        Spacecraft.Frame.AddStateOrientationToICRF(
-            new StateOrientation(latestOrientation.Rotation, latestOrientation.AngularVelocity,
-                Window.EndDate, latestOrientation.ReferenceFrame));
+        Spacecraft.Frame.RecordEnd(Window.EndDate);
 
         // 7. Store propagated states
         StorePropagatedStates(outputStates);
@@ -604,10 +603,11 @@ public abstract class PropagatorBase : IPropagator
             if (maneuver is Attitude attitude)
             {
                 // Process initial attitude maneuvers immediately at the initial state
+                // Each leading attitude replaces the previous one at the start: the last of the chain holds
                 var (_, so) = attitude.TryExecute(InitialState);
                 if (so.Rotation != Quaternion.Zero)
                 {
-                    Spacecraft.Frame.AddStateOrientationToICRF(so);
+                    Spacecraft.Frame.Record(so, attitude, true);
                 }
 
                 // Remember for continuous orientation computation at each output epoch
@@ -669,15 +669,15 @@ public abstract class PropagatorBase : IPropagator
             }
 
             // Apply continuous attitude maneuver at each output epoch
+            // in ICRF, whatever the frame of the propagation (#529, #535), a sample of the law that an activation at the same
+            // epoch keeps
             if (_continuousAttitude != null)
             {
-                var localSv = output[i].RelativeTo(_continuousAttitude.ManeuverCenter, Aberration.None).ToStateVector();
+                var localSv = ToIcrf(output[i]).RelativeTo(_continuousAttitude.ManeuverCenter, Aberration.None).ToStateVector();
                 var orientation = _continuousAttitude.ComputeOrientation(localSv);
                 if (orientation != Quaternion.Zero)
                 {
-                    Spacecraft.Frame.AddStateOrientationToICRF(
-                        new StateOrientation(orientation, Vector3.Zero, epoch,
-                            Spacecraft.InitialOrbitalParameters.Frame));
+                    Spacecraft.Frame.Record(new StateOrientation(orientation, Vector3.Zero, epoch, Frame.ICRF), _continuousAttitude, false);
                 }
             }
         }
@@ -686,6 +686,29 @@ public abstract class PropagatorBase : IPropagator
     }
 
     protected abstract void StorePropagatedStates(StateVector[] outputStates);
+
+    private Quaternion? _toIcrf;
+
+    /// <summary>
+    /// A state of the propagation in ICRF: the frame of the propagation is inertial (<see cref="ValidateInertialFrame"/>),
+    /// its rotation to ICRF constant, read once, so that no static frame keeps an orientation per output epoch.
+    /// </summary>
+    private protected StateVector ToIcrf(StateVector state)
+    {
+        if (state.Frame == Frame.ICRF)
+        {
+            return state;
+        }
+
+        var q = _toIcrf ??= state.Frame.ToFrame(Frame.ICRF, Window.StartDate).Rotation;
+        Matrix? covariance = null;
+        if (state.Covariance.HasValue)
+        {
+            covariance = Matrix.TransformCovarianceWithJacobian(state.Covariance.Value, Matrix.CreateStateTransformationJacobian(q, Vector3.Zero));
+        }
+
+        return new StateVector(state.Position.Rotate(q), state.Velocity.Rotate(q), state.Observer, state.Epoch, Frame.ICRF, covariance);
+    }
 
     private static void ValidateInertialFrame(Spacecraft spacecraft)
     {

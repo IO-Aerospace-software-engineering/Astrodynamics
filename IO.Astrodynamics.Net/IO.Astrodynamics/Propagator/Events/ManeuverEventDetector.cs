@@ -71,9 +71,10 @@ public class ManeuverEventDetector : IEventDetector
             {
                 // Process attitude maneuver at the current (advanced) epoch
                 var (_, so) = attitude.TryExecute(currentState);
+                // Later in the chain than the impulse at the same epoch, it replaces its attitude
                 if (so.Rotation != Math.Quaternion.Zero)
                 {
-                    spacecraft.Frame.AddStateOrientationToICRF(so);
+                    spacecraft.Frame.Record(so, null, true);
                 }
 
                 // Track the attitude maneuver as executed (adds to _executedManeuvers)

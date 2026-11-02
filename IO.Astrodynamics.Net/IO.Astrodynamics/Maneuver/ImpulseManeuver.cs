@@ -110,7 +110,11 @@ namespace IO.Astrodynamics.Maneuver
             Engine.FuelTank.Spacecraft.SetStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
 
             //return computed state vector and state orientation
-            return (stateVector, new StateOrientation(GetBodyFront().To(DeltaV), Vector3.Zero, stateVector.Epoch, stateVector.Frame));
+            //The front along the delta-V, in ICRF whatever the frame of the state (#529, #535)
+            var deltaVInIcrf = stateVector.Frame == Frames.Frame.ICRF
+                ? DeltaV
+                : DeltaV.Rotate(stateVector.Frame.ToFrame(Frames.Frame.ICRF, stateVector.Epoch).Rotation);
+            return (stateVector, new StateOrientation(GetBodyFront().To(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
         }
 
         internal override void Reset()
