@@ -156,14 +156,16 @@ initial frame, 0.48 to 0.87 rad apart between ICRF and ECLIPJ2000 on the same or
 
 **Between output epochs.** The leading attitude of the chain (the last attitude before the first impulse) is sampled
 at every output epoch; between two samples the attitude is their exact spherical linear interpolation, which a type-3
-CK computes. Its residual against the law grows as the square of the output step: on an inclined LEO 8.1e-7, 8.1e-5
-and 2.9e-3 rad at 1, 10 and 60 s outputs. Before 11.0.0 the latest sample held over the step, ω·Δt off (6.4e-2 rad at
+CK computes. Its residual against the law grows as the square of the output step: on the inclined LEO of the tests
+5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and 60 s outputs (an instrument TRIAD, the worst of the attitudes tested;
+[Attitude and kernels](spacecraft.md#attitude-and-kernels) gives the other figures and their sources). Its angular
+velocity, that of the CK, is the rate of the interpolation: 2.3e-5 rad/s from the rate of the law at 10 s outputs. Before 11.0.0 the latest sample held over the step, ω·Δt off (6.4e-2 rad at
 60 s, a field-of-view edge 53.8 s late).
 
 **At a discrete change.** An attitude activated after an impulse, and the attitude of an impulse (its front along ΔV),
 are discrete: each holds until the next entry. Before a discrete change, the leading attitude is sampled once more, 1 µs
 before it, so that it is interpolated up to the change: over the partial step before an RK7(8) event between outputs it
-is within the interpolation residual (1.2e-4 rad at 60 s outputs), where it was held (4.7e-2 rad). At an epoch shared
+is within the interpolation residual (1.2e-4 rad at 60 s outputs), where it was held (7.1e-2 rad before 11.0.0). At an epoch shared
 within 2 µs, the attitude activated later in the chain holds: the one chained after an impulse, not the impulse's own.
 
 **Not changed by 11.0.0.** An attitude chained after an impulse is computed once, on the state of the impulse's event

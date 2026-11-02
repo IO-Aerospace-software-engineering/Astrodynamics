@@ -131,7 +131,8 @@ spacecraft.AddCircularInstrument(
 
 The orientation is not a direction: it is the Euler angles (x, y, z), in
 radians, of the frame kernel the library writes for the instrument, as NAIF's
-Frames Required Reading defines them: `pxform(instrument, spacecraft)` =
+Frames Required Reading defines them in "Defining a TK Frame Using Euler Angles"
+(https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html): `pxform(instrument, spacecraft)` =
 `eul2m(x, y, z, 1, 2, 3)`. Here a rotation of the frame by π/2 about Y puts
 the boresight, +Z of the instrument, along −X of the spacecraft;
 the instrument's `GetBoresightInSpacecraftFrame()` returns it. A zero orientation keeps

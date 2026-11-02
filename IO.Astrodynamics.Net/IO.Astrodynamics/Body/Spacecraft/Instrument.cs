@@ -57,8 +57,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <remarks>
         /// NAIF's Frames Required Reading, "Defining a TK Frame Using Euler Angles" (https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html):
         /// "If M is the matrix that converts vectors relative to the TK frame to the RELATIVE frame by left
-        /// multiplication, then M = [angle_1]axis_1 [angle_2]axis_2 [angle_3]axis_3", where [A]i is the frame rotation by
-        /// the angle A about the i-th axis. Here M = [x]1 [y]2 [z]3 = <c>eul2m(x, y, z, 1, 2, 3)</c> =
+        /// multiplication, then the angles and axes must satisfy the following relationship: M = [angle_1]axis_1
+        /// [angle_2]axis_2 [angle_3]axis_3 where the symbol [ A ]i stands for a rotation by the angle A about the i'th
+        /// axis" (the axes are subscripts in the source; its matrices of [A]i are the rotations of the frame, the transposes
+        /// of the rotations of a vector by A). Here M = [x]1 [y]2 [z]3 = <c>eul2m(x, y, z, 1, 2, 3)</c> =
         /// <c>pxform(instrument, spacecraft)</c>: a vector in the instrument frame is rotated by -z about Z, then by -y
         /// about Y, then by -x about X, into the spacecraft frame (<see cref="RotationToSpacecraft"/>, #524).
         /// </remarks>

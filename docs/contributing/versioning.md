@@ -263,12 +263,16 @@ A major version, because it breaks the API: members deprecated for removal in 11
   attitude between two samples of a law is their exact spherical linear interpolation, the law is sampled once more
   1 µs before a discrete change, and two entries within 2 µs are one epoch. `WriteOrientation` writes the C-matrix in
   J2000 with the angular velocity of the CK, the earlier attitude repeated 1 µs before each discrete change, and
-  `WriteEphemeris` writes J2000. Against CSPICE on the kernels the library writes (Linux x64, 2026-11-02): the attitude
-  6.1e-10 rad from `pxform` on its CK outside those microseconds (1.3e-9 rad from 2025-01-19, where the spacing of the
-  encoded SCLK doubles), its angular velocity 9.9e-13 rad/s from `xf2rav`, the positions 7.4e-4 m from `spkezr`
-  (2.3e-2 m in SSB mode), in every inertial initial frame; the 20 field-of-view dynamics variants on those kernels
+  `WriteEphemeris` writes J2000. Against CSPICE on the kernels the library writes and the closed forms of the laws on
+  the solution of the propagation (Linux x64, 2026-11-02): the attitude 6.1e-10 rad from `pxform` on its CK outside
+  those microseconds (1.3e-9 rad from 2025-01-19, where the spacing of the encoded SCLK doubles), 1.3e-15 rad from the
+  law at its samples and 5.7e-5 rad between them at 10 s outputs, its angular velocity 2.3e-5 rad/s from the rate of the
+  law (the CK's model, which the library and the CK share to 9.9e-13 rad/s); the stored states equal to the solution
+  rotated to ICRF by `pxform` at the outputs, the positions between them 1.3e-8 m from the RK7(8) solution (7.1e-4 m in
+  SSB mode), in every inertial initial frame; the managed occultation of the Sun by the Earth from GALACTIC within one
+  tick of its ICRF twin and 4.0e-7 s of `gfoclt` on the SPK; the 20 field-of-view dynamics variants on those kernels
   within the 2.4e-6 s of #515 (971.8 s and 232.6 s before); the partial step before an RK7(8) event 1.2e-4 rad from the
-  law (4.7e-2 rad before); reads before, during and after a propagation leave the record and the CK identical. See
+  law (7.1e-2 rad before, where the last output sample held); reads before, during and after a propagation leave the record and the CK identical. See
   [Spacecraft](../reference/spacecraft.md#attitude-and-kernels); the changes of behaviour are under **Changed**.
 - **`Instrument.Orientation` has one meaning, the Euler angles of the frame kernel.** The managed path read it as a
   rotation vector and conjugated it, the spacecraft-frame getters as the same rotation vector, and the frame kernel as
@@ -282,7 +286,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   boresight: at zero orientation the boresight landed 137.519° from the target, twice the 68.759° between them, and its
   test asserted a snapshot 95.8° from the Moon. It now takes the boresight to the target: 4.4e-16 rad from the minimal
   rotation of the frame kernel's boresight onto the Moon's direction from `spkezr`, for five orientations. The light
-  time it requests is not applied to a celestial target, whose direction stays geometric, a defect outside this change
+  time it requests is not applied to a celestial target, whose direction stays geometric (4.3e-5 to 4.5e-5 rad from the
+  light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue
   ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
 
 **Changed**
@@ -401,10 +406,18 @@ A major version, because it breaks the API: members deprecated for removal in 11
   from the spacecraft frame to ICRF, labelled ICRF, for a state in any frame.
 - **Breaking: the attitude between outputs.** A continuous attitude between two output epochs is the spherical linear
   interpolation of its samples, no longer the earlier one held, up to a discrete change; its residual against the law
-  grows as the square of the output step (8.1e-7, 8.1e-5 and 2.9e-3 rad at 1, 10 and 60 s on an inclined LEO). Its
-  angular velocity is that of the CK, no longer 0, in the convention of the frames (ICRF relative to the spacecraft, in
-  the spacecraft frame). `StateOrientation.AtDate` is unchanged, and its documentation states its convention, the
-  opposite of the frames'.
+  grows as the square of the output step (5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and 60 s on the inclined LEO of the
+  tests). Its angular velocity is that of the CK, no longer 0, in the convention of the frames (ICRF relative to the
+  spacecraft, in the spacecraft frame), 2.3e-5 rad/s from the rate of the law at 10 s outputs; every read of the record
+  returns it, the entries of `GetStateOrientationsToICRF` and `GetLatestStateOrientationToICRF` included, and the rate
+  given to `AddStateOrientationToICRF` is not kept. `StateOrientation.AtDate` is unchanged, and its documentation states
+  its convention, the opposite of the frames'.
+- **Breaking: velocities in the spacecraft frame.** The spacecraft frame now turns with the attitude, where its angular
+  velocity was 0, so a velocity expressed in it (`StateVector.ToFrame(spacecraft.Frame)`, `GetEphemeris` with the
+  spacecraft frame, the angular velocity of `Spacecraft.GetOrientation`) takes the rotation of the frame,
+  v' = R v − (R ω) × r': for the Earth's centre seen from a LEO, 7.7e3 m/s with a nadir attitude and 2.0e4 m/s with the
+  prograde attitude of the tests, 4.2e8 m/s for the Sun. Against `spkezr` in the spacecraft frame on the kernels the
+  library writes, the state relative to the Earth is 3.9e-3 m and 1.0e-5 m/s off (Linux x64).
 - **Breaking: `SpacecraftFrame`.** A read stores nothing; the frame of a kernel-backed spacecraft reads SPICE at each
   call and no longer caches, so it no longer answers from its cache after its CK is unloaded. The entries and the reads are labelled
   with the spacecraft frame, the source of their rotation (they were labelled with the initial frame);
