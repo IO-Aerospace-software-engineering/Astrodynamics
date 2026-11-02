@@ -282,7 +282,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   now takes `RotationToSpacecraft`, `eul2m(x, y, z, 1, 2, 3)` as Frames Required Reading defines a TK frame
   ("Defining a TK Frame Using Euler Angles"): 3.0e-16 rad from the closed form and from `pxform(instrument, spacecraft)`
   on the frame kernels the library writes ([#524](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/524)).
-- **`InstrumentPointingToAttitude` returned the inverse rotation**, the one that takes the target's direction to the
+- **`InstrumentPointingToAttitude` returned the inverse rotation** ([#538](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/538)), the one that takes the target's direction to the
   boresight: at zero orientation the boresight landed 137.519° from the target, twice the 68.759° between them, and its
   test asserted a snapshot 95.8° from the Moon. It now takes the boresight to the target: 4.4e-16 rad from the minimal
   rotation of the frame kernel's boresight onto the Moon's direction from `spkezr`, for five orientations. The light
