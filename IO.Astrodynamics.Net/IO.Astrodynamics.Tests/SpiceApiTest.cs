@@ -9,6 +9,7 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 using FuelTank = IO.Astrodynamics.Body.Spacecraft.FuelTank;
 using KeplerianElements = IO.Astrodynamics.OrbitalParameters.KeplerianElements;
 using NadirAttitude = IO.Astrodynamics.Maneuver.NadirAttitude;
@@ -26,8 +27,11 @@ namespace IO.Astrodynamics.Tests;
 
 public class SpiceApiTest
 {
-    public SpiceApiTest()
+    private readonly ITestOutputHelper _output;
+
+    public SpiceApiTest(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
@@ -250,15 +254,23 @@ public class SpiceApiTest
         SpiceAPI.Instance.UnloadKernels(ckFile);
         SpiceAPI.Instance.UnloadKernels(clckFile);
 
-        //Read results — new system computes NadirAttitude at every output epoch (not just t=0,1)
-        // The quaternion at t=10s reflects 10 seconds of orbital motion
-        Assert.Equal(0.70311488671322719, res.ElementAt(1).Rotation.W, 3);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 3);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 3);
-        Assert.Equal(0.71107626600966340, res.ElementAt(1).Rotation.VectorPart.Z, 3);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 3);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 3);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Z, 3);
+        // The CK holds the C-matrix, J2000 to the spacecraft frame (#529): the conjugate of the nadir attitude. On this circular
+        // equatorial orbit (the Moon aside) the front (+Y) points at -r, at the angle pi/2 + n t from +Y about +Z: the
+        // attitude is a rotation of pi/2 + n t about +Z, the C-matrix its inverse, and ckgpav's angular velocity (the
+        // spacecraft relative to J2000, in J2000) n about +Z, n = v / r
+        double n = 7656.2204182967143 / 6800000.0;
+        double t = (res.ElementAt(1).Epoch - start).TotalSeconds;
+        double half = (System.Math.PI / 2.0 + n * t) / 2.0;
+        _output?.WriteLine($"MEASURE ReadOrientation: |W - closed form| {System.Math.Abs(res.ElementAt(1).Rotation.W - System.Math.Cos(half)):E3}, |Z - closed form| {System.Math.Abs(res.ElementAt(1).Rotation.VectorPart.Z + System.Math.Sin(half)):E3}, |AVz - n| {System.Math.Abs(res.ElementAt(1).AngularVelocity.Z - n):E3}");
+        // Twice the measured differences (Linux x64, 2026-11-02: 8.4e-10, 8.3e-10 and 2.4e-10 rad/s), the Moon's effect on
+        // the orbit; to be read on Windows and macOS arm64 from the CI logs
+        Assert.Equal(System.Math.Cos(half), res.ElementAt(1).Rotation.W, 1.7e-9);
+        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 1e-12);
+        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 1e-12);
+        Assert.Equal(-System.Math.Sin(half), res.ElementAt(1).Rotation.VectorPart.Z, 1.7e-9);
+        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 1e-12);
+        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 1e-12);
+        Assert.Equal(n, res.ElementAt(1).AngularVelocity.Z, 4.8e-10);
         Assert.Equal(window.StartDate, res.ElementAt(0).Epoch, TestHelpers.TimeComparer);
         Assert.Equal(Frames.Frame.ICRF, res.ElementAt(0).ReferenceFrame);
 

@@ -310,11 +310,12 @@ namespace IO.Astrodynamics.Tests.Body
             var refVector1 = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
             Assert.Equal(Vector3.VectorY, refVector1, TestHelpers.VectorComparer);
 
-            // Instrument with 90-degree rotation around Z - refVector (X) should rotate to +Y
+            // Euler angles (0, 0, pi/2) of the frame kernel (#524): pxform(instrument, spacecraft) = eul2m(0, 0, pi/2, 1, 2, 3),
+            // the frame rotation [pi/2]_3, takes the reference vector X to -Y
             spc.AddCircularInstrument(-1700, "inst2", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
                 new Vector3(0.0, 0.0, Astrodynamics.Constants.PI2));
             var refVector2 = spc.Instruments.ElementAt(1).GetRefVectorInSpacecraftFrame();
-            Assert.Equal(new Vector3(0.0, 1.0, 0.0), refVector2, TestHelpers.VectorComparer);
+            Assert.Equal(new Vector3(0.0, -1.0, 0.0), refVector2, TestHelpers.VectorComparer);
         }
 
         [Fact]
@@ -322,12 +323,13 @@ namespace IO.Astrodynamics.Tests.Body
         {
             var spc = TestHelpers.Spacecraft;
 
-            // Instrument with 90-degree rotation around Y axis
-            // Original refVector is VectorX, rotating 90 deg around Y maps X -> -Z
+            // Euler angles (0, pi/2, 0) of the frame kernel (#524): eul2m(0, pi/2, 0, 1, 2, 3), the frame rotation [pi/2]_2,
+            // takes the reference vector X to +Z (and the boresight Z to -X, the managed path's value before #524)
             spc.AddCircularInstrument(-1600, "inst", "model", 1.57, Vector3.VectorZ, Vector3.VectorX,
                 new Vector3(0.0, Astrodynamics.Constants.PI2, 0.0));
             var refVector = spc.Instruments.First().GetRefVectorInSpacecraftFrame();
-            Assert.Equal(new Vector3(0.0, 0.0, -1.0), refVector, TestHelpers.VectorComparer);
+            Assert.Equal(new Vector3(0.0, 0.0, 1.0), refVector, TestHelpers.VectorComparer);
+            Assert.Equal(new Vector3(-1.0, 0.0, 0.0), spc.Instruments.First().GetBoresightInSpacecraftFrame(), TestHelpers.VectorComparer);
         }
 
         [Fact]
