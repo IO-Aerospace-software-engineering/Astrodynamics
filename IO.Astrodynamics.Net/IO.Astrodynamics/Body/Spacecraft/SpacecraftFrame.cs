@@ -84,7 +84,7 @@ public class SpacecraftFrame : Frame
         {
             if (_record.Count == 0)
             {
-                return new StateOrientation(Quaternion.Zero, Vector3.Zero, date, ICRF);
+                return new StateOrientation(Quaternion.Zero, Vector3.Zero, date, this);
             }
 
             int index = Find(date);
@@ -126,9 +126,9 @@ public class SpacecraftFrame : Frame
     }
 
     // A rotation to ICRF with the rate of the spacecraft relative to ICRF in ICRF; the convention of the frames is that of
-    // ICRF relative to the spacecraft, in the spacecraft frame
-    private static StateOrientation WithRate(in Quaternion rotation, in Vector3 rate, in Time date) =>
-        new(rotation, rate.Inverse().Rotate(rotation.Conjugate()), date, ICRF);
+    // ICRF relative to the spacecraft, in the spacecraft frame, the source of the rotation and its label
+    private StateOrientation WithRate(in Quaternion rotation, in Vector3 rate, in Time date) =>
+        new(rotation, rate.Inverse().Rotate(rotation.Conjugate()), date, this);
 
     // The rate of the interpolation over the interval (i - 1, i): zero for a hold or a discrete change
     private Vector3 IntervalRate(int i)
@@ -155,7 +155,7 @@ public class SpacecraftFrame : Frame
     }
 
     // A held entry at another epoch: the same rotation, no angular velocity
-    private static StateOrientation At(StateOrientation entry, in Time date) => new(entry.Rotation, Vector3.Zero, date, ICRF);
+    private StateOrientation At(StateOrientation entry, in Time date) => new(entry.Rotation, Vector3.Zero, date, this);
 
     private static bool Interpolates(in AttitudeEntry before, in AttitudeEntry after) => after.Law != null && ReferenceEquals(before.Law, after.Law);
 
@@ -214,7 +214,12 @@ public class SpacecraftFrame : Frame
     internal bool Record(StateOrientation orientation, object law, bool replace)
     {
         if (orientation == null) throw new ArgumentNullException(nameof(orientation));
-        var entry = new AttitudeEntry(ToIcrf(orientation), law);
+        return Insert(new AttitudeEntry(ToEntry(orientation), law), replace);
+    }
+
+    // Inserts an entry under the rules of the shared epoch (Record)
+    private bool Insert(in AttitudeEntry entry, bool replace)
+    {
         lock (_recordLock)
         {
             var (first, end) = Near(entry.Orientation.Epoch);
@@ -280,7 +285,7 @@ public class SpacecraftFrame : Frame
     internal bool RecordLead(StateOrientation orientation, object law, in Time change)
     {
         if (orientation == null) throw new ArgumentNullException(nameof(orientation));
-        var entry = new AttitudeEntry(ToIcrf(orientation) with { Epoch = change.AddSeconds(-DiscreteChangeLead) }, law, true);
+        var entry = new AttitudeEntry(ToEntry(orientation) with { Epoch = change.AddSeconds(-DiscreteChangeLead) }, law, true);
         lock (_recordLock)
         {
             int index = Find(change);
@@ -338,29 +343,39 @@ public class SpacecraftFrame : Frame
             }
 
             // The same rotation, sampled from the same law: the interpolation between the two is the hold
-            _record.Add(new AttitudeEntry(new StateOrientation(latest.Orientation.Rotation, Vector3.Zero, end, ICRF), latest.Law));
+            _record.Add(new AttitudeEntry(new StateOrientation(latest.Orientation.Rotation, Vector3.Zero, end, this), latest.Law));
         }
     }
 
-    // An orientation relative to an inertial frame, made relative to ICRF; the rotation between two inertial frames is constant
-    private static StateOrientation ToIcrf(StateOrientation orientation)
+    // An attitude of the propagation, the rotation from the spacecraft frame to an inertial frame labelled with that frame
+    // (Attitude.StateOrientation), as an entry: the rotation to ICRF (the rotation between two inertial frames is
+    // constant), labelled with the spacecraft frame, its source (choice 9 of #537)
+    private StateOrientation ToEntry(StateOrientation orientation)
     {
         if (orientation.ReferenceFrame == ICRF)
         {
-            return orientation;
+            return new StateOrientation(orientation.Rotation, orientation.AngularVelocity, orientation.Epoch, this);
         }
 
         var toIcrf = orientation.ReferenceFrame.ToFrame(ICRF, orientation.Epoch);
-        return new StateOrientation((toIcrf.Rotation * orientation.Rotation).Normalize(), orientation.AngularVelocity.Rotate(toIcrf.Rotation), orientation.Epoch, ICRF);
+        return new StateOrientation((toIcrf.Rotation * orientation.Rotation).Normalize(), orientation.AngularVelocity.Rotate(toIcrf.Rotation), orientation.Epoch, this);
     }
 
     /// <summary>
     /// Adds an orientation to the attitude record of a managed spacecraft, as a discrete attitude: held until the next
     /// entry. It replaces the entries at the same epoch, within 2 µs.
     /// </summary>
+    /// <param name="stateOrientation">The rotation from the spacecraft frame to ICRF, labelled with the spacecraft frame,
+    /// its source, as <see cref="Frame.GetStateOrientationToICRF"/> returns it.</param>
+    /// <exception cref="ArgumentException">The orientation is labelled with another frame.</exception>
     public override bool AddStateOrientationToICRF(StateOrientation stateOrientation)
     {
-        return Record(stateOrientation, null, true);
+        if (stateOrientation == null) throw new ArgumentNullException(nameof(stateOrientation));
+        if (stateOrientation.ReferenceFrame != this)
+            throw new ArgumentException(
+                $"The orientation of {Spacecraft.Name} to ICRF is labelled with its frame, {Name}, the source of the rotation, not {stateOrientation.ReferenceFrame?.Name}.",
+                nameof(stateOrientation));
+        return Insert(new AttitudeEntry(stateOrientation, null), true);
     }
 
     public override StateOrientation GetLatestStateOrientationToICRF()
@@ -371,7 +386,8 @@ public class SpacecraftFrame : Frame
         }
     }
 
-    /// <summary>The attitude record of a managed spacecraft, in epoch order (rotations to ICRF).</summary>
+    /// <summary>The attitude record of a managed spacecraft, in epoch order: rotations to ICRF labelled with the spacecraft
+    /// frame, their source.</summary>
     public override IEnumerable<StateOrientation> GetStateOrientationsToICRF()
     {
         lock (_recordLock)

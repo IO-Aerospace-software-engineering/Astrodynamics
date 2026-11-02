@@ -250,7 +250,6 @@ public class SpiceApiTest
 
         var res = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray();
-        var resICRF = spacecraft.Frame.GetStateOrientationsToICRF().ElementAt(1).RelativeToICRF();
         SpiceAPI.Instance.UnloadKernels(ckFile);
         SpiceAPI.Instance.UnloadKernels(clckFile);
 

@@ -255,7 +255,7 @@ namespace IO.Astrodynamics.Tests.Body
             Clock clock = new Clock("clk1", 65536);
             Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, clock, parkingOrbit);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, Frames.Frame.ICRF));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, spacecraft.Frame));
 
 
             var boresightICRF = spacecraft.Instruments.First().GetBoresightInICRFFrame(start);
@@ -288,7 +288,7 @@ namespace IO.Astrodynamics.Tests.Body
                 start, Frames.Frame.ICRF);
             Spacecraft spacecraft = new Spacecraft(-179, "SC179", 1000.0, 3000.0, new Clock("clk1", 65536), parkingOrbit);
             spacecraft.AddCircularInstrument(-179789, "CAMERA789", "mod1", 0.75, Vector3.VectorZ, Vector3.VectorY, new Vector3(0.0, System.Math.PI * 0.5, 0.0));
-            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, Frames.Frame.ICRF));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorZ, -Astrodynamics.Constants.PI2), Vector3.Zero, start, spacecraft.Frame));
 
             // The attitude takes the boresight -X to +Y (GetBoresightInICRF2): a rotation of -pi/2 about +Z, which takes +Y to +X
             var instrument = spacecraft.Instruments.First();
