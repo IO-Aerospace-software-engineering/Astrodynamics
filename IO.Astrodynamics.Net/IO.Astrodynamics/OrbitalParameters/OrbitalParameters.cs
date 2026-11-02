@@ -630,6 +630,10 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// </summary>
     /// <param name="epoch">The epoch time at which to compute the state vector.</param>
     /// <returns>The state vector at the given epoch.</returns>
+    /// <remarks>
+    /// The state is the two-body motion of <see cref="AtEpoch"/>, without a covariance. A <see cref="StateVector"/>
+    /// returns itself, with its covariance, at the instant of its own epoch (#551).
+    /// </remarks>
     /// <exception cref="InvalidOperationException">
     /// Thrown when attempting to convert mean elements directly to a state vector.
     /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.

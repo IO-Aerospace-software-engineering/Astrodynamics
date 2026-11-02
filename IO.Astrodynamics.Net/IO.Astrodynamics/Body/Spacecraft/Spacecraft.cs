@@ -779,6 +779,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// yourself before or after the OPM export. The OPM standard supports both inertial and orbital frames
         /// for maneuver representation via the MAN_REF_FRAME field.
         /// </para>
+        /// <para>
+        /// The covariance of the initial state (<see cref="StateVector.Covariance"/>, m², m²/s, m²/s²) is exported, in km²,
+        /// km²/s, km²/s², at the instant of the initial epoch (the default) (#551). At any other epoch the OPM carries no
+        /// covariance: moving it there would take the state transition matrix of the motion, which this export does not
+        /// compute (<see cref="StateVector.ToStateVector(Time)"/>).
+        /// </para>
         /// </remarks>
         public Opm ToOpm(string originator = null, Time? epoch = null, bool includeKeplerianElements = true, bool includeSpacecraftParameters = true, bool includeManeuvers = true)
         {
