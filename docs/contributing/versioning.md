@@ -219,7 +219,7 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   for a rectangle against an ellipsoid, the largest discriminant of the ray over the rectangle, in closed form), located
   by the root finder of the occultations to 1 µs. `targetShape` and `targetFrame` mean what `gftfov`'s `tshape` and
   `tframe` mean. Against `gftfov` converged to 1e-9 s on its own kernels (`tools/fov_reference`): 8.3e-7 s geometric,
-  2.2e-6 s with the light time and `+S`, every field shape against the Earth, the Moon, the Sun, DSS-13, a spacecraft,
+  2.1e-6 s with the light time and `+S`, every field shape against the Earth, the Moon, the Sun, DSS-13, a spacecraft,
   the Earth-Moon barycenter and L1; a propagated spacecraft against `gftfov` on the kernels the library writes, 1.3e-6 s
   on 221 searches off the grazing and slow edges, every target kind, `None`, `LT` and `LT+S` on every field and the nine
   aberrations on a circle and a narrow field; 2.5e-4 s where the field grazes the Earth's limb (the same on Linux x64,

@@ -305,8 +305,10 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     // Twice the worst over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02), rounded up at the second
     // significant digit (#515, choice 9 (b)): gftfov at 1e-6 s in the process against the managed search at 1 µs, off the
     // grazing and slow edges: 1.3e-6 / 1.3e-6 / 1.3e-6 s, propagated, kernel-backed and between the two public paths alike
-    // (789 ELLIPSOID XCN+S), on the 221 rows on Linux (the Validation grid included) and the 35 uncategorized ones on
-    // Windows and macOS, every row the same on the three; the times are ticks, 100 ns
+    // (789 ELLIPSOID XCN+S), every row the same on the three. Rows on Linux (the Validation grid included) / on Windows
+    // and macOS: 231 / 45 for PropagatedLimit and 226 / 40 for KernelLimit, which also bound the grazing rows that use
+    // them (801 POINT NONE, 801 ELLIPSOID NONE and LT+S, 802 ELLIPSOID NONE, 802 POINT LT; worst 4e-7 s), and 221 / 35
+    // for PublicPathsLimit; the times are ticks, 100 ns
     private const double PropagatedLimit = 2.6e-6;
     private const double KernelLimit = 2.6e-6;
     private const double PublicPathsLimit = 2.6e-6;
