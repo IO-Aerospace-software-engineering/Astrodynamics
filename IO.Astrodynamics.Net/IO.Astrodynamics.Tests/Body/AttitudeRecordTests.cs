@@ -44,11 +44,14 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// pointing, the minimal rotation taking the boresight in the spacecraft frame (<c>pxform(instrument, SC)</c>) to the Moon;
 /// the impulse, the front along the delta-V rotated to ICRF by <c>pxform</c>. The state they take: the solution of the
 /// propagation, rotated from its frame to ICRF by <c>pxform</c> (the SPK's Lagrange interpolation across an impulse is
-/// off by up to 15 m over the steps around it, item 3 of §8 of the design, out of scope), or the SPK's (<c>spkezr</c>)
-/// where the propagation keeps no solution (the Velocity-Verlet path of <c>Scenario.SimulateAsync</c>, whose events are
-/// on its output grid) and in SSB mode. The directions of the Sun and the Moon: <c>spkezr</c> from the Earth, geometric,
-/// as the attitudes read them (<c>Aberration.None</c>; for the instrument pointing, whose light time is not applied
-/// to a celestial target, a defect outside #537 with its own issue).
+/// off by up to 15 m over the steps around it, item 3 of §8 of the design, out of scope), never the SPK the library wrote.
+/// In SSB mode the solution is relative to the Sun: less the Earth's state of <c>spkezr</c> on the planetary ephemeris.
+/// The Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: that of a twin propagated by
+/// <c>Spacecraft.Propagate</c> with the scenario's bodies, whose stored states equal the scenario's to the bit. The
+/// directions of the Sun and the Moon: <c>spkezr</c> from the Earth, geometric, as the attitudes read them
+/// (<c>Aberration.None</c>; for the instrument pointing, whose light time is not applied to a celestial target, a pin of a
+/// defect outside #537 with its own issue, <see cref="PropagatedCase.LawAt"/>). The angular velocity of a law: the rotation
+/// of its closed form over 0.1 s.
 /// </para>
 /// <para>
 /// <b>The case</b> of the prototype probe: an inclined LEO (a = 6 778 137 m, e = 0.001, i = 51.6°) from 2024-03-01 12:00
@@ -70,7 +73,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </remarks>
 public class AttitudeRecordTests
 {
-    // PROVISIONAL limits: twice the worst over the grid of 114 cases on Linux x64 (2026-11-02, MEASURE lines), to be set
+    // PROVISIONAL limits: twice the worst over the grid of 162 cases on Linux x64 (2026-11-02, MEASURE lines), to be set
     // from the Windows and macOS arm64 CI logs; the case of each worst is in WorstCase_MatchesSpice
 
     /// <summary>The managed rotation against the CK (<c>pxform</c>), off the leads, before 2025-01-19: the encoded SCLK's
@@ -88,9 +91,9 @@ public class AttitudeRecordTests
     /// <summary>The same from 2025-01-19, rad/s. Worst 1.45e-12 rad/s (Prograde, RK7(8), ECLIPJ2000, 2026).</summary>
     internal const double RateAgainstCkAfter2025 = 2.9e-12;
 
-    /// <summary>The CK at the entries of a continuous law (its samples) against the closed form of the law. Worst 1.64e-11
-    /// rad (Nadir, SSB mode, ICRF, the law on spkezr's state; 1e-15 on the solution's).</summary>
-    internal const double LawAtEntries = 3.3e-11;
+    /// <summary>The CK at the entries of a continuous law (its samples) against the closed form of the law on the solution
+    /// of the propagation, about the Earth. Worst 1.26e-15 rad (InstrumentTriad, VV, ECLIPJ2000).</summary>
+    internal const double LawAtEntries = 2.6e-15;
 
     /// <summary>The CK between the samples of a continuous law against its closed form: the residual of the SLERP between
     /// samples 10 s apart, a property of the step (choice 1). Worst 5.73e-5 rad (InstrumentTriad, RK7(8), B1950).</summary>
@@ -105,12 +108,79 @@ public class AttitudeRecordTests
     /// <see cref="ManagedAgainstCkAfter2025"/>.</summary>
     internal const double InstrumentAgainstFrameKernel = 1.3e-9;
 
-    /// <summary>The managed positions against <c>spkezr</c> on the SPK, m: the library's Lagrange interpolation against the
-    /// SPK's, between the 10 s outputs. Worst 7.37e-4 m (Nadir, RK7(8), ICRF, and every frame alike).</summary>
+    /// <summary>The managed positions against <c>spkezr</c> on the SPK, m: the agreement of the library's Lagrange
+    /// interpolation with the SPK's, between the 10 s outputs, both of the same stored states (not an accuracy: the
+    /// positions are compared with the solution in <see cref="PositionAgainstSolution"/>). Worst 7.37e-4 m (every frame
+    /// alike).</summary>
     internal const double PositionAgainstSpk = 1.5e-3;
 
-    /// <summary>The same in SSB mode, m. Worst 2.26e-2 m (Nadir, VV, ECLIPJ2000).</summary>
+    /// <summary>The same in SSB mode, m. Worst 2.26e-2 m (Nadir and InstrumentTriad, VV, ECLIPJ2000).</summary>
     internal const double PositionAgainstSpkSsb = 4.6e-2;
+
+    /// <summary>The managed angular velocity and the CK's against the rate of the law (a difference of its closed form over
+    /// 0.1 s), rad/s: the model of the CK (choice 8), the mean of the SLERP rates of the intervals at the samples and linear
+    /// between them, against the derivative. Worst 2.28e-5 rad/s (InstrumentTriad, RK7(8), B1950).</summary>
+    internal const double RateAgainstLaw = 4.6e-5;
+
+    /// <summary>The CK at the entries of a continuous law against its closed form in SSB mode: the solution is relative to
+    /// the Sun, the reference state relative to the Earth is its difference with the Earth's of <c>spkezr</c>, two vectors
+    /// of 1.5e11 m whose rounding (1e-5 m) is 2e-12 rad of the direction of a LEO; the library makes the same difference
+    /// with its own roundings. Worst 3.51e-12 rad (Nadir, RK7(8), GALACTIC).</summary>
+    internal const double LawAtEntriesSsb = 7.1e-12;
+
+    /// <summary>The same for a discrete attitude in SSB mode. Worst 3.48e-12 rad (ImpulseTriad, VV, GALACTIC).</summary>
+    internal const double DiscreteLawSsb = 7.0e-12;
+
+    /// <summary>The managed positions between the outputs against the solution of an RK7(8) propagation rotated to ICRF by
+    /// <c>pxform</c> (its dense output, the integrator's accuracy), m: the library's Lagrange interpolation of the stored
+    /// states. Worst 1.28e-8 m (InstrumentPointing, RK7(8), GALACTIC). The dense output of Velocity-Verlet, a cubic
+    /// Hermite, is 0.15 m off between the outputs and does not resolve it: the Velocity-Verlet cases are compared at the
+    /// outputs only.</summary>
+    internal const double PositionAgainstSolution = 2.6e-8;
+
+    /// <summary>The same in SSB mode, m: the stored states relative to the Sun. Worst 7.07e-4 m (InstrumentTriad, RK7(8),
+    /// GALACTIC).</summary>
+    internal const double PositionAgainstSolutionSsb = 1.5e-3;
+
+    /// <summary>The state of the spacecraft relative to the Earth in its own frame (<c>GetEphemeris</c>) against <c>spkezr</c>
+    /// in the spacecraft frame on the written kernels, m and m/s: the floor of the CK times the distance, and the SPK's
+    /// interpolation. Worst 3.93e-3 m and 1.00e-5 m/s (Prograde, RK7(8), B1950); 8.84e-3 m and 2.12e-5 m/s from
+    /// 2025-01-19 (Prograde, RK7(8), ECLIPJ2000, 2026); 2.26e-2 m (InstrumentTriad, VV, ECLIPJ2000) and 1.44e-3 m/s
+    /// (InstrumentTriad, RK7(8), ICRF) in SSB mode.</summary>
+    internal const double FramePosition = 7.9e-3;
+
+    internal const double FrameVelocity = 2.0e-5;
+    internal const double FramePositionAfter2025 = 1.8e-2;
+    internal const double FrameVelocityAfter2025 = 4.3e-5;
+    internal const double FramePositionSsb = 4.6e-2;
+    internal const double FrameVelocitySsb = 2.9e-3;
+
+    /// <summary>The same relative to the Sun, 1.5e11 m away: the floor of the CK's rotation times the distance. Worst 88.2 m
+    /// and 0.249 m/s (Prograde, RK7(8), B1950); 185 m and 0.527 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000,
+    /// 2026).</summary>
+    internal const double FramePositionSun = 1.8e2;
+
+    internal const double FrameVelocitySun = 5.0e-1;
+    internal const double FramePositionSunAfter2025 = 3.7e2;
+    internal const double FrameVelocitySunAfter2025 = 1.1;
+
+    /// <summary>The managed occultation from GALACTIC against its ICRF twin, s: measured 0, below the resolution of a
+    /// <see cref="Time"/>, one tick of 100 ns, which is the limit.</summary>
+    internal const double OccultationAgainstTwin = 1.0e-7;
+
+    /// <summary>The managed occultation from GALACTIC against <c>gfoclt</c> on the written SPK, s. Worst 4.0e-7 s.</summary>
+    internal const double OccultationAgainstGfoclt = 8.0e-7;
+
+    /// <summary>The SLERP residual against the law at 1 s outputs. Worst 5.73e-7 rad (InstrumentTriad; Nadir
+    /// 3.96e-7 rad).</summary>
+    internal const double SlerpResidualAtOneSecond = 1.2e-6;
+
+    /// <summary>The same at 60 s outputs. Worst 2.06e-3 rad (InstrumentTriad; Nadir 1.41e-3 rad).</summary>
+    internal const double SlerpResidualAtSixtySeconds = 4.2e-3;
+
+    /// <summary>The tolerance of RK7(8) in SSB mode: about the Sun, 1e-12 does not finish in minutes (item 7 of §8 of the
+    /// design); 1e-9 takes seconds.</summary>
+    internal const double SsbRk78Tolerance = 1e-9;
 
     private const double Length = 3600.0;
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(10.0);
@@ -154,19 +224,41 @@ public class AttitudeRecordTests
         // An epoch after 2025-01-19 03:13 TDB, where the spacing of the encoded SCLK doubles
         foreach (var (law, integrator) in new[] { ("Nadir", "VV"), ("Prograde", "RK78"), ("NadirImpulseTriad", "RK78") })
             cases.Add($"{law}|{integrator}|ECLIPJ2000|Propagate|2026");
+
+        // Added after the review of the implementation (appended, so that the cases above keep their identifiers): the other
+        // laws through Scenario.SimulateAsync, the discrete and instrument laws in SSB mode, and RK7(8) in SSB mode
+        foreach (var law in Laws.Where(x => x != "Nadir" && x != "ImpulseTriad"))
+        foreach (var integrator in new[] { "VV", "RK78" })
+        foreach (var frame in new[] { "ICRF", "ECLIPJ2000", "GALACTIC" })
+            cases.Add($"{law}|{integrator}|{frame}|Scenario|2024");
+
+        foreach (var law in new[] { "ImpulseTriad", "InstrumentTriad" })
+        foreach (var frame in new[] { "ICRF", "ECLIPJ2000", "GALACTIC" })
+            cases.Add($"{law}|VV|{frame}|SSB|2024");
+
+        foreach (var law in new[] { "Nadir", "ImpulseTriad", "InstrumentTriad" })
+        foreach (var frame in new[] { "ICRF", "GALACTIC" })
+            cases.Add($"{law}|RK78|{frame}|SSB|2024");
         return cases.ToArray();
     }
 
-    // The cases at the worst of each limit (Linux x64, 2026-11-02), which run in every CI job
+    // The cases at the worst of each limit (Linux x64, 2026-11-02, after the review of the implementation), which run in
+    // every CI job
     private static readonly string[] WorstCases =
     [
-        "Prograde|VV|ICRF|Propagate|2024", // managed - CK, instruments
-        "InstrumentTriad|RK78|B1950|Propagate|2024", // rate, law between entries
-        "Nadir|RK78|ICRF|Propagate|2024", // positions
-        "Nadir|VV|ICRF|SSB|2024", // law at entries
-        "Nadir|VV|ECLIPJ2000|SSB|2024", // positions in SSB mode
-        "ImpulseTriad|RK78|ICRF|Scenario|2024", // discrete law
-        "Prograde|RK78|ECLIPJ2000|Propagate|2026" // managed - CK, rate and instruments from 2025-01-19
+        "Prograde|RK78|B1950|Propagate|2024", // managed - CK, instruments, the states in the spacecraft frame
+        "InstrumentTriad|RK78|B1950|Propagate|2024", // rate against the CK and the law, law between entries
+        "InstrumentPointing|RK78|B1950|Propagate|2024", // positions against the SPK
+        "InstrumentPointing|RK78|GALACTIC|Propagate|2024", // positions against the solution
+        "InstrumentTriad|VV|ECLIPJ2000|Propagate|2024", // law at entries
+        "ImpulseTriad|RK78|ICRF|Propagate|2024", // discrete law
+        "Nadir|VV|GALACTIC|Scenario|2024", // the twin of the scenario's Velocity-Verlet path
+        "Nadir|RK78|GALACTIC|SSB|2024", // law at entries in SSB mode
+        "ImpulseTriad|VV|GALACTIC|SSB|2024", // discrete law in SSB mode
+        "InstrumentTriad|VV|ECLIPJ2000|SSB|2024", // positions against the SPK and in the spacecraft frame in SSB mode
+        "InstrumentTriad|RK78|GALACTIC|SSB|2024", // positions against the solution in SSB mode
+        "InstrumentTriad|RK78|ICRF|SSB|2024", // velocities in the spacecraft frame in SSB mode
+        "Prograde|RK78|ECLIPJ2000|Propagate|2026" // managed - CK, rate, instruments and the spacecraft frame from 2025-01-19
     ];
 
     public static IEnumerable<object[]> Grid() => AllCases.Where(x => !WorstCases.Contains(x)).Select(x => new object[] { x });
@@ -192,17 +284,38 @@ public class AttitudeRecordTests
         using var run = PropagatedCase.Run(-(8100 + index), law, integrator, FrameOf(frame), path, year);
         var m = Measure(run);
         string label = $"{law} {integrator} {frame} {path} {year}";
-        _output.WriteLine($"MEASURE #537 attitude {label}: managed - CK {m.ManagedAgainstCk:E2} rad (lead {m.ManagedAgainstCkLead:E2}), rate {m.RateAgainstCk:E2} rad/s, " +
+        _output.WriteLine($"MEASURE #537 attitude {label}: managed - CK {m.ManagedAgainstCk:E2} rad (lead {m.ManagedAgainstCkLead:E2}), rate managed - CK {m.RateAgainstCk:E2} rad/s, " +
+                          $"rate - law managed {m.RateAgainstLaw:E2} CK {m.RateCkAgainstLaw:E2} rad/s, discrete rate {m.DiscreteRate:E2} rad/s, " +
                           $"law at entries {m.LawAtEntries:E2}, between {m.LawBetweenEntries:E2}, discrete {m.DiscreteLaw:E2} rad, instruments {m.Instruments:E2} rad, " +
-                          $"positions {m.Positions:E2} m, {m.Reads} reads, {m.Entries} entries");
+                          $"positions - SPK {m.PositionsAgainstSpk:E2} m, - solution {m.PositionsAgainstSolution:E2} m, at the outputs {m.StatesAtOutputs:E2} m {m.VelocitiesAtOutputs:E2} m/s, " +
+                          $"in the spacecraft frame - spkezr from the Earth {m.FramePositions[0]:E2} m {m.FrameVelocities[0]:E2} m/s (rotation term {m.FrameRotationTerm[0]:E2} m/s), " +
+                          $"from the Sun {m.FramePositions[1]:E2} m {m.FrameVelocities[1]:E2} m/s (rotation term {m.FrameRotationTerm[1]:E2} m/s), " +
+                          $"twin {m.TwinStates:E2} m, {m.Reads} reads, {m.Entries} entries");
 
-        Assert.True(m.ManagedAgainstCk <= (year >= 2026 ? ManagedAgainstCkAfter2025 : ManagedAgainstCk), $"managed - CK {m.ManagedAgainstCk:E3} rad");
-        Assert.True(m.RateAgainstCk <= (year >= 2026 ? RateAgainstCkAfter2025 : RateAgainstCk), $"rate {m.RateAgainstCk:E3} rad/s");
-        Assert.True(m.LawAtEntries <= LawAtEntries, $"law at the entries {m.LawAtEntries:E3} rad");
+        bool after2025 = year >= 2026;
+        bool ssb = path == "SSB";
+        Assert.True(m.ManagedAgainstCk <= (after2025 ? ManagedAgainstCkAfter2025 : ManagedAgainstCk), $"managed - CK {m.ManagedAgainstCk:E3} rad");
+        Assert.True(m.RateAgainstCk <= (after2025 ? RateAgainstCkAfter2025 : RateAgainstCk), $"rate managed - CK {m.RateAgainstCk:E3} rad/s");
+        Assert.True(m.RateAgainstLaw <= RateAgainstLaw, $"rate managed - law {m.RateAgainstLaw:E3} rad/s");
+        Assert.True(m.RateCkAgainstLaw <= RateAgainstLaw, $"rate CK - law {m.RateCkAgainstLaw:E3} rad/s");
+        Assert.Equal(0.0, m.DiscreteRate);
+        Assert.True(m.LawAtEntries <= (ssb ? LawAtEntriesSsb : LawAtEntries), $"law at the entries {m.LawAtEntries:E3} rad");
         Assert.True(m.LawBetweenEntries <= LawBetweenEntries, $"law between the entries {m.LawBetweenEntries:E3} rad");
-        Assert.True(m.DiscreteLaw <= DiscreteLaw, $"discrete law {m.DiscreteLaw:E3} rad");
-        Assert.True(m.Instruments <= (year >= 2026 ? ManagedAgainstCkAfter2025 : InstrumentAgainstFrameKernel), $"instruments {m.Instruments:E3} rad");
-        Assert.True(m.Positions <= (path == "SSB" ? PositionAgainstSpkSsb : PositionAgainstSpk), $"positions {m.Positions:E3} m");
+        Assert.True(m.DiscreteLaw <= (ssb ? DiscreteLawSsb : DiscreteLaw), $"discrete law {m.DiscreteLaw:E3} rad");
+        Assert.True(m.Instruments <= (after2025 ? ManagedAgainstCkAfter2025 : InstrumentAgainstFrameKernel), $"instruments {m.Instruments:E3} rad");
+        Assert.True(m.PositionsAgainstSpk <= (ssb ? PositionAgainstSpkSsb : PositionAgainstSpk), $"positions - SPK {m.PositionsAgainstSpk:E3} m");
+        Assert.True(m.PositionsAgainstSolution <= (ssb ? PositionAgainstSolutionSsb : PositionAgainstSolution), $"positions - solution {m.PositionsAgainstSolution:E3} m");
+        // At the outputs the stored states are the solution's rotated by pxform(F, J2000), the rotation of the same doubles
+        // as the reference's: measured 0 in every case
+        Assert.Equal(0.0, m.StatesAtOutputs);
+        Assert.Equal(0.0, m.VelocitiesAtOutputs);
+        Assert.True(m.FramePositions[0] <= (ssb ? FramePositionSsb : after2025 ? FramePositionAfter2025 : FramePosition), $"positions from the Earth in the spacecraft frame {m.FramePositions[0]:E3} m");
+        Assert.True(m.FrameVelocities[0] <= (ssb ? FrameVelocitySsb : after2025 ? FrameVelocityAfter2025 : FrameVelocity), $"velocities from the Earth in the spacecraft frame {m.FrameVelocities[0]:E3} m/s");
+        Assert.True(m.FramePositions[1] <= (after2025 ? FramePositionSunAfter2025 : FramePositionSun), $"positions from the Sun in the spacecraft frame {m.FramePositions[1]:E3} m");
+        Assert.True(m.FrameVelocities[1] <= (after2025 ? FrameVelocitySunAfter2025 : FrameVelocitySun), $"velocities from the Sun in the spacecraft frame {m.FrameVelocities[1]:E3} m/s");
+        // The Velocity-Verlet path of the scenario keeps no solution: its reference is the solution of a twin propagated by
+        // Spacecraft.Propagate with the scenario's bodies, whose stored states are those of the scenario to the bit
+        Assert.Equal(0.0, m.TwinStates);
         Assert.True(m.RecordUnchanged, "a read changed the attitude record (#523)");
         // The law was compared where it applies: every case but the impulse alone samples or holds one
         Assert.True(m.LawChecks > 0);
@@ -214,11 +327,22 @@ public class AttitudeRecordTests
         public double ManagedAgainstCk { get; set; }
         public double ManagedAgainstCkLead { get; set; }
         public double RateAgainstCk { get; set; }
+        public double RateAgainstLaw { get; set; }
+        public double RateCkAgainstLaw { get; set; }
+        public double DiscreteRate { get; set; }
         public double LawAtEntries { get; set; }
         public double LawBetweenEntries { get; set; }
         public double DiscreteLaw { get; set; }
         public double Instruments { get; set; }
-        public double Positions { get; set; }
+        public double PositionsAgainstSpk { get; set; }
+        public double PositionsAgainstSolution { get; set; }
+        public double StatesAtOutputs { get; set; }
+        public double VelocitiesAtOutputs { get; set; }
+        // From the Earth [0] and from the Sun [1]
+        public double[] FramePositions { get; } = new double[2];
+        public double[] FrameVelocities { get; } = new double[2];
+        public double[] FrameRotationTerm { get; } = new double[2];
+        public double TwinStates { get; set; }
         public bool RecordUnchanged { get; set; }
         public int Reads { get; set; }
         public int Entries { get; set; }
@@ -230,9 +354,10 @@ public class AttitudeRecordTests
         var sc = run.Spacecraft;
         var record = sc.Frame.GetStateOrientationsToICRF().ToArray();
         var entries = new HashSet<Time>(record.Select(x => x.Epoch));
+        var outputs = new HashSet<Time>(sc.PropagatedStates.Select(x => x.Epoch));
         var changes = run.DiscreteChanges();
         var epochs = run.ReadEpochs(record);
-        var m = new Measures { Entries = record.Length, Reads = epochs.Count };
+        var m = new Measures { Entries = record.Length, Reads = epochs.Count, TwinStates = run.TwinStates };
         var instrumentFrames = sc.Instruments.Select(x => new Frame(sc.Name.ToUpper() + "_" + x.Name.ToUpper())).ToArray();
         // The positions do not depend on the attitude: off the impulses, whose output steps the library's Lagrange interpolation
         // and the SPK's both cross (item 3 of §8 of the design, out of scope)
@@ -251,6 +376,7 @@ public class AttitudeRecordTests
             }
 
             m.ManagedAgainstCk = System.Math.Max(m.ManagedAgainstCk, angle);
+            // The agreement of the managed rate with the CK's (xf2rav of sxform on the CK the library wrote with that rate)
             m.RateAgainstCk = System.Math.Max(m.RateAgainstCk, (managed.AngularVelocity - ck.AngularVelocity).Magnitude());
 
             for (int i = 0; i < instrumentFrames.Length; i++)
@@ -265,7 +391,38 @@ public class AttitudeRecordTests
             {
                 var managedState = sc.GetGeometricStateRelativeTo(t, run.Earth);
                 var spk = run.Kernel.GetGeometricStateRelativeTo(t, run.Earth);
-                m.Positions = System.Math.Max(m.Positions, (managedState.Position - spk.Position).Magnitude());
+                var (position, velocity) = run.StateAt(t);
+                // The SPK against the managed reads: the agreement of the two interpolations of the stored states
+                m.PositionsAgainstSpk = System.Math.Max(m.PositionsAgainstSpk, (managedState.Position - spk.Position).Magnitude());
+                // The managed reads against the solution of the propagation rotated to ICRF by pxform (#535), between the outputs
+                // where its dense output resolves them (RK7(8))
+                if (run.Integrator == "RK78")
+                {
+                    m.PositionsAgainstSolution = System.Math.Max(m.PositionsAgainstSolution, (managedState.Position - position).Magnitude());
+                }
+
+                if (outputs.Contains(t))
+                {
+                    m.StatesAtOutputs = System.Math.Max(m.StatesAtOutputs, (managedState.Position - position).Magnitude());
+                    m.VelocitiesAtOutputs = System.Math.Max(m.VelocitiesAtOutputs, (managedState.Velocity - velocity).Magnitude());
+                }
+
+                // The states in the spacecraft frame, from the Earth and from the Sun, against spkezr in the spacecraft frame on
+                // the written kernels: the velocity takes the rotation of the frame, v' = R v - (R w) x r'. From the Sun, 1.5e11 m
+                // away, the floor of the CK's rotation (managed - CK) gives tens of metres: its own limits
+                for (int b = 0; b < 2; b++)
+                {
+                    var body = b == 0 ? run.Earth : run.Sun;
+                    var inFrame = sc.GetEphemeris(t, body, sc.Frame, Aberration.None).ToStateVector();
+                    var spice = SpiceAPI.Instance.ReadEphemeris(t, body.NaifId, sc.NaifId, run.Kernel.Frame, Aberration.None).ToStateVector();
+                    var inIcrf = sc.GetEphemeris(t, body, Frame.ICRF, Aberration.None).ToStateVector();
+                    double positionDelta = (inFrame.Position - spice.Position).Magnitude();
+                    double velocityDelta = (inFrame.Velocity - spice.Velocity).Magnitude();
+                    double term = (inFrame.Velocity - inIcrf.Velocity.Rotate(managed.Rotation.Conjugate())).Magnitude();
+                    m.FramePositions[b] = System.Math.Max(m.FramePositions[b], positionDelta);
+                    m.FrameVelocities[b] = System.Math.Max(m.FrameVelocities[b], velocityDelta);
+                    m.FrameRotationTerm[b] = System.Math.Max(m.FrameRotationTerm[b], term);
+                }
             }
 
             var (law, continuous) = run.LawAt(t);
@@ -279,8 +436,12 @@ public class AttitudeRecordTests
             if (!continuous)
             {
                 m.DiscreteLaw = System.Math.Max(m.DiscreteLaw, fromLaw);
+                // A discrete attitude does not turn: the managed rate and the CK's are zero
+                m.DiscreteRate = System.Math.Max(m.DiscreteRate, System.Math.Max(managed.AngularVelocity.Magnitude(), ck.AngularVelocity.Magnitude()));
+                continue;
             }
-            else if (entries.Contains(t))
+
+            if (entries.Contains(t))
             {
                 m.LawAtEntries = System.Math.Max(m.LawAtEntries, fromLaw);
             }
@@ -288,6 +449,12 @@ public class AttitudeRecordTests
             {
                 m.LawBetweenEntries = System.Math.Max(m.LawBetweenEntries, fromLaw);
             }
+
+            // The rate of the law (a difference of its closed form over 0.1 s), in the convention of the frames, against the
+            // managed rate and the CK's: the model of the CK (choice 8) against the derivative
+            var lawRate = run.LawRateAt(t);
+            m.RateAgainstLaw = System.Math.Max(m.RateAgainstLaw, (managed.AngularVelocity - lawRate).Magnitude());
+            m.RateCkAgainstLaw = System.Math.Max(m.RateCkAgainstLaw, (ck.AngularVelocity - lawRate).Magnitude());
         }
 
         m.RecordUnchanged = record.SequenceEqual(sc.Frame.GetStateOrientationsToICRF());
@@ -533,14 +700,17 @@ public class AttitudeRecordTests
     // B1950 holds the worst (Linux x64, 2026-11-02) and runs in every job
     public static IEnumerable<object[]> FrameNames() => Frames.Where(x => x != "B1950").Select(x => new object[] { x });
 
-    // PROVISIONAL: twice the worst (Linux x64, 2026-11-02: 3.73e-9 m, 3.28e-12 m/s), m and m/s
+    // PROVISIONAL: twice the worst (Linux x64, 2026-11-02: 3.73e-9 m, 3.28e-12 m/s), m and m/s: the SPK's reproduction of
+    // its records, not an accuracy of the conversion
     internal const double TlePosition = 7.5e-9;
     internal const double TleVelocity = 6.6e-12;
 
     /// <summary>
     /// <c>TLEPropagator</c> (public): its SPK is written in J2000 (on the base, SPICE(INVALIDREFFRAME), TEME), and holds the
-    /// SGP4 states in ICRF, read by <c>spkezr</c> at its records. Its CK is left to its own issue (item 10 of §8 of the
-    /// design: its identity attitudes go to a dictionary nothing reads).
+    /// states <c>Spacecraft.AddPropagatedStates</c> stored, the SGP4 states converted from TEME to ICRF by the library,
+    /// read by <c>spkezr</c> at its records. The expected states take the same conversion: a check of the frame and of the
+    /// content of the SPK, not of the conversion, which the TLE tests check. Its CK is left to its own issue (item 10 of §8
+    /// of the design: its identity attitudes go to a dictionary nothing reads).
     /// </summary>
     [Fact]
     public void TlePropagator_WritesItsSpkInJ2000()
@@ -573,7 +743,7 @@ public class AttitudeRecordTests
                 velocity = System.Math.Max(velocity, (read.Velocity - expected.Velocity).Magnitude());
             }
 
-            _output.WriteLine($"MEASURE #535 TLEPropagator SPK - SGP4 in ICRF at its records: {position:E2} m, {velocity:E2} m/s");
+            _output.WriteLine($"MEASURE #535 TLEPropagator SPK - its stored records (SGP4 converted to ICRF by the library): {position:E2} m, {velocity:E2} m/s");
             Assert.True(position <= TlePosition, $"{position:E3} m");
             Assert.True(velocity <= TleVelocity, $"{velocity:E3} m/s");
         }
@@ -679,6 +849,74 @@ public class AttitudeRecordTests
         Assert.True(addedDelta <= StoredState, $"{addedDelta:E3} m");
     }
 
+    /// <summary>
+    /// The managed occultation of the Sun by the Earth, both ellipsoids, seen from a spacecraft propagated from GALACTIC, over
+    /// [60, 3 540] s: the windows of its ICRF twin, and those of CSPICE's <c>gfoclt</c> on the SPK the library wrote (a
+    /// kernel-backed spacecraft). On the base the search read the states of GALACTIC as ICRF, and its window ended at
+    /// 922.37 s instead of 2 071.45 s (§5 of the design, #535).
+    /// </summary>
+    [Fact]
+    public void ManagedOccultation_FromGalactic_IsThatOfItsIcrfTwinAndOfGfoclt()
+    {
+        using var galactic = PropagatedCase.Run(-8481, "None", "VV", FrameOf("GALACTIC"), "Propagate", 2024);
+        using var icrf = PropagatedCase.Run(-8482, "None", "VV", Frame.ICRF, "Propagate", 2024, new PropagatedCase.Hooks { WriteKernels = false });
+        var window = new Window(galactic.Start.AddSeconds(60.0), galactic.Start.AddSeconds(3540.0));
+        Window[] Search(Spacecraft observer, CelestialBody sun, CelestialBody earth) => sun.FindWindowsOnOccultationConstraint(window, observer, ShapeType.Ellipsoid, earth,
+            ShapeType.Ellipsoid, OccultationType.Any, Aberration.None, TimeSpan.FromSeconds(60.0)).ToArray();
+        var managed = Search(galactic.Spacecraft, galactic.Sun, galactic.Earth);
+        var twin = Search(icrf.Spacecraft, icrf.Sun, icrf.Earth);
+        // Both the observer and the target in the kernels, the observer a spacecraft: gfoclt
+        var spice = Search(galactic.Kernel, galactic.Sun, galactic.Earth);
+        Assert.Single(managed);
+        Assert.Equal(managed.Length, twin.Length);
+        Assert.Equal(managed.Length, spice.Length);
+        double Delta(Window[] a, Window[] b) => a.Zip(b, (x, y) => System.Math.Max(System.Math.Abs((x.StartDate - y.StartDate).TotalSeconds), System.Math.Abs((x.EndDate - y.EndDate).TotalSeconds))).Max();
+        double toTwin = Delta(managed, twin), toSpice = Delta(managed, spice);
+        _output.WriteLine($"MEASURE #535 occultation from GALACTIC: [{(managed[0].StartDate - galactic.Start).TotalSeconds:F6}, {(managed[0].EndDate - galactic.Start).TotalSeconds:F6}] s, " +
+                          $"ICRF twin {toTwin:E2} s, gfoclt {toSpice:E2} s");
+        Assert.True(toTwin <= OccultationAgainstTwin, $"twin {toTwin:E3} s");
+        Assert.True(toSpice <= OccultationAgainstGfoclt, $"gfoclt {toSpice:E3} s");
+    }
+
+    /// <summary>
+    /// The residual of the SLERP between the samples of a continuous law, a property of the output step (choice 1), at 1 s
+    /// and 60 s outputs (10 s is the grid's): the managed attitude at the midpoints and quarter points of the samples
+    /// against the closed form of the law on the solution, RK7(8), the grid's orbit from ICRF.
+    /// </summary>
+    [Theory]
+    [InlineData("Nadir", 60.0, -8491)]
+    [InlineData("InstrumentTriad", 60.0, -8492)]
+    public void SlerpResidual_AtSixtySecondOutputs(string law, double step, int naifId) => SlerpResidual(law, step, naifId);
+
+    [Theory]
+    [Trait("Category", "Validation")]
+    [InlineData("Nadir", 1.0, -8493)]
+    [InlineData("InstrumentTriad", 1.0, -8494)]
+    public void SlerpResidual_AtOneSecondOutputs(string law, double step, int naifId) => SlerpResidual(law, step, naifId);
+
+    private void SlerpResidual(string law, double step, int naifId)
+    {
+        using var run = PropagatedCase.Run(naifId, law, "RK78", Frame.ICRF, "Propagate", 2024, new PropagatedCase.Hooks { Step = TimeSpan.FromSeconds(step) });
+        var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        double worst = 0.0;
+        // Every interval at 60 s, one in ten at 1 s
+        int stride = step < 10.0 ? 10 : 1;
+        for (int i = 0; i + 1 < record.Length; i += stride)
+        {
+            foreach (var fraction in new[] { 0.25, 0.5, 0.75 })
+            {
+                var t = record[i].Epoch.AddSeconds((record[i + 1].Epoch - record[i].Epoch).TotalSeconds * fraction);
+                var (closedForm, continuous) = run.LawAt(t);
+                Assert.True(continuous);
+                worst = System.Math.Max(worst, RotationAngle(closedForm, v => v.Rotate(run.Spacecraft.Frame.GetStateOrientationToICRF(t).Rotation)));
+            }
+        }
+
+        double limit = step < 10.0 ? SlerpResidualAtOneSecond : SlerpResidualAtSixtySeconds;
+        _output.WriteLine($"MEASURE #529 SLERP residual {law} at {step} s outputs: {worst:E2} rad");
+        Assert.True(worst <= limit, $"{worst:E3} rad");
+    }
+
     /// <summary>The CK of a kernel-backed spacecraft cannot be written: its attitude is that of its kernels.</summary>
     [Fact]
     public void WriteOrientation_KernelBacked_Throws()
@@ -719,6 +957,28 @@ public class AttitudeRecordTests
 
     internal static double RotationAngle(Quaternion a, Quaternion b) => RotationAngle(v => v.Rotate(a), v => v.Rotate(b));
 
+    /// <summary>The inverse of a rotation, a map of vectors, applied to <paramref name="v"/>: Lᵀ v, by the images of the
+    /// axes.</summary>
+    internal static Vector3 Transpose(Func<Vector3, Vector3> rotation, Vector3 v) =>
+        new(rotation(Vector3.VectorX) * v, rotation(Vector3.VectorY) * v, rotation(Vector3.VectorZ) * v);
+
+    /// <summary>The rotation vector (angle times axis) of a rotation, a map of vectors: from the antisymmetric part and the
+    /// trace of its matrix.</summary>
+    internal static Vector3 RotationVector(Func<Vector3, Vector3> rotation)
+    {
+        Vector3 ex = rotation(Vector3.VectorX), ey = rotation(Vector3.VectorY), ez = rotation(Vector3.VectorZ);
+        // The columns are the images of the axes: m[i, j] = e_j[i]
+        var s = new Vector3(ey.Z - ez.Y, ez.X - ex.Z, ex.Y - ey.X) * 0.5;
+        double sin = s.Magnitude();
+        if (sin == 0.0)
+        {
+            return Vector3.Zero;
+        }
+
+        double cos = (ex.X + ey.Y + ez.Z - 1.0) / 2.0;
+        return s * (System.Math.Atan2(sin, cos) / sin);
+    }
+
     /// <summary>The minimal rotation taking the direction of <paramref name="from"/> to that of <paramref name="to"/>
     /// (Rodrigues, about their cross product).</summary>
     internal static Func<Vector3, Vector3> MinimalRotation(Vector3 from, Vector3 to)
@@ -754,9 +1014,10 @@ public class AttitudeRecordTests
     }
 
     /// <summary>Rx(-x) Ry(-y) Rz(-z) acting on a vector: the frame rotations [x]1 [y]2 [z]3 of Frames Required Reading
-    /// ("Defining a TK Frame Using Euler Angles", M = [angle_1]axis_1 [angle_2]axis_2 [angle_3]axis_3, [A]i the frame
-    /// rotation by A about the i-th axis, the transpose of the vector rotation), the instrument frame to the spacecraft
-    /// frame.</summary>
+    /// ("Defining a TK Frame Using Euler Angles", https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/frames.html: "M =
+    /// [angle_1]axis_1 [angle_2]axis_2 [angle_3]axis_3 where the symbol [ A ]i stands for a rotation by the angle A about the
+    /// i'th axis", the axes as subscripts; its matrices are the frame rotations, the transposes of the vector rotations),
+    /// the instrument frame to the spacecraft frame.</summary>
     internal static Vector3 EulerToSpacecraft(Vector3 orientation, Vector3 v)
     {
         // The vector rotation by angle a about an axis, written per axis
@@ -773,6 +1034,7 @@ public class AttitudeRecordTests
     internal sealed class PropagatedCase : IDisposable
     {
         public string Law { get; private init; }
+        public string Integrator { get; private init; }
         public Spacecraft Spacecraft { get; private init; }
         public Spacecraft Kernel { get; private set; }
         public PropagationSolution Solution { get; private init; }
@@ -784,6 +1046,10 @@ public class AttitudeRecordTests
         public CelestialBody Moon { get; private init; }
         public ImpulseManeuver Impulse { get; private init; }
         public TimeSpan OutputStep { get; private init; }
+
+        /// <summary>The worst difference between the states the scenario's Velocity-Verlet path stored and those of its twin,
+        /// whose solution is the reference (0 on the other paths), m and m/s.</summary>
+        public double TwinStates { get; private init; }
         private readonly List<FileInfo> _kernels = new();
 
         /// <summary>Hooks of a case outside the grid: an attitude chain of its own (law "Custom"), reads before the
@@ -822,62 +1088,79 @@ public class AttitudeRecordTests
             }
 
             var initial = frame == Frame.ICRF ? orbit : orbit.ToFrame(frame).ToStateVector();
-            string name = $"AR{-naifId}";
-            var sc = new Spacecraft(naifId, name, 1000.0, 3000.0, new Clock(name + "_CLK", 65536), initial);
-            var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
-            sc.AddFuelTank(tank);
-            var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
-            sc.AddEngine(engine);
-            for (int i = 0; i < InstrumentOrientations.Length; i++)
+            ImpulseManeuver impulse = null;
+
+            // The spacecraft of the case, its instruments and its attitude chain
+            Spacecraft Build(int id, string name)
             {
-                sc.AddCircularInstrument(naifId * 1000 - 1 - i, $"I{i + 1}", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[i]);
+                var spacecraft = new Spacecraft(id, name, 1000.0, 3000.0, new Clock(name + "_CLK", 65536), initial);
+                var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+                spacecraft.AddFuelTank(tank);
+                var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+                spacecraft.AddEngine(engine);
+                for (int i = 0; i < InstrumentOrientations.Length; i++)
+                {
+                    spacecraft.AddCircularInstrument(id * 1000 - 1 - i, $"I{i + 1}", "m", 0.5, Vector3.VectorZ, Vector3.VectorY, InstrumentOrientations[i]);
+                }
+
+                ImpulseManeuver Apogee()
+                {
+                    var apogee = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
+                    impulse ??= apogee;
+                    return apogee;
+                }
+
+                TriadAttitude TriadAfter() => new(start.AddSeconds(100.0), TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun, engine);
+                switch (law)
+                {
+                    case "None":
+                        break;
+                    case "Nadir":
+                        spacecraft.SetStandbyManeuver(new NadirAttitude(earth, Min, TimeSpan.Zero, engine));
+                        break;
+                    case "Prograde":
+                        spacecraft.SetStandbyManeuver(new ProgradeAttitude(earth, Min, TimeSpan.Zero, engine));
+                        break;
+                    case "InstrumentTriad":
+                        // The boresight of the instrument at (0.3, 0.5, 0.2) to the Earth, its reference vector toward the Sun
+                        spacecraft.SetStandbyManeuver(new TriadAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), earth, sun, engine));
+                        break;
+                    case "InstrumentPointing":
+                        spacecraft.SetStandbyManeuver(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, spacecraft.Instruments.First(), moon, engine));
+                        break;
+                    case "ImpulseAlone":
+                        spacecraft.SetStandbyManeuver(Apogee());
+                        break;
+                    case "ImpulseTriad":
+                    {
+                        var apogee = Apogee();
+                        apogee.SetNextManeuver(TriadAfter());
+                        spacecraft.SetStandbyManeuver(apogee);
+                        break;
+                    }
+                    case "NadirImpulseTriad":
+                    {
+                        var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero, engine);
+                        var apogee = Apogee();
+                        nadir.SetNextManeuver(apogee);
+                        apogee.SetNextManeuver(TriadAfter());
+                        spacecraft.SetStandbyManeuver(nadir);
+                        break;
+                    }
+                    case "Custom":
+                        hooks.Configure(spacecraft, engine, earth, sun, start);
+                        break;
+                    default:
+                        throw new ArgumentException(law);
+                }
+
+                return spacecraft;
             }
 
-            ImpulseManeuver impulse = null;
-            ImpulseManeuver Apogee() => impulse = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
-            TriadAttitude TriadAfter() => new(start.AddSeconds(100.0), TimeSpan.Zero, Spacecraft.Front, earth, Spacecraft.Up, sun, engine);
-            switch (law)
-            {
-                case "None":
-                    break;
-                case "Nadir":
-                    sc.SetStandbyManeuver(new NadirAttitude(earth, Min, TimeSpan.Zero, engine));
-                    break;
-                case "Prograde":
-                    sc.SetStandbyManeuver(new ProgradeAttitude(earth, Min, TimeSpan.Zero, engine));
-                    break;
-                case "InstrumentTriad":
-                    // The boresight of the instrument at (0.3, 0.5, 0.2) to the Earth, its reference vector toward the Sun
-                    sc.SetStandbyManeuver(new TriadAttitude(Min, TimeSpan.Zero, sc.Instruments.First(), earth, sun, engine));
-                    break;
-                case "InstrumentPointing":
-                    sc.SetStandbyManeuver(new InstrumentPointingToAttitude(Min, TimeSpan.Zero, sc.Instruments.First(), moon, engine));
-                    break;
-                case "ImpulseAlone":
-                    sc.SetStandbyManeuver(Apogee());
-                    break;
-                case "ImpulseTriad":
-                {
-                    var apogee = Apogee();
-                    apogee.SetNextManeuver(TriadAfter());
-                    sc.SetStandbyManeuver(apogee);
-                    break;
-                }
-                case "NadirImpulseTriad":
-                {
-                    var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero, engine);
-                    var apogee = Apogee();
-                    nadir.SetNextManeuver(apogee);
-                    apogee.SetNextManeuver(TriadAfter());
-                    sc.SetStandbyManeuver(nadir);
-                    break;
-                }
-                case "Custom":
-                    hooks.Configure(sc, engine, earth, sun, start);
-                    break;
-                default:
-                    throw new ArgumentException(law);
-            }
+            string name = $"AR{-naifId}";
+            var sc = Build(naifId, name);
+            // RK7(8) in SSB mode: about the Sun, a tolerance of 1e-12 does not finish in minutes (item 7 of §8 of the design)
+            double tolerance = ssb ? SsbRk78Tolerance : 1e-12;
 
             hooks.Before?.Invoke(sc);
             using var cancel = new CancellationTokenSource();
@@ -890,6 +1173,7 @@ public class AttitudeRecordTests
             });
             started.Wait();
             PropagationSolution solution = null;
+            double twinStates = 0.0;
             if (path == "Scenario")
             {
                 var scenario = new Scenario("S" + name, new IO.Astrodynamics.Mission.Mission("m" + name), window);
@@ -900,17 +1184,24 @@ public class AttitudeRecordTests
                 if (integrator == "RK78")
                 {
                     scenario.SimulateAsync(false, false, step, () => new RK78Integrator(1e-12, 1e-12)).GetAwaiter().GetResult();
-                    // The solution the RK7(8) propagation keeps; the Velocity-Verlet path keeps none
+                    // The solution the RK7(8) propagation keeps
                     solution = sc.LastPropagation;
                 }
                 else
                 {
                     scenario.SimulateAsync(false, false, step).GetAwaiter().GetResult();
+                    // The Velocity-Verlet path keeps no solution: that of a twin propagated by Spacecraft.Propagate with the
+                    // scenario's bodies, in its order, whose stored states are compared with the scenario's
+                    var twin = Build(naifId - 100000, name + "T");
+                    solution = twin.Propagate(window, scenario.CelestialBodies, false, false, step);
+                    var a = sc.PropagatedStates;
+                    var b = twin.PropagatedStates;
+                    twinStates = a.Length == b.Length ? a.Zip(b, (x, y) => x.Epoch == y.Epoch ? (x.Position - y.Position).Magnitude() + (x.Velocity - y.Velocity).Magnitude() : double.PositiveInfinity).Max() : double.PositiveInfinity;
                 }
             }
             else if (integrator == "RK78")
             {
-                solution = sc.Propagate(window, bodies, new RK78Integrator(1e-12, 1e-12), false, false, step);
+                solution = sc.Propagate(window, bodies, new RK78Integrator(tolerance, tolerance), false, false, step);
             }
             else
             {
@@ -923,8 +1214,8 @@ public class AttitudeRecordTests
 
             var run = new PropagatedCase
             {
-                Law = law, Spacecraft = sc, Solution = ssb ? null : solution, InitialFrame = frame, Ssb = ssb, Start = start, Earth = earth, Sun = sun,
-                Moon = moon, Impulse = impulse, OutputStep = step
+                Law = law, Integrator = integrator, Spacecraft = sc, Solution = solution, InitialFrame = frame, Ssb = ssb, Start = start, Earth = earth, Sun = sun,
+                Moon = moon, Impulse = impulse, OutputStep = step, TwinStates = twinStates
             };
             if (hooks.WriteKernels)
             {
@@ -1020,23 +1311,27 @@ public class AttitudeRecordTests
         }
 
         /// <summary>The position and the velocity of the spacecraft relative to the Earth in ICRF: the solution of the
-        /// propagation rotated from its frame by <c>pxform</c>, or <c>spkezr</c> without a solution.</summary>
+        /// propagation rotated from its frame by <c>pxform</c>; in SSB mode, where the solution is relative to the Sun, less
+        /// the state of the Earth relative to the Sun of <c>spkezr</c> on the planetary ephemeris (not the SPK the library
+        /// wrote).</summary>
         internal (Vector3 Position, Vector3 Velocity) StateAt(Time t)
         {
-            if (Solution == null)
-            {
-                var spk = Kernel.GetGeometricStateRelativeTo(t, Earth);
-                return (spk.Position, spk.Velocity);
-            }
-
             var (position, velocity) = Solution.InterpolateAt(t);
-            if (InitialFrame == Frame.ICRF)
+            if (InitialFrame != Frame.ICRF)
             {
-                return (position, velocity);
+                var q = SpiceAPI.Instance.TransformFrame(t, InitialFrame, Frame.ICRF).Rotation;
+                position = position.Rotate(q);
+                velocity = velocity.Rotate(q);
             }
 
-            var q = SpiceAPI.Instance.TransformFrame(t, InitialFrame, Frame.ICRF).Rotation;
-            return (position.Rotate(q), velocity.Rotate(q));
+            if (Ssb)
+            {
+                var earth = SpiceAPI.Instance.ReadEphemeris(t, 10, 399, Frame.ICRF, Aberration.None).ToStateVector();
+                position -= earth.Position;
+                velocity -= earth.Velocity;
+            }
+
+            return (position, velocity);
         }
 
         // The geometric position of a body relative to the Earth in ICRF (spkezr)
@@ -1051,6 +1346,11 @@ public class AttitudeRecordTests
         /// ICRF) and whether it is a continuous law; null where the attitude has no closed form here: after the TRIAD that
         /// follows a nadir attitude, whose continuous attitude resumes at the next output (the attitude timeline, item 2 of
         /// §8 of the design, its own issue).</summary>
+        /// <remarks>Two expectations pin the behaviour of the library where it departs from its documentation, each a
+        /// defect outside #537 with its own issue, listed in the description of #537: the instrument pointing at the
+        /// Moon takes its geometric direction, although the maneuver asks for <c>Aberration.LT</c> (its light time is not
+        /// applied to a celestial target, 4.4e-5 rad from this LEO); the TRIAD after an impulse is held inertially from the
+        /// change (item 2 of §8 of the design), not recomputed.</remarks>
         internal (Func<Vector3, Vector3> Law, bool Continuous) LawAt(Time t)
         {
             switch (Law)
@@ -1060,29 +1360,73 @@ public class AttitudeRecordTests
                 case "None":
                     return (v => v, false);
                 case "Nadir":
-                    return (MinimalRotation(Spacecraft.Front, StateAt(t).Position.Inverse()), true);
                 case "Prograde":
-                    return (MinimalRotation(Spacecraft.Front, StateAt(t).Velocity), true);
+                case "InstrumentTriad":
+                case "InstrumentPointing":
+                    return (ContinuousLaw(t), true);
+                case "ImpulseAlone":
+                    return t < Change ? (v => v, false) : (MinimalRotation(Spacecraft.Front, ImpulseInIcrf()), false);
+                case "ImpulseTriad":
+                    // Pin: the TRIAD held from the change (item 2 of §8 of the design)
+                    return t < Change ? (v => v, false) : (TriadAtChange(), false);
+                case "NadirImpulseTriad":
+                    return t < Change ? (ContinuousLaw(t), true) : (null, false);
+                default:
+                    throw new ArgumentException(Law);
+            }
+        }
+
+        // The closed form of the continuous law of the case at t, null for a case without one
+        private Func<Vector3, Vector3> ContinuousLaw(Time t)
+        {
+            switch (Law)
+            {
+                case "Nadir":
+                case "NadirImpulseTriad":
+                    return MinimalRotation(Spacecraft.Front, StateAt(t).Position.Inverse());
+                case "Prograde":
+                    return MinimalRotation(Spacecraft.Front, StateAt(t).Velocity);
                 case "InstrumentTriad":
                 {
                     var r = StateAt(t).Position;
                     var (b1, b2) = InstrumentAxesInSpacecraft();
-                    return (Triad(b1, b2, r.Inverse(), FromEarth(Sun, t) - r), true);
+                    return Triad(b1, b2, r.Inverse(), FromEarth(Sun, t) - r);
                 }
                 case "InstrumentPointing":
                 {
+                    // Pin: the geometric direction of the Moon, the light time not applied (above)
                     var (b1, _) = InstrumentAxesInSpacecraft();
-                    return (MinimalRotation(b1, FromEarth(Moon, t) - StateAt(t).Position), true);
+                    return MinimalRotation(b1, FromEarth(Moon, t) - StateAt(t).Position);
                 }
-                case "ImpulseAlone":
-                    return t < Change ? (v => v, false) : (MinimalRotation(Spacecraft.Front, ImpulseInIcrf()), false);
-                case "ImpulseTriad":
-                    return t < Change ? (v => v, false) : (TriadAtChange(), false);
-                case "NadirImpulseTriad":
-                    return t < Change ? (MinimalRotation(Spacecraft.Front, StateAt(t).Position.Inverse()), true) : (null, false);
                 default:
-                    throw new ArgumentException(Law);
+                    return null;
             }
+        }
+
+        /// <summary>The span of the difference of <see cref="LawRateAt"/>, s.</summary>
+        internal const double LawRateSpan = 0.1;
+
+        /// <summary>The angular velocity of the continuous law at <paramref name="t"/> in the convention of the frames (ICRF
+        /// relative to the spacecraft, in the spacecraft frame, -Lᵀω): the rotation of its closed form from t - 0.05 s to
+        /// t + 0.05 s over that time, the span cut at the window and before the change of a nadir followed by an impulse
+        /// (one-sided there: its error is the angular acceleration times half the cut, below 1e-7 rad/s).</summary>
+        internal Vector3 LawRateAt(Time t)
+        {
+            double before = System.Math.Min(LawRateSpan / 2.0, (t - Start).TotalSeconds);
+            double after = System.Math.Min(LawRateSpan / 2.0, (Start.AddSeconds(Length) - t).TotalSeconds);
+            if (Law == "NadirImpulseTriad")
+            {
+                after = System.Math.Min(after, (Change - t).TotalSeconds - 1e-6);
+            }
+
+            var t0 = t.AddSeconds(-before);
+            var t1 = t.AddSeconds(after);
+            var l0 = ContinuousLaw(t0);
+            var l1 = ContinuousLaw(t1);
+            var l = ContinuousLaw(t);
+            // L1 L0ᵀ, the rotation over the span, in ICRF
+            var w = RotationVector(v => l1(Transpose(l0, v))) / (t1 - t0).TotalSeconds;
+            return Transpose(l, w).Inverse();
         }
 
         private Func<Vector3, Vector3> _triadAtChange;
