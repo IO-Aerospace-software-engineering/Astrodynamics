@@ -127,7 +127,7 @@ A numerical propagation integrates over the seconds of the dynamical time of its
   suite prescribes TT (spec.md §12.1). The forces at t are those of the instant TT₀ + t: the bodies and the orientation of
   the Earth at its TDB, the drag at its UTC;
 - **about any other body**, SSB mode included (a star or a barycentre resolves to the Sun), the TDB seconds of the
-  window, as before 10.2.0, bit for bit.
+  window, as before 11.0.0, bit for bit.
 
 The labels stay TDB: every segment base, stage epoch, event epoch and output epoch is a TDB `Time`, which the caches,
 SPICE and the stored states read as they did. About the Earth only the instant a label names changes. `PropagationSegment.Duration`,
@@ -154,7 +154,7 @@ and local tags, through IO's TDB − TT series for a TDB tag.
   TDB epoch is then interpolated, and an exact-key lookup of a `Time` misses the output epochs. The TDB gaps between
   the labels vary by a tick, so `Spacecraft.WriteEphemeris` writes an SPK segment of type 9 (Lagrange, unequal steps)
   for a propagation about the Earth, where it wrote type 8 (equal steps) before (measured on UTC and TDB windows of an
-  hour and a day, 2026-11-01); about any other body the labels are those of before 10.2.0, bit for bit, so the segment
+  hour and a day, 2026-11-01); about any other body the labels are those of before 11.0.0, bit for bit, so the segment
   type is unchanged.
 - **End**: when the output grid misses the length of the window by less than 1e-9 of it (three times the largest rate
   of TDB − TT), the propagation ends at the end of the window, and its last output is labelled with the end of the
@@ -171,7 +171,7 @@ exact elapsed time instead.
 A solution is read at an epoch in any frame
 ([#507](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/507)): a UTC, TAI, TT or GPS epoch
 names the same instant as its TDB label, to the tick, and the bounds of the solution are read in the seconds of the time
-argument, so the UTC start and end of a UTC window are inside it. Before 10.2.0 a non-TDB epoch read on a solution about
+argument, so the UTC start and end of a UTC window are inside it. Before 11.0.0 a non-TDB epoch read on a solution about
 any central body was taken as a TAI difference from the TDB base, another instant by the change of TDB − TT (0.22 m after
 a day in LEO), and the UTC start or end of a UTC window could compare a tick outside the solution through TAI, where the
 getters threw `ArgumentOutOfRangeException`. About the Earth the TT time argument reads the TT seconds of the epoch;

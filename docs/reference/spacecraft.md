@@ -273,7 +273,7 @@ library:
   up to 2.5e6 m from the SPK the library writes from them, which CSPICE reads right: 9.7e-3 s to 0.77 s on the Earth's
   edges, 216 s and 233 s on DSS-13's.
 
-Before 10.2.0 the managed search tested the direction of the target's center, whatever its shape, the circle as a
+Before 11.0.0 the managed search tested the direction of the target's center, whatever its shape, the circle as a
 square, the ellipse with its half-angles swapped, the rectangle on the axes of ICRF, and the reference vector without
 making it perpendicular to the boresight; it sampled a boolean condition, refined it to about 1 s, and could start a
 window one step before the search window. On the cases of the tests its windows were off by up to 1 480 s, and it

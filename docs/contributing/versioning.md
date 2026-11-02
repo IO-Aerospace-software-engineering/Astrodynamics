@@ -42,9 +42,11 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 ## Release Notes
 
-### 10.2.0 (in development)
+### 11.0.0 (in development)
 
 Changes since 10.2.0-preview-1. Entries are added as they merge.
+
+A major version, because it breaks the API: it removes the members announced as removed in 11.0.
 
 **Added**
 
@@ -770,7 +772,7 @@ and **Fixed**. The open issues known at this preview are listed under **Known li
 
 **Known limitations**
 
-Open issues, to be handled after the 10.2.0 release.
+Open issues, to be handled after the 11.0.0 release.
 
 - **SSB mode in low orbit** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)). An RK7(8) propagation of a LEO state in SSB mode (central body
   the Sun) takes about 5 500 times more steps than relative to the Earth (125 641 steps against 23 for one hour at
