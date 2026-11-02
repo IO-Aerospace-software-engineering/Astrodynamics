@@ -21,15 +21,19 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// <remarks>
 /// <para>
 /// The record holds the rotation from the spacecraft frame to ICRF at each epoch (<c>vectorIcrf =
-/// vectorInSpacecraft.Rotate(q)</c>). Between two entries sampled from the same continuous attitude law, the attitude is
-/// the spherical linear interpolation of the two (exact, with no linear fallback), the interpolation of a type-3 CK
-/// (#529, part 3). Otherwise the change is discrete: the earlier entry holds until the later one (#534).
+/// vectorInSpacecraft.Rotate(q)</c>), labelled with the spacecraft frame, its source. Between two entries sampled from the
+/// same continuous attitude law, the attitude is the spherical linear interpolation of the two (exact, with no linear
+/// fallback), the interpolation of a type-3 CK (#529, part 3). Otherwise the change is discrete: the earlier entry holds
+/// until the later one (#534). Before a discrete change that follows a continuous law, the propagation samples the law
+/// once more, <see cref="DiscreteChangeLead"/> before the change, so that the law is interpolated up to it. Two entries
+/// within <see cref="SameEpochTolerance"/> are one epoch: an attitude activated later in the maneuver chain replaces the
+/// earlier one, a sample never replaces an activation.
 /// </para>
 /// <para>
 /// <see cref="WriteOrientation"/> writes the record as SPICE defines a CK: the C-matrix, ICRF to the spacecraft frame
 /// (the conjugate of the record's rotation, #529 part 1), in J2000, with the earlier attitude repeated
-/// <see cref="DiscreteChangeLead"/> before each discrete change, so that the CK's interpolation of its single interval
-/// is the record's attitude everywhere but in that lead.
+/// <see cref="DiscreteChangeLead"/> before each discrete change (the law's last sample, when the propagation took one
+/// there), so that the CK's interpolation of its single interval is the record's attitude everywhere but in that lead.
 /// </para>
 /// </remarks>
 public class SpacecraftFrame : Frame
