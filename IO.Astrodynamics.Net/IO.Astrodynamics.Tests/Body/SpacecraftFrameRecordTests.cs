@@ -254,7 +254,44 @@ public class SpacecraftFrameRecordTests
         // pxform(ECLIPJ2000, J2000) after the rotation to ECLIPJ2000
         var toIcrf = SpiceAPI.Instance.TransformFrame(Start, Frame.ECLIPTIC_J2000, Frame.ICRF).Rotation;
         Rotation(AttitudeRecordTests.RotationAngle(v => v.Rotate(q).Rotate(toIcrf), v => v.Rotate(entry.Rotation)), "ECLIPJ2000 entry");
-        Assert.True((entry.AngularVelocity - w.Rotate(toIcrf)).Magnitude() <= 1e-3 * Exact);
+        // The angular velocity it carried is not kept: a lone discrete entry has the CK's, zero by construction (NodeRate),
+        // as the read at its epoch
+        Assert.Equal(Vector3.Zero, entry.AngularVelocity);
+        Assert.Equal(frame.GetStateOrientationToICRF(Start), entry);
         Assert.Equal(spacecraft.Frame, entry.ReferenceFrame);
+    }
+
+    /// <summary>
+    /// The two readers of the record, the entries (<c>GetStateOrientationsToICRF</c>, <c>GetLatestStateOrientationToICRF</c>)
+    /// and the read at an epoch (<c>GetStateOrientationToICRF</c>), give the same orientation at each entry, the angular
+    /// velocity of the CK included (choice 8): samples of a law, a lead, a discrete change, an added attitude, the end.
+    /// </summary>
+    [Fact]
+    public void TheEntries_AreTheReadsAtTheirEpochs_TheirAngularVelocityIncluded()
+    {
+        var spacecraft = Create(-8507);
+        var frame = FrameOf(spacecraft);
+        frame.Record(Sample(0.0, Frame.ICRF), Law, false);
+        frame.Record(Sample(10.0, Frame.ICRF), Law, false);
+        frame.Record(Sample(20.0, Frame.ICRF), Law, false);
+        var change = Start.AddSeconds(25.0);
+        frame.Record(new StateOrientation(new Quaternion(Vector3.VectorX, 1.0), Vector3.Zero, change, Frame.ICRF), null, true);
+        Assert.True(frame.RecordLead(new StateOrientation(At((change.AddSeconds(-1e-6) - Start).TotalSeconds), Vector3.Zero, change.AddSeconds(-1e-6), Frame.ICRF), Law, change));
+        frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(Vector3.VectorY, 0.5), new Vector3(1.0, 2.0, 3.0), Start.AddSeconds(40.0), spacecraft.Frame));
+        frame.RecordEnd(Start.AddSeconds(50.0));
+
+        var entries = frame.GetStateOrientationsToICRF().ToArray();
+        Assert.Equal(7, entries.Length);
+        foreach (var entry in entries)
+        {
+            Assert.Equal(frame.GetStateOrientationToICRF(entry.Epoch), entry);
+        }
+
+        Assert.Equal(frame.GetStateOrientationToICRF(Start.AddSeconds(50.0)), frame.GetLatestStateOrientationToICRF());
+        // The law's rate at a sample between two interpolated intervals, -ω a in the convention of the frames
+        Rate((entries[1].AngularVelocity - Axis * -Omega).Magnitude(), "entry of a sample");
+        // A discrete entry, and the attitude added with a rate it does not keep: zero
+        Assert.Equal(Vector3.Zero, entries[4].AngularVelocity);
+        Assert.Equal(Vector3.Zero, entries[5].AngularVelocity);
     }
 }
