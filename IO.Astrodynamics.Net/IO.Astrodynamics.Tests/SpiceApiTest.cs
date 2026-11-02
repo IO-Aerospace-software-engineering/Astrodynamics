@@ -246,30 +246,42 @@ public class SpiceApiTest
 
         spacecraft.WriteOrientation(ckFile);
         SpiceAPI.Instance.LoadKernels(ckFile);
+        // The SPK of the same propagation: the reference of the attitude is the nadir of its positions (spkezr)
+        var spkFile = new FileInfo(root + "/EphemerisTestFile.bsp");
+        spacecraft.WriteEphemeris(spkFile);
+        SpiceAPI.Instance.LoadKernels(spkFile);
         //Read spacecraft orientation
 
         var res = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.FromSeconds(10.0), Frames.Frame.ICRF,
             TimeSpan.FromSeconds(10.0)).ToArray();
+
+        // The CK holds the C-matrix, J2000 to the spacecraft frame (#529): the inverse of the nadir attitude, the minimal
+        // rotation taking the front (+Y) to -r, r the position of spkezr on the SPK of the same propagation (choice 14 of
+        // the design of #537), compared as a rotation angle. ckgpav's angular velocity is that of the spacecraft relative to
+        // J2000 in J2000: the rotation of the positions, from spkezr 1 s before and after (the output step), about their
+        // normal. Not the closed form pi/2 + n t of the circular orbit: Velocity-Verlet turns its positions at
+        // n (1 + (n h)^2 / 6), 2.4e-10 rad/s faster than v / r (the review of the design)
+        Vector3 Position(TimeSystem.Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, spacecraft.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+        double worstRotation = 0.0, worstRate = 0.0;
+        for (int i = 1; i < res.Length - 1; i++)
+        {
+            var t = res[i].Epoch;
+            var nadir = Body.AttitudeRecordTests.MinimalRotation(Spacecraft.Front, Position(t).Inverse());
+            worstRotation = System.Math.Max(worstRotation, Body.AttitudeRecordTests.RotationAngle(nadir, v => v.Rotate(res[i].Rotation.Conjugate())));
+            var before = Position(t.AddSeconds(-1.0));
+            var after = Position(t.AddSeconds(1.0));
+            var normal = before.Cross(after);
+            var rate = normal.Normalize() * (System.Math.Atan2(normal.Magnitude(), before * after) / 2.0);
+            worstRate = System.Math.Max(worstRate, (res[i].AngularVelocity - rate).Magnitude());
+        }
+
+        SpiceAPI.Instance.UnloadKernels(spkFile);
         SpiceAPI.Instance.UnloadKernels(ckFile);
         SpiceAPI.Instance.UnloadKernels(clckFile);
 
-        // The CK holds the C-matrix, J2000 to the spacecraft frame (#529): the conjugate of the nadir attitude. On this circular
-        // equatorial orbit (the Moon aside) the front (+Y) points at -r, at the angle pi/2 + n t from +Y about +Z: the
-        // attitude is a rotation of pi/2 + n t about +Z, the C-matrix its inverse, and ckgpav's angular velocity (the
-        // spacecraft relative to J2000, in J2000) n about +Z, n = v / r
-        double n = 7656.2204182967143 / 6800000.0;
-        double t = (res.ElementAt(1).Epoch - start).TotalSeconds;
-        double half = (System.Math.PI / 2.0 + n * t) / 2.0;
-        _output?.WriteLine($"MEASURE ReadOrientation: |W - closed form| {System.Math.Abs(res.ElementAt(1).Rotation.W - System.Math.Cos(half)):E3}, |Z - closed form| {System.Math.Abs(res.ElementAt(1).Rotation.VectorPart.Z + System.Math.Sin(half)):E3}, |AVz - n| {System.Math.Abs(res.ElementAt(1).AngularVelocity.Z - n):E3}, X {res.ElementAt(1).Rotation.VectorPart.X:E3}, Y {res.ElementAt(1).Rotation.VectorPart.Y:E3}, AVx {res.ElementAt(1).AngularVelocity.X:E3}, AVy {res.ElementAt(1).AngularVelocity.Y:E3}");
-        // Twice the measured differences (Linux x64, 2026-11-02: W 8.4e-10, Z 8.3e-10, X 2.1e-12, Y 0, rate 2.4e-10 about Z and 6.0e-13 rad/s about X and Y), the Moon's effect on
-        // the orbit; to be read on Windows and macOS arm64 from the CI logs
-        Assert.Equal(System.Math.Cos(half), res.ElementAt(1).Rotation.W, 1.7e-9);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.X, 4.3e-12);
-        Assert.Equal(0.0, res.ElementAt(1).Rotation.VectorPart.Y, 1e-12);
-        Assert.Equal(-System.Math.Sin(half), res.ElementAt(1).Rotation.VectorPart.Z, 1.7e-9);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.X, 1.2e-12);
-        Assert.Equal(0.0, res.ElementAt(1).AngularVelocity.Y, 1.3e-12);
-        Assert.Equal(n, res.ElementAt(1).AngularVelocity.Z, 4.8e-10);
+        _output?.WriteLine($"MEASURE #529 ReadOrientation: the C-matrix read - the inverse of the nadir of spkezr {worstRotation:E2} rad, the rate - the rotation of spkezr's positions {worstRate:E2} rad/s");
+        Assert.True(worstRotation <= ReadOrientationRotation, $"{worstRotation:E3} rad");
+        Assert.True(worstRate <= ReadOrientationRate, $"{worstRate:E3} rad/s");
         Assert.Equal(window.StartDate, res.ElementAt(0).Epoch, TestHelpers.TimeComparer);
         Assert.Equal(Frames.Frame.ICRF, res.ElementAt(0).ReferenceFrame);
 
@@ -277,6 +289,11 @@ public class SpiceApiTest
             TimeSpan.FromSeconds(10.0), null,
             TimeSpan.FromSeconds(10.0)).ToArray());
     }
+
+    // PROVISIONAL limits of ReadOrientation, twice the worst over its five records on Linux x64 (2026-11-02: 2.57e-16 rad,
+    // 3.08e-12 rad/s); to be set from the Windows and macOS arm64 CI logs
+    private const double ReadOrientationRotation = 5.2e-16;
+    private const double ReadOrientationRate = 6.2e-12;
 
     [Fact]
     public void ReadOrientationFromExternalCKKernel()
@@ -453,7 +470,27 @@ public class SpiceApiTest
         Assert.Equal(Vector3.Zero, stateOrientation[9].AngularVelocity);
         Assert.Equal(9.0, stateOrientation[9].Epoch.TimeSpanFromJ2000().TotalSeconds);
         Assert.Equal(Frames.Frame.ICRF, stateOrientation[9].ReferenceFrame);
+
+        // pxform(J2000, SC) on the written CK, with the frame kernel of the spacecraft: the C-matrix written, J2000 to the
+        // spacecraft frame (choice 7 of the design of #537), at its records
+        var frameFile = new FileInfo("OrientationTestFrame.tf");
+        await ((SpacecraftFrame)spacecraft.Frame).WriteAsync(frameFile);
+        SpiceAPI.Instance.LoadKernels(frameFile);
+        double worst = 0.0;
+        foreach (var written in so)
+        {
+            var pxform = SpiceAPI.Instance.TransformFrame(written.Epoch, Frames.Frame.ICRF, spacecraft.Frame).Rotation;
+            worst = System.Math.Max(worst, Body.AttitudeRecordTests.RotationAngle(written.Rotation.Normalize(), pxform));
+        }
+
+        SpiceAPI.Instance.UnloadKernels(frameFile);
+        _output?.WriteLine($"MEASURE #537 WriteOrientation: pxform(J2000, SC) - the C-matrix written {worst:E2} rad");
+        // PROVISIONAL: twice the worst over its ten records on Linux x64 (2026-11-02: 3.31e-16 rad); to be set from the
+        // Windows and macOS arm64 CI logs
+        Assert.True(worst <= WriteOrientationPxform, $"{worst:E3} rad");
     }
+
+    private const double WriteOrientationPxform = 6.7e-16;
 
     [Fact]
     void GetCelestialBodyInformation()
