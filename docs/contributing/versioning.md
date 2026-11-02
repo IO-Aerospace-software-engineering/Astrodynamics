@@ -46,7 +46,8 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 Changes since 10.2.0-preview-1. Entries are added as they merge.
 
-A major version, because it breaks the API: it removes the members announced as removed in 11.0 (**Removed**).
+A major version, because it breaks the API: members deprecated for removal in 11.0 are removed, each listed under
+**Removed** as it merges.
 
 **Added**
 
