@@ -26,12 +26,14 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </summary>
 public class SpacecraftFrameRecordTests
 {
-    // PROVISIONAL: twice the worst over the rotations of these tests on Linux x64 (2026-11-02: 1.42e-16 rad, the entry from
-    // ECLIPJ2000), the arithmetic of the quaternions; to be set from the Windows and macOS arm64 CI logs
+    // Twice the worst over the rotations of these tests over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
+    // 1.42e-16 / 1.42e-16 / 1.42e-16 rad, the entry from ECLIPJ2000, every row the same on the three; the arithmetic of the
+    // quaternions
     private const double Exact = 2.9e-16;
 
-    // PROVISIONAL: twice the worst over the rates of these tests on Linux x64 (2026-11-02: 6.85e-18 rad/s), the rate of a
-    // SLERP being its angle (1.1e-2 rad between two samples) over its span
+    // Twice the worst over the rates of these tests over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
+    // 6.85e-18 / 6.85e-18 / 6.85e-18 rad/s (the read at 14.999999 s), every row the same on the three; the rate of a SLERP
+    // being its angle (1.1e-2 rad between two samples) over its span
     private const double RateTolerance = 1.4e-17;
 
     private readonly ITestOutputHelper _output;

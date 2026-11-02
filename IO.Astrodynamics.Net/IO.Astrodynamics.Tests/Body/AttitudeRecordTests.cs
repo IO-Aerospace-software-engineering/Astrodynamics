@@ -67,15 +67,19 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// and the rounding of the encoded SCLK of its records.
 /// </para>
 /// <para>
-/// <b>Limits.</b> Twice the worst over the grid, PROVISIONAL: measured on Linux x64 only (2026-11-02), to be set from
-/// the MEASURE lines of the Windows and macOS arm64 CI logs. The cases at the worst of each limit run in every CI job;
-/// the rest of the grid is in the Validation category (Linux).
+/// <b>Limits.</b> Twice the worst over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02), rounded up at
+/// the second significant digit. The cases at the worst of each limit run in every CI job; the rest of the grid is in the
+/// Validation category (Linux).
 /// </para>
 /// </remarks>
 public class AttitudeRecordTests
 {
-    // PROVISIONAL limits: twice the worst over the grid of 162 cases on Linux x64 (2026-11-02, MEASURE lines), to be set
-    // from the Windows and macOS arm64 CI logs; the case of each worst is in WorstCase_MatchesSpice
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02, MEASURE lines), rounded up at
+    // the second significant digit: the 162 cases of the grid on Linux, the 13 of WorstCase_MatchesSpice on Windows and
+    // macOS arm64, and the chains of NearEpochChain (managed - CK and its rate); every worst below is the same on the three,
+    // L / W / M equal to the printed digit, and the case of each worst is in WorstCase_MatchesSpice. The SLERP residual at
+    // 1 s outputs, in the Validation category, is twice the Linux worst; the occultation against its twin, measured 0 on
+    // the three, keeps its one tick
 
     /// <summary>The managed rotation against the CK (<c>pxform</c>), off the leads, before 2025-01-19: the encoded SCLK's
     /// spacing (2.4e-7 s) times the angular velocity. Worst 6.14e-10 rad (Prograde, VV, ICRF).</summary>
@@ -165,8 +169,8 @@ public class AttitudeRecordTests
     internal const double FramePositionSunAfter2025 = 3.7e2;
     internal const double FrameVelocitySunAfter2025 = 1.1;
 
-    /// <summary>The managed occultation from GALACTIC against its ICRF twin, s: measured 0, below the resolution of a
-    /// <see cref="Time"/>, one tick of 100 ns, which is the limit.</summary>
+    /// <summary>The managed occultation from GALACTIC against its ICRF twin, s: measured 0 on the three platforms, below the
+    /// resolution of a <see cref="Time"/>, one tick of 100 ns, which is the limit.</summary>
     internal const double OccultationAgainstTwin = 1.0e-7;
 
     /// <summary>The managed occultation from GALACTIC against <c>gfoclt</c> on the written SPK, s. Worst 4.0e-7 s.</summary>
@@ -244,7 +248,7 @@ public class AttitudeRecordTests
     }
 
     // The cases at the worst of each limit (Linux x64, 2026-11-02, after the review of the implementation), which run in
-    // every CI job
+    // every CI job: on Windows and macOS arm64 their worsts are Linux's (CI run 41522747911, 2026-11-02)
     private static readonly string[] WorstCases =
     [
         "Prograde|RK78|B1950|Propagate|2024", // managed - CK, instruments, the states in the spacecraft frame
@@ -545,9 +549,10 @@ public class AttitudeRecordTests
         Assert.Equal(0.0, worst);
     }
 
-    // PROVISIONAL: twice the worst over the partial step before the impulse (Linux x64, 2026-11-02: 1.23e-4 rad, the managed
-    // path and the CK alike), the residual of the SLERP between the last output sample (60 s step) and the law's sample 1 µs
-    // before the change; held, it was 4.70e-2 rad (the review's probe on the prototype; 7.11e-2 rad on the base)
+    // Twice the worst over the partial step before the impulse over Linux, Windows and macOS arm64 (CI run 41522747911,
+    // 2026-11-02): 1.23e-4 / 1.23e-4 / 1.23e-4 rad, the managed path and the CK alike, the residual of the SLERP between
+    // the last output sample (60 s step) and the law's sample 1 µs before the change; held, it was 4.70e-2 rad (the
+    // review's probe on the prototype; 7.11e-2 rad on the base)
     internal const double PartialStepLaw = 2.5e-4;
 
     /// <summary>
@@ -641,8 +646,9 @@ public class AttitudeRecordTests
         Assert.True(m.RecordUnchanged);
     }
 
-    // PROVISIONAL: twice the worst over the frames and the attitudes (Linux x64, 2026-11-02: 6.01e-16 rad, InstrumentPointing
-    // from B1950)
+    // Twice the worst over the frames and the attitudes over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
+    // 6.01e-16 / 6.01e-16 / 6.01e-16 rad, InstrumentPointing from B1950, which runs in every job (the other frames, in the
+    // Validation category, on Linux: at most the same 6.01e-16 rad)
     internal const double TryExecuteLaw = 1.3e-15;
 
     /// <summary>
@@ -701,10 +707,10 @@ public class AttitudeRecordTests
     // B1950 holds the worst (Linux x64, 2026-11-02) and runs in every job
     public static IEnumerable<object[]> FrameNames() => Frames.Where(x => x != "B1950").Select(x => new object[] { x });
 
-    // PROVISIONAL: twice the worst (Linux x64, 2026-11-02: 3.73e-9 m, 3.28e-12 m/s), m and m/s: the SPK's reproduction of
-    // its records, not an accuracy of the conversion
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02): 3.73e-9 / 3.73e-9 / 3.73e-9 m,
+    // 3.28e-12 / 3.28e-12 / 3.31e-12 m/s; the SPK's reproduction of its records, not an accuracy of the conversion
     internal const double TlePosition = 7.5e-9;
-    internal const double TleVelocity = 6.6e-12;
+    internal const double TleVelocity = 6.7e-12;
 
     /// <summary>
     /// <c>TLEPropagator</c> (public): its SPK is written in J2000 (on the base, SPICE(INVALIDREFFRAME), TEME), and holds the
@@ -754,8 +760,9 @@ public class AttitudeRecordTests
         }
     }
 
-    // PROVISIONAL: twice the worst (Linux x64, 2026-11-02): the covariance relative to its largest element (6.12e-16), the
-    // states in m and m/s (0 for the propagated states, 2.44e-9 m for the two-body branch)
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02): the covariance relative to its
+    // largest element, 6.12e-16 / 6.12e-16 / 6.12e-16; the states in m and m/s, 2.44e-9 / 2.44e-9 / 2.44e-9 m (the two-body
+    // branch; 0 for the propagated states and the added states)
     internal const double StoredCovariance = 1.3e-15;
     internal const double StoredState = 4.9e-9;
 

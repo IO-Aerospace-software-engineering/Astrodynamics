@@ -158,7 +158,8 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
 - **Accuracy** (CSPICE N0067 in the test process on the kernels the library writes, against the closed forms of the
   attitude laws on the solution of the propagation, never on the SPK the library wrote; 8 attitude cases, Velocity-Verlet
   and RK7(8), the six inertial frames, the scenario path in three frames, SSB mode (RK7(8) at 1e-9), an epoch after
-  2025-01-19, `AttitudeRecordTests`; Linux x64, 2026-11-02, Windows x64 and macOS arm64 measured by the CI):
+  2025-01-19, `AttitudeRecordTests`; the worst over Linux x64, Windows x64 and macOS arm64, CI run 41522747911,
+  2026-11-02, the same on the three: the whole grid on Linux, the case of each worst on the three):
 
   | Quantity | Worst |
   |---|---:|
@@ -372,7 +373,7 @@ rows it bounds, rounded up at the second significant digit.
 | The CSPICE path on the same kernels (`gftfov` at its 1 µs) | `gftfov` converged to 1e-9 s | 9.5e-7 s |
 | Propagated spacecraft, the public managed path and its kernel-backed twin: 26 fields, both target shapes, the Earth, the Moon, the Sun, DSS-13, a site given by its coordinates, a spacecraft, the Earth-Moon barycenter, L1, a star; `None`, `LT` and `LT+S` on every field, the nine aberrations on a circle and a narrow field (221 searches off the grazing and slow edges) | `gftfov` at 1 µs on the kernels the library writes | 1.3e-6 s |
 | RK7(8), SSB mode, a TLE | same (for the TLE, an SPK of its states, which the library does not write for a TLE that is not propagated) | 1.2e-6 s |
-| An impulse followed by a TRIAD attitude, a nadir attitude, the six inertial initial frames, the path of `Scenario.SimulateAsync` (Linux x64, 2026-11-02; Windows x64 and macOS arm64 measured by the CI) | `gftfov` at 1 µs on the kernels the library writes | 1.2e-6 s (SSB mode); TRIAD 1.0e-6 s, nadir 4e-7 s |
+| An impulse followed by a TRIAD attitude, a nadir attitude, the six inertial initial frames, the path of `Scenario.SimulateAsync` (CI run 41522747911, 2026-11-02: the variants of #515 the same on the three platforms, those of #537 on Linux only) | `gftfov` at 1 µs on the kernels the library writes | 1.2e-6 s (SSB mode); TRIAD 1.0e-6 s, nadir 4e-7 s |
 | Fields that graze the Earth's limb (a margin of slope 1.2e-6 rad/s at the contact) | `gftfov` at a step of 1 s | 2.5e-4 s |
 | A slow edge (an ellipse, slope 6.1e-4 per second, `LT+S`) | same | 4.4e-6 s |
 | `IsInFOV` on a grid of epochs more than 1 ms from an edge | `fovtrg` and `fovray` | every epoch equal |

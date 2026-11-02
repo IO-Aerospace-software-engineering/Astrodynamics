@@ -290,8 +290,8 @@ public class SpiceApiTest
             TimeSpan.FromSeconds(10.0)).ToArray());
     }
 
-    // PROVISIONAL limits of ReadOrientation, twice the worst over its five records on Linux x64 (2026-11-02: 2.57e-16 rad,
-    // 3.08e-12 rad/s); to be set from the Windows and macOS arm64 CI logs
+    // The limits of ReadOrientation, twice the worst over its five records over Linux, Windows and macOS arm64 (CI run
+    // 41522747911, 2026-11-02): 2.57e-16 / 2.57e-16 / 2.57e-16 rad, 3.08e-12 / 3.08e-12 / 3.08e-12 rad/s
     private const double ReadOrientationRotation = 5.2e-16;
     private const double ReadOrientationRate = 6.2e-12;
 
@@ -485,8 +485,8 @@ public class SpiceApiTest
 
         SpiceAPI.Instance.UnloadKernels(frameFile);
         _output?.WriteLine($"MEASURE #537 WriteOrientation: pxform(J2000, SC) - the C-matrix written {worst:E2} rad");
-        // PROVISIONAL: twice the worst over its ten records on Linux x64 (2026-11-02: 3.31e-16 rad); to be set from the
-        // Windows and macOS arm64 CI logs
+        // Twice the worst over its ten records over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
+        // 3.31e-16 / 3.31e-16 / 3.31e-16 rad
         Assert.True(worst <= WriteOrientationPxform, $"{worst:E3} rad");
     }
 
@@ -995,8 +995,9 @@ public class SpiceApiTest
         double positionError = (state.Position - new Vector3(a, 0.0, 0.0)).Magnitude();
         double velocityError = (state.Velocity - new Vector3(0.0, System.Math.Sqrt(gm / a), 0.0)).Magnitude();
         _output?.WriteLine($"MEASURE conic e = 0 against its closed form: {positionError:E3} m, {velocityError:E3} m/s");
-        Assert.True(positionError <= ConicPositionLimit, $"{positionError:E3} m");
-        Assert.True(velocityError <= ConicVelocityLimit, $"{velocityError:E3} m/s");
+        // 0 m and 0 m/s on Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02): the closed form to the bit
+        Assert.Equal(0.0, positionError);
+        Assert.Equal(0.0, velocityError);
 
         // The same circular equatorial orbit as equinoctial elements (p = a, f = g = h = k = 0, the longitude 0), through eqncpv
         var equinoctial = new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(a, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
@@ -1008,13 +1009,8 @@ public class SpiceApiTest
         Assert.True(equinoctialVelocityError <= EquinoctialVelocityLimit, $"{equinoctialVelocityError:E3} m/s");
     }
 
-    // PROVISIONAL: 0 m and 0 m/s on Linux x64 (2026-11-02); two units in the last place of a (9.3e-10 m) and of √(GM / a)
-    // (9.1e-13 m/s) until the CI logs of Windows and macOS arm64
-    private const double ConicPositionLimit = 1.9e-9;
-    private const double ConicVelocityLimit = 1.9e-12;
-
-    // PROVISIONAL: twice the measurement on Linux x64 (2026-11-02), 4.16e-10 m and 1.13e-12 m/s, until the CI logs of Windows
-    // and macOS arm64
+    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02): 4.164e-10 / 4.164e-10 /
+    // 4.164e-10 m and 1.125e-12 / 1.125e-12 / 1.125e-12 m/s
     private const double EquinoctialPositionLimit = 8.4e-10;
     private const double EquinoctialVelocityLimit = 2.3e-12;
 }

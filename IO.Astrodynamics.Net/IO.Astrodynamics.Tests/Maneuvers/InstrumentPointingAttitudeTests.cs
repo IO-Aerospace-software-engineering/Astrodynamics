@@ -71,8 +71,9 @@ public class InstrumentPointingAttitudeTests
         double angle = Body.AttitudeRecordTests.RotationAngle(Body.AttitudeRecordTests.MinimalRotation(boresight, toMoon), v => v.Rotate(maneuver.StateOrientation.Rotation));
         double pointing = Body.AttitudeRecordTests.Angle(boresight.Rotate(maneuver.StateOrientation.Rotation), toMoon);
         _output.WriteLine($"MEASURE InstrumentPointing ({x}, {y}, {z}): attitude - closed form {angle:E3} rad, boresight from the Moon {pointing:E3} rad");
-        // PROVISIONAL: twice the worst over the five orientations on Linux x64 (2026-11-02: 4.42e-16 rad at (-pi/2, 0, 0);
-        // the boresight 3.93e-16 rad from the Moon at (0.3, 0.5, 0.2)); to be set from the Windows and macOS arm64 CI logs
+        // Twice the worst over the five orientations over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
+        // 4.42e-16 / 3.43e-16 / 4.42e-16 rad at (-pi/2, 0, 0); the boresight 3.93e-16 / 3.93e-16 / 3.93e-16 rad from the Moon
+        // at (0.3, 0.5, 0.2)
         Assert.True(angle <= InstrumentPointingTolerance, $"attitude {angle:E3} rad from the closed form");
         Assert.True(pointing <= BoresightTolerance, $"boresight {pointing:E3} rad from the Moon");
         Assert.Equal(Frames.Frame.ICRF, maneuver.StateOrientation.ReferenceFrame);

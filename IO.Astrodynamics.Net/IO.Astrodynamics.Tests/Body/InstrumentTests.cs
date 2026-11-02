@@ -360,9 +360,11 @@ namespace IO.Astrodynamics.Tests.Body
                 res);
         }
 
-        // PROVISIONAL: twice the worst over the orientations below on Linux x64 (2026-11-02: 3.04e-16 rad, the vectors of
-        // (-0.7, 1.1, 2.3) against pxform); to be set from the Windows and macOS arm64 CI logs
-        private const double EulerAgainstFrameKernel = 6.1e-16;
+        // Twice the worst over the orientations below over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
+        // 3.04e-16 / 4.67e-16 / 2.94e-16 rad, the vectors against pxform, of (-0.7, 1.1, 2.3) on Linux and macOS arm64, of
+        // (0.3, +/-pi/2, +/-0.2) on Windows, whose pxform at y = +/-pi/2 is 4.4e-16 to 4.7e-16 rad from RotationToSpacecraft
+        // (2.2e-16 to 2.5e-16 rad on the other two)
+        private const double EulerAgainstFrameKernel = 9.4e-16;
 
         /// <summary>
         /// The rotation of <see cref="Instrument.Orientation"/> (#524) against the definition of Frames Required Reading,

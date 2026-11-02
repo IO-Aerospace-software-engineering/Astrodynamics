@@ -264,9 +264,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
   1 µs before a discrete change, and two entries within 2 µs are one epoch. `WriteOrientation` writes the C-matrix in
   J2000 with the angular velocity of the CK, the earlier attitude repeated 1 µs before each discrete change, and
   `WriteEphemeris` writes J2000. Against CSPICE on the kernels the library writes and the closed forms of the laws on
-  the solution of the propagation (Linux x64, 2026-11-02): the attitude 6.1e-10 rad from `pxform` on its CK outside
-  those microseconds (1.3e-9 rad from 2025-01-19, where the spacing of the encoded SCLK doubles), 1.3e-15 rad from the
-  law at its samples and 5.7e-5 rad between them at 10 s outputs, its angular velocity 2.3e-5 rad/s from the rate of the
+  the solution of the propagation (the worst over Linux x64, Windows x64 and macOS arm64, 2026-11-02): the attitude
+  6.1e-10 rad from `pxform` on its CK outside those microseconds (1.3e-9 rad from 2025-01-19, where the spacing of the
+  encoded SCLK doubles), 1.3e-15 rad from the law at its samples and 5.7e-5 rad between them at 10 s outputs, its angular velocity 2.3e-5 rad/s from the rate of the
   law (the CK's model, which the library and the CK share to 9.9e-13 rad/s); the stored states equal to the solution
   rotated to ICRF by `pxform` at the outputs, the positions between them 1.3e-8 m from the RK7(8) solution (7.1e-4 m in
   SSB mode), in every inertial initial frame; the managed occultation of the Sun by the Earth from GALACTIC within one
@@ -280,7 +280,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   (0.3, 0.5, 0.2) and 53.9° for (−0.7, 1.1, 2.3), the getters 180° off for (0, π/2, 0), and a TRIAD attitude built from
   an instrument aimed another vector than the one the field-of-view search sees (66.3° for (0.3, 0.5, 0.2)). Every path
   now takes `RotationToSpacecraft`, `eul2m(x, y, z, 1, 2, 3)` as Frames Required Reading defines a TK frame
-  ("Defining a TK Frame Using Euler Angles"): 3.0e-16 rad from the closed form and from `pxform(instrument, spacecraft)`
+  ("Defining a TK Frame Using Euler Angles"): 4.7e-16 rad from the closed form and from `pxform(instrument, spacecraft)`
   on the frame kernels the library writes ([#524](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/524)).
 - **`InstrumentPointingToAttitude` returned the inverse rotation** ([#538](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/538)), the one that takes the target's direction to the
   boresight: at zero orientation the boresight landed 137.519° from the target, twice the 68.759° between them, and its
@@ -417,7 +417,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   spacecraft frame, the angular velocity of `Spacecraft.GetOrientation`) takes the rotation of the frame,
   v' = R v − (R ω) × r': for the Earth's centre seen from a LEO, 7.7e3 m/s with a nadir attitude and 2.0e4 m/s with the
   prograde attitude of the tests, 4.2e8 m/s for the Sun. Against `spkezr` in the spacecraft frame on the kernels the
-  library writes, the state relative to the Earth is 3.9e-3 m and 1.0e-5 m/s off (Linux x64).
+  library writes, the state relative to the Earth is 3.9e-3 m and 1.0e-5 m/s off (Linux x64, Windows x64 and macOS arm64).
 - **Breaking: `SpacecraftFrame`.** A read stores nothing; the frame of a kernel-backed spacecraft reads SPICE at each
   call and no longer caches, so it no longer answers from its cache after its CK is unloaded. The entries and the reads are labelled
   with the spacecraft frame, the source of their rotation (they were labelled with the initial frame);

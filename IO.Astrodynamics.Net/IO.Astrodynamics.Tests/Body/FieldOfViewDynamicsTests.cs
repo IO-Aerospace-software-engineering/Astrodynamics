@@ -52,11 +52,12 @@ namespace IO.Astrodynamics.Tests.Body;
 /// </remarks>
 public class FieldOfViewDynamicsTests
 {
-    // Twice the worst over Linux, Windows and macOS arm64 (CI run 41365060160, 2026-11-02) over the rows below, off the
-    // nadir attitude: 1.2e-6 / 1.2e-6 / 1.2e-6 s (SSB 789 EARTH Ellipsoid LT), every row the same on the three, on the
-    // kernels of what the library read before #537, and on the kernels the library writes for RK7(8) and SSB mode; gftfov at
-    // 1e-6 s, the managed search at 1 µs, the times in ticks of 100 ns. On the kernels the library writes with #537, the worst
-    // over every variant is the same row, 1.2e-6 s (Linux x64, 2026-11-02; the nadir rows 4e-7 s, the TRIAD rows 1.0e-6 s)
+    // Twice the worst over Linux, Windows and macOS arm64 over the rows below, on the kernels the library writes with #537
+    // (CI run 41522747911, 2026-11-02): 1.2e-6 / 1.2e-6 / 1.2e-6 s (SSB 789 EARTH Ellipsoid LT), every row of
+    // Variant_MatchesGftfov the same on the three (the TRIAD rows 1.0e-6 s, the nadir rows 4e-7 s); the variants of #537,
+    // in the Validation category, at most 1.0e-6 s on Linux (ImpulseThenTriad@GALACTIC 791 EARTH Ellipsoid LTS; the nadir
+    // rows 4e-7 s). The same row and figure as before #537 on the kernels of what the library read (CI run 41365060160,
+    // 2026-11-02); gftfov at 1e-6 s, the managed search at 1 µs, the times in ticks of 100 ns
     private const double Limit = 2.4e-6;
 
     private static readonly TimeSpan Step = TimeSpan.FromSeconds(60.0);
