@@ -47,7 +47,8 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// off by up to 15 m over the steps around it, item 3 of §8 of the design, out of scope), or the SPK's (<c>spkezr</c>)
 /// where the propagation keeps no solution (the Velocity-Verlet path of <c>Scenario.SimulateAsync</c>, whose events are
 /// on its output grid) and in SSB mode. The directions of the Sun and the Moon: <c>spkezr</c> from the Earth, geometric,
-/// as the attitudes read them (<c>Aberration.None</c>; for the instrument pointing, item 1 of found.md, its own issue).
+/// as the attitudes read them (<c>Aberration.None</c>; for the instrument pointing, whose light time is not applied
+/// to a celestial target, a defect outside #537 with its own issue).
 /// </para>
 /// <para>
 /// <b>The case</b> of the prototype probe: an inclined LEO (a = 6 778 137 m, e = 0.001, i = 51.6°) from 2024-03-01 12:00
