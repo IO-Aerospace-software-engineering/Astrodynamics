@@ -80,5 +80,5 @@ within the bounds of the tests (5.2e-5 s and more), and are kept as they are.
 
 `CelestialItem.IsOcculted(by, from, aberration)` gives the type at one instant with the same geometry.
 
-Before 10.2.0 the managed search modeled the bodies as spheres of their equatorial radius, sampled a boolean condition
+Before 11.0.0 the managed search modeled the bodies as spheres of their equatorial radius, sampled a boolean condition
 and refined it to about 1 s: its windows were off by up to 0.16 s and could start before the search window.

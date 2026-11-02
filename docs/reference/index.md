@@ -14,7 +14,7 @@ Foundation services for kernel loading, time, frames, celestial bodies, and spac
 - [Time & Windows](time-and-windows.md) — `Time`, `Window`, time frame conversions
 - [Frames & Orientation](frames.md) — reference frames, `StateOrientation`, Earth orientation
 - [Celestial Bodies](celestial-bodies.md) — `CelestialBody`, `CelestialItem`, physical properties
-- [Spacecraft](spacecraft.md) — spacecraft modeling, components, body axes
+- [Spacecraft](spacecraft.md) — spacecraft modeling, components, body axes, the field-of-view search and its accuracy
 - [Sites](sites.md) — ground sites, launch sites, horizontal coordinates
 - [Occultations & Eclipses](occultations.md) — `FindWindowsOnOccultationConstraint`, shapes, frames, step rule, accuracy
 

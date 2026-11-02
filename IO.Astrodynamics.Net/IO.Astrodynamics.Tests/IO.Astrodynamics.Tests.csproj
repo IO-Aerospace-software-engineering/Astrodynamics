@@ -189,6 +189,11 @@
       <Content Include="Data\OccultationReference\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <!-- Kernels and CSPICE windows of tools/fov_reference, for the field-of-view searches (#515). -->
+      <None Remove="Data\FieldOfViewReference\*" />
+      <Content Include="Data\FieldOfViewReference\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
       <!-- Reconstructed LRO trajectory, used by the tracking-data tests. -->
       <None Remove="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp" />
       <Content Include="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp">

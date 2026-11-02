@@ -245,8 +245,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="naifId"></param>
         /// <param name="name"></param>
         /// <param name="model"></param>
-        /// <param name="fieldOfView"></param>
-        /// <param name="crossAngle"></param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
+        /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad</param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">Expressed as Euler angle</param>
@@ -266,8 +266,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="naifId"></param>
         /// <param name="name"></param>
         /// <param name="model"></param>
-        /// <param name="fieldOfView"></param>
-        /// <param name="crossAngle"></param>
+        /// <param name="fieldOfView">The half-angle in the plane of the boresight and the reference vector (<c>FOV_REF_ANGLE</c>), rad</param>
+        /// <param name="crossAngle">The half-angle across that plane (<c>FOV_CROSS_ANGLE</c>), rad</param>
         /// <param name="boresight"></param>
         /// <param name="refVector"></param>
         /// <param name="orientation">Expressed as Euler angle</param>
@@ -693,6 +693,25 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// propagated the covariance. For the conjunction analysis and the tests.
         /// </summary>
         internal StateVector[] PropagatedStates => _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
+
+        /// <summary>
+        /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo"/> interpolates, from the first
+        /// to the last; null when it reads no such states: a kernel-backed spacecraft, a TLE, or fewer than two states
+        /// (the initial orbital parameters are then propagated in two-body motion to the epoch).
+        /// </summary>
+        internal Window? InterpolatedStatesWindow
+        {
+            get
+            {
+                if (_isFromKernel || InitialOrbitalParameters is TLE || _propagatedStates.Count < 2)
+                {
+                    return null;
+                }
+
+                var epochs = _propagatedStates.Keys.ToArray();
+                return new Window(epochs.Min(), epochs.Max());
+            }
+        }
 
         /// <summary>
         /// The solution of the last propagation, whose output states the spacecraft stores, when it was an RK7(8)

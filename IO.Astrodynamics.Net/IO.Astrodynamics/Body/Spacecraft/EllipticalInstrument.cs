@@ -4,14 +4,16 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
 
 public class EllipticalInstrument : Instrument
 {
+    /// <summary>
+    /// The half-angle of the field of view across the plane of the boresight and the reference vector, rad: the
+    /// <c>FOV_CROSS_ANGLE</c> of the instrument kernel
+    /// </summary>
     public double CrossAngle { get; }
 
     internal EllipticalInstrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, double crossAngle, Vector3 boresight, Vector3 refVector,
@@ -40,19 +42,5 @@ public class EllipticalInstrument : Instrument
             .Replace("{cangle}", CrossAngle.ToString(CultureInfo.InvariantCulture));
         await using var sw = new StreamWriter(outputFile.FullName);
         await sw.WriteAsync(data);
-    }
-
-    public override bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
-    {
-        var (azimuth, elevation, isInFov) = PositionInFOV(date, target, aberration);
-        if (!isInFov) return false;
-
-        // Check if the object is within the camera's horizontal and vertical FOV
-        if (System.Math.Pow(azimuth / (FieldOfView), 2) + System.Math.Pow(elevation / (CrossAngle), 2) <= 1)
-        {
-            return true;
-        }
-
-        return false;
     }
 }

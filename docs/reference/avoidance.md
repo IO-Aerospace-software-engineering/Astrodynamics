@@ -80,7 +80,7 @@ Against the same spacecraft propagated from the start with the burn fixed and an
 each option has the same TCA, miss distance and Pc (`AvoidanceFallbackTests`; LEO 400 km, EGM2008 10×10, NRLMSISE-00,
 Moon, Sun, SRP, in RK7(8) and by Velocity-Verlet).
 
-!!! note "Change of results in 10.2.0"
+!!! note "Change of results in 10.2.0-preview-1"
     With a propagated covariance, the miss distance and the Pc of every option change: the trajectory after the burn
     follows the full force model instead of the two-body orbit, and the protected participant has a covariance at the
     TCA of the option, where it had none before (the single-covariance maximum Pc then applied). Cost: one RK7(8)

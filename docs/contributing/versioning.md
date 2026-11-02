@@ -42,9 +42,12 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 ## Release Notes
 
-### 10.2.0 (in development)
+### 11.0.0 (in development)
 
 Changes since 10.2.0-preview-1. Entries are added as they merge.
+
+A major version, because it breaks the API: members deprecated for removal in 11.0 are removed, each listed under
+**Removed** as it merges.
 
 **Added**
 
@@ -192,6 +195,45 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   state; without one, it throws `InvalidOperationException`.
   [#452](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/452)
 
+- **The managed field-of-view search takes the target's shape and tests each field as CSPICE's `gftfov` does.**
+  `Instrument.FindWindowsInFieldOfViewConstraint`, when the instrument's spacecraft or the target is not in the kernels
+  (a propagated spacecraft or a spacecraft from a TLE, a kernel-backed spacecraft with a propagated target, a site given
+  by its coordinates, a star), sampled `IsInFOV`, which tested the direction of the target's center: `targetShape` and
+  `targetFrame` were ignored, so the Earth as an ellipsoid was a point, its edges 1 080 to 1 480 s from `gftfov`'s and,
+  for a field grazing the limb, no window where `gftfov` finds one; and a circle was tested as the square of its
+  half-angle, +188 s and −83 s on DSS-13 ([#515](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/515)). The other shapes carried their own defects, which this
+  change replaces with the same margin:
+  - an ellipse took `FieldOfView`, the IK's `FOV_REF_ANGLE`, across the reference plane and the cross angle in it, and
+    tested angles instead of the plane of the field: about ±400 s on every edge
+    ([#518](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/518));
+  - a rectangle was tested on the ICRF components of the target's direction, never on the axes of the instrument: no
+    window where `gftfov` finds two, 401 of 1 290 epochs wrong against `fovtrg` for the Earth
+    ([#519](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/519));
+  - the reference vector was not made perpendicular to the boresight, as `getfov` does: 193 s and 198 s on an ellipse
+    whose reference vector is 63° from its boresight, against the Earth and a spacecraft target, measured with the
+    half-angles of #518 corrected (−756 s and one window instead of two with them)
+    ([#520](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/520));
+  - the windows were located by a 1 s bisection, up to 1 s before every edge (0.2 to 0.9 s measured), and the first one was searched a step
+    before the search window, starting 60 s early at a 60 s step ([#521](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/521); [#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461) for this path,
+    `GeometryFinder` and its other constraints unchanged).
+
+  The managed search now computes what `gftfov` computes, without writing a kernel: a continuous margin of the target in
+  the field (for a circle or an ellipse, `gftfov`'s field ellipsoid and the overlap margin of the occultation search;
+  for a rectangle against an ellipsoid, the largest discriminant of the ray over the rectangle, in closed form), located
+  by the root finder of the occultations to 1 µs. `targetShape` and `targetFrame` mean what `gftfov`'s `tshape` and
+  `tframe` mean. Against `gftfov` converged to 1e-9 s on its own kernels (`tools/fov_reference`): 8.3e-7 s geometric,
+  2.1e-6 s with the light time and `+S`, every field shape against the Earth, the Moon, the Sun, DSS-13, a spacecraft,
+  the Earth-Moon barycenter and L1; a propagated spacecraft against `gftfov` on the kernels the library writes, 1.3e-6 s
+  on 221 searches off the grazing and slow edges, every target kind, `None`, `LT` and `LT+S` on every field and the nine
+  aberrations on a circle and a narrow field; 2.5e-4 s where the field grazes the Earth's limb (the same on Linux x64,
+  Windows x64 and macOS arm64). The kernels
+  the library writes for an attitude other than the identity, or for an initial state in ECLIPJ2000, do not describe
+  what it reads (an inverted CK, interpolated across a discrete attitude change; ECLIPJ2000 states read as ICRF):
+  `gftfov` on them differs from both paths by up to 972 s, three defects outside this change, each its own issue
+  ([#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529), [#534](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/534), [#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535)).
+  The CSPICE path is unchanged. See
+  [Spacecraft](../reference/spacecraft.md#field-of-view-search).
+
 **Changed**
 
 - **The occultation searches of a propagated spacecraft, a site or two natural bodies run in managed code, with the
@@ -254,6 +296,48 @@ Changes since 10.2.0-preview-1. Entries are added as they merge.
   The conformance runner reads the final state at the end of the window as the case tags it, and the `stm/001` fixture
   is a UTC window. See [Time & Windows](../reference/time-and-windows.md#the-time-argument-of-a-propagation)
   ([#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501)).
+- **The field-of-view search: edges, time frame, short events, corrections and errors.** With the Fixed entry of
+  #515 above:
+  - the managed path locates the edges to 1 µs instead of 1 s; a window that holds at the start of the search window
+    starts there, not a step before it, and one that holds at its end ends there;
+  - it returns TDB windows whatever the frame of the search window, as the CSPICE path does (it returned the frame of
+    the search window), and counts the step in TDB seconds;
+  - it finds a window or a gap shorter than the step when the step is at most half the time between the extremes of
+    the margin; `gftfov` needs a step shorter than every window and gap, so with a longer step the managed path may find
+    an event the CSPICE path misses;
+  - `+S` applies the stellar aberration of `stelab` (`stlabx` for transmission) in the search and in `IsInFOV`, as
+    `gftfov` does: in `gftfov`, `LT+S` moves the edges from `LT` by up to 0.11 s for the Earth, 14.1 s for the Moon and
+    549 s for the Sun. `CelestialItem.GetEphemeris` keeps its correction until
+    [#491](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/491), so the two can differ for the same `Aberration`;
+  - a `Star` is a direction, as `gfrfov` reads a ray: no light time (`LT` and `CN` read as `None`), the stellar
+    aberration alone for their `+S` forms;
+  - `IsInFOV` is the `POINT` condition of `fovtrg` with the same field and corrections, and stays virtual; the search no
+    longer calls it, so an override no longer changes the search. The overrides of `EllipticalInstrument` and
+    `RectangularInstrument` are removed. Where it returned a value, it now throws `InvalidOperationException` for a field
+    the search rejects (below: a boresight zero or parallel to the reference vector, a half-angle not positive, an
+    angular radius above π/2 − 1e-6, a circle of half-angle π/2 included, a non-circular instrument of another
+    subclass), and `ArgumentException` when the target is the instrument's own spacecraft;
+  - both paths check the same rules before the search and throw where they returned no window, or one computed on an
+    extrapolation: a step that is not positive (`ArgumentOutOfRangeException`); a search window that ends before it
+    starts, a target that is the instrument's spacecraft, an ellipsoid target without radii (a site, a spacecraft, a
+    barycenter, a Lagrange point, a star) (`ArgumentException`); a boresight zero or parallel to the reference vector, a
+    half-angle that is not positive, a field whose angular radius exceeds π/2 − 1e-6, a non-circular instrument of
+    another subclass (`InvalidOperationException`); on the managed path, a search window that leaves the propagated
+    states of the instrument's spacecraft or of a spacecraft target (`ArgumentException`), and an observer inside the
+    target's ellipsoid (`InvalidOperationException`). A spacecraft target is still read up to its light time before the
+    start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, extrapolated.
+
+  A search on a propagated spacecraft takes 0.1 to 1 s (0.1 to 0.7 s before). The occultation searches share the
+  light time and the root finder, bit for bit. No other public signature changes; `Instrument.PositionInFOV` is
+  removed (below) ([#515](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/515)).
+
+**Removed**
+
+- **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
+  perpendicular to the boresight and its corrections were those of `CelestialItem.GetEphemeris`. A subclass of
+  `Instrument` that called it no longer compiles. Use `IsInFOV`, the `POINT` condition of CSPICE's `fovtrg` with the
+  field and the corrections of the search; the azimuth and the elevation it returned have no replacement
+  ([#515](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/515)).
 
 ### 10.2.0-preview-1
 
@@ -691,7 +775,7 @@ and **Fixed**. The open issues known at this preview are listed under **Known li
 
 **Known limitations**
 
-Open issues, to be handled after the 10.2.0 release.
+Open issues, to be handled after the 11.0.0 release.
 
 - **SSB mode in low orbit** ([#389](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/389)). An RK7(8) propagation of a LEO state in SSB mode (central body
   the Sun) takes about 5 500 times more steps than relative to the Earth (125 641 steps against 23 for one hour at

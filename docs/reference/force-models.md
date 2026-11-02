@@ -54,8 +54,8 @@ propagator can pass its whole body list, Sun included.
     in total eclipse, `b² / a²` in an annular eclipse of angular radii `a` (the Sun) and `b`. In the penumbra it is the
     sum of the two circular segments cut by the common chord, computed without cancellation (Heron's half chord in the
     form of Kahan, the half angles from atan2): within a few 1e-16 of the exact value of the angles everywhere, and
-    always in [0, 1]. Before 10.2.0 a closed form of the same area cancelled near the contacts of the penumbra, by up to
-    1.7e-4 in LEO, and could return values outside [0, 1]
+    always in [0, 1]. Before 10.2.0-preview-1 a closed form of the same area cancelled near the contacts of the
+    penumbra, by up to 1.7e-4 in LEO, and could return values outside [0, 1]
     ([#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434)).
 
 !!! note "Geometric positions"
@@ -94,8 +94,8 @@ with: IERS Conventions (2010), G. Petit and B. Luzum (eds.), IERS Technical Note
 EGM2008, which GMAT applies from the header of a `.cof`: `GeopotentialCentralTerm.ModelGravitationalParameter` below. Scaled to TDB-compatible units
 it is within 2.3e-10 of DE440's (Klioner et al., 2010). The GMs and the DE440 positions of the third bodies are not
 scaled either, as GMAT and the suite do not scale them: 1.48e-8 of the third-body acceleration, about 1e-14 m/s² in LEO
-for the Moon's tidal term (computed). Before 10.2.0 the harmonics took the GM and the equatorial radius of the kernels
-(6378136.6 m), 7.9e-8 of the harmonics away from EGM2008
+for the Moon's tidal term (computed). Before 10.2.0-preview-1 the harmonics took the GM and the equatorial radius of
+the kernels (6378136.6 m), 7.9e-8 of the harmonics away from EGM2008
 ([#410](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/410)).
 
 ```csharp

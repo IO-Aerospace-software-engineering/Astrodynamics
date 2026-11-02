@@ -1381,8 +1381,8 @@ Base class for spacecraft instruments.
 
 | Method | Description |
 |--------|-------------|
-| `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Check if target in FOV |
-| `FindWindowsInFieldOfViewConstraint(...)` | Find visibility windows |
+| `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT` |
+| `FindWindowsInFieldOfViewConstraint(...)` | The windows, in TDB, of CSPICE's `gftfov`: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search") |
 | `GetBoresightInSpacecraftFrame()` | Get boresight in spacecraft frame |
 | `GetBoresightInICRFFrame(Time date)` | Get boresight in ICRF |
 
@@ -2537,7 +2537,8 @@ scenario.AddSpacecraft(spacecraft);
 // Simulate
 await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
 
-// Find windows when Earth is in the camera's field of view
+// Find windows when Earth is in the camera's field of view: any part of its ellipsoid, oriented by its frame, with the light time.
+// The spacecraft is propagated, so the library searches; the windows are those of CSPICE's gftfov, in TDB, to 1 µs
 var visibilityWindows = spacecraft.Instruments.First()
     .FindWindowsInFieldOfViewConstraint(
         new Window(start, end),

@@ -527,7 +527,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             Aberration.XLT or Aberration.XLTS or Aberration.XCN or Aberration.XCNS => position.Magnitude() / Constants.C,
             _ => -position.Magnitude() / Constants.C
         };
-        return model.ToBody(position, OccultationEvaluator.Shift(from.Epoch, lightTime));
+        return model.ToBody(position, ApparentPositionReader.Shift(from.Epoch, lightTime));
     }
 
     /// <summary>

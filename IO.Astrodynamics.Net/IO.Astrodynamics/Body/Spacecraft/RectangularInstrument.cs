@@ -4,15 +4,16 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.SolarSystemObjects;
-using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body.Spacecraft;
 
 public class RectangularInstrument : Instrument
 {
+    /// <summary>
+    /// The half-angle of the field of view across the plane of the boresight and the reference vector, rad: the
+    /// <c>FOV_CROSS_ANGLE</c> of the instrument kernel
+    /// </summary>
     public double CrossAngle { get; }
 
     internal RectangularInstrument(Spacecraft spacecraft, int naifId, string name, string model, double fieldOfView, double crossAngle, Vector3 boresight, Vector3 refVector,
@@ -21,35 +22,7 @@ public class RectangularInstrument : Instrument
         ArgumentOutOfRangeException.ThrowIfNegative(crossAngle);
         CrossAngle = crossAngle;
     }
-    public override bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
-    {
-        var cameraPostion = Spacecraft.GetEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, aberration).ToStateVector();
-        var objectPosition = target.GetEphemeris(date, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, aberration).ToStateVector();
-        // Calculate the vector from the camera to the object
-        Vector3 toObject = objectPosition.Position - cameraPostion.Position;
 
-        // Project the vector onto the camera's view direction
-        double z = toObject * GetBoresightInICRFFrame(date);
-
-        // Check if the object is in front of the camera
-        if (z <= 0)
-            return false;
-
-        // Calculate horizontal and vertical angles
-        Vector3 projectedOntoXY = new Vector3(toObject.X, toObject.Y, 0);
-        double azimuth = System.Math.Atan2(projectedOntoXY.Magnitude(), z); // Horizontal angle
-
-        Vector3 projectedOntoYZ = new Vector3(0, toObject.Y, toObject.Z);
-        double elevation = System.Math.Atan2(projectedOntoYZ.Magnitude(), z); // Vertical angle
-
-        // Check if the object is within the camera's horizontal and vertical FOV
-        if (azimuth <= FieldOfView && elevation <= CrossAngle)
-        {
-            return true;
-        }
-
-        return false;
-    }
     public override async Task WriteKernelAsync(FileInfo outputFile)
     {
         await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.InstrumentKernelRectangularTemplate.ti");

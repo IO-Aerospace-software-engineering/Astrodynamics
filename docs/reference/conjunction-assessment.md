@@ -39,8 +39,8 @@ during the search, in this order:
 3. **Initial state held in RTN** (`InitialStateHeldInRtn`), the fallback for a participant that the library does not
    propagate in RK7(8) (Velocity-Verlet, not propagated and so two-body, TLE, SPICE), for an initial covariance at another
    epoch than the start of the propagation, for one that rounding does not explain (a negative variance, a value that is
-   not finite: the analysis does not throw, it holds that covariance in RTN as before 10.2.0), and for every participant
-   when `CovariancePropagation` is null. The
+   not finite: the analysis does not throw, it holds that covariance in RTN as before 10.2.0-preview-1), and for every
+   participant when `CovariancePropagation` is null. The
    covariance of the initial `StateVector` is rotated into RTN with the initial state, then back into the inertial frame
    with the state at TCA. It is **not propagated**: its shape relative to the orbit is kept, its size does not grow. Its
    age is reported, and `EncounterQualityFlags.StaleCovarianceUsed` is raised beyond
@@ -53,7 +53,7 @@ The source is reported for each participant in `EncounterState.ProtectedCovarian
 linear covariance, often optimistic. `Screen` never propagates the covariance: it ranks candidates with the covariance
 held in RTN.
 
-!!! note "Change of results in 10.2.0"
+!!! note "Change of results in 10.2.0-preview-1"
     The covariance propagation is on by default (`CovariancePropagationMode.Covariance`, no process noise, no consider
     parameter): the Pc of `Analyze` and `AnalyzeAll` changes for a participant propagated in RK7(8) with an initial
     covariance, and becomes the Pc of the propagated covariance. Set
