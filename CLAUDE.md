@@ -177,7 +177,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 
 ## Validation and Thresholds
 
-Rules learned during the state transition matrix and covariance work (10.2.0, tracking issue #364 and its "Lessons learned"):
+Rules learned during the state transition matrix and covariance work (10.2.0-preview-1, tracking issue #364 and its "Lessons learned"):
 
 - Expected values come from SPICE or an independent reference (GMAT, a closed form, an extended-precision computation), never from a snapshot of the code. A golden is recaptured only for an intended change of results, which the PR states.
 - A reference about the Earth counts TT seconds between its epochs (`PropagationTimeArgument.Tt.SecondsBetween`, or an exact elapsed time through `InterpolateAtElapsed`), never a TDB epoch difference; the SPICE occultation references of `tools/occultation_reference`, which count ET within their bounds, are the stated exception.
