@@ -54,8 +54,11 @@ public class SpacecraftFrame : Frame
 
     public Spacecraft Spacecraft { get; }
 
-    /// <summary>An entry of the attitude record: the rotation to ICRF, the continuous law it samples (null for a discrete one).</summary>
-    private readonly record struct AttitudeEntry(StateOrientation Orientation, object Law);
+    /// <summary>
+    /// An entry of the attitude record: the rotation to ICRF, the continuous law it samples (null for a discrete one), and
+    /// whether it is the sample of that law <see cref="DiscreteChangeLead"/> before the discrete change that follows it.
+    /// </summary>
+    private readonly record struct AttitudeEntry(StateOrientation Orientation, object Law, bool IsLead = false);
 
     public SpacecraftFrame(Spacecraft spacecraft) : base(spacecraft.Name + "_FRAME", spacecraft.NaifId * 1000)
     {
@@ -223,9 +226,70 @@ public class SpacecraftFrame : Frame
                 }
 
                 _record.RemoveRange(first, end - first);
+
+                // A lead whose change was replaced is an ordinary sample of its law, at least SameEpochTolerance before the entry
+                if (first > 0 && _record[first - 1].IsLead)
+                {
+                    _record[first - 1] = _record[first - 1] with { IsLead = false };
+                }
             }
 
             _record.Insert(first, entry);
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// The epochs of the discrete changes that follow a sample of <paramref name="law"/> by at least
+    /// <see cref="SameEpochTolerance"/> plus <see cref="DiscreteChangeLead"/>: where the law holds its last sample over a
+    /// partial step unless it is sampled once more before the change (<see cref="RecordLead"/>).
+    /// </summary>
+    internal Time[] ChangesAfterSamplesOf(object law)
+    {
+        if (law == null) throw new ArgumentNullException(nameof(law));
+        lock (_recordLock)
+        {
+            var changes = new List<Time>();
+            for (int i = 1; i < _record.Count; i++)
+            {
+                if (LeadFits(i, law))
+                {
+                    changes.Add(_record[i].Orientation.Epoch);
+                }
+            }
+
+            return changes.ToArray();
+        }
+    }
+
+    // Whether entry i is a discrete change after a sample of the law far enough before it for a lead
+    private bool LeadFits(int i, object law)
+    {
+        var before = _record[i - 1];
+        return ReferenceEquals(before.Law, law) && !before.IsLead && !Interpolates(before, _record[i]) &&
+               (_record[i].Orientation.Epoch - before.Orientation.Epoch).TotalSeconds >= SameEpochTolerance + DiscreteChangeLead;
+    }
+
+    /// <summary>
+    /// Records <paramref name="orientation"/>, the sample of <paramref name="law"/> on the state before the discrete change at
+    /// <paramref name="change"/>, at <paramref name="change"/> less <see cref="DiscreteChangeLead"/>: the interpolation of
+    /// the law then runs up to the change, and that sample is the record the CK repeats before it (#529 part 3, #534).
+    /// </summary>
+    /// <returns>Whether the sample was recorded: the change is in the record, after a sample of the law
+    /// (<see cref="ChangesAfterSamplesOf"/>).</returns>
+    internal bool RecordLead(StateOrientation orientation, object law, in Time change)
+    {
+        if (orientation == null) throw new ArgumentNullException(nameof(orientation));
+        var entry = new AttitudeEntry(ToIcrf(orientation) with { Epoch = change.AddSeconds(-DiscreteChangeLead) }, law, true);
+        lock (_recordLock)
+        {
+            int index = Find(change);
+            if (index <= 0 || !LeadFits(index, law))
+            {
+                return false;
+            }
+
+            _record.Insert(index, entry);
             return true;
         }
     }
@@ -354,15 +418,17 @@ public class SpacecraftFrame : Frame
             for (int i = 0; i < _record.Count; i++)
             {
                 var entry = _record[i].Orientation;
-                if (i > 0)
+                // A lead is the CK's record before its change, DiscreteChangeLead earlier
+                bool afterLead = i > 0 && _record[i - 1].IsLead;
+                if (i > 0 && !afterLead)
                 {
                     double span = (entry.Epoch - _record[i - 1].Orientation.Epoch).TotalSeconds;
-                    if (span < 2.0 * DiscreteChangeLead)
+                    if (span < SameEpochTolerance)
                         throw new InvalidOperationException(
-                            $"The attitudes of {Spacecraft.Name} at {_record[i - 1].Orientation.Epoch} and {entry.Epoch} are {span:E3} s apart: a CK needs them at least {2.0 * DiscreteChangeLead:E1} s apart.");
+                            $"The attitudes of {Spacecraft.Name} at {_record[i - 1].Orientation.Epoch} and {entry.Epoch} are {span:E3} s apart: a CK needs them at least {SameEpochTolerance:E1} s apart.");
                 }
 
-                if (i > 0 && !Interpolates(_record[i - 1], _record[i]) && _record[i - 1].Orientation.Rotation != entry.Rotation)
+                if (i > 0 && !afterLead && !Interpolates(_record[i - 1], _record[i]) && _record[i - 1].Orientation.Rotation != entry.Rotation)
                 {
                     var held = _record[i - 1].Orientation;
                     records.Add(new StateOrientation(held.Rotation.Conjugate(), Vector3.Zero, entry.Epoch.AddSeconds(-DiscreteChangeLead), ICRF));

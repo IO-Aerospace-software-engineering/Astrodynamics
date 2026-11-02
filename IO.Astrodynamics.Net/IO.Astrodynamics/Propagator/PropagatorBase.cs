@@ -534,6 +534,9 @@ public abstract class PropagatorBase : IPropagator
         solution.CovariancePropagation = _covariancePropagation;
         var outputStates = GenerateOutput(solution, outputCount, endsAtWindowEnd);
 
+        // 5b. The continuous attitude up to each discrete change that follows it
+        RecordContinuousAttitudeUpToChanges(solution);
+
         // 6. Add final orientation
         Spacecraft.Frame.RecordEnd(Window.EndDate);
 
@@ -673,8 +676,7 @@ public abstract class PropagatorBase : IPropagator
             // epoch keeps
             if (_continuousAttitude != null)
             {
-                var localSv = ToIcrf(output[i]).RelativeTo(_continuousAttitude.ManeuverCenter, Aberration.None).ToStateVector();
-                var orientation = _continuousAttitude.ComputeOrientation(localSv);
+                var orientation = SampleContinuousAttitude(output[i]);
                 if (orientation != Quaternion.Zero)
                 {
                     Spacecraft.Frame.Record(new StateOrientation(orientation, Vector3.Zero, epoch, Frame.ICRF), _continuousAttitude, false);
@@ -683,6 +685,44 @@ public abstract class PropagatorBase : IPropagator
         }
 
         return output;
+    }
+
+    // The rotation from the spacecraft frame to ICRF of the continuous attitude, computed on the state in ICRF
+    private Quaternion SampleContinuousAttitude(StateVector state)
+    {
+        var localSv = ToIcrf(state).RelativeTo(_continuousAttitude.ManeuverCenter, Aberration.None).ToStateVector();
+        return _continuousAttitude.ComputeOrientation(localSv);
+    }
+
+    /// <summary>
+    /// Samples the continuous attitude once more before each discrete change that follows it (an impulse, an attitude
+    /// chained after it), on the state of the solution <see cref="SpacecraftFrame.DiscreteChangeLead"/> before the change:
+    /// the attitude between the last output sample and the change is then the interpolation of the law, no longer the last
+    /// sample held over the partial step, and the CK repeats that sample before the change (#529 part 3, #534).
+    /// </summary>
+    private void RecordContinuousAttitudeUpToChanges(PropagationSolution solution)
+    {
+        if (_continuousAttitude == null)
+        {
+            return;
+        }
+
+        foreach (var change in Spacecraft.Frame.ChangesAfterSamplesOf(_continuousAttitude))
+        {
+            // A change after the propagation, an attitude chained past its end, has no state before it to sample
+            if (change > solution.End)
+            {
+                continue;
+            }
+
+            var epoch = change.AddSeconds(-SpacecraftFrame.DiscreteChangeLead);
+            var (position, velocity) = solution.InterpolateAt(epoch);
+            var orientation = SampleContinuousAttitude(new StateVector(position, velocity, InitialState.Observer, epoch, InitialState.Frame));
+            if (orientation != Quaternion.Zero)
+            {
+                Spacecraft.Frame.RecordLead(new StateOrientation(orientation, Vector3.Zero, epoch, Frame.ICRF), _continuousAttitude, change);
+            }
+        }
     }
 
     protected abstract void StorePropagatedStates(StateVector[] outputStates);
