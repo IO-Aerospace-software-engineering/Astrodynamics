@@ -253,42 +253,6 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(date) >= 0.0;
         }
 
-        /// <summary>
-        /// The azimuth and elevation of the target in the instrument's axes before #515: its reference vector is not made
-        /// perpendicular to the boresight, and its corrections are those of <see cref="CelestialItem.GetEphemeris"/>.
-        /// </summary>
-        [Obsolete("PositionInFOV does not make the reference vector perpendicular to the boresight; use IsInFOV, CSPICE's fovtrg condition. It will be removed in 11.0.")]
-        protected (double azimuth, double elevation, bool isInFov) PositionInFOV(Time date, ILocalizable target, Aberration aberration)
-        {
-            var objectPosition = target.GetEphemeris(date, Spacecraft, Frame.ICRF, aberration).ToStateVector();
-            // Calculate the vector from the camera to the object
-            // Compute the vector from the camera to the object
-            Vector3 toObject = objectPosition.Position;
-            
-            // Ensure boresight and refVector are normalized
-            var boresight = GetBoresightInICRFFrame(date).Normalize();
-            double z_cam = toObject * boresight; // Dot product with forward vector
-
-            // Check if the object is in front of the camera
-            if (z_cam <= 0)
-                return (double.NaN, double.NaN, false);
-            
-            var refVector = GetRefVectorInICRFFrame(date).Normalize();
-
-            // Compute the right vector (x-axis) of the camera's coordinate system
-            Vector3 rightVector = boresight.Cross(refVector).Normalize();
-
-            // Project toObject onto the camera's coordinate axes
-            double x_cam = toObject * rightVector; // Dot product with right vector
-            double y_cam = toObject * refVector; // Dot product with up vector
-           
-
-            // Calculate azimuth (horizontal angle) and elevation (vertical angle)
-            double azimuth = System.Math.Atan2(x_cam, z_cam);
-            double elevation = System.Math.Atan2(y_cam, z_cam);
-            return (azimuth, elevation, true);
-        }
-
         public abstract Task WriteKernelAsync(FileInfo outputFile);
 
         #region Operators

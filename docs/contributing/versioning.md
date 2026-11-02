@@ -46,7 +46,7 @@ Current version information and release notes since 8.0. Breaking changes are ca
 
 Changes since 10.2.0-preview-1. Entries are added as they merge.
 
-A major version, because it breaks the API: it removes the members announced as removed in 11.0.
+A major version, because it breaks the API: it removes the members announced as removed in 11.0 (**Removed**).
 
 **Added**
 
@@ -327,13 +327,15 @@ A major version, because it breaks the API: it removes the members announced as 
     start (reception) or after the end (transmission, `XLT` and `XCN`), milliseconds about the Earth, extrapolated.
 
   A search on a propagated spacecraft takes 0.1 to 1 s (0.1 to 0.7 s before). The occultation searches share the
-  light time and the root finder, bit for bit. No public signature changes
-  ([#515](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/515)).
+  light time and the root finder, bit for bit. No other public signature changes; `Instrument.PositionInFOV` is
+  removed (below) ([#515](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/515)).
 
-**Deprecated**
+**Removed**
 
-- **`Instrument.PositionInFOV`** (protected), unchanged: its reference vector is not made perpendicular to the
-  boresight and its corrections are those of `CelestialItem.GetEphemeris`. Use `IsInFOV`. It will be removed in 11.0
+- **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
+  perpendicular to the boresight and its corrections were those of `CelestialItem.GetEphemeris`. A subclass of
+  `Instrument` that called it no longer compiles. Use `IsInFOV`, the `POINT` condition of CSPICE's `fovtrg` with the
+  field and the corrections of the search; the azimuth and the elevation it returned have no replacement
   ([#515](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/515)).
 
 ### 10.2.0-preview-1
