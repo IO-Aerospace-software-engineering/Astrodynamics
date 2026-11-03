@@ -8,11 +8,14 @@ The propagation subsystem provides numerical and analytical orbit propagation th
 
 ### Propagation Frame
 
-The initial state may be given in any inertial frame: ICRF, B1950, FK4, ECLIPJ2000, ECLIPB1950 or GALACTIC. The
+The initial state may be given in any inertial frame: ICRF, GCRF, B1950, FK4, ECLIPJ2000, ECLIPB1950 or GALACTIC. The
 propagation runs in that frame, and the output states are in it. Every force input is evaluated in it as well: the
 ephemeris cache of the bodies, the third-body positions and the rotation of the atmosphere. The trajectory therefore
 does not depend on the inertial frame chosen, apart from rounding and from the step sequence of an adaptive
-integrator, whose error control scales each component separately.
+integrator, whose error control scales each component separately. GCRF has the axes of ICRF (the identity rotation,
+[ICRF, GCRF And EME2000](frames.md#icrf-gcrf-and-eme2000)): a propagation from a GCRF state is, bit for bit, that of
+its ICRF twin, labelled GCRF, with both integrators, a covariance and in SSB mode (#543; before 11.0.0 the propagator
+rejected it).
 
 ### Propagation Loop
 

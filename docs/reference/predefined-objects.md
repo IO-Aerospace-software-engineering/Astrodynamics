@@ -91,7 +91,7 @@ var titan = new CelestialBody(PlanetsAndMoons.TITAN);
 
 | Constant | Description |
 |----------|-------------|
-| `Frame.GCRF` | Geocentric realization of ICRS with IAU frame bias |
+| `Frame.GCRF` | ICRS axes centred on the Earth: the axes of `Frame.ICRF`, the identity rotation, no frame bias |
 | `Frame.CIRS` | Celestial intermediate reference system (CIO-based precession-nutation) |
 | `Frame.TIRS` | Terrestrial intermediate reference system (adds Earth rotation angle) |
 

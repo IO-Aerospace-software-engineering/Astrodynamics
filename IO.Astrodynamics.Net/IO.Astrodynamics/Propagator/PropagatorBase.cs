@@ -753,6 +753,7 @@ public abstract class PropagatorBase : IPropagator
     private static void ValidateInertialFrame(Spacecraft spacecraft)
     {
         if (spacecraft.InitialOrbitalParameters.Frame != Frame.ICRF
+            && spacecraft.InitialOrbitalParameters.Frame != Frame.GCRF
             && spacecraft.InitialOrbitalParameters.Frame != Frame.B1950
             && spacecraft.InitialOrbitalParameters.Frame != Frame.FK4
             && spacecraft.InitialOrbitalParameters.Frame != Frame.ECLIPTIC_J2000

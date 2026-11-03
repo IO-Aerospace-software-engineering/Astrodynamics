@@ -23,4 +23,29 @@ public class FrameTests
                 , res);
         }
     }
+
+    [Theory]
+    [InlineData("GCRF")]
+    [InlineData("gcrf")]
+    public void ConvertFromGcrf(string frame)
+    {
+        // GCRF has the axes of J2000 (#543): the conversion from a frame built from the name GCRF is that from ICRF, SPICE's
+        // sxform from J2000 (Convert), labelled with the frame given
+        using (Configuration.Lock())
+        {
+            string Run(string from)
+            {
+                var command = new FrameConverterCommand();
+                StringBuilder sb = new StringBuilder();
+                StringWriter sw = new StringWriter(sb);
+                Console.SetOut(sw);
+                command.Convert("Data", from, "ITRF93", new EpochParameters { Epoch = "2000-01-01T12:00:00Z" });
+                return sb.ToString();
+            }
+
+            var icrf = Run("ICRF");
+            Assert.Contains("W = 0.7686303144059605", icrf);
+            Assert.Equal(icrf.Replace("Frame : J2000", $"Frame : {frame}"), Run(frame));
+        }
+    }
 }

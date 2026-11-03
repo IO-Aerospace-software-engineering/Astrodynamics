@@ -139,6 +139,32 @@ namespace IO.Astrodynamics.Math
         }
 
         /// <summary>
+        /// The exact spherical linear interpolation from <paramref name="q0"/> to <paramref name="q1"/> at
+        /// <paramref name="fraction"/>, by the axis and angle of q1 q0⁻¹ on the shorter path, with no linear fallback: the
+        /// rotation by <c>fraction</c> times that angle about that axis, composed with q0 (the interpolation of a type-3 CK).
+        /// </summary>
+        /// <returns>The interpolated rotation, and the unit axis and the angle (rad, in [0, π]) of q1 q0⁻¹; for two equal
+        /// rotations, q0, a zero axis and a zero angle.</returns>
+        internal static (Quaternion Rotation, Vector3 Axis, double Angle) SlerpByAxisAngle(in Quaternion q0, in Quaternion q1, double fraction)
+        {
+            var delta = (q1 * q0.Conjugate()).Normalize();
+            if (delta.W < 0.0)
+            {
+                delta = delta * -1.0;
+            }
+
+            double sinHalf = delta.VectorPart.Magnitude();
+            if (sinHalf == 0.0)
+            {
+                return (q0, Vector3.Zero, 0.0);
+            }
+
+            double angle = 2.0 * System.Math.Atan2(sinHalf, delta.W);
+            var axis = delta.VectorPart / sinHalf;
+            return ((new Quaternion(axis, angle * fraction) * q0).Normalize(), axis, angle);
+        }
+
+        /// <summary>
         /// Linearly interpolates between the current quaternion and the specified quaternion.
         /// </summary>
         /// <param name="q2">The target quaternion to interpolate towards.</param>

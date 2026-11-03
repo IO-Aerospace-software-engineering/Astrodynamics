@@ -61,20 +61,25 @@ namespace IO.Astrodynamics.Maneuver
         {
         }
 
-        protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(targetOrbit.Observer as CelestialItem, minimumEpoch,
-            maneuverHoldDuration, engine)
+        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> or <paramref name="engine"/> is null.</exception>
+        /// <exception cref="ArgumentException">The spacecraft of the engine and the target orbit are defined in different frames.</exception>
+        protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
+            RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, engine)
         {
-            if(engine.FuelTank.Spacecraft!=null && engine.FuelTank.Spacecraft.InitialOrbitalParameters.Frame!=targetOrbit.Frame)
+            if (engine.FuelTank.Spacecraft != null && engine.FuelTank.Spacecraft.InitialOrbitalParameters.Frame != targetOrbit.Frame)
             {
                 throw new ArgumentException("Spacecraft and target orbit must be defined in the same frame");
             }
-            
-            if (targetOrbit == null)
-            {
-                throw new ArgumentException("Target orbit must be define");
-            }
 
             TargetOrbit = targetOrbit;
+        }
+
+        /// <summary>
+        /// The target orbit, checked before the constructor chain dereferences it (#552).
+        /// </summary>
+        private static OrbitalParameters.OrbitalParameters RequireTargetOrbit(OrbitalParameters.OrbitalParameters targetOrbit)
+        {
+            return targetOrbit ?? throw new ArgumentNullException(nameof(targetOrbit), "Target orbit must be defined");
         }
 
         public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)

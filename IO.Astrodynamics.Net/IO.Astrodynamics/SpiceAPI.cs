@@ -49,9 +49,11 @@ public class SpiceAPI
     private static extern IntPtr GetSpiceVersionProxy();
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool LoadKernelsProxy(string directoryPath);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool UnloadKernelsProxy(string directoryPath);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
@@ -83,10 +85,12 @@ public class SpiceAPI
         [In] [Out] Window[] windows);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool ReadOrientationProxy(Window searchWindow, int spacecraftId, double tolerance,
         string frame, double stepSize, [In] [Out] StateOrientation[] stateOrientations);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool ReadEphemerisProxy(Window searchWindow, int observerId, int targetId,
         string frame, string aberration, double stepSize, [In] [Out] StateVector[] stateVectors);
 
@@ -94,10 +98,12 @@ public class SpiceAPI
     private static extern IntPtr GetLastErrorProxy();
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool
         WriteEphemerisProxy(string filePath, int objectId, StateVector[] stateVectors, uint size);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool
         WriteOrientationProxy(string filePath, int objectId, StateOrientation[] stateOrientations, uint size);
 
@@ -157,6 +163,16 @@ public class SpiceAPI
 
     //Use the same lock for all cspice calls because it doesn't support multithreading.
     private static object lockObject = new object();
+
+    /// <summary>
+    /// The name SPICE knows the axes of an inertial frame by. GCRF is not a SPICE frame: it has the axes of ICRF
+    /// (SPICE <c>J2000</c>), the identity rotation of <see cref="GcrfFrame"/>, so a frame named GCRF, <see cref="Frame.GCRF"/>
+    /// or <c>new Frame("GCRF")</c>, is handed to SPICE as <c>J2000</c>, and what SPICE returns is labelled with the frame
+    /// the caller gave (#543). The name is compared ignoring case, as SPICE compares frame names. Every other name is
+    /// handed as it is.
+    /// </summary>
+    internal static string SpiceFrameName(Frame frame) =>
+        string.Equals(frame.Name, Frame.GCRF.Name, StringComparison.OrdinalIgnoreCase) ? Frame.ICRF.Name : frame.Name;
 
     /// <summary>
     ///     Retrieve the last error message from the native proxy layer and throw an InvalidOperationException.
@@ -504,7 +520,7 @@ public class SpiceAPI
             }
 
             FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
-                frame.Name, coordinateSystem.GetDescription(),
+                SpiceFrameName(frame), coordinateSystem.GetDescription(),
                 coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
             return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
@@ -597,7 +613,7 @@ public class SpiceAPI
                 var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
                 var window = new TimeSystem.Window(start.ToTDB(), end.ToTDB());
                 var stateVectors = new StateVector[messageSize];
-                if (!ReadEphemerisProxy(window.Convert(), observerId, targetId, frame.Name,
+                if (!ReadEphemerisProxy(window.Convert(), observerId, targetId, SpiceFrameName(frame),
                     aberration.GetDescription(), stepSize.TotalSeconds,
                     stateVectors))
                     ThrowLastProxyError();
@@ -626,7 +642,7 @@ public class SpiceAPI
         {
             var observer = CelestialItem.Create(observerId);
             var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, observerId,
-                targetId, frame.Name, aberration.GetDescription());
+                targetId, SpiceFrameName(frame), aberration.GetDescription());
             return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
                 Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
         }
@@ -643,7 +659,7 @@ public class SpiceAPI
         lock (lockObject)
         {
             var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
-                observer.NaifId, targetId, frame.Name, aberration.GetDescription());
+                observer.NaifId, targetId, SpiceFrameName(frame), aberration.GetDescription());
             return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(),
                 observer, Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
         }
@@ -684,7 +700,7 @@ public class SpiceAPI
         {
             var stateOrientations = new StateOrientation[10000];
             if (!ReadOrientationProxy(searchWindow.Convert(), naifId, tolerance.TotalSeconds,
-                referenceFrame.Name, stepSize.TotalSeconds,
+                SpiceFrameName(referenceFrame), stepSize.TotalSeconds,
                 stateOrientations))
                 ThrowLastProxyError();
             // ByValTStr marshaling returns "" (not null) for zero-padded unwritten slots;
@@ -788,7 +804,7 @@ public class SpiceAPI
         {
             if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
             if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
-            var res = TransformFrameProxy(fromFrame.Name, toFrame.Name, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+            var res = TransformFrameProxy(SpiceFrameName(fromFrame), SpiceFrameName(toFrame), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
             return new OrbitalParameters.StateOrientation(
                 new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z),

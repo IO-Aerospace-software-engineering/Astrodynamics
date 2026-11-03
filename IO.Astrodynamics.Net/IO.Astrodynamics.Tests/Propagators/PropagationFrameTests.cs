@@ -33,12 +33,13 @@ public class PropagationFrameTests
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
-    public static TheoryData<string> InertialFrames => new("ECLIPJ2000", "B1950");
+    public static TheoryData<string> InertialFrames => new("ECLIPJ2000", "B1950", "GCRF");
 
     private static Frames.Frame FrameNamed(string name) => name switch
     {
         "ECLIPJ2000" => Frames.Frame.ECLIPTIC_J2000,
         "B1950" => Frames.Frame.B1950,
+        "GCRF" => Frames.Frame.GCRF,
         _ => throw new ArgumentOutOfRangeException(nameof(name))
     };
 

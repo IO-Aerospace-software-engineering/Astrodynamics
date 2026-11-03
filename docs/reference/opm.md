@@ -62,6 +62,10 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 
 `Spacecraft.ToOpm(...)` exports the spacecraft's current state to OPM format.
 
+The covariance of the initial state (`StateVector.Covariance`, m², m²/s, m²/s²) is exported, in km², km²/s and km²/s², when
+the OPM is written at the initial epoch (the default, or the same instant in any time frame) (#551). At another epoch the
+OPM carries no covariance: moving it there would take the state transition matrix, which the export does not compute.
+
 ## Example
 
 ```csharp

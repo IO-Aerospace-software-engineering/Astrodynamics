@@ -96,7 +96,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 
 A propagated spacecraft keeps the states and the attitude that the library reads (`GetEphemeris`, the instruments, the
 field-of-view and occultation searches, sites, conjunctions) and that it writes as an SPK and a CK. Both are in ICRF,
-whatever the inertial frame of the initial state (ICRF, ECLIPJ2000, B1950, FK4, ECLIPB1950 or GALACTIC): the integration
+whatever the inertial frame of the initial state (ICRF, GCRF, ECLIPJ2000, B1950, FK4, ECLIPB1950 or GALACTIC): the integration
 and the `PropagationSolution` stay in that frame, bit for bit, and each output state is rotated to ICRF when it is stored,
 its covariance through the Jacobian of the rotation. The states of a spacecraft propagated from another frame, read back
 in that frame, are therefore a rotation round trip, no longer bit for bit those of the solution. Before 11.0.0 they were

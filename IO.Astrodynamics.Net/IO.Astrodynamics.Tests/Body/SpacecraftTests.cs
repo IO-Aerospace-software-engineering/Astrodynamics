@@ -636,5 +636,98 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Equal(Frames.Frame.ICRF.Name, maneuver.ManRefFrame);
             Assert.Null(spc.ToOpm(includeManeuvers: false).Data.Maneuvers.FirstOrDefault());
         }
+
+        /// <summary>
+        /// The OPM of a spacecraft carries the covariance of its initial state, in km², km²/s, km²/s², at the initial
+        /// epoch, whether the epoch is omitted or given at the same instant in any tag (#551). Expected: the terms of the
+        /// covariance in m², m²/s, m²/s², times 1e-6. The state is the initial one, in km, km/s, and stays in the frame of
+        /// the initial state, as its covariance.
+        /// </summary>
+        [Theory]
+        [InlineData("ICRF", null)]
+        [InlineData("ICRF", "UTC")]
+        [InlineData("ICRF", "TDB")]
+        [InlineData("ECLIPTIC_J2000", null)]
+        [InlineData("ECLIPTIC_J2000", "TDB")]
+        public void ToOpm_ExportsTheCovarianceOfTheInitialStateInKm2(string frameName, string epochTag)
+        {
+            var epoch = new TimeSystem.Time(new DateTime(2024, 1, 15, 12, 0, 0), TimeFrame.UTCFrame);
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var frame = frameName == "ICRF" ? Frames.Frame.ICRF : Frames.Frame.ECLIPTIC_J2000;
+            var sv = new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7500.0, 0.0), earth, epoch, frame,
+                OrbitalParameters.StateVectorTests.DistinctCovariance());
+            var spc = new Spacecraft(-1106, "Opm1106", 420000.0, 500000.0, new Clock("Clk1106", 256), sv, 1600.0, 2.2, "1998-067A", 1.5);
+            TimeSystem.Time? at = epochTag switch
+            {
+                null => null,
+                "UTC" => epoch,
+                _ => epoch.ToTDB()
+            };
+
+            var opm = spc.ToOpm(epoch: at);
+
+            Assert.True(opm.Data.HasCovariance);
+            var c = opm.Data.Covariance;
+            AssertKm2(1.0e-4, c.CxX);
+            AssertKm2(5.0e-5, c.CyX);
+            AssertKm2(4.0e-4, c.CyY);
+            AssertKm2(-3.0e-5, c.CzX);
+            AssertKm2(2.0e-5, c.CzY);
+            AssertKm2(9.0e-4, c.CzZ);
+            AssertKm2(5.0e-8, c.CxDotX);
+            AssertKm2(0.0, c.CxDotY);
+            AssertKm2(0.0, c.CxDotZ);
+            AssertKm2(0.0, c.CyDotX);
+            AssertKm2(1.0e-7, c.CyDotY);
+            AssertKm2(0.0, c.CyDotZ);
+            AssertKm2(0.0, c.CzDotX);
+            AssertKm2(0.0, c.CzDotY);
+            AssertKm2(-1.5e-7, c.CzDotZ);
+            AssertKm2(1.0e-10, c.CxDotXDot);
+            AssertKm2(1.0e-11, c.CyDotXDot);
+            AssertKm2(4.0e-10, c.CyDotYDot);
+            AssertKm2(0.0, c.CzDotXDot);
+            AssertKm2(2.0e-11, c.CzDotYDot);
+            AssertKm2(9.0e-10, c.CzDotZDot);
+            Assert.Equal(frame.Name, opm.Metadata.ReferenceFrame);
+            Assert.Equal(6778.137, opm.Data.StateVector.X);
+            Assert.Equal(0.0, opm.Data.StateVector.Y);
+            Assert.Equal(0.0, opm.Data.StateVector.Z);
+            Assert.Equal(0.0, opm.Data.StateVector.XDot);
+            Assert.Equal(7.5, opm.Data.StateVector.YDot);
+            Assert.Equal(0.0, opm.Data.StateVector.ZDot);
+        }
+
+        /// <summary>
+        /// At an epoch other than the initial one the OPM carries no covariance: moving it there would take the state
+        /// transition matrix, which the export does not compute (#551). Without a covariance on the initial state, or
+        /// from elements, none is exported.
+        /// </summary>
+        [Fact]
+        public void ToOpm_CarriesNoCovarianceAtAnotherEpochOrWithoutOne()
+        {
+            var epoch = new TimeSystem.Time(new DateTime(2024, 1, 15, 12, 0, 0), TimeFrame.UTCFrame);
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch);
+            var withCovariance = new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7500.0, 0.0), earth, epoch, Frames.Frame.ICRF,
+                OrbitalParameters.StateVectorTests.DistinctCovariance());
+            var spc = new Spacecraft(-1107, "Opm1107", 420000.0, 500000.0, new Clock("Clk1107", 256), withCovariance, cosparId: "1998-067A");
+            Assert.False(spc.ToOpm(epoch: epoch + TimeSpan.FromSeconds(60.0)).Data.HasCovariance);
+
+            var withoutCovariance = new StateVector(withCovariance.Position, withCovariance.Velocity, earth, epoch, Frames.Frame.ICRF);
+            var spc2 = new Spacecraft(-1108, "Opm1108", 420000.0, 500000.0, new Clock("Clk1108", 256), withoutCovariance, cosparId: "1998-067B");
+            Assert.False(spc2.ToOpm().Data.HasCovariance);
+
+            var spc3 = new Spacecraft(-1109, "Opm1109", 420000.0, 500000.0, new Clock("Clk1109", 256), withCovariance.ToKeplerianElements(), cosparId: "1998-067C");
+            Assert.False(spc3.ToOpm().Data.HasCovariance);
+        }
+
+        /// <summary>
+        /// A term of the covariance converted from m² to km², against its closed form: equal within two ulp, the rounding
+        /// of the product by 1e-6.
+        /// </summary>
+        private static void AssertKm2(double expected, double actual)
+        {
+            Assert.True(System.Math.Abs(actual - expected) <= 4.5e-16 * System.Math.Abs(expected), $"expected {expected:R}, actual {actual:R}");
+        }
     }
 }

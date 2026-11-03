@@ -6,13 +6,17 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters
 {
     public class StateVectorTests
     {
-        public StateVectorTests()
+        private readonly ITestOutputHelper _output;
+
+        public StateVectorTests(ITestOutputHelper output)
         {
+            _output = output;
             SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
@@ -613,6 +617,112 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(100.0, rtnCov.Get(0, 0), 6); // R variance
             Assert.Equal(200.0, rtnCov.Get(1, 1), 6); // T variance
             Assert.Equal(300.0, rtnCov.Get(2, 2), 6); // N variance
+        }
+
+        /// <summary>
+        /// A 6×6 covariance in m², m²/s, m²/s², with distinct terms in every block.
+        /// </summary>
+        internal static Matrix DistinctCovariance()
+        {
+            var c = new double[6, 6];
+            c[0, 0] = 100.0;
+            c[1, 1] = 400.0;
+            c[2, 2] = 900.0;
+            c[3, 3] = 1.0e-4;
+            c[4, 4] = 4.0e-4;
+            c[5, 5] = 9.0e-4;
+            c[1, 0] = c[0, 1] = 50.0;
+            c[2, 0] = c[0, 2] = -30.0;
+            c[2, 1] = c[1, 2] = 20.0;
+            c[3, 0] = c[0, 3] = 0.05;
+            c[4, 1] = c[1, 4] = 0.1;
+            c[5, 2] = c[2, 5] = -0.15;
+            c[4, 3] = c[3, 4] = 1.0e-5;
+            c[5, 4] = c[4, 5] = 2.0e-5;
+            return new Matrix(c);
+        }
+
+        /// <summary>
+        /// At its own epoch, tagged as it is, a state vector is itself, with its covariance (#551).
+        /// </summary>
+        [Fact]
+        public void ToStateVectorAtItsOwnEpoch_IsTheStateWithItsCovariance()
+        {
+            var epoch = new TimeSystem.Time(new DateTime(2024, 1, 15, 12, 0, 0), TimeFrame.UTCFrame);
+            var sv = new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7500.0, 0.0), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF,
+                DistinctCovariance());
+
+            Assert.Same(sv, sv.ToStateVector(epoch));
+        }
+
+        /// <summary>
+        /// At the instant of its epoch tagged in another time frame, a state vector keeps its position, velocity and
+        /// covariance, bit for bit, and takes the tag it is read at (#551).
+        /// </summary>
+        [Theory]
+        [InlineData("TDB")]
+        [InlineData("TAI")]
+        [InlineData("TT")]
+        [InlineData("GPS")]
+        public void ToStateVectorAtTheSameInstantInAnotherTimeFrame_KeepsTheStateAndItsCovariance(string frame)
+        {
+            var epoch = new TimeSystem.Time(new DateTime(2024, 1, 15, 12, 0, 0), TimeFrame.UTCFrame);
+            var covariance = DistinctCovariance();
+            var sv = new StateVector(new Vector3(6778137.0, 1000.0, -2000.0), new Vector3(10.0, 7500.0, 300.0), TestHelpers.EarthAtJ2000, epoch,
+                Frames.Frame.ECLIPTIC_J2000, covariance);
+            var tag = frame switch
+            {
+                "TDB" => epoch.ToTDB(),
+                "TAI" => epoch.ToTAI(),
+                "TT" => epoch.ToTDT(),
+                _ => epoch.ConvertTo(TimeFrame.GPSFrame)
+            };
+            Assert.NotEqual(epoch, tag);
+
+            var read = sv.ToStateVector(tag);
+
+            Assert.Equal(sv.Position, read.Position);
+            Assert.Equal(sv.Velocity, read.Velocity);
+            Assert.Equal(tag, read.Epoch);
+            Assert.Equal(sv.Frame, read.Frame);
+            Assert.Equal(sv.Observer, read.Observer);
+            Assert.True(read.Covariance.HasValue);
+            for (int i = 0; i < 6; i++)
+            for (int j = 0; j < 6; j++)
+                Assert.Equal(covariance.Get(i, j), read.Covariance.Value.Get(i, j));
+        }
+
+        /// <summary>
+        /// At another instant, a state vector is its two-body motion, without a covariance: moving the covariance
+        /// would take the state transition matrix (#551). The circular orbit is the closed form
+        /// r (cos nΔt, sin nΔt, 0), Δt the TT seconds between the two UTC epochs, away from a leap second (#501, #508).
+        /// </summary>
+        [Fact]
+        public void ToStateVectorAtAnotherEpoch_IsTheTwoBodyMotionWithoutCovariance()
+        {
+            var earth = TestHelpers.EarthAtJ2000;
+            const double r = 6778137.0;
+            double v = System.Math.Sqrt(earth.GM / r);
+            double n = System.Math.Sqrt(earth.GM / (r * r * r));
+            var epoch = new TimeSystem.Time(new DateTime(2024, 1, 15, 12, 0, 0), TimeFrame.UTCFrame);
+            var sv = new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, v, 0.0), earth, epoch, Frames.Frame.ICRF, DistinctCovariance());
+            const double dt = 600.0;
+
+            var later = sv.ToStateVector(epoch + TimeSpan.FromSeconds(dt));
+
+            Assert.False(later.Covariance.HasValue);
+            Assert.Equal(epoch + TimeSpan.FromSeconds(dt), later.Epoch);
+            var expectedPosition = new Vector3(r * System.Math.Cos(n * dt), r * System.Math.Sin(n * dt), 0.0);
+            var expectedVelocity = new Vector3(-v * System.Math.Sin(n * dt), v * System.Math.Cos(n * dt), 0.0);
+            // Measured 0 m and 0 m/s on Linux and Windows, 9.313e-10 m (one ulp of r) and 1.286e-12 m/s on macOS arm64 (run
+            // 41571571334, 2026-11-03): the libm's cos and sin differ there by an ulp. Twice the worst, 1.9e-9 m and
+            // 2.6e-12 m/s, is below the rounding floor that bounds it, 4 ulp of r (3.7e-9 m) and of v (3.6e-12 m/s), room
+            // for an ulp of the libm's cos and sin on each component.
+            double positionBound = 4.0 * (System.Math.BitIncrement(r) - r);
+            double velocityBound = 4.0 * (System.Math.BitIncrement(v) - v);
+            _output.WriteLine($"MEASURE #551 two-body motion at 600 s: {(later.Position - expectedPosition).Magnitude():E3} m, {(later.Velocity - expectedVelocity).Magnitude():E3} m/s");
+            Assert.True((later.Position - expectedPosition).Magnitude() <= positionBound, $"{(later.Position - expectedPosition).Magnitude():E3} m");
+            Assert.True((later.Velocity - expectedVelocity).Magnitude() <= velocityBound, $"{(later.Velocity - expectedVelocity).Magnitude():E3} m/s");
         }
     }
 }
