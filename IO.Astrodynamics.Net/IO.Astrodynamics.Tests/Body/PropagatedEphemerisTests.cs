@@ -419,11 +419,12 @@ public class PropagatedEphemerisTests
     {
         var file = new FileInfo(Path.Combine("Data/User/PropagatedArcs540", "rejected.bsp"));
         var two = new[] { State(0.0), State(10.0) };
-        Assert.Throws<ArgumentNullException>(() => IO.Astrodynamics.Kernels.SpkWriter.WriteType9(null, -540, 1, new[] { two }));
-        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.WriteType9(file, -540, 1, null));
-        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.WriteType9(file, -540, 1, Array.Empty<StateVector[]>()));
-        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.WriteType9(file, -540, 1, new[] { new[] { State(0.0) } }));
-        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.WriteType9(file, -540, 1, new[] { new[] { State(10.0), State(0.0) } }));
+        Assert.Throws<ArgumentNullException>(() => IO.Astrodynamics.Kernels.SpkWriter.Write(null, IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-540, 1, new[] { two })));
+        Assert.Throws<ArgumentNullException>(() => IO.Astrodynamics.Kernels.SpkWriter.Write(file, null));
+        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-540, 1, null));
+        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-540, 1, Array.Empty<StateVector[]>()));
+        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-540, 1, new[] { new[] { State(0.0) } }));
+        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-540, 1, new[] { new[] { State(10.0), State(0.0) } }));
         Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemerisArcs(null, -540, new[] { two }));
         Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -540, null));
         Assert.False(file.Exists);

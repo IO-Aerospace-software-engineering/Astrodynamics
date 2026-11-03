@@ -235,7 +235,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
   | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (Linux, 2026-11-03, PROVISIONAL) |
-  | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.3e-3 m, 5.9e-6 m/s in SSB mode, 2.5e-3 m across an impulse (Linux, 2026-11-03, PROVISIONAL; 2.3e-2 m and 1.4e-3 m/s with the type-8 segment of the native writer before 11.0.0) |
+  | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.3e-3 m, 5.9e-6 m/s in SSB mode, 2.6e-3 m across an impulse (Linux, 2026-11-03, PROVISIONAL; 2.3e-2 m and 1.4e-3 m/s with the type-8 segment of the native writer before 11.0.0) |
   | The managed occultation of the Sun by the Earth from GALACTIC, against its ICRF twin and `gfoclt` on the SPK | within one tick (100 ns); 4.0e-7 s |
 
   The angular velocity of the CK's model is the rate of the SLERP of each interval, its mean at the samples, linear in
@@ -243,7 +243,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   accuracies: the library's angular velocity against `xf2rav` of `sxform` on the CK it wrote with that rate, 9.9e-13 rad/s
   (1.5e-12 rad/s in 2026), and its positions against `spkezr` on its SPK, two interpolations of the same stored states,
   7.4e-4 m (1.8e-3 m in SSB mode, Linux, 2026-11-03, PROVISIONAL; 2.3e-2 m with the type-8 segment of the native writer
-  before 11.0.0); across an impulse, one-sided at the ends of the arcs, 1.6e-3 m (2.5e-3 m in SSB mode; Linux,
+  before 11.0.0); across an impulse, one-sided at the ends of the arcs, 7.8e-4 m (2.6e-3 m in SSB mode; Linux,
   2026-11-03, PROVISIONAL; these cases were excluded before 11.0.0, #540).
 
   The interpolation residual grows as the square of the output step: on the orbit of the tests (a = 6 778 km,

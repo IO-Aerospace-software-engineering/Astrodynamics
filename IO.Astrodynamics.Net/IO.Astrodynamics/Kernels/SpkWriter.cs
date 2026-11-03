@@ -45,27 +45,14 @@ internal static class SpkWriter
     internal const int MaximumDegree = 7;
 
     /// <summary>
-    /// Writes <paramref name="arcs"/>, each one segment of type 9, to <paramref name="file"/>, replacing it; its directory
+    /// Writes the bytes of a file built by <see cref="BuildType9"/> to <paramref name="file"/>, replacing it; its directory
     /// is created when it does not exist, as the native writer does.
     /// </summary>
-    /// <param name="file">The SPK file.</param>
-    /// <param name="body">The NAIF id of the object.</param>
-    /// <param name="frameCode">The SPICE code of the frame of the states (1 for J2000).</param>
-    /// <param name="arcs">The arcs, in time order, each of at least two states in strictly increasing epoch order, in SI
-    /// units, relative to the centre of their first state.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="file"/> is null.</exception>
-    /// <exception cref="ArgumentException">See <see cref="BuildType9"/>.</exception>
-    internal static void WriteType9(FileInfo file, int body, int frameCode, IReadOnlyList<StateVector[]> arcs)
-    {
-        if (file == null) throw new ArgumentNullException(nameof(file));
-        Write(file, BuildType9(body, frameCode, arcs));
-    }
-
-    /// <summary>
-    /// Writes the bytes of a file built by <see cref="BuildType9"/>, creating its directory when it does not exist.
-    /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="file"/> or <paramref name="bytes"/> is null.</exception>
     internal static void Write(FileInfo file, byte[] bytes)
     {
+        if (file == null) throw new ArgumentNullException(nameof(file));
+        if (bytes == null) throw new ArgumentNullException(nameof(bytes));
         var directory = Path.GetDirectoryName(file.FullName);
         if (!string.IsNullOrEmpty(directory))
         {
@@ -79,7 +66,9 @@ internal static class SpkWriter
     internal static double Seconds(StateVector state) => state.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
 
     /// <summary>
-    /// The bytes of the SPK of <paramref name="arcs"/>, each one segment of type 9, checked before anything is written. An
+    /// The bytes of the SPK of <paramref name="arcs"/>, each one segment of type 9, checked before anything is written: the
+    /// arcs in time order, each of at least two states in strictly increasing epoch order, in SI units, relative to the
+    /// centre of their first state; <paramref name="frameCode"/> the SPICE code of their frame (1 for J2000). An
     /// arc whose states are all one TDB second of the file (its epochs within the resolution of the double, 1.2e-7 s in
     /// 2024: an impulse that close to the start or the end of the propagation) cannot be a segment and is left out: SPICE
     /// reads there the neighbouring segment, which starts or ends at that second.
