@@ -490,8 +490,11 @@ A major version, because it breaks the API: members deprecated for removal in 11
   0.025 rad); it now takes the axis and the angle of the rotation between them, the interpolation the attitude record of
   a spacecraft already uses (bit for bit the same). `Quaternion.SLERP` itself is unchanged. `MemoryDataProvider` no
   longer grows with its reads ([#548](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/548)).
-- **The `orientation` command for a spacecraft outside its CK** throws `InvalidOperationException` with the SPICE error,
-  where it printed the identity ([#542](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/542)).
+- **Breaking: the `orientation` command of a spacecraft.** With the Fixed entry above. For a negative identifier it prints
+  the attitude of the CK, relative to the requested frame, where it printed the identity whatever the CK held: its
+  output changes for every spacecraft whose CK is not the identity. An epoch outside the CK throws
+  `InvalidOperationException` with the SPICE error, where it printed the identity
+  ([#542](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/542)).
 
 **Removed**
 
