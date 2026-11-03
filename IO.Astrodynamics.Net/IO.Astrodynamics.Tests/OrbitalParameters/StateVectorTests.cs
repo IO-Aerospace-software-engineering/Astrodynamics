@@ -6,13 +6,17 @@ using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters
 {
     public class StateVectorTests
     {
-        public StateVectorTests()
+        private readonly ITestOutputHelper _output;
+
+        public StateVectorTests(ITestOutputHelper output)
         {
+            _output = output;
             SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
@@ -715,6 +719,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             // (twice Linux, with that floor) until the CI measures Linux, Windows and macOS arm64.
             double positionBound = 4.0 * (System.Math.BitIncrement(r) - r);
             double velocityBound = 4.0 * (System.Math.BitIncrement(v) - v);
+            _output.WriteLine($"MEASURE #551 two-body motion at 600 s: {(later.Position - expectedPosition).Magnitude():E3} m, {(later.Velocity - expectedVelocity).Magnitude():E3} m/s");
             Assert.True((later.Position - expectedPosition).Magnitude() <= positionBound, $"{(later.Position - expectedPosition).Magnitude():E3} m");
             Assert.True((later.Velocity - expectedVelocity).Magnitude() <= velocityBound, $"{(later.Velocity - expectedVelocity).Magnitude():E3} m/s");
         }

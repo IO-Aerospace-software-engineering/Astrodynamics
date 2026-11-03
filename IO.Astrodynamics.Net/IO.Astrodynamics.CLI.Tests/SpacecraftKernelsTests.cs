@@ -119,12 +119,12 @@ public class SpacecraftKernelsTests
         return 2.0 * System.Math.Atan2(delta.VectorPart.Magnitude(), System.Math.Abs(delta.W));
     }
 
-    // Measured (Linux x64, .NET 10, Debug, 2026-11-03), the worst over the 91 epochs of each case: 0 rad in J2000,
-    // ECLIPJ2000 and ITRF93, UTC window included (ckgpav_c and sxform read the same CK segment at the same encoded SCLK),
-    // and 2.18e-18, 2.21e-18 and 2.18e-18 rad/s on rates of 1.1e-3 rad/s; before the fix the identity, 2.1 rad or more
-    // off. PROVISIONAL (twice Linux; the rotation with a floor of two roundings of the quaternion, 4.4e-16 rad) until
-    // the CI measures the three platforms.
-    private const double RotationTolerance = 4.4e-16;
+    // Measured, the worst over the 91 epochs of each case, the same on Linux, Windows and macOS arm64 (run 41567621620,
+    // 2026-11-03): 0 rad in J2000, ECLIPJ2000 and ITRF93, UTC window included (ckgpav_c and sxform read the same CK
+    // segment at the same encoded SCLK), and 2.182e-18, 2.211e-18 and 2.177e-18 rad/s on rates of 1.1e-3 rad/s; before the
+    // fix the identity, 2.1 rad or more off. The bounds are twice the worst rounded up at the second digit, the rotation
+    // with a floor of two roundings of the quaternion, 2 ulp(1) = 4.44e-16 rad, 4.5e-16 rounded up.
+    private const double RotationTolerance = 4.5e-16;
 
     private const double AngularVelocityTolerance = 4.5e-18;
 
@@ -299,10 +299,11 @@ public class SpacecraftKernelsTests
             double expectedFromSpacecraft = Angle(spacecraftFromEarth.Inverse(), moonFromEarth - spacecraftFromEarth);
             double expectedFromEarth = Angle(spacecraftFromEarth, moonFromEarth);
             _output.WriteLine($"MEASURE #542 angular separation: from the spacecraft {fromSpacecraft - expectedFromSpacecraft:E3} rad, from the Earth {fromEarth - expectedFromEarth:E3} rad");
-            // Measured 0 and 1.1e-16 rad (Linux x64, Debug, 2026-11-03), the library's Vector3.Angle against the atan2 form,
-            // angles of 2.48 and 0.65 rad; bound PROVISIONAL (twice Linux, with a floor of one ulp of 2.48 rad, 4.4e-16 rad)
-            Assert.True(System.Math.Abs(fromSpacecraft - expectedFromSpacecraft) <= 4.4e-16);
-            Assert.True(System.Math.Abs(fromEarth - expectedFromEarth) <= 4.4e-16);
+            // Measured 0 and 1.110e-16 rad on Linux and Windows, 0 and 0 rad on macOS arm64 (run 41567621620, 2026-11-03), the
+            // library's Vector3.Angle against the atan2 form, angles of 2.48 and 0.65 rad; the bound is twice the worst
+            // with a floor of one ulp of 2.48 rad, 4.44e-16 rad, 4.5e-16 rounded up (4.4e-16 would demand the same bits)
+            Assert.True(System.Math.Abs(fromSpacecraft - expectedFromSpacecraft) <= 4.5e-16);
+            Assert.True(System.Math.Abs(fromEarth - expectedFromEarth) <= 4.5e-16);
         }
     }
 }

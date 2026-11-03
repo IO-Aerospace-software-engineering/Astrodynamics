@@ -53,11 +53,11 @@ public class MemoryDataProviderTests
         return (provider, frame);
     }
 
-    // Measured (Linux x64, .NET 10, Debug, 2026-11-02), the worst over the 999 fractions: 1.45e-16 rad at 0.0113 rad,
-    // 1.81e-16 rad at 0.025 rad, 2.39e-16 rad at 0.05 rad. Before the fix, #548 measured 5.9e-9 and 6.3e-8 rad on a fresh
-    // provider (the Lerp below 0.028 rad), and 1.2e-8 to 1.8e-7 rad in sequence; its 5.0e-10 rad at 0.05 rad (SLERP) was
-    // the rounding of the dates to the tick, which this test takes out. PROVISIONAL (twice Linux) until the CI measures
-    // the three platforms.
+    // Measured, the worst over the 999 fractions, the same on Linux, Windows and macOS arm64 (run 41567621620, 2026-11-03):
+    // 1.451e-16 rad at 0.0113 rad, 1.809e-16 rad at 0.025 rad, 2.388e-16 rad at 0.05 rad; the bound is twice the worst.
+    // Before the fix, #548 measured 5.9e-9 and 6.3e-8 rad on a fresh provider (the Lerp below 0.028 rad), and 1.2e-8 to
+    // 1.8e-7 rad in sequence; its 5.0e-10 rad at 0.05 rad (SLERP) was the rounding of the dates to the tick, which this
+    // test takes out.
     private const double OrientationTolerance = 4.8e-16;
 
     [Theory]
@@ -136,9 +136,8 @@ public class MemoryDataProviderTests
         provider.GetEphemeris(Start.AddSeconds(t), TestHelpers.EarthAtJ2000, TestHelpers.SsbAtJ2000, Frames.Frame.ICRF, Aberration.None)
             .ToStateVector();
 
-    // Measured (Linux x64, .NET 10, Debug, 2026-11-02): 8.81e-7 m at 605 s, the error of the 8-point Lagrange interpolation
-    // of the nodes; before the fix 7.70 m after the 40 reads (#548). PROVISIONAL (twice Linux) until the CI measures the
-    // three platforms.
+    // Measured 8.805e-7 m at 605 s, the same on Linux, Windows and macOS arm64 (run 41567621620, 2026-11-03), the error of the
+    // 8-point Lagrange interpolation of the nodes; the bound is twice it. Before the fix, 7.70 m after the 40 reads (#548).
     private const double PositionTolerance = 1.8e-6;
 
     [Fact]

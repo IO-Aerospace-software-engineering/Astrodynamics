@@ -3,13 +3,17 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters
 {
     public class StateOrientationTests
     {
-        public StateOrientationTests()
+        private readonly ITestOutputHelper _output;
+
+        public StateOrientationTests(ITestOutputHelper output)
         {
+            _output = output;
             SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
@@ -146,9 +150,11 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             var result = initial.Interpolate(final, TimeSystem.Time.J2000TDB.AddSeconds(3));
 
             // Assert: the closed form. Measured 0 rad in the four cases (Linux x64, .NET 10, Debug, 2026-11-02); the bound is
-            // the record of MemoryDataProviderTests (twice 2.39e-16 rad over 999 fractions), PROVISIONAL (twice Linux) until
-            // the CI measures the three platforms
+            // the record of MemoryDataProviderTests (twice 2.388e-16 rad over 999 fractions, the same on Linux, Windows and
+            // macOS arm64, run 41567621620). This test's own 0 rad is measured on Linux only: PROVISIONAL until the CI
+            // measures it on the three platforms
             var expected = (new Quaternion(axis, angle * 0.3) * q0).Normalize();
+            _output.WriteLine($"MEASURE #548 interpolation {angle} rad{(oppositeSign ? " (opposite sign)" : "")}: {AngleBetween(expected, result.Rotation):E3} rad");
             Assert.True(AngleBetween(expected, result.Rotation) < 4.8e-16, $"{AngleBetween(expected, result.Rotation):E3} rad");
         }
 
