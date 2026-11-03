@@ -24,44 +24,22 @@ public class MemoryDataProvider : IDataProvider
             throw new ArgumentException($"Frame not found ({source})");
         }
 
-        if (!stateOrientations.TryGetValue(date, out var stateOrientation))
+        if (stateOrientations.TryGetValue(date, out var stateOrientation))
         {
-            if (stateOrientations.Count == 0)
-            {
-                throw new ArgumentException($"No state orientation found for this frame({source})");
-            }
-
-            if (date < stateOrientations.Keys.First() || date > stateOrientations.Keys.Last())
-            {
-                throw new ArgumentException($"No state orientation found for the frame ({source}) at this date {date}");
-            }
-
-            var dates = stateOrientations.Keys.Order().ToList();
-            int index = dates.BinarySearch(date);
-
-            Time? previousEntry = null;
-            Time? nextEntry = null;
-
-
-            index = ~index;
-
-            if (index > 0)
-            {
-                previousEntry = dates[index - 1];
-            }
-
-            if (index < dates.Count)
-            {
-                nextEntry = dates[index];
-            }
-
-            var previousSo = stateOrientations[previousEntry!.Value];
-            var nextSo = stateOrientations[nextEntry!.Value];
-            stateOrientation = previousSo.Interpolate(nextSo, date);
-            stateOrientations[date] = stateOrientation;
+            return stateOrientation;
         }
 
-        return stateOrientation;
+        // A frame is added with its first entry (AddStateOrientationToICRF): its entries are never empty
+        if (date < stateOrientations.Keys.First() || date > stateOrientations.Keys.Last())
+        {
+            throw new ArgumentException($"No state orientation found for the frame ({source}) at this date {date}");
+        }
+
+        // The entries around the date, interpolated by the exact SLERP of StateOrientation.Interpolate; the result is not
+        // stored, so that a read depends on the entries only, not on the reads before it (#548)
+        var dates = stateOrientations.Keys.ToList();
+        int next = ~dates.BinarySearch(date);
+        return stateOrientations[dates[next - 1]].Interpolate(stateOrientations[dates[next]], date);
     }
 
     private OrbitalParameters.OrbitalParameters GetEphemerisFromICRF(in Time date, ILocalizable target, Frame frame, Aberration aberration)
@@ -86,13 +64,9 @@ public class MemoryDataProvider : IDataProvider
             throw new ArgumentException($"No state vector found for this target {target.NaifId} at this date {date}");
         }
 
-        if(!stateVectors.TryGetValue(date, out var stateVector))
-        {
-            stateVector = Lagrange.Interpolate(stateVectors.Values.ToArray(), date);
-            stateVectors[date] = stateVector;
-        }
-
-        return stateVector;
+        // The stored states only: an interpolated read is not stored, so that it does not become a node of the reads after
+        // it (#548)
+        return stateVectors.TryGetValue(date, out var stateVector) ? stateVector : Lagrange.Interpolate(stateVectors.Values.ToArray(), date);
     }
 
     public OrbitalParameters.OrbitalParameters GetEphemeris(in Time date, ILocalizable target, ILocalizable observer, Frame frame, Aberration aberration)

@@ -120,6 +120,51 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(Frames.Frame.ICRF, result.ReferenceFrame);
         }
 
+        // The angle of the rotation between two unit quaternions, whatever their signs
+        private static double AngleBetween(in Quaternion a, in Quaternion b)
+        {
+            var delta = a * b.Conjugate();
+            return 2.0 * System.Math.Atan2(delta.VectorPart.Magnitude(), System.Math.Abs(delta.W));
+        }
+
+        [Theory]
+        [InlineData(1.0e-3, false)]
+        [InlineData(0.0113, false)]
+        [InlineData(0.0113, true)]
+        [InlineData(2.0, false)]
+        public void Interpolate_IsTheRotationAtTheInterpolatedAngle(double angle, bool oppositeSign)
+        {
+            // Arrange: a rotation by angle about a fixed axis after q0; the later quaternion of either sign (the same
+            // rotation). Below 0.028 rad Quaternion.SLERP is a normalised Lerp, 5.9e-9 rad off at 0.0113 rad (#548)
+            var axis = new Vector3(0.3, -0.5, 0.81).Normalize();
+            var q0 = new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7);
+            var q1 = (new Quaternion(axis, angle) * q0).Normalize();
+            var initial = new StateOrientation(q0, Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var final = new StateOrientation(oppositeSign ? q1 * -1.0 : q1, Vector3.Zero, TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ICRF);
+
+            // Act
+            var result = initial.Interpolate(final, TimeSystem.Time.J2000TDB.AddSeconds(3));
+
+            // Assert: the closed form. Measured 0 rad in the four cases (Linux x64, .NET 10, Debug, 2026-11-02); the bound is
+            // the record of MemoryDataProviderTests (twice 2.39e-16 rad over 999 fractions), PROVISIONAL (twice Linux) until
+            // the CI measures the three platforms
+            var expected = (new Quaternion(axis, angle * 0.3) * q0).Normalize();
+            Assert.True(AngleBetween(expected, result.Rotation) < 4.8e-16, $"{AngleBetween(expected, result.Rotation):E3} rad");
+        }
+
+        [Fact]
+        public void Interpolate_EqualRotations_IsThatRotation()
+        {
+            var q = new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7);
+            var initial = new StateOrientation(q, Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var final = new StateOrientation(q, Vector3.VectorX, TimeSystem.Time.J2000TDB.AddSeconds(10), Frames.Frame.ICRF);
+
+            var result = initial.Interpolate(final, TimeSystem.Time.J2000TDB.AddSeconds(4));
+
+            Assert.Equal(q, result.Rotation);
+            Assert.Equal(new Vector3(0.4, 0.0, 0.0), result.AngularVelocity);
+        }
+
         [Fact]
         public void Interpolate_DifferentReferenceFrames_ThrowsArgumentException()
         {

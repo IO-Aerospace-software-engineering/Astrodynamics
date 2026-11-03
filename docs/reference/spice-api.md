@@ -56,6 +56,11 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
 | `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation |
 
+A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
+the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two
+entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
+states. A read outside the entries throws `ArgumentException`.
+
 ```csharp
 var memoryProvider = new MemoryDataProvider();
 Configuration.Instance.SetDataProvider(memoryProvider);

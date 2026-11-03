@@ -80,12 +80,15 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Interpolates between two state orientations.
+        /// Interpolates between two state orientations: the exact spherical linear interpolation of the rotations (about the
+        /// axis of the rotation from this one to <paramref name="other"/>, at the fraction of the angle that
+        /// <paramref name="date"/> is of the interval, with no linear fallback for close rotations), and the linear
+        /// interpolation of the angular velocities.
         /// </summary>
-        /// <param name="other"></param>
-        /// <param name="date"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="other">The later state orientation, in the same reference frame.</param>
+        /// <param name="date">The date, between the epochs of the two.</param>
+        /// <returns>The state orientation at <paramref name="date"/>.</returns>
+        /// <exception cref="ArgumentException">The reference frames differ, or the date is outside the interval.</exception>
         public StateOrientation Interpolate(StateOrientation other, Time date)
         {
             if (ReferenceFrame != other.ReferenceFrame)
@@ -98,7 +101,10 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
             var ratio = (date - Epoch).TotalSeconds / (other.Epoch - Epoch).TotalSeconds;
 
-            return new StateOrientation(Rotation.SLERP(other.Rotation, ratio), AngularVelocity.LinearInterpolation(other.AngularVelocity, ratio),
+            // Quaternion.SLERP switches to a normalised Lerp below about 0.028 rad between the rotations, 6e-8 rad off the
+            // SLERP at 0.025 rad (#548)
+            return new StateOrientation(Quaternion.SlerpByAxisAngle(Rotation, other.Rotation, ratio).Rotation,
+                AngularVelocity.LinearInterpolation(other.AngularVelocity, ratio),
                 Epoch + (other.Epoch - Epoch) * ratio, ReferenceFrame);
         }
 
