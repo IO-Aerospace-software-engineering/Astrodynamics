@@ -163,8 +163,9 @@ public class AttitudeRecordTests
     /// outputs only.</summary>
     internal const double PositionAgainstSolution = 2.6e-8;
 
-    /// <summary>The same in SSB mode, m: the stored states relative to the Sun. Worst 7.07e-4 m (InstrumentTriad, RK7(8),
-    /// GALACTIC).</summary>
+    /// <summary>The same in SSB mode, m: the stored states relative to the Sun. Worst 7.07e-4 m, the same on the three
+    /// platforms (InstrumentTriad and Nadir, RK7(8), GALACTIC; CI run 41651463194). The rows without an impulse, which #568
+    /// did not change, keep the assertion; those with an impulse are a MEASURE line (#576, below).</summary>
     internal const double PositionAgainstSolutionSsb = 1.5e-3;
 
     /// <summary>The state of the spacecraft relative to the Earth in its own frame (<c>GetEphemeris</c>) against <c>spkezr</c>
@@ -172,11 +173,12 @@ public class AttitudeRecordTests
     /// interpolation. Worst 3.93e-3 m and 1.00e-5 m/s (Prograde, RK7(8), B1950; 1.003777e-5 m/s on Linux at six digits,
     /// twice 2.0076e-5 m/s); 8.84e-3 m and 2.12e-5 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000, 2026). In SSB mode,
     /// where the SPK is of type 9 since 11.0.0 (#540; 2.26e-2 m and 1.44e-3 m/s with the native writer's type 8), twice the
-    /// worst over Linux, Windows and macOS arm64 (CI run 41651463194, 2026-11-03): 2.34e-3 / 2.34e-3 / 2.35e-3 m (RK7(8), GALACTIC on Linux
-    /// and Windows, InstrumentTriad, RK7(8), ICRF on macOS arm64; twice 2.35e-3 falls on 4.7e-3, the step above for its
-    /// unprinted digits) and 5.85e-6 m/s on the three (InstrumentTriad, RK7(8), GALACTIC); with an impulse 2.56e-3 m and
-    /// 8.79e-7 m/s on Linux (ImpulseTriad, RK7(8), GALACTIC, the Validation category, Linux only), 1.59e-3 m and 4.28e-7 m/s
-    /// on Windows and macOS arm64 (ImpulseTriad, VV, GALACTIC).</summary>
+    /// worst over Linux, Windows and macOS arm64 (CI run 41651463194, 2026-11-03): 2.34e-3 / 2.34e-3 / 2.35e-3 m (on Linux
+    /// Nadir and InstrumentTriad, Velocity-Verlet and RK7(8), GALACTIC; on Windows Nadir and InstrumentTriad, RK7(8),
+    /// GALACTIC, and InstrumentTriad, RK7(8), ICRF; on macOS arm64 InstrumentTriad, RK7(8), ICRF; twice 2.35e-3 falls on
+    /// 4.7e-3, the step above for its unprinted digits) and 5.85e-6 m/s on the three (InstrumentTriad, RK7(8), GALACTIC);
+    /// with an impulse 2.56e-3 m and 8.79e-7 m/s on Linux (ImpulseTriad, RK7(8), GALACTIC, the Validation category, Linux
+    /// only), 1.59e-3 m and 4.28e-7 m/s on Windows and macOS arm64 (ImpulseTriad, VV, GALACTIC).</summary>
     internal const double FramePosition = 7.9e-3;
 
     internal const double FrameVelocity = 2.1e-5;

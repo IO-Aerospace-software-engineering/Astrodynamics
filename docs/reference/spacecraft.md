@@ -143,11 +143,12 @@ across the jump:
   11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
-41651463194, 2026-11-03; the velocities in SSB mode against the anchored reference on Linux x64 only, PROVISIONAL: #540's LEO, 233.8 m/s at perigee; perigee, plane alignment, combined maneuvers; the chain of four of
-`ScenarioTests`; Velocity-Verlet and RK7(8); 1, 10 and 60 s outputs; the paths of `Propagate` and `Scenario`; the
-initial frames; SSB mode; the Moon; within ±150 s of each impulse, every 0.25 s and at tc ± 1 µs; against the solution of
-the propagation, itself checked against `prop2b` in the two-body cases; and a timed impulse 2.2 µs to 1 s from an
-output, on either side):
+41651463194, 2026-11-03, except the velocities in SSB mode against the anchored reference, on Linux x64 only and
+PROVISIONAL; the cases: #540's LEO, 233.8 m/s at perigee; perigee, plane alignment, combined maneuvers; the chain of
+four of `ScenarioTests`; Velocity-Verlet and RK7(8); 1, 10 and 60 s outputs; the paths of `Propagate` and `Scenario`;
+the initial frames; SSB mode; the Moon; within ±150 s of each impulse, every 0.25 s and at tc ± 1 µs; against the
+solution of the propagation, itself checked against `prop2b` in the two-body cases; and a timed impulse 2.2 µs to 1 s
+from an output, on either side):
 
 | Reader | Before 11.0.0 | 11.0.0 |
 |---|---:|---:|
@@ -163,8 +164,9 @@ solution, 2.1e-4 to 3.4e-4 m within ±150 s of the impulse and 3.3e-8 to 2.0e-6 
 macOS arm64 (CI run 41651463194), are measured, not asserted, until the PR of #576. The velocity 1 µs before the impulse
 is measured instead against the anchored reference: the state before the impulse moved back by 1 µs with the closed-form
 acceleration of the Sun and the Earth (point masses, kernel GMs, the Earth from the Sun of `spkezr` at the impulse),
-accurate to 1e-13 m/s; the SPK against it is the resolution of the ET doubles (1.2e-7 s) times the acceleration, 8.67
-m/s².
+whose floor is a few 1e-12 m/s (the roundings of its 1 µs, an ulp of 4.55e-13 s near 2 963 s, and of the heliocentric
+velocity, an ulp of 3.64e-12 m/s), the size of the managed figure: 2.6e-12 to 9.1e-12 m/s over 26 step sequences on
+Linux x64. The SPK against it is the resolution of the ET doubles (1.2e-7 s) times the acceleration, 8.67 m/s².
 
 ### The attitude record
 

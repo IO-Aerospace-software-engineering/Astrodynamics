@@ -136,7 +136,9 @@ public class PropagatedArcsTests
     /// acceleration of the Sun and the Earth), not against the solution: in SSB mode <c>InterpolateAt</c> carries the noise
     /// of <c>ThirdBodyPerturbation</c> near the Earth (#576), 3.29e-8 / 3.83e-7 / 1.98e-6 m/s on Linux / Windows / macOS
     /// arm64 (CI run 41651463194), a figure kept in the MEASURE line with no assertion. PROVISIONAL: twice the Linux worst,
-    /// 4.90e-12 m/s (Apogee, 4.897779e-12 at six digits; Linux x64, 2026-11-03), the CI has not measured it yet.</summary>
+    /// 4.90e-12 m/s (Apogee, 4.897779e-12 at six digits; Linux x64, 2026-11-03), the CI has not measured it yet. The
+    /// reference's own floor is a few 1e-12 m/s, the size of this figure: 2.6e-12 to 9.1e-12 m/s over 26 step sequences on
+    /// Linux x64.</summary>
     internal const double VelocityBeforeSsbRk = 9.8e-12;
 
     /// <summary>The same in SSB mode, Velocity-Verlet, against the anchored reference. PROVISIONAL: twice the Linux worst,
@@ -840,10 +842,15 @@ public class PropagatedArcsTests
         /// 0, and the jump against the delta-V) moved by dt = SecondsBetween(base, t) - SecondsBetween(base, tc) with the
         /// closed-form acceleration of the model, the Sun and the Earth as point masses with the kernel GMs,
         /// a = -GM_S r/|r|³ - GM_E (ρ/|ρ|³ + d/|d|³), ρ = r - d, d the Earth from the Sun at tc by <c>spkezr</c>; then less the
-        /// Earth from the Sun by <c>spkezr</c> at <paramref name="t"/>, as <see cref="StateAt"/>. Its error, the rounding of ρ
-        /// (3e-5 m, 8e-11 m/s²) and the jerk over 1 µs, times 1 µs: below 1e-13 m/s. The solution's own
-        /// <c>InterpolateAt</c> carries there the noise of <c>ThirdBodyPerturbation</c> near the Earth (#576), up to 6.5e-6 m/s
-        /// over the step sequences of the platforms.
+        /// Earth from the Sun by <c>spkezr</c> at <paramref name="t"/>, as <see cref="StateAt"/>. Its floor is a few 1e-12 m/s,
+        /// the size of what it measures: dt, the difference of two TotalSeconds near 2 963 s whose ulp is 4.55e-13 s, misses
+        /// -1 µs by up to one ulp, 3.9e-12 m/s at 8.67 m/s² (1.0e-12 or 2.9e-12 m/s by the tick counts of the epochs);
+        /// before.Velocity + a dt rounds at the ulp of the heliocentric velocity, 3.64e-12 m/s (1.8e-12 m/s per component); the
+        /// state before the impulse is the integrator's at the event, one ulp of time (4.5e-13 s, 3.9e-12 m/s) from its label
+        /// tc, an offset the managed read of the same state shares. The acceleration's own error, the rounding of ρ (3e-5 m,
+        /// 8e-11 m/s²) and the jerk over 1 µs, is below 1e-13 m/s. Managed against it: 2.6e-12 to 9.1e-12 m/s over 26 RK7(8)
+        /// step sequences on Linux x64 (2026-11-03). The solution's own <c>InterpolateAt</c> carries there the noise of
+        /// <c>ThirdBodyPerturbation</c> near the Earth (#576), up to 6.5e-6 m/s over those step sequences.
         /// </summary>
         internal Vector3 AnchoredVelocityBefore(int k, Time t)
         {
@@ -851,6 +858,8 @@ public class PropagatedArcsTests
             var tc = ImpulseEpochs[k];
             Assert.Equal(tc, before.Epoch);
             Assert.Equal(Stars.Sun.NaifId, before.Observer.NaifId);
+            // The result is in the frame of the stored states, compared with managed reads in ICRF: every SSB row is in ICRF
+            Assert.Equal(Frame.ICRF, before.Frame);
             var baseEpoch = Solution.Segments[k].BaseEpoch;
             double dt = Solution.TimeArgument.SecondsBetween(baseEpoch, t) - Solution.TimeArgument.SecondsBetween(baseEpoch, tc);
             double gmSun = new CelestialBody(Stars.Sun, Frame.ICRF, tc).GM;
