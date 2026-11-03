@@ -458,6 +458,31 @@ public class SpiceApiTest
     }
 
     [Fact]
+    public void ReadOrientation_OutsideTheCk_Throws()
+    {
+        // The proxy finds no orientation and returns false (Proxy.cpp, "No orientation found"). Its C++ bool is one byte:
+        // read as a four-byte BOOL, the false came back true on Windows x64 and the read returned an empty sequence (#564)
+        var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
+        var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
+
+        SpiceAPI.Instance.LoadKernels(sclkFile);
+        SpiceAPI.Instance.LoadKernels(ckFile);
+        try
+        {
+            // A day before the CK starts (2011-11-08), within the clock (from 2011-11-07)
+            var start = TimeSystem.Time.CreateTDB(373970000.0);
+            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadOrientation(
+                new Window(start, start), -555, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0)).ToArray());
+            Assert.Contains("No orientation found", exception.Message);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(ckFile);
+            SpiceAPI.Instance.UnloadKernels(sclkFile);
+        }
+    }
+
+    [Fact]
     public void ReadOrientationToleranceHonored()
     {
         // Verify that tolerance is correctly interpreted as time duration (not raw ticks).
