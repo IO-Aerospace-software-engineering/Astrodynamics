@@ -54,6 +54,51 @@ namespace IO.Astrodynamics.Math
         {
             // Obtenir les k points les plus proches
             List<StateVector> nearestStateVectors = GetNearestStateVectors(stateVectors, date, k);
+            return InterpolateNearest(nearestStateVectors, date);
+        }
+
+        /// <summary>
+        /// <see cref="Interpolate(StateVector[], Time, int)"/> over states already in strictly increasing epoch order, without
+        /// sorting them: the <paramref name="k"/> nearest are found by a binary search and a merge outwards, in the order the
+        /// stable sort by distance gives them (the earlier state first at equal distances), so that the result is bit for bit
+        /// that of <see cref="Interpolate(StateVector[], Time, int)"/> on the same states (#522, #540).
+        /// </summary>
+        /// <param name="sorted">The states, in strictly increasing epoch order; at least one.</param>
+        /// <param name="date">The epoch of the interpolation.</param>
+        /// <param name="k">The number of states of the polynomial.</param>
+        internal static StateVector InterpolateSorted(IReadOnlyList<StateVector> sorted, Time date, int k = 8)
+        {
+            int count = sorted.Count;
+            int lo = 0, hi = count;
+            while (lo < hi)
+            {
+                int mid = (lo + hi) >> 1;
+                if (sorted[mid].Epoch < date) lo = mid + 1;
+                else hi = mid;
+            }
+
+            int left = lo - 1, right = lo;
+            var nearest = new List<StateVector>(System.Math.Min(k, count));
+            while (nearest.Count < k && (left >= 0 || right < count))
+            {
+                if (right >= count || (left >= 0 && Distance(sorted[left], date) <= Distance(sorted[right], date)))
+                {
+                    nearest.Add(sorted[left--]);
+                }
+                else
+                {
+                    nearest.Add(sorted[right++]);
+                }
+            }
+
+            return InterpolateNearest(nearest, date);
+        }
+
+        // The distance of the former sort, in the same arithmetic
+        private static double Distance(StateVector sv, in Time date) => System.Math.Abs((sv.Epoch - date).TotalSeconds);
+
+        private static StateVector InterpolateNearest(List<StateVector> nearestStateVectors, Time date)
+        {
 
             // Convertir les dates en secondes depuis la première date du sous-ensemble
             double[] t = nearestStateVectors.Select(sv => (sv.Epoch - nearestStateVectors[0].Epoch).TotalSeconds).ToArray();

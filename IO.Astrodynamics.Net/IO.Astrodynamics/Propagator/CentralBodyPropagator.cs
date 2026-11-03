@@ -298,7 +298,12 @@ public class CentralBodyPropagator : PropagatorBase
     protected override void StorePropagatedStates(StateVector[] outputStates)
     {
         // Store CB-relative states in ICRF (#535), the frame every reader of the spacecraft assumes; the solution keeps
-        // the frame of the propagation. Conversion to SSB happens on demand
-        Spacecraft.AddPropagatedStates(outputStates.Select(ToIcrf).ToArray());
+        // the frame of the propagation. Conversion to SSB happens on demand. The states replace those stored before, split
+        // into arcs at each impulse with the states on either side at its epoch, the short arcs filled from the solution
+        // with the covariance in covariance mode (#540)
+        var solution = CurrentSolution;
+        var impulses = Impulses.Select(i => new ImpulseBoundary(i.Epoch, ToIcrf(i.Before), ToIcrf(i.After))).ToArray();
+        Spacecraft.SetPropagatedStates(outputStates.Select(ToIcrf).ToArray(), impulses,
+            impulses.Length == 0 ? null : epoch => ToIcrf(solution.GetStateVector(epoch)));
     }
 }

@@ -32,6 +32,19 @@ public abstract class PropagatorBase : IPropagator
     // Standalone attitude maneuver to apply at each output epoch (null if none)
     private Attitude _continuousAttitude;
 
+    // The impulses of the last propagation, in epoch order, their states on either side for the arcs of the stored states
+    private readonly List<ImpulseBoundary> _impulses = new();
+
+    /// <summary>
+    /// The impulses of the propagation, in epoch order, each with the state of the integrator at its event before the
+    /// maneuver executes and the state the maneuver gives, in the frame of the propagation, with their covariance in
+    /// covariance mode (#540). For <see cref="StorePropagatedStates"/>.
+    /// </summary>
+    private protected IReadOnlyList<ImpulseBoundary> Impulses => _impulses;
+
+    /// <summary>The solution of the propagation, during <see cref="StorePropagatedStates"/> only; null otherwise.</summary>
+    private protected PropagationSolution CurrentSolution { get; private set; }
+
     // Options of the variational equations, null when they are off (internal until the public API of step 8)
     private VariationalOptions _variationalOptions;
 
@@ -358,6 +371,7 @@ public abstract class PropagatorBase : IPropagator
     {
         // 2. Build event detectors from maneuver chain (also discovers standalone attitude maneuvers)
         _continuousAttitude = null;
+        _impulses.Clear();
         var eventDetectors = BuildEventDetectors();
 
         // 1. Add initial orientation (skip zero-quaternion sentinel when continuous attitude provides the real one)
@@ -456,6 +470,11 @@ public abstract class PropagatorBase : IPropagator
                     dynamics.Evaluate(result.Segment, evt.EventTime, eventY, eventQ);
                 }
 
+                // The state before the maneuver, kept apart for the arcs of the stored states (#540): the maneuver changes the
+                // velocity of the state it executes on. In covariance mode, with the covariance at the event
+                var stateBefore = new StateVector(evt.EventPosition, evt.EventVelocity, InitialState.Observer, eventEpoch,
+                    InitialState.Frame, _covarianceModel != null ? CovarianceOf(eventY, eventQ) : null);
+
                 // Delegate to the event detector
                 var detector = eventDetectors[evt.DetectorIndex];
                 var eventResult = detector.HandleEvent(eventState, Spacecraft);
@@ -499,6 +518,16 @@ public abstract class PropagatorBase : IPropagator
                     result.Segment.EventTime = evt.EventTime;
                 }
 
+                // An executed impulse: its states on either side, the state after with the covariance the next segment starts
+                // from, the execution error of the burn included (#540)
+                if (restart && detector is ManeuverEventDetector)
+                {
+                    var after = eventResult.ModifiedState;
+                    _impulses.Add(new ImpulseBoundary(eventEpoch, stateBefore,
+                        new StateVector(after.Position, after.Velocity, after.Observer, after.Epoch, after.Frame,
+                            _covarianceModel != null ? CovarianceOf(eventY, eventQ) : null)));
+                }
+
                 // Update event detectors for next segment
                 eventDetectors = UpdateEventDetectors(eventResult.NextDetector);
 
@@ -540,8 +569,16 @@ public abstract class PropagatorBase : IPropagator
         // 6. Add final orientation
         Spacecraft.Frame.RecordEnd(Window.EndDate);
 
-        // 7. Store propagated states
-        StorePropagatedStates(outputStates);
+        // 7. Store propagated states, split at the impulses, the short arcs filled from the solution (#540)
+        CurrentSolution = solution;
+        try
+        {
+            StorePropagatedStates(outputStates);
+        }
+        finally
+        {
+            CurrentSolution = null;
+        }
 
         // 8. Attach sampled output to solution
         solution.SetOutputStates(outputStates);
@@ -555,6 +592,15 @@ public abstract class PropagatorBase : IPropagator
         Spacecraft.LastForceModel = solution.ForceModel;
 
         return solution;
+    }
+
+    // The covariance of the state from the cumulative Y and the carried Q, as the outputs of a propagation of the covariance
+    // take it (PropagationDynamics.StateAndCovarianceAt)
+    private Matrix CovarianceOf(double[] y, double[] q)
+    {
+        var covariance = new double[VariationalEquations.StateDimension * VariationalEquations.StateDimension];
+        _covarianceModel.Covariance(y, q, covariance);
+        return new Matrix(VariationalEquations.StateDimension, VariationalEquations.StateDimension, covariance);
     }
 
     /// <summary>
@@ -725,6 +771,12 @@ public abstract class PropagatorBase : IPropagator
         }
     }
 
+    /// <summary>
+    /// Stores the output states of the propagation in its spacecraft. The impulses of the propagation, with the states on
+    /// either side of each (<see cref="Impulses"/>), and its solution (<see cref="CurrentSolution"/>) are available during
+    /// the call (#540).
+    /// </summary>
+    /// <param name="outputStates">The output states, in the frame of the propagation, in epoch order.</param>
     protected abstract void StorePropagatedStates(StateVector[] outputStates);
 
     private Quaternion? _toIcrf;
