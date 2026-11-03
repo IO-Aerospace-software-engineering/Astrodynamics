@@ -143,9 +143,9 @@ across the jump:
   11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
-41651463194, 2026-11-03, except the velocities in SSB mode against the anchored reference, on Linux x64 only and
-PROVISIONAL; the cases: #540's LEO, 233.8 m/s at perigee; perigee, plane alignment, combined maneuvers; the chain of
-four of `ScenarioTests`; Velocity-Verlet and RK7(8); 1, 10 and 60 s outputs; the paths of `Propagate` and `Scenario`;
+41651463194, 2026-11-03, and run 41689602272 for the velocities in SSB mode against the anchored reference; the
+cases: #540's LEO, 233.8 m/s at perigee; perigee, plane alignment, combined maneuvers; the chain of four of `ScenarioTests`;
+Velocity-Verlet and RK7(8); 1, 10 and 60 s outputs; the paths of `Propagate` and `Scenario`;
 the initial frames; SSB mode; the Moon; within ±150 s of each impulse, every 0.25 s and at tc ± 1 µs; against the
 solution of the propagation, itself checked against `prop2b` in the two-body cases; and a timed impulse 2.2 µs to 1 s
 from an output, on either side):

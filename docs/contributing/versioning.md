@@ -297,8 +297,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   on the chain, 1.7e-3 m in SSB mode), the resolution of the ET doubles of its nodes; the velocity 1 µs before an impulse
   1.3e-11 m/s managed in RK7(8), 8.4e-7 m/s with Velocity-Verlet, and 8.0e-7 m/s by `spkezr`; in SSB mode, where the
   solution carries the noise of the third body near the Earth (#576), 4.9e-12 m/s managed and 6.3e-7 m/s by `spkezr`
-  against the state before the impulse moved back by the closed-form acceleration of the Sun and the Earth (Linux x64,
-  PROVISIONAL).
+  against the state before the impulse moved back by the closed-form acceleration of the Sun and the Earth, the worst over
+  Linux, Windows and macOS arm64.
   An output closer to an impulse than a tenth of the output step is not stored, the impulse's state is (kept, an output
   3 µs from an impulse put the SPK 301 m off); the first and the last output always are. Velocity-Verlet keeps its own error far from the impulses (0.16 m at 10 s and 33 m at
   60 s outputs). Far from the impulses, and without an impulse, the reads are those of before, bit for bit; the

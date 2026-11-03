@@ -57,8 +57,8 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// higher: the Linux worst is read at six digits (Linux x64, 2026-11-03, the same cases with only the format of the MEASURE
 /// line changed, equal to CI Linux at the printed digits), and a worst of Windows or macOS arm64 takes the step above. The
 /// grid takes about 30 s and runs in every CI job; <see cref="Spk_LayoutByDafus_AndTheFileOfSpkw09"/>, exact, is in the
-/// Validation category (Linux). The velocity before an impulse in SSB mode against the anchored reference is PROVISIONAL,
-/// twice the Linux worst, not yet measured by the CI. Each limit bounds the family of its worst, named in its summary; a
+/// Validation category (Linux). The velocity before an impulse in SSB mode against the anchored reference is measured by
+/// CI run 41689602272, on the same three platforms. Each limit bounds the family of its worst, named in its summary; a
 /// family is never bounded by the limit of a larger one (#515).
 /// </para>
 /// </remarks>
@@ -135,15 +135,15 @@ public class PropagatedArcsTests
     /// (<see cref="AnchoredVelocityBefore"/>: the state before the impulse moved back by 1 µs with the closed-form
     /// acceleration of the Sun and the Earth), not against the solution: in SSB mode <c>InterpolateAt</c> carries the noise
     /// of <c>ThirdBodyPerturbation</c> near the Earth (#576), 3.29e-8 / 3.83e-7 / 1.98e-6 m/s on Linux / Windows / macOS
-    /// arm64 (CI run 41651463194), a figure kept in the MEASURE line with no assertion. PROVISIONAL: twice the Linux worst,
-    /// 4.90e-12 m/s (Apogee, 4.897779e-12 at six digits; Linux x64, 2026-11-03), the CI has not measured it yet. The
+    /// arm64 (CI run 41651463194), a figure kept in the MEASURE line with no assertion. Worst 4.90e-12 / 3.75e-12 / 4.17e-12 m/s
+    /// on Linux / Windows / macOS arm64 (Apogee; CI run 41689602272; 4.897779e-12 at six digits on Linux). The
     /// reference's own floor is a few 1e-12 m/s, the size of this figure: 2.6e-12 to 9.1e-12 m/s over 26 step sequences on
     /// Linux x64.</summary>
     internal const double VelocityBeforeSsbRk = 9.8e-12;
 
-    /// <summary>The same in SSB mode, Velocity-Verlet, against the anchored reference. PROVISIONAL: twice the Linux worst,
-    /// 1.02e-10 m/s (Apogee, at the output step; 3.75e-12 m/s at 1 s; Linux x64, 2026-11-03), the CI has not measured it
-    /// yet.</summary>
+    /// <summary>The same in SSB mode, Velocity-Verlet, against the anchored reference. Worst 1.02e-10 m/s, the same on the
+    /// three platforms (Apogee, at the output step; 3.75e-12 m/s at 1 s; CI run 41689602272; 1.019446e-10 at six
+    /// digits).</summary>
     internal const double VelocityBeforeSsbVv = 2.1e-10;
 
     /// <summary>The same about the Moon, RK7(8). Worst 1.25e-12 / 1.25e-12 / 5.82e-13 m/s (CI run 41651463194; twice the printed
@@ -162,8 +162,9 @@ public class PropagatedArcsTests
     /// <summary>The same in SSB mode, against the anchored reference (<see cref="AnchoredVelocityBefore"/>): the resolution
     /// of the ET doubles of the read and of the node at tc (1.2e-7 s) times the acceleration, 8.67 m/s². Against the
     /// solution, kept in the MEASURE line with no assertion (#576), 5.99e-7 / 7.85e-7 / 1.58e-6 m/s on Linux / Windows /
-    /// macOS arm64 (CI run 41651463194). PROVISIONAL: twice the Linux worst, 6.32e-7 m/s (Apogee, RK7(8); 4.02e-7 m/s with
-    /// Velocity-Verlet; Linux x64, 2026-11-03), the CI has not measured it yet.</summary>
+    /// macOS arm64 (CI run 41651463194). Worst 6.32e-7 / 4.02e-7 / 4.02e-7 m/s on Linux / Windows / macOS
+    /// arm64 (Apogee, RK7(8); 4.02e-7 m/s with Velocity-Verlet on the three; CI run 41689602272): one of the two values
+    /// the ET doubles allow, 4.017e-7 and 6.319e-7 m/s, with the step sequence of each platform.</summary>
     internal const double VelocityBeforeSpkSsb = 1.3e-6;
 
     /// <summary>The same about the Moon. Worst 6.73e-8 m/s, the same on the three platforms (Apogee, RK7(8) and
