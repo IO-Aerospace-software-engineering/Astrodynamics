@@ -31,14 +31,14 @@ public class OrientationCommand
         
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
         
-        var celestialItem = Helpers.CreateOrientable(objectId);
+        Frame targetFrame = new Frame(frame);
+        var orientationAt = Helpers.CreateOrientationReader(objectId, targetFrame);
 
         List<StateOrientation> orientations = new List<StateOrientation>();
-        Frame targetFrame = new Frame(frame);
         Window windowInput = Helpers.ConvertWindowInput(windowParameters.Begin, windowParameters.End);
         for (Time epoch = windowInput.StartDate; epoch <= windowInput.EndDate; epoch+=step)
         {
-            orientations.Add(celestialItem.GetOrientation(targetFrame,epoch));
+            orientations.Add(orientationAt(epoch));
         }
 
         foreach (var orientation in orientations)
