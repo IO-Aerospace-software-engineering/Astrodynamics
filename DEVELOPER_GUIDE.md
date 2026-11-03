@@ -915,6 +915,11 @@ var opm = spacecraft.ToOpm(
 opm.SaveToFile("iss_state.opm");
 ```
 
+The covariance of the initial state (`StateVector.Covariance`, m², m²/s, m²/s²) is exported in km², km²/s and km²/s²
+when the OPM is written at the initial epoch (the default, or the same instant in any time frame). At another epoch the
+OPM carries no covariance: moving it there would take the state transition matrix, which the export does not compute
+(#551).
+
 #### OpmData Components
 
 OPM data contains mandatory state vector and optional components:
@@ -2057,6 +2062,11 @@ Configuration.Instance.SetDataProvider(memoryProvider);
 memoryProvider.AddCelestialBodyInfo(customEarth);
 memoryProvider.AddStateVector(399, epoch, earthState);
 ```
+
+A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
+the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the
+two entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
+states. A read outside the entries throws `ArgumentException`.
 
 ---
 

@@ -290,6 +290,43 @@ A major version, because it breaks the API: members deprecated for removal in 11
   time it requests is not applied to a celestial target, whose direction stays geometric (4.3e-5 to 4.5e-5 rad from the
   light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue,
   [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
+- **A state in GCRF propagates.** `PropagatorBase` rejected `Frame.GCRF` as an initial frame ("must be defined in
+  inertial frame"), although GCRF is inertial with the axes of ICRF. It is accepted, and `SpiceDataProvider` reads an
+  ephemeris requested in GCRF from SPICE in `J2000` and labels it GCRF (SPICE has no GCRF frame: the forces read
+  uninitialised states, NaN, once the frame was accepted). A propagation from a GCRF state is that of its ICRF twin,
+  bit for bit (0 m), with Velocity-Verlet, RK7(8) with and without a covariance, an impulse then a nadir attitude, in
+  SSB mode, and over the day of EGM2008 10×10, drag, SRP, the Moon and the Sun (Linux x64)
+  ([#543](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/543)).
+- **`Spacecraft.ToOpm` exports the covariance of the initial state.** `StateVector.ToStateVector(epoch)` went through
+  `AtEpoch`, which builds Keplerian elements without the covariance, even at the state's own epoch: the OPM never carried
+  it. A `StateVector` read at the instant of its own epoch is now the state itself, with its covariance, and the OPM
+  carries its 21 terms in km², km²/s and km²/s², the m² terms times 1e-6 within two ulp, in ICRF and ECLIPJ2000, the
+  epoch omitted or tagged UTC or TDB. At another epoch the OPM carries no covariance, as before (Changed below)
+  ([#551](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/551)).
+- **`MemoryDataProvider` reads depend on the entries only.** An interpolated read was stored as an entry, so the reads
+  after it depended on it: a state 7.70 m off its circular orbit after 40 reads, orientations 1.8e-7 rad off after reads
+  in sequence, one entry more per read. A read is no longer stored, and an orientation is the exact spherical linear
+  interpolation of its two entries (Changed below): 2.39e-16 rad from the closed form over 999 fractions of rotations of
+  0.0113, 0.025 and 0.05 rad (6e-8 rad before), and the state at 605 s 8.8e-7 m from the orbit, whatever the reads
+  before (Linux x64; bounds PROVISIONAL, twice Linux) ([#548](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/548)).
+- **The command line reads the kernels of a spacecraft given by its NAIF identifier.** `orientation` built a managed
+  spacecraft with an empty attitude record and printed the identity whatever the CK held (0.7 rad off in the issue's
+  case); `ephemeris`, `sub-point` and `angular-separation` threw `NullReferenceException`. `orientation` now reads the CK
+  by the identifier (`SpiceAPI.ReadOrientation`, `ckgpav_c` through the clock kernel), relative to the requested frame,
+  and the other commands take the kernel-backed spacecraft at the start of the window or at the epoch. On the kernels the
+  library writes for 600 s of a nadir LEO, against CSPICE: the orientation 0 rad and 2.2e-18 rad/s from `sxform` in
+  J2000, ECLIPJ2000, ITRF93 and over a UTC window (4.5e-16 rad from spiceypy's `pxform`, CSPICE N0067), the ephemeris
+  equal to `spkezr`, the sub-point equal to its closed form on `spkezr` (Linux x64; bounds PROVISIONAL, twice Linux)
+  ([#542](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/542)).
+- **A null target orbit is an argument error.** The target-orbit constructor of `ImpulseManeuver`, under
+  `ApsidalAlignmentManeuver`, `PlaneAlignmentManeuver` and `PhasingManeuver`, dereferenced the target before its null
+  check: `NullReferenceException`, the `ArgumentException` unreachable. It throws `ArgumentNullException` (an
+  `ArgumentException`) naming `targetOrbit`, before the check of the engine, whether the fuel tank is attached to a
+  spacecraft or not ([#552](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/552)).
+- **The XML documentation of `OpmManeuverParameters`.** A bare `<= 0` in three comments (`ManDeltaMass`, the
+  constructor's `manDeltaMass`, `CreateImpulsive`'s `deltaMass`) was badly formed XML (CS1570 with
+  `GenerateDocumentationFile`), and the whole documentation of the three members was dropped from the generated file.
+  It is escaped; the library and the command line build without CS1570 ([#550](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/550)).
 
 **Changed**
 
@@ -439,6 +476,20 @@ A major version, because it breaks the API: members deprecated for removal in 11
   and `ckw03_c`, the rotation from the reference frame to the spacecraft frame with the angular velocity of the
   spacecraft relative to the reference frame, in it; their documentation now says so. On a CK written by 11.0.0,
   `ReadOrientation` returns the C-matrix of the attitude, with a non-zero angular velocity.
+- **A `StateVector` read at its own epoch is the state itself.** `ToStateVector(epoch)` (and `ToStateVector(trueAnomaly)`
+  when it lands on the epoch) at the instant of the state's epoch, in any time frame, returns the state, position,
+  velocity, frame, observer and covariance unchanged, tagged as `epoch` is: the same object for the same tag. It was the
+  round trip through Keplerian elements, which moved it by rounding: 1.7e-9 m and 1.9e-12 m/s for a LEO, 5.3e-8 m and
+  3.3e-12 m/s for a GEO. This reaches `Spacecraft.ToOpm`, the state of a spacecraft read before two states are
+  propagated, and the directions of `ApsidalAlignmentManeuver`. At any other instant the result is the two-body motion,
+  without a covariance, as before ([#551](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/551)).
+- **`StateOrientation.Interpolate` is the exact spherical linear interpolation.** It took `Quaternion.SLERP`, which
+  switches to a normalised linear interpolation below about 0.028 rad between the rotations (6e-8 rad off at
+  0.025 rad); it now takes the axis and the angle of the rotation between them, the interpolation the attitude record of
+  a spacecraft already uses (bit for bit the same). `Quaternion.SLERP` itself is unchanged. `MemoryDataProvider` no
+  longer grows with its reads ([#548](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/548)).
+- **The `orientation` command for a spacecraft outside its CK** throws `InvalidOperationException` with the SPICE error,
+  where it printed the identity ([#542](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/542)).
 
 **Removed**
 
