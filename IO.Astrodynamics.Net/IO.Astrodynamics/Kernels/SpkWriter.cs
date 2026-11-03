@@ -13,7 +13,8 @@ namespace IO.Astrodynamics.Kernels;
 /// A managed writer of SPK files of type 9 (Lagrange interpolation, unequal time steps), one segment per arc of states
 /// (#540): the native writer, frozen, writes one segment per file, of degree 15. The file is a DAF in the little-endian
 /// IEEE format (<c>LTL-IEEE</c>), as the DAF and SPK Required Reading of NAIF define it: a file record, one summary record
-/// and one name record for each 25 segments, then the data of each segment, with no comment area.
+/// and one name record for each 25 segments, and one more after a full one, then the data of each segment, with no comment
+/// area.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -53,14 +54,56 @@ internal static class SpkWriter
     /// <param name="arcs">The arcs, in time order, each of at least two states in strictly increasing epoch order, in SI
     /// units, relative to the centre of their first state.</param>
     /// <exception cref="ArgumentNullException"><paramref name="file"/> is null.</exception>
-    /// <exception cref="ArgumentException">No arc, an arc of fewer than two states, or epochs not strictly increasing in
-    /// an arc.</exception>
+    /// <exception cref="ArgumentException">See <see cref="BuildType9"/>.</exception>
     internal static void WriteType9(FileInfo file, int body, int frameCode, IReadOnlyList<StateVector[]> arcs)
     {
         if (file == null) throw new ArgumentNullException(nameof(file));
-        if (arcs == null || arcs.Count == 0) throw new ArgumentException("No states to write.", nameof(arcs));
+        Write(file, BuildType9(body, frameCode, arcs));
+    }
 
-        int summaryRecords = (arcs.Count + SummariesPerRecord - 1) / SummariesPerRecord;
+    /// <summary>
+    /// Writes the bytes of a file built by <see cref="BuildType9"/>, creating its directory when it does not exist.
+    /// </summary>
+    internal static void Write(FileInfo file, byte[] bytes)
+    {
+        var directory = Path.GetDirectoryName(file.FullName);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        File.WriteAllBytes(file.FullName, bytes);
+    }
+
+    /// <summary>The TDB seconds from J2000 of an epoch, as the file holds it: a double.</summary>
+    internal static double Seconds(StateVector state) => state.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+
+    /// <summary>
+    /// The bytes of the SPK of <paramref name="arcs"/>, each one segment of type 9, checked before anything is written. An
+    /// arc whose states are all one TDB second of the file (its epochs within the resolution of the double, 1.2e-7 s in
+    /// 2024: an impulse that close to the start or the end of the propagation) cannot be a segment and is left out: SPICE
+    /// reads there the neighbouring segment, which starts or ends at that second.
+    /// </summary>
+    /// <exception cref="ArgumentException">No arc, an arc of fewer than two states, or epochs not strictly increasing in
+    /// an arc.</exception>
+    internal static byte[] BuildType9(int body, int frameCode, IReadOnlyList<StateVector[]> arcs)
+    {
+        if (arcs == null || arcs.Count == 0) throw new ArgumentException("No states to write.", nameof(arcs));
+        var written = new List<StateVector[]>(arcs.Count);
+        for (int k = 0; k < arcs.Count; k++)
+        {
+            var arc = arcs[k];
+            if (arc.Length < 2) throw new ArgumentException($"Arc {k} holds fewer than two states.", nameof(arcs));
+            if (Seconds(arc[0]) == Seconds(arc[^1])) continue;
+            written.Add(arc);
+        }
+
+        if (written.Count == 0) throw new ArgumentException("No states to write.", nameof(arcs));
+        arcs = written;
+
+        // A full summary record is followed by an empty one, as the DAF Required Reading has it and CSPICE writes it: its
+        // append (dafena) needs it (review of PR 1 of #554, spk-F1)
+        int summaryRecords = arcs.Count / SummariesPerRecord + 1;
         int firstDataRecord = 2 + 2 * summaryRecords;
         var data = new List<double>();
         var summaries = new List<(double Start, double End, int Center, int Begin, int Last, string Name)>();
@@ -68,12 +111,11 @@ internal static class SpkWriter
         for (int k = 0; k < arcs.Count; k++)
         {
             var arc = arcs[k];
-            if (arc.Length < 2) throw new ArgumentException($"Arc {k} holds fewer than two states.", nameof(arcs));
             int n = arc.Length;
             var epochs = new double[n];
             for (int i = 0; i < n; i++)
             {
-                epochs[i] = arc[i].Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+                epochs[i] = Seconds(arc[i]);
                 if (i > 0 && epochs[i] <= epochs[i - 1])
                     throw new ArgumentException($"The epochs of arc {k} are not strictly increasing.", nameof(arcs));
             }
@@ -137,13 +179,7 @@ internal static class SpkWriter
             WriteDouble(bytes, dataOffset + 8 * i, data[i]);
         }
 
-        var directory = Path.GetDirectoryName(file.FullName);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        File.WriteAllBytes(file.FullName, bytes);
+        return bytes;
     }
 
     // The file record: identification, ND, NI, internal file name, first and last summary records, first free address,

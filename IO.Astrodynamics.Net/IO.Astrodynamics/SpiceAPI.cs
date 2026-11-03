@@ -721,13 +721,17 @@ public class SpiceAPI
     /// <param name="arcs">The arcs, in time order, each of at least two states in strictly increasing epoch order, in ICRF,
     /// relative to the centre of their first state.</param>
     /// <exception cref="ArgumentNullException"><paramref name="filePath"/> or <paramref name="arcs"/> is null.</exception>
-    /// <exception cref="ArgumentException">No arc, an arc of fewer than two states, or epochs not strictly increasing.</exception>
+    /// <exception cref="ArgumentException">No arc, an arc of fewer than two states, or epochs not strictly increasing; an
+    /// existing file is then left as it was.</exception>
     internal void WriteEphemerisArcs(FileInfo filePath, int naifId, IReadOnlyList<OrbitalParameters.StateVector[]> arcs)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (arcs == null) throw new ArgumentNullException(nameof(arcs));
         lock (lockObject)
         {
+            // The file is built and checked first: an argument it cannot write leaves an existing file as it was
+            var bytes = Kernels.SpkWriter.BuildType9(naifId, 1, arcs);
+
             // File.Exists, not FileInfo.Exists: the caller's FileInfo must not cache the state of the file before the write
             if (File.Exists(filePath.FullName))
             {
@@ -735,7 +739,7 @@ public class SpiceAPI
                 File.Delete(filePath.FullName);
             }
 
-            Kernels.SpkWriter.WriteType9(filePath, naifId, 1, arcs);
+            Kernels.SpkWriter.Write(filePath, bytes);
             filePath.Refresh();
         }
     }
