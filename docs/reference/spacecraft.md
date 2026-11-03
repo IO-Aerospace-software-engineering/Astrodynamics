@@ -154,8 +154,17 @@ output, on either side):
 | The managed reads, RK7(8) at 1 and 10 s outputs | 23.5 to 1 420 m; 763 m on the chain of four | 6e-9 to 1.1e-8 m; 2.3e-8 m on the chain, their error far from the impulses |
 | The same at 60 s outputs (one-sided at the ends of an arc) | 2 120 m to 16.1 km | 3.3e-4 m; 1.8e-2 m on the chain, whose arcs end 7 min apart |
 | `spkezr` on the SPK the library writes | 22.4 m to 150 km | the managed reads within 1.2e-3 m (1.1e-3 m on the chain, 1.7e-3 m in SSB mode) |
-| The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8); 3.3e-8 m/s in SSB mode), 8.4e-7 m/s (Velocity-Verlet), 8.0e-7 m/s by `spkezr` |
+| The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8); 4.9e-12 m/s in SSB mode, against the anchored reference below), 8.4e-7 m/s (Velocity-Verlet), 8.0e-7 m/s by `spkezr` (6.3e-7 m/s in SSB mode, anchored) |
 | Velocity-Verlet | 18.5 m to 16 km | its own error far from the impulses (0.16 m at 10 s, 33 m at 60 s outputs, the Lagrange of its outputs against its cubic Hermite); 5.9e-4 m at 1 s steps, the label of its event (up to 1e-7 s from the event) |
+
+In SSB mode the solution's dense output carries the noise of the third-body acceleration of the Earth, which loses about
+eight digits there (#576), and the RK7(8) step sequence, so the noise, differs per platform: the reads against the
+solution, 2.1e-4 to 3.4e-4 m within ±150 s of the impulse and 3.3e-8 to 2.0e-6 m/s at tc − 1 µs over Linux, Windows and
+macOS arm64 (CI run 41651463194), are measured, not asserted, until the PR of #576. The velocity 1 µs before the impulse
+is measured instead against the anchored reference: the state before the impulse moved back by 1 µs with the closed-form
+acceleration of the Sun and the Earth (point masses, kernel GMs, the Earth from the Sun of `spkezr` at the impulse),
+accurate to 1e-13 m/s; the SPK against it is the resolution of the ET doubles (1.2e-7 s) times the acceleration, 8.67
+m/s².
 
 ### The attitude record
 
@@ -234,7 +243,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | A discrete attitude against its closed form | 4.8e-16 rad; 3.5e-12 rad in SSB mode |
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
-  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (Linux, 2026-11-03, PROVISIONAL) |
+  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (Linux, 2026-11-03, PROVISIONAL; in SSB mode measured, not asserted, the noise of the third body near the Earth, #576) |
   | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.3e-3 m, 5.9e-6 m/s in SSB mode, 2.6e-3 m across an impulse (Linux, 2026-11-03, PROVISIONAL; 2.3e-2 m and 1.4e-3 m/s with the type-8 segment of the native writer before 11.0.0) |
   | The managed occultation of the Sun by the Earth from GALACTIC, against its ICRF twin and `gfoclt` on the SPK | within one tick (100 ns); 4.0e-7 s |
 
