@@ -149,10 +149,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             // Act
             var result = initial.Interpolate(final, TimeSystem.Time.J2000TDB.AddSeconds(3));
 
-            // Assert: the closed form. Measured 0 rad in the four cases (Linux x64, .NET 10, Debug, 2026-11-02); the bound is
-            // the record of MemoryDataProviderTests (twice 2.388e-16 rad over 999 fractions, the same on Linux, Windows and
-            // macOS arm64, run 41567621620). This test's own 0 rad is measured on Linux only: PROVISIONAL until the CI
-            // measures it on the three platforms
+            // Assert: the closed form. Measured 0 rad in the four cases on Linux, Windows and macOS arm64 (run 41571571334,
+            // 2026-11-03); the bound is the record of MemoryDataProviderTests (twice 2.388e-16 rad over 999 fractions, the
+            // same on the three platforms, run 41567621620)
             var expected = (new Quaternion(axis, angle * 0.3) * q0).Normalize();
             _output.WriteLine($"MEASURE #548 interpolation {angle} rad{(oppositeSign ? " (opposite sign)" : "")}: {AngleBetween(expected, result.Rotation):E3} rad");
             Assert.True(AngleBetween(expected, result.Rotation) < 4.8e-16, $"{AngleBetween(expected, result.Rotation):E3} rad");

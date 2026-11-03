@@ -714,9 +714,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(epoch + TimeSpan.FromSeconds(dt), later.Epoch);
             var expectedPosition = new Vector3(r * System.Math.Cos(n * dt), r * System.Math.Sin(n * dt), 0.0);
             var expectedVelocity = new Vector3(-v * System.Math.Sin(n * dt), v * System.Math.Cos(n * dt), 0.0);
-            // Measured 0 m and 0 m/s (Linux x64, .NET 10, Release, 2026-11-03): the bound is the rounding floor, 4 ulp of r
-            // (3.7e-9 m) and of v (3.6e-12 m/s), room for an ulp of the libm's cos and sin on each component. PROVISIONAL
-            // (twice Linux, with that floor) until the CI measures Linux, Windows and macOS arm64.
+            // Measured 0 m and 0 m/s on Linux and Windows, 9.313e-10 m (one ulp of r) and 1.286e-12 m/s on macOS arm64 (run
+            // 41571571334, 2026-11-03): the libm's cos and sin differ there by an ulp. Twice the worst, 1.9e-9 m and
+            // 2.6e-12 m/s, is below the rounding floor that bounds it, 4 ulp of r (3.7e-9 m) and of v (3.6e-12 m/s), room
+            // for an ulp of the libm's cos and sin on each component.
             double positionBound = 4.0 * (System.Math.BitIncrement(r) - r);
             double velocityBound = 4.0 * (System.Math.BitIncrement(v) - v);
             _output.WriteLine($"MEASURE #551 two-body motion at 600 s: {(later.Position - expectedPosition).Magnitude():E3} m, {(later.Velocity - expectedVelocity).Magnitude():E3} m/s");
