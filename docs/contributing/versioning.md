@@ -316,7 +316,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   in sequence, one entry more per read. A read is no longer stored, and an orientation is the exact spherical linear
   interpolation of its two entries (Changed below): 2.39e-16 rad from the closed form over 999 fractions of rotations of
   0.0113, 0.025 and 0.05 rad (6e-8 rad before), and the state at 605 s 8.8e-7 m from the orbit, whatever the reads
-  before (Linux x64; bounds PROVISIONAL, twice Linux) ([#548](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/548)).
+  before, the same on Linux, Windows and macOS arm64 ([#548](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/548)).
 - **The command line reads the kernels of a spacecraft given by its NAIF identifier.** `orientation` built a managed
   spacecraft with an empty attitude record and printed the identity whatever the CK held (0.7 rad off in the issue's
   case); `ephemeris`, `sub-point` and `angular-separation` threw `NullReferenceException`. `orientation` now reads the CK
@@ -324,7 +324,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   and the other commands take the kernel-backed spacecraft at the start of the window or at the epoch. On the kernels the
   library writes for 600 s of a nadir LEO, against CSPICE: the orientation 0 rad and 2.2e-18 rad/s from `sxform` in
   J2000, ECLIPJ2000, ITRF93 and over a UTC window (4.5e-16 rad from spiceypy's `pxform`, CSPICE N0067), the ephemeris
-  equal to `spkezr`, the sub-point equal to its closed form on `spkezr` (Linux x64; bounds PROVISIONAL, twice Linux)
+  equal to `spkezr`, the sub-point equal to its closed form on `spkezr`, the same on Linux, Windows and macOS arm64
   ([#542](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/542)).
 - **A null target orbit is an argument error.** The target-orbit constructor of `ImpulseManeuver`, under
   `ApsidalAlignmentManeuver`, `PlaneAlignmentManeuver` and `PhasingManeuver`, dereferenced the target before its null
