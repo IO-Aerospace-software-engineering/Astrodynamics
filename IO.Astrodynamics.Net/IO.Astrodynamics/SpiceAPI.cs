@@ -49,9 +49,11 @@ public class SpiceAPI
     private static extern IntPtr GetSpiceVersionProxy();
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool LoadKernelsProxy(string directoryPath);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool UnloadKernelsProxy(string directoryPath);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
@@ -83,10 +85,12 @@ public class SpiceAPI
         [In] [Out] Window[] windows);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool ReadOrientationProxy(Window searchWindow, int spacecraftId, double tolerance,
         string frame, double stepSize, [In] [Out] StateOrientation[] stateOrientations);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool ReadEphemerisProxy(Window searchWindow, int observerId, int targetId,
         string frame, string aberration, double stepSize, [In] [Out] StateVector[] stateVectors);
 
@@ -94,10 +98,12 @@ public class SpiceAPI
     private static extern IntPtr GetLastErrorProxy();
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool
         WriteEphemerisProxy(string filePath, int objectId, StateVector[] stateVectors, uint size);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool
         WriteOrientationProxy(string filePath, int objectId, StateOrientation[] stateOrientations, uint size);
 
