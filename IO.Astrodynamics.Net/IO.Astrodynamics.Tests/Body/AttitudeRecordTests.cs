@@ -43,10 +43,9 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// prograde, to v; TRIAD, the rotation taking the triad of the body vectors to that of the directions; the instrument
 /// pointing, the minimal rotation taking the boresight in the spacecraft frame (<c>pxform(instrument, SC)</c>) to the Moon;
 /// the impulse, the front along the delta-V rotated to ICRF by <c>pxform</c>. The state they take: the solution of the
-/// propagation, rotated from its frame to ICRF by <c>pxform</c> (the SPK's Lagrange interpolation across an impulse is
-/// off by up to 15 m over the steps around it, item 3 of §8 of the design, #540, out of scope), never the SPK the library
-/// wrote. In SSB mode the solution is relative to the Sun: less the Earth's state of <c>spkezr</c> on the planetary
-/// ephemeris.
+/// propagation, rotated from its frame to ICRF by <c>pxform</c>, never the SPK the library wrote. In SSB mode the solution
+/// is relative to the Sun: less the Earth's state of <c>spkezr</c> on the planetary ephemeris. The positions are measured
+/// across the impulses too, the stored states being split into arcs at each impulse (#540).
 /// The Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: that of a twin propagated by
 /// <c>Spacecraft.Propagate</c> with the scenario's bodies, whose stored states equal the scenario's to the bit. The
 /// directions of the Sun and the Moon: <c>spkezr</c> from the Earth, geometric, as the attitudes read them
@@ -125,6 +124,13 @@ public class AttitudeRecordTests
 
     /// <summary>The same in SSB mode, m. Worst 2.26e-2 m (Nadir and InstrumentTriad, VV, ECLIPJ2000).</summary>
     internal const double PositionAgainstSpkSsb = 4.6e-2;
+
+    /// <summary>The same for the cases with an impulse, whose stored states are split into arcs at the impulse (#540, choice 18
+    /// of #554): near the ends of an arc both interpolations are one-sided, and the SPK's epochs, doubles of 1.2e-7 s
+    /// resolution, weigh more there. These rows were excluded before. PROVISIONAL: twice the Linux worst, 1.64e-3 m
+    /// (NadirImpulseTriad, RK7(8), ECLIPJ2000, 2026; Linux x64, 2026-11-03; 1.85e-3 m on the prototype of #554, with the
+    /// attitude timeline), to be measured on Linux, Windows and macOS arm64.</summary>
+    internal const double PositionAgainstSpkAcrossImpulses = 3.3e-3;
 
     /// <summary>The managed angular velocity and the CK's against the rate of the law (a difference of its closed form over
     /// 0.1 s), rad/s: the model of the CK (choice 8), the mean of the SLERP rates of the intervals at the samples and linear
@@ -312,7 +318,7 @@ public class AttitudeRecordTests
         Assert.True(m.LawBetweenEntries <= LawBetweenEntries, $"law between the entries {m.LawBetweenEntries:E3} rad");
         Assert.True(m.DiscreteLaw <= (ssb ? DiscreteLawSsb : DiscreteLaw), $"discrete law {m.DiscreteLaw:E3} rad");
         Assert.True(m.Instruments <= (after2025 ? ManagedAgainstCkAfter2025 : InstrumentAgainstFrameKernel), $"instruments {m.Instruments:E3} rad");
-        Assert.True(m.PositionsAgainstSpk <= (ssb ? PositionAgainstSpkSsb : PositionAgainstSpk), $"positions - SPK {m.PositionsAgainstSpk:E3} m");
+        Assert.True(m.PositionsAgainstSpk <= (ssb ? PositionAgainstSpkSsb : run.Law.Contains("Impulse") ? PositionAgainstSpkAcrossImpulses : PositionAgainstSpk), $"positions - SPK {m.PositionsAgainstSpk:E3} m");
         Assert.True(m.PositionsAgainstSolution <= (ssb ? PositionAgainstSolutionSsb : PositionAgainstSolution), $"positions - solution {m.PositionsAgainstSolution:E3} m");
         // At the outputs the stored states are the solution's rotated by pxform(F, J2000), the rotation of the same doubles
         // as the reference's: measured 0 in every case
@@ -368,9 +374,9 @@ public class AttitudeRecordTests
         var epochs = run.ReadEpochs(record);
         var m = new Measures { Entries = record.Length, Reads = epochs.Count, TwinStates = run.TwinStates };
         var instrumentFrames = sc.Instruments.Select(x => new Frame(sc.Name.ToUpper() + "_" + x.Name.ToUpper())).ToArray();
-        // The positions do not depend on the attitude: off the impulses, whose output steps the library's Lagrange interpolation
-        // and the SPK's both cross (item 3 of §8 of the design, #540, out of scope)
-        bool positions = !run.Law.Contains("Impulse") && run.Law != "Custom";
+        // The positions do not depend on the attitude; across an impulse too, the stored states being split into arcs at
+        // each impulse (#540)
+        bool positions = run.Law != "Custom";
 
         foreach (var t in epochs)
         {
