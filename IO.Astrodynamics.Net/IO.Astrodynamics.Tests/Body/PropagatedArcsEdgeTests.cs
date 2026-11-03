@@ -45,9 +45,16 @@ public class PropagatedArcsEdgeTests
     internal const double CovarianceBefore = 3.1e-9;
 
     /// <summary>The covariance after an impulse less the covariance before it, velocity block, against the covariance of the
-    /// execution error, relative to the largest element of the latter: the rounding of the difference. PROVISIONAL, Linux
-    /// worst 5.9e-17 (Apogee, 2.22e-16 against 3.77 m²/s²).</summary>
-    internal const double ExecutionErrorJump = 1.2e-16;
+    /// execution error written in the test from the four terms of Gates on the velocity jump of the stored states, relative
+    /// to the largest element of the latter: the rounding of the jump, a difference of two velocities of 7.8 km/s, in the
+    /// σ_s² v vᵀ and σ_p² v vᵀ terms. PROVISIONAL, Linux worst 6.13e-15 (Apogee from ECLIPJ2000, 2.31e-14 against 3.77 m²/s²;
+    /// 2026-11-03).</summary>
+    internal const double ExecutionErrorJump = 1.3e-14;
+
+    /// <summary>The covariance of a stored state after an impulse, or of a filled one, against the solution's rotated to ICRF
+    /// by <c>pxform</c> in the test, relative to the largest element, from ECLIPJ2000: the rounding of the two rotations.
+    /// PROVISIONAL, twice the Linux worst, 4.28e-16 (Apogee, 10 s; 2026-11-03).</summary>
+    internal const double RotatedCovariance = 8.6e-16;
 
     /// <summary>The managed occultation and field-of-view edges near a burn against <c>gfoclt</c> and <c>gftfov</c> on the
     /// kernels the library writes, s. PROVISIONAL, Linux worst 4.0e-7 s (the field of view and the occultation in
@@ -112,9 +119,11 @@ public class PropagatedArcsEdgeTests
     /// <summary>
     /// An impulse at the end of the propagation (review probe E3): Velocity-Verlet locates the perigee crossing at the end of
     /// its last step, the impulse executes (§9 item 7 of #554, its own issue) and the solution ends with the state before it,
-    /// one segment. No arc of zero length is stored: the reads and the SPK end as the solution does, the state before the
-    /// impulse (on the prototype, a one-state arc: the read at the end gave the state after, 8 063 m/s against 7 829 m/s, and
-    /// WriteEphemeris threw). RK7(8) over 2 970 s locates the impulse 6.8 s before the end: a short arc, filled.
+    /// one segment. An impulse that no segment carries opens no arc, its state before it closes the last one: the reads and
+    /// the SPK end as the solution does, with the state before the impulse, at the end of the propagation, past the last
+    /// output when the output step does not divide the window (on the prototype, a one-state arc: the read at the end gave
+    /// the state after, 8 063 m/s against 7 829 m/s, and WriteEphemeris threw). RK7(8) over 2 970 s locates the impulse
+    /// 6.8 s before the end: a short arc, filled.
     /// </summary>
     [Theory]
     [InlineData("VVd", 10.0, 2964.0, -5501)]
@@ -173,23 +182,165 @@ public class PropagatedArcsEdgeTests
     }
 
     /// <summary>
-    /// The covariance mode with an impulse and its execution error (Gates' model): every stored state carries its covariance
-    /// (<c>Spacecraft.Propagate</c>'s contract), the states at the impulse included: before it, the covariance at the event;
-    /// after it, <see cref="PropagationSolution.GetCovariance"/> at the impulse (the later segment), which adds the
-    /// covariance of the execution error, the closed form of <see cref="ManeuverExecutionError.Covariance"/>, to the velocity
-    /// block; the states of a filled arc, that of their epoch. On the prototype the two states at the impulse carried none
-    /// (review probe E2).
+    /// An impulse within 2 µs of the start or of the end of the window, located by RK7(8) (a timed impulse of 20 m/s, review
+    /// of PR 1 of #554, ARC-2): the solution then has a second segment shorter than 2 µs. The first and the last output are
+    /// kept in their own arc with the impulse's state, unfilled: the managed reads and the SPK cover the window, the solution
+    /// there to the bit managed and within the resolution of the SPK (before, the arc was dropped with its output: the read
+    /// at the boundary off by the whole ΔV, <c>spkezr</c> SPICE(SPKINSUFFDATA)). One tick (1e-7 s) before the end too.
     /// </summary>
     [Theory]
-    [InlineData("Apogee", 10.0, -5511)]
-    [InlineData("CombinedLate", 60.0, -5512)]
-    public void Covariance_EveryStoredStateCarriesIt(string maneuver, double step, int naifId)
+    [InlineData(1.0e-6, -5591)]
+    [InlineData(7200.0 - 1.0e-6, -5592)]
+    [InlineData(7200.0 - 1.0e-7, -5593)]
+    public void ImpulseWithin2MicrosecondsOfTheStartOrTheEnd_TheWindowStaysCovered(double target, int naifId)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), Leo(earth));
+        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        spacecraft.AddFuelTank(tank);
+        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        spacecraft.AddEngine(engine);
+        spacecraft.SetStandbyManeuver(new TimedImpulse(earth, Start, engine, Start.AddSeconds(target), 20.0));
+        var window = new Window(Start, Start.AddHours(2.0));
+        var solution = spacecraft.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(10.0));
+        Assert.Equal(2, solution.Segments.Count);
+        var tc = solution.Segments[1].BaseEpoch;
+        var arcs = spacecraft.PropagatedArcs;
+        Assert.Equal(2, arcs.Count);
+        // The arc of the boundary: the output there and the impulse's state, unfilled
+        var boundary = target < 1.0 ? arcs[0] : arcs[1];
+        Assert.Equal(2, boundary.Length);
+        Assert.Equal(target < 1.0 ? window.StartDate : tc, boundary[0].Epoch);
+        Assert.Equal(target < 1.0 ? tc : window.EndDate, boundary[1].Epoch);
+        Assert.Equal(window, spacecraft.InterpolatedStatesWindow);
+
+        var spk = NewSpk(spacecraft.Name.ToLowerInvariant());
+        spacecraft.WriteEphemeris(spk);
+        SpiceAPI.Instance.LoadKernels(spk);
+        try
+        {
+            double managed = 0.0, managedVelocity = 0.0, spkPosition = 0.0, spkVelocity = 0.0;
+            foreach (var t in new[] { window.StartDate, window.EndDate })
+            {
+                var (position, velocity) = solution.InterpolateAt(t);
+                var read = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None).ToStateVector();
+                managed = System.Math.Max(managed, (read.Position - position).Magnitude());
+                managedVelocity = System.Math.Max(managedVelocity, (read.Velocity - velocity).Magnitude());
+                // The windowed read, which throws on a SPICE error (the single-epoch read does not, spk-O1 of the review)
+                var fromSpk = SpiceAPI.Instance.ReadEphemeris(new Window(t, t), 399, spacecraft.NaifId, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0)).First().ToStateVector();
+                spkPosition = System.Math.Max(spkPosition, (fromSpk.Position - position).Magnitude());
+                spkVelocity = System.Math.Max(spkVelocity, (fromSpk.Velocity - velocity).Magnitude());
+            }
+
+            _output.WriteLine($"MEASURE #540 impulse at S + {(tc - Start).TotalSeconds:R} s (target {target:R}): arcs [{string.Join(",", arcs.Select(a => a.Length))}], " +
+                              $"at the start and the end managed {managed:E2} m {managedVelocity:E2} m/s, SPK {spkPosition:E2} m {spkVelocity:E2} m/s");
+            Assert.Equal(0.0, managed);
+            Assert.Equal(0.0, managedVelocity);
+            Assert.True(spkPosition <= SpkAtTheEnd, $"SPK {spkPosition:E3} m");
+            Assert.True(spkVelocity <= SpkVelocityAtTheEnd, $"SPK {spkVelocity:E3} m/s");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spk);
+            spk.Delete();
+        }
+    }
+
+    /// <summary>
+    /// Two impulses at one event (main's case M, review of #554, which PR 1 still produces: the timeline that fixes it is PR
+    /// 2): an apogee-raising impulse, an LVLH attitude held 0 s, a second apogee-raising impulse that RK7(8) fires at the same
+    /// event. The arc between them, of zero length, is not stored: the earlier arc ends with the state before both, the later
+    /// one starts with the state after both, at one epoch, the jump the sum of the two delta-V; the managed reads within
+    /// ±150 s against the solution, at tc the state after both; <c>spkezr</c> on the SPK, two segments, against them.
+    /// </summary>
+    [Fact]
+    public void TwoImpulsesAtOneEvent_OneBoundary()
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var spacecraft = new Spacecraft(-5594, "PE5594", 1000.0, 3000.0, new Clock("PE5594_CLK", 65536), Leo(earth));
+        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        spacecraft.AddFuelTank(tank);
+        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        spacecraft.AddEngine(engine);
+        var first = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine);
+        var lvlh = TriadAttitude.CreateLVLH(earth, Start, TimeSpan.Zero, engine);
+        var second = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 9378137.0, engine);
+        first.SetNextManeuver(lvlh);
+        lvlh.SetNextManeuver(second);
+        spacecraft.SetStandbyManeuver(first);
+        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(10.0));
+        var events = solution.Segments.Skip(1).Select(x => x.BaseEpoch).ToArray();
+        Assert.Equal(2, events.Length);
+        Assert.Equal(events[0], events[1]);
+        Assert.True(first.ThrustWindow.HasValue && second.ThrustWindow.HasValue);
+        var tc = events[0];
+        var arcs = spacecraft.PropagatedArcs;
+        Assert.Equal(2, arcs.Count);
+        Assert.Equal(tc, arcs[0][^1].Epoch);
+        Assert.Equal(tc, arcs[1][0].Epoch);
+        double boundary = (arcs[1][0].Position - arcs[0][^1].Position).Magnitude();
+        double jump = (arcs[1][0].Velocity - arcs[0][^1].Velocity - first.DeltaV - second.DeltaV).Magnitude();
+
+        var spk = NewSpk("pe5594");
+        spacecraft.WriteEphemeris(spk);
+        SpiceAPI.Instance.LoadKernels(spk);
+        try
+        {
+            var segments = OperatingSystem.IsLinux() ? CspiceDirect.ReadSegments(spk.FullName).Count : 2;
+            var kernel = new Spacecraft(-5594, "PE5594", Start, 1000.0, 3000.0, new Clock("PE5594K_CLK", 65536));
+            double near = 0.0, spkAgainstManaged = 0.0;
+            for (int i = -600; i <= 600; i++)
+            {
+                var t = tc.AddSeconds(i * 0.25);
+                var (position, _) = solution.InterpolateAt(t);
+                var managed = spacecraft.GetEphemeris(t, earth, Frame.ICRF, Aberration.None).ToStateVector();
+                near = System.Math.Max(near, (managed.Position - position).Magnitude());
+                spkAgainstManaged = System.Math.Max(spkAgainstManaged, (kernel.GetGeometricStateRelativeTo(t, earth).Position - managed.Position).Magnitude());
+            }
+
+            var (_, vAt) = solution.InterpolateAt(tc);
+            double atTc = (spacecraft.GetEphemeris(tc, earth, Frame.ICRF, Aberration.None).ToStateVector().Velocity - vAt).Magnitude();
+            _output.WriteLine($"MEASURE #540 two impulses at one event S + {(tc - Start).TotalSeconds:R} s: arcs [{string.Join(",", arcs.Select(a => a.Length))}], {segments} segments, " +
+                              $"boundary positions {boundary:E2} m, jump - dV1 - dV2 {jump:E2} m/s, near managed {near:E2} m, SPK - managed {spkAgainstManaged:E2} m, v at tc {atTc:E2} m/s");
+            Assert.Equal(2, segments);
+            Assert.Equal(0.0, boundary);
+            Assert.True(jump <= PropagatedArcsTests.JumpAgainstDeltaV, $"jump {jump:E3} m/s");
+            Assert.Equal(0.0, atTc);
+            Assert.True(near <= PropagatedArcsTests.NearRk, $"near {near:E3} m");
+            Assert.True(spkAgainstManaged <= PropagatedArcsTests.SpkAgainstManaged, $"SPK - managed {spkAgainstManaged:E3} m");
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spk);
+            spk.Delete();
+        }
+    }
+
+    /// <summary>
+    /// The covariance mode with an impulse and its execution error (Gates' model): every stored state carries its covariance
+    /// (<c>Spacecraft.Propagate</c>'s contract), the states at the impulse included: before it, the covariance at the event;
+    /// after it, <see cref="PropagationSolution.GetCovariance"/> at the impulse (the later segment); the states of a filled
+    /// arc, that of their epoch; all rotated to ICRF, where the spacecraft stores them, by R6 = diag(R, R), R the matrix of
+    /// <c>pxform</c>, when the propagation starts from ECLIPJ2000. The jump of the velocity block at the impulse against the
+    /// covariance of the execution error, written here from the four terms of Gates (JPL TR 32-504, 1963, section III) on the
+    /// velocity jump of the stored states: σ_s² v vᵀ + σ_r² u uᵀ + σ_p² (V² I − v vᵀ) + σ_a² (I − u uᵀ). Through
+    /// <c>Spacecraft.Propagate</c> and <c>Scenario.SimulateAsync</c>. On the prototype the two states at the impulse carried
+    /// none (review probe E2).
+    /// </summary>
+    [Theory]
+    [InlineData("Apogee", 10.0, "ICRF", "Propagate", -5511)]
+    [InlineData("CombinedLate", 60.0, "ICRF", "Propagate", -5512)]
+    [InlineData("Apogee", 10.0, "ECLIPJ2000", "Propagate", -5513)]
+    [InlineData("Apogee", 10.0, "ICRF", "Scenario", -5514)]
+    public void Covariance_EveryStoredStateCarriesIt(string maneuver, double step, string frameName, string path, int naifId)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
+        var frame = PropagatedArcsTests.FrameOf(frameName);
         var p0 = new Matrix(6, 6);
         for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 1.0e4 : 1.0e-2);
         var leo = Leo(earth);
-        var initial = new StateVector(leo.Position, leo.Velocity, earth, Start, Frame.ICRF, p0);
+        var inFrame = frame == Frame.ICRF ? leo : leo.ToFrame(frame).ToStateVector();
+        var initial = new StateVector(inFrame.Position, inFrame.Velocity, earth, Start, frame, p0);
         var error = new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
         var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), initial);
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
@@ -200,14 +351,53 @@ public class PropagatedArcsEdgeTests
             ? new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine) { ExecutionError = error }
             : new CombinedManeuver(earth, Start.AddSeconds(120.0), TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine) { ExecutionError = error };
         spacecraft.SetStandbyManeuver(impulse);
-        var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), [earth], new RK78Integrator(1e-12, 1e-12), false, false,
-            TimeSpan.FromSeconds(step), new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance });
+        var window = new Window(Start, Start.AddHours(2.0));
+        var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
+        PropagationSolution solution;
+        if (path == "Scenario")
+        {
+            var scenario = new Scenario($"SPE{-naifId}", new IO.Astrodynamics.Mission.Mission($"mPE{-naifId}"), window);
+            scenario.AddCelestialItem(earth);
+            scenario.AddSpacecraft(spacecraft);
+            scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(step), () => new RK78Integrator(1e-12, 1e-12), options).GetAwaiter().GetResult();
+            solution = spacecraft.LastPropagation;
+        }
+        else
+        {
+            solution = spacecraft.Propagate(window, [earth], new RK78Integrator(1e-12, 1e-12), false, false, TimeSpan.FromSeconds(step), options);
+        }
 
         var stored = spacecraft.PropagatedStates;
         var arcs = spacecraft.PropagatedArcs;
         var tc = solution.Segments[1].BaseEpoch;
         var before = arcs[0][^1];
         var after = arcs[1][0];
+
+        // R, the matrix of pxform(frame, J2000), by the images of the axes; the covariance of the solution in ICRF, R6 P R6ᵀ
+        var q = SpiceAPI.Instance.TransformFrame(Start, frame, Frame.ICRF).Rotation;
+        Vector3[] columns = [Vector3.VectorX.Rotate(q), Vector3.VectorY.Rotate(q), Vector3.VectorZ.Rotate(q)];
+        double R(int i, int j) => i switch { 0 => columns[j].X, 1 => columns[j].Y, _ => columns[j].Z };
+        Matrix InIcrf(Matrix p)
+        {
+            if (frame == Frame.ICRF) return p;
+            var rotated = new Matrix(6, 6);
+            for (int i = 0; i < 6; i++)
+            for (int j = 0; j < 6; j++)
+            {
+                double value = 0.0;
+                for (int k = 0; k < 6; k++)
+                for (int l = 0; l < 6; l++)
+                {
+                    double rik = i / 3 == k / 3 ? R(i % 3, k % 3) : 0.0;
+                    double rjl = j / 3 == l / 3 ? R(j % 3, l % 3) : 0.0;
+                    value += rik * p.Get(k, l) * rjl;
+                }
+
+                rotated.Set(i, j, value);
+            }
+
+            return rotated;
+        }
 
         static double Relative(Matrix a, Matrix b)
         {
@@ -222,11 +412,24 @@ public class PropagatedArcsEdgeTests
             return worst / scale;
         }
 
-        double beforeDelta = Relative(before.Covariance!.Value, solution.GetCovariance(tc.AddSeconds(-1e-6)));
-        double afterDelta = Relative(after.Covariance!.Value, solution.GetCovariance(tc));
-        // The covariance of the execution error, from the delta-V of the burn, against the jump of the velocity block
+        double beforeDelta = Relative(before.Covariance!.Value, InIcrf(solution.GetCovariance(tc.AddSeconds(-1e-6))));
+        double afterDelta = Relative(after.Covariance!.Value, InIcrf(solution.GetCovariance(tc)));
+        // The covariance of the execution error, the four terms of Gates on the velocity jump v of the stored states (the
+        // model is invariant under a rotation, so it is written in ICRF)
+        var v = after.Velocity - before.Velocity;
+        double speed = v.Magnitude();
+        var u = v / speed;
+        double sr2 = error.ResolutionSigma * error.ResolutionSigma, ss2 = error.ShutoffSigma * error.ShutoffSigma;
+        double sa2 = error.AutopilotSigma * error.AutopilotSigma, sp2 = error.PointingSigma * error.PointingSigma;
+        double[] vc = [v.X, v.Y, v.Z], uc = [u.X, u.Y, u.Z];
         var le = new double[9];
-        error.Covariance(impulse.DeltaV, le);
+        for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+        {
+            double identity = i == j ? 1.0 : 0.0;
+            le[3 * i + j] = ss2 * vc[i] * vc[j] + sr2 * uc[i] * uc[j] + sp2 * (speed * speed * identity - vc[i] * vc[j]) + sa2 * (identity - uc[i] * uc[j]);
+        }
+
         double jump = 0.0, leScale = le.Select(System.Math.Abs).Max();
         for (int i = 0; i < 3; i++)
         for (int j = 0; j < 3; j++)
@@ -242,19 +445,29 @@ public class PropagatedArcsEdgeTests
         {
             for (int i = 1; i < arc.Length - 1; i++)
             {
-                filled = System.Math.Max(filled, Relative(arc[i].Covariance!.Value, solution.GetCovariance(arc[i].Epoch)));
+                filled = System.Math.Max(filled, Relative(arc[i].Covariance!.Value, InIcrf(solution.GetCovariance(arc[i].Epoch))));
                 filledStates++;
             }
         }
 
-        _output.WriteLine($"MEASURE #540 covariance {maneuver} {step} s: {stored.Count(x => x.Covariance == null)} of {stored.Length} stored states without P, " +
+        _output.WriteLine($"MEASURE #540 covariance {maneuver} {step} s {frameName} {path}: {stored.Count(x => x.Covariance == null)} of {stored.Length} stored states without P, " +
                           $"before - GetCovariance(tc - 1 us) {beforeDelta:E2}, after - GetCovariance(tc) {afterDelta:E2} (relative), " +
-                          $"velocity jump - L_e {jump:E2} m2/s2 (L_e {leScale:E2}), {filledStates} filled states - GetCovariance {filled:E2}");
+                          $"velocity jump - L_e of Gates {jump:E2} m2/s2 (L_e {leScale:E2}), {filledStates} filled states - GetCovariance {filled:E2}");
         Assert.All(stored, x => Assert.NotNull(x.Covariance));
         Assert.True(beforeDelta <= CovarianceBefore, $"before {beforeDelta:E3}");
-        Assert.Equal(0.0, afterDelta);
         Assert.True(jump <= ExecutionErrorJump * leScale, $"jump - L_e {jump:E3}");
-        Assert.Equal(0.0, filled);
+        if (frame == Frame.ICRF)
+        {
+            // Without a rotation, the covariance of the solution itself, to the bit
+            Assert.Equal(0.0, afterDelta);
+            Assert.Equal(0.0, filled);
+        }
+        else
+        {
+            Assert.True(afterDelta <= RotatedCovariance, $"after {afterDelta:E3}");
+            Assert.True(filled <= RotatedCovariance, $"filled {filled:E3}");
+        }
+
         Assert.Equal(maneuver == "CombinedLate" ? PropagatedEphemeris.FilledArcStates - 2 : 0, filledStates);
     }
 
@@ -301,10 +514,10 @@ public class PropagatedArcsEdgeTests
     /// after the impulse, against the output state.
     /// </summary>
     [Theory]
-    [InlineData("Apogee|VVd|10|Propagate|ICRF|Earth")]
-    [InlineData("Chain4|VVd|10|Propagate|ICRF|Earth")]
-    [InlineData("Chain4|VVd|60|Propagate|ICRF|Earth")]
-    public void VelocityVerletOutputAtTheImpulse_IsNotStored(string key)
+    [InlineData("Apogee|VVd|10|Propagate|ICRF|Earth", 1, 0)]
+    [InlineData("Chain4|VVd|10|Propagate|ICRF|Earth", 1, 2)]
+    [InlineData("Chain4|VVd|60|Propagate|ICRF|Earth", 1, 3)]
+    public void VelocityVerletOutputAtTheImpulse_IsNotStored(string key, int expectedAtTc, int expectedTickAfter)
     {
         using var run = PropagatedArcsTests.ArcRun.Run(-(5530 + Array.IndexOf(PropagatedArcsTests.AllCases, key)), key, writeKernel: false);
         var stored = run.Spacecraft.PropagatedStates;
@@ -321,8 +534,12 @@ public class PropagatedArcsEdgeTests
             worst = System.Math.Max(worst, (read.Position - output.Position).Magnitude());
         }
 
-        _output.WriteLine($"MEASURE #540 VV outputs at the impulse {key.Replace('|', ' ')}: {atImpulses} of {run.ImpulseEpochs.Length} impulses, read - output {worst:E2} m");
+        int atTc = run.Solution.StateVectors.Count(o => run.ImpulseEpochs.Contains(o.Epoch));
+        int tickAfter = run.Solution.StateVectors.Count(o => run.ImpulseEpochs.Any(tc => o.Epoch == tc.AddSeconds(1e-7)));
+        _output.WriteLine($"MEASURE #540 VV outputs at the impulse {key.Replace('|', ' ')}: {atImpulses} of {run.ImpulseEpochs.Length} impulses ({atTc} at tc, {tickAfter} one tick after), read - output {worst:E2} m");
         Assert.True(atImpulses > 0);
+        Assert.Equal(expectedAtTc, atTc);
+        Assert.Equal(expectedTickAfter, tickAfter);
         // Both states of each impulse are stored at its epoch
         foreach (var tc in run.ImpulseEpochs) Assert.Equal(2, stored.Count(x => x.Epoch == tc));
         Assert.True(worst <= OutputAtTheImpulse, $"read - output {worst:E3} m");

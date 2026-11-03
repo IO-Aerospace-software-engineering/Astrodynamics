@@ -9,7 +9,7 @@ namespace IO.Astrodynamics.Tests.Body;
 /// CSPICE routines the library has no proxy for, called in the test process from the native library, which links CSPICE
 /// N0067 statically: the DAF reads of <c>dafus</c> (the layout of an SPK, through the f2c routines <c>dafbfs_</c>,
 /// <c>daffna_</c>, <c>dafgs_</c>, <c>dafus_</c>, <c>dafgda_</c>) and the SPK writer <c>spkw09_c</c>, the reference of the
-/// managed writer (#540). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
+/// managed writer (#540), with its append (<c>dafopw_c</c>). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
 /// </summary>
 /// <remarks>
 /// The Linux build of the native library exports the CSPICE symbols; the Windows DLL exports only the proxies, so the tests
@@ -47,6 +47,9 @@ internal static class CspiceDirect
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void spkw09_c(int handle, int body, int center, string frame, double first, double last, string segid,
         int degree, int n, [In] double[] states, [In] double[] epochs);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void dafopw_c(string fname, out int handle);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void spkcls_c(int handle);
@@ -119,6 +122,23 @@ internal static class CspiceDirect
                 Check("spkw09");
             }
 
+            spkcls_c(handle);
+            Check("spkcls");
+        }
+    }
+
+    /// <summary>Appends a segment of type 9 to an existing SPK with CSPICE's own writer, in J2000: <c>dafopw</c> (what
+    /// <c>spkopa</c> calls, which the library does not export), <c>spkw09</c>, <c>spkcls</c>; CSPICE's append (<c>dafbna</c>,
+    /// <c>dafena</c>) needs the DAF's summary records to be as the DAF Required Reading lays them out.</summary>
+    internal static void AppendType9(string path, int body, (int Center, int Degree, double[] Epochs, double[] States, string Name) segment)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            dafopw_c(path, out int handle);
+            Check("dafopw");
+            spkw09_c(handle, body, segment.Center, "J2000", segment.Epochs[0], segment.Epochs[^1], segment.Name, segment.Degree, segment.Epochs.Length, segment.States,
+                segment.Epochs);
+            Check("spkw09");
             spkcls_c(handle);
             Check("spkcls");
         }

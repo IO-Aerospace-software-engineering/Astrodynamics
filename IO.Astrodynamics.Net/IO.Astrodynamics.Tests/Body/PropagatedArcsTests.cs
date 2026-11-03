@@ -48,7 +48,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// (37 s for the chain of four), farther than max(150 s, 10 output steps) from every impulse.
 /// </para>
 /// <para>
-/// <b>Limits.</b> PROVISIONAL: twice the worst on Linux x64 (2026-11-03, the 73 cases of the grid, MEASURE lines),
+/// <b>Limits.</b> PROVISIONAL: twice the worst on Linux x64 (2026-11-03, the 93 cases of the grid, MEASURE lines),
 /// rounded up at the second significant digit, to be replaced by twice the worst over Linux, Windows and macOS arm64 from
 /// the CI's MEASURE lines. The grid takes about 30 s and runs in every CI job. Each limit bounds the family of its worst,
 /// named in its summary; a family is never bounded by the limit of a larger one (#515).
@@ -58,16 +58,18 @@ public class PropagatedArcsTests
 {
     /// <summary>The managed reads within ±150 s of an impulse against the RK7(8) solution, at 1 and 10 s outputs, one or two
     /// impulses about the Earth: the far error of the Lagrange interpolation, no trace of the impulse. PROVISIONAL, Linux
-    /// worst 9.32e-9 m (Apogee, RK7(8), 10 s, FK4); main 23.5 to 1 420 m.</summary>
-    internal const double NearRk = 1.9e-8;
+    /// worst 1.14e-8 m (a timed impulse 0.1 s before an output, 10 s; 9.32e-9 m before the timed cases of the review of
+    /// PR 1, Apogee, FK4); main 23.5 to 1 420 m.</summary>
+    internal const double NearRk = 2.3e-8;
 
     /// <summary>The same on the chain of four of <c>ScenarioTests</c> (Earth, Moon and Sun, 24.7 h). PROVISIONAL, Linux worst
     /// 2.25e-8 m (10 s, both paths); main 763 m.</summary>
     internal const double NearRkChain = 4.5e-8;
 
     /// <summary>The same at 60 s outputs: the per-arc interpolation is one-sided at the ends of an arc. PROVISIONAL, Linux
-    /// worst 2.97e-4 m (Apogee and Perigee); main 2 250 m.</summary>
-    internal const double NearRk60 = 6.0e-4;
+    /// worst 3.33e-4 m (a timed impulse 1 s before an output; 2.97e-4 m on Apogee and Perigee); main 2 120 m to 16.1 km
+    /// (Apogee 2 250 m, Plane 8 670 m, Combined 11.3 and 16.1 km, the chain 2 120 m).</summary>
+    internal const double NearRk60 = 6.7e-4;
 
     /// <summary>The same on the chain of four at 60 s outputs, whose arcs end 7 min apart. PROVISIONAL, Linux worst
     /// 1.81e-2 m (both paths); main 2 120 m.</summary>
@@ -97,11 +99,13 @@ public class PropagatedArcsTests
 
     /// <summary><c>spkezr</c> on the SPK the library writes against the managed reads, over every sample, about the Earth with
     /// one or two impulses: the resolution of the ET doubles of the nodes (1.2e-7 s) times the speed. PROVISIONAL, Linux
-    /// worst 8.67e-4 m (Perigee, RK7(8), 60 s).</summary>
-    internal const double SpkAgainstManaged = 1.8e-3;
+    /// worst 1.16e-3 m (a timed impulse 1 ms before an output, RK7(8), 60 s; 8.67e-4 m before the timed cases of the review
+    /// of PR 1, Perigee, RK7(8), 60 s).</summary>
+    internal const double SpkAgainstManaged = 2.4e-3;
 
-    /// <summary>The same on the chain of four. PROVISIONAL, Linux worst 1.85e-3 m (RK7(8), 60 s).</summary>
-    internal const double SpkAgainstManagedChain = 3.7e-3;
+    /// <summary>The same on the chain of four. PROVISIONAL, Linux worst 1.08e-3 m (Velocity-Verlet at 60 s; 1.85e-3 m in
+    /// RK7(8) at 60 s, 1.06e-3 m since the review of PR 1 drops the output within a tenth of the step of an impulse there).</summary>
+    internal const double SpkAgainstManagedChain = 2.2e-3;
 
     /// <summary>The same in SSB mode (the SPK relative to the Sun). PROVISIONAL, Linux worst 1.71e-3 m (RK7(8)).</summary>
     internal const double SpkAgainstManagedSsb = 3.5e-3;
@@ -113,20 +117,42 @@ public class PropagatedArcsTests
     /// PROVISIONAL, Linux worst 1.25e-11 m/s (the chain of four, 60 s); main 40 to 890 m/s.</summary>
     internal const double VelocityBeforeRk = 2.5e-11;
 
-    /// <summary>The same against the solution of Velocity-Verlet, and in SSB mode. PROVISIONAL, Linux worst 8.40e-7 m/s (the
-    /// chain of four, Velocity-Verlet at 10 s); 3.29e-8 m/s in SSB mode (RK7(8)).</summary>
+    /// <summary>The same against the solution of Velocity-Verlet, about the Earth. PROVISIONAL, Linux worst 8.40e-7 m/s (the
+    /// chain of four, Velocity-Verlet at 10 s).</summary>
     internal const double VelocityBefore = 1.7e-6;
 
-    /// <summary>The velocity of <c>spkezr</c> on the SPK 1 µs before an impulse against the solution. PROVISIONAL, Linux worst
-    /// 7.95e-7 m/s (Perigee, Velocity-Verlet at 60 s).</summary>
+    /// <summary>The same in SSB mode, RK7(8): the stored states relative to the Sun. PROVISIONAL, Linux worst 3.29e-8 m/s
+    /// (Apogee).</summary>
+    internal const double VelocityBeforeSsbRk = 6.6e-8;
+
+    /// <summary>The same in SSB mode, Velocity-Verlet. PROVISIONAL, Linux worst 1.02e-10 m/s (Apogee, at the output step;
+    /// 3.75e-12 m/s at 1 s).</summary>
+    internal const double VelocityBeforeSsbVv = 2.1e-10;
+
+    /// <summary>The same about the Moon, RK7(8). PROVISIONAL, Linux worst 1.25e-12 m/s.</summary>
+    internal const double VelocityBeforeMoonRk = 2.5e-12;
+
+    /// <summary>The same about the Moon, Velocity-Verlet. PROVISIONAL, Linux worst 9.71e-12 m/s (at the output step; 2.27e-13
+    /// m/s at 1 s).</summary>
+    internal const double VelocityBeforeMoonVv = 2.0e-11;
+
+    /// <summary>The velocity of <c>spkezr</c> on the SPK 1 µs before an impulse against the solution, about the Earth.
+    /// PROVISIONAL, Linux worst 7.95e-7 m/s (Perigee, Velocity-Verlet at 60 s).</summary>
     internal const double VelocityBeforeSpk = 1.6e-6;
+
+    /// <summary>The same in SSB mode. PROVISIONAL, Linux worst 5.99e-7 m/s (Apogee, RK7(8)).</summary>
+    internal const double VelocityBeforeSpkSsb = 1.2e-6;
+
+    /// <summary>The same about the Moon. PROVISIONAL, Linux worst 6.73e-8 m/s (Apogee, RK7(8) and Velocity-Verlet).</summary>
+    internal const double VelocityBeforeSpkMoon = 1.4e-7;
 
     /// <summary>The velocity of <c>spkezr</c> at an impulse against the state after it, the later segment. PROVISIONAL, Linux
     /// worst 2.92e-12 m/s (Apogee, Velocity-Verlet at 10 s, SSB mode).</summary>
     internal const double VelocityAtSpk = 5.9e-12;
 
     /// <summary>The velocity of the state after an impulse less that of the state before against the delta-V of the maneuver
-    /// rotated to ICRF by <c>pxform</c>: the rounding of the sum and of the rotation. PROVISIONAL, Linux worst 2.38e-12 m/s
+    /// (the library's <c>ImpulseManeuver.DeltaV</c>: a consistency check of the arcs with the maneuver, not an independent
+    /// reference) rotated to ICRF by <c>pxform</c>: the rounding of the sum and of the rotation. PROVISIONAL, Linux worst 2.38e-12 m/s
     /// (Apogee, Velocity-Verlet at 1 s, FK4).</summary>
     internal const double JumpAgainstDeltaV = 4.8e-12;
 
@@ -191,6 +217,13 @@ public class PropagatedArcsTests
             cases.Add($"Apogee|{integrator}|10|Propagate|ECLIPJ2000|2026");
         }
 
+        // An output near the impulse (review of PR 1 of #554, ARC-1): a timed impulse of 20 m/s 2.2 µs, 3 µs, 1 ms, 0.1 s
+        // and 1 s before or after the output at S + 1 980 s, RK7(8), 10 and 60 s outputs; closer than a tenth of the step the
+        // output is dropped
+        foreach (var step in new[] { 10, 60 })
+        foreach (var offset in new[] { "-0.0000022", "+0.0000022", "-0.000003", "+0.000003", "-0.001", "+0.001", "-0.1", "+0.1", "-1", "+1" })
+            cases.Add($"Timed{offset}|RK78|{step}|Propagate|ICRF|Earth");
+
         return cases.ToArray();
     }
 
@@ -232,6 +265,23 @@ public class PropagatedArcsTests
         Assert.Equal(0.0, m.BoundaryPositions);
         // The Velocity-Verlet path of the scenario stores the states of its twin, to the bit
         Assert.Equal(0.0, m.TwinStates);
+        // No stored output closer to an impulse than a tenth of the output step (review of PR 1 of #554, ARC-1); the output
+        // near a timed impulse is stored beyond it
+        var stored = run.Spacecraft.PropagatedStates;
+        foreach (var tc in run.ImpulseEpochs)
+        {
+            Assert.DoesNotContain(stored, x => x.Epoch != tc && System.Math.Abs((x.Epoch - tc).TotalSeconds) < PropagatedEphemeris.DropFraction * run.Step.TotalSeconds
+                                               && run.Solution.StateVectors.Any(o => o.Epoch == x.Epoch));
+        }
+
+        if (run.Maneuver.StartsWith("Timed"))
+        {
+            var output = run.Window.StartDate.AddSeconds(1980.0);
+            double distance = System.Math.Abs((output - run.ImpulseEpochs[0]).TotalSeconds);
+            // At a tenth of the step (1 s at 10 s outputs) the root of RK7(8) falls on either side of the threshold
+            if (System.Math.Abs(distance - PropagatedEphemeris.DropFraction * run.Step.TotalSeconds) > 1e-6)
+                Assert.Equal(distance >= PropagatedEphemeris.DropFraction * run.Step.TotalSeconds, stored.Any(x => x.Epoch == output));
+        }
 
         bool chain = run.Maneuver == "Chain4";
         bool moon = run.ReadCenter.NaifId == 301;
@@ -262,8 +312,9 @@ public class PropagatedArcsTests
 
         double spkLimit = run.Ssb ? SpkAgainstManagedSsb : moon ? SpkAgainstManagedMoon : chain ? SpkAgainstManagedChain : SpkAgainstManaged;
         Assert.True(m.SpkAgainstManaged <= spkLimit, $"SPK - managed {m.SpkAgainstManaged:E3} m");
-        Assert.True(m.VelocityBeforeManaged <= (rk && !run.Ssb ? VelocityBeforeRk : VelocityBefore), $"v before {m.VelocityBeforeManaged:E3} m/s");
-        Assert.True(m.VelocityBeforeSpk <= VelocityBeforeSpk, $"SPK v before {m.VelocityBeforeSpk:E3} m/s");
+        double velocityBefore = run.Ssb ? rk ? VelocityBeforeSsbRk : VelocityBeforeSsbVv : moon ? rk ? VelocityBeforeMoonRk : VelocityBeforeMoonVv : rk ? VelocityBeforeRk : VelocityBefore;
+        Assert.True(m.VelocityBeforeManaged <= velocityBefore, $"v before {m.VelocityBeforeManaged:E3} m/s");
+        Assert.True(m.VelocityBeforeSpk <= (run.Ssb ? VelocityBeforeSpkSsb : moon ? VelocityBeforeSpkMoon : VelocityBeforeSpk), $"SPK v before {m.VelocityBeforeSpk:E3} m/s");
         Assert.True(m.VelocityAtSpk <= VelocityAtSpk, $"SPK v at the impulse {m.VelocityAtSpk:E3} m/s");
         Assert.True(m.JumpAgainstDeltaV <= JumpAgainstDeltaV, $"jump - dV {m.JumpAgainstDeltaV:E3} m/s");
     }
@@ -693,6 +744,8 @@ public class PropagatedArcsTests
                         new PhasingManeuver(Min, TimeSpan.Zero, target, 1, engine), new ApogeeHeightManeuver(center, Min, TimeSpan.Zero, 15866666.666666666, engine)
                     ];
                 }
+                case not null when maneuver.StartsWith("Timed"):
+                    return [new TimedImpulse(center, start, engine, start.AddSeconds(1980.0 + double.Parse(maneuver[5..], System.Globalization.CultureInfo.InvariantCulture)), 20.0)];
                 default:
                     throw new ArgumentException(maneuver);
             }
@@ -748,4 +801,23 @@ public class PropagatedArcsTests
             }
         }
     }
+}
+
+/// <summary>An impulse at a set epoch: the event t - target, from positive to negative, the delta-V along the velocity.</summary>
+internal sealed class TimedImpulse : ImpulseManeuver
+{
+    private readonly Time _target;
+    private readonly double _deltaV;
+
+    internal TimedImpulse(CelestialItem center, Time minimumEpoch, Engine engine, Time target, double deltaV) : base(center, minimumEpoch, TimeSpan.Zero, engine)
+    {
+        _target = target;
+        _deltaV = deltaV;
+    }
+
+    public override double ComputeEventValue(StateVector localState) => (_target - localState.Epoch).TotalSeconds;
+
+    public override IO.Astrodynamics.Propagator.Events.CrossingDirection EventCrossingDirection => IO.Astrodynamics.Propagator.Events.CrossingDirection.PositiveToNegative;
+
+    protected override Vector3 Execute(StateVector vector) => vector.Velocity.Normalize() * _deltaV;
 }

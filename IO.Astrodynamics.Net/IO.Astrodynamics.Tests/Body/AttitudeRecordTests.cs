@@ -122,8 +122,14 @@ public class AttitudeRecordTests
     /// alike).</summary>
     internal const double PositionAgainstSpk = 1.5e-3;
 
-    /// <summary>The same in SSB mode, m. Worst 2.26e-2 m (Nadir and InstrumentTriad, VV, ECLIPJ2000).</summary>
-    internal const double PositionAgainstSpkSsb = 4.6e-2;
+    /// <summary>The same in SSB mode, m: since 11.0.0 the SPK is of type 9 there too (#540; the native writer's type 8
+    /// assumed equal steps, 2.26e-2 m before). PROVISIONAL: twice the Linux worst, 1.80e-3 m (Nadir, RK7(8), GALACTIC; Linux
+    /// x64, 2026-11-03), to be measured on Linux, Windows and macOS arm64.</summary>
+    internal const double PositionAgainstSpkSsb = 3.6e-3;
+
+    /// <summary>The same in SSB mode for the cases with an impulse, m. PROVISIONAL: twice the Linux worst, 2.54e-3 m
+    /// (ImpulseTriad, RK7(8), GALACTIC; Linux x64, 2026-11-03).</summary>
+    internal const double PositionAgainstSpkSsbAcrossImpulses = 5.1e-3;
 
     /// <summary>The same for the cases with an impulse, whose stored states are split into arcs at the impulse (#540, choice 18
     /// of #554): near the ends of an arc both interpolations are one-sided, and the SPK's epochs, doubles of 1.2e-7 s
@@ -160,15 +166,19 @@ public class AttitudeRecordTests
     /// <summary>The state of the spacecraft relative to the Earth in its own frame (<c>GetEphemeris</c>) against <c>spkezr</c>
     /// in the spacecraft frame on the written kernels, m and m/s: the floor of the CK times the distance, and the SPK's
     /// interpolation. Worst 3.93e-3 m and 1.00e-5 m/s (Prograde, RK7(8), B1950; 1.003777e-5 m/s on Linux at six digits,
-    /// twice 2.0076e-5 m/s); 8.84e-3 m and 2.12e-5 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000, 2026); 2.26e-2 m
-    /// (InstrumentTriad, VV, ECLIPJ2000) and 1.44e-3 m/s (InstrumentTriad, RK7(8), ICRF) in SSB mode.</summary>
+    /// twice 2.0076e-5 m/s); 8.84e-3 m and 2.12e-5 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000, 2026). In SSB mode,
+    /// where the SPK is of type 9 since 11.0.0 (#540; 2.26e-2 m and 1.44e-3 m/s with the native writer's type 8), PROVISIONAL,
+    /// twice the Linux worst (Linux x64, 2026-11-03): 2.34e-3 m (Nadir, RK7(8), GALACTIC) and 5.85e-6 m/s (InstrumentTriad,
+    /// RK7(8), GALACTIC); with an impulse 2.54e-3 m and 1.68e-6 m/s (ImpulseTriad, RK7(8), GALACTIC and ICRF).</summary>
     internal const double FramePosition = 7.9e-3;
 
     internal const double FrameVelocity = 2.1e-5;
     internal const double FramePositionAfter2025 = 1.8e-2;
     internal const double FrameVelocityAfter2025 = 4.3e-5;
-    internal const double FramePositionSsb = 4.6e-2;
-    internal const double FrameVelocitySsb = 2.9e-3;
+    internal const double FramePositionSsb = 4.7e-3;
+    internal const double FrameVelocitySsb = 1.2e-5;
+    internal const double FramePositionSsbAcrossImpulses = 5.1e-3;
+    internal const double FrameVelocitySsbAcrossImpulses = 3.4e-6;
 
     /// <summary>The same relative to the Sun, 1.5e11 m away: the floor of the CK's rotation times the distance. Worst 88.2 m
     /// and 0.249 m/s (Prograde, RK7(8), B1950); 185 m and 0.527 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000,
@@ -318,14 +328,16 @@ public class AttitudeRecordTests
         Assert.True(m.LawBetweenEntries <= LawBetweenEntries, $"law between the entries {m.LawBetweenEntries:E3} rad");
         Assert.True(m.DiscreteLaw <= (ssb ? DiscreteLawSsb : DiscreteLaw), $"discrete law {m.DiscreteLaw:E3} rad");
         Assert.True(m.Instruments <= (after2025 ? ManagedAgainstCkAfter2025 : InstrumentAgainstFrameKernel), $"instruments {m.Instruments:E3} rad");
-        Assert.True(m.PositionsAgainstSpk <= (ssb ? PositionAgainstSpkSsb : run.Law.Contains("Impulse") ? PositionAgainstSpkAcrossImpulses : PositionAgainstSpk), $"positions - SPK {m.PositionsAgainstSpk:E3} m");
+        bool impulse = run.Law.Contains("Impulse");
+        Assert.True(m.PositionsAgainstSpk <= (ssb ? impulse ? PositionAgainstSpkSsbAcrossImpulses : PositionAgainstSpkSsb : impulse ? PositionAgainstSpkAcrossImpulses : PositionAgainstSpk),
+            $"positions - SPK {m.PositionsAgainstSpk:E3} m");
         Assert.True(m.PositionsAgainstSolution <= (ssb ? PositionAgainstSolutionSsb : PositionAgainstSolution), $"positions - solution {m.PositionsAgainstSolution:E3} m");
         // At the outputs the stored states are the solution's rotated by pxform(F, J2000), the rotation of the same doubles
         // as the reference's: measured 0 in every case
         Assert.Equal(0.0, m.StatesAtOutputs);
         Assert.Equal(0.0, m.VelocitiesAtOutputs);
-        Assert.True(m.FramePositions[0] <= (ssb ? FramePositionSsb : after2025 ? FramePositionAfter2025 : FramePosition), $"positions from the Earth in the spacecraft frame {m.FramePositions[0]:E3} m");
-        Assert.True(m.FrameVelocities[0] <= (ssb ? FrameVelocitySsb : after2025 ? FrameVelocityAfter2025 : FrameVelocity), $"velocities from the Earth in the spacecraft frame {m.FrameVelocities[0]:E3} m/s");
+        Assert.True(m.FramePositions[0] <= (ssb ? impulse ? FramePositionSsbAcrossImpulses : FramePositionSsb : after2025 ? FramePositionAfter2025 : FramePosition), $"positions from the Earth in the spacecraft frame {m.FramePositions[0]:E3} m");
+        Assert.True(m.FrameVelocities[0] <= (ssb ? impulse ? FrameVelocitySsbAcrossImpulses : FrameVelocitySsb : after2025 ? FrameVelocityAfter2025 : FrameVelocity), $"velocities from the Earth in the spacecraft frame {m.FrameVelocities[0]:E3} m/s");
         Assert.True(m.FramePositions[1] <= (after2025 ? FramePositionSunAfter2025 : FramePositionSun), $"positions from the Sun in the spacecraft frame {m.FramePositions[1]:E3} m");
         Assert.True(m.FrameVelocities[1] <= (after2025 ? FrameVelocitySunAfter2025 : FrameVelocitySun), $"velocities from the Sun in the spacecraft frame {m.FrameVelocities[1]:E3} m/s");
         // The Velocity-Verlet path of the scenario keeps no solution: its reference is the solution of a twin propagated by

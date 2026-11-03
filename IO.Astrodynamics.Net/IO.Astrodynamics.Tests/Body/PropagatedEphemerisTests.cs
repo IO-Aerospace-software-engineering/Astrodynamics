@@ -78,7 +78,7 @@ public class PropagatedEphemerisTests
     }
 
     [Fact]
-    public void Impulses_SplitTheArcs_DropTheOutputsWithin2Microseconds()
+    public void Impulses_SplitTheArcs_DropTheOutputsAtTheImpulse()
     {
         // Outputs every 10 s; impulses at 50 s (an output there and one 1e-7 s after), at 120.0000015 s (an output 1.5 µs
         // before it) and at 200 s, the end (an arc of zero length)
@@ -182,6 +182,199 @@ public class PropagatedEphemerisTests
         Assert.Contains(arcs[1], x => x.Epoch == T0.AddSeconds(155.0));
         Assert.Equal(250.0, (arcs[1][^1].Epoch - T0).TotalSeconds);
         Assert.Same(impulses[0].Before, arcs[0][^1]);
+    }
+
+    /// <summary>
+    /// An output closer to an impulse than a tenth of the output step is dropped, on either side, and kept beyond (review of
+    /// PR 1 of #554, ARC-1: beside the impulse's state it made the interpolation ill-conditioned, 301 m in the SPK 3 µs from
+    /// the impulse); the first and the last output, the ends of the window, are kept in their own arc with the impulse's
+    /// state, unfilled when shorter than 15 µs (ARC-2: they were dropped with the arc, the window no longer covered).
+    /// </summary>
+    [Fact]
+    public void OutputsNearAnImpulse_DroppedWithinATenthOfTheStep_TheEndsOfTheWindowKept()
+    {
+        var outputs = Enumerable.Range(0, 21).Select(i => State(10.0 * i)).ToArray();
+        var filled = new List<Time>();
+        StateVector Fill(Time t)
+        {
+            filled.Add(t);
+            return State((t - T0).TotalSeconds);
+        }
+
+        // 0.9 s after the output at 50 s (dropped, 0.09 step) and 1.1 s before the one at 100 s (kept, 0.11 step); 1.1 s after
+        // the output at 150 s (kept) and 0.9 s before the one at 160 s (dropped)
+        var ephemeris = new PropagatedEphemeris();
+        var impulses = new[] { Impulse(50.9, 0.0, 1.0), Impulse(98.9, 1.0, 2.0), Impulse(151.1, 2.0, 3.0), Impulse(159.1, 3.0, 4.0) };
+        ephemeris.Set(outputs, impulses, Fill);
+        var arcs = ephemeris.Arcs;
+        Assert.Equal(5, arcs.Count);
+        Assert.Equal(new[] { 0.0, 10.0, 20.0, 30.0, 40.0, 50.9 }, arcs[0].Select(x => System.Math.Round((x.Epoch - T0).TotalSeconds, 6)));
+        Assert.Equal(new[] { 50.9, 60.0, 70.0, 80.0, 90.0, 98.9 }, arcs[1].Select(x => System.Math.Round((x.Epoch - T0).TotalSeconds, 6)));
+        Assert.Equal(new[] { 98.9, 100.0, 110.0, 120.0, 130.0, 140.0, 150.0, 151.1 }, arcs[2].Select(x => System.Math.Round((x.Epoch - T0).TotalSeconds, 6)));
+        // Between 151.1 and 159.1 s: no output left, filled
+        Assert.Equal(PropagatedEphemeris.FilledArcStates, arcs[3].Length);
+        Assert.Equal(new[] { 159.1, 170.0, 180.0, 190.0, 200.0 }, arcs[4].Select(x => System.Math.Round((x.Epoch - T0).TotalSeconds, 6)));
+        Assert.Equal(PropagatedEphemeris.FilledArcStates - 2, filled.Count);
+
+        // Impulses 1 µs after the start and 1 µs before the end: the first and the last output keep an arc of two states
+        filled.Clear();
+        var ends = new[] { Impulse(1e-6, 0.0, 1.0), Impulse(200.0 - 1e-6, 1.0, 2.0) };
+        ephemeris.Set(outputs, ends, Fill);
+        arcs = ephemeris.Arcs;
+        Assert.Equal(3, arcs.Count);
+        Assert.Equal(new[] { outputs[0], ends[0].Before }, arcs[0]);
+        Assert.Equal(new[] { ends[1].After, outputs[^1] }, arcs[2]);
+        Assert.Equal(new Window(T0, T0.AddSeconds(200.0)), ephemeris.Span);
+        Assert.Empty(filled);
+        Assert.Same(outputs[0], ephemeris.Interpolate(T0));
+        Assert.Same(outputs[^1], ephemeris.Interpolate(T0.AddSeconds(200.0)));
+
+        // An impulse that the solution does not carry (no state after it): it closes the last arc, the outputs from its epoch
+        // on are not stored
+        var uncarried = new ImpulseBoundary(T0.AddSeconds(195.0), State(195.0), null);
+        ephemeris.Set(outputs, new[] { uncarried }, Fill);
+        Assert.Single(ephemeris.Arcs);
+        Assert.Same(uncarried.Before, ephemeris.Arcs[0][^1]);
+        Assert.Equal(new Window(T0, T0.AddSeconds(195.0)), ephemeris.Span);
+
+        // 20 µs from the end: filled, the states 1.3 µs apart
+        ephemeris.Set(outputs, new[] { Impulse(200.0 - 2e-5, 0.0, 1.0) }, Fill);
+        Assert.Equal(PropagatedEphemeris.FilledArcStates, ephemeris.Arcs[1].Length);
+    }
+
+    /// <summary>
+    /// Two impulses 2.1 µs apart in 2026, where the TDB seconds of the SPK are doubles of 1.19e-7 s: the arc between them keeps
+    /// its two states, unfilled (16 states 1.4e-7 s apart collided as doubles and the writer threw, review of PR 1 of #554,
+    /// spk-F2), and the SPK is written; an arc whose two states are one double (1 tick apart) is left out of the file, which
+    /// is then the file without it, byte for byte.
+    /// </summary>
+    [Fact]
+    public void ShortArcs_DistinctEpochsOfTheSpk()
+    {
+        var t2026 = new Time(2026, 6, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        StateVector At(double t, double vy = 0.0) => new(State(t, vy).Position, State(t, vy).Velocity, Earth, t2026.AddSeconds(t), Frame.ICRF);
+        var outputs = Enumerable.Range(0, 11).Select(i => At(10.0 * i)).ToArray();
+        var impulses = new[] { new ImpulseBoundary(t2026.AddSeconds(50.0), At(50.0), At(50.0, 1.0)), new ImpulseBoundary(t2026.AddSeconds(50.0000021), At(50.0000021, 1.0), At(50.0000021, 2.0)) };
+        var ephemeris = new PropagatedEphemeris();
+        ephemeris.Set(outputs, impulses, t => At((t - t2026).TotalSeconds));
+        Assert.Equal(3, ephemeris.Arcs.Count);
+        Assert.Equal(2, ephemeris.Arcs[1].Length);
+        var file = new FileInfo(Path.Combine("Data/User/PropagatedArcs540", "short2026.bsp"));
+        SpiceAPI.Instance.WriteEphemerisArcs(file, -5403, ephemeris.Arcs);
+        Assert.True(file.Exists);
+        file.Delete();
+
+        // Two epochs one tick apart that are one TDB double
+        double Seconds(Time t) => t.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+        var t0 = t2026.AddSeconds(100.0);
+        while (Seconds(t0) != Seconds(t0.AddSeconds(1e-7))) t0 = t0.AddSeconds(1e-7);
+        var a0 = new[] { new StateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), Earth, t0.AddSeconds(-20.0), Frame.ICRF),
+            new StateVector(new Vector3(7.0e6, 1.5e5, 0.0), new Vector3(0.0, 7.5e3, 0.0), Earth, t0, Frame.ICRF) };
+        var a1 = new[] { new StateVector(new Vector3(7.0e6, 1.5e5, 0.0), new Vector3(0.0, 7.6e3, 0.0), Earth, t0, Frame.ICRF),
+            new StateVector(new Vector3(7.0e6, 1.5e5 + 7.6e-4, 0.0), new Vector3(0.0, 7.6e3, 0.0), Earth, t0.AddSeconds(1e-7), Frame.ICRF) };
+        Assert.Equal(IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-5403, 1, new[] { a0 }), IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-5403, 1, new[] { a0, a1 }));
+        Assert.Throws<ArgumentException>(() => IO.Astrodynamics.Kernels.SpkWriter.BuildType9(-5403, 1, new[] { a1 }));
+    }
+
+    /// <summary>
+    /// A write the writer refuses (no state, an arc of one state, epochs not increasing) leaves an existing SPK as it was: the
+    /// file is built and checked before the existing one is unloaded and deleted (review of PR 1 of #554, spk-F3; before
+    /// 11.0.0 the native writer refused these before its delete).
+    /// </summary>
+    [Fact]
+    public void RefusedWrite_KeepsTheExistingFile()
+    {
+        var directory = Path.Combine("Data/User/PropagatedArcs540", "kept");
+        Directory.CreateDirectory(directory);
+        var file = new FileInfo(Path.Combine(directory, "kept.bsp"));
+        var good = new[] { State(0.0), State(10.0), State(20.0) };
+        SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, new[] { good });
+        var bytes = File.ReadAllBytes(file.FullName);
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, Array.Empty<StateVector[]>()));
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, new[] { new[] { State(0.0) } }));
+        Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.WriteEphemerisArcs(file, -5404, new[] { new[] { State(10.0), State(0.0) } }));
+        // A spacecraft with one stored state
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-5404, "PE5404", 1000.0, 3000.0, new Clock("PE5404_CLK", 65536), State(0.0));
+        spacecraft.AddPropagatedStates(State(0.0));
+        Assert.Throws<ArgumentException>(() => spacecraft.WriteEphemeris(file));
+        file.Refresh();
+        Assert.True(file.Exists);
+        Assert.Equal(bytes, File.ReadAllBytes(file.FullName));
+        Directory.Delete(directory, true);
+    }
+
+    /// <summary>
+    /// A full summary record is followed by an empty one, as the DAF Required Reading lays out ("the final summary record is
+    /// full, so new summary and name records will be added") and CSPICE writes it (review of PR 1 of #554, spk-F1: at 25
+    /// segments the managed file had none, and CSPICE's append, <c>spkopa</c> (<c>dafopw</c>) then <c>spkw09</c>, failed in <c>dafena</c>
+    /// with SPICE(BADSUBSCRIPT)). The file record's backward pointer names the last summary record, empty; on Linux, the files
+    /// of 24 segments are byte for byte those of <c>spkw09</c>, those of 25 and 50 the same summaries and data, and CSPICE
+    /// appends a segment to each.
+    /// </summary>
+    [Theory]
+    [InlineData(1, 2)]
+    [InlineData(24, 2)]
+    [InlineData(25, 4)]
+    [InlineData(26, 4)]
+    [InlineData(50, 6)]
+    public void SpkWriter_FullSummaryRecord_FollowedByAnEmptyOne(int count, int lastSummaryRecord)
+    {
+        var directory = Path.Combine("Data/User/PropagatedArcs540", $"summaries{count}");
+        if (Directory.Exists(directory)) Directory.Delete(directory, true);
+        var file = new FileInfo(Path.Combine(directory, "s.bsp"));
+        var arcs = new List<StateVector[]>();
+        double t = 0.0;
+        for (int k = 0; k < count; k++)
+        {
+            var arc = new StateVector[5];
+            for (int i = 0; i < arc.Length; i++)
+            {
+                arc[i] = State(t, k);
+                if (i < arc.Length - 1) t += 10.0;
+            }
+
+            arcs.Add(arc);
+        }
+
+        SpiceAPI.Instance.WriteEphemerisArcs(file, -5405, arcs);
+        var bytes = File.ReadAllBytes(file.FullName);
+        int forward = BitConverter.ToInt32(bytes, 76), backward = BitConverter.ToInt32(bytes, 80);
+        Assert.Equal(2, forward);
+        Assert.Equal(lastSummaryRecord, backward);
+        // The last summary record: no next, its count of summaries count mod 25
+        double next = BitConverter.ToDouble(bytes, (backward - 1) * 1024), summaries = BitConverter.ToDouble(bytes, (backward - 1) * 1024 + 16);
+        Assert.Equal(0.0, next);
+        Assert.Equal(count % 25, (int)summaries);
+        if (OperatingSystem.IsLinux())
+        {
+            var reference = arcs.Select((arc, k) => (Earth.NaifId, System.Math.Min(7, arc.Length - 1), arc.Select(x => x.Epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds).ToArray(),
+                arc.SelectMany(x => new[] { x.Position.X * 1e-3, x.Position.Y * 1e-3, x.Position.Z * 1e-3, x.Velocity.X * 1e-3, x.Velocity.Y * 1e-3, x.Velocity.Z * 1e-3 }).ToArray(),
+                $"Seg{k + 1}")).ToList();
+            var spkw09 = Path.Combine(directory, "s.spkw09.bsp");
+            CspiceDirect.WriteType9(spkw09, -5405, reference);
+            var expected = File.ReadAllBytes(spkw09);
+            int differing = Enumerable.Range(0, System.Math.Min(bytes.Length, expected.Length)).Count(i => bytes[i] != expected[i]);
+            _output.WriteLine($"MEASURE #540 writer, {count} segments: {bytes.Length} and {expected.Length} bytes (spkw09), {differing} differ");
+            if (count < 25)
+            {
+                Assert.Equal(expected, bytes);
+            }
+
+            var segments = CspiceDirect.ReadSegments(file.FullName);
+            var written = CspiceDirect.ReadSegments(spkw09);
+            Assert.Equal(count, segments.Count);
+            for (int k = 0; k < count; k++)
+            {
+                Assert.Equal((written[k].Start, written[k].End, written[k].Body, written[k].Center, written[k].Frame, written[k].Type),
+                    (segments[k].Start, segments[k].End, segments[k].Body, segments[k].Center, segments[k].Frame, segments[k].Type));
+                Assert.Equal(written[k].Data, segments[k].Data);
+            }
+
+            CspiceDirect.AppendType9(file.FullName, -5406, reference[0]);
+            Assert.Equal(count + 1, CspiceDirect.ReadSegments(file.FullName).Count);
+        }
+
+        Directory.Delete(directory, true);
     }
 
     /// <summary>The read over sorted states is the former read (the sort of every state by distance) to the bit, at random
