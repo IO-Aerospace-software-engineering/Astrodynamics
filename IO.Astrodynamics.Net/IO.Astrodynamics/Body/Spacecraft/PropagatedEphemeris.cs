@@ -13,14 +13,16 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// <summary>
 /// The stored states of a propagated spacecraft, in ICRF relative to the central body, split into arcs at each impulse
 /// (#540): no interpolation runs across the jump of the velocity. Each arc holds the state after the impulse that opens
-/// it, the output states strictly inside it and the state before the impulse that closes it, both at the impulse's epoch;
-/// an output within <see cref="SameEpochTolerance"/> of an impulse is dropped, the impulse's state kept. An arc bounded by
-/// an impulse and holding fewer than <see cref="MinimumArcStates"/> states takes <see cref="FilledArcStates"/> states of
-/// the solution, evenly spaced over it, its two ends kept. An arc of zero length (an impulse at the end of the
-/// propagation, two impulses at one event), or bounded by an impulse and not longer than <see cref="SameEpochTolerance"/>,
-/// is not stored. At an impulse's epoch the reads take the later arc: the state
-/// after the impulse, as <see cref="PropagationSolution.InterpolateAt"/>, SPICE (the later segment of an SPK) and GMAT
-/// give it.
+/// it, the output states strictly inside it and the state before the impulse that closes it, both at the impulse's epoch.
+/// An output closer to an impulse than <see cref="DropFraction"/> of its distance to the next output away from it is
+/// dropped, the impulse's state kept: two nodes that close make the interpolation ill-conditioned. The first and the last
+/// output, the ends of the window, are always kept. An arc bounded by an impulse and holding fewer than
+/// <see cref="MinimumArcStates"/> states takes <see cref="FilledArcStates"/> states of the solution, evenly spaced over it,
+/// its two ends kept, when they can be <see cref="MinimumFillSpacing"/> apart. An arc of zero length (two impulses at one
+/// event), or between two impulses and not longer than <see cref="SameEpochTolerance"/>, is not stored; an impulse that no
+/// segment of the solution carries (located at the end of the propagation) closes the last arc. At an impulse's
+/// epoch the reads take the later arc: the state after the impulse, as <see cref="PropagationSolution.InterpolateAt"/>,
+/// SPICE (the later segment of an SPK) and GMAT give it.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -35,8 +37,27 @@ namespace IO.Astrodynamics.Body.Spacecraft;
 /// </remarks>
 internal sealed class PropagatedEphemeris
 {
-    /// <summary>An output within 2 µs of an impulse is the impulse's epoch (the same-epoch rule of the attitude record).</summary>
+    /// <summary>Two impulses within 2 µs are one epoch (the same-epoch rule of the attitude record): no arc between them.</summary>
     internal const double SameEpochTolerance = 2.0e-6;
+
+    /// <summary>
+    /// An output closer to an impulse than this fraction of its distance to the next output away from the impulse (the
+    /// output step) is dropped. Kept beside the impulse's state, such a node makes the Lagrange interpolation of the arc
+    /// ill-conditioned, and the SPK more so, its epochs doubles of 1.2e-7 s resolution: an output 3 µs from the impulse put
+    /// the SPK 301 m off at 10 s outputs, 1 804 m at 60 s; one 0.1 s from it 5.7e-3 m (review of PR 1 of #554, ARC-1).
+    /// Measured on #540's LEO, RK7(8), 1, 10 and 60 s outputs, the output 1e-4 to 0.5 step from the impulse on either side:
+    /// below a tenth of the step, dropping it keeps the SPK at its floor, 4e-4 to 1.5e-3 m, where keeping it costs up to
+    /// 3.3e-3 m (1 s outputs) and 2.5e-3 m (10 and 60 s outputs) at 0.04 step; above, keeping it is as good or better, the
+    /// managed reads at 60 s outputs most (1.6e-4 against 3.8e-4 m at 0.2 step).
+    /// </summary>
+    internal const double DropFraction = 0.1;
+
+    /// <summary>
+    /// The smallest spacing of the states of a filled arc, s: a shorter arc keeps its states (its interpolation over less
+    /// than 15 µs is linear within 3e-10 m), so that the states of an arc are distinct epochs of the SPK, doubles of
+    /// 1.2e-7 s resolution in 2024, 9.5e-7 s until 2136 (review of PR 1 of #554, spk-F2: 16 states over 2.1 µs collided).
+    /// </summary>
+    internal const double MinimumFillSpacing = 1.0e-6;
 
     /// <summary>An arc bounded by an impulse with fewer stored states than this is filled from the solution.</summary>
     internal const int MinimumArcStates = 4;
@@ -125,7 +146,8 @@ internal sealed class PropagatedEphemeris
     /// Replaces every stored state by those of a propagation, split at its impulses.
     /// </summary>
     /// <param name="outputs">The output states, in ICRF, in epoch order.</param>
-    /// <param name="impulses">The impulses, their states in ICRF, in epoch order.</param>
+    /// <param name="impulses">The impulses, their states in ICRF, in epoch order; the state after the last one null when no
+    /// segment of the solution carries it (at the end of the propagation): the states end with the state before it.</param>
     /// <param name="fill">The state of the solution at an epoch inside an arc, in ICRF, with its covariance in covariance
     /// mode, for the short arcs; null for no fill.</param>
     internal void Set(IReadOnlyList<StateVector> outputs, IReadOnlyList<ImpulseBoundary> impulses, Func<Time, StateVector> fill)
@@ -134,35 +156,32 @@ internal sealed class PropagatedEphemeris
         ArgumentNullException.ThrowIfNull(impulses);
         var arcs = new List<StateVector[]>(impulses.Count + 1);
         int o = 0;
-        StateVector opening = null;
         for (int k = 0; k <= impulses.Count; k++)
         {
+            // An impulse that the solution does not carry ends it: no arc after it
+            if (k > 0 && impulses[k - 1].After == null) break;
+            bool opened = k > 0, closed = k < impulses.Count;
             var arc = new List<StateVector>();
-            if (opening != null) arc.Add(opening);
-            bool last = k == impulses.Count;
+            if (opened) arc.Add(impulses[k - 1].After);
             for (; o < outputs.Count; o++)
             {
-                var epoch = outputs[o].Epoch;
-                // The outputs within the tolerance before the closing impulse, and after the opening one, are its epoch
-                if (!last && epoch.AddSeconds(SameEpochTolerance) >= impulses[k].Epoch) break;
-                if (opening != null && epoch <= opening.Epoch.AddSeconds(SameEpochTolerance)) continue;
+                // An output at or after the closing impulse belongs to the next arc
+                if (closed && outputs[o].Epoch >= impulses[k].Epoch) break;
+                if (opened && IsTooNear(outputs, o, impulses[k - 1].Epoch, true)) continue;
+                if (closed && IsTooNear(outputs, o, impulses[k].Epoch, false)) continue;
                 arc.Add(outputs[o]);
             }
 
-            bool bounded = opening != null || !last;
-            if (!last)
-            {
-                arc.Add(impulses[k].Before);
-                opening = impulses[k].After;
-            }
-
+            if (closed) arc.Add(impulses[k].Before);
             if (arc.Count == 0) continue;
 
-            // An arc of zero length between impulses holds no motion, and one shorter than the same-epoch tolerance is one
-            // epoch: the reads and the SPK end where the solution does
-            if (bounded && (arc[^1].Epoch - arc[0].Epoch).TotalSeconds <= SameEpochTolerance) continue;
+            // An arc of zero length holds no motion (two impulses at one event), and one between impulses shorter than the
+            // same-epoch tolerance is one epoch; at the ends of the window the first and the last output keep their arc
+            bool bounded = opened || closed;
+            double span = (arc[^1].Epoch - arc[0].Epoch).TotalSeconds;
+            if (bounded && (span <= 0.0 || opened && closed && span <= SameEpochTolerance)) continue;
 
-            if (bounded && arc.Count < MinimumArcStates && fill != null)
+            if (bounded && arc.Count < MinimumArcStates && fill != null && span >= (FilledArcStates - 1) * MinimumFillSpacing)
             {
                 arc = Fill(arc[0], arc[^1], fill);
             }
@@ -174,6 +193,18 @@ internal sealed class PropagatedEphemeris
         {
             _snapshot = new Snapshot(arcs.ToArray());
         }
+    }
+
+    // An output closer to the impulse than DropFraction of its distance to the next output away from it; the first and the
+    // last output, which have none, are kept
+    private static bool IsTooNear(IReadOnlyList<StateVector> outputs, int o, in Time impulse, bool opening)
+    {
+        int neighbour = opening ? o + 1 : o - 1;
+        if (neighbour < 0 || neighbour >= outputs.Count) return false;
+        var epoch = outputs[o].Epoch;
+        double distance = System.Math.Abs((epoch - impulse).TotalSeconds);
+        double step = System.Math.Abs((outputs[neighbour].Epoch - epoch).TotalSeconds);
+        return distance < DropFraction * step;
     }
 
     // FilledArcStates states evenly spaced over an arc, its two end states kept
