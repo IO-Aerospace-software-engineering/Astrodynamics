@@ -25,8 +25,10 @@ namespace IO.Astrodynamics.Kernels;
 /// </para>
 /// <para>
 /// The layout of the file record, the FTP validation string and the segment are those of NAIF's DAF Required Reading
-/// (daf.req) and SPK Required Reading (spk.req, "Type 9"), to be verified by S. Guillet; the files are checked by CSPICE
-/// itself (<c>spkezr</c>, <c>dafus</c>, <c>dafgda</c>) against files that CSPICE's <c>spkw09</c> writes.
+/// (https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/daf.html) and SPK Required Reading, "Type 9: Lagrange
+/// Interpolation --- Unequal Time Steps" (https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/req/spk.html); the files
+/// are checked by CSPICE itself (<c>spkezr</c>, <c>dafus</c>, <c>dafgda</c>) against files that CSPICE's <c>spkw09</c>
+/// writes.
 /// </para>
 /// </remarks>
 internal static class SpkWriter
