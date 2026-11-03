@@ -113,42 +113,48 @@ across the jump:
 
 - **An arc** holds the state after the impulse that opens it, the output states strictly inside it and the state before
   the impulse that closes it, both at the impulse's epoch: the states of the integrator at the event, before and after
-  the maneuver. An output within 2 µs of an impulse (Velocity-Verlet puts one at tc or one tick after it) is not stored,
-  the impulse's state is.
+  the maneuver. An output closer to an impulse than a tenth of the output step is not stored, the impulse's state is:
+  beside it, two nodes that close make the interpolation ill-conditioned (Velocity-Verlet puts an output at tc or one
+  tick after it; an output 3 µs from an RK7(8) impulse put the SPK 301 m off at 10 s outputs). The first and the last
+  output, the ends of the window, are always stored: an impulse within 2 µs of the start or of the end keeps them in an
+  arc of two states with its own state.
 - **A short arc**, bounded by an impulse and holding fewer than 4 states (an impulse within the first two outputs, or
-  just before the end), takes 16 states of the solution evenly spaced over it, its two ends kept. Without an impulse the
-  states make one arc, never filled, as before 11.0.0.
-- **An arc of zero length** is not stored: an impulse at the end of the propagation (Velocity-Verlet can locate the
-  crossing at the end of its last step), or two impulses at one event; nor an arc between impulses within 2 µs, one
-  epoch. The reads and the SPK then end with the state
-  before the impulse, as the solution does.
+  just before the end), takes 16 states of the solution evenly spaced over it, its two ends kept, when it is 15 µs long
+  or more (the states then 1 µs apart, distinct epochs of the SPK; shorter, its interpolation is linear within 3e-10 m).
+  Without an impulse the states make one arc, never filled, as before 11.0.0.
+- **An arc of zero length** is not stored: two impulses at one event; nor an arc between impulses within 2 µs, one
+  epoch. An impulse that no segment of the solution carries (Velocity-Verlet can locate the crossing at the end of its
+  last step) closes the last arc: the reads and the SPK end with the state before it, as the solution does.
 - **A read** (`GetEphemeris`, `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the
   geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
   so that at an impulse it gives the state after it, as `PropagationSolution.InterpolateAt`, SPICE (the later segment of
   an SPK) and GMAT's ephemeris give it. It interpolates the 8 states of that arc nearest to its epoch (Lagrange), in the
   order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. The arcs
-  are immutable arrays read by a binary search: a read takes no lock and sorts nothing; it cost 1.6 to 2.0 ms at 7 000
-  to 9 000 states before, the sort of every state at each call
-  ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522)).
+  are immutable arrays read by a binary search: a read takes no lock and sorts nothing, 0.001 to 0.003 ms at 7 000 to
+  9 000 states, where the sort of every state at each call took 1.6 to 2.2 ms
+  ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522); 2 000 reads in one process,
+  Linux x64, 2026-11-03, not a benchmark).
 - **In covariance mode** every stored state carries its covariance: the state before an impulse the covariance at its
   event, the state after it the covariance after the burn, the covariance of its execution error added
   (`ImpulseManeuver.ExecutionError`), a filled state that of its epoch.
 - **`AddPropagatedStates`** puts each state in the arc that holds its epoch (the later one at an impulse), replacing a
-  stored state of that arc at the same epoch; without stored states, they make one arc. A propagation replaces every
-  stored state, those added before it included: before 11.0.0 they were merged with the propagated ones.
+  stored state of that arc at the same epoch; without stored states, they make one arc. A propagation by
+  `Spacecraft.Propagate` or `Scenario.SimulateAsync` replaces every stored state, those added before it included: before
+  11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, Linux x64, 2026-11-03, PROVISIONAL until the CI measures Windows
 and macOS arm64: #540's LEO, 233.8 m/s at perigee; perigee, plane alignment, combined maneuvers; the chain of four of
 `ScenarioTests`; Velocity-Verlet and RK7(8); 1, 10 and 60 s outputs; the paths of `Propagate` and `Scenario`; the
 initial frames; SSB mode; the Moon; within ±150 s of each impulse, every 0.25 s and at tc ± 1 µs; against the solution of
-the propagation, itself checked against `prop2b` in the two-body cases):
+the propagation, itself checked against `prop2b` in the two-body cases; and a timed impulse 2.2 µs to 1 s from an
+output, on either side):
 
 | Reader | Before 11.0.0 | 11.0.0 |
 |---|---:|---:|
-| The managed reads, RK7(8) at 1 and 10 s outputs | 23.5 to 1 420 m; 763 m on the chain of four | 6e-9 to 9.3e-9 m; 2.3e-8 m on the chain, their error far from the impulses |
-| The same at 60 s outputs (one-sided at the ends of an arc) | 2 250 m | 3.0e-4 m; 1.8e-2 m on the chain, whose arcs end 7 min apart |
-| `spkezr` on the SPK the library writes | 22.4 m to 150 km | the managed reads within 8.7e-4 m (1.9e-3 m on the chain, 1.7e-3 m in SSB mode) |
-| The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8)), 8.0e-7 m/s by `spkezr` |
+| The managed reads, RK7(8) at 1 and 10 s outputs | 23.5 to 1 420 m; 763 m on the chain of four | 6e-9 to 1.1e-8 m; 2.3e-8 m on the chain, their error far from the impulses |
+| The same at 60 s outputs (one-sided at the ends of an arc) | 2 120 m to 16.1 km | 3.3e-4 m; 1.8e-2 m on the chain, whose arcs end 7 min apart |
+| `spkezr` on the SPK the library writes | 22.4 m to 150 km | the managed reads within 1.2e-3 m (1.1e-3 m on the chain, 1.7e-3 m in SSB mode) |
+| The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8); 3.3e-8 m/s in SSB mode), 8.4e-7 m/s (Velocity-Verlet), 8.0e-7 m/s by `spkezr` |
 | Velocity-Verlet | 18.5 m to 16 km | its own error far from the impulses (0.16 m at 10 s, 33 m at 60 s outputs, the Lagrange of its outputs against its cubic Hermite); 5.9e-4 m at 1 s steps, the label of its event (up to 1e-7 s from the event) |
 
 ### The attitude record
@@ -195,9 +201,13 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   time order, of degree min(7, N − 1) for an arc of N states, the managed reader's window of 8 states; at an impulse the
   later segment, the state after it, is the one SPICE reads, and 1 µs before it the earlier one, the state before. The
   file is written by the library's managed DAF writer (`LTL-IEEE`), in SSB mode and about any central body alike;
-  CSPICE's `spkw09_c`, fed the same segments, writes the same file, byte for byte, up to 25 segments (one summary
-  record); beyond, where CSPICE appends each new summary record after the data, the same summaries and data. An existing file is unloaded and
-  replaced, and the new one is left unloaded, as before. Before 11.0.0 the native writer wrote one segment of degree
+  CSPICE's `spkw09_c`, fed the same segments, writes the same file, byte for byte, up to 24 segments (one summary
+  record); from 25 on, where CSPICE appends each new summary record after the data, the same summaries and data, a full
+  summary record followed by an empty one, so that CSPICE can append to the file (`spkopa`). An arc whose states are one
+  TDB second of the file (an impulse within the resolution of the double, 1.2e-7 s in 2024, of the start or the end of
+  the propagation) cannot be a segment and is left out: SPICE reads there the neighbouring segment. The file is built and
+  checked before an existing file is unloaded and replaced, so that a refused write leaves it as it was; the new one is
+  left unloaded, as before. Before 11.0.0 the native writer wrote one segment of degree
   15 across every impulse, of type 8 for equal steps (SSB mode, other central bodies); `Star` and `Site` keep it.
 - **`WriteOrientation`** writes the record as a type-3 CK in J2000, one interval: at each entry the C-matrix, J2000 to
   the spacecraft frame (the conjugate of the record's rotation, as `ckw03_c` takes it), with the angular velocity of the
@@ -225,15 +235,16 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
   | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (Linux, 2026-11-03, PROVISIONAL) |
-  | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.3e-2 m, 1.4e-3 m/s in SSB mode |
+  | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.3e-3 m, 5.9e-6 m/s in SSB mode, 2.5e-3 m across an impulse (Linux, 2026-11-03, PROVISIONAL; 2.3e-2 m and 1.4e-3 m/s with the type-8 segment of the native writer before 11.0.0) |
   | The managed occultation of the Sun by the Earth from GALACTIC, against its ICRF twin and `gfoclt` on the SPK | within one tick (100 ns); 4.0e-7 s |
 
   The angular velocity of the CK's model is the rate of the SLERP of each interval, its mean at the samples, linear in
   between: a property of the output step, like the interpolation residual. Two further figures are agreements, not
   accuracies: the library's angular velocity against `xf2rav` of `sxform` on the CK it wrote with that rate, 9.9e-13 rad/s
   (1.5e-12 rad/s in 2026), and its positions against `spkezr` on its SPK, two interpolations of the same stored states,
-  7.4e-4 m (2.3e-2 m in SSB mode); across an impulse, one-sided at the ends of the arcs, 1.6e-3 m (Linux, 2026-11-03,
-  PROVISIONAL; these cases were excluded before 11.0.0, #540).
+  7.4e-4 m (1.8e-3 m in SSB mode, Linux, 2026-11-03, PROVISIONAL; 2.3e-2 m with the type-8 segment of the native writer
+  before 11.0.0); across an impulse, one-sided at the ends of the arcs, 1.6e-3 m (2.5e-3 m in SSB mode; Linux,
+  2026-11-03, PROVISIONAL; these cases were excluded before 11.0.0, #540).
 
   The interpolation residual grows as the square of the output step: on the orbit of the tests (a = 6 778 km,
   e = 0.001, i = 51.6°, the TRIAD of an instrument, its worst attitude) 5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and

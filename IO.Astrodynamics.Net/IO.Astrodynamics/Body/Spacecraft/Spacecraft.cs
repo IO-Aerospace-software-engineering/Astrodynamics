@@ -765,8 +765,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <summary>
         /// Adds states to the stored states, each to the arc that holds its epoch (the later one at an impulse of the last
         /// propagation), replacing a stored state of that arc at the same epoch; without stored states they make one arc.
-        /// They are kept in ICRF, the frame of the readers (#535). A propagation replaces every stored state, those added
-        /// before it included (11.0.0, #540: they were merged with the propagated ones before).
+        /// They are kept in ICRF, the frame of the readers (#535). A propagation by <c>Propagate</c>
+        /// or <c>Scenario.SimulateAsync</c> replaces every stored state, those added before it included (11.0.0, #540: they
+        /// were merged with the propagated ones before); <see cref="TLEPropagator"/> adds its states through this method.
         /// </summary>
         /// <param name="stateVectors">The states, relative to one central body.</param>
         /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>

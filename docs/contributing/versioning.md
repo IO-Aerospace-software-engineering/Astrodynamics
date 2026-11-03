@@ -292,10 +292,12 @@ A major version, because it breaks the API: members deprecated for removal in 11
   split into arcs at each impulse, the states of the integrator before and after it at its epoch, each read within its
   arc (the later one at the impulse: the state after it, as `InterpolateAt`), and written as one type-9 segment per arc.
   Against the RK7(8) solution within ±150 s of each impulse (Linux x64, 2026-11-03, PROVISIONAL until the CI measures
-  Windows and macOS arm64): the managed reads 6e-9 to 9.3e-9 m at 1 and 10 s outputs (2.3e-8 m on a chain of four
-  impulses), their error far from the impulses, 3.0e-4 m at 60 s; `spkezr` on the SPK within 8.7e-4 m of them (1.9e-3 m
-  on the chain), the resolution of the ET doubles of its nodes; the velocity 1 µs before an impulse 1.3e-11 m/s managed
-  and 8.0e-7 m/s by `spkezr`. Velocity-Verlet keeps its own error far from the impulses (0.16 m at 10 s and 33 m at
+  Windows and macOS arm64): the managed reads 6e-9 to 1.1e-8 m at 1 and 10 s outputs (2.3e-8 m on a chain of four
+  impulses), their error far from the impulses, 3.3e-4 m at 60 s; `spkezr` on the SPK within 1.2e-3 m of them (1.1e-3 m
+  on the chain, 1.7e-3 m in SSB mode), the resolution of the ET doubles of its nodes; the velocity 1 µs before an impulse
+  1.3e-11 m/s managed in RK7(8) (3.3e-8 m/s in SSB mode), 8.4e-7 m/s with Velocity-Verlet, and 8.0e-7 m/s by `spkezr`.
+  An output closer to an impulse than a tenth of the output step is not stored, the impulse's state is (kept, an output
+  3 µs from an impulse put the SPK 301 m off); the first and the last output always are. Velocity-Verlet keeps its own error far from the impulses (0.16 m at 10 s and 33 m at
   60 s outputs). Far from the impulses, and without an impulse, the reads are those of before, bit for bit; the
   trajectory, `PropagationSolution` and the attitude are unchanged. See
   [The stored states across an impulse](../reference/spacecraft.md#the-stored-states-across-an-impulse); the changes of
@@ -303,8 +305,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
 - **A read of the stored states sorted every state** ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522)).
   `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft sorted all its stored states at each call:
   1.6 to 2.0 ms a read at 7 000 to 9 000 states. The arcs above are sorted arrays read by a binary search, without a
-  lock: 0.006 to 0.05 ms (measured on the prototype of #554 on a shared machine, not a benchmark), the result bit for bit
-  that of the sort.
+  lock: 0.001 to 0.003 ms, against 1.6 to 2.2 ms for the sort in the same process (2 000 reads at 7 000 and 9 000
+  states, Linux x64, 2026-11-03, not a benchmark), the result bit for bit that of the sort.
 - **`Instrument.Orientation` has one meaning, the Euler angles of the frame kernel.** The managed path read it as a
   rotation vector and conjugated it, the spacecraft-frame getters as the same rotation vector, and the frame kernel as
   the Euler angles 1-2-3, as its documentation says: the managed boresight 4.634° from the frame kernel's for
@@ -472,12 +474,15 @@ A major version, because it breaks the API: members deprecated for removal in 11
   the state after it, 1 µs before it the state before. The native writer wrote one segment of degree 15 across every
   impulse, of type 8 for equal steps (SSB mode, other central bodies; far from the impulses, 2.2e-2 m off in SSB mode
   where type 9 is 4.7e-4 m); a file of type 9 with several segments reads the same through SPICE and every SPK reader.
-  An arc bounded by an impulse with fewer than 4 states takes 16 states of the solution; an arc of zero length (an
-  impulse at the end of the propagation) is not written, where the file ended with the state after it. The file is
+  An arc bounded by an impulse with fewer than 4 states takes 16 states of the solution. As before, a file that ends at
+  an impulse located at the end of the propagation ends with the state before it, as the solution does. A file of 25
+  segments or more holds a full summary record followed by an empty one, as CSPICE writes it. A write the writer refuses
+  (no state, an arc of one state) leaves an existing file as it was, as the native writer did. The file is
   replaced and left unloaded, as before; `Star` and `Site` keep the native writer. SPKs written before read as before:
   regenerate those that cross an impulse.
-- **Breaking: `Spacecraft.AddPropagatedStates`.** A propagation replaces every stored state, those added before a first
-  propagation included: they were merged with the propagated ones (only a propagated spacecraft was cleared). A state
+- **Breaking: `Spacecraft.AddPropagatedStates`.** A propagation by `Spacecraft.Propagate` or `Scenario.SimulateAsync`
+  replaces every stored state, those added before a first propagation included: they were merged with the propagated
+  ones (only a propagated spacecraft was cleared). `TLEPropagator.Propagate` still adds its states, as before. A state
   goes to the arc of its epoch (the later one at an impulse), replacing a stored state of that arc at the same epoch;
   without stored states the states make one arc, read and written as before.
 - **Breaking: states and attitudes in ICRF.** A spacecraft propagated from ECLIPJ2000, B1950, FK4, ECLIPB1950 or
