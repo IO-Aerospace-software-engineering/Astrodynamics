@@ -291,12 +291,14 @@ A major version, because it breaks the API: members deprecated for removal in 11
   light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue,
   [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
 - **A state in GCRF propagates.** `PropagatorBase` rejected `Frame.GCRF` as an initial frame ("must be defined in
-  inertial frame"), although GCRF is inertial with the axes of ICRF. It is accepted, and `SpiceDataProvider` reads an
-  ephemeris requested in GCRF from SPICE in `J2000` and labels it GCRF (SPICE has no GCRF frame: the forces read
-  uninitialised states, NaN, once the frame was accepted). A propagation from a GCRF state is that of its ICRF twin,
-  bit for bit (0 m), with Velocity-Verlet, RK7(8) with and without a covariance, an impulse then a nadir attitude, in
-  SSB mode, and over the day of EGM2008 10×10, drag, SRP, the Moon and the Sun (Linux x64)
-  ([#543](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/543)).
+  inertial frame"), although GCRF is inertial with the axes of ICRF. It is accepted, and `SpiceAPI` hands a frame named
+  GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000` in `ReadEphemeris`, `ReadOrientation`,
+  `TransformFrame` and `FindWindowsOnCoordinateConstraint`, and labels the result with the frame given (SPICE has no
+  GCRF frame: the forces read uninitialised states, NaN, once the frame was accepted, and these methods and the CLI's
+  `ephemeris` and `frame` commands in GCRF returned uninitialised or zero states). A propagation from a GCRF state is
+  that of its ICRF twin, bit for bit (0 m), with Velocity-Verlet, RK7(8) with and without a covariance, an impulse then
+  a nadir attitude, in SSB mode, and over the day of EGM2008 10×10, drag, SRP, the Moon and the Sun (Linux x64); the
+  reads in GCRF equal those in J2000, bit for bit ([#543](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/543)).
 - **`Spacecraft.ToOpm` exports the covariance of the initial state.** `StateVector.ToStateVector(epoch)` went through
   `AtEpoch`, which builds Keplerian elements without the covariance, even at the state's own epoch: the OPM never carried
   it. A `StateVector` read at the instant of its own epoch is now the state itself, with its covariance, and the OPM

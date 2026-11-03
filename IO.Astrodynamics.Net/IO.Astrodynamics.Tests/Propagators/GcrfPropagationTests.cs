@@ -76,15 +76,19 @@ public class GcrfPropagationTests
     [InlineData(Aberration.CNS)]
     public void SpiceEphemeris_InGcrf_IsTheIcrfState(Aberration aberration)
     {
-        // The SPICE path of an ephemeris read: the Moon and the Sun from the Earth, labelled GCRF
+        // The SPICE path of an ephemeris read: the Moon and the Sun from the Earth, labelled GCRF, in Frame.GCRF and in a
+        // frame built from the name (the CLI), which is not a GcrfFrame
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         foreach (var target in new CelestialItem[] { new CelestialBody(PlanetsAndMoons.MOON), new CelestialBody(Stars.Sun) })
         {
             var icrf = target.GetEphemeris(Start, earth, Frames.Frame.ICRF, aberration).ToStateVector();
-            var gcrf = target.GetEphemeris(Start, earth, Frames.Frame.GCRF, aberration).ToStateVector();
-            Assert.Equal(Frames.Frame.GCRF, gcrf.Frame);
-            AssertSameState(icrf, gcrf);
             Assert.True(icrf.Position.Magnitude() > 3.0e8);
+            foreach (var frame in new[] { Frames.Frame.GCRF, new Frames.Frame("GCRF") })
+            {
+                var gcrf = target.GetEphemeris(Start, earth, frame, aberration).ToStateVector();
+                Assert.Same(frame, gcrf.Frame);
+                AssertSameState(icrf, gcrf);
+            }
         }
     }
 

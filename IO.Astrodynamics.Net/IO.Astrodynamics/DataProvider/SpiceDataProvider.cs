@@ -23,11 +23,10 @@ public class SpiceDataProvider : IDataProvider
     {
         // Use ReadEphemerisRaw to avoid CelestialItem.Create() which can't handle
         // spacecraft/site NAIF IDs. The actual observer object is passed through directly.
-        // GCRF is not a SPICE frame: it shares the axes of ICRF (J2000), the identity rotation of GcrfFrame, so SPICE is
-        // read in J2000 and the state labelled GCRF (#543)
-        var result = SpiceAPI.Instance.ReadEphemerisRaw(date, observer, target.NaifId, frame is GcrfFrame ? Frame.ICRF : frame, aberration);
+        // A frame named GCRF is read from SPICE in J2000 and labelled with the caller's frame (SpiceAPI.SpiceFrameName, #543)
+        var result = SpiceAPI.Instance.ReadEphemerisRaw(date, observer, target.NaifId, frame, aberration);
         // ReadEphemeris always returns TDB epoch; preserve the caller's time frame.
-        return new StateVector(result.Position, result.Velocity, observer, date, frame);
+        return new StateVector(result.Position, result.Velocity, observer, date, result.Frame);
     }
 
     CelestialBody IDataProvider.GetCelestialBodyInfo(int naifId)

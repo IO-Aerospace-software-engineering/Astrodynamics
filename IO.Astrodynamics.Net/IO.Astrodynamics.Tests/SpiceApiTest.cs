@@ -338,6 +338,100 @@ public class SpiceApiTest
         }
     }
 
+    // The frames named GCRF a caller can give SPICE (#543): the instance of the library, a frame built from the name (the
+    // CLI), and the name in lower case, as SPICE compares frame names ignoring case
+    private static Frames.Frame[] GcrfFrames() => [Frames.Frame.GCRF, new Frames.Frame("GCRF"), new Frames.Frame("gcrf")];
+
+    [Theory]
+    [InlineData(Aberration.None)]
+    [InlineData(Aberration.LT)]
+    [InlineData(Aberration.CNS)]
+    public void ReadEphemeris_InGcrf_IsTheJ2000Read(Aberration aberration)
+    {
+        // GCRF has the axes of J2000 (GcrfFrame): the reference is SPICE's read of the Moon from the Earth in J2000, at an
+        // epoch and over a window; a read in GCRF is the same numbers, labelled with the frame the caller gave
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var window = new Window(epoch, epoch.AddSeconds(120.0));
+        var j2000 = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, aberration).ToStateVector();
+        var j2000Window = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, Frames.Frame.ICRF, aberration, TimeSpan.FromSeconds(60.0))
+            .Select(x => x.ToStateVector()).ToArray();
+        // The reference is a state, not the zeros of a read SPICE refused
+        Assert.True(j2000.Position.Magnitude() > 3.0e8);
+        Assert.Equal(3, j2000Window.Length);
+        Assert.All(j2000Window, x => Assert.True(x.Position.Magnitude() > 3.0e8));
+
+        foreach (var gcrf in GcrfFrames())
+        {
+            var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, gcrf, aberration).ToStateVector();
+            Assert.Equal(gcrf.Name, read.Frame.Name);
+            Assert.Equal(j2000.Epoch, read.Epoch);
+            Assert.Equal(j2000.Position, read.Position);
+            Assert.Equal(j2000.Velocity, read.Velocity);
+
+            var readWindow = SpiceAPI.Instance.ReadEphemeris(window, 399, 301, gcrf, aberration, TimeSpan.FromSeconds(60.0))
+                .Select(x => x.ToStateVector()).ToArray();
+            Assert.Equal(j2000Window.Length, readWindow.Length);
+            for (int i = 0; i < j2000Window.Length; i++)
+            {
+                Assert.Equal(gcrf.Name, readWindow[i].Frame.Name);
+                Assert.Equal(j2000Window[i].Epoch, readWindow[i].Epoch);
+                Assert.Equal(j2000Window[i].Position, readWindow[i].Position);
+                Assert.Equal(j2000Window[i].Velocity, readWindow[i].Velocity);
+            }
+        }
+    }
+
+    [Fact]
+    public void TransformFrame_FromOrToGcrf_IsTheJ2000Transform()
+    {
+        // The reference is SPICE's transformation from and to J2000 (sxform); from or to GCRF it is the same, through
+        // SpiceAPI and through Frame.ToFrame of a frame built from the name, which the data provider hands to SPICE
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        foreach (var other in new[] { Frames.Frame.ECLIPTIC_J2000, new Frames.Frame("IAU_EARTH"), Frames.Frame.ICRF })
+        {
+            var fromJ2000 = SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, other);
+            var toJ2000 = SpiceAPI.Instance.TransformFrame(epoch, other, Frames.Frame.ICRF);
+            // The reference is a rotation, not the zero quaternion of a transformation SPICE refused
+            Assert.Equal(1.0, fromJ2000.Rotation.Magnitude(), 12);
+            Assert.Equal(1.0, toJ2000.Rotation.Magnitude(), 12);
+
+            foreach (var gcrf in GcrfFrames())
+            {
+                var from = SpiceAPI.Instance.TransformFrame(epoch, gcrf, other);
+                var to = SpiceAPI.Instance.TransformFrame(epoch, other, gcrf);
+                Assert.Equal(fromJ2000.Rotation, from.Rotation);
+                Assert.Equal(fromJ2000.AngularVelocity, from.AngularVelocity);
+                Assert.Equal(gcrf.Name, from.ReferenceFrame.Name);
+                Assert.Equal(toJ2000.Rotation, to.Rotation);
+                Assert.Equal(toJ2000.AngularVelocity, to.AngularVelocity);
+            }
+
+            var byName = new Frames.Frame("GCRF").ToFrame(other, epoch);
+            var icrf = new Frames.Frame("J2000").ToFrame(other, epoch);
+            Assert.Equal(icrf.Rotation, byName.Rotation);
+            Assert.Equal(icrf.AngularVelocity, byName.AngularVelocity);
+        }
+    }
+
+    [Fact]
+    public void FindWindowsOnCoordinateConstraint_InGcrf_IsTheJ2000Search()
+    {
+        // The windows where the Moon is north of the equator of J2000 seen from the Earth, over 40 days (gfposc): in GCRF the
+        // same windows
+        var searchWindow = new Window(TimeSystem.Time.CreateTDB(730036800.0), TimeSystem.Time.CreateTDB(730036800.0 + 40.0 * 86400.0));
+        Window[] Search(Frames.Frame frame) => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(searchWindow, 399, 301, frame,
+            CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray();
+
+        var j2000 = Search(Frames.Frame.ICRF);
+        // The Moon crosses the equator about every 13.7 days: the reference holds windows, not the empty result of a
+        // search SPICE refused
+        Assert.True(j2000.Length >= 2, string.Join("; ", j2000.Select(x => $"{x.StartDate} {x.EndDate}")));
+        foreach (var gcrf in GcrfFrames())
+        {
+            Assert.Equal(j2000, Search(gcrf));
+        }
+    }
+
     [Fact]
     public void ReadOrientationToleranceHonored()
     {
@@ -364,6 +458,42 @@ public class SpiceApiTest
                 Frames.Frame.ICRF, TimeSpan.FromSeconds(7.5)).ToArray();
 
             Assert.NotEmpty(results);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(ckFile);
+            SpiceAPI.Instance.UnloadKernels(sclkFile);
+        }
+    }
+
+    [Fact]
+    public void ReadOrientationFromExternalCKKernel_InGcrf_IsTheJ2000Read()
+    {
+        // The records of the PHSRM CK (ckgpav) read in J2000 are the reference; read in GCRF, the same records, labelled
+        // with the frame the caller gave (#543)
+        var sclkFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_201008031645.tsc"));
+        var ckFile = new FileInfo(Path.Combine(Constants.PhsrmDataPath.FullName, "phsrm_sc_test2_111108_130214_v00.bc"));
+        SpiceAPI.Instance.LoadKernels(sclkFile);
+        SpiceAPI.Instance.LoadKernels(ckFile);
+        try
+        {
+            var start = TimeSystem.Time.CreateTDB(374100000.0);
+            var window = new Window(start, start.AddSeconds(300.0));
+            var j2000 = SpiceAPI.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), Frames.Frame.ICRF, TimeSpan.FromSeconds(60.0)).ToArray();
+            Assert.NotEmpty(j2000);
+            Assert.All(j2000, x => Assert.Equal(1.0, x.Rotation.Magnitude(), 12));
+            foreach (var gcrf in GcrfFrames())
+            {
+                var read = SpiceAPI.Instance.ReadOrientation(window, -555, TimeSpan.FromSeconds(60.0), gcrf, TimeSpan.FromSeconds(60.0)).ToArray();
+                Assert.Equal(j2000.Length, read.Length);
+                for (int i = 0; i < j2000.Length; i++)
+                {
+                    Assert.Equal(gcrf.Name, read[i].ReferenceFrame.Name);
+                    Assert.Equal(j2000[i].Epoch, read[i].Epoch);
+                    Assert.Equal(j2000[i].Rotation, read[i].Rotation);
+                    Assert.Equal(j2000[i].AngularVelocity, read[i].AngularVelocity);
+                }
+            }
         }
         finally
         {
