@@ -82,6 +82,12 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **The native errors of the proxies that return `bool` are raised on Windows** ([#564](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/564)).
+  `LoadKernelsProxy`, `UnloadKernelsProxy`, `ReadOrientationProxy`, `ReadEphemerisProxy`, `WriteEphemerisProxy` and
+  `WriteOrientationProxy` return a one-byte C++ `bool`, which .NET read as a four-byte Win32 `BOOL`. On Windows x64 a
+  native `false` could come back `true`, so a failed read, write or kernel load returned as a success, without its
+  SPICE error: a CK read outside its coverage gave an empty sequence instead of "No orientation found". The returns
+  are now marshalled as one byte. Linux and macOS behaved as intended and are unchanged.
 - **A propagation solution is read at an epoch in any time frame.** A UTC, TAI, TT or GPS epoch read on a solution
   about any central body was taken as the TAI difference from its TDB base, another instant by the change of TDB − TT
   (0.22 m after a day and 6.4 m after 30 days in LEO), and the UTC start or end of a UTC window could compare a tick
