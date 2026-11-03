@@ -280,6 +280,36 @@ A major version, because it breaks the API: members deprecated for removal in 11
   within the 2.4e-6 s of #515 (971.8 s and 232.6 s before); the partial step before an RK7(8) event 1.2e-4 rad from the
   law (7.1e-2 rad before, where the last output sample held); reads before, during and after a propagation leave the record and the CK identical. See
   [Spacecraft](../reference/spacecraft.md#attitude-and-kernels); the changes of behaviour are under **Changed**.
+- **The states of a propagated spacecraft across an impulse** ([#540](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/540)).
+  The stored states were one set of output states, read by a Lagrange polynomial of the 8 nearest and written as one
+  SPK segment of degree 15: both interpolated through the jump of the velocity at each impulse. Near #540's 234 m/s
+  burn the managed reads were 192 m off and the SPK 208 m (Velocity-Verlet at 10 s); RK7(8) 340 m and 326 m; up to
+  16 km and 150 km on other burns (a combined maneuver within the first outputs), and the velocity 1 µs before an
+  impulse 40 to 890 m/s off, nearly the whole ΔV. Every reader was affected: `GetEphemeris`,
+  `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the geometry finders, the
+  conjunctions with an `ILocalizable` participant and the avoidance burns read from the ephemeris, the SPK and every
+  reader of it (a kernel-backed spacecraft, the Cosmographia export, `gfoclt`, `gftfov`). The stored states are now
+  split into arcs at each impulse, the states of the integrator before and after it at its epoch, each read within its
+  arc (the later one at the impulse: the state after it, as `InterpolateAt`), and written as one type-9 segment per arc.
+  Against the RK7(8) solution within ±150 s of each impulse (the worst over Linux x64, Windows and macOS arm64, CI run
+  41651463194): the managed reads 6e-9 to 1.7e-8 m at 1 and 10 s outputs (2.3e-8 m on a chain of four
+  impulses), their error far from the impulses, 3.3e-4 m at 60 s; `spkezr` on the SPK within 1.2e-3 m of them (1.1e-3 m
+  on the chain, 1.7e-3 m in SSB mode), the resolution of the ET doubles of its nodes; the velocity 1 µs before an impulse
+  1.3e-11 m/s managed in RK7(8), 8.4e-7 m/s with Velocity-Verlet, and 8.0e-7 m/s by `spkezr`; in SSB mode, where the
+  solution carries the noise of the third body near the Earth (#576), 4.9e-12 m/s managed and 6.3e-7 m/s by `spkezr`
+  against the state before the impulse moved back by the closed-form acceleration of the Sun and the Earth, the worst over
+  Linux, Windows and macOS arm64.
+  An output closer to an impulse than a tenth of the output step is not stored, the impulse's state is (kept, an output
+  3 µs from an impulse put the SPK 301 m off); the first and the last output always are. Velocity-Verlet keeps its own error far from the impulses (0.16 m at 10 s and 33 m at
+  60 s outputs). Far from the impulses, and without an impulse, the reads are those of before, bit for bit; the
+  trajectory, `PropagationSolution` and the attitude are unchanged. See
+  [The stored states across an impulse](../reference/spacecraft.md#the-stored-states-across-an-impulse); the changes of
+  behaviour are under **Changed**.
+- **A read of the stored states sorted every state** ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522)).
+  `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft sorted all its stored states at each call:
+  1.6 to 2.0 ms a read at 7 000 to 9 000 states. The arcs above are sorted arrays read by a binary search, without a
+  lock: 0.001 to 0.003 ms, against 1.6 to 2.2 ms for the sort in the same process (2 000 reads at 7 000 and 9 000
+  states, Linux x64, 2026-11-03, not a benchmark), the result bit for bit that of the sort.
 - **`Instrument.Orientation` has one meaning, the Euler angles of the frame kernel.** The managed path read it as a
   rotation vector and conjugated it, the spacecraft-frame getters as the same rotation vector, and the frame kernel as
   the Euler angles 1-2-3, as its documentation says: the managed boresight 4.634° from the frame kernel's for
@@ -441,6 +471,23 @@ A major version, because it breaks the API: members deprecated for removal in 11
   The SPK is written in J2000, no longer in the initial frame (both read the same through SPICE). `WriteOrientation` of
   a spacecraft never propagated throws `InvalidOperationException`, where it wrote what its reads had stored or threw
   `ArgumentException`. `TLEPropagator` records no attitude: its SPK can now be written, its CK still cannot.
+- **Breaking: the SPK of a propagated spacecraft is written per arc.** With the Fixed entry of #540 above,
+  `Spacecraft.WriteEphemeris` writes one segment of type 9 (Lagrange, unequal steps) per arc between impulses, in time
+  order, of degree min(7, N − 1) for an arc of N states, through a managed DAF writer: at an impulse an SPK reader gets
+  the state after it, 1 µs before it the state before. The native writer wrote one segment of degree 15 across every
+  impulse, of type 8 for equal steps (SSB mode, other central bodies; far from the impulses, 2.2e-2 m off in SSB mode
+  where type 9 is 4.7e-4 m); a file of type 9 with several segments reads the same through SPICE and every SPK reader.
+  An arc bounded by an impulse with fewer than 4 states takes 16 states of the solution. As before, a file that ends at
+  an impulse located at the end of the propagation ends with the state before it, as the solution does. A file of 25
+  segments or more holds a full summary record followed by an empty one, as CSPICE writes it. A write the writer refuses
+  (no state, an arc of one state) leaves an existing file as it was, as the native writer did. The file is
+  replaced and left unloaded, as before; `Star` and `Site` keep the native writer. SPKs written before read as before:
+  regenerate those that cross an impulse.
+- **Breaking: `Spacecraft.AddPropagatedStates`.** A propagation by `Spacecraft.Propagate` or `Scenario.SimulateAsync`
+  replaces every stored state, those added before a first propagation included: they were merged with the propagated
+  ones (only a propagated spacecraft was cleared). `TLEPropagator.Propagate` still adds its states, as before. A state
+  goes to the arc of its epoch (the later one at an impulse), replacing a stored state of that arc at the same epoch;
+  without stored states the states make one arc, read and written as before.
 - **Breaking: states and attitudes in ICRF.** A spacecraft propagated from ECLIPJ2000, B1950, FK4, ECLIPB1950 or
   GALACTIC stores its states (with their covariance) and its attitude in ICRF; `PropagationSolution` keeps the initial
   frame, bit for bit, and the states read back in that frame are a rotation round trip, no longer bit for bit those of

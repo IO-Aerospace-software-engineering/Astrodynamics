@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,7 +21,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
 {
     public class Spacecraft : CelestialItem, IOrientable<SpacecraftFrame>
     {
-        private readonly ConcurrentDictionary<Time, StateVector> _propagatedStates = new();
+        // The stored states, in arcs split at each impulse (#540)
+        private readonly PropagatedEphemeris _propagatedStates = new();
 
         public static readonly Vector3 Front = Vector3.VectorY;
         public static readonly Vector3 Back = Front.Inverse();
@@ -612,10 +612,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
 
-            // Interpolate from cache
-            var states = _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
-            var cb = (CelestialItem)states[0].Observer;
-            var interpolated = Lagrange.Interpolate(states, epoch);
+            // Interpolate the arc of the epoch (#540)
+            var cb = (CelestialItem)_propagatedStates.First.Observer;
+            var interpolated = _propagatedStates.Interpolate(epoch);
 
             if (cb.NaifId == referenceBody.NaifId)
                 return new StateVector(interpolated.Position, interpolated.Velocity,
@@ -658,15 +657,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
             // Determine reference body
             CelestialItem cb = (_propagatedStates.Count >= 2)
-                ? (CelestialItem)_propagatedStates.Values.First().Observer
+                ? (CelestialItem)_propagatedStates.First.Observer
                 : InitialOrbitalParameters?.Observer as CelestialItem ?? Barycenters.SOLAR_SYSTEM_BARYCENTER;
 
             // Short-circuit: observer IS the CB, no aberration, have cached states
             if (aberration == Aberration.None && _propagatedStates.Count >= 2
                                               && cb.NaifId == observer.NaifId && cb.NaifId != 0)
             {
-                var states = _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
-                return Lagrange.Interpolate(states, epoch).ToFrame(frame);
+                return _propagatedStates.Interpolate(epoch).ToFrame(frame);
             }
 
             // Reference-body approach
@@ -684,28 +682,49 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Write spacecraft ephemeris from propagated states.
-        /// Writes CB-relative states directly — the DTO Convert() passes Observer.NaifId
-        /// as SPK center body, so SPICE handles ephemeris chaining automatically. The states are stored in ICRF whatever
-        /// the frame of the initial state, so the SPK is in J2000 (#535).
+        /// Writes the stored states as an SPK: one segment of type 9 (Lagrange, unequal steps) per arc between impulses, of
+        /// degree min(7, N - 1) for an arc of N states, in time order, so that at an impulse the later segment, the state
+        /// after it, is the one SPICE reads (#540). The states are relative to the central body, its NAIF identifier the
+        /// center of the segments, so SPICE chains the ephemerides; they are stored in ICRF whatever the frame of the initial
+        /// state, so the SPK is in J2000 (#535). The file is written by the library's managed writer
+        /// (<see cref="Kernels.SpkWriter"/>), in SSB mode and about any central body alike: an existing file is unloaded and
+        /// replaced, and the new one is left unloaded, as the native writer did.
         /// </summary>
         /// <remarks>
         /// The SPK holds positions and velocities only: the covariance of the propagated states, when the propagation
         /// carried one (<see cref="CovariancePropagationMode.Covariance"/>), is not written. It is read from the
         /// <see cref="PropagationSolution"/> (<see cref="PropagationSolution.GetCovariance"/>) or from the output states.
+        /// Before 11.0.0 the native writer wrote one segment of degree 15 across every impulse, of type 8 for equal steps.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="outputFile"/> is null.</exception>
+        /// <exception cref="ArgumentException">No state is stored, or an arc holds a single state.</exception>
         public override void WriteEphemeris(FileInfo outputFile)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot write ephemeris for a kernel-backed spacecraft.");
-            var states = _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
-            SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, states);
+            SpiceAPI.Instance.WriteEphemerisArcs(outputFile, NaifId, _propagatedStates.Arcs);
         }
 
         /// <summary>
-        /// The stored propagated states, in epoch order: those of the last propagation, with their covariance when it
-        /// propagated the covariance. For the conjunction analysis and the tests.
+        /// Every stored state, in epoch order: those of the last propagation, with their covariance when it propagated the
+        /// covariance, both states of each impulse at its epoch (the state before first) and the states that fill a short
+        /// arc (#540), or the states added by <see cref="AddPropagatedStates"/>. For the tests.
         /// </summary>
-        internal StateVector[] PropagatedStates => _propagatedStates.Values.OrderBy(x => x.Epoch).ToArray();
+        internal StateVector[] PropagatedStates => _propagatedStates.All;
+
+        /// <summary>The stored states in arcs, split at each impulse of the last propagation (#540).</summary>
+        internal IReadOnlyList<StateVector[]> PropagatedArcs => _propagatedStates.Arcs;
+
+        /// <summary>
+        /// Replaces the stored states by the output states of a propagation, in ICRF, split at its impulses, the short arcs
+        /// filled by <paramref name="fill"/> (#540).
+        /// </summary>
+        internal void SetPropagatedStates(IReadOnlyList<StateVector> outputs, IReadOnlyList<ImpulseBoundary> impulses,
+            Func<Time, StateVector> fill)
+        {
+            if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
+            _propagatedStates.Set(outputs, impulses, fill);
+        }
 
         /// <summary>
         /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo"/> interpolates, from the first
@@ -721,8 +740,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     return null;
                 }
 
-                var epochs = _propagatedStates.Keys.ToArray();
-                return new Window(epochs.Min(), epochs.Max());
+                return _propagatedStates.Span;
             }
         }
 
@@ -744,14 +762,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         internal PropagationForceModel LastForceModel { get; set; }
 
+        /// <summary>
+        /// Adds states to the stored states, each to the arc that holds its epoch (the later one at an impulse of the last
+        /// propagation), replacing a stored state of that arc at the same epoch; without stored states they make one arc.
+        /// They are kept in ICRF, the frame of the readers (#535). A propagation by <c>Propagate</c>
+        /// or <c>Scenario.SimulateAsync</c> replaces every stored state, those added before it included (11.0.0, #540: they
+        /// were merged with the propagated ones before); <see cref="TLEPropagator"/> adds its states through this method.
+        /// </summary>
+        /// <param name="stateVectors">The states, relative to one central body.</param>
+        /// <exception cref="InvalidOperationException">The spacecraft is kernel-backed.</exception>
         public void AddPropagatedStates(params StateVector[] stateVectors)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
-            // Kept in ICRF, the frame of the readers (#535)
-            foreach (var sv in stateVectors)
-            {
-                _propagatedStates[sv.Epoch] = sv.Frame == Frames.Frame.ICRF ? sv : sv.ToFrame(Frames.Frame.ICRF).ToStateVector();
-            }
+            ArgumentNullException.ThrowIfNull(stateVectors);
+            _propagatedStates.Add(stateVectors.Select(sv => sv.Frame == Frames.Frame.ICRF ? sv : sv.ToFrame(Frames.Frame.ICRF).ToStateVector()).ToArray());
         }
 
         internal override OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)

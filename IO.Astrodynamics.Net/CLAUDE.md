@@ -538,6 +538,7 @@ PropagatorBase (abstract)
 2. Segment loop: `Integrator.IntegrateSegment()` advances with event detection
 3. On event: `IEventDetector.HandleEvent()` → execute maneuver, reinitialize integrator
 4. Output: interpolate solution at fixed `DeltaT` epochs, sample the leading (continuous) attitude on the ICRF state at each, and once more 1 µs before each discrete change that follows it; the spacecraft stores its states and attitude record in ICRF (#523, #529, #534, #535; `docs/reference/spacecraft.md#attitude-and-kernels`)
+5. Stored states: split into arcs at each impulse with the states of the integrator before and after it (`ImpulseBoundary`, `PropagatorBase.Impulses`), read per arc and written as one type-9 SPK segment per arc by the managed writer (#540, #522; `docs/reference/spacecraft.md#the-stored-states-across-an-impulse`)
 
 **Integrator Interface**
 ```csharp
