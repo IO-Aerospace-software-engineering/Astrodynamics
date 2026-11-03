@@ -711,6 +711,41 @@ public class SpiceAPI
     }
 
     /// <summary>
+    /// Writes the arcs of states of an object as an SPK of type 9, one segment per arc, through the managed writer
+    /// (<see cref="Kernels.SpkWriter"/>, #540), in J2000: the native writer, frozen, writes one segment per file. As the
+    /// native writer, it unloads and replaces an existing file, creates its directory when needed, and leaves the new file
+    /// unloaded (the native kernel unloads the file it wrote when it is destroyed, at the end of its proxy).
+    /// </summary>
+    /// <param name="filePath">The SPK; the caller's <see cref="FileInfo"/> is refreshed once the file is written.</param>
+    /// <param name="naifId">The NAIF identifier of the object.</param>
+    /// <param name="arcs">The arcs, in time order, each of at least two states in strictly increasing epoch order, in ICRF,
+    /// relative to the centre of their first state.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="filePath"/> or <paramref name="arcs"/> is null.</exception>
+    /// <exception cref="ArgumentException">No arc, an arc of fewer than two states, or epochs not strictly increasing.</exception>
+    internal void WriteEphemerisArcs(FileInfo filePath, int naifId, IReadOnlyList<OrbitalParameters.StateVector[]> arcs)
+    {
+        if (filePath == null) throw new ArgumentNullException(nameof(filePath));
+        if (arcs == null) throw new ArgumentNullException(nameof(arcs));
+        lock (lockObject)
+        {
+            // File.Exists, not FileInfo.Exists: the caller's FileInfo must not cache the state of the file before the write
+            if (File.Exists(filePath.FullName))
+            {
+                UnloadKernelsProxy(filePath.FullName);
+                File.Delete(filePath.FullName);
+            }
+
+            Kernels.SpkWriter.WriteType9(filePath, naifId, 1, arcs);
+            filePath.Refresh();
+        }
+    }
+
+    /// <summary>
+    /// The lock of every CSPICE call, for the tests that call CSPICE directly in the process.
+    /// </summary>
+    internal static object SyncRoot => lockObject;
+
+    /// <summary>
     /// Write ephemeris file using a NAIF ID directly.
     /// </summary>
     /// <param name="filePath"></param>
