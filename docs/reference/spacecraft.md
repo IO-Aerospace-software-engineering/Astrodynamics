@@ -88,7 +88,8 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
 | `GetOrientation(Frame, Time)` | The rotation from the frame to the spacecraft frame (the C-matrix of a CK), with the angular velocity of the spacecraft relative to the frame, in the frame ([Attitude and kernels](#attitude-and-kernels)) |
-| `WriteEphemeris(FileInfo)` | Write ephemeris to SPK file, in J2000; positions and velocities only, never the covariance |
+| `WriteEphemeris(FileInfo)` | Write the stored states to an SPK file, in J2000, one type-9 segment per arc between impulses ([The stored states across an impulse](#the-stored-states-across-an-impulse)); positions and velocities only, never the covariance |
+| `AddPropagatedStates(params StateVector[])` | Add states to the stored states, each to the arc of its epoch, in ICRF; a propagation replaces them |
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
 
@@ -103,6 +104,52 @@ in that frame, are therefore a rotation round trip, no longer bit for bit those 
 stored in the initial frame and read as ICRF: up to 1.18e7 m off from GALACTIC, 1.86e11 m in SSB mode
 ([#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535),
 [#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)).
+
+### The stored states across an impulse
+
+An impulse is a jump of the velocity at its epoch tc. The stored states are split into **arcs** at each impulse
+([#540](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/540)), so that no reader interpolates
+across the jump:
+
+- **An arc** holds the state after the impulse that opens it, the output states strictly inside it and the state before
+  the impulse that closes it, both at the impulse's epoch: the states of the integrator at the event, before and after
+  the maneuver. An output within 2 µs of an impulse (Velocity-Verlet puts one at tc or one tick after it) is not stored,
+  the impulse's state is.
+- **A short arc**, bounded by an impulse and holding fewer than 4 states (an impulse within the first two outputs, or
+  just before the end), takes 16 states of the solution evenly spaced over it, its two ends kept. Without an impulse the
+  states make one arc, never filled, as before 11.0.0.
+- **An arc of zero length** is not stored: an impulse at the end of the propagation (Velocity-Verlet can locate the
+  crossing at the end of its last step), or two impulses at one event; nor an arc between impulses within 2 µs, one
+  epoch. The reads and the SPK then end with the state
+  before the impulse, as the solution does.
+- **A read** (`GetEphemeris`, `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the
+  geometry finders, the conjunctions with an `ILocalizable`) takes the arc that holds its epoch, the later one at tc,
+  so that at an impulse it gives the state after it, as `PropagationSolution.InterpolateAt`, SPICE (the later segment of
+  an SPK) and GMAT's ephemeris give it. It interpolates the 8 states of that arc nearest to its epoch (Lagrange), in the
+  order and arithmetic of the read before 11.0.0: far from the impulses, a read is that of before, to the bit. The arcs
+  are immutable arrays read by a binary search: a read takes no lock and sorts nothing; it cost 1.6 to 2.0 ms at 7 000
+  to 9 000 states before, the sort of every state at each call
+  ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522)).
+- **In covariance mode** every stored state carries its covariance: the state before an impulse the covariance at its
+  event, the state after it the covariance after the burn, the covariance of its execution error added
+  (`ImpulseManeuver.ExecutionError`), a filled state that of its epoch.
+- **`AddPropagatedStates`** puts each state in the arc that holds its epoch (the later one at an impulse), replacing a
+  stored state of that arc at the same epoch; without stored states, they make one arc. A propagation replaces every
+  stored state, those added before it included: before 11.0.0 they were merged with the propagated ones.
+
+**Accuracy across an impulse** (`PropagatedArcsTests`, Linux x64, 2026-11-03, PROVISIONAL until the CI measures Windows
+and macOS arm64: #540's LEO, 233.8 m/s at perigee; perigee, plane alignment, combined maneuvers; the chain of four of
+`ScenarioTests`; Velocity-Verlet and RK7(8); 1, 10 and 60 s outputs; the paths of `Propagate` and `Scenario`; the
+initial frames; SSB mode; the Moon; within ±150 s of each impulse, every 0.25 s and at tc ± 1 µs; against the solution of
+the propagation, itself checked against `prop2b` in the two-body cases):
+
+| Reader | Before 11.0.0 | 11.0.0 |
+|---|---:|---:|
+| The managed reads, RK7(8) at 1 and 10 s outputs | 23.5 to 1 420 m; 763 m on the chain of four | 6e-9 to 9.3e-9 m; 2.3e-8 m on the chain, their error far from the impulses |
+| The same at 60 s outputs (one-sided at the ends of an arc) | 2 250 m | 3.0e-4 m; 1.8e-2 m on the chain, whose arcs end 7 min apart |
+| `spkezr` on the SPK the library writes | 22.4 m to 150 km | the managed reads within 8.7e-4 m (1.9e-3 m on the chain, 1.7e-3 m in SSB mode) |
+| The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8)), 8.0e-7 m/s by `spkezr` |
+| Velocity-Verlet | 18.5 m to 16 km | its own error far from the impulses (0.16 m at 10 s, 33 m at 60 s outputs, the Lagrange of its outputs against its cubic Hermite); 5.9e-4 m at 1 s steps, the label of its event (up to 1e-7 s from the event) |
 
 ### The attitude record
 
@@ -144,7 +191,14 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
 
 ### The kernels
 
-- **`WriteEphemeris`** writes the stored states, in J2000.
+- **`WriteEphemeris`** writes the stored states, in J2000: one segment of type 9 (Lagrange, unequal steps) per arc, in
+  time order, of degree min(7, N − 1) for an arc of N states, the managed reader's window of 8 states; at an impulse the
+  later segment, the state after it, is the one SPICE reads, and 1 µs before it the earlier one, the state before. The
+  file is written by the library's managed DAF writer (`LTL-IEEE`), in SSB mode and about any central body alike;
+  CSPICE's `spkw09_c`, fed the same segments, writes the same file, byte for byte, up to 25 segments (one summary
+  record); beyond, where CSPICE appends each new summary record after the data, the same summaries and data. An existing file is unloaded and
+  replaced, and the new one is left unloaded, as before. Before 11.0.0 the native writer wrote one segment of degree
+  15 across every impulse, of type 8 for equal steps (SSB mode, other central bodies); `Star` and `Site` keep it.
 - **`WriteOrientation`** writes the record as a type-3 CK in J2000, one interval: at each entry the C-matrix, J2000 to
   the spacecraft frame (the conjugate of the record's rotation, as `ckw03_c` takes it), with the angular velocity of the
   spacecraft relative to J2000, in J2000; before each discrete change, the earlier attitude repeated 1 µs before it (the
@@ -170,7 +224,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | A discrete attitude against its closed form | 4.8e-16 rad; 3.5e-12 rad in SSB mode |
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
-  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode |
+  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (Linux, 2026-11-03, PROVISIONAL) |
   | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.3e-2 m, 1.4e-3 m/s in SSB mode |
   | The managed occultation of the Sun by the Earth from GALACTIC, against its ICRF twin and `gfoclt` on the SPK | within one tick (100 ns); 4.0e-7 s |
 
@@ -178,7 +232,8 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   between: a property of the output step, like the interpolation residual. Two further figures are agreements, not
   accuracies: the library's angular velocity against `xf2rav` of `sxform` on the CK it wrote with that rate, 9.9e-13 rad/s
   (1.5e-12 rad/s in 2026), and its positions against `spkezr` on its SPK, two interpolations of the same stored states,
-  7.4e-4 m (2.3e-2 m in SSB mode).
+  7.4e-4 m (2.3e-2 m in SSB mode); across an impulse, one-sided at the ends of the arcs, 1.6e-3 m (Linux, 2026-11-03,
+  PROVISIONAL; these cases were excluded before 11.0.0, #540).
 
   The interpolation residual grows as the square of the output step: on the orbit of the tests (a = 6 778 km,
   e = 0.001, i = 51.6°, the TRIAD of an instrument, its worst attitude) 5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and
@@ -195,7 +250,8 @@ attitude.
 of the propagation, interpolated across the discrete changes (107.5° on the case of #534): every reader, SPICE,
 Cosmographia, `ReadOrientation` and a kernel-backed spacecraft, reads them as before. They cannot be repaired from their
 content: regenerate them by propagating again. SPKs written before are right (in the initial frame, which SPICE
-converts). A CK of the identity attitude from ICRF is unaffected.
+converts) away from the impulses; across an impulse they interpolate through the jump of the velocity, by up to 150 km
+near a 635 m/s burn (#540): regenerate them. A CK of the identity attitude from ICRF is unaffected.
 
 **Not covered.** `TLEPropagator`, which `Spacecraft.Propagate` does not use, records no attitude: its SPK is written (in
 J2000), its CK is not (`InvalidOperationException`). The attitude laws after an impulse (a TRIAD held inertially, the
