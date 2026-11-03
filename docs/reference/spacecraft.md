@@ -142,8 +142,8 @@ across the jump:
   `Spacecraft.Propagate` or `Scenario.SimulateAsync` replaces every stored state, those added before it included: before
   11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
 
-**Accuracy across an impulse** (`PropagatedArcsTests`, Linux x64, 2026-11-03, PROVISIONAL until the CI measures Windows
-and macOS arm64: #540's LEO, 233.8 m/s at perigee; perigee, plane alignment, combined maneuvers; the chain of four of
+**Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
+41651463194, 2026-11-03; the velocities in SSB mode against the anchored reference on Linux x64 only, PROVISIONAL: #540's LEO, 233.8 m/s at perigee; perigee, plane alignment, combined maneuvers; the chain of four of
 `ScenarioTests`; Velocity-Verlet and RK7(8); 1, 10 and 60 s outputs; the paths of `Propagate` and `Scenario`; the
 initial frames; SSB mode; the Moon; within ±150 s of each impulse, every 0.25 s and at tc ± 1 µs; against the solution of
 the propagation, itself checked against `prop2b` in the two-body cases; and a timed impulse 2.2 µs to 1 s from an
@@ -151,7 +151,7 @@ output, on either side):
 
 | Reader | Before 11.0.0 | 11.0.0 |
 |---|---:|---:|
-| The managed reads, RK7(8) at 1 and 10 s outputs | 23.5 to 1 420 m; 763 m on the chain of four | 6e-9 to 1.1e-8 m; 2.3e-8 m on the chain, their error far from the impulses |
+| The managed reads, RK7(8) at 1 and 10 s outputs | 23.5 to 1 420 m; 763 m on the chain of four | 6e-9 to 1.7e-8 m; 2.3e-8 m on the chain, their error far from the impulses |
 | The same at 60 s outputs (one-sided at the ends of an arc) | 2 120 m to 16.1 km | 3.3e-4 m; 1.8e-2 m on the chain, whose arcs end 7 min apart |
 | `spkezr` on the SPK the library writes | 22.4 m to 150 km | the managed reads within 1.2e-3 m (1.1e-3 m on the chain, 1.7e-3 m in SSB mode) |
 | The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8); 4.9e-12 m/s in SSB mode, against the anchored reference below), 8.4e-7 m/s (Velocity-Verlet), 8.0e-7 m/s by `spkezr` (6.3e-7 m/s in SSB mode, anchored) |
@@ -243,17 +243,17 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | A discrete attitude against its closed form | 4.8e-16 rad; 3.5e-12 rad in SSB mode |
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
-  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (Linux, 2026-11-03, PROVISIONAL; in SSB mode measured, not asserted, the noise of the third body near the Earth, #576) |
-  | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.3e-3 m, 5.9e-6 m/s in SSB mode, 2.6e-3 m across an impulse (Linux, 2026-11-03, PROVISIONAL; 2.3e-2 m and 1.4e-3 m/s with the type-8 segment of the native writer before 11.0.0) |
+  | The positions between the outputs against the solution (RK7(8), whose dense output resolves them) | 1.3e-8 m; 7.1e-4 m in SSB mode; across an impulse, 1.2e-8 m (CI run 41651463194, the worst on Linux, in the Validation category; in SSB mode measured, not asserted, the noise of the third body near the Earth, #576) |
+  | The state relative to the Earth in the spacecraft frame (`GetEphemeris`) against `spkezr` in that frame | 3.9e-3 m, 1.0e-5 m/s (2024); 8.8e-3 m, 2.1e-5 m/s (2026); 2.35e-3 m, 5.9e-6 m/s in SSB mode, 2.6e-3 m across an impulse (CI run 41651463194; across an impulse the worst on Linux, in the Validation category; 2.3e-2 m and 1.4e-3 m/s with the type-8 segment of the native writer before 11.0.0) |
   | The managed occultation of the Sun by the Earth from GALACTIC, against its ICRF twin and `gfoclt` on the SPK | within one tick (100 ns); 4.0e-7 s |
 
   The angular velocity of the CK's model is the rate of the SLERP of each interval, its mean at the samples, linear in
   between: a property of the output step, like the interpolation residual. Two further figures are agreements, not
   accuracies: the library's angular velocity against `xf2rav` of `sxform` on the CK it wrote with that rate, 9.9e-13 rad/s
   (1.5e-12 rad/s in 2026), and its positions against `spkezr` on its SPK, two interpolations of the same stored states,
-  7.4e-4 m (1.8e-3 m in SSB mode, Linux, 2026-11-03, PROVISIONAL; 2.3e-2 m with the type-8 segment of the native writer
-  before 11.0.0); across an impulse, one-sided at the ends of the arcs, 7.8e-4 m (2.6e-3 m in SSB mode; Linux,
-  2026-11-03, PROVISIONAL; these cases were excluded before 11.0.0, #540).
+  7.4e-4 m (1.8e-3 m in SSB mode on the three platforms, CI run 41651463194; 2.3e-2 m with the type-8 segment of the
+  native writer before 11.0.0); across an impulse, one-sided at the ends of the arcs, 7.8e-4 m (2.6e-3 m in SSB mode; the
+  worst on Linux, in the Validation category, CI run 41651463194; these cases were excluded before 11.0.0, #540).
 
   The interpolation residual grows as the square of the output step: on the orbit of the tests (a = 6 778 km,
   e = 0.001, i = 51.6°, the TRIAD of an instrument, its worst attitude) 5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and

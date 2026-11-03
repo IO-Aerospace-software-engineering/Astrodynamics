@@ -34,53 +34,57 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// writer against CSPICE's <c>spkw09</c> and the layout of its file by <c>dafus</c>.
 /// </summary>
 /// <remarks>
-/// Limits: PROVISIONAL, twice the worst on Linux x64 (2026-11-03), to be replaced by twice the worst over Linux, Windows and
-/// macOS arm64 from the CI's MEASURE lines.
+/// Limits: twice the worst over Linux x64, Windows and macOS arm64 (CI run 41651463194, 2026-11-03, MEASURE lines), rounded
+/// up at the second significant digit; each summary states the worsts (L / W / M, or the same on the three platforms).
+/// Every test of the class runs in every CI job; the comparisons with CSPICE's own DAF routines (<c>dafus</c>) run on Linux
+/// only.
 /// </remarks>
 public class PropagatedArcsEdgeTests
 {
     /// <summary>The covariance of the state before an impulse against <see cref="PropagationSolution.GetCovariance"/> 1 µs
-    /// before it, relative to the largest element: the propagation of P over that microsecond. PROVISIONAL, Linux worst
-    /// 1.51e-9 (Apogee, 10 s).</summary>
+    /// before it, relative to the largest element: the propagation of P over that microsecond. Worst 1.51e-9, the same on
+    /// the three platforms (Apogee, 10 s; CI run 41651463194).</summary>
     internal const double CovarianceBefore = 3.1e-9;
 
     /// <summary>The covariance after an impulse less the covariance before it, velocity block, against the covariance of the
     /// execution error written in the test from the four terms of Gates on the velocity jump of the stored states, relative
     /// to the largest element of the latter: the rounding of the jump, a difference of two velocities of 7.8 km/s, in the
-    /// σ_s² v vᵀ and σ_p² v vᵀ terms. PROVISIONAL, Linux worst 6.13e-15 (Apogee from ECLIPJ2000, 2.31e-14 against 3.77 m²/s²;
-    /// 2026-11-03).</summary>
+    /// σ_s² v vᵀ and σ_p² v vᵀ terms. Worst 6.13e-15, the same on the three platforms (Apogee from ECLIPJ2000, 2.31e-14 against
+    /// 3.77 m²/s²; CI run 41651463194).</summary>
     internal const double ExecutionErrorJump = 1.3e-14;
 
     /// <summary>The covariance of a stored state after an impulse, or of a filled one, against the solution's rotated to ICRF
     /// by <c>pxform</c> in the test, relative to the largest element, from ECLIPJ2000: the rounding of the two rotations.
-    /// PROVISIONAL, twice the Linux worst, 4.28e-16 (Apogee, 10 s; 2026-11-03).</summary>
+    /// Worst 4.28e-16, the same on the three platforms (Apogee, 10 s; CI run 41651463194).</summary>
     internal const double RotatedCovariance = 8.6e-16;
 
     /// <summary>The managed occultation and field-of-view edges near a burn against <c>gfoclt</c> and <c>gftfov</c> on the
-    /// kernels the library writes, s. PROVISIONAL, Linux worst 4.0e-7 s (the field of view and the occultation in
-    /// RK7(8)).</summary>
+    /// kernels the library writes, s. Worst 4.0e-7 s, four ticks of 100 ns, the same on the three platforms (the field of view
+    /// and the occultation in RK7(8); CI run 41651463194).</summary>
     internal const double EdgesAgainstSpice = 8.0e-7;
 
     /// <summary>The TCA of a conjunction read through the stored states against the same analysis on the RK7(8) solutions:
-    /// measured 0 on Linux, below the resolution of a <see cref="Time"/>, one tick of 100 ns, which is the limit.</summary>
+    /// measured 0 on the three platforms (CI run 41651463194), below the resolution of a <see cref="Time"/>, one tick of 100 ns, which is
+    /// the limit.</summary>
     internal const double ConjunctionTca = 1.0e-7;
 
-    /// <summary>The miss distance of the same, m. PROVISIONAL, Linux worst 6.18e-10 m.</summary>
+    /// <summary>The miss distance of the same, m. Worst 6.18e-10 / 6.18e-10 / 3.31e-10 m (CI run 41651463194).</summary>
     internal const double ConjunctionMiss = 1.3e-9;
 
     /// <summary>The read at a Velocity-Verlet output within 2 µs of an impulse, which is not stored, against that output,
-    /// m: the Lagrange of the later arc from the state after the impulse. PROVISIONAL, Linux worst 7.22e-7 m (the chain of
-    /// four, 60 s).</summary>
+    /// m: the Lagrange of the later arc from the state after the impulse. Worst 7.22e-7 m, the same on the three platforms (the
+    /// chain of four, 60 s; CI run 41651463194).</summary>
     internal const double OutputAtTheImpulse = 1.5e-6;
 
     /// <summary>The SPK at the end of a propagation that ends at, or just after, an impulse, against the solution there, m and
-    /// m/s. PROVISIONAL, Linux worst 9.31e-10 m and 1.29e-12 m/s.</summary>
+    /// m/s, and at the start and the end of a window with an impulse within 2 µs of either. Worst 9.31e-10 m, the same on the
+    /// three platforms, and 1.29e-12 / 1.29e-12 / 9.09e-13 m/s (the impulse at the end, RK7(8), 10 s; CI run 41651463194).</summary>
     internal const double SpkAtTheEnd = 1.9e-9;
 
     internal const double SpkVelocityAtTheEnd = 2.6e-12;
 
-    /// <summary>The SPK of the Cosmographia export at tc - 1 µs, tc and tc + 1 µs against the solution, m and m/s. PROVISIONAL,
-    /// Linux worst 5.88e-4 m and 6.32e-7 m/s.</summary>
+    /// <summary>The SPK of the Cosmographia export at tc - 1 µs, tc and tc + 1 µs against the solution, m and m/s. Worst
+    /// 5.88e-4 m and 6.32e-7 m/s, the same on the three platforms (CI run 41651463194).</summary>
     internal const double CosmographiaPosition = 1.2e-3;
 
     internal const double CosmographiaVelocity = 1.3e-6;

@@ -123,20 +123,23 @@ public class AttitudeRecordTests
     internal const double PositionAgainstSpk = 1.5e-3;
 
     /// <summary>The same in SSB mode, m: since 11.0.0 the SPK is of type 9 there too (#540; the native writer's type 8
-    /// assumed equal steps, 2.26e-2 m before). PROVISIONAL: twice the Linux worst, 1.80e-3 m (Nadir, RK7(8), GALACTIC; Linux
-    /// x64, 2026-11-03; also InstrumentTriad, VV, GALACTIC), to be measured on Linux, Windows and macOS arm64.</summary>
-    internal const double PositionAgainstSpkSsb = 3.6e-3;
+    /// assumed equal steps, 2.26e-2 m before). Twice the worst over Linux, Windows and macOS arm64 (CI run 41651463194, 2026-11-03), rounded
+    /// up at the second significant digit: 1.80e-3 m on the three (InstrumentTriad and Nadir, RK7(8), GALACTIC; 1.797036e-3 m on
+    /// Linux at six digits); twice the printed worst falls on 3.6e-3, the step above for the unprinted digits of Windows and
+    /// macOS arm64, whose RK7(8) step sequences in SSB mode differ from Linux's.</summary>
+    internal const double PositionAgainstSpkSsb = 3.7e-3;
 
-    /// <summary>The same in SSB mode for the cases with an impulse, m. PROVISIONAL: twice the Linux worst, 2.56e-3 m
-    /// (ImpulseTriad, RK7(8), GALACTIC; Linux x64, 2026-11-03).</summary>
+    /// <summary>The same in SSB mode for the cases with an impulse, m. Twice the worst (CI run 41651463194, 2026-11-03): 2.56e-3 m on Linux
+    /// (ImpulseTriad, RK7(8), GALACTIC, a row of the Validation category, Linux only), 1.59e-3 m on Windows and macOS arm64
+    /// (ImpulseTriad, VV, GALACTIC, the only row with an impulse in SSB mode of <c>WorstCase_MatchesSpice</c>).</summary>
     internal const double PositionAgainstSpkSsbAcrossImpulses = 5.2e-3;
 
     /// <summary>The same for the cases with an impulse, whose stored states are split into arcs at the impulse (#540, choice 18
     /// of #554): near the ends of an arc both interpolations are one-sided, and the SPK's epochs, doubles of 1.2e-7 s
-    /// resolution, weigh more there. These rows were excluded before. PROVISIONAL: twice the Linux worst, 7.78e-4 m
-    /// (NadirImpulseTriad, RK7(8), ECLIPJ2000, 2026; Linux x64, 2026-11-03; 1.64e-3 m before the review of PR 1 of #554
-    /// dropped the output within a tenth of the step of the impulse, 1.85e-3 m on the prototype), to be measured on Linux,
-    /// Windows and macOS arm64.</summary>
+    /// resolution, weigh more there. These rows were excluded before. Twice the worst (CI run 41651463194, 2026-11-03): 7.78e-4 m on Linux
+    /// (NadirImpulseTriad, RK7(8), ECLIPJ2000, 2026, a row of the Validation category, Linux only; 1.64e-3 m before the review
+    /// of PR 1 of #554 dropped the output within a tenth of the step of the impulse), 5.67e-4 m on Windows and macOS arm64
+    /// (ImpulseTriad, RK7(8), ICRF, the row with an impulse of <c>WorstCase_MatchesSpice</c>).</summary>
     internal const double PositionAgainstSpkAcrossImpulses = 1.6e-3;
 
     /// <summary>The managed angular velocity and the CK's against the rate of the law (a difference of its closed form over
@@ -168,15 +171,18 @@ public class AttitudeRecordTests
     /// in the spacecraft frame on the written kernels, m and m/s: the floor of the CK times the distance, and the SPK's
     /// interpolation. Worst 3.93e-3 m and 1.00e-5 m/s (Prograde, RK7(8), B1950; 1.003777e-5 m/s on Linux at six digits,
     /// twice 2.0076e-5 m/s); 8.84e-3 m and 2.12e-5 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000, 2026). In SSB mode,
-    /// where the SPK is of type 9 since 11.0.0 (#540; 2.26e-2 m and 1.44e-3 m/s with the native writer's type 8), PROVISIONAL,
-    /// twice the Linux worst (Linux x64, 2026-11-03): 2.34e-3 m (InstrumentTriad, VV, GALACTIC) and 5.85e-6 m/s
-    /// (InstrumentTriad, RK7(8), GALACTIC); with an impulse 2.56e-3 m and 8.79e-7 m/s (ImpulseTriad, RK7(8), GALACTIC).</summary>
+    /// where the SPK is of type 9 since 11.0.0 (#540; 2.26e-2 m and 1.44e-3 m/s with the native writer's type 8), twice the
+    /// worst over Linux, Windows and macOS arm64 (CI run 41651463194, 2026-11-03): 2.34e-3 / 2.34e-3 / 2.35e-3 m (RK7(8), GALACTIC on Linux
+    /// and Windows, InstrumentTriad, RK7(8), ICRF on macOS arm64; twice 2.35e-3 falls on 4.7e-3, the step above for its
+    /// unprinted digits) and 5.85e-6 m/s on the three (InstrumentTriad, RK7(8), GALACTIC); with an impulse 2.56e-3 m and
+    /// 8.79e-7 m/s on Linux (ImpulseTriad, RK7(8), GALACTIC, the Validation category, Linux only), 1.59e-3 m and 4.28e-7 m/s
+    /// on Windows and macOS arm64 (ImpulseTriad, VV, GALACTIC).</summary>
     internal const double FramePosition = 7.9e-3;
 
     internal const double FrameVelocity = 2.1e-5;
     internal const double FramePositionAfter2025 = 1.8e-2;
     internal const double FrameVelocityAfter2025 = 4.3e-5;
-    internal const double FramePositionSsb = 4.7e-3;
+    internal const double FramePositionSsb = 4.8e-3;
     internal const double FrameVelocitySsb = 1.2e-5;
     internal const double FramePositionSsbAcrossImpulses = 5.2e-3;
     internal const double FrameVelocitySsbAcrossImpulses = 1.8e-6;

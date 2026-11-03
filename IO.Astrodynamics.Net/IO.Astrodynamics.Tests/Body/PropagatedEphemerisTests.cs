@@ -518,7 +518,9 @@ public class PropagatedEphemerisTests
     }
 
     /// <summary>The motion of the synthetic segments read by <c>spkezr</c>: the ET doubles of the nodes and of the epochs read,
-    /// 1.2e-7 s at 7.6e8 s, times up to 3 km/s. PROVISIONAL, Linux worst 6.97e-4 m and 1.37e-12 m/s.</summary>
+    /// 1.2e-7 s at 7.6e8 s, times up to 3 km/s. Twice the worst over Linux x64, Windows and macOS arm64, rounded up at the
+    /// second significant digit: 6.97e-4 m and 1.37e-12 m/s, the same on the three platforms (CI run 41651463194, 2026-11-03; the
+    /// comparison with spkw09's summaries and data on Linux only).</summary>
     internal const double SixtySegmentsPosition = 1.4e-3;
 
     internal const double SixtySegmentsVelocity = 2.8e-12;

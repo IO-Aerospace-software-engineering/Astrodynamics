@@ -51,73 +51,84 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// (37 s for the chain of four), farther than max(150 s, 10 output steps) from every impulse.
 /// </para>
 /// <para>
-/// <b>Limits.</b> PROVISIONAL: twice the worst on Linux x64 (2026-11-03, the 93 cases of the grid, MEASURE lines),
-/// rounded up at the second significant digit, to be replaced by twice the worst over Linux, Windows and macOS arm64 from
-/// the CI's MEASURE lines. The grid takes about 30 s and runs in every CI job. Each limit bounds the family of its worst,
-/// named in its summary; a family is never bounded by the limit of a larger one (#515).
+/// <b>Limits.</b> Twice the worst over Linux x64, Windows and macOS arm64 (CI run 41651463194, 2026-11-03, the MEASURE
+/// lines of the 93 cases of the grid), rounded up at the second significant digit; each summary states the three worsts
+/// (L / W / M). Where twice a printed worst falls on a rounding boundary, the unprinted digits could put it one step
+/// higher: the Linux worst is read at six digits (Linux x64, 2026-11-03, the same cases with only the format of the MEASURE
+/// line changed, equal to CI Linux at the printed digits), and a worst of Windows or macOS arm64 takes the step above. The
+/// grid takes about 30 s and runs in every CI job; <see cref="Spk_LayoutByDafus_AndTheFileOfSpkw09"/>, exact, is in the
+/// Validation category (Linux). The velocity before an impulse in SSB mode against the anchored reference is PROVISIONAL,
+/// twice the Linux worst, not yet measured by the CI. Each limit bounds the family of its worst, named in its summary; a
+/// family is never bounded by the limit of a larger one (#515).
 /// </para>
 /// </remarks>
 public class PropagatedArcsTests
 {
     /// <summary>The managed reads within ±150 s of an impulse against the RK7(8) solution, at 1 and 10 s outputs, one or two
-    /// impulses about the Earth: the far error of the Lagrange interpolation, no trace of the impulse. PROVISIONAL, Linux
-    /// worst 1.14e-8 m (a timed impulse 0.1 s before an output, 10 s; 9.32e-9 m before the timed cases of the review of
-    /// PR 1, Apogee, FK4); main 23.5 to 1 420 m.</summary>
-    internal const double NearRk = 2.3e-8;
+    /// impulses about the Earth: the far error of the Lagrange interpolation, no trace of the impulse. Worst 1.14e-8 /
+    /// 1.14e-8 / 1.65e-8 m (a timed impulse 0.1 s before an output, 10 s; CI run 41651463194; twice 1.65e-8 falls on 3.3e-8, the
+    /// step above for macOS arm64's unprinted digits); main 23.5 to 1 420 m.</summary>
+    internal const double NearRk = 3.4e-8;
 
-    /// <summary>The same on the chain of four of <c>ScenarioTests</c> (Earth, Moon and Sun, 24.7 h). PROVISIONAL, Linux worst
-    /// 2.25e-8 m (10 s, both paths); main 763 m.</summary>
-    internal const double NearRkChain = 4.5e-8;
+    /// <summary>The same on the chain of four of <c>ScenarioTests</c> (Earth, Moon and Sun, 24.7 h). Worst 2.25e-8 / 2.25e-8
+    /// / 2.32e-8 m (10 s; CI run 41651463194); main 763 m.</summary>
+    internal const double NearRkChain = 4.7e-8;
 
-    /// <summary>The same at 60 s outputs: the per-arc interpolation is one-sided at the ends of an arc. PROVISIONAL, Linux
-    /// worst 3.33e-4 m (a timed impulse 1 s before an output; 2.97e-4 m on Apogee and Perigee); main 2 120 m to 16.1 km
+    /// <summary>The same at 60 s outputs: the per-arc interpolation is one-sided at the ends of an arc. Worst 3.33e-4 m, the
+    /// same on the three platforms (a timed impulse 1 s before an output; 2.97e-4 m on Apogee and Perigee; CI run 41651463194); main
+    /// 2 120 m to 16.1 km
     /// (Apogee 2 250 m, Plane 8 670 m, Combined 11.3 and 16.1 km, the chain 2 120 m).</summary>
     internal const double NearRk60 = 6.7e-4;
 
-    /// <summary>The same on the chain of four at 60 s outputs, whose arcs end 7 min apart. PROVISIONAL, Linux worst
-    /// 1.81e-2 m (both paths); main 2 120 m.</summary>
+    /// <summary>The same on the chain of four at 60 s outputs, whose arcs end 7 min apart. Worst 1.81e-2 m, the same on the
+    /// three platforms (both paths; CI run 41651463194); main 2 120 m.</summary>
     internal const double NearRkChain60 = 3.7e-2;
 
     /// <summary>The managed reads near an impulse against the Velocity-Verlet solution at 1 s steps (the cubic Hermite of
     /// its steps), at 1, 10 and 60 s outputs: the event label of Velocity-Verlet, not carried to the tick grid, puts the
     /// states at the impulse up to 1e-7 s from their label (§9 item 4 of #554, its own issue), 7.5e-4 m at most.
-    /// PROVISIONAL, Linux worst 5.94e-4 m (Perigee, 1, 10 and 60 s); main 18.5 to 1 290 m.</summary>
+    /// Worst 5.94e-4 m, the same on the three platforms (Perigee, 1, 10 and 60 s; CI run 41651463194); main 18.5 to 1 290 m.</summary>
     internal const double NearVv = 1.2e-3;
 
     /// <summary>Velocity-Verlet at the output step: the managed reads near an impulse over the reads far from it, both
     /// against its cubic Hermite, which the Lagrange of the outputs does not match (0.16 m at 10 s, 33 m at 60 s): no
-    /// trace of the impulse. PROVISIONAL, Linux worst 1.07 (Apogee, 60 s); main 1 200 (#540's case, 192 m against
-    /// 0.16 m).</summary>
+    /// trace of the impulse, about the Earth and the Moon (in SSB mode a MEASURE line, #576). Worst 1.07 (the printed near
+    /// over the printed far), the same on the three platforms (Apogee, 60 s; CI run 41651463194); main 1 200 (#540's case, 192 m
+    /// against 0.16 m).</summary>
     internal const double NearOverFarVvd = 2.2;
 
-    /// <summary>The managed reads near an impulse about the Moon, RK7(8). PROVISIONAL, Linux worst 1.26e-9 m.</summary>
-    internal const double NearRkMoon = 2.6e-9;
+    /// <summary>The managed reads near an impulse about the Moon, RK7(8). Worst 1.26e-9 / 1.26e-9 / 1.51e-9 m
+    /// (CI run 41651463194).</summary>
+    internal const double NearRkMoon = 3.1e-9;
 
-    /// <summary>The same with Velocity-Verlet at 1 s. PROVISIONAL, Linux worst 2.11e-5 m.</summary>
+    /// <summary>The same with Velocity-Verlet at 1 s. Worst 2.11e-5 m, the same on the three platforms (CI run 41651463194).</summary>
     internal const double NearVvMoon = 4.3e-5;
 
     /// <summary><c>spkezr</c> on the SPK the library writes against the managed reads, over every sample, about the Earth with
-    /// one or two impulses: the resolution of the ET doubles of the nodes (1.2e-7 s) times the speed. PROVISIONAL, Linux
-    /// worst 1.16e-3 m (a timed impulse 1 ms before an output, RK7(8), 60 s; 8.67e-4 m before the timed cases of the review
-    /// of PR 1, Perigee, RK7(8), 60 s).</summary>
+    /// one or two impulses: the resolution of the ET doubles of the nodes (1.2e-7 s) times the speed. Worst 1.16e-3 m, the
+    /// same on the three platforms (a timed impulse 1 ms before an output, RK7(8), 60 s; CI run 41651463194).</summary>
     internal const double SpkAgainstManaged = 2.4e-3;
 
-    /// <summary>The same on the chain of four. PROVISIONAL, Linux worst 1.08e-3 m (Velocity-Verlet at 60 s; 1.85e-3 m in
-    /// RK7(8) at 60 s, 1.06e-3 m since the review of PR 1 drops the output within a tenth of the step of an impulse there).</summary>
+    /// <summary>The same on the chain of four. Worst 1.08e-3 m, the same on the three platforms (Velocity-Verlet at 60 s;
+    /// CI run 41651463194; 1.85e-3 m in RK7(8) at 60 s before the review of PR 1 dropped the output within a tenth of the step of an
+    /// impulse there).</summary>
     internal const double SpkAgainstManagedChain = 2.2e-3;
 
-    /// <summary>The same in SSB mode (the SPK relative to the Sun). PROVISIONAL, Linux worst 1.71e-3 m (RK7(8)).</summary>
+    /// <summary>The same in SSB mode (the SPK relative to the Sun), the library against CSPICE on the same stored states.
+    /// Worst 1.71e-3 / 1.12e-3 / 1.12e-3 m (RK7(8) on Linux, Velocity-Verlet at 1 s on Windows and macOS arm64, whose RK7(8)
+    /// step sequences differ; CI run 41651463194).</summary>
     internal const double SpkAgainstManagedSsb = 3.5e-3;
 
-    /// <summary>The same about the Moon. PROVISIONAL, Linux worst 7.99e-5 m.</summary>
+    /// <summary>The same about the Moon. Worst 7.97e-5 m, the same on the three platforms (CI run 41651463194).</summary>
     internal const double SpkAgainstManagedMoon = 1.6e-4;
 
     /// <summary>The managed velocity 1 µs before an impulse against the RK7(8) solution there (the state before it).
-    /// PROVISIONAL, Linux worst 1.25e-11 m/s (the chain of four, 60 s); main 40 to 890 m/s.</summary>
-    internal const double VelocityBeforeRk = 2.5e-11;
+    /// Worst 1.25e-11 m/s, the same on the three platforms (the chain of four, 60 s; CI run 41651463194; twice the printed worst
+    /// falls on 2.5e-11: 1.254476e-11 m/s on Linux at six digits); main 40 to 890 m/s.</summary>
+    internal const double VelocityBeforeRk = 2.6e-11;
 
-    /// <summary>The same against the solution of Velocity-Verlet, about the Earth. PROVISIONAL, Linux worst 8.40e-7 m/s (the
-    /// chain of four, Velocity-Verlet at 10 s).</summary>
+    /// <summary>The same against the solution of Velocity-Verlet, about the Earth. Worst 8.40e-7 m/s, the same on the three
+    /// platforms (the chain of four, Velocity-Verlet at 10 s; CI run 41651463194).</summary>
     internal const double VelocityBefore = 1.7e-6;
 
     /// <summary>The managed velocity 1 µs before an impulse in SSB mode, RK7(8), against the anchored reference
@@ -133,15 +144,17 @@ public class PropagatedArcsTests
     /// yet.</summary>
     internal const double VelocityBeforeSsbVv = 2.1e-10;
 
-    /// <summary>The same about the Moon, RK7(8). PROVISIONAL, Linux worst 1.25e-12 m/s.</summary>
-    internal const double VelocityBeforeMoonRk = 2.5e-12;
+    /// <summary>The same about the Moon, RK7(8). Worst 1.25e-12 / 1.25e-12 / 5.82e-13 m/s (CI run 41651463194; twice the printed
+    /// worst falls on 2.5e-12: 1.246674e-12 m/s on Linux at six digits, the step above for Windows' unprinted
+    /// digits).</summary>
+    internal const double VelocityBeforeMoonRk = 2.6e-12;
 
-    /// <summary>The same about the Moon, Velocity-Verlet. PROVISIONAL, Linux worst 9.71e-12 m/s (at the output step; 2.27e-13
-    /// m/s at 1 s).</summary>
+    /// <summary>The same about the Moon, Velocity-Verlet. Worst 9.71e-12 m/s, the same on the three platforms (at the output
+    /// step; 2.27e-13 m/s at 1 s; CI run 41651463194).</summary>
     internal const double VelocityBeforeMoonVv = 2.0e-11;
 
     /// <summary>The velocity of <c>spkezr</c> on the SPK 1 µs before an impulse against the solution, about the Earth.
-    /// PROVISIONAL, Linux worst 7.95e-7 m/s (Perigee, Velocity-Verlet at 60 s).</summary>
+    /// Worst 7.95e-7 m/s, the same on the three platforms (Perigee, Velocity-Verlet at 60 s; CI run 41651463194).</summary>
     internal const double VelocityBeforeSpk = 1.6e-6;
 
     /// <summary>The same in SSB mode, against the anchored reference (<see cref="AnchoredVelocityBefore"/>): the resolution
@@ -151,23 +164,24 @@ public class PropagatedArcsTests
     /// Velocity-Verlet; Linux x64, 2026-11-03), the CI has not measured it yet.</summary>
     internal const double VelocityBeforeSpkSsb = 1.3e-6;
 
-    /// <summary>The same about the Moon. PROVISIONAL, Linux worst 6.73e-8 m/s (Apogee, RK7(8) and Velocity-Verlet).</summary>
+    /// <summary>The same about the Moon. Worst 6.73e-8 m/s, the same on the three platforms (Apogee, RK7(8) and
+    /// Velocity-Verlet; CI run 41651463194).</summary>
     internal const double VelocityBeforeSpkMoon = 1.4e-7;
 
-    /// <summary>The velocity of <c>spkezr</c> at an impulse against the state after it, the later segment. PROVISIONAL, Linux
-    /// worst 2.92e-12 m/s (Apogee, Velocity-Verlet at 10 s, SSB mode).</summary>
+    /// <summary>The velocity of <c>spkezr</c> at an impulse against the state after it, the later segment. Worst 2.92e-12 m/s,
+    /// the same on the three platforms (Apogee, Velocity-Verlet at 10 s, SSB mode; CI run 41651463194).</summary>
     internal const double VelocityAtSpk = 5.9e-12;
 
     /// <summary>The velocity of the state after an impulse less that of the state before against the delta-V of the maneuver
     /// (the library's <c>ImpulseManeuver.DeltaV</c>: a consistency check of the arcs with the maneuver, not an independent
-    /// reference) rotated to ICRF by <c>pxform</c>: the rounding of the sum and of the rotation. PROVISIONAL, Linux worst 2.38e-12 m/s
-    /// (Apogee, Velocity-Verlet at 1 s, FK4).</summary>
+    /// reference) rotated to ICRF by <c>pxform</c>: the rounding of the sum and of the rotation. Worst 2.38e-12 m/s, the same
+    /// on the three platforms (Apogee, Velocity-Verlet at 1 s, FK4; CI run 41651463194).</summary>
     internal const double JumpAgainstDeltaV = 4.8e-12;
 
     /// <summary>The RK7(8) solution against <c>prop2b</c> in the two-body cases, m and m/s: 1.1e-6 m before the first
     /// impulse; after it, where the closed form restarts at the label of the impulse, 1.1e-3 m, 1.5e-7 s of the motion,
     /// the order of the resolution of the TT seconds between two labels (ET doubles, 1.2e-7 s at 7.6e8 s; not traced
-    /// further). PROVISIONAL, Linux worst 1.14e-3 m and 1.33e-6 m/s (Plane).</summary>
+    /// further). Worst 1.14e-3 m and 1.33e-6 m/s, the same on the three platforms (Plane; CI run 41651463194).</summary>
     internal const double SolutionAgainstProp2b = 2.3e-3;
 
     internal const double SolutionVelocityAgainstProp2b = 2.7e-6;
@@ -345,7 +359,8 @@ public class PropagatedArcsTests
     /// <summary>The RK7(8) solution against Kepler's closed form, in the two-body cases (the Earth as a point mass, the kernel
     /// GM): CSPICE's <c>prop2b</c> from the initial state over the TT seconds between the epochs, then from the closed-form
     /// state at each impulse plus the delta-V of its maneuver; at every sample of <see cref="Measure"/>. The reference of the
-    /// grid resolves what it measures. PROVISIONAL, Linux worst <see cref="SolutionAgainstProp2b"/>.</summary>
+    /// grid resolves what it measures. Limits <see cref="SolutionAgainstProp2b"/> and
+    /// <see cref="SolutionVelocityAgainstProp2b"/>.</summary>
     [Theory]
     [InlineData("Apogee")]
     [InlineData("Perigee")]
