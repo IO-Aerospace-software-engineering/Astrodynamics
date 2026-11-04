@@ -146,15 +146,20 @@ public class MinimumEpochGateEdgeTests
     /// <summary>
     /// A UTC gate whose TDB label compares before it (1 UTC gate in 200 000; none in TT or TAI): the root of
     /// g = TT(epoch) − TT(gate), at the gate's instant, is labelled at the first TDB tick that does not compare before the
-    /// gate in RK7(8), adaptive and fixed-step; Velocity-Verlet fires at the step end after it. Before the review of #569,
-    /// fixed-step RK7(8) at 10 s labelled it one tick before the gate (choice 1).
+    /// gate in RK7(8), adaptive and fixed-step; Velocity-Verlet fires at the step end after it. Both time arguments: TT, the
+    /// one of every propagation about the Earth, and TDB. Before the review of #569, fixed-step RK7(8) at 10 s labelled it
+    /// one tick before the gate (choice 1).
     /// </summary>
     [Theory]
-    [InlineData("RKf10")]
-    [InlineData("RK")]
-    [InlineData("VV1")]
-    [InlineData("VV10")]
-    public void UtcGate_WhoseTdbTickComparesBeforeIt_TheEventIsNotBeforeTheGate(string integratorName)
+    [InlineData("RKf10", "TT")]
+    [InlineData("RK", "TT")]
+    [InlineData("VV1", "TT")]
+    [InlineData("VV10", "TT")]
+    [InlineData("RKf10", "TDB")]
+    [InlineData("RK", "TDB")]
+    [InlineData("VV1", "TDB")]
+    [InlineData("VV10", "TDB")]
+    public void UtcGate_WhoseTdbTickComparesBeforeIt_TheEventIsNotBeforeTheGate(string integratorName, string timeArgument)
     {
         var gate = new Time(new DateTime(2024, 3, 1, 12, 0, 33, DateTimeKind.Utc).AddTicks(2826603), TimeFrame.UTCFrame);
         Assert.True(gate.ToTDB() < gate);
@@ -168,13 +173,14 @@ public class MinimumEpochGateEdgeTests
             G = s => PropagationTimeArgument.Tt.SecondsBetween(S, s.Epoch) - gateSeconds
         };
         var integrator = NewIntegrator(integratorName);
+        integrator.TimeArgument = timeArgument == "TT" ? PropagationTimeArgument.Tt : PropagationTimeArgument.Tdb;
         var result = IntegrateLine(integrator, detector);
 
         Assert.NotNull(result.Event);
         double t = result.Event.Value.EventTime;
         var epoch = integrator.TimeArgument.EpochAt(S, t);
         long ticks = epoch.ToTAI().DateTime.Ticks - gate.ToTAI().DateTime.Ticks;
-        _output.WriteLine($"MEASURE #569 gate UTC {integratorName}: gate {gate.DateTime:O} UTC at {gateSeconds:R} TT s, event {epoch.DateTime:O} TDB at {t:R} s, {ticks} ticks (TAI) from the gate");
+        _output.WriteLine($"MEASURE #569 gate UTC {integratorName} {timeArgument}: gate {gate.DateTime:O} UTC at {gateSeconds:R} TT s, event {epoch.DateTime:O} TDB at {t:R} s, {ticks} ticks (TAI) from the gate");
         Assert.False(epoch < gate);
         if (integratorName.StartsWith("RK"))
             Assert.Equal(firstTickNotBefore, epoch);

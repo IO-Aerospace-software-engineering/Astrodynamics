@@ -110,9 +110,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
       was labelled one tick before it and is now labelled at or after it.
   - **Also moves:**
     - with Velocity-Verlet, a minimum epoch within its own lag of a crossing: the decision follows Velocity-Verlet's
-      trajectory, not the Keplerian epoch. At 10 s steps the lag reaches 0.095 s at a node, 0.18 s at an apsis of the
-      orbit after a Velocity-Verlet burn and 1.4 s at the intersection of an apsidal alignment (Linux x64; to be
-      confirmed by the CI);
+      trajectory, not the Keplerian epoch. At 10 s steps the lag is up to 0.096 s at a node, 0.18 s at an apsis of
+      the orbit after a Velocity-Verlet burn and 1.5 s at the intersection of an apsidal alignment (Linux x64 worsts
+      0.0953 s, 0.176 s and 1.44 s; to be confirmed by the CI);
     - an apsis at the start of the propagation given by Keplerian elements (r·v exactly 0) with the minimum epoch at
       that start now fires there with RK7(8), at the first step end with Velocity-Verlet, instead of one orbit later.
   - **User code:**

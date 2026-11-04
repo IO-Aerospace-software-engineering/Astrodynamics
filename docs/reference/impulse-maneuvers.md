@@ -52,11 +52,15 @@ its g-function in its direction at or after the minimum epoch, searched from the
   a minimum epoch on a step end or equal to the start of the propagation included (an apsis given by Keplerian elements
   at the start, where r·v is 0.0): RK7(8) fires at the minimum epoch; Velocity-Verlet at the first step end whose sign is
   known after it, the next one when the minimum epoch is a step end.
-- `PlaneAlignmentManeuver` takes the node it moves toward from the state at the minimum epoch, never a node just passed:
-  within 1e-6 |r| of a node it moves away from, it waits for the next node.
+- `PlaneAlignmentManeuver` takes the node it moves toward from the state at a minimum epoch after the start of the
+  segment, never a node just passed: within 1e-6 |r| of a node it moves away from, it waits for the next node. With the
+  minimum epoch at or before the start of the segment, the first evaluation there still locks the node by the sign of
+  its rate, so a start less than 1e-6 |r| past a node takes that node, a period later (#581).
 - A chained impulse is gated by the end of the previous maneuver's window, the same way, in whichever step holds it.
-- With Velocity-Verlet, the decision follows its own trajectory, whose crossings lag the Keplerian epoch (up to 0.095 s
-  at a node with 10 s steps): a minimum epoch within that lag of a crossing is decided on that trajectory.
+- With Velocity-Verlet, the decision follows its own trajectory, whose crossings lag the Keplerian epoch: with 10 s
+  steps, up to 0.096 s at a node, 0.18 s at an apsis of the orbit after a Velocity-Verlet burn and 1.5 s at the
+  intersection of an apsidal alignment (Linux x64 worsts 0.0953 s, 0.176 s and 1.44 s; to be confirmed on Windows and
+  macOS arm64 by the CI). A minimum epoch within that lag of a crossing is decided on that trajectory.
 - The public `ManeuverEventDetector.Evaluate` still returns +1 before the minimum epoch. A custom `Integrator` that compares
   that value with the first g-value after the minimum epoch keeps the behaviour before 11.0.0: a false crossing at the
   minimum epoch for a positive-to-negative maneuver whose g is already negative there, and a missed negative-to-positive
