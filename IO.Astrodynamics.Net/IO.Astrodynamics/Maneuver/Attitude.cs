@@ -35,7 +35,7 @@ public abstract class Attitude : Maneuver
         //If state vector is outside maneuver windows the next maneuver can be set
         if (stateVector.Epoch > ManeuverWindow.Value.EndDate)
         {
-            Engine.FuelTank.Spacecraft.SetStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
+            Engine.FuelTank.Spacecraft.ChainStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
         }
 
         // Computed in ICRF, whatever the frame of the state (#529, #535): the rotation from the spacecraft frame to ICRF

@@ -106,7 +106,7 @@ public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
                 }
 
                 // Track the attitude maneuver as executed (adds to _executedManeuvers)
-                spacecraft.SetStandbyManeuver(attitude.NextManeuver,
+                spacecraft.ChainStandbyManeuver(attitude.NextManeuver,
                     attitude.ManeuverWindow?.EndDate);
 
                 // Advance epoch by ManeuverHoldDuration for next maneuver in chain
