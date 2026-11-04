@@ -155,7 +155,7 @@ from an output, on either side):
 | The managed reads, RK7(8) at 1 and 10 s outputs | 23.5 to 1 420 m; 763 m on the chain of four | 6e-9 to 1.7e-8 m; 2.3e-8 m on the chain, their error far from the impulses |
 | The same at 60 s outputs (one-sided at the ends of an arc) | 2 120 m to 16.1 km | 3.3e-4 m; 1.8e-2 m on the chain, whose arcs end 7 min apart |
 | `spkezr` on the SPK the library writes | 22.4 m to 150 km | the managed reads within 1.2e-3 m (1.1e-3 m on the chain, 1.7e-3 m in SSB mode) |
-| The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8); 4.9e-12 m/s in SSB mode, against the anchored reference below), 8.4e-7 m/s (Velocity-Verlet), 8.0e-7 m/s by `spkezr` (6.3e-7 m/s in SSB mode, anchored); 8.5e-7 m/s by `spkezr` on Linux since #569, where the combined maneuvers fire at their apogee (the three platforms to be measured again) |
+| The velocity 1 µs before an impulse | 40 to 890 m/s, nearly the whole ΔV | 1.3e-11 m/s managed (RK7(8); 4.9e-12 m/s in SSB mode, against the anchored reference below), 8.4e-7 m/s (Velocity-Verlet), 8.5e-7 m/s by `spkezr` (6.3e-7 m/s in SSB mode, anchored), since #569, where the combined maneuvers fire at their apogee (8.0e-7 m/s before) |
 | Velocity-Verlet | 18.5 m to 16 km | its own error far from the impulses (0.16 m at 10 s, 33 m at 60 s outputs, the Lagrange of its outputs against its cubic Hermite); 5.9e-4 m at 1 s steps, the label of its event (up to 1e-7 s from the event) |
 
 In SSB mode the solution's dense output carries the noise of the third-body acceleration of the Earth, which loses about

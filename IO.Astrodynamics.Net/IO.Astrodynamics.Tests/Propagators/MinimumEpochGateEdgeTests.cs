@@ -40,20 +40,22 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// </summary>
 /// <remarks>
 /// References are written in the test: the zeros and roots of g-functions placed on a force-free straight line, and the
-/// Keplerian closed form of <see cref="KeplerClosedForm"/>. Limits PROVISIONAL, twice the Linux worst (2026-11-04), until
-/// the CI measures Linux, Windows and macOS arm64.
+/// Keplerian closed form of <see cref="KeplerClosedForm"/>. Limits twice the worst over Linux x64, Windows and macOS arm64 (CI
+/// run 41852583362), rounded up at the second significant digit.
 /// </remarks>
 public class MinimumEpochGateEdgeTests
 {
     /// <summary><c>EvaluateAvoidance</c>: the state of an option at its TCA against the closed form of the orbit after the
-    /// impulse and the option's burn, m. Worst 8.72e-6 m (Linux x64). PROVISIONAL.</summary>
+    /// impulse and the option's burn, m. Worst 8.72e-6 / 8.72e-6 / 8.57e-6 m (Linux / Windows / macOS arm64).</summary>
     internal const double AvoidanceAgainstClosedForm = 1.8e-5;
 
     /// <summary>SSB mode: the burn of one propagation gated at the minimum epoch against the burn of the propagation from
     /// the state at the minimum epoch, gated at its base (GMAT's two <c>Propagate</c> commands), s: the integration noise of
-    /// RK7(8) at 1e-9 over two step sequences. Worst 4.79e-5 s (the apogee raise; 6.30e-6 s the perigee raise; Linux
-    /// x64). PROVISIONAL.</summary>
-    internal const double TwoPropagateSsb = 9.6e-5;
+    /// RK7(8) at 1e-9 over two step sequences, which #576 (the third body's acceleration near the Earth in SSB mode) makes
+    /// differ between platforms. Worst 6.30e-6 / 2.19e-4 / 1.31e-4 s on the perigee raise (Linux / Windows / macOS arm64;
+    /// the apogee raise 4.79e-5 / −1.38e-5 / −1.35e-5 s; CI run 41852583362), against the Keplerian residual of 0.64 s that
+    /// the Sun makes; to be measured again with #576's fix.</summary>
+    internal const double TwoPropagateSsb = 4.4e-4;
 
     private static readonly Time S = MinimumEpochGateTests.S;
     private readonly ITestOutputHelper _output;

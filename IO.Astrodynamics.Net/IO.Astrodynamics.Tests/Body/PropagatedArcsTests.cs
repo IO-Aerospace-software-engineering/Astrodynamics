@@ -68,8 +68,8 @@ public class PropagatedArcsTests
     /// impulses about the Earth: the far error of the Lagrange interpolation, no trace of the impulse. Worst 1.14e-8 /
     /// 1.14e-8 / 1.65e-8 m (a timed impulse 0.1 s before an output, 10 s; CI run 41651463194; twice 1.65e-8 falls on 3.3e-8, the
     /// step above for macOS arm64's unprinted digits); main 23.5 to 1 420 m. Since #569 the combined maneuver fires at its
-    /// apogee instead of its minimum epoch: Linux worst 1.21e-8 m (Combined, 1 s outputs; Linux x64, 2026-11-04), Windows
-    /// and macOS arm64 to be measured again by the CI, the limit unchanged until then.</summary>
+    /// apogee instead of its minimum epoch: worst 1.21e-8 / 1.21e-8 / 1.65e-8 m (Combined at 1 s outputs on Linux and Windows,
+    /// the timed impulse on macOS arm64; CI run 41852583362), the limit unchanged.</summary>
     internal const double NearRk = 3.4e-8;
 
     /// <summary>The same on the chain of four of <c>ScenarioTests</c> (Earth, Moon and Sun, 24.7 h). Worst 2.25e-8 / 2.25e-8
@@ -158,10 +158,10 @@ public class PropagatedArcsTests
     internal const double VelocityBeforeMoonVv = 2.0e-11;
 
     /// <summary>The velocity of <c>spkezr</c> on the SPK 1 µs before an impulse against the solution, about the Earth.
-    /// Worst 7.95e-7 m/s, the same on the three platforms (Perigee, Velocity-Verlet at 60 s; CI run 41651463194). Since #569
-    /// (the combined maneuver at its apogee): Linux worst 8.54e-7 m/s (Combined, Velocity-Verlet at 60 s; Linux x64,
-    /// 2026-11-04), Windows and macOS arm64 to be measured again by the CI, the limit unchanged until then.</summary>
-    internal const double VelocityBeforeSpk = 1.6e-6;
+    /// Worst 8.54e-7 m/s, the same on the three platforms (Combined, Velocity-Verlet with 60 s steps; CI run 41852583362):
+    /// since #569 the combined maneuver fires at its apogee instead of its minimum epoch (7.95e-7 m/s before, Perigee, CI run
+    /// 41651463194).</summary>
+    internal const double VelocityBeforeSpk = 1.8e-6;
 
     /// <summary>The same in SSB mode, against the anchored reference (<see cref="AnchoredVelocityBefore"/>): the resolution
     /// of the ET doubles of the read and of the node at tc (1.2e-7 s) times the acceleration, 8.67 m/s². Against the

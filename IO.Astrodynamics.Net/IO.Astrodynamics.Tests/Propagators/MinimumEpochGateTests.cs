@@ -64,9 +64,10 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// <b>SSB mode</b> is checked for the rule only, on the solution's own g-function: the closed form omits the Sun.
 /// </para>
 /// <para>
-/// <b>Limits.</b> PROVISIONAL: twice the worst on Linux x64 (2026-11-04, the MEASURE lines of this class), rounded up at
-/// the second significant digit, until the CI measures them on Linux, Windows and macOS arm64. Each limit bounds its
-/// family (#515).
+/// <b>Limits.</b> Twice the worst over Linux x64, Windows and macOS arm64 (CI run 41852583362, the MEASURE lines of this
+/// class), rounded up at the second significant digit; where twice a printed worst falls on a rounding boundary and the
+/// worst occurs on Windows or macOS arm64, the step above. The worsts are the same on the three platforms at the printed
+/// digits unless stated. Each limit bounds its family (#515).
 /// </para>
 /// </remarks>
 public class MinimumEpochGateTests
@@ -74,20 +75,20 @@ public class MinimumEpochGateTests
     /// <summary>
     /// RK7(8), the burn epoch less the closed form, s, per family: <c>apsis</c> (the apsides of the maneuvers, of the chains,
     /// of the user impulse in either direction; adaptive, fixed-step at 60 s, covariance mode with and without the step
-    /// control, both paths, ICRF and ECLIPJ2000), worst 9.22e-8 s (an apogee raise 3 s before the perigee); <c>node</c>,
-    /// worst 9.22e-8 s (the plane gated 10 ms before its node); <c>intersection</c> (the apsidal alignment), worst
-    /// 1.42e-7 s; <c>time</c> (the time-like user impulse, whose root is a tick), 0; <c>moon</c> (the apsides about the
-    /// Moon), worst 2.46e-9 s. Each includes the 100 ns quantization of the epochs. PROVISIONAL.
+    /// control, both paths, ICRF and ECLIPJ2000; F5, the two gated detectors, <c>EvaluateAvoidance</c>'s impulse), worst
+    /// 9.86e-8 s (the second burn of F5, fixed-step at 60 s; 9.22e-8 s on the grid, an apogee raise 3 s before the
+    /// perigee); <c>node</c>, worst 9.22e-8 s (the plane gated 10 ms before its node); <c>intersection</c> (the apsidal
+    /// alignment), worst 1.42e-7 s; <c>time</c> (the time-like user impulse, whose root is a tick), 0; <c>moon</c> (the
+    /// apsides about the Moon), worst 2.46e-9 s. Each includes the 100 ns quantization of the epochs.
     /// </summary>
     internal static readonly IReadOnlyDictionary<string, double> Rk78Epoch = new Dictionary<string, double>
     {
-        ["apsis"] = 1.9e-7, ["node"] = 1.9e-7, ["intersection"] = 2.9e-7, ["time"] = 0.0, ["moon"] = 5.0e-9
+        ["apsis"] = 2.0e-7, ["node"] = 1.9e-7, ["intersection"] = 2.9e-7, ["time"] = 0.0, ["moon"] = 5.0e-9
     };
 
     /// <summary>
     /// RK7(8), the delta-V less the closed form at the closed-form epoch, m/s, per family: worst 6.96e-9 (apsis, the
     /// phasing 60 s before the perigee), 2.54e-11 (node), 7.06e-7 (intersection), 1.78e-15 (time), 3.62e-11 (moon).
-    /// PROVISIONAL.
     /// </summary>
     internal static readonly IReadOnlyDictionary<string, double> Rk78DeltaV = new Dictionary<string, double>
     {
@@ -100,12 +101,13 @@ public class MinimumEpochGateTests
     /// orbit after Velocity-Verlet's first burn); node 2.19e-3 / 9.53e-2 s; intersection −1.44e-2 / −1.44 s (the g-function
     /// of the apsidal alignment swings fast there); time −2.27e-13 / −2.27e-13 s (a time-like g has no dynamics: its root is
     /// Velocity-Verlet's crossing, found to the resolution of t in double, an ulp at 1 100 s); moon 2.57e-4 / 2.55e-2 s. The
-    /// reference root is bisected to the resolution of t in double, below every lag it bounds. PROVISIONAL.
+    /// reference root is bisected to the resolution of t in double, below every lag it bounds. Twice 1.75e-3 (apsis, VV1) and
+    /// 2.55e-2 s (moon, VV10) fall on a rounding boundary, on the three platforms: the step above.
     /// </summary>
     internal static readonly IReadOnlyDictionary<string, double> VelocityVerletLagLimit = new Dictionary<string, double>
     {
-        ["apsis|VV1"] = 3.5e-3, ["apsis|VV10"] = 3.6e-1, ["node|VV1"] = 4.4e-3, ["node|VV10"] = 2.0e-1, ["intersection|VV1"] = 2.9e-2,
-        ["intersection|VV10"] = 2.9, ["time|VV1"] = 4.6e-13, ["time|VV10"] = 4.6e-13, ["moon|VV1"] = 5.2e-4, ["moon|VV10"] = 5.1e-2
+        ["apsis|VV1"] = 3.6e-3, ["apsis|VV10"] = 3.6e-1, ["node|VV1"] = 4.4e-3, ["node|VV10"] = 2.0e-1, ["intersection|VV1"] = 2.9e-2,
+        ["intersection|VV10"] = 2.9, ["time|VV1"] = 4.6e-13, ["time|VV10"] = 4.6e-13, ["moon|VV1"] = 5.2e-4, ["moon|VV10"] = 5.2e-2
     };
 
     internal static readonly Time S = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);

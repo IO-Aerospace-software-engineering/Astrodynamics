@@ -59,8 +59,8 @@ its g-function in its direction at or after the minimum epoch, searched from the
 - A chained impulse is gated by the end of the previous maneuver's window, the same way, in whichever step holds it.
 - With Velocity-Verlet, the decision follows its own trajectory, whose crossings lag the Keplerian epoch: with 10 s
   steps, up to 0.096 s at a node, 0.18 s at an apsis of the orbit after a Velocity-Verlet burn and 1.5 s at the
-  intersection of an apsidal alignment (Linux x64 worsts 0.0953 s, 0.176 s and 1.44 s; to be confirmed on Windows and
-  macOS arm64 by the CI). A minimum epoch within that lag of a crossing is decided on that trajectory.
+  intersection of an apsidal alignment (worsts 0.0953 s, 0.176 s and 1.44 s on Linux x64, Windows and macOS arm64). A
+  minimum epoch within that lag of a crossing is decided on that trajectory.
 - The public `ManeuverEventDetector.Evaluate` still returns +1 before the minimum epoch. A custom `Integrator` that compares
   that value with the first g-value after the minimum epoch keeps the behaviour before 11.0.0: a false crossing at the
   minimum epoch for a positive-to-negative maneuver whose g is already negative there, and a missed negative-to-positive
