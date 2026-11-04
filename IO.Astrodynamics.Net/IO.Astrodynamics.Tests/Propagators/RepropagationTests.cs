@@ -59,14 +59,18 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// P at the window end.
 /// </para>
 /// <para>
-/// <b>The reference checked.</b> About the Earth, outside SSB mode, the fresh run is checked against the Keplerian closed
-/// form (<see cref="KeplerClosedForm"/>): each chained impulse fires at the first apsis of its own at or after the end of
-/// the previous maneuver's window, on the orbit after the burn before it; the first, at the first one at or after its
-/// minimum epoch on the initial orbit (the window start, when the orbit starts at that apsis). RK7(8) within
-/// <see cref="MinimumEpochGateTests.Rk78Epoch"/>["apsis"]; Velocity-Verlet within [−limit, h + limit),
-/// limit = <see cref="MinimumEpochGateTests.VelocityVerletLagLimit"/>["apsis|VV1"]: #577's bounds, set on Linux x64,
-/// Windows and macOS arm64. And the <c>MinimumEpoch</c> of each chained maneuver is the later of the one it was given and the
-/// end of the previous maneuver's window, on every spacecraft, reused or fresh. No threshold is set here.
+/// <b>The reference checked.</b> Outside SSB mode (whose closed form would omit the Sun), the fresh run is checked against
+/// the Keplerian closed form (<see cref="KeplerClosedForm"/>), in the seconds of the time argument of the propagation: TT
+/// about the Earth, TDB about the Moon. Each chained impulse fires at the first apsis of its own at or after the end of the
+/// previous maneuver's window, on the orbit after the burn before it; the first, at the first one at or after its minimum
+/// epoch on the initial orbit (the window start, when the orbit starts at that apsis). RK7(8) within
+/// <see cref="MinimumEpochGateTests.Rk78Epoch"/>["apsis"], which includes the 100 ns quantization of the epochs: about the
+/// Moon the first burn, its epoch a whole tick, falls one tick (−1.000e-7 s) before the closed form, which the "moon" bound
+/// of #577 (5.0e-9 s, worst 2.46e-9 s on its cases) does not cover. Velocity-Verlet within
+/// [−limit, h + limit), limit = <see cref="MinimumEpochGateTests.VelocityVerletLagLimit"/>["apsis|VV1"] about the Earth,
+/// ["moon|VV1"] about the Moon: #577's bounds, set on Linux x64, Windows and macOS arm64. And the <c>MinimumEpoch</c> of
+/// each chained maneuver is the later of the one it was given and the end of the previous maneuver's window, on every
+/// spacecraft, reused or fresh. No threshold is set here.
 /// </para>
 /// </remarks>
 public class RepropagationTests
@@ -104,8 +108,12 @@ public class RepropagationTests
         public bool Moon { get; private init; }
         public bool Ssb => FrameName == "SSB";
 
-        /// <summary>The fresh run is checked against the closed form about the Earth, outside SSB mode.</summary>
-        public bool ClosedForm => !Moon && !Ssb;
+        /// <summary>The fresh run is checked against the closed form outside SSB mode, whose closed form omits the Sun.</summary>
+        public bool ClosedForm => !Ssb;
+
+        /// <summary>The seconds of the closed form from S, those of the time argument of the propagation: TT about the
+        /// Earth, TDB about the Moon (#501).</summary>
+        public double Seconds(Time t) => Moon ? PropagationTimeArgument.Tdb.SecondsBetween(S, t) : Tt(t);
 
         public static Env Of(string setup = "Earth|ICRF")
         {
@@ -422,7 +430,7 @@ public class RepropagationTests
     /// The fresh run on the Keplerian closed form: each impulse at the first apsis of its own at or after its gate, the
     /// later of its minimum epoch and the window start for the first (the window start when the orbit starts at that
     /// apsis, <paramref name="startsAtTheApsis"/>), the end of the previous maneuver's window for a chained one, on the
-    /// orbit before it. RK7(8) within #577's apsis bound, Velocity-Verlet within [−limit, h + limit).
+    /// orbit before it. RK7(8) within #577's apsis bound, Velocity-Verlet within [−limit, h + limit) of its centre.
     /// </summary>
     private void AssertOnTheClosedForm(string tag, Sc fresh, Run f, string integrator, bool startsAtTheApsis)
     {
@@ -442,16 +450,16 @@ public class RepropagationTests
             {
                 var gate = Later(fresh.Given[index], f.Window.StartDate);
                 expected = startsAtTheApsis && gate == f.Window.StartDate
-                    ? Tt(f.Window.StartDate)
-                    : ClosedForm(env, fresh.Spacecraft.InitialOrbitalParameters.ToStateVector(f.Window.StartDate)).NextApsis(Tt(gate), apogee);
+                    ? env.Seconds(f.Window.StartDate)
+                    : ClosedForm(env, fresh.Spacecraft.InitialOrbitalParameters.ToStateVector(f.Window.StartDate)).NextApsis(env.Seconds(gate), apogee);
             }
             else
             {
                 var gate = fresh.Chain[index - 1].ManeuverWindow!.Value.EndDate;
-                expected = ClosedForm(env, fresh.Spacecraft.PropagatedArcs[k][0]).NextApsis(Tt(gate), apogee);
+                expected = ClosedForm(env, fresh.Spacecraft.PropagatedArcs[k][0]).NextApsis(env.Seconds(gate), apogee);
             }
 
-            double error = Tt(f.Burns[k]) - expected;
+            double error = env.Seconds(f.Burns[k]) - expected;
             parts.Add($"burn {k} − closed form {error:E3} s");
             if (integrator == "RK")
             {
@@ -459,7 +467,7 @@ public class RepropagationTests
             }
             else
             {
-                double limit = MinimumEpochGateTests.VelocityVerletLagLimit["apsis|VV1"], h = VvStep.TotalSeconds;
+                double limit = MinimumEpochGateTests.VelocityVerletLagLimit[env.Moon ? "moon|VV1" : "apsis|VV1"], h = VvStep.TotalSeconds;
                 Assert.InRange(error, -limit, h + limit);
                 Assert.True(error < h + limit, $"{tag} burn {k}: {error:R} s from the closed form");
             }
@@ -468,12 +476,12 @@ public class RepropagationTests
         _output.WriteLine($"MEASURE #573 {tag} fresh on the closed form ({integrator}): {string.Join("; ", parts)}");
     }
 
-    // The closed form of a state relative to the centre, in ICRF, times in TT seconds from S
+    // The closed form of a state relative to the centre, in ICRF, times in seconds from S (TT about the Earth, TDB about the Moon)
     private static KeplerClosedForm ClosedForm(Env env, StateVector state)
     {
         var local = state.RelativeTo(env.Center, Aberration.None).ToStateVector();
         if (local.Frame != Frame.ICRF) local = local.ToFrame(Frame.ICRF).ToStateVector();
-        return new KeplerClosedForm(env.Center.GM, local.Position, local.Velocity, Tt(local.Epoch));
+        return new KeplerClosedForm(env.Center.GM, local.Position, local.Velocity, env.Seconds(local.Epoch));
     }
 
     /// <summary>A fresh spacecraft built as <paramref name="reused"/> was, from <paramref name="orbit"/>, run once.</summary>
