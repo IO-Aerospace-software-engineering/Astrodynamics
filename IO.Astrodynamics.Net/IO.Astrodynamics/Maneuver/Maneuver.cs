@@ -34,7 +34,15 @@ namespace IO.Astrodynamics.Maneuver
         /// Gets the minimum epoch value.
         /// </summary>
         /// <remarks>
-        /// The minimum epoch value represents the earliest date and time when the maneuver can be executed
+        /// <para>
+        /// The minimum epoch value represents the earliest date and time when the maneuver can be executed.
+        /// </para>
+        /// <para>
+        /// For an <see cref="ImpulseManeuver"/>, it is the gate of its <see cref="Propagator.Events.ManeuverEventDetector"/>:
+        /// the impulse fires at the first crossing of its g-function in its direction at or after this epoch, searched from
+        /// the integrated state there; a crossing before it never counts (#569, docs/reference/impulse-maneuvers.md, "Minimum
+        /// Epoch").
+        /// </para>
         /// </remarks>
         /// <value>
         /// The minimum epoch value.

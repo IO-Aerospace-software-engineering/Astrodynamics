@@ -42,7 +42,8 @@ public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
     /// <see cref="Integrator"/>, which keep the former behaviour: compared with the first g-value after the minimum epoch, it
     /// gives a false crossing for a positive-to-negative maneuver whose g is already negative there, and misses a
     /// negative-to-positive crossing in the step that holds it (#569). <see cref="VVIntegrator"/> and
-    /// <see cref="RK78Integrator"/> do not read it: they evaluate the g-function at the minimum epoch.
+    /// <see cref="RK78Integrator"/> never compare it with a g-value after the minimum epoch: in the step that holds it, they
+    /// replace it with the g-function evaluated there.
     /// </remarks>
     public double Evaluate(StateVector state)
     {

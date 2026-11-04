@@ -97,20 +97,24 @@ A major version, because it breaks the API: members deprecated for removal in 11
   - **The fix.** The integrators now evaluate the g-function at the minimum epoch, in the step that holds it, and search
     the first crossing from there, as GMAT's `Propagate` to the epoch then to the apsis does. A crossing before the
     minimum epoch never counts; a g exactly zero at it counts there when the sign that follows it is the target sign.
-    RK7(8) fires within 1.4e-7 s of the Keplerian epoch in these cases, 9.2e-8 s at the apsides and nodes (Linux x64;
-    to be confirmed on Windows and macOS arm64 by the CI); Velocity-Verlet at its step end.
+    RK7(8) fires within 1.5e-7 s of the Keplerian epoch in these cases, 9.3e-8 s at the apsides and nodes (Linux x64
+    worsts 1.42e-7 s and 9.22e-8 s, the 100 ns tick of the epochs included; to be confirmed on Windows and macOS arm64
+    by the CI); Velocity-Verlet at its step end.
   - **Unchanged, bit for bit:**
     - every step that does not hold a minimum epoch;
     - every step that holds one where the former decision holds: the g-function is positive at the minimum epoch, or a
       negative-to-positive maneuver's g stays negative to the step end, or a positive-to-negative maneuver's g turns
-      positive by the step end;
+      positive by the step end; except `PlaneAlignmentManeuver`, whose node is now chosen from the state at the minimum
+      epoch instead of the step end, and moves where a node lies between the two;
     - a true positive-to-negative crossing in that step, except a root within 1e-10 s after the minimum epoch, which
       was labelled one tick before it and is now labelled at or after it.
   - **Also moves:**
-    - with Velocity-Verlet, a minimum epoch within its own lag of a crossing (up to 0.095 s at 10 s steps): the decision
-      follows Velocity-Verlet's trajectory, not the Keplerian epoch;
+    - with Velocity-Verlet, a minimum epoch within its own lag of a crossing: the decision follows Velocity-Verlet's
+      trajectory, not the Keplerian epoch. At 10 s steps the lag reaches 0.095 s at a node, 0.18 s at an apsis of the
+      orbit after a Velocity-Verlet burn and 1.4 s at the intersection of an apsidal alignment (Linux x64; to be
+      confirmed by the CI);
     - an apsis at the start of the propagation given by Keplerian elements (r·v exactly 0) with the minimum epoch at
-      that start now fires there instead of one orbit later.
+      that start now fires there with RK7(8), at the first step end with Velocity-Verlet, instead of one orbit later.
   - **User code:**
     - a user `ImpulseManeuver` whose g has no recurring crossing (a time-like g) and whose root precedes its minimum
       epoch no longer fires in the window: it used to fire at the minimum epoch;

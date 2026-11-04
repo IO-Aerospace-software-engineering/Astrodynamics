@@ -31,6 +31,10 @@ the rocket equation (engine ISP, fuel flow and total mass), and the window is pl
 
 The end of `ManeuverWindow` is the earliest epoch at which the next maneuver of the chain may fire.
 
+The two-thirds split dates back to the initial .NET implementation and no derivation of it is on
+record. The usual impulsive approximation of a finite burn centres the burn on the impulse (50 %).
+The value is kept unchanged for now; it will be revisited together with finite-thrust modelling.
+
 ## Minimum Epoch
 
 `MinimumEpoch` is the earliest epoch at which the maneuver may fire (#569). The maneuver fires at the first crossing of
@@ -61,10 +65,6 @@ its g-function in its direction at or after the minimum epoch, searched from the
 Before 11.0.0 the integrators compared that +1 with the first step end after the minimum epoch: a `PerigeeHeightManeuver`
 gated where r·v < 0 fired at the minimum epoch, and an `ApogeeHeightManeuver` gated in the step of its perigee, before
 it, fired one orbit later (#569).
-
-The two-thirds split dates back to the initial .NET implementation and no derivation of it is on
-record. The usual impulsive approximation of a finite burn centres the burn on the impulse (50 %).
-The value is kept unchanged for now; it will be revisited together with finite-thrust modelling.
 
 ## Concrete Maneuvers
 
