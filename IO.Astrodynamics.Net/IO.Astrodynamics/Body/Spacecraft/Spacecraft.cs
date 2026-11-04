@@ -397,13 +397,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Put a maneuver in standby: the head of the maneuver chain, the first maneuver the next propagation can execute.
-        /// Each <c>Propagate</c> starts the chain again from it.
+        /// Put a maneuver in standby. When no maneuver is in standby, it becomes the head of the maneuver chain
+        /// (<see cref="Maneuver.Maneuver.SetNextManeuver"/>), from which each <c>Propagate</c> starts the chain again.
         /// </summary>
-        /// <param name="maneuver">The maneuver, the head of its chain (<see cref="Maneuver.Maneuver.SetNextManeuver"/>).</param>
+        /// <param name="maneuver">The maneuver to put in standby.</param>
         /// <param name="minimumEpoch">Null to keep the minimum epoch the maneuver was given. When later than that minimum
-        /// epoch, its new one: the maneuver never fires before it, and every later propagation keeps it, as the one of its
-        /// constructor (#573). An earlier value changes nothing.</param>
+        /// epoch, its new one, which every later propagation keeps, as the one of its constructor (#573): an
+        /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it (an attitude reads no minimum epoch). An earlier
+        /// value changes nothing.</param>
         public void SetStandbyManeuver(Maneuver.Maneuver maneuver, Time? minimumEpoch = null)
         {
             if (minimumEpoch.HasValue)
