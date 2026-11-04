@@ -67,7 +67,9 @@ public class PropagatedArcsTests
     /// <summary>The managed reads within ±150 s of an impulse against the RK7(8) solution, at 1 and 10 s outputs, one or two
     /// impulses about the Earth: the far error of the Lagrange interpolation, no trace of the impulse. Worst 1.14e-8 /
     /// 1.14e-8 / 1.65e-8 m (a timed impulse 0.1 s before an output, 10 s; CI run 41651463194; twice 1.65e-8 falls on 3.3e-8, the
-    /// step above for macOS arm64's unprinted digits); main 23.5 to 1 420 m.</summary>
+    /// step above for macOS arm64's unprinted digits); main 23.5 to 1 420 m. Since #569 the combined maneuver fires at its
+    /// apogee instead of its minimum epoch: Linux worst 1.21e-8 m (Combined, 1 s outputs; Linux x64, 2026-11-04), Windows
+    /// and macOS arm64 to be measured again by the CI, the limit unchanged until then.</summary>
     internal const double NearRk = 3.4e-8;
 
     /// <summary>The same on the chain of four of <c>ScenarioTests</c> (Earth, Moon and Sun, 24.7 h). Worst 2.25e-8 / 2.25e-8
@@ -156,7 +158,9 @@ public class PropagatedArcsTests
     internal const double VelocityBeforeMoonVv = 2.0e-11;
 
     /// <summary>The velocity of <c>spkezr</c> on the SPK 1 µs before an impulse against the solution, about the Earth.
-    /// Worst 7.95e-7 m/s, the same on the three platforms (Perigee, Velocity-Verlet at 60 s; CI run 41651463194).</summary>
+    /// Worst 7.95e-7 m/s, the same on the three platforms (Perigee, Velocity-Verlet at 60 s; CI run 41651463194). Since #569
+    /// (the combined maneuver at its apogee): Linux worst 8.54e-7 m/s (Combined, Velocity-Verlet at 60 s; Linux x64,
+    /// 2026-11-04), Windows and macOS arm64 to be measured again by the CI, the limit unchanged until then.</summary>
     internal const double VelocityBeforeSpk = 1.6e-6;
 
     /// <summary>The same in SSB mode, against the anchored reference (<see cref="AnchoredVelocityBefore"/>): the resolution
@@ -197,6 +201,19 @@ public class PropagatedArcsTests
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
     }
 
+    /// <summary>
+    /// #540's LEO 90 s before its apogee, by CSPICE's <c>prop2b</c> back from the apogee, labelled at
+    /// <paramref name="start"/>: a combined maneuver open from the start fires at the apogee, S + 90 s, within the first two
+    /// outputs at 60 s, the short arc of the <c>CombinedLate</c> cases (choice 13 of the design of #569; before #569 they
+    /// were gated at S + 120 s, where r·v &lt; 0, and fired there on the false crossing of the guard).
+    /// </summary>
+    internal static StateVector LeoBeforeApogee(CelestialItem earth, Time start)
+    {
+        var apogee = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), earth, start, Frame.ICRF);
+        var before = SpiceAPI.Instance.Propagate2Bodies(apogee, earth.GM, TimeSpan.FromSeconds(-90.0));
+        return new StateVector(before.Position, before.Velocity, earth, start, Frame.ICRF);
+    }
+
     internal static readonly string[] OtherFrames = ["GCRF", "ECLIPJ2000", "B1950", "FK4", "ECLIPB1950", "GALACTIC"];
 
     internal static Frame FrameOf(string name) => name switch
@@ -222,7 +239,8 @@ public class PropagatedArcsTests
             cases.Add($"{maneuver}|{integrator}|{step}|Propagate|ICRF|Earth");
         }
 
-        // An impulse within the first two outputs: a short arc, filled
+        // An impulse within the first two outputs: a short arc, filled (an ungated combined maneuver from 90 s before its
+        // apogee, choice 13 of the design of #569)
         foreach (var integrator in new[] { "VV", "VVd", "RK78" })
             cases.Add($"CombinedLate|{integrator}|60|Propagate|ICRF|Earth");
 
@@ -657,7 +675,9 @@ public class PropagatedArcsTests
                 {
                     // #540's LEO from apogee, 400 x 1 000 km: the apogee-raising impulse at perigee, about S + 2 964 s
                     center = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start);
-                    orbit = new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), center, start, Frame.ICRF);
+                    orbit = maneuver == "CombinedLate"
+                        ? LeoBeforeApogee(center, start)
+                        : new StateVector(new Vector3(-7378137.0, 0.0, 0.0), new Vector3(0.0, -5509.9, -4623.4), center, start, Frame.ICRF);
                     if (variant == "Eclipse")
                     {
                         // The same orbit turned by 91.7° in its plane: its perigee, and so the impulse, at the edge of the Earth's
@@ -784,7 +804,7 @@ public class PropagatedArcsTests
                 case "Combined":
                     return [new CombinedManeuver(center, start.AddSeconds(60.0), TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine)];
                 case "CombinedLate":
-                    return [new CombinedManeuver(center, start.AddSeconds(120.0), TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine)];
+                    return [new CombinedManeuver(center, start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine)];
                 case "Chain4":
                 {
                     var target = new StateVector(new Vector3(4390853.7278876612, 5110607.0005866792, 917659.86391987884),
