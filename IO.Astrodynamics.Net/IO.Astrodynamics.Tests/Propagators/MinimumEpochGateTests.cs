@@ -52,12 +52,16 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// <para>
 /// <b>RK7(8)</b> fires within <see cref="Rk78Epoch"/> of the closed form, the 100 ns quantization of the epochs included,
 /// with its delta-V within <see cref="Rk78DeltaV"/>, per family. <b>Velocity-Verlet</b> fires at the end of the step that
-/// holds the crossing: burn − closed form in [0, h). Its own crossing lags the closed form (<see cref="VelocityVerletLagLimit"/>);
-/// where the minimum epoch is closer to the crossing than 10 times that lag, the closed form does not decide the side
-/// Velocity-Verlet's trajectory is on, and the row is asserted on its own g-function (its cubic Hermite at the minimum
-/// epoch, the state the gate evaluates, then its step ends). Every Velocity-Verlet row with a solution is asserted on its
-/// own g-function too. <b>SSB mode</b> is checked for the rule only, on the solution's own g-function: the closed form
-/// omits the Sun.
+/// holds its own crossing, the root of the g-function on its cubic Hermite, which lags the closed form. Every row with a
+/// solution is asserted on its own g-function: the first crossing in the maneuver's direction at or after the minimum
+/// epoch (its cubic Hermite there, the state the gate evaluates, then its step ends) is at the step end of the burn. Where
+/// the minimum epoch is at least 10 times that lag from the crossing, the row is also asserted on the closed form: the
+/// burn less its own crossing in [0, h), the lag within <see cref="VelocityVerletLagLimit"/> of its family, and the burn
+/// less the closed form in [−limit, h + limit) (after a Velocity-Verlet burn, the next crossing is that of
+/// Velocity-Verlet's orbit, and can fall within the lag before a step end). Closer, the closed form does not decide the
+/// side Velocity-Verlet's trajectory is on, and the row is asserted on its own g-function only. A row without a solution
+/// (<c>Scenario</c>) is asserted on the closed form only, the burn less the closed form in [−limit, h + limit).
+/// <b>SSB mode</b> is checked for the rule only, on the solution's own g-function: the closed form omits the Sun.
 /// </para>
 /// <para>
 /// <b>Limits.</b> PROVISIONAL: twice the worst on Linux x64 (2026-11-04, the MEASURE lines of this class), rounded up at
@@ -94,13 +98,14 @@ public class MinimumEpochGateTests
     /// Velocity-Verlet, its own crossing (the root of the g-function on its cubic Hermite) less the closed form, s, per
     /// family and step: apsis 1.75e-3 / 1.76e-1 s at 1 / 10 s (the second burn of the chain with a hold of 4 000 s, on the
     /// orbit after Velocity-Verlet's first burn); node 2.19e-3 / 9.53e-2 s; intersection −1.44e-2 / −1.44 s (the g-function
-    /// of the apsidal alignment swings fast there); time 2.40e-11 / 3.13e-11 s (the root of a time-like g, the bisection's resolution); moon
-    /// 2.57e-4 / 2.55e-2 s. PROVISIONAL.
+    /// of the apsidal alignment swings fast there); time −2.27e-13 / −2.27e-13 s (a time-like g has no dynamics: its root is
+    /// Velocity-Verlet's crossing, found to the resolution of t in double, an ulp at 1 100 s); moon 2.57e-4 / 2.55e-2 s. The
+    /// reference root is bisected to the resolution of t in double, below every lag it bounds. PROVISIONAL.
     /// </summary>
     internal static readonly IReadOnlyDictionary<string, double> VelocityVerletLagLimit = new Dictionary<string, double>
     {
         ["apsis|VV1"] = 3.5e-3, ["apsis|VV10"] = 3.6e-1, ["node|VV1"] = 4.4e-3, ["node|VV10"] = 2.0e-1, ["intersection|VV1"] = 2.9e-2,
-        ["intersection|VV10"] = 2.9, ["time|VV1"] = 4.8e-11, ["time|VV10"] = 6.3e-11, ["moon|VV1"] = 5.2e-4, ["moon|VV10"] = 5.1e-2
+        ["intersection|VV10"] = 2.9, ["time|VV1"] = 4.6e-13, ["time|VV10"] = 4.6e-13, ["moon|VV1"] = 5.2e-4, ["moon|VV10"] = 5.1e-2
     };
 
     internal static readonly Time S = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
@@ -142,7 +147,7 @@ public class MinimumEpochGateTests
 
         // Face A: a positive-to-negative maneuver gated where r·v < 0
         foreach (var m in new[] { "m1000", "m2000", "m2900" }) Add("perigee/" + m, integrators);
-        foreach (var m in new[] { "m1000", "m2900" }) Add("combined/" + m, integrators);
+        foreach (var m in new[] { "m1000", "m2000", "m2900" }) Add("combined/" + m, integrators);
 
         // Controls: the decision of the guard holds (r·v > 0 at the gate, a true crossing in the gated step; a gate far
         // from a negative-to-positive crossing)
@@ -184,6 +189,14 @@ public class MinimumEpochGateTests
         {
             Add(p, ["RK", "RKf60"], "Cov");
             Add(p, ["RK"], "CovStep");
+        }
+
+        // The other activation paths of the covariance propagation, on face A and face B: the builder, the Scenario
+        // overload, the batch task
+        foreach (var p in new[] { "perigee/m1000", "apogee/peri-3" })
+        {
+            foreach (var path in new[] { "CovBuilder", "CovScenario", "CovTask" }) Add(p, ["RK", "RKf60"], path);
+            foreach (var path in new[] { "CovBuilderStep", "CovScenarioStep", "CovTaskStep" }) Add(p, ["RK"], path);
         }
 
         foreach (var p in paths) Add(p, ["VV1", "VV10", "RK"], frame: "SSB");
@@ -274,7 +287,10 @@ public class MinimumEpochGateTests
             GateRun.Run(-(7900 + 10 * Array.IndexOf(new[] { "VV1", "VV10", "RK", "RKf60" }, integrator) + i), $"f5/hold{h}|{integrator}|Propagate|ICRF")).ToArray();
         var first = runs[0];
         var expected = first.Case.Expected(first);
+        double error0 = first.Seconds(first.Burns[0].Epoch) - expected[0].Tc;
+        double dvError0 = first.Burns[0].DeltaV - expected[0].DeltaV;
         double error = first.Seconds(first.Burns[1].Epoch) - expected[1].Tc;
+        double dvError = first.Burns[1].DeltaV - expected[1].DeltaV;
         foreach (var run in runs)
         {
             Assert.Equal(2, run.Burns.Count);
@@ -283,15 +299,21 @@ public class MinimumEpochGateTests
             Assert.Equal(first.Spacecraft.PropagatedStates[^1].Position, run.Spacecraft.PropagatedStates[^1].Position);
         }
 
-        _output.WriteLine($"MEASURE #569 gate F5 {integrator}: second burn - closed form {error:E2} s, dV {first.Burns[1].DeltaV:F4} m/s (closed form {expected[1].DeltaV:F4}), the same for the holds {string.Join(", ", holds)} s");
+        _output.WriteLine($"MEASURE #569 gate F5 {integrator}: first burn - closed form {error0:E2} s, dV - closed form {dvError0:E2} m/s; second burn - closed form {error:E2} s, dV {first.Burns[1].DeltaV:F4} m/s (closed form {expected[1].DeltaV:F4}), dV - closed form {dvError:E2} m/s; the same for the holds {string.Join(", ", holds)} s");
         if (first.IsVelocityVerlet)
         {
+            // The first burn on the initial orbit, within Velocity-Verlet's lag of its step end; the second at the step end
+            // after the apogee of the orbit after the first
+            double lagLimit = VelocityVerletLagLimit[$"apsis|{integrator}"];
+            Assert.InRange(error0, -lagLimit, first.Step + lagLimit);
             Assert.InRange(error, 0.0, first.Step);
         }
         else
         {
+            Assert.True(System.Math.Abs(error0) <= Rk78Epoch["apsis"], $"first burn {error0:E3} s");
+            Assert.True(System.Math.Abs(dvError0) <= Rk78DeltaV["apsis"], $"first burn dV {dvError0:E3} m/s");
             Assert.True(System.Math.Abs(error) <= Rk78Epoch["apsis"], $"{error:E3} s");
-            Assert.True(System.Math.Abs(first.Burns[1].DeltaV - expected[1].DeltaV) <= Rk78DeltaV["apsis"]);
+            Assert.True(System.Math.Abs(dvError) <= Rk78DeltaV["apsis"], $"dV {dvError:E3} m/s");
         }
     }
 
@@ -410,9 +432,12 @@ public class MinimumEpochGateTests
                     _ => true
                 };
                 if (!crossing) continue;
-                for (int i = 0; i < 80 && hi - lo > 1e-10; i++)
+                // To the resolution of t in double, so that the reference resolves better than the lags it bounds
+                for (int i = 0; i < 200; i++)
                 {
-                    double mid = 0.5 * (lo + hi), gMid = G(mid);
+                    double mid = 0.5 * (lo + hi);
+                    if (mid <= lo || mid >= hi) break;
+                    double gMid = G(mid);
                     if (gLo * gMid <= 0.0) hi = mid;
                     else (lo, gLo) = (mid, gMid);
                 }
@@ -560,18 +585,36 @@ public class MinimumEpochGateTests
             };
 
             PropagationSolution solution;
-            if (path == "Scenario")
+            var covariance = path.StartsWith("Cov")
+                ? new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance, IncludeInStepControl = path.EndsWith("Step") }
+                : null;
+            if (path is "Scenario" or "CovScenario" or "CovScenarioStep")
             {
                 var scenario = new Scenario($"SGT{-naifId}", new IO.Astrodynamics.Mission.Mission($"mGT{-naifId}"), window);
                 foreach (var body in bodies) scenario.AddCelestialItem(body);
                 scenario.AddSpacecraft(spacecraft);
-                scenario.SimulateAsync(false, false, output, NewIntegrator).GetAwaiter().GetResult();
+                var simulation = covariance == null
+                    ? scenario.SimulateAsync(false, false, output, NewIntegrator)
+                    : scenario.SimulateAsync(false, false, output, NewIntegrator, covariance);
+                simulation.GetAwaiter().GetResult();
                 solution = spacecraft.LastPropagation;
             }
-            else if (path.StartsWith("Cov"))
+            else if (path.StartsWith("CovBuilder"))
             {
-                solution = spacecraft.Propagate(window, bodies, NewIntegrator(), false, false, output,
-                    new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance, IncludeInStepControl = path == "CovStep" });
+                using var propagator = new CentralBodyPropagatorBuilder(window, spacecraft, NewIntegrator(), output)
+                    .WithPerturbingBodies(bodies).WithCovariancePropagation(covariance).Build();
+                solution = propagator.Propagate();
+            }
+            else if (path.StartsWith("CovTask"))
+            {
+                var task = new PropagationTask(spacecraft, window, bodies, false, false, output, NewIntegrator) { CovariancePropagation = covariance };
+                var result = BatchPropagator.Propagate([task]).Results[0];
+                Assert.Null(result.Error);
+                solution = result.Solution;
+            }
+            else if (covariance != null)
+            {
+                solution = spacecraft.Propagate(window, bodies, NewIntegrator(), false, false, output, covariance);
             }
             else
             {
