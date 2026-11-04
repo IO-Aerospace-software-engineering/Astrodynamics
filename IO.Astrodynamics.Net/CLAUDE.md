@@ -560,7 +560,7 @@ Industry-standard g-function zero-crossing approach for maneuver triggering and 
 
 **Key Types**
 - `IEventDetector`: `Evaluate(state)` → scalar, `Direction` → `CrossingDirection`, `HandleEvent()` → `EventResult`
-- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`, handles maneuver chain advancement
+- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`, handles maneuver chain advancement; its `MinimumEpoch` is the gate of the detector (#569, internal `IGatedEventDetector`): `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate in the step that holds it and fire at the first crossing at or after it (a zero at the gate counts there when the sign after it is the target sign); the public `Evaluate` keeps its +1 before the gate for external callers
 - `CrossingDirection` enum: `NegativeToPositive`, `PositiveToNegative`, `Any`
 - `EventResult`: Modified state, orientation, action (`StopAndRestart` or `Continue`), next detector
 
@@ -569,6 +569,7 @@ Each `ImpulseManeuver` implements:
 - `ComputeEventValue(StateVector localState)` → continuous g-function (state is maneuver-center-relative)
 - `EventCrossingDirection` → which zero-crossing triggers the maneuver
 - `CheckPreconditions(StateVector)` → optional additional constraints (default: true)
+- `ComputeEventValueAtSearchStart(StateVector)` (internal virtual) → the g-function from the state at the minimum epoch; `PlaneAlignmentManeuver` takes there the node it moves toward, never one just passed
 
 | Maneuver | g-function | Direction | Fires at |
 |----------|-----------|-----------|----------|

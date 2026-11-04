@@ -139,6 +139,10 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - A numerical propagation whose resolved central body is the Earth integrates over the TT seconds between the instants of its window (#501): the forces at t are those of TT₀ + t (bodies and orientation at its TDB, drag at its UTC). Any other central body, SSB mode included, integrates over TDB seconds, bit for bit as before
 - Labels (segment bases, stages, events, outputs) stay TDB; `Duration`, `CumulativeTime`, the event time and the `IIntegrator` duration count the seconds of the argument; `AtEpoch`, `EpochAtMeanAnomaly`, Lambert and IOD count TT seconds about the Earth, TDB otherwise, whatever the tags (#508)
 
+### Minimum Epoch of an Impulse
+
+- An impulse fires at the first crossing of its g-function in its direction at or after its `MinimumEpoch`, searched from the integrated state there (#569): `VVIntegrator` and `RK78Integrator` evaluate g at the gate in the step that holds it (internal `IGatedEventDetector`, `EventGates`; RK7(8) by a shortened step and a bisection over [gate, step end], Velocity-Verlet by the cubic Hermite of the step); a g exactly zero at the gate counts there when the sign after it is the target sign (inside a step, on a step end, at the base); `PlaneAlignmentManeuver` takes the node it moves toward at the gate (`ComputeEventValueAtSearchStart`). The public `ManeuverEventDetector.Evaluate` keeps its +1 before the gate, which the library's integrators do not read; every step without a gate is unchanged. See `docs/reference/impulse-maneuvers.md#minimum-epoch`
+
 ### Thread Safety
 
 - CSPICE P/Invoke calls: use shared lock — **not thread-safe**
