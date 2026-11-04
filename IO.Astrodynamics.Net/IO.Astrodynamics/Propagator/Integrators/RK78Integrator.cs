@@ -511,7 +511,8 @@ public sealed class RK78Integrator : Integrator
     /// <para>
     /// In the step that holds the gate of the detector (#569, <see cref="EventGates"/>), the bisection runs over
     /// [gate, step end] on the g-function whatever the epoch, from its value at the gate, and the event is never before the
-    /// gate; a g-value exactly zero at the gate is the event there.
+    /// gate; a g-value exactly zero at the gate is the event there. The event is labelled at the first tick that does not
+    /// compare before the gate, also for a UTC gate whose TDB label compares before it.
     /// </para>
     /// <para>
     /// The event time is then moved to the epoch the propagator restarts from, which <see cref="Time"/> holds to
@@ -535,14 +536,15 @@ public sealed class RK78Integrator : Integrator
             eventT = zeroAtGate
                 ? gateT
                 : System.Math.Max(FindRootInsideStep(step, baseEpoch, gateT, stepEnd, gated.EvaluateOpen, gStart, gEnd), gateT);
+            eventT = NotBeforeGate(baseEpoch, OnEpochGrid(baseEpoch, eventT, step.CumulativeTime, stepEnd), stepEnd,
+                gated.Gate);
         }
         else
         {
             eventT = FindRootInsideStep(step, baseEpoch, step.CumulativeTime, stepEnd, detector.Evaluate, gStart, gEnd);
+            eventT = OnEpochGrid(baseEpoch, eventT, step.CumulativeTime, stepEnd);
         }
 
-        eventT = TimeArgument.OnEpochGrid(baseEpoch, TimeArgument.EpochAt(baseEpoch, eventT), step.CumulativeTime,
-            stepEnd);
         var (eventPos, eventVel) = StateInsideStep(step, baseEpoch, eventT);
         return new EventInfo(detectorIndex, eventT, eventPos, eventVel);
     }
@@ -551,11 +553,28 @@ public sealed class RK78Integrator : Integrator
     private double FindRootInsideStep(AcceptedStep step, Time baseEpoch, double tStart, double tEnd,
         Func<StateVector, double> g, double gStart, double gEnd)
     {
-        return BisectionEventFinder.FindRoot(tStart, tEnd, t =>
+        return BisectionEventFinder.FindRoot(tStart, tEnd, t => g(StateInsideAcceptedStep(step, baseEpoch, t)), gStart,
+            gEnd);
+    }
+
+    // The time of the epoch the propagator restarts from, which Time holds to 100 ns
+    private double OnEpochGrid(in Time baseEpoch, double t, double tStart, double tEnd) =>
+        TimeArgument.OnEpochGrid(baseEpoch, TimeArgument.EpochAt(baseEpoch, t), tStart, tEnd);
+
+    // The first tick from t on whose epoch does not compare before the gate: a UTC gate whose TDB label compares before it
+    // (about 1 in 200 000) leaves a root at the gate's instant labelled one tick before it. The end of the step, where the
+    // gate opened, does not compare before it
+    private double NotBeforeGate(in Time baseEpoch, double t, double tEnd, in Time gate)
+    {
+        const int maxTicks = 4;
+        for (int i = 0; i < maxTicks && t < tEnd; i++)
         {
-            var (p, v) = StateInsideStep(step, baseEpoch, t);
-            return g(StateAt(p, v, TimeArgument.EpochAt(baseEpoch, t)));
-        }, gStart, gEnd);
+            var epoch = TimeArgument.EpochAt(baseEpoch, t);
+            if (!(epoch < gate)) break;
+            t = TimeArgument.OnEpochGrid(baseEpoch, epoch + TimeSpan.FromTicks(1), t, tEnd);
+        }
+
+        return t;
     }
 
     /// <inheritdoc />

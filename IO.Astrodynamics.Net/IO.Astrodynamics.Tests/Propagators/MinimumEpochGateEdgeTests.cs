@@ -31,8 +31,9 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 
 /// <summary>
 /// The edges of the minimum-epoch gate (#569): a g-function exactly zero at the gate, inside a step, on a step end and at
-/// the base (choice 6 of the design); a root just after the gate with <see cref="EventAction.Continue"/>, through the
-/// propagator's calls and through <c>Spacecraft.Propagate</c> (choice 3); two gated detectors through
+/// the base (choice 6 of the design); a UTC gate whose TDB label compares before it (choice 1); a root just after the gate
+/// with <see cref="EventAction.Continue"/>, through the propagator's calls and through <c>Spacecraft.Propagate</c>
+/// (choice 3); two gated detectors through
 /// <see cref="IIntegrator.IntegrateSegment"/>; the search-start rule of <see cref="PlaneAlignmentManeuver"/> (choice 7); the
 /// public <see cref="ManeuverEventDetector.Evaluate"/> (choice 8); <c>EvaluateAvoidance</c> after an impulse whose gate
 /// moved its burn; the two-<c>Propagate</c> construction of GMAT in SSB mode.
@@ -140,6 +141,45 @@ public class MinimumEpochGateEdgeTests
         foreach (var direction in new[] { CrossingDirection.NegativeToPositive, CrossingDirection.PositiveToNegative, CrossingDirection.Any })
         foreach (var sign in new[] { 1.0, -1.0 })
             yield return [integrator, gate, direction, sign];
+    }
+
+    /// <summary>
+    /// A UTC gate whose TDB label compares before it (1 UTC gate in 200 000; none in TT or TAI): the root of
+    /// g = TT(epoch) − TT(gate), at the gate's instant, is labelled at the first TDB tick that does not compare before the
+    /// gate in RK7(8), adaptive and fixed-step; Velocity-Verlet fires at the step end after it. Before the review of #569,
+    /// fixed-step RK7(8) at 10 s labelled it one tick before the gate (choice 1).
+    /// </summary>
+    [Theory]
+    [InlineData("RKf10")]
+    [InlineData("RK")]
+    [InlineData("VV1")]
+    [InlineData("VV10")]
+    public void UtcGate_WhoseTdbTickComparesBeforeIt_TheEventIsNotBeforeTheGate(string integratorName)
+    {
+        var gate = new Time(new DateTime(2024, 3, 1, 12, 0, 33, DateTimeKind.Utc).AddTicks(2826603), TimeFrame.UTCFrame);
+        Assert.True(gate.ToTDB() < gate);
+        var firstTickNotBefore = gate.ToTDB();
+        while (firstTickNotBefore < gate) firstTickNotBefore += TimeSpan.FromTicks(1);
+
+        double gateSeconds = PropagationTimeArgument.Tt.SecondsBetween(S, gate);
+        var detector = new GatedDetector
+        {
+            GateEpoch = gate, Direction = CrossingDirection.NegativeToPositive,
+            G = s => PropagationTimeArgument.Tt.SecondsBetween(S, s.Epoch) - gateSeconds
+        };
+        var integrator = NewIntegrator(integratorName);
+        var result = IntegrateLine(integrator, detector);
+
+        Assert.NotNull(result.Event);
+        double t = result.Event.Value.EventTime;
+        var epoch = integrator.TimeArgument.EpochAt(S, t);
+        long ticks = epoch.ToTAI().DateTime.Ticks - gate.ToTAI().DateTime.Ticks;
+        _output.WriteLine($"MEASURE #569 gate UTC {integratorName}: gate {gate.DateTime:O} UTC at {gateSeconds:R} TT s, event {epoch.DateTime:O} TDB at {t:R} s, {ticks} ticks (TAI) from the gate");
+        Assert.False(epoch < gate);
+        if (integratorName.StartsWith("RK"))
+            Assert.Equal(firstTickNotBefore, epoch);
+        else
+            Assert.Equal(System.Math.Floor(gateSeconds / (integratorName == "VV1" ? 1.0 : 10.0) + 1.0) * (integratorName == "VV1" ? 1.0 : 10.0), t);
     }
 
     /// <summary>
