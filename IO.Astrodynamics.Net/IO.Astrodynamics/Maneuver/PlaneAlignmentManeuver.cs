@@ -20,6 +20,12 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <summary>
+        /// The distance to the target plane below which the node is taken by the rate of change of g rather than by its
+        /// sign, relative to the distance to the center.
+        /// </summary>
+        private const double NodeThreshold = 1e-6;
+
+        /// <summary>
         /// g = r · ĥ_target : height above target orbital plane.
         /// Zero at both ascending and descending nodes.
         /// CrossingDirection distinguishes which node triggers the maneuver.
@@ -34,7 +40,7 @@ namespace IO.Astrodynamics.Maneuver
             {
                 // Ascending node: spacecraft crosses from below to above target plane (g: - → +, NegToPos)
                 // Descending node: spacecraft crosses from above to below target plane (g: + → -, PosToNeg)
-                double threshold = 1e-6 * localState.Position.Magnitude();
+                double threshold = NodeThreshold * localState.Position.Magnitude();
 
                 if (System.Math.Abs(g) < threshold)
                 {
@@ -42,25 +48,47 @@ namespace IO.Astrodynamics.Maneuver
                     // Positive dg/dt → ascending through the plane → ascending node
                     // Negative dg/dt → descending through the plane → descending node
                     double dgdt = localState.Velocity * targetH;
-                    IsAscendingNode = dgdt > 0;
-                }
-                else if (g > 0)
-                {
-                    // Above target plane: next zero-crossing going negative is descending node
-                    IsAscendingNode = false;
+                    LockNode(dgdt > 0);
                 }
                 else
                 {
+                    // Above target plane: next zero-crossing going negative is descending node
                     // Below target plane: next zero-crossing going positive is ascending node
-                    IsAscendingNode = true;
+                    LockNode(!(g > 0));
                 }
-
-                _crossingDirection = IsAscendingNode == true
-                    ? CrossingDirection.NegativeToPositive
-                    : CrossingDirection.PositiveToNegative;
             }
 
             return g;
+        }
+
+        /// <inheritdoc />
+        /// <remarks>
+        /// At the start of a search, the state at the minimum epoch (#569), the node is the one the spacecraft moves toward:
+        /// within the threshold of a node it moves away from (g · dg/dt &gt; 0), that node is passed, and the search takes
+        /// the next node, that of the sign of g. Otherwise the rule of <see cref="ComputeEventValue"/>, which keeps the node
+        /// by dg/dt within the threshold, as a state handed to the maneuver at its node needs.
+        /// </remarks>
+        internal override double ComputeEventValueAtSearchStart(StateVector localState)
+        {
+            if (IsAscendingNode == null)
+            {
+                var targetH = TargetOrbit.SpecificAngularMomentum().Normalize();
+                double g = localState.Position * targetH;
+                double dgdt = localState.Velocity * targetH;
+                if (System.Math.Abs(g) < NodeThreshold * localState.Position.Magnitude() && g * dgdt > 0.0)
+                {
+                    LockNode(g < 0.0);
+                }
+            }
+
+            return ComputeEventValue(localState);
+        }
+
+        // The node the maneuver waits for, and the direction of its crossing
+        private void LockNode(bool ascending)
+        {
+            IsAscendingNode = ascending;
+            _crossingDirection = ascending ? CrossingDirection.NegativeToPositive : CrossingDirection.PositiveToNegative;
         }
 
         public override CrossingDirection EventCrossingDirection => _crossingDirection;

@@ -295,6 +295,8 @@ public sealed class RK78Integrator : Integrator
             }
         }
 
+        // The gates still closed at the base (#569), but that of the detector of the event just handled, which it decided
+        var gates = EventGates.Create(eventDetectors, baseEpoch, prevG, _skipRootOfLastEvent ? _lastEventDetector : null);
         _skipRootOfLastEvent = false;
 
         while (true)
@@ -385,14 +387,16 @@ public sealed class RK78Integrator : Integrator
                 // Check event detectors
                 if (eventDetectors != null && eventDetectors.Count > 0)
                 {
-                    UpdateEvalState(pos, vel, TimeArgument.EpochAt(baseEpoch, t));
+                    var endEpoch = TimeArgument.EpochAt(baseEpoch, t);
+                    gates?.AfterStep(segment.Steps[^1], baseEpoch, endEpoch, prevG, this);
+                    UpdateEvalState(pos, vel, endEpoch);
                     int detIdx = CheckEventDetectors(eventDetectors, EvalState, prevG, currG);
 
                     if (detIdx >= 0)
                     {
                         _currentH = hNew;
                         return new IntegrationResult(segment,
-                            LocateEvent(segment, eventDetectors[detIdx], detIdx, prevG[detIdx], currG[detIdx]));
+                            LocateEvent(segment, eventDetectors[detIdx], detIdx, prevG[detIdx], currG[detIdx], gates));
                     }
 
                     (prevG, currG) = (currG, prevG);
@@ -421,13 +425,15 @@ public sealed class RK78Integrator : Integrator
                 // Check event detectors
                 if (eventDetectors != null && eventDetectors.Count > 0)
                 {
-                    UpdateEvalState(pos, vel, TimeArgument.EpochAt(baseEpoch, t));
+                    var endEpoch = TimeArgument.EpochAt(baseEpoch, t);
+                    gates?.AfterStep(segment.Steps[^1], baseEpoch, endEpoch, prevG, this);
+                    UpdateEvalState(pos, vel, endEpoch);
                     int detIdx = CheckEventDetectors(eventDetectors, EvalState, prevG, currG);
 
                     if (detIdx >= 0)
                     {
                         return new IntegrationResult(segment,
-                            LocateEvent(segment, eventDetectors[detIdx], detIdx, prevG[detIdx], currG[detIdx]));
+                            LocateEvent(segment, eventDetectors[detIdx], detIdx, prevG[detIdx], currG[detIdx], gates));
                     }
 
                     (prevG, currG) = (currG, prevG);
@@ -503,12 +509,17 @@ public sealed class RK78Integrator : Integrator
     /// are the same doubles.
     /// </para>
     /// <para>
+    /// In the step that holds the gate of the detector (#569, <see cref="EventGates"/>), the bisection runs over
+    /// [gate, step end] on the g-function whatever the epoch, from its value at the gate, and the event is never before the
+    /// gate; a g-value exactly zero at the gate is the event there.
+    /// </para>
+    /// <para>
     /// The event time is then moved to the epoch the propagator restarts from, which <see cref="Time"/> holds to
     /// 100 ns, so that the state, the epoch of the next segment and the variational values refer to the same instant.
     /// </para>
     /// </remarks>
     private EventInfo LocateEvent(PropagationSegment segment, IEventDetector detector, int detectorIndex, double gStart,
-        double gEnd)
+        double gEnd, EventGates gates)
     {
         _lastEventDetector = detector;
         _lastEventGPastRoot = gEnd;
@@ -517,16 +528,43 @@ public sealed class RK78Integrator : Integrator
         double stepEnd = step.CumulativeTime + step.StepSize;
         var baseEpoch = segment.BaseEpoch;
 
-        double eventT = BisectionEventFinder.FindRoot(step.CumulativeTime, stepEnd, t =>
+        double eventT;
+        if (gates != null && gates.OpenedInLastStep(detectorIndex, out double gateT, out bool zeroAtGate))
         {
-            var (p, v) = StateInsideStep(step, baseEpoch, t);
-            return detector.Evaluate(CreateTempState(p, v, TimeArgument.EpochAt(baseEpoch, t)));
-        }, gStart, gEnd);
+            var gated = (IGatedEventDetector)detector;
+            eventT = zeroAtGate
+                ? gateT
+                : System.Math.Max(FindRootInsideStep(step, baseEpoch, gateT, stepEnd, gated.EvaluateOpen, gStart, gEnd), gateT);
+        }
+        else
+        {
+            eventT = FindRootInsideStep(step, baseEpoch, step.CumulativeTime, stepEnd, detector.Evaluate, gStart, gEnd);
+        }
 
         eventT = TimeArgument.OnEpochGrid(baseEpoch, TimeArgument.EpochAt(baseEpoch, eventT), step.CumulativeTime,
             stepEnd);
         var (eventPos, eventVel) = StateInsideStep(step, baseEpoch, eventT);
         return new EventInfo(detectorIndex, eventT, eventPos, eventVel);
+    }
+
+    // The root of g between tStart and tEnd inside the accepted step, by bisection on the states of shortened steps
+    private double FindRootInsideStep(AcceptedStep step, Time baseEpoch, double tStart, double tEnd,
+        Func<StateVector, double> g, double gStart, double gEnd)
+    {
+        return BisectionEventFinder.FindRoot(tStart, tEnd, t =>
+        {
+            var (p, v) = StateInsideStep(step, baseEpoch, t);
+            return g(StateAt(p, v, TimeArgument.EpochAt(baseEpoch, t)));
+        }, gStart, gEnd);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>A shortened RK7(8) step from the start of the step (13 force evaluations), the state
+    /// <see cref="LocateEvent"/> evaluates, at the accuracy of the integrator (#363).</remarks>
+    internal override StateVector StateInsideAcceptedStep(in AcceptedStep step, in Time baseEpoch, double t)
+    {
+        var (position, velocity) = StateInsideStep(step, baseEpoch, t);
+        return StateAt(position, velocity, TimeArgument.EpochAt(baseEpoch, t));
     }
 
     // The state at t, in seconds from the segment base epoch, by a shortened step from the start of the accepted step
@@ -557,14 +595,6 @@ public sealed class RK78Integrator : Integrator
             base.TimeArgument = value;
             _stepper.TimeArgument = value;
         }
-    }
-
-    /// <summary>
-    /// Create a temporary StateVector for event detector evaluation.
-    /// </summary>
-    private StateVector CreateTempState(in Vector3 pos, in Vector3 vel, in Time epoch)
-    {
-        return new StateVector(pos, vel, Observer, epoch, ReferenceFrame);
     }
 
     /// <summary>

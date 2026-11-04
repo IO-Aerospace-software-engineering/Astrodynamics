@@ -14,6 +14,11 @@ namespace IO.Astrodynamics.Propagator.Integrators;
 /// Velocity-Verlet (symplectic) fixed-step integrator.
 /// Produces a PropagationSegment with all accepted steps for dense output interpolation.
 /// </summary>
+/// <remarks>
+/// An event fires at the end of the step that holds its crossing. In the step that holds the gate of a gated detector
+/// (the minimum epoch of a maneuver, #569), the g-value at the gate, on the cubic Hermite of the step, replaces the
+/// previous g-value (<see cref="EventGates"/>).
+/// </remarks>
 public sealed class VVIntegrator : Integrator
 {
     public TimeSpan DeltaT { get; }
@@ -67,6 +72,9 @@ public sealed class VVIntegrator : Integrator
             }
         }
 
+        // The gates still closed at the base (#569)
+        var gates = EventGates.Create(eventDetectors, baseEpoch, prevG, null);
+
         while (t < duration)
         {
             double remaining = duration - t;
@@ -84,7 +92,8 @@ public sealed class VVIntegrator : Integrator
             var newVel = halfVel + accel * halfH;
 
             // Store accepted step
-            segment.AddStep(new AcceptedStep(t, h, pos, vel, newPos, newVel, startAccel, accel));
+            var accepted = new AcceptedStep(t, h, pos, vel, newPos, newVel, startAccel, accel);
+            segment.AddStep(accepted);
 
             t += h;
             pos = newPos;
@@ -93,7 +102,9 @@ public sealed class VVIntegrator : Integrator
             // Check event detectors
             if (eventDetectors != null && eventDetectors.Count > 0)
             {
-                UpdateEvalState(pos, vel, TimeArgument.EpochAt(baseEpoch, t));
+                var endEpoch = TimeArgument.EpochAt(baseEpoch, t);
+                gates?.AfterStep(accepted, baseEpoch, endEpoch, prevG, this);
+                UpdateEvalState(pos, vel, endEpoch);
                 int detIdx = CheckEventDetectors(eventDetectors, EvalState, prevG, currG);
 
                 if (detIdx >= 0)
