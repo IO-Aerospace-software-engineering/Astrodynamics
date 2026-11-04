@@ -124,6 +124,32 @@ A major version, because it breaks the API: members deprecated for removal in 11
   - **The cost:** one shortened RK7(8) step per segment with a minimum epoch inside it, in whichever step it lies; none
     in Velocity-Verlet.
   - No API change. See [Impulse Maneuvers](../reference/impulse-maneuvers.md#minimum-epoch).
+- **A spacecraft propagated again gated its chained maneuvers with the windows of an earlier propagation**
+  ([#573](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/573)).
+  - **The cause.** A propagation raises the minimum epoch of each chained maneuver to the end of the window of the
+    maneuver before it. `Spacecraft.Propagate` starts the chain again, but kept those raises, so a later propagation
+    from another state or over another window gated its maneuvers with the latest windows of every earlier run.
+  - **The effect.** Chained maneuvers fired late, by whole orbits. On a 400 × 1 000 km orbit with two
+    `ApogeeHeightManeuver`s (a hold of 5 000 s), propagated from the apogee and then again from the perigee, the second
+    burn fired one orbit (6 565.30 s) after that of a spacecraft never propagated, 2.4e6 m away after 6 hours, with
+    RK7(8) and Velocity-Verlet alike. An attitude between two impulses, `Scenario.SimulateAsync` run again,
+    `BatchPropagator` and the covariance propagation were affected the same way, and so were `ExecutedManeuvers`,
+    `ToOpm` and the scenario summary.
+  - **The fix.** The gate a propagation raises belongs to that propagation: the next `Spacecraft.Propagate` (and
+    `Scenario.SimulateAsync` and `BatchPropagator` through it) clears it before it runs. A spacecraft propagated again
+    fires its maneuvers as a spacecraft never propagated, bit for bit.
+  - **`MinimumEpoch`** reports the later of the minimum epoch given to the maneuver (its constructor, or
+    `Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)`) and the gate of the last propagation. After one
+    propagation it is the value it was; after a later one, that propagation's gate.
+  - **`SetStandbyManeuver(maneuver, minimumEpoch)`:** a later minimum epoch given there is kept by every later
+    propagation, as before.
+  - **Unchanged, bit for bit:** the first propagation of a spacecraft, and a propagation repeated with the same
+    state and window.
+  - **Not covered:** a spacecraft propagated twice through `CentralBodyPropagatorBuilder` or a `CentralBodyPropagator`
+    built directly, which does not start the chain again (its own issue; under **Known limitations** if still open
+    at the release).
+  - No API change: the setter of `MinimumEpoch` was internal. See
+    [Impulse Maneuvers](../reference/impulse-maneuvers.md#minimum-epoch).
 - **The native errors of the proxies that return `bool` are raised on Windows** ([#564](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/564)).
   `LoadKernelsProxy`, `UnloadKernelsProxy`, `ReadOrientationProxy`, `ReadEphemerisProxy`, `WriteEphemerisProxy` and
   `WriteOrientationProxy` return a one-byte C++ `bool`, which .NET read as a four-byte Win32 `BOOL`. On Windows x64 a

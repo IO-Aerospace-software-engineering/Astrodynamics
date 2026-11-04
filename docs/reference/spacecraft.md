@@ -83,7 +83,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddFuelTank(FuelTank)` | Add fuel tank |
 | `AddPayload(Payload)` | Add payload |
 | `GetTotalMass()` | Total mass including fuel |
-| `SetStandbyManeuver(Maneuver, Time?)` | Set maneuver to execute |
+| `SetStandbyManeuver(Maneuver, Time?)` | Put a maneuver in standby, the head of its chain; a later minimum epoch given here is kept by every propagation ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch)) |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
@@ -92,6 +92,12 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddPropagatedStates(params StateVector[])` | Add states to the stored states, each to the arc of its epoch, in ICRF; a propagation replaces them |
 | `WriteOrientation(FileInfo)` | Write the attitude of the last propagation as a type-3 CK, in J2000 ([Attitude and kernels](#attitude-and-kernels)) |
 | `ToOpm(...)` | Export to CCSDS OPM |
+
+Each `Propagate` (and `PropagateAsync`, `Scenario.SimulateAsync` and `BatchPropagator`, which go through it) starts the
+maneuver chain again from its head: it refuels the tanks, clears `ExecutedManeuvers`, the windows of the maneuvers and the
+gates of the previous propagation (#573), once its inputs are accepted; a rejected propagation leaves the previous one as
+it was. A spacecraft propagated again fires its chain as a spacecraft never propagated. A propagation through
+`CentralBodyPropagatorBuilder` or a `CentralBodyPropagator` built directly does not start the chain again.
 
 ## Attitude and kernels
 
