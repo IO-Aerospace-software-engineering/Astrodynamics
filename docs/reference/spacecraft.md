@@ -95,9 +95,9 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 
 Each `Propagate` (and `PropagateAsync`, `Scenario.SimulateAsync` and `BatchPropagator`, which go through it) starts the
 maneuver chain again from its head: it refuels the tanks, clears `ExecutedManeuvers`, the windows of the maneuvers and the
-gates of the previous propagation (#573), once its inputs are accepted; a rejected propagation leaves the previous one as
-it was. A spacecraft propagated again fires its chain as a spacecraft never propagated. A propagation through
-`CentralBodyPropagatorBuilder` or a `CentralBodyPropagator` built directly does not start the chain again.
+gates of the previous propagation (#573). The inputs of a propagation are checked when its propagator is built, before
+anything is reset: a propagation rejected there leaves the previous one as it was. A spacecraft propagated again fires
+its chain as a spacecraft never propagated.
 
 ## Attitude and kernels
 
