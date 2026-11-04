@@ -46,6 +46,17 @@ namespace IO.Astrodynamics.Maneuver
         public abstract CrossingDirection EventCrossingDirection { get; }
 
         /// <summary>
+        /// The g-function at a state from which the search for the crossing starts, the state at the minimum epoch, and at
+        /// the states of that search (#569): <see cref="ComputeEventValue"/> by default.
+        /// </summary>
+        /// <remarks>
+        /// A maneuver whose first evaluation decides which crossing it waits for overrides it with the rule of a search
+        /// start, where a crossing just passed does not count (<see cref="PlaneAlignmentManeuver"/>);
+        /// <see cref="ComputeEventValue"/> keeps the rule of a state handed to the maneuver at its crossing.
+        /// </remarks>
+        internal virtual double ComputeEventValueAtSearchStart(StateVector localState) => ComputeEventValue(localState);
+
+        /// <summary>
         /// Optional precondition check at event time (default: true).
         /// Override for maneuvers with additional constraints (e.g., CombinedManeuver).
         /// </summary>

@@ -82,6 +82,48 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
+  ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
+  - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared
+    the first step end after it with that value.
+  - **Positive-to-negative maneuvers** (`PerigeeHeightManeuver`, `CombinedManeuver`) whose r·v was already negative at
+    the minimum epoch fired there. On a 400 × 1 000 km orbit gated at S+1000: 120.6 m/s at 7 234 km instead of
+    27.4 m/s at the apogee, and up to 608.5 m/s.
+  - **Negative-to-positive maneuvers** (`ApogeeHeightManeuver`, `PhasingManeuver`, `ApsidalAlignmentManeuver`) missed a
+    crossing between the minimum epoch and the end of the integration step that held it, and fired one orbit later.
+  - **`PlaneAlignmentManeuver`** took the other node, half an orbit later.
+  - **Chained impulses**, gated by the end of the previous window, were affected the same way: a 4 000 s hold fired the
+    second burn 5 858 s early with 102.6 m/s instead of 26.4 m/s.
+  - **The fix.** The integrators now evaluate the g-function at the minimum epoch, in the step that holds it, and search
+    the first crossing from there, as GMAT's `Propagate` to the epoch then to the apsis does. A crossing before the
+    minimum epoch never counts; a g exactly zero at it counts there when the sign that follows it is the target sign.
+    RK7(8) fires within 1.5e-7 s of the Keplerian epoch in these cases, 9.9e-8 s at the apsides and nodes (worsts
+    1.42e-7 s and 9.86e-8 s on Linux x64, Windows and macOS arm64, the 100 ns tick of the epochs included);
+    Velocity-Verlet at its step end.
+  - **Unchanged, bit for bit:**
+    - every step that does not hold a minimum epoch;
+    - every step that holds one where the former decision holds: the g-function is positive at the minimum epoch, or a
+      negative-to-positive maneuver's g stays negative to the step end, or a positive-to-negative maneuver's g turns
+      positive by the step end; except `PlaneAlignmentManeuver`, whose node is now chosen from the state at the minimum
+      epoch instead of the step end, and moves where a node lies between the two;
+    - a true positive-to-negative crossing in that step, except a root within 1e-10 s after the minimum epoch, which
+      was labelled one tick before it and is now labelled at or after it.
+  - **Also moves:**
+    - with Velocity-Verlet, a minimum epoch within its own lag of a crossing: the decision follows Velocity-Verlet's
+      trajectory, not the Keplerian epoch. At 10 s steps the lag is up to 0.096 s at a node, 0.18 s at an apsis of
+      the orbit after a Velocity-Verlet burn and 1.5 s at the intersection of an apsidal alignment (worsts 0.0953 s,
+      0.176 s and 1.44 s on Linux x64, Windows and macOS arm64);
+    - an apsis at the start of the propagation given by Keplerian elements (r·v exactly 0) with the minimum epoch at
+      that start now fires there with RK7(8), at the first step end with Velocity-Verlet, instead of one orbit later.
+  - **User code:**
+    - a user `ImpulseManeuver` whose g has no recurring crossing (a time-like g) and whose root precedes its minimum
+      epoch no longer fires in the window: it used to fire at the minimum epoch;
+    - a custom `Integrator` (the class is public) keeps the former behaviour, the defect included: the gate is evaluated
+      by `VVIntegrator` and `RK78Integrator`, and `ManeuverEventDetector.Evaluate`, public, still returns +1 before the
+      minimum epoch.
+  - **The cost:** one shortened RK7(8) step per segment with a minimum epoch inside it, in whichever step it lies; none
+    in Velocity-Verlet.
+  - No API change. See [Impulse Maneuvers](../reference/impulse-maneuvers.md#minimum-epoch).
 - **The native errors of the proxies that return `bool` are raised on Windows** ([#564](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/564)).
   `LoadKernelsProxy`, `UnloadKernelsProxy`, `ReadOrientationProxy`, `ReadEphemerisProxy`, `WriteEphemerisProxy` and
   `WriteOrientationProxy` return a one-byte C++ `bool`, which .NET read as a four-byte Win32 `BOOL`. On Windows x64 a

@@ -342,7 +342,7 @@ public class PropagatedArcsEdgeTests
         var frame = PropagatedArcsTests.FrameOf(frameName);
         var p0 = new Matrix(6, 6);
         for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 1.0e4 : 1.0e-2);
-        var leo = Leo(earth);
+        var leo = maneuver == "CombinedLate" ? PropagatedArcsTests.LeoBeforeApogee(earth, Start) : Leo(earth);
         var inFrame = frame == Frame.ICRF ? leo : leo.ToFrame(frame).ToStateVector();
         var initial = new StateVector(inFrame.Position, inFrame.Velocity, earth, Start, frame, p0);
         var error = new ManeuverExecutionError { ResolutionSigma = 0.05, ShutoffSigma = 0.01, AutopilotSigma = 0.02, PointingSigma = 0.005 };
@@ -353,7 +353,7 @@ public class PropagatedArcsEdgeTests
         spacecraft.AddEngine(engine);
         ImpulseManeuver impulse = maneuver == "Apogee"
             ? new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine) { ExecutionError = error }
-            : new CombinedManeuver(earth, Start.AddSeconds(120.0), TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine) { ExecutionError = error };
+            : new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine) { ExecutionError = error };
         spacecraft.SetStandbyManeuver(impulse);
         var window = new Window(Start, Start.AddHours(2.0));
         var options = new CovariancePropagationOptions { Mode = CovariancePropagationMode.Covariance };
@@ -476,7 +476,8 @@ public class PropagatedArcsEdgeTests
     }
 
     /// <summary>
-    /// A short arc, an impulse within the first two outputs (a combined maneuver from S + 120 s, 60 s outputs): the first arc
+    /// A short arc, an impulse within the first two outputs (an ungated combined maneuver from 90 s before its apogee, which
+    /// fires there, S + 90 s, 60 s outputs; choice 13 of the design of #569): the first arc
     /// takes 16 states evenly spaced, its ends the state at the start and the state before the impulse, its others the
     /// solution's (<see cref="PropagationSolution.GetStateVector"/>), to the bit; the outputs within it are not stored.
     /// </summary>
@@ -486,12 +487,12 @@ public class PropagatedArcsEdgeTests
     public void ShortArc_IsFilledFromTheSolution(string integrator, int naifId)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Start);
-        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), Leo(earth));
+        var spacecraft = new Spacecraft(naifId, $"PE{-naifId}", 1000.0, 3000.0, new Clock($"PE{-naifId}_CLK", 65536), PropagatedArcsTests.LeoBeforeApogee(earth, Start));
         var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
-        spacecraft.SetStandbyManeuver(new CombinedManeuver(earth, Start.AddSeconds(120.0), TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine));
+        spacecraft.SetStandbyManeuver(new CombinedManeuver(earth, Start, TimeSpan.Zero, 7078137.0, 45.0 * IO.Astrodynamics.Constants.Deg2Rad, engine));
         var step = TimeSpan.FromSeconds(60.0);
         var solution = spacecraft.Propagate(new Window(Start, Start.AddHours(2.0)), [earth], integrator == "RK78" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(step),
             false, false, step);
