@@ -1289,7 +1289,7 @@ Represents a spacecraft with components.
 | `GetTotalFuel()` | Get total fuel mass |
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
-| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation |
+| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation (an impulse never fires before it, an attitude never activates before it) |
 | `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit, returns `PropagationSolution` |
 | `PropagateAsync(...)` | Propagate orbit asynchronously, returns `PropagationSolution` |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
@@ -1561,10 +1561,10 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 `docs/tutorials/covariance-propagation.md` and `docs/reference/conjunction-assessment.md`.
 
 **Propagation Architecture:**
-1. **Build event detectors** from the spacecraft's maneuver chain (leading attitudes execute immediately)
-2. **Segment loop**: Integrator advances with event detection; on event → execute maneuver, reinitialize
+1. **Build event detectors** from the spacecraft's maneuver chain: the leading attitudes on the attitude timeline, each at the later of its minimum epoch and the end of the previous hold, the last hold gating the first impulse (#539)
+2. **Segment loop**: Integrator advances with event detection; on event → the detector executes the impulse only, the propagation counts its windows in TT seconds about the Earth (#547), lays its attitude and the attitudes chained after it on the timeline and builds the next detector, reinitialize
 3. **Output**: Evaluate `PropagationSolution.InterpolateAt` at fixed `DeltaT` epochs: a shortened RK7(8) step from the start of the accepted step for RK7(8), at the accuracy of the integrator; cubic Hermite interpolation for Velocity-Verlet
-4. **Continuous attitude**: Recompute orientations at each output epoch if an attitude maneuver is active
+4. **Attitude record**: from the timeline, on the solution: each law at its activation, at each output epoch of its interval and 1 µs before the change that ends it; the impulse's attitude over its window (`docs/reference/attitudes.md#the-attitude-timeline`)
 
 **Key Supporting Types:**
 - `PropagationSolution`: Multi-segment container with `InterpolateAt(epoch)` for dense output (shortened RK7(8) step for RK7(8), cubic Hermite otherwise)
@@ -1581,7 +1581,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Event Detection (`IEventDetector`):**
 - `Evaluate(state)` → continuous scalar g-function
 - `Direction` → `CrossingDirection` (`NegativeToPositive`, `PositiveToNegative`, `Any`)
-- `HandleEvent()` → `EventResult` (modified state, orientation, action, next detector)
+- `HandleEvent()` → `EventResult` (modified state, orientation, action, next detector); `ManeuverEventDetector.HandleEvent` executes the impulse only and returns no next detector (#539)
 - `ManeuverEventDetector` wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`
 
 **Force Models:**

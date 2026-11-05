@@ -9,7 +9,7 @@ The event detection system uses industry-standard g-function zero-crossing to lo
 | `Evaluate(StateVector)` | Compute the scalar g-function value at the given state |
 | `Direction` | `CrossingDirection` specifying which zero-crossing triggers the event |
 | `IsActive` | Whether this detector is currently active |
-| `HandleEvent(StateVector, Spacecraft)` | Execute the event action and return an `EventResult` |
+| `HandleEvent(StateVector, Spacecraft)` | Execute the event action and return an `EventResult`. `ManeuverEventDetector` executes its impulse only and returns no next detector: the propagation lays the rest of the chain on its attitude timeline and builds the detector of the next impulse (#539) |
 
 When `Evaluate` changes sign in the specified `Direction` between two integration steps, the event is triggered.
 

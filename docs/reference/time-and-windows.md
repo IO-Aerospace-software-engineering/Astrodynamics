@@ -134,6 +134,12 @@ SPICE and the stored states read as they did. About the Earth only the instant a
 `AcceptedStep.CumulativeTime` and `StepSize`, the event time and the duration passed to `IIntegrator.IntegrateSegment`
 count the seconds of the time argument (TT about the Earth).
 
+The maneuver chain counts the same seconds (#547): about the Earth the thrust and maneuver windows of an impulse are
+counted in TT seconds from the time argument of its event, and the hold of an attitude in TT seconds from its
+activation; their ends, TDB labels, are the epochs of TT₀ + τ. About any other body they are TDB arithmetic on the
+labels, bit for bit as before 11.0.0. An activation at the end of a hold that ends on an output is then that output's
+epoch ([Attitudes](attitudes.md#the-attitude-timeline)).
+
 ### The Length of a Window
 
 The window has the TT seconds between its two instants, whatever their tags: exact in ticks between UTC, TAI, TT, GPS

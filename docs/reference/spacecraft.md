@@ -83,7 +83,7 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddFuelTank(FuelTank)` | Add fuel tank |
 | `AddPayload(Payload)` | Add payload |
 | `GetTotalMass()` | Total mass including fuel |
-| `SetStandbyManeuver(Maneuver, Time?)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch)) |
+| `SetStandbyManeuver(Maneuver, Time?)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation: an impulse never fires before it, an attitude never activates before it ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch), [The attitude timeline](attitudes.md#the-attitude-timeline)) |
 | `Propagate(Window, IEnumerable, bool, bool, TimeSpan)` | Propagate orbit |
 | `Propagate(Window, IEnumerable, Integrator, bool, bool, TimeSpan, CovariancePropagationOptions)` | Propagate the orbit with the integrator, and the state transition matrix and the covariance of the initial orbital parameters ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get state relative to observer |
@@ -180,9 +180,11 @@ Linux x64. The SPK against it is the resolution of the ET doubles (1.2e-7 s) tim
 each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the spacecraft frame, its source, as
 `GetStateOrientationToICRF` returns it.
 
-- **What fills it.** The propagation only: the initial attitude (the identity of ICRF without an attitude maneuver),
-  each attitude at its activation, the attitude of an impulse (its front along ΔV) at its event, the samples of the
-  leading attitude at every output epoch, and the latest attitude at the end of the window. Every attitude is computed
+- **What fills it.** The propagation only, from its attitude timeline ([Attitudes](attitudes.md#the-attitude-timeline)):
+  the identity of ICRF at the start, which an attitude activated there replaces; each activation at its epoch (an
+  attitude law executed on the state of the solution there, a law resumed after an impulse, the attitude of an impulse,
+  its front along ΔV, at the opening of its thrust window); the samples of each law at every output epoch of its
+  interval; and the latest attitude at the end of the window. Every attitude is computed
   on the state in ICRF ([Attitudes](attitudes.md#frames-and-interpolation)). `AddStateOrientationToICRF` adds a discrete
   attitude, labelled with the spacecraft frame (`ArgumentException` otherwise); it replaces an entry at the same epoch.
   A read never adds an entry, and reads before, during or after a propagation leave the record and the CK unchanged
@@ -190,14 +192,14 @@ each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the space
 - **Between two samples of the same attitude law,** the attitude is the exact spherical linear interpolation of the two,
   the interpolation of a type-3 CK
   ([#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)).
-- **A discrete change** (an attitude activated after an impulse, an impulse's attitude, an added one): the earlier
-  attitude holds until the change. Before a change that follows a continuous law, the propagation samples the law once
-  more, on the state of the solution 1 µs before the change, so that the law is interpolated up to it
+- **A discrete change** (an activation of the timeline, an added attitude): the earlier attitude holds until the
+  change. Before a change that follows a continuous law, the propagation samples the law once more, on the state of the solution 1 µs before the change, so that the law is interpolated up to it
   ([#534](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/534)).
-- **The same epoch.** Two entries less than 2 µs apart are one epoch: an attitude activated later in the maneuver chain
-  replaces an earlier one and keeps its own epoch, an output sample never replaces an activation, and the attitude of an
-  impulse does not replace the attitude chained after it. A chained attitude counts its hold in TDB seconds while the
-  outputs about the Earth sit on the TT grid (#501): the two fall 1e-7 to 2e-7 s apart, one epoch.
+- **The same epoch.** Two entries less than 2 µs apart are one epoch: an activation later in the maneuver chain
+  replaces an earlier one and keeps its own epoch, and an output sample never replaces an activation. Since #547 the
+  holds count TT seconds about the Earth, as the outputs, so an activation at the end of a hold ending on an output is
+  that output's epoch; a minimum epoch given as a TDB label still falls up to 1e-6 s from an output of the TT grid, one
+  epoch.
 - **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF.
 - **The angular velocity** is that of the CK: at each entry the mean of the rates of the interpolated intervals on either
   side, linear between two samples of a law. Over a hold it is zero between discrete entries; after a sample of a law
@@ -282,9 +284,7 @@ converts) away from the impulses; across an impulse they interpolate through the
 near a 635 m/s burn (#540): regenerate them. A CK of the identity attitude from ICRF is unaffected.
 
 **Not covered.** `TLEPropagator`, which `Spacecraft.Propagate` does not use, records no attitude: its SPK is written (in
-J2000), its CK is not (`InvalidOperationException`). The attitude laws after an impulse (a TRIAD held inertially, the
-leading attitude resumed from the next output) are those of the library before 11.0.0
-([Attitudes](attitudes.md#frames-and-interpolation)).
+J2000), its CK is not (`InvalidOperationException`).
 
 ## Components
 

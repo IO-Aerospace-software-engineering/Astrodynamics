@@ -187,8 +187,10 @@ attitude.SetNextManeuver(maneuver1);
 spacecraft.SetStandbyManeuver(attitude);
 ```
 
-Attitude maneuvers execute immediately when the chain reaches them, then
-pass control to the next impulse maneuver in the chain.
+The attitude activates at the start of the propagation and is held 5 minutes: the first
+impulse maneuver of the chain fires at its first crossing after that hold. The attitude
+stays in force until the impulse's own attitude takes over at the opening of its thrust
+window.
 
 ## Kernel-backed spacecraft
 
