@@ -486,6 +486,26 @@ A major version, because it breaks the API: members deprecated for removal in 11
   constructor's `manDeltaMass`, `CreateImpulsive`'s `deltaMass`) was badly formed XML (CS1570 with
   `GenerateDocumentationFile`), and the whole documentation of the three members was dropped from the generated file.
   It is escaped; the library and the command line build without CS1570 ([#550](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/550)).
+- **`PhasingManeuver`'s true-longitude constructor threw at its burn**
+  ([#588](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/588)).
+  - **The cause.** `PhasingManeuver(maneuverCenter, minimumEpoch, hold, trueLongitude, revolutionNumber, engine)` set
+    no target orbit, and the burn read only the target orbit: `NullReferenceException` at the first perigee after the
+    minimum epoch, in `TryExecute`, `Spacecraft.Propagate` and `Scenario.SimulateAsync` alike. `TargetTrueLongitude`
+    was never read.
+  - **The fix** (option (a), decided by S. Guillet, 2026-11-05). The true longitude is that of a virtual target on the
+    spacecraft's current orbit at the epoch of the burn, Ω + ω + ν about the maneuver center in the frame of the
+    spacecraft's state: Δθ = λ − λ_sc(burn), the formula of the target-orbit constructor with the target's angular
+    momentum replaced by the current orbit's. The burn is at the perigee, so λ − (Ω + ω) is the phase of the target
+    ahead of the spacecraft, modulo 2π, behind beyond π.
+  - **Measured** (Linux x64, .NET 10, Release, 2026-11-05) against the two-body closed form (T₂ = T₁ − t(Δθ) / N, a₂
+    from T₂, ΔV by vis-viva at the perigee) on a circular and an eccentric orbit, the target 30° ahead and behind, after
+    1 and 3 revolutions: the ΔV of `TryExecute` within 9.2e-9 m/s, the hold 0.9 N T₂ within 2.2e-7 s, and within
+    4.6e-13 m/s of the target-orbit constructor with the target on the same orbit at that phase. In a propagation
+    about a point-mass Earth, RK7(8) at 1e-12 burns within 1.9e-8 s of the closed-form perigee, its ΔV within
+    1.3e-8 m/s, and after N revolutions of the phasing orbit the spacecraft is within 1.4e-3 m of the virtual target;
+    Velocity-Verlet at 1 s burns at the end of the step holding the perigee, 2.0e-4 m/s and 49 m.
+  - **Unchanged, bit for bit:** the target-orbit constructor. See
+    [Impulse Maneuvers](../reference/impulse-maneuvers.md#phasingmaneuver).
 
 **Changed**
 

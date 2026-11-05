@@ -103,6 +103,24 @@ Raises perigee height. Fires at apogee (r . v crosses zero from positive to nega
 
 Adjusts orbital period for phasing. Fires at perigee (r . v, negative to positive).
 
+The burn, along the velocity, puts the spacecraft on a phasing orbit after `RevolutionNumber` (N) revolutions of which
+it is back at the perigee together with its target. The target is Δθ ahead of the spacecraft at the burn, the
+difference of their true longitudes (Ω + ω + ν) at its epoch, beyond π a target behind. With t(Δθ) the time from the
+perigee to Δθ along the current orbit by Kepler's equation (negative for a target behind), the phasing orbit has the
+period T₂ = T₁ − t(Δθ) / N and the semi-major axis a₂ = (√μ T₂ / 2π)^(2/3), and ΔV = h₂ / r_p − h_target / r_p at the
+perigee. The hold is set to 0.9 N T₂ at the burn. Two constructors set the target:
+
+| Constructor | Target | λ_target at the burn | h_target |
+|-------------|--------|----------------------|----------|
+| `PhasingManeuver(minimumEpoch, hold, targetOrbit, revolutionNumber, engine)` | the object on `targetOrbit`, about the maneuver center (its observer) in the frame of the spacecraft | `targetOrbit.TrueLongitude(burn epoch)` | the target orbit's |
+| `PhasingManeuver(maneuverCenter, minimumEpoch, hold, trueLongitude, revolutionNumber, engine)` | a virtual target on the spacecraft's current orbit (#588) | `trueLongitude`, in radians, about `maneuverCenter` in the frame of the spacecraft's state | the current orbit's |
+
+With a true longitude, Δθ = λ − λ_sc(burn), and since the burn is at the perigee λ_sc(burn) is the longitude of the
+perigee Ω + ω: λ − (Ω + ω) is the phase of the target ahead of the spacecraft along its orbit, taken modulo 2π. For
+instance, with a perigee longitude of 80°, 110° asks to catch up a target 30° ahead, 50° to let a target 30° behind
+catch up. `TargetTrueLongitude` holds the value given, NaN for the target-orbit constructor. Before 11.0.0 the
+true-longitude constructor threw `NullReferenceException` at its burn (#588).
+
 ### CombinedManeuver
 
 Combined plane and apsis change. Fires at apogee (r . v, positive to negative) with an additional precondition that the apogee is aligned with the ascending node.
