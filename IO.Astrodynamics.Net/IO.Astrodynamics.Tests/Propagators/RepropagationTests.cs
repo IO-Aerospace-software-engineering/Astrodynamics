@@ -38,14 +38,22 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// point-mass Earth with the kernel GM; 1 000 kg dry and 1 000 kg of fuel, Isp 300 s, 10 kg/s; every maneuver built with
 /// the minimum epoch S = 2024-03-01 12:00 TDB. The chains: <c>apo-apo</c>, an <see cref="ApogeeHeightManeuver"/> to
 /// 8 378 137 m held 5 000 s, then one to 8 878 137 m (#573's); <c>att&lt;H&gt;</c>, an <see cref="ApogeeHeightManeuver"/>
-/// to 8 378 137 m, a <see cref="NadirAttitude"/> held H s, then a <see cref="PerigeeHeightManeuver"/> to 6 878 137 m.
+/// to 8 378 137 m, a <see cref="NadirAttitude"/> held H s, then a <see cref="PerigeeHeightManeuver"/> to 6 878 137 m;
+/// <c>lead&lt;H&gt;</c>, a leading <see cref="NadirAttitude"/> held H s, then an <see cref="ApogeeHeightManeuver"/> to
+/// 8 378 137 m; <c>lead2</c>, a leading nadir and a prograde held 500 s each, then the same impulse (#539: the gates the
+/// attitude timeline raises, #582 choice 4). Since #539 the nadir of <c>att&lt;H&gt;</c> activates at the end of the first
+/// impulse's maneuver window (505.10 s after a burn at S + 500), so the gate of the second impulse is 505.10 + H.
 /// Velocity-Verlet at 1 s, RK7(8) at 1e-12 / 1e-12. Epochs are printed in TT seconds from S.
 /// </para>
 /// <para>
 /// <b>The rule of a rerun case.</b> A gate left from an earlier propagation moves a later one only when it is later than
 /// the gate the later one sets itself. Every rerun case meant to catch #573 puts the maneuvers of the second run earlier
 /// than those of the first (another state, an earlier window), and fails on the library before #573's fix (7f1cc0b8): its
-/// second burn one orbit late. A case whose second run fires no earlier than the first, or whose stale gate falls before
+/// second burn one orbit late. The rows of the timeline (#539) fail the same way with its raises left on the lasting
+/// minimum epoch (the two-argument <c>SetStandbyManeuver</c> for an attitude's raise, <c>RaiseGivenMinimumEpoch</c> for
+/// the TT end of an impulse's window), as a scratch copy of the library showed (PR of #539): <c>lead1000</c> run 2 at
+/// S + 7 426.38 s instead of S + 1 500.00 s, <c>att1000</c> from another state at 10 347.95 s instead of 3 782.65 s,
+/// <c>apo-apo</c> at 13 630.60 s instead of 7 065.30 s (RK7(8)). A case whose second run fires no earlier than the first, or whose stale gate falls before
 /// the crossing it gates (<c>att600</c>), is a control of the trajectory, and its name says so: it passes before the fix,
 /// except for the <c>MinimumEpoch</c> read after the run, which a separate test asserts.
 /// </para>
@@ -206,6 +214,22 @@ public class RepropagationTests
             maneuvers = env.Moon
                 ? [new ApogeeHeightManeuver(c, S, TimeSpan.FromSeconds(7000.0), MoonRadius + 500000.0, engine), new ApogeeHeightManeuver(c, S, TimeSpan.Zero, MoonRadius + 700000.0, engine)]
                 : [new ApogeeHeightManeuver(c, S, TimeSpan.FromSeconds(5000.0), 8378137.0, engine), new ApogeeHeightManeuver(c, S, TimeSpan.Zero, 8878137.0, engine)];
+        }
+        else if (chain.StartsWith("lead2"))
+        {
+            // Two leading attitudes, a nadir and a prograde held 500 s each, then an ApogeeHeightManeuver: the raise of the
+            // gate of an attitude by the attitude before it, and of the impulse by the last (#539, #582 choice 4)
+            maneuvers =
+            [
+                new NadirAttitude(c, S, TimeSpan.FromSeconds(500.0), engine), new ProgradeAttitude(c, S, TimeSpan.FromSeconds(500.0), engine),
+                new ApogeeHeightManeuver(c, S, TimeSpan.Zero, 8378137.0, engine)
+            ];
+        }
+        else if (chain.StartsWith("lead"))
+        {
+            // A leading NadirAttitude held H s, then an ApogeeHeightManeuver: the hold gates the impulse (#539)
+            double hold = double.Parse(chain[4..], Invariant);
+            maneuvers = [new NadirAttitude(c, S, TimeSpan.FromSeconds(hold), engine), new ApogeeHeightManeuver(c, S, TimeSpan.Zero, 8378137.0, engine)];
         }
         else
         {
@@ -446,7 +470,13 @@ public class RepropagationTests
             bool apogee = m is PerigeeHeightManeuver;
             Assert.True(apogee || m is ApogeeHeightManeuver);
             double expected;
-            if (k == 0)
+            if (k == 0 && index > 0)
+            {
+                // After leading attitudes, the end of the window of the last one (#539)
+                var gate = fresh.Chain[index - 1].ManeuverWindow!.Value.EndDate;
+                expected = ClosedForm(env, fresh.Spacecraft.InitialOrbitalParameters.ToStateVector(f.Window.StartDate)).NextApsis(env.Seconds(gate), apogee);
+            }
+            else if (k == 0)
             {
                 var gate = Later(fresh.Given[index], f.Window.StartDate);
                 expected = startsAtTheApsis && gate == f.Window.StartDate
@@ -541,7 +571,8 @@ public class RepropagationTests
 
     /// <summary>
     /// A control of the trajectory: <c>att600</c>, run 2 from another state as above. The gate run 1 leaves on the
-    /// <c>PerigeeHeightManeuver</c> (3 563 s) falls before run 2's apogee (3 783 s), so the burns, the state, the windows,
+    /// <c>PerigeeHeightManeuver</c> (3 568 s since #539, the nadir from the end of the first impulse's window; 3 563 s before)
+    /// falls before run 2's apogee (3 783 s), so the burns, the state, the windows,
     /// <c>ToOpm</c>, the summary and the attitudes of run 2 were a fresh spacecraft's before #573's fix already. Its
     /// <c>MinimumEpoch</c> was not: <see cref="AnotherState_AStaleGateBeforeTheBurn_MinimumEpochIsAFreshSpacecrafts"/>.
     /// </summary>
@@ -556,8 +587,8 @@ public class RepropagationTests
 
     /// <summary>
     /// The same <c>att600</c> run 2: the trajectory does not move, but the <c>MinimumEpoch</c> a user reads after run 2 is
-    /// the gate of run 2, a fresh spacecraft's, never the later gate run 1 left (2 968 and 3 563 s before #573's fix,
-    /// against 505 and 1 100 s).
+    /// the gate of run 2, a fresh spacecraft's, never the later gate run 1 left (2 968 and 3 568 s with the raise left on
+    /// the lasting minimum epoch, against 505 and 1 105 s; 3 563 and 1 100 s before #539).
     /// </summary>
     [Theory]
     [InlineData("RK")]
@@ -615,6 +646,165 @@ public class RepropagationTests
         Assert.Equal(2, f.Burns.Length);
         AssertSame(tag, r2, f, reused, fresh);
         AssertGatesFollowTheWindows(tag + " reused", reused);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // The gates the attitude timeline raises (#539, #582 choice 4): run 2 earlier than run 1, a crossing between the two
+    // hold ends
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// A leading attitude held 1 000 s gates the impulse after it (#539), for that propagation only (#582 choice 4): run 1
+    /// from the perigee at S + 3 000 (the gate at S + 4 000), run 2 from S with the perigee 1 500 s later (the gate at
+    /// S + 1 000), a crossing between the two hold ends. Run 2 fires at the perigee at S + 1 500 as a fresh spacecraft; with
+    /// the raise left on the lasting minimum epoch (the two-argument <c>SetStandbyManeuver</c>), it fired one orbit late,
+    /// from the stale gate (<c>wpr3/impl.md</c>). Every activation path of <c>Spacecraft.Propagate</c> and
+    /// <c>BatchPropagator</c>, both integrators.
+    /// </summary>
+    [Theory]
+    [InlineData("lead1000", "RK", "Propagate")]
+    [InlineData("lead1000", "VV1", "Propagate")]
+    [InlineData("lead1000", "RK", "PropagateOptions")]
+    [InlineData("lead1000", "VV1", "Default")]
+    [InlineData("lead1000", "VV1", "Async")]
+    [InlineData("lead1000", "RK", "Batch")]
+    [InlineData("lead2", "RK", "Propagate")]
+    [InlineData("lead2", "VV1", "Propagate")]
+    public void LeadingHold_RunTwoEarlier_FiresAsAFreshSpacecraft(string chain, string integrator, string path)
+    {
+        // Arrange
+        string tag = $"leading hold, run 2 earlier {chain} {integrator} {path}";
+        var env = Env.Of();
+        var s1 = S.AddSeconds(3000.0);
+        var reused = Build(env, env.PerigeeAt(s1), chain);
+        Propagate(reused, Win(s1), integrator, path);
+        reused.Spacecraft.SetInitialOrbitalParameters(env.PerigeeAfter(S, 1500.0));
+
+        // Act
+        var r2 = Propagate(reused, Win(S), integrator, path);
+
+        // Assert
+        var (fresh, f) = Fresh(tag, reused, env.PerigeeAfter(S, 1500.0), chain, Win(S), integrator, path, false);
+        AssertLeadingAttitudesOnTheRules(tag, fresh, Win(S));
+        AssertSame(tag, r2, f, reused, fresh);
+        AssertGatesFollowTheWindows(tag + " reused", reused);
+    }
+
+    /// <summary>
+    /// The same in SSB mode, ECLIPJ2000 and about the Moon (TDB seconds there), RK7(8) and Velocity-Verlet: the gate of the
+    /// leading hold is that of this propagation in every frame and time argument.
+    /// </summary>
+    [Theory]
+    [InlineData("Earth|ECLIPJ2000", "RK")]
+    [InlineData("Earth|ECLIPJ2000", "VV1")]
+    [InlineData("Earth|SSB", "RK")]
+    [InlineData("Earth|SSB", "VV1")]
+    [InlineData("Moon|ICRF", "RK")]
+    [InlineData("Moon|ICRF", "VV1")]
+    public void LeadingHold_FramesAndCentres_RunTwoEarlier_FiresAsAFreshSpacecraft(string setup, string integrator)
+    {
+        string tag = $"leading hold, run 2 earlier {setup.Replace('|', ' ')} lead1000 {integrator}";
+        var env = Env.Of(setup);
+        var s1 = S.AddSeconds(3000.0);
+        var reused = Build(env, env.PerigeeAfter(s1, 10.0), "lead1000");
+        Propagate(reused, Win(s1), integrator, "Propagate");
+        reused.Spacecraft.SetInitialOrbitalParameters(env.PerigeeAfter(S, 1500.0));
+        var r2 = Propagate(reused, Win(S), integrator, "Propagate");
+        var (fresh, f) = Fresh(tag, reused, env.PerigeeAfter(S, 1500.0), "lead1000", Win(S), integrator, "Propagate", false);
+        AssertLeadingAttitudesOnTheRules(tag, fresh, Win(S));
+        AssertSame(tag, r2, f, reused, fresh);
+        AssertGatesFollowTheWindows(tag + " reused", reused);
+    }
+
+    /// <summary>
+    /// A control: the leading hold through <c>Scenario.SimulateAsync</c>, its three overloads, the covariance one with and
+    /// without <c>IncludeInStepControl</c>. The window of a scenario is fixed, so the leading nadir activates at S in every
+    /// simulation and raises the same gate (S + 1 000): runs 1 and 2 from an orbit whose perigee is at S + 3 000, run 3 from
+    /// one whose perigee is at S + 1 500, each a fresh scenario's, summary included.
+    /// </summary>
+    [Theory]
+    [InlineData("VV1", "Default")]
+    [InlineData("RK", "Factory")]
+    [InlineData("RK", "Covariance")]
+    [InlineData("RK", "CovarianceStep")]
+    public void LeadingHold_Scenario_SimulatedAgain_Control_FiresAsAFreshScenario(string integrator, string overload)
+    {
+        string tag = $"leading hold, scenario lead1000 {integrator} {overload}";
+        var env = Env.Of();
+        bool p0 = overload.StartsWith("Covariance");
+        var window = Win(S);
+        var reused = Build(env, Perigee(env, S, 3000.0, p0), "lead1000");
+        var scenario = NewScenario(reused, window);
+        var r1 = Simulate(scenario, reused, window, integrator, overload);
+        var r2 = Simulate(scenario, reused, window, integrator, overload);
+        reused.Spacecraft.SetInitialOrbitalParameters(Perigee(env, S, 1500.0, p0));
+        var r3 = Simulate(scenario, reused, window, integrator, overload);
+        AssertSame(tag + " run 2 (identical) against run 1", r2, r1);
+        var fresh = Build(env, Perigee(env, S, 1500.0, p0), "lead1000");
+        var f = Simulate(NewScenario(fresh, window), fresh, window, integrator, overload);
+        AssertOnTheClosedForm(tag, fresh, f, integrator, false);
+        AssertLeadingAttitudesOnTheRules(tag, fresh, window);
+        AssertSame(tag + " run 3 against a fresh scenario", r3, f, reused, fresh);
+        AssertGatesFollowTheWindows(tag + " reused", reused);
+    }
+
+    // The orbit whose perigee is lead seconds after epoch, with P0 when asked
+    private static OrbitalParams Perigee(Env env, Time epoch, double lead, bool withP0)
+    {
+        var orbit = env.PerigeeAfter(epoch, lead).ToStateVector();
+        if (!withP0) return orbit;
+        var p0 = new Matrix(6, 6);
+        for (int i = 0; i < 6; i++) p0.Set(i, i, i < 3 ? 100.0 : 1.0e-4);
+        return new StateVector(orbit.Position, orbit.Velocity, orbit.Observer, orbit.Epoch, orbit.Frame, p0);
+    }
+
+    /// <summary>
+    /// A control: run 2 from S + 3 500, later than run 1 (S + 3 000), from the same orbit: its gate (S + 4 500) is later than
+    /// the stale one (S + 4 000), so run 2 was a fresh spacecraft's with the raise left on the lasting minimum epoch too.
+    /// </summary>
+    [Theory]
+    [InlineData("RK")]
+    [InlineData("VV1")]
+    public void LeadingHold_RunTwoLater_Control_FiresAsAFreshSpacecraft(string integrator)
+    {
+        string tag = $"leading hold, run 2 later (control) lead1000 {integrator}";
+        var env = Env.Of();
+        var s1 = S.AddSeconds(3000.0);
+        var reused = Build(env, env.PerigeeAt(s1), "lead1000");
+        Propagate(reused, Win(s1), integrator, "Propagate");
+        var r2 = Propagate(reused, Win(S.AddSeconds(3500.0)), integrator, "Propagate");
+        var (fresh, f) = Fresh(tag, reused, env.PerigeeAt(s1), "lead1000", Win(S.AddSeconds(3500.0)), integrator, "Propagate", false);
+        AssertLeadingAttitudesOnTheRules(tag, fresh, Win(S.AddSeconds(3500.0)));
+        AssertSame(tag, r2, f, reused, fresh);
+    }
+
+    /// <summary>
+    /// The leading attitudes of a fresh run on the rules of the timeline (<see cref="TimelineRules"/>): each activates at
+    /// the later of its minimum epoch and the end of the previous one's hold, from the window start, its hold counted in TT
+    /// seconds about the Earth, TDB about the Moon and in SSB mode; compared on Linux, within
+    /// <see cref="TimelineRules.RuleBound"/>.
+    /// </summary>
+    private void AssertLeadingAttitudesOnTheRules(string tag, Sc fresh, Window window)
+    {
+        bool tt = !fresh.Env.Moon && !fresh.Env.Ssb;
+        var previousEnd = window.StartDate;
+        double worst = 0.0;
+        for (int i = 0; i < fresh.Chain.Length && fresh.Chain[i] is Attitude attitude; i++)
+        {
+            var start = TimelineRules.Activation(fresh.Given[i], previousEnd);
+            var end = TimelineRules.After(start, attitude.ManeuverHoldDuration.TotalSeconds, tt);
+            Assert.True(attitude.ManeuverWindow.HasValue, $"{tag}: attitude {i} not executed");
+            worst = System.Math.Max(worst, System.Math.Abs((attitude.ManeuverWindow.Value.StartDate - start).TotalSeconds));
+            worst = System.Math.Max(worst, System.Math.Abs((attitude.ManeuverWindow.Value.EndDate - end).TotalSeconds));
+            Assert.Contains(attitude, fresh.Spacecraft.ExecutedManeuvers);
+            previousEnd = end;
+        }
+
+        _output.WriteLine($"MEASURE #539 {tag} leading attitudes - rules {worst:E2} s");
+        if (TimelineRules.Checked)
+        {
+            Assert.True(worst <= TimelineRules.RuleBound, $"{tag}: leading attitudes - rules {worst:E3} s");
+        }
     }
 
     // ---------------------------------------------------------------------------------------------------------------------

@@ -150,6 +150,56 @@ A major version, because it breaks the API: members deprecated for removal in 11
     at the release).
   - No API change: the setter of `MinimumEpoch` was internal. See
     [Impulse Maneuvers](../reference/impulse-maneuvers.md#minimum-epoch).
+- **The attitude of a propagation follows its maneuver chain: the attitude timeline**
+  ([#539](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/539),
+  [#570](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/570)).
+  - **The cause.** The leading attitudes all executed on the initial state, the last one sampled at every output; an
+    attitude chained after an impulse was executed by `ManeuverEventDetector.HandleEvent` on the state of the event,
+    recorded once and held inertially, the leading attitude taking over again from the next output; a hold delayed
+    nothing; the impulse's attitude applied from its event; a sentinel (`Quaternion.Zero`, the identity) dropped an
+    attitude that was exactly the identity; an attitude chained past the end of the window was recorded.
+  - **The effect**, measured before this change (240b000a) on #569's 400 × 1 000 km orbit (an apogee raise of
+    233.8 m/s at the perigee, dt = 15.3 s, RK7(8), 10 s outputs) against the rules below: after impulse → LVLH the
+    attitude up to 3.14 rad from LVLH (1.83 rad at the samples), the LVLH 5.10 s early; after nadir → impulse → LVLH
+    (3 600 s), the nadir back from the next output, 3.14 rad from LVLH; the front 1.56 rad from ΔV over the thrust window
+    before the burn; a nadir held 600 s before a prograde never in force (1.74 rad); a prograde whose minimum epoch is
+    S + 300 in force from S, and one chained after an impulse with S + 4 000 activated 1 040 s early; a hold of 3 600 s
+    before an impulse ignored, the burn 5 926 s before the next perigee after the hold; a leading nadir equal to the
+    identity at the start not recorded (the CK unreadable by `pxform` before the first output); an attitude chained past
+    the end of the window recorded; the first impulse after leading attitudes missing from `ExecutedManeuvers` (the first
+    leading attitude recorded in its place, the further ones, and a leading attitude with nothing executed after it,
+    lost; nadir → impulse → LVLH: indices {0, 2}), from `ToOpm` and from the scenario summary (#570).
+  - **The fix.** A propagation lays its chain on an attitude timeline: an attitude activates at the later of its
+    `MinimumEpoch` and the end of the previous maneuver's window, and its law is in force to the next activation,
+    sampled on the solution at its activation, at each output of its interval and 1 µs before the change that ends it;
+    the impulse's attitude is in force over [tc − 0.666 dt, end of its maneuver window], its start no earlier than the
+    start of the propagation or the previous activation; after an impulse the law in force before it resumes, unless an
+    attitude chained after it activates there; an activation after the end is not executed; an activation at a minimum
+    epoch given in another frame is labelled TDB, as every epoch of the propagation; no sentinel. Every executed
+    maneuver, attitudes included, is in `ExecutedManeuvers`, once, in the order of the chain. Against the rules written
+    in the tests (the burn durations by the rocket equation, the TT seconds by CSPICE's `unitim_c`) the activations and
+    windows within one tick (1e-7 s), and against the closed forms of the laws on the solution: 7.1e-16 rad at the
+    samples, 4.1e-5 rad between them at 10 s outputs (1.5e-3 rad at 60 s; on the kernels of `AttitudeRecordTests` the
+    TRIAD after an impulse, now a sampled law, 5.9e-5 rad, the worst at 10 s outputs, against 5.7e-5 rad for the
+    instrument TRIAD in the entry of #537), 2.7e-16 rad for the discrete attitudes;
+    `pxform` on the CK the library writes within 8.8e-10 rad of the managed attitude (the same on Linux x64, Windows and
+    macOS arm64).
+- **The impulse after an attitude chained after an impulse fired inside the first impulse's window**
+  ([#554](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/554), case M). The attitude, executed at
+  the first impulse's event, set the gate of the next impulse from that event, inside the first impulse's window (590 s inside its hold for a
+  hold of 600 s): on 240b000a RK7(8) fired the second apogee raise at the first one's event, S + 2 963.1895589 s to the
+  printed digits, 7 230 s before the perigee it is now gated to. It now fires at
+  the first perigee after the end of the first impulse's maneuver window plus the attitude's hold: S + 9 528.4908671 s,
+  within 1.6e-8 s of the Keplerian closed form, with a hold of 0 s or 600 s on the first; Velocity-Verlet at its step end
+  after it (#577's F5 now holds for a hold of 0 s in RK7(8) too).
+- **About the Earth the holds counted TDB seconds** ([#547](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/547)).
+  The hold of an attitude and the windows of an impulse were TDB arithmetic on the labels, while the integration and
+  the outputs about the Earth count TT seconds (#501): an attitude after a held one fell 1e-7 to 2e-7 s from an output
+  sample, a hold of 1 000 s was 999.99999982 TT seconds, and the CK of such a chain could not be written
+  (`SPICE(TIMESOUTOFORDER)` before #537). About the Earth the windows of an impulse now count TT seconds from the time
+  argument of its event, and the hold of an attitude TT seconds from its activation; an activation at the end of a
+  hold that ends on an output is that output's epoch. About any other body, SSB mode included, TDB arithmetic, bit for
+  bit.
 - **The native errors of the proxies that return `bool` are raised on Windows** ([#564](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/564)).
   `LoadKernelsProxy`, `UnloadKernelsProxy`, `ReadOrientationProxy`, `ReadEphemerisProxy`, `WriteEphemerisProxy` and
   `WriteOrientationProxy` return a one-byte C++ `bool`, which .NET read as a four-byte Win32 `BOOL`. On Windows x64 a
@@ -330,7 +380,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
     (`SPICE(TIMESOUTOFORDER)`), one from ECLIPJ2000 aborted the process when the CK was written, a read before the
     propagation became the attitude (1.806 rad off), and reads after it changed the CK by up to 6.53e-3 rad
     ([#523](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/523)). A propagation alone could also make its CK unwritable: an attitude chained after a held one, its hold
-    counted in TDB seconds, fell 1e-7 to 2e-7 s from an output on the TT grid of #501.
+    counted in TDB seconds, fell 1e-7 to 2e-7 s from an output on the TT grid of #501 (since #547 the holds count TT
+    seconds about the Earth, below).
 
   A managed spacecraft now keeps an attitude record that only its propagation fills and that a read never changes; its
   states and attitudes are stored in ICRF (the integration and `PropagationSolution` unchanged, bit for bit); the
@@ -340,13 +391,15 @@ A major version, because it breaks the API: members deprecated for removal in 11
   `WriteEphemeris` writes J2000. Against CSPICE on the kernels the library writes and the closed forms of the laws on
   the solution of the propagation (the worst over Linux x64, Windows x64 and macOS arm64, 2026-11-02): the attitude
   6.1e-10 rad from `pxform` on its CK outside those microseconds (1.3e-9 rad from 2025-01-19, where the spacing of the
-  encoded SCLK doubles), 1.3e-15 rad from the law at its samples and 5.7e-5 rad between them at 10 s outputs, its angular velocity 2.3e-5 rad/s from the rate of the
+  encoded SCLK doubles), 1.3e-15 rad from the law at its samples and 5.7e-5 rad between them at 10 s outputs (5.9e-5 rad
+  since #539, the TRIAD after an impulse, above), its angular velocity 2.3e-5 rad/s from the rate of the
   law (the CK's model, which the library and the CK share to 9.9e-13 rad/s); the stored states equal to the solution
   rotated to ICRF by `pxform` at the outputs, the positions between them 1.3e-8 m from the RK7(8) solution (7.1e-4 m in
   SSB mode), in every inertial initial frame; the managed occultation of the Sun by the Earth from GALACTIC within one
   tick of its ICRF twin and 4.0e-7 s of `gfoclt` on the SPK; the 20 field-of-view dynamics variants on those kernels
   within the 2.4e-6 s of #515 (971.8 s and 232.6 s before); the partial step before an RK7(8) event 1.2e-4 rad from the
-  law (7.1e-2 rad before, where the last output sample held); reads before, during and after a propagation leave the record and the CK identical. See
+  law (7.1e-2 rad before, where the last output sample held; since #539 the change is the opening of the impulse's
+  thrust window, 9.3e-5 rad over a partial step of 34.3 s, below); reads before, during and after a propagation leave the record and the CK identical. See
   [Spacecraft](../reference/spacecraft.md#attitude-and-kernels); the changes of behaviour are under **Changed**.
 - **The states of a propagated spacecraft across an impulse** ([#540](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/540)).
   The stored states were one set of output states, read by a Lagrange polynomial of the 8 nearest and written as one
@@ -435,6 +488,38 @@ A major version, because it breaks the API: members deprecated for removal in 11
   It is escaped; the library and the command line build without CS1570 ([#550](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/550)).
 
 **Changed**
+
+- **The maneuver chain on the attitude timeline** (#539, #547, #570; Fixed above). Breaking:
+  - **An attitude delays the next maneuver.** It activates at the later of its `MinimumEpoch` and the end of the
+    previous maneuver's window, and its hold gates the next maneuver: the last leading hold delays the first impulse (a
+    nadir held 3 600 s before an apogee raise due at S + 2 963 s: the burn one orbit later, S + 8 889.569 s), and an
+    attitude chained after an impulse starts at the end of the impulse's maneuver window, not at its event (the gate of
+    the next impulse 5.1 s later on #573's case, plus the hold). `Spacecraft.SetStandbyManeuver(attitude, epoch)` now
+    delays an attitude.
+  - **The windows and the holds count TT seconds about the Earth** (#547): `ThrustWindow`, `ManeuverWindow` and the
+    gate of the next maneuver move by the change of TDB − TT from the start of the window to them, which grows with
+    that span: at most about 3.4e-10 s per second of it (the TDB − TT of the leapseconds kernel, 1.657e-3 s
+    · sin E), so up to 2.0e-7 s over 10 min, 1.3e-6 s over 4 000 s, 4.5e-6 s over 3.7 h and 2.9e-5 s over a day, less
+    away from the worst season (8.0e-7 s and 9.0e-7 s measured on the gates of #573's cases).
+  - **After an impulse** the law in force before it resumes at the end of its maneuver window; an attitude whose
+    activation falls after the end of the propagation is not executed (null windows, not in `ExecutedManeuvers`, the
+    standby maneuver).
+  - **`ManeuverEventDetector.HandleEvent` executes the impulse only** and returns no next detector: it no longer
+    executes the attitudes chained after the impulse; the propagation advances the chain.
+  - **`ExecutedManeuvers`, `ToOpm` and the summaries** hold the leading attitudes and the first impulse after them; the
+    summary window of a scenario ends at the end of the last hold (`ScenarioTests`: 3 min after the last impulse's window
+    end, 08:47:34.12 instead of 08:47:31.02).
+  - **A gate at the start where g is exactly 0:** a leading attitude held 0 s gates the first impulse at the start of the
+    propagation; an apsis given there by Keplerian elements (r·v = 0.0) then fires at the start with RK7(8), at the first
+    step end with Velocity-Verlet (#577's rule of a zero at the gate), instead of one orbit later (#580).
+  - **Unchanged:** the integration, `PropagationSolution`, the positions and the SPK bit for bit, except where a crossing
+    lies within the TT shift of a gate (the change of TDB − TT above, about the Earth) or g is exactly 0 there, and
+    except the burns the gates above move (F3 by an orbit, M, the gate at the start); a chain without attitudes in its
+    integration and burns but for that shift, its impulses' attitudes now from the opening of their thrust windows;
+    every propagation about another body, and SSB mode, but for the attitudes, the windows and the gates the rules above
+    move.
+  - See [Attitudes](../reference/attitudes.md#the-attitude-timeline) and
+    [Impulse Maneuvers](../reference/impulse-maneuvers.md#maneuver-chain).
 
 - **The occultation searches of a propagated spacecraft, a site or two natural bodies run in managed code, with the
   ellipsoids and the types of `gfoclt`.** `FindWindowsOnOccultationConstraint` of a `CelestialItem` or a `Site`, when
@@ -568,7 +653,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
 - **Breaking: the attitude between outputs.** A continuous attitude between two output epochs is the spherical linear
   interpolation of its samples, no longer the earlier one held, up to a discrete change; its residual against the law
   grows as the square of the output step (5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and 60 s on the inclined LEO of the
-  tests). Its angular velocity is that of the CK, no longer 0, in the convention of the frames (ICRF relative to the
+  tests; 5.9e-5 rad at 10 s for the TRIAD after an impulse since #539). Its angular velocity is that of the CK, no longer 0, in the convention of the frames (ICRF relative to the
   spacecraft, in the spacecraft frame), 2.3e-5 rad/s from the rate of the law at 10 s outputs; every read of the record
   returns it, the entries of `GetStateOrientationsToICRF` and `GetLatestStateOrientationToICRF` included, and the rate
   given to `AddStateOrientationToICRF` is not kept. `StateOrientation.AtDate` is unchanged, and its documentation states

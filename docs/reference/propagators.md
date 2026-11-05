@@ -21,8 +21,10 @@ rejected it).
 
 1. Build event detectors from the spacecraft maneuver chain.
 2. Integrate a segment until the next event or end of window.
-3. Execute the maneuver via `IEventDetector.HandleEvent()`, update state.
-4. Compute output states on the requested `DeltaT` cadence with `PropagationSolution.InterpolateAt`.
+3. Execute the maneuver via `IEventDetector.HandleEvent()`, update state; lay the attitudes chained after an impulse on
+   the attitude timeline, from the end of its maneuver window, and build the detector of the next impulse.
+4. Compute output states on the requested `DeltaT` cadence with `PropagationSolution.InterpolateAt`, then the attitude
+   record from the timeline on the solution ([Attitudes](attitudes.md#the-attitude-timeline)).
 
 ### Supported Perturbations
 

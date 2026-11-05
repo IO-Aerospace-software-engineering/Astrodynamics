@@ -272,8 +272,9 @@ public class MinimumEpochGateTests
     }
 
     /// <summary>
-    /// PR 3's case F5 (#554): an attitude between two impulses moves the minimum epoch of the second by its hold. The second
-    /// burn is the same across the holds, byte for byte, and at the apogee of the orbit after the first.
+    /// PR 3's case F5 (#554): an attitude between two impulses activates at the end of the first impulse's maneuver window
+    /// (#539) and moves the minimum epoch of the second by its hold from there, in TT seconds (#547). The second burn is the
+    /// same across the holds, 0 included, byte for byte, and at the apogee of the orbit after the first.
     /// </summary>
     [Theory]
     [InlineData("VV1")]
@@ -282,9 +283,9 @@ public class MinimumEpochGateTests
     [InlineData("RKf60")]
     public void AttitudeBetweenTwoImpulses_TheSecondBurnIsTheSameForEveryHold(string integrator)
     {
-        // A hold of 0 in RK7(8) is #554's case M (the attitude drops the gate of the impulse before it, §10 item 3 of the
-        // design of #569, PR 3's): the gate of the second impulse is the first burn itself
-        var holds = integrator.StartsWith("VV") ? new[] { "0", "60", "65.1", "66", "600" } : new[] { "60", "65.1", "66", "600" };
+        // A hold of 0 is #554's case M, fixed by the timeline (#539): before it, the attitude executed at the first burn
+        // dropped the gate of the impulse before it, and in RK7(8) the second impulse fired one tick after the first
+        var holds = new[] { "0", "60", "65.1", "66", "600" };
         var runs = holds.Select((h, i) =>
             GateRun.Run(-(7900 + 10 * Array.IndexOf(new[] { "VV1", "VV10", "RK", "RKf60" }, integrator) + i), $"f5/hold{h}|{integrator}|Propagate|ICRF")).ToArray();
         var first = runs[0];

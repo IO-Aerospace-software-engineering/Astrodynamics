@@ -9,6 +9,16 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver;
 
+/// <summary>
+/// An attitude law of the maneuver chain: a rotation from the spacecraft frame to ICRF computed on the state
+/// (<see cref="ComputeOrientation"/>).
+/// </summary>
+/// <remarks>
+/// In a propagation, the law is in force from its activation, at its <see cref="Maneuver.MinimumEpoch"/> or at the end of
+/// the window of the previous maneuver of the chain, whichever is later, to the next activation of the chain: it is
+/// sampled on the solution over that whole interval, and its hold delays the next maneuver (#539,
+/// docs/reference/attitudes.md). An attitude that would activate after the end of the propagation is not executed.
+/// </remarks>
 public abstract class Attitude : Maneuver
 {
     public StateOrientation StateOrientation { get; private set; }

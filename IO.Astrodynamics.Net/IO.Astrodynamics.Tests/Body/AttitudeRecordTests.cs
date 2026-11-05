@@ -14,6 +14,7 @@ using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.Tests.Propagators;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
@@ -104,7 +105,9 @@ public class AttitudeRecordTests
     internal const double LawAtEntries = 2.6e-15;
 
     /// <summary>The CK between the samples of a continuous law against its closed form: the residual of the SLERP between
-    /// samples 10 s apart, a property of the step (choice 1). Worst 5.73e-5 rad (InstrumentTriad, RK7(8), B1950).</summary>
+    /// samples 10 s apart, a property of the step (choice 1). Worst 5.73e-5 rad (InstrumentTriad, RK7(8), B1950) on the
+    /// three platforms; since #539, 5.93e-5 rad (ImpulseTriad and NadirImpulseTriad, the TRIAD after an impulse, now a
+    /// sampled law; Linux, 2026-11-05), twice which, 1.19e-4 rad, the limit still holds.</summary>
     internal const double LawBetweenEntries = 1.2e-4;
 
     /// <summary>The CK of a discrete attitude (the identity, an impulse's, a TRIAD held from its change) against its closed
@@ -178,7 +181,11 @@ public class AttitudeRecordTests
     /// GALACTIC, and InstrumentTriad, RK7(8), ICRF; on macOS arm64 InstrumentTriad, RK7(8), ICRF; twice 2.35e-3 falls on
     /// 4.7e-3, the step above for its unprinted digits) and 5.85e-6 m/s on the three (InstrumentTriad, RK7(8), GALACTIC);
     /// with an impulse 2.56e-3 m and 8.79e-7 m/s on Linux (ImpulseTriad, RK7(8), GALACTIC, the Validation category, Linux
-    /// only), 1.59e-3 m and 4.28e-7 m/s on Windows and macOS arm64 (ImpulseTriad, VV, GALACTIC).</summary>
+    /// only), 1.59e-3 m and 4.28e-7 m/s on Windows and macOS arm64 (ImpulseTriad, VV, GALACTIC). Since the attitude timeline
+    /// (#539) the TRIAD after the impulse is a law that turns, no longer held: its rotation enters the velocity in the
+    /// spacecraft frame, and the velocity with an impulse in SSB mode is twice the worst over the three platforms, 2.50e-6 /
+    /// 2.49e-6 / 2.49e-6 m/s (ImpulseTriad, VV, ICRF on Linux, GALACTIC on Windows and macOS arm64; CI run 42021804663):
+    /// twice 2.50e-6 falls on the boundary 5.0e-6, so the step above; its position is unchanged.</summary>
     internal const double FramePosition = 7.9e-3;
 
     internal const double FrameVelocity = 2.1e-5;
@@ -187,7 +194,7 @@ public class AttitudeRecordTests
     internal const double FramePositionSsb = 4.8e-3;
     internal const double FrameVelocitySsb = 1.2e-5;
     internal const double FramePositionSsbAcrossImpulses = 5.2e-3;
-    internal const double FrameVelocitySsbAcrossImpulses = 1.8e-6;
+    internal const double FrameVelocitySsbAcrossImpulses = 5.1e-6;
 
     /// <summary>The same relative to the Sun, 1.5e11 m away: the floor of the CK's rotation times the distance. Worst 88.2 m
     /// and 0.249 m/s (Prograde, RK7(8), B1950); 185 m and 0.527 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000,
@@ -324,7 +331,7 @@ public class AttitudeRecordTests
                           $"positions - SPK {m.PositionsAgainstSpk:E2} m, - solution {m.PositionsAgainstSolution:E2} m, at the outputs {m.StatesAtOutputs:E2} m {m.VelocitiesAtOutputs:E2} m/s, " +
                           $"in the spacecraft frame - spkezr from the Earth {m.FramePositions[0]:E2} m {m.FrameVelocities[0]:E2} m/s (rotation term {m.FrameRotationTerm[0]:E2} m/s), " +
                           $"from the Sun {m.FramePositions[1]:E2} m {m.FrameVelocities[1]:E2} m/s (rotation term {m.FrameRotationTerm[1]:E2} m/s), " +
-                          $"twin {m.TwinStates:E2} m, {m.Reads} reads, {m.Entries} entries");
+                          $"twin {m.TwinStates:E2} m, {m.Reads} reads, {m.Entries} entries, changes - rules {m.Rule:E2} s");
 
         bool after2025 = year >= 2026;
         bool ssb = path == "SSB";
@@ -362,6 +369,12 @@ public class AttitudeRecordTests
         Assert.True(m.RecordUnchanged, "a read changed the attitude record (#523)");
         // The law was compared where it applies: every case but the impulse alone samples or holds one
         Assert.True(m.LawChecks > 0);
+        // The changes of the attitude timeline at the epochs of its rules (#539, #547), against unitim_c on Linux
+        Assert.True(m.RuleCount, "the discrete changes are not those of the rules");
+        if (TimelineRules.Checked)
+        {
+            Assert.True(m.Rule <= TimelineRules.RuleBound, $"changes - rules {m.Rule:E3} s");
+        }
     }
 
     /// <summary>What a case measures.</summary>
@@ -390,6 +403,9 @@ public class AttitudeRecordTests
         public int Reads { get; set; }
         public int Entries { get; set; }
         public int LawChecks { get; set; }
+        // The library's discrete changes after the start against the rules (#539, #547), s; whether they are as many
+        public double Rule { get; set; }
+        public bool RuleCount { get; set; } = true;
     }
 
     internal static Measures Measure(PropagatedCase run)
@@ -405,6 +421,19 @@ public class AttitudeRecordTests
         // The positions do not depend on the attitude; across an impulse too, the stored states being split into arcs at
         // each impulse (#540)
         bool positions = run.Law != "Custom";
+
+        // The discrete changes of the record against the rules of the timeline: the opening of the impulse's thrust window
+        // and the activation of the TRIAD chained after it
+        var rules = run.RuleChanges();
+        if (rules.Length > 0)
+        {
+            var after = changes.Where(c => c > run.Start).ToArray();
+            m.RuleCount = after.Length == rules.Length;
+            for (int i = 0; i < System.Math.Min(after.Length, rules.Length); i++)
+            {
+                m.Rule = System.Math.Max(m.Rule, System.Math.Abs((after[i] - rules[i]).TotalSeconds));
+            }
+        }
 
         foreach (var t in epochs)
         {
@@ -590,19 +619,29 @@ public class AttitudeRecordTests
     // Twice the worst over the partial step before the impulse over Linux, Windows and macOS arm64 (CI run 41522747911,
     // 2026-11-02): 1.23e-4 / 1.23e-4 / 1.23e-4 rad, the managed path and the CK alike, the residual of the SLERP between
     // the last output sample (60 s step) and the law's sample 1 µs before the change; held, it was 4.70e-2 rad (the
-    // review's probe on the prototype; 7.11e-2 rad on the base)
+    // review's probe on the prototype; 7.11e-2 rad on the base). Since #539 the change is the opening of the impulse's thrust
+    // window: 9.29e-5 rad over a partial step of 34.306 s (Linux, 2026-11-05)
     internal const double PartialStepLaw = 2.5e-4;
 
     /// <summary>
     /// The partial step before a discrete change off the output grid (RK7(8), 60 s outputs, nadir then an impulse at about
     /// S + 2 739.5 s): the attitude follows the nadir law up to the change, the law's sample 1 µs before it (choice 1), in
-    /// the managed path and in the CK, no longer the last output sample held.
+    /// the managed path and in the CK, no longer the last output sample held. The change is the opening of the impulse's
+    /// thrust window (#539), at the epoch of the rules (<see cref="TimelineRules"/>, compared on Linux).
     /// </summary>
     [Fact]
     public void PartialStepBeforeAnRk78Event_FollowsTheLaw()
     {
         using var run = PropagatedCase.Run(-8411, "NadirImpulseTriad", "RK78", Frame.ICRF, "Propagate", 2024, new PropagatedCase.Hooks { Step = TimeSpan.FromSeconds(60.0) });
-        var change = run.Change;
+        // The discrete change of the record nearest the rule's opening of the thrust window: the library's epoch, within the
+        // bound of the rules
+        var change = run.DiscreteChanges().OrderBy(x => System.Math.Abs((x - run.Change).TotalSeconds)).First();
+        double rule = System.Math.Abs((change - run.Change).TotalSeconds);
+        if (TimelineRules.Checked)
+        {
+            Assert.True(rule <= TimelineRules.RuleBound, $"change - rule {rule:E3} s");
+        }
+
         var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
         // The entry before the lead: the last output sample of the law before the change
         var lead = record.Single(x => x.Epoch == change.AddSeconds(-1e-6));
@@ -621,7 +660,7 @@ public class AttitudeRecordTests
         }
 
         double atLead = RotationAngle(run.LawAt(lead.Epoch).Law, v => v.Rotate(lead.Rotation));
-        _output.WriteLine($"MEASURE #529 partial step before the impulse at S + {(change - run.Start).TotalSeconds:F6} s ({span:F3} s): managed - nadir {managed:E2} rad, CK - nadir {ck:E2} rad, the lead sample - nadir {atLead:E2} rad");
+        _output.WriteLine($"MEASURE #529 partial step before the impulse's thrust window at S + {(change - run.Start).TotalSeconds:F6} s ({span:F3} s, the rule {rule:E2} s from it): managed - nadir {managed:E2} rad, CK - nadir {ck:E2} rad, the lead sample - nadir {atLead:E2} rad");
         Assert.True(managed <= PartialStepLaw, $"managed {managed:E3} rad");
         Assert.True(ck <= PartialStepLaw, $"CK {ck:E3} rad");
         Assert.True(atLead <= LawAtEntries, $"lead {atLead:E3} rad");
@@ -631,10 +670,13 @@ public class AttitudeRecordTests
     }
 
     /// <summary>
-    /// A chain whose held attitude ends within 2 µs of an output sample: nadir, then an impulse, a TRIAD held 290, 300 or
-    /// 600 s, then a prograde attitude, Velocity-Verlet at 10 s. The activation at tc + hold, counted in TDB seconds, falls
-    /// 1.2e-7 to 2.4e-7 s from an output sample of the TT grid (#501): the record keeps the activation at its epoch and
-    /// drops the sample (choice 3), so the CK is written (base: SPICE(TIMESOUTOFORDER); prototype: its spacing check).
+    /// A chain whose last attitude activates within 2 µs of an output sample (#547): nadir, then an impulse, a TRIAD held
+    /// 290, 300 or 600 s, then a prograde attitude whose minimum epoch is S + 3 400 s, a TDB label, Velocity-Verlet at
+    /// 10 s. About the Earth the outputs sit on the TT grid (#501), 6e-7 s from that label: the record keeps the activation
+    /// at its epoch and drops the sample (choice 3), so the CK is written. The TRIAD activates at the end of the impulse's
+    /// maneuver window and holds its hold in TT seconds (#539, #547), the epochs of the rules (<see cref="TimelineRules"/>,
+    /// compared on Linux). Before #547 the activation after the TRIAD, at tc + hold counted in TDB seconds, fell 1.2e-7 to
+    /// 2.4e-7 s from an output sample.
     /// </summary>
     [Theory]
     [InlineData(290.0, -8421)]
@@ -648,14 +690,17 @@ public class AttitudeRecordTests
 
     private void NearEpochChain(double hold, int naifId)
     {
+        ImpulseManeuver impulse = null;
+        TriadAttitude triad = null;
+        ProgradeAttitude prograde = null;
         var hooks = new PropagatedCase.Hooks
         {
             Configure = (sc, engine, earth, sun, start) =>
             {
                 var nadir = new NadirAttitude(earth, Min, TimeSpan.Zero, engine);
-                var impulse = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
-                var triad = new TriadAttitude(start.AddSeconds(100.0), TimeSpan.FromSeconds(hold), Spacecraft.Front, earth, Spacecraft.Up, sun, engine);
-                var prograde = new ProgradeAttitude(earth, start.AddSeconds(100.0), TimeSpan.Zero, engine);
+                impulse = new ApogeeHeightManeuver(earth, start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
+                triad = new TriadAttitude(start.AddSeconds(100.0), TimeSpan.FromSeconds(hold), Spacecraft.Front, earth, Spacecraft.Up, sun, engine);
+                prograde = new ProgradeAttitude(earth, start.AddSeconds(3400.0), TimeSpan.Zero, engine);
                 nadir.SetNextManeuver(impulse);
                 impulse.SetNextManeuver(triad);
                 triad.SetNextManeuver(prograde);
@@ -667,18 +712,36 @@ public class AttitudeRecordTests
         var record = run.Spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
         var gaps = record.Zip(record.Skip(1), (x, y) => (y.Epoch - x.Epoch).TotalSeconds).ToArray();
         double smallest = gaps.Min();
-        var activation = run.Change.AddSeconds(hold);
+        var activation = run.Start.AddSeconds(3400.0);
         double nearest = record.Min(x => System.Math.Abs((x.Epoch - activation).TotalSeconds));
         // The output sample the activation replaced: an output epoch (a stored state) within 2 µs of it, not in the record
         var output = run.Spacecraft.PropagatedStates.Select(x => x.Epoch).OrderBy(x => System.Math.Abs((x - activation).TotalSeconds)).First();
         double outputGap = System.Math.Abs((output - activation).TotalSeconds);
+        // The rules: the TRIAD from the end of the impulse's maneuver window, tc − 0.666 dt + dt in TT seconds, to its hold
+        // in TT seconds later; the prograde at its minimum epoch
+        double dt = TimelineRules.BurnDuration(2000.0, impulse.DeltaV.Magnitude(), 300.0, 10.0);
+        var triadStart = TimelineRules.ManeuverEnd(run.ImpulseEpoch, dt, 0.0, true);
+        var triadEnd = TimelineRules.After(triadStart, hold, true);
+        double startDelta = (triad.ManeuverWindow!.Value.StartDate - triadStart).TotalSeconds;
+        double endDelta = (triad.ManeuverWindow.Value.EndDate - triadEnd).TotalSeconds;
+        double heldTt = TimelineRules.SecondsBetween(triad.ManeuverWindow.Value.StartDate, triad.ManeuverWindow.Value.EndDate, true);
+        double heldTdb = (triad.ManeuverWindow.Value.EndDate - triad.ManeuverWindow.Value.StartDate).TotalSeconds;
         var m = Measure(run);
-        _output.WriteLine($"MEASURE #534 chain held {hold} s: smallest gap {smallest:E3} s, the entry nearest tc + hold {nearest:E3} s from it, the output sample {outputGap:E3} s, managed - CK {m.ManagedAgainstCk:E2} rad, rate {m.RateAgainstCk:E2} rad/s");
+        _output.WriteLine($"MEASURE #547 chain held {hold} s: smallest gap {smallest:E3} s, the entry nearest S + 3400 s {nearest:E3} s from it, the output sample {outputGap:E3} s, " +
+                          $"TRIAD start - rule {startDelta:E2} s, end - rule {endDelta:E2} s, its hold in TT seconds - hold {heldTt - hold:E2} s (in TDB seconds {heldTdb - hold:E2} s), " +
+                          $"managed - CK {m.ManagedAgainstCk:E2} rad, rate {m.RateAgainstCk:E2} rad/s");
         // The lead (1 µs) and the entries at least 2 µs apart
         Assert.True(gaps.All(x => x >= SpacecraftFrame.SameEpochTolerance || System.Math.Abs(x - SpacecraftFrame.DiscreteChangeLead) < 1e-9), $"smallest gap {smallest:E3} s");
         Assert.True(nearest < 1e-6, $"the activation is {nearest:E3} s from the nearest entry");
+        Assert.Equal(activation, prograde.ManeuverWindow!.Value.StartDate);
         Assert.InRange(outputGap, 1e-8, SpacecraftFrame.SameEpochTolerance);
         Assert.DoesNotContain(record, x => x.Epoch == output);
+        if (TimelineRules.Checked)
+        {
+            Assert.True(System.Math.Abs(startDelta) <= TimelineRules.RuleBound, $"TRIAD start - rule {startDelta:E3} s");
+            Assert.True(System.Math.Abs(endDelta) <= TimelineRules.RuleBound, $"TRIAD end - rule {endDelta:E3} s");
+        }
+
         Assert.True(m.ManagedAgainstCk <= ManagedAgainstCk, $"managed - CK {m.ManagedAgainstCk:E3} rad");
         Assert.True(m.RateAgainstCk <= RateAgainstCk, $"rate {m.RateAgainstCk:E3} rad/s");
         Assert.True(m.RecordUnchanged);
@@ -1384,20 +1447,46 @@ public class AttitudeRecordTests
         // The geometric position of a body relative to the Earth in ICRF (spkezr)
         private Vector3 FromEarth(CelestialBody body, Time t) => SpiceAPI.Instance.ReadEphemeris(t, 399, body.NaifId, Frame.ICRF, Aberration.None).ToStateVector().Position;
 
+        /// <summary>The event of the impulse, tc: the base of the segment that follows it in the solution.</summary>
+        internal Time ImpulseEpoch => Solution.Segments[1].BaseEpoch;
+
+        /// <summary>The burn duration of the impulse by the rocket equation (<see cref="TimelineRules.BurnDuration"/>): from
+        /// the 2 000 kg of the case (1 000 dry, 1 000 of fuel), Isp 300 s, 10 kg/s.</summary>
+        internal double BurnDuration => TimelineRules.BurnDuration(2000.0, Impulse.DeltaV.Magnitude(), 300.0, 10.0);
+
         private Time? _change;
 
-        /// <summary>The epoch of the impulse, the first discrete change of the record after the start.</summary>
-        internal Time Change => _change ??= DiscreteChanges().First(x => x > Start);
+        /// <summary>The opening of the impulse's thrust window by the rules (<see cref="TimelineRules"/>), tc − 0.666 dt in TT
+        /// seconds about the Earth, TDB in SSB mode: the impulse's attitude from there (#539, #547).</summary>
+        internal Time Change => _change ??= TimelineRules.ThrustStart(ImpulseEpoch, BurnDuration, !Ssb);
+
+        private Time? _triadStart;
+
+        /// <summary>The activation of the TRIAD chained after the impulse by the rules: the end of the impulse's maneuver
+        /// window, tc − 0.666 dt + max(0, dt).</summary>
+        internal Time TriadStart => _triadStart ??= TimelineRules.ManeuverEnd(ImpulseEpoch, BurnDuration, 0.0, !Ssb);
+
+        /// <summary>The epochs of the changes of the case by the rules, in the order of the record: the opening of the
+        /// thrust window, then the TRIAD's activation; none without an impulse.</summary>
+        internal Time[] RuleChanges() => Law switch
+        {
+            "ImpulseAlone" => [Change],
+            "ImpulseTriad" or "NadirImpulseTriad" => [Change, TriadStart],
+            _ => []
+        };
+
+        // Within the bound of the rules of a change, the attitude is either side of it at the resolution of the rules
+        private bool AtRuleChange(Time t) => RuleChanges().Any(c => System.Math.Abs((t - c).TotalSeconds) <= TimelineRules.RuleBound);
 
         /// <summary>The closed form of the attitude at <paramref name="t"/> (a map of vectors from the spacecraft frame to
-        /// ICRF) and whether it is a continuous law; null where the attitude has no closed form here: after the TRIAD that
-        /// follows a nadir attitude, whose continuous attitude resumes at the next output (the attitude timeline, item 2 of
-        /// §8 of the design, its own issue, #539).</summary>
-        /// <remarks>Two expectations pin the behaviour of the library where it departs from its documentation, each a
-        /// defect outside #537 with its own issue, listed in the description of #537: the instrument pointing at the
-        /// Moon takes its geometric direction, although the maneuver asks for <c>Aberration.LT</c> (its light time is not
-        /// applied to a celestial target, 4.4e-5 rad from this LEO, #549); the TRIAD after an impulse is held inertially from
-        /// the change (item 2 of §8 of the design, #539), not recomputed.</remarks>
+        /// ICRF) and whether it is a continuous law, by the attitude timeline of #539: a law in force from its activation to
+        /// the next one, the impulse's attitude from the opening of its thrust window to the end of its maneuver window, the
+        /// epochs of the rules (<see cref="Change"/>, <see cref="TriadStart"/>); null within
+        /// <see cref="TimelineRules.RuleBound"/> of one of them, where the rules do not resolve the side.</summary>
+        /// <remarks>One expectation pins the behaviour of the library where it departs from its documentation, a defect
+        /// outside #537 with its own issue: the instrument pointing at the Moon takes its geometric direction, although
+        /// the maneuver asks for <c>Aberration.LT</c> (its light time is not applied to a celestial target, 4.4e-5 rad from
+        /// this LEO, #549).</remarks>
         internal (Func<Vector3, Vector3> Law, bool Continuous) LawAt(Time t)
         {
             switch (Law)
@@ -1412,12 +1501,18 @@ public class AttitudeRecordTests
                 case "InstrumentPointing":
                     return (ContinuousLaw(t), true);
                 case "ImpulseAlone":
+                    if (AtRuleChange(t)) return (null, false);
                     return t < Change ? (v => v, false) : (MinimalRotation(Spacecraft.Front, ImpulseInIcrf()), false);
                 case "ImpulseTriad":
-                    // Pin: the TRIAD held from the change (item 2 of §8 of the design, #539)
-                    return t < Change ? (v => v, false) : (TriadAtChange(), false);
+                    // The attitude timeline (#539): the identity, the impulse's attitude over its thrust and maneuver
+                    // windows, then the TRIAD law, recomputed at every epoch
+                    if (AtRuleChange(t)) return (null, false);
+                    if (t < Change) return (v => v, false);
+                    return t < TriadStart ? (MinimalRotation(Spacecraft.Front, ImpulseInIcrf()), false) : (ContinuousLaw(t), true);
                 case "NadirImpulseTriad":
-                    return t < Change ? (ContinuousLaw(t), true) : (null, false);
+                    if (AtRuleChange(t)) return (null, false);
+                    if (t < Change) return (ContinuousLaw(t), true);
+                    return t < TriadStart ? (MinimalRotation(Spacecraft.Front, ImpulseInIcrf()), false) : (ContinuousLaw(t), true);
                 default:
                     throw new ArgumentException(Law);
             }
@@ -1428,6 +1523,12 @@ public class AttitudeRecordTests
         {
             switch (Law)
             {
+                case "ImpulseTriad" or "NadirImpulseTriad" when t >= TriadStart:
+                {
+                    // The TRIAD chained after the impulse: the front to the Earth, the up axis toward the Sun
+                    var r = StateAt(t).Position;
+                    return Triad(Spacecraft.Front, Spacecraft.Up, r.Inverse(), FromEarth(Sun, t) - r);
+                }
                 case "Nadir":
                 case "NadirImpulseTriad":
                     return MinimalRotation(Spacecraft.Front, StateAt(t).Position.Inverse());
@@ -1455,15 +1556,21 @@ public class AttitudeRecordTests
 
         /// <summary>The angular velocity of the continuous law at <paramref name="t"/> in the convention of the frames (ICRF
         /// relative to the spacecraft, in the spacecraft frame, -Lᵀω): the rotation of its closed form from t - 0.05 s to
-        /// t + 0.05 s over that time, the span cut at the window and before the change of a nadir followed by an impulse
-        /// (one-sided there: its error is the angular acceleration times half the cut, below 1e-7 rad/s).</summary>
+        /// t + 0.05 s over that time, the span cut at the window, before the change of a nadir followed by an impulse and
+        /// after the activation of the TRIAD chained after the impulse (one-sided there: its error is the angular
+        /// acceleration times half the cut, below 1e-7 rad/s).</summary>
         internal Vector3 LawRateAt(Time t)
         {
             double before = System.Math.Min(LawRateSpan / 2.0, (t - Start).TotalSeconds);
             double after = System.Math.Min(LawRateSpan / 2.0, (Start.AddSeconds(Length) - t).TotalSeconds);
-            if (Law == "NadirImpulseTriad")
+            if (Law == "NadirImpulseTriad" && t < Change)
             {
                 after = System.Math.Min(after, (Change - t).TotalSeconds - 1e-6);
+            }
+
+            if (Law is "ImpulseTriad" or "NadirImpulseTriad" && t >= TriadStart)
+            {
+                before = System.Math.Min(before, (t - TriadStart).TotalSeconds);
             }
 
             var t0 = t.AddSeconds(-before);
@@ -1474,20 +1581,6 @@ public class AttitudeRecordTests
             // L1 L0ᵀ, the rotation over the span, in ICRF
             var w = RotationVector(v => l1(Transpose(l0, v))) / (t1 - t0).TotalSeconds;
             return Transpose(l, w).Inverse();
-        }
-
-        private Func<Vector3, Vector3> _triadAtChange;
-
-        // The TRIAD of the change, on the state at its epoch: the front to the Earth, the up axis toward the Sun
-        private Func<Vector3, Vector3> TriadAtChange()
-        {
-            if (_triadAtChange == null)
-            {
-                var r = StateAt(Change).Position;
-                _triadAtChange = Triad(Spacecraft.Front, Spacecraft.Up, r.Inverse(), FromEarth(Sun, Change) - r);
-            }
-
-            return _triadAtChange;
         }
 
         // The delta-V of the impulse, in the frame of the propagation, rotated to ICRF by pxform

@@ -29,8 +29,13 @@ public abstract class PropagatorBase : IPropagator
 
     protected StateVector InitialState { get; set; }
 
-    // Standalone attitude maneuver to apply at each output epoch (null if none)
-    private Attitude _continuousAttitude;
+    // The attitude timeline of the propagation (#539): the activations of its maneuver chain, sampled on the solution once
+    // the integration is done
+    private AttitudeTimeline _timeline;
+
+    // The length of the propagation, in seconds of the time argument from the start of the window: an activation after it
+    // is not executed (#539)
+    private double _propagationDuration;
 
     // The impulses of the last propagation, in epoch order, their states on either side for the arcs of the stored states
     private readonly List<ImpulseBoundary> _impulses = new();
@@ -369,18 +374,21 @@ public abstract class PropagatorBase : IPropagator
 
     private PropagationSolution PropagateWithOrientationCache(Frame cacheFrame, PropagationFrameOrientationCache cache)
     {
-        // 2. Build event detectors from maneuver chain (also discovers standalone attitude maneuvers)
-        _continuousAttitude = null;
+        // 1. The length of the propagation (may exceed the window for non-fitting step sizes), in seconds of the time
+        // argument. In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the
+        // window, its last output labelled with the end of the window as the caller gave it
+        uint outputCount = (uint)System.Math.Round(_windowLength / DeltaT.TotalSeconds,
+            MidpointRounding.AwayFromZero) + 1;
+        double outputDuration = (outputCount - 1) * DeltaT.TotalSeconds;
+        bool endsAtWindowEnd = TimeArgument.EndsAtWindowEnd(_windowLength, outputDuration);
+        double propagationDuration = endsAtWindowEnd ? _windowLength : System.Math.Max(_windowLength, outputDuration);
+        var propagationEnd = endsAtWindowEnd ? Window.EndDate : TimeArgument.EpochAt(Window.StartDate, propagationDuration);
+        _propagationDuration = propagationDuration;
+
+        // 2. The leading attitudes of the chain on the attitude timeline, and the detector of its first impulse (#539)
+        _timeline = new AttitudeTimeline();
         _impulses.Clear();
         var eventDetectors = BuildEventDetectors();
-
-        // 1. Add initial orientation (skip zero-quaternion sentinel when continuous attitude provides the real one)
-        // The attitude without an attitude maneuver: the identity of ICRF (#529, #535), as the frame of a spacecraft not
-        // propagated
-        if (_continuousAttitude == null)
-        {
-            Spacecraft.Frame.Record(new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Frame.ICRF), null, false);
-        }
 
         // 3. Create solution
         var solution = new PropagationSolution { TimeArgument = TimeArgument };
@@ -414,15 +422,9 @@ public abstract class PropagatorBase : IPropagator
             entryQ = new double[variational.CarriedCovarianceLength];
         }
 
-        // Compute required propagation duration (may exceed window for non-fitting step sizes), in seconds of the time
-        // argument. In TT, a grid that misses the end of the window by the drift between TT and the labels ends at the
-        // window, its last output labelled with the end of the window as the caller gave it
-        uint outputCount = (uint)System.Math.Round(_windowLength / DeltaT.TotalSeconds,
-            MidpointRounding.AwayFromZero) + 1;
-        double outputDuration = (outputCount - 1) * DeltaT.TotalSeconds;
-        bool endsAtWindowEnd = TimeArgument.EndsAtWindowEnd(_windowLength, outputDuration);
-        double propagationDuration = endsAtWindowEnd ? _windowLength : System.Math.Max(_windowLength, outputDuration);
-        var propagationEnd = endsAtWindowEnd ? Window.EndDate : TimeArgument.EpochAt(Window.StartDate, propagationDuration);
+        // The seconds of the time argument from the start of the window to the base of the current segment, the sum of the
+        // event times: the time argument of each event, from which the windows of the chain count their seconds (#547)
+        double segmentBaseTau = 0.0;
 
         // 4. Segment loop
         while (true)
@@ -454,6 +456,7 @@ public abstract class PropagatorBase : IPropagator
             {
                 var evt = result.Event.Value;
                 var eventEpoch = TimeArgument.EpochAt(currentEpoch, evt.EventTime);
+                double eventTau = segmentBaseTau + evt.EventTime;
 
                 // Create StateVector at event epoch
                 var eventState = new StateVector(evt.EventPosition, evt.EventVelocity,
@@ -479,16 +482,22 @@ public abstract class PropagatorBase : IPropagator
                 var detector = eventDetectors[evt.DetectorIndex];
                 var eventResult = detector.HandleEvent(eventState, Spacecraft);
 
-                // The impulse's attitude, unless an attitude chained after it, later in the chain, was recorded at its epoch
-                if (eventResult.Orientation != null)
-                {
-                    Spacecraft.Frame.Record(eventResult.Orientation, null, false);
-                }
-
                 // The next segment starts at the event: from the state after the maneuver on StopAndRestart, from the
                 // state at the event, unchanged, on Continue (#355: the same segment used to be integrated again, without
                 // end)
                 bool restart = eventResult.Action == EventAction.StopAndRestart;
+
+                // An executed impulse: its windows in seconds of the time argument, its attitude and the rest of the chain
+                // on the timeline, and the detector of the next impulse (#539, #547); the detector executes the impulse
+                // only
+                if (restart && detector is ManeuverEventDetector executed)
+                {
+                    eventResult = eventResult with
+                    {
+                        NextDetector = OnImpulse(executed.Maneuver, eventTau, eventResult.Orientation)
+                    };
+                }
+
                 var nextState = restart ? eventResult.ModifiedState : eventState;
                 currentPos = nextState.Position;
                 currentVel = nextState.Velocity;
@@ -530,6 +539,7 @@ public abstract class PropagatorBase : IPropagator
 
                 // Update event detectors for next segment
                 eventDetectors = UpdateEventDetectors(eventResult.NextDetector);
+                segmentBaseTau = eventTau;
 
                 // Re-initialize integrator for new dynamics
                 Integrator.Initialize(new StateVector(currentPos, currentVel, InitialState.Observer, currentEpoch,
@@ -563,8 +573,8 @@ public abstract class PropagatorBase : IPropagator
         solution.CovariancePropagation = _covariancePropagation;
         var outputStates = GenerateOutput(solution, outputCount, endsAtWindowEnd);
 
-        // 5b. The continuous attitude up to each discrete change that follows it
-        RecordContinuousAttitudeUpToChanges(solution);
+        // 5b. The attitude record, from the timeline, on the solution (#539)
+        RecordAttitudeTimeline(solution, outputStates);
 
         // 6. Add final orientation
         Spacecraft.Frame.RecordEnd(Window.EndDate);
@@ -632,45 +642,131 @@ public abstract class PropagatorBase : IPropagator
     }
 
     /// <summary>
-    /// Build event detectors from the spacecraft's standby maneuver chain.
-    /// Processes leading attitude maneuvers immediately (they don't need event detection).
+    /// The leading attitudes of the spacecraft's maneuver chain on the attitude timeline (#539), each at its minimum epoch
+    /// or at the end of the previous one's hold, whichever is later, and the detector of the first impulse, whose gate the
+    /// last hold raises.
     /// </summary>
     private List<IEventDetector> BuildEventDetectors()
     {
         var detectors = new List<IEventDetector>();
-
-        // Walk the maneuver chain to find the first impulse maneuver
-        var maneuver = Spacecraft.StandbyManeuver;
-        while (maneuver != null)
+        var impulse = ScheduleAttitudes(Spacecraft.StandbyManeuver, Window.StartDate, 0.0);
+        if (impulse != null)
         {
-            if (maneuver is ImpulseManeuver impulse)
-            {
-                detectors.Add(new ManeuverEventDetector(impulse));
-                break;
-            }
-
-            if (maneuver is Attitude attitude)
-            {
-                // Process initial attitude maneuvers immediately at the initial state
-                // Each leading attitude replaces the previous one at the start: the last of the chain holds
-                var (_, so) = attitude.TryExecute(InitialState);
-                if (so.Rotation != Quaternion.Zero)
-                {
-                    Spacecraft.Frame.Record(so, attitude, true);
-                }
-
-                // Remember for continuous orientation computation at each output epoch
-                _continuousAttitude = attitude;
-
-                maneuver = attitude.NextManeuver;
-            }
-            else
-            {
-                break;
-            }
+            detectors.Add(new ManeuverEventDetector(impulse));
         }
 
         return detectors;
+    }
+
+    /// <summary>
+    /// Activates the attitudes of the chain from <paramref name="maneuver"/> on, on the attitude timeline: each at its
+    /// <see cref="Maneuver.Maneuver.MinimumEpoch"/> or at the end of the previous maneuver's window
+    /// (<paramref name="previousEnd"/>, at <paramref name="previousEndTau"/> seconds of the time argument from the start of
+    /// the window), whichever is later, its window its hold counted in seconds of the time argument (#547). Each executed
+    /// attitude raises the gate of the next maneuver to the end of its hold, for this propagation only
+    /// (<see cref="Spacecraft.ChainStandbyManeuver"/>, #573). An attitude that would activate after the end of the
+    /// propagation is not executed, and stops the chain.
+    /// </summary>
+    /// <returns>The first impulse maneuver after these attitudes, null if the chain ends or stops before one.</returns>
+    private ImpulseManeuver ScheduleAttitudes(Maneuver.Maneuver maneuver, Time previousEnd, double previousEndTau)
+    {
+        while (maneuver is Attitude attitude)
+        {
+            var start = previousEnd;
+            double tau = previousEndTau;
+            var minimumEpoch = attitude.MinimumEpoch;
+            double minimumTau = TimeArgument.SecondsBetween(Window.StartDate, minimumEpoch);
+            if (minimumTau > tau)
+            {
+                // Labelled TDB, as every epoch of the propagation (#501, #508), whatever the frame of the minimum epoch
+                start = minimumEpoch.ToTDB();
+                tau = minimumTau;
+            }
+
+            if (tau > _propagationDuration + PropagationSolution.EpochTick)
+            {
+                return null;
+            }
+
+            double endTau = tau + attitude.ManeuverHoldDuration.TotalSeconds;
+            var end = After(start, endTau, attitude.ManeuverHoldDuration);
+            // About the Earth the end is the epoch of endTau, truncated to the tick: never before the activation, which
+            // the minimum epoch gives exactly (a hold of 0)
+            if (end < start) end = start;
+            attitude.ThrustWindow = new Window(start, TimeSpan.Zero);
+            attitude.ManeuverWindow = new Window(start, end);
+            _timeline.ActivateLaw(start, attitude);
+
+            // The attitude is executed: the next maneuver of the chain may start at the end of its hold, in this
+            // propagation only (#573)
+            Spacecraft.ChainStandbyManeuver(attitude.NextManeuver, end);
+            previousEnd = end;
+            previousEndTau = endTau;
+            maneuver = attitude.NextManeuver;
+        }
+
+        return maneuver as ImpulseManeuver;
+    }
+
+    // The epoch at tau seconds of the time argument from the start of the window, span after from: about the Earth the TT
+    // seconds of the argument (#547); otherwise from + span, the TDB arithmetic of the maneuvers, bit for bit
+    private Time After(in Time from, double tau, TimeSpan span) =>
+        TimeArgument == PropagationTimeArgument.Tdb ? from + span : TimeArgument.EpochAt(Window.StartDate, tau);
+
+    /// <summary>
+    /// An executed impulse on the timeline: about the Earth, its thrust and maneuver windows in TT seconds from the time
+    /// argument of its event, and the gate of the next maneuver set to the end of its maneuver window (#547); its attitude
+    /// from the opening of its thrust window (#539); after its maneuver window, the law in force before it, unless an
+    /// attitude chained after it activates there; then the attitudes chained after it.
+    /// </summary>
+    /// <param name="impulse">The impulse its detector executed.</param>
+    /// <param name="eventTau">The seconds of the time argument from the start of the window to its event.</param>
+    /// <param name="orientation">Its attitude, the front along ΔV; null for none.</param>
+    /// <returns>The detector of the next impulse, null if none.</returns>
+    private IEventDetector OnImpulse(ImpulseManeuver impulse, double eventTau, StateOrientation orientation)
+    {
+        // The windows ImpulseManeuver.TryExecute set from the event, in TDB seconds; about the Earth, counted in TT seconds
+        // from the event's time argument (#547)
+        var thrust = impulse.ThrustWindow!.Value;
+        double maneuverEndTau;
+        if (TimeArgument == PropagationTimeArgument.Tdb)
+        {
+            maneuverEndTau = TimeArgument.SecondsBetween(Window.StartDate, impulse.ManeuverWindow!.Value.EndDate);
+        }
+        else
+        {
+            double dt = thrust.Length.TotalSeconds;
+            double thrustStartTau = eventTau - dt * 0.666;
+            var thrustStart = TimeArgument.EpochAt(Window.StartDate, thrustStartTau);
+            thrust = new Window(thrustStart, TimeArgument.EpochAt(Window.StartDate, thrustStartTau + dt));
+            maneuverEndTau = thrustStartTau + System.Math.Max(impulse.ManeuverHoldDuration.TotalSeconds, dt);
+            impulse.ThrustWindow = thrust;
+            impulse.ManeuverWindow = new Window(thrustStart, TimeArgument.EpochAt(Window.StartDate, maneuverEndTau));
+
+            // TryExecute raised the gate of the next maneuver to the TDB end of the window: the TT end replaces it, for
+            // this propagation only (#573)
+            impulse.NextManeuver?.SetPropagationGate(impulse.ManeuverWindow.Value.EndDate);
+        }
+
+        var maneuverEnd = impulse.ManeuverWindow!.Value.EndDate;
+
+        // The impulse's attitude from the opening of its thrust window, no earlier than the window or the last activation
+        var start = thrust.StartDate;
+        if (start < Window.StartDate) start = Window.StartDate;
+        if (_timeline.LastEpoch is { } last && start < last) start = last;
+        if (orientation != null)
+        {
+            _timeline.ActivateDiscrete(start, orientation);
+        }
+
+        // After its maneuver window, the law in force before it
+        if (_timeline.CurrentLaw != null && maneuverEndTau <= _propagationDuration + PropagationSolution.EpochTick)
+        {
+            _timeline.ActivateLaw(maneuverEnd, _timeline.CurrentLaw, true);
+        }
+
+        var nextImpulse = ScheduleAttitudes(impulse.NextManeuver, maneuverEnd, maneuverEndTau);
+        return nextImpulse != null ? new ManeuverEventDetector(nextImpulse) : null;
     }
 
     /// <summary>
@@ -690,7 +786,6 @@ public abstract class PropagatorBase : IPropagator
     /// <summary>
     /// Generate output StateVectors at DeltaT intervals with <see cref="PropagationSolution.InterpolateAt"/>.
     /// Output may extend slightly past the window end when the step size doesn't evenly divide the window.
-    /// Also computes continuous attitude orientations at each output epoch if a standalone attitude maneuver exists.
     /// </summary>
     /// <remarks>
     /// The outputs are uniform in the time argument and labelled TDB (<see cref="PropagationTimeArgument.OutputEpoch"/>);
@@ -716,46 +811,86 @@ public abstract class PropagatorBase : IPropagator
                 var (pos, vel) = solution.InterpolateAt(epoch);
                 output[i] = new StateVector(pos, vel, InitialState.Observer, epoch, InitialState.Frame);
             }
-
-            // Apply continuous attitude maneuver at each output epoch
-            // in ICRF, whatever the frame of the propagation (#529, #535), a sample of the law that an activation at the same
-            // epoch keeps
-            if (_continuousAttitude != null)
-            {
-                var orientation = SampleContinuousAttitude(output[i]);
-                if (orientation != Quaternion.Zero)
-                {
-                    Spacecraft.Frame.Record(new StateOrientation(orientation, Vector3.Zero, epoch, Frame.ICRF), _continuousAttitude, false);
-                }
-            }
         }
 
         return output;
     }
 
-    // The rotation from the spacecraft frame to ICRF of the continuous attitude, computed on the state in ICRF
-    private Quaternion SampleContinuousAttitude(StateVector state)
+    // The rotation from the spacecraft frame to ICRF of an attitude law, computed on the state in ICRF
+    private Quaternion Sample(Attitude law, StateVector state)
     {
-        var localSv = ToIcrf(state).RelativeTo(_continuousAttitude.ManeuverCenter, Aberration.None).ToStateVector();
-        return _continuousAttitude.ComputeOrientation(localSv);
+        var localSv = ToIcrf(state).RelativeTo(law.ManeuverCenter, Aberration.None).ToStateVector();
+        return law.ComputeOrientation(localSv);
     }
 
     /// <summary>
-    /// Samples the continuous attitude once more before each discrete change that follows it (an impulse, an attitude
-    /// chained after it), on the state of the solution <see cref="SpacecraftFrame.DiscreteChangeLead"/> before the change:
-    /// the attitude between the last output sample and the change is then the interpolation of the law, no longer the last
-    /// sample held over the partial step, and the CK repeats that sample before the change (#529 part 3, #534).
+    /// The attitude record from the timeline (#539), on the solution: the identity of ICRF at the start, which an attitude
+    /// activated there replaces; each activation at its epoch, a law executed on the state of the solution there
+    /// (<see cref="Attitude.TryExecute"/>), a resumed law sampled there; each law sampled at every output epoch of its
+    /// interval, and once more <see cref="SpacecraftFrame.DiscreteChangeLead"/> before each discrete change that follows
+    /// it (#529 part 3, #534). An identity is recorded like any rotation: no sentinel.
     /// </summary>
-    private void RecordContinuousAttitudeUpToChanges(PropagationSolution solution)
+    private void RecordAttitudeTimeline(PropagationSolution solution, StateVector[] outputs)
     {
-        if (_continuousAttitude == null)
+        var frame = Spacecraft.Frame;
+        var activations = _timeline.Activations;
+
+        // The attitude without an attitude maneuver: the identity of ICRF (#529, #535), as the frame of a spacecraft not
+        // propagated
+        frame.Record(new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Frame.ICRF), null, false);
+
+        int output = 0;
+        var laws = new List<Attitude>();
+        for (int i = 0; i < activations.Count; i++)
         {
-            return;
+            var activation = activations[i];
+            if (activation.Law == null)
+            {
+                frame.Record(activation.Discrete, null, true);
+                continue;
+            }
+
+            var law = activation.Law;
+            if (!laws.Contains(law)) laws.Add(law);
+            var (position, velocity) = solution.InterpolateAt(activation.Epoch);
+            var state = new StateVector(position, velocity, InitialState.Observer, activation.Epoch, InitialState.Frame);
+            if (activation.Resumed)
+            {
+                frame.Record(new StateOrientation(Sample(law, state), Vector3.Zero, activation.Epoch, Frame.ICRF), law, true);
+            }
+            else
+            {
+                // The attitude's own execution, on the state at its activation: its StateOrientation, in ICRF
+                var (_, so) = law.TryExecute(state);
+                frame.Record(so, law, true);
+            }
+
+            // Its samples at the outputs of its interval, up to the next activation
+            Time? next = i + 1 < activations.Count ? activations[i + 1].Epoch : null;
+            while (output < outputs.Length && outputs[output].Epoch <= activation.Epoch) output++;
+            for (int o = output; o < outputs.Length && (next == null || outputs[o].Epoch < next.Value); o++)
+            {
+                frame.Record(new StateOrientation(Sample(law, outputs[o]), Vector3.Zero, outputs[o].Epoch, Frame.ICRF), law, false);
+            }
         }
 
-        foreach (var change in Spacecraft.Frame.ChangesAfterSamplesOf(_continuousAttitude))
+        foreach (var law in laws)
         {
-            // A change after the propagation, an attitude chained past its end, has no state before it to sample
+            RecordLeads(solution, law);
+        }
+    }
+
+    /// <summary>
+    /// Samples <paramref name="law"/> once more before each discrete change that follows it (an impulse, another attitude),
+    /// on the state of the solution <see cref="SpacecraftFrame.DiscreteChangeLead"/> before the change: the attitude between
+    /// the last sample and the change is then the interpolation of the law, and the CK repeats that sample before the
+    /// change (#529 part 3, #534).
+    /// </summary>
+    private void RecordLeads(PropagationSolution solution, Attitude law)
+    {
+        foreach (var change in Spacecraft.Frame.ChangesAfterSamplesOf(law))
+        {
+            // A change after the propagation has no state before it to sample
             if (change > solution.End)
             {
                 continue;
@@ -763,11 +898,8 @@ public abstract class PropagatorBase : IPropagator
 
             var epoch = change.AddSeconds(-SpacecraftFrame.DiscreteChangeLead);
             var (position, velocity) = solution.InterpolateAt(epoch);
-            var orientation = SampleContinuousAttitude(new StateVector(position, velocity, InitialState.Observer, epoch, InitialState.Frame));
-            if (orientation != Quaternion.Zero)
-            {
-                Spacecraft.Frame.RecordLead(new StateOrientation(orientation, Vector3.Zero, epoch, Frame.ICRF), _continuousAttitude, change);
-            }
+            var orientation = Sample(law, new StateVector(position, velocity, InitialState.Observer, epoch, InitialState.Frame));
+            Spacecraft.Frame.RecordLead(new StateOrientation(orientation, Vector3.Zero, epoch, Frame.ICRF), law, change);
         }
     }
 

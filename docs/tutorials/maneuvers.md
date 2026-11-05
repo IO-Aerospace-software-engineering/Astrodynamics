@@ -16,8 +16,10 @@ maneuver's delta-v at that precise epoch.
 
 ## Attitude maneuvers
 
-Attitude maneuvers orient the spacecraft before an impulse fires. They execute
-immediately when the maneuver chain reaches them --- no event detection is needed.
+Attitude maneuvers orient the spacecraft before an impulse fires. No event detection is needed: each one activates at
+its minimum epoch or at the end of the previous maneuver's window, whichever is later, and stays in force until the
+next activation of the chain. Its hold delays the next maneuver: a leading attitude held 30 minutes moves the earliest
+epoch of the first impulse 30 minutes after it. See [The attitude timeline](../reference/attitudes.md#the-attitude-timeline).
 
 ### Single-vector attitudes
 
@@ -25,10 +27,10 @@ Single-vector attitudes constrain one spacecraft body axis to a geometric direct
 The remaining degrees of freedom (roll around that axis) are uncontrolled.
 
 ```csharp
-// Point the thrust axis along the velocity vector
+// Point the thrust axis along the velocity vector; the next maneuver of the chain starts 30 minutes later at the earliest
 var prograde = new ProgradeAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
 
-// Point the instrument axis toward the sub-satellite point
+// Point the instrument axis toward the sub-satellite point, also held 30 minutes
 var nadir = new NadirAttitude(earth, epoch, TimeSpan.FromMinutes(30), engine);
 ```
 
@@ -154,8 +156,10 @@ var combined = new CombinedManeuver(
 ## Maneuver chaining
 
 Multiple maneuvers execute in sequence via `SetNextManeuver`. Leading attitudes
-execute immediately; the first impulse maneuver arms an event detector.
-After that impulse fires, the chain advances to the next maneuver.
+activate one after the other from the start, each held for its hold; the first impulse
+maneuver arms an event detector gated by the end of the last hold. After that impulse
+fires, the attitudes chained after it activate at the end of its maneuver window, and the
+next impulse is gated by the end of their holds.
 
 ```csharp
 var maneuver1 = new PlaneAlignmentManeuver(

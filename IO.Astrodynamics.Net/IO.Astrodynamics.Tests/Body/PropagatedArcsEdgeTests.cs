@@ -251,9 +251,10 @@ public class PropagatedArcsEdgeTests
     }
 
     /// <summary>
-    /// Two impulses at one event (main's case M, review of #554, which PR 1 still produces: the timeline that fixes it is PR
-    /// 2): an apogee-raising impulse, an LVLH attitude held 0 s, a second apogee-raising impulse that RK7(8) fires at the same
-    /// event. The arc between them, of zero length, is not stored: the earlier arc ends with the state before both, the later
+    /// Two impulses at one event: an apogee-raising impulse, an LVLH attitude held 0 s, a second apogee-raising impulse that
+    /// RK7(8) fires at the same event. Since the attitude timeline (#539) the second impulse is gated by the end of the
+    /// first impulse's maneuver window (main's case M, which fired it there, is fixed): the first impulse takes an engine of
+    /// 1e12 kg/s, whose burn (2e-10 s) is shorter than a tick, so that its window ends at its event. The arc between them, of zero length, is not stored: the earlier arc ends with the state before both, the later
     /// one starts with the state after both, at one epoch, the jump the sum of the two delta-V; the managed reads within
     /// ±150 s against the solution, at tc the state after both; <c>spkezr</c> on the SPK, two segments, against them.
     /// </summary>
@@ -266,7 +267,9 @@ public class PropagatedArcsEdgeTests
         spacecraft.AddFuelTank(tank);
         var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
         spacecraft.AddEngine(engine);
-        var first = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, engine);
+        var fast = new Engine("fast", "model", "sn2", 300.0, 1e12, tank);
+        spacecraft.AddEngine(fast);
+        var first = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 8378137.0, fast);
         var lvlh = TriadAttitude.CreateLVLH(earth, Start, TimeSpan.Zero, engine);
         var second = new ApogeeHeightManeuver(earth, Start, TimeSpan.Zero, 9378137.0, engine);
         first.SetNextManeuver(lvlh);

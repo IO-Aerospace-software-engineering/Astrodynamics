@@ -1,6 +1,6 @@
 # Attitudes
 
-Attitudes define spacecraft orientation during propagation. They are processed immediately in the maneuver chain (not via event detection). The leading attitude of the chain is recomputed at each output epoch, and interpolated between them; see [Frames and interpolation](#frames-and-interpolation).
+Attitudes define spacecraft orientation during propagation. They are laid on the attitude timeline of the propagation (not via event detection): each attitude law is in force from its activation to the next one, recomputed at each output epoch of that interval and interpolated between them; see [The attitude timeline](#the-attitude-timeline) and [Frames and interpolation](#frames-and-interpolation).
 
 ## Attitude Base Class
 
@@ -11,8 +11,8 @@ All attitude maneuvers inherit from the abstract `Attitude` class.
 | `ComputeOrientation(StateVector)` | Method | Compute the orientation quaternion at the given state (abstract, public): the rotation from the spacecraft frame to the frame of the state |
 | `StateOrientation` | Property | The computed spacecraft orientation after execution: the rotation from the spacecraft frame to ICRF, labelled ICRF, whatever the frame of the state |
 | `ManeuverCenter` | Property | The central body for the maneuver frame |
-| `MinimumEpoch` | Property | Earliest epoch at which the attitude can activate |
-| `ManeuverHoldDuration` | Property | How long the attitude is held |
+| `MinimumEpoch` | Property | Earliest epoch at which the attitude can activate: it activates at the later of this epoch and the end of the window of the previous maneuver of the chain |
+| `ManeuverHoldDuration` | Property | How long the attitude is held before the next maneuver of the chain may start; the law stays in force until the next activation. TT seconds about the Earth (#547) |
 | `Engine` | Property | The engine associated with this maneuver |
 
 **Constructor** (used by all concrete attitude types):
@@ -145,6 +145,38 @@ Each spacecraft has configurable body axes that define the physical orientation 
 
 Instance-level overrides can be set via the `Spacecraft` constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be orthogonal and right-handed. All attitude maneuvers use `GetBodyFront()` which reads per-instance axes with fallback to the static default.
 
+## The attitude timeline
+
+A propagation lays its maneuver chain on an attitude timeline (#539): a list of activations in the order of the chain,
+each in force from its epoch to the next one.
+
+1. **An attitude** activates at the later of its `MinimumEpoch` and the end of the window of the previous maneuver of
+   the chain (the start of the propagation for the first). Its `ThrustWindow` is that epoch, its `ManeuverWindow` runs
+   to the end of its hold, which gates the next maneuver of the chain, in that propagation only. A leading attitude
+   with a hold therefore delays the first impulse, and an attitude chained after an impulse starts at the end of the
+   impulse's `ManeuverWindow`, not at its event.
+2. **An impulse** puts its attitude, the front along ΔV, in force from the opening of its thrust window,
+   `tc − 0.666 dt`, no earlier than the start of the propagation or the previous activation, to the end of its
+   `ManeuverWindow`. Its windows themselves stay `[tc − 0.666 dt, …]` ([Thrust Window
+   Convention](impulse-maneuvers.md#thrust-window-convention)).
+3. **After an impulse**, the attitude law in force before it resumes at the end of its `ManeuverWindow`, unless an
+   attitude chained after the impulse activates there (it is later in the chain, so it holds). With no law before, the
+   impulse's attitude holds to the next activation.
+4. **An activation after the end of the propagation** is not executed: the attitude keeps null windows, is not in
+   `ExecutedManeuvers`, stays the standby maneuver, and the chain stops there.
+5. **About the Earth** the holds and the windows count TT seconds from the time argument of the event (#547), as the
+   integration and the output grid do (#501); about any other body, SSB mode included, TDB seconds.
+
+Every law is sampled on the solution once the integration is done: at its activation (`Attitude.TryExecute` on the
+state of the solution there, or the law itself when it resumes), at each output epoch of its interval, and once more
+1 µs before the change that ends it. No value is a sentinel: an attitude that is exactly the identity is recorded like
+any other rotation, and the identity of ICRF is the attitude before the first activation. The executed attitudes,
+leading, chained and trailing, are in `Spacecraft.ExecutedManeuvers` with the impulses (#570).
+
+Before 11.0.0 the leading attitudes all executed on the initial state, the last one sampled at every output; an
+attitude chained after an impulse was computed once on the state of the event and held inertially, the leading attitude
+taking over again from the next output; a hold delayed nothing; the impulse's attitude applied from the event.
+
 ## Frames and interpolation
 
 **Computed in ICRF.** Every attitude is computed on the state of the spacecraft in ICRF, whatever the inertial frame
@@ -154,24 +186,25 @@ return that rotation, labelled ICRF. One orbit therefore gives one attitude in a
 single-vector or an impulse attitude is the minimal rotation in ICRF. Before 11.0.0 it was taken in the axes of the
 initial frame, 0.48 to 0.87 rad apart between ICRF and ECLIPJ2000 on the same orbit.
 
-**Between output epochs.** The leading attitude of the chain (the last attitude before the first impulse) is sampled
-at every output epoch; between two samples the attitude is their exact spherical linear interpolation, which a type-3
+**Between output epochs.** Each attitude law is sampled at every output epoch of its interval; between two samples the attitude is their exact spherical linear interpolation, which a type-3
 CK computes. Its residual against the law grows as the square of the output step: on the inclined LEO of the tests
-5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and 60 s outputs (an instrument TRIAD, the worst of the attitudes tested;
+5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and 60 s outputs (an instrument TRIAD, the worst of the attitudes tested
+without an impulse; the TRIAD after an impulse 5.9e-5 rad at 10 s, on Linux, Windows and macOS arm64;
 [Attitude and kernels](spacecraft.md#attitude-and-kernels) gives the other figures and their sources). Its angular
 velocity, that of the CK, is the rate of the interpolation: 2.3e-5 rad/s from the rate of the law at 10 s outputs. Before 11.0.0 the latest sample held over the step, ω·Δt off (6.4e-2 rad at
 60 s, a field-of-view edge 53.8 s late).
 
-**At a discrete change.** An attitude activated after an impulse, and the attitude of an impulse (its front along ΔV),
-are discrete: each holds until the next entry. Before a discrete change, the leading attitude is sampled once more, 1 µs
-before it, so that it is interpolated up to the change: over the partial step before an RK7(8) event between outputs it
-is within the interpolation residual (1.2e-4 rad at 60 s outputs), where it was held (7.1e-2 rad before 11.0.0). At an epoch shared
-within 2 µs, the attitude activated later in the chain holds: the one chained after an impulse, not the impulse's own.
-
-**Not changed by 11.0.0.** An attitude chained after an impulse is computed once, on the state of the impulse's event
-(also when the hold of an earlier attitude puts its activation later), and held inertially; the leading attitude,
-sampled at every output, takes over again from the next output epoch after it. The
-attitude of an impulse applies from the impulse, not from the opening of its thrust window.
+**At a discrete change.** An activation is a discrete change of the record; the attitude of an impulse (its front
+along ΔV) is discrete and holds until the next activation. Before a discrete change, the law in force is sampled once
+more, 1 µs before it, so that it is interpolated up to the change: over the partial step before the opening of an
+impulse's thrust window between outputs it is within the interpolation residual (9.3e-5 rad at 60 s outputs, a span of 34.3 s),
+where it was held (7.1e-2 rad before 11.0.0). At an epoch shared within 2 µs, the activation later in the chain holds:
+an attitude chained after an impulse over the law resumed there, an impulse's attitude over a law of zero length. The
+record never holds two entries closer than 2 µs apart but for the lead: about the Earth an activation at the end of a
+hold counted in TT seconds falls on the output grid, which is uniform in TT, and the sample of that output is the
+activation (#547; before it, a hold counted in TDB seconds put the activation 1e-7 to 2e-7 s from the sample); a minimum
+epoch given as a TDB label falls off that grid by the change of TDB − TT from the start to it, and an output sample
+within 2 µs of it is dropped (6.0e-7 s at S + 3 400 s in the tests).
 
 ## IAttitudeTarget
 

@@ -28,8 +28,18 @@ The burn is impulsive: the propagated state receives the whole delta-V at the ev
 The library also reports the finite burn the impulse stands for. Its duration `dt` follows from
 the rocket equation (engine ISP, fuel flow and total mass), and the window is placed on
 `[t - 0.666 dt, t + 0.334 dt]`: two thirds of the burn before the impulse, one third after.
+`ManeuverWindow` runs from the start of the thrust window to the later of the end of the hold and the end of the
+thrust window: `[t - 0.666 dt, t - 0.666 dt + max(hold, dt)]`.
 
-The end of `ManeuverWindow` is the earliest epoch at which the next maneuver of the chain may fire.
+The end of `ManeuverWindow` is the earliest epoch at which the next maneuver of the chain may fire, an attitude
+included: an attitude chained after an impulse activates there (#539).
+
+In a propagation about the Earth both windows, and the holds of the attitudes, count TT seconds from the time argument
+of the event (#547), as the integration does (#501); about any other body, SSB mode included, TDB seconds, bit for bit
+as before 11.0.0. `ImpulseManeuver.TryExecute` called outside a propagation sets them in TDB seconds from the epoch of
+its state. The attitude of the impulse, its front along ΔV, is in force over `[t - 0.666 dt, end of ManeuverWindow]`,
+its start no earlier than the start of the propagation or the previous activation of the chain
+([Attitudes](attitudes.md#the-attitude-timeline)).
 
 The two-thirds split dates back to the initial .NET implementation and no derivation of it is on
 record. The usual impulsive approximation of a finite burn centres the burn on the impulse (50 %).
@@ -56,7 +66,11 @@ its g-function in its direction at or after the minimum epoch, searched from the
   segment, never a node just passed: within 1e-6 |r| of a node it moves away from, it waits for the next node. With the
   minimum epoch at or before the start of the segment, the first evaluation there still locks the node by the sign of
   its rate, so a start less than 1e-6 |r| past a node takes that node, a period later (#581).
-- A chained impulse is gated by the end of the previous maneuver's window, the same way, in whichever step holds it.
+- A chained impulse is gated by the end of the previous maneuver's window, the same way, in whichever step holds it:
+  an impulse, or an attitude (#539). The last leading attitude gates the first impulse by the end of its hold, and an
+  attitude chained after an impulse delays the next impulse by its hold from the end of the impulse's window. About the
+  Earth the end of an impulse's window is counted in TT seconds and replaces, as the gate of the next maneuver, the TDB
+  end `TryExecute` raised it to (#547).
 - That gate belongs to the propagation that set it (#573). `MinimumEpoch` reports the later of the minimum epoch the
   maneuver was given (its constructor, or `Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)`, which lasts) and that
   gate, which holds after the propagation with the windows of the maneuver; the next `Spacecraft.Propagate` (and
@@ -105,10 +119,17 @@ Rotates the line of apsides. Fires at the nearest orbit intersection point using
 
 Maneuvers are linked in a chain on the spacecraft:
 
-1. **Leading attitudes** execute immediately at the initial state.
+1. **Leading attitudes** are laid on the attitude timeline: each activates at the later of its `MinimumEpoch` and the end
+   of the previous one's hold, from the start of the propagation; the last one's hold gates the first impulse.
 2. The first `ImpulseManeuver` is wrapped in a `ManeuverEventDetector`.
-3. When the event fires, the burn is applied and the chain advances to the next impulse maneuver.
-4. The process repeats until all maneuvers in the chain have executed.
+3. When the event fires, the detector executes the burn, and only the burn (`HandleEvent` returns no next detector).
+   The propagation then lays the attitudes chained after it on the timeline, each from the end of the previous window,
+   and builds the detector of the next impulse.
+4. The process repeats until all maneuvers in the chain have executed. An attitude whose activation falls after the end
+   of the propagation is not executed, and the chain stops there.
+
+Every executed maneuver, attitudes included, is in `Spacecraft.ExecutedManeuvers`, once, in the order of the chain
+(#570).
 
 ## Example
 
