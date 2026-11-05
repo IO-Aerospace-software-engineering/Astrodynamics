@@ -205,8 +205,9 @@ namespace IO.Astrodynamics.Tests.Mission
             if (maneuverWindow1 != null)
             {
                 Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972248"), maneuverWindow1.Value.StartDate, TestHelpers.TimeComparer);
-                // Attitude maneuvers start at event epoch (when impulse fires), not at thrust window end
-                Assert.Equal(new TimeSystem.Time("2021-03-04T08:47:31.0152381"), maneuverWindow1.Value.EndDate, TestHelpers.TimeComparer);
+                // The three attitudes chained after the last impulse activate at the end of its maneuver window (#539),
+                // asserted above, and hold 60 s each, counted in TT seconds about the Earth (#547): 1e-9 s from TDB seconds
+                Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:34.1196671 TDB").AddSeconds(3 * 60.0), maneuverWindow1.Value.EndDate, TestHelpers.TimeComparer);
             }
 
             Assert.Equal(2281.5771732185044, summary.SpacecraftSummaries.First().FuelConsumption, 2);
@@ -424,8 +425,9 @@ namespace IO.Astrodynamics.Tests.Mission
                 if (maneuverWindow1 != null)
                 {
                     Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972248"), maneuverWindow1.Value.StartDate, TestHelpers.TimeComparer);
-                    // Attitude maneuvers start at event epoch (when impulse fires), not at thrust window end
-                    Assert.Equal(new TimeSystem.Time("2021-03-04T08:47:31.0152381"), maneuverWindow1.Value.EndDate, TestHelpers.TimeComparer);
+                    // The three attitudes chained after the last impulse activate at the end of its maneuver window (#539),
+                    // asserted above, and hold 60 s each, counted in TT seconds about the Earth (#547): 1e-9 s from TDB seconds
+                    Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:34.1196671 TDB").AddSeconds(3 * 60.0), maneuverWindow1.Value.EndDate, TestHelpers.TimeComparer);
                 }
 
                 Assert.Equal(2281.5771732185044, summary1.SpacecraftSummaries.First().FuelConsumption, 2);
@@ -478,8 +480,9 @@ namespace IO.Astrodynamics.Tests.Mission
             if (maneuverWindow2 != null)
             {
                 Assert.Equal(new TimeSystem.Time("2021-03-04T00:34:35.5972248"), maneuverWindow2.Value.StartDate, TestHelpers.TimeComparer);
-                // Attitude maneuvers start at event epoch (when impulse fires), not at thrust window end
-                Assert.Equal(new TimeSystem.Time("2021-03-04T08:47:31.0152381"), maneuverWindow2.Value.EndDate, TestHelpers.TimeComparer);
+                // The three attitudes chained after the last impulse activate at the end of its maneuver window (#539),
+                // asserted above, and hold 60 s each, counted in TT seconds about the Earth (#547): 1e-9 s from TDB seconds
+                Assert.Equal(new TimeSystem.Time("2021-03-04T08:44:34.1196671 TDB").AddSeconds(3 * 60.0), maneuverWindow2.Value.EndDate, TestHelpers.TimeComparer);
             }
 
             Assert.Equal(2281.5771732185044, summary2.SpacecraftSummaries.First().FuelConsumption, 2);

@@ -9,7 +9,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// CSPICE routines the library has no proxy for, called in the test process from the native library, which links CSPICE
 /// N0067 statically: the DAF reads of <c>dafus</c> (the layout of an SPK, through the f2c routines <c>dafbfs_</c>,
 /// <c>daffna_</c>, <c>dafgs_</c>, <c>dafus_</c>, <c>dafgda_</c>) and the SPK writer <c>spkw09_c</c>, the reference of the
-/// managed writer (#540), with its append (<c>dafopw_c</c>). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
+/// managed writer (#540), with its append (<c>dafopw_c</c>); <c>unitim_c</c>, the conversion between TDB and TT, the
+/// reference of the TT windows of a propagation about the Earth (#547). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
 /// </summary>
 /// <remarks>
 /// The Linux build of the native library exports the CSPICE symbols; the Windows DLL exports only the proxies, so the tests
@@ -62,6 +63,32 @@ internal static class CspiceDirect
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void reset_c();
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern double unitim_c(double epoch, string insys, string outsys);
+
+    /// <summary>The TT seconds past J2000 of a TDB epoch given in seconds past J2000 (<c>unitim_c(et, "TDB", "TT")</c>,
+    /// the leapseconds kernel loaded).</summary>
+    internal static double TdbToTt(double tdbSecondsPastJ2000)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            double tt = unitim_c(tdbSecondsPastJ2000, "TDB", "TT");
+            Check("unitim");
+            return tt;
+        }
+    }
+
+    /// <summary>The TDB seconds past J2000 of a TT epoch given in seconds past J2000 (<c>unitim_c(tt, "TT", "TDB")</c>).</summary>
+    internal static double TtToTdb(double ttSecondsPastJ2000)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            double tdb = unitim_c(ttSecondsPastJ2000, "TT", "TDB");
+            Check("unitim");
+            return tdb;
+        }
+    }
 
     /// <summary>A segment as <c>dafus</c> unpacks its summary, and its data words as <c>dafgda</c> reads them.</summary>
     internal sealed record Segment(double Start, double End, int Body, int Center, int Frame, int Type, int Begin, int End2,

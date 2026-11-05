@@ -123,7 +123,7 @@ public class FieldOfViewDynamicsTests
             case "ImpulseThenTriad":
             {
                 // Below the circular velocity: at apogee at the start, at perigee half an orbit later, where the maneuver
-                // raises the apogee; the TRIAD attitude follows it, held from then on
+                // raises the apogee; the impulse's attitude over its thrust and maneuver windows, then the TRIAD law (#539)
                 var orbit = new StateVector(leo.Position, new Vector3(0.0, 7600.0, 0.0), earth, Start, Frames.Frame.ICRF);
                 var (spacecraft, engine) = Create(-5172, orbit);
                 var impulse = new ApogeeHeightManeuver(earth, Start.AddSeconds(100.0), TimeSpan.Zero, 7200000.0, engine);
@@ -204,9 +204,9 @@ public class FieldOfViewDynamicsTests
         ["ECLIPJ2000"] = ConstantAttitude,
         ["ImpulseThenTriad"] =
         [
-            new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 2), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
-            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 2),
-            new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1)
+            new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 2), new(790, "EARTH", ShapeType.Point, Aberration.LT, 2),
+            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 2), new(792, "DSS-13", ShapeType.Point, Aberration.LT, 3),
+            new(792, "SUN", ShapeType.Point, Aberration.LTS, 2), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 2)
         ],
         // The nadir attitude: the Earth stays in place in a nadir frame, no edge
         ["Nadir"] =
@@ -289,8 +289,8 @@ public class FieldOfViewDynamicsTests
         {
             var row = rows[i];
             var instrument = spacecraft.Instruments.First(x => x.NaifId == spacecraft.NaifId * 1000 - row.Number);
-            var actual = instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, targets[row.Target], TargetFrame(row), row.Shape, row.Aberration, Step).ToArray();
-            var expected = Gftfov(spacecraft, window, row, targets);
+            var actual = instrument.FindWindowsInFieldOfViewConstraint(window, spacecraft, targets[row.Target], TargetFrame(row), row.Shape, row.Aberration, SpiceStep(variant)).ToArray();
+            var expected = Gftfov(spacecraft, window, row, targets, SpiceStep(variant));
             _output.WriteLine($"  {variant} {row}: managed {FieldOfViewKernels.Format(actual)}; gftfov {FieldOfViewKernels.Format(expected)}");
             Assert.Equal(row.Windows, expected.Length);
             Assert.Contains(expected, x => x.StartDate > window.StartDate || x.EndDate < window.EndDate);
@@ -303,9 +303,14 @@ public class FieldOfViewDynamicsTests
     /// <summary>The body-fixed frame of an ellipsoid target, which gftfov requires; ICRF for a point, which it ignores.</summary>
     private static Frames.Frame TargetFrame(Row row) => row.Shape == ShapeType.Point ? Frames.Frame.ICRF : new Frames.Frame(row.Target == "SUN" ? "IAU_SUN" : "ITRF93");
 
-    private static Window[] Gftfov(Spacecraft spacecraft, Window window, Row row, IReadOnlyDictionary<string, ILocalizable> targets)
+    private static Window[] Gftfov(Spacecraft spacecraft, Window window, Row row, IReadOnlyDictionary<string, ILocalizable> targets, TimeSpan step)
     {
         return SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(window, spacecraft.NaifId, spacecraft.NaifId * 1000 - row.Number, targets[row.Target].NaifId,
-            TargetFrame(row), row.Shape, row.Aberration, Step).ToArray();
+            TargetFrame(row), row.Shape, row.Aberration, step).ToArray();
     }
+
+    /// <summary>The step of both searches: shorter than their shortest window or gap, which they would miss otherwise.
+    /// The impulse's attitude over its thrust window (7.3 s, #539) hides DSS-13 from instrument 792 and shows the Earth to
+    /// instrument 790 and the Sun to instrument 792: 5 s for that variant.</summary>
+    private static TimeSpan SpiceStep(string variant) => variant.StartsWith("ImpulseThenTriad") ? TimeSpan.FromSeconds(5.0) : Step;
 }
