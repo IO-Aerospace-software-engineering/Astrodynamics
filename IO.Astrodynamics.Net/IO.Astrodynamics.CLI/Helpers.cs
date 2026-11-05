@@ -21,7 +21,13 @@ namespace IO.Astrodynamics.CLI;
 
 public class Helpers
 {
-    internal static ILocalizable CreateLocalizable(int objectId)
+    /// <summary>
+    /// The object of a NAIF identifier: a site (its body's identifier times 1000 plus its own), a celestial body, or a
+    /// spacecraft (a negative identifier) read from its kernels.
+    /// </summary>
+    /// <param name="objectId">The NAIF identifier.</param>
+    /// <param name="epoch">An epoch the kernels of a spacecraft cover: the kernel-backed spacecraft reads its SPK there.</param>
+    internal static ILocalizable CreateLocalizable(int objectId, in Time epoch)
     {
         ILocalizable localizableObject = null;
 
@@ -33,40 +39,55 @@ public class Helpers
         }
         else
         {
-            localizableObject = CreateCelestialItem(objectId);
+            localizableObject = CreateCelestialItem(objectId, epoch);
         }
 
         return localizableObject;
     }
 
-    internal static CelestialItem CreateCelestialItem(int objectId)
+    /// <summary>
+    /// A celestial body, or for a negative identifier the kernel-backed spacecraft, which reads its SPK (#542): a managed
+    /// spacecraft has no state, its ephemeris was a NullReferenceException.
+    /// </summary>
+    /// <param name="objectId">The NAIF identifier.</param>
+    /// <param name="epoch">An epoch the SPK of a spacecraft covers, which its constructor reads.</param>
+    internal static CelestialItem CreateCelestialItem(int objectId, in Time epoch)
     {
-        CelestialItem localizableObject = null;
         if (int.IsPositive(objectId))
         {
-            localizableObject = new CelestialBody(objectId);
-        }
-        else
-        {
-            localizableObject = new Spacecraft(objectId, $"spc{objectId}", 1.0, 1.0, new Clock($"clk{objectId}", 65536), null);
+            return new CelestialBody(objectId);
         }
 
-        return localizableObject;
+        return new Spacecraft(objectId, $"spc{objectId}", epoch);
     }
 
-    internal static IOrientable<Frame> CreateOrientable(int objectId)
+    /// <summary>
+    /// The reader of the orientation of an object relative to <paramref name="referenceFrame"/>, at an epoch: that of a
+    /// celestial body, or, for a negative identifier, the CK of the spacecraft (#542).
+    /// </summary>
+    /// <remarks>
+    /// A spacecraft is read by its NAIF identifier alone, as the CLI names it: the CK of its structure (the identifier
+    /// times 1000) through its clock kernel, by <c>ckgpav_c</c> with no tolerance (<see cref="SpiceAPI.ReadOrientation"/>),
+    /// the C-matrix from <paramref name="referenceFrame"/> to the spacecraft with the angular velocity of the spacecraft
+    /// relative to <paramref name="referenceFrame"/>, in it: the orientation <see cref="Spacecraft.GetOrientation"/>
+    /// gives. A kernel-backed spacecraft would need the name its frame kernel gives it, which the identifier does not
+    /// tell, and an SPK; the managed spacecraft built before had an empty attitude record, the identity, whatever its CK.
+    /// An epoch the CK does not cover throws <see cref="InvalidOperationException"/>.
+    /// </remarks>
+    internal static Func<Time, StateOrientation> CreateOrientationReader(int objectId, Frame referenceFrame)
     {
-        IOrientable<Frame> celestialItem;
         if (int.IsPositive(objectId))
         {
-            celestialItem = new CelestialBody(objectId);
-        }
-        else
-        {
-            celestialItem = new Spacecraft(objectId, "spc", 1.0, 1.0, new Clock("clk", 65536), null);
+            var celestialBody = new CelestialBody(objectId);
+            return epoch => celestialBody.GetOrientation(referenceFrame, epoch);
         }
 
-        return celestialItem;
+        return epoch =>
+        {
+            // The window of the one epoch; the step only bounds the native loop, which runs once
+            var read = SpiceAPI.Instance.ReadOrientation(new Window(epoch, epoch), objectId, TimeSpan.Zero, referenceFrame, TimeSpan.FromSeconds(1.0)).Single();
+            return new StateOrientation(read.Rotation, read.AngularVelocity, epoch, referenceFrame);
+        };
     }
 
     internal static Time ConvertDateTimeInput(string epoch)

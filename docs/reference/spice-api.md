@@ -15,6 +15,10 @@
 | `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error) |
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK |
 
+SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
+hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and
+label what SPICE returns with the frame given (#543).
+
 ### Orientation kernels
 
 `ReadOrientation` and `WriteOrientation` are the C-matrix pair of CSPICE's `ckgpav_c` and `ckw03_c`. Each record is
@@ -55,6 +59,11 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 | `AddCelestialBodyInfo(params CelestialBody[] bodies)` | Add celestial body data |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
 | `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation |
+
+A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
+the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two
+entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
+states. A read outside the entries throws `ArgumentException`.
 
 ```csharp
 var memoryProvider = new MemoryDataProvider();

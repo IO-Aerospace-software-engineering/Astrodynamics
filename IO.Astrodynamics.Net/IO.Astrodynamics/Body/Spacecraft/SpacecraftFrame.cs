@@ -176,22 +176,8 @@ public class SpacecraftFrame : Frame
     /// </summary>
     internal static (Quaternion Rotation, Vector3 Rate) Slerp(in Quaternion q0, in Quaternion q1, double fraction, double span)
     {
-        var delta = (q1 * q0.Conjugate()).Normalize();
-        if (delta.W < 0.0)
-        {
-            delta = delta * -1.0;
-        }
-
-        double sinHalf = delta.VectorPart.Magnitude();
-        if (sinHalf == 0.0)
-        {
-            return (q0, Vector3.Zero);
-        }
-
-        double angle = 2.0 * System.Math.Atan2(sinHalf, delta.W);
-        var axis = delta.VectorPart / sinHalf;
-        var rotation = (new Quaternion(axis, angle * fraction) * q0).Normalize();
-        return (rotation, axis * (angle / span));
+        var (rotation, axis, angle) = Quaternion.SlerpByAxisAngle(q0, q1, fraction);
+        return angle == 0.0 ? (rotation, Vector3.Zero) : (rotation, axis * (angle / span));
     }
 
     // The index of the entry at the date, or the complement of the index of the first entry after it

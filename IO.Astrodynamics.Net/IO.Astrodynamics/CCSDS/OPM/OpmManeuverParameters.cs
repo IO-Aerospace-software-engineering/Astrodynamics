@@ -37,7 +37,7 @@ public class OpmManeuverParameters
     /// Gets the change in spacecraft mass due to the maneuver in kilograms.
     /// </summary>
     /// <remarks>
-    /// Must be <= 0 (mass is expelled during the maneuver).
+    /// Must be &lt;= 0 (mass is expelled during the maneuver).
     /// </remarks>
     public double ManDeltaMass { get; }
 
@@ -91,7 +91,7 @@ public class OpmManeuverParameters
     /// </summary>
     /// <param name="manEpochIgnition">Epoch of maneuver ignition.</param>
     /// <param name="manDuration">Duration in seconds (>= 0).</param>
-    /// <param name="manDeltaMass">Mass change in kg (<= 0).</param>
+    /// <param name="manDeltaMass">Mass change in kg (&lt;= 0).</param>
     /// <param name="manRefFrame">Reference frame for delta-V components.</param>
     /// <param name="manDv1">First delta-V component in km/s.</param>
     /// <param name="manDv2">Second delta-V component in km/s.</param>
@@ -131,7 +131,7 @@ public class OpmManeuverParameters
     /// <param name="epoch">Epoch of the impulsive maneuver.</param>
     /// <param name="deltaV">Delta-V vector in km/s.</param>
     /// <param name="refFrame">Reference frame for the delta-V.</param>
-    /// <param name="deltaMass">Mass change in kg (<= 0).</param>
+    /// <param name="deltaMass">Mass change in kg (&lt;= 0).</param>
     /// <param name="comments">Optional comments.</param>
     /// <returns>A new OpmManeuverParameters instance.</returns>
     public static OpmManeuverParameters CreateImpulsive(

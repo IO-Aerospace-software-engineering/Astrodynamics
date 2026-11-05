@@ -55,6 +55,36 @@ public class EphemerisTests
         }
     }
 
+    [Theory]
+    [InlineData("GCRF")]
+    [InlineData("gcrf")]
+    public void CallInGcrf(string frame)
+    {
+        // GCRF has the axes of J2000 (#543): the command builds a frame from the name, which reads SPICE in J2000. The
+        // reference is the command in ICRF, SPICE's spkezr in J2000 (CallWithoutOptions); in GCRF the same states, labelled
+        // with the frame given
+        using (Configuration.Lock())
+        {
+            string Run(string name)
+            {
+                var command = new EphemerisCommand();
+                StringBuilder sb = new StringBuilder();
+                StringWriter sw = new StringWriter(sb);
+                Console.SetOut(sw);
+                command.Ephemeris("Data", 399, 10, new WindowParameters
+                {
+                    Begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame).ToString(),
+                    End = new Time(new DateTime(2023, 01, 01, 1, 1, 0), TimeFrame.TDBFrame).ToString()
+                }, TimeSpan.FromMinutes(1), name);
+                return sb.ToString();
+            }
+
+            var icrf = Run("ICRF");
+            Assert.Contains("Position : X : -25577262731.326492 Y : 132913320450.42278 Z: 57617007553.115654", icrf);
+            Assert.Equal(icrf.Replace("Frame : j2000", $"Frame : {frame}"), Run(frame));
+        }
+    }
+
     [Fact]
     public void CallFromASite()
     {

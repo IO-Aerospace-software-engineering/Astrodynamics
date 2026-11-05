@@ -915,6 +915,11 @@ var opm = spacecraft.ToOpm(
 opm.SaveToFile("iss_state.opm");
 ```
 
+The covariance of the initial state (`StateVector.Covariance`, m², m²/s, m²/s²) is exported in km², km²/s and km²/s²
+when the OPM is written at the initial epoch (the default, or the same instant in any time frame). At another epoch the
+OPM carries no covariance: moving it there would take the state transition matrix, which the export does not compute
+(#551).
+
 #### OpmData Components
 
 OPM data contains mandatory state vector and optional components:
@@ -1284,7 +1289,7 @@ Represents a spacecraft with components.
 | `GetTotalFuel()` | Get total fuel mass |
 | `GetTotalISP()` | Get combined specific impulse |
 | `GetTotalFuelFlow()` | Get combined fuel flow rate |
-| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Set maneuver to execute |
+| `SetStandbyManeuver(Maneuver maneuver, Time? minEpoch)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation |
 | `Propagate(Window window, IEnumerable<CelestialItem> bodies, bool drag, bool srp, TimeSpan step)` | Propagate orbit, returns `PropagationSolution` |
 | `PropagateAsync(...)` | Propagate orbit asynchronously, returns `PropagationSolution` |
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state relative to observer (uses reference-body pattern) |
@@ -2057,6 +2062,11 @@ Configuration.Instance.SetDataProvider(memoryProvider);
 memoryProvider.AddCelestialBodyInfo(customEarth);
 memoryProvider.AddStateVector(399, epoch, earthState);
 ```
+
+A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
+the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the
+two entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
+states. A read outside the entries throws `ArgumentException`.
 
 ---
 

@@ -82,6 +82,80 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
+  ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
+  - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared
+    the first step end after it with that value.
+  - **Positive-to-negative maneuvers** (`PerigeeHeightManeuver`, `CombinedManeuver`) whose r·v was already negative at
+    the minimum epoch fired there. On a 400 × 1 000 km orbit gated at S+1000: 120.6 m/s at 7 234 km instead of
+    27.4 m/s at the apogee, and up to 608.5 m/s.
+  - **Negative-to-positive maneuvers** (`ApogeeHeightManeuver`, `PhasingManeuver`, `ApsidalAlignmentManeuver`) missed a
+    crossing between the minimum epoch and the end of the integration step that held it, and fired one orbit later.
+  - **`PlaneAlignmentManeuver`** took the other node, half an orbit later.
+  - **Chained impulses**, gated by the end of the previous window, were affected the same way: a 4 000 s hold fired the
+    second burn 5 858 s early with 102.6 m/s instead of 26.4 m/s.
+  - **The fix.** The integrators now evaluate the g-function at the minimum epoch, in the step that holds it, and search
+    the first crossing from there, as GMAT's `Propagate` to the epoch then to the apsis does. A crossing before the
+    minimum epoch never counts; a g exactly zero at it counts there when the sign that follows it is the target sign.
+    RK7(8) fires within 1.5e-7 s of the Keplerian epoch in these cases, 9.9e-8 s at the apsides and nodes (worsts
+    1.42e-7 s and 9.86e-8 s on Linux x64, Windows and macOS arm64, the 100 ns tick of the epochs included);
+    Velocity-Verlet at its step end.
+  - **Unchanged, bit for bit:**
+    - every step that does not hold a minimum epoch;
+    - every step that holds one where the former decision holds: the g-function is positive at the minimum epoch, or a
+      negative-to-positive maneuver's g stays negative to the step end, or a positive-to-negative maneuver's g turns
+      positive by the step end; except `PlaneAlignmentManeuver`, whose node is now chosen from the state at the minimum
+      epoch instead of the step end, and moves where a node lies between the two;
+    - a true positive-to-negative crossing in that step, except a root within 1e-10 s after the minimum epoch, which
+      was labelled one tick before it and is now labelled at or after it.
+  - **Also moves:**
+    - with Velocity-Verlet, a minimum epoch within its own lag of a crossing: the decision follows Velocity-Verlet's
+      trajectory, not the Keplerian epoch. At 10 s steps the lag is up to 0.096 s at a node, 0.18 s at an apsis of
+      the orbit after a Velocity-Verlet burn and 1.5 s at the intersection of an apsidal alignment (worsts 0.0953 s,
+      0.176 s and 1.44 s on Linux x64, Windows and macOS arm64);
+    - an apsis at the start of the propagation given by Keplerian elements (r·v exactly 0) with the minimum epoch at
+      that start now fires there with RK7(8), at the first step end with Velocity-Verlet, instead of one orbit later.
+  - **User code:**
+    - a user `ImpulseManeuver` whose g has no recurring crossing (a time-like g) and whose root precedes its minimum
+      epoch no longer fires in the window: it used to fire at the minimum epoch;
+    - a custom `Integrator` (the class is public) keeps the former behaviour, the defect included: the gate is evaluated
+      by `VVIntegrator` and `RK78Integrator`, and `ManeuverEventDetector.Evaluate`, public, still returns +1 before the
+      minimum epoch.
+  - **The cost:** one shortened RK7(8) step per segment with a minimum epoch inside it, in whichever step it lies; none
+    in Velocity-Verlet.
+  - No API change. See [Impulse Maneuvers](../reference/impulse-maneuvers.md#minimum-epoch).
+- **A spacecraft propagated again gated its chained maneuvers with the windows of an earlier propagation**
+  ([#573](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/573)).
+  - **The cause.** A propagation raises the minimum epoch of each chained maneuver to the end of the window of the
+    maneuver before it. `Spacecraft.Propagate` starts the chain again, but kept those raises, so a later propagation
+    from another state or over another window gated its maneuvers with the latest windows of every earlier run.
+  - **The effect.** Chained maneuvers fired late, by whole orbits. On a 400 × 1 000 km orbit with two
+    `ApogeeHeightManeuver`s (a hold of 5 000 s), propagated from the apogee and then again from the perigee, the second
+    burn fired one orbit (6 565.30 s) after that of a spacecraft never propagated, 2.4e6 m away after 6 hours, with
+    RK7(8) and Velocity-Verlet alike. An attitude between two impulses, `Scenario.SimulateAsync` run again,
+    `BatchPropagator` and the covariance propagation were affected the same way, and so were `ExecutedManeuvers`,
+    `ToOpm` and the scenario summary.
+  - **The fix.** The gate a propagation raises belongs to that propagation: the next `Spacecraft.Propagate` (and
+    `Scenario.SimulateAsync` and `BatchPropagator` through it) clears it before it runs. A spacecraft propagated again
+    fires its maneuvers as a spacecraft never propagated, bit for bit.
+  - **`MinimumEpoch`** reports the later of the minimum epoch given to the maneuver (its constructor, or
+    `Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)`) and the gate of the last propagation. After one
+    propagation it is the value it was; after a later one, that propagation's gate.
+  - **`SetStandbyManeuver(maneuver, minimumEpoch)`:** a later minimum epoch given there is kept by every later
+    propagation, as before.
+  - **Unchanged, bit for bit:** the first propagation of a spacecraft, and a propagation repeated with the same
+    state and window.
+  - **Not covered:** a spacecraft propagated twice through `CentralBodyPropagatorBuilder` or a `CentralBodyPropagator`
+    built directly, which does not start the chain again (its own issue; under **Known limitations** if still open
+    at the release).
+  - No API change: the setter of `MinimumEpoch` was internal. See
+    [Impulse Maneuvers](../reference/impulse-maneuvers.md#minimum-epoch).
+- **The native errors of the proxies that return `bool` are raised on Windows** ([#564](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/564)).
+  `LoadKernelsProxy`, `UnloadKernelsProxy`, `ReadOrientationProxy`, `ReadEphemerisProxy`, `WriteEphemerisProxy` and
+  `WriteOrientationProxy` return a one-byte C++ `bool`, which .NET read as a four-byte Win32 `BOOL`. On Windows x64 a
+  native `false` could come back `true`, so a failed read, write or kernel load returned as a success, without its
+  SPICE error: a CK read outside its coverage gave an empty sequence instead of "No orientation found". The returns
+  are now marshalled as one byte. Linux and macOS behaved as intended and are unchanged.
 - **A propagation solution is read at an epoch in any time frame.** A UTC, TAI, TT or GPS epoch read on a solution
   about any central body was taken as the TAI difference from its TDB base, another instant by the change of TDB − TT
   (0.22 m after a day and 6.4 m after 30 days in LEO), and the UTC start or end of a UTC window could compare a tick
@@ -274,6 +348,36 @@ A major version, because it breaks the API: members deprecated for removal in 11
   within the 2.4e-6 s of #515 (971.8 s and 232.6 s before); the partial step before an RK7(8) event 1.2e-4 rad from the
   law (7.1e-2 rad before, where the last output sample held); reads before, during and after a propagation leave the record and the CK identical. See
   [Spacecraft](../reference/spacecraft.md#attitude-and-kernels); the changes of behaviour are under **Changed**.
+- **The states of a propagated spacecraft across an impulse** ([#540](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/540)).
+  The stored states were one set of output states, read by a Lagrange polynomial of the 8 nearest and written as one
+  SPK segment of degree 15: both interpolated through the jump of the velocity at each impulse. Near #540's 234 m/s
+  burn the managed reads were 192 m off and the SPK 208 m (Velocity-Verlet at 10 s); RK7(8) 340 m and 326 m; up to
+  16 km and 150 km on other burns (a combined maneuver within the first outputs), and the velocity 1 µs before an
+  impulse 40 to 890 m/s off, nearly the whole ΔV. Every reader was affected: `GetEphemeris`,
+  `GetGeometricStateRelativeTo`, the managed occultation and field-of-view searches, the geometry finders, the
+  conjunctions with an `ILocalizable` participant and the avoidance burns read from the ephemeris, the SPK and every
+  reader of it (a kernel-backed spacecraft, the Cosmographia export, `gfoclt`, `gftfov`). The stored states are now
+  split into arcs at each impulse, the states of the integrator before and after it at its epoch, each read within its
+  arc (the later one at the impulse: the state after it, as `InterpolateAt`), and written as one type-9 segment per arc.
+  Against the RK7(8) solution within ±150 s of each impulse (the worst over Linux x64, Windows and macOS arm64, CI run
+  41651463194): the managed reads 6e-9 to 1.7e-8 m at 1 and 10 s outputs (2.3e-8 m on a chain of four
+  impulses), their error far from the impulses, 3.3e-4 m at 60 s; `spkezr` on the SPK within 1.2e-3 m of them (1.1e-3 m
+  on the chain, 1.7e-3 m in SSB mode), the resolution of the ET doubles of its nodes; the velocity 1 µs before an impulse
+  1.3e-11 m/s managed in RK7(8), 8.4e-7 m/s with Velocity-Verlet, and 8.0e-7 m/s by `spkezr`; in SSB mode, where the
+  solution carries the noise of the third body near the Earth (#576), 4.9e-12 m/s managed and 6.3e-7 m/s by `spkezr`
+  against the state before the impulse moved back by the closed-form acceleration of the Sun and the Earth, the worst over
+  Linux, Windows and macOS arm64.
+  An output closer to an impulse than a tenth of the output step is not stored, the impulse's state is (kept, an output
+  3 µs from an impulse put the SPK 301 m off); the first and the last output always are. Velocity-Verlet keeps its own error far from the impulses (0.16 m at 10 s and 33 m at
+  60 s outputs). Far from the impulses, and without an impulse, the reads are those of before, bit for bit; the
+  trajectory, `PropagationSolution` and the attitude are unchanged. See
+  [The stored states across an impulse](../reference/spacecraft.md#the-stored-states-across-an-impulse); the changes of
+  behaviour are under **Changed**.
+- **A read of the stored states sorted every state** ([#522](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/522)).
+  `GetEphemeris` and `GetGeometricStateRelativeTo` of a propagated spacecraft sorted all its stored states at each call:
+  1.6 to 2.0 ms a read at 7 000 to 9 000 states. The arcs above are sorted arrays read by a binary search, without a
+  lock: 0.001 to 0.003 ms, against 1.6 to 2.2 ms for the sort in the same process (2 000 reads at 7 000 and 9 000
+  states, Linux x64, 2026-11-03, not a benchmark), the result bit for bit that of the sort.
 - **`Instrument.Orientation` has one meaning, the Euler angles of the frame kernel.** The managed path read it as a
   rotation vector and conjugated it, the spacecraft-frame getters as the same rotation vector, and the frame kernel as
   the Euler angles 1-2-3, as its documentation says: the managed boresight 4.634° from the frame kernel's for
@@ -290,6 +394,45 @@ A major version, because it breaks the API: members deprecated for removal in 11
   time it requests is not applied to a celestial target, whose direction stays geometric (4.3e-5 to 4.5e-5 rad from the
   light-time-corrected Moon of `spkpos` from a LEO), a defect outside this change with its own issue,
   [#549](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/549) ([#537](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/537)).
+- **A state in GCRF propagates.** `PropagatorBase` rejected `Frame.GCRF` as an initial frame ("must be defined in
+  inertial frame"), although GCRF is inertial with the axes of ICRF. It is accepted, and `SpiceAPI` hands a frame named
+  GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000` in `ReadEphemeris`, `ReadOrientation`,
+  `TransformFrame` and `FindWindowsOnCoordinateConstraint`, and labels the result with the frame given (SPICE has no
+  GCRF frame: the forces read uninitialised states, NaN, once the frame was accepted, and these methods and the CLI's
+  `ephemeris` and `frame` commands in GCRF returned uninitialised or zero states). A propagation from a GCRF state is
+  that of its ICRF twin, bit for bit (0 m), with Velocity-Verlet, RK7(8) with and without a covariance, an impulse then
+  a nadir attitude, in SSB mode, and over the day of EGM2008 10×10, drag, SRP, the Moon and the Sun (Linux x64); the
+  reads in GCRF equal those in J2000, bit for bit ([#543](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/543)).
+- **`Spacecraft.ToOpm` exports the covariance of the initial state.** `StateVector.ToStateVector(epoch)` went through
+  `AtEpoch`, which builds Keplerian elements without the covariance, even at the state's own epoch: the OPM never carried
+  it. A `StateVector` read at the instant of its own epoch is now the state itself, with its covariance, and the OPM
+  carries its 21 terms in km², km²/s and km²/s², the m² terms times 1e-6 within two ulp, in ICRF and ECLIPJ2000, the
+  epoch omitted or tagged UTC or TDB. At another epoch the OPM carries no covariance, as before (Changed below)
+  ([#551](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/551)).
+- **`MemoryDataProvider` reads depend on the entries only.** An interpolated read was stored as an entry, so the reads
+  after it depended on it: a state 7.70 m off its circular orbit after 40 reads, orientations 1.8e-7 rad off after reads
+  in sequence, one entry more per read. A read is no longer stored, and an orientation is the exact spherical linear
+  interpolation of its two entries (Changed below): 2.39e-16 rad from the closed form over 999 fractions of rotations of
+  0.0113, 0.025 and 0.05 rad (6e-8 rad before), and the state at 605 s 8.8e-7 m from the orbit, whatever the reads
+  before, the same on Linux, Windows and macOS arm64 ([#548](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/548)).
+- **The command line reads the kernels of a spacecraft given by its NAIF identifier.** `orientation` built a managed
+  spacecraft with an empty attitude record and printed the identity whatever the CK held (0.7 rad off in the issue's
+  case); `ephemeris`, `sub-point` and `angular-separation` threw `NullReferenceException`. `orientation` now reads the CK
+  by the identifier (`SpiceAPI.ReadOrientation`, `ckgpav_c` through the clock kernel), relative to the requested frame,
+  and the other commands take the kernel-backed spacecraft at the start of the window or at the epoch. On the kernels the
+  library writes for 600 s of a nadir LEO, against CSPICE: the orientation 0 rad and 2.2e-18 rad/s from `sxform` in
+  J2000, ECLIPJ2000, ITRF93 and over a UTC window (4.5e-16 rad from spiceypy's `pxform`, CSPICE N0067), the ephemeris
+  equal to `spkezr`, the sub-point equal to its closed form on `spkezr`, the same on Linux, Windows and macOS arm64
+  ([#542](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/542)).
+- **A null target orbit is an argument error.** The target-orbit constructor of `ImpulseManeuver`, under
+  `ApsidalAlignmentManeuver`, `PlaneAlignmentManeuver` and `PhasingManeuver`, dereferenced the target before its null
+  check: `NullReferenceException`, the `ArgumentException` unreachable. It throws `ArgumentNullException` (an
+  `ArgumentException`) naming `targetOrbit`, before the check of the engine, whether the fuel tank is attached to a
+  spacecraft or not ([#552](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/552)).
+- **The XML documentation of `OpmManeuverParameters`.** A bare `<= 0` in three comments (`ManDeltaMass`, the
+  constructor's `manDeltaMass`, `CreateImpulsive`'s `deltaMass`) was badly formed XML (CS1570 with
+  `GenerateDocumentationFile`), and the whole documentation of the three members was dropped from the generated file.
+  It is escaped; the library and the command line build without CS1570 ([#550](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/550)).
 
 **Changed**
 
@@ -396,6 +539,23 @@ A major version, because it breaks the API: members deprecated for removal in 11
   The SPK is written in J2000, no longer in the initial frame (both read the same through SPICE). `WriteOrientation` of
   a spacecraft never propagated throws `InvalidOperationException`, where it wrote what its reads had stored or threw
   `ArgumentException`. `TLEPropagator` records no attitude: its SPK can now be written, its CK still cannot.
+- **Breaking: the SPK of a propagated spacecraft is written per arc.** With the Fixed entry of #540 above,
+  `Spacecraft.WriteEphemeris` writes one segment of type 9 (Lagrange, unequal steps) per arc between impulses, in time
+  order, of degree min(7, N − 1) for an arc of N states, through a managed DAF writer: at an impulse an SPK reader gets
+  the state after it, 1 µs before it the state before. The native writer wrote one segment of degree 15 across every
+  impulse, of type 8 for equal steps (SSB mode, other central bodies; far from the impulses, 2.2e-2 m off in SSB mode
+  where type 9 is 4.7e-4 m); a file of type 9 with several segments reads the same through SPICE and every SPK reader.
+  An arc bounded by an impulse with fewer than 4 states takes 16 states of the solution. As before, a file that ends at
+  an impulse located at the end of the propagation ends with the state before it, as the solution does. A file of 25
+  segments or more holds a full summary record followed by an empty one, as CSPICE writes it. A write the writer refuses
+  (no state, an arc of one state) leaves an existing file as it was, as the native writer did. The file is
+  replaced and left unloaded, as before; `Star` and `Site` keep the native writer. SPKs written before read as before:
+  regenerate those that cross an impulse.
+- **Breaking: `Spacecraft.AddPropagatedStates`.** A propagation by `Spacecraft.Propagate` or `Scenario.SimulateAsync`
+  replaces every stored state, those added before a first propagation included: they were merged with the propagated
+  ones (only a propagated spacecraft was cleared). `TLEPropagator.Propagate` still adds its states, as before. A state
+  goes to the arc of its epoch (the later one at an impulse), replacing a stored state of that arc at the same epoch;
+  without stored states the states make one arc, read and written as before.
 - **Breaking: states and attitudes in ICRF.** A spacecraft propagated from ECLIPJ2000, B1950, FK4, ECLIPB1950 or
   GALACTIC stores its states (with their covariance) and its attitude in ICRF; `PropagationSolution` keeps the initial
   frame, bit for bit, and the states read back in that frame are a rotation round trip, no longer bit for bit those of
@@ -439,6 +599,23 @@ A major version, because it breaks the API: members deprecated for removal in 11
   and `ckw03_c`, the rotation from the reference frame to the spacecraft frame with the angular velocity of the
   spacecraft relative to the reference frame, in it; their documentation now says so. On a CK written by 11.0.0,
   `ReadOrientation` returns the C-matrix of the attitude, with a non-zero angular velocity.
+- **A `StateVector` read at its own epoch is the state itself.** `ToStateVector(epoch)` (and `ToStateVector(trueAnomaly)`
+  when it lands on the epoch) at the instant of the state's epoch, in any time frame, returns the state, position,
+  velocity, frame, observer and covariance unchanged, tagged as `epoch` is: the same object for the same tag. It was the
+  round trip through Keplerian elements, which moved it by rounding: 1.7e-9 m and 1.9e-12 m/s for a LEO, 5.3e-8 m and
+  3.3e-12 m/s for a GEO. This reaches `Spacecraft.ToOpm`, the state of a spacecraft read before two states are
+  propagated, and the directions of `ApsidalAlignmentManeuver`. At any other instant the result is the two-body motion,
+  without a covariance, as before ([#551](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/551)).
+- **`StateOrientation.Interpolate` is the exact spherical linear interpolation.** It took `Quaternion.SLERP`, which
+  switches to a normalised linear interpolation below about 0.028 rad between the rotations (6e-8 rad off at
+  0.025 rad); it now takes the axis and the angle of the rotation between them, the interpolation the attitude record of
+  a spacecraft already uses (bit for bit the same). `Quaternion.SLERP` itself is unchanged. `MemoryDataProvider` no
+  longer grows with its reads ([#548](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/548)).
+- **Breaking: the `orientation` command of a spacecraft.** With the Fixed entry above. For a negative identifier it prints
+  the attitude of the CK, relative to the requested frame, where it printed the identity whatever the CK held: its
+  output changes for every spacecraft whose CK is not the identity. An epoch outside the CK throws
+  `InvalidOperationException` with the SPICE error, where it printed the identity
+  ([#542](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/542)).
 
 **Removed**
 

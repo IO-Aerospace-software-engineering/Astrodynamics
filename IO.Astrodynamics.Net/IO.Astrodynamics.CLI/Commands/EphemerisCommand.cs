@@ -42,11 +42,12 @@ public class EphemerisCommand
 
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
-        var localizableObject = Helpers.CreateLocalizable(objectId);
+        var window = Helpers.ConvertWindowInput(windowParameters.Begin, windowParameters.End);
+        var localizableObject = Helpers.CreateLocalizable(objectId, window.StartDate);
 
-        var observerItem = Helpers.CreateLocalizable(observerId);
+        var observerItem = Helpers.CreateLocalizable(observerId, window.StartDate);
 
-        var ephemeris = localizableObject.GetEphemeris(Helpers.ConvertWindowInput(windowParameters.Begin, windowParameters.End), observerItem, new Frame(frame),
+        var ephemeris = localizableObject.GetEphemeris(window, observerItem, new Frame(frame),
             Enum.Parse<Aberration>(aberration, true), step);
 
 
@@ -88,12 +89,13 @@ public class EphemerisCommand
     {
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
-        var localizableObject = Helpers.CreateLocalizable(objectId) as CelestialItem;
+        var epoch = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
+        var localizableObject = Helpers.CreateLocalizable(objectId, epoch) as CelestialItem;
 
         var celestialBody = new CelestialBody(celestialBodyId);
         var abe = Enum.Parse<Aberration>(aberration, true);
 
-        var planetocentric = localizableObject!.SubObserverPoint(celestialBody, Helpers.ConvertDateTimeInput(epochParameters.Epoch), abe);
+        var planetocentric = localizableObject!.SubObserverPoint(celestialBody, epoch, abe);
 
         if (cartesian)
         {
@@ -128,12 +130,13 @@ public class EphemerisCommand
     {
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
-        var observer = Helpers.CreateLocalizable(observerId);
-        var firstObject = Helpers.CreateLocalizable(firstObjectId);
-        var secondObject = Helpers.CreateLocalizable(secondObjectId);
+        var epoch = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
+        var observer = Helpers.CreateLocalizable(observerId, epoch);
+        var firstObject = Helpers.CreateLocalizable(firstObjectId, epoch);
+        var secondObject = Helpers.CreateLocalizable(secondObjectId, epoch);
         var abe = Enum.Parse<Aberration>(aberration, true);
 
-        var angle = observer.AngularSeparation(Helpers.ConvertDateTimeInput(epochParameters.Epoch), firstObject, secondObject, abe);
+        var angle = observer.AngularSeparation(epoch, firstObject, secondObject, abe);
 
         Console.WriteLine(angle);
 

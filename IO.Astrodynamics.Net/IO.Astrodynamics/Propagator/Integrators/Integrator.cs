@@ -140,6 +140,25 @@ public abstract class Integrator : IIntegrator
     }
 
     /// <summary>
+    /// A new state at <paramref name="epoch"/> in the observer and frame of the integration, for an evaluation of the event
+    /// detectors.
+    /// </summary>
+    internal StateVector StateAt(in Vector3 position, in Vector3 velocity, in Time epoch) =>
+        new(position, velocity, Observer, epoch, ReferenceFrame);
+
+    /// <summary>
+    /// The state at <paramref name="t"/>, in seconds of the time argument from <paramref name="baseEpoch"/>, inside the
+    /// accepted <paramref name="step"/>: the state at a gate (#569, <see cref="EventGates"/>). The cubic Hermite of the step
+    /// by default, the state <see cref="PropagationSolution.InterpolateAt"/> reports there for a Velocity-Verlet solution,
+    /// with no force evaluation.
+    /// </summary>
+    internal virtual StateVector StateInsideAcceptedStep(in AcceptedStep step, in Time baseEpoch, double t)
+    {
+        var (position, velocity) = PropagationSegment.HermiteInterpolate(step, t);
+        return StateAt(position, velocity, TimeArgument.EpochAt(baseEpoch, t));
+    }
+
+    /// <summary>
     /// Check event detectors for sign changes.
     /// Returns the detector index and g-values if an event is detected, or -1 if none.
     /// </summary>

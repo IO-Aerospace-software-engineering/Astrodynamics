@@ -102,6 +102,39 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
+        /// The state vector at a given epoch: this state, with its covariance, at the instant of <see cref="OrbitalParameters.Epoch"/>;
+        /// the two-body motion of <see cref="OrbitalParameters.AtEpoch"/>, without a covariance, at any other instant.
+        /// </summary>
+        /// <param name="epoch">The epoch of the state vector.</param>
+        /// <returns>The state vector at <paramref name="epoch"/>, tagged as <paramref name="epoch"/> is.</returns>
+        /// <remarks>
+        /// <para>
+        /// At the instant of <see cref="OrbitalParameters.Epoch"/>, in any time frame (the criterion of
+        /// <see cref="OrbitalParameters.AtEpoch"/>, which counts no time there), the state is this one, position, velocity
+        /// and <see cref="Covariance"/> unchanged, its epoch tagged as <paramref name="epoch"/> is (#551). It is no longer
+        /// the round trip through the Keplerian elements of <see cref="OrbitalParameters.AtEpoch"/>, which lost the
+        /// covariance and moved the state by the rounding of the conversions.
+        /// </para>
+        /// <para>
+        /// At any other instant the covariance is not carried: moving it to <paramref name="epoch"/> would take the state
+        /// transition matrix of the motion, which this conversion does not compute. A covariance at another epoch is the
+        /// one of a propagation with <see cref="Propagator.Variational.CovariancePropagationOptions"/>.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown when the mean anomaly at the epoch or the eccentricity is not finite (#453).
+        /// </exception>
+        public override StateVector ToStateVector(Time epoch)
+        {
+            if (epoch.ToTDB() != Epoch.ToTDB())
+            {
+                return base.ToStateVector(epoch);
+            }
+
+            return epoch == Epoch ? this : new StateVector(Position, Velocity, Observer, epoch, Frame, Covariance);
+        }
+
+        /// <summary>
         /// Calculates the specific orbital energy.
         /// </summary>
         /// <returns></returns>

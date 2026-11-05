@@ -429,7 +429,9 @@ var solution = spacecraft.Propagate(window, bodies, new RK78Integrator(), false,
 The SPK written by `Spacecraft.WriteEphemeris` holds positions and velocities only: the covariance is not written. The
 ephemeris queries of the spacecraft (`GetEphemeris`, `GetGeometricStateRelativeTo`, a Lagrange interpolation of the stored
 states) and SPICE reading the SPK carry no covariance. The covariance is read from the `PropagationSolution` and from its
-output states. An OEM export with covariance is planned for a later release.
+output states. The stored states carry it too, every one of them: across an impulse, the state before it the covariance
+at its event, the state after it the covariance after the burn with its execution error, the states that fill a short
+arc that of their epoch ([The stored states across an impulse](spacecraft.md#the-stored-states-across-an-impulse)). An OEM export with covariance is planned for a later release.
 
 ## In the Conjunction Analysis
 

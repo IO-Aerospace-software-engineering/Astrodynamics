@@ -50,11 +50,15 @@ detector from its g-value past that root (the rule Hipparchus applies to a zero 
 
 `ManeuverEventDetector` wraps an `ImpulseManeuver` and delegates to `ComputeEventValue()` for the g-function and `EventCrossingDirection` for the trigger direction. When the event fires, it applies the maneuver's delta-V and advances the maneuver chain. When the precondition of the maneuver (`CheckPreconditions`) fails, it returns `Continue` and the maneuver waits for its next crossing; if no crossing satisfies it within the window, the maneuver is not executed.
 
+The minimum epoch of the maneuver is the gate of the detector (#569): no crossing counts before it, and the first crossing is searched from the integrated state at it. `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate, in the step that holds it (RK7(8) by a shortened step from the start of the step, Velocity-Verlet by the cubic Hermite of the step), and compare that value with the g-value at the step end; a g-value exactly zero at the gate is a crossing there when the sign that follows it is the target sign. Every step that does not hold a gate is unchanged. `Evaluate` returns +1 before the gate, for callers outside the library; the library's integrators never compare that value with a g-value after the gate: in the step that holds the gate, they replace it with the g-value at the gate. See [Impulse Maneuvers](impulse-maneuvers.md#minimum-epoch).
+
 ## BisectionEventFinder
 
 `BisectionEventFinder` performs sub-step root-finding to locate event times to approximately 1e-10 second precision, by bisection on the zero crossing of the g-function within a step. Its public `FindRoot` evaluates the g-function on the cubic Hermite interpolation of an `AcceptedStep`.
 
 `VVIntegrator` detects events at step boundaries only. `RK78Integrator` refines them within the step by the same bisection, on states computed by shortened RK7(8) steps from the start of the step, so that the event is located on the integrated trajectory. The event time is then moved to the 100 ns grid of the epochs, and the propagation restarts from the state of a shortened step to that time: at the accuracy of the integrator, and the same state from which the state transition matrix at the event comes.
+
+In the step that holds the gate of a detector, `RK78Integrator` bisects [gate, step end] on the g-function, from its value at the gate, and never labels an event before the gate. After an event that continues the propagation (`EventAction.Continue`), the detector of that event is not gated again: the next segment starts from its g-value past the root (#355), and the event decided its gate.
 
 ## Maneuver G-Functions
 

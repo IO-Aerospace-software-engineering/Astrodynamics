@@ -538,6 +538,7 @@ PropagatorBase (abstract)
 2. Segment loop: `Integrator.IntegrateSegment()` advances with event detection
 3. On event: `IEventDetector.HandleEvent()` → execute maneuver, reinitialize integrator
 4. Output: interpolate solution at fixed `DeltaT` epochs, sample the leading (continuous) attitude on the ICRF state at each, and once more 1 µs before each discrete change that follows it; the spacecraft stores its states and attitude record in ICRF (#523, #529, #534, #535; `docs/reference/spacecraft.md#attitude-and-kernels`)
+5. Stored states: split into arcs at each impulse with the states of the integrator before and after it (`ImpulseBoundary`, `PropagatorBase.Impulses`), read per arc and written as one type-9 SPK segment per arc by the managed writer (#540, #522; `docs/reference/spacecraft.md#the-stored-states-across-an-impulse`)
 
 **Integrator Interface**
 ```csharp
@@ -559,7 +560,7 @@ Industry-standard g-function zero-crossing approach for maneuver triggering and 
 
 **Key Types**
 - `IEventDetector`: `Evaluate(state)` → scalar, `Direction` → `CrossingDirection`, `HandleEvent()` → `EventResult`
-- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`, handles maneuver chain advancement
+- `ManeuverEventDetector`: Wraps `ImpulseManeuver`, delegates to `ComputeEventValue()`, handles maneuver chain advancement; its `MinimumEpoch` is the gate of the detector (#569, internal `IGatedEventDetector`): `VVIntegrator` and `RK78Integrator` evaluate the g-function at the gate in the step that holds it and fire at the first crossing at or after it (a zero at the gate counts there when the sign after it is the target sign); the public `Evaluate` keeps its +1 before the gate for external callers; internally, `EvaluateOpen` calls `ImpulseManeuver.ComputeEventValueAtSearchStart` (internal virtual, `ComputeEventValue` by default), which only `PlaneAlignmentManeuver` overrides: from the state at a minimum epoch inside a step it takes the node it moves toward, never one just passed (at a segment base the first `Evaluate` still locks it, #581); the gate of a chained maneuver belongs to one propagation (#573): `Spacecraft.ChainStandbyManeuver` raises `Maneuver.PropagationGate`, cleared by `Maneuver.Reset` at each `Spacecraft.Propagate`; `SetStandbyManeuver(maneuver, minimumEpoch)` raises the given value, which lasts; `MinimumEpoch` is the later of the two
 - `CrossingDirection` enum: `NegativeToPositive`, `PositiveToNegative`, `Any`
 - `EventResult`: Modified state, orientation, action (`StopAndRestart` or `Continue`), next detector
 

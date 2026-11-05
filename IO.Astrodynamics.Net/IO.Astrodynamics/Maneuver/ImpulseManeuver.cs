@@ -46,6 +46,17 @@ namespace IO.Astrodynamics.Maneuver
         public abstract CrossingDirection EventCrossingDirection { get; }
 
         /// <summary>
+        /// The g-function at a state from which the search for the crossing starts, the state at the minimum epoch, and at
+        /// the states of that search (#569): <see cref="ComputeEventValue"/> by default.
+        /// </summary>
+        /// <remarks>
+        /// A maneuver whose first evaluation decides which crossing it waits for overrides it with the rule of a search
+        /// start, where a crossing just passed does not count (<see cref="PlaneAlignmentManeuver"/>);
+        /// <see cref="ComputeEventValue"/> keeps the rule of a state handed to the maneuver at its crossing.
+        /// </remarks>
+        internal virtual double ComputeEventValueAtSearchStart(StateVector localState) => ComputeEventValue(localState);
+
+        /// <summary>
         /// Optional precondition check at event time (default: true).
         /// Override for maneuvers with additional constraints (e.g., CombinedManeuver).
         /// </summary>
@@ -61,20 +72,25 @@ namespace IO.Astrodynamics.Maneuver
         {
         }
 
-        protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(targetOrbit.Observer as CelestialItem, minimumEpoch,
-            maneuverHoldDuration, engine)
+        /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> or <paramref name="engine"/> is null.</exception>
+        /// <exception cref="ArgumentException">The spacecraft of the engine and the target orbit are defined in different frames.</exception>
+        protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
+            RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, engine)
         {
-            if(engine.FuelTank.Spacecraft!=null && engine.FuelTank.Spacecraft.InitialOrbitalParameters.Frame!=targetOrbit.Frame)
+            if (engine.FuelTank.Spacecraft != null && engine.FuelTank.Spacecraft.InitialOrbitalParameters.Frame != targetOrbit.Frame)
             {
                 throw new ArgumentException("Spacecraft and target orbit must be defined in the same frame");
             }
-            
-            if (targetOrbit == null)
-            {
-                throw new ArgumentException("Target orbit must be define");
-            }
 
             TargetOrbit = targetOrbit;
+        }
+
+        /// <summary>
+        /// The target orbit, checked before the constructor chain dereferences it (#552).
+        /// </summary>
+        private static OrbitalParameters.OrbitalParameters RequireTargetOrbit(OrbitalParameters.OrbitalParameters targetOrbit)
+        {
+            return targetOrbit ?? throw new ArgumentNullException(nameof(targetOrbit), "Target orbit must be defined");
         }
 
         public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
@@ -107,7 +123,7 @@ namespace IO.Astrodynamics.Maneuver
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, ManeuverHoldDuration).Merge(ThrustWindow.Value);
 
             //Set next maneuver
-            Engine.FuelTank.Spacecraft.SetStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
+            Engine.FuelTank.Spacecraft.ChainStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
 
             //return computed state vector and state orientation
             //The front along the delta-V, in ICRF whatever the frame of the state (#529, #535)
