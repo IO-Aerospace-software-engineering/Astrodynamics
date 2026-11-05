@@ -72,6 +72,13 @@ public class AttitudeTimelineEdgeTests
         return m;
     }
 
+    // The epochs of the library's discrete changes: the second record of each pair of CK records 1 µs apart
+    private static Time[] DiscreteChanges(Spacecraft spacecraft)
+    {
+        var records = ((SpacecraftFrame)spacecraft.Frame).CkRecords();
+        return records.Skip(1).Where((x, i) => (x.Epoch - records[i].Epoch).TotalSeconds <= 1.5e-6).Select(x => x.Epoch).ToArray();
+    }
+
     // The epochs of the record strictly increase, and the activations of the rules never decrease
     private static void AssertMonotone(AttitudeTimelineTests.TimelineRun run, AttitudeTimelineTests.Measures m)
     {
@@ -113,8 +120,12 @@ public class AttitudeTimelineEdgeTests
     /// <summary>
     /// The impulse's attitude clipped to the previous activation (#577 choice 12): a perigee raise at the apogee after
     /// S + 3 500 held until 5 s before the next perigee, then an apogee raise there, whose thrust window opens 10.7 s before
-    /// its burn, before the end of the first one's window; with and without a leading nadir, whose resumption at that end
-    /// the impulse's attitude replaces (a law of zero length, the same epoch, later in the chain).
+    /// its burn, before the end of the first one's window. With a leading nadir (ClipLastLaw), the nadir resumes at that
+    /// end, the last activation: the second impulse's attitude is clipped to it and replaces it there (a law of zero length,
+    /// the same epoch, later in the chain). Without it (ClipLast) the last activation is the first impulse's attitude, at
+    /// its own thrust start: nothing is clipped, the second impulse's attitude opens at its thrust start, inside the first
+    /// one's maneuver window. The library's discrete change (the CK's pair of records 1 µs apart) against the library's
+    /// windows.
     /// </summary>
     [Theory]
     [InlineData("ClipLast|RK|Propagate|ICRF|10")]
@@ -128,12 +139,19 @@ public class AttitudeTimelineEdgeTests
         var impulses = run.Chain.OfType<ImpulseManeuver>().ToArray();
         Assert.Equal(2, run.Burns.Count);
         Assert.True(impulses[1].ThrustWindow!.Value.StartDate < impulses[0].ManeuverWindow!.Value.EndDate, "no clip: the second thrust window opens after the first window");
-        var second = m.Expected.Activations.Last(a => a.Kind == "discrete");
-        Assert.True(TimelineRules.SecondsBetween(impulses[0].ManeuverWindow.Value.EndDate, second.Epoch, true) <= TimelineRules.RuleBound);
+        // The library's change to the second impulse's attitude: the first discrete change after the first one's
+        var first = impulses[0].ThrustWindow!.Value.StartDate;
+        var change = DiscreteChanges(run.Spacecraft).First(c => (c - first).TotalSeconds > 1e-3);
+        var clip = key.StartsWith("ClipLastLaw") ? impulses[0].ManeuverWindow!.Value.EndDate : impulses[1].ThrustWindow.Value.StartDate;
+        double fromClip = (change - clip).TotalSeconds;
+        double fromThrust = (change - impulses[1].ThrustWindow.Value.StartDate).TotalSeconds;
+        _output.WriteLine($"MEASURE #539 timeline edge {key.Replace('|', ' ')}: the second impulse's attitude - {(key.StartsWith("ClipLastLaw") ? "the end of the first window" : "its thrust start")} " +
+                          $"{fromClip:E2} s, - its thrust start {fromThrust:E2} s");
+        Assert.True(System.Math.Abs(fromClip) <= TimelineRules.RuleBound, $"the change {fromClip:E3} s from the clip");
         if (key.StartsWith("ClipLastLaw"))
         {
-            // The nadir resumed at the end of the first window, replaced by the second impulse's attitude at the same epoch
-            Assert.Contains(m.Expected.Activations, a => a.Kind == "resumed" && a.Epoch == second.Epoch);
+            // Clipped: after its thrust start, by the 3.8 s of the overlap
+            Assert.True(fromThrust > 1.0, $"not clipped: {fromThrust:E3} s from its thrust start");
         }
 
         AssertMonotone(run, m);
@@ -266,7 +284,7 @@ public class AttitudeTimelineEdgeTests
             case "MinPast":
                 Assert.Empty(run.Burns);
                 Assert.Empty(run.Spacecraft.ExecutedManeuvers);
-                Assert.Single(run.Spacecraft.Frame.GetStateOrientationsToICRF().Where(x => x.Epoch < run.Window.EndDate));
+                Assert.Single(run.Spacecraft.Frame.GetStateOrientationsToICRF(), x => x.Epoch < run.Window.EndDate);
                 break;
             case "Npast":
                 Assert.DoesNotContain(m.Expected.Activations, a => a.Kind == "resumed");

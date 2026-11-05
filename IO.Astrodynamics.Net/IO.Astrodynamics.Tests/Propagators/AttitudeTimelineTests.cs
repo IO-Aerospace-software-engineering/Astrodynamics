@@ -64,7 +64,9 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// (the residual of the SLERP of 10 s samples; 60 s outputs within <see cref="LawBetweenEntriesAt60"/>), discrete
 /// within <see cref="AttitudeRecordTests.DiscreteLaw"/>. The burns, outside SSB mode, against the Keplerian closed form
 /// (<see cref="KeplerClosedForm"/>): the first apsis of the maneuver at or after the gate of the rules, on the orbit before
-/// the burn, within #577's bounds. <c>ExecutedManeuvers</c> (#570) against the activations of the rules, the fuel against
+/// the burn, within #577's bounds; the number of burns too: the first impulse the rules reach without a burn has its
+/// closed-form apsis past the end of the window (less those bounds), every impulse of the SSB rows fires.
+/// <c>ExecutedManeuvers</c> (#570) against the activations of the rules, the fuel against
 /// the rocket equation. The Velocity-Verlet path of <c>Scenario.SimulateAsync</c> keeps no solution: its reference is the
 /// solution of a twin propagated by <c>Spacecraft.Propagate</c>, whose stored states equal the scenario's to the bit.
 /// </para>
@@ -185,7 +187,8 @@ public class AttitudeTimelineTests
                           $"law at entries {m.AtEntries:E2} rad, between {m.Between:E2} rad, discrete {m.Discrete:E2} rad ({m.Checks} reads); " +
                           $"burns (TT s) [{string.Join(", ", run.Burns.Select(b => run.Seconds(b).ToString("F7", Invariant)))}], - closed form [{string.Join(", ", m.BurnErrors.Select(x => x.ToString("E2", Invariant)))}]; " +
                           $"activations [{string.Join(", ", m.Expected.Activations.Select(a => $"{a.Kind} {run.Seconds(a.Epoch).ToString("F7", Invariant)}"))}]; " +
-                          $"executed [{string.Join(",", run.Spacecraft.ExecutedManeuvers.Select(x => Array.IndexOf(run.Chain, x)))}], fuel - rocket equation {m.Fuel:E2} kg");
+                          $"executed [{string.Join(",", run.Spacecraft.ExecutedManeuvers.Select(x => Array.IndexOf(run.Chain, x)))}], fuel - rocket equation {m.Fuel:E2} kg" +
+                          (m.UnfiredApsis is { } unfired ? $"; unfired {Array.IndexOf(run.Chain, m.Expected.Unfired)}, its closed-form apsis - end {unfired.ToString("F3", Invariant)} s" : ""));
         AssertMeasures(run, m);
     }
 
@@ -208,18 +211,26 @@ public class AttitudeTimelineTests
         }
 
         Assert.True(m.Fuel <= 1e-9, $"fuel - rocket equation {m.Fuel:E3} kg");
+        double lag = MinimumEpochGateTests.VelocityVerletLagLimit[run.Moon ? "moon|VV1" : "apsis|VV1"];
+        double rk = MinimumEpochGateTests.Rk78Epoch[run.Moon ? "moon" : "apsis"] + (run.Moon ? 1.0e-7 : 0.0);
         for (int k = 0; k < m.BurnErrors.Count; k++)
         {
             double error = m.BurnErrors[k];
             if (run.IsVelocityVerlet)
             {
-                double limit = MinimumEpochGateTests.VelocityVerletLagLimit[run.Moon ? "moon|VV1" : "apsis|VV1"];
-                Assert.InRange(error, -limit, 1.0 + limit);
+                Assert.InRange(error, -lag, 1.0 + lag);
             }
             else
             {
-                Assert.True(System.Math.Abs(error) <= MinimumEpochGateTests.Rk78Epoch[run.Moon ? "moon" : "apsis"] + (run.Moon ? 1.0e-7 : 0.0), $"burn {k}: {error:E3} s");
+                Assert.True(System.Math.Abs(error) <= rk, $"burn {k}: {error:E3} s");
             }
+        }
+
+        // An impulse without a burn: its closed-form apsis past the end, but for the bound of a burn that may fall after it
+        if (m.UnfiredApsis is { } unfired)
+        {
+            Assert.True(unfired > -(run.IsVelocityVerlet ? 1.0 + lag : rk),
+                $"impulse {Array.IndexOf(run.Chain, m.Expected.Unfired)} not fired, its closed-form apsis {-unfired:F3} s before the end");
         }
     }
 
@@ -522,6 +533,10 @@ public class AttitudeTimelineTests
         public Dictionary<Maneuver.Maneuver, Time> Gates { get; } = new();
         public Maneuver.Maneuver[] Executed { get; set; }
         public double Fuel { get; set; }
+
+        /// <summary>The first impulse of the chain the rules reached without a burn of the run left for it, null if none;
+        /// the closed form puts its apsis past the end of the window, or the library missed it.</summary>
+        public ImpulseManeuver Unfired { get; set; }
     }
 
     /// <summary>The timeline of the rules (<see cref="TimelineRules"/>) from the burns of the run.</summary>
@@ -553,7 +568,12 @@ public class AttitudeTimelineTests
             }
 
             var impulse = (ImpulseManeuver)maneuver;
-            if (k >= run.Burns.Count) break;
+            if (k >= run.Burns.Count)
+            {
+                expected.Unfired = impulse;
+                break;
+            }
+
             var tc = run.Burns[k++];
             double dv = impulse.DeltaV.Magnitude();
             double dt = TimelineRules.BurnDuration(mass, dv, 300.0, 10.0);
@@ -592,6 +612,10 @@ public class AttitudeTimelineTests
         public int Checks { get; set; }
         public double Fuel { get; set; }
         public List<double> BurnErrors { get; } = new();
+
+        /// <summary>The closed-form apsis of <see cref="ExpectedTimeline.Unfired"/> after its gate, less the end of the
+        /// window, s (time argument); null if every impulse the rules reached fired, or in SSB mode.</summary>
+        public double? UnfiredApsis { get; set; }
     }
 
     /// <summary>The closed form of the attitude in force at <paramref name="t"/> (spacecraft frame to ICRF) and whether it is a
@@ -632,11 +656,13 @@ public class AttitudeTimelineTests
         foreach (var (maneuver, gate) in expected.Gates)
             m.Gates = System.Math.Max(m.Gates, System.Math.Abs((maneuver.MinimumEpoch - gate).TotalSeconds));
 
-        // The burns against the closed form: the first apsis of the maneuver at or after its gate, on the orbit before it
+        // The burns against the closed form: the first apsis of the maneuver at or after its gate, on the orbit before it;
+        // for the first impulse without a burn, that apsis past the end of the window (the library would otherwise have
+        // missed it). In SSB mode (no closed form) every impulse of these chains fires
         if (!run.Ssb)
         {
             var impulses = expected.Executed.OfType<ImpulseManeuver>().ToArray();
-            for (int k = 0; k < impulses.Length; k++)
+            double ApsisAfterGate(int k, ImpulseManeuver impulse)
             {
                 KeplerClosedForm orbit;
                 if (k == 0)
@@ -651,10 +677,23 @@ public class AttitudeTimelineTests
                     orbit = new KeplerClosedForm(run.Center.GM, after.Position, after.Velocity, run.Seconds(after.Epoch));
                 }
 
-                var gate = TimelineRules.Activation(expected.Gates[impulses[k]], run.Window.StartDate);
-                double tc = orbit.NextApsis(run.Seconds(gate), impulses[k] is PerigeeHeightManeuver);
-                m.BurnErrors.Add(run.Seconds(run.Burns[k]) - tc);
+                var gate = TimelineRules.Activation(expected.Gates[impulse], run.Window.StartDate);
+                return orbit.NextApsis(run.Seconds(gate), impulse is PerigeeHeightManeuver);
             }
+
+            for (int k = 0; k < impulses.Length; k++)
+            {
+                m.BurnErrors.Add(run.Seconds(run.Burns[k]) - ApsisAfterGate(k, impulses[k]));
+            }
+
+            if (expected.Unfired != null)
+            {
+                m.UnfiredApsis = ApsisAfterGate(impulses.Length, expected.Unfired) - run.Seconds(run.Window.EndDate);
+            }
+        }
+        else
+        {
+            Assert.Null(expected.Unfired);
         }
 
         // The attitude: every second, at each entry, and about each activation
