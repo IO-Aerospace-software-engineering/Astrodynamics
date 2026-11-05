@@ -1,0 +1,55 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/maneuver.yaml; do not edit.
+id: "maneuver_24h_leo_grav10_hohmann_004"
+schema_version: "v1"
+version: "0.1.0"
+category: "maneuver"
+created: "2026-11-05"
+description: >
+  The chain of maneuver 003 in a field: the apoapsis radius raised to 8000 km at the first periapsis, then the
+  periapsis radius raised to 7800 km at the next apoapsis. The EGM2008 field of data/ to degree and order 10 (the
+  model's GM and radius applied to the whole field, oriented by ITRF93 of data/'s Earth orientation file) and the
+  Moon and the Sun as point masses. No drag, no SRP. Dry mass 1000 kg, 500 kg of fuel, Isp 300 s. The state is GMAT
+  R2026a's conversion, in ICRF with BODY399_GM, of the elements a = 7000 km, e = 0.01, i = 28.5 deg, RAAN 45 deg,
+  argument of periapsis 30 deg, true anomaly 300 deg. Every target is an osculating two-body element with
+  BODY399_GM; the model is that of spec.md section 13.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  orbit:                                # GMAT R2026a's conversion of the elements of the description (reference-check.json)
+    type: "state_vector"
+    position_km: [6428.778390326222, 2100.9298468192037, -1661.5807515846147]
+    velocity_km_s: [-1.460439220994673, 6.743210122548074, 3.1496078721217584]
+  propagation_window:
+    start: "2026-01-20T06:00:00.000 UTC"
+    end: "2026-01-21T06:00:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp: false
+  spacecraft:                           # mass_kg the dry mass; the area and coefficients informative (spec.md 13.1)
+    mass_kg: 1000.0
+    sectional_area_m2: 1.0
+    drag_coefficient: 2.2
+    radiation_pressure_coefficient: 1.0
+  step_size_s: 60.0                     # informative (spec.md 13.1)
+  propulsion:
+    fuel_mass_kg: 500.0
+    isp_s: 300.0
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc"]
+  maneuvers:
+    - label: "raise_apoapsis"
+      type: "apoapsis_radius"
+      earliest_after_previous_s: 0.0
+      target_apoapsis_radius_km: 8000.0
+    - label: "raise_periapsis"
+      type: "periapsis_radius"
+      earliest_after_previous_s: 0.0
+      target_periapsis_radius_km: 7800.0

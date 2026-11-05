@@ -1,6 +1,7 @@
 """Write a fixture of the conformance runner's tests from a checkout of the conformance-tests suite: lot 1 (design of
 #458, section 7.2), the categories orbital_elements, time_conversion and frame_transformation; lot 2 (design of #500,
-section 6.4), the propagator cases 006 to 018.
+section 6.4), the propagator cases 006 to 018; lot 3 (design of #587, section 8.2), the categories maneuver and
+lambert.
 
 Written into IO.Astrodynamics.Net/IO.Astrodynamics.ConformanceRunner.Tests/Fixture/Lot<n>/, which is replaced:
   schemas/v1/case.schema.json, expected.schema.json, runner-report.schema.json
@@ -14,8 +15,8 @@ Written into IO.Astrodynamics.Net/IO.Astrodynamics.ConformanceRunner.Tests/Fixtu
       unless <suite> is the root of its own checkout and the files it copies (schemas/v1, tolerances.yaml, data/ and the
       cases of the lot's categories) are those committed at HEAD, untracked files included
   data.sha256
-      the SHA-256 and the name of every file of data/ a case reads: those named in its inputs.kernels and, for lot 2,
-      its geopotential_model (the field file, which the runner reads from data/), one per line
+      the SHA-256 and the name of every file of data/ a case reads: those named in its inputs.kernels and, for lots 2
+      and 3, its geopotential_model (the field file, which the runner reads from data/), one per line
   data/
       those of these files whose SHA-256 differs from IO.Astrodynamics.Tests/Data/SolarSystem and from the data/ of the
       fixtures of the earlier lots, or that are absent there; the tests take the others from those directories after
@@ -27,7 +28,7 @@ The tests hash the same way.
 
 Requires PyYAML. A file of data/ left as a Git LFS pointer (a suite cloned without LFS) stops the script.
 
-Usage: python3 -I -B tools/conformance/sync_fixture.py --lot <1|2> <suite checkout> [--source <sha>]
+Usage: python3 -I -B tools/conformance/sync_fixture.py --lot <1|2|3> <suite checkout> [--source <sha>]
 """
 import argparse
 import hashlib
@@ -81,6 +82,7 @@ class Lot:
 LOTS = {
     1: Lot(1, ("orbital_elements", "time_conversion", "frame_transformation")),
     2: Lot(2, ("propagator",), first=6, last=18, fields=True),
+    3: Lot(3, ("maneuver", "lambert"), fields=True),
 }
 
 

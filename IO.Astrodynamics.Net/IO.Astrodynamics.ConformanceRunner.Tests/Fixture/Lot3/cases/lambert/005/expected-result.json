@@ -1,0 +1,31 @@
+{
+  "id": "lambert_3000s_0rev_retro_005",
+  "category": "lambert",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-11-05",
+    "gravity_model": "point-mass Earth, GM 398600.4355070226 km^3/s^2 (BODY399_GM of data/gm_de440.tpc)",
+    "perturbations": "None (two-body).",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: point-mass Earth with BODY399_GM of data/gm_de440.tpc; a DifferentialCorrector varies the ICRF velocity at r1 and achieves r2 after the time of flight, the arrival corrected to the time of flight exactly; PrinceDormand78 at 1e-13, MaxStep 60 s; v1 and v2 read in EarthMJ2000Eq and rotated to ICRF with GMAT's rotation at the departure epoch.",
+    "reference_frame": "EarthMJ2000Eq rotated to ICRF",
+    "script": "lambert_3000s_0rev_retro_005.script",
+    "log": "lambert_3000s_0rev_retro_005.log"
+  },
+  "outputs": {
+    "v1_km_s": [
+      3.0852919550752826,
+      -6.080767419108452,
+      -3.0581141569208046
+    ],
+    "v2_km_s": [
+      -4.3917128665469125,
+      5.067738189732623,
+      3.20886785622463
+    ]
+  }
+}

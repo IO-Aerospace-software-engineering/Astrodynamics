@@ -1,0 +1,44 @@
+{
+  "id": "maneuver_24h_leo_pm_gto_012",
+  "category": "maneuver",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-11-05",
+    "gravity_model": "point-mass Earth, GM 398600.4355070226 km^3/s^2 (BODY399_GM of data/gm_de440.tpc)",
+    "perturbations": "None (two-body).",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: point-mass Earth with BODY399_GM of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; each step targeted by a DifferentialCorrector, its burn an ImpulsiveBurn in VNB with DecrementMass and GravitationalAccel 9.80665; the window integrated over its TT seconds; state entered in ICRF, every burn state and the final state read in MJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch.",
+    "reference_frame": "EarthMJ2000Eq rotated to ICRF",
+    "script": "maneuver_24h_leo_pm_gto_012.script",
+    "log": "maneuver_24h_leo_pm_gto_012.log"
+  },
+  "outputs": {
+    "burns": [
+      {
+        "label": "raise",
+        "elapsed_s": 894.6560150496,
+        "position_km": [
+          2000.9350932093325,
+          6122.797637097232,
+          1582.49702935581
+        ],
+        "delta_v_km_s": [
+          -2.1401341915268217,
+          0.4430668521900998,
+          0.9917623245279286
+        ],
+        "mass_after_kg": 1238.4258887078886
+      }
+    ],
+    "final_x_km": -21771.83583400043,
+    "final_y_km": -26979.016354978976,
+    "final_z_km": -1999.1806175066308,
+    "final_vx_km_s": 0.31193842830544083,
+    "final_vy_km_s": -2.3419093564324007,
+    "final_vz_km_s": -1.0188855622896964
+  }
+}

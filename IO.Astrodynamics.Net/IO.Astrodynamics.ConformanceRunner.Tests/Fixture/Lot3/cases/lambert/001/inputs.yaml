@@ -1,0 +1,28 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/lambert.yaml; do not edit.
+id: "lambert_3000s_0rev_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "lambert"
+created: "2026-11-05"
+description: >
+  Lambert's problem about the Earth with BODY399_GM of data/gm_de440.tpc: the prograde transfer of 3000 s with zero
+  revolutions, from r1, the position of the orbit a = 7000 km, e = 0.01, i = 28.5 deg, RAAN 45 deg, argument of
+  periapsis 30 deg, true anomaly 300 deg (GMAT R2026a's conversion), to r2, the position after 3000 s of the
+  two-body circular orbit of radius 9000 km, i 32 deg, RAAN 50 deg, argument of latitude 0 at the departure. Outputs
+  v1 and v2 in ICRF; the model is that of spec.md section 13.2.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  central_body: "Earth"
+  departure_epoch: "2026-01-20T06:00:00.000 UTC"   # informative (spec.md 13.2)
+  r1_km: [6428.778390326222, 2100.9298468192037, -1661.5807515846147]   # the position of GMAT R2026a's conversion of the elements of the description
+  r2_km: [-8152.930765942585, -245.93319516393643, 3803.845000688554]   # the position of the circular orbit of the description after the time of flight
+  time_of_flight_s: 3000.0
+  revolutions: 0
+  branch: null
+  direction: "prograde"
+  kernels: ["gm_de440.tpc"]

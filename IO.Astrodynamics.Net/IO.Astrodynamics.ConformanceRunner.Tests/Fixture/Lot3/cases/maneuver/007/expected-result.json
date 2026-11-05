@@ -1,0 +1,44 @@
+{
+  "id": "maneuver_24h_leo_grav10_plane_007",
+  "category": "maneuver",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-05",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 10, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS); EarthS.Mu BODY399_GM for the osculating elements",
+    "perturbations": "Moon, Sun as point masses (de440s positions, GMs of data/gm_de440.tpc). No drag. No SRP. No relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: the user-defined planet EarthS (NAIF 399 at its de440s position, its body-fixed frame ITRF93 of data/'s bpc through SPICE, Mu BODY399_GM of data/gm_de440.tpc for the osculating elements of the targets), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 10, third bodies Moon, Sun at their de440s positions with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; each step targeted by a DifferentialCorrector, its burn an ImpulsiveBurn in VNB with DecrementMass and GravitationalAccel 9.80665; the window integrated over its TT seconds; state entered in ICRF, every burn state and the final state read in MJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch.",
+    "reference_frame": "EarthSMJ2000Eq rotated to ICRF",
+    "script": "maneuver_24h_leo_grav10_plane_007.script",
+    "log": "maneuver_24h_leo_grav10_plane_007.log"
+  },
+  "outputs": {
+    "burns": [
+      {
+        "label": "plane",
+        "elapsed_s": 1081.4291479296,
+        "position_km": [
+          1211.9262776153882,
+          6508.185409283367,
+          2033.9444619845428
+        ],
+        "delta_v_km_s": [
+          0.21370691728259672,
+          -0.19498741626499497,
+          0.4965805348398047
+        ],
+        "mass_after_kg": 1233.8268771164978
+      }
+    ],
+    "final_x_km": 4786.52173620777,
+    "final_y_km": -3591.4291157364128,
+    "final_z_km": -3686.2927871834077,
+    "final_vx_km_s": 4.717621592303721,
+    "final_vy_km_s": 5.819161305624414,
+    "final_vz_km_s": 0.5737573475086177
+  }
+}

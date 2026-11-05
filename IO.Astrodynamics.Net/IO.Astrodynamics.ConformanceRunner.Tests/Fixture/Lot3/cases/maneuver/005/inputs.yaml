@@ -1,0 +1,49 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/maneuver.yaml; do not edit.
+id: "maneuver_24h_leo_pm_lower_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "maneuver"
+created: "2026-11-05"
+description: >
+  One day in LEO with one burn against the velocity: at the first apoapsis, the periapsis radius lowered from 6840
+  km to 6700 km. A point-mass Earth with BODY399_GM of data/gm_de440.tpc. No drag, no SRP. Dry mass 1000 kg, 500 kg
+  of fuel, Isp 300 s. The state is GMAT R2026a's conversion, in ICRF with BODY399_GM, of the elements a = 7200 km, e
+  = 0.05, i = 28.5 deg, RAAN 45 deg, argument of periapsis 30 deg, true anomaly 300 deg. Every target is an
+  osculating two-body element with BODY399_GM; the model is that of spec.md section 13.1.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  orbit:                                # GMAT R2026a's conversion of the elements of the description (reference-check.json)
+    type: "state_vector"
+    position_km: [6467.8724083306615, 2113.705802727282, -1671.6849835046369]
+    velocity_km_s: [-1.7074692202090642, 6.711901209208212, 3.2324291632082516]
+  propagation_window:
+    start: "2026-01-20T06:00:00.000 UTC"
+    end: "2026-01-21T06:00:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 0
+  geopotential_model: "none"
+  perturbation_bodies: []
+  force_model:
+    drag: false
+    srp: false
+  spacecraft:                           # mass_kg the dry mass; the area and coefficients informative (spec.md 13.1)
+    mass_kg: 1000.0
+    sectional_area_m2: 1.0
+    drag_coefficient: 2.2
+    radiation_pressure_coefficient: 1.0
+  step_size_s: 60.0                     # informative (spec.md 13.1)
+  propulsion:
+    fuel_mass_kg: 500.0
+    isp_s: 300.0
+  kernels: ["gm_de440.tpc"]
+  maneuvers:
+    - label: "lower"
+      type: "periapsis_radius"
+      earliest_after_previous_s: 0.0
+      target_periapsis_radius_km: 6700.0
