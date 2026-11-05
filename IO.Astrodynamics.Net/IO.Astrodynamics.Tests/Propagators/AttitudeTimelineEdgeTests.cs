@@ -43,7 +43,7 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// change and the rounding of its encoded SCLK, [change − 1.5 µs, change + 0.3 µs]).
 /// </para>
 /// <para>
-/// No limit of its own: the existing ones, and <see cref="TimelineRules.RuleBound"/> (PROVISIONAL).
+/// No limit of its own: the existing ones, and <see cref="TimelineRules.RuleBound"/>.
 /// </para>
 /// </remarks>
 public class AttitudeTimelineEdgeTests

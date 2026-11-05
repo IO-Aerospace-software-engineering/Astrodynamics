@@ -183,8 +183,9 @@ public class AttitudeRecordTests
     /// with an impulse 2.56e-3 m and 8.79e-7 m/s on Linux (ImpulseTriad, RK7(8), GALACTIC, the Validation category, Linux
     /// only), 1.59e-3 m and 4.28e-7 m/s on Windows and macOS arm64 (ImpulseTriad, VV, GALACTIC). Since the attitude timeline
     /// (#539) the TRIAD after the impulse is a law that turns, no longer held: its rotation enters the velocity in the
-    /// spacecraft frame, and the velocity with an impulse in SSB mode is PROVISIONAL, twice the Linux worst 2.50e-6 m/s
-    /// (ImpulseTriad, VV, ICRF, 2026-11-05), until the three-platform CI run; its position is unchanged.</summary>
+    /// spacecraft frame, and the velocity with an impulse in SSB mode is twice the worst over the three platforms, 2.50e-6 /
+    /// 2.49e-6 / 2.49e-6 m/s (ImpulseTriad, VV, ICRF on Linux, GALACTIC on Windows and macOS arm64; CI run 42021804663):
+    /// twice 2.50e-6 falls on the boundary 5.0e-6, so the step above; its position is unchanged.</summary>
     internal const double FramePosition = 7.9e-3;
 
     internal const double FrameVelocity = 2.1e-5;
@@ -193,7 +194,7 @@ public class AttitudeRecordTests
     internal const double FramePositionSsb = 4.8e-3;
     internal const double FrameVelocitySsb = 1.2e-5;
     internal const double FramePositionSsbAcrossImpulses = 5.2e-3;
-    internal const double FrameVelocitySsbAcrossImpulses = 5.0e-6;
+    internal const double FrameVelocitySsbAcrossImpulses = 5.1e-6;
 
     /// <summary>The same relative to the Sun, 1.5e11 m away: the floor of the CK's rotation times the distance. Worst 88.2 m
     /// and 0.249 m/s (Prograde, RK7(8), B1950); 185 m and 0.527 m/s from 2025-01-19 (Prograde, RK7(8), ECLIPJ2000,

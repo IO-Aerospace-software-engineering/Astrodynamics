@@ -26,8 +26,8 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// any other body, SSB mode included, TDB seconds.
 /// </para>
 /// <para>
-/// <see cref="RuleBound"/> is PROVISIONAL: twice the worst over the timeline tests on Linux x64 (2026-11-05), rounded up at
-/// two digits, until the three-platform CI run sets it from the worst over Linux, Windows and macOS arm64. The reference
+/// <see cref="RuleBound"/> is twice the worst over Linux x64, Windows and macOS arm64 (CI run 42021804663), rounded up at
+/// two digits; twice the 1.20e-7 s of Windows and macOS arm64 falls on the boundary 2.4e-7 s, so the step above. The reference
 /// itself resolves 1.2e-7 s: one rounding of <c>unitim_c</c>'s result (a double of 7.6e8 s past J2000) per conversion,
 /// and the tick (1e-7 s) of the epochs.
 /// </para>
@@ -37,10 +37,12 @@ internal static class TimelineRules
     /// <summary>Standard gravity, m/s², of the rocket equation.</summary>
     internal const double G0 = 9.80665;
 
-    /// <summary>The library's epochs against the rules, s. PROVISIONAL (see the remarks): Linux worst 1.0e-7 s, one tick
-    /// (every row of AttitudeTimelineTests and AttitudeTimelineEdgeTests, the changes of AttitudeRecordTests and its
-    /// NearEpochChain, the leading attitudes of RepropagationTests; 2026-11-05).</summary>
-    internal const double RuleBound = 2.0e-7;
+    /// <summary>The library's epochs against the rules, s (see the remarks). Worst 1.00e-7 / 1.20e-7 / 1.20e-7 s on Linux /
+    /// Windows / macOS arm64: one tick on every rule comparison; on Windows and macOS arm64, the hold of a UTC minimum epoch
+    /// counted in TT seconds about the Earth (AttitudeTimelineEdgeTests). Every row of AttitudeTimelineTests and
+    /// AttitudeTimelineEdgeTests, the changes of AttitudeRecordTests and its NearEpochChain, the leading attitudes of
+    /// RepropagationTests (CI run 42021804663).</summary>
+    internal const double RuleBound = 2.5e-7;
 
     /// <summary>The burn duration of an impulse of <paramref name="deltaV"/> m/s from <paramref name="mass"/> kg with a
     /// specific impulse of <paramref name="isp"/> s and a fuel flow of <paramref name="fuelFlow"/> kg/s: the fuel burned by

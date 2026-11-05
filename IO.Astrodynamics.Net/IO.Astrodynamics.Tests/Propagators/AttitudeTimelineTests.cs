@@ -72,9 +72,9 @@ using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 /// </para>
 /// <para>
 /// <b>Limits.</b> The existing ones, set on Linux, Windows and macOS arm64, never relaxed. <see cref="LawBetweenEntriesAt60"/>
-/// and <see cref="TimelineRules.RuleBound"/> are PROVISIONAL: twice the worst on Linux x64 (2026-11-05), rounded up at two
-/// digits, until the three-platform CI run. The grid is in the Validation category; the rows of <see cref="Worst"/> run in
-/// every CI job.
+/// is twice the worst on Linux x64, the only platform of the grid, which is in the Validation category (CI run
+/// 42021804663, equal to the session run); <see cref="TimelineRules.RuleBound"/>, from the three platforms. The rows of
+/// <see cref="Worst"/> run in every CI job.
 /// </para>
 /// </remarks>
 public class AttitudeTimelineTests
@@ -84,8 +84,8 @@ public class AttitudeTimelineTests
     private const double MoonRadius = MinimumEpochGateTests.MoonRadius;
 
     /// <summary>The SLERP residual between the samples of a law at 60 s outputs, rad, a property of the step (it grows as
-    /// its square: 4.1e-5 rad at 10 s, 3.1e-7 rad at 1 s). PROVISIONAL: twice the Linux worst, 1.49e-3 rad (E2, nadir,
-    /// RK7(8) and Velocity-Verlet alike, 2026-11-05), rounded up at two digits.</summary>
+    /// its square: 4.1e-5 rad at 10 s, 3.1e-7 rad at 1 s). Twice the Linux worst, 1.49e-3 rad (E2, nadir,
+    /// RK7(8) and Velocity-Verlet alike; CI run 42021804663), rounded up at two digits: the grid runs on Linux only (Validation).</summary>
     internal const double LawBetweenEntriesAt60 = 3.0e-3;
 
     /// <summary>Within this of an activation of the rules, the side of the activation is not resolved: the bound of the rules

@@ -250,7 +250,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | The library's attitude against `pxform` on its CK, outside the 1 µs before the changes | 6.1e-10 rad (2024), 1.3e-9 rad (2026) |
   | The instrument axes against `pxform(instrument, J2000)` | 6.1e-10 rad (2024), 1.3e-9 rad (2026) |
   | The attitude at the entries against the law | 1.3e-15 rad; 3.5e-12 rad in SSB mode, where the reference state relative to the Earth is the difference of two states 1.5e11 m from the Sun |
-  | Between the entries, against the law (the interpolation residual at 10 s outputs) | 5.7e-5 rad; 5.9e-5 rad for the TRIAD after an impulse, a law sampled since #539 (the worst on Linux, 2026-11-05, to be measured on the three platforms) |
+  | Between the entries, against the law (the interpolation residual at 10 s outputs) | 5.7e-5 rad; 5.9e-5 rad for the TRIAD after an impulse, a law sampled since #539 (the same on Linux, Windows and macOS arm64, CI run 42021804663) |
   | A discrete attitude against its closed form | 4.8e-16 rad; 3.5e-12 rad in SSB mode |
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
@@ -269,7 +269,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   The interpolation residual grows as the square of the output step: on the orbit of the tests (a = 6 778 km,
   e = 0.001, i = 51.6°, the TRIAD of an instrument, the worst of its attitudes without an impulse) 5.7e-7, 5.7e-5 and
   2.1e-3 rad at 1, 10 and 60 s outputs, the TRIAD after an impulse 5.9e-5 rad at 10 s (the worst at 10 s since #539, on
-  Linux), a nadir attitude 4.0e-7 and 1.4e-3 rad at 1 and 60 s (`AttitudeRecordTests`); on the worst inclined
+  the three platforms), a nadir attitude 4.0e-7 and 1.4e-3 rad at 1 and 60 s (`AttitudeRecordTests`); on the worst inclined
   state of the design of #537 (its reader 3, a probe on the DLLs of the base and of the prototype), 8.1e-7, 8.1e-5 and
   2.9e-3 rad; on a circular equatorial orbit, where the attitude turns at a constant rate about a fixed axis, 1.1e-10 rad
   (the same reader). A shorter output step lowers it.

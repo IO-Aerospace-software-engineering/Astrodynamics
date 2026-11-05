@@ -182,8 +182,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
     samples, 4.1e-5 rad between them at 10 s outputs (1.5e-3 rad at 60 s; on the kernels of `AttitudeRecordTests` the
     TRIAD after an impulse, now a sampled law, 5.9e-5 rad, the worst at 10 s outputs, against 5.7e-5 rad for the
     instrument TRIAD in the entry of #537), 2.7e-16 rad for the discrete attitudes;
-    `pxform` on the CK the library writes within 8.8e-10 rad of the managed attitude (Linux x64, 2026-11-05; the three
-    platforms at the CI run of the PR).
+    `pxform` on the CK the library writes within 8.8e-10 rad of the managed attitude (the same on Linux x64, Windows and
+    macOS arm64).
 - **The impulse after an attitude chained after an impulse fired inside the first impulse's window**
   ([#554](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/554), case M). The attitude, executed at
   the first impulse's event, set the gate of the next impulse from that event, inside the first impulse's window (590 s inside its hold for a
