@@ -93,6 +93,18 @@ namespace IO.Astrodynamics.Maneuver
             return targetOrbit ?? throw new ArgumentNullException(nameof(targetOrbit), "Target orbit must be defined");
         }
 
+        /// <summary>
+        /// Executes the impulse on <paramref name="stateVector"/>: adds its delta-V to the velocity, burns its fuel, sets its
+        /// windows in TDB seconds from the epoch of the state and raises the gate of the next maneuver of the chain to the
+        /// end of its maneuver window (<see cref="Spacecraft.ChainStandbyManeuver"/>).
+        /// </summary>
+        /// <returns>The state after the impulse and the attitude of the impulse, its front along the delta-V, in ICRF.</returns>
+        /// <remarks>
+        /// In a propagation, its detector calls it at the event; about the Earth the propagation then counts the windows in
+        /// TT seconds from the time argument of the event and sets the gate of the next maneuver to that end (#547), and it
+        /// holds the attitude from the start of the thrust window to the end of the maneuver window (#539). Called
+        /// directly, the windows stay in TDB seconds.
+        /// </remarks>
         public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
         {
             var localSv = stateVector.RelativeTo(ManeuverCenter, Aberration.None).ToStateVector();
@@ -118,6 +130,8 @@ namespace IO.Astrodynamics.Maneuver
             //The usual impulsive approximation of a finite burn centres the burn on the impulse (50 %).
             //The propagated state receives the full delta-V at t. The windows are reported, and the end of the
             //maneuver window sets the earliest epoch of the next maneuver in the chain.
+            //They count TDB seconds from the epoch of the state; a propagation about the Earth counts them again in TT
+            //seconds from the time argument of its event, and replaces the gate of the next maneuver with that end (#547).
             var thrustDuration = Tsiolkovski.DeltaT(Engine.ISP, Engine.FuelTank.Spacecraft.GetTotalMass() + FuelBurned, Engine.FuelFlow, DeltaV.Magnitude());
             ThrustWindow = new Window(stateVector.Epoch - thrustDuration * 0.666, thrustDuration);
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, ManeuverHoldDuration).Merge(ThrustWindow.Value);

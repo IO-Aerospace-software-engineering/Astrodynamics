@@ -16,6 +16,10 @@ namespace IO.Astrodynamics.Maneuver
         /// given by the rocket equation and starts two thirds of that duration before the impulse epoch
         /// (<c>[t - 0.666 dt, t + 0.334 dt]</c>). The propagated state receives the full delta-V at the impulse epoch;
         /// the window is reported, and the end of <see cref="ManeuverWindow"/> sets the earliest epoch of the next maneuver.
+        /// In a propagation about the Earth, both windows count TT seconds from the time argument of the event (#547).
+        /// The attitude of the impulse, its front along the delta-V, is in force from the start of this window to the end
+        /// of <see cref="ManeuverWindow"/> (#539).
+        /// For an <see cref="Attitude"/>, the window of its activation, of zero length.
         /// </summary>
         /// <value>
         /// The ThrustWindow instance.
@@ -24,6 +28,10 @@ namespace IO.Astrodynamics.Maneuver
 
         /// <summary>
         /// Gets or sets the ManeuverWindow object that represents the window for controlling maneuvering tasks.
+        /// For an <see cref="ImpulseManeuver"/>, from the start of <see cref="ThrustWindow"/> to the later of the end of its
+        /// hold and the end of the thrust window; for an <see cref="Attitude"/>, from its activation to the end of its hold.
+        /// Its end is the gate of the next maneuver of the chain. In a propagation about the Earth, its hold counts TT
+        /// seconds (#547).
         /// </summary>
         /// <value>
         /// The ManeuverWindow object for controlling maneuvering tasks.
@@ -44,9 +52,15 @@ namespace IO.Astrodynamics.Maneuver
         /// Epoch").
         /// </para>
         /// <para>
+        /// For an <see cref="Attitude"/>, it is the earliest epoch of its activation: a propagation activates it at this
+        /// epoch or at the end of the window of the previous maneuver of the chain, whichever is later (#539,
+        /// docs/reference/attitudes.md).
+        /// </para>
+        /// <para>
         /// It is the later of the minimum epoch the maneuver was given (its constructor, raised by
         /// <see cref="Spacecraft.SetStandbyManeuver"/> with a minimum epoch) and the gate of the current propagation, the end
-        /// of the window of the previous maneuver of the chain, which the chain sets when that maneuver executes. The gate
+        /// of the window of the previous maneuver of the chain, which the chain sets when that maneuver executes (an impulse
+        /// or an attitude, leading or chained: the last leading attitude gates the first impulse). The gate
         /// belongs to one propagation (#573): it holds after the propagation, with the windows of the maneuver, and the next
         /// <c>Spacecraft.Propagate</c> (and <c>Scenario.SimulateAsync</c> and <c>BatchPropagator</c> through it) clears it
         /// before it runs. A spacecraft propagated again, from another state or over another window, then gates its maneuvers
@@ -142,6 +156,19 @@ namespace IO.Astrodynamics.Maneuver
             {
                 PropagationGate = gate;
             }
+        }
+
+        /// <summary>
+        /// Sets the gate of the current propagation to <paramref name="gate"/>, earlier or later than the one it replaces;
+        /// <see cref="Reset"/> clears it (#573). About the Earth, the propagation sets it to the end of the window of the
+        /// impulse before, counted in TT seconds from its event, which replaces the end in TDB seconds that
+        /// <see cref="ImpulseManeuver.TryExecute"/> raised it to (#547). In a chain, the maneuver before is the only one to
+        /// set it, so the replacement loses no other gate.
+        /// </summary>
+        /// <param name="gate">The end of the window of the previous maneuver of the chain, in TT seconds from its event.</param>
+        internal void SetPropagationGate(Time gate)
+        {
+            PropagationGate = gate;
         }
 
         /// <summary>

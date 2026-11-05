@@ -403,8 +403,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="maneuver">The maneuver to put in standby.</param>
         /// <param name="minimumEpoch">Null to keep the minimum epoch the maneuver was given. When later than that minimum
         /// epoch, its new one, which every later propagation keeps, as the one of its constructor (#573): an
-        /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it (an attitude reads no minimum epoch). An earlier
-        /// value changes nothing.</param>
+        /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it, and an <see cref="Maneuver.Attitude"/> never
+        /// activates before it (#539). An earlier value changes nothing.</param>
         public void SetStandbyManeuver(Maneuver.Maneuver maneuver, Time? minimumEpoch = null)
         {
             if (minimumEpoch.HasValue)

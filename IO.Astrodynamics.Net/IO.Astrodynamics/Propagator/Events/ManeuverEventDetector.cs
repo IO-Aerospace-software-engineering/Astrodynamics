@@ -16,6 +16,10 @@ namespace IO.Astrodynamics.Propagator.Events;
 /// <see cref="Maneuver.Maneuver.MinimumEpoch"/>, searched from the integrated state there (#569). The minimum epoch is the
 /// gate of the detector: <see cref="VVIntegrator"/> and <see cref="RK78Integrator"/> evaluate the g-function at it, in the
 /// step that holds it, instead of reading the value <see cref="Evaluate"/> returns before it.
+/// <para>
+/// <see cref="HandleEvent"/> executes the impulse only; the propagation lays the rest of the maneuver chain on its attitude
+/// timeline and builds the detector of the next impulse (#539).
+/// </para>
 /// </remarks>
 public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
 {
@@ -64,6 +68,23 @@ public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
     // The state relative to the center of the maneuver, the frame of its g-function
     private StateVector Local(StateVector state) => state.RelativeTo(_maneuver.ManeuverCenter, Aberration.None).ToStateVector();
 
+    /// <summary>
+    /// Executes the impulse at <paramref name="stateAtEvent"/> when its preconditions hold
+    /// (<see cref="ImpulseManeuver.CheckPreconditions"/>), and only the impulse: the maneuvers chained after it are
+    /// activated by the propagation, on its attitude timeline, which builds the detector of the next impulse (#539).
+    /// </summary>
+    /// <param name="stateAtEvent">The state at the event; the impulse adds its ΔV to its velocity.</param>
+    /// <param name="spacecraft">The spacecraft of the maneuver.</param>
+    /// <returns>
+    /// When the preconditions hold: the state after the impulse, its attitude (the front along ΔV), the action
+    /// <see cref="EventAction.StopAndRestart"/> and no next detector. Otherwise: the state unchanged, no attitude, the
+    /// action <see cref="EventAction.Continue"/> and this detector, which waits for the next crossing.
+    /// </returns>
+    /// <remarks>
+    /// Before 11.0.0 it also executed the attitudes chained after the impulse at the epoch of its event, each raising the
+    /// gate of the next maneuver, and returned the detector of the next impulse. The propagation now activates them at the
+    /// end of the impulse's maneuver window (#539, docs/reference/attitudes.md).
+    /// </remarks>
     public EventResult HandleEvent(StateVector stateAtEvent, Spacecraft spacecraft)
     {
         // Check optional preconditions (e.g., CombinedManeuver's apogee-node alignment)
@@ -74,57 +95,6 @@ public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
         }
 
         var (sv, so) = _maneuver.TryExecute(stateAtEvent);
-
-        // Walk the maneuver chain to find the next impulse maneuver
-        // (attitude maneuvers are processed immediately by the propagation loop)
-        var nextImpulse = FindNextImpulseManeuver(_maneuver.NextManeuver, sv, spacecraft);
-        var nextDetector = nextImpulse != null ? new ManeuverEventDetector(nextImpulse) : null;
-
-        return new EventResult(sv, so, EventAction.StopAndRestart, nextDetector);
-    }
-
-    /// <summary>
-    /// Process chained attitude maneuvers immediately and return the next impulse maneuver (if any).
-    /// Each attitude maneuver's epoch is advanced by the previous one's hold duration to maintain sequential timing.
-    /// </summary>
-    private static ImpulseManeuver FindNextImpulseManeuver(Maneuver.Maneuver next, StateVector state, Spacecraft spacecraft)
-    {
-        var currentState = state;
-        while (next != null)
-        {
-            if (next is ImpulseManeuver impulse)
-                return impulse;
-
-            if (next is Attitude attitude)
-            {
-                // Process attitude maneuver at the current (advanced) epoch
-                var (_, so) = attitude.TryExecute(currentState);
-                // Later in the chain than the impulse at the same epoch, it replaces its attitude
-                if (so.Rotation != Math.Quaternion.Zero)
-                {
-                    spacecraft.Frame.Record(so, null, true);
-                }
-
-                // Track the attitude maneuver as executed (adds to _executedManeuvers)
-                spacecraft.ChainStandbyManeuver(attitude.NextManeuver,
-                    attitude.ManeuverWindow?.EndDate);
-
-                // Advance epoch by ManeuverHoldDuration for next maneuver in chain
-                if (attitude.ManeuverWindow.HasValue)
-                {
-                    var nextEpoch = attitude.ManeuverWindow.Value.EndDate;
-                    currentState = new StateVector(currentState.Position, currentState.Velocity,
-                        currentState.Observer, nextEpoch, currentState.Frame);
-                }
-
-                next = attitude.NextManeuver;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return null;
+        return new EventResult(sv, so, EventAction.StopAndRestart, null);
     }
 }
