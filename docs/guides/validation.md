@@ -63,8 +63,9 @@ worst ratios are the same on Windows and macOS arm64: the `MEASURE` lines of the
 (the tree of 1f226ea, the suite at 371c515) give them on the three platforms, from cases whose
 goldens conformance-tests#24 left unchanged. That PR regenerated the ITRF93 cases 002 to
 008 with a new Earth orientation file; they pass at 2.9e-5 of the tolerance at most, measured on
-Linux only. Lot 2 adds 13 propagator cases (see [Lot 2](#lot-2-drag-srp-heo-and-other-central-bodies)).
-Four harnesses run the cases:
+Linux only. Lot 2 adds 13 propagator cases (see [Lot 2](#lot-2-drag-srp-heo-and-other-central-bodies)), lot 3
+12 maneuver and 7 lambert cases (see [Lot 3](#lot-3-impulsive-maneuvers-and-lamberts-problem)).
+Five harnesses run the cases:
 
 - the conformance runner `IO.Astrodynamics.ConformanceRunner` runs every case and writes a report,
   `IO.Astrodynamics.Net/conformance-report.json`; it propagates with the adaptive RK7(8) integrator
@@ -83,7 +84,12 @@ Four harnesses run the cases:
   `tools/conformance/sync_fixture.py --lot 2` with the data files that differ from the runner's and
   from `Fixture/Lot1` (the lunar and Martian fields, the Mars cut, `moon_assoc_pa.tf`); its `SOURCE`
   records the suite commit, 8b5a347 of the suite's lot-2 branch, [conformance-tests#28](https://github.com/IO-Aerospace-software-engineering/conformance-tests/pull/28) (2026-10-28). It prints the same
-  `MEASURE` lines, which the CI logs carry on the three platforms.
+  `MEASURE` lines, which the CI logs carry on the three platforms;
+- `Lot3CaseTests` runs the runner on the 19 maneuver and lambert cases of lot 3, copied into `Fixture/Lot3` by
+  `tools/conformance/sync_fixture.py --lot 3`, whose data files are all the runner's or `Fixture/Lot1`'s; its `SOURCE`
+  records the suite commit, 9dca9c7 of the suite's lot-3 branch,
+  [conformance-tests#31](https://github.com/IO-Aerospace-software-engineering/conformance-tests/pull/31) (2026-11-05).
+  It prints the same `MEASURE` lines, one per field of each burn.
 
 The first two evaluate the final state of a propagation at the end of the window as it is tagged, the end of the TT
 seconds the library integrates about the Earth since #501, like the reference tool's elapsed time, and report the
@@ -113,7 +119,7 @@ pointer makes its case an ERROR that names the file. The suite (98 cases) takes 
 Release on Linux (4 cores, 2026-10-27: 4.3 s for d4e9905, 4.8 s for conformance-tests#25, one
 run each, the start of the process included); with the integrator at 1e-13, 6.1 s for the suite's
 main (4a7c20f) and 12.2 s for the 111 cases of the lot-2 branch (e6fafe4, the same cases as 8b5a347), one run each
-(2026-10-28); the eclipse case took 48 s alone before the managed occultation search of #495. The runner asks the propagator for the end of the window only: an
+(2026-10-28), and 11.7 s for the 130 cases of the lot-3 branch (9dca9c7, 2026-11-05, one run); the eclipse case took 48 s alone before the managed occultation search of #495. The runner asks the propagator for the end of the window only: an
 output every `step_size_s` (1 s) cost a shortened RK7(8) step each and took the suite to 107 s
 (#426).
 
@@ -213,6 +219,84 @@ whose move is about 5 cm, so these ratios hold to about 1 %). About the Moon, Ma
 both integrate over TDB seconds. The field files of `data/` end without a final newline, which the library's reader needs
 ([#502](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/502)). The CI logs of `Lot2CaseTests`
 give the ratios on Windows and macOS arm64.
+
+### Lot 3: Impulsive Maneuvers and Lambert's Problem
+
+Lot 3 of [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457) (design in
+[#587](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/pull/587) and
+[conformance-tests#31](https://github.com/IO-Aerospace-software-engineering/conformance-tests/pull/31), approved by
+S. Guillet, 2026-11-05) adds two categories, specified by the suite's `spec.md` §13. `maneuver` (001 to 012) is a chain
+of one to three impulsive maneuvers about the Earth during a one-day propagation, point mass or EGM2008 10×10 with the
+Moon and the Sun: each burn's epoch, position, Δv and mass after it, then the final state. `lambert` (001 to 007) is
+Lambert's problem with 0, 1 or 2 revolutions, both branches and a retrograde transfer: v1 and v2. Every Δv of a golden
+is found by GMAT R2026a's differential corrector, and every target uses the osculating two-body elements with the kernel
+GM. The runner (`ManeuverSolver`, `LambertCaseSolver`) maps each step to the library's maneuver, with no library change:
+
+| Step `type` | The library | From the case |
+|-------------|-------------|---------------|
+| `apoapsis_radius` | `ApogeeHeightManeuver` | the radius (the library's "height" is a radius) |
+| `periapsis_radius` | `PerigeeHeightManeuver` | the radius |
+| `plane_change` | `PlaneAlignmentManeuver` | a circular orbit of the target inclination and node, in ICRF |
+| `apsidal_alignment` | `ApsidalAlignmentManeuver` | a, e and ω of the case, i and Ω of the initial state (the current plane: a chain that changes the plane before this step is an ERROR) |
+| `phasing` | `PhasingManeuver` (target orbit) | the target's state at the start and N |
+| `combined` | `CombinedManeuver` | the periapsis radius and inclination |
+| Lambert | `LambertSolver` (Izzo) | r1 at the departure epoch, r2 `time_of_flight_s` TT seconds later; for N ≥ 1 the branch by the semi-major axis of each solution's v1, whatever the solver calls it (Left or Right) |
+
+- **Propulsion.** The spacecraft has the case's dry mass, a tank with its fuel and an engine with its Isp at a fuel flow
+  of 1e12 kg/s, so that the thrust and maneuver windows of an impulse vanish (open choice 17).
+- **Earliest epochs.** The library's hold belongs to the maneuver that sets it: the hold of step k is the
+  `earliest_after_previous_s` of step k + 1, the minimum epoch of the first step the start plus its own, in TT seconds.
+  `PhasingManeuver` sets its own hold, 0.9 N periods of the phasing orbit (16264 s on 009, whose restore declares
+  15000 s); both fire the restore at the third periapsis.
+- **Outputs.** The epoch of a burn is the base of the segment its impulse opens, in TT seconds from the start (open
+  choice 16: the library has no public burn epoch); its position the start of that segment; its Δv the library's
+  `DeltaV`, the velocity jump in ICRF; its mass the total mass at the start minus the fuel burned up to it. A step not
+  executed in the window makes its outputs, and those of the steps after it, an ERROR that names it; an exhausted tank
+  is an ERROR. The report names a burn output `burns[<label>].<field>`, and `accuracy_by_metric` gathers the burns
+  of every case under `maneuver/burns[].<field>`.
+
+Every key takes its operational tolerance (no case has an override): 1 ms for a burn epoch, 1 m for a burn position,
+1 mm/s for a Δv, 1 g for a mass, 1 mm/s for a Lambert velocity, and 1 m and 1 mm/s per component of the final state.
+Release, Linux, 2026-11-05, the runner on the suite at 9dca9c7: the worst ratio of each key over the cases, and of each
+case over its keys.
+
+| Key | Worst delta | Ratio | Case and output |
+|-----|-------------|-------|-----------------|
+| `maneuver_epoch_s` | 8.4e-7 s | 8.4e-4 | `maneuver_24h_leo_pm_apsidal_008`, `burns[align].elapsed_s` |
+| `maneuver_position_km` | 6.0 mm | 0.0060 | 008, `burns[align].position_km` |
+| `maneuver_delta_v_km_s` | 1.1e-3 mm/s | 0.0011 | `maneuver_24h_leo_pm_gto_012`, `burns[raise].delta_v_km_s` |
+| `maneuver_mass_kg` | 3.2e-7 kg | 3.2e-4 | 008, `burns[align].mass_after_kg` |
+| `propagator_position_km` | 31.4 mm | 0.031 | 008, `final_x_km` |
+| `propagator_velocity_km_s` | 0.034 mm/s | 0.034 | 008, `final_vx_km_s` |
+| `lambert_velocity_km_s` | 4.2e-3 mm/s | 0.0042 | `lambert_10800s_0rev_002`, `v2_km_s` |
+
+| Case | Largest ratio | Output |
+|------|---------------|--------|
+| `maneuver_24h_leo_pm_apoapsis_001` | 0.0038 | `burns[raise].position_km` |
+| `maneuver_24h_leo_grav10_apoapsis_002` | 0.0018 | `burns[raise].position_km` |
+| `maneuver_24h_leo_pm_hohmann_003` | 0.0040 | `burns[raise_periapsis].position_km` |
+| `maneuver_24h_leo_grav10_hohmann_004` | 0.0022 | `burns[raise_periapsis].position_km` |
+| `maneuver_24h_leo_pm_lower_005` | 0.0016 | `burns[lower].position_km` |
+| `maneuver_24h_leo_pm_plane_006` | 0.0027 | `burns[plane].position_km` |
+| `maneuver_24h_leo_grav10_plane_007` | 0.0027 | `burns[plane].position_km` |
+| `maneuver_24h_leo_pm_apsidal_008` | 0.034 | `final_vx_km_s` |
+| `maneuver_24h_leo_pm_phasing_009` | 0.0034 | `burns[restore].position_km` |
+| `maneuver_24h_leo_pm_combined_010` | 0.0024 | `burns[combined].position_km` |
+| `maneuver_24h_leo_grav10_chain_011` | 0.0026 | `burns[raise_periapsis].position_km` |
+| `maneuver_24h_leo_pm_gto_012` | 0.011 | `final_x_km` |
+| `lambert_3000s_0rev_001` | 3.3e-4 | `v2_km_s` |
+| `lambert_10800s_0rev_002` | 0.0042 | `v2_km_s` |
+| `lambert_10800s_1rev_lower_003` | 4.6e-6 | `v2_km_s` |
+| `lambert_10800s_1rev_higher_004` | 4.0e-4 | `v2_km_s` |
+| `lambert_3000s_0rev_retro_005` | 0.0011 | `v2_km_s` |
+| `lambert_20000s_2rev_lower_006` | 3.6e-4 | `v2_km_s` |
+| `lambert_20000s_2rev_higher_007` | 0.0025 | `v2_km_s` |
+
+The burn epochs agree within 8.4e-7 s, GMAT's epoch quantum (an A1 MJD double, 3.1e-7 s apart), and the burn
+positions within 6 mm, the distance travelled in that time. 008's final state, the worst of the lot, is of the size of
+the golden's own spread (0.046 of the tolerance, its corrector variants, conformance-tests#31). The field cases (002,
+004, 007, 011) agree as closely as the point-mass ones: the goldens orient the Earth by the suite's ITRF93 (GMAT's
+`EarthS`), as the library does. The CI logs of `Lot3CaseTests` give the ratios on Windows and macOS arm64.
 
 ### Measured Errors
 
