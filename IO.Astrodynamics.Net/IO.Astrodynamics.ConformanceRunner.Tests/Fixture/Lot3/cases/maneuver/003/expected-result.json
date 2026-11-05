@@ -1,0 +1,59 @@
+{
+  "id": "maneuver_24h_leo_pm_hohmann_003",
+  "category": "maneuver",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-11-05",
+    "gravity_model": "point-mass Earth, GM 398600.4355070226 km^3/s^2 (BODY399_GM of data/gm_de440.tpc)",
+    "perturbations": "None (two-body).",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: point-mass Earth with BODY399_GM of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; each step targeted by a DifferentialCorrector, its burn an ImpulsiveBurn in VNB with DecrementMass and GravitationalAccel 9.80665; the window integrated over its TT seconds; state entered in ICRF, every burn state and the final state read in MJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch.",
+    "reference_frame": "EarthMJ2000Eq rotated to ICRF",
+    "script": "maneuver_24h_leo_pm_hohmann_003.script",
+    "log": "maneuver_24h_leo_pm_hohmann_003.log"
+  },
+  "outputs": {
+    "burns": [
+      {
+        "label": "raise_apoapsis",
+        "elapsed_s": 955.41255,
+        "position_km": [
+          2090.5292075329944,
+          6396.952754001854,
+          1653.355102668419
+        ],
+        "delta_v_km_s": [
+          -0.20441581096788486,
+          0.04231971560542447,
+          0.09472859264018796
+        ],
+        "mass_after_kg": 1387.5584671020388
+      },
+      {
+        "label": "raise_periapsis",
+        "elapsed_s": 4164.8262810048,
+        "position_km": [
+          -2413.309330481531,
+          -7384.649643870206,
+          -1908.6350391572787
+        ],
+        "delta_v_km_s": [
+          0.18977932329478087,
+          -0.039289558630973165,
+          -0.08794587915186458
+        ],
+        "mass_after_kg": 1290.7267733465148
+      }
+    ],
+    "final_x_km": -7318.134012118639,
+    "final_y_km": 436.3775834608624,
+    "final_z_km": 2977.1714688318884,
+    "final_vx_km_s": -1.3263079380611333,
+    "final_vy_km_s": -6.659141973836651,
+    "final_vz_km_s": -2.0474224770489697
+  }
+}

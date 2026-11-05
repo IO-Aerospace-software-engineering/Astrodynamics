@@ -33,6 +33,14 @@ public static class SkipDetector
                         return true;
                 }
                 return false;
+            // The elements of a labelled array (the burns of a maneuver golden)
+            case JsonValueKind.Object:
+                foreach (var property in element.EnumerateObject())
+                {
+                    if (IsNullOrTodo(property.Value))
+                        return true;
+                }
+                return false;
             default:
                 return false;
         }

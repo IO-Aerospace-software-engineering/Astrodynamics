@@ -37,6 +37,13 @@ internal sealed class SuiteFixture
     public static readonly SuiteFixture Lot2 = new("Fixture/Lot2",
         new[] { "propagator" }, new[] { KernelsPath, "Fixture/Lot1/data" });
 
+    /// <summary>
+    /// Lot 3 (design of #587): the maneuver and lambert cases; the suite's Earth orientation file is the one of lot 1's
+    /// fixture, its field file the runner's.
+    /// </summary>
+    public static readonly SuiteFixture Lot3 = new("Fixture/Lot3",
+        new[] { "maneuver", "lambert" }, new[] { KernelsPath, "Fixture/Lot1/data", "Fixture/Lot2/data" });
+
     private static readonly string[] Schemas = { "case.schema.json", "expected.schema.json", "runner-report.schema.json" };
     private static readonly string[] CaseFiles = { "inputs.yaml", "expected-result.json" };
 

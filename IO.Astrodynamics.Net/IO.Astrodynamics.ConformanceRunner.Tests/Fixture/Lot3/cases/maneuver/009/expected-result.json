@@ -1,0 +1,59 @@
+{
+  "id": "maneuver_24h_leo_pm_phasing_009",
+  "category": "maneuver",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-11-05",
+    "gravity_model": "point-mass Earth, GM 398600.4355070226 km^3/s^2 (BODY399_GM of data/gm_de440.tpc)",
+    "perturbations": "None (two-body).",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: point-mass Earth with BODY399_GM of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; each step targeted by a DifferentialCorrector, its burn an ImpulsiveBurn in VNB with DecrementMass and GravitationalAccel 9.80665; the window integrated over its TT seconds; state entered in ICRF, every burn state and the final state read in MJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch.",
+    "reference_frame": "EarthMJ2000Eq rotated to ICRF",
+    "script": "maneuver_24h_leo_pm_phasing_009.script",
+    "log": "maneuver_24h_leo_pm_phasing_009.log"
+  },
+  "outputs": {
+    "burns": [
+      {
+        "label": "phase",
+        "elapsed_s": 931.1156678304,
+        "position_km": [
+          2063.3794726588512,
+          6313.8754465240345,
+          1631.882960751496
+        ],
+        "delta_v_km_s": [
+          0.019657572209300866,
+          -0.004069660061783553,
+          -0.009109540695262819
+        ],
+        "mass_after_kg": 1488.8023680741849
+      },
+      {
+        "label": "restore",
+        "elapsed_s": 19002.4826548896,
+        "position_km": [
+          2063.379471509573,
+          6313.875446761954,
+          1631.8829612840796
+        ],
+        "delta_v_km_s": [
+          -0.019657572210505236,
+          0.004069660058112046,
+          0.009109540694315577
+        ],
+        "mass_after_kg": 1477.6883274555319
+      }
+    ],
+    "final_x_km": -1677.1696627250321,
+    "final_y_km": 6002.901856783067,
+    "final_z_km": 2948.591864831551,
+    "final_vx_km_s": -7.106966774172851,
+    "final_vy_km_s": -2.5986543218017766,
+    "final_vz_km_s": 1.7308658373055825
+  }
+}
