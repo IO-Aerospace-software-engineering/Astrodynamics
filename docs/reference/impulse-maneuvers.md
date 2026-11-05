@@ -57,6 +57,11 @@ its g-function in its direction at or after the minimum epoch, searched from the
   minimum epoch at or before the start of the segment, the first evaluation there still locks the node by the sign of
   its rate, so a start less than 1e-6 |r| past a node takes that node, a period later (#581).
 - A chained impulse is gated by the end of the previous maneuver's window, the same way, in whichever step holds it.
+- That gate belongs to the propagation that set it (#573). `MinimumEpoch` reports the later of the minimum epoch the
+  maneuver was given (its constructor, or `Spacecraft.SetStandbyManeuver(maneuver, minimumEpoch)`, which lasts) and that
+  gate, which holds after the propagation with the windows of the maneuver; the next `Spacecraft.Propagate` (and
+  `Scenario.SimulateAsync` and `BatchPropagator` through it) clears it before it runs. A spacecraft propagated again,
+  from another state or over another window, so fires its maneuvers as a spacecraft never propagated would.
 - With Velocity-Verlet, the decision follows its own trajectory, whose crossings lag the Keplerian epoch: with 10 s
   steps, up to 0.096 s at a node, 0.18 s at an apsis of the orbit after a Velocity-Verlet burn and 1.5 s at the
   intersection of an apsidal alignment (worsts 0.0953 s, 0.176 s and 1.44 s on Linux x64, Windows and macOS arm64). A

@@ -397,17 +397,46 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         /// <summary>
-        /// Put a maneuver in standby
+        /// Put a maneuver in standby. When no maneuver is in standby, it becomes the head of the maneuver chain
+        /// (<see cref="Maneuver.Maneuver.SetNextManeuver"/>), from which each <c>Propagate</c> starts the chain again.
         /// </summary>
-        /// <param name="maneuver"></param>
-        /// <param name="minimumEpoch"></param>
+        /// <param name="maneuver">The maneuver to put in standby.</param>
+        /// <param name="minimumEpoch">Null to keep the minimum epoch the maneuver was given. When later than that minimum
+        /// epoch, its new one, which every later propagation keeps, as the one of its constructor (#573): an
+        /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it (an attitude reads no minimum epoch). An earlier
+        /// value changes nothing.</param>
         public void SetStandbyManeuver(Maneuver.Maneuver maneuver, Time? minimumEpoch = null)
         {
-            if (minimumEpoch > maneuver?.MinimumEpoch)
+            if (minimumEpoch.HasValue)
             {
-                maneuver.MinimumEpoch = minimumEpoch.Value;
+                maneuver?.RaiseGivenMinimumEpoch(minimumEpoch.Value);
             }
 
+            Standby(maneuver);
+        }
+
+        /// <summary>
+        /// Put the next maneuver of the chain in standby during a propagation, gated at <paramref name="gate"/>, the end of
+        /// the window of the maneuver that precedes it, for this propagation only: the gate is raised on
+        /// <see cref="Maneuver.Maneuver.PropagationGate"/>, which the next <c>Propagate</c> clears, never on the minimum epoch
+        /// the maneuver was given (#573). The library's raises of a chain go through it, never through
+        /// <see cref="SetStandbyManeuver"/>.
+        /// </summary>
+        /// <param name="maneuver">The next maneuver of the chain; null at its end.</param>
+        /// <param name="gate">The end of the window of the maneuver before it; null for none.</param>
+        internal void ChainStandbyManeuver(Maneuver.Maneuver maneuver, Time? gate)
+        {
+            if (gate.HasValue)
+            {
+                maneuver?.RaisePropagationGate(gate.Value);
+            }
+
+            Standby(maneuver);
+        }
+
+        // The bookkeeping of a maneuver put in standby, shared by the user's call and the chain's
+        private void Standby(Maneuver.Maneuver maneuver)
+        {
             if (StandbyManeuver != null)
             {
                 _executedManeuvers.Add(StandbyManeuver);

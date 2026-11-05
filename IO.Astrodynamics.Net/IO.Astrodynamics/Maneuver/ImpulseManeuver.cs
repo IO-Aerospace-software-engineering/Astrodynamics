@@ -123,7 +123,7 @@ namespace IO.Astrodynamics.Maneuver
             ManeuverWindow = new Window(ThrustWindow.Value.StartDate, ManeuverHoldDuration).Merge(ThrustWindow.Value);
 
             //Set next maneuver
-            Engine.FuelTank.Spacecraft.SetStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
+            Engine.FuelTank.Spacecraft.ChainStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
 
             //return computed state vector and state orientation
             //The front along the delta-V, in ICRF whatever the frame of the state (#529, #535)
