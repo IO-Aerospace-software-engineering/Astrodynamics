@@ -25,6 +25,7 @@ namespace IO.Astrodynamics.Tests.Propagators;
 // Inside IO.Astrodynamics.Tests the namespaces Frame and Time shadow the library types
 using Frame = IO.Astrodynamics.Frames.Frame;
 using Time = IO.Astrodynamics.TimeSystem.Time;
+using OrbitalParams = IO.Astrodynamics.OrbitalParameters.OrbitalParameters;
 
 /// <summary>
 /// The edges of the attitude timeline (#539, #547, #570; design of #554): the two clips of the impulse's attitude (choice
@@ -48,6 +49,7 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 public class AttitudeTimelineEdgeTests
 {
     private static readonly Time S = MinimumEpochGateTests.S;
+    private const double MoonRadius = MinimumEpochGateTests.MoonRadius;
     private readonly ITestOutputHelper _output;
 
     public AttitudeTimelineEdgeTests(ITestOutputHelper output)
@@ -414,6 +416,104 @@ public class AttitudeTimelineEdgeTests
         var m = AttitudeTimelineTests.Verify(withLead);
         if (TimelineRules.Checked) Assert.True(m.Windows <= TimelineRules.RuleBound);
         Assert.True(m.Discrete <= AttitudeRecordTests.DiscreteLaw);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------
+    // An attitude activated at its own minimum epoch
+    // ---------------------------------------------------------------------------------------------------------------------
+
+    // A prograde held hold seconds from its minimum epoch, then a nadir, on #569's orbit from its apogee at start
+    private static (Spacecraft, Attitude Prograde, Attitude Nadir) ProgradeThenNadir(CelestialBody center, Time start, Time minimumEpoch,
+        double hold, OrbitalParams orbit)
+    {
+        int id = NextId();
+        var spacecraft = new Spacecraft(id, $"TL{-id}", 1000.0, 3000.0, new Clock($"TL{-id}_CLK", 65536), orbit);
+        var tank = new FuelTank("ft", "model", "sn", 1000.0, 1000.0);
+        spacecraft.AddFuelTank(tank);
+        var engine = new Engine("eng", "model", "sn", 300.0, 10.0, tank);
+        spacecraft.AddEngine(engine);
+        var prograde = new ProgradeAttitude(center, minimumEpoch, TimeSpan.FromSeconds(hold), engine);
+        var nadir = new NadirAttitude(center, start, TimeSpan.Zero, engine);
+        prograde.SetNextManeuver(nadir);
+        spacecraft.SetStandbyManeuver(prograde);
+        return (spacecraft, prograde, nadir);
+    }
+
+    /// <summary>
+    /// A prograde held 0 s from its own minimum epoch, given as a TDB label off the TT grid of the Earth, then a nadir: its
+    /// window is [M, M] and the nadir activates at M, never before (the end of the hold, the epoch of its TT seconds
+    /// truncated to the tick, fell one tick before M for 21 of these 40 epochs before the clamp: the window swapped its ends
+    /// and the nadir activated one tick before the prograde). The rule: the activation is the minimum epoch, the end of a hold of 0 is
+    /// the activation.
+    /// </summary>
+    [Theory]
+    [InlineData("RK")]
+    [InlineData("VV1")]
+    public void AttitudeAtItsMinimumEpoch_HoldZero_EndsAtItsActivation(string integrator)
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
+        int short_ = 0;
+        for (int k = 0; k < 40; k++)
+        {
+            var minimum = S.AddSeconds(300.0 + k * 1.3e-8 + 7e-8);
+            var (spacecraft, prograde, nadir) = ProgradeThenNadir(earth, S, minimum, 0.0, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
+            Integrator propagator = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
+            spacecraft.Propagate(new Window(S, S.AddSeconds(600.0)), [earth], propagator, false, false, TimeSpan.FromSeconds(10.0));
+            // The epoch of its TT seconds from S, truncated to the tick, one tick before it
+            if (PropagationTimeArgument.Tt.EpochAt(S, PropagationTimeArgument.Tt.SecondsBetween(S, minimum)) < minimum) short_++;
+            Assert.Equal(minimum, prograde.ThrustWindow!.Value.StartDate);
+            Assert.Equal(minimum, prograde.ManeuverWindow!.Value.StartDate);
+            Assert.Equal(minimum, prograde.ManeuverWindow.Value.EndDate);
+            Assert.Equal(minimum, nadir.ThrustWindow!.Value.StartDate);
+            Assert.Equal(minimum, nadir.ManeuverWindow!.Value.StartDate);
+            Assert.Equal(minimum, nadir.MinimumEpoch);
+            Assert.Equal(new Maneuver.Maneuver[] { prograde, nadir }, spacecraft.ExecutedManeuvers.ToArray());
+        }
+
+        _output.WriteLine($"MEASURE #539 attitude at its minimum epoch, hold 0, {integrator}: {short_} of 40 epochs whose TT seconds give the epoch one tick before");
+        Assert.True(short_ > 0, "no epoch off the TT grid");
+    }
+
+    /// <summary>
+    /// A minimum epoch given in UTC: the attitude activates at its TDB label, as every epoch of the propagation (#501,
+    /// #508): its windows and the nadir after it are labelled TDB. About the Earth (TT) and about the Moon (TDB) across the
+    /// leap second of 2016-12-31, a hold of 60 s ends 60 s of the time argument after the activation, where the nadir
+    /// activates (by the calendar of UTC it ended 61 s after it, the leap second counted twice, the TDB path only). The
+    /// rules: the activation at <c>ToTDB()</c> of the minimum epoch, its end 60 TT seconds (Earth) or 60 TDB seconds (Moon)
+    /// after it.
+    /// </summary>
+    [Theory]
+    [InlineData("Earth", "RK")]
+    [InlineData("Earth", "VV1")]
+    [InlineData("Moon", "RK")]
+    [InlineData("Moon", "VV1")]
+    public void AttitudeAtAUtcMinimumEpoch_LabelledTdb_HeldAcrossALeapSecond(string centre, string integrator)
+    {
+        var minimum = new Time(new DateTime(2016, 12, 31, 23, 59, 30), TimeFrame.UTCFrame);
+        var start = minimum.ToTDB().AddSeconds(-30.0);
+        var body = new CelestialBody(centre == "Moon" ? PlanetsAndMoons.MOON : PlanetsAndMoons.EARTH, Frame.ICRF, start);
+        double ra = centre == "Moon" ? MoonRadius + 300000.0 : MinimumEpochGateTests.Apogee0;
+        double rp = centre == "Moon" ? MoonRadius + 100000.0 : 6778137.0;
+        var orbit = new KeplerianElements((ra + rp) / 2.0, (ra - rp) / (ra + rp), 0.9, 0.3, 1.1, System.Math.PI, body, start, Frame.ICRF);
+        var (spacecraft, prograde, nadir) = ProgradeThenNadir(body, start, minimum, 60.0, orbit);
+        Integrator propagator = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
+        spacecraft.Propagate(new Window(start, start.AddSeconds(600.0)), [body], propagator, false, false, TimeSpan.FromSeconds(10.0));
+
+        var activation = prograde.ThrustWindow!.Value.StartDate;
+        var end = prograde.ManeuverWindow!.Value.EndDate;
+        double hold = TimelineRules.SecondsBetween(activation, end, centre == "Earth");
+        _output.WriteLine($"MEASURE #539 attitude at a UTC minimum epoch, {centre} {integrator}: activation {activation.Frame.GetType().Name} - minimum " +
+                          $"{(activation - minimum).TotalSeconds:E2} s, hold {hold - 60.0:E2} s from 60 s, nadir - end {(nadir.ThrustWindow!.Value.StartDate - end).TotalSeconds:E2} s");
+        Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(activation.Frame);
+        Assert.Equal(minimum.ToTDB(), activation);
+        Assert.Equal(activation, prograde.ManeuverWindow.Value.StartDate);
+        Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(prograde.ManeuverWindow.Value.StartDate.Frame);
+        Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(end.Frame);
+        Assert.Equal(end, nadir.ThrustWindow.Value.StartDate);
+        Assert.IsType<IO.Astrodynamics.TimeSystem.Frames.TDBTimeFrame>(nadir.ThrustWindow.Value.StartDate.Frame);
+        Assert.True(System.Math.Abs(hold - 60.0) <= TimelineRules.RuleBound, $"hold {hold:R} s");
+        var summary = spacecraft.GetSummary();
+        Assert.Equal(activation, summary.ManeuverWindow!.Value.StartDate);
     }
 
     // ---------------------------------------------------------------------------------------------------------------------

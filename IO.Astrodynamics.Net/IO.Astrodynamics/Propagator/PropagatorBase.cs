@@ -678,7 +678,8 @@ public abstract class PropagatorBase : IPropagator
             double minimumTau = TimeArgument.SecondsBetween(Window.StartDate, minimumEpoch);
             if (minimumTau > tau)
             {
-                start = minimumEpoch;
+                // Labelled TDB, as every epoch of the propagation (#501, #508), whatever the frame of the minimum epoch
+                start = minimumEpoch.ToTDB();
                 tau = minimumTau;
             }
 
@@ -689,6 +690,9 @@ public abstract class PropagatorBase : IPropagator
 
             double endTau = tau + attitude.ManeuverHoldDuration.TotalSeconds;
             var end = After(start, endTau, attitude.ManeuverHoldDuration);
+            // About the Earth the end is the epoch of endTau, truncated to the tick: never before the activation, which
+            // the minimum epoch gives exactly (a hold of 0)
+            if (end < start) end = start;
             attitude.ThrustWindow = new Window(start, TimeSpan.Zero);
             attitude.ManeuverWindow = new Window(start, end);
             _timeline.ActivateLaw(start, attitude);
