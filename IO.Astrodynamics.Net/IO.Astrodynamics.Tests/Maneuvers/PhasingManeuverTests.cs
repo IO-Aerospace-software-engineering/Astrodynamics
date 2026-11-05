@@ -176,7 +176,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.True(dvError < DeltaVTolerance, $"{dvError:E2}");
             Assert.True(alongError < RoundingTolerance, $"{alongError:E2}");
             Assert.True(holdError < HoldTolerance, $"{holdError:E2}");
-            Assert.True(pathsError < RoundingTolerance, $"{pathsError:E2}");
+            Assert.True(pathsError < PathsTolerance, $"{pathsError:E2}");
         }
 
         /// <summary>
@@ -244,16 +244,19 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             }
         }
 
-        // Twice the worst value, Linux x64, .NET 10, Release, 2026-11-05: the delta-V of TryExecute against the closed
-        // form 9.23e-9 m/s (eccentric orbit; 5.19e-10 m/s circular), against the target-orbit path 4.55e-13 m/s, off the
-        // velocity 1.48e-14 m/s, the hold 2.22e-7 s
+        // Twice the worst value over Linux x64, Windows x64 and macOS arm64, .NET 10, Release (CI of #589, 2026-11-05): the
+        // delta-V of TryExecute against the closed form 9.23e-9 m/s (eccentric orbit; 5.19e-10 m/s circular), against the
+        // target-orbit path 1.83e-12 m/s (Windows, eccentric orbit; 4.55e-13 m/s on Linux and macOS), off the velocity
+        // 1.48e-14 m/s, the hold 2.22e-7 s, the same on the three platforms otherwise
         private const double DeltaVTolerance = 2.0e-8;
         private const double HoldTolerance = 5.0e-7;
+        private const double PathsTolerance = 3.7e-12;
         private const double RoundingTolerance = 1.0e-12;
 
-        // The propagations, Linux x64, .NET 10, Release, 2026-11-05: RK7(8) at 1e-12, the delta-V 1.29e-8 m/s and the
-        // separation from the virtual target 1.36e-3 m; Velocity-Verlet at 1 s, 2.01e-4 m/s and 49.1 m (the burn 1 ms after
-        // the perigee, 7.7 m along the orbit). Twice the worst value, rounded up
+        // The propagations, Linux x64, Windows x64 and macOS arm64, .NET 10, Release (CI of #589, 2026-11-05): RK7(8) at
+        // 1e-12, the delta-V 1.29e-8 m/s and the separation from the virtual target 1.36e-3 m; Velocity-Verlet at 1 s,
+        // 2.01e-4 m/s and 49.1 m (the burn 1 ms after the perigee, 7.7 m along the orbit), the same on the three platforms.
+        // Twice the worst value, rounded up
         private const double RkDeltaVTolerance = 3.0e-8;
         private const double RkSeparationTolerance = 3.0e-3;
         private const double VvDeltaVTolerance = 5.0e-4;
