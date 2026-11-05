@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace IO.Astrodynamics.ConformanceRunner.Comparison;
 
@@ -53,7 +54,8 @@ public sealed record Metric(MetricKind Kind, string Key, string Unit, string Tim
 /// <summary>
 /// The outputs of the conversion categories (spec.md section 11): <c>orbital_elements</c>, <c>time_conversion</c> and
 /// <c>frame_transformation</c>, and of the earlier categories (spec.md section 12): <c>propagator</c>, <c>eclipse</c>,
-/// <c>tracking_data</c>, <c>pointing_triad</c> and <c>geosynchronous</c>, each with its kind and tolerance key; and the
+/// <c>tracking_data</c>, <c>pointing_triad</c> and <c>geosynchronous</c>, and of the maneuver categories (spec.md section
+/// 13): <c>maneuver</c> and <c>lambert</c>, each with its kind and tolerance key; and the
 /// final state of the <c>stm</c> category, the extension of the suite tested by the fixture of the runner, compared as
 /// the propagator's.
 /// </summary>
@@ -80,6 +82,29 @@ public static class MetricTable
     private static readonly Metric RangeRate = new(MetricKind.Scalar, "tracking_range_rate_km_s", "km/s",
         FormerKeys: ["doppler (km/s)", "velocity_km_s"]);
     private static readonly Metric Exact = new(MetricKind.Exact, null, "-");
+    private static readonly Metric LambertVelocity = new(MetricKind.Vector3, "lambert_velocity_km_s", "km/s");
+
+    /// <summary>The array of the burns of a <c>maneuver</c> golden (spec.md section 13.1).</summary>
+    public const string Burns = "burns";
+
+    /// <summary>
+    /// The output of a field of a burn, whatever its label: <c>burns[].&lt;field&gt;</c>, the name under which the
+    /// table holds <c>burns[&lt;label&gt;].&lt;field&gt;</c>.
+    /// </summary>
+    private static string BurnOutput(string field) => $"{Burns}[].{field}";
+
+    // An output of a labelled element, <array>[<label>].<field> (OutputComparer.Outputs)
+    private static readonly Regex Labelled = new(@"^(?<array>[^\[\]]+)\[[^\]]*\]\.(?<field>[^\[\]]+)$", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// The name under which the table holds an output: <c>&lt;array&gt;[].&lt;field&gt;</c> for an output of a labelled
+    /// element, <c>&lt;array&gt;[&lt;label&gt;].&lt;field&gt;</c>, the output itself otherwise.
+    /// </summary>
+    public static string Generic(string output)
+    {
+        var match = Labelled.Match(output);
+        return match.Success ? $"{match.Groups["array"].Value}[].{match.Groups["field"].Value}" : output;
+    }
 
     /// <summary>The final state of a propagation (spec.md section 12.1).</summary>
     private static Dictionary<string, Metric> FinalState() => new()
@@ -167,6 +192,19 @@ public static class MetricTable
             ["attitude_quaternion"] = new(MetricKind.RotationAngle, "attitude_angle_rad", "rad", FormerKeys: ["attitude_quaternion"]),
             ["target_in_fov"] = Exact
         },
+        // The burns of a chain, each output named burns[<label>].<field> (spec.md section 13.1), and the final state
+        ["maneuver"] = new Dictionary<string, Metric>(FinalState())
+        {
+            [BurnOutput("elapsed_s")] = new(MetricKind.Seconds, "maneuver_epoch_s", "s"),
+            [BurnOutput("position_km")] = new(MetricKind.Vector3, "maneuver_position_km", "km"),
+            [BurnOutput("delta_v_km_s")] = new(MetricKind.Vector3, "maneuver_delta_v_km_s", "km/s"),
+            [BurnOutput("mass_after_kg")] = new(MetricKind.Scalar, "maneuver_mass_kg", "kg")
+        },
+        ["lambert"] = new Dictionary<string, Metric>
+        {
+            ["v1_km_s"] = LambertVelocity,
+            ["v2_km_s"] = LambertVelocity
+        },
         // The lot-1 keys of their quantities (spec.md section 12.5)
         ["geosynchronous"] = new Dictionary<string, Metric>
         {
@@ -201,7 +239,7 @@ public static class MetricTable
     public static bool TryGet(string category, string output, out Metric metric)
     {
         metric = null;
-        return Covers(category) && Categories[category].TryGetValue(output, out metric);
+        return Covers(category) && output != null && Categories[category].TryGetValue(Generic(output), out metric);
     }
 
     /// <summary>
@@ -221,10 +259,13 @@ public static class MetricTable
         return (inputScale == Tdb) != (metric.TimeScale == Tdb) ? TdbTimeKey : TimeKey;
     }
 
-    /// <summary>The row of <c>accuracy_by_metric</c> of an output: <c>&lt;category&gt;/&lt;output&gt;</c>.</summary>
+    /// <summary>
+    /// The row of <c>accuracy_by_metric</c> of an output: <c>&lt;category&gt;/&lt;output&gt;</c>, the outputs of the
+    /// labelled elements of an array in one row, <c>maneuver/burns[].elapsed_s</c>.
+    /// </summary>
     public static string SummaryKey(string category, string output)
     {
-        return $"{category}/{output}";
+        return $"{category}/{Generic(output)}";
     }
 
     /// <summary>The unit of a row of <c>accuracy_by_metric</c> named by <see cref="SummaryKey"/>.</summary>

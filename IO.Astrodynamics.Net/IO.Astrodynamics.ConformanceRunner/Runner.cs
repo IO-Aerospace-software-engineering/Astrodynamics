@@ -36,7 +36,9 @@ public class Runner
             new GeosynchronousSolver(conformanceTestsPath),
             new OrbitalElementsSolver(),
             new TimeConversionSolver(),
-            new FrameTransformationSolver(conformanceTestsPath)
+            new FrameTransformationSolver(conformanceTestsPath),
+            new ManeuverSolver(conformanceTestsPath),
+            new LambertCaseSolver(conformanceTestsPath)
         }.ToDictionary(solver => solver.Category);
         _schemaValidator = new SchemaValidator(conformanceTestsPath);
     }

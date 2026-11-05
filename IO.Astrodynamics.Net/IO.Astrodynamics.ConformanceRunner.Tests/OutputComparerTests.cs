@@ -213,6 +213,14 @@ public class OutputComparerTests
     [InlineData("frame_transformation", "latitude_deg", MetricKind.Angle, "geodetic_latitude_deg", "deg")]
     [InlineData("frame_transformation", "longitude_deg", MetricKind.WrappedAngle, "geodetic_longitude_deg", "deg")]
     [InlineData("frame_transformation", "altitude_km", MetricKind.Scalar, "geodetic_altitude_km", "km")]
+    [InlineData("maneuver", "burns[raise].elapsed_s", MetricKind.Seconds, "maneuver_epoch_s", "s")]
+    [InlineData("maneuver", "burns[raise].position_km", MetricKind.Vector3, "maneuver_position_km", "km")]
+    [InlineData("maneuver", "burns[plane change].delta_v_km_s", MetricKind.Vector3, "maneuver_delta_v_km_s", "km/s")]
+    [InlineData("maneuver", "burns[].mass_after_kg", MetricKind.Scalar, "maneuver_mass_kg", "kg")]
+    [InlineData("maneuver", "final_x_km", MetricKind.Scalar, "propagator_position_km", "km")]
+    [InlineData("maneuver", "final_vz_km_s", MetricKind.Scalar, "propagator_velocity_km_s", "km/s")]
+    [InlineData("lambert", "v1_km_s", MetricKind.Vector3, "lambert_velocity_km_s", "km/s")]
+    [InlineData("lambert", "v2_km_s", MetricKind.Vector3, "lambert_velocity_km_s", "km/s")]
     public void EachOutput_HasTheKindKeyAndUnitOfTheSpec(string category, string output, MetricKind kind, string key, string unit)
     {
         Assert.True(MetricTable.TryGet(category, output, out var metric));

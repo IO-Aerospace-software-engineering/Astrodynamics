@@ -181,7 +181,8 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
             sectionalArea: area, dragCoeff: cd, solarRadiationCoeff: cr);
     }
 
-    private static StateVector BuildStateVector(object orbit, CelestialBody observer, Time epoch, Frame frame)
+    /// <summary>The state of an orbit of the inputs (<see cref="InputParser.ParseOrbit"/>) at its epoch, about <paramref name="observer"/>.</summary>
+    internal static StateVector BuildStateVector(object orbit, CelestialBody observer, Time epoch, Frame frame)
     {
         if (orbit is KeplerianOrbit kep)
         {

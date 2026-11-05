@@ -97,6 +97,16 @@ public static class OutputComparer
     {
         foreach (var property in golden.EnumerateObject())
         {
+            if (IsLabelled(property.Value))
+            {
+                foreach (var output in LabelledOutputs(property.Name, property.Value))
+                {
+                    yield return output;
+                }
+
+                continue;
+            }
+
             if (property.Value.ValueKind != JsonValueKind.Object)
             {
                 yield return (property.Name, property.Value);
@@ -109,6 +119,39 @@ public static class OutputComparer
             }
         }
     }
+
+    /// <summary>The member that names an element of a labelled array (spec.md section 13.1).</summary>
+    internal const string LabelMember = "label";
+
+    // An array of objects, each with a string label: the burns of a maneuver golden
+    private static bool IsLabelled(JsonElement value)
+    {
+        return value.ValueKind == JsonValueKind.Array && value.GetArrayLength() > 0 &&
+               value.EnumerateArray().All(e => e.ValueKind == JsonValueKind.Object &&
+                                               e.TryGetProperty(LabelMember, out var label) && label.ValueKind == JsonValueKind.String);
+    }
+
+    // The fields of each element of a labelled array but its label, <array>[<label>].<field>, in their order
+    private static IEnumerable<(string Output, JsonElement Golden)> LabelledOutputs(string array, JsonElement elements)
+    {
+        var labels = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var element in elements.EnumerateArray())
+        {
+            string label = element.GetProperty(LabelMember).GetString();
+            if (!labels.Add(label))
+            {
+                throw new InvalidOperationException($"The golden holds two elements of {array} labelled '{label}': labels are unique.");
+            }
+
+            foreach (var field in element.EnumerateObject().Where(f => f.Name != LabelMember))
+            {
+                yield return (LabelledOutput(array, label, field.Name), field.Value);
+            }
+        }
+    }
+
+    /// <summary>The name of a field of a labelled element: <c>&lt;array&gt;[&lt;label&gt;].&lt;field&gt;</c>.</summary>
+    public static string LabelledOutput(string array, string label, string field) => $"{array}[{label}].{field}";
 
     private static IEnumerable<(string Output, JsonElement Golden)> Leaves(JsonElement element, string prefix)
     {

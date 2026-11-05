@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.ConformanceRunner.Models;
 
 namespace IO.Astrodynamics.ConformanceRunner.Utilities;
@@ -198,6 +199,121 @@ public static class InputParser
         return result;
     }
 
+    /// <summary>
+    /// The propulsion and the chain of a <c>maneuver</c> case (spec.md section 13.1); the propagation is read by
+    /// <see cref="ParsePropagatorInputs"/>.
+    /// </summary>
+    /// <exception cref="ArgumentException">The propulsion or the chain is missing, a step has no label, no type or a
+    /// type that is not one of spec.md section 13.1, lacks a field of its type, or two steps share a label.</exception>
+    public static ManeuverInputs ParseManeuverInputs(Dictionary<string, object> inputs)
+    {
+        var propulsion = inputs.TryGetValue("propulsion", out var p) && p is Dictionary<object, object> map
+            ? map
+            : throw new ArgumentException("A maneuver case has a propulsion block (spec.md section 13.1).");
+        var steps = inputs.TryGetValue("maneuvers", out var m) && m is List<object> list && list.Count > 0
+            ? list
+            : throw new ArgumentException("A maneuver case has a chain of one maneuver or more (spec.md section 13.1).");
+
+        var result = new ManeuverInputs
+        {
+            FuelMassKg = ToDouble(Required(propulsion, "fuel_mass_kg", "propulsion")),
+            IspS = ToDouble(Required(propulsion, "isp_s", "propulsion")),
+            Steps = steps.ConvertAll(step => ParseManeuverStep(step as Dictionary<object, object>
+                                                              ?? throw new ArgumentException($"A maneuver step is {step}, not a mapping.")))
+        };
+
+        var duplicate = result.Steps.GroupBy(s => s.Label).FirstOrDefault(g => g.Count() > 1);
+        if (duplicate != null)
+        {
+            throw new ArgumentException($"Two steps of the chain have the label '{duplicate.Key}': labels are unique in a chain (spec.md section 13.1).");
+        }
+
+        return result;
+    }
+
+    private static ManeuverStep ParseManeuverStep(Dictionary<object, object> step)
+    {
+        string label = Required(step, "label", "a maneuver step").ToString();
+        string where = $"the maneuver step '{label}'";
+        var result = new ManeuverStep
+        {
+            Label = label,
+            Type = Required(step, "type", where).ToString(),
+            EarliestAfterPreviousS = ToDouble(Required(step, "earliest_after_previous_s", where))
+        };
+
+        switch (result.Type)
+        {
+            case ManeuverStepType.ApoapsisRadius:
+                result.TargetApoapsisRadiusKm = ToDouble(Required(step, "target_apoapsis_radius_km", where));
+                break;
+            case ManeuverStepType.PeriapsisRadius:
+                result.TargetPeriapsisRadiusKm = ToDouble(Required(step, "target_periapsis_radius_km", where));
+                break;
+            case ManeuverStepType.PlaneChange:
+                var plane = Mapping(Required(step, "target_plane", where), where);
+                result.TargetPlane = new TargetPlane
+                {
+                    InclinationDeg = ToDouble(Required(plane, "inclination_deg", where)),
+                    RaanDeg = ToDouble(Required(plane, "raan_deg", where))
+                };
+                break;
+            case ManeuverStepType.ApsidalAlignment:
+                var orbit = Mapping(Required(step, "target_orbit", where), where);
+                result.TargetOrbit = new TargetOrbitInPlane
+                {
+                    AKm = ToDouble(Required(orbit, "a_km", where)),
+                    E = ToDouble(Required(orbit, "e", where)),
+                    ArgpDeg = ToDouble(Required(orbit, "argp_deg", where))
+                };
+                break;
+            case ManeuverStepType.Phasing:
+                result.Revolutions = (int)ToDouble(Required(step, "revolutions", where));
+                result.Target = ParseOrbit(Mapping(Required(step, "target", where), where));
+                break;
+            case ManeuverStepType.Combined:
+                result.TargetPeriapsisRadiusKm = ToDouble(Required(step, "target_periapsis_radius_km", where));
+                result.TargetInclinationDeg = ToDouble(Required(step, "target_inclination_deg", where));
+                break;
+            default:
+                throw new ArgumentException($"The type '{result.Type}' of {where} is not a maneuver type of spec.md section 13.1.");
+        }
+
+        return result;
+    }
+
+    /// <summary>The inputs of a <c>lambert</c> case (spec.md section 13.2).</summary>
+    /// <exception cref="ArgumentException">A field is missing.</exception>
+    public static LambertInputs ParseLambertInputs(Dictionary<string, object> inputs)
+    {
+        var map = inputs.ToDictionary(kv => (object)kv.Key, kv => kv.Value);
+        const string where = "a lambert case";
+        var branch = map.TryGetValue("branch", out var b) ? b?.ToString() : null;
+        return new LambertInputs
+        {
+            CentralBody = Required(map, "central_body", where).ToString(),
+            DepartureEpoch = Required(map, "departure_epoch", where).ToString(),
+            R1Km = ParseVec3(Required(map, "r1_km", where)),
+            R2Km = ParseVec3(Required(map, "r2_km", where)),
+            TimeOfFlightS = ToDouble(Required(map, "time_of_flight_s", where)),
+            Revolutions = (int)ToDouble(Required(map, "revolutions", where)),
+            Branch = string.IsNullOrEmpty(branch) || branch is "null" or "~" ? null : branch,
+            Direction = Required(map, "direction", where).ToString()
+        };
+    }
+
+    private static object Required(Dictionary<object, object> map, string key, string where)
+    {
+        return map.TryGetValue(key, out var value) && value != null
+            ? value
+            : throw new ArgumentException($"{where} has no {key}.");
+    }
+
+    private static Dictionary<object, object> Mapping(object value, string where)
+    {
+        return value as Dictionary<object, object> ?? throw new ArgumentException($"{where} gives {value} where a mapping is expected.");
+    }
+
     private static EllipsoidInputs ParseEllipsoid(Dictionary<object, object> ellipsoid)
     {
         return new EllipsoidInputs
@@ -245,7 +361,9 @@ public static class InputParser
         return inputs.TryGetValue(key, out var value) && value != null ? ToDouble(value) : null;
     }
 
-    private static object ParseOrbit(Dictionary<object, object> orbit)
+    /// <summary>An orbit of the inputs (<c>orbit</c>, a phasing <c>target</c>) by its <c>type</c>.</summary>
+    /// <exception cref="ArgumentException">The type is not one of the suite's.</exception>
+    public static object ParseOrbit(Dictionary<object, object> orbit)
     {
         var type = orbit["type"]?.ToString();
         if (type == "keplerian")
