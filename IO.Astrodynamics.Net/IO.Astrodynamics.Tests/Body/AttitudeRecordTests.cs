@@ -105,7 +105,9 @@ public class AttitudeRecordTests
     internal const double LawAtEntries = 2.6e-15;
 
     /// <summary>The CK between the samples of a continuous law against its closed form: the residual of the SLERP between
-    /// samples 10 s apart, a property of the step (choice 1). Worst 5.73e-5 rad (InstrumentTriad, RK7(8), B1950).</summary>
+    /// samples 10 s apart, a property of the step (choice 1). Worst 5.73e-5 rad (InstrumentTriad, RK7(8), B1950) on the
+    /// three platforms; since #539, 5.93e-5 rad (ImpulseTriad and NadirImpulseTriad, the TRIAD after an impulse, now a
+    /// sampled law; Linux, 2026-11-05), twice which, 1.19e-4 rad, the limit still holds.</summary>
     internal const double LawBetweenEntries = 1.2e-4;
 
     /// <summary>The CK of a discrete attitude (the identity, an impulse's, a TRIAD held from its change) against its closed
@@ -616,7 +618,8 @@ public class AttitudeRecordTests
     // Twice the worst over the partial step before the impulse over Linux, Windows and macOS arm64 (CI run 41522747911,
     // 2026-11-02): 1.23e-4 / 1.23e-4 / 1.23e-4 rad, the managed path and the CK alike, the residual of the SLERP between
     // the last output sample (60 s step) and the law's sample 1 µs before the change; held, it was 4.70e-2 rad (the
-    // review's probe on the prototype; 7.11e-2 rad on the base)
+    // review's probe on the prototype; 7.11e-2 rad on the base). Since #539 the change is the opening of the impulse's thrust
+    // window: 9.29e-5 rad over a partial step of 34.306 s (Linux, 2026-11-05)
     internal const double PartialStepLaw = 2.5e-4;
 
     /// <summary>

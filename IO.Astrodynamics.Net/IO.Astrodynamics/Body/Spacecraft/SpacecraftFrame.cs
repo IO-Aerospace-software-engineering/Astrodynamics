@@ -50,8 +50,10 @@ public class SpacecraftFrame : Frame
     /// <summary>
     /// Two entries of the record closer than this, 2 µs (twice <see cref="DiscreteChangeLead"/>), are one epoch: a record
     /// repeated <see cref="DiscreteChangeLead"/> before an entry then follows the previous one by at least
-    /// <see cref="DiscreteChangeLead"/>. The propagation itself records entries 1e-7 to 2e-7 s apart: an attitude chained
-    /// after a held one, at its epoch plus the hold counted in TDB seconds, and an output sample on the TT grid (#501).
+    /// <see cref="DiscreteChangeLead"/>. The propagation itself can sample an output within this of an activation off the TT
+    /// grid of the outputs (#501): a minimum epoch given as a TDB label, off it by the change of TDB − TT from the start
+    /// (6.0e-7 s at 3 400 s); before #547, an attitude chained after a held one, its hold counted in TDB seconds, 1e-7 to
+    /// 2e-7 s from the sample.
     /// </summary>
     internal const double SameEpochTolerance = 2.0 * DiscreteChangeLead;
 

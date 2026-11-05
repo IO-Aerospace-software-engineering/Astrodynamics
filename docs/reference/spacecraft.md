@@ -198,8 +198,9 @@ each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the space
 - **The same epoch.** Two entries less than 2 µs apart are one epoch: an activation later in the maneuver chain
   replaces an earlier one and keeps its own epoch, and an output sample never replaces an activation. Since #547 the
   holds count TT seconds about the Earth, as the outputs, so an activation at the end of a hold ending on an output is
-  that output's epoch; a minimum epoch given as a TDB label still falls up to 1e-6 s from an output of the TT grid, one
-  epoch.
+  that output's epoch. A minimum epoch given as a TDB label falls off the TT grid by the change of TDB − TT from the
+  start to it (6.0e-7 s at S + 3 400 s in the tests, about 1.5e-5 s a day later): one epoch with the output sample while
+  that stays under 2 µs, two entries beyond.
 - **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF.
 - **The angular velocity** is that of the CK: at each entry the mean of the rates of the interpolated intervals on either
   side, linear between two samples of a law. Over a hold it is zero between discrete entries; after a sample of a law
@@ -249,7 +250,7 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   | The library's attitude against `pxform` on its CK, outside the 1 µs before the changes | 6.1e-10 rad (2024), 1.3e-9 rad (2026) |
   | The instrument axes against `pxform(instrument, J2000)` | 6.1e-10 rad (2024), 1.3e-9 rad (2026) |
   | The attitude at the entries against the law | 1.3e-15 rad; 3.5e-12 rad in SSB mode, where the reference state relative to the Earth is the difference of two states 1.5e11 m from the Sun |
-  | Between the entries, against the law (the interpolation residual at 10 s outputs) | 5.7e-5 rad |
+  | Between the entries, against the law (the interpolation residual at 10 s outputs) | 5.7e-5 rad; 5.9e-5 rad for the TRIAD after an impulse, a law sampled since #539 (the worst on Linux, 2026-11-05, to be measured on the three platforms) |
   | A discrete attitude against its closed form | 4.8e-16 rad; 3.5e-12 rad in SSB mode |
   | The angular velocity against the rate of the law (its closed form over 0.1 s), the library's and the CK's alike | 2.3e-5 rad/s |
   | The stored states against the solution rotated to ICRF by `pxform`, at the outputs | 0, in every frame and in SSB mode |
@@ -266,8 +267,9 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   worst on Linux, in the Validation category, CI run 41651463194; these cases were excluded before 11.0.0, #540).
 
   The interpolation residual grows as the square of the output step: on the orbit of the tests (a = 6 778 km,
-  e = 0.001, i = 51.6°, the TRIAD of an instrument, its worst attitude) 5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and
-  60 s outputs, a nadir attitude 4.0e-7 and 1.4e-3 rad at 1 and 60 s (`AttitudeRecordTests`); on the worst inclined
+  e = 0.001, i = 51.6°, the TRIAD of an instrument, the worst of its attitudes without an impulse) 5.7e-7, 5.7e-5 and
+  2.1e-3 rad at 1, 10 and 60 s outputs, the TRIAD after an impulse 5.9e-5 rad at 10 s (the worst at 10 s since #539, on
+  Linux), a nadir attitude 4.0e-7 and 1.4e-3 rad at 1 and 60 s (`AttitudeRecordTests`); on the worst inclined
   state of the design of #537 (its reader 3, a probe on the DLLs of the base and of the prototype), 8.1e-7, 8.1e-5 and
   2.9e-3 rad; on a circular equatorial orbit, where the attitude turns at a constant rate about a fixed axis, 1.1e-10 rad
   (the same reader). A shorter output step lowers it.

@@ -188,7 +188,8 @@ initial frame, 0.48 to 0.87 rad apart between ICRF and ECLIPJ2000 on the same or
 
 **Between output epochs.** Each attitude law is sampled at every output epoch of its interval; between two samples the attitude is their exact spherical linear interpolation, which a type-3
 CK computes. Its residual against the law grows as the square of the output step: on the inclined LEO of the tests
-5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and 60 s outputs (an instrument TRIAD, the worst of the attitudes tested;
+5.7e-7, 5.7e-5 and 2.1e-3 rad at 1, 10 and 60 s outputs (an instrument TRIAD, the worst of the attitudes tested
+without an impulse; the TRIAD after an impulse 5.9e-5 rad at 10 s, on Linux;
 [Attitude and kernels](spacecraft.md#attitude-and-kernels) gives the other figures and their sources). Its angular
 velocity, that of the CK, is the rate of the interpolation: 2.3e-5 rad/s from the rate of the law at 10 s outputs. Before 11.0.0 the latest sample held over the step, ω·Δt off (6.4e-2 rad at
 60 s, a field-of-view edge 53.8 s late).
@@ -199,9 +200,11 @@ more, 1 µs before it, so that it is interpolated up to the change: over the par
 impulse's thrust window between outputs it is within the interpolation residual (9.3e-5 rad at 60 s outputs, a span of 34.3 s),
 where it was held (7.1e-2 rad before 11.0.0). At an epoch shared within 2 µs, the activation later in the chain holds:
 an attitude chained after an impulse over the law resumed there, an impulse's attitude over a law of zero length. The
-propagation itself never records two entries closer than 2 µs apart but for the lead: about the Earth an activation at
-the end of a hold counted in TT seconds falls on the output grid, which is uniform in TT, and the sample of that output
-is the activation (#547; before it, a hold counted in TDB seconds put the activation 1e-7 to 2e-7 s from the sample).
+record never holds two entries closer than 2 µs apart but for the lead: about the Earth an activation at the end of a
+hold counted in TT seconds falls on the output grid, which is uniform in TT, and the sample of that output is the
+activation (#547; before it, a hold counted in TDB seconds put the activation 1e-7 to 2e-7 s from the sample); a minimum
+epoch given as a TDB label falls off that grid by the change of TDB − TT from the start to it, and an output sample
+within 2 µs of it is dropped (6.0e-7 s at S + 3 400 s in the tests).
 
 ## IAttitudeTarget
 
