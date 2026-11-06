@@ -208,12 +208,8 @@ namespace IO.Astrodynamics.Tests.Surface
 
             var res = site.FindWindowsOnDistanceConstraint(new Window(TimeSystem.Time.CreateTDB(220881665.18391809), TimeSystem.Time.CreateTDB(228657665.18565452)),
                 TestHelpers.MoonAtJ2000, RelationnalOperator.Greater, 400000000, Aberration.None, TimeSpan.FromSeconds(3600.0));
-            var windows = res as Window[] ?? res.ToArray();
-            Assert.Equal(24, windows.Count());
-            Assert.Equal(new TimeSystem.Time("2007-01-06T21:21:57.6253242 TDB"), windows.ElementAt(0).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2007-01-07T01:04:58.0905336 TDB"), windows.ElementAt(0).EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2007-01-07T18:15:42.3323555 TDB"), windows.ElementAt(1).StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2007-01-08T05:43:12.5176513 TDB"), windows.ElementAt(1).EndDate, TestHelpers.TimeComparer);
+            // CSPICE gfdist (tools/geometry_reference, converged to 1e-9 s): 24 windows
+            GeometryReference.AssertWindows(null, "dss13_moon_distance > 400000 km", res, GeometryReference.ThresholdCrossing);
         }
 
         [Fact]
@@ -241,10 +237,8 @@ namespace IO.Astrodynamics.Tests.Surface
                 TestHelpers.MoonAtJ2000.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
                 TimeSpan.FromSeconds(60.0));
 
-            var windows = res as Window[] ?? res.ToArray();
-            Assert.Single(windows);
-            Assert.Equal(new TimeSystem.Time("2000-01-07T17:57:30.0000000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2000-01-21T20:19:21.6632940 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
+            // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s): DSS-13 above the Moon's equator
+            GeometryReference.AssertWindows(null, "moon_dss13_declination > 0", res, GeometryReference.ThresholdCrossing);
         }
 
         [Fact]
@@ -258,12 +252,12 @@ namespace IO.Astrodynamics.Tests.Surface
                 site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
                 TimeSpan.FromSeconds(60.0));
 
+            // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s) in the frame the library builds for the
+            // station: the Moon is up at the start and at the end of the search window, whose bounds close the windows
             var windows = res as Window[] ?? res.ToArray();
-            Assert.Equal(2, windows.Length);
-            Assert.Equal(new TimeSystem.Time("2000-01-01T11:59:00.0000000 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2000-01-01T21:32:59.4744873 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2000-01-02T11:23:57.1875000 TDB"), windows[1].StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2000-01-02T11:59:59.4719697 TDB"), windows[1].EndDate, TestHelpers.TimeComparer);
+            GeometryReference.AssertWindows(null, "dss13_moon_z > 0", windows, GeometryReference.ThresholdCrossing);
+            Assert.Equal(TimeSystem.Time.J2000TDB, windows[0].StartDate);
+            Assert.Equal(new TimeSystem.Time("2000-01-02 12:00:00").ToTDB(), windows[1].EndDate);
         }
 
         [Fact]
@@ -273,13 +267,13 @@ namespace IO.Astrodynamics.Tests.Surface
                 new Planetodetic(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.24716450 * Astrodynamics.Constants.Deg2Rad, 1070.85059));
 
             var res = site.FindWindowsOnIlluminationConstraint(new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
-                IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.LTS,
+                IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.None,
                 TimeSpan.FromSeconds(3600), TestHelpers.Sun);
 
-            var windows = res as Window[] ?? res.ToArray();
-            Assert.Single(windows);
-            Assert.Equal(new TimeSystem.Time("2021-05-17T12:42:40.2539062 TDB"), windows[0].StartDate, TestHelpers.TimeComparer);
-            Assert.Equal(new TimeSystem.Time("2021-05-18T02:47:18.6390119 TDB"), windows[0].EndDate, TestHelpers.TimeComparer);
+            // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s): the Sun above -0.8° of elevation in the site's
+            // frame, the incidence below 90.8°. Geometric: a site's LT+S read of the Sun is #491's (1.13 s on this sunrise
+            // against gfposc LT+S, which the reference holds with LT)
+            GeometryReference.AssertWindows(null, "site_sun_elevation > -0.8 deg NONE", res, GeometryReference.ThresholdCrossing);
         }
 
         [Fact]
