@@ -172,12 +172,47 @@ public class GeopotentialCentralTermTests
                           $"{stateName}, {(earthFixed ? "Earth-fixed" : "ICRF")}: acceleration {error:E2}, partials " +
                           $"{partialsError:E2} from the point mass; {fromTheOther:E3} from the point mass of the other GM");
         // Bounds, twice the worst of the twelve cases over Linux, Windows and macOS arm64 (CI of 77b509c, 2026-10-27, the worst on Linux:
-        // acceleration 8.2e-16, partials 5.9e-16, the rounding of the rotation to the Earth-fixed frame and back)
+        // acceleration 8.2e-16, partials 5.9e-16, the rounding of the rotation to the Earth-fixed frame and back, which a
+        // field without harmonics no longer makes since lot 4 of #457: its acceleration is the point mass in the frame of
+        // the state)
         Assert.True(error < 1.7e-15, $"acceleration {error:E2}");
         Assert.True(partialsError < 1.2e-15, $"partials {partialsError:E2}");
         Assert.Equal(samePartials, partials);
         Assert.True(System.Math.Abs(fromTheOther - System.Math.Abs(Egm2008Gm / earth.GM - 1.0)) < 1e-12,
             $"{fromTheOther:E3}");
+    }
+
+    /// <summary>
+    /// A field of degree 0 reads no orientation of its body (lot 4 of #457): at an epoch the Earth orientation file of the
+    /// tests does not cover (it ends on 2026-05-11), its acceleration and its partials are the point mass of the GM of its
+    /// central term, the closed form in the same arithmetic, bit for bit, where a rotation to the Earth-fixed frame would
+    /// have read no orientation.
+    /// </summary>
+    [Theory]
+    [InlineData(GeopotentialCentralTerm.BodyGravitationalParameter)]
+    [InlineData(GeopotentialCentralTerm.ModelGravitationalParameter)]
+    public void DegreeZero_ReadsNoOrientationOfTheBody(GeopotentialCentralTerm centralTerm)
+    {
+        // Arrange
+        var epoch = new TimeSystem.Time(2030, 1, 1, 0, 0, 0);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+            new GeopotentialModelParameters(Model, 0) { CentralTerm = centralTerm });
+        var state = new KeplerianElements(6778137.0, 0.0005, 51.6 * Deg, 20.0 * Deg, 15.0 * Deg, 0.0, earth, epoch,
+            Frames.Frame.ICRF).ToStateVector();
+        double gm = centralTerm == GeopotentialCentralTerm.ModelGravitationalParameter ? Egm2008Gm : earth.GM;
+        var position = state.Position;
+        double r = position.Magnitude();
+        var expectedPartials = new double[9];
+        PointMassPartials.Accumulate(position, gm, expectedPartials);
+
+        // Act
+        var acceleration = earth.Field.ComputeGravitationalAcceleration(state);
+        var partials = new double[9];
+        earth.TryAccumulateGravitationalPositionPartials(state, partials);
+
+        // Assert
+        Assert.Equal(position * (-gm / (r * r * r)), acceleration);
+        Assert.Equal(expectedPartials, partials);
     }
 
     /// <summary>

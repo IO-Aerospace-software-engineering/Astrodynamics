@@ -129,7 +129,8 @@ the model's GM to the whole field, such as the propagators 001 to 003 of the con
 regenerated with GMAT and EGM2008 (decision 17 of
 [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457)). The acceleration and its
 partials (the state transition matrix and the covariance) take the same GM, and a field of degree 0 is the point mass
-of the model's GM. The option changes the field only: `CelestialItem.GM`, the third-body perturbations, the
+of the model's GM, computed in the frame of the state without the body's orientation, so that it holds beyond the
+coverage of the body's orientation data (lot 4 of #457). The option changes the field only: `CelestialItem.GM`, the third-body perturbations, the
 conversions of orbital parameters (a Keplerian orbit given to the propagation) and the two-body orbits of the library
 keep the GM of the kernels. For a body whose harmonics take the kernel GM (any body
 other than the Earth without constants of the model), both choices give the same field, bit for bit.

@@ -813,7 +813,7 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
    - EGM2008 model file: `Data/SolarSystem/EGM2008_to70_TideFree` (degrees 2-70)
    - `GeopotentialGravitationalField` is NOT thread-safe — one instance per thread
    - Legendre functions use geodesy normalization without Condon-Shortley phase
-   - The model file starts at degree 2; degrees 0 and 1 are handled as zeros internally
+   - The model file starts at degree 2; degrees 0 and 1 are handled as zeros internally; a field of degree 0 or 1 is the point mass of its central term in the frame of the state, without the body's orientation
    - The harmonics take the constants of the model (#410): EGM2008's GM 3.986004415e14 m³/s² and radius 6378136.3 m for the Earth by default, the kernel GM and equatorial radius for another body, or those given to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`; the central term takes the GM of the kernels by default, or the GM of the model with `CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter` (GMAT's `.cof` convention; acceleration and partials alike; `CelestialItem.GM` unchanged)
 12. **Force Models (Drag & SRP)**: When working with atmospheric drag or solar radiation pressure:
    - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3

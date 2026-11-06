@@ -30,6 +30,9 @@ public class GeopotentialGravitationalField : GravitationalField
     /// </summary>
     public int MaxDegree { get; }
 
+    // The lowest degree of the harmonics: the models give none at degrees 0 and 1
+    private const int FirstHarmonicDegree = 2;
+
     // Pre-allocated buffers for performance
     private readonly double[][] _P;
     private readonly double[][] _dP;
@@ -256,6 +259,12 @@ public class GeopotentialGravitationalField : GravitationalField
         int degree = PartialsDegree(partialsDegree);
         var observer = (CelestialBody)stateVector.Observer;
         var position = stateVector.Position;
+        if (degree < FirstHarmonicDegree)
+        {
+            // No harmonic: the point mass, which reads no orientation of the body (see ComputeGravitationalAcceleration)
+            PointMassPartials.Accumulate(position, CentralGravitationalParameter(observer), dadr);
+            return true;
+        }
 
         // R maps the frame of the state to the body-fixed frame, as in ComputeGravitationalAcceleration; its columns are
         // the images of the unit vectors
@@ -544,11 +553,25 @@ public class GeopotentialGravitationalField : GravitationalField
     /// Computes the full 3D gravitational acceleration including geopotential harmonics
     /// using the Montenbruck &amp; Gill spherical coordinate gradient formulation.
     /// </summary>
+    /// <remarks>
+    /// A field of degree 0 or 1 has no harmonic: it is the point mass of the GM of its central term, computed in the
+    /// frame of the state, without the orientation of the body.
+    /// </remarks>
     /// <param name="stateVector">The state vector for which to compute the gravitational acceleration.</param>
     /// <returns>The gravitational acceleration as a <see cref="Vector3"/>.</returns>
     public override Vector3 ComputeGravitationalAcceleration(StateVector stateVector)
     {
         var observer = (CelestialBody)stateVector.Observer;
+        if (MaxDegree < FirstHarmonicDegree)
+        {
+            // A field of degree 0 or 1 has no harmonic (the file starts at degree 2): the point mass of the GM of its
+            // central term, in the frame of the state, which reads no orientation of the body, so that it holds beyond
+            // the coverage of the body's orientation data
+            var p = stateVector.Position;
+            double rr = p.Magnitude();
+            return p * (-CentralGravitationalParameter(observer) / (rr * rr * rr));
+        }
+
         var fixedFrame = observer.Frame;
 
         // The position in the body-fixed frame, as OrbitalParameters.ToFrame gives it (the same rotation, and the
