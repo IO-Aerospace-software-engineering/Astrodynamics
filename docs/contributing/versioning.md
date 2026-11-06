@@ -515,7 +515,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
     orbit before the burn.
   - **The fix.** It returns the state after the impulse as a new state (the position, epoch, frame, observer and
     covariance of the given state, its velocity plus the ΔV) and leaves the given state unchanged, for every impulse
-    maneuver.
+    maneuver; so does `ManeuverEventDetector.HandleEvent`, whose state after the impulse is `EventResult.ModifiedState`.
   - **Unchanged, bit for bit:** the state it returns, the ΔV, the fuel and the windows, and every propagation, which
     executes impulses on a state of its own and continues from the returned state.
 
