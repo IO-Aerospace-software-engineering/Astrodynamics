@@ -1,0 +1,35 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/eclipse.yaml; do not edit.
+id: "eclipse_simple_001"
+schema_version: "v1"
+version: "0.2.0"
+category: "eclipse"
+created: "2026-02-04"
+description: >
+  Sun-Earth-spacecraft eclipse of a near-circular LEO orbit near the vernal equinox: the first eclipse of the search
+  window, its penumbra entry, umbra entry, umbra exit and penumbra exit, and its penumbra and umbra durations. The
+  trajectory is the two-body propagation of the elements (in ICRF) with gm_km3_s2; the Earth is the pck00011
+  ellipsoid oriented by IAU_EARTH and the Sun the pck00011 sphere, geometric, without light time (spec.md section
+  12.2). The partial phases last about 9.3 s.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2026-03-20T00:00:00.000 TDB"
+  orbit:
+    type: "keplerian"
+    a_km: 7000.0
+    e: 0.001
+    i_deg: 28.5
+    raan_deg: 45.0
+    argp_deg: 0.0
+    ma_deg: 0.0
+  search_window:
+    start: "2026-03-20T00:00:00.000 TDB"
+    end: "2026-03-20T12:00:00.000 TDB"
+  occulting_body: "Earth"
+  light_source: "Sun"
+  gm_km3_s2: 398600.4415                # the GM of the two-body trajectory (spec.md 12.2)
+  kernels: ["pck00011.tpc"]

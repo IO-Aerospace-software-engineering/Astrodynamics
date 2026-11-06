@@ -1,0 +1,46 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/orbital_events.yaml; do not edit.
+id: "orbital_events_24h_leo_pm_apsides_nodes_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_events"
+created: "2026-11-06"
+description: >
+  One day of a LEO about a point-mass Earth with BODY399_GM of data/gm_de440.tpc: every periapsis and apoapsis (r.v
+  crossing zero from - to + and from + to -) with its radius, and every ascending and descending node on the ICRF
+  equator. The state is GMAT R2026a's conversion, in ICRF with BODY399_GM, of the elements a = 7000 km, e = 0.01, i
+  = 51.6 deg, RAAN 45 deg, argument of periapsis 30 deg, true anomaly 290 deg. The model is that of spec.md section
+  14.2.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  orbit:                                # GMAT R2026a's conversion of the elements of the description (reference-check.json)
+    type: "state_vector"
+    position_km: [5747.757607386299, 1809.091188099717, -3513.868347660337]
+    velocity_km_s: [0.8355396234257241, 5.971098408540634, 4.581671952262691]
+  propagation_window:
+    start: "2026-01-20T06:00:00.000 UTC"
+    end: "2026-01-21T06:00:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 0
+  geopotential_model: "none"
+  perturbation_bodies: []
+  force_model:
+    drag: false
+    srp: false
+  spacecraft:                           # informative (spec.md 14.2)
+    mass_kg: 1000.0
+    sectional_area_m2: 1.0
+    drag_coefficient: 2.2
+    radiation_pressure_coefficient: 1.0
+  step_size_s: 60.0                     # informative (spec.md 14.2)
+  kernels: ["gm_de440.tpc"]
+  events:
+    - type: "periapsis"
+    - type: "apoapsis"
+    - type: "ascending_node"
+    - type: "descending_node"

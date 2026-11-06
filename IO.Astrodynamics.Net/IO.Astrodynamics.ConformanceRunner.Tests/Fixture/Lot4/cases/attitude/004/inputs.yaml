@@ -1,0 +1,39 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/attitude.yaml; do not edit.
+id: "attitude_12h_molniya_lvlh_004"
+schema_version: "v1"
+version: "0.1.0"
+category: "attitude"
+created: "2026-11-06"
+description: >
+  The law of attitude 003 over twelve hours of a Molniya orbit, from its perigee: body -Z to nadir, body +Y toward
+  the velocity, where the flight-path angle reaches 47 deg and the TRIAD's orthogonalization of the velocity matters
+  (a secondary left unorthogonalized would be 0.8 rad off). The attitude body to ICRF at each sample. The state is
+  GMAT R2026a's conversion, in ICRF with gm_km3_s2, of the elements a = 26561.8 km, e = 0.74, i = 63.4 deg, RAAN 120
+  deg, argument of periapsis 270 deg, true anomaly 0 deg; the trajectory is its two-body propagation, the samples
+  every 60 s of the TT seconds from the start, the last at the end of the window. The model is that of spec.md
+  section 14.3.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2025-01-14T07:30:00.000 UTC"
+  orbit:                                # GMAT R2026a's conversion of the elements of the description (reference-check.json)
+    type: "state_vector"
+    position_km: [2677.966091281715, 1546.1244436821858, -6175.078338095704]
+    velocity_km_s: [-5.010701134158896, 8.678788945906211, -1.6433522320114728e-15]
+  gm_km3_s2: 398600.4415                # the GM of the two-body trajectory (spec.md 14.3)
+  propagation_window:
+    start: "2025-01-14T07:30:00.000 UTC"
+    end: "2025-01-14T19:30:00.000 UTC"
+  sample_step_s: 60.0
+  attitude:
+    primary:
+      body_vector: [0.0, 0.0, -1.0]
+      direction: "nadir"
+    secondary:
+      body_vector: [0.0, 1.0, 0.0]
+      direction: "velocity"
+  kernels: []

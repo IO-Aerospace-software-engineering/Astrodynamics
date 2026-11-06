@@ -33,7 +33,16 @@ public enum MetricKind
     /// </summary>
     RotationAngle,
 
-    /// <summary>No delta: the output equals the golden (a boolean, the samples of a grid) or fails; no key.</summary>
+    /// <summary>
+    /// A direction, a unit vector: d = θ = atan2(‖c × g‖, c·g), the angle between the two directions, in rad; no relative
+    /// delta.
+    /// </summary>
+    DirectionAngle,
+
+    /// <summary>
+    /// No delta: the output equals the golden (a boolean, a string, the samples of a grid, the number of elements of an
+    /// indexed array) or fails; no key.
+    /// </summary>
     Exact
 }
 
@@ -55,9 +64,13 @@ public sealed record Metric(MetricKind Kind, string Key, string Unit, string Tim
 /// The outputs of the conversion categories (spec.md section 11): <c>orbital_elements</c>, <c>time_conversion</c> and
 /// <c>frame_transformation</c>, and of the earlier categories (spec.md section 12): <c>propagator</c>, <c>eclipse</c>,
 /// <c>tracking_data</c>, <c>pointing_triad</c> and <c>geosynchronous</c>, and of the maneuver categories (spec.md section
-/// 13): <c>maneuver</c> and <c>lambert</c>, each with its kind and tolerance key; and the
-/// final state of the <c>stm</c> category, the extension of the suite tested by the fixture of the runner, compared as
-/// the propagator's.
+/// 13): <c>maneuver</c> and <c>lambert</c>, and of the geometry and event categories (spec.md section 14):
+/// <c>ground_station</c>, <c>orbital_events</c> and <c>attitude</c>, with the second branch of <c>eclipse</c>, each with
+/// its kind and tolerance key; and the final state of the <c>stm</c> category, the extension of the suite tested by the
+/// fixture of the runner, compared as the propagator's. The arrays of the geometry and event categories are indexed
+/// (<see cref="IsIndexed"/>): the array is the number of its elements, an exact output, and each element gives its
+/// outputs, named <c>&lt;array&gt;[k].&lt;field&gt;</c> or <c>&lt;array&gt;[k]</c>, k from 0, held as
+/// <c>&lt;array&gt;[].&lt;field&gt;</c> or <c>&lt;array&gt;[]</c>.
 /// </summary>
 public static class MetricTable
 {
@@ -83,6 +96,75 @@ public static class MetricTable
         FormerKeys: ["doppler (km/s)", "velocity_km_s"]);
     private static readonly Metric Exact = new(MetricKind.Exact, null, "-");
     private static readonly Metric LambertVelocity = new(MetricKind.Vector3, "lambert_velocity_km_s", "km/s");
+    private static readonly Metric StationAngle = new(MetricKind.Angle, "station_angle_deg", "deg");
+    private static readonly Metric EventEpoch = new(MetricKind.Seconds, "event_epoch_s", "s");
+    private static readonly Metric EventRadius = new(MetricKind.Scalar, "event_radius_km", "km");
+    private static readonly Metric AttitudeAngle = new(MetricKind.RotationAngle, "attitude_angle_rad", "rad");
+
+    /// <summary>The lists of an <c>orbital_events</c> golden (spec.md section 14.2), named <c>events.&lt;list&gt;</c>.</summary>
+    public static readonly IReadOnlyList<string> EventLists =
+        ["periapsis", "apoapsis", "ascending_node", "descending_node", "altitude_up", "altitude_down"];
+
+    // The apsides, whose events carry their radius
+    private static readonly HashSet<string> Apsides = ["periapsis", "apoapsis"];
+
+    /// <summary>The name of a list of an <c>orbital_events</c> golden: <c>events.&lt;list&gt;</c>.</summary>
+    public static string EventList(string list) => $"events.{list}";
+
+    /// <summary>
+    /// The arrays of each category whose elements are compared one by one, k from 0 (spec.md sections 12.2 and 14): the
+    /// array itself is its number of elements, an exact output; an element that is an object gives one output per
+    /// field, <c>&lt;array&gt;[k].&lt;field&gt;</c>, any other element one output, <c>&lt;array&gt;[k]</c>.
+    /// </summary>
+    private static readonly Dictionary<string, HashSet<string>> IndexedArrays = new()
+    {
+        ["ground_station"] = ["passes", "samples"],
+        ["eclipse"] = ["events"],
+        ["orbital_events"] = EventLists.Select(EventList).ToHashSet(),
+        ["attitude"] = ["attitude_quaternions", "pointing_directions"]
+    };
+
+    /// <summary>Whether <paramref name="array"/> is an indexed array of the category (<see cref="IndexedArrays"/>).</summary>
+    public static bool IsIndexed(string category, string array)
+    {
+        return category != null && array != null && IndexedArrays.TryGetValue(category, out var arrays) && arrays.Contains(array);
+    }
+
+    /// <summary>Whether an object of a golden holds indexed arrays of the category, <c>&lt;object&gt;.&lt;array&gt;</c>.</summary>
+    public static bool HoldsIndexed(string category, string name)
+    {
+        return category != null && name != null && IndexedArrays.TryGetValue(category, out var arrays) &&
+               arrays.Any(array => array.StartsWith(name + ".", System.StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// The indexed array of an output of an element, <c>&lt;array&gt;[k].&lt;field&gt;</c> or <c>&lt;array&gt;[k]</c>, when
+    /// it is one of the category's; null otherwise.
+    /// </summary>
+    public static string IndexedArrayOf(string category, string output)
+    {
+        if (output == null)
+        {
+            return null;
+        }
+
+        int bracket = output.LastIndexOf('[');
+        return bracket > 0 && IsIndexed(category, output[..bracket]) ? output[..bracket] : null;
+    }
+
+    // The outputs of the lists of an orbital_events golden
+    private static IEnumerable<KeyValuePair<string, Metric>> EventOutputs()
+    {
+        foreach (var list in EventLists)
+        {
+            yield return new KeyValuePair<string, Metric>(EventList(list), Exact);
+            yield return new KeyValuePair<string, Metric>($"{EventList(list)}[].elapsed_s", EventEpoch);
+            if (Apsides.Contains(list))
+            {
+                yield return new KeyValuePair<string, Metric>($"{EventList(list)}[].radius_km", EventRadius);
+            }
+        }
+    }
 
     /// <summary>The array of the burns of a <c>maneuver</c> golden (spec.md section 13.1).</summary>
     public const string Burns = "burns";
@@ -103,8 +185,17 @@ public static class MetricTable
     public static string Generic(string output)
     {
         var match = Labelled.Match(output);
-        return match.Success ? $"{match.Groups["array"].Value}[].{match.Groups["field"].Value}" : output;
+        if (match.Success)
+        {
+            return $"{match.Groups["array"].Value}[].{match.Groups["field"].Value}";
+        }
+
+        match = Element.Match(output);
+        return match.Success ? $"{match.Groups["array"].Value}[]" : output;
     }
+
+    // An element of an indexed array that is itself the output, <array>[<k>] (attitude_quaternions[k])
+    private static readonly Regex Element = new(@"^(?<array>[^\[\]]+)\[\d+\]$", RegexOptions.CultureInvariant);
 
     /// <summary>The final state of a propagation (spec.md section 12.1).</summary>
     private static Dictionary<string, Metric> FinalState() => new()
@@ -182,7 +273,14 @@ public static class MetricTable
             ["umbra_exit"] = EclipseInstant,
             ["penumbra_exit"] = EclipseInstant,
             ["penumbra_duration_s"] = new(MetricKind.Scalar, "eclipse_duration_s", "s", FormerKeys: ["penumbra_duration_s"]),
-            ["umbra_duration_s"] = new(MetricKind.Scalar, "eclipse_duration_s", "s", FormerKeys: ["umbra_duration_s"])
+            ["umbra_duration_s"] = new(MetricKind.Scalar, "eclipse_duration_s", "s", FormerKeys: ["umbra_duration_s"]),
+            // The second branch: every event of the window (spec.md section 12.2)
+            ["events"] = Exact,
+            ["events[].body"] = Exact,
+            ["events[].type"] = Exact,
+            ["events[].start"] = EclipseInstant,
+            ["events[].stop"] = EclipseInstant,
+            ["events[].duration_s"] = new(MetricKind.Scalar, "eclipse_duration_s", "s")
         },
         ["tracking_data"] = new Dictionary<string, Metric>(
             Statistics(TrackingRangeBlock, Range).Concat(Statistics(TrackingRangeRateBlock, RangeRate))
@@ -204,6 +302,31 @@ public static class MetricTable
         {
             ["v1_km_s"] = LambertVelocity,
             ["v2_km_s"] = LambertVelocity
+        },
+        // The passes and the samples of a station (spec.md section 14.1)
+        ["ground_station"] = new Dictionary<string, Metric>
+        {
+            ["passes"] = Exact,
+            ["passes[].rise"] = new(MetricKind.Instant, "station_event_time_s", "s"),
+            ["passes[].set"] = new(MetricKind.Instant, "station_event_time_s", "s"),
+            ["passes[].duration_s"] = new(MetricKind.Scalar, "station_duration_s", "s"),
+            ["passes[].culmination"] = new(MetricKind.Instant, "station_culmination_time_s", "s"),
+            ["passes[].max_elevation_deg"] = StationAngle,
+            ["samples"] = Exact,
+            ["samples[].epoch"] = Exact,
+            ["samples[].azimuth_deg"] = new(MetricKind.WrappedAngle, "station_angle_deg", "deg"),
+            ["samples[].elevation_deg"] = StationAngle,
+            ["samples[].range_km"] = new(MetricKind.Scalar, "tracking_range_km", "km"),
+            ["samples[].range_rate_km_s"] = new(MetricKind.Scalar, "tracking_range_rate_km_s", "km/s")
+        },
+        ["orbital_events"] = new Dictionary<string, Metric>(EventOutputs()),
+        // The attitudes or the pointing directions at the samples (spec.md section 14.3)
+        ["attitude"] = new Dictionary<string, Metric>
+        {
+            ["attitude_quaternions"] = Exact,
+            ["attitude_quaternions[]"] = AttitudeAngle,
+            ["pointing_directions"] = Exact,
+            ["pointing_directions[]"] = new(MetricKind.DirectionAngle, "attitude_angle_rad", "rad")
         },
         // The lot-1 keys of their quantities (spec.md section 12.5)
         ["geosynchronous"] = new Dictionary<string, Metric>

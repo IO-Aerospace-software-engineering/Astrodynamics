@@ -14,7 +14,9 @@ public static class InputParser
             Epoch = GetString(inputs, "epoch"),
             OccultingBody = GetString(inputs, "occulting_body"),
             LightSource = GetString(inputs, "light_source"),
-            GmKm3S2 = OptionalDouble(inputs, "gm_km3_s2")
+            GmKm3S2 = OptionalDouble(inputs, "gm_km3_s2"),
+            OccultingBodies = OptionalStrings(inputs, "occulting_bodies"),
+            LightTime = GetString(inputs, "light_time")
         };
 
         var orbit = inputs["orbit"] as Dictionary<object, object>;
@@ -128,8 +130,14 @@ public static class InputParser
         };
         result.StepSizeS = sw.ContainsKey("step_size_s") ? ToDouble(sw["step_size_s"]) : 60.0;
 
-        var loc = inputs["location"] as Dictionary<object, object>;
-        result.Location = new LocationInput
+        result.Location = ParseLocation(inputs["location"] as Dictionary<object, object>);
+        return result;
+    }
+
+    // The station of tracking_data (spec.md section 12.3) and ground_station (14.1)
+    private static LocationInput ParseLocation(Dictionary<object, object> loc)
+    {
+        var location = new LocationInput
         {
             ReferenceFrame = loc["reference_frame"]?.ToString(),
             LatitudeDeg = ToDouble(loc["latitude_deg"]),
@@ -138,10 +146,144 @@ public static class InputParser
         };
         if (loc.TryGetValue("ellipsoid", out var ellipsoidObj) && ellipsoidObj is Dictionary<object, object> ellipsoid)
         {
-            result.Location.Ellipsoid = ParseEllipsoid(ellipsoid);
+            location.Ellipsoid = ParseEllipsoid(ellipsoid);
+        }
+
+        return location;
+    }
+
+    /// <summary>The inputs of a <c>ground_station</c> case (spec.md section 14.1).</summary>
+    /// <exception cref="ArgumentException">A field is missing.</exception>
+    public static GroundStationInputs ParseGroundStationInputs(Dictionary<string, object> inputs)
+    {
+        var map = inputs.ToDictionary(kv => (object)kv.Key, kv => kv.Value);
+        const string where = "a ground_station case";
+        var window = Mapping(Required(map, "search_window", where), where);
+        return new GroundStationInputs
+        {
+            Epoch = Required(map, "epoch", where).ToString(),
+            Orbit = ParseOrbit(Mapping(Required(map, "orbit", where), where)),
+            GmKm3S2 = OptionalDouble(inputs, "gm_km3_s2"),
+            SearchWindow = new SearchWindow
+            {
+                Start = Required(window, "start", where).ToString(),
+                End = Required(window, "end", where).ToString()
+            },
+            StepSizeS = window.TryGetValue("step_size_s", out var step) && step != null ? ToDouble(step) : DefaultStationStepS,
+            Location = ParseLocation(Mapping(Required(map, "location", where), where)),
+            ElevationMaskDeg = ToDouble(Required(map, "elevation_mask_deg", where)),
+            Aberration = Required(map, "aberration", where).ToString(),
+            OccultingBodies = OptionalStrings(inputs, "occulting_bodies") ?? new List<string>(),
+            SampleEpochs = OptionalStrings(inputs, "sample_epochs") ?? new List<string>()
+        };
+    }
+
+    // The search step of a station case that gives none: that of the suite's cases (spec.md section 14.1)
+    private const double DefaultStationStepS = 10.0;
+
+    /// <summary>
+    /// The events of an <c>orbital_events</c> case (spec.md section 14.2); the propagation is read by
+    /// <see cref="ParsePropagatorInputs"/>.
+    /// </summary>
+    /// <exception cref="ArgumentException">No event, an event that is not a mapping, an unknown type, an altitude event
+    /// without its value or with an unknown direction, or a type listed twice.</exception>
+    public static List<OrbitalEventRequest> ParseOrbitalEvents(Dictionary<string, object> inputs)
+    {
+        var events = inputs.TryGetValue("events", out var e) && e is List<object> list && list.Count > 0
+            ? list
+            : throw new ArgumentException("An orbital_events case lists one event or more (spec.md section 14.2).");
+        var result = events.ConvertAll(item =>
+        {
+            var map = item as Dictionary<object, object> ?? throw new ArgumentException($"An event is {item}, not a mapping.");
+            var type = Required(map, "type", "an event").ToString();
+            switch (type)
+            {
+                case OrbitalEventRequest.Periapsis:
+                case OrbitalEventRequest.Apoapsis:
+                case OrbitalEventRequest.AscendingNode:
+                case OrbitalEventRequest.DescendingNode:
+                    return new OrbitalEventRequest { Type = type };
+                case OrbitalEventRequest.Altitude:
+                    var direction = Required(map, "direction", "the altitude event").ToString();
+                    if (direction is not (OrbitalEventRequest.Up or OrbitalEventRequest.Down or OrbitalEventRequest.Any))
+                    {
+                        throw new ArgumentException($"The direction '{direction}' of the altitude event is not up, down or any (spec.md section 14.2).");
+                    }
+
+                    return new OrbitalEventRequest
+                    {
+                        Type = type, ValueKm = ToDouble(Required(map, "value_km", "the altitude event")), Direction = direction
+                    };
+                default:
+                    throw new ArgumentException($"The event type '{type}' is not an event of spec.md section 14.2.");
+            }
+        });
+
+        var duplicate = result.GroupBy(r => r.Type).FirstOrDefault(g => g.Count() > 1);
+        if (duplicate != null)
+        {
+            throw new ArgumentException($"The event type '{duplicate.Key}' is listed twice: each type at most once (spec.md section 14.2).");
         }
 
         return result;
+    }
+
+    /// <summary>The inputs of an <c>attitude</c> case (spec.md section 14.3).</summary>
+    /// <exception cref="ArgumentException">A field is missing, the law is neither two axes nor one, or a direction is
+    /// unknown.</exception>
+    public static AttitudeInputs ParseAttitudeInputs(Dictionary<string, object> inputs)
+    {
+        var map = inputs.ToDictionary(kv => (object)kv.Key, kv => kv.Value);
+        const string where = "an attitude case";
+        var window = Mapping(Required(map, "propagation_window", where), where);
+        var law = Mapping(Required(map, "attitude", where), where);
+        var result = new AttitudeInputs
+        {
+            Epoch = Required(map, "epoch", where).ToString(),
+            Orbit = ParseOrbit(Mapping(Required(map, "orbit", where), where)),
+            GmKm3S2 = ToDouble(Required(map, "gm_km3_s2", where)),
+            PropagationWindow = new SearchWindow
+            {
+                Start = Required(window, "start", where).ToString(),
+                End = Required(window, "end", where).ToString()
+            },
+            SampleStepS = ToDouble(Required(map, "sample_step_s", where))
+        };
+
+        if (law.ContainsKey("pointing"))
+        {
+            result.Pointing = ParseAttitudeAxis(law["pointing"], "pointing");
+        }
+        else if (law.ContainsKey("primary") && law.ContainsKey("secondary"))
+        {
+            result.Primary = ParseAttitudeAxis(law["primary"], "primary");
+            result.Secondary = ParseAttitudeAxis(law["secondary"], "secondary");
+        }
+        else
+        {
+            throw new ArgumentException("The attitude of an attitude case is {primary, secondary} or {pointing} (spec.md section 14.3).");
+        }
+
+        return result;
+    }
+
+    private static AttitudeAxis ParseAttitudeAxis(object value, string name)
+    {
+        string where = $"the {name} axis";
+        var map = Mapping(value, where);
+        var direction = Required(map, "direction", where).ToString();
+        if (direction is not (AttitudeAxis.Nadir or AttitudeAxis.Velocity or AttitudeAxis.OrbitNormal))
+        {
+            throw new ArgumentException($"The direction '{direction}' of {where} is not nadir, velocity or orbit_normal (spec.md section 14.3).");
+        }
+
+        return new AttitudeAxis { BodyVector = ParseVec3(Required(map, "body_vector", where)), Direction = direction };
+    }
+
+    // A list of strings of the inputs, or null when the case gives none
+    private static List<string> OptionalStrings(Dictionary<string, object> inputs, string key)
+    {
+        return inputs.TryGetValue(key, out var value) && value is List<object> list ? list.ConvertAll(x => x.ToString()) : null;
     }
 
     public static GeosynchronousInputs ParseGeosynchronousInputs(Dictionary<string, object> inputs)

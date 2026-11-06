@@ -1,0 +1,38 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/eclipse.yaml; do not edit.
+id: "eclipse_1h_leo_total_moon_006"
+schema_version: "v1"
+version: "0.1.0"
+category: "eclipse"
+created: "2026-11-06"
+description: >
+  A polar LEO through the Moon's umbra during the total solar eclipse of 2026-08-12, over one hour: partial, total
+  (about 17 s) and partial, the Moon the only occulting body. The orbit is designed through the shadow axis at the
+  greatest eclipse, 17:46:31 UTC (a = 6878 km, circular, i = 97.4 deg, RAAN 200.53 deg, M 359.49 deg at the epoch,
+  rounded to 0.01 deg). The trajectory is the two-body propagation of the elements (in ICRF) with gm_km3_s2 over TT
+  seconds; the Moon and the Sun are the pck00011 spheres, geometric (spec.md section 12.2). The spacecraft enters
+  the Earth's shadow 43 minutes after the epoch, which the case does not report: the Moon is its only occulting
+  body.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-08-12T17:30:00.000 UTC"
+  orbit:                                # circular, M the true anomaly
+    type: "keplerian"
+    a_km: 6878.0
+    e: 0.0
+    i_deg: 97.4
+    raan_deg: 200.53
+    argp_deg: 0.0
+    ma_deg: 359.49
+  search_window:
+    start: "2026-08-12T17:30:00.000 UTC"
+    end: "2026-08-12T18:30:00.000 UTC"
+  occulting_bodies: ["Moon"]
+  light_source: "Sun"
+  light_time: "none"
+  gm_km3_s2: 398600.4415                # the GM of the two-body trajectory (spec.md 12.2)
+  kernels: ["pck00011.tpc"]

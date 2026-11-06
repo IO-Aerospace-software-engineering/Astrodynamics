@@ -157,6 +157,24 @@ A major version, because it breaks the API: members deprecated for removal in 11
     site, 20.7″) and their velocities by up to 3.5 km/s (the Sun from a LEO spacecraft); the managed searches with a
     correction move with them (the sunrise of `SiteTests` with `LT+S`, 1.13 s, now within 2.4e-7 s of `gfposc`).
 
+- **A geopotential of degree 0 read the orientation of its body, and failed where no orientation data covers the
+  epoch.** A field without harmonics (degree 0 or 1; the models start at degree 2) rotated the position to the
+  body-fixed frame and the acceleration back, which a point mass does not need: beyond the coverage of the Earth's binary
+  PCK, SPICE reported `FRAMEDATANOTFOUND` and the propagation failed with NaN steps ("100 consecutive rejections").
+  `GeopotentialGravitationalField` now gives such a field the point mass of the GM of its central term in the frame of
+  the state, its acceleration and its partials alike, without the orientation. The runner of the conformance suite
+  takes a case's GM as the central term of a field of degree 0 (decision 19 of #457), and the two-body cases of lot 4
+  after 2026-05-11 (`eclipse` 006, `attitude` 003) failed with the runner's Earth orientation file. A field of degree 0
+  moves by the rounding of the rotation it no longer makes (8.2e-16 of the acceleration at most, measured on the
+  twelve cases of `GeopotentialCentralTermTests`); every other field is unchanged, bit for bit.
+- **Conformance runner: the geometry and event categories of lot 4** (design of lot 4 of
+  [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), approved by S. Guillet,
+  2026-11-06). New solvers for `ground_station`, `orbital_events` and `attitude`, and the second branch of `eclipse`
+  (every eclipse of a window by the Earth and the Moon, light time `none` or `cn`), on the library's window searches
+  (#590); a shared two-body trajectory; the arrays of a golden compared element by element, their count exact, so that
+  a pass or an event the library does not find FAILS; the direction angle of a pointing direction. The 22 cases of the
+  suite's lot-4 branch (4cd11f9) pass with at most 0.137 of their tolerance, and the 151 cases of that branch pass. See
+  [Validation](../guides/validation.md#lot-4-geometry-and-events).
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
   - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared

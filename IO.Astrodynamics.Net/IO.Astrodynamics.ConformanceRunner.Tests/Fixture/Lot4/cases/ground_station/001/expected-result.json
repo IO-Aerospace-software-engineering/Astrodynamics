@@ -1,0 +1,162 @@
+{
+  "id": "ground_station_24h_leo_mask10_geo_001",
+  "category": "ground_station",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-06",
+    "method": "GMAT R2026a ContactLocator: the two-body orbit of the state (EarthICRF, Earth.Mu = gm_km3_s2, PrinceDormand78 at 1e-13, MaxStep 60 s) over the TT seconds of the window; a GroundStation on the Earth of the case's ellipsoid, oriented by ITRF93 of data/'s bpc, HorizonReference Ellipsoid, the geodetic coordinates of the case, MinimumElevationAngle 10.0 deg; no light time; StepSize 10 s; SiteViewMaxElevationRangeReport. The edges and the culmination of each pass as GMAT prints them (UTC, to the millisecond), its duration and maximum elevation at its 12 decimals. The samples: CSPICE azlcpo (ELLIPSOID) on a type-5 SPK of the two-body motion of the state over TT seconds, at the sample epochs.",
+    "reference_frame": "EarthICRF",
+    "script": "ground_station_24h_leo_mask10_geo_001.script",
+    "log": "ground_station_24h_leo_mask10_geo_001.log"
+  },
+  "outputs": {
+    "passes": [
+      {
+        "rise": "2026-01-20T20:14:29.167 UTC",
+        "set": "2026-01-20T20:17:01.228 UTC",
+        "duration_s": 152.061417151708,
+        "culmination": "2026-01-20T20:15:45.092 UTC",
+        "max_elevation_deg": 11.347070930201
+      },
+      {
+        "rise": "2026-01-20T21:49:56.309 UTC",
+        "set": "2026-01-20T21:57:36.921 UTC",
+        "duration_s": 460.611393442377,
+        "culmination": "2026-01-20T21:53:45.357 UTC",
+        "max_elevation_deg": 70.570641730399
+      },
+      {
+        "rise": "2026-01-20T23:29:05.735 UTC",
+        "set": "2026-01-20T23:36:10.201 UTC",
+        "duration_s": 424.465847003739,
+        "culmination": "2026-01-20T23:32:37.224 UTC",
+        "max_elevation_deg": 32.741918853702
+      },
+      {
+        "rise": "2026-01-21T01:08:45.126 UTC",
+        "set": "2026-01-21T01:15:16.549 UTC",
+        "duration_s": 391.422342555597,
+        "culmination": "2026-01-21T01:12:00.583 UTC",
+        "max_elevation_deg": 24.808151058661
+      },
+      {
+        "rise": "2026-01-21T02:47:29.478 UTC",
+        "set": "2026-01-21T02:55:02.320 UTC",
+        "duration_s": 452.841804537456,
+        "culmination": "2026-01-21T02:51:16.034 UTC",
+        "max_elevation_deg": 46.910789199832
+      },
+      {
+        "rise": "2026-01-21T04:26:14.331 UTC",
+        "set": "2026-01-21T04:33:25.056 UTC",
+        "duration_s": 430.724732915405,
+        "culmination": "2026-01-21T04:29:50.093 UTC",
+        "max_elevation_deg": 36.0874708329
+      }
+    ],
+    "samples": [
+      {
+        "epoch": "2026-01-20T21:51:00.000 UTC",
+        "azimuth_deg": 226.10841846830672,
+        "elevation_deg": 17.876852287966464,
+        "range_km": 1277.9226134397393,
+        "range_rate_km_s": -6.382984764397411
+      },
+      {
+        "epoch": "2026-01-20T21:52:00.000 UTC",
+        "azimuth_deg": 221.62894643743212,
+        "elevation_deg": 30.039283385403113,
+        "range_km": 911.5097890992521,
+        "range_rate_km_s": -5.714905490973968
+      },
+      {
+        "epoch": "2026-01-20T21:53:00.000 UTC",
+        "azimuth_deg": 206.62294918743103,
+        "elevation_deg": 52.65572324711997,
+        "range_km": 619.4390730307289,
+        "range_rate_km_s": -3.617480480708223
+      },
+      {
+        "epoch": "2026-01-20T21:54:00.000 UTC",
+        "azimuth_deg": 113.56181021828283,
+        "elevation_deg": 67.55595715312522,
+        "range_km": 541.6574860121029,
+        "range_rate_km_s": 1.3587829298106333
+      },
+      {
+        "epoch": "2026-01-20T21:55:00.000 UTC",
+        "azimuth_deg": 72.8840646734349,
+        "elevation_deg": 39.96832753738952,
+        "range_km": 748.4594687517466,
+        "range_rate_km_s": 4.955512376386282
+      },
+      {
+        "epoch": "2026-01-20T21:56:00.000 UTC",
+        "azimuth_deg": 65.26722044069783,
+        "elevation_deg": 23.461160520998924,
+        "range_km": 1087.618125559739,
+        "range_rate_km_s": 6.12900405733762
+      },
+      {
+        "epoch": "2026-01-20T21:57:00.000 UTC",
+        "azimuth_deg": 62.31847582293839,
+        "elevation_deg": 14.082439880871876,
+        "range_km": 1469.3233642060757,
+        "range_rate_km_s": 6.530168975310943
+      },
+      {
+        "epoch": "2026-01-21T02:48:00.000 UTC",
+        "azimuth_deg": 310.9675310388312,
+        "elevation_deg": 13.161920566878546,
+        "range_km": 1527.3169185815887,
+        "range_rate_km_s": -6.235039167689574
+      },
+      {
+        "epoch": "2026-01-21T02:49:00.000 UTC",
+        "azimuth_deg": 318.3278138341212,
+        "elevation_deg": 21.28706276312743,
+        "range_km": 1167.458820597611,
+        "range_rate_km_s": -5.682330439330512
+      },
+      {
+        "epoch": "2026-01-21T02:50:00.000 UTC",
+        "azimuth_deg": 333.4550858634832,
+        "elevation_deg": 33.277134176461956,
+        "range_km": 861.1930222856406,
+        "range_rate_km_s": -4.316877012508066
+      },
+      {
+        "epoch": "2026-01-21T02:51:00.000 UTC",
+        "azimuth_deg": 9.63917163386085,
+        "elevation_deg": 45.97533549231656,
+        "range_km": 686.5414833552218,
+        "range_rate_km_s": -1.1448398308107688
+      },
+      {
+        "epoch": "2026-01-21T02:52:00.000 UTC",
+        "azimuth_deg": 58.67046201238219,
+        "elevation_deg": 40.91572275695377,
+        "range_km": 743.7496952492959,
+        "range_rate_km_s": 2.8898684234415715
+      },
+      {
+        "epoch": "2026-01-21T02:53:00.000 UTC",
+        "azimuth_deg": 82.82566064862169,
+        "elevation_deg": 27.126429007211446,
+        "range_km": 993.404362914545,
+        "range_rate_km_s": 5.110156377567052
+      },
+      {
+        "epoch": "2026-01-21T02:54:00.000 UTC",
+        "azimuth_deg": 93.34611432534301,
+        "elevation_deg": 17.100133025069763,
+        "range_km": 1330.6808171325918,
+        "range_rate_km_s": 5.999600367974292
+      }
+    ]
+  }
+}

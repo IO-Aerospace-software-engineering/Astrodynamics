@@ -1,0 +1,24 @@
+{
+  "id": "eclipse_simple_001",
+  "category": "eclipse",
+  "case_version": "0.2.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-06",
+    "method": "GMAT R2026a EclipseLocator: the two-body orbit of the elements (EarthICRF, Earth.Mu = gm_km3_s2, PrinceDormand78 fixed step 30 s), the kernels of data/ (data/'s bpc loaded last), the Earth oriented by IAU_EARTH (Earth.SpiceFrameId), no light time, no stellar aberration, StepSize 1 s, over the search window. The first event of the window: its epochs as GMAT prints them (UTC, to the millisecond), its durations unrounded (the penumbra duration is the sum of its two partial intervals).",
+    "reference_frame": "EarthICRF",
+    "script": "eclipse_simple_001.script",
+    "log": "eclipse_simple_001.log"
+  },
+  "outputs": {
+    "penumbra_entry": "2026-03-20T00:18:37.494 UTC",
+    "umbra_entry": "2026-03-20T00:18:46.864 UTC",
+    "umbra_exit": "2026-03-20T00:53:10.862 UTC",
+    "penumbra_exit": "2026-03-20T00:53:20.204 UTC",
+    "penumbra_duration_s": 18.7118613277,
+    "umbra_duration_s": 2063.9985865
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "id": "orbital_events_24h_leo_pm_apsides_nodes_001",
+  "category": "orbital_events",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-11-06",
+    "gravity_model": "point-mass Earth, GM 398600.4355070226 km^3/s^2 (BODY399_GM of data/gm_de440.tpc)",
+    "perturbations": "None (two-body).",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: point-mass Earth with BODY399_GM of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; a While loop of Propagate commands stopping at Apoapsis, Periapsis, Z = 0 or the end of the window, the TT seconds of the window; each stop reported in ICRF at 17 digits with its A1 MJD.",
+    "reference_frame": "EarthICRF",
+    "script": "orbital_events_24h_leo_pm_apsides_nodes_001.script",
+    "log": "orbital_events_24h_leo_pm_apsides_nodes_001.log"
+  },
+  "outputs": {
+    "events": {
+      "periapsis": [
+        {
+          "elapsed_s": 1115.9336850912,
+          "radius_km": 6930.000000000008
+        },
+        {
+          "elapsed_s": 6944.4503691264,
+          "radius_km": 6930.000000000004
+        },
+        {
+          "elapsed_s": 12772.9670529024,
+          "radius_km": 6929.999999999977
+        },
+        {
+          "elapsed_s": 18601.4837360736,
+          "radius_km": 6929.99999999995
+        },
+        {
+          "elapsed_s": 24430.0004204544,
+          "radius_km": 6929.999999999958
+        },
+        {
+          "elapsed_s": 30258.5171035392,
+          "radius_km": 6929.999999999942
+        },
+        {
+          "elapsed_s": 36087.033787056,
+          "radius_km": 6929.999999999919
+        },
+        {
+          "elapsed_s": 41915.5504707456,
+          "radius_km": 6929.999999999914
+        },
+        {
+          "elapsed_s": 47744.0671539168,
+          "radius_km": 6929.999999999963
+        },
+        {
+          "elapsed_s": 53572.583837952,
+          "radius_km": 6929.99999999994
+        },
+        {
+          "elapsed_s": 59401.1005211232,
+          "radius_km": 6929.9999999999545
+        },
+        {
+          "elapsed_s": 65229.6172048992,
+          "radius_km": 6929.999999999965
+        },
+        {
+          "elapsed_s": 71058.1338883296,
+          "radius_km": 6930.000000000002
+        },
+        {
+          "elapsed_s": 76886.6505724512,
+          "radius_km": 6929.9999999999845
+        },
+        {
+          "elapsed_s": 82715.1672561408,
+          "radius_km": 6929.999999999977
+        }
+      ],
+      "apoapsis": [
+        {
+          "elapsed_s": 4030.1920270656,
+          "radius_km": 7069.999999999999
+        },
+        {
+          "elapsed_s": 9858.7087108416,
+          "radius_km": 7069.999999999983
+        },
+        {
+          "elapsed_s": 15687.2253949632,
+          "radius_km": 7069.9999999999445
+        },
+        {
+          "elapsed_s": 21515.7420783936,
+          "radius_km": 7069.999999999931
+        },
+        {
+          "elapsed_s": 27344.2587615648,
+          "radius_km": 7069.999999999931
+        },
+        {
+          "elapsed_s": 33172.7754449952,
+          "radius_km": 7069.999999999893
+        },
+        {
+          "elapsed_s": 39001.2921287712,
+          "radius_km": 7069.99999999989
+        },
+        {
+          "elapsed_s": 44829.808811856,
+          "radius_km": 7069.999999999898
+        },
+        {
+          "elapsed_s": 50658.3254959776,
+          "radius_km": 7069.9999999999045
+        },
+        {
+          "elapsed_s": 56486.8421800128,
+          "radius_km": 7069.999999999888
+        },
+        {
+          "elapsed_s": 62315.3588637888,
+          "radius_km": 7069.999999999931
+        },
+        {
+          "elapsed_s": 68143.8755472192,
+          "radius_km": 7069.99999999996
+        },
+        {
+          "elapsed_s": 73972.3922303904,
+          "radius_km": 7069.999999999961
+        },
+        {
+          "elapsed_s": 79800.9089141664,
+          "radius_km": 7069.999999999989
+        },
+        {
+          "elapsed_s": 85629.4255985472,
+          "radius_km": 7069.999999999955
+        }
+      ],
+      "ascending_node": [
+        {
+          "elapsed_s": 639.440389152
+        },
+        {
+          "elapsed_s": 6467.9570731872
+        },
+        {
+          "elapsed_s": 12296.4737569632
+        },
+        {
+          "elapsed_s": 18124.9904409984
+        },
+        {
+          "elapsed_s": 23953.5071245152
+        },
+        {
+          "elapsed_s": 29782.0238076
+        },
+        {
+          "elapsed_s": 35610.5404910304
+        },
+        {
+          "elapsed_s": 41439.0571748064
+        },
+        {
+          "elapsed_s": 47267.5738579776
+        },
+        {
+          "elapsed_s": 53096.0905420128
+        },
+        {
+          "elapsed_s": 58924.6072261344
+        },
+        {
+          "elapsed_s": 64753.1239099104
+        },
+        {
+          "elapsed_s": 70581.6405933408
+        },
+        {
+          "elapsed_s": 76410.1572764256
+        },
+        {
+          "elapsed_s": 82238.6739602016
+        }
+      ],
+      "descending_node": [
+        {
+          "elapsed_s": 3535.1453679264
+        },
+        {
+          "elapsed_s": 9363.662052048
+        },
+        {
+          "elapsed_s": 15192.178735824
+        },
+        {
+          "elapsed_s": 21020.6954189088
+        },
+        {
+          "elapsed_s": 26849.2121023392
+        },
+        {
+          "elapsed_s": 32677.7287864608
+        },
+        {
+          "elapsed_s": 38506.2454698912
+        },
+        {
+          "elapsed_s": 44334.7621536672
+        },
+        {
+          "elapsed_s": 50163.278836752
+        },
+        {
+          "elapsed_s": 55991.7955208736
+        },
+        {
+          "elapsed_s": 61820.3122039584
+        },
+        {
+          "elapsed_s": 67648.8288877344
+        },
+        {
+          "elapsed_s": 73477.3455711648
+        },
+        {
+          "elapsed_s": 79305.8622552864
+        },
+        {
+          "elapsed_s": 85134.3789390624
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "id": "eclipse_72h_geo_earth_moon_cn_003",
+  "category": "eclipse",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-06",
+    "method": "GMAT R2026a EclipseLocator: the two-body orbit of the elements (EarthICRF, Earth.Mu = gm_km3_s2, PrinceDormand78 fixed step 60 s), the kernels of data/, the Earth oriented by IAU_EARTH (Earth.SpiceFrameId), occulting bodies Earth, Moon, light time (UseLightTimeDelay, CN), no stellar aberration, StepSize 1 s, over the TT seconds of the search window. Every event of the window, each partial, total or annular interval its own event, in time order: its edges as GMAT prints them (UTC, to the millisecond), its duration unrounded.",
+    "reference_frame": "EarthICRF",
+    "script": "eclipse_72h_geo_earth_moon_cn_003.script",
+    "log": "eclipse_72h_geo_earth_moon_cn_003.log"
+  },
+  "outputs": {
+    "events": [
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2025-03-28T07:30:00.891 UTC",
+        "stop": "2025-03-28T07:32:17.492 UTC",
+        "duration_s": 136.60088538
+      },
+      {
+        "body": "Earth",
+        "type": "umbra",
+        "start": "2025-03-28T07:32:17.492 UTC",
+        "stop": "2025-03-28T08:35:22.724 UTC",
+        "duration_s": 3785.2322423
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2025-03-28T08:35:22.724 UTC",
+        "stop": "2025-03-28T08:37:39.325 UTC",
+        "duration_s": 136.60139741
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2025-03-29T07:30:18.360 UTC",
+        "stop": "2025-03-29T07:32:37.593 UTC",
+        "duration_s": 139.23335262
+      },
+      {
+        "body": "Earth",
+        "type": "umbra",
+        "start": "2025-03-29T07:32:37.593 UTC",
+        "stop": "2025-03-29T08:34:26.330 UTC",
+        "duration_s": 3708.7373582
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2025-03-29T08:34:26.330 UTC",
+        "stop": "2025-03-29T08:36:45.564 UTC",
+        "duration_s": 139.23419374
+      },
+      {
+        "body": "Moon",
+        "type": "penumbra",
+        "start": "2025-03-29T08:39:16.029 UTC",
+        "stop": "2025-03-29T08:53:59.974 UTC",
+        "duration_s": 883.94581679
+      },
+      {
+        "body": "Moon",
+        "type": "antumbra",
+        "start": "2025-03-29T08:53:59.974 UTC",
+        "stop": "2025-03-29T08:55:00.715 UTC",
+        "duration_s": 60.740144982
+      },
+      {
+        "body": "Moon",
+        "type": "penumbra",
+        "start": "2025-03-29T08:55:00.715 UTC",
+        "stop": "2025-03-29T09:09:53.302 UTC",
+        "duration_s": 892.58751674
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2025-03-30T07:30:40.915 UTC",
+        "stop": "2025-03-30T07:33:03.289 UTC",
+        "duration_s": 142.37419789
+      },
+      {
+        "body": "Earth",
+        "type": "umbra",
+        "start": "2025-03-30T07:33:03.289 UTC",
+        "stop": "2025-03-30T08:33:24.447 UTC",
+        "duration_s": 3621.1578446
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2025-03-30T08:33:24.447 UTC",
+        "stop": "2025-03-30T08:35:46.822 UTC",
+        "duration_s": 142.37537094
+      }
+    ]
+  }
+}

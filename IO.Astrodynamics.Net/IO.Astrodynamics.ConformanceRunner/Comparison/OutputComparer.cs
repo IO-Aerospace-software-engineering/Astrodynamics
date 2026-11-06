@@ -21,9 +21,14 @@ namespace IO.Astrodynamics.ConformanceRunner.Comparison;
 /// is no fallback. An exact output has no tolerance.
 /// </para>
 /// <para>
+/// An indexed array of the category (<see cref="MetricTable.IsIndexed"/>) is its count, exact, then the outputs of each
+/// element, <c>&lt;array&gt;[k].&lt;field&gt;</c> or <c>&lt;array&gt;[k]</c>: when the solver gives another count than
+/// the golden's, the count FAILS, and so does each element of the golden the solver does not give.
+/// </para>
+/// <para>
 /// The case is an ERROR, by an <see cref="InvalidOperationException"/> naming the output, when an output of the golden
-/// is not an output of the category, is geodetic while the inputs give no ellipsoid, is not produced by the solver, could
-/// not be computed by it, or has no tolerance.
+/// is not an output of the category, is geodetic while the inputs give no ellipsoid, is not produced by the solver (but
+/// for an element beyond a count that differs), could not be computed by it, or has no tolerance.
 /// </para>
 /// </remarks>
 public static class OutputComparer
@@ -46,7 +51,7 @@ public static class OutputComparer
         IReadOnlyDictionary<string, TolerancePair> defaults)
     {
         var measures = new List<OutputMeasure>();
-        foreach (var (output, goldenValue) in Outputs(golden))
+        foreach (var (output, goldenValue) in Outputs(golden, caseInput.Category))
         {
             if (!MetricTable.TryGet(caseInput.Category, output, out var metric))
             {
@@ -62,6 +67,14 @@ public static class OutputComparer
 
             if (!computed.TryGetValue(output, out var value))
             {
+                // An element beyond the computed elements of its array, whose count then differs from the golden's
+                // (the count itself FAILS): this element FAILS too
+                if (MissingElement(caseInput.Category, output, computed, golden) is { } missing)
+                {
+                    measures.Add(missing);
+                    continue;
+                }
+
                 throw new InvalidOperationException(
                     $"The golden holds {output}, which the {caseInput.Category} solver does not produce for these inputs.");
             }
@@ -91,9 +104,11 @@ public static class OutputComparer
 
     /// <summary>
     /// The outputs of a golden, in its order: its properties, and for a property that is an object, the leaves below it,
-    /// named by their path below it joined by dots (<c>range (km).mean</c>).
+    /// named by their path below it joined by dots (<c>range (km).mean</c>), the object's name first when it holds
+    /// indexed arrays of the category (<c>events.periapsis</c>); an indexed array of <paramref name="category"/>, its
+    /// count then the outputs of each element (see the remarks of <see cref="OutputComparer"/>).
     /// </summary>
-    internal static IEnumerable<(string Output, JsonElement Golden)> Outputs(JsonElement golden)
+    internal static IEnumerable<(string Output, JsonElement Golden)> Outputs(JsonElement golden, string category = null)
     {
         foreach (var property in golden.EnumerateObject())
         {
@@ -109,15 +124,88 @@ public static class OutputComparer
 
             if (property.Value.ValueKind != JsonValueKind.Object)
             {
-                yield return (property.Name, property.Value);
+                foreach (var output in Expanded(property.Name, property.Value, category))
+                {
+                    yield return output;
+                }
+
                 continue;
             }
 
-            foreach (var leaf in Leaves(property.Value, null))
+            // The leaves of an object are named below it (range (km).mean of the statistics of tracking_data), but
+            // those of an object that holds indexed arrays of the category (events.periapsis of orbital_events)
+            string prefix = MetricTable.HoldsIndexed(category, property.Name) ? property.Name : null;
+            foreach (var leaf in Leaves(property.Value, prefix, category))
             {
                 yield return leaf;
             }
         }
+    }
+
+    // An output, or for an indexed array of the category (MetricTable.IsIndexed) its count, then each element: the
+    // fields of an object, <array>[k].<field>, or the element itself, <array>[k]
+    private static IEnumerable<(string Output, JsonElement Golden)> Expanded(string name, JsonElement value, string category)
+    {
+        yield return (name, value);
+        if (value.ValueKind != JsonValueKind.Array || !MetricTable.IsIndexed(category, name))
+        {
+            yield break;
+        }
+
+        int k = 0;
+        foreach (var element in value.EnumerateArray())
+        {
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var field in element.EnumerateObject())
+                {
+                    yield return (IndexedOutput(name, k, field.Name), field.Value);
+                }
+            }
+            else
+            {
+                yield return (IndexedOutput(name, k), element);
+            }
+
+            k++;
+        }
+    }
+
+    /// <summary>The name of a field of the k-th element of an indexed array: <c>&lt;array&gt;[k].&lt;field&gt;</c>.</summary>
+    public static string IndexedOutput(string array, int k, string field) => $"{array}[{k}].{field}";
+
+    /// <summary>The name of the k-th element of an indexed array: <c>&lt;array&gt;[k]</c>.</summary>
+    public static string IndexedOutput(string array, int k) => $"{array}[{k}]";
+
+    // The failing measure of an element the solver does not give, when the solver gives its array with another count
+    // than the golden's; null otherwise
+    private static OutputMeasure MissingElement(string category, string output, IReadOnlyDictionary<string, object> computed,
+        JsonElement golden)
+    {
+        string array = MetricTable.IndexedArrayOf(category, output);
+        if (array == null || !computed.TryGetValue(array, out var count) || count is not int computedCount ||
+            !TryGetArray(golden, array, out var goldenArray) || computedCount == goldenArray.GetArrayLength())
+        {
+            return null;
+        }
+
+        return new OutputMeasure(output, MetricTable.TryGet(category, output, out var metric) ? metric.Kind : MetricKind.Exact,
+            double.NaN, double.NaN, "missing", null, double.NaN, double.NaN, false);
+    }
+
+    // The array of a golden at a dotted path (events.periapsis)
+    private static bool TryGetArray(JsonElement golden, string path, out JsonElement array)
+    {
+        array = golden;
+        foreach (var part in path.Split('.'))
+        {
+            if (array.ValueKind != JsonValueKind.Object || !array.TryGetProperty(part, out array))
+            {
+                return false;
+            }
+        }
+
+        return array.ValueKind == JsonValueKind.Array;
     }
 
     /// <summary>The member that names an element of a labelled array (spec.md section 13.1).</summary>
@@ -153,28 +241,25 @@ public static class OutputComparer
     /// <summary>The name of a field of a labelled element: <c>&lt;array&gt;[&lt;label&gt;].&lt;field&gt;</c>.</summary>
     public static string LabelledOutput(string array, string label, string field) => $"{array}[{label}].{field}";
 
-    private static IEnumerable<(string Output, JsonElement Golden)> Leaves(JsonElement element, string prefix)
+    private static IEnumerable<(string Output, JsonElement Golden)> Leaves(JsonElement element, string prefix, string category)
     {
         foreach (var property in element.EnumerateObject())
         {
             string name = prefix == null ? property.Name : $"{prefix}.{property.Name}";
-            if (property.Value.ValueKind == JsonValueKind.Object)
+            var leaves = property.Value.ValueKind == JsonValueKind.Object
+                ? Leaves(property.Value, name, category)
+                : Expanded(name, property.Value, category);
+            foreach (var leaf in leaves)
             {
-                foreach (var leaf in Leaves(property.Value, name))
-                {
-                    yield return leaf;
-                }
-            }
-            else
-            {
-                yield return (name, property.Value);
+                yield return leaf;
             }
         }
     }
 
     /// <summary>
     /// The measure of an exact output (spec.md section 6.1): an absolute delta of 0 when the output equals the golden, 1
-    /// otherwise; no tolerance, a ratio of NaN. A boolean equals its golden; the arcs of a grid (an array of
+    /// otherwise; no tolerance, a ratio of NaN. A boolean or a string equals its golden; a count the number of elements
+    /// of its array; the arcs of a grid (an array of
     /// <c>{rise, fall}</c> instants) equal theirs when they are as many and each instant is the same sample of the grid,
     /// within 1 µs.
     /// </summary>
@@ -183,6 +268,8 @@ public static class OutputComparer
         bool passed = computed switch
         {
             bool flag when golden.ValueKind is JsonValueKind.True or JsonValueKind.False => flag == golden.GetBoolean(),
+            string text when golden.ValueKind == JsonValueKind.String => string.Equals(text, golden.GetString(), StringComparison.Ordinal),
+            int count when golden.ValueKind == JsonValueKind.Array => count == golden.GetArrayLength(),
             IReadOnlyList<Window> arcs when golden.ValueKind == JsonValueKind.Array => SameArcs(arcs, golden, output),
             _ => throw new InvalidOperationException(
                 $"The solver gives {output} as {computed?.GetType().Name ?? "null"} and the golden as {golden.ValueKind}: they cannot be compared.")
@@ -312,6 +399,11 @@ public static class OutputComparer
             return (RotationAngle(Quaternion(computed, output), Quaternion(golden, output)), double.NaN);
         }
 
+        if (kind == MetricKind.DirectionAngle)
+        {
+            return (DirectionAngle(Vector(computed, output), Vector(golden, output)), double.NaN);
+        }
+
         double computedValue = Scalar(computed, output);
         double goldenValue = Scalar(golden, output);
         return kind switch
@@ -345,6 +437,19 @@ public static class OutputComparer
         }
 
         return 4.0 * System.Math.Atan2(System.Math.Sqrt(difference), System.Math.Sqrt(sum));
+    }
+
+    /// <summary>
+    /// The angle between two directions given as unit vectors (spec.md section 6.1), in rad, in [0, π]:
+    /// θ = atan2(‖c × g‖, c·g), which is accurate at small angles, unlike acos(c·g).
+    /// </summary>
+    internal static double DirectionAngle(double[] c, double[] g)
+    {
+        double x = c[1] * g[2] - c[2] * g[1];
+        double y = c[2] * g[0] - c[0] * g[2];
+        double z = c[0] * g[1] - c[1] * g[0];
+        double dot = c[0] * g[0] + c[1] * g[1] + c[2] * g[2];
+        return System.Math.Atan2(System.Math.Sqrt(x * x + y * y + z * z), dot);
     }
 
     private static Time Instant(JsonElement golden, string output)

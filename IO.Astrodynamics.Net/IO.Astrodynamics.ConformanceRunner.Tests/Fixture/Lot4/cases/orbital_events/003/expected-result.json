@@ -1,0 +1,114 @@
+{
+  "id": "orbital_events_24h_leo_grav10_altitude_003",
+  "category": "orbital_events",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-06",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 10, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS); EarthS.Mu BODY399_GM",
+    "perturbations": "Moon, Sun as point masses (de440s positions, GMs of data/gm_de440.tpc). No drag. No SRP. No relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: the user-defined planet EarthS (NAIF 399 at its de440s position, its body-fixed frame ITRF93 of data/'s bpc through SPICE, the pck00011 radius and flattening), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 10, third bodies Moon, Sun at their de440s positions with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; a While loop of Propagate commands stopping at Altitude or the end of the window, the TT seconds of the window; each stop reported in ICRF at 17 digits with its A1 MJD.",
+    "reference_frame": "EarthSICRF",
+    "script": "orbital_events_24h_leo_grav10_altitude_003.script",
+    "log": "orbital_events_24h_leo_grav10_altitude_003.log"
+  },
+  "outputs": {
+    "events": {
+      "altitude_up": [
+        {
+          "elapsed_s": 2346.255980064
+        },
+        {
+          "elapsed_s": 8169.7808890656
+        },
+        {
+          "elapsed_s": 13993.984074096
+        },
+        {
+          "elapsed_s": 19820.3574428352
+        },
+        {
+          "elapsed_s": 25643.9011497984
+        },
+        {
+          "elapsed_s": 31466.7529836192
+        },
+        {
+          "elapsed_s": 37290.7937477952
+        },
+        {
+          "elapsed_s": 43115.095149408
+        },
+        {
+          "elapsed_s": 48940.2379327104
+        },
+        {
+          "elapsed_s": 54764.3899140768
+        },
+        {
+          "elapsed_s": 60587.7727803552
+        },
+        {
+          "elapsed_s": 66411.9803586528
+        },
+        {
+          "elapsed_s": 72238.7654029152
+        },
+        {
+          "elapsed_s": 78064.816748832
+        },
+        {
+          "elapsed_s": 83889.3288013344
+        }
+      ],
+      "altitude_down": [
+        {
+          "elapsed_s": 5459.6914862112
+        },
+        {
+          "elapsed_s": 11282.9419813824
+        },
+        {
+          "elapsed_s": 17106.9778300896
+        },
+        {
+          "elapsed_s": 22930.5144057696
+        },
+        {
+          "elapsed_s": 28754.2712286144
+        },
+        {
+          "elapsed_s": 34576.6188786912
+        },
+        {
+          "elapsed_s": 40399.2399522816
+        },
+        {
+          "elapsed_s": 46222.5683513088
+        },
+        {
+          "elapsed_s": 52045.285129056
+        },
+        {
+          "elapsed_s": 57868.0973879616
+        },
+        {
+          "elapsed_s": 63691.9868864736
+        },
+        {
+          "elapsed_s": 69517.6734483072
+        },
+        {
+          "elapsed_s": 75342.4795796256
+        },
+        {
+          "elapsed_s": 81165.5688982752
+        }
+      ]
+    }
+  }
+}

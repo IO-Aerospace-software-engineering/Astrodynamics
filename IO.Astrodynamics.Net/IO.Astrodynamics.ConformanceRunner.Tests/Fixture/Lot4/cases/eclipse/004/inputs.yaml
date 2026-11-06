@@ -1,0 +1,36 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/eclipse.yaml; do not edit.
+id: "eclipse_8d_geo_season_earth_004"
+schema_version: "v1"
+version: "0.1.0"
+category: "eclipse"
+created: "2026-11-06"
+description: >
+  The start of the spring eclipse season of a geostationary orbit over eight days: a penumbra-only eclipse on
+  2026-02-26, then the first umbra, grazing, on 2026-02-27 (about 220 s) and longer umbrae each day after it. Every
+  eclipse by the Earth, each partial or total interval its own event. The trajectory is the two-body propagation of
+  the elements (in ICRF) with gm_km3_s2 over TT seconds; the Earth is the pck00011 ellipsoid oriented by IAU_EARTH,
+  geometric (spec.md section 12.2). The grazing umbra moves by about 12 ms per metre out of the shadow plane.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-02-23T00:00:00.000 UTC"
+  orbit:                                # circular, M the true anomaly
+    type: "keplerian"
+    a_km: 42164.17
+    e: 0.0
+    i_deg: 0.0
+    raan_deg: 0.0
+    argp_deg: 0.0
+    ma_deg: 0.0
+  search_window:
+    start: "2026-02-23T00:00:00.000 UTC"
+    end: "2026-03-03T00:00:00.000 UTC"
+  occulting_bodies: ["Earth"]
+  light_source: "Sun"
+  light_time: "none"
+  gm_km3_s2: 398600.4415                # the GM of the two-body trajectory (spec.md 12.2)
+  kernels: ["pck00011.tpc"]

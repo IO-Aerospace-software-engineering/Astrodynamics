@@ -139,31 +139,7 @@ public class TrackingDataSolver : ICategorySolver
             OccultationType.Full, Aberration.None, step).ToList();
 
         // Subtract occultation windows from above-horizon windows
-        var trackingArcs = new List<Window>();
-        foreach (var visWindow in aboveHorizonWindows)
-        {
-            var remaining = new List<Window> { visWindow };
-            foreach (var occWindow in occultations)
-            {
-                var next = new List<Window>();
-                foreach (var r in remaining)
-                {
-                    if (occWindow.EndDate <= r.StartDate || occWindow.StartDate >= r.EndDate)
-                    {
-                        next.Add(r);
-                    }
-                    else
-                    {
-                        if (occWindow.StartDate > r.StartDate)
-                            next.Add(new Window(r.StartDate, occWindow.StartDate));
-                        if (occWindow.EndDate < r.EndDate)
-                            next.Add(new Window(occWindow.EndDate, r.EndDate));
-                    }
-                }
-                remaining = next;
-            }
-            trackingArcs.AddRange(remaining);
-        }
+        var trackingArcs = GroundStationSolver.Subtract(aboveHorizonWindows, occultations);
 
         // Resample as half-open intervals [rise, fall) on the step grid
         var sampledArcs = new List<Window>();

@@ -87,6 +87,15 @@ public class EclipseInputs
 
     /// <summary>The GM of the two-body trajectory, km³/s² (spec.md section 12.2); null when the case gives none.</summary>
     public double? GmKm3S2 { get; set; }
+
+    /// <summary>
+    /// The occulting bodies of the second branch (002 to 006, spec.md section 12.2); null for the first branch, which
+    /// gives <see cref="OccultingBody"/>.
+    /// </summary>
+    public List<string> OccultingBodies { get; set; }
+
+    /// <summary>The light time of the second branch: <c>none</c> or <c>cn</c>.</summary>
+    public string LightTime { get; set; }
 }
 
 public class TriadInputs

@@ -1,0 +1,39 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/ground_station.yaml; do not edit.
+id: "ground_station_12h_lro_mask0_moon_lt_006"
+schema_version: "v1"
+version: "0.1.0"
+category: "ground_station"
+created: "2026-11-06"
+description: >
+  The geometry of tracking_data 001 with located events: the passes of the Lunar Reconnaissance Orbiter, from its
+  reconstructed ephemeris, over the AUWA01 station (Dongara, Western Australia) from 00:05 to 12:05 UTC, mask 0 deg,
+  the Moon occulting, with the light time received at the station (lt): each pass, its rise, set, duration,
+  culmination and maximum elevation. The Moon stays above the horizon: every edge is a lunar occultation edge, and
+  in five of the six passes the elevation is monotonic, so that the culmination is an edge. The model is that of
+  spec.md section 14.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2023-12-15T00:05:00.000 UTC"
+  orbit:                                # read from its SPK; the case's aberration governs (spec.md 14.1)
+    type: "bsp_source"
+    naif_id: -85
+    filename: "data/lro-reconstructed-2023349_2024075_v01_little_endian.bsp"
+  search_window:                        # step_size_s informative (spec.md 14.1)
+    start: "2023-12-15T00:05:00.000 UTC"
+    end: "2023-12-15T12:05:00.000 UTC"
+    step_size_s: 10.0
+  location:
+    reference_frame: "ITRF93"
+    latitude_deg: -29.045772
+    longitude_deg: 115.348678
+    height_km: 0.2511
+    ellipsoid: {equatorial_radius_km: 6378.1366, flattening: 0.0033528131084554157}   # the pck00011 Earth (spec.md 14.1)
+  elevation_mask_deg: 0.0
+  aberration: "lt"
+  occulting_bodies: ["Moon"]            # the Moon's pck00011 sphere (spec.md 14.1)
+  kernels: ["earth_latest_high_prec.bpc", "pck00011.tpc"]

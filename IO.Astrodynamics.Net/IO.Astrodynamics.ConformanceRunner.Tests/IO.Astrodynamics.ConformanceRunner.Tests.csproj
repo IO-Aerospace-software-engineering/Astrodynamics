@@ -31,7 +31,17 @@
          and frame_transformation with the schemas and tolerances of the suite, and the kernels that differ from the
          runner's; Fixture/Lot2: the propagator cases 006 to 018 of lot 2, their schemas and tolerances, and the data
          files that differ from the runner's and from Fixture/Lot1; Fixture/Lot3: the maneuver and lambert cases of lot 3,
-         their schemas and tolerances (no data file of their own); all three written by tools/conformance/sync_fixture.py -->
+         their schemas and tolerances (no data file of their own); Fixture/Lot4: the ground_station, eclipse, orbital_events and
+         attitude cases of lot 4, their schemas and tolerances (no data file of their own); all four written by
+         tools/conformance/sync_fixture.py -->
+    <!-- The SPK of LRO of the library's tests, which the station case 006 of lot 4 reads (SuiteFixture.Lot4) -->
+    <ItemGroup>
+        <None Include="..\IO.Astrodynamics.Tests\Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp">
+            <Link>Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
     <ItemGroup>
         <None Update="Fixture\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

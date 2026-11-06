@@ -44,16 +44,35 @@ internal sealed class SuiteFixture
     public static readonly SuiteFixture Lot3 = new("Fixture/Lot3",
         new[] { "maneuver", "lambert" }, new[] { KernelsPath, "Fixture/Lot1/data", "Fixture/Lot2/data" });
 
+    /// <summary>
+    /// Lot 4 (design of lot 4 of #457): the ground_station, eclipse, orbital_events and attitude cases; every case reads
+    /// the field file, whose header carries the GM of a two-body trajectory (<c>TwoBodyTrajectory</c>), and the station
+    /// case of LRO its SPK, the one of the library's tests (<see cref="LroPath"/>).
+    /// </summary>
+    public static readonly SuiteFixture Lot4 = new("Fixture/Lot4",
+        new[] { "ground_station", "eclipse", "orbital_events", "attitude" },
+        new[] { KernelsPath, LroPath, "Fixture/Lot1/data", "Fixture/Lot2/data", "Fixture/Lot3/data" },
+        new[] { "EGM2008_to70_TideFree" });
+
+    /// <summary>The SPK of LRO of the library's tests, copied beside the runner's kernels.</summary>
+    public const string LroPath = "Data/LRO";
+
+    // The prefix of the SPK of a bsp_source orbit, a file of data/
+    private const string DataPrefix = "data/";
+
     private static readonly string[] Schemas = { "case.schema.json", "expected.schema.json", "runner-report.schema.json" };
     private static readonly string[] CaseFiles = { "inputs.yaml", "expected-result.json" };
 
     private readonly IReadOnlyList<string> _referenceData;
+    private readonly IReadOnlyList<string> _always;
 
-    private SuiteFixture(string root, IReadOnlyList<string> categories, IReadOnlyList<string> referenceData)
+    private SuiteFixture(string root, IReadOnlyList<string> categories, IReadOnlyList<string> referenceData,
+        IReadOnlyList<string> always = null)
     {
         Root = root;
         Categories = categories;
         _referenceData = referenceData;
+        _always = always ?? Array.Empty<string>();
     }
 
     /// <summary>The root of the fixture.</summary>
@@ -100,6 +119,7 @@ internal sealed class SuiteFixture
             }
 
             files.UnionWith(DataFilesOf(ReadCase(Root, caseDirectory)));
+            files.UnionWith(_always);
         }
 
         var hashes = DataHashes();
@@ -181,15 +201,26 @@ internal sealed class SuiteFixture
         File.WriteAllText(path, document.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
     }
 
-    // The files of data/ a case reads: its kernels and its field file, which the runner reads from data/
+    // The files of data/ a case reads: its kernels, its field file and the SPK of its orbit, which the runner reads from
+    // data/
     private static IEnumerable<string> DataFilesOf(CaseInput caseInput)
     {
-        var kernels = caseInput.Inputs.TryGetValue("kernels", out var list) && list is List<object> names
-            ? names.Select(kernel => kernel.ToString())
-            : Enumerable.Empty<string>();
-        return caseInput.Inputs.TryGetValue("geopotential_model", out var field) && field?.ToString() is { } model && model != "none"
-            ? kernels.Append(model)
-            : kernels;
+        var files = caseInput.Inputs.TryGetValue("kernels", out var list) && list is List<object> names
+            ? names.Select(kernel => kernel.ToString()).ToList()
+            : new List<string>();
+        if (caseInput.Inputs.TryGetValue("geopotential_model", out var field) && field?.ToString() is { } model && model != "none")
+        {
+            files.Add(model);
+        }
+
+        if (caseInput.Inputs.TryGetValue("orbit", out var orbit) && orbit is Dictionary<object, object> map &&
+            map.TryGetValue("type", out var type) && type?.ToString() == "bsp_source" &&
+            map.TryGetValue("filename", out var filename) && filename?.ToString() is { } spk && spk.StartsWith(DataPrefix, StringComparison.Ordinal))
+        {
+            files.Add(spk[DataPrefix.Length..]);
+        }
+
+        return files;
     }
 
     // A kernel SPICE has opened is read and copied without asking for exclusive access (Windows)
