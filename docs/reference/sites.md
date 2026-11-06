@@ -28,9 +28,20 @@ Ground-based observation or tracking site.
 | `GetEphemeris(Time, ILocalizable, Frame, Aberration)` | Get site state relative to observer |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
+| `FindWindowsOnCoordinateConstraint(...)` | Find coordinate constraint windows of this site seen from an observer; for the visibility of a spacecraft, search the spacecraft from the site: `spacecraft.FindWindowsOnCoordinateConstraint(window, site, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, mask, 0.0, aberration, step)` (the declination in the site's frame is the elevation) |
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows ([Occultations](occultations.md)) |
 | `FindWindowsOnIlluminationConstraint(...)` | Find illumination windows |
 | `FindDayWindows(Window, double)` | Find daylight windows |
+
+### Window searches
+
+A search on a site built from its coordinates, or on a target that is not in the kernels, is the library's
+(`GeometryFinder`); CSPICE's `gf*` routines search kernel objects. The library samples the quantity at every step from
+the start of the search window and at its end, and locates each transition to 1 µs; a window that holds at a bound of
+the search window starts or ends there. `LocalMin` and `LocalMax` give the extremes inside the search window, and
+`AbsoluteMin` and `AbsoluteMax` the extreme over it, its bounds included, with `adjustValue` the windows within it of the
+extreme; `Equal` gives the crossings of the value, as windows of zero length. As with CSPICE, the step must be shorter
+than the shortest window, the shortest gap and half the time between two extremes.
 
 ### Example
 

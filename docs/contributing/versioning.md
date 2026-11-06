@@ -82,6 +82,48 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **The managed window search returned its edges up to 1 s early, could start before the search window, and had no
+  extremes and no equality** ([#590](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/590), [#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461), [#486](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/486), [#487](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/487)). `GeometryFinder` is
+  the search of `FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
+  `FindWindowsOnIlluminationConstraint` of `CelestialItem` and `Site`, and of `Site.FindDayWindows`, whenever CSPICE
+  cannot search (a propagated spacecraft, a site built from its coordinates, two natural bodies).
+  - **The edges ([#590](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/590)).** Each transition was bisected to a bracket of 1 s or less (0.9375 s at a 60 s step)
+    and its failing end returned: every interior edge came 0 to 0.94 s early, every window start and end alike (on a
+    LEO pass from a station, the rise and the set 0.4 to 587 ms early; on a LEO day, all 89 apsides, nodes and altitude
+    crossings early, by up to 0.898 s). Each transition is now located to 1 µs, CSPICE's convergence tolerance, by
+    Brent's root finder on the quantity minus the value (`Greater`, `Lower`, `Equal`), by a bisection of the relation
+    (`GreaterOrEqual`, `LowerOrEqual`, a boolean quantity), and the root is returned.
+  - **The bounds ([#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461)).** The first transition was searched over [start − step, start], so a window that held
+    at the start began before it, one step early at most, and the quantity was evaluated before the search window (on a
+    propagated spacecraft, outside its stored states, #527); the last edge stopped up to 1 s short of the end. Nothing
+    is evaluated outside the search window now; a window that holds at its start starts there, one that holds at its end
+    ends there. The windows are closed, as CSPICE's: two windows that one edge closes and opens are one.
+  - **The extremes ([#486](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/486)).** `LocalMin`, `LocalMax`, `AbsoluteMin` and `AbsoluteMax` threw
+    `ArgumentException("Invalid operator")`. The local extremes are now the sign changes of the rate of the quantity
+    (the derivative of the quartics through five values a sixteenth and a thirty-second of the step apart, combined by
+    Richardson's extrapolation), each located to 1 µs, inside the search window, as zero-length windows; the absolute
+    extremes the lowest or highest of the local extremes and of the bounds, as CSPICE's `gfdist`, and, with a positive
+    `adjustValue`, the windows within it of the extreme. `adjustValue`, which the managed path ignored, is now taken by
+    the coordinate and illumination searches; the distance searches take none.
+  - **Equality ([#487](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/487)).** `Equal` tested |x − v| < 1e-9 at the samples and returned no window (0 for the 30
+    nodes of a LEO day). It now gives the crossings of the value as zero-length windows, a jump at a branch cut (a right
+    ascension, a longitude, an azimuth) being no crossing, and `NotEqual` the rest of the search window, a window from
+    each crossing to the next.
+  - **Measured** against CSPICE's `gfdist` and `gfposc` converged to 1e-9 s (`tools/geometry_reference`, Linux x64,
+    2026-11-06): 2.4e-7 s on the edges and crossings (the Earth-Moon distance, the Moon from DSS-13 and DSS-13 from the
+    Moon, the Sun from a site), 4.8e-7 s on the Earth-Moon distance extremes at a 1-day step, 4.5e-9 s on the Moon's
+    elevation extremes from DSS-13 at a 60 s step.
+  - **Changes published results:** every managed window edge moves by up to 1 s toward its root (by up to a step for
+    a window that held at the start of the search), and a window that ended up to 1 s before the end of the search now
+    ends at it. The searches CSPICE runs (a kernel spacecraft with a kernel body or site) are unchanged.
+- **The site-visibility example of the tutorial found the times when the spacecraft is 10° below the horizon**
+  ([#591](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/591)). `docs/tutorials/geometry-and-visibility.md` called `site.FindWindowsOnCoordinateConstraint` with the
+  spacecraft as observer, which searches the site seen from the spacecraft (its declination is minus the elevation): 9
+  windows, 78 284 s of a day, against 6 passes of 2 312 s. The example now searches the spacecraft from the site
+  (`spacecraft.FindWindowsOnCoordinateConstraint(window, site, site.Frame, …)`), and `docs/reference/sites.md` lists
+  the call. `docs/reference/event-detection.md` no longer says that the propagation locates "other state transitions":
+  it detects the maneuvers' events only, and points to the window searches for the others.
+
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
   - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared
