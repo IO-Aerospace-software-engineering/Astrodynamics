@@ -399,7 +399,7 @@ namespace IO.Astrodynamics.Surface
                     break;
             }
 
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, stepSize);
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, adjustValue, stepSize);
         }
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace IO.Astrodynamics.Surface
                     throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
             }
 
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateIllumination, relationalOperator, value, stepSize);
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateIllumination, relationalOperator, value, adjustValue, stepSize);
         }
 
         /// <summary>

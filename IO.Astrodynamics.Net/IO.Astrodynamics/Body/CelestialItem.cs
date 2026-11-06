@@ -925,7 +925,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 break;
         }
 
-        return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, stepSize);
+        return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, adjustValue, stepSize);
     }
 
     #endregion
