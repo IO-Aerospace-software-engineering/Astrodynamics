@@ -73,12 +73,14 @@ public class ManeuverEventDetector : IEventDetector, IGatedEventDetector
     /// (<see cref="ImpulseManeuver.CheckPreconditions"/>), and only the impulse: the maneuvers chained after it are
     /// activated by the propagation, on its attitude timeline, which builds the detector of the next impulse (#539).
     /// </summary>
-    /// <param name="stateAtEvent">The state at the event; the impulse adds its ΔV to its velocity.</param>
+    /// <param name="stateAtEvent">The state at the event. It is left unchanged (#588): the state after the impulse is
+    /// <see cref="EventResult.ModifiedState"/>.</param>
     /// <param name="spacecraft">The spacecraft of the maneuver.</param>
     /// <returns>
-    /// When the preconditions hold: the state after the impulse, its attitude (the front along ΔV), the action
-    /// <see cref="EventAction.StopAndRestart"/> and no next detector. Otherwise: the state unchanged, no attitude, the
-    /// action <see cref="EventAction.Continue"/> and this detector, which waits for the next crossing.
+    /// When the preconditions hold: the state after the impulse, a new state (the velocity plus ΔV), its attitude (the
+    /// front along ΔV), the action <see cref="EventAction.StopAndRestart"/> and no next detector. Otherwise:
+    /// <paramref name="stateAtEvent"/>, no attitude, the action <see cref="EventAction.Continue"/> and this detector,
+    /// which waits for the next crossing.
     /// </returns>
     /// <remarks>
     /// Before 11.0.0 it also executed the attitudes chained after the impulse at the epoch of its event, each raising the

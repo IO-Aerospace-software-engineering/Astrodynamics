@@ -100,7 +100,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var maneuverPoint = orbitalParams.ToStateVector(
                 PropagationTimeArgument.Tt.EpochAt(orbitalParams.Epoch, orbitalParams.Period().TotalSeconds * 0.5));
             var res = maneuver.TryExecute(maneuverPoint);
-            Assert.Equal(new StateVector(maneuverPoint.Position, maneuverPoint.Velocity, maneuverPoint.Observer, maneuverPoint.Epoch, maneuverPoint.Frame), res.sv);
+            // The state after the impulse, the given state unchanged (#588)
+            Assert.Equal(new StateVector(maneuverPoint.Position, maneuverPoint.Velocity + maneuver.DeltaV, maneuverPoint.Observer, maneuverPoint.Epoch, maneuverPoint.Frame), res.sv);
             Assert.Equal(new StateOrientation(new Quaternion(1.0, 0.0, 0.0, 0.0), Vector3.Zero, maneuverPoint.Epoch, maneuverPoint.Frame), res.so);
             // The x component of ΔV is zero at the apogee, to the radial velocity of a tick, |a| 1e-7 s (1.6e-10 m/s on
             // main, 5.7e-9 m/s with the label of TT, #501)

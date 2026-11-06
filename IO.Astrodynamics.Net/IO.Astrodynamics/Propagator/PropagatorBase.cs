@@ -473,8 +473,8 @@ public abstract class PropagatorBase : IPropagator
                     dynamics.Evaluate(result.Segment, evt.EventTime, eventY, eventQ);
                 }
 
-                // The state before the maneuver, kept apart for the arcs of the stored states (#540): the maneuver changes the
-                // velocity of the state it executes on. In covariance mode, with the covariance at the event
+                // The state before the maneuver, for the arcs of the stored states (#540); in covariance mode, with the
+                // covariance at the event. The maneuver leaves the state it executes on unchanged (#588)
                 var stateBefore = new StateVector(evt.EventPosition, evt.EventVelocity, InitialState.Observer, eventEpoch,
                     InitialState.Frame, _covarianceModel != null ? CovarianceOf(eventY, eventQ) : null);
 
