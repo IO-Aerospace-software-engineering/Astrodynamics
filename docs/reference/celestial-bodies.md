@@ -72,6 +72,16 @@ var state = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).
 | `WriteEphemeris(FileInfo)` | Write ephemeris to SPK file |
 
 The implementation uses a reference-body strategy for relative ephemerides to avoid numerical issues from subtracting large SSB vectors.
+When CSPICE cannot read the pair (an observer or a target that is a site, a spacecraft not from a kernel or a star), the
+library applies the aberration corrections itself, as CSPICE's `spkaps` does
+([#491](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/491)): the light time of `spkltc`, one
+iteration for `LT` and `XLT`, converged for `CN` and `XCN`, the target taken at t − lt (t + lt for the transmission
+cases) and the velocity scaled by the rate of the light time; for the `+S` corrections, the stellar aberration of
+`stelab` (`stlabx` for transmission) of that position, with its rate from the observer's acceleration. The state is
+rotated to the output frame at the epoch of the observation: a non-inertial frame centred on another body than the
+observer is not evaluated at t − lt of its centre, as `spkezr` does
+([#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593)); an inertial frame or the
+topocentric frame of the observing site is not affected.
 
 ## See Also
 

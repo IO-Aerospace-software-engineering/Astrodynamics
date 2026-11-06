@@ -123,6 +123,39 @@ A major version, because it breaks the API: members deprecated for removal in 11
   (`spacecraft.FindWindowsOnCoordinateConstraint(window, site, site.Frame, …)`), and `docs/reference/sites.md` lists
   the call. `docs/reference/event-detection.md` no longer says that the propagation locates "other state transitions":
   it detects the maneuvers' events only, and points to the window searches for the others.
+- **On the reference-body path, the light-time and stellar-aberration corrections were not CSPICE's**
+  ([#491](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/491)). The path computes the state
+  when CSPICE cannot read the pair: a site as observer (from the kernels or from its coordinates), a spacecraft not
+  from a kernel as observer or as target, a star; through it `Site.GetHorizontalCoordinates`, the angular separations and
+  illumination angles seen from a site, and the managed window searches with a correction.
+  - **The cause.** `CN`, `CN+S`, `XCN` and `XCN+S` were not applied (the geometric state was returned); the `LT` and
+    `XLT` velocities missed the rate of the light time; `LT+S` and `XLT+S` returned the geometric position plus
+    v_obs·|v_obs|/c, with the `LT` and `XLT` velocity.
+  - **The fix.** CSPICE's `spkaps` (N0067, read from its source): the light time of `spkltc`, one iteration for `LT` and
+    `XLT`, up to five until it changes by less than 1e-17 of the epoch for `CN` and `XCN`, the target read at t ∓ lt
+    of the epoch as CSPICE forms it in double, the velocity (1 ∓ dlt/dt)·v_target − v_observer; for the `+S` flags the
+    stellar aberration of `stelab` (`stlabx` for transmission) of the light-time position, and its rate (`zzstelab`)
+    from the light-time velocity and the observer's acceleration, the central difference of its velocity over ±1 s
+    (`spkacs`). `None` is unchanged, bit for bit.
+  - **Measured** against `spkezr`, `spkcpo`, `spkcpt` and `azlcpo` (`tools/light_time_reference`, Linux x64,
+    2026-11-06), the nine flags at three epochs: the Moon from DSS-13, the Moon and the Sun from a site given by its
+    coordinates, within 2.2e-5 m and 1.9e-9 m/s; a LEO spacecraft given by one state, from that site and from the Earth,
+    and the Moon, the Sun and the site from it, the correction within 3.9e-4 m and 8.3e-7 m/s (the 100 ns of the TT
+    argument of its two-body state, #508), the Sun's `+S` within 2.9 cm and 6.4e-5 m/s (the stellar aberration of
+    the 1.2e-4 m/s between its two-body trajectories); the spacecraft's azimuth and elevation from the site within
+    5.4e-11 rad of the correction, its range within 0.16 mm and its range rate within 7.3e-7 m/s. On the four light-time
+    settings of the ground-station cases of the conformance suite (a two-body LEO from a site near Toulouse), the rises,
+    sets and culminations within 0.50 ms of GMAT's `ContactLocator` (its millisecond print), the azimuth and elevation
+    within 1.7e-7°, the range within 1.3 mm and the range rate within 0.014 mm/s of `azlcpo`, `LT+S` included (the
+    range rate was 0.728 m/s off with `LT` and `XLT`, `LT+S` 4.1e-3° in azimuth and 211 m in range).
+  - **Not in this fix:** the output frame is still evaluated at the epoch of the observation; `spkezr` evaluates a
+    non-inertial frame centred on another body at t − lt of its centre (the Moon from DSS-13 with `LT`, 531 to 620 m in
+    `ITRF93`; [#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593), split from #491).
+    The topocentric frame of the observing site and the inertial frames are not affected.
+  - **Changes published results:** on that path, the `LT` and `XLT` velocities by up to 0.77 m/s (a LEO spacecraft),
+    the `CN` and `XCN` states by up to 42 km (the Moon from a site), the `+S` states by up to 14 775 km (the Sun from a
+    site, 20.7″) and their velocities by up to 3.5 km/s (the Sun from a LEO spacecraft); the managed searches with a
+    correction move with them (the sunrise of `SiteTests` with `LT+S`, 1.13 s, now within 2.4e-7 s of `gfposc`).
 
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).

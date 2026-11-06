@@ -260,20 +260,22 @@ namespace IO.Astrodynamics.Tests.Surface
             Assert.Equal(new TimeSystem.Time("2000-01-02 12:00:00").ToTDB(), windows[1].EndDate);
         }
 
-        [Fact]
-        public void FindWindowsOnIlluminationConstraint()
+        [Theory]
+        [InlineData(Aberration.None, "site_sun_elevation > -0.8 deg NONE")]
+        [InlineData(Aberration.LT, "site_sun_elevation > -0.8 deg LT")]
+        [InlineData(Aberration.LTS, "site_sun_elevation > -0.8 deg LT+S")]
+        public void FindWindowsOnIlluminationConstraint(Aberration aberration, string reference)
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000,
                 new Planetodetic(-116.79445837 * Astrodynamics.Constants.Deg2Rad, 35.24716450 * Astrodynamics.Constants.Deg2Rad, 1070.85059));
 
             var res = site.FindWindowsOnIlluminationConstraint(new Window(TimeSystem.Time.CreateTDB(674524800), TimeSystem.Time.CreateTDB(674611200)),
-                IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, Aberration.None,
+                IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad), 0.0, aberration,
                 TimeSpan.FromSeconds(3600), TestHelpers.Sun);
 
             // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s): the Sun above -0.8° of elevation in the site's
-            // frame, the incidence below 90.8°. Geometric: a site's LT+S read of the Sun is #491's (1.13 s on this sunrise
-            // against gfposc LT+S, which the reference holds with LT)
-            GeometryReference.AssertWindows(null, "site_sun_elevation > -0.8 deg NONE", res, GeometryReference.ThresholdCrossing);
+            // frame, the incidence below 90.8°, with the same correction (LT+S: the 1.13 s of #491 before its fix)
+            GeometryReference.AssertWindows(null, reference, res, GeometryReference.ThresholdCrossing);
         }
 
         [Fact]

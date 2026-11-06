@@ -278,7 +278,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     /// <summary>
     /// GetEphemeris. For SPICE-backed observer/target pairs, uses SPICE directly.
-    /// For non-SPICE observers (Spacecraft, Site), uses reference-body approach.
+    /// For non-SPICE observers (Spacecraft, Site), uses reference-body approach, where the nine aberration corrections are
+    /// applied as CSPICE's <c>spkaps</c> applies them (<see cref="CorrectFromAberrationCB"/>, #491); the state is rotated
+    /// to <paramref name="frame"/> at <paramref name="epoch"/> (#593).
     /// </summary>
     public virtual OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
@@ -298,7 +300,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             targetCB.Velocity - observerCB.Velocity,
             observer, epoch, Frame.ICRF);
 
-        if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+        if (aberration != Aberration.None)
             relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerCB, cb);
 
         return relative.ToFrame(frame);
@@ -329,48 +331,167 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         };
     }
 
+    // SPKLTC's iterations for the converged Newtonian light time and its convergence threshold relative to the epoch; the
+    // half-step of SPKACS's central difference of the observer's velocity (TDELTA, 1 s)
+    private const int ConvergedLightTimeIterations = 5;
+    private const double LightTimeConvergence = 1e-17;
+    private const long AccelerationHalfStepTicks = TimeSpan.TicksPerSecond;
+
     /// <summary>
-    /// Correct from aberration using reference-body approach.
-    /// Accounts for the reference body's motion between observation epoch and retarded/advanced epoch.
+    /// The state of <paramref name="target"/> relative to <paramref name="observer"/> corrected as CSPICE corrects it
+    /// (<c>spkaps</c>, N0067, read from its source; #491), on the reference-body path: the states are read relative to
+    /// <paramref name="referenceBody"/>, plus that body's motion during the light time.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Light time, as <c>spkltc</c>: from the geometric distance, one iteration for LT and XLT, up to five until the light
+    /// time changes by less than 1e-17 of the epoch for CN and XCN; the target is read at t − lt (t + lt for the
+    /// transmission cases), its position carried by its velocity from the 100 ns of a <see cref="Time"/> to the exact
+    /// epoch. The velocity carries the rate of the light time: (1 ∓ dlt/dt)·v_target − v_observer, both from the solar
+    /// system barycenter, with dlt/dt = û·(v_target − v_observer) / (c ± û·v_target).
+    /// </para>
+    /// <para>
+    /// Stellar aberration of the four "+S" corrections, as <c>stelab</c> (<c>stlabx</c> for transmission) and
+    /// <c>zzstelab</c>: the light-time corrected position rotated by asin(|û × v/c|) about û × v, v the observer's velocity
+    /// from the solar system barycenter (−v for transmission), and the rate of that correction on the velocity, from the
+    /// light-time corrected velocity and the observer's acceleration, the central difference of its velocity over ±1 s
+    /// (<c>spkacs</c>).
+    /// </para>
+    /// <para>
+    /// The state is in ICRF at the epoch; the output frame is applied by the caller at the epoch (#593).
+    /// </para>
+    /// </remarks>
+    /// <param name="target">The target.</param>
+    /// <param name="epoch">The epoch of the observation.</param>
+    /// <param name="observer">The observer.</param>
+    /// <param name="aberration">The correction; <see cref="Aberration.None"/> returns <paramref name="relativeState"/>.</param>
+    /// <param name="relativeState">The geometric state of the target relative to the observer at the epoch, in ICRF.</param>
+    /// <param name="observerCB">The geometric state of the observer relative to the reference body at the epoch, in ICRF.</param>
+    /// <param name="referenceBody">The reference body.</param>
     internal static StateVector CorrectFromAberrationCB(
         ILocalizable target, Time epoch, ILocalizable observer, Aberration aberration,
         StateVector relativeState, StateVector observerCB, CelestialItem referenceBody)
     {
-        var lightTime = TimeSpan.FromSeconds(relativeState.Position.Magnitude() / Constants.C);
-        Time newEpoch = (aberration is Aberration.LT or Aberration.LTS)
-            ? epoch - lightTime : epoch + lightTime;
-
-        var targetNewCB = target.GetGeometricStateRelativeTo(newEpoch, referenceBody);
-
-        // Account for reference body's motion between epochs.
-        // target_inertial(newEpoch) = target_CB(newEpoch) + CB_SSB(newEpoch)
-        // observer_inertial(epoch) = observer_CB(epoch) + CB_SSB(epoch)
-        // corrected = target_CB(newEpoch) - observer_CB(epoch) + [CB_SSB(newEpoch) - CB_SSB(epoch)]
-        Vector3 cbDeltaPos = Vector3.Zero;
-        Vector3 cbDeltaVel = Vector3.Zero;
-        if (referenceBody.NaifId != 0) // SSB is inertial, no correction needed
+        (int iterations, double sign) = aberration switch
         {
-            var cbAtNewEpoch = referenceBody.GetGeometricStateFromICRF(newEpoch).ToStateVector();
-            var cbAtEpoch = referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector();
-            cbDeltaPos = cbAtNewEpoch.Position - cbAtEpoch.Position;
-            cbDeltaVel = cbAtNewEpoch.Velocity - cbAtEpoch.Velocity;
+            Aberration.None => (0, 0.0),
+            Aberration.LT or Aberration.LTS => (1, -1.0),
+            Aberration.CN or Aberration.CNS => (ConvergedLightTimeIterations, -1.0),
+            Aberration.XLT or Aberration.XLTS => (1, 1.0),
+            Aberration.XCN or Aberration.XCNS => (ConvergedLightTimeIterations, 1.0),
+            _ => throw new ArgumentOutOfRangeException(nameof(aberration))
+        };
+        if (iterations == 0)
+        {
+            return relativeState;
         }
 
-        var corrected = new StateVector(
-            targetNewCB.Position + cbDeltaPos - observerCB.Position,
-            targetNewCB.Velocity + cbDeltaVel - observerCB.Velocity,
-            observer, epoch, Frame.ICRF);
+        bool inertialReference = referenceBody.NaifId == 0;
+        var referenceAtEpoch = inertialReference ? null : referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector();
+        // The epochs as CSPICE sees them, TDB seconds in double: the corrected epoch is et ∓ lt in double, as spkltc forms
+        // it, and a state read at the 100 ns of a Time is carried there by its velocity (the double of a 2024 epoch
+        // resolves 1.2e-7 s, 3.6 mm at the 30 km/s of the Earth)
+        double epochSeconds = epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds;
 
-        if (aberration is Aberration.LTS or Aberration.XLTS)
+        var position = relativeState.Position;
+        double lightTime = position.Magnitude() / Constants.C;
+        Vector3 targetVelocity = Vector3.Zero; // the target's velocity relative to the reference body at the corrected epoch
+        Vector3 referenceVelocityChange = Vector3.Zero; // the reference body's velocity there minus at the epoch
+        for (int i = 0; i < iterations; i++)
         {
-            var cbSsbVel = referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector().Velocity;
-            var observerSsbVel = observerCB.Velocity + cbSsbVel;
-            var voverc = observerSsbVel.Magnitude() / Constants.C;
-            corrected.UpdatePosition(relativeState.Position + observerSsbVel * voverc);
+            double shift = sign * lightTime;
+            var corrected = ApparentPositionReader.Shift(epoch, shift);
+            double residual = (epochSeconds + shift) - corrected.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            var targetState = target.GetGeometricStateRelativeTo(corrected, referenceBody);
+            targetVelocity = targetState.Velocity;
+            position = targetState.Position + targetState.Velocity * residual - observerCB.Position;
+            if (!inertialReference)
+            {
+                var reference = referenceBody.GetGeometricStateFromICRF(corrected).ToStateVector();
+                position += reference.Position + reference.Velocity * residual - referenceAtEpoch.Position;
+                referenceVelocityChange = reference.Velocity - referenceAtEpoch.Velocity;
+            }
+
+            double previous = lightTime;
+            lightTime = position.Magnitude() / Constants.C;
+            if (System.Math.Abs(lightTime - previous) <= LightTimeConvergence * System.Math.Max(1.0, System.Math.Abs(epochSeconds + shift)))
+            {
+                break;
+            }
         }
 
-        return corrected;
+        // The velocities from the solar system barycenter: the target's at the corrected epoch, the observer's at the epoch;
+        // their difference is formed relative to the reference body first, to keep its digits
+        var referenceVelocity = inertialReference ? Vector3.Zero : referenceAtEpoch.Velocity;
+        var targetSsbVelocity = targetVelocity + referenceVelocityChange + referenceVelocity;
+        var observerSsbVelocity = observerCB.Velocity + referenceVelocity;
+        var geometricVelocity = targetVelocity + referenceVelocityChange - observerCB.Velocity;
+
+        // spkltc: the rate of the light time, and the velocity it scales
+        double distance = position.Magnitude();
+        double lightTimeRate = 0.0;
+        if (distance > 0.0)
+        {
+            var direction = position / distance;
+            lightTimeRate = (direction * geometricVelocity) / (Constants.C - sign * (direction * targetSsbVelocity));
+        }
+
+        var velocity = geometricVelocity + targetSsbVelocity * (sign * lightTimeRate);
+
+        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        {
+            // The observer's acceleration from the solar system barycenter, spkacs's central difference over ±1 s
+            var acceleration = (ObserverSsbVelocity(observer, epoch.AddTicks(AccelerationHalfStepTicks), referenceBody)
+                                - ObserverSsbVelocity(observer, epoch.AddTicks(-AccelerationHalfStepTicks), referenceBody)) * 0.5;
+            var observerVelocity = sign > 0.0 ? observerSsbVelocity.Inverse() : observerSsbVelocity;
+            var observerAcceleration = sign > 0.0 ? acceleration.Inverse() : acceleration;
+            var aberrated = ApparentPositionReader.StellarAberration(position, observerVelocity);
+            velocity += StellarAberrationRate(position, velocity, observerVelocity, observerAcceleration);
+            position = aberrated;
+        }
+
+        return new StateVector(position, velocity, observer, epoch, Frame.ICRF);
+    }
+
+    /// <summary>The velocity of an observer from the solar system barycenter, in ICRF, through its reference body.</summary>
+    private static Vector3 ObserverSsbVelocity(ILocalizable observer, in Time epoch, CelestialItem referenceBody)
+    {
+        var velocity = observer.GetGeometricStateRelativeTo(epoch, referenceBody).Velocity;
+        return referenceBody.NaifId == 0 ? velocity : velocity + referenceBody.GetGeometricStateFromICRF(epoch).ToStateVector().Velocity;
+    }
+
+    /// <summary>
+    /// The time derivative of the stellar aberration correction of <c>stelab</c>, as <c>zzstelab</c> gives it. The rotation
+    /// of p = r·û by asin(s) about û × w, w = v/c and s = |û × w|, is r·[(√(1 − s²) − û·w)·û + w], so the correction is
+    /// C = r·[(√(1 − s²) − 1 − û·w)·û + w], smooth where s = 0, and its derivative follows from ṙ = û·ṗ,
+    /// dû/dt = (ṗ − ṙ·û)/r and dw/dt = a/c.
+    /// </summary>
+    /// <param name="position">The light-time corrected position p.</param>
+    /// <param name="velocity">Its light-time corrected rate ṗ.</param>
+    /// <param name="observerVelocity">The observer's velocity from the solar system barycenter (its opposite for
+    /// transmission).</param>
+    /// <param name="observerAcceleration">Its acceleration (its opposite for transmission).</param>
+    internal static Vector3 StellarAberrationRate(in Vector3 position, in Vector3 velocity, in Vector3 observerVelocity, in Vector3 observerAcceleration)
+    {
+        double r = position.Magnitude();
+        if (r == 0.0)
+        {
+            return Vector3.Zero;
+        }
+
+        var u = position / r;
+        var w = observerVelocity / Constants.C;
+        var wDot = observerAcceleration / Constants.C;
+        double rDot = u * velocity;
+        var uDot = (velocity - u * rDot) / r;
+        double uw = u * w;
+        double uwDot = uDot * w + u * wDot;
+        double s2 = w * w - uw * uw;
+        double s2Dot = 2.0 * (w * wDot - uw * uwDot);
+        double k = System.Math.Sqrt(1.0 - s2);
+        double kDot = -s2Dot / (2.0 * k);
+        double a = k - 1.0 - uw;
+        return (u * a + w) * rDot + (u * (kDot - uwDot) + uDot * a + wDot) * r;
     }
 
     /// <summary>

@@ -209,7 +209,7 @@ public class Star : CelestialBody
             starSsb.Velocity - observerSsb.Velocity,
             observer, epoch, Frame.ICRF);
 
-        if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+        if (aberration != Aberration.None)
             relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerSsb, ssb);
 
         return relative.ToFrame(frame);

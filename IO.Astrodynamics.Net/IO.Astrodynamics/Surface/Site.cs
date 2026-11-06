@@ -216,7 +216,7 @@ namespace IO.Astrodynamics.Surface
                 siteCB.Velocity - observerCB.Velocity,
                 observer, date, Frames.Frame.ICRF);
 
-            if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+            if (aberration != Aberration.None)
                 relative = CelestialItem.CorrectFromAberrationCB(this, date, observer, aberration, relative, observerCB, cb);
 
             return relative.ToFrame(frame);
