@@ -57,7 +57,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             ApogeeHeightManeuver maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 42164000.0, spc.Engines.First());
 
             var res = maneuver.TryExecute(orbitalParams);
-            Assert.Equal(new StateVector(orbitalParams.Position, orbitalParams.Velocity, orbitalParams.Observer, orbitalParams.Epoch, orbitalParams.Frame), res.sv);
+            // The state after the impulse, the given state unchanged (#588)
+            Assert.Equal(new StateVector(orbitalParams.Position, orbitalParams.Velocity + maneuver.DeltaV, orbitalParams.Observer, orbitalParams.Epoch, orbitalParams.Frame), res.sv);
             Assert.Equal(new StateOrientation(Quaternion.Zero, Vector3.Zero, orbitalParams.Epoch, orbitalParams.Frame), res.so);
             Assert.Equal(new Vector3(0.0, 2424.6084273080614, 0.0), maneuver.DeltaV);
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 49, 301, 844), TimeSpan.FromSeconds(16.0632973)), maneuver.ThrustWindow);
@@ -77,7 +78,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             ApogeeHeightManeuver maneuver = new ApogeeHeightManeuver(TestHelpers.EarthAtJ2000,new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, 6678000.0, spc.Engines.First());
 
             var res = maneuver.TryExecute(orbitalParams);
-            Assert.Equal(new StateVector(orbitalParams.Position, orbitalParams.Velocity, orbitalParams.Observer, orbitalParams.Epoch, orbitalParams.Frame), res.sv);
+            // The state after the impulse, the given state unchanged (#588)
+            Assert.Equal(new StateVector(orbitalParams.Position, orbitalParams.Velocity + maneuver.DeltaV, orbitalParams.Observer, orbitalParams.Epoch, orbitalParams.Frame), res.sv);
             Assert.Equal(new StateOrientation(new Quaternion(0.0,-1.0,0.0,0.0), Vector3.Zero, orbitalParams.Epoch, orbitalParams.Frame), res.so);
             Assert.Equal(new Vector3(0.0, -1467.1724438487042, 0.0), maneuver.DeltaV);
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 52, 841, 699).AddTicks(3), TimeSpan.FromSeconds(10.7481993)), maneuver.ThrustWindow);

@@ -118,7 +118,6 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 345.0 * Deg, 3, spc.Engines.First());
             Assert.Null(maneuver.TargetOrbit);
 
-            // Before the burn: TryExecute changes the velocity of the state it is given, which the elements cache
             var (_, _, dv) = ClosedFormPhasing(ClosedForm(orbitalParams.ToStateVector(), 0.0), 345.0 * Deg, 3);
             maneuver.TryExecute(orbitalParams.ToStateVector());
 
@@ -166,9 +165,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             // The target-orbit constructor with the target on the same orbit at Δθ: its mean anomaly from the closed form
             var target = Orbit(orbit, k.MeanOfTrue(deltaTheta), center, epoch);
-            var unburnt = Orbit(orbit, 0.0, center, epoch);
-            var reference = new PhasingManeuver(epoch, TimeSpan.Zero, target, revolutions, NewSpacecraft(-5882, unburnt).Engines.First());
-            reference.TryExecute(unburnt.ToStateVector());
+            var reference = new PhasingManeuver(epoch, TimeSpan.Zero, target, revolutions, NewSpacecraft(-5882, initial).Engines.First());
+            reference.TryExecute(initial.ToStateVector());
             double pathsError = (maneuver.DeltaV - reference.DeltaV).Magnitude();
 
             _output.WriteLine($"MEASURE #588 TryExecute {orbit} {phaseDeg} deg {revolutions} rev: dV {dv:F6} m/s, |dV - closed form| {dvError:E2} m/s, " +

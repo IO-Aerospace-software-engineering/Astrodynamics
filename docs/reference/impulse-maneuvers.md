@@ -37,7 +37,8 @@ included: an attitude chained after an impulse activates there (#539).
 In a propagation about the Earth both windows, and the holds of the attitudes, count TT seconds from the time argument
 of the event (#547), as the integration does (#501); about any other body, SSB mode included, TDB seconds, bit for bit
 as before 11.0.0. `ImpulseManeuver.TryExecute` called outside a propagation sets them in TDB seconds from the epoch of
-its state. The attitude of the impulse, its front along ΔV, is in force over `[t - 0.666 dt, end of ManeuverWindow]`,
+its state. It returns the state after the impulse as a new state, its velocity plus ΔV, and leaves the state it is
+given unchanged (before 11.0.0 it added ΔV to that state's velocity, #588). The attitude of the impulse, its front along ΔV, is in force over `[t - 0.666 dt, end of ManeuverWindow]`,
 its start no earlier than the start of the propagation or the previous activation of the chain
 ([Attitudes](attitudes.md#the-attitude-timeline)).
 

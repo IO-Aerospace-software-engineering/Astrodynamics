@@ -94,16 +94,28 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <summary>
-        /// Executes the impulse on <paramref name="stateVector"/>: adds its delta-V to the velocity, burns its fuel, sets its
-        /// windows in TDB seconds from the epoch of the state and raises the gate of the next maneuver of the chain to the
-        /// end of its maneuver window (<see cref="Spacecraft.ChainStandbyManeuver"/>).
+        /// Executes the impulse from <paramref name="stateVector"/>: computes its delta-V, burns its fuel, sets its windows in
+        /// TDB seconds from the epoch of the state and raises the gate of the next maneuver of the chain to the end of its
+        /// maneuver window (<see cref="Spacecraft.ChainStandbyManeuver"/>).
         /// </summary>
-        /// <returns>The state after the impulse and the attitude of the impulse, its front along the delta-V, in ICRF.</returns>
+        /// <param name="stateVector">The state at the impulse. It is left unchanged.</param>
+        /// <returns>
+        /// The state after the impulse, a new state: the position, epoch, frame, observer and covariance of
+        /// <paramref name="stateVector"/>, its velocity plus the delta-V; and the attitude of the impulse, its front along
+        /// the delta-V, in ICRF.
+        /// </returns>
         /// <remarks>
+        /// <para>
         /// In a propagation, its detector calls it at the event; about the Earth the propagation then counts the windows in
         /// TT seconds from the time argument of the event and sets the gate of the next maneuver to that end (#547), and it
         /// holds the attitude from the start of the thrust window to the end of the maneuver window (#539). Called
         /// directly, the windows stay in TDB seconds.
+        /// </para>
+        /// <para>
+        /// Before 11.0.0 the delta-V was added to the velocity of <paramref name="stateVector"/> itself, which was returned
+        /// (#588): a spacecraft whose initial orbital parameters were that state, or Keplerian elements whose cached state it
+        /// was, then started its next propagation from the state after the burn. The values returned are unchanged.
+        /// </para>
         /// </remarks>
         public override (StateVector sv, StateOrientation so) TryExecute(StateVector stateVector)
         {
@@ -120,8 +132,10 @@ namespace IO.Astrodynamics.Maneuver
             //Burn required fuel, if not enought fuel an exception will be thrown
             FuelBurned = Engine.Ignite(DeltaV);
 
-            //Update DeltaV
-            stateVector.UpdateVelocity(stateVector.Velocity + DeltaV);
+            //The state after the impulse, a new state: the given one is left unchanged (#588), since it may be the initial
+            //orbital parameters of the spacecraft or the state that Keplerian elements cache
+            var after = new StateVector(stateVector.Position, stateVector.Velocity + DeltaV, stateVector.Observer, stateVector.Epoch,
+                stateVector.Frame, stateVector.Covariance);
 
             //Compute thrust windows and maneuver windows.
             //The impulse is applied at the event epoch t. The equivalent finite burn of duration dt is placed on
@@ -144,7 +158,7 @@ namespace IO.Astrodynamics.Maneuver
             var deltaVInIcrf = stateVector.Frame == Frames.Frame.ICRF
                 ? DeltaV
                 : DeltaV.Rotate(stateVector.Frame.ToFrame(Frames.Frame.ICRF, stateVector.Epoch).Rotation);
-            return (stateVector, new StateOrientation(GetBodyFront().To(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
+            return (after, new StateOrientation(GetBodyFront().To(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
         }
 
         internal override void Reset()
