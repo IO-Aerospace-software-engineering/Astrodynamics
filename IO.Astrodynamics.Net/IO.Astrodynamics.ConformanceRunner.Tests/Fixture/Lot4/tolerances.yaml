@@ -38,7 +38,7 @@ defaults:
     abs_tol: 0.1
     rel_tol: 0.0
   tracking_range_km:
-    # T_op 0.001 km (1 m); reference term 3.2e-09 km (ground_station_24h_leo_mask0_geo_005 samples[13].range_km)
+    # T_op 0.001 km (1 m); reference term 2.4e-08 km (ground_station_24h_leo_mask10_lts_003 samples[13].range_km)
     abs_tol: 0.001
     rel_tol: 0.0
   tracking_range_rate_km_s:
