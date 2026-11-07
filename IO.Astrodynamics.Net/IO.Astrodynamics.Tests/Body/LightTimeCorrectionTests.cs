@@ -32,8 +32,10 @@ public class LightTimeCorrectionTests
         Aberration.XCN, Aberration.XCNS
     ];
 
-    // PROVISIONAL: every bound is twice the worst value on Linux x64 (2026-11-06), until the three platforms are read from
-    // the CI logs. Positions in m, velocities in m/s, angles in rad. The corrections (corrected minus geometric) of the
+    // Every bound is twice the worst value over Linux x64, Windows x64 and macOS arm64 (CI of #596 at cde5d3f5,
+    // 2026-11-07), rounded up at two digits; the three platforms agree but on the Moon from the coordinate site, whose
+    // geometric velocity (5.1e-13 m/s) and range (3.0e-7 m) are those of Windows and macOS. Positions in m, velocities in
+    // m/s, angles in rad. The corrections (corrected minus geometric) of the
     // kernel and coordinate observers agree with CSPICE to 2.2e-5 m and 1.9e-9 m/s (the Sun with XCN), at the double of
     // a 2024 epoch (1.2e-7 s). Those of the spacecraft to 3.9e-4 m and 8.3e-7 m/s: its two-body state at t - lt is
     // OrbitalParameters.AtEpoch over TT seconds, converted on the 100 ns of a Time (7.6 km/s x 50 ns = 0.38 mm); the Sun
@@ -138,7 +140,7 @@ public class LightTimeCorrectionTests
 
     [Fact]
     public void MoonFromCoordinateSite() =>
-        AssertRow("moon_from_site", (t, a) => Icrf(_moon.GetEphemeris(t, _site, Frames.Frame.ICRF, a)), (1.4e-7, 9.2e-13), (2.8e-5, 1.9e-9));
+        AssertRow("moon_from_site", (t, a) => Icrf(_moon.GetEphemeris(t, _site, Frames.Frame.ICRF, a)), (1.4e-7, 1.1e-12), (2.8e-5, 1.9e-9));
 
     [Fact]
     public void SunFromCoordinateSite() =>
@@ -217,7 +219,7 @@ public class LightTimeCorrectionTests
     public void SpacecraftHorizontalFromCoordinateSite() => AssertHorizontal("spacecraft_from_site", _spacecraft, (1.7e-8, 7.0e-2, 1.1e-4), (1.1e-10, 3.2e-4, 1.5e-6));
 
     [Fact]
-    public void MoonHorizontalFromCoordinateSite() => AssertHorizontal("moon_from_site", _moon, (8.9e-16, 4.8e-7, 8.2e-12), (6.8e-14, 1.3e-5, 1.4e-9));
+    public void MoonHorizontalFromCoordinateSite() => AssertHorizontal("moon_from_site", _moon, (8.9e-16, 6.0e-7, 8.2e-12), (6.8e-14, 1.3e-5, 1.4e-9));
 
     [Theory]
     [InlineData(0.3, 0.9)] // general
@@ -236,7 +238,8 @@ public class LightTimeCorrectionTests
         var numerical = (plus - minus) / (2.0 * h);
         var analytic = CelestialItem.StellarAberrationRate(position, positionRate, velocity, acceleration);
         _output.WriteLine($"{offApex}: |analytic| {analytic.Magnitude():E6} m/s, |analytic - numerical| {(analytic - numerical).Magnitude():E3} m/s");
-        // PROVISIONAL: twice the worst on Linux x64 (2026-11-06), 1.45e-5 m/s, the rounding of the central difference
+        // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI of #596 at cde5d3f5),
+        // 1.45e-5 m/s, the rounding of the central difference
         // (1.5e11 m x 1e-16 / 1 s); its truncation is far below
         Assert.True((analytic - numerical).Magnitude() < 2.9e-5, $"{(analytic - numerical).Magnitude():E3}");
     }

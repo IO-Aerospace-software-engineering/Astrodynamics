@@ -359,8 +359,8 @@ public class GeometryFinderTests
 /// </summary>
 internal static class GeometryReference
 {
-    // PROVISIONAL: twice the worst value on Linux x64 (2026-11-06), the managed search at 1 µs against CSPICE at 1e-9 s,
-    // until the three platforms are read from the CI logs. Crossings and threshold edges: 2.38e-7 s (the Moon from
+    // Twice the worst value over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI of #596 at cde5d3f5,
+    // 2026-11-07), the managed search at 1 µs against CSPICE at 1e-9 s. Crossings and threshold edges: 2.38e-7 s (the Moon from
     // DSS-13 beyond 400 000 km); the Earth-Moon distance extremes at a 1-day step: 4.81e-7 s (LOCMIN); the Moon's
     // elevation extremes from DSS-13 at a 60 s step: 4.51e-9 s (LOCMAX)
     internal const double ThresholdCrossing = 4.8e-7;
