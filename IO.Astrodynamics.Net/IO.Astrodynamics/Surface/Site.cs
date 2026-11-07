@@ -216,7 +216,7 @@ namespace IO.Astrodynamics.Surface
                 siteCB.Velocity - observerCB.Velocity,
                 observer, date, Frames.Frame.ICRF);
 
-            if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+            if (aberration != Aberration.None)
                 relative = CelestialItem.CorrectFromAberrationCB(this, date, observer, aberration, relative, observerCB, cb);
 
             return relative.ToFrame(frame);
@@ -399,7 +399,7 @@ namespace IO.Astrodynamics.Surface
                     break;
             }
 
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, stepSize);
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateCoordinates, relationalOperator, value, adjustValue, stepSize);
         }
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace IO.Astrodynamics.Surface
                     throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
             }
 
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateIllumination, relationalOperator, value, stepSize);
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateIllumination, relationalOperator, value, adjustValue, stepSize);
         }
 
         /// <summary>

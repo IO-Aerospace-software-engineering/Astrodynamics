@@ -1,0 +1,41 @@
+{
+  "id": "eclipse_1h_leo_annular_moon_005",
+  "category": "eclipse",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-06",
+    "method": "GMAT R2026a EclipseLocator: the two-body orbit of the elements (EarthICRF, Earth.Mu = gm_km3_s2, PrinceDormand78 fixed step 10 s), the kernels of data/, the Earth oriented by IAU_EARTH (Earth.SpiceFrameId), occulting bodies Moon, no light time, no stellar aberration, StepSize 1 s, over the TT seconds of the search window. Every event of the window, each partial, total or annular interval its own event, in time order: its edges as GMAT prints them (UTC, to the millisecond), its duration unrounded.",
+    "reference_frame": "EarthICRF",
+    "script": "eclipse_1h_leo_annular_moon_005.script",
+    "log": "eclipse_1h_leo_annular_moon_005.log"
+  },
+  "outputs": {
+    "events": [
+      {
+        "body": "Moon",
+        "type": "penumbra",
+        "start": "2026-02-17T11:58:35.969 UTC",
+        "stop": "2026-02-17T12:12:24.775 UTC",
+        "duration_s": 828.80576339
+      },
+      {
+        "body": "Moon",
+        "type": "antumbra",
+        "start": "2026-02-17T12:12:24.775 UTC",
+        "stop": "2026-02-17T12:12:46.556 UTC",
+        "duration_s": 21.781504643
+      },
+      {
+        "body": "Moon",
+        "type": "penumbra",
+        "start": "2026-02-17T12:12:46.556 UTC",
+        "stop": "2026-02-17T12:22:17.155 UTC",
+        "duration_s": 570.59828618
+      }
+    ]
+  }
+}

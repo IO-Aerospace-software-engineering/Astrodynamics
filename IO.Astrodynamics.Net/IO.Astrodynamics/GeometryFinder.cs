@@ -1,15 +1,80 @@
-﻿using System;
+// Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics;
 
+/// <summary>
+/// The managed search of the windows where a geometric quantity satisfies a relation: the search of the distance,
+/// coordinate and illumination constraints of the bodies, spacecraft and sites that CSPICE cannot search (a propagated
+/// spacecraft, a site built from its coordinates, two natural bodies).
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>Samples.</b> The quantity is sampled at every step from the start of the search window, and at its end; nothing is
+/// evaluated outside the search window. As with CSPICE's geometry finder, the step must be shorter than the shortest
+/// window and the shortest gap, and than half the time between two extremes of the quantity: an event between two
+/// samples that leaves no trace on them is not found.
+/// </para>
+/// <para>
+/// <b>Transitions.</b> Each change of the relation between two samples is located to 1 µs (CSPICE's
+/// <c>SPICE_GF_CNVTOL</c>): by Brent's root finder on the quantity minus the value for <see cref="RelationnalOperator.Greater"/>,
+/// <see cref="RelationnalOperator.Lower"/> and <see cref="RelationnalOperator.Equal"/>, by a bisection of the relation
+/// for <see cref="RelationnalOperator.GreaterOrEqual"/>, <see cref="RelationnalOperator.LowerOrEqual"/> and a
+/// <see cref="bool"/> quantity; the epoch of the transition is then rounded to the 100 ns of a <see cref="Time"/>. A
+/// window that holds at the start of the search window starts there, one that holds at its end ends there, and a
+/// transition located within 1 µs of them is moved onto them. The windows are closed, as CSPICE's: two windows that one
+/// edge would close and open are one window.
+/// </para>
+/// <para>
+/// <b>Equality.</b> <see cref="RelationnalOperator.Equal"/> gives the instants where the quantity crosses the value, as
+/// windows of zero length, and the intervals where the samples equal it exactly; a jump of the quantity (the branch cut
+/// of a right ascension, a longitude or an azimuth) is no crossing. <see cref="RelationnalOperator.NotEqual"/> gives the
+/// rest of the search window, a window from each crossing to the next. A <see cref="bool"/> quantity is compared
+/// exactly.
+/// </para>
+/// <para>
+/// <b>Extremes.</b> <see cref="RelationnalOperator.LocalMin"/> and <see cref="RelationnalOperator.LocalMax"/> give the
+/// sign changes of the rate of the quantity inside the search window, each located to 1 µs, as windows of zero length;
+/// the rate is the Richardson extrapolation of the derivatives of the quartics through five values, a sixteenth and a
+/// thirty-second of the step apart, taken at the samples about each extreme the values show and at the first and last
+/// two samples. As CSPICE's, the
+/// bounds of the search window are no local extremes, while they are candidates of
+/// <see cref="RelationnalOperator.AbsoluteMin"/> and <see cref="RelationnalOperator.AbsoluteMax"/>: the lowest (or
+/// highest) of the local extremes and of the bounds, the earliest on a tie, as a window of zero length; with a positive
+/// adjustment value, the windows where the quantity is within it of that extreme.
+/// </para>
+/// <para>
+/// <b>Branch cuts.</b> A threshold window on a quantity that jumps (a right ascension, a longitude, an azimuth) ends or
+/// starts at the jump, and an extreme of the rate there is no extreme.
+/// </para>
+/// <para>The search keeps no state between calls: two searches may run concurrently.</para>
+/// </remarks>
 public class GeometryFinder
 {
+    // The convergence tolerance of the transitions, s: CSPICE's SPICE_GF_CNVTOL
+    private const double Tolerance = 1e-6;
+
+    // The spacing of the five values of the rate, as a fraction of the step (and half of it, for Richardson's extrapolation)
+    private const double RateSpacingPerStep = 1.0 / 16.0;
+
     public GeometryFinder()
     {
     }
 
+    /// <summary>
+    /// Whether a value satisfies a relation with a target value.
+    /// </summary>
+    /// <param name="actualValue">The value.</param>
+    /// <param name="targetValue">The target value.</param>
+    /// <param name="operatorType">The relation; the extremes are no relation of two values.</param>
+    /// <returns>Whether the relation holds; the equality of two doubles holds within 1e-9.</returns>
+    /// <exception cref="ArgumentException">The relation is an extreme, or an order of two booleans, or the type is
+    /// neither a double nor a boolean.</exception>
     public bool EvaluateCondition<T>(T actualValue, T targetValue, RelationnalOperator operatorType)
     {
         if (actualValue is double actualDouble && targetValue is double targetDouble)
@@ -50,106 +115,531 @@ public class GeometryFinder
         }
     }
 
+    /// <summary>
+    /// The windows of the search window where the quantity satisfies the relation; see the remarks of the class.
+    /// </summary>
+    /// <param name="searchWindow">The search window; the windows are in the time frame of its start.</param>
+    /// <param name="calculateValue">The quantity at an epoch: a <see cref="double"/>, or a <see cref="bool"/> for
+    /// <see cref="RelationnalOperator.Equal"/> and <see cref="RelationnalOperator.NotEqual"/>.</param>
+    /// <param name="relationalOperator">The relation.</param>
+    /// <param name="targetValue">The value; ignored by the extremes.</param>
+    /// <param name="stepSize">The step of the samples, positive.</param>
+    /// <returns>The windows, in time order.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
+    /// <exception cref="ArgumentException">The type is neither a double nor a boolean, or the relation is not one of a
+    /// boolean.</exception>
     public IEnumerable<Window> FindWindowsWithCondition<T>(Window searchWindow,
         Func<Time, T> calculateValue,
         RelationnalOperator relationalOperator, T targetValue,
         TimeSpan stepSize)
     {
-        List<Window> validWindows = new List<Window>();
-        var precision = TimeSpan.FromSeconds(1);
-        Time current = searchWindow.StartDate;
-        Time end = searchWindow.EndDate;
+        return FindWindowsWithCondition(searchWindow, calculateValue, relationalOperator, targetValue, 0.0, stepSize);
+    }
 
-        bool isInValidWindow = false;
-        Time? validWindowStart = null;
-
-        // Parcourir la plage de temps par stepSize
-        while (current <= end)
+    /// <summary>
+    /// The windows of the search window where the quantity satisfies the relation, with the adjustment value of the
+    /// absolute extremes (CSPICE's <c>adjust</c>); see the remarks of the class.
+    /// </summary>
+    /// <param name="searchWindow">The search window; the windows are in the time frame of its start.</param>
+    /// <param name="calculateValue">The quantity at an epoch.</param>
+    /// <param name="relationalOperator">The relation.</param>
+    /// <param name="targetValue">The value; ignored by the extremes.</param>
+    /// <param name="adjustValue">For <see cref="RelationnalOperator.AbsoluteMin"/> and
+    /// <see cref="RelationnalOperator.AbsoluteMax"/>, zero for the extreme itself, or positive for the windows where the
+    /// quantity is within it of the extreme; ignored by the other relations.</param>
+    /// <param name="stepSize">The step of the samples, positive.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The step is not positive, or the adjustment value of an absolute
+    /// extreme is negative.</exception>
+    internal IEnumerable<Window> FindWindowsWithCondition<T>(Window searchWindow, Func<Time, T> calculateValue,
+        RelationnalOperator relationalOperator, T targetValue, double adjustValue, TimeSpan stepSize)
+    {
+        ArgumentNullException.ThrowIfNull(calculateValue);
+        if (stepSize <= TimeSpan.Zero)
         {
-            // Calculer la valeur actuelle à la date 'current'
-            T currentValue = calculateValue(current);
+            throw new ArgumentOutOfRangeException(nameof(stepSize), "The step must be positive.");
+        }
 
-            // Vérifier la condition à la date actuelle
-            if (EvaluateCondition<T>(currentValue, targetValue, relationalOperator))
+        if (calculateValue is Func<Time, double> quantity && targetValue is double value)
+        {
+            if (relationalOperator is RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax && !(adjustValue >= 0.0))
             {
-                // Si la condition est satisfaite et qu'on n'est pas déjà dans une fenêtre valide
-                if (!isInValidWindow)
-                {
-                    // Chercher précisément le début de la fenêtre avec une recherche binaire
-                    validWindowStart = FindTransition(current - stepSize, current, calculateValue, targetValue, relationalOperator, precision);
-                    isInValidWindow = true;
-                }
+                throw new ArgumentOutOfRangeException(nameof(adjustValue), "The adjustment value must be positive or zero.");
+            }
+
+            var search = new Search(searchWindow, stepSize, quantity);
+            return search.ToWindows(Find(search, relationalOperator, value, adjustValue));
+        }
+
+        if (calculateValue is Func<Time, bool> predicate && targetValue is bool target)
+        {
+            if (relationalOperator is not (RelationnalOperator.Equal or RelationnalOperator.NotEqual))
+            {
+                throw new ArgumentException("Invalid operator");
+            }
+
+            bool equal = relationalOperator == RelationnalOperator.Equal;
+            var search = new Search(searchWindow, stepSize, null);
+            return search.ToWindows(Merge(Threshold(search, x => predicate(search.At(x)) == target == equal, null)));
+        }
+
+        throw new ArgumentException("Invalid type");
+    }
+
+    /// <summary>The windows of a double quantity, as offsets from the start of the search window.</summary>
+    private static List<(double Start, double End)> Find(Search search, RelationnalOperator relation, double value, double adjust)
+    {
+        switch (relation)
+        {
+            case RelationnalOperator.Greater:
+                return Merge(Threshold(search, null, x => search.F(x) - value));
+            case RelationnalOperator.Lower:
+                return Merge(Threshold(search, null, x => value - search.F(x)));
+            case RelationnalOperator.GreaterOrEqual:
+                return Merge(Threshold(search, x => search.F(x) >= value, null));
+            case RelationnalOperator.LowerOrEqual:
+                return Merge(Threshold(search, x => search.F(x) <= value, null));
+            case RelationnalOperator.Equal:
+                return Crossings(search, value);
+            case RelationnalOperator.NotEqual:
+                return Complement(search, Crossings(search, value));
+            case RelationnalOperator.LocalMin:
+                return Extremes(search, true).Select(x => (x, x)).ToList();
+            case RelationnalOperator.LocalMax:
+                return Extremes(search, false).Select(x => (x, x)).ToList();
+            case RelationnalOperator.AbsoluteMin:
+                return Absolute(search, true, adjust);
+            case RelationnalOperator.AbsoluteMax:
+                return Absolute(search, false, adjust);
+            default:
+                throw new ArgumentException("Invalid operator");
+        }
+    }
+
+    /// <summary>
+    /// The windows where a relation holds, from its value at the samples: each change located by Brent's root finder on a
+    /// margin, positive where the relation holds and zero or negative elsewhere, or by a bisection of the relation.
+    /// </summary>
+    /// <param name="search">The search.</param>
+    /// <param name="holds">The relation at an offset, for a bisection; null when the margin is given.</param>
+    /// <param name="margin">The margin at an offset, for Brent's root finder; null when the relation is given.</param>
+    /// <param name="extra">Offsets sampled in addition to the step, inside the search window.</param>
+    private static List<(double Start, double End)> Threshold(Search search, Func<double, bool> holds, Func<double, double> margin,
+        IEnumerable<double> extra = null)
+    {
+        var x = extra == null ? search.Offsets.ToList() : search.Offsets.Concat(extra).Distinct().OrderBy(o => o).ToList();
+        var m = margin == null ? null : x.Select(margin).ToArray();
+        var h = margin == null ? x.Select(holds).ToArray() : m.Select(v => v > 0.0).ToArray();
+        double last = search.Length;
+
+        var windows = new List<(double Start, double End)>();
+        double? open = h[0] ? 0.0 : null;
+        for (int i = 1; i < x.Count; i++)
+        {
+            if (h[i] == h[i - 1])
+            {
+                continue;
+            }
+
+            double a = x[i - 1];
+            double root = margin == null || double.IsNaN(m[i - 1]) || double.IsNaN(m[i])
+                ? Bisect(margin == null ? holds : o => margin(o) > 0.0, a, x[i], h[i])
+                : a + Brent.FindRoot(o => margin(a + o), 0.0, x[i] - a, m[i - 1], m[i], Tolerance);
+            if (h[i])
+            {
+                open = root <= Tolerance ? 0.0 : root;
             }
             else
             {
-                // Si la condition n'est plus satisfaite et qu'on était dans une fenêtre valide
-                if (isInValidWindow)
-                {
-                    // Chercher précisément la fin de la fenêtre avec une recherche binaire
-                    Time validWindowEnd = FindTransition(validWindowStart.Value, current, calculateValue, targetValue, ReverseOperator(relationalOperator), precision);
-
-                    // Ajouter la fenêtre précise à la liste
-                    validWindows.Add(new Window(validWindowStart.Value, validWindowEnd));
-
-                    // Réinitialiser le marqueur
-                    isInValidWindow = false;
-                    validWindowStart = null;
-                }
+                windows.Add((open!.Value, last - root <= Tolerance ? last : root));
+                open = null;
             }
-
-            // Avancer à l'intervalle suivant
-            current = current.Add(stepSize);
         }
 
-        // Gérer le cas où la condition est satisfaite jusqu'à la fin de la plage de recherche
-        if (isInValidWindow)
+        if (open.HasValue)
         {
-            Time validWindowEnd = FindTransition(validWindowStart.Value, end, calculateValue, targetValue, ReverseOperator(relationalOperator), precision);
-            validWindows.Add(new Window(validWindowStart.Value, validWindowEnd));
+            windows.Add((open.Value, last));
         }
 
-        return validWindows;
+        return windows;
     }
 
-    private Time FindTransition<T>(Time start, Time end, Func<Time, T> calculateValue,
-        T targetValue, RelationnalOperator relationalOperator, TimeSpan precision)
+    /// <summary>The change of a relation between two offsets, to the tolerance: the middle of the last bracket.</summary>
+    /// <param name="holds">The relation.</param>
+    /// <param name="a">The offset where the relation is the opposite of <paramref name="holdsAtB"/>.</param>
+    /// <param name="b">The other offset.</param>
+    /// <param name="holdsAtB">The relation at <paramref name="b"/>.</param>
+    private static double Bisect(Func<double, bool> holds, double a, double b, bool holdsAtB)
     {
-        while ((end - start) > precision)
+        while (b - a > Tolerance)
         {
-            // Calculer le milieu de l'intervalle
-            Time mid = start + (end - start) / 2;
-
-            // Calculer la valeur au milieu
-            T midValue = calculateValue(mid);
-
-            // Vérifier la condition à la date 'mid'
-            if (EvaluateCondition<T>(midValue, targetValue, relationalOperator))
+            double middle = 0.5 * (a + b);
+            if (middle <= a || middle >= b)
             {
-                // Si la condition est satisfaite à 'mid', on continue à chercher vers le début pour trouver la transition exacte
-                end = mid;
+                break;
+            }
+
+            if (holds(middle) == holdsAtB)
+            {
+                b = middle;
             }
             else
             {
-                // Sinon, on cherche vers la fin
-                start = mid;
+                a = middle;
             }
         }
 
-        // Retourner la date où la transition a été détectée avec la précision requise
-        return start;
+        return 0.5 * (a + b);
     }
 
-    private RelationnalOperator ReverseOperator(RelationnalOperator op)
+    /// <summary>The union of windows in time order, two windows that share an edge made one, as a CSPICE window.</summary>
+    private static List<(double Start, double End)> Merge(List<(double Start, double End)> windows)
     {
-        return op switch
+        var merged = new List<(double Start, double End)>(windows.Count);
+        foreach (var window in windows)
         {
-            RelationnalOperator.Greater => RelationnalOperator.LowerOrEqual,
-            RelationnalOperator.Lower => RelationnalOperator.GreaterOrEqual,
-            RelationnalOperator.Equal => RelationnalOperator.NotEqual,
-            RelationnalOperator.LowerOrEqual => RelationnalOperator.Greater,
-            RelationnalOperator.GreaterOrEqual => RelationnalOperator.Lower,
-            RelationnalOperator.NotEqual => RelationnalOperator.Equal,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+            if (merged.Count > 0 && window.Start <= merged[^1].End)
+            {
+                merged[^1] = (merged[^1].Start, System.Math.Max(merged[^1].End, window.End));
+            }
+            else
+            {
+                merged.Add(window);
+            }
+        }
+
+        return merged;
+    }
+
+    /// <summary>
+    /// The crossings of a value: an instant for each sign change of the quantity minus the value between two samples that
+    /// is no jump of the quantity, and the samples, or runs of samples, where they are equal.
+    /// </summary>
+    private static List<(double Start, double End)> Crossings(Search search, double value)
+    {
+        var x = search.Offsets;
+        var g = x.Select(o => search.F(o) - value).ToArray();
+        var found = new List<(double Start, double End)>();
+        for (int i = 0; i < x.Count; i++)
+        {
+            if (g[i] == 0.0)
+            {
+                // A sample, or a run of samples, equal to the value
+                int j = i;
+                while (j + 1 < x.Count && g[j + 1] == 0.0)
+                {
+                    j++;
+                }
+
+                found.Add((x[i], x[j]));
+                i = j;
+                continue;
+            }
+
+            if (i + 1 < x.Count && g[i + 1] != 0.0 && g[i] > 0.0 != g[i + 1] > 0.0)
+            {
+                double a = x[i];
+                double b = x[i + 1];
+                double root = a + Brent.FindRoot(o => search.F(a + o) - value, 0.0, b - a, g[i], g[i + 1], Tolerance);
+                if (!IsJump(search, root, a, b, System.Math.Abs(g[i + 1] - g[i])))
+                {
+                    root = root <= Tolerance ? 0.0 : search.Length - root <= Tolerance ? search.Length : root;
+                    found.Add((root, root));
+                }
+            }
+        }
+
+        return found;
+    }
+
+    /// <summary>
+    /// Whether a sign change located at <paramref name="root"/> in [<paramref name="a"/>, <paramref name="b"/>] is a
+    /// jump of the quantity (a branch cut): the quantity changes across 20 µs about the root by more than half its change
+    /// over the bracket.
+    /// </summary>
+    private static bool IsJump(Search search, double root, double a, double b, double change)
+    {
+        const double halfWidth = 10.0 * Tolerance;
+        if (b - a < 8.0 * halfWidth)
+        {
+            return false;
+        }
+
+        double before = System.Math.Max(a, root - halfWidth);
+        double after = System.Math.Min(b, root + halfWidth);
+        return System.Math.Abs(search.F(after) - search.F(before)) > 0.5 * change;
+    }
+
+    /// <summary>
+    /// The parts of the search window outside the crossings: a window from the start, or from each crossing, to the next
+    /// crossing, or to the end; none of zero length.
+    /// </summary>
+    private static List<(double Start, double End)> Complement(Search search, List<(double Start, double End)> crossings)
+    {
+        var windows = new List<(double Start, double End)>();
+        double cursor = 0.0;
+        foreach (var crossing in crossings)
+        {
+            if (crossing.Start > cursor)
+            {
+                windows.Add((cursor, crossing.Start));
+            }
+
+            cursor = System.Math.Max(cursor, crossing.End);
+        }
+
+        if (search.Length > cursor)
+        {
+            windows.Add((cursor, search.Length));
+        }
+
+        return windows;
+    }
+
+    /// <summary>
+    /// The local minima (or maxima) inside the search window: the sign changes of the rate between the samples, each
+    /// located by Brent's root finder to the tolerance, the jumps of the quantity left out.
+    /// </summary>
+    private static List<double> Extremes(Search search, bool minimum)
+    {
+        var extremes = new List<double>();
+        if (search.RateSpacing < 2.0 * Tolerance)
+        {
+            return extremes;
+        }
+
+        // The rate at the samples about each extreme the values show (three samples that do not increase, or decrease,
+        // strictly) and at the first two and the last two samples, where the values show no extreme of the first or the
+        // last interval
+        var x = search.Offsets;
+        int last = x.Count - 1;
+        var f = x.Select(search.F).ToArray();
+        var candidates = new SortedSet<int> { 0, 1, last - 1, last };
+        for (int i = 1; i < last; i++)
+        {
+            if ((f[i] - f[i - 1]) * (f[i + 1] - f[i]) <= 0.0)
+            {
+                candidates.Add(i - 1);
+                candidates.Add(i);
+                candidates.Add(i + 1);
+            }
+        }
+
+        var rate = new Dictionary<int, double>();
+        foreach (var i in candidates.Where(i => i >= 0 && i <= last))
+        {
+            rate[i] = search.Rate(x[i]);
+        }
+
+        // A minimum where the rate goes from negative to zero or positive between two consecutive samples, a maximum the
+        // other way; a zero rate at the first sample of the pair belongs to the previous pair
+        for (int i = 0; i < last; i++)
+        {
+            if (!rate.TryGetValue(i, out double ra) || !rate.TryGetValue(i + 1, out double rb) || double.IsNaN(ra) || double.IsNaN(rb))
+            {
+                continue;
+            }
+
+            if (minimum ? ra < 0.0 && rb >= 0.0 : ra > 0.0 && rb <= 0.0)
+            {
+                double a = x[i];
+                double root = a + Brent.FindRoot(o => search.Rate(a + o), 0.0, x[i + 1] - a, ra, rb, Tolerance);
+                if (root > Tolerance && search.Length - root > Tolerance && IsExtreme(search, root))
+                {
+                    extremes.Add(root);
+                }
+            }
+        }
+
+        return extremes;
+    }
+
+    /// <summary>
+    /// Whether the quantity has an extreme at <paramref name="root"/>, a zero of its rate: at the spacing of the rate,
+    /// its change across the root is less than half its curvature term, which a jump of the quantity (a branch cut)
+    /// is not.
+    /// </summary>
+    private static bool IsExtreme(Search search, double root)
+    {
+        // The extremes lie more than the tolerance inside the search window, and the rate spacing is at least twice it
+        double spacing = System.Math.Min(search.RateSpacing, System.Math.Min(root, search.Length - root));
+        double before = search.F(root - spacing);
+        double after = search.F(root + spacing);
+        return System.Math.Abs(after - before) < 0.5 * System.Math.Abs(after + before - 2.0 * search.F(root));
+    }
+
+    /// <summary>
+    /// The absolute minimum (or maximum): the lowest (or highest) of the local extremes and of the bounds, the earliest on
+    /// a tie, as a window of zero length; with a positive adjustment, the windows within it of the extreme.
+    /// </summary>
+    private static List<(double Start, double End)> Absolute(Search search, bool minimum, double adjust)
+    {
+        double sign = minimum ? 1.0 : -1.0;
+        var locals = Extremes(search, minimum);
+        var candidates = new List<double> { 0.0 };
+        candidates.AddRange(locals);
+        candidates.Add(search.Length);
+        double best = candidates[0];
+        double bestValue = sign * search.F(best);
+        foreach (var candidate in candidates.Skip(1))
+        {
+            double v = sign * search.F(candidate);
+            if (v < bestValue)
+            {
+                best = candidate;
+                bestValue = v;
+            }
+        }
+
+        if (adjust == 0.0)
+        {
+            return new List<(double Start, double End)> { (best, best) };
+        }
+
+        // The windows where the quantity is within the adjustment of the extreme; the local extremes are sampled, so that
+        // a window narrower than the step about one of them is found
+        double threshold = bestValue + adjust;
+        return Merge(Threshold(search, null, o => threshold - sign * search.F(o), locals));
+    }
+
+    /// <summary>
+    /// A search: the samples, as offsets in seconds from the start of the search window, every step and the end, the
+    /// quantity and its rate at an offset, and the windows of intervals of offsets.
+    /// </summary>
+    private sealed class Search
+    {
+        private readonly Window _window;
+        private readonly Time _start;
+        private readonly Func<Time, double> _quantity;
+
+        internal Search(in Window searchWindow, in TimeSpan step, Func<Time, double> quantity)
+        {
+            _window = searchWindow;
+            _start = searchWindow.StartDate;
+            _quantity = quantity;
+
+            // The end in the time frame of the start, whose calendar the samples follow
+            long totalTicks = System.Math.Max(0L, (searchWindow.EndDate.ConvertTo(_start.Frame).DateTime - _start.DateTime).Ticks);
+            var offsets = new List<double>();
+            for (long ticks = 0; ticks < totalTicks; ticks += step.Ticks)
+            {
+                offsets.Add(ticks / (double)TimeSpan.TicksPerSecond);
+            }
+
+            Length = totalTicks / (double)TimeSpan.TicksPerSecond;
+            offsets.Add(Length);
+            Offsets = offsets;
+            RateSpacing = System.Math.Min(System.Math.Max(step.TotalSeconds * RateSpacingPerStep, 20.0 * Tolerance), 0.25 * Length);
+        }
+
+        /// <summary>The offsets of the samples, s, increasing; the first is 0, the last the end of the search window.</summary>
+        internal IReadOnlyList<double> Offsets { get; }
+
+        /// <summary>The offset of the end of the search window, s.</summary>
+        internal double Length { get; }
+
+        /// <summary>The larger spacing of the five values of the rate, s.</summary>
+        internal double RateSpacing { get; }
+
+        /// <summary>The epoch of an offset, to the 100 ns of a <see cref="Time"/>; the bounds exactly.</summary>
+        internal Time At(double offset)
+        {
+            if (offset <= 0.0)
+            {
+                return _start;
+            }
+
+            if (offset >= Length)
+            {
+                return _window.EndDate;
+            }
+
+            return _start.AddTicks(Ticks(offset));
+        }
+
+        /// <summary>The quantity at an offset, clamped to the search window.</summary>
+        internal double F(double offset)
+        {
+            return _quantity(At(offset));
+        }
+
+        /// <summary>
+        /// The rate of the quantity at an offset: the derivatives of the quartics through its values at five epochs, the
+        /// rate spacing and half of it apart, centered on the offset or, near a bound, within the search window, combined
+        /// by Richardson's extrapolation.
+        /// </summary>
+        internal double Rate(double offset)
+        {
+            // Richardson's extrapolation of the five-point derivatives at the spacing and at half of it: their h^4 terms
+            // cancel
+            return (16.0 * Rate(offset, 0.5 * RateSpacing) - Rate(offset, RateSpacing)) / 15.0;
+        }
+
+        private double Rate(double offset, double h)
+        {
+            double center = System.Math.Clamp(offset, 2.0 * h, Length - 2.0 * h);
+            Span<double> nodes = stackalloc double[5];
+            Span<double> values = stackalloc double[5];
+            for (int k = 0; k < 5; k++)
+            {
+                // The epochs actually evaluated, to the 100 ns of a Time
+                nodes[k] = System.Math.Clamp(Ticks(center + (k - 2) * h), 0L, Ticks(Length)) / (double)TimeSpan.TicksPerSecond;
+                values[k] = F(nodes[k]);
+            }
+
+            return Derivative(nodes, values, offset);
+        }
+
+        /// <summary>The derivative at <paramref name="x"/> of the polynomial through the points, in the Lagrange form.</summary>
+        private static double Derivative(ReadOnlySpan<double> nodes, ReadOnlySpan<double> values, double x)
+        {
+            double derivative = 0.0;
+            for (int k = 0; k < nodes.Length; k++)
+            {
+                // L_k'(x) = sum over m != k of prod over j != k, m of (x - x_j), over prod over j != k of (x_k - x_j)
+                double denominator = 1.0;
+                double numerator = 0.0;
+                for (int j = 0; j < nodes.Length; j++)
+                {
+                    if (j != k)
+                    {
+                        denominator *= nodes[k] - nodes[j];
+                    }
+                }
+
+                for (int m = 0; m < nodes.Length; m++)
+                {
+                    if (m == k)
+                    {
+                        continue;
+                    }
+
+                    double product = 1.0;
+                    for (int j = 0; j < nodes.Length; j++)
+                    {
+                        if (j != k && j != m)
+                        {
+                            product *= x - nodes[j];
+                        }
+                    }
+
+                    numerator += product;
+                }
+
+                derivative += values[k] * numerator / denominator;
+            }
+
+            return derivative;
+        }
+
+        /// <summary>The windows of intervals of offsets; a bound of the search window exactly.</summary>
+        internal IEnumerable<Window> ToWindows(IEnumerable<(double Start, double End)> intervals)
+        {
+            return intervals.Select(w => new Window(At(w.Start), At(w.End))).ToArray();
+        }
+
+        private static long Ticks(double offset)
+        {
+            return (long)System.Math.Round(offset * TimeSpan.TicksPerSecond);
+        }
     }
 }

@@ -189,6 +189,16 @@
       <Content Include="Data\OccultationReference\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <!-- CSPICE windows of tools/geometry_reference, for the managed window search (#590, #461, #486, #487). -->
+      <None Remove="Data\GeometryReference\*" />
+      <Content Include="Data\GeometryReference\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <!-- CSPICE states of tools/light_time_reference, for the corrections of the reference-body path (#491). -->
+      <None Remove="Data\LightTimeReference\*" />
+      <Content Include="Data\LightTimeReference\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
       <!-- Kernels and CSPICE windows of tools/fov_reference, for the field-of-view searches (#515). -->
       <None Remove="Data\FieldOfViewReference\*" />
       <Content Include="Data\FieldOfViewReference\*">

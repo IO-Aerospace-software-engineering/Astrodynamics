@@ -1,0 +1,46 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/orbital_events.yaml; do not edit.
+id: "orbital_events_24h_leo_grav10_altitude_003"
+schema_version: "v1"
+version: "0.1.0"
+category: "orbital_events"
+created: "2026-11-06"
+description: >
+  The orbit of orbital_events 002, 10 deg further along it, crossing the geodetic altitude of 620 km, upward and
+  downward: the altitude above the pck00011 ellipsoid oriented by ITRF93 of data/'s Earth orientation file. The
+  EGM2008 field of data/ to degree and order 10 (the model's GM and radius applied to the whole field, oriented by
+  ITRF93 of data/'s Earth orientation file) and the Moon and the Sun as point masses. No drag, no SRP. The state is
+  GMAT R2026a's conversion, in ICRF with BODY399_GM, of the elements a = 7000 km, e = 0.01, i = 51.6 deg, RAAN 45
+  deg, argument of periapsis 30 deg, true anomaly 300 deg. The model is that of spec.md section 14.2.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  orbit:                                # GMAT R2026a's conversion of the elements of the description (reference-check.json)
+    type: "state_vector"
+    position_km: [5794.31541230956, 2735.3928248358648, -2729.0077690849494]
+    velocity_km_s: [-0.257783504006292, 5.5405544055596945, 5.172968177679138]
+  propagation_window:
+    start: "2026-01-20T06:00:00.000 UTC"
+    end: "2026-01-21T06:00:00.000 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp: false
+  spacecraft:                           # informative (spec.md 14.2)
+    mass_kg: 1000.0
+    sectional_area_m2: 1.0
+    drag_coefficient: 2.2
+    radiation_pressure_coefficient: 1.0
+  step_size_s: 60.0                     # informative (spec.md 14.2)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]
+  events:
+    - type: "altitude"
+      value_km: 620.0
+      direction: "any"

@@ -1,0 +1,37 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/attitude.yaml; do not edit.
+id: "attitude_2h_leo_nadir_normal_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "attitude"
+created: "2026-11-06"
+description: >
+  Two hours of a nadir-pointing attitude on a LEO: body +X to nadir (-r), body +Z toward the orbit normal (r x v),
+  the attitude body to ICRF at each sample. The state is GMAT R2026a's conversion, in ICRF with gm_km3_s2, of the
+  elements a = 6878 km, e = 0.01, i = 51.6 deg, RAAN 30 deg, argument of periapsis 40 deg, true anomaly 10 deg; the
+  trajectory is its two-body propagation, the samples every 60 s of the TT seconds from the start, the last at the
+  end of the window. The model is that of spec.md section 14.3.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-03-01T00:00:00.000 UTC"
+  orbit:                                # GMAT R2026a's conversion of the elements of the description (reference-check.json)
+    type: "state_vector"
+    position_km: [2170.8130457383872, 4995.12293065708, 4088.4894784641037]
+    velocity_km_s: [-6.630924759016492, -0.2766648275797041, 3.880774050400766]
+  gm_km3_s2: 398600.4415                # the GM of the two-body trajectory (spec.md 14.3)
+  propagation_window:
+    start: "2026-03-01T00:00:00.000 UTC"
+    end: "2026-03-01T02:00:00.000 UTC"
+  sample_step_s: 60.0
+  attitude:
+    primary:
+      body_vector: [1.0, 0.0, 0.0]
+      direction: "nadir"
+    secondary:
+      body_vector: [0.0, 0.0, 1.0]
+      direction: "orbit_normal"
+  kernels: []

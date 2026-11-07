@@ -1,0 +1,62 @@
+{
+  "id": "ground_station_12h_lro_mask0_moon_lt_006",
+  "category": "ground_station",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), lro-reconstructed-2023349_2024075_v01_little_endian.bsp (SHA-256 5e3e4188e42f759b627f864c2429527b9d089368e3b0fc4dbcce5a9ff613e68b), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-06",
+    "method": "GMAT R2026a ContactLocator: LRO read from its SPK (an SPK propagator at 10 s); a GroundStation on the Earth of the case's ellipsoid, oriented by ITRF93 of data/'s bpc, HorizonReference Ellipsoid, the geodetic coordinates of the case, MinimumElevationAngle 0.0 deg, the Moon occulting; light time received at the station (UseLightTimeDelay, Receive); StepSize 10 s; SiteViewMaxElevationRangeReport. The edges and the culmination of each pass as GMAT prints them (UTC, to the millisecond), its duration and maximum elevation at its 12 decimals.",
+    "reference_frame": "EarthICRF",
+    "script": "ground_station_12h_lro_mask0_moon_lt_006.script",
+    "log": "ground_station_12h_lro_mask0_moon_lt_006.log"
+  },
+  "outputs": {
+    "passes": [
+      {
+        "rise": "2023-12-15T00:24:38.507 UTC",
+        "set": "2023-12-15T01:35:37.903 UTC",
+        "duration_s": 4259.395742998458,
+        "culmination": "2023-12-15T01:35:37.903 UTC",
+        "max_elevation_deg": 28.165525414912
+      },
+      {
+        "rise": "2023-12-15T02:21:41.978 UTC",
+        "set": "2023-12-15T03:32:34.594 UTC",
+        "duration_s": 4252.616422623396,
+        "culmination": "2023-12-15T03:32:34.594 UTC",
+        "max_elevation_deg": 52.389976933566
+      },
+      {
+        "rise": "2023-12-15T04:18:42.785 UTC",
+        "set": "2023-12-15T05:29:29.568 UTC",
+        "duration_s": 4246.782984829042,
+        "culmination": "2023-12-15T05:29:29.568 UTC",
+        "max_elevation_deg": 77.167811194445
+      },
+      {
+        "rise": "2023-12-15T06:15:40.904 UTC",
+        "set": "2023-12-15T07:26:22.526 UTC",
+        "duration_s": 4241.621603840031,
+        "culmination": "2023-12-15T06:27:31.302 UTC",
+        "max_elevation_deg": 87.634281279566
+      },
+      {
+        "rise": "2023-12-15T08:12:36.878 UTC",
+        "set": "2023-12-15T09:23:13.774 UTC",
+        "duration_s": 4236.896279314533,
+        "culmination": "2023-12-15T08:12:36.878 UTC",
+        "max_elevation_deg": 67.333372482923
+      },
+      {
+        "rise": "2023-12-15T10:09:31.722 UTC",
+        "set": "2023-12-15T11:20:04.157 UTC",
+        "duration_s": 4232.435064262245,
+        "culmination": "2023-12-15T10:09:31.722 UTC",
+        "max_elevation_deg": 42.551350707294
+      }
+    ]
+  }
+}

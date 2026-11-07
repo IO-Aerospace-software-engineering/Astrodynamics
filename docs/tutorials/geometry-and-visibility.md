@@ -179,12 +179,13 @@ Objects below the horizon have negative elevation.
 ### Site visibility windows
 
 Combine horizontal coordinates with an elevation mask to find visibility
-windows:
+windows: the spacecraft seen from the site, its declination in the site's
+topocentric frame being its elevation:
 
 ```csharp
-var visibleWindows = mySite.FindWindowsOnCoordinateConstraint(
+var visibleWindows = spacecraft.FindWindowsOnCoordinateConstraint(
     searchWindow,
-    spacecraft,
+    mySite,
     mySite.Frame,
     CoordinateSystem.RaDec,
     Coordinate.Declination,
@@ -194,6 +195,10 @@ var visibleWindows = mySite.FindWindowsOnCoordinateConstraint(
     Aberration.LT,
     TimeSpan.FromMinutes(1));
 ```
+
+Each rise and set is located to 1 µs. The culmination of a pass is the same
+search over the pass with `RelationnalOperator.LocalMax` (the value is then
+ignored): a window of zero length at the maximum elevation.
 
 ## TLE-based satellite tracking
 

@@ -1,0 +1,241 @@
+{
+  "id": "orbital_events_24h_leo_grav10_apsides_nodes_002",
+  "category": "orbital_events",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-06",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 10, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS); EarthS.Mu BODY399_GM",
+    "perturbations": "Moon, Sun as point masses (de440s positions, GMs of data/gm_de440.tpc). No drag. No SRP. No relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: the user-defined planet EarthS (NAIF 399 at its de440s position, its body-fixed frame ITRF93 of data/'s bpc through SPICE, the pck00011 radius and flattening), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 10, third bodies Moon, Sun at their de440s positions with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; a While loop of Propagate commands stopping at Apoapsis, Periapsis, Z = 0 or the end of the window, the TT seconds of the window; each stop reported in ICRF at 17 digits with its A1 MJD.",
+    "reference_frame": "EarthSICRF",
+    "script": "orbital_events_24h_leo_grav10_apsides_nodes_002.script",
+    "log": "orbital_events_24h_leo_grav10_apsides_nodes_002.log"
+  },
+  "outputs": {
+    "events": {
+      "periapsis": [
+        {
+          "elapsed_s": 1168.3084880448,
+          "radius_km": 6927.270671178972
+        },
+        {
+          "elapsed_s": 6993.5699556576,
+          "radius_km": 6927.233604704654
+        },
+        {
+          "elapsed_s": 12819.93226416,
+          "radius_km": 6927.13175932085
+        },
+        {
+          "elapsed_s": 18647.5072957632,
+          "radius_km": 6926.961982718005
+        },
+        {
+          "elapsed_s": 24472.853077248,
+          "radius_km": 6926.957472975404
+        },
+        {
+          "elapsed_s": 30298.60869048,
+          "radius_km": 6926.937626429436
+        },
+        {
+          "elapsed_s": 36124.5419757216,
+          "radius_km": 6926.875507387446
+        },
+        {
+          "elapsed_s": 41950.623939984,
+          "radius_km": 6926.837436026785
+        },
+        {
+          "elapsed_s": 47777.0875306272,
+          "radius_km": 6926.794030957292
+        },
+        {
+          "elapsed_s": 53602.7728872672,
+          "radius_km": 6926.778698570032
+        },
+        {
+          "elapsed_s": 59428.1326900896,
+          "radius_km": 6926.776238474895
+        },
+        {
+          "elapsed_s": 65254.7022073056,
+          "radius_km": 6926.839698660132
+        },
+        {
+          "elapsed_s": 71083.881709632,
+          "radius_km": 6926.870204626811
+        },
+        {
+          "elapsed_s": 76911.4390761504,
+          "radius_km": 6926.911470104396
+        },
+        {
+          "elapsed_s": 82738.008120672,
+          "radius_km": 6926.903152661905
+        }
+      ],
+      "apoapsis": [
+        {
+          "elapsed_s": 4035.5149928256,
+          "radius_km": 7069.797418260337
+        },
+        {
+          "elapsed_s": 9861.4283560416,
+          "radius_km": 7069.898662953774
+        },
+        {
+          "elapsed_s": 15688.316687616,
+          "radius_km": 7070.0330433596955
+        },
+        {
+          "elapsed_s": 21514.4574234048,
+          "radius_km": 7070.068043138961
+        },
+        {
+          "elapsed_s": 27341.0253998496,
+          "radius_km": 7070.1589836181265
+        },
+        {
+          "elapsed_s": 33165.9809790624,
+          "radius_km": 7070.194087004419
+        },
+        {
+          "elapsed_s": 38991.3527304,
+          "radius_km": 7070.199534316427
+        },
+        {
+          "elapsed_s": 44817.6318540192,
+          "radius_km": 7070.226290651908
+        },
+        {
+          "elapsed_s": 50643.4923568512,
+          "radius_km": 7070.188196909183
+        },
+        {
+          "elapsed_s": 56469.0522141216,
+          "radius_km": 7070.179356486916
+        },
+        {
+          "elapsed_s": 62295.0953553216,
+          "radius_km": 7070.176568844019
+        },
+        {
+          "elapsed_s": 68123.0687308416,
+          "radius_km": 7070.174709963816
+        },
+        {
+          "elapsed_s": 73951.0897034304,
+          "radius_km": 7070.100500943355
+        },
+        {
+          "elapsed_s": 79777.829525328,
+          "radius_km": 7069.9962546060115
+        },
+        {
+          "elapsed_s": 85603.73098176,
+          "radius_km": 7069.969515409189
+        }
+      ],
+      "ascending_node": [
+        {
+          "elapsed_s": 639.1528070976
+        },
+        {
+          "elapsed_s": 6461.998986816
+        },
+        {
+          "elapsed_s": 12284.8989200352
+        },
+        {
+          "elapsed_s": 18107.8401015648
+        },
+        {
+          "elapsed_s": 23930.69733288
+        },
+        {
+          "elapsed_s": 29753.6220848448
+        },
+        {
+          "elapsed_s": 35576.5595451264
+        },
+        {
+          "elapsed_s": 41399.473264416
+        },
+        {
+          "elapsed_s": 47222.3917358784
+        },
+        {
+          "elapsed_s": 53045.2358779392
+        },
+        {
+          "elapsed_s": 58868.0565946272
+        },
+        {
+          "elapsed_s": 64690.9202742336
+        },
+        {
+          "elapsed_s": 70513.9001273664
+        },
+        {
+          "elapsed_s": 76336.8527247552
+        },
+        {
+          "elapsed_s": 82159.7338897344
+        }
+      ],
+      "descending_node": [
+        {
+          "elapsed_s": 3530.6083700064
+        },
+        {
+          "elapsed_s": 9353.3615631936
+        },
+        {
+          "elapsed_s": 15176.11121208
+        },
+        {
+          "elapsed_s": 20998.8258948864
+        },
+        {
+          "elapsed_s": 26821.5943228992
+        },
+        {
+          "elapsed_s": 32644.4442763968
+        },
+        {
+          "elapsed_s": 38467.2630561696
+        },
+        {
+          "elapsed_s": 44290.050121872
+        },
+        {
+          "elapsed_s": 50112.819592128
+        },
+        {
+          "elapsed_s": 55935.5533658784
+        },
+        {
+          "elapsed_s": 61758.2804681664
+        },
+        {
+          "elapsed_s": 67581.0450929376
+        },
+        {
+          "elapsed_s": 73403.8418035584
+        },
+        {
+          "elapsed_s": 79226.6554532448
+        },
+        {
+          "elapsed_s": 85049.427154608
+        }
+      ]
+    }
+  }
+}

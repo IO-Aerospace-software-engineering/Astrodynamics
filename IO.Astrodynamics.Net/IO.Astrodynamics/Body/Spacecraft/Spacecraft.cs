@@ -678,7 +678,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                     kernelScCB.Velocity - kernelObsCB.Velocity,
                     observer, epoch, Frames.Frame.ICRF);
 
-                if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+                if (aberration != Aberration.None)
                     kernelRelative = CorrectFromAberrationCB(this, epoch, observer, aberration, kernelRelative, kernelObsCB, kernelCb);
 
                 return kernelRelative.ToFrame(frame);
@@ -704,7 +704,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 spacecraftCB.Velocity - observerCB.Velocity,
                 observer, epoch, Frames.Frame.ICRF);
 
-            if (aberration is Aberration.LT or Aberration.XLT or Aberration.LTS or Aberration.XLTS)
+            if (aberration != Aberration.None)
                 relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerCB, cb);
 
             return relative.ToFrame(frame);

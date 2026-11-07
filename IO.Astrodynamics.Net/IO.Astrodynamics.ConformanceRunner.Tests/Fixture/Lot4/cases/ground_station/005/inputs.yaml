@@ -1,0 +1,55 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/ground_station.yaml; do not edit.
+id: "ground_station_24h_leo_mask0_geo_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "ground_station"
+created: "2026-11-06"
+description: >
+  Geometric, mask 0 deg: the horizon of the ellipsoid itself, seven passes, the lowest culminating at 1.13 deg. One
+  day of passes of a two-body LEO over a station near Toulouse (43.56 deg N, 1.48 deg E, 0.15 km on the pck00011
+  ellipsoid, fixed in ITRF93): each pass above the elevation mask, its rise, set, duration, culmination and maximum
+  elevation, and the azimuth, elevation, range and range rate at the sample epochs, every minute of two passes. The
+  state is GMAT R2026a's conversion, in ICRF with gm_km3_s2, of the elements a = 6878.137 km, e = 0.001, i = 51.6
+  deg, RAAN 45 deg, argument of periapsis 30 deg, true anomaly 0 deg; the model is that of spec.md section 14.1.
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  orbit:                                # GMAT R2026a's conversion of the elements of the description (reference-check.json)
+    type: "state_vector"
+    position_km: [2698.779899761009, 5716.759152702244, 2692.480307262644]
+    velocity_km_s: [-5.592689823001283, 0.2043773827143189, 5.171834523400308]
+  gm_km3_s2: 398600.4355070226          # BODY399_GM of data/gm_de440.tpc, the GM of the two-body trajectory (spec.md 14.1)
+  search_window:                        # step_size_s informative (spec.md 14.1)
+    start: "2026-01-20T06:00:00.000 UTC"
+    end: "2026-01-21T06:00:00.000 UTC"
+    step_size_s: 10.0
+  location:
+    reference_frame: "ITRF93"
+    latitude_deg: 43.56
+    longitude_deg: 1.48
+    height_km: 0.15
+    ellipsoid: {equatorial_radius_km: 6378.1366, flattening: 0.0033528131084554157}   # the pck00011 Earth (spec.md 14.1)
+  elevation_mask_deg: 0.0
+  aberration: "none"
+  occulting_bodies: []
+  sample_epochs:                        # every minute of two passes (catalog sample_grid)
+    - "2026-01-20T21:51:00.000 UTC"
+    - "2026-01-20T21:52:00.000 UTC"
+    - "2026-01-20T21:53:00.000 UTC"
+    - "2026-01-20T21:54:00.000 UTC"
+    - "2026-01-20T21:55:00.000 UTC"
+    - "2026-01-20T21:56:00.000 UTC"
+    - "2026-01-20T21:57:00.000 UTC"
+    - "2026-01-21T02:48:00.000 UTC"
+    - "2026-01-21T02:49:00.000 UTC"
+    - "2026-01-21T02:50:00.000 UTC"
+    - "2026-01-21T02:51:00.000 UTC"
+    - "2026-01-21T02:52:00.000 UTC"
+    - "2026-01-21T02:53:00.000 UTC"
+    - "2026-01-21T02:54:00.000 UTC"
+  kernels: ["earth_latest_high_prec.bpc"]

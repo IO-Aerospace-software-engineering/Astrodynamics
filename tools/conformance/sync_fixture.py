@@ -1,7 +1,8 @@
 """Write a fixture of the conformance runner's tests from a checkout of the conformance-tests suite: lot 1 (design of
 #458, section 7.2), the categories orbital_elements, time_conversion and frame_transformation; lot 2 (design of #500,
 section 6.4), the propagator cases 006 to 018; lot 3 (design of #587, section 8.2), the categories maneuver and
-lambert.
+lambert; lot 4 (design of lot 4 of #457, section 8.2), the categories ground_station, eclipse, orbital_events and
+attitude.
 
 Written into IO.Astrodynamics.Net/IO.Astrodynamics.ConformanceRunner.Tests/Fixture/Lot<n>/, which is replaced:
   schemas/v1/case.schema.json, expected.schema.json, runner-report.schema.json
@@ -16,11 +17,13 @@ Written into IO.Astrodynamics.Net/IO.Astrodynamics.ConformanceRunner.Tests/Fixtu
       cases of the lot's categories) are those committed at HEAD, untracked files included
   data.sha256
       the SHA-256 and the name of every file of data/ a case reads: those named in its inputs.kernels and, for lots 2
-      and 3, its geopotential_model (the field file, which the runner reads from data/), one per line
+      to 4, its geopotential_model (the field file, which the runner reads from data/); for lot 4, the SPK of a
+      bsp_source orbit (orbit.filename, data/<name>) and the field file EGM2008_to70_TideFree, whose header carries the
+      GM of a two-body trajectory (the runner's TwoBodyTrajectory); one per line
   data/
-      those of these files whose SHA-256 differs from IO.Astrodynamics.Tests/Data/SolarSystem and from the data/ of the
-      fixtures of the earlier lots, or that are absent there; the tests take the others from those directories after
-      checking their SHA-256
+      those of these files whose SHA-256 differs from IO.Astrodynamics.Tests/Data/SolarSystem (and, for lot 4,
+      IO.Astrodynamics.Tests/Data/LRO) and from the data/ of the fixtures of the earlier lots, or that are absent there;
+      the tests take the others from those directories after checking their SHA-256
 
 The SHA-256 is that of the content as committed: a file without a NUL byte (a text kernel) is hashed with its CRLF
 read as LF, so that a Windows checkout, whose Git converts the line endings of text files, gives the hash of Linux.
@@ -28,7 +31,7 @@ The tests hash the same way.
 
 Requires PyYAML. A file of data/ left as a Git LFS pointer (a suite cloned without LFS) stops the script.
 
-Usage: python3 -I -B tools/conformance/sync_fixture.py --lot <1|2|3> <suite checkout> [--source <sha>]
+Usage: python3 -I -B tools/conformance/sync_fixture.py --lot <1|2|3|4> <suite checkout> [--source <sha>]
 """
 import argparse
 import hashlib
@@ -48,18 +51,25 @@ REPOSITORY = pathlib.Path(__file__).resolve().parents[2]
 NET = REPOSITORY / "IO.Astrodynamics.Net"
 FIXTURES = NET / "IO.Astrodynamics.ConformanceRunner.Tests" / "Fixture"
 RUNNER_DATA = NET / "IO.Astrodynamics.Tests" / "Data" / "SolarSystem"
+TESTS_LRO = NET / "IO.Astrodynamics.Tests" / "Data" / "LRO"
+DATA_PREFIX = "data/"
 
 
 class Lot:
     """The cases of a lot: every case of its categories, or those numbered first to last; fields: whether the runner
-    reads the case's geopotential_model from data/."""
+    reads the case's geopotential_model from data/; always: the files of data/ the runner reads for every case of the
+    lot; spks: whether it reads the SPK of a bsp_source orbit from data/; reference: further directories of the
+    repository whose files the tests take when the fixture does not ship them."""
 
-    def __init__(self, number, categories, first=None, last=None, fields=False):
+    def __init__(self, number, categories, first=None, last=None, fields=False, always=(), spks=False, reference=()):
         self.number = number
         self.categories = categories
         self.first = first
         self.last = last
         self.fields = fields
+        self.always = always
+        self.spks = spks
+        self.reference = reference
 
     @property
     def fixture(self):
@@ -76,13 +86,15 @@ class Lot:
     def reference_data(self):
         """The directories the tests take a file from when the fixture does not ship it: the runner's kernels, then
         the data/ of the fixtures of the earlier lots."""
-        return [RUNNER_DATA] + [LOTS[n].fixture / "data" for n in sorted(LOTS) if n < self.number]
+        return [RUNNER_DATA, *self.reference] + [LOTS[n].fixture / "data" for n in sorted(LOTS) if n < self.number]
 
 
 LOTS = {
     1: Lot(1, ("orbital_elements", "time_conversion", "frame_transformation")),
     2: Lot(2, ("propagator",), first=6, last=18, fields=True),
     3: Lot(3, ("maneuver", "lambert"), fields=True),
+    4: Lot(4, ("ground_station", "eclipse", "orbital_events", "attitude"), fields=True, always=("EGM2008_to70_TideFree",),
+           spks=True, reference=(TESTS_LRO,)),
 }
 
 
@@ -132,16 +144,23 @@ def case_directories(suite, lot):
 
 
 def data_files_of(case, lot):
-    """The files of data/ the case reads: its kernels and, when the lot's runner reads it from data/, its field."""
+    """The files of data/ the case reads: its kernels, the files the lot reads for every case and, when the lot's
+    runner reads them from data/, its field and the SPK of its orbit."""
     inputs = yaml.safe_load((case / "inputs.yaml").read_text(encoding="utf-8")).get("inputs") or {}
-    names = list(inputs.get("kernels") or [])
+    names = list(inputs.get("kernels") or []) + list(lot.always)
     field = inputs.get("geopotential_model")
     if lot.fields and field is not None and field != NO_FIELD:
         names.append(field)
-    for name in names:
+    orbit = inputs.get("orbit") or {}
+    if lot.spks and orbit.get("type") == "bsp_source":
+        filename = str(orbit.get("filename"))
+        if not filename.startswith(DATA_PREFIX):
+            fail(f"{case / 'inputs.yaml'}: the SPK {filename!r} is not a file of data/")
+        names.append(filename[len(DATA_PREFIX):])
+    for name in dict.fromkeys(names):
         if not isinstance(name, str) or name != pathlib.PurePath(name).name or name.startswith("."):
             fail(f"{case / 'inputs.yaml'}: the file {name!r} is not a file name of data/")
-    return names
+    return list(dict.fromkeys(names))
 
 
 def write(suite, source, target, lot):

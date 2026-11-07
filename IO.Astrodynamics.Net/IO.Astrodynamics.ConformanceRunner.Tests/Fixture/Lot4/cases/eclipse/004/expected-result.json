@@ -1,0 +1,111 @@
+{
+  "id": "eclipse_8d_geo_season_earth_004",
+  "category": "eclipse",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-06",
+    "method": "GMAT R2026a EclipseLocator: the two-body orbit of the elements (EarthICRF, Earth.Mu = gm_km3_s2, PrinceDormand78 fixed step 60 s), the kernels of data/, the Earth oriented by IAU_EARTH (Earth.SpiceFrameId), occulting bodies Earth, no light time, no stellar aberration, StepSize 1 s, over the TT seconds of the search window. Every event of the window, each partial, total or annular interval its own event, in time order: its edges as GMAT prints them (UTC, to the millisecond), its duration unrounded.",
+    "reference_frame": "EarthICRF",
+    "script": "eclipse_8d_geo_season_earth_004.script",
+    "log": "eclipse_8d_geo_season_earth_004.log"
+  },
+  "outputs": {
+    "events": [
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-02-26T10:16:01.724 UTC",
+        "stop": "2026-02-26T10:30:14.945 UTC",
+        "duration_s": 853.22103373
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-02-27T10:10:31.664 UTC",
+        "stop": "2026-02-27T10:21:08.045 UTC",
+        "duration_s": 636.38174362
+      },
+      {
+        "body": "Earth",
+        "type": "umbra",
+        "start": "2026-02-27T10:21:08.045 UTC",
+        "stop": "2026-02-27T10:24:47.936 UTC",
+        "duration_s": 219.89036961
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-02-27T10:24:47.936 UTC",
+        "stop": "2026-02-27T10:35:24.312 UTC",
+        "duration_s": 636.37590258
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-02-28T10:06:49.454 UTC",
+        "stop": "2026-02-28T10:12:36.543 UTC",
+        "duration_s": 347.08862104
+      },
+      {
+        "body": "Earth",
+        "type": "umbra",
+        "start": "2026-02-28T10:12:36.543 UTC",
+        "stop": "2026-02-28T10:32:57.622 UTC",
+        "duration_s": 1221.0793225
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-02-28T10:32:57.622 UTC",
+        "stop": "2026-02-28T10:38:44.705 UTC",
+        "duration_s": 347.08286582
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-03-01T10:03:52.316 UTC",
+        "stop": "2026-03-01T10:08:28.194 UTC",
+        "duration_s": 275.87835143
+      },
+      {
+        "body": "Earth",
+        "type": "umbra",
+        "start": "2026-03-01T10:08:28.194 UTC",
+        "stop": "2026-03-01T10:36:43.073 UTC",
+        "duration_s": 1694.8782201
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-03-01T10:36:43.073 UTC",
+        "stop": "2026-03-01T10:41:18.945 UTC",
+        "duration_s": 275.87269144
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-03-02T10:01:22.282 UTC",
+        "stop": "2026-03-02T10:05:19.954 UTC",
+        "duration_s": 237.67215118
+      },
+      {
+        "body": "Earth",
+        "type": "umbra",
+        "start": "2026-03-02T10:05:19.954 UTC",
+        "stop": "2026-03-02T10:39:27.378 UTC",
+        "duration_s": 2047.4247662
+      },
+      {
+        "body": "Earth",
+        "type": "penumbra",
+        "start": "2026-03-02T10:39:27.378 UTC",
+        "stop": "2026-03-02T10:43:25.045 UTC",
+        "duration_s": 237.66659587
+      }
+    ]
+  }
+}

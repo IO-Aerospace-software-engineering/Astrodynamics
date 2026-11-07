@@ -38,7 +38,10 @@ public class Runner
             new TimeConversionSolver(),
             new FrameTransformationSolver(conformanceTestsPath),
             new ManeuverSolver(conformanceTestsPath),
-            new LambertCaseSolver(conformanceTestsPath)
+            new LambertCaseSolver(conformanceTestsPath),
+            new GroundStationSolver(conformanceTestsPath),
+            new OrbitalEventsSolver(conformanceTestsPath),
+            new AttitudeSolver(conformanceTestsPath)
         }.ToDictionary(solver => solver.Category);
         _schemaValidator = new SchemaValidator(conformanceTestsPath);
     }
@@ -246,7 +249,7 @@ public class Runner
         // The kinds and keys of the outputs (spec.md sections 6.1, 11 and 12), the outputs present in the golden, no
         // fallback tolerance
         var measures = OutputComparer.Compare(caseInput, computed, golden, toleranceConfig?.Defaults);
-        var goldens = OutputComparer.Outputs(golden).ToDictionary(o => o.Output, o => o.Golden);
+        var goldens = OutputComparer.Outputs(golden, category).ToDictionary(o => o.Output, o => o.Golden);
         foreach (var m in measures)
         {
             // The golden of a component of the final state, for the magnitude rows of accuracy_by_metric

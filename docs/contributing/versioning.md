@@ -82,6 +82,99 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **The managed window search returned its edges up to 1 s early, could start before the search window, and had no
+  extremes and no equality** ([#590](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/590), [#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461), [#486](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/486), [#487](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/487)). `GeometryFinder` is
+  the search of `FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
+  `FindWindowsOnIlluminationConstraint` of `CelestialItem` and `Site`, and of `Site.FindDayWindows`, whenever CSPICE
+  cannot search (a propagated spacecraft, a site built from its coordinates, two natural bodies).
+  - **The edges ([#590](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/590)).** Each transition was bisected to a bracket of 1 s or less (0.9375 s at a 60 s step)
+    and its failing end returned: every interior edge came 0 to 0.94 s early, every window start and end alike (on a
+    LEO pass from a station, the rise and the set 0.4 to 587 ms early; on a LEO day, all 89 apsides, nodes and altitude
+    crossings early, by up to 0.898 s). Each transition is now located to 1 µs, CSPICE's convergence tolerance, by
+    Brent's root finder on the quantity minus the value (`Greater`, `Lower`, `Equal`), by a bisection of the relation
+    (`GreaterOrEqual`, `LowerOrEqual`, a boolean quantity), and the root is returned.
+  - **The bounds ([#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461)).** The first transition was searched over [start − step, start], so a window that held
+    at the start began before it, one step early at most, and the quantity was evaluated before the search window (on a
+    propagated spacecraft, outside its stored states, #527); the last edge stopped up to 1 s short of the end. Nothing
+    is evaluated outside the search window now; a window that holds at its start starts there, one that holds at its end
+    ends there. The windows are closed, as CSPICE's: two windows that one edge closes and opens are one.
+  - **The extremes ([#486](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/486)).** `LocalMin`, `LocalMax`, `AbsoluteMin` and `AbsoluteMax` threw
+    `ArgumentException("Invalid operator")`. The local extremes are now the sign changes of the rate of the quantity
+    (the derivative of the quartics through five values a sixteenth and a thirty-second of the step apart, combined by
+    Richardson's extrapolation), each located to 1 µs, inside the search window, as zero-length windows; the absolute
+    extremes the lowest or highest of the local extremes and of the bounds, as CSPICE's `gfdist`, and, with a positive
+    `adjustValue`, the windows within it of the extreme. `adjustValue`, which the managed path ignored, is now taken by
+    the coordinate and illumination searches; the distance searches take none.
+  - **Equality ([#487](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/487)).** `Equal` tested |x − v| < 1e-9 at the samples and returned no window (0 for the 30
+    nodes of a LEO day). It now gives the crossings of the value as zero-length windows, a jump at a branch cut (a right
+    ascension, a longitude, an azimuth) being no crossing, and `NotEqual` the rest of the search window, a window from
+    each crossing to the next.
+  - **Measured** against CSPICE's `gfdist` and `gfposc` converged to 1e-9 s (`tools/geometry_reference`, Linux x64,
+    2026-11-06): 2.4e-7 s on the edges and crossings (the Earth-Moon distance, the Moon from DSS-13 and DSS-13 from the
+    Moon, the Sun from a site), 4.8e-7 s on the Earth-Moon distance extremes at a 1-day step, 4.5e-9 s on the Moon's
+    elevation extremes from DSS-13 at a 60 s step.
+  - **Changes published results:** every managed window edge moves by up to 1 s toward its root (by up to a step for
+    a window that held at the start of the search), and a window that ended up to 1 s before the end of the search now
+    ends at it. The searches CSPICE runs (a kernel spacecraft with a kernel body or site) are unchanged.
+- **The site-visibility example of the tutorial found the times when the spacecraft is 10° below the horizon**
+  ([#591](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/591)). `docs/tutorials/geometry-and-visibility.md` called `site.FindWindowsOnCoordinateConstraint` with the
+  spacecraft as observer, which searches the site seen from the spacecraft (its declination is minus the elevation): 9
+  windows, 78 284 s of a day, against 6 passes of 2 312 s. The example now searches the spacecraft from the site
+  (`spacecraft.FindWindowsOnCoordinateConstraint(window, site, site.Frame, …)`), and `docs/reference/sites.md` lists
+  the call. `docs/reference/event-detection.md` no longer says that the propagation locates "other state transitions":
+  it detects the maneuvers' events only, and points to the window searches for the others.
+- **On the reference-body path, the light-time and stellar-aberration corrections were not CSPICE's**
+  ([#491](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/491)). The path computes the state
+  when CSPICE cannot read the pair: a site as observer (from the kernels or from its coordinates), a spacecraft not
+  from a kernel as observer or as target, a star; through it `Site.GetHorizontalCoordinates`, the angular separations and
+  illumination angles seen from a site, and the managed window searches with a correction.
+  - **The cause.** `CN`, `CN+S`, `XCN` and `XCN+S` were not applied (the geometric state was returned); the `LT` and
+    `XLT` velocities missed the rate of the light time; `LT+S` and `XLT+S` returned the geometric position plus
+    v_obs·|v_obs|/c, with the `LT` and `XLT` velocity.
+  - **The fix.** CSPICE's `spkaps` (N0067, read from its source): the light time of `spkltc`, one iteration for `LT` and
+    `XLT`, up to five until it changes by less than 1e-17 of the epoch for `CN` and `XCN`, the target read at t ∓ lt
+    of the epoch as CSPICE forms it in double, the velocity (1 ∓ dlt/dt)·v_target − v_observer; for the `+S` flags the
+    stellar aberration of `stelab` (`stlabx` for transmission) of the light-time position, and its rate (`zzstelab`)
+    from the light-time velocity and the observer's acceleration, the central difference of its velocity over ±1 s
+    (`spkacs`). `None` is unchanged, bit for bit.
+  - **Measured** against `spkezr`, `spkcpo`, `spkcpt` and `azlcpo` (`tools/light_time_reference`, Linux x64,
+    2026-11-06), the nine flags at three epochs: the Moon from DSS-13, the Moon and the Sun from a site given by its
+    coordinates, within 2.2e-5 m and 1.9e-9 m/s; a LEO spacecraft given by one state, from that site and from the Earth,
+    and the Moon, the Sun and the site from it, the correction within 3.9e-4 m and 8.3e-7 m/s (the 100 ns of the TT
+    argument of its two-body state, #508), the Sun's `+S` within 2.9 cm and 6.4e-5 m/s (the stellar aberration of
+    the 1.2e-4 m/s between its two-body trajectories); the spacecraft's azimuth and elevation from the site within
+    5.4e-11 rad of the correction, its range within 0.16 mm and its range rate within 7.3e-7 m/s. On the four light-time
+    settings of the ground-station cases of the conformance suite (a two-body LEO from a site near Toulouse), the rises,
+    sets and culminations within 0.50 ms of GMAT's `ContactLocator` (its millisecond print), the azimuth and elevation
+    within 1.7e-7°, the range within 1.3 mm and the range rate within 0.014 mm/s of `azlcpo`, `LT+S` included (the
+    range rate was 0.728 m/s off with `LT` and `XLT`, `LT+S` 4.1e-3° in azimuth and 211 m in range).
+  - **Not in this fix:** the output frame is still evaluated at the epoch of the observation; `spkezr` evaluates a
+    non-inertial frame centred on another body at t − lt of its centre (the Moon from DSS-13 with `LT`, 531 to 620 m in
+    `ITRF93`; [#593](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/593), split from #491).
+    The topocentric frame of the observing site and the inertial frames are not affected.
+  - **Changes published results:** on that path, the `LT` and `XLT` velocities by up to 0.77 m/s (a LEO spacecraft),
+    the `CN` and `XCN` states by up to 42 km (the Moon from a site), the `+S` states by up to 14 775 km (the Sun from a
+    site, 20.7″) and their velocities by up to 3.5 km/s (the Sun from a LEO spacecraft); the managed searches with a
+    correction move with them (the sunrise of `SiteTests` with `LT+S`, 1.13 s, now within 2.4e-7 s of `gfposc`).
+
+- **A geopotential of degree 0 read the orientation of its body, and failed where no orientation data covers the
+  epoch.** A field without harmonics (degree 0 or 1; the models start at degree 2) rotated the position to the
+  body-fixed frame and the acceleration back, which a point mass does not need: beyond the coverage of the Earth's binary
+  PCK, SPICE reported `FRAMEDATANOTFOUND` and the propagation failed with NaN steps ("100 consecutive rejections").
+  `GeopotentialGravitationalField` now gives such a field the point mass of the GM of its central term in the frame of
+  the state, its acceleration and its partials alike, without the orientation. The runner of the conformance suite
+  takes a case's GM as the central term of a field of degree 0 (decision 19 of #457), and the two-body cases of lot 4
+  after 2026-05-11 (`eclipse` 006, `attitude` 003) failed with the runner's Earth orientation file. A field of degree 0
+  moves by the rounding of the rotation it no longer makes (8.2e-16 of the acceleration at most, measured on the
+  twelve cases of `GeopotentialCentralTermTests`); every other field is unchanged, bit for bit.
+- **Conformance runner: the geometry and event categories of lot 4** (design of lot 4 of
+  [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), approved by S. Guillet,
+  2026-11-06). New solvers for `ground_station`, `orbital_events` and `attitude`, and the second branch of `eclipse`
+  (every eclipse of a window by the Earth and the Moon, light time `none` or `cn`), on the library's window searches
+  (#590); a shared two-body trajectory; the arrays of a golden compared element by element, their count exact, so that
+  a pass or an event the library does not find FAILS; the direction angle of a pointing direction. The 22 cases of the
+  suite's lot-4 branch (4cd11f9) pass with at most 0.137 of their tolerance, and the 151 cases of that branch pass. See
+  [Validation](../guides/validation.md#lot-4-geometry-and-events).
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
   - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared

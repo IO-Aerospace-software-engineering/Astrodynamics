@@ -1,0 +1,38 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/attitude.yaml; do not edit.
+id: "attitude_2h_leo_lvlh_003"
+schema_version: "v1"
+version: "0.1.0"
+category: "attitude"
+created: "2026-11-06"
+description: >
+  Two hours of a local-vertical attitude on an eccentric sun-synchronous-like LEO: body -Z to nadir (+Z to the
+  zenith), body +Y toward the velocity (+X along the negative orbit normal), the attitude body to ICRF at each
+  sample. The family name lvlh names the law of its body axes, not CCSDS's LVLH. The state is GMAT R2026a's
+  conversion, in ICRF with gm_km3_s2, of the elements a = 7200 km, e = 0.05, i = 98 deg, RAAN 120 deg, argument of
+  periapsis 250 deg, true anomaly 300 deg; the trajectory is its two-body propagation, the samples every 60 s of the
+  TT seconds from the start, the last at the end of the window. The model is that of spec.md section 14.3.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-06-15T06:00:00.000 UTC"
+  orbit:                                # GMAT R2026a's conversion of the elements of the description (reference-check.json)
+    type: "state_vector"
+    position_km: [3303.54136807283, -6060.571757451011, -1204.882067764988]
+    velocity_km_s: [-1.721460602253617, 0.9040681133007743, -7.391407335206537]
+  gm_km3_s2: 398600.4415                # the GM of the two-body trajectory (spec.md 14.3)
+  propagation_window:
+    start: "2026-06-15T06:00:00.000 UTC"
+    end: "2026-06-15T08:00:00.000 UTC"
+  sample_step_s: 60.0
+  attitude:
+    primary:
+      body_vector: [0.0, 0.0, -1.0]
+      direction: "nadir"
+    secondary:
+      body_vector: [0.0, 1.0, 0.0]
+      direction: "velocity"
+  kernels: []
