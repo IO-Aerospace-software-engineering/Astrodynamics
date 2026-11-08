@@ -40,6 +40,32 @@ public enum MetricKind
     DirectionAngle,
 
     /// <summary>
+    /// A vector compared component by component (spec.md section 15.1): d = max over the components of
+    /// |computed_i − golden_i|; no relative delta.
+    /// </summary>
+    ScalarPerComponent,
+
+    /// <summary>
+    /// A relative delta (spec.md section 15.2): |d| / |golden|, d = computed − golden; a zero golden passes only on an
+    /// exact zero (relative delta 0 for d = 0, +∞ otherwise).
+    /// </summary>
+    Relative,
+
+    /// <summary>
+    /// A UTC instant of the TLE categories (spec.md sections 3 and 15), <c>YYYY-MM-DDThh:mm:ss.ffffff UTC</c>: d =
+    /// computed − golden on the UTC calendar, 86 400 s a day, so that it is defined for the 1957 and 2056 epochs of the
+    /// two-digit year; no relative delta.
+    /// </summary>
+    CalendarInstant,
+
+    /// <summary>
+    /// The two lines of a computed TLE (spec.md sections 6.1 and 15.2): their length, checksums, line numbers, catalog
+    /// number and identifiers exact (<c>items[k].tle</c>), then each other field decoded by the column table and compared
+    /// by its key (<c>items[k].tle.&lt;FIELD&gt;</c>, <see cref="TleLineComparer"/>).
+    /// </summary>
+    TleLine,
+
+    /// <summary>
     /// No delta: the output equals the golden (a boolean, a string, the samples of a grid, the number of elements of an
     /// indexed array) or fails; no key.
     /// </summary>
@@ -65,12 +91,14 @@ public sealed record Metric(MetricKind Kind, string Key, string Unit, string Tim
 /// <c>frame_transformation</c>, and of the earlier categories (spec.md section 12): <c>propagator</c>, <c>eclipse</c>,
 /// <c>tracking_data</c>, <c>pointing_triad</c> and <c>geosynchronous</c>, and of the maneuver categories (spec.md section
 /// 13): <c>maneuver</c> and <c>lambert</c>, and of the geometry and event categories (spec.md section 14):
-/// <c>ground_station</c>, <c>orbital_events</c> and <c>attitude</c>, with the second branch of <c>eclipse</c>, each with
-/// its kind and tolerance key; and the final state of the <c>stm</c> category, the extension of the suite tested by the
+/// <c>ground_station</c>, <c>orbital_events</c> and <c>attitude</c>, with the second branch of <c>eclipse</c>, and of the
+/// TLE categories (spec.md section 15): <c>sgp4</c> and <c>tle_conversion</c>, each with its kind and tolerance key; and the final state of the <c>stm</c> category, the extension of the suite tested by the
 /// fixture of the runner, compared as the propagator's. The arrays of the geometry and event categories are indexed
 /// (<see cref="IsIndexed"/>): the array is the number of its elements, an exact output, and each element gives its
 /// outputs, named <c>&lt;array&gt;[k].&lt;field&gt;</c> or <c>&lt;array&gt;[k]</c>, k from 0, held as
-/// <c>&lt;array&gt;[].&lt;field&gt;</c> or <c>&lt;array&gt;[]</c>.
+/// <c>&lt;array&gt;[].&lt;field&gt;</c> or <c>&lt;array&gt;[]</c>; a field of an element that is itself an object gives its
+/// leaves, <c>states[k].teme.position_km</c>, unless the table holds it as one output (<c>items[k].tle</c>, the lines of
+/// a TLE).
 /// </summary>
 public static class MetricTable
 {
@@ -100,6 +128,71 @@ public static class MetricTable
     private static readonly Metric EventEpoch = new(MetricKind.Seconds, "event_epoch_s", "s");
     private static readonly Metric EventRadius = new(MetricKind.Scalar, "event_radius_km", "km");
     private static readonly Metric AttitudeAngle = new(MetricKind.RotationAngle, "attitude_angle_rad", "rad");
+    private static readonly Metric TleValue = new(MetricKind.Relative, "tle_value_rel", "-");
+    private static readonly Metric TleEpoch = new(MetricKind.CalendarInstant, "tle_epoch_s", "s");
+    private static readonly Metric TleFieldAngle = new(MetricKind.WrappedAngle, "tle_field_angle_deg", "deg");
+    private static readonly Metric TleFieldExponent = new(MetricKind.Relative, "tle_field_exponent_rel", "-");
+
+    /// <summary>The output of the two lines of a computed TLE (spec.md section 15.2), an element of <c>items</c>.</summary>
+    public const string TleLines = "items[].tle";
+
+    /// <summary>
+    /// The decoded fields of <c>tle_to_omm</c> compared by <c>tle_value_rel</c> (spec.md section 15.2), under their OMM
+    /// keywords.
+    /// </summary>
+    public static readonly IReadOnlyList<string> TleValues =
+    [
+        "MEAN_MOTION", "ECCENTRICITY", "INCLINATION", "RA_OF_ASC_NODE", "ARG_OF_PERICENTER", "MEAN_ANOMALY", "BSTAR",
+        "MEAN_MOTION_DOT", "MEAN_MOTION_DDOT"
+    ];
+
+    /// <summary>The identifiers of a TLE, compared exactly (spec.md section 15.2), under their OMM keywords.</summary>
+    public static readonly IReadOnlyList<string> TleIdentifiers =
+        ["NORAD_CAT_ID", "OBJECT_ID", "CLASSIFICATION_TYPE", "ELEMENT_SET_NO", "REV_AT_EPOCH", "EPHEMERIS_TYPE"];
+
+    /// <summary>
+    /// The fields of a computed TLE compared by their keys (spec.md section 15.2), <c>items[k].tle.&lt;FIELD&gt;</c>, in
+    /// the order of the format.
+    /// </summary>
+    public static readonly IReadOnlyList<string> TleFields =
+    [
+        "EPOCH", "MEAN_MOTION_DOT", "MEAN_MOTION_DDOT", "BSTAR", "INCLINATION", "RA_OF_ASC_NODE", "ECCENTRICITY",
+        "ARG_OF_PERICENTER", "MEAN_ANOMALY", "MEAN_MOTION"
+    ];
+
+    /// <summary>The name of a field of a computed TLE: <c>&lt;tle&gt;.&lt;FIELD&gt;</c>.</summary>
+    public static string TleField(string tle, string field) => $"{tle}.{field}";
+
+    // The outputs of a tle_conversion golden: the fields of tle_to_omm and the lines of omm_to_tle with their fields
+    private static IEnumerable<KeyValuePair<string, Metric>> TleConversionOutputs()
+    {
+        yield return new KeyValuePair<string, Metric>("items", Exact);
+        foreach (var value in TleValues)
+        {
+            yield return new KeyValuePair<string, Metric>($"items[].{value}", TleValue);
+        }
+
+        yield return new KeyValuePair<string, Metric>("items[].EPOCH", TleEpoch);
+        foreach (var identifier in TleIdentifiers)
+        {
+            yield return new KeyValuePair<string, Metric>($"items[].{identifier}", Exact);
+        }
+
+        yield return new KeyValuePair<string, Metric>(TleLines, new(MetricKind.TleLine, null, "-"));
+        yield return new KeyValuePair<string, Metric>(TleField(TleLines, "EPOCH"), new(MetricKind.Seconds, "tle_field_epoch_s", "s"));
+        yield return new KeyValuePair<string, Metric>(TleField(TleLines, "MEAN_MOTION"),
+            new(MetricKind.Scalar, "tle_field_mean_motion_rev_day", "rev/day"));
+        yield return new KeyValuePair<string, Metric>(TleField(TleLines, "ECCENTRICITY"), new(MetricKind.Scalar, "tle_field_eccentricity", "-"));
+        foreach (var angle in new[] { "INCLINATION", "RA_OF_ASC_NODE", "ARG_OF_PERICENTER", "MEAN_ANOMALY" })
+        {
+            yield return new KeyValuePair<string, Metric>(TleField(TleLines, angle), TleFieldAngle);
+        }
+
+        yield return new KeyValuePair<string, Metric>(TleField(TleLines, "MEAN_MOTION_DOT"),
+            new(MetricKind.Scalar, "tle_field_mean_motion_dot", "rev/day2"));
+        yield return new KeyValuePair<string, Metric>(TleField(TleLines, "BSTAR"), TleFieldExponent);
+        yield return new KeyValuePair<string, Metric>(TleField(TleLines, "MEAN_MOTION_DDOT"), TleFieldExponent);
+    }
 
     /// <summary>The lists of an <c>orbital_events</c> golden (spec.md section 14.2), named <c>events.&lt;list&gt;</c>.</summary>
     public static readonly IReadOnlyList<string> EventLists =
@@ -121,7 +214,9 @@ public static class MetricTable
         ["ground_station"] = ["passes", "samples"],
         ["eclipse"] = ["events"],
         ["orbital_events"] = EventLists.Select(EventList).ToHashSet(),
-        ["attitude"] = ["attitude_quaternions", "pointing_directions"]
+        ["attitude"] = ["attitude_quaternions", "pointing_directions"],
+        ["sgp4"] = ["states"],
+        ["tle_conversion"] = ["items"]
     };
 
     /// <summary>Whether <paramref name="array"/> is an indexed array of the category (<see cref="IndexedArrays"/>).</summary>
@@ -328,6 +423,18 @@ public static class MetricTable
             ["pointing_directions"] = Exact,
             ["pointing_directions[]"] = new(MetricKind.DirectionAngle, "attitude_angle_rad", "rad")
         },
+        // The TLE epoch and the TEME and ICRF states at the samples (spec.md section 15.1)
+        ["sgp4"] = new Dictionary<string, Metric>
+        {
+            ["epoch"] = TleEpoch,
+            ["states"] = Exact,
+            ["states[].teme.position_km"] = new(MetricKind.ScalarPerComponent, "sgp4_position_km", "km"),
+            ["states[].teme.velocity_km_s"] = new(MetricKind.ScalarPerComponent, "sgp4_velocity_km_s", "km/s"),
+            ["states[].icrf.position_km"] = new(MetricKind.ScalarPerComponent, "sgp4_icrf_position_km", "km"),
+            ["states[].icrf.velocity_km_s"] = new(MetricKind.ScalarPerComponent, "sgp4_icrf_velocity_km_s", "km/s")
+        },
+        // The fields of a TLE read, and the lines of a TLE written (spec.md section 15.2)
+        ["tle_conversion"] = new Dictionary<string, Metric>(TleConversionOutputs()),
         // The lot-1 keys of their quantities (spec.md section 12.5)
         ["geosynchronous"] = new Dictionary<string, Metric>
         {

@@ -1,0 +1,27 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_24h_near_earth_alpha5_1957_008"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4 TEME states of a synthetic TLE, 00005 of Vallado's verification set with the Alpha-5 catalog number A0005
+  (100005) and the epoch 57300.78495062 (1957-10-27, the first year of the two-digit pivot), its checksums
+  recomputed, every 360 min over 24 h: the Alpha-5 number and the year pivot of spec.md 15.2.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "A0005 (synthetic, 00005 of SGP4-VER.TLE edited)"
+    line1: "1 A0005U 58002B   57300.78495062  .00000023  00000-0  28098-4 0  4751"
+    line2: "2 A0005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    tsince_min: [0.0, 360.0, 720.0, 1080.0, 1440.0]
+  output_frames: ["TEME"]
+  kernels: []

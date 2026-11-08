@@ -175,6 +175,40 @@ public class SpiceAPI
         string.Equals(frame.Name, Frame.GCRF.Name, StringComparison.OrdinalIgnoreCase) ? Frame.ICRF.Name : frame.Name;
 
     /// <summary>
+    /// Whether the frame is a TEME frame by its name, compared ignoring case as SPICE compares frame names: a frame
+    /// built by name, <c>new Frame("TEME")</c>, stands for <see cref="Frame.TEME"/>, the managed <see cref="TemeFrame"/>
+    /// (#451, #562 for the routing only).
+    /// </summary>
+    internal static bool IsTeme(Frame frame) =>
+        string.Equals(frame.Name, Frame.TEME.Name, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The managed frame whose orientation an ephemeris read in <paramref name="frame"/> rotates by, or null for a frame
+    /// that SPICE knows: an instance of <see cref="TemeFrame"/>, <see cref="CirsFrame"/> or <see cref="TirsFrame"/>, and
+    /// <see cref="Frame.TEME"/> for a frame named TEME (#558). SPICE knows none of these, or, for TEME, the native
+    /// construction that #451 replaced.
+    /// </summary>
+    internal static Frame ManagedReadFrame(Frame frame) => frame switch
+    {
+        TemeFrame or CirsFrame or TirsFrame => frame,
+        _ when IsTeme(frame) => Frame.TEME,
+        _ => null
+    };
+
+    /// <summary>
+    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558): rotated by
+    /// <see cref="OrbitalParameters.OrbitalParameters.ToFrame"/> at the epoch of the read, as a state in ICRF converted
+    /// by the caller would be, then labelled with the frame the caller gave.
+    /// </summary>
+    private static OrbitalParameters.StateVector ToManagedFrame(Vector3 position, Vector3 velocity, ILocalizable observer,
+        Time epoch, Frame managed, Frame frame)
+    {
+        var rotated = new OrbitalParameters.StateVector(position, velocity, observer, epoch, Frame.ICRF).ToFrame(managed)
+            .ToStateVector();
+        return new OrbitalParameters.StateVector(rotated.Position, rotated.Velocity, observer, epoch, frame);
+    }
+
+    /// <summary>
     ///     Retrieve the last error message from the native proxy layer and throw an InvalidOperationException.
     /// </summary>
     private static void ThrowLastProxyError()
@@ -613,12 +647,19 @@ public class SpiceAPI
                 var end = start + messageSize * stepSize > searchWindow.EndDate ? searchWindow.EndDate : (start + messageSize * stepSize) - stepSize;
                 var window = new TimeSystem.Window(start.ToTDB(), end.ToTDB());
                 var stateVectors = new StateVector[messageSize];
-                if (!ReadEphemerisProxy(window.Convert(), observerId, targetId, SpiceFrameName(frame),
+                // A managed frame is read in J2000, then rotated (#558)
+                var managed = ManagedReadFrame(frame);
+                if (!ReadEphemerisProxy(window.Convert(), observerId, targetId, managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name,
                     aberration.GetDescription(), stepSize.TotalSeconds,
                     stateVectors))
                     ThrowLastProxyError();
                 orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
-                    new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame), frame)));
+                {
+                    var epoch = Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame);
+                    return managed == null
+                        ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
+                        : ToManagedFrame(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, managed, frame);
+                }));
             }
 
             return orbitalParameters;
@@ -641,10 +682,7 @@ public class SpiceAPI
         lock (lockObject)
         {
             var observer = CelestialItem.Create(observerId);
-            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds, observerId,
-                targetId, SpiceFrameName(frame), aberration.GetDescription());
-            return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer,
-                Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
+            return ReadEphemerisAtGivenEpoch(epoch, observer, targetId, frame, aberration);
         }
     }
 
@@ -658,11 +696,24 @@ public class SpiceAPI
         ArgumentNullException.ThrowIfNull(frame);
         lock (lockObject)
         {
-            var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
-                observer.NaifId, targetId, SpiceFrameName(frame), aberration.GetDescription());
-            return new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(),
-                observer, Time.Create(stateVector.Epoch, TimeFrame.TDBFrame), frame);
+            return ReadEphemerisAtGivenEpoch(epoch, observer, targetId, frame, aberration);
         }
+    }
+
+    /// <summary>
+    /// The state of <paramref name="targetId"/> from <paramref name="observer"/> at <paramref name="epoch"/> (TDB label):
+    /// in a frame SPICE knows, as <c>spkezr_c</c> returns it; in a managed frame, read in J2000 and rotated (#558).
+    /// </summary>
+    private static OrbitalParameters.StateVector ReadEphemerisAtGivenEpoch(Time epoch, ILocalizable observer, int targetId,
+        Frame frame, Aberration aberration)
+    {
+        var managed = ManagedReadFrame(frame);
+        var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
+            observer.NaifId, targetId, managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name, aberration.GetDescription());
+        var tdb = Time.Create(stateVector.Epoch, TimeFrame.TDBFrame);
+        return managed == null
+            ? new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, frame)
+            : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame);
     }
 
     /// <summary>
@@ -837,18 +888,60 @@ public class SpiceAPI
     /// <param name="epoch"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
+    /// <remarks>
+    /// A TEME frame, <see cref="Frame.TEME"/> or a frame named TEME, is the managed <see cref="TemeFrame"/> (#451): the
+    /// transform is composed through ICRF, the other frame from SPICE, which then must give a rotation (#454 on the TEME
+    /// path: outside the coverage of its kernels SPICE returns a zero quaternion, and the call throws).
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">The SPICE part of a TEME transform is not a rotation.</exception>
     public OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame)
     {
+        if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
+        if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
+        if (IsTeme(fromFrame) || IsTeme(toFrame))
+        {
+            return TransformFrameThroughTeme(epoch, fromFrame, toFrame);
+        }
+
         lock (lockObject)
         {
-            if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
-            if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
             var res = TransformFrameProxy(SpiceFrameName(fromFrame), SpiceFrameName(toFrame), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
             return new OrbitalParameters.StateOrientation(
                 new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z),
                 new Vector3(res.AngularVelocity.X, res.AngularVelocity.Y, res.AngularVelocity.Z), epoch, fromFrame);
         }
+    }
+
+    /// <summary>
+    /// The transform between a TEME frame and another frame, composed through ICRF as <see cref="Frame.ToFrame"/>, TEME by
+    /// the managed <see cref="TemeFrame"/> and the other frame by SPICE, labelled with <paramref name="fromFrame"/>.
+    /// </summary>
+    private OrbitalParameters.StateOrientation TransformFrameThroughTeme(Time epoch, Frame fromFrame, Frame toFrame)
+    {
+        var fromToIcrf = OrientationToIcrfForTeme(epoch, fromFrame);
+        var toToIcrf = OrientationToIcrfForTeme(epoch, toFrame);
+        var rotation = toToIcrf.Rotation.Conjugate() * fromToIcrf.Rotation;
+        var angularVelocity = toToIcrf.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + fromToIcrf.AngularVelocity;
+        return new OrbitalParameters.StateOrientation(rotation, angularVelocity, epoch, fromFrame);
+    }
+
+    private OrbitalParameters.StateOrientation OrientationToIcrfForTeme(Time epoch, Frame frame)
+    {
+        if (IsTeme(frame))
+        {
+            return Frame.TEME.GetStateOrientationToICRF(epoch);
+        }
+
+        var orientation = TransformFrame(epoch, frame, Frame.ICRF);
+        // A rotation is a unit quaternion; the zero quaternion of a failed SPICE call is not (#454)
+        if (System.Math.Abs(orientation.Rotation.Magnitude() - 1.0) > 1e-9)
+        {
+            throw new InvalidOperationException(
+                $"SPICE gave no rotation from {frame.Name} to {Frame.ICRF.Name} at {epoch.ToTDB()}: the orientation data of {frame.Name} do not cover this epoch.");
+        }
+
+        return orientation;
     }
 
     public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)
@@ -862,20 +955,69 @@ public class SpiceAPI
     /// <summary>
     /// Convert TLE to state vector at given epoch
     /// </summary>
-    /// <param name="line1"></param>
-    /// <param name="line2"></param>
-    /// <param name="line3"></param>
-    /// <param name="epoch"></param>
-    /// <returns></returns>
+    /// <param name="line1">The name of the object (the title line).</param>
+    /// <param name="line2">Line 1 of the TLE.</param>
+    /// <param name="line3">Line 2 of the TLE.</param>
+    /// <param name="epoch">The instant of the state, in any time frame.</param>
+    /// <returns>The SGP4 state in <see cref="Frame.TEME"/>, labelled <paramref name="epoch"/>.</returns>
+    /// <remarks>
+    /// <para>
+    /// SGP4 is CSPICE's <c>evsgp4_c</c>: Vallado's 2006 code in the AFSPC mode with the WGS-72 "old" constants
+    /// (KE = 7.43669161e-2, R = 6378.135 km, J2 = 1.082616e-3, J3 = −2.53881e-6, J4 = −1.65597e-6). tsince is the TT
+    /// seconds from the TLE epoch (UTC, as the line gives it) to <paramref name="epoch"/> over 60 (#599): the call is at
+    /// the epoch <c>getelm_c</c> reads plus those seconds.
+    /// </para>
+    /// <para>
+    /// The state is in <see cref="Frame.TEME"/>, the managed TEME (#451). An SGP4 error (a decayed or suborbital orbit, an
+    /// eccentricity out of range) gives a zero state from the native layer, which keeps the SPICE message on stdout only:
+    /// it throws here instead (#454 on the TLE path). No valid state has r = 0.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">SGP4 failed at this epoch.</exception>
     public OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string line1, string line2, string line3,
         Time epoch)
     {
+        return ConvertTleToStateVector(line1, line2, line3, ReadTleEpoch(line1, line2, line3),
+            OrbitalParameters.TLE.TLE.ExtractEpochFromTLE(line2), epoch);
+    }
+
+    /// <summary>
+    /// The SGP4 state of a TLE at <paramref name="epoch"/>: <c>evsgp4_c</c> at <paramref name="sgp4Epoch"/>, the TLE epoch
+    /// as <c>getelm_c</c> reads it, plus the TT seconds from <paramref name="tleEpoch"/>, the same epoch as a UTC
+    /// <see cref="Time"/>, to <paramref name="epoch"/> (#599).
+    /// </summary>
+    internal OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string name, string line1, string line2,
+        double sgp4Epoch, Time tleEpoch, Time epoch)
+    {
+        double et = sgp4Epoch + Propagator.PropagationTimeArgument.Tt.SecondsBetween(tleEpoch, epoch);
         lock (lockObject)
         {
-            var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
-            return new OrbitalParameters.StateVector(res.Position.Convert(), res.Velocity.Convert(),
+            var res = ConvertTLEToStateVectorProxy(name, line1, line2, et);
+            var position = res.Position.Convert();
+            if (position.Magnitude() == 0.0)
+            {
+                throw new InvalidOperationException(
+                    $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: the native layer returned a zero state (see the SPICE message on the standard output).");
+            }
+
+            return new OrbitalParameters.StateVector(position, res.Velocity.Convert(),
                 new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
-                new Frame(res.Frame));
+                Frame.TEME);
+        }
+    }
+
+    /// <summary>
+    /// The epoch of a TLE as CSPICE's <c>getelm_c</c> reads it: TDB seconds from J2000 (ET), the epoch from which
+    /// <c>evsgp4_c</c> counts tsince (#599).
+    /// </summary>
+    /// <param name="name">The name of the object.</param>
+    /// <param name="line1">Line 1 of the TLE.</param>
+    /// <param name="line2">Line 2 of the TLE.</param>
+    internal double ReadTleEpoch(string name, string line1, string line2)
+    {
+        lock (lockObject)
+        {
+            return GetTLEElementsProxy(name, line1, line2).Epoch;
         }
     }
 

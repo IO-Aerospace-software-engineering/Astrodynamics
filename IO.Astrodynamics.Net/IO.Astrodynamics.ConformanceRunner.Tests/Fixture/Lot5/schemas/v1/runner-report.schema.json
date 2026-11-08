@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conformance-tests.local/schemas/v1/runner-report.schema.json",
+  "title": "Conformance-Test Runner Report",
+  "description": "Schema for the JSON report emitted by each framework runner after exercising all cases.",
+  "type": "object",
+
+  "$defs": {
+    "delta_value": {
+      "type": "object",
+      "properties": {
+        "max_abs_delta": { "type": "number" },
+        "max_rel_delta": { "type": "number" }
+      },
+      "required": ["max_abs_delta", "max_rel_delta"],
+      "additionalProperties": false
+    },
+    "deltas_map": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/delta_value" }
+    },
+    "result_entry": {
+      "type": "object",
+      "properties": {
+        "case_id": { "type": "string" },
+        "status":  { "type": "string", "enum": ["PASS", "FAIL", "SKIP", "ERROR"] },
+        "deltas":  { "$ref": "#/$defs/deltas_map" },
+        "message": { "type": "string" }
+      },
+      "required": ["case_id", "status", "deltas"],
+      "if": {
+        "properties": { "status": { "enum": ["SKIP", "ERROR"] } }
+      },
+      "then": {
+        "required": ["case_id", "status", "deltas", "message"]
+      }
+    }
+  },
+
+  "required": ["report_meta", "results", "summary"],
+
+  "properties": {
+    "report_meta": {
+      "type": "object",
+      "properties": {
+        "runner_name":              { "type": "string" },
+        "runner_version":           { "type": "string" },
+        "framework":                { "type": "string" },
+        "framework_version":        { "type": "string" },
+        "framework_informational_version": { "type": "string" },
+        "framework_commit":         { "type": "string", "pattern": "^([0-9a-f]{7,40}|unknown)$" },
+        "run_timestamp":            { "type": "string", "format": "date-time" },
+        "conformance_tests_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      },
+      "required": [
+        "runner_name",
+        "runner_version",
+        "framework",
+        "framework_version",
+        "run_timestamp",
+        "conformance_tests_commit"
+      ],
+      "additionalProperties": false
+    },
+    "results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/result_entry" }
+    },
+    "summary": {
+      "type": "object",
+      "$comment": "Logical invariant (not schema-enforced): total == passed + failed + skipped + errors",
+      "properties": {
+        "total":   { "type": "integer", "minimum": 0 },
+        "passed":  { "type": "integer", "minimum": 0 },
+        "failed":  { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "errors":  { "type": "integer", "minimum": 0 }
+      },
+      "required": ["total", "passed", "failed", "skipped", "errors"],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -60,6 +60,13 @@ Console.WriteLine($"Velocity at {futureEpoch}: {futureSv.Velocity}");
 
 SGP4 predictions degrade with time. For best accuracy, use the most recent TLE available.
 
+The model is CSPICE's `evsgp4_c`: Vallado's 2006 code (AIAA 2006-6753) in the AFSPC mode, with the WGS-72 "old"
+constants (KE = 7.43669161e-2 exactly, R = 6378.135 km, J2 = 1.082616e-3, J3 = −2.53881e-6, J4 = −1.65597e-6). The
+library offers no other mode or constants. SGP4's time argument, tsince, is the TT seconds from the TLE epoch (a UTC
+instant) to the epoch you ask for, whatever its time frame: `futureEpoch` above is TDB, and its UTC equivalent gives the
+same state. The state is in `Frame.TEME`. A TLE that SGP4 cannot evaluate at that epoch (decayed, suborbital, an
+eccentricity out of range) throws `InvalidOperationException`.
+
 ## Creating a TLE from a State Vector
 
 Convert an osculating state vector back to a TLE:
@@ -77,7 +84,9 @@ var config = new TleConfiguration(
 var newTle = sv.ToTLE(config);
 ```
 
-The fitting process converts osculating elements to mean elements consistent with SGP4.
+The fitting process converts osculating elements to mean elements consistent with SGP4. The state may be in any frame,
+elements already in TEME included; the TLE's epoch is the UTC of the state's epoch, rounded to the 1e-8 day of the
+field. Each field of the text is the nearest value its columns hold.
 
 A `NoradId` above 99999 is encoded with the Alpha-5 convention, up to 339999:
 

@@ -82,6 +82,99 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
+  R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
+  spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
+  LEO state at 2012-02-17, 4.75 km at the geostationary radius), and the zero rotation outside the PCK.
+  - **The fix.** `Frame.TEME` is the managed `TemeFrame`, Vallado et al. (2006), appendix C: TEME → ICRF =
+    Q(t)ᵀ · Rz(ERA − GMST82), the IAU 2006/2000B chain of `Frame.CIRS` and `Frame.TIRS`, GMST82 of SOFA `iauGmst82`,
+    UT1 = UTC (UT1 − UTC cancels to 0.2 mm at GEO; `new TemeFrame(eop)` takes a provider), quasi-inertial (v' = R v,
+    as Vallado's `teme2eci` and GMAT). It reads no kernel: TEME ↔ ICRF works at any epoch. The native TEME of the frozen
+    C++ layer is no longer used.
+  - **Measured** against `tools/teme_reference` (a LEO and a GEO state at 13 epochs, 1980 to 2026): 0.9 mm (LEO) and
+    18 mm (GEO) from ERFA's CIP route with IAU 2006/2000B; 19 mm and 106 mm from IAU 2006/2000A (0.55 mas, IAU 2000B's
+    accuracy); 9.4 cm and 56 cm from GMAT R2026a's TEME → EarthICRF, the kinematic terms of the 1994 equation of the
+    equinoxes that GMAT applies from 1997-02-27, and 0.094 mm/s. Five TLEs at their epoch (1994 to 2026, LEO, GTO, GEO),
+    from Vallado's code (`sgp4` 2.27, WGS-72 old, AFSPC mode) through GMAT: 1.0 cm to 0.37 m (TDRS 6, GEO).
+- **A frame named TEME took the native frame** (the routing of [#562](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/562)). `SpiceDataProvider` and `MemoryDataProvider`
+  route a frame named TEME, in any case (`new Frame("TEME")` from a CCSDS file, the CLI or user code), to `Frame.TEME`,
+  and `SpiceAPI.TransformFrame` composes a TEME end through ICRF; the TLE and `SpiceAPI.ConvertTleToStateVector` label
+  their states with `Frame.TEME`. The equality of a frame built by name with `Frame.TEME` stays #562's.
+- **An ephemeris read in a managed frame handed its name to `spkezr_c`** ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558), the ephemeris reads). A read in
+  `Frame.TEME` (or a frame named TEME), `Frame.CIRS` or `Frame.TIRS`, through `GetEphemeris` or the three
+  `SpiceAPI.ReadEphemeris`, is read in J2000 and rotated by the frame at the epoch of the read: the numbers of
+  `ToFrame` on the ICRF read, to 1e-6 m. CIRS and TIRS returned SPICE(UNKNOWNFRAME) and a state of |r| = 0; TEME the
+  native frame, up to 23″ from `ToFrame`. A coordinate search in a managed frame is not mapped.
+- **A failed SGP4 returned a zero state; TEME outside the PCK a zero rotation** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the TLE and TEME paths).
+  `SpiceAPI.ConvertTleToStateVector`, under `TLE.ToOsculating` and `ToStateVector`, throws `InvalidOperationException`
+  naming the TLE and the epoch when the native layer returns r = 0 (a decayed or suborbital orbit, an eccentricity out
+  of range); no valid state has r = 0. The native `TLE::ToStateVector` left its state unwritten when `evsgp4_c`
+  signalled, so the state returned was what the stack held: on Linux zero by chance (28872 of Vallado's set gave
+  r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307)), on Windows x64 and macOS arm64 a non-zero state, possibly that of an
+  earlier call. It now returns a zero state then, the one change of the C++ layer in 11.0.0 (decision of S. Guillet,
+  2026-11-08). TEME ↔ ICRF reads no kernel;
+  `SpiceAPI.TransformFrame` between TEME and a SPICE frame throws when SPICE gives no rotation for that frame (ITRF93
+  before 2000). The other proxies keep #454.
+- **A TLE built its Earth in ITRF93 at its epoch** ([#597](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/597)). `new TLE(...)` (twice) and `Omm.ToTle` built
+  `new CelestialBody(399, new Frame("ITRF93"), epoch)`: outside the Earth's binary PCK (every TLE before 2000 or after
+  the PCK's end) printed two SPICE(FRAMEDATANOTFOUND) messages, without an exception, and left the observer's state
+  read in a frame without data. The Earth is built in `Frame.ECLIPTIC_J2000` at the epoch, as `ConvertTleToStateVector`
+  builds it; SGP4 does not read it, so no state moves.
+- **SGP4 counted tsince in TDB seconds from an epoch the library converted itself** ([#599](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/599)). `TLE.ToOsculating(t)` (and
+  `ToStateVector(t)`, `AtEpoch`, `TLEPropagator`, the TLE participants of scenarios and conjunctions) called
+  `evsgp4_c` at the TDB of t, so that tsince was the TDB seconds between the library's TDB of t and CSPICE's TDB of
+  the epoch: the drift of TDB − TT over the interval and the difference of the two TDB models (up to 1.07 µs at the
+  epoch). tsince is now the TT seconds from the TLE epoch (UTC, as the line gives it) to t, the UTC days of Vallado's
+  driver away from a leap second, whatever the time frame of t: the call is at the epoch `getelm_c` reads (read once
+  per TLE from the native layer) plus those seconds. SGP4 itself is unchanged: CSPICE's `evsgp4_c`, Vallado's 2006
+  code in the AFSPC mode with WGS-72 old (KE = 7.43669161e-2).
+  - **What moves.** Every SGP4 state at a given instant, by up to 0.36 m after a day in LEO (0.11 m for 06251 of
+    Vallado's set, 0.21 m for the ISS of 2026-11-07, 0.03 m in GEO), and by the epoch term at the epoch (up to 9.3 mm,
+    1 µs); fits (`ToTLE`) by the same terms.
+  - **Measured** against `tools/sgp4_reference` (Vallado's code, `sgp4` 2.27, WGS-72 old, AFSPC mode): the 29 element
+    sets of Vallado's verification set that SGP4 evaluates, at the 577 tsince of `tcppver.out`, within 7.6e-5 m and
+    1.3e-8 m/s per component, CSPICE's own difference from the reference; 06251 and the ISS hourly over a day at UTC
+    instants within 0.36 mm, the double of the epoch passed to `evsgp4_c`. `SpiceAPI.ConvertTleToStateVector` counts
+    tsince the same way.
+- **The TLE epoch was read through a `double`, truncated to the tick** ([#603](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/603)). The day and its fraction are read
+  in decimal and the fraction rounded to the 100 ns tick: the 8 decimals of a day are whole multiples of 864 µs, so the
+  epoch is exact. 43 % of TLE epochs were read 100 ns early (CALSPHERE 1, `26311.28305435`: 06:47:35.8958399 instead
+  of 06:47:35.8958400), and their OMM `EPOCH` text 1 µs early.
+- **`TLE.Create` wrote fields its columns could not hold, or not the nearest value** ([#600](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/600), [#601](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/601),
+  [#602](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/602), [#480](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/480)). Each field is now the nearest value of its columns, as the format and
+  `tools/sgp4_reference` (exact decimal) give it. What moves, text only:
+  - the epoch is rounded to the nearest 1e-8 day and carried into the next day and year: an epoch in the last 432 µs
+    of a UTC day was written one day early (2026-11-07T23:59:59.9996 UTC as `26311.00000000`, now `26312.00000000`;
+    2026-12-31T23:59:59.9996 as `27001.00000000`) (#600);
+  - B* and n̈/6 below 1e-10 took a two-digit exponent, a 70-character line that threw `ArgumentException`: they are
+    written as the nearest value of a five-digit mantissa and a one-digit exponent, ` 00000-0` below 5e-11 and
+    ` 10000-9` from 5e-11 to 1e-10; from 0.999995e9 the field cannot hold the value and `ArgumentOutOfRangeException`
+    is thrown (#601);
+  - e was clamped to at least 1e-7, so e = 0 was written `0000001`: it is clamped to [0, 0.9999999] (#602);
+  - an angle of −0.0 was written `-0.0000`, and ṅ/2 in (−5e-9, 0] `- .00000000`, a 70-character line that threw: a
+    value that rounds to zero is written without a sign (#480).
+- **A non-UTC epoch was written as UTC** ([#479](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/479)). `TLE.Create` (and `ToTLE`, `Omm.ToTle`),
+  `OpmStateVector.FromStateVector` (under `Spacecraft.ToOpm` and `Opm.CreateFromStateVector`) and
+  `ImpulseManeuver.ToOpmManeuverParameters` wrote the calendar of the epoch's own time scale under a UTC epoch field
+  or `TIME_SYSTEM = UTC`: a TDB epoch 69.19 s late (530 km in LEO), TT 69.184 s, TAI 37 s, and `MAN_EPOCH_IGNITION`
+  always, its thrust window being TDB. They write the UTC of the instant: 2021-03-20 12:00 TDB gives `21079.49919924`,
+  CSPICE's UTC 11:58:50.8143932, where it gave `21079.50000000`. UTC epochs are written as before.
+- **The OPM and OMM readers took `EPOCH` as UTC whatever `TIME_SYSTEM` said** ([#485](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/485)). `Opm.ToStateVector`
+  (and `ToSpacecraft`) read the epoch in the time system of the metadata, UTC, TAI, TDB, TT or GPS (in any case), and
+  `Omm.ToTle` writes the UTC of its epoch so read: a TDB file was read 69.19 s late. Another time system (UT1, TCB,
+  MET, ...) throws `InvalidOperationException` naming it; loading and validation are unchanged.
+  `OpmStateVector.ToStateVector`, which carries no time system, still reads UTC. UTC files are read as before, bit for
+  bit.
+- **`ToTLE` threw `InvalidCastException` for elements already in TEME** ([#464](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/464)). A `TLE`, or Keplerian or
+  equinoctial elements in `Frame.TEME`, are fitted as their state in TEME; mean elements throw the
+  `InvalidOperationException` of `ToStateVector` that sends to SGP4. A `StateVector` fits as before, bit for bit.
+- **The TLE documentation named ṅ and n̈ and no SGP4 model** ([#605](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/605)). `FirstDerivationMeanMotion` and
+  `SecondDerivativeMeanMotion`, and the `nDot` and `nDDot` of `TLE.Create`, hold ṅ/2 and n̈/6, the TLE fields and OMM's
+  `MEAN_MOTION_DOT` and `MEAN_MOTION_DDOT`. The XML documentation of `TLE`, `ToOsculating` and
+  `SpiceAPI.ConvertTleToStateVector`, [TLE](../reference/tle.md) and the [TLE & OMM tutorial](../tutorials/tle-and-omm.md)
+  state the model: CSPICE `evsgp4_c`, Vallado's 2006 code, AFSPC mode, WGS-72 old (KE = 7.43669161e-2), no other mode
+  or constants, tsince in TT seconds, errors thrown.
+
 - **The managed window search returned its edges up to 1 s early, could start before the search window, and had no
   extremes and no equality** ([#590](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/590), [#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461), [#486](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/486), [#487](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/487)). `GeometryFinder` is
   the search of `FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
@@ -175,6 +268,16 @@ A major version, because it breaks the API: members deprecated for removal in 11
   a pass or an event the library does not find FAILS; the direction angle of a pointing direction. The 22 cases of the
   suite's lot-4 branch (4cd11f9) pass with at most 0.137 of their tolerance, and the 151 cases of that branch pass. See
   [Validation](../guides/validation.md#lot-4-geometry-and-events).
+- **Conformance runner: the TLE categories and TEME of lot 5** (design of lot 5 of
+  [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), approved by S. Guillet,
+  2026-11-08). New solvers for `sgp4` (TEME states at tsince or at UTC instants, and their ICRF states, through
+  `TLE.ToOsculating` and `Frame.TEME`) and `tle_conversion` (`TLE.ToOmm`, and `Omm.ToTle` from an OMM item in its
+  `TIME_SYSTEM`), and TEME in the frames of `frame_transformation`. A case whose `gravity_model` or `opsmode` is not
+  `wgs72old` and `afspc`, the only model of the library's SGP4, is an ERROR that names it. New kinds of `spec.md` §6.1:
+  the scalar per component, the relative delta, the TLE epoch on the UTC calendar, and the TLE line, whose fields the
+  runner decodes by the spec's column table in `decimal`, independently of the library's parser, so that a line of the
+  wrong length or checksum FAILs. The 25 cases of the suite's lot-5 branch (b10b925) pass with at most 0.642 of their
+  tolerance (the velocity of frame 035, ICRF → TEME in 1990), and the 176 cases of that branch pass. See [Validation](../guides/validation.md#lot-5-tles-sgp4-and-teme).
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
   - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared
@@ -613,6 +716,14 @@ A major version, because it breaks the API: members deprecated for removal in 11
     executes impulses on a state of its own and continues from the returned state.
 
 **Changed**
+
+- **Every TEME ↔ ICRF result moves** with the managed TEME ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451), Fixed above), by 0.3″ to 23.3″ over 2000–2026
+  (the angle between the former TEME and the definition; 2.0″ to 23.2″ at the 13 epochs of `tools/teme_reference`):
+  the ICRF states of a TLE (`TLE.ToOsculating(...).ToFrame(Frame.ICRF)`, 326 to 428 m on the three TLEs of the TEME
+  study, 82 to 851 m on the verification TLEs), a TLE fitted from ICRF (`TLE.Create`, `ToTLE`, about 168 m), OPM and
+  OMM in TEME, the CLI `--frame TEME`, `TLEPropagator` once converted, and the TLE participants of scenarios and
+  conjunctions. TEME ↔ ICRF before 2000 and after the end of the PCK, a zero rotation before, is now defined. The SGP4
+  states in TEME do not move with it; tsince in TT moves them (#599, Fixed above).
 
 - **The maneuver chain on the attitude timeline** (#539, #547, #570; Fixed above). Breaking:
   - **An attitude delays the next maneuver.** It activates at the later of its `MinimumEpoch` and the end of the

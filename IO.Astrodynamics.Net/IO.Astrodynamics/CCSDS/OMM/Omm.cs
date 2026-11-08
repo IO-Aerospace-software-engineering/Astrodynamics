@@ -210,6 +210,11 @@ public class Omm
     /// The resulting TLE is in TEME, the frame of SGP4/SDP4 mean elements, whatever REF_FRAME says; no frame
     /// bias or other inertial-frame conversion is involved.
     /// </para>
+    /// <para>
+    /// <c>EPOCH</c> is read in <c>TIME_SYSTEM</c> (UTC, TAI, TDB, TT or GPS) and written as its UTC, the time scale of a
+    /// TLE epoch (#485); another time system throws <see cref="InvalidOperationException"/>. Before 11.0.0 it was read as
+    /// UTC whatever the time system.
+    /// </para>
     /// </remarks>
     public OrbitalParameters.TLE.TLE ToTle()
     {
@@ -231,9 +236,12 @@ public class Omm
         if (!tleParams.BStar.HasValue)
             throw new InvalidOperationException("BSTAR drag term is required for TLE. OMM uses BTerm instead.");
 
-        // Create mean Keplerian elements from OMM data
-        var epoch = new TimeSystem.Time(meanElements.Epoch, TimeSystem.TimeFrame.UTCFrame);
-        var earth = new Body.CelestialBody(399, new Frames.Frame("ITRF93"), epoch);
+        // Create mean Keplerian elements from OMM data, at the epoch read in TIME_SYSTEM (#485), as UTC, the time scale of a
+        // TLE epoch
+        var timeFrame = Common.Enums.CcsdsTimeSystemMapping.ToTimeFrame(Metadata.TimeSystemEnum, Metadata.TimeSystem);
+        var epoch = new TimeSystem.Time(meanElements.Epoch, timeFrame).ToUTC();
+        // The Earth in an inertial frame, as the TLE builds it (#597): ITRF93 would read the Earth's binary PCK at the epoch
+        var earth = new Body.CelestialBody(399, Frames.Frame.ECLIPTIC_J2000, epoch);
 
         var keplerianElements = OrbitalParameters.KeplerianElements.FromOMM(
             meanElements.MeanMotion.Value,

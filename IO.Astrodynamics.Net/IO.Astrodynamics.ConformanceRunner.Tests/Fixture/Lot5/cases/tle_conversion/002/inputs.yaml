@@ -1,0 +1,40 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/tle_conversion.yaml; do not edit.
+id: "tle_conversion_tle_to_omm_deep_002"
+schema_version: "v1"
+version: "0.1.0"
+category: "tle_conversion"
+created: "2026-11-08"
+description: >
+  The fields of five TLEs under the OMM keywords and units: TDRS 3 (negative n-dot/2, zero B*), THEMIS E (e = 0.84,
+  n below 1 rev/day) and GPS BIIR-5 (NAVSTAR 48) of CelesTrak's GP data of 2026-11-07, 28350 (non-zero n-ddot/6) and
+  23333 (epoch 1994) of Vallado's SGP4-VER.TLE: signs, zeros, a low mean motion, an old epoch.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  operation: "tle_to_omm"
+  items:
+    - tle:
+        name: "TDRS 3"
+        line1: "1 19548U 88091B   26310.95041905 -.00000303  00000+0  00000+0 0  9993"
+        line2: "2 19548  12.4960 340.0569 0041590 351.9996   7.5191  1.00273059126817"
+    - tle:
+        name: "THEMIS E"
+        line1: "1 30798U 07004E   26310.34967581 -.00000043  00000+0  00000+0 0  9999"
+        line2: "2 30798   7.3299  86.9411 8405723 243.6137  63.0349  0.87839451 67174"
+    - tle:
+        name: "NAVSTAR 48 (USA 151)"
+        line1: "1 26407U 00040A   26310.03381689 -.00000008  00000+0  00000+0 0  9990"
+        line2: "2 26407  54.8268 209.5342 0115374 304.9646 156.9344  2.00558852192797"
+    - tle:
+        name: "28350 COSMOS 2405 (SGP4-VER.TLE)"
+        line1: "1 28350U 04020A   06167.21788666  .16154492  76267-5  18678-3 0  8894"
+        line2: "2 28350  64.9977 345.6130 0024870 260.7578  99.9590 16.47856722116490"
+    - tle:
+        name: "23333 WIND (SGP4-VER.TLE)"
+        line1: "1 23333U 94071A   94305.49999999 -.00172956  26967-3  10000-3 0    15"
+        line2: "2 23333  28.7490   2.3720 9728298  30.4360   1.3500  0.07309491    70"
+  kernels: []

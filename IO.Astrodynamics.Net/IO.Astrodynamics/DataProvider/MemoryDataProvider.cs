@@ -17,8 +17,18 @@ public class MemoryDataProvider : IDataProvider
     private Dictionary<int, SortedDictionary<Time, StateVector>> _stateVectors = new Dictionary<int, SortedDictionary<Time, StateVector>>();
     private Dictionary<int, CelestialBody> _celestialBodies = new Dictionary<int, CelestialBody>();
 
+    /// <remarks>
+    /// A frame named TEME is <see cref="Frame.TEME"/>, the managed <see cref="TemeFrame"/>, which needs no stored
+    /// orientation (#451, the routing of #562); its orientation is labelled with <paramref name="source"/>.
+    /// </remarks>
     public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
     {
+        if (SpiceAPI.IsTeme(source))
+        {
+            var teme = Frame.TEME.GetStateOrientationToICRF(date);
+            return new StateOrientation(teme.Rotation, teme.AngularVelocity, date, source);
+        }
+
         if (!_stateOrientationsToICRF.TryGetValue(source.Name, out var stateOrientations))
         {
             throw new ArgumentException($"Frame not found ({source})");

@@ -2,7 +2,8 @@
 #458, section 7.2), the categories orbital_elements, time_conversion and frame_transformation; lot 2 (design of #500,
 section 6.4), the propagator cases 006 to 018; lot 3 (design of #587, section 8.2), the categories maneuver and
 lambert; lot 4 (design of lot 4 of #457, section 8.2), the categories ground_station, eclipse, orbital_events and
-attitude.
+attitude; lot 5 (design of lot 5 of #457, section 8.2), the categories sgp4 and tle_conversion and the TEME cases 032 to
+036 of frame_transformation (lot 1 keeps its cases 001 to 031).
 
 Written into IO.Astrodynamics.Net/IO.Astrodynamics.ConformanceRunner.Tests/Fixture/Lot<n>/, which is replaced:
   schemas/v1/case.schema.json, expected.schema.json, runner-report.schema.json
@@ -31,7 +32,7 @@ The tests hash the same way.
 
 Requires PyYAML. A file of data/ left as a Git LFS pointer (a suite cloned without LFS) stops the script.
 
-Usage: python3 -I -B tools/conformance/sync_fixture.py --lot <1|2|3|4> <suite checkout> [--source <sha>]
+Usage: python3 -I -B tools/conformance/sync_fixture.py --lot <1|2|3|4|5> <suite checkout> [--source <sha>]
 """
 import argparse
 import hashlib
@@ -56,16 +57,19 @@ DATA_PREFIX = "data/"
 
 
 class Lot:
-    """The cases of a lot: every case of its categories, or those numbered first to last; fields: whether the runner
-    reads the case's geopotential_model from data/; always: the files of data/ the runner reads for every case of the
-    lot; spks: whether it reads the SPK of a bsp_source orbit from data/; reference: further directories of the
-    repository whose files the tests take when the fixture does not ship them."""
+    """The cases of a lot: every case of its categories, or those numbered first to last; ranges: the first and last
+    numbers of a category whose cases the lot shares with another lot, which override first and last for it; fields:
+    whether the runner reads the case's geopotential_model from data/; always: the files of data/ the runner reads for
+    every case of the lot; spks: whether it reads the SPK of a bsp_source orbit from data/; reference: further
+    directories of the repository whose files the tests take when the fixture does not ship them."""
 
-    def __init__(self, number, categories, first=None, last=None, fields=False, always=(), spks=False, reference=()):
+    def __init__(self, number, categories, first=None, last=None, fields=False, always=(), spks=False, reference=(),
+                 ranges=None):
         self.number = number
         self.categories = categories
         self.first = first
         self.last = last
+        self.ranges = ranges or {}
         self.fields = fields
         self.always = always
         self.spks = spks
@@ -81,7 +85,8 @@ class Lot:
 
     def selects(self, case):
         number = int(case.name)
-        return (self.first is None or number >= self.first) and (self.last is None or number <= self.last)
+        first, last = self.ranges.get(case.parent.name, (self.first, self.last))
+        return (first is None or number >= first) and (last is None or number <= last)
 
     def reference_data(self):
         """The directories the tests take a file from when the fixture does not ship it: the runner's kernels, then
@@ -90,11 +95,12 @@ class Lot:
 
 
 LOTS = {
-    1: Lot(1, ("orbital_elements", "time_conversion", "frame_transformation")),
+    1: Lot(1, ("orbital_elements", "time_conversion", "frame_transformation"), ranges={"frame_transformation": (1, 31)}),
     2: Lot(2, ("propagator",), first=6, last=18, fields=True),
     3: Lot(3, ("maneuver", "lambert"), fields=True),
     4: Lot(4, ("ground_station", "eclipse", "orbital_events", "attitude"), fields=True, always=("EGM2008_to70_TideFree",),
            spks=True, reference=(TESTS_LRO,)),
+    5: Lot(5, ("sgp4", "tle_conversion", "frame_transformation"), ranges={"frame_transformation": (32, 36)}),
 }
 
 

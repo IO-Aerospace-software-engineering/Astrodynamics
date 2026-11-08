@@ -67,10 +67,16 @@ IO::Astrodynamics::Math::Vector3D IO::Astrodynamics::OrbitalParameters::TLE::Get
 
 IO::Astrodynamics::OrbitalParameters::StateVector IO::Astrodynamics::OrbitalParameters::TLE::ToStateVector(const IO::Astrodynamics::Time::TDB &epoch) const
 {
-    SpiceDouble stateVector[6];
+    // A failed evsgp4_c leaves its output unwritten: the state is zero then, never what the stack held (#454; the .NET
+    // layer throws on a zero state)
+    SpiceDouble stateVector[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
     SpiceDouble ep = epoch.GetSecondsFromJ2000().count();
     evsgp4_c(ep, const_cast<SpiceDouble *>(m_geophysics), const_cast<SpiceDouble *>(m_elements), stateVector);
+    if (failed_c())
+    {
+        std::fill(std::begin(stateVector), std::end(stateVector), 0.0);
+    }
 
     for (double & sv : stateVector)
     {

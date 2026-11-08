@@ -606,16 +606,19 @@ public class EquinoctialElementsSingularityTests
         var tle = c.Elements(_earth, Epoch, Frames.Frame.ICRF).ToTLE(configuration);
         var fitted = tle.ToStateVector(Epoch);
 
-        // Assert, in m and m/s. Twice the worst over Linux, Windows and macOS arm64 (CI run 40280932636, 2026-10-26):
-        // 3.302 m and 3.20e-3 m/s
+        // Assert, in m and m/s. The residual is the TLE's text grid (half a unit of the 4th decimal of M is 6.2e-3 m/s
+        // here). Twice the worst over Linux x64, Windows x64 and macOS arm64 (CI run 42490199772, 2026-11-08; the three
+        // agree to the digits printed), 5.160 m and 9.38e-3 m/s. Before 11.0.0 the epoch field was the TDB calendar of
+        // the epoch, 69.19 s from its UTC (#479), and the fit landed on another point of the grid: 3.302 m and 3.20e-3
+        // m/s over the three platforms (CI run 40280932636, 2026-10-26)
         double position = (fitted.Position - target.Position).Magnitude();
         double velocity = (fitted.Velocity - target.Velocity).Magnitude();
         _output.WriteLine($"MEASURE #452 ToTle_OfEquatorialElementsInIcrf, {c.Name}: position {position:F3} m, velocity " +
                           $"{velocity:E2} m/s");
         _output.WriteLine($"  {tle.Line1}{Environment.NewLine}  {tle.Line2}");
         Assert.Equal(Frames.Frame.TEME, fitted.Frame);
-        Assert.True(position < 6.7, $"position {position:F3} m");
-        Assert.True(velocity < 6.5e-3, $"velocity {velocity:E2} m/s");
+        Assert.True(position < 10.4, $"position {position:F3} m");
+        Assert.True(velocity < 1.9e-2, $"velocity {velocity:E2} m/s");
     }
 
     [Fact]

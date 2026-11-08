@@ -1,0 +1,96 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/tle_conversion.yaml; do not edit.
+id: "tle_conversion_omm_to_tle_synthetic_004"
+schema_version: "v1"
+version: "0.1.0"
+category: "tle_conversion"
+created: "2026-11-08"
+description: >
+  TLEs of four synthetic OMM items whose values are representable in the columns (spec.md 15.2): ISS-like,
+  geostationary-like with classification S, a highly eccentric orbit (e = 0.74) with an Alpha-5 number (123456),
+  negative n-dot/2 and B*, and the ISS-like item with its epoch given in TT (TIME_SYSTEM TT).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  operation: "omm_to_tle"
+  items:
+    - omm:
+        OBJECT_NAME: "SYNTH LEO"
+        OBJECT_ID: "2026-901A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-03-15T12:00:00.000000"
+        MEAN_MOTION: 15.5
+        ECCENTRICITY: 0.0005
+        INCLINATION: 51.6
+        RA_OF_ASC_NODE: 120.25
+        ARG_OF_PERICENTER: 90.5
+        MEAN_ANOMALY: 270.75
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 90001
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 1234
+        BSTAR: 0.00012345
+        MEAN_MOTION_DOT: 0.00012345
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "SYNTH GEO"
+        OBJECT_ID: "2026-902A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-04-01T06:00:00.000000"
+        MEAN_MOTION: 1.00273791
+        ECCENTRICITY: 0.0001234
+        INCLINATION: 0.0512
+        RA_OF_ASC_NODE: 271.5
+        ARG_OF_PERICENTER: 15.25
+        MEAN_ANOMALY: 190.125
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "S"
+        NORAD_CAT_ID: 90002
+        ELEMENT_SET_NO: 12
+        REV_AT_EPOCH: 99
+        BSTAR: 0.0
+        MEAN_MOTION_DOT: -1.23e-6
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "SYNTH HEO"
+        OBJECT_ID: "2026-903B"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-05-10T18:00:00.000000"
+        MEAN_MOTION: 2.00611234
+        ECCENTRICITY: 0.74
+        INCLINATION: 63.4
+        RA_OF_ASC_NODE: 300.0
+        ARG_OF_PERICENTER: 270.0
+        MEAN_ANOMALY: 10.0
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "C"
+        NORAD_CAT_ID: 123456
+        ELEMENT_SET_NO: 4321
+        REV_AT_EPOCH: 5678
+        BSTAR: -1.2345e-5
+        MEAN_MOTION_DOT: -1.234e-5
+        MEAN_MOTION_DDOT: 1.2345e-8
+    - omm:
+        OBJECT_NAME: "SYNTH LEO TT"
+        OBJECT_ID: "2026-904A"
+        TIME_SYSTEM: "TT"
+        EPOCH: "2026-03-15T12:01:09.184000"
+        MEAN_MOTION: 15.5
+        ECCENTRICITY: 0.0005
+        INCLINATION: 51.6
+        RA_OF_ASC_NODE: 120.25
+        ARG_OF_PERICENTER: 90.5
+        MEAN_ANOMALY: 270.75
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 90004
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 1234
+        BSTAR: 0.00012345
+        MEAN_MOTION_DOT: 0.00012345
+        MEAN_MOTION_DDOT: 0.0
+  kernels: []

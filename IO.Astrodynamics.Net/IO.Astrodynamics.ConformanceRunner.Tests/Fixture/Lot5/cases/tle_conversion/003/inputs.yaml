@@ -1,0 +1,33 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/tle_conversion.yaml; do not edit.
+id: "tle_conversion_tle_to_omm_alpha5_pivot_003"
+schema_version: "v1"
+version: "0.1.0"
+category: "tle_conversion"
+created: "2026-11-08"
+description: >
+  The fields of an Alpha-5 TLE, A1252 (101252, STARLINK-38485), the TLE sgp4 2.27 exports from CelesTrak's OMM of
+  2026-11-07 (group last-30-days), and of two synthetic TLEs, 00005 of SGP4-VER.TLE with the epochs 57300.78495062
+  (1957) and 56179.78495062 (2056), their checksums recomputed: the Alpha-5 number and the year pivot of spec.md
+  15.2.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  operation: "tle_to_omm"
+  items:
+    - tle:
+        name: "STARLINK-38485 (A1252)"
+        line1: "1 A1252U 26246Y   26310.96744332 -.00954662  00000-0 -44345-2 0  9996"
+        line2: "2 A1252  70.0002 156.3423 0005962 284.5607  75.4935 15.85348457  2352"
+    - tle:
+        name: "00005 epoch 1957 (synthetic)"
+        line1: "1 00005U 58002B   57300.78495062  .00000023  00000-0  28098-4 0  4751"
+        line2: "2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667"
+    - tle:
+        name: "00005 epoch 2056 (synthetic)"
+        line1: "1 00005U 58002B   56179.78495062  .00000023  00000-0  28098-4 0  4754"
+        line2: "2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667"
+  kernels: []

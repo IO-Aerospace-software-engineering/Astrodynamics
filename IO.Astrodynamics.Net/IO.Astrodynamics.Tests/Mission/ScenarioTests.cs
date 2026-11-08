@@ -19,6 +19,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Mission
 {
@@ -28,8 +29,17 @@ namespace IO.Astrodynamics.Tests.Mission
         // #501, an explicit band around the literal rather than a rounding whose boundary a move of 2.3e-4 kg crossed
         private const double FuelTolerance = 5e-3;
 
-        public ScenarioTests()
+        // Bounds of PropagateSpacecraftFromTLE, m and m/s: twice the worst over Linux x64, Windows x64 and macOS arm64
+        // (CI run 42490199772, 2026-11-08, the same on the three), 1.263e-2 m and 1.316e-5 m/s at the end (GMAT's TEME,
+        // and 2.7 mm of SGP4 at the TDB instant, whose TT the library and CSPICE convert 1 us apart); 0.508 m and
+        // 5.72e-4 m/s before #599 (tsince in TDB)
+        private const double ScenarioTlePosition = 2.6e-2, ScenarioTleVelocity = 2.7e-5;
+
+        private readonly ITestOutputHelper _output;
+
+        public ScenarioTests(ITestOutputHelper output)
         {
+            _output = output;
             SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
@@ -292,29 +302,22 @@ namespace IO.Astrodynamics.Tests.Mission
             var initialSV = spacecraft.GetEphemeris(start, site, Frames.Frame.ICRF, Aberration.None);
             var endSV = spacecraft.GetEphemeris(end, site, Frames.Frame.ICRF, Aberration.None);
 
-            // Expected values from NASA (with appropriate tolerances for TLE calculations)
-            var expectedInitialSV = new StateVector(new Vector3(1331331.630401860, -126305.6148489359, -9083411.906514852), 
-                new Vector3(6856.774224223496, 1636.595716751383, -2187.216171170121), site, start, Frames.Frame.ICRF);
-            var expectedEndSV = new StateVector(new Vector3(1998457.692963169, 8929345.682055264, 1031448.594913648), 
-                new Vector3(-7693.791575415519, -1326.750547989111, 1526.010290790344), site, end, Frames.Frame.ICRF);
-
-            // Verify initial state vector with TLE-appropriate tolerances
-            // Position tolerance: 100m (typical for TLE accuracy)
-            // Velocity tolerance: 0.2 m/s (typical for TLE accuracy)
-            Assert.Equal(expectedInitialSV.Position.X, initialSV.ToStateVector().Position.X, 100.0);
-            Assert.Equal(expectedInitialSV.Position.Y, initialSV.ToStateVector().Position.Y, 100.0);
-            Assert.Equal(expectedInitialSV.Position.Z, initialSV.ToStateVector().Position.Z, 100.0);
-            Assert.Equal(expectedInitialSV.Velocity.X, initialSV.ToStateVector().Velocity.X, 0.2);
-            Assert.Equal(expectedInitialSV.Velocity.Y, initialSV.ToStateVector().Velocity.Y, 0.2);
-            Assert.Equal(expectedInitialSV.Velocity.Z, initialSV.ToStateVector().Velocity.Z, 0.2);
-
-            // Verify end state vector with TLE-appropriate tolerances
-            Assert.Equal(expectedEndSV.Position.X, endSV.ToStateVector().Position.X, 100.0);
-            Assert.Equal(expectedEndSV.Position.Y, endSV.ToStateVector().Position.Y, 100.0);
-            Assert.Equal(expectedEndSV.Position.Z, endSV.ToStateVector().Position.Z, 100.0);
-            Assert.Equal(expectedEndSV.Velocity.X, endSV.ToStateVector().Velocity.X, 0.2);
-            Assert.Equal(expectedEndSV.Velocity.Y, endSV.ToStateVector().Velocity.Y, 0.2);
-            Assert.Equal(expectedEndSV.Velocity.Z, endSV.ToStateVector().Velocity.Z, 0.2);
+            // Reference: the SGP4 state of Vallado's code (sgp4 2.27, WGS-72 old, AFSPC mode, the model of CSPICE's evsgp4_c)
+            // through GMAT R2026a's TEME -> EarthICRF, minus DSS-63 from CSPICE (spkezr in J2000, the test kernels):
+            // "ISS 2024 start" and "ISS 2024 end" of tools/teme_reference (#451)
+            foreach (var (name, state) in new[] { ("ISS 2024 start", initialSV.ToStateVector()), ("ISS 2024 end", endSV.ToStateVector()) })
+            {
+                var reference = Frame.TemeFrameTests.Reference(name);
+                Assert.Equal(Frame.TemeFrameTests.Instant(reference.Instant), state.Epoch);
+                var position = Frame.TemeFrameTests.Position(reference.Gmat) - Frame.TemeFrameTests.Position(reference.Dss63J2000);
+                var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat) - Frame.TemeFrameTests.Velocity(reference.Dss63J2000);
+                double dr = (state.Position - position).Magnitude(), dv = (state.Velocity - velocity).Magnitude();
+                // Twice the worst measured on the three platforms, GMAT's TEME (its kinematic terms of the
+                // equation of the equinoxes); 100 m and 0.2 m/s before #451, 1.1 m and 1.2e-3 m/s before #599
+                _output.WriteLine($"MEASURE ScenarioTests.PropagateSpacecraftFromTLE, {name}: {dr:E3} m, {dv:E3} m/s");
+                Assert.InRange(dr, 0.0, ScenarioTlePosition);
+                Assert.InRange(dv, 0.0, ScenarioTleVelocity);
+            }
 
             // Verify reference frame and epoch
             Assert.Equal(Frames.Frame.ICRF, initialSV.ToStateVector().Frame);

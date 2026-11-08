@@ -339,7 +339,8 @@ public class AttitudeTimelineEdgeTests
             Assert.True(System.Math.Abs(fuel + opm[k].ManDeltaMass) <= 1e-9, $"impulse {k}: delta mass {opm[k].ManDeltaMass} against {fuel}");
             if (TimelineRules.Checked)
             {
-                Assert.True(System.Math.Abs((thrust.StartDate.ToTDB().DateTime - opm[k].ManEpochIgnition).TotalSeconds) <= TimelineRules.RuleBound, $"impulse {k}: ignition");
+                // MAN_EPOCH_IGNITION is the UTC of the ignition, the time system of the OPM (#479)
+                Assert.True(System.Math.Abs((thrust.StartDate.ToUTC().DateTime - opm[k].ManEpochIgnition).TotalSeconds) <= TimelineRules.RuleBound, $"impulse {k}: ignition");
             }
         }
 

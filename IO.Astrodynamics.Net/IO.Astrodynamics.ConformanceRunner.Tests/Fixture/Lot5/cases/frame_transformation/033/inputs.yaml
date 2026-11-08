@@ -1,0 +1,48 @@
+id: "frame_transformation_teme_icrf_geo_2012_033"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-11-08"
+description: >
+  TEME to ICRF of a geostationary state (r = 42164 km at 30 deg, z = 10 km) on 2012-02-17 00:00 UTC, where the
+  kinematic terms GMAT carries are largest over 2000 to 2026 (spec.md 2.1).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"         # the frame of the golden (spec.md section 10)
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2012-02-17T00:00:00.000 UTC"
+  from_frame: "TEME"
+  to_frame: "ICRF"
+  from_center: "Earth"
+  to_center: "Earth"
+  state:
+    position_km: [36515.09512516707, 21081.999999999996, 10.0]
+    velocity_km_s: [-1.5373337999999999, 2.662740249792931, 0.01]
+  kernels: []
+
+tolerances_override:
+  position_km:
+    abs_tol: 0.0012
+    rel_tol: 0.0
+    justification: >-
+      GMAT R2026a's TEME axes (the golden) carry, from 1997-02-27, the kinematic terms of the 1994 equation of the
+      equinoxes (0.00264 arcsec sin(node) + 0.000063 arcsec sin(2 node)), which the definition of spec.md 2.1 leaves
+      out (finding T1 of tools/legacy_goldens/README.md), with the residual of its ICRF table; a runner exact to the
+      definition sits at E_ref from the golden. The definition allows IAU 2006/2000A or 2006/2000B (S_nut).
+      Measured: E_ref 0.000556 km (GMAT against the CIP route of spec.md 2.1; GMAT R2026a run of 2026-11-08),
+      conditioning floor 4.68e-12 km, S_nut (IAU 2006/2000B minus 2006/2000A) 4.33e-05 km; CSPICE has no TEME frame
+      and measures no E_CSPICE; T_op 1.0e-6 km. T = max(T_op, ceil2(2 max(E_ref, S_nut, floor))) = 0.0012.
+  velocity_km_s:
+    abs_tol: 8.2e-8
+    rel_tol: 0.0
+    justification: >-
+      GMAT R2026a's TEME axes (the golden) carry, from 1997-02-27, the kinematic terms of the 1994 equation of the
+      equinoxes (0.00264 arcsec sin(node) + 0.000063 arcsec sin(2 node)), which the definition of spec.md 2.1 leaves
+      out (finding T1 of tools/legacy_goldens/README.md), with the residual of its ICRF table; a runner exact to the
+      definition sits at E_ref from the golden. The definition allows IAU 2006/2000A or 2006/2000B (S_nut).
+      Measured: E_ref 4.06e-08 km/s (GMAT against the CIP route of spec.md 2.1; GMAT R2026a run of 2026-11-08),
+      conditioning floor 3.41e-16 km/s, S_nut (IAU 2006/2000B minus 2006/2000A) 2.27e-09 km/s; CSPICE has no TEME
+      frame and measures no E_CSPICE; T_op 1.0e-9 km/s. T = max(T_op, ceil2(2 max(E_ref, S_nut, floor))) = 8.2e-08.

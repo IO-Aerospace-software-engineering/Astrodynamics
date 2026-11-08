@@ -1,0 +1,51 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_24h_deep_molniya_icrf_012"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4/SDP4 states of 08195 MOLNIYA 2-14 of Vallado's verification set (2006, 12-hour resonance, high e) in TEME and
+  ICRF at the first whole UTC hour after the TLE epoch and every hour for 24 h.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "08195 MOLNIYA 2-14 (SGP4-VER.TLE, 12 h resonant)"
+    line1: "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813"
+    line2: "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    utc_epochs:
+      - "2006-06-25T08:00:00.000 UTC"
+      - "2006-06-25T09:00:00.000 UTC"
+      - "2006-06-25T10:00:00.000 UTC"
+      - "2006-06-25T11:00:00.000 UTC"
+      - "2006-06-25T12:00:00.000 UTC"
+      - "2006-06-25T13:00:00.000 UTC"
+      - "2006-06-25T14:00:00.000 UTC"
+      - "2006-06-25T15:00:00.000 UTC"
+      - "2006-06-25T16:00:00.000 UTC"
+      - "2006-06-25T17:00:00.000 UTC"
+      - "2006-06-25T18:00:00.000 UTC"
+      - "2006-06-25T19:00:00.000 UTC"
+      - "2006-06-25T20:00:00.000 UTC"
+      - "2006-06-25T21:00:00.000 UTC"
+      - "2006-06-25T22:00:00.000 UTC"
+      - "2006-06-25T23:00:00.000 UTC"
+      - "2006-06-26T00:00:00.000 UTC"
+      - "2006-06-26T01:00:00.000 UTC"
+      - "2006-06-26T02:00:00.000 UTC"
+      - "2006-06-26T03:00:00.000 UTC"
+      - "2006-06-26T04:00:00.000 UTC"
+      - "2006-06-26T05:00:00.000 UTC"
+      - "2006-06-26T06:00:00.000 UTC"
+      - "2006-06-26T07:00:00.000 UTC"
+      - "2006-06-26T08:00:00.000 UTC"
+  output_frames: ["TEME", "ICRF"]
+  kernels: []

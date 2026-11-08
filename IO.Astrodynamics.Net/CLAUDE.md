@@ -74,7 +74,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - `IO.Astrodynamics.CCSDS.OPM`: CCSDS Orbit Parameter Message support (read/write/validate/convert)
 - `IO.Astrodynamics.CCSDS.CDM`: CCSDS Conjunction Data Message support (read/write/validate, `EncounterCase.ToCdm()`)
 - `IO.Astrodynamics.Maneuver`: Lambert solvers, launch windows, maneuver planning, attitude maneuvers, IAttitudeTarget system (orbital direction targets, celestial attitude targets)
-- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`)
+- `IO.Astrodynamics.Frames`: Reference frames and transformations, including the CIO-based IAU chain (IAU 2006 precession with IAU 2000B nutation) exposed as `Frame.GCRF`, `Frame.CIRS` and `Frame.TIRS` (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `Iau2006Model`, `IEarthOrientationParameters`), and the managed TEME of SGP4, `Frame.TEME` (`TemeFrame`, Vallado et al. 2006: Q(t)ᵀ · Rz(ERA − GMST82), quasi-inertial, no kernel; a frame named TEME is routed to it, #451)
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Propagator`: PropagatorBase, CentralBodyPropagator, PropagationSegment, PropagationSolution, AcceptedStep
 - `IO.Astrodynamics.Propagator.Integrators`: IIntegrator, Integrator (abstract), VVIntegrator (Velocity-Verlet), RK78Integrator (adaptive Prince-Dormand 7(8))
@@ -179,6 +179,14 @@ OMM: meanMotion = 15.49309423 rev/day
   → MeanMotion() returns cached value (not recomputed from semi-major axis)
   → TLE output: 15.49309423 rev/day (EXACT)
 ```
+
+**SGP4 model and TLE text**
+- SGP4 is CSPICE `evsgp4_c`: Vallado's 2006 code, AFSPC mode, WGS-72 old (KE 7.43669161e-2), no other mode or constants;
+  tsince is the TT seconds from the TLE epoch (UTC, exact to the tick) to the instant, whatever its time frame (#599)
+- `FirstDerivationMeanMotion` and `SecondDerivativeMeanMotion` hold the TLE fields ṅ/2 and n̈/6 (OMM's
+  `MEAN_MOTION_DOT`, `MEAN_MOTION_DDOT`); `TLE.Create` writes the UTC of the epoch and the nearest value of each field
+  (#479, #480, #600 to #602)
+- OPM and OMM epochs are read in their `TIME_SYSTEM` (#485)
 
 **Osculating vs Mean Accessors in TLE**
 | Accessor | Returns | Use Case |

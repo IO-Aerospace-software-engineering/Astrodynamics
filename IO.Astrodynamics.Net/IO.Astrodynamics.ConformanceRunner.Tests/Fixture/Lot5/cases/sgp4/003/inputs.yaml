@@ -1,0 +1,48 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_7h_near_earth_decay_003"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4 TEME states of 29141 SL-14 DEB of Vallado's verification set, in the last stage of its decay, every 20 min
+  over 7 h: strong drag.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "29141 SL-14 DEB (SGP4-VER.TLE, last stage of decay)"
+    line1: "1 29141U 85108AA  06170.26783845  .99999999  00000-0  13519-0 0   718"
+    line2: "2 29141  82.4288 273.4882 0015848 277.2124  83.9133 15.93343074  6828"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    tsince_min:
+      - 0.0
+      - 20.0
+      - 40.0
+      - 60.0
+      - 80.0
+      - 100.0
+      - 120.0
+      - 140.0
+      - 160.0
+      - 180.0
+      - 200.0
+      - 220.0
+      - 240.0
+      - 260.0
+      - 280.0
+      - 300.0
+      - 320.0
+      - 340.0
+      - 360.0
+      - 380.0
+      - 400.0
+      - 420.0
+  output_frames: ["TEME"]
+  kernels: []

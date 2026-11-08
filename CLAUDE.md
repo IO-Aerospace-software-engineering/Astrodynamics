@@ -88,7 +88,7 @@ The C++ proxy layer uses a `bool` return + `GetLastErrorProxy()` pattern instead
 - `IO.Astrodynamics.Maneuver`: Lambert, impulsive maneuvers, attitude maneuvers, IAttitudeTarget
 - `IO.Astrodynamics.Atmosphere`: IAtmosphericModel, EarthStandardAtmosphere, Nrlmsise00Model
 - `IO.Astrodynamics.Physics`: GeopotentialModelReader, GeopotentialCoefficient (EGM2008, up to degree 70); `GeopotentialGravitationalField` and `GeopotentialModelParameters` are in `IO.Astrodynamics.Body`
-- `IO.Astrodynamics.Frames`: Reference frame transformations (ICRF, TEME, ITRF93, etc.)
+- `IO.Astrodynamics.Frames`: Reference frame transformations (ICRF, TEME, ITRF93, etc.); `Frame.TEME` is the managed `TemeFrame` (#451): TEME → ICRF = Q(t)ᵀ · Rz(ERA − GMST82), IAU 2006/2000B, UT1 = UTC, quasi-inertial (v' = R v), no kernel read; a frame named TEME is routed to it by both data providers and `SpiceAPI.TransformFrame` (the native TEME of the C++ layer is unused); an ephemeris read in TEME, CIRS or TIRS is read in J2000 and rotated (#558); see `docs/reference/frames.md#teme`
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Math`: Vector3, Matrix, Quaternion, Legendre functions
 
@@ -115,7 +115,9 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 `OrbitalElementsType` enum: `Osculating` (instantaneous, can convert to StateVector) vs. `Mean` (averaged, require a specific propagator).
 
 - **Mean elements CANNOT call `ToStateVector()`** — throws `InvalidOperationException`
-- `TLE.ToStateVector()` works because it uses SGP4/SDP4 internally
+- `TLE.ToStateVector()` works because it uses SGP4/SDP4 internally; its states are in `Frame.TEME`, a failed SGP4 throws (#454: the native `TLE::ToStateVector` returns a zero state when `evsgp4_c` signals, the one C++ change of lot 5, decided by S. Guillet, 2026-11-08; before, its unwritten state was the stack's), and the TLE's Earth is built in an inertial frame (#597)
+- SGP4 is CSPICE `evsgp4_c` (Vallado's 2006 code, AFSPC mode, WGS-72 old, KE 7.43669161e-2; no other mode or constants), at tsince = the TT seconds from the TLE epoch (UTC, read exactly to the tick, #603) to the instant: the `getelm_c` epoch, read once per TLE, plus those seconds (#599); reference `tools/sgp4_reference` (Vallado's code, `sgp4` 2.27, WGS72OLD, mode `a`)
+- `TLE.Create` writes each field as the nearest value its columns hold, the epoch as the UTC of the instant (#479) with the carry (#600), B* and n̈/6 with a one-digit exponent (#601), e from 0 (#602), zeros unsigned (#480); `FirstDerivationMeanMotion`/`SecondDerivativeMeanMotion` hold ṅ/2 and n̈/6 (#605); `ToTLE` fits elements already in TEME (#464)
 - Use `TLE.ToOsculating()` to get a usable StateVector from a TLE
 - Use `TLE.ToMeanKeplerianElements()` to get mean elements for TLE creation
 - `KeplerianElements.FromOMM()` caches original mean motion to prevent precision loss on round-trip
@@ -174,6 +176,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - Check `omm.IsTleCompatible` before calling `ToTle()`
 - OPM uses CCSDS units (km, km/s, deg); framework uses SI (m, m/s, rad) — conversions are automatic
 - Maneuver conversion is one-way: `Spacecraft → OPM` (OPM maneuvers are archival)
+- `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT, GPS; another throws) by `Opm.ToStateVector` and `Omm.ToTle` (#485); the writers write UTC under `TIME_SYSTEM = UTC`, `MAN_EPOCH_IGNITION` included (#479)
 
 ### Attitude Maneuvers
 

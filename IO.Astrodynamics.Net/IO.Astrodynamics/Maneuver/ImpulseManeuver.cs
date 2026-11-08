@@ -187,6 +187,10 @@ namespace IO.Astrodynamics.Maneuver
         /// (RSW, RTN, TNW), additional transformation would be needed based on the spacecraft state at the
         /// maneuver epoch.
         /// </para>
+        /// <para>
+        /// <c>MAN_EPOCH_IGNITION</c> is written in UTC, the time system of the OPM the library writes, whatever the time
+        /// frame of the thrust window (TDB in a propagation, #479).
+        /// </para>
         /// </remarks>
         public OpmManeuverParameters ToOpmManeuverParameters(string referenceFrame = "EME2000", IReadOnlyList<string> comments = null)
         {
@@ -199,7 +203,7 @@ namespace IO.Astrodynamics.Maneuver
             var deltaVKmPerSec = DeltaV / 1000.0;
 
             return new OpmManeuverParameters(
-                manEpochIgnition: ThrustWindow.Value.StartDate.DateTime,
+                manEpochIgnition: ThrustWindow.Value.StartDate.ToUTC().DateTime,
                 manDuration: ThrustWindow.Value.Length.TotalSeconds,
                 manDeltaMass: -FuelBurned, // OPM uses negative values for expelled mass
                 manRefFrame: referenceFrame,

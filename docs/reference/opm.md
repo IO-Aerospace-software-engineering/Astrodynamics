@@ -46,7 +46,7 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 
 | Method | Description |
 |--------|-------------|
-| `ToStateVector(observer)` | Convert to a `StateVector` (applies unit conversion) |
+| `ToStateVector(observer)` | Convert to a `StateVector` (applies unit conversion); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS), another time system throws (#485). The library's writers write the epoch in UTC under `TIME_SYSTEM = UTC` (#479) |
 | `ToSpacecraft(naifId, maxMass, clock, observer)` | Create a `Spacecraft` from OPM data |
 | `Validate()` | Validate and return `OpmValidationResult` |
 

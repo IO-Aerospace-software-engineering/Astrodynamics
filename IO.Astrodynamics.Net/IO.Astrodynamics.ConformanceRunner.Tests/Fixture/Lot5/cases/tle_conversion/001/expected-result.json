@@ -1,0 +1,52 @@
+{
+  "id": "tle_conversion_tle_to_omm_leo_001",
+  "category": "tle_conversion",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "exact decimal evaluation of the TLE format (tools/legacy_goldens/tle.py, Python decimal)",
+    "tool_version": "Python 3.13",
+    "kernel": "data/: latest_leapseconds.tls (SHA-256 678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b)",
+    "date": "2026-11-08",
+    "method": "tools/legacy_goldens/tle.py: the exact decimal evaluation of the format of spec.md 15.2 (Python decimal): each field read from its columns, the epoch an exact UTC instant"
+  },
+  "outputs": {
+    "items": [
+      {
+        "NORAD_CAT_ID": 25544,
+        "OBJECT_ID": "1998-067A",
+        "CLASSIFICATION_TYPE": "U",
+        "EPOCH": "2026-11-07T04:59:16.885248 UTC",
+        "MEAN_MOTION_DOT": 0.00014294,
+        "MEAN_MOTION_DDOT": 0.0,
+        "BSTAR": 0.00026479,
+        "EPHEMERIS_TYPE": 0,
+        "ELEMENT_SET_NO": 999,
+        "INCLINATION": 51.6321,
+        "RA_OF_ASC_NODE": 312.3516,
+        "ECCENTRICITY": 0.0007247,
+        "ARG_OF_PERICENTER": 357.8301,
+        "MEAN_ANOMALY": 2.2655,
+        "MEAN_MOTION": 15.49235271,
+        "REV_AT_EPOCH": 59392
+      },
+      {
+        "NORAD_CAT_ID": 44714,
+        "OBJECT_ID": "2019-074B",
+        "CLASSIFICATION_TYPE": "U",
+        "EPOCH": "2026-11-07T05:19:43.220064 UTC",
+        "MEAN_MOTION_DOT": 0.00256012,
+        "MEAN_MOTION_DDOT": 0.0,
+        "BSTAR": 0.0020787,
+        "EPHEMERIS_TYPE": 0,
+        "ELEMENT_SET_NO": 999,
+        "INCLINATION": 53.1432,
+        "RA_OF_ASC_NODE": 92.6329,
+        "ECCENTRICITY": 0.0006483,
+        "ARG_OF_PERICENTER": 315.4179,
+        "MEAN_ANOMALY": 44.6317,
+        "MEAN_MOTION": 15.69397271,
+        "REV_AT_EPOCH": 38655
+      }
+    ]
+  }
+}

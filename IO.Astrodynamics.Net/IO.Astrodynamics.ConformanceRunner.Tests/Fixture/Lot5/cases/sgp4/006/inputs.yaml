@@ -1,0 +1,64 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_12h_deep_lyddane_006"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4/SDP4 TEME states of 23599 ARIANE 42P+3 of Vallado's verification set (e = 0.578, i = 6.9 deg), every 20 min
+  over 12 h: the Lyddane choice of the AFSPC mode, 964 m from the improved mode, the output that tells the two modes
+  apart.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "23599 ARIANE 42P+3 (SGP4-VER.TLE, Lyddane choice)"
+    line1: "1 23599U 95029B   06171.76535463  .00085586  12891-6  12956-2 0  2905"
+    line2: "2 23599   6.9327   0.2849 5782022 274.4436  25.2425  4.47796565123555"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    tsince_min:
+      - 0.0
+      - 20.0
+      - 40.0
+      - 60.0
+      - 80.0
+      - 100.0
+      - 120.0
+      - 140.0
+      - 160.0
+      - 180.0
+      - 200.0
+      - 220.0
+      - 240.0
+      - 260.0
+      - 280.0
+      - 300.0
+      - 320.0
+      - 340.0
+      - 360.0
+      - 380.0
+      - 400.0
+      - 420.0
+      - 440.0
+      - 460.0
+      - 480.0
+      - 500.0
+      - 520.0
+      - 540.0
+      - 560.0
+      - 580.0
+      - 600.0
+      - 620.0
+      - 640.0
+      - 660.0
+      - 680.0
+      - 700.0
+      - 720.0
+  output_frames: ["TEME"]
+  kernels: []

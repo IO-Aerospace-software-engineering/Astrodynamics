@@ -541,8 +541,9 @@ public class PropagationCaseTests
         var earth = (CelestialBody)propagationCase.Bodies.Single();
         Assert.Equal(399, earth.NaifId);
         Assert.False(earth.HasAtmosphericModel);
-        Assert.Equal(state.Position * (-earth.GM / System.Math.Pow(state.Position.Magnitude(), 3.0)),
-            earth.EvaluateGravitationalAcceleration(state));
+        // The point mass to the rounding of its closed form (a few ulp: the order of the operations is free)
+        var pointMass = state.Position * (-earth.GM / System.Math.Pow(state.Position.Magnitude(), 3.0));
+        Assert.InRange((earth.EvaluateGravitationalAcceleration(state) - pointMass).Magnitude() / pointMass.Magnitude(), 0.0, 1e-15);
         Assert.Equal(100.0, propagationCase.Spacecraft.DryOperatingMass);
         Assert.Equal(1000.0, propagationCase.Spacecraft.MaximumOperatingMass);
         Assert.Equal(1.0, propagationCase.Spacecraft.SectionalArea);

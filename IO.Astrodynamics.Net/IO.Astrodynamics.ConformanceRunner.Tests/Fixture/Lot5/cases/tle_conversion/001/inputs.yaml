@@ -1,0 +1,27 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/tle_conversion.yaml; do not edit.
+id: "tle_conversion_tle_to_omm_leo_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "tle_conversion"
+created: "2026-11-08"
+description: >
+  The fields of two TLEs of CelesTrak's GP data of 2026-11-07 (group active), the ISS and STARLINK-1008, under the
+  OMM keywords and units (spec.md 15.2): positive n-dot/2, zero n-ddot/6, positive B*.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  operation: "tle_to_omm"
+  items:
+    - tle:
+        name: "ISS (ZARYA)"
+        line1: "1 25544U 98067A   26311.20783432  .00014294  00000+0  26479-3 0  9992"
+        line2: "2 25544  51.6321 312.3516 0007247 357.8301   2.2655 15.49235271593925"
+    - tle:
+        name: "STARLINK-1008"
+        line1: "1 44714U 19074B   26311.22202801  .00256012  00000+0  20787-2 0  9992"
+        line2: "2 44714  53.1432  92.6329 0006483 315.4179  44.6317 15.69397271386554"
+  kernels: []

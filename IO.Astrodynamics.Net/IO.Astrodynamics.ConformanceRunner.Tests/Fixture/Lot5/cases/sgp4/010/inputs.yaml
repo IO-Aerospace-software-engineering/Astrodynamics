@@ -1,0 +1,75 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_24h_near_earth_iss_icrf_010"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4 states of the ISS (25544) from CelesTrak's GP data of 2026-11-07 in TEME and ICRF at the first whole UTC hour
+  after the TLE epoch and every hour for 24 h, tsince the TT seconds from the TLE epoch: a current TLE.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "ISS (ZARYA)"
+    line1: "1 25544U 98067A   26311.20783432  .00014294  00000+0  26479-3 0  9992"
+    line2: "2 25544  51.6321 312.3516 0007247 357.8301   2.2655 15.49235271593925"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    utc_epochs:
+      - "2026-11-07T05:00:00.000 UTC"
+      - "2026-11-07T06:00:00.000 UTC"
+      - "2026-11-07T07:00:00.000 UTC"
+      - "2026-11-07T08:00:00.000 UTC"
+      - "2026-11-07T09:00:00.000 UTC"
+      - "2026-11-07T10:00:00.000 UTC"
+      - "2026-11-07T11:00:00.000 UTC"
+      - "2026-11-07T12:00:00.000 UTC"
+      - "2026-11-07T13:00:00.000 UTC"
+      - "2026-11-07T14:00:00.000 UTC"
+      - "2026-11-07T15:00:00.000 UTC"
+      - "2026-11-07T16:00:00.000 UTC"
+      - "2026-11-07T17:00:00.000 UTC"
+      - "2026-11-07T18:00:00.000 UTC"
+      - "2026-11-07T19:00:00.000 UTC"
+      - "2026-11-07T20:00:00.000 UTC"
+      - "2026-11-07T21:00:00.000 UTC"
+      - "2026-11-07T22:00:00.000 UTC"
+      - "2026-11-07T23:00:00.000 UTC"
+      - "2026-11-08T00:00:00.000 UTC"
+      - "2026-11-08T01:00:00.000 UTC"
+      - "2026-11-08T02:00:00.000 UTC"
+      - "2026-11-08T03:00:00.000 UTC"
+      - "2026-11-08T04:00:00.000 UTC"
+      - "2026-11-08T05:00:00.000 UTC"
+  output_frames: ["TEME", "ICRF"]
+  kernels: []
+
+tolerances_override:
+  sgp4_icrf_position_km:
+    abs_tol: 0.00011
+    rel_tol: 0.0
+    justification: >-
+      The ICRF golden is the golden TEME state through GMAT R2026a's TEME axes, which carry, from 1997-02-27, the
+      kinematic terms of the 1994 equation of the equinoxes that the definition of spec.md 2.1 leaves out (finding
+      T1 of tools/legacy_goldens/README.md); a runner exact to the definition sits at E_ref from the golden, and the
+      definition allows IAU 2006/2000A or 2006/2000B (S_nut). Measured on the 25 samples (2026-11-08, Linux x86_64,
+      GMAT R2026a and pyerfa 2.0.1.5): E_ref = |GMAT - the CIP route| per component up to 5.22e-05 km (sample 20),
+      S_nut up to 2.56e-06 km, CSPICE through the same route up to 3.58e-07 km; T_op 0.0001 km. T = max(T_op,
+      ceil2(2 max(S_gen, E_2nd, E_ref, S_nut))) = 0.00011 km (spec.md 6.4).
+  sgp4_icrf_velocity_km_s:
+    abs_tol: 1.2e-7
+    rel_tol: 0.0
+    justification: >-
+      The ICRF golden is the golden TEME state through GMAT R2026a's TEME axes, which carry, from 1997-02-27, the
+      kinematic terms of the 1994 equation of the equinoxes that the definition of spec.md 2.1 leaves out (finding
+      T1 of tools/legacy_goldens/README.md); a runner exact to the definition sits at E_ref from the golden, and the
+      definition allows IAU 2006/2000A or 2006/2000B (S_nut). Measured on the 25 samples (2026-11-08, Linux x86_64,
+      GMAT R2026a and pyerfa 2.0.1.5): E_ref = |GMAT - the CIP route| per component up to 5.78e-08 km/s (sample 8),
+      S_nut up to 2.8e-09 km/s, CSPICE through the same route up to 4.1e-10 km/s; T_op 1.0e-7 km/s. T = max(T_op,
+      ceil2(2 max(S_gen, E_2nd, E_ref, S_nut))) = 1.2e-7 km/s (spec.md 6.4).

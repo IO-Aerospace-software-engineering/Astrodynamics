@@ -1,0 +1,26 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_24h_deep_24h_resonant_geo_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4/SDP4 TEME states of 28626 XM-3 of Vallado's verification set (i = 0.0019 deg, which goes negative), every 120
+  min over 24 h: the synchronous resonance and the sign of the inclination.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "28626 XM-3 (SGP4-VER.TLE, 24 h resonant)"
+    line1: "1 28626U 05008A   06176.46683397 -.00000205  00000-0  10000-3 0  2190"
+    line2: "2 28626   0.0019 286.9433 0000335  13.7918  55.6504  1.00270176  4891"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    tsince_min: [0.0, 120.0, 240.0, 360.0, 480.0, 600.0, 720.0, 840.0, 960.0, 1080.0, 1200.0, 1320.0, 1440.0]
+  output_frames: ["TEME"]
+  kernels: []

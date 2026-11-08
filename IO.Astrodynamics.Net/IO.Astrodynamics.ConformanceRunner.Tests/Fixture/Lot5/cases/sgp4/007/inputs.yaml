@@ -1,0 +1,41 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_27h_deep_high_e_neg_ndot_1994_007"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4/SDP4 TEME states of 23333 WIND of Vallado's verification set (e = 0.973, negative n-dot/2, epoch 1994), every
+  120 min over 1600 min: a high eccentricity and an epoch before 2000.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "23333 WIND (SGP4-VER.TLE, high e)"
+    line1: "1 23333U 94071A   94305.49999999 -.00172956  26967-3  10000-3 0    15"
+    line2: "2 23333  28.7490   2.3720 9728298  30.4360   1.3500  0.07309491    70"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    tsince_min:
+      - 0.0
+      - 120.0
+      - 240.0
+      - 360.0
+      - 480.0
+      - 600.0
+      - 720.0
+      - 840.0
+      - 960.0
+      - 1080.0
+      - 1200.0
+      - 1320.0
+      - 1440.0
+      - 1560.0
+      - 1600.0
+  output_frames: ["TEME"]
+  kernels: []

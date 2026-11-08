@@ -119,9 +119,12 @@ public class Frame : IEquatable<Frame>
     public static readonly Frame FK4 = new Frame("FK4");
 
     /// <summary>
-    /// True Equator Mean Equinox (TEME) coordinate system.
+    /// True Equator, Mean Equinox (TEME), the frame of the SGP4/SDP4 states of a TLE: the managed
+    /// <see cref="TemeFrame"/>, TEME → ICRF = Q(t)ᵀ · Rz(ERA − GMST82) with IAU 2006/2000B and UT1 = UTC, quasi-inertial
+    /// (v' = R v). It reads no kernel, so it works at any epoch (#451). A frame built by name, <c>new Frame("TEME")</c>,
+    /// is routed to it by the data providers.
     /// </summary>
-    public static readonly Frame TEME = new Frame("TEME");
+    public static readonly Frame TEME = new TemeFrame();
 
     /// <summary>
     /// Geocentric Celestial Reference Frame (GCRF), the ICRS axes centred on the Earth.

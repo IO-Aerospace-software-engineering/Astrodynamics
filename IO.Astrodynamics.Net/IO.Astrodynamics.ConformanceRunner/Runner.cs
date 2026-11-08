@@ -41,7 +41,9 @@ public class Runner
             new LambertCaseSolver(conformanceTestsPath),
             new GroundStationSolver(conformanceTestsPath),
             new OrbitalEventsSolver(conformanceTestsPath),
-            new AttitudeSolver(conformanceTestsPath)
+            new AttitudeSolver(conformanceTestsPath),
+            new Sgp4Solver(),
+            new TleConversionSolver()
         }.ToDictionary(solver => solver.Category);
         _schemaValidator = new SchemaValidator(conformanceTestsPath);
     }

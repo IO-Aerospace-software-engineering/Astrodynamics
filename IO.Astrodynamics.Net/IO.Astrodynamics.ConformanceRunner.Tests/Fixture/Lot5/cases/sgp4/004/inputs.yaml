@@ -1,0 +1,51 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_48h_deep_12h_resonant_neg_bstar_004"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4/SDP4 TEME states of 21897 MOLNIYA 1-83 of Vallado's verification set (e = 0.742, negative B*), every 120 min
+  over 48 h: the deep-space path with the 12-hour resonance.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "21897 MOLNIYA 1-83 (SGP4-VER.TLE, 12 h resonant)"
+    line1: "1 21897U 92011A   06176.02341244 -.00001273  00000-0 -13525-3 0  3044"
+    line2: "2 21897  62.1749 198.0096 7421690 253.0462  20.1561  2.01269994104880"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    tsince_min:
+      - 0.0
+      - 120.0
+      - 240.0
+      - 360.0
+      - 480.0
+      - 600.0
+      - 720.0
+      - 840.0
+      - 960.0
+      - 1080.0
+      - 1200.0
+      - 1320.0
+      - 1440.0
+      - 1560.0
+      - 1680.0
+      - 1800.0
+      - 1920.0
+      - 2040.0
+      - 2160.0
+      - 2280.0
+      - 2400.0
+      - 2520.0
+      - 2640.0
+      - 2760.0
+      - 2880.0
+  output_frames: ["TEME"]
+  kernels: []

@@ -1,0 +1,49 @@
+id: "frame_transformation_teme_itrf93_vallado_2004_036"
+schema_version: "v1"
+version: "0.1.0"
+category: "frame_transformation"
+created: "2026-11-08"
+description: >
+  TEME to ITRF93 of the state of Vallado, Crawford, Hujsak and Kelso (2006), appendix C, on 2004-04-06 07:51:28.386
+  UTC: TEME to ICRF by spec.md 2.1, then ICRF to ITRF93 of data/'s Earth orientation file with its transport term
+  (spec.md 11.3).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ITRF93"       # the frame of the golden (spec.md section 10)
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2004-04-06T07:51:28.386 UTC"
+  from_frame: "TEME"
+  to_frame: "ITRF93"
+  from_center: "Earth"
+  to_center: "Earth"
+  state:
+    position_km: [5094.1801621, 6127.6446595, 6380.3445327]
+    velocity_km_s: [-4.746131487, 0.785818041, 5.531931288]
+  kernels: ["earth_latest_high_prec.bpc"]
+
+tolerances_override:
+  position_km:
+    abs_tol: 0.00016
+    rel_tol: 0.0
+    justification: >-
+      GMAT R2026a's TEME axes (the golden) carry, from 1997-02-27, the kinematic terms of the 1994 equation of the
+      equinoxes (0.00264 arcsec sin(node) + 0.000063 arcsec sin(2 node)), which the definition of spec.md 2.1 leaves
+      out (finding T1 of tools/legacy_goldens/README.md), with the residual of its ICRF table; a runner exact to the
+      definition sits at E_ref from the golden. The definition allows IAU 2006/2000A or 2006/2000B (S_nut).
+      Measured: E_ref 7.89e-05 km (GMAT against the CIP route of spec.md 2.1; GMAT R2026a run of 2026-11-08),
+      conditioning floor 1.13e-12 km, S_nut (IAU 2006/2000B minus 2006/2000A) 3.48e-06 km; CSPICE has no TEME frame
+      and measures no E_CSPICE; T_op 1.0e-6 km. T = max(T_op, ceil2(2 max(E_ref, S_nut, floor))) = 0.00016.
+  velocity_km_s:
+    abs_tol: 8.6e-8
+    rel_tol: 0.0
+    justification: >-
+      GMAT R2026a's TEME axes (the golden) carry, from 1997-02-27, the kinematic terms of the 1994 equation of the
+      equinoxes (0.00264 arcsec sin(node) + 0.000063 arcsec sin(2 node)), which the definition of spec.md 2.1 leaves
+      out (finding T1 of tools/legacy_goldens/README.md), with the residual of its ICRF table; a runner exact to the
+      definition sits at E_ref from the golden. The definition allows IAU 2006/2000A or 2006/2000B (S_nut).
+      Measured: E_ref 4.3e-08 km/s (GMAT against the CIP route of spec.md 2.1; GMAT R2026a run of 2026-11-08),
+      conditioning floor 8.16e-16 km/s, S_nut (IAU 2006/2000B minus 2006/2000A) 2.23e-09 km/s; CSPICE has no TEME
+      frame and measures no E_CSPICE; T_op 1.0e-9 km/s. T = max(T_op, ceil2(2 max(E_ref, S_nut, floor))) = 8.6e-08.

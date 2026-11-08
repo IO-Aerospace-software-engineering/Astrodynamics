@@ -14,8 +14,18 @@ namespace IO.Astrodynamics.DataProvider;
 
 public class SpiceDataProvider : IDataProvider
 {
+    /// <remarks>
+    /// A frame named TEME is <see cref="Frame.TEME"/>, the managed <see cref="TemeFrame"/>, whatever its instance (#451,
+    /// the routing of #562); its orientation is labelled with <paramref name="source"/>. Every other frame is SPICE's.
+    /// </remarks>
     public StateOrientation FrameTransformationToICRF(in Time date, Frame source)
     {
+        if (SpiceAPI.IsTeme(source))
+        {
+            var teme = Frame.TEME.GetStateOrientationToICRF(date);
+            return new StateOrientation(teme.Rotation, teme.AngularVelocity, date, source);
+        }
+
         return SpiceAPI.Instance.TransformFrame(date, source, Frame.ICRF);
     }
 
@@ -23,7 +33,8 @@ public class SpiceDataProvider : IDataProvider
     {
         // Use ReadEphemerisRaw to avoid CelestialItem.Create() which can't handle
         // spacecraft/site NAIF IDs. The actual observer object is passed through directly.
-        // A frame named GCRF is read from SPICE in J2000 and labelled with the caller's frame (SpiceAPI.SpiceFrameName, #543)
+        // A frame named GCRF is read from SPICE in J2000 and labelled with the caller's frame (SpiceAPI.SpiceFrameName, #543);
+        // a managed frame (TEME, CIRS, TIRS) is read in J2000 and rotated by it (SpiceAPI.ManagedReadFrame, #558)
         var result = SpiceAPI.Instance.ReadEphemerisRaw(date, observer, target.NaifId, frame, aberration);
         // ReadEphemeris always returns TDB epoch; preserve the caller's time frame.
         return new StateVector(result.Position, result.Velocity, observer, date, result.Frame);
