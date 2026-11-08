@@ -107,8 +107,12 @@ A major version, because it breaks the API: members deprecated for removal in 11
   native frame, up to 23″ from `ToFrame`. A coordinate search in a managed frame is not mapped.
 - **A failed SGP4 returned a zero state; TEME outside the PCK a zero rotation** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the TLE and TEME paths).
   `SpiceAPI.ConvertTleToStateVector`, under `TLE.ToOsculating` and `ToStateVector`, throws `InvalidOperationException`
-  naming the TLE and the epoch when the native layer returns r = 0 (a decayed or suborbital orbit: 28872 of Vallado's
-  set returned r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307)); no valid state has r = 0. TEME ↔ ICRF reads no kernel;
+  naming the TLE and the epoch when the native layer returns r = 0 (a decayed or suborbital orbit, an eccentricity out
+  of range); no valid state has r = 0. The native `TLE::ToStateVector` left its state unwritten when `evsgp4_c`
+  signalled, so the state returned was what the stack held: on Linux zero by chance (28872 of Vallado's set gave
+  r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307)), on Windows x64 and macOS arm64 a non-zero state, possibly that of an
+  earlier call. It now returns a zero state then, the one change of the C++ layer in 11.0.0 (decision of S. Guillet,
+  2026-11-08). TEME ↔ ICRF reads no kernel;
   `SpiceAPI.TransformFrame` between TEME and a SPICE frame throws when SPICE gives no rotation for that frame (ITRF93
   before 2000). The other proxies keep #454.
 - **A TLE built its Earth in ITRF93 at its epoch** ([#597](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/597)). `new TLE(...)` (twice) and `Omm.ToTle` built
