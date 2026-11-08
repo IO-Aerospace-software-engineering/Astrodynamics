@@ -11,8 +11,8 @@ namespace IO.Astrodynamics.Frames;
 /// <remarks>
 /// <para>
 /// The definition is that of Vallado, Crawford, Hujsak and Kelso (2006), "Revisiting Spacetrack Report #3",
-/// AIAA 2006-6753 Rev2, appendix C (to be verified by S. Guillet): the pseudo Earth-fixed frame of a TEME state is
-/// r_PEF = R3(GMST82(UT1)) r_TEME, the PEF taken as the TIRS. So <c>TEME → ICRF = Q(t)ᵀ · Rz(ERA − GMST82)</c>, with
+/// AIAA 2006-6753 Rev2, appendix C (confirmed by S. Guillet, 2026-11-08): the pseudo Earth-fixed frame of a TEME state
+/// is r_PEF = R3(GMST82(UT1)) r_TEME, the PEF taken as the TIRS. So <c>TEME → ICRF = Q(t)ᵀ · Rz(ERA − GMST82)</c>, with
 /// <c>Q(t)</c> the CIO-based precession-nutation matrix of <see cref="CirsFrame"/> (IAU 2006 precession, IAU 2000B
 /// nutation, <see cref="Iau2006Model"/>), the Earth rotation angle of <see cref="TirsFrame"/>, GMST82 the IAU 1982
 /// Greenwich mean sidereal time (<see cref="Gmst82"/>) and <c>Rz</c> the active rotation about z

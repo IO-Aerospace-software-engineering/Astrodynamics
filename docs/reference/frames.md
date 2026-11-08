@@ -137,7 +137,7 @@ coordinate search in one of them is not mapped.
 
 `Frame.TEME` is the True Equator, Mean Equinox frame of the SGP4/SDP4 states of a TLE, an instance of `TemeFrame`
 (#451). The definition is that of Vallado, Crawford, Hujsak and Kelso (2006), "Revisiting Spacetrack Report #3",
-AIAA 2006-6753 Rev2, appendix C (to be verified by S. Guillet): the pseudo Earth-fixed frame of a TEME state is
+AIAA 2006-6753 Rev2, appendix C (confirmed by S. Guillet, 2026-11-08): the pseudo Earth-fixed frame of a TEME state is
 `r_PEF = R3(GMST82(UT1)) r_TEME`, with the PEF taken as the TIRS. So
 
 ```
