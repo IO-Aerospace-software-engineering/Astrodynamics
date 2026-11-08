@@ -1,0 +1,26 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_24h_near_earth_low_perigee_002"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4 TEME states of 28350 COSMOS 2405 of Vallado's verification set, perigee 127 km, every 120 min over 24 h: the
+  low-perigee branch, the most sensitive to the constant KE (the exact KE of WGS-72 moves it by 0.71 m in a day).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "28350 COSMOS 2405 (SGP4-VER.TLE, low perigee)"
+    line1: "1 28350U 04020A   06167.21788666  .16154492  76267-5  18678-3 0  8894"
+    line2: "2 28350  64.9977 345.6130 0024870 260.7578  99.9590 16.47856722116490"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    tsince_min: [0.0, 120.0, 240.0, 360.0, 480.0, 600.0, 720.0, 840.0, 960.0, 1080.0, 1200.0, 1320.0, 1440.0]
+  output_frames: ["TEME"]
+  kernels: []

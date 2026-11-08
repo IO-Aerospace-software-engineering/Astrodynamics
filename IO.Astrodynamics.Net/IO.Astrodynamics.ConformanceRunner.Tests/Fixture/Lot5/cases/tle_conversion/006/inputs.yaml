@@ -1,0 +1,116 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/tle_conversion.yaml; do not edit.
+id: "tle_conversion_omm_to_tle_celestrak_006"
+schema_version: "v1"
+version: "0.1.0"
+category: "tle_conversion"
+created: "2026-11-08"
+description: >
+  TLEs of four OMMs of CelesTrak's GP data of 2026-11-07, which carry more digits than a TLE holds: the ISS (group
+  stations), TDRS 3 (e .00415909, group geo), GPS BIIR-5 (group gps-ops) and STARLINK-38485 (101252, B* -.443455E-2,
+  a tie of the 5-digit mantissa, group last-30-days); and the ISS OMM again with TIME_SYSTEM TT. CelesTrak's own TLE
+  of the same element set is recorded as a cross-check.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  operation: "omm_to_tle"
+  items:
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA)"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "TDRS 3"
+        OBJECT_ID: "1988-091B"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-06T22:48:36.205920"
+        MEAN_MOTION: 1.00273059
+        ECCENTRICITY: 0.00415909
+        INCLINATION: 12.496
+        RA_OF_ASC_NODE: 340.0569
+        ARG_OF_PERICENTER: 351.9996
+        MEAN_ANOMALY: 7.5191
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 19548
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 12681
+        BSTAR: 0.0
+        MEAN_MOTION_DOT: -3.03e-6
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "GPS BIIR-5  (PRN 22)"
+        OBJECT_ID: "2000-040A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-06T00:48:41.779296"
+        MEAN_MOTION: 2.00558852
+        ECCENTRICITY: 0.0115374
+        INCLINATION: 54.8268
+        RA_OF_ASC_NODE: 209.5342
+        ARG_OF_PERICENTER: 304.9646
+        MEAN_ANOMALY: 156.9344
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 26407
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 19279
+        BSTAR: 0.0
+        MEAN_MOTION_DOT: -8.0e-8
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "STARLINK-38485"
+        OBJECT_ID: "2026-246Y"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-06T23:13:07.102848"
+        MEAN_MOTION: 15.85348457
+        ECCENTRICITY: 0.00059622
+        INCLINATION: 70.0002
+        RA_OF_ASC_NODE: 156.3423
+        ARG_OF_PERICENTER: 284.5607
+        MEAN_ANOMALY: 75.4935
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 101252
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 235
+        BSTAR: -0.00443455
+        MEAN_MOTION_DOT: -0.00954662
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) in TT"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "TT"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 0.0
+  kernels: []

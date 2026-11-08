@@ -444,6 +444,127 @@ public static class InputParser
         };
     }
 
+    /// <summary>The inputs of an <c>sgp4</c> case (spec.md section 15.1).</summary>
+    /// <exception cref="ArgumentException">A field is missing, the samples are neither <c>tsince_min</c> nor
+    /// <c>utc_epochs</c>, or the output frames are not <c>[TEME]</c> or, with UTC instants, <c>[TEME, ICRF]</c>.</exception>
+    public static Sgp4Inputs ParseSgp4Inputs(Dictionary<string, object> inputs)
+    {
+        var map = inputs.ToDictionary(kv => (object)kv.Key, kv => kv.Value);
+        const string where = "an sgp4 case";
+        var samples = Mapping(Required(map, "samples", where), where);
+        var result = new Sgp4Inputs
+        {
+            Tle = ParseTle(Required(map, "tle", where), where),
+            GravityModel = Required(map, "gravity_model", where).ToString(),
+            Opsmode = Required(map, "opsmode", where).ToString(),
+            TsinceMin = samples.TryGetValue("tsince_min", out var tsince) && tsince is List<object> minutes ? minutes.ConvertAll(ToDouble) : null,
+            UtcEpochs = samples.TryGetValue("utc_epochs", out var epochs) && epochs is List<object> instants ? instants.ConvertAll(e => e.ToString()) : null,
+            OutputFrames = Required(map, "output_frames", where) is List<object> frames
+                ? frames.ConvertAll(f => f.ToString())
+                : throw new ArgumentException($"{where} gives its output_frames as no list.")
+        };
+
+        if ((result.TsinceMin == null) == (result.UtcEpochs == null))
+        {
+            throw new ArgumentException($"The samples of {where} are tsince_min or utc_epochs (spec.md section 15.1).");
+        }
+
+        bool teme = result.OutputFrames.SequenceEqual(["TEME"]);
+        bool icrf = result.OutputFrames.SequenceEqual(["TEME", "ICRF"]);
+        if (!teme && !(icrf && result.UtcEpochs != null))
+        {
+            throw new ArgumentException(
+                $"The output frames of {where} are [{string.Join(", ", result.OutputFrames)}]: [TEME], or [TEME, ICRF] with utc_epochs only (spec.md section 15.1).");
+        }
+
+        return result;
+    }
+
+    /// <summary>The inputs of a <c>tle_conversion</c> case (spec.md section 15.2).</summary>
+    /// <exception cref="ArgumentException">The operation is neither <c>tle_to_omm</c> nor <c>omm_to_tle</c>, an item is
+    /// not of the operation, or a field is missing.</exception>
+    public static TleConversionInputs ParseTleConversionInputs(Dictionary<string, object> inputs)
+    {
+        var map = inputs.ToDictionary(kv => (object)kv.Key, kv => kv.Value);
+        const string where = "a tle_conversion case";
+        var operation = Required(map, "operation", where).ToString();
+        var items = Required(map, "items", where) as List<object> ?? throw new ArgumentException($"{where} gives its items as no list.");
+        var mappings = items.ConvertAll(item => Mapping(item, "an item"));
+        return operation switch
+        {
+            TleConversionInputs.TleToOmm => new TleConversionInputs
+            {
+                Operation = operation, Tles = mappings.ConvertAll(item => ParseTle(Required(item, "tle", "a tle_to_omm item"), "a tle_to_omm item"))
+            },
+            TleConversionInputs.OmmToTle => new TleConversionInputs
+            {
+                Operation = operation, Omms = mappings.ConvertAll(item => ParseOmm(Mapping(Required(item, "omm", "an omm_to_tle item"), "an omm_to_tle item")))
+            },
+            _ => throw new ArgumentException($"The operation '{operation}' of {where} is not tle_to_omm or omm_to_tle (spec.md section 15.2).")
+        };
+    }
+
+    // The form of an OMM EPOCH (spec.md section 3): YYYY-MM-DDThh:mm:ss[.f{1,6}], no tag
+    private static readonly System.Text.RegularExpressions.Regex OmmEpochPattern =
+        new(@"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    private static readonly string[] OmmEpochFormats =
+    [
+        "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss'.'f", "yyyy-MM-dd'T'HH:mm:ss'.'ff", "yyyy-MM-dd'T'HH:mm:ss'.'fff",
+        "yyyy-MM-dd'T'HH:mm:ss'.'ffff", "yyyy-MM-dd'T'HH:mm:ss'.'fffff", "yyyy-MM-dd'T'HH:mm:ss'.'ffffff"
+    ];
+
+    /// <summary>The epoch of an OMM item (spec.md section 3), read exactly: up to 6 decimals, no tag.</summary>
+    /// <exception cref="FormatException">The epoch is not of that form.</exception>
+    public static DateTime ParseOmmEpoch(string epoch)
+    {
+        var match = epoch == null ? System.Text.RegularExpressions.Match.Empty : OmmEpochPattern.Match(epoch);
+        if (!match.Success || match.Length != epoch.Length)
+        {
+            throw new FormatException($"The EPOCH '{epoch}' is not of the CCSDS form of spec.md section 3: YYYY-MM-DDThh:mm:ss with 0 to 6 decimals, no tag.");
+        }
+
+        return DateTime.ParseExact(epoch, OmmEpochFormats, System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None);
+    }
+
+    private static OmmInput ParseOmm(Dictionary<object, object> omm)
+    {
+        const string where = "an OMM item";
+        return new OmmInput
+        {
+            ObjectName = Required(omm, "OBJECT_NAME", where).ToString(),
+            ObjectId = Required(omm, "OBJECT_ID", where).ToString(),
+            TimeSystem = Required(omm, "TIME_SYSTEM", where).ToString(),
+            Epoch = ParseOmmEpoch(Required(omm, "EPOCH", where).ToString()),
+            MeanMotion = ToDouble(Required(omm, "MEAN_MOTION", where)),
+            Eccentricity = ToDouble(Required(omm, "ECCENTRICITY", where)),
+            Inclination = ToDouble(Required(omm, "INCLINATION", where)),
+            RaOfAscNode = ToDouble(Required(omm, "RA_OF_ASC_NODE", where)),
+            ArgOfPericenter = ToDouble(Required(omm, "ARG_OF_PERICENTER", where)),
+            MeanAnomaly = ToDouble(Required(omm, "MEAN_ANOMALY", where)),
+            EphemerisType = (int)ToDouble(Required(omm, "EPHEMERIS_TYPE", where)),
+            ClassificationType = Required(omm, "CLASSIFICATION_TYPE", where).ToString(),
+            NoradCatId = (int)ToDouble(Required(omm, "NORAD_CAT_ID", where)),
+            ElementSetNo = (int)ToDouble(Required(omm, "ELEMENT_SET_NO", where)),
+            RevAtEpoch = (int)ToDouble(Required(omm, "REV_AT_EPOCH", where)),
+            BStar = ToDouble(Required(omm, "BSTAR", where)),
+            MeanMotionDot = ToDouble(Required(omm, "MEAN_MOTION_DOT", where)),
+            MeanMotionDdot = ToDouble(Required(omm, "MEAN_MOTION_DDOT", where))
+        };
+    }
+
+    private static TleInput ParseTle(object value, string where)
+    {
+        var tle = Mapping(value, where);
+        return new TleInput
+        {
+            Name = tle.TryGetValue("name", out var name) ? name?.ToString() : null,
+            Line1 = Required(tle, "line1", $"the tle of {where}").ToString(),
+            Line2 = Required(tle, "line2", $"the tle of {where}").ToString()
+        };
+    }
+
     private static object Required(Dictionary<object, object> map, string key, string where)
     {
         return map.TryGetValue(key, out var value) && value != null

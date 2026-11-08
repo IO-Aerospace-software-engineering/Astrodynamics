@@ -1,0 +1,192 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/tle_conversion.yaml; do not edit.
+id: "tle_conversion_omm_to_tle_edges_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "tle_conversion"
+created: "2026-11-08"
+description: >
+  TLEs of the ISS OMM of CelesTrak's GP data of 2026-11-07 with one edge per item (spec.md 15.2): epochs
+  2026-11-07T23:59:59.9996 and 2026-12-31T23:59:59.9996 UTC (the carry into the next day and year), n-dot/2 of -4e-9
+  and -0.0, e = 0, B* = 1.5e-11 and n-ddot/6 = 1.2e-13 (below the smallest normalized mantissa), angles of -0.0 and
+  359.99996 deg: each field takes its nearest representable value.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "none"
+  time_scale: "UTC"
+
+inputs:
+  operation: "omm_to_tle"
+  items:
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) epoch day carry"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T23:59:59.999600"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) epoch year carry"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-12-31T23:59:59.999600"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) n-dot/2 -4e-9"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: -4.0e-9
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) n-dot/2 -0.0"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: -0.0
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) e = 0"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.0
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) B* 1.5e-11"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 1.5e-11
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) n-ddot/6 1.2e-13"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 1.2e-13
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) angles -0.0"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: -0.0
+        ARG_OF_PERICENTER: -0.0
+        MEAN_ANOMALY: 2.2655
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 0.0
+    - omm:
+        OBJECT_NAME: "ISS (ZARYA) angle 359.99996"
+        OBJECT_ID: "1998-067A"
+        TIME_SYSTEM: "UTC"
+        EPOCH: "2026-11-07T04:59:16.885248"
+        MEAN_MOTION: 15.49235271
+        ECCENTRICITY: 0.00072476
+        INCLINATION: 51.6321
+        RA_OF_ASC_NODE: 312.3516
+        ARG_OF_PERICENTER: 357.8301
+        MEAN_ANOMALY: 359.99996
+        EPHEMERIS_TYPE: 0
+        CLASSIFICATION_TYPE: "U"
+        NORAD_CAT_ID: 25544
+        ELEMENT_SET_NO: 999
+        REV_AT_EPOCH: 59392
+        BSTAR: 0.00026478808
+        MEAN_MOTION_DOT: 0.00014294
+        MEAN_MOTION_DDOT: 0.0
+  kernels: []

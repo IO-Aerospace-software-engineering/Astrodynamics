@@ -1,0 +1,70 @@
+{
+  "id": "tle_conversion_tle_to_omm_alpha5_pivot_003",
+  "category": "tle_conversion",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "exact decimal evaluation of the TLE format (tools/legacy_goldens/tle.py, Python decimal)",
+    "tool_version": "Python 3.13",
+    "kernel": "data/: latest_leapseconds.tls (SHA-256 678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b)",
+    "date": "2026-11-08",
+    "method": "tools/legacy_goldens/tle.py: the exact decimal evaluation of the format of spec.md 15.2 (Python decimal): each field read from its columns, the epoch an exact UTC instant"
+  },
+  "outputs": {
+    "items": [
+      {
+        "NORAD_CAT_ID": 101252,
+        "OBJECT_ID": "2026-246Y",
+        "CLASSIFICATION_TYPE": "U",
+        "EPOCH": "2026-11-06T23:13:07.102848 UTC",
+        "MEAN_MOTION_DOT": -0.00954662,
+        "MEAN_MOTION_DDOT": 0.0,
+        "BSTAR": -0.0044345,
+        "EPHEMERIS_TYPE": 0,
+        "ELEMENT_SET_NO": 999,
+        "INCLINATION": 70.0002,
+        "RA_OF_ASC_NODE": 156.3423,
+        "ECCENTRICITY": 0.0005962,
+        "ARG_OF_PERICENTER": 284.5607,
+        "MEAN_ANOMALY": 75.4935,
+        "MEAN_MOTION": 15.85348457,
+        "REV_AT_EPOCH": 235
+      },
+      {
+        "NORAD_CAT_ID": 5,
+        "OBJECT_ID": "1958-002B",
+        "CLASSIFICATION_TYPE": "U",
+        "EPOCH": "1957-10-27T18:50:19.733568 UTC",
+        "MEAN_MOTION_DOT": 2.3e-07,
+        "MEAN_MOTION_DDOT": 0.0,
+        "BSTAR": 2.8098e-05,
+        "EPHEMERIS_TYPE": 0,
+        "ELEMENT_SET_NO": 475,
+        "INCLINATION": 34.2682,
+        "RA_OF_ASC_NODE": 348.7242,
+        "ECCENTRICITY": 0.1859667,
+        "ARG_OF_PERICENTER": 331.7664,
+        "MEAN_ANOMALY": 19.3264,
+        "MEAN_MOTION": 10.82419157,
+        "REV_AT_EPOCH": 41366
+      },
+      {
+        "NORAD_CAT_ID": 5,
+        "OBJECT_ID": "1958-002B",
+        "CLASSIFICATION_TYPE": "U",
+        "EPOCH": "2056-06-27T18:50:19.733568 UTC",
+        "MEAN_MOTION_DOT": 2.3e-07,
+        "MEAN_MOTION_DDOT": 0.0,
+        "BSTAR": 2.8098e-05,
+        "EPHEMERIS_TYPE": 0,
+        "ELEMENT_SET_NO": 475,
+        "INCLINATION": 34.2682,
+        "RA_OF_ASC_NODE": 348.7242,
+        "ECCENTRICITY": 0.1859667,
+        "ARG_OF_PERICENTER": 331.7664,
+        "MEAN_ANOMALY": 19.3264,
+        "MEAN_MOTION": 10.82419157,
+        "REV_AT_EPOCH": 41366
+      }
+    ]
+  }
+}

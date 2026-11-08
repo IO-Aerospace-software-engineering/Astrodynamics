@@ -264,6 +264,16 @@ A major version, because it breaks the API: members deprecated for removal in 11
   a pass or an event the library does not find FAILS; the direction angle of a pointing direction. The 22 cases of the
   suite's lot-4 branch (4cd11f9) pass with at most 0.137 of their tolerance, and the 151 cases of that branch pass. See
   [Validation](../guides/validation.md#lot-4-geometry-and-events).
+- **Conformance runner: the TLE categories and TEME of lot 5** (design of lot 5 of
+  [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), approved by S. Guillet,
+  2026-11-08). New solvers for `sgp4` (TEME states at tsince or at UTC instants, and their ICRF states, through
+  `TLE.ToOsculating` and `Frame.TEME`) and `tle_conversion` (`TLE.ToOmm`, and `Omm.ToTle` from an OMM item in its
+  `TIME_SYSTEM`), and TEME in the frames of `frame_transformation`. A case whose `gravity_model` or `opsmode` is not
+  `wgs72old` and `afspc`, the only model of the library's SGP4, is an ERROR that names it. New kinds of `spec.md` §6.1:
+  the scalar per component, the relative delta, the TLE epoch on the UTC calendar, and the TLE line, whose fields the
+  runner decodes by the spec's column table in `decimal`, independently of the library's parser, so that a line of the
+  wrong length or checksum FAILs. The 25 cases of the suite's lot-5 branch (b10b925) pass with at most 0.642 of their
+  tolerance (the velocity of frame 035, ICRF → TEME in 1990), and the 176 cases of that branch pass. See [Validation](../guides/validation.md#lot-5-tles-sgp4-and-teme).
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
   - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared

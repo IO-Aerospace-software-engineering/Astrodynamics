@@ -1,0 +1,27 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_72h_near_earth_teme_example_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4 TEME states of 00005, the TEME example of Vallado's verification set (e = 0.186, period 133 min), every 360
+  min over 72 h from the TLE epoch: the plain near-Earth path. The model is that of spec.md section 15.1, WGS-72 old
+  and the AFSPC mode.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "00005 (SGP4-VER.TLE, TEME example)"
+    line1: "1 00005U 58002B   00179.78495062  .00000023  00000-0  28098-4 0  4753"
+    line2: "2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    tsince_min: [0.0, 360.0, 720.0, 1080.0, 1440.0, 1800.0, 2160.0, 2520.0, 2880.0, 3240.0, 3600.0, 3960.0, 4320.0]
+  output_frames: ["TEME"]
+  kernels: []

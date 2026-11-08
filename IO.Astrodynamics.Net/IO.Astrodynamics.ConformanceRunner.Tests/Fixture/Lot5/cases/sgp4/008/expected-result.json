@@ -1,0 +1,90 @@
+{
+  "id": "sgp4_24h_near_earth_alpha5_1957_008",
+  "category": "sgp4",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "sgp4 (Vallado's SGP4/SDP4)",
+    "tool_version": "2.27",
+    "tool_sha256": "4d3775313120dcb6239535fa0c94cb6d5b089fd84bbfb15220923ae38dec7296",
+    "kernel": "data/: latest_leapseconds.tls (SHA-256 678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b)",
+    "date": "2026-11-08",
+    "gravity_model": "wgs72old: Vallado's WGS-72 \"old\", mu 398600.79964 km^3/s^2, R 6378.135 km, J2 1.082616e-3, J3 -2.53881e-6, J4 -1.65597e-6, xke 0.0743669161; opsmode afspc",
+    "method": "sgp4 2.27 (Vallado's SGP4/SDP4): twoline2rv(line1, line2, WGS72OLD), sgp4init(WGS72OLD, 'a', ...) from its fields, sgp4_tsince at each tsince; the epoch the exact decimal decode of its columns",
+    "reference_frame": "TEME"
+  },
+  "outputs": {
+    "epoch": "1957-10-27T18:50:19.733568 UTC",
+    "states": [
+      {
+        "teme": {
+          "position_km": [
+            7022.465290574917,
+            -1400.0829671389206,
+            0.039951552899142956
+          ],
+          "velocity_km_s": [
+            1.8938410139508999,
+            6.405893757305204,
+            4.534807249007841
+          ]
+        }
+      },
+      {
+        "teme": {
+          "position_km": [
+            -7154.031199858261,
+            -3783.1768239300586,
+            -3536.1941219313903
+          ],
+          "velocity_km_s": [
+            4.7418874076075,
+            -4.15181776413348,
+            -2.0939354242488966
+          ]
+        }
+      },
+      {
+        "teme": {
+          "position_km": [
+            -7134.593399135211,
+            6531.686411378113,
+            3260.2718637436788
+          ],
+          "velocity_km_s": [
+            -4.11379302589669,
+            -2.911922037778983,
+            -2.557327850215744
+          ]
+        }
+      },
+      {
+        "teme": {
+          "position_km": [
+            5568.539010059382,
+            4492.069924613793,
+            3863.8764187636693
+          ],
+          "velocity_km_s": [
+            -4.209106474421074,
+            5.159719886937953,
+            2.7448529786349654
+          ]
+        }
+      },
+      {
+        "teme": {
+          "position_km": [
+            -938.5592390002769,
+            -6268.187486484606,
+            -4294.029246217086
+          ],
+          "velocity_km_s": [
+            7.536105206992379,
+            -0.4271277069405316,
+            0.9898780794587957
+          ]
+        }
+      }
+    ]
+  }
+}

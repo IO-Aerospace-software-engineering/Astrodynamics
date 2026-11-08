@@ -1,0 +1,64 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_24h_deep_backward_icrf_014"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4/SDP4 states of 04632 of Vallado's verification set (2004, n = 1.2 rev/day) in TEME and ICRF at the whole UTC
+  hours of the 24 h before the TLE epoch, the last one before it: negative tsince.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "04632 (SGP4-VER.TLE, deep space, negative tsince)"
+    line1: "1 04632U 70093B   04031.91070959 -.00000084  00000-0  10000-3 0  9955"
+    line2: "2 04632  11.4628 273.1101 1450506 207.6000 143.9350  1.20231981 44145"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    utc_epochs:
+      - "2004-01-30T21:00:00.000 UTC"
+      - "2004-01-30T22:00:00.000 UTC"
+      - "2004-01-30T23:00:00.000 UTC"
+      - "2004-01-31T00:00:00.000 UTC"
+      - "2004-01-31T01:00:00.000 UTC"
+      - "2004-01-31T02:00:00.000 UTC"
+      - "2004-01-31T03:00:00.000 UTC"
+      - "2004-01-31T04:00:00.000 UTC"
+      - "2004-01-31T05:00:00.000 UTC"
+      - "2004-01-31T06:00:00.000 UTC"
+      - "2004-01-31T07:00:00.000 UTC"
+      - "2004-01-31T08:00:00.000 UTC"
+      - "2004-01-31T09:00:00.000 UTC"
+      - "2004-01-31T10:00:00.000 UTC"
+      - "2004-01-31T11:00:00.000 UTC"
+      - "2004-01-31T12:00:00.000 UTC"
+      - "2004-01-31T13:00:00.000 UTC"
+      - "2004-01-31T14:00:00.000 UTC"
+      - "2004-01-31T15:00:00.000 UTC"
+      - "2004-01-31T16:00:00.000 UTC"
+      - "2004-01-31T17:00:00.000 UTC"
+      - "2004-01-31T18:00:00.000 UTC"
+      - "2004-01-31T19:00:00.000 UTC"
+      - "2004-01-31T20:00:00.000 UTC"
+      - "2004-01-31T21:00:00.000 UTC"
+  output_frames: ["TEME", "ICRF"]
+  kernels: []
+
+tolerances_override:
+  sgp4_icrf_position_km:
+    abs_tol: 0.00086
+    rel_tol: 0.0
+    justification: >-
+      The ICRF golden is the golden TEME state through GMAT R2026a's TEME axes, which carry, from 1997-02-27, the
+      kinematic terms of the 1994 equation of the equinoxes that the definition of spec.md 2.1 leaves out (finding
+      T1 of tools/legacy_goldens/README.md); a runner exact to the definition sits at E_ref from the golden, and the
+      definition allows IAU 2006/2000A or 2006/2000B (S_nut). Measured on the 25 samples (2026-11-08, Linux x86_64,
+      GMAT R2026a and pyerfa 2.0.1.5): E_ref = |GMAT - the CIP route| per component up to 0.000427 km (sample 24),
+      S_nut up to 2.88e-05 km, CSPICE through the same route up to 9.8e-09 km; T_op 0.0001 km. T = max(T_op, ceil2(2
+      max(S_gen, E_2nd, E_ref, S_nut))) = 0.00086 km (spec.md 6.4).

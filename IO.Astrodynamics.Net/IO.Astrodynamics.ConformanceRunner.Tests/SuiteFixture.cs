@@ -54,6 +54,15 @@ internal sealed class SuiteFixture
         new[] { KernelsPath, LroPath, "Fixture/Lot1/data", "Fixture/Lot2/data", "Fixture/Lot3/data" },
         new[] { "EGM2008_to70_TideFree" });
 
+    /// <summary>
+    /// Lot 5 (design of lot 5 of #457): the sgp4 and tle_conversion cases and the TEME cases 032 to 036 of
+    /// frame_transformation (lot 1's fixture keeps 001 to 031); the suite's Earth orientation file, read by 036, is the
+    /// one of lot 1's fixture.
+    /// </summary>
+    public static readonly SuiteFixture Lot5 = new("Fixture/Lot5",
+        new[] { "sgp4", "tle_conversion", "frame_transformation" },
+        new[] { KernelsPath, "Fixture/Lot1/data", "Fixture/Lot2/data", "Fixture/Lot3/data", "Fixture/Lot4/data" });
+
     /// <summary>The SPK of LRO of the library's tests, copied beside the runner's kernels.</summary>
     public const string LroPath = "Data/LRO";
 
@@ -183,6 +192,12 @@ internal sealed class SuiteFixture
     {
         return new DeserializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build()
             .Deserialize<CaseInput>(File.ReadAllText(Path.Combine(suite, caseDirectory, "inputs.yaml")));
+    }
+
+    /// <summary>A case of a fixture, as the runner reads its inputs.yaml.</summary>
+    public static CaseInput ReadCaseFromFixture(SuiteFixture fixture, string caseDirectory)
+    {
+        return ReadCase(fixture.Root, caseDirectory);
     }
 
     /// <summary>The tolerances of a suite.</summary>

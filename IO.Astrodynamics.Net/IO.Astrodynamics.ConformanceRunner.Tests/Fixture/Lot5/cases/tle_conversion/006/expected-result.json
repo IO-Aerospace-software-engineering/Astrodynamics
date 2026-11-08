@@ -1,0 +1,46 @@
+{
+  "id": "tle_conversion_omm_to_tle_celestrak_006",
+  "category": "tle_conversion",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "exact decimal evaluation of the TLE format (tools/legacy_goldens/tle.py, Python decimal)",
+    "tool_version": "Python 3.13",
+    "kernel": "data/: latest_leapseconds.tls (SHA-256 678e32bdb5a744117a467cd9601cd6b373f0e9bc9bbde1371d5eee39600a039b)",
+    "date": "2026-11-08",
+    "method": "tools/legacy_goldens/tle.py: the exact decimal evaluation of the format of spec.md 15.2 (Python decimal): the nearest representable value of each field, a tie half away from zero, the mantissas normalized, the epoch on the 1e-8-day lattice with its carry, a non-UTC epoch converted to UTC by data/'s LSK"
+  },
+  "outputs": {
+    "items": [
+      {
+        "tle": {
+          "line1": "1 25544U 98067A   26311.20783432  .00014294  00000+0  26479-3 0  9992",
+          "line2": "2 25544  51.6321 312.3516 0007248 357.8301   2.2655 15.49235271593926"
+        }
+      },
+      {
+        "tle": {
+          "line1": "1 19548U 88091B   26310.95041905 -.00000303  00000+0  00000+0 0  9993",
+          "line2": "2 19548  12.4960 340.0569 0041591 351.9996   7.5191  1.00273059126818"
+        }
+      },
+      {
+        "tle": {
+          "line1": "1 26407U 00040A   26310.03381689 -.00000008  00000+0  00000+0 0  9990",
+          "line2": "2 26407  54.8268 209.5342 0115374 304.9646 156.9344  2.00558852192797"
+        }
+      },
+      {
+        "tle": {
+          "line1": "1 A1252U 26246Y   26310.96744332 -.00954662  00000+0 -44346-2 0  9996",
+          "line2": "2 A1252  70.0002 156.3423 0005962 284.5607  75.4935 15.85348457  2352"
+        }
+      },
+      {
+        "tle": {
+          "line1": "1 25544U 98067A   26311.20703358  .00014294  00000+0  26479-3 0  9991",
+          "line2": "2 25544  51.6321 312.3516 0007248 357.8301   2.2655 15.49235271593926"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,76 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_24h_near_earth_2000_icrf_013"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4 states of 00005 of Vallado's verification set (epoch 2000-06-27) in TEME and ICRF at the first whole UTC hour
+  after the TLE epoch and every hour for 24 h: an epoch where the kinematic terms GMAT's TEME carries are large
+  (spec.md 2.1).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "00005 (SGP4-VER.TLE, TEME example)"
+    line1: "1 00005U 58002B   00179.78495062  .00000023  00000-0  28098-4 0  4753"
+    line2: "2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    utc_epochs:
+      - "2000-06-27T19:00:00.000 UTC"
+      - "2000-06-27T20:00:00.000 UTC"
+      - "2000-06-27T21:00:00.000 UTC"
+      - "2000-06-27T22:00:00.000 UTC"
+      - "2000-06-27T23:00:00.000 UTC"
+      - "2000-06-28T00:00:00.000 UTC"
+      - "2000-06-28T01:00:00.000 UTC"
+      - "2000-06-28T02:00:00.000 UTC"
+      - "2000-06-28T03:00:00.000 UTC"
+      - "2000-06-28T04:00:00.000 UTC"
+      - "2000-06-28T05:00:00.000 UTC"
+      - "2000-06-28T06:00:00.000 UTC"
+      - "2000-06-28T07:00:00.000 UTC"
+      - "2000-06-28T08:00:00.000 UTC"
+      - "2000-06-28T09:00:00.000 UTC"
+      - "2000-06-28T10:00:00.000 UTC"
+      - "2000-06-28T11:00:00.000 UTC"
+      - "2000-06-28T12:00:00.000 UTC"
+      - "2000-06-28T13:00:00.000 UTC"
+      - "2000-06-28T14:00:00.000 UTC"
+      - "2000-06-28T15:00:00.000 UTC"
+      - "2000-06-28T16:00:00.000 UTC"
+      - "2000-06-28T17:00:00.000 UTC"
+      - "2000-06-28T18:00:00.000 UTC"
+      - "2000-06-28T19:00:00.000 UTC"
+  output_frames: ["TEME", "ICRF"]
+  kernels: []
+
+tolerances_override:
+  sgp4_icrf_position_km:
+    abs_tol: 0.00025
+    rel_tol: 0.0
+    justification: >-
+      The ICRF golden is the golden TEME state through GMAT R2026a's TEME axes, which carry, from 1997-02-27, the
+      kinematic terms of the 1994 equation of the equinoxes that the definition of spec.md 2.1 leaves out (finding
+      T1 of tools/legacy_goldens/README.md); a runner exact to the definition sits at E_ref from the golden, and the
+      definition allows IAU 2006/2000A or 2006/2000B (S_nut). Measured on the 25 samples (2026-11-08, Linux x86_64,
+      GMAT R2026a and pyerfa 2.0.1.5): E_ref = |GMAT - the CIP route| per component up to 0.000125 km (sample 10),
+      S_nut up to 5.05e-06 km, CSPICE through the same route up to 2.41e-09 km; T_op 0.0001 km. T = max(T_op,
+      ceil2(2 max(S_gen, E_2nd, E_ref, S_nut))) = 0.00025 km (spec.md 6.4).
+  sgp4_icrf_velocity_km_s:
+    abs_tol: 2.0e-7
+    rel_tol: 0.0
+    justification: >-
+      The ICRF golden is the golden TEME state through GMAT R2026a's TEME axes, which carry, from 1997-02-27, the
+      kinematic terms of the 1994 equation of the equinoxes that the definition of spec.md 2.1 leaves out (finding
+      T1 of tools/legacy_goldens/README.md); a runner exact to the definition sits at E_ref from the golden, and the
+      definition allows IAU 2006/2000A or 2006/2000B (S_nut). Measured on the 25 samples (2026-11-08, Linux x86_64,
+      GMAT R2026a and pyerfa 2.0.1.5): E_ref = |GMAT - the CIP route| per component up to 9.75e-08 km/s (sample 15),
+      S_nut up to 4.23e-09 km/s, CSPICE through the same route up to 2.55e-12 km/s; T_op 1.0e-7 km/s. T = max(T_op,
+      ceil2(2 max(S_gen, E_2nd, E_ref, S_nut))) = 2.0e-7 km/s (spec.md 6.4).

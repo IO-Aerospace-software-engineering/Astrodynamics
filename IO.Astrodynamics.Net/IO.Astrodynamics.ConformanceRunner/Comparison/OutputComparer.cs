@@ -92,6 +92,14 @@ public static class OutputComparer
                 continue;
             }
 
+            // The lines of a computed TLE: their exact part, then each decoded field by its key (spec.md section 15.2)
+            if (metric.Kind == MetricKind.TleLine)
+            {
+                measures.AddRange(TleLineComparer.Compare(caseInput.Category, output, value, goldenValue,
+                    (field, key) => ResolveTolerance(field, key, caseInput.TolerancesOverride, defaults)));
+                continue;
+            }
+
             string inputScale = metric.TimeScale == null ? null : EpochParser.Scale(caseInput.Inputs["epoch"]?.ToString());
             string key = MetricTable.ToleranceKey(metric, inputScale);
             var (tolerance, toleranceName) = ResolveTolerance(output, key, caseInput.TolerancesOverride, defaults, metric.FormerKeys);
@@ -159,7 +167,16 @@ public static class OutputComparer
             {
                 foreach (var field in element.EnumerateObject())
                 {
-                    yield return (IndexedOutput(name, k, field.Name), field.Value);
+                    // A field that is an object gives its leaves (states[k].teme.position_km of sgp4), unless the table
+                    // holds it as one output (items[k].tle of tle_conversion, the lines of a TLE)
+                    string output = IndexedOutput(name, k, field.Name);
+                    var outputs = field.Value.ValueKind == JsonValueKind.Object && !MetricTable.TryGet(category, output, out _)
+                        ? Leaves(field.Value, output, category)
+                        : [(output, field.Value)];
+                    foreach (var leaf in outputs)
+                    {
+                        yield return leaf;
+                    }
                 }
             }
             else
@@ -270,6 +287,8 @@ public static class OutputComparer
             bool flag when golden.ValueKind is JsonValueKind.True or JsonValueKind.False => flag == golden.GetBoolean(),
             string text when golden.ValueKind == JsonValueKind.String => string.Equals(text, golden.GetString(), StringComparison.Ordinal),
             int count when golden.ValueKind == JsonValueKind.Array => count == golden.GetArrayLength(),
+            // An integer of the golden: an identifier of a TLE (spec.md section 15.2)
+            int number when golden.ValueKind == JsonValueKind.Number => golden.TryGetInt64(out long integer) && number == integer,
             IReadOnlyList<Window> arcs when golden.ValueKind == JsonValueKind.Array => SameArcs(arcs, golden, output),
             _ => throw new InvalidOperationException(
                 $"The solver gives {output} as {computed?.GetType().Name ?? "null"} and the golden as {golden.ValueKind}: they cannot be compared.")
@@ -394,6 +413,29 @@ public static class OutputComparer
             return (System.Math.Abs((computedInstant - Instant(golden, output)).TotalSeconds), double.NaN);
         }
 
+        if (kind == MetricKind.ScalarPerComponent)
+        {
+            var c = Vector(computed, output);
+            var g = Vector(golden, output);
+            double largest = 0.0;
+            for (int i = 0; i < 3; i++)
+            {
+                largest = System.Math.Max(largest, System.Math.Abs(c[i] - g[i]));
+            }
+
+            return (largest, double.NaN);
+        }
+
+        if (kind == MetricKind.CalendarInstant)
+        {
+            var computedInstant = computed as DateTime? ??
+                                  throw new InvalidOperationException($"The solver gives {output} as {computed?.GetType().Name ?? "null"}, not a UTC calendar instant.");
+            var goldenInstant = golden.ValueKind == JsonValueKind.String
+                ? ParseCalendarInstant(golden.GetString())
+                : throw new InvalidOperationException($"The golden gives {output} as {golden.ValueKind}, not an instant.");
+            return (System.Math.Abs((computedInstant - goldenInstant).TotalSeconds), double.NaN);
+        }
+
         if (kind == MetricKind.RotationAngle)
         {
             return (RotationAngle(Quaternion(computed, output), Quaternion(golden, output)), double.NaN);
@@ -411,6 +453,7 @@ public static class OutputComparer
             MetricKind.Scalar => (System.Math.Abs(computedValue - goldenValue),
                 Relative(System.Math.Abs(computedValue - goldenValue), System.Math.Abs(goldenValue))),
             MetricKind.WrappedAngle => (System.Math.Abs(System.Math.IEEERemainder(computedValue - goldenValue, 360.0)), double.NaN),
+            MetricKind.Relative => RelativeDeltas(System.Math.Abs(computedValue - goldenValue), System.Math.Abs(goldenValue)),
             _ => (System.Math.Abs(computedValue - goldenValue), double.NaN)
         };
     }
@@ -450,6 +493,36 @@ public static class OutputComparer
         double z = c[0] * g[1] - c[1] * g[0];
         double dot = c[0] * g[0] + c[1] * g[1] + c[2] * g[2];
         return System.Math.Atan2(System.Math.Sqrt(x * x + y * y + z * z), dot);
+    }
+
+    /// <summary>
+    /// The deltas of the relative kind (spec.md section 6.1): |d| and |d| / |golden|; a zero golden passes only on an
+    /// exact zero, its relative delta 0 for d = 0 and +∞ otherwise.
+    /// </summary>
+    internal static (double Absolute, double Relative) RelativeDeltas(double absolute, double goldenMagnitude)
+    {
+        return (absolute, goldenMagnitude != 0.0 ? absolute / goldenMagnitude : absolute == 0.0 ? 0.0 : double.PositiveInfinity);
+    }
+
+    // A TLE epoch output (spec.md section 3): YYYY-MM-DDThh:mm:ss.ffffff UTC, 6 decimals, read on the UTC calendar
+    private static readonly System.Text.RegularExpressions.Regex CalendarInstantPattern =
+        new(@"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6} UTC$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// A UTC instant of the TLE categories (spec.md section 3), <c>YYYY-MM-DDThh:mm:ss.ffffff UTC</c>, as a date of the
+    /// UTC calendar.
+    /// </summary>
+    /// <exception cref="FormatException">The instant is not of that form.</exception>
+    internal static DateTime ParseCalendarInstant(string instant)
+    {
+        var match = instant == null ? System.Text.RegularExpressions.Match.Empty : CalendarInstantPattern.Match(instant);
+        if (!match.Success || match.Length != instant.Length)
+        {
+            throw new FormatException($"The instant '{instant}' is not a TLE epoch of spec.md section 3: YYYY-MM-DDThh:mm:ss.ffffff UTC.");
+        }
+
+        return DateTime.ParseExact(instant[..^4], "yyyy-MM-dd'T'HH:mm:ss'.'ffffff", System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None);
     }
 
     private static Time Instant(JsonElement golden, string output)

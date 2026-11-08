@@ -1,0 +1,65 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/sgp4.yaml; do not edit.
+id: "sgp4_24h_deep_geo_icrf_011"
+schema_version: "v1"
+version: "0.1.0"
+category: "sgp4"
+created: "2026-11-08"
+description: >
+  SGP4/SDP4 states of TDRS 6 (22314) from CelesTrak's GP data of 2026-11-07, a geosynchronous orbit, in TEME and
+  ICRF at the first whole UTC hour after the TLE epoch and every hour for 24 h: deep space at 42000 km, the largest
+  lever of the TEME rotation.
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "TEME"
+  time_scale: "UTC"
+
+inputs:
+  tle:
+    name: "TDRS 6"
+    line1: "1 22314U 93003B   26311.02217943 -.00000298  00000+0  00000+0 0  9996"
+    line2: "2 22314  14.1867 355.9844 0009055 216.4317 156.0344  1.00271830123845"
+  gravity_model: "wgs72old"
+  opsmode: "afspc"
+  samples:
+    utc_epochs:
+      - "2026-11-07T01:00:00.000 UTC"
+      - "2026-11-07T02:00:00.000 UTC"
+      - "2026-11-07T03:00:00.000 UTC"
+      - "2026-11-07T04:00:00.000 UTC"
+      - "2026-11-07T05:00:00.000 UTC"
+      - "2026-11-07T06:00:00.000 UTC"
+      - "2026-11-07T07:00:00.000 UTC"
+      - "2026-11-07T08:00:00.000 UTC"
+      - "2026-11-07T09:00:00.000 UTC"
+      - "2026-11-07T10:00:00.000 UTC"
+      - "2026-11-07T11:00:00.000 UTC"
+      - "2026-11-07T12:00:00.000 UTC"
+      - "2026-11-07T13:00:00.000 UTC"
+      - "2026-11-07T14:00:00.000 UTC"
+      - "2026-11-07T15:00:00.000 UTC"
+      - "2026-11-07T16:00:00.000 UTC"
+      - "2026-11-07T17:00:00.000 UTC"
+      - "2026-11-07T18:00:00.000 UTC"
+      - "2026-11-07T19:00:00.000 UTC"
+      - "2026-11-07T20:00:00.000 UTC"
+      - "2026-11-07T21:00:00.000 UTC"
+      - "2026-11-07T22:00:00.000 UTC"
+      - "2026-11-07T23:00:00.000 UTC"
+      - "2026-11-08T00:00:00.000 UTC"
+      - "2026-11-08T01:00:00.000 UTC"
+  output_frames: ["TEME", "ICRF"]
+  kernels: []
+
+tolerances_override:
+  sgp4_icrf_position_km:
+    abs_tol: 0.00074
+    rel_tol: 0.0
+    justification: >-
+      The ICRF golden is the golden TEME state through GMAT R2026a's TEME axes, which carry, from 1997-02-27, the
+      kinematic terms of the 1994 equation of the equinoxes that the definition of spec.md 2.1 leaves out (finding
+      T1 of tools/legacy_goldens/README.md); a runner exact to the definition sits at E_ref from the golden, and the
+      definition allows IAU 2006/2000A or 2006/2000B (S_nut). Measured on the 25 samples (2026-11-08, Linux x86_64,
+      GMAT R2026a and pyerfa 2.0.1.5): E_ref = |GMAT - the CIP route| per component up to 0.00037 km (sample 23),
+      S_nut up to 1.41e-05 km, CSPICE through the same route up to 5.52e-08 km; T_op 0.0001 km. T = max(T_op,
+      ceil2(2 max(S_gen, E_2nd, E_ref, S_nut))) = 0.00074 km (spec.md 6.4).

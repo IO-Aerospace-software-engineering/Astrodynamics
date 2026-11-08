@@ -20,24 +20,26 @@ public class FrameCatalogTests
     [InlineData("IAU_MOON", "IAU_MOON")]
     [InlineData("MOON_PA", "MOON_PA")]
     [InlineData("MOON_ME", "MOON_ME")]
-    public void TheSevenFrames_AreTheSpiceFramesOfTheirName(string name, string spiceName)
+    [InlineData("TEME", "TEME")]
+    public void TheEightFrames_AreTheFramesOfTheirName(string name, string spiceName)
     {
         Assert.Equal(spiceName, FrameCatalog.Resolve(name).Name);
         Assert.Contains(name, FrameCatalog.Names);
     }
 
     [Fact]
-    public void IcrfAndEcliptic_AreTheFrameworkFrames()
+    public void IcrfEclipticAndTeme_AreTheFrameworkFrames()
     {
         Assert.Same(Frame.ICRF, FrameCatalog.Resolve("ICRF"));
         Assert.Same(Frame.ECLIPTIC_J2000, FrameCatalog.Resolve("ECLIPJ2000"));
-        Assert.Equal(7, FrameCatalog.Names.Count);
+        Assert.Same(Frame.TEME, FrameCatalog.Resolve("TEME"));
+        Assert.Equal(8, FrameCatalog.Names.Count);
     }
 
     [Theory]
     [InlineData("EME2000")] // GMAT's EarthMJ2000Eq is not EME2000 (conformance-tests#13)
     [InlineData("TIRS")]
-    [InlineData("TEME")]
+    [InlineData("teme")]
     [InlineData("J2000")]
     [InlineData("icrf")]
     [InlineData("")]

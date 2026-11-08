@@ -1,0 +1,28 @@
+{
+  "id": "frame_transformation_teme_icrf_geo_2016_034",
+  "category": "frame_transformation",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), moon_080317.tf (SHA-256 78732477b96f9863e7b0d65bcee3c22b8707ca5ed0db56d1173319cb2e8c7993), moon_pa_de421_1900-2050.bpc (SHA-256 656f90616403d75a75f0cd6c8830fc5b44f8cb4facb5ccb8915e752b397520cf), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-08",
+    "method": "State entered in the GMAT coordinate system of TEME about Earth (Axes = TEME for TEME: GMAT's TEME, the golden of spec.md 2.1, with the kinematic terms of the 1994 equation of the equinoxes), reported in one with Axes = ICRF for ICRF; kernels of data/, no custom Planet, data/ bpc loaded last (log checked); E_ref the CIP route of spec.md 2.1 (IAU 2006/2000A, ERFA)",
+    "reference_frame": "EarthICRF (Axes = ICRF, origin Earth)",
+    "script": "frame_transformation_teme_icrf_geo_2016_034.script",
+    "log": "frame_transformation_teme_icrf_geo_2016_034.log"
+  },
+  "outputs": {
+    "position_km": [
+      36590.260237690505,
+      20951.223298370893,
+      -45.76068056438208
+    ],
+    "velocity_km_s": [
+      -1.5277798136707916,
+      2.6682228734358038,
+      0.0125055629135296
+    ]
+  }
+}
