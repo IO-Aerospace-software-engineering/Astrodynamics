@@ -719,7 +719,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   study, 82 to 851 m on the verification TLEs), a TLE fitted from ICRF (`TLE.Create`, `ToTLE`, about 168 m), OPM and
   OMM in TEME, the CLI `--frame TEME`, `TLEPropagator` once converted, and the TLE participants of scenarios and
   conjunctions. TEME ↔ ICRF before 2000 and after the end of the PCK, a zero rotation before, is now defined. The SGP4
-  states in TEME do not move.
+  states in TEME do not move with it; tsince in TT moves them (#599, Fixed above).
 
 - **The maneuver chain on the attitude timeline** (#539, #547, #570; Fixed above). Breaking:
   - **An attitude delays the next maneuver.** It activates at the later of its `MinimumEpoch` and the end of the
