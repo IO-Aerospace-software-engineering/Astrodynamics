@@ -55,7 +55,7 @@ is reserved for changes between inertial frames.
 |-------------------|-------------|
 | `Frame.ICRF` | International Celestial Reference Frame (SPICE `J2000`), the pivot of every transform |
 | `Frame.ECLIPTIC_J2000` | Ecliptic plane at J2000 |
-| `Frame.TEME` | True Equator Mean Equinox (for TLE) |
+| `Frame.TEME` | True Equator, Mean Equinox, the frame of SGP4 states: the managed `TemeFrame`, see [TEME](#teme) |
 | `Frame.ECLIPTIC_B1950` | Ecliptic plane at B1950 |
 | `Frame.GALACTIC_SYSTEM2` | Galactic coordinate system |
 | `Frame.B1950` | B1950 equatorial frame |
@@ -129,7 +129,46 @@ named GCRF (`Frame.GCRF`, or `new Frame("GCRF")` as the CLI builds it, in any ca
 `J2000` and labels the result with the frame given. An ephemeris, an orientation (CK), a frame
 transformation or a coordinate search in GCRF are then the same numbers as in J2000, and a state in
 GCRF propagates as its ICRF twin (#543). `Frame.CIRS` and `Frame.TIRS` are not SPICE frames either,
-and they rotate: they are not mapped, use `ToFrame` on a state read in ICRF.
+and they rotate: an ephemeris read in `Frame.CIRS` or `Frame.TIRS` (an instance of `CirsFrame` or `TirsFrame`) is read in
+J2000 and rotated by the frame at the epoch of the read, the numbers `ToFrame` gives on the state read in ICRF (#558). A
+coordinate search in one of them is not mapped.
+
+### TEME
+
+`Frame.TEME` is the True Equator, Mean Equinox frame of the SGP4/SDP4 states of a TLE, an instance of `TemeFrame`
+(#451). The definition is that of Vallado, Crawford, Hujsak and Kelso (2006), "Revisiting Spacetrack Report #3",
+AIAA 2006-6753 Rev2, appendix C (to be verified by S. Guillet): the pseudo Earth-fixed frame of a TEME state is
+`r_PEF = R3(GMST82(UT1)) r_TEME`, with the PEF taken as the TIRS. So
+
+```
+TEME → ICRF = Q(t)ᵀ · Rz(ERA − GMST82)
+```
+
+with `Q(t)` the CIO-based precession-nutation matrix of `Frame.CIRS` (IAU 2006/2000B), the Earth rotation angle of
+`Frame.TIRS`, GMST82 the IAU 1982 Greenwich mean sidereal time (the expression of SOFA `iauGmst82`) and `Rz` the active
+rotation about z.
+
+- **No file.** UT1 enters GMST82 and the ERA alike, so UT1 − UTC cancels between them to 0.03 mm in LEO and 0.2 mm at
+  the geostationary radius: `Frame.TEME` takes UT1 = UTC, and `new TemeFrame(eop)` takes UT1 − UTC from a provider.
+  Neither polar motion nor the Earth's binary PCK enters, so TEME ↔ ICRF works at any epoch, before 2000 and after the
+  end of the PCK.
+- **Quasi-inertial.** The angular velocity is zero: a state transforms as `r' = R r`, `v' = R v`, as Vallado's
+  `teme2eci` and GMAT. The rotation rate of the frame (about 7e-12 rad/s) would move a LEO velocity by at most
+  0.08 mm/s, a geostationary one by 0.39 mm/s. Toward a rotating frame such as ITRF93, the angular velocity of that
+  frame applies: TEME → ITRF93 is TEME → ICRF, then ICRF → ITRF93 from SPICE.
+- **By name.** A frame built by name, `new Frame("TEME")` in any case (a CCSDS file, the CLI, user code), is routed to
+  `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceAPI.TransformFrame` composes a TEME end
+  through ICRF; the native TEME of the frozen C++ layer is no longer used. An ephemeris read in TEME is read in J2000
+  and rotated (#558). The equality of a frame built by name with `Frame.TEME` is #562's.
+- **Measured** (`tools/teme_reference`, 2026-11-08; a LEO and a GEO state at 13 epochs from 1980 to 2026): within
+  0.9 mm (LEO) and 18 mm (GEO) of ERFA's CIP route with IAU 2006/2000B, 19 mm and 106 mm (0.55 mas, IAU 2000B's
+  accuracy) of the route with IAU 2006/2000A, and 9.4 cm and 56 cm of GMAT R2026a's TEME → EarthICRF, whose residual is
+  the kinematic terms of the 1994 equation of the equinoxes that GMAT applies from 1997-02-27 (up to 2.6 mas) and
+  Vallado's TEME leaves out; velocities within 0.094 mm/s of GMAT.
+
+Before 11.0.0 TEME was ITRF93 of the Earth's binary PCK composed with R3(GAST06) of UTC: 0.3″ to 23.3″ from the
+definition over 2000–2026 (70 to 797 m in LEO, up to 4.75 km at the geostationary radius), with a spurious rotation
+rate, and a zero rotation outside the PCK.
 
 ### Example
 

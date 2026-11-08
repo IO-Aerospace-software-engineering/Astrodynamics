@@ -61,25 +61,53 @@ public class TLETests
             "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 
-        TimeSystem.Time epoch = TimeSystem.Time.CreateTDB(664440682.84760022);
+        // 6 h after the TLE epoch. Reference: the SGP4 state of Vallado's code (sgp4 2.27, WGS-72 old, AFSPC mode, the model of
+        // CSPICE's evsgp4_c) through GMAT R2026a's TEME -> EarthICRF, "ISS 2021 +6 h" of tools/teme_reference (#451)
+        var epoch = new TimeSystem.Time(new DateTime(2021, 1, 20, 18, 50, 13, 663, DateTimeKind.Utc), TimeFrame.UTCFrame);
         var stateVector = tle.AtEpoch(epoch).ToStateVector().ToFrame(Frames.Frame.ICRF) as StateVector;
 
         Assert.Equal(stateVector, tle.ToStateVector(epoch).ToFrame(Frames.Frame.ICRF) as StateVector);
-        // Adjusted tolerances to account for SGP4/SDP4 propagator differences
-        // Position tolerance: ~30m (acceptable for orbital mechanics)
-        Assert.True(System.Math.Abs(stateVector.Position.X - 4339206.6119421758) < 30.0,
-            $"Position X difference: {System.Math.Abs(stateVector.Position.X - 4339206.6119421758):F3}m should be < 30m");
-        Assert.True(System.Math.Abs(stateVector.Position.Y - (-3648070.2129484829)) < 30.0,
-            $"Position Y difference: {System.Math.Abs(stateVector.Position.Y - (-3648070.2129484829)):F3}m should be < 30m");
-        Assert.True(System.Math.Abs(stateVector.Position.Z - (-3756119.7658792436)) < 30.0,
-            $"Position Z difference: {System.Math.Abs(stateVector.Position.Z - (-3756119.7658792436)):F3}m should be < 30m");
-        // Velocity tolerance: ~0.02 m/s (acceptable for orbital velocities)
-        Assert.Equal(5826.3276055659326, stateVector.Velocity.X, 1);
-        Assert.Equal(2548.7270427712078, stateVector.Velocity.Y, 1);
-        Assert.Equal(4259.876355263199, stateVector.Velocity.Z, 1);
+        var reference = Frame.TemeFrameTests.Reference("ISS 2021 +6 h");
+        Assert.Equal(epoch, Frame.TemeFrameTests.Instant(reference.Instant));
+        var position = Frame.TemeFrameTests.Position(reference.Gmat);
+        var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat);
+        // PROVISIONAL (Linux x64, 2026-11-08): twice the 0.114 m and 1.3e-4 m/s measured, GMAT's TEME (its kinematic terms
+        // of the equation of the equinoxes, 0.064 m here) and the tsince the library counts in TDB seconds (#599)
+        Assert.InRange((stateVector.Position - position).Magnitude(), 0.0, 0.23);
+        Assert.InRange((stateVector.Velocity - velocity).Magnitude(), 0.0, 2.6e-4);
         Assert.Equal("J2000", stateVector.Frame.Name);
         Assert.Equal(399, stateVector.Observer.NaifId);
-        Assert.Equal(664440682.84760022, stateVector.Epoch.TimeSpanFromJ2000().TotalSeconds, 3);
+        Assert.Equal(epoch, stateVector.Epoch);
+    }
+
+    [Fact]
+    public void ToOsculating_FailedSgp4_Throws()
+    {
+        // #454 on the TLE path: 28872 of Vallado's SGP4-VER.TLE is suborbital; CSPICE refuses it (SPICE(SUBORBITAL)) and the
+        // native layer returned r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307) without an exception
+        var tle = new TLE("SUBORBITAL", "1 28872U 05037B   05333.02012661  .25992681  00000-0  24476-3 0  1534",
+            "2 28872  96.4736 157.9986 0303955 244.0492 110.6523 16.46015938 10708");
+        var ex = Assert.Throws<InvalidOperationException>(() => tle.ToOsculating());
+        Assert.Contains("SUBORBITAL (1 28872U", ex.Message);
+    }
+
+    [Fact]
+    public void Constructor_BuildsTheEarthInAnInertialFrame()
+    {
+        // #597: 11801 of Vallado's set (1980) lies before the Earth's binary PCK; its Earth was built in ITRF93 at the epoch
+        // (two SPICE(FRAMEDATANOTFOUND) printed, no exception). Now in ECLIPJ2000, read without any orientation kernel: the
+        // Earth about the Earth-Moon barycenter, 4 670 km times the Moon's distance over its mean
+        var tle = new TLE("11801", "1 11801U          80230.29629788  .01431103  00000-0  14311-1      13",
+            "2 11801  46.7916 230.4354 7318036  47.4722  10.4117  2.28537848    13");
+        var earth = tle.Observer.InitialOrbitalParameters;
+        Assert.Equal(Frames.Frame.ECLIPTIC_J2000, earth.Frame);
+        Assert.Equal(tle.Epoch, earth.Epoch);
+        Assert.Equal(3, earth.Observer.NaifId);
+        Assert.InRange(earth.ToStateVector().Position.Magnitude(), 4.2e6, 5.0e6);
+        Assert.Same(Frames.Frame.TEME, tle.Frame);
+        // TEME -> ICRF reads no kernel: the 1980 state converts
+        var icrf = tle.ToOsculating().ToFrame(Frames.Frame.ICRF).ToStateVector();
+        Assert.InRange(icrf.Position.Magnitude(), 6.0e6, 1.0e8);
     }
 
     [Fact]
@@ -285,12 +313,12 @@ public class TLETests
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
         var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
-        Assert.Equal(sv.Position.X, computedSV.Position.X, (x, y) => System.Math.Abs(x - y) < 0.5);
-        Assert.Equal(sv.Position.Y, computedSV.Position.Y, (x, y) => System.Math.Abs(x - y) < 2);
-        Assert.Equal(sv.Position.Z, computedSV.Position.Z, (x, y) => System.Math.Abs(x - y) < 6);
-        Assert.Equal(sv.Velocity.X, computedSV.Velocity.X, (x, y) => System.Math.Abs(x - y) < 3e-3);
-        Assert.Equal(sv.Velocity.Y, computedSV.Velocity.Y, (x, y) => System.Math.Abs(x - y) < 1e-2);
-        Assert.Equal(sv.Velocity.Z, computedSV.Velocity.Z, (x, y) => System.Math.Abs(x - y) < 1e-2);
+        // The round trip is the residual of the fit, which the text of the TLE quantizes (1e-4 deg on the angles, about 3 m
+        // here): 3.06 m and 6.5e-3 m/s with the managed TEME (#451), whose state in TEME is not the one the former TEME gave,
+        // so that the fit lands on another point of the grid (the per-component bounds before, 0.5, 2 and 6 m, were that
+        // other draw). PROVISIONAL (Linux x64, 2026-11-08): twice the measured residual
+        Assert.InRange((sv.Position - computedSV.Position).Magnitude(), 0.0, 6.2);
+        Assert.InRange((sv.Velocity - computedSV.Velocity).Magnitude(), 0.0, 1.3e-2);
         Assert.Equal(sv.Epoch.TimeSpanFromJ2000().TotalSeconds, computedSV.Epoch.TimeSpanFromJ2000().TotalSeconds, 6);
         Assert.Equal(sv.Frame.Name, computedSV.Frame.Name);
         Assert.Equal(sv.Observer.NaifId, computedSV.Observer.NaifId);

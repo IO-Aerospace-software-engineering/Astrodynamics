@@ -158,8 +158,8 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <param name="line2">the second line</param>
     /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
-    public TLE(string name, string line1, string line2) : base(new CelestialBody(399, new Frame("ITRF93"), ExtractEpochFromTLE(line1)), ExtractEpochFromTLE(line1),
-        new Frame("TEME"), OrbitalElementsType.Mean)
+    public TLE(string name, string line1, string line2) : base(new CelestialBody(399, Frame.ECLIPTIC_J2000, ExtractEpochFromTLE(line1)), ExtractEpochFromTLE(line1),
+        Frame.TEME, OrbitalElementsType.Mean)
     {
         if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
         if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
@@ -175,7 +175,9 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         // Extract orbital parameters from TLE lines
         var epoch = ExtractEpochFromTLE(line1);
-        var earth = new CelestialBody(399, new Frame("ITRF93"), epoch);
+        // The Earth in an inertial frame: nothing on the TLE path needs its orientation, which ITRF93 would read from the
+        // Earth's binary PCK at the epoch (#597)
+        var earth = new CelestialBody(399, Frame.ECLIPTIC_J2000, epoch);
 
         // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
         var meanMotionRevPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);

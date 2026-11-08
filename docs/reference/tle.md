@@ -39,6 +39,12 @@ var tle = new TLE("ISS (ZARYA)",
 | `ToOmm(string originator)` | Convert to CCSDS OMM |
 | `Create(OrbitalParameters, string, int, string, ...)` | Create TLE from mean orbital parameters |
 
+The states of SGP4/SDP4 are in `Frame.TEME`, the managed TEME frame ([Frames](frames.md#teme)); `ToFrame(Frame.ICRF)`
+needs no Earth orientation kernel, at any epoch. The Earth a TLE refers to is built in an inertial frame, so that a TLE
+outside the coverage of the Earth's binary PCK reads nothing it does not need (#597). A failed SGP4 evaluation (a
+decayed or suborbital orbit, an eccentricity out of range) throws `InvalidOperationException` instead of returning a
+zero state (#454).
+
 NORAD catalog numbers run from 0 to 339999. Above 99999 they are written with the Alpha-5
 convention of the 18th Space Defense Squadron, which replaces the first digit with a letter
 (`I` and `O` excluded) without changing the column layout.

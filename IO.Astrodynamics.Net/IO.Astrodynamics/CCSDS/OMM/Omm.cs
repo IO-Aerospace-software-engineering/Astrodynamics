@@ -233,7 +233,8 @@ public class Omm
 
         // Create mean Keplerian elements from OMM data
         var epoch = new TimeSystem.Time(meanElements.Epoch, TimeSystem.TimeFrame.UTCFrame);
-        var earth = new Body.CelestialBody(399, new Frames.Frame("ITRF93"), epoch);
+        // The Earth in an inertial frame, as the TLE builds it (#597): ITRF93 would read the Earth's binary PCK at the epoch
+        var earth = new Body.CelestialBody(399, Frames.Frame.ECLIPTIC_J2000, epoch);
 
         var keplerianElements = OrbitalParameters.KeplerianElements.FromOMM(
             meanElements.MeanMotion.Value,

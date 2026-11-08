@@ -82,6 +82,41 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
+  R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
+  spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
+  LEO state at 2012-02-17, 4.75 km at the geostationary radius), and the zero rotation outside the PCK.
+  - **The fix.** `Frame.TEME` is the managed `TemeFrame`, Vallado et al. (2006), appendix C: TEME → ICRF =
+    Q(t)ᵀ · Rz(ERA − GMST82), the IAU 2006/2000B chain of `Frame.CIRS` and `Frame.TIRS`, GMST82 of SOFA `iauGmst82`,
+    UT1 = UTC (UT1 − UTC cancels to 0.2 mm at GEO; `new TemeFrame(eop)` takes a provider), quasi-inertial (v' = R v,
+    as Vallado's `teme2eci` and GMAT). It reads no kernel: TEME ↔ ICRF works at any epoch. The native TEME of the frozen
+    C++ layer is no longer used.
+  - **Measured** against `tools/teme_reference` (a LEO and a GEO state at 13 epochs, 1980 to 2026): 0.9 mm (LEO) and
+    18 mm (GEO) from ERFA's CIP route with IAU 2006/2000B; 19 mm and 106 mm from IAU 2006/2000A (0.55 mas, IAU 2000B's
+    accuracy); 9.4 cm and 56 cm from GMAT R2026a's TEME → EarthICRF, the kinematic terms of the 1994 equation of the
+    equinoxes that GMAT applies from 1997-02-27, and 0.094 mm/s. Five TLEs at their epoch (1994 to 2026, LEO, GTO, GEO),
+    from Vallado's code (`sgp4` 2.27, WGS-72 old, AFSPC mode) through GMAT: 1.0 cm to 0.37 m (TDRS 6, GEO).
+- **A frame named TEME took the native frame** (the routing of [#562](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/562)). `SpiceDataProvider` and `MemoryDataProvider`
+  route a frame named TEME, in any case (`new Frame("TEME")` from a CCSDS file, the CLI or user code), to `Frame.TEME`,
+  and `SpiceAPI.TransformFrame` composes a TEME end through ICRF; the TLE and `SpiceAPI.ConvertTleToStateVector` label
+  their states with `Frame.TEME`. The equality of a frame built by name with `Frame.TEME` stays #562's.
+- **An ephemeris read in a managed frame handed its name to `spkezr_c`** ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558), the ephemeris reads). A read in
+  `Frame.TEME` (or a frame named TEME), `Frame.CIRS` or `Frame.TIRS`, through `GetEphemeris` or the three
+  `SpiceAPI.ReadEphemeris`, is read in J2000 and rotated by the frame at the epoch of the read: the numbers of
+  `ToFrame` on the ICRF read, to 1e-6 m. CIRS and TIRS returned SPICE(UNKNOWNFRAME) and a state of |r| = 0; TEME the
+  native frame, up to 23″ from `ToFrame`. A coordinate search in a managed frame is not mapped.
+- **A failed SGP4 returned a zero state; TEME outside the PCK a zero rotation** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the TLE and TEME paths).
+  `SpiceAPI.ConvertTleToStateVector`, under `TLE.ToOsculating` and `ToStateVector`, throws `InvalidOperationException`
+  naming the TLE and the epoch when the native layer returns r = 0 (a decayed or suborbital orbit: 28872 of Vallado's
+  set returned r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307)); no valid state has r = 0. TEME ↔ ICRF reads no kernel;
+  `SpiceAPI.TransformFrame` between TEME and a SPICE frame throws when SPICE gives no rotation for that frame (ITRF93
+  before 2000). The other proxies keep #454.
+- **A TLE built its Earth in ITRF93 at its epoch** ([#597](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/597)). `new TLE(...)` (twice) and `Omm.ToTle` built
+  `new CelestialBody(399, new Frame("ITRF93"), epoch)`: outside the Earth's binary PCK (every TLE before 2000 or after
+  the PCK's end) printed two SPICE(FRAMEDATANOTFOUND) messages, without an exception, and left the observer's state
+  read in a frame without data. The Earth is built in `Frame.ECLIPTIC_J2000` at the epoch, as `ConvertTleToStateVector`
+  builds it; SGP4 does not read it, so no state moves.
+
 - **The managed window search returned its edges up to 1 s early, could start before the search window, and had no
   extremes and no equality** ([#590](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/590), [#461](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/461), [#486](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/486), [#487](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/487)). `GeometryFinder` is
   the search of `FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
@@ -613,6 +648,14 @@ A major version, because it breaks the API: members deprecated for removal in 11
     executes impulses on a state of its own and continues from the returned state.
 
 **Changed**
+
+- **Every TEME ↔ ICRF result moves** with the managed TEME ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451), Fixed above), by 0.3″ to 23.3″ over 2000–2026
+  (the angle between the former TEME and the definition; 2.0″ to 23.2″ at the 13 epochs of `tools/teme_reference`):
+  the ICRF states of a TLE (`TLE.ToOsculating(...).ToFrame(Frame.ICRF)`, 326 to 428 m on the three TLEs of the TEME
+  study, 82 to 851 m on the verification TLEs), a TLE fitted from ICRF (`TLE.Create`, `ToTLE`, about 168 m), OPM and
+  OMM in TEME, the CLI `--frame TEME`, `TLEPropagator` once converted, and the TLE participants of scenarios and
+  conjunctions. TEME ↔ ICRF before 2000 and after the end of the PCK, a zero rotation before, is now defined. The SGP4
+  states in TEME do not move.
 
 - **The maneuver chain on the attitude timeline** (#539, #547, #570; Fixed above). Breaking:
   - **An attitude delays the next maneuver.** It activates at the later of its `MinimumEpoch` and the end of the

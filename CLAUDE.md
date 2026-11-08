@@ -88,7 +88,7 @@ The C++ proxy layer uses a `bool` return + `GetLastErrorProxy()` pattern instead
 - `IO.Astrodynamics.Maneuver`: Lambert, impulsive maneuvers, attitude maneuvers, IAttitudeTarget
 - `IO.Astrodynamics.Atmosphere`: IAtmosphericModel, EarthStandardAtmosphere, Nrlmsise00Model
 - `IO.Astrodynamics.Physics`: GeopotentialModelReader, GeopotentialCoefficient (EGM2008, up to degree 70); `GeopotentialGravitationalField` and `GeopotentialModelParameters` are in `IO.Astrodynamics.Body`
-- `IO.Astrodynamics.Frames`: Reference frame transformations (ICRF, TEME, ITRF93, etc.)
+- `IO.Astrodynamics.Frames`: Reference frame transformations (ICRF, TEME, ITRF93, etc.); `Frame.TEME` is the managed `TemeFrame` (#451): TEME → ICRF = Q(t)ᵀ · Rz(ERA − GMST82), IAU 2006/2000B, UT1 = UTC, quasi-inertial (v' = R v), no kernel read; a frame named TEME is routed to it by both data providers and `SpiceAPI.TransformFrame` (the native TEME of the C++ layer is unused); an ephemeris read in TEME, CIRS or TIRS is read in J2000 and rotated (#558); see `docs/reference/frames.md#teme`
 - `IO.Astrodynamics.TimeSystem`: Time frames (UTC, TDB, TAI, etc.)
 - `IO.Astrodynamics.Math`: Vector3, Matrix, Quaternion, Legendre functions
 
@@ -115,7 +115,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 `OrbitalElementsType` enum: `Osculating` (instantaneous, can convert to StateVector) vs. `Mean` (averaged, require a specific propagator).
 
 - **Mean elements CANNOT call `ToStateVector()`** — throws `InvalidOperationException`
-- `TLE.ToStateVector()` works because it uses SGP4/SDP4 internally
+- `TLE.ToStateVector()` works because it uses SGP4/SDP4 internally; its states are in `Frame.TEME`, a failed SGP4 (zero native state) throws (#454), and the TLE's Earth is built in an inertial frame (#597)
 - Use `TLE.ToOsculating()` to get a usable StateVector from a TLE
 - Use `TLE.ToMeanKeplerianElements()` to get mean elements for TLE creation
 - `KeplerianElements.FromOMM()` caches original mean motion to prevent precision loss on round-trip
