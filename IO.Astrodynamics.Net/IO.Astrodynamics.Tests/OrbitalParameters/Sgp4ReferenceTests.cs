@@ -21,17 +21,18 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters;
 /// at the tsince of their rows in tcppver.out, and two TLEs hourly over a day at UTC instants (#599).
 /// </summary>
 /// <remarks>
-/// The bounds are twice the worst value measured on Linux x64 on 2026-11-08 (PROVISIONAL until the CI of Linux, Windows
-/// and macOS arm64). On the verification set the library is CSPICE, within 7.6e-5 m and 1.3e-8 m/s of the reference (the
-/// script's <c>cspice_minus_sgp4</c>); at UTC instants the residual is the double of the epoch the library hands to
+/// The bounds are twice the worst value over Linux x64, Windows x64 and macOS arm64 (CI run 42490199772, 2026-11-08;
+/// the three agree to the digits printed but the verification set, 7.591e-5 m on Linux and Windows, 7.586e-5 m on macOS
+/// arm64). On the verification set the library is CSPICE, within 7.6e-5 m and 1.3e-8 m/s of the reference (the script's
+/// <c>cspice_minus_sgp4</c>); at UTC instants the residual is the double of the epoch the library hands to
 /// <c>evsgp4_c</c>, ET₀ plus the TT seconds.
 /// </remarks>
 public class Sgp4ReferenceTests
 {
-    // PROVISIONAL bounds (Linux x64, 2026-11-08, until the CI of Linux, Windows and macOS arm64): twice the worst measured
-    // per component, m and m/s. Measured: the verification set 7.59e-5 m (23333) and 1.29e-8 m/s (20413's second set),
-    // CSPICE's own difference from Vallado's code on the same samples; the two TLEs at UTC instants 3.57e-4 m and
-    // 4.09e-7 m/s (the ISS: the double of ET0 plus the TT seconds, ~1e-7 s at 8.3e8 s)
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (CI run 42490199772, 2026-11-08), per component, m
+    // and m/s. Measured: the verification set 7.59e-5 m (23333) and 1.29e-8 m/s (20413's second set), CSPICE's own
+    // difference from Vallado's code on the same samples; the two TLEs at UTC instants 3.57e-4 m and 4.09e-7 m/s (the
+    // ISS: the double of ET0 plus the TT seconds, ~1e-7 s at 8.3e8 s)
     private const double VerificationPosition = 1.6e-4, VerificationVelocity = 2.6e-8;
     private const double InstantPosition = 7.2e-4, InstantVelocity = 8.2e-7;
 

@@ -29,9 +29,10 @@ namespace IO.Astrodynamics.Tests.Mission
         // #501, an explicit band around the literal rather than a rounding whose boundary a move of 2.3e-4 kg crossed
         private const double FuelTolerance = 5e-3;
 
-        // PROVISIONAL bounds of PropagateSpacecraftFromTLE (Linux x64, 2026-11-08, until the CI of the three platforms), m and
-        // m/s: twice the worst measured, 1.263e-2 m and 1.316e-5 m/s at the end (GMAT's TEME, and 2.7 mm of SGP4 at the TDB
-        // instant, whose TT the library and CSPICE convert 1 us apart); 0.508 m and 5.72e-4 m/s before #599 (tsince in TDB)
+        // Bounds of PropagateSpacecraftFromTLE, m and m/s: twice the worst over Linux x64, Windows x64 and macOS arm64
+        // (CI run 42490199772, 2026-11-08, the same on the three), 1.263e-2 m and 1.316e-5 m/s at the end (GMAT's TEME,
+        // and 2.7 mm of SGP4 at the TDB instant, whose TT the library and CSPICE convert 1 us apart); 0.508 m and
+        // 5.72e-4 m/s before #599 (tsince in TDB)
         private const double ScenarioTlePosition = 2.6e-2, ScenarioTleVelocity = 2.7e-5;
 
         private readonly ITestOutputHelper _output;
@@ -311,7 +312,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 var position = Frame.TemeFrameTests.Position(reference.Gmat) - Frame.TemeFrameTests.Position(reference.Dss63J2000);
                 var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat) - Frame.TemeFrameTests.Velocity(reference.Dss63J2000);
                 double dr = (state.Position - position).Magnitude(), dv = (state.Velocity - velocity).Magnitude();
-                // PROVISIONAL (Linux x64, 2026-11-08): twice the worst measured, GMAT's TEME (its kinematic terms of the
+                // Twice the worst measured on the three platforms, GMAT's TEME (its kinematic terms of the
                 // equation of the equinoxes); 100 m and 0.2 m/s before #451, 1.1 m and 1.2e-3 m/s before #599
                 _output.WriteLine($"MEASURE ScenarioTests.PropagateSpacecraftFromTLE, {name}: {dr:E3} m, {dv:E3} m/s");
                 Assert.InRange(dr, 0.0, ScenarioTlePosition);

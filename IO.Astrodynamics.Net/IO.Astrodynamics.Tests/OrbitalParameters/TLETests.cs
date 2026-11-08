@@ -71,8 +71,9 @@ public class TLETests
         Assert.Equal(epoch, Frame.TemeFrameTests.Instant(reference.Instant));
         var position = Frame.TemeFrameTests.Position(reference.Gmat);
         var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat);
-        // PROVISIONAL (Linux x64, 2026-11-08): twice the 0.0660 m and 7.57e-5 m/s measured, GMAT's TEME (its kinematic terms
-        // of the equation of the equinoxes); 0.114 m and 1.3e-4 m/s before #599 (tsince counted in TDB seconds)
+        // Twice the 0.0660 m and 7.57e-5 m/s measured on Linux x64, Windows x64 and macOS arm64 (CI run 42490199772,
+        // 2026-11-08), GMAT's TEME (its kinematic terms of the equation of the equinoxes); 0.114 m and 1.3e-4 m/s
+        // before #599 (tsince counted in TDB seconds)
         _testOutputHelper.WriteLine($"MEASURE TLETests.ToStateVector: {(stateVector.Position - position).Magnitude():E3} m, " +
                                     $"{(stateVector.Velocity - velocity).Magnitude():E3} m/s");
         Assert.InRange((stateVector.Position - position).Magnitude(), 0.0, 0.14);
@@ -315,10 +316,11 @@ public class TLETests
         Assert.NotNull(tle);
         Assert.Equal("TestSatellite", tle.Name);
         var computedSV = tle.ToStateVector().ToFrame(Frames.Frame.ICRF).ToStateVector();
-        // The round trip is the residual of the fit, which the text of the TLE quantizes (1e-4 deg on the angles, about 3 m
-        // here): 3.06 m and 6.5e-3 m/s with the managed TEME (#451), whose state in TEME is not the one the former TEME gave,
-        // so that the fit lands on another point of the grid (the per-component bounds before, 0.5, 2 and 6 m, were that
-        // other draw). PROVISIONAL (Linux x64, 2026-11-08): twice the measured residual
+        // The round trip is the residual of the fit, which the text of the TLE quantizes (1e-4 deg on the angles, about
+        // 3 m here): 3.06 m and 6.5e-3 m/s with the managed TEME (#451), whose state in TEME is not the one the former
+        // TEME gave, so that the fit lands on another point of the grid (the per-component bounds before, 0.5, 2 and 6
+        // m, were that other draw). Twice the residual, the same on Linux x64, Windows x64 and macOS arm64 (CI run
+        // 42490199772, 2026-11-08)
         _testOutputHelper.WriteLine($"MEASURE TLETests.ToTLE_ValidISSOrbit_ReturnsValidTLE: " +
                                     $"{(sv.Position - computedSV.Position).Magnitude():E3} m, " +
                                     $"{(sv.Velocity - computedSV.Velocity).Magnitude():E3} m/s");

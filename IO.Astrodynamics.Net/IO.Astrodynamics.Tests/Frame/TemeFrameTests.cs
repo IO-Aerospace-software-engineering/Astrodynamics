@@ -25,20 +25,19 @@ namespace IO.Astrodynamics.Tests.Frame;
 /// the TEME cases of the conformance suite, Vallado's appendix C, and the SGP4 states of five TLEs at their epoch.
 /// </summary>
 /// <remarks>
-/// The bounds are twice the worst value measured on Linux x64 on 2026-11-08 (PROVISIONAL until the CI of Linux, Windows
-/// and macOS arm64). Against GMAT the residual is GMAT's own: from 1997-02-27 its TEME → EarthICRF carries the kinematic
-/// terms of the 1994 equation of the equinoxes (up to 2.6 mas), which Vallado's TEME leaves out; against the 2000A route
-/// it is the IAU 2000B nutation (0.55 mas).
+/// The bounds are twice the worst value over Linux x64, Windows x64 and macOS arm64 (CI run 42490199772, 2026-11-08;
+/// the three agree to the digits printed). Against GMAT the residual is GMAT's own: from 1997-02-27 its TEME →
+/// EarthICRF carries the kinematic terms of the 1994 equation of the equinoxes (up to 2.6 mas), which Vallado's TEME
+/// leaves out; against the 2000A route it is the IAU 2000B nutation (0.55 mas).
 /// </remarks>
 public class TemeFrameTests
 {
-    // PROVISIONAL bounds (Linux x64, 2026-11-08, until the CI of Linux, Windows and macOS arm64): twice the worst measured,
-    // positions in m, velocities in m/s. Measured: GMAT 0.0936 m (LEO), 0.558 m (GEO), 9.39e-5 m/s; ERFA 2006/2000B
-    // 9.03e-4 m, 1.81e-2 m, 6.43e-6 m/s; ERFA 2006/2000A 1.89e-2 m, 0.106 m, 9.40e-6 m/s. The five TLEs at their epoch
-    // 0.371 m (TDRS 6), 5.93e-5 m/s, their TEME states 9.3e-6 m from Vallado's code; at an instant 6.60e-2 m, 7.57e-5 m/s,
-    // TEME 3.65e-3 m (the ISS of 2024 at a TDB instant, whose TT the library and CSPICE convert 1 us apart). Before #599
-    // (tsince counted in TDB seconds from the epoch the library converted): TEME 8.07e-3 m at the epoch, 0.520 m at an
-    // instant
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (CI run 42490199772, 2026-11-08), positions in m,
+    // velocities in m/s. Measured: GMAT 0.0936 m (LEO), 0.558 m (GEO), 9.39e-5 m/s; ERFA 2006/2000B 9.03e-4 m, 1.81e-2
+    // m, 6.43e-6 m/s; ERFA 2006/2000A 1.89e-2 m, 0.106 m, 9.40e-6 m/s. The five TLEs at their epoch 0.371 m (TDRS 6),
+    // 5.93e-5 m/s, their TEME states 9.3e-6 m from Vallado's code; at an instant 6.60e-2 m, 7.57e-5 m/s, TEME 3.65e-3 m
+    // (the ISS of 2024 at a TDB instant, whose TT the library and CSPICE convert 1 us apart). Before #599 (tsince
+    // counted in TDB seconds from the epoch the library converted): TEME 8.07e-3 m at the epoch, 0.520 m at an instant
     private const double GmatPositionLeo = 0.19, GmatPositionGeo = 1.2, GmatVelocity = 1.9e-4;
     private const double Cip2000BPositionLeo = 1.9e-3, Cip2000BPositionGeo = 3.7e-2, Cip2000BVelocity = 1.3e-5;
     private const double Cip2000APositionLeo = 3.8e-2, Cip2000APositionGeo = 0.22, Cip2000AVelocity = 1.9e-5;
