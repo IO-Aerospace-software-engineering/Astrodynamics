@@ -1,8 +1,8 @@
 """References of the managed TEME frame (#451, lot 5 of #457) for IO.Astrodynamics.Tests/Frame/TemeFrameTests.cs.
 
-TEME is defined by Vallado, Crawford, Hujsak and Kelso (2006), AIAA 2006-6753 Rev2, appendix C (to be verified by
-S. Guillet): r_PEF = R3(GMST82(UT1)) r_TEME, the PEF taken as the TIRS. Quasi-inertial: v' = R v. For each point (a UTC
-epoch and a TEME state) this script gives the ICRF state by three routes:
+TEME is defined by Vallado, Crawford, Hujsak and Kelso (2006), AIAA 2006-6753 Rev2, appendix C (confirmed by
+S. Guillet, 2026-11-08): r_PEF = R3(GMST82(UT1)) r_TEME, the PEF taken as the TIRS. Quasi-inertial: v' = R v. For each
+point (a UTC epoch and a TEME state) this script gives the ICRF state by three routes:
 
   - "gmat":    GMAT R2026a, a Spacecraft in a TEME coordinate system (Axes = TEME) reported in EarthICRF, run here;
   - "cip_a":   ERFA's CIP route, TEME -> GCRS = c2i06a^T . rz(GMST82 - ERA), IAU 2006/2000A, UT1 = UTC (UT1 - UTC
