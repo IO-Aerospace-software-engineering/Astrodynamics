@@ -180,6 +180,14 @@ OMM: meanMotion = 15.49309423 rev/day
   → TLE output: 15.49309423 rev/day (EXACT)
 ```
 
+**SGP4 model and TLE text**
+- SGP4 is CSPICE `evsgp4_c`: Vallado's 2006 code, AFSPC mode, WGS-72 old (KE 7.43669161e-2), no other mode or constants;
+  tsince is the TT seconds from the TLE epoch (UTC, exact to the tick) to the instant, whatever its time frame (#599)
+- `FirstDerivationMeanMotion` and `SecondDerivativeMeanMotion` hold the TLE fields ṅ/2 and n̈/6 (OMM's
+  `MEAN_MOTION_DOT`, `MEAN_MOTION_DDOT`); `TLE.Create` writes the UTC of the epoch and the nearest value of each field
+  (#479, #480, #600 to #602)
+- OPM and OMM epochs are read in their `TIME_SYSTEM` (#485)
+
 **Osculating vs Mean Accessors in TLE**
 | Accessor | Returns | Use Case |
 |----------|---------|----------|

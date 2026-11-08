@@ -955,33 +955,69 @@ public class SpiceAPI
     /// <summary>
     /// Convert TLE to state vector at given epoch
     /// </summary>
-    /// <param name="line1"></param>
-    /// <param name="line2"></param>
-    /// <param name="line3"></param>
-    /// <param name="epoch"></param>
-    /// <returns></returns>
+    /// <param name="line1">The name of the object (the title line).</param>
+    /// <param name="line2">Line 1 of the TLE.</param>
+    /// <param name="line3">Line 2 of the TLE.</param>
+    /// <param name="epoch">The instant of the state, in any time frame.</param>
+    /// <returns>The SGP4 state in <see cref="Frame.TEME"/>, labelled <paramref name="epoch"/>.</returns>
     /// <remarks>
+    /// <para>
+    /// SGP4 is CSPICE's <c>evsgp4_c</c>: Vallado's 2006 code in the AFSPC mode with the WGS-72 "old" constants
+    /// (KE = 7.43669161e-2, R = 6378.135 km, J2 = 1.082616e-3, J3 = −2.53881e-6, J4 = −1.65597e-6). tsince is the TT
+    /// seconds from the TLE epoch (UTC, as the line gives it) to <paramref name="epoch"/> over 60 (#599): the call is at
+    /// the epoch <c>getelm_c</c> reads plus those seconds.
+    /// </para>
+    /// <para>
     /// The state is in <see cref="Frame.TEME"/>, the managed TEME (#451). An SGP4 error (a decayed or suborbital orbit, an
     /// eccentricity out of range) gives a zero state from the native layer, which keeps the SPICE message on stdout only:
     /// it throws here instead (#454 on the TLE path). No valid state has r = 0.
+    /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">SGP4 failed at this epoch.</exception>
     public OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string line1, string line2, string line3,
         Time epoch)
     {
+        return ConvertTleToStateVector(line1, line2, line3, ReadTleEpoch(line1, line2, line3),
+            OrbitalParameters.TLE.TLE.ExtractEpochFromTLE(line2), epoch);
+    }
+
+    /// <summary>
+    /// The SGP4 state of a TLE at <paramref name="epoch"/>: <c>evsgp4_c</c> at <paramref name="sgp4Epoch"/>, the TLE epoch
+    /// as <c>getelm_c</c> reads it, plus the TT seconds from <paramref name="tleEpoch"/>, the same epoch as a UTC
+    /// <see cref="Time"/>, to <paramref name="epoch"/> (#599).
+    /// </summary>
+    internal OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string name, string line1, string line2,
+        double sgp4Epoch, Time tleEpoch, Time epoch)
+    {
+        double et = sgp4Epoch + Propagator.PropagationTimeArgument.Tt.SecondsBetween(tleEpoch, epoch);
         lock (lockObject)
         {
-            var res = ConvertTLEToStateVectorProxy(line1, line2, line3, epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
+            var res = ConvertTLEToStateVectorProxy(name, line1, line2, et);
             var position = res.Position.Convert();
             if (position.Magnitude() == 0.0)
             {
                 throw new InvalidOperationException(
-                    $"SGP4 failed for the TLE {line1} ({line2}) at {epoch.ToTDB()}: the native layer returned a zero state (see the SPICE message on the standard output).");
+                    $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: the native layer returned a zero state (see the SPICE message on the standard output).");
             }
 
             return new OrbitalParameters.StateVector(position, res.Velocity.Convert(),
                 new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
                 Frame.TEME);
+        }
+    }
+
+    /// <summary>
+    /// The epoch of a TLE as CSPICE's <c>getelm_c</c> reads it: TDB seconds from J2000 (ET), the epoch from which
+    /// <c>evsgp4_c</c> counts tsince (#599).
+    /// </summary>
+    /// <param name="name">The name of the object.</param>
+    /// <param name="line1">Line 1 of the TLE.</param>
+    /// <param name="line2">Line 2 of the TLE.</param>
+    internal double ReadTleEpoch(string name, string line1, string line2)
+    {
+        lock (lockObject)
+        {
+            return GetTLEElementsProxy(name, line1, line2).Epoch;
         }
     }
 

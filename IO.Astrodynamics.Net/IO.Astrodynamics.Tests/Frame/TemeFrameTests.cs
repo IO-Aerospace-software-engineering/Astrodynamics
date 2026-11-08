@@ -35,14 +35,15 @@ public class TemeFrameTests
     // PROVISIONAL bounds (Linux x64, 2026-11-08, until the CI of Linux, Windows and macOS arm64): twice the worst measured,
     // positions in m, velocities in m/s. Measured: GMAT 0.0936 m (LEO), 0.558 m (GEO), 9.39e-5 m/s; ERFA 2006/2000B
     // 9.03e-4 m, 1.81e-2 m, 6.43e-6 m/s; ERFA 2006/2000A 1.89e-2 m, 0.106 m, 9.40e-6 m/s. The five TLEs at their epoch
-    // 0.374 m (TDRS 6), 6.03e-5 m/s, their TEME states 8.07e-3 m from Vallado's code (the epoch converted by the library);
-    // at an instant 0.508 m, 5.72e-4 m/s, TEME 0.520 m (the ISS 2.8 days after its epoch: the tsince the library counts in
-    // TDB seconds, #599)
+    // 0.371 m (TDRS 6), 5.93e-5 m/s, their TEME states 9.3e-6 m from Vallado's code; at an instant 6.60e-2 m, 7.57e-5 m/s,
+    // TEME 3.65e-3 m (the ISS of 2024 at a TDB instant, whose TT the library and CSPICE convert 1 us apart). Before #599
+    // (tsince counted in TDB seconds from the epoch the library converted): TEME 8.07e-3 m at the epoch, 0.520 m at an
+    // instant
     private const double GmatPositionLeo = 0.19, GmatPositionGeo = 1.2, GmatVelocity = 1.9e-4;
     private const double Cip2000BPositionLeo = 1.9e-3, Cip2000BPositionGeo = 3.7e-2, Cip2000BVelocity = 1.3e-5;
     private const double Cip2000APositionLeo = 3.8e-2, Cip2000APositionGeo = 0.22, Cip2000AVelocity = 1.9e-5;
-    private const double TlePosition = 0.75, TleVelocity = 1.3e-4, TleTemePosition = 1.7e-2;
-    private const double TleInstantPosition = 1.1, TleInstantVelocity = 1.2e-3, TleInstantTemePosition = 1.1;
+    private const double TlePosition = 0.75, TleVelocity = 1.2e-4, TleTemePosition = 1.9e-5;
+    private const double TleInstantPosition = 0.14, TleInstantVelocity = 1.6e-4, TleInstantTemePosition = 7.4e-3;
 
     private readonly ITestOutputHelper _output;
 

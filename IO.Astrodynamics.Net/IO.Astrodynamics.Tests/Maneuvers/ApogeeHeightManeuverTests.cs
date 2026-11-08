@@ -106,7 +106,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             maneuver.TryExecute(orbitalParams);
             var parameters = maneuver.ToOpmManeuverParameters("ICRF", new[] { "apogee" });
-            Assert.Equal(maneuver.ThrustWindow!.Value.StartDate.DateTime, parameters.ManEpochIgnition);
+            // The ignition in UTC, the time system of the OPM, whatever the frame of the thrust window (#479)
+            Assert.Equal(maneuver.ThrustWindow!.Value.StartDate.ToUTC().DateTime, parameters.ManEpochIgnition);
             Assert.Equal(maneuver.ThrustWindow.Value.Length.TotalSeconds, parameters.ManDuration);
             Assert.Equal(-maneuver.FuelBurned, parameters.ManDeltaMass);
             Assert.Equal("ICRF", parameters.ManRefFrame);

@@ -42,7 +42,7 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 
 | Method | Description |
 |--------|-------------|
-| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`) |
+| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485) |
 | `Validate()` | Validate and return `OmmValidationResult` |
 | `IsValid()` | Quick validity check (returns `bool`) |
 

@@ -14,12 +14,30 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE;
 /// <summary>
 /// Represents a Two-Line Element (TLE) set of orbital parameters.
 /// </summary>
+/// <remarks>
+/// <para>
+/// The SGP4/SDP4 model is CSPICE's <c>evsgp4_c</c>, Vallado's 2006 code (Vallado, Crawford, Hujsak and Kelso,
+/// AIAA 2006-6753), in the AFSPC mode, with the WGS-72 "old" constants (Vallado's <c>wgs72old</c>): KE = 7.43669161e-2
+/// exactly (not derived from GM and the radius), R = 6378.135 km, J2 = 1.082616e-3, J3 = −2.53881e-6,
+/// J4 = −1.65597e-6, and the density parameters q0 = 120 km and s0 = 78 km. No other mode or constants are offered.
+/// The states are in <see cref="Frame.TEME"/>.
+/// </para>
+/// <para>
+/// The time argument of SGP4, tsince, counts the TT seconds from the TLE epoch (UTC) to the requested instant: away
+/// from a leap second, the UTC Julian-date difference of Vallado's driver (#599). A failed SGP4 (a decayed or suborbital
+/// orbit, an eccentricity out of range) throws <see cref="InvalidOperationException"/> (#454).
+/// </para>
+/// </remarks>
 public class TLE : OrbitalParameters, IEquatable<TLE>
 {
     private const double MAX_ECCENTRICITY = 0.9999999;
     private const int MAX_ELEMENT_SET_NUMBER = 9999;
     private const int MAX_REVOLUTIONS_AT_EPOCH = 99999;
     private KeplerianElements _meanKeplerianElements;
+
+    // The TLE epoch as CSPICE's getelm_c reads it (ET, TDB seconds from J2000), read once from the native layer: SGP4
+    // runs at this epoch plus the TT seconds from Epoch, so that tsince is the TT seconds from the TLE epoch (#599)
+    private readonly Lazy<double> _sgp4Epoch;
 
     /// <summary>
     /// Gets the first line of the TLE.
@@ -54,27 +72,24 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public double BallisticCoefficient { get; }
 
     /// <summary>
-    /// Gets the first derivative of the mean motion (in revolutions per day squared).
-    /// This value represents the rate of change of the mean motion of the satellite.
-    /// It is often used to account for perturbations in the satellite's orbit, such as
-    /// atmospheric drag or gravitational perturbations from other celestial bodies.
-    /// For example, a value of 0.000001 means that the mean motion increases by 0.000001 revolutions per day squared for each day that passes.
-    /// This parameter is crucial for accurate orbit predictions and is derived from tracking data.
-    /// It is typically a small value, indicating that the mean motion changes gradually over time due to various perturbative effects.
-    ///  </summary>
+    /// Gets the value of the first-derivative field of line 1 (columns 34-43), ṅ/2: half the first time derivative of
+    /// the mean motion, in revolutions per day squared, as the TLE format and OMM's <c>MEAN_MOTION_DOT</c> hold it.
+    /// </summary>
+    /// <remarks>
+    /// SGP4 does not read it; it is kept for the text of the TLE and its OMM. Before 11.0.0 this documentation called it
+    /// ṅ (#605).
+    /// </remarks>
     public double FirstDerivationMeanMotion { get; }
 
     /// <summary>
-    /// Gets the second derivative of the mean motion (in revolutions per day cubed).
-    /// This value is often used to account for atmospheric drag effects on the satellite's orbit.
-    /// It is typically a very small value, indicating the rate of change of the first derivative
-    /// of the mean motion.
-    /// For example, a value of 0.000001 means that the first derivative of the mean motion
-    /// changes by 0.000001 revolutions per day squared for each day that passes.
-    /// This parameter is crucial for accurate long-term orbit predictions, especially for low Earth orbit satellites.
-    /// It is often derived from tracking data and is used in conjunction with the first derivative of the mean motion
-    /// to refine the satellite's orbital model.
+    /// Gets the value of the second-derivative field of line 1 (columns 45-52), n̈/6: a sixth of the second time
+    /// derivative of the mean motion, in revolutions per day cubed, as the TLE format and OMM's <c>MEAN_MOTION_DDOT</c>
+    /// hold it.
     /// </summary>
+    /// <remarks>
+    /// SGP4 does not read it; it is kept for the text of the TLE and its OMM. Before 11.0.0 this documentation called it
+    /// n̈ (#605).
+    /// </remarks>
     public double SecondDerivativeMeanMotion { get; }
 
     /// <summary>
@@ -195,14 +210,21 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         FirstDerivationMeanMotion = ParseTleDouble(line1.Substring(33, 10));
         SecondDerivativeMeanMotion = ParseTleExponent(line1.Substring(44, 8));
         BallisticCoefficient = ParseTleExponent(line1.Substring(53, 8));
+
+        _sgp4Epoch = new Lazy<double>(() => SpiceAPI.Instance.ReadTleEpoch(Name, Line1, Line2));
     }
 
     /// <summary>
     /// Extracts the epoch time from TLE line 1.
     /// </summary>
     /// <param name="line1">The first line of the TLE.</param>
-    /// <returns>The epoch time.</returns>
-    private static Time ExtractEpochFromTLE(string line1)
+    /// <returns>The epoch time, a UTC <see cref="Time"/>.</returns>
+    /// <remarks>
+    /// The day and its fraction are read in decimal and the fraction rounded to the 100 ns tick, so that the 8 decimals
+    /// of a day, whole multiples of 864 µs, give the exact instant. Before 11.0.0 the field went through a
+    /// <see cref="double"/> and was truncated to the tick, 100 ns early on 43 % of the epochs (#603).
+    /// </remarks>
+    internal static Time ExtractEpochFromTLE(string line1)
     {
         if (string.IsNullOrEmpty(line1) || line1.Length < 32)
             throw new ArgumentException("Invalid TLE line 1 format.", nameof(line1));
@@ -218,12 +240,14 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         else
             year += 1900;
 
-        // Parse day of year (DDD.DDDDDDDD)
-        double dayOfYear = double.Parse(epochStr.Substring(2), CultureInfo.InvariantCulture);
+        // Parse day of year (DDD.DDDDDDDD) in decimal: the day, then its fraction rounded to the tick (#603)
+        decimal dayOfYear = decimal.Parse(epochStr.Substring(2), NumberStyles.Float, CultureInfo.InvariantCulture);
+        decimal day = decimal.Floor(dayOfYear);
+        long fractionTicks = (long)decimal.Round((dayOfYear - day) * TimeSpan.TicksPerDay, MidpointRounding.AwayFromZero);
 
         // Create DateTime from year and day of year
         var yearStart = new DateTime(year, 1, 1);
-        var epochDateTime = yearStart.AddDays(dayOfYear - 1.0);
+        var epochDateTime = yearStart.AddDays((double)(day - 1m)).AddTicks(fractionTicks);
 
         return new Time(epochDateTime, TimeFrame.UTCFrame);
     }
@@ -278,10 +302,18 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <param name="revolutionsAtEpoch">The revolution number at epoch (0 to 99999).</param>
     /// <param name="classification">The security classification of the object (default: Unclassified).</param>
     /// <param name="bstar">The ballistic coefficient (drag term) in units of 1/earth radii (default: 0.0001).</param>
-    /// <param name="nDot">The first derivative of mean motion in revolutions/day² (default: 0.0).</param>
-    /// <param name="nDDot">The second derivative of mean motion in revolutions/day³ (default: 0.0).</param>
+    /// <param name="nDot">The value of the first-derivative field, ṅ/2 (half the first derivative of the mean motion), in
+    /// revolutions/day² (default: 0.0), as OMM's <c>MEAN_MOTION_DOT</c> (#605).</param>
+    /// <param name="nDDot">The value of the second-derivative field, n̈/6 (a sixth of the second derivative of the mean
+    /// motion), in revolutions/day³ (default: 0.0), as OMM's <c>MEAN_MOTION_DDOT</c> (#605).</param>
     /// <param name="elementSetNumber">The element set number (default: 9999).</param>
     /// <returns>A new TLE instance constructed from the provided parameters.</returns>
+    /// <remarks>
+    /// Each field is the nearest value its columns represent: the epoch the UTC of the elements' epoch, whatever its
+    /// time frame (#479), to the nearest 1e-8 day with the carry into the next day and year (#600); e in [0, 0.9999999]
+    /// (#602); B* and n̈/6 as a five-digit mantissa and a one-digit exponent, zero below 5e-11 (#601); a value that rounds
+    /// to zero, −0.0 included, without a sign (#480).
+    /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when orbitalParams or name is null.</exception>
     /// <exception cref="ArgumentException">Thrown when cosparId is null, whitespace, or not between 6-8 characters.</exception>
     /// <exception cref="ArgumentOutOfRangeException">
@@ -345,28 +377,15 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // MeanMotion() returns cached value (rad/s) if available, otherwise computes from semi-major axis
         double meanMotion = kep.MeanMotion() * 86400.0 / Constants._2PI;
 
-        // Format epoch: YYDDD.DDDDDDDD - optimized with Span
-        var epochDt = kep.Epoch.DateTime;
-        int year = epochDt.Year % 100;
-        int dayOfYear = epochDt.DayOfYear;
-        double fracDay = epochDt.TimeOfDay.TotalSeconds / 86400.0;
+        // Format epoch: YYDDD.DDDDDDDD, in UTC whatever the time frame of the elements' epoch (#479)
+        string epochStr = FormatTleEpoch(kep.Epoch.ToUTC().DateTime);
 
-        // Pre-allocate for epoch string: YY + DDD + . + 8 decimals = 14 chars
-        Span<char> epochSpan = stackalloc char[14];
-        year.TryFormat(epochSpan, out int pos1, "00", CultureInfo.InvariantCulture);
-        dayOfYear.TryFormat(epochSpan.Slice(2), out int pos2, "000", CultureInfo.InvariantCulture);
-
-        // Format fractional day directly into span
-        string fracDayStr = fracDay.ToString("0.00000000", CultureInfo.InvariantCulture);
-        fracDayStr.AsSpan(1, 9).CopyTo(epochSpan.Slice(5)); // Copy ".DDDDDDDD"
-        string epochStr = new string(epochSpan);
-
-        // Format eccentricity: 7 digits, no decimal point
-        double clampedE = System.Math.Clamp(kep.E, 1e-7, MAX_ECCENTRICITY);
+        // Format eccentricity: 7 digits, no decimal point; e = 0 is written 0000000 (#602)
+        double clampedE = System.Math.Clamp(kep.E, 0.0, MAX_ECCENTRICITY);
         string eStr = clampedE.ToString("0.0000000", CultureInfo.InvariantCulture).Substring(2, 7);
 
-        // Format derivatives and drag term
-        string nDotStr = nDot.ToString(" .00000000;-.00000000", CultureInfo.InvariantCulture).PadLeft(10);
+        // Format derivatives and drag term. A value that rounds to zero is written without a sign (#480)
+        string nDotStr = nDot.ToString(" .00000000;-.00000000; .00000000", CultureInfo.InvariantCulture).PadLeft(10);
         string nDDotStr = FormatTleExponent(nDDot, 5);
         string bstarStr = FormatTleExponent(bstar, 5);
 
@@ -397,15 +416,15 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         line2Builder.Append("2 ")
             .Append(NoradCatalogNumber.Format(noradId))
             .Append(' ')
-            .Append(iDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
+            .Append(iDeg.ToString(AngleFormat, CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
-            .Append(raanDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
+            .Append(raanDeg.ToString(AngleFormat, CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
             .Append(eStr)
             .Append(' ')
-            .Append(argpDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
+            .Append(argpDeg.ToString(AngleFormat, CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
-            .Append(mDeg.ToString("0.0000", CultureInfo.InvariantCulture).PadLeft(8))
+            .Append(mDeg.ToString(AngleFormat, CultureInfo.InvariantCulture).PadLeft(8))
             .Append(' ')
             .Append(meanMotion.ToString("0.00000000", CultureInfo.InvariantCulture).PadLeft(11))
             .Append(revolutionsAtEpoch.ToString().PadLeft(5));
@@ -414,6 +433,31 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         line2Builder.Append(checksum2);
 
         return new TLE(name, line1Builder.ToString(), line2Builder.ToString());
+    }
+
+    // The four angles of line 2: a value that rounds to zero, −0.0 included, is written 0.0000 without a sign (#480)
+    private const string AngleFormat = "0.0000;-0.0000;0.0000";
+
+    // One unit of the 8th decimal of a day: 864 µs, 8640 ticks
+    private const long EpochLatticeTicks = TimeSpan.TicksPerDay / 100_000_000L;
+
+    /// <summary>
+    /// The epoch field of line 1, YYDDD.DDDDDDDD, of a UTC calendar instant: the instant rounded to the nearest 1e-8 day
+    /// (a tie up), then split into the day of the year and its fraction, a fraction that rounds to one day carried into
+    /// the next day and year (#600).
+    /// </summary>
+    internal static string FormatTleEpoch(DateTime utc)
+    {
+        long units = (utc.TimeOfDay.Ticks + EpochLatticeTicks / 2) / EpochLatticeTicks;
+        var date = utc.Date;
+        if (units == 100_000_000L)
+        {
+            date = date.AddDays(1.0);
+            units = 0;
+        }
+
+        return string.Create(CultureInfo.InvariantCulture,
+            $"{date.Year % 100:00}{date.DayOfYear:000}.{units:00000000}");
     }
 
     /// <summary>
@@ -465,13 +509,21 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     // TLE format: [sign][5-digit mantissa][signed exponent]
     // The mantissa represents 0.XXXXX (value between 0.1 and 1)
     // Example: " 10270-3" means +0.10270 × 10^-3 = 0.00010270
+    // The value is written as the nearest representable one, the exponent one digit from -9 to +9 (#601): below
+    // 5e-11 in magnitude it is zero, " 00000-0", and from 5e-11 to 1e-10 it is 0.10000e-9; from 0.999995e9 the field
+    // cannot hold it and the call throws.
     static string FormatTleExponent(double value, int width)
     {
-        if (System.Math.Abs(value) < 1e-15)
+        const double smallestHalf = 5e-11;
+        var absValue = System.Math.Abs(value);
+        if (!(absValue >= smallestHalf))
+        {
+            if (double.IsNaN(value))
+                throw new ArgumentOutOfRangeException(nameof(value), "A TLE exponent field cannot hold NaN.");
             return ' ' + new string('0', width) + "-0";
+        }
 
         var sign = value < 0 ? '-' : ' ';
-        var absValue = System.Math.Abs(value);
 
         var scientificNotation = absValue.ToString("0.0000E+0", CultureInfo.InvariantCulture);
         var parts = scientificNotation.Split('E');
@@ -480,7 +532,19 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
         // TLE format uses 0.XXXXX mantissa (0.1 to 1), C# uses X.XXXX (1 to 10)
         // So we must increment the exponent by 1 to compensate
         int exponentValue = int.Parse(parts[1], CultureInfo.InvariantCulture) + 1;
-        string exponent = exponentValue >= 0 ? $"+{exponentValue}" : exponentValue.ToString();
+        if (exponentValue < -9)
+        {
+            // [5e-11, 0.999995e-10): the nearest representable value is 0.10000e-9
+            mantissa = "1" + new string('0', width - 1);
+            exponentValue = -9;
+        }
+        else if (exponentValue > 9)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), value,
+                "A TLE exponent field holds at most 0.99999e9 in magnitude (a one-digit exponent).");
+        }
+
+        string exponent = exponentValue >= 0 ? $"+{exponentValue}" : exponentValue.ToString(CultureInfo.InvariantCulture);
 
         return $"{sign}{mantissa}{exponent}";
     }
@@ -618,13 +682,24 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// or <see cref="EquinoctialElements"/> using the standard conversion methods.
     /// </returns>
     /// <remarks>
+    /// <para>
     /// This is the correct way to obtain physical position and velocity from TLE data.
     /// The SGP4/SDP4 propagator properly accounts for perturbations that are implicit
     /// in the mean elements representation.
+    /// </para>
+    /// <para>
+    /// SGP4 is CSPICE's <c>evsgp4_c</c> (Vallado's 2006 code, AFSPC mode, WGS-72 old, KE = 7.43669161e-2; see
+    /// <see cref="TLE"/>), at tsince = the TT seconds from <see cref="OrbitalParameters.Epoch"/> to
+    /// <paramref name="epoch"/> over 60, whatever the time frame of <paramref name="epoch"/> (#599): the epoch is taken
+    /// as CSPICE's <c>getelm_c</c> reads it, so that tsince is exact. Before 11.0.0 tsince counted the TDB seconds
+    /// between the TDB of <paramref name="epoch"/> and that epoch, up to 0.36 m off a day after the epoch. The state is
+    /// in <see cref="Frame.TEME"/>, labelled <paramref name="epoch"/>.
+    /// </para>
     /// </remarks>
+    /// <exception cref="InvalidOperationException">SGP4 failed at this epoch (#454).</exception>
     public StateVector ToOsculating(Time epoch)
     {
-        return SpiceAPI.Instance.ConvertTleToStateVector(Name, Line1, Line2, epoch).ToStateVector();
+        return SpiceAPI.Instance.ConvertTleToStateVector(Name, Line1, Line2, _sgp4Epoch.Value, Epoch, epoch).ToStateVector();
     }
 
     /// <summary>

@@ -71,10 +71,10 @@ public class TLETests
         Assert.Equal(epoch, Frame.TemeFrameTests.Instant(reference.Instant));
         var position = Frame.TemeFrameTests.Position(reference.Gmat);
         var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat);
-        // PROVISIONAL (Linux x64, 2026-11-08): twice the 0.114 m and 1.3e-4 m/s measured, GMAT's TEME (its kinematic terms
-        // of the equation of the equinoxes, 0.064 m here) and the tsince the library counts in TDB seconds (#599)
-        Assert.InRange((stateVector.Position - position).Magnitude(), 0.0, 0.23);
-        Assert.InRange((stateVector.Velocity - velocity).Magnitude(), 0.0, 2.6e-4);
+        // PROVISIONAL (Linux x64, 2026-11-08): twice the 0.0660 m and 7.57e-5 m/s measured, GMAT's TEME (its kinematic terms
+        // of the equation of the equinoxes); 0.114 m and 1.3e-4 m/s before #599 (tsince counted in TDB seconds)
+        Assert.InRange((stateVector.Position - position).Magnitude(), 0.0, 0.14);
+        Assert.InRange((stateVector.Velocity - velocity).Magnitude(), 0.0, 1.6e-4);
         Assert.Equal("J2000", stateVector.Frame.Name);
         Assert.Equal(399, stateVector.Observer.NaifId);
         Assert.Equal(epoch, stateVector.Epoch);

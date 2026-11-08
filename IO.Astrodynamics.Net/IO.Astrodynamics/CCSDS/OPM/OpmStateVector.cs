@@ -95,15 +95,25 @@ public class OpmStateVector
     /// <param name="covariance">Optional 6x6 covariance matrix in framework units (m², m²/s, m²/s²).</param>
     /// <returns>A new StateVector in framework units (meters, m/s).</returns>
     /// <remarks>
-    /// Converts from CCSDS units (km, km/s) to framework units (m, m/s).
+    /// Converts from CCSDS units (km, km/s) to framework units (m, m/s). The epoch is read as UTC: this state carries no
+    /// time system. <see cref="Opm.ToStateVector"/> reads it in the <c>TIME_SYSTEM</c> of its metadata (#485).
     /// </remarks>
     public StateVector ToStateVector(ILocalizable observer, Frame frame, Matrix? covariance = null)
+    {
+        return ToStateVector(observer, frame, covariance, TimeFrame.UTCFrame);
+    }
+
+    /// <summary>
+    /// Converts this OPM state vector to a framework StateVector, its epoch read in <paramref name="timeFrame"/>, the
+    /// time frame of the message's <c>TIME_SYSTEM</c> (#485).
+    /// </summary>
+    internal StateVector ToStateVector(ILocalizable observer, Frame frame, Matrix? covariance, ITimeFrame timeFrame)
     {
         // Convert km to m, km/s to m/s
         var position = new Vector3(X * 1000.0, Y * 1000.0, Z * 1000.0);
         var velocity = new Vector3(XDot * 1000.0, YDot * 1000.0, ZDot * 1000.0);
 
-        var epoch = new Time(Epoch, TimeFrame.UTCFrame);
+        var epoch = new Time(Epoch, timeFrame);
 
         return new StateVector(position, velocity, observer, epoch, frame, covariance);
     }
@@ -115,7 +125,8 @@ public class OpmStateVector
     /// <param name="comments">Optional comments.</param>
     /// <returns>A new OpmStateVector in CCSDS units (km, km/s).</returns>
     /// <remarks>
-    /// Converts from framework units (m, m/s) to CCSDS units (km, km/s).
+    /// Converts from framework units (m, m/s) to CCSDS units (km, km/s). The epoch is written in UTC, whatever the time
+    /// frame of the state's epoch (#479), as the library's OPM writers declare <c>TIME_SYSTEM = UTC</c>.
     /// </remarks>
     public static OpmStateVector FromStateVector(StateVector stateVector, IReadOnlyList<string> comments = null)
     {
@@ -124,7 +135,7 @@ public class OpmStateVector
 
         // Convert m to km, m/s to km/s
         return new OpmStateVector(
-            stateVector.Epoch.DateTime,
+            stateVector.Epoch.ToUTC().DateTime,
             stateVector.Position.X / 1000.0,
             stateVector.Position.Y / 1000.0,
             stateVector.Position.Z / 1000.0,

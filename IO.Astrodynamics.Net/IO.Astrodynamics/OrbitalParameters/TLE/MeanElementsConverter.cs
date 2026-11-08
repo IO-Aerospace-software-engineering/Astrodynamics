@@ -31,8 +31,9 @@ namespace IO.Astrodynamics.OrbitalParameters.TLE
         {
             if (osculatingElements == null) throw new ArgumentNullException(nameof(osculatingElements));
 
-            // Convert to TEME frame (required for TLE)
-            var targetState = (StateVector)osculatingElements.ToFrame(Frame.TEME);
+            // Convert to TEME frame (required for TLE). ToFrame returns elements in TEME unchanged, as elements: a TLE,
+            // Keplerian or equinoctial elements already in TEME are taken as their state there (#464)
+            var targetState = osculatingElements.ToFrame(Frame.TEME).ToStateVector();
 
             // Fallback to original method if new algorithm fails
             return ConvertUsingEquinoctialElements(targetState, noradId, name, cosparId, revAtEpoch, bstar, 1e-10, maxIter, 1.0);

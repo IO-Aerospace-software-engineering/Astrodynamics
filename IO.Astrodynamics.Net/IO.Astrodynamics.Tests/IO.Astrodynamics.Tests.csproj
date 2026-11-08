@@ -194,6 +194,11 @@
       <Content Include="Data\TemeReference\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <!-- Vallado's SGP4 (WGS-72 old, AFSPC) and CSPICE epochs of tools/sgp4_reference, for the TLE paths (#599). -->
+      <None Remove="Data\Sgp4Reference\*" />
+      <Content Include="Data\Sgp4Reference\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
       <!-- CSPICE windows of tools/geometry_reference, for the managed window search (#590, #461, #486, #487). -->
       <None Remove="Data\GeometryReference\*" />
       <Content Include="Data\GeometryReference\*">

@@ -29,8 +29,9 @@ namespace IO.Astrodynamics.Tests.Mission
         private const double FuelTolerance = 5e-3;
 
         // PROVISIONAL bounds of PropagateSpacecraftFromTLE (Linux x64, 2026-11-08, until the CI of the three platforms), m and
-        // m/s: twice the worst measured, 0.508 m and 5.72e-4 m/s at the end, 0.52 m of it the tsince counted in TDB (#599)
-        private const double ScenarioTlePosition = 1.1, ScenarioTleVelocity = 1.2e-3;
+        // m/s: twice the worst measured, 1.263e-2 m and 1.316e-5 m/s at the end (GMAT's TEME, and 2.7 mm of SGP4 at the TDB
+        // instant, whose TT the library and CSPICE convert 1 us apart); 0.508 m and 5.72e-4 m/s before #599 (tsince in TDB)
+        private const double ScenarioTlePosition = 2.6e-2, ScenarioTleVelocity = 2.7e-5;
 
         public ScenarioTests()
         {
@@ -307,7 +308,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat) - Frame.TemeFrameTests.Velocity(reference.Dss63J2000);
                 double dr = (state.Position - position).Magnitude(), dv = (state.Velocity - velocity).Magnitude();
                 // PROVISIONAL (Linux x64, 2026-11-08): twice the worst measured, GMAT's TEME (its kinematic terms of the
-                // equation of the equinoxes) and the tsince the library counts in TDB seconds (#599); 100 m and 0.2 m/s before
+                // equation of the equinoxes); 100 m and 0.2 m/s before #451, 1.1 m and 1.2e-3 m/s before #599
                 Assert.InRange(dr, 0.0, ScenarioTlePosition);
                 Assert.InRange(dv, 0.0, ScenarioTleVelocity);
             }

@@ -5,6 +5,7 @@ using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -110,6 +111,7 @@ public class Opm
     /// <remarks>
     /// REF_FRAME is written as the SPICE name of the state vector frame: <c>J2000</c> for <see cref="Frame.ICRF"/>,
     /// <c>GCRF</c> for <see cref="Frame.GCRF"/>. Both denote the ICRF axes; no frame bias is applied.
+    /// The epoch is written in UTC under <c>TIME_SYSTEM = UTC</c>, whatever the time frame of the state's epoch (#479).
     /// </remarks>
     public static Opm CreateFromStateVector(
         string objectName,
@@ -190,7 +192,12 @@ public class Opm
     /// </summary>
     /// <param name="observer">The central body (observer). If null, Earth is used.</param>
     /// <returns>A new StateVector instance with the OPM data.</returns>
+    /// <exception cref="InvalidOperationException">The <c>TIME_SYSTEM</c> is none of UTC, TAI, TDB, TT and GPS.</exception>
     /// <remarks>
+    /// <para>
+    /// The epoch is read in the <c>TIME_SYSTEM</c> of the metadata: UTC, TAI, TDB, TT or GPS (#485). Before 11.0.0 it was
+    /// read as UTC whatever the time system, 69.19 s late for a TDB file.
+    /// </para>
     /// <para>
     /// Frames: CCSDS <c>ICRF</c> and <c>GCRF</c> map exactly onto <see cref="Frame.ICRF"/>, whose axes are the ICRF's.
     /// <c>EME2000</c> also maps onto <see cref="Frame.ICRF"/>: the ~23 mas IAU 2006 frame bias between EME2000 and the
@@ -211,10 +218,13 @@ public class Opm
     /// </remarks>
     public StateVector ToStateVector(ILocalizable observer = null)
     {
+        // The epoch in the TIME_SYSTEM of the metadata (#485); a time system the framework does not convert throws
+        var timeFrame = CcsdsTimeSystemMapping.ToTimeFrame(Metadata.TimeSystemEnum, Metadata.TimeSystem);
+
         // Default to Earth if no observer specified
         if (observer == null)
         {
-            var epoch = new Time(Data.StateVector.Epoch, TimeFrame.UTCFrame);
+            var epoch = new Time(Data.StateVector.Epoch, timeFrame);
             observer = new CelestialBody(399, Frame.ICRF, epoch);
         }
 
@@ -226,7 +236,7 @@ public class Opm
         // must handle frame transformation. Check CovarianceReferenceFrameConsistent property.
         Matrix? covariance = Data.Covariance?.ToMatrixWithUnitConversion();
 
-        return Data.StateVector.ToStateVector(observer, frame, covariance);
+        return Data.StateVector.ToStateVector(observer, frame, covariance, timeFrame);
     }
 
     /// <summary>
@@ -263,7 +273,7 @@ public class Opm
     /// The caller must provide naifId, maximumOperatingMass, and clock as these are not part of the CCSDS OPM standard.
     /// If spacecraftParameters is not present in the OPM, default values are used for mass (1.0 kg),
     /// sectionalArea (1.0 m²), dragCoeff (2.2), and solarRadiationCoeff (1.0).
-    /// The reference frame is mapped as described on <see cref="ToStateVector"/>.
+    /// The reference frame and the epoch's time system are mapped as described on <see cref="ToStateVector"/>.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when clock is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when naifId is non-negative or maximumOperatingMass is invalid.</exception>
