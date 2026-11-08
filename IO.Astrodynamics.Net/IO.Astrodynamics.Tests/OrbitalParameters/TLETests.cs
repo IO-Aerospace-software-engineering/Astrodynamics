@@ -73,6 +73,8 @@ public class TLETests
         var velocity = Frame.TemeFrameTests.Velocity(reference.Gmat);
         // PROVISIONAL (Linux x64, 2026-11-08): twice the 0.0660 m and 7.57e-5 m/s measured, GMAT's TEME (its kinematic terms
         // of the equation of the equinoxes); 0.114 m and 1.3e-4 m/s before #599 (tsince counted in TDB seconds)
+        _testOutputHelper.WriteLine($"MEASURE TLETests.ToStateVector: {(stateVector.Position - position).Magnitude():E3} m, " +
+                                    $"{(stateVector.Velocity - velocity).Magnitude():E3} m/s");
         Assert.InRange((stateVector.Position - position).Magnitude(), 0.0, 0.14);
         Assert.InRange((stateVector.Velocity - velocity).Magnitude(), 0.0, 1.6e-4);
         Assert.Equal("J2000", stateVector.Frame.Name);
@@ -317,6 +319,9 @@ public class TLETests
         // here): 3.06 m and 6.5e-3 m/s with the managed TEME (#451), whose state in TEME is not the one the former TEME gave,
         // so that the fit lands on another point of the grid (the per-component bounds before, 0.5, 2 and 6 m, were that
         // other draw). PROVISIONAL (Linux x64, 2026-11-08): twice the measured residual
+        _testOutputHelper.WriteLine($"MEASURE TLETests.ToTLE_ValidISSOrbit_ReturnsValidTLE: " +
+                                    $"{(sv.Position - computedSV.Position).Magnitude():E3} m, " +
+                                    $"{(sv.Velocity - computedSV.Velocity).Magnitude():E3} m/s");
         Assert.InRange((sv.Position - computedSV.Position).Magnitude(), 0.0, 6.2);
         Assert.InRange((sv.Velocity - computedSV.Velocity).Magnitude(), 0.0, 1.3e-2);
         Assert.Equal(sv.Epoch.TimeSpanFromJ2000().TotalSeconds, computedSV.Epoch.TimeSpanFromJ2000().TotalSeconds, 6);

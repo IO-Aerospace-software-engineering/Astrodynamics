@@ -19,6 +19,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Mission
 {
@@ -33,8 +34,11 @@ namespace IO.Astrodynamics.Tests.Mission
         // instant, whose TT the library and CSPICE convert 1 us apart); 0.508 m and 5.72e-4 m/s before #599 (tsince in TDB)
         private const double ScenarioTlePosition = 2.6e-2, ScenarioTleVelocity = 2.7e-5;
 
-        public ScenarioTests()
+        private readonly ITestOutputHelper _output;
+
+        public ScenarioTests(ITestOutputHelper output)
         {
+            _output = output;
             SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
         }
 
@@ -309,6 +313,7 @@ namespace IO.Astrodynamics.Tests.Mission
                 double dr = (state.Position - position).Magnitude(), dv = (state.Velocity - velocity).Magnitude();
                 // PROVISIONAL (Linux x64, 2026-11-08): twice the worst measured, GMAT's TEME (its kinematic terms of the
                 // equation of the equinoxes); 100 m and 0.2 m/s before #451, 1.1 m and 1.2e-3 m/s before #599
+                _output.WriteLine($"MEASURE ScenarioTests.PropagateSpacecraftFromTLE, {name}: {dr:E3} m, {dv:E3} m/s");
                 Assert.InRange(dr, 0.0, ScenarioTlePosition);
                 Assert.InRange(dv, 0.0, ScenarioTleVelocity);
             }
