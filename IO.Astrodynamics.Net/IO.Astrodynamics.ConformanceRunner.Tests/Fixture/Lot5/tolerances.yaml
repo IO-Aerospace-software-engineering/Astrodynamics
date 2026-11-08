@@ -111,11 +111,11 @@ defaults:
   # 014 whose T differs carry it as an override in their inputs.yaml, and the reference term below is over
   # the cases without one.
   sgp4_position_km:
-    # T_op 1.0e-5 km (1 cm per component); reference term 3.6e-07 km (sgp4_24h_near_earth_iss_icrf_010 states[8].teme.position_km)
+    # T_op 1.0e-5 km (1 cm per component); reference term 3.6e-07 km (sgp4_24h_near_earth_iss_icrf_010 states[24].teme.position_km)
     abs_tol: 1.0e-5
     rel_tol: 0.0
   sgp4_velocity_km_s:
-    # T_op 1.0e-8 km/s (1e-5 m/s per component); reference term 4.1e-10 km/s (sgp4_24h_near_earth_iss_icrf_010 states[20].teme.velocity_km_s)
+    # T_op 1.0e-8 km/s (1e-5 m/s per component); reference term 4.1e-10 km/s (sgp4_24h_near_earth_iss_icrf_010 states[24].teme.velocity_km_s)
     abs_tol: 1.0e-8
     rel_tol: 0.0
   sgp4_icrf_position_km:
@@ -163,7 +163,7 @@ defaults:
   # One active threshold per key (#7): rel_tol 0 = absolute, abs_tol 0 = relative. Value (spec.md 6.4):
   # T = max(T_op, ceil2(2 max(E_CSPICE, E_ref, floor))), each term in the unit of the key. T_op: the operational
   # tolerance of the key. E_CSPICE: tools/cspice_runner against the golden over linux, windows, macos, measured
-  # 2026-10-27. E_ref: golden vs a 60-digit evaluation, the exact time chain or CSPICE. floor: the
+  # 2026-11-08. E_ref: golden vs a 60-digit evaluation, the exact time chain or CSPICE. floor: the
   # conditioning floor.
   oe_length_km:              # a, rp, ra, p; T_op 1.0e-6 km (1 mm)
     abs_tol: 1.0e-6
