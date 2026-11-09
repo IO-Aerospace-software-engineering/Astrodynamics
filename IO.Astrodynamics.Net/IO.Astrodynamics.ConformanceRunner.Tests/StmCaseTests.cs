@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -10,7 +11,6 @@ using IO.Astrodynamics.ConformanceRunner.Models;
 using IO.Astrodynamics.ConformanceRunner.Solvers;
 using IO.Astrodynamics.ConformanceRunner.Utilities;
 using IO.Astrodynamics.Propagator;
-using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.Propagator.Variational;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,21 +20,21 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace IO.Astrodynamics.ConformanceRunner.Tests;
 
 /// <summary>
-/// The <c>stm</c> category of the conformance runner (F4 of phase 2, feature 1; design of #408), run on the fixture
-/// written by <c>tools/gmat_reference/make_stm_case.py</c>: the schemas and the tolerances of the conformance-tests suite
-/// (conformance-tests#25, c1af386) extended with the category, and the case <c>stm_24h_leo_twobody_001</c>, whose golden
-/// is GMAT R2026a's Φ of the reference case R1 turned to ICRF, an independent value; and the two-body propagator case
-/// 004 of the suite, as conformance-tests#25 writes it (its GMAT golden, the kernel it lists in the fixture's
-/// <c>data/</c>). The final state of the stm case takes the keys of the propagator's (spec.md section 12.1).
+/// The <c>stm</c> category of the conformance runner (F4 of phase 2, feature 1; design of #408), on the case
+/// <c>stm_24h_leo_twobody_001</c> of the suite (spec.md section 16.4; conformance-tests#10, absorbed by lot 6 of #457),
+/// synced in <c>Fixture/Lot6</c> (<see cref="SuiteFixture.Lot6"/>): its golden is GMAT R2026a's Φ of the reference case
+/// R1 on the suite's Earth turned to ICRF, an independent value. The final state takes the keys of the propagator's
+/// (spec.md section 12.1). The three cases of the category are run by <see cref="Lot6CaseTests"/>.
 /// </summary>
 /// <remarks>
-/// Each test runs the runner on its own copy of the fixture, so that the variants (a perturbed, a missing or a
-/// malformed golden) do not touch the others; the copies are deleted at the end.
+/// Each test runs the runner on its own suite written from the fixture, so that the variants (a perturbed, a missing or
+/// a malformed golden) do not touch the others; the suites are deleted at the end.
 /// </remarks>
 public sealed class StmCaseTests : IDisposable
 {
     private const string StmCase = "stm_24h_leo_twobody_001";
-    private const string KernelsPath = "Data/SolarSystem";
+    private const string StmCaseDirectory = "cases/stm/001";
+    private const string KernelsPath = SuiteFixture.KernelsPath;
 
     private readonly string _directory;
     private readonly ITestOutputHelper _output;
@@ -42,8 +42,8 @@ public sealed class StmCaseTests : IDisposable
     public StmCaseTests(ITestOutputHelper output)
     {
         _output = output;
-        _directory = Path.Combine(Path.GetTempPath(), "stm-fixture-" + Guid.NewGuid().ToString("N"));
-        Copy("Fixture", _directory);
+        _directory = Directory.CreateTempSubdirectory("stm-fixture-").FullName;
+        SuiteFixture.Lot6.WriteSuite(_directory, StmCaseDirectory);
     }
 
     public void Dispose()
@@ -52,7 +52,7 @@ public sealed class StmCaseTests : IDisposable
     }
 
     [Fact]
-    public void StmCase_AgainstTheGmatGolden_Passes_AndThePropagatorCaseIsUnchanged()
+    public void StmCase_AgainstTheGmatGolden_Passes()
     {
         // Act
         var report = new Runner(_directory, KernelsPath).Run();
@@ -65,24 +65,24 @@ public sealed class StmCaseTests : IDisposable
         }
 
         Assert.Equal("PASS", stm.Status);
-        // The golden of GMAT against the library: 7.6e-12 at most over the day (GmatReferenceTests)
+        // The golden of GMAT against the library: 7.6e-12 at most over the day (GmatReferenceTests), 8.0e-12 on the
+        // golden regenerated on the suite's Earth (Linux x64, 2026-11-09)
         Assert.All(StmComparer.BlockNames, block => Assert.True(stm.Deltas[block].MaxRelDelta < 1e-10, block));
         Assert.All(new[] { "final_x_km", "final_vx_km_s" }, metric => Assert.True(stm.Deltas[metric].Passed, metric));
-        Assert.Equal("PASS", report.Results.Single(r => r.CaseId == "propagator_1sd_geo_twobody_004").Status);
-        Assert.Equal(2, report.Summary.Passed);
+        Assert.Equal(1, report.Summary.Passed);
         Assert.Contains(report.Summary.AccuracyByMetric, m => m.Metric == "stm_rv" && m.Unit == "-");
     }
 
     [Fact]
     public void StmCase_WithOneElementOfTheGoldenPerturbed_FailsOnItsBlockOnly()
     {
-        // Arrange: Φ_rv[0][0] (row 0, column 3) of the golden moved by 1e-8 of the norm of its block
+        // Arrange: Φ_rv[0][0] (row 0, column 3) of the golden moved by 1e-6 of the norm of its block, ten times stm_block
         EditGolden(outputs =>
         {
             var rv = Block(outputs, 0, 3);
             double norm = System.Math.Sqrt(rv.Sum(x => x * x));
             var row = outputs["final_stm"]![0]!.AsArray();
-            row[3] = row[3]!.GetValue<double>() + 1e-8 * norm;
+            row[3] = row[3]!.GetValue<double>() + 1e-6 * norm;
         });
 
         // Act
@@ -91,7 +91,7 @@ public sealed class StmCaseTests : IDisposable
         // Assert
         Assert.Equal("FAIL", stm.Status);
         Assert.False(stm.Deltas["stm_rv"].Passed);
-        Assert.InRange(stm.Deltas["stm_rv"].MaxRelDelta, 0.9e-8, 1.1e-8);
+        Assert.InRange(stm.Deltas["stm_rv"].MaxRelDelta, 0.9e-6, 1.1e-6);
         Assert.All(new[] { "stm_rr", "stm_vr", "stm_vv" }, block => Assert.True(stm.Deltas[block].Passed, block));
     }
 
@@ -155,18 +155,22 @@ public sealed class StmCaseTests : IDisposable
         // Arrange: the stm case of the fixture, and the same propagation with an output at every step of the case, as
         // the solver did before #426
         CaseInput Case() => new DeserializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build()
-            .Deserialize<CaseInput>(File.ReadAllText(Path.Combine(_directory, "cases", "stm", "001", "inputs.yaml")));
-        var reference = PropagationCase.Build(Case(), KernelsPath);
+            .Deserialize<CaseInput>(File.ReadAllText(Path.Combine(_directory, StmCaseDirectory, "inputs.yaml")));
+        Dictionary<string, object> computed;
+        using (new CaseKernels(_directory, InputParser.ParseKernels(Case().Inputs)))
+        {
+            computed = new StmSolver(_directory).Solve(Case());
+        }
+
+        using var kernels = new CaseKernels(_directory, InputParser.ParseKernels(Case().Inputs));
+        var reference = PropagationCase.Build(Case(), Path.Combine(_directory, "data"));
         var solution = new CentralBodyPropagator(reference.Window, reference.Spacecraft,
-            new RK78Integrator(StmSolver.Tolerance, StmSolver.Tolerance), reference.Bodies, reference.Drag,
+            PropagatorSolver.CreateIntegrator(), reference.Bodies, reference.Drag,
             reference.SolarRadiationPressure, reference.StepSize,
             new CovariancePropagationOptions { Mode = CovariancePropagationMode.StateTransitionOnly }).Propagate();
         var end = reference.Window.EndDate;
         var phi = solution.GetStateTransitionMatrix(end);
         var (position, velocity) = solution.InterpolateAt(end);
-
-        // Act
-        var computed = new StmSolver(KernelsPath).Solve(Case());
 
         // Assert: the same, bit for bit, since the accepted steps do not depend on the outputs
         Assert.True(reference.StepSize < reference.Window.Length);
@@ -183,12 +187,12 @@ public sealed class StmCaseTests : IDisposable
     [Fact]
     public void StmSolver_HandlesTheStmCategory()
     {
-        Assert.Equal("stm", new StmSolver(KernelsPath).Category);
+        Assert.Equal("stm", new StmSolver(_directory).Category);
     }
 
     private void EditGolden(Action<JsonObject> edit)
     {
-        var path = Path.Combine(_directory, "cases", "stm", "001", "expected-result.json");
+        var path = Path.Combine(_directory, StmCaseDirectory, "expected-result.json");
         var document = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
         edit(document["outputs"]!.AsObject());
         File.WriteAllText(path, document.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
@@ -199,19 +203,5 @@ public sealed class StmCaseTests : IDisposable
         var rows = outputs["final_stm"]!.AsArray();
         return Enumerable.Range(0, 9)
             .Select(k => rows[rowOffset + k / 3]![columnOffset + k % 3]!.GetValue<double>()).ToArray();
-    }
-
-    private static void Copy(string source, string destination)
-    {
-        foreach (var directory in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
-        {
-            Directory.CreateDirectory(Path.Combine(destination, Path.GetRelativePath(source, directory)));
-        }
-
-        Directory.CreateDirectory(destination);
-        foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
-        {
-            File.Copy(file, Path.Combine(destination, Path.GetRelativePath(source, file)));
-        }
     }
 }

@@ -66,6 +66,13 @@ public enum MetricKind
     TleLine,
 
     /// <summary>
+    /// A covariance given by its lower triangle (spec.md sections 6.1 and 16.3): d = max over the elements of
+    /// |computed_ij − golden_ij| / √(golden_ii · golden_jj), an error of rotation or of an element scaled by the variances;
+    /// no relative delta.
+    /// </summary>
+    NormalizedCovariance,
+
+    /// <summary>
     /// No delta: the output equals the golden (a boolean, a string, the samples of a grid, the number of elements of an
     /// indexed array) or fails; no key.
     /// </summary>
@@ -92,8 +99,10 @@ public sealed record Metric(MetricKind Kind, string Key, string Unit, string Tim
 /// <c>tracking_data</c>, <c>pointing_triad</c> and <c>geosynchronous</c>, and of the maneuver categories (spec.md section
 /// 13): <c>maneuver</c> and <c>lambert</c>, and of the geometry and event categories (spec.md section 14):
 /// <c>ground_station</c>, <c>orbital_events</c> and <c>attitude</c>, with the second branch of <c>eclipse</c>, and of the
-/// TLE categories (spec.md section 15): <c>sgp4</c> and <c>tle_conversion</c>, each with its kind and tolerance key; and the final state of the <c>stm</c> category, the extension of the suite tested by the
-/// fixture of the runner, compared as the propagator's. The arrays of the geometry and event categories are indexed
+/// TLE categories (spec.md section 15): <c>sgp4</c> and <c>tle_conversion</c>, and of the conjunction categories (spec.md
+/// section 16): <c>conjunction</c>, <c>collision_probability</c>, <c>cdm</c> (a decode and a conversion; an export in
+/// its own table, <see cref="CdmExportTable"/>) and the final state of <c>stm</c>, compared as the propagator's (its
+/// matrix by <see cref="StmComparer"/>), each with its kind and tolerance key. The arrays of the geometry and event categories are indexed
 /// (<see cref="IsIndexed"/>): the array is the number of its elements, an exact output, and each element gives its
 /// outputs, named <c>&lt;array&gt;[k].&lt;field&gt;</c> or <c>&lt;array&gt;[k]</c>, k from 0, held as
 /// <c>&lt;array&gt;[].&lt;field&gt;</c> or <c>&lt;array&gt;[]</c>; a field of an element that is itself an object gives its
@@ -132,6 +141,11 @@ public static class MetricTable
     private static readonly Metric TleEpoch = new(MetricKind.CalendarInstant, "tle_epoch_s", "s");
     private static readonly Metric TleFieldAngle = new(MetricKind.WrappedAngle, "tle_field_angle_deg", "deg");
     private static readonly Metric TleFieldExponent = new(MetricKind.Relative, "tle_field_exponent_rel", "-");
+    private static readonly Metric ConjunctionTca = new(MetricKind.Seconds, "conjunction_tca_s", "s");
+    private static readonly Metric Probability = new(MetricKind.Relative, "collision_probability_rel", "-");
+    private static readonly Metric CdmValue = new(MetricKind.Relative, "cdm_value_rel", "-");
+    private static readonly Metric CdmEpoch = new(MetricKind.Instant, "cdm_epoch_s", "s");
+    private static readonly Metric CdmCovariance = new(MetricKind.NormalizedCovariance, "cdm_covariance_corr", "-");
 
     /// <summary>The output of the two lines of a computed TLE (spec.md section 15.2), an element of <c>items</c>.</summary>
     public const string TleLines = "items[].tle";
@@ -216,8 +230,28 @@ public static class MetricTable
         ["orbital_events"] = EventLists.Select(EventList).ToHashSet(),
         ["attitude"] = ["attitude_quaternions", "pointing_directions"],
         ["sgp4"] = ["states"],
-        ["tle_conversion"] = ["items"]
+        ["tle_conversion"] = ["items"],
+        ["conjunction"] = ["objects", "minima"],
+        ["cdm"] = ["objects"],
+        [CdmExportTable] = ["objects"]
     };
+
+    /// <summary>
+    /// The table of the outputs of a <c>cdm</c> export (spec.md section 16.3): the outputs of a decode, compared at the
+    /// operational thresholds of the fields a framework writes.
+    /// </summary>
+    public const string CdmExportTable = "cdm:export";
+
+    /// <summary>
+    /// The table of the outputs of a case: its category, or for a <c>cdm</c> export <see cref="CdmExportTable"/>, whose
+    /// outputs carry the names of a decode with other kinds and keys.
+    /// </summary>
+    public static string Table(string category, IReadOnlyDictionary<string, object> inputs)
+    {
+        return category == "cdm" && inputs != null && inputs.TryGetValue("operation", out var operation) && operation?.ToString() == "export"
+            ? CdmExportTable
+            : category;
+    }
 
     /// <summary>Whether <paramref name="array"/> is an indexed array of the category (<see cref="IndexedArrays"/>).</summary>
     public static bool IsIndexed(string category, string array)
@@ -435,6 +469,69 @@ public static class MetricTable
         },
         // The fields of a TLE read, and the lines of a TLE written (spec.md section 15.2)
         ["tle_conversion"] = new Dictionary<string, Metric>(TleConversionOutputs()),
+        // The TCA, the relative state, the covariances at TCA and the Pc, or every TCA (spec.md section 16.1)
+        ["conjunction"] = new Dictionary<string, Metric>
+        {
+            ["tca_s"] = ConjunctionTca,
+            ["miss_distance_km"] = new(MetricKind.Scalar, "conjunction_position_km", "km"),
+            ["relative_speed_km_s"] = new(MetricKind.Scalar, "conjunction_velocity_km_s", "km/s"),
+            ["relative_position_rtn_km"] = new(MetricKind.ScalarPerComponent, "conjunction_position_km", "km"),
+            ["relative_velocity_rtn_km_s"] = new(MetricKind.ScalarPerComponent, "conjunction_velocity_km_s", "km/s"),
+            ["objects"] = Exact,
+            ["objects[].sigma_rtn"] = new(MetricKind.Relative, "covariance_sigma_rel", "-"),
+            ["objects[].correlation_rtn"] = new(MetricKind.ScalarPerComponent, "covariance_correlation", "-"),
+            ["collision_probability"] = Probability,
+            ["minima"] = Exact,
+            ["minima[].tca_s"] = ConjunctionTca,
+            ["minima[].miss_distance_km"] = new(MetricKind.Scalar, "conjunction_position_km", "km")
+        },
+        // The 2D Pc of an encounter at TCA (spec.md section 16.2)
+        ["collision_probability"] = new Dictionary<string, Metric>
+        {
+            ["collision_probability"] = Probability,
+            ["maximum_collision_probability"] = Probability,
+            ["encounter_plane_sigma_major_km"] = new(MetricKind.Relative, "encounter_plane_sigma_rel", "-"),
+            ["encounter_plane_sigma_minor_km"] = new(MetricKind.Relative, "encounter_plane_sigma_rel", "-"),
+            ["remediated"] = Exact
+        },
+        // The fields of a CDM read, and turned to inertial axes (spec.md section 16.3)
+        ["cdm"] = new Dictionary<string, Metric>
+        {
+            ["tca"] = CdmEpoch,
+            ["creation_date"] = CdmEpoch,
+            ["start_screen_period"] = CdmEpoch,
+            ["stop_screen_period"] = CdmEpoch,
+            ["miss_distance_km"] = CdmValue,
+            ["relative_speed_km_s"] = CdmValue,
+            ["relative_position_rtn_km"] = CdmValue,
+            ["relative_velocity_rtn_km_s"] = CdmValue,
+            ["screen_volume_km"] = CdmValue,
+            ["collision_probability"] = CdmValue,
+            ["collision_probability_method"] = Exact,
+            ["objects"] = Exact,
+            ["objects[].ref_frame"] = Exact,
+            ["objects[].position_km"] = CdmValue,
+            ["objects[].velocity_km_s"] = CdmValue,
+            ["objects[].covariance_rtn"] = CdmValue,
+            ["objects[].covariance_consider"] = CdmValue,
+            ["objects[].time_lastob_start"] = CdmEpoch,
+            ["objects[].time_lastob_end"] = CdmEpoch,
+            ["objects[].covariance_inertial"] = CdmCovariance
+        },
+        // The fields of the CDM a framework writes, read back (spec.md section 16.3)
+        [CdmExportTable] = new Dictionary<string, Metric>
+        {
+            ["tca"] = CdmEpoch,
+            ["miss_distance_km"] = new(MetricKind.Scalar, "cdm_position_km", "km"),
+            ["relative_speed_km_s"] = new(MetricKind.Scalar, "cdm_velocity_km_s", "km/s"),
+            ["relative_position_rtn_km"] = new(MetricKind.ScalarPerComponent, "cdm_position_km", "km"),
+            ["relative_velocity_rtn_km_s"] = new(MetricKind.ScalarPerComponent, "cdm_velocity_km_s", "km/s"),
+            ["collision_probability"] = Probability,
+            ["objects"] = Exact,
+            ["objects[].position_km"] = new(MetricKind.ScalarPerComponent, "cdm_position_km", "km"),
+            ["objects[].velocity_km_s"] = new(MetricKind.ScalarPerComponent, "cdm_velocity_km_s", "km/s"),
+            ["objects[].covariance_rtn"] = CdmCovariance
+        },
         // The lot-1 keys of their quantities (spec.md section 12.5)
         ["geosynchronous"] = new Dictionary<string, Metric>
         {

@@ -31,7 +31,7 @@ public class Runner
             new TriadSolver(),
             new EclipseSolver(conformanceTestsPath),
             new PropagatorSolver(conformanceTestsPath),
-            new StmSolver(spiceKernelsPath),
+            new StmSolver(conformanceTestsPath),
             new TrackingDataSolver(conformanceTestsPath),
             new GeosynchronousSolver(conformanceTestsPath),
             new OrbitalElementsSolver(),
@@ -43,7 +43,10 @@ public class Runner
             new OrbitalEventsSolver(conformanceTestsPath),
             new AttitudeSolver(conformanceTestsPath),
             new Sgp4Solver(),
-            new TleConversionSolver()
+            new TleConversionSolver(),
+            new ConjunctionSolver(conformanceTestsPath),
+            new CollisionProbabilitySolver(),
+            new CdmSolver()
         }.ToDictionary(solver => solver.Category);
         _schemaValidator = new SchemaValidator(conformanceTestsPath);
     }
@@ -174,6 +177,7 @@ public class Runner
                 .Build();
 
             var caseInput = yamlDeserializer.Deserialize<CaseInput>(inputYaml);
+            caseInput.Directory = caseDir;
             caseId = caseInput.Id ?? Path.GetFileName(caseDir);
 
             var expected = JsonSerializer.Deserialize<ExpectedResult>(expectedJson,
@@ -204,8 +208,10 @@ public class Runner
             var computed = solver.Solve(caseInput);
 
             // Compare outputs
-            var result = CompareOutputs(caseId, caseInput.Category, computed, expected.Outputs, toleranceConfig, caseInput.TolerancesOverride, caseInput);
-            result.Category = caseInput.Category;
+            // The table of the outputs: the category, or for a cdm export the table of the fields it writes
+            string table = MetricTable.Table(caseInput.Category, caseInput.Inputs);
+            var result = CompareOutputs(caseId, table, computed, expected.Outputs, toleranceConfig, caseInput.TolerancesOverride, caseInput);
+            result.Category = table;
             return result;
         }
         catch (Exception ex)

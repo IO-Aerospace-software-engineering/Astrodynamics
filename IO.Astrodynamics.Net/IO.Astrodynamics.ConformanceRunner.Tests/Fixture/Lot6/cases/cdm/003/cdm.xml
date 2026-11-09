@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="CCSDS_CDM_VERS" version="1.0">
+ <header>
+  <COMMENT>Synthetic CDM written by the suite generator (every optional keyword)</COMMENT>
+  <CREATION_DATE>2026-02-28T09:15:00.000</CREATION_DATE>
+  <ORIGINATOR>SUITE</ORIGINATOR>
+  <MESSAGE_FOR>SYNTHETIC-1</MESSAGE_FOR>
+  <MESSAGE_ID>SUITE_CDM_003</MESSAGE_ID>
+ </header>
+ <body>
+  <relativeMetadataData>
+   <COMMENT>Relative metadata</COMMENT>
+   <TCA>2026-03-01T12:00:00.000</TCA>
+   <MISS_DISTANCE units="m">118.100</MISS_DISTANCE>
+   <RELATIVE_SPEED units="m/s">10975.943</RELATIVE_SPEED>
+   <relativeStateVector>
+    <RELATIVE_POSITION_R units="m">96.742</RELATIVE_POSITION_R>
+    <RELATIVE_POSITION_T units="m">46.195</RELATIVE_POSITION_T>
+    <RELATIVE_POSITION_N units="m">49.544</RELATIVE_POSITION_N>
+    <RELATIVE_VELOCITY_R units="m/s">-0.418</RELATIVE_VELOCITY_R>
+    <RELATIVE_VELOCITY_T units="m/s">-8027.296</RELATIVE_VELOCITY_T>
+    <RELATIVE_VELOCITY_N units="m/s">7485.575</RELATIVE_VELOCITY_N>
+   </relativeStateVector>
+   <START_SCREEN_PERIOD>2026-02-28T00:00:00.000</START_SCREEN_PERIOD>
+   <STOP_SCREEN_PERIOD>2026-03-07T00:00:00.000</STOP_SCREEN_PERIOD>
+   <SCREEN_VOLUME_FRAME>RTN</SCREEN_VOLUME_FRAME>
+   <SCREEN_VOLUME_SHAPE>BOX</SCREEN_VOLUME_SHAPE>
+   <SCREEN_VOLUME_X units="m">500</SCREEN_VOLUME_X>
+   <SCREEN_VOLUME_Y units="m">5000</SCREEN_VOLUME_Y>
+   <SCREEN_VOLUME_Z units="m">500</SCREEN_VOLUME_Z>
+   <SCREEN_ENTRY_TIME>2026-03-01T11:59:59.550</SCREEN_ENTRY_TIME>
+   <SCREEN_EXIT_TIME>2026-03-01T12:00:00.450</SCREEN_EXIT_TIME>
+   <COLLISION_PROBABILITY>3.615e-04</COLLISION_PROBABILITY>
+   <COLLISION_PROBABILITY_METHOD>FOSTER-1992</COLLISION_PROBABILITY_METHOD>
+  </relativeMetadataData>
+  <segment>
+   <metadata>
+    <OBJECT>OBJECT1</OBJECT>
+    <OBJECT_DESIGNATOR>90001</OBJECT_DESIGNATOR>
+    <CATALOG_NAME>SATCAT</CATALOG_NAME>
+    <OBJECT_NAME>SYNTHETIC SAT</OBJECT_NAME>
+    <INTERNATIONAL_DESIGNATOR>2026-001A</INTERNATIONAL_DESIGNATOR>
+    <OBJECT_TYPE>PAYLOAD</OBJECT_TYPE>
+    <OPERATOR_CONTACT_POSITION>FLIGHT DYNAMICS</OPERATOR_CONTACT_POSITION>
+    <OPERATOR_ORGANIZATION>SYNTHETIC OPERATOR</OPERATOR_ORGANIZATION>
+    <OPERATOR_PHONE>+00-000-000-0000</OPERATOR_PHONE>
+    <OPERATOR_EMAIL>ops@example.org</OPERATOR_EMAIL>
+    <EPHEMERIS_NAME>NONE</EPHEMERIS_NAME>
+    <COVARIANCE_METHOD>CALCULATED</COVARIANCE_METHOD>
+    <MANEUVERABLE>YES</MANEUVERABLE>
+    <ORBIT_CENTER>EARTH</ORBIT_CENTER>
+    <REF_FRAME>EME2000</REF_FRAME>
+    <GRAVITY_MODEL>EGM-96: 36D 36O</GRAVITY_MODEL>
+    <ATMOSPHERIC_MODEL>JBH09</ATMOSPHERIC_MODEL>
+    <N_BODY_PERTURBATIONS>MOON,SUN</N_BODY_PERTURBATIONS>
+    <SOLAR_RAD_PRESSURE>YES</SOLAR_RAD_PRESSURE>
+    <EARTH_TIDES>YES</EARTH_TIDES>
+    <INTRACK_THRUST>NO</INTRACK_THRUST>
+   </metadata>
+   <data>
+    <odParameters>
+     <COMMENT>COVARIANCE_SCALE_FACTOR = 1.000</COMMENT>
+     <COMMENT>OD_DATA_SOURCE = SYNTHETIC</COMMENT>
+     <TIME_LASTOB_START>2026-02-27T20:00:00.000</TIME_LASTOB_START>
+     <TIME_LASTOB_END>2026-02-27T21:00:00.000</TIME_LASTOB_END>
+     <RECOMMENDED_OD_SPAN units="d">3.77</RECOMMENDED_OD_SPAN>
+     <ACTUAL_OD_SPAN units="d">3.77</ACTUAL_OD_SPAN>
+     <OBS_AVAILABLE>461</OBS_AVAILABLE>
+     <OBS_USED>458</OBS_USED>
+     <TRACKS_AVAILABLE>149</TRACKS_AVAILABLE>
+     <TRACKS_USED>148</TRACKS_USED>
+     <RESIDUALS_ACCEPTED units="%">98.7</RESIDUALS_ACCEPTED>
+     <WEIGHTED_RMS>1.322</WEIGHTED_RMS>
+    </odParameters>
+    <additionalParameters>
+     <COMMENT>Apogee Altitude = 714 [km]</COMMENT>
+     <AREA_PC units="m**2">5.2</AREA_PC>
+     <AREA_DRG units="m**2">4.8</AREA_DRG>
+     <AREA_SRP units="m**2">6.1</AREA_SRP>
+     <MASS units="kg">1150.5</MASS>
+     <CD_AREA_OVER_MASS units="m**2/kg">0.023827</CD_AREA_OVER_MASS>
+     <CR_AREA_OVER_MASS units="m**2/kg">0.015946</CR_AREA_OVER_MASS>
+     <THRUST_ACCELERATION units="m/s**2">1.0e-7</THRUST_ACCELERATION>
+     <SEDR units="W/kg">0.000041</SEDR>
+    </additionalParameters>
+    <stateVector>
+     <COMMENT>DCP Density Forecast Uncertainty = 2.403870929999999961e-01</COMMENT>
+     <X units="km">-302.607983621</X>
+     <Y units="km">-1552.300111601</Y>
+     <Z units="km">6902.172228099</Z>
+     <X_DOT units="km/s">-5.780434939</X_DOT>
+     <Y_DOT units="km/s">-4.607822719</Y_DOT>
+     <Z_DOT units="km/s">-1.289327760</Z_DOT>
+    </stateVector>
+    <covarianceMatrix>
+     <CR_R units="m**2">196.000000000</CR_R>
+     <CT_R units="m**2">-111.922101504</CT_R>
+     <CT_T units="m**2">44100.000000000</CT_T>
+     <CN_R units="m**2">5.699616250</CN_R>
+     <CN_T units="m**2">603.066686968</CN_T>
+     <CN_N units="m**2">81.000000000</CN_N>
+     <CRDOT_R units="m**2/s">-0.080562497</CRDOT_R>
+     <CRDOT_T units="m**2/s">0.321661297</CRDOT_T>
+     <CRDOT_N units="m**2/s">0.126088314</CRDOT_N>
+     <CRDOT_RDOT units="m**2/s**2">0.044100000</CRDOT_RDOT>
+     <CTDOT_R units="m**2/s">-0.053171706</CTDOT_R>
+     <CTDOT_T units="m**2/s">0.060460896</CTDOT_T>
+     <CTDOT_N units="m**2/s">0.012186607</CTDOT_N>
+     <CTDOT_RDOT units="m**2/s**2">0.000783862</CTDOT_RDOT>
+     <CTDOT_TDOT units="m**2/s**2">0.000256000</CTDOT_TDOT>
+     <CNDOT_R units="m**2/s">-0.043478266</CNDOT_R>
+     <CNDOT_T units="m**2/s">-0.290844015</CNDOT_T>
+     <CNDOT_N units="m**2/s">-0.032276262</CNDOT_N>
+     <CNDOT_RDOT units="m**2/s**2">0.000466183</CNDOT_RDOT>
+     <CNDOT_TDOT units="m**2/s**2">0.000037323</CNDOT_TDOT>
+     <CNDOT_NDOT units="m**2/s**2">0.000121000</CNDOT_NDOT>
+     <CDRG_R units="m**3/kg">2.458034e-04</CDRG_R>
+     <CDRG_T units="m**3/kg">4.835740e-04</CDRG_T>
+     <CDRG_N units="m**3/kg">5.903871e-04</CDRG_N>
+     <CDRG_RDOT units="m**3/(kg*s)">8.849006e-04</CDRG_RDOT>
+     <CDRG_TDOT units="m**3/(kg*s)">4.797971e-04</CDRG_TDOT>
+     <CDRG_NDOT units="m**3/(kg*s)">8.446500e-04</CDRG_NDOT>
+     <CDRG_DRG units="m**4/kg**2">1.232042e-03</CDRG_DRG>
+     <CSRP_R units="m**3/kg">-6.875469e-05</CSRP_R>
+     <CSRP_T units="m**3/kg">8.867134e-04</CSRP_T>
+     <CSRP_N units="m**3/kg">2.979491e-04</CSRP_N>
+     <CSRP_RDOT units="m**3/(kg*s)">8.018010e-04</CSRP_RDOT>
+     <CSRP_TDOT units="m**3/(kg*s)">-7.735881e-04</CSRP_TDOT>
+     <CSRP_NDOT units="m**3/(kg*s)">-6.186190e-05</CSRP_NDOT>
+     <CSRP_DRG units="m**4/kg**2">-5.068543e-04</CSRP_DRG>
+     <CSRP_SRP units="m**4/kg**2">5.350087e-03</CSRP_SRP>
+     <CTHR_R units="m**2/s**2">1.478824e-04</CTHR_R>
+     <CTHR_T units="m**2/s**2">-9.737716e-04</CTHR_T>
+     <CTHR_N units="m**2/s**2">-5.665404e-04</CTHR_N>
+     <CTHR_RDOT units="m**2/s**3">-4.410353e-04</CTHR_RDOT>
+     <CTHR_TDOT units="m**2/s**3">8.326907e-04</CTHR_TDOT>
+     <CTHR_NDOT units="m**2/s**3">5.314509e-04</CTHR_NDOT>
+     <CTHR_DRG units="m**3/(kg*s**2)">-6.807916e-04</CTHR_DRG>
+     <CTHR_SRP units="m**3/(kg*s**2)">5.942940e-04</CTHR_SRP>
+     <CTHR_THR units="m**2/s**4">2.110139e-03</CTHR_THR>
+    </covarianceMatrix>
+   </data>
+  </segment>
+  <segment>
+   <metadata>
+    <OBJECT>OBJECT2</OBJECT>
+    <OBJECT_DESIGNATOR>90002</OBJECT_DESIGNATOR>
+    <CATALOG_NAME>SATCAT</CATALOG_NAME>
+    <OBJECT_NAME>SYNTHETIC DEB</OBJECT_NAME>
+    <INTERNATIONAL_DESIGNATOR>2019-099XT</INTERNATIONAL_DESIGNATOR>
+    <OBJECT_TYPE>DEBRIS</OBJECT_TYPE>
+    <EPHEMERIS_NAME>NONE</EPHEMERIS_NAME>
+    <COVARIANCE_METHOD>CALCULATED</COVARIANCE_METHOD>
+    <MANEUVERABLE>NO</MANEUVERABLE>
+    <ORBIT_CENTER>EARTH</ORBIT_CENTER>
+    <REF_FRAME>EME2000</REF_FRAME>
+    <GRAVITY_MODEL>EGM-96: 36D 36O</GRAVITY_MODEL>
+    <ATMOSPHERIC_MODEL>JBH09</ATMOSPHERIC_MODEL>
+    <N_BODY_PERTURBATIONS>MOON,SUN</N_BODY_PERTURBATIONS>
+    <SOLAR_RAD_PRESSURE>YES</SOLAR_RAD_PRESSURE>
+    <EARTH_TIDES>YES</EARTH_TIDES>
+    <INTRACK_THRUST>NO</INTRACK_THRUST>
+   </metadata>
+   <data>
+    <odParameters>
+     <COMMENT>COVARIANCE_SCALE_FACTOR = 1.000</COMMENT>
+     <COMMENT>OD_DATA_SOURCE = SYNTHETIC</COMMENT>
+     <TIME_LASTOB_START>2026-02-26T05:00:00.000</TIME_LASTOB_START>
+     <TIME_LASTOB_END>2026-02-26T06:00:00.000</TIME_LASTOB_END>
+     <RECOMMENDED_OD_SPAN units="d">3.77</RECOMMENDED_OD_SPAN>
+     <ACTUAL_OD_SPAN units="d">3.77</ACTUAL_OD_SPAN>
+     <OBS_AVAILABLE>461</OBS_AVAILABLE>
+     <OBS_USED>458</OBS_USED>
+     <TRACKS_AVAILABLE>149</TRACKS_AVAILABLE>
+     <TRACKS_USED>148</TRACKS_USED>
+     <RESIDUALS_ACCEPTED units="%">98.7</RESIDUALS_ACCEPTED>
+     <WEIGHTED_RMS>1.322</WEIGHTED_RMS>
+    </odParameters>
+    <additionalParameters>
+     <COMMENT>Apogee Altitude = 714 [km]</COMMENT>
+     <AREA_PC units="m**2">5.2</AREA_PC>
+     <AREA_DRG units="m**2">4.8</AREA_DRG>
+     <AREA_SRP units="m**2">6.1</AREA_SRP>
+     <MASS units="kg">1150.5</MASS>
+     <CD_AREA_OVER_MASS units="m**2/kg">0.023827</CD_AREA_OVER_MASS>
+     <CR_AREA_OVER_MASS units="m**2/kg">0.015946</CR_AREA_OVER_MASS>
+     <THRUST_ACCELERATION units="m/s**2">1.0e-7</THRUST_ACCELERATION>
+     <SEDR units="W/kg">0.000041</SEDR>
+    </additionalParameters>
+    <stateVector>
+     <COMMENT>DCP Density Forecast Uncertainty = 2.403870929999999961e-01</COMMENT>
+     <X units="km">-302.616182808</X>
+     <Y units="km">-1552.387250402</Y>
+     <Z units="km">6902.251520044</Z>
+     <X_DOT units="km/s">5.165664541</X_DOT>
+     <Y_DOT units="km/s">-5.354231640</Y_DOT>
+     <Z_DOT units="km/s">-0.977720615</Z_DOT>
+    </stateVector>
+    <covarianceMatrix>
+     <CR_R units="m**2">9025.000000000</CR_R>
+     <CT_R units="m**2">88658.997597282</CT_R>
+     <CT_T units="m**2">8410000.000000000</CT_T>
+     <CN_R units="m**2">1846.475720116</CN_R>
+     <CN_T units="m**2">64824.425908223</CN_T>
+     <CN_N units="m**2">3600.000000000</CN_N>
+     <CRDOT_R units="m**2/s">-92.704740839</CRDOT_R>
+     <CRDOT_T units="m**2/s">-318.610826277</CRDOT_T>
+     <CRDOT_N units="m**2/s">-24.977363691</CRDOT_N>
+     <CRDOT_RDOT units="m**2/s**2">9.610000000</CRDOT_RDOT>
+     <CTDOT_R units="m**2/s">0.255800373</CTDOT_R>
+     <CTDOT_T units="m**2/s">-88.329388372</CTDOT_T>
+     <CTDOT_N units="m**2/s">-2.003009474</CTDOT_N>
+     <CTDOT_RDOT units="m**2/s**2">-0.019365740</CTDOT_RDOT>
+     <CTDOT_TDOT units="m**2/s**2">0.014400000</CTDOT_TDOT>
+     <CNDOT_R units="m**2/s">-1.468659330</CNDOT_R>
+     <CNDOT_T units="m**2/s">-21.270055926</CNDOT_T>
+     <CNDOT_N units="m**2/s">-1.769202068</CNDOT_N>
+     <CNDOT_RDOT units="m**2/s**2">-0.047983991</CNDOT_RDOT>
+     <CNDOT_TDOT units="m**2/s**2">0.002182546</CNDOT_TDOT>
+     <CNDOT_NDOT units="m**2/s**2">0.006400000</CNDOT_NDOT>
+     <CDRG_R units="m**3/kg">-3.523345e-04</CDRG_R>
+     <CDRG_T units="m**3/kg">-6.983017e-04</CDRG_T>
+     <CDRG_N units="m**3/kg">3.018689e-04</CDRG_N>
+     <CDRG_RDOT units="m**3/(kg*s)">-8.551274e-04</CDRG_RDOT>
+     <CDRG_TDOT units="m**3/(kg*s)">7.176401e-05</CDRG_TDOT>
+     <CDRG_NDOT units="m**3/(kg*s)">-2.686222e-04</CDRG_NDOT>
+     <CDRG_DRG units="m**4/kg**2">1.463991e-03</CDRG_DRG>
+     <CSRP_R units="m**3/kg">1.487147e-05</CSRP_R>
+     <CSRP_T units="m**3/kg">-9.250087e-04</CSRP_T>
+     <CSRP_N units="m**3/kg">-1.327086e-04</CSRP_N>
+     <CSRP_RDOT units="m**3/(kg*s)">-8.602892e-04</CSRP_RDOT>
+     <CSRP_TDOT units="m**3/(kg*s)">-8.185740e-04</CSRP_TDOT>
+     <CSRP_NDOT units="m**3/(kg*s)">-1.509616e-04</CSRP_NDOT>
+     <CSRP_DRG units="m**4/kg**2">6.537042e-04</CSRP_DRG>
+     <CSRP_SRP units="m**4/kg**2">1.990416e-03</CSRP_SRP>
+     <CTHR_R units="m**2/s**2">-5.535221e-04</CTHR_R>
+     <CTHR_T units="m**2/s**2">2.548664e-04</CTHR_T>
+     <CTHR_N units="m**2/s**2">8.954179e-04</CTHR_N>
+     <CTHR_RDOT units="m**2/s**3">1.542059e-04</CTHR_RDOT>
+     <CTHR_TDOT units="m**2/s**3">-2.066391e-04</CTHR_TDOT>
+     <CTHR_NDOT units="m**2/s**3">9.525102e-04</CTHR_NDOT>
+     <CTHR_DRG units="m**3/(kg*s**2)">-9.068346e-04</CTHR_DRG>
+     <CTHR_SRP units="m**3/(kg*s**2)">7.169369e-04</CTHR_SRP>
+     <CTHR_THR units="m**2/s**4">3.316874e-03</CTHR_THR>
+    </covarianceMatrix>
+   </data>
+  </segment>
+ </body>
+</cdm>

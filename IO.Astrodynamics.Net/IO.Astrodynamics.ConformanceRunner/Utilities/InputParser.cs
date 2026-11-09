@@ -504,6 +504,160 @@ public static class InputParser
         };
     }
 
+    /// <summary>The inputs of a <c>conjunction</c> case (spec.md section 16.1).</summary>
+    /// <exception cref="ArgumentException">A field is missing or malformed, the case does not give two objects, mixes
+    /// propagated and kernel objects, reports neither <c>closest</c> nor <c>all_minima</c>, or gives a covariance that is
+    /// not 21 numbers.</exception>
+    public static ConjunctionInputs ParseConjunctionInputs(Dictionary<string, object> inputs)
+    {
+        var map = inputs.ToDictionary(kv => (object)kv.Key, kv => kv.Value);
+        const string where = "a conjunction case";
+        var window = Mapping(Required(map, "analysis_window", where), "the analysis_window of a conjunction case");
+        var result = new ConjunctionInputs
+        {
+            Epoch = Required(map, "epoch", where).ToString(),
+            AnalysisWindow = new SearchWindow
+            {
+                Start = Required(window, "start", "the analysis_window").ToString(),
+                End = Required(window, "end", "the analysis_window").ToString()
+            },
+            Report = Required(map, "report", where).ToString(),
+            HardBodyRadiusKm = OptionalDouble(inputs, "hard_body_radius_km"),
+            Objects = Objects(map, where).ConvertAll(ParseConjunctionObject)
+        };
+
+        if (result.Report is not (ConjunctionInputs.Closest or ConjunctionInputs.AllMinima))
+        {
+            throw new ArgumentException(
+                $"The report '{result.Report}' of {where} is neither {ConjunctionInputs.Closest} nor {ConjunctionInputs.AllMinima} (spec.md section 16.1).");
+        }
+
+        if (result.Objects[0].FromKernel != result.Objects[1].FromKernel)
+        {
+            throw new ArgumentException($"{where} propagates one object and reads the other from an SPK: spec.md section 16.1 takes two of a kind.");
+        }
+
+        return result;
+    }
+
+    private static ConjunctionObject ParseConjunctionObject(Dictionary<object, object> map)
+    {
+        string name = Required(map, "name", "an object of a conjunction case").ToString();
+        string where = $"the conjunction object {name}";
+        if (map.TryGetValue("naif_id", out var naifId) && !IsNull(naifId))
+        {
+            return new ConjunctionObject { Name = name, NaifId = (int)ToDouble(naifId) };
+        }
+
+        return new ConjunctionObject
+        {
+            Name = name,
+            PositionKm = ParseVec3(Required(map, "position_km", where)),
+            VelocityKmS = ParseVec3(Required(map, "velocity_km_s", where)),
+            Spacecraft = map.TryGetValue("spacecraft", out var spacecraft) && !IsNull(spacecraft) ? Mapping(spacecraft, where) : null,
+            CovarianceRtn = map.TryGetValue("covariance_rtn", out var covariance) && !IsNull(covariance)
+                ? Numbers(covariance, 21, $"the covariance_rtn of {where}")
+                : null
+        };
+    }
+
+    /// <summary>The inputs of a <c>collision_probability</c> case (spec.md section 16.2).</summary>
+    /// <exception cref="ArgumentException">A field is missing or malformed, the case does not give two objects, a
+    /// covariance is not 6 numbers, or no object has one.</exception>
+    public static CollisionProbabilityInputs ParseCollisionProbabilityInputs(Dictionary<string, object> inputs)
+    {
+        var map = inputs.ToDictionary(kv => (object)kv.Key, kv => kv.Value);
+        const string where = "a collision_probability case";
+        var result = new CollisionProbabilityInputs
+        {
+            Tca = Required(map, "tca", where).ToString(),
+            HardBodyRadiusKm = ToDouble(Required(map, "hard_body_radius_km", where)),
+            Objects = Objects(map, where).ConvertAll(o => ParseEncounterObject(o, 6, where))
+        };
+
+        if (result.Objects.TrueForAll(o => o.CovarianceRtn == null))
+        {
+            throw new ArgumentException($"{where} gives no covariance: spec.md section 16.2 takes at least one.");
+        }
+
+        return result;
+    }
+
+    /// <summary>The inputs of a <c>cdm</c> case (spec.md section 16.3).</summary>
+    /// <exception cref="ArgumentException">The operation is not one of spec.md section 16.3, or a field of the operation
+    /// is missing or malformed.</exception>
+    public static CdmInputs ParseCdmInputs(Dictionary<string, object> inputs)
+    {
+        var map = inputs.ToDictionary(kv => (object)kv.Key, kv => kv.Value);
+        const string where = "a cdm case";
+        var operation = Required(map, "operation", where).ToString();
+        switch (operation)
+        {
+            case CdmInputs.Decode:
+            case CdmInputs.ToInertial:
+                var file = Required(map, "cdm_file", where).ToString();
+                if (file != System.IO.Path.GetFileName(file) || file.StartsWith('.'))
+                {
+                    throw new ArgumentException($"The cdm_file '{file}' of {where} is not a file name next to inputs.yaml.");
+                }
+
+                return new CdmInputs { Operation = operation, CdmFile = file };
+            case CdmInputs.Export:
+                return new CdmInputs
+                {
+                    Operation = operation,
+                    Tca = Required(map, "tca", where).ToString(),
+                    HardBodyRadiusKm = ToDouble(Required(map, "hard_body_radius_km", where)),
+                    Objects = Objects(map, where).ConvertAll(o => ParseEncounterObject(o, 21, where))
+                };
+            default:
+                throw new ArgumentException(
+                    $"The operation '{operation}' of {where} is not {CdmInputs.Decode}, {CdmInputs.ToInertial} or {CdmInputs.Export} (spec.md section 16.3).");
+        }
+    }
+
+    private static EncounterObject ParseEncounterObject(Dictionary<object, object> map, int covarianceLength, string where)
+    {
+        string what = $"an object of {where}";
+        if (!map.ContainsKey("covariance_rtn"))
+        {
+            throw new ArgumentException($"{what} has no covariance_rtn (null when absent).");
+        }
+
+        return new EncounterObject
+        {
+            PositionKm = ParseVec3(Required(map, "position_km", what)),
+            VelocityKmS = ParseVec3(Required(map, "velocity_km_s", what)),
+            CovarianceRtn = IsNull(map["covariance_rtn"]) ? null : Numbers(map["covariance_rtn"], covarianceLength, $"the covariance_rtn of {what}")
+        };
+    }
+
+    // A YAML null as the deserializer gives it to an object: null, or the plain scalar null or ~
+    private static bool IsNull(object value) => value is null or "null" or "~" or "";
+
+    // The two objects of a lot-6 case, object 1 then object 2
+    private static List<Dictionary<object, object>> Objects(Dictionary<object, object> map, string where)
+    {
+        var objects = Required(map, "objects", where) as List<object> ?? throw new ArgumentException($"{where} gives its objects as no list.");
+        if (objects.Count != 2)
+        {
+            throw new ArgumentException($"{where} gives {objects.Count} objects: spec.md section 16 takes two, object 1 then object 2.");
+        }
+
+        return objects.ConvertAll(o => Mapping(o, $"an object of {where}"));
+    }
+
+    // A list of numbers of a given length (the lower triangle of a covariance)
+    private static double[] Numbers(object value, int length, string what)
+    {
+        if (value is not List<object> list || list.Count != length)
+        {
+            throw new ArgumentException($"{what} is not {length} numbers (spec.md section 16).");
+        }
+
+        return list.Select(ToDouble).ToArray();
+    }
+
     // The form of an OMM EPOCH (spec.md section 3): YYYY-MM-DDThh:mm:ss[.f{1,6}], no tag
     private static readonly System.Text.RegularExpressions.Regex OmmEpochPattern =
         new(@"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);

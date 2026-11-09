@@ -1,0 +1,27 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/collision_probability.yaml; do not edit.
+id: "collision_probability_synthetic_low_003"
+schema_version: "v1"
+version: "0.1.0"
+category: "collision_probability"
+created: "2026-11-09"
+description: >
+  A low probability of collision: a 120 deg crossing at 12.8 km/s at 800 km and 86.4 deg, the miss 881.3 m, several
+  sigmas of the combined covariance, hard-body radius 20 m. Outputs the 2D Pc and the two encounter-plane sigmas
+  (spec.md section 16.2).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  tca: "2026-03-01T12:00:00.000 UTC"    # informative (spec.md 16.2)
+  objects:                              # the states at TCA in ICRF and each 3x3 position covariance in its own RTN (km^2: RR, TR, TT, NR, NT, NN)
+    - position_km: [-1911.0644212705727, -5908.371453139248, 3575.778535115357]
+      velocity_km_s: [1.6599751245096006, 3.37459831569408, 6.448190752627052]
+      covariance_rtn: [0.0009, 0.0018000000000000002, 0.09, 0.0, 0.0, 0.0004]
+    - position_km: [-1910.6436277219398, -5909.1315359907585, 3575.630560326054]
+      velocity_km_s: [-6.754943160618439, 0.5089961178126002, -2.761812135115889]
+      covariance_rtn: [0.0064, -0.028800000000000003, 0.81, 0.00024, 0.0054, 0.0036]
+  hard_body_radius_km: 0.02
+  kernels: []

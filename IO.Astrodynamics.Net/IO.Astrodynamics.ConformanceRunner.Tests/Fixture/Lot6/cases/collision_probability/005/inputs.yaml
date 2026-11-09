@@ -1,0 +1,27 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/collision_probability.yaml; do not edit.
+id: "collision_probability_synthetic_large_hbr_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "collision_probability"
+created: "2026-11-09"
+description: >
+  A hard-body radius much larger than the covariance: metre-level covariances of both objects, a 90 deg crossing at
+  10.9 km/s at 400 km, hard-body radius 100 m, the edge of the disc half a major sigma past the Gaussian's mean
+  along the major axis (miss 99.62 m). Outputs the 2D Pc and the two encounter-plane sigmas (spec.md section 16.2).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  tca: "2026-03-01T12:00:00.000 UTC"    # informative (spec.md 16.2)
+  objects:                              # the states at TCA in ICRF and each 3x3 position covariance in its own RTN (km^2: RR, TR, TT, NR, NT, NN)
+    - position_km: [4937.991989654868, -3142.3660941833127, 3413.167795332686]
+      velocity_km_s: [0.6974804575552094, 6.094503651130246, 4.606778466921783]
+      covariance_rtn: [1.6000000000000003e-7, 4.8000000000000006e-8, 3.6e-7, 0.0, 0.0, 9.0e-8]
+    - position_km: [4937.953040484434, -3142.3392995452737, 3413.255483153362]
+      velocity_km_s: [-5.206632594279286, -3.006050729878625, 4.765132899385091]
+      covariance_rtn: [2.5e-7, -4.000000000000001e-8, 6.400000000000001e-7, 0.0, 2.8000000000000003e-8, 1.225e-7]
+  hard_body_radius_km: 0.1
+  kernels: []

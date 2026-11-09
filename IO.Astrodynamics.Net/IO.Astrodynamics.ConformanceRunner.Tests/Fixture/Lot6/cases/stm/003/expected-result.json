@@ -1,0 +1,77 @@
+{
+  "id": "stm_24h_geo_grav70_003",
+  "category": "stm",
+  "case_version": "0.3.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-09",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 70, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS)",
+    "perturbations": "Moon, Sun, Mercury Barycenter, Venus Barycenter, Mars Barycenter, Jupiter Barycenter, Saturn Barycenter, Uranus Barycenter, Neptune Barycenter as point masses (de440s positions, GMs of data/gm_de440.tpc). No drag, no SRP, no relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 300 s",
+    "method": "GMAT R2026a: the user-defined planet EarthS (NAIF 399 at its de440s position, its body-fixed frame ITRF93 of data/'s bpc through SPICE), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 70, third bodies Moon, Sun, Mercury Barycenter, Venus Barycenter, Mars Barycenter, Jupiter Barycenter, Saturn Barycenter, Uranus Barycenter, Neptune Barycenter at their de440s positions with the GMs of data/gm_de440.tpc, EarthS's radius and flattening those of data/pck00011.tpc, PrinceDormand78 at 1e-13, MaxStep 300 s; the window integrated over its TT seconds; state entered in EarthSICRF, read in EarthSMJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch. Phi: Sat.OrbitSTM of Propagate P(Sat, 'STM'), turned from EarthSMJ2000Eq to ICRF by R0 at both ends.",
+    "reference_frame": "EarthSMJ2000Eq rotated to ICRF",
+    "script": "stm_24h_geo_grav70_003.script",
+    "log": "stm_24h_geo_grav70_003.log"
+  },
+  "outputs": {
+    "final_stm": [
+      [
+        9.416177180949065,
+        4.858587366907685,
+        0.004257538586785776,
+        -66382.10457628372,
+        115384.54470691587,
+        101.89120818881689
+      ],
+      [
+        -13.99992419790184,
+        -7.082688392658,
+        -0.007034459325749034,
+        110823.74658329488,
+        -191706.82756036267,
+        -169.8686668373914
+      ],
+      [
+        -0.012963861984629307,
+        -0.007465102963553295,
+        0.9998593074007252,
+        101.9688992440876,
+        -177.03003745084902,
+        245.79682792642362
+      ],
+      [
+        0.0010227336882363187,
+        0.0005912131250905962,
+        5.135151533625175e-07,
+        -7.083202472999187,
+        14.00043393828647,
+        0.01244153917594552
+      ],
+      [
+        0.0006154914191946943,
+        0.00035409195048045265,
+        3.0990348477180666e-07,
+        -4.85835053891243,
+        9.415537600808133,
+        0.007458265658997138
+      ],
+      [
+        4.89081890726574e-07,
+        2.8355159879956723e-07,
+        -1.3088302583489809e-06,
+        -0.0038964209381171008,
+        0.006699571664081969,
+        0.999818135007306
+      ]
+    ],
+    "final_x_km": 36130.37581190747,
+    "final_y_km": 21718.713486569577,
+    "final_z_km": 17.25899432475863,
+    "final_vx_km_s": -1.5843583964883297,
+    "final_vy_km_s": 2.6357166793216558,
+    "final_vz_km_s": 0.002393638668830632
+  }
+}

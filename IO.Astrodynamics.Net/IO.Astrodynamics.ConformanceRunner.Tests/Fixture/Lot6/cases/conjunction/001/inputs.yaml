@@ -1,0 +1,107 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/conjunction.yaml; do not edit.
+id: "conjunction_6h_leo700_grav10_headon_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "conjunction"
+created: "2026-11-09"
+description: >
+  A head-on encounter 6 hours after the epoch: two objects at 700 km and 98.2 deg crossing at 170 deg and 15 km/s,
+  propagated with the EGM2008 field of data/ to degree and order 10 and the Moon and the Sun. Outputs the TCA, the
+  miss distance, the relative speed and state in the RTN of object 1, each object's covariance at TCA (sigmas and
+  correlations in its RTN, propagated linearly from the epoch) and the 2D Pc with a combined hard-body radius of 20
+  m (spec.md section 16.1).
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  objects:                              # object 1, then object 2: the states at the epoch in ICRF (GMAT R2026a's back-propagation of the encounter of the description) and each 6x6 covariance in its own RTN at the epoch (km, km/s; the CDM order)
+    - name: "object1"
+      position_km: [-4923.347827922202, -2034.100750680791, -4701.850005250436]
+      velocity_km_s: [3.947753614919817, 3.1703469372785755, -5.507138465641703]
+      covariance_rtn:
+        - 0.0025000000000000005
+        - 0.0
+        - 0.04000000000000001
+        - 0.0
+        - 0.0
+        - 0.0009
+        - 0.0
+        - -2.4e-5
+        - 0.0
+        - 4.0e-8
+        - -2.25e-6
+        - 0.0
+        - 0.0
+        - 0.0
+        - 2.5e-9
+        - 0.0
+        - 0.0
+        - 2.6999999999999996e-7
+        - 0.0
+        - 0.0
+        - 8.999999999999999e-10
+    - name: "object2"
+      position_km: [3478.58660934609, 2164.72340879725, -5889.188894991065]
+      velocity_km_s: [-5.965676734936958, -1.5620459107811515, -4.142849669286294]
+      covariance_rtn:
+        - 0.010000000000000002
+        - 0.010000000000000002
+        - 0.25
+        - 0.0
+        - 0.0
+        - 0.0064
+        - 0.0
+        - -0.000175
+        - 0.0
+        - 2.5e-7
+        - -9.5e-6
+        - 0.0
+        - 0.0
+        - 0.0
+        - 1.0e-8
+        - 0.0
+        - 0.0
+        - 0.0
+        - 0.0
+        - 0.0
+        - 6.400000000000001e-9
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp: false
+  analysis_window:
+    start: "2026-01-20T11:30:00.000 UTC"
+    end: "2026-01-20T12:30:00.000 UTC"
+  report: "closest"
+  hard_body_radius_km: 0.02
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]
+
+tolerances_override:
+  conjunction_position_km:
+    abs_tol: 0.00025
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x Dt / 86400 s) = 0.25 m, Dt =
+      21599.99972 TT seconds from the epoch to the last TCA; reference term 2.5e-10 (S_gen of
+      relative_position_rtn_km, reference-check.json: GMAT R2026a, 2026-11-09)
+  conjunction_tca_s:
+    abs_tol: 1.7e-5
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = max(1 us, ceil2(T_pos |nu| / v_eff^2)) =
+      1.7e-5 s for this case (T_pos 0.00025 km, |nu| 14.9739 km/s, v_eff^2 224.218 km^2/s^2 from the Hermite of the
+      1 s steps); reference term 8.9e-08 (E_2nd of tca_s, reference-check.json: GMAT R2026a, 2026-11-09)
+  conjunction_velocity_km_s:
+    abs_tol: 2.5e-7
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x Dt / 86400 s) = 0.25
+      mm/s, Dt = 21599.99972 TT seconds from the epoch to the last TCA; reference term 5.2e-13 (S_gen of
+      relative_velocity_rtn_km_s, reference-check.json: GMAT R2026a, 2026-11-09)

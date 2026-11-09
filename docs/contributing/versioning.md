@@ -372,6 +372,18 @@ A major version, because it breaks the API: members deprecated for removal in 11
   runner decodes by the spec's column table in `decimal`, independently of the library's parser, so that a line of the
   wrong length or checksum FAILs. The 25 cases of the suite's lot-5 branch (b10b925) pass with at most 0.642 of their
   tolerance (the velocity of frame 035, ICRF → TEME in 1990), and the 176 cases of that branch pass. See [Validation](../guides/validation.md#lot-5-tles-sgp4-and-teme).
+- **Conformance runner: the conjunction categories of lot 6** (design of lot 6 of
+  [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), approved by S. Guillet,
+  2026-11-09). New solvers for `conjunction` (two objects propagated in RK7(8) with their covariances, or read from
+  SPKs, `ConjunctionAssessment.Analyze` and `AnalyzeAll`; the covariance at TCA as the library propagates it),
+  `collision_probability` (the public `Analyze` on straight-line trajectories at TCA, the Pc or Frisbee's maximum, the
+  encounter-plane sigmas, the clip flag) and `cdm` (decode, to inertial axes, and export through `EncounterCase.ToCdm`
+  read back); `stm` takes the `propagator` category's data files and integrator, its case and schemas now synced from
+  the suite (`Fixture/Lot6`). New kind of `spec.md` §6.1: the normalized covariance; the relative kind and the scalar
+  per component take arrays of any length; a cdm export compares its fields in a table of its own. A covariance the
+  library did not propagate, a Pc it did not compute and a sigma it clipped are an ERROR that says so. The 25 cases of
+  the suite's lot-6 branch (970a3bf) pass with at most 0.66 of their tolerance (the relative position of the written
+  CDM, one 100 ns tick of the TCA), and the 201 cases of that branch pass. See [Validation](../guides/validation.md#lot-6-conjunctions-pc-cdm-and-the-state-transition-matrix).
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
   - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared

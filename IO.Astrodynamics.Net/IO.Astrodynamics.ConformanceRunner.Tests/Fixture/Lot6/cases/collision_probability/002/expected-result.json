@@ -1,0 +1,20 @@
+{
+  "id": "collision_probability_synthetic_mid_002",
+  "category": "collision_probability",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "mpmath (the 2D Pc of spec.md 16.2 at 50 digits, tools/legacy_goldens/pcref.py)",
+    "tool_version": "1.4.1",
+    "tool_sha256": "dc4f0ea2304480d4a9a48a94c1020571558ade522b44a6912efac63a586e140f",
+    "kernel": "data/: gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-11-09",
+    "method": "the 2D Pc of spec.md 16.2 (CARA Pc2D: the in-plane miss, the projection of the combined position covariance, the clip (1e-4 HBR)^2, the disc integral; Frisbee's maximum with one covariance absent) in mpmath at 50 digits, two quadratures",
+    "reference_frame": "ICRF"
+  },
+  "outputs": {
+    "collision_probability": 2.7007588724013706e-05,
+    "encounter_plane_sigma_major_km": 2.867555830283767,
+    "encounter_plane_sigma_minor_km": 0.4423099266366374,
+    "remediated": false
+  }
+}

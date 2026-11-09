@@ -3,7 +3,8 @@
 section 6.4), the propagator cases 006 to 018; lot 3 (design of #587, section 8.2), the categories maneuver and
 lambert; lot 4 (design of lot 4 of #457, section 8.2), the categories ground_station, eclipse, orbital_events and
 attitude; lot 5 (design of lot 5 of #457, section 8.2), the categories sgp4 and tle_conversion and the TEME cases 032 to
-036 of frame_transformation (lot 1 keeps its cases 001 to 031).
+036 of frame_transformation (lot 1 keeps its cases 001 to 031); lot 6 (design of lot 6 of #457, section 8.2), the
+categories conjunction, collision_probability, cdm and stm.
 
 Written into IO.Astrodynamics.Net/IO.Astrodynamics.ConformanceRunner.Tests/Fixture/Lot<n>/, which is replaced:
   schemas/v1/case.schema.json, expected.schema.json, runner-report.schema.json
@@ -11,14 +12,15 @@ Written into IO.Astrodynamics.Net/IO.Astrodynamics.ConformanceRunner.Tests/Fixtu
   tolerances.yaml
       the tolerances of the suite
   cases/<category>/<NNN>/inputs.yaml, expected-result.json
-      every case of the lot; nothing else of the case directories (scripts, reports, logs, checks)
+      every case of the lot, and the CDM a cdm case reads next to its inputs.yaml (inputs.cdm_file); nothing else of the
+      case directories (scripts, reports, logs, checks, the informative KVN source of a CDM)
   SOURCE
       the suite commit (git -C <suite> rev-parse HEAD, or the value of --source); without --source, the script stops
       unless <suite> is the root of its own checkout and the files it copies (schemas/v1, tolerances.yaml, data/ and the
       cases of the lot's categories) are those committed at HEAD, untracked files included
   data.sha256
       the SHA-256 and the name of every file of data/ a case reads: those named in its inputs.kernels and, for lots 2
-      to 4, its geopotential_model (the field file, which the runner reads from data/); for lot 4, the SPK of a
+      to 4 and 6, its geopotential_model (the field file, which the runner reads from data/); for lot 4, the SPK of a
       bsp_source orbit (orbit.filename, data/<name>) and the field file EGM2008_to70_TideFree, whose header carries the
       GM of a two-body trajectory (the runner's TwoBodyTrajectory); one per line
   data/
@@ -32,7 +34,7 @@ The tests hash the same way.
 
 Requires PyYAML. A file of data/ left as a Git LFS pointer (a suite cloned without LFS) stops the script.
 
-Usage: python3 -I -B tools/conformance/sync_fixture.py --lot <1|2|3|4|5> <suite checkout> [--source <sha>]
+Usage: python3 -I -B tools/conformance/sync_fixture.py --lot <1|2|3|4|5|6> <suite checkout> [--source <sha>]
 """
 import argparse
 import hashlib
@@ -101,6 +103,7 @@ LOTS = {
     4: Lot(4, ("ground_station", "eclipse", "orbital_events", "attitude"), fields=True, always=("EGM2008_to70_TideFree",),
            spks=True, reference=(TESTS_LRO,)),
     5: Lot(5, ("sgp4", "tle_conversion", "frame_transformation"), ranges={"frame_transformation": (32, 36)}),
+    6: Lot(6, ("conjunction", "collision_probability", "cdm", "stm"), fields=True),
 }
 
 
@@ -134,6 +137,18 @@ def suite_commit(suite, lot):
     return commit
 
 
+def case_files(case):
+    """The files of a case the runner reads: its inputs and golden, and the CDM its inputs name (inputs.cdm_file)."""
+    inputs = yaml.safe_load((case / "inputs.yaml").read_text(encoding="utf-8")).get("inputs") or {}
+    names = list(CASE_FILES)
+    cdm = inputs.get("cdm_file")
+    if cdm is not None:
+        if not isinstance(cdm, str) or cdm != pathlib.PurePath(cdm).name or cdm.startswith("."):
+            fail(f"{case / 'inputs.yaml'}: the CDM {cdm!r} is not a file name next to it")
+        names.append(cdm)
+    return names
+
+
 def case_directories(suite, lot):
     cases = []
     for category in lot.categories:
@@ -143,6 +158,8 @@ def case_directories(suite, lot):
             fail(f"the suite holds no case of lot {lot.number} in {category}")
         for case in found:
             missing = [name for name in CASE_FILES if not (case / name).is_file()]
+            if not missing:
+                missing = [name for name in case_files(case) if not (case / name).is_file()]
             if missing:
                 fail(f"{case} has no {', '.join(missing)}")
         cases.extend(found)
@@ -180,7 +197,7 @@ def write(suite, source, target, lot):
     for case in cases:
         destination = target / case.relative_to(suite)
         destination.mkdir(parents=True)
-        for name in CASE_FILES:
+        for name in case_files(case):
             shutil.copyfile(case / name, destination / name)
         kernels.update(data_files_of(case, lot))
 

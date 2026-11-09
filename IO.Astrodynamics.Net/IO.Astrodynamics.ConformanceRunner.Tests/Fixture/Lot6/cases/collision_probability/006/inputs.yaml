@@ -1,0 +1,35 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/collision_probability.yaml; do not edit.
+id: "collision_probability_synthetic_npd_006"
+schema_version: "v1"
+version: "0.1.0"
+category: "collision_probability"
+created: "2026-11-09"
+description: >
+  A combined covariance that is not positive definite: the projected combined covariance has the eigenvalues (1000
+  km)^2 along the miss and -1 m^2 across it, the secondary's own covariance not positive definite (as a rounded CDM
+  covariance), a 30 deg crossing at 3.9 km/s at 700 km, the miss 100 m, hard-body radius 20 m. The minor eigenvalue
+  is raised to the clip (1e-4 HBR)^2. Outputs the 2D Pc, the major encounter-plane sigma and remediated (spec.md
+  section 16.2).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  tca: "2026-03-01T12:00:00.000 UTC"    # informative (spec.md 16.2)
+  objects:                              # the states at TCA in ICRF and each 3x3 position covariance in its own RTN (km^2: RR, TR, TT, NR, NT, NN)
+    - position_km: [504.77306169219827, -874.2925891429867, 7005.764755937203]
+      velocity_km_s: [-6.498370771676425, -3.7530720236866104, 0.007427568053290112]
+      covariance_rtn: [0.0004, 0.0, 0.01, 0.0, 0.0, 0.0001]
+    - position_km: [504.78021131211716, -874.3049592504818, 7005.863729991255]
+      velocity_km_s: [-3.770862158159543, -6.46648702598876, -0.5287319909097317]
+      covariance_rtn:
+        - 999999.9326148671
+        - 66.98607928961111
+        - 0.2649104124800548
+        - 249.99545131168975
+        - 1.021033358968612
+        - 3.791973720442615
+  hard_body_radius_km: 0.02
+  kernels: []

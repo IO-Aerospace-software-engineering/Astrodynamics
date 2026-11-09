@@ -1,0 +1,21 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/cdm.yaml; do not edit.
+id: "cdm_decode_synthetic_relative_002"
+schema_version: "v1"
+version: "0.1.0"
+category: "cdm"
+created: "2026-11-09"
+description: >
+  Decode a CDM with the relative state, the screening volume with its entry and exit times, the Pc and its method
+  FOSTER-1992 and the OD parameters (the content of CCSDS 508.0-B-1 Cor. 2, section 4.4). The document is written by
+  the suite's generator in KVN and in the unqualified NDM/XML 4.0.0 form (spec.md section 16.3).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  operation: "decode"
+  cdm_file: "cdm.xml"
+  kvn_file: "cdm.kvn"                   # informative: the KVN source of the XML, which decodes identically
+  kernels: []

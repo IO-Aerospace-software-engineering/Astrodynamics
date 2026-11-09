@@ -1,0 +1,77 @@
+{
+  "id": "stm_24h_leo_twobody_001",
+  "category": "stm",
+  "case_version": "0.3.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-11-09",
+    "gravity_model": "point-mass Earth, GM 398600.4355070226 km^3/s^2 (BODY399_GM of data/gm_de440.tpc)",
+    "perturbations": "None (two-body).",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: the user-defined planet EarthS (NAIF 399 at its de440s position) as the point mass of BODY399_GM of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; the window integrated over its TT seconds; state entered in EarthSICRF, read in EarthSMJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch. Phi: Sat.OrbitSTM of Propagate P(Sat, 'STM'), turned from EarthSMJ2000Eq to ICRF by R0 at both ends.",
+    "reference_frame": "EarthSMJ2000Eq rotated to ICRF",
+    "script": "stm_24h_leo_twobody_001.script",
+    "log": "stm_24h_leo_twobody_001.log"
+  },
+  "outputs": {
+    "final_stm": [
+      [
+        10.215267772798345,
+        -164.1037137315648,
+        -147.66656424363873,
+        194994.88331380795,
+        52143.09299184989,
+        -52563.79154984021
+      ],
+      [
+        7.3764674560194265,
+        -121.41230588272617,
+        -108.07063510050571,
+        144368.2729530875,
+        38661.32782268642,
+        -38315.16990527092
+      ],
+      [
+        0.8396289103971684,
+        -22.330544506693066,
+        -20.640524098948934,
+        27305.557165196205,
+        7797.4200753568075,
+        -7347.200824882826
+      ],
+      [
+        -0.0061878900343849885,
+        0.10190419155394197,
+        0.09159736255132354,
+        -120.52167977162674,
+        -32.049723385875474,
+        32.0656829463739
+      ],
+      [
+        0.006315503603739721,
+        -0.11673842274699589,
+        -0.1046923199801688,
+        139.17095994881726,
+        37.458383535752745,
+        -36.38470898006703
+      ],
+      [
+        0.008815130472006709,
+        -0.15248666395525004,
+        -0.13596129216705166,
+        180.34714436754348,
+        49.22563268728787,
+        -48.421488365258696
+      ]
+    ],
+    "final_x_km": 3366.545734679459,
+    "final_y_km": -3779.1476277592724,
+    "final_z_km": -4956.110717631017,
+    "final_vx_km_s": 6.039166999187983,
+    "final_vy_km_s": 4.3771932292384745,
+    "final_vz_km_s": 0.7711770341998267
+  }
+}

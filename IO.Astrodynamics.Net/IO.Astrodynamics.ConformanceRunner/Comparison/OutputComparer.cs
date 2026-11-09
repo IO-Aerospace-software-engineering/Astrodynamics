@@ -51,12 +51,13 @@ public static class OutputComparer
         IReadOnlyDictionary<string, TolerancePair> defaults)
     {
         var measures = new List<OutputMeasure>();
-        foreach (var (output, goldenValue) in Outputs(golden, caseInput.Category))
+        string table = MetricTable.Table(caseInput.Category, caseInput.Inputs);
+        foreach (var (output, goldenValue) in Outputs(golden, table))
         {
-            if (!MetricTable.TryGet(caseInput.Category, output, out var metric))
+            if (!MetricTable.TryGet(table, output, out var metric))
             {
                 throw new InvalidOperationException(
-                    $"The golden holds {output}, which is not an output of the {caseInput.Category} category.");
+                    $"The golden holds {output}, which is not an output of the {table} category.");
             }
 
             if (metric.Geodetic && !caseInput.Inputs.ContainsKey("ellipsoid"))
@@ -69,20 +70,20 @@ public static class OutputComparer
             {
                 // An element beyond the computed elements of its array, whose count then differs from the golden's
                 // (the count itself FAILS): this element FAILS too
-                if (MissingElement(caseInput.Category, output, computed, golden) is { } missing)
+                if (MissingElement(table, output, computed, golden) is { } missing)
                 {
                     measures.Add(missing);
                     continue;
                 }
 
                 throw new InvalidOperationException(
-                    $"The golden holds {output}, which the {caseInput.Category} solver does not produce for these inputs.");
+                    $"The golden holds {output}, which the {table} solver does not produce for these inputs.");
             }
 
             if (value is Exception failure)
             {
                 throw new InvalidOperationException(
-                    $"The golden holds {output}, which the {caseInput.Category} solver cannot compute for these inputs: {failure.Message}",
+                    $"The golden holds {output}, which the {table} solver cannot compute for these inputs: {failure.Message}",
                     failure);
             }
 
@@ -95,7 +96,7 @@ public static class OutputComparer
             // The lines of a computed TLE: their exact part, then each decoded field by its key (spec.md section 15.2)
             if (metric.Kind == MetricKind.TleLine)
             {
-                measures.AddRange(TleLineComparer.Compare(caseInput.Category, output, value, goldenValue,
+                measures.AddRange(TleLineComparer.Compare(table, output, value, goldenValue,
                     (field, key) => ResolveTolerance(field, key, caseInput.TolerancesOverride, defaults)));
                 continue;
             }
@@ -415,15 +416,34 @@ public static class OutputComparer
 
         if (kind == MetricKind.ScalarPerComponent)
         {
-            var c = Vector(computed, output);
-            var g = Vector(golden, output);
+            var (c, g) = Components(computed, golden, output);
             double largest = 0.0;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < c.Length; i++)
             {
                 largest = System.Math.Max(largest, System.Math.Abs(c[i] - g[i]));
             }
 
             return (largest, double.NaN);
+        }
+
+        // An array of the relative kind (spec.md section 6.1): the largest relative delta over its components
+        if (kind == MetricKind.Relative && computed is double[])
+        {
+            var (c, g) = Components(computed, golden, output);
+            (double Absolute, double Relative) largest = (0.0, 0.0);
+            for (int i = 0; i < c.Length; i++)
+            {
+                var deltas = RelativeDeltas(System.Math.Abs(c[i] - g[i]), System.Math.Abs(g[i]));
+                largest = (System.Math.Max(largest.Absolute, deltas.Absolute), System.Math.Max(largest.Relative, deltas.Relative));
+            }
+
+            return largest;
+        }
+
+        if (kind == MetricKind.NormalizedCovariance)
+        {
+            var (c, g) = Components(computed, golden, output);
+            return (NormalizedCovarianceDelta(c, g), double.NaN);
         }
 
         if (kind == MetricKind.CalendarInstant)
@@ -456,6 +476,38 @@ public static class OutputComparer
             MetricKind.Relative => RelativeDeltas(System.Math.Abs(computedValue - goldenValue), System.Math.Abs(goldenValue)),
             _ => (System.Math.Abs(computedValue - goldenValue), double.NaN)
         };
+    }
+
+    /// <summary>
+    /// The delta of two covariances given by their lower triangles (spec.md section 6.1): max over the elements of
+    /// |c_ij − g_ij| / √(g_ii · g_jj).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">A diagonal element of the golden is not positive.</exception>
+    internal static double NormalizedCovarianceDelta(double[] computed, double[] golden)
+    {
+        int n = Utilities.LowerTriangle.Order(golden.Length);
+        var diagonal = new double[n];
+        for (int i = 0; i < n; i++)
+        {
+            diagonal[i] = golden[i * (i + 1) / 2 + i];
+            if (!(diagonal[i] > 0.0))
+            {
+                throw new InvalidOperationException($"The golden covariance has the variance {diagonal[i]:R} at {i}: it is no covariance.");
+            }
+        }
+
+        double largest = 0.0;
+        int k = 0;
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j <= i; j++)
+            {
+                largest = System.Math.Max(largest, System.Math.Abs(computed[k] - golden[k]) / System.Math.Sqrt(diagonal[i] * diagonal[j]));
+                k++;
+            }
+        }
+
+        return largest;
     }
 
     /// <summary>
@@ -567,6 +619,22 @@ public static class OutputComparer
         return golden.ValueKind == JsonValueKind.Number
             ? golden.GetDouble()
             : throw new InvalidOperationException($"The golden gives {output} as {golden.ValueKind}, not a number.");
+    }
+
+    // The components of an array output of any length and of its golden, of the same length
+    private static (double[] Computed, double[] Golden) Components(object computed, JsonElement golden, string output)
+    {
+        var c = computed as double[] ??
+                throw new InvalidOperationException($"The solver gives {output} as {computed?.GetType().Name ?? "null"}, not numbers.");
+        if (golden.ValueKind != JsonValueKind.Array || golden.EnumerateArray().Any(component => component.ValueKind != JsonValueKind.Number))
+        {
+            throw new InvalidOperationException($"The golden gives {output} as {golden}, not numbers.");
+        }
+
+        var g = golden.EnumerateArray().Select(component => component.GetDouble()).ToArray();
+        return g.Length == c.Length
+            ? (c, g)
+            : throw new InvalidOperationException($"The solver gives {output} as {c.Length} numbers and the golden as {g.Length}.");
     }
 
     private static double[] Vector(object computed, string output)

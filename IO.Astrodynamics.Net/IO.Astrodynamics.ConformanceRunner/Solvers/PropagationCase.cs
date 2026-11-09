@@ -44,9 +44,19 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
     /// <summary>The atmosphere model of the suite's drag (spec.md section 12.1).</summary>
     public const string DragModel = "NRLMSISE-00";
 
+    /// <summary>The NAIF id of the spacecraft of a propagation case.</summary>
+    public const int DefaultNaifId = -999;
+
     /// <summary>
     /// Builds the case of <paramref name="caseInput"/>, the geopotential model read from <paramref name="dataPath"/>.
     /// </summary>
+    /// <param name="caseInput">The case.</param>
+    /// <param name="dataPath">The directory of the field files.</param>
+    /// <param name="naifId">The NAIF id of the spacecraft, so that the two objects of a conjunction are two spacecraft.</param>
+    /// <param name="initialCovarianceRtn">The covariance of the initial state in its RTN (m, m/s), carried by the
+    /// initial state in its frame (a pure rotation, <see cref="StateVector.RotateCovarianceFromRtn"/>); none when
+    /// null.</param>
+    /// <param name="hardBodyRadius">The hard-body radius of the spacecraft, m.</param>
     /// <exception cref="InvalidOperationException">The case is not one the framework computes as spec.md section 12.1
     /// specifies it: an unknown field, the field of another body or a degree beyond its file, no field with a degree
     /// other than 0, drag or SRP about another body than the Earth, drag with another model, drag or SRP without the
@@ -54,7 +64,8 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
     /// <exception cref="ArgumentException">A force is neither <c>false</c> nor its definition (<c>true</c>, null), or
     /// a body is unknown.</exception>
     /// <exception cref="FormatException">An epoch is not a tagged epoch of spec.md section 3.</exception>
-    public static PropagationCase Build(CaseInput caseInput, string dataPath)
+    public static PropagationCase Build(CaseInput caseInput, string dataPath, int naifId = DefaultNaifId,
+        Matrix? initialCovarianceRtn = null, double hardBodyRadius = 0.0)
     {
         var inputs = InputParser.ParsePropagatorInputs(caseInput.Inputs);
         var frame = FrameMapper.Map(caseInput.Metadata.ReferenceFrame);
@@ -83,6 +94,10 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
 
         // Build initial state vector
         var sv = BuildStateVector(inputs.Orbit, centralBody, epoch, frame);
+        if (initialCovarianceRtn is { } covarianceRtn)
+        {
+            sv = new StateVector(sv.Position, sv.Velocity, sv.Observer, sv.Epoch, sv.Frame, sv.RotateCovarianceFromRtn(covarianceRtn));
+        }
 
         // Propagation window: its end may carry up to 7 decimals (spec.md section 3)
         var windowStart = EpochParser.Parse(inputs.PropagationWindow.Start);
@@ -102,7 +117,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
             CheckShadowBodies(inputs.ForceModel.Srp.ShadowBodies, bodies);
         }
 
-        var spacecraft = BuildSpacecraft(inputs, sv);
+        var spacecraft = BuildSpacecraft(inputs, sv, naifId, hardBodyRadius);
         return new PropagationCase(propWindow, spacecraft, bodies, inputs.ForceModel.Drag != null, inputs.ForceModel.Srp != null,
             TimeSpan.FromSeconds(inputs.StepSizeS));
     }
@@ -163,7 +178,7 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
 
     // The spacecraft of the case, normative for drag and SRP (spec.md section 12.1); without either, a case may give
     // none, and the spacecraft does not matter
-    private static Spacecraft BuildSpacecraft(PropagatorInputs inputs, StateVector sv)
+    private static Spacecraft BuildSpacecraft(PropagatorInputs inputs, StateVector sv, int naifId, double hardBodyRadius)
     {
         if (inputs.Spacecraft == null && (inputs.ForceModel.Drag != null || inputs.ForceModel.Srp != null))
         {
@@ -171,14 +186,14 @@ public sealed record PropagationCase(Window Window, Spacecraft Spacecraft, IRead
                 "The case has drag or SRP and no spacecraft: its mass, area and coefficients are inputs of these forces (spec.md section 12.1).");
         }
 
-        var clock = new Clock("ConfClk", 256);
+        var clock = new Clock(naifId == DefaultNaifId ? "ConfClk" : $"ConfClk{-naifId}", 256);
         double mass = inputs.Spacecraft?.MassKg ?? 100.0;
         double maxMass = inputs.Spacecraft?.MaxMassKg ?? mass * 10.0;
         double area = inputs.Spacecraft?.SectionalAreaM2 ?? 1.0;
         double cd = inputs.Spacecraft?.DragCoefficient ?? 2.2;
         double cr = inputs.Spacecraft?.RadiationPressureCoefficient ?? 1.0;
-        return new Spacecraft(-999, "ConformanceTestSC", mass, maxMass, clock, sv,
-            sectionalArea: area, dragCoeff: cd, solarRadiationCoeff: cr);
+        return new Spacecraft(naifId, naifId == DefaultNaifId ? "ConformanceTestSC" : $"ConformanceTestSC{-naifId}", mass, maxMass, clock, sv,
+            sectionalArea: area, dragCoeff: cd, solarRadiationCoeff: cr, hardBodyRadius: hardBodyRadius);
     }
 
     /// <summary>The state of an orbit of the inputs (<see cref="InputParser.ParseOrbit"/>) at its epoch, about <paramref name="observer"/>.</summary>

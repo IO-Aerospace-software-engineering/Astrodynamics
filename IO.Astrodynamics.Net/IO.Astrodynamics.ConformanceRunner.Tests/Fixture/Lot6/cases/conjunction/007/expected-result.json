@@ -1,0 +1,29 @@
+{
+  "id": "conjunction_12h_leo500_spk_crossing_007",
+  "category": "conjunction",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "CSPICE",
+    "tool_version": "N0067 (spiceypy 8.3.0)",
+    "tool_sha256": "bbfab248ac7a9e242b104353aa2e4275734a4768e542bce4802a4112666d8a1a",
+    "kernel": "data/: conjunction_002_object1.bsp (SHA-256 e2d19a076a79653ef00491a3cbf512b69adcdb93b355bc4fc3d68328be71028f), conjunction_002_object2.bsp (SHA-256 d9e3683fd6aaeab5f54d91b92fe9b79bc4302887e99ce056d658711f4006dd7c)",
+    "date": "2026-11-09",
+    "method": "CSPICE gfdist (LOCMIN, step 10 s) and a bisection of the range rate of spkezr to the ET double on the SPKs of the case, geometric, J2000; the TCA in TDB seconds from the TDB epoch; the RTN of object 1 about the Earth",
+    "reference_frame": "J2000 (SPICE)"
+  },
+  "outputs": {
+    "tca_s": 20769.150339126587,
+    "miss_distance_km": 0.2486776023496104,
+    "relative_speed_km_s": 7.647361416429409,
+    "relative_position_rtn_km": [
+      -0.2000268534262419,
+      0.1285761403157999,
+      0.07278725135790899
+    ],
+    "relative_velocity_rtn_km_s": [
+      0.0007866046540147768,
+      -3.7664710807674697,
+      6.655511371223752
+    ]
+  }
+}

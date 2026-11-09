@@ -1,0 +1,83 @@
+{
+  "id": "conjunction_12h_leo500_grav10_allminima_008",
+  "category": "conjunction",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-09",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 10, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS)",
+    "perturbations": "Moon, Sun as point masses. No drag. No SRP, no relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: both objects on the user-defined planet EarthS (NAIF 399 at its de440s position, ITRF93 of data/'s bpc through SPICE, the radius and flattening of data/pck00011.tpc), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 10, third bodies Moon, Sun with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s, over the TT seconds from the epoch; the TCA by a stop on Sat1.Rel.X = 0 (Rel: origin and primary object 2, secondary object 1, X = V) and one linear step; the states read in EarthSMJ2000Eq; Phi: Sat.OrbitSTM of each object alone.",
+    "reference_frame": "EarthSMJ2000Eq (every output invariant under a common rotation)",
+    "script": "conjunction_12h_leo500_grav10_allminima_008.script",
+    "log": "conjunction_12h_leo500_grav10_allminima_008.log"
+  },
+  "outputs": {
+    "minima": [
+      {
+        "tca_s": 1513.391062236808,
+        "miss_distance_km": 3739.175865018711
+      },
+      {
+        "tca_s": 4344.557343050573,
+        "miss_distance_km": 3285.84694276119
+      },
+      {
+        "tca_s": 7253.095347215321,
+        "miss_distance_km": 2699.8349936730015
+      },
+      {
+        "tca_s": 10096.260764685128,
+        "miss_distance_km": 2206.278508787706
+      },
+      {
+        "tca_s": 12992.076018591544,
+        "miss_distance_km": 1644.120392123758
+      },
+      {
+        "tca_s": 15848.066278884786,
+        "miss_distance_km": 1107.8092846652605
+      },
+      {
+        "tca_s": 18730.61025220801,
+        "miss_distance_km": 608.5645393618416
+      },
+      {
+        "tca_s": 21599.9658607788,
+        "miss_distance_km": 0.24867760276595988
+      },
+      {
+        "tca_s": 24469.04184828206,
+        "miss_distance_km": 604.2000702078253
+      },
+      {
+        "tca_s": 27351.901280425915,
+        "miss_distance_km": 1106.88685240845
+      },
+      {
+        "tca_s": 30207.673604842836,
+        "miss_distance_km": 1637.3851698336418
+      },
+      {
+        "tca_s": 33103.76484193711,
+        "miss_distance_km": 2204.0597121184387
+      },
+      {
+        "tca_s": 35946.7594875138,
+        "miss_distance_km": 2691.173588364172
+      },
+      {
+        "tca_s": 38855.50850890349,
+        "miss_distance_km": 3281.793237994319
+      },
+      {
+        "tca_s": 41686.65609921197,
+        "miss_distance_km": 3728.2329943674795
+      }
+    ]
+  }
+}

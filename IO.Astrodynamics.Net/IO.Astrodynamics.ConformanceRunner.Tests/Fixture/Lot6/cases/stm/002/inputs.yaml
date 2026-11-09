@@ -1,0 +1,34 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/stm.yaml; do not edit.
+id: "stm_24h_leo_grav10_002"
+schema_version: "v1"
+version: "0.3.0"
+category: "stm"
+created: "2026-10-19"
+description: >
+  State transition matrix of a 24-hour propagation, LEO 400 km, the EGM2008 field of data/ to degree and order 10
+  (the model's GM and radius, oriented by ITRF93 of data/'s Earth orientation file), the Moon and the Sun as point
+  masses, and the final state. Phi(t_end, t_start) in ICRF, compared by 3x3 block (spec.md section 16.4).
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2021-03-20T11:58:50.814 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [5776.749959692774, 3261.6052187414525, 1374.1545894227438]
+    velocity_km_s: [-3.4404278507247144, 3.646519559567989, 5.807923128665473]
+  propagation_window:
+    start: "2021-03-20T11:58:50.814 UTC"
+    end: "2021-03-21T11:58:50.814 UTC"
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp: false
+  step_size_s: 3600.0                   # informative (spec.md 12.1)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]

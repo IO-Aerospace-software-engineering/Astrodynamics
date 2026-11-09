@@ -63,6 +63,15 @@ internal sealed class SuiteFixture
         new[] { "sgp4", "tle_conversion", "frame_transformation" },
         new[] { KernelsPath, "Fixture/Lot1/data", "Fixture/Lot2/data", "Fixture/Lot3/data", "Fixture/Lot4/data" });
 
+    /// <summary>
+    /// Lot 6 (design of lot 6 of #457): the conjunction, collision_probability, cdm and stm cases; the cdm cases read
+    /// their CDM next to their inputs, the conjunction case 007 the SPKs of its objects, shipped in the fixture's
+    /// <c>data/</c>; the suite's Earth orientation file is the one of lot 1's fixture.
+    /// </summary>
+    public static readonly SuiteFixture Lot6 = new("Fixture/Lot6",
+        new[] { "conjunction", "collision_probability", "cdm", "stm" },
+        new[] { KernelsPath, "Fixture/Lot1/data", "Fixture/Lot2/data", "Fixture/Lot3/data", "Fixture/Lot4/data", "Fixture/Lot5/data" });
+
     /// <summary>The SPK of LRO of the library's tests, copied beside the runner's kernels.</summary>
     public const string LroPath = "Data/LRO";
 
@@ -122,12 +131,13 @@ internal sealed class SuiteFixture
         foreach (var caseDirectory in cases)
         {
             Directory.CreateDirectory(Path.Combine(directory, caseDirectory));
-            foreach (var file in CaseFiles)
+            var caseInput = ReadCase(Root, caseDirectory);
+            foreach (var file in CaseFiles.Concat(FilesNextToInputs(caseInput)))
             {
                 CopyFile(Path.Combine(Root, caseDirectory, file), Path.Combine(directory, caseDirectory, file));
             }
 
-            files.UnionWith(DataFilesOf(ReadCase(Root, caseDirectory)));
+            files.UnionWith(DataFilesOf(caseInput));
             files.UnionWith(_always);
         }
 
@@ -214,6 +224,12 @@ internal sealed class SuiteFixture
         var document = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
         edit(document["outputs"]!.AsObject());
         File.WriteAllText(path, document.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    // The files a case reads next to its inputs.yaml: the CDM of a cdm case
+    private static IEnumerable<string> FilesNextToInputs(CaseInput caseInput)
+    {
+        return caseInput.Inputs.TryGetValue("cdm_file", out var cdm) && cdm?.ToString() is { } name ? [name] : [];
     }
 
     // The files of data/ a case reads: its kernels, its field file and the SPK of its orbit, which the runner reads from

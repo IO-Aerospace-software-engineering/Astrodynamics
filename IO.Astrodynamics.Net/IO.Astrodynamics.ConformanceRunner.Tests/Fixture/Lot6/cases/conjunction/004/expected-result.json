@@ -1,0 +1,90 @@
+{
+  "id": "conjunction_6h_geo_grav10_slow_004",
+  "category": "conjunction",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-09",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 10, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS)",
+    "perturbations": "Moon, Sun as point masses. No drag. No SRP, no relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 300 s",
+    "method": "GMAT R2026a: both objects on the user-defined planet EarthS (NAIF 399 at its de440s position, ITRF93 of data/'s bpc through SPICE, the radius and flattening of data/pck00011.tpc), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 10, third bodies Moon, Sun with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 300 s, over the TT seconds from the epoch; the TCA by a stop on Sat1.Rel.X = 0 (Rel: origin and primary object 2, secondary object 1, X = V) and one linear step; the states read in EarthSMJ2000Eq; Phi: Sat.OrbitSTM of each object alone.",
+    "reference_frame": "EarthSMJ2000Eq (every output invariant under a common rotation)",
+    "script": "conjunction_6h_geo_grav10_slow_004.script",
+    "log": "conjunction_6h_geo_grav10_slow_004.log"
+  },
+  "outputs": {
+    "tca_s": 21600.000005827013,
+    "miss_distance_km": 0.5000000003113364,
+    "relative_speed_km_s": 0.0010000000000001696,
+    "relative_position_rtn_km": [
+      0.5000000003113071,
+      1.7086931836954248e-07,
+      6.21246650059312e-09
+    ],
+    "relative_velocity_rtn_km_s": [
+      -1.2427376713766556e-11,
+      -8.525823223963705e-15,
+      0.0010000000000001694
+    ],
+    "objects": [
+      {
+        "sigma_rtn": [
+          2.9251386841063796,
+          5.404636153503839,
+          0.41122129679628827,
+          0.0004115132702307233,
+          0.00019733619171091144,
+          2.2363041679174905e-06
+        ],
+        "correlation_rtn": [
+          -0.9259229206227526,
+          1.4341416686809904e-05,
+          -3.860989902382671e-06,
+          0.9884585345264797,
+          -0.9720795143868014,
+          1.1176221581640646e-05,
+          -0.977106888867417,
+          0.9847931858842317,
+          -7.372527415554363e-06,
+          -0.9974256863552693,
+          -0.0004463934114152598,
+          0.000647936159881571,
+          -0.3583391405087795,
+          -0.0005355072927351246,
+          0.0005668101555512697
+        ]
+      },
+      {
+        "sigma_rtn": [
+          7.0032407014493,
+          13.448829360659362,
+          1.0967306422971967,
+          0.0010079325927362566,
+          0.0004845156946687383,
+          5.848117788543775e-06
+        ],
+        "correlation_rtn": [
+          -0.9487713203148833,
+          9.253257523915049e-06,
+          -2.046912159853564e-06,
+          0.9915086488712879,
+          -0.9815119992307418,
+          7.263313033411272e-06,
+          -0.9838906182911435,
+          0.98981554053919,
+          -3.8015512559464865e-06,
+          -0.9983497073221695,
+          -0.0005026740284364466,
+          0.0006337074029867312,
+          -0.06558345327655708,
+          -0.0005628794118788131,
+          0.0005826317691348102
+        ]
+      }
+    ]
+  }
+}

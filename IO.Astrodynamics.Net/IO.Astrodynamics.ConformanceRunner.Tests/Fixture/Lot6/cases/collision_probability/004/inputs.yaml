@@ -1,0 +1,27 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/collision_probability.yaml; do not edit.
+id: "collision_probability_synthetic_floor_004"
+schema_version: "v1"
+version: "0.1.0"
+category: "collision_probability"
+created: "2026-11-09"
+description: >
+  A probability of collision near 5e-12: a 75 deg crossing at 9.2 km/s at 550 km and 97.6 deg, the miss of 11.3 km
+  along the major axis of the projected combined covariance, hard-body radius 4 m, the far tail of the Gaussian.
+  Outputs the 2D Pc and the two encounter-plane sigmas (spec.md section 16.2).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  tca: "2026-03-01T12:00:00.000 UTC"    # informative (spec.md 16.2)
+  objects:                              # the states at TCA in ICRF and each 3x3 position covariance in its own RTN (km^2: RR, TR, TT, NR, NT, NN)
+    - position_km: [4934.22176669829, 212.4985225124609, 4853.149713150022]
+      velocity_km_s: [-5.158668835026957, -1.6307234140360465, 5.322368801650167]
+      covariance_rtn: [0.0025, 0.003, 0.36, 0.0, 0.0, 0.0016]
+    - position_km: [4929.432111503135, 203.86336667483852, 4858.643644963533]
+      velocity_km_s: [-0.07336760549403824, -7.578052422643333, 0.40798794101017416]
+      covariance_rtn: [0.0225, 0.07500000000000001, 6.25, 0.0, 0.025, 0.01]
+  hard_body_radius_km: 0.004
+  kernels: []

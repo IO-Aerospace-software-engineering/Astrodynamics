@@ -1,0 +1,21 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/cdm.yaml; do not edit.
+id: "cdm_decode_synthetic_default_units_006"
+schema_version: "v1"
+version: "0.1.0"
+category: "cdm"
+created: "2026-11-09"
+description: >
+  Decode the CDM of 002 written without the optional units of MISS_DISTANCE, RELATIVE_POSITION_R, T and N and
+  SCREEN_VOLUME_X, Y and Z, in the KVN and in the XML: the standard's unit, m (CCSDS 508.0-B-1 Cor. 2, table 3-2).
+  The document is written by the suite's generator (spec.md section 16.3).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  operation: "decode"
+  cdm_file: "cdm.xml"
+  kvn_file: "cdm.kvn"                   # informative: the KVN source of the XML, which decodes identically
+  kernels: []

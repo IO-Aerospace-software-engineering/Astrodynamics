@@ -1,0 +1,44 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/stm.yaml; do not edit.
+id: "stm_24h_geo_grav70_003"
+schema_version: "v1"
+version: "0.3.0"
+category: "stm"
+created: "2026-10-19"
+description: >
+  State transition matrix of a 24-hour propagation, GEO, the EGM2008 field of data/ to degree and order 70 (the
+  model's GM and radius, oriented by ITRF93 of data/'s Earth orientation file), the Moon, the Sun and the
+  barycentres of Mercury to Neptune as point masses, and the final state. Phi(t_end, t_start) in ICRF, compared by
+  3x3 block (spec.md section 16.4).
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2021-03-20T11:58:50.814 UTC"
+  orbit:
+    type: "state_vector"
+    position_km: [36507.910727893264, 21077.844060449363, 18.393893573089176]
+    velocity_km_s: [-1.537638129248968, 2.663266349417397, 0.0023241389227228655]
+  propagation_window:
+    start: "2021-03-20T11:58:50.814 UTC"
+    end: "2021-03-21T11:58:50.814 UTC"
+  central_body: "Earth"
+  geopotential_degree: 70
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies:
+    - "Moon"
+    - "Sun"
+    - "Mercury Barycenter"
+    - "Venus Barycenter"
+    - "Mars Barycenter"
+    - "Jupiter Barycenter"
+    - "Saturn Barycenter"
+    - "Uranus Barycenter"
+    - "Neptune Barycenter"
+  force_model:
+    drag: false
+    srp: false
+  step_size_s: 3600.0                   # informative (spec.md 12.1)
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]

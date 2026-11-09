@@ -1,0 +1,21 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/cdm.yaml; do not edit.
+id: "cdm_to_inertial_synthetic_cara_form_004"
+schema_version: "v1"
+version: "0.1.0"
+category: "cdm"
+created: "2026-11-09"
+description: >
+  Decode a CDM in the form of CARA's files (19 significant digits, comments inside the data blocks, rounded relative
+  fields, FOSTER-1992) and turn each object's 6x6 RTN covariance into inertial axes. The document is written by the
+  suite's generator in KVN and in the unqualified NDM/XML 4.0.0 form (spec.md section 16.3).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  operation: "to_inertial"
+  cdm_file: "cdm.xml"
+  kvn_file: "cdm.kvn"                   # informative: the KVN source of the XML, which decodes identically
+  kernels: []
