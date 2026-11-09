@@ -36,7 +36,7 @@ public class CdmSolver : ICategorySolver
     private const int NaifId = -1701;
 
     // The consider terms of a 9x9 covariance (spec.md section 16.3), in their order, each with the power of m of its unit
-    // in CCSDS 508.0 table 3-2 (m³/kg: 3)
+    // in CCSDS 508.0 table 3-2 (m³/kg: 3); a CDM gives whole rows, CDRG (7 terms), then CSRP (15), then CTHR (24)
     private static readonly (string Name, Func<CdmCovarianceMatrix, double?> Value, int Power)[] ConsiderTerms =
     [
         ("CDRG_R", c => c.CdrgR, 3), ("CDRG_T", c => c.CdrgT, 3), ("CDRG_N", c => c.CdrgN, 3),
@@ -139,10 +139,7 @@ public class CdmSolver : ICategorySolver
             var consider = ConsiderTerms.Select(t => (t.Name, Value: t.Value(covariance), t.Power)).ToArray();
             if (consider.Any(t => t.Value.HasValue))
             {
-                outputs[Name("covariance_consider")] = SolverOutput.Of(() => consider.All(t => t.Value.HasValue)
-                    ? consider.Select(t => t.Value!.Value / System.Math.Pow(10.0, 3 * t.Power)).ToArray()
-                    : throw new InvalidOperationException(
-                        $"The CDM gives some consider terms of object {k + 1} and not {string.Join(", ", consider.Where(t => !t.Value.HasValue).Select(t => t.Name))}."));
+                outputs[Name("covariance_consider")] = SolverOutput.Of(() => Consider(consider, k));
             }
 
             if (inertial)
@@ -154,6 +151,24 @@ public class CdmSolver : ICategorySolver
         var od = segment.Data?.OdParameters;
         Optional(outputs, Name("time_lastob_start"), od?.TimeLastObservationStartUtc);
         Optional(outputs, Name("time_lastob_end"), od?.TimeLastObservationEndUtc);
+    }
+
+    // The consider terms present, in their order, each in km: the 7, 15 or 24 terms of whole rows CDRG, then CSRP, then
+    // CTHR (the 8x8 or 9x9 covariance of CCSDS 508.0, as the suite's generator writes them); a hole inside a row, or a
+    // later row without an earlier one, is refused
+    private static double[] Consider((string Name, double? Value, int Power)[] consider, int k)
+    {
+        int present = consider.TakeWhile(t => t.Value.HasValue).Count();
+        if (present is 7 or 15 or 24 && consider.Skip(present).All(t => !t.Value.HasValue))
+        {
+            return consider.Take(present).Select(t => t.Value!.Value / System.Math.Pow(10.0, 3 * t.Power)).ToArray();
+        }
+
+        int last = Array.FindLastIndex(consider, t => t.Value.HasValue);
+        int rowsEnd = last < 7 ? 7 : last < 15 ? 15 : 24;
+        var missing = consider.Take(rowsEnd).Where(t => !t.Value.HasValue).Select(t => t.Name);
+        throw new InvalidOperationException(
+            $"The consider terms of object {k + 1} are not whole rows CDRG, then CSRP, then CTHR: no {string.Join(", ", missing)}.");
     }
 
     // The covariance of an object in inertial axes, km: the RTN covariance turned on its state
