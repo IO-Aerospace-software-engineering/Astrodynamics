@@ -17,15 +17,22 @@ namespace IO.Astrodynamics.Tests.SSA;
 
 /// <summary>
 /// Two LEO spacecraft about a point-mass Earth that cross at 60° with a 250 m miss at t0 + 1800 s, then at each node
-/// crossing (the reproduction of #620 and #621), propagated over 3 h in RK7(8) and written to two SPKs.
+/// crossing (the reproduction of #620 and #621), propagated over 3 h in RK7(8) at 60 s steps and written to two SPKs.
 /// </summary>
-public sealed class CrossingEncounterCase : IDisposable
+public class CrossingEncounterCase : IDisposable
 {
     internal const int Id1 = -620001;
     internal const int Id2 = -620002;
 
-    public CrossingEncounterCase()
+    public CrossingEncounterCase() : this(Id1, Id2, "CROSS", () => new RK78Integrator(absoluteTolerance: 1e-13,
+        relativeTolerance: 1e-13, initialStepSize: 60.0, minStepSize: 1e-3, maxStepSize: 60.0))
     {
+    }
+
+    protected CrossingEncounterCase(int id1, int id2, string name, Func<RK78Integrator> integrator)
+    {
+        ProtectedId = id1;
+        SecondaryId = id2;
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
         T0 = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, frame: TimeFrame.UTCFrame).ToTDB();
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, T0);
@@ -44,15 +51,15 @@ public sealed class CrossingEncounterCase : IDisposable
         var s1 = new StateVector(p1, v1, earth, encounter, Frames.Frame.ICRF).AtEpoch(T0).ToStateVector();
         var s2 = new StateVector(p2, v2, earth, encounter, Frames.Frame.ICRF).AtEpoch(T0).ToStateVector();
 
-        Sat1 = new Spacecraft(Id1, "CROSS1", 500.0, 5000.0, new Clock("CROSS1_CLK", 256), s1);
-        Sat2 = new Spacecraft(Id2, "CROSS2", 100.0, 1000.0, new Clock("CROSS2_CLK", 256), s2);
+        Sat1 = new Spacecraft(id1, name + "1", 500.0, 5000.0, new Clock(name + "1_CLK", 256), s1);
+        Sat2 = new Spacecraft(id2, name + "2", 100.0, 1000.0, new Clock(name + "2_CLK", 256), s2);
         Window = new Window(T0, T0.AddSeconds(10800.0));
-        Solution1 = Sat1.Propagate(Window, new CelestialItem[] { earth }, Integrator(), false, false, TimeSpan.FromSeconds(60.0));
-        Solution2 = Sat2.Propagate(Window, new CelestialItem[] { earth }, Integrator(), false, false, TimeSpan.FromSeconds(60.0));
+        Solution1 = Sat1.Propagate(Window, new CelestialItem[] { earth }, integrator(), false, false, TimeSpan.FromSeconds(60.0));
+        Solution2 = Sat2.Propagate(Window, new CelestialItem[] { earth }, integrator(), false, false, TimeSpan.FromSeconds(60.0));
 
         _directory = Directory.CreateTempSubdirectory("io-crossing-");
-        Spk1 = new FileInfo(Path.Combine(_directory.FullName, "cross1.bsp"));
-        Spk2 = new FileInfo(Path.Combine(_directory.FullName, "cross2.bsp"));
+        Spk1 = new FileInfo(Path.Combine(_directory.FullName, name.ToLowerInvariant() + "1.bsp"));
+        Spk2 = new FileInfo(Path.Combine(_directory.FullName, name.ToLowerInvariant() + "2.bsp"));
         Sat1.WriteEphemeris(Spk1);
         Sat2.WriteEphemeris(Spk2);
         SpiceAPI.Instance.LoadKernels(Spk1);
@@ -61,6 +68,8 @@ public sealed class CrossingEncounterCase : IDisposable
 
     private readonly DirectoryInfo _directory;
 
+    public int ProtectedId { get; }
+    public int SecondaryId { get; }
     public TimeSystem.Time T0 { get; }
     public Window Window { get; }
     public Spacecraft Sat1 { get; }
@@ -72,14 +81,24 @@ public sealed class CrossingEncounterCase : IDisposable
 
     public Window Seconds(double start, double end) => new(T0.AddSeconds(start), T0.AddSeconds(end));
 
-    private static RK78Integrator Integrator() => new(absoluteTolerance: 1e-13, relativeTolerance: 1e-13, initialStepSize: 60.0,
-        minStepSize: 1e-3, maxStepSize: 60.0);
-
     public void Dispose()
     {
         SpiceAPI.Instance.UnloadKernels(Spk1);
         SpiceAPI.Instance.UnloadKernels(Spk2);
         _directory.Delete(true);
+        GC.SuppressFinalize(this);
+    }
+}
+
+/// <summary>
+/// The same crossing propagated with the defaults of <c>new RK78Integrator()</c> (47 steps, median 234 s): the minima of
+/// the cubic Hermite of its steps are 12 to 212 µs before those of its states (#363), the band of S1 of the review of
+/// lot 6 of #457.
+/// </summary>
+public sealed class DefaultStepCrossingEncounterCase : CrossingEncounterCase
+{
+    public DefaultStepCrossingEncounterCase() : base(-620011, -620012, "CROSSD", () => new RK78Integrator())
+    {
     }
 }
 
@@ -88,16 +107,20 @@ public sealed class CrossingEncounterCase : IDisposable
 /// outside the coverage of the kernels (#454) or of the propagated states (#527). Expected values from CSPICE on the SPKs
 /// (<c>spkezr_c</c>, <c>gfdist_c</c>) and from the case's geometry.
 /// </summary>
-public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCase>
+public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCase>,
+    IClassFixture<DefaultStepCrossingEncounterCase>
 {
     private static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = null };
 
     private readonly CrossingEncounterCase _case;
+    private readonly DefaultStepCrossingEncounterCase _defaultStepCase;
     private readonly ITestOutputHelper _output;
 
-    public ConjunctionKernelAndWindowTests(CrossingEncounterCase crossingCase, ITestOutputHelper output)
+    public ConjunctionKernelAndWindowTests(CrossingEncounterCase crossingCase,
+        DefaultStepCrossingEncounterCase defaultStepCase, ITestOutputHelper output)
     {
         _case = crossingCase;
+        _defaultStepCase = defaultStepCase;
         _output = output;
     }
 
@@ -219,36 +242,37 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // The local minima of the distance on the two SPKs: those of CSPICE's gfdist_c (LOCMIN, step 60 s, its convergence
     // tolerance of 1e-6 s), each refined to the zero of the range rate of CSPICE's states by secants (1 ms base), and the
     // distance there
-    private (TimeSystem.Time Epoch, double Distance)[] CspiceLocalMinima(Window window)
+    private (TimeSystem.Time Epoch, double Distance)[] CspiceLocalMinima(Window window, CrossingEncounterCase crossing = null)
     {
-        return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, CrossingEncounterCase.Id1, CrossingEncounterCase.Id2,
+        crossing ??= _case;
+        return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, crossing.ProtectedId, crossing.SecondaryId,
                 RelationnalOperator.LocalMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0))
             .Select(w =>
             {
                 var epoch = w.StartDate;
                 for (int iteration = 0; iteration < 4; iteration++)
                 {
-                    double f0 = CspiceRangeRate(epoch);
-                    double f1 = CspiceRangeRate(epoch.AddSeconds(1.0e-3));
+                    double f0 = CspiceRangeRate(epoch, crossing);
+                    double f1 = CspiceRangeRate(epoch.AddSeconds(1.0e-3), crossing);
                     if (f1 == f0) break;
                     epoch = epoch.AddSeconds(-f0 * 1.0e-3 / (f1 - f0));
                 }
 
-                return (epoch, CspiceRelative(epoch).Position.Magnitude());
+                return (epoch, CspiceRelative(epoch, crossing).Position.Magnitude());
             })
             .ToArray();
     }
 
-    private static (Vector3 Position, Vector3 Velocity) CspiceRelative(TimeSystem.Time epoch)
+    private static (Vector3 Position, Vector3 Velocity) CspiceRelative(TimeSystem.Time epoch, CrossingEncounterCase crossing = null)
     {
-        var s1 = CspiceState(epoch, CrossingEncounterCase.Id1);
-        var s2 = CspiceState(epoch, CrossingEncounterCase.Id2);
+        var s1 = CspiceState(epoch, crossing?.ProtectedId ?? CrossingEncounterCase.Id1);
+        var s2 = CspiceState(epoch, crossing?.SecondaryId ?? CrossingEncounterCase.Id2);
         return (s2.Position - s1.Position, s2.Velocity - s1.Velocity);
     }
 
-    private static double CspiceRangeRate(TimeSystem.Time epoch)
+    private static double CspiceRangeRate(TimeSystem.Time epoch, CrossingEncounterCase crossing = null)
     {
-        var (position, velocity) = CspiceRelative(epoch);
+        var (position, velocity) = CspiceRelative(epoch, crossing);
         return position * velocity;
     }
 
@@ -257,16 +281,145 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         return SpiceAPI.Instance.ReadEphemeris(epoch, observer, id, Frames.Frame.ICRF, Aberration.None).ToStateVector();
     }
 
-    private void AssertIsMinimum(EncounterCase encounter, (TimeSystem.Time Epoch, double Distance) reference)
+    private void AssertIsMinimum(EncounterCase encounter, (TimeSystem.Time Epoch, double Distance) reference,
+        double missBound = 2.3e-8)
     {
         double tcaError = (encounter.EncounterState.Epoch - reference.Epoch).TotalSeconds;
         double missError = encounter.EncounterState.MissDistanceMeters - reference.Distance;
         _output.WriteLine($"TCA t0 + {(encounter.EncounterState.Epoch - _case.T0).TotalSeconds:F7} s: {tcaError:E3} s, miss {missError:E3} m");
+        _worstTcaError = System.Math.Max(_worstTcaError, System.Math.Abs(tcaError));
+        _worstMissError = System.Math.Max(_worstMissError, System.Math.Abs(missError));
 
         // PROVISIONAL (Linux x64 only, until the CI of the three platforms): twice the worst measured, 2e-7 s (two ticks
         // of the epochs) and 1.1e-8 m, the propagation against its SPK (degree-7 interpolation of the 60 s outputs)
         Assert.True(System.Math.Abs(tcaError) <= 4.0e-7, $"TCA {tcaError:E3} s");
-        Assert.True(System.Math.Abs(missError) <= 2.3e-8, $"miss {missError:E3} m");
+        Assert.True(System.Math.Abs(missError) <= missBound, $"miss {missError:E3} m");
+    }
+
+    // ---- S1 of the review of lot 6 of #457: a window end within the Hermite error of a minimum ----
+
+    // Offsets of the window ends from the minima: 10 µs to 1 ms, inside and past the band of the default steps (the
+    // minima of the Hermite 12, 62, 139 and 212 µs before those of the states; below 1 µs at 60 s steps)
+    private static readonly double[] EndOffsets = { 1.0e-5, 3.0e-5, 1.0e-4, 3.0e-4, 1.0e-3 };
+
+    private double _worstTcaError;
+    private double _worstMissError;
+
+    private CrossingEncounterCase Crossing(string steps) => steps == "60 s" ? _case : _defaultStepCase;
+
+    // The bound of the miss distance against the SPK: #621's at 60 s steps (1.1e-8 m measured again here); at the default
+    // steps, PROVISIONAL (Linux x64 only, until the CI of the three platforms): twice the worst measured, 2.74e-7 m, on the
+    // whole window as on every window of S1: the states of RK7(8) at 1e-9 inside a step of 234 s against the degree-7
+    // interpolation of their 60 s outputs, whatever the window (the TCA keeps #621's 4e-7 s, 2e-7 s measured)
+    private double MissBound(CrossingEncounterCase crossing) => crossing == _case ? 2.3e-8 : DefaultStepMissBound;
+
+    private const double DefaultStepMissBound = 5.5e-7;
+
+    [Fact]
+    public void AnalyzeAll_Dense_DefaultSteps_ListsTheLocalMinimaOfCspice()
+    {
+        // The whole window, no end near a minimum: the miss of the default steps against their SPK
+        var crossing = _defaultStepCase;
+        AssertWindowMatchesCspice(crossing, crossing.Window, expectedCount: 4);
+        _output.WriteLine($"MEASURE S1 whole window default: TCA {_worstTcaError:E3} s, miss {_worstMissError:E3} m");
+    }
+
+    [Theory]
+    [InlineData("60 s", 0)]
+    [InlineData("60 s", 1)]
+    [InlineData("60 s", 2)]
+    [InlineData("60 s", 3)]
+    [InlineData("default", 0)]
+    [InlineData("default", 1)]
+    [InlineData("default", 2)]
+    [InlineData("default", 3)]
+    public void Dense_WindowEndingJustBeforeAMinimum_DoesNotListIt(string steps, int minimum)
+    {
+        // Before, a window ending inside the band listed the minimum of the Hermite, unrefined: a point still closing
+        var crossing = Crossing(steps);
+        var minima = CspiceLocalMinima(crossing.Window, crossing);
+        Assert.Equal(4, minima.Length);
+        var tca = minima[minimum].Epoch;
+        foreach (double offset in EndOffsets)
+        {
+            // No minimum inside: AnalyzeAll lists none, Analyze returns the end, where the distance grows into the window
+            AssertWindowMatchesCspice(crossing, new Window(tca.AddSeconds(-600.0), tca.AddSeconds(-offset)), expectedCount: 0);
+
+            // The previous minimum inside: AnalyzeAll lists it alone, Analyze returns it
+            if (minimum > 0)
+            {
+                var previous = minima[minimum - 1].Epoch;
+                AssertWindowMatchesCspice(crossing, new Window(previous.AddSeconds(-600.0), tca.AddSeconds(-offset)),
+                    expectedCount: 1);
+            }
+
+            // Past the minimum, the window holds it
+            AssertWindowMatchesCspice(crossing, new Window(tca.AddSeconds(-600.0), tca.AddSeconds(offset)), expectedCount: 1);
+        }
+
+        _output.WriteLine($"MEASURE S1 window end {steps} minimum {minimum}: TCA {_worstTcaError:E3} s, miss {_worstMissError:E3} m");
+    }
+
+    [Theory]
+    [InlineData("60 s", 0)]
+    [InlineData("60 s", 1)]
+    [InlineData("60 s", 2)]
+    [InlineData("60 s", 3)]
+    [InlineData("default", 0)]
+    [InlineData("default", 1)]
+    [InlineData("default", 2)]
+    [InlineData("default", 3)]
+    public void Dense_WindowStartingJustBeforeAMinimum_ListsIt(string steps, int minimum)
+    {
+        // Before, a window starting inside the band listed nothing: the minimum of the Hermite lay before the start
+        var crossing = Crossing(steps);
+        var minima = CspiceLocalMinima(crossing.Window, crossing);
+        Assert.Equal(4, minima.Length);
+        var tca = minima[minimum].Epoch;
+        foreach (double offset in EndOffsets)
+        {
+            AssertWindowMatchesCspice(crossing, new Window(tca.AddSeconds(-offset), tca.AddSeconds(400.0)), expectedCount: 1);
+
+            // Starting past the minimum: none inside but the next one, which Analyze returns, never the start, closer
+            var end = minimum < minima.Length - 1 ? minima[minimum + 1].Epoch.AddSeconds(400.0) : tca.AddSeconds(400.0);
+            AssertWindowMatchesCspice(crossing, new Window(tca.AddSeconds(offset), end),
+                expectedCount: minimum < minima.Length - 1 ? 1 : 0);
+        }
+
+        _output.WriteLine($"MEASURE S1 window start {steps} minimum {minimum}: TCA {_worstTcaError:E3} s, miss {_worstMissError:E3} m");
+    }
+
+    // AnalyzeAll lists the local minima of CSPICE's gfdist_c in the window, each within the bounds of #621, and Analyze
+    // returns the closest of them; without one, the window end where the distance grows into the window by CSPICE's range
+    // rate (the closer one when both do)
+    private void AssertWindowMatchesCspice(CrossingEncounterCase crossing, Window window, int expectedCount)
+    {
+        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
+        var locmin = CspiceLocalMinima(window, crossing);
+        Assert.Equal(expectedCount, locmin.Length);
+
+        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
+        Assert.Equal(locmin.Length, all.Count);
+        double missBound = MissBound(crossing);
+        for (int i = 0; i < all.Count; i++)
+        {
+            AssertIsMinimum(all[i], locmin[i], missBound);
+        }
+
+        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
+        if (locmin.Length > 0)
+        {
+            AssertIsMinimum(encounter, locmin.MinBy(m => m.Distance), missBound);
+            return;
+        }
+
+        var ends = new[] { window.StartDate, window.EndDate }
+            .Where(epoch => epoch == window.StartDate
+                ? CspiceRangeRate(epoch, crossing) >= 0.0
+                : CspiceRangeRate(epoch, crossing) <= 0.0)
+            .ToArray();
+        Assert.NotEmpty(ends);
+        Assert.Equal(ends.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()), encounter.EncounterState.Epoch);
     }
 
     // ---- #527: the ILocalizable overloads do not extrapolate the propagated states ----

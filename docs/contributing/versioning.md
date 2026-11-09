@@ -158,9 +158,15 @@ A major version, because it breaks the API: members deprecated for removal in 11
   never an end closer than it. Measured against CSPICE's `gfdist_c` (LOCMIN) on the SPKs of the propagations, refined
   on the range rate of `spkezr_c`: the four minima of 3 h within 2e-7 s (two ticks) and 1.1e-8 m. Without an interior
   minimum, `Analyze` still returns the end where the distance grows into the window, and `Screen` and the
-  `ILocalizable` overloads keep their midpoint: #621's own change decides them. A minimum is interior as located on the
-  cubic Hermite of the stored steps (#363): within that error of a window end, a minimum whose range-rate zero lies just
-  outside the window is still kept at its unrefined Hermite epoch, as before 11.0.0 (its fix goes to its own issue).
+  `ILocalizable` overloads keep their midpoint: #621's own change decides them. Whether a minimum lies inside the window
+  is decided on the range rate of the states, the minima of the cubic Hermite of the stored steps, the window ends
+  included, only seeding the search (S1 of the lot's review): the Hermite misses the zero by its error (#363, 12 to
+  212 µs at the default steps of `new RK78Integrator()` on this crossing), within which a window ending before a minimum
+  listed its unrefined Hermite epoch, a point still closing (as before 11.0.0), and a window starting before one listed
+  nothing (an intermediate state of this change). A window end is now bracketed when the range rate says the minimum
+  lies inside, and a minimum whose range-rate zero lies outside the window is dropped: against `gfdist_c` on windows
+  ending or starting 10 µs to 1 ms before or after each of the four minima, at 60 s and at the default steps, the same
+  minima within the bounds above (2.7e-7 m at the default steps, their states against their SPK of 60 s outputs).
 - **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the
   ephemeris read and `TransformFrame`). `ReadEphemerisAtGivenEpochProxy` left its state unwritten when `spkezr_c`
   failed (r = (4.9e-321, 6.95e-307, 6.95e-307) m past de440s on Linux, whatever the stack held elsewhere), and

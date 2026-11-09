@@ -210,9 +210,9 @@ public static class ConjunctionAssessment
     /// <returns>
     /// The highest-priority encounter within the window: the closest interior local minimum of the distance when the window
     /// holds one, a window end never preferred to it (#621); without an interior minimum, the end where the distance grows
-    /// into the window when the trajectories share their observer and frame, the midpoint otherwise. A minimum is interior
-    /// as located on the cubic Hermite of the stored steps (#363): within that error of a window end, a minimum whose
-    /// range-rate zero lies just outside the window is kept at its unrefined Hermite epoch.
+    /// into the window when the trajectories share their observer and frame, the midpoint otherwise. On that path a minimum
+    /// lies inside the window when the range rate of the states says so, the cubic Hermite of the stored steps only seeding
+    /// the search (#363): a minimum whose range-rate zero lies outside the window is never returned, however near an end.
     /// </returns>
     public static EncounterCase Analyze(
         ProtectedSpacecraftProfile protectedAsset,
@@ -282,9 +282,9 @@ public static class ConjunctionAssessment
     /// <returns>
     /// All detected encounters in the window. When the trajectories share their observer and frame, the interior local
     /// minima of the distance only, an empty list when the window holds none (#621: a window end was listed before 11.0.0);
-    /// otherwise, without a TCA, a single midpoint fallback encounter. A minimum is interior as located on the cubic Hermite
-    /// of the stored steps (#363): within that error of a window end, a minimum whose range-rate zero lies just outside the
-    /// window is listed at its unrefined Hermite epoch.
+    /// otherwise, without a TCA, a single midpoint fallback encounter. On the first path a minimum lies inside the window
+    /// when the range rate of the states says so, the cubic Hermite of the stored steps only seeding the search (#363): a
+    /// minimum whose range-rate zero lies just inside a window end is listed, one whose zero lies just outside is not.
     /// </returns>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
         ProtectedSpacecraftProfile protectedAsset,
@@ -908,12 +908,12 @@ public static class ConjunctionAssessment
     /// <summary>
     /// The close approaches of the polynomial search on the stored steps of two propagations: the interior local minima of
     /// the distance, refined on the range rate (#621: a window end, where the distance grows into the window, is no close
-    /// approach; it was listed before 11.0.0). A minimum is interior as located on the cubic Hermite of the stored steps
-    /// (#363), before the refinement: within that error of a window end, a minimum whose range-rate zero lies outside the
-    /// window cannot be bracketed and keeps its unrefined Hermite epoch (<see cref="RefineOnRangeRate"/>).
+    /// approach; it was listed before 11.0.0). The minima of the cubic Hermite of the stored steps, the window ends
+    /// included, only seed the search: whether a minimum lies inside the window is decided on the range rate of the states
+    /// (<see cref="RefineOnRangeRate"/>), since the Hermite misses its zero by up to milliseconds (#363).
     /// </summary>
     /// <param name="windowEndsWithoutInteriorMinimum">When the window holds no interior minimum, return the ends where the
-    /// distance grows into the window instead of nothing: <see cref="Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>
+    /// distance grows into the window, on the range rate of the states, instead of nothing: <see cref="Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>
     /// keeps its former answer there, which #621's own change decides; <c>AnalyzeAll</c> lists the interior minima only.</param>
     private static List<Time> FindDenseCloseApproaches(
         StateSamplingSource protectedSource,
@@ -1006,17 +1006,31 @@ public static class ConjunctionAssessment
             epoch => (DensePosition(secondaryDense, epoch) - DensePosition(protectedDense, epoch)).MagnitudeSquared(),
             toleranceSeconds);
 
-        // The first and last candidates are the window ends (BuildDenseIntervalBoundaries)
-        var interiorMinima = minima
-            .Where(epoch => epoch != distinctCandidates[0] && epoch != distinctCandidates[^1])
-            .ToList();
-        if (interiorMinima.Count > 0 || !windowEndsWithoutInteriorMinimum)
+        // The minima of the polynomials, the window ends included, are only the seeds of the search: whether a minimum
+        // lies inside the window is decided on the range rate of the states (RefineOnRangeRate), whose zero the Hermite
+        // misses by its error (#363)
+        Func<Time, double> rangeRate = epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch);
+        var closeApproaches = RefineOnRangeRate(minima, distinctCandidates, rangeRate, toleranceSeconds);
+        if (closeApproaches.Count > 0 || !windowEndsWithoutInteriorMinimum)
         {
-            minima = interiorMinima;
+            return closeApproaches;
         }
 
-        return RefineOnRangeRate(minima, distinctCandidates,
-            epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch), toleranceSeconds);
+        // No minimum inside the window: the ends where the distance grows into it, on the states (the first and last
+        // candidates are the window ends, BuildDenseIntervalBoundaries)
+        var start = distinctCandidates[0];
+        var end = distinctCandidates[^1];
+        if (rangeRate(start) >= 0.0)
+        {
+            closeApproaches.Add(start);
+        }
+
+        if (rangeRate(end) <= 0.0)
+        {
+            closeApproaches.Add(end);
+        }
+
+        return closeApproaches;
     }
 
     // The cubic Hermite position of a dense trajectory, from the step that contains the epoch (the earlier one at a
@@ -1054,35 +1068,46 @@ public static class ConjunctionAssessment
 
     /// <summary>
     /// Moves each minimum of the polynomial search to the zero of <paramref name="rangeRate"/>, from negative to
-    /// positive, near it.
+    /// positive, near it, and drops a minimum whose zero lies outside the candidates.
     /// </summary>
     /// <remarks>
     /// <para>
     /// The polynomial search locates each minimum on the cubic Hermite interpolation of the positions, which is off by up
     /// to about 100 m between the steps of an RK7(8) propagation (#363): the TCA is then off by up to milliseconds. The
-    /// range rate comes from the states of the sources, as in the sampled search.
+    /// range rate comes from the states of the sources, as in the sampled search, and it alone decides whether a minimum
+    /// lies between the first and the last candidates, the window ends.
+    /// </para>
+    /// <para>
+    /// A minimum at the first candidate is a minimum inside when the range rate is negative there (the distance still
+    /// decreases into the window), and its zero is searched after it; zero there with a positive range rate at the next
+    /// candidate, it is the minimum itself, as in the sampled search; positive, it is no minimum and is dropped. A minimum
+    /// at the last candidate is a minimum inside when the range rate is zero or positive there, and its zero is searched
+    /// before it; negative, it is dropped.
     /// </para>
     /// <para>
     /// The range rate is close to linear near its zero: its relative curvature is of the order of the orbital rate, so
     /// over a few milliseconds the zero of its secant is within a fraction of a tick (100 ns) of the zero. The secant
-    /// through the minimum and an epoch 1 ms away gives a first estimate, a second secant within ten ticks of it a
-    /// second one, and a bracket of one tick on each side of that is checked before the bisection. Each bracket is
-    /// checked before it is used, and the bisection ends on the bracket one tick wide that contains the change of sign
-    /// on the grid of the epochs, whichever checked bracket it starts from: these estimates take the refinement from
-    /// about 33 evaluations of the states of each source to about 7 without changing the refined TCA.
+    /// through the minimum and an epoch 1 ms away (before it when the last candidate is nearer than that) gives a first
+    /// estimate, a second secant within ten ticks of it a second one, and a bracket of one tick on each side of that is
+    /// checked before the bisection. Each bracket is checked before it is used, and the bisection ends on the bracket one
+    /// tick wide that contains the change of sign on the grid of the epochs, whichever checked bracket it starts from:
+    /// these estimates take the refinement from about 33 evaluations of the states of each source to about 7 without
+    /// changing the refined TCA. The range rate is never evaluated outside the first and last candidates.
     /// </para>
     /// <para>
     /// When an estimate cannot be checked, the bisection starts from the candidates next to the minimum. When the
     /// minimum on the states lies past one of them, the range rate has the wrong sign there; the bracket then moves to
-    /// the next candidate on that side, at most <see cref="MaximumBracketWidenings"/> times in all. A minimum that is
-    /// still not bracketed (at a window boundary) is kept.
+    /// the next candidate on that side, at most <see cref="MaximumBracketWidenings"/> times in all. A minimum whose
+    /// bracket reaches the first candidate with a range rate zero or positive there, or the last one with a negative
+    /// range rate, has its zero outside the candidates and is dropped. A minimum that is still not bracketed, the
+    /// widenings spent between the first and last candidates, is kept.
     /// </para>
     /// </remarks>
     /// <param name="minima">The minima of the polynomial search, each one of <paramref name="candidates"/>.</param>
-    /// <param name="candidates">The sorted candidate epochs of the polynomial search.</param>
+    /// <param name="candidates">The sorted candidate epochs of the polynomial search, the window ends first and last.</param>
     /// <param name="rangeRate">The range rate, (r_s − r_p)·(v_s − v_p), at an epoch.</param>
     /// <param name="toleranceSeconds">Tolerance of the bisection, in s.</param>
-    /// <returns>The refined minima, distinct within the tolerance.</returns>
+    /// <returns>The refined minima inside the candidates, distinct within the tolerance.</returns>
     internal static List<Time> RefineOnRangeRate(
         IReadOnlyList<Time> minima,
         IReadOnlyList<Time> candidates,
@@ -1090,65 +1115,122 @@ public static class ConjunctionAssessment
         double toleranceSeconds)
     {
         var refined = new List<Time>(minima.Count);
+        int last = candidates.Count - 1;
         foreach (var minimum in minima)
         {
             int index = IndexOf(candidates, minimum);
-            var tca = minimum;
-            if (index > 0 && index < candidates.Count - 1)
+            if (index < 0 || last < 1)
             {
-                // The estimates may not go further than the widened bracket of the candidates
-                var lowest = candidates[System.Math.Max(index - 1 - MaximumBracketWidenings, 0)];
-                var highest = candidates[System.Math.Min(index + 1 + MaximumBracketWidenings, candidates.Count - 1)];
-                if (TryZeroBySecants(rangeRate, minimum, lowest, highest, toleranceSeconds, out var zero))
+                AddDistinctEpoch(refined, minimum, toleranceSeconds);
+                continue;
+            }
+
+            int left = System.Math.Max(index - 1, 0);
+            int right = System.Math.Min(index + 1, last);
+            double leftRate = double.NaN;
+            double rightRate = double.NaN;
+            if (index == 0)
+            {
+                // The window start: a minimum inside when the distance still decreases into the window
+                leftRate = rangeRate(minimum);
+                if (leftRate >= 0.0)
                 {
-                    AddDistinctEpoch(refined, zero, toleranceSeconds);
+                    if (leftRate == 0.0 && rangeRate(candidates[1]) > 0.0)
+                    {
+                        AddDistinctEpoch(refined, minimum, toleranceSeconds);
+                    }
+
                     continue;
                 }
-
-                int left = index - 1;
-                int right = index + 1;
-                double leftRate = rangeRate(candidates[left]);
-                double rightRate = rangeRate(candidates[right]);
-                for (int widening = 0;
-                     widening < MaximumBracketWidenings && (leftRate >= 0.0 || rightRate < 0.0);
-                     widening++)
+            }
+            else if (index == last)
+            {
+                // The window end: a minimum inside when the distance no longer decreases there
+                rightRate = rangeRate(minimum);
+                if (rightRate < 0.0)
                 {
-                    // Already receding at the left candidate: the minimum lies before it; still closing at the right
-                    // candidate: after it
-                    if (leftRate >= 0.0 && left > 0)
-                    {
-                        leftRate = rangeRate(candidates[--left]);
-                    }
-                    else if (rightRate < 0.0 && right < candidates.Count - 1)
-                    {
-                        rightRate = rangeRate(candidates[++right]);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (leftRate < 0.0 && rightRate >= 0.0)
-                {
-                    tca = BisectForZero(rangeRate, candidates[left], candidates[right], toleranceSeconds);
+                    continue;
                 }
             }
 
-            AddDistinctEpoch(refined, tca, toleranceSeconds);
+            // The estimates may not go further than the widened bracket of the candidates
+            var lowest = candidates[System.Math.Max(index - 1 - MaximumBracketWidenings, 0)];
+            var highest = candidates[System.Math.Min(index + 1 + MaximumBracketWidenings, last)];
+            if (TryZeroBySecants(rangeRate, minimum, lowest, highest, candidates[last], toleranceSeconds, out var zero))
+            {
+                AddDistinctEpoch(refined, zero, toleranceSeconds);
+                continue;
+            }
+
+            if (double.IsNaN(leftRate))
+            {
+                leftRate = rangeRate(candidates[left]);
+            }
+
+            if (double.IsNaN(rightRate))
+            {
+                rightRate = rangeRate(candidates[right]);
+            }
+
+            for (int widening = 0;
+                 widening < MaximumBracketWidenings && (leftRate >= 0.0 || rightRate < 0.0);
+                 widening++)
+            {
+                // Already receding at the left candidate: the minimum lies before it; still closing at the right
+                // candidate: after it
+                if (leftRate >= 0.0 && left > 0)
+                {
+                    leftRate = rangeRate(candidates[--left]);
+                }
+                else if (rightRate < 0.0 && right < last)
+                {
+                    rightRate = rangeRate(candidates[++right]);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (leftRate < 0.0 && rightRate >= 0.0)
+            {
+                AddDistinctEpoch(refined, BisectForZero(rangeRate, candidates[left], candidates[right], toleranceSeconds),
+                    toleranceSeconds);
+                continue;
+            }
+
+            // Receding at the window start or still closing at the window end: the zero lies outside the window
+            if ((left == 0 && leftRate >= 0.0) || (right == last && rightRate < 0.0))
+            {
+                continue;
+            }
+
+            AddDistinctEpoch(refined, minimum, toleranceSeconds);
         }
 
         return refined;
     }
 
     // The zero of the range rate near a minimum, by two secants and a checked bracket (RefineOnRangeRate); false when a
-    // secant is undefined or leaves [lowest, highest], or when the bracket around it does not hold the change of sign
+    // secant is undefined or leaves [lowest, highest], or when the bracket around it does not hold the change of sign.
+    // The first secant takes the epoch 1 ms after the minimum, or 1 ms before it when the window end is nearer: the range
+    // rate is never evaluated past the window end, nor before lowest
     private static bool TryZeroBySecants(Func<Time, double> rangeRate, Time minimum, Time lowest, Time highest,
-        double toleranceSeconds, out Time zero)
+        Time windowEnd, double toleranceSeconds, out Time zero)
     {
         zero = minimum;
         var secantBase = TimeSpan.FromSeconds(SecantBaseSeconds);
-        if (!TrySecantZero(rangeRate, minimum, minimum + secantBase, lowest, highest, out var estimate))
+        var second = minimum + secantBase;
+        if (second > windowEnd)
+        {
+            second = minimum - secantBase;
+            if (second < lowest)
+            {
+                return false;
+            }
+        }
+
+        if (!TrySecantZero(rangeRate, minimum, second, lowest, highest, out var estimate))
         {
             return false;
         }

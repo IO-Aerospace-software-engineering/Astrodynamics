@@ -109,11 +109,13 @@ public class ConjunctionRefinementTests
     }
 
     [Fact]
-    public void AZeroBeforeTheFirstCandidate_CannotBeBracketed_AndTheMinimumIsKept()
+    public void AZeroBeforeTheFirstCandidate_LiesOutsideTheWindow_AndTheMinimumIsDropped()
     {
+        // Receding at every candidate: the bracket reaches the window start with a positive range rate (kept unrefined
+        // before the window-end rule of the dense search, S1 of the review of lot 6 of #457)
         var candidates = Candidates(6);
 
-        Assert.Equal(candidates[1], Refine(candidates, 1, Step(-30.0)));
+        Assert.Empty(ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1] }, candidates, Step(-30.0), Tolerance));
     }
 
     [Fact]
@@ -151,13 +153,94 @@ public class ConjunctionRefinementTests
         Assert.Equal(minimum, refined.Single());
     }
 
-    [Fact]
-    public void AMinimumAtABoundaryOfTheCandidates_IsKept()
+    // ---- The window ends (S1 of the review of lot 6 of #457): the first and last candidates are the window ends, and the
+    // range rate there, not the minima of the polynomials, decides whether a minimum lies inside the window ----
+
+    // The range rate, refused outside the candidates: the refinement reads nothing outside the window
+    private static Func<TimeSystem.Time, double> InsideOnly(TimeSystem.Time[] candidates,
+        Func<TimeSystem.Time, double> rangeRate) =>
+        epoch =>
+        {
+            Assert.InRange(epoch, candidates[0], candidates[^1]);
+            return rangeRate(epoch);
+        };
+
+    private static System.Collections.Generic.List<TimeSystem.Time> RefineInside(TimeSystem.Time[] candidates,
+        int minimumIndex, Func<TimeSystem.Time, double> rangeRate) =>
+        ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[minimumIndex] }, candidates,
+            InsideOnly(candidates, rangeRate), Tolerance);
+
+    [Theory]
+    [InlineData(30.0)]
+    [InlineData(1.0e-5)] // 10 µs after the start, within the Hermite error of #363 at the default steps
+    [InlineData(5.0e-7)] // within the microsecond of the bracket checked around the secant
+    public void AMinimumAtTheWindowStart_ClosingThere_IsRefinedToItsZeroInside(double zeroSeconds)
     {
         var candidates = Candidates(4);
 
-        Assert.Equal(candidates[0], Refine(candidates, 0, Rectilinear(30.0)));
-        Assert.Equal(candidates[3], Refine(candidates, 3, Rectilinear(270.0)));
+        AssertWithinATick(zeroSeconds, Assert.Single(RefineInside(candidates, 0, Rectilinear(zeroSeconds))));
+    }
+
+    [Theory]
+    [InlineData(270.0)]
+    [InlineData(300.0 - 1.0e-5)]
+    [InlineData(300.0 - 5.0e-7)]
+    public void AMinimumAtTheWindowEnd_RecedingThere_IsRefinedToItsZeroInside(double zeroSeconds)
+    {
+        // The secant takes the epoch 1 ms before the end, never after it
+        var candidates = Candidates(4);
+
+        AssertWithinATick(zeroSeconds, Assert.Single(RefineInside(candidates, 3, Rectilinear(zeroSeconds))));
+    }
+
+    [Theory]
+    [InlineData(0, -30.0)]
+    [InlineData(0, -1.0e-5)]
+    [InlineData(3, 330.0)]
+    [InlineData(3, 300.0 + 1.0e-5)]
+    public void AMinimumAtAWindowEnd_WithItsZeroOutside_IsDropped(int minimumIndex, double zeroSeconds)
+    {
+        // Receding at the start, or still closing at the end: the distance grows into the window there
+        var candidates = Candidates(4);
+
+        Assert.Empty(RefineInside(candidates, minimumIndex, Rectilinear(zeroSeconds)));
+    }
+
+    [Theory]
+    [InlineData(1, -1.0e-5)]
+    [InlineData(1, -5.0e-7)]
+    [InlineData(4, 500.0 + 1.0e-5)]
+    [InlineData(4, 500.0 + 5.0e-7)]
+    [InlineData(4, 500.0 + 30.0)]
+    public void AnInteriorMinimum_WhoseZeroLiesJustOutsideTheWindow_IsDropped(int minimumIndex, double zeroSeconds)
+    {
+        // The minimum of the polynomials inside the window, that of the states just outside it: the bracket reaches the
+        // window end with the wrong sign (before, the unrefined minimum was kept)
+        var candidates = Candidates(6);
+
+        Assert.Empty(RefineInside(candidates, minimumIndex, Rectilinear(zeroSeconds)));
+    }
+
+    [Theory]
+    [InlineData(4, 500.0 - 1.0e-5)]
+    [InlineData(4, 500.0 - 5.0e-7)]
+    [InlineData(1, 1.0e-5)]
+    [InlineData(1, 5.0e-7)]
+    public void AnInteriorMinimum_WhoseZeroLiesJustInsideTheWindow_IsRefinedToIt(int minimumIndex, double zeroSeconds)
+    {
+        var candidates = Candidates(6);
+
+        AssertWithinATick(zeroSeconds, Assert.Single(RefineInside(candidates, minimumIndex, Rectilinear(zeroSeconds))));
+    }
+
+    [Fact]
+    public void AZeroRangeRateAtTheWindowStart_ThenReceding_IsTheMinimum()
+    {
+        // As the sampled search: g = 0 at the start and positive after
+        var candidates = Candidates(4);
+        Func<TimeSystem.Time, double> rangeRate = epoch => (epoch - Epoch).TotalSeconds;
+
+        Assert.Equal(candidates[0], Assert.Single(RefineInside(candidates, 0, rangeRate)));
     }
 
     /// <summary>
