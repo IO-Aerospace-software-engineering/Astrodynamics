@@ -82,6 +82,43 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
+  adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
+  narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
+  for 0.691, with no flag, through `Analyze`, `AnalyzeAll` (sorted last), `EvaluateAvoidance` (a manoeuvre into such an
+  encounter passed the Pc threshold) and `ToCdm`. The integral now runs in θ along the disc (x = x_c + R sin θ, smooth at
+  its edges), split at the Gaussian's mean and ±1, 2, 4, 8 and 16 σ, at the chords that reach the minor axis's ±kσ and at
+  the disc's centre, so that the Gaussian is always sampled however narrow it is; nothing of the disc is dropped. The
+  internal `EncounterPlaneProbability` holds it.
+- **The probability of collision was accurate to 1.5e-7 absolute, and 4.6 % low below 1e-10** ([#611](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/611)). The chord
+  integral took the difference of two values of `SpecialFunctions.ErrorFunction` (Abramowitz and Stegun 7.1.26, 1.5e-7
+  absolute), and the Simpson rule stopped at an absolute tolerance of 1e-12, which a Pc below about 1.5e-10 met at its
+  first level (−4.62 % whatever the Pc; 0 in the far tails from the erf difference). The chord probability is now an erfc
+  difference on the side away from zero (CARA's `erf_vec_dif`), erf where the chord straddles the minor axis, with
+  fdlibm's erf and erfc (about one ulp) private to the Pc path, and the quadrature stops at 1e-12 of the whole integral,
+  shared over the segments by width, a difference at the noise of the integrand accepted and the evaluations bounded.
+  The public `SpecialFunctions.ErrorFunction` is unchanged.
+  - **Measured** (Linux x64; the bounds provisional until the three platforms) against the exact Pc of the same double
+    inputs, CARA's `Pc2D` at 50 digits (`tools/collision_probability`, tanh-sinh and Gauss-Legendre agreeing to 1e-30):
+    the seven `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger
+    than the covariance, a covariance not positive definite, Frisbee's maximum) within 1.4e-14, 7.4e-10 through `Analyze`
+    (the covariance held in RTN over the refined TCA's offset); the 25 reproductions of #610 to #612 within 7.6e-15;
+    NASA CARA's Omitron case 01 and Alfano case 03 within 2.6e-15, Frisbee's table 1 within 3.2e-16 (their tests now
+    take the exact values: the published ones are 2.9e-6 and 2.3e-6 from them, Frisbee's given to two or three digits).
+    One evaluation takes 50 µs to 0.5 ms.
+  - **What moves:** every Pc, `CollisionRisk.ProbabilityOfCollision` through `Analyze`, `AnalyzeAll`, `Screen`,
+    `EvaluateAvoidance` and the `COLLISION_PROBABILITY` that `ToCdm` writes: by 1e-8 to 1e-5 relative above 1e-7, up to
+    3.3e-4 near 1e-8, +4.8 % below 1e-10 (to the exact value), and from 0 to the risk at a large hard-body radius (#610).
+- **The probability of collision was null for a covariance not positive definite in the encounter plane** ([#612](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/612)).
+  The clipped eigenvalues (CARA's (1e-4 R)²) were rebuilt into a matrix and decomposed again, and λ2 = (tr − √disc)/2
+  loses everything below λ1·ε: with σ_major 1000 km, R 20 m and λ2 at or below the clip (1 mm, 0 or −1 m², the
+  rounding of a CDM covariance), the Pc was null with only `CovarianceRemediated` raised. The integral now takes the
+  clipped eigenvalues and the rotation as they are; λ2 is det/λ1, the determinant by Kahan's fused form, so that a
+  minor eigenvalue between the clip and λ1·ε is kept rather than clipped (the 30° rows of #612: `CovarianceRemediated`
+  is no longer raised there); Frisbee's maximum-Pc covariance is built in the principal axes of the known one, whose
+  determinant is then a sum of positive terms. `CollisionRisk.ProjectedCovariance` is still the clipped matrix, rebuilt
+  for display. A null Pc becomes the clipped Pc (1.5957691e-5 on #612's case, exact to 2e-16); every other Pc moves only
+  by rounding.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a

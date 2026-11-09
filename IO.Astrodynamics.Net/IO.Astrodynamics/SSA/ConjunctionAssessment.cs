@@ -1848,7 +1848,7 @@ public static class ConjunctionAssessment
                     }
 
                     qualityFlags |= EncounterQualityFlags.SingleCovarianceMaximumPcUsed;
-                    projectedCovariance = maximumCovariance;
+                    projectedCovariance = maximumCovariance.ToMatrix();
                     probability = ComputeFosterCollisionProbabilityCore(miss2D, maximumCovariance, combinedHardBodyRadiusMeters);
                 }
                 else
@@ -1866,7 +1866,7 @@ public static class ConjunctionAssessment
                         qualityFlags |= EncounterQualityFlags.CovarianceRemediated;
                     }
 
-                    projectedCovariance = prepared;
+                    projectedCovariance = prepared.ToMatrix();
                     probability = ComputeFosterCollisionProbabilityCore(miss2D, prepared, combinedHardBodyRadiusMeters);
                 }
                 else
@@ -1948,7 +1948,7 @@ public static class ConjunctionAssessment
         return (new[] { m1, m2 }, cov2D);
     }
 
-    // --- Foster/Chan collision probability ---
+    // --- Foster collision probability (CARA's Pc2D) ---
 
     internal static double? ComputeFosterCollisionProbability(
         double[] miss2D,
@@ -1983,7 +1983,7 @@ public static class ConjunctionAssessment
         return ComputeFosterCollisionProbabilityCore(miss2D, maximumPcCovariance.Value, combinedRadius);
     }
 
-    private static Matrix? PrepareMaximumProbabilityEncounterPlaneCovariance(
+    private static EncounterPlaneGaussian? PrepareMaximumProbabilityEncounterPlaneCovariance(
         double[] miss2D,
         Matrix knownCov2D,
         double combinedRadius,
@@ -1992,133 +1992,83 @@ public static class ConjunctionAssessment
     {
         remediatedMaximumCovariance = false;
         var preparedKnownCovariance = PrepareEncounterPlaneCovariance(knownCov2D, combinedRadius, out remediatedKnownCovariance);
-        if (preparedKnownCovariance is null)
+        if (preparedKnownCovariance is null || miss2D.Length != 2)
         {
             return null;
         }
 
-        var criticalCovariance = BuildMaximumProbabilityEncounterPlaneCovariance(miss2D, preparedKnownCovariance.Value);
+        var criticalCovariance = preparedKnownCovariance.Value.WithFrisbeeCriticalCovariance(miss2D[0], miss2D[1]);
         if (criticalCovariance is null)
         {
             return null;
         }
 
-        return PrepareEncounterPlaneCovariance(criticalCovariance.Value, combinedRadius, out remediatedMaximumCovariance);
+        return ClipEncounterPlaneCovariance(criticalCovariance.Value, combinedRadius, out remediatedMaximumCovariance);
     }
 
     internal static Matrix? BuildMaximumProbabilityEncounterPlaneCovariance(
         double[] miss2D,
         Matrix knownCov2D)
     {
-        if (miss2D.Length != 2 || knownCov2D.Rows != 2 || knownCov2D.Columns != 2)
+        if (miss2D.Length != 2)
         {
             return null;
         }
 
-        double x = miss2D[0];
-        double y = miss2D[1];
-        double missSquared = x * x + y * y;
-        if (!double.IsFinite(missSquared))
+        var known = EncounterPlaneGaussian.FromCovariance(knownCov2D);
+        if (known is null)
         {
             return null;
         }
 
-        double a = knownCov2D.Get(0, 0);
-        double b = 0.5 * (knownCov2D.Get(0, 1) + knownCov2D.Get(1, 0));
-        double c = knownCov2D.Get(1, 1);
-        double determinant = a * c - b * b;
-        if (!double.IsFinite(determinant) || determinant <= 0.0)
+        var critical = known.Value.WithFrisbeeCriticalCovariance(miss2D[0], miss2D[1]);
+        if (critical is null)
         {
             return null;
         }
 
-        if (missSquared <= 0.0)
-        {
-            return knownCov2D;
-        }
-
-        double kSquared = (c * x * x - 2.0 * b * x * y + a * y * y) / determinant;
-        if (!double.IsFinite(kSquared) || kSquared <= 1.0)
-        {
-            return knownCov2D;
-        }
-
-        double criticalVariance = missSquared * (kSquared - 1.0) / kSquared;
-        if (!double.IsFinite(criticalVariance) || criticalVariance <= 0.0)
-        {
-            return knownCov2D;
-        }
-
-        double ux = x / System.Math.Sqrt(missSquared);
-        double uy = y / System.Math.Sqrt(missSquared);
-        var unknownCovariance = new Matrix(2, 2);
-        unknownCovariance.Set(0, 0, criticalVariance * ux * ux);
-        unknownCovariance.Set(0, 1, criticalVariance * ux * uy);
-        unknownCovariance.Set(1, 0, criticalVariance * ux * uy);
-        unknownCovariance.Set(1, 1, criticalVariance * uy * uy);
-
-        return knownCov2D + unknownCovariance;
+        return critical.Value.Equals(known.Value) ? knownCov2D : critical.Value.ToMatrix();
     }
 
-    private static Matrix? PrepareEncounterPlaneCovariance(
+    /// <summary>
+    /// The principal axes of the encounter-plane covariance, each variance raised to at least (1e-4 R)², CARA's clip
+    /// (<paramref name="remediated"/> when one is raised); not clipped when R ≤ 0; null when the covariance is not 2×2,
+    /// R or an element is not finite.
+    /// </summary>
+    private static EncounterPlaneGaussian? PrepareEncounterPlaneCovariance(
         Matrix cov2D,
         double combinedRadius,
         out bool remediated)
     {
         remediated = false;
-
-        if (cov2D.Rows != 2 || cov2D.Columns != 2 || !double.IsFinite(combinedRadius))
+        if (!double.IsFinite(combinedRadius))
         {
             return null;
         }
 
-        double a = cov2D.Get(0, 0);
-        double b = 0.5 * (cov2D.Get(0, 1) + cov2D.Get(1, 0));
-        double c = cov2D.Get(1, 1);
-        if (!double.IsFinite(a) || !double.IsFinite(b) || !double.IsFinite(c))
+        var gaussian = EncounterPlaneGaussian.FromCovariance(cov2D);
+        if (gaussian is null)
         {
             return null;
         }
 
-        double trace = a + c;
-        double discriminant = (a - c) * (a - c) + 4.0 * b * b;
-        double sqrtDisc = System.Math.Sqrt(System.Math.Max(discriminant, 0.0));
-        double lambda1 = 0.5 * (trace + sqrtDisc);
-        double lambda2 = 0.5 * (trace - sqrtDisc);
-        if (!double.IsFinite(lambda1) || !double.IsFinite(lambda2))
-        {
-            return null;
-        }
+        return ClipEncounterPlaneCovariance(gaussian.Value, combinedRadius, out remediated);
+    }
 
+    private static EncounterPlaneGaussian ClipEncounterPlaneCovariance(EncounterPlaneGaussian gaussian, double combinedRadius, out bool remediated)
+    {
         if (combinedRadius <= 0.0)
         {
-            return BuildSymmetric2X2(a, b, c);
+            remediated = false;
+            return gaussian;
         }
 
-        double eigenvalueClip = System.Math.Pow(1.0e-4 * combinedRadius, 2);
-        double clippedLambda1 = System.Math.Max(lambda1, eigenvalueClip);
-        double clippedLambda2 = System.Math.Max(lambda2, eigenvalueClip);
-        remediated = clippedLambda1 != lambda1 || clippedLambda2 != lambda2;
-
-        double theta = 0.5 * System.Math.Atan2(2.0 * b, a - c);
-        double cosTheta = System.Math.Cos(theta);
-        double sinTheta = System.Math.Sin(theta);
-        var rotation = new Matrix(2, 2);
-        rotation.Set(0, 0, cosTheta);
-        rotation.Set(0, 1, -sinTheta);
-        rotation.Set(1, 0, sinTheta);
-        rotation.Set(1, 1, cosTheta);
-
-        var diagonal = new Matrix(2, 2);
-        diagonal.Set(0, 0, clippedLambda1);
-        diagonal.Set(1, 1, clippedLambda2);
-
-        return rotation * diagonal * rotation.Transpose();
+        return gaussian.Clip(System.Math.Pow(1.0e-4 * combinedRadius, 2), out remediated);
     }
 
     private static double? ComputeFosterCollisionProbabilityCore(
         double[] miss2D,
-        Matrix cov2D,
+        EncounterPlaneGaussian covariance,
         double combinedRadius)
     {
         if (combinedRadius <= 0.0)
@@ -2126,72 +2076,18 @@ public static class ConjunctionAssessment
             return 0.0;
         }
 
-        double a = cov2D.Get(0, 0);
-        double b = 0.5 * (cov2D.Get(0, 1) + cov2D.Get(1, 0));
-        double c = cov2D.Get(1, 1);
-
-        double trace = a + c;
-        double discriminant = (a - c) * (a - c) + 4.0 * b * b;
-        double sqrtDisc = System.Math.Sqrt(System.Math.Max(discriminant, 0.0));
-        double lambda1 = 0.5 * (trace + sqrtDisc);
-        double lambda2 = 0.5 * (trace - sqrtDisc);
-        if (lambda1 <= 0.0 || lambda2 <= 0.0)
+        if (!(covariance.MajorVariance > 0.0) || !(covariance.MinorVariance > 0.0))
         {
             return null;
         }
 
-        double theta = 0.5 * System.Math.Atan2(2.0 * b, a - c);
-        double cosTheta = System.Math.Cos(theta);
-        double sinTheta = System.Math.Sin(theta);
-        double xPrincipal = miss2D[0] * cosTheta + miss2D[1] * sinTheta;
-        double yPrincipal = -miss2D[0] * sinTheta + miss2D[1] * cosTheta;
-
-        return IntegrateGaussianOverCircularHardBodyRegion(
+        var (xPrincipal, yPrincipal) = covariance.ToPrincipal(miss2D[0], miss2D[1]);
+        return EncounterPlaneProbability.Integrate(
             xPrincipal,
             yPrincipal,
-            lambda1,
-            lambda2,
+            covariance.MajorVariance,
+            covariance.MinorVariance,
             combinedRadius);
-    }
-
-    private static double IntegrateGaussianOverCircularHardBodyRegion(
-        double xCenter,
-        double yCenter,
-        double varianceX,
-        double varianceY,
-        double radius)
-    {
-        double determinant = varianceX * varianceY;
-        if (determinant <= 0.0 || !double.IsFinite(determinant))
-        {
-            return 0.0;
-        }
-
-        double radiusSquared = radius * radius;
-        double normalizer = 1.0 / (2.0 * System.Math.PI * System.Math.Sqrt(determinant));
-        double yScale = System.Math.Sqrt(System.Math.PI * varianceY / 2.0);
-        double erfScale = 1.0 / System.Math.Sqrt(2.0 * varianceY);
-
-        double Integrand(double x)
-        {
-            double dx = x - xCenter;
-            if (System.Math.Abs(dx) > radius)
-            {
-                return 0.0;
-            }
-
-            double halfChord = System.Math.Sqrt(System.Math.Max(radiusSquared - dx * dx, 0.0));
-            double yLow = yCenter - halfChord;
-            double yHigh = yCenter + halfChord;
-            double xWeight = System.Math.Exp(-(x * x) / (2.0 * varianceX));
-            double yIntegral = yScale * (SpecialFunctions.ErrorFunction(yHigh * erfScale) - SpecialFunctions.ErrorFunction(yLow * erfScale));
-            return normalizer * xWeight * yIntegral;
-        }
-
-        double lower = xCenter - radius;
-        double upper = xCenter + radius;
-        double integral = AdaptiveSimpson(Integrand, lower, upper, 1.0e-12, 20);
-        return System.Math.Clamp(integral, 0.0, 1.0);
     }
 
     private static IEnumerable<Vector3> BuildBurnDirections()
@@ -2289,60 +2185,6 @@ public static class ConjunctionAssessment
         {
             epochs.Add(epoch);
         }
-    }
-
-    private static Matrix BuildSymmetric2X2(double a, double b, double c)
-    {
-        var matrix = new Matrix(2, 2);
-        matrix.Set(0, 0, a);
-        matrix.Set(0, 1, b);
-        matrix.Set(1, 0, b);
-        matrix.Set(1, 1, c);
-        return matrix;
-    }
-
-    private static double AdaptiveSimpson(Func<double, double> integrand, double lower, double upper, double tolerance, int maxDepth)
-    {
-        double midpoint = (lower + upper) * 0.5;
-        double fLower = integrand(lower);
-        double fMid = integrand(midpoint);
-        double fUpper = integrand(upper);
-        double whole = SimpsonEstimate(lower, upper, fLower, fMid, fUpper);
-        return AdaptiveSimpsonRecursive(integrand, lower, upper, tolerance, whole, fLower, fMid, fUpper, maxDepth);
-    }
-
-    private static double AdaptiveSimpsonRecursive(
-        Func<double, double> integrand,
-        double lower,
-        double upper,
-        double tolerance,
-        double whole,
-        double fLower,
-        double fMid,
-        double fUpper,
-        int depth)
-    {
-        double midpoint = (lower + upper) * 0.5;
-        double leftMid = (lower + midpoint) * 0.5;
-        double rightMid = (midpoint + upper) * 0.5;
-        double fLeftMid = integrand(leftMid);
-        double fRightMid = integrand(rightMid);
-        double left = SimpsonEstimate(lower, midpoint, fLower, fLeftMid, fMid);
-        double right = SimpsonEstimate(midpoint, upper, fMid, fRightMid, fUpper);
-        double delta = left + right - whole;
-
-        if (depth <= 0 || System.Math.Abs(delta) <= 15.0 * tolerance)
-        {
-            return left + right + delta / 15.0;
-        }
-
-        return AdaptiveSimpsonRecursive(integrand, lower, midpoint, tolerance * 0.5, left, fLower, fLeftMid, fMid, depth - 1)
-             + AdaptiveSimpsonRecursive(integrand, midpoint, upper, tolerance * 0.5, right, fMid, fRightMid, fUpper, depth - 1);
-    }
-
-    private static double SimpsonEstimate(double lower, double upper, double fLower, double fMid, double fUpper)
-    {
-        return (upper - lower) * (fLower + 4.0 * fMid + fUpper) / 6.0;
     }
 
     private static void ValidateAnalysisOptions(ConjunctionAnalysisOptions options)

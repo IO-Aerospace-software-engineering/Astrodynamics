@@ -14,15 +14,19 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.SSA;
 
-public class ConjunctionAssessmentTests
+public partial class ConjunctionAssessmentTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
 
-    public ConjunctionAssessmentTests()
+    private readonly ITestOutputHelper _output;
+
+    public ConjunctionAssessmentTests(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
@@ -836,7 +840,8 @@ public class ConjunctionAssessmentTests
     [Fact]
     public void CollisionProbability_NasaOmitronReferenceCase_MatchesPublishedValue()
     {
-        // NASA CARA Pc2D_Foster_UnitTest.m Omitron Test Case 01.
+        // NASA CARA Pc2D_Foster_UnitTest.m Omitron Test Case 01 (published 2.70601573490125e-05, itself 2.9e-6 from the
+        // exact Pc of its inputs)
         var r1 = new Vector3(378.39559, 4305.721887, 5752.767554);
         var v1 = new Vector3(2.360800244, 5.580331936, -4.322349039);
         var cov1 = BuildPositionCovariance(new[,]
@@ -857,14 +862,14 @@ public class ConjunctionAssessmentTests
         var pc = ComputeFosterProbabilityFromInertialInputs(r1, v1, cov1, r2, v2, cov2, 0.020);
 
         Assert.NotNull(pc);
-        Assert.True(System.Math.Abs(pc.Value - 2.70601573490125e-05) / 2.70601573490125e-05 < 1.0e-5,
-            $"Expected NASA Omitron Pc≈2.70601573490125E-05, got {pc.Value:E12}");
+        double error = System.Math.Abs(pc.Value - OmitronCase01ExactPc) / OmitronCase01ExactPc;
+        Assert.True(error <= CaraDirectPcBound, $"Omitron case 01: relative error {error:E2} to the exact Pc");
     }
 
     [Fact]
     public void CollisionProbability_NasaAlfanoCase03_MatchesPublishedValue()
     {
-        // NASA CARA Pc2D_Foster_UnitTest.m Alfano case 03 expected solution = 1.00351176E-01.
+        // NASA CARA Pc2D_Foster_UnitTest.m Alfano case 03 (published 1.00351176E-01, 2.3e-6 from the exact Pc)
         var r1 = new Vector3(153.951475, 41874.153995, 0.0);
         var v1 = new Vector3(3.066874624, -0.011411025, 0.0);
         var cov1Rtn = BuildPositionCovariance(new[,]
@@ -888,8 +893,8 @@ public class ConjunctionAssessmentTests
         var pc = ComputeFosterProbabilityFromInertialInputs(r1, v1, cov1, r2, v2, cov2, 0.015);
 
         Assert.NotNull(pc);
-        Assert.True(System.Math.Abs(pc.Value - 1.00351176e-01) / 1.00351176e-01 < 1.0e-5,
-            $"Expected NASA Alfano case 03 Pc≈1.00351176E-01, got {pc.Value:E12}");
+        double error = System.Math.Abs(pc.Value - AlfanoCase03ExactPc) / AlfanoCase03ExactPc;
+        Assert.True(error <= CaraDirectPcBound, $"Alfano case 03: relative error {error:E2} to the exact Pc");
     }
 
     // ========== Published Single-Covariance Maximum-Pc Conformance (NASA Frisbee) ==========
@@ -915,13 +920,14 @@ public class ConjunctionAssessmentTests
     }
 
     [Theory]
-    [InlineData(5.0, 0.000043)]
-    [InlineData(10.0, 0.000171)]
-    [InlineData(20.0, 0.000685)]
-    [InlineData(25.0, 0.001070)]
+    [InlineData(5.0, 4.278120354404266e-05)]
+    [InlineData(10.0, 1.710716927885487e-04)]
+    [InlineData(20.0, 6.834377891732130e-04)]
+    [InlineData(25.0, 1.066878220462202e-03)]
     public void SingleCovarianceMaximumPc_FrisbeeTable1_MatchesPublishedApproximateOutcomes(double hardBodyRadius, double expectedPc)
     {
-        // Frisbee AAS 15-717, Table 1 using the Eq. 11 example geometry.
+        // Frisbee AAS 15-717, Table 1 using the Eq. 11 example geometry (published to two or three digits); the expected
+        // values are the exact maximum Pc of tools/collision_probability (rows "Frisbee AAS 15-717 table 1")
         var miss2D = new[] { 1000.0, 200.0 };
         var knownCov2D = new Matrix(2, 2);
         knownCov2D.Set(0, 0, 722500.0);
@@ -930,8 +936,8 @@ public class ConjunctionAssessmentTests
         var pc = ConjunctionAssessment.ComputeSingleCovarianceMaximumCollisionProbability(miss2D, knownCov2D, hardBodyRadius);
 
         Assert.NotNull(pc);
-        Assert.True(System.Math.Abs(pc.Value - expectedPc) / expectedPc < 0.03,
-            $"Expected NASA Frisbee max Pc≈{expectedPc:E12}, got {pc.Value:E12}");
+        double error = System.Math.Abs(pc.Value - expectedPc) / expectedPc;
+        Assert.True(error <= CaraDirectPcBound, $"Frisbee max Pc, R {hardBodyRadius}: relative error {error:E2} to the exact Pc");
     }
 
     // ========== Published Workflow Conformance (NASA CARA Through Analyze/AnalyzeAll) ==========
@@ -1028,8 +1034,8 @@ public class ConjunctionAssessmentTests
             v2,
             cov2,
             expectedCombinedHardBodyRadius: combinedHardBodyRadius,
-            expectedPublishedPc: 2.70601573490125e-05,
-            publishedPcRelativeTolerance: 1.0e-5);
+            expectedPublishedPc: OmitronCase01ExactPc,
+            publishedPcRelativeTolerance: CaraEntryPointPcBound);
     }
 
     [Fact]
@@ -1125,8 +1131,8 @@ public class ConjunctionAssessmentTests
             v2,
             cov2,
             expectedCombinedHardBodyRadius: combinedHardBodyRadius,
-            expectedPublishedPc: 1.00351176e-01,
-            publishedPcRelativeTolerance: 1.0e-5);
+            expectedPublishedPc: AlfanoCase03ExactPc,
+            publishedPcRelativeTolerance: CaraEntryPointPcBound);
     }
 
     [Fact]
@@ -1215,8 +1221,8 @@ public class ConjunctionAssessmentTests
             v2,
             cov2,
             expectedCombinedHardBodyRadius: combinedHardBodyRadius,
-            expectedPublishedPc: 2.70601573490125e-05,
-            publishedPcRelativeTolerance: 1.0e-5);
+            expectedPublishedPc: OmitronCase01ExactPc,
+            publishedPcRelativeTolerance: CaraEntryPointPcBound);
     }
 
     [Fact]
@@ -1308,8 +1314,8 @@ public class ConjunctionAssessmentTests
             v2,
             cov2,
             expectedCombinedHardBodyRadius: combinedHardBodyRadius,
-            expectedPublishedPc: 1.00351176e-01,
-            publishedPcRelativeTolerance: 1.0e-5);
+            expectedPublishedPc: AlfanoCase03ExactPc,
+            publishedPcRelativeTolerance: CaraEntryPointPcBound);
     }
 
     // ========== Screening Tests ==========
@@ -1708,8 +1714,9 @@ public class ConjunctionAssessmentTests
         Assert.Equal(10800.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-3);
         Assert.Equal(10800.0, encounter.EncounterState.SecondaryCovarianceAge!.Value.TotalSeconds, 1.0e-3);
         // The initial states carry the TCA geometry, so holding the covariances in RTN leaves them unchanged:
-        // the published Pc is still reproduced.
-        Assert.True(System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision!.Value - 2.70601573490125e-05) / 2.70601573490125e-05 < 1.0e-5);
+        // the exact Pc is still reproduced.
+        double staleError = System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision!.Value - OmitronCase01ExactPc) / OmitronCase01ExactPc;
+        Assert.True(staleError <= CaraEntryPointPcBound, $"Omitron case 01, 3 h old covariances: relative error {staleError:E2} to the exact Pc");
 
         var creationDate = new DateTime(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc);
         var refused = Assert.Throws<InvalidOperationException>(() => encounter.ToCdm(new CdmExportOptions { CreationDateUtc = creationDate }));
@@ -2127,8 +2134,9 @@ public class ConjunctionAssessmentTests
         Assert.NotNull(expectedPc);
         Assert.True(System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision.Value - expectedPc.Value) < 1.0e-12,
             $"Entry-point Pc {encounter.CollisionRisk.ProbabilityOfCollision.Value:E12} should match direct Pc {expectedPc.Value:E12}");
-        Assert.True(System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision.Value - expectedPublishedPc) / expectedPublishedPc < publishedPcRelativeTolerance,
-            $"Expected published Pc≈{expectedPublishedPc:E12}, got {encounter.CollisionRisk.ProbabilityOfCollision.Value:E12}");
+        double publishedError = System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision.Value - expectedPublishedPc) / expectedPublishedPc;
+        Assert.True(publishedError <= publishedPcRelativeTolerance,
+            $"Relative error {publishedError:E2} to the expected Pc {expectedPublishedPc:E12}");
 
         Assert.Equal(expectedMissDistance, encounter.EncounterState.MissDistanceMeters, 9);
         AssertVectorApproximatelyEqual(expectedRelativePosition, encounter.EncounterState.RelativeState.RelativePositionInertial, 1.0e-8);

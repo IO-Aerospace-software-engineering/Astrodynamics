@@ -110,6 +110,9 @@
       <None Update="Data\ShadowFunctionReference\shadow_fraction_reference.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Data\CollisionProbabilityReference\collision_probability_reference.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="Data\KeplerEquationReference\kepler_equation_reference.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
