@@ -177,6 +177,8 @@ public static class ConjunctionAssessment
     /// <returns>
     /// The highest-priority encounter within the window. If no range-rate zero crossing is found, a midpoint fallback is used.
     /// </returns>
+    /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
+    /// propagated secondary spacecraft, which would be extrapolated (#527).</exception>
     public static EncounterCase Analyze(
         ProtectedSpacecraftProfile protectedAsset,
         ILocalizable secondaryObject,
@@ -189,6 +191,7 @@ public static class ConjunctionAssessment
         options ??= new ConjunctionAnalysisOptions();
         ValidateAnalysisOptions(options);
 
+        CheckStatesCover(protectedAsset.Spacecraft, secondaryObject, screeningWindow);
         var observer = protectedAsset.Spacecraft.InitialOrbitalParameters.Observer;
         var protectedSource = CreateLocalizableStateSource(protectedAsset.Spacecraft, observer);
         var secondarySource = CreateLocalizableStateSource(secondaryObject, observer);
@@ -204,7 +207,11 @@ public static class ConjunctionAssessment
     /// <param name="secondaryTrajectory">Propagated trajectory of the secondary object.</param>
     /// <param name="screeningWindow">Time window over which close approaches are searched.</param>
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
-    /// <returns>The highest-priority encounter within the window.</returns>
+    /// <returns>
+    /// The highest-priority encounter within the window: the closest interior local minimum of the distance when the window
+    /// holds one, a window end never preferred to it (#621); without an interior minimum, the end where the distance grows
+    /// into the window when the trajectories share their observer and frame, the midpoint otherwise.
+    /// </returns>
     public static EncounterCase Analyze(
         ProtectedSpacecraftProfile protectedAsset,
         PropagationSolution protectedTrajectory,
@@ -240,6 +247,8 @@ public static class ConjunctionAssessment
     /// <returns>
     /// All detected encounters in the window. If no TCA is detected, a single midpoint fallback encounter is returned.
     /// </returns>
+    /// <exception cref="ArgumentException">The window leaves the propagated states of the protected spacecraft or of a
+    /// propagated secondary spacecraft, which would be extrapolated (#527).</exception>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
         ProtectedSpacecraftProfile protectedAsset,
         ILocalizable secondaryObject,
@@ -252,6 +261,7 @@ public static class ConjunctionAssessment
         options ??= new ConjunctionAnalysisOptions();
         ValidateAnalysisOptions(options);
 
+        CheckStatesCover(protectedAsset.Spacecraft, secondaryObject, screeningWindow);
         var observer = protectedAsset.Spacecraft.InitialOrbitalParameters.Observer;
         var protectedSource = CreateLocalizableStateSource(protectedAsset.Spacecraft, observer);
         var secondarySource = CreateLocalizableStateSource(secondaryObject, observer);
@@ -267,7 +277,11 @@ public static class ConjunctionAssessment
     /// <param name="secondaryTrajectory">Propagated trajectory of the secondary object.</param>
     /// <param name="screeningWindow">Time window over which close approaches are searched.</param>
     /// <param name="options">Analysis configuration. Defaults are used when <see langword="null"/>.</param>
-    /// <returns>All detected encounters in the window.</returns>
+    /// <returns>
+    /// All detected encounters in the window. When the trajectories share their observer and frame, the interior local
+    /// minima of the distance only, an empty list when the window holds none (#621: a window end was listed before 11.0.0);
+    /// otherwise, without a TCA, a single midpoint fallback encounter.
+    /// </returns>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
         ProtectedSpacecraftProfile protectedAsset,
         PropagationSolution protectedTrajectory,
@@ -734,7 +748,15 @@ public static class ConjunctionAssessment
             screeningWindow,
             options.SampleStep,
             options.MaximumEventSearchStep,
-            options.BisectionToleranceSeconds);
+            options.BisectionToleranceSeconds,
+            windowEndsWithoutInteriorMinimum: false);
+
+        // On the dense path, the interior minima only, none when the window holds none (#621); the sampled path keeps its
+        // midpoint fallback
+        if (tcaEpochs.Count == 0 && CanUseDensePolynomialSearch(protectedSource, secondarySource))
+        {
+            return Array.Empty<EncounterCase>();
+        }
 
         if (tcaEpochs.Count == 0)
         {
@@ -825,7 +847,8 @@ public static class ConjunctionAssessment
         Window window,
         TimeSpan sampleStep,
         TimeSpan maximumEventSearchStep,
-        double bisectionToleranceSeconds)
+        double bisectionToleranceSeconds,
+        bool windowEndsWithoutInteriorMinimum = true)
     {
         if (CanUseDensePolynomialSearch(protectedSource, secondarySource))
         {
@@ -833,7 +856,8 @@ public static class ConjunctionAssessment
                 protectedSource,
                 secondarySource,
                 window,
-                bisectionToleranceSeconds);
+                bisectionToleranceSeconds,
+                windowEndsWithoutInteriorMinimum);
         }
 
         var tcaEpochs = new List<Time>();
@@ -877,11 +901,20 @@ public static class ConjunctionAssessment
                && protectedSource.DenseTrajectory.Frame.Equals(secondarySource.DenseTrajectory.Frame);
     }
 
+    /// <summary>
+    /// The close approaches of the polynomial search on the stored steps of two propagations: the interior local minima of
+    /// the distance, refined on the range rate (#621: a window end, where the distance grows into the window, is no close
+    /// approach; it was listed before 11.0.0).
+    /// </summary>
+    /// <param name="windowEndsWithoutInteriorMinimum">When the window holds no interior minimum, return the ends where the
+    /// distance grows into the window instead of nothing: <see cref="Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>
+    /// keeps its former answer there, which #621's own change decides; <c>AnalyzeAll</c> lists the interior minima only.</param>
     private static List<Time> FindDenseCloseApproaches(
         StateSamplingSource protectedSource,
         StateSamplingSource secondarySource,
         Window window,
-        double toleranceSeconds)
+        double toleranceSeconds,
+        bool windowEndsWithoutInteriorMinimum)
     {
         var protectedDense = protectedSource.DenseTrajectory;
         var secondaryDense = secondarySource.DenseTrajectory;
@@ -966,6 +999,16 @@ public static class ConjunctionAssessment
         var minima = SelectLocalMinimumEpochs(distinctCandidates,
             epoch => (DensePosition(secondaryDense, epoch) - DensePosition(protectedDense, epoch)).MagnitudeSquared(),
             toleranceSeconds);
+
+        // The first and last candidates are the window ends (BuildDenseIntervalBoundaries)
+        var interiorMinima = minima
+            .Where(epoch => epoch != distinctCandidates[0] && epoch != distinctCandidates[^1])
+            .ToList();
+        if (interiorMinima.Count > 0 || !windowEndsWithoutInteriorMinimum)
+        {
+            minima = interiorMinima;
+        }
+
         return RefineOnRangeRate(minima, distinctCandidates,
             epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch), toleranceSeconds);
     }
@@ -2223,6 +2266,14 @@ public static class ConjunctionAssessment
             throw new ArgumentOutOfRangeException(nameof(options.NonlinearityIndexThreshold),
                 "The non-linearity index threshold must be positive and finite.");
         }
+    }
+
+    // The ILocalizable overloads read the stored states of a propagated spacecraft, which must cover the window (#527), as
+    // a trajectory must (ValidateTrajectoryCoverage)
+    private static void CheckStatesCover(Spacecraft protectedSpacecraft, ILocalizable secondaryObject, in Window window)
+    {
+        protectedSpacecraft.CheckInterpolatedStatesCover(window, "screening window", "screeningWindow");
+        (secondaryObject as Spacecraft)?.CheckInterpolatedStatesCover(window, "screening window", "screeningWindow");
     }
 
     private static void ValidateTrajectoryCoverage(PropagationSolution trajectory, Window window, string paramName)

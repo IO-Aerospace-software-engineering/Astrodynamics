@@ -163,7 +163,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
 
         /// <summary>
         /// Creates a kernel-backed spacecraft whose ephemeris and orientation come from loaded SPK/CK kernels.
-        /// No central body parameter — SPICE handles segment chaining internally.
+        /// Its initial orbital parameters are its state at <paramref name="epoch"/> relative to
+        /// <paramref name="centerOfMotion"/>, the Earth by default (#620: the Solar System barycentre before 11.0.0); SPICE
+        /// chains the segments to that centre. The conjunction analysis takes this centre as the observer of a protected
+        /// spacecraft, so its RTN axes are those of the orbit about it.
         /// </summary>
         /// <param name="naifId">NAIF ID (must be negative)</param>
         /// <param name="name">Spacecraft name</param>
@@ -176,17 +179,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="cosparId">COSPAR international designator</param>
         /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr)</param>
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
+        /// <param name="centerOfMotion">The centre of the initial orbital parameters, the Earth when null; the Solar System
+        /// barycentre, or any body the loaded kernels chain to, may be given.</param>
+        /// <exception cref="InvalidOperationException">The loaded kernels give no state of the spacecraft relative to
+        /// <paramref name="centerOfMotion"/> at <paramref name="epoch"/> (#454).</exception>
         public Spacecraft(int naifId, string name,
             Time? epoch = null, double mass = 0.0, double maximumOperatingMass = double.MaxValue,
             Clock clock = null, double sectionalArea = 1.0, double dragCoeff = 2.2,
-            string cosparId = null, double solarRadiationCoeff = 1.0, double hardBodyRadius = 0.0)
-            : base(naifId, name, mass,
-                SpiceAPI.Instance.ReadEphemeris(
-                    epoch ?? TimeSystem.Time.J2000TDB,
-                    0, naifId,
-                    Frames.Frame.ICRF, Aberration.None).ToStateVector())
+            string cosparId = null, double solarRadiationCoeff = 1.0, double hardBodyRadius = 0.0,
+            CelestialItem centerOfMotion = null)
+            : base(naifId, name, mass, ReadKernelInitialState(naifId, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion))
         {
-            if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId), "Kernel-backed spacecraft NAIF ID must be negative.");
             _isFromKernel = true;
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? new Clock(name + "_CLK", 256);
@@ -770,6 +773,40 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 }
 
                 return _propagatedStates.Span;
+            }
+        }
+
+        // The initial state of a kernel-backed spacecraft relative to its centre of motion, the Earth by default (#620); the
+        // identifier checked before the read
+        private static StateVector ReadKernelInitialState(int naifId, in Time epoch, CelestialItem centerOfMotion)
+        {
+            if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId), "Kernel-backed spacecraft NAIF ID must be negative.");
+            return SpiceAPI.Instance.ReadEphemerisRaw(epoch, centerOfMotion ?? new CelestialBody(PlanetsAndMoons.EARTH), naifId,
+                Frames.Frame.ICRF, Aberration.None);
+        }
+
+        /// <summary>
+        /// Throws when a window leaves the propagated states that <see cref="GetGeometricStateRelativeTo"/> interpolates,
+        /// which would be extrapolated (#527); nothing to check without such states (<see cref="InterpolatedStatesWindow"/>).
+        /// </summary>
+        /// <param name="window">The window read.</param>
+        /// <param name="description">What the window is, for the message.</param>
+        /// <param name="paramName">The parameter of the window.</param>
+        /// <exception cref="ArgumentException">The window leaves the propagated states.</exception>
+        internal void CheckInterpolatedStatesCover(in Window window, string description, string paramName)
+        {
+            if (InterpolatedStatesWindow is not { } states)
+            {
+                return;
+            }
+
+            var start = window.StartDate.ToTDB();
+            var end = window.EndDate.ToTDB();
+            if ((start - states.StartDate.ToTDB()).Ticks < 0 || (states.EndDate.ToTDB() - end).Ticks < 0)
+            {
+                throw new ArgumentException(
+                    $"The {description} [{start}, {end}] leaves the propagated states of {Name}, [{states.StartDate.ToTDB()}, {states.EndDate.ToTDB()}]: they would be extrapolated.",
+                    paramName);
             }
         }
 

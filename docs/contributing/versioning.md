@@ -119,6 +119,63 @@ A major version, because it breaks the API: members deprecated for removal in 11
   determinant is then a sum of positive terms. `CollisionRisk.ProjectedCovariance` is still the clipped matrix, rebuilt
   for display. A null Pc becomes the clipped Pc (1.5957691e-5 on #612's case, exact to 2e-16); every other Pc moves only
   by rounding.
+- **A CDM length without `units` was read in km** ([#613](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/613)). `MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N`
+  and `SCREEN_VOLUME_X/Y/Z` are `lengthTypeUO` in the NDM/XML schema (units optional, `m` the only unit; m in
+  CCSDS 508.0 table 3-2), and the reader took km when the attribute was absent: 715 read as 715 000 m, with no error and
+  the schema check passing. The default is now m. A length with `units="m"` is now the double of its text exactly (it was
+  divided by 1000 and multiplied back, one ulp off at most); `units="km"`, outside the schema, is still accepted.
+- **The CDM, OPM and OMM readers rejected a day-of-year date** ([#490](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/490)). The `yyyy-DDD` patterns of the
+  three readers read the literal text `DDD` (`D` is no .NET specifier): every `YYYY-DDDThh:mm:ss` date, which the
+  schema's `epochType` allows and the library's own schema check passed, threw, in every date field and on every load
+  path, and `2021-DDDT12:00:00` loaded as 1 January. One internal parser of `CCSDS/Common`, `CcsdsEpochParser`, now
+  reads the date branch of `epochType` for the three readers: `-MM-DD` or `-DDD` (1 to 365, 366 in a leap year, as
+  CSPICE's `str2et`), any fraction (up to 7 digits exact, more rounded to the 100 ns tick as before), `Z` or `±hh:mm`
+  applied, UTC. Measured against `tools/ccsds_epoch_reference` (CSPICE `str2et` and `et2utc` on 25 day-of-year dates,
+  2000 to 2026, leap days, offsets, 0 to 7 fraction digits): every instant exact to the tick; the calendar dates give
+  the `DateTime` of the former readers bit for bit; the literal `DDD`, a day 0 or a day 366 of a common year throw the
+  reader's parse exception. Other text keeps the former fallback (`DateTime.TryParse`, #619).
+- **A kernel-backed protected spacecraft got the RTN axes of its orbit about the Solar System barycentre** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620)).
+  `new Spacecraft(naifId, name, epoch, ...)` read its initial state about the SSB, and the conjunction analysis takes the
+  protected spacecraft's centre as its observer: `RelativePositionRtn`, `RelativeVelocityRtn`, `CombinedCovarianceRtn`
+  and the `RELATIVE_POSITION_*` and `RELATIVE_VELOCITY_*` that `ToCdm` writes were rotated by the axes of an orbit about
+  the SSB, up to 316.6 m and 7557.5 m/s off on a 250 m encounter. The constructor takes an optional `centerOfMotion`,
+  the Earth by default, about which it reads its initial orbital parameters; the SSB, or any body the kernels chain to,
+  may be given. Measured on two SPKs written by the library: the RTN relative state within 2.8e-14 m and 9.1e-13 m/s of
+  CSPICE's `spkezr_c` about the Earth (and about the SSB when it is given). The TCA, the miss distance and the inertial
+  relative state do not move, nor do the managed light-time, occultation and field-of-view reads of a kernel-backed
+  spacecraft, which keep the SSB as their reference body, as CSPICE.
+- **`AnalyzeAll` on two propagations listed a window end as a close approach** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), its dense-search part).
+  The polynomial search took the window ends as candidates and kept an end where the distance grows into the window as a
+  local minimum: over 3 h the list began with the window start, 6277 km away and receding. The window ends are no longer
+  minima of the dense path: `AnalyzeAll(profile, solution, secondary, solution, window)` lists the interior minima only,
+  an empty list when there are none, and `Analyze` on that path returns the closest interior minimum when there is one,
+  never an end closer than it. Measured against CSPICE's `gfdist_c` (LOCMIN) on the SPKs of the propagations, refined
+  on the range rate of `spkezr_c`: the four minima of 3 h within 2e-7 s (two ticks) and 1.1e-8 m. Without an interior
+  minimum, `Analyze` still returns the end where the distance grows into the window, and `Screen` and the
+  `ILocalizable` overloads keep their midpoint: #621's own change decides them.
+- **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the
+  ephemeris read and `TransformFrame`). `ReadEphemerisAtGivenEpochProxy` left its state unwritten when `spkezr_c`
+  failed (r = (4.9e-321, 6.95e-307, 6.95e-307) m past de440s on Linux, whatever the stack held elsewhere), and
+  `TransformFrameProxy` returned the zero quaternion: `Analyze` of two kernel-backed spacecraft past their SPKs gave a
+  TCA with a miss of 0 m and 2888 SPICE messages on stdout. The native read now writes NaN and keeps the SPICE message
+  for `GetLastErrorProxy` (4 lines, the second change of the frozen C++ layer in 11.0.0, decision of S. Guillet,
+  2026-11-09), and `SpiceAPI.ReadEphemeris` (at an epoch and over a window), every `GetEphemeris` of a kernel-backed
+  object and the kernel-backed `Spacecraft` constructor throw `InvalidOperationException` with that message
+  ("Insufficient ephemeris data has been loaded ..."). `SpiceAPI.TransformFrame` throws when SPICE gives no rotation
+  (a quaternion whose norm is not 1 to 1e-9), naming the frames and the epoch, for every frame (only the TEME path did
+  before). Reads inside the coverage do not move. A read at the very first instant of an SPK can fall a fraction of a
+  tick before it (the 100 ns of a `Time` in TDB) and now throws: the LRO tracking test starts 5 minutes after its SPK,
+  as the conformance case tracking_data 001 does. A planet or a moon that the loaded kernels do not chain to its system
+  barycenter (Mars to Pluto and their moons with de440s alone) is built with `InitialOrbitalParameters` null instead of
+  an undefined state; a read of its position throws. The orientation cache of a propagation's central body
+  (`PropagationFrameOrientationCache`) keeps a grid point SPICE cannot give as unavailable and throws only when a force
+  reads it, so a point-mass propagation about the Earth still runs past the Earth's PCK, and a geopotential or drag
+  there throws (they used the zero rotation before). The other proxies keep #454.
+- **The `ILocalizable` conjunction overloads extrapolated past a propagated spacecraft's states** ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), its
+  guard). `Analyze`, `AnalyzeAll` and `Screen` read a propagated protected or secondary spacecraft through its stored
+  states without a coverage check, so a window past them was extrapolated (567 km off 6 min out); they now throw
+  `ArgumentException` (`screeningWindow`) when the window leaves the stored states, as the `PropagationSolution`
+  overloads did. The check, `Spacecraft.CheckInterpolatedStatesCover`, is the one of the managed field-of-view search.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
@@ -148,10 +205,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
   of range); no valid state has r = 0. The native `TLE::ToStateVector` left its state unwritten when `evsgp4_c`
   signalled, so the state returned was what the stack held: on Linux zero by chance (28872 of Vallado's set gave
   r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307)), on Windows x64 and macOS arm64 a non-zero state, possibly that of an
-  earlier call. It now returns a zero state then, the one change of the C++ layer in 11.0.0 (decision of S. Guillet,
-  2026-11-08). TEME ↔ ICRF reads no kernel;
+  earlier call. It now returns a zero state then, a change of the C++ layer (decision of S. Guillet, 2026-11-08; the
+  other change of 11.0.0 is the ephemeris read of #454, below). TEME ↔ ICRF reads no kernel;
   `SpiceAPI.TransformFrame` between TEME and a SPICE frame throws when SPICE gives no rotation for that frame (ITRF93
-  before 2000). The other proxies keep #454.
+  before 2000); every frame since (#454's ephemeris read and frame guard, above).
 - **A TLE built its Earth in ITRF93 at its epoch** ([#597](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/597)). `new TLE(...)` (twice) and `Omm.ToTle` built
   `new CelestialBody(399, new Frame("ITRF93"), epoch)`: outside the Earth's binary PCK (every TLE before 2000 or after
   the PCK's end) printed two SPICE(FRAMEDATANOTFOUND) messages, without an exception, and left the observer's state
@@ -754,6 +811,16 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Changed**
 
+- **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its
+  `InitialOrbitalParameters.Observer` is the Earth unless `centerOfMotion` says otherwise (the SSB before), so the
+  observer of a conjunction analysis it protects, and of anything else that reads that centre, is the Earth. Pass
+  `centerOfMotion: new Barycenter(0)` for the former state; the kernels must chain the spacecraft to the centre.
+- **Reads outside the coverage throw** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), Fixed above): an ephemeris read or a frame
+  transformation that SPICE cannot give, and a conjunction window past a propagated spacecraft's states, throw instead
+  of returning an undefined state, the zero rotation or an extrapolation. A kernel-backed spacecraft built for its CK
+  alone, without an SPK that covers its epoch, now throws at construction: its initial state cannot be read.
+- **`AnalyzeAll` on two propagations no longer lists the window ends** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above), and returns an
+  empty list for a window without an interior minimum.
 - **Every TEME ↔ ICRF result moves** with the managed TEME ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451), Fixed above), by 0.3″ to 23.3″ over 2000–2026
   (the angle between the former TEME and the definition; 2.0″ to 23.2″ at the 13 epochs of `tools/teme_reference`):
   the ICRF states of a TLE (`TLE.ToOsculating(...).ToFrame(Frame.ICRF)`, 326 to 428 m on the three TLEs of the TEME

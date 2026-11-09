@@ -10,12 +10,21 @@ namespace IO.Astrodynamics.Propagator;
 /// Pre-computed cache of body-fixed frame orientations on a regular time grid.
 /// Uses SLERP interpolation for sub-grid queries, eliminating SPICE calls during integration.
 /// </summary>
+/// <remarks>
+/// A grid point SPICE cannot give (outside the coverage of the frame's orientation data, where
+/// <see cref="SpiceAPI.TransformFrame(Time, Frame, Frame)"/> throws since #454) is kept as unavailable, and a read that
+/// needs it throws: a propagation whose forces need no orientation of the central body (a point mass, no drag) still runs
+/// there, as it did when the native layer returned the zero rotation.
+/// </remarks>
 public sealed class PropagationFrameOrientationCache
 {
     private readonly record struct OrientationPoint(
         Quaternion Rotation, Vector3 AngularVelocity, double EpochSeconds);
 
     private readonly OrientationPoint[] _points;
+    // The message of the first grid point SPICE could not give, and which points it could not give; null when it gave all
+    private readonly string _unavailableMessage;
+    private readonly bool[] _unavailable;
     private readonly double _gridStepSeconds;
     private readonly double _startEpochSeconds;
     private readonly int _gridSize;
@@ -49,7 +58,20 @@ public sealed class PropagationFrameOrientationCache
         {
             double epochSec = _startEpochSeconds + i * _gridStepSeconds;
             var epoch = Time.CreateTDB(epochSec);
-            var so = bodyFixedFrame.GetStateOrientationToICRF(epoch);
+            StateOrientation so;
+            try
+            {
+                so = bodyFixedFrame.GetStateOrientationToICRF(epoch);
+            }
+            catch (InvalidOperationException exception)
+            {
+                _unavailable ??= new bool[_gridSize];
+                _unavailable[i] = true;
+                _unavailableMessage ??= exception.Message;
+                _points[i] = new OrientationPoint(Quaternion.Zero, Vector3.Zero, epochSec);
+                continue;
+            }
+
             _points[i] = new OrientationPoint(so.Rotation, so.AngularVelocity, epochSec);
         }
     }
@@ -95,6 +117,12 @@ public sealed class PropagationFrameOrientationCache
 
         int idx = (int)((t - _startEpochSeconds) / _gridStepSeconds);
         idx = System.Math.Clamp(idx, 0, _gridSize - 2);
+
+        if (_unavailable != null && (_unavailable[idx] || _unavailable[idx + 1]))
+        {
+            throw new InvalidOperationException(
+                $"The orientation of {_frame.Name} is not available at {epoch}: {_unavailableMessage}");
+        }
 
         p0 = _points[idx];
         p1 = _points[idx + 1];

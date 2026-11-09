@@ -157,9 +157,24 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
-            InitialOrbitalParameters = GetEphemeris(epoch, new Barycenter(BarycenterOfMotionId, epoch), frame, Aberration.None);
+            InitialOrbitalParameters = ReadStateAboutBarycenter(epoch, frame);
 
         (InitialOrbitalParameters?.Observer as CelestialItem)?._satellites.Add(this);
+    }
+
+    // The state about the barycenter of the body's system; null when the loaded kernels do not chain the body to it (Mars
+    // to Pluto and their moons with de440s alone). Before #454 the native read returned an undefined state there; a read
+    // that needs the body's position still throws
+    private OrbitalParameters.OrbitalParameters ReadStateAboutBarycenter(in Time epoch, Frame frame)
+    {
+        try
+        {
+            return GetEphemeris(epoch, new Barycenter(BarycenterOfMotionId, epoch), frame, Aberration.None);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -324,6 +339,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     {
         return observer switch
         {
+            // A kernel-backed spacecraft is read from the SSB, as CSPICE reads it, whatever the centre of its initial
+            // orbital parameters (the Earth by default since #620)
+            Spacecraft.Spacecraft { IsSpiceBacked: true } => Barycenters.SOLAR_SYSTEM_BARYCENTER,
             Spacecraft.Spacecraft sc => sc.InitialOrbitalParameters?.Observer as CelestialItem
                                         ?? Barycenters.SOLAR_SYSTEM_BARYCENTER,
             Surface.Site site => site.CelestialBody,

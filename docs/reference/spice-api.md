@@ -11,7 +11,7 @@
 | `ClearKernels()` | Unload all kernels |
 | `GetLoadedKernels()` | Inspect the current kernel set |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
-| `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` on native error) |
+| `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454) |
 | `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error) |
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK |
 

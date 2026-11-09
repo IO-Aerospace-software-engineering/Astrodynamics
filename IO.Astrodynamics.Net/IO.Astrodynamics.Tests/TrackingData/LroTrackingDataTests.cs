@@ -41,8 +41,12 @@ public class LroTrackingDataTests
                 115.348678 * IO.Astrodynamics.Constants.Deg2Rad,
                 -29.045772 * IO.Astrodynamics.Constants.Deg2Rad,
                 251.1));
-        _windowStart = new TimeSystem.Time(2023, 12, 15, 0, 0, 0, frame: TimeFrame.UTCFrame);
-        _windowEnd = _windowStart.Add(TimeSpan.FromHours(12));
+        // 5 minutes after the start of the SPK, as the conformance case tracking_data 001: the SPK starts at
+        // 2023-12-15T00:00:00 UTC, which IO's 100 ns ticks put a fraction of a tick before it, and since #454 a read outside
+        // the coverage throws (it returned an undefined state before). The arcs start at 00:25 and the samples keep the
+        // whole-minute grid
+        _windowStart = new TimeSystem.Time(2023, 12, 15, 0, 5, 0, frame: TimeFrame.UTCFrame);
+        _windowEnd = new TimeSystem.Time(2023, 12, 15, 12, 0, 0, frame: TimeFrame.UTCFrame);
         _searchWindow = new Window(_windowStart, _windowEnd);
         _lro = new Spacecraft(-85, "LRO", epoch: _windowStart);
         _step = TimeSpan.FromSeconds(60);

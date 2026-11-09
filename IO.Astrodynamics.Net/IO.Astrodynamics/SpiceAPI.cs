@@ -629,6 +629,7 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454).</exception>
     public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
         int observerId, int targetId, Frame frame,
         Aberration aberration, TimeSpan stepSize)
@@ -655,6 +656,7 @@ public class SpiceAPI
                     ThrowLastProxyError();
                 orbitalParameters.AddRange(stateVectors.Where(x => !string.IsNullOrEmpty(x.Frame)).Select(x =>
                 {
+                    ThrowOnFailedRead(x);
                     var epoch = Time.CreateTDB(x.Epoch).ConvertTo(searchWindow.StartDate.Frame);
                     return managed == null
                         ? new OrbitalParameters.StateVector(x.Position.Convert(), x.Velocity.Convert(), observer, epoch, frame)
@@ -675,6 +677,8 @@ public class SpiceAPI
     /// <param name="frame"></param>
     /// <param name="aberration"></param>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">SPICE gives no state (#454): the kernels do not cover the epoch or do
+    /// not chain the target to the observer; the message is SPICE's. Before 11.0.0 the state was undefined.</exception>
     public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, int observerId,
         int targetId, Frame frame, Aberration aberration)
     {
@@ -710,10 +714,30 @@ public class SpiceAPI
         var managed = ManagedReadFrame(frame);
         var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
             observer.NaifId, targetId, managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name, aberration.GetDescription());
+        ThrowOnFailedRead(stateVector);
         var tdb = Time.Create(stateVector.Epoch, TimeFrame.TDBFrame);
         return managed == null
             ? new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, frame)
             : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame);
+    }
+
+    // The bound of | |q| − 1 | of a rotation from the native layer, a unit quaternion to rounding; the zero quaternion of a
+    // failed transformation is 1 away (#454)
+    private const double UnitQuaternionTolerance = 1.0e-9;
+
+    /// <summary>
+    /// Throws the SPICE error of a failed read: <c>ReadEphemerisAtGivenEpochProxy</c> writes NaN in the state when
+    /// <c>spkezr_c</c> fails and keeps the SPICE message for <c>GetLastErrorProxy</c> (#454); before, the state was the
+    /// unwritten one of the stack. No valid state is non-finite.
+    /// </summary>
+    private static void ThrowOnFailedRead(in StateVector stateVector)
+    {
+        if (!double.IsFinite(stateVector.Position.X) || !double.IsFinite(stateVector.Position.Y) ||
+            !double.IsFinite(stateVector.Position.Z) || !double.IsFinite(stateVector.Velocity.X) ||
+            !double.IsFinite(stateVector.Velocity.Y) || !double.IsFinite(stateVector.Velocity.Z))
+        {
+            ThrowLastProxyError();
+        }
     }
 
     /// <summary>
@@ -890,10 +914,12 @@ public class SpiceAPI
     /// <exception cref="ArgumentNullException"></exception>
     /// <remarks>
     /// A TEME frame, <see cref="Frame.TEME"/> or a frame named TEME, is the managed <see cref="TemeFrame"/> (#451): the
-    /// transform is composed through ICRF, the other frame from SPICE, which then must give a rotation (#454 on the TEME
-    /// path: outside the coverage of its kernels SPICE returns a zero quaternion, and the call throws).
+    /// transform is composed through ICRF, the other frame from SPICE. SPICE must give a rotation: outside the coverage of
+    /// the frame data the native layer returns the zero quaternion and drops the SPICE message, and the call throws (#454;
+    /// before 11.0.0 the zero quaternion was returned, except on the TEME path).
     /// </remarks>
-    /// <exception cref="InvalidOperationException">The SPICE part of a TEME transform is not a rotation.</exception>
+    /// <exception cref="InvalidOperationException">SPICE gives no rotation between the frames at this epoch: a quaternion
+    /// whose norm differs from 1 by more than 1e-9.</exception>
     public OrbitalParameters.StateOrientation TransformFrame(Time epoch, Frame fromFrame, Frame toFrame)
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
@@ -907,8 +933,17 @@ public class SpiceAPI
         {
             var res = TransformFrameProxy(SpiceFrameName(fromFrame), SpiceFrameName(toFrame), epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds);
 
+            // A failed transformation returns the zero quaternion, its SPICE message printed and dropped by the native layer
+            // (#454): a rotation is a unit quaternion
+            var rotation = new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z);
+            if (!(System.Math.Abs(rotation.Magnitude() - 1.0) <= UnitQuaternionTolerance))
+            {
+                throw new InvalidOperationException(
+                    $"SPICE gives no transformation from {fromFrame.Name} to {toFrame.Name} at {epoch.ToTDB()}: the frame data (a PCK, CK or frame kernel) does not cover this epoch or is not loaded.");
+            }
+
             return new OrbitalParameters.StateOrientation(
-                new Quaternion(res.Rotation.W, res.Rotation.X, res.Rotation.Y, res.Rotation.Z),
+                rotation,
                 new Vector3(res.AngularVelocity.X, res.AngularVelocity.Y, res.AngularVelocity.Z), epoch, fromFrame);
         }
     }
@@ -933,15 +968,8 @@ public class SpiceAPI
             return Frame.TEME.GetStateOrientationToICRF(epoch);
         }
 
-        var orientation = TransformFrame(epoch, frame, Frame.ICRF);
-        // A rotation is a unit quaternion; the zero quaternion of a failed SPICE call is not (#454)
-        if (System.Math.Abs(orientation.Rotation.Magnitude() - 1.0) > 1e-9)
-        {
-            throw new InvalidOperationException(
-                $"SPICE gave no rotation from {frame.Name} to {Frame.ICRF.Name} at {epoch.ToTDB()}: the orientation data of {frame.Name} do not cover this epoch.");
-        }
-
-        return orientation;
+        // TransformFrame throws when SPICE gives no rotation (#454)
+        return TransformFrame(epoch, frame, Frame.ICRF);
     }
 
     public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)
