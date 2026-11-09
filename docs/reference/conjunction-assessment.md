@@ -271,7 +271,7 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
   eigenvalues and the rotation as they are, in θ along the disc (x = x_c + R sin θ), split at the Gaussian's mean and
   ±1 to 16 σ and at the chords reaching the minor axis's ±kσ, by adaptive Simpson at 1e-12 of the whole, the chord
   probability an erfc difference on the side away from zero with fdlibm's erf and erfc (#610, #611, #612). Measured
-  against the exact Pc of its inputs (mpmath at 50 digits): within 1.4e-14 from 2.1e-2 to 5.1e-12, a hard-body radius much
+  against the exact Pc of its inputs (mpmath at 50 digits): within 2.0e-14 from 2.1e-2 to 5.1e-12, a hard-body radius much
   larger than the covariance and a covariance not positive definite included; 50 µs to 0.5 ms a call.
 - With only one covariance, Pc is the maximum probability over the unknown covariance (Frisbee's
   method), an upper bound, and `SingleCovarianceMaximumPcUsed` is raised.

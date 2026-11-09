@@ -30,13 +30,15 @@ public partial class ConjunctionAssessmentTests
     private const string CollisionProbabilityReferenceFile = "Data/CollisionProbabilityReference/collision_probability_reference.json";
 
     // PROVISIONAL until the CI of Linux, Windows and macOS arm64: twice the worst relative error measured on Linux x64
-    // (2026-11-09), rounded up to two digits. The internal integral on the seven encounters: worst 1.41e-14 (003)
-    private const double DesignedEncounterPcBound = 2.9e-14;
+    // (2026-11-09), rounded up to two digits. The internal integral on the seven encounters (the doubles of the suite's
+    // inputs.yaml): worst 2.01e-14 (003)
+    private const double DesignedEncounterPcBound = 4.1e-14;
 
     // PROVISIONAL (Linux x64, 2026-11-09): the public Analyze on straight-line trajectories, the seven encounters: worst
-    // 7.41e-10 (002). The refined TCA lies a bisection tolerance from the linear TCA, over which the covariance is held
-    // in RTN; the integral itself is at 1.4e-14
-    private const double DesignedEncounterAnalyzePcBound = 1.5e-9;
+    // 9.03e-9 (003; 7.41e-10 on the design-stage doubles, within 1e-10 of these, whose 003 gave less). The refined TCA
+    // lies up to a tick of Time (100 ns) from the linear TCA, over which the covariance is held in RTN, and 003's Pc of
+    // 1.1e-8 (miss 11 sigma) amplifies that rotation; the integral itself is at 2.0e-14
+    private const double DesignedEncounterAnalyzePcBound = 1.9e-8;
 
     // PROVISIONAL (Linux x64, 2026-11-09): the 25 reproductions of #610, #611 and #612: worst 7.64e-15 (#612, λ2 1e-2 m²
     // at 30°); before the fix 0 or 4e-86 for 1 (#610), −4.6 % (#611), null (#612)

@@ -101,7 +101,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   - **Measured** (Linux x64; the bounds provisional until the three platforms) against the exact Pc of the same double
     inputs, CARA's `Pc2D` at 50 digits (`tools/collision_probability`, tanh-sinh and Gauss-Legendre agreeing to 1e-30):
     the seven `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger
-    than the covariance, a covariance not positive definite, Frisbee's maximum) within 1.4e-14, 7.4e-10 through `Analyze`
+    than the covariance, a covariance not positive definite, Frisbee's maximum) within 2.0e-14, 9.0e-9 through `Analyze`
     (the covariance held in RTN over the refined TCA's offset); the 25 reproductions of #610 to #612 within 7.6e-15;
     NASA CARA's Omitron case 01 and Alfano case 03 within 2.6e-15, Frisbee's table 1 within 3.2e-16 (their tests now
     take the exact values: the published ones are 2.9e-6 and 2.3e-6 from them, Frisbee's given to two or three digits).
