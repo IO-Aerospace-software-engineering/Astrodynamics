@@ -272,10 +272,12 @@ infer the source from the age (null: `None`, zero: `ProvidedAtEncounter`, otherw
   ±1 to 16 σ and at the chords reaching the minor axis's ±kσ, by adaptive Simpson at 1e-12 of the whole, the chord
   probability an erfc difference on the side away from zero with fdlibm's erf and erfc (#610, #611, #612). Measured
   against the exact Pc of its inputs (mpmath at 50 digits): within 2.0e-14 from 2.1e-2 to 5.1e-12, a hard-body radius much
-  larger than the covariance and a covariance not positive definite included; 50 µs to 0.5 ms a call. A covariance far
-  wider than the disc is limited by the noise of the integrand, the cancellation of the erfc difference (about ε σ/R
-  relative), which the quadrature accepts rather than chase: within 5.0e-11 at σ = 1e6 R with the miss 1 σ off the major
-  axis.
+  larger than the covariance and a covariance not positive definite included; a median of 0.2 ms a call over a random
+  sweep, 2.2 ms in the deep tails (a Pc near 1e-300, 13 765 evaluations). A covariance far wider than the disc is
+  limited by the noise of the integrand, the cancellation of the erfc difference, which the quadrature accepts rather
+  than chase: it grows as about ε σ/R relative, within 5.0e-11 at σ = 1e6 R with the miss 1 σ off the major axis, and
+  against Marcum's closed form (a circular covariance, the miss off the axes) 1.2e-10 at σ = 1e7 R, 2.4e-8 at 1e8 R and
+  6.6e-7 at 1e10 R.
 - With only one covariance, Pc is the maximum probability over the unknown covariance (Frisbee's
   method), an upper bound, and `SingleCovarianceMaximumPcUsed` is raised.
 - With no covariance, no Pc is computed (`ProbabilityOfCollision` is null) and

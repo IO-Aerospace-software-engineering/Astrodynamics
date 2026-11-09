@@ -19,11 +19,11 @@ namespace IO.Astrodynamics.Propagator;
 /// </para>
 /// <para>
 /// When the coverage ends between the window end and the next grid point, that point is replaced by the orientation read
-/// once at the window end (and likewise at the window start when the coverage starts between the previous grid point and
-/// it), so a read inside the window interpolates over the shortened interval. A read whose interval still has an
-/// unavailable point, or which lies past such a boundary point, reads the frame's orientation at its epoch from the data
-/// provider, never through this cache: it throws, with SPICE's message, only when SPICE has no orientation at that epoch.
-/// A grid SPICE gives entirely reads nothing and allocates nothing.
+/// once at the window end, so a read inside the window interpolates over the shortened interval. A read whose interval
+/// still has an unavailable point (after a window start inside the coverage, whose previous grid points SPICE cannot
+/// give, up to the next grid point), or which lies past the window end so replaced, reads the frame's orientation at its
+/// epoch from the data provider, never through this cache: it throws, with SPICE's message, only when SPICE has no
+/// orientation at that epoch. A grid SPICE gives entirely reads nothing and allocates nothing.
 /// </para>
 /// </remarks>
 public sealed class PropagationFrameOrientationCache
@@ -34,8 +34,7 @@ public sealed class PropagationFrameOrientationCache
     private readonly OrientationPoint[] _points;
     // Which points SPICE could not give; null when it gave all
     private readonly bool[] _unavailable;
-    // The span the grid interpolates when a boundary point was read at the window start or end (KR-1 of lot 6, #457)
-    private readonly double _interpolatedFromSeconds = double.NegativeInfinity;
+    // The end of the span the grid interpolates when the point after the window end was read there (KR-1 of lot 6, #457)
     private readonly double _interpolatedToSeconds = double.PositiveInfinity;
     private readonly double _gridStepSeconds;
     private readonly double _startEpochSeconds;
@@ -75,7 +74,7 @@ public sealed class PropagationFrameOrientationCache
             {
                 so = bodyFixedFrame.GetStateOrientationToICRF(epoch);
             }
-            catch (InvalidOperationException exception)
+            catch (InvalidOperationException)
             {
                 _unavailable ??= new bool[_gridSize];
                 _unavailable[i] = true;
@@ -91,17 +90,10 @@ public sealed class PropagationFrameOrientationCache
             return;
         }
 
-        // The coverage starts between the last grid point before the window start and it: that point becomes the
-        // orientation at the window start
-        int before = LastPointAtOrBefore(windowStart);
-        if (before >= 0 && _unavailable[before] && _points[before].EpochSeconds < windowStart &&
-            TryReadBoundary(windowStart, before))
-        {
-            _interpolatedFromSeconds = windowStart;
-        }
-
-        // The coverage ends between the window end and the first grid point after it: that point becomes the orientation
-        // at the window end
+        // The grid starts two steps before the window start, so a grid point lies on the window start: a start inside the
+        // coverage needs no boundary read (the points before it are unavailable, and a read there goes to the data
+        // provider). The coverage ends between the window end and the first grid point after it: that point becomes the
+        // orientation at the window end
         int after = LastPointAtOrBefore(windowEnd) + 1;
         if (after < _gridSize && _unavailable[after] && TryReadBoundary(windowEnd, after))
         {
@@ -189,7 +181,7 @@ public sealed class PropagationFrameOrientationCache
 
     /// <summary>
     /// The grid points around <paramref name="epoch"/> and its position between them, in [0, 1]; false when the grid
-    /// cannot give it (an unavailable point, or past a boundary point read at the window start or end).
+    /// cannot give it (an unavailable point, or past the boundary point read at the window end).
     /// </summary>
     private bool Locate(in Time epoch, out OrientationPoint p0, out OrientationPoint p1, out double ratio)
     {
@@ -198,8 +190,7 @@ public sealed class PropagationFrameOrientationCache
         int idx = (int)((t - _startEpochSeconds) / _gridStepSeconds);
         idx = System.Math.Clamp(idx, 0, _gridSize - 2);
 
-        if (_unavailable != null && (_unavailable[idx] || _unavailable[idx + 1] || t < _interpolatedFromSeconds ||
-                                     t > _interpolatedToSeconds))
+        if (_unavailable != null && (_unavailable[idx] || _unavailable[idx + 1] || t > _interpolatedToSeconds))
         {
             p0 = default;
             p1 = default;

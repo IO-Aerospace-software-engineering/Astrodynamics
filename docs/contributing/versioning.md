@@ -109,9 +109,11 @@ A major version, because it breaks the API: members deprecated for removal in 11
     NASA CARA's Omitron case 01 and Alfano case 03 within 2.6e-15, Frisbee's table 1 within 3.2e-16 (their tests now
     take the exact values: the published ones are 2.9e-6 and 2.3e-6 from them, Frisbee's given to two or three digits).
     σ ≫ R with the miss off the axes (σ 1e5 to 1e6 m, R 1 m; mpmath at 70 digits): within 5.0e-11, the noise of the
-    integrand itself, at 9 to 1 425 evaluations (200 000 before); a random sweep of 500 encounters (σ/R 1e-4 to 1e6,
-    misses to 12 σ) reaches neither the budget nor the depth cap (14 budget hits before, at most 9 217 evaluations
-    after). One evaluation takes 50 µs to 0.5 ms.
+    integrand itself, at 9 to 1 425 evaluations (200 000 before); that noise grows as about ε σ/R relative (Marcum's
+    closed form, a circular covariance: 1.2e-10 at σ = 1e7 R, 2.4e-8 at 1e8 R, 6.6e-7 at 1e10 R, 2.1e-6 before); a
+    random sweep of 500 encounters (σ/R 1e-4 to 1e6, misses to 12 σ) reaches neither the budget nor the depth cap (14
+    budget hits before, at most 9 217 evaluations after). One evaluation takes a median of 0.2 ms over the sweep, 2.2 ms
+    in the deep tails (a Pc near 1e-300, 13 765 evaluations).
   - **What moves:** every Pc, `CollisionRisk.ProbabilityOfCollision` through `Analyze`, `AnalyzeAll`, `Screen`,
     `EvaluateAvoidance` and the `COLLISION_PROBABILITY` that `ToCdm` writes: by 1e-8 to 1e-5 relative above 1e-7, up to
     3.3e-4 near 1e-8, +4.8 % below 1e-10 (to the exact value), and from 0 to the risk at a large hard-body radius (#610).
@@ -185,11 +187,13 @@ A major version, because it breaks the API: members deprecated for removal in 11
   a value of the undefined state: 0 for Mars and Jupiter in the review's probe); a read of its position throws. The orientation cache of a propagation's central
   body (`PropagationFrameOrientationCache`) keeps a grid point SPICE cannot give as unavailable, so a point-mass
   propagation about the Earth still runs past the Earth's PCK, and a geopotential or drag there throws (they used the
-  zero rotation before). A window that ends (or starts) inside the coverage, its next grid point outside, runs: the
-  point is replaced by the orientation read at the window end, and a read the grid cannot interpolate reads the frame at
-  its epoch, so only an epoch SPICE does not cover throws, with SPICE's message (a propagation up to the last instant of
-  `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute; KR-1 of the lot's review). The other
-  proxies keep #454.
+  zero rotation before). A window that ends (or starts) inside the coverage, its next grid point outside, no longer
+  throws for that point: the point after the window end is replaced by the orientation read there, and a read the grid
+  cannot interpolate reads the frame at its epoch, so only an epoch SPICE does not cover throws, with SPICE's message (a
+  propagation up to the last instant of `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute; KR-1
+  of the lot's review). A propagation still reads past its window end when its output step does not divide the window:
+  it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end, and a geopotential or drag read there past the coverage throws
+  (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies keep #454.
 - **The `ILocalizable` conjunction overloads extrapolated past a propagated spacecraft's states** ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), its
   guard). `Analyze`, `AnalyzeAll` and `Screen` read a propagated protected or secondary spacecraft through its stored
   states without a coverage check, so a window past them was extrapolated (567 km off 6 min out); they now throw

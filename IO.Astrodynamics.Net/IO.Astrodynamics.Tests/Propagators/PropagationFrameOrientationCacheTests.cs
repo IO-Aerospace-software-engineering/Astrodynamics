@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Frames;
@@ -222,9 +223,10 @@ public class PropagationFrameOrientationCacheTests
     // (0, 30) s puts the first grid point after the window end more than 30 s past it
     private const double UnalignedLength = 3610.0;
 
-    // The SLERP of the grid against CSPICE sxform: worst 3.27e-10 rad, angular velocity 1.12e-17 rad/s (Linux x64,
-    // 2026-11-09); bounds twice the worst, PROVISIONAL (Linux x64) until the CI of the three platforms
-    private const double AngleBound = 6.6e-10;
+    // The SLERP of the grid against CSPICE sxform, 98 epochs evenly spaced over each window besides the chosen ones:
+    // worst 3.43e-10 rad (a window starting 59.999 s after the coverage start), angular velocity 1.12e-17 rad/s (Linux
+    // x64, 2026-11-09); bounds twice the worst, PROVISIONAL (Linux x64) until the CI of the three platforms
+    private const double AngleBound = 6.9e-10;
     private const double AngularVelocityBound = 2.3e-17;
 
     [Theory]
@@ -239,9 +241,10 @@ public class PropagationFrameOrientationCacheTests
         var start = end.AddSeconds(-length);
         var cache = new PropagationFrameOrientationCache(new Window(start, end), earth.Frame, TimeSpan.FromSeconds(60));
 
-        // Against CSPICE sxform at each epoch: the grid's SLERP over its last interval, and the window end itself
+        // Against CSPICE sxform at each epoch: the grid's SLERP over its last interval, the window end itself, and 98
+        // epochs evenly spaced over the window
         double worstAngle = 0.0, worstAngularVelocity = 0.0;
-        foreach (double fromEnd in new[] { -length, -100.0, -45.0, -30.0, -10.0, -1.0, 0.0 })
+        foreach (double fromEnd in new[] { -length, -100.0, -45.0, -30.0, -10.0, -1.0, 0.0 }.Concat(EvenlySpaced(-length, 0.0)))
         {
             var epoch = end.AddSeconds(fromEnd);
             var cached = cache.GetOrientation(epoch);
@@ -288,23 +291,27 @@ public class PropagationFrameOrientationCacheTests
     public void WindowStartingInsideTheCoverage_ReadsEveryEpochOfTheWindow()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
-        double worst = 0.0;
-        foreach (double fromCoverageStart in new[] { 0.0, 30.0, 59.0, 61.0 })
+        double worst = 0.0, worstAngularVelocity = 0.0;
+        foreach (double fromCoverageStart in new[] { 0.0, 1.0e-3, 0.5, 30.0, 59.0, 59.999, 61.0 })
         {
             var start = TimeSystem.Time.CreateTDB(CoverageStart + fromCoverageStart);
             var cache = new PropagationFrameOrientationCache(new Window(start, start.AddSeconds(UnalignedLength)), earth.Frame,
                 TimeSpan.FromSeconds(60));
-            foreach (double fromStart in new[] { 0.0, 1.0, 30.0, 61.0 })
+            foreach (double fromStart in new[] { 0.0, 1.0, 30.0, 61.0 }.Concat(EvenlySpaced(0.0, UnalignedLength)))
             {
                 var epoch = start.AddSeconds(fromStart);
                 var direct = SpiceAPI.Instance.TransformFrame(epoch, earth.Frame, Frames.Frame.ICRF);
-                double angle = RotationAngle(direct.Rotation, cache.GetOrientation(epoch).Rotation);
+                var cached = cache.GetOrientation(epoch);
+                double angle = RotationAngle(direct.Rotation, cached.Rotation);
+                double angularVelocity = (direct.AngularVelocity - cached.AngularVelocity).Magnitude();
                 worst = System.Math.Max(worst, angle);
+                worstAngularVelocity = System.Math.Max(worstAngularVelocity, angularVelocity);
                 Assert.True(angle < AngleBound, $"{fromCoverageStart} s, {fromStart} s: {angle:E3} rad");
+                Assert.True(angularVelocity < AngularVelocityBound, $"{fromCoverageStart} s, {fromStart} s: {angularVelocity:E3} rad/s");
             }
         }
 
-        _output.WriteLine($"MEASURE KR-1 cache start worst {worst:E3} rad");
+        _output.WriteLine($"MEASURE KR-1 cache start worst {worst:E3} rad, {worstAngularVelocity:E3} rad/s");
 
         // Before the coverage, SPICE's message
         var early = TimeSystem.Time.CreateTDB(CoverageStart - 1.0);
@@ -321,6 +328,7 @@ public class PropagationFrameOrientationCacheTests
     [InlineData(0.0, 3600.0, false)]
     [InlineData(-30.0, 3600.0, false)]
     [InlineData(1.0, UnalignedLength, true)]
+    [InlineData(0.0, 3570.0, true)] // 59.5 steps of 60 s: the propagation runs to 3600 s, 30 s past the coverage
     public void Propagation_EndingAtTheCoverageEnd_Runs(double endFromCoverageEnd, double length, bool throws)
     {
         // A geopotential reads the orientation of the Earth at every stage, up to the window end
@@ -346,6 +354,10 @@ public class PropagationFrameOrientationCacheTests
         var last = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
         Assert.InRange(last.Position.Magnitude(), 6.0e6, 8.0e6);
     }
+
+    // 98 epochs evenly spaced over [from, to], the ends included (the review's denser sampling)
+    private static System.Collections.Generic.IEnumerable<double> EvenlySpaced(double from, double to) =>
+        Enumerable.Range(0, 98).Select(i => from + (to - from) * i / 97.0);
 
     private static double RotationAngle(Quaternion expected, Quaternion actual)
     {
