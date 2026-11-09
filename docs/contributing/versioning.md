@@ -166,7 +166,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   212 µs at the default steps of `new RK78Integrator()` on this crossing), within which a window ending before a minimum
   listed its unrefined Hermite epoch, a point still closing (as before 11.0.0), and a window starting before one listed
   nothing (an intermediate state of this change). A window end is now bracketed when the range rate says the minimum
-  lies inside, and a minimum whose range-rate zero lies outside the window is dropped: against `gfdist_c` on windows
+  lies inside, a minimum whose range-rate zero lies outside the window is dropped, and a zero exactly at a window end is
+  that end (the bisection would give the tick before it, #624): against `gfdist_c` on windows
   ending or starting 10 µs to 1 ms before or after each of the four minima, at 60 s and at the default steps, the same
   minima within the bounds above (2.7e-7 m at the default steps, their states against their SPK of 60 s outputs).
 - **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the

@@ -465,6 +465,70 @@ public partial class ConjunctionAssessmentTests
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
     }
 
+    // A rectilinear pass in a 2 s window: the secondary at (10, y0 + vy t) m from the protected spacecraft, one accepted
+    // step; closest, 10 m, where y = 0
+    private static (ProtectedSpacecraftProfile, PropagationSolution, Spacecraft, PropagationSolution, Window)
+        RectilinearPass(int naifId, double y0, double vy)
+    {
+        var earth = CreateEarth();
+        var start = TimeSystem.Time.J2000TDB;
+        var protectedSpacecraft = CreateSpacecraft(naifId, "P", earth, Vector3.Zero, Vector3.Zero);
+        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "S", earth, new Vector3(10.0, y0, 0.0), new Vector3(0.0, vy, 0.0));
+        var protectedTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
+            stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
+        var secondaryTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
+            stateAtSeconds: t => (new Vector3(10.0, y0 + vy * t, 0.0), new Vector3(0.0, vy, 0.0), Vector3.Zero));
+        return (new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory, secondarySpacecraft,
+            secondaryTrajectory, new Window(start, start.AddSeconds(2.0)));
+    }
+
+    private static readonly ConjunctionAnalysisOptions RectilinearPassOptions = new()
+    {
+        SampleStep = TimeSpan.FromDays(1.0),
+        MaximumEventSearchStep = TimeSpan.FromDays(1.0),
+        SecondaryHardBodyRadiusMeters = 0.0,
+        LowRelativeSpeedThresholdMetersPerSecond = 0.0
+    };
+
+    [Theory]
+    [InlineData(200.0, -100.0)] // closest at the window end, closing before it
+    [InlineData(0.0, 100.0)] // closest at the window start, receding after it
+    public void AnalyzeAndAnalyzeAll_DenseRangeRateZeroAtAWindowEnd_ReturnThatEndItself(double y0, double vy)
+    {
+        // The closed form: y = 0 at t = −y0/vy, a window end; the range rate is zero there and the distance 10 m. The
+        // window end itself, not the tick before it (#624's bisection, which S1's refinement of the ends reached)
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5524, y0, vy);
+        var expected = window.StartDate.AddSeconds(-y0 / vy);
+
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        Assert.Equal(expected, encounter.EncounterState.Epoch);
+        Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
+        Assert.Equal(expected, Assert.Single(encounters).EncounterState.Epoch);
+    }
+
+    [Theory]
+    [InlineData(250.0, -100.0, 2.0)] // still closing at the end: the end, where the distance grows into the window
+    [InlineData(50.0, 100.0, 0.0)] // receding from the start: the start
+    public void Analyze_DenseMonotonicWindow_ReturnsTheEndWhereTheDistanceGrowsIntoIt_AndAnalyzeAllNothing(double y0,
+        double vy, double expectedSeconds)
+    {
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5526, y0, vy);
+
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        Assert.Equal(window.StartDate.AddSeconds(expectedSeconds), encounter.EncounterState.Epoch);
+        Assert.Equal(System.Math.Sqrt(100.0 + System.Math.Pow(y0 + vy * expectedSeconds, 2.0)),
+            encounter.EncounterState.MissDistanceMeters, 9);
+        Assert.Empty(encounters);
+    }
+
     // ========== Correctness Tests ==========
 
     [Fact]

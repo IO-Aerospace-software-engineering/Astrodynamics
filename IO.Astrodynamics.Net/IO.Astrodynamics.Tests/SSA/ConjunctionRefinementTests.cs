@@ -243,6 +243,30 @@ public class ConjunctionRefinementTests
         Assert.Equal(candidates[0], Assert.Single(RefineInside(candidates, 0, rangeRate)));
     }
 
+    [Theory]
+    [InlineData(3)] // the window end itself
+    [InlineData(2)] // an interior minimum of the polynomials
+    public void AZeroRangeRateAtTheWindowEnd_ClosingBefore_IsTheEndItself(int minimumIndex)
+    {
+        // g = 0 exactly at the end and negative before: the zero is the end, not the tick before it (the bisection on
+        // [left, end] ends on [end − 1 tick, end] and returns its lower bound, #624)
+        var candidates = Candidates(4);
+        Func<TimeSystem.Time, double> rangeRate = epoch => (epoch - Epoch).TotalSeconds - 300.0;
+
+        Assert.Equal(candidates[^1], Assert.Single(RefineInside(candidates, minimumIndex, rangeRate)));
+    }
+
+    [Fact]
+    public void AZeroRangeRateAtTheWindowStart_ThenReceding_IsTheMinimum_FromAnInteriorMinimum()
+    {
+        // The minimum of the polynomials at the next candidate, g = 0 exactly at the start and positive after: the start,
+        // as from a minimum at the start (it was dropped as receding at the start)
+        var candidates = Candidates(4);
+        Func<TimeSystem.Time, double> rangeRate = epoch => (epoch - Epoch).TotalSeconds;
+
+        Assert.Equal(candidates[0], Assert.Single(RefineInside(candidates, 1, rangeRate)));
+    }
+
     /// <summary>
     /// Range rates far from linear near their zero, so that a secant estimate, or the bracket checked around it, fails:
     /// the refinement falls back to the candidates and still ends on the epoch of the bisection.

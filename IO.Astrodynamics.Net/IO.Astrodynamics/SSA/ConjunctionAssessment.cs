@@ -284,7 +284,8 @@ public static class ConjunctionAssessment
     /// minima of the distance only, an empty list when the window holds none (#621: a window end was listed before 11.0.0);
     /// otherwise, without a TCA, a single midpoint fallback encounter. On the first path a minimum lies inside the window
     /// when the range rate of the states says so, the cubic Hermite of the stored steps only seeding the search (#363): a
-    /// minimum whose range-rate zero lies just inside a window end is listed, one whose zero lies just outside is not.
+    /// minimum whose range-rate zero lies just inside a window end is listed, one whose zero lies just outside is not, and
+    /// one whose zero is exactly a window end is listed at that end.
     /// </returns>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
         ProtectedSpacecraftProfile protectedAsset,
@@ -1082,7 +1083,9 @@ public static class ConjunctionAssessment
     /// decreases into the window), and its zero is searched after it; zero there with a positive range rate at the next
     /// candidate, it is the minimum itself, as in the sampled search; positive, it is no minimum and is dropped. A minimum
     /// at the last candidate is a minimum inside when the range rate is zero or positive there, and its zero is searched
-    /// before it; negative, it is dropped.
+    /// before it; negative, it is dropped. A zero of the range rate exactly at a window end (the range rate negative at
+    /// the candidate before the last one, or positive at the one after the first) is that end itself, whichever minimum
+    /// it refines: the bisection would end on the tick before the last candidate (#624).
     /// </para>
     /// <para>
     /// The range rate is close to linear near its zero: its relative curvature is of the order of the orbital rate, so
@@ -1194,8 +1197,20 @@ public static class ConjunctionAssessment
 
             if (leftRate < 0.0 && rightRate >= 0.0)
             {
-                AddDistinctEpoch(refined, BisectForZero(rangeRate, candidates[left], candidates[right], toleranceSeconds),
-                    toleranceSeconds);
+                // A zero exactly at the window end, closing before it, is the end itself: the bisection would end on
+                // the tick before it (#624)
+                var tca = right == last && rightRate == 0.0
+                                        && (left == last - 1 ? leftRate : rangeRate(candidates[last - 1])) < 0.0
+                    ? candidates[last]
+                    : BisectForZero(rangeRate, candidates[left], candidates[right], toleranceSeconds);
+                AddDistinctEpoch(refined, tca, toleranceSeconds);
+                continue;
+            }
+
+            // A zero exactly at the window start, receding after it, is the start itself, as for a minimum there
+            if (left == 0 && leftRate == 0.0 && rangeRate(candidates[1]) > 0.0)
+            {
+                AddDistinctEpoch(refined, candidates[0], toleranceSeconds);
                 continue;
             }
 
