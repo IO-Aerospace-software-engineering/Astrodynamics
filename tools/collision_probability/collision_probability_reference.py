@@ -28,6 +28,10 @@ The families of rows:
                  position covariance in its own RTN (km^2, the CDM's lower triangle R, TR, TT, NR, NT, NN), the
                  combined hard-body radius (km); the states at the linear TCA (rho normal to nu to the doubles);
     D1, D2, D3   the reproductions of #610, #611 and #612: miss2D and C2D given in the encounter plane (m, m^2);
+    cancellation a covariance far wider than the disc with a miss off its axes (the adversarial review of lot 6, PC-1):
+                 sigma 1e5 to 1e6 m against R = 1 m, where the erfc difference of the chord probability cancels and the
+                 integral, before the fix, spent its 200 000 evaluations and returned a Pc 1.3e-6 off (m, m^2; at 70
+                 digits);
     CARA         the published cases of IO's own checks: NASA CARA Pc2D_Foster_UnitTest.m Omitron case 01 and Alfano
                  case 03 (3D inputs as the tests build them), Frisbee AAS 15-717 table 1 (2D, the maximum Pc);
     erf          erf and erfc at points of each branch of fdlibm's s_erf.c, for the private erf/erfc of the Pc path.
@@ -299,6 +303,20 @@ def reproductions():
     return rows
 
 
+def cancellations():
+    """sigma >> R with an off-axis miss: (1e5, 3e5) / diag(1e10, 1e10) m^2 / R 1 m, its mirror, (1e6, 1e6) /
+    diag(1e12, 1e10), (0, 1e6) / diag(1e12, 1e12)."""
+    rows = []
+    for miss, cov in (((1.0e5, 3.0e5), (1.0e10, 0.0, 1.0e10)), ((3.0e5, 1.0e5), (1.0e10, 0.0, 1.0e10)),
+                      ((1.0e6, 1.0e6), (1.0e12, 0.0, 1.0e10)), ((0.0, 1.0e6), (1.0e12, 0.0, 1.0e12))):
+        name = f'PC-1 miss ({miss[0]:g}, {miss[1]:g}), diag({cov[0]:g}, {cov[2]:g}), R 1'
+        # At 70 digits: the erfc difference of a chord of 1 m against sigma 1e5 m cancels about 5 digits of the working
+        # precision, and at 50 the two quadratures of (1e6, 1e6) agree to 1.6e-26 only
+        with mp.workdps(70):
+            rows.append(plane_row(name, miss, cov, 1.0))
+    return rows
+
+
 # ---- IO's published checks (NASA CARA Pc2D_Foster_UnitTest.m, Frisbee AAS 15-717) ----
 
 def scaled(rows, scale):
@@ -359,6 +377,7 @@ def main():
     doc = dict(header)
     doc['encounters'] = encounters()
     doc['reproductions'] = reproductions()
+    doc['cancellation'] = cancellations()
     doc['cara'] = cara_rows()
     doc['erf'] = erf_rows()
     text = json.dumps(doc, indent=1)

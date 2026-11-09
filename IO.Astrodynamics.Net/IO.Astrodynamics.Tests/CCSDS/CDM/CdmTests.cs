@@ -736,6 +736,29 @@ public class CdmTests
         Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
     }
 
+    [Theory]
+    [InlineData("0000-01-01T00:00:00")]
+    [InlineData("0000-001T00:00:00")]
+    [InlineData("\u0662\u0660\u0661\u0660-03-13T22:37:52")]
+    [InlineData("\uFF12\uFF10\uFF11\uFF10-03-13T22:37:52")]
+    public void ReadFromString_YearZeroOrNonAsciiDigits(string text)
+    {
+        // The CDM's own parse exception (CcsdsEpochParser returns false), not an exception of DateTime or int.Parse
+        var original = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2014, 1, 21, 17, 42, 47, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-EPOCH-0000"
+        });
+        var document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+        document.Descendants("CREATION_DATE").Single().Value = text;
+        Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+
+        document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+        document.Descendants("TCA").Single().Value = text;
+        Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+    }
+
     private static string FormatValidationIssues(IEnumerable<CdmValidationError> issues)
     {
         return string.Join(Environment.NewLine, issues.Select(issue =>

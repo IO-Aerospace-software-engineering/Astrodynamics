@@ -210,7 +210,9 @@ public static class ConjunctionAssessment
     /// <returns>
     /// The highest-priority encounter within the window: the closest interior local minimum of the distance when the window
     /// holds one, a window end never preferred to it (#621); without an interior minimum, the end where the distance grows
-    /// into the window when the trajectories share their observer and frame, the midpoint otherwise.
+    /// into the window when the trajectories share their observer and frame, the midpoint otherwise. A minimum is interior
+    /// as located on the cubic Hermite of the stored steps (#363): within that error of a window end, a minimum whose
+    /// range-rate zero lies just outside the window is kept at its unrefined Hermite epoch.
     /// </returns>
     public static EncounterCase Analyze(
         ProtectedSpacecraftProfile protectedAsset,
@@ -280,7 +282,9 @@ public static class ConjunctionAssessment
     /// <returns>
     /// All detected encounters in the window. When the trajectories share their observer and frame, the interior local
     /// minima of the distance only, an empty list when the window holds none (#621: a window end was listed before 11.0.0);
-    /// otherwise, without a TCA, a single midpoint fallback encounter.
+    /// otherwise, without a TCA, a single midpoint fallback encounter. A minimum is interior as located on the cubic Hermite
+    /// of the stored steps (#363): within that error of a window end, a minimum whose range-rate zero lies just outside the
+    /// window is listed at its unrefined Hermite epoch.
     /// </returns>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
         ProtectedSpacecraftProfile protectedAsset,
@@ -904,7 +908,9 @@ public static class ConjunctionAssessment
     /// <summary>
     /// The close approaches of the polynomial search on the stored steps of two propagations: the interior local minima of
     /// the distance, refined on the range rate (#621: a window end, where the distance grows into the window, is no close
-    /// approach; it was listed before 11.0.0).
+    /// approach; it was listed before 11.0.0). A minimum is interior as located on the cubic Hermite of the stored steps
+    /// (#363), before the refinement: within that error of a window end, a minimum whose range-rate zero lies outside the
+    /// window cannot be bracketed and keeps its unrefined Hermite epoch (<see cref="RefineOnRangeRate"/>).
     /// </summary>
     /// <param name="windowEndsWithoutInteriorMinimum">When the window holds no interior minimum, return the ends where the
     /// distance grows into the window instead of nothing: <see cref="Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>

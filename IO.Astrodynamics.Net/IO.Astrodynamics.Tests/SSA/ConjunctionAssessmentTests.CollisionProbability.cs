@@ -44,6 +44,12 @@ public partial class ConjunctionAssessmentTests
     // at 30°); before the fix 0 or 4e-86 for 1 (#610), −4.6 % (#611), null (#612)
     private const double ReproductionPcBound = 1.6e-14;
 
+    // PROVISIONAL (Linux x64, 2026-11-09): a covariance far wider than the disc with a miss off its axes (PC-1 of the lot's
+    // review: σ 1e5 to 1e6 m, R 1 m), where the erfc difference of the chord probability cancels to about ε σ/R: worst
+    // 5.01e-11 ((0, 1e6) m, diag(1e12, 1e12) m², the integrand's own rounding at 9 evaluations); 8.7e-14 to 5.4e-12 for
+    // the three others; before the fix 1.3e-6 at the 200 000-evaluation budget
+    private const double CancellationPcBound = 1.1e-10;
+
     // PROVISIONAL (Linux x64, 2026-11-09): fdlibm's erf and erfc, relative, at 22 points of its branches: worst 1.85e-16
     private const double ErrorFunctionBound = 3.7e-16;
 
@@ -171,6 +177,37 @@ public partial class ConjunctionAssessmentTests
         }
 
         _output.WriteLine($"MEASURE #610-#612 reproductions worst {worst:E2}");
+    }
+
+    [Fact]
+    public void CollisionProbability_CovarianceFarWiderThanTheDisc_MatchExactPc()
+    {
+        // PC-1: (1e5, 3e5) m and its mirror with diag(1e10, 1e10) m², (1e6, 1e6) m with diag(1e12, 1e10) m², (0, 1e6) m
+        // with diag(1e12, 1e12) m², R 1 m; a Pc at the budget's truncation was 1.3e-6 off, so the bound also shows that no
+        // case reaches it
+        double worst = 0.0;
+        foreach (var row in CollisionProbabilityReference.Value.RootElement.GetProperty("cancellation").EnumerateArray())
+        {
+            var miss = row.GetProperty("miss").EnumerateArray().Select(x => x.GetDouble()).ToArray();
+            var cov = row.GetProperty("cov").EnumerateArray().Select(x => x.GetDouble()).ToArray();
+            var cov2D = new Matrix(2, 2);
+            cov2D.Set(0, 0, cov[0]);
+            cov2D.Set(0, 1, cov[1]);
+            cov2D.Set(1, 0, cov[1]);
+            cov2D.Set(1, 1, cov[2]);
+
+            var pc = ConjunctionAssessment.ComputeFosterCollisionProbability(miss, cov2D, row.GetProperty("hbr").GetDouble());
+            double direct = EncounterPlaneProbability.Integrate(miss[0], miss[1], cov[0], cov[2], row.GetProperty("hbr").GetDouble());
+
+            Assert.NotNull(pc);
+            Assert.Equal(direct, pc.Value);
+            double error = RelativeError(pc.Value, row.GetProperty("exact").GetProperty("pc"));
+            worst = System.Math.Max(worst, error);
+            _output.WriteLine($"MEASURE #611 cancellation {row.GetProperty("name").GetString()}: Pc {pc.Value:R}, relative error {error:E2}");
+            Assert.True(error <= CancellationPcBound, $"{row.GetProperty("name").GetString()}: {error:E2}");
+        }
+
+        _output.WriteLine($"MEASURE #611 cancellation worst {worst:E2}");
     }
 
     [Fact]

@@ -112,6 +112,13 @@ public class CcsdsEpochParserTests
     [InlineData("2021-079T12:00:00.")]
     [InlineData("0001-001T00:00:00+01:00")]
     [InlineData("9999-365T23:59:59.9999999-01:00")]
+    [InlineData("0000-01-01T00:00:00")]
+    [InlineData("0000-001T00:00:00")]
+    [InlineData("0000-12-31T00:00:00Z")]
+    [InlineData("\u0662\u0660\u0661\u0660-03-13T22:37:52")]
+    [InlineData("\uFF12\uFF10\uFF11\uFF10-03-13T22:37:52")]
+    [InlineData("2010-03-13T22:37:52.\u0661")]
+    [InlineData("\u0662\u0660\u0661\u0660-072T22:37:52")]
     public void NotADate_IsRejected(string text)
     {
         Assert.False(CcsdsEpochParser.TryParse(text, out _));
@@ -155,6 +162,23 @@ public class CcsdsEpochParserTests
         var ommXml = File.ReadAllText(Path.Combine("CCSDS", "iss.omm"))
             .Replace("<EPOCH>2026-01-13T05:00:55.752768</EPOCH>", "<EPOCH>2026-DDDT05:00:55.752768</EPOCH>");
         Assert.Throws<OmmParseException>(() => new OmmReader().ReadFromString(ommXml));
+    }
+
+    [Theory]
+    [InlineData("0000-01-15T12:00:00.000")]
+    [InlineData("0000-015T12:00:00.000")]
+    [InlineData("\u0662\u0660\u0662\u0664-01-15T12:00:00.000")]
+    [InlineData("\uFF12\uFF10\uFF12\uFF14-01-15T12:00:00.000")]
+    public void Readers_RejectAYearZeroOrNonAsciiDigits(string text)
+    {
+        // The readers' own parse exception, not an exception of DateTime or int.Parse
+        Assert.Throws<OpmParseException>(() => new OpmReader().ReadFromString(OpmXml("2024-01-15T12:00:00", text)));
+        Assert.Throws<OpmParseException>(() => new OpmReader().ReadFromString(OpmXml(text, "2024-01-15T12:00:00")));
+        var ommXml = File.ReadAllText(Path.Combine("CCSDS", "iss.omm"))
+            .Replace("<EPOCH>2026-01-13T05:00:55.752768</EPOCH>", $"<EPOCH>{text}</EPOCH>");
+        Assert.Throws<OmmParseException>(() => new OmmReader().ReadFromString(ommXml));
+
+        // CDM: CdmTests.ReadFromString_YearZeroOrNonAsciiDigits
     }
 
     private static string OpmXml(string creationDate, string epoch)

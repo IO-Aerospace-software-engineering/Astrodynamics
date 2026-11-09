@@ -863,6 +863,7 @@ public partial class ConjunctionAssessmentTests
 
         Assert.NotNull(pc);
         double error = System.Math.Abs(pc.Value - OmitronCase01ExactPc) / OmitronCase01ExactPc;
+        _output.WriteLine($"MEASURE #611 CARA direct worst {error:E2} (Omitron case 01)");
         Assert.True(error <= CaraDirectPcBound, $"Omitron case 01: relative error {error:E2} to the exact Pc");
     }
 
@@ -894,6 +895,7 @@ public partial class ConjunctionAssessmentTests
 
         Assert.NotNull(pc);
         double error = System.Math.Abs(pc.Value - AlfanoCase03ExactPc) / AlfanoCase03ExactPc;
+        _output.WriteLine($"MEASURE #611 CARA direct worst {error:E2} (Alfano case 03)");
         Assert.True(error <= CaraDirectPcBound, $"Alfano case 03: relative error {error:E2} to the exact Pc");
     }
 
@@ -937,6 +939,7 @@ public partial class ConjunctionAssessmentTests
 
         Assert.NotNull(pc);
         double error = System.Math.Abs(pc.Value - expectedPc) / expectedPc;
+        _output.WriteLine($"MEASURE #611 CARA direct worst {error:E2} (Frisbee table 1, R {hardBodyRadius})");
         Assert.True(error <= CaraDirectPcBound, $"Frisbee max Pc, R {hardBodyRadius}: relative error {error:E2} to the exact Pc");
     }
 
@@ -1716,6 +1719,7 @@ public partial class ConjunctionAssessmentTests
         // The initial states carry the TCA geometry, so holding the covariances in RTN leaves them unchanged:
         // the exact Pc is still reproduced.
         double staleError = System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision!.Value - OmitronCase01ExactPc) / OmitronCase01ExactPc;
+        _output.WriteLine($"MEASURE #611 CARA entry point worst {staleError:E2} (Omitron case 01, 3 h old covariances)");
         Assert.True(staleError <= CaraEntryPointPcBound, $"Omitron case 01, 3 h old covariances: relative error {staleError:E2} to the exact Pc");
 
         var creationDate = new DateTime(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc);
@@ -2074,7 +2078,7 @@ public partial class ConjunctionAssessmentTests
         return rotation.Transpose() * covarianceRtn * rotation;
     }
 
-    private static void AssertEncounterMatchesDirectExpectation(
+    private void AssertEncounterMatchesDirectExpectation(
         EncounterCase encounter,
         Vector3 primaryPositionAtEpoch,
         Vector3 primaryVelocityAtEpoch,
@@ -2135,6 +2139,7 @@ public partial class ConjunctionAssessmentTests
         Assert.True(System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision.Value - expectedPc.Value) < 1.0e-12,
             $"Entry-point Pc {encounter.CollisionRisk.ProbabilityOfCollision.Value:E12} should match direct Pc {expectedPc.Value:E12}");
         double publishedError = System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision.Value - expectedPublishedPc) / expectedPublishedPc;
+        _output.WriteLine($"MEASURE #611 CARA entry point worst {publishedError:E2} (expected Pc {expectedPublishedPc:R})");
         Assert.True(publishedError <= publishedPcRelativeTolerance,
             $"Relative error {publishedError:E2} to the expected Pc {expectedPublishedPc:E12}");
 

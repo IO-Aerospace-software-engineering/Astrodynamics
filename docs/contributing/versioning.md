@@ -97,7 +97,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
   difference on the side away from zero (CARA's `erf_vec_dif`), erf where the chord straddles the minor axis, with
   fdlibm's erf and erfc (about one ulp) private to the Pc path, and the quadrature stops at 1e-12 of the whole integral,
   shared over the segments by width, a difference at the noise of the integrand accepted and the evaluations bounded.
-  The public `SpecialFunctions.ErrorFunction` is unchanged.
+  That noise includes the cancellation of the erfc difference when σ ≫ the chord (about ε σ/R relative, at each sample):
+  without it, a covariance far wider than the disc with a miss off its axes (σ 1e5 m, R 1 m, miss (1e5, 3e5) m) spent
+  the 200 000 evaluations and returned a Pc 1.3e-6 off, with no flag (PC-1 of the lot's review). The public
+  `SpecialFunctions.ErrorFunction` is unchanged.
   - **Measured** (Linux x64; the bounds provisional until the three platforms) against the exact Pc of the same double
     inputs, CARA's `Pc2D` at 50 digits (`tools/collision_probability`, tanh-sinh and Gauss-Legendre agreeing to 1e-30):
     the seven `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger
@@ -105,7 +108,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
     (the covariance held in RTN over the refined TCA's offset); the 25 reproductions of #610 to #612 within 7.6e-15;
     NASA CARA's Omitron case 01 and Alfano case 03 within 2.6e-15, Frisbee's table 1 within 3.2e-16 (their tests now
     take the exact values: the published ones are 2.9e-6 and 2.3e-6 from them, Frisbee's given to two or three digits).
-    One evaluation takes 50 µs to 0.5 ms.
+    σ ≫ R with the miss off the axes (σ 1e5 to 1e6 m, R 1 m; mpmath at 70 digits): within 5.0e-11, the noise of the
+    integrand itself, at 9 to 1 425 evaluations (200 000 before); a random sweep of 500 encounters (σ/R 1e-4 to 1e6,
+    misses to 12 σ) reaches neither the budget nor the depth cap (14 budget hits before, at most 9 217 evaluations
+    after). One evaluation takes 50 µs to 0.5 ms.
   - **What moves:** every Pc, `CollisionRisk.ProbabilityOfCollision` through `Analyze`, `AnalyzeAll`, `Screen`,
     `EvaluateAvoidance` and the `COLLISION_PROBABILITY` that `ToCdm` writes: by 1e-8 to 1e-5 relative above 1e-7, up to
     3.3e-4 near 1e-8, +4.8 % below 1e-10 (to the exact value), and from 0 to the risk at a large hard-body radius (#610).
@@ -152,7 +158,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
   never an end closer than it. Measured against CSPICE's `gfdist_c` (LOCMIN) on the SPKs of the propagations, refined
   on the range rate of `spkezr_c`: the four minima of 3 h within 2e-7 s (two ticks) and 1.1e-8 m. Without an interior
   minimum, `Analyze` still returns the end where the distance grows into the window, and `Screen` and the
-  `ILocalizable` overloads keep their midpoint: #621's own change decides them.
+  `ILocalizable` overloads keep their midpoint: #621's own change decides them. A minimum is interior as located on the
+  cubic Hermite of the stored steps (#363): within that error of a window end, a minimum whose range-rate zero lies just
+  outside the window is still kept at its unrefined Hermite epoch, as before 11.0.0 (its fix goes to its own issue).
 - **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the
   ephemeris read and `TransformFrame`). `ReadEphemerisAtGivenEpochProxy` left its state unwritten when `spkezr_c`
   failed (r = (4.9e-321, 6.95e-307, 6.95e-307) m past de440s on Linux, whatever the stack held elsewhere), and
@@ -167,10 +175,15 @@ A major version, because it breaks the API: members deprecated for removal in 11
   tick before it (the 100 ns of a `Time` in TDB) and now throws: the LRO tracking test starts 5 minutes after its SPK,
   as the conformance case tracking_data 001 does. A planet or a moon that the loaded kernels do not chain to its system
   barycenter (Mars to Pluto and their moons with de440s alone) is built with `InitialOrbitalParameters` null instead of
-  an undefined state; a read of its position throws. The orientation cache of a propagation's central body
-  (`PropagationFrameOrientationCache`) keeps a grid point SPICE cannot give as unavailable and throws only when a force
-  reads it, so a point-mass propagation about the Earth still runs past the Earth's PCK, and a geopotential or drag
-  there throws (they used the zero rotation before). The other proxies keep #454.
+  an undefined state, and its `SphereOfInfluence` is then +Infinity, as for a body built from custom parameters (before,
+  a value of the undefined state: 0 for Mars and Jupiter in the review's probe); a read of its position throws. The orientation cache of a propagation's central
+  body (`PropagationFrameOrientationCache`) keeps a grid point SPICE cannot give as unavailable, so a point-mass
+  propagation about the Earth still runs past the Earth's PCK, and a geopotential or drag there throws (they used the
+  zero rotation before). A window that ends (or starts) inside the coverage, its next grid point outside, runs: the
+  point is replaced by the orientation read at the window end, and a read the grid cannot interpolate reads the frame at
+  its epoch, so only an epoch SPICE does not cover throws, with SPICE's message (a propagation up to the last instant of
+  `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute; KR-1 of the lot's review). The other
+  proxies keep #454.
 - **The `ILocalizable` conjunction overloads extrapolated past a propagated spacecraft's states** ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), its
   guard). `Analyze`, `AnalyzeAll` and `Screen` read a propagated protected or secondary spacecraft through its stored
   states without a coverage check, so a window past them was extrapolated (567 km off 6 min out); they now throw
@@ -830,7 +843,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
 - **Reads outside the coverage throw** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), Fixed above): an ephemeris read or a frame
   transformation that SPICE cannot give, and a conjunction window past a propagated spacecraft's states, throw instead
   of returning an undefined state, the zero rotation or an extrapolation. A kernel-backed spacecraft built for its CK
-  alone, without an SPK that covers its epoch, now throws at construction: its initial state cannot be read.
+  alone, without an SPK that covers its epoch, now throws at construction: its initial state cannot be read. A planet or
+  a moon the loaded kernels do not chain to its system barycenter has `InitialOrbitalParameters` null, and its
+  `SphereOfInfluence` is then +Infinity, as for a body built from custom parameters.
 - **`AnalyzeAll` on two propagations no longer lists the window ends** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above), and returns an
   empty list for a window without an interior minimum.
 - **Every TEME ↔ ICRF result moves** with the managed TEME ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451), Fixed above), by 0.3″ to 23.3″ over 2000–2026

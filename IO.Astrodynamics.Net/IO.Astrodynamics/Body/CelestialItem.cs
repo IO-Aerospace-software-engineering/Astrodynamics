@@ -163,7 +163,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     // The state about the barycenter of the body's system; null when the loaded kernels do not chain the body to it (Mars
-    // to Pluto and their moons with de440s alone). Before #454 the native read returned an undefined state there; a read
+    // to Pluto and their moons with de440s alone), and the sphere of influence of a CelestialBody is then +Infinity, as
+    // for a body built from custom parameters. Before #454 the native read returned an undefined state there; a read
     // that needs the body's position still throws
     private OrbitalParameters.OrbitalParameters ReadStateAboutBarycenter(in Time epoch, Frame frame)
     {

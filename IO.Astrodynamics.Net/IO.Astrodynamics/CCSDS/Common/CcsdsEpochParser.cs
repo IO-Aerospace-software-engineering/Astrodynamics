@@ -21,15 +21,18 @@ namespace IO.Astrodynamics.CCSDS.Common;
 /// <para>
 /// A text outside this form goes to <see cref="DateTime.TryParse(string, IFormatProvider, DateTimeStyles, out DateTime)"/>,
 /// the readers' former fallback, unchanged (its leniency is #619). A day of year out of range is rejected, as CSPICE's
-/// <c>str2et</c> rejects it.
+/// <c>str2et</c> rejects it. The digits are ASCII; a year 0000, or a text with other decimal digits, is rejected (false),
+/// so the readers throw their own parse exception, as before.
 /// </para>
 /// </remarks>
 internal static class CcsdsEpochParser
 {
     private const DateTimeStyles Styles = DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal;
 
+    // ASCII digits only: .NET's \d matches every Unicode decimal digit, which int.Parse does not read; a text with other
+    // digits goes to the fallback, which rejects it (RegexOptions.ECMAScript cannot be combined with CultureInvariant)
     private static readonly Regex EpochPattern = new(
-        @"^(?<year>\d{4})-(?:(?<month>\d{2})-(?<day>\d{2})|(?<doy>\d{3}))T(?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})(?:\.(?<fraction>\d+))?(?<zone>Z|[+-]\d{2}:\d{2})?$",
+        @"^(?<year>[0-9]{4})-(?:(?<month>[0-9]{2})-(?<day>[0-9]{2})|(?<doy>[0-9]{3}))T(?<hour>[0-9]{2}):(?<minute>[0-9]{2}):(?<second>[0-9]{2})(?:\.(?<fraction>[0-9]+))?(?<zone>Z|[+-][0-9]{2}:[0-9]{2})?$",
         RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     // The base of the rounding of a fraction longer than 7 digits
@@ -56,6 +59,12 @@ internal static class CcsdsEpochParser
         }
 
         int year = Int(match, "year");
+        if (year < 1)
+        {
+            // Year 0000 matches the pattern but no DateTime holds it; the fallback rejects it too
+            return false;
+        }
+
         if (match.Groups["doy"].Success)
         {
             int dayOfYear = Int(match, "doy");

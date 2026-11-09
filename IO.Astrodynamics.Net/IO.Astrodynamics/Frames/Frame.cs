@@ -180,6 +180,17 @@ public class Frame : IEquatable<Frame>
         return _stateOrientationsToICRF.GetOrAdd(date, dt => _dataProvider.FrameTransformationToICRF(dt, this));
     }
 
+    /// <summary>
+    /// The orientation of this frame to ICRF read from the data provider, neither through the orientation cache active
+    /// on the current thread nor through the orientations stored by date: what
+    /// <see cref="GetStateOrientationToICRF(Time)"/> of a <see cref="Frame"/> reads when neither holds the epoch. Used by
+    /// <see cref="PropagationFrameOrientationCache"/> where its grid cannot give an orientation.
+    /// </summary>
+    internal StateOrientation ReadStateOrientationToICRF(in Time date)
+    {
+        return _dataProvider.FrameTransformationToICRF(date, this);
+    }
+
     public virtual bool AddStateOrientationToICRF(StateOrientation stateOrientation)
     {
         return _stateOrientationsToICRF.TryAdd(stateOrientation.Epoch, stateOrientation);

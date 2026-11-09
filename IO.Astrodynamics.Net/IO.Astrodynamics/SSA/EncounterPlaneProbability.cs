@@ -167,8 +167,10 @@ internal readonly struct EncounterPlaneGaussian
 /// reach |y_c| + kσ in y, and at the disc's centre, so that the quadrature always samples the Gaussian inside the disc,
 /// however narrow against R it is (#610); the parts of the disc beyond ±8σ are their own segments, so that nothing is
 /// dropped. Each segment is integrated by adaptive Simpson under its share, by width, of a tolerance of 1e-12 of the whole
-/// integral, halved at each level; a difference at the noise of the integrand, the rounding of x_c + R sin θ against σ, is
-/// accepted, and the evaluations are bounded (#611).
+/// integral, halved at each level; a difference at the noise of the integrand, the rounding of x_c + R sin θ against σ and
+/// the cancellation of the erfc difference when σ ≫ the chord, is accepted, and the evaluations are bounded (#611). Within
+/// that noise, about ε σy/R relative, the Pc of a covariance far wider than the disc is as accurate as its double inputs
+/// allow, not to 1e-12: 5.0e-11 for σ = 1e6 R with the miss 1 σ off the major axis (lot 6 of #457, PC-1).
 /// </para>
 /// <para>
 /// The chord probability is an erfc difference on the side away from zero (CARA's <c>erf_vec_dif</c>), and erf where the
@@ -212,9 +214,11 @@ internal static class EncounterPlaneProbability
 
         // The relative noise of the integrand: x = x_c + R sin θ and h = R cos θ carry an absolute rounding of
         // ε (|x_c| + R) and ε R, which the Gaussian turns into a relative error of up to 16 ε (|x_c| + R)/σx and the chord
-        // probability into 16 ε (|y_c| + R)/σy within 16 σ of the mass; no refinement lowers a Simpson difference below it
+        // probability into 16 ε (|y_c| + R)/σy within 16 σ of the mass; no refinement lowers a Simpson difference below it.
+        // The cancellation of the erfc difference adds its own noise at each sample (ChordProbability)
         double noiseFloor = 64.0 * Epsilon + 16.0 * Epsilon * ((System.Math.Abs(xCenter) + radius) / sigmaX + (yAbs + radius) / sigmaY);
         int evaluations = 0;
+        double sampleNoise = 0.0;
 
         double Integrand(double theta)
         {
@@ -225,10 +229,12 @@ internal static class EncounterPlaneProbability
             double weight = System.Math.Exp(-(x * x) / (2.0 * majorVariance));
             if (weight == 0.0)
             {
+                sampleNoise = 0.0;
                 return 0.0;
             }
 
-            return halfChord * normalizer * weight * ChordProbability((yAbs - halfChord) * erfScale, (yAbs + halfChord) * erfScale);
+            return halfChord * normalizer * weight *
+                   ChordProbability((yAbs - halfChord) * erfScale, (yAbs + halfChord) * erfScale, out sampleNoise);
         }
 
         var breakpoints = Breakpoints(xCenter, yAbs, sigmaX, sigmaY, radius);
@@ -260,12 +266,15 @@ internal static class EncounterPlaneProbability
         {
             double midpoint = 0.5 * (lower + upper);
             double fLeftMid = Integrand(0.5 * (lower + midpoint));
+            double leftMidNoise = sampleNoise;
             double fRightMid = Integrand(0.5 * (midpoint + upper));
+            // The noise of the erfc difference at the interval's new samples, an upper bound of its four roundings
+            double noise = noiseFloor + System.Math.Max(leftMidNoise, sampleNoise);
             double left = SimpsonEstimate(lower, midpoint, fLower, fLeftMid, fMid);
             double right = SimpsonEstimate(midpoint, upper, fMid, fRightMid, fUpper);
             double delta = left + right - whole;
             if (depth <= 0 || evaluations >= EvaluationBudget || System.Math.Abs(delta) <= 15.0 * tolerance ||
-                System.Math.Abs(delta) <= noiseFloor * System.Math.Abs(left + right))
+                System.Math.Abs(delta) <= noise * System.Math.Abs(left + right))
             {
                 return left + right + delta / 15.0;
             }
@@ -288,13 +297,31 @@ internal static class EncounterPlaneProbability
     /// ½[erf(<paramref name="upper"/>) − erf(<paramref name="lower"/>)] for <paramref name="upper"/> ≥ |<paramref name="lower"/>|:
     /// an erfc difference when both are non-negative, a sum of erf otherwise, so that no difference of values near 1 is taken.
     /// </summary>
-    private static double ChordProbability(double lower, double upper)
+    /// <param name="lower">The lower end of the chord, scaled by 1/(√2 σy).</param>
+    /// <param name="upper">The upper end of the chord, scaled by 1/(√2 σy).</param>
+    /// <param name="relativeNoise">
+    /// The relative noise of the erfc difference, 0 for the sum of erf (the noise floor of the integral covers it).
+    /// </param>
+    /// <remarks>
+    /// When σy ≫ the chord, erfc(lo) − erfc(up) cancels: each erfc carries about one ulp, and the rounding of lo and up,
+    /// about ε|x| each, moves erfc(x) by 2|x|e^(−x²)/√π · ε, at most 2(1 + x²) erfc(x) · ε for x ≥ 0. Their sum over the
+    /// difference is the relative noise of the chord probability, about ε σy/h (lot 6 of #457, PC-1): without it, the
+    /// recursion chases that noise to its evaluation budget.
+    /// </remarks>
+    private static double ChordProbability(double lower, double upper, out double relativeNoise)
     {
         if (lower >= 0.0)
         {
-            return 0.5 * (Erfc(lower) - Erfc(upper));
+            double erfcLower = Erfc(lower);
+            double erfcUpper = Erfc(upper);
+            double difference = erfcLower - erfcUpper;
+            relativeNoise = difference > 0.0
+                ? Epsilon * (erfcLower * (3.0 + 2.0 * lower * lower) + erfcUpper * (3.0 + 2.0 * upper * upper)) / difference
+                : 0.0;
+            return 0.5 * difference;
         }
 
+        relativeNoise = 0.0;
         return 0.5 * (Erf(upper) + Erf(-lower));
     }
 
