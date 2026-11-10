@@ -91,21 +91,70 @@ public class ConjunctionRefinementTests
         AssertWithinATick(151.25, tca);
     }
 
-    [Fact]
-    public void TheBracketMovesTwiceAtMost_ThenTheMinimumIsKept()
+    [Theory]
+    [InlineData(1, 350.0)] // two candidates past the minimum, within reach of the widenings
+    [InlineData(1, 450.0)] // three candidates past it: before round 4 of the lot-6 review, the minimum was kept unrefined
+    [InlineData(1, 550.0)]
+    [InlineData(5, 150.0)] // three candidates before it
+    [InlineData(5, 50.0)]
+    public void PastTheWidenings_TheRangeRateIsFollowedToItsChangeOfSign(int minimumIndex, double zeroSeconds)
     {
-        // Arrange: the zero lies three candidates past the minimum
+        // Arrange: the zero lies two to four candidates from the minimum
         var candidates = Candidates(7);
+        Assert.Equal(2, ConjunctionAssessment.MaximumBracketWidenings);
 
         // Act
-        var tca = Refine(candidates, 1, Step(450.0));
+        var tca = RefineInside(candidates, minimumIndex, Step(zeroSeconds));
 
         // Assert
-        Assert.Equal(2, ConjunctionAssessment.MaximumBracketWidenings);
-        Assert.Equal(candidates[1], tca);
+        AssertWithinATick(zeroSeconds, Assert.Single(tca));
+    }
 
-        // Two candidates past the minimum is within reach
-        AssertWithinATick(350.0, Refine(candidates, 1, Step(350.0)));
+    // A range rate that changes sign at each of the given epochs, negative before the first: the minima of the distance at
+    // the first, third ... and its maxima at the second, fourth ...
+    private static Func<TimeSystem.Time, double> Steps(params double[] zeroSeconds) =>
+        epoch => zeroSeconds.Count(zero => (epoch - Epoch).TotalSeconds >= zero) % 2 == 0 ? -1.0 : 1.0;
+
+    [Fact]
+    public void AMaximumOfTheDistance_WithoutAMinimumInside_IsDropped()
+    {
+        // Receding from the start up to 520 s, closing from there to the end: a maximum, which the Hermite of a slow pass
+        // may seed (round 4 of the lot-6 review: kept unrefined before, a close approach of +0.0012 m/s at t0 + 4246.66 s)
+        var candidates = Candidates(11);
+        var rangeRate = InsideOnly(candidates, epoch => (epoch - Epoch).TotalSeconds < 520.0 ? 1.0 : -1.0);
+
+        Assert.Empty(ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[5] }, candidates, rangeRate, Tolerance));
+    }
+
+    [Fact]
+    public void AMaximumOfTheDistance_BetweenTwoMinima_GivesThemOnce()
+    {
+        // Minima at 150 s and 850 s, a maximum at 520 s
+        var candidates = Candidates(11);
+        var rangeRate = InsideOnly(candidates, Steps(150.0, 520.0, 850.0));
+
+        // Seeded at the maximum alone: the range rate followed on both sides reaches both minima
+        var fromTheMaximum = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[5] }, candidates, rangeRate, Tolerance);
+        Assert.Equal(2, fromTheMaximum.Count);
+        AssertWithinATick(150.0, fromTheMaximum[0]);
+        AssertWithinATick(850.0, fromTheMaximum[1]);
+
+        // Seeded at the three: each minimum once, in order, the epochs of their own seeds
+        var fromTheThree = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1], candidates[5], candidates[9] },
+            candidates, rangeRate, Tolerance);
+        Assert.Equal(new[] { Refine(candidates, 1, rangeRate), Refine(candidates, 9, rangeRate) }, fromTheThree);
+    }
+
+    [Fact]
+    public void AFollowedZeroAtTheWindowEnd_ClosingBefore_IsTheEndItself()
+    {
+        // Closing up to the window end, zero exactly there: the end, not the tick before it (#624)
+        var candidates = Candidates(11);
+        var end = candidates[^1];
+        var rangeRate = InsideOnly(candidates, epoch => epoch == end ? 0.0 : -1.0);
+
+        Assert.Equal(end, Assert.Single(
+            ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance)));
     }
 
     [Fact]
@@ -142,15 +191,14 @@ public class ConjunctionRefinementTests
     }
 
     [Fact]
-    public void AMinimumThatIsNotACandidate_IsKept()
+    public void AMinimumThatIsNotACandidate_IsDropped()
     {
+        // No bracket of candidates to refine it in: not a minimum on the range rate (kept unrefined before round 4 of the
+        // lot-6 review)
         var candidates = Candidates(6);
         var minimum = Epoch.AddSeconds(150.0);
 
-        var refined = ConjunctionAssessment.RefineOnRangeRate(new[] { minimum }, candidates, Rectilinear(170.0),
-            Tolerance);
-
-        Assert.Equal(minimum, refined.Single());
+        Assert.Empty(ConjunctionAssessment.RefineOnRangeRate(new[] { minimum }, candidates, Rectilinear(170.0), Tolerance));
     }
 
     // ---- The window ends (S1 of the review of lot 6 of #457): the first and last candidates are the window ends, and the
