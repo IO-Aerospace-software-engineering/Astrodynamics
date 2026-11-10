@@ -254,6 +254,13 @@ A major version, because it breaks the API: members deprecated for removal in 11
   - **What moves:** every refined TCA, by at most one tick toward the zero, and what is computed there: the states at
     TCA by v·δt (up to 0.77 mm at 7.7 km/s), the miss distance at second order, the RTN axes and the covariance held in
     RTN, the Pc, and the `TCA` and states that `ToCdm` writes.
+- **A test swapped the global data provider** ([#631](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/631)).
+  `TemeFrameTests.FrameByName_IsRoutedByTheMemoryDataProvider` set `Configuration.Instance` to an empty
+  `MemoryDataProvider` for a few milliseconds, so that a body, frame, spacecraft or site another test class built in
+  parallel kept the empty provider and threw `KeyNotFoundException` (a probe building the Earth in a loop beside it:
+  41 to 155 failed builds in each of 5 runs, none without the test). It now calls a `MemoryDataProvider` directly, as
+  the other tests of the provider do, with the same two assertions; no other test changes the global provider.
+  The library is unchanged.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a

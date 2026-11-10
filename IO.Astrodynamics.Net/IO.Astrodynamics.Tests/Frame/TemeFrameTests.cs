@@ -232,19 +232,13 @@ public class TemeFrameTests
     [Fact]
     public void FrameByName_IsRoutedByTheMemoryDataProvider()
     {
-        var previous = Configuration.Instance.DataProvider;
-        try
-        {
-            Configuration.Instance.SetDataProvider(new MemoryDataProvider());
-            var epoch = Utc("2012-02-17T00:00:00.000");
-            var orientation = new Frames.Frame("TEME").GetStateOrientationToICRF(epoch);
-            Assert.InRange(Angle(orientation.Rotation, Frames.Frame.TEME.GetStateOrientationToICRF(epoch).Rotation), 0.0, 1e-15);
-            Assert.Equal("TEME", orientation.ReferenceFrame.Name);
-        }
-        finally
-        {
-            Configuration.Instance.SetDataProvider(previous);
-        }
+        // The TEME routing of an empty MemoryDataProvider, called directly (#631): the global provider is never swapped,
+        // since an object another test class builds during a swap would keep the empty provider
+        var provider = new MemoryDataProvider();
+        var epoch = Utc("2012-02-17T00:00:00.000");
+        var orientation = provider.FrameTransformationToICRF(epoch, new Frames.Frame("TEME"));
+        Assert.InRange(Angle(orientation.Rotation, Frames.Frame.TEME.GetStateOrientationToICRF(epoch).Rotation), 0.0, 1e-15);
+        Assert.Equal("TEME", orientation.ReferenceFrame.Name);
     }
 
     [Fact]
