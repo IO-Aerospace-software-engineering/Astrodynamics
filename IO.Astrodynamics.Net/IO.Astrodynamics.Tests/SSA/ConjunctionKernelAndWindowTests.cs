@@ -458,6 +458,22 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
             .ToArray();
     }
 
+    // CSPICE's minimum within the TCA bound of a listed epoch near a window end, searched over [epoch − w, epoch + w],
+    // w = max(2 × bound, 1 s), within the propagation; none when CSPICE has no minimum there
+    private (TimeSystem.Time Epoch, double Distance)? CspiceMinimumNear(TimeSystem.Time epoch, Window window, double tcaBound,
+        CrossingEncounterCase crossing)
+    {
+        double w = System.Math.Max(2.0 * tcaBound, 1.0);
+        var start = epoch.AddSeconds(-w);
+        var end = epoch.AddSeconds(w);
+        start = start < crossing.Window.StartDate ? crossing.Window.StartDate : start;
+        end = end > crossing.Window.EndDate ? crossing.Window.EndDate : end;
+        var near = CspiceLocalMinima(new Window(start, end), crossing)
+            .Where(m => System.Math.Abs((m.Epoch - epoch).TotalSeconds) <= tcaBound)
+            .ToArray();
+        return near.Length == 0 ? null : near.MinBy(m => System.Math.Abs((m.Epoch - epoch).TotalSeconds));
+    }
+
     private static (Vector3 Position, Vector3 Velocity) CspiceRelative(TimeSystem.Time epoch, CrossingEncounterCase crossing = null)
     {
         var s1 = CspiceState(epoch, crossing?.ProtectedId ?? CrossingEncounterCase.Id1);
@@ -684,18 +700,19 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // the slow passes against CSPICE on their SPKs, twice the worst measured over every minimum of each propagation,
     // rounded up to two digits. Measured in round 6 of the lot-6 review by
     // Dense_EveryMinimumOfThePass_IsListedWithinTheBounds (1222 to 1527 windows, those that end or start at the zero
-    // included, against CSPICE's zero below the tick) and by the fifth reviewer's probe on the same propagations (its 634 to 1084 windows, gfdist_c refined by bisection of spkezr_c's
-    // range rate to 1e-10 s), the larger of the two:
+    // included, a listed minimum within the TCA bound of an end measured against CSPICE's minimum just outside the window,
+    // against CSPICE's zero below the tick) and by the reviewers' probes on the same propagations (their 634 to 1571
+    // windows, gfdist_c refined by bisection of spkezr_c's range rate to 1e-10 s), the larger of the two:
     //                                         this test                 the probe                 bound
     //   SLOW (60 s steps)                     1.272e-7 s  3.136e-10 m   1.480e-7 s  2.294e-10 m   3.0e-7 s  6.3e-10 m
-    //   SLOWD (default steps)                 2.897e-5 s  1.147e-6 m    2.893e-5 s  1.147e-6 m    5.8e-5 s  2.3e-6 m
+    //   SLOWD (default steps)                 2.907e-5 s  1.147e-6 m    2.903e-5 s  1.147e-6 m    5.9e-5 s  2.3e-6 m
     //   SLOWX (default and 30 s steps, 1 m)   5.047e-2 s  2.074e-7 m    5.041e-2 s  2.072e-7 m    1.1e-1 s  4.2e-7 m
     //   CWD (two minima per orbit, default)   6.498e-7 s  4.732e-8 m    7.190e-7 s  4.807e-8 m    1.5e-6 s  9.7e-8 m
-    //   CW60 (60 s steps)                     6.096e-7 s  4.702e-8 m    7.110e-7 s  4.753e-8 m    1.5e-6 s  9.6e-8 m
+    //   CW60 (60 s steps)                     7.096e-7 s  4.702e-8 m    7.110e-7 s  4.753e-8 m    1.5e-6 s  9.6e-8 m
     //   CWE (y0 = 1500 m, default)            3.068e-6 s  9.269e-8 m    3.025e-6 s  9.163e-8 m    6.2e-6 s  1.9e-7 m
-    //   CWE60 (y0 = 1500 m, 60 s steps)       1.133e-6 s  4.893e-8 m    1.170e-6 s  4.892e-8 m    2.4e-6 s  9.8e-8 m
+    //   CWE60 (y0 = 1500 m, 60 s steps)       1.233e-6 s  4.893e-8 m    1.270e-6 s  4.905e-8 m    2.6e-6 s  9.9e-8 m
     //   CWF (the fold, default)               2.094e-3 s  9.684e-7 m    2.083e-3 s  9.684e-7 m    4.2e-3 s  2.0e-6 m
-    //   CWF60 (the fold, 60 s steps)          3.338e-5 s  3.844e-8 m    3.192e-5 s  3.848e-8 m    6.7e-5 s  7.7e-8 m
+    //   CWF60 (the fold, 60 s steps)          3.338e-5 s  3.864e-8 m    3.232e-5 s  3.848e-8 m    6.7e-5 s  7.8e-8 m
     // The TCA error is the difference of the range rate of the states and of their SPK (the degree-7 interpolation of
     // their 60 s outputs) over its slope, 2.6e-4 m/s per second at a drift of 100 m and 2.6e-6 at 1 m; at the fold, 2.9e-7 m
     // deep, the states and their SPK of the default steps place the zero 2.1 ms apart (the library within 7.4e-6 s of the
@@ -704,14 +721,14 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     private static (double Tca, double Miss) SlowPassBounds(CrossingEncounterCase crossing) => crossing switch
     {
         SlowPassEncounterCase => (3.0e-7, 6.3e-10),
-        DefaultStepSlowPassEncounterCase => (5.8e-5, 2.3e-6),
+        DefaultStepSlowPassEncounterCase => (5.9e-5, 2.3e-6),
         MixedStepSlowPassEncounterCase => (1.1e-1, 4.2e-7),
         CwPassDefaultStepCase => (1.5e-6, 9.7e-8),
         CwPass60StepCase => (1.5e-6, 9.6e-8),
         CwPass1500DefaultStepCase => (6.2e-6, 1.9e-7),
-        CwPass1500Step60Case => (2.4e-6, 9.8e-8),
+        CwPass1500Step60Case => (2.6e-6, 9.9e-8),
         CwPassFoldDefaultStepCase => (4.2e-3, 2.0e-6),
-        CwPassFoldStep60Case => (6.7e-5, 7.7e-8),
+        CwPassFoldStep60Case => (6.7e-5, 7.8e-8),
         _ => throw new ArgumentOutOfRangeException(nameof(crossing))
     };
 
@@ -1018,6 +1035,15 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
             if (matched[i] < 0)
             {
                 Assert.True(NearAnEnd(all[i].EncounterState.Epoch));
+                // A listed minimum within the TCA bound of an end whose CSPICE minimum lies just outside the window (a window
+                // starting or ending at the zero, the states placing it inside): measured against that minimum, from
+                // CSPICE's minima of the window widened by the bound (the round-6 verifier's windows)
+                var outside = CspiceMinimumNear(all[i].EncounterState.Epoch, window, tcaBound, crossing);
+                if (outside.HasValue)
+                {
+                    AssertSlowPassMinimum(all[i], outside.Value, tcaBound, missBound, crossing, log);
+                }
+
                 continue;
             }
 
