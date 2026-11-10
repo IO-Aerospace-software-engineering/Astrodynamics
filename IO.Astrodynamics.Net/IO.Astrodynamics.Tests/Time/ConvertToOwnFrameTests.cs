@@ -18,7 +18,9 @@ namespace IO.Astrodynamics.Tests.Time;
 /// A conversion of a <see cref="TimeSystem.Time"/> to its own frame is the identity (#510). Through TAI, a TDB time
 /// came back a tick away at 2 of the 935 041 TT instants every 0.05 day from 1972 to 2100 (2024-05-09T12:00 and
 /// 2078-02-02T18:00 TDB) and at 2 of 2 000 000 random ticks of that span: the start of a propagation moved by a tick,
-/// and a covariance given at the start was rejected as given at another epoch.
+/// and a covariance given at the start was rejected as given at another epoch. Since the conversions round TDB − TT to
+/// the nearest tick (#625), it comes back a tick away at 1 of the 935 041 instants, 2032-12-20T20:24 TDB (found by an
+/// exact replica of the two conversions, which finds the two instants above under truncation).
 /// </summary>
 public class ConvertToOwnFrameTests
 {
@@ -31,6 +33,7 @@ public class ConvertToOwnFrameTests
     {
         new DateTime(2024, 5, 9, 12, 0, 0).Ticks,
         new DateTime(2078, 2, 2, 18, 0, 0).Ticks,
+        new DateTime(2032, 12, 20, 20, 24, 0).Ticks,
         650637292165637068L,
         626854470396592948L
     };
@@ -68,8 +71,9 @@ public class ConvertToOwnFrameTests
     [Fact]
     public void ConvertTo_AnotherFrame_StillGoesThroughTai()
     {
-        // The TDB time of the first instant, to TT and back to TDB: two truncations of the series, a tick away
-        var tdb = new TimeSystem.Time(new DateTime(2024, 5, 9, 12, 0, 0), TimeFrame.TDBFrame);
+        // The TDB time of the instant of the rounding, to TT and back to TDB: the series at two arguments rounded on
+        // either side of a half tick, a tick away
+        var tdb = new TimeSystem.Time(new DateTime(2032, 12, 20, 20, 24, 0), TimeFrame.TDBFrame);
         Assert.Equal(1, tdb.ToTDT().ToTDB().DateTime.Ticks - tdb.DateTime.Ticks);
     }
 

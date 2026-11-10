@@ -24,11 +24,12 @@ namespace IO.Astrodynamics.Propagator;
 /// </para>
 /// <para>
 /// The TT mapping is computed in double seconds, the tick-exact label plus IO's TDB − TT series
-/// (<see cref="TDBTimeFrame.TdbMinusTt"/>), never through chained <see cref="Time"/> conversions, which truncate the
-/// offset to the 100 ns tick at each step. A label is still truncated to the tick when it becomes a <see cref="Time"/>
-/// (<see cref="Time.AddSeconds"/>), as before: it is at or before its instant, by less than 1.0012e-7 s (measured over
-/// 200 000 random cases). The seconds between two epochs (<see cref="SecondsBetween"/>) and the length of a window
-/// (<see cref="Length"/>) carry no truncation of the offset.
+/// (<see cref="TDBTimeFrame.TdbMinusTt"/>), never through chained <see cref="Time"/> conversions, which round the
+/// offset to the 100 ns tick at each step. A label is still rounded to the tick when it becomes a <see cref="Time"/>
+/// (<see cref="Time.AddSeconds"/>): the nearest tick of its double since #625, within half a tick of its instant and the
+/// rounding of the double (it was at or before its instant, by less than 1.0012e-7 s, when AddSeconds truncated). The
+/// seconds between two epochs (<see cref="SecondsBetween"/>) and the length of a window (<see cref="Length"/>) carry no
+/// rounding of the offset.
 /// </para>
 /// <para>
 /// The TDB time argument is the code it replaces, expression for expression on TDB labels, so that a propagation about
@@ -143,7 +144,7 @@ internal abstract class PropagationTimeArgument
     /// <summary>
     /// The time left to integrate at <paramref name="current"/>, a segment base, in a propagation of
     /// <paramref name="duration"/> seconds from <paramref name="start"/> that ends at <paramref name="end"/>: TDB,
-    /// <c>(end - current).TotalSeconds</c>; TT, the duration less the seconds from the start, without the truncation of
+    /// <c>(end - current).TotalSeconds</c>; TT, the duration less the seconds from the start, without the rounding of
     /// the end label.
     /// </summary>
     internal abstract double Remaining(in Time start, double duration, in Time end, in Time current);
@@ -254,7 +255,7 @@ internal abstract class PropagationTimeArgument
             SecondsBetween(window.StartDate, window.EndDate);
 
         // TDB(TT_b + t) = TDB_b + t + (Δ(TT_b + t) − Δ_b), Δ = TDB − TT: the label of the base plus a double, which
-        // AddSeconds truncates to the tick; no conversion of Time, so no second truncation
+        // AddSeconds rounds to the nearest tick (#625); no conversion of Time, so no second rounding
         internal override Time EpochAt(in Time baseEpoch, double t)
         {
             var (ticks, correction) = TerrestrialTimeParts(baseEpoch);

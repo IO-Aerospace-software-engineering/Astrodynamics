@@ -70,6 +70,13 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// from there the steps differ. With the stage labels of main and the TT length (a counterfactual build), the 98 first
 /// steps are bit for bit those of main. Of the 31.1 mm, 6.6 mm are the dynamics (the case at 1e-13 on main and on the
 /// branch) and 24.4 mm the integration error of main's 99 steps at 1e-11, which the 103 steps do not have (0.07 mm).
+/// Recaptured with #625: a number of seconds becomes the nearest tick of a <see cref="TimeSystem.Time"/> instead of its
+/// truncation, so the TDB labels of the stages, of the outputs and of TDB − TT move by a tick at most. The first step
+/// changes in its last bits (the end velocity of step 0 by 2.3e-13, 3.6e-15 and 5.7e-14 m/s), and the step control takes
+/// other steps from there, the same 103, 46 and 22 + 72; the maneuver epoch is unchanged. 76, 61 and 94 of the 181, 145
+/// and 241 output labels are a tick later (their nearest tick); the output states moved by 1.37 mm and 1.4e-6 m/s (SRP),
+/// 0.31 mm and 2.2e-8 m/s (GEO), 0.82 mm and 9.0e-7 m/s (maneuver) at most, at the scale of |v| times a tick (0.77 mm in
+/// LEO, 0.31 mm at GEO) and of the integration error at 1e-11 of other steps (see #410 above).
 /// A golden holds on one platform only (the mathematical library differs between
 /// operating systems), so the test is in the <c>Validation</c> category, which the CI runs on Linux only.
 /// </para>

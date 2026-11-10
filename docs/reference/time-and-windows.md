@@ -24,10 +24,18 @@
 
 | Method | Description |
 |--------|-------------|
-| `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from J2000 seconds in a given frame |
-| `Create(int year, int doy, double sec)` | Create from year, day-of-year, seconds-of-day |
-| `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
-| `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds |
+| `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from J2000 seconds in a given frame, to the nearest tick |
+| `Create(int year, int doy, double sec)` | Create from year, day-of-year, seconds-of-day, to the nearest tick |
+| `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds, to the nearest tick |
+| `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds, to the nearest tick |
+
+A span of seconds becomes the nearest tick (100 ns) of the exact value of its double, ties to even, in `Create`,
+`CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB − TT offset of the TDB
+conversions ([#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625)); a value that is
+not finite, or whose ticks do not fit in a `long`, throws `ArgumentOutOfRangeException`. So an ET of SPICE from 2017 to
+2028, where an ulp of the double is larger than a tick, comes back from `TimeSpanFromJ2000()` exactly, and an ET before
+2017 within half a tick. Before 11.0.0 these truncated toward zero: up to a tick early after J2000 and late before it,
+so that a spacecraft built at the first instant of its SPK read 84 ns before its coverage.
 | `CreateFromJD(double julianDate, ITimeFrame frame)` | Create from Julian Date |
 
 ### Conversion Methods
@@ -53,9 +61,9 @@
 | `AddDays(double)` | Add days |
 | `AddHours(double)` | Add hours |
 | `AddMinutes(double)` | Add minutes |
-| `AddSeconds(double)` | Add seconds |
-| `AddMilliseconds(double)` | Add milliseconds |
-| `AddMicroseconds(double)` | Add microseconds |
+| `AddSeconds(double)` | Add seconds, to the nearest tick |
+| `AddMilliseconds(double)` | Add milliseconds, to the nearest tick |
+| `AddMicroseconds(double)` | Add microseconds, to the nearest tick |
 | `AddTicks(long)` | Add ticks |
 
 ### Utility Methods

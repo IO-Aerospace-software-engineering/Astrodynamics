@@ -690,7 +690,7 @@ public abstract class PropagatorBase : IPropagator
 
             double endTau = tau + attitude.ManeuverHoldDuration.TotalSeconds;
             var end = After(start, endTau, attitude.ManeuverHoldDuration);
-            // About the Earth the end is the epoch of endTau, truncated to the tick: never before the activation, which
+            // About the Earth the end is the epoch of endTau, rounded to the tick: never before the activation, which
             // the minimum epoch gives exactly (a hold of 0)
             if (end < start) end = start;
             attitude.ThrustWindow = new Window(start, TimeSpan.Zero);

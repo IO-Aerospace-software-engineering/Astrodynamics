@@ -108,19 +108,68 @@ public readonly record struct Time : IComparable<Time>, IComparable
         return new Time(DateTime.AddMinutes(minutes), Frame);
     }
 
+    /// <summary>
+    /// This time plus <paramref name="seconds"/>, to the nearest tick (100 ns), ties to even (#625).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="seconds"/> is not finite, or the result is outside
+    /// the range of <see cref="System.DateTime"/>.</exception>
     public Time AddSeconds(double seconds)
     {
-        return new Time(DateTime.AddSeconds(seconds), Frame);
+        return new Time(DateTime.AddTicks(SecondsToTicks(seconds)), Frame);
     }
 
+    /// <summary>
+    /// This time plus <paramref name="milliseconds"/>, to the nearest tick (100 ns), ties to even (#625).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="milliseconds"/> is not finite, or the result is
+    /// outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddMilliseconds(double milliseconds)
     {
-        return new Time(DateTime.AddMilliseconds(milliseconds), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(milliseconds, TimeSpan.TicksPerMillisecond, nameof(milliseconds))), Frame);
     }
 
+    /// <summary>
+    /// This time plus <paramref name="microseconds"/>, to the nearest tick (100 ns), ties to even (#625).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="microseconds"/> is not finite, or the result is
+    /// outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddMicroseconds(double microseconds)
     {
-        return new Time(DateTime.AddMicroseconds(microseconds), Frame);
+        return new Time(DateTime.AddTicks(ToNearestTicks(microseconds, TimeSpan.TicksPerMicrosecond, nameof(microseconds))), Frame);
+    }
+
+    /// <summary>
+    /// The tick count (100 ns) nearest <paramref name="seconds"/>, ties to even: the conversion of every span of seconds
+    /// to a <see cref="Time"/> (#625). <see cref="System.DateTime.AddSeconds"/> and <see cref="TimeSpan.FromSeconds(double)"/>
+    /// truncate toward zero instead, up to one tick early after J2000 and late before it.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="seconds"/> is not finite or its ticks do not fit in
+    /// a <see cref="long"/>.</exception>
+    internal static long SecondsToTicks(double seconds) => ToNearestTicks(seconds, TimeSpan.TicksPerSecond, nameof(seconds));
+
+    // The whole units and the fraction apart, so that the whole part is exact; the fraction times the ticks per unit
+    // rounded once, its residual (exact by the fused multiply-add) deciding the side of a half tick, so that the result is
+    // the nearest tick of the exact value of the double
+    private static long ToNearestTicks(double value, long ticksPerUnit, string paramName)
+    {
+        if (!double.IsFinite(value) || System.Math.Abs(value) >= long.MaxValue / ticksPerUnit)
+        {
+            throw new ArgumentOutOfRangeException(paramName, value, "The span does not fit in the ticks of a Time.");
+        }
+
+        double whole = System.Math.Floor(value);
+        double fraction = value - whole;
+        double scaled = fraction * ticksPerUnit;
+        double residual = System.Math.FusedMultiplyAdd(fraction, ticksPerUnit, -scaled);
+        double floor = System.Math.Floor(scaled);
+        double rest = scaled - floor;
+        long ticks = (long)whole * ticksPerUnit + (long)floor;
+        if (rest > 0.5 || (rest == 0.5 && (residual > 0.0 || (residual == 0.0 && (ticks & 1L) == 1L))))
+        {
+            ticks++;
+        }
+
+        return ticks;
     }
 
     public Time AddTicks(long ticks)
@@ -166,9 +215,9 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// This time in <paramref name="targetReference"/>, through TAI; this time itself when it is already in that frame.
     /// </summary>
     /// <remarks>
-    /// The round trip through TAI of a TDB time truncates TDB − TT to the 100 ns tick twice, at two arguments of the
-    /// series, so it could move the time by a tick (2 of the 935 041 TT instants every 0.05 day from 1972 to 2100,
-    /// #510); a conversion to the frame of the time is the identity.
+    /// The round trip through TAI of a TDB time rounds TDB − TT to the nearest 100 ns tick twice, at two arguments of the
+    /// series, so it can move the time by a tick (1 of the 935 041 TT instants every 0.05 day from 1972 to 2100, #625;
+    /// 2 when the conversions truncated, #510); a conversion to the frame of the time is the identity.
     /// </remarks>
     public Time ConvertTo(ITimeFrame targetReference)
     {
@@ -228,14 +277,15 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// Create TDB from seconds elapsed from J2000
+    /// Create a time from seconds elapsed from J2000 in <paramref name="frame"/>, to the nearest tick (100 ns), ties to
+    /// even (#625): an ET of SPICE from 2017 to 2028 comes back from <see cref="TimeSpanFromJ2000"/> exactly.
     /// </summary>
     /// <param name="secondsFromJ2000"></param>
     /// <param name="frame"></param>
     /// <returns></returns>
     public static Time Create(double secondsFromJ2000, ITimeFrame frame)
     {
-        var date = J2000.AddSeconds(secondsFromJ2000);
+        var date = J2000.AddTicks(SecondsToTicks(secondsFromJ2000));
         if (frame is UTCTimeFrame utcFrame)
         {
             date = DateTime.SpecifyKind(date, DateTimeKind.Utc);
@@ -246,7 +296,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
     
     /// <summary>
-    /// Create time from year, day of year, and seconds of day
+    /// Create a UTC time from year, day of year, and seconds of day, to the nearest tick (100 ns), ties to even (#625)
     /// </summary>
     /// <param name="year"></param>
     /// <param name="doy"></param>
@@ -255,7 +305,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
     public static Time Create(int year, int doy, double sec)
     {
         var baseDate = new DateTime(year == 0 ? 2000 : year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        var date = baseDate.AddDays(doy - 1).AddSeconds(sec);
+        var date = baseDate.AddDays(doy - 1).AddTicks(SecondsToTicks(sec));
         return new Time(date, TimeFrame.UTCFrame);
     }
 

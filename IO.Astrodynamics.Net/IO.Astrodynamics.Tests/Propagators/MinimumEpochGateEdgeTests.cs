@@ -90,12 +90,14 @@ public class MinimumEpochGateEdgeTests
     };
 
     // A force-free straight line, x = t m: a g-function of the position or the epoch can be placed anywhere in t
-    private static IntegrationResult IntegrateLine(Integrator integrator, IEventDetector detector, double duration = 400.0)
+    private static IntegrationResult IntegrateLine(Integrator integrator, IEventDetector detector, double duration = 400.0,
+        Time? from = null)
     {
-        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-        var start = new StateVector(new Vector3(0.0, 7e6, 0.0), new Vector3(1.0, 0.0, 0.0), earth, S, Frame.ICRF);
+        var epoch = from ?? S;
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch);
+        var start = new StateVector(new Vector3(0.0, 7e6, 0.0), new Vector3(1.0, 0.0, 0.0), earth, epoch, Frame.ICRF);
         integrator.Initialize(start);
-        return integrator.IntegrateSegment(start.Position, start.Velocity, S, duration, [detector]);
+        return integrator.IntegrateSegment(start.Position, start.Velocity, epoch, duration, [detector]);
     }
 
     /// <summary>
@@ -146,11 +148,13 @@ public class MinimumEpochGateEdgeTests
     }
 
     /// <summary>
-    /// A UTC gate whose TDB label compares before it (1 UTC gate in 200 000; none in TT or TAI): the root of
-    /// g = TT(epoch) − TT(gate), at the gate's instant, is labelled at the first TDB tick that does not compare before the
-    /// gate in RK7(8), adaptive and fixed-step; Velocity-Verlet fires at the step end after it. Both time arguments: TT, the
-    /// one of every propagation about the Earth, and TDB. Before the review of #569, fixed-step RK7(8) at 10 s labelled it
-    /// one tick before the gate (choice 1).
+    /// A UTC gate whose TDB label compares before it (none in TT or TAI): the root of g = TT(epoch) − TT(gate), at the
+    /// gate's instant, is labelled at the first TDB tick that does not compare before the gate in RK7(8), adaptive and
+    /// fixed-step; Velocity-Verlet fires at the step end after it. Both time arguments: TT, the one of every propagation
+    /// about the Earth, and TDB. Before the review of #569, fixed-step RK7(8) at 10 s labelled it one tick before the gate
+    /// (choice 1). Since the conversions round TDB − TT to the nearest tick (#625), such a gate is 1 UTC instant in
+    /// 3 000 000 over 2024 (an exact replica of the conversions), none on 2024-03-01 where the gate of the truncation was
+    /// (1 in 200 000 then): the gate is 2024-03-19T23:17:12.8864997 UTC, the line from 23:17 TDB.
     /// </summary>
     [Theory]
     [InlineData("RKf10", "TT")]
@@ -163,24 +167,25 @@ public class MinimumEpochGateEdgeTests
     [InlineData("VV10", "TDB")]
     public void UtcGate_WhoseTdbTickComparesBeforeIt_TheEventIsNotBeforeTheGate(string integratorName, string timeArgument)
     {
-        var gate = new Time(new DateTime(2024, 3, 1, 12, 0, 33, DateTimeKind.Utc).AddTicks(2826603), TimeFrame.UTCFrame);
+        var from = new Time(new DateTime(2024, 3, 19, 23, 17, 0), TimeFrame.TDBFrame);
+        var gate = new Time(new DateTime(2024, 3, 19, 23, 17, 12, DateTimeKind.Utc).AddTicks(8864997), TimeFrame.UTCFrame);
         Assert.True(gate.ToTDB() < gate);
         var firstTickNotBefore = gate.ToTDB();
         while (firstTickNotBefore < gate) firstTickNotBefore += TimeSpan.FromTicks(1);
 
-        double gateSeconds = PropagationTimeArgument.Tt.SecondsBetween(S, gate);
+        double gateSeconds = PropagationTimeArgument.Tt.SecondsBetween(from, gate);
         var detector = new GatedDetector
         {
             GateEpoch = gate, Direction = CrossingDirection.NegativeToPositive,
-            G = s => PropagationTimeArgument.Tt.SecondsBetween(S, s.Epoch) - gateSeconds
+            G = s => PropagationTimeArgument.Tt.SecondsBetween(from, s.Epoch) - gateSeconds
         };
         var integrator = NewIntegrator(integratorName);
         integrator.TimeArgument = timeArgument == "TT" ? PropagationTimeArgument.Tt : PropagationTimeArgument.Tdb;
-        var result = IntegrateLine(integrator, detector);
+        var result = IntegrateLine(integrator, detector, from: from);
 
         Assert.NotNull(result.Event);
         double t = result.Event.Value.EventTime;
-        var epoch = integrator.TimeArgument.EpochAt(S, t);
+        var epoch = integrator.TimeArgument.EpochAt(from, t);
         long ticks = epoch.ToTAI().DateTime.Ticks - gate.ToTAI().DateTime.Ticks;
         _output.WriteLine($"MEASURE #569 gate UTC {integratorName} {timeArgument}: gate {gate.DateTime:O} UTC at {gateSeconds:R} TT s, event {epoch.DateTime:O} TDB at {t:R} s, {ticks} ticks (TAI) from the gate");
         Assert.False(epoch < gate);
@@ -241,8 +246,8 @@ public class MinimumEpochGateEdgeTests
 
     /// <summary>
     /// The review's case through <c>Spacecraft.Propagate</c>: from 0.03 rad before the apogee (M0 = 3.1115924495453107), a
-    /// <see cref="CombinedManeuver"/> whose precondition fails (|apogee · node| = 0.45), gated one tick after the label of the
-    /// apogee root, completes with one <see cref="EventAction.Continue"/> at or after its gate, not executed; a
+    /// <see cref="CombinedManeuver"/> whose precondition fails (|apogee · node| = 0.45), gated at the last tick at or before
+    /// the apogee root (3e-12 s before it; one tick after its label when the labels truncated, #625), completes with one <see cref="EventAction.Continue"/> at or after its gate, not executed; a
     /// <see cref="PerigeeHeightManeuver"/> gated there fires at or after it.
     /// </summary>
     [Fact]
@@ -271,11 +276,35 @@ public class MinimumEpochGateEdgeTests
         }
 
         var (ungated, _) = Build(-7801, e => new PerigeeHeightManeuver(earth, S, TimeSpan.Zero, 6878137.0, e));
-        var root = Propagate(ungated).Segments[1].BaseEpoch;
-        var gate = root.Add(TimeSpan.FromTicks(1));
+        var ungatedSolution = Propagate(ungated);
+        var root = ungatedSolution.Segments[1].BaseEpoch;
+
+        // The last tick at or before the root of r·v, bisected in TT seconds on the solution: the root just after the
+        // gate. When the labels truncated, the gate was the label of the root plus one tick; since they round to the
+        // nearest tick (#625) that tick is a tick past the root (the root 3e-12 s after its label), and the burn did not
+        // fire in the window
+        double lo = MinimumEpochGateTests.Tt(root) - 1e-6, hi = MinimumEpochGateTests.Tt(root) + 1e-6;
+        double G(double t)
+        {
+            var (p, v) = ungatedSolution.InterpolateAtElapsed(t);
+            return p * v;
+        }
+
+        Assert.True(G(lo) > 0.0 && G(hi) < 0.0);
+        while (hi - lo > 1e-15 && System.Math.BitIncrement(lo) < hi)
+        {
+            double mid = 0.5 * (lo + hi);
+            if (G(mid) > 0.0) lo = mid;
+            else hi = mid;
+        }
+
+        var gate = root;
+        while (MinimumEpochGateTests.Tt(gate) > lo) gate = gate.Add(TimeSpan.FromTicks(-1));
+        while (MinimumEpochGateTests.Tt(gate.Add(TimeSpan.FromTicks(1))) <= lo) gate = gate.Add(TimeSpan.FromTicks(1));
 
         var (perigee, _) = Build(-7802, e => new PerigeeHeightManeuver(earth, gate, TimeSpan.Zero, 6878137.0, e));
         var gated = Propagate(perigee);
+        _output.WriteLine($"MEASURE #625 root of r·v {lo:R} s, its label {(MinimumEpochGateTests.Tt(root) - lo) * 1e7:F3} tick from it, the gate {(MinimumEpochGateTests.Tt(gate) - lo) * 1e7:F3} tick after it");
         var (combined, maneuver) = Build(-7803, e => new CombinedManeuver(earth, gate, TimeSpan.Zero, 6878137.0, 0.45, e));
         var skipped = Propagate(combined);
         _output.WriteLine($"MEASURE #569 gate Continue Propagate: apogee root label {MinimumEpochGateTests.Tt(root):R} s, gated burn {(gated.Segments[1].BaseEpoch - gate).Ticks} ticks from the gate, " +
