@@ -105,7 +105,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
     inputs, CARA's `Pc2D` at 50 digits (`tools/collision_probability`, tanh-sinh and Gauss-Legendre agreeing to 1e-30):
     the seven `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger
     than the covariance, a covariance not positive definite, Frisbee's maximum) within 2.0e-14, 9.0e-9 through `Analyze`
-    (the covariance held in RTN over the tick by which the refined TCA was early; 3.2e-10 since #624, Linux x64); the 25 reproductions of #610 to #612 within 7.6e-15;
+    (the covariance held in RTN over the tick by which the refined TCA was early; 3.2e-10 since #624, the same on the three, CI of #629 at 8c864b23); the 25 reproductions of #610 to #612 within 7.6e-15;
     NASA CARA's Omitron case 01 and Alfano case 03 within 2.6e-15, Frisbee's table 1 within 3.2e-16 (their tests now
     take the exact values: the published ones are 2.9e-6 and 2.3e-6 from them, Frisbee's given to two or three digits).
     σ ≫ R with the miss off the axes (σ 1e5 to 1e6 m, R 1 m; mpmath at 70 digits): within 5.0e-11, the noise of the
@@ -237,17 +237,18 @@ A major version, because it breaks the API: members deprecated for removal in 11
   several at the noise level). On the dense path, a zero within the first or the
   last tick of the window that rounds onto a window end is the tick next to that end inside the window, a window end
   being no close approach (#621); the sampled path keeps the nearer tick, an end included. `Screen` does not refine.
-  - **Measured** (Linux x64, 2026-11-10, PROVISIONAL until the CI of the three platforms): linear range rates whose zero
-    lies 0 to 1 tick after a tick, evaluated in exact tick arithmetic, give the nearest tick on every route of the
-    refinement (the secants, the seed's own range rate forward and backward, the widened bracket, the range rate
-    followed over the candidates, the sampled search) and at the window ends. The seven `collision_probability`
-    encounters through `Analyze`, whose exact TCA lies within 4.3e-7 tick of a tick: the Pc within 3.15e-10 of its
-    exact value (005, at its exact tick; 9.03e-9 before, 003 and 005 returned one tick early), asserted at 6.3e-10 (1.9e-8
-    before). Against `gfdist_c` on the crossing LEOs, the TCA within 6.4e-8 s of CSPICE's zero below the tick at 60 s
-    steps and 9.0e-8 s at the default steps (1.5e-7 s before), asserted at 1.8e-7 s (4e-7 s, when the reference was
-    CSPICE's minimum on the grid of ticks, up to 0.96 tick from its zero); the #620 RTN position within 1.5e-4 m of the
-    design (6.3e-4 m before), asserted at 3.1e-4 m. The runner on the suite's main (33286d2), 201 of 201: cdm 007 from
-    0.664 to 0.019 of its tolerance (the relative position of the written CDM 6.6e-7 km to 4.3e-13 km; its TCA written
+  - **Measured** (Linux x64, Windows x64 and macOS arm64, the bounds twice the worst over the three, CI of #629 at
+    8c864b23, 2026-11-10; the figures the same on the three): linear range rates whose zero lies 0 to 1 tick after a
+    tick, evaluated in exact tick arithmetic, give the nearest tick on every route of the refinement (the secants, the
+    seed's own range rate forward and backward, the widened bracket, the range rate followed over the candidates, the
+    sampled search) and at the window ends. The seven `collision_probability` encounters through `Analyze`, whose exact
+    TCA lies within 4.3e-7 tick of a tick: the Pc within 3.15e-10 of its exact value (005, at its exact tick; 9.03e-9
+    before, 003 and 005 returned one tick early), asserted at 6.3e-10 (1.9e-8 before). Against `gfdist_c` on the
+    crossing LEOs, the TCA within 6.4e-8 s of CSPICE's zero below the tick at 60 s steps and 9.0e-8 s at the default
+    steps (1.5e-7 s before), asserted at 1.8e-7 s (4e-7 s, when the reference was CSPICE's minimum on the grid of ticks,
+    up to 0.96 tick from its zero); the #620 RTN position within 1.5e-4 m of the design (6.3e-4 m before), asserted at
+    3.1e-4 m. The runner on the suite's main (33286d2, Linux x64, 2026-11-10), 201 of 201: cdm 007 from 0.664 to 0.019
+    of its tolerance (the relative position of the written CDM 6.6e-7 km to 4.3e-13 km; its TCA written
     12:00:00.0000000Z, 11:59:59.9999999Z before), conjunction 007 from 0.497 to 0.027 (its TCA 1.27e-7 s to 2.66e-8 s
     from CSPICE's).
   - **What moves:** every refined TCA, by at most one tick toward the zero, and what is computed there: the states at

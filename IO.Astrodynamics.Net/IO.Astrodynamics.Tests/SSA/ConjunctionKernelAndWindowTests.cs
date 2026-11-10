@@ -328,11 +328,11 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         AssertRtn(encounter, position, velocity, "Earth");
 
         // The design of the case, about the Earth at the encounter: (150, -100 √3, -100) m, |Δv| along T and N. The
-        // relative velocity, 7.6 km/s along (0, -1/2, √3/2) in RTN, moves the RTN position by 0.76 mm over a tick. At the
-        // tick nearer the zero (#624) the deltas are -1.282e-8, -8.817e-5 and 1.527e-4 m (Linux x64, 2026-11-10): the
-        // bound is twice the worst, 3.1e-4 m, PROVISIONAL until the CI of the three platforms. Before #624, one tick
-        // early, 1.003e-8, 3.656e-4 and -6.333e-4 m, then checked to two decimals against -173.205 m, a rounding
-        // boundary that the tick before the zero happened to meet
+        // relative velocity, 7.6 km/s along (0, -1/2, √3/2) in RTN, moves the RTN position by 0.76 mm over a tick. At
+        // the tick nearer the zero (#624) the deltas are -1.282e-8, -8.817e-5 and 1.527e-4 m, the same on the three
+        // platforms: the bound is twice the worst over Linux x64, Windows x64 and macOS arm64 (CI of #629 at 8c864b23,
+        // 2026-11-10), 3.1e-4 m. Before #624, one tick early, 1.003e-8, 3.656e-4 and -6.333e-4 m, then checked to two
+        // decimals against -173.205 m, a rounding boundary that the tick before the zero happened to meet
         var rtn = encounter.EncounterState.RelativeState.RelativePositionRtn;
         var design = new Vector3(150.0, -100.0 * System.Math.Sqrt(3.0), -100.0);
         _output.WriteLine($"MEASURE #620 RTN - design: {rtn.X - design.X:E3} {rtn.Y - design.Y:E3} {rtn.Z - design.Z:E3} m");
@@ -513,15 +513,16 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         _worstTcaError = System.Math.Max(_worstTcaError, System.Math.Abs(tcaError));
         _worstMissError = System.Math.Max(_worstMissError, System.Math.Abs(missError));
 
-        // The TCA, against CSPICE's zero below the tick (reference.Offset from its epoch on the grid of ticks): twice the
-        // worst, 8.949e-8 s, rounded up to two digits, PROVISIONAL (Linux x64, 2026-11-10) until the CI of the three
-        // platforms. At the tick nearer the zero (#624), 6.430e-8 s at 60 s steps (#621, S1 and F1) and 8.949e-8 s at the
-        // default steps (S1), where the states and their SPK place the zero further apart; before #624, against the same
-        // reference, 1.525e-7 s and 1.493e-7 s. Before, CSPICE's minimum was taken on the grid of ticks (Time.AddSeconds
-        // truncates to the tick), up to 0.96 tick from its zero: 1e-7 s and 2e-7 s measured, bounds 2e-7 s and 4e-7 s.
-        // The miss: twice the worst over Linux x64, Windows x64 and macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10; the
-        // same on the three), 1.129e-8 m, the propagation against its SPK (degree-7 interpolation of the 60 s outputs);
-        // 1.115e-8 m against CSPICE's distance at its zero below the tick, before and after #624 (Linux x64).
+        // The TCA, against CSPICE's zero below the tick (reference.Offset from its epoch on the grid of ticks): twice
+        // the worst over Linux x64, Windows x64 and macOS arm64 (CI of #629 at 8c864b23, 2026-11-10; the same on the
+        // three), 8.949e-8 s, rounded up to two digits. At the tick nearer the zero (#624), 6.430e-8 s at 60 s steps
+        // (#621, S1 and F1) and 8.949e-8 s at the default steps (S1), where the states and their SPK place the zero
+        // further apart; before #624, against the same reference, 1.525e-7 s and 1.493e-7 s. Before, CSPICE's minimum
+        // was taken on the grid of ticks (Time.AddSeconds truncates to the tick), up to 0.96 tick from its zero: 1e-7 s
+        // and 2e-7 s measured, bounds 2e-7 s and 4e-7 s. The miss: twice the worst over Linux x64, Windows x64 and
+        // macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10; the same on the three), 1.129e-8 m, the propagation against
+        // its SPK (degree-7 interpolation of the 60 s outputs); 1.115e-8 m against CSPICE's distance at its zero below
+        // the tick, before #624 (Linux x64) and after it (the same on the three, CI of #629 at 8c864b23, 2026-11-10).
         // Measured again in round 3 of the lot-6 review over every window here, those of 1 and 3 µs and of 1 to 3 ticks
         // about the minima included: 1.129e-8 m, the TCA t0 + 4638.5363740 s of a window starting two ticks before the
         // minimum; against the second reviewer's spiceypy distance at the minimum, over its 341 windows, 1.143e-8 m (its
@@ -738,26 +739,28 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     //   CWE60 (y0 = 1500 m, 60 s steps)       1.233e-6 s  4.893e-8 m    1.270e-6 s  4.905e-8 m    2.6e-6 s  9.9e-8 m
     //   CWF (the fold, default)               2.094e-3 s  9.685e-7 m    2.083e-3 s  9.684e-7 m    4.2e-3 s  2.0e-6 m
     //   CWF60 (the fold, 60 s steps)          3.338e-5 s  3.864e-8 m    3.232e-5 s  3.848e-8 m    6.7e-5 s  7.8e-8 m
-    // At the tick nearer the zero (#624; Linux x64, 2026-11-10, PROVISIONAL until the CI of the three platforms), this
-    // test (1187 to 1524 windows: the windows about the listed minima now coincide more often with those about CSPICE's)
-    // and the probes, run again on #624 by its verifier (634 to 911 windows, gfdist_c refined by bisection of
-    // spkezr_c's range rate to 1e-10 s), give:
+    // At the tick nearer the zero (#624), this test over Linux x64, Windows x64 and macOS arm64 (CI of #629 at
+    // 8c864b23, 2026-11-10; 1187 to 1524 windows: the windows about the listed minima now coincide more often with
+    // those about CSPICE's), the same on the three but CWE (TCA 3.068e-6 s on Linux x64, 3.205e-6 s on Windows x64,
+    // 3.282e-6 s on macOS arm64; miss 9.269e-8, 9.212e-8 and 9.206e-8 m, as on lot 6), and the probes, run again on
+    // #624 by its verifier (Linux x64, 634 to 911 windows, gfdist_c refined by bisection of spkezr_c's range rate to
+    // 1e-10 s), give, the worst over the three:
     //                                         this test                 the probe                 bound
     //   SLOW (60 s steps)                     1.272e-7 s  3.136e-10 m   1.480e-7 s  2.294e-10 m   3.0e-7 s  6.3e-10 m
     //   SLOWD (default steps)                 2.907e-5 s  1.147e-6 m    2.903e-5 s  1.147e-6 m    5.9e-5 s  2.3e-6 m
     //   SLOWX (default and 30 s steps, 1 m)   5.048e-2 s  2.076e-7 m    5.041e-2 s  2.072e-7 m    1.1e-1 s  4.2e-7 m
     //   CWD (two minima per orbit, default)   6.498e-7 s  4.732e-8 m    6.190e-7 s  4.779e-8 m    1.3e-6 s  9.7e-8 m
     //   CW60 (60 s steps)                     7.096e-7 s  4.702e-8 m    6.110e-7 s  4.753e-8 m    1.5e-6 s  9.6e-8 m
-    //   CWE (y0 = 1500 m, default)            3.068e-6 s  9.269e-8 m    3.025e-6 s  9.163e-8 m    6.6e-6 s  1.9e-7 m
+    //   CWE (y0 = 1500 m, default)            3.282e-6 s  9.269e-8 m    3.025e-6 s  9.163e-8 m    6.6e-6 s  1.9e-7 m
     //   CWE60 (y0 = 1500 m, 60 s steps)       1.233e-6 s  4.893e-8 m    1.170e-6 s  4.892e-8 m    2.5e-6 s  9.9e-8 m
     //   CWF (the fold, default)               2.094e-3 s  9.677e-7 m    2.082e-3 s  9.676e-7 m    4.2e-3 s  2.0e-6 m
     //   CWF60 (the fold, 60 s steps)          3.328e-5 s  3.864e-8 m    3.222e-5 s  3.848e-8 m    6.7e-5 s  7.8e-8 m
-    // Every TCA bound is twice the worst of the two, rounded up to two digits, but CWE's, which keeps twice its worst
-    // over the three platforms (3.282e-6 s on macOS arm64; this test gives the same 3.068e-6 s on Linux x64 before and
-    // after #624). CWD's and CWE60's move from 1.5e-6 s and 2.6e-6 s to 1.3e-6 s and 2.5e-6 s: the verifier's probe
-    // gives 6.190e-7 s and 1.170e-6 s on lot 6 before #624 (a9f2a371) as on #624, and the earlier probes, 7.190e-7 s and
-    // 1.270e-6 s, lay exactly one tick above it, as a reference on the grid of ticks would. The miss bounds are unchanged
-    // (the figures within 1 % of the earlier ones).
+    // Every bound is twice the worst of the two, rounded up to two digits (CWE's TCA bound from 3.282e-6 s on macOS
+    // arm64, as on lot 6: this test gives CWE the same figures on each platform before and after #624). CWD's and
+    // CWE60's move from 1.5e-6 s and 2.6e-6 s to 1.3e-6 s and 2.5e-6 s: the verifier's probe gives 6.190e-7 s and
+    // 1.170e-6 s on lot 6 before #624 (a9f2a371) as on #624, and the earlier probes, 7.190e-7 s and 1.270e-6 s, lay
+    // exactly one tick above it, as a reference on the grid of ticks would. The miss bounds are unchanged (the figures
+    // within 1 % of the earlier ones).
     // The TCA error is the difference of the range rate of the states and of their SPK (the degree-7 interpolation of
     // their 60 s outputs) over its slope, 2.6e-4 m/s per second at a drift of 100 m and 2.6e-6 at 1 m; at the fold, 2.9e-7 m
     // deep, the states and their SPK of the default steps place the zero 2.1 ms apart (the library within 7.4e-6 s of the

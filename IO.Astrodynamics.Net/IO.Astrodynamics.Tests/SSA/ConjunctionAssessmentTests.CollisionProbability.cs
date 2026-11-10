@@ -35,11 +35,12 @@ public partial class ConjunctionAssessmentTests
     private const double DesignedEncounterPcBound = 4.1e-14;
 
     // The public Analyze on straight-line trajectories, the seven encounters: worst 3.15e-10 (005, the large hard-body
-    // radius, at its exact TCA tick; 003 6.66e-11), PROVISIONAL (Linux x64, 2026-11-10) until the CI of the three
-    // platforms. Every refined TCA is now the tick nearest the linear TCA, within 4.3e-7 tick of it (#624); before, the
-    // tick below the root of the library's range rate, one tick early for 003 and 005, over which the covariance was held
-    // in RTN, and 003's Pc of 1.1e-8 (miss 11 sigma) amplified that rotation: 9.03e-9, the same on the three platforms,
-    // bound 1.9e-8. The integral itself is at 2.0e-14
+    // radius, at its exact TCA tick; 003 6.66e-11), the same on the three platforms: the bound is twice the worst over
+    // Linux x64, Windows x64 and macOS arm64 (CI of #629 at 8c864b23, 2026-11-10). Every refined TCA is now the tick
+    // nearest the linear TCA, within 4.3e-7 tick of it (#624); before, the tick below the root of the library's range
+    // rate, one tick early for 003 and 005, over which the covariance was held in RTN, and 003's Pc of 1.1e-8 (miss 11
+    // sigma) amplified that rotation: 9.03e-9, the same on the three platforms, bound 1.9e-8. The integral itself is at
+    // 2.0e-14
     private const double DesignedEncounterAnalyzePcBound = 6.3e-10;
 
     // The 25 reproductions of #610, #611 and #612: worst 7.64e-15 on Linux x64 and Windows x64, 7.43e-15 on macOS arm64
@@ -68,8 +69,8 @@ public partial class ConjunctionAssessmentTests
 
     // The same through Analyze and AnalyzeAll on straight-line trajectories: worst 2.20e-7, the same on the three
     // platforms (Omitron 01, whose states are not at the linear TCA: the covariance is held in RTN over the refined
-    // TCA's offset), unchanged by the nearer tick of #624 (Linux x64, 2026-11-10); Alfano 03 2.7e-11 (4.8e-11 before
-    // #624)
+    // TCA's offset), unchanged by the nearer tick of #624 (the same on the three, CI of #629 at 8c864b23, 2026-11-10);
+    // Alfano 03 2.7e-11 (4.8e-11 before #624)
     private const double CaraEntryPointPcBound = 4.4e-7;
 
     private static readonly Lazy<JsonDocument> CollisionProbabilityReference =
