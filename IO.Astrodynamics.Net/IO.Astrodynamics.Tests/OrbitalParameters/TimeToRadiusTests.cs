@@ -53,11 +53,15 @@ public class TimeToRadiusTests
         double at1e12 = SecondsTo(orbit, 1e12) - 27139842.071728861318;
         double at1e15 = SecondsTo(orbit, 1e15) - 33580027163.50922645;
         _output.WriteLine($"1e12 m: {at1e12:E3} s, 1e15 m: {at1e15:E3} s off the closed form");
-        // Measured on Linux x64 (2026-11-10): -6.3e-8 s at 1e12 m, within the tick of the epoch, and 1.04e-2 s at 1e15 m,
-        // where the true anomaly is within 2e-4 rad of the asymptote and tan(nu / 2) carries its rounding into H; twice each,
-        // the first at least two ticks
+        // Measured on Linux x64 (2026-11-10): -6.3e-8 s at 1e12 m, within the tick of the epoch; twice, at least two ticks.
+        // At 1e15 m the true anomaly is 2.6e-4 rad from the asymptote, where one ulp of nu moves the time by 5.0e-2 to
+        // 6.2e-2 s: the result is the rounding of the platform's libm (Math.Acos, Tan, Atanh, Sinh; glibc, UCRT or Apple's,
+        // each within one ulp, not correctly rounded). Linux measures 1.04e-2 s, mostly the rounding of acos (+1.89e-2 s;
+        // tan -0.38e-2 s, c +0.37e-2 s); a libm within one ulp per call gives up to 3.944e-2 s
+        // (tools/time_to_radius/time_to_radius_libm_envelope.py), which a bound twice the Linux figure (2.1e-2 s) did not
+        // hold (the second review of #627). The bound is twice that worst value; PROVISIONAL until the three-platform CI
         Assert.InRange(at1e12, -2e-7, 2e-7);
-        Assert.InRange(at1e15, -2.1e-2, 2.1e-2);
+        Assert.InRange(at1e15, -7.9e-2, 7.9e-2);
     }
 
     [Fact]

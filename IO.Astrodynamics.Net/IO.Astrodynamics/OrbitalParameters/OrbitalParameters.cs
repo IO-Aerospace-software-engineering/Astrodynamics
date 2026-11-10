@@ -1032,11 +1032,15 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     private const double ApsisRadiusTolerance = 1e-12;
 
     /// <summary>
-    /// Computes the epoch at which the orbit is at a given radius, outbound from the periapsis: on an ellipse the next
-    /// such epoch from <see cref="Epoch"/> (within one period); on an open orbit its one outbound crossing, an epoch before
-    /// <see cref="Epoch"/> when the orbit is already past the radius; on a circular orbit (e = 0), at its radius at every
-    /// instant, <see cref="Epoch"/> itself.
+    /// Computes the epoch at which the orbit is at a given radius, outbound from the periapsis: on an ellipse
+    /// (<see cref="IsElliptical"/>, e ≤ 1 − 1e-6) the next such epoch from <see cref="Epoch"/> (within one period); on an
+    /// open orbit its one outbound crossing, an epoch before <see cref="Epoch"/> when the orbit is already past the
+    /// radius; on a circular orbit (e = 0), at its radius at every instant, <see cref="Epoch"/> itself.
     /// </summary>
+    /// <remarks>An ellipse with 1 − 1e-6 &lt; e &lt; 1, whose anomalies are taken as parabolic
+    /// (<see cref="IsParabolic"/>), gives an epoch about 8 times off the closed form, which can be before
+    /// <see cref="Epoch"/> even for a radius not yet reached: a defect of the near-parabolic anomalies, not of this
+    /// method.</remarks>
     /// <param name="radius">The distance from the center of motion, in meters.</param>
     /// <returns>The epoch at the radius, in the frame of <see cref="Epoch"/>.</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="radius"/> is not finite, is below the periapsis, or

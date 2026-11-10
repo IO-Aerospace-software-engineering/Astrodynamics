@@ -297,13 +297,31 @@ A major version, because it breaks the API: members deprecated for removal in 11
   748 smaller against 308 larger, mean ratio 0.93; the propagators 0.94; the time conversions 0.91), so that every
   conversion of seconds follows one rule. `PropagationTimeArgument.Tt.SecondsBetween` and the runner's
   `TerrestrialSeconds` count from tick-exact labels and the series in double, so they do not depend on it.
+  What a double holds limits the cure. From 2017 to 2028 (and 1971 to 1983) an ET comes back exactly, but a tick made
+  seconds and back is the neighbouring tick for about 16 % of ticks (its double up to 0.6 tick from it), so
+  `SpiceAPI.ReadEphemeris(Time …)` and the initial state of a kernel-backed spacecraft, which labelled the state with
+  the epoch SPICE returned, now carry the epoch asked, as `SpiceDataProvider.GetEphemeris` does, and a window end of the
+  CSPICE searches of `SpiceAPI` at an end of the search window is that end (the second review:
+  2024-01-11T00:35:02.8486908 TDB was labelled .8486907, and a search ending 2024-02-29T03:34:37.2052700 gave a window
+  ending .2052701, outside it; a start could come back a tick inside). The other epochs SPICE gives as seconds (the grid
+  of `ReadEphemeris(Window …)` and `ReadOrientation`, a transition inside a window, the element conversions) are the
+  nearest tick of their double. From 1983 to 2017 a tick is coarser than a double, so no tick holds every ET: the
+  nearest tick of a coverage bound lies outside the coverage for about a third of the bounds, at either end (30 % from
+  2000 to 2017, 37 % from 1990 to 2000, on the double SPICE receives), where the truncation always kept a start from
+  1983 to J2000 and an end from 2000 to 2017 inside (and put 80 % of the starts from 2000 to 2017 and 87 % of the ends
+  from 1990 to 2000 outside).
   - **Measured** (Linux x64, 2026-11-10): the helper, `Create`, `AddSeconds`, `AddMilliseconds` and `AddMicroseconds`
     give the exact nearest tick (Python `Fraction`, `tools/seconds_to_ticks`) of 1978 values: the issue's (±0.12345678999 s,
     1234568 ticks; the start of the LRO SPK, 7558704691834258 ticks), exact ties, near ties, 8 doubles where rounding the
     product misses, 1500 ET from 1968 to 2031, 234 near ties above −1 unit and their mirrors (968 of them not their
     truncation); a span and its opposite give a time back; 200 000 ET from 2017-01-05 to
     2028-07-17 come back exactly; `new Spacecraft(-85, "LRO", Time.CreateTDB(a))` at the start of its SPK builds and its
-    state is spiceypy's `spkezr(-85, a, J2000, NONE, 399)` to the bit, at both ends of the coverage.
+    state is spiceypy's `spkezr(-85, a, J2000, NONE, 399)` to the bit, at both ends of the coverage; a tick made seconds
+    and back is that tick from 1983 to 2017 and within one tick from 1971 to 1983 and 2017 to 2028 (100 000 each, the
+    exact nearest tick of the double); 2001 states of the Moon read at ticks of 2024 and 301 LRO spacecraft built at
+    ticks of its SPK carry the epoch asked (10 036 of 20 000 and 1 441 of 3 000 did not on main, 3 267 and 474 at the
+    first round of the fix), and 201 `gfdist` searches of 2024 give back their search window tick for tick (28 of 300
+    ends past it and 22 starts before it at the first round, 146 starts before it on main).
   - **What moves:** every epoch built from seconds, by a tick at most, and what is computed there. The window epochs of
     CSPICE's searches (the same searches in spiceypy, `tools/seconds_to_ticks/spice_windows_reference.py`, whose
     truncated mode gives the former strings), the labels of the stages and outputs of a propagation, so the three
@@ -319,7 +337,11 @@ A major version, because it breaks the API: members deprecated for removal in 11
     search moves by 9.6e-4 s between the propagated states and their kernels; 802 LT 6.7e-6 s, LT+S 8.84e-5 s), the miss
     of a conjunction read through stored states (3.12e-9 m, a few ulps of a LEO position), and a Velocity-Verlet output a
     tick before an impulse, which reads the earlier arc, whose closing state carries the label of the impulse, the
-    nearest tick of its instant: half a tick of motion at most (3.96e-4 m at 8.6 km/s).
+    nearest tick of its instant: half a tick of motion at most (3.96e-4 m at 8.6 km/s). A coverage start from 1983 to J2000 or
+    an end from 2000 to 2017 given as seconds, which the truncation put inside, now falls outside about a third of the
+    time, and a read there throws: the coverage of ITRF93 in the test kernels starts at −43135.816087188054 s, whose
+    nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it), so the test of the orientation
+    cache of a window starting inside the coverage starts one tick later; read from the first tick inside a bound.
 - **`TimeToRadius` returned an apsis for a radius the orbit never reaches, and failed with NaN or an overflow far out** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627)).
   It clamped cos ν to [−1, 1], so a radius below the periapsis gave the periapsis and a radius above the apoapsis of an
   ellipse the apoapsis, both silently, and an infinite radius on a hyperbola, the asymptote, gave a NaN mean anomaly
@@ -331,14 +353,18 @@ A major version, because it breaks the API: members deprecated for removal in 11
   to 7e-16); a radius reached outside the epochs a `Time` holds throws an `ArgumentOutOfRangeException` that says so,
   after the last or before the first. A circular orbit (e = 0), at its radius at every instant, returns its epoch, where
   0 / 0 gave NaN (and a radius an ulp from p an arbitrary epoch). On an open orbit already past the radius the epoch is
-  its outbound crossing, before the epoch of the orbit, as before.
+  its outbound crossing, before the epoch of the orbit, as before. An ellipse with 1 − 1e-6 < e < 1, whose anomalies the
+  library takes as parabolic, keeps a time about 8 times off, and its epoch can be before the epoch of the orbit even for
+  a radius not yet reached (EpochAtMeanAnomaly adds a period only for e ≤ 1 − 1e-6); pre-existing, for its own issue.
   `TimeToSphereOfInfluence` throws `InvalidOperationException` ("<body> has no finite sphere of influence; an orbit
   about it never leaves it") for an infinite sphere of influence. The recommendation of the issue: throw, no `Try`
   method.
   - **Measured** (Linux x64, 2026-11-10) against the closed form of the hyperbola at 50 digits
     (`tools/time_to_radius`, mpmath 1.4.1 and spiceypy 8.3.0): about the Sun (a = −1.5e11 m, e = 2) 1e12 m within
-    6.3e-8 s and 1e15 m within 1.04e-2 s, where the true anomaly is within 2e-4 rad of the asymptote; the Moon's sphere
-    of influence, one ulp from spiceypy's, reached within 4.0e-8 s; the past crossings, at M0 = 10 rad (1e12 m, −2.33e7 s)
+    6.3e-8 s and 1e15 m within 1.04e-2 s, where the true anomaly is 2.6e-4 rad from the asymptote and one ulp of it moves
+    the time by 5.0e-2 to 6.2e-2 s, so the figure is the rounding of the platform's libm (up to 3.944e-2 s for a libm
+    within one ulp per call, `tools/time_to_radius/time_to_radius_libm_envelope.py`, asserted at twice it); the Moon's
+    sphere of influence, one ulp from spiceypy's, reached within 4.0e-8 s; the past crossings, at M0 = 10 rad (1e12 m, −2.33e7 s)
     and M0 = 1e3 rad (the Moon's sphere, −4.99e6 s), within 1.12e-7 s and 2.4e-8 s.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
@@ -1224,8 +1250,13 @@ A major version, because it breaks the API: members deprecated for removal in 11
   `Time.Create`, `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB conversions
   give the nearest tick, ties to even, where they truncated, so an epoch built from seconds can be a tick later after
   J2000 and earlier before it; a span that is not finite, or whose ticks do not fit in a `long`, throws
-  `ArgumentOutOfRangeException` (`AddSeconds(double.NaN)` returned the time unchanged). `AddDays`, `AddHours` and
-  `AddMinutes` are unchanged.
+  `ArgumentOutOfRangeException` (`AddSeconds(double.NaN)` returned the time unchanged). A coverage bound from 1983 to 2017 given
+  as seconds can now be a tick outside the coverage, where the truncation kept a start from 1983 to J2000 or an end from 2000
+  to 2017 inside, and a read there throws: read from the first tick inside. `SpiceAPI.ReadEphemeris(Time …)` and a
+  kernel-backed spacecraft label their state with the epoch asked, and an end of a CSPICE search at an end of its search
+  window is that end. `AddDays`, `AddHours`, `AddMinutes`, `CreateFromJD` and the `TimeSpan.FromSeconds` of the library
+  outside `Time` (`Period()`, `SideralRotationPeriod`, `TrueSolarDay`, `Launch`, the windows of an impulse, the hold of
+  `PhasingManeuver`, the epochs of the conjunction search) still truncate.
 - **`TimeToRadius` and `TimeToSphereOfInfluence` throw where the orbit never reaches the radius** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627), Fixed above):
   a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached outside the epochs
   of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite sphere of

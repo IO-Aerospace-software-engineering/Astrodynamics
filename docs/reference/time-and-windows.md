@@ -33,11 +33,33 @@
 A span of seconds becomes the nearest tick (100 ns) of the exact value of its double, ties to even, in `Create`,
 `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB − TT offset of the TDB
 conversions ([#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625)); a value that is
-not finite, or whose ticks do not fit in a `long`, throws `ArgumentOutOfRangeException`. So an ET of SPICE from 2017 to
-2028, where an ulp of the double is larger than a tick, comes back from `TimeSpanFromJ2000()` exactly, and an ET before
-2017 within half a tick. Before 11.0.0 these truncated toward zero: up to a tick early after J2000 and late before it,
-so that a spacecraft built at the first instant of its SPK read 84 ns before its coverage. The rounding is symmetric,
-so a span and its opposite give a time back. `CreateFromJD`, `AddDays`, `AddHours` and `AddMinutes` still truncate.
+not finite, or whose ticks do not fit in a `long`, throws `ArgumentOutOfRangeException`. Before 11.0.0 these truncated
+toward zero: up to a tick early after J2000 and late before it, so that a spacecraft built at the first instant of its
+SPK read 84 ns before its coverage. The rounding is symmetric, so a span and its opposite give a time back.
+
+What a double can hold limits both directions:
+
+- **From 2017 to 2028, and from 1971 to 1983** (|ET| from 2^29 s to 2^53 ticks) an ulp of the ET is coarser than a tick: an ET of SPICE comes back from
+  `TimeSpanFromJ2000()` exactly, but a tick made seconds and back is not always that tick. The double nearest a tick can
+  be up to 0.6 tick from it, and for about 16 % of ticks its nearest tick is the neighbour. So the epochs of SPICE are not
+  passed through seconds again where the tick asked is known: `SpiceAPI.ReadEphemeris(Time …)` and the initial state of
+  a kernel-backed spacecraft carry the epoch asked, as `SpiceDataProvider.GetEphemeris` does, and an end of a
+  CSPICE search (`FindWindowsOn…Constraint` of `SpiceAPI`) at an end of its search window is that end. Where SPICE
+  gives the epoch itself (the grid of `ReadEphemeris(Window …)` and `ReadOrientation`, a transition inside a window, the
+  element conversions of `SpiceAPI`), the label is the nearest tick of its double, within a tick of any tick it came from.
+- **From 1983 to 2017** (|ET| below 2^29 s) a tick is coarser than an ulp, so no tick holds every ET: an ET comes back
+  within half a tick, and a tick made seconds and back is that tick. The nearest tick of a coverage bound (`spkcov`, `pckcov`) lies outside the
+  coverage for about a third of the bounds, at either end (on the double SPICE receives, 50 000 bounds per range: starts
+  30 % from 2000 to 2017 and 37 % from 1990 to 2000, ends the same). The truncation kept every start from 1983 to J2000 and
+  every end from 2000 to 2017 inside, and put 80 % of the starts from 2000 to 2017 and 87 % of the ends from 1990 to 2000
+  outside, so a read at a bound that worked before 11.0.0 can now throw (since #454), and the reverse. Read from the
+  first tick inside: one tick later at a start, one tick earlier at an end. The coverage of ITRF93 in the test kernels starts at
+  −43135.816087188054 s, whose nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it).
+
+Still truncating: `CreateFromJD`, `AddDays`, `AddHours`, `AddMinutes`, and every `TimeSpan.FromSeconds` of the library
+outside `Time`, for example `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`,
+`Launch`, the thrust windows of an impulse (`Tsiolkovski`), the hold of `PhasingManeuver`, the candidate, secant and
+subdivision epochs of the conjunction search and the period of the element conversions of `SpiceAPI`.
 
 ### Conversion Methods
 

@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.OrbitalParameters;
@@ -12,10 +13,14 @@ using Xunit.Abstractions;
 namespace IO.Astrodynamics.Tests.Time;
 
 /// <summary>
-/// Every span of seconds becomes the nearest tick of a <see cref="TimeSystem.Time"/>, ties to even (#625):
+/// The conversions of seconds to ticks of <see cref="TimeSystem.Time"/> give the nearest tick, ties to even (#625):
 /// <see cref="TimeSystem.Time.Create(double, ITimeFrame)"/>, <see cref="TimeSystem.Time.Create(int, int, double)"/>,
 /// <see cref="TimeSystem.Time.AddSeconds"/>, <see cref="TimeSystem.Time.AddMilliseconds"/>,
-/// <see cref="TimeSystem.Time.AddMicroseconds"/> and the TDB − TT offset of <see cref="TDBTimeFrame"/>. The references
+/// <see cref="TimeSystem.Time.AddMicroseconds"/> and the TDB − TT offset of <see cref="TDBTimeFrame"/> (not
+/// <c>AddDays</c>, <c>AddHours</c>, <c>AddMinutes</c>, <c>CreateFromJD</c> nor the <c>TimeSpan.FromSeconds</c> of the
+/// library outside <see cref="TimeSystem.Time"/>, which still truncate); a tick made seconds and back, which is not
+/// always that tick from 2017 to 2028 (and 1971 to 1983); and the labels and window ends of the CSPICE reads, which keep the ticks asked.
+/// The references
 /// are exact: Python's Fraction (<c>tools/seconds_to_ticks/seconds_to_ticks_reference.py</c>,
 /// <c>Data/SecondsToTicksReference/seconds_to_ticks_reference.json</c>), integer arithmetic (<see cref="ExactTicks"/>),
 /// and spiceypy 8.3.0 (CSPICE N0067) on the LRO kernel of <c>Data/LRO</c>.
@@ -151,6 +156,134 @@ public class SecondsToTicksTests
             if (back != et)
                 Assert.Fail($"{et:R} s came back as {back:R} s");
         }
+    }
+
+    [Fact]
+    public void ATickMadeSeconds_ComesBackExactlyWithin2Pow29SecondsOfJ2000_AndWithinOneTickBeyond()
+    {
+        // The reverse of the round trip above is not the identity where an ulp of the seconds is coarser than a tick,
+        // |ET| from 2^29 s to 2^53 ticks (1971-06-17 to 1982-12-27 and 2017-01-05 to 2028-07-17): the double nearest a
+        // tick can be up to 0.596 tick from it, and its nearest tick is then the neighbour (the review of #625). Fraction:
+        // 5652918976297924 ticks -> 565291897.6297925 s -> ...925
+        Assert.Equal(565291897.6297925, TimeSpan.FromTicks(5652918976297924).TotalSeconds);
+        Assert.Equal(5652918976297925L, FromJ2000(TimeSystem.Time.CreateTDB(565291897.6297925)));
+
+        // Every tick comes back within one tick of itself, through the double nearest it (ExactTicks, exact); within
+        // 2^29 s of J2000 (1982-12-27 to 2017-01-05) an ulp is finer than a tick, so the double is within half a tick and
+        // the tick comes back exactly
+        const long limit = 9_007_199_254_740_992L;
+        const long inner = 5_368_709_120_000_000L;
+        var random = new Random(6252);
+        var moved = new int[3];
+        var ranges = new[] { (-limit, -inner, false), (-inner, inner, true), (inner, limit, false) };
+        for (int r = 0; r < ranges.Length; r++)
+        {
+            var (from, to, exact) = ranges[r];
+            for (int i = 0; i < 100_000; i++)
+            {
+                long ticks = from + (long)(random.NextDouble() * (to - from));
+                double seconds = TimeSpan.FromTicks(ticks).TotalSeconds;
+                long back = FromJ2000(TimeSystem.Time.CreateTDB(seconds));
+                Assert.Equal(ExactTicks.Nearest(seconds), back);
+                Assert.InRange(back - ticks, exact ? 0L : -1L, exact ? 0L : 1L);
+                if (back != ticks)
+                    moved[r]++;
+            }
+        }
+
+        // About 16 % of the ticks beyond 2^29 s (Fraction, 100 000 uniform ticks from 2017 to 2028 in the review: 16 072),
+        // none within
+        _output.WriteLine($"Ticks of 100 000 that come back as a neighbour: 1971-1983 {moved[0]}, 1983-2017 {moved[1]}, 2017-2028 {moved[2]}");
+        Assert.Equal(0, moved[1]);
+    }
+
+    [Fact]
+    public void AStateReadAtATick_IsLabelledWithThatTick()
+    {
+        // SpiceAPI.ReadEphemeris(Time ...) labelled its state with the epoch CSPICE returned, made a Time again: the
+        // neighbouring tick for about 16 % of the ticks of 2024 (the review of #625; Fraction: 2024-12-18T09:36:47.8294540
+        // came back .8294539). It is labelled with the epoch asked, the instant SPICE read at, as the data provider does
+        var epochs = new System.Collections.Generic.List<TimeSystem.Time>
+            { new(new DateTime(2024, 12, 18, 9, 36, 47).AddTicks(8294540), TimeFrame.TDBFrame) };
+        var random = new Random(6253);
+        long start = new DateTime(2024, 1, 1).Ticks;
+        long span = new DateTime(2025, 1, 1).Ticks - start;
+        for (int i = 0; i < 2000; i++)
+            epochs.Add(new TimeSystem.Time(new DateTime(start + (long)(random.NextDouble() * span)), TimeFrame.TDBFrame));
+
+        foreach (var epoch in epochs)
+        {
+            var state = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None);
+            Assert.Equal(epoch.DateTime.Ticks, state.Epoch.DateTime.Ticks);
+            Assert.Equal(TimeFrame.TDBFrame, state.Epoch.Frame);
+        }
+
+        // An epoch tagged UTC is labelled with its TDB instant, as before
+        var utc = new TimeSystem.Time(new DateTime(2024, 6, 1, 12, 0, 0), TimeFrame.UTCFrame);
+        Assert.Equal(utc.ToTDB().DateTime.Ticks,
+            SpiceAPI.Instance.ReadEphemeris(utc, 399, 301, Frames.Frame.ICRF, Aberration.None).Epoch.DateTime.Ticks);
+    }
+
+    [Fact]
+    public void AKernelBackedSpacecraft_IsAtTheEpochAsked()
+    {
+        // Its initial state was labelled with the epoch CSPICE returned (Fraction: 2024-01-11T00:35:02.8486908 came back
+        // .8486907, the effect the issue names): it is the epoch asked, as SpiceDataProvider.GetEphemeris labels it
+        var epochs = new System.Collections.Generic.List<TimeSystem.Time>
+            { new(new DateTime(2024, 1, 11, 0, 35, 2).AddTicks(8486908), TimeFrame.TDBFrame) };
+        var random = new Random(6254);
+        long start = new DateTime(2023, 12, 16).Ticks;
+        long span = new DateTime(2024, 3, 14).Ticks - start;
+        for (int i = 0; i < 300; i++)
+            epochs.Add(new TimeSystem.Time(new DateTime(start + (long)(random.NextDouble() * span)), TimeFrame.TDBFrame));
+
+        foreach (var epoch in epochs)
+        {
+            var lro = new Spacecraft(-85, "LRO", epoch);
+            Assert.Equal(epoch.DateTime.Ticks, lro.InitialOrbitalParameters.Epoch.DateTime.Ticks);
+            Assert.Equal(TimeFrame.TDBFrame, lro.InitialOrbitalParameters.Epoch.Frame);
+        }
+    }
+
+    [Fact]
+    public void ACspiceWindow_StaysInsideItsSearchWindow()
+    {
+        // The Moon is always farther than 1 km from the Earth, so gfdist gives back the search window, its ends as the
+        // doubles of their ticks: made a Time again, an end was the neighbouring tick for about 16 % of the ticks of 2024,
+        // one tick outside the search window (the review of #625; Fraction: the end 2024-02-29T03:34:37.2052700 came back
+        // .2052701). The ends are clamped to the search window: the window is the search window, tick for tick
+        var searches = new System.Collections.Generic.List<Window>
+        {
+            new(new TimeSystem.Time(new DateTime(2024, 2, 28, 3, 34, 37).AddTicks(2052700), TimeFrame.TDBFrame),
+                new TimeSystem.Time(new DateTime(2024, 2, 29, 3, 34, 37).AddTicks(2052700), TimeFrame.TDBFrame))
+        };
+        var random = new Random(6255);
+        long start = new DateTime(2024, 1, 1).Ticks;
+        long span = new DateTime(2024, 12, 1).Ticks - start;
+        for (int i = 0; i < 200; i++)
+        {
+            long from = start + (long)(random.NextDouble() * span);
+            long length = TimeSpan.TicksPerHour + (long)(random.NextDouble() * 10 * TimeSpan.TicksPerDay);
+            searches.Add(new Window(new TimeSystem.Time(new DateTime(from), TimeFrame.TDBFrame),
+                new TimeSystem.Time(new DateTime(from + length), TimeFrame.TDBFrame)));
+        }
+
+        foreach (var search in searches)
+        {
+            var windows = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(search, 399, 301, RelationnalOperator.Greater, 1000.0,
+                Aberration.None, TimeSpan.FromHours(6.0)).ToArray();
+            Assert.Single(windows);
+            Assert.Equal(search.StartDate.DateTime.Ticks, windows[0].StartDate.DateTime.Ticks);
+            Assert.Equal(search.EndDate.DateTime.Ticks, windows[0].EndDate.DateTime.Ticks);
+        }
+
+        // A search window tagged UTC: the window is its TDB instants
+        var utc = new Window(new TimeSystem.Time(new DateTime(2024, 6, 1), TimeFrame.UTCFrame),
+            new TimeSystem.Time(new DateTime(2024, 6, 2), TimeFrame.UTCFrame));
+        var inTdb = SpiceAPI.Instance.FindWindowsOnDistanceConstraint(utc, 399, 301, RelationnalOperator.Greater, 1000.0,
+            Aberration.None, TimeSpan.FromHours(6.0)).Single();
+        Assert.Equal(utc.StartDate.ToTDB().DateTime.Ticks, inTdb.StartDate.DateTime.Ticks);
+        Assert.Equal(utc.EndDate.ToTDB().DateTime.Ticks, inTdb.EndDate.DateTime.Ticks);
     }
 
     [Fact]
