@@ -101,7 +101,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   without it, a covariance far wider than the disc with a miss off its axes (σ 1e5 m, R 1 m, miss (1e5, 3e5) m) spent
   the 200 000 evaluations and returned a Pc 1.3e-6 off, with no flag (PC-1 of the lot's review). The public
   `SpecialFunctions.ErrorFunction` is unchanged.
-  - **Measured** (Linux x64; the bounds provisional until the three platforms) against the exact Pc of the same double
+  - **Measured** (Linux x64, Windows x64 and macOS arm64, the bounds twice the worst over the three, CI of 7f5e6dfb) against the exact Pc of the same double
     inputs, CARA's `Pc2D` at 50 digits (`tools/collision_probability`, tanh-sinh and Gauss-Legendre agreeing to 1e-30):
     the seven `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger
     than the covariance, a covariance not positive definite, Frisbee's maximum) within 2.0e-14, 9.0e-9 through `Analyze`
@@ -191,7 +191,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   ending or starting at the zero included, the reference refined below the tick), the local minima, each once, and no
   maximum, within 1.5e-7 s and 3.14e-10 m at 60 s steps, 2.9e-5 s and 1.15e-6 m at the default steps, 5.05e-2 s and
   2.1e-7 m with a drift of 1 m at mixed steps (the states and their SPK placing the zero apart by the difference of
-  their range rates over its slope, 2.6e-6 m/s per second), 7.1e-7 s to 3.1e-6 s and 4.8e-8 to 9.3e-8 m with two minima
+  their range rates over its slope, 2.6e-6 m/s per second), 7.1e-7 s to 3.3e-6 s and 4.8e-8 to 9.3e-8 m with two minima
   per orbit, and at the fold 3.4e-5 s and 3.9e-8 m at 60 s steps, 2.1e-3 s and 9.7e-7 m at the default steps (its
   states and their SPK 2.1 ms apart).
 - **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the

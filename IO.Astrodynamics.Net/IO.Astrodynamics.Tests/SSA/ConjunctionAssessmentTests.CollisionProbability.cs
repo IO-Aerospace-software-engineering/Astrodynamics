@@ -29,28 +29,29 @@ public partial class ConjunctionAssessmentTests
 {
     private const string CollisionProbabilityReferenceFile = "Data/CollisionProbabilityReference/collision_probability_reference.json";
 
-    // PROVISIONAL until the CI of Linux, Windows and macOS arm64: twice the worst relative error measured on Linux x64
-    // (2026-11-09), rounded up to two digits. The internal integral on the seven encounters (the doubles of the suite's
-    // inputs.yaml): worst 2.01e-14 (003)
+    // Every bound below is twice the worst relative error over Linux x64, Windows x64 and macOS arm64 (CI of #622 at
+    // 7f5e6dfb, 2026-11-10), rounded up to two digits. The internal integral on the seven encounters (the doubles of
+    // the suite's inputs.yaml): worst 2.01e-14 (003), the same on the three
     private const double DesignedEncounterPcBound = 4.1e-14;
 
-    // PROVISIONAL (Linux x64, 2026-11-09): the public Analyze on straight-line trajectories, the seven encounters: worst
-    // 9.03e-9 (003; 7.41e-10 on the design-stage doubles, within 1e-10 of these, whose 003 gave less). The refined TCA
-    // lies up to a tick of Time (100 ns) from the linear TCA, over which the covariance is held in RTN, and 003's Pc of
-    // 1.1e-8 (miss 11 sigma) amplifies that rotation; the integral itself is at 2.0e-14
+    // The public Analyze on straight-line trajectories, the seven encounters: worst 9.03e-9, the same on the three
+    // platforms (003; 7.41e-10 on the design-stage doubles, within 1e-10 of these, whose 003 gave less). The refined
+    // TCA lies up to a tick of Time (100 ns) from the linear TCA, over which the covariance is held in RTN, and 003's
+    // Pc of 1.1e-8 (miss 11 sigma) amplifies that rotation; the integral itself is at 2.0e-14
     private const double DesignedEncounterAnalyzePcBound = 1.9e-8;
 
-    // PROVISIONAL (Linux x64, 2026-11-09): the 25 reproductions of #610, #611 and #612: worst 7.64e-15 (#612, λ2 1e-2 m²
-    // at 30°); before the fix 0 or 4e-86 for 1 (#610), −4.6 % (#611), null (#612)
+    // The 25 reproductions of #610, #611 and #612: worst 7.64e-15 on Linux x64 and Windows x64, 7.43e-15 on macOS arm64
+    // (#612, λ2 1e-2 m² at 30°); before the fix 0 or 4e-86 for 1 (#610), −4.6 % (#611), null (#612)
     private const double ReproductionPcBound = 1.6e-14;
 
-    // PROVISIONAL (Linux x64, 2026-11-09): a covariance far wider than the disc with a miss off its axes (PC-1 of the lot's
-    // review: σ 1e5 to 1e6 m, R 1 m), where the erfc difference of the chord probability cancels to about ε σ/R: worst
-    // 5.01e-11 ((0, 1e6) m, diag(1e12, 1e12) m², the integrand's own rounding at 9 evaluations); 8.7e-14 to 5.4e-12 for
-    // the three others; before the fix 1.3e-6 at the 200 000-evaluation budget
+    // A covariance far wider than the disc with a miss off its axes (PC-1 of the lot's review: σ 1e5 to 1e6 m, R 1 m),
+    // where the erfc difference of the chord probability cancels to about ε σ/R: worst 5.01e-11 on the three platforms
+    // ((0, 1e6) m, diag(1e12, 1e12) m², the integrand's own rounding at 9 evaluations); 8.2e-14 to 5.4e-12 for the
+    // three others (8.74e-14, 8.23e-14 and 9.10e-14 for (1e5, 3e5) m on Linux x64, Windows x64 and macOS arm64); before
+    // the fix 1.3e-6 at the 200 000-evaluation budget
     private const double CancellationPcBound = 1.1e-10;
 
-    // PROVISIONAL (Linux x64, 2026-11-09): fdlibm's erf and erfc, relative, at 22 points of its branches: worst 1.85e-16
+    // Fdlibm's erf and erfc, relative, at 22 points of its branches: worst 1.85e-16, the same on the three platforms
     private const double ErrorFunctionBound = 3.7e-16;
 
     // The exact Pc of IO's CARA checks, tools/collision_probability (rows "cara"): Omitron case 01 and Alfano case 03 of
@@ -58,13 +59,14 @@ public partial class ConjunctionAssessmentTests
     private const double OmitronCase01ExactPc = 2.706023527355529e-05;
     private const double AlfanoCase03ExactPc = 0.1003509475910938;
 
-    // PROVISIONAL (Linux x64, 2026-11-09): the internal integral on Omitron 01, Alfano 03 and Frisbee's table 1 against
-    // their exact Pc: worst 2.63e-15 (Omitron 01; before #611, 1.1e-6, hidden by the published values' 1e-5 and 3 %)
+    // The internal integral on Omitron 01, Alfano 03 and Frisbee's table 1 against their exact Pc: worst 2.63e-15, the
+    // same on the three platforms (Omitron 01; Alfano 03 1.38e-16 on Windows x64, 0 elsewhere; before #611, 1.1e-6,
+    // hidden by the published values' 1e-5 and 3 %)
     private const double CaraDirectPcBound = 5.3e-15;
 
-    // PROVISIONAL (Linux x64, 2026-11-09): the same through Analyze and AnalyzeAll on straight-line trajectories: worst
-    // 2.20e-7 (Omitron 01, whose states are not at the linear TCA: the covariance is held in RTN over the refined TCA's
-    // offset); Alfano 03 4.8e-11
+    // The same through Analyze and AnalyzeAll on straight-line trajectories: worst 2.20e-7, the same on the three
+    // platforms (Omitron 01, whose states are not at the linear TCA: the covariance is held in RTN over the refined
+    // TCA's offset); Alfano 03 4.8e-11
     private const double CaraEntryPointPcBound = 4.4e-7;
 
     private static readonly Lazy<JsonDocument> CollisionProbabilityReference =

@@ -224,8 +224,9 @@ public class PropagationFrameOrientationCacheTests
     private const double UnalignedLength = 3610.0;
 
     // The SLERP of the grid against CSPICE sxform, 98 epochs evenly spaced over each window besides the chosen ones:
-    // worst 3.43e-10 rad (a window starting 59.999 s after the coverage start), angular velocity 1.12e-17 rad/s (Linux
-    // x64, 2026-11-09); bounds twice the worst, PROVISIONAL (Linux x64) until the CI of the three platforms
+    // worst 3.43e-10 rad (a window starting 59.999 s after the coverage start), angular velocity 1.117e-17 rad/s
+    // (1.116e-17 on Linux x64); bounds twice the worst over Linux x64, Windows x64 and macOS arm64 (CI of #622 at
+    // 7f5e6dfb, 2026-11-10), rounded up to two digits
     private const double AngleBound = 6.9e-10;
     private const double AngularVelocityBound = 2.3e-17;
 
@@ -260,8 +261,9 @@ public class PropagationFrameOrientationCacheTests
 
         _output.WriteLine($"MEASURE KR-1 cache end {endFromCoverageEnd} s, {length} s: worst {worstAngle:E3} rad, {worstAngularVelocity:E3} rad/s");
 
-        // At the window end, the orientation read there: 0 rad measured, bounded by twice the resolution of the angle
-        // (1.1e-16 rad), PROVISIONAL (Linux x64)
+        // At the window end, the orientation read there: 0 rad measured (Linux x64, 2026-11-09), bounded by twice the
+        // resolution of the angle (1.1e-16 rad), a floor rather than a measurement; passed on Linux x64, Windows x64
+        // and macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10), which print no figure
         var atEnd = cache.GetOrientation(end);
         var spiceAtEnd = SpiceAPI.Instance.TransformFrame(end, earth.Frame, Frames.Frame.ICRF);
         Assert.True(RotationAngle(spiceAtEnd.Rotation, atEnd.Rotation) < 2.3e-16);

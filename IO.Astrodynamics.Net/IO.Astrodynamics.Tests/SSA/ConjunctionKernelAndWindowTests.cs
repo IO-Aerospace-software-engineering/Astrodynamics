@@ -368,9 +368,9 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         double velocityError = (relative.RelativeVelocityRtn - velocity).Magnitude();
         _output.WriteLine($"RTN about the {observer}: position {positionError:E3} m, velocity {velocityError:E3} m/s");
 
-        // PROVISIONAL (Linux x64 only, until the CI of the three platforms): twice the worst measured over both observers,
-        // 2.8e-14 m and 9.1e-13 m/s: IO reads the same spkezr_c states (before #620, about the Earth: 316.6 m and
-        // 7557.5 m/s off, the RTN of the orbit about the SSB)
+        // Twice the worst over both observers and over Linux x64, Windows x64 and macOS arm64 (CI of #622 at 7f5e6dfb,
+        // 2026-11-10), 2.842e-14 m and 9.095e-13 m/s, the same on the three: IO reads the same spkezr_c states (before
+        // #620, about the Earth: 316.6 m and 7557.5 m/s off, the RTN of the orbit about the SSB)
         Assert.True(positionError <= 5.7e-14, $"position {positionError:E3} m");
         Assert.True(velocityError <= 1.9e-12, $"velocity {velocityError:E3} m/s");
     }
@@ -501,8 +501,9 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         _worstTcaError = System.Math.Max(_worstTcaError, System.Math.Abs(tcaError));
         _worstMissError = System.Math.Max(_worstMissError, System.Math.Abs(missError));
 
-        // PROVISIONAL (Linux x64 only, until the CI of the three platforms): twice the worst measured, 2e-7 s (two ticks
-        // of the epochs) and 1.13e-8 m, the propagation against its SPK (degree-7 interpolation of the 60 s outputs).
+        // Twice the worst over Linux x64, Windows x64 and macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10; the same on
+        // the three), 2e-7 s (two ticks of the epochs) and 1.129e-8 m, the propagation against its SPK (degree-7
+        // interpolation of the 60 s outputs).
         // Measured again in round 3 of the lot-6 review over every window here, those of 1 and 3 µs and of 1 to 3 ticks
         // about the minima included: 1.129e-8 m, the TCA t0 + 4638.5363740 s of a window starting two ticks before the
         // minimum; against the second reviewer's spiceypy distance at the minimum, over its 341 windows, 1.143e-8 m (its
@@ -522,10 +523,11 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
 
     private CrossingEncounterCase Crossing(string steps) => steps == "60 s" ? _case : _defaultStepCase;
 
-    // The bound of the miss distance against the SPK: #621's at 60 s steps (1.129e-8 m measured again here); at the default
-    // steps, PROVISIONAL (Linux x64 only, until the CI of the three platforms): twice the worst measured, 2.74e-7 m, on the
-    // whole window as on every window of S1: the states of RK7(8) at 1e-9 inside a step of 234 s against the degree-7
-    // interpolation of their 60 s outputs, whatever the window (the TCA keeps #621's 4e-7 s, 2e-7 s measured)
+    // The bound of the miss distance against the SPK: #621's at 60 s steps (1.129e-8 m measured again here); at the
+    // default steps, twice the worst over Linux x64, Windows x64 and macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10;
+    // the same on the three), 2.740e-7 m, on the whole window as on every window of S1: the states of RK7(8) at 1e-9
+    // inside a step of 234 s against the degree-7 interpolation of their 60 s outputs, whatever the window (the TCA
+    // keeps #621's 4e-7 s, 2e-7 s measured)
     private double MissBound(CrossingEncounterCase crossing) => crossing == _case ? 2.3e-8 : DefaultStepMissBound;
 
     private const double DefaultStepMissBound = 5.5e-7;
@@ -696,22 +698,25 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
 
     // ---- Round 4 of the lot-6 review: a maximum of the distance is no close approach ----
 
-    // PROVISIONAL (Linux x64 only, until the CI of the three platforms): the bounds of the TCA and of the miss distance of
-    // the slow passes against CSPICE on their SPKs, twice the worst measured over every minimum of each propagation,
-    // rounded up to two digits. Measured in round 6 of the lot-6 review by
+    // The bounds of the TCA and of the miss distance of the slow passes against CSPICE on their SPKs, twice the worst
+    // over every minimum of each propagation, over Linux x64, Windows x64 and macOS arm64 (CI of #622 at 7f5e6dfb,
+    // 2026-11-10) and the reviewers' probes (Linux x64), rounded up to two digits. Measured by
     // Dense_EveryMinimumOfThePass_IsListedWithinTheBounds (1222 to 1527 windows, those that end or start at the zero
-    // included, a listed minimum within the TCA bound of an end measured against CSPICE's minimum just outside the window,
-    // against CSPICE's zero below the tick) and by the reviewers' probes on the same propagations (their 634 to 1571
-    // windows, gfdist_c refined by bisection of spkezr_c's range rate to 1e-10 s), the larger of the two:
+    // included, a listed minimum within the TCA bound of an end measured against CSPICE's minimum just outside the
+    // window, against CSPICE's zero below the tick) and by the reviewers' probes on the same propagations (their 634 to
+    // 1571 windows, gfdist_c refined by bisection of spkezr_c's range rate to 1e-10 s), the larger of the two. This
+    // test gives the same figures on the three platforms but CWE (TCA 3.068e-6 s on Linux x64, 3.205e-6 s on Windows
+    // x64, 3.282e-6 s on macOS arm64; miss 9.269e-8, 9.212e-8 and 9.206e-8 m) and CWF (miss 9.685e-7 m on Linux x64 and
+    // macOS arm64, 9.684e-7 m on Windows x64); the worst over the three:
     //                                         this test                 the probe                 bound
     //   SLOW (60 s steps)                     1.272e-7 s  3.136e-10 m   1.480e-7 s  2.294e-10 m   3.0e-7 s  6.3e-10 m
     //   SLOWD (default steps)                 2.907e-5 s  1.147e-6 m    2.903e-5 s  1.147e-6 m    5.9e-5 s  2.3e-6 m
     //   SLOWX (default and 30 s steps, 1 m)   5.047e-2 s  2.074e-7 m    5.041e-2 s  2.072e-7 m    1.1e-1 s  4.2e-7 m
     //   CWD (two minima per orbit, default)   6.498e-7 s  4.732e-8 m    7.190e-7 s  4.807e-8 m    1.5e-6 s  9.7e-8 m
     //   CW60 (60 s steps)                     7.096e-7 s  4.702e-8 m    7.110e-7 s  4.753e-8 m    1.5e-6 s  9.6e-8 m
-    //   CWE (y0 = 1500 m, default)            3.068e-6 s  9.269e-8 m    3.025e-6 s  9.163e-8 m    6.2e-6 s  1.9e-7 m
+    //   CWE (y0 = 1500 m, default)            3.282e-6 s  9.269e-8 m    3.025e-6 s  9.163e-8 m    6.6e-6 s  1.9e-7 m
     //   CWE60 (y0 = 1500 m, 60 s steps)       1.233e-6 s  4.893e-8 m    1.270e-6 s  4.905e-8 m    2.6e-6 s  9.9e-8 m
-    //   CWF (the fold, default)               2.094e-3 s  9.684e-7 m    2.083e-3 s  9.684e-7 m    4.2e-3 s  2.0e-6 m
+    //   CWF (the fold, default)               2.094e-3 s  9.685e-7 m    2.083e-3 s  9.684e-7 m    4.2e-3 s  2.0e-6 m
     //   CWF60 (the fold, 60 s steps)          3.338e-5 s  3.864e-8 m    3.232e-5 s  3.848e-8 m    6.7e-5 s  7.8e-8 m
     // The TCA error is the difference of the range rate of the states and of their SPK (the degree-7 interpolation of
     // their 60 s outputs) over its slope, 2.6e-4 m/s per second at a drift of 100 m and 2.6e-6 at 1 m; at the fold, 2.9e-7 m
@@ -725,7 +730,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         MixedStepSlowPassEncounterCase => (1.1e-1, 4.2e-7),
         CwPassDefaultStepCase => (1.5e-6, 9.7e-8),
         CwPass60StepCase => (1.5e-6, 9.6e-8),
-        CwPass1500DefaultStepCase => (6.2e-6, 1.9e-7),
+        CwPass1500DefaultStepCase => (6.6e-6, 1.9e-7),
         CwPass1500Step60Case => (2.6e-6, 9.9e-8),
         CwPassFoldDefaultStepCase => (4.2e-3, 2.0e-6),
         CwPassFoldStep60Case => (6.7e-5, 7.8e-8),
