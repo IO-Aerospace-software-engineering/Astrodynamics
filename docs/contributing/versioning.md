@@ -265,7 +265,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   - **Measured** (Linux x64, 2026-11-10): against mpmath at 50 digits on the library's TDB − TT series
     (`tools/conformance/terrestrial_seconds_reference.py`), 100 TDB labels in the 6 h after 2026-01-20T06:00:00 UTC and
     100 after 2026-10-20T06:00:00 UTC (−1.61 ms) within 3.64e-12 s, one ulp near 2.16e4 s, asserted at 7.3e-12 s
-    (PROVISIONAL, Linux x64, until the three-platform CI); the former expression was off there by +0.0004 to +0.992 tick
+    (twice the worst, the same on Linux x64, Windows x64 and macOS arm64, CI of #632 at 01d14e2c); the former expression
+    was off there by +0.0004 to +0.992 tick
     and by −0.995 to −0.006 tick. CSPICE (`unitim`) confirms the TT of both UTC epochs to the tick. The runner on the
     suite's main (33286d2), 201 of 201: 20 `tca_s` and 17 `elapsed_s` deltas move, each value by −0.05 to −0.98 tick,
     and no other key (4727 unchanged; the events' epochs are UTC, exact either way); no status changes.

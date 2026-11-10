@@ -26,8 +26,8 @@ public class TerrestrialSecondsTests
 {
     private const string ReferencePath = "Data/TerrestrialSecondsReference/terrestrial_seconds_reference.json";
 
-    // PROVISIONAL (Linux x64): twice the worst measured over the 200 labels, 3.638e-12 s (2026-11-10), until the
-    // three-platform CI. The resolution of a double near 2.16e4 s is 3.6e-12 s; one tick is 1e-7 s
+    // Twice the worst measured over the 200 labels, 3.638e-12 s, the same on Linux x64, Windows x64 and macOS arm64
+    // (CI of #632 at 01d14e2c, 2026-11-10). The resolution of a double near 2.16e4 s is 3.6e-12 s; one tick is 1e-7 s
     private const double Bound = 7.3e-12;
 
     private readonly ITestOutputHelper _output;
