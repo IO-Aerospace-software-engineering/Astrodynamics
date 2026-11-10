@@ -181,13 +181,19 @@ A major version, because it breaks the API: members deprecated for removal in 11
   and the dense `Analyze` returned instead of the closer end, 53.06 m against 111.79 m (main returned that end); on a
   pass with two minima per orbit at the default steps, a seed 1.6 s past its minimum was listed unrefined, 1.35e-4 m off. A seed the secants
   cannot bracket is now searched on its own range rate, from the seed toward the side it points to (1 ms, then distances
-  doubling up to the neighbouring candidate), then between the candidates, moved twice at most, then by following the
-  range rate over the candidates to the nearest change from negative to positive, or dropped: every TCA of the dense path
-  is such a zero, one per pair of consecutive candidates. Against `gfdist_c` on 634 to 715 windows of each slow pass
-  and of each pass with two minima per orbit, the local minima, each once, and no maximum, within 2e-7 s and 2.8e-10 m at
-  60 s steps, 2.9e-5 s and 1.15e-6 m at the default steps, 5.1e-2 s and 2.1e-7 m with a drift of 1 m at mixed steps (the
-  states and their SPK placing the zero apart by the difference of their range rates over its slope, 2.6e-6 m/s per
-  second).
+  doubling up to 1.024 s and 1 s apart after that, up to the neighbouring candidate: an interval of the other sign 1 s
+  wide or more holds a read, where distances doubling all the way stepped over a shallow minimum next to a fold of the
+  range rate, 2.9e-7 m deep and positive over 1.6 s, lost in 204 to 229 windows of each propagation of the review's fifth
+  probe while main listed its seed unrefined, 4.85 s off at 60 s steps), then between the candidates, moved twice at
+  most, then by following the range rate over the candidates to the nearest change from negative to positive, or
+  dropped: every TCA of the dense path is such a zero, one per pair of consecutive candidates. Against `gfdist_c` on
+  1222 to 1527 windows of each slow pass, of each pass with two minima per orbit and of each pass with the fold (windows
+  ending or starting at the zero included, the reference refined below the tick), the local minima, each once, and no
+  maximum, within 1.5e-7 s and 3.14e-10 m at 60 s steps, 2.9e-5 s and 1.15e-6 m at the default steps, 5.05e-2 s and
+  2.1e-7 m with a drift of 1 m at mixed steps (the states and their SPK placing the zero apart by the difference of
+  their range rates over its slope, 2.6e-6 m/s per second), 7.1e-7 s to 3.1e-6 s and 4.8e-8 to 9.3e-8 m with two minima
+  per orbit, and at the fold 3.4e-5 s and 3.9e-8 m at 60 s steps, 2.1e-3 s and 9.7e-7 m at the default steps (its
+  states and their SPK 2.1 ms apart).
 - **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the
   ephemeris read and `TransformFrame`). `ReadEphemerisAtGivenEpochProxy` left its state unwritten when `spkezr_c`
   failed (r = (4.9e-321, 6.95e-307, 6.95e-307) m past de440s on Linux, whatever the stack held elsewhere), and

@@ -189,6 +189,62 @@ public class ConjunctionRefinementTests
         AssertWithinATick(202.5, Assert.Single(tca));
     }
 
+    [Theory]
+    [InlineData(204.85, 206.47)] // the fold of round 5 of the lot-6 review: 4.85 s from the seed, positive over 1.62 s
+    [InlineData(204.10, 205.10)] // one second wide, starting just past the read at 4.096 s
+    [InlineData(250.0241, 251.0241)] // one second wide, deep in the reads 1 s apart
+    [InlineData(299.5, 300.5)] // nearer the neighbouring candidate than the spacing: the last read, on the candidate
+    public void ASeedClosing_ItsZeroInANarrowPositiveInterval_IsFoundForward(double zeroSeconds, double maximumSeconds)
+    {
+        // Closing at the seed (200 s) and at the candidates after it: positive only between the minimum and the maximum,
+        // then closing up to a minimum at 450 s. Reads at distances doubling from the seed (4.096 and 8.192 s, ...) stepped
+        // over the narrow interval, and the widened bracket then gave the minimum at 450 s
+        var candidates = Candidates(11);
+        var rangeRate = InsideOnly(candidates, Steps(zeroSeconds, maximumSeconds, 450.0));
+
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance);
+
+        AssertWithinATick(zeroSeconds, Assert.Single(tca));
+    }
+
+    [Fact]
+    public void ASeedReceding_ItsZeroAfterANarrowNegativeInterval_IsFoundBackward()
+    {
+        // Receding at the seed (300 s): a minimum at 150 s, a maximum at 293.53 s, the minimum at 295.15 s. Reads at
+        // 4.096 and 8.192 s before the seed both receding stepped over the 1.62 s where it closes
+        var candidates = Candidates(11);
+        var rangeRate = InsideOnly(candidates, Steps(150.0, 293.53, 295.15));
+
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[3] }, candidates, rangeRate, Tolerance);
+
+        AssertWithinATick(295.15, Assert.Single(tca));
+    }
+
+    [Fact]
+    public void TheSearchFromTheSeed_ReadsAtMostOneSecondApart_ElevenPlusOnePerSecond()
+    {
+        // Closing from the seed (200 s) to the neighbouring candidate, 100 s away, and past it: the search reads at 1 ms to
+        // 1.024 s from the seed (11 reads), then every second up to the candidate, 11 + ceil(100 - 1.024) = 110 reads, the
+        // last on the candidate, against 18 when the distances doubled all the way
+        var candidates = Candidates(11);
+        var reads = new System.Collections.Generic.SortedSet<double>();
+        var rangeRate = InsideOnly(candidates, epoch =>
+        {
+            double t = (epoch - Epoch).TotalSeconds;
+            reads.Add(t);
+            return Steps(450.0)(epoch);
+        });
+
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance);
+
+        AssertWithinATick(450.0, Assert.Single(tca));
+        var search = reads.Where(t => t > 200.0 && t <= 300.0).ToArray();
+        Assert.Equal(110, search.Length);
+        Assert.Equal(300.0, search[^1]);
+        Assert.True(search.Zip(search.Skip(1), (a, b) => b - a).Max() <= ConjunctionAssessment.SeedSearchMaximumSpacingSeconds + 1.0e-9);
+        Assert.Equal(1.0, ConjunctionAssessment.SeedSearchMaximumSpacingSeconds);
+    }
+
     [Fact]
     public void TwoSeedsReachingTwoZerosInOnePairOfCandidates_GiveOneMinimum()
     {

@@ -1148,6 +1148,14 @@ public static class ConjunctionAssessment
     private const double SecantBracketHalfWidthSeconds = 1.0e-6;
 
     /// <summary>
+    /// The largest spacing, in s, of the reads of the range rate by which <see cref="RefineOnRangeRate"/> searches the zero
+    /// of a minimum from the minimum itself: the distances from it double from 1 ms while their spacing stays below this
+    /// one (up to 1.024 s), then grow by it. An interval of the sign the search looks for at least this wide holds a read,
+    /// whatever its distance from the minimum.
+    /// </summary>
+    internal const double SeedSearchMaximumSpacingSeconds = 1.0;
+
+    /// <summary>
     /// Moves each minimum of the polynomial search to the zero of <paramref name="rangeRate"/>, from negative to
     /// positive, near it, and drops a minimum whose zero lies outside the candidates: every epoch returned is such a zero,
     /// or a window end where the range rate is exactly zero.
@@ -1182,10 +1190,13 @@ public static class ConjunctionAssessment
     /// <para>
     /// When an estimate cannot be checked, the range rate at the minimum itself says on which side its zero lies: zero
     /// there, the minimum is the zero; positive, before it; negative, after it. It is read on that side 1 ms from the
-    /// minimum, then at distances doubling up to the neighbouring candidate, until it changes sign, and the bracket of the
-    /// last two reads is bisected. This finds the zero between a minimum and its neighbour when the Hermite has placed the
-    /// minimum past the zero of the states and the range rate has the same sign at the candidates on both sides (a maximum
-    /// of the distance lying between the zero and the candidate).
+    /// minimum, then at distances doubling up to 1.024 s and growing by <see cref="SeedSearchMaximumSpacingSeconds"/> (1 s)
+    /// after that, up to the neighbouring candidate, until it changes sign, and the bracket of the last two reads is
+    /// bisected. This finds the zero between a minimum and its neighbour when the Hermite has placed the minimum past the
+    /// zero of the states and the range rate has the same sign at the candidates on both sides (a maximum of the distance
+    /// lying between the zero and the candidate), and a zero whose range rate keeps the sign of the minimum's except over
+    /// an interval at least 1 s wide (a shallow minimum next to a fold of the range rate): the resolution of this search
+    /// is 1 s, an interval narrower than that between two reads may be stepped over.
     /// </para>
     /// <para>
     /// When the range rate keeps its sign up to that candidate, the bisection starts from the candidates next to the
@@ -1470,9 +1481,14 @@ public static class ConjunctionAssessment
 
     // The zero of the range rate between a seed and its neighbouring candidate on the side its own range rate points to
     // (RefineOnRangeRate): before it when the range rate is positive there, after it when negative. The range rate is read
-    // at 1 ms from the seed, then at distances doubling up to that candidate, until it changes sign, and the bracket of
-    // the last two reads is bisected; a zero exactly at the window end, closing before it, is the end itself (#624). False
-    // when the range rate keeps its sign up to the neighbouring candidate, or the seed has no neighbour on that side
+    // at 1 ms from the seed, then at distances doubling up to 1.024 s, then every SeedSearchMaximumSpacingSeconds (1 s) up
+    // to that candidate, until it changes sign, and the bracket of the last two reads is bisected; a zero exactly at the
+    // window end, closing before it, is the end itself (#624). The spacing is capped: reads doubling all the way stride
+    // over an interval of the other sign narrower than their spacing (a shallow minimum next to a fold of the range rate,
+    // positive over 1.6 s between reads 4.096 s apart, lost in round 5 of the lot-6 review). It costs at most
+    // 11 + ceil(D - 1.024) reads for a neighbouring candidate D seconds away, against 1 + ceil(log2(D / 1 ms)) before, and
+    // the bisection of a bracket at most 1 s wide. False when the range rate keeps its sign up to the neighbouring
+    // candidate, or the seed has no neighbour on that side
     private static bool TryZeroFromTheSeed(Func<Time, double> rangeRate, IReadOnlyList<Time> candidates, int index,
         double seedRate, double toleranceSeconds, out Time zero)
     {
@@ -1487,7 +1503,9 @@ public static class ConjunctionAssessment
         var seed = candidates[index];
         var bound = candidates[neighbour];
         var previous = seed;
-        for (double distance = SecantBaseSeconds; ; distance *= 2.0)
+        for (double distance = SecantBaseSeconds;
+             ;
+             distance += System.Math.Min(distance, SeedSearchMaximumSpacingSeconds))
         {
             var offset = TimeSpan.FromSeconds(distance);
             var read = backward
