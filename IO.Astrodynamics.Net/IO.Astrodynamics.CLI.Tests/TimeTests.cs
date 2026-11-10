@@ -35,7 +35,9 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, false, true, false);
             var res = sb.ToString();
 
-            Assert.Equal($"631152069.1839218{Environment.NewLine}", res);
+            // TDB − TT rounded to the nearest tick (#625): tools/seconds_to_ticks/time_conversion_reference.py, an exact
+            // replica of the conversions (.1839218 when they truncated)
+            Assert.Equal($"631152069.1839217{Environment.NewLine}", res);
         }
     }
 
@@ -51,7 +53,7 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T12:00:00Z" }, true, false, false, false, false, true);
             var res = sb.ToString();
 
-            Assert.Equal($"2020-01-01T12:01:09.1839218 TDB{Environment.NewLine}", res);
+            Assert.Equal($"2020-01-01T12:01:09.1839217 TDB{Environment.NewLine}", res);
         }
     }
 
@@ -67,7 +69,8 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = "631152069.1839273 TDB" }, false, true, false, false, false, true);
             var res = sb.ToString();
 
-            Assert.Equal($"2020-01-01T12:00:00.0000054Z{Environment.NewLine}", res);
+            // The nearest tick of the seconds and of TDB − TT (#625; .0000054 when they truncated)
+            Assert.Equal($"2020-01-01T12:00:00.0000056Z{Environment.NewLine}", res);
         }
     }
 
@@ -99,7 +102,8 @@ public class TimeTests
             command.TimeConverter(new EpochParameters { Epoch = "2020-01-01T13:00:00.0000001+01:00" }, true, false, false, false, true, false);
             var res = sb.ToString();
 
-            Assert.Equal($"631152069.1839219{Environment.NewLine}", res);
+            // The nearest tick of TDB − TT (#625; .1839219 when it was truncated)
+            Assert.Equal($"631152069.1839218{Environment.NewLine}", res);
         }
     }
 

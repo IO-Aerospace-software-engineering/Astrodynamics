@@ -277,6 +277,59 @@ A major version, because it breaks the API: members deprecated for removal in 11
   41 to 155 failed builds in each of 5 runs, none without the test). It now calls a `MemoryDataProvider` directly, as
   the other tests of the provider do, with the same two assertions; no other test changes the global provider.
   The library is unchanged.
+- **A number of seconds became a `Time` truncated toward zero** ([#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625)).
+  `Time.Create` (both overloads), `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the
+  TDB − TT offset of the TDB conversions went through `DateTime.AddSeconds` or `TimeSpan.FromSeconds`, which truncate
+  to the 100 ns tick: up to a tick early after J2000 and late before it. Every epoch that comes back from SPICE as
+  seconds goes through `Time.Create`, so an ET from 2017 to 2028 came back an ulp earlier for 40.6 % of the ET, and a
+  kernel-backed spacecraft built at the first instant of its SPK (`spkcov`) read 84 ns before its coverage and threw
+  SPKINSUFFDATA (since #454). Each now takes the nearest tick of the exact value of its double, ties to even, through
+  one internal helper, `Time.SecondsToTicks`: the whole units apart, the fraction times the ticks per unit rounded
+  once, and its residual, exact by a fused multiply-add, deciding the side of a half tick (rounding the product alone,
+  as the issue's sketch did, misses the nearest tick of about 5 doubles in a million near a half tick). The TDB − TT
+  offset rounds too, the open choice of the issue: measured on the conformance runner, rounding it moves 798 more delta
+  entries than rounding the other conversions alone (1915 against 1117 of 4764), most of them smaller (the attitudes,
+  748 smaller against 308 larger, mean ratio 0.93; the propagators 0.94; the time conversions 0.91), so that every
+  conversion of seconds follows one rule. `PropagationTimeArgument.Tt.SecondsBetween` and the runner's
+  `TerrestrialSeconds` count from tick-exact labels and the series in double, so they do not depend on it.
+  - **Measured** (Linux x64, 2026-11-10): the helper, `Create`, `AddSeconds`, `AddMilliseconds` and `AddMicroseconds`
+    give the exact nearest tick (Python `Fraction`, `tools/seconds_to_ticks`) of 1744 values: the issue's (±0.12345678999 s,
+    1234568 ticks; the start of the LRO SPK, 7558704691834258 ticks), exact ties, near ties, 8 doubles where rounding the
+    product misses, 1500 ET from 1968 to 2031 (857 of them not their truncation); 200 000 ET from 2017-01-05 to
+    2028-07-17 come back exactly; `new Spacecraft(-85, "LRO", Time.CreateTDB(a))` at the start of its SPK builds and its
+    state is spiceypy's `spkezr(-85, a, J2000, NONE, 399)` to the bit, at both ends of the coverage.
+  - **What moves:** every epoch built from seconds, by a tick at most, and what is computed there. The window epochs of
+    CSPICE's searches (the same searches in spiceypy, `tools/seconds_to_ticks/spice_windows_reference.py`, whose
+    truncated mode gives the former strings), the labels of the stages and outputs of a propagation, so the three
+    propagation goldens are recaptured (the step control takes other steps from the first one, the same counts and the
+    same maneuver epoch; 1.37 mm, 0.31 mm and 0.82 mm at most), and the TDB round trip of a time, which now moves a tick
+    at 1 of the 935 041 instants of #510 (2 when it truncated). The runner on the suite's main (33286d2), 201 of 201:
+    1915 of the 4764 delta entries move, no status changes; the times by a tick (2.0e-7 s at most for the burns,
+    5.0e-7 s for the events of `orbital_events`), the eclipse and station transitions and culminations within the
+    microsecond of their root finders (up to 2.3e-6 s), the states at the level of a tick of motion and of the
+    integration error of other steps (the propagators' final states by 8.2e-6 km at most, the maneuvers' by 4.6e-6 km).
+    Three bounds of the tests measured again (Linux x64, to be confirmed on the three platforms): the grazing fields of
+    the managed field-of-view search (801 ELLIPSOID LT on its kernels 1.20e-3 s, an ill-conditioned edge that the same
+    search moves by 9.6e-4 s between the propagated states and their kernels; 802 LT 6.7e-6 s, LT+S 8.84e-5 s), the miss
+    of a conjunction read through stored states (3.12e-9 m, a few ulps of a LEO position), and a Velocity-Verlet output a
+    tick before an impulse, which reads the earlier arc, whose closing state carries the label of the impulse, the
+    nearest tick of its instant: half a tick of motion at most (3.96e-4 m at 8.6 km/s).
+- **`TimeToRadius` returned an apsis for a radius the orbit never reaches, and failed with NaN or an overflow far out** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627)).
+  It clamped cos ν to [−1, 1], so a radius below the periapsis gave the periapsis and a radius above the apoapsis of an
+  ellipse the apoapsis, both silently, and an infinite radius on a hyperbola, the asymptote, gave a NaN mean anomaly
+  that `TimeSpan.FromSeconds` refused (`ArgumentException`); `TimeToSphereOfInfluence` passed it the +Infinity sphere
+  of influence of the Sun, of a body built from custom parameters and of a planet the kernels do not chain to its
+  barycenter (#454). `TimeToRadius` now checks the radius first: not finite, below the periapsis p / (1 + e) or above
+  the apoapsis p / (1 − e) of an ellipse, it throws `ArgumentOutOfRangeException` naming the radius and the reachable
+  range (a radius within 1e-12 relative of an apsis is that apsis: its other expressions differ from p / (1 ± e) by 6e-16
+  to 7e-16); a radius reached beyond the last epoch a `Time` holds throws an `ArgumentOutOfRangeException` that says so.
+  `TimeToSphereOfInfluence` throws `InvalidOperationException` ("<body> has no finite sphere of influence; an orbit
+  about it never leaves it") for an infinite sphere of influence. The recommendation of the issue: throw, no `Try`
+  method.
+  - **Measured** (Linux x64, 2026-11-10) against the closed form of the hyperbola at 50 digits
+    (`tools/time_to_radius`, mpmath 1.4.1 and spiceypy 8.3.0): about the Sun (a = −1.5e11 m, e = 2) 1e12 m within
+    6.3e-8 s and 1e15 m within 1.04e-2 s, where the true anomaly is within 2e-4 rad of the asymptote; the Moon's sphere
+    of influence, one ulp from spiceypy's, reached within 4.0e-8 s.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
@@ -1157,6 +1210,16 @@ A major version, because it breaks the API: members deprecated for removal in 11
   output changes for every spacecraft whose CK is not the identity. An epoch outside the CK throws
   `InvalidOperationException` with the SPICE error, where it printed the identity
   ([#542](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/542)).
+- **A number of seconds becomes the nearest tick of a `Time`** ([#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625), Fixed above):
+  `Time.Create`, `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB conversions
+  give the nearest tick, ties to even, where they truncated, so an epoch built from seconds can be a tick later after
+  J2000 and earlier before it; a span that is not finite, or whose ticks do not fit in a `long`, throws
+  `ArgumentOutOfRangeException` (`AddSeconds(double.NaN)` returned the time unchanged). `AddDays`, `AddHours` and
+  `AddMinutes` are unchanged.
+- **`TimeToRadius` and `TimeToSphereOfInfluence` throw where the orbit never reaches the radius** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627), Fixed above):
+  a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached beyond the last
+  epoch of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite
+  sphere of influence throws `InvalidOperationException`.
 
 **Removed**
 

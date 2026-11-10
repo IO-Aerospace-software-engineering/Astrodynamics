@@ -216,17 +216,25 @@ lot 2; `conformance-report.json`):
 |------|----------|----------|-----------|---------------|
 | `propagator_24h_leo400_grav10_drag_006` | 4.1 mm | 0.0067 mm/s | 1 m, 1 mm/s | 0.0067 |
 | `propagator_6h_leo250_grav10_drag_007` | 20.2 mm | 0.023 mm/s | 0.25 m, 0.25 mm/s | 0.092 |
-| `propagator_24h_leo500_grav10_drag_008` | 8.3 mm | 0.0077 mm/s | 1 m, 1 mm/s | 0.0083 |
-| `propagator_24h_leo200x800_grav10_drag_009` | 32.0 mm | 0.036 mm/s | 1 m, 1 mm/s | 0.036 |
-| `propagator_72h_geo_grav10_srp_010` | 0.13 mm | 1.0e-5 mm/s | 3 m, 3 mm/s | 4.5e-5 |
-| `propagator_24h_sso700_grav10_srp_011` | 2.2 mm | 0.0024 mm/s | 1 m, 1 mm/s | 0.0024 |
-| `propagator_48h_meo_grav10_srp_012` | 0.62 mm | 1.1e-4 mm/s | 2 m, 2 mm/s | 3.1e-4 |
-| `propagator_72h_molniya_grav10_013` | 0.35 mm | 1.9e-4 mm/s | 3 m, 3 mm/s | 1.2e-4 |
-| `propagator_72h_gto_grav10_014` | 0.72 mm | 1.3e-4 mm/s | 3 m, 3 mm/s | 2.4e-4 |
-| `propagator_72h_gto_grav10_drag_srp_015` | 12.2 mm | 0.0017 mm/s | 3 m, 3 mm/s | 0.0041 |
+| `propagator_24h_leo500_grav10_drag_008` | 8.0 mm | 0.0074 mm/s | 1 m, 1 mm/s | 0.0080 |
+| `propagator_24h_leo200x800_grav10_drag_009` | 36.1 mm | 0.040 mm/s | 1 m, 1 mm/s | 0.040 |
+| `propagator_72h_geo_grav10_srp_010` | 0.13 mm | 1.0e-5 mm/s | 3 m, 3 mm/s | 4.3e-5 |
+| `propagator_24h_sso700_grav10_srp_011` | 1.8 mm | 0.0020 mm/s | 1 m, 1 mm/s | 0.0020 |
+| `propagator_48h_meo_grav10_srp_012` | 0.63 mm | 1.1e-4 mm/s | 2 m, 2 mm/s | 3.2e-4 |
+| `propagator_72h_molniya_grav10_013` | 0.29 mm | 1.5e-4 mm/s | 3 m, 3 mm/s | 9.7e-5 |
+| `propagator_72h_gto_grav10_014` | 0.54 mm | 9.4e-5 mm/s | 3 m, 3 mm/s | 1.8e-4 |
+| `propagator_72h_gto_grav10_drag_srp_015` | 3.9 mm | 5.4e-4 mm/s | 3 m, 3 mm/s | 0.0013 |
 | `propagator_24h_llo_grav20_016` | 0.44 mm | 4.8e-4 mm/s | 1 m, 1 mm/s | 4.8e-4 |
 | `propagator_24h_lmo_grav20_017` | 3.6 mm | 0.0030 mm/s | 1 m, 1 mm/s | 0.0036 |
 | `propagator_30d_helio_nbody_018` | 4.6 mm | 8.8e-6 mm/s | 30 m, 30 mm/s | 1.5e-4 |
+
+Measured again with [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Release,
+Linux, 2026-11-10, the suite's main 33286d2): the labels of the stages take the nearest tick of their seconds, so the
+forces of the Earth cases are evaluated up to a tick from where they were, and the step control takes other steps from
+there; the rows of 008 to 015 moved, by the integration error of other steps (before it, 008 8.3 mm, 0.0077 mm/s and
+0.0083; 009 32.0 mm, 0.036 mm/s and 0.036; 010 4.5e-5; 011 2.2 mm, 0.0024 mm/s and 0.0024; 012 0.62 mm and 3.1e-4; 013
+0.35 mm, 1.9e-4 mm/s and 1.2e-4; 014 0.72 mm, 1.3e-4 mm/s and 2.4e-4; 015 12.2 mm, 0.0017 mm/s and 0.0041), the
+others to the figures printed; the Moon, Mars and the Sun integrate over TDB seconds from labels a tick off too.
 
 About the Earth the library integrates over the TT seconds of the window since #501, as the suite does (its `spec.md`
 §12.1) and GMAT (its native A1 rate), the forces at TT₀ + t
@@ -281,32 +289,39 @@ Release, Linux, 2026-11-05, the runner on the suite at 9dca9c7: the worst ratio 
 case over its keys. The burn epochs count exact TT seconds since
 [#630](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/630) (Release, Linux, 2026-11-10, the
 suite's main 33286d2): the runner had counted them through `ToTDT`, which truncates TDB − TT to the tick, so each moved
-by 0.05 to 0.96 tick, and the `maneuver_epoch_s` row with them (8.4e-7 s, 8.4e-4 before).
+by 0.05 to 0.96 tick, and the `maneuver_epoch_s` row with them (8.4e-7 s, 8.4e-4 before). Measured again with
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Release, Linux, 2026-11-10, the
+suite's main 33286d2), whose labels take the nearest tick of their seconds: the burn epochs move by a tick at most, and
+the states with the stage labels of the propagation and the steps the step control then takes. Before it,
+`maneuver_epoch_s` 8.0e-7 s (8.0e-4), `maneuver_position_km` 6.0 mm (0.0060), `maneuver_delta_v_km_s` 1.1e-3 mm/s
+(0.0011), `maneuver_mass_kg` 3.2e-7 kg (3.2e-4, 008), `propagator_position_km` 31.4 mm and `propagator_velocity_km_s`
+0.034 mm/s (0.031 and 0.034), and per case 0.0018 (002), 0.0040 (003), 0.0022 (004), 0.0016 (005), 0.0027 (006, 007),
+0.034 (008), 0.0034 (009), 0.0026 (011) and 0.011 (012).
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
-| `maneuver_epoch_s` | 8.0e-7 s | 8.0e-4 | `maneuver_24h_leo_pm_apsidal_008`, `burns[align].elapsed_s` |
-| `maneuver_position_km` | 6.0 mm | 0.0060 | 008, `burns[align].position_km` |
-| `maneuver_delta_v_km_s` | 1.1e-3 mm/s | 0.0011 | `maneuver_24h_leo_pm_gto_012`, `burns[raise].delta_v_km_s` |
-| `maneuver_mass_kg` | 3.2e-7 kg | 3.2e-4 | 008, `burns[align].mass_after_kg` |
-| `propagator_position_km` | 31.4 mm | 0.031 | 008, `final_x_km` |
-| `propagator_velocity_km_s` | 0.034 mm/s | 0.034 | 008, `final_vx_km_s` |
+| `maneuver_epoch_s` | 9.0e-7 s | 9.0e-4 | `maneuver_24h_leo_pm_apsidal_008`, `burns[align].elapsed_s` |
+| `maneuver_position_km` | 6.8 mm | 0.0068 | 008, `burns[align].position_km` |
+| `maneuver_delta_v_km_s` | 8.0e-4 mm/s | 8.0e-4 | `maneuver_24h_leo_pm_gto_012`, `burns[raise].delta_v_km_s` |
+| `maneuver_mass_kg` | 2.4e-8 kg | 2.4e-5 | `maneuver_24h_leo_pm_combined_010`, `burns[combined].mass_after_kg` |
+| `propagator_position_km` | 35.9 mm | 0.036 | 008, `final_x_km` |
+| `propagator_velocity_km_s` | 0.040 mm/s | 0.040 | 008, `final_vx_km_s` |
 | `lambert_velocity_km_s` | 4.2e-3 mm/s | 0.0042 | `lambert_10800s_0rev_002`, `v2_km_s` |
 
 | Case | Largest ratio | Output |
 |------|---------------|--------|
 | `maneuver_24h_leo_pm_apoapsis_001` | 0.0038 | `burns[raise].position_km` |
-| `maneuver_24h_leo_grav10_apoapsis_002` | 0.0018 | `burns[raise].position_km` |
-| `maneuver_24h_leo_pm_hohmann_003` | 0.0040 | `burns[raise_periapsis].position_km` |
-| `maneuver_24h_leo_grav10_hohmann_004` | 0.0022 | `burns[raise_periapsis].position_km` |
-| `maneuver_24h_leo_pm_lower_005` | 0.0016 | `burns[lower].position_km` |
-| `maneuver_24h_leo_pm_plane_006` | 0.0027 | `burns[plane].position_km` |
-| `maneuver_24h_leo_grav10_plane_007` | 0.0027 | `burns[plane].position_km` |
-| `maneuver_24h_leo_pm_apsidal_008` | 0.034 | `final_vx_km_s` |
-| `maneuver_24h_leo_pm_phasing_009` | 0.0034 | `burns[restore].position_km` |
+| `maneuver_24h_leo_grav10_apoapsis_002` | 0.0011 | `burns[raise].position_km` |
+| `maneuver_24h_leo_pm_hohmann_003` | 0.0046 | `burns[raise_periapsis].position_km` |
+| `maneuver_24h_leo_grav10_hohmann_004` | 0.0011 | `burns[raise_apoapsis].position_km` |
+| `maneuver_24h_leo_pm_lower_005` | 0.0023 | `burns[lower].position_km` |
+| `maneuver_24h_leo_pm_plane_006` | 0.0034 | `burns[plane].position_km` |
+| `maneuver_24h_leo_grav10_plane_007` | 0.0034 | `burns[plane].position_km` |
+| `maneuver_24h_leo_pm_apsidal_008` | 0.040 | `final_vx_km_s` |
+| `maneuver_24h_leo_pm_phasing_009` | 0.0027 | `burns[restore].position_km` |
 | `maneuver_24h_leo_pm_combined_010` | 0.0024 | `burns[combined].position_km` |
-| `maneuver_24h_leo_grav10_chain_011` | 0.0026 | `burns[raise_periapsis].position_km` |
-| `maneuver_24h_leo_pm_gto_012` | 0.011 | `final_x_km` |
+| `maneuver_24h_leo_grav10_chain_011` | 0.0018 | `burns[raise_periapsis].position_km` |
+| `maneuver_24h_leo_pm_gto_012` | 0.0080 | `final_x_km` |
 | `lambert_3000s_0rev_001` | 3.3e-4 | `v2_km_s` |
 | `lambert_10800s_0rev_002` | 0.0042 | `v2_km_s` |
 | `lambert_10800s_1rev_lower_003` | 4.6e-6 | `v2_km_s` |
@@ -315,8 +330,8 @@ by 0.05 to 0.96 tick, and the `maneuver_epoch_s` row with them (8.4e-7 s, 8.4e-4
 | `lambert_20000s_2rev_lower_006` | 3.6e-4 | `v2_km_s` |
 | `lambert_20000s_2rev_higher_007` | 0.0025 | `v2_km_s` |
 
-The burn epochs agree within 8.4e-7 s, GMAT's epoch quantum (an A1 MJD double, 3.1e-7 s apart), and the burn
-positions within 6 mm, the distance travelled in that time. 008's final state, the worst of the lot, is of the size of
+The burn epochs agree within 9.0e-7 s, GMAT's epoch quantum (an A1 MJD double, 3.1e-7 s apart), and the burn
+positions within 7 mm, the distance travelled in that time. 008's final state, the worst of the lot, is of the size of
 the golden's own spread (0.046 of the tolerance, its corrector variants, conformance-tests#31). The field cases (002,
 004, 007, 011) agree as closely as the point-mass ones: the goldens orient the Earth by the suite's ITRF93 (GMAT's
 `EarthS`), as the library does. The CI logs of `Lot3CaseTests` give the ratios on Windows and macOS arm64.
@@ -359,7 +374,14 @@ The runner reads them through the library's window searches, whose edges are the
 Every key takes its operational tolerance (no case has an override): 10 ms for a pass or eclipse edge, 100 ms for a
 duration and a culmination, 1e-4 deg for an angle, 1 m for a range or an apsis radius, 0.1 mm/s for a range rate, 1 ms
 for an orbital event, 1e-5 rad for an attitude. Release, Linux, 2026-11-06, the runner on the suite at 4cd11f9: the
-worst ratio of each key over the cases, and of each case over its keys.
+worst ratio of each key over the cases, and of each case over its keys. Measured again with
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Release, Linux, 2026-11-10, the
+suite's main 33286d2), whose labels take the nearest tick of their seconds: the rows of the range, the range rate and the
+attitude angle, and the cases of the stations 001 to 005, of the events 001, 002 and 004 and of the attitudes moved.
+Before it, `tracking_range_km` 1.2 mm (0.0012, 002 `samples[8]`), `tracking_range_rate_km_s` 0.014 mm/s (0.137),
+`attitude_angle_rad` 4.2e-10 rad (4.2e-5, 004 `attitude_quaternions[715]`), and per case 0.072 (stations 001 and 005,
+`samples[3].range_rate_km_s`), 0.137 (002, 003), 0.101 (004), 0.0015 (events 001, `events.descending_node[12]`), 0.0012
+(002), 8.5e-4 (004), 1.5e-5 (attitudes 001, 002 and 005, sample 118), 8.2e-6 (003) and 4.2e-5 (004).
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
@@ -367,21 +389,21 @@ worst ratio of each key over the cases, and of each case over its keys.
 | `station_duration_s` | 0.21 ms | 0.0021 | 006, `passes[0].duration_s` |
 | `station_culmination_time_s` | 0.55 ms | 0.0055 | 006, `passes[0].culmination` |
 | `station_angle_deg` | 4.4e-7 deg | 0.0044 | 006, `passes[4].max_elevation_deg` |
-| `tracking_range_km` | 1.2 mm | 0.0012 | `ground_station_24h_leo_mask10_lt_002`, `samples[8].range_km` |
-| `tracking_range_rate_km_s` | 0.014 mm/s | 0.137 | `ground_station_24h_leo_mask10_lts_003`, `samples[10].range_rate_km_s` |
+| `tracking_range_km` | 1.1 mm | 0.0011 | `ground_station_24h_leo_mask10_xlt_004`, `samples[6].range_km` |
+| `tracking_range_rate_km_s` | 6.9e-3 mm/s | 0.069 | `ground_station_24h_leo_mask10_lts_003`, `samples[10].range_rate_km_s` |
 | `eclipse_time_s` | 1.07 ms | 0.107 | `eclipse_8d_geo_season_earth_004`, `events[1].stop` |
 | `eclipse_duration_s` | 1.49 ms | 0.015 | 004, `events[2].duration_s` |
 | `event_epoch_s` | 1.2e-5 s | 0.012 | `orbital_events_24h_leo_grav10_altitude_003`, `events.altitude_up[12].elapsed_s` |
 | `event_radius_km` | 0.021 mm | 2.1e-5 | `orbital_events_48h_heo_grav10_apsides_nodes_004`, `events.apoapsis[3].radius_km` |
-| `attitude_angle_rad` | 4.2e-10 rad | 4.2e-5 | `attitude_12h_molniya_lvlh_004`, `attitude_quaternions[715]` |
+| `attitude_angle_rad` | 4.0e-10 rad | 4.0e-5 | `attitude_12h_molniya_lvlh_004`, `attitude_quaternions[717]` |
 
 | Case | Largest ratio | Output |
 |------|---------------|--------|
-| `ground_station_24h_leo_mask10_geo_001` | 0.072 | `samples[3].range_rate_km_s` |
-| `ground_station_24h_leo_mask10_lt_002` | 0.137 | `samples[10].range_rate_km_s` |
-| `ground_station_24h_leo_mask10_lts_003` | 0.137 | `samples[10].range_rate_km_s` |
-| `ground_station_24h_leo_mask10_xlt_004` | 0.101 | `samples[10].range_rate_km_s` |
-| `ground_station_24h_leo_mask0_geo_005` | 0.072 | `samples[3].range_rate_km_s` |
+| `ground_station_24h_leo_mask10_geo_001` | 0.050 | `passes[5].set` |
+| `ground_station_24h_leo_mask10_lt_002` | 0.069 | `samples[10].range_rate_km_s` |
+| `ground_station_24h_leo_mask10_lts_003` | 0.069 | `samples[10].range_rate_km_s` |
+| `ground_station_24h_leo_mask10_xlt_004` | 0.057 | `samples[11].range_rate_km_s` |
+| `ground_station_24h_leo_mask0_geo_005` | 0.044 | `passes[1].rise` |
 | `ground_station_12h_lro_mask0_moon_lt_006` | 0.055 | `passes[0].set` |
 | `eclipse_simple_001` | 0.046 | `umbra_exit` |
 | `eclipse_72h_geo_earth_moon_002` | 0.048 | `events[8].stop` |
@@ -389,24 +411,24 @@ worst ratio of each key over the cases, and of each case over its keys.
 | `eclipse_8d_geo_season_earth_004` | 0.107 | `events[1].stop` |
 | `eclipse_1h_leo_annular_moon_005` | 0.036 | `events[1].stop` |
 | `eclipse_1h_leo_total_moon_006` | 0.048 | `events[0].stop` |
-| `orbital_events_24h_leo_pm_apsides_nodes_001` | 0.0015 | `events.descending_node[12].elapsed_s` |
-| `orbital_events_24h_leo_grav10_apsides_nodes_002` | 0.0012 | `events.periapsis[8].elapsed_s` |
+| `orbital_events_24h_leo_pm_apsides_nodes_001` | 0.0018 | `events.periapsis[12].elapsed_s` |
+| `orbital_events_24h_leo_grav10_apsides_nodes_002` | 0.0013 | `events.periapsis[8].elapsed_s` |
 | `orbital_events_24h_leo_grav10_altitude_003` | 0.012 | `events.altitude_up[12].elapsed_s` |
-| `orbital_events_48h_heo_grav10_apsides_nodes_004` | 8.5e-4 | `events.descending_node[2].elapsed_s` |
+| `orbital_events_48h_heo_grav10_apsides_nodes_004` | 6.5e-4 | `events.descending_node[2].elapsed_s` |
 | `orbital_events_48h_heo_grav10_altitude_005` | 7.8e-4 | `events.altitude_up[1].elapsed_s` |
-| `attitude_2h_leo_nadir_normal_001` | 1.5e-5 | `attitude_quaternions[118]` |
-| `attitude_2h_leo_nadir_velocity_002` | 1.5e-5 | `attitude_quaternions[118]` |
-| `attitude_2h_leo_lvlh_003` | 8.2e-6 | `attitude_quaternions[113]` |
-| `attitude_12h_molniya_lvlh_004` | 4.2e-5 | `attitude_quaternions[715]` |
-| `attitude_2h_leo_nadir_axis_005` | 1.5e-5 | `pointing_directions[118]` |
+| `attitude_2h_leo_nadir_normal_001` | 1.0e-5 | `attitude_quaternions[113]` |
+| `attitude_2h_leo_nadir_velocity_002` | 1.0e-5 | `attitude_quaternions[113]` |
+| `attitude_2h_leo_lvlh_003` | 1.1e-5 | `attitude_quaternions[117]` |
+| `attitude_12h_molniya_lvlh_004` | 4.0e-5 | `attitude_quaternions[717]` |
+| `attitude_2h_leo_nadir_axis_005` | 1.0e-5 | `pointing_directions[113]` |
 
 The pass and eclipse edges are within GMAT's millisecond print (±0.5 ms) but on two cases: the passes of LRO (006,
 0.55 ms), where GMAT converges the light time that the model iterates once (0.88 ms of the suite's E_2nd there), and the
 grazing umbra of the GEO season (004, 1.07 ms), whose chord moves by about 12 ms per metre out of the shadow plane,
-GMAT's own out-of-plane drift of 0.15 m (the suite's `spec.md` §12.2, G2). The orbital events agree to 1.5e-6 s on the apsides and nodes, GMAT's epoch
+GMAT's own out-of-plane drift of 0.15 m (the suite's `spec.md` §12.2, G2). The orbital events agree to 1.8e-6 s on the apsides and nodes (1.5e-6 s before #625), GMAT's epoch
 quantum, and to 1.2e-5 s on the LEO altitude crossings, GMAT's own altitude (1 mm from CSPICE `recgeo`). The range rate
-with light time, the largest ratio of the lot (0.014 mm/s), is the library's light-time rate since #491 against
-`azlcpo`'s. The CI logs of `Lot4CaseTests` give the ratios on Windows and macOS arm64.
+with light time (6.9e-3 mm/s, the largest ratio of the lot, 0.137 and 0.014 mm/s, before #625) is the library's
+light-time rate since #491 against `azlcpo`'s. The CI logs of `Lot4CaseTests` give the ratios on Windows and macOS arm64.
 
 ### Lot 5: TLEs, SGP4 and TEME
 
@@ -526,7 +548,9 @@ locally): every case passes; the worst ratio of each key over the cases, and of 
 the figure before it in brackets. The `tca_s` of propagated objects counts exact TT seconds since
 [#630](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/630) (same run): the runner had counted
 it through `ToTDT`, which truncates TDB − TT to the tick, 0.06 to 0.98 tick late on these dates; this moved the rows
-of 001, 002, 003 and 008 (0.0058, 0.0037, 0.0037 and 0.0064 at `minima[3].tca_s` before it).
+of 001, 002, 003 and 008 (0.0058, 0.0037, 0.0037 and 0.0064 at `minima[3].tca_s` before it). With
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (same suite, 2026-11-10) the
+labels take the nearest tick of their seconds: of these figures only 005 moved, the figure before it in brackets.
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
@@ -551,7 +575,7 @@ of 001, 002, 003 and 008 (0.0058, 0.0037, 0.0037 and 0.0064 at `minima[3].tca_s`
 | `conjunction_6h_leo500_grav10_crossing_002` | 0.0019 (0.0025) | `tca_s` (`relative_position_rtn_km`) |
 | `conjunction_6h_leo500_pm_crossing_003` | 0.0019 (0.0024) | `tca_s` (`relative_position_rtn_km`) |
 | `conjunction_6h_geo_grav10_slow_004` | 1.9e-5 | `objects[1].correlation_rtn` |
-| `conjunction_6h_leo700_grav10_flat_005` | 6.4e-5 | `relative_velocity_rtn_km_s` |
+| `conjunction_6h_leo700_grav10_flat_005` | 9.6e-5 (6.4e-5) | `relative_velocity_rtn_km_s` |
 | `conjunction_6h_leo400_grav10_drag_crossing_006` | 0.30 | `objects[0].correlation_rtn` |
 | `conjunction_12h_leo500_spk_crossing_007` | 0.027 (0.50) | `tca_s` (`relative_velocity_rtn_km_s`) |
 | `conjunction_12h_leo500_grav10_allminima_008` | 0.0064 (0.0063) | `minima[14].tca_s` |

@@ -285,8 +285,8 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
     {
         // Arrange: an epoch in the middle of a step, where each evaluation costs a shortened step, the forces and the
         // variational equations included. An epoch reaches the end of a step only at the end of the propagation, since
-        // Time.AddSeconds truncates to the tick (AtTheEndOfAWindowThatStopsOneTickShort_…); this test used to take the
-        // start of step 3, which the tick put inside step 2 (#429)
+        // Time.AddSeconds puts it on a tick (the nearest since #625, the one before when it truncated); this test used to
+        // take the start of step 3, which the tick put inside step 2 (#429)
         var solution = Propagate(WithCovariance(Leo), Start.AddHours(1.0),
             new VariationalOptions(ForceParameters.DragCoefficient, new RtnProcessNoise(1e-12, 1e-11, 1e-12),
                 PropagateCovariance: true, ConsiderParameters: new ConsiderParameters(0.1)), true);
@@ -489,11 +489,12 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
     }
 
     [Fact]
-    public void AtTheEndOfATdbWindowThatStopsOneTickShort_AboutTheMoon_TheEvaluationsReadTheValuesAtTheEnd()
+    public void AtTheEndOfATdbWindow_AboutTheMoon_TheEvaluationsReadTheValuesAtTheEnd()
     {
-        // Arrange: about any other body the time argument is TDB (#501), and a window of 21 600.3 s stops one tick
-        // (100 ns) before its end, since Time.AddSeconds truncates to the tick; the evaluations used to throw there (H3
-        // review of lots A to C). A 100 km lunar orbit, the Earth and the Sun as third bodies
+        // Arrange: about any other body the time argument is TDB (#501). A window of 21 600.3 s stopped one tick (100 ns)
+        // before its end while Time.AddSeconds truncated to the tick, and the evaluations threw there (H3 review of lots
+        // A to C); since it takes the nearest tick (#625) the last step ends at the window end, and the tick of
+        // allowance past it reads the values at the end. A 100 km lunar orbit, the Earth and the Sun as third bodies
         var moon = _cases.Moon;
         var orbit = new KeplerianElements(1837400.0, 0.001, 0.5, 0.2, 0.3, 0.0, moon, Start, Frames.Frame.ICRF)
             .ToStateVector();
@@ -503,14 +504,13 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
             TimeSpan.FromSeconds(600.0), new VariationalOptions(ForceParameters.None,
                 new RtnProcessNoise(1e-12, 1e-11, 1e-12), PropagateCovariance: true));
         var last = solution.Segments[^1];
-        var lastStep = window.EndDate.AddSeconds(-1e-7);
+        var tickPast = window.EndDate.AddTicks(1);
 
-        // Act and assert: the window end is past the last step, by one tick, and reads its values bit for bit; beyond that
+        // Act and assert: the last step ends at the window end; a tick past it reads its values bit for bit; beyond that
         // tick, the epoch is outside the propagation
         Assert.Same(PropagationTimeArgument.Tdb, solution.TimeArgument);
-        Assert.True((window.EndDate - last.BaseEpoch).TotalSeconds > last.Duration);
-        Assert.Equal(last.Duration, (lastStep - last.BaseEpoch).TotalSeconds);
-        AssertTheSameValuesAt(solution, window.EndDate, lastStep, 6);
+        Assert.Equal(last.Duration, (window.EndDate - last.BaseEpoch).TotalSeconds);
+        AssertTheSameValuesAt(solution, tickPast, window.EndDate, 6);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             solution.EvaluateCovariance(window.EndDate.AddSeconds(1e-6), new double[36]));
     }
