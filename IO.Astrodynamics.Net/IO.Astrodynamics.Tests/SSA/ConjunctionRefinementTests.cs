@@ -148,7 +148,8 @@ public class ConjunctionRefinementTests
     [Fact]
     public void AFollowedZeroAtTheWindowEnd_ClosingBefore_IsTheEndItself()
     {
-        // Closing up to the window end, zero exactly there: the end, not the tick before it (#624)
+        // Closing up to the window end, zero exactly there: the end, not the tick before it (before #624, the bisection
+        // returned the lower tick of its last bracket)
         var candidates = Candidates(11);
         var end = candidates[^1];
         var rangeRate = InsideOnly(candidates, epoch => epoch == end ? 0.0 : -1.0);
@@ -416,8 +417,8 @@ public class ConjunctionRefinementTests
     [InlineData(2)] // an interior minimum of the polynomials
     public void AZeroRangeRateAtTheWindowEnd_ClosingBefore_IsTheEndItself(int minimumIndex)
     {
-        // g = 0 exactly at the end and negative before: the zero is the end, not the tick before it (the bisection on
-        // [left, end] ends on [end − 1 tick, end] and returns its lower bound, #624)
+        // g = 0 exactly at the end and negative before: the zero is the end, not the tick before it (before #624, the
+        // bisection on [left, end] ended on [end − 1 tick, end] and returned its lower bound)
         var candidates = Candidates(4);
         Func<TimeSystem.Time, double> rangeRate = epoch => (epoch - Epoch).TotalSeconds - 300.0;
 
@@ -437,7 +438,8 @@ public class ConjunctionRefinementTests
 
     /// <summary>
     /// Range rates far from linear near their zero, so that a secant estimate, or the bracket checked around it, fails:
-    /// the refinement falls back to the candidates and still ends on the epoch of the bisection.
+    /// the refinement falls back to the candidates and still ends on the epoch of the bisection, the tick nearer the zero
+    /// (the three shapes are odd about it, so the smaller |g| of the last bracket is the nearer tick).
     /// </summary>
     [Theory]
     [InlineData("cube root", 213.73456789)]
@@ -464,9 +466,99 @@ public class ConjunctionRefinementTests
         // Act
         var tca = Refine(candidates, 2, rangeRate);
 
-        // Assert
-        Assert.Equal(Refine(candidates, 2, Step(zeroSeconds)), tca);
-        AssertWithinATick(zeroSeconds, tca);
+        // Assert: the epoch of the bisection between the candidates on the same values near the zero, the nearest tick
+        Assert.Equal(Refine(candidates, 2, FlatAwayFromTheZero(rangeRate, zeroSeconds)), tca);
+        Assert.Equal(NearestTick(zeroSeconds), tca);
+    }
+
+    // The range rate within ten microseconds of a zero at zeroSeconds, and its sign alone (±1) farther: no secant from a
+    // minimum is defined, so the refinement bisects, and its last bracket, one tick wide, holds the values of rangeRate
+    private static Func<TimeSystem.Time, double> FlatAwayFromTheZero(Func<TimeSystem.Time, double> rangeRate,
+        double zeroSeconds) =>
+        epoch => System.Math.Abs((epoch - Epoch).TotalSeconds - zeroSeconds) < 1.0e-5
+            ? rangeRate(epoch)
+            : System.Math.Sign(rangeRate(epoch));
+
+    // The tick nearest to zeroSeconds from the epoch, for a zero that is not half-way between two ticks
+    private static TimeSystem.Time NearestTick(double zeroSeconds) =>
+        Epoch.AddTicks((long)System.Math.Round(zeroSeconds * TimeSpan.TicksPerSecond));
+
+    // ---- The tick returned (#624): the bisection ends on a bracket one tick wide and returns the tick nearer the zero of
+    // the chord of the range rate, the end where |g| is smaller, the lower tick on a tie. Before, it always returned the
+    // lower tick: up to one tick before the zero, a zero exactly on a tick one tick early ----
+
+    // The slope of a linear range rate at LEO relative speeds, (7.6 km/s)², per tick: 5.8 m²/s per 100 ns
+    private const double SlopePerTick = 5.8;
+
+    // A linear range rate whose zero lies fraction of a tick after the tick zeroTicks from the epoch, evaluated in exact
+    // tick arithmetic: g = s ((n − k) − f) at the tick n, so the zero is known exactly and |g| at the two ticks around it
+    // compares as their distances to it
+    private static Func<TimeSystem.Time, double> LinearInTicks(long zeroTicks, double fraction) =>
+        epoch => SlopePerTick * ((double)((epoch - Epoch).Ticks - zeroTicks) - fraction);
+
+    // The nearest tick to the zero, the lower one on a tie (f = 0.5 exactly)
+    private static TimeSystem.Time NearestTick(long zeroTicks, double fraction) =>
+        Epoch.AddTicks(zeroTicks + (fraction > 0.5 ? 1 : 0));
+
+    public static TheoryData<string, double> RoutesAndFractions()
+    {
+        var data = new TheoryData<string, double>();
+        foreach (var route in new[] { "secants", "seed forward", "seed backward", "widened", "followed" })
+        {
+            foreach (double fraction in new[] { 0.0, 1.0e-6, 0.25, 0.5 - 1.0e-6, 0.5, 0.5 + 1.0e-6, 0.75, 1.0 - 1.0e-6 })
+            {
+                data.Add(route, fraction);
+            }
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(RoutesAndFractions))]
+    public void ALinearRangeRate_IsRefinedToTheNearestTick_OnEveryRoute(string route, double fraction)
+    {
+        // Arrange: candidates every 100 s; the zero f ticks after 250 s, or after 450 s for the followed route. Linear,
+        // the secants refine it; flat (±1) farther than ten microseconds from the zero, no secant is defined and the
+        // range rate is searched from the seed (forward from 200 s, backward from 300 s), between the widened candidates
+        // (seed at 100 s, the zero past its right neighbour) or followed over the candidates (seed at 100 s, the zero
+        // three candidates away)
+        var candidates = Candidates(7);
+        long zeroTicks = (route == "followed" ? 450L : 250L) * TimeSpan.TicksPerSecond;
+        var linear = LinearInTicks(zeroTicks, fraction);
+        double zeroSeconds = (zeroTicks + fraction) / TimeSpan.TicksPerSecond;
+        var rangeRate = route == "secants" ? linear : FlatAwayFromTheZero(linear, zeroSeconds);
+        int minimumIndex = route switch
+        {
+            "secants" or "seed forward" => 2,
+            "seed backward" => 3,
+            _ => 1
+        };
+
+        // Act
+        var tca = RefineInside(candidates, minimumIndex, rangeRate);
+
+        // Assert: the nearest tick, half a tick from the zero at most; a zero exactly on a tick is that tick
+        Assert.Equal(NearestTick(zeroTicks, fraction), Assert.Single(tca));
+    }
+
+    [Theory]
+    [InlineData(0.8, 3)] // the zero 0.2 tick before the end: the end, the nearer tick
+    [InlineData(0.6, 3)] // 0.4 tick before it: the end
+    [InlineData(0.6, 2)] // the same from an interior minimum of the polynomials
+    [InlineData(0.4, 3)] // 0.6 tick before it: the tick before the end
+    [InlineData(0.2, 2)]
+    public void AZeroInTheLastTickOfTheCandidates_IsTheNearerTick_TheEndIncluded(double fraction, int minimumIndex)
+    {
+        // The zero f ticks after the tick before the last candidate (300 s): RefineOnRangeRate returns the nearer tick,
+        // the last candidate itself when the zero lies within half a tick of it. The range rate is positive there, so the
+        // dense search takes it as the tick before the end (FindDenseCloseApproaches, ConjunctionAssessmentTests)
+        var candidates = Candidates(4);
+        long zeroTicks = 300L * TimeSpan.TicksPerSecond - 1;
+
+        var tca = RefineInside(candidates, minimumIndex, LinearInTicks(zeroTicks, fraction));
+
+        Assert.Equal(NearestTick(zeroTicks, fraction), Assert.Single(tca));
     }
 
     [Theory]
@@ -475,21 +567,24 @@ public class ConjunctionRefinementTests
     [InlineData(213.73456789)]
     public void TheSecantsAndTheBisectionBetweenTheCandidates_EndOnTheSameEpoch(double zeroSeconds)
     {
-        // Arrange: two range rates with the same sign on every epoch; the first one is refined by the secants, the
-        // second one, flat, by the bisection between the candidates
+        // Arrange: two range rates with the same values within ten microseconds of the zero and the same sign on every
+        // epoch; the first one is refined by the secants, the second one, flat farther from the zero, by the bisection
+        // between the candidates. Since #624 the epoch returned depends on the values of the last bracket, one tick wide,
+        // not only on their signs (a range rate flat up to the zero, ±1, gave the same epoch before)
         var candidates = Candidates(6);
         var rectilinear = Rectilinear(zeroSeconds);
-        var step = Step(zeroSeconds);
-        bool sameSigns = Enumerable.Range(-50, 101)
+        var flat = FlatAwayFromTheZero(rectilinear, zeroSeconds);
+        bool sameValues = Enumerable.Range(-50, 101)
             .Select(i => Epoch.AddSeconds(zeroSeconds).AddTicks(i))
-            .All(epoch => (rectilinear(epoch) < 0.0) == (step(epoch) < 0.0));
-        Assert.True(sameSigns);
+            .All(epoch => rectilinear(epoch) == flat(epoch));
+        Assert.True(sameValues);
 
         // Act
         var bySecants = Refine(candidates, 1, rectilinear);
-        var byBisection = Refine(candidates, 1, step);
+        var byBisection = Refine(candidates, 1, flat);
 
-        // Assert
+        // Assert: the same epoch, the tick nearest the zero
         Assert.Equal(byBisection, bySecants);
+        Assert.Equal(NearestTick(zeroSeconds), bySecants);
     }
 }

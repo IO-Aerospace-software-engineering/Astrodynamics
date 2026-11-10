@@ -518,40 +518,42 @@ of the CDMs.
   (`ProjectedCovariance` is after the clip; no case compares one: 006's minor sigma is left out by the suite).
 
 Release, Linux, 2026-11-09, the runner on the suite at 970a3bf (the native library of the lot's #454 change built
-locally): every case passes; the worst ratio of each key over the cases, and of each case over its keys.
+locally): every case passes; the worst ratio of each key over the cases, and of each case over its keys. The rows that
+[#624](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/624) moved are given at the tick nearer the TCA (Release, Linux, 2026-11-10, the suite's main 33286d2, 201 of 201),
+the figure before it in brackets.
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
-| `conjunction_tca_s` | 1.3e-7 s | 0.13 | `conjunction_12h_leo500_spk_crossing_007`, `tca_s` |
-| `conjunction_position_km` | 0.79 mm | 0.50 | 007, `relative_position_rtn_km` (T 1.6 mm) |
-| `conjunction_velocity_km_s` | 5.0e-7 m/s | 0.50 | 007, `relative_velocity_rtn_km_s` |
+| `conjunction_tca_s` | 2.7e-8 s | 0.027 (0.13) | `conjunction_12h_leo500_spk_crossing_007`, `tca_s` |
+| `conjunction_position_km` | 0.72 mm | 0.0029 (0.50) | 006, `relative_position_rtn_km` (007 0.79 mm of 1.6 mm before, 1.4e-13 km after) |
+| `conjunction_velocity_km_s` | 7.3e-7 m/s | 0.0029 (0.50) | 006, `relative_velocity_rtn_km_s` (007 5.0e-7 m/s before) |
 | `covariance_sigma_rel` | 1.1e-6 | 0.11 | `conjunction_6h_leo400_grav10_drag_crossing_006`, `objects[1].sigma_rtn` |
 | `covariance_correlation` | 3.0e-6 | 0.30 | 006, `objects[0].correlation_rtn` |
 | `collision_probability_rel` | 1.1e-6 | 0.0011 | 006, `collision_probability` |
-| `encounter_plane_sigma_rel` | 7.5e-12 | 7.5e-6 | `collision_probability_synthetic_mid_002`, minor sigma |
+| `encounter_plane_sigma_rel` | 7.3e-16 | 7.3e-10 (7.5e-6) | `collision_probability_synthetic_frisbee_max_007`, minor sigma (002 before) |
 | `cdm_value_rel` | 2.1e-16 | 2.1e-4 | `cdm_decode_synthetic_optional_003`, `objects[1].covariance_consider` |
-| `cdm_covariance_corr` | 1.7e-14 | 0.017 | `cdm_export_synthetic_leo_007`, `objects[0].covariance_rtn` |
-| `cdm_epoch_s` | 1e-7 s | 0.10 | cdm 007, `tca` |
-| `cdm_position_km` | 0.66 mm | 0.66 | cdm 007, `relative_position_rtn_km` |
-| `cdm_velocity_km_s` | 4.3e-7 m/s | 0.43 | cdm 007, `relative_velocity_rtn_km_s` |
+| `cdm_covariance_corr` | 1.9e-14 | 0.019 (0.017) | `cdm_export_synthetic_leo_007`, `objects[0].covariance_rtn` |
+| `cdm_epoch_s` | 0 s | 0 (0.10) | cdm 007, `tca` |
+| `cdm_position_km` | 4.3e-10 m | 4.3e-7 (0.66) | cdm 007, `relative_position_rtn_km` |
+| `cdm_velocity_km_s` | 1.3e-12 m/s | 1.3e-6 (0.43) | cdm 007, `relative_velocity_rtn_km_s` |
 | `stm_block` | 1.9e-10 | 0.0019 | `stm_24h_leo_grav10_002`, every block |
 | `propagator_position_km` | 1.0 mm | 0.0010 | stm 002, `final_x_km` |
 
 | Case | Largest ratio | Output |
 |------|---------------|--------|
 | `conjunction_6h_leo700_grav10_headon_001` | 0.0058 | `tca_s` |
-| `conjunction_6h_leo500_grav10_crossing_002` | 0.0025 | `relative_position_rtn_km` |
-| `conjunction_6h_leo500_pm_crossing_003` | 0.0024 | `relative_position_rtn_km` |
+| `conjunction_6h_leo500_grav10_crossing_002` | 0.0037 (0.0025) | `tca_s` (`relative_position_rtn_km`) |
+| `conjunction_6h_leo500_pm_crossing_003` | 0.0037 (0.0024) | `tca_s` (`relative_position_rtn_km`) |
 | `conjunction_6h_geo_grav10_slow_004` | 1.9e-5 | `objects[1].correlation_rtn` |
 | `conjunction_6h_leo700_grav10_flat_005` | 6.4e-5 | `relative_velocity_rtn_km_s` |
 | `conjunction_6h_leo400_grav10_drag_crossing_006` | 0.30 | `objects[0].correlation_rtn` |
-| `conjunction_12h_leo500_spk_crossing_007` | 0.50 | `relative_velocity_rtn_km_s` |
-| `conjunction_12h_leo500_grav10_allminima_008` | 0.0063 | `minima[14].tca_s` |
+| `conjunction_12h_leo500_spk_crossing_007` | 0.027 (0.50) | `tca_s` (`relative_velocity_rtn_km_s`) |
+| `conjunction_12h_leo500_grav10_allminima_008` | 0.0064 (0.0063) | `minima[3].tca_s` (`minima[14].tca_s`) |
 | `collision_probability_synthetic_high_001` | 1.6e-8 | `collision_probability` |
-| `collision_probability_synthetic_mid_002` | 7.5e-6 | `encounter_plane_sigma_minor_km` |
+| `collision_probability_synthetic_mid_002` | 4.9e-9 (7.5e-6) | `collision_probability` (`encounter_plane_sigma_minor_km`) |
 | `collision_probability_synthetic_low_003` | 7.4e-8 | `collision_probability` |
-| `collision_probability_synthetic_floor_004` | 1.5e-6 | `encounter_plane_sigma_minor_km` |
-| `collision_probability_synthetic_large_hbr_005` | 1.8e-6 | `encounter_plane_sigma_major_km` |
+| `collision_probability_synthetic_floor_004` | 3.0e-9 (1.5e-6) | `collision_probability` (`encounter_plane_sigma_minor_km`) |
+| `collision_probability_synthetic_large_hbr_005` | 4.0e-8 (1.8e-6) | `collision_probability` (`encounter_plane_sigma_major_km`) |
 | `collision_probability_synthetic_npd_006` | 2.3e-10 | `encounter_plane_sigma_major_km` |
 | `collision_probability_synthetic_frisbee_max_007` | 7.3e-10 | `encounter_plane_sigma_minor_km` |
 | `cdm_decode_synthetic_obligatory_001` | 2.1e-4 | `objects[1].covariance_rtn` |
@@ -560,16 +562,20 @@ locally): every case passes; the worst ratio of each key over the cases, and of 
 | `cdm_to_inertial_synthetic_cara_form_004` | 3.7e-4 | `objects[1].covariance_inertial` |
 | `cdm_decode_synthetic_day_of_year_005` | 2.1e-4 | `objects[1].covariance_rtn` |
 | `cdm_decode_synthetic_default_units_006` | 2.1e-4 | `objects[1].covariance_rtn` |
-| `cdm_export_synthetic_leo_007` | 0.66 | `relative_position_rtn_km` |
+| `cdm_export_synthetic_leo_007` | 0.019 (0.66) | `objects[0].covariance_rtn` (`relative_position_rtn_km`) |
 | `stm_24h_leo_twobody_001` | 8.0e-5 | Φ, every block (8.0e-12) |
 | `stm_24h_leo_grav10_002` | 0.0019 | Φ, every block |
 | `stm_24h_geo_grav70_003` | 6.0e-4 | `final_y_km` (Φ 1.7e-11, 1.7e-4) |
 
-The kernel objects of 007 sit at half their tolerance: the delta is the TCA's, 1.3e-7 s, about one ulp of CSPICE's ET
-there (1.19e-7 s), which moves the RTN state by ν_N × Δt; one ulp is the floor the suite added to 007's position
-tolerance (7.9e-7 km of 1.6e-6 km). The written CDM of cdm 007 sits at 0.66 of 1 mm: the library's TCA is one 100 ns
-tick of `Time` before the exact one (12:01:09.1853859 TDB for 12:01:09.1853860), and the written states, at that TCA,
-move by v × 1e-7 s (0.61 mm for object 1, 6.1 km/s along y); the CDM is consistent with itself. 006 carries the
+Before [#624](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/624), the kernel objects of 007 sat at half their tolerance: the delta was the TCA's, 1.3e-7 s, about one ulp
+of CSPICE's ET there (1.19e-7 s), which moved the RTN state by ν_N × Δt; one ulp is the floor the suite added to 007's
+position tolerance (7.9e-7 km of 1.6e-6 km). The written CDM of cdm 007 sat at 0.66 of 1 mm: the library's TCA was one
+100 ns tick of `Time` before the exact one (12:01:09.1853859 TDB for 12:01:09.1853860), and the written states, at that
+TCA, moved by v × 1e-7 s (0.61 mm for object 1, 6.1 km/s along y). The refinement now returns the tick nearer the zero
+of the range rate: 007's TCA is 2.7e-8 s from CSPICE's (0.027 of its 1 µs) and its RTN position within 1.4e-13 km, and
+cdm 007 writes the exact TCA (12:00:00.0000000Z), its states equal to the golden's, its worst ratio a covariance
+element, 0.019. The encounter-plane sigmas of `collision_probability` 002, 004 and 005, computed at the refined TCA,
+moved from 1.5e-6 to 7.5e-6 of their tolerance to below 1e-9. 006 carries the
 drag's partials at 0.30 of the correlation tolerance, inside GMAT's own spread (lot 6 design, §7.2). The CI logs of `Lot6CaseTests` give the ratios on Windows and macOS arm64.
 
 ### Measured Errors
@@ -1119,9 +1125,9 @@ Beyond the conformance cases, the test suite compares the library with published
 | Reference | What is compared | Tests | Tolerance |
 |-----------|------------------|-------|-----------|
 | NASA CARA `Pc2D_Foster_UnitTest`, Omitron case 01 | Foster 2D collision probability, against the exact Pc of its inputs (`tools/collision_probability`, mpmath at 50 digits; the published value is 2.9e-6 from it) | `CollisionProbability_NasaOmitronReferenceCase_MatchesPublishedValue`; through the entry points, `Analyze_NasaOmitronReferenceCase_MatchesPublishedValueThroughEntryPoint` and `AnalyzeAll_NasaOmitronReferenceCase_MatchesPublishedValueThroughEntryPoint` | Measured on Linux x64, Windows x64 and macOS arm64 (CI of 7f5e6dfb, 2026-11-10; the same on the three): 2.6e-15 relative, asserted at 5.3e-15; through the entry points 2.2e-7 (the covariance held in RTN over the refined TCA's offset), asserted at 4.4e-7 |
-| NASA CARA `Pc2D_Foster_UnitTest`, Alfano case 03 | Foster 2D collision probability, against the exact Pc (the published value is 2.3e-6 from it) | `CollisionProbability_NasaAlfanoCase03_MatchesPublishedValue`, `Analyze_NasaAlfanoCase03_MatchesPublishedValueThroughEntryPoint`, `AnalyzeAll_NasaAlfanoCase03_MatchesPublishedValueThroughEntryPoint` | 0 and 4.8e-11 relative, asserted at 5.3e-15 and 4.4e-7 |
+| NASA CARA `Pc2D_Foster_UnitTest`, Alfano case 03 | Foster 2D collision probability, against the exact Pc (the published value is 2.3e-6 from it) | `CollisionProbability_NasaAlfanoCase03_MatchesPublishedValue`, `Analyze_NasaAlfanoCase03_MatchesPublishedValueThroughEntryPoint`, `AnalyzeAll_NasaAlfanoCase03_MatchesPublishedValueThroughEntryPoint` | 0 and 2.7e-11 relative (4.8e-11 before [#624](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/624)), asserted at 5.3e-15 and 4.4e-7 |
 | Frisbee, maximum Pc with a single covariance | Critical covariance matrix; the Table 1 outcomes against the exact maximum Pc (published to two or three digits) | `SingleCovarianceMaximumPc_FrisbeeCriticalCovarianceMatchesPublishedMatrix`, `SingleCovarianceMaximumPc_FrisbeeTable1_MatchesPublishedApproximateOutcomes` | 1e-6 absolute on the matrix; 3.2e-16 relative on the four Table 1 cases, asserted at 5.3e-15 |
-| The exact 2D Pc of CARA's definition (`tools/collision_probability`, mpmath at 50 digits, tanh-sinh and Gauss-Legendre agreeing to 1e-30) | The seven designed `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger than the covariance, a covariance not positive definite in the encounter plane, Frisbee's maximum), internally and through `Analyze`; the 25 reproductions of #610, #611 and #612; four covariances far wider than the disc with an off-axis miss (σ 1e5 to 1e6 m, R 1 m, at 70 digits; PC-1 of the lot's review); the private erf and erfc | `ConjunctionAssessmentTests.CollisionProbability_DesignedEncounters_MatchExactPc`, `Analyze_DesignedEncounters_MatchExactPcAndFlags`, `CollisionProbability_IssueReproductions_MatchExactPc`, `CollisionProbability_CovarianceFarWiderThanTheDisc_MatchExactPc`, `CollisionProbability_PrivateErrorFunctions_MatchMpmath` | Measured on Linux x64, Windows x64 and macOS arm64 (CI of 7f5e6dfb, 2026-11-10): 2.0e-14, 9.0e-9 through `Analyze`, 7.6e-15 (7.4e-15 on macOS arm64), 5.0e-11 (the erfc difference's own noise, bounded by about ε σ/R), 1.9e-16; each asserted at twice |
+| The exact 2D Pc of CARA's definition (`tools/collision_probability`, mpmath at 50 digits, tanh-sinh and Gauss-Legendre agreeing to 1e-30) | The seven designed `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger than the covariance, a covariance not positive definite in the encounter plane, Frisbee's maximum), internally and through `Analyze`; the 25 reproductions of #610, #611 and #612; four covariances far wider than the disc with an off-axis miss (σ 1e5 to 1e6 m, R 1 m, at 70 digits; PC-1 of the lot's review); the private erf and erfc | `ConjunctionAssessmentTests.CollisionProbability_DesignedEncounters_MatchExactPc`, `Analyze_DesignedEncounters_MatchExactPcAndFlags`, `CollisionProbability_IssueReproductions_MatchExactPc`, `CollisionProbability_CovarianceFarWiderThanTheDisc_MatchExactPc`, `CollisionProbability_PrivateErrorFunctions_MatchMpmath` | Measured on Linux x64, Windows x64 and macOS arm64 (CI of 7f5e6dfb, 2026-11-10): 2.0e-14, 9.0e-9 through `Analyze` before [#624](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/624) (3.2e-10 at the tick nearer the TCA, the same on the three, CI of #629 at 8c864b23, 2026-11-10, asserted at 6.3e-10), 7.6e-15 (7.4e-15 on macOS arm64), 5.0e-11 (the erfc difference's own noise, bounded by about ε σ/R), 1.9e-16; each asserted at twice |
 | Central differences of whole propagations (F1), *Numerical Recipes* §5.7 | Φ per 3×3 block and Ψ over the arc on R1 to R5, across a maneuver, and with a reduced degree of the geopotential partials; the plateau of the steps | `StmValidationTests`, `ManeuverStmValidationTests`, `GeopotentialPartialsDegreeTests`, `WholePropagationStepStudyTests` | R1 1e-7, R2 to R5 1e-4 outside the penumbra (specification); see [State Transition Matrix and Covariance](#state-transition-matrix-and-covariance) |
 | Monte Carlo of the initial state (F3): Wishart variance (Anderson, 2003, §7.3) and Kolmogorov-Smirnov against χ²(6) (*Numerical Recipes* §14.3.3) | Propagated covariance against 5000 runs, R1 to R3 | `CovarianceMonteCarloTests`, `CovarianceMonteCarloLongTests`, `KolmogorovSmirnovTests` | 4 standard deviations element-wise; α = 0.01 |
 | GMAT R2026a (H2), `GmatConsole` and GMAT's Python API | Φ per block over the arc on G1 to G6, Ψ_Cr and Ψ_Cd, P, the limit of GMAT's discrete process noise, and the partials of each force at the B7 states | `GmatReferenceTests`, `GmatPartialsTests`; the `stm` conformance case, `StmCaseTests` | G1 1e-10 on Φ, 1e-8 on P; the library's own computation to F1; the analytic partials to 1e-6 (B); the rest records at twice the measurement; see [Against GMAT](#against-gmat-h2) |

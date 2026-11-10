@@ -892,7 +892,8 @@ public static class ConjunctionAssessment
             }
             else if (previousG < 0.0 && currentG >= 0.0)
             {
-                var tca = BisectForZero(protectedSource, secondarySource, previousEpoch, currentEpoch, bisectionToleranceSeconds);
+                var tca = BisectForZero(protectedSource, secondarySource, previousEpoch, previousG, currentEpoch, currentG,
+                    bisectionToleranceSeconds);
                 AddDistinctEpoch(tcaEpochs, tca, bisectionToleranceSeconds);
             }
 
@@ -1030,11 +1031,14 @@ public static class ConjunctionAssessment
         var start = distinctCandidates[0];
         var end = distinctCandidates[^1];
         double? startRateValue = null;
+        double? endRateValue = null;
         double StartRate() => startRateValue ??= rangeRate(start);
+        double EndRate() => endRateValue ??= rangeRate(end);
 
-        // A zero inside the first tick of the window, which the bisection returns as the start (its last bracket one tick
-        // wide, #624), is the tick after it when that tick lies inside the window; a zero exactly at an end is no zero
-        // inside
+        // The bisection returns the tick nearer the zero (#624): a zero inside the first or last tick of the window may
+        // round onto its end. It is the tick next to that end inside the window, when that tick lies inside: the tick
+        // after the start (the range rate negative there), the tick before the end (positive there). A zero exactly at an
+        // end (the range rate zero there) is that end, no zero inside
         Time? Inside(Time epoch)
         {
             if (epoch > start && epoch < end)
@@ -1042,8 +1046,14 @@ public static class ConjunctionAssessment
                 return epoch;
             }
 
-            var next = start.AddTicks(1);
-            return epoch == start && next < end && StartRate() < 0.0 ? next : null;
+            if (epoch == start)
+            {
+                var next = start.AddTicks(1);
+                return next < end && StartRate() < 0.0 ? next : null;
+            }
+
+            var previous = end.AddTicks(-1);
+            return epoch == end && previous > start && EndRate() > 0.0 ? previous : null;
         }
 
         var closeApproaches = new List<Time>();
@@ -1063,15 +1073,14 @@ public static class ConjunctionAssessment
         // No seed inside: the distances of the candidates may all lie within the flatness tolerance of
         // SelectLocalMinimumEpochs (a slow pass, a window of a few ticks about a minimum). A range rate negative at the
         // start and zero or positive at the end holds a minimum inside, whose zero is bisected over the window; a zero
-        // exactly at the end, the range rate negative on the tick before it, is that end, no minimum inside
+        // exactly at the end, which the bisection returns as the end, is that end, no minimum inside (Inside)
         double startRate = StartRate();
-        double endRate = rangeRate(end);
+        double endRate = EndRate();
         Time? zero = null;
         if (startRate < 0.0 && endRate >= 0.0)
         {
-            zero = BisectForZero(rangeRate, start, end, toleranceSeconds);
-            bool zeroIsTheEnd = endRate == 0.0 && (end - zero.Value).Ticks <= 1 && rangeRate(end.AddTicks(-1)) < 0.0;
-            if (!zeroIsTheEnd && Inside(zero.Value) is { } epoch)
+            zero = BisectForZero(rangeRate, start, startRate, end, endRate, toleranceSeconds);
+            if (Inside(zero.Value) is { } epoch)
             {
                 closeApproaches.Add(epoch);
                 return closeApproaches;
@@ -1157,8 +1166,10 @@ public static class ConjunctionAssessment
 
     /// <summary>
     /// Moves each minimum of the polynomial search to the zero of <paramref name="rangeRate"/>, from negative to
-    /// positive, near it, and drops a minimum whose zero lies outside the candidates: every epoch returned is such a zero,
-    /// or a window end where the range rate is exactly zero.
+    /// positive, near it, and drops a minimum whose zero lies outside the candidates: every epoch returned is the tick
+    /// nearer such a zero (<see cref="BisectForZero(Func{Time, double}, Time, double, Time, double, double)"/>), a
+    /// window end included when the zero lies within half a tick of it, or a window end where the range rate is exactly
+    /// zero.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -1174,8 +1185,8 @@ public static class ConjunctionAssessment
     /// at the last candidate is a minimum inside when the range rate is zero or positive there, and its zero is searched
     /// before it; negative, it is dropped. A zero of the range rate exactly at a window end (the range rate negative at
     /// the candidate before the last one, or positive at the one after the first) is that end itself, whichever minimum
-    /// it refines: the bisection would end on the tick before the last candidate (#624). The dense search drops it, a
-    /// window end being no close approach.
+    /// it refines. The dense search drops it, a window end being no close approach, and takes a zero within the first or
+    /// last tick that the bisection rounds onto a window end as the tick next to that end inside the window.
     /// </para>
     /// <para>
     /// The range rate is close to linear near its zero: its relative curvature is of the order of the orbital rate, so
@@ -1183,9 +1194,10 @@ public static class ConjunctionAssessment
     /// through the minimum and an epoch 1 ms away (before it when the last candidate is nearer than that) gives a first
     /// estimate, a second secant within ten ticks of it a second one, and a bracket of one tick on each side of that is
     /// checked before the bisection. Each bracket is checked before it is used, and the bisection ends on the bracket one
-    /// tick wide that contains the change of sign on the grid of the epochs, whichever checked bracket it starts from:
-    /// these estimates take the refinement from about 33 evaluations of the states of each source to about 7 without
-    /// changing the refined TCA. The range rate is never evaluated outside the first and last candidates.
+    /// tick wide that contains the change of sign on the grid of the epochs, whichever checked bracket it starts from,
+    /// and returns the tick of that bracket where the range rate is smaller in magnitude (#624): these estimates take the
+    /// refinement from about 33 evaluations of the states of each source to about 7 without changing the refined TCA. The
+    /// range rate is never evaluated outside the first and last candidates.
     /// </para>
     /// <para>
     /// When an estimate cannot be checked, the range rate at the minimum itself says on which side its zero lies: zero
@@ -1227,8 +1239,8 @@ public static class ConjunctionAssessment
     /// <param name="candidates">The sorted candidate epochs of the polynomial search, the window ends first and last.</param>
     /// <param name="rangeRate">The range rate, (r_s − r_p)·(v_s − v_p), at an epoch.</param>
     /// <param name="toleranceSeconds">Tolerance of the bisection, in s.</param>
-    /// <returns>The refined minima inside the candidates, in order, one per pair of consecutive candidates: zeros of the
-    /// range rate from negative to positive, or a window end where it is exactly zero.</returns>
+    /// <returns>The refined minima inside the candidates, in order, one per pair of consecutive candidates: the ticks
+    /// nearer the zeros of the range rate from negative to positive, or a window end where it is exactly zero.</returns>
     internal static List<Time> RefineOnRangeRate(
         IReadOnlyList<Time> minima,
         IReadOnlyList<Time> candidates,
@@ -1242,8 +1254,8 @@ public static class ConjunctionAssessment
         var fromSeeds = new List<Time>();
 
         // The pairs of consecutive candidates, by the index of the first one, where the range rate followed from a minimum
-        // that the widenings did not bracket changes from negative to zero or positive
-        var followed = new SortedSet<int>();
+        // that the widenings did not bracket changes from negative to zero or positive, with the range rates at both
+        var followed = new SortedDictionary<int, (double Low, double High)>();
         foreach (var minimum in minima)
         {
             int index = IndexOf(candidates, minimum);
@@ -1337,12 +1349,13 @@ public static class ConjunctionAssessment
 
             if (leftRate < 0.0 && rightRate >= 0.0)
             {
-                // A zero exactly at the window end, closing before it, is the end itself: the bisection would end on
-                // the tick before it (#624)
+                // A zero exactly at the window end, closing before it, is the end itself, whatever change of sign the
+                // bisection of a bracket wider than the last pair would reach first
                 var tca = right == last && rightRate == 0.0
                                         && (left == last - 1 ? leftRate : rangeRate(candidates[last - 1])) < 0.0
                     ? candidates[last]
-                    : BisectForZero(rangeRate, candidates[left], candidates[right], toleranceSeconds);
+                    : BisectForZero(rangeRate, candidates[left], leftRate, candidates[right], rightRate,
+                        toleranceSeconds);
                 AddDistinctEpoch(refined, tca, toleranceSeconds);
                 continue;
             }
@@ -1367,27 +1380,31 @@ public static class ConjunctionAssessment
             // minimum inside
             if (leftRate >= 0.0)
             {
+                double afterRate = leftRate;
                 while (leftRate >= 0.0 && left > 0)
                 {
+                    afterRate = leftRate;
                     leftRate = rangeRate(candidates[--left]);
                 }
 
                 if (leftRate < 0.0)
                 {
-                    followed.Add(left);
+                    followed.TryAdd(left, (leftRate, afterRate));
                 }
             }
 
             if (rightRate < 0.0)
             {
+                double beforeRate = rightRate;
                 while (rightRate < 0.0 && right < last)
                 {
+                    beforeRate = rightRate;
                     rightRate = rangeRate(candidates[++right]);
                 }
 
                 if (rightRate >= 0.0)
                 {
-                    followed.Add(right - 1);
+                    followed.TryAdd(right - 1, (beforeRate, rightRate));
                 }
             }
         }
@@ -1401,7 +1418,8 @@ public static class ConjunctionAssessment
     // strictly between the two): the same minimum, reached from another seed, the range rate at the noise level changing
     // sign more than once there
     private static List<Time> MergeByPairs(List<Time> refined, List<Time> fromSeeds,
-        SortedSet<int> followed, IReadOnlyList<Time> candidates, Func<Time, double> rangeRate, double toleranceSeconds)
+        SortedDictionary<int, (double Low, double High)> followed, IReadOnlyList<Time> candidates,
+        Func<Time, double> rangeRate, double toleranceSeconds)
     {
         var zeros = new List<Time>(refined.Count + fromSeeds.Count + followed.Count);
         var held = new HashSet<int>();
@@ -1436,19 +1454,18 @@ public static class ConjunctionAssessment
             Add(zero);
         }
 
-        foreach (int pair in followed)
+        foreach (var (pair, rates) in followed)
         {
             if (held.Contains(pair))
             {
                 continue;
             }
 
-            // A zero exactly at the window end, closing before it, is the end itself: the bisection would end on the tick
-            // before it (#624)
+            // A zero exactly at the window end, closing before it, is the end itself
             var right = candidates[pair + 1];
-            Add(pair + 1 == last && rangeRate(right) == 0.0
+            Add(pair + 1 == last && rates.High == 0.0
                 ? right
-                : BisectForZero(rangeRate, candidates[pair], right, toleranceSeconds));
+                : BisectForZero(rangeRate, candidates[pair], rates.Low, right, rates.High, toleranceSeconds));
         }
 
         zeros.Sort();
@@ -1483,7 +1500,7 @@ public static class ConjunctionAssessment
     // (RefineOnRangeRate): before it when the range rate is positive there, after it when negative. The range rate is read
     // at 1 ms from the seed, then at distances doubling up to 1.024 s, then every SeedSearchMaximumSpacingSeconds (1 s) up
     // to that candidate, until it changes sign, and the bracket of the last two reads is bisected; a zero exactly at the
-    // window end, closing before it, is the end itself (#624). The spacing is capped: reads doubling all the way stride
+    // window end, closing before it, is the end itself. The spacing is capped: reads doubling all the way stride
     // over an interval of the other sign narrower than their spacing (a shallow minimum next to a fold of the range rate,
     // positive over 1.6 s between reads 4.096 s apart, lost in round 5 of the lot-6 review). It costs at most
     // 11 + ceil(D - 1.024) reads for a neighbouring candidate D seconds away, against 1 + ceil(log2(D / 1 ms)) before, and
@@ -1503,6 +1520,7 @@ public static class ConjunctionAssessment
         var seed = candidates[index];
         var bound = candidates[neighbour];
         var previous = seed;
+        double previousRate = seedRate;
         for (double distance = SecantBaseSeconds;
              ;
              distance += System.Math.Min(distance, SeedSearchMaximumSpacingSeconds))
@@ -1517,8 +1535,8 @@ public static class ConjunctionAssessment
                 zero = !backward && read == bound && neighbour == candidates.Count - 1 && rate == 0.0
                     ? bound
                     : backward
-                        ? BisectForZero(rangeRate, read, previous, toleranceSeconds)
-                        : BisectForZero(rangeRate, previous, read, toleranceSeconds);
+                        ? BisectForZero(rangeRate, read, rate, previous, previousRate, toleranceSeconds)
+                        : BisectForZero(rangeRate, previous, previousRate, read, rate, toleranceSeconds);
                 return true;
             }
 
@@ -1528,6 +1546,7 @@ public static class ConjunctionAssessment
             }
 
             previous = read;
+            previousRate = rate;
         }
     }
 
@@ -1575,14 +1594,22 @@ public static class ConjunctionAssessment
         {
             var low = refinedEstimate.AddTicks(-1);
             var high = refinedEstimate.AddTicks(1);
-            if (low > left && high < right && rangeRate(low) < 0.0 && rangeRate(high) >= 0.0)
+            if (low > left && high < right)
             {
-                zero = BisectForZero(rangeRate, low, high, toleranceSeconds);
-                return true;
+                double lowRate = rangeRate(low);
+                if (lowRate < 0.0)
+                {
+                    double highRate = rangeRate(high);
+                    if (highRate >= 0.0)
+                    {
+                        zero = BisectForZero(rangeRate, low, lowRate, high, highRate, toleranceSeconds);
+                        return true;
+                    }
+                }
             }
         }
 
-        zero = BisectForZero(rangeRate, left, right, toleranceSeconds);
+        zero = BisectForZero(rangeRate, left, leftRate, right, rightRate, toleranceSeconds);
         return true;
     }
 
@@ -1639,46 +1666,62 @@ public static class ConjunctionAssessment
         StateSamplingSource protectedSource,
         StateSamplingSource secondarySource,
         Time tLow,
+        double gLow,
         Time tHigh,
+        double gHigh,
         double toleranceSeconds)
     {
-        return BisectForZero(epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch), tLow, tHigh,
-            toleranceSeconds);
+        return BisectForZero(epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch), tLow, gLow, tHigh,
+            gHigh, toleranceSeconds);
     }
 
-    private static Time BisectForZero(Func<Time, double> rangeRate, Time tLow, Time tHigh, double toleranceSeconds)
+    /// <summary>
+    /// The zero of the range rate in [<paramref name="tLow"/>, <paramref name="tHigh"/>], where it is negative at
+    /// <paramref name="tLow"/> (<paramref name="gLow"/>) and zero or positive at <paramref name="tHigh"/>
+    /// (<paramref name="gHigh"/>), the values the caller already holds: the bracket is bisected on the sign of the range
+    /// rate, its middle in ticks, the values at its ends carried along, until it is narrower than
+    /// <paramref name="toleranceSeconds"/> or one tick wide (100 ns, the resolution of the epochs).
+    /// </summary>
+    /// <returns>
+    /// On a bracket one tick wide, the tick nearer the zero of the chord of the range rate: <paramref name="tHigh"/> when
+    /// |gHigh| &lt; |gLow| (a zero exactly on that tick included), <paramref name="tLow"/> otherwise (a tie included).
+    /// For a range rate linear over the tick, that is the nearest tick to its zero, half a tick from it at most (#624:
+    /// before 11.0.0 the lower tick was always returned, up to a tick before the zero, a zero exactly on a tick one tick
+    /// early). A bracket left wider than a tick by a tolerance of a tick or more gives its middle, in ticks.
+    /// </returns>
+    private static Time BisectForZero(Func<Time, double> rangeRate, Time tLow, double gLow, Time tHigh, double gHigh,
+        double toleranceSeconds)
     {
         const int maxIterations = 80;
         for (int i = 0; i < maxIterations; i++)
         {
-            double interval = (tHigh - tLow).TotalSeconds;
-            if (interval < toleranceSeconds)
+            long ticks = (tHigh - tLow).Ticks;
+            if (ticks <= 1 || (tHigh - tLow).TotalSeconds < toleranceSeconds)
             {
                 break;
             }
 
-            var tMid = tLow + TimeSpan.FromSeconds(interval * 0.5);
-
-            // The epochs have a resolution of 100 ns: once the bracket is one tick wide, the middle rounds to one of its
-            // ends, and every further iteration would evaluate it again without changing the bracket
-            if (tMid == tLow || tMid == tHigh)
-            {
-                break;
-            }
-
+            var tMid = tLow.AddTicks(ticks / 2);
             double gMid = rangeRate(tMid);
-
             if (gMid < 0.0)
             {
                 tLow = tMid;
+                gLow = gMid;
             }
             else
             {
                 tHigh = tMid;
+                gHigh = gMid;
             }
         }
 
-        return tLow + TimeSpan.FromSeconds((tHigh - tLow).TotalSeconds * 0.5);
+        long width = (tHigh - tLow).Ticks;
+        if (width == 1)
+        {
+            return System.Math.Abs(gHigh) < System.Math.Abs(gLow) ? tHigh : tLow;
+        }
+
+        return tLow.AddTicks(width / 2);
     }
 
     private static List<Time> BuildDenseIntervalBoundaries(
