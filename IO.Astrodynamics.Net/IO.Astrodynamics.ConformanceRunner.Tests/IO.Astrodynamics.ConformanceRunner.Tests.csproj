@@ -25,16 +25,13 @@
         <ProjectReference Include="..\IO.Astrodynamics.ConformanceRunner\IO.Astrodynamics.ConformanceRunner.csproj" />
     </ItemGroup>
 
-    <!-- The fixture: the schemas and the tolerances of the conformance-tests suite extended with the stm category,
-         written by tools/gmat_reference/make_stm_case.py from conformance-tests#25 (c1af386), the stm case it writes, and
-         the propagator case 004 (inputs.yaml, expected-result.json) and data/gm_de440.tpc copied from c1af386. Fixture/Lot1: the cases of orbital_elements, time_conversion
-         and frame_transformation with the schemas and tolerances of the suite, and the kernels that differ from the
-         runner's; Fixture/Lot2: the propagator cases 006 to 018 of lot 2, their schemas and tolerances, and the data
-         files that differ from the runner's and from Fixture/Lot1; Fixture/Lot3: the maneuver and lambert cases of lot 3,
-         their schemas and tolerances (no data file of their own); Fixture/Lot4: the ground_station, eclipse, orbital_events and
-         attitude cases of lot 4, their schemas and tolerances (no data file of their own); Fixture/Lot5: the sgp4 and
-         tle_conversion cases and the TEME frame cases 032 to 036 of lot 5, their schemas and tolerances (no data file of
-         their own); all five written by tools/conformance/sync_fixture.py -->
+    <!-- The fixtures, written by tools/conformance/sync_fixture.py from the conformance-tests suite, each with the
+         schemas and tolerances of the suite and the data files that differ from the runner's and from the earlier
+         fixtures: Fixture/Lot1, the cases of orbital_elements, time_conversion and frame_transformation 001 to 031;
+         Fixture/Lot2, the propagator cases 006 to 018; Fixture/Lot3, the maneuver and lambert cases; Fixture/Lot4, the
+         ground_station, eclipse, orbital_events and attitude cases; Fixture/Lot5, the sgp4 and tle_conversion cases and
+         the TEME frame cases 032 to 036; Fixture/Lot6, the conjunction, collision_probability, cdm and stm cases, the
+         CDMs of the cdm cases and the SPKs of conjunction 007 -->
     <!-- The SPK of LRO of the library's tests, which the station case 006 of lot 4 reads (SuiteFixture.Lot4) -->
     <ItemGroup>
         <None Include="..\IO.Astrodynamics.Tests\Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp">

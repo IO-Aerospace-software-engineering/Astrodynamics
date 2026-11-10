@@ -14,15 +14,19 @@ using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.SSA;
 
-public class ConjunctionAssessmentTests
+public partial class ConjunctionAssessmentTests
 {
     private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
 
-    public ConjunctionAssessmentTests()
+    private readonly ITestOutputHelper _output;
+
+    public ConjunctionAssessmentTests(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
     }
 
@@ -461,6 +465,175 @@ public class ConjunctionAssessmentTests
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
     }
 
+    // A rectilinear pass in a 2 s window: the secondary at (x, y0 + vy t) m from the protected spacecraft, one accepted
+    // step; closest, x m, where y = 0
+    private static (ProtectedSpacecraftProfile, PropagationSolution, Spacecraft, PropagationSolution, Window)
+        RectilinearPass(int naifId, double y0, double vy, double x = 10.0)
+    {
+        var earth = CreateEarth();
+        var start = TimeSystem.Time.J2000TDB;
+        var protectedSpacecraft = CreateSpacecraft(naifId, "P", earth, Vector3.Zero, Vector3.Zero);
+        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "S", earth, new Vector3(x, y0, 0.0), new Vector3(0.0, vy, 0.0));
+        var protectedTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
+            stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
+        var secondaryTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
+            stateAtSeconds: t => (new Vector3(x, y0 + vy * t, 0.0), new Vector3(0.0, vy, 0.0), Vector3.Zero));
+        return (new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory, secondarySpacecraft,
+            secondaryTrajectory, new Window(start, start.AddSeconds(2.0)));
+    }
+
+    private static readonly ConjunctionAnalysisOptions RectilinearPassOptions = new()
+    {
+        SampleStep = TimeSpan.FromDays(1.0),
+        MaximumEventSearchStep = TimeSpan.FromDays(1.0),
+        SecondaryHardBodyRadiusMeters = 0.0,
+        LowRelativeSpeedThresholdMetersPerSecond = 0.0
+    };
+
+    [Theory]
+    [InlineData(200.0, -100.0)] // closest at the window end, closing before it
+    [InlineData(0.0, 100.0)] // closest at the window start, receding after it
+    public void DenseRangeRateZeroAtAWindowEnd_AnalyzeReturnsThatEndItself_AnalyzeAllNothing(double y0, double vy)
+    {
+        // The closed form: y = 0 at t = −y0/vy, a window end; the range rate is zero there and the distance 10 m. A window
+        // end is never a close approach (design of lot 6 of #457, §2.1: "A window end is never a TCA"; §8.3 row 7:
+        // AnalyzeAll lists the interior minima only), so AnalyzeAll lists nothing; Analyze keeps its end fallback, the end
+        // itself, not the tick before it (#624's bisection, which S1's refinement of the ends reached)
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5524, y0, vy);
+        var expected = window.StartDate.AddSeconds(-y0 / vy);
+
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        Assert.Equal(expected, encounter.EncounterState.Epoch);
+        Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
+        Assert.Empty(encounters);
+    }
+
+    // The slow pass of the round-2 review of lot 6 of #457: 0.113 m/s, 50 m, closest at m = 1.00000005 s, half-way between
+    // two ticks (100 ns). Over these windows (ends in ticks from 1 s) the squared distance moves by at most
+    // (0.113 m/s × 8 ms)² = 8.2e-7 m², within the 1e-6 m² flatness tolerance of the seeds: before, no seed survived,
+    // AnalyzeAll listed nothing and Analyze returned the midpoint (1 ms off on the first window)
+    [Theory]
+    [InlineData(-50_000, 30_000)] // [m − 5 ms, m + 3 ms]
+    [InlineData(-10_000, 10_000)] // [m − 1 ms, m + 1 ms]
+    [InlineData(-80_000, 80_000)] // [m − 8 ms, m + 8 ms]
+    [InlineData(-1, 2)] // one tick inside on each side of m
+    [InlineData(-3, 3)]
+    [InlineData(0, 3)] // m in the first tick, which the bisection returns as the start: the tick after it
+    [InlineData(-3, 1)] // m in the last tick
+    public void Dense_SlowPassFlatOverTheWindow_ListsTheMinimumOfTheRangeRate(long startTicks, long endTicks)
+    {
+        const double vy = 0.113;
+        const double m = 1.00000005;
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+            RectilinearPass(-5528, -vy * m, vy, x: 50.0);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond.AddTicks(startTicks), oneSecond.AddTicks(endTicks));
+
+        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        // The closed form: the TCA within one tick of m, strictly inside the window, 50 m
+        var listed = Assert.Single(encounters);
+        foreach (var state in new[] { listed.EncounterState, encounter.EncounterState })
+        {
+            double seconds = (state.Epoch - fullWindow.StartDate).TotalSeconds;
+            Assert.True(System.Math.Abs(seconds - m) <= 1.0e-7, $"TCA {seconds:F9} s, closed form {m:F9} s");
+            Assert.True(state.Epoch > window.StartDate && state.Epoch < window.EndDate);
+            Assert.Equal(50.0, state.MissDistanceMeters, 9);
+        }
+
+        Assert.Equal(listed.EncounterState.Epoch, encounter.EncounterState.Epoch);
+    }
+
+    [Fact]
+    public void Dense_SlowPassInAWindowOneTickWide_AnalyzeReturnsTheCloserEnd_AnalyzeAllNothing()
+    {
+        // m = 1.00000003 s inside [1 s, 1 s + 1 tick]: no epoch inside resolves the minimum, a window end is never listed;
+        // Analyze returns the closer end, 1 s, never the midpoint
+        const double vy = 0.113;
+        const double m = 1.00000003;
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+            RectilinearPass(-5532, -vy * m, vy, x: 50.0);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond, oneSecond.AddTicks(1));
+
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions));
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        Assert.Equal(oneSecond, encounter.EncounterState.Epoch);
+        Assert.Equal(System.Math.Sqrt(2500.0 + System.Math.Pow(vy * 3.0e-8, 2.0)),
+            encounter.EncounterState.MissDistanceMeters, 9);
+    }
+
+    [Fact]
+    public void Dense_WindowOfZeroLength_AnalyzeReturnsItsEpoch_AnalyzeAllNothing()
+    {
+        // [1 s, 1 s] on the pass closest at 1 s: no epoch inside, so AnalyzeAll lists nothing; Analyze returns that epoch
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) = RectilinearPass(-5534, -100.0, 100.0);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond, oneSecond);
+
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions));
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        Assert.Equal(oneSecond, encounter.EncounterState.Epoch);
+        Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
+    }
+
+    [Theory]
+    [InlineData(-5.0e-3, -1.0e-3, 1.0e-3)] // still closing at the end: the end
+    [InlineData(1.0e-3, 5.0e-3, 1.0e-3)] // receding from the start: the start
+    public void Dense_SlowPassFlatAndMonotonic_AnalyzeReturnsTheEndWhereTheDistanceGrowsIntoIt(double startOffset,
+        double endOffset, double expectedFromMinimum)
+    {
+        // Flat over the window and no minimum inside: Analyze returns the end the distance decreases toward, never the
+        // midpoint; AnalyzeAll lists nothing
+        const double vy = 0.113;
+        const double m = 1.0;
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+            RectilinearPass(-5530, -vy * m, vy, x: 50.0);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond.AddTicks((long)System.Math.Round(startOffset * TimeSpan.TicksPerSecond)),
+            oneSecond.AddTicks((long)System.Math.Round(endOffset * TimeSpan.TicksPerSecond)));
+
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        var expected = startOffset < 0.0 ? window.EndDate : window.StartDate;
+        Assert.Equal(expected, encounter.EncounterState.Epoch);
+        Assert.Equal(System.Math.Sqrt(2500.0 + System.Math.Pow(vy * expectedFromMinimum, 2.0)),
+            encounter.EncounterState.MissDistanceMeters, 9);
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions));
+    }
+
+    [Theory]
+    [InlineData(250.0, -100.0, 2.0)] // still closing at the end: the end, where the distance grows into the window
+    [InlineData(50.0, 100.0, 0.0)] // receding from the start: the start
+    public void Analyze_DenseMonotonicWindow_ReturnsTheEndWhereTheDistanceGrowsIntoIt_AndAnalyzeAllNothing(double y0,
+        double vy, double expectedSeconds)
+    {
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5526, y0, vy);
+
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        Assert.Equal(window.StartDate.AddSeconds(expectedSeconds), encounter.EncounterState.Epoch);
+        Assert.Equal(System.Math.Sqrt(100.0 + System.Math.Pow(y0 + vy * expectedSeconds, 2.0)),
+            encounter.EncounterState.MissDistanceMeters, 9);
+        Assert.Empty(encounters);
+    }
+
     // ========== Correctness Tests ==========
 
     [Fact]
@@ -836,7 +1009,8 @@ public class ConjunctionAssessmentTests
     [Fact]
     public void CollisionProbability_NasaOmitronReferenceCase_MatchesPublishedValue()
     {
-        // NASA CARA Pc2D_Foster_UnitTest.m Omitron Test Case 01.
+        // NASA CARA Pc2D_Foster_UnitTest.m Omitron Test Case 01 (published 2.70601573490125e-05, itself 2.9e-6 from the
+        // exact Pc of its inputs)
         var r1 = new Vector3(378.39559, 4305.721887, 5752.767554);
         var v1 = new Vector3(2.360800244, 5.580331936, -4.322349039);
         var cov1 = BuildPositionCovariance(new[,]
@@ -857,14 +1031,15 @@ public class ConjunctionAssessmentTests
         var pc = ComputeFosterProbabilityFromInertialInputs(r1, v1, cov1, r2, v2, cov2, 0.020);
 
         Assert.NotNull(pc);
-        Assert.True(System.Math.Abs(pc.Value - 2.70601573490125e-05) / 2.70601573490125e-05 < 1.0e-5,
-            $"Expected NASA Omitron Pc≈2.70601573490125E-05, got {pc.Value:E12}");
+        double error = System.Math.Abs(pc.Value - OmitronCase01ExactPc) / OmitronCase01ExactPc;
+        _output.WriteLine($"MEASURE #611 CARA direct worst {error:E2} (Omitron case 01)");
+        Assert.True(error <= CaraDirectPcBound, $"Omitron case 01: relative error {error:E2} to the exact Pc");
     }
 
     [Fact]
     public void CollisionProbability_NasaAlfanoCase03_MatchesPublishedValue()
     {
-        // NASA CARA Pc2D_Foster_UnitTest.m Alfano case 03 expected solution = 1.00351176E-01.
+        // NASA CARA Pc2D_Foster_UnitTest.m Alfano case 03 (published 1.00351176E-01, 2.3e-6 from the exact Pc)
         var r1 = new Vector3(153.951475, 41874.153995, 0.0);
         var v1 = new Vector3(3.066874624, -0.011411025, 0.0);
         var cov1Rtn = BuildPositionCovariance(new[,]
@@ -888,8 +1063,9 @@ public class ConjunctionAssessmentTests
         var pc = ComputeFosterProbabilityFromInertialInputs(r1, v1, cov1, r2, v2, cov2, 0.015);
 
         Assert.NotNull(pc);
-        Assert.True(System.Math.Abs(pc.Value - 1.00351176e-01) / 1.00351176e-01 < 1.0e-5,
-            $"Expected NASA Alfano case 03 Pc≈1.00351176E-01, got {pc.Value:E12}");
+        double error = System.Math.Abs(pc.Value - AlfanoCase03ExactPc) / AlfanoCase03ExactPc;
+        _output.WriteLine($"MEASURE #611 CARA direct worst {error:E2} (Alfano case 03)");
+        Assert.True(error <= CaraDirectPcBound, $"Alfano case 03: relative error {error:E2} to the exact Pc");
     }
 
     // ========== Published Single-Covariance Maximum-Pc Conformance (NASA Frisbee) ==========
@@ -915,13 +1091,14 @@ public class ConjunctionAssessmentTests
     }
 
     [Theory]
-    [InlineData(5.0, 0.000043)]
-    [InlineData(10.0, 0.000171)]
-    [InlineData(20.0, 0.000685)]
-    [InlineData(25.0, 0.001070)]
+    [InlineData(5.0, 4.278120354404266e-05)]
+    [InlineData(10.0, 1.710716927885487e-04)]
+    [InlineData(20.0, 6.834377891732130e-04)]
+    [InlineData(25.0, 1.066878220462202e-03)]
     public void SingleCovarianceMaximumPc_FrisbeeTable1_MatchesPublishedApproximateOutcomes(double hardBodyRadius, double expectedPc)
     {
-        // Frisbee AAS 15-717, Table 1 using the Eq. 11 example geometry.
+        // Frisbee AAS 15-717, Table 1 using the Eq. 11 example geometry (published to two or three digits); the expected
+        // values are the exact maximum Pc of tools/collision_probability (rows "Frisbee AAS 15-717 table 1")
         var miss2D = new[] { 1000.0, 200.0 };
         var knownCov2D = new Matrix(2, 2);
         knownCov2D.Set(0, 0, 722500.0);
@@ -930,8 +1107,9 @@ public class ConjunctionAssessmentTests
         var pc = ConjunctionAssessment.ComputeSingleCovarianceMaximumCollisionProbability(miss2D, knownCov2D, hardBodyRadius);
 
         Assert.NotNull(pc);
-        Assert.True(System.Math.Abs(pc.Value - expectedPc) / expectedPc < 0.03,
-            $"Expected NASA Frisbee max Pc≈{expectedPc:E12}, got {pc.Value:E12}");
+        double error = System.Math.Abs(pc.Value - expectedPc) / expectedPc;
+        _output.WriteLine($"MEASURE #611 CARA direct worst {error:E2} (Frisbee table 1, R {hardBodyRadius})");
+        Assert.True(error <= CaraDirectPcBound, $"Frisbee max Pc, R {hardBodyRadius}: relative error {error:E2} to the exact Pc");
     }
 
     // ========== Published Workflow Conformance (NASA CARA Through Analyze/AnalyzeAll) ==========
@@ -1028,8 +1206,8 @@ public class ConjunctionAssessmentTests
             v2,
             cov2,
             expectedCombinedHardBodyRadius: combinedHardBodyRadius,
-            expectedPublishedPc: 2.70601573490125e-05,
-            publishedPcRelativeTolerance: 1.0e-5);
+            expectedPublishedPc: OmitronCase01ExactPc,
+            publishedPcRelativeTolerance: CaraEntryPointPcBound);
     }
 
     [Fact]
@@ -1125,8 +1303,8 @@ public class ConjunctionAssessmentTests
             v2,
             cov2,
             expectedCombinedHardBodyRadius: combinedHardBodyRadius,
-            expectedPublishedPc: 1.00351176e-01,
-            publishedPcRelativeTolerance: 1.0e-5);
+            expectedPublishedPc: AlfanoCase03ExactPc,
+            publishedPcRelativeTolerance: CaraEntryPointPcBound);
     }
 
     [Fact]
@@ -1215,8 +1393,8 @@ public class ConjunctionAssessmentTests
             v2,
             cov2,
             expectedCombinedHardBodyRadius: combinedHardBodyRadius,
-            expectedPublishedPc: 2.70601573490125e-05,
-            publishedPcRelativeTolerance: 1.0e-5);
+            expectedPublishedPc: OmitronCase01ExactPc,
+            publishedPcRelativeTolerance: CaraEntryPointPcBound);
     }
 
     [Fact]
@@ -1308,8 +1486,8 @@ public class ConjunctionAssessmentTests
             v2,
             cov2,
             expectedCombinedHardBodyRadius: combinedHardBodyRadius,
-            expectedPublishedPc: 1.00351176e-01,
-            publishedPcRelativeTolerance: 1.0e-5);
+            expectedPublishedPc: AlfanoCase03ExactPc,
+            publishedPcRelativeTolerance: CaraEntryPointPcBound);
     }
 
     // ========== Screening Tests ==========
@@ -1708,8 +1886,10 @@ public class ConjunctionAssessmentTests
         Assert.Equal(10800.0, encounter.EncounterState.ProtectedCovarianceAge!.Value.TotalSeconds, 1.0e-3);
         Assert.Equal(10800.0, encounter.EncounterState.SecondaryCovarianceAge!.Value.TotalSeconds, 1.0e-3);
         // The initial states carry the TCA geometry, so holding the covariances in RTN leaves them unchanged:
-        // the published Pc is still reproduced.
-        Assert.True(System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision!.Value - 2.70601573490125e-05) / 2.70601573490125e-05 < 1.0e-5);
+        // the exact Pc is still reproduced.
+        double staleError = System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision!.Value - OmitronCase01ExactPc) / OmitronCase01ExactPc;
+        _output.WriteLine($"MEASURE #611 CARA entry point worst {staleError:E2} (Omitron case 01, 3 h old covariances)");
+        Assert.True(staleError <= CaraEntryPointPcBound, $"Omitron case 01, 3 h old covariances: relative error {staleError:E2} to the exact Pc");
 
         var creationDate = new DateTime(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc);
         var refused = Assert.Throws<InvalidOperationException>(() => encounter.ToCdm(new CdmExportOptions { CreationDateUtc = creationDate }));
@@ -2067,7 +2247,7 @@ public class ConjunctionAssessmentTests
         return rotation.Transpose() * covarianceRtn * rotation;
     }
 
-    private static void AssertEncounterMatchesDirectExpectation(
+    private void AssertEncounterMatchesDirectExpectation(
         EncounterCase encounter,
         Vector3 primaryPositionAtEpoch,
         Vector3 primaryVelocityAtEpoch,
@@ -2127,8 +2307,10 @@ public class ConjunctionAssessmentTests
         Assert.NotNull(expectedPc);
         Assert.True(System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision.Value - expectedPc.Value) < 1.0e-12,
             $"Entry-point Pc {encounter.CollisionRisk.ProbabilityOfCollision.Value:E12} should match direct Pc {expectedPc.Value:E12}");
-        Assert.True(System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision.Value - expectedPublishedPc) / expectedPublishedPc < publishedPcRelativeTolerance,
-            $"Expected published Pc≈{expectedPublishedPc:E12}, got {encounter.CollisionRisk.ProbabilityOfCollision.Value:E12}");
+        double publishedError = System.Math.Abs(encounter.CollisionRisk.ProbabilityOfCollision.Value - expectedPublishedPc) / expectedPublishedPc;
+        _output.WriteLine($"MEASURE #611 CARA entry point worst {publishedError:E2} (expected Pc {expectedPublishedPc:R})");
+        Assert.True(publishedError <= publishedPcRelativeTolerance,
+            $"Relative error {publishedError:E2} to the expected Pc {expectedPublishedPc:E12}");
 
         Assert.Equal(expectedMissDistance, encounter.EncounterState.MissDistanceMeters, 9);
         AssertVectorApproximatelyEqual(expectedRelativePosition, encounter.EncounterState.RelativeState.RelativePositionInertial, 1.0e-8);

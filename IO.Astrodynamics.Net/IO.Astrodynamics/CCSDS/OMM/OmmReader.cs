@@ -437,34 +437,10 @@ public class OmmReader
             .ToList();
     }
 
-    private DateTime ParseDateTime(string value, string fieldName)
+    private static DateTime ParseDateTime(string value, string fieldName)
     {
-        // CCSDS datetime format: yyyy-MM-ddTHH:mm:ss.ffffff or yyyy-DDDTHH:mm:ss.ffffff
-        // Also supports optional 'Z' suffix
-        var formats = new[]
-        {
-            "yyyy-MM-ddTHH:mm:ss.ffffff",
-            "yyyy-MM-ddTHH:mm:ss.fffff",
-            "yyyy-MM-ddTHH:mm:ss.ffff",
-            "yyyy-MM-ddTHH:mm:ss.fff",
-            "yyyy-MM-ddTHH:mm:ss.ff",
-            "yyyy-MM-ddTHH:mm:ss.f",
-            "yyyy-MM-ddTHH:mm:ss",
-            "yyyy-MM-ddTHH:mm:ssZ",
-            "yyyy-MM-ddTHH:mm:ss.ffffffZ",
-            "yyyy-DDDTHH:mm:ss.ffffff",
-            "yyyy-DDDTHH:mm:ss",
-        };
-
-        if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var result))
-        {
-            return result;
-        }
-
-        // Try standard parse as fallback
-        if (DateTime.TryParse(value, CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out result))
+        // A CCSDS date, calendar or day of year (#490)
+        if (CcsdsEpochParser.TryParse(value, out var result))
         {
             return result;
         }

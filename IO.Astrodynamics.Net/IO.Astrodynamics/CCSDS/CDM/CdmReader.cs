@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 using IO.Astrodynamics.Math;
 
@@ -359,43 +360,10 @@ public sealed class CdmReader
         return value == null ? null : parser(value);
     }
 
-    private static readonly string[] DateTimeFormats =
-    [
-        "yyyy-MM-ddTHH:mm:ss.fffffffZ",
-        "yyyy-MM-ddTHH:mm:ss.ffffffZ",
-        "yyyy-MM-ddTHH:mm:ss.fffffZ",
-        "yyyy-MM-ddTHH:mm:ss.ffffZ",
-        "yyyy-MM-ddTHH:mm:ss.fffZ",
-        "yyyy-MM-ddTHH:mm:ss.ffZ",
-        "yyyy-MM-ddTHH:mm:ss.fZ",
-        "yyyy-MM-ddTHH:mm:ssZ",
-        "yyyy-MM-ddTHH:mm:ss.fffffff",
-        "yyyy-MM-ddTHH:mm:ss.ffffff",
-        "yyyy-MM-ddTHH:mm:ss.fffff",
-        "yyyy-MM-ddTHH:mm:ss.ffff",
-        "yyyy-MM-ddTHH:mm:ss.fff",
-        "yyyy-MM-ddTHH:mm:ss.ff",
-        "yyyy-MM-ddTHH:mm:ss.f",
-        "yyyy-MM-ddTHH:mm:ss",
-        "yyyy-DDDTHH:mm:ss.fffffffZ",
-        "yyyy-DDDTHH:mm:ss.ffffffZ",
-        "yyyy-DDDTHH:mm:ssZ",
-        "yyyy-DDDTHH:mm:ss.fffffff",
-        "yyyy-DDDTHH:mm:ss.ffffff",
-        "yyyy-DDDTHH:mm:ss"
-    ];
-
     private static DateTime ParseDateTime(string value, string fieldName)
     {
-
-        if (DateTime.TryParseExact(value, DateTimeFormats, CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var result))
-        {
-            return result;
-        }
-
-        if (DateTime.TryParse(value, CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out result))
+        // A CCSDS date, calendar or day of year (#490)
+        if (CcsdsEpochParser.TryParse(value, out var result))
         {
             return result;
         }
@@ -446,9 +414,10 @@ public sealed class CdmReader
         throw new CdmParseException($"Invalid numeric value for {fieldName}: '{value}'.");
     }
 
+    // positionTypeUR: units required, km by default as before
     private static double ParsePositionToMeters(XElement element)
     {
-        return ParseLengthValue(element, "km") * 1000.0;
+        return ParseLengthToMeters(element, "km");
     }
 
     private static double ParseVelocityToMetersPerSecond(XElement element)
@@ -463,9 +432,11 @@ public sealed class CdmReader
         };
     }
 
+    // lengthTypeUO (MISS_DISTANCE, RELATIVE_POSITION_R/T/N, SCREEN_VOLUME_X/Y/Z): units optional, m the only unit of the
+    // schema and of CCSDS 508.0 table 3-2, so m when absent (#613)
     private static double ParseLengthToMeters(XElement element)
     {
-        return ParseLengthValue(element, "km") * 1000.0;
+        return ParseLengthToMeters(element, "m");
     }
 
     private static double? ParseOptionalLength(XElement parent, string localName)
@@ -474,14 +445,14 @@ public sealed class CdmReader
         return element == null ? null : ParseLengthToMeters(element);
     }
 
-    private static double ParseLengthValue(XElement element, string defaultUnits)
+    private static double ParseLengthToMeters(XElement element, string defaultUnits)
     {
         var units = element.Attribute("units")?.Value ?? defaultUnits;
         var value = ParseDouble(element.Value, element.Name.LocalName);
         return units switch
         {
-            "km" => value,
-            "m" => value / 1000.0,
+            "km" => value * 1000.0,
+            "m" => value,
             _ => throw new CdmParseException($"Unsupported length units '{units}'.")
         };
     }

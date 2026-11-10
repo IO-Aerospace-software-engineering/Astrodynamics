@@ -39,6 +39,11 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <summary>
     /// Gets or sets the sphere of influence of the celestial body.
     /// </summary>
+    /// <remarks>
+    /// +Infinity for a body without a heliocentric orbit: the Sun, a body built from custom parameters, and a body whose
+    /// <see cref="CelestialItem.InitialOrbitalParameters"/> is null because the loaded kernels do not chain it to its
+    /// system barycenter (#454).
+    /// </remarks>
     public double SphereOfInfluence { get; private set; }
 
     /// <summary>

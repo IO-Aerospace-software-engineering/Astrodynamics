@@ -11,7 +11,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers.Lambert;
 
 class DummyBody : CelestialItem
 {
-    public DummyBody(double mass) : base(999, "dummy", 0, null)
+    // The Earth's identifier, so that the states about the Earth are read about it without SPICE: de440s does not chain
+    // Pluto (999) to the Earth, and since #454 that read throws instead of returning an undefined state
+    public DummyBody(double mass) : base(399, "dummy", 0, null)
     {
     }
 }

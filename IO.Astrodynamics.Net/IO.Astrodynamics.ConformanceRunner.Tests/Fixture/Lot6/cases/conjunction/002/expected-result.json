@@ -1,0 +1,91 @@
+{
+  "id": "conjunction_6h_leo500_grav10_crossing_002",
+  "category": "conjunction",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-09",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 10, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS)",
+    "perturbations": "Moon, Sun as point masses. No drag. No SRP, no relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: both objects on the user-defined planet EarthS (NAIF 399 at its de440s position, ITRF93 of data/'s bpc through SPICE, the radius and flattening of data/pck00011.tpc), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 10, third bodies Moon, Sun with the GMs of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s, over the TT seconds from the epoch; the TCA by a stop on Sat1.Rel.X = 0 (Rel: origin and primary object 2, secondary object 1, X = V) and one linear step; the states read in EarthSMJ2000Eq; Phi: Sat.OrbitSTM of each object alone.",
+    "reference_frame": "EarthSMJ2000Eq (every output invariant under a common rotation)",
+    "script": "conjunction_6h_leo500_grav10_crossing_002.script",
+    "log": "conjunction_6h_leo500_grav10_crossing_002.log"
+  },
+  "outputs": {
+    "tca_s": 21599.965860877986,
+    "miss_distance_km": 0.2486776023505439,
+    "relative_speed_km_s": 7.647361416407727,
+    "relative_position_rtn_km": [
+      -0.20002685343835946,
+      0.12857618686879013,
+      0.07278716909350343
+    ],
+    "relative_velocity_rtn_km_s": [
+      0.0007866047054995671,
+      -3.7664710807566153,
+      6.655511371204975
+    ],
+    "objects": [
+      {
+        "sigma_rtn": [
+          0.16414160840480513,
+          1.615480215212689,
+          0.02420887378844242,
+          0.0017705836767252057,
+          0.00017801074026640873,
+          3.607790902439261e-05
+        ],
+        "correlation_rtn": [
+          -0.14732958718925296,
+          0.0036330070221129527,
+          -0.05478249981392235,
+          0.11096727536071742,
+          -0.998881535440486,
+          0.05495380912596847,
+          -0.9902517909810196,
+          0.008950248637340808,
+          0.004300340614627006,
+          0.027823668059334523,
+          -0.0021917411978072147,
+          0.03964324860027285,
+          -0.1722659503300476,
+          -0.03970725869088561,
+          -0.003241006693007972
+        ]
+      },
+      {
+        "sigma_rtn": [
+          0.2862506472500235,
+          3.0911971521498054,
+          0.07353992524357458,
+          0.003224490973548267,
+          0.0003426958472438703,
+          8.711942832653628e-05
+        ],
+        "correlation_rtn": [
+          0.8903078753763051,
+          0.0072226503515853665,
+          0.009516321735006062,
+          -0.8870937348341782,
+          -0.9995143591038111,
+          -0.009557731199078516,
+          -0.9986640125051552,
+          -0.910964833134641,
+          -0.007380748047688847,
+          0.908198746069323,
+          0.03676567165792246,
+          0.039211913257984364,
+          -0.020834874597121435,
+          -0.03913551881607793,
+          -0.03750981099477079
+        ]
+      }
+    ],
+    "collision_probability": 0.00018585885759207963
+  }
+}

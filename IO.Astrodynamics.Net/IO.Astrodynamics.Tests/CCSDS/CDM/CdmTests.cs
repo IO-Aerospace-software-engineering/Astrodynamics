@@ -655,6 +655,110 @@ public class CdmTests
         }
     }
 
+    // The seven lengthTypeUO fields (#613): units optional, m the only unit of the schema and of CCSDS 508.0 table 3-2
+    private static readonly (string Name, string Text, double Value)[] OptionalUnitLengths =
+    [
+        ("MISS_DISTANCE", "715", 715.0),
+        ("RELATIVE_POSITION_R", "27.4", 27.4),
+        ("RELATIVE_POSITION_T", "-70.2", -70.2),
+        ("RELATIVE_POSITION_N", "711.8", 711.8),
+        ("SCREEN_VOLUME_X", "200", 200.0),
+        ("SCREEN_VOLUME_Y", "1000", 1000.0),
+        ("SCREEN_VOLUME_Z", "1000", 1000.0)
+    ];
+
+    [Theory]
+    [InlineData(null, 1.0)]
+    [InlineData("m", 1.0)]
+    [InlineData("km", 1000.0)]
+    public void ReadFromString_OptionalUnitLengths_AreMetersByDefault(string? units, double scale)
+    {
+        var document = XDocument.Parse(RemoveNamespaces(CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 0, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNITS-613"
+        }).WriteToString()));
+        var relativeMetadata = document.Descendants("relativeMetadataData").Single();
+        foreach (var (name, text, _) in OptionalUnitLengths)
+        {
+            var element = relativeMetadata.Descendants(name).SingleOrDefault();
+            if (element == null)
+            {
+                element = new XElement(name);
+                relativeMetadata.Add(element);
+            }
+
+            element.Value = text;
+            element.SetAttributeValue("units", units);
+        }
+
+        var cdm = Cdm.ReadFromString(document.ToString());
+
+        var data = cdm.RelativeMetadataData;
+        var read = new[]
+        {
+            data.MissDistanceMeters, data.RelativeStateVector!.RelativePositionRtnMeters.X,
+            data.RelativeStateVector.RelativePositionRtnMeters.Y, data.RelativeStateVector.RelativePositionRtnMeters.Z,
+            data.ScreenVolumeXMeters!.Value, data.ScreenVolumeYMeters!.Value, data.ScreenVolumeZMeters!.Value
+        };
+        for (int i = 0; i < OptionalUnitLengths.Length; i++)
+        {
+            // The double of the text, times 1000 for km, exactly: before #613 a length without units was read in km
+            Assert.Equal(OptionalUnitLengths[i].Value * scale, read[i]);
+        }
+    }
+
+    [Fact]
+    public void ReadFromString_DayOfYearDates()
+    {
+        // #490: the TCA and the creation date in the day-of-year form, as CSPICE's str2et reads them
+        // (tools/ccsds_epoch_reference: 2026-013 is 2026-01-13, 2014-021 is 2014-01-21)
+        var tca = new DateTime(2026, 1, 13, 5, 0, 55, DateTimeKind.Utc).AddTicks(7527680);
+        var original = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2014, 1, 21, 17, 42, 47, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-DOY-490"
+        });
+        var document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+        document.Descendants("CREATION_DATE").Single().Value = "2014-021T17:42:47.000";
+        document.Descendants("TCA").Single().Value = "2026-013T05:00:55.752768Z";
+
+        var cdm = Cdm.ReadFromString(document.ToString());
+
+        Assert.Equal(tca, cdm.RelativeMetadataData.TcaUtc);
+        Assert.Equal(DateTimeKind.Utc, cdm.RelativeMetadataData.TcaUtc.Kind);
+        Assert.Equal(new DateTime(2014, 1, 21, 17, 42, 47, DateTimeKind.Utc), cdm.Header.CreationDateUtc);
+
+        // The literal DDD was read as 1 January
+        document.Descendants("TCA").Single().Value = "2026-DDDT05:00:55.752768Z";
+        Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+    }
+
+    [Theory]
+    [InlineData("0000-01-01T00:00:00")]
+    [InlineData("0000-001T00:00:00")]
+    [InlineData("\u0662\u0660\u0661\u0660-03-13T22:37:52")]
+    [InlineData("\uFF12\uFF10\uFF11\uFF10-03-13T22:37:52")]
+    public void ReadFromString_YearZeroOrNonAsciiDigits(string text)
+    {
+        // The CDM's own parse exception (CcsdsEpochParser returns false), not an exception of DateTime or int.Parse
+        var original = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2014, 1, 21, 17, 42, 47, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-EPOCH-0000"
+        });
+        var document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+        document.Descendants("CREATION_DATE").Single().Value = text;
+        Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+
+        document = XDocument.Parse(RemoveNamespaces(original.WriteToString()));
+        document.Descendants("TCA").Single().Value = text;
+        Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(document.ToString()));
+    }
+
     private static string FormatValidationIssues(IEnumerable<CdmValidationError> issues)
     {
         return string.Join(Environment.NewLine, issues.Select(issue =>

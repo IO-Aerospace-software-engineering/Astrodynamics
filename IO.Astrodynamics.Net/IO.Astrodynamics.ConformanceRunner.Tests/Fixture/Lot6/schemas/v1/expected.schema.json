@@ -1,0 +1,1226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://conformance-tests.local/schemas/v1/expected.schema.json",
+  "title": "Conformance Test Expected Output",
+  "description": "Validates a golden-answer file.  All output values may be null (triggers SKIP in the runner).",
+  "type": "object",
+  "$defs": {
+    "nullable_number": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nullable_string": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nullable_boolean": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "statistics": {
+      "type": "object",
+      "properties": {
+        "mean": {
+          "type": "number"
+        },
+        "median": {
+          "type": "number"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "tracking_arcs": {
+      "type": "object",
+      "properties": {
+        "rise": {
+          "type": "string"
+        },
+        "fall": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rise",
+        "fall"
+      ],
+      "additionalProperties": false
+    },
+    "tracking_statistics": {
+      "type": "object",
+      "properties": {
+        "range (km)": {
+          "$ref": "#/$defs/statistics"
+        },
+        "doppler (km/s)": {
+          "$ref": "#/$defs/statistics"
+        },
+        "azimuth (deg)": {
+          "$ref": "#/$defs/statistics"
+        },
+        "elevation (deg)": {
+          "$ref": "#/$defs/statistics"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "nullable_quaternion": {
+      "description": "Unit quaternion in scalar-first order [w, x, y, z], or null; null anywhere means SKIP (spec.md sections 4 and 7).",
+      "type": ["array", "null"],
+      "items": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "pointing_triad_outputs": {
+      "type": "object",
+      "properties": {
+        "attitude_quaternion": {
+          "$ref": "#/$defs/nullable_quaternion"
+        },
+        "target_in_fov": {
+          "$ref": "#/$defs/nullable_boolean"
+        }
+      },
+      "required": [
+        "attitude_quaternion",
+        "target_in_fov"
+      ],
+      "additionalProperties": false
+    },
+    "eclipse_outputs": {
+      "type": "object",
+      "properties": {
+        "penumbra_entry": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "umbra_entry": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "umbra_exit": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "penumbra_exit": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "penumbra_duration_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "umbra_duration_s": {
+          "$ref": "#/$defs/nullable_number"
+        }
+      },
+      "required": [
+        "penumbra_entry",
+        "umbra_entry",
+        "umbra_exit",
+        "penumbra_exit",
+        "penumbra_duration_s",
+        "umbra_duration_s"
+      ],
+      "additionalProperties": false
+    },
+    "propagator_outputs": {
+      "type": "object",
+      "properties": {
+        "final_x_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_y_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_z_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_vx_km_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_vy_km_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_vz_km_s": {
+          "$ref": "#/$defs/nullable_number"
+        }
+      },
+      "required": [
+        "final_x_km",
+        "final_y_km",
+        "final_z_km"
+      ],
+      "additionalProperties": false
+    },
+    "tracking_data_outputs": {
+      "type": "object",
+      "properties": {
+        "arcs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tracking_arcs"
+          }
+        },
+        "statistics": {
+          "$ref": "#/$defs/tracking_statistics"
+        }
+      },
+      "required": [
+        "arcs",
+        "statistics"
+      ],
+      "additionalProperties": false
+    },
+    "geosynchronous_outputs": {
+      "type": "object",
+      "properties": {
+        "semi_major_axis_km": { "$ref": "#/$defs/nullable_number" },
+        "eccentricity":       { "$ref": "#/$defs/nullable_number" },
+        "inclination_deg":    { "$ref": "#/$defs/nullable_number" },
+        "raan_deg":           { "$ref": "#/$defs/nullable_number" },
+        "argp_deg":           { "$ref": "#/$defs/nullable_number" },
+        "mean_anomaly_deg":   { "$ref": "#/$defs/nullable_number" },
+        "position_x_km":     { "$ref": "#/$defs/nullable_number" },
+        "position_y_km":     { "$ref": "#/$defs/nullable_number" },
+        "position_z_km":     { "$ref": "#/$defs/nullable_number" },
+        "velocity_x_km_s":   { "$ref": "#/$defs/nullable_number" },
+        "velocity_y_km_s":   { "$ref": "#/$defs/nullable_number" },
+        "velocity_z_km_s":   { "$ref": "#/$defs/nullable_number" }
+      },
+      "required": [
+        "semi_major_axis_km",
+        "eccentricity",
+        "inclination_deg",
+        "raan_deg",
+        "argp_deg",
+        "mean_anomaly_deg",
+        "position_x_km",
+        "position_y_km",
+        "position_z_km",
+        "velocity_x_km_s",
+        "velocity_y_km_s",
+        "velocity_z_km_s"
+      ],
+      "additionalProperties": false
+    },
+    "nullable_vec3": {
+      "description": "Three numbers, or null; null anywhere means SKIP (spec.md section 7).",
+      "type": ["array", "null"],
+      "items": {
+        "$ref": "#/$defs/nullable_number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "maneuver_burn": {
+      "description": "A burn of a maneuver chain (spec.md 13.1): its label, its epoch in TT seconds from the start, the position at the burn and the delta-v v_after - v_before in ICRF, and the total mass after it.",
+      "type": "object",
+      "properties": {
+        "label":         { "type": "string" },
+        "elapsed_s":     { "$ref": "#/$defs/nullable_number" },
+        "position_km":   { "$ref": "#/$defs/nullable_vec3" },
+        "delta_v_km_s":  { "$ref": "#/$defs/nullable_vec3" },
+        "mass_after_kg": { "$ref": "#/$defs/nullable_number" }
+      },
+      "required": ["label", "elapsed_s", "position_km", "delta_v_km_s", "mass_after_kg"],
+      "additionalProperties": false
+    },
+    "maneuver_outputs": {
+      "description": "The burns of the chain, in its order, then the final state (spec.md 13.1); a report names a burn output burns[<label>].<field>.",
+      "type": "object",
+      "properties": {
+        "burns": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/maneuver_burn" },
+          "minItems": 1
+        },
+        "final_x_km":    { "$ref": "#/$defs/nullable_number" },
+        "final_y_km":    { "$ref": "#/$defs/nullable_number" },
+        "final_z_km":    { "$ref": "#/$defs/nullable_number" },
+        "final_vx_km_s": { "$ref": "#/$defs/nullable_number" },
+        "final_vy_km_s": { "$ref": "#/$defs/nullable_number" },
+        "final_vz_km_s": { "$ref": "#/$defs/nullable_number" }
+      },
+      "required": ["burns", "final_x_km", "final_y_km", "final_z_km", "final_vx_km_s", "final_vy_km_s",
+                   "final_vz_km_s"],
+      "additionalProperties": false
+    },
+    "eclipse_event": {
+      "description": "An eclipse of the second branch (spec.md 12.2): its body and type, exact; its start and stop, UTC instants (spec.md section 3); its duration.",
+      "type": "object",
+      "properties": {
+        "body":       { "enum": ["Earth", "Moon", null] },
+        "type":       { "enum": ["umbra", "penumbra", "antumbra", null] },
+        "start":      { "$ref": "#/$defs/nullable_string" },
+        "stop":       { "$ref": "#/$defs/nullable_string" },
+        "duration_s": { "$ref": "#/$defs/nullable_number" }
+      },
+      "required": ["body", "type", "start", "stop", "duration_s"],
+      "additionalProperties": false
+    },
+    "eclipse_events_outputs": {
+      "description": "Every eclipse of the window in time order (spec.md 12.2); a report names an output events[<k>].<field>, k from 0.",
+      "type": "object",
+      "properties": { "events": { "type": "array", "items": { "$ref": "#/$defs/eclipse_event" } } },
+      "required": ["events"],
+      "additionalProperties": false
+    },
+    "station_pass": {
+      "description": "A pass over a ground station (spec.md 14.1): rise, set and culmination as UTC instants, its duration and maximum elevation.",
+      "type": "object",
+      "properties": {
+        "rise":              { "$ref": "#/$defs/nullable_string" },
+        "set":               { "$ref": "#/$defs/nullable_string" },
+        "duration_s":        { "$ref": "#/$defs/nullable_number" },
+        "culmination":       { "$ref": "#/$defs/nullable_string" },
+        "max_elevation_deg": { "$ref": "#/$defs/nullable_number" }
+      },
+      "required": ["rise", "set", "duration_s", "culmination", "max_elevation_deg"],
+      "additionalProperties": false
+    },
+    "station_sample": {
+      "description": "A sample of a ground_station case (spec.md 14.1): its epoch, the echo of the sample epoch, and the azimuth, elevation, range and range rate there.",
+      "type": "object",
+      "properties": {
+        "epoch":           { "type": "string" },
+        "azimuth_deg":     { "$ref": "#/$defs/nullable_number" },
+        "elevation_deg":   { "$ref": "#/$defs/nullable_number" },
+        "range_km":        { "$ref": "#/$defs/nullable_number" },
+        "range_rate_km_s": { "$ref": "#/$defs/nullable_number" }
+      },
+      "required": ["epoch", "azimuth_deg", "elevation_deg", "range_km", "range_rate_km_s"],
+      "additionalProperties": false
+    },
+    "ground_station_outputs": {
+      "description": "The passes in time order and the samples of sample_epochs, in their order (spec.md 14.1); a report names an output passes[<k>].<field> or samples[<k>].<field>, k from 0.",
+      "type": "object",
+      "properties": {
+        "passes":  { "type": "array", "items": { "$ref": "#/$defs/station_pass" } },
+        "samples": { "type": "array", "items": { "$ref": "#/$defs/station_sample" } }
+      },
+      "required": ["passes"],
+      "additionalProperties": false
+    },
+    "orbital_event_epoch": {
+      "type": "object",
+      "properties": { "elapsed_s": { "$ref": "#/$defs/nullable_number" } },
+      "required": ["elapsed_s"],
+      "additionalProperties": false
+    },
+    "orbital_event_apsis": {
+      "type": "object",
+      "properties": {
+        "elapsed_s": { "$ref": "#/$defs/nullable_number" },
+        "radius_km": { "$ref": "#/$defs/nullable_number" }
+      },
+      "required": ["elapsed_s", "radius_km"],
+      "additionalProperties": false
+    },
+    "orbital_events_outputs": {
+      "description": "Each list of events in time order, its epochs in TT seconds from the start, the radius at an apsis (spec.md 14.2); a report names an output events.<list>[<k>].<field>, k from 0.",
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "object",
+          "properties": {
+            "periapsis":       { "type": "array", "items": { "$ref": "#/$defs/orbital_event_apsis" } },
+            "apoapsis":        { "type": "array", "items": { "$ref": "#/$defs/orbital_event_apsis" } },
+            "ascending_node":  { "type": "array", "items": { "$ref": "#/$defs/orbital_event_epoch" } },
+            "descending_node": { "type": "array", "items": { "$ref": "#/$defs/orbital_event_epoch" } },
+            "altitude_up":     { "type": "array", "items": { "$ref": "#/$defs/orbital_event_epoch" } },
+            "altitude_down":   { "type": "array", "items": { "$ref": "#/$defs/orbital_event_epoch" } }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        }
+      },
+      "required": ["events"],
+      "additionalProperties": false
+    },
+    "attitude_outputs": {
+      "description": "The attitude body -> ICRF, scalar first, or the direction in ICRF of the single pointing axis, at each sample (spec.md 14.3); a report names an output attitude_quaternions[<k>] or pointing_directions[<k>].",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": { "attitude_quaternions": { "type": "array", "items": { "$ref": "#/$defs/nullable_quaternion" }, "minItems": 1 } },
+          "required": ["attitude_quaternions"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "pointing_directions": { "type": "array", "items": { "$ref": "#/$defs/nullable_vec3" }, "minItems": 1 } },
+          "required": ["pointing_directions"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "lambert_outputs": {
+      "description": "The departure and arrival velocities of the transfer in ICRF (spec.md 13.2).",
+      "type": "object",
+      "properties": {
+        "v1_km_s": { "$ref": "#/$defs/nullable_vec3" },
+        "v2_km_s": { "$ref": "#/$defs/nullable_vec3" }
+      },
+      "required": ["v1_km_s", "v2_km_s"],
+      "additionalProperties": false
+    },
+    "orbital_elements_outputs": {
+      "description": "The outputs a case checks are the keys present (spec.md section 7); spec.md section 11.1 defines each.",
+      "type": "object",
+      "properties": {
+        "semi_major_axis_km":          { "$ref": "#/$defs/nullable_number" },
+        "eccentricity":                { "$ref": "#/$defs/nullable_number" },
+        "inclination_deg":             { "$ref": "#/$defs/nullable_number" },
+        "raan_deg":                    { "$ref": "#/$defs/nullable_number" },
+        "argp_deg":                    { "$ref": "#/$defs/nullable_number" },
+        "true_anomaly_deg":            { "$ref": "#/$defs/nullable_number" },
+        "mean_anomaly_deg":            { "$ref": "#/$defs/nullable_number" },
+        "eccentric_anomaly_deg":       { "$ref": "#/$defs/nullable_number" },
+        "hyperbolic_anomaly_deg":      { "$ref": "#/$defs/nullable_number" },
+        "hyperbolic_mean_anomaly_deg": { "$ref": "#/$defs/nullable_number" },
+        "argument_of_latitude_deg":    { "$ref": "#/$defs/nullable_number" },
+        "longitude_of_periapsis_deg":  { "$ref": "#/$defs/nullable_number" },
+        "true_longitude_deg":          { "$ref": "#/$defs/nullable_number" },
+        "mean_longitude_deg":          { "$ref": "#/$defs/nullable_number" },
+        "periapsis_radius_km":         { "$ref": "#/$defs/nullable_number" },
+        "apoapsis_radius_km":          { "$ref": "#/$defs/nullable_number" },
+        "semi_latus_rectum_km":        { "$ref": "#/$defs/nullable_number" },
+        "period_s":                    { "$ref": "#/$defs/nullable_number" },
+        "specific_energy_km2_s2":      { "$ref": "#/$defs/nullable_number" },
+        "angular_momentum_km2_s":      { "$ref": "#/$defs/nullable_vec3" },
+        "periapsis_speed_km_s":        { "$ref": "#/$defs/nullable_number" },
+        "apoapsis_speed_km_s":         { "$ref": "#/$defs/nullable_number" },
+        "mean_motion_rad_s":           { "$ref": "#/$defs/nullable_number" },
+        "mod_equinoctial_f":           { "$ref": "#/$defs/nullable_number" },
+        "mod_equinoctial_g":           { "$ref": "#/$defs/nullable_number" },
+        "mod_equinoctial_h":           { "$ref": "#/$defs/nullable_number" },
+        "mod_equinoctial_k":           { "$ref": "#/$defs/nullable_number" },
+        "right_ascension_deg":         { "$ref": "#/$defs/nullable_number" },
+        "declination_deg":             { "$ref": "#/$defs/nullable_number" },
+        "position_km":                 { "$ref": "#/$defs/nullable_vec3" },
+        "velocity_km_s":               { "$ref": "#/$defs/nullable_vec3" }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "time_conversion_outputs": {
+      "type": "object",
+      "properties": {
+        "tai_s": { "$ref": "#/$defs/nullable_number" },
+        "utc_s": { "$ref": "#/$defs/nullable_number" },
+        "tt_s":  { "$ref": "#/$defs/nullable_number" },
+        "tdb_s": { "$ref": "#/$defs/nullable_number" },
+        "gps_s": { "$ref": "#/$defs/nullable_number" }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "frame_transformation_outputs": {
+      "type": "object",
+      "properties": {
+        "position_km":   { "$ref": "#/$defs/nullable_vec3" },
+        "velocity_km_s": { "$ref": "#/$defs/nullable_vec3" },
+        "latitude_deg":  { "$ref": "#/$defs/nullable_number" },
+        "longitude_deg": { "$ref": "#/$defs/nullable_number" },
+        "altitude_km":   { "$ref": "#/$defs/nullable_number" }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "sgp4_state": {
+      "type": "object",
+      "properties": {
+        "position_km":   { "$ref": "#/$defs/nullable_vec3" },
+        "velocity_km_s": { "$ref": "#/$defs/nullable_vec3" }
+      },
+      "required": ["position_km", "velocity_km_s"],
+      "additionalProperties": false
+    },
+    "sgp4_outputs": {
+      "description": "The TLE epoch (a UTC instant with 6 decimals, spec.md 15.2) and the state at each sample in TEME and, for UTC samples, in ICRF (spec.md 15.1); a report names an output epoch, states, states[<k>].teme.position_km, ...",
+      "type": "object",
+      "properties": {
+        "epoch": { "$ref": "#/$defs/nullable_string" },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "teme": { "$ref": "#/$defs/sgp4_state" },
+              "icrf": { "$ref": "#/$defs/sgp4_state" }
+            },
+            "required": ["teme"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["epoch", "states"],
+      "additionalProperties": false
+    },
+    "tle_fields": {
+      "description": "The fields of a TLE under the OMM keywords and units (spec.md 15.2).",
+      "type": "object",
+      "properties": {
+        "NORAD_CAT_ID":        { "$ref": "#/$defs/nullable_number" },
+        "OBJECT_ID":           { "$ref": "#/$defs/nullable_string" },
+        "CLASSIFICATION_TYPE": { "$ref": "#/$defs/nullable_string" },
+        "EPOCH":               { "$ref": "#/$defs/nullable_string" },
+        "MEAN_MOTION_DOT":     { "$ref": "#/$defs/nullable_number" },
+        "MEAN_MOTION_DDOT":    { "$ref": "#/$defs/nullable_number" },
+        "BSTAR":               { "$ref": "#/$defs/nullable_number" },
+        "EPHEMERIS_TYPE":      { "$ref": "#/$defs/nullable_number" },
+        "ELEMENT_SET_NO":      { "$ref": "#/$defs/nullable_number" },
+        "INCLINATION":         { "$ref": "#/$defs/nullable_number" },
+        "RA_OF_ASC_NODE":      { "$ref": "#/$defs/nullable_number" },
+        "ECCENTRICITY":        { "$ref": "#/$defs/nullable_number" },
+        "ARG_OF_PERICENTER":   { "$ref": "#/$defs/nullable_number" },
+        "MEAN_ANOMALY":        { "$ref": "#/$defs/nullable_number" },
+        "MEAN_MOTION":         { "$ref": "#/$defs/nullable_number" },
+        "REV_AT_EPOCH":        { "$ref": "#/$defs/nullable_number" }
+      },
+      "required": ["NORAD_CAT_ID", "OBJECT_ID", "CLASSIFICATION_TYPE", "EPOCH", "MEAN_MOTION_DOT", "MEAN_MOTION_DDOT", "BSTAR", "EPHEMERIS_TYPE", "ELEMENT_SET_NO", "INCLINATION", "RA_OF_ASC_NODE", "ECCENTRICITY", "ARG_OF_PERICENTER", "MEAN_ANOMALY", "MEAN_MOTION", "REV_AT_EPOCH"],
+      "additionalProperties": false
+    },
+    "tle_conversion_outputs": {
+      "description": "Per item: the fields of the TLE (tle_to_omm) or the two lines of the TLE (omm_to_tle), compared field by field (kind TLE line, spec.md 6.1 and 15.2); a report names an output items, items[<k>].<KEYWORD> or items[<k>].tle.<KEYWORD>.",
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/tle_fields" },
+              {
+                "type": "object",
+                "properties": {
+                  "tle": {
+                    "type": "object",
+                    "properties": { "line1": { "$ref": "#/$defs/nullable_string" }, "line2": { "$ref": "#/$defs/nullable_string" } },
+                    "required": ["line1", "line2"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["tle"],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "required": ["items"],
+      "additionalProperties": false
+    },
+    "conjunction_object_covariance": {
+      "description": "An object's covariance at TCA in its own RTN (spec.md 16.1): the six sigmas (km, km/s) and the 15 correlations of the strict lower triangle in the CDM order.",
+      "type": "object",
+      "properties": {
+        "sigma_rtn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nullable_number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "correlation_rtn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nullable_number"
+          },
+          "minItems": 15,
+          "maxItems": 15
+        }
+      },
+      "required": [
+        "sigma_rtn",
+        "correlation_rtn"
+      ],
+      "additionalProperties": false
+    },
+    "conjunction_minimum": {
+      "type": "object",
+      "properties": {
+        "tca_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "miss_distance_km": {
+          "$ref": "#/$defs/nullable_number"
+        }
+      },
+      "required": [
+        "tca_s",
+        "miss_distance_km"
+      ],
+      "additionalProperties": false
+    },
+    "conjunction_outputs": {
+      "description": "The TCA (seconds from the epoch, TT, or TDB for kernel objects), the miss distance, the relative speed and state in the RTN of object 1, each covariance at TCA and the Pc (spec.md 16.1); or every minimum in time order (report all_minima), the count exact. An output the case leaves out is absent.",
+      "type": "object",
+      "properties": {
+        "tca_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "miss_distance_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "relative_speed_km_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "relative_position_rtn_km": {
+          "$ref": "#/$defs/nullable_vec3"
+        },
+        "relative_velocity_rtn_km_s": {
+          "$ref": "#/$defs/nullable_vec3"
+        },
+        "objects": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/conjunction_object_covariance"
+          }
+        },
+        "collision_probability": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "minima": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/conjunction_minimum"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "miss_distance_km"
+          ]
+        },
+        {
+          "required": [
+            "minima"
+          ]
+        }
+      ]
+    },
+    "collision_probability_outputs": {
+      "description": "The 2D Pc, or Frisbee's maximum with one covariance absent, the encounter-plane sigmas of the projected combined covariance before the clip, and whether an eigenvalue was raised to the clip (spec.md 16.2).",
+      "type": "object",
+      "properties": {
+        "collision_probability": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "maximum_collision_probability": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "encounter_plane_sigma_major_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "encounter_plane_sigma_minor_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "remediated": {
+          "$ref": "#/$defs/nullable_boolean"
+        }
+      },
+      "required": [
+        "encounter_plane_sigma_major_km",
+        "remediated"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "collision_probability"
+          ]
+        },
+        {
+          "required": [
+            "maximum_collision_probability"
+          ]
+        }
+      ]
+    },
+    "cdm_object": {
+      "type": "object",
+      "properties": {
+        "ref_frame": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "position_km": {
+          "$ref": "#/$defs/nullable_vec3"
+        },
+        "velocity_km_s": {
+          "$ref": "#/$defs/nullable_vec3"
+        },
+        "covariance_rtn": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nullable_number"
+          },
+          "minItems": 21,
+          "maxItems": 21
+        },
+        "covariance_consider": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nullable_number"
+          },
+          "minItems": 7,
+          "maxItems": 24
+        },
+        "covariance_inertial": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nullable_number"
+          },
+          "minItems": 21,
+          "maxItems": 21
+        },
+        "time_lastob_start": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "time_lastob_end": {
+          "$ref": "#/$defs/nullable_string"
+        }
+      },
+      "required": [
+        "position_km",
+        "velocity_km_s",
+        "covariance_rtn"
+      ],
+      "additionalProperties": false
+    },
+    "cdm_outputs": {
+      "description": "The fields of a CDM in the suite's units (spec.md 16.3): decoded, or written by the runner and read back (export); epochs as UTC instants.",
+      "type": "object",
+      "properties": {
+        "tca": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "creation_date": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "miss_distance_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "relative_speed_km_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "relative_position_rtn_km": {
+          "$ref": "#/$defs/nullable_vec3"
+        },
+        "relative_velocity_rtn_km_s": {
+          "$ref": "#/$defs/nullable_vec3"
+        },
+        "start_screen_period": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "stop_screen_period": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "screen_volume_km": {
+          "$ref": "#/$defs/nullable_vec3"
+        },
+        "collision_probability": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "collision_probability_method": {
+          "$ref": "#/$defs/nullable_string"
+        },
+        "objects": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/cdm_object"
+          }
+        }
+      },
+      "required": [
+        "tca",
+        "miss_distance_km",
+        "objects"
+      ],
+      "additionalProperties": false
+    },
+    "stm_outputs": {
+      "description": "Phi(t_end, t_start), 6 rows of 6 numbers, in the frame of the case; the same in km and km/s as in m and m/s (the rv block in s, the vr block in 1/s). Compared by 3 x 3 block (stm_block, spec.md 16.4). The final state, compared as for the propagator category.",
+      "type": "object",
+      "properties": {
+        "final_stm": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/nullable_number"
+            },
+            "minItems": 6,
+            "maxItems": 6
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "final_x_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_y_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_z_km": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_vx_km_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_vy_km_s": {
+          "$ref": "#/$defs/nullable_number"
+        },
+        "final_vz_km_s": {
+          "$ref": "#/$defs/nullable_number"
+        }
+      },
+      "required": [
+        "final_stm"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "category",
+    "case_version",
+    "generated_by",
+    "outputs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "pointing_triad",
+        "eclipse",
+        "propagator",
+        "tracking_data",
+        "geosynchronous",
+        "orbital_elements",
+        "time_conversion",
+        "frame_transformation",
+        "maneuver",
+        "lambert",
+        "ground_station",
+        "orbital_events",
+        "attitude",
+        "sgp4",
+        "tle_conversion",
+        "conjunction",
+        "collision_probability",
+        "cdm",
+        "stm"
+      ]
+    },
+    "case_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+    },
+    "generated_by": {
+      "type": "object",
+      "properties": {
+        "tool": {
+          "type": "string"
+        },
+        "tool_version": {
+          "type": "string"
+        },
+        "kernel": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "gravity_model": {
+          "type": "string"
+        },
+        "perturbations": {
+          "type": "string"
+        },
+        "integrator": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "reference_frame": {
+          "type": "string",
+          "description": "Frame in which the reference tool produced the golden, e.g. EarthMJ2000Eq (GMAT) or J2000 (SPICE)."
+        },
+        "tool_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "script": {
+          "type": "string",
+          "description": "File name of the reference script, next to the case."
+        },
+        "log": {
+          "type": "string",
+          "description": "File name of the reference run's console log, next to the case."
+        }
+      },
+      "required": [
+        "tool",
+        "tool_version",
+        "kernel",
+        "date"
+      ],
+      "additionalProperties": false
+    },
+    "outputs": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "category": {
+        "const": "pointing_triad"
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "outputs": {
+        "$ref": "#/$defs/pointing_triad_outputs"
+      }
+    }
+  },
+  "else": {
+    "if": {
+      "properties": {
+        "category": {
+          "const": "eclipse"
+        }
+      }
+    },
+    "then": {
+      "properties": {
+        "outputs": {
+          "oneOf": [
+            { "$ref": "#/$defs/eclipse_outputs" },
+            { "$ref": "#/$defs/eclipse_events_outputs" }
+          ]
+        }
+      }
+    },
+    "else": {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "propagator"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/propagator_outputs"
+          }
+        }
+      },
+      "else": {
+        "if": {
+          "properties": {
+            "category": {
+              "const": "tracking_data"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "outputs": {
+              "$ref": "#/$defs/tracking_data_outputs"
+            }
+          }
+        },
+        "else": {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "geosynchronous"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "outputs": {
+                "$ref": "#/$defs/geosynchronous_outputs"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "orbital_elements"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/orbital_elements_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "time_conversion"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/time_conversion_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "frame_transformation"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/frame_transformation_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "maneuver"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/maneuver_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "lambert"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/lambert_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "ground_station"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/ground_station_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "orbital_events"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/orbital_events_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "attitude"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/attitude_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "sgp4"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/sgp4_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "tle_conversion"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/tle_conversion_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "conjunction"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/conjunction_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "collision_probability"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/collision_probability_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "cdm"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/cdm_outputs"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "stm"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "outputs": {
+            "$ref": "#/$defs/stm_outputs"
+          }
+        }
+      }
+    }
+  ]
+}

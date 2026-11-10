@@ -1,0 +1,116 @@
+{
+  "id": "cdm_decode_synthetic_relative_002",
+  "category": "cdm",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "exact decimal reading of the CCSDS 508.0 CDM (tools/legacy_goldens/cdm.py, Python decimal) and mpmath at 50 digits",
+    "tool_version": "Python 3.13, mpmath 1.4.1",
+    "kernel": "data/: gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140)",
+    "date": "2026-11-09",
+    "method": "CCSDS 508.0-B-1 Cor. 2: the decimal text of each field times the power of ten of its unit (the standard's unit when the attribute is absent), the double nearest the exact value; epochs as UTC instants; to_inertial and export in mpmath at 50 digits",
+    "reference_frame": "the CDM's REF_FRAME (inertial); RTN of each object"
+  },
+  "outputs": {
+    "tca": "2026-03-01T12:00:00.000 UTC",
+    "creation_date": "2026-02-28T09:15:00.000 UTC",
+    "miss_distance_km": 0.1181,
+    "relative_speed_km_s": 10.9759,
+    "relative_position_rtn_km": [
+      0.0967,
+      0.0462,
+      0.0495
+    ],
+    "relative_velocity_rtn_km_s": [
+      -0.0004,
+      -8.0273,
+      7.4856
+    ],
+    "start_screen_period": "2026-02-28T00:00:00.000 UTC",
+    "stop_screen_period": "2026-03-07T00:00:00.000 UTC",
+    "screen_volume_km": [
+      0.2,
+      1.0,
+      1.0
+    ],
+    "collision_probability": 0.0003615,
+    "collision_probability_method": "FOSTER-1992",
+    "objects": [
+      {
+        "ref_frame": "EME2000",
+        "position_km": [
+          -302.607983621,
+          -1552.300111601,
+          6902.172228099
+        ],
+        "velocity_km_s": [
+          -5.780434939,
+          -4.607822719,
+          -1.28932776
+        ],
+        "covariance_rtn": [
+          0.000196,
+          -0.000111922101504,
+          0.0441,
+          5.69961625e-06,
+          0.000603066686968,
+          8.1e-05,
+          -8.0562497e-08,
+          3.21661297e-07,
+          1.26088314e-07,
+          4.41e-08,
+          -5.3171706e-08,
+          6.0460896e-08,
+          1.2186607e-08,
+          7.83862e-10,
+          2.56e-10,
+          -4.3478266e-08,
+          -2.90844015e-07,
+          -3.2276262e-08,
+          4.66183e-10,
+          3.7323e-11,
+          1.21e-10
+        ],
+        "time_lastob_start": "2026-02-27T20:00:00.000 UTC",
+        "time_lastob_end": "2026-02-27T21:00:00.000 UTC"
+      },
+      {
+        "ref_frame": "EME2000",
+        "position_km": [
+          -302.616182808,
+          -1552.387250402,
+          6902.251520044
+        ],
+        "velocity_km_s": [
+          5.165664541,
+          -5.35423164,
+          -0.977720615
+        ],
+        "covariance_rtn": [
+          0.009025,
+          0.088658997597282,
+          8.41,
+          0.001846475720116,
+          0.064824425908223,
+          0.0036,
+          -9.2704740839e-05,
+          -0.000318610826277,
+          -2.4977363691e-05,
+          9.61e-06,
+          2.55800373e-07,
+          -8.8329388372e-05,
+          -2.003009474e-06,
+          -1.936574e-08,
+          1.44e-08,
+          -1.46865933e-06,
+          -2.1270055926e-05,
+          -1.769202068e-06,
+          -4.7983991e-08,
+          2.182546e-09,
+          6.4e-09
+        ],
+        "time_lastob_start": "2026-02-26T05:00:00.000 UTC",
+        "time_lastob_end": "2026-02-26T06:00:00.000 UTC"
+      }
+    ]
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "id": "stm_24h_leo_grav10_002",
+  "category": "stm",
+  "case_version": "0.3.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: EGM2008_to70_TideFree.cof (SHA-256 311f101576fc68d569f70d82a2d46014fc69f9597f9c65ad7d97dfddfe8628d6), de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-09",
+    "gravity_model": "EGM2008 tide-free (data/EGM2008_to70_TideFree.cof, from data/EGM2008_to70_TideFree), degree and order 10, GM 3.986004415e14 m^3/s^2 and R 6378.1363 km of the model applied to the whole field, oriented by ITRF93 of data/'s bpc through SPICE (GMAT's user-defined planet EarthS)",
+    "perturbations": "Moon, Sun as point masses (de440s positions, GMs of data/gm_de440.tpc). No drag, no SRP, no relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: the user-defined planet EarthS (NAIF 399 at its de440s position, its body-fixed frame ITRF93 of data/'s bpc through SPICE), EGM2008 of data/ (EGM2008_to70_TideFree.cof, the model GM and radius) to degree and order 10, third bodies Moon, Sun at their de440s positions with the GMs of data/gm_de440.tpc, EarthS's radius and flattening those of data/pck00011.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s; the window integrated over its TT seconds; state entered in EarthSICRF, read in EarthSMJ2000Eq and rotated to ICRF with GMAT's rotation at the epoch. Phi: Sat.OrbitSTM of Propagate P(Sat, 'STM'), turned from EarthSMJ2000Eq to ICRF by R0 at both ends.",
+    "reference_frame": "EarthSMJ2000Eq rotated to ICRF",
+    "script": "stm_24h_leo_grav10_002.script",
+    "log": "stm_24h_leo_grav10_002.log"
+  },
+  "outputs": {
+    "final_stm": [
+      [
+        -204.41374992178348,
+        -116.66377164034078,
+        -50.615727802184274,
+        93554.27795459061,
+        -102462.69697932359,
+        -162291.4374087242
+      ],
+      [
+        54.89966929430774,
+        31.083513641770278,
+        14.245792615820813,
+        -24501.514527447325,
+        27194.246475798256,
+        43398.26921628798
+      ],
+      [
+        133.38836766852222,
+        77.02216867672823,
+        33.07470513850539,
+        -60630.382078332135,
+        67132.39268250192,
+        105547.30725125367
+      ],
+      [
+        -0.15711405042786647,
+        -0.08931375378689632,
+        -0.03808607105711542,
+        72.39402763169669,
+        -78.25021181039843,
+        -124.54724757647668
+      ],
+      [
+        -0.17323280240746142,
+        -0.09841990755381741,
+        -0.042830189128718096,
+        79.21092231783547,
+        -86.79002907493985,
+        -136.22686480709785
+      ],
+      [
+        -0.16021783708859283,
+        -0.09183132620991742,
+        -0.03934756653795328,
+        72.79888455853454,
+        -79.4603641958414,
+        -126.77762222793916
+      ]
+    ],
+    "final_x_km": -3715.771403507676,
+    "final_y_km": -4153.098660230795,
+    "final_z_km": -3844.983754163326,
+    "final_vx_km_s": 6.225212773700358,
+    "final_vy_km_s": -1.7328265929090352,
+    "final_vz_km_s": -4.139580329614542
+  }
+}

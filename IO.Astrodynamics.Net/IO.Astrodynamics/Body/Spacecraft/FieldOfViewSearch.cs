@@ -129,18 +129,6 @@ internal static class FieldOfViewSearch
     /// <exception cref="ArgumentException">The search window leaves the propagated states.</exception>
     internal static void CheckCoverage(Spacecraft spacecraft, in Window searchWindow)
     {
-        if (spacecraft.InterpolatedStatesWindow is not { } states)
-        {
-            return;
-        }
-
-        var start = searchWindow.StartDate.ToTDB();
-        var end = searchWindow.EndDate.ToTDB();
-        if ((start - states.StartDate.ToTDB()).Ticks < 0 || (states.EndDate.ToTDB() - end).Ticks < 0)
-        {
-            throw new ArgumentException(
-                $"The search window [{start}, {end}] leaves the propagated states of {spacecraft.Name}, [{states.StartDate.ToTDB()}, {states.EndDate.ToTDB()}]: they would be extrapolated.",
-                nameof(searchWindow));
-        }
+        spacecraft.CheckInterpolatedStatesCover(searchWindow, "search window", nameof(searchWindow));
     }
 }

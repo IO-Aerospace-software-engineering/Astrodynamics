@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="CCSDS_CDM_VERS" version="1.0">
+ <header>
+  <CREATION_DATE>2026-059T09:15:00.000</CREATION_DATE>
+  <ORIGINATOR>SUITE</ORIGINATOR>
+  <MESSAGE_ID>SUITE_CDM_005</MESSAGE_ID>
+ </header>
+ <body>
+  <relativeMetadataData>
+   <TCA>2026-060T12:00:00.000</TCA>
+   <MISS_DISTANCE units="m">118.1</MISS_DISTANCE>
+   <START_SCREEN_PERIOD>2026-059T00:00:00.000</START_SCREEN_PERIOD>
+   <STOP_SCREEN_PERIOD>2026-066T00:00:00.000</STOP_SCREEN_PERIOD>
+   <SCREEN_VOLUME_FRAME>RTN</SCREEN_VOLUME_FRAME>
+   <SCREEN_VOLUME_SHAPE>ELLIPSOID</SCREEN_VOLUME_SHAPE>
+   <SCREEN_VOLUME_X units="m">200</SCREEN_VOLUME_X>
+   <SCREEN_VOLUME_Y units="m">1000</SCREEN_VOLUME_Y>
+   <SCREEN_VOLUME_Z units="m">1000</SCREEN_VOLUME_Z>
+  </relativeMetadataData>
+  <segment>
+   <metadata>
+    <OBJECT>OBJECT1</OBJECT>
+    <OBJECT_DESIGNATOR>90001</OBJECT_DESIGNATOR>
+    <CATALOG_NAME>SATCAT</CATALOG_NAME>
+    <OBJECT_NAME>SYNTHETIC SAT</OBJECT_NAME>
+    <INTERNATIONAL_DESIGNATOR>2026-001A</INTERNATIONAL_DESIGNATOR>
+    <EPHEMERIS_NAME>NONE</EPHEMERIS_NAME>
+    <COVARIANCE_METHOD>CALCULATED</COVARIANCE_METHOD>
+    <MANEUVERABLE>YES</MANEUVERABLE>
+    <REF_FRAME>EME2000</REF_FRAME>
+   </metadata>
+   <data>
+    <odParameters>
+     <TIME_LASTOB_START>2026-058T20:00:00.000</TIME_LASTOB_START>
+     <TIME_LASTOB_END>2026-058T21:00:00.000</TIME_LASTOB_END>
+     <RECOMMENDED_OD_SPAN units="d">3.77</RECOMMENDED_OD_SPAN>
+     <ACTUAL_OD_SPAN units="d">3.77</ACTUAL_OD_SPAN>
+     <OBS_AVAILABLE>461</OBS_AVAILABLE>
+     <OBS_USED>458</OBS_USED>
+     <TRACKS_AVAILABLE>149</TRACKS_AVAILABLE>
+     <TRACKS_USED>148</TRACKS_USED>
+     <RESIDUALS_ACCEPTED units="%">98.7</RESIDUALS_ACCEPTED>
+     <WEIGHTED_RMS>1.322</WEIGHTED_RMS>
+    </odParameters>
+    <stateVector>
+     <X units="km">-302.607983621</X>
+     <Y units="km">-1552.300111601</Y>
+     <Z units="km">6902.172228099</Z>
+     <X_DOT units="km/s">-5.780434939</X_DOT>
+     <Y_DOT units="km/s">-4.607822719</Y_DOT>
+     <Z_DOT units="km/s">-1.289327760</Z_DOT>
+    </stateVector>
+    <covarianceMatrix>
+     <CR_R units="m**2">196.000000000</CR_R>
+     <CT_R units="m**2">-111.922101504</CT_R>
+     <CT_T units="m**2">44100.000000000</CT_T>
+     <CN_R units="m**2">5.699616250</CN_R>
+     <CN_T units="m**2">603.066686968</CN_T>
+     <CN_N units="m**2">81.000000000</CN_N>
+     <CRDOT_R units="m**2/s">-0.080562497</CRDOT_R>
+     <CRDOT_T units="m**2/s">0.321661297</CRDOT_T>
+     <CRDOT_N units="m**2/s">0.126088314</CRDOT_N>
+     <CRDOT_RDOT units="m**2/s**2">0.044100000</CRDOT_RDOT>
+     <CTDOT_R units="m**2/s">-0.053171706</CTDOT_R>
+     <CTDOT_T units="m**2/s">0.060460896</CTDOT_T>
+     <CTDOT_N units="m**2/s">0.012186607</CTDOT_N>
+     <CTDOT_RDOT units="m**2/s**2">0.000783862</CTDOT_RDOT>
+     <CTDOT_TDOT units="m**2/s**2">0.000256000</CTDOT_TDOT>
+     <CNDOT_R units="m**2/s">-0.043478266</CNDOT_R>
+     <CNDOT_T units="m**2/s">-0.290844015</CNDOT_T>
+     <CNDOT_N units="m**2/s">-0.032276262</CNDOT_N>
+     <CNDOT_RDOT units="m**2/s**2">0.000466183</CNDOT_RDOT>
+     <CNDOT_TDOT units="m**2/s**2">0.000037323</CNDOT_TDOT>
+     <CNDOT_NDOT units="m**2/s**2">0.000121000</CNDOT_NDOT>
+    </covarianceMatrix>
+   </data>
+  </segment>
+  <segment>
+   <metadata>
+    <OBJECT>OBJECT2</OBJECT>
+    <OBJECT_DESIGNATOR>90002</OBJECT_DESIGNATOR>
+    <CATALOG_NAME>SATCAT</CATALOG_NAME>
+    <OBJECT_NAME>SYNTHETIC DEB</OBJECT_NAME>
+    <INTERNATIONAL_DESIGNATOR>2019-099XT</INTERNATIONAL_DESIGNATOR>
+    <EPHEMERIS_NAME>NONE</EPHEMERIS_NAME>
+    <COVARIANCE_METHOD>CALCULATED</COVARIANCE_METHOD>
+    <MANEUVERABLE>NO</MANEUVERABLE>
+    <REF_FRAME>EME2000</REF_FRAME>
+   </metadata>
+   <data>
+    <odParameters>
+     <TIME_LASTOB_START>2026-057T05:00:00.000</TIME_LASTOB_START>
+     <TIME_LASTOB_END>2026-057T06:00:00.000</TIME_LASTOB_END>
+     <RECOMMENDED_OD_SPAN units="d">3.77</RECOMMENDED_OD_SPAN>
+     <ACTUAL_OD_SPAN units="d">3.77</ACTUAL_OD_SPAN>
+     <OBS_AVAILABLE>461</OBS_AVAILABLE>
+     <OBS_USED>458</OBS_USED>
+     <TRACKS_AVAILABLE>149</TRACKS_AVAILABLE>
+     <TRACKS_USED>148</TRACKS_USED>
+     <RESIDUALS_ACCEPTED units="%">98.7</RESIDUALS_ACCEPTED>
+     <WEIGHTED_RMS>1.322</WEIGHTED_RMS>
+    </odParameters>
+    <stateVector>
+     <X units="km">-302.616182808</X>
+     <Y units="km">-1552.387250402</Y>
+     <Z units="km">6902.251520044</Z>
+     <X_DOT units="km/s">5.165664541</X_DOT>
+     <Y_DOT units="km/s">-5.354231640</Y_DOT>
+     <Z_DOT units="km/s">-0.977720615</Z_DOT>
+    </stateVector>
+    <covarianceMatrix>
+     <CR_R units="m**2">9025.000000000</CR_R>
+     <CT_R units="m**2">88658.997597282</CT_R>
+     <CT_T units="m**2">8410000.000000000</CT_T>
+     <CN_R units="m**2">1846.475720116</CN_R>
+     <CN_T units="m**2">64824.425908223</CN_T>
+     <CN_N units="m**2">3600.000000000</CN_N>
+     <CRDOT_R units="m**2/s">-92.704740839</CRDOT_R>
+     <CRDOT_T units="m**2/s">-318.610826277</CRDOT_T>
+     <CRDOT_N units="m**2/s">-24.977363691</CRDOT_N>
+     <CRDOT_RDOT units="m**2/s**2">9.610000000</CRDOT_RDOT>
+     <CTDOT_R units="m**2/s">0.255800373</CTDOT_R>
+     <CTDOT_T units="m**2/s">-88.329388372</CTDOT_T>
+     <CTDOT_N units="m**2/s">-2.003009474</CTDOT_N>
+     <CTDOT_RDOT units="m**2/s**2">-0.019365740</CTDOT_RDOT>
+     <CTDOT_TDOT units="m**2/s**2">0.014400000</CTDOT_TDOT>
+     <CNDOT_R units="m**2/s">-1.468659330</CNDOT_R>
+     <CNDOT_T units="m**2/s">-21.270055926</CNDOT_T>
+     <CNDOT_N units="m**2/s">-1.769202068</CNDOT_N>
+     <CNDOT_RDOT units="m**2/s**2">-0.047983991</CNDOT_RDOT>
+     <CNDOT_TDOT units="m**2/s**2">0.002182546</CNDOT_TDOT>
+     <CNDOT_NDOT units="m**2/s**2">0.006400000</CNDOT_NDOT>
+    </covarianceMatrix>
+   </data>
+  </segment>
+ </body>
+</cdm>

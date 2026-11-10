@@ -1,0 +1,28 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/collision_probability.yaml; do not edit.
+id: "collision_probability_synthetic_high_001"
+schema_version: "v1"
+version: "0.1.0"
+category: "collision_probability"
+created: "2026-11-09"
+description: >
+  A high probability of collision: a 94 deg crossing at 11 km/s in a 705 km sun-synchronous orbit, the miss 32.28 m
+  in the encounter plane, a tight covariance of the protected object and a large in-track covariance of the
+  secondary, combined hard-body radius 15 m. Outputs the 2D Pc and the two encounter-plane sigmas of the combined
+  covariance (spec.md section 16.2).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  tca: "2026-03-01T12:00:00.000 UTC"    # informative (spec.md 16.2)
+  objects:                              # the states at TCA in ICRF and each 3x3 position covariance in its own RTN (km^2: RR, TR, TT, NR, NT, NN)
+    - position_km: [-302.6079836212348, -1552.3001116007206, 6902.172228098769]
+      velocity_km_s: [-5.780434938893088, -4.607822719200638, -1.2893277595617945]
+      covariance_rtn: [6.4e-5, 9.6e-5, 0.0016, 2.4000000000000003e-6, -2.4e-5, 3.6e-5]
+    - position_km: [-302.61022468604125, -1552.323929047974, 6902.19390078284]
+      velocity_km_s: [5.16566454144894, -5.354231640363491, -0.9777206147489946]
+      covariance_rtn: [0.000625, -0.00225, 0.0225, 4.5e-5, 0.00054, 0.000324]
+  hard_body_radius_km: 0.015
+  kernels: []

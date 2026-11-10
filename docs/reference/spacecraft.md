@@ -34,6 +34,12 @@ var lro = new Spacecraft(naifId: -85, name: "LRO",
 | `sectionalArea` | `1.0` | Mean sectional area (m2) |
 | `dragCoeff` | `2.2` | Drag coefficient |
 | `solarRadiationCoeff` | `1.0` | Solar radiation pressure coefficient |
+| `centerOfMotion` | the Earth | Centre of the initial orbital parameters (`InitialOrbitalParameters.Observer`), which the conjunction analysis takes as its observer when the spacecraft is protected |
+
+The initial orbital parameters are the state at `epoch` relative to `centerOfMotion`, the Earth by default (#620; the
+Solar System barycentre before 11.0.0): pass `new Barycenter(0)`, or the body the spacecraft orbits, otherwise. The
+kernels must cover `epoch` and chain the spacecraft to that centre, or the constructor throws
+`InvalidOperationException` with SPICE's message (#454).
 
 Kernel-backed spacecraft: `IsSpiceBacked` returns `true`. Calling `Propagate()` throws `InvalidOperationException`.
 

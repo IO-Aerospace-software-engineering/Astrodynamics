@@ -1,0 +1,27 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/collision_probability.yaml; do not edit.
+id: "collision_probability_synthetic_frisbee_max_007"
+schema_version: "v1"
+version: "0.1.0"
+category: "collision_probability"
+created: "2026-11-09"
+description: >
+  Frisbee's maximum probability of collision: the secondary's covariance absent, a 105 deg crossing at 12 km/s at
+  620 km and 63.4 deg, the miss 2368 m beyond the protected object's covariance (k^2 about 900), hard-body radius 10
+  m. Outputs the maximum Pc and the two encounter-plane sigmas of the given covariance (spec.md section 16.2).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  tca: "2026-03-01T12:00:00.000 UTC"    # informative (spec.md 16.2)
+  objects:                              # the states at TCA in ICRF and each 3x3 position covariance in its own RTN (km^2: RR, TR, TT, NR, NT, NN); object 2 without covariance
+    - position_km: [-5163.675347519388, -3548.156404199443, 3131.414170902977]
+      velocity_km_s: [4.537777742307794, -1.462317958510397, 5.843368129939845]
+      covariance_rtn: [0.0016, 0.003, 0.0625, -0.00012, 0.0, 0.0009]
+    - position_km: [-5164.294293703191, -3547.6299259655975, 3133.6383899323987]
+      velocity_km_s: [-3.4022182849123626, 6.499182248870712, 1.7493527978391024]
+      covariance_rtn: null
+  hard_body_radius_km: 0.01
+  kernels: []

@@ -1,0 +1,91 @@
+{
+  "id": "conjunction_6h_leo500_pm_crossing_003",
+  "category": "conjunction",
+  "case_version": "0.1.0",
+  "generated_by": {
+    "tool": "GMAT",
+    "tool_version": "R2026a",
+    "tool_sha256": "fe124b4a606b2e3b704a6fbb1c37b87598d5df0d18cb661c304b5f60074a7754",
+    "kernel": "data/: de440s.bsp (SHA-256 c1c7feeab882263fc493a9d5a5b2ddd71b54826cdf65d8d17a76126b260a49f2), earth_latest_high_prec.bpc (SHA-256 a3e65d8acfa368f03bbbdc74bf1c5ee8fd40ff28d93c6f4bc7033b3798831a53), gm_de440.tpc (SHA-256 924ddf4fb9ead9fe8a1aa55780bcabde40b09d00065d58226e24b68d8092f140), pck00011.tpc (SHA-256 3dff7b1dbeceaa01f25467767d3fa25816051c85d162d1edf04acb310ee28bb1)",
+    "date": "2026-11-09",
+    "gravity_model": "point-mass Earth, GM 398600.4355070226 km^3/s^2 (BODY399_GM of data/gm_de440.tpc)",
+    "perturbations": "No drag. No SRP, no relativity.",
+    "integrator": "PrinceDormand78, accuracy 1e-13, MaxStep 60 s",
+    "method": "GMAT R2026a: both objects on the user-defined planet EarthS (NAIF 399 at its de440s position, ITRF93 of data/'s bpc through SPICE, the radius and flattening of data/pck00011.tpc), the point mass of BODY399_GM of data/gm_de440.tpc, PrinceDormand78 at 1e-13, MaxStep 60 s, over the TT seconds from the epoch; the TCA by a stop on Sat1.Rel.X = 0 (Rel: origin and primary object 2, secondary object 1, X = V) and one linear step; the states read in EarthSMJ2000Eq; Phi: Sat.OrbitSTM of each object alone.",
+    "reference_frame": "EarthSMJ2000Eq (every output invariant under a common rotation)",
+    "script": "conjunction_6h_leo500_pm_crossing_003.script",
+    "log": "conjunction_6h_leo500_pm_crossing_003.log"
+  },
+  "outputs": {
+    "tca_s": 21599.96586087802,
+    "miss_distance_km": 0.24867760211529558,
+    "relative_speed_km_s": 7.647361416418184,
+    "relative_position_rtn_km": [
+      -0.20002685349996213,
+      0.12857618774040547,
+      0.07278716658080564
+    ],
+    "relative_velocity_rtn_km_s": [
+      0.0007866046570144605,
+      -3.766470962976178,
+      6.655511437871018
+    ],
+    "objects": [
+      {
+        "sigma_rtn": [
+          0.16584146196506594,
+          1.6188192884272763,
+          0.024469778135738772,
+          0.001771952188336682,
+          0.00017968959808786975,
+          3.562092872297935e-05
+        ],
+        "correlation_rtn": [
+          -0.1422776628028589,
+          5.86274717055756e-14,
+          3.138353215671251e-14,
+          0.1082841962184803,
+          -0.998977416137797,
+          -3.3920239362072625e-14,
+          -0.9911614030920127,
+          0.010558561057335245,
+          -6.539443111187592e-14,
+          0.0238122599566731,
+          8.667151750405368e-15,
+          -6.521562217191323e-14,
+          -0.17266169682446592,
+          6.635187608777445e-14,
+          9.80713804568281e-15
+        ]
+      },
+      {
+        "sigma_rtn": [
+          0.28211990781332513,
+          3.1069328963147336,
+          0.07375335456479148,
+          0.0032286965559827656,
+          0.00033810573116379867,
+          8.680866868532028e-05
+        ],
+        "correlation_rtn": [
+          0.8869453127870583,
+          3.164404541698204e-14,
+          1.51235269886442e-14,
+          -0.8836833669903519,
+          -0.9995153390762446,
+          -1.0979235380498437e-14,
+          -0.9985933824401971,
+          -0.9085066418178296,
+          -2.8576958755034955e-14,
+          0.9056960663812542,
+          7.756211730969406e-14,
+          1.2789521818364765e-14,
+          -0.027551865819500098,
+          -5.953780697238352e-15,
+          -7.506620450039928e-14
+        ]
+      }
+    ],
+    "collision_probability": 0.00018524365378198848
+  }
+}

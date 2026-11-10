@@ -559,10 +559,14 @@ public class AttitudeTimelineEdgeTests
         var clock = NewFile(stem + ".tsc");
         var frame = NewFile(stem + ".tf");
         var ck = NewFile(stem + ".bc");
+        // The SPK too: the kernel-backed spacecraft reads its initial state, which throws without one since #454
+        var spk = NewFile(stem + ".bsp");
         sc.Clock.WriteAsync(clock).GetAwaiter().GetResult();
         ((SpacecraftFrame)sc.Frame).WriteAsync(frame).GetAwaiter().GetResult();
+        sc.WriteEphemeris(spk);
         SpiceAPI.Instance.LoadKernels(clock);
         SpiceAPI.Instance.LoadKernels(frame);
+        SpiceAPI.Instance.LoadKernels(spk);
         try
         {
             sc.WriteOrientation(ck);
@@ -597,6 +601,7 @@ public class AttitudeTimelineEdgeTests
         }
         finally
         {
+            SpiceAPI.Instance.UnloadKernels(spk);
             SpiceAPI.Instance.UnloadKernels(frame);
             SpiceAPI.Instance.UnloadKernels(clock);
         }

@@ -31,7 +31,7 @@ public class CcsdsHeader
     /// Gets the creation date and time of the message.
     /// </summary>
     /// <remarks>
-    /// Required field. Format: yyyy-MM-ddTHH:mm:ss.fff or yyyy-dddTHH:mm:ss.fff
+    /// Required field. Format: yyyy-MM-ddTHH:mm:ss[.f…][Z|±hh:mm] or yyyy-dddTHH:mm:ss[.f…][Z|±hh:mm] (day of year, #490)
     /// </remarks>
     public DateTime CreationDate { get; }
 

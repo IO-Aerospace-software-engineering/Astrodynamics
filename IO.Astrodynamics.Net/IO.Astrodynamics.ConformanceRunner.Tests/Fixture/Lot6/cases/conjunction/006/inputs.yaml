@@ -1,0 +1,121 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/conjunction.yaml; do not edit.
+id: "conjunction_6h_leo400_grav10_drag_crossing_006"
+schema_version: "v1"
+version: "0.1.0"
+category: "conjunction"
+created: "2026-11-09"
+description: >
+  A crossing encounter at 400 km and 51.6 deg 6 hours after the epoch, at 90 deg and 10.8 km/s, with atmospheric
+  drag: NRLMSISE-00 at constant space weather (F10.7 120 sfu, F10.7A 130 sfu, Ap 9) on objects of 500 kg and 10 m^2
+  and of 100 kg and 1 m^2, Cd 2.2, two ballistic coefficients; EGM2008 of data/ to degree and order 10, the Moon and
+  the Sun. Outputs the TCA, the miss distance, the relative speed and state in the RTN of object 1, each object's
+  covariance at TCA and the 2D Pc with a combined hard-body radius of 20 m (spec.md section 16.1).
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  objects:                              # object 1, then object 2: the states at the epoch in ICRF (GMAT R2026a's back-propagation of the encounter of the description), each spacecraft (radiation_pressure_coefficient informative) and each 6x6 covariance in its own RTN at the epoch (km, km/s; the CDM order)
+    - name: "object1"
+      position_km: [4231.916408266376, 979.6198083687581, 5202.31204464082]
+      velocity_km_s: [-3.0770640751700613, 6.916947000964654, 1.2047815579271899]
+      spacecraft:
+        mass_kg: 500.0
+        sectional_area_m2: 10.0
+        drag_coefficient: 2.2
+        radiation_pressure_coefficient: 1.0
+      covariance_rtn:
+        - 0.0025000000000000005
+        - 0.0
+        - 0.04000000000000001
+        - 0.0
+        - 0.0
+        - 0.0009
+        - 0.0
+        - -2.4e-5
+        - 0.0
+        - 4.0e-8
+        - -2.25e-6
+        - 0.0
+        - 0.0
+        - 0.0
+        - 2.5e-9
+        - 0.0
+        - 0.0
+        - 2.6999999999999996e-7
+        - 0.0
+        - 0.0
+        - 8.999999999999999e-10
+    - name: "object2"
+      position_km: [907.0264887196822, -4134.214945343893, 5291.264266509655]
+      velocity_km_s: [-7.553277669635307, 0.024649273542114925, 1.3166470696323511]
+      spacecraft:
+        mass_kg: 100.0
+        sectional_area_m2: 1.0
+        drag_coefficient: 2.2
+        radiation_pressure_coefficient: 1.0
+      covariance_rtn:
+        - 0.010000000000000002
+        - 0.010000000000000002
+        - 0.25
+        - 0.0
+        - 0.0
+        - 0.0064
+        - 0.0
+        - -0.000175
+        - 0.0
+        - 2.5e-7
+        - -9.5e-6
+        - 0.0
+        - 0.0
+        - 0.0
+        - 1.0e-8
+        - 0.0
+        - 0.0
+        - 0.0
+        - 0.0
+        - 0.0
+        - 6.400000000000001e-9
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag:
+      model: "NRLMSISE-00"
+      f107_sfu: 120.0
+      f107a_sfu: 130.0
+      ap: 9.0
+    srp: false
+  analysis_window:
+    start: "2026-01-20T11:30:00.000 UTC"
+    end: "2026-01-20T12:30:00.000 UTC"
+  report: "closest"
+  hard_body_radius_km: 0.02
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]
+
+tolerances_override:
+  conjunction_position_km:
+    abs_tol: 0.00025
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x Dt / 86400 s) = 0.25 m, Dt =
+      21599.99022 TT seconds from the epoch to the last TCA; reference term 1.4e-06 (E_rho of miss_distance_km,
+      reference-check.json: GMAT R2026a, pymsis 0.13.0, 2026-11-09)
+  conjunction_tca_s:
+    abs_tol: 2.4e-5
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = max(1 us, ceil2(T_pos |nu| / v_eff^2)) =
+      2.4e-5 s for this case (T_pos 0.00025 km, |nu| 10.8491 km/s, v_eff^2 117.704 km^2/s^2 from the Hermite of the
+      1 s steps); reference term 2.5e-07 (S_gen of tca_s, reference-check.json: GMAT R2026a, 2026-11-09)
+  conjunction_velocity_km_s:
+    abs_tol: 2.5e-7
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x Dt / 86400 s) = 0.25
+      mm/s, Dt = 21599.99022 TT seconds from the epoch to the last TCA; reference term 1.2e-09 (E_rho of
+      relative_velocity_rtn_km_s, reference-check.json: GMAT R2026a, pymsis 0.13.0, 2026-11-09)

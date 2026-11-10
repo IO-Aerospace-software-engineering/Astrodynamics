@@ -1,0 +1,27 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/collision_probability.yaml; do not edit.
+id: "collision_probability_synthetic_mid_002"
+schema_version: "v1"
+version: "0.1.0"
+category: "collision_probability"
+created: "2026-11-09"
+description: >
+  A mid probability of collision: a 60 deg crossing at 7.6 km/s at 500 km and 51.6 deg, the miss 1669 m, combined
+  sigmas of kilometre order, hard-body radius 20 m. Outputs the 2D Pc and the two encounter-plane sigmas (spec.md
+  section 16.2).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  tca: "2026-03-01T12:00:00.000 UTC"    # informative (spec.md 16.2)
+  objects:                              # the states at TCA in ICRF and each 3x3 position covariance in its own RTN (km^2: RR, TR, TT, NR, NT, NN)
+    - position_km: [3994.560474297074, -3789.254417110051, -4133.12814434483]
+      velocity_km_s: [1.9772632255384104, 6.266340704116273, -3.8296747425663358]
+      covariance_rtn: [0.04, 0.15, 2.25, -0.006, 0.022500000000000003, 0.0225]
+    - position_km: [3994.9598075847393, -3787.665689599236, -4132.808709184362]
+      velocity_km_s: [6.0720248540600466, 4.0295097340487676, 2.1763650216714368]
+      covariance_rtn: [0.16, -0.36, 9.0, 0.01, 0.30000000000000004, 0.0625]
+  hard_body_radius_km: 0.02
+  kernels: []

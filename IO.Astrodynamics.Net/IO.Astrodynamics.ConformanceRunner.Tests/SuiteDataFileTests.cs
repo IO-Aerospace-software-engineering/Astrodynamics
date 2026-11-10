@@ -71,12 +71,12 @@ public sealed class SuiteDataFileTests : IDisposable
     {
         // Arrange: a suite with the schemas of the fixture and one tracking case, whose kernel is an LFS pointer
         Directory.CreateDirectory(Path.Combine(_directory, "schemas", "v1"));
-        foreach (var schema in Directory.GetFiles(Path.Combine("Fixture", "schemas", "v1")))
+        foreach (var schema in Directory.GetFiles(Path.Combine(SuiteFixture.Lot6.Root, "schemas", "v1")))
         {
             File.Copy(schema, Path.Combine(_directory, "schemas", "v1", Path.GetFileName(schema)));
         }
 
-        File.Copy(Path.Combine("Fixture", "tolerances.yaml"), Path.Combine(_directory, "tolerances.yaml"));
+        File.Copy(Path.Combine(SuiteFixture.Lot6.Root, "tolerances.yaml"), Path.Combine(_directory, "tolerances.yaml"));
         Directory.CreateDirectory(Path.Combine(_directory, "data"));
         var kernel = Path.Combine(_directory, "data", "orbit.bsp");
         File.WriteAllText(kernel, Pointer);

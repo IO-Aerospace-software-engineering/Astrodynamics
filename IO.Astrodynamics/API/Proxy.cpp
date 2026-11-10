@@ -3,6 +3,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <filesystem>
 
@@ -748,7 +749,10 @@ IO::Astrodynamics::API::DTO::StateVectorDTO ReadEphemerisAtGivenEpochProxy(
 
     if (failed_c())
     {
-        HandleError();
+        // #454: a failed read is a NaN state, its SPICE message kept for GetLastErrorProxy
+        std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        stateVectorDto.position = stateVectorDto.velocity = {std::nan(""), std::nan(""), std::nan("")};
     }
     return stateVectorDto;
 }

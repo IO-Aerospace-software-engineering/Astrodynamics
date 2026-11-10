@@ -82,6 +82,148 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Fixed**
 
+- **The probability of collision was 0 when the hard-body radius was much larger than the covariance** ([#610](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/610)). The
+  adaptive Simpson rule of the Foster integral started from 5 points R/2 apart over the disc, which all missed a Gaussian
+  narrower than about R/29: C2D diag(1, 0.25) m², R 100 m, miss (30, 0) m gave 3.9e-86 for 1, miss (99.5, 0) m gave 0
+  for 0.691, with no flag, through `Analyze`, `AnalyzeAll` (sorted last), `EvaluateAvoidance` (a manoeuvre into such an
+  encounter passed the Pc threshold) and `ToCdm`. The integral now runs in θ along the disc (x = x_c + R sin θ, smooth at
+  its edges), split at the Gaussian's mean and ±1, 2, 4, 8 and 16 σ, at the chords that reach the minor axis's ±kσ and at
+  the disc's centre, so that the Gaussian is always sampled however narrow it is; nothing of the disc is dropped. The
+  internal `EncounterPlaneProbability` holds it.
+- **The probability of collision was accurate to 1.5e-7 absolute, and 4.6 % low below 1e-10** ([#611](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/611)). The chord
+  integral took the difference of two values of `SpecialFunctions.ErrorFunction` (Abramowitz and Stegun 7.1.26, 1.5e-7
+  absolute), and the Simpson rule stopped at an absolute tolerance of 1e-12, which a Pc below about 1.5e-10 met at its
+  first level (−4.62 % whatever the Pc; 0 in the far tails from the erf difference). The chord probability is now an erfc
+  difference on the side away from zero (CARA's `erf_vec_dif`), erf where the chord straddles the minor axis, with
+  fdlibm's erf and erfc (about one ulp) private to the Pc path, and the quadrature stops at 1e-12 of the whole integral,
+  shared over the segments by width, a difference at the noise of the integrand accepted and the evaluations bounded.
+  That noise includes the cancellation of the erfc difference when σ ≫ the chord (bounded by about ε σ/R relative, at each sample):
+  without it, a covariance far wider than the disc with a miss off its axes (σ 1e5 m, R 1 m, miss (1e5, 3e5) m) spent
+  the 200 000 evaluations and returned a Pc 1.3e-6 off, with no flag (PC-1 of the lot's review). The public
+  `SpecialFunctions.ErrorFunction` is unchanged.
+  - **Measured** (Linux x64, Windows x64 and macOS arm64, the bounds twice the worst over the three, CI of 7f5e6dfb) against the exact Pc of the same double
+    inputs, CARA's `Pc2D` at 50 digits (`tools/collision_probability`, tanh-sinh and Gauss-Legendre agreeing to 1e-30):
+    the seven `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger
+    than the covariance, a covariance not positive definite, Frisbee's maximum) within 2.0e-14, 9.0e-9 through `Analyze`
+    (the covariance held in RTN over the refined TCA's offset); the 25 reproductions of #610 to #612 within 7.6e-15;
+    NASA CARA's Omitron case 01 and Alfano case 03 within 2.6e-15, Frisbee's table 1 within 3.2e-16 (their tests now
+    take the exact values: the published ones are 2.9e-6 and 2.3e-6 from them, Frisbee's given to two or three digits).
+    σ ≫ R with the miss off the axes (σ 1e5 to 1e6 m, R 1 m; mpmath at 70 digits): within 5.0e-11, the noise of the
+    integrand itself, at 9 to 1 425 evaluations (200 000 before); that noise is bounded by about ε σ/R relative, 0.05
+    to 1 times it as measured (Marcum's closed form, a circular covariance: 1.2e-10 at σ = 1e7 R, 2.4e-8 at 1e8 R,
+    6.6e-7 at 1e10 R, 2.1e-6 before); a random sweep of 500 encounters (σ/R 1e-4 to 1e6, misses to 12 σ) reaches
+    neither the budget nor the depth cap (14 budget hits before, at most 9 217 evaluations after). One evaluation takes a median of 0.2 ms over the sweep, 2.2 ms
+    in the deep tails (a Pc near 1e-300, 13 765 evaluations).
+  - **What moves:** every Pc, `CollisionRisk.ProbabilityOfCollision` through `Analyze`, `AnalyzeAll`, `Screen`,
+    `EvaluateAvoidance` and the `COLLISION_PROBABILITY` that `ToCdm` writes: by 1e-8 to 1e-5 relative above 1e-7, up to
+    3.3e-4 near 1e-8, +4.8 % below 1e-10 (to the exact value), and from 0 to the risk at a large hard-body radius (#610).
+- **The probability of collision was null for a covariance not positive definite in the encounter plane** ([#612](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/612)).
+  The clipped eigenvalues (CARA's (1e-4 R)²) were rebuilt into a matrix and decomposed again, and λ2 = (tr − √disc)/2
+  loses everything below λ1·ε: with σ_major 1000 km, R 20 m and λ2 at or below the clip (1 mm, 0 or −1 m², the
+  rounding of a CDM covariance), the Pc was null with only `CovarianceRemediated` raised. The integral now takes the
+  clipped eigenvalues and the rotation as they are; λ2 is det/λ1, the determinant by Kahan's fused form, so that a
+  minor eigenvalue between the clip and λ1·ε is kept rather than clipped (the 30° rows of #612: `CovarianceRemediated`
+  is no longer raised there); Frisbee's maximum-Pc covariance is built in the principal axes of the known one, whose
+  determinant is then a sum of positive terms. `CollisionRisk.ProjectedCovariance` is still the clipped matrix, rebuilt
+  for display. A null Pc becomes the clipped Pc (1.5957691e-5 on #612's case, exact to 2e-16); every other Pc moves only
+  by rounding.
+- **A CDM length without `units` was read in km** ([#613](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/613)). `MISS_DISTANCE`, `RELATIVE_POSITION_R/T/N`
+  and `SCREEN_VOLUME_X/Y/Z` are `lengthTypeUO` in the NDM/XML schema (units optional, `m` the only unit; m in
+  CCSDS 508.0 table 3-2), and the reader took km when the attribute was absent: 715 read as 715 000 m, with no error and
+  the schema check passing. The default is now m. A length with `units="m"` is now the double of its text exactly (it was
+  divided by 1000 and multiplied back, one ulp off at most); `units="km"`, outside the schema, is still accepted.
+- **The CDM, OPM and OMM readers rejected a day-of-year date** ([#490](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/490)). The `yyyy-DDD` patterns of the
+  three readers read the literal text `DDD` (`D` is no .NET specifier): every `YYYY-DDDThh:mm:ss` date, which the
+  schema's `epochType` allows and the library's own schema check passed, threw, in every date field and on every load
+  path, and `2021-DDDT12:00:00` loaded as 1 January. One internal parser of `CCSDS/Common`, `CcsdsEpochParser`, now
+  reads the date branch of `epochType` for the three readers: `-MM-DD` or `-DDD` (1 to 365, 366 in a leap year, as
+  CSPICE's `str2et`), any fraction (up to 7 digits exact, more rounded to the 100 ns tick as before), `Z` or `±hh:mm`
+  applied, UTC. Measured against `tools/ccsds_epoch_reference` (CSPICE `str2et` and `et2utc` on 25 day-of-year dates,
+  2000 to 2026, leap days, offsets, 0 to 7 fraction digits): every instant exact to the tick; the calendar dates give
+  the `DateTime` of the former readers bit for bit; the literal `DDD`, a day 0 or a day 366 of a common year throw the
+  reader's parse exception. Other text keeps the former fallback (`DateTime.TryParse`, #619).
+- **A kernel-backed protected spacecraft got the RTN axes of its orbit about the Solar System barycentre** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620)).
+  `new Spacecraft(naifId, name, epoch, ...)` read its initial state about the SSB, and the conjunction analysis takes the
+  protected spacecraft's centre as its observer: `RelativePositionRtn`, `RelativeVelocityRtn`, `CombinedCovarianceRtn`
+  and the `RELATIVE_POSITION_*` and `RELATIVE_VELOCITY_*` that `ToCdm` writes were rotated by the axes of an orbit about
+  the SSB, up to 316.6 m and 7557.5 m/s off on a 250 m encounter. The constructor takes an optional `centerOfMotion`,
+  the Earth by default, about which it reads its initial orbital parameters; the SSB, or any body the kernels chain to,
+  may be given. Measured on two SPKs written by the library: the RTN relative state within 2.8e-14 m and 9.1e-13 m/s of
+  CSPICE's `spkezr_c` about the Earth (and about the SSB when it is given). The TCA, the miss distance and the inertial
+  relative state do not move, nor do the managed light-time, occultation and field-of-view reads of a kernel-backed
+  spacecraft, which keep the SSB as their reference body, as CSPICE.
+- **`AnalyzeAll` on two propagations listed a window end as a close approach** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), its dense-search part).
+  The polynomial search took the window ends as candidates and kept an end where the distance grows into the window as a
+  local minimum: over 3 h the list began with the window start, 6277 km away and receding. The window ends are no longer
+  minima of the dense path: `AnalyzeAll(profile, solution, secondary, solution, window)` lists the interior minima only,
+  an empty list when there are none, and `Analyze` on that path returns the closest interior minimum when there is one,
+  never an end closer than it. Measured against CSPICE's `gfdist_c` (LOCMIN) on the SPKs of the propagations, refined
+  on the range rate of `spkezr_c`: the four minima of 3 h within 2e-7 s (two ticks) and 1.1e-8 m. Without an interior
+  minimum, `Analyze` still returns the end where the distance grows into the window, and `Screen` and the
+  `ILocalizable` overloads keep their midpoint: #621's own change decides them. Whether a minimum lies inside the window
+  is decided on the range rate of the states, the minima of the cubic Hermite of the stored steps, the window ends
+  included, only seeding the search (S1 of the lot's review): the Hermite misses the zero by its error (#363, 12 to
+  212 µs at the default steps of `new RK78Integrator()` on this crossing), within which a window ending before a minimum
+  listed its unrefined Hermite epoch, a point still closing (as before 11.0.0), and a window starting before one listed
+  nothing (an intermediate state of this change). A window end is now bracketed when the range rate says the minimum
+  lies inside, and a minimum whose range-rate zero lies outside the window is dropped. A window end is never listed,
+  not even a zero of the range rate exactly there, which `Analyze` returns as that end (the bisection would give the
+  tick before it, #624). A window whose candidates all lie within the flatness tolerance of the seeds (a slow pass, a
+  window of a few ticks about a minimum) listed nothing and `Analyze` returned its midpoint, although the range rate
+  went from negative to positive inside (F1 of the lot's second review: 1 ms off on a pass at 0.113 m/s and 50 m); the
+  zero is now bisected over the window, and `Analyze` on this path never returns the midpoint. Against `gfdist_c` on
+  windows ending or starting 1 µs to 1 ms before or after each of the four minima, at 60 s and at the default steps,
+  and on windows of 2 and 3 ticks on each side of each minimum at 60 s steps, the same minima within the bounds above
+  (2.7e-7 m at the default steps, their states against their SPK of 60 s outputs). A seed that the refinement could not
+  bracket on the range rate within two moves of its bracket was kept unrefined: on a slow pass at the default steps
+  (50 m along-track, a drift of 100 m across the plane), the Hermite seeded minima near the maxima of the distance, which
+  `AnalyzeAll` listed (t0 + 4246.66 s, 111.79 m, a range rate of +0.0012 m/s, where `gfdist_c` lists no local minimum)
+  and the dense `Analyze` returned instead of the closer end, 53.06 m against 111.79 m (main returned that end); on a
+  pass with two minima per orbit at the default steps, a seed 1.6 s past its minimum was listed unrefined, 1.35e-4 m off. A seed the secants
+  cannot bracket is now searched on its own range rate, from the seed toward the side it points to (1 ms, then distances
+  doubling up to 1.024 s and 1 s apart after that, up to the neighbouring candidate: an interval of the other sign 1 s
+  wide or more holds a read, where distances doubling all the way stepped over a shallow minimum next to a fold of the
+  range rate, 2.9e-7 m deep and positive over 1.6 s, lost in 204 to 229 windows of each propagation of the review's fifth
+  probe while main listed its seed unrefined, 4.85 s off at 60 s steps), then between the candidates, moved twice at
+  most, then by following the range rate over the candidates to the nearest change from negative to positive, or
+  dropped: every TCA of the dense path is such a zero, one per pair of consecutive candidates. Against `gfdist_c` on
+  1222 to 1527 windows of each slow pass, of each pass with two minima per orbit and of each pass with the fold (windows
+  ending or starting at the zero included, the reference refined below the tick), the local minima, each once, and no
+  maximum, within 1.5e-7 s and 3.14e-10 m at 60 s steps, 2.9e-5 s and 1.15e-6 m at the default steps, 5.05e-2 s and
+  2.1e-7 m with a drift of 1 m at mixed steps (the states and their SPK placing the zero apart by the difference of
+  their range rates over its slope, 2.6e-6 m/s per second), 7.1e-7 s to 3.3e-6 s and 4.8e-8 to 9.3e-8 m with two minima
+  per orbit, and at the fold 3.4e-5 s and 3.9e-8 m at 60 s steps, 2.1e-3 s and 9.7e-7 m at the default steps (its
+  states and their SPK 2.1 ms apart).
+- **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the
+  ephemeris read and `TransformFrame`). `ReadEphemerisAtGivenEpochProxy` left its state unwritten when `spkezr_c`
+  failed (r = (4.9e-321, 6.95e-307, 6.95e-307) m past de440s on Linux, whatever the stack held elsewhere), and
+  `TransformFrameProxy` returned the zero quaternion: `Analyze` of two kernel-backed spacecraft past their SPKs gave a
+  TCA with a miss of 0 m and 2888 SPICE messages on stdout. The native read now writes NaN and keeps the SPICE message
+  for `GetLastErrorProxy` (4 lines, the second change of the frozen C++ layer in 11.0.0, decision of S. Guillet,
+  2026-11-09), and `SpiceAPI.ReadEphemeris` (at an epoch and over a window), every `GetEphemeris` of a kernel-backed
+  object and the kernel-backed `Spacecraft` constructor throw `InvalidOperationException` with that message
+  ("Insufficient ephemeris data has been loaded ..."). `SpiceAPI.TransformFrame` throws when SPICE gives no rotation
+  (a quaternion whose norm is not 1 to 1e-9), naming the frames and the epoch, for every frame (only the TEME path did
+  before). Reads inside the coverage do not move. A read at the very first instant of an SPK can fall a fraction of a
+  tick before it (the 100 ns of a `Time` in TDB) and now throws: the LRO tracking test starts 5 minutes after its SPK,
+  as the conformance case tracking_data 001 does. A planet or a moon that the loaded kernels do not chain to its system
+  barycenter (Mars to Pluto and their moons with de440s alone) is built with `InitialOrbitalParameters` null instead of
+  an undefined state, and its `SphereOfInfluence` is then +Infinity, as for a body built from custom parameters (before,
+  a value of the undefined state: 0 for Mars and Jupiter in the review's probe); a read of its position throws. The orientation cache of a propagation's central
+  body (`PropagationFrameOrientationCache`) keeps a grid point SPICE cannot give as unavailable, so a point-mass
+  propagation about the Earth still runs past the Earth's PCK, and a geopotential or drag there throws (they used the
+  zero rotation before). A window that ends (or starts) inside the coverage, its next grid point outside, no longer
+  throws for that point: the point after the window end is replaced by the orientation read there, and a read the grid
+  cannot interpolate reads the frame at its epoch, so only an epoch SPICE does not cover throws, with SPICE's message (a
+  propagation up to the last instant of `earth_latest_high_prec.bpc`, or 30 s before it, threw at its last minute; KR-1
+  of the lot's review). A propagation still reads past its window end when its output step does not divide the window:
+  it runs to round(L/ΔT)·ΔT, up to ΔT/2 past the end, and a geopotential or drag read there past the coverage throws
+  (a window of 3570 s at 60 s steps ending at the end of the coverage throws 30 s past it). The other proxies keep #454.
+- **The `ILocalizable` conjunction overloads extrapolated past a propagated spacecraft's states** ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), its
+  guard). `Analyze`, `AnalyzeAll` and `Screen` read a propagated protected or secondary spacecraft through its stored
+  states without a coverage check, so a window past them was extrapolated (567 km off 6 min out); they now throw
+  `ArgumentException` (`screeningWindow`) when the window leaves the stored states, as the `PropagationSolution`
+  overloads did. The check, `Spacecraft.CheckInterpolatedStatesCover`, is the one of the managed field-of-view search.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
@@ -111,10 +253,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
   of range); no valid state has r = 0. The native `TLE::ToStateVector` left its state unwritten when `evsgp4_c`
   signalled, so the state returned was what the stack held: on Linux zero by chance (28872 of Vallado's set gave
   r = (0, 0, 0), v = (0, 6.95e-307, 6.95e-307)), on Windows x64 and macOS arm64 a non-zero state, possibly that of an
-  earlier call. It now returns a zero state then, the one change of the C++ layer in 11.0.0 (decision of S. Guillet,
-  2026-11-08). TEME ↔ ICRF reads no kernel;
+  earlier call. It now returns a zero state then, a change of the C++ layer (decision of S. Guillet, 2026-11-08; the
+  other change of 11.0.0 is the ephemeris read of #454, below). TEME ↔ ICRF reads no kernel;
   `SpiceAPI.TransformFrame` between TEME and a SPICE frame throws when SPICE gives no rotation for that frame (ITRF93
-  before 2000). The other proxies keep #454.
+  before 2000); every frame since (#454's ephemeris read and frame guard, above).
 - **A TLE built its Earth in ITRF93 at its epoch** ([#597](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/597)). `new TLE(...)` (twice) and `Omm.ToTle` built
   `new CelestialBody(399, new Frame("ITRF93"), epoch)`: outside the Earth's binary PCK (every TLE before 2000 or after
   the PCK's end) printed two SPICE(FRAMEDATANOTFOUND) messages, without an exception, and left the observer's state
@@ -278,6 +420,18 @@ A major version, because it breaks the API: members deprecated for removal in 11
   runner decodes by the spec's column table in `decimal`, independently of the library's parser, so that a line of the
   wrong length or checksum FAILs. The 25 cases of the suite's lot-5 branch (b10b925) pass with at most 0.642 of their
   tolerance (the velocity of frame 035, ICRF → TEME in 1990), and the 176 cases of that branch pass. See [Validation](../guides/validation.md#lot-5-tles-sgp4-and-teme).
+- **Conformance runner: the conjunction categories of lot 6** (design of lot 6 of
+  [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), approved by S. Guillet,
+  2026-11-09). New solvers for `conjunction` (two objects propagated in RK7(8) with their covariances, or read from
+  SPKs, `ConjunctionAssessment.Analyze` and `AnalyzeAll`; the covariance at TCA as the library propagates it),
+  `collision_probability` (the public `Analyze` on straight-line trajectories at TCA, the Pc or Frisbee's maximum, the
+  encounter-plane sigmas, the clip flag) and `cdm` (decode, to inertial axes, and export through `EncounterCase.ToCdm`
+  read back); `stm` takes the `propagator` category's data files and integrator, its case and schemas now synced from
+  the suite (`Fixture/Lot6`). New kind of `spec.md` §6.1: the normalized covariance; the relative kind and the scalar
+  per component take arrays of any length; a cdm export compares its fields in a table of its own. A covariance the
+  library did not propagate, a Pc it did not compute and a sigma it clipped are an ERROR that says so. The 25 cases of
+  the suite's lot-6 branch (970a3bf) pass with at most 0.66 of their tolerance (the relative position of the written
+  CDM, one 100 ns tick of the TCA), and the 201 cases of that branch pass. See [Validation](../guides/validation.md#lot-6-conjunctions-pc-cdm-and-the-state-transition-matrix).
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
   - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared
@@ -717,6 +871,18 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Changed**
 
+- **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its
+  `InitialOrbitalParameters.Observer` is the Earth unless `centerOfMotion` says otherwise (the SSB before), so the
+  observer of a conjunction analysis it protects, and of anything else that reads that centre, is the Earth. Pass
+  `centerOfMotion: new Barycenter(0)` for the former state; the kernels must chain the spacecraft to the centre.
+- **Reads outside the coverage throw** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), [#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527), Fixed above): an ephemeris read or a frame
+  transformation that SPICE cannot give, and a conjunction window past a propagated spacecraft's states, throw instead
+  of returning an undefined state, the zero rotation or an extrapolation. A kernel-backed spacecraft built for its CK
+  alone, without an SPK that covers its epoch, now throws at construction: its initial state cannot be read. A planet or
+  a moon the loaded kernels do not chain to its system barycenter has `InitialOrbitalParameters` null, and its
+  `SphereOfInfluence` is then +Infinity, as for a body built from custom parameters.
+- **`AnalyzeAll` on two propagations no longer lists the window ends** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above), and returns an
+  empty list for a window without an interior minimum.
 - **Every TEME ↔ ICRF result moves** with the managed TEME ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451), Fixed above), by 0.3″ to 23.3″ over 2000–2026
   (the angle between the former TEME and the definition; 2.0″ to 23.2″ at the 13 epochs of `tools/teme_reference`):
   the ICRF states of a TLE (`TLE.ToOsculating(...).ToFrame(Frame.ICRF)`, 326 to 428 m on the three TLEs of the TEME

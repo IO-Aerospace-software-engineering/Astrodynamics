@@ -1,0 +1,53 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/conjunction.yaml; do not edit.
+id: "conjunction_12h_leo500_grav10_allminima_008"
+schema_version: "v1"
+version: "0.1.0"
+category: "conjunction"
+created: "2026-11-09"
+description: >
+  Every minimum of the relative distance of the objects of 002 over 12 hours from the epoch, EGM2008 of data/ to
+  degree and order 10, the Moon and the Sun. Outputs each TCA and miss distance in time order, the count exact; no
+  minimum lies at a window end (spec.md section 16.1).
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  objects:                              # object 1, then object 2: the states at the epoch in ICRF (GMAT R2026a's back-propagation of the encounter of 002)
+    - name: "object1"
+      position_km: [4242.195848814373, 561.1696779567471, -5380.811765646876]
+      velocity_km_s: [-1.2955708740294951, 7.4958499815464545, -0.22929227350455822]
+    - name: "object2"
+      position_km: [5229.905014430512, 4406.558666571409, 1736.1476375450854]
+      velocity_km_s: [-4.920776396534517, 5.442870932979774, 1.5341615247427145]
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp: false
+  analysis_window:
+    start: "2026-01-20T06:00:00.000 UTC"
+    end: "2026-01-20T18:00:00.000 UTC"
+  report: "all_minima"
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]
+
+tolerances_override:
+  conjunction_tca_s:
+    abs_tol: 6.5e-5
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = the smallest max(1 us, ceil2(T_pos |nu|
+      / v_eff^2)) over the 15 minima = 6.5e-5 s (T_pos 0.00049 km, v_eff^2 from the Hermite of the 1 s steps);
+      reference term 9.8e-07 (minima[13].tca_s, reference-check.json: GMAT R2026a, 2026-11-09)
+  conjunction_position_km:
+    abs_tol: 0.00049
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x Dt / 86400 s) = 0.49 m, Dt =
+      41686.6561 TT seconds from the epoch to the last TCA; reference term 6.7e-09 (minima[14].miss_distance_km,
+      reference-check.json: GMAT R2026a, 2026-11-09)

@@ -93,6 +93,15 @@ The managed API stores values internally in SI units. The CDM writer emits CCSDS
 | Miss distance | m | m |
 | Relative position | m | m |
 
+The reader converts each value from its `units` attribute. A length of the `lengthTypeUO` type (`MISS_DISTANCE`,
+`RELATIVE_POSITION_R/T/N`, `SCREEN_VOLUME_X/Y/Z`), whose attribute the schema makes optional with `m` as its only unit, is
+read in m when the attribute is absent ([#613](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/613); km before 11.0.0). A state vector position, whose
+`units` the schema requires, defaults to km.
+
+Dates are read in both forms of the NDM/XML `epochType` ([#490](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/490)): calendar (`2026-01-13T05:00:55.752768`)
+and day of year (`2026-013T05:00:55.752768`), with any fraction, an optional `Z` or `±hh:mm` offset, as UTC. The OPM
+and OMM readers share the parser (`CcsdsEpochParser`). The writer emits the calendar form.
+
 Standards-compliant CDM export requires covariance for both participants, so the exported
 `COLLISION_PROBABILITY_METHOD` is `FOSTER-2D`.
 

@@ -1,0 +1,45 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/conjunction.yaml; do not edit.
+id: "conjunction_12h_leo500_spk_crossing_007"
+schema_version: "v1"
+version: "0.1.0"
+category: "conjunction"
+created: "2026-11-09"
+description: >
+  The objects of 002 read from two SPKs of data/ written by GMAT R2026a (type 13, about the Earth, every integration
+  step over 12 hours): kernel objects, no propagation. The epoch and the window are tagged TDB, the time argument of
+  the SPKs. Outputs the TCA in TDB seconds from the epoch, the miss distance, the relative speed and state in the
+  RTN of object 1 (spec.md section 16.1).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "TDB"
+
+inputs:
+  epoch: "2026-01-20T06:15:00.000 TDB"
+  objects:                              # object 1, then object 2, read from the SPKs of inputs.kernels (geometric, J2000 = ICRF)
+    - name: "object1"
+      naif_id: -10001
+    - name: "object2"
+      naif_id: -10002
+  analysis_window:
+    start: "2026-01-20T06:15:00.000 TDB"
+    end: "2026-01-20T17:45:00.000 TDB"
+  report: "closest"
+  kernels: ["conjunction_002_object1.bsp", "conjunction_002_object2.bsp"]
+
+tolerances_override:
+  conjunction_position_km:
+    abs_tol: 1.6e-6
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = 1.0e-6 (decision 16, the objects read
+      from SPKs, no propagation); reference term 7.9e-07 (floor of relative_position_rtn_km, reference-check.json:
+      GMAT R2026a, CSPICE, 2026-11-09)
+  conjunction_velocity_km_s:
+    abs_tol: 1.0e-9
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = 1.0e-9 (decision 16, the objects read
+      from SPKs, no propagation); reference term 5e-10 (floor of relative_velocity_rtn_km_s, reference-check.json:
+      GMAT R2026a, CSPICE, 2026-11-09)

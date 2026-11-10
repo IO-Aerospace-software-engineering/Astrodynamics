@@ -31,6 +31,13 @@ public class CaseInput
 
     [YamlMember(Alias = "tolerances_override")]
     public Dictionary<string, TolerancePair> TolerancesOverride { get; set; }
+
+    /// <summary>
+    /// The directory of the case, where the files its inputs name next to <c>inputs.yaml</c> lie (the CDM of a
+    /// <c>cdm</c> case); set by the runner, null for a case built otherwise.
+    /// </summary>
+    [YamlIgnore]
+    public string Directory { get; set; }
 }
 
 public class CaseMetadata

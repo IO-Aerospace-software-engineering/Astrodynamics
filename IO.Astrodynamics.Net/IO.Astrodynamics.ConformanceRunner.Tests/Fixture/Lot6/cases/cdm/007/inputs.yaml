@@ -1,0 +1,71 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/cdm.yaml; do not edit.
+id: "cdm_export_synthetic_leo_007"
+schema_version: "v1"
+version: "0.1.0"
+category: "cdm"
+created: "2026-11-09"
+description: >
+  Export the CDM of an encounter at an exact TCA and read it back: a LEO object at 400 km and 51.6 deg and a 60 deg
+  crossing, the miss of 200 m in the plane normal to the relative velocity, correlated 6x6 RTN covariances, combined
+  hard-body radius 12 m. Outputs the fields the runner's CDM holds: TCA, miss, relative speed, the RTN relative
+  state, each state and covariance and the Pc (spec.md section 16.3).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  operation: "export"
+  tca: "2026-03-01T12:00:00.000 UTC"
+  objects:                              # the states at TCA in ICRF and each 6x6 covariance in its own RTN (km, km/s; the CDM order)
+    - position_km: [4937.991989654868, -3142.3660941833127, 3413.167795332686]
+      velocity_km_s: [0.6974804575552094, 6.094503651130246, 4.606778466921783]
+      covariance_rtn:
+        - 0.0009
+        - -0.0032713984901758773
+        - 0.09
+        - -0.00017710880301324502
+        - 0.00018759988506475555
+        - 0.0004
+        - 1.20781912888915e-6
+        - -2.6501482608248523e-5
+        - -1.7242553063818738e-6
+        - 9.0e-8
+        - -1.759014660681641e-7
+        - 2.213279754264496e-6
+        - -1.2134009628956658e-7
+        - 1.412631129502771e-9
+        - 8.999999999999999e-10
+        - 7.392201877734064e-8
+        - -1.8120028799333034e-6
+        - 4.782884102172003e-9
+        - 2.7280039469180505e-10
+        - -9.020340778100667e-11
+        - 4.0e-10
+    - position_km: [4938.037702775528, -3142.3430090672587, 3413.361127658013]
+      velocity_km_s: [-4.160335866040333, 0.4439355284254801, 6.430115376737378]
+      covariance_rtn:
+        - 0.0064
+        - 0.010374072075664627
+        - 0.81
+        - -0.0014847537649044684
+        - 0.002361705432928263
+        - 0.0036
+        - 1.8392525425451607e-5
+        - 0.00023015691662147024
+        - -2.4889021185742234e-6
+        - 8.100000000000001e-7
+        - 6.337131563595746e-7
+        - -6.013247521652009e-6
+        - -9.312705788173604e-8
+        - -1.986450120663174e-8
+        - 6.4e-9
+        - 6.687813618131371e-7
+        - 5.180833646550537e-6
+        - -6.965808279567985e-7
+        - -1.8074192036007678e-9
+        - 9.59836819222245e-10
+        - 3.5999999999999996e-9
+  hard_body_radius_km: 0.012
+  kernels: []

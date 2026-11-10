@@ -1,0 +1,22 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/cdm.yaml; do not edit.
+id: "cdm_decode_synthetic_day_of_year_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "cdm"
+created: "2026-11-09"
+description: >
+  Decode a CDM whose dates take the day-of-year form of epochType (CREATION_DATE 2026-059T09:15:00.000, TCA
+  2026-060T12:00:00.000, the screening period and the last observations), as CARA's single-covariance test files.
+  The outputs are UTC instants. The document is written by the suite's generator in KVN and in the unqualified
+  NDM/XML 4.0.0 form (spec.md section 16.3).
+
+metadata:
+  ephemeris_kernel: "none"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  operation: "decode"
+  cdm_file: "cdm.xml"
+  kvn_file: "cdm.kvn"                   # informative: the KVN source of the XML, which decodes identically
+  kernels: []

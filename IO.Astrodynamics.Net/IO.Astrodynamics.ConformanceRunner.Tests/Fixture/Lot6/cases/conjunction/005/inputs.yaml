@@ -1,0 +1,55 @@
+# Written by tools/legacy_goldens/generate.py from tools/legacy_goldens/catalog/conjunction.yaml; do not edit.
+id: "conjunction_6h_leo700_grav10_flat_005"
+schema_version: "v1"
+version: "0.1.0"
+category: "conjunction"
+created: "2026-11-09"
+description: >
+  A flat minimum 6 hours after the epoch: two objects at 700 km and 98.2 deg, the second 100 m across the orbit
+  plane with 0.11 m/s along the track, so that d^2(rho^2)/dt^2 / 2 is about 8.7e-4 m^2/s^2: the TCA is
+  ill-conditioned and left out, the miss distance and the relative state are not. EGM2008 of data/ to degree and
+  order 10, the Moon and the Sun. Outputs the miss distance and the relative state in the RTN of object 1 (spec.md
+  section 16.1).
+
+metadata:
+  ephemeris_kernel: "de440s.bsp"
+  reference_frame: "ICRF"
+  time_scale: "UTC"
+
+inputs:
+  epoch: "2026-01-20T06:00:00.000 UTC"
+  objects:                              # object 1, then object 2: the states at the epoch in ICRF (GMAT R2026a's back-propagation of the encounter of the description)
+    - name: "object1"
+      position_km: [-4923.347827922202, -2034.100750680791, -4701.850005250436]
+      velocity_km_s: [3.947753614919817, 3.1703469372785755, -5.507138465641703]
+    - name: "object2"
+      position_km: [-4919.702083111511, -2030.9953247266178, -4707.528758856719]
+      velocity_km_s: [3.9528824871873844, 3.172495187197379, -5.501859549982667]
+  central_body: "Earth"
+  geopotential_degree: 10
+  geopotential_model: "EGM2008_to70_TideFree"
+  perturbation_bodies: ["Moon", "Sun"]
+  force_model:
+    drag: false
+    srp: false
+  analysis_window:
+    start: "2026-01-20T11:30:00.000 UTC"
+    end: "2026-01-20T12:30:00.000 UTC"
+  report: "closest"
+  kernels: ["earth_latest_high_prec.bpc", "gm_de440.tpc", "pck00011.tpc"]
+
+tolerances_override:
+  conjunction_position_km:
+    abs_tol: 0.00026
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 m x Dt / 86400 s) = 0.26 m, Dt =
+      21600.00013 TT seconds from the epoch to the last TCA; reference term 2e-08 (S_gen of
+      relative_position_rtn_km, reference-check.json: GMAT R2026a, 2026-11-09)
+  conjunction_velocity_km_s:
+    abs_tol: 2.6e-7
+    rel_tol: 0.0
+    justification: >-
+      spec.md 6.4: T = max(T_op, ceil2(2 max(S_gen, E_2nd, floor))), T_op = ceil2(1 mm/s x Dt / 86400 s) = 0.26
+      mm/s, Dt = 21600.00013 TT seconds from the epoch to the last TCA; reference term 2.5e-11 (S_gen of
+      relative_velocity_rtn_km_s, reference-check.json: GMAT R2026a, 2026-11-09)
