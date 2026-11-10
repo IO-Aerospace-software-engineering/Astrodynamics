@@ -139,17 +139,20 @@ public readonly record struct Time : IComparable<Time>, IComparable
     }
 
     /// <summary>
-    /// The tick count (100 ns) nearest <paramref name="seconds"/>, ties to even: the conversion of every span of seconds
-    /// to a <see cref="Time"/> (#625). <see cref="System.DateTime.AddSeconds"/> and <see cref="TimeSpan.FromSeconds(double)"/>
+    /// The tick count (100 ns) nearest <paramref name="seconds"/>, ties to even, symmetric in sign: the conversion of the
+    /// seconds of <c>Create</c>, <see cref="AddSeconds"/> (with the ticks per millisecond and microsecond, of
+    /// <see cref="AddMilliseconds"/> and <see cref="AddMicroseconds"/>) and of the TDB − TT offset to ticks (#625). <see cref="System.DateTime.AddSeconds"/> and <see cref="TimeSpan.FromSeconds(double)"/>
     /// truncate toward zero instead, up to one tick early after J2000 and late before it.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="seconds"/> is not finite or its ticks do not fit in
     /// a <see cref="long"/>.</exception>
     internal static long SecondsToTicks(double seconds) => ToNearestTicks(seconds, TimeSpan.TicksPerSecond, nameof(seconds));
 
-    // The whole units and the fraction apart, so that the whole part is exact; the fraction times the ticks per unit
-    // rounded once, its residual (exact by the fused multiply-add) deciding the side of a half tick, so that the result is
-    // the nearest tick of the exact value of the double
+    // The magnitude of the value, its whole units and its fraction apart, so that the whole part and the fraction are
+    // exact (a fraction 1 - |value| of a negative value above -1 would round to the ulp of [0.5, 1)); the fraction times
+    // the ticks per unit rounded once, its residual (exact by the fused multiply-add) deciding the side of a half tick,
+    // so that the result is the nearest tick of the exact value of the double; ties to even, which is symmetric, so the
+    // sign is put back last
     private static long ToNearestTicks(double value, long ticksPerUnit, string paramName)
     {
         if (!double.IsFinite(value) || System.Math.Abs(value) >= long.MaxValue / ticksPerUnit)
@@ -157,8 +160,9 @@ public readonly record struct Time : IComparable<Time>, IComparable
             throw new ArgumentOutOfRangeException(paramName, value, "The span does not fit in the ticks of a Time.");
         }
 
-        double whole = System.Math.Floor(value);
-        double fraction = value - whole;
+        double magnitude = System.Math.Abs(value);
+        double whole = System.Math.Floor(magnitude);
+        double fraction = magnitude - whole;
         double scaled = fraction * ticksPerUnit;
         double residual = System.Math.FusedMultiplyAdd(fraction, ticksPerUnit, -scaled);
         double floor = System.Math.Floor(scaled);
@@ -169,7 +173,7 @@ public readonly record struct Time : IComparable<Time>, IComparable
             ticks++;
         }
 
-        return ticks;
+        return value < 0.0 ? -ticks : ticks;
     }
 
     public Time AddTicks(long ticks)

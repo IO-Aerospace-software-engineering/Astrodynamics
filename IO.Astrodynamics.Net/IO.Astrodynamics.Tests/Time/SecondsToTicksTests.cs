@@ -61,10 +61,37 @@ public class SecondsToTicksTests
             count++;
         }
 
-        // 857 of the 1744 values are not their truncation, the former result
+        // 968 of the 1978 values are not their truncation, the former result
         _output.WriteLine($"{count} values, {moved} whose nearest tick is not their truncation");
-        Assert.Equal(1744, count);
-        Assert.Equal(857, moved);
+        Assert.Equal(1978, count);
+        Assert.Equal(968, moved);
+    }
+
+    [Fact]
+    public void ANegativeValueAboveMinusOneUnit_IsTheMirrorOfItsMagnitude()
+    {
+        // Above -1 unit the fraction 1 - |value| of a floor is not exact in double, so a near tie can fall on the wrong
+        // side (the review of #625): -2.5e-7 s is -2.49999999999999995 ticks, -0.15 us -1.4999999999999999 ticks,
+        // -0.00025 ms -2.5000000000000001 ticks (Fraction)
+        Assert.Equal(-2L, TimeSystem.Time.SecondsToTicks(-2.5e-7));
+        Assert.Equal(2L, TimeSystem.Time.SecondsToTicks(2.5e-7));
+        Assert.Equal(0L, TimeSystem.Time.SecondsToTicks(-5e-8));
+        Assert.Equal(-1L, FromJ2000(TimeSystem.Time.J2000TDB.AddMicroseconds(-0.15)));
+        Assert.Equal(-3L, FromJ2000(TimeSystem.Time.J2000TDB.AddMilliseconds(-0.00025)));
+
+        // So adding a span and its opposite gives the time back: -(k + 1/2) 1e-7 s, k < 5000, missed it for 2499 of them before
+        var random = new Random(6251);
+        var start = TimeSystem.Time.CreateTDB(7.6e8 + 0.1234567);
+        for (int k = 0; k < 5000; k++)
+        {
+            double seconds = double.Parse($"{k}.5e-7", CultureInfo.InvariantCulture);
+            Assert.Equal(-TimeSystem.Time.SecondsToTicks(seconds), TimeSystem.Time.SecondsToTicks(-seconds));
+            Assert.Equal(start, start.AddSeconds(seconds).AddSeconds(-seconds));
+            Assert.Equal(start, start.AddSeconds(-seconds).AddSeconds(seconds));
+            double any = (random.NextDouble() - 0.5) * System.Math.Pow(10.0, random.Next(-9, 6));
+            Assert.Equal(-TimeSystem.Time.SecondsToTicks(any), TimeSystem.Time.SecondsToTicks(-any));
+            Assert.Equal(ExactTicks.Nearest(any), TimeSystem.Time.SecondsToTicks(any));
+        }
     }
 
     [Fact]

@@ -33,8 +33,8 @@ public class TimeToRadiusTests
         }
     }
 
-    private static KeplerianElements Orbit(double a, double e, ILocalizable observer) =>
-        new(a, e, 0.5, 1.0, 2.0, 0.0, observer, Epoch, Frames.Frame.ICRF);
+    private static KeplerianElements Orbit(double a, double e, ILocalizable observer, double meanAnomaly = 0.0) =>
+        new(a, e, 0.5, 1.0, 2.0, meanAnomaly, observer, Epoch, Frames.Frame.ICRF);
 
     private double SecondsTo(KeplerianElements orbit, double radius)
     {
@@ -174,11 +174,61 @@ public class TimeToRadiusTests
     [Theory]
     [InlineData(1e18)] // 3.4e13 s, beyond Time
     [InlineData(1e300)] // the mean anomaly overflows
-    public void ARadiusReachedBeyondTheLastEpochOfTime_Throws(double radius)
+    public void ARadiusReachedAfterTheLastEpochOfTime_Throws(double radius)
     {
         var orbit = Orbit(-1.5e11, 2.0, new CelestialBody(Stars.Sun));
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => orbit.TimeToRadius(radius));
         Assert.Equal("radius", ex.ParamName);
-        Assert.Contains("beyond the last epoch a Time holds", ex.Message);
+        Assert.Contains($"a radius of {radius:R} m outside the epochs a Time holds, after the last.", ex.Message);
+    }
+
+    [Fact]
+    public void ARadiusCrossedBeforeTheFirstEpochOfTime_Throws()
+    {
+        // At M0 = 1e7 rad the outbound crossing of 1e12 m (M = 5.37 rad) is (5.37 - 1e7) / n, about -5e13 s: before year 1
+        var orbit = Orbit(-1.5e11, 2.0, new CelestialBody(Stars.Sun), 1e7);
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => orbit.TimeToRadius(1e12));
+        Assert.Equal("radius", ex.ParamName);
+        Assert.Contains("a radius of 1000000000000 m outside the epochs a Time holds, before the first.", ex.Message);
+    }
+
+    [Fact]
+    public void AnOpenOrbitPastTheRadius_GivesItsOutboundCrossing_BeforeItsEpoch()
+    {
+        // The one outbound crossing of an open orbit, already past at M0 > M(r): (M(r) - M0) / n, the closed form
+        var sun = new CelestialBody(Stars.Sun);
+        double past = SecondsTo(Orbit(-1.5e11, 2.0, sun, 10.0), 1e12) - -23289240.982338788371;
+        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        double pastSoi = (Orbit(-5e6, 2.0, moon, 1e3).TimeToSphereOfInfluence() - Epoch).TotalSeconds -
+                         -4990383.9801409249097;
+        _output.WriteLine($"past 1e12 m: {past:E3} s, past the SOI: {pastSoi:E3} s off the closed form");
+        // Measured on Linux x64 (2026-11-10): -1.12e-7 s past 1e12 m (the -6.3e-8 s of the time from the periapsis, above,
+        // and the rounding of M(r) - M0 and of the tick), 2.4e-8 s past the SOI; twice each, at least two ticks
+        Assert.InRange(past, -2.3e-7, 2.3e-7);
+        Assert.InRange(pastSoi, -2e-7, 2e-7);
+    }
+
+    [Theory]
+    [InlineData(7.0e6)]
+    [InlineData(7.2e6)]
+    [InlineData(4.2164e7)]
+    public void ACircularOrbit_IsAtItsRadiusAtItsEpoch(double a)
+    {
+        // e = 0: the orbit is at its radius at every instant; (p / r - 1) / e is 0 / 0 at r = p and ±1 / 0 at r = a, an
+        // ulp or two from p
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        var orbit = Orbit(a, 0.0, earth);
+        double p = orbit.SemiLatusRectum();
+        foreach (var radius in new[] { p, a, System.Math.BitIncrement(p), System.Math.BitDecrement(p) })
+        {
+            Assert.Equal(Epoch, orbit.TimeToRadius(radius));
+        }
+
+        // Any other radius is never reached
+        foreach (var radius in new[] { p * (1.0 + 1e-9), p * (1.0 - 1e-9) })
+        {
+            var ex = Assert.Throws<ArgumentOutOfRangeException>(() => orbit.TimeToRadius(radius));
+            Assert.Contains($"from its periapsis, {p:R} m, to its apoapsis, {p:R} m.", ex.Message);
+        }
     }
 }

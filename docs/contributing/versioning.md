@@ -284,18 +284,24 @@ A major version, because it breaks the API: members deprecated for removal in 11
   seconds goes through `Time.Create`, so an ET from 2017 to 2028 came back an ulp earlier for 40.6 % of the ET, and a
   kernel-backed spacecraft built at the first instant of its SPK (`spkcov`) read 84 ns before its coverage and threw
   SPKINSUFFDATA (since #454). Each now takes the nearest tick of the exact value of its double, ties to even, through
-  one internal helper, `Time.SecondsToTicks`: the whole units apart, the fraction times the ticks per unit rounded
-  once, and its residual, exact by a fused multiply-add, deciding the side of a half tick (rounding the product alone,
-  as the issue's sketch did, misses the nearest tick of about 5 doubles in a million near a half tick). The TDB − TT
+  one internal helper, `Time.SecondsToTicks`: the magnitude of the value, its whole units apart, the fraction times the
+  ticks per unit rounded once, and its residual, exact by a fused multiply-add, deciding the side of a half tick, the
+  sign put back last (rounding the product alone, as the issue's sketch did, misses the nearest tick of about 5 doubles
+  in a million near a half tick; a floor of a negative value above −1 unit leaves a fraction 1 − |value| that double
+  cannot hold, which missed half of the near ties there, −2.5e-7 s giving −3 ticks for −2). The step epochs of a
+  propagation about a body other than the Earth, as the conjunction analysis reads them, and the epoch of a two-body
+  motion (`EpochAtMeanAnomaly`, so `TimeToRadius`, `TimeToSphereOfInfluence` and `ToStateVector(trueAnomaly)`) take
+  the labels of the propagation, `AddSeconds`, where they added `TimeSpan.FromSeconds`. The TDB − TT
   offset rounds too, the open choice of the issue: measured on the conformance runner, rounding it moves 798 more delta
   entries than rounding the other conversions alone (1915 against 1117 of 4764), most of them smaller (the attitudes,
   748 smaller against 308 larger, mean ratio 0.93; the propagators 0.94; the time conversions 0.91), so that every
   conversion of seconds follows one rule. `PropagationTimeArgument.Tt.SecondsBetween` and the runner's
   `TerrestrialSeconds` count from tick-exact labels and the series in double, so they do not depend on it.
   - **Measured** (Linux x64, 2026-11-10): the helper, `Create`, `AddSeconds`, `AddMilliseconds` and `AddMicroseconds`
-    give the exact nearest tick (Python `Fraction`, `tools/seconds_to_ticks`) of 1744 values: the issue's (±0.12345678999 s,
+    give the exact nearest tick (Python `Fraction`, `tools/seconds_to_ticks`) of 1978 values: the issue's (±0.12345678999 s,
     1234568 ticks; the start of the LRO SPK, 7558704691834258 ticks), exact ties, near ties, 8 doubles where rounding the
-    product misses, 1500 ET from 1968 to 2031 (857 of them not their truncation); 200 000 ET from 2017-01-05 to
+    product misses, 1500 ET from 1968 to 2031, 234 near ties above −1 unit and their mirrors (968 of them not their
+    truncation); a span and its opposite give a time back; 200 000 ET from 2017-01-05 to
     2028-07-17 come back exactly; `new Spacecraft(-85, "LRO", Time.CreateTDB(a))` at the start of its SPK builds and its
     state is spiceypy's `spkezr(-85, a, J2000, NONE, 399)` to the bit, at both ends of the coverage.
   - **What moves:** every epoch built from seconds, by a tick at most, and what is computed there. The window epochs of
@@ -322,14 +328,18 @@ A major version, because it breaks the API: members deprecated for removal in 11
   barycenter (#454). `TimeToRadius` now checks the radius first: not finite, below the periapsis p / (1 + e) or above
   the apoapsis p / (1 − e) of an ellipse, it throws `ArgumentOutOfRangeException` naming the radius and the reachable
   range (a radius within 1e-12 relative of an apsis is that apsis: its other expressions differ from p / (1 ± e) by 6e-16
-  to 7e-16); a radius reached beyond the last epoch a `Time` holds throws an `ArgumentOutOfRangeException` that says so.
+  to 7e-16); a radius reached outside the epochs a `Time` holds throws an `ArgumentOutOfRangeException` that says so,
+  after the last or before the first. A circular orbit (e = 0), at its radius at every instant, returns its epoch, where
+  0 / 0 gave NaN (and a radius an ulp from p an arbitrary epoch). On an open orbit already past the radius the epoch is
+  its outbound crossing, before the epoch of the orbit, as before.
   `TimeToSphereOfInfluence` throws `InvalidOperationException` ("<body> has no finite sphere of influence; an orbit
   about it never leaves it") for an infinite sphere of influence. The recommendation of the issue: throw, no `Try`
   method.
   - **Measured** (Linux x64, 2026-11-10) against the closed form of the hyperbola at 50 digits
     (`tools/time_to_radius`, mpmath 1.4.1 and spiceypy 8.3.0): about the Sun (a = −1.5e11 m, e = 2) 1e12 m within
     6.3e-8 s and 1e15 m within 1.04e-2 s, where the true anomaly is within 2e-4 rad of the asymptote; the Moon's sphere
-    of influence, one ulp from spiceypy's, reached within 4.0e-8 s.
+    of influence, one ulp from spiceypy's, reached within 4.0e-8 s; the past crossings, at M0 = 10 rad (1e12 m, −2.33e7 s)
+    and M0 = 1e3 rad (the Moon's sphere, −4.99e6 s), within 1.12e-7 s and 2.4e-8 s.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
@@ -1217,9 +1227,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
   `ArgumentOutOfRangeException` (`AddSeconds(double.NaN)` returned the time unchanged). `AddDays`, `AddHours` and
   `AddMinutes` are unchanged.
 - **`TimeToRadius` and `TimeToSphereOfInfluence` throw where the orbit never reaches the radius** ([#627](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/627), Fixed above):
-  a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached beyond the last
-  epoch of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite
-  sphere of influence throws `InvalidOperationException`.
+  a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached outside the epochs
+  of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite sphere of
+  influence throws `InvalidOperationException`; a circular orbit returns its epoch.
 
 **Removed**
 

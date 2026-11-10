@@ -12,7 +12,10 @@ The values:
 - the doubles nearest (n + 1/2) ticks, |n| < 2^40, which are not ties;
 - 8 doubles near a half tick whose fraction times 1e7, rounded in double, is a half while the exact product is on one
   side of it (found by a search, seed 625): rounding that product, as the issue's helper does, misses their nearest tick;
-- 1500 uniform ET from 1968-04-24 (-2^30 s) to 2031-09-09 (+2^30.8 s), seed 625, both signs.
+- 1500 uniform ET from 1968-04-24 (-2^30 s) to 2031-09-09 (+2^30.8 s), seed 625, both signs;
+- near ties of values above -1 unit and below 0, where the fraction 1 - |value| of a floor would round (the review of
+  #625): the decimal literals -(k + 1/2) 1e-7 s, -(k + 1/2) 1e-4 and -(k + 1/2) 0.1 (half ticks read as milliseconds and
+  as microseconds), with their positive mirrors, and 60 doubles nearest -(n + 1/2) ticks below a second.
 
 Per value: s, its repr; ticks, the nearest tick; truncated, the truncation toward zero. Each value is also read as
 milliseconds and as microseconds (the ticks nearest value x 1e4 and value x 10), the references of AddMilliseconds and
@@ -74,6 +77,21 @@ while len(hazards) < 8:
 values += [('double rounding', x) for x in hazards]
 for _ in range(1500):
     values.append(('grid', rng.uniform(-2.0 ** 30, 2.0 ** 30.8)))
+# Near ties of values in (-1, 0) units, where 1 - |value| is not exact in double (review of #625), and their positive
+# mirrors: the decimal literals -(k + 1/2) 1e-7 s, -(k + 1/2) 1e-4 (half ticks as ms), -(k + 1/2) 0.1 (as us), and the
+# doubles nearest -(n + 1/2) ticks below a second
+for k in [0, 1, 2, 3, 4, 7, 12, 24, 99, 123, 999, 4999] + sorted(rng.sample(range(5000, 5_000_000), 60)):
+    for sign in ('-', ''):
+        values.append(('sub-unit near tie', float(f'{sign}{k}.5e-7')))
+for k in [0, 1, 2, 3, 4, 9, 24, 99, 499, 4999]:
+    for sign in ('-', ''):
+        values.append(('sub-unit near tie', float(f'{sign}{k}.5e-4')))
+for k in range(5):
+    for sign in ('-', ''):
+        values.append(('sub-unit near tie', float(f'{sign}0.{k}5')))
+for _ in range(60):
+    n = rng.randrange(TICKS // 2)
+    values.append(('sub-unit near tie', -float(Fraction(2 * n + 1, 2 * TICKS))))
 
 rows = []
 for kind, value in values:
