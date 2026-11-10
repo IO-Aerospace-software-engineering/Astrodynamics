@@ -169,10 +169,10 @@ internal readonly struct EncounterPlaneGaussian
 /// dropped. Each segment is integrated by adaptive Simpson under its share, by width, of a tolerance of 1e-12 of the whole
 /// integral, halved at each level; a difference at the noise of the integrand, the rounding of x_c + R sin θ against σ and
 /// the cancellation of the erfc difference when σ ≫ the chord, is accepted, and the evaluations are bounded (#611). That
-/// noise, about ε σ/R relative, limits the Pc of a covariance far wider than the disc, which is itself well defined (a
-/// polar quadrature resolves it): it is the chord form's cancellation, not a limit of the double inputs. Against
-/// Marcum's closed form, a circular covariance with the miss off the axes: 5.0e-11 at σ = 1e6 R, 1.2e-10 at 1e7 R,
-/// 2.4e-8 at 1e8 R, 6.6e-7 at 1e10 R (lot 6 of #457, PC-1 and its verification).
+/// noise, bounded by about ε σ/R relative, limits the Pc of a covariance far wider than the disc, which is itself well
+/// defined (a polar quadrature resolves it): it is the chord form's cancellation, not a limit of the double inputs.
+/// Against Marcum's closed form, a circular covariance with the miss off the axes: 5.0e-11 at σ = 1e6 R, 1.2e-10 at
+/// 1e7 R, 2.4e-8 at 1e8 R, 6.6e-7 at 1e10 R, 0.05 to 1 times ε σ/R (lot 6 of #457, PC-1 and its verification).
 /// </para>
 /// <para>
 /// The chord probability is an erfc difference on the side away from zero (CARA's <c>erf_vec_dif</c>), and erf where the

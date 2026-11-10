@@ -97,7 +97,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   difference on the side away from zero (CARA's `erf_vec_dif`), erf where the chord straddles the minor axis, with
   fdlibm's erf and erfc (about one ulp) private to the Pc path, and the quadrature stops at 1e-12 of the whole integral,
   shared over the segments by width, a difference at the noise of the integrand accepted and the evaluations bounded.
-  That noise includes the cancellation of the erfc difference when σ ≫ the chord (about ε σ/R relative, at each sample):
+  That noise includes the cancellation of the erfc difference when σ ≫ the chord (bounded by about ε σ/R relative, at each sample):
   without it, a covariance far wider than the disc with a miss off its axes (σ 1e5 m, R 1 m, miss (1e5, 3e5) m) spent
   the 200 000 evaluations and returned a Pc 1.3e-6 off, with no flag (PC-1 of the lot's review). The public
   `SpecialFunctions.ErrorFunction` is unchanged.
@@ -109,10 +109,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
     NASA CARA's Omitron case 01 and Alfano case 03 within 2.6e-15, Frisbee's table 1 within 3.2e-16 (their tests now
     take the exact values: the published ones are 2.9e-6 and 2.3e-6 from them, Frisbee's given to two or three digits).
     σ ≫ R with the miss off the axes (σ 1e5 to 1e6 m, R 1 m; mpmath at 70 digits): within 5.0e-11, the noise of the
-    integrand itself, at 9 to 1 425 evaluations (200 000 before); that noise grows as about ε σ/R relative (Marcum's
-    closed form, a circular covariance: 1.2e-10 at σ = 1e7 R, 2.4e-8 at 1e8 R, 6.6e-7 at 1e10 R, 2.1e-6 before); a
-    random sweep of 500 encounters (σ/R 1e-4 to 1e6, misses to 12 σ) reaches neither the budget nor the depth cap (14
-    budget hits before, at most 9 217 evaluations after). One evaluation takes a median of 0.2 ms over the sweep, 2.2 ms
+    integrand itself, at 9 to 1 425 evaluations (200 000 before); that noise is bounded by about ε σ/R relative, 0.05
+    to 1 times it as measured (Marcum's closed form, a circular covariance: 1.2e-10 at σ = 1e7 R, 2.4e-8 at 1e8 R,
+    6.6e-7 at 1e10 R, 2.1e-6 before); a random sweep of 500 encounters (σ/R 1e-4 to 1e6, misses to 12 σ) reaches
+    neither the budget nor the depth cap (14 budget hits before, at most 9 217 evaluations after). One evaluation takes a median of 0.2 ms over the sweep, 2.2 ms
     in the deep tails (a Pc near 1e-300, 13 765 evaluations).
   - **What moves:** every Pc, `CollisionRisk.ProbabilityOfCollision` through `Analyze`, `AnalyzeAll`, `Screen`,
     `EvaluateAvoidance` and the `COLLISION_PROBABILITY` that `ToCdm` writes: by 1e-8 to 1e-5 relative above 1e-7, up to
@@ -166,10 +166,15 @@ A major version, because it breaks the API: members deprecated for removal in 11
   212 µs at the default steps of `new RK78Integrator()` on this crossing), within which a window ending before a minimum
   listed its unrefined Hermite epoch, a point still closing (as before 11.0.0), and a window starting before one listed
   nothing (an intermediate state of this change). A window end is now bracketed when the range rate says the minimum
-  lies inside, a minimum whose range-rate zero lies outside the window is dropped, and a zero exactly at a window end is
-  that end (the bisection would give the tick before it, #624): against `gfdist_c` on windows
-  ending or starting 10 µs to 1 ms before or after each of the four minima, at 60 s and at the default steps, the same
-  minima within the bounds above (2.7e-7 m at the default steps, their states against their SPK of 60 s outputs).
+  lies inside, and a minimum whose range-rate zero lies outside the window is dropped. A window end is never listed,
+  not even a zero of the range rate exactly there, which `Analyze` returns as that end (the bisection would give the
+  tick before it, #624). A window whose candidates all lie within the flatness tolerance of the seeds (a slow pass, a
+  window of a few ticks about a minimum) listed nothing and `Analyze` returned its midpoint, although the range rate
+  went from negative to positive inside (F1 of the lot's second review: 1 ms off on a pass at 0.113 m/s and 50 m); the
+  zero is now bisected over the window, and `Analyze` on this path never returns the midpoint. Against `gfdist_c` on
+  windows ending or starting 1 µs to 1 ms before or after each of the four minima, at 60 s and at the default steps,
+  and on windows of 2 and 3 ticks on each side of each minimum at 60 s steps, the same minima within the bounds above
+  (2.7e-7 m at the default steps, their states against their SPK of 60 s outputs).
 - **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the
   ephemeris read and `TransformFrame`). `ReadEphemerisAtGivenEpochProxy` left its state unwritten when `spkezr_c`
   failed (r = (4.9e-321, 6.95e-307, 6.95e-307) m past de440s on Linux, whatever the stack held elsewhere), and

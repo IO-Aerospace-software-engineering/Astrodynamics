@@ -210,9 +210,12 @@ public static class ConjunctionAssessment
     /// <returns>
     /// The highest-priority encounter within the window: the closest interior local minimum of the distance when the window
     /// holds one, a window end never preferred to it (#621); without an interior minimum, the end where the distance grows
-    /// into the window when the trajectories share their observer and frame, the midpoint otherwise. On that path a minimum
-    /// lies inside the window when the range rate of the states says so, the cubic Hermite of the stored steps only seeding
-    /// the search (#363): a minimum whose range-rate zero lies outside the window is never returned, however near an end.
+    /// into the window when the trajectories share their observer and frame (an end where the range rate is exactly zero
+    /// included), the midpoint otherwise. On that path a minimum lies inside the window when the range rate of the states
+    /// says so, the cubic Hermite of the stored steps only seeding the search (#363): a minimum whose range-rate zero lies
+    /// outside the window is never returned, however near an end, and a range rate negative at the start and positive at
+    /// the end returns the minimum between them, however flat the distance over the window; the midpoint is never returned
+    /// on that path.
     /// </returns>
     public static EncounterCase Analyze(
         ProtectedSpacecraftProfile protectedAsset,
@@ -284,8 +287,9 @@ public static class ConjunctionAssessment
     /// minima of the distance only, an empty list when the window holds none (#621: a window end was listed before 11.0.0);
     /// otherwise, without a TCA, a single midpoint fallback encounter. On the first path a minimum lies inside the window
     /// when the range rate of the states says so, the cubic Hermite of the stored steps only seeding the search (#363): a
-    /// minimum whose range-rate zero lies just inside a window end is listed, one whose zero lies just outside is not, and
-    /// one whose zero is exactly a window end is listed at that end.
+    /// minimum whose range-rate zero lies just inside a window end is listed, one whose zero lies just outside is not, nor
+    /// one whose zero is exactly a window end (a window end is never listed), and a range rate negative at the start and
+    /// positive at the end lists the minimum between them, however flat the distance over the window.
     /// </returns>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
         ProtectedSpacecraftProfile protectedAsset,
@@ -911,10 +915,15 @@ public static class ConjunctionAssessment
     /// the distance, refined on the range rate (#621: a window end, where the distance grows into the window, is no close
     /// approach; it was listed before 11.0.0). The minima of the cubic Hermite of the stored steps, the window ends
     /// included, only seed the search: whether a minimum lies inside the window is decided on the range rate of the states
-    /// (<see cref="RefineOnRangeRate"/>), since the Hermite misses its zero by up to milliseconds (#363).
+    /// (<see cref="RefineOnRangeRate"/>), since the Hermite misses its zero by up to milliseconds (#363). Without a seed
+    /// inside, a range rate negative at the start and zero or positive at the end still holds a minimum inside, which is
+    /// bisected over the window: the distances of the candidates may all lie within the flatness tolerance of the seeds
+    /// (a slow pass, a window of a few ticks about a minimum). A window end is never a close approach, a zero of the range
+    /// rate exactly there included.
     /// </summary>
     /// <param name="windowEndsWithoutInteriorMinimum">When the window holds no interior minimum, return the ends where the
-    /// distance grows into the window, on the range rate of the states, instead of nothing: <see cref="Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>
+    /// distance grows into the window, on the range rate of the states (an end where it is exactly zero included), instead
+    /// of nothing; within a window one tick wide whose range-rate zero no epoch inside resolves, the closer end. <see cref="Analyze(ProtectedSpacecraftProfile, PropagationSolution, ILocalizable, PropagationSolution, Window, ConjunctionAnalysisOptions)"/>
     /// keeps its former answer there, which #621's own change decides; <c>AnalyzeAll</c> lists the interior minima only.</param>
     private static List<Time> FindDenseCloseApproaches(
         StateSamplingSource protectedSource,
@@ -928,7 +937,8 @@ public static class ConjunctionAssessment
         var boundaries = BuildDenseIntervalBoundaries(protectedDense, secondaryDense, window, toleranceSeconds);
         if (boundaries.Count < 2)
         {
-            return new List<Time>();
+            // A window of zero length: its one epoch for Analyze, nothing for AnalyzeAll
+            return windowEndsWithoutInteriorMinimum ? new List<Time> { window.StartDate } : new List<Time>();
         }
 
         var candidateEpochs = new List<Time>(boundaries);
@@ -1009,29 +1019,93 @@ public static class ConjunctionAssessment
 
         // The minima of the polynomials, the window ends included, are only the seeds of the search: whether a minimum
         // lies inside the window is decided on the range rate of the states (RefineOnRangeRate), whose zero the Hermite
-        // misses by its error (#363)
+        // misses by its error (#363). A window end is never a close approach (#621), not even a zero of the range rate
+        // exactly there, which the dense Analyze keeps by its end fallback below
         Func<Time, double> rangeRate = epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch);
-        var closeApproaches = RefineOnRangeRate(minima, distinctCandidates, rangeRate, toleranceSeconds);
-        if (closeApproaches.Count > 0 || !windowEndsWithoutInteriorMinimum)
+        var start = distinctCandidates[0];
+        var end = distinctCandidates[^1];
+        double? startRateValue = null;
+        double StartRate() => startRateValue ??= rangeRate(start);
+
+        // A zero inside the first tick of the window, which the bisection returns as the start (its last bracket one tick
+        // wide, #624), is the tick after it when that tick lies inside the window; a zero exactly at an end is no zero
+        // inside
+        Time? Inside(Time epoch)
+        {
+            if (epoch > start && epoch < end)
+            {
+                return epoch;
+            }
+
+            var next = start.AddTicks(1);
+            return epoch == start && next < end && StartRate() < 0.0 ? next : null;
+        }
+
+        var closeApproaches = new List<Time>();
+        foreach (var refined in RefineOnRangeRate(minima, distinctCandidates, rangeRate, toleranceSeconds))
+        {
+            if (Inside(refined) is { } epoch)
+            {
+                AddDistinctEpoch(closeApproaches, epoch, toleranceSeconds);
+            }
+        }
+
+        if (closeApproaches.Count > 0)
+        {
+            return closeApproaches;
+        }
+
+        // No seed inside: the distances of the candidates may all lie within the flatness tolerance of
+        // SelectLocalMinimumEpochs (a slow pass, a window of a few ticks about a minimum). A range rate negative at the
+        // start and zero or positive at the end holds a minimum inside, whose zero is bisected over the window; a zero
+        // exactly at the end, the range rate negative on the tick before it, is that end, no minimum inside
+        double startRate = StartRate();
+        double endRate = rangeRate(end);
+        Time? zero = null;
+        if (startRate < 0.0 && endRate >= 0.0)
+        {
+            zero = BisectForZero(rangeRate, start, end, toleranceSeconds);
+            bool zeroIsTheEnd = endRate == 0.0 && (end - zero.Value).Ticks <= 1 && rangeRate(end.AddTicks(-1)) < 0.0;
+            if (!zeroIsTheEnd && Inside(zero.Value) is { } epoch)
+            {
+                closeApproaches.Add(epoch);
+                return closeApproaches;
+            }
+        }
+
+        if (!windowEndsWithoutInteriorMinimum)
         {
             return closeApproaches;
         }
 
         // No minimum inside the window: the ends where the distance grows into it, on the states (the first and last
         // candidates are the window ends, BuildDenseIntervalBoundaries)
-        var start = distinctCandidates[0];
-        var end = distinctCandidates[^1];
-        if (rangeRate(start) >= 0.0)
+        if (startRate >= 0.0)
         {
             closeApproaches.Add(start);
         }
 
-        if (rangeRate(end) <= 0.0)
+        if (endRate <= 0.0)
         {
             closeApproaches.Add(end);
         }
 
+        // A zero inside a window one tick wide, which no epoch inside resolves: the closer end, never the midpoint
+        if (closeApproaches.Count == 0 && zero.HasValue)
+        {
+            closeApproaches.Add(DistanceSquared(protectedSource, secondarySource, start) <=
+                                DistanceSquared(protectedSource, secondarySource, end)
+                ? start
+                : end);
+        }
+
         return closeApproaches;
+    }
+
+    private static double DistanceSquared(StateSamplingSource protectedSource, StateSamplingSource secondarySource,
+        Time epoch)
+    {
+        return (secondarySource.GetState(epoch).Position - protectedSource.GetState(epoch).Position).MagnitudeSquared();
     }
 
     // The cubic Hermite position of a dense trajectory, from the step that contains the epoch (the earlier one at a
@@ -1085,7 +1159,8 @@ public static class ConjunctionAssessment
     /// at the last candidate is a minimum inside when the range rate is zero or positive there, and its zero is searched
     /// before it; negative, it is dropped. A zero of the range rate exactly at a window end (the range rate negative at
     /// the candidate before the last one, or positive at the one after the first) is that end itself, whichever minimum
-    /// it refines: the bisection would end on the tick before the last candidate (#624).
+    /// it refines: the bisection would end on the tick before the last candidate (#624). The dense search drops it, a
+    /// window end being no close approach.
     /// </para>
     /// <para>
     /// The range rate is close to linear near its zero: its relative curvature is of the order of the orbital rate, so

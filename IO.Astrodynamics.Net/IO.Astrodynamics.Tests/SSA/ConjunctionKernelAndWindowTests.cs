@@ -291,7 +291,11 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         _worstMissError = System.Math.Max(_worstMissError, System.Math.Abs(missError));
 
         // PROVISIONAL (Linux x64 only, until the CI of the three platforms): twice the worst measured, 2e-7 s (two ticks
-        // of the epochs) and 1.1e-8 m, the propagation against its SPK (degree-7 interpolation of the 60 s outputs)
+        // of the epochs) and 1.13e-8 m, the propagation against its SPK (degree-7 interpolation of the 60 s outputs).
+        // Measured again in round 3 of the lot-6 review over every window here, those of 1 and 3 µs and of 1 to 3 ticks
+        // about the minima included: 1.129e-8 m, the TCA t0 + 4638.5363740 s of a window starting two ticks before the
+        // minimum; against the second reviewer's spiceypy distance at the minimum, over its 341 windows, 1.143e-8 m (its
+        // 1.16e-8 m printed the library's miss to 1e-9 m): 2.3e-8 m is twice the worst, rounded up to two digits
         Assert.True(System.Math.Abs(tcaError) <= 4.0e-7, $"TCA {tcaError:E3} s");
         Assert.True(System.Math.Abs(missError) <= missBound, $"miss {missError:E3} m");
     }
@@ -300,14 +304,14 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
 
     // Offsets of the window ends from the minima: 10 µs to 1 ms, inside and past the band of the default steps (the
     // minima of the Hermite 12, 62, 139 and 212 µs before those of the states; below 1 µs at 60 s steps)
-    private static readonly double[] EndOffsets = { 1.0e-5, 3.0e-5, 1.0e-4, 3.0e-4, 1.0e-3 };
+    private static readonly double[] EndOffsets = { 1.0e-6, 3.0e-6, 1.0e-5, 3.0e-5, 1.0e-4, 3.0e-4, 1.0e-3 };
 
     private double _worstTcaError;
     private double _worstMissError;
 
     private CrossingEncounterCase Crossing(string steps) => steps == "60 s" ? _case : _defaultStepCase;
 
-    // The bound of the miss distance against the SPK: #621's at 60 s steps (1.1e-8 m measured again here); at the default
+    // The bound of the miss distance against the SPK: #621's at 60 s steps (1.129e-8 m measured again here); at the default
     // steps, PROVISIONAL (Linux x64 only, until the CI of the three platforms): twice the worst measured, 2.74e-7 m, on the
     // whole window as on every window of S1: the states of RK7(8) at 1e-9 inside a step of 234 s against the degree-7
     // interpolation of their 60 s outputs, whatever the window (the TCA keeps #621's 4e-7 s, 2e-7 s measured)
@@ -387,6 +391,63 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         }
 
         _output.WriteLine($"MEASURE S1 window start {steps} minimum {minimum}: TCA {_worstTcaError:E3} s, miss {_worstMissError:E3} m");
+    }
+
+    // ---- F1 of the round-2 review of lot 6 of #457: a window flat within the tolerance of the seeds ----
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void Dense_WindowOfAFewTicksAboutAMinimum_ListsTheMinimumOfCspice(int minimum)
+    {
+        // Windows of 1 to 3 ticks (100 ns) on each side of a minimum, at 60 s steps: the distances of the candidates all
+        // lie within the flatness tolerance of the seeds, so before, no seed survived and AnalyzeAll listed nothing
+        // although the range rate goes from negative to positive inside. With them, windows ending or starting 1 to 3
+        // ticks past the minimum, 400 s on the other side (the windows of the second reviewer's worst miss, a window
+        // starting on the tick before the zero). The states and their SPK place the zero of the range rate up to 1.3e-7 s
+        // apart (the TCA accuracy of #621, the band of the round-2 review), so an end one tick from the minimum may hold it
+        // for CSPICE and not for the states, or the reverse: there AnalyzeAll lists at most one minimum, strictly inside.
+        // Both ends two ticks or more from it, CSPICE's range rate goes from negative to positive and its gfdist_c LOCMIN
+        // lists the minimum: AnalyzeAll lists it, within #621's bounds, and Analyze returns it
+        var crossing = _case;
+        var tca = CspiceLocalMinima(crossing.Window, crossing)[minimum].Epoch;
+        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
+        const long farTicks = 400 * TimeSpan.TicksPerSecond;
+        for (long ticks = 1; ticks <= 3; ticks++)
+        {
+            foreach (var (startTicks, endTicks) in new[] { (-ticks, ticks), (-ticks, farTicks), (-farTicks, ticks) })
+            {
+                var window = new Window(tca.AddTicks(startTicks), tca.AddTicks(endTicks));
+                var locmin = CspiceLocalMinima(window, crossing);
+                double startRate = CspiceRangeRate(window.StartDate, crossing);
+                double endRate = CspiceRangeRate(window.EndDate, crossing);
+                var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2,
+                    window, Options);
+                var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2,
+                    crossing.Solution2, window, Options);
+                double analyzeSeconds = (encounter.EncounterState.Epoch - crossing.T0).TotalSeconds;
+                _output.WriteLine($"[{startTicks}, {endTicks}] ticks: CSPICE range rate {startRate:E3} {endRate:E3} m²/s, " +
+                                  $"LOCMIN {locmin.Length}, AnalyzeAll {all.Count}, Analyze t0 + {analyzeSeconds:F7} s");
+
+                Assert.True(all.Count <= 1);
+                Assert.All(all, e => Assert.True(e.EncounterState.Epoch > window.StartDate &&
+                                                 e.EncounterState.Epoch < window.EndDate));
+                Assert.True(encounter.EncounterState.Epoch >= window.StartDate &&
+                            encounter.EncounterState.Epoch <= window.EndDate);
+                if (ticks == 1)
+                {
+                    continue;
+                }
+
+                Assert.True(startRate < 0.0 && endRate > 0.0);
+                AssertIsMinimum(Assert.Single(all), Assert.Single(locmin));
+                AssertIsMinimum(encounter, locmin[0]);
+            }
+        }
+
+        _output.WriteLine($"MEASURE F1 minimum {minimum}: TCA {_worstTcaError:E3} s, miss {_worstMissError:E3} m");
     }
 
     // AnalyzeAll lists the local minima of CSPICE's gfdist_c in the window, each within the bounds of #621, and Analyze

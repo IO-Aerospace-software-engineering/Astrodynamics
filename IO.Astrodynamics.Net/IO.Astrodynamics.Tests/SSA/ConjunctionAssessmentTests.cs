@@ -465,19 +465,19 @@ public partial class ConjunctionAssessmentTests
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
     }
 
-    // A rectilinear pass in a 2 s window: the secondary at (10, y0 + vy t) m from the protected spacecraft, one accepted
-    // step; closest, 10 m, where y = 0
+    // A rectilinear pass in a 2 s window: the secondary at (x, y0 + vy t) m from the protected spacecraft, one accepted
+    // step; closest, x m, where y = 0
     private static (ProtectedSpacecraftProfile, PropagationSolution, Spacecraft, PropagationSolution, Window)
-        RectilinearPass(int naifId, double y0, double vy)
+        RectilinearPass(int naifId, double y0, double vy, double x = 10.0)
     {
         var earth = CreateEarth();
         var start = TimeSystem.Time.J2000TDB;
         var protectedSpacecraft = CreateSpacecraft(naifId, "P", earth, Vector3.Zero, Vector3.Zero);
-        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "S", earth, new Vector3(10.0, y0, 0.0), new Vector3(0.0, vy, 0.0));
+        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "S", earth, new Vector3(x, y0, 0.0), new Vector3(0.0, vy, 0.0));
         var protectedTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
             stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
         var secondaryTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
-            stateAtSeconds: t => (new Vector3(10.0, y0 + vy * t, 0.0), new Vector3(0.0, vy, 0.0), Vector3.Zero));
+            stateAtSeconds: t => (new Vector3(x, y0 + vy * t, 0.0), new Vector3(0.0, vy, 0.0), Vector3.Zero));
         return (new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory, secondarySpacecraft,
             secondaryTrajectory, new Window(start, start.AddSeconds(2.0)));
     }
@@ -493,10 +493,12 @@ public partial class ConjunctionAssessmentTests
     [Theory]
     [InlineData(200.0, -100.0)] // closest at the window end, closing before it
     [InlineData(0.0, 100.0)] // closest at the window start, receding after it
-    public void AnalyzeAndAnalyzeAll_DenseRangeRateZeroAtAWindowEnd_ReturnThatEndItself(double y0, double vy)
+    public void DenseRangeRateZeroAtAWindowEnd_AnalyzeReturnsThatEndItself_AnalyzeAllNothing(double y0, double vy)
     {
-        // The closed form: y = 0 at t = −y0/vy, a window end; the range rate is zero there and the distance 10 m. The
-        // window end itself, not the tick before it (#624's bisection, which S1's refinement of the ends reached)
+        // The closed form: y = 0 at t = −y0/vy, a window end; the range rate is zero there and the distance 10 m. A window
+        // end is never a close approach (design of lot 6 of #457, §2.1: "A window end is never a TCA"; §8.3 row 7:
+        // AnalyzeAll lists the interior minima only), so AnalyzeAll lists nothing; Analyze keeps its end fallback, the end
+        // itself, not the tick before it (#624's bisection, which S1's refinement of the ends reached)
         var (profile, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5524, y0, vy);
         var expected = window.StartDate.AddSeconds(-y0 / vy);
 
@@ -507,7 +509,110 @@ public partial class ConjunctionAssessmentTests
 
         Assert.Equal(expected, encounter.EncounterState.Epoch);
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
-        Assert.Equal(expected, Assert.Single(encounters).EncounterState.Epoch);
+        Assert.Empty(encounters);
+    }
+
+    // The slow pass of the round-2 review of lot 6 of #457: 0.113 m/s, 50 m, closest at m = 1.00000005 s, half-way between
+    // two ticks (100 ns). Over these windows (ends in ticks from 1 s) the squared distance moves by at most
+    // (0.113 m/s × 8 ms)² = 8.2e-7 m², within the 1e-6 m² flatness tolerance of the seeds: before, no seed survived,
+    // AnalyzeAll listed nothing and Analyze returned the midpoint (1 ms off on the first window)
+    [Theory]
+    [InlineData(-50_000, 30_000)] // [m − 5 ms, m + 3 ms]
+    [InlineData(-10_000, 10_000)] // [m − 1 ms, m + 1 ms]
+    [InlineData(-80_000, 80_000)] // [m − 8 ms, m + 8 ms]
+    [InlineData(-1, 2)] // one tick inside on each side of m
+    [InlineData(-3, 3)]
+    [InlineData(0, 3)] // m in the first tick, which the bisection returns as the start: the tick after it
+    [InlineData(-3, 1)] // m in the last tick
+    public void Dense_SlowPassFlatOverTheWindow_ListsTheMinimumOfTheRangeRate(long startTicks, long endTicks)
+    {
+        const double vy = 0.113;
+        const double m = 1.00000005;
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+            RectilinearPass(-5528, -vy * m, vy, x: 50.0);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond.AddTicks(startTicks), oneSecond.AddTicks(endTicks));
+
+        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        // The closed form: the TCA within one tick of m, strictly inside the window, 50 m
+        var listed = Assert.Single(encounters);
+        foreach (var state in new[] { listed.EncounterState, encounter.EncounterState })
+        {
+            double seconds = (state.Epoch - fullWindow.StartDate).TotalSeconds;
+            Assert.True(System.Math.Abs(seconds - m) <= 1.0e-7, $"TCA {seconds:F9} s, closed form {m:F9} s");
+            Assert.True(state.Epoch > window.StartDate && state.Epoch < window.EndDate);
+            Assert.Equal(50.0, state.MissDistanceMeters, 9);
+        }
+
+        Assert.Equal(listed.EncounterState.Epoch, encounter.EncounterState.Epoch);
+    }
+
+    [Fact]
+    public void Dense_SlowPassInAWindowOneTickWide_AnalyzeReturnsTheCloserEnd_AnalyzeAllNothing()
+    {
+        // m = 1.00000003 s inside [1 s, 1 s + 1 tick]: no epoch inside resolves the minimum, a window end is never listed;
+        // Analyze returns the closer end, 1 s, never the midpoint
+        const double vy = 0.113;
+        const double m = 1.00000003;
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+            RectilinearPass(-5532, -vy * m, vy, x: 50.0);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond, oneSecond.AddTicks(1));
+
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions));
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        Assert.Equal(oneSecond, encounter.EncounterState.Epoch);
+        Assert.Equal(System.Math.Sqrt(2500.0 + System.Math.Pow(vy * 3.0e-8, 2.0)),
+            encounter.EncounterState.MissDistanceMeters, 9);
+    }
+
+    [Fact]
+    public void Dense_WindowOfZeroLength_AnalyzeReturnsItsEpoch_AnalyzeAllNothing()
+    {
+        // [1 s, 1 s] on the pass closest at 1 s: no epoch inside, so AnalyzeAll lists nothing; Analyze returns that epoch
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) = RectilinearPass(-5534, -100.0, 100.0);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond, oneSecond);
+
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions));
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        Assert.Equal(oneSecond, encounter.EncounterState.Epoch);
+        Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
+    }
+
+    [Theory]
+    [InlineData(-5.0e-3, -1.0e-3, 1.0e-3)] // still closing at the end: the end
+    [InlineData(1.0e-3, 5.0e-3, 1.0e-3)] // receding from the start: the start
+    public void Dense_SlowPassFlatAndMonotonic_AnalyzeReturnsTheEndWhereTheDistanceGrowsIntoIt(double startOffset,
+        double endOffset, double expectedFromMinimum)
+    {
+        // Flat over the window and no minimum inside: Analyze returns the end the distance decreases toward, never the
+        // midpoint; AnalyzeAll lists nothing
+        const double vy = 0.113;
+        const double m = 1.0;
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+            RectilinearPass(-5530, -vy * m, vy, x: 50.0);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond.AddTicks((long)System.Math.Round(startOffset * TimeSpan.TicksPerSecond)),
+            oneSecond.AddTicks((long)System.Math.Round(endOffset * TimeSpan.TicksPerSecond)));
+
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        var expected = startOffset < 0.0 ? window.EndDate : window.StartDate;
+        Assert.Equal(expected, encounter.EncounterState.Epoch);
+        Assert.Equal(System.Math.Sqrt(2500.0 + System.Math.Pow(vy * expectedFromMinimum, 2.0)),
+            encounter.EncounterState.MissDistanceMeters, 9);
+        Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions));
     }
 
     [Theory]
