@@ -278,11 +278,14 @@ GM. The runner (`ManeuverSolver`, `LambertCaseSolver`) maps each step to the lib
 Every key takes its operational tolerance (no case has an override): 1 ms for a burn epoch, 1 m for a burn position,
 1 mm/s for a Δv, 1 g for a mass, 1 mm/s for a Lambert velocity, and 1 m and 1 mm/s per component of the final state.
 Release, Linux, 2026-11-05, the runner on the suite at 9dca9c7: the worst ratio of each key over the cases, and of each
-case over its keys.
+case over its keys. The burn epochs count exact TT seconds since
+[#630](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/630) (Release, Linux, 2026-11-10, the
+suite's main 33286d2): the runner had counted them through `ToTDT`, which truncates TDB − TT to the tick, so each moved
+by 0.05 to 0.96 tick, and the `maneuver_epoch_s` row with them (8.4e-7 s, 8.4e-4 before).
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
-| `maneuver_epoch_s` | 8.4e-7 s | 8.4e-4 | `maneuver_24h_leo_pm_apsidal_008`, `burns[align].elapsed_s` |
+| `maneuver_epoch_s` | 8.0e-7 s | 8.0e-4 | `maneuver_24h_leo_pm_apsidal_008`, `burns[align].elapsed_s` |
 | `maneuver_position_km` | 6.0 mm | 0.0060 | 008, `burns[align].position_km` |
 | `maneuver_delta_v_km_s` | 1.1e-3 mm/s | 0.0011 | `maneuver_24h_leo_pm_gto_012`, `burns[raise].delta_v_km_s` |
 | `maneuver_mass_kg` | 3.2e-7 kg | 3.2e-4 | 008, `burns[align].mass_after_kg` |
@@ -520,7 +523,10 @@ of the CDMs.
 Release, Linux, 2026-11-09, the runner on the suite at 970a3bf (the native library of the lot's #454 change built
 locally): every case passes; the worst ratio of each key over the cases, and of each case over its keys. The rows that
 [#624](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/624) moved are given at the tick nearer the TCA (Release, Linux, 2026-11-10, the suite's main 33286d2, 201 of 201),
-the figure before it in brackets.
+the figure before it in brackets. The `tca_s` of propagated objects counts exact TT seconds since
+[#630](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/630) (same run): the runner had counted
+it through `ToTDT`, which truncates TDB − TT to the tick, 0.06 to 0.98 tick late on these dates; this moved the rows
+of 001, 002, 003 and 008 (0.0058, 0.0037, 0.0037 and 0.0064 at `minima[3].tca_s` before it).
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
@@ -541,14 +547,14 @@ the figure before it in brackets.
 
 | Case | Largest ratio | Output |
 |------|---------------|--------|
-| `conjunction_6h_leo700_grav10_headon_001` | 0.0058 | `tca_s` |
-| `conjunction_6h_leo500_grav10_crossing_002` | 0.0037 (0.0025) | `tca_s` (`relative_position_rtn_km`) |
-| `conjunction_6h_leo500_pm_crossing_003` | 0.0037 (0.0024) | `tca_s` (`relative_position_rtn_km`) |
+| `conjunction_6h_leo700_grav10_headon_001` | 0.0022 | `tca_s` |
+| `conjunction_6h_leo500_grav10_crossing_002` | 0.0019 (0.0025) | `tca_s` (`relative_position_rtn_km`) |
+| `conjunction_6h_leo500_pm_crossing_003` | 0.0019 (0.0024) | `tca_s` (`relative_position_rtn_km`) |
 | `conjunction_6h_geo_grav10_slow_004` | 1.9e-5 | `objects[1].correlation_rtn` |
 | `conjunction_6h_leo700_grav10_flat_005` | 6.4e-5 | `relative_velocity_rtn_km_s` |
 | `conjunction_6h_leo400_grav10_drag_crossing_006` | 0.30 | `objects[0].correlation_rtn` |
 | `conjunction_12h_leo500_spk_crossing_007` | 0.027 (0.50) | `tca_s` (`relative_velocity_rtn_km_s`) |
-| `conjunction_12h_leo500_grav10_allminima_008` | 0.0064 (0.0063) | `minima[3].tca_s` (`minima[14].tca_s`) |
+| `conjunction_12h_leo500_grav10_allminima_008` | 0.0064 (0.0063) | `minima[14].tca_s` |
 | `collision_probability_synthetic_high_001` | 1.6e-8 | `collision_probability` |
 | `collision_probability_synthetic_mid_002` | 4.9e-9 (7.5e-6) | `collision_probability` (`encounter_plane_sigma_minor_km`) |
 | `collision_probability_synthetic_low_003` | 7.4e-8 | `collision_probability` |
