@@ -88,7 +88,7 @@ public class ConjunctionSolver : ICategorySolver
             encounters = closest
                 ? [ConjunctionAssessment.Analyze(profile, propagated[0].Solution, propagated[1].Spacecraft, propagated[1].Solution, window, options)]
                 : ConjunctionAssessment.AnalyzeAll(profile, propagated[0].Solution, propagated[1].Spacecraft, propagated[1].Solution, window, options);
-            seconds = t => (t.ToTDT() - epoch.ToTDT()).TotalSeconds;
+            seconds = t => TerrestrialSeconds.Between(epoch, t);
         }
 
         var outputs = new Dictionary<string, object>();

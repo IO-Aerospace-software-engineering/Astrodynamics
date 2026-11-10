@@ -254,6 +254,29 @@ A major version, because it breaks the API: members deprecated for removal in 11
   - **What moves:** every refined TCA, by at most one tick toward the zero, and what is computed there: the states at
     TCA by v·δt (up to 0.77 mm at 7.7 km/s), the miss distance at second order, the RTN axes and the covariance held in
     RTN, the Pc, and the `TCA` and states that `ToCdm` writes.
+- **The conformance runner counted its TT seconds through `ToTDT`** ([#630](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/630)).
+  `tca_s` of the propagated objects (`ConjunctionSolver`), `burns[].elapsed_s` (`ManeuverSolver`) and
+  `events.*[].elapsed_s` (`OrbitalEventsSolver`) were `(t.ToTDT() - epoch.ToTDT()).TotalSeconds`, and the TDB → TT
+  conversion of a TDB label subtracts TDB − TT through `TimeSpan.FromSeconds`, which truncates it toward zero to the
+  100 ns tick: a TDB label came out late by 0 to 1 tick when TDB − TT is positive (+0.47 ms on 2026-01-20, the date of
+  the conjunction cases), early when it is negative. The three now count with `PropagationTimeArgument.Tt.SecondsBetween`
+  (the runner's `TerrestrialSeconds`, the internals of the library visible to the runner), the rule of the library's
+  references about the Earth. The library is unchanged.
+  - **Measured** (Linux x64, 2026-11-10): against mpmath at 50 digits on the library's TDB − TT series
+    (`tools/conformance/terrestrial_seconds_reference.py`), 100 TDB labels in the 6 h after 2026-01-20T06:00:00 UTC and
+    100 after 2026-10-20T06:00:00 UTC (−1.61 ms) within 3.64e-12 s, one ulp near 2.16e4 s, asserted at 7.3e-12 s
+    (twice the worst, the same on Linux x64, Windows x64 and macOS arm64, CI of #632 at 01d14e2c); the former expression
+    was off there by +0.0004 to +0.992 tick
+    and by −0.995 to −0.006 tick. CSPICE (`unitim`) confirms the TT of both UTC epochs to the tick. The runner on the
+    suite's main (33286d2), 201 of 201: 20 `tca_s` and 17 `elapsed_s` deltas move, each value by −0.05 to −0.98 tick,
+    and no other key (4727 unchanged; the events' epochs are UTC, exact either way); no status changes.
+- **A test swapped the global data provider** ([#631](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/631)).
+  `TemeFrameTests.FrameByName_IsRoutedByTheMemoryDataProvider` set `Configuration.Instance` to an empty
+  `MemoryDataProvider` for a few milliseconds, so that a body, frame, spacecraft or site another test class built in
+  parallel kept the empty provider and threw `KeyNotFoundException` (a probe building the Earth in a loop beside it:
+  41 to 155 failed builds in each of 5 runs, none without the test). It now calls a `MemoryDataProvider` directly, as
+  the other tests of the provider do, with the same two assertions; no other test changes the global provider.
+  The library is unchanged.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a

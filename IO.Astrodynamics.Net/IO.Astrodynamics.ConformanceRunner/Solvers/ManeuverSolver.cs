@@ -130,7 +130,7 @@ public class ManeuverSolver : ICategorySolver
             mass -= maneuver.FuelBurned;
             var segment = BurnSegment(solution, maneuver.ThrustWindow.Value.StartDate);
             var position = segment.InterpolateAt(0.0).position;
-            Add(outputs, label, "elapsed_s", (segment.BaseEpoch.ToTDT() - start.ToTDT()).TotalSeconds);
+            Add(outputs, label, "elapsed_s", TerrestrialSeconds.Between(start, segment.BaseEpoch));
             Add(outputs, label, "position_km", Kilometres(position));
             Add(outputs, label, "delta_v_km_s", Kilometres(maneuver.DeltaV));
             Add(outputs, label, "mass_after_kg", mass);

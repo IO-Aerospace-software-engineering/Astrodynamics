@@ -40,6 +40,13 @@
         </None>
     </ItemGroup>
 
+    <!-- The TT seconds of the runner at 50 digits (tools/conformance/terrestrial_seconds_reference.py, #630) -->
+    <ItemGroup>
+        <None Update="Data\TerrestrialSecondsReference\*.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
     <ItemGroup>
         <None Update="Fixture\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

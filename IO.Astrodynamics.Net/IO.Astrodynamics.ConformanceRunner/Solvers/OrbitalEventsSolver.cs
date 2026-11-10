@@ -118,7 +118,7 @@ public class OrbitalEventsSolver : ICategorySolver
         outputs[name] = epochs.Count;
         for (int k = 0; k < epochs.Count; k++)
         {
-            outputs[OutputComparer.IndexedOutput(name, k, "elapsed_s")] = (epochs[k].ToTDT() - start.ToTDT()).TotalSeconds;
+            outputs[OutputComparer.IndexedOutput(name, k, "elapsed_s")] = TerrestrialSeconds.Between(start, epochs[k]);
             if (radiusKm != null)
             {
                 outputs[OutputComparer.IndexedOutput(name, k, "radius_km")] = radiusKm(epochs[k]);
