@@ -277,6 +277,42 @@ A major version, because it breaks the API: members deprecated for removal in 11
   41 to 155 failed builds in each of 5 runs, none without the test). It now calls a `MemoryDataProvider` directly, as
   the other tests of the provider do, with the same two assertions; no other test changes the global provider.
   The library is unchanged.
+- **The dense search lost minima that no minimum of the Hermite seeded** ([#628](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/628)).
+  On two propagations, `AnalyzeAll` and `Analyze` read the range rate of the states only near the minima of the cubic
+  Hermite of the stored steps, so a minimum of the states with no such minimum near it was not listed: with mixed steps
+  (the default for one trajectory and 60 s for the other), the range rate closing at one candidate and receding at the
+  next with no seed near (form A); with long steps, one step holding a minimum, a maximum and a second minimum, its
+  Hermite one minimum only (form B). `Analyze` then returned a window end or another minimum (504.6578 m against the
+  missed minimum's 504.6428 m). The range rate is now also read at every candidate and, between two candidates more
+  than `MaximumEventSearchStep` (60 s by default) apart, at the fewest epochs evenly spaced that leave no gap wider, as
+  the sampled search does, and each change from negative to positive between two consecutive reads that holds no TCA
+  yet is bisected to the tick nearer its zero, one TCA per pair of reads. The search from a seed reaches
+  `MaximumEventSearchStep` from it at most (its neighbouring candidate before), the reads resolving the range rate
+  beyond: at fixed 600 s steps for one trajectory, its reads 1 s apart were 84 to 87 % of the states read. Each epoch is
+  read once.
+  - **Measured** (Linux x64, 2026-11-10, against CSPICE's `gfdist_c` LOCMIN on the SPKs of the propagations, refined on
+    `spkezr_c`'s range rate, and against a scan of the range rate of the states every 0.25 s): on the passes with two
+    minima per orbit (a circular LEO and a Clohessy-Wiltshire ellipse of 1000 m about it, y0 = 1480 to 1500 m, 843 to
+    1084 windows per propagation), the windows losing a minimum go from 10 to 46 to none at mixed default and 60 s
+    steps, from 116 to 164 to none at fixed 300 s and 600 s steps and at 600 s with the default; the two minima of one
+    600 s step (t0 + 1317.45 s and 1526.28 s) are both listed. No TCA listed before moves on these passes, and no entry
+    is spurious, a window end, a duplicate or out of order. The new fixtures of `ConjunctionKernelAndWindowTests`, over
+    1361 to 1727 windows each, give 6.1e-6 to 6.5e-5 s and 6.6e-7 to 2.0e-6 m at mixed steps, 3.1e-5 to 1.0e-4 s and
+    1.3e-5 to 2.1e-5 m at 600 s steps (the states against their SPK), asserted at twice the worst (provisional until the
+    CI of the three platforms). The conformance runner on the suite's main (33286d2), 201 of 201, its 4764 deltas
+    unchanged bit for bit, in 26.7 to 27.3 s instead of 25.7 to 26.0 s.
+  - **Not changed.** A shallow minimum next to a fold of the range rate, positive over less than the spacing of the reads
+    with no seed before it, is still not guaranteed to be found (2.9e-7 m deep, about 1 s wide: lost in 200 to 205 of
+    843 windows, as before); only reads about 1 s apart over the whole window would resolve it. Below about 1e-8 m/s of
+    range rate the minima listed follow the noise of the states: on the slow passes (range rates of 1e-12 to 1e-13 m/s),
+    a few zeros of the first 0.35 s are now reached by the reads in place of the seeds; at fixed 600 s steps, where the
+    search from a seed now stops 60 s from it, another zero of the same noisy minimum is listed in 179 to 198 of about
+    1000 windows (up to 3.2e-4 s away at a drift of 1 m, 2.9e-2 s at 0.1 m); at a drift of 0.01 m a few more are listed.
+  - **Cost.** One state per candidate and per sample: on two LEO trajectories over one day with EGM2008 10×10, the Moon
+    and the Sun at the default steps (31 minima), `Analyze` reads 2063 states instead of 218 and takes 127 to 141 ms
+    instead of 18 to 19 ms; 57 to 60 ms with a `MaximumEventSearchStep` of 300 s or more. At 60 s steps for both
+    trajectories the reads add no sample, and those at the candidates take the states read per window of the probe of
+    #628 from 54 to 83 on average.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a

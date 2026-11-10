@@ -183,6 +183,12 @@ public abstract class CwPassEncounterCase : CrossingEncounterCase
     {
     }
 
+    protected CwPassEncounterCase(int id1, int id2, string name, double y0, Func<RK78Integrator> integrator1,
+        Func<RK78Integrator> integrator2)
+        : base(id1, id2, name, CwStates(y0), integrator1, integrator2)
+    {
+    }
+
     private static Func<RK78Integrator> Steps(bool defaultSteps) =>
         defaultSteps ? () => new RK78Integrator() : SlowPassEncounterCase.Steps60;
 
@@ -267,6 +273,62 @@ public sealed class CwPassFoldStep60Case : CwPassFoldEncounterCase
 }
 
 /// <summary>
+/// The pass with two minima per orbit, <c>y0</c> = 1500 m, the first spacecraft at the defaults of
+/// <c>new RK78Integrator()</c> and the second at 60 s steps (#628): the Hermite of the mixed steps places no minimum near
+/// the minimum at t0 + 7029.70 s, where the range rate closes at one candidate and recedes at the next.
+/// </summary>
+public sealed class CwPassMixedStep1500Case : CwPassEncounterCase
+{
+    public CwPassMixedStep1500Case() : base(-620111, -620112, "CWM", 1500.0, () => new RK78Integrator(),
+        SlowPassEncounterCase.Steps60)
+    {
+    }
+}
+
+/// <summary>The pass with two minima per orbit, <c>y0</c> = 1490 m, at the default steps and 60 s steps (#628).</summary>
+public sealed class CwPassMixedStep1490Case : CwPassEncounterCase
+{
+    public CwPassMixedStep1490Case() : base(-620121, -620122, "CWM90", 1490.0, () => new RK78Integrator(),
+        SlowPassEncounterCase.Steps60)
+    {
+    }
+}
+
+/// <summary>
+/// The pass with two minima per orbit, <c>y0</c> = 1495 m, the first spacecraft at 60 s steps and the second at the
+/// defaults (#628): no seed after t0 + 1165.32 s, the range rate closing at t0 + 1440 s and receding at 1500 s about the
+/// minimum at t0 + 1497.86 s.
+/// </summary>
+public sealed class CwPassMixedStep1495Case : CwPassEncounterCase
+{
+    public CwPassMixedStep1495Case() : base(-620131, -620132, "CWN", 1495.0, SlowPassEncounterCase.Steps60,
+        () => new RK78Integrator())
+    {
+    }
+}
+
+/// <summary>
+/// The pass with two minima per orbit, <c>y0</c> = 1490 m, at fixed 600 s steps (#628): the step [1200, 1800] s holds the
+/// minima at t0 + 1317.45 and 1526.28 s and a maximum between them, its Hermite one minimum only, at 1502.10 s.
+/// </summary>
+public sealed class CwPassStep600Case : CwPassEncounterCase
+{
+    public CwPassStep600Case() : base(-620141, -620142, "CW600", 1490.0, () => new RK78Integrator(600.0),
+        () => new RK78Integrator(600.0))
+    {
+    }
+}
+
+/// <summary>The pass with two minima per orbit, <c>y0</c> = 1500 m, at fixed 600 s steps (#628).</summary>
+public sealed class CwPass1500Step600Case : CwPassEncounterCase
+{
+    public CwPass1500Step600Case() : base(-620151, -620152, "CWE600", 1500.0, () => new RK78Integrator(600.0),
+        () => new RK78Integrator(600.0))
+    {
+    }
+}
+
+/// <summary>
 /// The conjunction analysis of kernel-backed spacecraft (#620), the window ends of the dense search (#621), and the reads
 /// outside the coverage of the kernels (#454) or of the propagated states (#527). Expected values from CSPICE on the SPKs
 /// (<c>spkezr_c</c>, <c>gfdist_c</c>) and from the case's geometry.
@@ -275,7 +337,9 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     IClassFixture<DefaultStepCrossingEncounterCase>, IClassFixture<SlowPassEncounterCase>,
     IClassFixture<DefaultStepSlowPassEncounterCase>, IClassFixture<MixedStepSlowPassEncounterCase>,
     IClassFixture<CwPassDefaultStepCase>, IClassFixture<CwPass60StepCase>, IClassFixture<CwPass1500DefaultStepCase>,
-    IClassFixture<CwPass1500Step60Case>, IClassFixture<CwPassFoldDefaultStepCase>, IClassFixture<CwPassFoldStep60Case>
+    IClassFixture<CwPass1500Step60Case>, IClassFixture<CwPassFoldDefaultStepCase>, IClassFixture<CwPassFoldStep60Case>,
+    IClassFixture<CwPassMixedStep1500Case>, IClassFixture<CwPassMixedStep1490Case>, IClassFixture<CwPassMixedStep1495Case>,
+    IClassFixture<CwPassStep600Case>, IClassFixture<CwPass1500Step600Case>
 {
     private static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = null };
 
@@ -290,6 +354,11 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     private readonly CwPass1500Step60Case _cw1500Step60Case;
     private readonly CwPassFoldDefaultStepCase _cwFoldDefaultCase;
     private readonly CwPassFoldStep60Case _cwFoldStep60Case;
+    private readonly CwPassMixedStep1500Case _cwMixed1500Case;
+    private readonly CwPassMixedStep1490Case _cwMixed1490Case;
+    private readonly CwPassMixedStep1495Case _cwMixed1495Case;
+    private readonly CwPassStep600Case _cw600Case;
+    private readonly CwPass1500Step600Case _cw1500Step600Case;
     private readonly ITestOutputHelper _output;
 
     public ConjunctionKernelAndWindowTests(CrossingEncounterCase crossingCase,
@@ -297,8 +366,15 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         DefaultStepSlowPassEncounterCase defaultStepSlowCase, MixedStepSlowPassEncounterCase mixedStepSlowCase,
         CwPassDefaultStepCase cwDefaultCase, CwPass60StepCase cw60Case, CwPass1500DefaultStepCase cw1500DefaultCase,
         CwPass1500Step60Case cw1500Step60Case, CwPassFoldDefaultStepCase cwFoldDefaultCase,
-        CwPassFoldStep60Case cwFoldStep60Case, ITestOutputHelper output)
+        CwPassFoldStep60Case cwFoldStep60Case, CwPassMixedStep1500Case cwMixed1500Case,
+        CwPassMixedStep1490Case cwMixed1490Case, CwPassMixedStep1495Case cwMixed1495Case, CwPassStep600Case cw600Case,
+        CwPass1500Step600Case cw1500Step600Case, ITestOutputHelper output)
     {
+        _cwMixed1500Case = cwMixed1500Case;
+        _cwMixed1490Case = cwMixed1490Case;
+        _cwMixed1495Case = cwMixed1495Case;
+        _cw600Case = cw600Case;
+        _cw1500Step600Case = cw1500Step600Case;
         _cwFoldDefaultCase = cwFoldDefaultCase;
         _cwFoldStep60Case = cwFoldStep60Case;
         _cwDefaultCase = cwDefaultCase;
@@ -765,7 +841,18 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // their 60 s outputs) over its slope, 2.6e-4 m/s per second at a drift of 100 m and 2.6e-6 at 1 m; at the fold, 2.9e-7 m
     // deep, the states and their SPK of the default steps place the zero 2.1 ms apart (the library within 7.4e-6 s of the
     // zero of the states, from a scan of their range rate). A CSPICE minimum or a listed one within the TCA bound of a
-    // window end may be on either side of it for the states and their SPK
+    // window end may be on either side of it for the states and their SPK.
+    // The passes of #628, whose minima no seed reached before (mixed steps, fixed 600 s steps), PROVISIONAL: measured on
+    // Linux x64 only (2026-11-10), by this test and by the probe of #628 (843 to 1084 windows per propagation, gfdist_c
+    // refined by bisection of spkezr_c's range rate to 1e-10 s), until the CI of the three platforms:
+    //                                         this test                 the probe                 bound
+    //   CWM (y0 = 1500 m, default and 60 s)   3.543e-5 s  8.430e-7 m    3.546e-5 s  8.433e-7 m    7.1e-5 s  1.7e-6 m
+    //   CWM90 (y0 = 1490 m, default and 60 s) 6.057e-6 s  6.567e-7 m    6.066e-6 s  6.564e-7 m    1.3e-5 s  1.4e-6 m
+    //   CWN (y0 = 1495 m, 60 s and default)   6.519e-5 s  1.960e-6 m    6.507e-5 s  1.960e-6 m    1.4e-4 s  4.0e-6 m
+    //   CW600 (y0 = 1490 m, fixed 600 s)      3.107e-5 s  1.277e-5 m    3.105e-5 s  1.277e-5 m    6.3e-5 s  2.6e-5 m
+    //   CWE600 (y0 = 1500 m, fixed 600 s)     1.016e-4 s  2.090e-5 m    1.016e-4 s  2.090e-5 m    2.1e-4 s  4.2e-5 m
+    // twice the worst of the two, rounded up to two digits: the states of mixed or 600 s steps against the degree-7
+    // interpolation of their 60 s outputs in the SPK
     private static (double Tca, double Miss) SlowPassBounds(CrossingEncounterCase crossing) => crossing switch
     {
         SlowPassEncounterCase => (3.0e-7, 6.3e-10),
@@ -777,6 +864,11 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         CwPass1500Step60Case => (2.5e-6, 9.9e-8),
         CwPassFoldDefaultStepCase => (4.2e-3, 2.0e-6),
         CwPassFoldStep60Case => (6.7e-5, 7.8e-8),
+        CwPassMixedStep1500Case => (7.1e-5, 1.7e-6),
+        CwPassMixedStep1490Case => (1.3e-5, 1.4e-6),
+        CwPassMixedStep1495Case => (1.4e-4, 4.0e-6),
+        CwPassStep600Case => (6.3e-5, 2.6e-5),
+        CwPass1500Step600Case => (2.1e-4, 4.2e-5),
         _ => throw new ArgumentOutOfRangeException(nameof(crossing))
     };
 
@@ -790,6 +882,11 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         "CWE" => _cw1500DefaultCase,
         "CWE60" => _cw1500Step60Case,
         "CWF" => _cwFoldDefaultCase,
+        "CWM" => _cwMixed1500Case,
+        "CWM90" => _cwMixed1490Case,
+        "CWN" => _cwMixed1495Case,
+        "CW600" => _cw600Case,
+        "CWE600" => _cw1500Step600Case,
         _ => _cwFoldStep60Case
     };
 
@@ -918,6 +1015,30 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     }
 
     [Theory]
+    [InlineData("CWM", 6969.70, 7089.70, 1)]
+    [InlineData("CWM", 0.0, 10800.0, 3)]
+    [InlineData("CWM90", 6970.31, 7171.31, 1)]
+    [InlineData("CWM90", 0.0, 10800.0, 4)]
+    [InlineData("CWN", 97.86, 1507.86, 2)]
+    [InlineData("CWN", 0.0, 10800.0, 4)]
+    [InlineData("CW600", 0.0, 10800.0, 4)]
+    [InlineData("CW600", 1200.0, 1800.0, 2)]
+    [InlineData("CWE600", 0.0, 10800.0, 3)]
+    [InlineData("CWE600", 4268.0, 7268.0, 2)]
+    public void Dense_MinimumWithoutASeedNearIt_IsListed(string fixture, double start, double end, int count)
+    {
+        // #628: the windows the review of lot 6 traced, where the Hermite of mixed or long steps places no minimum near a
+        // minimum of the states (form A: CWM's 504.6428 m at t0 + 7029.70 s, the range rate -3.18, -0.22, +0.062 and
+        // -0.044 m²/s at the candidates of the window, the only seed its end; CWM90's minimum 1 s after the start; CWN's at
+        // t0 + 1497.86 s, closing at t0 + 1440 s and receding at 1500 s), or one 600 s step holds two minima (form B:
+        // CW600's at t0 + 1317.45 and 1526.28 s, a maximum between them, the Hermite one minimum at 1502.10 s; CWE600's at
+        // t0 + 7029.94 s). Before, AnalyzeAll did not list them, and Analyze returned a window end (504.6578 m on CWM's
+        // window) or another minimum (CWN, CW600); the windows of 3000 s every 97 s of the sweeps lost them in 163 to 164
+        // windows at 600 s steps
+        AssertSlowPassMatchesCspice(Pass(fixture), Pass(fixture).Seconds(start, end), count);
+    }
+
+    [Theory]
     [InlineData("SLOW")]
     [InlineData("SLOWD")]
     [InlineData("SLOWX")]
@@ -927,6 +1048,11 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     [InlineData("CWE60")]
     [InlineData("CWF")]
     [InlineData("CWF60")]
+    [InlineData("CWM")]
+    [InlineData("CWM90")]
+    [InlineData("CWN")]
+    [InlineData("CW600")]
+    [InlineData("CWE600")]
     public void Dense_EveryMinimumOfThePass_IsListedWithinTheBounds(string fixture)
     {
         // The windows of the reviewers' sweeps over the whole propagation: the start and the end of each window at 1 to
@@ -1078,6 +1204,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
             .ToArray();
         Assert.Equal(matched.Where(i => i >= 0).Count(), matched.Where(i => i >= 0).Distinct().Count());
         Assert.All(locmin.Where((m, i) => !matched.Contains(i)), m => Assert.True(NearAnEnd(m.Epoch)));
+        var outsideReferences = new System.Collections.Generic.List<(TimeSystem.Time Epoch, double Offset, double Distance)>();
         for (int i = 0; i < all.Count; i++)
         {
             if (matched[i] < 0)
@@ -1090,6 +1217,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
                 if (outside.HasValue)
                 {
                     AssertSlowPassMinimum(all[i], outside.Value, tcaBound, missBound, crossing, log);
+                    outsideReferences.Add(outside.Value);
                 }
 
                 continue;
@@ -1100,7 +1228,10 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
 
         if (all.Count > 0)
         {
-            var references = matched.Where(i => i >= 0).Select(i => locmin[i]).ToArray();
+            // Analyze returns the closest listed minimum, one within the TCA bound of an end included, measured against
+            // its CSPICE minimum just outside the window (#628: a window ending at a minimum, the states placing it one
+            // tick inside, with another minimum inside that no seed reached before)
+            var references = matched.Where(i => i >= 0).Select(i => locmin[i]).Concat(outsideReferences).ToArray();
             if (references.Length > 0)
             {
                 AssertSlowPassMinimum(encounter, references.MinBy(m => m.Distance), tcaBound, missBound, crossing, log);
