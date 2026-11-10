@@ -291,8 +291,8 @@ public static class ConjunctionAssessment
     /// minimum whose range-rate zero lies just inside a window end is listed, one whose zero lies just outside is not, nor
     /// one whose zero is exactly a window end (a window end is never listed), and a range rate negative at the start and
     /// positive at the end lists the minimum between them, however flat the distance over the window. Every encounter listed
-    /// on that path is a zero of the range rate going from negative to positive: a minimum of the Hermite that the range
-    /// rate does not bracket, a maximum of the distance on a slow pass, is not listed.
+    /// on that path is a zero of the range rate going from negative to positive, each minimum listed once: a minimum of the
+    /// Hermite that the range rate does not bracket, a maximum of the distance on a slow pass, is not listed.
     /// </returns>
     public static IReadOnlyList<EncounterCase> AnalyzeAll(
         ProtectedSpacecraftProfile protectedAsset,
@@ -1180,31 +1180,44 @@ public static class ConjunctionAssessment
     /// changing the refined TCA. The range rate is never evaluated outside the first and last candidates.
     /// </para>
     /// <para>
-    /// When an estimate cannot be checked, the bisection starts from the candidates next to the minimum. When the
-    /// minimum on the states lies past one of them, the range rate has the wrong sign there; the bracket then moves to
-    /// the next candidate on that side, at most <see cref="MaximumBracketWidenings"/> times in all. A minimum whose
-    /// bracket reaches the first candidate with a range rate zero or positive there, or the last one with a negative
-    /// range rate, has its zero outside the candidates and is dropped.
+    /// When an estimate cannot be checked, the range rate at the minimum itself says on which side its zero lies: zero
+    /// there, the minimum is the zero; positive, before it; negative, after it. It is read on that side 1 ms from the
+    /// minimum, then at distances doubling up to the neighbouring candidate, until it changes sign, and the bracket of the
+    /// last two reads is bisected. This finds the zero between a minimum and its neighbour when the Hermite has placed the
+    /// minimum past the zero of the states and the range rate has the same sign at the candidates on both sides (a maximum
+    /// of the distance lying between the zero and the candidate).
     /// </para>
     /// <para>
-    /// A minimum that is still not bracketed, the widenings spent between the first and last candidates, is never kept
-    /// as it is (before round 4 of the lot-6 review it was, unrefined: a maximum of the distance on the states, seeded by
-    /// the error of the Hermite on a slow pass, was then listed as a close approach). The range rate is followed over the
-    /// candidates, on the side where it says the minimum lies (before the minimum when it is zero or positive at the left
-    /// end of the bracket, after it when it is negative at the right end, on both sides when both hold: a maximum on the
-    /// states), to the nearest pair of consecutive candidates where it changes from negative to zero or positive, whose
-    /// zero is bisected, unless a refined minimum already lies in that pair: it is the same minimum, reached from another
-    /// seed. A side that reaches a window end without the change holds no zero inside; a minimum with no such zero on
-    /// either side is dropped: it is not a minimum on the range rate. When a zero was reached this way, the refined minima
-    /// are returned in order. A minimum that is not one of the candidates is dropped: there is no bracket to refine it in.
+    /// When the range rate keeps its sign up to that candidate, the bisection starts from the candidates next to the
+    /// minimum. When the minimum on the states lies past one of them, the range rate has the wrong sign there; the bracket
+    /// then moves to the next candidate on that side, at most <see cref="MaximumBracketWidenings"/> times in all. A
+    /// minimum whose bracket reaches the first candidate with a range rate zero or positive there, or the last one with a
+    /// negative range rate, has its zero outside the candidates and is dropped.
+    /// </para>
+    /// <para>
+    /// A minimum still not bracketed, the widenings spent between the first and last candidates, is followed over the
+    /// candidates, on the side where the range rate says the minimum lies (before the minimum when it is zero or positive
+    /// at the left end of the bracket, after it when it is negative at the right end, on both sides when both hold: a
+    /// maximum on the states), to the nearest pair of consecutive candidates where it changes from negative to zero or
+    /// positive, whose zero is bisected. A side that reaches a window end without the change holds no zero inside; a
+    /// minimum with no such zero on either side is dropped: it is not a minimum on the range rate (a maximum of the
+    /// distance on the states, seeded by the error of the Hermite on a slow pass). A minimum that is not one of the
+    /// candidates is dropped: there is no bracket to refine it in.
+    /// </para>
+    /// <para>
+    /// A pair of consecutive candidates gives one minimum: a zero that lies in the pair of an earlier one (no candidate
+    /// strictly between them) is the same minimum, reached from another seed, the range rate changing sign more than once
+    /// there at the level of its noise. The zeros of the secants and of the brackets of the candidates come first, then
+    /// those read from the minima on their own range rate, then those of the pairs reached by following it. The zeros are
+    /// returned in order.
     /// </para>
     /// </remarks>
     /// <param name="minima">The minima of the polynomial search, each one of <paramref name="candidates"/>.</param>
     /// <param name="candidates">The sorted candidate epochs of the polynomial search, the window ends first and last.</param>
     /// <param name="rangeRate">The range rate, (r_s − r_p)·(v_s − v_p), at an epoch.</param>
     /// <param name="toleranceSeconds">Tolerance of the bisection, in s.</param>
-    /// <returns>The refined minima inside the candidates, distinct within the tolerance: zeros of the range rate from
-    /// negative to positive, or a window end where it is exactly zero.</returns>
+    /// <returns>The refined minima inside the candidates, in order, one per pair of consecutive candidates: zeros of the
+    /// range rate from negative to positive, or a window end where it is exactly zero.</returns>
     internal static List<Time> RefineOnRangeRate(
         IReadOnlyList<Time> minima,
         IReadOnlyList<Time> candidates,
@@ -1213,6 +1226,9 @@ public static class ConjunctionAssessment
     {
         var refined = new List<Time>(minima.Count);
         int last = candidates.Count - 1;
+
+        // The zeros found from the seeds on their own range rate
+        var fromSeeds = new List<Time>();
 
         // The pairs of consecutive candidates, by the index of the first one, where the range rate followed from a minimum
         // that the widenings did not bracket changes from negative to zero or positive
@@ -1260,6 +1276,21 @@ public static class ConjunctionAssessment
             if (TryZeroBySecants(rangeRate, minimum, lowest, highest, candidates[last], toleranceSeconds, out var zero))
             {
                 AddDistinctEpoch(refined, zero, toleranceSeconds);
+                continue;
+            }
+
+            // The range rate at the seed itself points to its zero: receding there, the zero lies before it; still
+            // closing, after it; zero, it is the seed
+            double seedRate = index == 0 ? leftRate : index == last ? rightRate : rangeRate(minimum);
+            if (seedRate == 0.0)
+            {
+                AddDistinctEpoch(refined, minimum, toleranceSeconds);
+                continue;
+            }
+
+            if (TryZeroFromTheSeed(rangeRate, candidates, index, seedRate, toleranceSeconds, out var seedZero))
+            {
+                fromSeeds.Add(seedZero);
                 continue;
             }
 
@@ -1350,33 +1381,63 @@ public static class ConjunctionAssessment
             }
         }
 
-        return followed.Count == 0
-            ? refined
-            : AddFollowedZeros(refined, followed, candidates, rangeRate, toleranceSeconds);
+        return MergeByPairs(refined, fromSeeds, followed, candidates, rangeRate, toleranceSeconds);
     }
 
-    // The zeros of the range rate between the pairs of candidates reached by following it (RefineOnRangeRate), except in a
-    // pair that already holds a refined minimum, the same minimum reached from another seed; the refined minima and these
-    // zeros in order
-    private static List<Time> AddFollowedZeros(List<Time> refined, SortedSet<int> followed, IReadOnlyList<Time> candidates,
-        Func<Time, double> rangeRate, double toleranceSeconds)
+    // The zeros of RefineOnRangeRate in order, one per pair of consecutive candidates: those refined from the seeds by
+    // the secants or the widened brackets, then those found from the seeds on their own range rate, then those of the
+    // pairs reached by following the range rate, each dropped when a zero before it lies in its pair (no candidate
+    // strictly between the two): the same minimum, reached from another seed, the range rate at the noise level changing
+    // sign more than once there
+    private static List<Time> MergeByPairs(List<Time> refined, List<Time> fromSeeds,
+        SortedSet<int> followed, IReadOnlyList<Time> candidates, Func<Time, double> rangeRate, double toleranceSeconds)
     {
-        var zeros = new List<Time>(refined);
+        var zeros = new List<Time>(refined.Count + fromSeeds.Count + followed.Count);
+        var held = new HashSet<int>();
         int last = candidates.Count - 1;
+
+        // The pairs a zero lies in: the one that holds it, and the one before when it is a candidate
+        void Add(Time zero)
+        {
+            int pair = PairOf(candidates, zero);
+            bool onCandidate = candidates[pair] == zero;
+            if (held.Contains(pair) || (onCandidate && held.Contains(pair - 1)))
+            {
+                return;
+            }
+
+            held.Add(pair);
+            if (onCandidate && pair > 0)
+            {
+                held.Add(pair - 1);
+            }
+
+            zeros.Add(zero);
+        }
+
+        foreach (var zero in refined)
+        {
+            Add(zero);
+        }
+
+        foreach (var zero in fromSeeds)
+        {
+            Add(zero);
+        }
+
         foreach (int pair in followed)
         {
-            var left = candidates[pair];
-            var right = candidates[pair + 1];
-            if (refined.Any(epoch => epoch >= left && epoch <= right))
+            if (held.Contains(pair))
             {
                 continue;
             }
 
             // A zero exactly at the window end, closing before it, is the end itself: the bisection would end on the tick
             // before it (#624)
-            zeros.Add(pair + 1 == last && rangeRate(right) == 0.0
+            var right = candidates[pair + 1];
+            Add(pair + 1 == last && rangeRate(right) == 0.0
                 ? right
-                : BisectForZero(rangeRate, left, right, toleranceSeconds));
+                : BisectForZero(rangeRate, candidates[pair], right, toleranceSeconds));
         }
 
         zeros.Sort();
@@ -1387,6 +1448,69 @@ public static class ConjunctionAssessment
         }
 
         return distinct;
+    }
+
+    // The index of the pair of consecutive candidates that holds an epoch between the first and the last: the last
+    // candidate at or before it, the pair before the last at the last candidate
+    private static int PairOf(IReadOnlyList<Time> candidates, Time epoch)
+    {
+        int low = 0;
+        int high = candidates.Count - 2;
+        while (low < high)
+        {
+            int middle = low + (high - low + 1) / 2;
+            if (candidates[middle] <= epoch)
+                low = middle;
+            else
+                high = middle - 1;
+        }
+
+        return low;
+    }
+
+    // The zero of the range rate between a seed and its neighbouring candidate on the side its own range rate points to
+    // (RefineOnRangeRate): before it when the range rate is positive there, after it when negative. The range rate is read
+    // at 1 ms from the seed, then at distances doubling up to that candidate, until it changes sign, and the bracket of
+    // the last two reads is bisected; a zero exactly at the window end, closing before it, is the end itself (#624). False
+    // when the range rate keeps its sign up to the neighbouring candidate, or the seed has no neighbour on that side
+    private static bool TryZeroFromTheSeed(Func<Time, double> rangeRate, IReadOnlyList<Time> candidates, int index,
+        double seedRate, double toleranceSeconds, out Time zero)
+    {
+        zero = candidates[index];
+        bool backward = seedRate > 0.0;
+        int neighbour = backward ? index - 1 : index + 1;
+        if (neighbour < 0 || neighbour >= candidates.Count)
+        {
+            return false;
+        }
+
+        var seed = candidates[index];
+        var bound = candidates[neighbour];
+        var previous = seed;
+        for (double distance = SecantBaseSeconds; ; distance *= 2.0)
+        {
+            var offset = TimeSpan.FromSeconds(distance);
+            var read = backward
+                ? (seed - bound > offset ? seed - offset : bound)
+                : (bound - seed > offset ? seed + offset : bound);
+            double rate = rangeRate(read);
+            if (backward ? rate < 0.0 : rate >= 0.0)
+            {
+                zero = !backward && read == bound && neighbour == candidates.Count - 1 && rate == 0.0
+                    ? bound
+                    : backward
+                        ? BisectForZero(rangeRate, read, previous, toleranceSeconds)
+                        : BisectForZero(rangeRate, previous, read, toleranceSeconds);
+                return true;
+            }
+
+            if (read == bound)
+            {
+                return false;
+            }
+
+            previous = read;
+        }
     }
 
     // The zero of the range rate near a minimum, by two secants and a checked bracket (RefineOnRangeRate); false when a

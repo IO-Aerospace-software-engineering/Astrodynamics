@@ -169,13 +169,75 @@ public sealed class MixedStepSlowPassEncounterCase : CrossingEncounterCase
 }
 
 /// <summary>
+/// A pass with two minima of the distance per orbit and a maximum between them: a circular orbit of 500 km in the equator,
+/// and the second spacecraft on the Clohessy-Wiltshire ellipse 1000 m above it, <c>y0</c> metres ahead along the track (the
+/// fourth reviewer's probe in round 4 of the lot-6 review). With <c>y0</c> = 1490 m, minima of about 509.7 m at t0 + 1317.43
+/// and 1526.28 s and of about 514.3 m at 6971.33 and 7224.79 s; with 1500 m, minima of 499.85 m at t0 + 1457.38 s and of
+/// about 504.6 m at 7029.75 and 7173.55 s. At the default steps, the Hermite of the steps seeds the minimum at
+/// t0 + 1526.28 s 1.6 s past it, where the range rate of the states is already positive, as are the candidates on either side.
+/// </summary>
+public abstract class CwPassEncounterCase : CrossingEncounterCase
+{
+    protected CwPassEncounterCase(int id1, int id2, string name, double y0, bool defaultSteps)
+        : base(id1, id2, name, CwStates(y0), Steps(defaultSteps), Steps(defaultSteps))
+    {
+    }
+
+    private static Func<RK78Integrator> Steps(bool defaultSteps) =>
+        defaultSteps ? () => new RK78Integrator() : SlowPassEncounterCase.Steps60;
+
+    private static Func<CelestialBody, TimeSystem.Time, (StateVector, StateVector)> CwStates(double y0) =>
+        (earth, t0) =>
+        {
+            const double b = 1000.0;
+            double r = 6878137.0, v = System.Math.Sqrt(earth.GM / r), n = v / r;
+            return (new StateVector(new Vector3(r, 0, 0), new Vector3(0, v, 0), earth, t0, Frames.Frame.ICRF),
+                new StateVector(new Vector3(r + b, y0, 0), new Vector3(-n * y0, v - b * n, 0), earth, t0, Frames.Frame.ICRF));
+        };
+}
+
+/// <summary>The pass with two minima per orbit, <c>y0</c> = 1490 m, at the defaults of <c>new RK78Integrator()</c>.</summary>
+public sealed class CwPassDefaultStepCase : CwPassEncounterCase
+{
+    public CwPassDefaultStepCase() : base(-620051, -620052, "CWD", 1490.0, true)
+    {
+    }
+}
+
+/// <summary>The pass with two minima per orbit, <c>y0</c> = 1490 m, at 60 s steps.</summary>
+public sealed class CwPass60StepCase : CwPassEncounterCase
+{
+    public CwPass60StepCase() : base(-620061, -620062, "CW60", 1490.0, false)
+    {
+    }
+}
+
+/// <summary>The pass with two minima per orbit, <c>y0</c> = 1500 m, at the defaults of <c>new RK78Integrator()</c>.</summary>
+public sealed class CwPass1500DefaultStepCase : CwPassEncounterCase
+{
+    public CwPass1500DefaultStepCase() : base(-620071, -620072, "CWE", 1500.0, true)
+    {
+    }
+}
+
+/// <summary>The pass with two minima per orbit, <c>y0</c> = 1500 m, at 60 s steps.</summary>
+public sealed class CwPass1500Step60Case : CwPassEncounterCase
+{
+    public CwPass1500Step60Case() : base(-620081, -620082, "CWE60", 1500.0, false)
+    {
+    }
+}
+
+/// <summary>
 /// The conjunction analysis of kernel-backed spacecraft (#620), the window ends of the dense search (#621), and the reads
 /// outside the coverage of the kernels (#454) or of the propagated states (#527). Expected values from CSPICE on the SPKs
 /// (<c>spkezr_c</c>, <c>gfdist_c</c>) and from the case's geometry.
 /// </summary>
 public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCase>,
     IClassFixture<DefaultStepCrossingEncounterCase>, IClassFixture<SlowPassEncounterCase>,
-    IClassFixture<DefaultStepSlowPassEncounterCase>, IClassFixture<MixedStepSlowPassEncounterCase>
+    IClassFixture<DefaultStepSlowPassEncounterCase>, IClassFixture<MixedStepSlowPassEncounterCase>,
+    IClassFixture<CwPassDefaultStepCase>, IClassFixture<CwPass60StepCase>, IClassFixture<CwPass1500DefaultStepCase>,
+    IClassFixture<CwPass1500Step60Case>
 {
     private static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = null };
 
@@ -184,13 +246,22 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     private readonly SlowPassEncounterCase _slowCase;
     private readonly DefaultStepSlowPassEncounterCase _defaultStepSlowCase;
     private readonly MixedStepSlowPassEncounterCase _mixedStepSlowCase;
+    private readonly CwPassDefaultStepCase _cwDefaultCase;
+    private readonly CwPass60StepCase _cw60Case;
+    private readonly CwPass1500DefaultStepCase _cw1500DefaultCase;
+    private readonly CwPass1500Step60Case _cw1500Step60Case;
     private readonly ITestOutputHelper _output;
 
     public ConjunctionKernelAndWindowTests(CrossingEncounterCase crossingCase,
         DefaultStepCrossingEncounterCase defaultStepCase, SlowPassEncounterCase slowCase,
         DefaultStepSlowPassEncounterCase defaultStepSlowCase, MixedStepSlowPassEncounterCase mixedStepSlowCase,
-        ITestOutputHelper output)
+        CwPassDefaultStepCase cwDefaultCase, CwPass60StepCase cw60Case, CwPass1500DefaultStepCase cw1500DefaultCase,
+        CwPass1500Step60Case cw1500Step60Case, ITestOutputHelper output)
     {
+        _cwDefaultCase = cwDefaultCase;
+        _cw60Case = cw60Case;
+        _cw1500DefaultCase = cw1500DefaultCase;
+        _cw1500Step60Case = cw1500Step60Case;
         _case = crossingCase;
         _defaultStepCase = defaultStepCase;
         _slowCase = slowCase;
@@ -316,12 +387,16 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
 
     // The local minima of the distance on the two SPKs: those of CSPICE's gfdist_c (LOCMIN, step 60 s, its convergence
     // tolerance of 1e-6 s), each refined to the zero of the range rate of CSPICE's states by secants (1 ms base), and the
-    // distance there
+    // distance there; the secants read the SPKs within their coverage only. The passes with two minima per orbit take a
+    // step of 1 s: their maxima lie less than 60 s from a minimum, which a step of 60 s steps over
     private (TimeSystem.Time Epoch, double Distance)[] CspiceLocalMinima(Window window, CrossingEncounterCase crossing = null)
     {
         crossing ??= _case;
+        var step = TimeSpan.FromSeconds(crossing is CwPassEncounterCase ? 1.0 : 60.0);
+        var first = crossing.Window.StartDate;
+        var last = crossing.Window.EndDate.AddSeconds(-1.0e-3);
         return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(window, crossing.ProtectedId, crossing.SecondaryId,
-                RelationnalOperator.LocalMin, 0.0, Aberration.None, TimeSpan.FromSeconds(60.0))
+                RelationnalOperator.LocalMin, 0.0, Aberration.None, step)
             .Select(w =>
             {
                 var epoch = w.StartDate;
@@ -331,6 +406,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
                     double f1 = CspiceRangeRate(epoch.AddSeconds(1.0e-3), crossing);
                     if (f1 == f0) break;
                     epoch = epoch.AddSeconds(-f0 * 1.0e-3 / (f1 - f0));
+                    epoch = epoch < first ? first : epoch > last ? last : epoch;
                 }
 
                 return (epoch, CspiceRelative(epoch, crossing).Position.Magnitude());
@@ -561,14 +637,41 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // ---- Round 4 of the lot-6 review: a maximum of the distance is no close approach ----
 
     // PROVISIONAL (Linux x64 only, until the CI of the three platforms): the bounds of the TCA and of the miss distance of
-    // the slow passes against CSPICE on their SPKs, twice the worst measured over the windows of the tests below, rounded
-    // up to two digits. At 60 s steps 1e-7 s (a tick) and 2.77e-10 m; at the default steps 2.90e-5 s and 1.147e-6 m, the
-    // states of RK7(8) inside a step of 235 s against the degree-7 interpolation of their 60 s outputs, a difference of
-    // range rate over a slope of 2.6e-4 m/s per second; mixed steps with a drift of 1 m, 9.04e-3 s and 3.83e-8 m, the
-    // same difference over a slope of 2.6e-6 m/s per second. A CSPICE minimum or a listed one within the TCA bound of a
-    // window end may be on either side of it for the states and their SPK
-    private (double Tca, double Miss) SlowPassBounds(CrossingEncounterCase crossing) =>
-        crossing == _slowCase ? (2.0e-7, 5.6e-10) : crossing == _defaultStepSlowCase ? (5.8e-5, 2.3e-6) : (1.9e-2, 7.7e-8);
+    // the slow passes against CSPICE on their SPKs, twice the worst measured over every minimum of each propagation, from
+    // the 634 to 715 windows of Dense_EveryMinimumOfThePass_IsListedWithinTheBounds (round 5 of the lot-6 review), rounded
+    // up to two digits:
+    //   SLOW (60 s steps)                     2.0e-7 s (two ticks)   2.767e-10 m
+    //   SLOWD (default steps)                 2.90e-5 s              1.147e-6 m
+    //   SLOWX (default and 30 s steps, 1 m)   5.055e-2 s             2.074e-7 m
+    //   CWD (two minima per orbit, default)   6.0e-7 s               4.732e-8 m
+    //   CW60 (60 s steps)                     6.0e-7 s               4.702e-8 m
+    //   CWE (y0 = 1500 m, default)            3.0e-6 s               9.173e-8 m
+    //   CWE60 (y0 = 1500 m, 60 s steps)       1.0e-6 s               4.893e-8 m
+    // The TCA error is the difference of the range rate of the states and of their SPK (the degree-7 interpolation of
+    // their 60 s outputs) over its slope, 2.6e-4 m/s per second at a drift of 100 m and 2.6e-6 at 1 m. A CSPICE minimum or
+    // a listed one within the TCA bound of a window end may be on either side of it for the states and their SPK
+    private static (double Tca, double Miss) SlowPassBounds(CrossingEncounterCase crossing) => crossing switch
+    {
+        SlowPassEncounterCase => (4.0e-7, 5.6e-10),
+        DefaultStepSlowPassEncounterCase => (5.8e-5, 2.3e-6),
+        MixedStepSlowPassEncounterCase => (1.1e-1, 4.2e-7),
+        CwPassDefaultStepCase => (1.2e-6, 9.5e-8),
+        CwPass60StepCase => (1.2e-6, 9.5e-8),
+        CwPass1500DefaultStepCase => (6.0e-6, 1.9e-7),
+        CwPass1500Step60Case => (2.0e-6, 9.8e-8),
+        _ => throw new ArgumentOutOfRangeException(nameof(crossing))
+    };
+
+    private CrossingEncounterCase Pass(string fixture) => fixture switch
+    {
+        "SLOW" => _slowCase,
+        "SLOWD" => _defaultStepSlowCase,
+        "SLOWX" => _mixedStepSlowCase,
+        "CWD" => _cwDefaultCase,
+        "CW60" => _cw60Case,
+        "CWE" => _cw1500DefaultCase,
+        _ => _cw1500Step60Case
+    };
 
     private CrossingEncounterCase SlowPass(string steps) => steps == "60 s" ? _slowCase : _defaultStepSlowCase;
 
@@ -609,12 +712,107 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         AssertSlowPassMatchesCspice(crossing, window, 1);
     }
 
+    [Theory]
+    [InlineData("default", 0.0, 10800.0, 4)]
+    [InlineData("default", 1000.0, 2000.0, 2)]
+    [InlineData("default", 1200.0, 1800.0, 2)]
+    [InlineData("default", 1300.0, 1600.0, 2)]
+    [InlineData("default", 1400.0, 1700.0, 1)]
+    [InlineData("default", 1450.0, 1600.0, 1)]
+    [InlineData("60 s", 0.0, 10800.0, 4)]
+    [InlineData("60 s", 1000.0, 2000.0, 2)]
+    [InlineData("60 s", 1200.0, 1800.0, 2)]
+    [InlineData("60 s", 1300.0, 1600.0, 2)]
+    [InlineData("60 s", 1400.0, 1700.0, 1)]
+    [InlineData("60 s", 1450.0, 1600.0, 1)]
+    public void Dense_TwoMinimaPerOrbit_ListsTheLocalMinimaOfCspice(string steps, double start, double end, int count)
+    {
+        // At the default steps the Hermite seeds the minimum at t0 + 1526.28 s 1.6 s past it, where the range rate of the
+        // states is already positive (+0.086 m²/s), as at the candidates on either side, the maximum between the two minima
+        // lying before the one on the left: the zero lies between that candidate and the seed. Before round 5 of the lot-6
+        // review, the refinement followed the candidates to the left, reached the pair that holds the minimum at
+        // t0 + 1317.43 s and dropped the seed, so that AnalyzeAll listed the minimum at 1317.43 s alone and Analyze returned
+        // it (509.744 m against 509.695 m); before round 4 it kept the seed unrefined, 1.6 s off, and on [1400, 1700] s it
+        // listed nothing, Analyze returning the start. It is now searched from the seed on its own range rate
+        CrossingEncounterCase crossing = steps == "60 s" ? _cw60Case : _cwDefaultCase;
+        AssertSlowPassMatchesCspice(crossing, crossing.Seconds(start, end), count);
+    }
+
+    [Theory]
+    [InlineData("default")]
+    [InlineData("60 s")]
+    public void Dense_TwoMinimaPerOrbit_MinimumSeededPastItsZero_IsListed(string steps)
+    {
+        // y0 = 1500 m: the window ends 60 s after the minimum at t0 + 7029.75 s and starts 1400 s before it, where the
+        // fourth reviewer found it dropped in round 4 of the lot-6 review, as in 134 other windows
+        CrossingEncounterCase crossing = steps == "60 s" ? _cw1500Step60Case : _cw1500DefaultCase;
+        var minimum = CspiceLocalMinima(crossing.Seconds(6500.0, 7100.0), crossing).Single().Epoch;
+        AssertSlowPassMatchesCspice(crossing, new Window(minimum.AddSeconds(-1400.0), minimum.AddSeconds(60.0)), 1);
+    }
+
+    [Theory]
+    [InlineData("SLOW")]
+    [InlineData("SLOWD")]
+    [InlineData("SLOWX")]
+    [InlineData("CWD")]
+    [InlineData("CW60")]
+    [InlineData("CWE")]
+    [InlineData("CWE60")]
+    public void Dense_EveryMinimumOfThePass_IsListedWithinTheBounds(string fixture)
+    {
+        // The windows of the reviewers' sweeps over the whole propagation: the start and the end of each window at 1 to
+        // 1400 s on either side of each local minimum of CSPICE on the whole window (within the propagation), and windows of
+        // 300, 700, 1500 and 3000 s every 97 s. Every minimum of the propagation is measured, from many windows: the bounds
+        // of SlowPassBounds are twice the worst of this test
+        var crossing = Pass(fixture);
+        double duration = (crossing.Window.EndDate - crossing.Window.StartDate).TotalSeconds;
+        var minima = CspiceLocalMinima(crossing.Window, crossing)
+            .Select(m => (m.Epoch - crossing.T0).TotalSeconds)
+            .ToArray();
+        double[] offsets = { 1.0, 10.0, 30.0, 60.0, 120.0, 200.0, 400.0, 800.0, 1400.0 };
+        var windows = new System.Collections.Generic.SortedSet<(double Start, double End)>();
+        foreach (double minimum in minima)
+        {
+            foreach (double before in offsets)
+            {
+                foreach (double after in offsets)
+                {
+                    double start = System.Math.Round(System.Math.Max(0.0, minimum - before), 7);
+                    double end = System.Math.Round(System.Math.Min(duration, minimum + after), 7);
+                    if (end > start)
+                    {
+                        windows.Add((start, end));
+                    }
+                }
+            }
+        }
+
+        foreach (double length in new[] { 300.0, 700.0, 1500.0, 3000.0 })
+        {
+            for (double start = 0.0; start + length <= duration; start += 97.0)
+            {
+                windows.Add((start, start + length));
+            }
+        }
+
+        _worstSlowTcaError = 0.0;
+        _worstSlowMissError = 0.0;
+        foreach (var (start, end) in windows)
+        {
+            AssertSlowPassMatchesCspice(crossing, crossing.Seconds(start, end), null, log: false);
+        }
+
+        _output.WriteLine($"MEASURE {fixture} every minimum ({minima.Length} on the whole window, {windows.Count} windows): " +
+                          $"TCA {_worstSlowTcaError:E3} s, miss {_worstSlowMissError:E3} m");
+    }
+
     // AnalyzeAll lists the local minima of CSPICE's gfdist_c in the window, each within the bounds of the slow passes, and
     // nothing else; a CSPICE minimum within the TCA bound of a window end may be listed or not, and a listed one there may
     // have no CSPICE minimum, the states and their SPK placing the zero of the range rate on either side of that end.
     // Analyze returns the closest listed minimum, or without one the window end where the distance grows into the window by
     // CSPICE's range rate (the closer one when both do)
-    private void AssertSlowPassMatchesCspice(CrossingEncounterCase crossing, Window window, int expectedCount)
+    private void AssertSlowPassMatchesCspice(CrossingEncounterCase crossing, Window window, int? expectedCount,
+        bool log = true)
     {
         var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
         var (tcaBound, missBound) = SlowPassBounds(crossing);
@@ -622,15 +820,37 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
 
         var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
         var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
-        _output.WriteLine($"[{(window.StartDate - crossing.T0).TotalSeconds:F7}, {(window.EndDate - crossing.T0).TotalSeconds:F7}] s: " +
+        string listed = $"[{(window.StartDate - crossing.T0).TotalSeconds:F7}, {(window.EndDate - crossing.T0).TotalSeconds:F7}] s: " +
                           $"LOCMIN [{string.Join("; ", locmin.Select(m => $"{(m.Epoch - crossing.T0).TotalSeconds:F7} s {m.Distance:R} m"))}], " +
                           $"AnalyzeAll [{string.Join("; ", all.Select(e => $"{(e.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s {e.EncounterState.MissDistanceMeters:R} m"))}], " +
-                          $"Analyze {(encounter.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s");
+                          $"Analyze {(encounter.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s";
+        if (log)
+        {
+            _output.WriteLine(listed);
+        }
 
+        try
+        {
+            AssertSlowPassLists(crossing, window, expectedCount, locmin, all, encounter, tcaBound, missBound, log);
+        }
+        catch (Xunit.Sdk.XunitException e) when (!log)
+        {
+            throw new Xunit.Sdk.XunitException($"{listed}{Environment.NewLine}{e.Message}");
+        }
+    }
+
+    private void AssertSlowPassLists(CrossingEncounterCase crossing, Window window, int? expectedCount,
+        (TimeSystem.Time Epoch, double Distance)[] locmin, System.Collections.Generic.IReadOnlyList<EncounterCase> all,
+        EncounterCase encounter, double tcaBound, double missBound, bool log)
+    {
         bool NearAnEnd(TimeSystem.Time epoch) => System.Math.Abs((epoch - window.StartDate).TotalSeconds) <= tcaBound ||
                                                  System.Math.Abs((window.EndDate - epoch).TotalSeconds) <= tcaBound;
 
-        Assert.Equal(expectedCount, locmin.Count(m => !NearAnEnd(m.Epoch)));
+        if (expectedCount.HasValue)
+        {
+            Assert.Equal(expectedCount.Value, locmin.Count(m => !NearAnEnd(m.Epoch)));
+        }
+
         Assert.All(all, e => Assert.True(e.EncounterState.Epoch > window.StartDate && e.EncounterState.Epoch < window.EndDate));
         var matched = all.Select(e => locmin.Select((m, i) => (m, i))
                 .Where(x => System.Math.Abs((e.EncounterState.Epoch - x.m.Epoch).TotalSeconds) <= tcaBound)
@@ -646,7 +866,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
                 continue;
             }
 
-            AssertSlowPassMinimum(all[i], locmin[matched[i]], tcaBound, missBound, crossing);
+            AssertSlowPassMinimum(all[i], locmin[matched[i]], tcaBound, missBound, crossing, log);
         }
 
         if (all.Count > 0)
@@ -654,7 +874,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
             var references = matched.Where(i => i >= 0).Select(i => locmin[i]).ToArray();
             if (references.Length > 0)
             {
-                AssertSlowPassMinimum(encounter, references.MinBy(m => m.Distance), tcaBound, missBound, crossing);
+                AssertSlowPassMinimum(encounter, references.MinBy(m => m.Distance), tcaBound, missBound, crossing, log);
             }
             else
             {
@@ -677,18 +897,38 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
                 : CspiceRangeRate(epoch, crossing) <= 0.0)
             .ToArray();
         Assert.NotEmpty(ends);
+
+        // Both ends nearer to each other than the miss bound of the states against their SPK: either one
+        var distances = ends.Select(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()).ToArray();
+        if (distances.Length == 2 && System.Math.Abs(distances[0] - distances[1]) <= 2.0 * missBound)
+        {
+            Assert.Contains(encounter.EncounterState.Epoch, ends);
+            return;
+        }
+
         Assert.Equal(ends.MinBy(epoch => CspiceRelative(epoch, crossing).Position.Magnitude()), encounter.EncounterState.Epoch);
     }
 
+    private double _worstSlowTcaError;
+    private double _worstSlowMissError;
+
     private void AssertSlowPassMinimum(EncounterCase encounter, (TimeSystem.Time Epoch, double Distance) reference,
-        double tcaBound, double missBound, CrossingEncounterCase crossing)
+        double tcaBound, double missBound, CrossingEncounterCase crossing, bool log)
     {
         double tcaError = (encounter.EncounterState.Epoch - reference.Epoch).TotalSeconds;
         double missError = encounter.EncounterState.MissDistanceMeters - reference.Distance;
-        _output.WriteLine($"MEASURE slow pass TCA t0 + {(encounter.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s: " +
-                          $"{tcaError:E3} s, miss {missError:E3} m");
-        Assert.True(System.Math.Abs(tcaError) <= tcaBound, $"TCA {tcaError:E3} s");
-        Assert.True(System.Math.Abs(missError) <= missBound, $"miss {missError:E3} m");
+        _worstSlowTcaError = System.Math.Max(_worstSlowTcaError, System.Math.Abs(tcaError));
+        _worstSlowMissError = System.Math.Max(_worstSlowMissError, System.Math.Abs(missError));
+        if (log)
+        {
+            _output.WriteLine($"MEASURE slow pass TCA t0 + {(encounter.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s: " +
+                              $"{tcaError:E3} s, miss {missError:E3} m");
+        }
+
+        Assert.True(System.Math.Abs(tcaError) <= tcaBound,
+            $"TCA t0 + {(encounter.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s: {tcaError:E3} s");
+        Assert.True(System.Math.Abs(missError) <= missBound,
+            $"miss at t0 + {(encounter.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s: {missError:E3} m");
     }
 
     // ---- #527: the ILocalizable overloads do not extrapolate the propagated states ----

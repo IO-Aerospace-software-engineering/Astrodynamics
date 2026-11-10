@@ -157,6 +157,70 @@ public class ConjunctionRefinementTests
             ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance)));
     }
 
+    [Theory]
+    [InlineData(498.4)] // 1.6 s before the seed, as on the pass with two minima per orbit (round 5 of the lot-6 review)
+    [InlineData(499.9995)] // within the first read, 1 ms before the seed
+    [InlineData(467.0)] // 33 s before the seed, between its sixth and seventh reads
+    public void ASeedPastItsZero_RecedingAtTheCandidatesOnBothSides_IsSearchedOnItsOwnRangeRate(double zeroSeconds)
+    {
+        // Receding from the start up to a maximum at 420 s, closing up to the zero, receding after it: the seed, at 500 s,
+        // and the candidates on both sides recede, the zero lies between the seed and the candidate before it. Before
+        // round 5 of the lot-6 review, the candidates were followed to the left up to the window start, receding, and the
+        // minimum was dropped
+        var candidates = Candidates(11);
+        var rangeRate = InsideOnly(candidates, Steps(-1.0, 420.0, zeroSeconds));
+
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[5] }, candidates, rangeRate, Tolerance);
+
+        AssertWithinATick(zeroSeconds, Assert.Single(tca));
+    }
+
+    [Fact]
+    public void ASeedBeforeItsZero_ClosingAtTheCandidatesAfterIt_IsSearchedForward()
+    {
+        // Closing at the seed (200 s) and at the candidates after it up to 400 s: a minimum 2.5 s after the seed, a
+        // maximum at 205 s, the next minimum at 450 s. The seed is refined to the minimum next to it, between it and the
+        // next candidate (before round 5 of the lot-6 review, the widened bracket of the candidates gave the one at 450 s)
+        var candidates = Candidates(11);
+        var rangeRate = InsideOnly(candidates, Steps(202.5, 205.0, 450.0));
+
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance);
+
+        AssertWithinATick(202.5, Assert.Single(tca));
+    }
+
+    [Fact]
+    public void TwoSeedsReachingTwoZerosInOnePairOfCandidates_GiveOneMinimum()
+    {
+        // A range rate changing sign three times between the candidates of 200 s and 300 s (a minimum at 240 s, a
+        // maximum at 250 s and a minimum at 260 s, a range rate at the noise level): the seed at 200 s, closing, reaches
+        // the first zero forward, the seed at 300 s, receding, the last one backward. They are one minimum, the first
+        var candidates = Candidates(6);
+        var rangeRate = InsideOnly(candidates, Steps(240.0, 250.0, 260.0));
+
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2], candidates[3] }, candidates, rangeRate,
+            Tolerance);
+
+        AssertWithinATick(240.0, Assert.Single(tca));
+        AssertWithinATick(260.0, Assert.Single(
+            ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[3] }, candidates, rangeRate, Tolerance)));
+    }
+
+    [Fact]
+    public void ARangeRateExactlyZeroAtTheSeed_TheSeedIsTheZero()
+    {
+        // Zero over [300, 300.5] s, so that the secant from the seed (300 s) has no slope
+        var candidates = Candidates(7);
+        var rangeRate = InsideOnly(candidates, epoch =>
+        {
+            double t = (epoch - Epoch).TotalSeconds;
+            return t < 300.0 ? -1.0 : t <= 300.5 ? 0.0 : 1.0;
+        });
+
+        Assert.Equal(candidates[3], Assert.Single(
+            ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[3] }, candidates, rangeRate, Tolerance)));
+    }
+
     [Fact]
     public void AZeroBeforeTheFirstCandidate_LiesOutsideTheWindow_AndTheMinimumIsDropped()
     {

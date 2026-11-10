@@ -175,16 +175,19 @@ A major version, because it breaks the API: members deprecated for removal in 11
   windows ending or starting 1 µs to 1 ms before or after each of the four minima, at 60 s and at the default steps,
   and on windows of 2 and 3 ticks on each side of each minimum at 60 s steps, the same minima within the bounds above
   (2.7e-7 m at the default steps, their states against their SPK of 60 s outputs). A seed that the refinement could not
-  bracket on the range rate within two moves of its bracket was kept unrefined (the third review of the lot): on a slow
-  pass at the default steps (50 m along-track, a drift of 100 m across the plane), the Hermite seeded minima near the
-  maxima of the distance, which `AnalyzeAll` listed (t0 + 4246.66 s, 111.79 m, a range rate of +0.0012 m/s, where
-  `gfdist_c` lists no local minimum) and the dense `Analyze` returned instead of the closer end, 53.06 m against
-  111.79 m (main returned that end). Such a seed is now followed over the candidates to the nearest change of the range
-  rate from negative to positive on the side where the states place the minimum, or dropped when that side reaches a
-  window end: every TCA of the dense path is such a zero. Against `gfdist_c` on the slow pass, the local minima and no
-  maximum, within 1e-7 s and 2.8e-10 m at 60 s steps and 2.9e-5 s and 1.2e-6 m at the default steps; on the same pass
-  with a drift of 1 m and mixed steps, a minimum whose seeds lie three candidates or more from it is listed (dropping
-  the seeds instead would have lost it).
+  bracket on the range rate within two moves of its bracket was kept unrefined: on a slow pass at the default steps
+  (50 m along-track, a drift of 100 m across the plane), the Hermite seeded minima near the maxima of the distance, which
+  `AnalyzeAll` listed (t0 + 4246.66 s, 111.79 m, a range rate of +0.0012 m/s, where `gfdist_c` lists no local minimum)
+  and the dense `Analyze` returned instead of the closer end, 53.06 m against 111.79 m (main returned that end); on a
+  pass with two minima per orbit at the default steps, a seed 1.6 s past its minimum was listed unrefined, 1.35e-4 m off. A seed the secants
+  cannot bracket is now searched on its own range rate, from the seed toward the side it points to (1 ms, then distances
+  doubling up to the neighbouring candidate), then between the candidates, moved twice at most, then by following the
+  range rate over the candidates to the nearest change from negative to positive, or dropped: every TCA of the dense path
+  is such a zero, one per pair of consecutive candidates. Against `gfdist_c` on 634 to 715 windows of each slow pass
+  and of each pass with two minima per orbit, the local minima, each once, and no maximum, within 2e-7 s and 2.8e-10 m at
+  60 s steps, 2.9e-5 s and 1.15e-6 m at the default steps, 5.1e-2 s and 2.1e-7 m with a drift of 1 m at mixed steps (the
+  states and their SPK placing the zero apart by the difference of their range rates over its slope, 2.6e-6 m/s per
+  second).
 - **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the
   ephemeris read and `TransformFrame`). `ReadEphemerisAtGivenEpochProxy` left its state unwritten when `spkezr_c`
   failed (r = (4.9e-321, 6.95e-307, 6.95e-307) m past de440s on Linux, whatever the stack held elsewhere), and
