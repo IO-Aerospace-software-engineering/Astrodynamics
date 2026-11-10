@@ -105,7 +105,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
     inputs, CARA's `Pc2D` at 50 digits (`tools/collision_probability`, tanh-sinh and Gauss-Legendre agreeing to 1e-30):
     the seven `collision_probability` encounters of lot 6 of #457 (Pc 2.1e-2 to 5.1e-12, a hard-body radius much larger
     than the covariance, a covariance not positive definite, Frisbee's maximum) within 2.0e-14, 9.0e-9 through `Analyze`
-    (the covariance held in RTN over the refined TCA's offset); the 25 reproductions of #610 to #612 within 7.6e-15;
+    (the covariance held in RTN over the tick by which the refined TCA was early; 3.2e-10 since #624, Linux x64); the 25 reproductions of #610 to #612 within 7.6e-15;
     NASA CARA's Omitron case 01 and Alfano case 03 within 2.6e-15, Frisbee's table 1 within 3.2e-16 (their tests now
     take the exact values: the published ones are 2.9e-6 and 2.3e-6 from them, Frisbee's given to two or three digits).
     σ ≫ R with the miss off the axes (σ 1e5 to 1e6 m, R 1 m; mpmath at 70 digits): within 5.0e-11, the noise of the
@@ -158,7 +158,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   minima of the dense path: `AnalyzeAll(profile, solution, secondary, solution, window)` lists the interior minima only,
   an empty list when there are none, and `Analyze` on that path returns the closest interior minimum when there is one,
   never an end closer than it. Measured against CSPICE's `gfdist_c` (LOCMIN) on the SPKs of the propagations, refined
-  on the range rate of `spkezr_c`: the four minima of 3 h within 2e-7 s (two ticks) and 1.1e-8 m. Without an interior
+  on the range rate of `spkezr_c`: the four minima of 3 h within 6.5e-8 s of CSPICE's zero below the tick (1.4e-7 s before #624) and 1.1e-8 m. Without an interior
   minimum, `Analyze` still returns the end where the distance grows into the window, and `Screen` and the
   `ILocalizable` overloads keep their midpoint: #621's own change decides them. Whether a minimum lies inside the window
   is decided on the range rate of the states, the minima of the cubic Hermite of the stored steps, the window ends
@@ -167,14 +167,13 @@ A major version, because it breaks the API: members deprecated for removal in 11
   listed its unrefined Hermite epoch, a point still closing (as before 11.0.0), and a window starting before one listed
   nothing (an intermediate state of this change). A window end is now bracketed when the range rate says the minimum
   lies inside, and a minimum whose range-rate zero lies outside the window is dropped. A window end is never listed,
-  not even a zero of the range rate exactly there, which `Analyze` returns as that end (the bisection would give the
-  tick before it, #624). A window whose candidates all lie within the flatness tolerance of the seeds (a slow pass, a
+  not even a zero of the range rate exactly there, which `Analyze` returns as that end. A window whose candidates all lie within the flatness tolerance of the seeds (a slow pass, a
   window of a few ticks about a minimum) listed nothing and `Analyze` returned its midpoint, although the range rate
   went from negative to positive inside (F1 of the lot's second review: 1 ms off on a pass at 0.113 m/s and 50 m); the
   zero is now bisected over the window, and `Analyze` on this path never returns the midpoint. Against `gfdist_c` on
   windows ending or starting 1 µs to 1 ms before or after each of the four minima, at 60 s and at the default steps,
   and on windows of 2 and 3 ticks on each side of each minimum at 60 s steps, the same minima within the bounds above
-  (2.7e-7 m at the default steps, their states against their SPK of 60 s outputs). A seed that the refinement could not
+  (9.0e-8 s and 2.7e-7 m at the default steps, their states against their SPK of 60 s outputs). A seed that the refinement could not
   bracket on the range rate within two moves of its bracket was kept unrefined: on a slow pass at the default steps
   (50 m along-track, a drift of 100 m across the plane), the Hermite seeded minima near the maxima of the distance, which
   `AnalyzeAll` listed (t0 + 4246.66 s, 111.79 m, a range rate of +0.0012 m/s, where `gfdist_c` lists no local minimum)
@@ -187,12 +186,12 @@ A major version, because it breaks the API: members deprecated for removal in 11
   probe while main listed its seed unrefined, 4.85 s off at 60 s steps), then between the candidates, moved twice at
   most, then by following the range rate over the candidates to the nearest change from negative to positive, or
   dropped: every TCA of the dense path is such a zero, one per pair of consecutive candidates. Against `gfdist_c` on
-  1222 to 1527 windows of each slow pass, of each pass with two minima per orbit and of each pass with the fold (windows
+  1187 to 1524 windows of each slow pass, of each pass with two minima per orbit and of each pass with the fold (windows
   ending or starting at the zero included, the reference refined below the tick), the local minima, each once, and no
   maximum, within 1.5e-7 s and 3.14e-10 m at 60 s steps, 2.9e-5 s and 1.15e-6 m at the default steps, 5.05e-2 s and
   2.1e-7 m with a drift of 1 m at mixed steps (the states and their SPK placing the zero apart by the difference of
-  their range rates over its slope, 2.6e-6 m/s per second), 7.1e-7 s to 3.3e-6 s and 4.8e-8 to 9.3e-8 m with two minima
-  per orbit, and at the fold 3.4e-5 s and 3.9e-8 m at 60 s steps, 2.1e-3 s and 9.7e-7 m at the default steps (its
+  their range rates over its slope, 2.6e-6 m/s per second), 6.5e-7 s to 3.3e-6 s and 4.8e-8 to 9.3e-8 m with two minima
+  per orbit, and at the fold 3.3e-5 s and 3.9e-8 m at 60 s steps, 2.1e-3 s and 9.7e-7 m at the default steps (its
   states and their SPK 2.1 ms apart).
 - **SPICE failures of the ephemeris reads and of the frame transformations were swallowed** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the
   ephemeris read and `TransformFrame`). `ReadEphemerisAtGivenEpochProxy` left its state unwritten when `spkezr_c`
@@ -224,6 +223,36 @@ A major version, because it breaks the API: members deprecated for removal in 11
   states without a coverage check, so a window past them was extrapolated (567 km off 6 min out); they now throw
   `ArgumentException` (`screeningWindow`) when the window leaves the stored states, as the `PropagationSolution`
   overloads did. The check, `Spacecraft.CheckInterpolatedStatesCover`, is the one of the managed field-of-view search.
+- **The refined TCA was up to one tick early** ([#624](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/624)).
+  The bisection of the range rate that refines every TCA of `Analyze`, `AnalyzeAll` and `EvaluateAvoidance`, on the
+  sampled path of the `ILocalizable` overloads and on the dense path of two propagations, stops on a bracket one tick
+  wide (100 ns, the resolution of `Time`; the default tolerance, 1e-9 s, lies below it), and returned its middle through
+  `TimeSpan.FromSeconds`, which truncates to the tick: always the lower tick, half a tick before the zero on average and
+  up to one tick, a zero exactly on a tick one tick early. It now carries the range rates at both ends of its bracket,
+  which every caller already holds (no extra evaluation), and returns the tick nearer the zero of their chord: the upper
+  one when its range rate is smaller in magnitude, the lower one otherwise (a tie included), so half a tick at most from
+  the zero of a range rate linear over the tick, and a zero exactly on a tick is that tick. A bracket left wider than a
+  tick by a tolerance of a tick or more gives its middle, in ticks, as does each step of the bisection, whose middle
+  `TimeSpan.FromSeconds` also truncated (the same last bracket about a single zero, another zero of a bracket holding
+  several at the noise level). On the dense path, a zero within the first or the
+  last tick of the window that rounds onto a window end is the tick next to that end inside the window, a window end
+  being no close approach (#621); the sampled path keeps the nearer tick, an end included. `Screen` does not refine.
+  - **Measured** (Linux x64, 2026-11-10, PROVISIONAL until the CI of the three platforms): linear range rates whose zero
+    lies 0 to 1 tick after a tick, evaluated in exact tick arithmetic, give the nearest tick on every route of the
+    refinement (the secants, the seed's own range rate forward and backward, the widened bracket, the range rate
+    followed over the candidates, the sampled search) and at the window ends. The seven `collision_probability`
+    encounters through `Analyze`, whose exact TCA lies within 4.3e-7 tick of a tick: the Pc within 3.15e-10 of its
+    exact value (005, at its exact tick; 9.03e-9 before, 003 and 005 returned one tick early), asserted at 6.3e-10 (1.9e-8
+    before). Against `gfdist_c` on the crossing LEOs, the TCA within 6.4e-8 s of CSPICE's zero below the tick at 60 s
+    steps and 9.0e-8 s at the default steps (1.5e-7 s before), asserted at 1.8e-7 s (4e-7 s, when the reference was
+    CSPICE's minimum on the grid of ticks, up to 0.96 tick from its zero); the #620 RTN position within 1.5e-4 m of the
+    design (6.3e-4 m before), asserted at 3.1e-4 m. The runner on the suite's main (33286d2), 201 of 201: cdm 007 from
+    0.664 to 0.019 of its tolerance (the relative position of the written CDM 6.6e-7 km to 4.3e-13 km; its TCA written
+    12:00:00.0000000Z, 11:59:59.9999999Z before), conjunction 007 from 0.497 to 0.027 (its TCA 1.27e-7 s to 2.66e-8 s
+    from CSPICE's).
+  - **What moves:** every refined TCA, by at most one tick toward the zero, and what is computed there: the states at
+    TCA by v·δt (up to 0.77 mm at 7.7 km/s), the miss distance at second order, the RTN axes and the covariance held in
+    RTN, the Pc, and the `TCA` and states that `ToCdm` writes.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
@@ -431,7 +460,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   per component take arrays of any length; a cdm export compares its fields in a table of its own. A covariance the
   library did not propagate, a Pc it did not compute and a sigma it clipped are an ERROR that says so. The 25 cases of
   the suite's lot-6 branch (970a3bf) pass with at most 0.66 of their tolerance (the relative position of the written
-  CDM, one 100 ns tick of the TCA), and the 201 cases of that branch pass. See [Validation](../guides/validation.md#lot-6-conjunctions-pc-cdm-and-the-state-transition-matrix).
+  CDM, one 100 ns tick of the TCA; 0.30 since #624, a correlation of conjunction 006, cdm 007 at 0.019), and the 201
+  cases of that branch pass. See [Validation](../guides/validation.md#lot-6-conjunctions-pc-cdm-and-the-state-transition-matrix).
 - **An impulse gated by its minimum epoch fired there on a false crossing, or missed a crossing just after it**
   ([#569](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/569)).
   - **The cause.** Before `MinimumEpoch`, the g-function of a maneuver was replaced by +1, and the integrators compared

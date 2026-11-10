@@ -169,6 +169,39 @@ public partial class ConjunctionAssessmentTests
             $"Expected TCA at window start, got offset {(tca - start).TotalSeconds:E6}s");
     }
 
+    // The sampled search (two ILocalizable objects) bisects each change of sign of the range rate between its samples and
+    // returns the tick nearer the zero (#624): a secondary at (100 m, v (t − t*), 0) from a still primary, v = 7.6 km/s, the
+    // zero t* f ticks after the tick k from the start, in a window of 10 s sampled every second. Before, the lower tick of
+    // the last bracket: up to a tick before the zero, a zero exactly on a tick one tick early
+    [Theory]
+    [InlineData(52_345_678L, 0.0)] // exactly on a tick: that tick
+    [InlineData(52_345_678L, 0.25)]
+    [InlineData(52_345_678L, 0.5 - 1.0e-3)]
+    [InlineData(52_345_678L, 0.5 + 1.0e-3)]
+    [InlineData(52_345_678L, 0.75)]
+    [InlineData(50_000_000L, 0.0)] // exactly on a sample epoch: that epoch
+    [InlineData(0L, 0.25)] // in the first tick, nearer the start: the start
+    [InlineData(0L, 0.75)] // nearer the tick after it: that tick
+    [InlineData(99_999_999L, 0.25)] // in the last tick, nearer the tick before the end: that tick
+    [InlineData(99_999_999L, 0.75)] // nearer the end: the end, the sampled search applies no window-end rule (#621)
+    [InlineData(100_000_000L, 0.0)] // exactly at the end: the end, as a zero exactly at the start is the start
+    public void FindCloseApproaches_SampledSearch_ReturnsTheTickNearerTheZero(long zeroTicks, double fraction)
+    {
+        var earth = CreateEarth();
+        var start = TimeSystem.Time.J2000TDB;
+        var window = new Window(start, start.AddSeconds(10.0));
+        const double v = 7600.0;
+        double zeroSeconds = (zeroTicks + fraction) / TimeSpan.TicksPerSecond;
+        var primary = new LinearMotionLocalizable(-2341, "P", earth, start, Vector3.Zero, Vector3.Zero);
+        var secondary = new LinearMotionLocalizable(-2342, "S", earth, start, new Vector3(100.0, -v * zeroSeconds, 0.0),
+            new Vector3(0.0, v, 0.0));
+
+        var tcas = ConjunctionAssessment.FindCloseApproaches(primary, secondary, window, TimeSpan.FromSeconds(1.0), 1e-9,
+            earth);
+
+        Assert.Equal(start.AddTicks(zeroTicks + (fraction > 0.5 ? 1 : 0)), Assert.Single(tcas));
+    }
+
     [Fact]
     public void FindCloseApproaches_CrossingOnlyInFinalSubstep_IsDetected()
     {
@@ -498,7 +531,7 @@ public partial class ConjunctionAssessmentTests
         // The closed form: y = 0 at t = −y0/vy, a window end; the range rate is zero there and the distance 10 m. A window
         // end is never a close approach (design of lot 6 of #457, §2.1: "A window end is never a TCA"; §8.3 row 7:
         // AnalyzeAll lists the interior minima only), so AnalyzeAll lists nothing; Analyze keeps its end fallback, the end
-        // itself, not the tick before it (#624's bisection, which S1's refinement of the ends reached)
+        // itself, not the tick before it (the lower tick that the bisection returned before #624)
         var (profile, protectedTrajectory, secondary, secondaryTrajectory, window) = RectilinearPass(-5524, y0, vy);
         var expected = window.StartDate.AddSeconds(-y0 / vy);
 
@@ -522,7 +555,7 @@ public partial class ConjunctionAssessmentTests
     [InlineData(-80_000, 80_000)] // [m − 8 ms, m + 8 ms]
     [InlineData(-1, 2)] // one tick inside on each side of m
     [InlineData(-3, 3)]
-    [InlineData(0, 3)] // m in the first tick, which the bisection returns as the start: the tick after it
+    [InlineData(0, 3)] // m in the first tick, half-way, which the bisection may round onto the start: the tick after it
     [InlineData(-3, 1)] // m in the last tick
     public void Dense_SlowPassFlatOverTheWindow_ListsTheMinimumOfTheRangeRate(long startTicks, long endTicks)
     {
@@ -549,6 +582,54 @@ public partial class ConjunctionAssessmentTests
         }
 
         Assert.Equal(listed.EncounterState.Epoch, encounter.EncounterState.Epoch);
+    }
+
+    // The tick returned on the dense path (#624): the refinement returns the tick nearer the zero of the range rate, and a
+    // zero within the first or last tick of the window that it rounds onto a window end is the tick next to that end
+    // inside the window, a window end being no close approach (#621): a zero in the first tick is the tick after the start,
+    // a zero in the last tick the tick before the end, whichever is nearer. Rectilinear passes closest at m = 1 s + f
+    // ticks, the window [1 s + a ticks, 1 s + b ticks]; before #624, the lower tick of the last bracket, so m − f ticks
+    // inside the window and the tick after the start in the first tick
+    [Theory]
+    // A pass at 100 m/s, 10 m, in windows of 1 s or more: the seed of the Hermite refined on the range rate
+    [InlineData(100.0, 10.0, 0.8, -10_000_000L, 1L, 0L)] // 0.2 tick before the end: the tick before it, not the end
+    [InlineData(100.0, 10.0, 0.6, -10_000_000L, 1L, 0L)] // 0.4 tick before the end: the tick before it
+    [InlineData(100.0, 10.0, 0.2, -10_000_000L, 1L, 0L)] // 0.8 tick before the end: the tick before it, the nearer
+    [InlineData(100.0, 10.0, 0.2, 0L, 10_000_000L, 1L)] // 0.2 tick after the start: the tick after it, not the start
+    [InlineData(100.0, 10.0, 0.8, 0L, 10_000_000L, 1L)] // 0.8 tick after the start: the tick after it, the nearer
+    [InlineData(100.0, 10.0, 0.8, -10_000_000L, 10_000_000L, 1L)] // inside: the nearer tick, after m − f ticks
+    [InlineData(100.0, 10.0, 0.6, -10_000_000L, 10_000_000L, 1L)]
+    [InlineData(100.0, 10.0, 0.2, -10_000_000L, 10_000_000L, 0L)]
+    // The slow pass of 0.113 m/s, 50 m, in windows of a few ticks: no seed inside, the range rate bisected over the window
+    [InlineData(0.113, 50.0, 0.8, -3L, 1L, 0L)]
+    [InlineData(0.113, 50.0, 0.2, -3L, 1L, 0L)]
+    [InlineData(0.113, 50.0, 0.2, 0L, 3L, 1L)]
+    [InlineData(0.113, 50.0, 0.8, 0L, 3L, 1L)]
+    [InlineData(0.113, 50.0, 0.8, -3L, 3L, 1L)]
+    [InlineData(0.113, 50.0, 0.2, -3L, 3L, 0L)]
+    public void Dense_TheTickNearerTheZero_TheTickInsideAtAWindowEnd(double vy, double x, double fraction,
+        long startTicks, long endTicks, long expectedTicks)
+    {
+        double m = 1.0 + fraction * 1.0e-7;
+        var (profile, protectedTrajectory, secondary, secondaryTrajectory, fullWindow) =
+            RectilinearPass(-5536, -vy * m, vy, x);
+        var oneSecond = fullWindow.StartDate.AddTicks(TimeSpan.TicksPerSecond);
+        var window = new Window(oneSecond.AddTicks(startTicks), oneSecond.AddTicks(endTicks));
+
+        var encounters = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+        var encounter = ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary, secondaryTrajectory,
+            window, RectilinearPassOptions);
+
+        // The closed form: closest at m, x m away; the TCA the expected tick, strictly inside the window
+        var expected = oneSecond.AddTicks(expectedTicks);
+        double offset = (expectedTicks - fraction) * 1.0e-7;
+        foreach (var state in new[] { Assert.Single(encounters).EncounterState, encounter.EncounterState })
+        {
+            Assert.Equal(expected, state.Epoch);
+            Assert.True(state.Epoch > window.StartDate && state.Epoch < window.EndDate);
+            Assert.Equal(System.Math.Sqrt(x * x + System.Math.Pow(vy * offset, 2.0)), state.MissDistanceMeters, 9);
+        }
     }
 
     [Fact]

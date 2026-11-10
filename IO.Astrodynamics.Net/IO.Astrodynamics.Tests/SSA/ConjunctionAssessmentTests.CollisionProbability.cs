@@ -34,11 +34,13 @@ public partial class ConjunctionAssessmentTests
     // the suite's inputs.yaml): worst 2.01e-14 (003), the same on the three
     private const double DesignedEncounterPcBound = 4.1e-14;
 
-    // The public Analyze on straight-line trajectories, the seven encounters: worst 9.03e-9, the same on the three
-    // platforms (003; 7.41e-10 on the design-stage doubles, within 1e-10 of these, whose 003 gave less). The refined
-    // TCA lies up to a tick of Time (100 ns) from the linear TCA, over which the covariance is held in RTN, and 003's
-    // Pc of 1.1e-8 (miss 11 sigma) amplifies that rotation; the integral itself is at 2.0e-14
-    private const double DesignedEncounterAnalyzePcBound = 1.9e-8;
+    // The public Analyze on straight-line trajectories, the seven encounters: worst 3.15e-10 (005, the large hard-body
+    // radius, at its exact TCA tick; 003 6.66e-11), PROVISIONAL (Linux x64, 2026-11-10) until the CI of the three
+    // platforms. Every refined TCA is now the tick nearest the linear TCA, within 4.3e-7 tick of it (#624); before, the
+    // tick below the root of the library's range rate, one tick early for 003 and 005, over which the covariance was held
+    // in RTN, and 003's Pc of 1.1e-8 (miss 11 sigma) amplified that rotation: 9.03e-9, the same on the three platforms,
+    // bound 1.9e-8. The integral itself is at 2.0e-14
+    private const double DesignedEncounterAnalyzePcBound = 6.3e-10;
 
     // The 25 reproductions of #610, #611 and #612: worst 7.64e-15 on Linux x64 and Windows x64, 7.43e-15 on macOS arm64
     // (#612, λ2 1e-2 m² at 30°); before the fix 0 or 4e-86 for 1 (#610), −4.6 % (#611), null (#612)
@@ -66,7 +68,8 @@ public partial class ConjunctionAssessmentTests
 
     // The same through Analyze and AnalyzeAll on straight-line trajectories: worst 2.20e-7, the same on the three
     // platforms (Omitron 01, whose states are not at the linear TCA: the covariance is held in RTN over the refined
-    // TCA's offset); Alfano 03 4.8e-11
+    // TCA's offset), unchanged by the nearer tick of #624 (Linux x64, 2026-11-10); Alfano 03 2.7e-11 (4.8e-11 before
+    // #624)
     private const double CaraEntryPointPcBound = 4.4e-7;
 
     private static readonly Lazy<JsonDocument> CollisionProbabilityReference =
