@@ -420,7 +420,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
     y0 = 1496 and 1497 m, from 309 and 341 to 1 and 152 of 948 (not changed, below). Over the 81 scenarios of the
     probe of #628 and of its review, no TCA listed by default moves but at the level of noise below, and no entry is
     spurious, a window end, a duplicate or out of order. The new fixtures of `ConjunctionKernelAndWindowTests`, over
-    1361 to 1727 windows each, give 6.1e-6 to 6.5e-5 s and 6.6e-7 to 2.0e-6 m at mixed steps, 3.1e-5 to 1.0e-4 s and
+    1353 to 1727 windows each, give 6.1e-6 to 6.5e-5 s and 6.6e-7 to 2.0e-6 m at mixed steps, 3.1e-5 to 1.0e-4 s and
     1.3e-5 to 2.1e-5 m at 600 s steps (the states against their SPK), asserted at twice the worst over Linux x64, Windows
     x64 and macOS arm64, which give the same figures but CW600's miss on Windows x64 (1.278e-5 m). The conformance runner on the suite's main (33286d2), 201 of 201, its 4764 deltas
     unchanged bit for bit, with the reads (in 26.7 to 27.3 s instead of 25.7 to 26.0 s) and by default alike.
