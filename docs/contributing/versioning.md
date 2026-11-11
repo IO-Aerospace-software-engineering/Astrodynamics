@@ -283,6 +283,31 @@ A major version, because it breaks the API: members deprecated for removal in 11
   41 to 155 failed builds in each of 5 runs, none without the test). It now calls a `MemoryDataProvider` directly, as
   the other tests of the provider do, with the same two assertions; no other test changes the global provider.
   The library is unchanged.
+- **A TLE converted on one thread while another first used `PlanetsAndMoons` hung the process** ([#623](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/623)).
+  `SpiceAPI.ConvertTleToStateVector`, so `TLE.ToStateVector`, `TLE.ToOsculating` and every SGP4 propagation, built the
+  Earth of its state, `new CelestialBody(PlanetsAndMoons.EARTH, ...)`, while it held the SpiceAPI lock. Reading
+  `PlanetsAndMoons` runs its type initializer, which builds `EARTH_BODY` and `MOON_BODY` and so takes the same lock. When
+  another thread was running that initializer, the first thread waited for it while holding the lock, and the other
+  thread waited for the lock: neither ended, and the runtime, which detects only cycles between type initializers, raised
+  nothing. The audit of the other locked sections found the same pattern in both `SpiceAPI.ReadEphemeris` overloads by
+  NAIF ids: their observer, `CelestialItem.Create(observerId)`, was built under the lock, and for a Lagrange point (391 to
+  395) the constructor of `LagrangePoint` reads `Barycenters.EARTH_BARYCENTER`, whose initializer takes the lock. Now
+  only the native call runs under the lock in `ConvertTleToStateVector`, the zero-state check and the Earth after it,
+  and `ReadEphemeris` builds its observer before it; the states are the same bit for bit (same native calls, same
+  inputs). No other section under the lock reaches `PlanetsAndMoons`, `Stars` or `Barycenters`, the only type
+  initializers of the library that read SPICE.
+  - **Measured** (Linux x64, 4 cores, Release, 2026-11-11), each run a fresh process, two threads started behind a
+    barrier, a run hung when it had not ended 3 s after its start: before the fix, `ConvertTleToStateVector` against the
+    first read of `PlanetsAndMoons.EARTH_BODY` hung 120 of 120 runs, `TLE.ToStateVector` 35 of 200, `ReadEphemeris` from
+    L1 against the first read of `Barycenters.EARTH_BARYCENTER` 120 of 120; with the first thread started once the second
+    is inside the initializer (a data provider holds it there 200 ms), every run of the three hung (40, 40 and 30 runs).
+    After it, none of 1200 runs (200 per case) hung; a run takes 0.11 to 0.40 s, 0.12 to 0.53 s with the 4 cores kept
+    busy.
+  - **Test:** `ColdStartTests` starts the console project `IO.Astrodynamics.Tests.ColdStart`, which the test project
+    builds and copies to `ColdStart/` next to its output, with the dotnet host that runs the tests: 3 children of each
+    case with the initializer held and 3 behind the barrier, each required to exit 0 within 60 s, a child that does not
+    killed with its process tree. A test inside the test process cannot see the defect, since another test has already
+    run the initializers. With the fix reverted the three cases fail at their first child.
 - **A number of seconds became a `Time` truncated toward zero** ([#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625)).
   `Time.Create` (both overloads), `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the
   TDB − TT offset of the TDB conversions went through `DateTime.AddSeconds` or `TimeSpan.FromSeconds`, which truncate
