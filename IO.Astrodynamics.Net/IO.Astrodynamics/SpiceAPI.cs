@@ -164,7 +164,9 @@ public class SpiceAPI
     //Use the same lock for all cspice calls because it doesn't support multithreading.
     // No code under it may read a static class whose type initializer takes it (PlanetsAndMoons, Stars, Barycenters):
     // the thread would wait for the initializer while it holds the lock, and a thread running the initializer would wait
-    // for the lock, forever (#623).
+    // for the lock, forever (#623). The library's code does not; a custom IDataProvider (the bodies the element
+    // conversions build, the frames of a read in TEME, CIRS or TIRS) and the enumeration of the states given to
+    // WriteEphemeris or WriteOrientation also run under it.
     private static object lockObject = new object();
 
     /// <summary>

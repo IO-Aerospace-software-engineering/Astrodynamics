@@ -33,6 +33,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <item><c>lagrange</c>: <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/> from L1 (391), whose
 /// observer is a <see cref="LagrangePoint"/>, which reads <see cref="Barycenters.EARTH_BARYCENTER"/>; the first read of
 /// <see cref="Barycenters.EARTH_BARYCENTER"/>.</item>
+/// <item><c>lagrange-window</c>: <see cref="SpiceAPI.ReadEphemeris(Window, int, int, Frame, Aberration, TimeSpan)"/> from
+/// L1 over 60 s every 30 s; the same read.</item>
 /// </list>
 /// </para>
 /// <para>
@@ -45,8 +47,9 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// </para>
 /// <para>
 /// Exit codes: 0 both threads ended; 1 a thread threw (its exception on the standard error); 2 wrong arguments; 3 with
-/// the schedule <c>held</c>, thread B did not enter the type initializer within 60 s (the class was initialized before,
-/// so the process does not test what it should).
+/// the schedule <c>held</c>, thread B did not enter the type initializer within 20 s (the class was initialized before,
+/// so the process does not test what it should). The 20 s are a third of the time <c>ColdStartTests</c> gives a child,
+/// so that this exit reaches the test rather than being taken for a deadlock.
 /// </para>
 /// </remarks>
 internal static class Program
@@ -54,7 +57,9 @@ internal static class Program
     private const string Name = "ISS";
     private const string Line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
     private const string Line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
-    private static readonly TimeSpan EnterTimeout = TimeSpan.FromSeconds(60);
+    // Thread B enters the initializer within a few milliseconds of its start (a whole child takes 0.11 to 0.53 s); a third of
+    // the 60 s ColdStartTests gives a child, so that exit 3 reaches the test before it kills the child
+    private static readonly TimeSpan EnterTimeout = TimeSpan.FromSeconds(20);
 
     private static int Main(string[] args)
     {
@@ -94,6 +99,11 @@ internal static class Program
                 break;
             case "lagrange":
                 threadA = () => SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frame.ICRF, Aberration.None);
+                threadB = ReadEarthBarycenter;
+                break;
+            case "lagrange-window":
+                var window = new Window(epoch, epoch.AddSeconds(60.0));
+                threadA = () => SpiceAPI.Instance.ReadEphemeris(window, 391, 399, Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(30.0));
                 threadB = ReadEarthBarycenter;
                 break;
             default:
@@ -166,7 +176,7 @@ internal static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange> <race|held> [hold in ms, for held]");
+        Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held]");
         return 2;
     }
 

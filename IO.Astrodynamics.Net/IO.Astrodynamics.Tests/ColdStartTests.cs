@@ -12,8 +12,9 @@ namespace IO.Astrodynamics.Tests;
 /// <summary>
 /// No deadlock between the SpiceAPI lock and the type initializers that read SPICE (#623), in fresh processes: in this
 /// process another test has already run every initializer, so the test starts the child process
-/// <c>IO.Astrodynamics.Tests.ColdStart</c> (copied to <c>ColdStart/</c> by the build), which calls the library on two
-/// threads before any static class of the library is initialized, and requires it to end and exit 0.
+/// <c>IO.Astrodynamics.Tests.ColdStart</c> (copied to <c>ColdStart/</c> by the build, or built beside the tests when the
+/// output directory is given on the command line), which calls the library on two threads before any static class of
+/// the library is initialized, and requires it to end and exit 0.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -21,6 +22,7 @@ namespace IO.Astrodynamics.Tests;
 /// it (thread B): <c>direct</c> <see cref="SpiceAPI.ConvertTleToStateVector(string, string, string, TimeSystem.Time)"/>
 /// and <c>tle</c> <see cref="OrbitalParameters.TLE.TLE.ToStateVector(TimeSystem.Time)"/> with
 /// <see cref="SolarSystemObjects.PlanetsAndMoons"/>, <c>lagrange</c> <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Time, int, int, Frames.Frame, Aberration)"/>
+/// and <c>lagrange-window</c> <see cref="SpiceAPI.ReadEphemeris(TimeSystem.Window, int, int, Frames.Frame, Aberration, TimeSpan)"/>
 /// from L1 with <see cref="SolarSystemObjects.Barycenters"/>. Before #623 thread A read the static class while it held the
 /// lock and the process hung forever.
 /// </para>
@@ -28,7 +30,7 @@ namespace IO.Astrodynamics.Tests;
 /// Schedules: <c>held</c> holds thread B inside the initializer, before it takes the lock, until thread A has run, which
 /// reproduced the hang in every child of every mode before the fix (measured, Linux x64, 2026-11-11, see
 /// <see cref="HeldChildren"/>); <c>race</c> starts the two threads behind a barrier, the reproduction of #623, which hung in
-/// every child of <c>direct</c> and <c>lagrange</c> and in 10 % to 25 % of those of <c>tle</c>.
+/// every child of <c>direct</c>, <c>lagrange</c> and <c>lagrange-window</c> and in 10 % to 25 % of those of <c>tle</c>.
 /// </para>
 /// </remarks>
 public class ColdStartTests
@@ -36,8 +38,9 @@ public class ColdStartTests
     // Children per mode and schedule, and the hold of thread B, ms. Before the fix (Linux x64, 4 cores, Release, 2026-11-11,
     // a child hung when it had not ended 3 s after its start): held with a hold of 200 ms, 40 / 40 children hung in direct
     // and tle, 30 / 30 in lagrange; race, 120 / 120 in direct and lagrange, 35 / 200 in tle (25 / 100 and 10 / 100 in two
-    // series). After it, 0 hangs over 200 children of each mode and schedule. One held child per mode finds the defect;
-    // the race children add the reproduction of #623
+    // series). After it, 0 hangs over 200 children of each mode and schedule. lagrange-window, with only the window overload
+    // reverted (killed at 10 s): 3 / 3 held and 3 / 3 race children hung, while lagrange ended 2 / 2; with the fix, 0 / 20
+    // of each. One held child per mode finds the defect; the race children add the reproduction of #623
     private const int HeldChildren = 3;
     private const int RaceChildren = 3;
     private const int HoldMilliseconds = 200;
@@ -51,6 +54,7 @@ public class ColdStartTests
     [InlineData("direct")]
     [InlineData("tle")]
     [InlineData("lagrange")]
+    [InlineData("lagrange-window")]
     public void TwoThreadsEndOnTheFirstUseOfAStaticBodyClass(string mode)
     {
         for (int i = 0; i < HeldChildren; i++)
@@ -66,7 +70,13 @@ public class ColdStartTests
 
     private static void RunChild(string mode, string schedule, string hold = null)
     {
+        // ColdStart/, or beside the tests when the build was given an output directory (-o), which the child is built into
         string child = Path.Combine(AppContext.BaseDirectory, "ColdStart", "IO.Astrodynamics.Tests.ColdStart.dll");
+        if (!File.Exists(child))
+        {
+            child = Path.Combine(AppContext.BaseDirectory, "IO.Astrodynamics.Tests.ColdStart.dll");
+        }
+
         Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");
 
         var start = new ProcessStartInfo(DotnetHost())
