@@ -46,7 +46,7 @@ public sealed record ConjunctionAnalysisOptions
     /// duplicate), but a minimum that no minimum of the Hermite seeds may be lost: two minima within one step of a slow
     /// co-orbital pass, or a minimum between two candidates where the range rate closes at one and recedes at the next,
     /// with long (300 s and more) or mixed steps. <c>Analyze</c> then returns another minimum, 1.7 mm to 9.6 cm farther
-    /// in the measured cases (504.837 m for 504.802 m), or a window end (504.658 m for 504.643 m; up to 1.46 m farther). No
+    /// in the measured cases (504.837 m for 504.801 m), or a window end (504.658 m for 504.643 m; up to 1.46 m farther). No
     /// loss was measured on fast passes.
     /// </para>
     /// <para>

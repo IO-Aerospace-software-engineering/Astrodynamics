@@ -921,6 +921,14 @@ public static class ConjunctionAssessment
     }
 
     /// <summary>
+    /// The range rates of the states read by the dense search on this thread (each epoch once per search), counted for the
+    /// tests of decision 54 of #457: without <see cref="ConjunctionAnalysisOptions.ReadRangeRateOverWindow"/>, the public
+    /// <c>Analyze</c> and <c>AnalyzeAll</c> read no more than the seeds need, whatever
+    /// <see cref="ConjunctionAnalysisOptions.MaximumEventSearchStep"/>. One increment per read, no result depends on it.
+    /// </summary>
+    [ThreadStatic] internal static long DenseRangeRateReads;
+
+    /// <summary>
     /// The close approaches of the polynomial search on the stored steps of two propagations: the interior local minima of
     /// the distance, refined on the range rate (#621: a window end, where the distance grows into the window, is no close
     /// approach; it was listed before 11.0.0). The minima of the cubic Hermite of the stored steps, the window ends
@@ -1044,7 +1052,11 @@ public static class ConjunctionAssessment
         // lies inside the window is decided on the range rate of the states, whose zero the Hermite misses by its error
         // (#363)
         return CloseApproachesOnRangeRate(minima, distinctCandidates,
-            epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch),
+            epoch =>
+            {
+                DenseRangeRateReads++;
+                return EvaluateRangeRate(protectedSource, secondarySource, epoch);
+            },
             epoch => DistanceSquared(protectedSource, secondarySource, epoch), toleranceSeconds,
             maximumReadSpacing?.TotalSeconds, windowEndsWithoutInteriorMinimum);
     }

@@ -341,8 +341,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
     1e-12 to 1e-13 m/s), zeros of 26 windows ending within the first 0.35 s are reached by the reads in place of the
     seeds (by up to 1.2e-2 s); at a drift of 0.01 m a few more are listed.
   - **Cost of the option.** One state per candidate and per sample: on two LEO trajectories over one day with EGM2008 10×10, the Moon
-    and the Sun at the default steps (31 minima), `Analyze` reads 2063 states instead of 218 and takes 96 to 106 ms
-    instead of 15 to 20 ms (about 6×); 49 to 56 ms with a `MaximumEventSearchStep` of 300 s or more. At 60 s steps for
+    and the Sun at the default steps (31 minima), `Analyze` reads 2063 states instead of 218 and takes 103 to 111 ms
+    instead of 16.5 to 21.5 ms (about 6×); 76 to 80 ms at a `MaximumEventSearchStep` of 120 s (1350 states), 53 to 57 ms
+    at 300 s or more (1001 states; the run of the default figures above, three runs of each build in turn, 2026-11-11). At 60 s steps for
     both trajectories the reads add no sample (a step of 60 TT seconds may span 60 s and one tick of its TDB labels,
     which is not read at its middle), and those at the candidates take the states read per window of the probe of #628
     from 54 to 78 on average; at fixed 600 s steps for one trajectory and the default for the other, 469 to 554

@@ -1085,12 +1085,63 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     public void Dense_ByDefault_MinimumWithoutASeedNearIt_ListsOnlyMinima(string fixture, double start, double end)
     {
         // The windows of #628 with the default options (decision 54 of #457: the reads of the range rate over the window
-        // opt-in): a minimum that no minimum of the Hermite seeds may be lost (on CWM's window, Analyze returns the window
-        // end, 504.658 m, for the minimum of 504.643 m; on CW600's [1200, 1800] s, the minimum of 509.695 m at t0 + 1526.28 s
-        // for that of 509.741 m at 1317.45 s), but every TCA listed is a minimum of CSPICE within the bounds, inside the
-        // window, in order, none twice, and Analyze returns the closest one listed, or a window end without one
+        // opt-in): a minimum that no minimum of the Hermite seeds may be lost (on CWM's window, AnalyzeAll lists nothing and
+        // Analyze returns the window end, 504.658 m, for the minimum of 504.643 m; on CW600's [1200, 1800] s, AnalyzeAll
+        // lists only the minimum at t0 + 1526.28 s, 509.692 m, losing the farther one at 1317.45 s, 509.741 m, and Analyze
+        // returns 1526.28 s either way), but every TCA listed is a minimum of CSPICE within the bounds, inside the window, in
+        // order, none twice, and Analyze returns the closest one listed, or without one the end where the distance grows
+        // into the window
         Assert.False(new ConjunctionAnalysisOptions().ReadRangeRateOverWindow);
         AssertSlowPassListsOnlyMinima(Pass(fixture), Pass(fixture).Seconds(start, end), Options, log: true);
+    }
+
+    [Theory]
+    [InlineData("CW600", 1200.0, 1800.0)]
+    [InlineData("CW600", 0.0, 10800.0)]
+    [InlineData("CWM", 6969.70, 7089.70)]
+    [InlineData("CWM", 0.0, 10800.0)]
+    public void Dense_ByDefault_TheRangeRateIsNotReadOverTheWindow(string fixture, double start, double end)
+    {
+        // Decision 54 of #457, through the public Analyze and AnalyzeAll: by default the dense search reads the range rate
+        // the seeds need only, so MaximumEventSearchStep changes neither its reads nor its results, and at a spacing of 1 s
+        // it reads fewer states than the reads over the window alone need (one per second of the window); with
+        // ReadRangeRateOverWindow it reads at least those (the review of decision 54: a search that always read over the
+        // window passed every other test)
+        var crossing = Pass(fixture);
+        var window = crossing.Seconds(start, end);
+        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
+        double length = (window.EndDate - window.StartDate).TotalSeconds;
+
+        (long Reads, string Result) All(ConjunctionAnalysisOptions options)
+        {
+            ConjunctionAssessment.DenseRangeRateReads = 0;
+            var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window,
+                options);
+            return (ConjunctionAssessment.DenseRangeRateReads, string.Join("; ",
+                all.Select(e => $"{e.EncounterState.Epoch.TimeSpanFromJ2000().Ticks} {e.EncounterState.MissDistanceMeters:R}")));
+        }
+
+        (long Reads, string Result) One(ConjunctionAnalysisOptions options)
+        {
+            ConjunctionAssessment.DenseRangeRateReads = 0;
+            var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2,
+                window, options);
+            return (ConjunctionAssessment.DenseRangeRateReads,
+                $"{encounter.EncounterState.Epoch.TimeSpanFromJ2000().Ticks} {encounter.EncounterState.MissDistanceMeters:R}");
+        }
+
+        var fine = Options with { MaximumEventSearchStep = TimeSpan.FromSeconds(1.0) };
+        foreach (var search in new Func<ConjunctionAnalysisOptions, (long Reads, string Result)>[] { All, One })
+        {
+            var byDefault = search(Options);
+            var byDefaultFine = search(fine);
+            var withTheReads = search(fine with { ReadRangeRateOverWindow = true });
+            _output.WriteLine($"reads by default {byDefault.Reads} (at 1 s {byDefaultFine.Reads}), with the option at 1 s " +
+                              $"{withTheReads.Reads}, window {length:F2} s");
+            Assert.Equal(byDefault, byDefaultFine);
+            Assert.True(byDefaultFine.Reads < length, $"{byDefaultFine.Reads} reads by default at 1 s");
+            Assert.True(withTheReads.Reads >= length, $"{withTheReads.Reads} reads with the option at 1 s");
+        }
     }
 
     [Theory]
@@ -1170,8 +1221,8 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     {
         // The windows of the sweep above, on the passes of #628, with the default options (decision 54 of #457): a minimum
         // that no minimum of the Hermite seeds may be missing, but every TCA listed is a minimum of CSPICE within the bounds
-        // of the pass, inside the window, in order, none twice, and Analyze returns the closest one listed, or a window end
-        // without one (the contract that holds by default)
+        // of the pass, inside the window, in order, none twice, and Analyze returns the closest one listed, or without one
+        // the end where the distance grows into the window (the contract that holds by default)
         var crossing = Pass(fixture);
         var (minima, windows) = SweepWindows(crossing, Options);
         _worstSlowTcaError = 0.0;
@@ -1275,7 +1326,8 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // The contract of the dense search by default (decision 54 of #457): AnalyzeAll lists only local minima of CSPICE's
     // gfdist_c, each within the bounds of the slow passes (or, within the TCA bound of a window end, one CSPICE places just
     // outside the window, or none, the states and their SPK placing the zero on either side of that end), strictly inside
-    // the window, in order, none twice; Analyze returns the closest one listed, or without one a window end
+    // the window, in order, none twice; Analyze returns the closest one listed, or without one the window end where the
+    // distance grows into the window (AssertTheEndWhereTheDistanceGrows)
     private void AssertSlowPassListsOnlyMinima(CrossingEncounterCase crossing, Window window,
         ConjunctionAnalysisOptions options, bool log)
     {
@@ -1327,10 +1379,16 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
                 Assert.Equal(all.MinBy(e => e.EncounterState.MissDistanceMeters).EncounterState.Epoch,
                     encounter.EncounterState.Epoch);
             }
-            else
+            else if (locmin.Length > 0 && locmin.All(m => NearAnEnd(m.Epoch)))
             {
+                // Only minima within the band of an end, none listed: an end, as AssertSlowPassLists
                 Assert.True(encounter.EncounterState.Epoch == window.StartDate ||
                             encounter.EncounterState.Epoch == window.EndDate);
+            }
+            else
+            {
+                // None listed, a minimum inside lost by default or none: the end where the distance grows into the window
+                AssertTheEndWhereTheDistanceGrows(crossing, window, encounter, tcaBound, missBound);
             }
         }
         catch (Xunit.Sdk.XunitException e) when (!log)
@@ -1439,6 +1497,15 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
             return;
         }
 
+        AssertTheEndWhereTheDistanceGrows(crossing, window, encounter, tcaBound, missBound);
+    }
+
+    // Analyze without a listed minimum: the window end where the distance grows into the window by CSPICE's range rate, the
+    // closer one when both do (either one when their distances lie within the miss bound of each other), or an end within
+    // the TCA bound of a zero of CSPICE's range rate
+    private static void AssertTheEndWhereTheDistanceGrows(CrossingEncounterCase crossing, Window window,
+        EncounterCase encounter, double tcaBound, double missBound)
+    {
         // A zero of CSPICE's range rate, from negative to positive, within the TCA bound of a window end (inside the window
         // or outside it, too near an end for gfdist_c): the states may place it anywhere within that bound, so that the
         // whole window recedes (the start the closest point) or closes (the end) on the states. A window narrower than the
