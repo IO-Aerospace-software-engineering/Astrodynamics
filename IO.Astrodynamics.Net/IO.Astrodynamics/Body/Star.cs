@@ -202,7 +202,7 @@ public class Star : CelestialBody
     /// </summary>
     /// <remarks>
     /// A catalog position at an epoch is the direction of the light that reaches the barycenter then, as SOFA's
-    /// <c>iauPmsafe</c> reads a catalog (to be verified by S. Guillet), so no light time is applied, whatever the
+    /// <c>iauPmsafe</c> reads a catalog (confirmed by S. Guillet, 2026-11-11), so no light time is applied, whatever the
     /// correction: <see cref="Aberration.LT"/>, <see cref="Aberration.CN"/>, <see cref="Aberration.XLT"/> and
     /// <see cref="Aberration.XCN"/> read as <see cref="Aberration.None"/>, their "+S" forms as the stellar aberration
     /// alone (<c>stelab</c>, <c>stlabx</c> for transmission), as the field-of-view search (#517) and the occultation search

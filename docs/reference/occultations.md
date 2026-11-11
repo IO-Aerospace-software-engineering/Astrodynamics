@@ -61,7 +61,7 @@ seconds. `gfoclt` asks the step to be shorter than every event and every gap.
 corrected epoch. The stellar aberration of the `+S` corrections is ignored, as `gfoclt` does. A `Star` is a direction,
 read at the epoch whatever the correction, as the [field-of-view search](spacecraft.md) reads it: its catalog position
 moved by its proper motion to the epoch is the direction of the light that reaches the barycenter then (as SOFA's
-`iauPmsafe` reads a catalog, to be verified by S. Guillet), so no light time is applied to it (#533). Before, it was read
+`iauPmsafe` reads a catalog, confirmed by S. Guillet, 2026-11-11), so no light time is applied to it (#533). Before, it was read
 at t − lt, 65 years at 20 pc: a proper motion of 0.1″/yr moved a lunar occultation by 9.6 s, and from a site the Earth was
 read there too, before the start of de440s beyond about 54 pc, which threw once the reads of #454 threw.
 

@@ -1,7 +1,7 @@
 """The lunar occultation of a star seen from DSS-13, the reference of #533: a star is a direction, read at the epoch.
 
 The convention: a catalog position at an epoch is the direction of the light that reaches the solar system barycenter
-then (as SOFA's iauPmsafe reads a catalog: only the change of the light time is corrected, to be verified by S. Guillet),
+then (as SOFA's iauPmsafe reads a catalog: only the change of the light time is corrected, confirmed by S. Guillet, 2026-11-11),
 so the star seen at t is its catalog position moved by its proper motion to t, minus the observer's position from the
 barycenter at t: no light time on the star, whatever the correction. The field-of-view search reads a star the same way
 since #517, as CSPICE's gfrfov reads a ray.
