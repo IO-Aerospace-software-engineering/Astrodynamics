@@ -493,7 +493,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
     chain, valid links and shared tails are kept; a cycle through a subclass makes `SetStandbyManeuver` throw, and
     `Spacecraft.Propagate` (three overloads, RK7(8) and Velocity-Verlet, a leading attitude, an impulse, an attitude after
     an impulse) throw with the previous states kept, the builder throw at `Build` or, for a cycle made after it, at
-    `Propagate`, the batch report the error; a chain of 200 000 attitudes resets without overflow.
+    `Propagate`, the batch report the error; a chain of 200 000 attitudes resets without overflow. With the maneuver
+    code of 3eb1edc0 the test host crashes ("Stack overflow").
 - **A CSPICE window search with `NotEqual`, `GreaterOrEqual` or `LowerOrEqual` ended the process** ([#482](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/482)).
   The native layer parses the relation before it calls `gfdist`, `gfposc` or `gfilum`, and threw a C++ exception that
   nothing caught for `!`, `>=` and `<=` (exit code 134, measured on every CSPICE path: `CelestialItem` and `Site`
@@ -512,7 +513,27 @@ A major version, because it breaks the API: members deprecated for removal in 11
     search of a kernel spacecraft (LRO from the Moon) and of a kernel site (DSS-13 from LRO), with the three operators;
     the distance search of a kernel spacecraft both ways and the illumination search of a kernel site against their own
     `>`, `<` and `=` searches (their thresholds carry #466's factor and the native surface point's altitude defect); the
-    command line with `>=`, `<=` and `!` (`GeometryFinderTests.DistanceConstraint_OperatorsCspiceHasNot`).
+    command line with `>=`, `<=` and `!` (`GeometryFinderTests.DistanceConstraint_OperatorsCspiceHasNot`). With the
+    `SpiceAPI` of 3eb1edc0 the test host crashes ("Invalid relational operator : <=").
+- **`new CelestialBody(-82)`, and orientations in several frames written to a CK, ended the process** ([#560](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/560), the comment on [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454) of 2026-11-02).
+  The native body information reads the centre of motion of any identifier SPICE names, and threw a C++ exception that
+  nothing caught for one that is not a celestial body, a spacecraft such as CASSINI (-82, a name built into SPICE) or an
+  instrument; the native CK writer threw one for records in more than one frame. Both ended the process (exit code 134)
+  with no exception to catch. `SpiceAPI.GetCelestialBodyInfo` now throws `ArgumentException` for an identifier that is
+  not a celestial body (a barycenter 0 to 9, the Sun 10, a planet, a moon or a Lagrange point 101 to 999, or above 1000:
+  the classes of the native layer), named or not, before the native call; so do `new CelestialBody(id)`, the command
+  `celestial-body-info`, the observer of `SpiceAPI.ReadEphemeris` by identifiers (built as a celestial body, a spacecraft
+  observer ended the process there too) and the ellipsoid of `SpiceAPI.FindWindowsOnOccultationConstraint` whose frame is
+  read from the body. An identifier without a name, which returned an empty record (and a celestial item then threw
+  `InvalidOperationException`), throws the same `ArgumentException` when it is not a celestial body.
+  `SpiceAPI.WriteOrientation` throws `ArgumentException` when a record is not in the frame of the first, and writes
+  nothing. `Spacecraft.WriteOrientation` writes one frame, J2000, and is unchanged.
+  - **Test:** `NativeAbortGuardTests` (19 cases): -82, -999, -1, 11, 50, 100 and 1000 throw from `GetCelestialBodyInfo`
+    and `new CelestialBody`, the barycenters, the Sun, the Moon, the Earth and Mars are read; `ReadEphemeris` from -82,
+    an occultation with -82 as an ellipsoid front or target, and ten records with one in ECLIPJ2000 (first, middle,
+    last) throw; `BodyInformationsTests.SpacecraftIdentifier_IsAnArgumentError` on the command. With the `SpiceAPI` of
+    3eb1edc0 the test host crashes on the first of them ("Invalid Naif Id : -82", "different frames : J2000 -
+    ECLIPJ2000").
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a

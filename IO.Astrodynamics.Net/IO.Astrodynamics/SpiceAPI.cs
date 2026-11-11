@@ -609,10 +609,17 @@ public class SpiceAPI
     /// <param name="targetFrame">The body-fixed frame of the target's ellipsoid (<c>bframe</c>), or null for the frame
     /// the kernels associate with the body.</param>
     /// <returns></returns>
+    /// <exception cref="ArgumentException">A body modeled as an ellipsoid without a frame given is not a celestial body
+    /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
+    /// process to read for a named spacecraft (#560).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
     {
+        // The frame of an ellipsoid the kernels associate with a body is read from the body's information, which the native
+        // layer ends the process to read for a named spacecraft or instrument (#560): such an ellipsoid is rejected first
+        if (frontShape == ShapeType.Ellipsoid && frontFrame == null) ThrowIfNotCelestialBody(frontBodyId, nameof(frontBodyId));
+        if (targetShape == ShapeType.Ellipsoid && targetFrame == null) ThrowIfNotCelestialBody(targetId, nameof(targetId));
         lock (lockObject)
         {
             string frontFrameName = frontShape == ShapeType.Ellipsoid
@@ -1010,6 +1017,8 @@ public class SpiceAPI
     /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
     /// convention, the conjugate of the record's rotation, in J2000.
     /// </remarks>
+    /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
+    /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>
     public bool WriteOrientation(FileInfo filePath, int naifId, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
@@ -1019,7 +1028,13 @@ public class SpiceAPI
             var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
             if (!enumerable.Any())
                 throw new ArgumentException("Value cannot be an empty collection.", nameof(stateOrientations));
-            bool res = WriteOrientationProxy(filePath.FullName, naifId, stateOrientations.Select(x => x.Convert()).ToArray(), (uint)enumerable.Length);
+            string frame = enumerable[0].ReferenceFrame.Name;
+            var other = enumerable.FirstOrDefault(x => !string.Equals(x.ReferenceFrame.Name, frame, StringComparison.Ordinal));
+            if (other != null)
+                throw new ArgumentException(
+                    $"Every orientation must be in the frame of the first one, {frame}: the one at {other.Epoch} is in {other.ReferenceFrame.Name}.",
+                    nameof(stateOrientations));
+            bool res = WriteOrientationProxy(filePath.FullName, naifId, enumerable.Select(x => x.Convert()).ToArray(), (uint)enumerable.Length);
             if (res == false)
             {
                 throw new InvalidOperationException(
@@ -1031,12 +1046,35 @@ public class SpiceAPI
     }
 
     /// <summary>
+    /// Whether <paramref name="naifId"/> is an identifier the native layer can read as a celestial body: a barycenter (0 to
+    /// 9), the Sun (10), a planet, a moon or a Lagrange point (101 to 999), or above 1000 (an asteroid, a comet, a star of
+    /// the library). For any other identifier with a name (a spacecraft such as CASSINI, -82, an instrument), the native
+    /// layer's search of the centre of motion throws a C++ exception across P/Invoke, which ends the process (#560).
+    /// </summary>
+    internal static bool IsCelestialBodyId(int naifId) => naifId is >= 0 and <= 10 or > 100 and < 1000 or > 1000;
+
+    private static void ThrowIfNotCelestialBody(int naifId, string paramName)
+    {
+        if (!IsCelestialBodyId(naifId))
+        {
+            throw new ArgumentException(
+                $"The NAIF identifier {naifId} is not a celestial body: a barycenter (0 to 9), the Sun (10), a planet, a moon or a " +
+                "Lagrange point (101 to 999), or an identifier above 1000. A spacecraft or an instrument (a negative identifier) is not one.",
+                paramName);
+        }
+    }
+
+    /// <summary>
     ///     Get celestial celestialItem information like radius, GM, name, associated frame, ...
     /// </summary>
     /// <param name="naifId"></param>
     /// <returns></returns>
+    /// <exception cref="ArgumentException"><paramref name="naifId"/> is not the identifier of a celestial body
+    /// (<see cref="IsCelestialBodyId"/>): a spacecraft, an instrument or a site of a negative identifier, 11 to 100, or 1000.
+    /// The native layer reads the centre of motion of any named identifier and ended the process for one of them (#560).</exception>
     public CelestialBody GetCelestialBodyInfo(int naifId)
     {
+        ThrowIfNotCelestialBody(naifId, nameof(naifId));
         lock (lockObject)
         {
             return GetCelestialBodyInfoProxy(naifId);

@@ -22,4 +22,18 @@ public class BodyInformationsTests
                 , res);
         }
     }
+
+    /// <summary>
+    /// CASSINI's identifier, a name built into SPICE, ended the process in the native layer (#560, exit code 134); it is
+    /// now an argument error, as an identifier without a name was.
+    /// </summary>
+    [Fact]
+    public void SpacecraftIdentifier_IsAnArgumentError()
+    {
+        using (Configuration.Lock())
+        {
+            var command = new BodyInformationCommand();
+            Assert.Throws<ArgumentException>(() => { _ = command.GetInformations("Data", -82); });
+        }
+    }
 }
