@@ -16,8 +16,18 @@ public sealed record ConjunctionAnalysisOptions
     public TimeSpan SampleStep { get; init; } = TimeSpan.FromMinutes(1);
 
     /// <summary>
-    /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection.
+    /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection: on the
+    /// sampled search, the largest interval between its search epochs; on the polynomial search of two propagations
+    /// (the <see cref="PropagationSolution"/> overloads of <c>Analyze</c> and <c>AnalyzeAll</c>), the largest spacing of
+    /// the reads of the range rate over the window, between and at the candidates of the polynomial search (#628).
     /// </summary>
+    /// <remarks>
+    /// On two propagations a minimum of the distance is listed from these reads when the range rate changes from negative
+    /// to positive between two of them; a change of sign over an interval narrower than this spacing, which no search
+    /// from a minimum of the polynomial search reaches, is not guaranteed to be found; a smaller spacing resolves a
+    /// narrower one. Each read costs a state of each propagation (an RK7(8) step inside a step), so a larger spacing
+    /// costs less: the measured costs are in <c>docs/reference/conjunction-assessment.md</c>.
+    /// </remarks>
     public TimeSpan MaximumEventSearchStep { get; init; } = TimeSpan.FromSeconds(60);
 
     /// <summary>

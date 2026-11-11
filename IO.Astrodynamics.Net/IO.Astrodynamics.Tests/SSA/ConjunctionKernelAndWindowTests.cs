@@ -253,6 +253,12 @@ public abstract class CwPassFoldEncounterCase : CwPassEncounterCase
     {
     }
 
+    protected CwPassFoldEncounterCase(int id1, int id2, string name, Func<RK78Integrator> integrator1,
+        Func<RK78Integrator> integrator2)
+        : base(id1, id2, name, 1502.358, integrator1, integrator2)
+    {
+    }
+
     public override double GfStepSeconds => 0.2;
 }
 
@@ -329,6 +335,19 @@ public sealed class CwPass1500Step600Case : CwPassEncounterCase
 }
 
 /// <summary>
+/// The pass with the fold of the range rate, <c>y0</c> = 1502.358 m, the first spacecraft at the defaults of
+/// <c>new RK78Integrator()</c> and the second at 60 s steps (round 1 of the review of #628): the range rate is positive
+/// over [7065.14, 7067.49] s only, and no minimum of the Hermite lies before it, so that the reads 60 s apart step over it;
+/// reads 1 s apart do not.
+/// </summary>
+public sealed class CwPassFoldMixedStepCase : CwPassFoldEncounterCase
+{
+    public CwPassFoldMixedStepCase() : base(-620161, -620162, "CWFM", () => new RK78Integrator(), SlowPassEncounterCase.Steps60)
+    {
+    }
+}
+
+/// <summary>
 /// The conjunction analysis of kernel-backed spacecraft (#620), the window ends of the dense search (#621), and the reads
 /// outside the coverage of the kernels (#454) or of the propagated states (#527). Expected values from CSPICE on the SPKs
 /// (<c>spkezr_c</c>, <c>gfdist_c</c>) and from the case's geometry.
@@ -339,7 +358,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     IClassFixture<CwPassDefaultStepCase>, IClassFixture<CwPass60StepCase>, IClassFixture<CwPass1500DefaultStepCase>,
     IClassFixture<CwPass1500Step60Case>, IClassFixture<CwPassFoldDefaultStepCase>, IClassFixture<CwPassFoldStep60Case>,
     IClassFixture<CwPassMixedStep1500Case>, IClassFixture<CwPassMixedStep1490Case>, IClassFixture<CwPassMixedStep1495Case>,
-    IClassFixture<CwPassStep600Case>, IClassFixture<CwPass1500Step600Case>
+    IClassFixture<CwPassStep600Case>, IClassFixture<CwPass1500Step600Case>, IClassFixture<CwPassFoldMixedStepCase>
 {
     private static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = null };
 
@@ -359,6 +378,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     private readonly CwPassMixedStep1495Case _cwMixed1495Case;
     private readonly CwPassStep600Case _cw600Case;
     private readonly CwPass1500Step600Case _cw1500Step600Case;
+    private readonly CwPassFoldMixedStepCase _cwFoldMixedCase;
     private readonly ITestOutputHelper _output;
 
     public ConjunctionKernelAndWindowTests(CrossingEncounterCase crossingCase,
@@ -368,8 +388,9 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         CwPass1500Step60Case cw1500Step60Case, CwPassFoldDefaultStepCase cwFoldDefaultCase,
         CwPassFoldStep60Case cwFoldStep60Case, CwPassMixedStep1500Case cwMixed1500Case,
         CwPassMixedStep1490Case cwMixed1490Case, CwPassMixedStep1495Case cwMixed1495Case, CwPassStep600Case cw600Case,
-        CwPass1500Step600Case cw1500Step600Case, ITestOutputHelper output)
+        CwPass1500Step600Case cw1500Step600Case, CwPassFoldMixedStepCase cwFoldMixedCase, ITestOutputHelper output)
     {
+        _cwFoldMixedCase = cwFoldMixedCase;
         _cwMixed1500Case = cwMixed1500Case;
         _cwMixed1490Case = cwMixed1490Case;
         _cwMixed1495Case = cwMixed1495Case;
@@ -851,6 +872,8 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     //   CWN (y0 = 1495 m, 60 s and default)   6.519e-5 s  1.960e-6 m    6.507e-5 s  1.960e-6 m    1.4e-4 s  4.0e-6 m
     //   CW600 (y0 = 1490 m, fixed 600 s)      3.107e-5 s  1.277e-5 m    3.105e-5 s  1.277e-5 m    6.3e-5 s  2.6e-5 m
     //   CWE600 (y0 = 1500 m, fixed 600 s)     1.016e-4 s  2.090e-5 m    1.016e-4 s  2.090e-5 m    2.1e-4 s  4.2e-5 m
+    //   CWFM (the fold, default and 60 s, read every 1 s, round 1 of the review of #628)
+    //                                         3.223e-3 s  2.279e-6 m    3.219e-3 s  2.280e-6 m    6.5e-3 s  4.6e-6 m
     // twice the worst of the two, rounded up to two digits: the states of mixed or 600 s steps against the degree-7
     // interpolation of their 60 s outputs in the SPK
     private static (double Tca, double Miss) SlowPassBounds(CrossingEncounterCase crossing) => crossing switch
@@ -869,6 +892,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         CwPassMixedStep1495Case => (1.4e-4, 4.0e-6),
         CwPassStep600Case => (6.3e-5, 2.6e-5),
         CwPass1500Step600Case => (2.1e-4, 4.2e-5),
+        CwPassFoldMixedStepCase => (6.5e-3, 4.6e-6),
         _ => throw new ArgumentOutOfRangeException(nameof(crossing))
     };
 
@@ -887,6 +911,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         "CWN" => _cwMixed1495Case,
         "CW600" => _cw600Case,
         "CWE600" => _cw1500Step600Case,
+        "CWFM" => _cwFoldMixedCase,
         _ => _cwFoldStep60Case
     };
 
@@ -1032,10 +1057,26 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         // -0.044 m²/s at the candidates of the window, the only seed its end; CWM90's minimum 1 s after the start; CWN's at
         // t0 + 1497.86 s, closing at t0 + 1440 s and receding at 1500 s), or one 600 s step holds two minima (form B:
         // CW600's at t0 + 1317.45 and 1526.28 s, a maximum between them, the Hermite one minimum at 1502.10 s; CWE600's at
-        // t0 + 7029.94 s). Before, AnalyzeAll did not list them, and Analyze returned a window end (504.6578 m on CWM's
-        // window) or another minimum (CWN, CW600); the windows of 3000 s every 97 s of the sweeps lost them in 163 to 164
-        // windows at 600 s steps
+        // t0 + 7029.94 s). Before, AnalyzeAll did not list them on the traced windows and on the whole windows of CW600
+        // and CWE600, and Analyze returned a window end (504.6578 m on CWM's window) or another minimum (CWN, CW600); the
+        // windows of 3000 s every 97 s of the sweeps lost them in 163 to 164 windows at 600 s steps. The whole windows of
+        // CWM, CWM90 and CWN are regression rows: main b237eec2 already lists every minimum there, the seeds of the whole
+        // window reaching them (round 1 of the review of #628)
         AssertSlowPassMatchesCspice(Pass(fixture), Pass(fixture).Seconds(start, end), count);
+    }
+
+    [Theory]
+    [InlineData(7000.0, 7100.0, 1)]
+    [InlineData(6900.0, 7300.0, 2)]
+    [InlineData(0.0, 10800.0, 3)]
+    public void Dense_TheReadsOfTheRangeRate_AreMaximumEventSearchStepApart(double start, double end, int count)
+    {
+        // The fold of CWFM, positive over [7065.14, 7067.49] s with no minimum of the Hermite before it: at a
+        // MaximumEventSearchStep of 1 s the reads over the window land in it, and AnalyzeAll lists every minimum of CSPICE
+        // (the round-1 review of #628: the option reaches the dense search; the 60 s reads step over this fold, the
+        // documented limit, which this test does not assert)
+        var options = Options with { MaximumEventSearchStep = TimeSpan.FromSeconds(1.0) };
+        AssertSlowPassMatchesCspice(_cwFoldMixedCase, _cwFoldMixedCase.Seconds(start, end), count, options: options);
     }
 
     [Theory]
@@ -1158,14 +1199,15 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // Analyze returns the closest listed minimum, or without one the window end where the distance grows into the window by
     // CSPICE's range rate (the closer one when both do)
     private void AssertSlowPassMatchesCspice(CrossingEncounterCase crossing, Window window, int? expectedCount,
-        bool log = true)
+        bool log = true, ConjunctionAnalysisOptions options = null)
     {
+        options ??= Options;
         var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
         var (tcaBound, missBound) = SlowPassBounds(crossing);
         var locmin = CspiceLocalMinima(window, crossing);
 
-        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
-        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
+        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
+        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
         string listed = $"[{(window.StartDate - crossing.T0).TotalSeconds:F7}, {(window.EndDate - crossing.T0).TotalSeconds:F7}] s: " +
                           $"LOCMIN [{string.Join("; ", locmin.Select(m => $"{(m.Epoch - crossing.T0).TotalSeconds:F7} s {m.Distance:R} m"))}], " +
                           $"AnalyzeAll [{string.Join("; ", all.Select(e => $"{(e.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s {e.EncounterState.MissDistanceMeters:R} m"))}], " +

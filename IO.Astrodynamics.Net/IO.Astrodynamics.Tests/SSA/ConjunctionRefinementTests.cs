@@ -684,83 +684,119 @@ public class ConjunctionRefinementTests
         Assert.Equal(expected, reads.ToArray());
     }
 
-    [Fact]
-    public void TheSearchFromTheSeed_ReachesTheSpacingOfTheReads()
+    [Theory]
+    [InlineData(420.0, 5.0)]
+    [InlineData(500.0, 1.5)]
+    [InlineData(700.0, 20.0)]
+    public void TheSearchFromTheSeed_ReachesItsNeighbouringCandidate_WhateverTheSpacingOfTheReads(double foldSeconds,
+        double widthSeconds)
     {
-        // As TheSearchFromTheSeed_ReadsAtMostOneSecondApart_ElevenPlusOnePerSecond, with the reads of the dense path: the
-        // search from the seed (200 s) stops 60 s from it, 11 + ceil(60 - 1.024) = 70 reads, the last at 260 s, and the
-        // minimum at 450 s is still found. At 600 s steps the reads 1 s apart up to the neighbouring candidate were most of
-        // the reads of the search
-        var candidates = Candidates(11);
-        var reads = new System.Collections.Generic.SortedSet<double>();
-        var rangeRate = InsideOnly(candidates, epoch =>
-        {
-            reads.Add((epoch - Epoch).TotalSeconds);
-            return Steps(450.0)(epoch);
-        });
+        // Candidates at 0, 300, 790 and 900 s, the seeds at 300 and 790 s, both closing; positive over a fold of 1.5 to 20 s
+        // more than 60 s after the first seed, then closing up to the minimum at 800 s. The reads over the window, 54.44 s
+        // apart between 300 and 790 s, all close around the fold; the reads 1 s apart from the seed at 300 s reach it, up to
+        // the neighbouring candidate (round 1 of the review of #628: the search from a seed stopped 60 s from it, and the
+        // minimum of the fold was lost where main b237eec2 found it, at fixed 600 s steps a positive interval of 2.3 to 27 s
+        // 61 to 90 s past the seed). The reference: the zeros of the range rate from negative to positive
+        var candidates = new[] { 0.0, 300.0, 790.0, 900.0 }.Select(t => Epoch.AddSeconds(t)).ToArray();
+        var rangeRate = InsideOnly(candidates, Steps(foldSeconds, foldSeconds + widthSeconds, 800.0));
 
-        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance,
-            ReadSpacing);
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1], candidates[2] }, candidates, rangeRate,
+            Tolerance, ReadSpacing);
 
-        AssertWithinATick(450.0, Assert.Single(tca));
-        var search = reads.Where(t => t > 200.0 && t < 300.0 && System.Math.Abs(t - 250.0) > 1.0e-9).ToArray();
-        Assert.Equal(70, search.Length);
-        Assert.Equal(260.0, search[^1], 9);
-        Assert.True(search.Zip(search.Skip(1), (a, b) => b - a).Max() <= ConjunctionAssessment.SeedSearchMaximumSpacingSeconds + 1.0e-9);
+        Assert.Equal(2, tca.Count);
+        AssertWithinATick(foldSeconds, tca[0]);
+        AssertWithinATick(800.0, tca[1]);
     }
 
     [Fact]
-    public void TheSearchFromTheSeed_Backward_ReachesTheSpacingOfTheReads()
+    public void TheSearchFromTheSeed_Backward_ReachesItsNeighbouringCandidate_WhateverTheSpacingOfTheReads()
     {
-        // Receding at the seed (500 s) and at every candidate after 150 s: the search reads backward to 440 s, 70 reads,
-        // then the bracket of the candidates is followed to the minimum at 150 s
+        // Receding at the seed (500 s) back to 432 s, closing over [430, 432) s, receding from 150 s to 430 s: the search
+        // reads backward 1 s apart to the neighbouring candidate (400 s) and finds the minimum at 432 s, 68 s from the seed,
+        // which the reads at 400 and 450 s, both receding, step over; the minimum at 150 s is found by the candidates. The
+        // reference: the zeros of the range rate from negative to positive
         var candidates = Candidates(11);
         var reads = new System.Collections.Generic.SortedSet<double>();
         var rangeRate = InsideOnly(candidates, epoch =>
         {
             reads.Add((epoch - Epoch).TotalSeconds);
-            return Steps(150.0)(epoch);
+            return Steps(150.0, 430.0, 432.0)(epoch);
         });
 
         var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[5] }, candidates, rangeRate, Tolerance,
             ReadSpacing);
 
-        AssertWithinATick(150.0, Assert.Single(tca));
-        var search = reads.Where(t => t >= 440.0 - 1.0e-9 && t < 500.0 && System.Math.Abs(t - 450.0) > 1.0e-9).ToArray();
-        Assert.Equal(70, search.Length);
-        Assert.Equal(440.0, search[0], 9);
+        Assert.Equal(2, tca.Count);
+        AssertWithinATick(150.0, tca[0]);
+        AssertWithinATick(432.0, tca[1]);
+        Assert.Contains(reads, t => t < 440.0 && t > 431.0);
     }
 
-    [Fact]
-    public void AZeroOfTheReadsAtTheWindowEnd_ClosingBefore_IsTheEndItself()
+    [Theory]
+    [InlineData(1.0e-9)]
+    [InlineData(1.0e-3)]
+    public void AZeroOfTheReadsAtTheWindowEnd_ClosingBefore_IsTheEndItself(double tolerance)
     {
         // No seed, closing up to the window end, zero exactly there: the reads give the end itself, which the dense search
-        // then drops as a window end
+        // then drops as a window end. With a tolerance of a tick or more the bisection of the last pair of reads ends on
+        // the middle of its last bracket, inside the window: the end itself all the same
         var candidates = Candidates(11);
         var end = candidates[^1];
         var rangeRate = InsideOnly(candidates, epoch => epoch == end ? 0.0 : -1.0);
 
         Assert.Equal(end, Assert.Single(ConjunctionAssessment.RefineOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates,
-            rangeRate, Tolerance, ReadSpacing)));
+            rangeRate, tolerance, ReadSpacing)));
+    }
+
+    [Theory]
+    [InlineData("steps")]
+    [InlineData("cubic")]
+    public void AMinimumInTheLastPairOfReads_ZeroAtTheWindowEnd_IsBisected(string shape)
+    {
+        // Closing at the read before the end (950 s), receding over (970, 990) s, closing again and exactly zero at the
+        // window end (1000 s): the minimum at 970 s lies in the last pair of reads, whose bisection finds it (round 1 of the
+        // review of #628: the end was returned without bisecting the pair). The reference: the zero of the range rate from
+        // negative to positive inside the window, 970 s
+        var candidates = Candidates(11);
+        var end = candidates[^1];
+        Func<TimeSystem.Time, double> shapeRate = shape == "steps"
+            ? epoch => epoch == end ? 0.0 : Steps(970.0, 990.0)(epoch)
+            : epoch =>
+            {
+                double s = (epoch - Epoch).TotalSeconds;
+                return (s - 970.0) * (s - 990.0) * (s - 1000.0);
+            };
+        var rangeRate = InsideOnly(candidates, shapeRate);
+
+        var tca = ConjunctionAssessment.RefineOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates, rangeRate, Tolerance,
+            ReadSpacing);
+
+        AssertWithinATick(970.0, Assert.Single(tca));
     }
 
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void ANarrowFoldBetweenTwoReads_IsFoundFromASeedOnly(bool seeded)
+    public void ANarrowFoldBetweenTwoReads_IsFoundFromASeed(bool seeded)
     {
         // Positive over [230.2, 231.2] s only, then closing up to the minimum at 450 s: the reads at 200 s and 250 s both
         // close. From the seed at 200 s, whose reads are 1 s apart, the minimum at 230.2 s is found; without a seed before
-        // it, it is not guaranteed to be found (the documented limit: an interval narrower than the spacing of the reads)
+        // it, it is not guaranteed to be found (the documented limit: an interval narrower than the spacing of the reads),
+        // and whatever is listed is a zero of the reference. The reference: the zeros of the range rate from negative to
+        // positive, 230.2 s and 450 s
         var candidates = Candidates(11);
         var rangeRate = InsideOnly(candidates, Steps(230.2, 231.2, 450.0));
         var seeds = seeded ? new[] { candidates[2] } : Array.Empty<TimeSystem.Time>();
 
         var tca = ConjunctionAssessment.RefineOnRangeRate(seeds, candidates, rangeRate, Tolerance, ReadSpacing);
 
-        Assert.Equal(seeded ? 2 : 1, tca.Count);
+        var reference = new[] { 230.2, 450.0 };
+        Assert.All(tca, epoch => Assert.Contains(reference,
+            zero => System.Math.Abs((epoch - Epoch.AddSeconds(zero)).TotalSeconds) <= 1.0e-7));
+        Assert.Equal(tca.Count, tca.Distinct().Count());
         if (seeded)
         {
+            Assert.Equal(2, tca.Count);
             AssertWithinATick(230.2, tca[0]);
         }
 
