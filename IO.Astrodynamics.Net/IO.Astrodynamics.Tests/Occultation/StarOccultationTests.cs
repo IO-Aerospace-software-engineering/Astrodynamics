@@ -45,22 +45,22 @@ public class StarOccultationTests
     private static readonly Window SearchWindow = new(S.AddSeconds(-3.0 * 3600.0), S.AddSeconds(3.0 * 3600.0));
     private const double Arcsec = System.Math.PI / 180.0 / 3600.0;
 
-    // The worst edge over the 20 cases on Linux x64 (Release, 2026-11-11) is 2.38 µs (XLT entry, 20 tick spacings of a
-    // TDB epoch near 8.3e8 s), 1.43 µs without XLT and XCN (20 pc, CN), within the search's 1 µs tolerance and the
-    // light-time iteration of the Moon (#533 measured 1.4 µs with the same reference); the bound is twice it, rounded up
-    private const double EdgeLimit = 5.0e-6;
+    // The worst edge over the 20 cases is 2.38 µs on Linux x64, Windows x64 and macOS arm64 alike (CI run 43086661602,
+    // 2026-11-11; XLT entry, 20 tick spacings of a TDB epoch near 8.3e8 s), 1.43 µs without XLT and XCN (20 pc, CN),
+    // within the search's 1 µs tolerance and the light-time iteration of the Moon (#533 measured 1.4 µs with the same
+    // reference); the bound is twice it, rounded up
+    private const double EdgeLimit = 4.8e-6;
 
-    // The angle (Separation) of the direction of Star.GetEphemeris to the reference: at most 1.71e-16 rad on Linux x64
-    // (Release, 2026-11-11), against 3.0e-5 rad (6.2″) for 0.1″/yr at 20 pc before #533. The other platforms' sin and cos
-    // may differ by a few ulps: 8 ulps per component of the direction move it by 1.35e-15 rad at most (a simulation on
-    // the reference directions, 20 000 draws), so the bound is twice that, rounded up, until the three-platform CI logs
-    // give their worst
-    private const double DirectionLimit = 3.0e-15;
+    // The angle (Separation) of the direction of Star.GetEphemeris to the reference: at most 1.71e-16 rad on Linux x64 and
+    // Windows x64, 2.15e-16 rad on macOS arm64 (CI run 43086661602, 2026-11-11), against 3.0e-5 rad (6.2″) for 0.1″/yr at
+    // 20 pc before #533; the bound is twice the worst of the three, rounded up (it was 3.0e-15 rad, twice the move of 8 ulps
+    // per component, until those logs)
+    private const double DirectionLimit = 4.4e-16;
 
-    // |angle(transmission, geometric) − angle(reception, geometric)|, stlabx the mirror of stelab: 5.1e-17 rad on Linux
-    // x64 (Release, 2026-11-11); 8 ulps per component of either direction give 2.64e-15 rad at most (the same
-    // simulation), and the bound is twice that, rounded up
-    private const double MirrorLimit = 6.0e-15;
+    // |angle(transmission, geometric) − angle(reception, geometric)|, stlabx the mirror of stelab: 5.06e-17 rad on Linux
+    // x64, Windows x64 and macOS arm64 alike (CI run 43086661602, 2026-11-11); the bound is twice it, rounded up (it was
+    // 6.0e-15 rad, from 8 ulps per component, until those logs)
+    private const double MirrorLimit = 1.1e-16;
 
     private readonly ITestOutputHelper _output;
 

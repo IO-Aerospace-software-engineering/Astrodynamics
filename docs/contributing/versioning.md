@@ -555,9 +555,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
     (the Earth in 1699), with `XLT` or `XCN` an exception (the Earth in 2352); after, every edge of the 20 cases (20 and
     100 pc, 0 and 0.1″/yr, `None`, `LT`, `CN`, `XLT`, `XCN`) within 2.38 µs (1.43 µs without `XLT` and `XCN`).
     `Star.GetEphemeris` at S + 1 h: before 3.0e-5 rad (20 pc) and 1.5e-4 rad (100 pc) from the reference with `LT`,
-    `CN`, `XLT`, `LTS` and `CNS`; after within 1.7e-16 rad (atan2 of the cross and dot products), `stelab` for `+S`.
-  - **Test:** `StarOccultationTests` (30 cases), the edges within 5.0e-6 s (twice the worst, Linux only so far), the
-    directions within 3.0e-15 rad (twice the move of 8 ulps per component, until the three-platform CI logs).
+    `CN`, `XLT`, `LTS` and `CNS`; after within 2.2e-16 rad (atan2 of the cross and dot products; 1.7e-16 rad on Linux and Windows), `stelab` for `+S`.
+  - **Test:** `StarOccultationTests` (30 cases), the edges within 4.8e-6 s and the
+    directions within 4.4e-16 rad (twice the worst over Linux x64, Windows x64 and macOS arm64).
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
