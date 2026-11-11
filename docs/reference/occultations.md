@@ -58,7 +58,12 @@ the extremes of the margins. For the eclipses of a satellite, a quarter of the p
 seconds. `gfoclt` asks the step to be shorter than every event and every gap.
 
 **Aberration.** `None`, or the light time (`LT`, `CN`, `XLT`, `XCN`) as `gfoclt`: each body's position and frame at its
-corrected epoch. The stellar aberration of the `+S` corrections is ignored, as `gfoclt` does.
+corrected epoch. The stellar aberration of the `+S` corrections is ignored, as `gfoclt` does. A `Star` is a direction,
+read at the epoch whatever the correction, as the [field-of-view search](spacecraft.md) reads it: its catalog position
+moved by its proper motion to the epoch is the direction of the light that reaches the barycenter then (as SOFA's
+`iauPmsafe` reads a catalog, to be verified by S. Guillet), so no light time is applied to it (#533). Before, it was read
+at t − lt, 65 years at 20 pc: a proper motion of 0.1″/yr moved a lunar occultation by 9.6 s, and from a site the Earth was
+read there too, before the start of de440s beyond about 54 pc, which threw once the reads of #454 threw.
 
 ## Accuracy
 
@@ -70,6 +75,7 @@ Against `gfoclt` converged to 1e-9 s (`tools/occultation_reference`), on Linux x
 | The same at the default tolerance, against `gfoclt` at its default | 7.0e-7 s |
 | Eclipse 001 with the light time (`LT`, `CN`, `XLT`, `XCN`) | 1.3e-6 s |
 | Eclipse 001 of a propagated spacecraft, against GMAT R2026a's `EclipseLocator` (epochs to the millisecond) | 4.8e-4 s |
+| A star at 20 and 100 pc behind the Moon from DSS-13, with and without 0.1″/yr of proper motion, `None`, `LT`, `CN`, against the closed form of `tools/occultation_reference/star_occultation_reference.py` (2026-11-11) | 1.43e-6 s |
 
 The last row includes the difference of the Earth GM of the two trajectories (the kernel's, GMAT's 398600.4415
 km³/s²), 3.2e-4 s after 12 h; measured again with the TT time argument of the propagation

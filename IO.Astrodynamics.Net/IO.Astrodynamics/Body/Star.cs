@@ -197,8 +197,18 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Star ephemeris using reference-body approach. Stars use SSB as reference.
+    /// The star seen from <paramref name="observer"/> at <paramref name="epoch"/>: a direction, its catalog position moved
+    /// by its proper motion to the epoch minus the observer's position from the solar system barycenter at the epoch.
     /// </summary>
+    /// <remarks>
+    /// A catalog position at an epoch is the direction of the light that reaches the barycenter then, as SOFA's
+    /// <c>iauPmsafe</c> reads a catalog (to be verified by S. Guillet), so no light time is applied, whatever the
+    /// correction: <see cref="Aberration.LT"/>, <see cref="Aberration.CN"/>, <see cref="Aberration.XLT"/> and
+    /// <see cref="Aberration.XCN"/> read as <see cref="Aberration.None"/>, their "+S" forms as the stellar aberration
+    /// alone (<c>stelab</c>, <c>stlabx</c> for transmission), as the field-of-view search (#517) and the occultation search
+    /// read a star (#533). Before 11.0.0 the star was read at t − lt, its light time, 65 years at 20 pc: its proper
+    /// motion over that time moved its direction (6.2″ for 0.1″/yr at 20 pc).
+    /// </remarks>
     public override OrbitalParameters.OrbitalParameters GetEphemeris(in Time epoch, ILocalizable observer, Frame frame, Aberration aberration)
     {
         var ssb = Barycenters.SOLAR_SYSTEM_BARYCENTER;
@@ -209,8 +219,12 @@ public class Star : CelestialBody
             starSsb.Velocity - observerSsb.Velocity,
             observer, epoch, Frame.ICRF);
 
-        if (aberration != Aberration.None)
-            relative = CorrectFromAberrationCB(this, epoch, observer, aberration, relative, observerSsb, ssb);
+        if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
+        {
+            var (position, velocity) = ApplyStellarAberration(relative.Position, relative.Velocity, observerSsb.Velocity, observer, epoch, ssb,
+                aberration is Aberration.XLTS or Aberration.XCNS);
+            relative = new StateVector(position, velocity, observer, epoch, Frame.ICRF);
+        }
 
         return relative.ToFrame(frame);
     }
