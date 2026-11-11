@@ -69,8 +69,10 @@ var farMoonWindows = earth.FindWindowsOnDistanceConstraint(
     TimeSpan.FromHours(24));
 ```
 
-Available operators: `Greater`, `Less`, `Equal` (with tolerance), and their
-negations.
+Available operators: `Greater`, `Lower`, `Equal` (with tolerance), their
+negations `LowerOrEqual`, `GreaterOrEqual` and `NotEqual`, and the extremes
+`AbsoluteMin`, `AbsoluteMax`, `LocalMin` and `LocalMax` (see
+[Enumerations](../reference/enumerations.md#relationnaloperator)).
 
 ## Instrument field of view
 

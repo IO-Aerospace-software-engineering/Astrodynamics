@@ -1130,9 +1130,9 @@ var goldstone = new Site(13, "DSS-13", earth);
 // Create site with explicit coordinates
 var mySite = new Site(100, "MySite", earth,
     new Planetodetic(
-        longitude: -117.0 * Constants.Deg2Rad,
-        latitude: 34.0 * Constants.Deg2Rad,
-        altitude: 1000.0  // meters
+        Longitude: -117.0 * Constants.Deg2Rad,
+        Latitude: 34.0 * Constants.Deg2Rad,
+        Altitude: 1000.0  // meters
     ));
 
 // Get horizontal coordinates to Moon
@@ -1147,7 +1147,7 @@ Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
 // Find visibility windows
 var windows = mySite.FindWindowsOnDistanceConstraint(
     new Window(new Time(2024, 1, 1), new Time(2024, 1, 2)),
-    moon, RelationnalOperator.Less, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
+    moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
 ```
 
 #### LaunchSite
@@ -2093,13 +2093,16 @@ Comparison operators for geometry finding.
 
 | Value | Description |
 |-------|-------------|
-| `Greater` | Value > threshold |
-| `Less` | Value < threshold |
-| `Equal` | Value = threshold |
-| `AbsMin` | Absolute minimum |
-| `AbsMax` | Absolute maximum |
-| `LocalMin` | Local minimum |
-| `LocalMax` | Local maximum |
+| `Greater` | Value > threshold (`>`) |
+| `Lower` | Value < threshold (`<`) |
+| `Equal` | Value = threshold (`=`) |
+| `NotEqual` | Value ≠ threshold (`!`) |
+| `GreaterOrEqual` | Value ≥ threshold (`>=`) |
+| `LowerOrEqual` | Value ≤ threshold (`<=`) |
+| `AbsoluteMin` | Absolute minimum (`ABSMIN`) |
+| `AbsoluteMax` | Absolute maximum (`ABSMAX`) |
+| `LocalMin` | Local minimum (`LOCMIN`) |
+| `LocalMax` | Local maximum (`LOCMAX`) |
 
 ### OccultationType
 
@@ -2616,7 +2619,7 @@ var issTLE = new TLE(
 
 // Create spacecraft from TLE
 var clock = new Clock("ISSClock", 65536);
-var iss = new Spacecraft(-25544, "ISS", 420000.0, 1000.0, clock, issTLE);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, clock, issTLE);
 
 // Track from a ground station
 var goldstone = new Site(13, "DSS-13", earth);
@@ -2643,7 +2646,7 @@ for (var t = trackStart; t < trackEnd; t = t.AddMinutes(10))
 var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(
     new Window(trackStart, trackEnd),
     iss,
-    RelationnalOperator.Less,
+    RelationnalOperator.Lower,
     2000000,  // Within 2000 km
     Aberration.LT,
     TimeSpan.FromMinutes(1)

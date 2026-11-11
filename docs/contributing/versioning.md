@@ -1141,6 +1141,16 @@ A major version, because it breaks the API: members deprecated for removal in 11
     is given the managed TDB as its ephemeris time. See [Time Scales](../reference/time-and-windows.md#time-scales).
     `Period()` for e ≥ 1 (item 3) and the LSK formula for the ephemeris time given to CSPICE (item 4) stay open.
 
+- **The documentation named `RelationnalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
+  `Site` and TLE tracking examples of `DEVELOPER_GUIDE.md` did not compile (CS0117), and the operator tables of
+  `DEVELOPER_GUIDE.md` and [Enumerations](../reference/enumerations.md#relationnaloperator) left out `NotEqual`,
+  `GreaterOrEqual` and `LowerOrEqual`. The examples pass `Lower`; the `Site` example names the members of `Planetodetic`
+  (`Longitude:`, `Latitude:`, `Altitude:`, CS1739 before), and the TLE example gives its 420 t spacecraft a maximum
+  operating mass of 450 t (1 t threw `ArgumentOutOfRangeException`). Both compile and run: the Moon at 399 039 km from
+  the site at 2024-01-01T12:00 TDB, as SPICE `spkcpo` gives it (399 039.486 km), and 7 windows of the ISS within
+  2000 km of DSS-13 on 2024-06-03. The tables list the ten members as declared, each with its symbol, and the geometry
+  tutorial names `Lower` and the negations.
+
 **Changed**
 
 - **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its

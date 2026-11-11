@@ -22,13 +22,16 @@ Used in geometry-finder constraint searches.
 
 | Value | Description |
 |-------|-------------|
-| `Greater` | Greater than threshold |
-| `Less` | Less than threshold |
-| `Equal` | Equal to threshold |
-| `AbsMin` | Absolute minimum |
-| `AbsMax` | Absolute maximum |
-| `LocalMin` | Local minimum |
-| `LocalMax` | Local maximum |
+| `Greater` | Greater than threshold (`>`) |
+| `Lower` | Lower than threshold (`<`) |
+| `Equal` | Equal to threshold (`=`) |
+| `NotEqual` | Not equal to threshold (`!`) |
+| `GreaterOrEqual` | Greater than or equal to threshold (`>=`) |
+| `LowerOrEqual` | Lower than or equal to threshold (`<=`) |
+| `AbsoluteMin` | Absolute minimum (`ABSMIN`) |
+| `AbsoluteMax` | Absolute maximum (`ABSMAX`) |
+| `LocalMin` | Local minimum (`LOCMIN`) |
+| `LocalMax` | Local maximum (`LOCMAX`) |
 
 ## OccultationType
 
