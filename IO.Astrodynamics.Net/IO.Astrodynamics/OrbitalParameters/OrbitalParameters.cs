@@ -1027,37 +1027,93 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         return hNorm * hNorm / Observer.GM;
     }
 
+    // A radius within this relative distance of an apsis is that apsis: the apsides computed by other expressions
+    // (PerigeeVector().Magnitude(), a (1 - e), p / (1 + e)) differ from p / (1 ± e) by a few 1e-16 (#627)
+    private const double ApsisRadiusTolerance = 1e-12;
+
     /// <summary>
-    /// Computes the time to reach a given radius.
+    /// Computes the epoch at which the orbit is at a given radius, outbound from the periapsis: on an ellipse
+    /// (<see cref="IsElliptical"/>, e ≤ 1 − 1e-6) the next such epoch from <see cref="Epoch"/> (within one period); on an
+    /// open orbit its one outbound crossing, an epoch before <see cref="Epoch"/> when the orbit is already past the
+    /// radius; on a circular orbit (e = 0), at its radius at every instant, <see cref="Epoch"/> itself.
     /// </summary>
-    /// <param name="radius"></param>
-    /// <returns></returns>
+    /// <remarks>An ellipse with 1 − 1e-6 &lt; e &lt; 1, whose anomalies are taken as parabolic
+    /// (<see cref="IsParabolic"/>), gives an epoch about 8 times off the closed form, which can be before
+    /// <see cref="Epoch"/> even for a radius not yet reached: a defect of the near-parabolic anomalies, not of this
+    /// method.</remarks>
+    /// <param name="radius">The distance from the center of motion, in meters.</param>
+    /// <returns>The epoch at the radius, in the frame of <see cref="Epoch"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="radius"/> is not finite, is below the periapsis, or
+    /// is above the apoapsis of an ellipse: the orbit never reaches it (a radius within 1e-12 relative of an apsis is that
+    /// apsis); or the epoch at the radius is outside the epochs a <see cref="Time"/> holds, after the last or before the
+    /// first (#627).</exception>
     public Time TimeToRadius(double radius)
     {
-        // Extract orbital elements
-        double e = Eccentricity(); // Eccentricity
-
-        // Semi-latus rectum
+        double e = Eccentricity();
         double p = SemiLatusRectum();
+        double periapsis = p / (1.0 + e);
+        double apoapsis = e < 1.0 ? p / (1.0 - e) : double.PositiveInfinity;
+        if (!double.IsFinite(radius) || radius < periapsis * (1.0 - ApsisRadiusTolerance) ||
+            radius > apoapsis * (1.0 + ApsisRadiusTolerance))
+        {
+            throw new ArgumentOutOfRangeException(nameof(radius), radius,
+                $"The orbit never reaches a radius of {radius:R} m: it reaches the radii from its periapsis, {periapsis:R} m, to " +
+                (e < 1.0 ? $"its apoapsis, {apoapsis:R} m." : "infinity (exclusive)."));
+        }
 
-        // Compute the true anomaly at the radius
+        // A circular orbit is at its radius at every instant: (p / r - 1) / e is 0 / 0 or ±1 / 0, no true anomaly
+        if (e == 0.0)
+        {
+            return Epoch;
+        }
+
+        // The true anomaly at the radius; the clamp only absorbs the rounding at an apsis
         double cosNuRad = System.Math.Clamp((p / radius - 1) / e, -1.0, 1.0);
         double nuRad = System.Math.Acos(cosNuRad);
+        double meanAnomaly = TrueAnomalyToMeanAnomaly(nuRad, e, EccentricAnomaly(nuRad));
 
-        return EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(nuRad, e, EccentricAnomaly(nuRad)));
+        // Far out on an open orbit the mean anomaly overflows (H = +∞, then e sinh H − H = NaN), a crossing after the last
+        // epoch of Time; or the epoch passes one end of Time, the first on an open orbit far past the radius
+        if (double.IsFinite(meanAnomaly))
+        {
+            try
+            {
+                return EpochAtMeanAnomaly(meanAnomaly);
+            }
+            catch (Exception ex) when (ex is OverflowException or ArgumentOutOfRangeException)
+            {
+            }
+        }
+
+        bool beforeTheFirst = double.IsFinite(meanAnomaly) && !IsElliptical() && meanAnomaly < MeanAnomaly();
+        throw new ArgumentOutOfRangeException(nameof(radius), radius,
+            $"The orbit reaches a radius of {radius:R} m outside the epochs a Time holds, " +
+            (beforeTheFirst ? "before the first." : "after the last."));
     }
 
     /// <summary>
-    /// Computes the time to reach the sphere of influence of the center of motion.
+    /// Computes the epoch at which the orbit reaches the sphere of influence of its center of motion, outbound from the
+    /// periapsis (<see cref="TimeToRadius"/>): on an open orbit already beyond the sphere, an epoch before
+    /// <see cref="Epoch"/>.
     /// </summary>
-    /// <returns></returns>
-    /// <exception cref="InvalidOperationException">The observer must be a celestial body to compute the time to the sphere of influence.</exception>
+    /// <returns>The epoch at the sphere of influence, in the frame of <see cref="Epoch"/>.</returns>
+    /// <exception cref="InvalidOperationException">The observer is not a celestial body, or its sphere of influence is
+    /// infinite (the Sun, a body built from custom parameters, a body the kernels do not chain to its barycenter): an
+    /// orbit about it never leaves it (#627).</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The orbit never reaches the sphere of influence (an ellipse inside
+    /// it), or reaches it outside the epochs a <see cref="Time"/> holds (<see cref="TimeToRadius"/>).</exception>
     public Time TimeToSphereOfInfluence()
     {
         var centerOfMotion = Observer as CelestialBody;
         if (centerOfMotion is null)
         {
             throw new InvalidOperationException("The observer must be a celestial body to compute the time to the sphere of influence.");
+        }
+
+        if (double.IsPositiveInfinity(centerOfMotion.SphereOfInfluence))
+        {
+            throw new InvalidOperationException(
+                $"{centerOfMotion.Name} has no finite sphere of influence; an orbit about it never leaves it.");
         }
 
         return TimeToRadius(centerOfMotion.SphereOfInfluence);

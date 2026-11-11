@@ -46,7 +46,9 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
     // place of a LEO position (9.3e-10 m at 7e6 m); P and the extended covariance 5.2e-15 at most, against 1e-13 (before:
     // 1e-3 m and 1e-8, set at 1e-11, which the state of #415, 5.7e-4 m, passed). With the TT time argument of #501 (CI
     // run 41268715428, 2026-11-01): the state 0 m on Linux, Windows and macOS arm64, P and the extended covariance
-    // 4.1e-15 at most on Linux, 5.2e-15 on Windows and macOS arm64 (2.9e-15 on main on Linux the same day)
+    // 4.1e-15 at most on Linux, 5.2e-15 on Windows and macOS arm64 (2.9e-15 on main on Linux the same day). With the
+    // nearest tick of #625 (CI of #634, 2026-11-11): the state 0 m on the three, P and the extended covariance 5.3e-15 at
+    // most on Linux, 6.3e-15 on Windows and macOS arm64
     private const double StateThresholdMeters = 1e-8;
     private const double CovarianceThreshold = 1e-13;
 

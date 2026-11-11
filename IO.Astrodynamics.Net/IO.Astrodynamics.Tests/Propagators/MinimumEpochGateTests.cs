@@ -100,14 +100,16 @@ public class MinimumEpochGateTests
     /// family and step: apsis 1.75e-3 / 1.76e-1 s at 1 / 10 s (the second burn of the chain with a hold of 4 000 s, on the
     /// orbit after Velocity-Verlet's first burn); node 2.19e-3 / 9.53e-2 s; intersection −1.44e-2 / −1.44 s (the g-function
     /// of the apsidal alignment swings fast there); time −2.27e-13 / −2.27e-13 s (a time-like g has no dynamics: its root is
-    /// Velocity-Verlet's crossing, found to the resolution of t in double, an ulp at 1 100 s); moon 2.57e-4 / 2.55e-2 s. The
+    /// Velocity-Verlet's crossing, found to the resolution of t in double, an ulp at 1 100 s), and since the labels round to
+    /// the nearest tick (#625) half a tick more: g, read on the labels of t, reaches the label of the root half a tick
+    /// before its TT, so its limit is half a tick plus twice the ulp; moon 2.57e-4 / 2.55e-2 s. The
     /// reference root is bisected to the resolution of t in double, below every lag it bounds. Twice 1.75e-3 (apsis, VV1) and
     /// 2.55e-2 s (moon, VV10) fall on a rounding boundary, on the three platforms: the step above.
     /// </summary>
     internal static readonly IReadOnlyDictionary<string, double> VelocityVerletLagLimit = new Dictionary<string, double>
     {
         ["apsis|VV1"] = 3.6e-3, ["apsis|VV10"] = 3.6e-1, ["node|VV1"] = 4.4e-3, ["node|VV10"] = 2.0e-1, ["intersection|VV1"] = 2.9e-2,
-        ["intersection|VV10"] = 2.9, ["time|VV1"] = 4.6e-13, ["time|VV10"] = 4.6e-13, ["moon|VV1"] = 5.2e-4, ["moon|VV10"] = 5.2e-2
+        ["intersection|VV10"] = 2.9, ["time|VV1"] = 0.5e-7 + 4.6e-13, ["time|VV10"] = 0.5e-7 + 4.6e-13, ["moon|VV1"] = 5.2e-4, ["moon|VV10"] = 5.2e-2
     };
 
     internal static readonly Time S = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);

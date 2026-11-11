@@ -534,6 +534,37 @@ public class TimeArgumentTests
     }
 
     [Fact]
+    public void TheEpochsAfterASpan_AreTheLabelsOfThePropagation()
+    {
+        // The step epochs of the conjunction analysis and the epoch of a two-body motion take the labels the integrators
+        // give (EpochAt, the nearest tick of the seconds, #625), about the Moon as about the Earth; they truncated
+        // (TimeSpan.FromSeconds) after #625 made EpochAt round, a tick off half the labels (the review of #625)
+        var random = new Random(2627);
+        var label = TimeSystem.Time.CreateTDB(7.6e8 + 0.1234567);
+        for (int i = 0; i < 20_000; i++)
+        {
+            double cumulative = random.NextDouble() * 86400.0;
+            double step = 1.0 + random.NextDouble() * 299.0;
+            Assert.Equal((PropagationTimeArgument.Tdb.EpochAt(label, cumulative),
+                    PropagationTimeArgument.Tdb.EpochAt(label, cumulative + step)),
+                PropagationTimeArgument.Tdb.StepEpochs(label, cumulative, step));
+            Assert.Equal(PropagationTimeArgument.Tdb.EpochAt(label, cumulative),
+                PropagationTimeArgument.EpochAfter(_moon, label, cumulative));
+            Assert.Equal(PropagationTimeArgument.Tt.EpochAt(label, cumulative),
+                PropagationTimeArgument.EpochAfter(_earth, label, cumulative));
+
+            // The inverse of the elapsed seconds, to the tick, about the Moon from a TDB label and from a TAI epoch
+            var later = label.AddTicks((long)(random.NextDouble() * 864_000_000_000L));
+            Assert.Equal(later, PropagationTimeArgument.EpochAfter(_moon, label,
+                PropagationTimeArgument.ElapsedSeconds(_moon, label, later)));
+            var tai = label.ToTAI();
+            var taiLater = later.ToTAI();
+            Assert.Equal(taiLater.ToTDB(), PropagationTimeArgument.EpochAfter(_moon, tai,
+                PropagationTimeArgument.ElapsedSeconds(_moon, tai, taiLater)).ToTDB());
+        }
+    }
+
+    [Fact]
     public void Sgp4_KeepsItsOwnTime()
     {
         // Arrange: the TLE propagator is not a PropagatorBase; SGP4 counts minutes from the epoch of the TLE (§3.2 of

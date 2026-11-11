@@ -68,8 +68,12 @@ public class PropagatedArcsEdgeTests
     /// the limit.</summary>
     internal const double ConjunctionTca = 1.0e-7;
 
-    /// <summary>The miss distance of the same, m. Worst 6.18e-10 / 6.18e-10 / 3.31e-10 m (CI run 41651463194).</summary>
-    internal const double ConjunctionMiss = 1.3e-9;
+    /// <summary>The miss distance of the same, m. Worst 6.18e-10 / 6.18e-10 / 3.31e-10 m (CI run 41651463194); with #625
+    /// 3.12e-9 / 3.13e-9 / 2.46e-9 m (CI run 42940000708), the projection on the miss of the reads of the stored states
+    /// against the solutions, 2.80e-9 / 2.80e-9 / 9.40e-10 m and 4.87e-9 / 4.98e-9 / 5.27e-9 m for the two participants
+    /// (2.80e-9 m and 6.05e-9 m before on Linux, a few ulps of a LEO position, 9.3e-10 m), whose outputs now sit on other
+    /// ticks: twice the worst, rounded up at the second significant digit.</summary>
+    internal const double ConjunctionMiss = 6.3e-9;
 
     /// <summary>The read at a Velocity-Verlet output within 2 µs of an impulse, which is not stored, against that output,
     /// m: the Lagrange of the later arc from the state after the impulse. Worst 7.22e-7 m, the same on the three platforms (the
@@ -517,40 +521,52 @@ public class PropagatedArcsEdgeTests
     }
 
     /// <summary>
-    /// Velocity-Verlet puts an output at the impulse or one tick after it (1.19e-7 s in the ET double, events at the end of
-    /// a step on the grid): the output is not stored, the states of the impulse are; the read at that output is the state
-    /// after the impulse, against the output state.
+    /// Velocity-Verlet puts an output at the impulse or a tick from it (events at the end of a step on the grid, the labels
+    /// of the output and of the impulse each the nearest tick of its own seconds since #625; at the impulse or one tick
+    /// after it, 1.19e-7 s in the ET double, when they truncated): the output is not stored, the states of the impulse
+    /// are; the read at an output at or after the impulse is the state after it, against the output state. An output a
+    /// tick before the impulse reads the earlier arc, whose closing state, the state before the impulse at the end of its
+    /// segment, carries the label of the impulse: the nearest tick of that end, up to half a tick from it (0.46, 0.08 and
+    /// 0.03 tick here), so the read is off the output by |v| times that residual, half a tick of motion at most (3.96e-4 m
+    /// at 8.6 km/s).
     /// </summary>
     [Theory]
-    [InlineData("Apogee|VVd|10|Propagate|ICRF|Earth", 1, 0)]
-    [InlineData("Chain4|VVd|10|Propagate|ICRF|Earth", 1, 2)]
-    [InlineData("Chain4|VVd|60|Propagate|ICRF|Earth", 1, 3)]
-    public void VelocityVerletOutputAtTheImpulse_IsNotStored(string key, int expectedAtTc, int expectedTickAfter)
+    [InlineData("Apogee|VVd|10|Propagate|ICRF|Earth", 1, 0, 0)]
+    [InlineData("Chain4|VVd|10|Propagate|ICRF|Earth", 1, 0, 3)]
+    [InlineData("Chain4|VVd|60|Propagate|ICRF|Earth", 4, 0, 0)]
+    public void VelocityVerletOutputAtTheImpulse_IsNotStored(string key, int expectedAtTc, int expectedTickAfter, int expectedTickBefore)
     {
         using var run = PropagatedArcsTests.ArcRun.Run(-(5530 + Array.IndexOf(PropagatedArcsTests.AllCases, key)), key, writeKernel: false);
         var stored = run.Spacecraft.PropagatedStates;
         int atImpulses = 0;
-        double worst = 0.0;
+        double worst = 0.0, worstBefore = 0.0;
         foreach (var output in run.Solution.StateVectors)
         {
             var tc = run.ImpulseEpochs.FirstOrDefault(x => System.Math.Abs((output.Epoch - x).TotalSeconds) <= PropagatedEphemeris.SameEpochTolerance);
             if (tc == default) continue;
             atImpulses++;
             Assert.DoesNotContain(stored, x => x.Epoch == output.Epoch && x.Epoch != tc);
-            Assert.True(output.Epoch >= tc, $"an output {(output.Epoch - tc).TotalSeconds:E3} s before the impulse");
+            Assert.True(System.Math.Abs((output.Epoch - tc).Ticks) <= 1, $"an output {(output.Epoch - tc).TotalSeconds:E3} s from the impulse");
             var read = run.Spacecraft.GetEphemeris(output.Epoch, run.ReadCenter, Frame.ICRF, Aberration.None).ToStateVector();
-            worst = System.Math.Max(worst, (read.Position - output.Position).Magnitude());
+            double error = (read.Position - output.Position).Magnitude();
+            if (output.Epoch < tc)
+                worstBefore = System.Math.Max(worstBefore, error / (output.Velocity.Magnitude() * 0.5e-7));
+            else
+                worst = System.Math.Max(worst, error);
         }
 
         int atTc = run.Solution.StateVectors.Count(o => run.ImpulseEpochs.Contains(o.Epoch));
-        int tickAfter = run.Solution.StateVectors.Count(o => run.ImpulseEpochs.Any(tc => o.Epoch == tc.AddSeconds(1e-7)));
-        _output.WriteLine($"MEASURE #540 VV outputs at the impulse {key.Replace('|', ' ')}: {atImpulses} of {run.ImpulseEpochs.Length} impulses ({atTc} at tc, {tickAfter} one tick after), read - output {worst:E2} m");
+        int tickAfter = run.Solution.StateVectors.Count(o => run.ImpulseEpochs.Any(tc => o.Epoch == tc.AddTicks(1)));
+        int tickBefore = run.Solution.StateVectors.Count(o => run.ImpulseEpochs.Any(tc => o.Epoch == tc.AddTicks(-1)));
+        _output.WriteLine($"MEASURE #540 VV outputs at the impulse {key.Replace('|', ' ')}: {atImpulses} of {run.ImpulseEpochs.Length} impulses ({atTc} at tc, {tickAfter} one tick after, {tickBefore} one tick before), read - output {worst:E2} m, before the impulse {worstBefore:F3} of half a tick of motion");
         Assert.True(atImpulses > 0);
         Assert.Equal(expectedAtTc, atTc);
         Assert.Equal(expectedTickAfter, tickAfter);
+        Assert.Equal(expectedTickBefore, tickBefore);
         // Both states of each impulse are stored at its epoch
         foreach (var tc in run.ImpulseEpochs) Assert.Equal(2, stored.Count(x => x.Epoch == tc));
         Assert.True(worst <= OutputAtTheImpulse, $"read - output {worst:E3} m");
+        Assert.True(worstBefore <= 1.0, $"read - output before the impulse {worstBefore:F3} of half a tick of motion");
     }
 
     /// <summary>
@@ -705,6 +721,10 @@ public class PropagatedArcsEdgeTests
         double missDelta = System.Math.Abs(throughStates.EncounterState.MissDistanceMeters - throughSolutions.EncounterState.MissDistanceMeters);
         _output.WriteLine($"MEASURE #540 conjunction with a maneuvering ILocalizable: TCA S + {(throughSolutions.EncounterState.Epoch - Start).TotalSeconds:F6} s (designed {(tca - Start).TotalSeconds:F6} s), " +
                           $"miss {throughSolutions.EncounterState.MissDistanceMeters:F4} m; stored states - solutions: TCA {tcaDelta:E2} s, miss {missDelta:E2} m");
+        var at = throughSolutions.EncounterState.Epoch;
+        double secondaryRead = (secondary.GetGeometricStateRelativeTo(at, earth).Position - secondarySolution.InterpolateAt(at).position).Magnitude();
+        double protectedRead = (protectedCraft.GetGeometricStateRelativeTo(at, earth).Position - protectedSolution.InterpolateAt(at).position).Magnitude();
+        _output.WriteLine($"MEASURE #625 stored states - solution at the TCA: secondary {secondaryRead:E2} m, protected {protectedRead:E2} m");
         Assert.True(System.Math.Abs((throughSolutions.EncounterState.Epoch - tca).TotalSeconds) < 1.0);
         Assert.True(tcaDelta <= ConjunctionTca, $"TCA {tcaDelta:E3} s");
         Assert.True(missDelta <= ConjunctionMiss, $"miss {missDelta:E3} m");

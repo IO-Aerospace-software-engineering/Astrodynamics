@@ -61,7 +61,8 @@ internal sealed record ReferenceCase(string Name, StateVector InitialState, IRea
     /// <summary>
     /// The window of the case: <see cref="Duration"/> seconds of TT from the start, the time argument of a propagation
     /// about the Earth (#501), as GMAT propagates the G cases (elapsed A1 seconds). Its end is one tick after the label of
-    /// TT₀ + <see cref="Duration"/>, which is at or before its instant by less than 1e-7 s, so that the window covers the
+    /// TT₀ + <see cref="Duration"/>, which is within half a tick of its instant (#625; at or before it by less than 1e-7 s
+    /// before), so that the window covers the
     /// arc: 6.8e-6 s after <c>Epoch + Duration</c> for one day from 2021-03-20 12:00 TDB, the change of TDB − TT.
     /// </summary>
     internal TimeSystem.Window Window => new(InitialState.Epoch,

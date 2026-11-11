@@ -11,8 +11,9 @@ namespace IO.Astrodynamics.CLI.Tests;
 public class EpochInputTests
 {
     // 2020-01-01T12:00:00 UTC in TDB seconds from J2000, the value of TimeTests.DateToSecondsFromJ2000 for the Z form:
-    // 7305 days of calendar, plus TAI − UTC (37 s), TT − TAI (32.184 s) and TDB − TT
-    private const string UtcNoonInTdbSeconds = "631152069.1839218";
+    // 7305 days of calendar, plus TAI − UTC (37 s), TT − TAI (32.184 s) and TDB − TT, its nearest tick since #625
+    // (tools/seconds_to_ticks/time_conversion_reference.py; .1839218 when it was truncated)
+    private const string UtcNoonInTdbSeconds = "631152069.1839217";
 
     [Theory]
     [InlineData("2020-01-01T12:00:00Z")]

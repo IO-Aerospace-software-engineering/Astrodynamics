@@ -11,8 +11,10 @@ namespace IO.Astrodynamics.Tests.Time;
 /// The TDB − TT series of <see cref="TDBTimeFrame"/>, shared by its conversions and the time argument of the
 /// propagation (#501): <see cref="TDBTimeFrame.ConvertToTAI"/> and <see cref="TDBTimeFrame.ConvertFromTAI"/> give, tick
 /// for tick, what the expressions they held before gave, on the TT instants every 0.05 day from 1972 to 2100 (935 041)
-/// and on 2 000 000 random ticks of the same span. The reference is the former code of the two conversions, copied
-/// below: it guards that the conversions are unchanged, not that they are correct.
+/// and on 2 000 000 random ticks of the same span, the offset rounded to the nearest tick since #625. The reference is
+/// the former code of the two conversions, copied below, its truncation of the offset (TimeSpan.FromSeconds) replaced
+/// by the exact nearest tick (<see cref="ExactTicks"/>): it guards that the conversions are unchanged, not that the
+/// series is correct.
 /// </summary>
 public class TdbSeriesTests
 {
@@ -71,21 +73,21 @@ public class TdbSeriesTests
         }
     }
 
-    // TDBTimeFrame.ConvertToTAI before #501: g at the TDB centuries
+    // TDBTimeFrame.ConvertToTAI before #501: g at the TDB centuries; the offset to the nearest tick (#625)
     private static long FormerConvertToTai(TimeSystem.Time time)
     {
         var tempTAI = time.Add(TimeSpan.FromSeconds(-32.184));
         var g = G(time.Centuries());
-        return tempTAI.DateTime.Add(TimeSpan.FromSeconds(0.001658 * System.Math.Sin(g + 0.0167 * System.Math.Sin(g))).Negate())
+        return tempTAI.DateTime.AddTicks(-ExactTicks.Nearest(0.001658 * System.Math.Sin(g + 0.0167 * System.Math.Sin(g))))
             .Ticks;
     }
 
-    // TDBTimeFrame.ConvertFromTAI before #501: g at the TT centuries
+    // TDBTimeFrame.ConvertFromTAI before #501: g at the TT centuries; the offset to the nearest tick (#625)
     private static long FormerConvertFromTai(TimeSystem.Time time)
     {
         var tdt = time.ToTDT();
         var g = G(tdt.Centuries());
-        return tdt.DateTime.Add(TimeSpan.FromSeconds(0.001658 * System.Math.Sin(g + 0.0167 * System.Math.Sin(g)))).Ticks;
+        return tdt.DateTime.AddTicks(ExactTicks.Nearest(0.001658 * System.Math.Sin(g + 0.0167 * System.Math.Sin(g)))).Ticks;
     }
 
     private static double G(double t) => IO.Astrodynamics.Constants._2PI * (357.528 + 35999.05 * t) / 360.0;

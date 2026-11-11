@@ -296,7 +296,10 @@ public class PropagationFrameOrientationCacheTests
         double worst = 0.0, worstAngularVelocity = 0.0;
         foreach (double fromCoverageStart in new[] { 0.0, 1.0e-3, 0.5, 30.0, 59.0, 59.999, 61.0 })
         {
+            // The first tick inside the coverage: the start, −431358160871.88 ticks, has its nearest tick 12 ns before it
+            // (#625; the truncation toward zero put it 88 ns after)
             var start = TimeSystem.Time.CreateTDB(CoverageStart + fromCoverageStart);
+            if (start.TimeSpanFromJ2000().TotalSeconds < CoverageStart + fromCoverageStart) start = start.AddTicks(1);
             var cache = new PropagationFrameOrientationCache(new Window(start, start.AddSeconds(UnalignedLength)), earth.Frame,
                 TimeSpan.FromSeconds(60));
             foreach (double fromStart in new[] { 0.0, 1.0, 30.0, 61.0 }.Concat(EvenlySpaced(0.0, UnalignedLength)))

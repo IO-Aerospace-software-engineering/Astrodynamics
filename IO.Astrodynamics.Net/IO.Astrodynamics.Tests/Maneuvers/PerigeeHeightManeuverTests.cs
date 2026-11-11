@@ -109,9 +109,10 @@ namespace IO.Astrodynamics.Tests.Maneuvers
                 ApogeeTurn(maneuverPoint) * maneuverPoint.Velocity.Magnitude());
             Assert.Equal((1466.487832468652, 0.0), (maneuver.DeltaV.Y, maneuver.DeltaV.Z));
             // The window at the apogee, half a period in TT seconds: 1.44e-5 s after that at the half period in TDB seconds
-            // (23:58:08.6636582), the change of TDB − TT over the 12 h (#501, #508)
-            Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(6), TimeSpan.FromSeconds(10.7439713)), maneuver.ThrustWindow);
-            Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(6), TimeSpan.FromSeconds(10.7439713)), maneuver.ManeuverWindow);
+            // (23:58:08.6636582), the change of TDB − TT over the 12 h (#501, #508); the label of the apogee is the nearest
+            // tick of 43095.81915755211 s from J2000 TDB, 0.52 tick past a tick, so a tick later than its truncation (#625)
+            Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ThrustWindow);
+            Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ManeuverWindow);
             Assert.Equal(537.19856491695327, maneuver.FuelBurned,3);
         }
     }

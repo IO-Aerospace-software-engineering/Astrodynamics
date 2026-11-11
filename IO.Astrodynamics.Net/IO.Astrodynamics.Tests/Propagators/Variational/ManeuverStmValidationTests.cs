@@ -76,6 +76,22 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// same to three digits. The records are set again at twice these measurements, rounded up at the second significant
 /// digit (choice 17 of #501, the Linux rule of the Validation category).
 /// </para>
+/// <para>
+/// The nearest tick of #625 moves by one tick about half of the TDB labels at which the forces read the time (the
+/// nearest tick of <c>AddSeconds</c> through <c>TerrestrialTime.EpochAt</c>, and the rounded TDB − TT of the drag's UTC):
+/// another draw of the noise of the references, by analogy with R2, R4 and R5 of <c>StmValidationTests</c>, where the Φ
+/// under test was compared on both behaviours (the burn case was not split). Measured again (Linux CI job 130260609740, 2026-11-11; the figures of
+/// 2026-11-01 above, which <c>main</c> reproduces, in parentheses), open loop: Φ per block 5.2e-8, 4.1e-8, 5.1e-8,
+/// 3.9e-8 outside the penumbra, 4.6e-8 at most in it (3.0e-8, 3.2e-8, 2.9e-8, 2.7e-8; 3.2e-8); Ψ_Cd 1.2e-7 and 1.1e-7
+/// over the arc, 1.4e-6 locally after the burn, 1.9e-7 in the penumbra (1.2e-6 and 1.3e-6, 1.8e-6, 1.8e-6); Ψ_Cr against
+/// the central differences 3.7e-6 and 6.2e-6 over the arc, 3.5e-5 locally after the burn, 8.5e-6 in the penumbra (3.3e-6
+/// and 5.7e-6, 3.9e-5, 7.9e-6); Ψ_Cr against the same propagation at 1e-14 with the step control 2.2e-11 and 3.9e-11
+/// over the arc, 6.5e-8 relative to the local value (1.0e-9 and 1.8e-9, 4.3e-6), within F1. Closed loop: Φ before the
+/// burn below 8.9e-9 (the same), after it and Ψ the same to three digits. The records hold and stay (decision 53 of #457,
+/// S. Guillet, 2026-11-11), Φ in the penumbra 1.4 times below its record of 6.4e-8: they are not set again from this
+/// one draw, as over eleven starts moved by −5 to +5 ticks the F1 noise of the full degree moves by up to a factor of
+/// 3.3 (R4) and 7.7 (R2) (<c>GeopotentialPartialsDegreeTests</c>).
+/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class ManeuverStmValidationTests : IClassFixture<ReferenceCases>
