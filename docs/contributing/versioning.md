@@ -1173,8 +1173,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
 - **The export example of the OPM page did not compile** ([#557](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/557)). It called
   `spacecraft.ToOpm(epoch, Frame.ICRF)`, whose first parameter is the originator and which has no frame parameter
   (CS1503 twice). It now calls `spacecraft.ToOpm(epoch: epoch)`, and [OPM](../reference/opm.md#spacecraft-export) gives
-  the signature, says that the state is written in the frame of the spacecraft's initial orbital parameters and that a
-  `CosparId` is required. The example compiles and runs: the state read back from the file is the state written.
+  the signature, says that the state is that of the spacecraft's initial orbital parameters at the epoch (two-body, or
+  SGP4 for a TLE; not a propagated state), written in their frame, and that a `CosparId` is required. The example
+  compiles and runs: the state read back from the file is the state written.
 
 **Changed**
 
