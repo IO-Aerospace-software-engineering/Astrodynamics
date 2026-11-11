@@ -536,21 +536,25 @@ Equinoctial orbital elements, without singularity for circular orbits (e = 0) or
 
 | Property | Description |
 |----------|-------------|
+| `P` | Semi-latus rectum a (1 − e²) (m) |
+| `F` / `G` | Eccentricity components e cos(ω + Ω) / e sin(ω + Ω) |
+| `H` / `K` | Inclination components tan(i/2) cos Ω / tan(i/2) sin Ω |
+| `L0` | True longitude Ω + ω + ν (rad) |
+
+The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F, p = K and q = H.
+
+| Method | Description |
+|--------|-------------|
 | `SemiMajorAxis()` | Semi-major axis (m) |
 | `Eccentricity()` | Eccentricity |
 | `Inclination()` | Inclination (rad) |
 | `AscendingNode()` | RAAN (rad) |
 | `ArgumentOfPeriapsis()` | Argument of periapsis (rad) |
-
-| Method | Description |
-|--------|-------------|
 | `ToStateVector()` | Convert to state vector |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
-| `EquinoctialEx()` | Get Ex component |
-| `EquinoctialEy()` | Get Ey component |
-| `Hx()` | Get Hx component |
-| `Hy()` | Get Hy component |
-| `Lv()` | Get true longitude (rad) |
+| `EquinoctialEx()` / `EquinoctialEy()` | Eccentricity components, `F` / `G` |
+| `Hx()` / `Hy()` | Inclination components, `H` / `K` |
+| `Lv()` | True longitude (rad), `L0` |
 
 ```csharp
 var sv = new StateVector(...);

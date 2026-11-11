@@ -75,6 +75,37 @@ public class EquinoctialElementsTests
         Assert.Equal(equinoctial.L0, equinoctial.Lv());
     }
 
+    /// <summary>
+    /// The singular orbit of the set (#465): near i = 180°, H = tan(i/2) cos Ω and K = tan(i/2) sin Ω grow as 2/δ. The orbit
+    /// of #465 (a 7500 km, e 0.05, i = π − δ, Ω 1, ω 0.5, M 2) against the closed form at 50 digits (mpmath) evaluated at
+    /// the double i, and the state of the elements against the state of the Keplerian elements. Linux x64, 2026-11-11: H and
+    /// K at most 1.4e-16 relative, the state 1.9e-9 m and 1.3e-12 m/s; the bounds (1e-15 relative, 1e-8 m, 1e-11 m/s) are
+    /// provisional, as above.
+    /// </summary>
+    [Theory]
+    [InlineData(1e-3, 1080.604521685880298148829, 1682.941829370605789624414)]
+    [InlineData(1e-6, 1080604.611452808770864849, 1682941.969174313611576429)]
+    [InlineData(1e-9, 1080604389.990800568946039, 1682941624.26767132032076)]
+    public void NearTheRetrogradeEquatorialOrbitHAndKGrowAsTheTangentOfHalfTheInclination(double delta, double expectedH, double expectedK)
+    {
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        var ke = new KeplerianElements(7500000.0, 0.05, System.Math.PI - delta, 1.0, 0.5, 2.0, earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0),
+            Frames.Frame.ICRF);
+
+        var equinoctial = ke.ToEquinoctial();
+        var expected = ke.ToStateVector();
+        var actual = equinoctial.ToStateVector();
+
+        var dr = (actual.Position - expected.Position).Magnitude();
+        var dv = (actual.Velocity - expected.Velocity).Magnitude();
+        _output.WriteLine($"delta {delta:E0}: H {(equinoctial.H - expectedH) / expectedH:E3}, K {(equinoctial.K - expectedK) / expectedK:E3} relative, " +
+                          $"state {dr:E3} m, {dv:E3} m/s");
+        Assert.Equal(expectedH, equinoctial.H, System.Math.Abs(expectedH) * 1e-15);
+        Assert.Equal(expectedK, equinoctial.K, System.Math.Abs(expectedK) * 1e-15);
+        Assert.True(dr < 1e-8, $"position {dr} m");
+        Assert.True(dv < 1e-11, $"velocity {dv} m/s");
+    }
+
     [Fact]
     public void Create()
     {

@@ -1162,12 +1162,13 @@ A major version, because it breaks the API: members deprecated for removal in 11
   and its labels h, k, p were the inclination components and the semi-latus rectum. It now prints `P` (m), `F`, `G`, `H`,
   `K` and `L0` under their definitions, and says that the classical set of GMAT (EquinoctialH, K, P, Q) is G, F, K, H in
   these names; for the tutorial's state it prints p = 7424377.237 m and f = e = 0.091820, the closed form of a periapsis
-  (p = (r v)²/μ, e = p/r − 1). [Keplerian Elements](../reference/keplerian-elements.md#equinoctialelements) lists the six
-  properties. That page and `DEVELOPER_GUIDE.md` now say what orbit-creation already said: no singularity at e = 0 or
-  i = 0, where the Keplerian ω and Ω are undefined, and the retrograde equatorial orbit (i = 180°) singular, h and k
-  growing as tan(i/2). `EquinoctialElementsTests` checks the tutorial's state against the closed form and state S1 of
-  the issue against GMAT R2026a (components within 1.9e-16, P within 9.3e-10 m, Linux), and the accessor methods
-  against the properties.
+  (p = (r v)²/μ, e = p/r − 1). [Keplerian Elements](../reference/keplerian-elements.md#equinoctialelements) and
+  `DEVELOPER_GUIDE.md` list the six properties and the accessor of each. Both now say what orbit-creation already said:
+  no singularity at e = 0 or i = 0, where the Keplerian ω and Ω are undefined, and the retrograde equatorial orbit
+  (i = 180°) singular, h and k growing as tan(i/2). `EquinoctialElementsTests` checks the tutorial's state against the closed form and state S1 of
+  the issue against GMAT R2026a (components within 1.9e-16, P within 9.3e-10 m, Linux), the accessor methods
+  against the properties, and the orbit of the issue at i = π − δ (δ = 1e-3, 1e-6, 1e-9) against tan(i/2) cos Ω and
+  tan(i/2) sin Ω at 50 digits (H and K within 1.4e-16 relative, the state within 1.9e-9 m of the Keplerian one, Linux).
 
 - **The export example of the OPM page did not compile** ([#557](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/557)). It called
   `spacecraft.ToOpm(epoch, Frame.ICRF)`, whose first parameter is the originator and which has no frame parameter
