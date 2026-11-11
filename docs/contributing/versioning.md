@@ -476,6 +476,24 @@ A major version, because it breaks the API: members deprecated for removal in 11
     which is not read at its middle), and those at the candidates take the states read per window of the probe of #628
     from 54 to 78 on average; at fixed 600 s steps for one trajectory and the default for the other, 469 to 554
     against 481 to 564.
+- **A cyclic maneuver chain ended the process, or a propagation that never returned** ([#585](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/585)).
+  `Maneuver.SetNextManeuver` accepted the maneuver itself or an earlier one of its chain, and nothing walked the chain
+  with a record of the maneuvers seen: `Maneuver.Reset` recursed along `NextManeuver`, so the first
+  `Spacecraft.Propagate` (and the scenario, the batch and the Monte Carlo propagators through it) ended with a stack
+  overflow that no `catch` sees (exit code 134, measured on `apo → apo`, `apo → peri → apo`, `nadir → nadir` and
+  `apo → nadir → apo`); through the builder, which never resets, a cycle with an attitude never returned and a
+  self-gating impulse fired again at one epoch until the memory ran out. Now `SetNextManeuver` throws
+  `ArgumentException` when the chain from the next maneuver comes back to the maneuver, and leaves the chain as it was;
+  a cycle built through a subclass that sets the protected `NextManeuver` is rejected by `Spacecraft.SetStandbyManeuver`
+  (`ArgumentException`), by the construction of the propagator (`InvalidOperationException`, before the states of an
+  earlier propagation are cleared) and by `PropagatorBase.Propagate`. `Maneuver.Reset` resets one maneuver; the chain is
+  reset in a loop (`Maneuver.ResetChain`), so a long chain uses no stack. A chain is a list: a maneuver appears in it
+  once, a repeated burn is a new maneuver. A valid chain propagates as before (the same calls in the same order).
+  - **Test:** `ManeuverChainCycleTests` (33 cases): `SetNextManeuver` closing five kinds of cycle throws and keeps the
+    chain, valid links and shared tails are kept; a cycle through a subclass makes `SetStandbyManeuver` throw, and
+    `Spacecraft.Propagate` (three overloads, RK7(8) and Velocity-Verlet, a leading attitude, an impulse, an attitude after
+    an impulse) throw with the previous states kept, the builder throw at `Build` or, for a cycle made after it, at
+    `Propagate`, the batch report the error; a chain of 200 000 attitudes resets without overflow.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a

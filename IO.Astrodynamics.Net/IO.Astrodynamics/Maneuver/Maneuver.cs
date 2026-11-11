@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
@@ -122,10 +123,73 @@ namespace IO.Astrodynamics.Maneuver
             Engine = engine ?? throw new ArgumentNullException(nameof(engine));
         }
 
+        /// <summary>
+        /// Chains <paramref name="maneuver"/> after this maneuver. A chain is a list: a maneuver appears in it once, and a
+        /// repeated burn is a new maneuver (#585).
+        /// </summary>
+        /// <param name="maneuver">The next maneuver; null to end the chain here.</param>
+        /// <returns><paramref name="maneuver"/>, to chain the next one.</returns>
+        /// <exception cref="ArgumentException">The chain from <paramref name="maneuver"/> holds this maneuver (the
+        /// maneuver itself, or one before it in the chain), or already holds a cycle: the chain would never end. The chain
+        /// is left as it was.</exception>
         public Maneuver SetNextManeuver(Maneuver maneuver)
         {
+            if (maneuver != null)
+            {
+                var visited = new HashSet<Maneuver>(ReferenceEqualityComparer.Instance) { this };
+                for (var next = maneuver; next != null; next = next.NextManeuver)
+                {
+                    if (!visited.Add(next))
+                    {
+                        throw new ArgumentException(
+                            $"Chaining this {maneuver.GetType().Name} after this {GetType().Name} would make the maneuver chain a cycle: " +
+                            $"the {next.GetType().Name} appears in it twice. A maneuver appears in a chain once; a repeated burn is a new maneuver.",
+                            nameof(maneuver));
+                    }
+                }
+            }
+
             NextManeuver = maneuver;
             return maneuver;
+        }
+
+        /// <summary>
+        /// The maneuvers of the chain from <paramref name="head"/>, in order, each once.
+        /// </summary>
+        /// <param name="head">The first maneuver; null for none.</param>
+        /// <returns>The maneuvers of the chain.</returns>
+        /// <exception cref="InvalidOperationException">The chain is a cycle: a maneuver appears in it twice, which
+        /// <see cref="SetNextManeuver"/> rejects but a subclass that sets <see cref="NextManeuver"/> can build (#585).</exception>
+        internal static List<Maneuver> Chain(Maneuver head)
+        {
+            var chain = new List<Maneuver>();
+            var visited = new HashSet<Maneuver>(ReferenceEqualityComparer.Instance);
+            for (var maneuver = head; maneuver != null; maneuver = maneuver.NextManeuver)
+            {
+                if (!visited.Add(maneuver))
+                {
+                    throw new InvalidOperationException(
+                        $"The maneuver chain is a cycle: the {maneuver.GetType().Name} appears in it twice, and the chain would never end. " +
+                        "A maneuver appears in a chain once; a repeated burn is a new maneuver.");
+                }
+
+                chain.Add(maneuver);
+            }
+
+            return chain;
+        }
+
+        /// <summary>
+        /// Clears what a propagation set on the maneuvers of the chain from <paramref name="head"/> (<see cref="Reset"/>),
+        /// in a loop, so that a long chain does not use the stack (#585).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The chain is a cycle (<see cref="Chain"/>); nothing is reset.</exception>
+        internal static void ResetChain(Maneuver head)
+        {
+            foreach (var maneuver in Chain(head))
+            {
+                maneuver.Reset();
+            }
         }
 
         protected abstract Vector3 Execute(StateVector vector);
@@ -172,17 +236,16 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <summary>
-        /// Clears what a propagation set on this maneuver and the next ones of the chain: the fuel burned, the windows and
-        /// the gate of the propagation, so that <see cref="MinimumEpoch"/> is again the minimum epoch the maneuver was given
-        /// (#573). Called by <c>Spacecraft.ResetPropagation</c> at the start of every <c>Spacecraft.Propagate</c>, after
-        /// the propagator is built.
+        /// Clears what a propagation set on this maneuver: the fuel burned, the windows and the gate of the propagation, so
+        /// that <see cref="MinimumEpoch"/> is again the minimum epoch the maneuver was given (#573). The next maneuvers of
+        /// the chain are reset by <see cref="ResetChain"/>, which <c>Spacecraft.ResetPropagation</c> calls at the start of
+        /// every <c>Spacecraft.Propagate</c>, after the propagator is built (a loop since #585, no longer a recursion).
         /// </summary>
         internal virtual void Reset()
         {
             FuelBurned = 0.0;
             ManeuverWindow = ThrustWindow = null;
             PropagationGate = null;
-            NextManeuver?.Reset();
         }
     }
 }
