@@ -153,9 +153,9 @@ Every executed maneuver, attitudes included, is in `Spacecraft.ExecutedManeuvers
 A chain is a list: a maneuver appears in it once, and a repeated burn is a new maneuver object (#585). Each maneuver
 keeps one record (its windows, `DeltaV`, `FuelBurned`), so a maneuver met twice would lose the first. A cycle is
 rejected where it is made: `SetNextManeuver` throws `ArgumentException` when the chain from the next maneuver comes back
-to the maneuver itself, and leaves the chain as it was. A cycle built past it, by a subclass that sets the protected
-`NextManeuver`, is rejected by `Spacecraft.SetStandbyManeuver` (`ArgumentException`), by the construction of the
-propagator (`Spacecraft.Propagate` and so the scenario, the batch and the Monte Carlo propagators, the builder's
+to the maneuver itself or already holds a cycle, and leaves the chain as it was. A cycle built past it, by a subclass
+that sets the protected `NextManeuver`, is rejected by `Spacecraft.SetStandbyManeuver` (`ArgumentException`), by the
+construction of the propagator (`Spacecraft.Propagate` and so the scenario, the batch and the Monte Carlo propagators, the builder's
 `Build`, a `CentralBodyPropagator` built directly: `InvalidOperationException`, before the states of an earlier
 propagation are cleared) and by `Propagate` (`InvalidOperationException`). Before 11.0.0 a cycle ended the process with
 a stack overflow at the first `Spacecraft.Propagate`, or never returned through the builder.

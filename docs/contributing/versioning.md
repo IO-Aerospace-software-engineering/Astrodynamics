@@ -483,9 +483,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
   overflow that no `catch` sees (exit code 134, measured on `apo → apo`, `apo → peri → apo`, `nadir → nadir` and
   `apo → nadir → apo`); through the builder, which never resets, a cycle with an attitude never returned and a
   self-gating impulse fired again at one epoch until the memory ran out. Now `SetNextManeuver` throws
-  `ArgumentException` when the chain from the next maneuver comes back to the maneuver, and leaves the chain as it was;
-  a cycle built through a subclass that sets the protected `NextManeuver` is rejected by `Spacecraft.SetStandbyManeuver`
-  (`ArgumentException`), by the construction of the propagator (`InvalidOperationException`, before the states of an
+  `ArgumentException` when the chain from the next maneuver comes back to the maneuver or already holds a cycle, and
+  leaves the chain as it was; a cycle built through a subclass that sets the protected `NextManeuver` is rejected by
+  `Spacecraft.SetStandbyManeuver` (`ArgumentException`), by the construction of the propagator (`InvalidOperationException`, before the states of an
   earlier propagation are cleared) and by `PropagatorBase.Propagate`. `Maneuver.Reset` resets one maneuver; the chain is
   reset in a loop (`Maneuver.ResetChain`), so a long chain uses no stack. A chain is a list: a maneuver appears in it
   once, a repeated burn is a new maneuver. A valid chain propagates as before (the same calls in the same order).
@@ -525,7 +525,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   `celestial-body-info`, the observer of `SpiceAPI.ReadEphemeris` by identifiers (built as a celestial body, a spacecraft
   observer ended the process there too) and the ellipsoid of `SpiceAPI.FindWindowsOnOccultationConstraint` whose frame is
   read from the body. An identifier without a name, which returned an empty record (and a celestial item then threw
-  `InvalidOperationException`), throws the same `ArgumentException` when it is not a celestial body.
+  `InvalidOperationException`), throws the same `ArgumentException` when it is not a celestial body (Changed below).
   `SpiceAPI.WriteOrientation` throws `ArgumentException` when a record is not in the frame of the first, and writes
   nothing. `Spacecraft.WriteOrientation` writes one frame, J2000, and is unchanged.
   - **Test:** `NativeAbortGuardTests` (19 cases): -82, -999, -1, 11, 50, 100 and 1000 throw from `GetCelestialBodyInfo`
@@ -543,7 +543,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
   #454 throw, the search threw `InvalidOperationException` (SPKINSUFFDATA, the Earth in 1699 for a star at 100 pc): a
   regression of 11.0.0. A star is now a direction, read at the epoch whatever the correction, in the occultation search
   as the field-of-view search reads it since #517, and in `Star.GetEphemeris`: `LT`, `CN`, `XLT` and `XCN` read as
-  `None`, their `+S` forms as the stellar aberration alone (`stelab`, `stlabx`). A catalog position at an epoch is the
+  `None`, their `+S` forms as the stellar aberration alone (`stelab`, `stlabx`; Changed below). A catalog position at an epoch is the
   direction of the light that reaches the barycenter then, as SOFA's `iauPmsafe` reads it (to be verified by S.
   Guillet). The other bodies of a search are read as before, and a star without proper motion within the measurements
   below of its former windows.
@@ -551,12 +551,13 @@ A major version, because it breaks the API: members deprecated for removal in 11
     `tools/occultation_reference/star_occultation_reference.py` (spiceypy: the star at its catalog position at t minus
     DSS-13 at t, the Moon from `spkpos` with the correction, a sphere of 1737.4 km, bisection to 1e-9 s), a star on the
     Moon's LT direction from DSS-13 at 2026-03-01 12:00 TDB, search ± 3 h, step 60 s: before, 20 pc with 0.1″/yr and
-    `LT` or `CN` −9.641 s / −9.074 s, 100 pc with `LT` or `CN` an exception; after, every edge of the 12 cases (20 and
-    100 pc, 0 and 0.1″/yr, `None`, `LT`, `CN`) within 1.43 µs. `Star.GetEphemeris` at S + 1 h: before 3.0e-5 rad
-    (20 pc) and 1.5e-4 rad (100 pc) from the reference with `LT`, `CN`, `XLT`, `LTS` and `CNS`; after 0 rad, `stelab`
-    for `+S`.
-  - **Test:** `StarOccultationTests` (22 cases), the edges within 3.0e-6 s (twice the worst, Linux only so far), the
-    directions within 1e-14 rad.
+    `LT` or `CN` −9.641 s / −9.074 s, with `XLT` or `XCN` +9.620 s / +9.105 s, 100 pc with `LT` or `CN` an exception
+    (the Earth in 1699), with `XLT` or `XCN` an exception (the Earth in 2352); after, every edge of the 20 cases (20 and
+    100 pc, 0 and 0.1″/yr, `None`, `LT`, `CN`, `XLT`, `XCN`) within 2.38 µs (1.43 µs without `XLT` and `XCN`).
+    `Star.GetEphemeris` at S + 1 h: before 3.0e-5 rad (20 pc) and 1.5e-4 rad (100 pc) from the reference with `LT`,
+    `CN`, `XLT`, `LTS` and `CNS`; after within 1.7e-16 rad (atan2 of the cross and dot products), `stelab` for `+S`.
+  - **Test:** `StarOccultationTests` (30 cases), the edges within 5.0e-6 s (twice the worst, Linux only so far), the
+    directions within 3.0e-15 rad (twice the move of 8 ulps per component, until the three-platform CI logs).
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
@@ -1452,6 +1453,14 @@ A major version, because it breaks the API: members deprecated for removal in 11
   a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached outside the epochs
   of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite sphere of
   influence throws `InvalidOperationException`; a circular orbit returns its epoch.
+- **`SpiceAPI.GetCelestialBodyInfo` throws for an identifier that is not a celestial body** ([#560](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/560), Fixed above):
+  an identifier without a name, such as -999, returned an empty record (identifier -1) and now throws
+  `ArgumentException`, as `new CelestialBody(id)` and the command `celestial-body-info` do for it.
+  `SpiceAPI.WriteOrientation` throws `ArgumentException` for records in more than one frame.
+- **`Star.GetEphemeris` applies no light time** ([#533](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/533), Fixed above): with `LT`, `CN`, `XLT` and `XCN` it
+  returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
+  stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
+  0.1″/yr at 20 pc). The occultation search reads a star the same way.
 
 **Removed**
 
