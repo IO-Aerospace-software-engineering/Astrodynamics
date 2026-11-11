@@ -365,7 +365,8 @@ public class Frame : IEquatable<Frame>
     /// <c>==</c>, <c>!=</c>, <see cref="Equals(object)"/> and <see cref="GetHashCode"/> are this relation, so that the
     /// operators, the collections and the comparers agree. The name does not carry the Earth orientation parameters of a
     /// <see cref="TirsFrame"/> or a <see cref="TemeFrame"/>: two of them with the same name are one frame, as they were
-    /// before 11.0.0.
+    /// before 11.0.0. Nor does it carry the definition of a <c>SiteFrame</c> or a <see cref="SpacecraftFrame"/>: each equals
+    /// any frame of its name, a kernel frame included, whatever its axes.
     /// </remarks>
     public bool Equals(Frame other)
     {

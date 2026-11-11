@@ -147,7 +147,8 @@ public class GcrfPropagationTests
         Assert.Equal(icrf.StateVectors.Count, gcrf.StateVectors.Count);
         for (int i = 0; i < icrf.StateVectors.Count; i++)
         {
-            Assert.Equal(Frames.Frame.GCRF, gcrf.StateVectors[i].Frame);
+            // The label itself, not only a frame of its name: equality ignores case and type (#562)
+            Assert.Same(Frames.Frame.GCRF, gcrf.StateVectors[i].Frame);
             AssertSameState(icrf.StateVectors[i], gcrf.StateVectors[i]);
         }
 
@@ -155,7 +156,7 @@ public class GcrfPropagationTests
         Assert.Equal(icrf.StateVectors.Count, byName.StateVectors.Count);
         for (int i = 0; i < icrf.StateVectors.Count; i++)
         {
-            Assert.Equal(Frames.Frame.GCRF, byName.StateVectors[i].Frame);
+            Assert.Same(byNameFrame, byName.StateVectors[i].Frame);
             AssertSameState(icrf.StateVectors[i], byName.StateVectors[i]);
         }
 

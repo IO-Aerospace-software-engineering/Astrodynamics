@@ -1396,7 +1396,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
   mode. Migration: code that told a managed frame from a frame of the same name with `==` tests the type instead
   (`frame is CirsFrame`); a subclass of `Frame` can no longer override `Equals(object)` or `GetHashCode`. Equality does
   not route: a frame named CIRS or TIRS that is not a `CirsFrame` or a `TirsFrame` still goes to SPICE, which does not
-  know it ([Equality](../reference/frames.md#equality)). A state converted to a frame equal to its own keeps its frame
+  know it ([Equality](../reference/frames.md#equality)). Nor does the name carry a definition: a `SiteFrame` or a
+  `SpacecraftFrame` equals any frame of its name, a kernel frame included (a site named DSS-13 and the kernel frame
+  `DSS-13_TOPO`), so `ToFrame` between them is the identity whatever their axes; give a site or a spacecraft a name no
+  loaded kernel uses for another frame. A state converted to a frame equal to its own keeps its frame
   (the identity of `ToFrame`), so the CLI's `ephemeris` from a site observer, computed in ICRF, prints `Frame : J2000`
   for the default `ICRF` (handed to the library as `j2000`) where it printed `Frame : j2000`, the numbers unchanged.
 
