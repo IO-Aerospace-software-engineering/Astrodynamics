@@ -596,7 +596,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // −2e-9 to 2e-9 m along x in both frames, 5.6e-5 to 3.7e-3 at 1e-12 (1.6e-6 to 3.2e-5 at 1e-14), rounded up at the
         // second significant digit (decision (b) of S. Guillet, 2026-10-20). With the TT time argument of #501, J2000 /
         // ECLIPJ2000: 9.6e-4 / 1.3e-3 in position and 1.7e-3 / 2.3e-3 in velocity at 1e-12, 1.4e-5 / 5.8e-6 and 2.5e-5 /
-        // 1.0e-5 at 1e-14 (Linux, 2026-11-01)
+        // 1.0e-5 at 1e-14 (Linux, 2026-11-01). With the nearest tick of #625 (Linux CI job 130260609740, 2026-11-11):
+        // 9.6e-4 / 2.0e-3 in position and 1.7e-3 / 3.7e-3 in velocity at 1e-12, 1.25e-5 / 1.43e-6 and 2.25e-5 / 2.50e-6 at
+        // 1e-14, below the record (7.4e-3) and F1; at 5.123 h Φ 1.96e-8 / 6.95e-9 and Ψ_Cd 2.20e-7 / 2.68e-7
         var epochs = Enumerable.Range(1, 120).Select(i => Start.AddHours(0.05 * i)).ToArray();
         var psiCr = PsiCrArcError(y, expected, epochs);
         var tighterPsiCr = PsiCrArcError(tighter, expected, epochs);
@@ -612,7 +614,9 @@ public class CovariancePropagationTests : IClassFixture<PartialsTestCases>, ICla
         // 2026-10-15). Measured 7.1e-8 (J2000) and 3.4e-8 (ECLIPJ2000) with the density gradient of #420 (Linux, .NET 10,
         // 2026-10-21; 9.6e-8 and 7.1e-8, at 0.35 h, on 2026-10-15; 7.6e-8 and 3.4e-8 with the derivative of the shadow
         // function, #423, 2026-10-22). The reference at 1e-14 with the step control stopped in the penumbra when this test
-        // was written (100 rejections at 328 s), hence 1e-13; it completes since #421 and #423 (1 064 steps in J2000)
+        // was written (100 rejections at 328 s), hence 1e-13; it completes since #421 and #423 (1 064 steps in J2000).
+        // 1.5e-8 and 2.7e-8 with the TT time argument of #501 (Linux, 2026-11-01), 3.2e-8 and 6.5e-9 with the nearest
+        // tick of #625 (Linux CI job 130260609740, 2026-11-11)
         var reference = EclipsingCase(-1966, frame, 1e-13, new VariationalOptions(parameters, IncludeInStepControl: true));
         double controlled = 0.0;
         foreach (var epoch in epochs)

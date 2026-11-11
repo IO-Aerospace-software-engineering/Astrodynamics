@@ -86,7 +86,10 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// <para>
 /// The nearest tick of #625 moves by one tick about half of the TDB labels at which the forces read the bodies, the
 /// orientation and the UTC of the drag (the nearest tick of <c>AddSeconds</c> through <c>TerrestrialTime.EpochAt</c>, and
-/// the rounded TDB − TT): another draw of the noise of the references, the Φ under test moving by less than 3.5e-9.
+/// the rounded TDB − TT): another draw of the noise of the references. The Φ under test was compared on both behaviours
+/// for R2, R4 and R5 only, where it moves by 6.9e-11, 3.5e-9 and 3.1e-10 at most against the whole figure for the
+/// references; R3, which moves most (2.3e-7 to 6.4e-7), was not split, so its attribution to the references is
+/// inferred from the other cases.
 /// Measured again (Linux CI job 130260609740, 2026-11-11, and the same figures in a session the same day; the figures of
 /// 2026-11-01 above, which <c>main</c> reproduces, before), worst outside the penumbra, Φ per block: R1 1.3e-8, 1.6e-8,
 /// 1.4e-8, 1.7e-8 (unchanged bit for bit: its forces do not read the time); R2 1.6e-8, 9.1e-9, 1.6e-8, 8.2e-9, Ψ_Cd

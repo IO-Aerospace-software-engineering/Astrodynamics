@@ -55,12 +55,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// (<c>StmValidationTests</c>, R4 9.0e-9 to 1.8e-8, R2 3.0e-8 to 1.6e-8). The conversion that moves them is the nearest
 /// tick of <c>AddSeconds</c>, through which <c>TerrestrialTime.EpochAt</c> labels every stage of the integration, and for
 /// R2 the rounded TDB − TT, through which the drag reads its UTC: about half of the TDB labels at which the forces read
-/// the bodies, the orientation and the UTC move by one tick. The tested Φ moves by less than 3.5e-9 (R4) and 6.9e-11
-/// (R2), the reference by the whole figure. Over eleven starts moved by −5 to +5 ticks, R4 at degrees 8, 20 and 70 spans
+/// the bodies, the orientation and the UTC move by one tick. The tested Φ moves by 3.5e-9 (R4) and 6.9e-11 (R2) at most,
+/// the reference by the whole figure. Over eleven starts moved by −5 to +5 ticks, R4 at degrees 8, 20 and 70 spans
 /// 1.0e-8 to 3.3e-8 (3.31e-8 one tick later, 3.30e-8 at 20 and 70) and R2 at degrees 20 and 10 1.6e-8 to 1.24e-7 (three
 /// ticks later; 4.15e-8 at worst in the ten other starts); under the truncation before #625 the starts moved by one tick
 /// already gave R4 2.1e-8 and 5.3e-8, outside the band of the record 9.0e-9, which a single draw had set. Degree 2 of R4
-/// 1.16e-6 (1.14e-6 to 1.21e-6 over the starts); R2 1.98e-3 and 8.50e-4 at degrees 2 and 8, unchanged over every start:
+/// 1.16e-6 (1.14e-6 to 1.17e-6 over the eleven starts, 1.16e-6 to 1.21e-6 under the truncation); R2 1.98e-3 and 8.50e-4 at degrees 2 and 8, unchanged over every start:
 /// the truncation of the partials, which a tick does not move. The degrees whose partials are those of the full degree
 /// (R4 at 8, 20 and 70, R2 at 20 and 10) are therefore held below an upper record, twice the worst of the eleven starts
 /// rounded up at the second significant digit: 6.7e-8 for R4 (twice 3.31e-8) and 2.5e-7 for R2 (twice 1.24e-7)

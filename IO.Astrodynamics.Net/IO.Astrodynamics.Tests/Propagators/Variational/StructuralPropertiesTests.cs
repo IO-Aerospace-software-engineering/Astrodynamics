@@ -69,7 +69,11 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
     // 1.24e-9 and 3.3e-10 on Windows, 6.6e-10, 1.34e-9 and 8.5e-10 on macOS arm64, 4.6e-17 to 1.9e-16 of ‖Φ‖²; main
     // e8f0d5f on Linux the same day 1.01e-9, 1.19e-9 and 1.76e-9). The worst relative defect of the cases is 2.86e-15 on
     // Linux (R4, point-mass Earth and third bodies), 2.91e-15 on Windows and 2.96e-15 on macOS arm64 (R4 with its
-    // geopotential only; 3.02e-15 on main on Linux, R4 with its geopotential), against 1e-14
+    // geopotential only; 3.02e-15 on main on Linux, R4 with its geopotential), against 1e-14. With the nearest tick of
+    // #625 (CI jobs 130260609740, 130260609708 and 130260609696 of #634, 2026-11-11), another draw of the rounding: R5
+    // 4.45e-10, 1.78e-9 and 1.48e-9 on Linux, 4.60e-10, 1.78e-9 and 1.62e-9 on Windows, 4.60e-10, 6.18e-10 and 1.52e-9
+    // on macOS arm64, 6.3e-17 to 2.5e-16 of ‖Φ‖²; the worst relative defect 2.91e-15 on Linux (R4 with its geopotential
+    // only), 3.01e-15 on Windows and 2.86e-15 on macOS arm64 (R4 with its geopotential and third bodies)
     public static TheoryData<string, bool> PointMassCases => new()
     {
         { "R2", false }, { "R3", false }, { "R4", false }, { "R5", true }
@@ -167,7 +171,9 @@ public class StructuralPropertiesTests : IClassFixture<ReferenceCases>
         // Act and assert: at the apogees and the perigees. Measured 2.7e-14, 7.8e-13, 2.4e-12 and 3.5e-12 (Linux, .NET 10,
         // 2026-10-10), growing with Φ; the threshold is about three times the largest. With the TT time argument of #501
         // (CI run 41268715428, 2026-11-01): 2.78e-14, 8.75e-13, 2.29e-12 and 2.59e-12 on Linux, 2.78e-14, 8.45e-13,
-        // 2.56e-12 and 4.29e-12 on Windows and macOS arm64, the threshold 2.3 times the largest
+        // 2.56e-12 and 4.29e-12 on Windows and macOS arm64, the threshold 2.3 times the largest. With the nearest tick of
+        // #625 (CI of #634, 2026-11-11), the epochs read moving by a tick: 8.73e-13 at half on Linux, 8.43e-13 on Windows
+        // and macOS arm64, the others unchanged
         foreach (double fraction in new[] { 0.25, 0.5, 0.75, 1.0 })
         {
             var epoch = fraction < 1.0

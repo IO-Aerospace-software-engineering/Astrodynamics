@@ -759,8 +759,9 @@ Worst over the arc, outside the penumbra, each relative to the local reference (
 measured again on 2026-11-11 with the nearest tick of
 [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Linux CI job 130260609740, and
 the same figures in a session the same day), another draw of the noise of the central differences: about half of the
-TDB labels at which the forces read the bodies, the orientation and the UTC of the drag move by one tick, the Φ under
-test by less than 3.5e-9, the references by the whole figure (R2 Φ_rr 3.0e-8 to 1.6e-8; R4 Φ_vr 8.9e-9 to 1.8e-8; R3 Φ
+TDB labels at which the forces read the bodies, the orientation and the UTC of the drag move by one tick; where the Φ
+under test was compared on both behaviours (R2, R4 and R5) it moves by 6.9e-11, 3.5e-9 and 3.1e-10 at most, the
+references by the whole figure (R3, not split, is inferred from them; R2 Φ_rr 3.0e-8 to 1.6e-8; R4 Φ_vr 8.9e-9 to 1.8e-8; R3 Φ
 2.3e-7 to 2.5e-7 before, 5.9e-7 to 6.4e-7 after; R5 Φ 2.4e-7 to 6.0e-7; R1, whose forces do not read the time, unchanged
 bit for bit). The records of the Validation category hold and stay (decision 53 of
 [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), S. Guillet, 2026-11-11): over
@@ -823,8 +824,9 @@ before), the chosen 10 % at 2.2 times the smallest; Ψ_Cr of the library does no
 geopotential changed the steps of the reference propagations, and Ψ_Cr of R4 became 3.1e-7, 1.5e-8, 5.7e-8, 4.1e-9,
 1.7e-9 and 1.8e-9 from 0.1 % to 30 % (2.8e-7, 3.6e-8, 1.1e-8, 1.6e-9, 1.3e-9, 9.2e-10 before), not monotone, the chosen
 10 % at 2.5 times the smallest; Ψ_Cd of R2 1.9e-8, 1.2e-7, 3.0e-6, 1.2e-5, 4.9e-5 and 1.1e-4 (7.1e-8 at 0.1 % before),
-the chosen 1 % unchanged and 6.5 times the 0.1 %, whose noise moved. The chosen steps stay. The factor of 2 holds for
-Φ of R3 and R4 and every other sweep. Since #398 the latter is published and not asserted: 1.4e-3, 7.2e-4, 2.4e-4,
+the chosen 1 % unchanged and 6.5 times the 0.1 %, whose noise moved. The chosen steps stay. The factor of 2 held then for
+Φ of R3 and R4 and every other sweep but Ψ_Cr of the eclipsing case, and holds since #625 except for Ψ_Cd of R5, held to
+a record (below). Since #398 Ψ_Cr of the eclipsing case is published and not asserted: 1.4e-3, 7.2e-4, 2.4e-4,
 1.1e-5, 1.3e-4 and 4.7e-5 from 0.1 % to 30 %, so no step lies on a plateau there. On the code before #398, the start of
 the reference moved by 2e-9 m along x alone takes that sweep from 3.7e-3, 1.8e-4, 2.3e-4, 1.3e-4, 3.4e-5, 1.8e-5 to
 2.1e-2, 7.0e-5, 2.4e-5, 8.1e-5, 7.2e-6, 1.5e-5. Ψ_Cd of the eclipsing case is held at its chosen step, 30 %, to a
@@ -907,8 +909,9 @@ nominal burn (fixed in epoch and ΔV), the errors are as follows:
   after the burn (3.9e-5) and 8.5e-6 in the penumbra (7.9e-6), records rather than F1 figures (1.2e-5, 7.8e-5 and
   1.6e-5).
 
-Another draw of the noise of the references: about half of the TDB labels at which the forces read the time move by
-one tick. The records hold and stay (decision 53 of
+Another draw of the noise of the references, by analogy with R2, R4 and R5 above, where the Φ under test was compared
+on both behaviours (the burn case was not split): about half of the TDB labels at which the forces read the time move
+by one tick. The records hold and stay (decision 53 of
 [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), S. Guillet, 2026-11-11), as for
 `StmValidationTests` above. Measured on 2026-10-24, after
 [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423),
@@ -961,9 +964,9 @@ With the nearest tick of [#625](https://github.com/IO-Aerospace-software-enginee
 42945251492 of `long-validation.yml`, 2026-11-11, and the same figures in a session the same day), R4 is 1.2e-6 at
 degree 2 and 1.8e-8 at degrees 8, 20 and 70, and R2 2.0e-3, 8.5e-4 and 1.6e-8 at degrees 2, 8 and 20 and at the full
 degree: the F1 noise of the reference again, which moves the same way on the full degree in `StmValidationTests` (R4
-9.0e-9 to 1.8e-8, R2 3.0e-8 to 1.6e-8), the tested Φ moving by less than 3.5e-9. Over eleven starts moved by −5 to +5
+9.0e-9 to 1.8e-8, R2 3.0e-8 to 1.6e-8), the tested Φ moving by 3.5e-9 (R4) and 6.9e-11 (R2) at most. Over eleven starts moved by −5 to +5
 ticks (Linux, in a session), R4 from degree 8 spans 1.0e-8 to 3.3e-8 and R2 at the full degree 1.6e-8 to 1.2e-7 (three
-ticks later; 4.2e-8 at worst in the ten others), while degree 2 of R4 stays within 1.14e-6 to 1.21e-6 and R2 at degrees
+ticks later; 4.2e-8 at worst in the ten others), while degree 2 of R4 stays within 1.14e-6 to 1.17e-6 (1.16e-6 to 1.21e-6 under the truncation) and R2 at degrees
 2 and 8 does not move: the truncation of the partials. Under the truncation before #625 a start moved by one tick
 already gave R4 2.1e-8 and 5.3e-8, outside the band of the record 9.0e-9, which one draw had set. The degrees whose
 partials are those of the full degree (R4 at 8, 20 and 70, R2 at 20 and 10) are therefore held below an upper record,
@@ -1111,11 +1114,20 @@ variational equation enters). Computation: each tool's Φ against its own centra
 | Case | Total | Models | GMAT's computation | Library's computation | State departure |
 |------|-------|--------|--------------------|-----------------------|-----------------|
 | G1 | 7.6e-12 | 6.7e-9 | 1.7e-8 | 1.7e-8 | 53 µm, 5.6e-8 m/s |
-| G2 | 8.4e-9 | 1.4e-8 | 1.7e-8 | 1.9e-8 | 5.7 cm, 6.4e-5 m/s |
-| G3 | 4.8e-12 | 2.2e-8 | 1.7e-8 | 7.7e-9 | 58 µm, 2.8e-9 m/s |
-| G4 | 3.8e-8 | 7.9e-8 | 4.6e-8 | 1.5e-8 | 25 cm, 1.8e-4 m/s |
-| G5 | 1.0e-4 | 2.5e-7 | 9.9e-5 | 2.5e-7 | 8.0 mm, 9.1e-6 m/s |
-| G6 | 3.7e-5 | 1.1e-6 | 3.6e-5 | 3.0e-8 | 11 cm, 1.3e-4 m/s |
+| G2 | 8.4e-9 | 1.8e-8 | 1.7e-8 | 1.9e-8 | 5.7 cm, 6.4e-5 m/s |
+| G3 | 4.8e-12 | 1.4e-8 | 1.7e-8 | 4.8e-9 | 58 µm, 2.8e-9 m/s |
+| G4 | 3.8e-8 | 6.7e-8 | 4.6e-8 | 1.9e-8 | 25 cm, 1.8e-4 m/s |
+| G5 | 1.0e-4 | 1.6e-7 | 9.9e-5 | 6.4e-7 | 8.3 mm, 9.4e-6 m/s |
+| G6 | 3.7e-5 | 1.1e-6 | 3.6e-5 | 1.6e-8 | 11 cm, 1.3e-4 m/s |
+
+Measured again on 2026-11-11 with the nearest tick of
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Linux CI job 130260609740),
+which moves by one tick about half of the TDB labels at which the forces of the library read the bodies, the
+orientation and the UTC of the drag: the totals, GMAT's computation and G1 do not move; the central differences of the
+library are another draw of their noise, and the state of G5 moves by 0.3 mm. The cells that moved, the value of
+2026-11-01 in parentheses: the models of G2 1.8e-8 (1.4e-8), G3 1.4e-8 (2.2e-8), G4 6.7e-8 (7.9e-8) and G5 1.6e-7
+(2.5e-7); the library's computation of G3 4.8e-9 (7.7e-9), G4 1.9e-8 (1.5e-8), G5 6.4e-7 (2.5e-7) and G6 1.6e-8
+(3.0e-8); G5's state 8.3 mm and 9.4e-6 m/s (8.0 mm and 9.1e-6 m/s). Every bound holds.
 
 Measured on 2026-11-01 with the TT time argument of
 [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501): GMAT's rows are at elapsed A1, so
@@ -1140,7 +1152,7 @@ within what they resolve.
 - G5: the total departure is GMAT's computation. Its Φ leaves out the derivative of the shadow function in the
   penumbra, which the library differentiates (analytically since #423, by central differences before; GMAT's
   Mathematical Specification, §4.2.5, has the derivative that its build leaves out); left out, the library
-  departed by 1.05e-4 after one day in step 5b. The models agree to 2.5e-7 (1.5e-7 before #501, 2.8e-7 before #410 and 1.9e-7 before #434,
+  departed by 1.05e-4 after one day in step 5b. The models agree to 1.6e-7 (2.5e-7 before #625, 1.5e-7 before #501, 2.8e-7 before #410 and 1.9e-7 before #434,
   each of which reshuffled the steps of the central differences of the library through the penumbra). GMAT prints, 23 times in the console log of
   each G5 run (`G5/nominal.log`, committed with the reports): *"Warning: The orbit state transition matrix does not
   currently contain SRP contributions from shadow partial derivatives when using Spherical SRP."* On this point the
@@ -1148,14 +1160,15 @@ within what they resolve.
   function (§4.2.4 and §4.2.5, eqs. 4.79 and 4.83).
 - G6: the total departure is GMAT's computation, 3.6e-5, mostly GMAT's step error at 10 s: its Φ moves by 2.6e-5
   between 10 s and 5 s (5.3e-5 and 4.2e-5 before #410). The models agree to 1.1e-6, the library's Φ holds its own
-  central differences to 2.4e-8. Before
+  central differences to 1.6e-8 (3.0e-8 before #625, 2.4e-8 before #501). Before
   #411 and #409 were fixed, the densities differed and the models departed by 7.1e-4 (total 6.9e-4, state 3.9 km).
 
 **Ψ**, over the arc relative to its largest value, against GMAT's central differences on the coefficient (GMAT has no
 Ψ): Ψ_Cr of G5 5.5e-6 (position) and 7.9e-6 (velocity), the central differences of the two tools against each other
-3.1e-6 and 4.4e-6 (9.6e-6 and 1.4e-5 before #410, 4.1e-6 and 5.7e-6 before #434: the library's central differences
+4.6e-6 and 6.5e-6 since #625 (5.9e-6 and 8.5e-6 on main in the CI of #630, 2026-11-10, against the 3.1e-6 and 4.4e-6 published here
+since #410 and not measured again until #625; 9.6e-6 and 1.4e-5 before #410, 4.1e-6 and 5.7e-6 before #434: the library's central differences
 moved, its Ψ against GMAT did not, to two digits); Ψ_Cd of G6 7.8e-7 and 7.6e-7, the central differences of the two
-tools against each other 8.2e-7 and 8.1e-7 (1.3e-2 before #411 and #409, the density).
+tools against each other 8.0e-7 and 7.9e-7 (8.2e-7 and 8.1e-7 before #625, 1.3e-2 before #411 and #409, the density).
 
 **P**, from the correlated P0 of `CovariancePropagationTests` (σ 50, 200 and 30 m, 0.2, 0.05 and 0.03 m/s in RTN),
 over the arc: G1 4.4e-9 relative Frobenius, 4.5e-9 on the correlation matrix; G2 1.2e-8 and 1.2e-6. The departure on
@@ -1164,7 +1177,7 @@ the correlation matrix splits into three parts, which the test checks to close:
 | Part | G1 | G2 |
 |------|----|----|
 | GMAT's computation: its P against its own Φ P0 Φᵀ, which it propagates step by step | 4.4e-9 | 5.7e-9 |
-| The library's computation: its P against its own Φ P0 Φᵀ | 9.0e-16 | 1.6e-15 |
+| The library's computation: its P against its own Φ P0 Φᵀ | 9.0e-16 | 1.7e-15 |
 | Φ alone: Φ P0 Φᵀ of the library against that of GMAT | 1.3e-10 | 1.3e-6 |
 
 On G1 the departure is GMAT's, so P on G1 is held to 1e-8 rather than the 1e-10 of the design (decision of S. Guillet,
@@ -1172,7 +1185,7 @@ On G1 the departure is GMAT's, so P on G1 is held to 1e-8 rather than the 1e-10 
 ICRF: there σ_y is 52 m against 11.6 km for the largest σ of the position block. An element of Φ P0 Φᵀ is the product
 of two rows of Φ whitened by P0, so its departure on the correlation matrix is bounded by the departures of these two
 rows in the metric of P0: 1.25e-6 for y, 2.9e-8 for vx, while Φ departs by 8.2e-9 per block at that epoch. That
-departure of Φ, 8.4e-9 per block over the arc, is within what the model column resolves (1.4e-8). GMAT has no consider
+departure of Φ, 8.4e-9 per block over the arc, is within what the model column resolves (1.8e-8). GMAT has no consider
 parameter, so Ψ Pp Ψᵀ has no reference here.
 
 **Q**, the state noise compensation of q_T = 1e-11 m²/s³ alone, at the end of the day. GMAT adds the discrete form of

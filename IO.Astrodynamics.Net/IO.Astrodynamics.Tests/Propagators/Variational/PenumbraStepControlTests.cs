@@ -161,7 +161,8 @@ public class PenumbraStepControlTests : IClassFixture<ReferenceCases>
         // 6.5e-11, 9.5e-11, 7.9e-10 (Windows); 8.3e-11, 1.2e-10, 2.1e-9 (macOS arm64). With the shadow fraction of #434
         // (CI of 3340116): 1.1e-10, 1.5e-10, 7.0e-10; 1.5e-10, 2.3e-10, 2.7e-9; 3.7e-10, 5.5e-10, 4.2e-9
         // With the constants of the geopotential of #410 (CI of ad40b45): 8.0e-11, 1.2e-10, 1.3e-9; 1.7e-10, 2.5e-10,
-        // 1.7e-9; 2.1e-10, 3.1e-10, 2.4e-9
+        // 1.7e-9; 2.1e-10, 3.1e-10, 2.4e-9. With the nearest tick of #625 (CI of #634, 2026-11-11): 2.8e-10, 4.2e-10,
+        // 2.2e-9; 1.1e-10, 1.6e-10, 9.9e-10; 3.7e-11, 5.4e-11, 1.4e-9
         double largestPosition = 0.0;
         double largestVelocity = 0.0;
         double worstPosition = 0.0;

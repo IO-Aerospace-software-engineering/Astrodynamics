@@ -342,7 +342,11 @@ A major version, because it breaks the API: members deprecated for removal in 11
     `GeopotentialPartialsDegreeTests` is held below an upper record (6.7e-8 for R4, 2.5e-7 for R2) and Ψ_Cd of R5 of
     `WholePropagationStepStudyTests` at its chosen 5 % to a record of 4.1e-7, each twice the worst of eleven starts moved
     by −5 to +5 ticks, where a factor of 2 about one draw broke, and the records of `StmValidationTests` and
-    `ManeuverStmValidationTests` stay (decision 53 of #457, S. Guillet, 2026-11-11). A coverage start from 1983 to J2000 or
+    `ManeuverStmValidationTests` stay (decision 53 of #457, S. Guillet, 2026-11-11). The other figures of the central
+    differences and of the rounding of the integration are another draw, measured again from the CI of #634: the F1
+    figures of `NonConservativeVariationalTests`, `CovariancePropagationTests` and `PenumbraStepControlTests`, the GMAT
+    Φ table of the validation guide (its models and the library's computation; the totals do not move), the symplectic
+    defects of `StructuralPropertiesTests` on the three platforms and the avoidance covariances, all within their bounds. A coverage start from 1983 to J2000 or
     an end from 2000 to 2017 given as seconds, which the truncation put inside, now falls outside about a third of the
     time, and a read there throws: the coverage of ITRF93 in the test kernels starts at −43135.816087188054 s, whose
     nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it), so the test of the orientation
