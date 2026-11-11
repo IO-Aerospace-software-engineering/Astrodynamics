@@ -53,6 +53,15 @@ altitude reached CSPICE in km and the threshold of the distance in km/1000, so t
 ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)) and 1000 times off
 ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
 
+Both paths take every value of `RelationnalOperator` (#482). CSPICE has no `>=`, `<=` or `!=`: on its path
+`GreaterOrEqual` and `LowerOrEqual` are searched as `Greater` and `Lower`, whose windows are closed, so for a quantity
+that crosses the value they are the windows of the managed search, which bisects the relation itself; the two differ only
+where the quantity stays equal to the value over an interval, which CSPICE's `>` leaves out. `NotEqual` is, on both
+paths, the search window less the crossings of `Equal`, a window from each crossing to the next. Before 11.0.0 the three
+operators ended the process on the CSPICE path (the native parser of the relation threw across P/Invoke); the same
+applies to `SpiceAPI.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and
+`FindWindowsOnIlluminationConstraint`, and to the command line (`<=`, `>=` and `!`).
+
 ### Example
 
 ```csharp

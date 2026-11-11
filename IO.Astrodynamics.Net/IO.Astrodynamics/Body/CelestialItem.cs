@@ -459,17 +459,29 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         if (aberration is Aberration.LTS or Aberration.CNS or Aberration.XLTS or Aberration.XCNS)
         {
-            // The observer's acceleration from the solar system barycenter, spkacs's central difference over ±1 s
-            var acceleration = (ObserverSsbVelocity(observer, epoch.AddTicks(AccelerationHalfStepTicks), referenceBody)
-                                - ObserverSsbVelocity(observer, epoch.AddTicks(-AccelerationHalfStepTicks), referenceBody)) * 0.5;
-            var observerVelocity = sign > 0.0 ? observerSsbVelocity.Inverse() : observerSsbVelocity;
-            var observerAcceleration = sign > 0.0 ? acceleration.Inverse() : acceleration;
-            var aberrated = ApparentPositionReader.StellarAberration(position, observerVelocity);
-            velocity += StellarAberrationRate(position, velocity, observerVelocity, observerAcceleration);
-            position = aberrated;
+            (position, velocity) = ApplyStellarAberration(position, velocity, observerSsbVelocity, observer, epoch, referenceBody, sign > 0.0);
         }
 
         return new StateVector(position, velocity, observer, epoch, Frame.ICRF);
+    }
+
+    /// <summary>
+    /// The stellar aberration of the "+S" corrections, as <c>stelab</c> (<c>stlabx</c> for transmission) and
+    /// <c>zzstelab</c>: <paramref name="position"/> rotated by asin(|û × v/c|) about û × v, v the observer's velocity from
+    /// the solar system barycenter (−v for transmission), and the rate of that correction added to
+    /// <paramref name="velocity"/>, from the observer's acceleration, the central difference of its velocity over ±1 s
+    /// (<c>spkacs</c>).
+    /// </summary>
+    internal static (Vector3 Position, Vector3 Velocity) ApplyStellarAberration(in Vector3 position, in Vector3 velocity,
+        in Vector3 observerSsbVelocity, ILocalizable observer, in Time epoch, CelestialItem referenceBody, bool transmission)
+    {
+        // The observer's acceleration from the solar system barycenter, spkacs's central difference over ±1 s
+        var acceleration = (ObserverSsbVelocity(observer, epoch.AddTicks(AccelerationHalfStepTicks), referenceBody)
+                            - ObserverSsbVelocity(observer, epoch.AddTicks(-AccelerationHalfStepTicks), referenceBody)) * 0.5;
+        var observerVelocity = transmission ? observerSsbVelocity.Inverse() : observerSsbVelocity;
+        var observerAcceleration = transmission ? acceleration.Inverse() : acceleration;
+        var aberrated = ApparentPositionReader.StellarAberration(position, observerVelocity);
+        return (aberrated, velocity + StellarAberrationRate(position, velocity, observerVelocity, observerAcceleration));
     }
 
     /// <summary>The velocity of an observer from the solar system barycenter, in ICRF, through its reference body.</summary>

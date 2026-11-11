@@ -50,6 +50,32 @@ public class GeometryFinderTests
         }
     }
 
+    /// <summary>
+    /// The operators CSPICE has not (#482), which ended the process: <c>&gt;=</c> and <c>&lt;=</c> searched as
+    /// <c>&gt;</c> and <c>&lt;</c>, <c>!</c> as the search window less the instants of <c>=</c>. The windows are those of
+    /// <c>gfdist</c> in spiceypy, <c>tools/geometry_reference/operators_reference.py</c> ("cli distance").
+    /// </summary>
+    [Theory]
+    [InlineData(">=", "From 2024-03-19T18:04:11.9364667 TDB to 2024-03-21T00:00:00.0000000 TDB - Length 1.05:55:48.0635333")]
+    [InlineData("<=", "From 2024-03-01T00:00:00.0000000 TDB to 2024-03-19T18:04:11.9364667 TDB - Length 18.18:04:11.9364667")]
+    [InlineData("!", "From 2024-03-01T00:00:00.0000000 TDB to 2024-03-19T18:04:11.9364665 TDB - Length 18.18:04:11.9364665|From 2024-03-19T18:04:11.9364665 TDB to 2024-03-21T00:00:00.0000000 TDB - Length 1.05:55:48.0635335")]
+    public void DistanceConstraint_OperatorsCspiceHasNot(string relation, string expected)
+    {
+        using (Configuration.Lock())
+        {
+            var command = new GeometryFinderCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+            command.DistanceConstraint("Data", 399, 301, relation, 400000000.0,
+                new WindowParameters { Begin = "2024-03-01T00:00:00", End = "2024-03-21T00:00:00" },
+                TimeSpan.FromDays(10));
+            var res = sb.ToString();
+
+            Assert.Equal(string.Join("", expected.Split('|').Select(x => x + Environment.NewLine)), res);
+        }
+    }
+
     [Fact]
     public void OccultationConstraint()
     {

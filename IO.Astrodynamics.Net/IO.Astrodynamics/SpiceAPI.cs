@@ -468,19 +468,93 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// Find time windows based on distance constraint, CSPICE's <c>gfdist_c</c> between two objects of the kernels.
+    /// The relation CSPICE's geometry finder takes for <paramref name="relationalOperator"/> (#482). CSPICE knows only
+    /// <c>&gt;</c>, <c>&lt;</c>, <c>=</c>, <c>ABSMIN</c>, <c>ABSMAX</c>, <c>LOCMIN</c> and <c>LOCMAX</c>, and the native
+    /// parser of the relation ends the process on any other string (a C++ exception across P/Invoke).
+    /// <see cref="RelationnalOperator.GreaterOrEqual"/> and <see cref="RelationnalOperator.LowerOrEqual"/> are sent as
+    /// <c>&gt;</c> and <c>&lt;</c>: CSPICE's windows are closed, so for a quantity that crosses the value they already hold
+    /// the instants where it equals the value, as the managed search's windows do; the two differ only where the quantity
+    /// stays equal to the value over an interval, which <c>&gt;</c> leaves out. <see cref="RelationnalOperator.NotEqual"/>
+    /// is never sent: <see cref="SearchWindows"/> forms it from <c>=</c>.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is not one of the enumeration.</exception>
+    private static string SpiceRelation(RelationnalOperator relationalOperator) => relationalOperator switch
+    {
+        RelationnalOperator.Greater or RelationnalOperator.GreaterOrEqual => ">",
+        RelationnalOperator.Lower or RelationnalOperator.LowerOrEqual => "<",
+        RelationnalOperator.Equal => "=",
+        RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax or RelationnalOperator.LocalMin
+            or RelationnalOperator.LocalMax => relationalOperator.GetDescription(),
+        _ => throw new ArgumentOutOfRangeException(nameof(relationalOperator), relationalOperator,
+            "CSPICE's window searches accept Greater, GreaterOrEqual, Lower, LowerOrEqual, Equal, NotEqual, AbsoluteMin, " +
+            "AbsoluteMax, LocalMin and LocalMax.")
+    };
+
+    /// <summary>
+    /// The windows of a CSPICE search for <paramref name="relationalOperator"/>: the search itself, or for
+    /// <see cref="RelationnalOperator.NotEqual"/>, which CSPICE has not, the rest of the search window once the instants
+    /// of <c>=</c> are taken out, a window from each crossing to the next, as the managed search defines it (#482).
+    /// </summary>
+    private static IEnumerable<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationnalOperator relationalOperator,
+        Func<string, IEnumerable<TimeSystem.Window>> search)
+    {
+        if (relationalOperator != RelationnalOperator.NotEqual)
+        {
+            return search(SpiceRelation(relationalOperator));
+        }
+
+        var end = searchWindow.EndDate.ToTDB();
+        var cursor = searchWindow.StartDate.ToTDB();
+        var windows = new List<TimeSystem.Window>();
+        foreach (var crossing in search("=").OrderBy(x => x.StartDate))
+        {
+            if (crossing.StartDate > cursor)
+            {
+                windows.Add(new TimeSystem.Window(cursor, crossing.StartDate));
+            }
+
+            if (crossing.EndDate > cursor)
+            {
+                cursor = crossing.EndDate;
+            }
+        }
+
+        if (end > cursor)
+        {
+            windows.Add(new TimeSystem.Window(cursor, end));
+        }
+
+        return windows;
+    }
+
+    /// <summary>
+    /// The windows where the distance from the observer to the target satisfies the relation: CSPICE's <c>gfdist</c>.
     /// </summary>
     /// <param name="searchWindow">The search window.</param>
-    /// <param name="observerId">The NAIF id of the observer.</param>
-    /// <param name="targetId">The NAIF id of the target.</param>
-    /// <param name="relationalOperator">The relational operator.</param>
+    /// <param name="observerId">The NAIF identifier of the observer.</param>
+    /// <param name="targetId">The NAIF identifier of the target.</param>
+    /// <param name="relationalOperator">The relation: every value of the enumeration; see the remarks.</param>
     /// <param name="value">The distance, m: the native layer converts it to km for <c>gfdist_c</c> (#466).</param>
     /// <param name="aberration">The aberration correction.</param>
     /// <param name="stepSize">The step of the search.</param>
-    /// <returns>The windows where the constraint holds.</returns>
+    /// <returns>The windows, in TDB.</returns>
+    /// <remarks>
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
+    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// closed (they differ only where the distance stays equal to the value over an interval);
+    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// crossing to the next, as the managed search gives it.
+    /// </remarks>
     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
+    {
+        return SearchWindows(searchWindow, relationalOperator, relation => DistanceWindows(searchWindow, observerId, targetId, relation,
+            value, aberration, stepSize));
+    }
+
+    private IEnumerable<TimeSystem.Window> DistanceWindows(TimeSystem.Window searchWindow, int observerId, int targetId, string relation,
+        double value, Aberration aberration, TimeSpan stepSize)
     {
         lock (lockObject)
         {
@@ -490,7 +564,7 @@ public class SpiceAPI
                 windows[i] = new Window(double.NaN, double.NaN);
             }
 
-            FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relationalOperator.GetDescription(), value,
+            FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relation, value,
                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
             return WithinSearchWindow(windows, searchWindow);
         }
@@ -535,10 +609,17 @@ public class SpiceAPI
     /// <param name="targetFrame">The body-fixed frame of the target's ellipsoid (<c>bframe</c>), or null for the frame
     /// the kernels associate with the body.</param>
     /// <returns></returns>
+    /// <exception cref="ArgumentException">A body modeled as an ellipsoid without a frame given is not a celestial body
+    /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
+    /// process to read for a named spacecraft (#560).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
     {
+        // The frame of an ellipsoid the kernels associate with a body is read from the body's information, which the native
+        // layer ends the process to read for a named spacecraft or instrument (#560): such an ellipsoid is rejected first
+        if (frontShape == ShapeType.Ellipsoid && frontFrame == null) ThrowIfNotCelestialBody(frontBodyId, nameof(frontBodyId));
+        if (targetShape == ShapeType.Ellipsoid && targetFrame == null) ThrowIfNotCelestialBody(targetId, nameof(targetId));
         lock (lockObject)
         {
             string frontFrameName = frontShape == ShapeType.Ellipsoid
@@ -575,6 +656,13 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
+    /// <remarks>
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
+    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// closed (they differ only where the quantity stays equal to the value over an interval);
+    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// crossing to the next, as the managed search gives it.
+    /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
@@ -582,20 +670,23 @@ public class SpiceAPI
         TimeSpan stepSize)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
-        lock (lockObject)
+        return SearchWindows(searchWindow, relationalOperator, relation =>
         {
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
+            lock (lockObject)
             {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
+                var windows = new Window[1000];
+                for (var i = 0; i < 1000; i++)
+                {
+                    windows[i] = new Window(double.NaN, double.NaN);
+                }
 
-            FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
-                SpiceFrameName(frame), coordinateSystem.GetDescription(),
-                coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
-                aberration.GetDescription(), stepSize.TotalSeconds, windows);
-            return WithinSearchWindow(windows, searchWindow);
-        }
+                FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
+                    SpiceFrameName(frame), coordinateSystem.GetDescription(),
+                    coordinate.GetDescription(), relation, value, adjustValue,
+                    aberration.GetDescription(), stepSize.TotalSeconds, windows);
+                return WithinSearchWindow(windows, searchWindow);
+            }
+        });
     }
 
     /// <summary>
@@ -616,7 +707,14 @@ public class SpiceAPI
     /// <param name="illuminationSourceId">The NAIF id of the illumination source.</param>
     /// <param name="method">The computation method of <c>gfilum_c</c>.</param>
     /// <returns>The windows where the constraint holds.</returns>
-    /// <remarks>Before 11.0.0 the altitude was read in km (#488).</remarks>
+    /// <remarks>
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
+    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// closed (they differ only where the quantity stays equal to the value over an interval);
+    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// crossing to the next, as the managed search gives it.
+    /// Before 11.0.0 the altitude was read in km (#488).
+    /// </remarks>
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
@@ -624,22 +722,25 @@ public class SpiceAPI
     {
         if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
         if (method == null) throw new ArgumentNullException(nameof(method));
-        lock (lockObject)
+        return SearchWindows(searchWindow, relationalOperator, relation =>
         {
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
+            lock (lockObject)
             {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
+                var windows = new Window[1000];
+                for (var i = 0; i < 1000; i++)
+                {
+                    windows[i] = new Window(double.NaN, double.NaN);
+                }
 
-            FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
-                illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
-                // The native layer hands the altitude to georec_c beside a radius in km (#488)
-                (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
-                illuminationType.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
-                aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
-            return WithinSearchWindow(windows, searchWindow);
-        }
+                FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
+                    illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
+                    // The native layer hands the altitude to georec_c beside a radius in km (#488)
+                    (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
+                    illuminationType.GetDescription(), relation, value, adjustValue,
+                    aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
+                return WithinSearchWindow(windows, searchWindow);
+            }
+        });
     }
 
     /// <summary>
@@ -933,6 +1034,8 @@ public class SpiceAPI
     /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
     /// convention, the conjugate of the record's rotation, in J2000.
     /// </remarks>
+    /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
+    /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>
     public bool WriteOrientation(FileInfo filePath, int naifId, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
@@ -942,7 +1045,13 @@ public class SpiceAPI
             var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
             if (!enumerable.Any())
                 throw new ArgumentException("Value cannot be an empty collection.", nameof(stateOrientations));
-            bool res = WriteOrientationProxy(filePath.FullName, naifId, stateOrientations.Select(x => x.Convert()).ToArray(), (uint)enumerable.Length);
+            string frame = enumerable[0].ReferenceFrame.Name;
+            var other = enumerable.FirstOrDefault(x => !string.Equals(x.ReferenceFrame.Name, frame, StringComparison.Ordinal));
+            if (other != null)
+                throw new ArgumentException(
+                    $"Every orientation must be in the frame of the first one, {frame}: the one at {other.Epoch} is in {other.ReferenceFrame.Name}.",
+                    nameof(stateOrientations));
+            bool res = WriteOrientationProxy(filePath.FullName, naifId, enumerable.Select(x => x.Convert()).ToArray(), (uint)enumerable.Length);
             if (res == false)
             {
                 throw new InvalidOperationException(
@@ -954,12 +1063,35 @@ public class SpiceAPI
     }
 
     /// <summary>
+    /// Whether <paramref name="naifId"/> is an identifier the native layer can read as a celestial body: a barycenter (0 to
+    /// 9), the Sun (10), a planet, a moon or a Lagrange point (101 to 999), or above 1000 (an asteroid, a comet, a star of
+    /// the library). For any other identifier with a name (a spacecraft such as CASSINI, -82, an instrument), the native
+    /// layer's search of the centre of motion throws a C++ exception across P/Invoke, which ends the process (#560).
+    /// </summary>
+    internal static bool IsCelestialBodyId(int naifId) => naifId is >= 0 and <= 10 or > 100 and < 1000 or > 1000;
+
+    private static void ThrowIfNotCelestialBody(int naifId, string paramName)
+    {
+        if (!IsCelestialBodyId(naifId))
+        {
+            throw new ArgumentException(
+                $"The NAIF identifier {naifId} is not a celestial body: a barycenter (0 to 9), the Sun (10), a planet, a moon or a " +
+                "Lagrange point (101 to 999), or an identifier above 1000. A spacecraft or an instrument (a negative identifier) is not one.",
+                paramName);
+        }
+    }
+
+    /// <summary>
     ///     Get celestial celestialItem information like radius, GM, name, associated frame, ...
     /// </summary>
     /// <param name="naifId"></param>
     /// <returns></returns>
+    /// <exception cref="ArgumentException"><paramref name="naifId"/> is not the identifier of a celestial body
+    /// (<see cref="IsCelestialBodyId"/>): a spacecraft, an instrument or a site of a negative identifier, 11 to 100, or 1000.
+    /// The native layer reads the centre of motion of any named identifier and ended the process for one of them (#560).</exception>
     public CelestialBody GetCelestialBodyInfo(int naifId)
     {
+        ThrowIfNotCelestialBody(naifId, nameof(naifId));
         lock (lockObject)
         {
             return GetCelestialBodyInfoProxy(naifId);
