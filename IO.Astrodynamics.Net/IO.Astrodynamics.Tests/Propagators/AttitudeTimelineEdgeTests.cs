@@ -462,8 +462,9 @@ public class AttitudeTimelineEdgeTests
     /// A prograde held 0 s from its own minimum epoch, given as a TDB label off the TT grid of the Earth, then a nadir: its
     /// window is [M, M] and the nadir activates at M, never before (the end of the hold, the epoch of its TT seconds
     /// truncated to the tick, fell one tick before M for 21 of these 40 epochs before the clamp: the window swapped its ends
-    /// and the nadir activated one tick before the prograde). The rule: the activation is the minimum epoch, the end of a hold of 0 is
-    /// the activation.
+    /// and the nadir activated one tick before the prograde). Since the epoch of a number of seconds is its nearest tick
+    /// (#625), the TT seconds of each of the 40 give back M itself, so the clamp is not reached here. The rule: the
+    /// activation is the minimum epoch, the end of a hold of 0 is the activation.
     /// </summary>
     [Theory]
     [InlineData("RK")]
@@ -471,15 +472,15 @@ public class AttitudeTimelineEdgeTests
     public void AttitudeAtItsMinimumEpoch_HoldZero_EndsAtItsActivation(string integrator)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, S);
-        int short_ = 0;
+        int off = 0;
         for (int k = 0; k < 40; k++)
         {
             var minimum = S.AddSeconds(300.0 + k * 1.3e-8 + 7e-8);
             var (spacecraft, prograde, nadir) = ProgradeThenNadir(earth, S, minimum, 0.0, MinimumEpochGateTests.Orbit(earth, System.Math.PI));
             Integrator propagator = integrator == "RK" ? new RK78Integrator(1e-12, 1e-12) : new VVIntegrator(TimeSpan.FromSeconds(1.0));
             spacecraft.Propagate(new Window(S, S.AddSeconds(600.0)), [earth], propagator, false, false, TimeSpan.FromSeconds(10.0));
-            // The epoch of its TT seconds from S, truncated to the tick, one tick before it
-            if (PropagationTimeArgument.Tt.EpochAt(S, PropagationTimeArgument.Tt.SecondsBetween(S, minimum)) < minimum) short_++;
+            // The epoch of its TT seconds from S, the nearest tick: the minimum epoch itself (#625)
+            if (PropagationTimeArgument.Tt.EpochAt(S, PropagationTimeArgument.Tt.SecondsBetween(S, minimum)) != minimum) off++;
             Assert.Equal(minimum, prograde.ThrustWindow!.Value.StartDate);
             Assert.Equal(minimum, prograde.ManeuverWindow!.Value.StartDate);
             Assert.Equal(minimum, prograde.ManeuverWindow.Value.EndDate);
@@ -489,8 +490,8 @@ public class AttitudeTimelineEdgeTests
             Assert.Equal(new Maneuver.Maneuver[] { prograde, nadir }, spacecraft.ExecutedManeuvers.ToArray());
         }
 
-        _output.WriteLine($"MEASURE #539 attitude at its minimum epoch, hold 0, {integrator}: {short_} of 40 epochs whose TT seconds give the epoch one tick before");
-        Assert.True(short_ > 0, "no epoch off the TT grid");
+        _output.WriteLine($"MEASURE #539 attitude at its minimum epoch, hold 0, {integrator}: {off} of 40 epochs whose TT seconds do not give the epoch back");
+        Assert.Equal(0, off);
     }
 
     /// <summary>

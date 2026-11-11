@@ -24,15 +24,19 @@ namespace IO.Astrodynamics.Propagator;
 /// </para>
 /// <para>
 /// The TT mapping is computed in double seconds, the tick-exact label plus IO's TDB − TT series
-/// (<see cref="TDBTimeFrame.TdbMinusTt"/>), never through chained <see cref="Time"/> conversions, which truncate the
-/// offset to the 100 ns tick at each step. A label is still truncated to the tick when it becomes a <see cref="Time"/>
-/// (<see cref="Time.AddSeconds"/>), as before: it is at or before its instant, by less than 1.0012e-7 s (measured over
-/// 200 000 random cases). The seconds between two epochs (<see cref="SecondsBetween"/>) and the length of a window
-/// (<see cref="Length"/>) carry no truncation of the offset.
+/// (<see cref="TDBTimeFrame.TdbMinusTt"/>), never through chained <see cref="Time"/> conversions, which round the
+/// offset to the 100 ns tick at each step. A label is still rounded to the tick when it becomes a <see cref="Time"/>
+/// (<see cref="Time.AddSeconds"/>): the nearest tick of its double since #625, within half a tick of its instant and the
+/// rounding of the double (it was at or before its instant, by less than 1.0012e-7 s, when AddSeconds truncated). The
+/// seconds between two epochs (<see cref="SecondsBetween"/>) and the length of a window (<see cref="Length"/>) carry no
+/// rounding of the offset.
 /// </para>
 /// <para>
 /// The TDB time argument is the code it replaces, expression for expression on TDB labels, so that a propagation about
 /// any other body is bit for bit what it was; an epoch in another frame is converted to TDB before it is read (#507).
+/// Since #625 its step epochs (<see cref="StepEpochs"/>) and <see cref="EpochAfter"/> are the labels of
+/// <see cref="EpochAt"/>, the nearest tick of their seconds, where they added <c>TimeSpan.FromSeconds</c>, which
+/// truncates.
 /// </para>
 /// </remarks>
 internal abstract class PropagationTimeArgument
@@ -85,19 +89,21 @@ internal abstract class PropagationTimeArgument
     /// </summary>
     /// <remarks>
     /// About the Earth, a TDB epoch gives the TDB label of TT + <paramref name="seconds"/> (<see cref="EpochAt"/>), and any
-    /// other frame its TT, exact in ticks, plus the span, back in its frame: a UTC epoch therefore gets
-    /// <c>from + TimeSpan.FromSeconds(seconds)</c>, as before, away from a leap second, and counts the leap second across
-    /// one. About any other body, a TDB epoch gets <c>from + TimeSpan.FromSeconds(seconds)</c>, as before, and any other
-    /// frame its TDB plus the span, back in its frame.
+    /// other frame its TT, exact in ticks, plus the seconds, back in its frame: a UTC epoch therefore gets
+    /// <c>from.AddSeconds(seconds)</c> away from a leap second, and counts the leap second across one. About any other
+    /// body, a TDB epoch gets <c>from.AddSeconds(seconds)</c>, the label <see cref="EpochAt"/> gives, and any other frame
+    /// its TDB plus the seconds, back in its frame. The seconds become the nearest tick (<see cref="Time.AddSeconds"/>,
+    /// #625), as in every label of the propagation; <c>TimeSpan.FromSeconds</c>, which truncates, was used before.
     /// </remarks>
     internal static Time EpochAfter(ILocalizable centralBody, in Time from, double seconds)
     {
         var argument = For(centralBody);
-        var span = TimeSpan.FromSeconds(seconds);
         if (from.Frame is TDBTimeFrame)
-            return argument == Tt ? Tt.EpochAt(from, seconds) : from + span;
+            return argument.EpochAt(from, seconds);
 
-        return argument == Tt ? (from.ToTDT() + span).ConvertTo(from.Frame) : (from.ToTDB() + span).ConvertTo(from.Frame);
+        return argument == Tt
+            ? from.ToTDT().AddSeconds(seconds).ConvertTo(from.Frame)
+            : from.ToTDB().AddSeconds(seconds).ConvertTo(from.Frame);
     }
 
     /// <summary>
@@ -143,7 +149,7 @@ internal abstract class PropagationTimeArgument
     /// <summary>
     /// The time left to integrate at <paramref name="current"/>, a segment base, in a propagation of
     /// <paramref name="duration"/> seconds from <paramref name="start"/> that ends at <paramref name="end"/>: TDB,
-    /// <c>(end - current).TotalSeconds</c>; TT, the duration less the seconds from the start, without the truncation of
+    /// <c>(end - current).TotalSeconds</c>; TT, the duration less the seconds from the start, without the rounding of
     /// the end label.
     /// </summary>
     internal abstract double Remaining(in Time start, double duration, in Time end, in Time current);
@@ -227,11 +233,9 @@ internal abstract class PropagationTimeArgument
 
         internal override Time EpochAt(in Time baseEpoch, double t) => baseEpoch.AddSeconds(t);
 
-        internal override (Time Start, Time End) StepEpochs(in Time baseEpoch, double cumulativeTime, double stepSize)
-        {
-            var start = baseEpoch + TimeSpan.FromSeconds(cumulativeTime);
-            return (start, start + TimeSpan.FromSeconds(stepSize));
-        }
+        // The labels the integrators give the ends of the step (EpochAt), each the nearest tick of its seconds (#625)
+        internal override (Time Start, Time End) StepEpochs(in Time baseEpoch, double cumulativeTime, double stepSize) =>
+            (EpochAt(baseEpoch, cumulativeTime), EpochAt(baseEpoch, cumulativeTime + stepSize));
 
         // ToTDB is the identity on a TDB label (#510): two labels give (epoch - baseEpoch), the former expression
         internal override double SecondsBetween(in Time baseEpoch, in Time epoch) =>
@@ -254,7 +258,7 @@ internal abstract class PropagationTimeArgument
             SecondsBetween(window.StartDate, window.EndDate);
 
         // TDB(TT_b + t) = TDB_b + t + (Δ(TT_b + t) − Δ_b), Δ = TDB − TT: the label of the base plus a double, which
-        // AddSeconds truncates to the tick; no conversion of Time, so no second truncation
+        // AddSeconds rounds to the nearest tick (#625); no conversion of Time, so no second rounding
         internal override Time EpochAt(in Time baseEpoch, double t)
         {
             var (ticks, correction) = TerrestrialTimeParts(baseEpoch);

@@ -442,6 +442,26 @@ public class SpiceAPI
         }
     }
 
+    /// <summary>
+    /// The windows a CSPICE search wrote, as TDB times: an end at an end of the search window, the seconds passed for it,
+    /// is that end. Where an ulp of the seconds is coarser than a tick (2017 to 2028, 1971 to 1983), the seconds of a
+    /// tick made a <see cref="Time"/> again are the neighbouring tick for about 16 % of ticks, which put such an end a tick
+    /// off the search window's, outside it or inside (#625). A transition inside is the nearest tick of its seconds,
+    /// within the search window: the rounding is monotone, and where an ulp is coarser than a tick the double after the seconds of a
+    /// tick is more than half a tick past that tick (the double before, more than half a tick before it).
+    /// </summary>
+    private static IEnumerable<TimeSystem.Window> WithinSearchWindow(Window[] windows, TimeSystem.Window searchWindow)
+    {
+        var start = searchWindow.StartDate.ToTDB();
+        var end = searchWindow.EndDate.ToTDB();
+        double startSeconds = start.TimeSpanFromJ2000().TotalSeconds;
+        double endSeconds = end.TimeSpanFromJ2000().TotalSeconds;
+        return windows.Where(x => !double.IsNaN(x.Start)).Select(x => new TimeSystem.Window(Label(x.Start), Label(x.End))).ToArray();
+
+        Time Label(double seconds) =>
+            seconds <= startSeconds ? start : seconds >= endSeconds ? end : Time.Create(seconds, TimeFrame.TDBFrame);
+    }
+
     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
@@ -456,7 +476,7 @@ public class SpiceAPI
 
             FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relationalOperator.GetDescription(), value,
                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
-            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+            return WithinSearchWindow(windows, searchWindow);
         }
     }
 
@@ -519,7 +539,7 @@ public class SpiceAPI
 
             FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
                 frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows);
-            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+            return WithinSearchWindow(windows, searchWindow);
         }
     }
 
@@ -557,7 +577,7 @@ public class SpiceAPI
                 SpiceFrameName(frame), coordinateSystem.GetDescription(),
                 coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
-            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+            return WithinSearchWindow(windows, searchWindow);
         }
     }
 
@@ -581,7 +601,7 @@ public class SpiceAPI
                 planetodetic.Convert(),
                 illuminationType.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
                 aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
-            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+            return WithinSearchWindow(windows, searchWindow);
         }
     }
 
@@ -615,7 +635,7 @@ public class SpiceAPI
             FindWindowsInFieldOfViewConstraintProxy(searchWindowDto, observerId, instrumentId, targetId, targetFrame.Name, targetShape.GetDescription(),
                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
 
-            return windows.Where(x => !double.IsNaN(x.Start)).Select(x => x.Convert());
+            return WithinSearchWindow(windows, searchWindow);
         }
     }
 
@@ -715,7 +735,10 @@ public class SpiceAPI
         var stateVector = ReadEphemerisAtGivenEpochProxy(epoch.ToTDB().TimeSpanFromJ2000().TotalSeconds,
             observer.NaifId, targetId, managed == null ? SpiceFrameName(frame) : Frame.ICRF.Name, aberration.GetDescription());
         ThrowOnFailedRead(stateVector);
-        var tdb = Time.Create(stateVector.Epoch, TimeFrame.TDBFrame);
+        // Labelled with the epoch asked, the instant SPICE read at, as SpiceDataProvider.GetEphemeris does: where an ulp
+        // of the seconds is coarser than a tick (2017 to 2028, 1971 to 1983), the epoch SPICE returns, made a Time again,
+        // is the neighbouring tick for about 16 % of ticks (#625)
+        var tdb = epoch.ToTDB();
         return managed == null
             ? new OrbitalParameters.StateVector(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, frame)
             : ToManagedFrame(stateVector.Position.Convert(), stateVector.Velocity.Convert(), observer, tdb, managed, frame);

@@ -538,9 +538,9 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
 
     // The local minima of the distance on the two SPKs: those of CSPICE's gfdist_c (LOCMIN, step 60 s, its convergence
     // tolerance of 1e-6 s), each refined to the zero of the range rate of CSPICE's states by secants (1 ms base) to an
-    // epoch on the grid of ticks (Time.AddSeconds truncates to the tick), then below the tick (CspiceZeroBelowTheTick): the
-    // zero is Epoch + Offset, Offset in s, and Distance the distance there; the secants read the SPKs within their
-    // coverage only. The passes with two minima per orbit take the step of their case (1 s, 0.2 s with the fold): their
+    // epoch on the grid of ticks (Time.AddSeconds gives the nearest tick, #625), then below the tick
+    // (CspiceZeroBelowTheTick): the zero is Epoch + Offset, Offset in s, and Distance the distance there; the secants
+    // read the SPKs within their coverage only. The passes with two minima per orbit take the step of their case (1 s, 0.2 s with the fold): their
     // maxima lie less than 60 s from a minimum, which a step of 60 s steps over
     private (TimeSystem.Time Epoch, double Offset, double Distance)[] CspiceLocalMinima(Window window,
         CrossingEncounterCase crossing = null)
@@ -618,7 +618,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         // three), 8.949e-8 s, rounded up to two digits. At the tick nearer the zero (#624), 6.430e-8 s at 60 s steps
         // (#621, S1 and F1) and 8.949e-8 s at the default steps (S1), where the states and their SPK place the zero
         // further apart; before #624, against the same reference, 1.525e-7 s and 1.493e-7 s. Before, CSPICE's minimum
-        // was taken on the grid of ticks (Time.AddSeconds truncates to the tick), up to 0.96 tick from its zero: 1e-7 s
+        // was taken on the grid of ticks (Time.AddSeconds then truncated to the tick), up to 0.96 tick from its zero: 1e-7 s
         // and 2e-7 s measured, bounds 2e-7 s and 4e-7 s. The miss: twice the worst over Linux x64, Windows x64 and
         // macOS arm64 (CI of #622 at 7f5e6dfb, 2026-11-10; the same on the three), 1.129e-8 m, the propagation against
         // its SPK (degree-7 interpolation of the 60 s outputs); 1.115e-8 m against CSPICE's distance at its zero below

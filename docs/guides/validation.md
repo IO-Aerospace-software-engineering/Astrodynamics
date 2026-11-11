@@ -216,17 +216,25 @@ lot 2; `conformance-report.json`):
 |------|----------|----------|-----------|---------------|
 | `propagator_24h_leo400_grav10_drag_006` | 4.1 mm | 0.0067 mm/s | 1 m, 1 mm/s | 0.0067 |
 | `propagator_6h_leo250_grav10_drag_007` | 20.2 mm | 0.023 mm/s | 0.25 m, 0.25 mm/s | 0.092 |
-| `propagator_24h_leo500_grav10_drag_008` | 8.3 mm | 0.0077 mm/s | 1 m, 1 mm/s | 0.0083 |
-| `propagator_24h_leo200x800_grav10_drag_009` | 32.0 mm | 0.036 mm/s | 1 m, 1 mm/s | 0.036 |
-| `propagator_72h_geo_grav10_srp_010` | 0.13 mm | 1.0e-5 mm/s | 3 m, 3 mm/s | 4.5e-5 |
-| `propagator_24h_sso700_grav10_srp_011` | 2.2 mm | 0.0024 mm/s | 1 m, 1 mm/s | 0.0024 |
-| `propagator_48h_meo_grav10_srp_012` | 0.62 mm | 1.1e-4 mm/s | 2 m, 2 mm/s | 3.1e-4 |
-| `propagator_72h_molniya_grav10_013` | 0.35 mm | 1.9e-4 mm/s | 3 m, 3 mm/s | 1.2e-4 |
-| `propagator_72h_gto_grav10_014` | 0.72 mm | 1.3e-4 mm/s | 3 m, 3 mm/s | 2.4e-4 |
-| `propagator_72h_gto_grav10_drag_srp_015` | 12.2 mm | 0.0017 mm/s | 3 m, 3 mm/s | 0.0041 |
+| `propagator_24h_leo500_grav10_drag_008` | 8.0 mm | 0.0074 mm/s | 1 m, 1 mm/s | 0.0080 |
+| `propagator_24h_leo200x800_grav10_drag_009` | 36.1 mm | 0.040 mm/s | 1 m, 1 mm/s | 0.040 |
+| `propagator_72h_geo_grav10_srp_010` | 0.13 mm | 1.0e-5 mm/s | 3 m, 3 mm/s | 4.3e-5 |
+| `propagator_24h_sso700_grav10_srp_011` | 1.8 mm | 0.0020 mm/s | 1 m, 1 mm/s | 0.0020 |
+| `propagator_48h_meo_grav10_srp_012` | 0.63 mm | 1.1e-4 mm/s | 2 m, 2 mm/s | 3.2e-4 |
+| `propagator_72h_molniya_grav10_013` | 0.29 mm | 1.5e-4 mm/s | 3 m, 3 mm/s | 9.7e-5 |
+| `propagator_72h_gto_grav10_014` | 0.54 mm | 9.4e-5 mm/s | 3 m, 3 mm/s | 1.8e-4 |
+| `propagator_72h_gto_grav10_drag_srp_015` | 3.9 mm | 5.4e-4 mm/s | 3 m, 3 mm/s | 0.0013 |
 | `propagator_24h_llo_grav20_016` | 0.44 mm | 4.8e-4 mm/s | 1 m, 1 mm/s | 4.8e-4 |
 | `propagator_24h_lmo_grav20_017` | 3.6 mm | 0.0030 mm/s | 1 m, 1 mm/s | 0.0036 |
 | `propagator_30d_helio_nbody_018` | 4.6 mm | 8.8e-6 mm/s | 30 m, 30 mm/s | 1.5e-4 |
+
+Measured again with [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Release,
+Linux, 2026-11-10, the suite's main 33286d2): the labels of the stages take the nearest tick of their seconds, so the
+forces of the Earth cases are evaluated up to a tick from where they were, and the step control takes other steps from
+there; the rows of 008 to 015 moved, by the integration error of other steps (before it, 008 8.3 mm, 0.0077 mm/s and
+0.0083; 009 32.0 mm, 0.036 mm/s and 0.036; 010 4.5e-5; 011 2.2 mm, 0.0024 mm/s and 0.0024; 012 0.62 mm and 3.1e-4; 013
+0.35 mm, 1.9e-4 mm/s and 1.2e-4; 014 0.72 mm, 1.3e-4 mm/s and 2.4e-4; 015 12.2 mm, 0.0017 mm/s and 0.0041), the
+others to the figures printed; the Moon, Mars and the Sun integrate over TDB seconds from labels a tick off too.
 
 About the Earth the library integrates over the TT seconds of the window since #501, as the suite does (its `spec.md`
 §12.1) and GMAT (its native A1 rate), the forces at TT₀ + t
@@ -281,32 +289,39 @@ Release, Linux, 2026-11-05, the runner on the suite at 9dca9c7: the worst ratio 
 case over its keys. The burn epochs count exact TT seconds since
 [#630](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/630) (Release, Linux, 2026-11-10, the
 suite's main 33286d2): the runner had counted them through `ToTDT`, which truncates TDB − TT to the tick, so each moved
-by 0.05 to 0.96 tick, and the `maneuver_epoch_s` row with them (8.4e-7 s, 8.4e-4 before).
+by 0.05 to 0.96 tick, and the `maneuver_epoch_s` row with them (8.4e-7 s, 8.4e-4 before). Measured again with
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Release, Linux, 2026-11-10, the
+suite's main 33286d2), whose labels take the nearest tick of their seconds: the burn epochs move by a tick at most, and
+the states with the stage labels of the propagation and the steps the step control then takes. Before it,
+`maneuver_epoch_s` 8.0e-7 s (8.0e-4), `maneuver_position_km` 6.0 mm (0.0060), `maneuver_delta_v_km_s` 1.1e-3 mm/s
+(0.0011), `maneuver_mass_kg` 3.2e-7 kg (3.2e-4, 008), `propagator_position_km` 31.4 mm and `propagator_velocity_km_s`
+0.034 mm/s (0.031 and 0.034), and per case 0.0018 (002), 0.0040 (003), 0.0022 (004), 0.0016 (005), 0.0027 (006, 007),
+0.034 (008), 0.0034 (009), 0.0026 (011) and 0.011 (012).
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
-| `maneuver_epoch_s` | 8.0e-7 s | 8.0e-4 | `maneuver_24h_leo_pm_apsidal_008`, `burns[align].elapsed_s` |
-| `maneuver_position_km` | 6.0 mm | 0.0060 | 008, `burns[align].position_km` |
-| `maneuver_delta_v_km_s` | 1.1e-3 mm/s | 0.0011 | `maneuver_24h_leo_pm_gto_012`, `burns[raise].delta_v_km_s` |
-| `maneuver_mass_kg` | 3.2e-7 kg | 3.2e-4 | 008, `burns[align].mass_after_kg` |
-| `propagator_position_km` | 31.4 mm | 0.031 | 008, `final_x_km` |
-| `propagator_velocity_km_s` | 0.034 mm/s | 0.034 | 008, `final_vx_km_s` |
+| `maneuver_epoch_s` | 9.0e-7 s | 9.0e-4 | `maneuver_24h_leo_pm_apsidal_008`, `burns[align].elapsed_s` |
+| `maneuver_position_km` | 6.8 mm | 0.0068 | 008, `burns[align].position_km` |
+| `maneuver_delta_v_km_s` | 8.0e-4 mm/s | 8.0e-4 | `maneuver_24h_leo_pm_gto_012`, `burns[raise].delta_v_km_s` |
+| `maneuver_mass_kg` | 2.4e-8 kg | 2.4e-5 | `maneuver_24h_leo_pm_combined_010`, `burns[combined].mass_after_kg` |
+| `propagator_position_km` | 35.9 mm | 0.036 | 008, `final_x_km` |
+| `propagator_velocity_km_s` | 0.040 mm/s | 0.040 | 008, `final_vx_km_s` |
 | `lambert_velocity_km_s` | 4.2e-3 mm/s | 0.0042 | `lambert_10800s_0rev_002`, `v2_km_s` |
 
 | Case | Largest ratio | Output |
 |------|---------------|--------|
 | `maneuver_24h_leo_pm_apoapsis_001` | 0.0038 | `burns[raise].position_km` |
-| `maneuver_24h_leo_grav10_apoapsis_002` | 0.0018 | `burns[raise].position_km` |
-| `maneuver_24h_leo_pm_hohmann_003` | 0.0040 | `burns[raise_periapsis].position_km` |
-| `maneuver_24h_leo_grav10_hohmann_004` | 0.0022 | `burns[raise_periapsis].position_km` |
-| `maneuver_24h_leo_pm_lower_005` | 0.0016 | `burns[lower].position_km` |
-| `maneuver_24h_leo_pm_plane_006` | 0.0027 | `burns[plane].position_km` |
-| `maneuver_24h_leo_grav10_plane_007` | 0.0027 | `burns[plane].position_km` |
-| `maneuver_24h_leo_pm_apsidal_008` | 0.034 | `final_vx_km_s` |
-| `maneuver_24h_leo_pm_phasing_009` | 0.0034 | `burns[restore].position_km` |
+| `maneuver_24h_leo_grav10_apoapsis_002` | 0.0011 | `burns[raise].position_km` |
+| `maneuver_24h_leo_pm_hohmann_003` | 0.0046 | `burns[raise_periapsis].position_km` |
+| `maneuver_24h_leo_grav10_hohmann_004` | 0.0011 | `burns[raise_apoapsis].position_km` |
+| `maneuver_24h_leo_pm_lower_005` | 0.0023 | `burns[lower].position_km` |
+| `maneuver_24h_leo_pm_plane_006` | 0.0034 | `burns[plane].position_km` |
+| `maneuver_24h_leo_grav10_plane_007` | 0.0034 | `burns[plane].position_km` |
+| `maneuver_24h_leo_pm_apsidal_008` | 0.040 | `final_vx_km_s` |
+| `maneuver_24h_leo_pm_phasing_009` | 0.0027 | `burns[restore].position_km` |
 | `maneuver_24h_leo_pm_combined_010` | 0.0024 | `burns[combined].position_km` |
-| `maneuver_24h_leo_grav10_chain_011` | 0.0026 | `burns[raise_periapsis].position_km` |
-| `maneuver_24h_leo_pm_gto_012` | 0.011 | `final_x_km` |
+| `maneuver_24h_leo_grav10_chain_011` | 0.0018 | `burns[raise_periapsis].position_km` |
+| `maneuver_24h_leo_pm_gto_012` | 0.0080 | `final_x_km` |
 | `lambert_3000s_0rev_001` | 3.3e-4 | `v2_km_s` |
 | `lambert_10800s_0rev_002` | 0.0042 | `v2_km_s` |
 | `lambert_10800s_1rev_lower_003` | 4.6e-6 | `v2_km_s` |
@@ -315,8 +330,8 @@ by 0.05 to 0.96 tick, and the `maneuver_epoch_s` row with them (8.4e-7 s, 8.4e-4
 | `lambert_20000s_2rev_lower_006` | 3.6e-4 | `v2_km_s` |
 | `lambert_20000s_2rev_higher_007` | 0.0025 | `v2_km_s` |
 
-The burn epochs agree within 8.4e-7 s, GMAT's epoch quantum (an A1 MJD double, 3.1e-7 s apart), and the burn
-positions within 6 mm, the distance travelled in that time. 008's final state, the worst of the lot, is of the size of
+The burn epochs agree within 9.0e-7 s, GMAT's epoch quantum (an A1 MJD double, 3.1e-7 s apart), and the burn
+positions within 7 mm, the distance travelled in that time. 008's final state, the worst of the lot, is of the size of
 the golden's own spread (0.046 of the tolerance, its corrector variants, conformance-tests#31). The field cases (002,
 004, 007, 011) agree as closely as the point-mass ones: the goldens orient the Earth by the suite's ITRF93 (GMAT's
 `EarthS`), as the library does. The CI logs of `Lot3CaseTests` give the ratios on Windows and macOS arm64.
@@ -359,7 +374,14 @@ The runner reads them through the library's window searches, whose edges are the
 Every key takes its operational tolerance (no case has an override): 10 ms for a pass or eclipse edge, 100 ms for a
 duration and a culmination, 1e-4 deg for an angle, 1 m for a range or an apsis radius, 0.1 mm/s for a range rate, 1 ms
 for an orbital event, 1e-5 rad for an attitude. Release, Linux, 2026-11-06, the runner on the suite at 4cd11f9: the
-worst ratio of each key over the cases, and of each case over its keys.
+worst ratio of each key over the cases, and of each case over its keys. Measured again with
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Release, Linux, 2026-11-10, the
+suite's main 33286d2), whose labels take the nearest tick of their seconds: the rows of the range, the range rate and the
+attitude angle, and the cases of the stations 001 to 005, of the events 001, 002 and 004 and of the attitudes moved.
+Before it, `tracking_range_km` 1.2 mm (0.0012, 002 `samples[8]`), `tracking_range_rate_km_s` 0.014 mm/s (0.137),
+`attitude_angle_rad` 4.2e-10 rad (4.2e-5, 004 `attitude_quaternions[715]`), and per case 0.072 (stations 001 and 005,
+`samples[3].range_rate_km_s`), 0.137 (002, 003), 0.101 (004), 0.0015 (events 001, `events.descending_node[12]`), 0.0012
+(002), 8.5e-4 (004), 1.5e-5 (attitudes 001, 002 and 005, sample 118), 8.2e-6 (003) and 4.2e-5 (004).
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
@@ -367,21 +389,21 @@ worst ratio of each key over the cases, and of each case over its keys.
 | `station_duration_s` | 0.21 ms | 0.0021 | 006, `passes[0].duration_s` |
 | `station_culmination_time_s` | 0.55 ms | 0.0055 | 006, `passes[0].culmination` |
 | `station_angle_deg` | 4.4e-7 deg | 0.0044 | 006, `passes[4].max_elevation_deg` |
-| `tracking_range_km` | 1.2 mm | 0.0012 | `ground_station_24h_leo_mask10_lt_002`, `samples[8].range_km` |
-| `tracking_range_rate_km_s` | 0.014 mm/s | 0.137 | `ground_station_24h_leo_mask10_lts_003`, `samples[10].range_rate_km_s` |
+| `tracking_range_km` | 1.1 mm | 0.0011 | `ground_station_24h_leo_mask10_xlt_004`, `samples[6].range_km` |
+| `tracking_range_rate_km_s` | 6.9e-3 mm/s | 0.069 | `ground_station_24h_leo_mask10_lts_003`, `samples[10].range_rate_km_s` |
 | `eclipse_time_s` | 1.07 ms | 0.107 | `eclipse_8d_geo_season_earth_004`, `events[1].stop` |
 | `eclipse_duration_s` | 1.49 ms | 0.015 | 004, `events[2].duration_s` |
 | `event_epoch_s` | 1.2e-5 s | 0.012 | `orbital_events_24h_leo_grav10_altitude_003`, `events.altitude_up[12].elapsed_s` |
 | `event_radius_km` | 0.021 mm | 2.1e-5 | `orbital_events_48h_heo_grav10_apsides_nodes_004`, `events.apoapsis[3].radius_km` |
-| `attitude_angle_rad` | 4.2e-10 rad | 4.2e-5 | `attitude_12h_molniya_lvlh_004`, `attitude_quaternions[715]` |
+| `attitude_angle_rad` | 4.0e-10 rad | 4.0e-5 | `attitude_12h_molniya_lvlh_004`, `attitude_quaternions[717]` |
 
 | Case | Largest ratio | Output |
 |------|---------------|--------|
-| `ground_station_24h_leo_mask10_geo_001` | 0.072 | `samples[3].range_rate_km_s` |
-| `ground_station_24h_leo_mask10_lt_002` | 0.137 | `samples[10].range_rate_km_s` |
-| `ground_station_24h_leo_mask10_lts_003` | 0.137 | `samples[10].range_rate_km_s` |
-| `ground_station_24h_leo_mask10_xlt_004` | 0.101 | `samples[10].range_rate_km_s` |
-| `ground_station_24h_leo_mask0_geo_005` | 0.072 | `samples[3].range_rate_km_s` |
+| `ground_station_24h_leo_mask10_geo_001` | 0.050 | `passes[5].set` |
+| `ground_station_24h_leo_mask10_lt_002` | 0.069 | `samples[10].range_rate_km_s` |
+| `ground_station_24h_leo_mask10_lts_003` | 0.069 | `samples[10].range_rate_km_s` |
+| `ground_station_24h_leo_mask10_xlt_004` | 0.057 | `samples[11].range_rate_km_s` |
+| `ground_station_24h_leo_mask0_geo_005` | 0.044 | `passes[1].rise` |
 | `ground_station_12h_lro_mask0_moon_lt_006` | 0.055 | `passes[0].set` |
 | `eclipse_simple_001` | 0.046 | `umbra_exit` |
 | `eclipse_72h_geo_earth_moon_002` | 0.048 | `events[8].stop` |
@@ -389,24 +411,24 @@ worst ratio of each key over the cases, and of each case over its keys.
 | `eclipse_8d_geo_season_earth_004` | 0.107 | `events[1].stop` |
 | `eclipse_1h_leo_annular_moon_005` | 0.036 | `events[1].stop` |
 | `eclipse_1h_leo_total_moon_006` | 0.048 | `events[0].stop` |
-| `orbital_events_24h_leo_pm_apsides_nodes_001` | 0.0015 | `events.descending_node[12].elapsed_s` |
-| `orbital_events_24h_leo_grav10_apsides_nodes_002` | 0.0012 | `events.periapsis[8].elapsed_s` |
+| `orbital_events_24h_leo_pm_apsides_nodes_001` | 0.0018 | `events.periapsis[12].elapsed_s` |
+| `orbital_events_24h_leo_grav10_apsides_nodes_002` | 0.0013 | `events.periapsis[8].elapsed_s` |
 | `orbital_events_24h_leo_grav10_altitude_003` | 0.012 | `events.altitude_up[12].elapsed_s` |
-| `orbital_events_48h_heo_grav10_apsides_nodes_004` | 8.5e-4 | `events.descending_node[2].elapsed_s` |
+| `orbital_events_48h_heo_grav10_apsides_nodes_004` | 6.5e-4 | `events.descending_node[2].elapsed_s` |
 | `orbital_events_48h_heo_grav10_altitude_005` | 7.8e-4 | `events.altitude_up[1].elapsed_s` |
-| `attitude_2h_leo_nadir_normal_001` | 1.5e-5 | `attitude_quaternions[118]` |
-| `attitude_2h_leo_nadir_velocity_002` | 1.5e-5 | `attitude_quaternions[118]` |
-| `attitude_2h_leo_lvlh_003` | 8.2e-6 | `attitude_quaternions[113]` |
-| `attitude_12h_molniya_lvlh_004` | 4.2e-5 | `attitude_quaternions[715]` |
-| `attitude_2h_leo_nadir_axis_005` | 1.5e-5 | `pointing_directions[118]` |
+| `attitude_2h_leo_nadir_normal_001` | 1.0e-5 | `attitude_quaternions[113]` |
+| `attitude_2h_leo_nadir_velocity_002` | 1.0e-5 | `attitude_quaternions[113]` |
+| `attitude_2h_leo_lvlh_003` | 1.1e-5 | `attitude_quaternions[117]` |
+| `attitude_12h_molniya_lvlh_004` | 4.0e-5 | `attitude_quaternions[717]` |
+| `attitude_2h_leo_nadir_axis_005` | 1.0e-5 | `pointing_directions[113]` |
 
 The pass and eclipse edges are within GMAT's millisecond print (±0.5 ms) but on two cases: the passes of LRO (006,
 0.55 ms), where GMAT converges the light time that the model iterates once (0.88 ms of the suite's E_2nd there), and the
 grazing umbra of the GEO season (004, 1.07 ms), whose chord moves by about 12 ms per metre out of the shadow plane,
-GMAT's own out-of-plane drift of 0.15 m (the suite's `spec.md` §12.2, G2). The orbital events agree to 1.5e-6 s on the apsides and nodes, GMAT's epoch
+GMAT's own out-of-plane drift of 0.15 m (the suite's `spec.md` §12.2, G2). The orbital events agree to 1.8e-6 s on the apsides and nodes (1.5e-6 s before #625), GMAT's epoch
 quantum, and to 1.2e-5 s on the LEO altitude crossings, GMAT's own altitude (1 mm from CSPICE `recgeo`). The range rate
-with light time, the largest ratio of the lot (0.014 mm/s), is the library's light-time rate since #491 against
-`azlcpo`'s. The CI logs of `Lot4CaseTests` give the ratios on Windows and macOS arm64.
+with light time (6.9e-3 mm/s, the largest ratio of the lot, 0.137 and 0.014 mm/s, before #625) is the library's
+light-time rate since #491 against `azlcpo`'s. The CI logs of `Lot4CaseTests` give the ratios on Windows and macOS arm64.
 
 ### Lot 5: TLEs, SGP4 and TEME
 
@@ -526,7 +548,9 @@ locally): every case passes; the worst ratio of each key over the cases, and of 
 the figure before it in brackets. The `tca_s` of propagated objects counts exact TT seconds since
 [#630](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/630) (same run): the runner had counted
 it through `ToTDT`, which truncates TDB − TT to the tick, 0.06 to 0.98 tick late on these dates; this moved the rows
-of 001, 002, 003 and 008 (0.0058, 0.0037, 0.0037 and 0.0064 at `minima[3].tca_s` before it).
+of 001, 002, 003 and 008 (0.0058, 0.0037, 0.0037 and 0.0064 at `minima[3].tca_s` before it). With
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (same suite, 2026-11-10) the
+labels take the nearest tick of their seconds: of these figures only 005 moved, the figure before it in brackets.
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
@@ -551,7 +575,7 @@ of 001, 002, 003 and 008 (0.0058, 0.0037, 0.0037 and 0.0064 at `minima[3].tca_s`
 | `conjunction_6h_leo500_grav10_crossing_002` | 0.0019 (0.0025) | `tca_s` (`relative_position_rtn_km`) |
 | `conjunction_6h_leo500_pm_crossing_003` | 0.0019 (0.0024) | `tca_s` (`relative_position_rtn_km`) |
 | `conjunction_6h_geo_grav10_slow_004` | 1.9e-5 | `objects[1].correlation_rtn` |
-| `conjunction_6h_leo700_grav10_flat_005` | 6.4e-5 | `relative_velocity_rtn_km_s` |
+| `conjunction_6h_leo700_grav10_flat_005` | 9.6e-5 (6.4e-5) | `relative_velocity_rtn_km_s` |
 | `conjunction_6h_leo400_grav10_drag_crossing_006` | 0.30 | `objects[0].correlation_rtn` |
 | `conjunction_12h_leo500_spk_crossing_007` | 0.027 (0.50) | `tca_s` (`relative_velocity_rtn_km_s`) |
 | `conjunction_12h_leo500_grav10_allminima_008` | 0.0064 (0.0063) | `minima[14].tca_s` |
@@ -726,13 +750,23 @@ with SRP. Thresholds of the specification: R1 below 1e-7, R2 to R5 below 1e-4 ou
 | Case | Φ_rr | Φ_rv | Φ_vr | Φ_vv | Ψ, position | Ψ, velocity | In the penumbra |
 |------|------|------|------|------|-------------|-------------|-----------------|
 | R1 | 1.3e-8 | 1.6e-8 | 1.4e-8 | 1.7e-8 | | | |
-| R2 | 3.0e-8 | 1.3e-8 | 3.0e-8 | 1.2e-8 | Cd 1.2e-7 | Cd 1.2e-7 | |
-| R3 | 2.3e-7 | 2.5e-7 | 2.3e-7 | 2.5e-7 | Cr 1.6e-5 | Cr 2.3e-4 (local, a record) | 30 crossings: Φ 2.3e-7 to 2.5e-7, Ψ_Cr 7.9e-6 |
-| R4 | 9.0e-9 | 2.4e-9 | 8.9e-9 | 2.2e-9 | Cr 1.4e-6 | Cr 1.6e-8 | 2 crossings: Φ 5.1e-10 to 5.7e-9, Ψ_Cr 5.1e-9 |
-| R5 | 2.4e-7 | 2.4e-7 | 2.4e-7 | 2.4e-7 | Cd 1.4e-7 | Cd 1.4e-7 | |
+| R2 | 1.6e-8 | 9.1e-9 | 1.6e-8 | 8.2e-9 | Cd 1.1e-7 | Cd 1.1e-7 | |
+| R3 | 6.3e-7 | 5.9e-7 | 6.4e-7 | 5.9e-7 | Cr 1.3e-5 | Cr 1.9e-4 (local, a record) | 30 crossings: Φ 5.9e-7 to 6.3e-7, Ψ_Cr 1.1e-5 |
+| R4 | 1.1e-8 | 2.8e-9 | 1.8e-8 | 2.5e-9 | Cr 1.4e-6 | Cr 1.6e-8 | 2 crossings: Φ 2.2e-10 to 3.6e-9, Ψ_Cr 3.5e-9 |
+| R5 | 6.0e-7 | 3.8e-7 | 6.0e-7 | 3.8e-7 | Cd 6.3e-8 | Cd 6.5e-8 | |
 
 Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). R1 to R5
-measured again on 2026-11-01 with the TT time argument of
+measured again on 2026-11-11 with the nearest tick of
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Linux CI job 130260609740, and
+the same figures in a session the same day), another draw of the noise of the central differences: about half of the
+TDB labels at which the forces read the bodies, the orientation and the UTC of the drag move by one tick; where the Φ
+under test was compared on both behaviours (R2, R4 and R5) it moves by 6.9e-11, 3.5e-9 and 3.1e-10 at most, the
+references by the whole figure (R3, not split, is inferred from them; R2 Φ_rr 3.0e-8 to 1.6e-8; R4 Φ_vr 8.9e-9 to 1.8e-8; R3 Φ
+2.3e-7 to 2.5e-7 before, 5.9e-7 to 6.4e-7 after; R5 Φ 2.4e-7 to 6.0e-7; R1, whose forces do not read the time, unchanged
+bit for bit). The records of the Validation category hold and stay (decision 53 of
+[#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), S. Guillet, 2026-11-11): over
+eleven starts moved by −5 to +5 ticks, the noise of Φ of the full degree moves by up to a factor of 3.3 (R4) and 7.7
+(R2), so one draw does not set them. Measured on 2026-11-01 with the TT time argument of
 [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501) (Linux), another draw of the noise
 of the central differences (R4 Φ_rr 6.1e-8 to 9.0e-9; R3 Φ 1.9e-7 to 2.1e-7 before, 2.3e-7 to 2.5e-7 after). Before,
 R1 as measured on 2026-10-16 and R2 to R5 measured again on 2026-10-23 with the constants of the geopotential of
@@ -775,7 +809,8 @@ local minimum, 7.9e-4 m/s per unit Cr, and the local figure follows the step of 
 **Steps of the reference** (`WholePropagationStepStudyTests`, `LongValidation`): position steps from 1 cm to 1 km (the velocity step 1e-3
 s⁻¹ times the position step), and the coefficients from 0.1 % to 30 %. On the small steps the integration noise of the
 perturbed propagations dominates, on the large ones the δ² truncation. The chosen steps are within a factor of 2 of the
-smallest error of each sweep, at the end of the arc: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 %
+smallest error of each sweep, at the end of the arc, except the sweeps published and not asserted and the coefficients
+held to a record (Ψ_Cd of the eclipsing case since #413, of R5 since #625), below: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 %
 (R2), 5 % (R5), 30 % (Eclipsing); Cr 10 % (R3, R4), 30 % (Eclipsing). For Φ each sweep has its minimum between the two
 sides. For Ψ two sweeps show the noise floor of the reference rather than a plateau: Ψ_Cr of R3, which is not
 monotone, and Ψ_Cr of the eclipsing case. Since
@@ -789,8 +824,9 @@ before), the chosen 10 % at 2.2 times the smallest; Ψ_Cr of the library does no
 geopotential changed the steps of the reference propagations, and Ψ_Cr of R4 became 3.1e-7, 1.5e-8, 5.7e-8, 4.1e-9,
 1.7e-9 and 1.8e-9 from 0.1 % to 30 % (2.8e-7, 3.6e-8, 1.1e-8, 1.6e-9, 1.3e-9, 9.2e-10 before), not monotone, the chosen
 10 % at 2.5 times the smallest; Ψ_Cd of R2 1.9e-8, 1.2e-7, 3.0e-6, 1.2e-5, 4.9e-5 and 1.1e-4 (7.1e-8 at 0.1 % before),
-the chosen 1 % unchanged and 6.5 times the 0.1 %, whose noise moved. The chosen steps stay. The factor of 2 holds for
-Φ of R3 and R4 and every other sweep. Since #398 the latter is published and not asserted: 1.4e-3, 7.2e-4, 2.4e-4,
+the chosen 1 % unchanged and 6.5 times the 0.1 %, whose noise moved. The chosen steps stay. The factor of 2 held then for
+Φ of R3 and R4 and every other sweep but Ψ_Cr of the eclipsing case, and holds since #625 except for Ψ_Cd of R5, held to
+a record (below). Since #398 Ψ_Cr of the eclipsing case is published and not asserted: 1.4e-3, 7.2e-4, 2.4e-4,
 1.1e-5, 1.3e-4 and 4.7e-5 from 0.1 % to 30 %, so no step lies on a plateau there. On the code before #398, the start of
 the reference moved by 2e-9 m along x alone takes that sweep from 3.7e-3, 1.8e-4, 2.3e-4, 1.3e-4, 3.4e-5, 1.8e-5 to
 2.1e-2, 7.0e-5, 2.4e-5, 8.1e-5, 7.2e-6, 1.5e-5. Ψ_Cd of the eclipsing case is held at its chosen step, 30 %, to a
@@ -826,6 +862,28 @@ R3 1.8e-3, 3.7e-4, 3.1e-5, 9.2e-7, 1.3e-5 and 8.8e-6, the chosen 10 % now the sm
 4.9e-5 and 1.1e-4, the chosen 1 % 2.3 times the 0.1 %; Ψ_Cr of the eclipsing case 2.5e-3, 1.2e-3, 4.4e-4, 2.3e-4,
 9.3e-5 and 1.2e-5. The chosen steps stay.
 
+With the nearest tick of [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (run
+42945251492 of `long-validation.yml`, 2026-11-11), which moves by one tick about half of the TDB labels at which the
+forces read the time (R1, whose forces do not, is unchanged bit for bit), the smallest error on Φ at 1e-14 and at 1e-13
+is R1 1.7e-8 and 2.3e-8 (unchanged), R2 1.5e-8 and 1.6e-7, R3 1.3e-7 and 9.7e-7, R4 9.6e-9 and 3.6e-8 (both at 10 m,
+5.6e-8 at 100 m), R5 5.9e-7 and 5.5e-7 (at 1e-13 below 1e-14, which R5 allows as it is held to its record of 1.7e-6),
+the eclipsing case 3.3e-8 and 1.5e-7 (100 m). At 1e-14 every chosen step of Φ is the smallest of its sweep. Ψ_Cd of R2
+at 1 % is 1.1e-7, now the smallest of its sweep; Ψ_Cd of the eclipsing case at 30 % 1.2e-7, against its record of
+4.1e-7. Ψ_Cd of R5 is 6.4e-6, 2.7e-9, 5.2e-8, 1.9e-7, 8.0e-7 and 1.8e-6 from 0.1 % to 30 % (8.2e-6, 2.2e-7, 7.7e-8,
+1.9e-7, 8.1e-7 and 1.8e-6 before): the chosen 5 % is 19 times the 1 %, a cancellation in the reference, while the tested
+Ψ_Cd moves by 8.6e-10 and its references by 2.2e-7 at 1 % and 3.8e-8 at 5 %. Over eleven starts moved by −5 to +5
+ticks (Linux, measured in a session the same day), the 1 % is 7.2e-8 to 7.1e-7 except there, and the 5 % 4.6e-8 to
+2.0e-7, the smallest of its sweep in eight of them; under the truncation before #625, five starts moved by −2 to +2
+ticks gave at most 3.0e-7 at 5 %. Ψ_Cd of R5 is therefore held at its chosen 5 % to a record, as the eclipsing case:
+twice the worst at 5 % over the eleven starts (2.04e-7, three ticks later), rounded up at the second significant digit,
+4.1e-7 (decision 53 of [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457),
+S. Guillet, 2026-11-11). The record no longer checks that 5 % lies on the plateau (10 %, 1.9e-7 to 2.1e-7 over the
+starts, would pass it too), the trade #413 accepted for the eclipsing case; the sweep is published. `long-validation.yml`
+runs on Linux only, and so do the starts. The sweeps published and not asserted, from 0.1 % to 30 %: Ψ_Cr of R3 7.8e-4,
+6.3e-4, 6.8e-5, 2.2e-6, 7.0e-6 and 7.0e-6, the chosen 10 % the smallest; Ψ_Cr of R4 3.4e-7, 2.5e-8, 1.2e-9, 2.6e-9,
+6.6e-9 and 2.6e-9, the chosen 10 % 2.2 times the smallest; Ψ_Cd of R2 1.6e-7, 1.1e-7, 3.0e-6, 1.2e-5, 4.9e-5 and 1.1e-4;
+Ψ_Cr of the eclipsing case 8.8e-3, 4.2e-4, 6.4e-4, 2.6e-4, 4.8e-5 and 5.5e-6. The chosen steps stay.
+
 **Start of the reference.** A propagation takes a state vector given at the start of its window as it is, so each
 reference propagation starts from exactly its perturbed state. Until
 [#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398), the initial state went through
@@ -836,21 +894,33 @@ step 9). The true anomaly fixed alone, the round trip would return the state to 
 enough for R4 (Φ 3.3e-8), but not for two references: Ψ_Cr of R3, which is resolved only to the noise of its reference,
 and the test after a maneuver, which compares the states bit for bit. Hence the state taken as it is: R4 Φ 2.8e-8.
 
-**Across a maneuver** (`ManeuverStmValidationTests`, Eclipsing case; measured again on 2026-10-24, after
+**Across a maneuver** (`ManeuverStmValidationTests`, Eclipsing case; measured again on 2026-11-11 with the nearest
+tick of [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625), Linux CI job
+130260609740; the figures of 2026-11-01, with the TT time argument of
+[#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501), in parentheses). Φ and Ψ model
+the burn in open loop: the epoch and the ΔV are those of the nominal trajectory. Against a reference that fires that
+nominal burn (fixed in epoch and ΔV), the errors are as follows:
+
+- Φ: 5.2e-8 at most per block, 4.6e-8 in the 7 penumbra crossings (3.2e-8 and 3.2e-8), the latter held to a record of
+  6.4e-8;
+- Ψ_Cd: 1.2e-7 over the arc relative to its largest value (1.3e-6), 1.4e-6 relative to the local value after the burn
+  (1.8e-6) and 1.9e-7 in the penumbra (1.8e-6);
+- Ψ_Cr: 3.7e-6 in position and 6.2e-6 in velocity over the arc (3.3e-6 and 5.7e-6), 3.5e-5 relative to the local value
+  after the burn (3.9e-5) and 8.5e-6 in the penumbra (7.9e-6), records rather than F1 figures (1.2e-5, 7.8e-5 and
+  1.6e-5).
+
+Another draw of the noise of the references, by analogy with R2, R4 and R5 above, where the Φ under test was compared
+on both behaviours (the burn case was not split): about half of the TDB labels at which the forces read the time move
+by one tick. The records hold and stay (decision 53 of
+[#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), S. Guillet, 2026-11-11), as for
+`StmValidationTests` above. Measured on 2026-10-24, after
 [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423),
 [#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434) and the density of
 [#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411) and
-[#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409); the figures of 2026-10-17 in
-parentheses). Φ and Ψ model the burn in open loop: the epoch
-and the ΔV are those of the nominal trajectory. Against a reference that fires that nominal burn (fixed in epoch and
-ΔV), the errors are as follows:
-
-- Φ: 3.2e-8 at most per block, 3.0e-8 in the 7 penumbra crossings (5.5e-8 and 5.2e-8; published as a record, 1.1e-7;
-  2.9e-8 before #398);
-- Ψ_Cd: 1.1e-7 over the arc relative to its largest value (7.5e-8), and 1.4e-6 relative to the local value after the
-  burn (3.7e-6);
-- Ψ_Cr: 1.6e-6 in position and 2.3e-6 in velocity over the arc (5.2e-5 and 9.4e-5; 4.4e-6 before #398), and 1.5e-5
-  relative to the local value after the burn (3.7e-4; 1.3e-5 before #398), records rather than F1 figures.
+[#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409): Φ 3.2e-8 at most per block,
+3.0e-8 in the penumbra; Ψ_Cd 1.1e-7 over the arc and 1.4e-6 after the burn; Ψ_Cr 1.6e-6 and 2.3e-6 over the arc and
+1.5e-5 after the burn. On 2026-10-17: Φ 5.5e-8 and 5.2e-8 (2.9e-8 before #398); Ψ_Cd 7.5e-8 and 3.7e-6; Ψ_Cr 5.2e-5 and
+9.4e-5 over the arc (4.4e-6 before #398) and 3.7e-4 after the burn (1.3e-5 before #398).
 
 Since [#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398) the propagations start
 from exactly the state given, about 1e-9 m from where they started before. That shift alone moves the reference of
@@ -858,9 +928,10 @@ from exactly the state given, about 1e-9 m from where they started before. That 
 reference moved by 2e-9 m along x takes Ψ_Cr over the arc from 4.4e-6 to 9.3e-6, locally after the burn from 1.3e-5 to
 5.4e-5, and Φ from 2.9e-8 to 4.3e-8. The Ψ_Cr under test does not move: with Φ and Ψ in the step control it is the same
 before and after the fix to 2.5e-10 of its largest value, while its reference moves by up to 6.7e-5. Ψ_Cr is therefore
-held to F1 against the same propagation at 1e-14 with Φ and Ψ in the step control, without central differences: 9.8e-11
-in position and 1.8e-10 in velocity over the arc, 5.2e-7 at most relative to the local value wherever it is not zero
-(2.1e-12, 3.0e-12 and 1.2e-8 on 2026-10-17).
+held to F1 against the same propagation at 1e-14 with Φ and Ψ in the step control, without central differences: 2.2e-11
+in position and 3.9e-11 in velocity over the arc, 6.5e-8 at most relative to the local value wherever it is not zero
+(1.0e-9, 1.8e-9 and 4.3e-6 on 2026-11-01; 9.8e-11, 1.8e-10 and 5.2e-7 on 2026-10-24; 2.1e-12, 3.0e-12 and 1.2e-8 on
+2026-10-17).
 Against the central differences it is published as a record, over the arc and locally.
 
 Ψ starts from zero (in the shadow for Cr, at 1000 km for Cd), where the reference does not resolve it relative to its
@@ -888,6 +959,22 @@ in `StmValidationTests`): its records at degrees 8, 20 and 70 are set at 6.1e-8 
 2026-10-23). With the TT time argument of #501 (run 41268727370 of `long-validation.yml`, 2026-11-01), R4 is 1.2e-6 at
 degree 2 and 9.0e-9 at degrees 8, 20 and 70, the F1 noise of R4 again (Φ_rr 6.1e-8 to 9.0e-9 in `StmValidationTests`),
 and its records are set at 9.0e-9; R2 2.0e-3, 8.5e-4 and 3.0e-8, within its records.
+
+With the nearest tick of [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (run
+42945251492 of `long-validation.yml`, 2026-11-11, and the same figures in a session the same day), R4 is 1.2e-6 at
+degree 2 and 1.8e-8 at degrees 8, 20 and 70, and R2 2.0e-3, 8.5e-4 and 1.6e-8 at degrees 2, 8 and 20 and at the full
+degree: the F1 noise of the reference again, which moves the same way on the full degree in `StmValidationTests` (R4
+9.0e-9 to 1.8e-8, R2 3.0e-8 to 1.6e-8), the tested Φ moving by 3.5e-9 (R4) and 6.9e-11 (R2) at most. Over eleven starts moved by −5 to +5
+ticks (Linux, in a session), R4 from degree 8 spans 1.0e-8 to 3.3e-8 and R2 at the full degree 1.6e-8 to 1.2e-7 (three
+ticks later; 4.2e-8 at worst in the ten others), while degree 2 of R4 stays within 1.14e-6 to 1.17e-6 (1.16e-6 to 1.21e-6 under the truncation) and R2 at degrees
+2 and 8 does not move: the truncation of the partials. Under the truncation before #625 a start moved by one tick
+already gave R4 2.1e-8 and 5.3e-8, outside the band of the record 9.0e-9, which one draw had set. The degrees whose
+partials are those of the full degree (R4 at 8, 20 and 70, R2 at 20 and 10) are therefore held below an upper record,
+twice the worst of the eleven starts rounded up at the second significant digit, 6.7e-8 for R4 and 2.5e-7 for R2, with
+no lower bound (decision 53 of [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457),
+S. Guillet, 2026-11-11); the other degrees keep their band of a factor of 2. This gives up the lower bound, which
+flagged a stale record, and widens the upper bounds from 1.8e-8 to 6.7e-8 (R4) and from 9.1e-8 to 2.5e-7 (R2).
+`long-validation.yml` runs on Linux only, and so do the starts.
 
 In LEO the partials keep a contribution of every degree, so a reduced degree leaves Φ above the threshold after one day
 and saves nothing. At GEO the high degrees vanish, and from degree 8 Φ is that of the full degree, a third cheaper.
@@ -1027,11 +1114,20 @@ variational equation enters). Computation: each tool's Φ against its own centra
 | Case | Total | Models | GMAT's computation | Library's computation | State departure |
 |------|-------|--------|--------------------|-----------------------|-----------------|
 | G1 | 7.6e-12 | 6.7e-9 | 1.7e-8 | 1.7e-8 | 53 µm, 5.6e-8 m/s |
-| G2 | 8.4e-9 | 1.4e-8 | 1.7e-8 | 1.9e-8 | 5.7 cm, 6.4e-5 m/s |
-| G3 | 4.8e-12 | 2.2e-8 | 1.7e-8 | 7.7e-9 | 58 µm, 2.8e-9 m/s |
-| G4 | 3.8e-8 | 7.9e-8 | 4.6e-8 | 1.5e-8 | 25 cm, 1.8e-4 m/s |
-| G5 | 1.0e-4 | 2.5e-7 | 9.9e-5 | 2.5e-7 | 8.0 mm, 9.1e-6 m/s |
-| G6 | 3.7e-5 | 1.1e-6 | 3.6e-5 | 3.0e-8 | 11 cm, 1.3e-4 m/s |
+| G2 | 8.4e-9 | 1.8e-8 | 1.7e-8 | 1.9e-8 | 5.7 cm, 6.4e-5 m/s |
+| G3 | 4.8e-12 | 1.4e-8 | 1.7e-8 | 4.8e-9 | 58 µm, 2.8e-9 m/s |
+| G4 | 3.8e-8 | 6.7e-8 | 4.6e-8 | 1.9e-8 | 25 cm, 1.8e-4 m/s |
+| G5 | 1.0e-4 | 1.6e-7 | 9.9e-5 | 6.4e-7 | 8.3 mm, 9.4e-6 m/s |
+| G6 | 3.7e-5 | 1.1e-6 | 3.6e-5 | 1.6e-8 | 11 cm, 1.3e-4 m/s |
+
+Measured again on 2026-11-11 with the nearest tick of
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Linux CI job 130260609740),
+which moves by one tick about half of the TDB labels at which the forces of the library read the bodies, the
+orientation and the UTC of the drag: the totals, GMAT's computation and G1 do not move; the central differences of the
+library are another draw of their noise, and the state of G5 moves by 0.3 mm. The cells that moved, the value of
+2026-11-01 in parentheses: the models of G2 1.8e-8 (1.4e-8), G3 1.4e-8 (2.2e-8), G4 6.7e-8 (7.9e-8) and G5 1.6e-7
+(2.5e-7); the library's computation of G3 4.8e-9 (7.7e-9), G4 1.9e-8 (1.5e-8), G5 6.4e-7 (2.5e-7) and G6 1.6e-8
+(3.0e-8); G5's state 8.3 mm and 9.4e-6 m/s (8.0 mm and 9.1e-6 m/s). Every bound holds.
 
 Measured on 2026-11-01 with the TT time argument of
 [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501): GMAT's rows are at elapsed A1, so
@@ -1056,7 +1152,7 @@ within what they resolve.
 - G5: the total departure is GMAT's computation. Its Φ leaves out the derivative of the shadow function in the
   penumbra, which the library differentiates (analytically since #423, by central differences before; GMAT's
   Mathematical Specification, §4.2.5, has the derivative that its build leaves out); left out, the library
-  departed by 1.05e-4 after one day in step 5b. The models agree to 2.5e-7 (1.5e-7 before #501, 2.8e-7 before #410 and 1.9e-7 before #434,
+  departed by 1.05e-4 after one day in step 5b. The models agree to 1.6e-7 (2.5e-7 before #625, 1.5e-7 before #501, 2.8e-7 before #410 and 1.9e-7 before #434,
   each of which reshuffled the steps of the central differences of the library through the penumbra). GMAT prints, 23 times in the console log of
   each G5 run (`G5/nominal.log`, committed with the reports): *"Warning: The orbit state transition matrix does not
   currently contain SRP contributions from shadow partial derivatives when using Spherical SRP."* On this point the
@@ -1064,14 +1160,15 @@ within what they resolve.
   function (§4.2.4 and §4.2.5, eqs. 4.79 and 4.83).
 - G6: the total departure is GMAT's computation, 3.6e-5, mostly GMAT's step error at 10 s: its Φ moves by 2.6e-5
   between 10 s and 5 s (5.3e-5 and 4.2e-5 before #410). The models agree to 1.1e-6, the library's Φ holds its own
-  central differences to 2.4e-8. Before
+  central differences to 1.6e-8 (3.0e-8 before #625, 2.4e-8 before #501). Before
   #411 and #409 were fixed, the densities differed and the models departed by 7.1e-4 (total 6.9e-4, state 3.9 km).
 
 **Ψ**, over the arc relative to its largest value, against GMAT's central differences on the coefficient (GMAT has no
 Ψ): Ψ_Cr of G5 5.5e-6 (position) and 7.9e-6 (velocity), the central differences of the two tools against each other
-3.1e-6 and 4.4e-6 (9.6e-6 and 1.4e-5 before #410, 4.1e-6 and 5.7e-6 before #434: the library's central differences
+4.6e-6 and 6.5e-6 since #625 (5.9e-6 and 8.5e-6 on main in the CI of #630, 2026-11-10, against the 3.1e-6 and 4.4e-6 published here
+since #410 and not measured again until #625; 9.6e-6 and 1.4e-5 before #410, 4.1e-6 and 5.7e-6 before #434: the library's central differences
 moved, its Ψ against GMAT did not, to two digits); Ψ_Cd of G6 7.8e-7 and 7.6e-7, the central differences of the two
-tools against each other 8.2e-7 and 8.1e-7 (1.3e-2 before #411 and #409, the density).
+tools against each other 8.0e-7 and 7.9e-7 (8.2e-7 and 8.1e-7 before #625, 1.3e-2 before #411 and #409, the density).
 
 **P**, from the correlated P0 of `CovariancePropagationTests` (σ 50, 200 and 30 m, 0.2, 0.05 and 0.03 m/s in RTN),
 over the arc: G1 4.4e-9 relative Frobenius, 4.5e-9 on the correlation matrix; G2 1.2e-8 and 1.2e-6. The departure on
@@ -1080,7 +1177,7 @@ the correlation matrix splits into three parts, which the test checks to close:
 | Part | G1 | G2 |
 |------|----|----|
 | GMAT's computation: its P against its own Φ P0 Φᵀ, which it propagates step by step | 4.4e-9 | 5.7e-9 |
-| The library's computation: its P against its own Φ P0 Φᵀ | 9.0e-16 | 1.6e-15 |
+| The library's computation: its P against its own Φ P0 Φᵀ | 9.0e-16 | 1.7e-15 |
 | Φ alone: Φ P0 Φᵀ of the library against that of GMAT | 1.3e-10 | 1.3e-6 |
 
 On G1 the departure is GMAT's, so P on G1 is held to 1e-8 rather than the 1e-10 of the design (decision of S. Guillet,
@@ -1088,7 +1185,7 @@ On G1 the departure is GMAT's, so P on G1 is held to 1e-8 rather than the 1e-10 
 ICRF: there σ_y is 52 m against 11.6 km for the largest σ of the position block. An element of Φ P0 Φᵀ is the product
 of two rows of Φ whitened by P0, so its departure on the correlation matrix is bounded by the departures of these two
 rows in the metric of P0: 1.25e-6 for y, 2.9e-8 for vx, while Φ departs by 8.2e-9 per block at that epoch. That
-departure of Φ, 8.4e-9 per block over the arc, is within what the model column resolves (1.4e-8). GMAT has no consider
+departure of Φ, 8.4e-9 per block over the arc, is within what the model column resolves (1.8e-8). GMAT has no consider
 parameter, so Ψ Pp Ψᵀ has no reference here.
 
 **Q**, the state noise compensation of q_T = 1e-11 m²/s³ alone, at the end of the day. GMAT adds the discrete form of

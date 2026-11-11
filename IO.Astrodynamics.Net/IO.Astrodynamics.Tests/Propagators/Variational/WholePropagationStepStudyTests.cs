@@ -33,7 +33,7 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// </para>
 /// <para>
 /// The test asserts that the steps of <see cref="ReferenceCases"/> are within a factor of 2 of the smallest error of
-/// their sweep, and that the reference at 1e-14 resolves Φ at least as well as at the 1e-13 of the specification, which
+/// their sweep (except the sweeps published and not asserted and the coefficients held to a record, below), and that the reference at 1e-14 resolves Φ at least as well as at the 1e-13 of the specification, which
 /// justifies its tolerance (decision of S. Guillet, 2026-10-16). Measured (Linux, .NET 10, 2026-10-16), the smallest
 /// error of Φ at 1e-14 and at 1e-13: R1 1.7e-8 and 2.3e-8, R2 4.6e-8 and 1.4e-7, R3 1.9e-7 and 1.0e-6, R4 2.8e-8 and
 /// 5.6e-8, R5 6.7e-7 and 7.8e-7. Since #411 and #409 both tolerances resolve R5 alike (4.1e-7 to 8.0e-7 at 1e-14,
@@ -95,6 +95,31 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// 4.39e-4, 2.32e-4, 9.34e-5, 1.22e-5. The chosen steps stay.
 /// </para>
 /// <para>
+/// With the nearest tick of #625 (run 42945251492 of <c>long-validation.yml</c>, 2026-11-11), which moves by one tick about
+/// half of the TDB labels at which the forces read the bodies, the orientation and the UTC of the drag (the nearest tick
+/// of <c>AddSeconds</c> through <c>TerrestrialTime.EpochAt</c>, and the rounded TDB − TT; R1, whose forces do not read
+/// the time, is unchanged bit for bit), the smallest error of Φ at 1e-14 and at 1e-13: R1 1.7e-8 and 2.3e-8 (unchanged,
+/// at 1e-13 still smallest at 1 m, 2.30e-8 against 2.31e-8 at 10 m), R2 1.5e-8 and 1.6e-7, R3 1.3e-7 and 9.7e-7, R4
+/// 9.6e-9 and 3.6e-8, both at 10 m (at 1e-13 no longer at 100 m, 5.61e-8 there), R5 5.9e-7 and 5.5e-7 (at 1e-13 below
+/// 1e-14, which R5 allows as it is held to its record of 1.7e-6), the eclipsing case 3.3e-8 and 1.5e-7 (100 m, 1.62e-7
+/// at 10 m). At 1e-14 every chosen step of Φ is the smallest of its sweep. Ψ_Cd of R2 at 1 % 1.1e-7, now the smallest of
+/// its sweep; Ψ_Cd of the eclipsing case at 30 % 1.2e-7 (1.23e-7), against its record of 4.1e-7. Ψ_Cd of R5 is 6.37e-6,
+/// 2.70e-9, 5.22e-8, 1.86e-7, 8.03e-7, 1.82e-6 from 0.1 % to 30 % (8.24e-6, 2.16e-7, 7.68e-8, 1.87e-7, 8.07e-7, 1.83e-6
+/// before): the chosen 5 % is 19 times the 1 %, a cancellation in its reference, while the tested Ψ_Cd moved by 8.6e-10
+/// and the references by 2.2e-7 at 1 % and 3.8e-8 at 5 %. Over eleven starts moved by −5 to +5 ticks (Linux, measured in
+/// a session the same day), the 1 % is 7.2e-8 to 7.1e-7 except there, and the 5 % 4.6e-8 to 2.04e-7 (three ticks later),
+/// the smallest of its sweep in eight of them; under the truncation before #625, five starts moved by −2 to +2 ticks gave
+/// at most 2.96e-7 at 5 %. Since then Ψ_Cd of R5 is held at its chosen 5 % to a record, as the eclipsing case since #413:
+/// twice the worst at 5 % over the eleven starts, rounded up at the second significant digit, 4.1e-7 (decision 53 of
+/// #457, S. Guillet, 2026-11-11). What this gives up: the record no longer checks that 5 % lies on the plateau (10 %,
+/// 1.85e-7 to 2.07e-7 over the starts, would pass it too), the trade #413 accepted for the eclipsing case; its sweep is
+/// published, not asserted on the plateau. The starts were measured on Linux only, as <c>long-validation.yml</c> runs on
+/// <c>ubuntu-latest</c> only. The sweeps published and not asserted: Ψ_Cr of R3 7.83e-4, 6.32e-4, 6.77e-5, 2.19e-6,
+/// 7.02e-6, 6.97e-6 from 0.1 % to 30 %, the chosen 10 % the smallest; Ψ_Cr of R4 3.37e-7, 2.46e-8, 1.20e-9, 2.63e-9,
+/// 6.57e-9, 2.64e-9, the chosen 10 % 2.2 times the smallest; Ψ_Cd of R2 1.64e-7, 1.14e-7, 3.04e-6, 1.22e-5, 4.87e-5,
+/// 1.10e-4; Ψ_Cr of the eclipsing case 8.78e-3, 4.20e-4, 6.40e-4, 2.56e-4, 4.81e-5, 5.45e-6. The chosen steps stay.
+/// </para>
+/// <para>
 /// In the <c>LongValidation</c> category since 2026-10-22 (decision of S. Guillet): the study checks steps chosen once,
 /// and takes about 11 min on 4 cores, R4 alone 8 min.
 /// </para>
@@ -132,10 +157,12 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
 
         // Act and assert
         // The sweeps of Ψ_Cr of R3 and R4 and of Ψ_Cd of R2 are published, not asserted: the noise floor of their
-        // reference (decisions of S. Guillet, 2026-10-23, below)
+        // reference (decisions of S. Guillet, 2026-10-23, below). Ψ_Cd of R5 is held at its chosen step to a record,
+        // its sweep published (decision 53 of #457, S. Guillet, 2026-11-11)
         Study(referenceCase, solution, (start, cd, cr, tolerance) =>
             referenceCase.PropagateReference(NaifId - 1, start, cd, cr, tolerance),
             assertPsiCr: name != "R3" && name != "R4", assertPsiCd: name != "R2",
+            psiCdRecord: name == "R5" ? R5PsiCdRecord : null,
             referenceResolutionRecord: name == "R5" ? R5ReferenceResolutionRecord : null);
     }
 
@@ -163,6 +190,11 @@ public class WholePropagationStepStudyTests : IClassFixture<ReferenceCases>
     // rounded up at the second significant digit (decision of S. Guillet, 2026-10-20; remarks of the class), re-measured
     // with #411 and #409
     private const double EclipsingPsiCdRecord = 4.1e-7;
+
+    // Ψ_Cd of R5 at its chosen step, 5 %: twice the worst of eleven starts moved by −5 to +5 ticks (2.04e-7, three ticks
+    // later), rounded up at the second significant digit (decision 53 of #457, S. Guillet, 2026-11-11; remarks of the
+    // class), in place of the factor of 2, which a cancellation at 1 % broke with the nearest tick of #625
+    private const double R5PsiCdRecord = 4.1e-7;
 
     private void Study(ReferenceCase referenceCase, PropagationSolution solution,
         Func<StateVector, double, double, double, PropagationSolution> reference, bool assertPsiCr = true,

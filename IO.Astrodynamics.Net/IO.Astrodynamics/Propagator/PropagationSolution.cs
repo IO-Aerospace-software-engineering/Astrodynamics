@@ -473,7 +473,8 @@ public sealed class PropagationSolution
     }
 
     // One tick of Time (100 ns): in TDB the propagation ends at Window.StartDate.AddSeconds(duration), which AddSeconds
-    // truncates to the tick, so its last step can end one tick before the end of the window (H3 review of lots A to C);
+    // rounds to the nearest tick (#625; it truncated before), so its last step can end a tick off the end of the window
+    // (H3 review of lots A to C);
     // in TT the label of the end of the window maps to its length plus the sub-tick residuals of the labels of the start
     // and of the end, below 1e-7 s (#501)
     internal const double EpochTick = 1e-7;
@@ -486,7 +487,7 @@ public sealed class PropagationSolution
     /// <remarks>
     /// The two bounds are read in the seconds of the time argument, never by comparing <see cref="Time"/>s: the start of
     /// the first segment is the TDB label of the start of the window, and a comparison of a UTC epoch with it goes through
-    /// TAI, which truncates TDB − TT to the tick a second time, so the UTC start of a UTC window could compare one tick
+    /// TAI, which rounds TDB − TT to the tick a second time, so the UTC start of a UTC window could compare one tick
     /// before its own label. The tick allowed before the start absorbs the rounding of the seconds; an epoch there reads
     /// the start of the propagation.
     /// </remarks>

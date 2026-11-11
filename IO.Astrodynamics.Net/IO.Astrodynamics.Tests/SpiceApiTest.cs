@@ -25,6 +25,11 @@ using Window = IO.Astrodynamics.TimeSystem.Window;
 
 namespace IO.Astrodynamics.Tests;
 
+/// <remarks>
+/// The epochs of the windows that CSPICE searches (distance, occultation, coordinate, illumination) are those of the same
+/// searches in spiceypy, the window ends and the results each the nearest tick of its ET (#625):
+/// <c>tools/seconds_to_ticks/spice_windows_reference.py</c>, whose truncated mode gives the strings held before #625.
+/// </remarks>
 public class SpiceApiTest
 {
     private readonly ITestOutputHelper _output;
@@ -52,10 +57,10 @@ public class SpiceApiTest
             TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(4, windows.Count());
-        Assert.Equal("2007-01-08T00:11:07.6285910 TDB", windows.ElementAt(0).StartDate.ToString());
-        Assert.Equal("2007-01-13T06:37:47.9481440 TDB", windows.ElementAt(0).EndDate.ToString());
-        Assert.Equal("2007-03-29T22:53:58.1518963 TDB", windows.ElementAt(3).StartDate.ToString());
-        Assert.Equal("2007-04-01T00:01:05.1856544 TDB", windows.ElementAt(3).EndDate.ToString());
+        Assert.Equal("2007-01-08T00:11:07.6285911 TDB", windows.ElementAt(0).StartDate.ToString());
+        Assert.Equal("2007-01-13T06:37:47.9481441 TDB", windows.ElementAt(0).EndDate.ToString());
+        Assert.Equal("2007-03-29T22:53:58.1518964 TDB", windows.ElementAt(3).StartDate.ToString());
+        Assert.Equal("2007-04-01T00:01:05.1856545 TDB", windows.ElementAt(3).EndDate.ToString());
     }
 
     [Fact]
@@ -69,10 +74,10 @@ public class SpiceApiTest
             TimeSpan.FromSeconds(86400.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Equal(4, windows.Count());
-        Assert.Equal("2007-01-08T00:11:07.6285910 TDB", windows.ElementAt(0).StartDate.ToString());
-        Assert.Equal("2007-01-13T06:37:47.9481440 TDB", windows.ElementAt(0).EndDate.ToString());
-        Assert.Equal("2007-03-29T22:53:58.1518963 TDB", windows.ElementAt(3).StartDate.ToString());
-        Assert.Equal("2007-04-01T00:01:05.1856544 TDB", windows.ElementAt(3).EndDate.ToString());
+        Assert.Equal("2007-01-08T00:11:07.6285911 TDB", windows.ElementAt(0).StartDate.ToString());
+        Assert.Equal("2007-01-13T06:37:47.9481441 TDB", windows.ElementAt(0).EndDate.ToString());
+        Assert.Equal("2007-03-29T22:53:58.1518964 TDB", windows.ElementAt(3).StartDate.ToString());
+        Assert.Equal("2007-04-01T00:01:05.1856545 TDB", windows.ElementAt(3).EndDate.ToString());
     }
 
     [Fact]
@@ -86,8 +91,8 @@ public class SpiceApiTest
             TimeSpan.FromSeconds(3600.0));
         var windows = res as Window[] ?? res.ToArray();
         Assert.Single(windows);
-        Assert.Equal("2001-12-14T20:10:15.4105881 TDB", windows[0].StartDate.ToString());
-        Assert.Equal("2001-12-14T21:35:49.1005208 TDB", windows[0].EndDate.ToString());
+        Assert.Equal("2001-12-14T20:10:15.4105882 TDB", windows[0].StartDate.ToString());
+        Assert.Equal("2001-12-14T21:35:49.1005209 TDB", windows[0].EndDate.ToString());
     }
 
     [Fact]
@@ -105,7 +110,7 @@ public class SpiceApiTest
         Assert.Equal(2, windows.Count());
         Assert.Equal("2021-05-17T12:00:00.0000000 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2021-05-17T19:35:24.9088323 TDB", windows[0].EndDate.ToString());
-        Assert.Equal("2021-05-18T04:18:32.4437502 TDB", windows[1].StartDate.ToString());
+        Assert.Equal("2021-05-18T04:18:32.4437503 TDB", windows[1].StartDate.ToString());
         Assert.Equal("2021-05-18T12:00:00.0000000 TDB", windows[1].EndDate.ToString());
     }
 
@@ -124,7 +129,7 @@ public class SpiceApiTest
 
         var windows = res as Window[] ?? res.ToArray();
         Assert.Single(windows);
-        Assert.Equal("2023-02-19T14:33:08.9179868 TDB", windows[0].StartDate.ToString());
+        Assert.Equal("2023-02-19T14:33:08.9179869 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2023-02-20T00:00:00.0000000 TDB", windows[0].EndDate.ToString());
     }
 
@@ -143,7 +148,7 @@ public class SpiceApiTest
         Assert.Equal(2, windows.Count());
         Assert.Equal("2021-05-17T12:00:00.0000000 TDB", windows[0].StartDate.ToString());
         Assert.Equal("2021-05-17T19:35:24.9088323 TDB", windows[0].EndDate.ToString());
-        Assert.Equal("2021-05-18T04:18:32.4437502 TDB", windows[1].StartDate.ToString());
+        Assert.Equal("2021-05-18T04:18:32.4437503 TDB", windows[1].StartDate.ToString());
         Assert.Equal("2021-05-18T12:00:00.0000000 TDB", windows[1].EndDate.ToString());
     }
 

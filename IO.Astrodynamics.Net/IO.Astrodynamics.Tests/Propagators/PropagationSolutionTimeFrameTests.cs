@@ -163,14 +163,17 @@ public class PropagationSolutionTimeFrameTests
             Assert.True(departure <= velocity.Magnitude() * 1e-7, $"{departure} m from the TDB label of the end.");
     }
 
-    // UTC instants whose TDB label, converted to TAI, is not their own TAI: the conversion of the label truncates
-    // TDB − TT to the tick a second time. Found by the review of #505 over 8e6 random UTC instants of 2021 (the first
-    // one whose label is a tick later in TAI) and over a scan of 2021-03-20 by steps of 4999 ticks (one a tick off)
+    // UTC instants whose TDB label, converted to TAI, is not their own TAI: the conversion of the label rounds
+    // TDB − TT to the tick a second time, at another argument of the series. Found by an exact replica of the
+    // conversions over 8e6 random UTC instants of 2021, seed 625 (7 a tick later, 7 a tick earlier; the first of each):
+    // since #625 the conversions round to the nearest tick; the instants of the review of #505, found when they
+    // truncated (2021-06-02T14:51:26.1940007, a tick later, and 2021-03-20T00:05:05.0969684, a tick earlier), now come
+    // back to their TAI
     private static readonly TimeSystem.Time LabelLaterInTai =
-        new(new DateTime(2021, 6, 2, 14, 51, 26).AddTicks(1940007), TimeFrame.UTCFrame);
+        new(new DateTime(2021, 5, 13, 10, 31, 43).AddTicks(6810149), TimeFrame.UTCFrame);
 
     private static readonly TimeSystem.Time LabelOffInTai =
-        new(new DateTime(2021, 3, 20, 0, 5, 5).AddTicks(969684), TimeFrame.UTCFrame);
+        new(new DateTime(2021, 9, 7, 5, 33, 59).AddTicks(2598236), TimeFrame.UTCFrame);
 
     [Theory]
     [InlineData("Earth")]

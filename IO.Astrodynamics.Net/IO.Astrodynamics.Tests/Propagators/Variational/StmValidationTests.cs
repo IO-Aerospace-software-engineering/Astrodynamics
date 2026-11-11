@@ -83,6 +83,24 @@ namespace IO.Astrodynamics.Tests.Propagators.Variational;
 /// significant digit (choice 17 of #501, the Linux rule of the Validation category): R3 in the penumbra 1.6e-5 (3.6e-5
 /// before), the local Ψ_Cr of R3 4.5e-4 (8.1e-4), R4 in the penumbra 1.2e-8 (2.5e-8).
 /// </para>
+/// <para>
+/// The nearest tick of #625 moves by one tick about half of the TDB labels at which the forces read the bodies, the
+/// orientation and the UTC of the drag (the nearest tick of <c>AddSeconds</c> through <c>TerrestrialTime.EpochAt</c>, and
+/// the rounded TDB − TT): another draw of the noise of the references. The Φ under test was compared on both behaviours
+/// for R2, R4 and R5 only, where it moves by 6.9e-11, 3.5e-9 and 3.1e-10 at most against the whole figure for the
+/// references; R3, which moves most (2.3e-7 to 6.4e-7), was not split, so its attribution to the references is
+/// inferred from the other cases.
+/// Measured again (Linux CI job 130260609740, 2026-11-11, and the same figures in a session the same day; the figures of
+/// 2026-11-01 above, which <c>main</c> reproduces, before), worst outside the penumbra, Φ per block: R1 1.3e-8, 1.6e-8,
+/// 1.4e-8, 1.7e-8 (unchanged bit for bit: its forces do not read the time); R2 1.6e-8, 9.1e-9, 1.6e-8, 8.2e-9, Ψ_Cd
+/// 1.1e-7, 1.1e-7; R3 6.3e-7, 5.9e-7, 6.4e-7, 5.9e-7, Ψ_Cr 1.3e-5 and, locally at 9.50 h, 1.9e-4; R4 1.1e-8, 2.8e-9,
+/// 1.8e-8, 2.5e-9, Ψ_Cr 1.4e-6, 1.6e-8; R5 6.0e-7, 3.8e-7, 6.0e-7, 3.8e-7, Ψ_Cd 6.3e-8, 6.5e-8. In the penumbra: R3 Φ
+/// 5.9e-7 to 6.3e-7, Ψ_Cr 8.5e-6 and 1.1e-5; R4 Φ 2.2e-10 to 3.6e-9, Ψ_Cr 1.7e-9 and 3.5e-9. Over the arc: R2 Ψ_Cd
+/// 1.1e-7 and 1.1e-7, R3 Ψ_Cr 1.5e-6 and 2.1e-6, R4 Ψ_Cr 2.6e-9 and 2.7e-9, R5 Ψ_Cd 4.1e-8 and 5.2e-8. The records hold
+/// and stay (decision 53 of #457, S. Guillet, 2026-11-11): R3 in the penumbra 1.6e-5, the local Ψ_Cr of R3 4.5e-4, R4 in
+/// the penumbra 1.2e-8. They are not set again from this one draw: over eleven starts moved by −5 to +5 ticks, the F1
+/// noise of the full degree moves by up to a factor of 3.3 (R4) and 7.7 (R2) (<c>GeopotentialPartialsDegreeTests</c>).
+/// </para>
 /// </remarks>
 [Trait("Category", "Validation")]
 public class StmValidationTests : IClassFixture<ReferenceCases>
