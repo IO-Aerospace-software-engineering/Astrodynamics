@@ -290,24 +290,33 @@ A major version, because it breaks the API: members deprecated for removal in 11
   up to its neighbouring candidate: capped at `MaximumEventSearchStep`, it read 29 to 33 % fewer states at fixed 600 s
   steps for one trajectory, but the reads up to 60 s apart then stepped over a positive interval of 2.3 to 43 s lying
   more than 60 s past its seed, lost in 21 to 135 of 843 windows (review of #628). Each epoch is read once.
-  - **Measured** (Linux x64, 2026-11-10, against CSPICE's `gfdist_c` LOCMIN on the SPKs of the propagations, refined on
-    `spkezr_c`'s range rate, and against a scan of the range rate of the states every 0.25 s): on the passes with two
-    minima per orbit (a circular LEO and a Clohessy-Wiltshire ellipse of 1000 m about it, y0 = 1480 to 1500 m, 843 to
-    1084 windows per propagation), the windows losing a minimum go from 10 to 46 to none at mixed default and 60 s
-    steps, from 116 to 164 to none at fixed 300 s and 600 s steps and at 600 s with the default; the two minima of one
-    600 s step (t0 + 1317.45 s and 1526.28 s) are both listed; at fixed 600 s steps with y0 = 1501 to 1502.33 m (a
-    positive interval of 2.3 to 43 s between the two minima of one step), from 165 to 170 to none. Over the 81 scenarios
+  - **Measured** (Linux x64, 2026-11-10 and 2026-11-11, against CSPICE's `gfdist_c` LOCMIN on the SPKs of the
+    propagations, refined on `spkezr_c`'s range rate, and against a scan of the range rate of the states every 0.25 s):
+    on the passes with two minima per orbit (a circular LEO and a Clohessy-Wiltshire ellipse of 1000 m about it, 843 to
+    1084 windows per propagation), the windows losing a minimum go from 10 to 95 to none at mixed default and 60 s steps
+    (y0 = 1480, 1490, 1495, 1497, 1499 and 1500 m); from 116 to 318 to none at fixed 300 s steps (y0 = 1480, 1486,
+    1490, 1492, 1495 to 1499 and 1500 m), at fixed 600 s steps (y0 = 1480, 1481, 1483, 1485, 1486, 1488, 1490, 1492,
+    1494, 1495, 1498, 1499, 1499.5 and 1500 m) and at 600 s with the default (y0 = 1480, 1486, 1490, 1495 to 1497,
+    1499 and 1500 m); the two minima of one 600 s step (t0 + 1317.45 s and 1526.28 s at y0 = 1490 m) are both listed;
+    at fixed 600 s steps with y0 = 1501 to 1502.33 m (a positive interval of 2.3 to 43 s between the two minima of one
+    step), from 165 to 170 to none; at fixed 600 s steps with y0 = 1496 and 1497 m, from 309 and 341 to 1 and 152 of
+    948 (not changed, below). Over the 81 scenarios
     of the probe of #628 and of its review, no TCA listed before moves but at the level of noise below, and no entry is
     spurious, a window end, a duplicate or out of order. The new fixtures of `ConjunctionKernelAndWindowTests`, over
     1361 to 1727 windows each, give 6.1e-6 to 6.5e-5 s and 6.6e-7 to 2.0e-6 m at mixed steps, 3.1e-5 to 1.0e-4 s and
     1.3e-5 to 2.1e-5 m at 600 s steps (the states against their SPK), asserted at twice the worst (provisional until the
     CI of the three platforms). The conformance runner on the suite's main (33286d2), 201 of 201, its 4764 deltas
     unchanged bit for bit, in 26.7 to 27.3 s instead of 25.7 to 26.0 s.
-  - **Not changed.** A positive interval of the range rate narrower than the spacing of the reads, which no seed's
-    reads 1 s apart reach (a seed whose range rate points toward it, up to its neighbouring candidate), is still not
-    guaranteed to be found: the shallow minimum next to a fold of the range rate (2.9e-7 m deep, about 1 s wide) is lost
-    in 200 to 205 of 843 windows without a seed before it, as before. A smaller `MaximumEventSearchStep` resolves an
-    interval at least as wide as it (at 1 s, the fold of 2.35 s at mixed steps is listed in each of 843 windows). Below
+  - **Not changed.** An interval of either sign of the range rate narrower than the spacing of the reads, a positive one
+    between two closing reads or a negative one between a zero found from a seed and a later minimum in the same pair of
+    reads, which no seed's reads 1 s apart reach (a seed whose range rate points toward it, up to its neighbouring
+    candidate), is still not guaranteed to be found: the shallow minimum next to a fold of the range rate (2.9e-7 m deep,
+    about 1 s wide) is lost in 200 to 205 of 843 windows without a seed before it, as before; at fixed 600 s steps with
+    y0 = 1497 m, the first of the two minima of one step (t0 + 1373.31 s, 502.851 m), the range rate positive over
+    27.9 s after it and both reads around that interval closing, the step's only seed refining to the second (1483.67 s,
+    502.824 m), in 152 of 948 windows, the whole window included, and at 1496 m (46.1 s) in 1. A smaller
+    `MaximumEventSearchStep` resolves the intervals wider than it (at 10 s, the first minimum at y0 = 1497 m is lost
+    in none of 948 windows; at 1 s, the fold of 2.35 s at mixed steps in none of 843). Below
     about 1e-8 m/s of range rate the minima listed follow the noise of the states: on the slow passes (range rates of
     1e-12 to 1e-13 m/s), zeros of 26 windows ending within the first 0.35 s are now reached by the reads in place of the
     seeds (by up to 1.2e-2 s); at a drift of 0.01 m a few more are listed.

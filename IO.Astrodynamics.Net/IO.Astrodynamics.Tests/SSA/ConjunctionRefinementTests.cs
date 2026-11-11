@@ -737,9 +737,11 @@ public class ConjunctionRefinementTests
     [InlineData(1.0e-3)]
     public void AZeroOfTheReadsAtTheWindowEnd_ClosingBefore_IsTheEndItself(double tolerance)
     {
-        // No seed, closing up to the window end, zero exactly there: the reads give the end itself, which the dense search
-        // then drops as a window end. With a tolerance of a tick or more the bisection of the last pair of reads ends on
-        // the middle of its last bracket, inside the window: the end itself all the same
+        // No seed, closing up to the window end, zero exactly there: the reads give the end itself, whose range rate is
+        // exactly zero, even with a tolerance of a tick or more, where the bisection of the last pair of reads ends on the
+        // middle of its last bracket, inside the window. This is RefineOnRangeRate only: the dense search drops that end
+        // (Inside), then its fallback bisects the whole window again, which with a tolerance coarser than a tick ends on
+        // the middle of its last bracket and lists it, the range rate negative there (as before #628; out of its scope)
         var candidates = Candidates(11);
         var end = candidates[^1];
         var rangeRate = InsideOnly(candidates, epoch => epoch == end ? 0.0 : -1.0);
@@ -801,6 +803,45 @@ public class ConjunctionRefinementTests
         }
 
         AssertWithinATick(450.0, tca[^1]);
+    }
+
+    [Theory]
+    [InlineData(true, 60.0)]
+    [InlineData(false, 60.0)]
+    [InlineData(true, 4.0)]
+    [InlineData(false, 4.0)]
+    [InlineData(true, 1.0)]
+    [InlineData(false, 1.0)]
+    public void TwoMinimaInOnePairOfReads_AreSeparatedByReadsNarrowerThanTheIntervalOfEachSign(bool seeded,
+        double spacing)
+    {
+        // Minima at 210 s and 230 s, the range rate positive over [210, 215) s, negative over [215, 230) s (15 s) and
+        // positive over [230, 300) s: at a spacing of 60 s the reads at 200 s and 250 s hold both, and the pair holding the
+        // zero the seed at 200 s finds is not bisected again, so the second minimum is not guaranteed (the documented
+        // limit: an interval of either sign narrower than the spacing of the reads; review of #628, round 2). Reads
+        // narrower than every interval of each sign (4 s and 1 s) separate them, with a seed or without. The reference:
+        // the zeros of the range rate from negative to positive, 210 s and 230 s
+        var candidates = Candidates(11);
+        var rangeRate = InsideOnly(candidates, Steps(210.0, 215.0, 230.0, 300.0));
+        var seeds = seeded ? new[] { candidates[2] } : Array.Empty<TimeSystem.Time>();
+
+        var tca = ConjunctionAssessment.RefineOnRangeRate(seeds, candidates, rangeRate, Tolerance, spacing);
+
+        var reference = new[] { 210.0, 230.0 };
+        Assert.All(tca, epoch => Assert.Contains(reference,
+            zero => System.Math.Abs((epoch - Epoch.AddSeconds(zero)).TotalSeconds) <= 1.0e-7));
+        Assert.Equal(tca.Count, tca.Distinct().Count());
+        Assert.NotEmpty(tca);
+        if (spacing < 5.0)
+        {
+            Assert.Equal(2, tca.Count);
+            AssertWithinATick(210.0, tca[0]);
+            AssertWithinATick(230.0, tca[1]);
+        }
+        else if (seeded)
+        {
+            AssertWithinATick(210.0, tca[0]);
+        }
     }
 
     [Fact]

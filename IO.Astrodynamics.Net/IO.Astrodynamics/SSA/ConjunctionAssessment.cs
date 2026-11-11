@@ -1079,8 +1079,11 @@ public static class ConjunctionAssessment
         }
 
         // No zero inside, although the reads of RefineOnRangeRate cover the window (#628): a range rate negative at the start
-        // and zero or positive at the end is still bisected over the window, for a zero they did not keep, exactly at the
-        // end, which is no minimum inside (Inside), or in a window one tick wide, for the end fallback below
+        // and zero or positive at the end is still bisected over the window, for a zero they did not keep, or in a window
+        // one tick wide, for the end fallback below. A zero exactly at the end, closing before it, which RefineOnRangeRate
+        // returns as the end and Inside drops, is bisected again here: to the end itself with a tolerance below a tick, but
+        // with a coarser one to the middle of the last bracket, inside the window, which is then listed although the range
+        // rate is negative there (as before #628; out of its scope)
         double startRate = StartRate();
         double endRate = EndRate();
         Time? zero = null;
@@ -1253,9 +1256,10 @@ public static class ConjunctionAssessment
     /// that last pair reaches the end within its tolerance; a change of sign inside the pair is bisected as any other. A
     /// change of sign over an interval narrower than the spacing of the reads, which the reads 1 s apart from a minimum do
     /// not reach (between that minimum and its neighbouring candidate on the side its range rate points to, up to the
-    /// first change of sign), is not guaranteed to be found (a narrow fold of the range rate, or the second minimum of a
-    /// pair next to a positive interval narrower than the spacing, both reads around it closing). Each epoch is read
-    /// once. The zeros are returned in order.
+    /// first change of sign), is not guaranteed to be found, whichever its sign (a narrow fold of the range rate, or the
+    /// second minimum of a pair next to a positive interval narrower than the spacing, both reads around it closing; or a
+    /// minimum after a negative interval narrower than the spacing that follows a zero found from a seed in the same pair
+    /// of reads, which is not bisected again). Each epoch is read once. The zeros are returned in order.
     /// </para>
     /// </remarks>
     /// <param name="minima">The minima of the polynomial search, each one of <paramref name="candidates"/>.</param>
@@ -1492,7 +1496,9 @@ public static class ConjunctionAssessment
     // the secants or the widened brackets, then those found from the seeds on their own range rate, then those of the
     // pairs reached by following the range rate, each dropped when a zero before it lies in its pair (no candidate
     // strictly between the two): the same minimum, reached from another seed, the range rate at the noise level changing
-    // sign more than once there; then those of the reads over the window, one per pair of consecutive reads (#628)
+    // sign more than once there; then those of the reads over the window, one per pair of consecutive reads (#628): a
+    // pair of reads that holds a zero already is not bisected again, so a second change of sign in it, after an interval
+    // of either sign narrower than the reads, is not found
     private static List<Time> MergeByPairs(List<Time> refined, List<Time> fromSeeds,
         SortedDictionary<int, (double Low, double High)> followed, IReadOnlyList<Time> candidates,
         IReadOnlyList<Time> reads, Func<Time, double> rangeRate, double toleranceSeconds)
