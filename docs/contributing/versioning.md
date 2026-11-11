@@ -494,6 +494,25 @@ A major version, because it breaks the API: members deprecated for removal in 11
     `Spacecraft.Propagate` (three overloads, RK7(8) and Velocity-Verlet, a leading attitude, an impulse, an attitude after
     an impulse) throw with the previous states kept, the builder throw at `Build` or, for a cycle made after it, at
     `Propagate`, the batch report the error; a chain of 200 000 attitudes resets without overflow.
+- **A CSPICE window search with `NotEqual`, `GreaterOrEqual` or `LowerOrEqual` ended the process** ([#482](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/482)).
+  The native layer parses the relation before it calls `gfdist`, `gfposc` or `gfilum`, and threw a C++ exception that
+  nothing caught for `!`, `>=` and `<=` (exit code 134, measured on every CSPICE path: `CelestialItem` and `Site`
+  distance and coordinate searches with kernel objects, `Site.FindWindowsOnIlluminationConstraint` of a kernel site, the
+  three `SpiceAPI` searches and the three command-line searches). `SpiceAPI` now hands CSPICE only the relations it
+  knows: `GreaterOrEqual` and `LowerOrEqual` are searched as `>` and `<`, whose windows are closed, so for a quantity that
+  crosses the value they are the windows the managed search gives (it bisects the relation itself; the two differ only
+  where the quantity stays equal to the value over an interval, which `>` leaves out); `NotEqual`, which CSPICE has
+  not, is the search window less the instants of `=`, a window from each crossing to the next, the managed search's
+  definition since lot 4. Both paths so accept every operator and give the same windows; throwing for `NotEqual` on the
+  CSPICE path alone (#482's first recommendation) would have made a call that works with a propagated spacecraft throw
+  once the spacecraft comes from a kernel. A value outside the enumeration throws `ArgumentOutOfRangeException`. The
+  command-line help lists `<=`, `>=` and `!`.
+  - **Test:** `SpiceOperatorTests` (18 cases) against `gfdist`, `gfposc` and `gfilum` in spiceypy
+    (`tools/geometry_reference/operators_reference.py`), equal to the tick: the three `SpiceAPI` searches, the coordinate
+    search of a kernel spacecraft (LRO from the Moon) and of a kernel site (DSS-13 from LRO), with the three operators;
+    the distance search of a kernel spacecraft both ways and the illumination search of a kernel site against their own
+    `>`, `<` and `=` searches (their thresholds carry #466's factor and the native surface point's altitude defect); the
+    command line with `>=`, `<=` and `!` (`GeometryFinderTests.DistanceConstraint_OperatorsCspiceHasNot`).
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a

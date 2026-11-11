@@ -467,9 +467,94 @@ public class SpiceAPI
             seconds <= startSeconds ? start : seconds >= endSeconds ? end : Time.Create(seconds, TimeFrame.TDBFrame);
     }
 
+    /// <summary>
+    /// The relation CSPICE's geometry finder takes for <paramref name="relationalOperator"/> (#482). CSPICE knows only
+    /// <c>&gt;</c>, <c>&lt;</c>, <c>=</c>, <c>ABSMIN</c>, <c>ABSMAX</c>, <c>LOCMIN</c> and <c>LOCMAX</c>, and the native
+    /// parser of the relation ends the process on any other string (a C++ exception across P/Invoke).
+    /// <see cref="RelationnalOperator.GreaterOrEqual"/> and <see cref="RelationnalOperator.LowerOrEqual"/> are sent as
+    /// <c>&gt;</c> and <c>&lt;</c>: CSPICE's windows are closed, so for a quantity that crosses the value they already hold
+    /// the instants where it equals the value, as the managed search's windows do; the two differ only where the quantity
+    /// stays equal to the value over an interval, which <c>&gt;</c> leaves out. <see cref="RelationnalOperator.NotEqual"/>
+    /// is never sent: <see cref="SearchWindows"/> forms it from <c>=</c>.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The value is not one of the enumeration.</exception>
+    private static string SpiceRelation(RelationnalOperator relationalOperator) => relationalOperator switch
+    {
+        RelationnalOperator.Greater or RelationnalOperator.GreaterOrEqual => ">",
+        RelationnalOperator.Lower or RelationnalOperator.LowerOrEqual => "<",
+        RelationnalOperator.Equal => "=",
+        RelationnalOperator.AbsoluteMin or RelationnalOperator.AbsoluteMax or RelationnalOperator.LocalMin
+            or RelationnalOperator.LocalMax => relationalOperator.GetDescription(),
+        _ => throw new ArgumentOutOfRangeException(nameof(relationalOperator), relationalOperator,
+            "CSPICE's window searches accept Greater, GreaterOrEqual, Lower, LowerOrEqual, Equal, NotEqual, AbsoluteMin, " +
+            "AbsoluteMax, LocalMin and LocalMax.")
+    };
+
+    /// <summary>
+    /// The windows of a CSPICE search for <paramref name="relationalOperator"/>: the search itself, or for
+    /// <see cref="RelationnalOperator.NotEqual"/>, which CSPICE has not, the rest of the search window once the instants
+    /// of <c>=</c> are taken out, a window from each crossing to the next, as the managed search defines it (#482).
+    /// </summary>
+    private static IEnumerable<TimeSystem.Window> SearchWindows(TimeSystem.Window searchWindow, RelationnalOperator relationalOperator,
+        Func<string, IEnumerable<TimeSystem.Window>> search)
+    {
+        if (relationalOperator != RelationnalOperator.NotEqual)
+        {
+            return search(SpiceRelation(relationalOperator));
+        }
+
+        var end = searchWindow.EndDate.ToTDB();
+        var cursor = searchWindow.StartDate.ToTDB();
+        var windows = new List<TimeSystem.Window>();
+        foreach (var crossing in search("=").OrderBy(x => x.StartDate))
+        {
+            if (crossing.StartDate > cursor)
+            {
+                windows.Add(new TimeSystem.Window(cursor, crossing.StartDate));
+            }
+
+            if (crossing.EndDate > cursor)
+            {
+                cursor = crossing.EndDate;
+            }
+        }
+
+        if (end > cursor)
+        {
+            windows.Add(new TimeSystem.Window(cursor, end));
+        }
+
+        return windows;
+    }
+
+    /// <summary>
+    /// The windows where the distance from the observer to the target satisfies the relation: CSPICE's <c>gfdist</c>.
+    /// </summary>
+    /// <param name="searchWindow">The search window.</param>
+    /// <param name="observerId">The NAIF identifier of the observer.</param>
+    /// <param name="targetId">The NAIF identifier of the target.</param>
+    /// <param name="relationalOperator">The relation: every value of the enumeration; see the remarks.</param>
+    /// <param name="value">The distance, in m.</param>
+    /// <param name="aberration">The aberration correction.</param>
+    /// <param name="stepSize">The step of the search.</param>
+    /// <returns>The windows, in TDB.</returns>
+    /// <remarks>
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
+    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// closed (they differ only where the distance stays equal to the value over an interval);
+    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// crossing to the next, as the managed search gives it.
+    /// </remarks>
     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
+    {
+        return SearchWindows(searchWindow, relationalOperator, relation => DistanceWindows(searchWindow, observerId, targetId, relation,
+            value, aberration, stepSize));
+    }
+
+    private IEnumerable<TimeSystem.Window> DistanceWindows(TimeSystem.Window searchWindow, int observerId, int targetId, string relation,
+        double value, Aberration aberration, TimeSpan stepSize)
     {
         lock (lockObject)
         {
@@ -479,7 +564,7 @@ public class SpiceAPI
                 windows[i] = new Window(double.NaN, double.NaN);
             }
 
-            FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relationalOperator.GetDescription(), value,
+            FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relation, value,
                 aberration.GetDescription(), stepSize.TotalSeconds, windows);
             return WithinSearchWindow(windows, searchWindow);
         }
@@ -563,6 +648,13 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
+    /// <remarks>
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
+    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// closed (they differ only where the quantity stays equal to the value over an interval);
+    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// crossing to the next, as the managed search gives it.
+    /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
@@ -570,22 +662,36 @@ public class SpiceAPI
         TimeSpan stepSize)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
-        lock (lockObject)
+        return SearchWindows(searchWindow, relationalOperator, relation =>
         {
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
+            lock (lockObject)
             {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
+                var windows = new Window[1000];
+                for (var i = 0; i < 1000; i++)
+                {
+                    windows[i] = new Window(double.NaN, double.NaN);
+                }
 
-            FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
-                SpiceFrameName(frame), coordinateSystem.GetDescription(),
-                coordinate.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
-                aberration.GetDescription(), stepSize.TotalSeconds, windows);
-            return WithinSearchWindow(windows, searchWindow);
-        }
+                FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
+                    SpiceFrameName(frame), coordinateSystem.GetDescription(),
+                    coordinate.GetDescription(), relation, value, adjustValue,
+                    aberration.GetDescription(), stepSize.TotalSeconds, windows);
+                return WithinSearchWindow(windows, searchWindow);
+            }
+        });
     }
 
+    /// <summary>
+    /// The windows where an illumination angle at a point on the target body satisfies the relation: CSPICE's
+    /// <c>gfilum</c>.
+    /// </summary>
+    /// <remarks>
+    /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
+    /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
+    /// closed (they differ only where the quantity stays equal to the value over an interval);
+    /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
+    /// crossing to the next, as the managed search gives it.
+    /// </remarks>
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
@@ -593,21 +699,24 @@ public class SpiceAPI
     {
         if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
         if (method == null) throw new ArgumentNullException(nameof(method));
-        lock (lockObject)
+        return SearchWindows(searchWindow, relationalOperator, relation =>
         {
-            var windows = new Window[1000];
-            for (var i = 0; i < 1000; i++)
+            lock (lockObject)
             {
-                windows[i] = new Window(double.NaN, double.NaN);
-            }
+                var windows = new Window[1000];
+                for (var i = 0; i < 1000; i++)
+                {
+                    windows[i] = new Window(double.NaN, double.NaN);
+                }
 
-            FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
-                illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
-                planetodetic.Convert(),
-                illuminationType.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
-                aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
-            return WithinSearchWindow(windows, searchWindow);
-        }
+                FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
+                    illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
+                    planetodetic.Convert(),
+                    illuminationType.GetDescription(), relation, value, adjustValue,
+                    aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
+                return WithinSearchWindow(windows, searchWindow);
+            }
+        });
     }
 
     /// <summary>

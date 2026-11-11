@@ -30,6 +30,10 @@ Used in geometry-finder constraint searches.
 | `LocalMin` | Local minimum |
 | `LocalMax` | Local maximum |
 
+`NotEqual`, `GreaterOrEqual` and `LowerOrEqual` are accepted by every search: on the CSPICE path, which has no such
+relation, `GreaterOrEqual` and `LowerOrEqual` are searched as `Greater` and `Lower` (closed windows), and `NotEqual` is
+the search window less the crossings of `Equal` (#482; [Sites](sites.md#window-searches)).
+
 ## OccultationType
 
 | Value | Description |
