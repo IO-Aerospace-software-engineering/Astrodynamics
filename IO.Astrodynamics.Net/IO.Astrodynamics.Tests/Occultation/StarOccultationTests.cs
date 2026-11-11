@@ -35,7 +35,8 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// <para>
 /// <b>The case</b> (#533's): the star on the Moon's LT direction from DSS-13 at S = 2026-03-01 12:00 TDB, at 20 pc and at
 /// 100 pc from DSS-13, without proper motion and with 0.1″/yr in right ascension (catalog epoch S); the search over
-/// S ± 3 h, step 60 s, tolerance 1 µs.
+/// S ± 3 h, step 60 s, tolerance 1 µs, with each correction of the occultation search (None, LT, CN, XLT and XCN: before
+/// #533 the star was read at t − lt or t + lt, its light time from the observer, whatever the sign).
 /// </para>
 /// </remarks>
 public class StarOccultationTests
@@ -44,14 +45,22 @@ public class StarOccultationTests
     private static readonly Window SearchWindow = new(S.AddSeconds(-3.0 * 3600.0), S.AddSeconds(3.0 * 3600.0));
     private const double Arcsec = System.Math.PI / 180.0 / 3600.0;
 
-    // The worst edge over the 12 cases on Linux x64 (Release, 2026-11-11) is 1.43 µs (20 pc, CN), within the search's 1 µs
-    // tolerance and the light-time iteration of the Moon (#533 measured 1.4 µs with the same reference); the bound is
-    // twice it, rounded up
-    private const double EdgeLimit = 3.0e-6;
+    // The worst edge over the 20 cases on Linux x64 (Release, 2026-11-11) is 2.38 µs (XLT entry, 20 tick spacings of a
+    // TDB epoch near 8.3e8 s), 1.43 µs without XLT and XCN (20 pc, CN), within the search's 1 µs tolerance and the
+    // light-time iteration of the Moon (#533 measured 1.4 µs with the same reference); the bound is twice it, rounded up
+    private const double EdgeLimit = 5.0e-6;
 
-    // The angle of the direction of Star.GetEphemeris to the reference; measured 0 rad on Linux x64 (within the rounding
-    // of the subtraction; Vector3.Angle gives 0 on every case), against 3.0e-5 rad (6.2″) for 0.1″/yr at 20 pc before #533
-    private const double DirectionLimit = 1.0e-14;
+    // The angle (Separation) of the direction of Star.GetEphemeris to the reference: at most 1.71e-16 rad on Linux x64
+    // (Release, 2026-11-11), against 3.0e-5 rad (6.2″) for 0.1″/yr at 20 pc before #533. The other platforms' sin and cos
+    // may differ by a few ulps: 8 ulps per component of the direction move it by 1.35e-15 rad at most (a simulation on
+    // the reference directions, 20 000 draws), so the bound is twice that, rounded up, until the three-platform CI logs
+    // give their worst
+    private const double DirectionLimit = 3.0e-15;
+
+    // |angle(transmission, geometric) − angle(reception, geometric)|, stlabx the mirror of stelab: 5.1e-17 rad on Linux
+    // x64 (Release, 2026-11-11); 8 ulps per component of either direction give 2.64e-15 rad at most (the same
+    // simulation), and the bound is twice that, rounded up
+    private const double MirrorLimit = 6.0e-15;
 
     private readonly ITestOutputHelper _output;
 
@@ -78,15 +87,23 @@ public class StarOccultationTests
             (20.0, 0.0, Aberration.None) => (825636696.6894515, 825639975.673676),
             (20.0, 0.0, Aberration.LT) => (825636730.4999154, 825640007.2576585),
             (20.0, 0.0, Aberration.CN) => (825636730.5013449, 825640007.2589674),
+            (20.0, 0.0, Aberration.XLT) => (825636662.8887165, 825639944.0466852),
+            (20.0, 0.0, Aberration.XCN) => (825636662.8901455, 825639944.0479977),
             (20.0, 0.1, Aberration.None) => (825636696.6894436, 825639975.6736829),
             (20.0, 0.1, Aberration.LT) => (825636730.4999075, 825640007.2576656),
             (20.0, 0.1, Aberration.CN) => (825636730.501337, 825640007.2589746),
+            (20.0, 0.1, Aberration.XLT) => (825636662.8887084, 825639944.0466921),
+            (20.0, 0.1, Aberration.XCN) => (825636662.8901374, 825639944.0480046),
             (100.0, 0.0, Aberration.None) => (825636696.68943, 825639975.6736946),
             (100.0, 0.0, Aberration.LT) => (825636730.4998941, 825640007.2576776),
             (100.0, 0.0, Aberration.CN) => (825636730.5013239, 825640007.2589865),
+            (100.0, 0.0, Aberration.XLT) => (825636662.8886945, 825639944.0467033),
+            (100.0, 0.0, Aberration.XCN) => (825636662.8901236, 825639944.0480161),
             (100.0, 0.1, Aberration.None) => (825636696.6894219, 825639975.6737015),
             (100.0, 0.1, Aberration.LT) => (825636730.4998863, 825640007.2576845),
             (100.0, 0.1, Aberration.CN) => (825636730.5013161, 825640007.2589934),
+            (100.0, 0.1, Aberration.XLT) => (825636662.8886864, 825639944.0467103),
+            (100.0, 0.1, Aberration.XCN) => (825636662.8901155, 825639944.048023),
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -94,15 +111,23 @@ public class StarOccultationTests
     [InlineData(20.0, 0.0, Aberration.None)]
     [InlineData(20.0, 0.0, Aberration.LT)]
     [InlineData(20.0, 0.0, Aberration.CN)]
+    [InlineData(20.0, 0.0, Aberration.XLT)]
+    [InlineData(20.0, 0.0, Aberration.XCN)]
     [InlineData(20.0, 0.1, Aberration.None)]
     [InlineData(20.0, 0.1, Aberration.LT)]
     [InlineData(20.0, 0.1, Aberration.CN)]
+    [InlineData(20.0, 0.1, Aberration.XLT)]
+    [InlineData(20.0, 0.1, Aberration.XCN)]
     [InlineData(100.0, 0.0, Aberration.None)]
     [InlineData(100.0, 0.0, Aberration.LT)]
     [InlineData(100.0, 0.0, Aberration.CN)]
+    [InlineData(100.0, 0.0, Aberration.XLT)]
+    [InlineData(100.0, 0.0, Aberration.XCN)]
     [InlineData(100.0, 0.1, Aberration.None)]
     [InlineData(100.0, 0.1, Aberration.LT)]
     [InlineData(100.0, 0.1, Aberration.CN)]
+    [InlineData(100.0, 0.1, Aberration.XLT)]
+    [InlineData(100.0, 0.1, Aberration.XCN)]
     public void LunarOccultationFromASite(double distancePc, double properMotion, Aberration aberration)
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
@@ -121,6 +146,13 @@ public class StarOccultationTests
         Assert.True(System.Math.Abs(entryError) <= EdgeLimit, $"entry {entryError:E3} s");
         Assert.True(System.Math.Abs(exitError) <= EdgeLimit, $"exit {exitError:E3} s");
     }
+
+    /// <summary>
+    /// The angle between two directions, atan2(|a × b|, a · b), which resolves an angle near zero to the rounding of its
+    /// components (about 1e-16 rad); <see cref="Vector3.Angle"/>, the acos of the dot product, gives 0 or at least
+    /// acos(1 − 2⁻⁵³) = 1.49e-8 rad there, so it cannot measure a direction against its reference.
+    /// </summary>
+    private static double Separation(in Vector3 a, in Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
 
     /// <summary>The direction of the star at S + 1 h from DSS-13, without and with the stellar aberration.</summary>
     private static Vector3 ReferenceDirection(double distancePc, double properMotion, bool stellar) =>
@@ -164,15 +196,16 @@ public class StarOccultationTests
             // geometric direction to first order; checked against the geometric direction and the reception one
             var geometric = ReferenceDirection(distancePc, properMotion, false);
             var reception = ReferenceDirection(distancePc, properMotion, true);
-            double toGeometric = position.Angle(geometric);
-            double toReception = reception.Angle(geometric);
+            double toGeometric = Separation(position, geometric);
+            double toReception = Separation(reception, geometric);
             _output.WriteLine($"MEASURE transmission {aberration}: {toGeometric:E3} rad from the geometric direction, reception {toReception:E3}");
-            Assert.True(System.Math.Abs(toGeometric - toReception) <= 1e-12, $"{toGeometric:E3} against {toReception:E3}");
-            Assert.True(position.Angle(reception) > 1.9 * toReception);
+            _output.WriteLine($"MEASURE transmission {aberration}: mirror difference {toGeometric - toReception:E3} rad");
+            Assert.True(System.Math.Abs(toGeometric - toReception) <= MirrorLimit, $"{toGeometric:E3} against {toReception:E3}");
+            Assert.True(Separation(position, reception) > 1.9 * toReception);
             return;
         }
 
-        double angle = position.Angle(expected);
+        double angle = Separation(position, expected);
         _output.WriteLine($"MEASURE direction {distancePc} pc {properMotion}\"/yr {aberration}: {angle:E3} rad");
         Assert.True(angle <= DirectionLimit, $"{angle:E3} rad");
         // The distance is that of the star from DSS-13 at the epoch, the stellar aberration a rotation

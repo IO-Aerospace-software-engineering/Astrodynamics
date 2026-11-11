@@ -13,8 +13,8 @@ right ascension pmra (rad per Julian year of 365.25 days, added to the right asc
 does).
 
 The occultation: the Moon a sphere of 1737.4 km (pck00011's radii), its position from DSS-13 that of spkpos with the
-correction (NONE, LT or CN), the star as above; the entry and the exit are the zeros of asin(R/d) - sep(t) around S,
-found by bisection to 1e-9 s. The windows of the library (Star as a point target, the Moon an ellipsoid in IAU_MOON,
+correction (NONE, LT, CN, XLT or XCN), the star as above; the entry and the exit are the zeros of asin(R/d) - sep(t)
+around S, found by bisection to 1e-9 s. The windows of the library (Star as a point target, the Moon an ellipsoid in IAU_MOON,
 OccultationType.Any) are compared with them.
 
 The direction of Star.GetEphemeris(S + 1 h, DSS-13, ICRF, correction): the unit vector of the star minus DSS-13 at the
@@ -95,7 +95,7 @@ for distance in (20.0, 100.0):
     for pm in (0.0, 0.1):
         pmra = pm * ARCSEC
         star = lambda t: star_from_dss13(t, ra, dec, parallax, pmra)
-        for abcorr in ('NONE', 'LT', 'CN'):
+        for abcorr in ('NONE', 'LT', 'CN', 'XLT', 'XCN'):
             print(f'  pmra {pm:g} arcsec/yr {abcorr}: {", ".join(repr(x) for x in events(star, abcorr))}')
         t = S + 3600.0
         u = sp.vhat(star(t))
