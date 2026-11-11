@@ -32,7 +32,14 @@ namespace IO.Astrodynamics.Tests;
 /// <see cref="HeldChildren"/>); <c>race</c> starts the two threads behind a barrier, the reproduction of #623, which hung in
 /// every child of <c>direct</c>, <c>lagrange</c> and <c>lagrange-window</c> and in 10 % to 25 % of those of <c>tle</c>.
 /// </para>
+/// <para>
+/// The class runs alone, after the test classes that run in parallel (<see cref="ColdStartCollection"/>): on Windows a
+/// child process inherits every inheritable handle of the test host, among them the files CSPICE has open, so a child
+/// started while another test class had an SPK loaded kept that file open until it ended, and that test could not delete
+/// its SPK after unloading it (<c>PropagatedArcsTests</c>, <c>IOException</c>, CI of 2026-11-11 on Windows x64 only).
+/// </para>
 /// </remarks>
+[Collection(nameof(ColdStartCollection))]
 public class ColdStartTests
 {
     // Children per mode and schedule, and the hold of thread B, ms. Before the fix (Linux x64, 4 cores, Release, 2026-11-11,
@@ -138,3 +145,10 @@ public class ColdStartTests
         return !string.IsNullOrEmpty(hostPath) && File.Exists(hostPath) ? hostPath : executable;
     }
 }
+
+/// <summary>
+/// The collection of <see cref="ColdStartTests"/>, run alone after the test classes that run in parallel: no other class
+/// holds a kernel file while its child processes inherit the handles of the test host on Windows.
+/// </summary>
+[CollectionDefinition(nameof(ColdStartCollection), DisableParallelization = true)]
+public class ColdStartCollection;
