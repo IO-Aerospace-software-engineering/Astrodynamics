@@ -408,8 +408,19 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// epoch, its new one, which every later propagation keeps, as the one of its constructor (#573): an
         /// <see cref="Maneuver.ImpulseManeuver"/> never fires before it, and an <see cref="Maneuver.Attitude"/> never
         /// activates before it (#539). An earlier value changes nothing.</param>
+        /// <exception cref="ArgumentException">The chain from <paramref name="maneuver"/> is a cycle, which a subclass that
+        /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); nothing changes.</exception>
         public void SetStandbyManeuver(Maneuver.Maneuver maneuver, Time? minimumEpoch = null)
         {
+            try
+            {
+                Maneuver.Maneuver.Chain(maneuver);
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new ArgumentException(e.Message, nameof(maneuver), e);
+            }
+
             if (minimumEpoch.HasValue)
             {
                 maneuver?.RaiseGivenMinimumEpoch(minimumEpoch.Value);
@@ -982,7 +993,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 fuelTank.Refuel();
             }
 
-            InitialManeuver?.Reset();
+            Maneuver.Maneuver.ResetChain(InitialManeuver);
             StandbyManeuver = InitialManeuver;
         }
     }

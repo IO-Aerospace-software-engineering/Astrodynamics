@@ -91,6 +91,9 @@ public abstract class PropagatorBase : IPropagator
         Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
         ValidateInertialFrame(spacecraft);
+        // A cycle in the maneuver chain would never end the walks of the chain: rejected before anything runs (#585)
+        Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
+        Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
 
         OriginalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
@@ -361,6 +364,12 @@ public abstract class PropagatorBase : IPropagator
     /// </summary>
     private protected virtual (Frame Frame, PropagationFrameOrientationCache Cache) OrientationCache => (null, null);
 
+    /// <summary>
+    /// Propagates the spacecraft over the window, with its maneuver chain from its maneuver in standby.
+    /// </summary>
+    /// <returns>The solution.</returns>
+    /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
+    /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too.</exception>
     public PropagationSolution Propagate()
     {
         // The orientation cache is active on this thread only, so concurrent propagations sharing a central body do not
@@ -385,7 +394,9 @@ public abstract class PropagatorBase : IPropagator
         var propagationEnd = endsAtWindowEnd ? Window.EndDate : TimeArgument.EpochAt(Window.StartDate, propagationDuration);
         _propagationDuration = propagationDuration;
 
-        // 2. The leading attitudes of the chain on the attitude timeline, and the detector of its first impulse (#539)
+        // 2. The leading attitudes of the chain on the attitude timeline, and the detector of its first impulse (#539),
+        // from a chain without a cycle, which the walks of the chain would never end (#585)
+        Maneuver.Maneuver.Chain(Spacecraft.StandbyManeuver);
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
         var eventDetectors = BuildEventDetectors();
