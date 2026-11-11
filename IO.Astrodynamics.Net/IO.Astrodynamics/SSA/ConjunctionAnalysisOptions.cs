@@ -19,7 +19,8 @@ public sealed record ConjunctionAnalysisOptions
     /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection: on the
     /// sampled search, the largest interval between its search epochs; on the polynomial search of two propagations
     /// (the <see cref="PropagationSolution"/> overloads of <c>Analyze</c> and <c>AnalyzeAll</c>), the largest spacing of
-    /// the reads of the range rate over the window, between and at the candidates of the polynomial search (#628).
+    /// the reads of the range rate over the window, between and at the candidates of the polynomial search (#628), one tick
+    /// more allowed (about the Earth a step of 60 TT seconds may span 60 s and one tick of its TDB labels).
     /// </summary>
     /// <remarks>
     /// On two propagations a minimum of the distance is listed from these reads when the range rate changes from negative

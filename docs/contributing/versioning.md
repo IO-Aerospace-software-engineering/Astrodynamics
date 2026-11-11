@@ -284,8 +284,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
   next with no seed near (form A); with long steps, one step holding a minimum, a maximum and a second minimum, its
   Hermite one minimum only (form B). `Analyze` then returned a window end or another minimum (504.6578 m against the
   missed minimum's 504.6428 m). The range rate is now also read at every candidate and, between two candidates more
-  than `MaximumEventSearchStep` (60 s by default) apart, at the fewest epochs evenly spaced that leave no gap wider, as
-  the sampled search does, and each change from negative to positive between two consecutive reads that holds no TCA
+  than `MaximumEventSearchStep` (60 s by default) apart, at the fewest epochs evenly spaced that leave no gap wider by
+  more than one tick (about the Earth a step of 60 TT seconds may span 60 s and one tick of its TDB labels), as the
+  sampled search does, and each change from negative to positive between two consecutive reads that holds no TCA
   yet is bisected to the tick nearer its zero, one TCA per pair of reads. The search from a seed still reads 1 s apart
   up to its neighbouring candidate: capped at `MaximumEventSearchStep`, it read 29 to 33 % fewer states at fixed 600 s
   steps for one trajectory, but the reads up to 60 s apart then stepped over a positive interval of 2.3 to 43 s lying
@@ -294,14 +295,16 @@ A major version, because it breaks the API: members deprecated for removal in 11
     propagations, refined on `spkezr_c`'s range rate, and against a scan of the range rate of the states every 0.25 s):
     on the passes with two minima per orbit (a circular LEO and a Clohessy-Wiltshire ellipse of 1000 m about it, 843 to
     1084 windows per propagation), the windows losing a minimum go from 10 to 95 to none at mixed default and 60 s steps
-    (y0 = 1480, 1490, 1495, 1497, 1499 and 1500 m); from 116 to 318 to none at fixed 300 s steps (y0 = 1480, 1486,
-    1490, 1492, 1495 to 1499 and 1500 m), at fixed 600 s steps (y0 = 1480, 1481, 1483, 1485, 1486, 1488, 1490, 1492,
-    1494, 1495, 1498, 1499, 1499.5 and 1500 m) and at 600 s with the default (y0 = 1480, 1486, 1490, 1495 to 1497,
-    1499 and 1500 m); the two minima of one 600 s step (t0 + 1317.45 s and 1526.28 s at y0 = 1490 m) are both listed;
-    at fixed 600 s steps with y0 = 1501 to 1502.33 m (a positive interval of 2.3 to 43 s between the two minima of one
-    step), from 165 to 170 to none; at fixed 600 s steps with y0 = 1496 and 1497 m, from 309 and 341 to 1 and 152 of
-    948 (not changed, below). Over the 81 scenarios
-    of the probe of #628 and of its review, no TCA listed before moves but at the level of noise below, and no entry is
+    (the default for the first trajectory: y0 = 1490, 1495, 1497, 1499 and 1500 m; 60 s for the first: y0 = 1495 and
+    1497 m); from 116 to 318 to none at fixed 300 s steps (y0 = 1495 to 1499 and 1500 m), at fixed 600 s steps
+    (y0 = 1480, 1481, 1483, 1485, 1486, 1488, 1490, 1492, 1494, 1495, 1498, 1499, 1499.5 and 1500 m) and at 600 s with
+    the default (y0 = 1490, 1495 to 1497, 1499 and 1500 m). The passes measured that lost none before lose none now:
+    y0 = 1480 m at mixed steps, 1490, 1499 and 1500 m with 60 s for the first trajectory; 1480, 1486, 1490 and 1492 m
+    at fixed 300 s steps; 1480 and 1486 m at 600 s with the default. The two minima of one 600 s step (t0 + 1317.45 s
+    and 1526.28 s at y0 = 1490 m) are both listed; at fixed 600 s steps with y0 = 1501 to 1502.33 m (a positive
+    interval of 2.3 to 43 s between the two minima of one step), from 165 to 170 to none; at fixed 600 s steps with
+    y0 = 1496 and 1497 m, from 309 and 341 to 1 and 152 of 948 (not changed, below). Over the 81 scenarios of the
+    probe of #628 and of its review, no TCA listed before moves but at the level of noise below, and no entry is
     spurious, a window end, a duplicate or out of order. The new fixtures of `ConjunctionKernelAndWindowTests`, over
     1361 to 1727 windows each, give 6.1e-6 to 6.5e-5 s and 6.6e-7 to 2.0e-6 m at mixed steps, 3.1e-5 to 1.0e-4 s and
     1.3e-5 to 2.1e-5 m at 600 s steps (the states against their SPK), asserted at twice the worst (provisional until the
@@ -309,8 +312,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
     unchanged bit for bit, in 26.7 to 27.3 s instead of 25.7 to 26.0 s.
   - **Not changed.** An interval of either sign of the range rate narrower than the spacing of the reads, a positive one
     between two closing reads or a negative one between a zero found from a seed and a later minimum in the same pair of
-    reads, which no seed's reads 1 s apart reach (a seed whose range rate points toward it, up to its neighbouring
-    candidate), is still not guaranteed to be found: the shallow minimum next to a fold of the range rate (2.9e-7 m deep,
+    reads, which no seed's reads 1 s apart reach (a seed whose secants are not checked and whose range rate points toward
+    it, up to its neighbouring candidate; a seed whose secants are checked reads nothing between itself and their zero),
+    is still not guaranteed to be found: the shallow minimum next to a fold of the range rate (2.9e-7 m deep,
     about 1 s wide) is lost in 200 to 205 of 843 windows without a seed before it, as before; at fixed 600 s steps with
     y0 = 1497 m, the first of the two minima of one step (t0 + 1373.31 s, 502.851 m), the range rate positive over
     27.9 s after it and both reads around that interval closing, the step's only seed refining to the second (1483.67 s,
@@ -321,10 +325,11 @@ A major version, because it breaks the API: members deprecated for removal in 11
     1e-12 to 1e-13 m/s), zeros of 26 windows ending within the first 0.35 s are now reached by the reads in place of the
     seeds (by up to 1.2e-2 s); at a drift of 0.01 m a few more are listed.
   - **Cost.** One state per candidate and per sample: on two LEO trajectories over one day with EGM2008 10×10, the Moon
-    and the Sun at the default steps (31 minima), `Analyze` reads 2063 states instead of 218 and takes 127 to 141 ms
-    instead of 18 to 19 ms; 57 to 60 ms with a `MaximumEventSearchStep` of 300 s or more. At 60 s steps for both
-    trajectories the reads add no sample, and those at the candidates take the states read per window of the probe of
-    #628 from 54 to 82 on average; at fixed 600 s steps for one trajectory and the default for the other, 469 to 554
+    and the Sun at the default steps (31 minima), `Analyze` reads 2063 states instead of 218 and takes 96 to 106 ms
+    instead of 15 to 20 ms (about 6×); 49 to 56 ms with a `MaximumEventSearchStep` of 300 s or more. At 60 s steps for
+    both trajectories the reads add no sample (a step of 60 TT seconds may span 60 s and one tick of its TDB labels,
+    which is not read at its middle), and those at the candidates take the states read per window of the probe of #628
+    from 54 to 78 on average; at fixed 600 s steps for one trajectory and the default for the other, 469 to 554
     against 481 to 564.
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a

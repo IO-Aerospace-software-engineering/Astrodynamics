@@ -925,8 +925,9 @@ public static class ConjunctionAssessment
     /// <paramref name="maximumReadSpacing"/> apart, and each change from negative to positive between two reads that holds
     /// no zero of the seeds is bisected (#628): a minimum of the states with no minimum of the Hermite near it. Without a
     /// zero inside, a range rate negative at the start and zero or positive at the end is still bisected over the window,
-    /// for a zero the reads did not keep: the end, where the range rate is exactly zero, or a zero in a window one tick
-    /// wide, which no epoch inside resolves. A window end is never a close approach, a zero of the range rate exactly there included. Every close approach is a zero of the range rate
+    /// for a zero the reads did not keep: the end, where the range rate is exactly zero (the bisection over the window may
+    /// then end on a minimum inside the last pair of reads that its own bisection stepped over), or a zero in a window one
+    /// tick wide, which no epoch inside resolves. A window end is never a close approach, a zero of the range rate exactly there included. Every close approach is a zero of the range rate
     /// from negative to positive: a seed that the refinement does not bracket on the range rate, a maximum of the distance
     /// seeded by the error of the Hermite on a slow pass, is none, and does not keep the dense <c>Analyze</c> from its
     /// window ends.
@@ -1031,14 +1032,42 @@ public static class ConjunctionAssessment
             toleranceSeconds);
 
         // The minima of the polynomials, the window ends included, are only the seeds of the search: whether a minimum
-        // lies inside the window is decided on the range rate of the states (RefineOnRangeRate), whose zero the Hermite
-        // misses by its error (#363). A window end is never a close approach (#621), not even a zero of the range rate
-        // exactly there, which the dense Analyze keeps by its end fallback below. Each epoch is read once, those of
-        // RefineOnRangeRate and of the fallbacks below alike (round 1 of the review of #628: the window ends were read
-        // again after the refinement)
-        var rangeRate = ReadOnce(epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch));
-        var start = distinctCandidates[0];
-        var end = distinctCandidates[^1];
+        // lies inside the window is decided on the range rate of the states, whose zero the Hermite misses by its error
+        // (#363)
+        return CloseApproachesOnRangeRate(minima, distinctCandidates,
+            epoch => EvaluateRangeRate(protectedSource, secondarySource, epoch),
+            epoch => DistanceSquared(protectedSource, secondarySource, epoch), toleranceSeconds,
+            maximumReadSpacing.TotalSeconds, windowEndsWithoutInteriorMinimum);
+    }
+
+    /// <summary>
+    /// The close approaches of the dense search from its seeds and candidates, on the range rate of the states
+    /// (<see cref="FindDenseCloseApproaches"/>): the zeros of <see cref="RefineOnRangeRate"/> inside the window, then,
+    /// without one, the fallbacks over the window and, for <c>Analyze</c>, its ends.
+    /// </summary>
+    /// <param name="minima">The minima of the polynomial search, each one of <paramref name="candidates"/>.</param>
+    /// <param name="candidates">The sorted candidate epochs of the polynomial search, the window ends first and last.</param>
+    /// <param name="rangeRate">The range rate of the states, (r_s − r_p)·(v_s − v_p), at an epoch.</param>
+    /// <param name="distanceSquared">The squared distance of the states at an epoch.</param>
+    /// <param name="toleranceSeconds">Tolerance of the bisection, in s.</param>
+    /// <param name="maximumReadSpacingSeconds">The largest spacing of the reads of the range rate over the window, in s.</param>
+    /// <param name="windowEndsWithoutInteriorMinimum">As for <see cref="FindDenseCloseApproaches"/>.</param>
+    /// <returns>The close approaches, in order.</returns>
+    internal static List<Time> CloseApproachesOnRangeRate(
+        IReadOnlyList<Time> minima,
+        IReadOnlyList<Time> candidates,
+        Func<Time, double> rangeRate,
+        Func<Time, double> distanceSquared,
+        double toleranceSeconds,
+        double maximumReadSpacingSeconds,
+        bool windowEndsWithoutInteriorMinimum)
+    {
+        // A window end is never a close approach (#621), not even a zero of the range rate exactly there, which the dense
+        // Analyze keeps by its end fallback below. Each epoch is read once, those of RefineOnRangeRate and of the
+        // fallbacks below alike (round 1 of the review of #628: the window ends were read again after the refinement)
+        rangeRate = ReadOnce(rangeRate);
+        var start = candidates[0];
+        var end = candidates[^1];
         double StartRate() => rangeRate(start);
         double EndRate() => rangeRate(end);
 
@@ -1064,8 +1093,8 @@ public static class ConjunctionAssessment
         }
 
         var closeApproaches = new List<Time>();
-        foreach (var refined in RefineOnRangeRate(minima, distinctCandidates, rangeRate, toleranceSeconds,
-                     maximumReadSpacing.TotalSeconds))
+        foreach (var refined in RefineOnRangeRate(minima, candidates, rangeRate, toleranceSeconds,
+                     maximumReadSpacingSeconds))
         {
             if (Inside(refined) is { } epoch)
             {
@@ -1080,10 +1109,12 @@ public static class ConjunctionAssessment
 
         // No zero inside, although the reads of RefineOnRangeRate cover the window (#628): a range rate negative at the start
         // and zero or positive at the end is still bisected over the window, for a zero they did not keep, or in a window
-        // one tick wide, for the end fallback below. A zero exactly at the end, closing before it, which RefineOnRangeRate
-        // returns as the end and Inside drops, is bisected again here: to the end itself with a tolerance below a tick, but
-        // with a coarser one to the middle of the last bracket, inside the window, which is then listed although the range
-        // rate is negative there (as before #628; out of its scope)
+        // one tick wide, for the end fallback below. The reads always hold a change of sign there, so they keep no zero
+        // inside only when theirs is the end, the range rate exactly zero there: the bisection over the window, whose
+        // middles are not those of the last pair of reads, may then end on a minimum inside that pair, narrower than the
+        // reads, which that pair's bisection stepped over (the limit of the reads; review round 3 of #628), or on the end
+        // again. With a tolerance coarser than a tick it ends on the middle of its last bracket, inside the window, which
+        // is then listed although the range rate is negative there (as before #628; out of its scope)
         double startRate = StartRate();
         double endRate = EndRate();
         Time? zero = null;
@@ -1117,10 +1148,7 @@ public static class ConjunctionAssessment
         // A zero inside a window one tick wide, which no epoch inside resolves: the closer end, never the midpoint
         if (closeApproaches.Count == 0 && zero.HasValue)
         {
-            closeApproaches.Add(DistanceSquared(protectedSource, secondarySource, start) <=
-                                DistanceSquared(protectedSource, secondarySource, end)
-                ? start
-                : end);
+            closeApproaches.Add(distanceSquared(start) <= distanceSquared(end) ? start : end);
         }
 
         return closeApproaches;
@@ -1240,26 +1268,31 @@ public static class ConjunctionAssessment
     /// candidates is dropped: there is no bracket to refine it in.
     /// </para>
     /// <para>
-    /// A pair of consecutive candidates gives one minimum: a zero that lies in the pair of an earlier one (no candidate
-    /// strictly between them) is the same minimum, reached from another seed, the range rate changing sign more than once
-    /// there at the level of its noise. The zeros of the secants and of the brackets of the candidates come first, then
-    /// those read from the minima on their own range rate, then those of the pairs reached by following it.
+    /// The zeros found from the seeds give one minimum per pair of consecutive candidates: a zero that lies in the pair of
+    /// an earlier one (no candidate strictly between them) is the same minimum, reached from another seed, the range rate
+    /// changing sign more than once there at the level of its noise. The zeros of the secants and of the brackets of the
+    /// candidates come first, then those read from the minima on their own range rate, then those of the pairs reached by
+    /// following it. The reads below add their zeros one per pair of consecutive reads, so a pair of candidates may hold
+    /// more than one minimum (two minima of one long step).
     /// </para>
     /// <para>
     /// Last, the range rate is read at every candidate and, between two candidates more than
-    /// <paramref name="maximumReadSpacingSeconds"/> apart, at the fewest epochs evenly spaced that leave no gap wider (#628),
+    /// <paramref name="maximumReadSpacingSeconds"/> and one tick apart, at the fewest epochs evenly spaced in ticks that leave
+    /// no gap wider by more than one tick (#628; a step of 60 TT seconds about the Earth may span 60 s and one tick),
     /// and each change from negative to zero or positive between two consecutive reads is bisected, unless a zero already
     /// lies between them: a minimum that no minimum of the polynomial search reached, the range rate closing at one
     /// candidate and receding at the next with no seed near (the Hermite of long or mixed steps), or a second minimum
     /// between two candidates, which the reads between them separate (one long step holding a minimum, a maximum and a
     /// minimum). A zero exactly at the window end, closing at the read before it, is the end itself when the bisection of
     /// that last pair reaches the end within its tolerance; a change of sign inside the pair is bisected as any other. A
-    /// change of sign over an interval narrower than the spacing of the reads, which the reads 1 s apart from a minimum do
-    /// not reach (between that minimum and its neighbouring candidate on the side its range rate points to, up to the
-    /// first change of sign), is not guaranteed to be found, whichever its sign (a narrow fold of the range rate, or the
-    /// second minimum of a pair next to a positive interval narrower than the spacing, both reads around it closing; or a
-    /// minimum after a negative interval narrower than the spacing that follows a zero found from a seed in the same pair
-    /// of reads, which is not bisected again). Each epoch is read once. The zeros are returned in order.
+    /// change of sign over an interval narrower than the spacing of the reads is not guaranteed to be found unless the reads
+    /// 1 s apart from a minimum reach it (a minimum whose secants are not checked, between it and its neighbouring candidate
+    /// on the side its range rate points to, up to the first change of sign; a minimum whose secants are checked reads
+    /// nothing between itself and their zero, so an interval between them, however wide against 1 s, is read only by the
+    /// reads over the window), whichever its sign (a narrow fold of the range rate, or the second minimum of a pair next to
+    /// a positive interval narrower than the spacing, both reads around it closing; or a minimum after a negative interval
+    /// narrower than the spacing that follows a zero found from a seed in the same pair of reads, which is not bisected
+    /// again). Each epoch is read once. The zeros are returned in order.
     /// </para>
     /// </remarks>
     /// <param name="minima">The minima of the polynomial search, each one of <paramref name="candidates"/>.</param>
@@ -1463,10 +1496,16 @@ public static class ConjunctionAssessment
     }
 
     // The epochs where RefineOnRangeRate reads the range rate over the whole window (#628): the candidates, and between
-    // two of them more than maximumSpacingSeconds apart, the fewest epochs evenly spaced in ticks that leave no gap wider
-    // than that, as the sampled search subdivides the intervals of its knots (BuildSearchEpochs)
+    // two of them more than maximumSpacingSeconds and one tick apart, the fewest epochs evenly spaced in ticks that leave
+    // no gap wider than that spacing by more than one tick, as the sampled search subdivides the intervals of its knots
+    // (BuildSearchEpochs) but for that tick. About the Earth the steps count TT seconds and their boundaries are TDB
+    // labels cut to the tick (#501): when TDB - TT increases, a step of 60 TT seconds spans 60 s and one tick of the
+    // labels, which a strict comparison split at its middle, one RK7(8) step more for a read 100 ns closer (review round 3
+    // of #628: 32 reads in 3 h at 60 s steps from 2026-01-20)
     private static List<Time> WithRangeRateSamples(IReadOnlyList<Time> candidates, double maximumSpacingSeconds)
     {
+        double maximumSpacingTicks =
+            System.Math.Max(1.0, System.Math.Round(maximumSpacingSeconds * TimeSpan.TicksPerSecond));
         var reads = new List<Time>(candidates.Count);
         for (int index = 0; index < candidates.Count; index++)
         {
@@ -1474,10 +1513,9 @@ public static class ConjunctionAssessment
             {
                 var left = candidates[index - 1];
                 long gapTicks = (candidates[index] - left).Ticks;
-                double gapSeconds = (double)gapTicks / TimeSpan.TicksPerSecond;
-                if (gapSeconds > maximumSpacingSeconds)
+                if (gapTicks - 1 > maximumSpacingTicks)
                 {
-                    long subdivisions = (long)System.Math.Ceiling(gapSeconds / maximumSpacingSeconds);
+                    long subdivisions = (long)System.Math.Ceiling((gapTicks - 1) / maximumSpacingTicks);
                     for (long subdivision = 1; subdivision < subdivisions; subdivision++)
                     {
                         reads.Add(left.AddTicks(gapTicks / subdivisions * subdivision +

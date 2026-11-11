@@ -662,11 +662,21 @@ public class ConjunctionRefinementTests
     }
 
     [Fact]
-    public void TheReads_AreEvenlySpacedInTicks_NoGapWiderThanTheSpacing()
+    public void TheReads_AreEvenlySpacedInTicks_NoGapWiderThanTheSpacingByMoreThanATick()
     {
-        // 100 s, 60 s, 61 s and 300.0000001 s between the candidates: two, one, two and six intervals
-        var candidates = new[] { 0.0, 100.0, 160.0, 221.0, 521.0000001 }.Select(t => Epoch.AddSeconds(t)).ToArray();
-        candidates[^1] = candidates[^2].AddTicks(3000000001);
+        // 100 s, 60 s, 61 s, 300 s and one tick, 300 s and two ticks, 60 s and one tick and 60 s and two ticks between the
+        // candidates: two, one, two, five, six, one and two intervals. A gap one tick wider than a multiple of the spacing
+        // is not subdivided once more: about the Earth a step of 60 TT seconds spans 60 s and one tick of its TDB labels
+        // when TDB - TT increases, which a strict comparison read at its middle (review round 3 of #628). The reference:
+        // the fewest intervals of at most the spacing and one tick, floor(gap k / n) ticks after the left candidate
+        var gaps = new[] { 1000000000L, 600000000L, 610000000L, 3000000001L, 3000000002L, 600000001L, 600000002L };
+        var candidates = new TimeSystem.Time[gaps.Length + 1];
+        candidates[0] = Epoch;
+        for (int index = 0; index < gaps.Length; index++)
+        {
+            candidates[index + 1] = candidates[index].AddTicks(gaps[index]);
+        }
+
         var reads = new System.Collections.Generic.SortedSet<long>();
         Func<TimeSystem.Time, double> rangeRate = epoch =>
         {
@@ -677,11 +687,22 @@ public class ConjunctionRefinementTests
         Assert.Empty(ConjunctionAssessment.RefineOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates, rangeRate, Tolerance,
             ReadSpacing));
 
-        long first = (candidates[^2] - Epoch).Ticks;
-        var expected = new long[] { 0, 500000000, 1000000000, 1600000000, 1905000000, 2210000000 }
-            .Concat(Enumerable.Range(1, 6).Select(k => first + 3000000001L * k / 6))
-            .ToArray();
+        var intervals = new[] { 2, 1, 2, 5, 6, 1, 2 };
+        var expected = new System.Collections.Generic.List<long> { 0 };
+        long left = 0;
+        for (int index = 0; index < gaps.Length; index++)
+        {
+            for (int k = 1; k <= intervals[index]; k++)
+            {
+                expected.Add(left + gaps[index] * k / intervals[index]);
+            }
+
+            left += gaps[index];
+        }
+
         Assert.Equal(expected, reads.ToArray());
+        long widest = expected.Zip(expected.Skip(1), (a, b) => b - a).Max();
+        Assert.Equal(600000001L, widest);
     }
 
     [Theory]
@@ -774,6 +795,28 @@ public class ConjunctionRefinementTests
             ReadSpacing);
 
         AssertWithinATick(970.0, Assert.Single(tca));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AMinimumInTheLastPairOfReads_ThatItsBisectionStepsOver_IsFoundByTheBisectionOverTheWindow(
+        bool windowEndsWithoutInteriorMinimum)
+    {
+        // No seed, closing up to the window end, exactly zero there, but receding over [960, 970) s: a minimum at 960 s in
+        // the last pair of reads (950 and 1000 s, 50 s apart, both closing), narrower than the reads. That pair's bisection
+        // (middles 975, 987.5 ... s) ends on the end itself, which the dense search drops; its fallback then bisects the
+        // window (middles 500, 750, 875, 937.5, 968.75 ... s), whose bracket reaches the receding interval, and lists the
+        // minimum (review round 3 of #628: no test reached this branch). The reference: the zero of the range rate from
+        // negative to positive inside the window, 960 s
+        var candidates = Candidates(11);
+        var end = candidates[^1];
+        var rangeRate = InsideOnly(candidates, epoch => epoch == end ? 0.0 : Steps(960.0, 970.0)(epoch));
+
+        var tca = ConjunctionAssessment.CloseApproachesOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates, rangeRate,
+            _ => 1.0, Tolerance, ReadSpacing, windowEndsWithoutInteriorMinimum);
+
+        AssertWithinATick(960.0, Assert.Single(tca));
     }
 
     [Theory]
