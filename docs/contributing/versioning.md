@@ -1122,6 +1122,25 @@ A major version, because it breaks the API: members deprecated for removal in 11
   - **Unchanged, bit for bit:** the state it returns, the ΔV, the fuel and the windows, and every propagation, which
     executes impulses on a state of its own and continues from the returned state.
 
+- **`Time(string)` threw on the `UTC` of its documented example** ([#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455), items 1 and 2).
+  - **The cause.** After a calendar that `DateTime` does not read on its own, the constructor took the last three
+    characters as the frame and knew only `TDB`, `TDT`, `GPS` and `TAI`: `new Time("2024-06-21T12:00:00.000 UTC")`, the
+    example of `docs/reference/time-and-windows.md` and of `DEVELOPER_GUIDE.md`, threw `ArgumentException`, and so did
+    ` TT`, the IAU name of the scale the library calls TDT.
+  - **The fix.** The frame is the word after the last space, in any case: `UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`;
+    `2024-06-21T12:00:00.000 UTC` is the instant of `2024-06-21T12:00:00.000Z` and of `Time.CreateUTC(772243200)`, its
+    TAI 37 s later. A second 60 throws an `ArgumentException` that says a `Time` holds no leap second (it threw "Value is
+    not a valid time frame", or a `FormatException` with a frame name). A frame name not separated by a space
+    (`…12:00:05TDB`) throws the `ArgumentException` of an unknown frame: the calendar was cut one character short,
+    which threw a `FormatException` or read another instant (`2024-06-21 12:05TDB` read 12:00).
+  - **Unchanged:** the `Z`, offset and untagged forms, and the time of every string with a space before its frame name.
+  - **The documentation of the time scales.** `DEVELOPER_GUIDE.md` ("IERS Conventions, leap seconds from NAIF LSK
+    kernels") and `docs/standards-and-units.md` ("Time: IERS conventions") now state what the managed conversions do: the
+    leap second table of `TimeFrame` (a fixed 9 s before 1972, as the LSK), TT = TAI + 32.184 s, GPS = TAI − 19 s, and
+    the one-term TDB − TT series, within 1.244 µs of SPICE `unitim` and 37.34 µs of ERFA `dtdb` from 1972 to 2100; CSPICE
+    is given the managed TDB as its ephemeris time. See [Time Scales](../reference/time-and-windows.md#time-scales).
+    `Period()` for e ≥ 1 (item 3) and the LSK formula for the ephemeris time given to CSPICE (item 4) stay open.
+
 **Changed**
 
 - **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its

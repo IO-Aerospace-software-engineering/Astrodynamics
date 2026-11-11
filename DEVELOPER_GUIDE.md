@@ -62,7 +62,7 @@ public const double Rad2Deg = 180.0 / Math.PI; // Radians to degrees
 
 ### Reference Standards
 
-- **Time**: IERS Conventions, leap seconds from NAIF LSK kernels
+- **Time**: managed conversions with no kernel read: the leap second table of `TimeFrame` (TAI − UTC from 10 s on 1972-01-01 to 37 s from 2017-01-01, a fixed 9 s before 1972), TT = TAI + 32.184 s, GPS = TAI − 19 s, and TDB − TT by the one-term series 0.001658 sin(g + 0.0167 sin g) s; CSPICE is given the managed TDB as its ephemeris time (see `docs/reference/time-and-windows.md#time-scales`)
 - **Ephemerides**: JPL Development Ephemeris (DE series)
 - **Reference Frames**: IAU/IAG standards, IERS conventions
 - **Gravity Models**: EGM2008 (Earth Gravitational Model 2008), geodesy-normalized spherical harmonics up to degree/order 70
@@ -231,7 +231,7 @@ Represents a precise instant in time with time frame awareness.
 | `Time(int year, int month, int day)` | Create from date (defaults to TDB) |
 | `Time(int year, int month, int day, int hour, int minute, int second)` | Create from date and time |
 | `Time(DateTime dateTime, ITimeFrame frame)` | Create from DateTime with specified frame |
-| `Time(string iso8601)` | Parse from ISO 8601 string |
+| `Time(string timeString)` | Parse an ISO 8601 calendar followed by a space and its frame (`UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`); `Z` is UTC, no suffix TDB |
 | `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from seconds since J2000 |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
 | `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds |

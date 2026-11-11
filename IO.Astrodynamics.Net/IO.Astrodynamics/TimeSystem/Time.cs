@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using IO.Astrodynamics.TimeSystem.Frames;
 
 namespace IO.Astrodynamics.TimeSystem;
@@ -41,6 +42,12 @@ public readonly record struct Time : IComparable<Time>, IComparable
     {
     }
 
+    /// <summary>
+    /// The time a string writes: an ISO 8601 calendar ending in Z (UTC), with an offset (local) or with neither (TDB), or a
+    /// calendar followed by a space and the name of its frame, in any case: UTC, TT or TDT, TDB, TAI, GPS (#455).
+    /// </summary>
+    /// <exception cref="ArgumentException">The string is empty, names another frame, or holds a second 60.</exception>
+    /// <exception cref="FormatException">The calendar before the frame name cannot be read.</exception>
     public Time(string timeString)
     {
         if (string.IsNullOrEmpty(timeString)) throw new ArgumentException("Value cannot be null or empty.", nameof(timeString));
@@ -52,30 +59,39 @@ public readonly record struct Time : IComparable<Time>, IComparable
         }
         else
         {
-            var kind = string.Concat(timeString.TakeLast(3));
-            ITimeFrame frame = null;
-            switch (kind)
-            {
-                case "TDB":
-                    frame = TimeFrame.TDBFrame;
-                    break;
-                case "TDT":
-                    frame = TimeFrame.TDTFrame;
-                    break;
-                case "GPS":
-                    frame = TimeFrame.GPSFrame;
-                    break;
-                case "TAI":
-                    frame = TimeFrame.TAIFrame;
-                    break;
-                default:
-                    throw new ArgumentException("Value is not a valid time frame.", nameof(timeString));
-            }
+            if (LeapSecond.IsMatch(timeString))
+                throw new ArgumentException("Second 60 cannot be represented: a Time holds no leap second (a UTC leap second can be given in TAI).", nameof(timeString));
 
-            DateTime = DateTime.Parse(string.Concat(timeString.SkipLast(4) ?? throw new InvalidOperationException("invalid time string")),
-                CultureInfo.InvariantCulture);
+            // The calendar, then a space and the name of its frame (#455), as ToString writes it
+            var separator = timeString.TrimEnd().LastIndexOfAny([' ', '\t']);
+            var frame = separator > 0 ? FrameFromName(timeString.Substring(separator + 1).TrimEnd()) : null;
+            if (frame == null) throw new ArgumentException("Value is not a valid time frame.", nameof(timeString));
+
+            var dateTime = DateTime.Parse(timeString.Substring(0, separator).TrimEnd(), CultureInfo.InvariantCulture);
+            DateTime = frame is UTCTimeFrame ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc) : dateTime;
             Frame = frame;
         }
+    }
+
+    /// <summary>
+    /// A second 60, in the hh:mm:ss of a calendar.
+    /// </summary>
+    private static readonly Regex LeapSecond = new(@"\d:\d{2}:60(?!\d)", RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// The frame a time string names after its calendar, in any case: TDB, TT or TDT, TAI, GPS, UTC; null for another name.
+    /// </summary>
+    private static ITimeFrame FrameFromName(string name)
+    {
+        return name.ToUpperInvariant() switch
+        {
+            "TDB" => TimeFrame.TDBFrame,
+            "TT" or "TDT" => TimeFrame.TDTFrame,
+            "TAI" => TimeFrame.TAIFrame,
+            "GPS" => TimeFrame.GPSFrame,
+            "UTC" => TimeFrame.UTCFrame,
+            _ => null
+        };
     }
 
     public Time Add(in TimeSpan timeSpan)
