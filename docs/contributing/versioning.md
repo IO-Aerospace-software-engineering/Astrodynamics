@@ -1179,10 +1179,6 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Changed**
 
-- **`Time(string)` rejects a `Z` or an offset before a frame name** ([#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455), Fixed above): `"2024-06-21T12:00:00Z TDB"`
-  and `"…+02:00 UTC"` throw `ArgumentException`. The calendar was converted to the machine's local time and then labelled
-  with the frame named, so the instant depended on the machine's time zone; on a machine in UTC a `Z` read as if absent.
-  Write the calendar without its zone designator, or the `Z` form alone for UTC.
 - **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its
   `InitialOrbitalParameters.Observer` is the Earth unless `centerOfMotion` says otherwise (the SSB before), so the
   observer of a conjunction analysis it protects, and of anything else that reads that centre, is the Earth. Pass
@@ -1193,6 +1189,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
   alone, without an SPK that covers its epoch, now throws at construction: its initial state cannot be read. A planet or
   a moon the loaded kernels do not chain to its system barycenter has `InitialOrbitalParameters` null, and its
   `SphereOfInfluence` is then +Infinity, as for a body built from custom parameters.
+- **`Time(string)` rejects a `Z` or an offset before a frame name** ([#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455), Fixed above): `"2024-06-21T12:00:00Z TDB"`
+  and `"…+02:00 UTC"` throw `ArgumentException`. The calendar was converted to the machine's local time and then labelled
+  with the frame named, so the instant depended on the machine's time zone; on a machine in UTC a `Z` read as if absent.
+  Write the calendar without its zone designator, or the `Z` form alone for UTC.
 - **`AnalyzeAll` on two propagations no longer lists the window ends** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above), and returns an
   empty list for a window without an interior minimum.
 - **Every TEME ↔ ICRF result moves** with the managed TEME ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451), Fixed above), by 0.3″ to 23.3″ over 2000–2026
