@@ -18,7 +18,7 @@
 |-------------|-------------|
 | `Time(int year, int month, int day, ...)` | Create from date components (hour, minute, second, ms, us optional; defaults to TDB) |
 | `Time(DateTime dateTime, ITimeFrame frame)` | Create from DateTime with specified frame |
-| `Time(string timeString)` | Parse a calendar followed by a space and the name of its frame, in any case: `UTC`, `TT` (or `TDT`), `TDB`, `TAI` or `GPS` (e.g., `"2024-06-21T12:00:00.000 UTC"`, the form `ToString` writes); a calendar ending in `Z` is UTC, one with an offset (`+02:00`) local, one with neither TDB. Another name, or a name not separated by a space, throws `ArgumentException`, and so does second 60: a `Time` holds no leap second, so a UTC leap second is given in TAI |
+| `Time(string timeString)` | Parse a calendar followed by the name of its frame, with or without a space, in any case: `UTC`, `TT` (or `TDT`), `TDB`, `TAI` or `GPS` (e.g., `"2024-06-21T12:00:00.000 UTC"`; `ToString` writes this form for `TDB`, `TDT`, `TAI` and `GPS`, and the `Z` form for UTC); a calendar ending in `Z` is UTC, one with an offset (`+02:00`) local, one with neither TDB. A string that `DateTime` reads on its own is read as `DateTime` reads it (`"… 12:00:00 GMT"` and the RFC 1123 form are UTC); otherwise another name throws `ArgumentException`, and so do a `Z` or an offset before a frame name and second 60: a `Time` holds no leap second, so a UTC leap second is given in TAI |
 
 ### Static Factories
 
@@ -73,8 +73,10 @@ The conversions of `Time` and `TimeFrame` are managed and read no kernel:
 - **TDB − TT** is the one-term series 0.001658 sin(g + 0.0167 sin g) s, with g = 357.528° + 35999.05° T and T the Julian
   centuries from J2000 of the TT time converted to TDB, or of the TDB time converted to TT, rounded to the nearest tick.
   It is a short series, like those of the LSK and of GMAT. Measured from 1972 to 2100 (TT instants every 0.05 day, 935 041
-  epochs, [#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455)), the series is within 1.244 µs of SPICE `unitim` (rms 0.714 µs), within 0.232 µs of GMAT R2026a, and within
-  37.34 µs of the full Fairhead & Bretagnon series (ERFA `dtdb`, rms 17.11 µs).
+  epochs, [#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455)), the series is within 1.006 µs (rms 0.709 µs) of the LSK formula that SPICE `unitim` evaluates,
+  1.6570e-3 sin(M + 1.671e-2 sin M) s with M = 6.239996 + 1.99096871e-7 t (t the TT seconds from J2000), and within
+  1.055 µs (rms 0.710 µs) once rounded to the tick; it is within 37.34 µs of the full Fairhead & Bretagnon series (ERFA
+  `dtdb`, rms 17.11 µs). Over the 6 679 epochs every 7 days of #455, it is within 0.232 µs of GMAT R2026a's series.
 
 CSPICE is given the managed TDB as its ephemeris time (`ToTDB()`). The NAIF LSK kernel, which CSPICE needs loaded, does
 not enter the managed conversions.

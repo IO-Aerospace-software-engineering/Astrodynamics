@@ -1130,15 +1130,20 @@ A major version, because it breaks the API: members deprecated for removal in 11
   - **The fix.** The frame is the word after the last space, in any case: `UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`;
     `2024-06-21T12:00:00.000 UTC` is the instant of `2024-06-21T12:00:00.000Z` and of `Time.CreateUTC(772243200)`, its
     TAI 37 s later. A second 60 throws an `ArgumentException` that says a `Time` holds no leap second (it threw "Value is
-    not a valid time frame", or a `FormatException` with a frame name). A frame name not separated by a space
-    (`…12:00:05TDB`) throws the `ArgumentException` of an unknown frame: the calendar was cut one character short,
-    which threw a `FormatException` or read another instant (`2024-06-21 12:05TDB` read 12:00).
-  - **Unchanged:** the `Z`, offset and untagged forms, and the time of every string with a space before its frame name.
+    not a valid time frame", or a `FormatException` with a frame name). A frame name right after the calendar, with no
+    space (`…12:00:00.000TDB`, `…12:05TDB`), is read with the calendar as written: the constructor cut the calendar one
+    character short, which read the right instant when that character was a trailing zero (`.000TDB`, `12:00:00TDB`),
+    and otherwise threw a `FormatException` (`12:00:05TDB`) or read another instant (`2024-06-21 12:05TDB` read 12:00).
+    A `Z` or an offset before a frame name (`…12:00:00Z UTC`, `…+02:00 TDB`) throws an `ArgumentException` (Changed
+    below): `DateTime` converted the calendar to the machine's local time, which the frame then labelled.
+  - **Unchanged:** the `Z`, offset and untagged forms, and the time of every string with a space before its frame name
+    and no zone designator.
   - **The documentation of the time scales.** `DEVELOPER_GUIDE.md` ("IERS Conventions, leap seconds from NAIF LSK
     kernels") and `docs/standards-and-units.md` ("Time: IERS conventions") now state what the managed conversions do: the
     leap second table of `TimeFrame` (a fixed 9 s before 1972, as the LSK), TT = TAI + 32.184 s, GPS = TAI − 19 s, and
-    the one-term TDB − TT series, within 1.244 µs of SPICE `unitim` and 37.34 µs of ERFA `dtdb` from 1972 to 2100; CSPICE
-    is given the managed TDB as its ephemeris time. See [Time Scales](../reference/time-and-windows.md#time-scales).
+    the one-term TDB − TT series, within 1.06 µs of the LSK formula SPICE `unitim` evaluates and 37.34 µs of ERFA `dtdb`
+    from 1972 to 2100; CSPICE is given the managed TDB as its ephemeris time. See
+    [Time Scales](../reference/time-and-windows.md#time-scales).
     `Period()` for e ≥ 1 (item 3) and the LSK formula for the ephemeris time given to CSPICE (item 4) stay open.
 
 - **The documentation named `RelationnalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
@@ -1172,6 +1177,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Changed**
 
+- **`Time(string)` rejects a `Z` or an offset before a frame name** ([#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455), Fixed above): `"2024-06-21T12:00:00Z TDB"`
+  and `"…+02:00 UTC"` throw `ArgumentException`. The calendar was converted to the machine's local time and then labelled
+  with the frame named, so the instant depended on the machine's time zone; on a machine in UTC a `Z` read as if absent.
+  Write the calendar without its zone designator, or the `Z` form alone for UTC.
 - **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its
   `InitialOrbitalParameters.Observer` is the Earth unless `centerOfMotion` says otherwise (the SSB before), so the
   observer of a conjunction analysis it protects, and of anything else that reads that centre, is the Earth. Pass

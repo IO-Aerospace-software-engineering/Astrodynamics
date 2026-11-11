@@ -324,17 +324,66 @@ public class DateTimeTests
         }
     }
 
+    /// <summary>
+    /// A frame name right after the calendar, with no space, as before #455, which cut the calendar one character short
+    /// (12:05TDB read 12:00): the calendar as written, in the frame named.
+    /// </summary>
+    [Theory]
+    [InlineData("2024-06-21T12:00:00.000TDB", "TDB", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21T12:00:00.120TAI", "TAI", 2024, 6, 21, 12, 0, 0, 120)]
+    [InlineData("2024-06-21T12:00:00.00GPS", "GPS", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21 12:00:00TDB", "TDB", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21T12:00:05TDB", "TDB", 2024, 6, 21, 12, 0, 5, 0)]
+    [InlineData("2024-06-21 12:05TDB", "TDB", 2024, 6, 21, 12, 5, 0, 0)]
+    [InlineData("2024-06-21T12:00:00.000UTC", "UTC", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21T12:00:00tt", "TDT", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21T12:00:00TDT", "TDT", 2024, 6, 21, 12, 0, 0, 0)]
+    public void CreateFromStringWithAnUnspacedFrameName(string timeString, string frameName, int year, int month, int day,
+        int hour, int minute, int second, int millisecond)
+    {
+        var frame = frameName switch
+        {
+            "UTC" => (ITimeFrame)TimeFrame.UTCFrame,
+            "TDT" => TimeFrame.TDTFrame,
+            "TAI" => TimeFrame.TAIFrame,
+            "GPS" => TimeFrame.GPSFrame,
+            _ => TimeFrame.TDBFrame
+        };
+
+        var parsed = new TimeSystem.Time(timeString);
+
+        Assert.Same(frame, parsed.Frame);
+        Assert.Equal(new TimeSystem.Time(new DateTime(year, month, day, hour, minute, second, millisecond), frame), parsed);
+    }
+
     [Theory]
     [InlineData("2024-06-21T12:00:00.000 GMT")]
     [InlineData("2024-06-21T12:00:00.000 TTT")]
-    [InlineData("2024-06-21T12:00:05TDB")]
-    [InlineData("2024-06-21T12:00:00.000UTC")]
+    [InlineData("2024-06-21T12:00:00.000 XTDB")]
     [InlineData("TDB")]
     [InlineData(" TDB")]
     public void CreateFromStringWithoutAFrameNameThrows(string timeString)
     {
         var exception = Assert.Throws<ArgumentException>(() => new TimeSystem.Time(timeString));
         Assert.StartsWith("Value is not a valid time frame.", exception.Message);
+    }
+
+    /// <summary>
+    /// A Z or an offset before a frame name: DateTime converted the calendar to the machine's local time, which the frame
+    /// then labelled, an instant that depended on the time zone of the machine (#455's review). It throws in every zone.
+    /// </summary>
+    [Theory]
+    [InlineData("2024-06-21T12:00:00Z UTC")]
+    [InlineData("2024-06-21T12:00:00.000ZUTC")]
+    [InlineData("2024-06-21T12:00:00+02:00 UTC")]
+    [InlineData("2024-06-21T12:00:00Z TDB")]
+    [InlineData("2024-06-21T12:00:00z tai")]
+    [InlineData("2024-06-21T12:00:00-05:00 GPS")]
+    [InlineData("2024-06-21T12:00:00+00:00TT")]
+    public void CreateFromStringWithAZoneAndAFrameNameThrows(string timeString)
+    {
+        var exception = Assert.Throws<ArgumentException>(() => new TimeSystem.Time(timeString));
+        Assert.StartsWith("A calendar with a Z or an offset takes no frame name.", exception.Message);
     }
 
     [Theory]

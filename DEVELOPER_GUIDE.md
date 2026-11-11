@@ -231,7 +231,7 @@ Represents a precise instant in time with time frame awareness.
 | `Time(int year, int month, int day)` | Create from date (defaults to TDB) |
 | `Time(int year, int month, int day, int hour, int minute, int second)` | Create from date and time |
 | `Time(DateTime dateTime, ITimeFrame frame)` | Create from DateTime with specified frame |
-| `Time(string timeString)` | Parse an ISO 8601 calendar followed by a space and its frame (`UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`); `Z` is UTC, no suffix TDB |
+| `Time(string timeString)` | Parse an ISO 8601 calendar followed by its frame, with or without a space (`UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`); `Z` is UTC, no suffix TDB; a `Z` or an offset before a frame name throws |
 | `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from seconds since J2000 |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
 | `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds |
