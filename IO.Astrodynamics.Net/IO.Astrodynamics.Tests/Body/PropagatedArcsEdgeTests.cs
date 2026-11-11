@@ -69,9 +69,10 @@ public class PropagatedArcsEdgeTests
     internal const double ConjunctionTca = 1.0e-7;
 
     /// <summary>The miss distance of the same, m. Worst 6.18e-10 / 6.18e-10 / 3.31e-10 m (CI run 41651463194); with #625
-    /// 3.12e-9 m on Linux x64 (2026-11-10), the projection on the miss of the reads of the stored states against the
-    /// solutions, 2.80e-9 m and 4.87e-9 m for the two participants (2.80e-9 m and 6.05e-9 m before, a few ulps of a LEO
-    /// position, 9.3e-10 m), whose outputs now sit on other ticks: twice it, PROVISIONAL until the three platforms.</summary>
+    /// 3.12e-9 / 3.13e-9 / 2.46e-9 m (CI run 42940000708), the projection on the miss of the reads of the stored states
+    /// against the solutions, 2.80e-9 / 2.80e-9 / 9.40e-10 m and 4.87e-9 / 4.98e-9 / 5.27e-9 m for the two participants
+    /// (2.80e-9 m and 6.05e-9 m before on Linux, a few ulps of a LEO position, 9.3e-10 m), whose outputs now sit on other
+    /// ticks: twice the worst, rounded up at the second significant digit.</summary>
     internal const double ConjunctionMiss = 6.3e-9;
 
     /// <summary>The read at a Velocity-Verlet output within 2 µs of an impulse, which is not stored, against that output,

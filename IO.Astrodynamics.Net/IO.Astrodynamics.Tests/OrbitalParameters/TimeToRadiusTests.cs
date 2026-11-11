@@ -53,13 +53,15 @@ public class TimeToRadiusTests
         double at1e12 = SecondsTo(orbit, 1e12) - 27139842.071728861318;
         double at1e15 = SecondsTo(orbit, 1e15) - 33580027163.50922645;
         _output.WriteLine($"1e12 m: {at1e12:E3} s, 1e15 m: {at1e15:E3} s off the closed form");
-        // Measured on Linux x64 (2026-11-10): -6.3e-8 s at 1e12 m, within the tick of the epoch; twice, at least two ticks.
+        // Measured -6.3e-8 s at 1e12 m, the same on the three platforms (CI run 42940000708), within the tick of the epoch; twice,
+        // at least two ticks.
         // At 1e15 m the true anomaly is 2.6e-4 rad from the asymptote, where one ulp of nu moves the time by 5.0e-2 to
         // 6.2e-2 s: the result is the rounding of the platform's libm (Math.Acos, Tan, Atanh, Sinh; glibc, UCRT or Apple's,
-        // each within one ulp, not correctly rounded). Linux measures 1.04e-2 s, mostly the rounding of acos (+1.89e-2 s;
+        // each within one ulp, not correctly rounded). Linux and Windows measure 1.04e-2 s, macOS arm64 -2.05e-3 s
+        // (CI run 42940000708); Linux's is mostly the rounding of acos (+1.89e-2 s;
         // tan -0.38e-2 s, c +0.37e-2 s); a libm within one ulp per call gives up to 3.944e-2 s
         // (tools/time_to_radius/time_to_radius_libm_envelope.py), which a bound twice the Linux figure (2.1e-2 s) did not
-        // hold (the second review of #627). The bound is twice that worst value; PROVISIONAL until the three-platform CI
+        // hold (the second review of #627). The bound is twice that worst value, which the three platforms are within.
         Assert.InRange(at1e12, -2e-7, 2e-7);
         Assert.InRange(at1e15, -7.9e-2, 7.9e-2);
     }
@@ -73,7 +75,7 @@ public class TimeToRadiusTests
         var orbit = Orbit(-5e6, 2.0, moon);
         double toSoi = (orbit.TimeToSphereOfInfluence() - Epoch).TotalSeconds - 58936.224724040151512;
         _output.WriteLine($"SOI {soi:E3} m, time to it {toSoi:E3} s off the reference");
-        // Measured on Linux x64 (2026-11-10): the sphere of influence one ulp (1.5e-8 m) from spiceypy's, the time 4.0e-8 s
+        // Measured, the same on the three platforms (CI run 42940000708): the sphere of influence one ulp (1.5e-8 m) from spiceypy's, the time 4.0e-8 s
         // from the closed form, within the tick of the epoch; twice each, the time at least two ticks
         Assert.InRange(soi, -3e-8, 3e-8);
         Assert.InRange(toSoi, -2e-7, 2e-7);
@@ -206,7 +208,7 @@ public class TimeToRadiusTests
         double pastSoi = (Orbit(-5e6, 2.0, moon, 1e3).TimeToSphereOfInfluence() - Epoch).TotalSeconds -
                          -4990383.9801409249097;
         _output.WriteLine($"past 1e12 m: {past:E3} s, past the SOI: {pastSoi:E3} s off the closed form");
-        // Measured on Linux x64 (2026-11-10): -1.12e-7 s past 1e12 m (the -6.3e-8 s of the time from the periapsis, above,
+        // Measured, the same on the three platforms (CI run 42940000708): -1.12e-7 s past 1e12 m (the -6.3e-8 s of the time from the periapsis, above,
         // and the rounding of M(r) - M0 and of the tick), 2.4e-8 s past the SOI; twice each, at least two ticks
         Assert.InRange(past, -2.3e-7, 2.3e-7);
         Assert.InRange(pastSoi, -2e-7, 2e-7);

@@ -499,13 +499,12 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     /// their limits; their window counts exact. Measured, propagated / kernel-backed, the same on the three: 801 ELLIPSOID LT 2.17e-4 / 2.52e-4 s; 802 ELLIPSOID NONE 3e-7 /
     /// 4e-7 s, LT 2.2e-6 / 3.0e-6 s, LT+S 4.16e-5 / 1.75e-4 s; 811 POINT LT+S 1.6e-6 / 4.4e-6 s; the other rows have no
     /// window. The two public paths differ as the propagated spacecraft does from gftfov, which the SPICE path is.
-    /// Measured again with #625 (Linux x64, 2026-11-10; the labels of the propagation take the nearest tick, so the
+    /// Measured again with #625 (the same on the three platforms, CI run 42940000708; the labels of the propagation take the nearest tick, so the
     /// trajectory and the kernels the library writes move by up to a millimetre): 801 ELLIPSOID LT 1.86e-4 / 1.20e-3 s,
     /// 802 ELLIPSOID LT 6.7e-6 / 2.2e-6 s, LT+S 8.84e-5 / 4.01e-5 s, the other rows as before. The end of 801's window is
     /// ill-conditioned: gftfov moved by 1.2e-6 s, the managed search on the propagated spacecraft by 3.7e-5 s, the same
     /// search on its kernels by 9.4e-4 s, the two managed results (the same code on states a fraction of a millimetre
-    /// apart) 9.6e-4 s from each other (7.1e-5 s before). The rows past their limits take twice the new figure, PROVISIONAL
-    /// until the three platforms are measured again.
+    /// apart) 9.6e-4 s from each other (7.1e-5 s before). The rows past their limits take twice the new figure.
     /// </summary>
     [Theory]
     [InlineData("801 399 POINT NONE", 0, PropagatedLimit, KernelLimit)]
