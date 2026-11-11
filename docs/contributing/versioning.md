@@ -79,6 +79,12 @@ A major version, because it breaks the API: members deprecated for removal in 11
   `Orientation`, `vectorInSpacecraft = vectorInInstrument.Rotate(q)`, the Euler angles of the frame kernel
   (`eul2m(x, y, z, 1, 2, 3)`), which the managed field of view, `GetBoresightInSpacecraftFrame`,
   `GetRefVectorInSpacecraftFrame`, `TriadAttitude` and `InstrumentPointingToAttitude` use ([#524](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/524), under Changed).
+- **The range rate read over the whole window of the dense search, on request** ([#628](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/628)).
+  `ConjunctionAnalysisOptions.ReadRangeRateOverWindow` (`init`, default false; decision 54 of #457, S. Guillet,
+  2026-11-11): on two propagations, `Analyze` and `AnalyzeAll` also read the range rate of the states at every candidate
+  and at most `MaximumEventSearchStep` apart between them, and bisect each change from negative to positive, which finds
+  the minima that no minimum of the Hermite of the stored steps seeds (slow co-orbital passes at long or mixed steps;
+  under Fixed). Without it the search is unchanged, bit for bit, and so is its cost.
 
 **Fixed**
 
@@ -283,34 +289,44 @@ A major version, because it breaks the API: members deprecated for removal in 11
   (the default for one trajectory and 60 s for the other), the range rate closing at one candidate and receding at the
   next with no seed near (form A); with long steps, one step holding a minimum, a maximum and a second minimum, its
   Hermite one minimum only (form B). `Analyze` then returned a window end or another minimum (504.6578 m against the
-  missed minimum's 504.6428 m). The range rate is now also read at every candidate and, between two candidates more
+  missed minimum's 504.6428 m). Resolved by an option, opt-in (decision 54 of #457, S. Guillet, 2026-11-11, after
+  weighing the cost below against a gain measured on slow co-orbital passes only): by default the search is that of
+  before, bit for bit, on the 149 scenarios of the probe of #628 and of its review (141 837 windows: every list of
+  `AnalyzeAll`, every result of `Analyze` and the SPKs), at its cost (16.5 to 21.5 ms against 16.8 to 18.9 ms on the day
+  below, the same 31 minima), and every TCA it lists is a minimum of the states (inside the window, in order, none twice;
+  new tests `Dense_ByDefault_*` against CSPICE), but a minimum no seed reaches may be lost: `Analyze` then returns another
+  minimum, 1.7 mm to 9.6 cm farther (median 3.5 cm, 4039 of the 141 837 windows), or a window end (1275 windows: farther
+  in 845, by up to 1.46 m, median 4.5 cm; closer in 430, by up to 1.36 m, an end being no close approach). With
+  `ConjunctionAnalysisOptions.ReadRangeRateOverWindow = true` (under Added), the results of the review's last commit,
+  bit for bit on the same windows: the range rate is also read at every candidate and, between two candidates more
   than `MaximumEventSearchStep` (60 s by default) apart, at the fewest epochs evenly spaced that leave no gap wider by
   more than one tick (about the Earth a step of 60 TT seconds may span 60 s and one tick of its TDB labels), as the
   sampled search does, and each change from negative to positive between two consecutive reads that holds no TCA
   yet is bisected to the tick nearer its zero, one TCA per pair of reads. The search from a seed still reads 1 s apart
   up to its neighbouring candidate: capped at `MaximumEventSearchStep`, it read 29 to 33 % fewer states at fixed 600 s
   steps for one trajectory, but the reads up to 60 s apart then stepped over a positive interval of 2.3 to 43 s lying
-  more than 60 s past its seed, lost in 21 to 135 of 843 windows (review of #628). Each epoch is read once.
-  - **Measured** (Linux x64, 2026-11-10 and 2026-11-11, against CSPICE's `gfdist_c` LOCMIN on the SPKs of the
+  more than 60 s past its seed, lost in 21 to 135 of 843 windows (review of #628). Each epoch is read once, with the
+  option or without it.
+  - **Measured with the option**, against the default (Linux x64, 2026-11-10 and 2026-11-11, against CSPICE's `gfdist_c` LOCMIN on the SPKs of the
     propagations, refined on `spkezr_c`'s range rate, and against a scan of the range rate of the states every 0.25 s):
     on the passes with two minima per orbit (a circular LEO and a Clohessy-Wiltshire ellipse of 1000 m about it, 843 to
-    1084 windows per propagation), the windows losing a minimum go from 10 to 95 to none at mixed default and 60 s steps
+    1084 windows per propagation), the windows losing a minimum go from 10 to 95 by default to none at mixed default and 60 s steps
     (the default for the first trajectory: y0 = 1490, 1495, 1497, 1499 and 1500 m; 60 s for the first: y0 = 1495 and
     1497 m); from 116 to 318 to none at fixed 300 s steps (y0 = 1495 to 1499 and 1500 m), at fixed 600 s steps
     (y0 = 1480, 1481, 1483, 1485, 1486, 1488, 1490, 1492, 1494, 1495, 1498, 1499, 1499.5 and 1500 m) and at 600 s with
-    the default (y0 = 1490, 1495 to 1497, 1499 and 1500 m). The passes measured that lost none before lose none now:
+    the default (y0 = 1490, 1495 to 1497, 1499 and 1500 m). The passes measured that lose none by default lose none with the option:
     y0 = 1480 m at mixed steps, 1490, 1499 and 1500 m with 60 s for the first trajectory; 1480, 1486, 1490 and 1492 m
     at fixed 300 s steps; 1480 and 1486 m at 600 s with the default. The two minima of one 600 s step (t0 + 1317.45 s
     and 1526.28 s at y0 = 1490 m) are both listed; at fixed 600 s steps with y0 = 1501 to 1502.33 m (a positive
     interval of 2.3 to 43 s between the two minima of one step), from 165 to 170 to none; at fixed 600 s steps with
     y0 = 1496 and 1497 m, from 309 and 341 to 1 and 152 of 948 (not changed, below). Over the 81 scenarios of the
-    probe of #628 and of its review, no TCA listed before moves but at the level of noise below, and no entry is
+    probe of #628 and of its review, no TCA listed by default moves but at the level of noise below, and no entry is
     spurious, a window end, a duplicate or out of order. The new fixtures of `ConjunctionKernelAndWindowTests`, over
     1361 to 1727 windows each, give 6.1e-6 to 6.5e-5 s and 6.6e-7 to 2.0e-6 m at mixed steps, 3.1e-5 to 1.0e-4 s and
     1.3e-5 to 2.1e-5 m at 600 s steps (the states against their SPK), asserted at twice the worst (provisional until the
     CI of the three platforms). The conformance runner on the suite's main (33286d2), 201 of 201, its 4764 deltas
-    unchanged bit for bit, in 26.7 to 27.3 s instead of 25.7 to 26.0 s.
-  - **Not changed.** An interval of either sign of the range rate narrower than the spacing of the reads, a positive one
+    unchanged bit for bit, with the reads (in 26.7 to 27.3 s instead of 25.7 to 26.0 s) and by default alike.
+  - **Not changed by the option.** An interval of either sign of the range rate narrower than the spacing of the reads, a positive one
     between two closing reads or a negative one between a zero found from a seed and a later minimum in the same pair of
     reads, which no seed's reads 1 s apart reach (a seed whose secants are not checked and whose range rate points toward
     it, up to its neighbouring candidate; a seed whose secants are checked reads nothing between itself and their zero),
@@ -322,9 +338,9 @@ A major version, because it breaks the API: members deprecated for removal in 11
     `MaximumEventSearchStep` resolves the intervals wider than it (at 10 s, the first minimum at y0 = 1497 m is lost
     in none of 948 windows; at 1 s, the fold of 2.35 s at mixed steps in none of 843). Below
     about 1e-8 m/s of range rate the minima listed follow the noise of the states: on the slow passes (range rates of
-    1e-12 to 1e-13 m/s), zeros of 26 windows ending within the first 0.35 s are now reached by the reads in place of the
+    1e-12 to 1e-13 m/s), zeros of 26 windows ending within the first 0.35 s are reached by the reads in place of the
     seeds (by up to 1.2e-2 s); at a drift of 0.01 m a few more are listed.
-  - **Cost.** One state per candidate and per sample: on two LEO trajectories over one day with EGM2008 10×10, the Moon
+  - **Cost of the option.** One state per candidate and per sample: on two LEO trajectories over one day with EGM2008 10×10, the Moon
     and the Sun at the default steps (31 minima), `Analyze` reads 2063 states instead of 218 and takes 96 to 106 ms
     instead of 15 to 20 ms (about 6×); 49 to 56 ms with a `MaximumEventSearchStep` of 300 s or more. At 60 s steps for
     both trajectories the reads add no sample (a step of 60 TT seconds may span 60 s and one tick of its TDB labels,

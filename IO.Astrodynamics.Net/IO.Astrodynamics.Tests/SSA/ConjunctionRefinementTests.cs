@@ -48,6 +48,21 @@ public class ConjunctionRefinementTests
         Assert.True(System.Math.Abs(error) <= 1.0e-7 * (1.0 + 1.0e-6), $"TCA {error:E3} s from the zero");
     }
 
+    // The spacing of the reads over the window: MaximumEventSearchStep with ReadRangeRateOverWindow, none without it (the
+    // default, decision 54 of #457)
+    private static double? Reads(bool overTheWindow) => overTheWindow ? ReadSpacing : null;
+
+    // The contract of the refinement, with or without the reads over the window: every epoch returned is within a tick of a
+    // zero of the reference (a change of the range rate from negative to positive), in order, no two at the same zero.
+    // Without the reads, a minimum that no seed reaches may be missing (#628), so this alone asserts no completeness
+    private static void AssertMinimaOf(double[] referenceSeconds, System.Collections.Generic.IReadOnlyList<TimeSystem.Time> tca)
+    {
+        var zeros = tca.Select(epoch => referenceSeconds.Single(zero =>
+            System.Math.Abs((epoch - Epoch).TotalSeconds - zero) <= 1.0e-7 * (1.0 + 1.0e-6))).ToArray();
+        Assert.Equal(zeros.OrderBy(zero => zero).Distinct(), zeros);
+        Assert.Equal(tca.OrderBy(epoch => epoch), tca);
+    }
+
     [Theory]
     [InlineData(303.7)] // next to the minimum
     [InlineData(413.73456789)] // past the right neighbour
@@ -126,28 +141,40 @@ public class ConjunctionRefinementTests
         Assert.Empty(ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[5] }, candidates, rangeRate, Tolerance));
     }
 
-    [Fact]
-    public void AMaximumOfTheDistance_BetweenTwoMinima_GivesThemOnce()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AMaximumOfTheDistance_BetweenTwoMinima_GivesThemOnce(bool overTheWindow)
     {
         // Minima at 150 s and 850 s, a maximum at 520 s
         var candidates = Candidates(11);
         var rangeRate = InsideOnly(candidates, Steps(150.0, 520.0, 850.0));
 
         // Seeded at the maximum alone: the range rate followed on both sides reaches both minima
-        var fromTheMaximum = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[5] }, candidates, rangeRate, Tolerance);
+        var fromTheMaximum = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[5] }, candidates, rangeRate, Tolerance,
+            Reads(overTheWindow));
         Assert.Equal(2, fromTheMaximum.Count);
         AssertWithinATick(150.0, fromTheMaximum[0]);
         AssertWithinATick(850.0, fromTheMaximum[1]);
 
-        // Seeded at the three: each minimum once, in order, the epochs of their own seeds. Seeded at one of them, the reads
-        // of the range rate at the candidates give the other one (#628)
+        // Seeded at the three: each minimum once, in order, the epochs of their own seeds
         var fromTheThree = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1], candidates[5], candidates[9] },
-            candidates, rangeRate, Tolerance);
-        Assert.Equal(fromTheMaximum, fromTheThree);
-        Assert.Equal(fromTheThree, ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1] }, candidates, rangeRate,
-            Tolerance));
-        Assert.Equal(fromTheThree, ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[9] }, candidates, rangeRate,
-            Tolerance));
+            candidates, rangeRate, Tolerance, Reads(overTheWindow));
+        Assert.Equal(new[] { Refine(candidates, 1, rangeRate), Refine(candidates, 9, rangeRate) }, fromTheThree);
+
+        // Seeded at one of them: its own minimum; the other one, which no seed reaches, with the reads over the window
+        // only (#628: the range rate closes at 800 s and recedes at 900 s); without them, the default, it is not guaranteed
+        foreach (int seed in new[] { 1, 9 })
+        {
+            var fromOne = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[seed] }, candidates, rangeRate, Tolerance,
+                Reads(overTheWindow));
+            AssertMinimaOf(new[] { 150.0, 850.0 }, fromOne);
+            Assert.Contains(Refine(candidates, seed, rangeRate), fromOne);
+            if (overTheWindow)
+            {
+                Assert.Equal(fromTheThree, fromOne);
+            }
+        }
     }
 
     [Fact]
@@ -181,29 +208,42 @@ public class ConjunctionRefinementTests
         AssertWithinATick(zeroSeconds, Assert.Single(tca));
     }
 
-    [Fact]
-    public void ASeedBeforeItsZero_ClosingAtTheCandidatesAfterIt_IsSearchedForward()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASeedBeforeItsZero_ClosingAtTheCandidatesAfterIt_IsSearchedForward(bool overTheWindow)
     {
         // Closing at the seed (200 s) and at the candidates after it up to 400 s: a minimum 2.5 s after the seed, a
         // maximum at 205 s, the next minimum at 450 s. The seed is refined to the minimum next to it, between it and the
-        // next candidate (before round 5 of the lot-6 review, the widened bracket of the candidates gave the one at 450 s);
-        // the one at 450 s, which no seed reaches, is read at the candidates (#628: before, it was not listed)
+        // next candidate (before round 5 of the lot-6 review, the widened bracket of the candidates gave the one at 450 s).
+        // The one at 450 s, which no seed reaches, is read over the window with ReadRangeRateOverWindow (#628); without
+        // it, the default, it is not guaranteed
         var candidates = Candidates(11);
         var rangeRate = InsideOnly(candidates, Steps(202.5, 205.0, 450.0));
 
-        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance);
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance,
+            Reads(overTheWindow));
 
-        Assert.Equal(2, tca.Count);
+        AssertMinimaOf(new[] { 202.5, 450.0 }, tca);
         AssertWithinATick(202.5, tca[0]);
-        AssertWithinATick(450.0, tca[1]);
+        if (overTheWindow)
+        {
+            Assert.Equal(2, tca.Count);
+            AssertWithinATick(450.0, tca[1]);
+        }
     }
 
     [Theory]
-    [InlineData(204.85, 206.47)] // the fold of round 5 of the lot-6 review: 4.85 s from the seed, positive over 1.62 s
-    [InlineData(204.10, 205.10)] // one second wide, starting just past the read at 4.096 s
-    [InlineData(250.0241, 251.0241)] // one second wide, deep in the reads 1 s apart
-    [InlineData(299.5, 300.5)] // nearer the neighbouring candidate than the spacing: the last read, on the candidate
-    public void ASeedClosing_ItsZeroInANarrowPositiveInterval_IsFoundForward(double zeroSeconds, double maximumSeconds)
+    [InlineData(204.85, 206.47, false)] // the fold of round 5 of the lot-6 review: 4.85 s from the seed, positive over 1.62 s
+    [InlineData(204.10, 205.10, false)] // one second wide, starting just past the read at 4.096 s
+    [InlineData(250.0241, 251.0241, false)] // one second wide, deep in the reads 1 s apart
+    [InlineData(299.5, 300.5, false)] // nearer the neighbouring candidate than the spacing: the last read, on the candidate
+    [InlineData(204.85, 206.47, true)]
+    [InlineData(204.10, 205.10, true)]
+    [InlineData(250.0241, 251.0241, true)]
+    [InlineData(299.5, 300.5, true)]
+    public void ASeedClosing_ItsZeroInANarrowPositiveInterval_IsFoundForward(double zeroSeconds, double maximumSeconds,
+        bool overTheWindow)
     {
         // Closing at the seed (200 s) and at the candidates after it: positive only between the minimum and the maximum,
         // then closing up to a minimum at 450 s. Reads at distances doubling from the seed (4.096 and 8.192 s, ...) stepped
@@ -211,28 +251,42 @@ public class ConjunctionRefinementTests
         var candidates = Candidates(11);
         var rangeRate = InsideOnly(candidates, Steps(zeroSeconds, maximumSeconds, 450.0));
 
-        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance);
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[2] }, candidates, rangeRate, Tolerance,
+            Reads(overTheWindow));
 
-        // The minimum at 450 s, which no seed reaches, read at the candidates (#628)
-        Assert.Equal(2, tca.Count);
+        // The minimum at 450 s, which no seed reaches, read over the window with ReadRangeRateOverWindow (#628), not
+        // guaranteed without it
+        AssertMinimaOf(new[] { zeroSeconds, 450.0 }, tca);
         AssertWithinATick(zeroSeconds, tca[0]);
-        AssertWithinATick(450.0, tca[1]);
+        if (overTheWindow)
+        {
+            Assert.Equal(2, tca.Count);
+            AssertWithinATick(450.0, tca[1]);
+        }
     }
 
-    [Fact]
-    public void ASeedReceding_ItsZeroAfterANarrowNegativeInterval_IsFoundBackward()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ASeedReceding_ItsZeroAfterANarrowNegativeInterval_IsFoundBackward(bool overTheWindow)
     {
         // Receding at the seed (300 s): a minimum at 150 s, a maximum at 293.53 s, the minimum at 295.15 s. Reads at
         // 4.096 and 8.192 s before the seed both receding stepped over the 1.62 s where it closes
         var candidates = Candidates(11);
         var rangeRate = InsideOnly(candidates, Steps(150.0, 293.53, 295.15));
 
-        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[3] }, candidates, rangeRate, Tolerance);
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[3] }, candidates, rangeRate, Tolerance,
+            Reads(overTheWindow));
 
-        // The minimum at 150 s, which no seed reaches, read at the candidates (#628)
-        Assert.Equal(2, tca.Count);
-        AssertWithinATick(150.0, tca[0]);
-        AssertWithinATick(295.15, tca[1]);
+        // The minimum at 150 s, which no seed reaches, read over the window with ReadRangeRateOverWindow (#628), not
+        // guaranteed without it
+        AssertMinimaOf(new[] { 150.0, 295.15 }, tca);
+        AssertWithinATick(295.15, tca[^1]);
+        if (overTheWindow)
+        {
+            Assert.Equal(2, tca.Count);
+            AssertWithinATick(150.0, tca[0]);
+        }
     }
 
     [Fact]
@@ -325,19 +379,30 @@ public class ConjunctionRefinementTests
         AssertWithinATick(213.73456789, Refine(candidates, 1, rangeRate));
     }
 
-    [Fact]
-    public void AMinimumThatIsNotACandidate_IsDropped()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void AMinimumThatIsNotACandidate_IsDropped(bool overTheWindow)
     {
         // No bracket of candidates to refine it in: not a minimum on the range rate (kept unrefined before round 4 of the
-        // lot-6 review). The zero at 170 s is the one the reads at the candidates give without a seed (#628)
+        // lot-6 review). The seed adds nothing: the result is that of no seed, empty without the reads over the window,
+        // and with them the zero at 170 s that they give without a seed (#628)
         var candidates = Candidates(6);
         var minimum = Epoch.AddSeconds(150.0);
 
-        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { minimum }, candidates, Rectilinear(170.0), Tolerance);
+        var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { minimum }, candidates, Rectilinear(170.0), Tolerance,
+            Reads(overTheWindow));
 
         Assert.Equal(ConjunctionAssessment.RefineOnRangeRate(Array.Empty<TimeSystem.Time>(), candidates, Rectilinear(170.0),
-            Tolerance), tca);
-        AssertWithinATick(170.0, Assert.Single(tca));
+            Tolerance, Reads(overTheWindow)), tca);
+        if (overTheWindow)
+        {
+            AssertWithinATick(170.0, Assert.Single(tca));
+        }
+        else
+        {
+            Assert.Empty(tca);
+        }
     }
 
     // ---- The window ends (S1 of the review of lot 6 of #457): the first and last candidates are the window ends, and the
@@ -605,13 +670,62 @@ public class ConjunctionRefinementTests
         Assert.Equal(byBisection, bySecants);
         Assert.Equal(NearestTick(zeroSeconds), bySecants);
     }
-    // ---- #628: the minima that no seed reaches. The range rate is read at every candidate and, between two candidates
-    // farther apart than the spacing of the reads (MaximumEventSearchStep, 60 s by default, on the dense path), at epochs
-    // evenly spaced between them; each change from negative to positive between two reads that holds no zero yet is
-    // bisected ----
+    // ---- #628: the minima that no seed reaches. With ReadRangeRateOverWindow (opt-in, decision 54 of #457), the range
+    // rate is read at every candidate and, between two candidates farther apart than the spacing of the reads
+    // (MaximumEventSearchStep, 60 s by default, on the dense path), at epochs evenly spaced between them; each change from
+    // negative to positive between two reads that holds no zero yet is bisected. Without it, the default, the seeds alone
+    // are refined, as before #628 ----
 
     // The spacing of the reads of the dense path, MaximumEventSearchStep by default
     private const double ReadSpacing = 60.0;
+
+    [Theory]
+    [InlineData("A", false, false)]
+    [InlineData("A", false, true)]
+    [InlineData("A", true, false)]
+    [InlineData("A", true, true)]
+    [InlineData("B", false, false)]
+    [InlineData("B", false, true)]
+    [InlineData("B", true, false)]
+    [InlineData("B", true, true)]
+    public void TheReadsOverTheWindow_FindTheMinimaNoSeedReaches_OnlyWhenAskedFor(string form, bool overTheWindow,
+        bool windowEndsWithoutInteriorMinimum)
+    {
+        // The dense search after its seeds (CloseApproachesOnRangeRate), AnalyzeAll (no window end) and Analyze (window ends
+        // without a minimum inside), on the two forms of #628. Form A: minima at 150 s and 850 s, maxima at 520 s and
+        // 930 s, no seed, the range rate closing at both window ends, so that the bisection over the window does not apply.
+        // Form B: one step of 600 s holding minima at 117.45 s and 326.28 s and a maximum at 250 s, the seed at 302.10 s
+        // (CW600's step [1200, 1800] s). The reference: the zeros of the range rate from negative to positive. With the
+        // reads, every one; without them (the documented default, decision 54 of #457), the seed's alone, and for Analyze
+        // the window end where the distance decreases into the window when no seed gives one
+        bool formA = form == "A";
+        var candidates = formA
+            ? Candidates(11)
+            : new[] { Epoch, Epoch.AddSeconds(302.10), Epoch.AddSeconds(600.0) };
+        var rangeRate = InsideOnly(candidates, formA ? Steps(150.0, 520.0, 850.0, 930.0) : Steps(117.45, 250.0, 326.28));
+        var seeds = formA ? Array.Empty<TimeSystem.Time>() : new[] { candidates[1] };
+        double[] reference = formA ? new[] { 150.0, 850.0 } : new[] { 117.45, 326.28 };
+
+        var tca = ConjunctionAssessment.CloseApproachesOnRangeRate(seeds, candidates, rangeRate,
+            epoch => (epoch - Epoch).TotalSeconds, Tolerance, Reads(overTheWindow), windowEndsWithoutInteriorMinimum);
+
+        if (overTheWindow)
+        {
+            Assert.Equal(2, tca.Count);
+            AssertWithinATick(reference[0], tca[0]);
+            AssertWithinATick(reference[1], tca[1]);
+        }
+        else if (formA)
+        {
+            // No minimum inside: nothing for AnalyzeAll, for Analyze the end, closing there (the start recedes into the
+            // window nowhere: closing there too)
+            Assert.Equal(windowEndsWithoutInteriorMinimum ? new[] { candidates[^1] } : Array.Empty<TimeSystem.Time>(), tca);
+        }
+        else
+        {
+            AssertWithinATick(reference[1], Assert.Single(tca));
+        }
+    }
 
     [Theory]
     [InlineData(new int[0])]
@@ -640,7 +754,7 @@ public class ConjunctionRefinementTests
         // seeding one minimum at 302.10 s, where the range rate still closes, as at the start (form B of #628, the 600 s
         // steps of the pass with two minima per orbit, y0 = 1490 m, at t0 + 1200 s): the seed reaches the second minimum;
         // the first one lies between two candidates where the range rate closes, and the reads 50.35 s apart between them
-        // find it. Read at the candidates alone, it is lost
+        // find it. Read at the candidates alone (an infinite spacing), it is lost
         var candidates = new[] { Epoch, Epoch.AddSeconds(302.10), Epoch.AddSeconds(600.0) };
         var reads = new System.Collections.Generic.SortedSet<double>();
         var rangeRate = InsideOnly(candidates, epoch =>
@@ -658,7 +772,8 @@ public class ConjunctionRefinementTests
         var all = reads.ToArray();
         Assert.True(all.Zip(all.Skip(1), (a, b) => b - a).Max() <= ReadSpacing);
         AssertWithinATick(326.28, Assert.Single(
-            ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1] }, candidates, rangeRate, Tolerance)));
+            ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1] }, candidates, rangeRate, Tolerance,
+                double.PositiveInfinity)));
     }
 
     [Fact]
@@ -887,10 +1002,13 @@ public class ConjunctionRefinementTests
         }
     }
 
-    [Fact]
-    public void EachEpoch_IsReadOnce()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void EachEpoch_IsReadOnce(bool overTheWindow)
     {
-        // The reads of the candidates come back to those the seeds have read: each epoch is read once
+        // The reads of the candidates come back to those the seeds have read, and the seeds come back to epochs they have
+        // read: each epoch is read once, with the reads over the window or without them
         var candidates = Candidates(11);
         var counts = new System.Collections.Generic.Dictionary<TimeSystem.Time, int>();
         var rangeRate = InsideOnly(candidates, epoch =>
@@ -900,10 +1018,13 @@ public class ConjunctionRefinementTests
         });
 
         var tca = ConjunctionAssessment.RefineOnRangeRate(new[] { candidates[1], candidates[5], candidates[9] }, candidates,
-            rangeRate, Tolerance, ReadSpacing);
+            rangeRate, Tolerance, Reads(overTheWindow));
 
         Assert.Equal(2, tca.Count);
         Assert.All(counts.Values, count => Assert.Equal(1, count));
-        Assert.All(candidates, candidate => Assert.True(counts.ContainsKey(candidate)));
+        if (overTheWindow)
+        {
+            Assert.All(candidates, candidate => Assert.True(counts.ContainsKey(candidate)));
+        }
     }
 }
