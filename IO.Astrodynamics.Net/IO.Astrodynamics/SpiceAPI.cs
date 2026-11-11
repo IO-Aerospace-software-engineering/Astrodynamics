@@ -162,6 +162,11 @@ public class SpiceAPI
     }
 
     //Use the same lock for all cspice calls because it doesn't support multithreading.
+    // No code under it may read a static class whose type initializer takes it (PlanetsAndMoons, Stars, Barycenters):
+    // the thread would wait for the initializer while it holds the lock, and a thread running the initializer would wait
+    // for the lock, forever (#623). The library's code does not; a custom IDataProvider (the bodies the element
+    // conversions build, the frames of a read in TEME, CIRS or TIRS) and the enumeration of the states given to
+    // WriteEphemeris or WriteOrientation also run under it.
     private static object lockObject = new object();
 
     /// <summary>
@@ -655,9 +660,10 @@ public class SpiceAPI
         Aberration aberration, TimeSpan stepSize)
     {
         ArgumentNullException.ThrowIfNull(frame);
+        // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
+        var observer = CelestialItem.Create(observerId);
         lock (lockObject)
         {
-            var observer = CelestialItem.Create(observerId);
             const int messageSize = 10000;
             List<OrbitalParameters.OrbitalParameters> orbitalParameters = [];
             int occurrences = (int)(searchWindow.Length / stepSize / messageSize);
@@ -703,9 +709,10 @@ public class SpiceAPI
         int targetId, Frame frame, Aberration aberration)
     {
         ArgumentNullException.ThrowIfNull(frame);
+        // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
+        var observer = CelestialItem.Create(observerId);
         lock (lockObject)
         {
-            var observer = CelestialItem.Create(observerId);
             return ReadEphemerisAtGivenEpoch(epoch, observer, targetId, frame, aberration);
         }
     }
@@ -1037,24 +1044,33 @@ public class SpiceAPI
     /// as <c>getelm_c</c> reads it, plus the TT seconds from <paramref name="tleEpoch"/>, the same epoch as a UTC
     /// <see cref="Time"/>, to <paramref name="epoch"/> (#599).
     /// </summary>
+    /// <remarks>
+    /// Only the native call runs under the lock; the Earth of the state is built after it is released (#623).
+    /// </remarks>
     internal OrbitalParameters.OrbitalParameters ConvertTleToStateVector(string name, string line1, string line2,
         double sgp4Epoch, Time tleEpoch, Time epoch)
     {
         double et = sgp4Epoch + Propagator.PropagationTimeArgument.Tt.SecondsBetween(tleEpoch, epoch);
+
+        // Nothing but the native call under the lock (#623): the Earth below reads PlanetsAndMoons, whose type initializer
+        // takes this lock. Built under it, the Earth made this thread wait for that initializer while it held the lock,
+        // and a thread running the initializer wait for the lock: both waited forever
+        StateVector res;
         lock (lockObject)
         {
-            var res = ConvertTLEToStateVectorProxy(name, line1, line2, et);
-            var position = res.Position.Convert();
-            if (position.Magnitude() == 0.0)
-            {
-                throw new InvalidOperationException(
-                    $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: the native layer returned a zero state (see the SPICE message on the standard output).");
-            }
-
-            return new OrbitalParameters.StateVector(position, res.Velocity.Convert(),
-                new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
-                Frame.TEME);
+            res = ConvertTLEToStateVectorProxy(name, line1, line2, et);
         }
+
+        var position = res.Position.Convert();
+        if (position.Magnitude() == 0.0)
+        {
+            throw new InvalidOperationException(
+                $"SGP4 failed for the TLE {name} ({line1}) at {epoch.ToTDB()}: the native layer returned a zero state (see the SPICE message on the standard output).");
+        }
+
+        return new OrbitalParameters.StateVector(position, res.Velocity.Convert(),
+            new Body.CelestialBody(PlanetsAndMoons.EARTH, Frame.ECLIPTIC_J2000, epoch), epoch,
+            Frame.TEME);
     }
 
     /// <summary>
