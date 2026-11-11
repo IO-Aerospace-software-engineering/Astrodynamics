@@ -532,7 +532,7 @@ Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
 
 #### EquinoctialElements
 
-Equinoctial orbital elements, without singularity for circular or equatorial orbits (`ToStateVector()` uses them directly; `ToKeplerianElements()` takes ω = 0 when f = g = 0 exactly and Ω = 0 when h = k = 0 exactly).
+Equinoctial orbital elements, without singularity for circular orbits (e = 0) or prograde equatorial ones (i = 0), where the Keplerian ω and Ω are undefined (`ToStateVector()` uses them directly; `ToKeplerianElements()` takes ω = 0 when f = g = 0 exactly and Ω = 0 when h = k = 0 exactly). Their only singular orbit is the retrograde equatorial one (i = 180°), where h = tan(i/2) cos Ω and k = tan(i/2) sin Ω grow without bound.
 
 | Property | Description |
 |----------|-------------|

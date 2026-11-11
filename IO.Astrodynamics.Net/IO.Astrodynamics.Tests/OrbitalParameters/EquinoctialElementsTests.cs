@@ -3,15 +3,76 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Math;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
 public class EquinoctialElementsTests
 {
-    public EquinoctialElementsTests()
+    private readonly ITestOutputHelper _output;
+
+    public EquinoctialElementsTests(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+    }
+
+    /// <summary>
+    /// The state of docs/tutorials/orbit-creation.md (#465), at its periapsis on the x axis in the equatorial plane: p = (r v)² / μ
+    /// and f = e = p / r − 1, g = h = k = L = 0, with μ the kernel GM of the Earth, 398600435507022.6 m³/s²; the closed form
+    /// at 40 digits (mpmath) is p = 7424377.236908115642 m, e = 0.09182018189825230031. Linux x64, 2026-11-11: P 9.3e-10 m
+    /// (1.3e-16 relative), F 5.6e-17, the others 0. The bounds (1e-15, relative for P) are provisional, until the deltas this
+    /// test prints in the CI logs of Linux, Windows and macOS arm64 set them to twice their worst.
+    /// </summary>
+    [Fact]
+    public void TheStateOfTheTutorialGivesTheClosedForm()
+    {
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        Assert.Equal(398600435507022.6, earth.GM);
+        var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0),
+            Frames.Frame.ICRF);
+
+        var equinoctial = sv.ToEquinoctial();
+
+        _output.WriteLine($"P {equinoctial.P - 7424377.236908115642:E3} m, F {equinoctial.F - 0.09182018189825230031:E3}, G {equinoctial.G:E3}, H {equinoctial.H:E3}, K {equinoctial.K:E3}, L0 {equinoctial.L0:E3}");
+        Assert.Equal(7424377.236908115642, equinoctial.P, 7424377.236908115642 * 1e-15);
+        Assert.Equal(0.09182018189825230031, equinoctial.F, 1e-15);
+        Assert.Equal(0.0, equinoctial.G, 1e-15);
+        Assert.Equal(0.0, equinoctial.H, 1e-15);
+        Assert.Equal(0.0, equinoctial.K, 1e-15);
+        Assert.Equal(0.0, equinoctial.L0, 1e-15);
+    }
+
+    /// <summary>
+    /// State S1 of #465 (r = (−4000, 5500, 2500) km, v = (−5.5, −3.0, 4.0) km/s, ICRF) against GMAT R2026a with Earth.Mu the kernel
+    /// GM (#465, 2026-10-25): the modified set is P = SemilatusRectum, F = EquinoctialK, G = EquinoctialH, H = EquinoctialQ and
+    /// K = EquinoctialP, the names of the tutorial and of docs/reference/keplerian-elements.md; the accessor methods return the
+    /// properties. Linux x64, 2026-11-11: the components at most 1.9e-16 off, P 9.3e-10 m (GMAT prints P to 1e-9 m); the bounds
+    /// (1e-15, 5e-9 m) are provisional, as above.
+    /// </summary>
+    [Fact]
+    public void TheModifiedSetIsTheClassicalSetOfGmatUnderItsNames()
+    {
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        var sv = new StateVector(new Vector3(-4000000.0, 5500000.0, 2500000.0), new Vector3(-5500.0, -3000.0, 4000.0), earth,
+            new TimeSystem.Time(2024, 6, 21, 12, 0, 0), Frames.Frame.ICRF);
+
+        var equinoctial = sv.ToEquinoctial();
+
+        _output.WriteLine($"P {equinoctial.P - 6674290.249121238:E3} m, F {equinoctial.F - 0.25992015915397076:E3}, G {equinoctial.G - 0.12363511685104268:E3}, " +
+                          $"H {equinoctial.H - -0.023979838219125259:E3}, K {equinoctial.K - 0.31440232331742002:E3}");
+        Assert.Equal(6674290.249121238, equinoctial.P, 5e-9);
+        Assert.Equal(0.25992015915397076, equinoctial.F, 1e-15);
+        Assert.Equal(0.12363511685104268, equinoctial.G, 1e-15);
+        Assert.Equal(-0.023979838219125259, equinoctial.H, 1e-15);
+        Assert.Equal(0.31440232331742002, equinoctial.K, 1e-15);
+        Assert.Equal(equinoctial.F, equinoctial.EquinoctialEx());
+        Assert.Equal(equinoctial.G, equinoctial.EquinoctialEy());
+        Assert.Equal(equinoctial.H, equinoctial.Hx());
+        Assert.Equal(equinoctial.K, equinoctial.Hy());
+        Assert.Equal(equinoctial.L0, equinoctial.Lv());
     }
 
     [Fact]

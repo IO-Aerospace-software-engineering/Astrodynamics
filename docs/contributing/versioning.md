@@ -1151,6 +1151,19 @@ A major version, because it breaks the API: members deprecated for removal in 11
   2000 km of DSS-13 on 2024-06-03. The tables list the ten members as declared, each with its symbol, and the geometry
   tutorial names `Lower` and the negations.
 
+- **The equinoctial snippet of the orbit-creation tutorial did not compile, and two pages called the elements free of
+  singularity for every equatorial orbit** ([#465](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/465)). The
+  snippet called `H()`, `K()`, `P()` and `Q()`: `P`, `H` and `K` are properties and nothing is named `Q` (CS1955, CS1061),
+  and its labels h, k, p were the inclination components and the semi-latus rectum. It now prints `P` (m), `F`, `G`, `H`,
+  `K` and `L0` under their definitions, and says that the classical set of GMAT (EquinoctialH, K, P, Q) is G, F, K, H in
+  these names; for the tutorial's state it prints p = 7424377.237 m and f = e = 0.091820, the closed form of a periapsis
+  (p = (r v)²/μ, e = p/r − 1). [Keplerian Elements](../reference/keplerian-elements.md#equinoctialelements) lists the six
+  properties. That page and `DEVELOPER_GUIDE.md` now say what orbit-creation already said: no singularity at e = 0 or
+  i = 0, where the Keplerian ω and Ω are undefined, and the retrograde equatorial orbit (i = 180°) singular, h and k
+  growing as tan(i/2). `EquinoctialElementsTests` checks the tutorial's state against the closed form and state S1 of
+  the issue against GMAT R2026a (components within 1.9e-16, P within 9.3e-10 m, Linux), and the accessor methods
+  against the properties.
+
 **Changed**
 
 - **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its
