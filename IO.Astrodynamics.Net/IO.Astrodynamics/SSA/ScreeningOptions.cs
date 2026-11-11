@@ -14,7 +14,9 @@ public sealed record ScreeningOptions
     public TimeSpan SampleStep { get; init; } = TimeSpan.FromMinutes(5);
 
     /// <summary>
-    /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection.
+    /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection: the largest
+    /// interval between the search epochs of the sampled search, which the screening uses (it reads the candidates as
+    /// <see cref="IO.Astrodynamics.Body.ILocalizable"/>, never by the polynomial search of two propagations).
     /// </summary>
     public TimeSpan MaximumEventSearchStep { get; init; } = TimeSpan.FromSeconds(60);
 

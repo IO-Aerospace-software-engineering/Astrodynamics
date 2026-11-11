@@ -36,7 +36,10 @@ public sealed record AvoidanceSearchOptions
     public TimeSpan AnalysisSampleStep { get; init; } = TimeSpan.FromMinutes(1);
 
     /// <summary>
-    /// Gets the largest interval that SSA is allowed to subdivide internally while refining post-maneuver event detection.
+    /// Gets the largest interval that SSA is allowed to subdivide internally while refining post-maneuver event detection:
+    /// the largest interval between the search epochs of the sampled search, which the reassessment of each option uses
+    /// (it reads the participants as <see cref="IO.Astrodynamics.Body.ILocalizable"/>, never by the polynomial search of
+    /// two propagations).
     /// </summary>
     public TimeSpan MaximumEventSearchStep { get; init; } = TimeSpan.FromSeconds(60);
 

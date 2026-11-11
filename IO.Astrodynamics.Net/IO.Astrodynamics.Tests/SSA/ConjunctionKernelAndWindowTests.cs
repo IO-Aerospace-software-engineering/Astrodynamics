@@ -183,6 +183,12 @@ public abstract class CwPassEncounterCase : CrossingEncounterCase
     {
     }
 
+    protected CwPassEncounterCase(int id1, int id2, string name, double y0, Func<RK78Integrator> integrator1,
+        Func<RK78Integrator> integrator2)
+        : base(id1, id2, name, CwStates(y0), integrator1, integrator2)
+    {
+    }
+
     private static Func<RK78Integrator> Steps(bool defaultSteps) =>
         defaultSteps ? () => new RK78Integrator() : SlowPassEncounterCase.Steps60;
 
@@ -247,6 +253,12 @@ public abstract class CwPassFoldEncounterCase : CwPassEncounterCase
     {
     }
 
+    protected CwPassFoldEncounterCase(int id1, int id2, string name, Func<RK78Integrator> integrator1,
+        Func<RK78Integrator> integrator2)
+        : base(id1, id2, name, 1502.358, integrator1, integrator2)
+    {
+    }
+
     public override double GfStepSeconds => 0.2;
 }
 
@@ -267,6 +279,75 @@ public sealed class CwPassFoldStep60Case : CwPassFoldEncounterCase
 }
 
 /// <summary>
+/// The pass with two minima per orbit, <c>y0</c> = 1500 m, the first spacecraft at the defaults of
+/// <c>new RK78Integrator()</c> and the second at 60 s steps (#628): the Hermite of the mixed steps places no minimum near
+/// the minimum at t0 + 7029.70 s, where the range rate closes at one candidate and recedes at the next.
+/// </summary>
+public sealed class CwPassMixedStep1500Case : CwPassEncounterCase
+{
+    public CwPassMixedStep1500Case() : base(-620111, -620112, "CWM", 1500.0, () => new RK78Integrator(),
+        SlowPassEncounterCase.Steps60)
+    {
+    }
+}
+
+/// <summary>The pass with two minima per orbit, <c>y0</c> = 1490 m, at the default steps and 60 s steps (#628).</summary>
+public sealed class CwPassMixedStep1490Case : CwPassEncounterCase
+{
+    public CwPassMixedStep1490Case() : base(-620121, -620122, "CWM90", 1490.0, () => new RK78Integrator(),
+        SlowPassEncounterCase.Steps60)
+    {
+    }
+}
+
+/// <summary>
+/// The pass with two minima per orbit, <c>y0</c> = 1495 m, the first spacecraft at 60 s steps and the second at the
+/// defaults (#628): no seed after t0 + 1165.32 s, the range rate closing at t0 + 1440 s and receding at 1500 s about the
+/// minimum at t0 + 1497.86 s.
+/// </summary>
+public sealed class CwPassMixedStep1495Case : CwPassEncounterCase
+{
+    public CwPassMixedStep1495Case() : base(-620131, -620132, "CWN", 1495.0, SlowPassEncounterCase.Steps60,
+        () => new RK78Integrator())
+    {
+    }
+}
+
+/// <summary>
+/// The pass with two minima per orbit, <c>y0</c> = 1490 m, at fixed 600 s steps (#628): the step [1200, 1800] s holds the
+/// minima at t0 + 1317.45 and 1526.28 s and a maximum between them, its Hermite one minimum only, at 1502.10 s.
+/// </summary>
+public sealed class CwPassStep600Case : CwPassEncounterCase
+{
+    public CwPassStep600Case() : base(-620141, -620142, "CW600", 1490.0, () => new RK78Integrator(600.0),
+        () => new RK78Integrator(600.0))
+    {
+    }
+}
+
+/// <summary>The pass with two minima per orbit, <c>y0</c> = 1500 m, at fixed 600 s steps (#628).</summary>
+public sealed class CwPass1500Step600Case : CwPassEncounterCase
+{
+    public CwPass1500Step600Case() : base(-620151, -620152, "CWE600", 1500.0, () => new RK78Integrator(600.0),
+        () => new RK78Integrator(600.0))
+    {
+    }
+}
+
+/// <summary>
+/// The pass with the fold of the range rate, <c>y0</c> = 1502.358 m, the first spacecraft at the defaults of
+/// <c>new RK78Integrator()</c> and the second at 60 s steps (round 1 of the review of #628): the range rate is positive
+/// over [7065.14, 7067.49] s only, and no minimum of the Hermite lies before it, so that the reads 60 s apart step over it;
+/// reads 1 s apart do not.
+/// </summary>
+public sealed class CwPassFoldMixedStepCase : CwPassFoldEncounterCase
+{
+    public CwPassFoldMixedStepCase() : base(-620161, -620162, "CWFM", () => new RK78Integrator(), SlowPassEncounterCase.Steps60)
+    {
+    }
+}
+
+/// <summary>
 /// The conjunction analysis of kernel-backed spacecraft (#620), the window ends of the dense search (#621), and the reads
 /// outside the coverage of the kernels (#454) or of the propagated states (#527). Expected values from CSPICE on the SPKs
 /// (<c>spkezr_c</c>, <c>gfdist_c</c>) and from the case's geometry.
@@ -275,9 +356,14 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     IClassFixture<DefaultStepCrossingEncounterCase>, IClassFixture<SlowPassEncounterCase>,
     IClassFixture<DefaultStepSlowPassEncounterCase>, IClassFixture<MixedStepSlowPassEncounterCase>,
     IClassFixture<CwPassDefaultStepCase>, IClassFixture<CwPass60StepCase>, IClassFixture<CwPass1500DefaultStepCase>,
-    IClassFixture<CwPass1500Step60Case>, IClassFixture<CwPassFoldDefaultStepCase>, IClassFixture<CwPassFoldStep60Case>
+    IClassFixture<CwPass1500Step60Case>, IClassFixture<CwPassFoldDefaultStepCase>, IClassFixture<CwPassFoldStep60Case>,
+    IClassFixture<CwPassMixedStep1500Case>, IClassFixture<CwPassMixedStep1490Case>, IClassFixture<CwPassMixedStep1495Case>,
+    IClassFixture<CwPassStep600Case>, IClassFixture<CwPass1500Step600Case>, IClassFixture<CwPassFoldMixedStepCase>
 {
     private static readonly ConjunctionAnalysisOptions Options = new() { CovariancePropagation = null };
+
+    // The reads of the range rate over the window of the dense search (#628), opt-in (decision 54 of #457)
+    private static readonly ConjunctionAnalysisOptions ReadOverWindowOptions = Options with { ReadRangeRateOverWindow = true };
 
     private readonly CrossingEncounterCase _case;
     private readonly DefaultStepCrossingEncounterCase _defaultStepCase;
@@ -290,6 +376,12 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     private readonly CwPass1500Step60Case _cw1500Step60Case;
     private readonly CwPassFoldDefaultStepCase _cwFoldDefaultCase;
     private readonly CwPassFoldStep60Case _cwFoldStep60Case;
+    private readonly CwPassMixedStep1500Case _cwMixed1500Case;
+    private readonly CwPassMixedStep1490Case _cwMixed1490Case;
+    private readonly CwPassMixedStep1495Case _cwMixed1495Case;
+    private readonly CwPassStep600Case _cw600Case;
+    private readonly CwPass1500Step600Case _cw1500Step600Case;
+    private readonly CwPassFoldMixedStepCase _cwFoldMixedCase;
     private readonly ITestOutputHelper _output;
 
     public ConjunctionKernelAndWindowTests(CrossingEncounterCase crossingCase,
@@ -297,8 +389,16 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         DefaultStepSlowPassEncounterCase defaultStepSlowCase, MixedStepSlowPassEncounterCase mixedStepSlowCase,
         CwPassDefaultStepCase cwDefaultCase, CwPass60StepCase cw60Case, CwPass1500DefaultStepCase cw1500DefaultCase,
         CwPass1500Step60Case cw1500Step60Case, CwPassFoldDefaultStepCase cwFoldDefaultCase,
-        CwPassFoldStep60Case cwFoldStep60Case, ITestOutputHelper output)
+        CwPassFoldStep60Case cwFoldStep60Case, CwPassMixedStep1500Case cwMixed1500Case,
+        CwPassMixedStep1490Case cwMixed1490Case, CwPassMixedStep1495Case cwMixed1495Case, CwPassStep600Case cw600Case,
+        CwPass1500Step600Case cw1500Step600Case, CwPassFoldMixedStepCase cwFoldMixedCase, ITestOutputHelper output)
     {
+        _cwFoldMixedCase = cwFoldMixedCase;
+        _cwMixed1500Case = cwMixed1500Case;
+        _cwMixed1490Case = cwMixed1490Case;
+        _cwMixed1495Case = cwMixed1495Case;
+        _cw600Case = cw600Case;
+        _cw1500Step600Case = cw1500Step600Case;
         _cwFoldDefaultCase = cwFoldDefaultCase;
         _cwFoldStep60Case = cwFoldStep60Case;
         _cwDefaultCase = cwDefaultCase;
@@ -765,7 +865,24 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // their 60 s outputs) over its slope, 2.6e-4 m/s per second at a drift of 100 m and 2.6e-6 at 1 m; at the fold, 2.9e-7 m
     // deep, the states and their SPK of the default steps place the zero 2.1 ms apart (the library within 7.4e-6 s of the
     // zero of the states, from a scan of their range rate). A CSPICE minimum or a listed one within the TCA bound of a
-    // window end may be on either side of it for the states and their SPK
+    // window end may be on either side of it for the states and their SPK.
+    // The passes of #628, whose minima no seed reached before (mixed steps, fixed 600 s steps), measured by this test on
+    // Linux x64 (2026-11-10) and by the probe of #628 (843 to 1084 windows per propagation, gfdist_c refined by bisection
+    // of spkezr_c's range rate to 1e-10 s); the CI of Linux x64, Windows x64 and macOS arm64 (run 43000949510, 2026-11-11,
+    // by default and with the reads over the window) gives this test's figures on the three platforms, but CW600's miss
+    // on Windows x64, 1.278e-5 m; with the nearest tick of #625 (merged 2026-11-11) they move in their fourth digit,
+    // the windows ending a tick apart (this test's column, Linux x64; before #625: CWM 3.543e-5 s 8.430e-7 m, CWM90
+    // 6.057e-6 s 6.567e-7 m, CWN 6.519e-5 s, CW600 3.107e-5 s, CWE600 1.016e-4 s, CWFM 3.223e-3 s 2.279e-6 m):
+    //                                         this test                 the probe                 bound
+    //   CWM (y0 = 1500 m, default and 60 s)   3.542e-5 s  8.427e-7 m    3.546e-5 s  8.433e-7 m    7.1e-5 s  1.7e-6 m
+    //   CWM90 (y0 = 1490 m, default and 60 s) 6.067e-6 s  6.560e-7 m    6.066e-6 s  6.564e-7 m    1.3e-5 s  1.4e-6 m
+    //   CWN (y0 = 1495 m, 60 s and default)   6.501e-5 s  1.960e-6 m    6.507e-5 s  1.960e-6 m    1.4e-4 s  4.0e-6 m
+    //   CW600 (y0 = 1490 m, fixed 600 s)      3.106e-5 s  1.277e-5 m    3.105e-5 s  1.277e-5 m    6.3e-5 s  2.6e-5 m
+    //   CWE600 (y0 = 1500 m, fixed 600 s)     1.015e-4 s  2.090e-5 m    1.016e-4 s  2.090e-5 m    2.1e-4 s  4.2e-5 m
+    //   CWFM (the fold, default and 60 s, read every 1 s, round 1 of the review of #628)
+    //                                         3.224e-3 s  2.278e-6 m    3.219e-3 s  2.280e-6 m    6.5e-3 s  4.6e-6 m
+    // twice the worst of the two, rounded up to two digits: the states of mixed or 600 s steps against the degree-7
+    // interpolation of their 60 s outputs in the SPK
     private static (double Tca, double Miss) SlowPassBounds(CrossingEncounterCase crossing) => crossing switch
     {
         SlowPassEncounterCase => (3.0e-7, 6.3e-10),
@@ -777,6 +894,12 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         CwPass1500Step60Case => (2.5e-6, 9.9e-8),
         CwPassFoldDefaultStepCase => (4.2e-3, 2.0e-6),
         CwPassFoldStep60Case => (6.7e-5, 7.8e-8),
+        CwPassMixedStep1500Case => (7.1e-5, 1.7e-6),
+        CwPassMixedStep1490Case => (1.3e-5, 1.4e-6),
+        CwPassMixedStep1495Case => (1.4e-4, 4.0e-6),
+        CwPassStep600Case => (6.3e-5, 2.6e-5),
+        CwPass1500Step600Case => (2.1e-4, 4.2e-5),
+        CwPassFoldMixedStepCase => (6.5e-3, 4.6e-6),
         _ => throw new ArgumentOutOfRangeException(nameof(crossing))
     };
 
@@ -790,6 +913,12 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         "CWE" => _cw1500DefaultCase,
         "CWE60" => _cw1500Step60Case,
         "CWF" => _cwFoldDefaultCase,
+        "CWM" => _cwMixed1500Case,
+        "CWM90" => _cwMixed1490Case,
+        "CWN" => _cwMixed1495Case,
+        "CW600" => _cw600Case,
+        "CWE600" => _cw1500Step600Case,
+        "CWFM" => _cwFoldMixedCase,
         _ => _cwFoldStep60Case
     };
 
@@ -918,6 +1047,122 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     }
 
     [Theory]
+    [InlineData("CWM", 6969.70, 7089.70, 1)]
+    [InlineData("CWM", 0.0, 10800.0, 3)]
+    [InlineData("CWM90", 6970.31, 7171.31, 1)]
+    [InlineData("CWM90", 0.0, 10800.0, 4)]
+    [InlineData("CWN", 97.86, 1507.86, 2)]
+    [InlineData("CWN", 0.0, 10800.0, 4)]
+    [InlineData("CW600", 0.0, 10800.0, 4)]
+    [InlineData("CW600", 1200.0, 1800.0, 2)]
+    [InlineData("CWE600", 0.0, 10800.0, 3)]
+    [InlineData("CWE600", 4268.0, 7268.0, 2)]
+    public void Dense_MinimumWithoutASeedNearIt_IsListed(string fixture, double start, double end, int count)
+    {
+        // #628, with ReadRangeRateOverWindow (opt-in, decision 54 of #457; without it, Dense_ByDefault_* below): the
+        // windows the review of lot 6 traced, where the Hermite of mixed or long steps places no minimum near a
+        // minimum of the states (form A: CWM's 504.6428 m at t0 + 7029.70 s, the range rate -3.18, -0.22, +0.062 and
+        // -0.044 m²/s at the candidates of the window, the only seed its end; CWM90's minimum 1 s after the start; CWN's at
+        // t0 + 1497.86 s, closing at t0 + 1440 s and receding at 1500 s), or one 600 s step holds two minima (form B:
+        // CW600's at t0 + 1317.45 and 1526.28 s, a maximum between them, the Hermite one minimum at 1502.10 s; CWE600's at
+        // t0 + 7029.94 s). Before, AnalyzeAll did not list them on the traced windows and on the whole windows of CW600
+        // and CWE600, and Analyze returned a window end (504.6578 m on CWM's window) or another minimum (CWN, CW600); the
+        // windows of 3000 s every 97 s of the sweeps lost them in 163 to 164 windows at 600 s steps. The whole windows of
+        // CWM, CWM90 and CWN are regression rows: main b237eec2 already lists every minimum there, the seeds of the whole
+        // window reaching them (round 1 of the review of #628)
+        AssertSlowPassMatchesCspice(Pass(fixture), Pass(fixture).Seconds(start, end), count, options: ReadOverWindowOptions);
+    }
+
+    [Theory]
+    [InlineData("CWM", 6969.70, 7089.70)]
+    [InlineData("CWM", 0.0, 10800.0)]
+    [InlineData("CWM90", 6970.31, 7171.31)]
+    [InlineData("CWM90", 0.0, 10800.0)]
+    [InlineData("CWN", 97.86, 1507.86)]
+    [InlineData("CWN", 0.0, 10800.0)]
+    [InlineData("CW600", 0.0, 10800.0)]
+    [InlineData("CW600", 1200.0, 1800.0)]
+    [InlineData("CWE600", 0.0, 10800.0)]
+    [InlineData("CWE600", 4268.0, 7268.0)]
+    [InlineData("CWFM", 7000.0, 7100.0)]
+    [InlineData("CWFM", 0.0, 10800.0)]
+    public void Dense_ByDefault_MinimumWithoutASeedNearIt_ListsOnlyMinima(string fixture, double start, double end)
+    {
+        // The windows of #628 with the default options (decision 54 of #457: the reads of the range rate over the window
+        // opt-in): a minimum that no minimum of the Hermite seeds may be lost (on CWM's window, AnalyzeAll lists nothing and
+        // Analyze returns the window end, 504.658 m, for the minimum of 504.643 m; on CW600's [1200, 1800] s, AnalyzeAll
+        // lists only the minimum at t0 + 1526.28 s, 509.692 m, losing the farther one at 1317.45 s, 509.741 m, and Analyze
+        // returns 1526.28 s either way), but every TCA listed is a minimum of CSPICE within the bounds, inside the window, in
+        // order, none twice, and Analyze returns the closest one listed, or without one the end where the distance grows
+        // into the window
+        Assert.False(new ConjunctionAnalysisOptions().ReadRangeRateOverWindow);
+        AssertSlowPassListsOnlyMinima(Pass(fixture), Pass(fixture).Seconds(start, end), Options, log: true);
+    }
+
+    [Theory]
+    [InlineData("CW600", 1200.0, 1800.0)]
+    [InlineData("CW600", 0.0, 10800.0)]
+    [InlineData("CWM", 6969.70, 7089.70)]
+    [InlineData("CWM", 0.0, 10800.0)]
+    public void Dense_ByDefault_TheRangeRateIsNotReadOverTheWindow(string fixture, double start, double end)
+    {
+        // Decision 54 of #457, through the public Analyze and AnalyzeAll: by default the dense search reads the range rate
+        // the seeds need only, so MaximumEventSearchStep changes neither its reads nor its results, and at a spacing of 1 s
+        // it reads fewer states than the reads over the window alone need (one per second of the window); with
+        // ReadRangeRateOverWindow it reads at least those (the review of decision 54: a search that always read over the
+        // window passed every other test)
+        var crossing = Pass(fixture);
+        var window = crossing.Seconds(start, end);
+        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
+        double length = (window.EndDate - window.StartDate).TotalSeconds;
+
+        (long Reads, string Result) All(ConjunctionAnalysisOptions options)
+        {
+            ConjunctionAssessment.DenseRangeRateReads = 0;
+            var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window,
+                options);
+            return (ConjunctionAssessment.DenseRangeRateReads, string.Join("; ",
+                all.Select(e => $"{e.EncounterState.Epoch.TimeSpanFromJ2000().Ticks} {e.EncounterState.MissDistanceMeters:R}")));
+        }
+
+        (long Reads, string Result) One(ConjunctionAnalysisOptions options)
+        {
+            ConjunctionAssessment.DenseRangeRateReads = 0;
+            var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2,
+                window, options);
+            return (ConjunctionAssessment.DenseRangeRateReads,
+                $"{encounter.EncounterState.Epoch.TimeSpanFromJ2000().Ticks} {encounter.EncounterState.MissDistanceMeters:R}");
+        }
+
+        var fine = Options with { MaximumEventSearchStep = TimeSpan.FromSeconds(1.0) };
+        foreach (var search in new Func<ConjunctionAnalysisOptions, (long Reads, string Result)>[] { All, One })
+        {
+            var byDefault = search(Options);
+            var byDefaultFine = search(fine);
+            var withTheReads = search(fine with { ReadRangeRateOverWindow = true });
+            _output.WriteLine($"reads by default {byDefault.Reads} (at 1 s {byDefaultFine.Reads}), with the option at 1 s " +
+                              $"{withTheReads.Reads}, window {length:F2} s");
+            Assert.Equal(byDefault, byDefaultFine);
+            Assert.True(byDefaultFine.Reads < length, $"{byDefaultFine.Reads} reads by default at 1 s");
+            Assert.True(withTheReads.Reads >= length, $"{withTheReads.Reads} reads with the option at 1 s");
+        }
+    }
+
+    [Theory]
+    [InlineData(7000.0, 7100.0, 1)]
+    [InlineData(6900.0, 7300.0, 2)]
+    [InlineData(0.0, 10800.0, 3)]
+    public void Dense_TheReadsOfTheRangeRate_AreMaximumEventSearchStepApart(double start, double end, int count)
+    {
+        // The fold of CWFM, positive over [7065.14, 7067.49] s with no minimum of the Hermite before it: at a
+        // MaximumEventSearchStep of 1 s the reads over the window land in it, and AnalyzeAll lists every minimum of CSPICE
+        // (the round-1 review of #628: the option reaches the dense search; the 60 s reads step over this fold, the
+        // documented limit, which this test does not assert)
+        var options = ReadOverWindowOptions with { MaximumEventSearchStep = TimeSpan.FromSeconds(1.0) };
+        AssertSlowPassMatchesCspice(_cwFoldMixedCase, _cwFoldMixedCase.Seconds(start, end), count, options: options);
+    }
+
+    [Theory]
     [InlineData("SLOW")]
     [InlineData("SLOWD")]
     [InlineData("SLOWX")]
@@ -927,7 +1172,21 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     [InlineData("CWE60")]
     [InlineData("CWF")]
     [InlineData("CWF60")]
-    public void Dense_EveryMinimumOfThePass_IsListedWithinTheBounds(string fixture)
+    [InlineData("SLOW", true)]
+    [InlineData("SLOWD", true)]
+    [InlineData("SLOWX", true)]
+    [InlineData("CWD", true)]
+    [InlineData("CW60", true)]
+    [InlineData("CWE", true)]
+    [InlineData("CWE60", true)]
+    [InlineData("CWF", true)]
+    [InlineData("CWF60", true)]
+    [InlineData("CWM", true)]
+    [InlineData("CWM90", true)]
+    [InlineData("CWN", true)]
+    [InlineData("CW600", true)]
+    [InlineData("CWE600", true)]
+    public void Dense_EveryMinimumOfThePass_IsListedWithinTheBounds(string fixture, bool readRangeRateOverWindow = false)
     {
         // The windows of the reviewers' sweeps over the whole propagation: the start and the end of each window at 1 to
         // 1400 s on either side of each local minimum of CSPICE on the whole window (within the propagation), windows of
@@ -937,13 +1196,63 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
         // minimum the dense AnalyzeAll lists on the whole window, from 300 s and from 20 ms on the other side. Every minimum
         // of the propagation is measured, from many windows, against CSPICE's zero below the tick: the bounds of
         // SlowPassBounds are twice the worst of this test
+        // The passes of #628 (CWM to CWE600) only with ReadRangeRateOverWindow (decision 54 of #457): by default a minimum
+        // that no minimum of the Hermite seeds may be lost there (Dense_ByDefault_EveryListedMinimumOfThePass_IsAMinimum)
         var crossing = Pass(fixture);
+        var options = readRangeRateOverWindow ? ReadOverWindowOptions : Options;
+        var (minima, windows) = SweepWindows(crossing, options);
+
+        _worstSlowTcaError = 0.0;
+        _worstSlowMissError = 0.0;
+        foreach (var (start, end) in windows)
+        {
+            AssertSlowPassMatchesCspice(crossing, crossing.Seconds(start, end), null, log: false, options: options);
+        }
+
+        _output.WriteLine($"MEASURE {fixture}{(readRangeRateOverWindow ? " (reads over the window)" : "")} every minimum " +
+                          $"({minima.Length} on the whole window, {windows.Count} windows): " +
+                          $"TCA {_worstSlowTcaError:E3} s, miss {_worstSlowMissError:E3} m");
+    }
+
+    [Theory]
+    [InlineData("CWM")]
+    [InlineData("CWM90")]
+    [InlineData("CWN")]
+    [InlineData("CW600")]
+    [InlineData("CWE600")]
+    [InlineData("CWFM")]
+    public void Dense_ByDefault_EveryListedMinimumOfThePass_IsAMinimumWithinTheBounds(string fixture)
+    {
+        // The windows of the sweep above, on the passes of #628, with the default options (decision 54 of #457): a minimum
+        // that no minimum of the Hermite seeds may be missing, but every TCA listed is a minimum of CSPICE within the bounds
+        // of the pass, inside the window, in order, none twice, and Analyze returns the closest one listed, or without one
+        // the end where the distance grows into the window (the contract that holds by default)
+        var crossing = Pass(fixture);
+        var (minima, windows) = SweepWindows(crossing, Options);
+        _worstSlowTcaError = 0.0;
+        _worstSlowMissError = 0.0;
+        foreach (var (start, end) in windows)
+        {
+            AssertSlowPassListsOnlyMinima(crossing, crossing.Seconds(start, end), Options, log: false);
+        }
+
+        _output.WriteLine($"MEASURE {fixture} by default, every listed minimum ({minima.Length} on the whole window, " +
+                          $"{windows.Count} windows): TCA {_worstSlowTcaError:E3} s, miss {_worstSlowMissError:E3} m");
+    }
+
+    // The windows of the sweeps: the start and the end of each window at 1 to 1400 s on either side of each local minimum of
+    // CSPICE on the whole window (within the propagation), windows of 300, 700, 1500 and 3000 s every 97 s, and the windows
+    // of the fifth reviewer (round 5 of the lot-6 review), about each minimum of CSPICE and of each minimum AnalyzeAll lists
+    // on the whole window with the given options
+    private (double[] Minima, System.Collections.Generic.SortedSet<(double Start, double End)> Windows) SweepWindows(
+        CrossingEncounterCase crossing, ConjunctionAnalysisOptions options)
+    {
         double duration = (crossing.Window.EndDate - crossing.Window.StartDate).TotalSeconds;
         var minima = CspiceLocalMinima(crossing.Window, crossing)
             .Select(m => (m.Epoch - crossing.T0).TotalSeconds)
             .ToArray();
         var listed = ConjunctionAssessment.AnalyzeAll(new ProtectedSpacecraftProfile(crossing.Sat1), crossing.Solution1,
-                crossing.Sat2, crossing.Solution2, crossing.Window, Options)
+                crossing.Sat2, crossing.Solution2, crossing.Window, options)
             .Select(e => (e.EncounterState.Epoch - crossing.T0).TotalSeconds)
             .ToArray();
         double[] offsets = { 1.0, 10.0, 30.0, 60.0, 120.0, 200.0, 400.0, 800.0, 1400.0 };
@@ -1015,15 +1324,81 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
             }
         }
 
-        _worstSlowTcaError = 0.0;
-        _worstSlowMissError = 0.0;
-        foreach (var (start, end) in windows)
+        return (minima, windows);
+    }
+
+    // The contract of the dense search by default (decision 54 of #457): AnalyzeAll lists only local minima of CSPICE's
+    // gfdist_c, each within the bounds of the slow passes (or, within the TCA bound of a window end, one CSPICE places just
+    // outside the window, or none, the states and their SPK placing the zero on either side of that end), strictly inside
+    // the window, in order, none twice; Analyze returns the closest one listed, or without one the window end where the
+    // distance grows into the window (AssertTheEndWhereTheDistanceGrows)
+    private void AssertSlowPassListsOnlyMinima(CrossingEncounterCase crossing, Window window,
+        ConjunctionAnalysisOptions options, bool log)
+    {
+        var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
+        var (tcaBound, missBound) = SlowPassBounds(crossing);
+        var locmin = CspiceLocalMinima(window, crossing);
+        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
+        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
+        string listed = $"[{(window.StartDate - crossing.T0).TotalSeconds:F7}, {(window.EndDate - crossing.T0).TotalSeconds:F7}] s: " +
+                        $"LOCMIN [{string.Join("; ", locmin.Select(m => $"{(m.Epoch - crossing.T0).TotalSeconds:F7} s {m.Distance:R} m"))}], " +
+                        $"AnalyzeAll [{string.Join("; ", all.Select(e => $"{(e.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s {e.EncounterState.MissDistanceMeters:R} m"))}], " +
+                        $"Analyze {(encounter.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s {encounter.EncounterState.MissDistanceMeters:R} m";
+        if (log)
         {
-            AssertSlowPassMatchesCspice(crossing, crossing.Seconds(start, end), null, log: false);
+            _output.WriteLine(listed);
         }
 
-        _output.WriteLine($"MEASURE {fixture} every minimum ({minima.Length} on the whole window, {windows.Count} windows): " +
-                          $"TCA {_worstSlowTcaError:E3} s, miss {_worstSlowMissError:E3} m");
+        try
+        {
+            bool NearAnEnd(TimeSystem.Time epoch) => System.Math.Abs((epoch - window.StartDate).TotalSeconds) <= tcaBound ||
+                                                     System.Math.Abs((window.EndDate - epoch).TotalSeconds) <= tcaBound;
+
+            var epochs = all.Select(e => e.EncounterState.Epoch).ToArray();
+            Assert.All(epochs, epoch => Assert.True(epoch > window.StartDate && epoch < window.EndDate));
+            Assert.True(epochs.Zip(epochs.Skip(1), (a, b) => a < b).All(ordered => ordered), "ordered, none twice");
+            var matched = new System.Collections.Generic.List<int>();
+            foreach (var e in all)
+            {
+                int index = locmin.Select((m, i) => (m, i))
+                    .Where(x => System.Math.Abs((e.EncounterState.Epoch - x.m.Epoch).TotalSeconds) <= tcaBound)
+                    .Select(x => x.i).DefaultIfEmpty(-1).First();
+                if (index >= 0)
+                {
+                    AssertSlowPassMinimum(e, locmin[index], tcaBound, missBound, crossing, log);
+                    matched.Add(index);
+                    continue;
+                }
+
+                Assert.True(NearAnEnd(e.EncounterState.Epoch), "a listed TCA that is no minimum of CSPICE");
+                if (CspiceMinimumNear(e.EncounterState.Epoch, window, tcaBound, crossing) is { } outside)
+                {
+                    AssertSlowPassMinimum(e, outside, tcaBound, missBound, crossing, log);
+                }
+            }
+
+            Assert.Equal(matched.Count, matched.Distinct().Count());
+            if (all.Count > 0)
+            {
+                Assert.Equal(all.MinBy(e => e.EncounterState.MissDistanceMeters).EncounterState.Epoch,
+                    encounter.EncounterState.Epoch);
+            }
+            else if (locmin.Length > 0 && locmin.All(m => NearAnEnd(m.Epoch)))
+            {
+                // Only minima within the band of an end, none listed: an end, as AssertSlowPassLists
+                Assert.True(encounter.EncounterState.Epoch == window.StartDate ||
+                            encounter.EncounterState.Epoch == window.EndDate);
+            }
+            else
+            {
+                // None listed, a minimum inside lost by default or none: the end where the distance grows into the window
+                AssertTheEndWhereTheDistanceGrows(crossing, window, encounter, tcaBound, missBound);
+            }
+        }
+        catch (Xunit.Sdk.XunitException e) when (!log)
+        {
+            throw new Xunit.Sdk.XunitException($"{listed}{Environment.NewLine}{e.Message}");
+        }
     }
 
     // AnalyzeAll lists the local minima of CSPICE's gfdist_c in the window, each within the bounds of the slow passes, and
@@ -1032,14 +1407,15 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // Analyze returns the closest listed minimum, or without one the window end where the distance grows into the window by
     // CSPICE's range rate (the closer one when both do)
     private void AssertSlowPassMatchesCspice(CrossingEncounterCase crossing, Window window, int? expectedCount,
-        bool log = true)
+        bool log = true, ConjunctionAnalysisOptions options = null)
     {
+        options ??= Options;
         var profile = new ProtectedSpacecraftProfile(crossing.Sat1);
         var (tcaBound, missBound) = SlowPassBounds(crossing);
         var locmin = CspiceLocalMinima(window, crossing);
 
-        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
-        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, Options);
+        var all = ConjunctionAssessment.AnalyzeAll(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
+        var encounter = ConjunctionAssessment.Analyze(profile, crossing.Solution1, crossing.Sat2, crossing.Solution2, window, options);
         string listed = $"[{(window.StartDate - crossing.T0).TotalSeconds:F7}, {(window.EndDate - crossing.T0).TotalSeconds:F7}] s: " +
                           $"LOCMIN [{string.Join("; ", locmin.Select(m => $"{(m.Epoch - crossing.T0).TotalSeconds:F7} s {m.Distance:R} m"))}], " +
                           $"AnalyzeAll [{string.Join("; ", all.Select(e => $"{(e.EncounterState.Epoch - crossing.T0).TotalSeconds:F7} s {e.EncounterState.MissDistanceMeters:R} m"))}], " +
@@ -1078,6 +1454,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
             .ToArray();
         Assert.Equal(matched.Where(i => i >= 0).Count(), matched.Where(i => i >= 0).Distinct().Count());
         Assert.All(locmin.Where((m, i) => !matched.Contains(i)), m => Assert.True(NearAnEnd(m.Epoch)));
+        var outsideReferences = new System.Collections.Generic.List<(TimeSystem.Time Epoch, double Offset, double Distance)>();
         for (int i = 0; i < all.Count; i++)
         {
             if (matched[i] < 0)
@@ -1090,6 +1467,7 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
                 if (outside.HasValue)
                 {
                     AssertSlowPassMinimum(all[i], outside.Value, tcaBound, missBound, crossing, log);
+                    outsideReferences.Add(outside.Value);
                 }
 
                 continue;
@@ -1100,7 +1478,10 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
 
         if (all.Count > 0)
         {
-            var references = matched.Where(i => i >= 0).Select(i => locmin[i]).ToArray();
+            // Analyze returns the closest listed minimum, one within the TCA bound of an end included, measured against
+            // its CSPICE minimum just outside the window (#628: a window ending at a minimum, the states placing it one
+            // tick inside, with another minimum inside that no seed reached before)
+            var references = matched.Where(i => i >= 0).Select(i => locmin[i]).Concat(outsideReferences).ToArray();
             if (references.Length > 0)
             {
                 AssertSlowPassMinimum(encounter, references.MinBy(m => m.Distance), tcaBound, missBound, crossing, log);
@@ -1120,6 +1501,15 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
             return;
         }
 
+        AssertTheEndWhereTheDistanceGrows(crossing, window, encounter, tcaBound, missBound);
+    }
+
+    // Analyze without a listed minimum: the window end where the distance grows into the window by CSPICE's range rate, the
+    // closer one when both do (either one when their distances lie within the miss bound of each other), or an end within
+    // the TCA bound of a zero of CSPICE's range rate
+    private static void AssertTheEndWhereTheDistanceGrows(CrossingEncounterCase crossing, Window window,
+        EncounterCase encounter, double tcaBound, double missBound)
+    {
         // A zero of CSPICE's range rate, from negative to positive, within the TCA bound of a window end (inside the window
         // or outside it, too near an end for gfdist_c): the states may place it anywhere within that bound, so that the
         // whole window recedes (the start the closest point) or closes (the end) on the states. A window narrower than the

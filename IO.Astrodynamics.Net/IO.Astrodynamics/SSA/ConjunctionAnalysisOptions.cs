@@ -16,9 +16,50 @@ public sealed record ConjunctionAnalysisOptions
     public TimeSpan SampleStep { get; init; } = TimeSpan.FromMinutes(1);
 
     /// <summary>
-    /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection.
+    /// Gets the largest interval that SSA is allowed to subdivide internally while refining event detection: on the
+    /// sampled search, the largest interval between its search epochs; on the polynomial search of two propagations
+    /// (the <see cref="PropagationSolution"/> overloads of <c>Analyze</c> and <c>AnalyzeAll</c>), with
+    /// <see cref="ReadRangeRateOverWindow"/> only, the largest spacing of the reads of the range rate over the window,
+    /// between and at the candidates of the polynomial search (#628), one tick more allowed (about the Earth a step of
+    /// 60 TT seconds may span 60 s and one tick of its TDB labels). Without it the polynomial search does not use it.
     /// </summary>
+    /// <remarks>
+    /// With <see cref="ReadRangeRateOverWindow"/>, a minimum of the distance on two propagations is listed from these reads
+    /// when the range rate changes from negative to positive between two of them; a change of sign over an interval
+    /// narrower than this spacing, which no search from a minimum of the polynomial search reaches, is not guaranteed to be
+    /// found; a smaller spacing resolves a narrower one. Each read costs a state of each propagation (an RK7(8) step inside
+    /// a step), so a larger spacing costs less: the measured costs are in <c>docs/reference/conjunction-assessment.md</c>.
+    /// </remarks>
     public TimeSpan MaximumEventSearchStep { get; init; } = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Gets whether the polynomial search of two propagations (the <see cref="PropagationSolution"/> overloads of
+    /// <c>Analyze</c> and <c>AnalyzeAll</c>) also reads the range rate of the states over the whole window, at every
+    /// candidate of the polynomial search and at most <see cref="MaximumEventSearchStep"/> (and one tick) apart between
+    /// them, and bisects each change from negative to positive between two reads (#628). Default: false (decision 54 of
+    /// #457, S. Guillet, 2026-11-11).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Without it, the minima of the cubic Hermite of the stored steps seed the search, and every close approach listed is
+    /// a minimum of the states (a zero of the range rate from negative to positive, inside the window, ordered, no
+    /// duplicate), but a minimum that no minimum of the Hermite seeds may be lost: two minima within one step of a slow
+    /// co-orbital pass, or a minimum between two candidates where the range rate closes at one and recedes at the next,
+    /// with long (300 s and more) or mixed steps. <c>Analyze</c> then returns another minimum, 1.7 mm to 9.6 cm farther
+    /// in the measured cases (504.837 m for 504.801 m), or a window end (504.658 m for 504.643 m; up to 1.46 m farther). No
+    /// loss was measured on fast passes.
+    /// </para>
+    /// <para>
+    /// With it, those minima are listed, but for a change of sign over an interval narrower than
+    /// <see cref="MaximumEventSearchStep"/> that no search from a seed reaches. It costs a state of each propagation per
+    /// read: over one day of two LEO propagations at the default steps, the dense <c>Analyze</c> takes about 100 ms
+    /// against about 18 ms without it at the default 60 s spacing (see <c>docs/reference/conjunction-assessment.md</c>).
+    /// Ask for it on slow co-orbital formations (relative speeds of metres per second or less) propagated with long or
+    /// mixed steps. The sampled search (<see cref="IO.Astrodynamics.Body.ILocalizable"/> participants, the screening and
+    /// the avoidance options) does not use it.
+    /// </para>
+    /// </remarks>
+    public bool ReadRangeRateOverWindow { get; init; }
 
     /// <summary>
     /// Gets the hard-body radius assumed for the secondary object when it does not expose one directly.
