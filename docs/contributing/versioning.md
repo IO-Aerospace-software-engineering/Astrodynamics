@@ -1172,8 +1172,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
     targets −7 and 8 rad, and from `EquinoctialElements` the targets 5.5, −7 and 8 rad, all within 4.5e-8 s, half a
     tick; a grid of `StateVector`s after the apoapsis (e from 0.001 to 0.999) within 8.4e-12 of the period; about the
     Sun, a comet at e = 0.999999 (a = 1e4 au) from M = −0.02 rad within 9.2e-4 s of 5.02e10 s (`OverflowException`
-    before) and 300 years later within 3.4e-3 s of 5.60e9 s, the rounding of M (one ulp is 4.5e-3 s). Pairs with both
-    anomalies in [0, 2π) keep their epoch bit for bit.
+    before) and 300 years later within 3.4e-3 s of 5.60e9 s, the rounding of M (one ulp is 4.5e-3 s); at e = 0.999999
+    and M = 20 rad, `TimeToRadius(7e6 m)` on the issue's a = 7e6 m within 3.9e-8 s of 5290.815 s (−12 194.735 s before)
+    and `TimeToSphereOfInfluence` about the Moon (a = 5e7 m) within 1.35e-5 s of 973 267.782 s, where one ulp of cos ν
+    moves the time by 2.2e-5 s. Pairs with both anomalies in [0, 2π) keep their epoch bit for bit.
 
 **Changed**
 

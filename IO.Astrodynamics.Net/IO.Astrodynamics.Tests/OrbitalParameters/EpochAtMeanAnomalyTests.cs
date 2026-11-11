@@ -1,6 +1,8 @@
 using System;
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
 using Xunit.Abstractions;
@@ -24,6 +26,12 @@ public class EpochAtMeanAnomalyTests
     // platforms has printed its MEASURE lines; the Earth orbits within half a tick (4.5e-8 s), twice that
     private const double CometTolerance = 7.0e-3;
     private const double EarthTolerance = 1.0e-7;
+
+    // Near e = 1 the true anomaly at the sphere of influence (a = 5e7 m about the Moon) is 1.0e-3 rad from π, where one ulp
+    // of cos ν = (p / r − 1) / e (1.1e-16, IEEE arithmetic) moves the time by 2.2e-5 s and one ulp of ν by 8.9e-8 s
+    // (mpmath): −1.35e-5 s on Linux x64 (2026-11-11). Provisional, twice that rounded up, until the CI of the three
+    // platforms has printed its MEASURE lines
+    private const double MoonSoiTolerance = 3.0e-5;
 
     private readonly ITestOutputHelper _output;
 
@@ -109,11 +117,27 @@ public class EpochAtMeanAnomalyTests
     [Fact]
     public void Comet_EccentricityKeptUnreduced()
     {
-        // e = 0.999999, the one double at which KeplerianElements keeps M as given: it threw OverflowException before #474
+        // e = 0.999999, the one double at which KeplerianElements keeps M as given: before #474 its passage, beyond the epochs a Time holds,
+        // threw (OverflowException in 10.x, ArgumentOutOfRangeException since #625)
         var comet = new KeplerianElements(1e4 * Au, 1.0 - 1e-6, 0.5, 0.3, 0.2, -0.02, TestHelpers.Sun, Epoch, Frames.Frame.ECLIPTIC_J2000);
         Assert.Equal(-0.02, comet.MeanAnomaly());
         var passage = comet.EpochAtMeanAnomaly(IO.Astrodynamics.Constants._2PI - 0.01);
         AssertSeconds(50226428909.255040238, (passage - Epoch).TotalSeconds, CometTolerance, "comet M -0.02");
+    }
+
+    [Fact]
+    public void TimeToRadiusAndSphereOfInfluence_EccentricityKeptUnreduced()
+    {
+        // e = 0.999999 at M = 20 rad, kept unreduced: #474's example to r = a, −12194.735 s before #474; about the Moon to
+        // its sphere of influence, TDB seconds
+        var earthOrbit = new KeplerianElements(7e6, 1.0 - 1e-6, 0.5, 0.1, 0.2, 20.0, TestHelpers.EarthAtJ2000, Epoch, Frames.Frame.ICRF);
+        Assert.Equal(20.0, earthOrbit.MeanAnomaly());
+        AssertSeconds(5290.8147701649110473, TtSeconds(Epoch, earthOrbit.TimeToRadius(7e6)), EarthTolerance, "time to radius e 0.999999");
+
+        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
+        Assert.InRange(moon.SphereOfInfluence - 66482232.21562789, -3e-8, 3e-8);
+        var moonOrbit = new KeplerianElements(5e7, 1.0 - 1e-6, 0.5, 0.1, 0.2, 20.0, moon, Epoch, Frames.Frame.ICRF);
+        AssertSeconds(973267.78183257802201, (moonOrbit.TimeToSphereOfInfluence() - Epoch).TotalSeconds, MoonSoiTolerance, "time to SOI e 0.999999");
     }
 
     [Fact]
