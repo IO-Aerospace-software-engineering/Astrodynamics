@@ -62,7 +62,9 @@ internal sealed class OccultationEvaluator
             throw new ArgumentException("The observer, the front body and the back body must be distinct.");
         }
 
-        _reader = new ApparentPositionReader(observer, aberration, false, false);
+        // A star is a direction, read at the epoch, as the field-of-view search reads it (#517): its light time would read
+        // it, and the reference body of the observer, years before the epoch (#533)
+        _reader = new ApparentPositionReader(observer, aberration, false, true);
         _front = new OccultationBodyModel(front, frontShape, frontFrame);
         _back = new OccultationBodyModel(back, backShape, backFrame);
 
