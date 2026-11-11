@@ -1155,6 +1155,25 @@ A major version, because it breaks the API: members deprecated for removal in 11
     the site built from its coordinates now agree within 4.96e-3 s (4.1 s and 5.2 s before): `gfilum_c` takes the
     normal of a point above the ellipsoid from `surfnm_c`, 0.11″ from the geodetic normal of the library at DSS-13
     ([Sites](../reference/sites.md#window-searches)).
+- **`EpochAtMeanAnomaly` came one period late from a `StateVector`, and could be in the past at e = 0.999999** ([#474](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/474)).
+  It added 2π to the difference of the anomalies at most once, so it was right only when both lay in [0, 2π): from a
+  `StateVector`, whose mean anomaly is in (−π, π), a target between the position and the periapsis came one period late
+  (12 % of the pairs of a grid of the issue), and so did the epoch of `ToStateVector(trueAnomaly)`; a target outside
+  [0, 2π) gave a past epoch or one a period late; at e = 0.999999, where `KeplerianElements` keeps its mean anomaly
+  unreduced, the epoch could be in the past or throw `OverflowException` (`TimeToRadius` and `TimeToSphereOfInfluence`
+  with it). On an ellipse the difference is now reduced modulo 2π: the next passage at or after the epoch, whatever the
+  turn of either anomaly; an open orbit still passes once. A passage beyond the epochs a `Time` holds throws
+  `ArgumentOutOfRangeException`. `KeplerianElements` still keeps the mean anomaly at e = 0.999999 (`MeanAnomaly()`,
+  `AtEpoch`, the OPM export), the open choice of the issue.
+  - **Measured** (Linux x64, 2026-11-11) against ((M_t − M_0) mod 2π)/n at 60 digits
+    (`tools/epoch_at_mean_anomaly/epoch_at_mean_anomaly_reference.py`, `EpochAtMeanAnomalyTests`), about the Earth in
+    TT seconds: from the `StateVector` of a = 1e7 m, e = 0.3, M = 5 rad, the passage at 5.5 rad 791.956 s and at
+    ν = 300° 1104.351 s later (10 743.970 s and 11 056.365 s before); from `KeplerianElements` at M = 1 rad the
+    targets −7 and 8 rad, and from `EquinoctialElements` the targets 5.5, −7 and 8 rad, all within 4.5e-8 s, half a
+    tick; a grid of `StateVector`s after the apoapsis (e from 0.001 to 0.999) within 8.4e-12 of the period; about the
+    Sun, a comet at e = 0.999999 (a = 1e4 au) from M = −0.02 rad within 9.2e-4 s of 5.02e10 s (`OverflowException`
+    before) and 300 years later within 3.4e-3 s of 5.60e9 s, the rounding of M (one ulp is 4.5e-3 s). Pairs with both
+    anomalies in [0, 2π) keep their epoch bit for bit.
 
 **Changed**
 
