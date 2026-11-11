@@ -2,7 +2,7 @@
 
 On an ellipse the next passage at the mean anomaly M_t after an epoch at the mean anomaly M_0 is
 t = ((M_t - M_0) mod 2pi) / n, n = sqrt(mu / a^3), whatever the turn of either anomaly (Vallado, Fundamentals of
-Astrodynamics and Applications, 4th ed., section 2.2, Kepler's equation, to be verified by S. Guillet); at a true anomaly nu, M_t = E - e sin E with
+Astrodynamics and Applications, 4th ed., section 2.2, Kepler's equation, confirmed by S. Guillet, 2026-11-11); at a true anomaly nu, M_t = E - e sin E with
 tan(E/2) = sqrt((1 - e)/(1 + e)) tan(nu/2). The epochs of the tests are J2000 TDB; about the Earth the library counts TT
 seconds, about the Sun TDB seconds, and so does the reference: it is the elapsed time of the two-body motion.
 
