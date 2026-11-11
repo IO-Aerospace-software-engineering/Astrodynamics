@@ -1164,6 +1164,12 @@ A major version, because it breaks the API: members deprecated for removal in 11
   the issue against GMAT R2026a (components within 1.9e-16, P within 9.3e-10 m, Linux), and the accessor methods
   against the properties.
 
+- **The export example of the OPM page did not compile** ([#557](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/557)). It called
+  `spacecraft.ToOpm(epoch, Frame.ICRF)`, whose first parameter is the originator and which has no frame parameter
+  (CS1503 twice). It now calls `spacecraft.ToOpm(epoch: epoch)`, and [OPM](../reference/opm.md#spacecraft-export) gives
+  the signature, says that the state is written in the frame of the spacecraft's initial orbital parameters and that a
+  `CosparId` is required. The example compiles and runs: the state read back from the file is the state written.
+
 **Changed**
 
 - **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its
