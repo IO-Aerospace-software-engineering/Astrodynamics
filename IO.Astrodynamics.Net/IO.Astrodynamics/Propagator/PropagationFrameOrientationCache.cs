@@ -78,7 +78,7 @@ public sealed class PropagationFrameOrientationCache
             {
                 _unavailable ??= new bool[_gridSize];
                 _unavailable[i] = true;
-                _points[i] = new OrientationPoint(Quaternion.Zero, Vector3.Zero, epochSec);
+                _points[i] = new OrientationPoint(Quaternion.Identity, Vector3.Zero, epochSec);
                 continue;
             }
 

@@ -189,9 +189,21 @@ namespace IO.Astrodynamics.Tests.Math
         }
 
         [Fact]
-        public void Zero()
+        public void Identity_IsTheIdentityRotation_AndCannotBeAssigned()
         {
-            Assert.Equal(new Quaternion(1.0, 0.0, 0.0, 0.0), Quaternion.Zero);
+            // #571: the identity is (1, 0, 0, 0), the default quaternion, and a vector rotated by it is the same vector, bit
+            // for bit (q v q* with w = 1 and a zero vector part is exact); the field is init-only, so that no caller can
+            // change it (Quaternion.Zero, its former name, was assignable)
+            Assert.Equal(new Quaternion(1.0, 0.0, 0.0, 0.0), Quaternion.Identity);
+            Assert.Equal(new Quaternion(), Quaternion.Identity);
+            var v = new Vector3(1.0, -2.0, 3.0);
+            Assert.Equal(v, v.Rotate(Quaternion.Identity));
+
+            var field = typeof(Quaternion).GetField(nameof(Quaternion.Identity));
+            Assert.NotNull(field);
+            Assert.True(field.IsStatic);
+            Assert.True(field.IsInitOnly);
+            Assert.Null(typeof(Quaternion).GetField("Zero"));
         }
 
         [Fact]

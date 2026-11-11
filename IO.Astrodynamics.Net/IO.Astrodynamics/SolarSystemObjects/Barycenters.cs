@@ -8,16 +8,16 @@ namespace IO.Astrodynamics.SolarSystemObjects;
 
 public static class Barycenters
 {
-    public static Barycenter SOLAR_SYSTEM_BARYCENTER;
-    public static Barycenter MERCURY_BARYCENTER;
-    public static Barycenter VENUS_BARYCENTER;
-    public static Barycenter EARTH_BARYCENTER;
-    public static Barycenter MARS_BARYCENTER;
-    public static Barycenter JUPITER_BARYCENTER;
-    public static Barycenter SATURN_BARYCENTER;
-    public static Barycenter URANUS_BARYCENTER;
-    public static Barycenter NEPTUNE_BARYCENTER;
-    public static Barycenter PLUTO_BARYCENTER;
+    public static readonly Barycenter SOLAR_SYSTEM_BARYCENTER;
+    public static readonly Barycenter MERCURY_BARYCENTER;
+    public static readonly Barycenter VENUS_BARYCENTER;
+    public static readonly Barycenter EARTH_BARYCENTER;
+    public static readonly Barycenter MARS_BARYCENTER;
+    public static readonly Barycenter JUPITER_BARYCENTER;
+    public static readonly Barycenter SATURN_BARYCENTER;
+    public static readonly Barycenter URANUS_BARYCENTER;
+    public static readonly Barycenter NEPTUNE_BARYCENTER;
+    public static readonly Barycenter PLUTO_BARYCENTER;
 
     static Barycenters()
     {

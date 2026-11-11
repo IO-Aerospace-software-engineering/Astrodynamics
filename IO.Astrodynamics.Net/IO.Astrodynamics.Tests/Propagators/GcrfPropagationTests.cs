@@ -63,9 +63,9 @@ public class GcrfPropagationTests
         {
             var toIcrf = Frames.Frame.GCRF.ToFrame(Frames.Frame.ICRF, epoch);
             var fromIcrf = Frames.Frame.ICRF.ToFrame(Frames.Frame.GCRF, epoch);
-            Assert.Equal(Quaternion.Zero, toIcrf.Rotation);
+            Assert.Equal(Quaternion.Identity, toIcrf.Rotation);
             Assert.Equal(Vector3.Zero, toIcrf.AngularVelocity);
-            Assert.Equal(Quaternion.Zero, fromIcrf.Rotation);
+            Assert.Equal(Quaternion.Identity, fromIcrf.Rotation);
             Assert.Equal(Vector3.Zero, fromIcrf.AngularVelocity);
         }
     }
@@ -159,7 +159,7 @@ public class GcrfPropagationTests
         {
             // The impulse fired and the nadir attitude followed it
             Assert.Single(gcrfSpacecraft.ExecutedManeuvers.OfType<ApogeeHeightManeuver>());
-            Assert.NotEqual(Quaternion.Zero, gcrfSpacecraft.Frame.GetStateOrientationToICRF(Window.EndDate).Rotation);
+            Assert.NotEqual(Quaternion.Identity, gcrfSpacecraft.Frame.GetStateOrientationToICRF(Window.EndDate).Rotation);
         }
     }
 

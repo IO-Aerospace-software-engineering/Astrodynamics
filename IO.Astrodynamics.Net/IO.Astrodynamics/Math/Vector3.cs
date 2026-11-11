@@ -109,7 +109,7 @@ namespace IO.Astrodynamics.Math
             var angle = System.Math.Abs(this.Angle(vector));
             if (angle <= double.Epsilon)
             {
-                return Quaternion.Zero;
+                return Quaternion.Identity;
             }
 
             var mag1 = Magnitude();

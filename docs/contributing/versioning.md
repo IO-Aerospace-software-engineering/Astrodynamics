@@ -1371,6 +1371,16 @@ A major version, because it breaks the API: members deprecated for removal in 11
   a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached outside the epochs
   of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite sphere of
   influence throws `InvalidOperationException`; a circular orbit returns its epoch.
+- **Breaking: `Quaternion.Identity` replaces `Quaternion.Zero`, and every public static field of the library is
+  `readonly`** ([#571](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/571)). `Quaternion.Zero`
+  was the identity (1, 0, 0, 0) under the name of the zero quaternion, and an assignable field: after
+  `Quaternion.Zero = new Quaternion(0, 1, 0, 0)` anywhere in a process, `Frame.ICRF.ToFrame(Frame.ICRF, t)` was a 180°
+  rotation about x, and so was every identity of the library (frames, `Vector3.To`, the attitudes, the initial attitude
+  of a propagation). It is now `public static readonly Quaternion Identity`, the same value; there is no zero-quaternion
+  constant. The 411 `NaifObject`, `CelestialBody` and `Barycenter` fields of `SolarSystemObjects` (`PlanetsAndMoons`,
+  `Stars`, `Barycenters`, `Asteroids`, `Comets`, `GroundStations`, `LagrangePoints`) are `static readonly`, their
+  values unchanged. Migration: replace `Quaternion.Zero` with `Quaternion.Identity` (or `new Quaternion()`); code that
+  assigned one of these fields no longer compiles, so build the value it held in a variable of its own.
 
 **Removed**
 
@@ -1381,6 +1391,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   ([#515](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/515)).
 - **`LowThrustManeuver`.** It was never implemented: every member threw `NotImplementedException`. It was marked
   `[Obsolete]` in 10.1.0 (see its Deprecated entry). Finite thrust is planned as a separate feature.
+- **`Quaternion.Zero`**, the identity under another name and an assignable field: use `Quaternion.Identity` (Changed
+  above, [#571](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/571)).
 
 ### 10.2.0-preview-1
 

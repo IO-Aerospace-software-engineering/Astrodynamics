@@ -221,7 +221,7 @@ public class Frame : IEquatable<Frame>
     {
         if (targetFrame == this)
         {
-            return new StateOrientation(Quaternion.Zero, Vector3.Zero, epoch, targetFrame);
+            return new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, targetFrame);
         }
 
         var sourceToICRF = GetStateOrientationToICRF(epoch);
@@ -250,7 +250,7 @@ public class Frame : IEquatable<Frame>
     {
         if (targetFrame == this)
         {
-            return Quaternion.Zero;
+            return Quaternion.Identity;
         }
 
         var sourceToICRF = GetRotationToICRF(epoch);
@@ -300,7 +300,7 @@ public class Frame : IEquatable<Frame>
 
         if (GetType() == typeof(Frame) && Name == ICRF.Name)
         {
-            rotation = Quaternion.Zero;
+            rotation = Quaternion.Identity;
             angularVelocity = Vector3.Zero;
             return;
         }
@@ -316,7 +316,7 @@ public class Frame : IEquatable<Frame>
     /// </summary>
     /// <remarks>
     /// ICRF to ICRF is the identity: SPICE returns exactly (1, 0, 0, 0), bit for bit
-    /// (<c>FrameRotationTests.IcrfToIcrf_IsTheIdentityBitForBit</c>), which is <see cref="Quaternion.Zero"/>; reading it
+    /// (<c>FrameRotationTests.IcrfToIcrf_IsTheIdentityBitForBit</c>), which is <see cref="Quaternion.Identity"/>; reading it
     /// would otherwise store an orientation per epoch. The cache is used only by a frame whose
     /// <see cref="GetStateOrientationToICRF(Time)"/> reads it (<see cref="ReadsOrientationCache"/>), so that the two
     /// methods agree for every frame.
@@ -332,7 +332,7 @@ public class Frame : IEquatable<Frame>
 
         if (GetType() == typeof(Frame) && Name == ICRF.Name)
         {
-            return Quaternion.Zero;
+            return Quaternion.Identity;
         }
 
         return GetStateOrientationToICRF(date).Rotation;

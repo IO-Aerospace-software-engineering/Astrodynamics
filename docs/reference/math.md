@@ -47,7 +47,11 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 
 | Constant | Description |
 |----------|-------------|
-| `Quaternion.Zero` | Identity/zero quaternion |
+| `Quaternion.Identity` | The identity rotation (1, 0, 0, 0), equal to `new Quaternion()`; `static readonly` |
+
+`Quaternion.Identity` replaces `Quaternion.Zero` of the versions before 11.0.0, which was the identity under another
+name and an assignable field ([#571](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/571)).
+There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quaternion(0, 0, 0, 0)` builds it.
 
 ### Constructors
 

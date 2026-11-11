@@ -29,6 +29,6 @@ public sealed class GcrfFrame : Frame
             return OrientationCache.GetOrientation(date);
 
         return _stateOrientationsToICRF.GetOrAdd(date, _ =>
-            new StateOrientation(Quaternion.Zero, Vector3.Zero, date, this));
+            new StateOrientation(Quaternion.Identity, Vector3.Zero, date, this));
     }
 }
