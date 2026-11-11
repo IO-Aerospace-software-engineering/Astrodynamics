@@ -750,13 +750,22 @@ with SRP. Thresholds of the specification: R1 below 1e-7, R2 to R5 below 1e-4 ou
 | Case | Φ_rr | Φ_rv | Φ_vr | Φ_vv | Ψ, position | Ψ, velocity | In the penumbra |
 |------|------|------|------|------|-------------|-------------|-----------------|
 | R1 | 1.3e-8 | 1.6e-8 | 1.4e-8 | 1.7e-8 | | | |
-| R2 | 3.0e-8 | 1.3e-8 | 3.0e-8 | 1.2e-8 | Cd 1.2e-7 | Cd 1.2e-7 | |
-| R3 | 2.3e-7 | 2.5e-7 | 2.3e-7 | 2.5e-7 | Cr 1.6e-5 | Cr 2.3e-4 (local, a record) | 30 crossings: Φ 2.3e-7 to 2.5e-7, Ψ_Cr 7.9e-6 |
-| R4 | 9.0e-9 | 2.4e-9 | 8.9e-9 | 2.2e-9 | Cr 1.4e-6 | Cr 1.6e-8 | 2 crossings: Φ 5.1e-10 to 5.7e-9, Ψ_Cr 5.1e-9 |
-| R5 | 2.4e-7 | 2.4e-7 | 2.4e-7 | 2.4e-7 | Cd 1.4e-7 | Cd 1.4e-7 | |
+| R2 | 1.6e-8 | 9.1e-9 | 1.6e-8 | 8.2e-9 | Cd 1.1e-7 | Cd 1.1e-7 | |
+| R3 | 6.3e-7 | 5.9e-7 | 6.4e-7 | 5.9e-7 | Cr 1.3e-5 | Cr 1.9e-4 (local, a record) | 30 crossings: Φ 5.9e-7 to 6.3e-7, Ψ_Cr 1.1e-5 |
+| R4 | 1.1e-8 | 2.8e-9 | 1.8e-8 | 2.5e-9 | Cr 1.4e-6 | Cr 1.6e-8 | 2 crossings: Φ 2.2e-10 to 3.6e-9, Ψ_Cr 3.5e-9 |
+| R5 | 6.0e-7 | 3.8e-7 | 6.0e-7 | 3.8e-7 | Cd 6.3e-8 | Cd 6.5e-8 | |
 
 Worst over the arc, outside the penumbra, each relative to the local reference (`StmValidationTests`). R1 to R5
-measured again on 2026-11-01 with the TT time argument of
+measured again on 2026-11-11 with the nearest tick of
+[#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (Linux CI job 130260609740, and
+the same figures in a session the same day), another draw of the noise of the central differences: about half of the
+TDB labels at which the forces read the bodies, the orientation and the UTC of the drag move by one tick, the Φ under
+test by less than 3.5e-9, the references by the whole figure (R2 Φ_rr 3.0e-8 to 1.6e-8; R4 Φ_vr 8.9e-9 to 1.8e-8; R3 Φ
+2.3e-7 to 2.5e-7 before, 5.9e-7 to 6.4e-7 after; R5 Φ 2.4e-7 to 6.0e-7; R1, whose forces do not read the time, unchanged
+bit for bit). The records of the Validation category hold and stay (decision 53 of
+[#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), S. Guillet, 2026-11-11): over
+eleven starts moved by −5 to +5 ticks, the noise of Φ of the full degree moves by up to a factor of 3.3 (R4) and 7.7
+(R2), so one draw does not set them. Measured on 2026-11-01 with the TT time argument of
 [#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501) (Linux), another draw of the noise
 of the central differences (R4 Φ_rr 6.1e-8 to 9.0e-9; R3 Φ 1.9e-7 to 2.1e-7 before, 2.3e-7 to 2.5e-7 after). Before,
 R1 as measured on 2026-10-16 and R2 to R5 measured again on 2026-10-23 with the constants of the geopotential of
@@ -799,7 +808,8 @@ local minimum, 7.9e-4 m/s per unit Cr, and the local figure follows the step of 
 **Steps of the reference** (`WholePropagationStepStudyTests`, `LongValidation`): position steps from 1 cm to 1 km (the velocity step 1e-3
 s⁻¹ times the position step), and the coefficients from 0.1 % to 30 %. On the small steps the integration noise of the
 perturbed propagations dominates, on the large ones the δ² truncation. The chosen steps are within a factor of 2 of the
-smallest error of each sweep, at the end of the arc: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 %
+smallest error of each sweep, at the end of the arc, except the sweeps published and not asserted and the coefficients
+held to a record (Ψ_Cd of the eclipsing case since #413, of R5 since #625), below: 10 m and 1 cm/s (R1 to R4, Eclipsing), 1 m and 1 mm/s (R5); Cd 1 %
 (R2), 5 % (R5), 30 % (Eclipsing); Cr 10 % (R3, R4), 30 % (Eclipsing). For Φ each sweep has its minimum between the two
 sides. For Ψ two sweeps show the noise floor of the reference rather than a plateau: Ψ_Cr of R3, which is not
 monotone, and Ψ_Cr of the eclipsing case. Since
@@ -850,6 +860,28 @@ R3 1.8e-3, 3.7e-4, 3.1e-5, 9.2e-7, 1.3e-5 and 8.8e-6, the chosen 10 % now the sm
 4.9e-5 and 1.1e-4, the chosen 1 % 2.3 times the 0.1 %; Ψ_Cr of the eclipsing case 2.5e-3, 1.2e-3, 4.4e-4, 2.3e-4,
 9.3e-5 and 1.2e-5. The chosen steps stay.
 
+With the nearest tick of [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (run
+42945251492 of `long-validation.yml`, 2026-11-11), which moves by one tick about half of the TDB labels at which the
+forces read the time (R1, whose forces do not, is unchanged bit for bit), the smallest error on Φ at 1e-14 and at 1e-13
+is R1 1.7e-8 and 2.3e-8 (unchanged), R2 1.5e-8 and 1.6e-7, R3 1.3e-7 and 9.7e-7, R4 9.6e-9 and 3.6e-8 (both at 10 m,
+5.6e-8 at 100 m), R5 5.9e-7 and 5.5e-7 (at 1e-13 below 1e-14, which R5 allows as it is held to its record of 1.7e-6),
+the eclipsing case 3.3e-8 and 1.5e-7 (100 m). At 1e-14 every chosen step of Φ is the smallest of its sweep. Ψ_Cd of R2
+at 1 % is 1.1e-7, now the smallest of its sweep; Ψ_Cd of the eclipsing case at 30 % 1.2e-7, against its record of
+4.1e-7. Ψ_Cd of R5 is 6.4e-6, 2.7e-9, 5.2e-8, 1.9e-7, 8.0e-7 and 1.8e-6 from 0.1 % to 30 % (8.2e-6, 2.2e-7, 7.7e-8,
+1.9e-7, 8.1e-7 and 1.8e-6 before): the chosen 5 % is 19 times the 1 %, a cancellation in the reference, while the tested
+Ψ_Cd moves by 8.6e-10 and its references by 2.2e-7 at 1 % and 3.8e-8 at 5 %. Over eleven starts moved by −5 to +5
+ticks (Linux, measured in a session the same day), the 1 % is 7.2e-8 to 7.1e-7 except there, and the 5 % 4.6e-8 to
+2.0e-7, the smallest of its sweep in eight of them; under the truncation before #625, five starts moved by −2 to +2
+ticks gave at most 3.0e-7 at 5 %. Ψ_Cd of R5 is therefore held at its chosen 5 % to a record, as the eclipsing case:
+twice the worst at 5 % over the eleven starts (2.04e-7, three ticks later), rounded up at the second significant digit,
+4.1e-7 (decision 53 of [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457),
+S. Guillet, 2026-11-11). The record no longer checks that 5 % lies on the plateau (10 %, 1.9e-7 to 2.1e-7 over the
+starts, would pass it too), the trade #413 accepted for the eclipsing case; the sweep is published. `long-validation.yml`
+runs on Linux only, and so do the starts. The sweeps published and not asserted, from 0.1 % to 30 %: Ψ_Cr of R3 7.8e-4,
+6.3e-4, 6.8e-5, 2.2e-6, 7.0e-6 and 7.0e-6, the chosen 10 % the smallest; Ψ_Cr of R4 3.4e-7, 2.5e-8, 1.2e-9, 2.6e-9,
+6.6e-9 and 2.6e-9, the chosen 10 % 2.2 times the smallest; Ψ_Cd of R2 1.6e-7, 1.1e-7, 3.0e-6, 1.2e-5, 4.9e-5 and 1.1e-4;
+Ψ_Cr of the eclipsing case 8.8e-3, 4.2e-4, 6.4e-4, 2.6e-4, 4.8e-5 and 5.5e-6. The chosen steps stay.
+
 **Start of the reference.** A propagation takes a state vector given at the start of its window as it is, so each
 reference propagation starts from exactly its perturbed state. Until
 [#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398), the initial state went through
@@ -860,21 +892,32 @@ step 9). The true anomaly fixed alone, the round trip would return the state to 
 enough for R4 (Φ 3.3e-8), but not for two references: Ψ_Cr of R3, which is resolved only to the noise of its reference,
 and the test after a maneuver, which compares the states bit for bit. Hence the state taken as it is: R4 Φ 2.8e-8.
 
-**Across a maneuver** (`ManeuverStmValidationTests`, Eclipsing case; measured again on 2026-10-24, after
+**Across a maneuver** (`ManeuverStmValidationTests`, Eclipsing case; measured again on 2026-11-11 with the nearest
+tick of [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625), Linux CI job
+130260609740; the figures of 2026-11-01, with the TT time argument of
+[#501](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/501), in parentheses). Φ and Ψ model
+the burn in open loop: the epoch and the ΔV are those of the nominal trajectory. Against a reference that fires that
+nominal burn (fixed in epoch and ΔV), the errors are as follows:
+
+- Φ: 5.2e-8 at most per block, 4.6e-8 in the 7 penumbra crossings (3.2e-8 and 3.2e-8), the latter held to a record of
+  6.4e-8;
+- Ψ_Cd: 1.2e-7 over the arc relative to its largest value (1.3e-6), 1.4e-6 relative to the local value after the burn
+  (1.8e-6) and 1.9e-7 in the penumbra (1.8e-6);
+- Ψ_Cr: 3.7e-6 in position and 6.2e-6 in velocity over the arc (3.3e-6 and 5.7e-6), 3.5e-5 relative to the local value
+  after the burn (3.9e-5) and 8.5e-6 in the penumbra (7.9e-6), records rather than F1 figures (1.2e-5, 7.8e-5 and
+  1.6e-5).
+
+Another draw of the noise of the references: about half of the TDB labels at which the forces read the time move by
+one tick. The records hold and stay (decision 53 of
+[#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457), S. Guillet, 2026-11-11), as for
+`StmValidationTests` above. Measured on 2026-10-24, after
 [#423](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/423),
 [#434](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/434) and the density of
 [#411](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/411) and
-[#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409); the figures of 2026-10-17 in
-parentheses). Φ and Ψ model the burn in open loop: the epoch
-and the ΔV are those of the nominal trajectory. Against a reference that fires that nominal burn (fixed in epoch and
-ΔV), the errors are as follows:
-
-- Φ: 3.2e-8 at most per block, 3.0e-8 in the 7 penumbra crossings (5.5e-8 and 5.2e-8; published as a record, 1.1e-7;
-  2.9e-8 before #398);
-- Ψ_Cd: 1.1e-7 over the arc relative to its largest value (7.5e-8), and 1.4e-6 relative to the local value after the
-  burn (3.7e-6);
-- Ψ_Cr: 1.6e-6 in position and 2.3e-6 in velocity over the arc (5.2e-5 and 9.4e-5; 4.4e-6 before #398), and 1.5e-5
-  relative to the local value after the burn (3.7e-4; 1.3e-5 before #398), records rather than F1 figures.
+[#409](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/409): Φ 3.2e-8 at most per block,
+3.0e-8 in the penumbra; Ψ_Cd 1.1e-7 over the arc and 1.4e-6 after the burn; Ψ_Cr 1.6e-6 and 2.3e-6 over the arc and
+1.5e-5 after the burn. On 2026-10-17: Φ 5.5e-8 and 5.2e-8 (2.9e-8 before #398); Ψ_Cd 7.5e-8 and 3.7e-6; Ψ_Cr 5.2e-5 and
+9.4e-5 over the arc (4.4e-6 before #398) and 3.7e-4 after the burn (1.3e-5 before #398).
 
 Since [#398](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/398) the propagations start
 from exactly the state given, about 1e-9 m from where they started before. That shift alone moves the reference of
@@ -882,9 +925,10 @@ from exactly the state given, about 1e-9 m from where they started before. That 
 reference moved by 2e-9 m along x takes Ψ_Cr over the arc from 4.4e-6 to 9.3e-6, locally after the burn from 1.3e-5 to
 5.4e-5, and Φ from 2.9e-8 to 4.3e-8. The Ψ_Cr under test does not move: with Φ and Ψ in the step control it is the same
 before and after the fix to 2.5e-10 of its largest value, while its reference moves by up to 6.7e-5. Ψ_Cr is therefore
-held to F1 against the same propagation at 1e-14 with Φ and Ψ in the step control, without central differences: 9.8e-11
-in position and 1.8e-10 in velocity over the arc, 5.2e-7 at most relative to the local value wherever it is not zero
-(2.1e-12, 3.0e-12 and 1.2e-8 on 2026-10-17).
+held to F1 against the same propagation at 1e-14 with Φ and Ψ in the step control, without central differences: 2.2e-11
+in position and 3.9e-11 in velocity over the arc, 6.5e-8 at most relative to the local value wherever it is not zero
+(1.0e-9, 1.8e-9 and 4.3e-6 on 2026-11-01; 9.8e-11, 1.8e-10 and 5.2e-7 on 2026-10-24; 2.1e-12, 3.0e-12 and 1.2e-8 on
+2026-10-17).
 Against the central differences it is published as a record, over the arc and locally.
 
 Ψ starts from zero (in the shadow for Cr, at 1000 km for Cd), where the reference does not resolve it relative to its
@@ -912,6 +956,22 @@ in `StmValidationTests`): its records at degrees 8, 20 and 70 are set at 6.1e-8 
 2026-10-23). With the TT time argument of #501 (run 41268727370 of `long-validation.yml`, 2026-11-01), R4 is 1.2e-6 at
 degree 2 and 9.0e-9 at degrees 8, 20 and 70, the F1 noise of R4 again (Φ_rr 6.1e-8 to 9.0e-9 in `StmValidationTests`),
 and its records are set at 9.0e-9; R2 2.0e-3, 8.5e-4 and 3.0e-8, within its records.
+
+With the nearest tick of [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (run
+42945251492 of `long-validation.yml`, 2026-11-11, and the same figures in a session the same day), R4 is 1.2e-6 at
+degree 2 and 1.8e-8 at degrees 8, 20 and 70, and R2 2.0e-3, 8.5e-4 and 1.6e-8 at degrees 2, 8 and 20 and at the full
+degree: the F1 noise of the reference again, which moves the same way on the full degree in `StmValidationTests` (R4
+9.0e-9 to 1.8e-8, R2 3.0e-8 to 1.6e-8), the tested Φ moving by less than 3.5e-9. Over eleven starts moved by −5 to +5
+ticks (Linux, in a session), R4 from degree 8 spans 1.0e-8 to 3.3e-8 and R2 at the full degree 1.6e-8 to 1.2e-7 (three
+ticks later; 4.2e-8 at worst in the ten others), while degree 2 of R4 stays within 1.14e-6 to 1.21e-6 and R2 at degrees
+2 and 8 does not move: the truncation of the partials. Under the truncation before #625 a start moved by one tick
+already gave R4 2.1e-8 and 5.3e-8, outside the band of the record 9.0e-9, which one draw had set. The degrees whose
+partials are those of the full degree (R4 at 8, 20 and 70, R2 at 20 and 10) are therefore held below an upper record,
+twice the worst of the eleven starts rounded up at the second significant digit, 6.7e-8 for R4 and 2.5e-7 for R2, with
+no lower bound (decision 53 of [#457](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/457),
+S. Guillet, 2026-11-11); the other degrees keep their band of a factor of 2. This gives up the lower bound, which
+flagged a stale record, and widens the upper bounds from 1.8e-8 to 6.7e-8 (R4) and from 9.1e-8 to 2.5e-7 (R2).
+`long-validation.yml` runs on Linux only, and so do the starts.
 
 In LEO the partials keep a contribution of every degree, so a reduced degree leaves Φ above the threshold after one day
 and saves nothing. At GEO the high degrees vanish, and from degree 8 Φ is that of the full degree, a third cheaper.

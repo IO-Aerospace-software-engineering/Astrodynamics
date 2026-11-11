@@ -337,7 +337,12 @@ A major version, because it breaks the API: members deprecated for removal in 11
     search moves by 9.6e-4 s between the propagated states and their kernels; 802 LT 6.7e-6 s, LT+S 8.84e-5 s), the miss
     of a conjunction read through stored states (3.12e-9 m, a few ulps of a LEO position), and a Velocity-Verlet output a
     tick before an impulse, which reads the earlier arc, whose closing state carries the label of the impulse, the
-    nearest tick of its instant: half a tick of motion at most (3.96e-4 m at 8.6 km/s). A coverage start from 1983 to J2000 or
+    nearest tick of its instant: half a tick of motion at most (3.96e-4 m at 8.6 km/s). The noise of the central
+    differences of the F1 validation is drawn again (run 42945251492 of `long-validation.yml`), so the full degree of
+    `GeopotentialPartialsDegreeTests` is held below an upper record (6.7e-8 for R4, 2.5e-7 for R2) and Ψ_Cd of R5 of
+    `WholePropagationStepStudyTests` at its chosen 5 % to a record of 4.1e-7, each twice the worst of eleven starts moved
+    by −5 to +5 ticks, where a factor of 2 about one draw broke, and the records of `StmValidationTests` and
+    `ManeuverStmValidationTests` stay (decision 53 of #457, S. Guillet, 2026-11-11). A coverage start from 1983 to J2000 or
     an end from 2000 to 2017 given as seconds, which the truncation put inside, now falls outside about a third of the
     time, and a read there throws: the coverage of ITRF93 in the test kernels starts at −43135.816087188054 s, whose
     nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it), so the test of the orientation
