@@ -1154,7 +1154,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   operating mass of 450 t (1 t threw `ArgumentOutOfRangeException`). Both compile and run: the Moon at 399 039 km from
   the site at 2024-01-01T12:00 TDB, as SPICE `spkcpo` gives it (399 039.486 km), and 7 windows of the ISS within
   2000 km of DSS-13 on 2024-06-03. The tables list the ten members as declared, each with its symbol, and the geometry
-  tutorial names `Lower` and the negations.
+  tutorial names `Lower` and the negations. `DeveloperGuideExamplesSmokeTests` runs both examples on the packed package:
+  the Moon's range within 1e-3 m of `spkcpo` (3.1e-5 m on Linux), and the TLE example's windows found.
 
 - **The equinoctial snippet of the orbit-creation tutorial did not compile, and two pages called the elements free of
   singularity for every equatorial orbit** ([#465](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/465)). The
