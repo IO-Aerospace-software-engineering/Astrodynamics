@@ -866,9 +866,11 @@ public class ConjunctionKernelAndWindowTests : IClassFixture<CrossingEncounterCa
     // deep, the states and their SPK of the default steps place the zero 2.1 ms apart (the library within 7.4e-6 s of the
     // zero of the states, from a scan of their range rate). A CSPICE minimum or a listed one within the TCA bound of a
     // window end may be on either side of it for the states and their SPK.
-    // The passes of #628, whose minima no seed reached before (mixed steps, fixed 600 s steps), PROVISIONAL: measured on
-    // Linux x64 only (2026-11-10), by this test and by the probe of #628 (843 to 1084 windows per propagation, gfdist_c
-    // refined by bisection of spkezr_c's range rate to 1e-10 s), until the CI of the three platforms:
+    // The passes of #628, whose minima no seed reached before (mixed steps, fixed 600 s steps), measured by this test on
+    // Linux x64 (2026-11-10) and by the probe of #628 (843 to 1084 windows per propagation, gfdist_c refined by bisection
+    // of spkezr_c's range rate to 1e-10 s); the CI of Linux x64, Windows x64 and macOS arm64 (run 43000949510, 2026-11-11,
+    // by default and with the reads over the window) gives this test's figures on the three platforms, but CW600's miss
+    // on Windows x64, 1.278e-5 m:
     //                                         this test                 the probe                 bound
     //   CWM (y0 = 1500 m, default and 60 s)   3.543e-5 s  8.430e-7 m    3.546e-5 s  8.433e-7 m    7.1e-5 s  1.7e-6 m
     //   CWM90 (y0 = 1490 m, default and 60 s) 6.057e-6 s  6.567e-7 m    6.066e-6 s  6.564e-7 m    1.3e-5 s  1.4e-6 m
