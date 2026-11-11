@@ -356,34 +356,49 @@ public class Frame : IEquatable<Frame>
         return Name;
     }
 
+    /// <summary>
+    /// Whether <paramref name="other"/> is the same frame: a frame is its name, compared ignoring case as SPICE compares
+    /// frame names (<c>namfrm_c</c>), whatever the instance or its type (#562). <c>new Frame("TEME")</c> is
+    /// <see cref="TEME"/>, <c>new Frame("gcrf")</c> is <see cref="GCRF"/>, <c>new Frame("J2000")</c> is <see cref="ICRF"/>.
+    /// </summary>
+    /// <remarks>
+    /// <c>==</c>, <c>!=</c>, <see cref="Equals(object)"/> and <see cref="GetHashCode"/> are this relation, so that the
+    /// operators, the collections and the comparers agree. The name does not carry the Earth orientation parameters of a
+    /// <see cref="TirsFrame"/> or a <see cref="TemeFrame"/>: two of them with the same name are one frame, as they were
+    /// before 11.0.0.
+    /// </remarks>
     public bool Equals(Frame other)
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
-        return Name == other.Name;
+        return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
     }
 
-    public override bool Equals(object obj)
+    /// <summary>
+    /// <see cref="Equals(Frame)"/> for a frame, false for anything else (#562: the type of the frame no longer counts).
+    /// Sealed, so that a subclass cannot make it another relation than the operators.
+    /// </summary>
+    public sealed override bool Equals(object obj)
     {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
-        return Equals((Frame)obj);
+        return Equals(obj as Frame);
     }
 
-    public override int GetHashCode()
+    /// <summary>
+    /// The hash of the name ignoring case, the relation of <see cref="Equals(Frame)"/> (#562).
+    /// </summary>
+    public sealed override int GetHashCode()
     {
-        return (Name != null ? Name.GetHashCode() : 0);
+        return StringComparer.OrdinalIgnoreCase.GetHashCode(Name);
     }
 
     public static bool operator ==(Frame left, Frame right)
     {
-        return Equals(left, right);
+        return ReferenceEquals(left, right) || (left is not null && left.Equals(right));
     }
 
     public static bool operator !=(Frame left, Frame right)
     {
-        return !Equals(left, right);
+        return !(left == right);
     }
 
     #endregion

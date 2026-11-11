@@ -74,6 +74,23 @@ is reserved for changes between inertial frames.
 | `GetStateOrientationToICRF(Time epoch)` | Get orientation relative to ICRF |
 | `ToFrame(Frame target, Time epoch)` | Get transformation to another frame |
 
+### Equality
+
+A frame is its name, compared ignoring case as SPICE compares frame names (`namfrm_c`), whatever the instance or its
+type: `==`, `!=`, `Equals(Frame)`, `Equals(object)` and `GetHashCode` are one relation, so the operators, `HashSet`,
+`Dictionary` and `Assert.Equal` agree
+([#562](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/562)). `new Frame("TEME")` equals
+`Frame.TEME`, `new Frame("GCRF")` or `new Frame("gcrf")` equals `Frame.GCRF`, `new Frame("CIRS")` and
+`new Frame("TIRS")` equal `Frame.CIRS` and `Frame.TIRS`, and `new Frame("J2000")` equals `Frame.ICRF`; a frame built
+by name (a CCSDS file, the CLI) takes the identity shortcut of `ToFrame` and passes the inertial-frame check of a
+propagation as the static frame does. The name does not carry the Earth orientation parameters of a `TirsFrame` or a
+`TemeFrame` built with a provider: it equals `Frame.TIRS` or `Frame.TEME`, so `ToFrame` between them is the identity.
+`Frame.ICRF` is named `J2000`: `new Frame("ICRF")` is another name, not this frame. `Id` takes no part.
+Equality is not routing: a frame named TEME or GCRF is routed to the managed rotation by its name (see [TEME](#teme)
+and [ICRF, GCRF And EME2000](#icrf-gcrf-and-eme2000)), but a frame named CIRS or TIRS that is not a `CirsFrame` or a
+`TirsFrame` is still handed to SPICE, which does not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws. Use
+`Frame.CIRS` and `Frame.TIRS`.
+
 ## StateOrientation
 
 `StateOrientation` packages a rotation, angular velocity, epoch, and source frame.
@@ -159,7 +176,7 @@ rotation about z.
 - **By name.** A frame built by name, `new Frame("TEME")` in any case (a CCSDS file, the CLI, user code), is routed to
   `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceAPI.TransformFrame` composes a TEME end
   through ICRF; the native TEME of the frozen C++ layer is no longer used. An ephemeris read in TEME is read in J2000
-  and rotated (#558). The equality of a frame built by name with `Frame.TEME` is #562's.
+  and rotated (#558). A frame built by name equals `Frame.TEME` ([Equality](#equality), #562).
 - **Measured** (`tools/teme_reference`, 2026-11-08; a LEO and a GEO state at 13 epochs from 1980 to 2026): within
   0.9 mm (LEO) and 18 mm (GEO) of ERFA's CIP route with IAU 2006/2000B, 19 mm and 106 mm (0.55 mas, IAU 2000B's
   accuracy) of the route with IAU 2006/2000A, and 9.4 cm and 56 cm of GMAT R2026a's TEME → EarthICRF, whose residual is

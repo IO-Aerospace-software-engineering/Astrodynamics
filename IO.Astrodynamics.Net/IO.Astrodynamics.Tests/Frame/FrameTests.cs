@@ -166,6 +166,137 @@ public class FrameTests
         Assert.False(Frames.Frame.ECLIPTIC_J2000.Equals("null"));
     }
 
+    // #562: the frames of the library and the frames built by name a caller can give (a CCSDS file, the CLI, user code),
+    // as SPICE reads them: the name in any case (namfrm_c ignores it)
+    public static TheoryData<string, string> SameFramePairs => new()
+    {
+        { "GCRF", "GCRF" }, { "GCRF", "gcrf" }, { "CIRS", "CIRS" }, { "CIRS", "cirs" }, { "TIRS", "TIRS" }, { "TEME", "TEME" },
+        { "TEME", "Teme" }, { "ICRF", "J2000" }, { "ICRF", "j2000" }, { "ECLIPTIC_J2000", "ECLIPJ2000" }
+    };
+
+    private static Frames.Frame Static(string name) => name switch
+    {
+        "GCRF" => Frames.Frame.GCRF,
+        "CIRS" => Frames.Frame.CIRS,
+        "TIRS" => Frames.Frame.TIRS,
+        "TEME" => Frames.Frame.TEME,
+        "ICRF" => Frames.Frame.ICRF,
+        "ECLIPTIC_J2000" => Frames.Frame.ECLIPTIC_J2000,
+        _ => throw new ArgumentOutOfRangeException(nameof(name))
+    };
+
+    [Theory]
+    [MemberData(nameof(SameFramePairs))]
+    public void AFrameBuiltByName_IsTheFrameOfTheLibrary_ForEveryRelation(string library, string name)
+    {
+        // #562: ==, !=, Equals(Frame), Equals(object), GetHashCode and the collections are one relation, by the name
+        // ignoring case; before, == and Equals(object) also compared the type, so new Frame("GCRF") == Frame.GCRF was false
+        // while Equals(Frame) and HashSet said true (the issue's table)
+        var a = Static(library);
+        var b = new Frames.Frame(name);
+        Assert.True(a == b);
+        Assert.True(b == a);
+        Assert.False(a != b);
+        Assert.False(b != a);
+        Assert.True(a.Equals(b));
+        Assert.True(b.Equals(a));
+        Assert.True(a.Equals((object)b));
+        Assert.True(b.Equals((object)a));
+        Assert.True(Equals(a, b));
+        Assert.Equal(a.GetHashCode(), b.GetHashCode());
+        Assert.Contains(b, new System.Collections.Generic.HashSet<Frames.Frame> { a });
+        Assert.Contains(a, new System.Collections.Generic.HashSet<Frames.Frame> { b });
+        Assert.Equal(1, new System.Collections.Generic.Dictionary<Frames.Frame, int> { [a] = 1 }[b]);
+        Assert.Equal(a, b);
+    }
+
+    [Fact]
+    public void FramesOfOtherNames_AreDifferent_ForEveryRelation()
+    {
+        // Every pair of distinct names among the frames of the library, and a frame built by another name: different for
+        // every relation. ICRF is named J2000: "ICRF" is another name. Null is equal to null only
+        Frames.Frame[] frames =
+        [
+            Frames.Frame.ICRF, Frames.Frame.GCRF, Frames.Frame.CIRS, Frames.Frame.TIRS, Frames.Frame.TEME, Frames.Frame.ECLIPTIC_J2000,
+            Frames.Frame.ECLIPTIC_B1950, Frames.Frame.B1950, Frames.Frame.FK4, Frames.Frame.GALACTIC_SYSTEM2, new Frames.Frame("ITRF93"),
+            new Frames.Frame("ICRF"), new Frames.Frame("TEME_OF_DATE")
+        ];
+        for (int i = 0; i < frames.Length; i++)
+        {
+            for (int j = 0; j < frames.Length; j++)
+            {
+                if (i == j) continue;
+                Assert.False(frames[i] == frames[j], $"{frames[i]} == {frames[j]}");
+                Assert.True(frames[i] != frames[j]);
+                Assert.False(frames[i].Equals(frames[j]));
+                Assert.False(frames[i].Equals((object)frames[j]));
+            }
+
+            Assert.False(frames[i] == null);
+            Assert.False(null == frames[i]);
+            Assert.True(frames[i] != null);
+            Assert.False(frames[i].Equals((Frames.Frame)null));
+        }
+
+        Frames.Frame none = null;
+        Assert.True(none == null);
+        Assert.False(none != null);
+    }
+
+    [Fact]
+    public void TheFramesOfASpacecraftAndOfASite_AreTheirNames()
+    {
+        // The subclasses that are not static frames: a SpacecraftFrame and a SiteFrame are equal to a frame built by their
+        // name, in any case, for every relation (they were different for == and Equals(object))
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-1562, "EQ562", 1000.0, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("eq562", 65536),
+            new StateVector(new Vector3(6778137.0, 0.0, 0.0), new Vector3(0.0, 7668.6, 0.0), TestHelpers.EarthAtJ2000,
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        var site = new Site(339, "EQ562SITE", TestHelpers.EarthAtJ2000, new Planetodetic(-2.0384478466737517, 0.61517960506340708, 1073.2434632601216));
+        foreach (var frame in new Frames.Frame[] { spacecraft.Frame, site.Frame })
+        {
+            foreach (var byName in new[] { new Frames.Frame(frame.Name), new Frames.Frame(frame.Name.ToLowerInvariant()) })
+            {
+                Assert.True(frame == byName);
+                Assert.False(frame != byName);
+                Assert.True(frame.Equals((object)byName));
+                Assert.True(byName.Equals((object)frame));
+                Assert.Equal(frame.GetHashCode(), byName.GetHashCode());
+            }
+
+            Assert.False(frame == Frames.Frame.ICRF);
+        }
+    }
+
+    [Fact]
+    public void AStateInAFrameBuiltByName_IsTheStateInTheFrameOfTheLibrary()
+    {
+        // The library's comparisons with == (#562): StateVector.Equals, and the identity shortcut of ToFrame. A state in
+        // Frame.CIRS converted to new Frame("CIRS") is the same state (the identity, the closed form), where it went to SPICE
+        // with the name CIRS and came back r = (0, 0, 0)
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var position = new Vector3(6778137.0, 1234.5, -4321.0);
+        var velocity = new Vector3(-1.5, 7668.6, 2.25);
+        foreach (var (library, name) in new[] { (Frames.Frame.GCRF, "GCRF"), (Frames.Frame.CIRS, "CIRS"), (Frames.Frame.TIRS, "tirs"), (Frames.Frame.TEME, "TEME") })
+        {
+            var byName = new Frames.Frame(name);
+            var inLibrary = new StateVector(position, velocity, TestHelpers.EarthAtJ2000, epoch, library);
+            var inByName = new StateVector(position, velocity, TestHelpers.EarthAtJ2000, epoch, byName);
+            Assert.True(inLibrary.Equals(inByName));
+            Assert.True(inLibrary == inByName);
+
+            var converted = inLibrary.ToFrame(byName).ToStateVector();
+            Assert.Equal(position, converted.Position);
+            Assert.Equal(velocity, converted.Velocity);
+            var back = inByName.ToFrame(library).ToStateVector();
+            Assert.Equal(position, back.Position);
+            Assert.Equal(velocity, back.Velocity);
+
+            var transform = library.ToFrame(byName, epoch);
+            Assert.Equal(Quaternion.Identity, transform.Rotation);
+            Assert.Equal(Vector3.Zero, transform.AngularVelocity);
+        }
+    }
+
     [Fact]
     public void TheOrientationsAddedToAFrame_AreKeptByEpoch_TheFirstAtAnEpochKept()
     {

@@ -182,7 +182,7 @@ public class SpiceAPI
     /// <summary>
     /// Whether the frame is a TEME frame by its name, compared ignoring case as SPICE compares frame names: a frame
     /// built by name, <c>new Frame("TEME")</c>, stands for <see cref="Frame.TEME"/>, the managed <see cref="TemeFrame"/>
-    /// (#451, #562 for the routing only).
+    /// (#451, #562).
     /// </summary>
     internal static bool IsTeme(Frame frame) =>
         string.Equals(frame.Name, Frame.TEME.Name, StringComparison.OrdinalIgnoreCase);

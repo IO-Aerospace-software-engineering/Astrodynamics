@@ -493,7 +493,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
 - **A frame named TEME took the native frame** (the routing of [#562](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/562)). `SpiceDataProvider` and `MemoryDataProvider`
   route a frame named TEME, in any case (`new Frame("TEME")` from a CCSDS file, the CLI or user code), to `Frame.TEME`,
   and `SpiceAPI.TransformFrame` composes a TEME end through ICRF; the TLE and `SpiceAPI.ConvertTleToStateVector` label
-  their states with `Frame.TEME`. The equality of a frame built by name with `Frame.TEME` stays #562's.
+  their states with `Frame.TEME`. The equality of a frame built by name with `Frame.TEME` is #562's (Changed below).
 - **An ephemeris read in a managed frame handed its name to `spkezr_c`** ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558), the ephemeris reads). A read in
   `Frame.TEME` (or a frame named TEME), `Frame.CIRS` or `Frame.TIRS`, through `GetEphemeris` or the three
   `SpiceAPI.ReadEphemeris`, is read in J2000 and rotated by the frame at the epoch of the read: the numbers of
@@ -1381,6 +1381,24 @@ A major version, because it breaks the API: members deprecated for removal in 11
   `Stars`, `Barycenters`, `Asteroids`, `Comets`, `GroundStations`, `LagrangePoints`) are `static readonly`, their
   values unchanged. Migration: replace `Quaternion.Zero` with `Quaternion.Identity` (or `new Quaternion()`); code that
   assigned one of these fields no longer compiles, so build the value it held in a variable of its own.
+- **Breaking: a frame is its name, for every relation**
+  ([#562](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/562)). `Frame`'s `==`, `!=` and
+  `Equals(object)` also compared the type, while `Equals(Frame)` and `GetHashCode` compared the name only: a frame built
+  by name and the managed frame of the same name (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `TemeFrame`) or a
+  `SpacecraftFrame` or `SiteFrame` were equal for `HashSet`, `Dictionary` and `Assert.Equal` and different for the
+  operators, so a state in `new Frame("GCRF")` (a CCSDS file, the CLI) was rejected by the propagator as not inertial,
+  two `StateVector`s that differed only by `Frame.GCRF` and `new Frame("GCRF")` were not equal, and a state in
+  `Frame.CIRS` converted to `new Frame("CIRS")` missed the identity and went to SPICE. The five members are now one
+  relation: the name compared ignoring case, as SPICE compares frame names (`namfrm_c`), whatever the type;
+  `Equals(object)` and `GetHashCode` are `sealed`. `new Frame("TEME") == Frame.TEME`, `new Frame("gcrf") == Frame.GCRF`,
+  `new Frame("CIRS") == Frame.CIRS` and `new Frame("j2000") == Frame.ICRF` are true; a propagation from
+  `new Frame("gcrf")` is that of `Frame.GCRF`, bit for bit, in Velocity-Verlet and RK7(8), with an impulse and in SSB
+  mode. Migration: code that told a managed frame from a frame of the same name with `==` tests the type instead
+  (`frame is CirsFrame`); a subclass of `Frame` can no longer override `Equals(object)` or `GetHashCode`. Equality does
+  not route: a frame named CIRS or TIRS that is not a `CirsFrame` or a `TirsFrame` still goes to SPICE, which does not
+  know it ([Equality](../reference/frames.md#equality)). A state converted to a frame equal to its own keeps its frame
+  (the identity of `ToFrame`), so the CLI's `ephemeris` from a site observer, computed in ICRF, prints `Frame : J2000`
+  for the default `ICRF` (handed to the library as `j2000`) where it printed `Frame : j2000`, the numbers unchanged.
 
 **Removed**
 
