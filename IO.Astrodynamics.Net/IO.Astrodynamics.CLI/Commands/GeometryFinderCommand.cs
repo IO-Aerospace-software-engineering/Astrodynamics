@@ -69,7 +69,7 @@ public class GeometryFinderCommand
         int targetId,
         [Argument(Description = "Relational operator used to define search constraint (<,>,=,ABSMIN,ABSMAX,LOCMIN,LOCMAX)")]
         string relationalOperator,
-        [Argument(Description = "Value used by operator")]
+        [Argument(Description = "Distance used by operator, m")]
         double value,
         WindowParameters window,
         [Argument(Description = "Initial step size <d.hh:mm:ss.fff>")]

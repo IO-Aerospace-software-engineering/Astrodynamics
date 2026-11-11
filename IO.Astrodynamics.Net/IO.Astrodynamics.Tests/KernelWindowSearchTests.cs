@@ -8,6 +8,7 @@ using System.Text.Json;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -169,9 +170,11 @@ public class KernelWindowSearchTests
     }
 
     [Fact]
-    public void Illumination_KernelSiteAndSiteFromCoordinates_Agree()
+    public void Illumination_SiteFromCoordinates_WithinTheNormalOfGfilum()
     {
-        // #488: 4.1 s and 5.2 s apart before; the site from the coordinates of the kernel site takes the managed search.
+        // The site from the coordinates of the kernel site takes the managed search, which #488 does not change (this test
+        // passes before it): with Illumination_KernelSite, which holds the kernel site to gfilum, it bounds the gap
+        // between the two branches, 4.1 s and 5.2 s before #488.
         // The two differ by the normal at a point above the ellipsoid: the managed search takes the geodetic normal,
         // gfilum the normal of surfnm at the point, tilted from it by atan(k tan φ) − φ = 0.110″ at 1070.85 m and the
         // latitude of DSS-13 (k = (N(1 − e²) + h) / ((1 − e²)(N + h))), 0.053″ along the incidence, 4.96e-3 s at its
@@ -180,6 +183,36 @@ public class KernelWindowSearchTests
         var fromCoordinates = new Site(99, "DSS13GEO", Earth, dss13.Planetodetic);
         AssertWindows("dss13_sun_incidence > 90 deg NONE", fromCoordinates.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence,
             RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, Step, TestHelpers.Sun), 1.0e-2, "site from coordinates");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void LaunchWindows_KernelRecoverySite(bool byDay)
+    {
+        // #488 through Launch: the day windows of a recovery site from the kernels (FindDayWindows, civil twilight) are
+        // gfilum's; each launch window of the day, or of the night, is the one of every window (launchByDay null) that the
+        // day windows of both sites hold, or that neither holds; the launch site from the coordinates of DSS-13
+        var dss13 = Dss13;
+        var launchSite = new LaunchSite(98, "DSS13LAUNCH", Earth, dss13.Planetodetic, new AzimuthRange(0.0, IO.Astrodynamics.Constants._2PI));
+        var target = new KeplerianElements(6.8e6, 0.0, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 1.0, 0.0, 0.0, Earth, IlluminationWindow.StartDate,
+            Frames.Frame.ICRF);
+        var all = new Maneuver.Launch(launchSite, dss13, target, IO.Astrodynamics.Constants.CivilTwilight, null).FindLaunchWindows(IlluminationWindow).ToArray();
+        var recoveryDays = Reference.Value["dss13_sun_incidence < 96 deg LT+S"]
+            .Select(w => new Window(TimeSystem.Time.CreateTDB(w[0]), TimeSystem.Time.CreateTDB(w[1]))).ToArray();
+        var launchDays = launchSite.FindDayWindows(IlluminationWindow, IO.Astrodynamics.Constants.CivilTwilight).ToArray();
+        var expected = all.Where(w =>
+        {
+            bool launchDay = launchDays.Any(d => d.Intersects(w.Window));
+            bool recoveryDay = recoveryDays.Any(d => d.Intersects(w.Window));
+            return byDay ? launchDay && recoveryDay : !(launchDay || recoveryDay);
+        }).Select(w => w.Window).ToArray();
+
+        var actual = new Maneuver.Launch(launchSite, dss13, target, IO.Astrodynamics.Constants.CivilTwilight, byDay).FindLaunchWindows(IlluminationWindow)
+            .Select(w => w.Window).ToArray();
+        _output.WriteLine($"MEASURE launch by day {byDay}: {actual.Length} of {all.Length} windows");
+        Assert.NotEmpty(actual);
+        Assert.Equal(expected, actual);
     }
 
     [Theory]

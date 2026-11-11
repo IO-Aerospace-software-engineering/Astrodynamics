@@ -83,7 +83,7 @@ namespace IO.Astrodynamics.Body
         /// <param name="searchWindow">The time window to search within.</param>
         /// <param name="observer">The observer of the celestial object.</param>
         /// <param name="relationalOperator">The relational operator for the distance constraint.</param>
-        /// <param name="value">The distance value for the constraint.</param>
+        /// <param name="value">The distance value for the constraint, m.</param>
         /// <param name="aberration">The aberration correction to apply.</param>
         /// <param name="stepSize">The step size for the search.</param>
         /// <returns>An enumerable of time windows that satisfy the distance constraint.</returns>
