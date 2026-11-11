@@ -467,6 +467,17 @@ public class SpiceAPI
             seconds <= startSeconds ? start : seconds >= endSeconds ? end : Time.Create(seconds, TimeFrame.TDBFrame);
     }
 
+    /// <summary>
+    /// Find time windows based on distance constraint, CSPICE's <c>gfdist_c</c> between two objects of the kernels.
+    /// </summary>
+    /// <param name="searchWindow">The search window.</param>
+    /// <param name="observerId">The NAIF id of the observer.</param>
+    /// <param name="targetId">The NAIF id of the target.</param>
+    /// <param name="relationalOperator">The relational operator.</param>
+    /// <param name="value">The distance, m: the native layer converts it to km for <c>gfdist_c</c> (#466).</param>
+    /// <param name="aberration">The aberration correction.</param>
+    /// <param name="stepSize">The step of the search.</param>
+    /// <returns>The windows where the constraint holds.</returns>
     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
@@ -558,8 +569,9 @@ public class SpiceAPI
     /// <param name="coordinateSystem"></param>
     /// <param name="coordinate"></param>
     /// <param name="relationalOperator"></param>
-    /// <param name="value"></param>
-    /// <param name="adjustValue"></param>
+    /// <param name="value">The value of the coordinate, as <c>gfposc_c</c> takes it: km for a distance (X, Y, Z, range,
+    /// radius, altitude), rad for an angle. Unlike <see cref="FindWindowsOnDistanceConstraint"/>, which takes metres (#466).</param>
+    /// <param name="adjustValue">The adjustment of the absolute extremes, in the unit of <paramref name="value"/>.</param>
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
@@ -586,6 +598,25 @@ public class SpiceAPI
         }
     }
 
+    /// <summary>
+    /// Find time windows based on an illumination constraint at a surface point, CSPICE's <c>gfilum_c</c>.
+    /// </summary>
+    /// <param name="searchWindow">The search window.</param>
+    /// <param name="observerId">The NAIF id of the observer.</param>
+    /// <param name="targetBodyId">The NAIF id of the body that carries the point.</param>
+    /// <param name="fixedFrame">The body-fixed frame of the body.</param>
+    /// <param name="planetodetic">The point: longitude and latitude in rad, altitude in m above the ellipsoid of the body
+    /// (its equatorial radius and flattening in the kernels).</param>
+    /// <param name="illuminationType">The illumination angle.</param>
+    /// <param name="relationalOperator">The relational operator.</param>
+    /// <param name="value">The angle, rad.</param>
+    /// <param name="adjustValue">The adjustment of the absolute extremes, rad.</param>
+    /// <param name="aberration">The aberration correction.</param>
+    /// <param name="stepSize">The step of the search.</param>
+    /// <param name="illuminationSourceId">The NAIF id of the illumination source.</param>
+    /// <param name="method">The computation method of <c>gfilum_c</c>.</param>
+    /// <returns>The windows where the constraint holds.</returns>
+    /// <remarks>Before 11.0.0 the altitude was read in km (#488).</remarks>
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
@@ -603,7 +634,8 @@ public class SpiceAPI
 
             FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
                 illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
-                planetodetic.Convert(),
+                // The native layer hands the altitude to georec_c beside a radius in km (#488)
+                (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
                 illuminationType.GetDescription(), relationalOperator.GetDescription(), value, adjustValue,
                 aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
             return WithinSearchWindow(windows, searchWindow);

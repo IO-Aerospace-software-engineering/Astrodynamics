@@ -19,6 +19,20 @@ SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` an
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and
 label what SPICE returns with the frame given (#543).
 
+### Units of the window searches
+
+The window searches take the units of the library, except the coordinate search:
+
+- `FindWindowsOnDistanceConstraint`: the distance in m, as `CelestialItem` and `Site` take it (the native layer hands
+  km to `gfdist_c`). Before 11.0.0 the kernel-spacecraft branch of `CelestialItem` and `Site` divided it by 1000 once
+  more ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
+- `FindWindowsOnCoordinateConstraint`: the value as `gfposc_c` takes it, km for a distance coordinate (X, Y, Z, range,
+  radius, altitude) and rad for an angle; `CelestialItem` and `Site` convert their metres.
+- `FindWindowsOnIlluminationConstraint`: the surface point as `Planetodetic`, longitude and latitude in rad and the
+  altitude in m above the ellipsoid of the body (equatorial radius and flattening of the kernels); before 11.0.0 the
+  altitude was read in km ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)). So
+  does the CLI command `find-windows-from-illumination-constraint`.
+
 ### Orientation kernels
 
 `ReadOrientation` and `WriteOrientation` are the C-matrix pair of CSPICE's `ckgpav_c` and `ckw03_c`. Each record is
