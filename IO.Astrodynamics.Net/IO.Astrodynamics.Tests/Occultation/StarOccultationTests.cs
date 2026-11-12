@@ -25,12 +25,12 @@ namespace IO.Astrodynamics.Tests.Occultation;
 /// </para>
 /// <para>
 /// <b>The reference</b>, <c>tools/occultation_reference/star_occultation_reference.py</c> (spiceypy, CSPICE N0067): the
-/// star at its catalog position moved by its proper motion to t, minus DSS-13 from the barycenter at t (a catalog position
-/// is the direction of the light that reaches the barycenter at its epoch, as SOFA's <c>iauPmsafe</c> reads it, to be
-/// verified by S. Guillet; the field-of-view search reads a star so since #517, as <c>gfrfov</c> reads a ray); the Moon
-/// from <c>spkpos</c> with the correction, a sphere of 1737.4 km; the entry and the exit the zeros of asin(R/d) − sep, by
-/// bisection to 1e-9 s. The direction of <see cref="Star.GetEphemeris"/>: the star minus DSS-13 at the epoch, rotated by
-/// <c>stelab</c> for +S.
+/// star at its catalog position moved by its proper motion to t, minus DSS-13 from the barycenter at t (a catalog
+/// position is the direction of the light that reaches the barycenter at its epoch, as SOFA's <c>iauPmsafe</c> reads
+/// it, confirmed by S. Guillet, 2026-11-11; the field-of-view search reads a star so since #517, as <c>gfrfov</c> reads
+/// a ray); the Moon from <c>spkpos</c> with the correction, a sphere of 1737.4 km; the entry and the exit the zeros of
+/// asin(R/d) − sep, by bisection to 1e-9 s. The direction of <see cref="Star.GetEphemeris"/>: the star minus DSS-13 at
+/// the epoch, rotated by <c>stelab</c> for +S.
 /// </para>
 /// <para>
 /// <b>The case</b> (#533's): the star on the Moon's LT direction from DSS-13 at S = 2026-03-01 12:00 TDB, at 20 pc and at
