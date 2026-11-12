@@ -41,7 +41,7 @@ public sealed class AvoidanceFallbackCase
 
     public AvoidanceFallbackCase()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));

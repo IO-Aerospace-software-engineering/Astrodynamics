@@ -15,7 +15,7 @@ public class StateSamplerTests
 {
     public StateSamplerTests()
     {
-        SpiceAPI.Instance.LoadKernels(new System.IO.DirectoryInfo("Data/SolarSystem"));
+        TestKernels.EnsureSolarSystem();
     }
 
     private static StateVector CreateNominalWithCovariance(Matrix covariance)

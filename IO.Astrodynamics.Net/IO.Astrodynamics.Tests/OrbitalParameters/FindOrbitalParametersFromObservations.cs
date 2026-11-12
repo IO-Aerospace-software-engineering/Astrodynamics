@@ -18,7 +18,7 @@ public class InitialOrbitDeterminationTests
     public InitialOrbitDeterminationTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

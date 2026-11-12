@@ -759,9 +759,9 @@ var rotationMatrix = Matrix.FromColumnVectors(col0, col1, col2);
 
 ### Testing Approach
 
-All test classes load SPICE kernels in constructor:
+Test classes load the solar system kernels in their constructor through `TestKernels.EnsureSolarSystem()`, which loads them once per test process; see the root `CLAUDE.md` (Data Provider Pattern) for the rules (no unload of `Data/SolarSystem` in the test process, no kernel that shadows it):
 ```csharp
-SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+TestKernels.EnsureSolarSystem();
 ```
 
 Test data files are in `Data/SolarSystem/` and copied to output directory.

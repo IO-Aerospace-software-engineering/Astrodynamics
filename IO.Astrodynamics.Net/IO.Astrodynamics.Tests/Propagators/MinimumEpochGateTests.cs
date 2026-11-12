@@ -125,7 +125,7 @@ public class MinimumEpochGateTests
     public MinimumEpochGateTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>The TDB label whose TT is S + <paramref name="tt"/>, to the tick.</summary>

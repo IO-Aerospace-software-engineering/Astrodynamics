@@ -67,7 +67,7 @@ public class StarOccultationTests
     public StarOccultationTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>The right ascension, declination and parallax of the star of the reference, at <paramref name="distancePc"/>.</summary>

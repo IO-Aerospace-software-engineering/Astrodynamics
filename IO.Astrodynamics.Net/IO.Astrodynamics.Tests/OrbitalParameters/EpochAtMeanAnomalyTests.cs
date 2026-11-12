@@ -38,7 +38,7 @@ public class EpochAtMeanAnomalyTests
     public EpochAtMeanAnomalyTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static readonly TimeSystem.Time Epoch = TimeSystem.Time.J2000TDB;

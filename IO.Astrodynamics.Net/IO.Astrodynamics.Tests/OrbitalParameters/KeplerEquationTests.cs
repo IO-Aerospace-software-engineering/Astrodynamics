@@ -102,7 +102,7 @@ public class KeplerEquationTests
     public KeplerEquationTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

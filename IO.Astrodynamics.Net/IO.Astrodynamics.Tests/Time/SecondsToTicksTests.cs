@@ -34,7 +34,7 @@ public class SecondsToTicksTests
     public SecondsToTicksTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         SpiceAPI.Instance.LoadKernels(new FileInfo(LroKernel));
     }
 

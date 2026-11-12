@@ -7,7 +7,7 @@ namespace IO.Astrodynamics.Tests.Math
     {
         public LegendreTests()
         {
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

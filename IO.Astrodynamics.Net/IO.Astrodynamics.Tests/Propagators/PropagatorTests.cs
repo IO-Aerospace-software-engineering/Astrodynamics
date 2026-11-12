@@ -28,7 +28,7 @@ public class PropagatorTests
     public PropagatorTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     #region Infrastructure Tests

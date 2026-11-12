@@ -23,7 +23,7 @@ public class OpenOrbitTests
     public OpenOrbitTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public static TheoryData<double, double> HyperbolicCases()

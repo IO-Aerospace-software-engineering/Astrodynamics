@@ -238,7 +238,7 @@ public class AttitudeRecordTests
     public AttitudeRecordTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     internal static Frame FrameOf(string name) => name == "ICRF" ? Frame.ICRF : new Frame(name);

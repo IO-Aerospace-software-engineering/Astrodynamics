@@ -31,7 +31,7 @@ public class TwoBodyDynamicalTimeTests
     public TwoBodyDynamicalTimeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static readonly string[] Tags = { "UTC", "TAI", "TT", "TDB" };

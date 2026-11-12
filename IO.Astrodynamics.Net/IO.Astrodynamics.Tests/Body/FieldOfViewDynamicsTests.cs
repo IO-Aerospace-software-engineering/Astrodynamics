@@ -67,7 +67,7 @@ public class FieldOfViewDynamicsTests
     public FieldOfViewDynamicsTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static readonly TimeSystem.Time Start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();

@@ -23,7 +23,7 @@ public class SolarRadiationPressureTests
     public SolarRadiationPressureTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

@@ -55,7 +55,7 @@ public class AttitudeTimelineEdgeTests
     public AttitudeTimelineEdgeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     // Four digits: the frame of a spacecraft is its NAIF identifier times 1 000, which the CK writer needs in an int

@@ -13,7 +13,7 @@ public class ProgradeAttitudeTests
 {
     public ProgradeAttitudeTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

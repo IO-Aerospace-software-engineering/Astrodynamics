@@ -18,7 +18,7 @@ public class VVIntegratorTests
     public VVIntegratorTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>

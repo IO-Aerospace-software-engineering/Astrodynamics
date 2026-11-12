@@ -18,7 +18,7 @@ public class FrameTests
 
     public FrameTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

@@ -23,11 +23,9 @@ namespace IO.Astrodynamics.Tests.Propagators;
 
 public class BatchPropagatorTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     public BatchPropagatorTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     #region Helpers

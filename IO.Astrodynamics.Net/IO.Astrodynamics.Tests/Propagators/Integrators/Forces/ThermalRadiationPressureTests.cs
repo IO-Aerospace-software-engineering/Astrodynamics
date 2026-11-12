@@ -16,11 +16,9 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces;
 
 public class ThermalRadiationPressureTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     public ThermalRadiationPressureTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static CelestialBody CreateEarth(double thermalEffectiveTemperature = 254.0, double thermalEmissivity = 0.95)

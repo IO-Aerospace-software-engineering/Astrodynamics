@@ -247,7 +247,7 @@ public sealed class ReferenceCases
 
     public ReferenceCases()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
         var sun = new CelestialBody(Stars.Sun);
         var day = TimeSpan.FromDays(1.0);

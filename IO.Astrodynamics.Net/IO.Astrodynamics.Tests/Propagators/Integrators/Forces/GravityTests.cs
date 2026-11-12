@@ -13,7 +13,7 @@ public class GravityTests
 {
     public GravityTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

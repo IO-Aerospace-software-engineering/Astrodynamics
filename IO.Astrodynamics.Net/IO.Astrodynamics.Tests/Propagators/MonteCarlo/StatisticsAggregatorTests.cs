@@ -16,7 +16,7 @@ public class StatisticsAggregatorTests
 {
     public StatisticsAggregatorTests()
     {
-        SpiceAPI.Instance.LoadKernels(new System.IO.DirectoryInfo("Data/SolarSystem"));
+        TestKernels.EnsureSolarSystem();
     }
 
     private static PropagationSolution CreateSolution(double[][] states, CelestialBody observer)

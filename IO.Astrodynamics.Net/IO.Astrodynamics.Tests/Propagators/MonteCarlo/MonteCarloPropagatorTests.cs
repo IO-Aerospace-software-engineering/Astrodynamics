@@ -20,11 +20,9 @@ namespace IO.Astrodynamics.Tests.Propagators.MonteCarlo;
 
 public class MonteCarloPropagatorTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     public MonteCarloPropagatorTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static Spacecraft CreateTemplateSpacecraft()

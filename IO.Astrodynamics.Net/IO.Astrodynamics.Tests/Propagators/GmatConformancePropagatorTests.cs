@@ -48,7 +48,7 @@ public class GmatConformancePropagatorTests
     public GmatConformancePropagatorTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>

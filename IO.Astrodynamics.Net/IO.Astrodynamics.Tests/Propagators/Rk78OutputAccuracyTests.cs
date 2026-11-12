@@ -33,7 +33,7 @@ public class Rk78OutputAccuracyTests
 
     public Rk78OutputAccuracyTests(ITestOutputHelper output)
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         _output = output;
         _pointMassEarth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
     }

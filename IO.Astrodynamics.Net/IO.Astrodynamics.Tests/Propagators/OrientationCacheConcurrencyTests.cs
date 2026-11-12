@@ -33,7 +33,7 @@ public class OrientationCacheConcurrencyTests
 
     public OrientationCacheConcurrencyTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>Point-mass Earth with NRLMSISE-00: no geopotential, so it may be shared between threads.</summary>

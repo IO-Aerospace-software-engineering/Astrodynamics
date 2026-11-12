@@ -31,7 +31,7 @@ public class PropagatedEphemerisTests
     public PropagatedEphemerisTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static readonly Time T0 = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);

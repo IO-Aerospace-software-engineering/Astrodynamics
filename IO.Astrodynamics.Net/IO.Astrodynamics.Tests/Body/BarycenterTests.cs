@@ -8,7 +8,7 @@ public class BarycenterTests
 {
     public BarycenterTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

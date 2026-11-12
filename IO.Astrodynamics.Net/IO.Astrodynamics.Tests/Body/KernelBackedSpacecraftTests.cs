@@ -18,7 +18,7 @@ public class KernelBackedSpacecraftTests
 {
     public KernelBackedSpacecraftTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     #region IsSpiceBacked property tests

@@ -37,7 +37,7 @@ public class SpiceApiTest
     public SpiceApiTest(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]
@@ -560,22 +560,28 @@ public class SpiceApiTest
 
         //Load ephemeris file
         SpiceAPI.Instance.LoadKernels(file);
-
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-        var stateVectors = SpiceAPI.Instance.ReadEphemeris(window, TestHelpers.EarthAtJ2000.NaifId, spacecraft.NaifId, Frames.Frame.ICRF,
-                Aberration.None, TimeSpan.FromSeconds(1.0))
-            .Select(x => x.ToStateVector()).ToArray();
-        for (int i = 0; i < size; ++i)
+        try
         {
-            Assert.Equal(6800.0 + i, stateVectors[i].Position.X, 9);
-            Assert.Equal(i, stateVectors[i].Position.Y, 12);
-            Assert.Equal(i, stateVectors[i].Position.Z, 12);
-            Assert.Equal(i, stateVectors[i].Velocity.X, 12);
-            Assert.Equal(8 + i * 0.001, stateVectors[i].Velocity.Y, 12);
-            Assert.Equal(i, stateVectors[i].Velocity.Z, 12);
-            Assert.Equal(i, stateVectors[i].Epoch.TimeSpanFromJ2000().TotalSeconds);
-            Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[i].Observer.NaifId);
-            Assert.Equal(Frames.Frame.ICRF, stateVectors[i].Frame);
+            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+            var stateVectors = SpiceAPI.Instance.ReadEphemeris(window, TestHelpers.EarthAtJ2000.NaifId, spacecraft.NaifId, Frames.Frame.ICRF,
+                    Aberration.None, TimeSpan.FromSeconds(1.0))
+                .Select(x => x.ToStateVector()).ToArray();
+            for (int i = 0; i < size; ++i)
+            {
+                Assert.Equal(6800.0 + i, stateVectors[i].Position.X, 9);
+                Assert.Equal(i, stateVectors[i].Position.Y, 12);
+                Assert.Equal(i, stateVectors[i].Position.Z, 12);
+                Assert.Equal(i, stateVectors[i].Velocity.X, 12);
+                Assert.Equal(8 + i * 0.001, stateVectors[i].Velocity.Y, 12);
+                Assert.Equal(i, stateVectors[i].Velocity.Z, 12);
+                Assert.Equal(i, stateVectors[i].Epoch.TimeSpanFromJ2000().TotalSeconds);
+                Assert.Equal(PlanetsAndMoons.EARTH.NaifId, stateVectors[i].Observer.NaifId);
+                Assert.Equal(Frames.Frame.ICRF, stateVectors[i].Frame);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(file);
         }
     }
 
@@ -598,52 +604,59 @@ public class SpiceApiTest
 
         var clockFile = new FileInfo("OrientationClockTest.tsc");
         await clock.WriteAsync(clockFile);
-        SpiceAPI.Instance.LoadKernels(clockFile);
         //Write ephemeris file
         FileInfo file = new FileInfo("OrientationTestFile.ck");
-
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(null, spacecraft.NaifId, so));
-        Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, null));
-        SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, so);
-
-        //Load ephemeris file
-        SpiceAPI.Instance.LoadKernels(file);
-
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-        var stateOrientation = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
-            .Select(x => x).ToArray();
-
-        Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
-        Assert.Equal(new Vector3(-0.57735026918962573, -0.57735026918962573, -0.57735026918962573), stateOrientation[0].Rotation.VectorPart);
-        Assert.Equal(Vector3.Zero, stateOrientation[0].AngularVelocity);
-        Assert.Equal(0.0, stateOrientation[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
-        Assert.Equal(Frames.Frame.ICRF, stateOrientation[0].ReferenceFrame);
-
-        Assert.Equal(0.78386180166962049, stateOrientation[4].Rotation.W, 9);
-        Assert.Equal(new Vector3(0.27435163058436718, 0.35273781075132921, 0.43112399091829129), stateOrientation[4].Rotation.VectorPart);
-        Assert.Equal(Vector3.Zero, stateOrientation[4].AngularVelocity);
-        Assert.Equal(4.0, stateOrientation[4].Epoch.TimeSpanFromJ2000().TotalSeconds);
-        Assert.Equal(Frames.Frame.ICRF, stateOrientation[4].ReferenceFrame);
-
-        Assert.Equal(0.87358057364767872, stateOrientation[9].Rotation.W, 9);
-        Assert.Equal(new Vector3(0.18442256554784328, 0.27178062291261118, 0.359138680277379), stateOrientation[9].Rotation.VectorPart);
-        Assert.Equal(Vector3.Zero, stateOrientation[9].AngularVelocity);
-        Assert.Equal(9.0, stateOrientation[9].Epoch.TimeSpanFromJ2000().TotalSeconds);
-        Assert.Equal(Frames.Frame.ICRF, stateOrientation[9].ReferenceFrame);
-
-        // pxform(J2000, SC) on the written CK, with the frame kernel of the spacecraft: the C-matrix written, J2000 to the
-        // spacecraft frame (choice 7 of the design of #537), at its records
         var frameFile = new FileInfo("OrientationTestFrame.tf");
-        await ((SpacecraftFrame)spacecraft.Frame).WriteAsync(frameFile);
-        SpiceAPI.Instance.LoadKernels(frameFile);
         double worst = 0.0;
-        foreach (var written in so)
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        try
         {
-            var pxform = SpiceAPI.Instance.TransformFrame(written.Epoch, Frames.Frame.ICRF, spacecraft.Frame).Rotation;
-            worst = System.Math.Max(worst, Body.AttitudeRecordTests.RotationAngle(written.Rotation.Normalize(), pxform));
+            Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(null, spacecraft.NaifId, so));
+            Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, null));
+            SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, so);
+
+            //Load ephemeris file
+            SpiceAPI.Instance.LoadKernels(file);
+
+            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+            var stateOrientation = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
+                .Select(x => x).ToArray();
+
+            Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
+            Assert.Equal(new Vector3(-0.57735026918962573, -0.57735026918962573, -0.57735026918962573), stateOrientation[0].Rotation.VectorPart);
+            Assert.Equal(Vector3.Zero, stateOrientation[0].AngularVelocity);
+            Assert.Equal(0.0, stateOrientation[0].Epoch.TimeSpanFromJ2000().TotalSeconds);
+            Assert.Equal(Frames.Frame.ICRF, stateOrientation[0].ReferenceFrame);
+
+            Assert.Equal(0.78386180166962049, stateOrientation[4].Rotation.W, 9);
+            Assert.Equal(new Vector3(0.27435163058436718, 0.35273781075132921, 0.43112399091829129), stateOrientation[4].Rotation.VectorPart);
+            Assert.Equal(Vector3.Zero, stateOrientation[4].AngularVelocity);
+            Assert.Equal(4.0, stateOrientation[4].Epoch.TimeSpanFromJ2000().TotalSeconds);
+            Assert.Equal(Frames.Frame.ICRF, stateOrientation[4].ReferenceFrame);
+
+            Assert.Equal(0.87358057364767872, stateOrientation[9].Rotation.W, 9);
+            Assert.Equal(new Vector3(0.18442256554784328, 0.27178062291261118, 0.359138680277379), stateOrientation[9].Rotation.VectorPart);
+            Assert.Equal(Vector3.Zero, stateOrientation[9].AngularVelocity);
+            Assert.Equal(9.0, stateOrientation[9].Epoch.TimeSpanFromJ2000().TotalSeconds);
+            Assert.Equal(Frames.Frame.ICRF, stateOrientation[9].ReferenceFrame);
+
+            // pxform(J2000, SC) on the written CK, with the frame kernel of the spacecraft: the C-matrix written, J2000 to the
+            // spacecraft frame (choice 7 of the design of #537), at its records
+            await ((SpacecraftFrame)spacecraft.Frame).WriteAsync(frameFile);
+            SpiceAPI.Instance.LoadKernels(frameFile);
+            foreach (var written in so)
+            {
+                var pxform = SpiceAPI.Instance.TransformFrame(written.Epoch, Frames.Frame.ICRF, spacecraft.Frame).Rotation;
+                worst = System.Math.Max(worst, Body.AttitudeRecordTests.RotationAngle(written.Rotation.Normalize(), pxform));
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(frameFile);
+            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceAPI.Instance.UnloadKernels(clockFile);
         }
 
-        SpiceAPI.Instance.UnloadKernels(frameFile);
         _output?.WriteLine($"MEASURE #537 WriteOrientation: pxform(J2000, SC) - the C-matrix written {worst:E2} rad");
         // Twice the worst over its ten records over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02):
         // 3.31e-16 / 3.31e-16 / 3.31e-16 rad
@@ -948,16 +961,22 @@ public class SpiceApiTest
         FileInfo file = new FileInfo("EphemerisTestFileFromId.spk");
         SpiceAPI.Instance.WriteEphemeris(file, -136, sv);
         SpiceAPI.Instance.LoadKernels(file);
-
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-        var stateVectors = SpiceAPI.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -136,
-                Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0))
-            .Select(x => x.ToStateVector()).ToArray();
-        for (int i = 0; i < size; ++i)
+        try
         {
-            Assert.Equal(6800.0 + i, stateVectors[i].Position.X, 9);
-            Assert.Equal(i, stateVectors[i].Position.Y, 12);
-            Assert.Equal(i, stateVectors[i].Position.Z, 12);
+            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+            var stateVectors = SpiceAPI.Instance.ReadEphemeris(window, PlanetsAndMoons.EARTH.NaifId, -136,
+                    Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(1.0))
+                .Select(x => x.ToStateVector()).ToArray();
+            for (int i = 0; i < size; ++i)
+            {
+                Assert.Equal(6800.0 + i, stateVectors[i].Position.X, 9);
+                Assert.Equal(i, stateVectors[i].Position.Y, 12);
+                Assert.Equal(i, stateVectors[i].Position.Z, 12);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(file);
         }
     }
 
@@ -980,17 +999,24 @@ public class SpiceApiTest
         var clockFile = new FileInfo("OrientationClockTestFromId.tsc");
         await clock.WriteAsync(clockFile);
         SpiceAPI.Instance.LoadKernels(clockFile);
-
         FileInfo file = new FileInfo("OrientationTestFileFromId.ck");
-        SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, so);
-        SpiceAPI.Instance.LoadKernels(file);
+        try
+        {
+            SpiceAPI.Instance.WriteOrientation(file, spacecraft.NaifId, so);
+            SpiceAPI.Instance.LoadKernels(file);
 
-        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
-        var stateOrientation = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
-            .ToArray();
+            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddSeconds(9.0));
+            var stateOrientation = SpiceAPI.Instance.ReadOrientation(window, spacecraft.NaifId, TimeSpan.Zero, Frames.Frame.ICRF, TimeSpan.FromSeconds(1.0))
+                .ToArray();
 
-        Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
-        Assert.Equal(Frames.Frame.ICRF, stateOrientation[0].ReferenceFrame);
+            Assert.Equal(0.0, stateOrientation[0].Rotation.W, 9);
+            Assert.Equal(Frames.Frame.ICRF, stateOrientation[0].ReferenceFrame);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(file);
+            SpiceAPI.Instance.UnloadKernels(clockFile);
+        }
     }
 
     [Fact]

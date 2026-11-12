@@ -21,11 +21,9 @@ namespace IO.Astrodynamics.Tests.Propagators;
 
 public class CentralBodyPropagatorBuilderTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     public CentralBodyPropagatorBuilderTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static CelestialBody CreateEarth(double albedo = 0.0,

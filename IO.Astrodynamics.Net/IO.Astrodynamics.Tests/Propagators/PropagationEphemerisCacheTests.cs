@@ -17,7 +17,7 @@ public class PropagationEphemerisCacheTests
 
     public PropagationEphemerisCacheTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static (CelestialBody Earth, CelestialBody Moon, Window Window, (CelestialItem, Aberration)[] Entries) Setup()

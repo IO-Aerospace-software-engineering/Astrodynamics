@@ -33,7 +33,7 @@ public class GeometryFinderTests
     public GeometryFinderTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
 

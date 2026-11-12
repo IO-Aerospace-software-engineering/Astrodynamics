@@ -18,7 +18,7 @@ public class TLENoradIdTests
 
     public TLENoradIdTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>

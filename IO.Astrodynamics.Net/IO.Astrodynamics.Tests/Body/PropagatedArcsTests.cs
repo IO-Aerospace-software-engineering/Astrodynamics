@@ -198,7 +198,7 @@ public class PropagatedArcsTests
     public PropagatedArcsTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>

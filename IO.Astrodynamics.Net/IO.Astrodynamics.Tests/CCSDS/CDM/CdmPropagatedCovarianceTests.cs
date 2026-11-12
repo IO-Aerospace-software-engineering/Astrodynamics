@@ -40,7 +40,7 @@ public sealed class CdmPropagatedCovarianceCase
 
     public CdmPropagatedCovarianceCase()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start,
             new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
             new Nrlmsise00Model(SpaceWeather.Nominal));

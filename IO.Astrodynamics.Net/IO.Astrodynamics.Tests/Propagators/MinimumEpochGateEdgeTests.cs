@@ -63,7 +63,7 @@ public class MinimumEpochGateEdgeTests
     public MinimumEpochGateEdgeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>A gated detector: +1 before its gate, as the guard of <see cref="ManeuverEventDetector"/>, g otherwise; the

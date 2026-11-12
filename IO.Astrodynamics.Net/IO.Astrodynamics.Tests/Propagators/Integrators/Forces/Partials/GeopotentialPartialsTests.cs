@@ -29,7 +29,7 @@ public sealed class GeopotentialPartialsBodies
 
     public GeopotentialPartialsBodies()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         foreach (int degree in new[] { 2, 10, 70, GeopotentialGravitationalField.MaxPartialsDegree,
                      GeopotentialGravitationalField.MaxPartialsDegree + 10 })
         {

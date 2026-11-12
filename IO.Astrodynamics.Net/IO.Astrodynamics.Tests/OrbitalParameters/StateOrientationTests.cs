@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public StateOrientationTests(ITestOutputHelper output)
         {
             _output = output;
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

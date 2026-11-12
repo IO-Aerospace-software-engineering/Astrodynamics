@@ -31,7 +31,7 @@ public sealed class ConjunctionCovarianceCase
 
     public ConjunctionCovarianceCase()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
         var (protectedOrbit, secondaryOrbit) = Pair(Earth, Start, Tca);
 

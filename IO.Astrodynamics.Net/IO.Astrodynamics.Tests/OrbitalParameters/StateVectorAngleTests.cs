@@ -21,7 +21,7 @@ public class StateVectorAngleTests
     public StateVectorAngleTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public static TheoryData<string> Cases => new()

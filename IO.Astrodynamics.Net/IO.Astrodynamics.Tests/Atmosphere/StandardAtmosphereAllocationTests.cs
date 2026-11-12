@@ -45,7 +45,7 @@ public class StandardAtmosphereAllocationTests
     public StandardAtmosphereAllocationTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public static TheoryData<string> Models => new() { "Earth", "Mars" };

@@ -11,7 +11,7 @@ public class CelestialAttitudeTargetTests
 {
     public CelestialAttitudeTargetTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

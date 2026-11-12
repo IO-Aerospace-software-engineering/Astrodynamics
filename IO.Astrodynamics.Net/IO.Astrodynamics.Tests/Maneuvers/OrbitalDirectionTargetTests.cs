@@ -11,7 +11,7 @@ public class OrbitalDirectionTargetTests
 {
     public OrbitalDirectionTargetTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private StateVector CreateEquatorialStateVector()

@@ -51,7 +51,7 @@ public class KernelWindowSearchTests
     public KernelWindowSearchTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         SpiceAPI.Instance.LoadKernels(LroSpkPath);
         SpiceAPI.Instance.LoadKernels(OrbiterSpkPath);
     }

@@ -50,7 +50,7 @@ public class ManeuverChainCycleTests
 
     public ManeuverChainCycleTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>A nadir attitude whose next maneuver a test sets past <see cref="Maneuver.Maneuver.SetNextManeuver"/>.</summary>

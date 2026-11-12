@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         // expected values take that speed from SPICE (sxform_c, tools/spice_reference/spice_ref.c).
         public LaunchTests()
         {
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

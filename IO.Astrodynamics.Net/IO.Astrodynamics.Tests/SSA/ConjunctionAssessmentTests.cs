@@ -20,14 +20,12 @@ namespace IO.Astrodynamics.Tests.SSA;
 
 public partial class ConjunctionAssessmentTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     private readonly ITestOutputHelper _output;
 
     public ConjunctionAssessmentTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     // ========== TCA Detection Tests ==========
