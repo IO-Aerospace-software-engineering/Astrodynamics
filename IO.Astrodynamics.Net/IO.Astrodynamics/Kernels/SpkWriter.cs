@@ -11,7 +11,7 @@ namespace IO.Astrodynamics.Kernels;
 
 /// <summary>
 /// A managed writer of SPK files of type 9 (Lagrange interpolation, unequal time steps), one segment per arc of states
-/// (#540): the native writer, frozen, writes one segment per file, of degree 15. The file is a DAF in the little-endian
+/// (#540): the native writer writes one segment per file, of degree 15. The file is a DAF in the little-endian
 /// IEEE format (<c>LTL-IEEE</c>), as the DAF and SPK Required Reading of NAIF define it: a file record, one summary record
 /// and one name record for each 25 segments, and one more after a full one, then the data of each segment, with no comment
 /// area.
