@@ -1203,9 +1203,69 @@ A major version, because it breaks the API: members deprecated for removal in 11
     maneuver; so does `ManeuverEventDetector.HandleEvent`, whose state after the impulse is `EventResult.ModifiedState`.
   - **Unchanged, bit for bit:** the state it returns, the ΔV, the fuel and the windows, and every propagation, which
     executes impulses on a state of its own and continues from the returned state.
+- **The distance search of a kernel spacecraft ran with a threshold 1000 times too small** ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
+  When both objects come from the kernels and one is a spacecraft, `CelestialItem.FindWindowsOnDistanceConstraint`
+  and `Site.FindWindowsOnDistanceConstraint` (a site from the kernels, a kernel spacecraft as observer) hand the search to
+  CSPICE's `gfdist_c` through `SpiceAPI.FindWindowsOnDistanceConstraint`, which takes metres (the native layer converts
+  them to km); both divided the metres by 1000 first, so "farther than 1815.148 km" ran as "farther than 1.815148 km":
+  `Greater` returned the whole search window, `Lower` and `Equal` nothing, with no error, and the same geometry gave
+  another answer through the managed search (a `Site` observer). They now pass the metres. Only these two calls change,
+  on that branch; the coordinate search, which converts its distances to km for `gfposc_c`, was right and is unchanged.
+  - **Measured** (Linux x64, 2026-11-11) against `gfdist_c` and `gfposc_c` converged to 1e-9 s
+    (`tools/geometry_reference/kernel_search_reference.py`, `KernelWindowSearchTests`), LRO from 2023-12-15 00:05 to
+    12:05 TDB at 60 s: LRO and the Moon beyond, within and at 1815.148 km (7, 6 and 12 windows; 1, 0 and 0 before),
+    LRO and the Earth-Moon barycenter beyond 364 500 km (7; 1 before), LRO and a second kernel spacecraft (a two-body
+    lunar orbiter written by the generator) within 3000 km (8; 0 before), each with either object as the receiver, and
+    DSS-13 from the kernels and LRO beyond 372 000 km (2; 1 before): every edge within 4.8e-7 s, CSPICE's default
+    tolerance of 1e-6 s; the managed search of LRO from DSS-13 within 1.2e-7 s of the same windows, and the coordinate
+    searches (Z > 500 km, range > 1815.148 km and > 372 000 km) within 4.8e-7 s, before and after.
+- **The illumination windows of a site from the kernels were seconds off** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)).
+  `Site.FindWindowsOnIlluminationConstraint` and `Site.FindDayWindows` of a site from the kernels (`new Site(id, name,
+  body)`) search with CSPICE's `gfilum_c` through `SpiceAPI.FindWindowsOnIlluminationConstraint`, whose native layer
+  read the altitude of the `Planetodetic` in km beside a radius in km: DSS-13, 1070.85 m up, became a point 1070.85 km
+  up, whose normal is tilted by 94″, and its sunrise and sunset were 4.4 s off (3.1 s to 29.6 s in the other geometries
+  measured). `SpiceAPI` now converts the altitude to km before the call. So are fixed the launch windows by day of a
+  recovery site from the kernels (`Launch.FindLaunchWindows` through `FindDayWindows`) and the CLI command
+  `find-windows-from-illumination-constraint` (under Changed). The sites built from their coordinates, which the library
+  searches, are unchanged.
+  - **Measured** (Linux x64, 2026-11-11) against `gfilum_c` converged to 1e-9 s
+    (`tools/geometry_reference/kernel_search_reference.py`, `KernelWindowSearchTests`) over 24 h from 2023-12-15 00:05
+    TDB: DSS-13 from the kernels, at its position at J2000 TDB, incidence above 90° without correction, below 90.8° and
+    96° with LT+S (`FindDayWindows` at 0.8° and 6°), above 60° with CN+S, within 3.6e-7 s (4.4, 4.3, 3.6 and 29.6 s
+    before); `SpiceAPI` at the longitude of DSS-13 at 0, 1071 and 5000 m, at latitudes 0 and 60° at 1071 m, and on the
+    Moon at 1071 m over 30 days, within 4.8e-7 s (0.11 s to 15.2 s before; 0 m unchanged). The site from the kernels and
+    the site built from its coordinates now agree within 4.96e-3 s (4.1 s and 5.2 s before): `gfilum_c` takes the
+    normal of a point above the ellipsoid from `surfnm_c`, 0.11″ from the geodetic normal of the library at DSS-13
+    ([Sites](../reference/sites.md#window-searches)).
+- **`EpochAtMeanAnomaly` came one period late from a `StateVector`, and could be in the past at e = 0.999999** ([#474](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/474)).
+  It added 2π to the difference of the anomalies at most once, so it was right only when both lay in [0, 2π): from a
+  `StateVector`, whose mean anomaly is in (−π, π), a target between the position and the periapsis came one period late
+  (12 % of the pairs of a grid of the issue), and so did the epoch of `ToStateVector(trueAnomaly)`; a target outside
+  [0, 2π) gave a past epoch or one a period late; at e = 0.999999, where `KeplerianElements` keeps its mean anomaly
+  unreduced, the epoch could be in the past or throw `OverflowException` (`TimeToRadius` and `TimeToSphereOfInfluence`
+  with it). On an ellipse the difference is now reduced modulo 2π: the next passage at or after the epoch, whatever the
+  turn of either anomaly; an open orbit still passes once. A passage beyond the epochs a `Time` holds throws
+  `ArgumentOutOfRangeException`. `KeplerianElements` still keeps the mean anomaly at e = 0.999999 (`MeanAnomaly()`,
+  `AtEpoch`, the OPM export), the open choice of the issue.
+  - **Measured** (Linux x64, 2026-11-11) against ((M_t − M_0) mod 2π)/n at 60 digits
+    (`tools/epoch_at_mean_anomaly/epoch_at_mean_anomaly_reference.py`, `EpochAtMeanAnomalyTests`), about the Earth in
+    TT seconds: from the `StateVector` of a = 1e7 m, e = 0.3, M = 5 rad, the passage at 5.5 rad 791.956 s and at
+    ν = 300° 1104.351 s later (10 743.970 s and 11 056.365 s before); from `KeplerianElements` at M = 1 rad the
+    targets −7 and 8 rad, and from `EquinoctialElements` the targets 5.5, −7 and 8 rad, all within 4.5e-8 s, half a
+    tick; a grid of `StateVector`s after the apoapsis (e from 0.001 to 0.999) within 8.4e-12 of the period; about the
+    Sun, a comet at e = 0.999999 (a = 1e4 au) from M = −0.02 rad within 9.2e-4 s of 5.02e10 s (`OverflowException`
+    before) and 300 years later within 3.4e-3 s of 5.60e9 s, the rounding of M (one ulp is 4.5e-3 s); at e = 0.999999
+    and M = 20 rad, `TimeToRadius(7e6 m)` on the issue's a = 7e6 m within 3.9e-8 s of 5290.815 s (−12 194.735 s before)
+    and `TimeToSphereOfInfluence` about the Moon (a = 5e7 m) within 1.35e-5 s of 973 267.782 s, where one ulp of cos ν
+    moves the time by 2.2e-5 s. Pairs with both anomalies in [0, 2π) keep their epoch bit for bit.
 
 **Changed**
 
+- **`SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
+  the altitude of the `Planetodetic`, which `Planetodetic` documents in m, reached `gfilum_c` as km, so a caller
+  passing metres got edges seconds off. A caller who passed km gets a point 1000 times lower: at DSS-13 the sunrise moves
+  by 5 ms between 0 and 1071 m. The CLI help of `find-windows-from-illumination-constraint` now names the units of its
+  coordinates (rad, rad, m). An altitude of 0 gives the same call, bit for bit.
 - **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its
   `InitialOrbitalParameters.Observer` is the Earth unless `centerOfMotion` says otherwise (the SSB before), so the
   observer of a conjunction analysis it protects, and of anything else that reads that centre, is the Earth. Pass

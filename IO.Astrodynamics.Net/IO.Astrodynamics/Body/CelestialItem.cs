@@ -892,17 +892,20 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <param name="searchWindow"></param>
     /// <param name="observer"></param>
     /// <param name="relationalOperator"></param>
-    /// <param name="value"></param>
+    /// <param name="value">The distance, m.</param>
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
+    /// <remarks>When both objects come from the kernels and one of them is a spacecraft, CSPICE's <c>gfdist_c</c>
+    /// searches; otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
     public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer,
         RelationnalOperator relationalOperator, double value, Aberration aberration, in TimeSpan stepSize)
     {
+        // SpiceAPI takes metres, as this method: the native layer converts them to km for gfdist_c (#466)
         if (IsSpiceBacked && observer is CelestialItem ci1 && ci1.IsSpiceBacked
             && (IsSpacecraft || ci1.IsSpacecraft))
             return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
-                searchWindow, observer.NaifId, NaifId, relationalOperator, value / 1000.0, aberration, stepSize);
+                searchWindow, observer.NaifId, NaifId, relationalOperator, value, aberration, stepSize);
 
         Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
 
