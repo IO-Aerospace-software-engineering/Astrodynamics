@@ -60,7 +60,11 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 
 ## Spacecraft Export
 
-`Spacecraft.ToOpm(...)` exports the spacecraft's current state to OPM format.
+`Spacecraft.ToOpm(originator, epoch, includeKeplerianElements, includeSpacecraftParameters, includeManeuvers)` exports to OPM
+format the state of the spacecraft's initial orbital parameters at `epoch`, their epoch by default:
+`InitialOrbitalParameters.ToStateVector(epoch)`, the two-body motion of osculating elements (SGP4 for a TLE), not the
+states of a propagation. Every argument is optional, so name the ones you pass (`epoch: epoch`). The state is written in
+the frame of the spacecraft's initial orbital parameters, which the export does not change: there is no frame argument. The spacecraft needs a `CosparId` (`InvalidOperationException` otherwise).
 
 The covariance of the initial state (`StateVector.Covariance`, m², m²/s, m²/s²) is exported, in km², km²/s and km²/s², when
 the OPM is written at the initial epoch (the default, or the same instant in any time frame) (#551). At another epoch the
@@ -69,8 +73,8 @@ OPM carries no covariance: moving it there would take the state transition matri
 ## Example
 
 ```csharp
-// Export spacecraft state to OPM
-var opm = spacecraft.ToOpm(epoch, Frame.ICRF);
+// Export spacecraft state to OPM, in the frame of its state
+var opm = spacecraft.ToOpm(epoch: epoch);
 opm.SaveToFile("state.opm.xml");
 
 // Load and convert back

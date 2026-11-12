@@ -83,11 +83,17 @@ Equinoctial elements have no singularity at zero eccentricity or zero inclinatio
 var equinoctial = sv.ToEquinoctial();
 
 Console.WriteLine($"Semi-major axis: {equinoctial.SemiMajorAxis():F0} m");
-Console.WriteLine($"h: {equinoctial.H():F6}");
-Console.WriteLine($"k: {equinoctial.K():F6}");
-Console.WriteLine($"p: {equinoctial.P():F6}");
-Console.WriteLine($"q: {equinoctial.Q():F6}");
+Console.WriteLine($"p, semi-latus rectum: {equinoctial.P:F3} m");
+Console.WriteLine($"f = e cos(ω + Ω): {equinoctial.F:F6}");
+Console.WriteLine($"g = e sin(ω + Ω): {equinoctial.G:F6}");
+Console.WriteLine($"h = tan(i/2) cos Ω: {equinoctial.H:F6}");
+Console.WriteLine($"k = tan(i/2) sin Ω: {equinoctial.K:F6}");
+Console.WriteLine($"L = Ω + ω + ν: {equinoctial.L0:F6} rad");
 ```
+
+These are the modified equinoctial elements p, f, g, h, k and L. The classical set (GMAT's EquinoctialH, EquinoctialK,
+EquinoctialP and EquinoctialQ) is h = G, k = F, p = K and q = H in these names.
+`EquinoctialEx()`, `EquinoctialEy()`, `Hx()`, `Hy()` and `Lv()` return F, G, H, K and L0.
 
 They are preferred for numerical orbit determination and low-eccentricity orbits where Keplerian elements become poorly defined.
 

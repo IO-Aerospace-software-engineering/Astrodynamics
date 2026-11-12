@@ -1259,6 +1259,62 @@ A major version, because it breaks the API: members deprecated for removal in 11
     and `TimeToSphereOfInfluence` about the Moon (a = 5e7 m) within 1.35e-5 s of 973 267.782 s, where one ulp of cos ν
     moves the time by 2.2e-5 s. Pairs with both anomalies in [0, 2π) keep their epoch bit for bit.
 
+- **`Time(string)` threw on the `UTC` of its documented example** ([#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455), items 1 and 2).
+  - **The cause.** After a calendar that `DateTime` does not read on its own, the constructor took the last three
+    characters as the frame and knew only `TDB`, `TDT`, `GPS` and `TAI`: `new Time("2024-06-21T12:00:00.000 UTC")`, the
+    example of `docs/reference/time-and-windows.md` and of `DEVELOPER_GUIDE.md`, threw `ArgumentException`, and so did
+    ` TT`, the IAU name of the scale the library calls TDT.
+  - **The fix.** The frame is the word after the last space, in any case: `UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`;
+    `2024-06-21T12:00:00.000 UTC` is the instant of `2024-06-21T12:00:00.000Z` and of `Time.CreateUTC(772243200)`, its
+    TAI 37 s later. A second 60 throws an `ArgumentException` that says a `Time` holds no leap second (it threw "Value is
+    not a valid time frame", or a `FormatException` with a frame name). A frame name right after the calendar, with no
+    space (`…12:00:00.000TDB`, `…12:05TDB`), is read with the calendar as written: the constructor cut the calendar one
+    character short, which read the right instant when that character was a trailing zero (`.000TDB`, `12:00:00TDB`),
+    and otherwise threw a `FormatException` (`12:00:05TDB`) or read another instant (`2024-06-21 12:05TDB` read 12:00).
+    A `Z` or an offset before a frame name (`…12:00:00Z UTC`, `…+02:00 TDB`) throws an `ArgumentException` (Changed
+    below): `DateTime` converted the calendar to the machine's local time, which the frame then labelled.
+  - **Unchanged:** the `Z`, offset and untagged forms, and the time of every string with a space before its frame name
+    and no zone designator.
+  - **The documentation of the time scales.** `DEVELOPER_GUIDE.md` ("IERS Conventions, leap seconds from NAIF LSK
+    kernels") and `docs/standards-and-units.md` ("Time: IERS conventions") now state what the managed conversions do: the
+    leap second table of `TimeFrame` (a fixed 9 s before 1972, as the LSK), TT = TAI + 32.184 s, GPS = TAI − 19 s, and
+    the one-term TDB − TT series, within 1.06 µs of the LSK formula SPICE `unitim` evaluates and 37.34 µs of ERFA `dtdb`
+    from 1972 to 2100; CSPICE is given the managed TDB as its ephemeris time. See
+    [Time Scales](../reference/time-and-windows.md#time-scales).
+    `Period()` for e ≥ 1 (item 3) and the LSK formula for the ephemeris time given to CSPICE (item 4) stay open.
+
+- **The documentation named `RelationnalOperator.Less`, `AbsMin` and `AbsMax`, which do not exist** ([#483](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/483)). The
+  `Site` and TLE tracking examples of `DEVELOPER_GUIDE.md` did not compile (CS0117), and the operator tables of
+  `DEVELOPER_GUIDE.md` and [Enumerations](../reference/enumerations.md#relationnaloperator) left out `NotEqual`,
+  `GreaterOrEqual` and `LowerOrEqual`. The examples pass `Lower`; the `Site` example names the members of `Planetodetic`
+  (`Longitude:`, `Latitude:`, `Altitude:`, CS1739 before), and the TLE example gives its 420 t spacecraft a maximum
+  operating mass of 450 t (1 t threw `ArgumentOutOfRangeException`). Both compile and run: the Moon at 399 039 km from
+  the site at 2024-01-01T12:00 TDB, as SPICE `spkcpo` gives it (399 039.486 km), and 7 windows of the ISS within
+  2000 km of DSS-13 on 2024-06-03. The tables list the ten members as declared, each with its symbol, and the geometry
+  tutorial names `Lower` and the negations. `DeveloperGuideExamplesSmokeTests` runs both examples on the packed package:
+  the Moon's range within 1e-3 m of `spkcpo` (3.1e-5 m on Linux), and the TLE example's windows found.
+
+- **The equinoctial snippet of the orbit-creation tutorial did not compile, and two pages called the elements free of
+  singularity for every equatorial orbit** ([#465](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/465)). The
+  snippet called `H()`, `K()`, `P()` and `Q()`: `P`, `H` and `K` are properties and nothing is named `Q` (CS1955, CS1061),
+  and its labels h, k, p were the inclination components and the semi-latus rectum. It now prints `P` (m), `F`, `G`, `H`,
+  `K` and `L0` under their definitions, and says that the classical set of GMAT (EquinoctialH, K, P, Q) is G, F, K, H in
+  these names; for the tutorial's state it prints p = 7424377.237 m and f = e = 0.091820, the closed form of a periapsis
+  (p = (r v)²/μ, e = p/r − 1). [Keplerian Elements](../reference/keplerian-elements.md#equinoctialelements) and
+  `DEVELOPER_GUIDE.md` list the six properties and the accessor of each. Both now say what orbit-creation already said:
+  no singularity at e = 0 or i = 0, where the Keplerian ω and Ω are undefined, and the retrograde equatorial orbit
+  (i = 180°) singular, h and k growing as tan(i/2). `EquinoctialElementsTests` checks the tutorial's state against the closed form and state S1 of
+  the issue against GMAT R2026a (components within 1.9e-16, P within 9.3e-10 m, Linux), the accessor methods
+  against the properties, and the orbit of the issue at i = π − δ (δ = 1e-3, 1e-6, 1e-9) against tan(i/2) cos Ω and
+  tan(i/2) sin Ω at 50 digits (H and K within 1.4e-16 relative, the state within 1.9e-9 m of the Keplerian one, Linux).
+
+- **The export example of the OPM page did not compile** ([#557](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/557)). It called
+  `spacecraft.ToOpm(epoch, Frame.ICRF)`, whose first parameter is the originator and which has no frame parameter
+  (CS1503 twice). It now calls `spacecraft.ToOpm(epoch: epoch)`, and [OPM](../reference/opm.md#spacecraft-export) gives
+  the signature, says that the state is that of the spacecraft's initial orbital parameters at the epoch (two-body, or
+  SGP4 for a TLE; not a propagated state), written in their frame, and that a `CosparId` is required. The example
+  compiles and runs: the state read back from the file is the state written.
+
 **Changed**
 
 - **`SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
@@ -1276,6 +1332,10 @@ A major version, because it breaks the API: members deprecated for removal in 11
   alone, without an SPK that covers its epoch, now throws at construction: its initial state cannot be read. A planet or
   a moon the loaded kernels do not chain to its system barycenter has `InitialOrbitalParameters` null, and its
   `SphereOfInfluence` is then +Infinity, as for a body built from custom parameters.
+- **`Time(string)` rejects a `Z` or an offset before a frame name** ([#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455), Fixed above): `"2024-06-21T12:00:00Z TDB"`
+  and `"…+02:00 UTC"` throw `ArgumentException`. The calendar was converted to the machine's local time and then labelled
+  with the frame named, so the instant depended on the machine's time zone; on a machine in UTC a `Z` read as if absent.
+  Write the calendar without its zone designator, or the `Z` form alone for UTC.
 - **`AnalyzeAll` on two propagations no longer lists the window ends** ([#621](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/621), Fixed above), and returns an
   empty list for a window without an interior minimum.
 - **Every TEME ↔ ICRF result moves** with the managed TEME ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451), Fixed above), by 0.3″ to 23.3″ over 2000–2026

@@ -253,6 +253,150 @@ public class DateTimeTests
     }
 
     /// <summary>
+    /// The frame names a time string can end with (#455), in the case written: 2024-06-21T12:00:00 of each frame is
+    /// 772243200 s from J2000 in its own calendar (8938 days), and its TAI instant is that calendar plus TAI − UTC = 37 s
+    /// (IERS Bulletin C, from 2017-01-01; the NAIF LSK), minus TT − TAI = 32.184 s, or plus TAI − GPS = 19 s.
+    /// </summary>
+    public static TheoryData<string, string, long?> FrameSuffixes() => new()
+    {
+        { "2024-06-21T12:00:00.000 UTC", "UTC", 370000000L },
+        { "2024-06-21T12:00:00.000 utc", "UTC", 370000000L },
+        { "2024-06-21T12:00:00.000 TT", "TDT", -321840000L },
+        { "2024-06-21T12:00:00.000 tt", "TDT", -321840000L },
+        { "2024-06-21T12:00:00.000 TDT", "TDT", -321840000L },
+        { "2024-06-21T12:00:00.000 TAI", "TAI", 0L },
+        { "2024-06-21T12:00:00.000 GPS", "GPS", 190000000L },
+        { "2024-06-21 12:00:00 Tdb", "TDB", null },
+        { "2024-06-21T12:00:00.000\tTDB  ", "TDB", null }
+    };
+
+    [Theory]
+    [MemberData(nameof(FrameSuffixes))]
+    public void CreateFromStringWithEachFrameName(string timeString, string frameName, long? taiMinusCalendarTicks)
+    {
+        var frame = frameName switch
+        {
+            "UTC" => (ITimeFrame)TimeFrame.UTCFrame,
+            "TDT" => TimeFrame.TDTFrame,
+            "TAI" => TimeFrame.TAIFrame,
+            "GPS" => TimeFrame.GPSFrame,
+            _ => TimeFrame.TDBFrame
+        };
+
+        var parsed = new TimeSystem.Time(timeString);
+
+        Assert.Same(frame, parsed.Frame);
+        Assert.Equal(new TimeSystem.Time(new DateTime(2024, 6, 21, 12, 0, 0), frame), parsed);
+        Assert.Equal(TimeSystem.Time.Create(772243200.0, frame), parsed);
+        Assert.Equal(frame is UTCTimeFrame ? DateTimeKind.Utc : DateTimeKind.Unspecified, parsed.DateTime.Kind);
+        if (frame is UTCTimeFrame)
+        {
+            Assert.Equal(TimeSystem.Time.CreateUTC(772243200.0), parsed);
+        }
+        else if (frame is TDBTimeFrame)
+        {
+            Assert.Equal(TimeSystem.Time.CreateTDB(772243200.0), parsed);
+        }
+
+        if (taiMinusCalendarTicks.HasValue)
+        {
+            Assert.Equal(new DateTime(2024, 6, 21, 12, 0, 0).AddTicks(taiMinusCalendarTicks.Value), parsed.ToTAI().DateTime);
+        }
+    }
+
+    [Fact]
+    public void TheUtcExampleOfTheDocumentationIsTheUtcInstant()
+    {
+        // docs/reference/time-and-windows.md and DEVELOPER_GUIDE.md: the same instant as its Z form
+        Assert.Equal(new TimeSystem.Time("2024-06-21T12:00:00.000Z"), new TimeSystem.Time("2024-06-21T12:00:00.000 UTC"));
+    }
+
+    [Fact]
+    public void ToStringReadsBackInEveryFrame()
+    {
+        var calendar = new DateTime(2024, 6, 21, 12, 0, 0).AddTicks(1234567);
+        foreach (var frame in new ITimeFrame[] { TimeFrame.UTCFrame, TimeFrame.TDBFrame, TimeFrame.TDTFrame, TimeFrame.TAIFrame, TimeFrame.GPSFrame })
+        {
+            var time = new TimeSystem.Time(calendar, frame);
+            var read = new TimeSystem.Time(time.ToString());
+            Assert.Same(frame, read.Frame);
+            Assert.Equal(time, read);
+        }
+    }
+
+    /// <summary>
+    /// A frame name right after the calendar, with no space, as before #455, which cut the calendar one character short
+    /// (12:05TDB read 12:00): the calendar as written, in the frame named.
+    /// </summary>
+    [Theory]
+    [InlineData("2024-06-21T12:00:00.000TDB", "TDB", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21T12:00:00.120TAI", "TAI", 2024, 6, 21, 12, 0, 0, 120)]
+    [InlineData("2024-06-21T12:00:00.00GPS", "GPS", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21 12:00:00TDB", "TDB", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21T12:00:05TDB", "TDB", 2024, 6, 21, 12, 0, 5, 0)]
+    [InlineData("2024-06-21 12:05TDB", "TDB", 2024, 6, 21, 12, 5, 0, 0)]
+    [InlineData("2024-06-21T12:00:00.000UTC", "UTC", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21T12:00:00tt", "TDT", 2024, 6, 21, 12, 0, 0, 0)]
+    [InlineData("2024-06-21T12:00:00TDT", "TDT", 2024, 6, 21, 12, 0, 0, 0)]
+    public void CreateFromStringWithAnUnspacedFrameName(string timeString, string frameName, int year, int month, int day,
+        int hour, int minute, int second, int millisecond)
+    {
+        var frame = frameName switch
+        {
+            "UTC" => (ITimeFrame)TimeFrame.UTCFrame,
+            "TDT" => TimeFrame.TDTFrame,
+            "TAI" => TimeFrame.TAIFrame,
+            "GPS" => TimeFrame.GPSFrame,
+            _ => TimeFrame.TDBFrame
+        };
+
+        var parsed = new TimeSystem.Time(timeString);
+
+        Assert.Same(frame, parsed.Frame);
+        Assert.Equal(new TimeSystem.Time(new DateTime(year, month, day, hour, minute, second, millisecond), frame), parsed);
+    }
+
+    [Theory]
+    [InlineData("2024-06-21T12:00:00.000 GMT")]
+    [InlineData("2024-06-21T12:00:00.000 TTT")]
+    [InlineData("2024-06-21T12:00:00.000 XTDB")]
+    [InlineData("TDB")]
+    [InlineData(" TDB")]
+    public void CreateFromStringWithoutAFrameNameThrows(string timeString)
+    {
+        var exception = Assert.Throws<ArgumentException>(() => new TimeSystem.Time(timeString));
+        Assert.StartsWith("Value is not a valid time frame.", exception.Message);
+    }
+
+    /// <summary>
+    /// A Z or an offset before a frame name: DateTime converted the calendar to the machine's local time, which the frame
+    /// then labelled, an instant that depended on the time zone of the machine (#455's review). It throws in every zone.
+    /// </summary>
+    [Theory]
+    [InlineData("2024-06-21T12:00:00Z UTC")]
+    [InlineData("2024-06-21T12:00:00.000ZUTC")]
+    [InlineData("2024-06-21T12:00:00+02:00 UTC")]
+    [InlineData("2024-06-21T12:00:00Z TDB")]
+    [InlineData("2024-06-21T12:00:00z tai")]
+    [InlineData("2024-06-21T12:00:00-05:00 GPS")]
+    [InlineData("2024-06-21T12:00:00+00:00TT")]
+    public void CreateFromStringWithAZoneAndAFrameNameThrows(string timeString)
+    {
+        var exception = Assert.Throws<ArgumentException>(() => new TimeSystem.Time(timeString));
+        Assert.StartsWith("A calendar with a Z or an offset takes no frame name.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("2016-12-31T23:59:60Z")]
+    [InlineData("2016-12-31T23:59:60.5 UTC")]
+    [InlineData("2016-12-31T23:59:60 TAI")]
+    public void CreateFromStringWithSecondSixtyThrowsSaying(string timeString)
+    {
+        var exception = Assert.Throws<ArgumentException>(() => new TimeSystem.Time(timeString));
+        Assert.StartsWith("Second 60 cannot be represented", exception.Message);
+    }
+
+    /// <summary>
     /// Every leap second of the table, with its index: TAI - UTC is 9 + index s just before it and 10 + index s
     /// from its first instant on (10 s on 1972-01-01, 37 s on 2017-01-01).
     /// </summary>

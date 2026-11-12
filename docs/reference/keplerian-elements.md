@@ -43,15 +43,24 @@
 
 ## EquinoctialElements
 
-`EquinoctialElements` has no singularity for circular or equatorial orbits: `ToStateVector()` computes the state from the elements directly, and `ToKeplerianElements()` takes ω = 0 for an exactly circular orbit (f = g = 0) and Ω = 0 for an exactly equatorial one (h = k = 0).
+`EquinoctialElements` has no singularity for circular orbits (e = 0) or for prograde equatorial ones (i = 0), where the Keplerian ω and Ω are undefined: `ToStateVector()` computes the state from the elements directly, and `ToKeplerianElements()` takes ω = 0 for an exactly circular orbit (f = g = 0) and Ω = 0 for an exactly equatorial one (h = k = 0). Its only singular orbit is the retrograde equatorial one (i = 180°), where h = tan(i/2) cos Ω and k = tan(i/2) sin Ω grow without bound.
+
+| Property | Description |
+|----------|-------------|
+| `P` | Semi-latus rectum a (1 − e²) (m) |
+| `F` / `G` | Eccentricity components e cos(ω + Ω) / e sin(ω + Ω) |
+| `H` / `K` | Inclination components tan(i/2) cos Ω / tan(i/2) sin Ω |
+| `L0` | True longitude Ω + ω + ν (rad) |
+
+The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F, p = K and q = H.
 
 | Method | Description |
 |--------|-------------|
 | `ToStateVector()` | Convert to state vector |
 | `ToKeplerianElements()` | Convert to Keplerian |
-| `EquinoctialEx()` / `EquinoctialEy()` | Eccentricity components |
-| `Hx()` / `Hy()` | Inclination components |
-| `Lv()` | True longitude (rad) |
+| `EquinoctialEx()` / `EquinoctialEy()` | Eccentricity components, `F` / `G` |
+| `Hx()` / `Hy()` | Inclination components, `H` / `K` |
+| `Lv()` | True longitude (rad), `L0` |
 
 ## See Also
 

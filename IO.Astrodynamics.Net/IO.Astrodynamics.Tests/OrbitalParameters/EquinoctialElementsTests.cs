@@ -3,15 +3,109 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Math;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.OrbitalParameters;
 
 public class EquinoctialElementsTests
 {
-    public EquinoctialElementsTests()
+    private readonly ITestOutputHelper _output;
+
+    public EquinoctialElementsTests(ITestOutputHelper output)
     {
+        _output = output;
         SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+    }
+
+    /// <summary>
+    /// The state of docs/tutorials/orbit-creation.md (#465), at its periapsis on the x axis in the equatorial plane: p = (r v)² / μ
+    /// and f = e = p / r − 1, g = h = k = L = 0, with μ the kernel GM of the Earth, 398600435507022.6 m³/s²; the closed form
+    /// at 40 digits (mpmath) is p = 7424377.236908115642 m, e = 0.09182018189825230031. The same on Linux x64, Windows x64 and
+    /// macOS arm64 (CI run 43084675599, 2026-11-11): P 9.3e-10 m (1.3e-16 relative), F 5.6e-17, G, H, K and L0 exactly 0 (their
+    /// closed form is 0 and the state lies on the x axis in the equatorial plane). Bounds: twice the worst, 2.6e-16 relative for
+    /// P, 1.2e-16 for F, and exact equality for the components that are 0.
+    /// </summary>
+    [Fact]
+    public void TheStateOfTheTutorialGivesTheClosedForm()
+    {
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        Assert.Equal(398600435507022.6, earth.GM);
+        var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0),
+            Frames.Frame.ICRF);
+
+        var equinoctial = sv.ToEquinoctial();
+
+        _output.WriteLine($"P {equinoctial.P - 7424377.236908115642:E3} m, F {equinoctial.F - 0.09182018189825230031:E3}, G {equinoctial.G:E3}, H {equinoctial.H:E3}, K {equinoctial.K:E3}, L0 {equinoctial.L0:E3}");
+        Assert.Equal(7424377.236908115642, equinoctial.P, 7424377.236908115642 * 2.6e-16);
+        Assert.Equal(0.09182018189825230031, equinoctial.F, 1.2e-16);
+        Assert.Equal(0.0, equinoctial.G);
+        Assert.Equal(0.0, equinoctial.H);
+        Assert.Equal(0.0, equinoctial.K);
+        Assert.Equal(0.0, equinoctial.L0);
+    }
+
+    /// <summary>
+    /// State S1 of #465 (r = (−4000, 5500, 2500) km, v = (−5.5, −3.0, 4.0) km/s, ICRF) against GMAT R2026a with Earth.Mu the kernel
+    /// GM (#465, 2026-10-25): the modified set is P = SemilatusRectum, F = EquinoctialK, G = EquinoctialH, H = EquinoctialQ and
+    /// K = EquinoctialP, the names of the tutorial and of docs/reference/keplerian-elements.md; the accessor methods return the
+    /// properties. The same on Linux x64, Windows x64 and macOS arm64 (CI run
+    /// 43084675599, 2026-11-11): the components at most 1.9e-16 off, P 9.3e-10 m (GMAT prints P to 1e-9 m); the bounds are
+    /// twice the worst, 3.9e-16 and 1.9e-9 m.
+    /// </summary>
+    [Fact]
+    public void TheModifiedSetIsTheClassicalSetOfGmatUnderItsNames()
+    {
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        var sv = new StateVector(new Vector3(-4000000.0, 5500000.0, 2500000.0), new Vector3(-5500.0, -3000.0, 4000.0), earth,
+            new TimeSystem.Time(2024, 6, 21, 12, 0, 0), Frames.Frame.ICRF);
+
+        var equinoctial = sv.ToEquinoctial();
+
+        _output.WriteLine($"P {equinoctial.P - 6674290.249121238:E3} m, F {equinoctial.F - 0.25992015915397076:E3}, G {equinoctial.G - 0.12363511685104268:E3}, " +
+                          $"H {equinoctial.H - -0.023979838219125259:E3}, K {equinoctial.K - 0.31440232331742002:E3}");
+        Assert.Equal(6674290.249121238, equinoctial.P, 1.9e-9);
+        Assert.Equal(0.25992015915397076, equinoctial.F, 3.9e-16);
+        Assert.Equal(0.12363511685104268, equinoctial.G, 3.9e-16);
+        Assert.Equal(-0.023979838219125259, equinoctial.H, 3.9e-16);
+        Assert.Equal(0.31440232331742002, equinoctial.K, 3.9e-16);
+        Assert.Equal(equinoctial.F, equinoctial.EquinoctialEx());
+        Assert.Equal(equinoctial.G, equinoctial.EquinoctialEy());
+        Assert.Equal(equinoctial.H, equinoctial.Hx());
+        Assert.Equal(equinoctial.K, equinoctial.Hy());
+        Assert.Equal(equinoctial.L0, equinoctial.Lv());
+    }
+
+    /// <summary>
+    /// The singular orbit of the set (#465): near i = 180°, H = tan(i/2) cos Ω and K = tan(i/2) sin Ω grow as 2/δ. The orbit
+    /// of #465 (a 7500 km, e 0.05, i = π − δ, Ω 1, ω 0.5, M 2) against the closed form at 50 digits (mpmath) evaluated at
+    /// the double i, and the state of the elements against the state of the Keplerian elements. Over Linux x64, Windows x64 and
+    /// macOS arm64 (CI run 43084675599, 2026-11-11): H and K at most 2.2e-16 relative, the state 2.3e-9 m and 2.3e-12 m/s, the
+    /// worst on macOS arm64 at δ = 1e-6; the bounds are twice the worst, 4.4e-16 relative, 4.7e-9 m and 4.6e-12 m/s.
+    /// </summary>
+    [Theory]
+    [InlineData(1e-3, 1080.604521685880298148829, 1682.941829370605789624414)]
+    [InlineData(1e-6, 1080604.611452808770864849, 1682941.969174313611576429)]
+    [InlineData(1e-9, 1080604389.990800568946039, 1682941624.26767132032076)]
+    public void NearTheRetrogradeEquatorialOrbitHAndKGrowAsTheTangentOfHalfTheInclination(double delta, double expectedH, double expectedK)
+    {
+        var earth = PlanetsAndMoons.EARTH_BODY;
+        var ke = new KeplerianElements(7500000.0, 0.05, System.Math.PI - delta, 1.0, 0.5, 2.0, earth, new TimeSystem.Time(2024, 6, 21, 12, 0, 0),
+            Frames.Frame.ICRF);
+
+        var equinoctial = ke.ToEquinoctial();
+        var expected = ke.ToStateVector();
+        var actual = equinoctial.ToStateVector();
+
+        var dr = (actual.Position - expected.Position).Magnitude();
+        var dv = (actual.Velocity - expected.Velocity).Magnitude();
+        _output.WriteLine($"delta {delta:E0}: H {(equinoctial.H - expectedH) / expectedH:E3}, K {(equinoctial.K - expectedK) / expectedK:E3} relative, " +
+                          $"state {dr:E3} m, {dv:E3} m/s");
+        Assert.Equal(expectedH, equinoctial.H, System.Math.Abs(expectedH) * 4.4e-16);
+        Assert.Equal(expectedK, equinoctial.K, System.Math.Abs(expectedK) * 4.4e-16);
+        Assert.True(dr < 4.7e-9, $"position {dr} m");
+        Assert.True(dv < 4.6e-12, $"velocity {dv} m/s");
     }
 
     [Fact]

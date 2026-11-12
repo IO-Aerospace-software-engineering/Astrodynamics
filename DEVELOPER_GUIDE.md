@@ -62,7 +62,7 @@ public const double Rad2Deg = 180.0 / Math.PI; // Radians to degrees
 
 ### Reference Standards
 
-- **Time**: IERS Conventions, leap seconds from NAIF LSK kernels
+- **Time**: managed conversions with no kernel read: the leap second table of `TimeFrame` (TAI − UTC from 10 s on 1972-01-01 to 37 s from 2017-01-01, a fixed 9 s before 1972), TT = TAI + 32.184 s, GPS = TAI − 19 s, and TDB − TT by the one-term series 0.001658 sin(g + 0.0167 sin g) s; CSPICE is given the managed TDB as its ephemeris time (see `docs/reference/time-and-windows.md#time-scales`)
 - **Ephemerides**: JPL Development Ephemeris (DE series)
 - **Reference Frames**: IAU/IAG standards, IERS conventions
 - **Gravity Models**: EGM2008 (Earth Gravitational Model 2008), geodesy-normalized spherical harmonics up to degree/order 70
@@ -231,7 +231,7 @@ Represents a precise instant in time with time frame awareness.
 | `Time(int year, int month, int day)` | Create from date (defaults to TDB) |
 | `Time(int year, int month, int day, int hour, int minute, int second)` | Create from date and time |
 | `Time(DateTime dateTime, ITimeFrame frame)` | Create from DateTime with specified frame |
-| `Time(string iso8601)` | Parse from ISO 8601 string |
+| `Time(string timeString)` | Parse an ISO 8601 calendar followed by its frame, with or without a space (`UTC`, `TT` or `TDT`, `TDB`, `TAI`, `GPS`); `Z` is UTC, no suffix TDB; a `Z` or an offset before a frame name throws |
 | `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from seconds since J2000 |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds |
 | `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds |
@@ -532,25 +532,29 @@ Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
 
 #### EquinoctialElements
 
-Equinoctial orbital elements, without singularity for circular or equatorial orbits (`ToStateVector()` uses them directly; `ToKeplerianElements()` takes ω = 0 when f = g = 0 exactly and Ω = 0 when h = k = 0 exactly).
+Equinoctial orbital elements, without singularity for circular orbits (e = 0) or prograde equatorial ones (i = 0), where the Keplerian ω and Ω are undefined (`ToStateVector()` uses them directly; `ToKeplerianElements()` takes ω = 0 when f = g = 0 exactly and Ω = 0 when h = k = 0 exactly). Their only singular orbit is the retrograde equatorial one (i = 180°), where h = tan(i/2) cos Ω and k = tan(i/2) sin Ω grow without bound.
 
 | Property | Description |
 |----------|-------------|
+| `P` | Semi-latus rectum a (1 − e²) (m) |
+| `F` / `G` | Eccentricity components e cos(ω + Ω) / e sin(ω + Ω) |
+| `H` / `K` | Inclination components tan(i/2) cos Ω / tan(i/2) sin Ω |
+| `L0` | True longitude Ω + ω + ν (rad) |
+
+The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F, p = K and q = H.
+
+| Method | Description |
+|--------|-------------|
 | `SemiMajorAxis()` | Semi-major axis (m) |
 | `Eccentricity()` | Eccentricity |
 | `Inclination()` | Inclination (rad) |
 | `AscendingNode()` | RAAN (rad) |
 | `ArgumentOfPeriapsis()` | Argument of periapsis (rad) |
-
-| Method | Description |
-|--------|-------------|
 | `ToStateVector()` | Convert to state vector |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
-| `EquinoctialEx()` | Get Ex component |
-| `EquinoctialEy()` | Get Ey component |
-| `Hx()` | Get Hx component |
-| `Hy()` | Get Hy component |
-| `Lv()` | Get true longitude (rad) |
+| `EquinoctialEx()` / `EquinoctialEy()` | Eccentricity components, `F` / `G` |
+| `Hx()` / `Hy()` | Inclination components, `H` / `K` |
+| `Lv()` | True longitude (rad), `L0` |
 
 ```csharp
 var sv = new StateVector(...);
@@ -1130,9 +1134,9 @@ var goldstone = new Site(13, "DSS-13", earth);
 // Create site with explicit coordinates
 var mySite = new Site(100, "MySite", earth,
     new Planetodetic(
-        longitude: -117.0 * Constants.Deg2Rad,
-        latitude: 34.0 * Constants.Deg2Rad,
-        altitude: 1000.0  // meters
+        Longitude: -117.0 * Constants.Deg2Rad,
+        Latitude: 34.0 * Constants.Deg2Rad,
+        Altitude: 1000.0  // meters
     ));
 
 // Get horizontal coordinates to Moon
@@ -1147,7 +1151,7 @@ Console.WriteLine($"Range: {horizontal.Range / 1000:F0} km");
 // Find visibility windows
 var windows = mySite.FindWindowsOnDistanceConstraint(
     new Window(new Time(2024, 1, 1), new Time(2024, 1, 2)),
-    moon, RelationnalOperator.Less, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
+    moon, RelationnalOperator.Lower, 400000000, Aberration.LT, TimeSpan.FromMinutes(10));
 ```
 
 #### LaunchSite
@@ -2093,13 +2097,16 @@ Comparison operators for geometry finding.
 
 | Value | Description |
 |-------|-------------|
-| `Greater` | Value > threshold |
-| `Less` | Value < threshold |
-| `Equal` | Value = threshold |
-| `AbsMin` | Absolute minimum |
-| `AbsMax` | Absolute maximum |
-| `LocalMin` | Local minimum |
-| `LocalMax` | Local maximum |
+| `Greater` | Value > threshold (`>`) |
+| `Lower` | Value < threshold (`<`) |
+| `Equal` | Value = threshold (`=`) |
+| `NotEqual` | Value ≠ threshold (`!`) |
+| `GreaterOrEqual` | Value ≥ threshold (`>=`) |
+| `LowerOrEqual` | Value ≤ threshold (`<=`) |
+| `AbsoluteMin` | Absolute minimum (`ABSMIN`) |
+| `AbsoluteMax` | Absolute maximum (`ABSMAX`) |
+| `LocalMin` | Local minimum (`LOCMIN`) |
+| `LocalMax` | Local maximum (`LOCMAX`) |
 
 ### OccultationType
 
@@ -2616,7 +2623,7 @@ var issTLE = new TLE(
 
 // Create spacecraft from TLE
 var clock = new Clock("ISSClock", 65536);
-var iss = new Spacecraft(-25544, "ISS", 420000.0, 1000.0, clock, issTLE);
+var iss = new Spacecraft(-25544, "ISS", 420000.0, 450000.0, clock, issTLE);
 
 // Track from a ground station
 var goldstone = new Site(13, "DSS-13", earth);
@@ -2643,7 +2650,7 @@ for (var t = trackStart; t < trackEnd; t = t.AddMinutes(10))
 var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(
     new Window(trackStart, trackEnd),
     iss,
-    RelationnalOperator.Less,
+    RelationnalOperator.Lower,
     2000000,  // Within 2000 km
     Aberration.LT,
     TimeSpan.FromMinutes(1)
