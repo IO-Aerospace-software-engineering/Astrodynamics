@@ -25,7 +25,7 @@ public class GeometryFinderCommand
         [Argument(Description = "CoordinateSystem (RECTANGULAR, LATITUDINAL, RA/DEC, SPHERICAL, CYLINDRICAL, GEODETIC, PLANETOGRAPHIC)")]
         string coordinateSystem,
         [Argument(Description = "Coordinate (X,Y,Z,ALTITUDE,COLATITUDE,DECLINATION,LATITUDE,LONGITUDE,RADIUS,RANGE,RIGHT ASCENSION)")] string coordinate,
-        [Argument(Description = "Relational operator used to define search constraint (<,>,=,ABSMIN,ABSMAX,LOCMIN,LOCMAX)")]
+        [Argument(Description = "Relational operator used to define search constraint (<,>,=,<=,>=,!,ABSMIN,ABSMAX,LOCMIN,LOCMAX; <= and >= are searched as < and >, whose windows are closed; ! is the search window less the instants of =)")]
         string relationalOperator,
         [Argument(Description = "Value used by operator")]
         double value,
@@ -67,9 +67,9 @@ public class GeometryFinderCommand
         int observerId,
         [Argument(Description = "Target identifier (Naif Identifier)")]
         int targetId,
-        [Argument(Description = "Relational operator used to define search constraint (<,>,=,ABSMIN,ABSMAX,LOCMIN,LOCMAX)")]
+        [Argument(Description = "Relational operator used to define search constraint (<,>,=,<=,>=,!,ABSMIN,ABSMAX,LOCMIN,LOCMAX; <= and >= are searched as < and >, whose windows are closed; ! is the search window less the instants of =)")]
         string relationalOperator,
-        [Argument(Description = "Value used by operator")]
+        [Argument(Description = "Distance used by operator, m")]
         double value,
         WindowParameters window,
         [Argument(Description = "Initial step size <d.hh:mm:ss.fff>")]
@@ -184,7 +184,7 @@ public class GeometryFinderCommand
         PlanetodeticParameters planetodetic,
         [Argument(Description = "Illumination type - Phase or Incidence or Emission")]
         string illuminationType,
-        [Argument(Description = "Relational operator (<,>,=,ABSMIN,ABSMAX,LOCMIN,LOCMAX)")]
+        [Argument(Description = "Relational operator (<,>,=,<=,>=,!,ABSMIN,ABSMAX,LOCMIN,LOCMAX; <= and >= are searched as < and >, whose windows are closed; ! is the search window less the instants of =)")]
         string relationalOperator,
         [Argument(Description = "Value")] double value,
         WindowParameters window,

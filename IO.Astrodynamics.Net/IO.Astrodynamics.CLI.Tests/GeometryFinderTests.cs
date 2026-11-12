@@ -50,6 +50,32 @@ public class GeometryFinderTests
         }
     }
 
+    /// <summary>
+    /// The operators CSPICE has not (#482), which ended the process: <c>&gt;=</c> and <c>&lt;=</c> searched as
+    /// <c>&gt;</c> and <c>&lt;</c>, <c>!</c> as the search window less the instants of <c>=</c>. The windows are those of
+    /// <c>gfdist</c> in spiceypy, <c>tools/geometry_reference/operators_reference.py</c> ("cli distance").
+    /// </summary>
+    [Theory]
+    [InlineData(">=", "From 2024-03-19T18:04:11.9364667 TDB to 2024-03-21T00:00:00.0000000 TDB - Length 1.05:55:48.0635333")]
+    [InlineData("<=", "From 2024-03-01T00:00:00.0000000 TDB to 2024-03-19T18:04:11.9364667 TDB - Length 18.18:04:11.9364667")]
+    [InlineData("!", "From 2024-03-01T00:00:00.0000000 TDB to 2024-03-19T18:04:11.9364665 TDB - Length 18.18:04:11.9364665|From 2024-03-19T18:04:11.9364665 TDB to 2024-03-21T00:00:00.0000000 TDB - Length 1.05:55:48.0635335")]
+    public void DistanceConstraint_OperatorsCspiceHasNot(string relation, string expected)
+    {
+        using (Configuration.Lock())
+        {
+            var command = new GeometryFinderCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+            command.DistanceConstraint("Data", 399, 301, relation, 400000000.0,
+                new WindowParameters { Begin = "2024-03-01T00:00:00", End = "2024-03-21T00:00:00" },
+                TimeSpan.FromDays(10));
+            var res = sb.ToString();
+
+            Assert.Equal(string.Join("", expected.Split('|').Select(x => x + Environment.NewLine)), res);
+        }
+    }
+
     [Fact]
     public void OccultationConstraint()
     {
@@ -107,6 +133,30 @@ public class GeometryFinderTests
 
             Assert.Equal(
                 $"From 2021-05-17T12:00:00.0000000 TDB to 2021-05-17T19:36:13.5596726 TDB - Length 07:36:13.5596726{Environment.NewLine}From 2021-05-18T04:19:19.9753258 TDB to 2021-05-18T12:00:00.0000000 TDB - Length 07:40:40.0246742{Environment.NewLine}"
+                , res);
+        }
+    }
+
+    [Fact]
+    public void IlluminationConstraint_AltitudeInMetres()
+    {
+        // #488: the point at 1071 m, read as 1071 km before (edges seconds off). The expected strings are gfilum at
+        // georec(lon, lat, 1.071 km) replicated as the native layer runs it (tools/geometry_reference/kernel_search_reference.py),
+        // 6.8 ms from those at 0 m above
+        using (Configuration.Lock())
+        {
+            var command = new GeometryFinderCommand();
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+            Console.SetOut(sw);
+            command.IlluminationConstraint("Data", 10, 399, 10, "ITRF93", new PlanetodeticParameters { Planetodetic = "0.0349 0.8378 1071.0" }, "Incidence", "<",
+                System.Math.PI * 0.5 - (-0.8 * IO.Astrodynamics.Constants.Deg2Rad),
+                new WindowParameters { Begin = "674524800.0" , End = "674611200.0" }, TimeSpan.FromHours(4.5),
+                "CNS");
+            var res = sb.ToString();
+
+            Assert.Equal(
+                $"From 2021-05-17T12:00:00.0000000 TDB to 2021-05-17T19:36:13.5664368 TDB - Length 07:36:13.5664368{Environment.NewLine}From 2021-05-18T04:19:19.9685371 TDB to 2021-05-18T12:00:00.0000000 TDB - Length 07:40:40.0314629{Environment.NewLine}"
                 , res);
         }
     }

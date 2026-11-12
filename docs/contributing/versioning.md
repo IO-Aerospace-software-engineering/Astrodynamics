@@ -476,6 +476,88 @@ A major version, because it breaks the API: members deprecated for removal in 11
     which is not read at its middle), and those at the candidates take the states read per window of the probe of #628
     from 54 to 78 on average; at fixed 600 s steps for one trajectory and the default for the other, 469 to 554
     against 481 to 564.
+- **A cyclic maneuver chain ended the process, or a propagation that never returned** ([#585](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/585)).
+  `Maneuver.SetNextManeuver` accepted the maneuver itself or an earlier one of its chain, and nothing walked the chain
+  with a record of the maneuvers seen: `Maneuver.Reset` recursed along `NextManeuver`, so the first
+  `Spacecraft.Propagate` (and the scenario, the batch and the Monte Carlo propagators through it) ended with a stack
+  overflow that no `catch` sees (exit code 134, measured on `apo → apo`, `apo → peri → apo`, `nadir → nadir` and
+  `apo → nadir → apo`); through the builder, which never resets, a cycle with an attitude never returned and a
+  self-gating impulse fired again at one epoch until the memory ran out. Now `SetNextManeuver` throws
+  `ArgumentException` when the chain from the next maneuver comes back to the maneuver or already holds a cycle, and
+  leaves the chain as it was; a cycle built through a subclass that sets the protected `NextManeuver` is rejected by
+  `Spacecraft.SetStandbyManeuver` (`ArgumentException`), by the construction of the propagator (`InvalidOperationException`, before the states of an
+  earlier propagation are cleared) and by `PropagatorBase.Propagate`. `Maneuver.Reset` resets one maneuver; the chain is
+  reset in a loop (`Maneuver.ResetChain`), so a long chain uses no stack. A chain is a list: a maneuver appears in it
+  once, a repeated burn is a new maneuver. A valid chain propagates as before (the same calls in the same order).
+  - **Test:** `ManeuverChainCycleTests` (33 cases): `SetNextManeuver` closing five kinds of cycle throws and keeps the
+    chain, valid links and shared tails are kept; a cycle through a subclass makes `SetStandbyManeuver` throw, and
+    `Spacecraft.Propagate` (three overloads, RK7(8) and Velocity-Verlet, a leading attitude, an impulse, an attitude after
+    an impulse) throw with the previous states kept, the builder throw at `Build` or, for a cycle made after it, at
+    `Propagate`, the batch report the error; a chain of 200 000 attitudes resets without overflow. With the maneuver
+    code of 3eb1edc0 the test host crashes ("Stack overflow").
+- **A CSPICE window search with `NotEqual`, `GreaterOrEqual` or `LowerOrEqual` ended the process** ([#482](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/482)).
+  The native layer parses the relation before it calls `gfdist`, `gfposc` or `gfilum`, and threw a C++ exception that
+  nothing caught for `!`, `>=` and `<=` (exit code 134, measured on every CSPICE path: `CelestialItem` and `Site`
+  distance and coordinate searches with kernel objects, `Site.FindWindowsOnIlluminationConstraint` of a kernel site, the
+  three `SpiceAPI` searches and the three command-line searches). `SpiceAPI` now hands CSPICE only the relations it
+  knows: `GreaterOrEqual` and `LowerOrEqual` are searched as `>` and `<`, whose windows are closed, so for a quantity that
+  crosses the value they are the windows the managed search gives (it bisects the relation itself; the two differ only
+  where the quantity stays equal to the value over an interval, which `>` leaves out); `NotEqual`, which CSPICE has
+  not, is the search window less the instants of `=`, a window from each crossing to the next, the managed search's
+  definition since lot 4. Both paths so accept every operator and give the same windows; throwing for `NotEqual` on the
+  CSPICE path alone (#482's first recommendation) would have made a call that works with a propagated spacecraft throw
+  once the spacecraft comes from a kernel. A value outside the enumeration throws `ArgumentOutOfRangeException`. The
+  command-line help lists `<=`, `>=` and `!`.
+  - **Test:** `SpiceOperatorTests` (18 cases) against `gfdist`, `gfposc` and `gfilum` in spiceypy
+    (`tools/geometry_reference/operators_reference.py`), equal to the tick: the three `SpiceAPI` searches, the coordinate
+    search of a kernel spacecraft (LRO from the Moon) and of a kernel site (DSS-13 from LRO), with the three operators;
+    the distance search of a kernel spacecraft both ways and the illumination search of a kernel site against their own
+    `>`, `<` and `=` searches (their thresholds carry #466's factor and the native surface point's altitude defect); the
+    command line with `>=`, `<=` and `!` (`GeometryFinderTests.DistanceConstraint_OperatorsCspiceHasNot`). With the
+    `SpiceAPI` of 3eb1edc0 the test host crashes ("Invalid relational operator : <=").
+- **`new CelestialBody(-82)`, and orientations in several frames written to a CK, ended the process** ([#560](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/560), the comment on [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454) of 2026-11-02).
+  The native body information reads the centre of motion of any identifier SPICE names, and threw a C++ exception that
+  nothing caught for one that is not a celestial body, a spacecraft such as CASSINI (-82, a name built into SPICE) or an
+  instrument; the native CK writer threw one for records in more than one frame. Both ended the process (exit code 134)
+  with no exception to catch. `SpiceAPI.GetCelestialBodyInfo` now throws `ArgumentException` for an identifier that is
+  not a celestial body (a barycenter 0 to 9, the Sun 10, a planet, a moon or a Lagrange point 101 to 999, or above 1000:
+  the classes of the native layer), named or not, before the native call; so do `new CelestialBody(id)`, the command
+  `celestial-body-info`, the observer of `SpiceAPI.ReadEphemeris` by identifiers (built as a celestial body, a spacecraft
+  observer ended the process there too) and the ellipsoid of `SpiceAPI.FindWindowsOnOccultationConstraint` whose frame is
+  read from the body. An identifier without a name, which returned an empty record (and a celestial item then threw
+  `InvalidOperationException`), throws the same `ArgumentException` when it is not a celestial body (Changed below).
+  `SpiceAPI.WriteOrientation` throws `ArgumentException` when a record is not in the frame of the first, and writes
+  nothing. `Spacecraft.WriteOrientation` writes one frame, J2000, and is unchanged.
+  - **Test:** `NativeAbortGuardTests` (19 cases): -82, -999, -1, 11, 50, 100 and 1000 throw from `GetCelestialBodyInfo`
+    and `new CelestialBody`, the barycenters, the Sun, the Moon, the Earth and Mars are read; `ReadEphemeris` from -82,
+    an occultation with -82 as an ellipsoid front or target, and ten records with one in ECLIPJ2000 (first, middle,
+    last) throw; `BodyInformationsTests.SpacecraftIdentifier_IsAnArgumentError` on the command. With the `SpiceAPI` of
+    3eb1edc0 the test host crashes on the first of them ("Invalid Naif Id : -82", "different frames : J2000 -
+    ECLIPJ2000").
+- **A site occultation of a `Star` with `LT` or `CN` read the star one light time back, and threw beyond about 54 pc** ([#533](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/533)).
+  The managed occultation search read a star, and the reference body of the observer, at t − lt, the star's light time
+  (65.2 years at 20 pc, 326 years at 100 pc), and `Star.GetEphemeris` did the same through its light-time correction:
+  the proper motion was applied over the light time (a lunar occultation moved by −9.641 s and −9.074 s, the direction
+  by 6.2″, for 0.1″/yr at 20 pc), and from a site the Earth was read before the start of de440s beyond about 54 pc (after
+  its end with `XLT` and `XCN` beyond about 38 pc). The two failed reads cancelled before 11.0.0; since the reads of
+  #454 throw, the search threw `InvalidOperationException` (SPKINSUFFDATA, the Earth in 1699 for a star at 100 pc): a
+  regression of 11.0.0. A star is now a direction, read at the epoch whatever the correction, in the occultation search
+  as the field-of-view search reads it since #517, and in `Star.GetEphemeris`: `LT`, `CN`, `XLT` and `XCN` read as
+  `None`, their `+S` forms as the stellar aberration alone (`stelab`, `stlabx`; Changed below). A catalog position at an epoch is the
+  direction of the light that reaches the barycenter then, as SOFA's `iauPmsafe` reads it (to be verified by S.
+  Guillet). The other bodies of a search are read as before, and a star without proper motion within the measurements
+  below of its former windows.
+  - **Measured** (Linux x64, Release, 2026-11-11) against the closed form of
+    `tools/occultation_reference/star_occultation_reference.py` (spiceypy: the star at its catalog position at t minus
+    DSS-13 at t, the Moon from `spkpos` with the correction, a sphere of 1737.4 km, bisection to 1e-9 s), a star on the
+    Moon's LT direction from DSS-13 at 2026-03-01 12:00 TDB, search ± 3 h, step 60 s: before, 20 pc with 0.1″/yr and
+    `LT` or `CN` −9.641 s / −9.074 s, with `XLT` or `XCN` +9.620 s / +9.105 s, 100 pc with `LT` or `CN` an exception
+    (the Earth in 1699), with `XLT` or `XCN` an exception (the Earth in 2352); after, every edge of the 20 cases (20 and
+    100 pc, 0 and 0.1″/yr, `None`, `LT`, `CN`, `XLT`, `XCN`) within 2.38 µs (1.43 µs without `XLT` and `XCN`).
+    `Star.GetEphemeris` at S + 1 h: before 3.0e-5 rad (20 pc) and 1.5e-4 rad (100 pc) from the reference with `LT`,
+    `CN`, `XLT`, `LTS` and `CNS`; after within 2.2e-16 rad (atan2 of the cross and dot products; 1.7e-16 rad on Linux and Windows), `stelab` for `+S`.
+  - **Test:** `StarOccultationTests` (30 cases), the edges within 4.8e-6 s and the
+    directions within 4.4e-16 rad (twice the worst over Linux x64, Windows x64 and macOS arm64).
 - **TEME was not the TEME of SGP4** ([#451](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/451)). `Frame.TEME` was ITRF93 of the Earth's binary PCK composed with
   R3(GAST06) of UTC taken as UT1: a frame close to the true equator and equinox of date, with the pole of ITRF93 and a
   spurious rotation rate (1.39e-10 rad/s), 0.3″ to 23.3″ from the definition over 2000–2026 (797 m and 812 mm/s on a
@@ -1121,6 +1203,61 @@ A major version, because it breaks the API: members deprecated for removal in 11
     maneuver; so does `ManeuverEventDetector.HandleEvent`, whose state after the impulse is `EventResult.ModifiedState`.
   - **Unchanged, bit for bit:** the state it returns, the ΔV, the fuel and the windows, and every propagation, which
     executes impulses on a state of its own and continues from the returned state.
+- **The distance search of a kernel spacecraft ran with a threshold 1000 times too small** ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
+  When both objects come from the kernels and one is a spacecraft, `CelestialItem.FindWindowsOnDistanceConstraint`
+  and `Site.FindWindowsOnDistanceConstraint` (a site from the kernels, a kernel spacecraft as observer) hand the search to
+  CSPICE's `gfdist_c` through `SpiceAPI.FindWindowsOnDistanceConstraint`, which takes metres (the native layer converts
+  them to km); both divided the metres by 1000 first, so "farther than 1815.148 km" ran as "farther than 1.815148 km":
+  `Greater` returned the whole search window, `Lower` and `Equal` nothing, with no error, and the same geometry gave
+  another answer through the managed search (a `Site` observer). They now pass the metres. Only these two calls change,
+  on that branch; the coordinate search, which converts its distances to km for `gfposc_c`, was right and is unchanged.
+  - **Measured** (Linux x64, 2026-11-11) against `gfdist_c` and `gfposc_c` converged to 1e-9 s
+    (`tools/geometry_reference/kernel_search_reference.py`, `KernelWindowSearchTests`), LRO from 2023-12-15 00:05 to
+    12:05 TDB at 60 s: LRO and the Moon beyond, within and at 1815.148 km (7, 6 and 12 windows; 1, 0 and 0 before),
+    LRO and the Earth-Moon barycenter beyond 364 500 km (7; 1 before), LRO and a second kernel spacecraft (a two-body
+    lunar orbiter written by the generator) within 3000 km (8; 0 before), each with either object as the receiver, and
+    DSS-13 from the kernels and LRO beyond 372 000 km (2; 1 before): every edge within 4.8e-7 s, CSPICE's default
+    tolerance of 1e-6 s; the managed search of LRO from DSS-13 within 1.2e-7 s of the same windows, and the coordinate
+    searches (Z > 500 km, range > 1815.148 km and > 372 000 km) within 4.8e-7 s, before and after.
+- **The illumination windows of a site from the kernels were seconds off** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)).
+  `Site.FindWindowsOnIlluminationConstraint` and `Site.FindDayWindows` of a site from the kernels (`new Site(id, name,
+  body)`) search with CSPICE's `gfilum_c` through `SpiceAPI.FindWindowsOnIlluminationConstraint`, whose native layer
+  read the altitude of the `Planetodetic` in km beside a radius in km: DSS-13, 1070.85 m up, became a point 1070.85 km
+  up, whose normal is tilted by 94″, and its sunrise and sunset were 4.4 s off (3.1 s to 29.6 s in the other geometries
+  measured). `SpiceAPI` now converts the altitude to km before the call. So are fixed the launch windows by day of a
+  recovery site from the kernels (`Launch.FindLaunchWindows` through `FindDayWindows`) and the CLI command
+  `find-windows-from-illumination-constraint` (under Changed). The sites built from their coordinates, which the library
+  searches, are unchanged.
+  - **Measured** (Linux x64, 2026-11-11) against `gfilum_c` converged to 1e-9 s
+    (`tools/geometry_reference/kernel_search_reference.py`, `KernelWindowSearchTests`) over 24 h from 2023-12-15 00:05
+    TDB: DSS-13 from the kernels, at its position at J2000 TDB, incidence above 90° without correction, below 90.8° and
+    96° with LT+S (`FindDayWindows` at 0.8° and 6°), above 60° with CN+S, within 3.6e-7 s (4.4, 4.3, 3.6 and 29.6 s
+    before); `SpiceAPI` at the longitude of DSS-13 at 0, 1071 and 5000 m, at latitudes 0 and 60° at 1071 m, and on the
+    Moon at 1071 m over 30 days, within 4.8e-7 s (0.11 s to 15.2 s before; 0 m unchanged). The site from the kernels and
+    the site built from its coordinates now agree within 4.96e-3 s (4.1 s and 5.2 s before): `gfilum_c` takes the
+    normal of a point above the ellipsoid from `surfnm_c`, 0.11″ from the geodetic normal of the library at DSS-13
+    ([Sites](../reference/sites.md#window-searches)).
+- **`EpochAtMeanAnomaly` came one period late from a `StateVector`, and could be in the past at e = 0.999999** ([#474](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/474)).
+  It added 2π to the difference of the anomalies at most once, so it was right only when both lay in [0, 2π): from a
+  `StateVector`, whose mean anomaly is in (−π, π), a target between the position and the periapsis came one period late
+  (12 % of the pairs of a grid of the issue), and so did the epoch of `ToStateVector(trueAnomaly)`; a target outside
+  [0, 2π) gave a past epoch or one a period late; at e = 0.999999, where `KeplerianElements` keeps its mean anomaly
+  unreduced, the epoch could be in the past or throw `OverflowException` (`TimeToRadius` and `TimeToSphereOfInfluence`
+  with it). On an ellipse the difference is now reduced modulo 2π: the next passage at or after the epoch, whatever the
+  turn of either anomaly; an open orbit still passes once. A passage beyond the epochs a `Time` holds throws
+  `ArgumentOutOfRangeException`. `KeplerianElements` still keeps the mean anomaly at e = 0.999999 (`MeanAnomaly()`,
+  `AtEpoch`, the OPM export), the open choice of the issue.
+  - **Measured** (Linux x64, 2026-11-11) against ((M_t − M_0) mod 2π)/n at 60 digits
+    (`tools/epoch_at_mean_anomaly/epoch_at_mean_anomaly_reference.py`, `EpochAtMeanAnomalyTests`), about the Earth in
+    TT seconds: from the `StateVector` of a = 1e7 m, e = 0.3, M = 5 rad, the passage at 5.5 rad 791.956 s and at
+    ν = 300° 1104.351 s later (10 743.970 s and 11 056.365 s before); from `KeplerianElements` at M = 1 rad the
+    targets −7 and 8 rad, and from `EquinoctialElements` the targets 5.5, −7 and 8 rad, all within 4.5e-8 s, half a
+    tick; a grid of `StateVector`s after the apoapsis (e from 0.001 to 0.999) within 8.4e-12 of the period; about the
+    Sun, a comet at e = 0.999999 (a = 1e4 au) from M = −0.02 rad within 9.2e-4 s of 5.02e10 s (`OverflowException`
+    before) and 300 years later within 3.4e-3 s of 5.60e9 s, the rounding of M (one ulp is 4.5e-3 s); at e = 0.999999
+    and M = 20 rad, `TimeToRadius(7e6 m)` on the issue's a = 7e6 m within 3.9e-8 s of 5290.815 s (−12 194.735 s before)
+    and `TimeToSphereOfInfluence` about the Moon (a = 5e7 m) within 1.35e-5 s of 973 267.782 s, where one ulp of cos ν
+    moves the time by 2.2e-5 s. Pairs with both anomalies in [0, 2π) keep their epoch bit for bit.
 
 - **`Time(string)` threw on the `UTC` of its documented example** ([#455](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/455), items 1 and 2).
   - **The cause.** After a calendar that `DateTime` does not read on its own, the constructor took the last three
@@ -1180,6 +1317,11 @@ A major version, because it breaks the API: members deprecated for removal in 11
 
 **Changed**
 
+- **`SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
+  the altitude of the `Planetodetic`, which `Planetodetic` documents in m, reached `gfilum_c` as km, so a caller
+  passing metres got edges seconds off. A caller who passed km gets a point 1000 times lower: at DSS-13 the sunrise moves
+  by 5 ms between 0 and 1071 m. The CLI help of `find-windows-from-illumination-constraint` now names the units of its
+  coordinates (rad, rad, m). An altitude of 0 gives the same call, bit for bit.
 - **A kernel-backed spacecraft's initial orbital parameters are about the Earth** ([#620](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/620), Fixed above): its
   `InitialOrbitalParameters.Observer` is the Earth unless `centerOfMotion` says otherwise (the SSB before), so the
   observer of a conjunction analysis it protects, and of anything else that reads that centre, is the Earth. Pass
@@ -1431,6 +1573,14 @@ A major version, because it breaks the API: members deprecated for removal in 11
   a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached outside the epochs
   of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite sphere of
   influence throws `InvalidOperationException`; a circular orbit returns its epoch.
+- **`SpiceAPI.GetCelestialBodyInfo` throws for an identifier that is not a celestial body** ([#560](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/560), Fixed above):
+  an identifier without a name, such as -999, returned an empty record (identifier -1) and now throws
+  `ArgumentException`, as `new CelestialBody(id)` and the command `celestial-body-info` do for it.
+  `SpiceAPI.WriteOrientation` throws `ArgumentException` for records in more than one frame.
+- **`Star.GetEphemeris` applies no light time** ([#533](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/533), Fixed above): with `LT`, `CN`, `XLT` and `XCN` it
+  returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
+  stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
+  0.1″/yr at 20 pc). The occultation search reads a star the same way.
 
 **Removed**
 

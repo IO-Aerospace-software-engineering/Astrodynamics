@@ -253,6 +253,13 @@ returns there, and from a UTC epoch away from a leap second. `Time + TimeSpan` s
 UTC epoch whose period holds a leap second, `Epoch + Period()` is a period and one second of TT later, and the state
 is one second of motion past the start.
 
+On an ellipse, `EpochAtMeanAnomaly(m)` is the next passage at m modulo 2π, at or after the epoch, whatever the turn of
+m and of the mean anomaly at the epoch, so `ToStateVector(trueAnomaly)` is the next passage at that true anomaly; on an
+open orbit it is the single passage, before the epoch when m is behind. Before 11.0.0 it added 2π at most once: from a
+`StateVector`, whose mean anomaly is in (−π, π), the passage came one period late, and at e = 0.999999, where
+`KeplerianElements` keeps its mean anomaly unreduced, it could be in the past
+([#474](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/474)).
+
 ## See Also
 
 - [Standards & Units](../standards-and-units.md)

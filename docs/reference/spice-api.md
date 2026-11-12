@@ -13,11 +13,35 @@
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
 | `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454) |
 | `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error) |
-| `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK |
+| `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560) |
+| `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560) |
+
+`GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
+celestial body: a barycenter (0 to 9), the Sun (10), a planet, a moon or a Lagrange point (101 to 999), or an identifier
+above 1000 (an asteroid, a comet, a star of the library). Any other identifier, a spacecraft or an instrument (negative)
+among them, throws `ArgumentException`: the native layer reads the centre of motion of any named identifier and ended the
+process for a named spacecraft such as CASSINI (-82) before 11.0.0; an identifier without a name returned an empty
+record. The same check guards the ellipsoid of an occultation search whose frame is read from the body
+(`FindWindowsOnOccultationConstraint` without frames) and the observer of `ReadEphemeris` by identifiers, which is built
+as a celestial body.
 
 SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and
 label what SPICE returns with the frame given (#543).
+
+### Units of the window searches
+
+The window searches take the units of the library, except the coordinate search:
+
+- `FindWindowsOnDistanceConstraint`: the distance in m, as `CelestialItem` and `Site` take it (the native layer hands
+  km to `gfdist_c`). Before 11.0.0 the kernel-spacecraft branch of `CelestialItem` and `Site` divided it by 1000 once
+  more ([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
+- `FindWindowsOnCoordinateConstraint`: the value as `gfposc_c` takes it, km for a distance coordinate (X, Y, Z, range,
+  radius, altitude) and rad for an angle; `CelestialItem` and `Site` convert their metres.
+- `FindWindowsOnIlluminationConstraint`: the surface point as `Planetodetic`, longitude and latitude in rad and the
+  altitude in m above the ellipsoid of the body (equatorial radius and flattening of the kernels); before 11.0.0 the
+  altitude was read in km ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)). So
+  does the CLI command `find-windows-from-illumination-constraint`.
 
 ### Orientation kernels
 
@@ -28,7 +52,8 @@ to the reference frame, expressed in the reference frame: the convention of `Fra
 `Spacecraft.GetOrientation`. On the external CK of the tests (PHSRM) it equals `pxform` from J2000 to its bus frame to 0 rad.
 
 `WriteOrientation` writes its records unchanged, in one interval of one segment tagged with the frame of the first
-record: every record carries the same frame, in increasing order of their encoded SCLK, and the spacecraft clock kernel
+record: every record carries the same frame (another frame throws `ArgumentException` before the native call, which
+ended the process before 11.0.0, #560), in increasing order of their encoded SCLK, and the spacecraft clock kernel
 is loaded. To write the attitude of a propagated spacecraft, use `Spacecraft.WriteOrientation`, which writes its
 attitude record in this convention, in J2000 ([Attitude and kernels](spacecraft.md#attitude-and-kernels)).
 

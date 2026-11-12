@@ -2,7 +2,7 @@
 
 From the periapsis (M0 = 0), the hyperbolic anomaly at the radius r is cosh H = (1 + r/|a|)/e, the mean anomaly
 M = e sinh H - H and the time t = M / n, n = sqrt(mu/|a|^3) (Vallado, Fundamentals of Astrodynamics and Applications,
-4th ed., section 2.2, the hyperbolic Kepler equation). As r goes to infinity, t goes to infinity (t ~ r / v_inf): the
+4th ed., section 2.2, the hyperbolic Kepler equation; confirmed by S. Guillet, 2026-11-11). As r goes to infinity, t goes to infinity (t ~ r / v_inf): the
 orbit never reaches an infinite radius. From a mean anomaly M0 at the epoch the time is (M - M0) / n, negative when the
 orbit is already past the radius (the review of #627).
 
