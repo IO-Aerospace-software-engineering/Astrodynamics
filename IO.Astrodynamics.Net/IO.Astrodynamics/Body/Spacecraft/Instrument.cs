@@ -217,7 +217,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             if (orientation == Vector3.Zero)
             {
-                return Quaternion.Zero;
+                return Quaternion.Identity;
             }
 
             return (new Quaternion(Vector3.VectorX, -orientation.X) * new Quaternion(Vector3.VectorY, -orientation.Y) * new Quaternion(Vector3.VectorZ, -orientation.Z)).Normalize();

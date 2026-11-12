@@ -253,10 +253,10 @@ public class TemeFrameTests
         Assert.InRange((direct.AngularVelocity - composed.AngularVelocity).Magnitude(), 0.0, 1e-20);
 
         var inverse = SpiceAPI.Instance.TransformFrame(epoch, itrf93, new Frames.Frame("TEME"));
-        Assert.InRange(Angle(inverse.Rotation * direct.Rotation, Quaternion.Zero), 0.0, 1e-15);
+        Assert.InRange(Angle(inverse.Rotation * direct.Rotation, Quaternion.Identity), 0.0, 1e-15);
 
         var temeToTeme = SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.TEME, new Frames.Frame("TEME"));
-        Assert.InRange(Angle(temeToTeme.Rotation, Quaternion.Zero), 0.0, 1e-15);
+        Assert.InRange(Angle(temeToTeme.Rotation, Quaternion.Identity), 0.0, 1e-15);
         Assert.Equal(Vector3.Zero, temeToTeme.AngularVelocity);
     }
 

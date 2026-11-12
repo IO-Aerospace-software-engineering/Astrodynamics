@@ -37,13 +37,13 @@ public class TLEPropagator : IPropagator
 
     public PropagationSolution Propagate()
     {
-        _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Frame.ICRF);
+        _stateOrientation[Window.StartDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.StartDate, Frame.ICRF);
         for (int i = 1; i < _svCacheSize; i++)
         {
             _svCache[i] = Spacecraft.InitialOrbitalParameters.ToStateVector(Window.StartDate.Add(DeltaT * i));
         }
 
-        _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.EndDate, Frame.ICRF);
+        _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.EndDate, Frame.ICRF);
         Spacecraft.AddPropagatedStates(_svCache);
 
         // Build synthetic PropagationSolution from TLE states

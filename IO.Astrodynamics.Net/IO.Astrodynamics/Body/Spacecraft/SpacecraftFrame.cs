@@ -93,7 +93,7 @@ public class SpacecraftFrame : Frame
         {
             if (_record.Count == 0)
             {
-                return new StateOrientation(Quaternion.Zero, Vector3.Zero, date, this);
+                return new StateOrientation(Quaternion.Identity, Vector3.Zero, date, this);
             }
 
             int index = Find(date);

@@ -90,6 +90,9 @@ public class EphemerisTests
     {
         // A site is given by its NAIF identifier, here 399013, DSS-13 on the Earth; the expected states are SPICE's
         // spkezr("301", et, "J2000", "NONE", "399013") on the kernels of Data/SolarSystem (spiceypy, CSPICE N0067)
+        // The states from a site observer are computed in ICRF and converted to the frame of the command, j2000, which is
+        // Frame.ICRF (#562: a frame is its name ignoring case, as SPICE compares frame names): the conversion is the identity
+        // and keeps the frame of the state, J2000
         using (Configuration.Lock())
         {
             var command = new EphemerisCommand();
@@ -104,9 +107,9 @@ public class EphemerisTests
             var res = sb.ToString();
 
             OutputAssert.EqualApprox(
-                $"Epoch : 2023-01-01T01:00:00.0000000 TDB Position : X : 318432518.66904956 Y : 201167633.45658574 Z: 78470616.8558369 Velocity : X : -525.6735216135344 Y : 374.6728331151655 Z: 423.04259903334116 Frame : j2000{
+                $"Epoch : 2023-01-01T01:00:00.0000000 TDB Position : X : 318432518.66904956 Y : 201167633.45658574 Z: 78470616.8558369 Velocity : X : -525.6735216135344 Y : 374.6728331151655 Z: 423.04259903334116 Frame : J2000{
                     Environment.NewLine
-                }Epoch : 2023-01-01T01:01:00.0000000 TDB Position : X : 318401024.1503668 Y : 201190109.75510025 Z: 78495998.30144708 Velocity : X : -524.1437266303659 Y : 374.538327456151 Z: 423.00558627606205 Frame : j2000{
+                }Epoch : 2023-01-01T01:01:00.0000000 TDB Position : X : 318401024.1503668 Y : 201190109.75510025 Z: 78495998.30144708 Velocity : X : -524.1437266303659 Y : 374.538327456151 Z: 423.00558627606205 Frame : J2000{
                     Environment.NewLine}"
                 , res);
         }

@@ -2,7 +2,12 @@ namespace IO.Astrodynamics.Math
 {
     public readonly record struct Quaternion
     {
-        public static Quaternion Zero = new(1, 0, 0, 0);
+        /// <summary>
+        /// The identity rotation, (1, 0, 0, 0), equal to <c>new Quaternion()</c>: a vector rotated by it is unchanged. It is
+        /// <c>readonly</c>, so no caller can change the identity of the library (#571; <c>Quaternion.Zero</c> before 11.0.0).
+        /// </summary>
+        public static readonly Quaternion Identity = new(1, 0, 0, 0);
+
         public double W { get; }
 
         public Vector3 VectorPart { get; }

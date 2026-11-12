@@ -848,7 +848,7 @@ public abstract class PropagatorBase : IPropagator
 
         // The attitude without an attitude maneuver: the identity of ICRF (#529, #535), as the frame of a spacecraft not
         // propagated
-        frame.Record(new StateOrientation(Quaternion.Zero, Vector3.Zero, Window.StartDate, Frame.ICRF), null, false);
+        frame.Record(new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.StartDate, Frame.ICRF), null, false);
 
         int output = 0;
         var laws = new List<Attitude>();

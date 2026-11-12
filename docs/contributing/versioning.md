@@ -575,7 +575,7 @@ A major version, because it breaks the API: members deprecated for removal in 11
 - **A frame named TEME took the native frame** (the routing of [#562](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/562)). `SpiceDataProvider` and `MemoryDataProvider`
   route a frame named TEME, in any case (`new Frame("TEME")` from a CCSDS file, the CLI or user code), to `Frame.TEME`,
   and `SpiceAPI.TransformFrame` composes a TEME end through ICRF; the TLE and `SpiceAPI.ConvertTleToStateVector` label
-  their states with `Frame.TEME`. The equality of a frame built by name with `Frame.TEME` stays #562's.
+  their states with `Frame.TEME`. The equality of a frame built by name with `Frame.TEME` is #562's (Changed below).
 - **An ephemeris read in a managed frame handed its name to `spkezr_c`** ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558), the ephemeris reads). A read in
   `Frame.TEME` (or a frame named TEME), `Frame.CIRS` or `Frame.TIRS`, through `GetEphemeris` or the three
   `SpiceAPI.ReadEphemeris`, is read in J2000 and rotated by the frame at the epoch of the read: the numbers of
@@ -1513,6 +1513,37 @@ A major version, because it breaks the API: members deprecated for removal in 11
   a radius below the periapsis or above the apoapsis of an ellipse, an infinite one, or one reached outside the epochs
   of `Time`, throws `ArgumentOutOfRangeException` where it returned an apsis or failed with NaN; an infinite sphere of
   influence throws `InvalidOperationException`; a circular orbit returns its epoch.
+- **Breaking: `Quaternion.Identity` replaces `Quaternion.Zero`, and every public static field of the library is
+  `readonly`** ([#571](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/571)). `Quaternion.Zero`
+  was the identity (1, 0, 0, 0) under the name of the zero quaternion, and an assignable field: after
+  `Quaternion.Zero = new Quaternion(0, 1, 0, 0)` anywhere in a process, `Frame.ICRF.ToFrame(Frame.ICRF, t)` was a 180°
+  rotation about x, and so was every identity of the library (frames, `Vector3.To`, the attitudes, the initial attitude
+  of a propagation). It is now `public static readonly Quaternion Identity`, the same value; there is no zero-quaternion
+  constant. The 411 `NaifObject`, `CelestialBody` and `Barycenter` fields of `SolarSystemObjects` (`PlanetsAndMoons`,
+  `Stars`, `Barycenters`, `Asteroids`, `Comets`, `GroundStations`, `LagrangePoints`) are `static readonly`, their
+  values unchanged. Migration: replace `Quaternion.Zero` with `Quaternion.Identity` (or `new Quaternion()`); code that
+  assigned one of these fields no longer compiles, so build the value it held in a variable of its own.
+- **Breaking: a frame is its name, for every relation**
+  ([#562](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/562)). `Frame`'s `==`, `!=` and
+  `Equals(object)` also compared the type, while `Equals(Frame)` and `GetHashCode` compared the name only: a frame built
+  by name and the managed frame of the same name (`GcrfFrame`, `CirsFrame`, `TirsFrame`, `TemeFrame`) or a
+  `SpacecraftFrame` or `SiteFrame` were equal for `HashSet`, `Dictionary` and `Assert.Equal` and different for the
+  operators, so a state in `new Frame("GCRF")` (a CCSDS file, the CLI) was rejected by the propagator as not inertial,
+  two `StateVector`s that differed only by `Frame.GCRF` and `new Frame("GCRF")` were not equal, and a state in
+  `Frame.CIRS` converted to `new Frame("CIRS")` missed the identity and went to SPICE. The five members are now one
+  relation: the name compared ignoring case, as SPICE compares frame names (`namfrm_c`), whatever the type;
+  `Equals(object)` and `GetHashCode` are `sealed`. `new Frame("TEME") == Frame.TEME`, `new Frame("gcrf") == Frame.GCRF`,
+  `new Frame("CIRS") == Frame.CIRS` and `new Frame("j2000") == Frame.ICRF` are true; a propagation from
+  `new Frame("gcrf")` is that of `Frame.GCRF`, bit for bit, in Velocity-Verlet and RK7(8), with an impulse and in SSB
+  mode. Migration: code that told a managed frame from a frame of the same name with `==` tests the type instead
+  (`frame is CirsFrame`); a subclass of `Frame` can no longer override `Equals(object)` or `GetHashCode`. Equality does
+  not route: a frame named CIRS or TIRS that is not a `CirsFrame` or a `TirsFrame` still goes to SPICE, which does not
+  know it ([Equality](../reference/frames.md#equality)). Nor does the name carry a definition: a `SiteFrame` or a
+  `SpacecraftFrame` equals any frame of its name, a kernel frame included (a site named DSS-13 and the kernel frame
+  `DSS-13_TOPO`), so `ToFrame` between them is the identity whatever their axes; give a site or a spacecraft a name no
+  loaded kernel uses for another frame. A state converted to a frame equal to its own keeps its frame
+  (the identity of `ToFrame`), so the CLI's `ephemeris` from a site observer, computed in ICRF, prints `Frame : J2000`
+  for the default `ICRF` (handed to the library as `j2000`) where it printed `Frame : j2000`, the numbers unchanged.
 - **`SpiceAPI.GetCelestialBodyInfo` throws for an identifier that is not a celestial body** ([#560](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/560), Fixed above):
   an identifier without a name, such as -999, returned an empty record (identifier -1) and now throws
   `ArgumentException`, as `new CelestialBody(id)` and the command `celestial-body-info` do for it.
@@ -1531,6 +1562,8 @@ A major version, because it breaks the API: members deprecated for removal in 11
   ([#515](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/515)).
 - **`LowThrustManeuver`.** It was never implemented: every member threw `NotImplementedException`. It was marked
   `[Obsolete]` in 10.1.0 (see its Deprecated entry). Finite thrust is planned as a separate feature.
+- **`Quaternion.Zero`**, the identity under another name and an assignable field: use `Quaternion.Identity` (Changed
+  above, [#571](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/571)).
 
 ### 10.2.0-preview-1
 
