@@ -43,6 +43,16 @@ the search window starts or ends there. `LocalMin` and `LocalMax` give the extre
 extreme; `Equal` gives the crossings of the value, as windows of zero length. As with CSPICE, the step must be shorter
 than the shortest window, the shortest gap and half the time between two extremes.
 
+Both searches take a distance in m. CSPICE searches the distance of a site from the kernels to a spacecraft from the
+kernels, and its illumination (`FindWindowsOnIlluminationConstraint`, `FindDayWindows`) whatever the source: its surface
+point is its `Planetodetic`, the coordinates of its position at J2000 TDB (DSS-13 has moved 0.467 m since, 1.4 ms of a
+sunrise at most). CSPICE's `gfilum_c` takes the normal of a point above the ellipsoid from `surfnm_c`, tilted from the
+geodetic normal that the library's search takes (0.11″ at DSS-13, 1071 m up at 35.2° of latitude): there the sunrise
+of the site from the kernels and that of the site built from its coordinates are 4.96 ms apart. Before 11.0.0 the
+altitude reached CSPICE in km and the threshold of the distance in km/1000, so these searches were seconds off
+([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)) and 1000 times off
+([#466](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/466)).
+
 Both paths take every value of `RelationnalOperator` (#482). CSPICE has no `>=`, `<=` or `!=`: on its path
 `GreaterOrEqual` and `LowerOrEqual` are searched as `Greater` and `Lower`, whose windows are closed, so for a quantity
 that crosses the value they are the windows of the managed search, which bisects the relation itself; the two differ only

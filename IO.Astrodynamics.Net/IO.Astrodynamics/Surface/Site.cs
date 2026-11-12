@@ -27,6 +27,12 @@ namespace IO.Astrodynamics.Surface
         public string Name { get; }
         public CelestialBody CelestialBody { get; }
 
+        /// <summary>
+        /// The planetodetic coordinates of the site: longitude and latitude in rad, altitude in m above the ellipsoid of
+        /// its body. For a site from the kernels, those of its position at J2000 TDB, which a search of
+        /// <see cref="FindWindowsOnIlluminationConstraint"/> and <see cref="FindDayWindows"/> by CSPICE takes as the
+        /// site (#488).
+        /// </summary>
         public Planetodetic Planetodetic { get; }
 
         public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; }
@@ -244,16 +250,19 @@ namespace IO.Astrodynamics.Surface
         /// <param name="searchWindow"></param>
         /// <param name="observer"></param>
         /// <param name="relationalOperator"></param>
-        /// <param name="value"></param>
+        /// <param name="value">The distance, m.</param>
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns></returns>
+        /// <remarks>For a site from the kernels and a spacecraft from the kernels, CSPICE's <c>gfdist_c</c> searches;
+        /// otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
         public IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize)
         {
+            // SpiceAPI takes metres, as this method: the native layer converts them to km for gfdist_c (#466)
             if (IsSpiceBacked && observer is CelestialItem ci1 && ci1.IsSpiceBacked && ci1.IsSpacecraft)
                 return SpiceAPI.Instance.FindWindowsOnDistanceConstraint(
-                    searchWindow, observer.NaifId, NaifId, relationalOperator, value / 1000.0, aberration, stepSize);
+                    searchWindow, observer.NaifId, NaifId, relationalOperator, value, aberration, stepSize);
 
             Func<Time, double> calculateDistance = date => { return GetEphemeris(date, observer, Frames.Frame.ICRF, aberration).ToStateVector().Position.Magnitude(); };
 

@@ -666,22 +666,28 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Computes the epoch time at a given mean anomaly.
+    /// Computes the epoch time at a given mean anomaly: on an ellipse the next passage at that mean anomaly modulo 2π,
+    /// at or after <see cref="Epoch"/>, whatever the turn of the given anomaly and of <see cref="MeanAnomaly"/>; on an
+    /// open orbit the single passage, before <see cref="Epoch"/> when the mean anomaly is behind.
     /// </summary>
-    /// <param name="meanAnomaly">The mean anomaly at which to compute the epoch time.</param>
+    /// <param name="meanAnomaly">The mean anomaly at which to compute the epoch time, rad.</param>
     /// <returns>The epoch time at the given mean anomaly, in the frame of <see cref="Epoch"/>.</returns>
     /// <remarks>The time to the mean anomaly is counted in the dynamical time of the observer, as
     /// <see cref="AtEpoch"/> counts it: TT seconds about the Earth, TDB seconds about any other body (#501, #508), so that
     /// <c>AtEpoch(EpochAtMeanAnomaly(m))</c> is at <c>m</c> to the tick of the epoch. About the Earth from a TDB epoch,
-    /// the epoch is not <c>Epoch + TimeSpan.FromSeconds(Δt)</c>, which adds TDB seconds.</remarks>
+    /// the epoch is not <c>Epoch + TimeSpan.FromSeconds(Δt)</c>, which adds TDB seconds. Before 11.0.0 the difference
+    /// of the anomalies took 2π at most once: from a <see cref="StateVector"/>, whose mean anomaly is in (−π, π), the
+    /// passage came one period late, and at e = 0.999999, where <see cref="KeplerianElements"/> keeps its mean anomaly
+    /// unreduced, it could be in the past (#474).</remarks>
+    /// <exception cref="ArgumentOutOfRangeException">The passage lies beyond the epochs a <see cref="Time"/> holds.</exception>
     public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
         var res = meanAnomaly - MeanAnomaly();
 
-        // The next passage on an ellipse; an open orbit passes once
-        if (res < 0.0 && IsElliptical())
+        // The next passage on an ellipse, whatever the turn of either anomaly; an open orbit passes once (#474)
+        if (IsElliptical())
         {
-            res += Constants._2PI;
+            res = SpecialFunctions.NormalizeAngle(res);
         }
 
         return Propagator.PropagationTimeArgument.EpochAfter(Observer, Epoch, res / MeanMotion());

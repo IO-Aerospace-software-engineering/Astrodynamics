@@ -35,8 +35,8 @@ namespace IO.Astrodynamics.Tests;
 /// (DSS-13 from LRO), on the LRO SPK of the tests. <see cref="CelestialItem.FindWindowsOnDistanceConstraint"/> and
 /// <see cref="Site.FindWindowsOnIlluminationConstraint"/> on their CSPICE path are checked against their own
 /// <see cref="RelationnalOperator.Greater"/>, <see cref="RelationnalOperator.Lower"/> and <see cref="RelationnalOperator.Equal"/>
-/// searches, CSPICE's: the threshold of the first carries the factor of #466 and the surface point of the second the
-/// altitude defect that #482 records, so a spiceypy reference at the stated values would measure those defects.
+/// searches, CSPICE's: the threshold of the first is in m, as the library reads it since #466, and the surface point
+/// of the second in m, its altitude converted to km since #488.
 /// </para>
 /// </remarks>
 public class SpiceOperatorTests
@@ -294,11 +294,12 @@ public class SpiceOperatorTests
     [Fact]
     public void KernelSpacecraft_Distance()
     {
-        // LRO and the Moon, both ways; the threshold carries #466's factor: 1 815.148 km reaches gfdist
+        // LRO and the Moon, both ways, at 1 815.148 km (the threshold in m since #466; before it the library divided it by
+        // 1000 twice, and this test passed 1 815 148 000 m to reach gfdist with 1 815.148 km)
         var moon = new CelestialBody(PlanetsAndMoons.MOON);
         var lro = new Spacecraft(-85, "LRO", epoch: LroWindow.StartDate);
-        AssertAgainstOwnSearches(LroWindow, r => lro.FindWindowsOnDistanceConstraint(LroWindow, moon, r, 1815148000.0, Aberration.None, LroStep));
-        AssertAgainstOwnSearches(LroWindow, r => moon.FindWindowsOnDistanceConstraint(LroWindow, lro, r, 1815148000.0, Aberration.None, LroStep));
+        AssertAgainstOwnSearches(LroWindow, r => lro.FindWindowsOnDistanceConstraint(LroWindow, moon, r, 1815148.0, Aberration.None, LroStep));
+        AssertAgainstOwnSearches(LroWindow, r => moon.FindWindowsOnDistanceConstraint(LroWindow, lro, r, 1815148.0, Aberration.None, LroStep));
     }
 
     [Fact]
