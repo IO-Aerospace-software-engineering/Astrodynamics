@@ -25,7 +25,7 @@ public class CovarianceReplayTests : IClassFixture<ReferenceCases>
 
     public CovarianceReplayTests(ReferenceCases cases, ITestOutputHelper output)
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         _cases = cases;
         _output = output;
     }

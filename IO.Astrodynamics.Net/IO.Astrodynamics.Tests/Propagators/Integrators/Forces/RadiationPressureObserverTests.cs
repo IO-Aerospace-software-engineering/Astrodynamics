@@ -45,7 +45,7 @@ public class RadiationPressureObserverTests
     public RadiationPressureObserverTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, albedo: 0.3,
             thermalEffectiveTemperature: 254.0, thermalEmissivity: 0.95);
     }

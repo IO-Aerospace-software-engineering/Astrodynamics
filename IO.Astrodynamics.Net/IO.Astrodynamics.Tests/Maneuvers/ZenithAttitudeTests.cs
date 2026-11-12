@@ -13,7 +13,7 @@ public class ZenithAttitudeTests
 {
     public ZenithAttitudeTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

@@ -32,7 +32,7 @@ public class OccultationSearchTests
     public OccultationSearchTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/OccultationReference"));
     }
 

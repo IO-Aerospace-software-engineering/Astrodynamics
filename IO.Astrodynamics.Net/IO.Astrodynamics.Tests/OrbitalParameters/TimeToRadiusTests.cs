@@ -22,7 +22,7 @@ public class TimeToRadiusTests
     public TimeToRadiusTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     // A body built from custom parameters: no heliocentric orbit, so an infinite sphere of influence

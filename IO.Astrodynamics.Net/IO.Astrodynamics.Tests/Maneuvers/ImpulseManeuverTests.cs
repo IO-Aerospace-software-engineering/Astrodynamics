@@ -17,7 +17,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
     {
         public ImpulseManeuverTests()
         {
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         private static readonly TimeSystem.Time MinimumEpoch = new(DateTime.MinValue, TimeFrame.TDBFrame);

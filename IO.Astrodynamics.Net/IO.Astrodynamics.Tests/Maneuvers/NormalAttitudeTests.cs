@@ -13,7 +13,7 @@ public class NormalAttitudeTests
 {
     public NormalAttitudeTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

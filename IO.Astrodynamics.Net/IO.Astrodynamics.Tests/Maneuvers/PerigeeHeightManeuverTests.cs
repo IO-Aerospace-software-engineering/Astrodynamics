@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
     {
         public PerigeeHeightManeuverTests()
         {
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

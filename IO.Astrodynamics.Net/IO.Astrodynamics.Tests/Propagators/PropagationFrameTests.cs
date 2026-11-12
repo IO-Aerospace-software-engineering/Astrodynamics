@@ -30,7 +30,7 @@ public class PropagationFrameTests
     public PropagationFrameTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public static TheoryData<string> InertialFrames => new("ECLIPJ2000", "B1950", "GCRF");

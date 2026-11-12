@@ -23,7 +23,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         public PhasingManeuverTests(ITestOutputHelper output)
         {
             _output = output;
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

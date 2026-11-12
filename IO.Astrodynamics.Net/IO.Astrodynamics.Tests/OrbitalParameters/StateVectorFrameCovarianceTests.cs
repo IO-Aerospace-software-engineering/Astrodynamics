@@ -24,7 +24,7 @@ public class StateVectorFrameCovarianceTests
 
     public StateVectorFrameCovarianceTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

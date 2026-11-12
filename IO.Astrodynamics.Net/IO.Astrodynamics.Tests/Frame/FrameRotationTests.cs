@@ -21,7 +21,7 @@ public class FrameRotationTests
 
     public FrameRotationTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static TimeSystem.Time[] Epochs => new[]

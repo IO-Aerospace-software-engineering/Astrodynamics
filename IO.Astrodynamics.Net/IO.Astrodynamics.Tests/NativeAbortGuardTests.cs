@@ -22,7 +22,7 @@ public class NativeAbortGuardTests
 {
     public NativeAbortGuardTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>

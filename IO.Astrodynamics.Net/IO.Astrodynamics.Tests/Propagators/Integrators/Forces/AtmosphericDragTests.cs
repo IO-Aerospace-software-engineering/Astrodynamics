@@ -16,7 +16,7 @@ public class AtmosphericDragTests
 {
     public AtmosphericDragTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

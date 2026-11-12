@@ -15,11 +15,9 @@ namespace IO.Astrodynamics.Tests.Frame;
 
 public class FrameChainIntegrationTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     public FrameChainIntegrationTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

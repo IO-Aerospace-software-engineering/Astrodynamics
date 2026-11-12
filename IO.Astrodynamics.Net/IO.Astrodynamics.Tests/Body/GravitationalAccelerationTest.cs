@@ -11,7 +11,7 @@ public class GravitationalAccelerationTest
 {
     public GravitationalAccelerationTest()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

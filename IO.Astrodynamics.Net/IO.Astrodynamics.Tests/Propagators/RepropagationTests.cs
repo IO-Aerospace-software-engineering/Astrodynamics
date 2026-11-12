@@ -94,7 +94,7 @@ public class RepropagationTests
     public RepropagationTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static double Tt(Time t) => MinimumEpochGateTests.Tt(t);

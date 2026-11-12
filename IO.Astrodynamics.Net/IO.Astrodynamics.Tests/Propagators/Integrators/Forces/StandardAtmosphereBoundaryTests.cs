@@ -46,7 +46,7 @@ public class StandardAtmosphereBoundaryTests
     public StandardAtmosphereBoundaryTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     internal static CelestialBody Body(string model) => model == "Earth"

@@ -97,7 +97,7 @@ public class AttitudeTimelineTests
     public AttitudeTimelineTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     // ---------------------------------------------------------------------------------------------------------------------

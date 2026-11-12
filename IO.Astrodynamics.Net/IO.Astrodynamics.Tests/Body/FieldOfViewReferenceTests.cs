@@ -18,7 +18,7 @@ namespace IO.Astrodynamics.Tests.Body;
 
 /// <summary>
 /// The kernels and the CSPICE windows of <c>tools/fov_reference</c> (choice 9 (a) of #515), loaded once for the class:
-/// the reload of the solar system kernels by each test would take most of its time.
+/// the reload of its text kernels by each test would make CSPICE re-read every text kernel loaded.
 /// </summary>
 public sealed class FieldOfViewReferenceKernels
 {
@@ -26,7 +26,7 @@ public sealed class FieldOfViewReferenceKernels
 
     public FieldOfViewReferenceKernels()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         SpiceAPI.Instance.LoadKernels(Path);
         Root = JsonDocument.Parse(File.ReadAllText(System.IO.Path.Combine(Path.FullName, "fov_reference.json"))).RootElement;
     }

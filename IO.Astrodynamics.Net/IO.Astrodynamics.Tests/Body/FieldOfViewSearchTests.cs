@@ -129,7 +129,7 @@ public sealed class PropagatedFieldOfViewCase
 
     public PropagatedFieldOfViewCase()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         Start = TimeSystem.Time.CreateUTC(676555130.80).ToTDB();
         End = Start.AddSeconds(6448.0);
         // The light time of a spacecraft target reads it before the search window: one second inside the propagation
@@ -862,10 +862,17 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         File.Delete(clock.FullName);
         await fresh[0].spacecraft.Clock.WriteAsync(new FileInfo(clock.FullName));
         SpiceAPI.Instance.LoadKernels(new FileInfo(clock.FullName));
-        var ck = new FileInfo("Data/User/FieldOfViewSearch515/concurrent.bc");
-        File.Delete(ck.FullName);
-        fresh[0].spacecraft.WriteOrientation(new FileInfo(ck.FullName));
-        Assert.True(new FileInfo(ck.FullName).Exists);
+        try
+        {
+            var ck = new FileInfo("Data/User/FieldOfViewSearch515/concurrent.bc");
+            File.Delete(ck.FullName);
+            fresh[0].spacecraft.WriteOrientation(new FileInfo(ck.FullName));
+            Assert.True(new FileInfo(ck.FullName).Exists);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(new FileInfo(clock.FullName));
+        }
     }
 
     /// <summary>

@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Tests.Body
         public InstrumentTests(ITestOutputHelper output)
         {
             _output = output;
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

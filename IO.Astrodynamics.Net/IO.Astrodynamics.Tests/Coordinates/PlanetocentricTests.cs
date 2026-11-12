@@ -10,7 +10,7 @@ public class PlanetocentricTests
 {
     public PlanetocentricTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

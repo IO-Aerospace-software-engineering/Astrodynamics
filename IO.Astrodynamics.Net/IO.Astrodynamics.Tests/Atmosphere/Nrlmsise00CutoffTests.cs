@@ -20,7 +20,7 @@ public class Nrlmsise00CutoffTests
 
     public Nrlmsise00CutoffTests(ITestOutputHelper output)
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         _output = output;
     }
 

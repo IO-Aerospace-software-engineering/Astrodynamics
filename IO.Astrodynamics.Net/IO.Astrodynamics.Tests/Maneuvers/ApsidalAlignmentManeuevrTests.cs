@@ -15,7 +15,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
     {
         public ApsidalAlignmentManeuevrTests()
         {
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

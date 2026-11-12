@@ -98,7 +98,7 @@ public class PropagatedArcsEdgeTests
     public PropagatedArcsEdgeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static readonly Time Start = new(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);

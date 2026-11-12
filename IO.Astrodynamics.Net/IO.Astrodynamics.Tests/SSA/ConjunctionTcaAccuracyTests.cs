@@ -33,7 +33,7 @@ public class ConjunctionTcaAccuracyTests
 
     public ConjunctionTcaAccuracyTests(ITestOutputHelper output)
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         _output = output;
         _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Start);
     }

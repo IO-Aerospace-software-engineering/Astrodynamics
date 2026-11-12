@@ -23,14 +23,12 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators;
 
 public class RK78IntegratorTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     private readonly ITestOutputHelper _output;
 
     public RK78IntegratorTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     #region Butcher Tableau Verification

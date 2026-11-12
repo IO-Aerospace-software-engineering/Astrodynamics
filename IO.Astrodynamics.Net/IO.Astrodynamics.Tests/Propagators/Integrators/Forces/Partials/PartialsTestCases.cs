@@ -41,7 +41,7 @@ public sealed class PartialsTestCases
 
     public PartialsTestCases()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         Earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
             new Nrlmsise00Model(SpaceWeather.Nominal), albedo: 0.3, thermalEffectiveTemperature: 254.0,
             thermalEmissivity: 0.95);

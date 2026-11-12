@@ -12,7 +12,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
     {
         public KeplerianElementsTests()
         {
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

@@ -21,7 +21,7 @@ public class Nrlmsise00TimeScaleTests
 
     public Nrlmsise00TimeScaleTests(ITestOutputHelper output)
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         _output = output;
     }
 

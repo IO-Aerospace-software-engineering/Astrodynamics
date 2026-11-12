@@ -33,7 +33,7 @@ public class DensityGradientNoiseTests
     public DensityGradientNoiseTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static CelestialBody Body(string model)

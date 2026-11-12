@@ -16,7 +16,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
         public OmmTests()
         {
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

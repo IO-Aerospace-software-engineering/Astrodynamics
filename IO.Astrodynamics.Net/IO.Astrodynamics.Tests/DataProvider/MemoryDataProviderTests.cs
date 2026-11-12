@@ -25,7 +25,7 @@ public class MemoryDataProviderTests
     public MemoryDataProviderTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     // The angle of the rotation between two unit quaternions, whatever their signs

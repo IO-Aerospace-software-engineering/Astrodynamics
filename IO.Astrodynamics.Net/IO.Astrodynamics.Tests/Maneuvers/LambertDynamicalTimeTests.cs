@@ -30,7 +30,7 @@ public class LambertDynamicalTimeTests
     public LambertDynamicalTimeTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public static TheoryData<string, string, string> TagPairs

@@ -13,7 +13,7 @@ public class ThirdBodyPerturbationTests
 {
     public ThirdBodyPerturbationTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Theory]

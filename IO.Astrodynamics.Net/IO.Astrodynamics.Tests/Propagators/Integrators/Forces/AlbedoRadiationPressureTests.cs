@@ -16,11 +16,9 @@ namespace IO.Astrodynamics.Tests.Propagators.Integrators.Forces;
 
 public class AlbedoRadiationPressureTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     public AlbedoRadiationPressureTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static CelestialBody CreateEarth(double albedo = 0.306)

@@ -103,10 +103,11 @@ Configuration.Instance.SetDataProvider(new SpiceDataProvider());
 Configuration.Instance.SetDataProvider(new MemoryDataProvider());
 ```
 
-Test classes load SPICE kernels in their constructor:
+Test classes of `IO.Astrodynamics.Tests` load the solar system kernels in their constructor through the helper, which loads them once per test process (`LoadKernels` of a loaded path unloads and reloads it under the SPICE lock, which cost 63 % of the CI time):
 ```csharp
-SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+TestKernels.EnsureSolarSystem();
 ```
+No test of that process unloads `Data/SolarSystem` or calls `ClearKernels` (a child process instead, as `ColdStartTests`), and no kernel a test loads may redefine what `Data/SolarSystem` defines; `KernelReloadGuardTests` and `KernelShadowingTests` check both. A test's own kernels are loaded with `LoadKernels` and unloaded in `finally` or `Dispose`.
 Test data files live in `Data/SolarSystem/` and are copied to the output directory.
 
 ## Critical Domain Rules

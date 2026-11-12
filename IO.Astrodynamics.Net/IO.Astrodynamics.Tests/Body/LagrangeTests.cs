@@ -10,7 +10,7 @@ public class LagrangeTests
 {
     public LagrangeTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

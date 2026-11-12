@@ -49,7 +49,7 @@ public class SpiceOperatorTests
 
     public SpiceOperatorTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         SpiceAPI.Instance.LoadKernels(LroSpkPath);
     }
 

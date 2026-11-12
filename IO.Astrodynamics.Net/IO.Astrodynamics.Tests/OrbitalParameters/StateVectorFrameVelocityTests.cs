@@ -26,7 +26,7 @@ public class StateVectorFrameVelocityTests
 
     public StateVectorFrameVelocityTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Theory]

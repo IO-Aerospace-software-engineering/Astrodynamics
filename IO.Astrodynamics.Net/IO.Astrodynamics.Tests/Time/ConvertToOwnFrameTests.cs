@@ -26,7 +26,7 @@ public class ConvertToOwnFrameTests
 {
     public ConvertToOwnFrameTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public static TheoryData<long> TicksThatMovedThroughTai => new()

@@ -16,7 +16,7 @@ public class ConfigurationTest
 {
     public ConfigurationTest()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

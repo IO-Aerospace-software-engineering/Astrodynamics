@@ -40,7 +40,7 @@ namespace IO.Astrodynamics.Tests.Mission
         public ScenarioTests(ITestOutputHelper output)
         {
             _output = output;
-            SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+            TestKernels.EnsureSolarSystem();
         }
 
         [Fact]

@@ -71,7 +71,7 @@ public class EquinoctialElementsSingularityTests
     public EquinoctialElementsSingularityTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         _earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
         _reference = EquinoctialReference.Load();
     }

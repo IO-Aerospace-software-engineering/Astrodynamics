@@ -49,7 +49,7 @@ public class TemeFrameTests
     public TemeFrameTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public sealed record Point(string Kind, string Name, string Utc, string Instant, string Line1, string Line2, double[] Teme,

@@ -28,7 +28,7 @@ public class GeopotentialConstantsTests
     public GeopotentialConstantsTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static string Model => Path.Combine(Constants.SolarSystemKernelPath.ToString(), "EGM2008_to70_TideFree");

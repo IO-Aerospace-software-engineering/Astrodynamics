@@ -21,11 +21,9 @@ namespace IO.Astrodynamics.Tests.CCSDS.CDM;
 
 public class CdmTests
 {
-    private static readonly DirectoryInfo SolarSystemKernelPath = new("Data/SolarSystem");
-
     public CdmTests()
     {
-        SpiceAPI.Instance.LoadKernels(SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

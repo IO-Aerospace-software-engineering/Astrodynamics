@@ -22,7 +22,7 @@ public class LambertSolverTests
 {
     public LambertSolverTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static Astrodynamics.OrbitalParameters.OrbitalParameters CreateStateVector(Vector3 position, Vector3 velocity, in TimeSystem.Time epoch)

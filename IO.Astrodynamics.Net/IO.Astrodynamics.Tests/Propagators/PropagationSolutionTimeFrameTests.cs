@@ -37,7 +37,7 @@ public class PropagationSolutionTimeFrameTests
     public PropagationSolutionTimeFrameTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public static TheoryData<string, bool> Cases => new()

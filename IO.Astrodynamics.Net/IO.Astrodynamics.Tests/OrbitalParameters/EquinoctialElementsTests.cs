@@ -16,7 +16,7 @@ public class EquinoctialElementsTests
     public EquinoctialElementsTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     /// <summary>

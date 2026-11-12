@@ -36,7 +36,7 @@ public class DenseAirStepControlTests
     public DenseAirStepControlTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static CelestialBody Body(string model)

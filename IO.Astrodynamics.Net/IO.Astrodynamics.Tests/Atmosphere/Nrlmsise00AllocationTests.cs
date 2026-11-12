@@ -25,7 +25,7 @@ public class Nrlmsise00AllocationTests
 
     public Nrlmsise00AllocationTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     public static TheoryData<string> Configurations => new() { "nominal", "solar maximum", "AP array" };

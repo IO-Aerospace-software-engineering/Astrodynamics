@@ -66,7 +66,7 @@ public class OccultationSearchValidationTests
     public OccultationSearchValidationTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
         SpiceAPI.Instance.LoadKernels(ReferencePath);
         SpiceAPI.Instance.LoadKernels(LroSpkPath);
     }

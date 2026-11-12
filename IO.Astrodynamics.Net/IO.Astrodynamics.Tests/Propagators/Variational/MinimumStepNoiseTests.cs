@@ -41,7 +41,7 @@ public class MinimumStepNoiseTests
     public MinimumStepNoiseTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static PropagationSolution Propagate(CelestialBody body, StateVector start, double tolerance,

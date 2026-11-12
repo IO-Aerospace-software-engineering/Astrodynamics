@@ -20,7 +20,7 @@ public class DragPropagationTests
 {
     public DragPropagationTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static double CircularVelocity(double radius, double gm) => System.Math.Sqrt(gm / radius);

@@ -34,7 +34,7 @@ public class TleTextTests
 
     public TleTextTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static readonly Lazy<JsonElement[]> EpochFields = new(() =>

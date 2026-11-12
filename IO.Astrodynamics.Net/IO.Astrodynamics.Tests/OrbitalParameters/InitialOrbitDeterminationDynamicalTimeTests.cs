@@ -22,7 +22,7 @@ public class InitialOrbitDeterminationDynamicalTimeTests
 
     public InitialOrbitDeterminationDynamicalTimeTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]

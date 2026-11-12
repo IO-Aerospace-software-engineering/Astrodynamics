@@ -40,7 +40,7 @@ public class CrossingEncounterCase : IDisposable
     {
         ProtectedId = id1;
         SecondaryId = id2;
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/SolarSystem"));
+        TestKernels.EnsureSolarSystem();
         T0 = new TimeSystem.Time(2026, 1, 20, 6, 0, 0, frame: TimeFrame.UTCFrame).ToTDB();
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, T0);
         var (s1, s2) = states(earth, T0);

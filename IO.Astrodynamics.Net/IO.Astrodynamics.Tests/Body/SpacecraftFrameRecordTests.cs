@@ -61,7 +61,7 @@ public class SpacecraftFrameRecordTests
     public SpacecraftFrameRecordTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static Spacecraft Create(int naifId)

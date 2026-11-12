@@ -41,7 +41,7 @@ public class Sgp4ReferenceTests
     public Sgp4ReferenceTests(ITestOutputHelper output)
     {
         _output = output;
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     private static readonly Lazy<JsonElement> Reference = new(() =>

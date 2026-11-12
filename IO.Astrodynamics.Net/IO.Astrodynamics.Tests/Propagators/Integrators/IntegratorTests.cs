@@ -16,7 +16,7 @@ public class IntegratorTests
 {
     public IntegratorTests()
     {
-        SpiceAPI.Instance.LoadKernels(Constants.SolarSystemKernelPath);
+        TestKernels.EnsureSolarSystem();
     }
 
     [Fact]
