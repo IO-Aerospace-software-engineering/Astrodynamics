@@ -168,7 +168,7 @@ public class SpacecraftKernelsTests
                 Assert.Equal(1.0, reference.Rotation.Magnitude(), 12);
                 worstAngle = System.Math.Max(worstAngle, RotationAngle(rotation, reference.Rotation));
                 worstRate = System.Math.Max(worstRate, (rate - reference.AngularVelocity).Magnitude());
-                smallestFromIdentity = System.Math.Min(smallestFromIdentity, RotationAngle(rotation, Quaternion.Zero));
+                smallestFromIdentity = System.Math.Min(smallestFromIdentity, RotationAngle(rotation, Quaternion.Identity));
             }
 
             _output.WriteLine($"MEASURE #542 orientation from {referenceFrame}{(utcWindow ? " (UTC window)" : "")}: CLI - pxform {worstAngle:E3} rad, " +

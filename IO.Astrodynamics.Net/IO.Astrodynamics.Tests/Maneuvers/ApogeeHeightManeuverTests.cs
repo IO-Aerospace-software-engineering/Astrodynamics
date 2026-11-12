@@ -59,7 +59,7 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             var res = maneuver.TryExecute(orbitalParams);
             // The state after the impulse, the given state unchanged (#588)
             Assert.Equal(new StateVector(orbitalParams.Position, orbitalParams.Velocity + maneuver.DeltaV, orbitalParams.Observer, orbitalParams.Epoch, orbitalParams.Frame), res.sv);
-            Assert.Equal(new StateOrientation(Quaternion.Zero, Vector3.Zero, orbitalParams.Epoch, orbitalParams.Frame), res.so);
+            Assert.Equal(new StateOrientation(Quaternion.Identity, Vector3.Zero, orbitalParams.Epoch, orbitalParams.Frame), res.so);
             Assert.Equal(new Vector3(0.0, 2424.6084273080614, 0.0), maneuver.DeltaV);
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 49, 301, 844), TimeSpan.FromSeconds(16.0632973)), maneuver.ThrustWindow);
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 11, 59, 49, 301, 844), TimeSpan.FromSeconds(16.0632973)), maneuver.ManeuverWindow);

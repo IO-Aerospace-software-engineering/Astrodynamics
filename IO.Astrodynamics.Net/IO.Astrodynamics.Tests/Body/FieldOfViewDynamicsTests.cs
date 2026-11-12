@@ -274,7 +274,7 @@ public class FieldOfViewDynamicsTests
             {
                 var state = spacecraft.GetGeometricStateRelativeTo(epoch, earthBody);
                 states.Add(new StateVector(state.Position, state.Velocity, earthBody, epoch, Frames.Frame.ICRF));
-                orientations.Add(new StateOrientation(Quaternion.Zero, Vector3.Zero, epoch, Frames.Frame.ICRF));
+                orientations.Add(new StateOrientation(Quaternion.Identity, Vector3.Zero, epoch, Frames.Frame.ICRF));
             }
 
             FieldOfViewKernels.WriteAndLoad(directory, spacecraft, [], [], window, file => SpiceAPI.Instance.WriteEphemeris(file, spacecraft.NaifId, states.ToArray()), orientations);

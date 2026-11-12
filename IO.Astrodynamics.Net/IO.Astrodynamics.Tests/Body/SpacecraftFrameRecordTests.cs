@@ -85,7 +85,7 @@ public class SpacecraftFrameRecordTests
     {
         var spacecraft = Create(-8501);
         var orientation = spacecraft.Frame.GetStateOrientationToICRF(Start);
-        Assert.Equal(Quaternion.Zero, orientation.Rotation);
+        Assert.Equal(Quaternion.Identity, orientation.Rotation);
         Assert.Equal(Vector3.Zero, orientation.AngularVelocity);
         Assert.Equal(spacecraft.Frame, orientation.ReferenceFrame);
         Assert.Null(spacecraft.Frame.GetLatestStateOrientationToICRF());

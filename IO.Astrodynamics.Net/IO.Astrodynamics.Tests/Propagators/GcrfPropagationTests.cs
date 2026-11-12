@@ -63,9 +63,9 @@ public class GcrfPropagationTests
         {
             var toIcrf = Frames.Frame.GCRF.ToFrame(Frames.Frame.ICRF, epoch);
             var fromIcrf = Frames.Frame.ICRF.ToFrame(Frames.Frame.GCRF, epoch);
-            Assert.Equal(Quaternion.Zero, toIcrf.Rotation);
+            Assert.Equal(Quaternion.Identity, toIcrf.Rotation);
             Assert.Equal(Vector3.Zero, toIcrf.AngularVelocity);
-            Assert.Equal(Quaternion.Zero, fromIcrf.Rotation);
+            Assert.Equal(Quaternion.Identity, fromIcrf.Rotation);
             Assert.Equal(Vector3.Zero, fromIcrf.AngularVelocity);
         }
     }
@@ -137,29 +137,44 @@ public class GcrfPropagationTests
         // Act
         var (icrf, icrfSpacecraft) = Run(Frames.Frame.ICRF, -1543);
         var (gcrf, gcrfSpacecraft) = Run(Frames.Frame.GCRF, -1544);
+        // #562: a frame built by name, in any case, is Frame.GCRF: the propagator's inertial-frame check (==) accepts it, and
+        // the propagation is that of its twin, where it threw "must be defined in inertial frame"
+        var byNameFrame = new Frames.Frame("gcrf");
+        var (byName, byNameSpacecraft) = Run(byNameFrame, -1545);
 
         // Assert: the solution in GCRF, equal to its twin; the stored states and the attitude (in ICRF) too
         Assert.Equal(Frames.Frame.GCRF, gcrf.Frame);
         Assert.Equal(icrf.StateVectors.Count, gcrf.StateVectors.Count);
         for (int i = 0; i < icrf.StateVectors.Count; i++)
         {
-            Assert.Equal(Frames.Frame.GCRF, gcrf.StateVectors[i].Frame);
+            // The label itself, not only a frame of its name: equality ignores case and type (#562)
+            Assert.Same(Frames.Frame.GCRF, gcrf.StateVectors[i].Frame);
             AssertSameState(icrf.StateVectors[i], gcrf.StateVectors[i]);
+        }
+
+        Assert.Same(byNameFrame, byName.Frame);
+        Assert.Equal(icrf.StateVectors.Count, byName.StateVectors.Count);
+        for (int i = 0; i < icrf.StateVectors.Count; i++)
+        {
+            Assert.Same(byNameFrame, byName.StateVectors[i].Frame);
+            AssertSameState(icrf.StateVectors[i], byName.StateVectors[i]);
         }
 
         var observer = icrfSpacecraft.InitialOrbitalParameters.Observer;
         foreach (var epoch in new[] { Start, Start.AddSeconds(150.0), Start.AddSeconds(437.5), Window.EndDate })
         {
-            AssertSameState(icrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector(),
-                gcrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector());
+            var expected = icrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            AssertSameState(expected, gcrfSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector());
+            AssertSameState(expected, byNameSpacecraft.GetEphemeris(epoch, observer, Frames.Frame.ICRF, Aberration.None).ToStateVector());
             Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation, gcrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
+            Assert.Equal(icrfSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation, byNameSpacecraft.Frame.GetStateOrientationToICRF(epoch).Rotation);
         }
 
         if (variant.Contains("Impulse"))
         {
             // The impulse fired and the nadir attitude followed it
             Assert.Single(gcrfSpacecraft.ExecutedManeuvers.OfType<ApogeeHeightManeuver>());
-            Assert.NotEqual(Quaternion.Zero, gcrfSpacecraft.Frame.GetStateOrientationToICRF(Window.EndDate).Rotation);
+            Assert.NotEqual(Quaternion.Identity, gcrfSpacecraft.Frame.GetStateOrientationToICRF(Window.EndDate).Rotation);
         }
     }
 

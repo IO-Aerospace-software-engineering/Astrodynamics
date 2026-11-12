@@ -84,7 +84,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         public void RelativeToITRF()
         {
             var earth = TestHelpers.EarthAtJ2000;
-            var so = new StateOrientation(Quaternion.Zero,
+            var so = new StateOrientation(Quaternion.Identity,
                 Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
             var res = so.RelativeTo(earth.Frame);
             Assert.NotNull(so);

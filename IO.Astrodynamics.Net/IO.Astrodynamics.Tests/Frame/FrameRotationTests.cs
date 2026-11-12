@@ -35,8 +35,8 @@ public class FrameRotationTests
         // The premise of the shortcut of Frame.GetRotationToICRF: SPICE gives exactly (1, 0, 0, 0)
         foreach (var epoch in Epochs)
         {
-            AssertSameBits(Quaternion.Zero, Frames.Frame.ICRF.GetStateOrientationToICRF(epoch).Rotation);
-            AssertSameBits(Quaternion.Zero, new Frames.Frame("J2000").GetStateOrientationToICRF(epoch).Rotation);
+            AssertSameBits(Quaternion.Identity, Frames.Frame.ICRF.GetStateOrientationToICRF(epoch).Rotation);
+            AssertSameBits(Quaternion.Identity, new Frames.Frame("J2000").GetStateOrientationToICRF(epoch).Rotation);
         }
     }
 
