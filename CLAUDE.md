@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 IO.Astrodynamics is a .NET 10 astrodynamics toolkit with a thin C++ interop layer for NASA/JPL NAIF CSPICE.
 
-**Critical**: The C++ layer (`IO.Astrodynamics/`) is **feature-frozen**. All new development targets the .NET projects in `IO.Astrodynamics.Net/`.
+**The C++ layer** (`IO.Astrodynamics/`) is the bridge to CSPICE. The product is the .NET library, so features land in the .NET projects of `IO.Astrodynamics.Net/`; the C++ layer is changed when a technical or ergonomic reason calls for it (a CSPICE call the .NET side cannot make well, an error a proxy drops, performance), not to add features of its own (decided by S. Guillet, 2026-11-12). A change keeps the P/Invoke declarations of `SpiceAPI` and the native library of the same release in step, is built by `build-native` on the three platforms, and is tested by the C++ tests and the .NET tests that reach it.
 
 ## Commands
 
@@ -29,7 +29,7 @@ dotnet test --filter "Category!=LongValidation"
 # Skip the Validation category too (bit-for-bit goldens, heavy validations), which CI runs on Linux only
 dotnet test --filter "Category!=Validation&Category!=LongValidation"
 
-# Run the LongValidation category (Linux, about 35 min on 4 cores)
+# Run the LongValidation category (Linux, about 1 h 15 min on the CI runner, run 43235887045)
 IO_ASTRODYNAMICS_LONG_VALIDATION=1 dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "Category=LongValidation"
 
 # Run a single test by name
@@ -43,7 +43,7 @@ dotnet test --collect:"XPlat Code Coverage"
 dotnet run --project IO.Astrodynamics.CLI -- --help
 ```
 
-C++ build (only needed if modifying the native layer, which should not happen):
+C++ build (only needed when the native layer changes):
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
@@ -54,8 +54,8 @@ cmake --build build --config Release
 ### Two-Layer Design
 
 ```
-IO.Astrodynamics/            ← C++ (FROZEN): P/Invoke bridge to CSPICE
-IO.Astrodynamics.Net/        ← .NET (ACTIVE): All new development here
+IO.Astrodynamics/            ← C++: P/Invoke bridge to CSPICE, changed when a technical or ergonomic reason calls for it
+IO.Astrodynamics.Net/        ← .NET: the product, where features land
   ├── IO.Astrodynamics/      ← Core library
   ├── IO.Astrodynamics.CLI/  ← CLI tool (astro command)
   ├── IO.Astrodynamics.Tests/

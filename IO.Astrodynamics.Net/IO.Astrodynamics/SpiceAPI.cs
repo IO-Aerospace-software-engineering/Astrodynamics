@@ -950,7 +950,7 @@ public class SpiceAPI
 
     /// <summary>
     /// Writes the arcs of states of an object as an SPK of type 9, one segment per arc, through the managed writer
-    /// (<see cref="Kernels.SpkWriter"/>, #540), in J2000: the native writer, frozen, writes one segment per file. As the
+    /// (<see cref="Kernels.SpkWriter"/>, #540), in J2000: the native writer writes one segment per file. As the
     /// native writer, it unloads and replaces an existing file, creates its directory when needed, and leaves the new file
     /// unloaded (the native kernel unloads the file it wrote when it is destroyed, at the end of its proxy).
     /// </summary>

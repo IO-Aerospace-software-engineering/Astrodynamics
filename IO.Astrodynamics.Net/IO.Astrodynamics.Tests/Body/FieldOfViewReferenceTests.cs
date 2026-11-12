@@ -465,7 +465,7 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
 
     /// <summary>
     /// The SPICE path of a kernel-backed spacecraft, a search window outside the coverage of its kernels: no window and no
-    /// exception, the error of gftfov dropped by the native proxy (#454, the C++ layer frozen). The
+    /// exception, the error of gftfov dropped by the native proxy (#454). The
     /// managed path has no coverage check for a kernel-backed spacecraft (choice 14 is for propagated states): the native
     /// reading of its states outside the kernels is a defect of its own, outside #515 (#454).
     /// </summary>

@@ -20,8 +20,9 @@ Everything happens in the
 feature discussions and pull requests. The whole codebase is open to contributions, including the
 adaptive integrator, the Earth orientation frames, the SSA module and the CCSDS message support.
 
-The native C++ layer is a thin, stable bridge to CSPICE. It accepts fixes and performance or
-stability improvements, but not new API surface: new capabilities belong in the .NET layer.
+The native C++ layer is a thin bridge to CSPICE. New capabilities belong in the .NET layer; the C++ layer
+changes when a technical or ergonomic reason calls for it (a CSPICE call the .NET layer cannot make well, an
+error a proxy drops, performance), with its P/Invoke declarations in the same pull request.
 
 ## What A Good Contribution Looks Like
 

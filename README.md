@@ -87,13 +87,13 @@ More worked examples: [docs.io-aerospace.org/tutorials](https://docs.io-aerospac
 ## How it works
 
 - **SPICE data**: you supply the NAIF kernels (ephemerides, planetary constants, leap seconds, mission data)
-- **Native bridge**: a small C++ interop library talks to CSPICE for performance-critical calls (frozen API)
+- **Native bridge**: a small C++ interop library talks to CSPICE for performance-critical calls
 - **.NET SDK**: the rich, evolving API surface for modeling, propagation and analysis
 - **CLI**: command-line tools built on the .NET SDK for quick analyses
 
 Background reading: [SPICE concept](https://naif.jpl.nasa.gov/naif/spiceconcept.html) and [SPICE data](https://naif.jpl.nasa.gov/naif/data.html).
 
-> **The C++ layer is feature-frozen** and exists only to communicate with SPICE. All new features and APIs land in the .NET projects.
+> **The C++ layer exists to communicate with SPICE.** Features and APIs land in the .NET projects; the C++ layer changes when a technical or ergonomic reason calls for it.
 
 ## Getting SPICE data
 
@@ -135,9 +135,9 @@ dotnet run --project IO.Astrodynamics.Net/IO.Astrodynamics.CLI -- --help
 
 Available commands: `ephemeris`, `propagate`, `orientation`, `sub-point`, `angular-separation`, `celestial-body-info`, `orbital-parameters-converter`, `frame-converter`, `time-converter`, and the window finders `find-windows-from-distance-constraint`, `find-windows-from-occultation-constraint`, `find-windows-from-coordinate-constraint`, `find-windows-from-illumination-constraint`, `find-windows-from-FOV-constraint`.
 
-## Native C++ interop (frozen)
+## Native C++ interop
 
-The native C++ library exists only as a high-performance bridge to CSPICE. It won't receive new features (only safety and correctness fixes). If you need to link it directly:
+The native C++ library is a high-performance bridge to CSPICE. Features are added to the .NET SDK; the native library changes when the .NET SDK needs it (a CSPICE call, error reporting, performance). If you need to link it directly:
 
 - Download prebuilt binaries from [Releases](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/releases)
 - **Linux**: install the headers to `/usr/local/include/IO` and `libIO.Astrodynamics.so` to `/usr/local/lib`
