@@ -180,7 +180,7 @@ rotation about z.
   frame applies: TEME → ITRF93 is TEME → ICRF, then ICRF → ITRF93 from SPICE.
 - **By name.** A frame built by name, `new Frame("TEME")` in any case (a CCSDS file, the CLI, user code), is routed to
   `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceAPI.TransformFrame` composes a TEME end
-  through ICRF; the native TEME of the frozen C++ layer is no longer used. An ephemeris read in TEME is read in J2000
+  through ICRF; the native TEME of the C++ layer is no longer used. An ephemeris read in TEME is read in J2000
   and rotated (#558). A frame built by name equals `Frame.TEME` ([Equality](#equality), #562).
 - **Measured** (`tools/teme_reference`, 2026-11-08; a LEO and a GEO state at 13 epochs from 1980 to 2026): within
   0.9 mm (LEO) and 18 mm (GEO) of ERFA's CIP route with IAU 2006/2000B, 19 mm and 106 mm (0.55 mas, IAU 2000B's
