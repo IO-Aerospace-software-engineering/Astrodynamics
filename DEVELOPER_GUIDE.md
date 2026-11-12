@@ -2917,12 +2917,14 @@ See the [LICENSE](../LICENSE) file for complete warranty disclaimer terms.
 
 ## Version Information
 
-- NuGet Package: 10.2.0-preview-1
-- CLI Tool: 10.2.0-preview-1
+- NuGet Package: 11.0.0
+- CLI Tool: 11.0.0
 - Framework: .NET 10.0 (`net10.0` only)
 - Supported runtimes: `win-x64`, `linux-x64`, `osx-arm64` (Apple Silicon), `osx-x64` (Intel)
 - SPICE Toolkit: CSPICE N0067
 - License: LGPL-3.0-or-later
+
+The breaking changes of 11.0.0, each with its migration, are the **Breaking** entries under **Changed** and the entries under **Removed** of the 11.0.0 release notes (`docs/contributing/versioning.md#1100`).
 
 ### Breaking Changes in 8.5.0
 
