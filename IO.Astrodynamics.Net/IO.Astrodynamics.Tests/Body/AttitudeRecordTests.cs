@@ -75,9 +75,10 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 public class AttitudeRecordTests
 {
     // Twice the worst over Linux, Windows and macOS arm64 (CI run 41522747911, 2026-11-02, MEASURE lines), rounded up at
-    // the second significant digit: the 162 cases of the grid on Linux, the 13 of WorstCase_MatchesSpice on Windows and
-    // macOS arm64, and the chains of NearEpochChain (managed - CK and its rate); every worst below is the same on the three,
-    // L / W / M equal to the printed digit, and the case of each worst is in WorstCase_MatchesSpice. The SLERP residual at
+    // the second significant digit: the 162 cases of the grid on Linux, the 13 worst cases (WorstCases, run by
+    // WorstCase_MatchesSpice in this class and AttitudeRecordGridPart1Tests to Part3Tests) on Windows and macOS arm64,
+    // and the chains of NearEpochChain (managed - CK and its rate); every worst below is the same on the three,
+    // L / W / M equal to the printed digit, and the case of each worst is in WorstCases. The SLERP residual at
     // 1 s outputs, in the Validation category, is twice the Linux worst; the occultation against its twin, measured 0 on
     // the three, keeps its one tick. Where twice the printed worst falls on a rounding boundary, the Linux worst is read at
     // six digits from the same 162 cases with only the format of the MEASURE line changed (Linux x64, 2026-11-02, every
@@ -134,7 +135,7 @@ public class AttitudeRecordTests
 
     /// <summary>The same in SSB mode for the cases with an impulse, m. Twice the worst (CI run 41651463194, 2026-11-03): 2.56e-3 m on Linux
     /// (ImpulseTriad, RK7(8), GALACTIC, a row of the Validation category, Linux only), 1.59e-3 m on Windows and macOS arm64
-    /// (ImpulseTriad, VV, GALACTIC, the only row with an impulse in SSB mode of <c>WorstCase_MatchesSpice</c>).</summary>
+    /// (ImpulseTriad, VV, GALACTIC, the only row with an impulse in SSB mode of <c>WorstCases</c>, which run in every CI job).</summary>
     internal const double PositionAgainstSpkSsbAcrossImpulses = 5.2e-3;
 
     /// <summary>The same for the cases with an impulse, whose stored states are split into arcs at the impulse (#540, choice 18
@@ -142,7 +143,7 @@ public class AttitudeRecordTests
     /// resolution, weigh more there. These rows were excluded before. Twice the worst (CI run 41651463194, 2026-11-03): 7.78e-4 m on Linux
     /// (NadirImpulseTriad, RK7(8), ECLIPJ2000, 2026, a row of the Validation category, Linux only; 1.64e-3 m before the review
     /// of PR 1 of #554 dropped the output within a tenth of the step of the impulse), 5.67e-4 m on Windows and macOS arm64
-    /// (ImpulseTriad, RK7(8), ICRF, the row with an impulse of <c>WorstCase_MatchesSpice</c>).</summary>
+    /// (ImpulseTriad, RK7(8), ICRF, the row with an impulse of <c>WorstCases</c>, which run in every CI job).</summary>
     internal const double PositionAgainstSpkAcrossImpulses = 1.6e-3;
 
     /// <summary>The managed angular velocity and the CK's against the rate of the law (a difference of its closed form over
@@ -302,20 +303,60 @@ public class AttitudeRecordTests
         "Prograde|RK78|ECLIPJ2000|Propagate|2026" // managed - CK, rate, instruments and the spacecraft frame from 2025-01-19
     ];
 
-    public static IEnumerable<object[]> Grid() => AllCases.Where(x => !WorstCases.Contains(x)).Select(x => new object[] { x });
+    /// <summary>The parts of the cases: xUnit runs the tests of a class one after the other, so the cases are split over
+    /// this class (part 0) and <see cref="AttitudeRecordGridPart1Tests"/> to <see cref="AttitudeRecordGridPart3Tests"/>,
+    /// which run in parallel.</summary>
+    /// <remarks>On Linux the 162 cases took 727 s of the 739 s this class ran serially, from 21 s to 841 s of the run, the
+    /// critical path (CI run 43256478324, 2026-11-12); the 13 of <see cref="WorstCases"/> (<c>WorstCase_MatchesSpice</c>
+    /// of the four classes) 173 s on Windows and 82 s on macOS arm64. The part of a case is its index in
+    /// <see cref="AllCases"/> modulo 4, which needs no table: 153, 196, 202 and 176 s of the Linux durations of that run;
+    /// <see cref="Parts_HoldEveryCaseOnce"/> checks that the parts and their classes hold every case once. Each case keeps its test name, its NAIF identifier (its index), its
+    /// kernel folder, its assertions and its limits, and its category (none for the worst cases, Validation for the rest).</remarks>
+    internal const int Parts = 4;
 
-    public static IEnumerable<object[]> Worst() => WorstCases.Select(x => new object[] { x });
+    /// <summary>The part of a case: its index in <see cref="AllCases"/> modulo <see cref="Parts"/>; a key missing from
+    /// <see cref="AllCases"/> goes to part 0, where <see cref="Check"/> fails on it, as before the split.</summary>
+    private static int PartOf(string key) => System.Math.Max(Array.IndexOf(AllCases, key), 0) % Parts;
+
+    public static IEnumerable<object[]> Grid(int part) => AllCases.Where(x => !WorstCases.Contains(x) && PartOf(x) == part).Select(x => new object[] { x });
+
+    public static IEnumerable<object[]> Worst(int part) => WorstCases.Where(x => PartOf(x) == part).Select(x => new object[] { x });
+
+    /// <summary>The parts hold every case once: <see cref="Worst"/> over the parts is <see cref="WorstCases"/>,
+    /// <see cref="Grid"/> the rest of <see cref="AllCases"/>, and each part from 1 has its class, whose two theories read
+    /// that part.</summary>
+    [Fact]
+    public void Parts_HoldEveryCaseOnce()
+    {
+        var parts = Enumerable.Range(0, Parts).ToArray();
+        Assert.Equal(WorstCases, parts.SelectMany(Worst).Select(x => (string)x[0]).OrderBy(x => Array.IndexOf(WorstCases, x)));
+        Assert.Equal(AllCases.Where(x => !WorstCases.Contains(x)),
+            parts.SelectMany(Grid).Select(x => (string)x[0]).OrderBy(x => Array.IndexOf(AllCases, x)));
+        Assert.All(WorstCases, x => Assert.Contains(x, AllCases));
+        Assert.Equal(AllCases.Length, AllCases.Distinct().Count());
+        foreach (var part in parts)
+        {
+            var type = part == 0 ? typeof(AttitudeRecordTests) : typeof(AttitudeRecordTests).Assembly.GetType($"{typeof(AttitudeRecordTests).Namespace}.AttitudeRecordGridPart{part}Tests");
+            Assert.NotNull(type);
+            foreach (var (method, member) in new[] { (nameof(WorstCase_MatchesSpice), nameof(Worst)), (nameof(Case_MatchesSpice), nameof(Grid)) })
+            {
+                var data = Assert.Single(type.GetMethod(method)!.GetCustomAttributes(typeof(MemberDataAttribute), false).Cast<MemberDataAttribute>());
+                Assert.Equal(member, data.MemberName);
+                Assert.Equal(new object[] { part }, data.Parameters);
+            }
+        }
+    }
 
     [Theory]
-    [MemberData(nameof(Worst))]
-    public void WorstCase_MatchesSpice(string key) => Check(key);
+    [MemberData(nameof(Worst), 0)]
+    public void WorstCase_MatchesSpice(string key) => Check(key, _output);
 
     [Theory]
     [Trait("Category", "Validation")]
-    [MemberData(nameof(Grid))]
-    public void Case_MatchesSpice(string key) => Check(key);
+    [MemberData(nameof(Grid), 0)]
+    public void Case_MatchesSpice(string key) => Check(key, _output);
 
-    private void Check(string key)
+    internal static void Check(string key, ITestOutputHelper output)
     {
         var parts = key.Split('|');
         string law = parts[0], integrator = parts[1], frame = parts[2], path = parts[3];
@@ -325,7 +366,7 @@ public class AttitudeRecordTests
         using var run = PropagatedCase.Run(-(8100 + index), law, integrator, FrameOf(frame), path, year);
         var m = Measure(run);
         string label = $"{law} {integrator} {frame} {path} {year}";
-        _output.WriteLine($"MEASURE #537 attitude {label}: managed - CK {m.ManagedAgainstCk:E2} rad (lead {m.ManagedAgainstCkLead:E2}), rate managed - CK {m.RateAgainstCk:E2} rad/s, " +
+        output.WriteLine($"MEASURE #537 attitude {label}: managed - CK {m.ManagedAgainstCk:E2} rad (lead {m.ManagedAgainstCkLead:E2}), rate managed - CK {m.RateAgainstCk:E2} rad/s, " +
                           $"rate - law managed {m.RateAgainstLaw:E2} CK {m.RateCkAgainstLaw:E2} rad/s, discrete rate {m.DiscreteRate:E2} rad/s, " +
                           $"law at entries {m.LawAtEntries:E2}, between {m.LawBetweenEntries:E2}, discrete {m.DiscreteLaw:E2} rad, instruments {m.Instruments:E2} rad, " +
                           $"positions - SPK {m.PositionsAgainstSpk:E2} m, - solution {m.PositionsAgainstSolution:E2} m, at the outputs {m.StatesAtOutputs:E2} m {m.VelocitiesAtOutputs:E2} m/s, " +
