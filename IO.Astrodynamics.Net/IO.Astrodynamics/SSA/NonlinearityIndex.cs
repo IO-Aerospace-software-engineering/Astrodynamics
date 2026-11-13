@@ -164,9 +164,13 @@ internal sealed class NonlinearityIndex
         return propagator.Propagate();
     }
 
-    private static int _nextId = -9_500_000;
+    // The NAIF ids of the perturbed propagations, cycling over [-2 147 483, -2 100 000] (#676): inside the range whose
+    // frame id NaifId × 1000 is an int, where -9 500 001 and below wrapped around before; nothing keys on them
+    private const int FirstId = -2_100_000;
+    private const int IdCount = 2_147_483 - 2_100_000 + 1;
+    private static int _nextId = -1;
 
-    private static int NextId() => System.Threading.Interlocked.Decrement(ref _nextId);
+    private static int NextId() => FirstId - (int)((uint)System.Threading.Interlocked.Increment(ref _nextId) % IdCount);
 
     // ‖A‖_F
     private static double Frobenius(Math.Matrix a)

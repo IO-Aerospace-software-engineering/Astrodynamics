@@ -71,6 +71,14 @@ var state = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).
 | `IsOcculted(CelestialItem, OrbitalParameters, Aberration)` | Type of occultation at an instant ([Occultations](occultations.md)) |
 | `WriteEphemeris(FileInfo)` | Write ephemeris to SPK file |
 
+`Satellites` lists the items whose initial orbital parameters have the item as observer: the instances, by reference,
+held weakly, so that a spacecraft referenced nowhere else leaves it when the garbage collector collects it, and safe
+across threads, constructions about one body on several threads included (#676). Two items of one NAIF id are both
+listed; an item is listed at the end of its constructor, after every check, so a constructor that throws lists nothing;
+the order of the enumeration is not specified, and `Count` enumerates. A natural body or a barycentre is listed by its
+observer, a spacecraft or a body of custom parameters by a `CelestialBody` observer only. Before 11.0.0 it was a set
+compared by NAIF id, without a lock, that kept its items alive.
+
 The implementation uses a reference-body strategy for relative ephemerides to avoid numerical issues from subtracting large SSB vectors.
 When CSPICE cannot read the pair (an observer or a target that is a site, a spacecraft not from a kernel or a star), the
 library applies the aberration corrections itself, as CSPICE's `spkaps` does

@@ -32,6 +32,7 @@ Ground-based observation or tracking site.
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows ([Occultations](occultations.md)) |
 | `FindWindowsOnIlluminationConstraint(...)` | Find illumination windows |
 | `FindDayWindows(Window, double)` | Find daylight windows |
+| `WriteFrameAsync(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676) |
 
 ### Window searches
 

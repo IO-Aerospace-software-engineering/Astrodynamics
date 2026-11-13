@@ -128,8 +128,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="bodyUp">Instance body up axis (default: +Z). Must be orthogonal to bodyFront and bodyRight.</param>
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
+        /// (#676), or a mass, coefficient, area or radius is out of its range.</exception>
         /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed.</exception>
+        /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed, or when
+        /// <paramref name="clock"/> is attached to a spacecraft of another NAIF id (#676: an SCLK identifies one spacecraft
+        /// id).</exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
             double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
             Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
@@ -137,13 +141,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             if (maximumOperatingMass < mass) throw new ArgumentOutOfRangeException(nameof(maximumOperatingMass));
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId));
+            CheckFrameIdRange(naifId);
             ArgumentOutOfRangeException.ThrowIfNegative(dragCoeff);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sectionalArea);
             ArgumentOutOfRangeException.ThrowIfNegative(solarRadiationCoeff);
             ArgumentOutOfRangeException.ThrowIfNegative(hardBodyRadius);
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
-            Clock.AttachSpacecraft(this);
+            Clock.CheckAttachableTo(naifId, name);
             Frame = new SpacecraftFrame(this);
             SectionalArea = sectionalArea;
             DragCoefficient = dragCoeff;
@@ -159,6 +164,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
             {
                 ValidateBodyAxes();
             }
+
+            // After every check, so that a constructor that throws leaves the clock free and lists nothing (#676)
+            Clock.AttachSpacecraft(this);
+            RegisterWithObserver();
         }
 
         /// <summary>
@@ -168,12 +177,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// chains the segments to that centre. The conjunction analysis takes this centre as the observer of a protected
         /// spacecraft, so its RTN axes are those of the orbit about it.
         /// </summary>
-        /// <param name="naifId">NAIF ID (must be negative)</param>
+        /// <param name="naifId">NAIF ID, in [-2147483, -1] (#676)</param>
         /// <param name="name">Spacecraft name</param>
         /// <param name="epoch">Epoch for initial state lookup (defaults to J2000 TDB)</param>
         /// <param name="mass">Dry mass in kg</param>
         /// <param name="maximumOperatingMass">Maximum operating mass in kg</param>
-        /// <param name="clock">Onboard clock (defaults to a new clock named after the spacecraft)</param>
+        /// <param name="clock">Onboard clock (defaults to a new clock named after the spacecraft); not attached to a spacecraft
+        /// of another NAIF id (#676)</param>
         /// <param name="sectionalArea">Mean sectional area in m²</param>
         /// <param name="dragCoeff">Drag coefficient (Cd)</param>
         /// <param name="cosparId">COSPAR international designator</param>
@@ -183,17 +193,25 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// barycentre, or any body the loaded kernels chain to, may be given.</param>
         /// <exception cref="InvalidOperationException">The loaded kernels give no state of the spacecraft relative to
         /// <paramref name="centerOfMotion"/> at <paramref name="epoch"/> (#454).</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
+        /// (#676).</exception>
+        /// <exception cref="ArgumentException"><paramref name="clock"/> is attached to a spacecraft of another NAIF id
+        /// (#676).</exception>
+        /// <remarks>
+        /// Its frame (<see cref="Frame"/>) is read from SPICE as the frame the loaded frame kernels define for the id
+        /// NaifId × 1000, whatever its name; <see cref="Frame.Name"/> stays <c>Name + "_FRAME"</c>, and is handed to SPICE
+        /// when no loaded kernel defines that id (#676).
+        /// </remarks>
         public Spacecraft(int naifId, string name,
             Time? epoch = null, double mass = 0.0, double maximumOperatingMass = double.MaxValue,
             Clock clock = null, double sectionalArea = 1.0, double dragCoeff = 2.2,
             string cosparId = null, double solarRadiationCoeff = 1.0, double hardBodyRadius = 0.0,
             CelestialItem centerOfMotion = null)
-            : base(naifId, name, mass, ReadKernelInitialState(naifId, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion))
+            : base(naifId, name, mass, ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion, clock))
         {
             _isFromKernel = true;
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? new Clock(name + "_CLK", 256);
-            Clock.AttachSpacecraft(this);
             Frame = new SpacecraftFrame(this);
             SectionalArea = sectionalArea;
             DragCoefficient = dragCoeff;
@@ -203,6 +221,27 @@ namespace IO.Astrodynamics.Body.Spacecraft
             BodyFront = Vector3.VectorY;
             BodyRight = Vector3.VectorX;
             BodyUp = Vector3.VectorZ;
+
+            // After every check, so that a constructor that throws leaves the clock free and lists nothing (#676)
+            Clock.AttachSpacecraft(this);
+            RegisterWithObserver();
+        }
+
+        /// <summary>
+        /// The smallest NAIF id of a spacecraft: its frame id, NaifId × 1000 (<see cref="SpacecraftFrame"/>), is an int
+        /// down to -2147483000 (#676).
+        /// </summary>
+        internal const int MinimumNaifId = -2147483;
+
+        // A NAIF id below MinimumNaifId has no frame id in an int: before #676 NaifId × 1000 wrapped around, a positive id
+        // from -2147484 to -4294967
+        private static void CheckFrameIdRange(int naifId)
+        {
+            if (naifId < MinimumNaifId)
+            {
+                throw new ArgumentOutOfRangeException(nameof(naifId), naifId,
+                    $"A spacecraft NAIF id is in [{MinimumNaifId}, -1]: its frame id, NaifId × 1000, must be an int.");
+            }
         }
 
         private void ValidateBodyAxes()
@@ -234,6 +273,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="refVector"></param>
         /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
         /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
+        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments").</exception>
         public void AddCircularInstrument(int naifId, string name, string model, double fieldOfView, in Vector3 boresight, in Vector3 refVector, in Vector3 orientation)
         {
             if (!_instruments.Add(new CircularInstrument(this, naifId, name, model, fieldOfView, boresight, refVector, orientation)))
@@ -254,6 +296,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="refVector"></param>
         /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
         /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
+        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments").</exception>
         public void AddRectangularInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
             in Vector3 orientation)
         {
@@ -275,6 +320,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="refVector"></param>
         /// <param name="orientation">The Euler angles (x, y, z) in radians about the axes 1, 2, 3 of the frame kernel: <see cref="Instrument.Orientation"/></param>
         /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not negative, or is the id of the
+        /// spacecraft frame, NaifId × 1000, which the instrument frame kernel would define relative to itself (#676); an
+        /// instrument id of NAIF's convention is NaifId × 1000 − n, n in [1, 999] (NAIF IDs Required Reading, "Instruments").</exception>
         public void AddEllipticalInstrument(int naifId, string name, string model, double fieldOfView, double crossAngle, in Vector3 boresight, in Vector3 refVector,
             in Vector3 orientation)
         {
@@ -289,14 +337,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </summary>
         /// <param name="engine"></param>
         /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="InvalidOperationException">The engine's fuel tank is not one of the tank instances added to the
+        /// spacecraft: a tank equal to one of them by name, model and serial number is another tank (#676, #586).</exception>
         public void AddEngine(Engine engine)
         {
             if (engine == null) throw new ArgumentNullException(nameof(engine));
-            if (!FuelTanks.Contains(engine.FuelTank))
+            if (!HoldsFuelTank(engine.FuelTank))
             {
                 throw new InvalidOperationException(
-                    "Unknown fuel tank, you must add fuel tank to spacecraft before add engine");
+                    $"Unknown fuel tank, you must add fuel tank to spacecraft before add engine: the fuel tank {engine.FuelTank.Name} (serial number {engine.FuelTank.SerialNumber}) of the engine {engine.Name} is not a tank instance of {Name}; a tank equal to one of its tanks by name, model and serial number is another tank.");
             }
 
             if (!_engines.Add(engine))
@@ -309,16 +358,55 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Add fuel tank to spacecraft
         /// </summary>
         /// <param name="fuelTank"></param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">The tank is already added, or is held by another spacecraft: a tank belongs to
+        /// one spacecraft (#676, #586; before, it moved to this one without an error).</exception>
         public void AddFuelTank(FuelTank fuelTank)
         {
             if (fuelTank == null) throw new ArgumentNullException(nameof(fuelTank));
+            if (fuelTank.Spacecraft != null && !ReferenceEquals(fuelTank.Spacecraft, this))
+            {
+                throw new ArgumentException(
+                    $"The fuel tank {fuelTank.Name} (serial number {fuelTank.SerialNumber}) belongs to the spacecraft {fuelTank.Spacecraft.Name} ({fuelTank.Spacecraft.NaifId}): a tank belongs to one spacecraft.",
+                    nameof(fuelTank));
+            }
+
             if (!_fuelTanks.Add(fuelTank))
             {
                 throw new ArgumentException("Fuel tank already added to spacecraft");
             }
 
             fuelTank.SetSpacecraft(this);
+        }
+
+        // Whether the tank is one of the tank instances of the spacecraft, by reference: FuelTank compares by value (#676)
+        private bool HoldsFuelTank(FuelTank fuelTank) => _fuelTanks.Any(x => ReferenceEquals(x, fuelTank));
+
+        /// <summary>
+        /// Checks, before a propagation, that each maneuver of the chain draws on a tank of this spacecraft (#676, #586):
+        /// its engine's fuel tank is one of the tank instances of the spacecraft and is held by this instance. The engine
+        /// itself need not be in <see cref="Engines"/>. Without it, an impulse on a tank of no spacecraft threw a
+        /// <see cref="NullReferenceException"/> during the run, one on another spacecraft's tank burnt that spacecraft's
+        /// fuel, and an attitude took the body axes of the other spacecraft, or the static ones.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">A maneuver draws on a tank that is not this spacecraft's; nothing
+        /// changes.</exception>
+        internal void CheckManeuverEngines()
+        {
+            foreach (var maneuver in Maneuver.Maneuver.Chain(InitialManeuver).Concat(Maneuver.Maneuver.Chain(StandbyManeuver)))
+            {
+                var tank = maneuver.Engine.FuelTank;
+                if (ReferenceEquals(tank.Spacecraft, this) && HoldsFuelTank(tank))
+                {
+                    continue;
+                }
+
+                string holder = tank.Spacecraft == null
+                    ? "is on no spacecraft"
+                    : $"belongs to the spacecraft {tank.Spacecraft.Name} ({tank.Spacecraft.NaifId})";
+                throw new InvalidOperationException(
+                    $"The {maneuver.GetType().Name} of {Name} ({NaifId}) draws on the engine {maneuver.Engine.Name} (serial number {maneuver.Engine.SerialNumber}), whose fuel tank {tank.Name} (serial number {tank.SerialNumber}) {holder}, not on the spacecraft propagated: " +
+                    $"add the tank to {Name} with AddFuelTank and the engine with AddEngine, or build the maneuver on an engine of {Name}.");
+            }
         }
 
         /// <summary>
@@ -788,10 +876,12 @@ namespace IO.Astrodynamics.Body.Spacecraft
         }
 
         // The initial state of a kernel-backed spacecraft relative to its centre of motion, the Earth by default (#620); the
-        // identifier checked before the read
-        private static StateVector ReadKernelInitialState(int naifId, in Time epoch, CelestialItem centerOfMotion)
+        // identifier and the clock checked before the read (#676)
+        private static StateVector ReadKernelInitialState(int naifId, string name, in Time epoch, CelestialItem centerOfMotion, Clock clock)
         {
             if (naifId >= 0) throw new ArgumentOutOfRangeException(nameof(naifId), "Kernel-backed spacecraft NAIF ID must be negative.");
+            CheckFrameIdRange(naifId);
+            clock?.CheckAttachableTo(naifId, name);
             return SpiceAPI.Instance.ReadEphemerisRaw(epoch, centerOfMotion ?? new CelestialBody(PlanetsAndMoons.EARTH), naifId,
                 Frames.Frame.ICRF, Aberration.None);
         }

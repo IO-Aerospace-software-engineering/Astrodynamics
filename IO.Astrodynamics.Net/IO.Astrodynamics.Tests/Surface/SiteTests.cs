@@ -422,5 +422,52 @@ namespace IO.Astrodynamics.Tests.Surface
             var res = site.IlluminationPhase(TimeSystem.Time.J2000TDB, TestHelpers.Sun, TestHelpers.Moon, Aberration.None);
             Assert.Equal(0.98449746814087213, res,6 );
         }
+
+        /// <summary>
+        /// Site names whose FRAME_&lt;SITE&gt;_TOPO is no kernel variable SPICE can read (#676): a blank, or more than 32
+        /// bytes (Kernel Required Reading, "Variable Name Rules"; measured on main: SPICE(BADVARASSIGN), SPICE(BADVARNAME)).
+        /// The writer throws and writes nothing.
+        /// </summary>
+        [Theory]
+        [InlineData("DSS 13")]
+        [InlineData("ABCDEFGHIJKLMNOPQRSTUV")]
+        public async Task WriteFrame_NameSpiceCannotRead_Throws(string name)
+        {
+            // Arrange
+            var site = new Site(801, name, new CelestialBody(PlanetsAndMoons.EARTH), new Planetodetic(0.5, 0.6, 100.0));
+            var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site_refused");
+
+            // Act
+            var exception = await Record.ExceptionAsync(() => site.WriteFrameAsync(fk));
+
+            // Assert
+            var rejected = Assert.IsType<InvalidOperationException>(exception);
+            Assert.Contains(name.ToUpper(), rejected.Message);
+            fk.Refresh();
+            Assert.False(fk.Exists);
+        }
+
+        /// <summary>
+        /// A site name of 21 characters, FRAME_ + 21 + _TOPO = 32 bytes: the FK loads in SPICE and its TOPO frame resolves
+        /// by its name through <c>sxform_c</c> (#676).
+        /// </summary>
+        [Fact]
+        public async Task WriteFrame_BoundaryNames_LoadInSpice()
+        {
+            // Arrange
+            var site = new Site(802, "ABCDEFGHIJKLMNOPQRSTU", new CelestialBody(PlanetsAndMoons.EARTH), new Planetodetic(0.5, 0.6, 100.0));
+            var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site_boundary");
+            Assert.Equal(32, System.Text.Encoding.UTF8.GetByteCount("FRAME_ABCDEFGHIJKLMNOPQRSTU_TOPO"));
+
+            // Act
+            await site.WriteFrameAsync(fk);
+
+            // Assert: loaded, and the frame known to SPICE by its name
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Load(fk, () =>
+            {
+                var orientation = SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2024, 1, 1), Frames.Frame.ICRF, new Frames.Frame("ABCDEFGHIJKLMNOPQRSTU_TOPO"));
+                Assert.Equal(1.0, orientation.Rotation.Magnitude(), 12);
+            });
+        }
     }
 }

@@ -31,6 +31,12 @@ namespace IO.Astrodynamics.Propagator;
 /// <c>GeopotentialModelParameters</c>, each task must use its own <see cref="CelestialBody"/>
 /// instance because the geopotential field's internal buffers are not thread-safe.
 /// See <see cref="BatchPropagator"/> for full thread-safety guidance.
+/// <para>
+/// <b>Maneuvers:</b> each maneuver of the spacecraft draws on one of its own fuel tanks, which belongs to it alone: the
+/// propagation rejects a maneuver whose engine's tank is not the spacecraft's with an
+/// <see cref="InvalidOperationException"/> in <see cref="PropagationResult.Error"/> (#676, #586). Distinct spacecraft
+/// therefore imply distinct maneuvers and engines, built on each spacecraft's tanks.
+/// </para>
 /// </remarks>
 public sealed record PropagationTask(
     Spacecraft Spacecraft,

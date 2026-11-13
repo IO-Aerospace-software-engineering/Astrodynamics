@@ -1357,6 +1357,65 @@ release are listed under **Known limitations**.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
 
+- **`CelestialItem.Satellites` kept every spacecraft alive, lost entries across threads, matched by NAIF id and listed
+  items whose constructor threw** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)). It was a `HashSet` compared by NAIF id, without a lock, on process-wide
+  instances such as `PlanetsAndMoons.EARTH_BODY`, filled by the base constructor before the checks of the derived one:
+  2000 spacecraft built about the Earth and dropped stayed alive after a collection (20 of 20 sampled), a second
+  spacecraft of an id was not listed and moving it about the Moon removed the first, a constructor that threw on its
+  masses left its spacecraft listed, and 4000 constructions on 4 threads gave a wrong count in 20 runs of 20, 11 of them
+  with an `InvalidOperationException` of the set. The library's own transient spacecraft (avoidance trials, the
+  non-linearity index) leaked into the Earth at each analysis. The satellites are now held weakly and by instance
+  (`ConditionalWeakTable`, internal `WeakSatellites`), and each constructor lists its item as its last statement, after
+  every check; natural bodies and barycentres are listed by their observer as before, a spacecraft by a `CelestialBody`
+  observer only, as before. `SatellitesTests` checks the collection, the 20 runs of concurrent constructions and the
+  throwing constructors by reference.
+- **A maneuver whose engine's tank was not the propagated spacecraft's threw mid-run, burnt another spacecraft's fuel or
+  pointed the wrong axes** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), [#586](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/586)). Nothing checked the chain before a run: an impulse on a tank added to no
+  spacecraft threw `NullReferenceException` at its first burn (`Engine.Ignite`), under RK7(8) and Velocity-Verlet and
+  through every path; one on another spacecraft's engine burnt that spacecraft's fuel; an attitude on such an engine took
+  the static body axes (90° off with `BodyFront` +X) or the other spacecraft's. The construction of the propagator, and
+  `PropagatorBase.Propagate` again, now throw `InvalidOperationException` naming the maneuver, the engine, its tank and
+  the spacecraft when a maneuver of the chain draws on a tank that is not one of the spacecraft's tank instances held by
+  it, before anything changes (`Spacecraft.Propagate`, `PropagateAsync`, the builder, the constructors,
+  `Scenario.SimulateAsync`; `BatchPropagator` reports it in `PropagationResult.Error`). `AddFuelTank` rejects a tank held
+  by another spacecraft, which it moved before. `ManeuverEngineBindingTests` runs the 84 combinations of path,
+  integrator, chain and engine, with the controls: the burn against Tsiolkovsky within 1e-12 relative (bit for bit
+  those of main) and the prograde front of `BodyFront` +X against the velocity.
+- **An instrument of id NaifId × 1000 broke the spacecraft frame** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)). `Add*Instrument` accepted the id of the
+  spacecraft frame, and the instrument FK then defined that frame relative to itself: SPICE(BADFRAMESPEC2) at any read
+  of the kernel-backed spacecraft. The `Instrument` constructor rejects it with `ArgumentOutOfRangeException`; the ids
+  NaifId × 1000 − n of NAIF's convention (NAIF IDs Required Reading, "Instruments") are unchanged.
+- **`AddEngine` accepted an engine on a tank equal by value to one of the spacecraft's** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), [#586](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/586)). The check used
+  `FuelTank`'s equality on name, model and serial number, so an engine on a tank never added passed, entered
+  `GetTotalISP`, and threw `NullReferenceException` at its first burn. It now takes the tank instance added
+  (`InvalidOperationException` otherwise, the type of an unknown tank).
+- **A clock shared by two spacecraft wrote the SCLK of the second** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)). Each constructor attached the clock without a
+  check, so a clock given to spacecraft -1101 then -1102 wrote `SCLK_DATA_TYPE_1102` for both, and the CK of -1101 could
+  not be written against it (SPICE(KERNELVARNOTFOUND) in `sce2c_c`); a constructor that threw on its body axes kept the
+  clock. The constructors and `Opm.ToSpacecraft` reject a clock attached to a spacecraft of another NAIF id with
+  `ArgumentException` (another instance of the same id, a kernel-backed twin, writes the same SCLK and is accepted), and
+  attach it after every check.
+- **A NAIF id below -2147483 gave a wrong frame id** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)). `SpacecraftFrame` computed NaifId × 1000 in unchecked
+  `int` arithmetic: -2147484 gave the frame id 2147483296 and -3000000 1294967296, written in the FK; the library's own
+  avoidance trials (from -9000001) and non-linearity index (from -9500001) had such ids. Both constructors reject an id
+  below -2147483 with `ArgumentOutOfRangeException`, the frame id is computed checked, and the transient spacecraft
+  draw their ids from cycling blocks inside the range ([-2099999, -2000000] and [-2147483, -2100000]); nothing keys on
+  them, and the conjunction and non-linearity results are unchanged.
+- **A kernel-backed spacecraft read its frame by its own name** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)). Its frame was handed to SPICE as
+  `Name + "_FRAME"`, so a twin of another name than the propagated spacecraft (`SatK` for `KSAT_FRAME`), or any twin
+  of a mission FK naming the frame of id NaifId × 1000 otherwise (`KSAT_BUS`), threw SPICE(UNKNOWNFRAME). The frame is
+  now handed by the name the loaded kernels give to its id (`frmnam_c`, through the new native `GetFrameNameProxy`),
+  read at each call so that an FK loaded after the twin is read, and by its own name when no kernel defines the id;
+  `Frame.Name` is unchanged. A twin whose own name matched gets the same frame, bit for bit.
+- **Frame kernels with names SPICE cannot read were written** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676)). `SpacecraftFrame.WriteAsync`,
+  `Instrument.WriteFrameAsync` and `Site.WriteFrameAsync` put the upper-cased name in a kernel variable name
+  (`FRAME_<NAME>_FRAME`, `FRAME_<SPACECRAFT>_<INSTRUMENT>`, `FRAME_<SITE>_TOPO`), so 'Demo Sat', 'ISS (ZARYA)', 'Sat,1',
+  "Sat'1" and a tab gave SPICE(BADVARASSIGN), 'Sat=1' SPICE(NUMBEREXPECTED), and a variable over 32 bytes (a
+  21-character spacecraft name, a 13-character name of 'É') SPICE(BADVARNAME) at `LoadKernels`. The writers now check
+  the variable before the file is opened (Kernel Required Reading, "Variable Name Rules": no blank, comma, parenthesis,
+  '=' or TAB, 32 characters at most, counted by SPICE in the file's UTF-8 bytes; and no quote, which ends the string
+  values), and throw `InvalidOperationException` naming the object, the variable and the rule, writing nothing.
+
 **Changed**
 
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
@@ -1686,6 +1745,45 @@ release are listed under **Known limitations**.
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
 
+- **Breaking: a maneuver draws on a tank of the spacecraft it is propagated with** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), [#586](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/586), Fixed above): a
+  propagation whose chain holds a maneuver on an engine whose tank is not one of the spacecraft's throws
+  `InvalidOperationException` before it runs, from `Spacecraft.Propagate`, `PropagateAsync`, the builder, the
+  `CentralBodyPropagator` constructors and `Scenario.SimulateAsync` (in `PropagationResult.Error` for `BatchPropagator`).
+  An impulse on such a tank threw `NullReferenceException` mid-run or burnt another spacecraft's fuel; an attitude on it
+  ran with the static body axes or another spacecraft's. A chain built on the spacecraft's own tanks is unchanged, bit
+  for bit. Migration: build each spacecraft's maneuvers on an engine whose tank was added to that spacecraft; distinct
+  spacecraft imply distinct maneuvers.
+- **Breaking: `Spacecraft.AddFuelTank` rejects a tank held by another spacecraft** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), [#586](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/586), Fixed above):
+  `ArgumentException`, nothing changed; it moved the tank before. Migration: one tank per spacecraft.
+- **Breaking: `Spacecraft.AddEngine` takes the tank instance added** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), Fixed above): an engine on a tank equal by
+  value to one of the spacecraft's, but another instance, throws `InvalidOperationException`, as for an unknown tank.
+  Migration: build the engine on the tank instance given to `AddFuelTank`.
+- **Breaking: a clock belongs to the spacecraft of one NAIF id** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), Fixed above): both `Spacecraft` constructors and
+  `Opm.ToSpacecraft` throw `ArgumentException` (`ParamName` "clock") for a clock attached to a spacecraft of another
+  id. Migration: one `new Clock(name, resolution)` per spacecraft.
+- **Breaking: a spacecraft NAIF id is in [-2147483, -1]** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), Fixed above): both constructors, `Opm.ToSpacecraft`
+  and the runs of a Monte Carlo campaign whose `BaseNaifId - i` leaves the range (at the construction of their tasks)
+  throw `ArgumentOutOfRangeException`. Such an id gave a wrong frame id before. Migration: an id in the range.
+- **Breaking: `Add*Instrument` rejects the id of the spacecraft frame, NaifId × 1000** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), Fixed above):
+  `ArgumentOutOfRangeException`. Migration: an id in [NaifId × 1000 − 999, NaifId × 1000 − 1].
+- **Breaking: the frame kernel writers reject names SPICE cannot hold in a kernel variable** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), Fixed above):
+  `SpacecraftFrame.WriteAsync`, `Instrument.WriteFrameAsync`, `Site.WriteFrameAsync`, and `CosmographiaExporter` and the
+  CLI command `propagate` through them, throw `InvalidOperationException` for a name with a blank, a tab or another
+  whitespace or control character, a quote, a parenthesis, a comma or '=', or of more than 32 bytes in its variable: 20
+  ASCII characters for a spacecraft, 25 for a spacecraft and an instrument together, 21 for a site. Every refused name
+  gave an FK that `LoadKernels` rejected; the constructors are unchanged, so an OPM object named 'ISS (ZARYA)' still
+  builds and propagates. Migration: name the spacecraft, the instrument or the site within the rule.
+- **`CelestialItem.Satellites` holds its items weakly and by instance, safe across threads** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), Fixed above): a
+  spacecraft referenced nowhere else leaves the collection after a collection of the garbage collector, two items of one
+  NAIF id are both listed, `SetInitialOrbitalParameters` removes only the instance it moves, and the order of the
+  enumeration is not specified. A class derived directly from `CelestialItem` outside the library is no longer listed
+  by its observer: the listing is the last statement of the constructors of `CelestialBody`, `Barycenter` and
+  `Spacecraft`. Migration: keep a reference to a spacecraft that is reached through `Satellites`.
+- **The frame of a kernel-backed spacecraft is the frame the kernels define for its id** ([#676](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/676), Fixed above): SPICE is
+  asked for the name of the frame of id NaifId × 1000 at each read (`frmnam_c`), one more native call per read of that
+  frame. The native layer gains `GetFrameNameProxy`, the bool and `GetLastErrorProxy` pattern; its P/Invoke and the
+  native library of this release are in step.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -1773,14 +1871,12 @@ not listed.
   mm at 8.6 km/s).
 - **State kept by the maneuver chain**
   ([#583](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/583),
-  [#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584),
-  [#586](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/586)). A spacecraft propagated a
+  [#584](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/584)). A spacecraft propagated a
   second time through `CentralBodyPropagatorBuilder.Build().Propagate()` or a `CentralBodyPropagator` built directly is
   not reset: the second run fires no burn and starts with the fuel the first left. A second
   `Spacecraft.SetStandbyManeuver` before a propagation does not replace the first, which fires while the new one is
-  dropped silently. A maneuver whose engine belongs to another spacecraft burns that spacecraft's fuel and writes to its
-  `ExecutedManeuvers`. Use `Spacecraft.Propagate` or a fresh spacecraft, set the standby maneuver once, and build each
-  spacecraft's maneuvers on its own engines.
+  dropped silently. Use `Spacecraft.Propagate` or a fresh spacecraft, and set the standby maneuver once (a maneuver on
+  another spacecraft's tank is rejected since #676).
 - **Event detection** ([#578](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/578),
   [#580](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/580),
   [#581](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/581)). The public

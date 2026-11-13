@@ -13,7 +13,7 @@ All attitude maneuvers inherit from the abstract `Attitude` class.
 | `ManeuverCenter` | Property | The central body for the maneuver frame |
 | `MinimumEpoch` | Property | Earliest epoch at which the attitude can activate: it activates at the later of this epoch and the end of the window of the previous maneuver of the chain |
 | `ManeuverHoldDuration` | Property | How long the attitude is held before the next maneuver of the chain may start; the law stays in force until the next activation. TT seconds about the Earth (#547) |
-| `Engine` | Property | The engine associated with this maneuver |
+| `Engine` | Property | The engine associated with this maneuver, whose fuel tank is the propagated spacecraft's: the attitude takes that spacecraft's body axes, and a propagation whose attitude's tank is another spacecraft's, or no spacecraft's, throws `InvalidOperationException` before it runs (#676, #586; before, it ran with the static or the other spacecraft's axes) |
 
 **Constructor** (used by all concrete attitude types):
 
