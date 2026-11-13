@@ -334,4 +334,49 @@ public class TemeFrameTests
             Assert.Same(Frames.Frame.CIRS, state.Frame);
         }
     }
+
+    [Fact]
+    public void EphemerisReadInManagedSpacecraftFrame_EqualsTheIcrfReadRotated()
+    {
+        // #682: the frame of a managed spacecraft, which only the library holds, reached spkezr_c by name
+        // (SPICE(UNKNOWNFRAME)); it is read in J2000 and rotated by the attitude record, as the frames of #558
+        var epoch = new TimeSystem_Time(2024, 3, 1);
+        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6825, "F07SC", 100.0, 10000.0,
+            new IO.Astrodynamics.Body.Spacecraft.Clock("F07SC_CLK", 65536), orbit);
+        var frame = spacecraft.Frame;
+        // Unpropagated, its frame is the identity of ICRF; then an attitude other than the identity, given by hand
+        foreach (var attitude in new Quaternion?[] { null, new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7) })
+        {
+            if (attitude.HasValue)
+            {
+                frame.AddStateOrientationToICRF(new StateOrientation(attitude.Value, Vector3.Zero, epoch, frame));
+            }
+
+            var icrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT).ToStateVector();
+            var read = moon.GetEphemeris(epoch, earth, frame, Aberration.LT).ToStateVector();
+            var converted = icrf.ToFrame(frame).ToStateVector();
+            Assert.Same(frame, read.Frame);
+            Assert.InRange((read.Position - converted.Position).Magnitude(), 0.0, 1e-6);
+            Assert.InRange((read.Velocity - converted.Velocity).Magnitude(), 0.0, 1e-9);
+
+            var atEpoch = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None).ToStateVector();
+            var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
+            Assert.Same(frame, atEpoch.Frame);
+            Assert.InRange((atEpoch.Position - expected.Position).Magnitude(), 0.0, 1e-6);
+            Assert.InRange((atEpoch.Velocity - expected.Velocity).Magnitude(), 0.0, 1e-9);
+        }
+
+        var windowed = SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch + TimeSpan.FromHours(2.0)), 399, 301, frame, Aberration.None,
+            TimeSpan.FromHours(1.0)).Select(x => x.ToStateVector()).ToArray();
+        Assert.Equal(3, windowed.Length);
+        foreach (var state in windowed)
+        {
+            var reference = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
+            Assert.InRange((state.Position - reference.Position).Magnitude(), 0.0, 1e-6);
+            Assert.Same(frame, state.Frame);
+        }
+    }
 }

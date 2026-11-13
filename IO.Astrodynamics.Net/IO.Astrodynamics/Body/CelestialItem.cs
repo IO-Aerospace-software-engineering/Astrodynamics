@@ -273,6 +273,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Get ephemeris
     /// </summary>
+    /// <remarks>
+    /// The states every <paramref name="stepSize"/> from the start of the window, placed in its calendar
+    /// (<c>StartDate + i · stepSize</c>), up to its end. Across a leap second the window's <see cref="Window.Length"/> counts
+    /// one second more than its calendar: the end bounds the samples, so that none lies past it (#682; before 11.0.0 the
+    /// last state of such a window could lie one second past its end).
+    /// </remarks>
     /// <param name="searchWindow"></param>
     /// <param name="observer"></param>
     /// <param name="frame"></param>
@@ -281,11 +287,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
+        // An upper bound of the count: the Length counts the leap seconds the calendar placement does not
         var occurences = (int)((searchWindow.Length / stepSize) + 1);
         var ephemeris = new List<OrbitalParameters.OrbitalParameters>(occurences);
         for (int i = 0; i < occurences; i++)
         {
             var epoch = searchWindow.StartDate + stepSize * i;
+            if (epoch > searchWindow.EndDate)
+            {
+                break;
+            }
+
             ephemeris.Add(GetEphemeris(epoch, observer, frame, aberration));
         }
 
@@ -1065,18 +1077,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 };
                 break;
             case CoordinateSystem.Planetographic:
+                // CSPICE's PLANETOGRAPHIC (#682): the sense of the longitude of the observer's body read once, at the start
+                bool positiveWest = observer is CelestialBody observerBody &&
+                                    GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
                 evaluateCoordinates = date =>
-                {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                    var planetographic = stateVector.ToPlanetocentric(aberration);
-                    return coordinate switch
-                    {
-                        Coordinate.Latitude => planetographic.Latitude,
-                        Coordinate.Longitude => planetographic.Longitude,
-                        Coordinate.Radius => planetographic.Radius,
-                        _ => throw new ArgumentOutOfRangeException()
-                    };
-                };
+                    GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration).ToStateVector(), coordinate, positiveWest);
                 break;
         }
 

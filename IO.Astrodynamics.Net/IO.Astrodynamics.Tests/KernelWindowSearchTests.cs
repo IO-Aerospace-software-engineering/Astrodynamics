@@ -241,4 +241,183 @@ public class KernelWindowSearchTests
             moon.Frame, new Planetodetic(0.5, 0.3, 1071.0), IlluminationAngle.Incidence, RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0,
             Aberration.None, TimeSpan.FromHours(1.0), 10), NativeThreshold, "SpiceAPI Moon");
     }
+
+    /// <summary>
+    /// #682 (guard): the spellings of ELLIPSOID that <c>gfilum_c</c> accepts ("Neither case nor whitespaces are significant
+    /// in `method'", Detailed_Input <c>method</c>; measured on N0067 for these) give the windows of the default method on
+    /// both paths, to the tick, the CSPICE path within <see cref="NativeThreshold"/> of the reference.
+    /// </summary>
+    [Fact]
+    public void Illumination_MethodCaseAndBlanks_SameWindows()
+    {
+        const string label = "dss13_sun_incidence < 90.8 deg LT+S";
+        double angle = IO.Astrodynamics.Constants.PI2 + 0.8 * IO.Astrodynamics.Constants.Deg2Rad;
+        var dss13 = Dss13;
+        var fromCoordinates = new Site(99, "DSS13GEO", Earth, dss13.Planetodetic);
+        foreach (var site in new[] { dss13, fromCoordinates })
+        {
+            var expected = site.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, 0.0,
+                Aberration.LTS, Step, TestHelpers.Sun).ToArray();
+            foreach (var method in new[] { "ELLIPSOID", "ellipsoid", " Ellipsoid ", "eLLipsoid  " })
+            {
+                var actual = site.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, 0.0,
+                    Aberration.LTS, Step, TestHelpers.Sun, method).ToArray();
+                Assert.Equal(expected, actual);
+            }
+        }
+
+        AssertWindows(label, dss13.FindWindowsOnIlluminationConstraint(IlluminationWindow, IlluminationAngle.Incidence, RelationnalOperator.Lower, angle, 0.0,
+            Aberration.LTS, Step, TestHelpers.Sun, " ellipsoid"), NativeThreshold, "kernel site, method ' ellipsoid'");
+    }
+
+    // The planetographic longitude east of the prime meridian of the body-fixed frame of the observer's body, in (−π, π]:
+    // the angle between a window's edge and the 0/2π cut of the planetographic longitude, whatever its sense
+    private static double EastLongitude(ILocalizable target, CelestialBody observer, TimeSystem.Time epoch)
+    {
+        var position = target.GetEphemeris(epoch, observer, observer.Frame, Aberration.None).ToStateVector().Position;
+        return System.Math.Atan2(position.Y, position.X);
+    }
+
+    /// <summary>
+    /// The managed windows against those of <c>gfposc_c</c> PLANETOGRAPHIC: the same count; an edge on the threshold within
+    /// <see cref="NativeThreshold"/>; for a longitude (<paramref name="cutAngle"/> given), an edge at the 0/2π cut (where it
+    /// jumps) within <paramref name="cutAngle"/> of the cut, as an angle, on both, and as a time within the time that angle gives at the rate of the longitude (#682,
+    /// the Sun from Mercury moves 7e-8 rad/s).
+    /// </summary>
+    private void AssertPlanetographic(string label, Window[] managed, Window[] gfposc, Window window, ILocalizable target, CelestialBody observer, double? cutAngle)
+    {
+        Assert.NotEmpty(gfposc);
+        Assert.Equal(gfposc.Length, managed.Length);
+        double worstThreshold = 0.0, worstCut = 0.0;
+        for (int i = 0; i < gfposc.Length; i++)
+        {
+            foreach (var (m, g) in new[] { (managed[i].StartDate, gfposc[i].StartDate), (managed[i].EndDate, gfposc[i].EndDate) })
+            {
+                double dt = System.Math.Abs((m - g).TotalSeconds);
+                double east = EastLongitude(target, observer, g);
+                if (cutAngle.HasValue && g > window.StartDate && g < window.EndDate && System.Math.Abs(east) < 1e-3)
+                {
+                    // At the cut
+                    double managedAngle = System.Math.Abs(EastLongitude(target, observer, m));
+                    double rate = System.Math.Abs(EastLongitude(target, observer, g.AddSeconds(1.0)) - EastLongitude(target, observer, g.AddSeconds(-1.0))) / 2.0;
+                    worstCut = System.Math.Max(worstCut, managedAngle);
+                    Assert.True(managedAngle <= cutAngle, $"{label}: the managed edge {m} is {managedAngle:E3} rad from the cut");
+                    Assert.True(System.Math.Abs(east) <= cutAngle, $"{label}: the gfposc edge {g} is {System.Math.Abs(east):E3} rad from the cut");
+                    Assert.True(dt <= (managedAngle + System.Math.Abs(east)) / rate + NativeThreshold, $"{label}: {dt:E3} s at the cut, rate {rate:E3} rad/s");
+                }
+                else
+                {
+                    worstThreshold = System.Math.Max(worstThreshold, dt);
+                }
+            }
+        }
+
+        _output.WriteLine($"MEASURE #682 planetographic {label}: {gfposc.Length} windows, worst |managed - gfposc| {worstThreshold:E3} s on the threshold, worst managed edge {worstCut:E3} rad from the cut");
+        Assert.True(worstThreshold <= NativeThreshold, $"{label}: {worstThreshold:E3} s");
+    }
+
+    // Provisional (#682), twice the worst on Linux x64 rounded up (6.6e-11 rad, the Moon from the Earth above 4 rad,
+    // 2026-11-13), until the CI of the three platforms has printed its MEASURE lines: the 1 µs of the searches and the
+    // 100 ns of a Time at the rate of the longitude, 7.3e-5 rad/s for the Moon in ITRF93
+    private const double CutAngle = 1.4e-10;
+
+    private static readonly Window MoonPlanetographicWindow = new(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 11));
+
+    /// <summary>
+    /// #682: the managed <see cref="CoordinateSystem.Planetographic"/> longitude is CSPICE's (<c>gfposc_c</c> Detailed_Input
+    /// <c>coord</c>: PLANETOGRAPHIC LONGITUDE in [0, 2π), the sense of <c>recpgr_c</c>), the Moon from the Earth in ITRF93,
+    /// a frame centred on the observer's body; before, it was the planetocentric (−π, π] (10 windows against 11 above 1 rad,
+    /// 0 against 10 above 4 rad).
+    /// </summary>
+    [Theory]
+    [InlineData(1.0)]
+    [InlineData(4.0)]
+    public void PlanetographicLongitude_ManagedEqualsGfposc(double longitude)
+    {
+        var earth = Earth;
+        var moon = Moon;
+        var step = TimeSpan.FromHours(1.0);
+        var managed = moon.FindWindowsOnCoordinateConstraint(MoonPlanetographicWindow, earth, earth.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude,
+            RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+        var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(MoonPlanetographicWindow, 399, 301, earth.Frame, CoordinateSystem.Planetographic,
+            Coordinate.Longitude, RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+        AssertPlanetographic($"Moon from the Earth, longitude > {longitude} rad", managed, gfposc, MoonPlanetographicWindow, moon, earth, CutAngle);
+    }
+
+    public static IEnumerable<object[]> PositiveWestAndRetrograde()
+    {
+        // Mercury, prograde: positive west; Venus, retrograde: positive east (recpgr_c Particulars)
+        yield return [199, 10, 2024, 1, TimeSpan.FromDays(1.0), 3.0];
+        yield return [199, 399, 2024, 1, TimeSpan.FromDays(1.0), 3.0];
+        yield return [199, 399, 2024, 1, TimeSpan.FromHours(6.0), 0.5];
+        yield return [299, 399, 2024, 2, TimeSpan.FromDays(2.0), 3.0];
+    }
+
+    /// <summary>
+    /// #682: the sense of the planetographic longitude (<c>recpgr_c</c> Particulars: positive west for a prograde body,
+    /// positive east for a retrograde one, the Earth, the Moon and the Sun east), the Earth and the Sun from Mercury, the Earth
+    /// from Venus, in their IAU frames, against <c>gfposc_c</c>; and on the site's path, DSS-13 from Mercury.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(PositiveWestAndRetrograde))]
+    public void PlanetographicLongitude_PositiveWestAndRetrograde_ManagedEqualsGfposc(int observerId, int targetId, int year, int months, TimeSpan step, double longitude)
+    {
+        var observer = new CelestialBody(observerId);
+        CelestialItem target = targetId == 10 ? TestHelpers.Sun : new CelestialBody(targetId);
+        var start = new TimeSystem.Time(year, 1, 1);
+        var window = new Window(start, months == 1 ? new TimeSystem.Time(year, 7, 1) : new TimeSystem.Time(year + 1, 1, 1));
+        var managed = target.FindWindowsOnCoordinateConstraint(window, observer, observer.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude,
+            RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+        var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, observerId, targetId, observer.Frame, CoordinateSystem.Planetographic,
+            Coordinate.Longitude, RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+        AssertPlanetographic($"{target.Name} from {observer.Name} in {observer.Frame.Name}, longitude > {longitude} rad, step {step}", managed, gfposc, window,
+            target, observer, CutAngle);
+
+        if (observerId == 199 && targetId == 399 && step == TimeSpan.FromDays(1.0))
+        {
+            var dss13 = Dss13;
+            var site = dss13.FindWindowsOnCoordinateConstraint(window, observer, observer.Frame, CoordinateSystem.Planetographic, Coordinate.Longitude,
+                RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+            var siteGfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, observerId, dss13.NaifId, observer.Frame, CoordinateSystem.Planetographic,
+                Coordinate.Longitude, RelationnalOperator.Greater, longitude, 0.0, Aberration.None, step).ToArray();
+            AssertPlanetographic($"DSS-13 from {observer.Name}, longitude > {longitude} rad", site, siteGfposc, window, dss13, observer, CutAngle);
+        }
+    }
+
+    /// <summary>
+    /// #682: the managed planetographic latitude and altitude are CSPICE's (<c>recpgr_c</c> Detailed_Output: the latitude of
+    /// the normal to the spheroid, the altitude above it), the Moon from the Earth in ITRF93; before, the planetocentric
+    /// latitude (edges 51.5 s and 47.5 s off) and no altitude (it threw). On the site's path, DSS-13 from the Moon in its
+    /// body frame (a sphere: the latitude did not move there, the altitude threw).
+    /// </summary>
+    [Fact]
+    public void PlanetographicLatitudeAndAltitude_ManagedEqualsGfposc()
+    {
+        var earth = Earth;
+        var moon = Moon;
+        var dss13 = Dss13;
+        var step = TimeSpan.FromHours(1.0);
+        var window = MoonPlanetographicWindow;
+        foreach (var (coordinate, value) in new[] { (Coordinate.Latitude, -0.4), (Coordinate.Altitude, 3.9e8) })
+        {
+            double spiceValue = coordinate == Coordinate.Altitude ? value / 1000.0 : value;
+            var managed = moon.FindWindowsOnCoordinateConstraint(window, earth, earth.Frame, CoordinateSystem.Planetographic, coordinate,
+                RelationnalOperator.Greater, value, 0.0, Aberration.None, step).ToArray();
+            var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(window, 399, 301, earth.Frame, CoordinateSystem.Planetographic, coordinate,
+                RelationnalOperator.Greater, spiceValue, 0.0, Aberration.None, step).ToArray();
+            AssertPlanetographic($"Moon from the Earth, {coordinate} > {value}", managed, gfposc, window, moon, earth, null);
+        }
+
+        // A month: the latitude of the Earth in the Moon's frame, its libration, has a period of 27.2 days
+        var siteWindow = new Window(window.StartDate, window.StartDate.AddDays(30.0));
+        foreach (var (coordinate, value) in new[] { (Coordinate.Latitude, 0.0), (Coordinate.Altitude, 3.9e8) })
+        {
+            double spiceValue = coordinate == Coordinate.Altitude ? value / 1000.0 : value;
+            var managed = dss13.FindWindowsOnCoordinateConstraint(siteWindow, moon, moon.Frame, CoordinateSystem.Planetographic, coordinate,
+                RelationnalOperator.Greater, value, 0.0, Aberration.None, step).ToArray();
+            var gfposc = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(siteWindow, 301, dss13.NaifId, moon.Frame, CoordinateSystem.Planetographic, coordinate,
+                RelationnalOperator.Greater, spiceValue, 0.0, Aberration.None, step).ToArray();
+            AssertPlanetographic($"DSS-13 from the Moon in {moon.Frame.Name}, {coordinate} > {value}", managed, gfposc, siteWindow, dss13, moon, null);
+        }
+    }
 }

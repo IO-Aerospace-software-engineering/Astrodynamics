@@ -10,7 +10,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// N0067 statically: the DAF reads of <c>dafus</c> (the layout of an SPK, through the f2c routines <c>dafbfs_</c>,
 /// <c>daffna_</c>, <c>dafgs_</c>, <c>dafus_</c>, <c>dafgda_</c>) and the SPK writer <c>spkw09_c</c>, the reference of the
 /// managed writer (#540), with its append (<c>dafopw_c</c>); <c>unitim_c</c>, the conversion between TDB and TT, the
-/// reference of the TT windows of a propagation about the Earth (#547). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
+/// reference of the TT windows of a propagation about the Earth (#547); <c>recpgr_c</c>, <c>georec_c</c>, <c>spkezr_c</c>
+/// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
 /// </summary>
 /// <remarks>
 /// The Linux build of the native library exports the CSPICE symbols; the Windows DLL exports only the proxies, so the tests
@@ -66,6 +67,67 @@ internal static class CspiceDirect
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern double unitim_c(double epoch, string insys, string outsys);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void recpgr_c(string body, [In] double[] rectan, double re, double f, out double lon, out double lat, out double alt);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void georec_c(double lon, double lat, double alt, double re, double f, [Out] double[] rectan);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void spkezr_c(string targ, double et, string re, string abcorr, string obs, [Out] double[] starg, out double lt);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void pxform_c(string from, string to, double et, [Out] double[] rotate);
+
+    /// <summary>The planetographic coordinates of a body-fixed point (<c>recpgr_c</c>): the longitude in [0, 2π] in the
+    /// sense of the body (the kernel pool's), the latitude and the altitude on the spheroid of <paramref name="re"/> and
+    /// <paramref name="f"/>, in the units of the point.</summary>
+    internal static (double Longitude, double Latitude, double Altitude) Recpgr(string body, double[] rectan, double re, double f)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            recpgr_c(body, rectan, re, f, out double lon, out double lat, out double alt);
+            Check("recpgr");
+            return (lon, lat, alt);
+        }
+    }
+
+    /// <summary>The body-fixed position of a geodetic point (<c>georec_c</c>), in the units of <paramref name="re"/>.</summary>
+    internal static double[] Georec(double lon, double lat, double alt, double re, double f)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var rectan = new double[3];
+            georec_c(lon, lat, alt, re, f, rectan);
+            Check("georec");
+            return rectan;
+        }
+    }
+
+    /// <summary>The state of a target from an observer (<c>spkezr_c</c>), km and km/s.</summary>
+    internal static double[] Spkezr(string target, double et, string frame, string abcorr, string observer)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var state = new double[6];
+            spkezr_c(target, et, frame, abcorr, observer, state, out _);
+            Check("spkezr");
+            return state;
+        }
+    }
+
+    /// <summary>The rotation from one frame to another at an epoch (<c>pxform_c</c>), row-major.</summary>
+    internal static double[] Pxform(string from, string to, double et)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var rotation = new double[9];
+            pxform_c(from, to, et, rotation);
+            Check("pxform");
+            return rotation;
+        }
+    }
 
     /// <summary>The TT seconds past J2000 of a TDB epoch given in seconds past J2000 (<c>unitim_c(et, "TDB", "TT")</c>,
     /// the leapseconds kernel loaded).</summary>

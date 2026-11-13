@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -10,13 +11,19 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Surface
 {
     public class SiteTests
     {
-        public SiteTests()
+        private static readonly FileInfo LroSpkPath = new("Data/LRO/lro-reconstructed-2023349_2024075_v01_little_endian.bsp");
+
+        private readonly ITestOutputHelper _output;
+
+        public SiteTests(ITestOutputHelper output)
         {
+            _output = output;
             TestKernels.EnsureSolarSystem();
         }
 
@@ -422,5 +429,246 @@ namespace IO.Astrodynamics.Tests.Surface
             var res = site.IlluminationPhase(TimeSystem.Time.J2000TDB, TestHelpers.Sun, TestHelpers.Moon, Aberration.None);
             Assert.Equal(0.98449746814087213, res,6 );
         }
+
+        private static readonly string[] MethodsGfilumRejects = ["Dsk", "Elipsoid", "ELLIP SOID", "", "DSK/UNPRIORITIZED", "DSK/UNPRIORITIZED/SURFACES = 1"];
+
+        /// <summary>
+        /// #682: <c>gfilum_c</c> supports one method, ELLIPSOID ("The only choice currently supported is "Ellipsoid"",
+        /// Detailed_Input <c>method</c>, CSPICE N0067); measured on N0067, each of these strings is rejected
+        /// (SPICE(INVALIDMETHOD) "The only supported computation method is ELLIPSOID", SPICE(EMPTYSTRING) for the empty one,
+        /// Exceptions 18), which the native proxy dropped: no window on the CSPICE path, the ellipsoid's windows on the
+        /// managed path, which never read the method. Each now throws on both paths and in <see cref="SpiceAPI"/>.
+        /// </summary>
+        [Fact]
+        public void IlluminationSearch_MethodOtherThanEllipsoid_ThrowsOnBothPaths()
+        {
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var dss13 = new Site(13, "DSS-13", earth);
+            var fromCoordinates = new Site(682, "F07DSS13GEO", earth, dss13.Planetodetic);
+            var window = new Window(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 3));
+            var step = TimeSpan.FromMinutes(10.0);
+            var searches = new (string Path, Func<string, Window[]> Search)[]
+            {
+                ("kernel site, CSPICE", m => dss13.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence, RelationnalOperator.Lower,
+                    IO.Astrodynamics.Constants.PI2, 0.0, Aberration.LTS, step, TestHelpers.Sun, m).ToArray()),
+                ("site from coordinates, managed", m => fromCoordinates.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence,
+                    RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.LTS, step, TestHelpers.Sun, m).ToArray()),
+                ("SpiceAPI", m => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(window, 399013, 399, earth.Frame, dss13.Planetodetic,
+                    IlluminationAngle.Incidence, RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.LTS, step, 10, m).ToArray())
+            };
+            foreach (var (path, search) in searches)
+            {
+                foreach (var method in MethodsGfilumRejects)
+                {
+                    var exception = Assert.Throws<ArgumentException>(() => search(method));
+                    Assert.Equal("method", exception.ParamName);
+                    Assert.Contains("ELLIPSOID", exception.Message);
+                }
+
+                Assert.Equal("method", Assert.Throws<ArgumentNullException>(() => search(null)).ParamName);
+                _output.WriteLine($"{path}: every method but ELLIPSOID rejected");
+            }
+        }
+
+        /// <summary>
+        /// #682: the emission and phase angles are angles at the point towards an observer (<c>gfilum_c</c> Particulars: the
+        /// vector from the surface point to the observer); the site's search takes none, so its observer would be the site
+        /// itself, where that vector is zero and the angles are undefined. Before, the managed path measured them as 0 (one
+        /// window of the whole day) and <c>gfilum_c</c>, given the site as its observer, gave 0 and 2 windows.
+        /// </summary>
+        [Fact]
+        public void IlluminationSearch_EmissionAndPhase_ThrowWithoutObserver()
+        {
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var dss13 = new Site(13, "DSS-13", earth);
+            var fromCoordinates = new Site(682, "F07DSS13GEO", earth, dss13.Planetodetic);
+            var window = new Window(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 2));
+            foreach (var site in new[] { dss13, fromCoordinates })
+            {
+                foreach (var angle in new[] { IlluminationAngle.Emission, IlluminationAngle.Phase })
+                {
+                    foreach (var relation in new[] { RelationnalOperator.Lower, RelationnalOperator.Greater, RelationnalOperator.LocalMin })
+                    {
+                        var exception = Assert.Throws<ArgumentException>(() => site.FindWindowsOnIlluminationConstraint(window, angle, relation,
+                            IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0), TestHelpers.Sun).ToArray());
+                        Assert.Equal("illuminationType", exception.ParamName);
+                        Assert.Contains("observer", exception.Message);
+                    }
+                }
+
+                // An angle that is none of the enumeration's
+                if (site == fromCoordinates)
+                {
+                    Assert.Throws<ArgumentOutOfRangeException>(() => site.FindWindowsOnIlluminationConstraint(window, (IlluminationAngle)99,
+                        RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0), TestHelpers.Sun).ToArray());
+                }
+
+                // The angle is checked before the method
+                Assert.Equal("illuminationType", Assert.Throws<ArgumentException>(() => site.FindWindowsOnIlluminationConstraint(window,
+                    IlluminationAngle.Emission, RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0),
+                    TestHelpers.Sun, "DSK").ToArray()).ParamName);
+            }
+        }
+
+        // Provisional (#682), twice the worst on Linux x64 (4.44e-3 s, 2026-11-13) rounded up, until the CI of the three
+        // platforms has printed its MEASURE line: the managed search takes the geodetic normal at DSS-13, gfilum the normal of surfnm,
+        // 0.110" apart at 1070.85 m (#654), over the rate of the emission angle
+        private const double EmissionFromTheMoonLimit = 9.0e-3;
+
+        /// <summary>
+        /// #682: the way to an emission search the message of the site's search names, the public
+        /// <see cref="GeometryFinder"/> on <see cref="Site.IlluminationEmission"/> with an observer, here the Moon, equals
+        /// <c>gfilum_c</c> with the Moon as its observer at the point of DSS-13 (06:52:07.61 to 17:06:28.25 TDB).
+        /// </summary>
+        [Fact]
+        public void IlluminationEmission_FromTheMoon_EqualsGfilum()
+        {
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var moon = new CelestialBody(PlanetsAndMoons.MOON);
+            var dss13 = new Site(13, "DSS-13", earth);
+            var fromCoordinates = new Site(682, "F07DSS13GEO", earth, dss13.Planetodetic);
+            var window = new Window(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 2));
+            var step = TimeSpan.FromMinutes(10.0);
+            var managed = new GeometryFinder().FindWindowsWithCondition(window, t => fromCoordinates.IlluminationEmission(t, moon, Aberration.None),
+                RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, step).ToArray();
+            var gfilum = SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(window, 301, 399, earth.Frame, dss13.Planetodetic, IlluminationAngle.Emission,
+                RelationnalOperator.Lower, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, step, 10).ToArray();
+            Assert.Single(gfilum);
+            Assert.Equal(gfilum.Length, managed.Length);
+            double worst = 0.0;
+            for (int i = 0; i < gfilum.Length; i++)
+            {
+                worst = System.Math.Max(worst, System.Math.Abs((managed[i].StartDate - gfilum[i].StartDate).TotalSeconds));
+                worst = System.Math.Max(worst, System.Math.Abs((managed[i].EndDate - gfilum[i].EndDate).TotalSeconds));
+            }
+
+            _output.WriteLine($"MEASURE #682 emission from the Moon at DSS-13: worst |managed - gfilum| {worst:E3} s");
+            Assert.True(worst < EmissionFromTheMoonLimit, $"{worst:E3} s");
+        }
+
+        // The same rotation of the same read, to its rounding: 1 µm and 1 nm/s, or a few ulp of the distance of the Sun
+        // (1.5e11 m, an ulp of 3.1e-5 m) and of its velocity in a frame turning with the Earth (1.1e7 m/s)
+        private static void AssertSameState(StateVector expected, StateVector actual, Frames.Frame frame, string label)
+        {
+            Assert.Same(frame, actual.Frame);
+            double dr = (actual.Position - expected.Position).Magnitude();
+            double dv = (actual.Velocity - expected.Velocity).Magnitude();
+            Assert.True(dr < 1e-6 + 1e-15 * expected.Position.Magnitude(), $"{label}: |dr| {dr:E3} m");
+            Assert.True(dv < 1e-9 + 1e-15 * expected.Velocity.Magnitude(), $"{label}: |dv| {dv:E3} m/s");
+        }
+
+        /// <summary>
+        /// #682: a frame only the library holds, the frame of a site built from coordinates, reached <c>spkezr_c</c> by name
+        /// (SPICE(UNKNOWNFRAME)) when the site was read from an observer other than its body; it is read in J2000 and rotated
+        /// by the managed frame, as #558 reads TEME, CIRS and TIRS. Seen from the Moon, the Sun and LRO (a kernel
+        /// spacecraft), with and without light time, the read in the site's frame is the ICRF read rotated to it, and so
+        /// are a body read in it and the reads of <see cref="SpiceAPI"/>; a coordinate search in it runs.
+        /// </summary>
+        [Fact]
+        public void CustomSite_FromNonEarthObserver_InItsOwnFrame_EqualsTheIcrfReadRotated()
+        {
+            // LRO's SPK, shared by the test classes that read LRO, which keep it loaded
+            SpiceAPI.Instance.LoadKernels(LroSpkPath);
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var moon = new CelestialBody(PlanetsAndMoons.MOON);
+            var site = new Site(682, "F07CUSTOM", earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
+            var start = new TimeSystem.Time(2024, 3, 1);
+            var lro = new Spacecraft(-85, "LRO", epoch: start);
+            foreach (var observer in new ILocalizable[] { moon, TestHelpers.Sun, lro })
+            {
+                foreach (var aberration in new[] { Aberration.None, Aberration.LT })
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        var t = start.AddSeconds(7.0 * 3600.0 * k);
+                        var read = site.GetEphemeris(t, observer, site.Frame, aberration).ToStateVector();
+                        var expected = site.GetEphemeris(t, observer, Frames.Frame.ICRF, aberration).ToFrame(site.Frame).ToStateVector();
+                        AssertSameState(expected, read, site.Frame, $"site from {observer.Name} {aberration} at {t}");
+                    }
+                }
+            }
+
+            var epoch = start.AddSeconds(3600.0);
+            AssertSameState(moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT).ToFrame(site.Frame).ToStateVector(),
+                moon.GetEphemeris(epoch, earth, site.Frame, Aberration.LT).ToStateVector(), site.Frame, "the Moon from the Earth");
+            AssertSameState(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(site.Frame).ToStateVector(),
+                SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, site.Frame, Aberration.None).ToStateVector(), site.Frame, "SpiceAPI at an epoch");
+            var windowed = SpiceAPI.Instance.ReadEphemeris(new Window(start, start.AddSeconds(7200.0)), 399, 301, site.Frame, Aberration.None, TimeSpan.FromHours(1.0))
+                .Select(x => x.ToStateVector()).ToArray();
+            Assert.Equal(3, windowed.Length);
+            foreach (var state in windowed)
+            {
+                AssertSameState(SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(site.Frame).ToStateVector(), state,
+                    site.Frame, $"SpiceAPI over a window at {state.Epoch}");
+            }
+
+            // A coordinate search in the site's frame, the declination of the site from the Moon above 0: the condition holds
+            // inside each window on the ICRF read rotated to the frame
+            var window = new Window(start, start.AddSeconds(86400.0));
+            var windows = site.FindWindowsOnCoordinateConstraint(window, moon, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater,
+                0.0, 0.0, Aberration.None, TimeSpan.FromMinutes(10.0)).ToArray();
+            Assert.NotEmpty(windows);
+            foreach (var w in windows)
+            {
+                var middle = w.StartDate + (w.EndDate - w.StartDate) / 2.0;
+                Assert.True(site.GetEphemeris(middle, moon, Frames.Frame.ICRF, Aberration.None).ToFrame(site.Frame).ToStateVector().Position.Z > 0.0);
+            }
+        }
+
+        /// <summary>
+        /// #682: the read of a site built from coordinates in its frame, from the Moon, against CSPICE with the frame kernel
+        /// the library writes for it (<see cref="Site.WriteFrameAsync"/>), loaded after the library value: <c>spkezr_c</c> of
+        /// the Earth from the Moon in the site's TK frame, which SPICE builds from the kernel's Euler angles, plus
+        /// <c>pxform_c</c>(ITRF93, site frame) · <c>georec_c</c> of the site; its velocity is <c>spkezr_c</c>'s, the site
+        /// being fixed in its frame.
+        /// </summary>
+        [Fact]
+        [Trait("Category", "Validation")]
+        public void CustomSite_FromTheMoon_InItsFrame_MatchesSpkezr()
+        {
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var moon = new CelestialBody(PlanetsAndMoons.MOON);
+            var site = new Site(917, "F07SITE", earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
+            var epochs = Enumerable.Range(0, 5).Select(k => new TimeSystem.Time(2024, 3, 1).AddSeconds(7.0 * 3600.0 * k)).ToArray();
+            var library = epochs.Select(t => site.GetEphemeris(t, moon, site.Frame, Aberration.None).ToStateVector()).ToArray();
+
+            var directory = Directory.CreateTempSubdirectory("f07site-");
+            var frameKernel = new FileInfo(Path.Combine(directory.FullName, "f07site.tf"));
+            site.WriteFrameAsync(frameKernel).GetAwaiter().GetResult();
+            Assert.Empty(KernelShadowing.Find([frameKernel], KernelShadowing.SolarSystem));
+            SpiceAPI.Instance.LoadKernels(frameKernel);
+            try
+            {
+                double re = earth.EquatorialRadius / 1000.0;
+                var p = IO.Astrodynamics.Tests.Body.CspiceDirect.Georec(site.Planetodetic.Longitude, site.Planetodetic.Latitude, site.Planetodetic.Altitude / 1000.0,
+                    re, earth.Flattening);
+                double worstPosition = 0.0, worstVelocity = 0.0;
+                for (int k = 0; k < epochs.Length; k++)
+                {
+                    double et = epochs[k].ToTDB().TimeSpanFromJ2000().TotalSeconds;
+                    var st = IO.Astrodynamics.Tests.Body.CspiceDirect.Spkezr("EARTH", et, "F07SITE_TOPO", "NONE", "MOON");
+                    var m = IO.Astrodynamics.Tests.Body.CspiceDirect.Pxform("ITRF93", "F07SITE_TOPO", et);
+                    var position = new Vector3(st[0] + m[0] * p[0] + m[1] * p[1] + m[2] * p[2], st[1] + m[3] * p[0] + m[4] * p[1] + m[5] * p[2],
+                        st[2] + m[6] * p[0] + m[7] * p[1] + m[8] * p[2]) * 1000.0;
+                    var velocity = new Vector3(st[3], st[4], st[5]) * 1000.0;
+                    worstPosition = System.Math.Max(worstPosition, (library[k].Position - position).Magnitude());
+                    worstVelocity = System.Math.Max(worstVelocity, (library[k].Velocity - velocity).Magnitude());
+                }
+
+                _output.WriteLine($"MEASURE #682 site frame from the Moon against spkezr + pxform·georec: |dr| {worstPosition:E3} m, |dv| {worstVelocity:E3} m/s");
+                Assert.True(worstPosition < SiteFrameReadPositionLimit, $"{worstPosition:E3} m");
+                Assert.True(worstVelocity < SiteFrameReadVelocityLimit, $"{worstVelocity:E3} m/s");
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(frameKernel);
+                directory.Delete(true);
+            }
+        }
+
+        // Twice the worst on Linux x64 (4.0e-7 m, 6.4e-11 m/s, 2026-11-13) rounded up; the test runs on Linux only
+        // (Validation, CspiceDirect)
+        private const double SiteFrameReadPositionLimit = 8.0e-7;
+        private const double SiteFrameReadVelocityLimit = 1.3e-10;
     }
 }
