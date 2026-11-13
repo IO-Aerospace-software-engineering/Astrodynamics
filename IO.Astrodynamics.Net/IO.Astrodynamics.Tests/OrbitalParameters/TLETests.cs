@@ -398,6 +398,42 @@ public class TLETests
     }
 
     [Fact]
+    public void MeanSemiMajorAxis_IsTheKernelGmOverNSquared()
+    {
+        // a = (GM / n²)^(1/3), GM BODY399_GM read from the kernels through SpiceAPI, not through the Earth of the TLE, and n
+        // the mean motion of line 2 in rad/s by the expression of the constructor: a guard of #675, whose constructor builds
+        // its Earth once and takes the GM of its observer, the same body from the same kernels
+        const string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
+        const string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
+        var tle = new TLE("ISS", line1, line2);
+
+        double gm = SpiceAPI.Instance.GetCelestialBodyInfo(399).GM;
+        double n = double.Parse(line2.Substring(52, 11), System.Globalization.CultureInfo.InvariantCulture) * IO.Astrodynamics.Constants._2PI / 86400.0;
+
+        Assert.Equal(System.Math.Cbrt(gm / (n * n)), tle.MeanSemiMajorAxis);
+        Assert.Equal(gm, ((CelestialBody)tle.Observer).GM);
+    }
+
+    [Fact]
+    public void NullOrShortLine1_ReportsItsOwnCheck()
+    {
+        // The null check and the length check of line 1 run before its epoch is read (#675): 'Invalid TLE line 1 format.',
+        // the message of the epoch parser, came first before
+        const string line2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
+        var nullLine = Assert.Throws<ArgumentException>(() => new TLE("ISS", null, line2));
+        Assert.Equal("line1", nullLine.ParamName);
+        Assert.StartsWith("Value cannot be null or empty.", nullLine.Message);
+
+        var shortLine = Assert.Throws<ArgumentException>(() => new TLE("ISS", "1 25544U 98067A   21020", line2));
+        Assert.StartsWith("TLE line 1 must be exactly 69 characters long", shortLine.Message);
+
+        // A line 1 whose epoch does not parse and whose checksum is wrong reports the checksum, a text check
+        var badEpoch = Assert.Throws<InvalidOperationException>(() => new TLE("ISS",
+            "1 25544U 98067A   2X020.53488036  .00016717  00000-0  10270-3 0  9054", line2));
+        Assert.StartsWith("Checksum validation failed for TLE line 1", badEpoch.Message);
+    }
+
+    [Fact]
     public void Parse_InvalidLineFormat_ThrowsException()
     {
         string line1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3"; // Too short

@@ -171,33 +171,27 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     /// <param name="name">Line 1 - TLE Name</param>
     /// <param name="line1">the first line</param>
     /// <param name="line2">the second line</param>
-    /// <exception cref="ArgumentException">Thrown when any of the lines are null or empty.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when checksum validation fails.</exception>
-    public TLE(string name, string line1, string line2) : base(new CelestialBody(399, Frame.ECLIPTIC_J2000, ExtractEpochFromTLE(line1)), ExtractEpochFromTLE(line1),
+    /// <exception cref="ArgumentException">Thrown when the name or a line is null or empty, or when a line has not the
+    /// length, the line number or a valid catalog number of its format.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when checksum validation fails, when the catalog numbers of the
+    /// two lines differ, or when the loaded kernels do not define the Earth (its GM, radii and frame).</exception>
+    /// <remarks>
+    /// The text is checked before the Earth of the TLE is built, which reads the kernels (#675): without kernels, a
+    /// malformed TLE throws the error of its text. A valid TLE needs the kernels that define the Earth.
+    /// </remarks>
+    public TLE(string name, string line1, string line2) : base(EarthAt(ValidatedEpoch(name, line1, line2)), ExtractEpochFromTLE(line1),
         Frame.TEME, OrbitalElementsType.Mean)
     {
-        if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
-        if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
-        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
-
-        // Validate TLE format and checksums
-        ValidateTleFormat(line1, line2);
-
         Line1 = line1;
         Line2 = line2;
         Name = name;
         NoradCatalogId = NoradCatalogNumber.Parse(line1.Substring(2, NoradCatalogNumber.FieldLength));
 
-        // Extract orbital parameters from TLE lines
-        var epoch = ExtractEpochFromTLE(line1);
-        // The Earth in an inertial frame: nothing on the TLE path needs its orientation, which ITRF93 would read from the
-        // Earth's binary PCK at the epoch (#597)
-        var earth = new CelestialBody(399, Frame.ECLIPTIC_J2000, epoch);
-
         // Parse line 2 for orbital elements - FIXED: Use InvariantCulture
         var meanMotionRevPerDay = double.Parse(line2.Substring(52, 11), CultureInfo.InvariantCulture);
         double n = meanMotionRevPerDay * Constants._2PI / 86400.0; // Convert rev/day to rad/s
-        MeanSemiMajorAxis = System.Math.Cbrt(earth.GM / (n * n));
+        // The GM of the Earth of the TLE, built once from the kernels at the epoch
+        MeanSemiMajorAxis = System.Math.Cbrt(((CelestialBody)Observer).GM / (n * n));
 
         // Cache mean motion to preserve precision for TLE recreation
         MeanEccentricity = double.Parse("0." + line2.Substring(26, 7), CultureInfo.InvariantCulture);
@@ -213,6 +207,29 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
 
         _sgp4Epoch = new Lazy<double>(() => SpiceAPI.Instance.ReadTleEpoch(Name, Line1, Line2));
     }
+
+    /// <summary>
+    /// The epoch of line 1, read once the text has passed every check of the constructor, in their order: the null or
+    /// empty lines and name (line 1, line 2, then the name), then <see cref="ValidateTleFormat"/>. Evaluated as the first
+    /// argument of the base constructor, so that no check waits for a kernel read (#675).
+    /// </summary>
+    private static Time ValidatedEpoch(string name, string line1, string line2)
+    {
+        if (string.IsNullOrEmpty(line1)) throw new ArgumentException("Value cannot be null or empty.", nameof(line1));
+        if (string.IsNullOrEmpty(line2)) throw new ArgumentException("Value cannot be null or empty.", nameof(line2));
+        if (string.IsNullOrEmpty(name)) throw new ArgumentException("Value cannot be null or empty.", nameof(name));
+
+        // Validate TLE format and checksums
+        ValidateTleFormat(line1, line2);
+        return ExtractEpochFromTLE(line1);
+    }
+
+    /// <summary>
+    /// The Earth of a TLE, in an inertial frame: nothing on the TLE path needs its orientation, which ITRF93 would read
+    /// from the Earth's binary PCK at the epoch (#597). It reads the kernels, after <see cref="ValidatedEpoch"/>, and the
+    /// static frames only once the text is checked.
+    /// </summary>
+    private static CelestialBody EarthAt(Time epoch) => new(399, Frame.ECLIPTIC_J2000, epoch);
 
     /// <summary>
     /// Extracts the epoch time from TLE line 1.

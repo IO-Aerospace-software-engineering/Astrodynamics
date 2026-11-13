@@ -75,7 +75,22 @@ public class ColdStartTests
         }
     }
 
-    private static void RunChild(string mode, string schedule, string hold = null)
+    [Fact]
+    public void TleText_IsCheckedBeforeAnyKernelRead()
+    {
+        // A child that loads no kernel (#675): a malformed TLE throws the error of its text (a wrong checksum, a short line
+        // 1, two catalog numbers, a null line 1), each checked by the child. Before the fix the constructor built its Earth
+        // first, which threw the kernel error, and CSPICE printed the banners of its failed reads on the standard output:
+        // an empty output shows that no SPICE read was attempted
+        string output = RunChild("tle-text");
+
+        Assert.DoesNotContain("SPICE(", output);
+        Assert.DoesNotContain("Toolkit", output);
+        Assert.Equal(string.Empty, output.Trim());
+    }
+
+    // Runs the child with the mode, and the schedule and hold when given; returns its standard output
+    private static string RunChild(string mode, string schedule = null, string hold = null)
     {
         // ColdStart/, or beside the tests when the build was given an output directory (-o), which the child is built into
         string child = Path.Combine(AppContext.BaseDirectory, "ColdStart", "IO.Astrodynamics.Tests.ColdStart.dll");
@@ -96,7 +111,11 @@ public class ColdStartTests
         start.ArgumentList.Add(child);
         start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"));
         start.ArgumentList.Add(mode);
-        start.ArgumentList.Add(schedule);
+        if (schedule != null)
+        {
+            start.ArgumentList.Add(schedule);
+        }
+
         if (hold != null)
         {
             start.ArgumentList.Add(hold);
@@ -117,6 +136,7 @@ public class ColdStartTests
         process.WaitForExit();
         Assert.True(process.ExitCode == 0,
             $"The child ({mode}, {schedule}) exited {process.ExitCode}. Output: {output.Result} Error: {error.Result}");
+        return output.Result;
     }
 
     /// <summary>

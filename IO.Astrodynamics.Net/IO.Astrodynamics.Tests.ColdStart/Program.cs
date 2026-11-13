@@ -36,6 +36,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <item><c>lagrange-window</c>: <see cref="SpiceAPI.ReadEphemeris(Window, int, int, Frame, Aberration, TimeSpan)"/> from
 /// L1 over 60 s every 30 s; the same read.</item>
 /// </list>
+/// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
+/// and nothing may be written on the standard output (#675).
 /// </para>
 /// <para>
 /// The schedules: <c>race</c> starts the two threads behind a <see cref="Barrier"/>, the reproduction of #623;
@@ -63,6 +65,12 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        // Before the schedule check and before any kernel is loaded: the text of a TLE is checked before any SPICE read
+        if (args.Length == 2 && args[1] == "tle-text")
+        {
+            return CheckTleTextWithoutKernels();
+        }
+
         if (args.Length < 3 || args[2] is not ("race" or "held") || (args[2] == "held") != (args.Length == 4))
         {
             return Usage();
@@ -176,8 +184,54 @@ internal static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held]");
+        Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], " +
+                                "or <kernel directory> tle-text");
         return 2;
+    }
+
+    /// <summary>
+    /// The mode <c>tle-text</c> (#675): with no kernel loaded, each malformed TLE throws the error of its text, which the
+    /// constructor checks before it builds its Earth. Writes nothing on the standard output, where CSPICE prints the
+    /// banner of a failed read; a mismatch is written on the standard error and exits 1.
+    /// </summary>
+    private static int CheckTleTextWithoutKernels()
+    {
+        // The checksum of line 1 is 4; 0 here
+        string badChecksum = Line1.Substring(0, 68) + "0";
+        string shortLine1 = Line1.Substring(0, 68);
+        // Another catalog number in line 2, its checksum corrected (the digit 4 replaced by 5 adds 1)
+        string otherNorad = "2 25545" + Line2.Substring(7, 61) + (char)('0' + (Line2[68] - '0' + 1) % 10);
+
+        int failures = 0;
+        failures += Expect<InvalidOperationException>("checksum", () => new TLE(Name, badChecksum, Line2),
+            e => e.Message.StartsWith("Checksum validation failed for TLE line 1", StringComparison.Ordinal));
+        failures += Expect<ArgumentException>("length", () => new TLE(Name, shortLine1, Line2),
+            e => e.Message.StartsWith("TLE line 1 must be exactly 69 characters", StringComparison.Ordinal));
+        failures += Expect<InvalidOperationException>("catalog number", () => new TLE(Name, Line1, otherNorad),
+            e => e.Message.StartsWith("NORAD catalog numbers differ", StringComparison.Ordinal));
+        failures += Expect<ArgumentException>("null line 1", () => new TLE(Name, null, Line2),
+            e => e.ParamName == "line1");
+        return failures == 0 ? 0 : 1;
+    }
+
+    private static int Expect<TException>(string label, Func<TLE> create, Func<TException, bool> matches)
+        where TException : Exception
+    {
+        try
+        {
+            create();
+            Console.Error.WriteLine($"{label}: no exception");
+            return 1;
+        }
+        catch (Exception e) when (e.GetType() == typeof(TException) && matches((TException)e))
+        {
+            return 0;
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"{label}: {e.GetType().Name}: {e.Message}");
+            return 1;
+        }
     }
 
     // The first reads of the static classes, each in a method of its own, compiled when thread B calls it
