@@ -23,7 +23,8 @@ public static class MonteCarloPropagator
     /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
     /// <returns>Aggregated statistics across all successful runs.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than 2.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than 2,
+    /// or <see cref="MonteCarloConfiguration.DeltaT"/> is not positive.</exception>
     /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance.</exception>
     public static MonteCarloResult Propagate(MonteCarloConfiguration config)
     {
@@ -140,5 +141,7 @@ public static class MonteCarloPropagator
             throw new ArgumentOutOfRangeException(nameof(config.RunCount), "RunCount must be at least 2.");
         ArgumentNullException.ThrowIfNull(config.TemplateSpacecraft);
         ArgumentNullException.ThrowIfNull(config.CelestialBodiesFactory);
+        // Before any run: through the batch, a bad step would fail every run without an exception (#674)
+        PropagatorBase.RequirePositiveStep(config.DeltaT, nameof(config.DeltaT));
     }
 }

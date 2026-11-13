@@ -31,13 +31,25 @@ public class CentralBodyPropagatorBuilder
 
     private CovariancePropagationOptions _covariancePropagation;
 
+    /// <summary>
+    /// A builder of the propagation of <paramref name="spacecraft"/> over <paramref name="window"/>, with output states
+    /// every <paramref name="deltaT"/>.
+    /// </summary>
+    /// <param name="window">The propagation window.</param>
+    /// <param name="spacecraft">The spacecraft.</param>
+    /// <param name="integrator">The integrator, a new instance without forces: <see cref="Build"/> adds the forces to
+    /// it, once.</param>
+    /// <param name="deltaT">The step of the output states.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="spacecraft"/> or <paramref name="integrator"/> is
+    /// null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
     public CentralBodyPropagatorBuilder(Window window, Spacecraft spacecraft,
         Integrator integrator, TimeSpan deltaT)
     {
         _window = window;
         _spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         _integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
-        _deltaT = deltaT;
+        _deltaT = PropagatorBase.RequirePositiveStep(deltaT, nameof(deltaT));
     }
 
     public CentralBodyPropagatorBuilder WithPerturbingBody(CelestialItem body)
@@ -120,34 +132,26 @@ public class CentralBodyPropagatorBuilder
     /// </summary>
     /// <remarks>
     /// The central body of the spacecraft (the observer of its initial orbital parameters, or the Sun for a star or a
-    /// barycenter) is added to the perturbing bodies when they do not hold it: atmospheric drag applies with its
-    /// atmospheric model and solar radiation pressure with its shadow, whether or not it was listed. A body of the same
-    /// NAIF identifier given to <see cref="WithPerturbingBody"/> is used as given.
+    /// barycenter) takes part in the forces whether or not it was given to <see cref="WithPerturbingBody"/>, with the
+    /// models of the observer: atmospheric drag applies with its atmosphere and solar radiation pressure with its shadow.
+    /// A body of its NAIF identifier given to <see cref="WithPerturbingBody"/> is accepted when its models are those of
+    /// the observer (#674). The forces are added to the integrator of the builder, so a builder builds once.
     /// </remarks>
     /// <exception cref="NotSupportedException">The covariance propagation is asked for with another integrator than
     /// <see cref="RK78Integrator"/>.</exception>
     /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a consider
-    /// parameter without its force.</exception>
+    /// parameter without its force; a perturbing body of the observer's NAIF identifier with other models; or the
+    /// integrator already holds forces or was already used, by an earlier <see cref="Build"/> among others.</exception>
     /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
     /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
-    /// semi-definite.</exception>
+    /// semi-definite; or drag is asked about a central body other than the Earth and the Sun without an atmospheric
+    /// model, or about the Sun with no perturbing body that has one.</exception>
     public CentralBodyPropagator Build()
     {
-        // The central body takes part in the forces whether or not it was listed: its atmosphere for drag, its shadow
-        // for SRP. A body of the same NAIF identifier given by the caller is kept as given
-        var bodies = new List<CelestialItem>(_perturbingBodies.Count + 1);
-        var centralBody = CentralBodyPropagator.ResolveCentralBody(_spacecraft);
-        if (!_perturbingBodies.Contains(centralBody))
-        {
-            bodies.Add(centralBody);
-        }
-
-        bodies.AddRange(_perturbingBodies);
-
         // Create propagator via the auto-building constructor
         // (handles gravity, third-body, drag, SRP, ephemeris cache, integrator init)
         var propagator = new CentralBodyPropagator(_window, _spacecraft, _integrator,
-            bodies, _includeAtmosphericDrag, _includeSolarRadiationPressure, _deltaT);
+            _perturbingBodies, _includeAtmosphericDrag, _includeSolarRadiationPressure, _deltaT);
 
         // Add the radiation forces after construction (with ephemeris cache from existing forces)
         if (_albedoBody != null)

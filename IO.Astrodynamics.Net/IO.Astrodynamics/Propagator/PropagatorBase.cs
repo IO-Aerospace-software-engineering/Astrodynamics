@@ -75,9 +75,29 @@ public abstract class PropagatorBase : IPropagator
     // The length of the window in seconds of the time argument, between its ends as the caller tagged them
     private readonly double _windowLength;
 
+    /// <summary>
+    /// A propagator over TDB seconds, with output states every <paramref name="deltaT"/>.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
     protected PropagatorBase(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
-        : this(window, spacecraft, integrator, deltaT, PropagationTimeArgument.Tdb)
+        : this(window, spacecraft, integrator, RequirePositiveStep(deltaT, nameof(deltaT)), PropagationTimeArgument.Tdb)
     {
+    }
+
+    /// <summary>
+    /// <paramref name="step"/>, a step of a propagation, when it is positive (#674).
+    /// </summary>
+    /// <param name="step">The step.</param>
+    /// <param name="paramName">The name of the step as the caller passed it.</param>
+    /// <exception cref="ArgumentOutOfRangeException">The step is zero or negative.</exception>
+    internal static TimeSpan RequirePositiveStep(TimeSpan step, string paramName)
+    {
+        if (step <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(paramName, step, "The step of a propagation must be positive.");
+        }
+
+        return step;
     }
 
     /// <summary>

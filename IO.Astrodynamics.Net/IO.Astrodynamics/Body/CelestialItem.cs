@@ -212,8 +212,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
     }
 
-    // The NAIF identifier of the Earth, whose geopotential is EGM2008 unless its parameters give other constants
-    private const int EarthNaifId = 399;
+    // The NAIF identifier of the Earth, whose geopotential is EGM2008 unless its parameters give other constants, and
+    // whose atmosphere without a model is NRLMSISE-00 at nominal space weather
+    private protected const int EarthNaifId = 399;
 
     /// <summary>
     /// The gravitational field of a body: the point mass, or the geopotential of <paramref name="parameters"/>, its
@@ -241,7 +242,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             modelName = "EGM2008";
         }
 
-        return new GeopotentialGravitationalField(parameters.GeopotentialModelPath, parameters.GeopotentialDegree,
+        // The coefficients of the parameters, read once and shared by every body built from them (#674)
+        return new GeopotentialGravitationalField(parameters.ModelReader, parameters.GeopotentialDegree,
             gravitationalParameter, referenceRadius, gm, modelName, parameters.CentralTerm);
     }
 
@@ -1093,6 +1095,67 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                $"{"Name :",TITLE_WIDTH} {Name,-VALUE_WIDTH}{Environment.NewLine}" +
                $"{"Mass (kg) :",TITLE_WIDTH} {Mass.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}" +
                $"{"GM (m^3.s^2):",TITLE_WIDTH} {GM.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}";
+    }
+
+    /// <summary>
+    /// What differs between the models of this body and of <paramref name="other"/>, a body of the same NAIF identifier,
+    /// for the message of a rejected pair; null when they give the same forces: the same GM, the same gravitational field
+    /// (<see cref="GravitationalField.HasSameModel"/>) and, for two <see cref="CelestialBody"/>, the same radii and the same
+    /// atmospheric model (#674). Albedo and thermal properties are not compared: the forces of a propagation built from
+    /// its bodies do not read them.
+    /// </summary>
+    internal virtual string ModelDifference(CelestialItem other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return null;
+        }
+
+        if (!GM.Equals(other.GM))
+        {
+            return string.Create(CultureInfo.InvariantCulture, $"GM ({GM:R} and {other.GM:R} m³/s²)");
+        }
+
+        if (!GravitationalField.HasSameModel(other.GravitationalField))
+        {
+            return "gravitational field";
+        }
+
+        return (this is CelestialBody) == (other is CelestialBody) ? null : "kind of body";
+    }
+
+    /// <summary>
+    /// Rejects listed bodies of one NAIF identifier whose models differ, before any of them is dropped as a duplicate: the
+    /// bodies of the central body's identifier against <paramref name="centralBody"/>, the others against the first of
+    /// their identifier (#674). A propagation takes one model per body.
+    /// </summary>
+    /// <param name="centralBody">The central body of the propagation, the observer of the orbit or the Sun.</param>
+    /// <param name="bodies">The listed bodies.</param>
+    /// <param name="paramName">The name of the list, for the exception.</param>
+    /// <exception cref="ArgumentException">Two bodies of one NAIF identifier have different models.</exception>
+    internal static void RequireOneModelPerBody(CelestialItem centralBody, IReadOnlyList<CelestialItem> bodies,
+        string paramName)
+    {
+        foreach (var group in bodies.Where(b => b != null).GroupBy(b => b.NaifId))
+        {
+            bool central = centralBody != null && group.Key == centralBody.NaifId;
+            var reference = central ? centralBody : group.First();
+            foreach (var body in group)
+            {
+                var difference = reference.ModelDifference(body);
+                if (difference == null)
+                {
+                    continue;
+                }
+
+                throw new ArgumentException(central
+                    ? $"The listed body {body.Name} (NAIF {body.NaifId}) has another {difference} than {reference.Name}, " +
+                      "the central body of the orbit: a propagation takes the models of its central body. List the " +
+                      "observer of the orbit itself, or build the orbit on the listed body."
+                    : $"The listed bodies {reference.Name} and {body.Name} (NAIF {body.NaifId}) differ by their " +
+                      $"{difference}: a propagation takes one model per body. List one of them.", paramName);
+            }
+        }
     }
 
     public bool Equals(CelestialItem other)
