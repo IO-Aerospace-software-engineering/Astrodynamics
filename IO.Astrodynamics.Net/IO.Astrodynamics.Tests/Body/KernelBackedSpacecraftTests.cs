@@ -348,6 +348,184 @@ public class KernelBackedSpacecraftTests
 
     #endregion
 
+    #region Kernel-backed frame of a propagated spacecraft (#676)
+
+    // The CK against the attitude record in 2024: the accuracy of a type-3 CK of the library at that epoch
+    // (docs/reference/spacecraft.md, attitude and kernels, 2024 row)
+    private const double CkAccuracy2024 = 6.1e-10;
+
+    private static readonly TimeSystem.Time KSatEpoch = new(2024, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+    private static readonly TimeSystem.Time KSatRead = KSatEpoch.AddSeconds(1800.0);
+
+    /// <summary>
+    /// KSAT (-1401), propagated 2 h about the Earth in LVLH with its camera (-1401001), and the kernels the library writes
+    /// of it: its SCLK, FK (the frame of id -1401000 renamed <paramref name="frameName"/> when given, as a mission FK
+    /// names it), instrument FK and IK, SPK and CK. The kernels named by <paramref name="load"/> are loaded; each loaded
+    /// kernel is unloaded by <see cref="Dispose"/>.
+    /// </summary>
+    private sealed class KSatKernels : IDisposable
+    {
+        private readonly System.Collections.Generic.List<FileInfo> _loaded = new();
+
+        public Spacecraft Spacecraft { get; }
+        public FileInfo Clock { get; }
+        public FileInfo FrameKernel { get; }
+        public FileInfo InstrumentFrame { get; }
+        public FileInfo InstrumentKernel { get; }
+        public FileInfo Ephemeris { get; }
+        public FileInfo Orientation { get; }
+
+        public KSatKernels(string frameName = null)
+        {
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            Spacecraft = new Spacecraft(-1401, "KSat", 100.0, 1000.0, new Clock("KSatClk", 256),
+                new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, KSatEpoch, Frames.Frame.ICRF));
+            Spacecraft.AddCircularInstrument(-1401001, "Camera", "Imager", 0.1, Vector3.VectorZ, Vector3.VectorX, new Vector3(0.1, 0.2, 0.3));
+            var tank = new FuelTank("t", "m", "s", 100.0, 100.0);
+            Spacecraft.AddFuelTank(tank);
+            var engine = new Engine("e", "m", "s", 300.0, 1.0, tank);
+            Spacecraft.AddEngine(engine);
+            Spacecraft.SetStandbyManeuver(Maneuver.TriadAttitude.CreateLVLH(earth, KSatEpoch, TimeSpan.Zero, engine));
+            Spacecraft.Propagate(new Window(KSatEpoch, KSatEpoch.AddSeconds(7200.0)), [earth],
+                new Propagator.Integrators.RK78Integrator(1e-10, 1e-10), false, false, TimeSpan.FromSeconds(60.0));
+
+            var directory = Constants.OutputPath.CreateSubdirectory("KernelBackedFrame676").CreateSubdirectory(Guid.NewGuid().ToString("N")[..8]);
+            Clock = new FileInfo(Path.Combine(directory.FullName, "ksat.tsc"));
+            FrameKernel = new FileInfo(Path.Combine(directory.FullName, "ksat.tf"));
+            InstrumentFrame = new FileInfo(Path.Combine(directory.FullName, "camera.tf"));
+            InstrumentKernel = new FileInfo(Path.Combine(directory.FullName, "camera.ti"));
+            Ephemeris = new FileInfo(Path.Combine(directory.FullName, "ksat.bsp"));
+            Orientation = new FileInfo(Path.Combine(directory.FullName, "ksat.bc"));
+            Spacecraft.Clock.WriteAsync(Clock).GetAwaiter().GetResult();
+            Spacecraft.Frame.WriteAsync(FrameKernel).GetAwaiter().GetResult();
+            if (frameName != null)
+            {
+                File.WriteAllText(FrameKernel.FullName, File.ReadAllText(FrameKernel.FullName).Replace("KSAT_FRAME", frameName));
+            }
+
+            var instrument = Spacecraft.Instruments.Single();
+            instrument.WriteFrameAsync(InstrumentFrame).GetAwaiter().GetResult();
+            instrument.WriteKernelAsync(InstrumentKernel).GetAwaiter().GetResult();
+            Spacecraft.WriteEphemeris(Ephemeris);
+            Load(Clock);
+            Spacecraft.WriteOrientation(Orientation);
+        }
+
+        public void Load(FileInfo kernel)
+        {
+            // FileInfo caches Exists, and LoadKernels loads nothing for a path it believes absent
+            kernel.Refresh();
+            Assert.True(kernel.Exists, kernel.FullName);
+            SpiceAPI.Instance.LoadKernels(kernel);
+            _loaded.Add(kernel);
+        }
+
+        public void Dispose()
+        {
+            for (int i = _loaded.Count - 1; i >= 0; i--)
+            {
+                SpiceAPI.Instance.UnloadKernels(_loaded[i]);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Control (#676, passes on main too): the instrument id next to the spacecraft frame id, -1401001. The written FK, IK
+    /// and CK load, and SPICE's rotation of the instrument frame to J2000 (<c>sxform_c</c> on the FK's frame name) equals
+    /// the managed instrument axes within the CK's 2024 accuracy.
+    /// </summary>
+    [Fact]
+    public void InstrumentNextToFrameId_KernelsRead()
+    {
+        using var kernels = new KSatKernels();
+        foreach (var kernel in new[] { kernels.FrameKernel, kernels.InstrumentFrame, kernels.InstrumentKernel, kernels.Ephemeris, kernels.Orientation })
+        {
+            kernels.Load(kernel);
+        }
+
+        // Act
+        var instrument = kernels.Spacecraft.Instruments.Single();
+        var spice = SpiceAPI.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_CAMERA"), Frames.Frame.ICRF).Rotation;
+        var managed = kernels.Spacecraft.Frame.GetStateOrientationToICRF(KSatRead).Rotation * instrument.RotationToSpacecraft;
+
+        // Assert
+        double angle = AttitudeRecordTests.RotationAngle(spice, managed);
+        Assert.True(angle <= CkAccuracy2024, $"{angle:E3} rad");
+    }
+
+    /// <summary>
+    /// A twin of another name than the propagated spacecraft reads the frame SPICE defines for its id, NaifId × 1000
+    /// (#676): its rotation is SPICE's through the FK's own frame name (0 rad) and the managed record's within the CK's
+    /// 2024 accuracy. On main the twin asked SPICE for SatK_FRAME, a frame it does not know, and threw.
+    /// </summary>
+    [Fact]
+    public void TwinOfAnotherName_ReadsFrameOfItsId()
+    {
+        using var kernels = new KSatKernels();
+        foreach (var kernel in new[] { kernels.FrameKernel, kernels.Ephemeris, kernels.Orientation })
+        {
+            kernels.Load(kernel);
+        }
+
+        // Act
+        var twin = new Spacecraft(-1401, "SatK", KSatEpoch, clock: new Clock("SatKClk", 256));
+        var read = twin.Frame.GetStateOrientationToICRF(KSatRead).Rotation;
+
+        // Assert: the twin's frame keeps its name
+        Assert.Equal("SatK_FRAME", twin.Frame.Name);
+        var spice = SpiceAPI.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_FRAME"), Frames.Frame.ICRF).Rotation;
+        Assert.Equal(0.0, AttitudeRecordTests.RotationAngle(spice, read));
+        var orientation = twin.GetOrientation(Frames.Frame.ICRF, KSatRead);
+        var managed = kernels.Spacecraft.GetOrientation(Frames.Frame.ICRF, KSatRead);
+        double angle = AttitudeRecordTests.RotationAngle(managed.Rotation, orientation.Rotation);
+        Assert.True(angle <= CkAccuracy2024, $"{angle:E3} rad");
+    }
+
+    /// <summary>
+    /// A mission FK names the frame of id -1401000 KSAT_BUS (#676): the twin KSat reads it, at 0 rad from SPICE's rotation
+    /// through that name, also when the FK is loaded after the twin is built. On main it asked for KSAT_FRAME and threw.
+    /// </summary>
+    [Fact]
+    public void MissionFrameName_ReadsFrameOfItsId()
+    {
+        using var kernels = new KSatKernels("KSAT_BUS");
+        kernels.Load(kernels.Ephemeris);
+        kernels.Load(kernels.Orientation);
+        var twin = new Spacecraft(-1401, "KSat", KSatEpoch, clock: new Clock("KSatTwinClk", 256));
+
+        // Act: the FK loaded after the twin is built
+        kernels.Load(kernels.FrameKernel);
+        var read = twin.Frame.GetStateOrientationToICRF(KSatRead).Rotation;
+
+        // Assert
+        var spice = SpiceAPI.Instance.TransformFrame(KSatRead, new Frames.Frame("KSAT_BUS"), Frames.Frame.ICRF).Rotation;
+        Assert.Equal(0.0, AttitudeRecordTests.RotationAngle(spice, read));
+        Assert.Equal("KSat_FRAME", twin.Frame.Name);
+        double angle = AttitudeRecordTests.RotationAngle(kernels.Spacecraft.Frame.GetStateOrientationToICRF(KSatRead).Rotation, read);
+        Assert.True(angle <= CkAccuracy2024, $"{angle:E3} rad");
+    }
+
+    /// <summary>
+    /// No FK defines the frame of id -1401000: the read throws, naming the frame, as on main (#676).
+    /// </summary>
+    [Fact]
+    public void NoFrameForId_ThrowsAsBefore()
+    {
+        using var kernels = new KSatKernels();
+        kernels.Load(kernels.Ephemeris);
+        kernels.Load(kernels.Orientation);
+        var twin = new Spacecraft(-1401, "SatK", KSatEpoch, clock: new Clock("SatKClk", 256));
+
+        // Act
+        var exception = Record.Exception(() => twin.Frame.GetStateOrientationToICRF(KSatRead));
+
+        // Assert
+        var rejected = Assert.IsType<InvalidOperationException>(exception);
+        Assert.Contains("SatK_FRAME", rejected.Message);
+    }
+
+    #endregion
+
     #region Helper
 
     /// <summary>

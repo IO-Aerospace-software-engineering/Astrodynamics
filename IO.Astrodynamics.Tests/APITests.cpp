@@ -512,3 +512,21 @@ TEST(API, ConvertHyperbolicStateToConic)
     EXPECT_NEAR(stateVector.velocity.z, stateVector2.velocity.z, 1e-6);
     EXPECT_NEAR(stateVector.epoch, stateVector2.epoch, 1e-6);
 }
+
+TEST(API, GetFrameNameProxy)
+{
+    // SPICE's built-in frame table (Frames Required Reading, "Built-in Inertial Reference Frames" and "Built-in PCK-Based
+    // IAU Body-Fixed Reference Frames"): J2000 is frame 1, ITRF93 13000 and IAU_EARTH 10013
+    char name[33];
+    ASSERT_TRUE(GetFrameNameProxy(1, name));
+    ASSERT_STREQ("J2000", name);
+    ASSERT_TRUE(GetFrameNameProxy(13000, name));
+    ASSERT_STREQ("ITRF93", name);
+    ASSERT_TRUE(GetFrameNameProxy(10013, name));
+    ASSERT_STREQ("IAU_EARTH", name);
+
+    // No frame of that id: false, an empty name and the message
+    ASSERT_FALSE(GetFrameNameProxy(-999999000, name));
+    ASSERT_STREQ("", name);
+    ASSERT_STREQ("SPICE knows no frame of id -999999000", GetLastErrorProxy());
+}
