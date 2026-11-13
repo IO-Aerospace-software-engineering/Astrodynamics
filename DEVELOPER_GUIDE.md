@@ -1592,7 +1592,8 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Force Models:**
 - **Gravitational acceleration** from each body in the `bodies` list. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
 - **Third-body perturbation**: Battin's numerically stable formula for each celestial body beyond the central body.
-- **Atmospheric drag** (when `drag` is true): uses the body's atmospheric model with atmosphere-relative velocity (accounts for body co-rotation). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
+- **Atmospheric drag** (when `drag` is true): uses the central body's atmosphere with atmosphere-relative velocity (accounts for body co-rotation): its atmospheric model, or NRLMSISE-00 at nominal space weather for an Earth built without one; another central body without a model throws `InvalidOperationException`, and about the Sun (a star or barycentre observer) the listed bodies with a model give the drag (#674). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
+- **The central body** takes part whether or not it is listed, with the observer's models; listed bodies of one NAIF identifier, the observer's included, must have the same models (`ArgumentException` otherwise). The integrator of a force-building path must be a new instance, and the step positive (#674).
 - **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
 - **Albedo radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeAlbedo()`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
 - **Thermal radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeThermalRadiation()`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
@@ -1657,7 +1658,7 @@ Configuration for enabling geopotential gravity on a `CelestialBody`.
 
 | Property | Description |
 |----------|-------------|
-| `GeopotentialModelPath` | Stream reader for the model file |
+| `GeopotentialModelPath` | Stream reader for the model file, read once by the first body built from the parameters; every body shares its coefficients (#674) |
 | `GeopotentialDegree` | Maximum degree/order to use |
 | `GravitationalParameter`, `ReferenceRadius` | The constants given to the four-argument constructors; null otherwise. The harmonics then take EGM2008's GM (3.986004415e14 m³/s²) and radius (6378136.3 m) for the Earth, the kernel GM and equatorial radius for another body; the central term always takes the kernel GM (#410) |
 
@@ -1886,15 +1887,17 @@ Console.WriteLine($"Mars atmosphere: ρ={atmosphere.Density:E3} kg/m³");
 
 #### CelestialBody Integration
 
-`CelestialBody` provides convenient `GetAtmosphere` methods that automatically select the best available model.
+`CelestialBody` provides `GetAtmosphere` methods that read its atmospheric model. An Earth built without one answers a
+full context with NRLMSISE-00 at nominal space weather, the atmosphere of its drag (#674); without the geodetic position
+and the epoch, a body without a model gives a NaN temperature and a zero pressure and density.
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
 
-// Simple: altitude-only (uses EarthStandardAtmosphere)
+// Simple: altitude-only; EARTH_BODY has no model, so NaN, 0 and 0 (give the body an EarthStandardAtmosphere for US 1976)
 var atm1 = earth.GetAtmosphere(10000);  // 10 km altitude
 
-// Full context: automatically uses NRLMSISE-00 for Earth
+// Full context: NRLMSISE-00 at nominal space weather for an Earth without a model
 var context = AtmosphericContext.FromPlanetodetic(
     altitude: 400000,
     geodeticLatitude: 45 * Constants.Deg2Rad,

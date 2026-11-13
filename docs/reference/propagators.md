@@ -46,6 +46,16 @@ rejected it).
 | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT, covariancePropagation)` | As the first, and propagates the state transition matrix and, in covariance mode, the covariance ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second, with the covariance propagation; the columns of Ψ follow the forces of the integrator |
 
+On every constructor the central body takes part with the models of the observer: the constructors that build the forces
+insert it first when no listed body has its NAIF identifier (a run that lists it is unchanged), and a listed body of its
+identifier, or two listed bodies of one identifier, must have the same GM, radii, gravitational field and atmospheric
+model (`ArgumentException` otherwise). Drag is that of the central body's atmosphere, NRLMSISE-00 at nominal space
+weather for an Earth without a model ([Force Models](force-models.md#atmosphericdrag)). The integrator of a constructor
+that builds the forces must be a new instance: one that holds forces or was used by such a constructor throws
+`ArgumentException` (`integrator`); the constructors without celestial bodies use the integrator and its forces as
+given, after the caller's `Initialize`. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
+constructor (#674).
+
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the
 initial orbital parameters is not propagated: it stays on the initial state, the output states carry none, and no partial
 derivative is evaluated.
