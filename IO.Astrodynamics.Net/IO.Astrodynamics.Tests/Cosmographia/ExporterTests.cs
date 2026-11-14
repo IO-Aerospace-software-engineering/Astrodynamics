@@ -228,4 +228,80 @@ public class ExporterTests
         CosmographiaExporter cosmographiaExporter = new CosmographiaExporter();
         await cosmographiaExporter.ExportAsync(scenario, new DirectoryInfo("CosmographiaExport"));
     }
+
+    /// <summary>
+    /// The export checks the length of its kernel paths before it touches the output directory (#673): FURNSH stores a file
+    /// name of at most 255 characters, and <see cref="SpiceAPI.LoadKernels"/> hands it the full path. Before, the export
+    /// deleted the previous export and wrote kernels that could not be loaded.
+    /// </summary>
+    [Fact]
+    public async Task Export_ToADirectoryTooLongForItsKernels_ThrowsAndLeavesItUntouched()
+    {
+        // Arrange: one spacecraft and one star under NAIF ids no other test uses (-8674, 1000000674), and no site
+        // (Data/SolarSystem defines the DSN frames)
+        const string name = "EXP8674";
+        var mission = new Astrodynamics.Mission.Mission("PathLimit");
+        var start = TimeSystem.Time.J2000TDB.AddYears(21);
+        var scenario = new Scenario("Export673", mission, new Window(start, start.AddMinutes(10.0)));
+        scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
+        var spacecraft = new Spacecraft(-8674, name, 1000.0, 2000.0, new Clock("EXP8674_CLK", 65536),
+            new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+        scenario.AddSpacecraft(spacecraft);
+        scenario.AddStar(new Astrodynamics.Body.Star(674, "star674", 1E+30, "spec", 2, 0.3792, new Astrodynamics.Coordinates.Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start));
+        await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        var root = Directory.CreateTempSubdirectory("export-length-");
+        // The longest kernel of the layout, <output>/<Mission>_<Scenario>/Spacecrafts/<sc>/Orientation/<sc>.ck
+        string Longest(string output) => Path.Combine(output, "PathLimit_Export673", "Spacecrafts", name, "Orientation", $"{name}.ck");
+        string Output(int longest)
+        {
+            int pad = longest - Longest(root.FullName).Length - 1;
+            var output = Path.Combine(root.FullName, new string('o', pad));
+            Assert.Equal(longest, Longest(output).Length);
+            return output;
+        }
+
+        try
+        {
+            // An existing export in the directory too long by one character
+            var tooLong = new DirectoryInfo(Output(256));
+            var existing = Directory.CreateDirectory(Path.Combine(tooLong.FullName, "PathLimit_Export673"));
+            var marker = Path.Combine(existing.FullName, "marker.txt");
+            await File.WriteAllTextAsync(marker, "previous export");
+
+            // Act and assert: nothing deleted, nothing written
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => new CosmographiaExporter().ExportAsync(scenario, tooLong));
+            Assert.Equal("outputDirectory", exception.ParamName);
+            Assert.Equal([marker], Directory.EnumerateFileSystemEntries(existing.FullName, "*", SearchOption.AllDirectories));
+
+            // Act: one character shorter
+            var atLimit = new DirectoryInfo(Output(255));
+            await new CosmographiaExporter().ExportAsync(scenario, atLimit);
+
+            // Assert: every kernel of spice.json loads, the longest at 255 characters
+            var exported = Path.Combine(atLimit.FullName, "PathLimit_Export673");
+            var spice = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(exported, "spice.json")));
+            var kernels = spice.RootElement.GetProperty("spiceKernels").EnumerateArray().Select(k => new FileInfo(Path.Combine(exported, k.GetString()!))).ToArray();
+            Assert.Contains(kernels, k => k.FullName == Longest(atLimit.FullName));
+            Assert.Contains(kernels, k => k.FullName == Path.Combine(exported, "Stars", "star674.spk"));
+            Assert.Equal(255, kernels.Max(k => k.FullName.Length));
+            try
+            {
+                foreach (var kernel in kernels)
+                {
+                    SpiceAPI.Instance.LoadKernels(kernel);
+                }
+            }
+            finally
+            {
+                foreach (var kernel in kernels)
+                {
+                    SpiceAPI.Instance.UnloadKernels(kernel);
+                }
+            }
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
 }

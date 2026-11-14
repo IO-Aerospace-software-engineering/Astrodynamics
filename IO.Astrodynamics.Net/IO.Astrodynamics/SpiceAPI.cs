@@ -1087,11 +1087,15 @@ public class SpiceAPI
     /// <param name="naifId"></param>
     /// <param name="stateVectors"></param>
     /// <returns></returns>
+    /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
+    /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
+    /// then failed).</exception>
     public bool WriteEphemeris(FileInfo filePath, int naifId,
         IEnumerable<OrbitalParameters.StateVector> stateVectors)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (stateVectors == null) throw new ArgumentNullException(nameof(stateVectors));
+        Kernels.KernelPath.EnsureLoadable(filePath.FullName, nameof(filePath));
         lock (lockObject)
         {
             var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
@@ -1129,10 +1133,14 @@ public class SpiceAPI
     /// </remarks>
     /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
     /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>
+    /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
+    /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
+    /// then failed).</exception>
     public bool WriteOrientation(FileInfo filePath, int naifId, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (stateOrientations == null) throw new ArgumentNullException(nameof(stateOrientations));
+        Kernels.KernelPath.EnsureLoadable(filePath.FullName, nameof(filePath));
         lock (lockObject)
         {
             var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
