@@ -67,6 +67,19 @@ public class KernelRegistryTests : IDisposable
         return file;
     }
 
+    // A meta-kernel that loads the given kernel. A string value of the kernel pool holds 80 characters: FURNSH cuts a longer
+    // name of KERNELS_TO_LOAD there and does not load the kernel, as under the temporary folder of macOS. The name is written
+    // in pieces of at most 79 characters, each but the last ended by '+', which FURNSH joins to the next one (measured with
+    // CSPICE N0067)
+    private static FileInfo WriteMetaKernel(FileInfo metaKernel, string kernel)
+    {
+        var pieces = kernel.Chunk(79).Select(x => new string(x)).ToArray();
+        var values = string.Join("\n", pieces.Select((x, i) => i < pieces.Length - 1 ? $"'{x}+'" : $"'{x}'"));
+        metaKernel.Directory!.Create();
+        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = (\n{values}\n)\n\\begintext\n");
+        return metaKernel;
+    }
+
     // The rotation angle of the frame from ICRF, in degrees (the sign of a quaternion is free); throws once SPICE no longer
     // knows the frame
     internal static double RotationAngleDeg(string frameName)
@@ -128,10 +141,13 @@ public class KernelRegistryTests : IDisposable
     [Fact]
     public void LoadKernels_OfAFolderWhosePathContainsALoadedPath_LoadsIt()
     {
-        // Arrange: <root>/k, and <root>/far/<root without its root>/k, whose path contains the first one
+        // Arrange: <root>/k, and <root>/far/<root without its root>/k, whose path contains the first one. On Windows the colon
+        // of a drive is in no component, so a full path holds another one only at its start: there the second path contains
+        // the first one without its drive
         var first = new DirectoryInfo(Path.Combine(_root.FullName, "k"));
-        var far = new DirectoryInfo(Path.Combine(_root.FullName, "far", Path.GetRelativePath(Path.GetPathRoot(first.FullName)!, first.FullName)));
-        Assert.Contains(first.FullName, far.FullName);
+        var relative = Path.GetRelativePath(Path.GetPathRoot(first.FullName)!, first.FullName);
+        var far = new DirectoryInfo(Path.Combine(_root.FullName, "far", relative));
+        Assert.Contains(OperatingSystem.IsWindows() ? Path.DirectorySeparatorChar + relative : first.FullName, far.FullName);
         WriteFrameKernel(first, "a.tf", 1999905, "IOA_F02_FAR_A", 90.0);
         WriteFrameKernel(far, "b.tf", 1999906, "IOA_F02_FAR_B", 45.0);
 
@@ -344,10 +360,7 @@ public class KernelRegistryTests : IDisposable
         var binary = new FileInfo(Path.Combine(_root.FullName, "Binary", "y.bsp"));
         binary.Directory!.Create();
         File.Copy("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk", binary.FullName);
-        Assert.True(binary.FullName.Length <= 78, binary.FullName);
-        var metaKernel = new FileInfo(Path.Combine(_root.FullName, "Meta", "m.tm"));
-        metaKernel.Directory!.Create();
-        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( '{binary.FullName}' )\n\\begintext\n");
+        var metaKernel = WriteMetaKernel(new FileInfo(Path.Combine(_root.FullName, "Meta", "m.tm")), binary.FullName);
         SpiceAPI.Instance.LoadKernels(gone);
         SpiceAPI.Instance.LoadKernels(after);
         SpiceAPI.Instance.LoadKernels(metaKernel);
@@ -399,10 +412,7 @@ public class KernelRegistryTests : IDisposable
         // Arrange: a meta-kernel names a frame kernel of another folder, which no entry holds
         var frames = new DirectoryInfo(Path.Combine(_root.FullName, "Frames"));
         var kernel = WriteFrameKernel(frames, "a.tf", 1999919, "IOA_F02_META_A", 90.0);
-        Assert.True(kernel.FullName.Length <= 78, kernel.FullName);
-        var metaKernel = new FileInfo(Path.Combine(_root.FullName, "Meta", "m.tm"));
-        metaKernel.Directory!.Create();
-        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( '{kernel.FullName}' )\n\\begintext\n");
+        var metaKernel = WriteMetaKernel(new FileInfo(Path.Combine(_root.FullName, "Meta", "m.tm")), kernel.FullName);
         SpiceAPI.Instance.LoadKernels(metaKernel);
         Assert.Equal(90.0, RotationAngleDeg("IOA_F02_META_A"), 12);
 
@@ -419,9 +429,7 @@ public class KernelRegistryTests : IDisposable
     {
         // Arrange: a frame kernel loaded by a meta-kernel, which no entry holds, and a text kernel deleted after its load
         var kernel = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "Frames")), "a.tf", 1999920, "IOA_F02_META_B", 90.0);
-        var metaKernel = new FileInfo(Path.Combine(_root.FullName, "Meta", "m.tm"));
-        metaKernel.Directory!.Create();
-        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( '{kernel.FullName}' )\n\\begintext\n");
+        var metaKernel = WriteMetaKernel(new FileInfo(Path.Combine(_root.FullName, "Meta", "m.tm")), kernel.FullName);
         var gone = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "Deleted")), "b.tf", 1999921, "IOA_F02_META_C", 45.0);
         SpiceAPI.Instance.LoadKernels(metaKernel);
         SpiceAPI.Instance.LoadKernels(gone);
