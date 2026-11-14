@@ -32,7 +32,7 @@ namespace IO.Astrodynamics.Maneuver
         /// </summary>
         public override double ComputeEventValue(StateVector localState)
         {
-            var targetH = TargetOrbit.SpecificAngularMomentum().Normalize();
+            var targetH = TargetOrbit.SpecificAngularMomentum().NormalizeOrZero();
             double g = localState.Position * targetH;
 
             // On first evaluation, determine which node is closer and lock the direction
@@ -72,7 +72,7 @@ namespace IO.Astrodynamics.Maneuver
         {
             if (IsAscendingNode == null)
             {
-                var targetH = TargetOrbit.SpecificAngularMomentum().Normalize();
+                var targetH = TargetOrbit.SpecificAngularMomentum().NormalizeOrZero();
                 double g = localState.Position * targetH;
                 double dgdt = localState.Velocity * targetH;
                 if (System.Math.Abs(g) < NodeThreshold * localState.Position.Magnitude() && g * dgdt > 0.0)
@@ -96,7 +96,7 @@ namespace IO.Astrodynamics.Maneuver
         protected override Vector3 Execute(StateVector stateVector)
         {
             // Determine ascending node direction from angular momentum cross product
-            var an = TargetOrbit.SpecificAngularMomentum().Cross(stateVector.SpecificAngularMomentum()).Normalize();
+            var an = TargetOrbit.SpecificAngularMomentum().Cross(stateVector.SpecificAngularMomentum()).NormalizeOrZero();
             if (IsAscendingNode is null)
             {
                 throw new InvalidOperationException("Maneuver point undefined");
@@ -124,10 +124,10 @@ namespace IO.Astrodynamics.Maneuver
             var deltaV = 2.0 * projectedVector.Magnitude() * System.Math.Sin(RelativeInclination * 0.5);
 
             //Compute the quaternion
-            var q = new Quaternion(pos.Normalize(), rotationAngle);
+            var q = new Quaternion(pos.NormalizeOrZero(), rotationAngle);
 
             //Rotate velocity vector
-            var rotateVecor = projectedVector.Normalize().Rotate(q);
+            var rotateVecor = projectedVector.NormalizeOrZero().Rotate(q);
 
             //Compute delta V vector
             return rotateVecor * deltaV;

@@ -129,7 +129,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed.</exception>
+        /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed, or when a body
+        /// axis has a magnitude of 0 (the exception names it, #680).</exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
             double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
             Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
@@ -151,9 +152,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
             SolarRadiationCoeff = solarRadiationCoeff;
             HardBodyRadius = hardBodyRadius;
 
-            BodyFront = bodyFront?.Normalize() ?? Vector3.VectorY;
-            BodyRight = bodyRight?.Normalize() ?? Vector3.VectorX;
-            BodyUp = bodyUp?.Normalize() ?? Vector3.VectorZ;
+            BodyFront = BodyAxis(bodyFront, Vector3.VectorY, nameof(bodyFront));
+            BodyRight = BodyAxis(bodyRight, Vector3.VectorX, nameof(bodyRight));
+            BodyUp = BodyAxis(bodyUp, Vector3.VectorZ, nameof(bodyUp));
 
             if (bodyFront.HasValue || bodyRight.HasValue || bodyUp.HasValue)
             {
@@ -203,6 +204,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
             BodyFront = Vector3.VectorY;
             BodyRight = Vector3.VectorX;
             BodyUp = Vector3.VectorZ;
+        }
+
+        // The unit vector of a given body axis, or the default; an axis of magnitude 0 has no direction (#680: zero axes were
+        // accepted when the dot products of ValidateBodyAxes all vanished)
+        private static Vector3 BodyAxis(Vector3? axis, Vector3 defaultAxis, string paramName)
+        {
+            if (!axis.HasValue)
+            {
+                return defaultAxis;
+            }
+
+            if (axis.Value.Magnitude() == 0.0)
+            {
+                throw new ArgumentException("A body axis must have a non-zero magnitude.", paramName);
+            }
+
+            return axis.Value.NormalizeOrZero();
         }
 
         private void ValidateBodyAxes()

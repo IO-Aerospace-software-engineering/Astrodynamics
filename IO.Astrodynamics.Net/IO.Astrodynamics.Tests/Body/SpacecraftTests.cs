@@ -465,6 +465,37 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.True(System.Math.Abs(spc.BodyUp.Magnitude() - 1.0) < 1e-10);
         }
 
+        // #680: an axis of magnitude 0 has no direction; (Y, 0, 0) and (0, 0, 0) were accepted with zero axes (every dot
+        // product of the checks vanishes), a single zero axis threw without naming it
+        private static Vector3? Axis(string axis) => axis switch
+        {
+            "X" => Vector3.VectorX,
+            "Y" => Vector3.VectorY,
+            "Z" => Vector3.VectorZ,
+            "0" => Vector3.Zero,
+            "underflow" => new Vector3(1e-170, 0.0, 0.0),
+            _ => null
+        };
+
+        [Theory]
+        [InlineData("0", "X", "Z", "bodyFront")]
+        [InlineData("Y", "0", "Z", "bodyRight")]
+        [InlineData("Y", "X", "0", "bodyUp")]
+        [InlineData("Y", "0", "0", "bodyRight")]
+        [InlineData("0", "0", "0", "bodyFront")]
+        [InlineData("0", null, null, "bodyFront")]
+        [InlineData(null, null, "0", "bodyUp")]
+        [InlineData("underflow", "X", "Z", "bodyFront")]
+        public void ZeroBodyAxis_ThrowsArgumentException(string front, string right, string up, string parameter)
+        {
+            Clock clk = new Clock("My clock", 256);
+            var exception = Assert.Throws<ArgumentException>(() => new Spacecraft(-1007, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
+                bodyFront: Axis(front), bodyRight: Axis(right), bodyUp: Axis(up)));
+            Assert.Equal(parameter, exception.ParamName);
+        }
+
         [Fact]
         public void CustomBodyAxes_PartialSpecification_ThrowsWhenInvalid()
         {

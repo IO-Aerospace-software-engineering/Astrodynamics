@@ -576,7 +576,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                               fromPosition.ToStateVector().Position;
         var target2Position = this.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
                               fromPosition.ToStateVector().Position;
-        return target1Position.Normalize().Angle(target2Position.Normalize());
+        return target1Position.NormalizeOrZero().Angle(target2Position.NormalizeOrZero());
     }
 
 
@@ -1039,7 +1039,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 evaluateCoordinates = date =>
                 {
                     var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                    var equatorial = stateVector.ToEquatorial();
+                    // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
+                    var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
                     return coordinate switch
                     {
                         Coordinate.Declination => equatorial.Declination,

@@ -150,10 +150,10 @@ public class InitialOrbitDetermination
         if (observerPositions.Length != 3 || apparentDirections.Length != 3 || observationTimes.Length != 3)
             throw new ArgumentException("Exactly 3 observations are required");
 
-        var sightLines = apparentDirections.Select(dir => dir.Normalize()).ToList();
+        var sightLines = apparentDirections.Select(dir => dir.NormalizeOrZero()).ToList();
 
         // geometrics quality
-        var normal = sightLines[0].Cross(sightLines[1]).Normalize();
+        var normal = sightLines[0].Cross(sightLines[1]).NormalizeOrZero();
         var coplanarity = 1 - System.Math.Abs(normal * sightLines[2]);
 
         var angle1 = System.Math.Acos(sightLines[0] * sightLines[1]);
@@ -178,7 +178,7 @@ public class InitialOrbitDetermination
         var centerOfMotionQuality = 0.0;
         for (int i = 0; i < 3; i++)
         {
-            var observerDirection = observerPositions[i].Normalize();
+            var observerDirection = observerPositions[i].NormalizeOrZero();
             var angle = System.Math.Abs(sightLines[i] * observerDirection);
             const double optimalAngle = 0.25;
             var normalizedDistance = System.Math.Abs(angle - optimalAngle);

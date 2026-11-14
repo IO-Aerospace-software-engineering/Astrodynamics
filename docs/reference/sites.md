@@ -115,6 +115,10 @@ between the `pck00011` ellipsoid and the WGS84 spheroid of `earth_topo_201023.tf
 | `Declination` | Dec (rad) |
 | `Distance` | Distance from observer (m) |
 
+`ToEquatorial()` gives the right ascension and declination in ICRF, whatever the frame of the state (#680). The
+coordinate searches of `CoordinateSystem.RaDec` take them in their search frame instead, as CSPICE `gfposc`: the
+declination in the site's frame is the elevation.
+
 ## See Also
 
 - [Geometry & Visibility](../tutorials/geometry-and-visibility.md)

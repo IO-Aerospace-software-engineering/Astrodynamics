@@ -241,8 +241,8 @@ Represents a precise instant in time with time frame awareness.
 | `ToJulianDate()` | Get Julian Date |
 | `TimeSpanFromJ2000()` | Get TimeSpan from J2000 epoch |
 | `Add(TimeSpan span)` | Add duration |
-| `AddDays(double days)` | Add days |
-| `AddHours(double hours)` | Add hours |
+| `AddDays(double days)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddHours(double hours)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double seconds)` | Add seconds |
 
 ```csharp
@@ -412,7 +412,7 @@ Cartesian position and velocity state.
 | `ApogeeVelocity()` | Compute velocity at apogee (m/s) |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
 | `ToEquinoctial()` | Convert to equinoctial elements |
-| `ToEquatorial()` | Convert to equatorial coordinates |
+| `ToEquatorial()` | Right ascension and declination in ICRF, whatever the frame of the state (rotated at its epoch, #680), and the distance |
 | `ToFrame(Frame frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
@@ -1217,7 +1217,11 @@ Planetocentric coordinates.
 
 #### Equatorial
 
-Right ascension and declination.
+Right ascension and declination in ICRF: `new Equatorial(stateVector)` and `ToEquatorial()` rotate a state in another
+frame to ICRF at its epoch first (#680; before 11.0.0 they gave the angles of the position in the state's frame). For a
+light-time corrected state read in a frame centred on its target (the Moon in MOON_ME), SPICE takes that frame at the
+epoch minus the light time, while the rotation is taken at the state's epoch (3.05e-6 rad for the Moon): read such
+states in ICRF. The coordinate searches of `CoordinateSystem.RaDec` keep the angles in their search frame, as `gfposc`.
 
 | Property | Description |
 |----------|-------------|
@@ -1228,8 +1232,8 @@ Right ascension and declination.
 
 | Method | Description |
 |--------|-------------|
-| `ToCartesian()` | Convert to Cartesian vector |
-| `ToDirection()` | Get unit direction vector |
+| `ToCartesian()` | Convert to Cartesian vector, in the frame of the angles (ICRF for a state's, #680) |
+| `ToDirection()` | Get unit direction vector, in the frame of the angles (ICRF for a state's, #680) |
 
 ```csharp
 // Get equatorial coordinates
@@ -1943,7 +1947,7 @@ if (atm2.Details is NrlmsiseDetails details)
 |--------|-------------|
 | `Magnitude()` | Get vector length |
 | `MagnitudeSquared()` | Get squared length |
-| `Normalize()` | Get unit vector |
+| `Normalize()` | Get unit vector; `InvalidOperationException` for a magnitude of 0 (#680) |
 | `Cross(Vector3 other)` | Cross product |
 | `Angle(Vector3 other)` | Angle between vectors (rad) |
 | `Inverse()` | Negate vector |
@@ -1980,7 +1984,7 @@ Rotation representation.
 | Method | Description |
 |--------|-------------|
 | `Magnitude()` | Get magnitude |
-| `Normalize()` | Get unit quaternion |
+| `Normalize()` | Get unit quaternion; `InvalidOperationException` for a magnitude of 0 (#680) |
 | `Conjugate()` | Get conjugate |
 | `ToEuler()` | Convert to Euler angles |
 | `SLERP(Quaternion q, double t)` | Spherical linear interpolation |
@@ -2071,7 +2075,10 @@ memoryProvider.AddStateVector(399, epoch, earthState);
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the
 two entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
-states. A read outside the entries throws `ArgumentException`.
+states. Missing data throw `InvalidOperationException`, as on SPICE (#680): a state read for a target without entries or
+outside them, an orientation read outside a frame's entries, the information of an identifier never added; a frame
+never added throws `ArgumentException`. A body whose barycentre's data the provider lacks builds with
+`InitialOrbitalParameters` null and an infinite sphere of influence, as on SPICE.
 
 ---
 

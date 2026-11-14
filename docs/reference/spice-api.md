@@ -88,7 +88,16 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two
 entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
-states. A read outside the entries throws `ArgumentException`.
+states. Missing data throw `InvalidOperationException`, which the library's handlers of missing data catch (#680): a
+state read for a target without entries or outside them and an orientation read outside a frame's entries, the type
+SPICE throws for the same reads; the information of an identifier never added, the type the construction of a body the
+kernels do not name throws on SPICE (`SpiceDataProvider.GetCelestialBodyInfo` itself returns a record for such an
+identifier and throws `ArgumentException` for one that is not a celestial body's). A frame never added throws
+`ArgumentException`. A body whose
+barycentre's data the provider lacks therefore builds with `InitialOrbitalParameters` null and an infinite sphere of
+influence, as a body the kernels do not chain to its barycentre, and the orientation cache of a propagation keeps the
+points the entries do not reach unavailable. Before 11.0.0 these reads threw `ArgumentException` and
+`KeyNotFoundException`.
 
 ```csharp
 var memoryProvider = new MemoryDataProvider();

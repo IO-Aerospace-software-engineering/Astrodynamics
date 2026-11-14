@@ -30,7 +30,7 @@ namespace IO.Astrodynamics.Maneuver
         /// Apogee must be nearly aligned with ascending node (dot product > 0.9).
         /// </summary>
         public override bool CheckPreconditions(StateVector state) =>
-            System.Math.Abs(state.ApogeeVector().Normalize() * state.AscendingNodeVector().Normalize()) > 0.9;
+            System.Math.Abs(state.ApogeeVector().NormalizeOrZero() * state.AscendingNodeVector().NormalizeOrZero()) > 0.9;
 
         protected override Vector3 Execute(StateVector stateVector)
         {

@@ -118,7 +118,7 @@ namespace IO.Astrodynamics.Maneuver
             double dv = h2 / rp - (TargetOrbit ?? stateVector).SpecificAngularMomentum().Magnitude() / rp;
 
             ManeuverHoldDuration = TimeSpan.FromSeconds(t2 * RevolutionNumber * 0.9);
-            return stateVector.Velocity.Normalize() * dv;
+            return stateVector.Velocity.NormalizeOrZero() * dv;
         }
     }
 }

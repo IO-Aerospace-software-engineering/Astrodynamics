@@ -77,6 +77,15 @@ public class ColdStartTests
 
     private static void RunChild(string mode, string schedule, string hold = null)
     {
+        RunChild($"({mode}, {schedule})", hold == null ? [mode, schedule] : [mode, schedule, hold]);
+    }
+
+    /// <summary>
+    /// Runs the child process with the kernel directory and <paramref name="arguments"/>, requires it to end within
+    /// <see cref="ChildTimeout"/> and exit 0, and returns its standard output.
+    /// </summary>
+    internal static string RunChild(string description, params string[] arguments)
+    {
         // ColdStart/, or beside the tests when the build was given an output directory (-o), which the child is built into
         string child = Path.Combine(AppContext.BaseDirectory, "ColdStart", "IO.Astrodynamics.Tests.ColdStart.dll");
         if (!File.Exists(child))
@@ -95,11 +104,9 @@ public class ColdStartTests
         };
         start.ArgumentList.Add(child);
         start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"));
-        start.ArgumentList.Add(mode);
-        start.ArgumentList.Add(schedule);
-        if (hold != null)
+        foreach (var argument in arguments)
         {
-            start.ArgumentList.Add(hold);
+            start.ArgumentList.Add(argument);
         }
 
         using var process = Process.Start(start);
@@ -109,14 +116,15 @@ public class ColdStartTests
         {
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
-            Assert.Fail($"The child ({mode}, {schedule}) did not end within {ChildTimeout.TotalSeconds} s: a thread holding the " +
+            Assert.Fail($"The child {description} did not end within {ChildTimeout.TotalSeconds} s: a thread holding the " +
                         $"SpiceAPI lock waits for a type initializer that waits for the lock (#623). Output: {output.Result} {error.Result}");
         }
 
         // The parameterless wait also waits for the end of the redirected streams
         process.WaitForExit();
         Assert.True(process.ExitCode == 0,
-            $"The child ({mode}, {schedule}) exited {process.ExitCode}. Output: {output.Result} Error: {error.Result}");
+            $"The child {description} exited {process.ExitCode}. Output: {output.Result} Error: {error.Result}");
+        return output.Result;
     }
 
     /// <summary>

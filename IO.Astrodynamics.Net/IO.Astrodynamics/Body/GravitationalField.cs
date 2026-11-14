@@ -21,7 +21,7 @@ public class GravitationalField
         CelestialItem centerOfMotion = stateVector.Observer as CelestialItem;
         var position = stateVector.Position;
 
-        return position.Normalize() * (-centerOfMotion.GM / System.Math.Pow(position.Magnitude(), 2.0));
+        return position.NormalizeOrZero() * (-centerOfMotion.GM / System.Math.Pow(position.Magnitude(), 2.0));
     }
 
     /// <summary>

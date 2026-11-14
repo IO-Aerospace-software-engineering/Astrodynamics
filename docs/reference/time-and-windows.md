@@ -25,10 +25,10 @@
 | Method | Description |
 |--------|-------------|
 | `Create(double secondsFromJ2000, ITimeFrame frame)` | Create from J2000 seconds in a given frame, to the nearest tick |
-| `Create(int year, int doy, double sec)` | Create from year, day-of-year, seconds-of-day, to the nearest tick |
+| `Create(int year, int doy, double sec)` | Create a UTC time from year (1 to 9999), day of year (1 to 365, or 366 in a Gregorian leap year) and seconds of day (finite, in [0, 86400)), to the nearest tick; `ArgumentOutOfRangeException` names an argument out of its range (#680) |
 | `CreateTDB(double secondsFromJ2000)` | Create TDB time from J2000 seconds, to the nearest tick |
 | `CreateUTC(double secondsFromJ2000)` | Create UTC time from J2000 seconds, to the nearest tick |
-| `CreateFromJD(double julianDate, ITimeFrame frame)` | Create from Julian Date |
+| `CreateFromJD(double julianDate, ITimeFrame frame)` | Create from Julian Date; a non-finite date throws `ArgumentOutOfRangeException` (#680) |
 
 A span of seconds becomes the nearest tick (100 ns) of the exact value of its double, ties to even, in `Create`,
 `CreateTDB`, `CreateUTC`, `AddSeconds`, `AddMilliseconds`, `AddMicroseconds` and the TDB − TT offset of the TDB
@@ -56,7 +56,8 @@ What a double can hold limits both directions:
   first tick inside: one tick later at a start, one tick earlier at an end. The coverage of ITRF93 in the test kernels starts at
   −43135.816087188054 s, whose nearest tick is 11.9 ns before it (the truncation gave the tick 88.1 ns after it).
 
-Still truncating: `CreateFromJD`, `AddDays`, `AddHours`, `AddMinutes`, and every `TimeSpan.FromSeconds` of the library
+Still truncating: `CreateFromJD`, `AddDays`, `AddHours`, `AddMinutes` (which throw for a non-finite argument, #680: NaN
+returned the epoch, or J2000 for `CreateFromJD`), and every `TimeSpan.FromSeconds` of the library
 outside `Time`, for example `OrbitalParameters.Period()`, `CelestialBody.SideralRotationPeriod` and `TrueSolarDay`,
 `Launch`, the thrust windows of an impulse (`Tsiolkovski`), the hold of `PhasingManeuver`, the candidate, secant and
 subdivision epochs of the conjunction search and the period of the element conversions of `SpiceAPI`.
@@ -101,9 +102,9 @@ not enter the managed conversions.
 | `Add(TimeSpan)` | Add a duration |
 | `AddYears(int)` | Add calendar years |
 | `AddMonths(int)` | Add calendar months |
-| `AddDays(double)` | Add days |
-| `AddHours(double)` | Add hours |
-| `AddMinutes(double)` | Add minutes |
+| `AddDays(double)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddHours(double)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddMinutes(double)` | Add minutes; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double)` | Add seconds, to the nearest tick |
 | `AddMilliseconds(double)` | Add milliseconds, to the nearest tick |
 | `AddMicroseconds(double)` | Add microseconds, to the nearest tick |

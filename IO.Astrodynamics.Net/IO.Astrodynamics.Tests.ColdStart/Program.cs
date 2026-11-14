@@ -36,6 +36,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <item><c>lagrange-window</c>: <see cref="SpiceAPI.ReadEphemeris(Window, int, int, Frame, Aberration, TimeSpan)"/> from
 /// L1 over 60 s every 30 s; the same read.</item>
 /// </list>
+/// The mode <c>memory-provider</c> (#680) takes the kernel directory alone and has no thread nor schedule: the library on a
+/// <see cref="MemoryDataProvider"/> set as the global provider, see <see cref="MemoryProviderChild"/>.
 /// </para>
 /// <para>
 /// The schedules: <c>race</c> starts the two threads behind a <see cref="Barrier"/>, the reproduction of #623;
@@ -63,6 +65,12 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        // #680: the library on a MemoryDataProvider set as the global provider, which the test process never swaps (#631)
+        if (args.Length == 2 && args[1] == "memory-provider")
+        {
+            return MemoryProviderChild.Run(args[0]);
+        }
+
         if (args.Length < 3 || args[2] is not ("race" or "held") || (args[2] == "held") != (args.Length == 4))
         {
             return Usage();
@@ -176,7 +184,7 @@ internal static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held]");
+        Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], or <kernel directory> memory-provider");
         return 2;
     }
 

@@ -1,3 +1,5 @@
+using System;
+
 namespace IO.Astrodynamics.Math
 {
     public readonly record struct Vector3
@@ -28,7 +30,30 @@ namespace IO.Astrodynamics.Math
             return X * X + Y * Y + Z * Z;
         }
 
+        /// <summary>
+        /// The unit vector of this vector.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The magnitude is 0 (#680; the vector itself was returned before
+        /// 11.0.0): a zero vector, or one whose components are all too small for their squares to be represented (below about
+        /// 1.5e-162), since the magnitude is not scaled. A vector of magnitude 0 has no direction.</exception>
         public Vector3 Normalize()
+        {
+            var m = Magnitude();
+            if (m == 0)
+            {
+                throw new InvalidOperationException($"The vector {this} has a magnitude of 0 and no direction.");
+            }
+
+            return this / m;
+        }
+
+        /// <summary>
+        /// The unit vector of this vector, or this vector when its magnitude is 0: the library's own normalizations, whose
+        /// degenerate cases rely on the zero vector (a zero angular velocity rotates nothing, a coincident target is at
+        /// angle 0, the transfer plane of collinear positions has no z component), bit for bit the former
+        /// <see cref="Normalize"/> (#680).
+        /// </summary>
+        internal Vector3 NormalizeOrZero()
         {
             var m = Magnitude();
             if (m == 0)
@@ -70,7 +95,7 @@ namespace IO.Astrodynamics.Math
 
         public double Angle(in Vector3 vector, in Vector3 plane)
         {
-            return double.Atan2(Cross(vector) * plane.Normalize(), this * vector);
+            return double.Atan2(Cross(vector) * plane.NormalizeOrZero(), this * vector);
         }
 
         public Vector3 Inverse()
@@ -122,13 +147,13 @@ namespace IO.Astrodynamics.Math
 
                 Vector3 axis = x < y ? (x < z ? VectorX : VectorZ) : (y < z ? VectorY : VectorZ);
                 var vec = vector.Cross(axis);
-                return new Quaternion(0.0, vec.X, vec.Y, vec.Z).Normalize();
+                return new Quaternion(0.0, vec.X, vec.Y, vec.Z).NormalizeOrZero();
             }
 
             var v = this.Cross(vector);
             var w = dot + System.Math.Sqrt(mag1 * mag1 * mag2 * mag2);
 
-            return new Quaternion(w, v.X, v.Y, v.Z).Normalize();
+            return new Quaternion(w, v.X, v.Y, v.Z).NormalizeOrZero();
         }
 
         public Vector3 Rotate(in Quaternion quaternion)

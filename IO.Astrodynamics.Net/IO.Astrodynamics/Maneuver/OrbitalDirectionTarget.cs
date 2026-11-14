@@ -33,10 +33,10 @@ public sealed class OrbitalDirectionTarget : IAttitudeTarget
 
         return Direction switch
         {
-            OrbitalDirection.Prograde => observerState.Velocity.Normalize(),
-            OrbitalDirection.Retrograde => observerState.Velocity.Inverse().Normalize(),
-            OrbitalDirection.Nadir => observerState.Position.Inverse().Normalize(),
-            OrbitalDirection.Zenith => observerState.Position.Normalize(),
+            OrbitalDirection.Prograde => observerState.Velocity.NormalizeOrZero(),
+            OrbitalDirection.Retrograde => observerState.Velocity.Inverse().NormalizeOrZero(),
+            OrbitalDirection.Nadir => observerState.Position.Inverse().NormalizeOrZero(),
+            OrbitalDirection.Zenith => observerState.Position.NormalizeOrZero(),
             OrbitalDirection.Normal => NormalDirection(observerState),
             OrbitalDirection.AntiNormal => NormalDirection(observerState).Inverse(),
             _ => throw new ArgumentOutOfRangeException(nameof(Direction), Direction, "Unknown orbital direction.")
@@ -53,6 +53,6 @@ public sealed class OrbitalDirectionTarget : IAttitudeTarget
                 "The orbit is degenerate (rectilinear trajectory).");
         }
 
-        return normal.Normalize();
+        return normal.NormalizeOrZero();
     }
 }

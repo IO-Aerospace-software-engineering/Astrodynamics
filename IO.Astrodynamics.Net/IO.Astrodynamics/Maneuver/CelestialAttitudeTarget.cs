@@ -45,6 +45,6 @@ public class CelestialAttitudeTarget : IAttitudeTarget
         if (observerState == null) throw new ArgumentNullException(nameof(observerState));
 
         var ephemeris = Target.GetEphemeris(observerState.Epoch, observerState.Observer, observerState.Frame, Aberration);
-        return (ephemeris.ToStateVector().Position - observerState.Position).Normalize();
+        return (ephemeris.ToStateVector().Position - observerState.Position).NormalizeOrZero();
     }
 }

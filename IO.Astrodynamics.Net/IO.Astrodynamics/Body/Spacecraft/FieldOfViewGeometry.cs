@@ -52,8 +52,8 @@ internal static class FieldOfViewGeometry
     /// <summary>The axes of a field of view from its boresight and reference vector, in the same frame.</summary>
     internal static FieldOfViewAxes Axes(in Vector3 boresight, in Vector3 refVector)
     {
-        var b = boresight.Normalize();
-        var b1 = (refVector - b * (refVector * b)).Normalize();
+        var b = boresight.NormalizeOrZero();
+        var b1 = (refVector - b * (refVector * b)).NormalizeOrZero();
         return new FieldOfViewAxes(b, b1, b.Cross(b1));
     }
 

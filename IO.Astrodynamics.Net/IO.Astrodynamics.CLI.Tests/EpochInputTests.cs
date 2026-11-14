@@ -76,6 +76,17 @@ public class EpochInputTests
         Assert.Equal($"{7305 * 86400.0}{Environment.NewLine}", SecondsFromJ2000InTdb("2458850.0 JD"));
     }
 
+    // #680: NaN is not a Julian date; CreateFromJD read it as 0 days from J2000, and the command ran at J2000
+    [Theory]
+    [InlineData("NaN JD")]
+    [InlineData("NaN JD UTC")]
+    [InlineData("nan jd tdb")]
+    public void NaNJulianDate_IsRejected(string epoch)
+    {
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => SecondsFromJ2000InTdb(epoch));
+        Assert.Equal("julianDate", exception.ParamName);
+    }
+
     private static string SecondsFromJ2000InTdb(string epoch)
     {
         using (Configuration.Lock())

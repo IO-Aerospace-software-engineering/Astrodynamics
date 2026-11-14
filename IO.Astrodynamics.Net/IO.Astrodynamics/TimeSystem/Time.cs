@@ -119,19 +119,47 @@ public readonly record struct Time : IComparable<Time>, IComparable
         return new Time(DateTime.AddMonths(months), Frame);
     }
 
+    /// <summary>
+    /// This time plus <paramref name="days"/>, by <see cref="System.DateTime.AddDays"/>, which truncates to the tick (#637).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="days"/> is not finite (#680: NaN returned this time
+    /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddDays(double days)
     {
-        return new Time(DateTime.AddDays(days), Frame);
+        return new Time(DateTime.AddDays(Finite(days, nameof(days))), Frame);
     }
 
+    /// <summary>
+    /// This time plus <paramref name="hours"/>, by <see cref="System.DateTime.AddHours"/>, which truncates to the tick (#637).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="hours"/> is not finite (#680: NaN returned this time
+    /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddHours(double hours)
     {
-        return new Time(DateTime.AddHours(hours), Frame);
+        return new Time(DateTime.AddHours(Finite(hours, nameof(hours))), Frame);
     }
 
+    /// <summary>
+    /// This time plus <paramref name="minutes"/>, by <see cref="System.DateTime.AddMinutes"/>, which truncates to the tick
+    /// (#637).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minutes"/> is not finite (#680: NaN returned this time
+    /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public Time AddMinutes(double minutes)
     {
-        return new Time(DateTime.AddMinutes(minutes), Frame);
+        return new Time(DateTime.AddMinutes(Finite(minutes, nameof(minutes))), Frame);
+    }
+
+    // A non-finite span has no instant (#680): DateTime's range check is false for NaN, which it converts to 0 ticks, and
+    // names its own parameter for the infinities
+    private static double Finite(double value, string paramName)
+    {
+        if (!double.IsFinite(value))
+        {
+            throw new ArgumentOutOfRangeException(paramName, value, "The span is not a finite number.");
+        }
+
+        return value;
     }
 
     /// <summary>
@@ -328,15 +356,37 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// <summary>
     /// Create a UTC time from year, day of year, and seconds of day, to the nearest tick (100 ns), ties to even (#625)
     /// </summary>
-    /// <param name="year"></param>
-    /// <param name="doy"></param>
-    /// <param name="sec"></param>
-    /// <returns></returns>
+    /// <remarks>
+    /// The seconds are those of a day without leap second; a value below 86400 whose nearest tick is 86400 s is the next
+    /// day's midnight, the nearest instant, except on 9999-12-31, whose next midnight no <see cref="DateTime"/> holds: there
+    /// seconds above 86399.99999995, whose nearest tick is 86400 s, throw naming <paramref name="sec"/>. Before 11.0.0
+    /// nothing was checked (#680): year 0 was read as 2000, and a day or seconds outside their range rolled into the
+    /// neighbouring day or year.
+    /// </remarks>
+    /// <param name="year">The year, from 1 to 9999.</param>
+    /// <param name="doy">The day of the year, from 1 to 365, or 366 in a leap year of the Gregorian calendar.</param>
+    /// <param name="sec">The seconds of the day, finite, in [0, 86400).</param>
+    /// <returns>The UTC time.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">An argument is outside its range; the exception names it.</exception>
     public static Time Create(int year, int doy, double sec)
     {
-        var baseDate = new DateTime(year == 0 ? 2000 : year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        var date = baseDate.AddDays(doy - 1).AddTicks(SecondsToTicks(sec));
-        return new Time(date, TimeFrame.UTCFrame);
+        ArgumentOutOfRangeException.ThrowIfLessThan(year, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(year, 9999);
+        ArgumentOutOfRangeException.ThrowIfLessThan(doy, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(doy, DateTime.IsLeapYear(year) ? 366 : 365);
+        if (!(sec >= 0.0 && sec < 86400.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(sec), sec, "The seconds of a day are finite, in [0, 86400).");
+        }
+
+        var day = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(doy - 1);
+        long ticks = SecondsToTicks(sec);
+        if (ticks > DateTime.MaxValue.Ticks - day.Ticks)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sec), sec, "The nearest tick of the seconds is past 9999-12-31T23:59:59.9999999.");
+        }
+
+        return new Time(day.AddTicks(ticks), TimeFrame.UTCFrame);
     }
 
     /// <summary>
@@ -388,9 +438,15 @@ public readonly record struct Time : IComparable<Time>, IComparable
         return DaysFromJ2000() / 36525.0;
     }
 
+    /// <summary>
+    /// The time of <paramref name="julianDate"/> in <paramref name="frame"/>, by <see cref="System.DateTime.AddDays"/> from
+    /// J2000, which truncates to the tick (#637).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="julianDate"/> is not finite (#680: NaN gave J2000
+    /// before 11.0.0), or the result is outside the range of <see cref="System.DateTime"/>.</exception>
     public static Time CreateFromJD(double julianDate, ITimeFrame frame)
     {
-        var sinceEpoch = julianDate - JULIAN_J2000;
+        var sinceEpoch = Finite(julianDate, nameof(julianDate)) - JULIAN_J2000;
         var date = J2000.AddDays(sinceEpoch);
         if (frame is UTCTimeFrame)
         {
