@@ -106,7 +106,10 @@ Atmosphere 1976 with `-a`); its centre of motion must be the Earth (399).
 
 A TLE spacecraft reads its stored states after a numerical propagation by any path (`GetEphemeris`, `WriteEphemeris`,
 the window searches, the conjunction analysis with the check of #527, the avoidance options on its force model), and
-SGP4 otherwise: unpropagated, or sampled by `TLEPropagator`, which adds its states without changing the rule.
+SGP4 otherwise: unpropagated, or sampled by `TLEPropagator`, which adds its states without changing the rule. One read
+of a sampled spacecraft is not SGP4 at the instant: `GetEphemeris` from its Earth without aberration interpolates the
+samples of `TLEPropagator`, as before (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s); its
+geometric state, and the reads from any other body, are SGP4.
 `Spacecraft.ToOpm` writes the SGP4 state (#658). For SGP4 itself, use `TLEPropagator` or `tle.ToStateVector(t)`.
 
 ## See Also

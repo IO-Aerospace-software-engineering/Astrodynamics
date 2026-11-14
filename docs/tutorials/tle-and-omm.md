@@ -102,7 +102,8 @@ Console.WriteLine($"Numerical - SGP4 after 6 h: {(end.Position - sgp4AtEnd.Posit
 ```
 
 The solution and the stored states are in ICRF. Once propagated numerically, the spacecraft reads its stored states;
-unpropagated, or sampled by `TLEPropagator`, it reads SGP4. See
+unpropagated, it reads SGP4; sampled by `TLEPropagator`, it reads SGP4 too, except `GetEphemeris` from its Earth
+without aberration, which interpolates the samples (under a millimetre for the ISS at 60 s). See
 [Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle).
 
 ## Creating a TLE from a State Vector

@@ -158,7 +158,10 @@ across the jump:
 - **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, the builder and
   a `CentralBodyPropagator` built directly included (which leave `IsPropagated` false), and SGP4 otherwise: unpropagated,
   or sampled by `TLEPropagator`, whose `AddPropagatedStates` does not change the rule (#675; before 11.0.0 it read SGP4
-  whatever its stored states, and no numerical propagation of a TLE ran).
+  whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
+  `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
+  without aberration reads them directly, whatever the initial orbit, so after `TLEPropagator` it interpolates its
+  samples (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s), as before 11.0.0.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
 41651463194, 2026-11-03, and run 41689602272 for the velocities in SSB mode against the anchored reference; the
