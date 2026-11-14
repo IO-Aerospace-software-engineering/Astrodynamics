@@ -131,7 +131,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="bodyFront">Instance body front axis (default: +Y). Must be orthogonal to bodyRight and bodyUp.</param>
         /// <param name="bodyRight">Instance body right axis (default: +X). Must be orthogonal to bodyFront and bodyUp.</param>
         /// <param name="bodyUp">Instance body up axis (default: +Z). Must be orthogonal to bodyFront and bodyRight.</param>
-        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
+        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
         /// (#676), or a mass, coefficient, area or radius is out of its range.</exception>
@@ -150,7 +150,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             ArgumentOutOfRangeException.ThrowIfNegative(dragCoeff);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sectionalArea);
             ArgumentOutOfRangeException.ThrowIfNegative(solarRadiationCoeff);
-            ArgumentOutOfRangeException.ThrowIfNegative(hardBodyRadius);
+            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
             Clock.CheckAttachableTo(naifId, name);
@@ -193,13 +193,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="dragCoeff">Drag coefficient (Cd)</param>
         /// <param name="cosparId">COSPAR international designator</param>
         /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr)</param>
-        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
+        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
         /// <param name="centerOfMotion">The centre of the initial orbital parameters, the Earth when null; the Solar System
         /// barycentre, or any body the loaded kernels chain to, may be given.</param>
         /// <exception cref="InvalidOperationException">The loaded kernels give no state of the spacecraft relative to
         /// <paramref name="centerOfMotion"/> at <paramref name="epoch"/> (#454).</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
-        /// (#676).</exception>
+        /// (#676), or <paramref name="hardBodyRadius"/> is negative or not finite (#683).</exception>
         /// <exception cref="ArgumentException"><paramref name="clock"/> is attached to a spacecraft of another NAIF id
         /// (#676).</exception>
         /// <remarks>
@@ -215,6 +215,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             : base(naifId, name, mass, ReadKernelInitialState(naifId, name, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion, clock))
         {
             _isFromKernel = true;
+            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? new Clock(name + "_CLK", 256);
             Frame = new SpacecraftFrame(this);
@@ -246,6 +247,17 @@ namespace IO.Astrodynamics.Body.Spacecraft
             {
                 throw new ArgumentOutOfRangeException(nameof(naifId), naifId,
                     $"A spacecraft NAIF id is in [{MinimumNaifId}, -1]: its frame id, NaifId × 1000, must be an int.");
+            }
+        }
+
+        // A hard-body radius is finite and not negative, 0 for none (#683: the conjunction analysis reads the radius of a
+        // secondary): the rule of the constructors and of the radius options of the conjunction analysis
+        internal static void ThrowIfInvalidHardBodyRadius(double hardBodyRadius, string paramName)
+        {
+            if (!double.IsFinite(hardBodyRadius) || hardBodyRadius < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(paramName, hardBodyRadius,
+                    "The hard-body radius must be finite and not negative.");
             }
         }
 
