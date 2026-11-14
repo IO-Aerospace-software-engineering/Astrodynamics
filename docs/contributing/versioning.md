@@ -1364,11 +1364,15 @@ release are listed under **Known limitations**.
   every path (`Screen`, `Analyze`, `AnalyzeAll`, both avoidance paths). `ToCdm` wrote object 2's `AREA_PC` as π·5².
   An option of −5 m gave 3 m, NaN or ∞ a null Pc without a flag, and both `Spacecraft` constructors accepted an infinite
   radius (the kernel-backed one any). The radius of the secondary is now its own when it gives one, the option otherwise,
-  5 m when neither does (Changed below). `Analyze_SecondaryHardBodyRadius_DesignedEncounters_MatchExactPc` splits the
+  5 m when neither does (Changed below); the option of `Screen` is a fallback over its catalogue, never in conflict with
+  a candidate's own radius. `Analyze_SecondaryHardBodyRadius_DesignedEncounters_MatchExactPc` splits the
   radius of the seven designed encounters of `tools/collision_probability` between the two spacecraft (0.6 R and 0.4 R,
   no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.2e-10 (bound 6.3e-10); a
   theory checks the five rows of the rule on every entry point and both paths, with a spacecraft and a body as
-  secondary, and `AREA_PC` is π·3² for a secondary of 3 m.
+  secondary; `Screen_MixedCatalogue_EachCandidateTakesItsOwnRadiusOrTheFallback` screens spacecraft of 2, 6 and 0 m and
+  the Moon with a fallback of 3 m and with none (two-body and RK7(8)): each combined radius is 8 m plus the candidate's
+  own or the fallback, each Pc that of `Analyze` on the pair, and `EvaluateAvoidance` runs on each screened encounter
+  with the same radius; and `AREA_PC` is π·3² for a secondary of 3 m.
 - **`EvaluateAvoidance` reset the settings of the encounter** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)). Both avoidance paths re-analyzed each option with
   new `ConjunctionAnalysisOptions` built from the four values `AvoidanceSearchOptions` mirrors, every other setting at
   its default: an encounter analyzed with a stale threshold of a day, a secondary radius of 0 m and no low-speed
@@ -1741,15 +1745,20 @@ release are listed under **Known limitations**.
   `ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters`, `ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters`
   and `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters` are `double?`, null by default (5.0 before). The radius of
   the secondary is the `HardBodyRadius` of a secondary spacecraft when it is above 0, the option when the secondary
-  gives none (a radius of 0, or not a spacecraft), 5 m when neither does; an option that differs from the radius of the
-  secondary throws `ArgumentException` naming the secondary and the option (on `Screen`, checked over every candidate
-  before the first analysis), and an option that is NaN, infinite or negative throws `ArgumentOutOfRangeException`.
+  gives none (a radius of 0, or not a spacecraft), 5 m when neither does; an option of `Analyze`, `AnalyzeAll` or
+  `EvaluateAvoidance` that differs from the radius of the secondary throws `ArgumentException` naming the secondary and
+  the option, while `ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters` is a fallback: a candidate that gives a
+  radius keeps it whatever the option, so `Screen` never throws for a candidate's radius and screens a catalogue of
+  spacecraft with different radii (decided by S. Guillet, 2026-11-14), each analysis and the re-analysis of its avoidance
+  options carrying the candidate's resolved radius; an option that is NaN, infinite or negative throws
+  `ArgumentOutOfRangeException`.
   Both `Spacecraft` constructors throw `ArgumentOutOfRangeException` for a `hardBodyRadius` that is not finite or is
   negative, the kernel-backed one included. The combined radius and the Pc move for every secondary spacecraft with a
   radius under the default options (p + 5 m to p + s): `Screen`'s ranking, `EvaluateAvoidance`'s Pc and ranking, and
   the CDM's `COLLISION_PROBABILITY` and `AREA_PC` with them; secondaries of 0 m and other objects are bit for bit.
-  Migration: read the properties as `double?`; drop an option that restated or overrode the radius of the secondary
-  spacecraft (or give the same value), and set `HardBodyRadius` on the secondary instead; code compiled against
+  Migration: read the properties as `double?`; drop an option of `Analyze`, `AnalyzeAll` or `EvaluateAvoidance` that
+  restated or overrode the radius of the secondary spacecraft (or give the same value), and set `HardBodyRadius` on the
+  secondary instead (a screening fallback that overrode a candidate's radius now leaves it its own); code compiled against
   10.2.0-preview-1 must be recompiled.
 - **Breaking: the avoidance options inherit the settings of the encounter** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above).
   `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep` are `TimeSpan?`,

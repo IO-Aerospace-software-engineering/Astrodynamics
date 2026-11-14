@@ -125,11 +125,14 @@ public static class ConjunctionAssessment
     /// <returns>
     /// Ranked encounter cases ordered by decreasing collision probability and then by miss distance.
     /// </returns>
+    /// <remarks>
+    /// The hard-body radius of each candidate is its own, a candidate <see cref="Spacecraft"/> with a
+    /// <see cref="Spacecraft.HardBodyRadius"/> greater than 0, whatever <see cref="ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters"/>;
+    /// the option, or 5 m when it is null, for a candidate that gives none (a radius of 0, or not a spacecraft) (#683).
+    /// The analysis of each candidate, and the re-analysis of its avoidance options, carry that radius.
+    /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><see cref="ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters"/>
     /// is not finite or is negative.</exception>
-    /// <exception cref="ArgumentException"><see cref="ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters"/> differs
-    /// from the hard-body radius a candidate spacecraft gives (#683), checked over every candidate before the first
-    /// analysis.</exception>
     public static IReadOnlyList<EncounterCase> Screen(
         ProtectedSpacecraftProfile protectedAsset,
         IEnumerable<ILocalizable> candidates,
@@ -142,17 +145,14 @@ public static class ConjunctionAssessment
         options ??= new ScreeningOptions();
         ThrowIfInvalidHardBodyRadius(options.DefaultSecondaryHardBodyRadiusMeters, nameof(options.DefaultSecondaryHardBodyRadiusMeters));
 
-        // The radius of every candidate resolved before the first analysis, so that a conflict throws before any search
-        var kept = candidates
-            .Where(candidate => candidate != null && candidate.NaifId != protectedAsset.Spacecraft.NaifId)
-            .Select(candidate => (Candidate: candidate,
-                Radius: ResolveSecondaryHardBodyRadius(candidate, options.DefaultSecondaryHardBodyRadiusMeters,
-                    nameof(options.DefaultSecondaryHardBodyRadiusMeters), nameof(candidates))))
-            .ToArray();
-
         var rankedCases = new List<EncounterCase>();
-        foreach (var (candidate, radius) in kept)
+        foreach (var candidate in candidates.Where(candidate =>
+                     candidate != null && candidate.NaifId != protectedAsset.Spacecraft.NaifId))
         {
+            // The option is a fallback over a catalogue: the radius a candidate gives wins, and is the option of its
+            // analysis, so that the re-analysis of its avoidance options carries it too (decision of 2026-11-14 on #683)
+            double own = OwnHardBodyRadius(candidate);
+            double radius = own > 0.0 ? own : options.DefaultSecondaryHardBodyRadiusMeters ?? DefaultSecondaryHardBodyRadiusMeters;
             var encounter = Analyze(
                 protectedAsset,
                 candidate,
@@ -3039,7 +3039,7 @@ public static class ConjunctionAssessment
     internal static double ResolveSecondaryHardBodyRadius(ILocalizable secondary, double? option, string optionName,
         string paramName)
     {
-        double own = secondary is Spacecraft spacecraft ? spacecraft.HardBodyRadius : 0.0;
+        double own = OwnHardBodyRadius(secondary);
         if (own > 0.0)
         {
             if (option is { } given && given != own)
@@ -3055,6 +3055,10 @@ public static class ConjunctionAssessment
 
         return option ?? DefaultSecondaryHardBodyRadiusMeters;
     }
+
+    // The hard-body radius a secondary gives: that of a spacecraft, 0 (none) for any other object
+    private static double OwnHardBodyRadius(ILocalizable secondary) =>
+        secondary is Spacecraft spacecraft ? spacecraft.HardBodyRadius : 0.0;
 
     // The options of the re-analysis of the avoidance options: those of the encounter (the defaults for a case built by
     // hand), but for the values the avoidance options give (#683); the reads over the window and the non-linearity index

@@ -19,7 +19,7 @@ namespace IO.Astrodynamics.Tests.SSA;
 
 /// <summary>
 /// The input rules of the conjunction analysis (#683): the hard-body radius of the secondary (its own radius, the options
-/// as fallback, a conflict refused), the protected spacecraft refused as its own secondary, and a trajectory refused when
+/// as fallback, a conflict refused by the analysis and the avoidance, the screening's option a fallback only), the protected spacecraft refused as its own secondary, and a trajectory refused when
 /// it was propagated for another spacecraft.
 /// </summary>
 public partial class ConjunctionAssessmentTests
@@ -114,7 +114,9 @@ public partial class ConjunctionAssessmentTests
 
         double? given = option < 0.0 ? null : option;
         bool secondaryHasRadius = secondaryKind == "spacecraft" && secondaryRadius > 0.0;
-        bool conflict = secondaryHasRadius && given.HasValue && given.Value != secondaryRadius;
+        // The screening's option is a fallback: a candidate that gives a radius keeps it, whatever the option (decision of
+        // S. Guillet, 2026-11-14, on #683); the options of the analysis and of the avoidance name one secondary
+        bool conflict = entryPoint != "Screen" && secondaryHasRadius && given.HasValue && given.Value != secondaryRadius;
         double expected = ProtectedHardBodyRadius + (secondaryHasRadius ? secondaryRadius : given ?? FallbackSecondaryHardBodyRadius);
         var profile = new ProtectedSpacecraftProfile(protectedCraft);
         var analysisOptions = given is { } a ? new ConjunctionAnalysisOptions { SecondaryHardBodyRadiusMeters = a } : new ConjunctionAnalysisOptions();
@@ -160,16 +162,9 @@ public partial class ConjunctionAssessmentTests
         if (conflict)
         {
             var exception = Assert.Throws<ArgumentException>(() => act());
-            string expectedParameter = entryPoint switch
-            {
-                "Screen" => "candidates",
-                "AvoidanceTwoBody" or "AvoidancePropagated" => "options",
-                _ => "secondaryObject"
-            };
-            Assert.Equal(expectedParameter, exception.ParamName);
+            Assert.Equal(entryPoint.StartsWith("Avoidance") ? "options" : "secondaryObject", exception.ParamName);
             Assert.Contains(secondary.Name, exception.Message);
-            Assert.Contains(entryPoint == "Screen" ? "DefaultSecondaryHardBodyRadiusMeters" : "SecondaryHardBodyRadiusMeters",
-                exception.Message);
+            Assert.Contains("SecondaryHardBodyRadiusMeters", exception.Message);
             return;
         }
 
@@ -178,35 +173,93 @@ public partial class ConjunctionAssessmentTests
         Assert.All(encounters, e => Assert.Equal(expected, e.CollisionRisk.CombinedHardBodyRadiusMeters));
     }
 
-    [Fact]
-    public void Screen_RadiusConflictBehindAnotherCandidate_ThrowsBeforeTheFirstAnalysis()
+    public static IEnumerable<object[]> MixedCatalogueRows()
     {
-        // Arrange: two candidates propagated over the hour of the pair, the first without a radius of its own (the option
-        // gives it 2 m), the second of 3 m beside the option of 2 m; the window leaves the states, so that the analysis of
-        // the first candidate throws on its coverage
+        foreach (bool propagated in new[] { false, true })
+        {
+            yield return new object[] { 3.0, propagated };
+            yield return new object[] { OptionUnset, propagated };
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(MixedCatalogueRows))]
+    public void Screen_MixedCatalogue_EachCandidateTakesItsOwnRadiusOrTheFallback(double fallback, bool propagated)
+    {
+        // Arrange: a catalogue of two spacecraft of 2 m and 6 m, a spacecraft of 0 m (none) and the Moon (not a
+        // spacecraft), the spacecraft on the orbit of the secondary of the pair, two-body or propagated in RK7(8)
         var earth = CreateEarth();
         var (protectedStart, secondaryStart) = InputRulePair(earth);
         var protectedCraft = InputRuleSpacecraft(NextInputRuleId(), protectedStart, ProtectedHardBodyRadius);
-        var first = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 0.0);
-        var second = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 3.0);
-        PropagateRk78(protectedCraft, earth);
-        PropagateRk78(first, earth);
-        PropagateRk78(second, earth);
+        var small = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 2.0);
+        var large = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 6.0);
+        var none = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 0.0);
+        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        if (propagated)
+        {
+            foreach (var craft in new[] { protectedCraft, small, large, none })
+            {
+                PropagateRk78(craft, earth);
+            }
+        }
+
+        double? given = fallback < 0.0 ? null : fallback;
+        double radiusOfNone = given ?? FallbackSecondaryHardBodyRadius;
+        var catalogue = new (ILocalizable Candidate, double SecondaryRadius, bool OwnRadius)[]
+        {
+            (small, 2.0, true), (large, 6.0, true), (none, radiusOfNone, false), (moon, radiusOfNone, false)
+        };
         var profile = new ProtectedSpacecraftProfile(protectedCraft);
-        var options = new ScreeningOptions { DefaultSecondaryHardBodyRadiusMeters = 2.0, MaxMissDistanceMeters = double.MaxValue };
-        var firstAlone = Record.Exception(() =>
-            ConjunctionAssessment.Screen(profile, new ILocalizable[] { first }, InputRuleWindowPastTheStates, options));
-        Assert.NotNull(firstAlone);
-        Assert.False(firstAlone is ArgumentException { ParamName: "candidates" });
+        var screeningOptions = new ScreeningOptions
+        {
+            DefaultSecondaryHardBodyRadiusMeters = given,
+            MaxMissDistanceMeters = double.MaxValue
+        };
 
         // Act
-        var exception = Assert.Throws<ArgumentException>(() =>
-            ConjunctionAssessment.Screen(profile, new ILocalizable[] { first, second }, InputRuleWindowPastTheStates, options));
+        var screened = ConjunctionAssessment.Screen(profile, catalogue.Select(c => c.Candidate), InputRuleWindow,
+            screeningOptions);
 
-        // Assert: the radii of every candidate resolved before the first analysis (#683), the conflict named
-        Assert.Equal("candidates", exception.ParamName);
-        Assert.Contains($"{second.Name} (NAIF {second.NaifId})", exception.Message);
-        Assert.Contains("DefaultSecondaryHardBodyRadiusMeters", exception.Message);
+        // Assert: each candidate screened (before the decision of 2026-11-14 on #683, the explicit fallback of 3 m
+        // beside the candidates of 2 m and 6 m threw ArgumentException), with the radius it gives, or the fallback (5 m
+        // when null) when it gives none; its Pc that of Analyze on the pair with the options of the screening
+        Assert.Equal(catalogue.Length, screened.Count);
+        foreach (var (candidate, secondaryRadius, ownRadius) in catalogue)
+        {
+            var encounter = Assert.Single(screened, e => ReferenceEquals(e.SecondaryObject, candidate));
+            Assert.Equal(ProtectedHardBodyRadius + secondaryRadius, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
+            var analyzed = ConjunctionAssessment.Analyze(profile, candidate, InputRuleWindow, new ConjunctionAnalysisOptions
+            {
+                SampleStep = screeningOptions.SampleStep,
+                MaximumEventSearchStep = screeningOptions.MaximumEventSearchStep,
+                SecondaryHardBodyRadiusMeters = ownRadius ? null : secondaryRadius,
+                LowRelativeSpeedThresholdMetersPerSecond = screeningOptions.LowRelativeSpeedThresholdMetersPerSecond,
+                CovariancePropagation = null
+            });
+            Assert.Equal(analyzed.CollisionRisk.CombinedHardBodyRadiusMeters, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
+            Assert.Equal(analyzed.EncounterState.Epoch, encounter.EncounterState.Epoch);
+            Assert.Equal(analyzed.CollisionRisk.ProbabilityOfCollision, encounter.CollisionRisk.ProbabilityOfCollision);
+
+            // The avoidance re-analyzes each option with the radius the screening resolved for the candidate: no conflict
+            // with the radius the candidate gives
+            var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, InputRuleAvoidance);
+            if (candidate is Spacecraft)
+            {
+                Assert.Equal(6, avoidance.Count);
+            }
+
+            Assert.All(avoidance, o => Assert.Equal(ProtectedHardBodyRadius + secondaryRadius,
+                o.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters));
+        }
+
+        // A fallback not finite or negative still throws, though every spacecraft of the catalogue but one gives its own
+        foreach (double invalid in new[] { double.NaN, -1.0 })
+        {
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => ConjunctionAssessment.Screen(profile,
+                new ILocalizable[] { small, large }, InputRuleWindow,
+                screeningOptions with { DefaultSecondaryHardBodyRadiusMeters = invalid }));
+            Assert.Equal("DefaultSecondaryHardBodyRadiusMeters", exception.ParamName);
+        }
     }
 
     public static IEnumerable<object[]> InvalidRadiusRows()

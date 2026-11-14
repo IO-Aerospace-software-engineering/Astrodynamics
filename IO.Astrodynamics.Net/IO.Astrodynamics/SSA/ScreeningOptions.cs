@@ -36,10 +36,12 @@ public sealed record ScreeningOptions
     /// greater than 0 gives its own (#683). Default: null, 5 m for a candidate that gives none.
     /// </summary>
     /// <remarks>
-    /// The rule of <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/>, applied to every candidate
-    /// before the first analysis: a value that differs from the radius a candidate spacecraft gives throws
-    /// <see cref="ArgumentException"/> naming that candidate, and a value that is not finite or is negative throws
-    /// <see cref="ArgumentOutOfRangeException"/>.
+    /// A fallback over the catalogue: a candidate that gives a radius keeps it whatever this value, so a catalogue of
+    /// spacecraft with different radii is screened with one fallback for the others. A value that is not finite or is
+    /// negative throws <see cref="ArgumentOutOfRangeException"/> before the first analysis. The analysis of each candidate
+    /// carries its resolved radius as <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/>, and
+    /// <see cref="ConjunctionAssessment.EvaluateAvoidance"/> re-analyzes with it. Before 11.0.0 this value (5 m by
+    /// default) was used whatever the radius of the candidate.
     /// </remarks>
     public double? DefaultSecondaryHardBodyRadiusMeters { get; init; }
 

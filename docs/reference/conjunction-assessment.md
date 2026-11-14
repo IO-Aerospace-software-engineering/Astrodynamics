@@ -153,16 +153,24 @@ which `Screen` skips it ([#683](https://github.com/IO-Aerospace-software-enginee
 of 0 and a Pc of 0.815 before, or an empty list on two propagations).
 
 The **hard-body radius of the secondary** is resolved before any search, from the secondary and the option of the
-call (`ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters`, `ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters`
-for each candidate of `Screen`, `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters`):
+call (`ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters`, `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters`,
+each naming one secondary):
 
 | Secondary | Option | Radius of the secondary |
 |-----------|--------|-------------------------|
 | a `Spacecraft` with `HardBodyRadius` > 0 | null | its `HardBodyRadius` |
 | a `Spacecraft` with `HardBodyRadius` > 0 | the same value | that value |
-| a `Spacecraft` with `HardBodyRadius` > 0 | another value | `ArgumentException` naming the secondary and the option (`secondaryObject`, `candidates` for `Screen`, `options` for `EvaluateAvoidance`) |
+| a `Spacecraft` with `HardBodyRadius` > 0 | another value | `ArgumentException` naming the secondary and the option (`secondaryObject`, `options` for `EvaluateAvoidance`) |
 | a radius of 0, or not a `Spacecraft` | a value | that value |
 | a radius of 0, or not a `Spacecraft` | null | 5 m |
+
+`ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters` is a fallback over the catalogue of `Screen` (decided by
+S. Guillet, 2026-11-14, on [#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): a
+candidate `Spacecraft` with `HardBodyRadius` > 0 keeps its own radius whatever the option, and a candidate that gives
+none (a radius of 0, or not a `Spacecraft`) takes the option, or 5 m when it is null; no candidate throws for its radius,
+so a catalogue of spacecraft with different radii is screened with one fallback. The analysis of each candidate carries
+its resolved radius as its `SecondaryHardBodyRadiusMeters`, and `EvaluateAvoidance` re-analyzes a screened encounter
+with it (the table above with a null option: no conflict).
 
 An option that is NaN, infinite or negative throws `ArgumentOutOfRangeException` naming it. Before 11.0.0 the option,
 5 m by default, was used whatever the radius of the secondary
@@ -201,7 +209,7 @@ Packages the protected `Spacecraft` with maneuver constraints used by avoidance 
 | `MaximumEventSearchStep` | 60 s | Largest interval subdivided while refining the event detection |
 | `MaxMissDistanceMeters` | 25 000 m | Filter threshold for miss distance |
 | `MaxResults` | 25 | Maximum number of ranked results to return |
-| `DefaultSecondaryHardBodyRadiusMeters` | null | Hard-body radius of a candidate that gives none (5 m when null); a value that differs from the radius a candidate spacecraft gives throws, checked over every candidate before the first analysis (see the table above, [#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)) |
+| `DefaultSecondaryHardBodyRadiusMeters` | null | Hard-body radius of a candidate that gives none (5 m when null); a candidate spacecraft with a radius above 0 keeps its own whatever this value (a fallback, see above, [#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)) |
 | `LowRelativeSpeedThresholdMetersPerSecond` | 1 m/s | Relative speed below which an encounter is flagged as a low-velocity case |
 
 Results are ordered by descending collision probability, then by miss distance.
