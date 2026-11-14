@@ -31,9 +31,17 @@ public sealed record ScreeningOptions
     public int MaxResults { get; init; } = 25;
 
     /// <summary>
-    /// Gets the fallback hard-body radius applied to secondaries that do not expose one directly.
+    /// Gets the hard-body radius, in m, of the candidates that do not give one: a candidate
+    /// <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft"/> with a <see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft.HardBodyRadius"/>
+    /// greater than 0 gives its own (#683). Default: null, 5 m for a candidate that gives none.
     /// </summary>
-    public double DefaultSecondaryHardBodyRadiusMeters { get; init; } = 5.0;
+    /// <remarks>
+    /// The rule of <see cref="ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters"/>, applied to every candidate
+    /// before the first analysis: a value that differs from the radius a candidate spacecraft gives throws
+    /// <see cref="ArgumentException"/> naming that candidate, and a value that is not finite or is negative throws
+    /// <see cref="ArgumentOutOfRangeException"/>.
+    /// </remarks>
+    public double? DefaultSecondaryHardBodyRadiusMeters { get; init; }
 
     /// <summary>
     /// Gets the relative-speed threshold below which an encounter is flagged as a low-velocity case.

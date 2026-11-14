@@ -47,7 +47,7 @@ public class TLEPropagator : IPropagator
         Spacecraft.AddPropagatedStates(_svCache);
 
         // Build synthetic PropagationSolution from TLE states
-        var solution = new PropagationSolution();
+        var solution = new PropagationSolution { Owner = Spacecraft };
         var segment = new PropagationSegment(Window.StartDate, (int)_svCacheSize);
 
         for (int i = 0; i < _svCacheSize - 1; i++)

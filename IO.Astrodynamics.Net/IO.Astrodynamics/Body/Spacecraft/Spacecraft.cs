@@ -126,7 +126,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="bodyFront">Instance body front axis (default: +Y). Must be orthogonal to bodyRight and bodyUp.</param>
         /// <param name="bodyRight">Instance body right axis (default: +X). Must be orthogonal to bodyFront and bodyUp.</param>
         /// <param name="bodyUp">Instance body up axis (default: +Z). Must be orthogonal to bodyFront and bodyRight.</param>
-        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
+        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed.</exception>
@@ -140,7 +140,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             ArgumentOutOfRangeException.ThrowIfNegative(dragCoeff);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sectionalArea);
             ArgumentOutOfRangeException.ThrowIfNegative(solarRadiationCoeff);
-            ArgumentOutOfRangeException.ThrowIfNegative(hardBodyRadius);
+            ThrowIfInvalidHardBodyRadius(hardBodyRadius);
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
             Clock.AttachSpacecraft(this);
@@ -178,7 +178,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="dragCoeff">Drag coefficient (Cd)</param>
         /// <param name="cosparId">COSPAR international designator</param>
         /// <param name="solarRadiationCoeff">Solar radiation pressure coefficient (Cr)</param>
-        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment (default 0.0)</param>
+        /// <param name="hardBodyRadius">Hard-body radius in meters for conjunction assessment, finite and not negative (default 0.0, none): the radius of the spacecraft as a secondary object too (#683)</param>
         /// <param name="centerOfMotion">The centre of the initial orbital parameters, the Earth when null; the Solar System
         /// barycentre, or any body the loaded kernels chain to, may be given.</param>
         /// <exception cref="InvalidOperationException">The loaded kernels give no state of the spacecraft relative to
@@ -191,6 +191,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             : base(naifId, name, mass, ReadKernelInitialState(naifId, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion))
         {
             _isFromKernel = true;
+            ThrowIfInvalidHardBodyRadius(hardBodyRadius);
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? new Clock(name + "_CLK", 256);
             Clock.AttachSpacecraft(this);
@@ -203,6 +204,16 @@ namespace IO.Astrodynamics.Body.Spacecraft
             BodyFront = Vector3.VectorY;
             BodyRight = Vector3.VectorX;
             BodyUp = Vector3.VectorZ;
+        }
+
+        // A radius is finite and not negative, 0 for none (#683: the conjunction analysis reads the radius of a secondary)
+        private static void ThrowIfInvalidHardBodyRadius(double hardBodyRadius)
+        {
+            if (!double.IsFinite(hardBodyRadius) || hardBodyRadius < 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(hardBodyRadius), hardBodyRadius,
+                    "The hard-body radius must be finite and not negative.");
+            }
         }
 
         private void ValidateBodyAxes()

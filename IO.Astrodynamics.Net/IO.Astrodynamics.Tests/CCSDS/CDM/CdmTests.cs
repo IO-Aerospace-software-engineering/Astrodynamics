@@ -94,7 +94,8 @@ public class CdmTests
         Assert.Equal(ObjectType.Payload, secondarySegment.Metadata.ObjectType);
         Assert.Equal("IO.Astrodynamics", secondarySegment.Metadata.EphemerisName);
         Assert.Equal(CdmCovarianceMethod.Calculated, secondarySegment.Metadata.CovarianceMethod);
-        Assert.Equal(CdmManeuverable.Yes, secondarySegment.Metadata.Maneuverable);
+        // An engineless spacecraft states no maneuver capacity: N/A (#683; YES before)
+        Assert.Equal(CdmManeuverable.NotApplicable, secondarySegment.Metadata.Maneuverable);
         Assert.Equal("EARTH", secondarySegment.Metadata.OrbitCenter);
         Assert.Equal(CdmReferenceFrame.Gcrf, secondarySegment.Metadata.ReferenceFrame);
 
@@ -290,6 +291,81 @@ public class CdmTests
         Assert.Equal(encounter.EncounterState.MissDistanceMeters, cdm.RelativeMetadataData.MissDistanceMeters, 9);
         Assert.Equal(encounter.ProtectedAsset.Spacecraft.Name, cdm.Segments[0].Metadata!.ObjectName);
         Assert.Equal(encounter.SecondaryObject.Name, cdm.Segments[1].Metadata!.ObjectName);
+    }
+
+    // The pair of ToCdm_FromAnalyzeWorkflow_ProducesSchemaValidMessage, the secondary with a radius of 3 m, with an engine
+    // when asked
+    private static EncounterCase AnalyzeWorkflowEncounter(int naifId, bool secondaryEngine)
+    {
+        var earth = CreateEarth();
+        var protectedSpacecraft = CreateSpacecraft(naifId, "ProtectedWorkflow", earth, new Vector3(6_800_000.0, 0.0, 0.0),
+            new Vector3(0.0, 7_656.2204182967143, 0.0), BuildStateCovariance(new[] { 25.0, 36.0, 49.0, 0.01, 0.02, 0.03 }));
+        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "SecondaryWorkflow", earth, new Vector3(6_800_000.0, 120.0, -40.0),
+            new Vector3(0.2, 7_646.0, -0.1), BuildStateCovariance(new[] { 16.0, 9.0, 4.0, 0.04, 0.05, 0.06 }),
+            hardBodyRadius: 3.0);
+        if (secondaryEngine)
+        {
+            var tank = new FuelTank("tank" + -naifId, "model", "sn1", 20.0, 20.0);
+            secondarySpacecraft.AddFuelTank(tank);
+            secondarySpacecraft.AddEngine(new Engine("engine" + -naifId, "model", "sn1", 300.0, 10.0, tank));
+        }
+
+        return ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedSpacecraft), secondarySpacecraft,
+            new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10.0)));
+    }
+
+    [Fact]
+    public void ToCdm_FromAnalyzeWorkflow_AreaPcIsTheSecondaryRadius()
+    {
+        // Arrange: a protected spacecraft of 8 m and a secondary of 3 m, the options unset
+        var encounter = AnalyzeWorkflowEncounter(-42011, false);
+
+        // Act
+        var cdm = encounter.ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 20, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-683"
+        });
+
+        // Assert: the combined radius is the sum of the two, and AREA_PC of object 2 is π r² of the secondary's own radius
+        // (the exporter's convention; #683: π·5², the 5 m of the option in its place)
+        Assert.Equal(8.0 + 3.0, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
+        Assert.Equal(System.Math.PI * 3.0 * 3.0, cdm.Segments[1].Data!.AdditionalParameters!.AreaPcSquareMeters!.Value, 12);
+        var schemaValidation = Cdm.ValidateSchemaFromXml(cdm.WriteToString());
+        Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
+    }
+
+    [Theory]
+    [InlineData("engineless", CdmManeuverable.NotApplicable)]
+    [InlineData("engine", CdmManeuverable.Yes)]
+    [InlineData("override", CdmManeuverable.Yes)]
+    public void ToCdm_SecondaryManeuverable_FollowsItsEngines(string secondary, CdmManeuverable expected)
+    {
+        // Arrange: the secondary spacecraft without an engine, with one, or without one and the flag given
+        var encounter = AnalyzeWorkflowEncounter(secondary switch { "engineless" => -42021, "engine" => -42023, _ => -42025 },
+            secondary == "engine");
+        var options = new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 20, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-683-" + secondary,
+            SecondaryParticipantMetadata = secondary == "override"
+                ? new CdmParticipantMetadata { Maneuverable = CdmManeuverable.Yes }
+                : null
+        };
+
+        // Act
+        var cdm = encounter.ToCdm(options);
+        var xml = cdm.WriteToString();
+
+        // Assert: YES with an engine, N/A ("not available" or "not applicable", CCSDS 508.0-B-1 Cor. 2, 1.4.3.1) without
+        // one, the value given winning (#683: YES for any spacecraft); the message valid against the bundled NDM/XML 4.0.0
+        // schema, which reads the value back
+        Assert.Equal(expected, cdm.Segments[1].Metadata!.Maneuverable);
+        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
+        Assert.Equal(expected, Cdm.ReadFromString(xml).Segments[1].Metadata!.Maneuverable);
     }
 
     [Fact]

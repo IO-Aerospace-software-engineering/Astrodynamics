@@ -338,6 +338,164 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         });
     }
 
+    public static System.Collections.Generic.IEnumerable<object[]> InheritanceRows()
+    {
+        foreach (var model in new[] { "TwoBody", "VelocityVerlet", "Rk78" })
+        {
+            foreach (var entry in new[] { "Analyze", "AnalyzeAll", "AnalyzeDense", "Screen" })
+            {
+                // Neither participant propagated: no trajectory to pass
+                if (model != "TwoBody" || entry != "AnalyzeDense")
+                    yield return new object[] { model, entry };
+            }
+        }
+    }
+
+    // The settings of the encounter: a stale threshold of a day, no low-speed threshold, the secondary without a radius of
+    // its own given 2 m (the protected spacecraft has none)
+    private static readonly ConjunctionAnalysisOptions InheritedSettings = HeldInRtn with
+    {
+        StaleCovarianceThreshold = TimeSpan.FromDays(1.0),
+        SecondaryHardBodyRadiusMeters = 2.0,
+        LowRelativeSpeedThresholdMetersPerSecond = 0.0
+    };
+
+    // The encounter of the protected spacecraft (two-body, or propagated by Velocity-Verlet or in RK7(8)) analyzed by the
+    // entry point with the settings above (Screen: its radius and low-speed threshold, the stale threshold its 60 s)
+    private (EncounterCase Encounter, TimeSpan StaleThreshold) InheritanceEncounter(string model, string entry, int id)
+    {
+        Spacecraft protectedCraft;
+        Spacecraft secondary;
+        PropagationSolution protectedTrajectory = null;
+        if (model == "TwoBody")
+        {
+            protectedCraft = ReferenceCase.NewSpacecraft(id, _case.ProtectedStart);
+            secondary = ReferenceCase.NewSpacecraft(id - 1,
+                AvoidanceFallbackCase.SecondaryNear(_case.ProtectedStart.ToStateVector(AvoidanceFallbackCase.Tca)));
+        }
+        else
+        {
+            protectedCraft = AvoidanceFallbackCase.WithEngine(id, _case.ProtectedStart, out _);
+            protectedTrajectory = _case.Propagate(protectedCraft, model == "Rk78");
+            secondary = Secondary(id - 1);
+        }
+
+        var profile = new ProtectedSpacecraftProfile(protectedCraft);
+        var window = AvoidanceFallbackCase.ScreeningWindow;
+        var encounter = entry switch
+        {
+            "Analyze" => ConjunctionAssessment.Analyze(profile, secondary, window, InheritedSettings),
+            "AnalyzeAll" => ConjunctionAssessment.AnalyzeAll(profile, secondary, window, InheritedSettings)
+                .OrderBy(e => e.EncounterState.MissDistanceMeters).First(),
+            "AnalyzeDense" => ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondary,
+                _case.PropagateTwoBody(secondary), window, InheritedSettings),
+            _ => Assert.Single(ConjunctionAssessment.Screen(profile, new ILocalizable[] { secondary }, window,
+                new ScreeningOptions
+                {
+                    DefaultSecondaryHardBodyRadiusMeters = 2.0,
+                    LowRelativeSpeedThresholdMetersPerSecond = 0.0,
+                    MaxMissDistanceMeters = double.MaxValue
+                }))
+        };
+        return (encounter, entry == "Screen" ? TimeSpan.FromSeconds(60.0) : InheritedSettings.StaleCovarianceThreshold);
+    }
+
+    [Theory]
+    [MemberData(nameof(InheritanceRows))]
+    public void EvaluateAvoidance_InheritsTheEncounterSettings(string model, string entry)
+    {
+        // Arrange
+        int id = -6900 - 100 * Array.IndexOf(new[] { "TwoBody", "VelocityVerlet", "Rk78" }, model) -
+                 10 * Array.IndexOf(new[] { "Analyze", "AnalyzeAll", "AnalyzeDense", "Screen" }, entry);
+        var (encounter, staleThreshold) = InheritanceEncounter(model, entry, id);
+        Assert.Equal(2.0, encounter.CollisionRisk.CombinedHardBodyRadiusMeters);
+
+        // Act
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+
+        // Assert: each option re-analyzed with the settings of the encounter (#683: the radius of the avoidance options, 5 m
+        // for the secondary, and their stale threshold of 60 s): its radius, the stale flag by the rule of the encounter's
+        // threshold on the sources and ages the option reports, never the low-speed flag
+        Assert.Equal(6, avoidance.Count);
+        int stale = 0;
+        foreach (var option in avoidance)
+        {
+            var post = option.PostManeuverEncounter;
+            var state = post.EncounterState;
+            bool expectedStale = IsStale(state.ProtectedCovariance, staleThreshold) || IsStale(state.SecondaryCovariance, staleThreshold);
+            stale += expectedStale ? 1 : 0;
+            Assert.Equal(encounter.CollisionRisk.CombinedHardBodyRadiusMeters, post.CollisionRisk.CombinedHardBodyRadiusMeters);
+            Assert.Equal(expectedStale, state.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
+            Assert.False(state.QualityFlags.HasFlag(EncounterQualityFlags.LowRelativeVelocityEncounter));
+        }
+
+        // The protected covariance is held in RTN from the initial state, aged 1 h to 2.5 h at the TCA of the options:
+        // stale against Screen's 60 s, not against a day
+        Assert.Equal(entry == "Screen" ? 6 : 0, stale);
+    }
+
+    private static bool IsStale(ParticipantCovariance covariance, TimeSpan threshold) =>
+        covariance.Source == CovarianceSource.InitialStateHeldInRtn && covariance.Age > threshold;
+
+    [Theory]
+    [InlineData("TwoBody")]
+    [InlineData("Rk78")]
+    public void EvaluateAvoidance_NullMirrors_EqualTheEncounterValuesGivenExplicitly(string model)
+    {
+        // Arrange: the encounter analyzed with settings other than the defaults of the avoidance
+        int id = model == "TwoBody" ? -6990 : -6995;
+        var settings = InheritedSettings with
+        {
+            SampleStep = TimeSpan.FromMinutes(2.0),
+            MaximumEventSearchStep = TimeSpan.FromSeconds(30.0),
+            LowRelativeSpeedThresholdMetersPerSecond = 0.5
+        };
+        Spacecraft protectedCraft;
+        Spacecraft secondary;
+        if (model == "TwoBody")
+        {
+            protectedCraft = ReferenceCase.NewSpacecraft(id, _case.ProtectedStart);
+            secondary = ReferenceCase.NewSpacecraft(id - 1,
+                AvoidanceFallbackCase.SecondaryNear(_case.ProtectedStart.ToStateVector(AvoidanceFallbackCase.Tca)));
+        }
+        else
+        {
+            protectedCraft = AvoidanceFallbackCase.WithEngine(id, _case.ProtectedStart, out _);
+            _case.Propagate(protectedCraft, true);
+            secondary = Secondary(id - 1);
+        }
+
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondary,
+            AvoidanceFallbackCase.ScreeningWindow, settings);
+
+        // Act: the mirrors left null, and given the values of the encounter
+        var inherited = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+        var explicitly = ConjunctionAssessment.EvaluateAvoidance(encounter, Options with
+        {
+            AnalysisSampleStep = settings.SampleStep,
+            MaximumEventSearchStep = settings.MaximumEventSearchStep,
+            SecondaryHardBodyRadiusMeters = 2.0,
+            LowRelativeSpeedThresholdMetersPerSecond = settings.LowRelativeSpeedThresholdMetersPerSecond
+        });
+
+        // Assert: the same options, bit for bit (#683: the defaults of the avoidance replaced the settings of the encounter)
+        Assert.Equal(6, inherited.Count);
+        Assert.Equal(explicitly.Count, inherited.Count);
+        for (int i = 0; i < inherited.Count; i++)
+        {
+            var a = inherited[i];
+            var b = explicitly[i];
+            Assert.Equal(b.BurnEpoch, a.BurnEpoch);
+            Assert.Equal(b.DeltaVInertial, a.DeltaVInertial);
+            Assert.Equal(b.PostManeuverEncounter.EncounterState.Epoch, a.PostManeuverEncounter.EncounterState.Epoch);
+            Assert.Equal(b.PostManeuverEncounter.EncounterState.MissDistanceMeters, a.PostManeuverEncounter.EncounterState.MissDistanceMeters);
+            Assert.Equal(b.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision, a.PostManeuverEncounter.CollisionRisk.ProbabilityOfCollision);
+            Assert.Equal(b.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters,
+                a.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters);
+            Assert.Equal(b.PostManeuverEncounter.EncounterState.QualityFlags, a.PostManeuverEncounter.EncounterState.QualityFlags);
+        }
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

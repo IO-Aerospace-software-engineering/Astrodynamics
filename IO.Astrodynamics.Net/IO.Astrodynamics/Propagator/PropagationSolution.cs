@@ -39,6 +39,13 @@ public sealed class PropagationSolution
     internal PropagationDynamics Dynamics { get; set; }
 
     /// <summary>
+    /// The spacecraft the propagation propagated (the instance the propagator was given), set by
+    /// <see cref="PropagatorBase"/> and <see cref="TLEPropagator"/>; null for a solution built by hand. The conjunction
+    /// analysis refuses a solution passed for another spacecraft (#683).
+    /// </summary>
+    internal Body.Spacecraft.Spacecraft Owner { get; init; }
+
+    /// <summary>
     /// The force model of the propagation, kept without the steps by RK7(8) and Velocity-Verlet, for the avoidance
     /// options of the conjunction assessment (#402); null for another integrator.
     /// </summary>
