@@ -77,10 +77,12 @@ var triad = new TriadAttitude(earth, epoch, duration,
     engine, 0.0);
 ```
 
-Factory methods create common attitude profiles in one call:
+Factory methods create common attitude profiles in one call. They point the axes of the spacecraft that carries the
+engine (`BodyDown` and `BodyFront` for LVLH, `BodyFront` and `BodyUp` for Sun tracking), so a spacecraft built with
+its own `bodyFront`, `bodyRight` and `bodyUp` gets its own axes pointed:
 
 ```csharp
-// LVLH frame (nadir + velocity tracking)
+// LVLH frame (the spacecraft's down axis to nadir, its front axis toward the velocity)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
 // Prograde thrust with solar panels tracking the Sun
@@ -93,18 +95,23 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(
 Each impulse maneuver computes the required delta-v and defines a g-function that
 determines **when** the burn fires.
 
-### Raising apogee height
+### Moving the apogee
 
-`ApogeeHeightManeuver` fires at perigee to raise the apogee to a target altitude:
+`ApogeeHeightManeuver` fires at perigee and moves the apogee, up or down, to a target **radius**: a distance in metres
+from the centre of `ManeuverCenter`, not an altitude. For an altitude h above the Earth, pass the equatorial radius
+plus h:
 
 ```csharp
+// An apogee 1 000 km above the equator: R + 1 000 km from the Earth's centre
+double targetApogeeRadius = earth.EquatorialRadius + 1000e3;
 var raiseApogee = new ApogeeHeightManeuver(
     earth, epoch, TimeSpan.Zero, targetApogeeRadius, engine);
 ```
 
-### Lowering perigee height
+### Moving the perigee
 
-`PerigeeHeightManeuver` fires at apogee to lower the perigee:
+`PerigeeHeightManeuver` fires at apogee and moves the perigee, up or down, to a target radius from the centre, in
+metres:
 
 ```csharp
 var lowerPerigee = new PerigeeHeightManeuver(
@@ -144,8 +151,8 @@ var apsidalAlign = new ApsidalAlignmentManeuver(
 
 ### Combined maneuver
 
-`CombinedManeuver` performs a combined plane change and perigee height adjustment
-at apogee. It includes a precondition that the apogee is aligned with the ascending
+`CombinedManeuver` performs a combined plane change and perigee change at apogee, the perigee
+moved to a target radius from the centre, in metres. It includes a precondition that the apogee is aligned with the ascending
 node before firing:
 
 ```csharp

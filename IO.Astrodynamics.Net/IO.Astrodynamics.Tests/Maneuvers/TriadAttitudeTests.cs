@@ -5,14 +5,19 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
+using IO.Astrodynamics.Tests.Body;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Maneuvers;
 
 public class TriadAttitudeTests
 {
-    public TriadAttitudeTests()
+    private readonly ITestOutputHelper _output;
+
+    public TriadAttitudeTests(ITestOutputHelper output)
     {
+        _output = output;
         TestKernels.EnsureSolarSystem();
     }
 
@@ -1251,6 +1256,174 @@ public class TriadAttitudeTests
             qLT.VectorPart.Y * qNone.VectorPart.Y + qLT.VectorPart.Z * qNone.VectorPart.Z);
 
         Assert.True(dot < 1.0 - 1e-9, $"LT and None should produce different attitudes. Quaternion dot: {dot}");
+    }
+
+    #endregion
+
+    #region Factory axes (#677)
+
+    // The angles between the spacecraft's axes, rotated by the factory's attitude, and the directions of the closed form of
+    // the law, worst over the six cases (the rotated triad, LVLH, the right axis): 3.58e-16 rad on Linux x64, Windows x64
+    // and macOS arm64 alike (CI run 43595588856, 2026-11-14); twice the worst
+    private const double FactoryAxesAngle = 7.2e-16;
+
+    /// <summary>The body axes (front, right, up) of the spacecraft of a case: the front +X, the right −Y, the up +Z; the front
+    /// +Z, the right +X, the up −Y; the default axes turned by 30° about (1, 1, 1). Each is right-handed: right × front = up.</summary>
+    private static (Vector3 Front, Vector3 Right, Vector3 Up) BodyAxes(string triad)
+    {
+        switch (triad)
+        {
+            case "FrontX":
+                return (Vector3.VectorX, Vector3.VectorY.Inverse(), Vector3.VectorZ);
+            case "FrontZ":
+                return (Vector3.VectorZ, Vector3.VectorX, Vector3.VectorY.Inverse());
+            case "Rotated":
+            {
+                // Rodrigues' rotation by 30° about (1, 1, 1)/√3, written here
+                var k = new Vector3(1.0, 1.0, 1.0).Normalize();
+                double angle = 30.0 * Astrodynamics.Constants.Deg2Rad;
+                Vector3 Turn(Vector3 v) => v * System.Math.Cos(angle) + k.Cross(v) * System.Math.Sin(angle) + k * ((k * v) * (1.0 - System.Math.Cos(angle)));
+                return (Turn(Vector3.VectorY), Turn(Vector3.VectorX), Turn(Vector3.VectorZ));
+            }
+            default:
+                throw new ArgumentException(triad);
+        }
+    }
+
+    // An inclined LEO about the Earth in ICRF, a = 7 000 km, e = 0.001, i = 0.9 rad, and a spacecraft with the body axes of
+    // the triad that carries the engine of the attitude
+    private static (Spacecraft spacecraft, StateVector state) CustomAxesSpacecraft(string triad)
+    {
+        var state = new KeplerianElements(7000000.0, 0.001, 0.9, 0.4, 1.1, 0.3, TestHelpers.EarthAtJ2000, new TimeSystem.Time(2021, 01, 01, 13, 0, 0),
+            Frames.Frame.ICRF).ToStateVector();
+        var (front, right, up) = BodyAxes(triad);
+        var spc = new Spacecraft(-669, "TriadAxesSpacecraft", 1000.0, 3000.0, new Clock("AxesClk", 65536), state, bodyFront: front, bodyRight: right, bodyUp: up);
+        spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+        spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+        return (spc, state);
+    }
+
+    /// <summary>
+    /// LVLH puts the spacecraft's own up axis along r, its front along the part of v perpendicular to r and its right along
+    /// v⊥ × r (right × front = up), whatever its body axes (#677): the closed form of the law from the state, compared as
+    /// direction angles. The factory pointed the static axes, 90° off for the two axis-aligned triads.
+    /// </summary>
+    [Theory]
+    [InlineData("FrontX")]
+    [InlineData("FrontZ")]
+    [InlineData("Rotated")]
+    public void CreateLVLH_CustomAxes_PointsTheSpacecraftAxes(string triad)
+    {
+        var (spc, state) = CustomAxesSpacecraft(triad);
+        var maneuver = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, spc.Engines.First());
+
+        maneuver.TryExecute(state);
+        var q = maneuver.StateOrientation.Rotation;
+        var rHat = state.Position.Normalize();
+        var vPerp = (state.Velocity - rHat * (state.Velocity * rHat)).Normalize();
+        double up = AttitudeRecordTests.Angle(spc.BodyUp.Rotate(q), rHat);
+        double front = AttitudeRecordTests.Angle(spc.BodyFront.Rotate(q), vPerp);
+        double right = AttitudeRecordTests.Angle(spc.BodyRight.Rotate(q), vPerp.Cross(rHat));
+        _output.WriteLine($"MEASURE #677 LVLH {triad}: up - r {up:E2}, front - v⊥ {front:E2}, right - v⊥ × r {right:E2} rad");
+        Assert.True(up <= FactoryAxesAngle, $"up - r {up:E3} rad");
+        Assert.True(front <= FactoryAxesAngle, $"front - v⊥ {front:E3} rad");
+        Assert.True(right <= FactoryAxesAngle, $"right - v⊥ × r {right:E3} rad");
+        Assert.Equal(spc.BodyDown, maneuver.PrimaryBodyVector);
+        Assert.Equal(spc.BodyFront, maneuver.SecondaryBodyVector);
+    }
+
+    /// <summary>
+    /// Prograde with Sun tracking puts the spacecraft's own front along v, its up along the part of the geometric Sun direction
+    /// perpendicular to v and its right along v × s⊥ (front × up = right), whatever its body axes (#677): the Sun from SPICE
+    /// (<c>spkezr</c>, no aberration, as <see cref="CelestialAttitudeTarget"/>'s default), compared as direction angles. The
+    /// factory pointed the static axes, 90° off for the two axis-aligned triads.
+    /// </summary>
+    [Theory]
+    [InlineData("FrontX")]
+    [InlineData("FrontZ")]
+    [InlineData("Rotated")]
+    public void CreateProgradeWithSunTracking_CustomAxes_PointsTheSpacecraftAxes(string triad)
+    {
+        var (spc, state) = CustomAxesSpacecraft(triad);
+        var maneuver = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero,
+            TestHelpers.Sun, spc.Engines.First());
+
+        maneuver.TryExecute(state);
+        var q = maneuver.StateOrientation.Rotation;
+        var vHat = state.Velocity.Normalize();
+        var sun = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 10, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position - state.Position;
+        var sPerp = (sun - vHat * (sun * vHat)).Normalize();
+        double front = AttitudeRecordTests.Angle(spc.BodyFront.Rotate(q), vHat);
+        double up = AttitudeRecordTests.Angle(spc.BodyUp.Rotate(q), sPerp);
+        double right = AttitudeRecordTests.Angle(spc.BodyRight.Rotate(q), vHat.Cross(sPerp));
+        _output.WriteLine($"MEASURE #677 prograde Sun {triad}: front - v {front:E2}, up - s⊥ {up:E2}, right - v × s⊥ {right:E2} rad");
+        Assert.True(front <= FactoryAxesAngle, $"front - v {front:E3} rad");
+        Assert.True(up <= FactoryAxesAngle, $"up - s⊥ {up:E3} rad");
+        Assert.True(right <= FactoryAxesAngle, $"right - v × s⊥ {right:E3} rad");
+        Assert.Equal(spc.BodyFront, maneuver.PrimaryBodyVector);
+        Assert.Equal(spc.BodyUp, maneuver.SecondaryBodyVector);
+    }
+
+    /// <summary>
+    /// With the default body axes, the factories are bit for bit the explicit constructor given the static axes: the
+    /// default instance axes are the static ones exactly (#677).
+    /// </summary>
+    [Fact]
+    public void Factories_DefaultAxes_BitForBitTheStaticForm()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+        var min = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var engine = spc.Engines.First();
+
+        var lvlh = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, engine);
+        var lvlhStatic = new TriadAttitude(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, Spacecraft.Down, OrbitalDirectionTarget.Nadir, Spacecraft.Front,
+            OrbitalDirectionTarget.Prograde, engine);
+        var sun = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, TestHelpers.Sun, engine);
+        var sunStatic = new TriadAttitude(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, Spacecraft.Front, OrbitalDirectionTarget.Prograde, Spacecraft.Up,
+            new CelestialAttitudeTarget(TestHelpers.Sun), engine);
+
+        foreach (var (factory, explicitForm) in new[] { (lvlh, lvlhStatic), (sun, sunStatic) })
+        {
+            Assert.Equal(explicitForm.PrimaryBodyVector, factory.PrimaryBodyVector);
+            Assert.Equal(explicitForm.SecondaryBodyVector, factory.SecondaryBodyVector);
+            factory.TryExecute(orbitalParams);
+            explicitForm.TryExecute(orbitalParams);
+            var a = factory.StateOrientation.Rotation;
+            var b = explicitForm.StateOrientation.Rotation;
+            Assert.Equal(b.W, a.W);
+            Assert.Equal(b.VectorPart.X, a.VectorPart.X);
+            Assert.Equal(b.VectorPart.Y, a.VectorPart.Y);
+            Assert.Equal(b.VectorPart.Z, a.VectorPart.Z);
+        }
+    }
+
+    /// <summary>
+    /// The engine's tank on no spacecraft: the factories keep the static axes, the fallback of
+    /// <c>Maneuver.GetBodyFront</c> (#677); added to a spacecraft afterwards, they follow its axes.
+    /// </summary>
+    [Fact]
+    public void Factories_UnattachedEngine_KeepStaticAxes()
+    {
+        var tank = new FuelTank("ft", "ftA", "123456", 1000.0, 900.0);
+        var engine = new Engine("eng", "engmk1", "12345", 450, 50, tank);
+        var min = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var lvlh = TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, engine);
+        var sun = TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, min, TimeSpan.Zero, TestHelpers.Sun, engine);
+
+        Assert.Equal(Spacecraft.Down, lvlh.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Front, lvlh.SecondaryBodyVector);
+        Assert.Equal(Spacecraft.Front, sun.PrimaryBodyVector);
+        Assert.Equal(Spacecraft.Up, sun.SecondaryBodyVector);
+
+        var (front, right, up) = BodyAxes("FrontZ");
+        var spc = new Spacecraft(-670, "TriadLateSpacecraft", 1000.0, 3000.0, new Clock("LateClk", 65536), CreateTestSpacecraft().orbitalParams, bodyFront: front,
+            bodyRight: right, bodyUp: up);
+        spc.AddFuelTank(tank);
+
+        Assert.Equal(spc.BodyDown, lvlh.PrimaryBodyVector);
+        Assert.Equal(spc.BodyFront, lvlh.SecondaryBodyVector);
+        Assert.Equal(spc.BodyFront, sun.PrimaryBodyVector);
+        Assert.Equal(spc.BodyUp, sun.SecondaryBodyVector);
     }
 
     #endregion

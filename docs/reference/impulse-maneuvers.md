@@ -94,11 +94,13 @@ it, fired one orbit later (#569).
 
 ### ApogeeHeightManeuver
 
-Raises apogee height. Fires at perigee (r . v crosses zero from negative to positive).
+Moves the apogee, up or down, to `TargetApogee`, a radius in metres from the centre of `ManeuverCenter` (not an
+altitude: R + h for an altitude h). Fires at perigee (r . v crosses zero from negative to positive).
 
 ### PerigeeHeightManeuver
 
-Raises perigee height. Fires at apogee (r . v crosses zero from positive to negative).
+Moves the perigee, up or down, to `TargetPerigeeHeight`, a radius in metres from the centre of `ManeuverCenter` (not an
+altitude). Fires at apogee (r . v crosses zero from positive to negative).
 
 ### PhasingManeuver
 
@@ -124,7 +126,11 @@ true-longitude constructor threw `NullReferenceException` at its burn (#588).
 
 ### CombinedManeuver
 
-Combined plane and apsis change. Fires at apogee (r . v, positive to negative) with an additional precondition that the apogee is aligned with the ascending node.
+Combined plane and perigee change: the perigee moves, up or down, to `TargetPerigeeHeight`, a radius in metres from the
+centre of the maneuver centre (not an altitude), and the inclination to `TargetInclination`. Fires at apogee (r . v,
+positive to negative) with an additional precondition that the apogee is aligned with the ascending node. Its target
+orbit carries its own perigee radius, a(1 − e); before 11.0.0 it carried the current orbit's, which no result read
+(#677).
 
 ### PlaneAlignmentManeuver
 
