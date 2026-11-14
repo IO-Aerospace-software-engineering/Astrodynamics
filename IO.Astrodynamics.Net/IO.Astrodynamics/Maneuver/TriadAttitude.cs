@@ -265,7 +265,8 @@ public class TriadAttitude : Attitude
     /// The axes are those of the spacecraft that carries the engine's tank, <see cref="Spacecraft.BodyDown"/> and
     /// <see cref="Spacecraft.BodyFront"/>, read at execution as the single-vector attitudes read
     /// <see cref="Spacecraft.BodyFront"/>; the static <see cref="Spacecraft.Down"/> and <see cref="Spacecraft.Front"/> while
-    /// the tank is on no spacecraft (#677). For the static axes on any spacecraft, use the constructor with
+    /// the tank is on no spacecraft (#677), outside a propagation only: a propagation of the attitude on a tank that is not
+    /// the propagated spacecraft's throws (#676). For the static axes on any spacecraft, use the constructor with
     /// <see cref="Spacecraft.Down"/> and <see cref="Spacecraft.Front"/>.
     /// </remarks>
     public static TriadAttitude CreateLVLH(
@@ -289,7 +290,8 @@ public class TriadAttitude : Attitude
     /// The axes are those of the spacecraft that carries the engine's tank, <see cref="Spacecraft.BodyFront"/> and
     /// <see cref="Spacecraft.BodyUp"/>, read at execution as the single-vector attitudes read
     /// <see cref="Spacecraft.BodyFront"/>; the static <see cref="Spacecraft.Front"/> and <see cref="Spacecraft.Up"/> while
-    /// the tank is on no spacecraft (#677). For the static axes on any spacecraft, use the constructor with
+    /// the tank is on no spacecraft (#677), outside a propagation only: a propagation of the attitude on a tank that is not
+    /// the propagated spacecraft's throws (#676). For the static axes on any spacecraft, use the constructor with
     /// <see cref="Spacecraft.Front"/> and <see cref="Spacecraft.Up"/>.
     /// </remarks>
     public static TriadAttitude CreateProgradeWithSunTracking(
@@ -349,8 +351,8 @@ public class TriadAttitude : Attitude
             var primaryEphemeris = PrimaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None);
             var secondaryEphemeris = SecondaryTarget.GetEphemeris(stateVector.Epoch, stateVector.Observer, stateVector.Frame, Aberration.None);
 
-            primaryRefVector = (primaryEphemeris.ToStateVector().Position - stateVector.Position).Normalize();
-            secondaryRefVector = (secondaryEphemeris.ToStateVector().Position - stateVector.Position).Normalize();
+            primaryRefVector = (primaryEphemeris.ToStateVector().Position - stateVector.Position).NormalizeOrZero();
+            secondaryRefVector = (secondaryEphemeris.ToStateVector().Position - stateVector.Position).NormalizeOrZero();
         }
 
         // Validate reference vectors are not collinear
@@ -366,12 +368,12 @@ public class TriadAttitude : Attitude
         // Construct orthonormal triads using the NAIF pattern
         // Reference frame triad (where we want to point)
         var t1R = primaryRefVector;
-        var t2R = t1R.Cross(secondaryRefVector).Normalize();
+        var t2R = t1R.Cross(secondaryRefVector).NormalizeOrZero();
         var t3R = t1R.Cross(t2R);
 
         // Body frame triad (spacecraft axes)
-        var t1B = PrimaryBodyVector.Normalize();
-        var t2B = t1B.Cross(SecondaryBodyVector).Normalize();
+        var t1B = PrimaryBodyVector.NormalizeOrZero();
+        var t2B = t1B.Cross(SecondaryBodyVector).NormalizeOrZero();
         var t3B = t1B.Cross(t2B);
 
         // Build rotation matrices: columns are the triad vectors

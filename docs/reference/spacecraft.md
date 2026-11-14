@@ -16,6 +16,15 @@ var spacecraft = new Spacecraft(
     cosparId: "2024-001A", solarRadiationCoeff: 1.5);
 ```
 
+The NAIF id is in [-2147483, -1], so that the id of the spacecraft frame, NaifId × 1000, is an `int`
+(`ArgumentOutOfRangeException` otherwise, #676; below -2147483 the frame id wrapped around before 11.0.0). A clock
+belongs to the spacecraft of one NAIF id, whose id its SCLK declares (`SCLK_DATA_TYPE_<id>`): a clock attached to a
+spacecraft of another id is rejected with `ArgumentException`, one attached to another instance of the same id (a
+kernel-backed twin) is accepted and stays with its first spacecraft. Give each spacecraft its own `new Clock(...)`. The
+clock is attached, and the spacecraft listed by its observer's `Satellites`, at the end of the constructor, after every
+check: a constructor that throws leaves the clock free and lists nothing (#676). The clock is attached atomically: of
+spacecraft of different ids built at once on several threads with one clock, one takes it and the others throw.
+
 ## Kernel-Backed Constructor
 
 Creates a spacecraft whose ephemeris comes from loaded SPK/CK kernels. Use for archived missions (LRO, Cassini, JWST) or when using a spacecraft as an observer without propagation.
@@ -43,18 +52,26 @@ kernels must cover `epoch` and chain the spacecraft to that centre, or the const
 
 Kernel-backed spacecraft: `IsSpiceBacked` returns `true`. Calling `Propagate()` throws `InvalidOperationException`.
 
+The NAIF id and the clock follow the rules of the standard constructor, checked before the SPK is read. The frame of
+a kernel-backed spacecraft is the frame the loaded kernels define for the id NaifId × 1000, whatever its name: SPICE is
+asked for that name (`frmnam_c`) at each read, so a twin named otherwise than the propagated spacecraft, or a mission FK
+that names the frame `KSAT_BUS`, is read, and so is an FK loaded after the twin is built. `Frame.Name` stays
+`Name + "_FRAME"`, the name handed to SPICE when no loaded kernel defines the id (#676; before, always that name). A twin
+whose `Name + "_FRAME"` is the name of the frame of another id, which read that other frame without an error before,
+reads the frame of its own id.
+
 ## Properties
 
 | Property | Description |
 |----------|-------------|
-| `NaifId` | NAIF ID (negative) |
+| `NaifId` | NAIF ID, in [-2147483, -1] |
 | `DryOperatingMass` | Mass without fuel (kg) |
 | `MaximumOperatingMass` | Maximum operating mass (kg) |
 | `SectionalArea` | Cross-sectional area for drag and SRP (m2) |
 | `DragCoefficient` | Cd (default 2.2) |
 | `SolarRadiationCoeff` | Cr (default 1.0) |
 | `CosparId` | COSPAR international designator |
-| `HardBodyRadius` | Hard-body radius for conjunction assessment (m) |
+| `HardBodyRadius` | Hard-body radius for conjunction assessment (m): finite and not negative, 0 (the default) for none, both constructors throwing `ArgumentOutOfRangeException` otherwise; the radius of the spacecraft as a secondary object too, an option of the analysis that gives another value throwing ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
 | `BodyFront` / `BodyRight` / `BodyUp` | Instance body axes (override static defaults) |
 | `Instruments` | Read-only collection of instruments |
 | `Engines` | Read-only collection of engines |
@@ -68,7 +85,8 @@ Kernel-backed spacecraft: `IsSpiceBacked` returns `true`. Calling `Propagate()` 
 Default body-frame directions. The single-vector attitudes, the attitude of an impulse and the TRIAD factories
 (`TriadAttitude.CreateLVLH`, `CreateProgradeWithSunTracking`) read the instance axes (`BodyFront`, `BodyRight`,
 `BodyUp`) of the spacecraft that carries the engine's tank, and these static axes when no instance override is set or
-while the tank is on no spacecraft (#677). The `TriadAttitude` constructors take literal body vectors: pass
+while the tank is on no spacecraft (#677), a read outside a propagation only: a propagation whose maneuver's tank is not the
+propagated spacecraft's throws (#676). The `TriadAttitude` constructors take literal body vectors: pass
 `spacecraft.BodyFront`, ... for the instance axes.
 
 | Field | Direction | Vector |
@@ -86,11 +104,11 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument |
-| `AddEngine(Engine)` | Add propulsion engine |
-| `AddFuelTank(FuelTank)` | Add fuel tank |
+| `AddCircularInstrument(...)` | Add circular FOV instrument; its id is negative and not the spacecraft frame's, NaifId × 1000 (#676) |
+| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument, under the same id rule |
+| `AddRectangularInstrument(...)` | Add rectangular FOV instrument, under the same id rule |
+| `AddEngine(Engine)` | Add propulsion engine, whose fuel tank is a tank instance added to the spacecraft (`ArgumentException` otherwise, a tank equal to it by value included, #676, #586; `InvalidOperationException` for an unknown tank before 11.0.0) |
+| `AddFuelTank(FuelTank)` | Add fuel tank; a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
 | `AddPayload(Payload)` | Add payload |
 | `GetTotalMass()` | Total mass including fuel |
 | `SetStandbyManeuver(Maneuver, Time?)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation: an impulse never fires before it, an attitude never activates before it ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch), [The attitude timeline](attitudes.md#the-attitude-timeline)) |
@@ -107,7 +125,16 @@ Each `Propagate` (and `PropagateAsync`, `Scenario.SimulateAsync` and `BatchPropa
 maneuver chain again from its head: it refuels the tanks, clears `ExecutedManeuvers`, the windows of the maneuvers and the
 gates of the previous propagation (#573). The inputs of a propagation are checked when its propagator is built, before
 anything is reset: a propagation rejected there leaves the previous one as it was. A spacecraft propagated again fires
-its chain as a spacecraft never propagated.
+its chain as a spacecraft never propagated. Among those inputs, each maneuver of the chain draws on a tank of the
+spacecraft: its engine's fuel tank is one of the spacecraft's tank instances, held by it; otherwise the propagation
+throws `InvalidOperationException` naming the maneuver, the engine, its tank and the spacecraft (#676, #586; before, an
+impulse threw `NullReferenceException` at its burn or burnt another spacecraft's fuel, and an attitude took the static
+or another spacecraft's body axes). The engine need not be in `Engines`.
+
+The exception types of these rules follow one rule (decided by S. Guillet, 2026-11-14, after the .NET Framework Design
+Guidelines: `ArgumentException` for a bad argument, `InvalidOperationException` for the state of an object):
+`ArgumentException` where the call receives the faulty object (`AddFuelTank`, `AddEngine`, the clock of a
+constructor), `InvalidOperationException` for the chain checked at a propagation, a state of the spacecraft.
 
 ## Attitude and kernels
 
@@ -119,7 +146,9 @@ its covariance through the Jacobian of the rotation. The states of a spacecraft 
 in that frame, are therefore a rotation round trip, no longer bit for bit those of the solution. Before 11.0.0 they were
 stored in the initial frame and read as ICRF: up to 1.18e7 m off from GALACTIC, 1.86e11 m in SSB mode
 ([#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535),
-[#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)).
+[#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)). A TLE or an osculating TEME
+state is rotated once to ICRF at the start, where the integration and the solution run
+([Propagation Frame](propagators.md#propagation-frame), #675).
 
 ### The stored states across an impulse
 
@@ -157,6 +186,13 @@ across the jump:
   stored state of that arc at the same epoch; without stored states, they make one arc. A propagation by
   `Spacecraft.Propagate` or `Scenario.SimulateAsync` replaces every stored state, those added before it included: before
   11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
+- **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, the builder and
+  a `CentralBodyPropagator` built directly included (which leave `IsPropagated` false), and SGP4 otherwise: unpropagated,
+  or sampled by `TLEPropagator`, whose `AddPropagatedStates` does not change the rule (#675; before 11.0.0 it read SGP4
+  whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
+  `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
+  without aberration reads them directly, whatever the initial orbit, so after `TLEPropagator` it interpolates its
+  samples (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s), as before 11.0.0.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
 41651463194, 2026-11-03, and run 41689602272 for the velocities in SSB mode against the anchored reference; the
@@ -211,7 +247,12 @@ each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the space
   that output's epoch. A minimum epoch given as a TDB label falls off the TT grid by the change of TDB − TT from the
   start to it (6.0e-7 s at S + 3 400 s in the tests, about 1.5e-5 s a day later): one epoch with the output sample while
   that stays under 2 µs, two entries beyond.
-- **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF.
+- **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF, which
+  `Frame.GetStateOrientationToICRF` and getters such as `GetBoresightInICRFFrame` return, but which the field-of-view
+  search does not take for an attitude: it throws ([Field-of-view search](#field-of-view-search), [#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). An
+  ephemeris read in the frame of a managed spacecraft is rotated by its record once the record holds an entry; with an
+  empty record the frame is read by name in SPICE, as before 11.0.0, which reads the frame kernel and the CK of that id
+  when they are loaded and throws SPICE(UNKNOWNFRAME) otherwise ([Frames](frames.md)).
 - **The angular velocity** is that of the CK: at each entry the mean of the rates of the interpolated intervals on either
   side, linear between two samples of a law. Over a hold it is zero between discrete entries; after a sample of a law
   that no lead follows (an attitude added by `AddStateOrientationToICRF` after a propagation, or a lead whose change was
@@ -246,6 +287,16 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   microsecond, where it turns to the new attitude (up to 0.79 rad in the tests); a field-of-view edge moves by at most
   that microsecond and the rounding of its encoded SCLK. The spacecraft clock kernel must be loaded.
   `InvalidOperationException` for a kernel-backed spacecraft or one never propagated.
+- **The frame kernels** (`SpacecraftFrame.WriteAsync`, `Instrument.WriteFrameAsync`) put the upper-cased names in kernel
+  variable names, `FRAME_<SPACECRAFT>_FRAME` and `FRAME_<SPACECRAFT>_<INSTRUMENT>`, which SPICE reads with the rules of
+  the Kernel Required Reading ("Variable Name Rules"): no blank, comma, parenthesis, '=' or TAB, and 32 characters at
+  most, counted in the bytes of the file (UTF-8); a quote, which ends the string values the names are also written in,
+  is refused too. A name outside the rule throws `InvalidOperationException` and nothing is written (#676; before, the
+  FK was written and `LoadKernels` rejected it): 20 ASCII characters at most for a spacecraft, 25 for a spacecraft and an
+  instrument together; `-`, `.`, `/` and non-ASCII letters are accepted within the 32 bytes. The instrument kernels
+  (`Instrument.WriteKernelAsync`) name the instrument frame, `<SPACECRAFT>_<INSTRUMENT>`, in the string
+  `INS<id>_FOV_FRAME`, and check the instrument FK's variable by the same rule: a quote ended that string, which SPICE
+  rejected at `furnsh_c` (SPICE(TYPEMISMATCH)), and a blank or a longer name named a frame no FK can define.
 - **The encoded SCLK.** The CK's epochs are the spacecraft clock of the library, 65 536 ticks per second from 1957: a
   double whose spacing is 2.4e-7 s up to 2025-01-19 03:13 TDB and 4.8e-7 s from then to 2093. It is the floor of the
   attitude read from the CK.
@@ -310,7 +361,7 @@ J2000), its CK is not (`InvalidOperationException`).
 | `ISP` | Specific impulse (s) |
 | `FuelFlow` | Fuel mass flow rate (kg/s) |
 | `Thrust` | Computed thrust (N) |
-| `FuelTank` | Associated fuel tank |
+| `FuelTank` | Associated fuel tank; a maneuver on the engine is propagated with the spacecraft that holds this tank, and with no other (#676, #586) |
 
 ```csharp
 var engine = new Engine("MainEngine", "RS-25", "SN001",
@@ -337,7 +388,7 @@ var tank = new FuelTank("MainTank", "FT-100", "SN001",
 
 | Property | Description |
 |----------|-------------|
-| `NaifId` | NAIF instrument ID |
+| `NaifId` | NAIF instrument ID: negative, and not the spacecraft frame's id NaifId × 1000, which the instrument FK would define relative to itself (SPICE(BADFRAMESPEC2), #676); NAIF's convention is NaifId × 1000 − n, n from 1 to 999 (NAIF IDs Required Reading, "Instruments") |
 | `Name` | Instrument name |
 | `Model` | Instrument model identifier |
 | `FieldOfView` | Half-angle in the plane of the boresight and the reference vector, the IK's `FOV_REF_ANGLE` (rad) |
@@ -445,11 +496,17 @@ search for a `+S` correction.
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
-milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when
-the observer is inside the ellipsoid of the target. On the CSPICE path an error of `gftfov` (a missing kernel, a
+milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when the instrument's spacecraft
+has no attitude, or when the observer is inside the ellipsoid of the target. A managed spacecraft has no attitude while
+its attitude record is empty: never propagated and with no orientation added, built from a TLE and not propagated by
+`Spacecraft.Propagate` ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)), or propagated by
+`TLEPropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,
+`spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`, held from
+then on ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682); before 11.0.0 the identity of ICRF was searched). This check comes after those of the
+arguments and of the field, whose errors come first. On the CSPICE path an error of `gftfov` (a missing kernel, a
 coverage) gives no window, no exception (the native layer drops it).
 
-`IsInFOV` is the `POINT` condition with the same field and corrections, and the same field errors
+`IsInFOV` is the `POINT` condition with the same field and corrections, and the same field and attitude errors
 (`InvalidOperationException`) and target error (`ArgumentException`, the instrument's own spacecraft); the search does
 not call it, so an override does not change the search.
 
@@ -469,6 +526,7 @@ rows it bounds, rounded up at the second significant digit.
 | The CSPICE path on the same kernels (`gftfov` at its 1 µs) | `gftfov` converged to 1e-9 s | 9.5e-7 s |
 | Propagated spacecraft, the public managed path and its kernel-backed twin: 26 fields, both target shapes, the Earth, the Moon, the Sun, DSS-13, a site given by its coordinates, a spacecraft, the Earth-Moon barycenter, L1, a star; `None`, `LT` and `LT+S` on every field, the nine aberrations on a circle and a narrow field (221 searches off the grazing and slow edges) | `gftfov` at 1 µs on the kernels the library writes | 1.3e-6 s |
 | RK7(8), SSB mode, a TLE | same (for the TLE, an SPK of its states, which the library does not write for a TLE that is not propagated) | 1.2e-6 s |
+| A TLE propagated by RK7(8) (#675; the same on Linux x64, Windows and macOS arm64, CI run 43591654097, 2026-11-14) | same | 5.0e-7 s |
 | An impulse followed by a TRIAD attitude, a nadir attitude, the six inertial initial frames, the path of `Scenario.SimulateAsync` (CI run 41522747911, 2026-11-02: the variants of #515 the same on the three platforms, those of #537 on Linux only) | `gftfov` at 1 µs on the kernels the library writes | 1.2e-6 s (SSB mode); TRIAD 1.0e-6 s, nadir 4e-7 s |
 | Fields that graze the Earth's limb (a margin of slope 1.2e-6 rad/s at the contact) | `gftfov` at a step of 1 s | 2.5e-4 s |
 | A slow edge (an ellipse, slope 6.1e-4 per second, `LT+S`) | same | 4.4e-6 s |

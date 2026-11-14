@@ -154,8 +154,11 @@ internal sealed class EncounterCovarianceResolver
         if (_solution.CovariancePropagation?.Mode == CovariancePropagationMode.Covariance)
             return _solution;
 
-        // An initial covariance at another epoch, or one that cannot be propagated nor remediated: held in RTN
-        if (_participant.InitialOrbitalParameters is not StateVector { Covariance: not null } initial ||
+        // An initial covariance at another epoch, or one that cannot be propagated nor remediated: held in RTN. P0 in the
+        // frame of the propagation: an osculating TEME state is propagated in ICRF (#675)
+        if (_participant.InitialOrbitalParameters is not StateVector { Covariance: not null } ||
+            PropagatorBase.InertialInitialOrbit(_participant.InitialOrbitalParameters, _solution.Segments[0].BaseEpoch)
+                is not StateVector { Covariance: not null } initial ||
             initial.Epoch.ToTDB() != _solution.Segments[0].BaseEpoch ||
             !ResolveInitialCovariance(initial.Covariance.Value))
             return null;

@@ -152,8 +152,14 @@ named GCRF (`Frame.GCRF`, or `new Frame("GCRF")` as the CLI builds it, in any ca
 transformation or a coordinate search in GCRF are then the same numbers as in J2000, and a state in
 GCRF propagates as its ICRF twin (#543). `Frame.CIRS` and `Frame.TIRS` are not SPICE frames either,
 and they rotate: an ephemeris read in `Frame.CIRS` or `Frame.TIRS` (an instance of `CirsFrame` or `TirsFrame`) is read in
-J2000 and rotated by the frame at the epoch of the read, the numbers `ToFrame` gives on the state read in ICRF (#558). A
-coordinate search in one of them is not mapped.
+J2000 and rotated by the frame at the epoch of the read, the numbers `ToFrame` gives on the state read in ICRF (#558). So
+are the frames only the library holds, the `SiteFrame` of a site built from coordinates and the `SpacecraftFrame` of a
+managed spacecraft whose attitude record holds an entry (#682; before 11.0.0 a read in them reached SPICE by name and threw
+SPICE(UNKNOWNFRAME)), whatever a loaded kernel defines under their names. The frame of a managed spacecraft whose record
+is empty (never propagated, no orientation added, built from a TLE or propagated by `TLEPropagator`) holds no attitude in
+the library: a read in it still reaches SPICE by name, which reads the frame kernel and the CK of that id when they are
+loaded (those the library wrote for an earlier object of the id) and throws SPICE(UNKNOWNFRAME) otherwise. A coordinate
+search that CSPICE runs in one of them is not mapped.
 
 ### TEME
 

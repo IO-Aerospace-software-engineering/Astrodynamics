@@ -24,6 +24,7 @@ namespace IO.Astrodynamics.Body
         /// <param name="epoch">The epoch time for the barycenter.</param>
         public Barycenter(int naifId, Time epoch) : base(naifId, Frame.ECLIPTIC_J2000, epoch)
         {
+            RegisterWithObserver();
         }
     }
 }

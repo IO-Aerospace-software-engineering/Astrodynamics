@@ -106,7 +106,9 @@ namespace IO.Astrodynamics.Maneuver
 
         /// <summary>
         /// Gets a body axis of the spacecraft that carries the engine's tank, read at the call, or
-        /// <paramref name="fallback"/> while the tank is on no spacecraft (#677).
+        /// <paramref name="fallback"/> while the tank is on no spacecraft (#677). A propagation checks first that the tank is
+        /// the propagated spacecraft's (<see cref="Spacecraft.CheckManeuverEngines"/>, #676), so only a read outside a
+        /// propagation meets the fallback.
         /// </summary>
         /// <param name="axis">The axis of the spacecraft instance, such as <c>s =&gt; s.BodyFront</c>.</param>
         /// <param name="fallback">The vector returned while the tank is on no spacecraft, such as <see cref="Spacecraft.Front"/>.</param>

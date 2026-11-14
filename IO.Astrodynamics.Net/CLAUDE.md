@@ -629,7 +629,7 @@ Default body axes (static fields, backward-compatible):
 - `BodyBack`, `BodyLeft`, `BodyDown` — computed inverses
 - Passed via optional constructor parameters: `bodyFront`, `bodyRight`, `bodyUp`
 - Validation enforces orthogonality and right-handedness when custom axes are provided
-- The axes are read on the spacecraft of the engine's tank at execution, with the static axes as fallback while the tank is on no spacecraft: the single-vector attitudes and the impulse attitude point `BodyFront` through `GetBodyFront()`, `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through the one rule of `Maneuver.GetBodyAxis` (`private protected`, no public surface) (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
+- The axes are read on the spacecraft of the engine's tank at execution, with the static axes as fallback while the tank is on no spacecraft (a read outside a propagation only: a propagation whose maneuver's tank is not the propagated spacecraft's throws, `Spacecraft.CheckManeuverEngines`, #676): the single-vector attitudes and the impulse attitude point `BodyFront` through `GetBodyFront()`, `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through the one rule of `Maneuver.GetBodyAxis` (`private protected`, no public surface) (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
 
 ```csharp
 // Spacecraft with +X as front (e.g., matching a SPICE FK convention)
@@ -811,7 +811,7 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
    - Ensure body vectors and reference vectors are not collinear (minimum 5 degrees separation)
    - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions; use instance `BodyFront`, `BodyRight`, `BodyUp` for non-standard frames
    - Custom body axes must be orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
-   - The single-vector attitudes and the impulse attitude use `GetBodyFront()`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the engine's spacecraft with static fallback; the `TriadAttitude` constructors take literal vectors
+   - The single-vector attitudes and the impulse attitude use `GetBodyFront()`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the engine's spacecraft with static fallback outside a propagation (in one, the tank is the propagated spacecraft's, #676); the `TriadAttitude` constructors take literal vectors
    - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
    - Use factory methods `TriadAttitude.CreateLVLH()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)
    - Use `Instrument.GetBoresightInSpacecraftFrame()` and `GetRefVectorInSpacecraftFrame()` for instrument-based pointing

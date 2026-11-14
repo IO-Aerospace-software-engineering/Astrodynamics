@@ -181,7 +181,9 @@ public class AttitudeTimelineTests
     {
         int index = Array.IndexOf(AllRows, key);
         Assert.True(index >= 0, key);
-        var run = TimelineRun.Run(-(5390000 + index), key);
+        // Ids in [-2147483, -1] (#676: a frame id NaifId × 1000 in an int), their twins 100 000 below, clear of the library's
+        // transient blocks [-2147483, -2000000]
+        var run = TimelineRun.Run(-(1539000 + index), key);
         var m = Verify(run);
         _output.WriteLine($"MEASURE #539 timeline {key.Replace('|', ' ')}: windows - rules {m.Windows:E2} s, gates - rules {m.Gates:E2} s, " +
                           $"law at entries {m.AtEntries:E2} rad, between {m.Between:E2} rad, discrete {m.Discrete:E2} rad ({m.Checks} reads); " +
@@ -385,7 +387,7 @@ public class AttitudeTimelineTests
             {
                 // The scenario's Velocity-Verlet path keeps no solution: a twin through Spacecraft.Propagate, whose stored
                 // states are the scenario's to the bit
-                var (twin, _, _, _) = Build(naifId - 500000, letter, orbit, center);
+                var (twin, _, _, _) = Build(naifId - 100000, letter, orbit, center);
                 solution = twin.Propagate(window, bodies, NewIntegrator(), false, false, step);
                 Assert.Equal(twin.PropagatedStates.Select(x => (x.Epoch, x.Position, x.Velocity)), spacecraft.PropagatedStates.Select(x => (x.Epoch, x.Position, x.Velocity)));
             }

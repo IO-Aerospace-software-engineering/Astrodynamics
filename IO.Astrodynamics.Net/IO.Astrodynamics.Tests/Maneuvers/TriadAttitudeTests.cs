@@ -1426,5 +1426,50 @@ public class TriadAttitudeTests
         Assert.Equal(spc.BodyUp, sun.SecondaryBodyVector);
     }
 
+    /// <summary>
+    /// The static axes of an engine whose tank is on no spacecraft, and the axes of another spacecraft, are never pointed
+    /// in a propagation: a factory attitude drawing on such an engine is rejected before it runs (#676, #586), so the
+    /// fallback of <c>Maneuver.GetBodyAxis</c> is read outside a propagation only (#677).
+    /// </summary>
+    [Theory]
+    [InlineData("LVLH", "NoSpacecraft")]
+    [InlineData("LVLH", "OtherSpacecraft")]
+    [InlineData("ProgradeSun", "NoSpacecraft")]
+    [InlineData("ProgradeSun", "OtherSpacecraft")]
+    public void Factories_EngineNotOnSpacecraft_PropagationThrows(string factory, string engineKind)
+    {
+        var (spc, state) = CustomAxesSpacecraft("FrontZ");
+        Engine engine;
+        if (engineKind == "OtherSpacecraft")
+        {
+            var (front, right, up) = BodyAxes("FrontX");
+            var other = new Spacecraft(-671, "TriadOtherSpacecraft", 1000.0, 3000.0, new Clock("OtherClk", 65536), state, bodyFront: front,
+                bodyRight: right, bodyUp: up);
+            other.AddFuelTank(new FuelTank("ftO", "ftA", "654321", 1000.0, 900.0));
+            other.AddEngine(new Engine("engO", "engmk1", "54321", 450, 50, other.FuelTanks.First()));
+            engine = other.Engines.First();
+        }
+        else
+        {
+            engine = new Engine("engL", "engmk1", "54322", 450, 50, new FuelTank("ftL", "ftA", "654322", 1000.0, 900.0));
+        }
+
+        var epoch = state.Epoch;
+        TriadAttitude attitude = factory == "LVLH"
+            ? TriadAttitude.CreateLVLH(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromMinutes(10.0), engine)
+            : TriadAttitude.CreateProgradeWithSunTracking(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromMinutes(10.0), TestHelpers.Sun, engine);
+        spc.SetStandbyManeuver(attitude);
+
+        var earth = new IO.Astrodynamics.Body.CelestialBody(IO.Astrodynamics.SolarSystemObjects.PlanetsAndMoons.EARTH);
+        var exception = Record.Exception(() => spc.Propagate(new Window(epoch, epoch.AddSeconds(1200.0)), [earth], false, false, TimeSpan.FromSeconds(60.0)));
+
+        var rejected = Assert.IsType<InvalidOperationException>(exception);
+        Assert.Contains(engine.Name, rejected.Message);
+        Assert.Contains(spc.Name, rejected.Message);
+        Assert.False(spc.IsPropagated);
+        Assert.Empty(spc.Frame.GetStateOrientationsToICRF());
+        Assert.Empty(spc.ExecutedManeuvers);
+    }
+
     #endregion
 }
