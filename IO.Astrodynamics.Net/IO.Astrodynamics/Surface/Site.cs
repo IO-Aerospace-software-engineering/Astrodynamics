@@ -252,7 +252,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="relationalOperator"></param>
         /// <param name="value">The distance, m.</param>
         /// <param name="aberration"></param>
-        /// <param name="stepSize"></param>
+        /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
+        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
+        /// than the shortest interval where the quantity is monotone.</param>
         /// <returns></returns>
         /// <remarks>For a site from the kernels and a spacecraft from the kernels, CSPICE's <c>gfdist_c</c> searches;
         /// otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
@@ -331,7 +333,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="value"></param>
         /// <param name="adjustValue"></param>
         /// <param name="aberration"></param>
-        /// <param name="stepSize"></param>
+        /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
+        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
+        /// than the shortest interval where the quantity is monotone.</param>
         /// <returns></returns>
         public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
@@ -420,7 +424,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="value"></param>
         /// <param name="adjustValue"></param>
         /// <param name="aberration"></param>
-        /// <param name="stepSize"></param>
+        /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
+        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
+        /// than the shortest interval where the quantity is monotone.</param>
         /// <param name="illuminationSource"></param>
         /// <param name="method"></param>
         /// <returns></returns>
@@ -531,6 +537,13 @@ namespace IO.Astrodynamics.Surface
             SpiceAPI.Instance.WriteEphemeris(outputFile, NaifId, ephemeris.Select(x => x.ToStateVector()).ToArray());
         }
 
+        /// <summary>
+        /// The windows where the Sun's incidence at the site is below 90° plus the twilight angle, with light time and
+        /// stellar aberration, sampled every minute.
+        /// </summary>
+        /// <remarks>For a site from the kernels CSPICE's <c>gfilum_c</c> searches; for a site built from its coordinates
+        /// the library does (<see cref="GeometryFinder"/>), and a day or a night shorter than the minute (the Sun grazing
+        /// the twilight angle) is found as an extreme of the incidence between two samples (#678).</remarks>
         public IEnumerable<Window> FindDayWindows(in Window searchWindow, double twilight)
         {
             var sun = Stars.SUN_BODY;

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics;
@@ -16,9 +17,19 @@ namespace IO.Astrodynamics;
 /// <remarks>
 /// <para>
 /// <b>Samples.</b> The quantity is sampled at every step from the start of the search window, and at its end; nothing is
-/// evaluated outside the search window. As with CSPICE's geometry finder, the step must be shorter than the shortest
-/// window and the shortest gap, and than half the time between two extremes of the quantity: an event between two
-/// samples that leaves no trace on them is not found.
+/// evaluated outside the search window.
+/// </para>
+/// <para>
+/// <b>Step rule.</b> Between the samples, the search looks for the extremes of a <see cref="double"/> quantity that the
+/// samples hide, by the rule of the occultation search: where three consecutive samples show an extreme of the margin of
+/// the relation (the quantity minus the value, or the value minus the quantity) that does not reach zero, Brent's
+/// <c>localmin</c> locates it between their two neighbors, and the first and last intervals are searched the same way;
+/// an extreme on the other side of zero is added as a sample. Every window, gap and crossing, however short, is
+/// therefore found when the step is at most half the time between two extremes of the quantity, a jump of a branch cut
+/// counting as one (#678). A <see cref="bool"/> quantity has no margin to search between samples: its step must be
+/// shorter than every window and every gap. CSPICE's <c>gfdist_c</c>, <c>gfposc_c</c> and <c>gfilum_c</c> ask for a
+/// step shorter than the shortest interval where the quantity is monotone (for a longitude or a right ascension, where
+/// its sine or cosine is).
 /// </para>
 /// <para>
 /// <b>Transitions.</b> Each change of the relation between two samples is located to 1 µs (CSPICE's
@@ -123,7 +134,9 @@ public class GeometryFinder
     /// <see cref="RelationnalOperator.Equal"/> and <see cref="RelationnalOperator.NotEqual"/>.</param>
     /// <param name="relationalOperator">The relation.</param>
     /// <param name="targetValue">The value; ignored by the extremes.</param>
-    /// <param name="stepSize">The step of the samples, positive.</param>
+    /// <param name="stepSize">The step of the samples, positive: at most half the time between two extremes of a
+    /// <see cref="double"/> quantity, shorter than every window and gap of a <see cref="bool"/> one (the step rule of the
+    /// remarks of the class).</param>
     /// <returns>The windows, in time order.</returns>
     /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
     /// <exception cref="ArgumentException">The type is neither a double nor a boolean, or the relation is not one of a
@@ -147,7 +160,7 @@ public class GeometryFinder
     /// <param name="adjustValue">For <see cref="RelationnalOperator.AbsoluteMin"/> and
     /// <see cref="RelationnalOperator.AbsoluteMax"/>, zero for the extreme itself, or positive for the windows where the
     /// quantity is within it of the extreme; ignored by the other relations.</param>
-    /// <param name="stepSize">The step of the samples, positive.</param>
+    /// <param name="stepSize">The step of the samples, positive (the step rule of the remarks of the class).</param>
     /// <exception cref="ArgumentOutOfRangeException">The step is not positive, or the adjustment value of an absolute
     /// extreme is negative.</exception>
     internal IEnumerable<Window> FindWindowsWithCondition<T>(Window searchWindow, Func<Time, T> calculateValue,
@@ -179,7 +192,9 @@ public class GeometryFinder
 
             bool equal = relationalOperator == RelationnalOperator.Equal;
             var search = new Search(searchWindow, stepSize, null);
-            return search.ToWindows(Merge(Threshold(search, x => predicate(search.At(x)) == target == equal, null)));
+            Func<double, bool> holds = x => predicate(search.At(x)) == target == equal;
+            var offsets = search.Offsets;
+            return search.ToWindows(Merge(Threshold(search, offsets, offsets.Select(holds).ToArray(), null, holds, null)));
         }
 
         throw new ArgumentException("Invalid type");
@@ -191,13 +206,13 @@ public class GeometryFinder
         switch (relation)
         {
             case RelationnalOperator.Greater:
-                return Merge(Threshold(search, null, x => search.F(x) - value));
+                return Merge(Strict(search, x => search.F(x) - value));
             case RelationnalOperator.Lower:
-                return Merge(Threshold(search, null, x => value - search.F(x)));
+                return Merge(Strict(search, x => value - search.F(x)));
             case RelationnalOperator.GreaterOrEqual:
-                return Merge(Threshold(search, x => search.F(x) >= value, null));
+                return Merge(OrEqual(search, x => search.F(x) - value, x => search.F(x) >= value));
             case RelationnalOperator.LowerOrEqual:
-                return Merge(Threshold(search, x => search.F(x) <= value, null));
+                return Merge(OrEqual(search, x => value - search.F(x), x => search.F(x) <= value));
             case RelationnalOperator.Equal:
                 return Crossings(search, value);
             case RelationnalOperator.NotEqual:
@@ -216,19 +231,63 @@ public class GeometryFinder
     }
 
     /// <summary>
+    /// The margin of a relation at the samples (and at <paramref name="extra"/> offsets), each evaluated once, with the
+    /// extremes of the margin between them that the samples hide (<see cref="OccultationFinder.HiddenCrossings"/>): a window,
+    /// a gap or a pair of crossings shorter than the step is found when every two consecutive intervals hold at most one
+    /// extreme of the quantity.
+    /// </summary>
+    /// <param name="search">The search.</param>
+    /// <param name="margin">The margin at an offset, positive where the relation holds.</param>
+    /// <param name="zeroHolds">Whether the relation holds where the margin is zero.</param>
+    /// <param name="extra">Offsets sampled in addition to the step, inside the search window.</param>
+    /// <returns>The offsets, increasing, and the margin at each.</returns>
+    private static (List<double> X, double[] M) Sampled(Search search, Func<double, double> margin, bool zeroHolds, IEnumerable<double> extra = null)
+    {
+        var x = extra == null ? search.Offsets.ToList() : search.Offsets.Concat(extra).Distinct().OrderBy(o => o).ToList();
+        var m = x.Select(margin).ToArray();
+        var hidden = OccultationFinder.HiddenCrossings(x, m, margin, Tolerance, zeroHolds);
+        if (hidden.Count == 0)
+        {
+            return (x, m);
+        }
+
+        var points = x.Select((o, i) => (X: o, M: m[i])).Concat(hidden).OrderBy(p => p.X).ToList();
+        return (points.Select(p => p.X).ToList(), points.Select(p => p.M).ToArray());
+    }
+
+    /// <summary>
+    /// The windows where a strict relation holds: its margin positive, each change located by Brent's root finder on the
+    /// margin.
+    /// </summary>
+    private static List<(double Start, double End)> Strict(Search search, Func<double, double> margin, IEnumerable<double> extra = null)
+    {
+        var (x, m) = Sampled(search, margin, false, extra);
+        return Threshold(search, x, m.Select(v => v > 0.0).ToArray(), m, null, margin);
+    }
+
+    /// <summary>
+    /// The windows where a relation that holds at equality holds: its margin zero or positive, each change located by a
+    /// bisection of the relation.
+    /// </summary>
+    private static List<(double Start, double End)> OrEqual(Search search, Func<double, double> margin, Func<double, bool> holds)
+    {
+        var (x, m) = Sampled(search, margin, true);
+        return Threshold(search, x, m.Select(v => v >= 0.0).ToArray(), null, holds, null);
+    }
+
+    /// <summary>
     /// The windows where a relation holds, from its value at the samples: each change located by Brent's root finder on a
     /// margin, positive where the relation holds and zero or negative elsewhere, or by a bisection of the relation.
     /// </summary>
     /// <param name="search">The search.</param>
+    /// <param name="x">The offsets of the samples, increasing.</param>
+    /// <param name="h">The relation at the samples.</param>
+    /// <param name="m">The margin at the samples, for Brent's root finder; null when the relation is bisected.</param>
     /// <param name="holds">The relation at an offset, for a bisection; null when the margin is given.</param>
     /// <param name="margin">The margin at an offset, for Brent's root finder; null when the relation is given.</param>
-    /// <param name="extra">Offsets sampled in addition to the step, inside the search window.</param>
-    private static List<(double Start, double End)> Threshold(Search search, Func<double, bool> holds, Func<double, double> margin,
-        IEnumerable<double> extra = null)
+    private static List<(double Start, double End)> Threshold(Search search, IReadOnlyList<double> x, bool[] h, double[] m, Func<double, bool> holds,
+        Func<double, double> margin)
     {
-        var x = extra == null ? search.Offsets.ToList() : search.Offsets.Concat(extra).Distinct().OrderBy(o => o).ToList();
-        var m = margin == null ? null : x.Select(margin).ToArray();
-        var h = margin == null ? x.Select(holds).ToArray() : m.Select(v => v > 0.0).ToArray();
         double last = search.Length;
 
         var windows = new List<(double Start, double End)>();
@@ -311,13 +370,13 @@ public class GeometryFinder
     }
 
     /// <summary>
-    /// The crossings of a value: an instant for each sign change of the quantity minus the value between two samples that
-    /// is no jump of the quantity, and the samples, or runs of samples, where they are equal.
+    /// The crossings of a value: an instant for each sign change of the quantity minus the value between two samples, or
+    /// a sample and an extreme between samples, that is no jump of the quantity, and the samples, or runs of samples, where
+    /// they are equal.
     /// </summary>
     private static List<(double Start, double End)> Crossings(Search search, double value)
     {
-        var x = search.Offsets;
-        var g = x.Select(o => search.F(o) - value).ToArray();
+        var (x, g) = Sampled(search, o => search.F(o) - value, true);
         var found = new List<(double Start, double End)>();
         for (int i = 0; i < x.Count; i++)
         {
@@ -496,9 +555,10 @@ public class GeometryFinder
         }
 
         // The windows where the quantity is within the adjustment of the extreme; the local extremes are sampled, so that
-        // a window narrower than the step about one of them is found
+        // a window narrower than the step about one of them is found, and a gap narrower than the step is found as a
+        // hidden extreme of the margin
         double threshold = bestValue + adjust;
-        return Merge(Threshold(search, null, o => threshold - sign * search.F(o), locals));
+        return Merge(Strict(search, o => threshold - sign * search.F(o), locals));
     }
 
     /// <summary>

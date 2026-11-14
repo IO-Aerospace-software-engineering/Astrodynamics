@@ -229,7 +229,7 @@ internal static class OccultationFinder
             points.Add((x[i], m[i]));
         }
 
-        points.AddRange(HiddenCrossings(x, m, f, tolerance));
+        points.AddRange(HiddenCrossings(x, m, f, tolerance, true));
         points.Sort((p, q) => p.X.CompareTo(q.X));
 
         var windows = new List<(double Start, double End)>();
@@ -266,10 +266,20 @@ internal static class OccultationFinder
     }
 
     /// <summary>
-    /// The extremes between the samples where the margin crosses zero and back without a sample showing it.
+    /// The extremes between the samples where the margin crosses zero and back without a sample showing it: where three
+    /// consecutive samples show an extreme on one side of zero, Brent's <c>localmin</c> between its two neighbors, and the
+    /// first and last intervals when the samples beyond them leave room for an extreme; each extreme found on the other side
+    /// of zero, with the margin there. A bracket with an undefined (NaN) sample is not searched.
     /// </summary>
-    private static List<(double X, double M)> HiddenCrossings(IReadOnlyList<double> x, IReadOnlyList<double> m,
-        Func<double, double> f, double tolerance)
+    /// <param name="x">The offsets of the samples, increasing.</param>
+    /// <param name="m">The margin at the samples.</param>
+    /// <param name="f">The margin at any offset.</param>
+    /// <param name="tolerance">The convergence tolerance of <c>localmin</c>, s.</param>
+    /// <param name="zeroHolds">Whether the condition holds where the margin is zero (m ≥ 0: the occultation and
+    /// field-of-view searches, and the relations that hold at equality), or only where it is positive (m &gt; 0: the
+    /// strict relations).</param>
+    internal static List<(double X, double M)> HiddenCrossings(IReadOnlyList<double> x, IReadOnlyList<double> m,
+        Func<double, double> f, double tolerance, bool zeroHolds)
     {
         var found = new List<(double X, double M)>();
         int last = x.Count - 1;
@@ -278,11 +288,22 @@ internal static class OccultationFinder
             return found;
         }
 
+        bool Holds(double margin) => zeroHolds ? margin >= 0.0 : margin > 0.0;
+
         void Search(int from, int to, bool maximum)
         {
-            // A maximum is searched only below zero, a minimum only above: otherwise the samples already bracket a change
-            if (maximum ? m[from] >= 0.0 || m[to] >= 0.0 || (to - from == 2 && m[from + 1] >= 0.0)
-                    : m[from] < 0.0 || m[to] < 0.0 || (to - from == 2 && m[from + 1] < 0.0))
+            for (int i = from; i <= to; i++)
+            {
+                if (double.IsNaN(m[i]))
+                {
+                    return;
+                }
+            }
+
+            // A maximum is searched only where no sample holds, a minimum only where every sample holds: otherwise the
+            // samples already bracket a change
+            if (maximum ? Holds(m[from]) || Holds(m[to]) || (to - from == 2 && Holds(m[from + 1]))
+                    : !Holds(m[from]) || !Holds(m[to]) || (to - from == 2 && !Holds(m[from + 1])))
             {
                 return;
             }
@@ -291,8 +312,12 @@ internal static class OccultationFinder
             double half = 0.5 * (x[to] - a);
             double middle = a + half;
             double sign = maximum ? -1.0 : 1.0;
-            double offset = Brent.Minimize(o => sign * f(middle + o), -half, half, tolerance, out double value, 0.0);
-            if (value < 0.0)
+
+            // The search stops at the first point on the other side: a positive margin for a maximum, a negative one (or,
+            // when zero fails, zero) for a minimum
+            double stopBelow = maximum || zeroHolds ? 0.0 : double.Epsilon;
+            double offset = Brent.Minimize(o => sign * f(middle + o), -half, half, tolerance, out double value, stopBelow);
+            if (value < stopBelow)
             {
                 found.Add((middle + offset, sign * value));
             }
@@ -300,7 +325,7 @@ internal static class OccultationFinder
 
         if (last == 1)
         {
-            Search(0, 1, m[0] < 0.0);
+            Search(0, 1, !Holds(m[0]));
             return found;
         }
 

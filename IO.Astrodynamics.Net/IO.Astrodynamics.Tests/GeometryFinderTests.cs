@@ -344,6 +344,149 @@ public class GeometryFinderTests
             GeometryReference.ThresholdElevationExtreme);
     }
 
+    // #678: sin(2π t / 5400 s) over a day, whose extremes are 2700 s apart; it exceeds 0.995 (and falls below -0.995) 16
+    // times, for 171.959 s each, from (5400 s / 2π) asin 0.995 = 1264.020 s after the start of each period (2700 s after it)
+    private const double Period = 5400.0;
+    private static readonly Window Day = new(Start, Start.AddSeconds(86400.0));
+    private static readonly double Rise = Period / (2.0 * System.Math.PI) * System.Math.Asin(0.995);
+    private static double Sine(double t) => System.Math.Sin(2.0 * System.Math.PI * t / Period);
+
+    private static Window[] FindOverTheDay(Func<double, double> f, RelationnalOperator relation, double value, double stepMinutes, double adjust = 0.0) =>
+        new GeometryFinder().FindWindowsWithCondition(Day, Of(f), relation, value, adjust, TimeSpan.FromMinutes(stepMinutes)).ToArray();
+
+    private void AssertClosedForm(string label, IReadOnlyList<(double Start, double End)> expected, IReadOnlyList<Window> actual)
+    {
+        _output.WriteLine($"{label}: {actual.Count} windows, {expected.Count} expected");
+        Assert.Equal(expected.Count, actual.Count);
+        double worst = 0.0;
+        for (int i = 0; i < expected.Count; i++)
+        {
+            worst = System.Math.Max(worst, System.Math.Abs(Seconds(actual[i].StartDate) - expected[i].Start));
+            worst = System.Math.Max(worst, System.Math.Abs(Seconds(actual[i].EndDate) - expected[i].End));
+        }
+
+        _output.WriteLine($"{label}: worst |search - closed form| {worst:E3} s");
+        AssertWindows(expected, actual, RootTolerance);
+    }
+
+    [Theory]
+    [InlineData(RelationnalOperator.Greater, 0.995, 3.0)]
+    [InlineData(RelationnalOperator.Greater, 0.995, 10.0)]
+    [InlineData(RelationnalOperator.Greater, 0.995, 22.0)]
+    [InlineData(RelationnalOperator.GreaterOrEqual, 0.995, 3.0)]
+    [InlineData(RelationnalOperator.GreaterOrEqual, 0.995, 10.0)]
+    [InlineData(RelationnalOperator.GreaterOrEqual, 0.995, 22.0)]
+    [InlineData(RelationnalOperator.Lower, -0.995, 3.0)]
+    [InlineData(RelationnalOperator.Lower, -0.995, 10.0)]
+    [InlineData(RelationnalOperator.Lower, -0.995, 22.0)]
+    [InlineData(RelationnalOperator.LowerOrEqual, -0.995, 3.0)]
+    [InlineData(RelationnalOperator.LowerOrEqual, -0.995, 10.0)]
+    [InlineData(RelationnalOperator.LowerOrEqual, -0.995, 22.0)]
+    public void Threshold_WindowsShorterThanTheStep_FoundUpToHalfTheTimeBetweenExtremes(RelationnalOperator relation, double value, double stepMinutes)
+    {
+        // #678: no window at 3 and 10 min, 2 at 22 min; a step of 22 min is less than half the 2700 s between extremes.
+        // The windows of the maxima, or of the minima half a period later
+        double shift = value > 0.0 ? 0.0 : 0.5 * Period;
+        var expected = Enumerable.Range(0, 16).Select(k => (k * Period + shift + Rise, k * Period + shift + 0.5 * Period - Rise)).ToArray();
+        AssertClosedForm($"{relation} {value} at {stepMinutes} min", expected, FindOverTheDay(Sine, relation, value, stepMinutes));
+    }
+
+    [Fact]
+    public void Equal_CrossingsCloserThanTheStep_AndNotEqual()
+    {
+        // #678: at a 10 min step, Equal gave none of the 32 crossings and NotEqual the whole day
+        var crossings = Enumerable.Range(0, 16).SelectMany(k => new[] { k * Period + Rise, k * Period + 0.5 * Period - Rise }).ToArray();
+        AssertClosedForm("Equal 0.995 at 10 min", crossings.Select(c => (c, c)).ToArray(), FindOverTheDay(Sine, RelationnalOperator.Equal, 0.995, 10.0));
+
+        var gaps = new List<(double, double)>();
+        double previous = 0.0;
+        foreach (var c in crossings)
+        {
+            gaps.Add((previous, c));
+            previous = c;
+        }
+
+        gaps.Add((previous, 86400.0));
+        AssertClosedForm("NotEqual 0.995 at 10 min", gaps, FindOverTheDay(Sine, RelationnalOperator.NotEqual, 0.995, 10.0));
+    }
+
+    private static (double Start, double End)[] AroundGaps(double first, double halfWidth)
+    {
+        // The windows of the day outside 16 gaps, centred every period from the first
+        var windows = new List<(double Start, double End)>();
+        double previous = 0.0;
+        for (int k = 0; k < 16; k++)
+        {
+            double centre = first + k * Period;
+            windows.Add((previous, centre - halfWidth));
+            previous = centre + halfWidth;
+        }
+
+        windows.Add((previous, 86400.0));
+        return windows.ToArray();
+    }
+
+    [Fact]
+    public void Threshold_GapShorterThanTheStep_Found()
+    {
+        // #678: one window over the whole day. sin > -0.995 everywhere but 171.959 s about each minimum, at 4050 s + k 5400 s
+        AssertClosedForm("Greater -0.995 at 10 min", AroundGaps(0.75 * Period, 0.25 * Period - Rise),
+            FindOverTheDay(Sine, RelationnalOperator.Greater, -0.995, 10.0));
+    }
+
+    [Fact]
+    public void AbsoluteMin_Adjust_GapShorterThanTheStep()
+    {
+        // #678: one window over the whole day. -cos(2π t / 5400 s) has its absolute minimum -1 at the start; within 1.995 of
+        // it, below 0.995, everywhere but 171.959 s about each maximum, at 2700 s + k 5400 s
+        Func<double, double> f = t => -System.Math.Cos(2.0 * System.Math.PI * t / Period);
+        AssertClosedForm("AbsoluteMin adjust 1.995 at 10 min", AroundGaps(0.5 * Period, 0.25 * Period - Rise),
+            FindOverTheDay(f, RelationnalOperator.AbsoluteMin, 0.0, 10.0, 1.995));
+    }
+
+    [Fact]
+    public void Greater_HiddenWindowFromASampleAtTheValue()
+    {
+        // #678: 1/64 - ((t - 640 s) / 320 s)^2 > 0 over (600, 680) s; at a 120 s step the samples at 480 and 720 s are negative
+        // and the one at 600 s exactly zero, which fails the strict relation: no window before
+        var window = new Window(Start, Start.AddSeconds(1200.0));
+        Func<double, double> f = t => 1.0 / 64.0 - (t - 640.0) / 320.0 * ((t - 640.0) / 320.0);
+        Assert.Equal(0.0, f(600.0));
+        var windows = new GeometryFinder().FindWindowsWithCondition(window, Of(f), RelationnalOperator.Greater, 0.0, TimeSpan.FromSeconds(120.0)).ToArray();
+        AssertClosedForm("parabola Greater 0", [(600.0, 680.0)], windows);
+    }
+
+    [Theory]
+    [InlineData(7.0)]
+    [InlineData(10.0)]
+    [InlineData(20.0)]
+    public void BranchCut_ShortWindowBeforeTheJump(double stepMinutes)
+    {
+        // #678: no window. A right ascension (2π (t + 1000 s) / 5400 s) mod 2π jumps from 2π to 0 at 4400 s + k 5400 s, between
+        // the samples; it exceeds 2π - 0.01 over the 0.01 (5400 s) / 2π = 8.594 s before each jump, and the window ends there
+        Func<double, double> ra = t =>
+        {
+            double turns = (t + 1000.0) / Period;
+            return 2.0 * System.Math.PI * (turns - System.Math.Floor(turns));
+        };
+        double width = 0.01 * Period / (2.0 * System.Math.PI);
+        var expected = Enumerable.Range(0, 16).Select(k => (4400.0 + k * Period - width, 4400.0 + k * Period)).ToArray();
+        AssertClosedForm($"sawtooth at {stepMinutes} min", expected, FindOverTheDay(ra, RelationnalOperator.Greater, 2.0 * System.Math.PI - 0.01, stepMinutes));
+    }
+
+    [Fact]
+    public void UndefinedQuantity_InsideAFailingStretch_IsNoWindow()
+    {
+        // An undefined quantity holds no relation: NaN over [90, 91) s inside a stretch where it fails
+        Assert.Empty(Find(t => t is >= 90.0 and < 91.0 ? double.NaN : -1.0, RelationnalOperator.Greater, 0.0));
+
+        // Every sample undefined, in a search window of one interval: no extreme is searched between them
+        var window = new Window(Start, Start.AddSeconds(30.0));
+        var finder = new GeometryFinder();
+        Assert.Empty(finder.FindWindowsWithCondition(window, t => double.NaN, RelationnalOperator.Greater, 0.0, Step));
+        Assert.Empty(finder.FindWindowsWithCondition(window, t => double.NaN, RelationnalOperator.Lower, 0.0, Step));
+    }
+
     private void LogDeltas(string label, IReadOnlyList<Window> actual, double[] expected)
     {
         for (int i = 0; i < System.Math.Min(actual.Count, expected.Length); i++)
