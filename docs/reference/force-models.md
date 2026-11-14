@@ -40,9 +40,14 @@ Earth built without one; another body without a model throws `ArgumentException`
 - about a central body other than the Sun, its atmosphere gives the drag, whether or not it is listed; without one (a
   Moon, a Mars, built without a model) the propagation throws `InvalidOperationException` naming it, before anything
   changes, whatever the listed bodies;
-- about the Sun (a star or barycentre observer, SSB mode), the listed bodies with a configured model give the drag, and
-  the propagation throws when none has one;
-- in both cases, the other listed bodies with a configured model add their drag.
+- about the Sun (a star or barycentre observer, SSB mode), the listed bodies with an atmosphere give the drag, and the
+  propagation throws when none has one (no Earth listed, and no body with a model);
+- in both cases, the other listed bodies with an atmosphere add their drag.
+
+An Earth always has an atmosphere: wherever the library decides whether a body has one (drag about the central body, in
+SSB mode, from a listed non-central body, and `AtmosphericDrag`), an Earth without a model takes NRLMSISE-00 at nominal
+space weather (decided by S. Guillet, 2026-11-14). `HasAtmosphericModel` says whether a model was given, not whether the
+body has an atmosphere.
 
 ### SolarRadiationPressure
 

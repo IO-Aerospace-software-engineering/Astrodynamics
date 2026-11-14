@@ -1362,11 +1362,13 @@ release are listed under **Known limitations**.
   integrators), a Moon-centred run with drag and no atmosphere ran without an error, and the CDM of such a run wrote
   `ATMOSPHERIC_MODEL = NONE`. The drag of a central body is now that of its atmosphere: its model, or for an Earth
   without one NRLMSISE-00 at nominal space weather, the model `GetAtmosphere` already gave it; another central body
-  without a model throws, and about the Sun (SSB mode) the listed bodies with a model give the drag (Changed below).
-  `ForceModelDefectTests` checks on every entry point (the constructors, the builder, `Spacecraft.Propagate` and
+  without a model throws. An Earth always has at least that atmosphere (decided by S. Guillet, 2026-11-14): a listed
+  Earth without a model, in SSB mode or beside another central body, adds its drag, where it was dropped too (Changed
+  below). `ForceModelDefectTests` checks on every entry point (the constructors, the builder, `Spacecraft.Propagate` and
   `PropagateAsync`, the three `Scenario.SimulateAsync`, the batch) that the run about `EARTH_BODY` equals bit for bit the
   run about an Earth built with `new Nrlmsise00Model(SpaceWeather.Nominal)`, the force and its partials too, and that a
-  parallel batch equals its serial runs.
+  parallel batch equals its serial runs; and on nine paths, both integrators, that a listed `EARTH_BODY` in SSB mode
+  and beside a Moon central body with a model equals bit for bit the run listing that explicit Earth.
 - **A `GeopotentialModelParameters` built one body** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). The parameters kept the caller's `StreamReader`, which
   the first body read to its end and closed, so a second `new CelestialBody(..., parameters)` threw
   `ObjectDisposedException`. The coefficients are now read once, behind a thread-safe `Lazy`, and shared, read only, by
@@ -1736,15 +1738,20 @@ release are listed under **Known limitations**.
   `includeAtmosphericDrag: true` now has drag: over one day on a 6800 km orbit with A = 1 m², m = 100 kg and Cd 2.2,
   4.627 km in RK7(8) at 1e-11 and 4.265 km in Velocity-Verlet at 60 s; Ψ gains its Cd column, which moves the
   covariance, and the CDM names `NRLMSISE-00`. The get-started RK7(8) example, about `EARTH_BODY` with drag, now has
-  drag. A run with a configured model, or without drag, is unchanged, bit for bit. Migration: pass
-  `includeAtmosphericDrag: false` for the former result, or give the Earth the model you want.
+  drag. So does a listed Earth without a model where the central body is not that Earth (decided by S. Guillet,
+  2026-11-14): in SSB mode (a star or barycentre observer), where the run ran without drag, and beside another central
+  body with a model, whose drag it ran alone. On a 6700 km orbit with A = 10 m², m = 100 kg and Cd 2.2, 51.4 m over
+  20 min in Velocity-Verlet at 10 s and 51.25 m in RK7(8) at 1e-10, in SSB mode as about a Moon given a model; 0.64 m
+  over 600 s for the VV-SSB variant of `GcrfPropagationTests` (6778 km, 1000 kg). A run with a configured model, or
+  without drag, is unchanged, bit for bit. Migration: pass `includeAtmosphericDrag: false` for the former result, or
+  give the Earth the model you want.
 - **Breaking: drag about another central body without an atmospheric model throws** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): a central body
   other than the Earth and the Sun without a model throws `InvalidOperationException` naming it, before anything changes,
   whatever the listed bodies (a Moon-centred run with an atmospheric Earth listed applied that Earth's drag alone; Mars
   without a model; `astro propagate` about the Moon with `-a`). About the Sun (a star or barycentre observer, SSB mode),
-  drag comes from the listed bodies with a configured model, as before, and the run throws when none has one
-  (`EARTH_BODY` listed alone ran without drag). Migration: give the body an `IAtmosphericModel`, or pass
-  `includeAtmosphericDrag: false`.
+  drag comes from the listed bodies with an atmosphere, an Earth always having one (above), and the run throws when none
+  has one, the Moon alone without a model for instance (it ran without drag). Migration: give the body an
+  `IAtmosphericModel`, or pass `includeAtmosphericDrag: false`.
 - **Breaking: the central body takes part on every path** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): the constructors of
   `CentralBodyPropagator`, `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync` and the batch insert the
   central body first when no listed body has its NAIF identifier, as the builder did: its atmosphere gives drag (4.760 km
@@ -1763,8 +1770,9 @@ release are listed under **Known limitations**.
 - **Breaking: `CelestialBody.GetAtmosphere` and the context getters read the body's model** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): with a
   full context an Earth with a configured model returns that model (US 1976: 2.80e-12 kg/m³ at 400 km instead of
   5.24e-12), and on a model-less Earth `GetAirDensity`, `GetAirPressure` and `GetAirTemperature` return NRLMSISE-00 at
-  nominal space weather where they returned 0, 0 and NaN. An altitude-only context, and another body without a model,
-  still give NaN, 0 and 0. `HasAtmosphericModel` still says whether a model was given. Migration: none.
+  nominal space weather where they returned 0, 0 and NaN. An altitude-only or null context, and another body without a
+  model, still give NaN, 0 and 0 (`GetAtmosphere` of a model-less Earth threw `NullReferenceException` on a null
+  context). `HasAtmosphericModel` still says whether a model was given. Migration: none.
 - **Breaking: a force-building path rejects an integrator that holds forces or was already used** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above):
   `Spacecraft.Propagate` with an integrator, the constructors of `CentralBodyPropagator` with celestial bodies, the
   builder (a second `Build()` included) and the batch, Monte Carlo and scenario factories throw `ArgumentException`

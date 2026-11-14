@@ -117,4 +117,20 @@ public class CelestialBodyAtmosphereTests
         Assert.Equal(0.0, PlanetsAndMoons.EARTH_BODY.GetAirDensity(400e3));
         Assert.Equal(0.0, PlanetsAndMoons.MOON_BODY.GetAirDensity(100e3, 0.1, 0.2, Epoch));
     }
+
+    [Fact]
+    public void ModellessBodies_WithANullContext_HaveNoAtmosphere()
+    {
+        // A null context is an incomplete one: NaN, 0 and 0, as the getters of a model-less body returned before #674
+        foreach (var body in new[] { PlanetsAndMoons.EARTH_BODY, PlanetsAndMoons.MOON_BODY })
+        {
+            Assert.True(double.IsNaN(body.GetAirTemperature((IAtmosphericContext)null)));
+            Assert.Equal(0.0, body.GetAirPressure((IAtmosphericContext)null));
+            Assert.Equal(0.0, body.GetAirDensity((IAtmosphericContext)null));
+            var atmosphere = body.GetAtmosphere((AtmosphericContext)null);
+            Assert.True(double.IsNaN(atmosphere.Temperature));
+            Assert.Equal(0.0, atmosphere.Pressure);
+            Assert.Equal(0.0, atmosphere.Density);
+        }
+    }
 }

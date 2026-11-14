@@ -50,7 +50,7 @@
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation/eclipse windows ([Occultations](occultations.md)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Compute angular separation |
 | `SubObserverPoint(CelestialBody, Time, Aberration)` | Get sub-observer point |
-| `GetAtmosphere(double)` / `GetAtmosphere(AtmosphericContext)` | Get atmospheric data: from the configured atmospheric model of the body; for an Earth without one, NRLMSISE-00 at nominal space weather (the atmosphere of its drag) when the context holds the geodetic position and the epoch; otherwise a NaN temperature and a zero pressure and density. `GetAirDensity`, `GetAirPressure` and `GetAirTemperature` give the same values (#674) |
+| `GetAtmosphere(double)` / `GetAtmosphere(AtmosphericContext)` | Get atmospheric data: from the configured atmospheric model of the body; for an Earth without one, NRLMSISE-00 at nominal space weather (the atmosphere of its drag) when the context holds the geodetic position and the epoch; otherwise (a null context included) a NaN temperature and a zero pressure and density. `GetAirDensity`, `GetAirPressure` and `GetAirTemperature` give the same values (#674) |
 
 ### Example
 

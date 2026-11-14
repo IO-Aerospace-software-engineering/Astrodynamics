@@ -503,7 +503,7 @@ var drag = new AtmosphericDrag(spacecraft, earth);
 In a propagation the central body takes part whether or not it is listed, with the observer's models; listed bodies of
 one NAIF identifier must have the same models (`ArgumentException` otherwise); drag about a central body other than the
 Earth and the Sun without a model throws `InvalidOperationException`, and about the Sun (SSB mode) comes from the listed
-bodies with a model. A force-building path rejects an integrator that holds forces or was already used, and every entry
+bodies with an atmosphere; an Earth always has one (NRLMSISE-00 nominal without a model), listed or central. A force-building path rejects an integrator that holds forces or was already used, and every entry
 rejects a step of zero or less.
 
 **Solar Radiation Pressure (`SolarRadiationPressure`)**

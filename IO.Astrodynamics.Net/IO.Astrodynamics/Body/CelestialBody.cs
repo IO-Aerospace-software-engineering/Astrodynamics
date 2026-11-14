@@ -66,8 +66,14 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     public double J4 { get; }
 
     /// <summary>
-    /// Gets the atmospheric model of the celestial body.
+    /// Gets the atmospheric model given to the celestial body, null when none was given.
     /// </summary>
+    /// <remarks>
+    /// The atmosphere of the body is this model, or for an Earth without one NRLMSISE-00 at nominal space weather: an
+    /// Earth always has an atmosphere, wherever the library decides whether a body has one (drag about the central body,
+    /// in SSB mode and from a listed non-central body, <see cref="Propagator.Forces.AtmosphericDrag"/>, and the getters
+    /// with a full context); another body without a model has none (#674).
+    /// </remarks>
     protected IAtmosphericModel AtmosphericModel { get; }
 
     /// <summary>
@@ -89,8 +95,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     public double ThermalEmissivity { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the celestial body was given an atmospheric model. An Earth without one still has
-    /// an atmosphere, NRLMSISE-00 at nominal space weather, read by its drag and, with a full context, by its getters.
+    /// Gets a value indicating whether the celestial body was given an atmospheric model, not whether it has an
+    /// atmosphere: an Earth without one still has NRLMSISE-00 at nominal space weather, read by its drag, central or
+    /// listed, and with a full context by its getters (#674).
     /// </summary>
     public bool HasAtmosphericModel => AtmosphericModel != null;
 
@@ -104,7 +111,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <summary>
     /// The model that answers <paramref name="context"/>: the atmospheric model of the body, or for an Earth without one
     /// NRLMSISE-00 at nominal space weather when the context holds the geodetic position and the epoch, which that model
-    /// needs; null otherwise.
+    /// needs; null otherwise, a null context being an incomplete one.
     /// </summary>
     private IAtmosphericModel AtmosphereFor(IAtmosphericContext context)
     {
@@ -113,8 +120,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             return AtmosphericModel;
         }
 
-        return NaifId == EarthNaifId && context.GeodeticLatitude.HasValue && context.GeodeticLongitude.HasValue &&
-               context.Epoch.HasValue
+        return NaifId == EarthNaifId && context is { GeodeticLatitude: not null, GeodeticLongitude: not null, Epoch: not null }
             ? EarthDefaultAtmosphere.Model
             : null;
     }
@@ -554,8 +560,10 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <remarks>
     /// The configured atmospheric model of the body answers, for every body. An Earth without one answers with
     /// NRLMSISE-00 at nominal space weather when the context holds the geodetic position and the epoch, the model its
-    /// drag uses, with its molecular densities in <see cref="Atmosphere.Atmosphere.Details"/>; without them, and for any
-    /// other body without a model, the temperature is NaN and the pressure and density 0 (#674).
+    /// drag uses, with its molecular densities in <see cref="Atmosphere.Atmosphere.Details"/>; without them, a null
+    /// context included, and for any other body without a model, the temperature is NaN and the pressure and density 0, as
+    /// <see cref="GetAirTemperature(IAtmosphericContext)"/>, <see cref="GetAirPressure(IAtmosphericContext)"/> and
+    /// <see cref="GetAirDensity(IAtmosphericContext)"/> give (#674).
     /// </remarks>
     public Atmosphere.Atmosphere GetAtmosphere(AtmosphericContext context)
     {

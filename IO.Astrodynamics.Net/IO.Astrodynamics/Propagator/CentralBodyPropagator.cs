@@ -38,15 +38,16 @@ public class CentralBodyPropagator : PropagatorBase
     /// listed body has its NAIF identifier, so that a run that lists it is unchanged. Listed bodies of one NAIF identifier,
     /// the observer's included, must have the same models (GM, radii, gravitational field, atmospheric model). Drag about a
     /// central body is that of its atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without one;
-    /// about the Sun (a star or barycentre observer), that of the listed bodies with a model. The integrator must be a new
-    /// instance: the propagator adds the forces to it (#674).
+    /// each other listed body with an atmosphere adds its drag, an Earth always having one, and about the Sun (a star or
+    /// barycentre observer) the drag is that of those bodies. The integrator must be a new instance: the propagator adds
+    /// the forces to it (#674).
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
     /// <exception cref="ArgumentException">The integrator already holds forces or was already used by a propagation that
     /// builds its forces; or two listed bodies of one NAIF identifier, or a listed body and the observer, have different
     /// models.</exception>
     /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Earth and the Sun
-    /// without an atmospheric model, or about the Sun with no listed body that has one.</exception>
+    /// without an atmospheric model, or about the Sun with no listed Earth and no listed body with a model.</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
         IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
@@ -258,7 +259,7 @@ public class CentralBodyPropagator : PropagatorBase
     /// <exception cref="ArgumentException">Two listed bodies of one NAIF identifier, or a listed body and the observer,
     /// have different models.</exception>
     /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Earth and the Sun
-    /// without an atmospheric model, or about the Sun with no listed body that has one.</exception>
+    /// without an atmospheric model, or about the Sun with no listed Earth and no listed body with a model.</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft,
         IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
@@ -313,10 +314,12 @@ public class CentralBodyPropagator : PropagatorBase
     /// <remarks>
     /// Drag about a central body other than the Sun is that of its atmosphere: its atmospheric model, or NRLMSISE-00 at
     /// nominal space weather for an Earth without one; about the Sun (a star or barycentre observer, SSB mode), that of the
-    /// listed bodies with a model. The other bodies with an atmospheric model add their drag in both cases (#674).
+    /// listed bodies with an atmosphere. The other bodies with an atmosphere add their drag in both cases, an Earth without
+    /// a model with NRLMSISE-00 at nominal space weather: an Earth always has an atmosphere (#674, amendment of
+    /// 2026-11-14).
     /// </remarks>
     /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Sun without an
-    /// atmosphere, or about the Sun with no listed body that has an atmospheric model.</exception>
+    /// atmosphere, or about the Sun with no listed body that has one (no Earth, and no body with a model).</exception>
     protected static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
         CelestialItem[] items, Spacecraft spacecraft,
         bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
@@ -348,7 +351,8 @@ public class CentralBodyPropagator : PropagatorBase
         return forces;
     }
 
-    // The drag forces, in the order of the bodies, the central body's where it is listed, first otherwise
+    // The drag forces, in the order of the bodies, the central body's where it is listed, first otherwise; each body with
+    // an atmosphere, an Earth without a model taking NRLMSISE-00 at nominal space weather (amendment of 2026-11-14)
     private static void AddDrag(List<ForceBase> forces, CelestialItem centralBody, CelestialItem[] items,
         Spacecraft spacecraft)
     {
@@ -376,7 +380,7 @@ public class CentralBodyPropagator : PropagatorBase
                     centralAdded = true;
                 }
             }
-            else if (body.HasAtmosphericModel)
+            else if (body.Atmosphere != null)
             {
                 forces.Add(new AtmosphericDrag(spacecraft, body));
             }
@@ -391,8 +395,8 @@ public class CentralBodyPropagator : PropagatorBase
         {
             throw new InvalidOperationException(
                 "Atmospheric drag is asked about the Sun (the central body of a star or barycentre observer), and no " +
-                "listed body has an atmospheric model: list a CelestialBody built with an IAtmosphericModel, or do not " +
-                "include atmospheric drag.");
+                "listed body has an atmosphere: list an Earth (without a model it takes NRLMSISE-00 at nominal space " +
+                "weather) or a CelestialBody built with an IAtmosphericModel, or do not include atmospheric drag.");
         }
     }
 

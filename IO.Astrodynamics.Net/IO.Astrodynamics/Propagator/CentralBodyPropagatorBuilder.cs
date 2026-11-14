@@ -145,7 +145,7 @@ public class CentralBodyPropagatorBuilder
     /// <exception cref="InvalidOperationException">The covariance is asked for, and the initial orbital parameters carry
     /// none, carry it at another epoch than the start of the window, or carry one that is not symmetric and positive
     /// semi-definite; or drag is asked about a central body other than the Earth and the Sun without an atmospheric
-    /// model, or about the Sun with no perturbing body that has one.</exception>
+    /// model, or about the Sun with no perturbing Earth and no perturbing body with a model.</exception>
     public CentralBodyPropagator Build()
     {
         // Create propagator via the auto-building constructor

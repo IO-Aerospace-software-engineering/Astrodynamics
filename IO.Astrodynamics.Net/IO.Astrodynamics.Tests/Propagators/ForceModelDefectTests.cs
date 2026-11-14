@@ -342,28 +342,101 @@ public class ForceModelDefectTests
         }
     }
 
+    public static TheoryData<string> ListedEarthPaths() => new()
+    {
+        "Propagate", "Propagate RK78", "VV default constructor", "RK78 constructor", "builder", "Scenario",
+        "Scenario RK78", "Batch", "Batch RK78"
+    };
+
+    [Theory]
+    [MemberData(nameof(ListedEarthPaths))]
+    public void DragInSsbMode_FromAListedModellessEarth_IsNrlmsise00Nominal(string path)
+    {
+        // Arrange: the orbit relative to the barycenter, its central body the Sun, EARTH_BODY listed; the same orbit with
+        // an Earth given NRLMSISE-00 at nominal space weather listed; and without drag (amendment of 2026-11-14: an Earth
+        // always has at least the base atmosphere)
+        var explicitEarth = EarthWith(new Nrlmsise00Model(SpaceWeather.Nominal));
+        var window = new Window(Epoch, Epoch.AddMinutes(20.0));
+        var step = TimeSpan.FromSeconds(10.0);
+        var modelless = NewSsbSpacecraft(PlanetsAndMoons.EARTH_BODY);
+        var configured = NewSsbSpacecraft(explicitEarth);
+        var withoutDrag = NewSsbSpacecraft(PlanetsAndMoons.EARTH_BODY);
+
+        // Act
+        var defaulted = Run(path, modelless, new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY }, true,
+            false, window, step);
+        var expected = Run(path, configured, new CelestialItem[] { explicitEarth, Stars.SUN_BODY }, true, false, window,
+            step);
+        var noDrag = Run(path, withoutDrag, new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY }, false,
+            false, window, step);
+
+        // Assert: the listed Earth's default is its explicit setting, bit for bit, and it is drag
+        double effect = (defaulted.Position - noDrag.Position).Magnitude();
+        _output.WriteLine($"{path}: SSB mode, drag of EARTH_BODY over 20 min {effect:E3} m");
+        Assert.True(effect > 1.0, $"{path}: the drag of a listed model-less Earth moved the orbit by {effect:E3} m");
+        AssertSameState(expected, defaulted, path);
+    }
+
+    [Theory]
+    [MemberData(nameof(ListedEarthPaths))]
+    public void DragFromAListedModellessNonCentralEarth_IsNrlmsise00Nominal(string path)
+    {
+        // Arrange: a low Earth orbit propagated about the Moon, given an atmospheric model (US 1976, zero at the Earth's
+        // distance), EARTH_BODY listed as a third body; the same with an Earth given NRLMSISE-00 at nominal space weather
+        // listed; and without drag
+        var moon = new CelestialBody(PlanetsAndMoons.MOON, atmosphericModel: new EarthStandardAtmosphere());
+        var explicitEarth = EarthWith(new Nrlmsise00Model(SpaceWeather.Nominal));
+
+        Spacecraft AboutMoon()
+        {
+            var geocentric = new StateVector(new Vector3(6700000.0, 0.0, 0.0), new Vector3(0.0, 7713.0, 1000.0),
+                PlanetsAndMoons.EARTH_BODY, Epoch, Frames.Frame.ICRF);
+            int id = NextId();
+            return new Spacecraft(id, $"FM{-id}", 100.0, 10000.0, new Clock($"fmclk{-id}", 65536),
+                geocentric.RelativeTo(moon, Aberration.None).ToStateVector(), 10.0, 2.2);
+        }
+
+        var window = new Window(Epoch, Epoch.AddMinutes(20.0));
+        var step = TimeSpan.FromSeconds(10.0);
+
+        // Act
+        var defaulted = Run(path, AboutMoon(),
+            new CelestialItem[] { moon, PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY }, true, false, window, step);
+        var expected = Run(path, AboutMoon(), new CelestialItem[] { moon, explicitEarth, Stars.SUN_BODY }, true, false,
+            window, step);
+        var noDrag = Run(path, AboutMoon(), new CelestialItem[] { moon, PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY },
+            false, false, window, step);
+
+        // Assert: the listed Earth adds its default drag, bit for bit its explicit setting
+        double effect = (defaulted.Position - noDrag.Position).Magnitude();
+        _output.WriteLine($"{path}: about the Moon, drag of EARTH_BODY over 20 min {effect:E3} m");
+        Assert.True(effect > 1.0, $"{path}: the drag of a listed model-less Earth moved the orbit by {effect:E3} m");
+        AssertSameState(expected, defaulted, path);
+    }
+
     [Fact]
     public void DragInSsbMode_ListedAtmospheres()
     {
-        // Arrange: the orbit relative to the barycenter, its central body the Sun; an Earth with US 1976 listed
+        // Arrange: the orbit relative to the barycenter, its central body the Sun; an Earth with US 1976 listed, then the
+        // Moon alone, a body other than the Earth without a model
         var earth = EarthWith(new EarthStandardAtmosphere());
         var window = new Window(Epoch, Epoch.AddMinutes(20.0));
         var step = TimeSpan.FromSeconds(10.0);
         var withDrag = NewSsbSpacecraft(earth);
         var withoutDrag = NewSsbSpacecraft(earth);
-        var modelless = NewSsbSpacecraft(earth);
+        var moonOnly = NewSsbSpacecraft(earth);
 
         // Act
         var dragged = Run("Propagate", withDrag, new CelestialItem[] { earth, Stars.SUN_BODY }, true, false, window, step);
         var free = Run("Propagate", withoutDrag, new CelestialItem[] { earth, Stars.SUN_BODY }, false, false, window, step);
-        var exception = Assert.Throws<InvalidOperationException>(() => Run("Propagate", modelless,
-            new CelestialItem[] { PlanetsAndMoons.EARTH_BODY, Stars.SUN_BODY }, true, false, window, step));
+        var exception = Assert.Throws<InvalidOperationException>(() => Run("Propagate", moonOnly,
+            new CelestialItem[] { PlanetsAndMoons.MOON_BODY, Stars.SUN_BODY }, true, false, window, step));
 
-        // Assert: the drag of the listed atmosphere applies; without one, the request throws
+        // Assert: the drag of the listed atmosphere applies; with no listed body that has an atmosphere, the request throws
         double effect = (dragged.Position - free.Position).Magnitude();
         _output.WriteLine($"SSB mode, drag over 20 min {effect:E3} m; {exception.Message}");
         Assert.True(effect > 0.1, $"{effect:E3} m");
-        Assert.Empty(modelless.PropagatedStates);
+        Assert.Empty(moonOnly.PropagatedStates);
     }
 
     [Fact]

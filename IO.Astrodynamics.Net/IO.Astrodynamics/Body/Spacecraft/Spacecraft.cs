@@ -590,8 +590,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; or the covariance is asked
         /// for, and the initial orbital parameters carry none, carry it at another epoch than the start of the window,
         /// or carry one that is not symmetric and positive semi-definite; or drag is asked about a central body other
-        /// than the Earth and the Sun without an atmospheric model, or about the Sun with no listed body that has
-        /// one.</exception>
+        /// than the Earth and the Sun without an atmospheric model, or about the Sun with no listed Earth and no listed
+        /// body with a model.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive.</exception>
         /// <remarks>
         /// The options and the initial covariance are checked before anything changes: when they are rejected, the

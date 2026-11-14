@@ -130,10 +130,7 @@ public class GcrfPropagationTests
             }
 
             Integrator integrator = variant == "RK78" ? new RK78Integrator() : new VVIntegrator(TimeSpan.FromSeconds(1.0));
-            // In SSB mode drag comes from the listed bodies with an atmospheric model, and this Earth has none: drag off, as
-            // the variant ran before #674, where the request was dropped
-            var solution = spacecraft.Propagate(Window, Bodies(earth), integrator, !variant.EndsWith("SSB"), true,
-                TimeSpan.FromSeconds(60.0));
+            var solution = spacecraft.Propagate(Window, Bodies(earth), integrator, true, true, TimeSpan.FromSeconds(60.0));
             return (solution, spacecraft);
         }
 
