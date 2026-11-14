@@ -15,16 +15,32 @@
 | `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error) |
 | `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673) |
 | `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for a path longer than 255 characters, #673) |
-| `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560) |
+| `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
 celestial body: a barycenter (0 to 9), the Sun (10), a planet, a moon or a Lagrange point (101 to 999), or an identifier
 above 1000 (an asteroid, a comet, a star of the library). Any other identifier, a spacecraft or an instrument (negative)
 among them, throws `ArgumentException`: the native layer reads the centre of motion of any named identifier and ended the
-process for a named spacecraft such as CASSINI (-82) before 11.0.0; an identifier without a name returned an empty
-record. The same check guards the ellipsoid of an occultation search whose frame is read from the body
-(`FindWindowsOnOccultationConstraint` without frames) and the observer of `ReadEphemeris` by identifiers, which is built
-as a celestial body.
+process for a named spacecraft such as CASSINI (-82) before 11.0.0. So does an identifier of those classes that SPICE
+does not name, by its built-in names or the loaded kernels (12345678, 2000003): its record held the name of a previous
+call or undefined bytes (#672). The same checks guard the ellipsoid of an occultation search whose frame is read from the
+body (`FindWindowsOnOccultationConstraint` without frames, `ArgumentException` naming `frontBodyId` or `targetId`) and the
+observer of `ReadEphemeris` by identifiers built as a celestial body. A Lagrange point (391 to 395) is the exception:
+`CelestialItem.Create`, and so the observer of `ReadEphemeris`, builds it as a `LagrangePoint` without reading its body
+information, whether the kernels name it or not (`Data/SolarSystem` names none of them; the `LagrangePoint` constructor
+reads its state at J2000 TDB, so its SPK must cover that epoch), while `GetCelestialBodyInfo` and `new CelestialBody` of
+an unnamed one throw.
+
+A body the kernel pool gives no `BODYnnn_RADII` has radii 0, one it gives no `BODYnnn_GM` a GM of 0, and its frame is
+still read (`cnmfrm_c`); a barycentre has no frame (an empty `FrameName`, `FrameId` 0). Before #672 a missing variable
+left the GM 0 and the frame name undefined (Pallas, Nix, Hydra, Didymos and Dimorphos read GM 0; Elara a garbage frame).
+
+The observer of `ReadEphemeris` by identifiers is a `Site` for a site identifier, its body's identifier times 1000 plus
+its own (1 to 999), the body a planet or a moon (399013 is DSS-13 on the Earth): `new Site(id % 1000, its SPICE name,
+new CelestialBody(id / 1000))`, whose constructor reads the site's state at J2000 TDB, so its SPK must cover that epoch.
+Any other identifier is built by `CelestialItem.Create`, a barycenter, a Lagrange point or a celestial body (#672: a
+site observer was built as a celestial body, which threw or was built from undefined bytes). The state itself is
+`spkezr_c`'s, which needs only the identifier.
 
 SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
 File Naming"). `LoadKernels` hands it the full path, so a longer one fails with `SPICE(FILENAMETOOLONG)`; the native

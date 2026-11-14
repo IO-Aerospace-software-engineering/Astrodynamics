@@ -12,8 +12,16 @@
 #include <Constants.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <locale>
+#include <sstream>
+#include <string>
+#include <vector>
 
 TEST(API, TDBToString)
 {
@@ -300,9 +308,230 @@ TEST(API, GetBodyInformationWithoutJ)
     ASSERT_TRUE(std::isnan(res.J4));
 }
 
+// The CSPICE calls of these tests reach the library's kernel pool on Linux and macOS only: on Windows the DLL exports none
+// of cspice.lib, so the test executable links its own copy of CSPICE, whose kernel pool is empty and whose error state is its
+// own (#672). What the library reads from the pool is therefore checked against the text of the kernels of Data/SolarSystem,
+// as KernelTextValues does in the .NET tests, and CSPICE is called directly only for what any copy holds without a kernel:
+// its built-in body names and frames.
+
+// The values of a kernel variable in the data of a text kernel of Data/SolarSystem, read without SPICE: an assignment "="
+// replaces them, "+=" appends to them; the values, in parentheses or not, separated by blanks or commas, a Fortran exponent
+// D read as E. Empty when the kernel does not assign the variable
+static std::vector<double> KernelTextValues(const std::string &kernel, const std::string &name)
+{
+    std::ifstream file(std::string(SolarSystemKernelPath) + "/" + kernel);
+    if (!file.is_open())
+    {
+        ADD_FAILURE() << "Kernel not found: " << kernel;
+        return {};
+    }
+    std::vector<double> values;
+    bool inData{false};
+    bool inValues{false};
+    bool inParentheses{false};
+    std::string line;
+    while (std::getline(file, line))
+    {
+        const auto first = line.find_first_not_of(" \t\r");
+        const std::string content = first == std::string::npos ? std::string{} : line.substr(first);
+        if (content.rfind("\\begindata", 0) == 0 || content.rfind("\\begintext", 0) == 0)
+        {
+            inData = content.rfind("\\begindata", 0) == 0;
+            continue;
+        }
+        if (!inData)
+        {
+            continue;
+        }
+        std::string text;
+        if (inValues)
+        {
+            text = content;
+        } else
+        {
+            const auto end = content.find_first_of(" \t+=");
+            if (content.substr(0, end) != name)
+            {
+                continue;
+            }
+            const auto equal = content.find('=', end);
+            if (equal == std::string::npos)
+            {
+                continue;
+            }
+            if (content.find('+', end) >= equal)
+            {
+                values.clear();
+            }
+            text = content.substr(equal + 1);
+            const auto open = text.find_first_not_of(" \t\r");
+            inParentheses = open != std::string::npos && text[open] == '(';
+            inValues = true;
+        }
+        const auto close = text.find(')');
+        inValues = inParentheses && close == std::string::npos;
+        text = text.substr(0, close);
+        for (auto &c: text)
+        {
+            if (c == '(' || c == ',' || c == '\r')
+            {
+                c = ' ';
+            } else if (c == 'D' || c == 'd')
+            {
+                c = 'E';
+            }
+        }
+        std::istringstream stream(text);
+        stream.imbue(std::locale::classic());
+        double value{};
+        while (stream >> value)
+        {
+            values.push_back(value);
+        }
+    }
+    return values;
+}
+
+// The number of doubles between two finite doubles of the same sign (0 when equal)
+static std::int64_t UlpDistance(double a, double b)
+{
+    if (a == b)
+    {
+        return 0;
+    }
+    std::int64_t x{}, y{};
+    std::memcpy(&x, &a, sizeof a);
+    std::memcpy(&y, &b, sizeof b);
+    return std::llabs(x - y);
+}
+
+// The bound, in ulp, of a GM the library reads through CSPICE against the kernel text parsed by the C++ library (correctly
+// rounded): CSPICE's parse of the decimal text is not. bodvcd_c on gm_de431.tpc, times 1e9, is 0 or 1 ulp from it for the
+// barycentres 1 to 9, Pallas, Nix, the Earth and the Moon, 4 for the Sun and for the sum over 1 to 10 (Linux x64,
+// 2026-11-14). The tests print each body's ulp (MEASURE #672): at worst 4 ulp on Linux, 4 on Windows and 5 on macOS
+// arm64, the sum over 1 to 10 on each (build-native jobs of CI run 43602458842 at 33b9faf, 2026-11-14; the macOS x64
+// job cross-compiles on the arm64 runner and does not run the C++ tests); twice that worst
+inline constexpr std::int64_t SpiceParseUlps = 10;
+
+// The GM against the text of gm_de431.tpc, no radii where pck00011.tpc has none, and the built-in body-fixed frame given by
+// CSPICE, not through the proxy nor CelestialBody::ReadGM (#672)
+static void ExpectBodyReadAsKernels(int id, const char *name, const char *frameName, int frameId)
+{
+    const auto gm = KernelTextValues("gm_de431.tpc", "BODY" + std::to_string(id) + "_GM");
+    ASSERT_EQ(1u, gm.size());
+    ASSERT_TRUE(KernelTextValues("pck00011.tpc", "BODY" + std::to_string(id) + "_RADII").empty());
+    SpiceInt frcode{};
+    SpiceChar frname[32]{};
+    SpiceBoolean frameFound{false};
+    cnmfrm_c(name, 32, &frcode, frname, &frameFound);
+    ASSERT_TRUE(frameFound);
+    ASSERT_STREQ(frameName, frname);
+    ASSERT_EQ(frameId, frcode);
+
+    auto res = GetCelestialBodyInfoProxy(id);
+    ASSERT_EQ(id, res.Id);
+    ASSERT_STREQ(name, res.Name);
+    const auto ulps = UlpDistance(gm[0] * 1E+09, res.GM);
+    std::cout << "MEASURE #672 GM of " << id << " from gm_de431.tpc's text, ulp: " << ulps << std::endl;
+    ASSERT_LE(ulps, SpiceParseUlps);
+    ASSERT_EQ(0.0, res.Radii.x);
+    ASSERT_EQ(0.0, res.Radii.y);
+    ASSERT_EQ(0.0, res.Radii.z);
+    ASSERT_STREQ(frname, res.FrameName);
+    ASSERT_EQ(frcode, res.FrameId);
+}
+
+TEST(API, GetBodyInformationGmWithoutRadii)
+{
+    // A GM in gm_de431.tpc, no RADII in pck00011.tpc: before #672 the failed RADII read left GM 0 and the frame unread
+    ExpectBodyReadAsKernels(2000002, "PALLAS", "IAU_PALLAS", 10102);
+    ExpectBodyReadAsKernels(902, "NIX", "IAU_NIX", 10108);
+}
+
+TEST(API, GetBodyInformationRadiiWithoutGm)
+{
+    // BODY507_RADII = (40 40 40) km in pck00011.tpc, no BODY507_GM in gm_de431.tpc
+    ASSERT_TRUE(KernelTextValues("gm_de431.tpc", "BODY507_GM").empty());
+    ASSERT_EQ((std::vector<double>{40.0, 40.0, 40.0}), KernelTextValues("pck00011.tpc", "BODY507_RADII"));
+    SpiceInt frcode{};
+    SpiceChar frname[32]{};
+    SpiceBoolean frameFound{false};
+    cnmfrm_c("ELARA", 32, &frcode, frname, &frameFound);
+    ASSERT_TRUE(frameFound);
+
+    auto res = GetCelestialBodyInfoProxy(507);
+    ASSERT_EQ(507, res.Id);
+    ASSERT_STREQ("ELARA", res.Name);
+    ASSERT_EQ(0.0, res.GM);
+    ASSERT_EQ(40000.0, res.Radii.x);
+    ASSERT_EQ(40000.0, res.Radii.y);
+    ASSERT_EQ(40000.0, res.Radii.z);
+    ASSERT_STREQ("IAU_ELARA", frname);
+    ASSERT_STREQ(frname, res.FrameName);
+    ASSERT_EQ(10029, frcode);
+    ASSERT_EQ(frcode, res.FrameId);
+}
+
+TEST(API, GetBodyInformationSolarSystemBarycenterGm)
+{
+    // The GM of the solar system barycentre is the sum of the GM of the barycentres 1 to 9 and of the Sun
+    double expected{};
+    for (int i = 1; i <= 10; ++i)
+    {
+        const auto gm = KernelTextValues("gm_de431.tpc", "BODY" + std::to_string(i) + "_GM");
+        ASSERT_EQ(1u, gm.size());
+        expected += gm[0] * 1E+09;
+    }
+
+    auto res = GetCelestialBodyInfoProxy(0);
+    ASSERT_EQ(0, res.Id);
+    ASSERT_STREQ("SOLAR SYSTEM BARYCENTER", res.Name);
+    const auto ulps = UlpDistance(expected, res.GM);
+    std::cout << "MEASURE #672 GM of 0 from gm_de431.tpc's text (the sum over 1 to 10), ulp: " << ulps << std::endl;
+    ASSERT_LE(ulps, SpiceParseUlps);
+    ASSERT_STREQ("", res.FrameName);
+}
+
+TEST(API, GetBodyInformationBarycenter)
+{
+    SpiceInt frcode{};
+    SpiceChar frname[32]{};
+    SpiceBoolean frameFound{true};
+    cnmfrm_c("EARTH BARYCENTER", 32, &frcode, frname, &frameFound);
+    ASSERT_FALSE(frameFound);
+
+    // A named body first, so that the stack holds its frame name
+    auto earth = GetCelestialBodyInfoProxy(399);
+    ASSERT_STREQ("ITRF93", earth.FrameName);
+    auto res = GetCelestialBodyInfoProxy(3);
+    ASSERT_EQ(3, res.Id);
+    ASSERT_STREQ("EARTH BARYCENTER", res.Name);
+    ASSERT_STREQ("", res.FrameName);
+    ASSERT_EQ(0, res.FrameId);
+}
+
 TEST(API, GetBodyInformationInvalidId)
 {
-    auto res = GetCelestialBodyInfoProxy(398);
+    for (int id: {398, 12345678})
+    {
+        SpiceChar name[32]{};
+        SpiceBoolean found{true};
+        bodc2n_c(id, 32, name, &found);
+        ASSERT_FALSE(found);
+
+        // A named body first, so that the stack holds its name and frame name
+        auto earth = GetCelestialBodyInfoProxy(399);
+        ASSERT_STREQ("EARTH", earth.Name);
+        auto res = GetCelestialBodyInfoProxy(id);
+        ASSERT_EQ(-1, res.Id);
+        ASSERT_STREQ("", res.Name);
+        ASSERT_STREQ("", res.FrameName);
+        ASSERT_EQ(0, res.FrameId);
+        ASSERT_EQ(0.0, res.GM);
+        ASSERT_EQ(0.0, res.Radii.x);
+        ASSERT_EQ(0.0, res.Radii.y);
+        ASSERT_EQ(0.0, res.Radii.z);
+    }
 }
 
 TEST(API, TransformFrame)

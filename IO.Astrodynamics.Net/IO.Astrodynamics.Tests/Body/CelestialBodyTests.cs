@@ -117,6 +117,37 @@ public class CelestialBodyTests
     }
 
     [Fact]
+    public void Pallas_BuildsWithTheKernelGm()
+    {
+        // A GM in gm_de440.tpc and no RADII in pck00011.tpc: the failed RADII read left GM 0 and the frame unread, so the
+        // body could not be built (#672). The GM is the kernel text's, to SPICE's parse; the frame that of cnmfrm_c
+        double expected = KernelTextValues.GravitationalParameter(2000002);
+        for (int i = 0; i < 3; i++)
+        {
+            var pallas = new CelestialBody(2000002);
+            Assert.Equal("PALLAS", pallas.Name);
+            Assert.True(KernelTextValues.UlpDistance(expected, pallas.GM) <= KernelTextValues.SpiceParseUlps,
+                $"GM {pallas.GM:R}, the kernel text gives {expected:R}");
+            Assert.Equal(pallas.GM / IO.Astrodynamics.Constants.G, pallas.Mass);
+            Assert.Equal("IAU_PALLAS", pallas.Frame.Name);
+            Assert.Equal(0.0, pallas.EquatorialRadius);
+            Assert.Equal(0.0, pallas.Flattening);
+            Assert.Null(pallas.InitialOrbitalParameters);
+        }
+    }
+
+    [Fact]
+    public void Kerberos_WithoutFrame_Throws()
+    {
+        // KERBEROS has a GM and no body-fixed frame (cnmfrm_c finds none): the body cannot be built, every time (#672)
+        for (int i = 0; i < 3; i++)
+        {
+            var e = Assert.Throws<InvalidOperationException>(() => new CelestialBody(904));
+            Assert.Contains("frame", e.Message);
+        }
+    }
+
+    [Fact]
     public void CelestialBodyToString()
     {
         var earth = TestHelpers.EarthAtJ2000;

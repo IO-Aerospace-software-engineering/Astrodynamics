@@ -36,6 +36,22 @@
 | `GeopotentialModelParameters.CentralTerm` (`init`) | The GM of the central term: the body's (`GeopotentialCentralTerm.BodyGravitationalParameter`, the default) or the model's (`ModelGravitationalParameter`, as GMAT applies a `.cof` header); see [Force Models](force-models.md#the-central-term-with-the-gm-of-the-model) |
 | `CelestialBody(NaifObject, geopotentialModelParameters = null, atmosphericModel = null, albedo = 0, thermalEffectiveTemperature = 0, thermalEmissivity = 0)` | Create with a geopotential, an atmosphere and radiation properties (named arguments for the last three, e.g. `albedo: 0.3`) |
 
+A body built from its identifier (`new CelestialBody(id)`, `CelestialItem.Create(id)`) reads its constants from the
+loaded kernels through the data provider (`SpiceAPI.GetCelestialBodyInfo` for the default `SpiceDataProvider`):
+
+- its name, which SPICE gives (`bodc2n_c`, built-in names or a kernel's `NAIF_BODY_NAME`); an identifier SPICE does not
+  name throws `ArgumentException` (#672), as one that is not a celestial body does (#560);
+- its GM from `BODYnnn_GM`, 0 when the kernel pool has none (Elara, Nereid: 39 bodies of `pck00011.tpc` have radii and
+  no GM in `gm_de440.tpc`);
+- its radii from `BODYnnn_RADII`, 0 when the pool has none (Pallas, Nix, Didymos), the flattening then 0;
+- its body-fixed frame, the one `cnmfrm_c` associates with its name; a body without one (Kerberos, Styx) throws
+  `InvalidOperationException`.
+
+Before #672 a missing `BODYnnn_RADII` or `BODYnnn_GM` left the GM 0 and the frame undefined, so Pallas could not be
+built and Elara was built with a garbage frame name. A site identifier (399013, DSS-13) builds a body named after the site,
+of GM 0 and frame `DSS-13_TOPO`, classed as an asteroid around the Sun
+([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)): build a `Site` instead.
+
 ### Methods
 
 | Method | Description |

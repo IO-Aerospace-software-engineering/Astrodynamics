@@ -12,10 +12,10 @@ namespace IO::Astrodynamics::API::DTO
         int Id{-1};
         int CenterOfMotionId{-1};
         int BarycenterOfMotionId{-1};
-        char Name[32];
+        char Name[32]{};
         IO::Astrodynamics::API::DTO::Vector3DDTO Radii{};
         double GM{};
-        char FrameName[32];
+        char FrameName[32]{};
         int FrameId{0};
         double J2{0.0};
         double J3{0.0};

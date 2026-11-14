@@ -40,7 +40,8 @@ public class Helpers
 
         if (objectId is > 100_000 and < 999_999)
         {
-            // A site's NAIF identifier is its body's times 1000 plus its own (399013 is DSS-13 on the Earth)
+            // A site's NAIF identifier is its body's times 1000 plus its own (399013 is DSS-13 on the Earth). Kept apart on
+            // purpose from SpiceAPI.IsSiteId, the rule of SpiceAPI.ReadEphemeris's observer (#672), which is internal
             var id = objectId % 1000;
             localizableObject = new Site(id, $"site{id}", new CelestialBody(objectId / 1000));
         }
