@@ -115,7 +115,19 @@ Use `Configuration.Instance.SetDataProvider(...)` to swap between SPICE-backed a
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the two
 entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
-states. A read outside the entries throws `ArgumentException`.
+states. Missing data throw `InvalidOperationException`, which the library's handlers of missing data catch (#680): a
+state read for a target without entries or outside them and an orientation read outside a frame's entries, the type
+SPICE throws for the same reads. A bad argument throws `ArgumentException` (#680, decided by S. Guillet, 2026-11-14): a
+frame never added, and the information of an identifier never added, whose `ParamName` is `naifId`, the type and the
+parameter `SpiceDataProvider.GetCelestialBodyInfo` throws for an identifier SPICE does not name or that is not a
+celestial body's (#672); `new CelestialBody(id)` and `CelestialItem.Create(id)` of that identifier throw it too, on both
+providers, except `CelestialItem.Create` of a Lagrange point (391 to 395), which reads the point's state and not its
+information (above): a provider without that state throws `InvalidOperationException`, as SPICE for L3, whose state
+`Data/SolarSystem` lacks. A body whose barycentre's data, information included, the provider lacks builds with
+`InitialOrbitalParameters` null and an infinite sphere of influence, as a body the kernels do not chain to its
+barycentre (SPICE names every barycentre), and the orientation cache of a propagation keeps the points the entries do not
+reach unavailable. Before 11.0.0 the state and orientation reads threw `ArgumentException` and the information of an
+identifier never added `KeyNotFoundException`.
 
 ```csharp
 var memoryProvider = new MemoryDataProvider();

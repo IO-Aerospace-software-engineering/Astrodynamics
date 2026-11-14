@@ -79,14 +79,15 @@ These frames are critical for precise orbit determination and high-accuracy grou
 
 ## Equatorial Coordinates
 
-Extract right ascension and declination from a state vector:
+Extract right ascension and declination from a state vector. They are in ICRF whatever the frame of the state: a
+state in another frame is rotated to ICRF at its epoch first (#680).
 
 ```csharp
 var eq = svICRF.ToEquatorial();
 
 Console.WriteLine($"RA:  {eq.RightAscension * Constants.Rad2Deg:F4} deg");
 Console.WriteLine($"Dec: {eq.Declination * Constants.Rad2Deg:F4} deg");
-Console.WriteLine($"Range: {eq.Range:F0} m");
+Console.WriteLine($"Distance: {eq.Distance:F0} m");
 ```
 
 Equatorial coordinates are useful for observation planning and sensor pointing.
@@ -122,4 +123,4 @@ var back = planetocentric.ToPlanetodetic(earth.Flattening, earth.EquatorialRadiu
 - All frame transforms pivot through ICRF. Use `ToFrame` to convert between any supported frames.
 - Body-fixed frames (`IAU_EARTH`, `IAU_MOON`, etc.) rotate with the body.
 - GCRF, CIRS, and TIRS frames provide the IAU CIO-based Earth orientation chain.
-- `ToEquatorial` extracts RA/Dec; `Planetodetic` represents geodetic surface coordinates.
+- `ToEquatorial` extracts the ICRF RA/Dec whatever the frame of the state; `Planetodetic` represents geodetic surface coordinates.

@@ -26,7 +26,7 @@ namespace IO.Astrodynamics.Maneuver
         public override double ComputeEventValue(StateVector localState)
         {
             var intersectionDir = DetermineIntersectionDirection(localState);
-            var perpDir = localState.SpecificAngularMomentum().Cross(intersectionDir).Normalize();
+            var perpDir = localState.SpecificAngularMomentum().Cross(intersectionDir).NormalizeOrZero();
             return localState.Position * perpDir;
         }
 
@@ -44,12 +44,12 @@ namespace IO.Astrodynamics.Maneuver
             {
                 IntersectsP = true;
                 IntersectsQ = false;
-                return stateVector.ToStateVector(pv).Position.Normalize();
+                return stateVector.ToStateVector(pv).Position.NormalizeOrZero();
             }
 
             IntersectsP = false;
             IntersectsQ = true;
-            return stateVector.ToStateVector(qv).Position.Normalize();
+            return stateVector.ToStateVector(qv).Position.NormalizeOrZero();
         }
 
         private double AngleDifference(double angleA, double angleB)

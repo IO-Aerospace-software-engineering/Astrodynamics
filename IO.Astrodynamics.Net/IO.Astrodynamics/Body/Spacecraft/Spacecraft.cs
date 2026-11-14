@@ -136,9 +136,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="naifId"/> is not in [-2147483, -1]
         /// (#676), or a mass, coefficient, area or radius is out of its range.</exception>
         /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed, or when
-        /// <paramref name="clock"/> is attached to a spacecraft of another NAIF id (#676: an SCLK identifies one spacecraft
-        /// id).</exception>
+        /// <exception cref="ArgumentException">Thrown when body axes are not orthogonal or not right-handed, when a body axis
+        /// has a magnitude of 0 (the exception names it, #680), or when <paramref name="clock"/> is attached to a spacecraft
+        /// of another NAIF id (#676: an SCLK identifies one spacecraft id).</exception>
         public Spacecraft(int naifId, string name, double mass, double maximumOperatingMass, Clock clock, OrbitalParameters.OrbitalParameters initialOrbitalParameters,
             double sectionalArea = 1.0, double dragCoeff = 2.2, string cosparId = null, double solarRadiationCoeff = 1.0,
             Vector3? bodyFront = null, Vector3? bodyRight = null, Vector3? bodyUp = null, double hardBodyRadius = 0.0) : base(
@@ -161,9 +161,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
             SolarRadiationCoeff = solarRadiationCoeff;
             HardBodyRadius = hardBodyRadius;
 
-            BodyFront = bodyFront?.Normalize() ?? Vector3.VectorY;
-            BodyRight = bodyRight?.Normalize() ?? Vector3.VectorX;
-            BodyUp = bodyUp?.Normalize() ?? Vector3.VectorZ;
+            BodyFront = BodyAxis(bodyFront, Vector3.VectorY, nameof(bodyFront));
+            BodyRight = BodyAxis(bodyRight, Vector3.VectorX, nameof(bodyRight));
+            BodyUp = BodyAxis(bodyUp, Vector3.VectorZ, nameof(bodyUp));
 
             if (bodyFront.HasValue || bodyRight.HasValue || bodyUp.HasValue)
             {
@@ -259,6 +259,23 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 throw new ArgumentOutOfRangeException(paramName, hardBodyRadius,
                     "The hard-body radius must be finite and not negative.");
             }
+        }
+
+        // The unit vector of a given body axis, or the default; an axis of magnitude 0 has no direction (#680: zero axes were
+        // accepted when the dot products of ValidateBodyAxes all vanished)
+        private static Vector3 BodyAxis(Vector3? axis, Vector3 defaultAxis, string paramName)
+        {
+            if (!axis.HasValue)
+            {
+                return defaultAxis;
+            }
+
+            if (axis.Value.Magnitude() == 0.0)
+            {
+                throw new ArgumentException("A body axis must have a non-zero magnitude.", paramName);
+            }
+
+            return axis.Value.NormalizeOrZero();
         }
 
         private void ValidateBodyAxes()

@@ -338,9 +338,13 @@ public readonly record struct Matrix
             q3 = 0.25 * s;
         }
 
-        return new Quaternion(q0, new Vector3(q1, q2, q3)).Normalize();
+        return new Quaternion(q0, new Vector3(q1, q2, q3)).NormalizeOrZero();
     }
 
+    /// <summary>
+    /// Whether the two matrices have the same dimensions and, element by element, values equal by
+    /// <see cref="double.Equals(double)"/>: NaN equals NaN only, +0 equals -0.
+    /// </summary>
     public bool Equals(Matrix other)
     {
         if (Rows != other.Rows)
@@ -357,7 +361,10 @@ public readonly record struct Matrix
         {
             for (int j = 0; j < Columns; j++)
             {
-                if (System.Math.Abs(_data[i, j] - other.Get(i, j)) > Double.Epsilon)
+                // double.Equals, the semantics of Vector3 and of the record structs: NaN equals NaN only, +0 equals -0 (#680:
+                // |a - b| > Double.Epsilon is false for NaN and for two entries one smallest subnormal apart, which compared
+                // equal, so equality was not transitive and equal matrices hashed differently)
+                if (!_data[i, j].Equals(other.Get(i, j)))
                 {
                     return false;
                 }
@@ -421,7 +428,7 @@ public readonly record struct Matrix
     /// <returns>A 3x3 rotation matrix.</returns>
     public static Matrix FromQuaternion(Quaternion q)
     {
-        var qn = q.Normalize();
+        var qn = q.NormalizeOrZero();
         double w = qn.W;
         double x = qn.VectorPart.X;
         double y = qn.VectorPart.Y;

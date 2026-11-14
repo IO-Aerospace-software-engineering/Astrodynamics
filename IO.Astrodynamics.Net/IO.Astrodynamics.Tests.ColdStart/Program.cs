@@ -36,6 +36,8 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <item><c>lagrange-window</c>: <see cref="SpiceAPI.ReadEphemeris(Window, int, int, Frame, Aberration, TimeSpan)"/> from
 /// L1 over 60 s every 30 s; the same read.</item>
 /// </list>
+/// The mode <c>memory-provider</c> (#680) takes the kernel directory alone and has no thread nor schedule: the library on a
+/// <see cref="MemoryDataProvider"/> set as the global provider, see <see cref="MemoryProviderChild"/>.
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
 /// </para>
@@ -65,6 +67,12 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        // #680: the library on a MemoryDataProvider set as the global provider, which the test process never swaps (#631)
+        if (args.Length == 2 && args[1] == "memory-provider")
+        {
+            return MemoryProviderChild.Run(args[0]);
+        }
+
         // Before the schedule check and before any kernel is loaded: the text of a TLE is checked before any SPICE read
         if (args.Length == 2 && args[1] == "tle-text")
         {
@@ -185,7 +193,7 @@ internal static class Program
     private static int Usage()
     {
         Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], " +
-                                "or <kernel directory> tle-text");
+                                "or <kernel directory> memory-provider, or <kernel directory> tle-text");
         return 2;
     }
 

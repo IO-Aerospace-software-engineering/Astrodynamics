@@ -145,7 +145,7 @@ internal sealed class ApparentPositionReader
     /// </summary>
     internal static Vector3 StellarAberration(in Vector3 position, in Vector3 observerVelocity)
     {
-        var u = position.Normalize();
+        var u = position.NormalizeOrZero();
         var h = u.Cross(observerVelocity / Constants.C);
         double sinPhi = h.Magnitude();
         if (sinPhi == 0.0)

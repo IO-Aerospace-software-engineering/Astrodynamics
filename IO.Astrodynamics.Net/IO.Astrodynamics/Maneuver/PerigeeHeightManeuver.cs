@@ -34,7 +34,7 @@ namespace IO.Astrodynamics.Maneuver
             var apogee = stateVector.ApogeeVector().Magnitude();
             double vInit = stateVector.Velocity.Magnitude();
             double vFinal = System.Math.Sqrt(stateVector.Observer.GM * ((2.0 / apogee) - (1.0 / ((apogee + TargetPerigeeHeight) / 2.0))));
-            return stateVector.Velocity.Normalize() * (vFinal - vInit);
+            return stateVector.Velocity.NormalizeOrZero() * (vFinal - vInit);
         }
     }
 }

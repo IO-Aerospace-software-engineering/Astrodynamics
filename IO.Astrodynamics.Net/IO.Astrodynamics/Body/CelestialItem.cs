@@ -178,12 +178,25 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     // The state about the barycenter of the body's system; null when the loaded kernels do not chain the body to it (Mars
     // to Pluto and their moons with de440s alone), and the sphere of influence of a CelestialBody is then +Infinity, as
     // for a body built from custom parameters. Before #454 the native read returned an undefined state there; a read
-    // that needs the body's position still throws
+    // that needs the body's position still throws. A provider without information on the barycentre, which SPICE always
+    // names (0 to 9), throws ArgumentException for its identifier (MemoryDataProvider, #680): the identifier is the
+    // library's, not the caller's, and the barycentre's information is missing data, so the body builds without an orbit
+    // as when the barycentre's state is missing, and as the same body built on SPICE
     private OrbitalParameters.OrbitalParameters ReadStateAboutBarycenter(in Time epoch, Frame frame)
     {
+        Barycenter barycenter;
         try
         {
-            return GetEphemeris(epoch, new Barycenter(BarycenterOfMotionId, epoch), frame, Aberration.None);
+            barycenter = new Barycenter(BarycenterOfMotionId, epoch);
+        }
+        catch (Exception e) when (e is ArgumentException or InvalidOperationException)
+        {
+            return null;
+        }
+
+        try
+        {
+            return GetEphemeris(epoch, barycenter, frame, Aberration.None);
         }
         catch (InvalidOperationException)
         {
@@ -612,7 +625,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                               fromPosition.ToStateVector().Position;
         var target2Position = this.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
                               fromPosition.ToStateVector().Position;
-        return target1Position.Normalize().Angle(target2Position.Normalize());
+        return target1Position.NormalizeOrZero().Angle(target2Position.NormalizeOrZero());
     }
 
 
@@ -1075,7 +1088,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 evaluateCoordinates = date =>
                 {
                     var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                    var equatorial = stateVector.ToEquatorial();
+                    // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
+                    var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
                     return coordinate switch
                     {
                         Coordinate.Declination => equatorial.Declination,

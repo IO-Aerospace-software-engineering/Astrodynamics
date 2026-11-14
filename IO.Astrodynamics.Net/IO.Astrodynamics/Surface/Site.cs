@@ -367,7 +367,8 @@ namespace IO.Astrodynamics.Surface
                     evaluateCoordinates = date =>
                     {
                         var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                        var equatorial = stateVector.ToEquatorial();
+                        // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
+                        var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
                         return coordinate switch
                         {
                             Coordinate.Declination => equatorial.Declination,
