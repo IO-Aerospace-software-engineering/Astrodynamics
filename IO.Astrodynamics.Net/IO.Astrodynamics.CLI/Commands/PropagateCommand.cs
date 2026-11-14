@@ -20,7 +20,7 @@ public class PropagateCommand
 
     [Command("propagate", Description = "Propagate a small body")]
     public async Task Propagate(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Body name")] string bodyName,
         Parameters.OrbitalParameters orbitalParameters,
@@ -43,7 +43,7 @@ public class PropagateCommand
     )
     {
         //Load kernels
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         //Initialize date
         Clock clock = new Clock($"clock{bodyName}", 65536);

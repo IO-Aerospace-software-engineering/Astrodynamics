@@ -109,30 +109,55 @@ public sealed class CaseKernelsTests : IDisposable
     }
 
     [Fact]
-    public void AKernelInsideASetAlreadyLoaded_IsAnError_AndTheKernelsLoadedBeforeItAreUnloaded()
+    public void AKernelInsideASetAlreadyLoaded_IsAnError_AndTheSetStaysLoaded()
     {
-        // Arrange: a directory data/inside/ loaded as a whole, as the runner loads its set. SpiceAPI takes a path whose
-        // name contains that of a loaded set for a part of it and reloads the set instead, so data/inside.bpc is never
-        // loaded for the case
-        var data = Path.Combine(_directory, "data");
-        var set = new DirectoryInfo(Path.Combine(data, "inside"));
-        set.Create();
-        File.Copy(Path.Combine(data, Kernel), Path.Combine(set.FullName, Kernel));
-        File.Copy(Path.Combine(data, Kernel), Path.Combine(data, "inside.bpc"));
-        SpiceAPI.Instance.LoadKernels(set);
+        // Arrange: data/ loaded as a whole, as the runner loads its set. SpiceAPI reloads the set for a path inside it (paths
+        // compared by components, #673), so the suite's bpc is never loaded for the case alone
+        var data = new DirectoryInfo(Path.Combine(_directory, "data"));
+        SpiceAPI.Instance.LoadKernels(data);
         try
         {
-            // Act
-            var exception = Assert.Throws<InvalidOperationException>(() => new CaseKernels(_directory, new[] { Kernel, "inside.bpc" }));
+            var loadedBefore = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
 
-            // Assert: the suite's bpc, loaded first, is unloaded
-            Assert.Contains("inside.bpc", exception.Message);
-            Assert.DoesNotContain(SpiceAPI.Instance.GetLoadedKernels(), k => k.FullName == Path.Combine(data, Kernel));
-            Assert.Contains(SpiceAPI.Instance.GetLoadedKernels(), k => k.FullName == set.FullName);
+            // Act
+            var exception = Assert.IsType<InvalidOperationException>(Construct(new[] { Kernel }));
+
+            // Assert: the set is listed as before, the kernel not on its own
+            Assert.Contains(Kernel, exception.Message);
+            Assert.Equal(loadedBefore, SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName));
+            Assert.Contains(data.FullName, loadedBefore);
+            Assert.DoesNotContain(Path.Combine(data.FullName, Kernel), loadedBefore);
         }
         finally
         {
-            SpiceAPI.Instance.UnloadKernels(set);
+            SpiceAPI.Instance.UnloadKernels(data);
         }
+    }
+
+    [Fact]
+    public void AKernelSpiceCannotLoad_IsAnError_AndTheKernelsLoadedBeforeItAreUnloaded()
+    {
+        // Arrange: a binary PCK cut after its ID word, which SPICE fails to read and does not hold (measured with CSPICE N0067)
+        File.WriteAllBytes(Path.Combine(_directory, "data", "cut.bpc"), "DAF/PCK "u8.ToArray().Concat(new byte[100]).ToArray());
+        var before = Itrf93();
+        var loadedBefore = SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName).ToArray();
+
+        // Act
+        var exception = Assert.IsType<InvalidOperationException>(Construct(new[] { Kernel, "cut.bpc" }));
+
+        // Assert: the suite's bpc, loaded first, is unloaded, and the runner's orientation restored bit for bit
+        Assert.Contains("cut.bpc", exception.Message);
+        Assert.Equal(loadedBefore, SpiceAPI.Instance.GetLoadedKernels().Select(k => k.FullName));
+        Assert.Equal(before.Rotation, Itrf93().Rotation);
+    }
+
+    // The exception of the constructor, and the kernels of a constructor that did not throw unloaded, so that no case kernel
+    // stays loaded for the next tests of the process
+    private Exception Construct(string[] kernels)
+    {
+        CaseKernels created = null;
+        var exception = Record.Exception(() => created = new CaseKernels(_directory, kernels));
+        created?.Dispose();
+        return exception;
     }
 }

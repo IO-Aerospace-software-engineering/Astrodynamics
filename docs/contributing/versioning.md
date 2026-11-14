@@ -1423,9 +1423,103 @@ release are listed under **Known limitations**.
   at 121 s, the last at 00:01:01Z, a second past the end. The samples now stop at the end, as `Site.GetEphemeris(window)`
   and `Star.Propagate` do: 121 and 1 states (the CLI's `ephemeris` with them). Every other window keeps its states bit
   for bit.
+- **`LoadKernels` and `UnloadKernels` matched kernel paths by substring** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). A path whose text contained a
+  loaded one was taken for a path inside it: after `k/SolarSystem`, the load of its sibling `k/SolarSystem2` reloaded
+  `k/SolarSystem` and loaded nothing (L1 then threw SPKINSUFFDATA), in the other order the sibling was unloaded, and
+  `UnloadKernels(k/SolarSystem)`, never loaded, unloaded `k/SolarSystem2`; a folder elsewhere whose path ends with a
+  loaded one was never loaded. Paths are now compared by their components, on the full paths without their trailing
+  separator, ordinal as before: the same path, or a path inside a loaded folder, reloads that entry, and a folder load
+  first unloads the entries inside it, as before; a sibling is another path. `KernelRegistryTests` reads TK frame
+  kernels of 90° and 45° about z back through SPICE (`pxform`) after each order, and compares on Linux the files SPICE
+  holds (KEEPER, `ktotal_`/`kdata_`) with those the scenario loaded. No result moves on `Data/SolarSystem`.
+- **`UnloadKernels` left a deleted or moved path loaded, and a folder listed after one of its files was unloaded**
+  ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). The unload ran only for a path that existed, and walked it as it was on disk, so a folder of kernels loaded,
+  deleted, then unloaded stayed listed and SPICE kept its files (the Moon still read at 4.046675e8 m); through the
+  `DirectoryInfo` that was loaded, whose cached `Exists` stayed true, the entry was dropped while SPICE kept the files.
+  After `UnloadKernels` of a file of a loaded folder, the folder stayed listed while SPICE no longer held the file. Each
+  entry now records the files its load handed SPICE, and the unload hands SPICE those names, whether the path still
+  exists or not; an entry that holds the path is replaced, at its place, by its remaining files. A path that matches no
+  entry is handed to SPICE as before, without the existence test: a file loaded by a meta-kernel is unloaded by its
+  name. C++: `KernelsLoader::Unload` hands any path that is not an existing directory to `unload_c`, which unloads a
+  file by the name it was loaded under and does nothing for a name it does not hold (its unreachable throws, which
+  would have crossed the `extern "C"` boundary, are gone); the P/Invoke is unchanged. `ClearKernels` calls `kclear_c`
+  without unloading each entry first, which would read again a text kernel deleted since its load. The C++ tests
+  `API.UnloadKernelsProxyOfADeletedFile` and `API.UnloadKernelsProxyOfANameNotLoaded` check the frame lookup of
+  `TransformFrameProxy`; `KernelRegistryTests` the frames and the listing after a deleted folder (both instances) and a
+  file of a folder. SPICE unloads a text kernel or a meta-kernel by reading the pool again, which fails while another
+  text kernel deleted since its load is still loaded, and leaves out the text kernels loaded after it. The unload of
+  an SPK, a CK, a binary PCK, a DSK or an EK opens the other loaded kernels of its kind again (`unload_c` → `UNLOAD` →
+  `SPKLEF`, `CKLPF`, `PCKLOF`, `ZZDSKLSF` or `EKLEF`), reads no text kernel, and fails on a kernel of its kind deleted
+  since its load; after such a failure the SPKs, CKs or PCKs loaded before the deleted one take precedence over those
+  loaded after it (each reload of a loaded file closes it and loads it again at the highest priority, and the files
+  after the deleted one are not reloaded; measured with CSPICE N0067 for SPKs, CKs and PCKs, and by `KernelRegistryTests`
+  for PCKs: a PCK frame read from the PCK loaded before the deleted one until the deleted one is unloaded). A
+  meta-kernel's unload also unloads the kernels it names and opens again the loaded kernels of each of their kinds
+  (measured for SPKs, CKs, PCKs, DSKs and EKs). SPICE loads a text kernel as a meta-kernel when its load assigns
+  `KERNELS_TO_LOAD`, `PATH_SYMBOLS` or `PATH_VALUES` (FURNSH watches them), and an old DAF (`NAIF/DAF`, as
+  `earthstns_itrf93_201023.bsp`) as an SPK or a CK from its segments (`GETFAT` → `ZZCKSPK`). The unload of the recorded
+  files throws for such a failure unless a later unload of the same call, of the same entry or of another one, read the
+  same kernels again: a text kernel's or a meta-kernel's for a text kernel, one of the same kind for an SPK, a CK, a PCK,
+  a DSK or an EK, none for a meta-kernel, whose files the library does not read, nor for an old DAF, whose kind it does
+  not tell (internal `SpiceAPI.UnloadRereads`, from the ID word of the file and, for a text kernel, the variables its
+  data assigns, outside its comments and quoted strings, read at its load; the type KEEPER gives each text kernel of the
+  tests is checked by `KernelRegistryTests` through `kdata`). Every entry the call matched is unloaded and removed
+  before it throws. A binary kernel SPICE failed to open again stays open in SPICE for the life of the process: KEEPER
+  records the handle 0 for it, its unload and `kclear_c` close nothing, and once its logical unit is released (more than
+  the 23 units of CSPICE's handle manager in use) every later search of its kind fails to reconnect it, for a PCK every
+  IAU frame (measured with CSPICE N0067; the CI of the first version of the PCK tests, run in the test process, failed
+  that way on Linux and macOS arm64, `TISBOD` → `PCKSFS` → `DAFBBS` → `ZZDDHHLU` on the deleted PCK, in other test
+  classes). The tests that delete a loaded binary kernel therefore run in the child process
+  `IO.Astrodynamics.Tests.KernelUnload`, which the test project builds and copies to `KernelUnload/`, and are skipped
+  on Windows, where a loaded binary kernel cannot be deleted. `KernelRegistryTests` unloads a folder of a text kernel listed before an SPK while a deleted text
+  kernel is loaded, which throws and leaves the frame of the text kernel loaded after the deleted one unknown until
+  the deleted one is unloaded; a meta-kernel of one SPK, whose unload SPICE fails the same way; a folder of two binary
+  PCKs whose second is deleted (in the child process), between a PCK loaded before it and one loaded after it of the same frame class, whose
+  unload no longer throws and leaves the later PCK in precedence; the unload of the first of those two PCKs alone, which
+  throws and leaves the earlier PCK in precedence until the deleted one is unloaded; a folder of a meta-kernel of a PCK
+  listed before a text kernel while a deleted PCK is loaded (in the child process), which throws, the text kernel's
+  unload not taken for a repair; a folder of two loaded folders whose second's kernel is deleted, whose unload no longer
+  stops at the first folder's failure; and a folder of a text kernel whose comment names `KERNELS_TO_LOAD`, listed
+  before a deleted one, whose unload no longer throws. A folder is loaded in the order of its listing, alphabetical on
+  NTFS: the tests name the file to list first from a to z in turn and check the order through `SpiceAPI.KernelFiles`.
+- **The command line ignored a kernel file or a meta-kernel given as its kernels path** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). The 13 commands that
+  load kernels wrapped the argument in a `DirectoryInfo`, from which a file loaded nothing without an error:
+  `astro ephemeris mk.tm …` failed with "Celestial celestialItem frame can't be defined". A file, a kernel or a
+  meta-kernel, is now loaded as a file (`Helpers.KernelsPath`), a folder as before, bit for bit; a path that does not
+  exist still loads nothing. `KernelsPathTests` gives `frame-converter` a TK frame kernel, then a meta-kernel that names
+  it, and reads the quaternion of the 90° rotation about z (|W| = |Z| = cos 45°).
+- **The Cosmographia export wrote kernels that SPICE cannot load, and the native writers a file under a truncated
+  name** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading,
+  "Recommendations on Kernel File Naming"), and `LoadKernels` and the command line hand it the full path. The export,
+  and `astro propagate` through it, deleted the previous export and wrote kernels at longer paths (`MySat.ck` at 302
+  characters for a 120-character directory), which then failed with `SPICE(FILENAMETOOLONG)`. `SpiceAPI.WriteEphemeris`
+  (under `Star` and `Site`) and `SpiceAPI.WriteOrientation` (under `Spacecraft.WriteOrientation`) handed such a path to
+  CSPICE, which wrote a file under the name truncated to 255 and then failed. The export now checks every kernel path
+  of its layout, under the output directory and under the new directory of the system temporary directory where it
+  writes the kernels and loads the clock and frame kernels first, before it touches the output directory, and the
+  native writers check their target, in the bytes the marshaller hands CSPICE (UTF-8 on Linux and macOS). `KernelPathLengthTests` writes each native writer's kernel at 255
+  characters, which SPICE loads, while a copy at 256 fails in FURNSH; at 256 the writer throws and leaves no file, and a
+  255-character path holding one é (256 bytes) is rejected on Linux; `Spacecraft.WriteEphemeris` and the clock writer
+  still write at 300 characters, byte for byte. `ExporterTests` exports one character too long (nothing deleted) and
+  at 255 (every kernel of `spice.json` loads), and to a short directory with a scratch directory whose kernels would be
+  longer than 255 (nothing deleted, no scratch left); `PropagateTests` the command.
 
 **Changed**
 
+- **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
+  above). `CosmographiaExporter.ExportAsync` and `astro propagate` throw for an output directory (parameter
+  `outputDirectory`), or a system temporary directory (no parameter), whose kernels would have a full path longer than
+  255 characters (UTF-8 bytes), and delete nothing; they succeeded with kernels `LoadKernels`
+  could not load, after deleting the previous export. `SpiceAPI.WriteEphemeris` (so `Star.WriteEphemeris` and
+  `Site.WriteEphemeris`) and `SpiceAPI.WriteOrientation` (so `Spacecraft.WriteOrientation`) throw `ArgumentException`
+  (parameter `filePath`) where they threw `InvalidOperationException` after leaving a file under the truncated name.
+  Migration: choose a shorter output directory (the CK of a spacecraft,
+  `<output>/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck`, is usually the longest kernel) or a shorter
+  temporary directory (`TMPDIR`, `TEMP`), and catch `ArgumentException`. `Spacecraft.WriteEphemeris` and the text kernel writers are unchanged.
+- **`GetLoadedKernels` after a partial unload** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed above): after `UnloadKernels` of a file or a subfolder of a
+  loaded folder, the listing names the folder's remaining kernel files, in its place, instead of the folder; after
+  `UnloadKernels` of a deleted or moved path, its data is no longer readable. Migration: look for the folder's files,
+  or unload the whole folder.
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
   the altitude of the `Planetodetic`, which `Planetodetic` documents in m, reached `gfilum_c` as km, so a caller
   passing metres got edges seconds off. A caller who passed km gets a point 1000 times lower: at DSS-13 the sunrise moves
@@ -1842,6 +1936,12 @@ not listed.
   134) for a centre with a GM but no NAIF name and for fewer than 3 states (pass 3 states or more), and enumerates the caller's states twice, both writers under the SPICE lock:
   pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
   field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
+- **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
+  each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
+  (`SPICE(FILENAMETOOLONG)`, reported as "more details on standard output"), while `Spacecraft.WriteEphemeris` and the
+  text kernel writers still write it: load it through a meta-kernel that names it by a shorter relative path, or write
+  it under a shorter directory. Paths are compared ordinally, so on Windows and macOS two spellings that differ in case
+  are two entries.
 - **CIRS and TIRS by name, and searches in a managed frame**
   ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558),
   [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)). A frame built by name as CIRS

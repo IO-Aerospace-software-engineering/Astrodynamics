@@ -26,6 +26,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="IO.Astrodynamics.Tests" />
+        <InternalsVisibleTo Include="IO.Astrodynamics.Tests.KernelUnload" />
         <InternalsVisibleTo Include="IO.Astrodynamics.CLI.Tests" />
         <InternalsVisibleTo Include="IO.Astrodynamics.ConformanceRunner" />
     </ItemGroup>

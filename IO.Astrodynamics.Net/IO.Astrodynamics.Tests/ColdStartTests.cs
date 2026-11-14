@@ -86,7 +86,7 @@ public class ColdStartTests
 
         Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");
 
-        var start = new ProcessStartInfo(DotnetHost())
+        var start = new ProcessStartInfo(ChildProcess.DotnetHost())
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -117,32 +117,6 @@ public class ColdStartTests
         process.WaitForExit();
         Assert.True(process.ExitCode == 0,
             $"The child ({mode}, {schedule}) exited {process.ExitCode}. Output: {output.Result} Error: {error.Result}");
-    }
-
-    /// <summary>
-    /// The dotnet host of the runtime that runs the tests: the process itself when it is the host (<c>dotnet exec
-    /// testhost.dll</c>), otherwise the host at the root of the runtime's installation (the directory of the runtime is
-    /// <c>&lt;root&gt;/shared/Microsoft.NETCore.App/&lt;version&gt;</c>), then <c>DOTNET_HOST_PATH</c>, which the .NET CLI
-    /// sets, then <c>dotnet</c> on the path.
-    /// </summary>
-    private static string DotnetHost()
-    {
-        string executable = OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet";
-        string processPath = Environment.ProcessPath;
-        if (processPath != null && string.Equals(Path.GetFileName(processPath), executable, StringComparison.OrdinalIgnoreCase))
-        {
-            return processPath;
-        }
-
-        var runtime = new DirectoryInfo(Path.GetDirectoryName(typeof(object).Assembly.Location));
-        string root = runtime.Parent?.Parent?.Parent?.FullName;
-        if (root != null && File.Exists(Path.Combine(root, executable)))
-        {
-            return Path.Combine(root, executable);
-        }
-
-        string hostPath = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH");
-        return !string.IsNullOrEmpty(hostPath) && File.Exists(hostPath) ? hostPath : executable;
     }
 }
 

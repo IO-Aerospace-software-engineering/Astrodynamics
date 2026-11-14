@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -11,7 +12,9 @@ namespace IO.Astrodynamics.Tests.Body;
 /// <c>daffna_</c>, <c>dafgs_</c>, <c>dafus_</c>, <c>dafgda_</c>) and the SPK writer <c>spkw09_c</c>, the reference of the
 /// managed writer (#540), with its append (<c>dafopw_c</c>); <c>unitim_c</c>, the conversion between TDB and TT, the
 /// reference of the TT windows of a propagation about the Earth (#547); <c>recpgr_c</c>, <c>georec_c</c>, <c>spkezr_c</c>
-/// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
+/// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682); the list of the
+/// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
+/// reference of the kernel registry and of the type of a text kernel (#673). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
 /// </summary>
 /// <remarks>
 /// The Linux build of the native library exports the CSPICE symbols; the Windows DLL exports only the proxies, so the tests
@@ -64,6 +67,13 @@ internal static class CspiceDirect
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void reset_c();
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ktotal_([In] byte[] kind, ref int count, int kindLength);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int kdata_(ref int which, [In] byte[] kind, [Out] byte[] file, [Out] byte[] fileType, [Out] byte[] source,
+        ref int handle, ref int found, int kindLength, int fileLength, int fileTypeLength, int sourceLength);
 
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern double unitim_c(double epoch, string insys, string outsys);
@@ -234,6 +244,43 @@ internal static class CspiceDirect
     }
 
     // A CSPICE error, as the proxies' error management leaves it (RETURN mode): its long message, then a reset
+    /// <summary>The names of the files SPICE holds, in their load order, as KEEPER records them (<c>ktotal_("ALL")</c>,
+    /// then <c>kdata_</c> for each; a meta-kernel and the files it loaded are listed each).</summary>
+    internal static List<string> LoadedKernelFiles() => LoadedKernels().Select(x => x.File).ToList();
+
+    /// <summary>The type KEEPER gives a file SPICE holds (<c>kdata_</c>: SPK, CK, PCK, DSK, EK, TEXT or META), null for a file
+    /// it does not hold.</summary>
+    internal static string LoadedKernelType(string file) => LoadedKernels().Where(x => x.File == file).Select(x => x.Type).FirstOrDefault();
+
+    // The files SPICE holds and their types, in their load order
+    private static List<(string File, string Type)> LoadedKernels()
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var all = Encoding.ASCII.GetBytes("ALL");
+            int count = 0;
+            ktotal_(all, ref count, all.Length);
+            Check("ktotal");
+            var files = new List<(string File, string Type)>(count);
+            for (int which = 1; which <= count; which++)
+            {
+                var file = new byte[1024];
+                var fileType = new byte[32];
+                var source = new byte[1024];
+                int handle = 0, found = 0, index = which;
+                kdata_(ref index, all, file, fileType, source, ref handle, ref found, all.Length, file.Length, fileType.Length,
+                    source.Length);
+                Check("kdata");
+                if (found != 0)
+                {
+                    files.Add((Encoding.UTF8.GetString(file).TrimEnd(' ', '\0'), Encoding.ASCII.GetString(fileType).TrimEnd(' ', '\0')));
+                }
+            }
+
+            return files;
+        }
+    }
+
     private static void Check(string routine)
     {
         if (failed_c() == 0) return;

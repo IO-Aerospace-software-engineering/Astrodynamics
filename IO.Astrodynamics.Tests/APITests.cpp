@@ -9,6 +9,11 @@
 #include "Spacecraft.h"
 #include <Converters.cpp>
 #include <TLE.h>
+#include <Constants.h>
+#include <algorithm>
+#include <cmath>
+#include <filesystem>
+#include <fstream>
 
 TEST(API, TDBToString)
 {
@@ -511,4 +516,68 @@ TEST(API, ConvertHyperbolicStateToConic)
     EXPECT_NEAR(stateVector.velocity.y, stateVector2.velocity.y, 1e-6);
     EXPECT_NEAR(stateVector.velocity.z, stateVector2.velocity.z, 1e-6);
     EXPECT_NEAR(stateVector.epoch, stateVector2.epoch, 1e-6);
+}
+
+namespace
+{
+    // A TK frame kernel whose frame is rotated by 90 deg about z from J2000: TKFRAME_ANGLES (90, 0, 0) about the axes
+    // (3, 2, 1) (NAIF, Frames Required Reading, "Defining a TK Frame Using Euler Angles")
+    std::filesystem::path WriteRotatedFrameKernel(const std::string &fileName, int frameId, const std::string &frameName)
+    {
+        auto file = std::filesystem::temp_directory_path() / fileName;
+        std::ofstream out(file);
+        auto id = std::to_string(frameId);
+        out << "KPL/FK\n\\begindata\n"
+            << "FRAME_" << frameName << " = " << id << "\n"
+            << "FRAME_" << id << "_NAME = '" << frameName << "'\n"
+            << "FRAME_" << id << "_CLASS = 4\n"
+            << "FRAME_" << id << "_CLASS_ID = " << id << "\n"
+            << "FRAME_" << id << "_CENTER = 399\n"
+            << "TKFRAME_" << id << "_RELATIVE = 'J2000'\n"
+            << "TKFRAME_" << id << "_SPEC = 'ANGLES'\n"
+            << "TKFRAME_" << id << "_UNITS = 'DEGREES'\n"
+            << "TKFRAME_" << id << "_AXES = ( 3, 2, 1 )\n"
+            << "TKFRAME_" << id << "_ANGLES = ( 90.0, 0.0, 0.0 )\n"
+            << "\\begintext\n";
+        return file;
+    }
+
+    // The rotation angle of the quaternion of the frame to J2000, in degrees (the sign of a quaternion is free)
+    double RotationAngleDeg(const IO::Astrodynamics::API::DTO::FrameTransformationDTO &transformation)
+    {
+        return 2.0 * std::acos(std::min(1.0, std::abs(transformation.Rotation.w))) * 180.0 / IO::Astrodynamics::Constants::PI;
+    }
+}
+
+TEST(API, UnloadKernelsProxyOfADeletedFile)
+{
+    // A text kernel is closed once loaded, so it can be deleted on every platform while SPICE still holds its data
+    auto file = WriteRotatedFrameKernel("IOA_F02_CPP_A.tf", 1999911, "IOA_F02_CPP_A");
+    ASSERT_TRUE(LoadKernelsProxy(file.string().c_str()));
+    ASSERT_NEAR(90.0, RotationAngleDeg(TransformFrameProxy("IOA_F02_CPP_A", "J2000", 0.0)), 1e-10);
+
+    std::filesystem::remove(file);
+    ASSERT_TRUE(UnloadKernelsProxy(file.string().c_str()));
+
+    // The frame is no longer known: the failed transformation is the zero quaternion (#454)
+    auto res = TransformFrameProxy("IOA_F02_CPP_A", "J2000", 0.0);
+    ASSERT_EQ(0.0, res.Rotation.w);
+    ASSERT_EQ(0.0, res.Rotation.x);
+    ASSERT_EQ(0.0, res.Rotation.y);
+    ASSERT_EQ(0.0, res.Rotation.z);
+}
+
+TEST(API, UnloadKernelsProxyOfANameNotLoaded)
+{
+    auto file = WriteRotatedFrameKernel("IOA_F02_CPP_B.tf", 1999912, "IOA_F02_CPP_B");
+    ASSERT_TRUE(LoadKernelsProxy(file.string().c_str()));
+    auto neverLoaded = std::filesystem::temp_directory_path() / "IOA_F02_CPP_never_loaded.tf";
+    std::filesystem::remove(neverLoaded);
+
+    // SPICE ignores a name it does not hold, and raises no error
+    ASSERT_TRUE(UnloadKernelsProxy(neverLoaded.string().c_str()));
+    ASSERT_NEAR(90.0, RotationAngleDeg(TransformFrameProxy("IOA_F02_CPP_B", "J2000", 0.0)), 1e-10);
+
+    ASSERT_TRUE(UnloadKernelsProxy(file.string().c_str()));
+    std::filesystem::remove(file);
 }
