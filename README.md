@@ -133,7 +133,7 @@ Or run it from a clone of this repository:
 dotnet run --project IO.Astrodynamics.Net/IO.Astrodynamics.CLI -- --help
 ```
 
-Available commands: `ephemeris`, `propagate`, `orientation`, `sub-point`, `angular-separation`, `celestial-body-info`, `orbital-parameters-converter`, `frame-converter`, `time-converter`, and the window finders `find-windows-from-distance-constraint`, `find-windows-from-occultation-constraint`, `find-windows-from-coordinate-constraint`, `find-windows-from-illumination-constraint`, `find-windows-from-FOV-constraint`.
+Available commands: `ephemeris`, `propagate`, `orientation`, `sub-point`, `angular-separation`, `celestial-body-info`, `orbital-parameters-converter`, `frame-converter`, `time-converter`, and the window finders `find-windows-from-distance-constraint`, `find-windows-from-occultation-constraint`, `find-windows-from-coordinate-constraint`, `find-windows-from-illumination-constraint`, `find-windows-from-fov-constraint`.
 
 ## Native C++ interop
 

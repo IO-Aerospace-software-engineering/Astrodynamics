@@ -31,8 +31,8 @@ public class PropagateCommand
         bool useSolarRadiationPressure,
         [Option('a', Description = "Include atmospheric drag perturbation (Earth and Mars only)")]
         bool useAtmosphericDrag,
-        [Option('n', Description = "Number of degrees used by earth geopotential model (Max. 100")]
-        ushort earthGeopotentialDegree = 10,
+        [Option('n', Description = "Degree of the Earth geopotential (EGM2008), at most 100")]
+        ushort earthGeopotentialDegree = Helpers.EarthGeopotentialDefaultDegree,
         [Argument(Description = "Body mass")] double bodyMass = 100.0,
         [Argument(Description = "Body projected area")]
         double area = 1.0,
@@ -42,12 +42,21 @@ public class PropagateCommand
         int[] celestialBodies = null
     )
     {
+        // The embedded model ends at degree 100, and a field pads the degrees beyond its file with zeros (#681); checked
+        // whatever the centre, before anything is loaded or written
+        if (earthGeopotentialDegree > Helpers.EarthGeopotentialMaximumDegree)
+        {
+            throw new ArgumentException(
+                $"The degree of the Earth geopotential is at most {Helpers.EarthGeopotentialMaximumDegree}, the degree of the embedded EGM2008 model; {earthGeopotentialDegree} was given",
+                nameof(earthGeopotentialDegree));
+        }
+
         //Load kernels
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         //Initialize date
         Clock clock = new Clock($"clock{bodyName}", 65536);
-        Spacecraft spacecraft = new Spacecraft(-1000, bodyName, bodyMass, bodyMass, clock, Helpers.ConvertToOrbitalParameters(orbitalParameters), area, cd);
+        Spacecraft spacecraft = new Spacecraft(-1000, bodyName, bodyMass, bodyMass, clock, Helpers.ConvertToOrbitalParameters(orbitalParameters, earthGeopotentialDegree), area, cd);
         List<CelestialBody> bodies = new List<CelestialBody>([spacecraft.InitialOrbitalParameters.Observer as CelestialBody]);
         bodies.AddRange(celestialBodies?.Select(x => new CelestialBody(x)) ?? Array.Empty<CelestialBody>());
 

@@ -87,15 +87,22 @@ public class EphemerisCommand
         [Option(shortName: 'c', Description = "Display result as planetocentric cartesian coordinates")]
         bool cartesian = false)
     {
+        // A site has no sub-observer point: before #681 it was cast to a celestial item, null, then dereferenced
+        if (Helpers.IsSiteIdentifier(objectId))
+        {
+            throw new ArgumentException(
+                $"sub-point projects a celestial body or a spacecraft given by its NAIF identifier; {objectId} is a site", nameof(objectId));
+        }
+
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         var epoch = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
-        var localizableObject = Helpers.CreateLocalizable(objectId, epoch) as CelestialItem;
+        var celestialItem = Helpers.CreateCelestialItem(objectId, epoch);
 
         var celestialBody = new CelestialBody(celestialBodyId);
         var abe = Enum.Parse<Aberration>(aberration, true);
 
-        var planetocentric = localizableObject!.SubObserverPoint(celestialBody, epoch, abe);
+        var planetocentric = celestialItem.SubObserverPoint(celestialBody, epoch, abe);
 
         if (cartesian)
         {

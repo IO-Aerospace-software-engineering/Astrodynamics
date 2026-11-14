@@ -22,6 +22,18 @@ namespace IO.Astrodynamics.CLI;
 public class Helpers
 {
     /// <summary>
+    /// The degree of the embedded EGM2008 model of the Earth, <c>Data/EGM2008_to100_TideFree.txt</c>, whose last line holds
+    /// n = m = 100: a field pads the degrees beyond its file with zeros, so a degree above it is an argument error.
+    /// </summary>
+    internal const ushort EarthGeopotentialMaximumDegree = 100;
+
+    /// <summary>
+    /// The degree of the Earth geopotential when <c>propagate -n</c> is not given, and of the conversions of
+    /// <c>orbital-parameters-converter</c>, which read the GM only.
+    /// </summary>
+    internal const ushort EarthGeopotentialDefaultDegree = 10;
+
+    /// <summary>
     /// The object of a NAIF identifier: a site (its body's identifier times 1000 plus its own), a celestial body, or a
     /// spacecraft (a negative identifier) read from its kernels.
     /// </summary>
@@ -31,7 +43,7 @@ public class Helpers
     {
         ILocalizable localizableObject = null;
 
-        if (objectId is > 100_000 and < 999_999)
+        if (IsSiteIdentifier(objectId))
         {
             // A site's NAIF identifier is its body's times 1000 plus its own (399013 is DSS-13 on the Earth)
             var id = objectId % 1000;
@@ -43,6 +55,15 @@ public class Helpers
         }
 
         return localizableObject;
+    }
+
+    /// <summary>
+    /// Whether a NAIF identifier is a site's: its body's identifier times 1000 plus its own (399013 is DSS-13 on the Earth).
+    /// </summary>
+    /// <param name="objectId">The NAIF identifier.</param>
+    internal static bool IsSiteIdentifier(int objectId)
+    {
+        return objectId is > 100_000 and < 999_999;
     }
 
     /// <summary>
@@ -142,7 +163,7 @@ public class Helpers
     }
 
     internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(string orbitalParametersInput, int centerofMotion, string epoch, string originalFrame,
-        bool fromStateVector, bool fromKeplerian, bool fromEquinoctial, bool fromTLE, ushort geopotentialDegrees = 10)
+        bool fromStateVector, bool fromKeplerian, bool fromEquinoctial, bool fromTLE, ushort geopotentialDegrees = EarthGeopotentialDefaultDegree)
     {
         if (originalFrame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
         {
@@ -192,10 +213,16 @@ public class Helpers
         return orbitalParameters;
     }
 
-    internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(Commands.Parameters.OrbitalParameters orbitalParameters)
+    /// <summary>
+    /// The orbital parameters of the command's arguments, about a centre whose geopotential, for the Earth, is the embedded
+    /// EGM2008 model to <paramref name="geopotentialDegrees"/> (#681: the degree of <c>propagate -n</c>, which no code read).
+    /// </summary>
+    internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(Commands.Parameters.OrbitalParameters orbitalParameters,
+        ushort geopotentialDegrees)
     {
         return ConvertToOrbitalParameters(orbitalParameters.OrbitalParametersValues, orbitalParameters.CenterOfMotionId, orbitalParameters.OrbitalParametersEpoch,
-            orbitalParameters.Frame, orbitalParameters.FromStateVector, orbitalParameters.FromKeplerian, orbitalParameters.FromEquinoctial, orbitalParameters.FromTLE);
+            orbitalParameters.Frame, orbitalParameters.FromStateVector, orbitalParameters.FromKeplerian, orbitalParameters.FromEquinoctial, orbitalParameters.FromTLE,
+            geopotentialDegrees);
     }
 
     internal static Planetodetic ConvertToPlanetodetic(string value)

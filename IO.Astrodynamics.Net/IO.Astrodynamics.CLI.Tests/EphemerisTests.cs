@@ -132,6 +132,24 @@ public class EphemerisTests
         }
     }
 
+    /// <summary>
+    /// A site's identifier (its body's times 1000 plus its own, 399013 DSS-13 on the Earth) names no sub-observer point:
+    /// before #681 the site was cast to a celestial item, null, then dereferenced (NullReferenceException). It is an
+    /// argument error naming the kinds sub-point accepts.
+    /// </summary>
+    [Fact]
+    public void SubPoint_OfASite_IsAnArgumentError()
+    {
+        using (Configuration.Lock())
+        {
+            var command = new EphemerisCommand();
+            var exception = Assert.Throws<ArgumentException>(() => { _ = command.SubPoint("Data", 399013, 399, new EpochParameters { Epoch = "0.0" }); });
+            Assert.Contains("celestial body", exception.Message);
+            Assert.Contains("spacecraft", exception.Message);
+            Assert.Contains("399013", exception.Message);
+        }
+    }
+
     [Fact]
     public void SubPointCartesian()
     {

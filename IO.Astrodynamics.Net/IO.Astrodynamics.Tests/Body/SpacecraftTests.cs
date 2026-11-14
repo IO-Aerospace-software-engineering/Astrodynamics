@@ -21,6 +21,25 @@ namespace IO.Astrodynamics.Tests.Body
             TestKernels.EnsureSolarSystem();
         }
 
+        /// <summary>
+        /// A spacecraft prints through the lines of <see cref="CelestialItem"/>: its mass and GM parse back to the
+        /// properties (#681: they were printed to 7 digits, GM under "m^3.s^2").
+        /// </summary>
+        [Fact]
+        public void SpacecraftToString_RoundTrips()
+        {
+            Clock clk = new Clock("My clock", 256);
+            Spacecraft spc = new Spacecraft(-1001, "MySpacecraft", 1234.5678901234, 10000.0, clk,
+                new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000,
+                    TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
+            var res = spc.ToString();
+            Assert.Equal("-1001", ToStringLines.Value(res, "Identifier :"));
+            Assert.Equal("MySpacecraft", ToStringLines.Value(res, "Name :"));
+            Assert.Equal(spc.Mass, ToStringLines.Number(res, "Mass (kg) :"));
+            Assert.Equal(spc.GM, ToStringLines.Number(res, "GM (m^3/s^2) :"));
+            Assert.All(res.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries), line => Assert.Equal(" : ", line.Substring(30, 3)));
+        }
+
         [Fact]
         public void Create()
         {
