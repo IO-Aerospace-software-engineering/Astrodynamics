@@ -27,8 +27,7 @@ namespace IO.Astrodynamics.Tests;
 /// unloads <c>Data/SolarSystem</c>, a file inside it, a parent of it or its anchor, which other classes read in parallel
 /// (a sanctioned exception would have to be declared to the guard, not the guard weakened); a test of the reload
 /// branches of <see cref="SpiceAPI.LoadKernels"/> uses its own folder (as <see cref="SpiceApiTest"/> with <c>scn100</c>),
-/// never <c>Data/SolarSystem</c>, a file inside it or a parent of it; no folder of test data has a name that extends
-/// <c>Data/SolarSystem</c> (the library matches loaded paths by substring).
+/// never <c>Data/SolarSystem</c>, a file inside it or a parent of it.
 /// <see cref="KernelReloadGuardTests"/> fails when a test reloaded the folder, removed it or its anchor, or loaded it
 /// before the first call of <see cref="EnsureSolarSystem"/>, and when a kernel still loaded at its end shadows the folder
 /// (<see cref="KernelShadowing"/>).

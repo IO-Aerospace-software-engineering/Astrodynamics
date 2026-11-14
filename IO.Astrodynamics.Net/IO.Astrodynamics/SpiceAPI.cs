@@ -33,7 +33,10 @@ namespace IO.Astrodynamics;
 public class SpiceAPI
 {
     private static IntPtr _libHandle = IntPtr.Zero;
-    private readonly List<FileSystemInfo> _kernels = [];
+    private readonly List<KernelEntry> _kernels = [];
+
+    /// <summary>A path given to <see cref="LoadKernels"/>, and the files its load handed SPICE (#673).</summary>
+    private sealed record KernelEntry(FileSystemInfo Path, string[] Files);
 
     /// <summary>
     ///     Instantiate API
@@ -242,11 +245,15 @@ public class SpiceAPI
     /// The kernel paths loaded by <see cref="LoadKernels"/>, as they are at the call: a copy taken under the lock, so that
     /// another thread may load or unload kernels while the caller enumerates it.
     /// </summary>
+    /// <remarks>
+    /// After <see cref="UnloadKernels"/> of a file or a subdirectory of a loaded directory, the directory is no longer listed
+    /// but each of its kernel files SPICE still holds, in its place.
+    /// </remarks>
     public IEnumerable<FileSystemInfo> GetLoadedKernels()
     {
         lock (lockObject)
         {
-            return _kernels.ToArray();
+            return _kernels.Select(x => x.Path).ToArray();
         }
     }
 
@@ -255,36 +262,45 @@ public class SpiceAPI
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
     /// <remarks>
+    /// <para>
     /// A file path is handed to SPICE as it is. For a directory, the kernel files of the directory and of its
     /// subdirectories are loaded, in the order of the directory listing; the other files, from which SPICE would load
-    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>).
+    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>). A path that does not exist
+    /// loads nothing.
+    /// </para>
+    /// <para>
+    /// Paths are compared by their components (#673): a path already loaded, or inside a loaded directory, reloads that
+    /// entry; a directory first unloads the entries inside it; a sibling whose name extends a loaded one is another path.
+    /// SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
+    /// </para>
     /// </remarks>
     public void LoadKernels(FileSystemInfo path)
     {
         if (path == null) throw new ArgumentNullException(nameof(path));
         lock (lockObject)
         {
-            if (_kernels.Any(x => path.FullName.Contains(x.FullName)))
+            var containing = _kernels.Where(x => IsSameOrInside(path.FullName, x.Path.FullName)).ToArray();
+            if (containing.Length > 0)
             {
-                foreach (var kernel in _kernels.Where(x => path.FullName.Contains(x.FullName)).ToArray())
+                foreach (var entry in containing)
                 {
-                    UnloadKernels(kernel);
-                    LoadKernels(kernel);
+                    UnloadKernels(entry.Path);
+                    LoadKernels(entry.Path);
                 }
 
                 return;
             }
 
-
-            var existingKernels = _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray();
-            foreach (var existingKernel in existingKernels)
+            foreach (var inside in _kernels.Where(x => IsSameOrInside(x.Path.FullName, path.FullName)).ToArray())
             {
-                UnloadKernels(existingKernel);
+                UnloadKernels(inside.Path);
             }
 
-            if (path.Exists)
+            // Not the cached Exists of the instance, which a reload of a stored entry would trust after a deletion
+            if (Exists(path))
             {
-                foreach (var kernel in KernelFiles(path))
+                var files = KernelFiles(path).ToArray();
+                foreach (var kernel in files)
                 {
                     if (!LoadKernelsProxy(kernel))
                     {
@@ -292,9 +308,32 @@ public class SpiceAPI
                     }
                 }
 
-                _kernels.Add(path);
+                _kernels.Add(new KernelEntry(path, files));
             }
         }
+    }
+
+    /// <summary>Whether the path exists now, as a directory for a <see cref="DirectoryInfo"/>, as a file otherwise.</summary>
+    private static bool Exists(FileSystemInfo path) =>
+        path is DirectoryInfo ? Directory.Exists(path.FullName) : File.Exists(path.FullName);
+
+    /// <summary>
+    /// Whether <paramref name="path"/> is <paramref name="root"/> or a path inside it, compared by components on the full
+    /// paths without their trailing separator, ordinal: a sibling whose name extends <paramref name="root"/>
+    /// (<c>Kernels2</c> beside <c>Kernels</c>) or a path that merely contains it is not inside it (#673).
+    /// </summary>
+    internal static bool IsSameOrInside(string path, string root)
+    {
+        path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
+        if (!path.StartsWith(root, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        // The same path; a root that keeps its separator (/ or C:\); or a separator after the root (GetFullPath writes
+        // every separator as DirectorySeparatorChar)
+        return path.Length == root.Length || Path.EndsInDirectorySeparator(root) || path[root.Length] == Path.DirectorySeparatorChar;
     }
 
     // Length of the scan buffer of IsKernelFile, and the marker of the data of a text kernel
@@ -413,37 +452,91 @@ public class SpiceAPI
     ///     Unload kernel at given path
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
+    /// <remarks>
+    /// The files a load handed SPICE are unloaded by their names, whether the path still exists or not (#673): every loaded
+    /// entry that is the path or inside it is unloaded and removed; an entry that holds the path (a file or a subdirectory
+    /// of a loaded directory) unloads the files it recorded there and is replaced, at its place, by its remaining files. A
+    /// path that matches no entry is handed to SPICE as it is (the files of a directory as it is now), which does nothing
+    /// for a name SPICE does not hold.
+    /// </remarks>
     public void UnloadKernels(FileSystemInfo path)
     {
         if (path == null) return;
         lock (lockObject)
         {
-            if (path.Exists)
+            bool matched = false;
+            for (int i = 0; i < _kernels.Count; i++)
             {
-                if (!UnloadKernelsProxy(path.FullName))
+                var entry = _kernels[i];
+                // The registry follows SPICE's list first: SPICE drops a file from it even when it reports a failure
+                if (IsSameOrInside(entry.Path.FullName, path.FullName))
                 {
-                    throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
+                    _kernels.RemoveAt(i--);
+                    matched = true;
+                    UnloadFiles(entry.Files);
+                    continue;
                 }
 
-                _kernels.RemoveAll(x => x.FullName == path.FullName);
-                foreach (var kernel in _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray())
+                if (!IsSameOrInside(path.FullName, entry.Path.FullName))
                 {
-                    UnloadKernels(kernel);
+                    continue;
                 }
+
+                var removed = entry.Files.Where(x => IsSameOrInside(x, path.FullName)).ToArray();
+                if (removed.Length == 0)
+                {
+                    continue;
+                }
+
+                var remaining = entry.Files.Except(removed).Select(x => new KernelEntry(new FileInfo(x), [x])).ToArray();
+                _kernels.RemoveAt(i);
+                _kernels.InsertRange(i, remaining);
+                i += remaining.Length - 1;
+                matched = true;
+                UnloadFiles(removed);
+            }
+
+            if (!matched && !UnloadKernelsProxy(path.FullName))
+            {
+                throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
             }
         }
     }
 
+    /// <summary>
+    /// Unloads files by their names. SPICE reads again the text kernels still loaded after it unloads one (KEEPER's
+    /// UNLOAD), so the unload of a text kernel fails while another deleted text kernel of the same files is still loaded
+    /// (<c>SPICE(FILEOPENFAILED)</c>, measured with CSPICE N0067); a later unload of the files that succeeds reads the
+    /// pool again without it, so only the failure of the last unload is reported.
+    /// </summary>
+    private static void UnloadFiles(string[] files)
+    {
+        string failed = null;
+        foreach (var file in files)
+        {
+            failed = UnloadKernelsProxy(file) ? null : file;
+        }
+
+        if (failed != null)
+        {
+            throw new InvalidOperationException($"Kernel {failed} can't be unloaded. You can have more details on standard output");
+        }
+    }
+
+    /// <summary>
+    /// Unloads every kernel SPICE holds and clears the kernel pool (<c>kclear_c</c>), and empties
+    /// <see cref="GetLoadedKernels"/>.
+    /// </summary>
+    /// <remarks>
+    /// The files are not unloaded one by one first: SPICE reads again the text kernels still loaded after each unload of
+    /// one, which fails for a text kernel deleted since its load, while <c>kclear_c</c> reads nothing.
+    /// </remarks>
     public void ClearKernels()
     {
         lock (lockObject)
         {
-            foreach (var kernel in _kernels.ToArray())
-            {
-                UnloadKernels(kernel);
-            }
-
             KClearProxy();
+            _kernels.Clear();
         }
     }
 
