@@ -160,6 +160,12 @@ construction of the propagator (`Spacecraft.Propagate` and so the scenario, the 
 propagation are cleared) and by `Propagate` (`InvalidOperationException`). Before 11.0.0 a cycle ended the process with
 a stack overflow at the first `Spacecraft.Propagate`, or never returned through the builder.
 
+Each maneuver of the chain draws on a tank of the propagated spacecraft: its `Engine.FuelTank` is one of the
+spacecraft's tank instances, held by it. The same constructions and `Propagate` check it and throw
+`InvalidOperationException` naming the maneuver, the engine, its tank and the spacecraft, before anything changes
+(#676, #586). Before 11.0.0 an impulse on a tank added to no spacecraft threw `NullReferenceException` at its burn, and
+one on another spacecraft's tank burnt that spacecraft's fuel.
+
 ## Example
 
 ```csharp

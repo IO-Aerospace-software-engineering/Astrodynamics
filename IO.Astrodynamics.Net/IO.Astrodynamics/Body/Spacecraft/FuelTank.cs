@@ -1,11 +1,18 @@
 using System;
+using System.Threading;
 using IO.Astrodynamics.Exceptions;
 
 namespace IO.Astrodynamics.Body.Spacecraft
 {
     public class FuelTank : IEquatable<FuelTank>
     {
-        public Spacecraft Spacecraft { get; private set; }
+        private Spacecraft _spacecraft;
+
+        /// <summary>
+        /// The spacecraft that holds the tank, the first one it was added to: a tank belongs to one spacecraft (#676, #586),
+        /// attached atomically, so that one spacecraft takes it when several add it on several threads.
+        /// </summary>
+        public Spacecraft Spacecraft => Volatile.Read(ref _spacecraft);
         public string Name { get; }
         public string Model { get; }
         public double Capacity { get; }
@@ -39,9 +46,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
             Quantity -= requiredMass;
         }
 
-        internal void SetSpacecraft(Spacecraft spacecraft)
+        /// <summary>
+        /// Attaches the tank to <paramref name="spacecraft"/> unless it is held already, atomically (#676).
+        /// </summary>
+        /// <returns>The spacecraft that holds the tank after the call: <paramref name="spacecraft"/>, or the one that held it.</returns>
+        internal Spacecraft AttachSpacecraft(Spacecraft spacecraft)
         {
-            Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
+            return Interlocked.CompareExchange(ref _spacecraft, spacecraft, null) ?? spacecraft;
         }
 
         public bool Equals(FuelTank other)

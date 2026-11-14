@@ -66,6 +66,11 @@ public class SpiceAPI
     [return: MarshalAs(UnmanagedType.I1)]
     private static extern bool UnloadKernelsProxy(string directoryPath);
 
+    // frmnam_c: the name SPICE gives to a frame id, false when it knows none (#676)
+    [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool GetFrameNameProxy(int frameId, [Out] byte[] name);
+
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void FindWindowsOnDistanceConstraintProxy(Window searchWindow, int observerId,
         int targetId, string constraint, double value, string aberration, double stepSize, [In] [Out] Window[] windows);
@@ -186,8 +191,35 @@ public class SpiceAPI
     /// the caller gave (#543). The name is compared ignoring case, as SPICE compares frame names. Every other name is
     /// handed as it is.
     /// </summary>
-    internal static string SpiceFrameName(Frame frame) =>
-        string.Equals(frame.Name, Frame.GCRF.Name, StringComparison.OrdinalIgnoreCase) ? Frame.ICRF.Name : frame.Name;
+    /// <remarks>
+    /// The frame of a kernel-backed spacecraft (<see cref="Spacecraft.IsSpiceBacked"/>) is handed by the name the loaded
+    /// kernels give to its id, NaifId × 1000 (<c>frmnam_c</c>), whatever the name of the spacecraft or of the mission's
+    /// frame kernel, and by its own name when no loaded kernel defines that id (#676; before, always by its own name,
+    /// <c>Name + "_FRAME"</c>). The lookup runs at each call, under the lock the caller holds, so a frame kernel loaded
+    /// after the spacecraft is built is read. The frame of a managed spacecraft is handed by its name.
+    /// </remarks>
+    internal static string SpiceFrameName(Frame frame)
+    {
+        if (frame is Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: true, Id: { } id })
+        {
+            return KernelFrameName(id) ?? frame.Name;
+        }
+
+        return string.Equals(frame.Name, Frame.GCRF.Name, StringComparison.OrdinalIgnoreCase) ? Frame.ICRF.Name : frame.Name;
+    }
+
+    // The name of the frame of id frameId in the loaded kernels, null when they define none; called under the lock
+    private static string KernelFrameName(int frameId)
+    {
+        var name = new byte[33];
+        if (!GetFrameNameProxy(frameId, name))
+        {
+            return null;
+        }
+
+        // frmnam_c writes at most 32 characters and the terminating null in the 33 bytes it is given
+        return System.Text.Encoding.UTF8.GetString(name, 0, Array.IndexOf(name, (byte)0)).TrimEnd();
+    }
 
     /// <summary>
     /// Whether the frame is a TEME frame by its name, compared ignoring case as SPICE compares frame names: a frame

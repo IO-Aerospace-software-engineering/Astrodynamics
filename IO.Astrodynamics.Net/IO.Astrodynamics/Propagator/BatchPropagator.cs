@@ -42,6 +42,13 @@ namespace IO.Astrodynamics.Propagator;
 /// concurrent propagations sharing a central body do not see each other's cache.
 /// </para>
 /// <para>
+/// <b>Maneuvers:</b> a maneuver draws on a fuel tank of the spacecraft it is propagated with, a tank belonging to one
+/// spacecraft (<see cref="IO.Astrodynamics.Body.Spacecraft.Spacecraft.AddFuelTank"/>): distinct spacecraft imply distinct
+/// maneuvers and engines. A task whose maneuver draws on another spacecraft's tank, or on a tank of none, fails with an
+/// <see cref="InvalidOperationException"/> in its <see cref="PropagationResult.Error"/> before anything runs (#676, #586;
+/// before, it burnt the other spacecraft's fuel and wrote its records, or threw a <see cref="NullReferenceException"/>).
+/// </para>
+/// <para>
 /// <b>Recommendation:</b> When using geopotential gravity, create a separate
 /// <see cref="IO.Astrodynamics.Body.CelestialBody"/> instance per task for the central body.
 /// This ensures each task has its own <c>GeopotentialGravitationalField</c> buffers. Third-body perturbation bodies (Sun, Moon, etc.) that do not
