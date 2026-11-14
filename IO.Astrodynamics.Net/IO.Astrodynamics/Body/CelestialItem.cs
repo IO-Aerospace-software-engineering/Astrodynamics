@@ -1087,12 +1087,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     #region Operators
 
+    /// <summary>
+    /// The identifier, name, mass (kg) and GM (m^3/s^2) of the item, one "title : value" line each, every number in the
+    /// shortest form that parses back to its property in the invariant culture (#681: the mass and GM were printed to 7
+    /// significant digits, GM under "m^3.s^2").
+    /// </summary>
     public override string ToString()
     {
         return $"{"Identifier :",TITLE_WIDTH} {NaifId,-VALUE_WIDTH}{Environment.NewLine}" +
                $"{"Name :",TITLE_WIDTH} {Name,-VALUE_WIDTH}{Environment.NewLine}" +
-               $"{"Mass (kg) :",TITLE_WIDTH} {Mass.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}" +
-               $"{"GM (m^3.s^2):",TITLE_WIDTH} {GM.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}";
+               $"{"Mass (kg) :",TITLE_WIDTH} {Mass.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}" +
+               $"{"GM (m^3/s^2) :",TITLE_WIDTH} {GM.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}";
     }
 
     public bool Equals(CelestialItem other)
