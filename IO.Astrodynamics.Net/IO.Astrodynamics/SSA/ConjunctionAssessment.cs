@@ -2624,13 +2624,13 @@ public static class ConjunctionAssessment
             if (missInPlaneMag < 1e-10)
             {
                 var seed = System.Math.Abs(vHat.X) < 0.9 ? Vector3.VectorX : Vector3.VectorY;
-                e1 = (seed - vHat * (seed * vHat)).Normalize();
-                e2 = vHat.Cross(e1).Normalize();
+                e1 = (seed - vHat * (seed * vHat)).NormalizeOrZero();
+                e2 = vHat.Cross(e1).NormalizeOrZero();
             }
             else
             {
                 e1 = missInPlane * (1.0 / missInPlaneMag);
-                e2 = vHat.Cross(e1).Normalize();
+                e2 = vHat.Cross(e1).NormalizeOrZero();
             }
         }
 

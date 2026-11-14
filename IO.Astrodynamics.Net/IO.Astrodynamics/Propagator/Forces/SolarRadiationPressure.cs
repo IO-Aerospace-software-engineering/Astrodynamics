@@ -334,7 +334,7 @@ public class SolarRadiationPressure : ForceBase
         var scToOcc = GeometricPosition(occultingBody, stateVector) - scPosition;
         double occDistance = scToOcc.Magnitude();
         double occAngSize = occultingBody.AngularSize(occDistance);
-        double angSep = scToSun.Normalize().Angle(scToOcc.Normalize());
+        double angSep = scToSun.NormalizeOrZero().Angle(scToOcc.NormalizeOrZero());
         return new Occultation(scToOcc / occDistance, occDistance, occultingBody.EquatorialRadius, 0.5 * occAngSize,
             angSep);
     }

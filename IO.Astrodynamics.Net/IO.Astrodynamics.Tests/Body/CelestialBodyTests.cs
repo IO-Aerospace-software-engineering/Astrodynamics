@@ -194,6 +194,17 @@ public class CelestialBodyTests
         Assert.Equal(0.9984998794278185, res, 12);
     }
 
+    // #680: a target at the position of the observer has no direction; the angle is 0 by Vector3.Angle's convention, the
+    // zero vector going through the library's lenient helper (the public Normalize throws for it)
+    [Fact]
+    public void AngularSeparationFromOrbitalParameters_OfACoincidentTarget_IsZero()
+    {
+        var moonFromEarth = TestHelpers.MoonAtJ2000.GetEphemeris(TimeSystem.Time.J2000TDB, TestHelpers.EarthAtJ2000, Frames.Frame.ICRF,
+            Aberration.None);
+        var res = TestHelpers.Sun.AngularSeparation(TimeSystem.Time.J2000TDB, TestHelpers.MoonAtJ2000, moonFromEarth, Aberration.None);
+        Assert.Equal(0.0, res);
+    }
+
     [Fact]
     public void SubObserverPoint()
     {

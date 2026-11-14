@@ -347,7 +347,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </remarks>
         private double AngleInOrbitPlane(in Vector3 from, in Vector3 to)
         {
-            var hHat = SpecificAngularMomentum().Normalize();
+            var hHat = SpecificAngularMomentum().NormalizeOrZero();
             double angle = System.Math.Atan2(hHat * from.Cross(to), from * to);
             return angle < 0.0 ? angle + Constants._2PI : angle;
         }
@@ -423,9 +423,9 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// <returns>A 3x3 rotation matrix whose rows are the R, T, N unit vectors in inertial coordinates.</returns>
         public Matrix CreateRtnRotation()
         {
-            var r = Position.Normalize();
-            var h = Position.Cross(Velocity).Normalize();
-            var t = h.Cross(r).Normalize();
+            var r = Position.NormalizeOrZero();
+            var h = Position.Cross(Velocity).NormalizeOrZero();
+            var t = h.Cross(r).NormalizeOrZero();
             return Matrix.FromRowVectors(r, t, h);
         }
 

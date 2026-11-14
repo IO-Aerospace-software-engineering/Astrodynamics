@@ -83,7 +83,7 @@ conjunction analysis; see
 |--------|-------------|
 | `ToKeplerianElements()` | Convert to Keplerian elements |
 | `ToEquinoctial()` | Convert to equinoctial elements |
-| `ToEquatorial()` | Convert to equatorial coordinates |
+| `ToEquatorial()` | Right ascension and declination in ICRF, whatever the frame of the state (rotated at its epoch, #680), and the distance |
 | `ToFrame(Frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable, Aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |

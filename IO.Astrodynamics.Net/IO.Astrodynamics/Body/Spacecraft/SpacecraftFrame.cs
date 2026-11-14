@@ -357,7 +357,7 @@ public class SpacecraftFrame : Frame
         }
 
         var toIcrf = orientation.ReferenceFrame.ToFrame(ICRF, orientation.Epoch);
-        return new StateOrientation((toIcrf.Rotation * orientation.Rotation).Normalize(), Vector3.Zero, orientation.Epoch, this);
+        return new StateOrientation((toIcrf.Rotation * orientation.Rotation).NormalizeOrZero(), Vector3.Zero, orientation.Epoch, this);
     }
 
     /// <summary>

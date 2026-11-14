@@ -1,3 +1,5 @@
+using System;
+
 namespace IO.Astrodynamics.Math
 {
     public readonly record struct Quaternion
@@ -40,7 +42,28 @@ namespace IO.Astrodynamics.Math
             return System.Math.Sqrt(W * W + VectorPart.X * VectorPart.X + VectorPart.Y * VectorPart.Y + VectorPart.Z * VectorPart.Z);
         }
 
+        /// <summary>
+        /// The unit quaternion of this quaternion.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The magnitude is 0 (#680; the quaternion itself was returned before
+        /// 11.0.0, and a vector rotated by it was zero): a zero quaternion, or one whose components are all too small for
+        /// their squares to be represented (below about 1.5e-162). A quaternion of magnitude 0 is no rotation.</exception>
         public Quaternion Normalize()
+        {
+            double m = Magnitude();
+            if (m == 0)
+            {
+                throw new InvalidOperationException($"The quaternion {this} has a magnitude of 0 and is no rotation.");
+            }
+
+            return new Quaternion(W / m, VectorPart / m);
+        }
+
+        /// <summary>
+        /// The unit quaternion of this quaternion, or this quaternion when its magnitude is 0: the library's own
+        /// normalizations, bit for bit the former <see cref="Normalize"/> (#680).
+        /// </summary>
+        internal Quaternion NormalizeOrZero()
         {
             double m = Magnitude();
             if (m == 0)
@@ -152,7 +175,7 @@ namespace IO.Astrodynamics.Math
         /// rotations, q0, a zero axis and a zero angle.</returns>
         internal static (Quaternion Rotation, Vector3 Axis, double Angle) SlerpByAxisAngle(in Quaternion q0, in Quaternion q1, double fraction)
         {
-            var delta = (q1 * q0.Conjugate()).Normalize();
+            var delta = (q1 * q0.Conjugate()).NormalizeOrZero();
             if (delta.W < 0.0)
             {
                 delta = delta * -1.0;
@@ -166,7 +189,7 @@ namespace IO.Astrodynamics.Math
 
             double angle = 2.0 * System.Math.Atan2(sinHalf, delta.W);
             var axis = delta.VectorPart / sinHalf;
-            return ((new Quaternion(axis, angle * fraction) * q0).Normalize(), axis, angle);
+            return ((new Quaternion(axis, angle * fraction) * q0).NormalizeOrZero(), axis, angle);
         }
 
         /// <summary>
@@ -185,7 +208,7 @@ namespace IO.Astrodynamics.Math
                 VectorPart.Z + t * (q2.VectorPart.Z - VectorPart.Z)
             );
 
-            return result.Normalize();
+            return result.NormalizeOrZero();
         }
     }
 }

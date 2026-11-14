@@ -1,11 +1,20 @@
+using System;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Math
 {
     public class QuaternionTests
     {
+        private readonly ITestOutputHelper _output;
+
+        public QuaternionTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         [Fact]
         public void CreateByAxisAngle()
         {
@@ -252,6 +261,42 @@ namespace IO.Astrodynamics.Tests.Math
             Assert.Equal(-0.38268343236508984, q3.VectorPart.X, 12);
             Assert.Equal(0.0, q3.VectorPart.Y);
             Assert.Equal(0.0, q3.VectorPart.Z);
+        }
+            // Measured on Linux x64 (2026-11-14): 5.551e-16; twice the worst, provisional until the three platforms are measured
+        private const double RotationTolerance = 1.2e-15;
+
+        // #680: a quaternion of magnitude 0 is no rotation; Normalize returned it, and a vector rotated by it was zero
+        [Fact]
+        public void Normalize_OfZero_Throws_AndRotateCannotBeFedAZeroAttitude()
+        {
+            Assert.Throws<InvalidOperationException>(() => new Quaternion(0.0, 0.0, 0.0, 0.0).Normalize());
+            Assert.Throws<InvalidOperationException>(() => Vector3.VectorX.Rotate(new Quaternion(0.0, 0.0, 0.0, 0.0).Normalize()));
+            Assert.Throws<InvalidOperationException>(() => new Quaternion(1e-170, 0.0, -1e-170, 0.0).Normalize());
+
+            // A non-zero quaternion: a unit quaternion, which rotates VectorX like the rotation matrix of the same quaternion,
+            // whose first column is (1 - 2(y² + z²), 2(xy + wz), 2(xz - wy)) (Shuster 1993, the active rotation q p q*)
+            var random = new Random(680);
+            double worstNorm = 0.0;
+            double worstRotation = 0.0;
+            for (int i = 0; i < 1000; i++)
+            {
+                var q = new Quaternion(random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0,
+                    random.NextDouble() * 2.0 - 1.0) * System.Math.Pow(10.0, random.NextDouble() * 20.0 - 10.0);
+                if (q.Magnitude() == 0.0) continue;
+
+                var u = q.Normalize();
+
+                double w = u.W, x = u.VectorPart.X, y = u.VectorPart.Y, z = u.VectorPart.Z;
+                var expected = new Vector3(1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y + w * z), 2.0 * (x * z - w * y));
+                worstNorm = System.Math.Max(worstNorm, System.Math.Abs(u.Magnitude() - 1.0));
+                worstRotation = System.Math.Max(worstRotation, (Vector3.VectorX.Rotate(u) - expected).Magnitude());
+            }
+
+            _output.WriteLine($"MEASURE #680 Quaternion.Normalize | |q| - 1 |: {worstNorm:E3}");
+            _output.WriteLine($"MEASURE #680 Quaternion.Normalize rotation of X against the matrix: {worstRotation:E3}");
+            // |q| - 1 measured 2.220e-16 (one ulp of 1): the bound is twice it
+            Assert.True(worstNorm <= 4.4e-16, $"{worstNorm:E3}");
+            Assert.True(worstRotation <= RotationTolerance, $"{worstRotation:E3}");
         }
     }
 }

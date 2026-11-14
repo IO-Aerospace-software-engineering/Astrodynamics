@@ -181,7 +181,7 @@ internal static class OccultationGeometry
         var mappedLimb = new LimbEllipse(sphere.ToUnitSphere(limb.Center), sphere.ToUnitSphere(limb.U), sphere.ToUnitSphere(limb.V));
 
         // Whether the ray to the sphere's center meets the other body: u is then inside the other's disc
-        var towardSphere = sphere.Center.Normalize();
+        var towardSphere = sphere.Center.NormalizeOrZero();
         double entryOther = other.RayEntry(towardSphere);
         bool inside = !double.IsNaN(entryOther);
 

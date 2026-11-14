@@ -75,7 +75,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             var deltaT = (date - Epoch).TotalSeconds;
             return new StateOrientation(
-                (new Quaternion(AngularVelocity.Normalize(), AngularVelocity.Magnitude() * deltaT).Normalize() * Rotation.Normalize()).Normalize(), AngularVelocity, date,
+                (new Quaternion(AngularVelocity.NormalizeOrZero(), AngularVelocity.Magnitude() * deltaT).NormalizeOrZero() * Rotation.NormalizeOrZero()).NormalizeOrZero(), AngularVelocity, date,
                 ReferenceFrame);
         }
 

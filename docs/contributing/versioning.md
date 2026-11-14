@@ -1357,6 +1357,64 @@ release are listed under **Known limitations**.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
 
+- **`MemoryDataProvider` threw exception types SPICE does not throw, so a body that builds on SPICE did not build
+  from memory** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). A target without stored states or read outside them, and a frame read outside its stored
+  orientations, threw `ArgumentException`; an identifier without body information threw `KeyNotFoundException`. The
+  library's handlers of missing data catch the `InvalidOperationException` of SPICE only, so `new CelestialBody(399)`
+  on a provider holding the Earth's information alone threw `KeyNotFoundException` ('3'), and the orientation cache of
+  a propagation over a memory frame threw from its constructor as soon as a buffer point lay before the first stored
+  orientation. The three cases now throw `InvalidOperationException` naming the item and the epoch, the contract of the
+  SPICE provider; a frame never added keeps `ArgumentException`. A planet, moon, barycentre or the Sun whose barycentre's
+  data the provider lacks builds with `InitialOrbitalParameters` null and an infinite sphere of influence, as the Earth
+  built on SPICE outside de440s, and the cache keeps the points the entries do not reach unavailable. `MemoryDataProviderTests`
+  checks the types against those of `SpiceDataProvider` for the same situations; `MemoryDataProviderBodyTests` builds
+  the Earth from one, two or three infos, a day before its stored states and within them, and the Moon, in a child
+  process (the test process never swaps the global provider, #631), and reads the cache over a memory frame between two
+  grid points against the closed-form rotation, within 1.15e-16 rad (Changed, Breaking, below).
+- **`ToEquatorial()` and `new Equatorial(StateVector)` ignored the state's frame** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). They took atan2 and asin
+  of the position in whatever frame it was expressed in, so a state in ITRF93 gave an Earth-fixed longitude, one in
+  ECLIPJ2000 an ecliptic longitude and latitude, a TLE (TEME) a right ascension up to 0.32° off; the Moon from the Earth
+  over four epochs from 2000 to 2024 was up to 166.4° off in right ascension in IAU_MOON and MOON_ME, 24.7° to 123.1° in
+  ITRF93. The position is now rotated to ICRF at the state's epoch, the rotation of `ToFrame`, before the angles; a state
+  in ICRF is taken as it is, bit for bit, and the distance is that of the position as given. The coordinate searches of
+  `CoordinateSystem.RaDec` keep the angles in their search frame, as CSPICE `gfposc`, through an internal helper.
+  `EquatorialTests` reads the Moon from the Earth in ICRF, ECLIPJ2000, ITRF93, IAU_MOON, MOON_ME and TEME at four
+  epochs against the closed form of RA and Dec on SPICE's J2000 state (`spkezr_c`): within 4.4e-16 rad in RA and
+  1.1e-16 rad in Dec; the angles are invariant under a change of frame (a state vector, Keplerian elements in ECLIPJ2000,
+  a TLE), and the ICRF pole and equator expressed in ECLIPJ2000 give Dec π/2 and 0 (Changed, Breaking, below).
+- **`Time.AddDays`, `AddHours` and `AddMinutes` of NaN returned the epoch, `CreateFromJD(NaN)` J2000** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). They
+  forwarded to `DateTime`, whose range check is false for NaN, which it converts to 0 ticks; the infinities threw with
+  `DateTime`'s parameter name, `value`. A non-finite argument now throws `ArgumentOutOfRangeException` naming `days`,
+  `hours`, `minutes` or `julianDate`, as `AddSeconds` already did; a finite argument gives the result of `DateTime`, bit
+  for bit, still truncated to the tick ([#637](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/637)). The command line's epoch `NaN JD` ran at J2000 and is now
+  rejected. `DateTimeTests` checks the four methods in UTC and TDB, and 1e5 finite arguments against `DateTime`'s
+  arithmetic (Changed, Breaking, below).
+- **`Time.Create(year, doy, sec)` checked nothing** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). Year 0 was read as 2000, and a day or seconds outside
+  their range rolled into the neighbouring day or year: `Create(2023, 366, 0)` was 2024-01-01, `Create(2024, 1, -1)`
+  2023-12-31T23:59:59Z. It now throws `ArgumentOutOfRangeException` naming `year` outside [1, 9999], `doy` outside the
+  365 or 366 days of its Gregorian year, or `sec` not finite or outside [0, 86400); a valid input builds as before.
+  `DateTimeTests` checks the bounds against the Gregorian rule (day 60 is 29 February in 2000, 1 March in 1900) (Changed,
+  Breaking, below).
+- **`Matrix.Equals` took NaN as equal to any value, and equal matrices hashed differently** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). An element pair
+  differed only when |a − b| > `Double.Epsilon`, which is false for NaN and for two values one smallest subnormal apart:
+  a zero matrix equalled the same matrix with NaN at [0, 0], which equalled the matrix with 1 there, while the zero
+  matrix did not, and the hash codes of the first two differed. The elements now compare by `double.Equals`, the
+  semantics of `Vector3` and of the record structs: NaN equals NaN only, +0 equals −0. `MatirxTests` checks the
+  reflexivity, symmetry and transitivity of `Equals` and the hash contract over the matrices of {0, −0, 4.9e-324, 1, NaN,
+  ±∞}, against `double.Equals` pair by pair. The records that hold a `Matrix` (`EncounterState`, `CollisionRisk`, the
+  CDM models) follow (Changed, below).
+- **`Normalize()` of a zero `Vector3` or `Quaternion` returned zero silently, and a spacecraft accepted zero body axes**
+  ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). `Vector3.Zero.Normalize()` was the zero vector, a vector rotated by a normalized zero quaternion was zero,
+  and a `Spacecraft` with `bodyFront` +Y and the two other axes zero was accepted with zero axes. The public
+  `Normalize()` of both types now throws `InvalidOperationException` for a magnitude of 0; the library's own
+  normalizations keep their behaviour, bit for bit, through an internal helper (a zero angular velocity rotates nothing,
+  a coincident target is at angle 0, collinear Lambert positions throw `ArgumentException`), and the `Spacecraft`
+  constructor throws `ArgumentException` naming a zero `bodyFront`, `bodyRight` or `bodyUp`. `VectorTests` and
+  `QuaternionTests` check the throw and, for 1e4 vectors of magnitude 1e-150 to 1e150 and 1000 quaternions, a unit
+  result parallel to the input, the quaternion's rotation against its matrix; `StateOrientationTests`,
+  `LambertSolverTests` and `CelestialBodyTests` the kept conventions; `SpacecraftTests` each zero axis (Changed,
+  Breaking, below).
+
 **Changed**
 
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
@@ -1686,6 +1744,37 @@ release are listed under **Known limitations**.
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
 
+- **Breaking: `MemoryDataProvider` throws `InvalidOperationException` for missing data** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above):
+  `GetEphemeris` of a target without stored states or outside them and `FrameTransformationToICRF` outside a frame's
+  stored orientations threw `ArgumentException`, `GetCelestialBodyInfo` of an identifier without information
+  `KeyNotFoundException`, and so `new CelestialBody(id)` of an identifier the provider lacks. A frame never added still
+  throws `ArgumentException`. A body built on the provider without its barycentre's data now builds without an orbit
+  instead of throwing. A variational replay of the conjunction analysis over a provider short of data surfaces the
+  provider's `InvalidOperationException` unwrapped. Migration: catch `InvalidOperationException`.
+- **Breaking: `ToEquatorial()` and `new Equatorial(StateVector)` give the right ascension and declination in ICRF**
+  ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above): for a state in another frame the angles change (up to 166.4° in RA for the Moon in MOON_ME,
+  24.7° to 123.1° in ITRF93, 0.87° to 4.13° in ECLIPJ2000, up to 0.32° for a TLE in TEME, the Dec by up to 3.65°); the
+  distance and the epoch do not, and a state in ICRF gives the same numbers, bit for bit. The frame's orientation is now
+  read, so a state in a frame the data do not cover at its epoch (ITRF93 outside the PCK) throws
+  `InvalidOperationException`. Migration: for the angles in the state's own frame, take atan2 and asin of
+  `stateVector.Position`, or search with `CoordinateSystem.RaDec` in that frame.
+- **Breaking: `Time.AddDays`, `AddHours`, `AddMinutes` and `CreateFromJD` throw for a non-finite argument** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680),
+  Fixed above): NaN returned the epoch or J2000 and now throws `ArgumentOutOfRangeException`; the infinities, which threw
+  with the parameter name `value`, name the caller's parameter. The command line rejects an epoch `NaN JD`. Migration:
+  check `double.IsFinite` before the call.
+- **Breaking: `Time.Create(year, doy, sec)` checks its ranges** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above): year 0 (read as 2000), a year
+  above 9999, a day outside its year and seconds outside [0, 86400) throw `ArgumentOutOfRangeException`; a non-finite
+  `sec` names `sec` (it named `seconds`). Migration: normalise the day and the seconds before the call, or add the
+  excess with `AddSeconds`.
+- **`Matrix` equality follows `double.Equals`** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above): two matrices, or two records holding one, are no
+  longer equal when one has NaN where the other has a number, or when two elements differ by 4.9e-324; NaN against NaN
+  stays equal. No call throws and no numeric result moves.
+- **Breaking: `Vector3.Normalize()` and `Quaternion.Normalize()` throw for a magnitude of 0** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above):
+  they returned the value itself. The magnitude is not scaled, so a vector or quaternion whose components are all below
+  about 1.5e-162 has magnitude 0 too and throws. `new Spacecraft(...)` throws `ArgumentException` naming `bodyFront`,
+  `bodyRight` or `bodyUp` for an axis of magnitude 0 (accepted when the other given axes were zero too, thrown without a
+  parameter name otherwise). Migration: test `Magnitude() > 0` before normalizing; give non-zero axes.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -1891,12 +1980,20 @@ not listed.
   coordinates and read as a target from a kernel-backed observer takes the light time of the observer, not of the site:
   82.7 km off `spkcpt` from the Moon with LT, about 15 000 km from the Sun. A light-time-corrected state in a
   non-inertial frame centred on the target (ITRF93, MOON_ME) takes the frame at the observation epoch, not at t − lt as
-  `spkezr` does: the Moon from DSS-13 with LT 531 m to 1.48 km off.
+  `spkezr` does: the Moon from DSS-13 with LT 531 m to 1.48 km off. `ToEquatorial` of such a state rotates it to ICRF at its epoch
+  ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)): 3.05e-6 rad in RA and 1.15e-6 rad in Dec for the Moon from the Earth with LT in MOON_ME; read it in ICRF.
 - **Illumination of a site above the ellipsoid**
   ([#654](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/654)). A site from the kernels,
   searched by `gfilum_c` with the normal of `surfnm_c` at the point, and the same site built from its coordinates,
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
+- **Degenerate geometry kept by the library's normalizations**
+  ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), [#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687), [#688](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/688)). The library's own
+  normalizations still return the zero vector for a magnitude of 0 ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)), which hides three degenerate cases:
+  `PerigeeVector()` and `ApogeeVector()` are the zero vector when the eccentricity vector rounds to zero (139 of 10 000
+  random circular elements), `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix, and
+  `new Quaternion(axis, angle)` neither checks nor normalises its axis (a zero axis gives a non-unit quaternion). Give
+  near-circular elements a non-zero eccentricity for their apsides, and a unit axis to the quaternion.
 - **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
   read in ICRF without aberration and convert with `ToFrame`.

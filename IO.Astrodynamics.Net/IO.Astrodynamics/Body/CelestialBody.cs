@@ -324,7 +324,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         var toIcrf = Frame.ToFrame(Frame.ICRF, epoch).Rotation;
         var icrfPos = bodyfFixedCoordinates.Rotate(toIcrf);
         var icrfRot = Vector3.VectorZ.Rotate(toIcrf);
-        var inertialVelocity = icrfRot.Cross(icrfPos).Normalize() * System.Math.Sqrt(GM / radius);
+        var inertialVelocity = icrfRot.Cross(icrfPos).NormalizeOrZero() * System.Math.Sqrt(GM / radius);
         var sv = new StateVector(icrfPos, inertialVelocity, this, epoch, Frame.ICRF);
         return new KeplerianElements(radius, 0.0, sv.Inclination(), sv.AscendingNode(), sv.ArgumentOfPeriapsis() + sv.MeanAnomaly(), 0.0, this, epoch, sv.Frame);
     }

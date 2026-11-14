@@ -165,4 +165,42 @@ public class MemoryDataProviderTests
         // A node is read as it is, before and after interpolated reads
         Assert.Equal(Circular(600.0).Position, Read(sequence, 600.0).Position);
     }
+    // #680, the contract of the reads (#668, C10): a known item without data at the epoch throws InvalidOperationException,
+    // the type SPICE throws for the same situations, which the library's handlers of missing data catch (a body whose
+    // barycentre the data do not reach builds without an orbit; the orientation cache of a propagation keeps the point
+    // unavailable); a frame never added throws ArgumentException. Before, ArgumentException and KeyNotFoundException
+    [Fact]
+    public void MissingData_ThrowsInvalidOperationException_UnknownFrame_ArgumentException()
+    {
+        var earth = TestHelpers.EarthAtJ2000;
+        var ssb = TestHelpers.SsbAtJ2000;
+        var early = new TimeSystem.Time(1500, 1, 1, 0, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
+
+        // The reference: the types SPICE gives, the Earth outside de440s and ITRF93 outside the PCK
+        var spice = new SpiceDataProvider();
+        Assert.Throws<InvalidOperationException>(() => spice.GetEphemeris(early, earth, ssb, Frames.Frame.ICRF, Aberration.None));
+        Assert.Throws<InvalidOperationException>(() => spice.FrameTransformationToICRF(early, new Frames.Frame("ITRF93")));
+
+        // A target without states, and one read before its first or after its last state
+        var provider = new MemoryDataProvider();
+        var targetException = Assert.Throws<InvalidOperationException>(() =>
+            provider.GetEphemeris(Start, earth, ssb, Frames.Frame.ICRF, Aberration.None));
+        Assert.Contains("399", targetException.Message);
+        var states = StateProvider();
+        Assert.Throws<InvalidOperationException>(() =>
+            states.GetEphemeris(Start.AddSeconds(-1.0), earth, ssb, Frames.Frame.ICRF, Aberration.None));
+        Assert.Throws<InvalidOperationException>(() =>
+            states.GetEphemeris(Start.AddSeconds(1201.0), earth, ssb, Frames.Frame.ICRF, Aberration.None));
+
+        // A frame read outside its stored orientations; a frame never added keeps ArgumentException
+        var (orientations, frame) = OrientationProvider(0.025);
+        var frameException = Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToICRF(Start.AddSeconds(-1.0), frame));
+        Assert.Contains(frame.Name, frameException.Message);
+        Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToICRF(Start.AddSeconds(11.0), frame));
+        Assert.Throws<ArgumentException>(() => orientations.FrameTransformationToICRF(Start, new Frames.Frame("IAU_MARS")));
+
+        // An id without body info: InvalidOperationException, the type a body without a name throws on SPICE
+        var infoException = Assert.Throws<InvalidOperationException>(() => provider.GetCelestialBodyInfo(999));
+        Assert.Contains("999", infoException.Message);
+    }
 }

@@ -55,6 +55,23 @@ public class LambertSolverTests
         Assert.Throws<ArgumentException>(() => solver.Solve(false, op1, op2, dummyBody, 0));
     }
 
+    // #680: collinear positions define no transfer plane; the solver normalizes their zero cross product through the
+    // library's lenient helper and rejects it by its z component, an ArgumentException, not the InvalidOperationException
+    // of the public Normalize
+    [Theory]
+    [InlineData(-8.0e6)]
+    [InlineData(8.0e6)]
+    public void Solve_ThrowsArgumentExceptionOnCollinearPositions(double x2)
+    {
+        var solver = new LambertSolver();
+        var now = TimeSystem.Time.J2000TDB;
+        var op1 = CreateStateVector(new Vector3(7.0e6, 0.0, 0.0), new Vector3(0.0, 7.5e3, 0.0), now);
+        var op2 = CreateStateVector(new Vector3(x2, 0.0, 0.0), new Vector3(0.0, -7.0e3, 0.0), now.AddSeconds(3000.0));
+
+        var exception = Assert.Throws<ArgumentException>(() => solver.Solve(false, op1, op2, TestHelpers.EarthAtJ2000, 0));
+        Assert.Contains("no z component", exception.Message);
+    }
+
     [Fact]
     public void Solve_ThrowsOnNonPositiveGM()
     {
