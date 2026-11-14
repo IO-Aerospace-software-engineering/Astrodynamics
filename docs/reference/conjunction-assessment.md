@@ -170,7 +170,10 @@ candidate `Spacecraft` with `HardBodyRadius` > 0 keeps its own radius whatever t
 none (a radius of 0, or not a `Spacecraft`) takes the option, or 5 m when it is null; no candidate throws for its radius,
 so a catalogue of spacecraft with different radii is screened with one fallback. The analysis of each candidate carries
 its resolved radius as its `SecondaryHardBodyRadiusMeters`, and `EvaluateAvoidance` re-analyzes a screened encounter
-with it (the table above with a null option: no conflict).
+with it: with a null `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters` the table above applies to the radius the
+screening resolved, which never conflicts (a candidate of 0 m or a body screened with a fallback of 3 m is re-analyzed
+with 3 m, not the 5 m of the null row). A radius of 0 is the default of both `Spacecraft` constructors, so it cannot be
+told from a radius left unset and gives none; a fallback of 0 m keeps every such candidate at 0 m.
 
 An option that is NaN, infinite or negative throws `ArgumentOutOfRangeException` naming it. Before 11.0.0 the option,
 5 m by default, was used whatever the radius of the secondary

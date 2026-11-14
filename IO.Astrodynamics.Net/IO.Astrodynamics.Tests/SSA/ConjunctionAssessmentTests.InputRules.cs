@@ -84,6 +84,13 @@ public partial class ConjunctionAssessmentTests
                 yield return new object[] { entryPoint, "body", 0.0, 2.0 };
                 yield return new object[] { entryPoint, "body", 0.0, OptionUnset };
             }
+
+            if (entryPoint == "Screen")
+            {
+                // A fallback of 0 m keeps a candidate that gives none at 0 m: a radius of 0 cannot be told from an unset one
+                yield return new object[] { entryPoint, "spacecraft", 0.0, 0.0 };
+                yield return new object[] { entryPoint, "body", 0.0, 0.0 };
+            }
         }
     }
 

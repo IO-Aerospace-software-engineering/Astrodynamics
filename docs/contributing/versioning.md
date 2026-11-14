@@ -1368,8 +1368,9 @@ release are listed under **Known limitations**.
   a candidate's own radius. `Analyze_SecondaryHardBodyRadius_DesignedEncounters_MatchExactPc` splits the
   radius of the seven designed encounters of `tools/collision_probability` between the two spacecraft (0.6 R and 0.4 R,
   no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.2e-10 (bound 6.3e-10); a
-  theory checks the five rows of the rule on every entry point and both paths, with a spacecraft and a body as
-  secondary; `Screen_MixedCatalogue_EachCandidateTakesItsOwnRadiusOrTheFallback` screens spacecraft of 2, 6 and 0 m and
+  theory checks the five rows of the rule on `Analyze` and `AnalyzeAll` (sampled and dense) and both avoidance paths,
+  and the fallback rule on `Screen` (the candidate's own radius in the row where the others throw), with a spacecraft
+  and a body as secondary; `Screen_MixedCatalogue_EachCandidateTakesItsOwnRadiusOrTheFallback` screens spacecraft of 2, 6 and 0 m and
   the Moon with a fallback of 3 m and with none (two-body and RK7(8)): each combined radius is 8 m plus the candidate's
   own or the fallback, each Pc that of `Analyze` on the pair, and `EvaluateAvoidance` runs on each screened encounter
   with the same radius; and `AREA_PC` is π·3² for a secondary of 3 m.
