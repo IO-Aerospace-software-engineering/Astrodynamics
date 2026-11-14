@@ -67,6 +67,44 @@ instant) to the epoch you ask for, whatever its time frame: `futureEpoch` above 
 same state. The state is in `Frame.TEME`. A TLE that SGP4 cannot evaluate at that epoch (decayed, suborbital, an
 eccentricity out of range) throws `InvalidOperationException`.
 
+## Numerical Propagation of a TLE
+
+A spacecraft built on a TLE is propagated numerically like any spacecraft: the propagation starts from the SGP4 state
+at the start of the window, rotated once to ICRF, and integrates in ICRF. About the TLE's own Earth that is a point mass
+(53.7 km from SGP4 after an hour for this ISS TLE). To give it a geopotential and drag, start from the SGP4 state in
+TEME on an Earth that carries them; `TLEPropagator` gives SGP4 itself, for comparison:
+
+```csharp
+using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+using IO.Astrodynamics.Body.Spacecraft;
+using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.Propagator;
+using IO.Astrodynamics.Propagator.Integrators;
+
+var window = new Window(tle.Epoch, tle.Epoch.AddHours(6.0));
+var start = window.StartDate.ToTDB();
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10),
+    new Nrlmsise00Model(SpaceWeather.Nominal));
+var sgp4AtStart = tle.ToStateVector(start);
+var numerical = new Spacecraft(-1001, "ISS-NUM", 420000.0, 450000.0, new Clock("issnum", 65536),
+    new StateVector(sgp4AtStart.Position, sgp4AtStart.Velocity, earth, start, Frame.TEME), 1600.0, 2.2);
+var solution = numerical.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), true, false,
+    TimeSpan.FromSeconds(60.0));
+
+var sampled = new Spacecraft(-1002, "ISS-SGP4", 420000.0, 450000.0, new Clock("issgp4", 65536), tle);
+new TLEPropagator(window, sampled, TimeSpan.FromSeconds(60.0)).Propagate();
+
+var end = solution.StateVectors[^1];
+var sgp4AtEnd = tle.ToStateVector(end.Epoch).ToFrame(Frame.ICRF).ToStateVector();
+Console.WriteLine($"Numerical - SGP4 after 6 h: {(end.Position - sgp4AtEnd.Position).Magnitude():F0} m");
+```
+
+The solution and the stored states are in ICRF. Once propagated numerically, the spacecraft reads its stored states;
+unpropagated, or sampled by `TLEPropagator`, it reads SGP4. See
+[Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle).
+
 ## Creating a TLE from a State Vector
 
 Convert an osculating state vector back to a TLE:

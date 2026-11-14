@@ -17,6 +17,18 @@ integrator, whose error control scales each component separately. GCRF has the a
 its ICRF twin, labelled GCRF, with both integrators, a covariance and in SSB mode (#543; before 11.0.0 the propagator
 rejected it).
 
+A TLE or an osculating state in TEME is accepted too (#675; before 11.0.0 every path rejected it, "must be defined in
+inertial frame"), and rotated once to ICRF, where the propagation runs and its states are: a TLE starts from its SGP4
+state at the start of the window, on the Earth of the TLE (its observer); a TEME state from itself at its epoch, its
+covariance through the Jacobian (TEME is quasi-inertial: v' = R v, P' = diag(R, R) P diag(R, R)ᵀ,
+[TEME](frames.md#teme)). The run is bit for bit that of its ICRF twin, `start.ToFrame(Frame.ICRF)` on the same
+observer, on every path: `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`,
+`MonteCarloPropagator`, the constructors and the builder. The target orbit of an impulse of such a spacecraft is given
+in ICRF: a target in another frame, TEME included, is rejected when the propagation is built
+([Impulse Maneuvers](impulse-maneuvers.md)). CIRS, TIRS, the rotating frames and a set of mean elements in TEME
+(`tle.ToMeanKeplerianElements()`, which has no state without its theory) are still rejected. For a TLE, see
+[Numerical propagation of a TLE](tle.md#numerical-propagation-of-a-tle): its point-mass Earth is not SGP4.
+
 ### Propagation Loop
 
 1. Build event detectors from the spacecraft maneuver chain.
@@ -82,6 +94,13 @@ var solution = propagator.Propagate();
 | `Window` | Propagation time window |
 | `Spacecraft` | The spacecraft being propagated |
 | `DeltaT` | Output time step |
+
+The solution holds the SGP4 states at the samples, and between them the cubic Hermite of `PropagationSegment` on the
+positions, the velocities and the accelerations of SGP4 at the samples (the central difference of its velocity at
+±1 s, #675; zero before 11.0.0, which put the interpolated velocity up to 49.9 m/s off SGP4). For the ISS at 60 s,
+`InterpolateAt` and `GetStateVector` are 4.3e-4 m/s and 0.38 m off SGP4 between the samples (Linux x64), and exact at
+them; `tle.ToStateVector(t)` is the exact SGP4 state at any instant. A TLE whose SGP4 fails within 1 s of an end of
+the window throws.
 
 ## BatchPropagator
 

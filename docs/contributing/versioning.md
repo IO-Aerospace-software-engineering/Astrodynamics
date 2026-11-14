@@ -1357,6 +1357,57 @@ release are listed under **Known limitations**.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
 
+- **A spacecraft whose initial orbit is a TLE or a TEME state could not be propagated numerically** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)).
+  Every path, `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`,
+  `MonteCarloPropagator`, the `CentralBodyPropagator` constructors and the builder, threw `ArgumentException`
+  "Spacecraft initial orbital parameters must be defined in inertial frame": TEME, the frame of SGP4, was not in the
+  list of inertial frames, and integrating in it, a frame of date, would add fictitious accelerations. A TLE now starts
+  from its SGP4 state at the start of the window, a TEME state from itself at its epoch; either is rotated once to ICRF
+  (the covariance through the Jacobian, diag(R, R)), on the observer of the initial orbit, and the propagation, its
+  `PropagationSolution` and the stored states are in ICRF. The run is bit for bit that of its ICRF twin
+  (`TlePropagationTests`: the eight activation paths, Velocity-Verlet and RK7(8), the Moon, the Sun and SRP, a
+  covariance with Φ and P, SSB mode, drag on an Earth with NRLMSISE-00, which moves the end by 27.2 m in an hour;
+  `MonteCarloPropagatorTests.TemeTemplate_RunsStartFromTheirRotatedSamples`). The central body of a TLE is its Earth, a
+  point mass: for the ISS (`21020.53488036`), RK7(8) at 1e-9, the run is 53.663, 275.692 and 1118.386 km from SGP4
+  after 1 h, 6 h and 24 h (on the closed form of Kepler within 9.3e-7 m over the hour at 1e-12), and B* is not used;
+  from a TEME state on an Earth with EGM2008 at degree 10, 0.555, 0.788 and 7.217 km
+  ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). The conjunction analysis
+  reads the TEME P0 rotated: TCA, covariance at TCA, Pc and non-linearity index bit for bit those of the ICRF twin,
+  and within 3.1e-16 relative for the covariance held in RTN (`ConjunctionCovarianceEdgeTests`). The target orbit of
+  an impulse of such a spacecraft is taken in ICRF, which its constructor now accepts; a target in TEME still
+  constructs, and the propagation rejects it when it is built, before it changes anything, naming
+  `targetOrbit.ToFrame(Frame.ICRF)` ([The frame of a target orbit](../reference/impulse-maneuvers.md#the-frame-of-a-target-orbit)).
+  A set of mean elements in TEME (`tle.ToMeanKeplerianElements()`) is still rejected, as are CIRS and TIRS.
+- **A propagated TLE spacecraft read SGP4** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). `Spacecraft.GetGeometricStateRelativeTo` and the window of the
+  stored states tested `InitialOrbitalParameters is TLE` before the stored states. A TLE spacecraft now reads the states
+  of a numerical propagation by any path, the builder and a propagator built directly included, which leave
+  `IsPropagated` false: `GetEphemeris`, `WriteEphemeris` (read back by `spkezr` within 2.8e-9 m), the window searches
+  (the managed field of view against `gftfov` on the kernels it writes within 5e-7 s), the conjunction analysis with
+  the check of #527 and the avoidance options on its force model, bit for bit those of its ICRF twin. Unpropagated, or
+  sampled by `TLEPropagator`, it reads SGP4 as before (0 m). `Spacecraft.ToOpm` still writes SGP4
+  ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)).
+- **`astro propagate -t` ended in an unhandled exception** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). The command built the spacecraft on the TLE, about
+  the TLE's point-mass Earth, and the propagation rejected it ("must be defined in inertial frame"); once accepted, it
+  would have run without the geopotential and the atmosphere of the CLI (12.3 km from them after 30 min, drag and SRP
+  on). It now starts from the SGP4 state at the start of the window, in TEME on the Earth of the CLI (EGM2008 at degree
+  10, the U.S. Standard Atmosphere 1976 with `-a`, `Helpers.CreateCenterOfMotion`), rotated once to ICRF by the
+  library: its SPK is the library run from that state within 6.2e-4 m (`PropagateTests.PropagateFromTle_RunsOnTheCliEarth`).
+  `-t` with a centre of motion other than the Earth throws `ArgumentException` naming 399, before anything is written.
+- **A TLE read the kernels before it checked its text** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). `new TLE(...)` built its Earth (radii, GM, frame), the
+  first argument of its base constructor, before the null checks and the format checks of its lines. Without kernels a
+  malformed TLE threw the kernel error ("Celestial celestialItem frame can't be defined") and CSPICE printed the banners
+  of its failed reads on the standard output: its checksum error was never reached. The text is now checked first
+  (null or empty lines and name, lengths, line numbers, catalog numbers, checksums), and the Earth is built once
+  (`MeanSemiMajorAxis` takes its GM; the second Earth is gone, bit for bit). `ColdStartTests.TleText_IsCheckedBeforeAnyKernelRead`
+  checks four malformed TLEs in a process without kernels, with nothing on the standard output. A valid TLE still
+  needs the kernels that define the Earth.
+- **The velocity of a `TLEPropagator` solution between its samples was up to 49.9 m/s off SGP4** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). Each step of
+  the solution carried zero accelerations, which the cubic Hermite of `PropagationSegment` interpolates the velocity
+  with: 4.39 m/s off at mid-step, 48.7 m/s at a quarter step, 49.93 m/s at worst (ISS, 1 h at 60 s). The accelerations
+  at the samples are now the central difference of SGP4's velocity at ±1 s: the velocity of `InterpolateAt` and
+  `GetStateVector` is 4.28e-4 m/s off SGP4 at worst, the positions (0.376 m, the Hermite's own error) and the states
+  at the samples unchanged (`TLEPropagatorTests.InterpolatedVelocity_FollowsSgp4`, against SGP4 through `evsgp4_c`).
+
 **Changed**
 
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
@@ -1686,6 +1737,22 @@ release are listed under **Known limitations**.
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
 
+- **Breaking: the velocity of a `TLEPropagator` solution between its samples moves** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675), Fixed above): from up to
+  49.9 m/s off SGP4 to 4.3e-4 m/s (ISS, 60 s); the positions and the states at the samples are bit for bit. The
+  `PropagationSolution` overloads of the conjunction analysis fed with two `TLEPropagator` solutions move with it (the
+  ISS and its elements at 61.64°, 6 h, 7 encounters: the TCA from up to 4.44 ms to 5.2 µs from SGP4's, the relative
+  speed from 0.75 m/s to 7.3e-5 m/s off, the miss by at most 0.27 mm). `TLEPropagator` reads SGP4 twice more per
+  sample (1 day at 60 s from 87-133 ms to 262-305 ms), 1 s before the start and 1 s after the last sample included, so a
+  TLE whose SGP4 fails within 1 s of an end of the window throws `InvalidOperationException`. Migration: none for the
+  velocities; for a TLE that decays at an end of the window, shorten the window by a second. The exact SGP4 state at any
+  instant is `tle.ToStateVector(t)`.
+- **Breaking: a malformed TLE reports its own error first** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675), Fixed above): a null or empty line 1 gives "Value
+  cannot be null or empty." and a line 1 shorter than 32 characters "TLE line 1 must be exactly 69 characters long"
+  where both gave "Invalid TLE line 1 format." (`ArgumentException`, parameter `line1`, in both); a line 1 whose epoch
+  does not parse and whose checksum is wrong throws the checksum's `InvalidOperationException` where it threw
+  `FormatException` or `ArgumentOutOfRangeException`. A valid TLE is unchanged. Migration: catch `ArgumentException`
+  and `InvalidOperationException`, as the constructor documents.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -1814,6 +1881,12 @@ not listed.
   be read, but neither re-created by `TLE.Create` nor round-tripped through an OMM. `TLE.Create` checks only that its
   elements are mean: pass mean elements about the Earth in `Frame.TEME`. `Omm.ToTle` writes element set 999 for an OMM
   without `ELEMENT_SET_NO`, `TLE.Create` 9999 by default ([#606](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/606)): pass the element set number.
+  A spacecraft propagated numerically from a TLE ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)) integrates about the TLE's Earth, a point mass: an Earth with a
+  geopotential in the bodies is ignored for gravity, and drag without an atmospheric model on the TLE's Earth is
+  dropped without a word; give a TEME state on an Earth that carries the models
+  ([Numerical propagation of a TLE](../reference/tle.md#numerical-propagation-of-a-tle)). CIRS and TIRS, quasi-inertial
+  as TEME, are still rejected as initial frames. A TLE cannot be built without the kernels that define the Earth. After
+  a numerical propagation, `TLEPropagator` adds its SGP4 states to the stored ones, and the spacecraft reads both.
 - **CDM writing and validation** ([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614),
   [#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615),
   [#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618)). `CdmWriter` puts the `cdm` and
