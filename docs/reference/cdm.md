@@ -52,6 +52,20 @@ The covariance of each participant is the one the conjunction analysis used (see
 [Conjunction Assessment](conjunction-assessment.md#covariance-at-tca)): propagated to TCA, given at TCA, or the
 initial-state covariance held fixed in RTN (not propagated), whose age at TCA a comment gives.
 
+Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipantMetadata` override:
+
+- `MANEUVERABLE` of object 1 is `YES` when the `ManeuverConstraints.MaxDeltaVMetersPerSecond` of the protected profile
+  is positive, `NO` otherwise. Object 2 is `YES` for a spacecraft with at least one engine, `N/A` otherwise: N/A means
+  "not available" or "not applicable" (CCSDS 508.0-B-1 Cor. 2, 1.4.3.1, to which the `MANEUVERABLE` row of Table 3-3
+  refers), and the library knows the model of the object, not its maneuver capacity
+  ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683): `YES` for any spacecraft
+  before, an engineless one or a debris wrapped in a spacecraft included);
+- `AREA_PC` is π r² for each object, r the protected spacecraft's `HardBodyRadius` for object 1 and, for object 2,
+  the combined radius minus it: the radius of the secondary the analysis resolved, its own `HardBodyRadius` when it
+  gives one ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683): π·5² for any
+  secondary under the default options). π r² is the exporter's convention; 508 defines `AREA_PC` as the actual area of
+  the object (Annex E).
+
 ### Propagated covariance
 
 For a participant whose covariance was propagated (`CovarianceSource.Propagated`):

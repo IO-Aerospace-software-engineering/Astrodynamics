@@ -729,5 +729,30 @@ namespace IO.Astrodynamics.Tests.Body
         {
             Assert.True(System.Math.Abs(actual - expected) <= 4.5e-16 * System.Math.Abs(expected), $"expected {expected:R}, actual {actual:R}");
         }
+
+        [Theory]
+        [InlineData(double.PositiveInfinity, true)]
+        [InlineData(double.NegativeInfinity, true)]
+        [InlineData(double.NaN, true)]
+        [InlineData(-1.0, true)]
+        [InlineData(0.0, false)]
+        [InlineData(8.0, false)]
+        public void HardBodyRadius_NotFiniteOrNegative_Throws(double hardBodyRadius, bool throws)
+        {
+            // A radius is finite and not negative (#683: +Infinity was accepted, and the conjunction analysis now reads it)
+            Spacecraft Create() => new(-1683, "HBR1683", 1000.0, 10000.0, new Clock("hbr1683", 256),
+                new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), TestHelpers.EarthAtJ2000,
+                    TimeSystem.Time.J2000TDB, Frames.Frame.ICRF), hardBodyRadius: hardBodyRadius);
+
+            if (throws)
+            {
+                var exception = Assert.Throws<ArgumentOutOfRangeException>(Create);
+                Assert.Equal("hardBodyRadius", exception.ParamName);
+            }
+            else
+            {
+                Assert.Equal(hardBodyRadius, Create().HardBodyRadius);
+            }
+        }
     }
 }

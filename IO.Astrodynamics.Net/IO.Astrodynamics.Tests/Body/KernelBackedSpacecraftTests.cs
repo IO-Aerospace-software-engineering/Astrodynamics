@@ -346,6 +346,39 @@ public class KernelBackedSpacecraftTests
         }
     }
 
+    [Theory]
+    [InlineData(double.PositiveInfinity, true)]
+    [InlineData(double.NaN, true)]
+    [InlineData(-1.0, true)]
+    [InlineData(0.0, false)]
+    [InlineData(8.0, false)]
+    public void HardBodyRadius_NotFiniteOrNegative_Throws(double hardBodyRadius, bool throws)
+    {
+        // A radius is finite and not negative, as for the spacecraft given by its state (#683: the kernel-backed
+        // constructor checked nothing, and the conjunction analysis now reads the radius of a secondary spacecraft)
+        var spkFile = CreateTestSpk(-9911, "KernelSC_HardBodyRadius" + BitConverter.DoubleToInt64Bits(hardBodyRadius).ToString("X"));
+        try
+        {
+            SpiceAPI.Instance.LoadKernels(spkFile);
+            Spacecraft Create() => new(-9911, "KernelSC_HardBodyRadius", epoch: TimeSystem.Time.J2000TDB,
+                hardBodyRadius: hardBodyRadius);
+
+            if (throws)
+            {
+                var exception = Assert.Throws<ArgumentOutOfRangeException>(Create);
+                Assert.Equal("hardBodyRadius", exception.ParamName);
+            }
+            else
+            {
+                Assert.Equal(hardBodyRadius, Create().HardBodyRadius);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spkFile);
+        }
+    }
+
     #endregion
 
     #region Helper

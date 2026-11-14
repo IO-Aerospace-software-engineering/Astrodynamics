@@ -402,7 +402,7 @@ public abstract class PropagatorBase : IPropagator
         var eventDetectors = BuildEventDetectors();
 
         // 3. Create solution
-        var solution = new PropagationSolution { TimeArgument = TimeArgument };
+        var solution = new PropagationSolution { TimeArgument = TimeArgument, Owner = Spacecraft };
 
         var currentPos = InitialState.Position;
         var currentVel = InitialState.Velocity;
