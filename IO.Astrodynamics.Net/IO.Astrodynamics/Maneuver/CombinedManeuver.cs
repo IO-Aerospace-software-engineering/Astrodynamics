@@ -55,6 +55,17 @@ namespace IO.Astrodynamics.Maneuver
 
         protected override Vector3 Execute(StateVector stateVector)
         {
+            return ComputeTargetOrbit(stateVector).ToStateVector().Velocity - stateVector.Velocity;
+        }
+
+        /// <summary>
+        /// The orbit after the burn: its apsides the current apogee and <see cref="TargetPerigeeHeight"/>, inclined at
+        /// <see cref="TargetInclination"/>, through the given state. It carries no cached perigee radius, so its
+        /// <see cref="OrbitalParameters.OrbitalParameters.PerigeeRadius"/> is its own, a(1 − e) (#677); it carried the current
+        /// orbit's.
+        /// </summary>
+        internal KeplerianElements ComputeTargetOrbit(StateVector stateVector)
+        {
             double e;
             double meanAnomaly = stateVector.MeanAnomaly();
             double periapsisArgument = stateVector.ArgumentOfPeriapsis();
@@ -74,10 +85,8 @@ namespace IO.Astrodynamics.Maneuver
                 e = 1.0 - (2.0 / ((apogee / TargetPerigeeHeight) + 1.0));
             }
 
-            var targetOrbit = new KeplerianElements((TargetPerigeeHeight + apogee) * 0.5, e, TargetInclination, stateVector.AscendingNode(), periapsisArgument, meanAnomaly,
-                stateVector.Observer, stateVector.Epoch, stateVector.Frame, perigeeRadius: stateVector.PerigeeRadius());
-
-            return targetOrbit.ToStateVector().Velocity - stateVector.Velocity;
+            return new KeplerianElements((TargetPerigeeHeight + apogee) * 0.5, e, TargetInclination, stateVector.AscendingNode(), periapsisArgument, meanAnomaly,
+                stateVector.Observer, stateVector.Epoch, stateVector.Frame);
         }
     }
 }

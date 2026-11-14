@@ -126,7 +126,11 @@ true-longitude constructor threw `NullReferenceException` at its burn (#588).
 
 ### CombinedManeuver
 
-Combined plane and apsis change. Fires at apogee (r . v, positive to negative) with an additional precondition that the apogee is aligned with the ascending node.
+Combined plane and perigee change: the perigee moves, up or down, to `TargetPerigeeHeight`, a radius in metres from the
+centre of the maneuver centre (not an altitude), and the inclination to `TargetInclination`. Fires at apogee (r . v,
+positive to negative) with an additional precondition that the apogee is aligned with the ascending node. Its target
+orbit carries its own perigee radius, a(1 − e); before 11.0.0 it carried the current orbit's, which no result read
+(#677).
 
 ### PlaneAlignmentManeuver
 

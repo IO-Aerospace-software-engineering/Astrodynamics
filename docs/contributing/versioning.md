@@ -1356,6 +1356,13 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **`CombinedManeuver`'s target orbit carried the current orbit's perigee radius** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). The target orbit was built
+  with `perigeeRadius:` the perigee of the orbit before the burn (6 678 000 m for the orbit of `CombinedManeuverTest`,
+  where the target's own perigee is 42 163 999.919 m or 6 600 000 m), so its `PerigeeRadius()` returned another orbit's.
+  Only its velocity was read, which ignores that value on an ellipse, so no result moved. The argument is dropped; the
+  ΔV, the windows and the fuel are bit for bit, the conformance case `maneuver/010` included. `CombinedManeuverTest`
+  checks the target's perigee against a(1 − e) and min(target, apogee), and |ΔV| against vis-viva and the law of cosines
+  of a combined burn at the apogee on the line of nodes (within 5.0e-16 relative, Linux).
 - **The documentation called the targets of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` and `CombinedManeuver`
   heights or altitudes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). The maneuvers tutorial said that `ApogeeHeightManeuver` raises the apogee "to a target
   altitude", and the impulse-maneuver reference that the apogee and perigee maneuvers raise the heights; the targets are
