@@ -102,7 +102,21 @@ namespace IO.Astrodynamics.Maneuver
         /// Gets the body front vector from the spacecraft instance (if available),
         /// falling back to the static Spacecraft.Front default.
         /// </summary>
-        protected Vector3 GetBodyFront() => Engine.FuelTank.Spacecraft?.BodyFront ?? Spacecraft.Front;
+        protected Vector3 GetBodyFront() => GetBodyAxis(static s => s.BodyFront, Spacecraft.Front);
+
+        /// <summary>
+        /// Gets a body axis of the spacecraft that carries the engine's tank, read at the call, or
+        /// <paramref name="fallback"/> while the tank is on no spacecraft (#677). A propagation checks first that the tank is
+        /// the propagated spacecraft's (<see cref="Spacecraft.CheckManeuverEngines"/>, #676), so only a read outside a
+        /// propagation meets the fallback.
+        /// </summary>
+        /// <param name="axis">The axis of the spacecraft instance, such as <c>s =&gt; s.BodyFront</c>.</param>
+        /// <param name="fallback">The vector returned while the tank is on no spacecraft, such as <see cref="Spacecraft.Front"/>.</param>
+        private protected Vector3 GetBodyAxis(Func<Spacecraft, Vector3> axis, Vector3 fallback)
+        {
+            var spacecraft = Engine.FuelTank.Spacecraft;
+            return spacecraft != null ? axis(spacecraft) : fallback;
+        }
 
         /// <summary>
         /// Gets or sets the next maneuver.

@@ -8,11 +8,32 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
 {
+    /// <summary>
+    /// An impulse at apogee that changes the inclination and moves the perigee, up or down, to a target radius from the
+    /// centre of the maneuver centre.
+    /// </summary>
     public class CombinedManeuver : ImpulseManeuver
     {
+        /// <summary>
+        /// The perigee radius after the burn, in m from the centre of the maneuver centre (not an altitude).
+        /// </summary>
         public double TargetPerigeeHeight { get; } = double.NaN;
+
+        /// <summary>
+        /// The inclination after the burn, in radians.
+        /// </summary>
         public double TargetInclination { get; } = double.NaN;
 
+        /// <summary>
+        /// Creates the maneuver.
+        /// </summary>
+        /// <param name="maneuverCenter">The body the orbit is about.</param>
+        /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
+        /// <param name="maneuverHoldDuration">Duration to hold after the maneuver.</param>
+        /// <param name="perigeeRadius">The perigee radius after the burn, in m from the centre of
+        /// <paramref name="maneuverCenter"/>, not an altitude: for an altitude h, its equatorial radius + h.</param>
+        /// <param name="inclination">The inclination after the burn, in radians.</param>
+        /// <param name="engine">Engine used for the maneuver.</param>
         public CombinedManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double perigeeRadius, double inclination, Engine engine) : base(
             maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
         {
@@ -34,6 +55,17 @@ namespace IO.Astrodynamics.Maneuver
 
         protected override Vector3 Execute(StateVector stateVector)
         {
+            return ComputeTargetOrbit(stateVector).ToStateVector().Velocity - stateVector.Velocity;
+        }
+
+        /// <summary>
+        /// The orbit after the burn: its apsides the current apogee and <see cref="TargetPerigeeHeight"/>, inclined at
+        /// <see cref="TargetInclination"/>, through the given state. It carries no cached perigee radius, so its
+        /// <see cref="OrbitalParameters.OrbitalParameters.PerigeeRadius"/> is its own, a(1 − e) (#677); it carried the current
+        /// orbit's.
+        /// </summary>
+        internal KeplerianElements ComputeTargetOrbit(StateVector stateVector)
+        {
             double e;
             double meanAnomaly = stateVector.MeanAnomaly();
             double periapsisArgument = stateVector.ArgumentOfPeriapsis();
@@ -53,10 +85,8 @@ namespace IO.Astrodynamics.Maneuver
                 e = 1.0 - (2.0 / ((apogee / TargetPerigeeHeight) + 1.0));
             }
 
-            var targetOrbit = new KeplerianElements((TargetPerigeeHeight + apogee) * 0.5, e, TargetInclination, stateVector.AscendingNode(), periapsisArgument, meanAnomaly,
-                stateVector.Observer, stateVector.Epoch, stateVector.Frame, perigeeRadius: stateVector.PerigeeRadius());
-
-            return targetOrbit.ToStateVector().Velocity - stateVector.Velocity;
+            return new KeplerianElements((TargetPerigeeHeight + apogee) * 0.5, e, TargetInclination, stateVector.AscendingNode(), periapsisArgument, meanAnomaly,
+                stateVector.Observer, stateVector.Epoch, stateVector.Frame);
         }
     }
 }
