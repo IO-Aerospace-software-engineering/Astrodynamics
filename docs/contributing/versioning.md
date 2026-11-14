@@ -1356,6 +1356,59 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **Atmospheric drag asked about an Earth without an atmospheric model was dropped** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). A propagation built
+  drag only for listed bodies with `HasAtmosphericModel`, which no predefined Earth has, so `includeAtmosphericDrag: true`
+  about `PlanetsAndMoons.EARTH_BODY` changed nothing (0.000 m against the same run without drag, on every path and both
+  integrators), a Moon-centred run with drag and no atmosphere ran without an error, and the CDM of such a run wrote
+  `ATMOSPHERIC_MODEL = NONE`. The drag of a central body is now that of its atmosphere: its model, or for an Earth
+  without one NRLMSISE-00 at nominal space weather, the model `GetAtmosphere` already gave it; another central body
+  without a model throws. An Earth always has at least that atmosphere (decided by S. Guillet, 2026-11-14): a listed
+  Earth without a model, in SSB mode or beside another central body, adds its drag, where it was dropped too (Changed
+  below). `ForceModelDefectTests` checks on every entry point (the constructors, the builder, `Spacecraft.Propagate` and
+  `PropagateAsync`, the three `Scenario.SimulateAsync`, the batch) that the run about `EARTH_BODY` equals bit for bit the
+  run about an Earth built with `new Nrlmsise00Model(SpaceWeather.Nominal)`, the force and its partials too, and that a
+  parallel batch equals its serial runs; and on nine paths, both integrators, that a listed `EARTH_BODY` in SSB mode
+  and beside a Moon central body with a model equals bit for bit the run listing that explicit Earth.
+- **A `GeopotentialModelParameters` built one body** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). The parameters kept the caller's `StreamReader`, which
+  the first body read to its end and closed, so a second `new CelestialBody(..., parameters)` threw
+  `ObjectDisposedException`. The coefficients are now read once, behind a thread-safe `Lazy`, and shared, read only, by
+  the fields of every body built from the parameters, each with its own buffers. `GeopotentialModelParametersReuseTests`
+  checks the acceleration and its partials of three bodies of one instance at 20 positions (LEO to GEO, on and near the
+  polar axis), path and stream, degree 10 and 70, both central terms, bit for bit against a fresh instance, and eight
+  threads sharing one instance. No result moves.
+- **The central body left out by the constructors, and a listed twin ignored** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). The constructors of
+  `CentralBodyPropagator` built the forces from the listed bodies only: an unlisted observer gave no drag and no shadow
+  (4.76 km of drag over a day with US 1976 in LEO, 1.87 m of SRP shadow), and a listed body of the observer's NAIF
+  identifier was dropped as a third body whatever its models, so a listed EGM2008 Earth moved an orbit on `EARTH_BODY`
+  by 0.000 m instead of 4.9e5 m in 6 h, and a listed atmospheric twin gave its drag under the other Earth's gravity.
+  `Scenario.AddCelestialItem` dropped a second body of one identifier silently. The central body now takes part on every
+  path with the models of the observer, inserted first when it is not listed (the builder's rule), and bodies of one
+  identifier with different models throw (Changed below). `ForceModelDefectTests` checks that an unlisted central body
+  equals bit for bit the run that lists it first, on six paths, both integrators, from ICRF, ECLIPJ2000 and SSB states
+  and from empty and null lists.
+- **`CelestialBody.GetAtmosphere` ignored the body's model** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). With a full context it returned NRLMSISE-00 at
+  nominal space weather for any Earth: 5.24e-12 kg/m³ at 400 km for an Earth with `EarthStandardAtmosphere` (2.80e-12,
+  the 2.803e-12 of the U.S. Standard Atmosphere 1976 table) or with NRLMSISE-00 at F10.7 250 and Ap 100 (1.82e-11), while
+  `GetAirDensity` returned 0 on a model-less Earth. The configured model now answers every getter, and a model-less Earth
+  with a full context the NRLMSISE-00 of its drag; with a context that holds the altitude without the geodetic position
+  or the epoch (the altitude overloads included), where it returned NaN, 0 and 0, it answers with the U.S. Standard
+  Atmosphere 1976, its base atmosphere (an Earth always has at least the base atmosphere, decided by S. Guillet,
+  2026-11-14). `CelestialBodyAtmosphereTests` checks the US 1976 Earth against table I from 86 to 1000 km (within the
+  5e-4 of `EarthStandardAtmosphereReferenceTests`), a configured NRLMSISE-00 against its own values, details included,
+  the one atmosphere of a model-less Earth across its getters and its drag, and the altitude-only and partial contexts
+  of a model-less Earth: `EarthStandardAtmosphere`'s own values bit for bit, and table I within the 4.2e-4 the model
+  states at 0, 11, 86, 400 and 1000 km.
+- **A reused integrator kept the forces of every run** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). The force-building paths added their forces to the
+  given integrator, which nothing cleared: a second run with one `RK78Integrator` held 2 forces and ended 8.37e6 m from
+  the first (8.23e6 m with a `VVIntegrator`), a second `CentralBodyPropagatorBuilder.Build()` doubled them, and a batch
+  whose factory returned one instance raced on its list. These paths now take the integrator atomically and throw
+  `ArgumentException` (`integrator`) when it holds forces or was taken before (Changed below).
+  `ForceModelDefectTests` checks every path, and a parallel batch of 8 tasks sharing one instance, 20 times: one task
+  runs, bit for bit as with a fresh instance, the others fail.
+- **A propagation step of zero or less was not checked** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). RK7(8) returned 0 states for a 0 s step and 1 state for
+  −60 s without an error, Velocity-Verlet threw List's `capacity` message from inside the integration, and a Monte Carlo
+  campaign returned every run failed. Every entry now throws `ArgumentOutOfRangeException` naming the step as the caller
+  passed it, before anything changes (Changed below).
 
 **Changed**
 
@@ -1685,6 +1738,68 @@ release are listed under **Known limitations**.
   returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
+- **Breaking: drag about an Earth without an atmospheric model is NRLMSISE-00 at nominal space weather** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674),
+  Fixed above). A propagation about `PlanetsAndMoons.EARTH_BODY`, or any Earth built without a model, with
+  `includeAtmosphericDrag: true` now has drag: over one day on a 6800 km orbit with A = 1 m², m = 100 kg and Cd 2.2,
+  4.627 km in RK7(8) at 1e-11 and 4.265 km in Velocity-Verlet at 60 s; Ψ gains its Cd column, which moves the
+  covariance, and the CDM names `NRLMSISE-00`. The get-started RK7(8) example, about `EARTH_BODY` with drag, now has
+  drag. So does a listed Earth without a model where the central body is not that Earth (decided by S. Guillet,
+  2026-11-14): in SSB mode (a star or barycentre observer), where the run ran without drag, and beside another central
+  body with a model, whose drag it ran alone. On a 6700 km orbit with A = 10 m², m = 100 kg and Cd 2.2, 51.4 m over
+  20 min in Velocity-Verlet at 10 s and 51.25 m in RK7(8) at 1e-10, in SSB mode as about a Moon given a model; 0.64 m
+  over 600 s for the VV-SSB variant of `GcrfPropagationTests` (6778 km, 1000 kg). A run with a configured model, or
+  without drag, is unchanged, bit for bit. Migration: pass `includeAtmosphericDrag: false` for the former result, or
+  give the Earth the model you want.
+- **Breaking: drag about another central body without an atmospheric model throws** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): a central body
+  other than the Earth and the Sun without a model throws `InvalidOperationException` naming it, before anything changes,
+  whatever the listed bodies (a Moon-centred run with an atmospheric Earth listed applied that Earth's drag alone; Mars
+  without a model; `astro propagate` about the Moon with `-a`). About the Sun (a star or barycentre observer, SSB mode),
+  drag comes from the listed bodies with an atmosphere, an Earth always having one (above), and the run throws when none
+  has one, the Moon alone without a model for instance (it ran without drag). Migration: give the body an
+  `IAtmosphericModel`, or pass `includeAtmosphericDrag: false`.
+- **Breaking: the central body takes part on every path** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): the constructors of
+  `CentralBodyPropagator`, `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync` and the batch insert the
+  central body first when no listed body has its NAIF identifier, as the builder did: its atmosphere gives drag (4.760 km
+  in RK7(8) and 4.500 km in Velocity-Verlet over a day with US 1976 on the orbit above) and its shadow scales SRP
+  (1.871 m and 1.241 m). A run without drag and SRP is unchanged (0.000 m, from an empty list too), and so is a run that
+  lists its central body. Migration: none for the corrected result; the former one has no equivalent.
+- **Breaking: bodies of one NAIF identifier must have the same models** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): a listed body of the
+  observer's identifier with another GM, radii, gravitational field or atmospheric model, or two listed bodies of one
+  identifier that differ, throw `ArgumentException` naming them, on every path, the builder included; so does
+  `Scenario.AddCelestialItem` of a body whose identifier the scenario holds with other models (it was dropped). Examples:
+  an EGM2008 or atmospheric Earth listed while the orbit is on `EARTH_BODY`; `astro propagate` given its centre again in
+  its celestial bodies. Models are compared by value (NRLMSISE-00 by its switches and space weather, a custom
+  `IAtmosphericModel` by `Equals`); a value-equal twin of the observer runs with the observer's instance, which moves a
+  run that listed one with a configured NRLMSISE-00 by 6e-5 m over an hour in RK7(8). Migration: list the observer's
+  instance, or build the orbit on the listed body.
+- **Breaking: `CelestialBody.GetAtmosphere` and the context getters read the body's model** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): with a
+  full context an Earth with a configured model returns that model (US 1976: 2.80e-12 kg/m³ at 400 km instead of
+  5.24e-12), and on a model-less Earth `GetAirDensity`, `GetAirPressure` and `GetAirTemperature` return NRLMSISE-00 at
+  nominal space weather where they returned 0, 0 and NaN. On a model-less Earth, a context that holds the altitude
+  without the geodetic position or the epoch, and the altitude overloads (`GetAirDensity(double)`,
+  `GetAirPressure(double)`, `GetAirTemperature(double)`, `GetAtmosphere(double)`), return the U.S. Standard Atmosphere
+  1976 (`EarthStandardAtmosphere`, −5 to 1000 km and continued above) where they returned 0, 0 and NaN: 1.225 kg/m³,
+  101.325 kPa and 15 °C at sea level, 2.80e-12 kg/m³ at 400 km (decided by S. Guillet, 2026-11-14). It is not the
+  NRLMSISE-00 of the drag, which always has the full context, so no propagation moves. A null context, which holds no
+  altitude, and another body without a model, still give NaN, 0 and 0 (`GetAtmosphere` of a model-less Earth threw
+  `NullReferenceException` on a null context). `HasAtmosphericModel` still says whether a model was given. Migration:
+  to keep "no atmosphere" for an altitude-only read, test `HasAtmosphericModel` before reading; for the drag's
+  atmosphere, pass the geodetic position and the epoch (`AtmosphericContext.FromPlanetodetic`).
+- **Breaking: a force-building path rejects an integrator that holds forces or was already used** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above):
+  `Spacecraft.Propagate` with an integrator, the constructors of `CentralBodyPropagator` with celestial bodies, the
+  builder (a second `Build()` included) and the batch, Monte Carlo and scenario factories throw `ArgumentException`
+  (`integrator`) for such an instance. In `BatchPropagator` and `MonteCarloPropagator` the exception is the failure of
+  its task: with a factory returning one instance, one run succeeds and the others fail. A construction rejected after
+  the integrator was taken (an invalid covariance) leaves it taken. The constructor taking an `IIntegrator` with the
+  forces the caller added is unchanged. Migration: pass a new integrator to each propagation; for forces of your own,
+  add them all and use that constructor.
+- **Breaking: a propagation step of zero or less throws** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): `ArgumentOutOfRangeException`, named
+  `propagatorStepSize` by `Spacecraft.Propagate`, `PropagateAsync` (before its task starts) and
+  `Scenario.SimulateAsync` (before any star is propagated), `deltaT` by the constructors of `CentralBodyPropagator`,
+  `PropagatorBase` and `VVIntegrator` and by `CentralBodyPropagatorBuilder`, and `DeltaT` by
+  `MonteCarloPropagator.Propagate` (which returned every run failed). Migration: pass a positive step.
+- **`new AtmosphericDrag(spacecraft, earth)` accepts an Earth without an atmospheric model** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)): it threw
+  `ArgumentException` and now applies NRLMSISE-00 at nominal space weather; another body without a model still throws.
 
 **Removed**
 
@@ -1926,6 +2041,12 @@ not listed.
   coverage of the orientation kernel goes through the native read, which prints its SPICE message on standard output
   (123 lines for 2 h, measured before the fix of [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454); the native read is unchanged): a point-mass
   propagation there still runs ([#595](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/595)).
+- **Force model inputs** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). A configured `Nrlmsise00Model` shared by parallel propagations serializes their
+  density calls on its lock (4 threads × 200 000 densities: 5.8 s on one instance, 0.9 s on one per thread); the default
+  atmosphere of a model-less Earth is one instance per thread, so give each parallel propagation its own configured
+  model. A custom `IAtmosphericModel` compares by `Equals`, so two separately built instances on bodies of one NAIF
+  identifier throw unless it overrides `Equals`. `CentralBodyPropagator(window, spacecraft, IIntegrator, deltaT)` uses the
+  integrator as given: call its `Initialize` with the initial state, or the first step throws `NullReferenceException`.
 - **Mars atmosphere** ([#431](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/431)). Above 100 km
   `MarsStandardAtmosphere` extends an isothermal layer at 139 K: at 400 km its density is 4.6e7 times below Mars-GRAM,
   so drag in Mars orbit above about 120 km is underestimated by orders of magnitude.

@@ -25,17 +25,25 @@ public sealed class VVIntegrator : Integrator
     public double DeltaTs { get; }
     public double HalfDeltaTs { get; }
 
+    /// <summary>
+    /// A Velocity-Verlet integrator with its forces, initialized at <paramref name="initialState"/>.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
     public VVIntegrator(IEnumerable<ForceBase> forces, TimeSpan deltaT, StateVector initialState) : base(forces)
     {
-        DeltaT = deltaT;
+        DeltaT = PropagatorBase.RequirePositiveStep(deltaT, nameof(deltaT));
         DeltaTs = DeltaT.TotalSeconds;
         HalfDeltaTs = DeltaTs * 0.5;
         Initialize(initialState);
     }
 
+    /// <summary>
+    /// A Velocity-Verlet integrator of step <paramref name="deltaT"/>, without forces.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
     public VVIntegrator(TimeSpan deltaT) : base()
     {
-        DeltaT = deltaT;
+        DeltaT = PropagatorBase.RequirePositiveStep(deltaT, nameof(deltaT));
         DeltaTs = DeltaT.TotalSeconds;
         HalfDeltaTs = DeltaTs * 0.5;
     }

@@ -125,7 +125,12 @@ using var propagator = new CentralBodyPropagator(
     deltaT: TimeSpan.FromSeconds(10.0));
 ```
 
-Drag uses the NRLMSISE-00 atmosphere model with default Cd = 2.2. SRP uses a cannonball model with continuous shadow fraction computation.
+Drag uses the atmosphere of the central body with default Cd = 2.2: its atmospheric model, or NRLMSISE-00 at nominal
+space weather for an Earth built without one. Another central body needs a model when drag is on (the propagation throws
+`InvalidOperationException` otherwise), and about the Sun (a star or barycentre observer) the listed bodies with an
+atmosphere give the drag, an Earth always having one; a listed Earth adds its drag about any central body. The central body takes part whether or not it is listed, with the models of the observer, and a listed
+body of its NAIF identifier must have the same models (`ArgumentException` otherwise). SRP uses a cannonball model with
+continuous shadow fraction computation, the central body among the occulting bodies.
 
 ## Fluent Builder with Additional Force Models
 

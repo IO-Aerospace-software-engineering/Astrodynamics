@@ -438,15 +438,18 @@ if (atmosphere.Details is NrlmsiseDetails details)
     var exoTemp = details.ExosphericTemperature;     // K
 }
 
-// Via CelestialBody (auto-selects NRLMSISE-00 for Earth with full context)
+// Via CelestialBody: its configured model; an Earth without one takes NRLMSISE-00 at nominal space weather with a
+// full context, the atmosphere of its drag (#674), and the U.S. Standard Atmosphere 1976, its base atmosphere, with an
+// altitude only or a partial context (decided by S. Guillet, 2026-11-14)
 var earth = PlanetsAndMoons.EARTH_BODY;
-var atm = earth.GetAtmosphere(context);  // Uses NRLMSISE-00 automatically
+var atm = earth.GetAtmosphere(context);  // NRLMSISE-00 nominal: EARTH_BODY has no model
+var low = earth.GetAtmosphere(10000.0);  // U.S. Standard Atmosphere 1976: an altitude only
 ```
 
 **Model Selection Guidelines**
 - Use `EarthStandardAtmosphere` for quick calculations without time-dependent effects (the mean 1976 standard, to 1000 km)
 - Use `Nrlmsise00Model` for accurate high-altitude modeling, time-varying conditions, or space weather effects
-- Use `CelestialBody.GetAtmosphere(context)` with full context for automatic NRLMSISE-00 selection
+- `CelestialBody.GetAtmosphere(context)` reads the body's model; an Earth without one takes NRLMSISE-00 at nominal space weather with a full context, the U.S. Standard Atmosphere 1976 otherwise (an altitude only, a partial context); a null context, or another body without a model, gives NaN, 0 and 0
 - Use `MarsStandardAtmosphere` for preliminary Mars mission analysis below about 100 km (entry); not for orbit lifetime
 
 ### Geopotential Gravity Model
@@ -479,7 +482,7 @@ var propagator = new CentralBodyPropagator(window, spacecraft,
     false, false, TimeSpan.FromSeconds(1.0));
 ```
 
-**Thread Safety:** `GeopotentialGravitationalField` is NOT thread-safe (pre-allocated buffers). Create separate `CelestialBody` instances for concurrent propagation.
+**Thread Safety:** `GeopotentialGravitationalField` is NOT thread-safe (pre-allocated buffers). Create separate `CelestialBody` instances for concurrent propagation; one `GeopotentialModelParameters` can build all of them, on any thread (its coefficients are read once and shared, #674).
 
 ### Force Models (Propagator Perturbations)
 
@@ -492,11 +495,18 @@ The `IO.Astrodynamics.Propagator.Forces` namespace provides configurable perturb
 - Drag coefficient default is **2.2** (appropriate for satellites in free-molecular flow)
 
 ```csharp
-// Atmospheric drag requires a CelestialBody with an atmospheric model
+// Atmospheric drag reads the body's atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without
+// one; another body without a model throws (#674)
 var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
     geopotentialParams, new EarthStandardAtmosphere());
 var drag = new AtmosphericDrag(spacecraft, earth);
 ```
+
+In a propagation the central body takes part whether or not it is listed, with the observer's models; listed bodies of
+one NAIF identifier must have the same models (`ArgumentException` otherwise); drag about a central body other than the
+Earth and the Sun without a model throws `InvalidOperationException`, and about the Sun (SSB mode) comes from the listed
+bodies with an atmosphere; an Earth always has one (NRLMSISE-00 nominal without a model), listed or central. A force-building path rejects an integrator that holds forces or was already used, and every entry
+rejects a step of zero or less.
 
 **Solar Radiation Pressure (`SolarRadiationPressure`)**
 - Cannonball model: `F = (L_sun / 4*pi*c) * Cr * (A/m) * r_hat / r^2`
@@ -825,6 +835,7 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
    - The harmonics take the constants of the model (#410): EGM2008's GM 3.986004415e14 m³/s² and radius 6378136.3 m for the Earth by default, the kernel GM and equatorial radius for another body, or those given to `GeopotentialModelParameters(path, degree, gravitationalParameter, referenceRadius)`; the central term takes the GM of the kernels by default, or the GM of the model with `CentralTerm = GeopotentialCentralTerm.ModelGravitationalParameter` (GMAT's `.cof` convention; acceleration and partials alike; `CelestialItem.GM` unchanged)
 12. **Force Models (Drag & SRP)**: When working with atmospheric drag or solar radiation pressure:
    - Default drag coefficient (Cd) is **2.2** (free-molecular flow for satellites), not 0.3
+   - Drag reads the central body's atmosphere: an Earth without a model takes NRLMSISE-00 at nominal space weather; another central body needs a model (#674)
    - Atmospheric drag uses **atmosphere-relative velocity** (body-centered velocity minus co-rotation)
    - SRP includes **Cr coefficient** from `Spacecraft.SolarRadiationCoeff` (default 1.0, range 1.0–2.0)
    - SRP uses **continuous shadow fraction** (partial/annular eclipses reduce SRP proportionally)

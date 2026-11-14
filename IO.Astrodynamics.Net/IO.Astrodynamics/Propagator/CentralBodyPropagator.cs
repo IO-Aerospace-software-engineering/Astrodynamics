@@ -33,22 +33,89 @@ public class CentralBodyPropagator : PropagatorBase
     /// provided celestial bodies and flags.
     /// The central body is inferred from the spacecraft's orbital parameters observer.
     /// </summary>
+    /// <remarks>
+    /// The central body takes part whether or not it is listed, with the models of the observer: inserted first when no
+    /// listed body has its NAIF identifier, so that a run that lists it is unchanged. Listed bodies of one NAIF identifier,
+    /// the observer's included, must have the same models (GM, radii, gravitational field, atmospheric model). Drag about a
+    /// central body is that of its atmosphere: its model, or NRLMSISE-00 at nominal space weather for an Earth without one;
+    /// each other listed body with an atmosphere adds its drag, an Earth always having one, and about the Sun (a star or
+    /// barycentre observer) the drag is that of those bodies. The integrator must be a new instance: the propagator adds
+    /// the forces to it (#674).
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
+    /// <exception cref="ArgumentException">The integrator already holds forces or was already used by a propagation that
+    /// builds its forces; or two listed bodies of one NAIF identifier, or a listed body and the observer, have different
+    /// models.</exception>
+    /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Earth and the Sun
+    /// without an atmospheric model, or about the Sun with no listed Earth and no listed body with a model.</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator,
         IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
-        : this(window, spacecraft, integrator, deltaT)
+        : this(window, spacecraft, integrator, deltaT,
+            PlanForces(spacecraft, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, deltaT,
+                integrator))
     {
-        var items = (celestialBodies ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
-        var forces = BuildCentralBodyForces(_centralBody, items, spacecraft, includeAtmosphericDrag,
-            includeSolarRadiationPressure);
-        InjectEphemerisCache(Window, forces, items, _centralBody, InitialState.Frame);
+    }
+
+    // The force-building constructors once their inputs are checked and the integrator claimed (PlanForces)
+    private CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator, TimeSpan deltaT,
+        ForceModelPlan plan)
+        : this(window, spacecraft, integrator, deltaT,
+            PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
+    {
+        InjectEphemerisCache(Window, plan.Forces, plan.Bodies, _centralBody, InitialState.Frame);
         _orientationCache = CreateFrameOrientationCache(Window, _centralBody);
-        foreach (var force in forces)
+        foreach (var force in plan.Forces)
         {
             integrator.AddForce(force);
         }
 
         integrator.Initialize(InitialState);
+    }
+
+    /// <summary>The bodies and forces of a force-building constructor, checked before anything changes.</summary>
+    private sealed record ForceModelPlan(CelestialItem[] Bodies, List<ForceBase> Forces);
+
+    /// <summary>
+    /// Checks the step, the bodies and the drag request, builds the forces, then claims <paramref name="integrator"/>
+    /// (null for the default integrator, which is new): a rejected input leaves the integrator and the spacecraft as they
+    /// were (#674).
+    /// </summary>
+    private static ForceModelPlan PlanForces(Spacecraft spacecraft, IEnumerable<CelestialItem> celestialBodies,
+        bool includeAtmosphericDrag, bool includeSolarRadiationPressure, TimeSpan deltaT, Integrator integrator)
+    {
+        RequirePositiveStep(deltaT, nameof(deltaT));
+        ArgumentNullException.ThrowIfNull(spacecraft);
+        var centralBody = ResolveCentralBody(spacecraft);
+        var bodies = ForceModelBodies(centralBody, celestialBodies);
+        var forces = BuildCentralBodyForces(centralBody, bodies, spacecraft, includeAtmosphericDrag,
+            includeSolarRadiationPressure);
+        integrator?.ClaimForForces();
+        return new ForceModelPlan(bodies, forces);
+    }
+
+    /// <summary>
+    /// The bodies of the force model: the listed ones, each NAIF identifier once, the central body among them with the
+    /// models of <paramref name="centralBody"/>, inserted first when none is listed (#674).
+    /// </summary>
+    /// <exception cref="ArgumentException">Two listed bodies of one NAIF identifier, or a listed body and the central
+    /// body, have different models.</exception>
+    private static CelestialItem[] ForceModelBodies(CelestialItem centralBody, IEnumerable<CelestialItem> celestialBodies)
+    {
+        var listed = (celestialBodies ?? Array.Empty<CelestialItem>()).ToArray();
+        CelestialItem.RequireOneModelPerBody(centralBody, listed, nameof(celestialBodies));
+        var bodies = new List<CelestialItem>(listed.Length + 1);
+        if (!listed.Any(body => body?.NaifId == centralBody.NaifId))
+        {
+            bodies.Add(centralBody);
+        }
+
+        foreach (var body in listed.Distinct())
+        {
+            bodies.Add(body != null && body.NaifId == centralBody.NaifId ? centralBody : body);
+        }
+
+        return bodies.ToArray();
     }
 
     /// <summary>
@@ -119,7 +186,8 @@ public class CentralBodyPropagator : PropagatorBase
     internal CentralBodyPropagator(in Window window, Spacecraft spacecraft, Integrator integrator, TimeSpan deltaT,
         CovariancePropagationOptions covariancePropagation, PropagationFrameOrientationCache orientationCache,
         object syncRoot)
-        : this(window, spacecraft, integrator, deltaT)
+        : this(window, spacecraft, integrator, deltaT,
+            PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
         _orientationCache = orientationCache;
         DynamicsSyncRoot = syncRoot ?? throw new ArgumentNullException(nameof(syncRoot));
@@ -139,9 +207,18 @@ public class CentralBodyPropagator : PropagatorBase
     /// of a star or barycentre observer included, over TDB seconds. The epochs of the segments, the steps, the events and
     /// the output states are TDB labels in both cases, and the velocities are per second of the time argument.
     /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
-        : base(window, spacecraft, integrator, deltaT,
+        : this(window, spacecraft, integrator, RequirePositiveStep(deltaT, nameof(deltaT)),
             PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
+    {
+    }
+
+    // Every constructor ends here; the internal one of the avoidance options and of the non-linearity index directly,
+    // with the length of its window as its step
+    private CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT,
+        PropagationTimeArgument timeArgument)
+        : base(window, spacecraft, integrator, deltaT, timeArgument)
     {
         _centralBody = ResolveCentralBody(spacecraft);
 
@@ -177,6 +254,12 @@ public class CentralBodyPropagator : PropagatorBase
     /// provided celestial bodies and flags.
     /// The central body is inferred from the spacecraft's orbital parameters observer.
     /// </summary>
+    /// <remarks>The forces are built as by the constructor with an integrator.</remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
+    /// <exception cref="ArgumentException">Two listed bodies of one NAIF identifier, or a listed body and the observer,
+    /// have different models.</exception>
+    /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Earth and the Sun
+    /// without an atmospheric model, or about the Sun with no listed Earth and no listed body with a model.</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft,
         IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
@@ -211,19 +294,32 @@ public class CentralBodyPropagator : PropagatorBase
         IEnumerable<CelestialItem> celestialItems, bool includeAtmosphericDrag,
         bool includeSolarRadiationPressure, TimeSpan deltaT)
     {
+        var plan = PlanForces(spacecraft, celestialItems, includeAtmosphericDrag, includeSolarRadiationPressure, deltaT,
+            null);
         var centralBody = ResolveCentralBody(spacecraft);
 
         var tdbStartDate = window.StartDate.ToTDB();
         var initialState = StartState(spacecraft.InitialOrbitalParameters, tdbStartDate)
             .RelativeTo(centralBody, Aberration.None).ToStateVector();
-        var items = (celestialItems ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
-        var forces = BuildCentralBodyForces(centralBody, items, spacecraft, includeAtmosphericDrag,
-            includeSolarRadiationPressure);
         var tdbWindow = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
-        InjectEphemerisCache(tdbWindow, forces, items, centralBody, initialState.Frame);
-        return new VVIntegrator(forces, deltaT, initialState);
+        InjectEphemerisCache(tdbWindow, plan.Forces, plan.Bodies, centralBody, initialState.Frame);
+        return new VVIntegrator(plan.Forces, deltaT, initialState);
     }
 
+    /// <summary>
+    /// The forces of a propagation about <paramref name="centralBody"/>: its gravity, the third-body perturbations of the
+    /// other bodies of <paramref name="items"/>, drag and solar radiation pressure, the bodies of
+    /// <paramref name="items"/> occulting the Sun.
+    /// </summary>
+    /// <remarks>
+    /// Drag about a central body other than the Sun is that of its atmosphere: its atmospheric model, or NRLMSISE-00 at
+    /// nominal space weather for an Earth without one; about the Sun (a star or barycentre observer, SSB mode), that of the
+    /// listed bodies with an atmosphere. The other bodies with an atmosphere add their drag in both cases, an Earth without
+    /// a model with NRLMSISE-00 at nominal space weather: an Earth always has an atmosphere (#674, amendment of
+    /// 2026-11-14).
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Drag is asked about a central body other than the Sun without an
+    /// atmosphere, or about the Sun with no listed body that has one (no Earth, and no body with a model).</exception>
     protected static List<ForceBase> BuildCentralBodyForces(CelestialItem centralBody,
         CelestialItem[] items, Spacecraft spacecraft,
         bool includeAtmosphericDrag, bool includeSolarRadiationPressure)
@@ -244,10 +340,7 @@ public class CentralBodyPropagator : PropagatorBase
 
         if (includeAtmosphericDrag)
         {
-            foreach (var celestialBody in items.OfType<CelestialBody>().Where(x => x.HasAtmosphericModel).ToArray())
-            {
-                forces.Add(new AtmosphericDrag(spacecraft, celestialBody));
-            }
+            AddDrag(forces, centralBody, items, spacecraft);
         }
 
         if (includeSolarRadiationPressure)
@@ -256,6 +349,55 @@ public class CentralBodyPropagator : PropagatorBase
         }
 
         return forces;
+    }
+
+    // The drag forces, in the order of the bodies, the central body's where it is listed, first otherwise; each body with
+    // an atmosphere, an Earth without a model taking NRLMSISE-00 at nominal space weather (amendment of 2026-11-14)
+    private static void AddDrag(List<ForceBase> forces, CelestialItem centralBody, CelestialItem[] items,
+        Spacecraft spacecraft)
+    {
+        bool aboutTheSun = centralBody.NaifId == Stars.Sun.NaifId;
+        CelestialBody centralAtmosphere = null;
+        if (!aboutTheSun)
+        {
+            centralAtmosphere = centralBody is CelestialBody { Atmosphere: not null } body
+                ? body
+                : throw new InvalidOperationException(
+                    $"Atmospheric drag is asked about the central body {centralBody.Name} (NAIF {centralBody.NaifId}), " +
+                    "which has no atmospheric model: give its CelestialBody an IAtmosphericModel (an Earth without one " +
+                    "takes NRLMSISE-00 at nominal space weather), or do not include atmospheric drag.");
+        }
+
+        int first = forces.Count;
+        bool centralAdded = false;
+        foreach (var body in items.OfType<CelestialBody>())
+        {
+            if (body.NaifId == centralBody.NaifId)
+            {
+                if (centralAtmosphere != null && !centralAdded)
+                {
+                    forces.Add(new AtmosphericDrag(spacecraft, centralAtmosphere));
+                    centralAdded = true;
+                }
+            }
+            else if (body.Atmosphere != null)
+            {
+                forces.Add(new AtmosphericDrag(spacecraft, body));
+            }
+        }
+
+        if (centralAtmosphere != null && !centralAdded)
+        {
+            forces.Insert(first, new AtmosphericDrag(spacecraft, centralAtmosphere));
+        }
+
+        if (forces.Count == first)
+        {
+            throw new InvalidOperationException(
+                "Atmospheric drag is asked about the Sun (the central body of a star or barycentre observer), and no " +
+                "listed body has an atmosphere: list an Earth (without a model it takes NRLMSISE-00 at nominal space " +
+                "weather) or a CelestialBody built with an IAtmosphericModel, or do not include atmospheric drag.");
+        }
     }
 
     // The orientation cache of the central body frame over the window, kept by the propagator: it is active only on the

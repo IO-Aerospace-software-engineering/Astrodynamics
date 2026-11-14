@@ -21,7 +21,7 @@
 | `J4` | Fourth zonal harmonic |
 | `SphereOfInfluence` | Sphere of influence radius (m) |
 | `GravitationalField` | Gravity model (point-mass or geopotential) |
-| `HasAtmosphericModel` | Whether an atmospheric model is attached |
+| `HasAtmosphericModel` | Whether an atmospheric model was given (an Earth without one still has the NRLMSISE-00 default of its drag and getters) |
 | `Albedo` | Bond albedo for reflected sunlight |
 | `ThermalEffectiveTemperature` | Effective radiating temperature in Kelvin |
 | `ThermalEmissivity` | Thermal emissivity |
@@ -32,7 +32,7 @@
 |-------------|-------------|
 | `CelestialBody(NaifObject naifObject)` | Create from NAIF object |
 | `CelestialBody(NaifObject, Frame, Time, GeopotentialModelParameters)` | Create with geopotential |
-| `GeopotentialModelParameters(path, degree)` / `(path, degree, gravitationalParameter, referenceRadius)`, and the same with a `Stream` instead of the path | The geopotential of a body: its harmonics with the constants of EGM2008 for the Earth, of the kernels for another body, or the given ones; see [Force Models](force-models.md#geopotentialgravitationalfield) |
+| `GeopotentialModelParameters(path, degree)` / `(path, degree, gravitationalParameter, referenceRadius)`, and the same with a `Stream` instead of the path | The geopotential of a body: its harmonics with the constants of EGM2008 for the Earth, of the kernels for another body, or the given ones; see [Force Models](force-models.md#geopotentialgravitationalfield). One instance builds any number of bodies, on any thread: the coefficients are read once and shared, each body with its own field (#674) |
 | `GeopotentialModelParameters.CentralTerm` (`init`) | The GM of the central term: the body's (`GeopotentialCentralTerm.BodyGravitationalParameter`, the default) or the model's (`ModelGravitationalParameter`, as GMAT applies a `.cof` header); see [Force Models](force-models.md#the-central-term-with-the-gm-of-the-model) |
 | `CelestialBody(NaifObject, geopotentialModelParameters = null, atmosphericModel = null, albedo = 0, thermalEffectiveTemperature = 0, thermalEmissivity = 0)` | Create with a geopotential, an atmosphere and radiation properties (named arguments for the last three, e.g. `albedo: 0.3`) |
 
@@ -50,7 +50,7 @@
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation/eclipse windows ([Occultations](occultations.md)) |
 | `AngularSeparation(Time, ILocalizable, ILocalizable, Aberration)` | Compute angular separation |
 | `SubObserverPoint(CelestialBody, Time, Aberration)` | Get sub-observer point |
-| `GetAtmosphere(double)` / `GetAtmosphere(IAtmosphericContext)` | Get atmospheric data |
+| `GetAtmosphere(double)` / `GetAtmosphere(AtmosphericContext)` | Get atmospheric data: from the configured atmospheric model of the body; for an Earth without one, NRLMSISE-00 at nominal space weather (the atmosphere of its drag) when the context holds the geodetic position and the epoch, and otherwise the U.S. Standard Atmosphere 1976 (`EarthStandardAtmosphere`), its base atmosphere, which needs the altitude only: `GetAtmosphere(double)` and every altitude-only or partial context (decided by S. Guillet, 2026-11-14); a null context, which holds no altitude, and another body without a model give a NaN temperature and a zero pressure and density. `GetAirDensity`, `GetAirPressure` and `GetAirTemperature` give the same values (#674) |
 
 ### Example
 

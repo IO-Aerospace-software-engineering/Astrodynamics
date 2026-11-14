@@ -4,7 +4,6 @@ using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Atmosphere;
-using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
@@ -67,8 +66,17 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     public double J4 { get; }
 
     /// <summary>
-    /// Gets the atmospheric model of the celestial body.
+    /// Gets the atmospheric model given to the celestial body, null when none was given.
     /// </summary>
+    /// <remarks>
+    /// The atmosphere of the body is this model, or for an Earth without one NRLMSISE-00 at nominal space weather: an
+    /// Earth always has an atmosphere, wherever the library decides whether a body has one (drag about the central body,
+    /// in SSB mode and from a listed non-central body, <see cref="Propagator.Forces.AtmosphericDrag"/>, and the getters
+    /// with a full context). The getters of a model-less Earth given a context that holds the altitude but not the
+    /// geodetic position and the epoch answer with the U.S. Standard Atmosphere 1976, the base atmosphere (decided by
+    /// S. Guillet, 2026-11-14); a null context, which holds no altitude, gives no atmosphere. Another body without a model
+    /// has none (#674).
+    /// </remarks>
     protected IAtmosphericModel AtmosphericModel { get; }
 
     /// <summary>
@@ -90,17 +98,43 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     public double ThermalEmissivity { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the celestial body has an atmospheric model.
+    /// Gets a value indicating whether the celestial body was given an atmospheric model, not whether it has an
+    /// atmosphere: an Earth without one still has NRLMSISE-00 at nominal space weather, read by its drag, central or
+    /// listed, and with a full context by its getters (#674), and the U.S. Standard Atmosphere 1976 for a context without
+    /// the geodetic position or the epoch (decided by S. Guillet, 2026-11-14).
     /// </summary>
     public bool HasAtmosphericModel => AtmosphericModel != null;
 
-    /// <summary>The atmospheric model of the body, null without one; for the description of a force model (CDM export).</summary>
-    internal IAtmosphericModel Atmosphere => AtmosphericModel;
+    /// <summary>
+    /// The atmosphere of the body: its atmospheric model, or for an Earth without one NRLMSISE-00 at nominal space weather
+    /// (one instance per thread, <see cref="EarthDefaultAtmosphere"/>); null for another body without a model. Read by
+    /// <see cref="Propagator.Forces.AtmosphericDrag"/> and the description of a force model (CDM export) (#674).
+    /// </summary>
+    internal IAtmosphericModel Atmosphere => AtmosphericModel ?? (NaifId == EarthNaifId ? EarthDefaultAtmosphere.Model : null);
 
     /// <summary>
-    /// NRLMSISE-00 model instance for Earth with full atmospheric context.
+    /// The model that answers <paramref name="context"/>: the atmospheric model of the body; for an Earth without one,
+    /// NRLMSISE-00 at nominal space weather when the context holds the geodetic position and the epoch, which that model
+    /// needs, and otherwise the U.S. Standard Atmosphere 1976, which needs the altitude only (an Earth always has at least
+    /// the base atmosphere, decided by S. Guillet, 2026-11-14); null for a null context, which holds no altitude, and for
+    /// another body without a model.
     /// </summary>
-    private Nrlmsise00Model _nrlmsiseModel;
+    private IAtmosphericModel AtmosphereFor(IAtmosphericContext context)
+    {
+        if (AtmosphericModel != null)
+        {
+            return AtmosphericModel;
+        }
+
+        if (NaifId != EarthNaifId || context == null)
+        {
+            return null;
+        }
+
+        return context is { GeodeticLatitude: not null, GeodeticLongitude: not null, Epoch: not null }
+            ? EarthDefaultAtmosphere.Model
+            : EarthDefaultAtmosphere.Standard;
+    }
 
     /// <summary>
     /// Instantiate celestial body from naif object with default parameters (Ecliptic J2000 at J2000 epoch)
@@ -430,8 +464,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="altitude">Altitude in meters.</param>
     /// <returns>Temperature in Celsius.</returns>
     /// <remarks>
-    /// For simple atmospheric models, this is sufficient.
-    /// For complex models requiring time/position context, use GetAirTemperature(IAtmosphericContext).
+    /// The value of <see cref="GetAirTemperature(IAtmosphericContext)"/> for an altitude-only context: the configured model
+    /// (NRLMSISE-00 throws without the geodetic position and the epoch), for an Earth without one the U.S. Standard
+    /// Atmosphere 1976 (<see cref="EarthStandardAtmosphere"/>), which is not the NRLMSISE-00 its drag uses.
     /// </remarks>
     public double GetAirTemperature(double altitude)
     {
@@ -442,10 +477,10 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// Get temperature with full atmospheric context.
     /// </summary>
     /// <param name="context">Atmospheric context with altitude, position, and time.</param>
-    /// <returns>Temperature in Celsius.</returns>
+    /// <returns>Temperature in Celsius; NaN without an atmosphere (see <see cref="GetAtmosphere(AtmosphericContext)"/>).</returns>
     public double GetAirTemperature(IAtmosphericContext context)
     {
-        return AtmosphericModel?.GetTemperature(context) ?? double.NaN;
+        return AtmosphereFor(context)?.GetTemperature(context) ?? double.NaN;
     }
 
     /// <summary>
@@ -454,8 +489,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="altitude">Altitude in meters.</param>
     /// <returns>Pressure in kPa.</returns>
     /// <remarks>
-    /// For simple atmospheric models, this is sufficient.
-    /// For complex models requiring time/position context, use GetAirPressure(IAtmosphericContext).
+    /// The value of <see cref="GetAirPressure(IAtmosphericContext)"/> for an altitude-only context: the configured model
+    /// (NRLMSISE-00 throws without the geodetic position and the epoch), for an Earth without one the U.S. Standard
+    /// Atmosphere 1976 (<see cref="EarthStandardAtmosphere"/>), which is not the NRLMSISE-00 its drag uses.
     /// </remarks>
     public double GetAirPressure(double altitude)
     {
@@ -466,10 +502,10 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// Get air pressure with full atmospheric context.
     /// </summary>
     /// <param name="context">Atmospheric context with altitude, position, and time.</param>
-    /// <returns>Pressure in kPa.</returns>
+    /// <returns>Pressure in kPa; 0 without an atmosphere (see <see cref="GetAtmosphere(AtmosphericContext)"/>).</returns>
     public double GetAirPressure(IAtmosphericContext context)
     {
-        return AtmosphericModel?.GetPressure(context) ?? 0.0;
+        return AtmosphereFor(context)?.GetPressure(context) ?? 0.0;
     }
 
     /// <summary>
@@ -478,8 +514,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="altitude">Altitude in meters.</param>
     /// <returns>Density in kg/m³.</returns>
     /// <remarks>
-    /// For simple atmospheric models, this is sufficient.
-    /// For complex models requiring time/position context, use GetAirDensity(IAtmosphericContext).
+    /// The value of <see cref="GetAirDensity(IAtmosphericContext)"/> for an altitude-only context: the configured model
+    /// (NRLMSISE-00 throws without the geodetic position and the epoch), for an Earth without one the U.S. Standard
+    /// Atmosphere 1976 (<see cref="EarthStandardAtmosphere"/>), which is not the NRLMSISE-00 its drag uses.
     /// </remarks>
     public double GetAirDensity(double altitude)
     {
@@ -490,15 +527,16 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// Get air density with full atmospheric context.
     /// </summary>
     /// <param name="context">Atmospheric context with altitude, position, and time.</param>
-    /// <returns>Density in kg/m³.</returns>
+    /// <returns>Density in kg/m³; 0 without an atmosphere (see <see cref="GetAtmosphere(AtmosphericContext)"/>).</returns>
     public double GetAirDensity(IAtmosphericContext context)
     {
-        return AtmosphericModel?.GetDensity(context) ?? 0.0;
+        return AtmosphereFor(context)?.GetDensity(context) ?? 0.0;
     }
 
     /// <summary>
     /// Air density at a geodetic position and an epoch: the value of <see cref="GetAirDensity(IAtmosphericContext)"/>
-    /// for the same context, without allocating when the model supports it (NRLMSISE-00).
+    /// for the same context, without allocating when the model supports it (NRLMSISE-00): the context is full, so a
+    /// model-less Earth gives NRLMSISE-00 at nominal space weather, the density of its drag.
     /// </summary>
     /// <param name="altitude">Altitude, in m.</param>
     /// <param name="geodeticLatitude">Geodetic latitude, in rad.</param>
@@ -507,7 +545,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <returns>Density in kg/m³; 0 without an atmospheric model.</returns>
     internal double GetAirDensity(double altitude, double geodeticLatitude, double geodeticLongitude, in Time epoch)
     {
-        if (AtmosphericModel is IGeodeticDensityModel model)
+        if (Atmosphere is IGeodeticDensityModel model)
         {
             return model.GetDensity(altitude, geodeticLatitude, geodeticLongitude, epoch);
         }
@@ -521,8 +559,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="altitude">Altitude in meters.</param>
     /// <returns>Atmosphere record with temperature, pressure, and density.</returns>
     /// <remarks>
-    /// Uses the standard atmospheric model configured for this celestial body.
-    /// For Earth with full context (geodetic coordinates and time), use GetAtmosphere(AtmosphericContext).
+    /// The value of <see cref="GetAtmosphere(AtmosphericContext)"/> for an altitude-only context: the configured model, for
+    /// an Earth without one the U.S. Standard Atmosphere 1976. With the geodetic position and the epoch, a model-less Earth
+    /// gives the NRLMSISE-00 of its drag through <see cref="GetAtmosphere(AtmosphericContext)"/>.
     /// </remarks>
     public Atmosphere.Atmosphere GetAtmosphere(double altitude)
     {
@@ -535,25 +574,19 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <param name="context">Atmospheric context with altitude, and optionally position and time.</param>
     /// <returns>Atmosphere record with temperature, pressure, density, and optional model-specific details.</returns>
     /// <remarks>
-    /// For Earth: If the context includes geodetic coordinates (latitude, longitude) and epoch,
-    /// the NRLMSISE-00 model will be used automatically, providing additional molecular density data.
-    /// Otherwise, the standard atmospheric model is used.
-    /// For other bodies: The configured standard atmospheric model is used.
+    /// The configured atmospheric model of the body answers, for every body. An Earth without one answers with
+    /// NRLMSISE-00 at nominal space weather when the context holds the geodetic position and the epoch, the model its
+    /// drag uses, with its molecular densities in <see cref="Atmosphere.Atmosphere.Details"/> (#674); without them, with the
+    /// U.S. Standard Atmosphere 1976 (<see cref="EarthStandardAtmosphere"/>, −5 to 1000 km, continued above), its base
+    /// atmosphere, which needs the altitude only (decided by S. Guillet, 2026-11-14). A null context, which holds no
+    /// altitude, and any other body without a model give the temperature NaN and the pressure and density 0, as
+    /// <see cref="GetAirTemperature(IAtmosphericContext)"/>, <see cref="GetAirPressure(IAtmosphericContext)"/> and
+    /// <see cref="GetAirDensity(IAtmosphericContext)"/> give.
     /// </remarks>
     public Atmosphere.Atmosphere GetAtmosphere(AtmosphericContext context)
     {
-        // For Earth with full context, use NRLMSISE-00 model
-        if (NaifId == 399 && 
-            context.GeodeticLatitude.HasValue && 
-            context.GeodeticLongitude.HasValue && 
-            context.Epoch.HasValue)
-        {
-            _nrlmsiseModel ??= new Nrlmsise00Model();
-            return _nrlmsiseModel.GetAtmosphere(context);
-        }
-
-        // Use standard atmospheric model
-        if (AtmosphericModel == null)
+        var model = AtmosphereFor(context);
+        if (model == null)
         {
             return new Atmosphere.Atmosphere
             {
@@ -563,7 +596,26 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             };
         }
 
-        return AtmosphericModel.GetAtmosphere(context);
+        return model.GetAtmosphere(context);
+    }
+
+    /// <inheritdoc />
+    internal override string ModelDifference(CelestialItem other)
+    {
+        var difference = base.ModelDifference(other);
+        if (difference != null || other is not CelestialBody body || ReferenceEquals(this, other))
+        {
+            return difference;
+        }
+
+        if (Radii != body.Radii)
+        {
+            return "radii";
+        }
+
+        return AtmosphericModelComparer.AreEquivalent(AtmosphericModel, body.AtmosphericModel)
+            ? null
+            : "atmospheric model";
     }
 
     public override string ToString()

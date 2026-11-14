@@ -33,6 +33,22 @@ new AtmosphericDrag(spacecraft, celestialBody)
 | `DragCoefficient` (Cd) | 2.2 | Set on the `Spacecraft` constructor |
 | `SectionalArea` | -- | Cross-sectional area (m2) |
 
+The density is that of the body's atmosphere: its atmospheric model, or NRLMSISE-00 at nominal space weather for an
+Earth built without one; another body without a model throws `ArgumentException`. In a propagation that includes drag
+(#674):
+
+- about a central body other than the Sun, its atmosphere gives the drag, whether or not it is listed; without one (a
+  Moon, a Mars, built without a model) the propagation throws `InvalidOperationException` naming it, before anything
+  changes, whatever the listed bodies;
+- about the Sun (a star or barycentre observer, SSB mode), the listed bodies with an atmosphere give the drag, and the
+  propagation throws when none has one (no Earth listed, and no body with a model);
+- in both cases, the other listed bodies with an atmosphere add their drag.
+
+An Earth always has an atmosphere: wherever the library decides whether a body has one (drag about the central body, in
+SSB mode, from a listed non-central body, and `AtmosphericDrag`), an Earth without a model takes NRLMSISE-00 at nominal
+space weather (decided by S. Guillet, 2026-11-14). `HasAtmosphericModel` says whether a model was given, not whether the
+body has an atmosphere.
+
 ### SolarRadiationPressure
 
 Cannonball SRP model with configurable reflectivity coefficient and continuous shadow fraction for penumbra transitions.
@@ -201,9 +217,9 @@ new ThermalRadiationPressure(spacecraft, emittingBody)
 | Model | Description |
 |-------|-------------|
 | `IAtmosphericModel` | Common interface for density queries |
-| `EarthStandardAtmosphere` | The U.S. Standard Atmosphere 1976 from −5 to 1000 km, of the altitude alone: its layers below 86 km joined by transitions of ±100 m, its thermosphere above (#437); a mean static model, not for orbit determination |
+| `EarthStandardAtmosphere` | The U.S. Standard Atmosphere 1976 from −5 to 1000 km, of the altitude alone: its layers below 86 km joined by transitions of ±100 m, its thermosphere above (#437); a mean static model, not for orbit determination; the base atmosphere of an Earth built without a model, which answers its altitude-only reads (`GetAtmosphere(double)`, a context without the geodetic position or the epoch), not its drag (decided by S. Guillet, 2026-11-14) |
 | `MarsStandardAtmosphere` | Simple Mars atmospheric model of the altitude: the NASA Glenn curve fit below 49.9 km, its branches joined over 500 m at 7 km (#433), the isothermal layer of Seiff (1982) at 139 K above; positive and decreasing at every altitude, but no thermosphere, so drag in orbit above about 120 km is underestimated (#431) |
-| `Nrlmsise00Model` | Time-varying Earth model for drag analysis (thread-safe) |
+| `Nrlmsise00Model` | Time-varying Earth model for drag analysis (thread-safe, its calls serialized on a lock of the instance); at nominal space weather, the atmosphere of an Earth built without a model, one instance per thread |
 
 ## Example
 

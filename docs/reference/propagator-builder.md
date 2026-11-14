@@ -28,8 +28,12 @@ Every fluent method returns the builder for chaining. Calling the same method tw
 
 `Build` adds the central body of the spacecraft (the observer of its initial orbital parameters, or the Sun for a star or
 a barycenter) to the bodies given to `WithPerturbingBody` and `WithPerturbingBodies` when they do not hold it: atmospheric
-drag applies with its atmospheric model and solar radiation pressure with its shadow, whether or not it was listed. A body
-of the same NAIF identifier given by the caller is used as given. `Build` checks the covariance propagation options once
+drag applies with its atmosphere and solar radiation pressure with its shadow, whether or not it was listed, as on every
+constructor path ([Propagators](propagators.md#centralbodypropagator-constructors)). A body of the same NAIF identifier
+given by the caller is accepted when its models (GM, radii, gravitational field, atmospheric model) equal the observer's,
+and the observer's instance is used; otherwise `Build` throws `ArgumentException`. `Build` adds the forces to the
+integrator of the builder: a second `Build`, or an integrator that already holds forces, throws `ArgumentException`
+(`integrator`), and a step of zero or less throws `ArgumentOutOfRangeException` at the constructor. `Build` checks the covariance propagation options once
 all the forces are added, since the columns of Ψ follow them (Cd with drag, Cr with a radiation force).
 
 ## Example

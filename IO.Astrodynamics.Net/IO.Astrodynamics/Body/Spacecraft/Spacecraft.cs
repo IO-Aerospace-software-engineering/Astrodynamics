@@ -536,6 +536,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
+            PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
             return Task.Run(() => Propagate(window, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
         }
 
@@ -543,6 +544,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
+            PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
@@ -582,10 +584,15 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="NotSupportedException"><paramref name="covariancePropagation"/> is given and the integrator
         /// is not an <see cref="RK78Integrator"/>.</exception>
         /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a
-        /// consider parameter without its force.</exception>
+        /// consider parameter without its force; the integrator already holds forces or was already used by a
+        /// propagation that builds its forces; or listed bodies of one NAIF identifier, the observer's included, have
+        /// different models.</exception>
         /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; or the covariance is asked
         /// for, and the initial orbital parameters carry none, carry it at another epoch than the start of the window,
-        /// or carry one that is not symmetric and positive semi-definite.</exception>
+        /// or carry one that is not symmetric and positive semi-definite; or drag is asked about a central body other
+        /// than the Earth and the Sun without an atmospheric model, or about the Sun with no listed Earth and no listed
+        /// body with a model.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive.</exception>
         /// <remarks>
         /// The options and the initial covariance are checked before anything changes: when they are rejected, the
         /// states, maneuvers and fuel of a previous propagation are left as they were.
@@ -595,6 +602,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             CovariancePropagationOptions covariancePropagation)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
+            PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
 
             // Built, and so the options and P0 checked, before the reset: a rejected activation leaves the previous
             // propagation as it was
@@ -615,6 +623,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize, VariationalOptions variationalOptions)
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
+            PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
             // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.

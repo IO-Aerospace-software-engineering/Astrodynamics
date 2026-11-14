@@ -56,7 +56,6 @@ public class ExporterTests
             new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(TestHelpers.MoonAtJ2000);
-        scenario.AddCelestialItem(TestHelpers.EarthWithAtmAndGeoAtJ2000);
 
         await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
 

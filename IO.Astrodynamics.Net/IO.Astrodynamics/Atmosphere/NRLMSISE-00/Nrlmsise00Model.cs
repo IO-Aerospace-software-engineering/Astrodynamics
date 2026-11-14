@@ -168,6 +168,23 @@ public class Nrlmsise00Model : IAtmosphericModel, IGeodeticDensityModel, IDensit
     int IDensityDiscontinuities.DensityInterval(double altitude) =>
         MixingCutoffsApply ? NRLMSISE00.MixingInterval(altitude / 1000.0) : 0;
 
+    /// <summary>
+    /// Whether <paramref name="other"/> has the same switches and space weather, so that both give the same values: F10.7,
+    /// F10.7A, Ap and the 3-hour Ap indices, a null <see cref="SpaceWeather.ApArray"/> read as <see cref="ApArray.Default"/>
+    /// as the model does (#674).
+    /// </summary>
+    internal bool HasSameParameters(Nrlmsise00Model other)
+    {
+        var a = _spaceWeather;
+        var b = other._spaceWeather;
+        return SameValues(_flags.Switches, other._flags.Switches) && a.F107.Equals(b.F107) &&
+               a.F107A.Equals(b.F107A) && a.Ap.Equals(b.Ap) &&
+               SameValues((a.ApArray ?? DefaultApArray).A, (b.ApArray ?? DefaultApArray).A);
+    }
+
+    private static bool SameValues<T>(T[] first, T[] second) where T : IEquatable<T> =>
+        ReferenceEquals(first, second) || (first != null && second != null && first.AsSpan().SequenceEqual(second));
+
     // Flag 15 on, as the model reads it (Tselec: Sw[15] = 1 when Switches[15] is 1)
     private bool MixingCutoffsApply => _flags.Switches[15] == 1;
 

@@ -159,6 +159,9 @@ state, which is the form every other API expects. See [TLE & OMM](tutorials/tle-
     var (position, velocity) = solution.InterpolateAt(window.EndDate);
     ```
 
+    The orbit is on `PlanetsAndMoons.EARTH_BODY`, which has no atmospheric model: its drag is NRLMSISE-00 at nominal
+    space weather. Give the Earth an `IAtmosphericModel` for another one.
+
 ## Next Steps
 
 - [Ephemeris Queries](tutorials/ephemeris-queries.md) — query positions of planets, moons, and spacecraft
