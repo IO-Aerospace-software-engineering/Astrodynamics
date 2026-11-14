@@ -288,7 +288,7 @@ public class KernelWindowSearchTests
     {
         Assert.NotEmpty(gfposc);
         Assert.Equal(gfposc.Length, managed.Length);
-        double worstThreshold = 0.0, worstCut = 0.0;
+        double worstThreshold = 0.0, worstCut = 0.0, worstGfposcCut = 0.0;
         for (int i = 0; i < gfposc.Length; i++)
         {
             foreach (var (m, g) in new[] { (managed[i].StartDate, gfposc[i].StartDate), (managed[i].EndDate, gfposc[i].EndDate) })
@@ -301,6 +301,7 @@ public class KernelWindowSearchTests
                     double managedAngle = System.Math.Abs(EastLongitude(target, observer, m));
                     double rate = System.Math.Abs(EastLongitude(target, observer, g.AddSeconds(1.0)) - EastLongitude(target, observer, g.AddSeconds(-1.0))) / 2.0;
                     worstCut = System.Math.Max(worstCut, managedAngle);
+                    worstGfposcCut = System.Math.Max(worstGfposcCut, System.Math.Abs(east));
                     Assert.True(managedAngle <= cutAngle, $"{label}: the managed edge {m} is {managedAngle:E3} rad from the cut");
                     Assert.True(System.Math.Abs(east) <= cutAngle, $"{label}: the gfposc edge {g} is {System.Math.Abs(east):E3} rad from the cut");
                     Assert.True(dt <= (managedAngle + System.Math.Abs(east)) / rate + NativeThreshold, $"{label}: {dt:E3} s at the cut, rate {rate:E3} rad/s");
@@ -312,13 +313,15 @@ public class KernelWindowSearchTests
             }
         }
 
-        _output.WriteLine($"MEASURE #682 planetographic {label}: {gfposc.Length} windows, worst |managed - gfposc| {worstThreshold:E3} s on the threshold, worst managed edge {worstCut:E3} rad from the cut");
+        _output.WriteLine($"MEASURE #682 planetographic {label}: {gfposc.Length} windows, worst |managed - gfposc| {worstThreshold:E3} s on the threshold, worst managed edge {worstCut:E3} rad from the cut, worst gfposc edge {worstGfposcCut:E3} rad from the cut");
         Assert.True(worstThreshold <= NativeThreshold, $"{label}: {worstThreshold:E3} s");
     }
 
-    // #682. Twice the worst over Linux, Windows and macOS arm64 rounded up (CI run 43591652055, 2026-11-14): 6.557e-11 rad
-    // on each of the three (the Moon from the Earth above 4 rad): the 1 µs of the searches and the 100 ns of a Time at
-    // the rate of the longitude, 7.3e-5 rad/s for the Moon in ITRF93
+    // #682. Twice the larger of the two edges it bounds, rounded up. The managed edge: 6.557e-11 rad on each of Linux,
+    // Windows and macOS arm64 (CI run 43591652055, 2026-11-14; the Moon from the Earth above 4 rad), the 1 µs of the
+    // searches and the 100 ns of a Time at the rate of the longitude, 7.3e-5 rad/s for the Moon in ITRF93. The gfposc
+    // edge: provisional, 1.799e-11 rad on Linux x64 (2026-11-14; the Moon from the Earth), until the CI of the three
+    // platforms has printed it
     private const double CutAngle = 1.4e-10;
 
     private static readonly Window MoonPlanetographicWindow = new(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 11));
