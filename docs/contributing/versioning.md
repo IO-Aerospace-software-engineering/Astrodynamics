@@ -1356,6 +1356,153 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **A field-of-view search on a managed spacecraft without attitude searched the identity of ICRF**
+  ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). A spacecraft never propagated, with no orientation added, built from a TLE or propagated
+  by `TLEPropagator` has an empty attitude record, which `WriteOrientation` refuses to write; its frame reads the
+  identity there, and `Instrument.FindWindowsInFieldOfViewConstraint` and `Instrument.IsInFOV` searched with it (a camera
+  of 30° along +Y in LEO: 5 windows of the Earth over 6 h, its boresight ICRF +Y). Both now throw
+  `InvalidOperationException` naming the spacecraft, after the argument and field checks, whose errors keep their
+  precedence (internal `FieldOfViewSearch.CheckAttitude`). `FieldOfViewSearchTests.ManagedSpacecraftWithoutAttitude_Throws`
+  checks the search (the Earth as a point and as its ellipsoid, the Moon) and `IsInFOV` on a spacecraft from a state,
+  from a TLE and propagated by `TLEPropagator`, and that an attitude added lifts the refusal;
+  `AttitudeAddedByHand_IsTheOneSearched` holds `IsInFOV` to the closed form of a circular field for an
+  attitude given by hand, at the edges of the search within 9.7e-11 rad of the half-angle. The getters
+  (`GetBoresightInICRFFrame`, …) keep the identity before any attitude.
+- **The emission and phase angles of a site's illumination search were measured from the site itself**
+  ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). `Site.FindWindowsOnIlluminationConstraint` takes no observer: the managed path measured the
+  angles towards the site (0, one window of the whole search) and `gfilum_c` was given the site as its observer (0 and
+  2 windows over 2024-03-01 for DSS-13, where `gfilum_c` from the Moon gives one emission window, 06:52:07.61 to
+  17:06:28.25 TDB, and no phase window). The angles are at the point towards an observer (`gfilum_c` Particulars),
+  undefined at the point itself: the search now throws `ArgumentException` for them and keeps the incidence, unchanged.
+  `SiteTests.IlluminationEmission_FromTheMoon_EqualsGfilum` holds the workaround its message names to `gfilum_c`, 4.4e-3 s
+  (the normal of [#654](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/654)).
+- **An illumination method other than ELLIPSOID gave no window, or was ignored** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). `gfilum_c`
+  supports ELLIPSOID only (Detailed_Input `method`); for `"Dsk"`, `"Elipsoid"`, `"ELLIP SOID"`, `""` or the DSK forms
+  it signalled SPICE(INVALIDMETHOD) or SPICE(EMPTYSTRING), which the native proxy dropped: no window on the CSPICE path,
+  while the managed path never read the method (3 windows of the ellipsoid for each string). One check
+  (internal `SpiceAPI.CheckIlluminationMethod`), used by `Site.FindWindowsOnIlluminationConstraint` and
+  `SpiceAPI.FindWindowsOnIlluminationConstraint`, accepts ELLIPSOID whatever its case and its leading or trailing
+  whitespace and throws `ArgumentException` for anything else (a null method `ArgumentNullException`, on the managed path
+  too); `"ellipsoid"` and `" Ellipsoid "` keep their windows to the tick.
+- **The managed planetographic longitude was the planetocentric one** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). The managed
+  `CoordinateSystem.Planetographic` search (a body, a propagated spacecraft or a site from coordinates; the CSPICE path is
+  taken with a kernel spacecraft) compared the east longitude in (−π, π] where `gfposc_c` compares the planetographic
+  one, in [0, 2π), positive west for a prograde body other than the Earth, the Moon and the Sun (`recpgr_c`
+  Detailed_Output `lon`, Particulars): the Moon from the Earth above 1 rad over 10 days gave 10 windows where `gfposc_c`
+  gives 11, above 4 rad none where it gives 10, and the Sun from Mercury 0.188 rad where `recpgr_c` gives 6.095. One
+  internal evaluation shared by `CelestialItem` and `Site` (`GeodeticCoordinates.PlanetographicCoordinate`) takes the
+  sense from the spin of the observer's body at the start of the search. `KernelWindowSearchTests` holds it to
+  `gfposc_c` (the Moon from the Earth, the Earth and the Sun from Mercury, the Earth from Venus, DSS-13 from Mercury):
+  the same window counts, the edges on the threshold within 3e-7 s (DSS-13 from Mercury; 2e-7 s for the others), those
+  at the 0/2π cut within 6.6e-11 rad of it;
+  `PlanetographicTests` holds the evaluation to `recpgr_c` for eight bodies within 1.7e-16 rad.
+- **The managed planetographic latitude was the planetocentric one, and its altitude was a radius**
+  ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). PLANETOGRAPHIC is (LONGITUDE, LATITUDE, ALTITUDE) in `gfposc_c` (Detailed_Input `coord`), its
+  latitude the geodetic one on the spheroid (`recpgr_c` Particulars); the managed search took the planetocentric
+  latitude (−0.297009940 rad for the Moon from the Earth on 2024-03-01, `recpgr_c` −0.297039902), whose edges above
+  −0.4 rad were 51.5 s and 47.5 s off, accepted `Coordinate.Radius` and threw for `Coordinate.Altitude`. The latitude
+  and the altitude are now the geodetic ones on the observer body's spheroid, their edges within 4e-7 s of `gfposc_c`
+  (DSS-13 from the Moon, both; the Moon from the Earth 3e-7 s and 1e-7 s); the altitude is searched and the radius
+  throws `ArgumentOutOfRangeException`.
+- **A site built from coordinates, or a managed spacecraft, read in its own frame threw SPICE(UNKNOWNFRAME)**
+  ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). A read in a frame that only the library holds, the `SiteFrame` of a site built from coordinates
+  seen from an observer other than its body (the Moon, the Sun, a kernel spacecraft) or the `SpacecraftFrame` of a
+  managed spacecraft, reached `spkezr_c` by name: `site.GetEphemeris(t, moon, site.Frame, …)`,
+  `moon.GetEphemeris(t, earth, site.Frame, …)`, `SpiceAPI.ReadEphemeris` and the managed searches on them threw.
+  `SpiceAPI.ManagedReadFrame` now routes these frames as [#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558) routes TEME, CIRS and TIRS: read in J2000 and
+  rotated by the managed frame at the epoch of the read. Against `spkezr_c` and `pxform_c` · `georec_c` on the frame
+  kernel the library writes for the site, 4.0e-7 m and 6.4e-11 m/s over 5 epochs from the Moon; against `spkezr_c` in
+  the frame of a managed spacecraft on the frame kernel and the CK the library writes from its record, 6.8e-8 m and
+  1.6e-13 m/s. A managed spacecraft whose attitude record is empty (never propagated, no orientation added, from a TLE
+  or `TLEPropagator`) has no attitude in the library: its frame is still read by name, as before, so the frame kernel
+  and the CK of its id, if loaded, give its attitude (within 1.7e-16 rad of the attitude written), and SPICE rejects the
+  frame otherwise; it is not read with the identity of the empty record.
+- **`CelestialItem.GetEphemeris(window, …)` read past its window across a leap second** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). It
+  counted floor(`Length` / step) + 1 samples, `Length` counting the leap second ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)), and placed them in
+  the calendar, which does not: over 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z it returned 122 states at 1 s and 2
+  at 121 s, the last at 00:01:01Z, a second past the end. The samples now stop at the end, as `Site.GetEphemeris(window)`
+  and `Star.Propagate` do: 121 and 1 states (the CLI's `ephemeris` with them). Every other window keeps its states bit
+  for bit.
+- **`LoadKernels` and `UnloadKernels` matched kernel paths by substring** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). A path whose text contained a
+  loaded one was taken for a path inside it: after `k/SolarSystem`, the load of its sibling `k/SolarSystem2` reloaded
+  `k/SolarSystem` and loaded nothing (L1 then threw SPKINSUFFDATA), in the other order the sibling was unloaded, and
+  `UnloadKernels(k/SolarSystem)`, never loaded, unloaded `k/SolarSystem2`; a folder elsewhere whose path ends with a
+  loaded one was never loaded. Paths are now compared by their components, on the full paths without their trailing
+  separator, ordinal as before: the same path, or a path inside a loaded folder, reloads that entry, and a folder load
+  first unloads the entries inside it, as before; a sibling is another path. `KernelRegistryTests` reads TK frame
+  kernels of 90° and 45° about z back through SPICE (`pxform`) after each order, and compares on Linux the files SPICE
+  holds (KEEPER, `ktotal_`/`kdata_`) with those the scenario loaded. No result moves on `Data/SolarSystem`.
+- **`UnloadKernels` left a deleted or moved path loaded, and a folder listed after one of its files was unloaded**
+  ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). The unload ran only for a path that existed, and walked it as it was on disk, so a folder of kernels loaded,
+  deleted, then unloaded stayed listed and SPICE kept its files (the Moon still read at 4.046675e8 m); through the
+  `DirectoryInfo` that was loaded, whose cached `Exists` stayed true, the entry was dropped while SPICE kept the files.
+  After `UnloadKernels` of a file of a loaded folder, the folder stayed listed while SPICE no longer held the file. Each
+  entry now records the files its load handed SPICE, and the unload hands SPICE those names, whether the path still
+  exists or not; an entry that holds the path is replaced, at its place, by its remaining files. A path that matches no
+  entry is handed to SPICE as before, without the existence test: a file loaded by a meta-kernel is unloaded by its
+  name. C++: `KernelsLoader::Unload` hands any path that is not an existing directory to `unload_c`, which unloads a
+  file by the name it was loaded under and does nothing for a name it does not hold (its unreachable throws, which
+  would have crossed the `extern "C"` boundary, are gone); the P/Invoke is unchanged. `ClearKernels` calls `kclear_c`
+  without unloading each entry first, which would read again a text kernel deleted since its load. The C++ tests
+  `API.UnloadKernelsProxyOfADeletedFile` and `API.UnloadKernelsProxyOfANameNotLoaded` check the frame lookup of
+  `TransformFrameProxy`; `KernelRegistryTests` the frames and the listing after a deleted folder (both instances) and a
+  file of a folder. SPICE unloads a text kernel or a meta-kernel by reading the pool again, which fails while another
+  text kernel deleted since its load is still loaded, and leaves out the text kernels loaded after it. The unload of
+  an SPK, a CK, a binary PCK, a DSK or an EK opens the other loaded kernels of its kind again (`unload_c` → `UNLOAD` →
+  `SPKLEF`, `CKLPF`, `PCKLOF`, `ZZDSKLSF` or `EKLEF`), reads no text kernel, and fails on a kernel of its kind deleted
+  since its load; after such a failure the SPKs, CKs or PCKs loaded before the deleted one take precedence over those
+  loaded after it (each reload of a loaded file closes it and loads it again at the highest priority, and the files
+  after the deleted one are not reloaded; measured with CSPICE N0067 for SPKs, CKs and PCKs, and by `KernelRegistryTests`
+  for PCKs: a PCK frame read from the PCK loaded before the deleted one until the deleted one is unloaded). A
+  meta-kernel's unload also unloads the kernels it names and opens again the loaded kernels of each of their kinds
+  (measured for SPKs, CKs, PCKs, DSKs and EKs). SPICE loads a text kernel as a meta-kernel when its load assigns
+  `KERNELS_TO_LOAD`, `PATH_SYMBOLS` or `PATH_VALUES` (FURNSH watches them), and an old DAF (`NAIF/DAF`, as
+  `earthstns_itrf93_201023.bsp`) as an SPK or a CK from its segments (`GETFAT` → `ZZCKSPK`). The unload of the recorded
+  files throws for such a failure unless a later unload of the same call, of the same entry or of another one, read the
+  same kernels again: a text kernel's or a meta-kernel's for a text kernel, one of the same kind for an SPK, a CK, a PCK,
+  a DSK or an EK, none for a meta-kernel, whose files the library does not read, nor for an old DAF, whose kind it does
+  not tell (internal `SpiceAPI.UnloadRereads`, from the ID word of the file and, for a text kernel, the variables its
+  data assigns, outside its comments and quoted strings, read at its load; the type KEEPER gives each text kernel of the
+  tests is checked by `KernelRegistryTests` through `kdata`). Every entry the call matched is unloaded and removed
+  before it throws. A binary kernel SPICE failed to open again stays open in SPICE for the life of the process: KEEPER
+  records the handle 0 for it, its unload and `kclear_c` close nothing, and once its logical unit is released (more than
+  the 23 units of CSPICE's handle manager in use) every later search of its kind fails to reconnect it, for a PCK every
+  IAU frame (measured with CSPICE N0067; the CI of the first version of the PCK tests, run in the test process, failed
+  that way on Linux and macOS arm64, `TISBOD` → `PCKSFS` → `DAFBBS` → `ZZDDHHLU` on the deleted PCK, in other test
+  classes). The tests that delete a loaded binary kernel therefore run in the child process
+  `IO.Astrodynamics.Tests.KernelUnload`, which the test project builds and copies to `KernelUnload/`, and are skipped
+  on Windows, where a loaded binary kernel cannot be deleted. `KernelRegistryTests` unloads a folder of a text kernel listed before an SPK while a deleted text
+  kernel is loaded, which throws and leaves the frame of the text kernel loaded after the deleted one unknown until
+  the deleted one is unloaded; a meta-kernel of one SPK, whose unload SPICE fails the same way; a folder of two binary
+  PCKs whose second is deleted (in the child process), between a PCK loaded before it and one loaded after it of the same frame class, whose
+  unload no longer throws and leaves the later PCK in precedence; the unload of the first of those two PCKs alone, which
+  throws and leaves the earlier PCK in precedence until the deleted one is unloaded; a folder of a meta-kernel of a PCK
+  listed before a text kernel while a deleted PCK is loaded (in the child process), which throws, the text kernel's
+  unload not taken for a repair; a folder of two loaded folders whose second's kernel is deleted, whose unload no longer
+  stops at the first folder's failure; and a folder of a text kernel whose comment names `KERNELS_TO_LOAD`, listed
+  before a deleted one, whose unload no longer throws. A folder is loaded in the order of its listing, alphabetical on
+  NTFS: the tests name the file to list first from a to z in turn and check the order through `SpiceAPI.KernelFiles`.
+- **The command line ignored a kernel file or a meta-kernel given as its kernels path** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). The 13 commands that
+  load kernels wrapped the argument in a `DirectoryInfo`, from which a file loaded nothing without an error:
+  `astro ephemeris mk.tm …` failed with "Celestial celestialItem frame can't be defined". A file, a kernel or a
+  meta-kernel, is now loaded as a file (`Helpers.KernelsPath`), a folder as before, bit for bit; a path that does not
+  exist still loads nothing. `KernelsPathTests` gives `frame-converter` a TK frame kernel, then a meta-kernel that names
+  it, and reads the quaternion of the 90° rotation about z (|W| = |Z| = cos 45°).
+- **The Cosmographia export wrote kernels that SPICE cannot load, and the native writers a file under a truncated
+  name** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading,
+  "Recommendations on Kernel File Naming"), and `LoadKernels` and the command line hand it the full path. The export,
+  and `astro propagate` through it, deleted the previous export and wrote kernels at longer paths (`MySat.ck` at 302
+  characters for a 120-character directory), which then failed with `SPICE(FILENAMETOOLONG)`. `SpiceAPI.WriteEphemeris`
+  (under `Star` and `Site`) and `SpiceAPI.WriteOrientation` (under `Spacecraft.WriteOrientation`) handed such a path to
+  CSPICE, which wrote a file under the name truncated to 255 and then failed. The export now checks every kernel path
+  of its layout, under the output directory and under the new directory of the system temporary directory where it
+  writes the kernels and loads the clock and frame kernels first, before it touches the output directory, and the
+  native writers check their target, in the bytes the marshaller hands CSPICE (UTF-8 on Linux and macOS). `KernelPathLengthTests` writes each native writer's kernel at 255
+  characters, which SPICE loads, while a copy at 256 fails in FURNSH; at 256 the writer throws and leaves no file, and a
+  255-character path holding one é (256 bytes) is rejected on Linux; `Spacecraft.WriteEphemeris` and the clock writer
+  still write at 300 characters, byte for byte. `ExporterTests` exports one character too long (nothing deleted) and
+  at 255 (every kernel of `spice.json` loads), and to a short directory with a scratch directory whose kernels would be
+  longer than 255 (nothing deleted, no scratch left); `PropagateTests` the command.
 - **A body with a GM and no radii read GM 0 and no frame, one with radii and no GM a garbage frame** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)).
   The native body information read `BODYnnn_RADII` and `BODYnnn_GM` without checking that the kernel pool has them; the
   failed read left SPICE failed, so the reads after it did nothing until the error was reset at the end: the GM was the
@@ -1412,6 +1559,20 @@ release are listed under **Known limitations**.
 
 **Changed**
 
+- **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
+  above). `CosmographiaExporter.ExportAsync` and `astro propagate` throw for an output directory (parameter
+  `outputDirectory`), or a system temporary directory (no parameter), whose kernels would have a full path longer than
+  255 characters (UTF-8 bytes), and delete nothing; they succeeded with kernels `LoadKernels`
+  could not load, after deleting the previous export. `SpiceAPI.WriteEphemeris` (so `Star.WriteEphemeris` and
+  `Site.WriteEphemeris`) and `SpiceAPI.WriteOrientation` (so `Spacecraft.WriteOrientation`) throw `ArgumentException`
+  (parameter `filePath`) where they threw `InvalidOperationException` after leaving a file under the truncated name.
+  Migration: choose a shorter output directory (the CK of a spacecraft,
+  `<output>/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck`, is usually the longest kernel) or a shorter
+  temporary directory (`TMPDIR`, `TEMP`), and catch `ArgumentException`. `Spacecraft.WriteEphemeris` and the text kernel writers are unchanged.
+- **`GetLoadedKernels` after a partial unload** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed above): after `UnloadKernels` of a file or a subfolder of a
+  loaded folder, the listing names the folder's remaining kernel files, in its place, instead of the folder; after
+  `UnloadKernels` of a deleted or moved path, its data is no longer readable. Migration: look for the folder's files,
+  or unload the whole folder.
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
   the altitude of the `Planetodetic`, which `Planetodetic` documents in m, reached `gfilum_c` as km, so a caller
   passing metres got edges seconds off. A caller who passed km gets a point 1000 times lower: at DSS-13 the sunrise moves
@@ -1765,6 +1926,44 @@ release are listed under **Known limitations**.
   returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
+- **Breaking: the managed `CoordinateSystem.Planetographic` is CSPICE's PLANETOGRAPHIC** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682), Fixed
+  above): its longitude is in [0, 2π), positive west for a prograde body other than the Earth, the Moon and the Sun and
+  positive east otherwise (the Moon from the Earth above 1 rad: 11 windows where there were 10, the second starting at
+  04:00:35.63 instead of 16:23:27.62 TDB), its latitude the planetographic (geodetic) one (edges 51.5 s and 47.5 s from
+  where they were for the Moon above −0.4 rad; unchanged on a sphere, such as the Moon or Mercury), and its third
+  coordinate the altitude above the spheroid: `Coordinate.Altitude` is searched and `Coordinate.Radius` throws
+  `ArgumentOutOfRangeException`. The managed path does not read `BODY<id>_PGR_POSITIVE_LON`, by which a kernel can
+  override the sense for `gfposc_c` (GF Required Reading, "Meridian crossing"); no kernel of the library defines it.
+  It works in the body-fixed frame of the observer's body, as `Geodetic` does, where `gfposc_c` takes the body of the
+  frame's centre: the two agree for a frame centred on the observer. Migration: for the former east longitude in (−π, π],
+  search `CoordinateSystem.Geodetic`, whose longitude it was; for the planetocentric latitude and radius,
+  `CoordinateSystem.RaDec` (`Declination`, `Range`) in the body-fixed frame.
+- **Breaking: `Site.FindWindowsOnIlluminationConstraint` throws for the emission and phase angles** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682),
+  Fixed above): `ArgumentException` (`illuminationType`), the search having no observer. Migration: with the
+  observer's NAIF id, `SpiceAPI.FindWindowsOnIlluminationConstraint(window, observerId, site.CelestialBody.NaifId,
+  site.CelestialBody.Frame, site.Planetodetic, angle, …)` for objects of the kernels; otherwise
+  `new GeometryFinder().FindWindowsWithCondition(window, t => site.IlluminationEmission(t, observer, aberration), relation,
+  value, step)`, or `IlluminationPhase(t, source, observer, aberration)`.
+- **Breaking: a field-of-view search or `IsInFOV` on a managed spacecraft without attitude throws** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682),
+  Fixed above): `InvalidOperationException` for a spacecraft never propagated and with no orientation added, a spacecraft
+  built from a TLE, and one propagated by `TLEPropagator`, which records no attitude
+  ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)). Migration: propagate the spacecraft, or give it its attitude,
+  `spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`;
+  `Quaternion.Identity` reproduces the former result.
+- **Breaking: an illumination method other than ELLIPSOID throws** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682), Fixed above):
+  `Site.FindWindowsOnIlluminationConstraint` and `SpiceAPI.FindWindowsOnIlluminationConstraint` throw
+  `ArgumentException` (`method`) for anything but ELLIPSOID, case and leading or trailing whitespace aside, the DSK forms
+  included, which `gfilum_c` never supported (they returned no window). Migration: pass `"ELLIPSOID"`, the default.
+- **Breaking: a site built from coordinates under the name of a station of a loaded frame kernel is read in its own
+  frame** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682), Fixed above): `new Site(13, "DSS-13", earth, coordinates)` has the frame name `DSS-13_TOPO`,
+  which `earth_topo_201023.tf` defines; its reads in its frame from an observer other than the Earth went through the
+  kernel's station frame and are now rotated by its own coordinates (27.0 to 30.3 m and 2.0e-3 m/s from the Moon for
+  DSS-13's own coordinates, 2024-03-01). A caller who loaded the frame kernel the library writes for a site (or the
+  frame kernel and the CK of a managed spacecraft, read through an object whose attitude record holds an entry) gets the
+  library's rotation, the source of those kernels: 4.0e-7 m from them for a site, 6.8e-8 m for a spacecraft; a managed
+  spacecraft with an empty record (a new object of the id, never propagated) is read through the kernels by name, as
+  before. Migration: give a site built from coordinates a name no loaded kernel uses, or build the
+  station from the kernels, `new Site(13, "DSS-13", earth)`.
 
 **Removed**
 
@@ -1815,7 +2014,14 @@ not listed.
   leave the kernel they write unloaded, and a CK loaded then rewritten in the same process is still read with its old
   content: unload a file before rewriting it, and load it after. `SpiceAPI.WriteEphemeris` ends the process (exit code
   134) for a centre with a GM but no NAIF name and for fewer than 3 states (pass 3 states or more), and enumerates the caller's states twice, both writers under the SPICE lock:
-  pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written.
+  pass an array. A spacecraft propagated by `TLEPropagator` has no attitude record, so its CK cannot be written and its
+  field-of-view searches throw ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)); give it its attitude with `AddStateOrientationToICRF`.
+- **Kernel paths of more than 255 characters** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). `LoadKernels` and the command line hand SPICE the full path of
+  each kernel, so a kernel whose full path is longer than 255 characters cannot be loaded through them
+  (`SPICE(FILENAMETOOLONG)`, reported as "more details on standard output"), while `Spacecraft.WriteEphemeris` and the
+  text kernel writers still write it: load it through a meta-kernel that names it by a shorter relative path, or write
+  it under a shorter directory. Paths are compared ordinally, so on Windows and macOS two spellings that differ in case
+  are two entries.
 - **CIRS and TIRS by name, and searches in a managed frame**
   ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558),
   [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)). A frame built by name as CIRS
@@ -1823,7 +2029,10 @@ not listed.
   not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws, and `SpiceAPI.TransformFrame` in CIRS or TIRS throws
   even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in `Frame.CIRS` or
   `Frame.TIRS` returns no window, and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances `Frame.CIRS`
-  and `Frame.TIRS`, and search in a SPICE frame.
+  and `Frame.TIRS`, and search in a SPICE frame. The frame of a site built from coordinates and that of a managed
+  spacecraft with an attitude record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), but a CSPICE coordinate search in them (a kernel
+  spacecraft taking part) still returns no window, and a frame built by such a name (`new Frame("MYSITE_TOPO")`) still
+  goes to SPICE.
 - **Identifiers that are not celestial bodies**
   ([#650](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/650),
   [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)). `SpiceAPI.ReadEphemeris` by

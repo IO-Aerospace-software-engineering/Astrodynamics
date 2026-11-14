@@ -19,8 +19,8 @@ namespace IO.Astrodynamics.Tests;
 /// <see cref="TestKernels.EnsureSolarSystem"/>); a removal, a <see cref="SpiceAPI.ClearKernels"/> included, leaves the
 /// folder or its anchor out of the loaded kernels at the next call (<see cref="SharedKernels.RemovalObserved"/>); a first
 /// load by another caller leaves the helper's loads at 0; the load of a parent replaces the folder's entry by the
-/// parent's. In a filtered run, a class whose tests all ran before the first call of the helper escapes, and so does a
-/// file inside the folder unloaded by its own path, which the loaded kernels of <see cref="SpiceAPI"/> do not record.
+/// parent's; the unload of a file inside the folder replaces the folder's entry by its other files (#673). In a filtered
+/// run, a class whose tests all ran before the first call of the helper escapes.
 /// </remarks>
 [Collection(nameof(KernelReloadGuardCollection))]
 public class KernelReloadGuardTests

@@ -17,7 +17,7 @@ public class EphemerisCommand
 
     [Command("ephemeris", Description = "Compute ephemeris of given object")]
     public Task Ephemeris(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Object identifier (Naif Identifier)")]
         int objectId,
@@ -40,7 +40,7 @@ public class EphemerisCommand
             frame = "j2000";
         }
 
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var window = Helpers.ConvertWindowInput(windowParameters.Begin, windowParameters.End);
         var localizableObject = Helpers.CreateLocalizable(objectId, window.StartDate);
@@ -74,7 +74,7 @@ public class EphemerisCommand
 
     [Command("sub-point", Description = "Compute sub observer point of given object in planetodetic, planetocentric or planetocentric cartesian coordinates")]
     public Task SubPoint(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Object identifier (Naif Identifier)")]
         int objectId,
@@ -87,7 +87,7 @@ public class EphemerisCommand
         [Option(shortName: 'c', Description = "Display result as planetocentric cartesian coordinates")]
         bool cartesian = false)
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var epoch = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
         var localizableObject = Helpers.CreateLocalizable(objectId, epoch) as CelestialItem;
@@ -116,7 +116,7 @@ public class EphemerisCommand
 
     [Command("angular-separation", Description = "Compute angular separation between given objects")]
     public Task AngularSeparation(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Observer identifier (Naif Identifier)")]
         int observerId,
@@ -128,7 +128,7 @@ public class EphemerisCommand
         [Argument(Description = "Aberration")] string aberration = "None"
     )
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var epoch = Helpers.ConvertDateTimeInput(epochParameters.Epoch);
         var observer = Helpers.CreateLocalizable(observerId, epoch);

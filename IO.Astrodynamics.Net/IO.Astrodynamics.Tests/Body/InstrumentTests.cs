@@ -217,6 +217,10 @@ namespace IO.Astrodynamics.Tests.Body
                 start, Frames.Frame.ICRF);
             Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, 3000.0, clock, targetOrbit);
 
+            // Never propagated, it has no attitude to test with (#682); with the identity given by hand, the target 10 km
+            // below it is in the field
+            Assert.Throws<InvalidOperationException>(() => spacecraft.Instruments.First().IsInFOV(start, target, Aberration.None));
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
             var res = spacecraft.Instruments.First().IsInFOV(start, target, Aberration.None);
             Assert.True(res);
         }

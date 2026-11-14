@@ -899,9 +899,29 @@ public class SpiceApiTest
         SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
         SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
-        SpiceAPI.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
-        Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
+        var spk = new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk");
+        var epoch = TimeSystem.Time.CreateTDB(668100000.0);
+        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude() > 6.0e6);
+        SpiceAPI.Instance.UnloadKernels(spk);
+
+        // The folder is no longer listed, but its other kernel files, which SPICE still holds (#673): before, the folder
+        // stayed listed while SPICE no longer held the SPK of DRAGONFLY32
+        var folder = new DirectoryInfo(@"Data/UserDataTest/scn100");
+        var listed = SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName)
+            .Where(x => x == folder.FullName || x.StartsWith(folder.FullName + Path.DirectorySeparatorChar, StringComparison.Ordinal)).ToArray();
+        Assert.DoesNotContain(folder.FullName, listed);
+        Assert.DoesNotContain(spk.FullName, listed);
+        // The kernel files the project copies to scn100 (IO.Astrodynamics.Tests.csproj), but the SPK of DRAGONFLY32
+        string[] expected =
+        [
+            new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk").FullName,
+            new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc").FullName
+        ];
+        Assert.Equal(expected.Order(StringComparer.Ordinal), listed.Order(StringComparer.Ordinal));
+        // SPICE's reads: the SPK of DRAGONFLY32 (-1785) is gone, that of MySite (399132) is still there (both cover 668085625 to
+        // 668174469 s TDB)
+        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None));
+        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 399132, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude() > 6.0e6);
     }
 
     [Fact]
