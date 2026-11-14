@@ -72,13 +72,15 @@ internal sealed class NonlinearityIndex
     {
         var dynamics = nominal.Dynamics;
         if (dynamics?.Integrator == null || nominal.Segments.Count != 1 || nominal.Segments[0].Context is not { } context ||
-            participant.InitialOrbitalParameters is not StateVector { Covariance: not null } initial)
+            participant.InitialOrbitalParameters is not StateVector { Covariance: not null })
         {
             return null;
         }
 
         var segment = nominal.Segments[0];
         var start = segment.BaseEpoch;
+        // P0 in the frame of the propagation: an osculating TEME state is propagated in ICRF (#675)
+        var initial = (StateVector)PropagatorBase.InertialInitialOrbit(participant.InitialOrbitalParameters, start);
         var x0Position = segment.Steps[0].StartPosition;
         var x0Velocity = segment.Steps[0].StartVelocity;
         var root = SquareRoot(initialCovariance ?? initial.Covariance.Value);

@@ -9,6 +9,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.Propagator.Integrators;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -32,7 +33,9 @@ using Time = IO.Astrodynamics.TimeSystem.Time;
 /// The case: a 7 000 km orbit, e = 0.01, i = 0.9 rad, from its apoapsis at 2024-01-01 00:00 TDB about a point-mass Earth,
 /// a window of 2 h with outputs every 60 s; 1 000 kg dry, 3 000 kg of fuel, Isp 320 s, 5 kg/s. The rejected calls are
 /// checked against the state the previous valid run left, read before the call (structural); the controls against
-/// Tsiolkovsky's closed form and the prograde law (the unit velocity).
+/// Tsiolkovsky's closed form and the prograde law (the unit velocity). A spacecraft on a TLE or an osculating TEME state,
+/// propagated numerically since #675, is rejected on every path as well: the ISS TLE of 2021-01-20, the TEME state its SGP4
+/// gives at the TLE epoch, a window of 2 h from that epoch.
 /// </remarks>
 public class ManeuverEngineBindingTests
 {
@@ -63,10 +66,11 @@ public class ManeuverEngineBindingTests
     private static KeplerianElements Orbit(CelestialBody earth) =>
         new(7000e3, 0.01, 0.9, 0.0, 0.0, System.Math.PI, earth, Epoch, Frame.ICRF);
 
-    private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine, Vector3? front = null, Vector3? right = null)
+    private static Spacecraft NewSpacecraft(CelestialBody earth, out Engine engine, Vector3? front = null, Vector3? right = null,
+        IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit = null)
     {
         int id = NextId();
-        var spacecraft = new Spacecraft(id, "BIND" + -id, DryMass, 10000.0, new Clock("BIND" + -id, 65536), Orbit(earth),
+        var spacecraft = new Spacecraft(id, "BIND" + -id, DryMass, 10000.0, new Clock("BIND" + -id, 65536), orbit ?? Orbit(earth),
             bodyFront: front, bodyRight: right, bodyUp: front.HasValue ? Vector3.VectorZ : null);
         var tank = new FuelTank("TANK" + -id, "MODEL", "SN" + -id, Fuel, Fuel);
         spacecraft.AddFuelTank(tank);
@@ -83,29 +87,32 @@ public class ManeuverEngineBindingTests
     };
 
     // The activation paths: the call that must throw, or, for the batch, the error of its task
-    private static Exception Activate(string path, Spacecraft spacecraft, CelestialBody earth, Func<Integrator> integrator)
+    private static Exception Activate(string path, Spacecraft spacecraft, CelestialBody earth, Func<Integrator> integrator) =>
+        Activate(path, spacecraft, earth, integrator, Window);
+
+    private static Exception Activate(string path, Spacecraft spacecraft, CelestialBody earth, Func<Integrator> integrator, Window window)
     {
         CelestialItem[] bodies = [earth];
         switch (path)
         {
             case "Propagate":
-                return Record.Exception(() => spacecraft.Propagate(Window, bodies, integrator(), false, false, Output));
+                return Record.Exception(() => spacecraft.Propagate(window, bodies, integrator(), false, false, Output));
             case "PropagateDefault":
-                return Record.Exception(() => spacecraft.Propagate(Window, bodies, false, false, Output));
+                return Record.Exception(() => spacecraft.Propagate(window, bodies, false, false, Output));
             case "PropagateAsync":
-                return Record.Exception(() => spacecraft.PropagateAsync(Window, bodies, false, false, Output).GetAwaiter().GetResult());
+                return Record.Exception(() => spacecraft.PropagateAsync(window, bodies, false, false, Output).GetAwaiter().GetResult());
             case "Builder":
-                return Record.Exception(() => new CentralBodyPropagatorBuilder(Window, spacecraft, integrator(), Output).Build().Propagate());
+                return Record.Exception(() => new CentralBodyPropagatorBuilder(window, spacecraft, integrator(), Output).Build().Propagate());
             case "Constructor":
                 return Record.Exception(() =>
                 {
-                    using var propagator = new CentralBodyPropagator(Window, spacecraft, integrator(), bodies, false, false, Output);
+                    using var propagator = new CentralBodyPropagator(window, spacecraft, integrator(), bodies, false, false, Output);
                     propagator.Propagate();
                 });
             case "Scenario":
             case "ScenarioDefault":
             {
-                var scenario = new Scenario("BIND", new IO.Astrodynamics.Mission.Mission("BIND"), Window);
+                var scenario = new Scenario("BIND", new IO.Astrodynamics.Mission.Mission("BIND"), window);
                 scenario.AddCelestialItem(earth);
                 scenario.AddSpacecraft(spacecraft);
                 return Record.Exception(() => (path == "Scenario"
@@ -115,7 +122,7 @@ public class ManeuverEngineBindingTests
             case "Batch":
             case "BatchDefault":
             {
-                var task = new PropagationTask(spacecraft, Window, bodies, false, false, Output, path == "Batch" ? integrator : null);
+                var task = new PropagationTask(spacecraft, window, bodies, false, false, Output, path == "Batch" ? integrator : null);
                 var result = BatchPropagator.Propagate([task]).Results.Single();
                 Assert.False(result.Succeeded);
                 Assert.Null(result.Solution);
@@ -128,20 +135,103 @@ public class ManeuverEngineBindingTests
 
     public static IEnumerable<object[]> Cases()
     {
-        (string Path, string[] Integrators)[] paths =
-        [
-            ("Propagate", ["RK78", "VV"]), ("Builder", ["RK78", "VV"]), ("Constructor", ["RK78", "VV"]),
-            ("Scenario", ["RK78", "VV"]), ("Batch", ["RK78", "VV"]),
-            // The paths of the default integrator, Velocity-Verlet
-            ("PropagateDefault", ["VV"]), ("PropagateAsync", ["VV"]), ("ScenarioDefault", ["VV"]), ("BatchDefault", ["VV"])
-        ];
-        foreach (var (path, integrators) in paths)
+        foreach (var (path, integrators) in Paths)
         foreach (var integrator in integrators)
         foreach (var chain in new[] { "Impulse", "Attitude", "ImpulseSecond" })
         foreach (var engine in new[] { "UnattachedTank", "OtherSpacecraft" })
         {
             yield return [path, integrator, chain, engine];
         }
+    }
+
+    // The activation paths and their integrators
+    private static readonly (string Path, string[] Integrators)[] Paths =
+    [
+        ("Propagate", ["RK78", "VV"]), ("Builder", ["RK78", "VV"]), ("Constructor", ["RK78", "VV"]),
+        ("Scenario", ["RK78", "VV"]), ("Batch", ["RK78", "VV"]),
+        // The paths of the default integrator, Velocity-Verlet
+        ("PropagateDefault", ["VV"]), ("PropagateAsync", ["VV"]), ("ScenarioDefault", ["VV"]), ("BatchDefault", ["VV"])
+    ];
+
+    public static IEnumerable<object[]> TleOrTemeCases()
+    {
+        foreach (var (path, integrators) in Paths)
+        foreach (var integrator in integrators)
+        foreach (var orbit in new[] { "Tle", "Teme" })
+        foreach (var engine in new[] { "UnattachedTank", "OtherSpacecraft" })
+        {
+            yield return [path, integrator, orbit, engine];
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(TleOrTemeCases))]
+    public void EngineNotOnSpacecraft_TleOrTemeOrbit_Throws(string path, string integratorName, string orbitKind, string engineKind)
+    {
+        // Arrange: a TLE spacecraft starts from SGP4 at the window start on the Earth of the TLE, a TEME state from itself,
+        // both rotated once to ICRF (#675); a valid run on the spacecraft's own engine, whose state the rejected call must
+        // leave as it was
+        var integrator = IntegratorOf(integratorName);
+        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        var epoch = tle.Epoch.ToTDB();
+        var window = new Window(epoch, epoch.AddSeconds(7200.0));
+        CelestialBody earth;
+        IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit;
+        if (orbitKind == "Tle")
+        {
+            earth = (CelestialBody)tle.Observer;
+            orbit = tle;
+        }
+        else
+        {
+            earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var teme = tle.ToStateVector(epoch);
+            Assert.Equal(Frame.TEME, teme.Frame);
+            orbit = new StateVector(teme.Position, teme.Velocity, earth, epoch, Frame.TEME);
+        }
+
+        var spacecraft = NewSpacecraft(earth, out var ownEngine, orbit: orbit);
+        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, ownEngine));
+        spacecraft.Propagate(window, [earth], integrator(), false, false, Output);
+        Assert.Single(spacecraft.ExecutedManeuvers);
+
+        var other = NewSpacecraft(earth, out var otherEngine);
+        var foreignEngine = engineKind == "OtherSpacecraft"
+            ? otherEngine
+            : new Engine("LOOSE", "MODEL", "SN-LOOSE", Isp, 5.0, new FuelTank("LOOSE", "MODEL", "SN-LOOSE", Fuel, Fuel));
+        spacecraft.SetStandbyManeuver(new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, foreignEngine));
+
+        var ownTank = spacecraft.FuelTanks.Single();
+        var states = spacecraft.InterpolatedStatesWindow;
+        var mid = epoch.AddSeconds(3600.0);
+        var midState = spacecraft.GetGeometricStateRelativeTo(mid, earth);
+        var lastPropagation = spacecraft.LastPropagation;
+        var record = spacecraft.Frame.GetStateOrientationsToICRF().ToArray();
+        var executed = spacecraft.ExecutedManeuvers.ToArray();
+        double ownQuantity = ownTank.Quantity;
+        double foreignQuantity = foreignEngine.FuelTank.Quantity;
+
+        // Act
+        var exception = Activate(path, spacecraft, earth, integrator, window);
+
+        // Assert: rejected before anything changes, the engine and the spacecraft named
+        var rejected = Assert.IsType<InvalidOperationException>(exception);
+        Assert.Contains(foreignEngine.Name, rejected.Message);
+        Assert.Contains(spacecraft.Name, rejected.Message);
+        Assert.True(spacecraft.IsPropagated);
+        Assert.NotNull(states);
+        Assert.Equal(states, spacecraft.InterpolatedStatesWindow);
+        var midAfter = spacecraft.GetGeometricStateRelativeTo(mid, earth);
+        Assert.Equal(midState.Position, midAfter.Position);
+        Assert.Equal(midState.Velocity, midAfter.Velocity);
+        Assert.Same(lastPropagation, spacecraft.LastPropagation);
+        Assert.Equal(record, spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+        Assert.Equal(executed, spacecraft.ExecutedManeuvers.ToArray());
+        Assert.Equal(ownQuantity, ownTank.Quantity);
+        Assert.Equal(foreignQuantity, foreignEngine.FuelTank.Quantity);
+        Assert.Equal(Fuel, other.FuelTanks.Single().Quantity);
+        Assert.Empty(other.ExecutedManeuvers);
     }
 
     [Theory]
