@@ -14,6 +14,7 @@ using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.SSA;
 using IO.Astrodynamics.Tests.Propagators.Variational;
 using Xunit;
+using Xunit.Abstractions;
 using Matrix = IO.Astrodynamics.Math.Matrix;
 
 namespace IO.Astrodynamics.Tests.SSA;
@@ -29,11 +30,13 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
 
     private readonly ConjunctionCovarianceCase _case;
     private readonly ReferenceCases _cases;
+    private readonly ITestOutputHelper _output;
 
-    public ConjunctionCovarianceEdgeTests(ConjunctionCovarianceCase @case, ReferenceCases cases)
+    public ConjunctionCovarianceEdgeTests(ConjunctionCovarianceCase @case, ReferenceCases cases, ITestOutputHelper output)
     {
         _case = @case;
         _cases = cases;
+        _output = output;
     }
 
     [Fact]
@@ -307,6 +310,74 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         Assert.Equal(CovarianceSource.Propagated, covariance.Source);
         Assert.Equal(Frames.Frame.ECLIPTIC_J2000, solution.Frame);
         Assert.Equal(encounterState.Covariance.Value.ToArray(), covariance.CovarianceInertial.Value.ToArray());
+    }
+
+    [Fact]
+    public void TemeInitialCovariance_EqualsItsIcrfTwin()
+    {
+        // Arrange: the protected participant on an osculating TEME state with P0 (#675: its propagation threw "must be
+        // defined in inertial frame"), and its twin rotated by ToFrame(ICRF), P0 through diag(R, R); propagated in RK7(8)
+        var teme = _case.ProtectedStart.ToFrame(Frames.Frame.TEME).ToStateVector();
+        var icrf = teme.ToFrame(Frames.Frame.ICRF).ToStateVector();
+        var fromTeme = ConjunctionCovarianceCase.NewSpacecraft(-6941, teme);
+        var twin = ConjunctionCovarianceCase.NewSpacecraft(-6942, icrf);
+        var secondary = ConjunctionCovarianceCase.NewSpacecraft(-6943, _case.SecondaryStart);
+        var temeSolution = _case.Propagate(fromTeme);
+        var twinSolution = _case.Propagate(twin);
+        var secondarySolution = _case.Propagate(secondary);
+        var options = new ConjunctionAnalysisOptions { ComputeNonlinearityIndex = true };
+
+        // Act: both overload families, the spacecraft and their solutions
+        var encounters = new[]
+        {
+            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(fromTeme), secondary, ConjunctionCovarianceCase.AnalysisWindow, options),
+            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twin), secondary, ConjunctionCovarianceCase.AnalysisWindow, options),
+            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(fromTeme), temeSolution, secondary, secondarySolution,
+                ConjunctionCovarianceCase.AnalysisWindow, options),
+            ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twin), twinSolution, secondary, secondarySolution,
+                ConjunctionCovarianceCase.AnalysisWindow, options)
+        };
+
+        // Assert: the TCA, the propagated covariance at TCA, its source, the Pc and the index of the twin, bit for bit
+        for (int k = 0; k < 4; k += 2)
+        {
+            var (actual, expected) = (encounters[k], encounters[k + 1]);
+            Assert.Equal(CovarianceSource.Propagated, actual.EncounterState.ProtectedCovariance.Source);
+            Assert.Equal(expected.EncounterState.Epoch, actual.EncounterState.Epoch);
+            Assert.Equal(expected.ProtectedCovariance.CovarianceInertial.Value.ToArray(), actual.ProtectedCovariance.CovarianceInertial.Value.ToArray());
+            Assert.Equal(expected.CollisionRisk.ProbabilityOfCollision, actual.CollisionRisk.ProbabilityOfCollision);
+            Assert.NotNull(actual.EncounterState.ProtectedCovariance.NonlinearityIndex);
+            Assert.Equal(expected.EncounterState.ProtectedCovariance.NonlinearityIndex, actual.EncounterState.ProtectedCovariance.NonlinearityIndex);
+        }
+
+        // Velocity-Verlet: the covariance held in RTN from the TEME state as given, the RTN basis invariant under the
+        // rotation of r and v; equal to the twin's within the rounding of the two rotations
+        var temeVv = ConjunctionCovarianceCase.NewSpacecraft(-6944, teme);
+        var twinVv = ConjunctionCovarianceCase.NewSpacecraft(-6945, icrf);
+        foreach (var spacecraft in new[] { temeVv, twinVv })
+        {
+            spacecraft.Propagate(ConjunctionCovarianceCase.PropagationWindow, new CelestialItem[] { _case.Earth }, false, false,
+                TimeSpan.FromSeconds(60.0));
+        }
+
+        var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(temeVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
+        var twinHeld = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twinVv), secondary, ConjunctionCovarianceCase.AnalysisWindow);
+        Assert.Equal(CovarianceSource.InitialStateHeldInRtn, held.EncounterState.ProtectedCovariance.Source);
+        Assert.Equal(twinHeld.EncounterState.Epoch, held.EncounterState.Epoch);
+        var a = held.ProtectedCovariance.CovarianceInertial.Value;
+        var b = twinHeld.ProtectedCovariance.CovarianceInertial.Value;
+        double difference = 0.0, norm = 0.0;
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                difference += (a.Get(i, j) - b.Get(i, j)) * (a.Get(i, j) - b.Get(i, j));
+                norm += b.Get(i, j) * b.Get(i, j);
+            }
+        }
+
+        _output.WriteLine($"MEASURE ConjunctionCovarianceEdgeTests.TemeInitialCovariance_EqualsItsIcrfTwin: held in RTN, {System.Math.Sqrt(difference / norm):E2} relative");
+        Assert.True(System.Math.Sqrt(difference / norm) < 1e-12, $"{System.Math.Sqrt(difference / norm):E2}");
     }
 
     [Fact]

@@ -4,6 +4,7 @@ using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.CCSDS.OPM;
 using IO.Astrodynamics.Math;
+using IO.Astrodynamics.Propagator;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Physics;
 using IO.Astrodynamics.Propagator.Events;
@@ -73,11 +74,17 @@ namespace IO.Astrodynamics.Maneuver
         }
 
         /// <exception cref="ArgumentNullException"><paramref name="targetOrbit"/> or <paramref name="engine"/> is null.</exception>
-        /// <exception cref="ArgumentException">The spacecraft of the engine and the target orbit are defined in different frames.</exception>
+        /// <exception cref="ArgumentException">The target orbit is defined neither in the frame of the initial orbit of the
+        /// spacecraft of the engine nor in the frame it is propagated in (ICRF for a TLE or a TEME state, #675).</exception>
+        /// <remarks>
+        /// On a spacecraft whose initial orbit is a TLE or a TEME state, the propagation integrates in ICRF and takes the
+        /// target in ICRF: a target in TEME is accepted here, as before, and rejected when the propagation is built.
+        /// </remarks>
         protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
             RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, engine)
         {
-            if (engine.FuelTank.Spacecraft != null && engine.FuelTank.Spacecraft.InitialOrbitalParameters.Frame != targetOrbit.Frame)
+            var initial = engine.FuelTank.Spacecraft?.InitialOrbitalParameters;
+            if (initial != null && initial.Frame != targetOrbit.Frame && PropagatorBase.PropagationFrame(initial) != targetOrbit.Frame)
             {
                 throw new ArgumentException("Spacecraft and target orbit must be defined in the same frame");
             }

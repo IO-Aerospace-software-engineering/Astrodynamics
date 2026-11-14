@@ -108,6 +108,47 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         /// <summary>
+        /// On a spacecraft whose initial orbit is a TLE or an osculating TEME state, propagated in ICRF (#675), the target
+        /// orbit is accepted in the frame of the initial orbit (TEME, as before) or in ICRF, the frame of the propagation,
+        /// which threw before; any other frame is rejected, as before. A set of mean elements in TEME is not propagated in
+        /// ICRF: an ICRF target is rejected on it, as before.
+        /// </summary>
+        [Theory]
+        [InlineData(nameof(ApsidalAlignmentManeuver))]
+        [InlineData(nameof(PlaneAlignmentManeuver))]
+        [InlineData(nameof(PhasingManeuver))]
+        public void OnATleOrTemeSpacecraft_TheTargetIsTakenInTemeOrIcrf(string maneuver)
+        {
+            var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+            var sgp4 = tle.ToOsculating();
+            var orbits = new IO.Astrodynamics.OrbitalParameters.OrbitalParameters[]
+            {
+                tle, new StateVector(sgp4.Position, sgp4.Velocity, tle.Observer, sgp4.Epoch, Frames.Frame.TEME), tle.ToMeanKeplerianElements()
+            };
+            for (int k = 0; k < orbits.Length; k++)
+            {
+                var spc = new Spacecraft(-1553 - k, $"Impulse{1553 + k}", 1000.0, 3000.0, new Clock($"Clk{1553 + k}", 65536), orbits[k]);
+                spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+                spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+                var engine = spc.Engines.First();
+                bool mean = orbits[k] is KeplerianElements { ElementsType: OrbitalElementsType.Mean };
+
+                Assert.Equal(Frames.Frame.TEME, Create(maneuver, Target(Frames.Frame.TEME), engine).TargetOrbit.Frame);
+                if (mean)
+                {
+                    Assert.Throws<ArgumentException>(() => Create(maneuver, Target(Frames.Frame.ICRF), engine));
+                }
+                else
+                {
+                    Assert.Equal(Frames.Frame.ICRF, Create(maneuver, Target(Frames.Frame.ICRF), engine).TargetOrbit.Frame);
+                }
+
+                Assert.Throws<ArgumentException>(() => Create(maneuver, Target(Frames.Frame.ECLIPTIC_J2000), engine));
+            }
+        }
+
+        /// <summary>
         /// <see cref="ImpulseManeuver.TryExecute"/> leaves the state it is given unchanged and returns the state after the
         /// impulse as a new state (#588): before, it added the delta-V to the velocity of the given state, so that a
         /// spacecraft built on that state, or on Keplerian elements whose cached state it was, started its next
