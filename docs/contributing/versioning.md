@@ -1368,10 +1368,11 @@ release are listed under **Known limitations**.
   of the element conversions, is unchanged
   ([#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655)). Native change, no signature
   change.
-  - **Test:** C++ `API.GetBodyInformationGmWithoutRadii` (Pallas, Nix: the GM of `bodvcd_c` and the frame of `cnmfrm_c`
-    called by the test, radii 0), `API.GetBodyInformationRadiiWithoutGm` (Elara: GM 0, the 40 km radii of
-    `pck00011.tpc`, IAU_ELARA), `API.GetBodyInformationSolarSystemBarycenterGm` (the sum of `bodvcd_c` over 1 to 10, bit
-    for bit); `NativeAbortGuardTests.GetCelestialBodyInfo_GmWithoutRadii_ReadsTheKernelGm` (the 8 bodies against the GM
+  - **Test:** C++ `API.GetBodyInformationGmWithoutRadii` (Pallas, Nix: the GM against the text of `gm_de431.tpc`, the
+    frame of `cnmfrm_c` called by the test, radii 0), `API.GetBodyInformationRadiiWithoutGm` (Elara: GM 0, the 40 km
+    radii of `pck00011.tpc`, IAU_ELARA), `API.GetBodyInformationSolarSystemBarycenterGm` (the sum of the text over 1 to
+    10), the GMs within 10 ulp of the text (`SpiceParseUlps` of `APITests.cpp`: at worst 4 ulp on Linux, 4 on Windows and
+    5 on macOS arm64, the sum over 1 to 10, CI run 43602458842); `NativeAbortGuardTests.GetCelestialBodyInfo_GmWithoutRadii_ReadsTheKernelGm` (the 8 bodies against the GM
     parsed from the text of `gm_de440.tpc`, within 10 ulp: CSPICE's own parse is up to 5 ulp off the correctly rounded
     value, Jupiter barycentre, on Linux, Windows and macOS arm64 (CI run 43600640037), and 1 ulp for Nix, Kerberos and
     Pallas; the frames of `cnmfrm_c`, three reads equal),

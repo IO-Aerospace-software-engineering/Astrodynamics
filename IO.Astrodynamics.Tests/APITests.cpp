@@ -404,8 +404,9 @@ static std::int64_t UlpDistance(double a, double b)
 // The bound, in ulp, of a GM the library reads through CSPICE against the kernel text parsed by the C++ library (correctly
 // rounded): CSPICE's parse of the decimal text is not. bodvcd_c on gm_de431.tpc, times 1e9, is 0 or 1 ulp from it for the
 // barycentres 1 to 9, Pallas, Nix, the Earth and the Moon, 4 for the Sun and for the sum over 1 to 10 (Linux x64,
-// 2026-11-14); provisional: the tests print each body's ulp (MEASURE #672) for the build-native jobs of Linux, Windows and
-// macOS arm64 to set it from, at twice their worst; until then the bound of SpiceParseUlps of the .NET tests
+// 2026-11-14). The tests print each body's ulp (MEASURE #672): at worst 4 ulp on Linux, 4 on Windows and 5 on macOS
+// arm64, the sum over 1 to 10 on each (build-native jobs of CI run 43602458842 at 33b9faf, 2026-11-14; the macOS x64
+// job cross-compiles on the arm64 runner and does not run the C++ tests); twice that worst
 inline constexpr std::int64_t SpiceParseUlps = 10;
 
 // The GM against the text of gm_de431.tpc, no radii where pck00011.tpc has none, and the built-in body-fixed frame given by
