@@ -35,13 +35,15 @@ internal sealed class FieldOfViewEvaluator
     /// <param name="aberration">The aberration correction.</param>
     /// <exception cref="ArgumentException">The target is the instrument's spacecraft, or is modeled as an ellipsoid without
     /// radii.</exception>
-    /// <exception cref="InvalidOperationException">The field of view cannot be searched (<see cref="FieldOfViewSearch.CheckField"/>).</exception>
+    /// <exception cref="InvalidOperationException">The field of view cannot be searched (<see cref="FieldOfViewSearch.CheckField"/>),
+    /// or the spacecraft has no attitude (<see cref="FieldOfViewSearch.CheckAttitude"/>).</exception>
     internal FieldOfViewEvaluator(Instrument instrument, ILocalizable target, ShapeType targetShape, Frame targetFrame, Aberration aberration)
     {
         ArgumentNullException.ThrowIfNull(instrument);
         ArgumentNullException.ThrowIfNull(target);
         FieldOfViewSearch.CheckTarget(instrument, target, targetShape);
         _crossAngle = FieldOfViewSearch.CheckField(instrument);
+        FieldOfViewSearch.CheckAttitude(instrument);
         _instrument = instrument;
         _target = new OccultationBodyModel(target, targetShape, targetFrame);
         _reader = new ApparentPositionReader(instrument.Spacecraft, aberration, true, true);

@@ -578,7 +578,8 @@ public class AttitudeRecordTests
     #region The additions of the review and the reads of #523
 
     /// <summary>
-    /// Reads before the propagation (an instrument's field of view before the start, an orientation 100 s in), during it (on
+    /// Reads before the propagation (an instrument's field of view before the start, which throws without an attitude since
+    /// #682, an orientation 100 s in), during it (on
     /// another thread) and after it (every output and 3.3 s after it, past the end, a managed field-of-view search) leave the
     /// attitude record and the CK of a twin without reads (#523): on the base, the CK could not be written (ICRF,
     /// SPICE(TIMESOUTOFORDER)) or aborted the process (ECLIPJ2000).
@@ -602,7 +603,9 @@ public class AttitudeRecordTests
             Before = sc =>
             {
                 var start = sc.InitialOrbitalParameters.Epoch;
-                sc.Instruments.First().IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None);
+                // Before the propagation the spacecraft has no attitude to test the field of view with (#682): the read
+                // throws, and leaves the record as the others do
+                Assert.Throws<InvalidOperationException>(() => sc.Instruments.First().IsInFOV(start.AddSeconds(-10.0), earth, Aberration.None));
                 sc.GetOrientation(Frame.ICRF, start.AddSeconds(100.0));
                 sc.Frame.GetStateOrientationToICRF(start.AddSeconds(-10.0));
             },

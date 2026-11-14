@@ -393,18 +393,11 @@ namespace IO.Astrodynamics.Surface
                     };
                     break;
                 case CoordinateSystem.Planetographic:
+                    // CSPICE's PLANETOGRAPHIC (#682): the sense of the longitude of the observer's body read once, at the start
+                    bool positiveWest = observer is CelestialBody observerBody &&
+                                        GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
                     evaluateCoordinates = date =>
-                    {
-                        var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                        var planetographic = stateVector.ToPlanetocentric(aberration);
-                        return coordinate switch
-                        {
-                            Coordinate.Latitude => planetographic.Latitude,
-                            Coordinate.Longitude => planetographic.Longitude,
-                            Coordinate.Radius => planetographic.Radius,
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-                    };
+                        GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration).ToStateVector(), coordinate, positiveWest);
                     break;
             }
 
@@ -412,46 +405,59 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Find when illumination constraint occurs
+        /// Find when illumination constraint occurs: the windows where the incidence angle of the source at the site
+        /// satisfies the constraint, by CSPICE's <c>gfilum_c</c> for a site of the kernels, by the managed search otherwise.
         /// </summary>
+        /// <remarks>
+        /// The emission and phase angles are angles at the point towards an observer (<c>gfilum_c</c> Particulars: the
+        /// vector "from the surface point to the observer"), which this search does not take: its observer would be the
+        /// site itself, where that vector is zero and the angles are undefined, so it throws for them (#682; before 11.0.0
+        /// the managed path measured them as 0, a window of the whole search, and <c>gfilum_c</c> was given the site as its
+        /// observer). With an observer, search them with
+        /// <see cref="SpiceAPI.FindWindowsOnIlluminationConstraint"/> (the observer's NAIF id, for objects of the kernels),
+        /// or with <see cref="GeometryFinder"/>'s <c>FindWindowsWithCondition</c> on <see cref="IlluminationEmission"/> or
+        /// <see cref="IlluminationPhase"/> and the observer.
+        /// </remarks>
         /// <param name="searchWindow"></param>
-        /// <param name="illuminationType"></param>
+        /// <param name="illuminationType">The angle: <see cref="IlluminationAngle.Incidence"/>.</param>
         /// <param name="relationalOperator"></param>
         /// <param name="value"></param>
         /// <param name="adjustValue"></param>
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <param name="illuminationSource"></param>
-        /// <param name="method"></param>
+        /// <param name="method">ELLIPSOID, the only method, whatever its case and its leading or trailing whitespace
+        /// (<c>gfilum_c</c> Detailed_Input <c>method</c>, #682).</param>
         /// <returns></returns>
+        /// <exception cref="ArgumentException"><paramref name="illuminationType"/> is <see cref="IlluminationAngle.Emission"/> or
+        /// <see cref="IlluminationAngle.Phase"/>, which need an observer; or <paramref name="method"/> is not ELLIPSOID, which
+        /// before 11.0.0 gave no window on the path of <c>gfilum_c</c> and was ignored on the managed one (#682).</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="method"/> is null.</exception>
         public IEnumerable<Window> FindWindowsOnIlluminationConstraint(in Window searchWindow, IlluminationAngle illuminationType,
             RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize, ILocalizable illuminationSource,
             string method = "Ellipsoid")
         {
+            if (illuminationType is IlluminationAngle.Emission or IlluminationAngle.Phase)
+            {
+                throw new ArgumentException(
+                    $"The {illuminationType} angle of {Name} is measured towards an observer, which this search does not take (it would be the site itself, where the angle is undefined). Search it with SpiceAPI.FindWindowsOnIlluminationConstraint and the observer's NAIF id, or with GeometryFinder.FindWindowsWithCondition on IlluminationEmission or IlluminationPhase with an observer.",
+                    nameof(illuminationType));
+            }
+
+            method = SpiceAPI.CheckIlluminationMethod(method);
             if (_isFromKernel && illuminationSource is INaifObject src)
                 return SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(
                     searchWindow, NaifId, CelestialBody.NaifId, CelestialBody.Frame,
                     Planetodetic, illuminationType, relationalOperator, value, adjustValue,
                     aberration, stepSize, src.NaifId, method);
 
-            Func<Time, double> evaluateIllumination = null;
-
-            switch (illuminationType)
+            if (illuminationType != IlluminationAngle.Incidence)
             {
-                case IlluminationAngle.Phase:
-                    evaluateIllumination = date => IlluminationPhase(date, illuminationSource, this, aberration);
-                    break;
-                case IlluminationAngle.Incidence:
-                    evaluateIllumination = date => IlluminationIncidence(date, illuminationSource, aberration);
-                    break;
-                case IlluminationAngle.Emission:
-                    evaluateIllumination = date => IlluminationEmission(date, this, aberration);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
+                throw new ArgumentOutOfRangeException(nameof(illuminationType), illuminationType, null);
             }
 
-            return _geometryFinder.FindWindowsWithCondition(searchWindow, evaluateIllumination, relationalOperator, value, adjustValue, stepSize);
+            return _geometryFinder.FindWindowsWithCondition(searchWindow, date => IlluminationIncidence(date, illuminationSource, aberration), relationalOperator,
+                value, adjustValue, stepSize);
         }
 
         /// <summary>

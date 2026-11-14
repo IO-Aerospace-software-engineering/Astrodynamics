@@ -57,13 +57,27 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; internal set; }
 
     /// <summary>
-    /// A collection of satellites orbiting the celestial item.
+    /// The satellites orbiting the celestial item, held weakly, by instance (#676).
     /// </summary>
-    private readonly HashSet<CelestialItem> _satellites = new();
+    private readonly WeakSatellites _satellites = new();
 
     /// <summary>
-    /// Gets a read-only collection of satellites orbiting the celestial item.
+    /// Whether the item is listed by an observer of any kind (the natural-body constructor), or by a
+    /// <see cref="CelestialBody"/> observer only (the constructor of custom parameters).
     /// </summary>
+    private readonly bool _listedByAnyObserver;
+
+    /// <summary>
+    /// Gets a read-only collection of satellites orbiting the celestial item: the instances whose initial orbital
+    /// parameters have it as observer, by reference, whose constructor completed (#676).
+    /// </summary>
+    /// <remarks>
+    /// A live view: the collection holds its items weakly, so that an item referenced nowhere else leaves it when it is
+    /// collected, and is safe across threads, constructions about one body on several threads included. Two items of one
+    /// NAIF id are both listed. The order of the enumeration is not specified; <see cref="IReadOnlyCollection{T}.Count"/>
+    /// enumerates. Before 11.0.0 it held its items strongly in a set compared by NAIF id, without a lock, and listed an
+    /// item whose constructor then threw.
+    /// </remarks>
     public IReadOnlyCollection<CelestialItem> Satellites => _satellites;
 
     /// <summary>
@@ -140,6 +154,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
     {
         _dataProvider = Configuration.Instance.DataProvider;
+        _listedByAnyObserver = true;
         ExtendedInformation = _dataProvider.GetCelestialBodyInfo(naifId);
 
         NaifId = naifId;
@@ -158,8 +173,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
             InitialOrbitalParameters = ReadStateAboutBarycenter(epoch, frame);
-
-        (InitialOrbitalParameters?.Observer as CelestialItem)?._satellites.Add(this);
     }
 
     // The state about the barycenter of the body's system; null when the loaded kernels do not chain the body to it (Mars
@@ -206,9 +219,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         Mass = mass;
         GM = mass * Constants.G;
         InitialOrbitalParameters = initialOrbitalParameters;
-
-
-        (InitialOrbitalParameters?.Observer as CelestialBody)?._satellites.Add(this);
         GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
     }
 
@@ -260,6 +270,20 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new CelestialBody(naifId);
     }
 
+    /// <summary>
+    /// Lists the item by the observer of its initial orbital parameters: any observer for the natural-body constructor, a
+    /// <see cref="CelestialBody"/> only for the constructor of custom parameters. The last statement of each constructor
+    /// of a derived class that does not chain to another one, after every check, so that a constructor that throws lists
+    /// nothing (#676).
+    /// </summary>
+    private protected void RegisterWithObserver()
+    {
+        var observer = _listedByAnyObserver
+            ? InitialOrbitalParameters?.Observer as CelestialItem
+            : InitialOrbitalParameters?.Observer as CelestialBody;
+        observer?.AddSatellite(this);
+    }
+
     internal void AddSatellite(CelestialItem celestialItem)
     {
         _satellites.Add(celestialItem);
@@ -273,6 +297,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Get ephemeris
     /// </summary>
+    /// <remarks>
+    /// The states every <paramref name="stepSize"/> from the start of the window, placed in its calendar
+    /// (<c>StartDate + i · stepSize</c>), up to its end. Across a leap second the window's <see cref="Window.Length"/> counts
+    /// one second more than its calendar: the end bounds the samples, so that none lies past it (#682; before 11.0.0 the
+    /// last state of such a window could lie one second past its end).
+    /// </remarks>
     /// <param name="searchWindow"></param>
     /// <param name="observer"></param>
     /// <param name="frame"></param>
@@ -281,11 +311,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
+        // An upper bound of the count: the Length counts the leap seconds the calendar placement does not
         var occurences = (int)((searchWindow.Length / stepSize) + 1);
         var ephemeris = new List<OrbitalParameters.OrbitalParameters>(occurences);
         for (int i = 0; i < occurences; i++)
         {
             var epoch = searchWindow.StartDate + stepSize * i;
+            if (epoch > searchWindow.EndDate)
+            {
+                break;
+            }
+
             ephemeris.Add(GetEphemeris(epoch, observer, frame, aberration));
         }
 
@@ -1065,18 +1101,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 };
                 break;
             case CoordinateSystem.Planetographic:
+                // CSPICE's PLANETOGRAPHIC (#682): the sense of the longitude of the observer's body read once, at the start
+                bool positiveWest = observer is CelestialBody observerBody &&
+                                    GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
                 evaluateCoordinates = date =>
-                {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                    var planetographic = stateVector.ToPlanetocentric(aberration);
-                    return coordinate switch
-                    {
-                        Coordinate.Latitude => planetographic.Latitude,
-                        Coordinate.Longitude => planetographic.Longitude,
-                        Coordinate.Radius => planetographic.Radius,
-                        _ => throw new ArgumentOutOfRangeException()
-                    };
-                };
+                    GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration).ToStateVector(), coordinate, positiveWest);
                 break;
         }
 
@@ -1087,12 +1116,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     #region Operators
 
+    /// <summary>
+    /// The identifier, name, mass (kg) and GM (m^3/s^2) of the item, one "title : value" line each, every number in the
+    /// shortest form that parses back to its property in the invariant culture (#681: the mass and GM were printed to 7
+    /// significant digits, GM under "m^3.s^2").
+    /// </summary>
     public override string ToString()
     {
         return $"{"Identifier :",TITLE_WIDTH} {NaifId,-VALUE_WIDTH}{Environment.NewLine}" +
                $"{"Name :",TITLE_WIDTH} {Name,-VALUE_WIDTH}{Environment.NewLine}" +
-               $"{"Mass (kg) :",TITLE_WIDTH} {Mass.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}" +
-               $"{"GM (m^3.s^2):",TITLE_WIDTH} {GM.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}";
+               $"{"Mass (kg) :",TITLE_WIDTH} {Mass.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}" +
+               $"{"GM (m^3/s^2) :",TITLE_WIDTH} {GM.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}";
     }
 
     public bool Equals(CelestialItem other)
