@@ -38,15 +38,15 @@ public class KernelWindowSearchTests
     // The managed search at 1 µs against the reference (GeometryReference.ThresholdCrossing)
     private const double ManagedThreshold = GeometryReference.ThresholdCrossing;
 
-    // Provisional, twice the worst value on Linux x64 (3.58e-7 s, 2026-11-14), until the CI of the three platforms has
-    // printed its MEASURE lines: the managed search at 1 µs on the LEO propagated by RK7(8) at 1e-12 about a point-mass
-    // Earth, against the CSPICE windows of its two-body orbit (#678)
+    // Twice the worst value over Linux x64, Windows x64 and macOS arm64 (3.576e-7 s, 3.576e-7 s and 3.576e-7 s, the elevation
+    // at a 10 min step; CI run 43595586388, 2026-11-14), rounded up: the managed search at 1 µs on the LEO propagated by
+    // RK7(8) at 1e-12 about a point-mass Earth, against the CSPICE windows of its two-body orbit (#678)
     private const double PropagatedThreshold = 7.2e-7;
 
-    // Provisional, twice the worst value on Linux x64 (3.58e-7 s, the range of the site built from DSS-13's coordinates at a
-    // 20 min step, 2026-11-14), until the CI of the three platforms has printed its MEASURE lines: the managed search at 1 µs
-    // at steps much longer than its windows (the LEO from DSS-13 and from a site built from its coordinates, the incidence
-    // of a point of DSS-13's coordinates), against CSPICE at 1e-9 s (#678)
+    // Twice the worst value over Linux x64, Windows x64 and macOS arm64 (3.576e-7 s, 3.576e-7 s and 3.576e-7 s, the range of
+    // the site built from DSS-13's coordinates at a 20 min step; CI run 43595586388, 2026-11-14), rounded up: the managed
+    // search at 1 µs at steps much longer than its windows (the LEO from DSS-13 and from a site built from its coordinates,
+    // the incidence of a point of DSS-13's coordinates), against CSPICE at 1e-9 s (#678)
     private const double ShortWindowThreshold = 7.2e-7;
 
     private static readonly Lazy<Dictionary<string, double[][]>> Reference = new(() =>
