@@ -439,15 +439,17 @@ if (atmosphere.Details is NrlmsiseDetails details)
 }
 
 // Via CelestialBody: its configured model; an Earth without one takes NRLMSISE-00 at nominal space weather with a
-// full context, the atmosphere of its drag (#674)
+// full context, the atmosphere of its drag (#674), and the U.S. Standard Atmosphere 1976, its base atmosphere, with an
+// altitude only or a partial context (decided by S. Guillet, 2026-11-14)
 var earth = PlanetsAndMoons.EARTH_BODY;
 var atm = earth.GetAtmosphere(context);  // NRLMSISE-00 nominal: EARTH_BODY has no model
+var low = earth.GetAtmosphere(10000.0);  // U.S. Standard Atmosphere 1976: an altitude only
 ```
 
 **Model Selection Guidelines**
 - Use `EarthStandardAtmosphere` for quick calculations without time-dependent effects (the mean 1976 standard, to 1000 km)
 - Use `Nrlmsise00Model` for accurate high-altitude modeling, time-varying conditions, or space weather effects
-- `CelestialBody.GetAtmosphere(context)` reads the body's model; an Earth without one takes NRLMSISE-00 at nominal space weather with a full context
+- `CelestialBody.GetAtmosphere(context)` reads the body's model; an Earth without one takes NRLMSISE-00 at nominal space weather with a full context, the U.S. Standard Atmosphere 1976 otherwise (an altitude only, a partial context); a null context, or another body without a model, gives NaN, 0 and 0
 - Use `MarsStandardAtmosphere` for preliminary Mars mission analysis below about 100 km (entry); not for orbit lifetime
 
 ### Geopotential Gravity Model

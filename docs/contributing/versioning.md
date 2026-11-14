@@ -1390,9 +1390,14 @@ release are listed under **Known limitations**.
   nominal space weather for any Earth: 5.24e-12 kg/m³ at 400 km for an Earth with `EarthStandardAtmosphere` (2.80e-12,
   the 2.803e-12 of the U.S. Standard Atmosphere 1976 table) or with NRLMSISE-00 at F10.7 250 and Ap 100 (1.82e-11), while
   `GetAirDensity` returned 0 on a model-less Earth. The configured model now answers every getter, and a model-less Earth
-  with a full context the NRLMSISE-00 of its drag. `CelestialBodyAtmosphereTests` checks the US 1976 Earth against table I
-  from 86 to 1000 km (within the 5e-4 of `EarthStandardAtmosphereReferenceTests`), a configured NRLMSISE-00 against its
-  own values, details included, and the one atmosphere of a model-less Earth across its getters and its drag.
+  with a full context the NRLMSISE-00 of its drag; with a context that holds the altitude without the geodetic position
+  or the epoch (the altitude overloads included), where it returned NaN, 0 and 0, it answers with the U.S. Standard
+  Atmosphere 1976, its base atmosphere (an Earth always has at least the base atmosphere, decided by S. Guillet,
+  2026-11-14). `CelestialBodyAtmosphereTests` checks the US 1976 Earth against table I from 86 to 1000 km (within the
+  5e-4 of `EarthStandardAtmosphereReferenceTests`), a configured NRLMSISE-00 against its own values, details included,
+  the one atmosphere of a model-less Earth across its getters and its drag, and the altitude-only and partial contexts
+  of a model-less Earth: `EarthStandardAtmosphere`'s own values bit for bit, and table I within the 4.2e-4 the model
+  states at 0, 11, 86, 400 and 1000 km.
 - **A reused integrator kept the forces of every run** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674)). The force-building paths added their forces to the
   given integrator, which nothing cleared: a second run with one `RK78Integrator` held 2 forces and ended 8.37e6 m from
   the first (8.23e6 m with a `VVIntegrator`), a second `CentralBodyPropagatorBuilder.Build()` doubled them, and a batch
@@ -1770,9 +1775,16 @@ release are listed under **Known limitations**.
 - **Breaking: `CelestialBody.GetAtmosphere` and the context getters read the body's model** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above): with a
   full context an Earth with a configured model returns that model (US 1976: 2.80e-12 kg/m³ at 400 km instead of
   5.24e-12), and on a model-less Earth `GetAirDensity`, `GetAirPressure` and `GetAirTemperature` return NRLMSISE-00 at
-  nominal space weather where they returned 0, 0 and NaN. An altitude-only or null context, and another body without a
-  model, still give NaN, 0 and 0 (`GetAtmosphere` of a model-less Earth threw `NullReferenceException` on a null
-  context). `HasAtmosphericModel` still says whether a model was given. Migration: none.
+  nominal space weather where they returned 0, 0 and NaN. On a model-less Earth, a context that holds the altitude
+  without the geodetic position or the epoch, and the altitude overloads (`GetAirDensity(double)`,
+  `GetAirPressure(double)`, `GetAirTemperature(double)`, `GetAtmosphere(double)`), return the U.S. Standard Atmosphere
+  1976 (`EarthStandardAtmosphere`, −5 to 1000 km and continued above) where they returned 0, 0 and NaN: 1.225 kg/m³,
+  101.325 kPa and 15 °C at sea level, 2.80e-12 kg/m³ at 400 km (decided by S. Guillet, 2026-11-14). It is not the
+  NRLMSISE-00 of the drag, which always has the full context, so no propagation moves. A null context, which holds no
+  altitude, and another body without a model, still give NaN, 0 and 0 (`GetAtmosphere` of a model-less Earth threw
+  `NullReferenceException` on a null context). `HasAtmosphericModel` still says whether a model was given. Migration:
+  to keep "no atmosphere" for an altitude-only read, test `HasAtmosphericModel` before reading; for the drag's
+  atmosphere, pass the geodetic position and the epoch (`AtmosphericContext.FromPlanetodetic`).
 - **Breaking: a force-building path rejects an integrator that holds forces or was already used** ([#674](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/674), Fixed above):
   `Spacecraft.Propagate` with an integrator, the constructors of `CentralBodyPropagator` with celestial bodies, the
   builder (a second `Build()` included) and the batch, Monte Carlo and scenario factories throw `ArgumentException`

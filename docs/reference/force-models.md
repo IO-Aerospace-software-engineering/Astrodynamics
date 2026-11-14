@@ -217,7 +217,7 @@ new ThermalRadiationPressure(spacecraft, emittingBody)
 | Model | Description |
 |-------|-------------|
 | `IAtmosphericModel` | Common interface for density queries |
-| `EarthStandardAtmosphere` | The U.S. Standard Atmosphere 1976 from −5 to 1000 km, of the altitude alone: its layers below 86 km joined by transitions of ±100 m, its thermosphere above (#437); a mean static model, not for orbit determination |
+| `EarthStandardAtmosphere` | The U.S. Standard Atmosphere 1976 from −5 to 1000 km, of the altitude alone: its layers below 86 km joined by transitions of ±100 m, its thermosphere above (#437); a mean static model, not for orbit determination; the base atmosphere of an Earth built without a model, which answers its altitude-only reads (`GetAtmosphere(double)`, a context without the geodetic position or the epoch), not its drag (decided by S. Guillet, 2026-11-14) |
 | `MarsStandardAtmosphere` | Simple Mars atmospheric model of the altitude: the NASA Glenn curve fit below 49.9 km, its branches joined over 500 m at 7 km (#433), the isothermal layer of Seiff (1982) at 139 K above; positive and decreasing at every altitude, but no thermosphere, so drag in orbit above about 120 km is underestimated (#431) |
 | `Nrlmsise00Model` | Time-varying Earth model for drag analysis (thread-safe, its calls serialized on a lock of the instance); at nominal space weather, the atmosphere of an Earth built without a model, one instance per thread |
 
