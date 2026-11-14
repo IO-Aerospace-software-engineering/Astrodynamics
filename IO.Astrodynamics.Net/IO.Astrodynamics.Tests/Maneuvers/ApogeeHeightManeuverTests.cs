@@ -20,8 +20,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             TestKernels.EnsureSolarSystem();
         }
 
-        // Relative agreements with the Hohmann closed form, measured on Linux x64 (2026-11-14): ΔV 1.33e-14, apogee radius
-        // after the burn 1.01e-15; twice the worst until the three CI platforms have printed their MEASURE lines (provisional)
+        // Relative agreements with the Hohmann closed form, worst: ΔV 1.33e-14, apogee radius after the burn 1.01e-15, on
+        // Linux x64, Windows x64 and macOS arm64 alike (CI run 43595588856, 2026-11-14); twice the worst
         private const double HohmannDeltaVRelative = 2.7e-14;
         private const double HohmannApogeeRelative = 2.1e-15;
 

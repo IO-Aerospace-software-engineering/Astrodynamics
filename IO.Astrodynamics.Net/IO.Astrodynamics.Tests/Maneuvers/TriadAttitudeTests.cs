@@ -1263,8 +1263,8 @@ public class TriadAttitudeTests
     #region Factory axes (#677)
 
     // The angles between the spacecraft's axes, rotated by the factory's attitude, and the directions of the closed form of
-    // the law: 3.6e-16 rad at worst (the rotated triad, LVLH, the right axis), measured on Linux x64 (2026-11-14); twice
-    // the worst until the three CI platforms have printed their MEASURE lines (provisional)
+    // the law, worst over the six cases (the rotated triad, LVLH, the right axis): 3.58e-16 rad on Linux x64, Windows x64
+    // and macOS arm64 alike (CI run 43595588856, 2026-11-14); twice the worst
     private const double FactoryAxesAngle = 7.2e-16;
 
     /// <summary>The body axes (front, right, up) of the spacecraft of a case: the front +X, the right −Y, the up +Z; the front

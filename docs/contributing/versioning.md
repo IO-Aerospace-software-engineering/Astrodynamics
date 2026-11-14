@@ -1365,7 +1365,7 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   static axes while the tank is on no spacecraft, and `PrimaryBodyVector` and `SecondaryBodyVector` return them; no
   public signature changes. `TriadAttitudeTests` compares the attitude of three right-handed triads (one turned 30°
   about (1, 1, 1)) with the closed form of each law built from the state, the spacecraft's axes and the Sun of `spkezr`
-  (within 3.6e-16 rad, Linux), and `AttitudeRecordTests` the record and `pxform` on the written CK with the same closed
+  (within 3.6e-16 rad on Linux, Windows and macOS arm64), and `AttitudeRecordTests` the record and `pxform` on the written CK with the same closed
   forms over both integrators, ICRF and ECLIPJ2000 starts, `Spacecraft.Propagate`, SSB mode and `Scenario`, leading,
   chained after an impulse, and an LVLH that an impulse interrupts and the timeline resumes (60 cases within the limits
   of the attitude grid). A spacecraft with the default axes is bit for bit. See Changed.
@@ -1375,7 +1375,7 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   Only its velocity was read, which ignores that value on an ellipse, so no result moved. The argument is dropped; the
   ΔV, the windows and the fuel are bit for bit, the conformance case `maneuver/010` included. `CombinedManeuverTest`
   checks the target's perigee against a(1 − e) and min(target, apogee), and |ΔV| against vis-viva and the law of cosines
-  of a combined burn at the apogee on the line of nodes (within 5.0e-16 relative, Linux).
+  of a combined burn at the apogee on the line of nodes (within 5.0e-16 relative on Linux, Windows and macOS arm64).
 - **The documentation called the targets of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` and `CombinedManeuver`
   heights or altitudes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). The maneuvers tutorial said that `ApogeeHeightManeuver` raises the apogee "to a target
   altitude", and the impulse-maneuver reference that the apogee and perigee maneuvers raise the heights; the targets are
@@ -1384,7 +1384,7 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   `InsufficientFuelException`. The tutorial, the reference and the XML documentation of the three constructors now say
   "radius from the centre, in m" (R + h for an altitude h). `ApogeeHeightManeuverTests.TargetIsARadiusFromTheCentre`
   checks R + 1 000 km against the Hohmann first burn and the apogee radius after it by vis-viva (within 1.33e-14 and
-  1.01e-15 relative, Linux). No code changes.
+  1.01e-15 relative on Linux, Windows and macOS arm64). No code changes.
 
 **Changed**
 

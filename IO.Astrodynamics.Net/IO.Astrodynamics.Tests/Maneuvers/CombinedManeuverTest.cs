@@ -21,13 +21,12 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             TestKernels.EnsureSolarSystem();
         }
 
-        // The relative agreement of the target conic's perigee with min(target, apogee): 1.8e-16 at worst, measured on Linux
-        // x64 (2026-11-14), twice that until the three CI platforms have printed their MEASURE lines (provisional)
+        // The relative agreement of the target conic's perigee with min(target, apogee), worst: 1.77e-16 on Linux x64,
+        // Windows x64 and macOS arm64 alike (CI run 43595588856, 2026-11-14); twice that
         private const double TargetPerigeeRelative = 3.6e-16;
 
-        // The relative agreement of |ΔV| with the closed form of a combined burn at an apsis on the line of nodes: 5.0e-16 at
-        // worst, measured on Linux x64 (2026-11-14), twice that until the three CI platforms have printed their MEASURE lines
-        // (provisional)
+        // The relative agreement of |ΔV| with the closed form of a combined burn at an apsis on the line of nodes, worst:
+        // 4.97e-16 on Linux x64, Windows x64 and macOS arm64 alike (CI run 43595588856, 2026-11-14); twice that
         private const double DeltaVClosedFormRelative = 1.0e-15;
 
         // The orbit of the tests above at its apogee, which lies on the line of nodes (Ω = ω = 0), half a period after the
