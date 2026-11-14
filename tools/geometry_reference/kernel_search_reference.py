@@ -24,6 +24,20 @@ ELLIPSOID, the Sun as source, the incidence angle):
     30 days at a 1 h step.
   Search window 2023-12-15 00:05 TDB to 2023-12-16 00:05 TDB (the Moon: to 2024-01-14 00:05 TDB), step 60 s.
 
+#678, the managed threshold searches against CSPICE at steps much longer than their windows:
+  - a two-body LEO (-67801; a = 6800 km, e = 1e-4, i = 51.6 deg, Omega = omega = M = 0 at 2024-03-01 00:00 TDB, the
+    Earth's GM of gm_de440.tpc), written here as a type 5 SPK (kernel_search_leo.bsp, states every 60 s from 2024-02-29
+    23:00 to 2024-03-02 01:00 TDB, centre 399, J2000), each state the conic at the TT seconds from the epoch to its own,
+    as the library's two-body motion and propagation count them about the Earth (TT - TDB moves by up to 2.9e-5 s a day);
+    seen from DSS-13 (399013) over 2024-03-01 00:00 to 2024-03-02 00:00 TDB: elevation > 30 deg (gfposc, declination
+    in DSS-13_TOPO) and range < 1000 km (gfdist), step 60 s, no aberration correction; and the elevation in the
+    topocentric frame of the library's site (north, west, zenith from the planetodetic coordinates of DSS-13 at J2000 on
+    pck00011, relative to ITRF93), defined here as DSS-13_J2000_TOPO (1678013), which the frame kernel's DSS-13_TOPO
+    (its coordinates at 2020-10-23 on GRS80) differs from by 7.6e-8 rad in longitude and 1.7e-8 rad in latitude;
+  - the point of DSS-13's longitude and latitude at 0 m on the ellipsoid (georec, as above), incidence of the Sun
+    < 58.83 deg (the minimum over the window, 58.5315 deg, plus 0.3 deg, rounded), without correction, observer 399013,
+    over 2023-12-15 00:05 to 2023-12-18 00:05 TDB, step 60 s.
+
 Each entry is "<label>": a list of [start, end] in TDB seconds from J2000. The script also prints the string that the
 CLI command find-windows-from-illumination-constraint prints for the point at longitude 0.0349 rad, latitude 0.8378 rad
 and 1071 m (the window and step of CLI GeometryFinderTests.IlluminationConstraint, CN+S, incidence < 90.8 deg), the
@@ -32,8 +46,8 @@ native search replicated at its default tolerance with each edge the nearest tic
 
 Run from this directory (needs spiceypy, CSPICE N0067):
   python3 -I kernel_search_reference.py
-It writes IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GeometryReference/kernel_search_reference.json and
-kernel_search_orbiter.bsp.
+It writes IO.Astrodynamics.Net/IO.Astrodynamics.Tests/Data/GeometryReference/kernel_search_reference.json,
+kernel_search_orbiter.bsp and kernel_search_leo.bsp.
 """
 import datetime as D
 import json
@@ -48,6 +62,7 @@ TESTS = os.path.join(HERE, '..', '..', 'IO.Astrodynamics.Net', 'IO.Astrodynamics
 CLI = os.path.join(HERE, '..', '..', 'IO.Astrodynamics.Net', 'IO.Astrodynamics.CLI.Tests', 'Data')
 OUT = os.path.join(TESTS, 'GeometryReference')
 ORBITER = os.path.join(OUT, 'kernel_search_orbiter.bsp')
+LEO = os.path.join(OUT, 'kernel_search_leo.bsp')
 EXTENSIONS = ('.tls', '.bsp', '.tpc', '.bpc', '.tf', '.ker')
 
 
@@ -101,12 +116,44 @@ def write_orbiter(gm_moon, first, last):
     sp.spkcls(handle)
 
 
+def site_frame(frame_id, name, centre, lon, lat):
+    """The topocentric frame of a site at planetodetic coordinates relative to ITRF93: X north, Y west, Z zenith."""
+    sp.pipool(f'FRAME_{name}', [frame_id])
+    sp.pcpool(f'FRAME_{frame_id}_NAME', [name])
+    sp.pipool(f'FRAME_{frame_id}_CLASS', [4])
+    sp.pipool(f'FRAME_{frame_id}_CLASS_ID', [frame_id])
+    sp.pipool(f'FRAME_{frame_id}_CENTER', [centre])
+    sp.pcpool(f'TKFRAME_{frame_id}_RELATIVE', ['ITRF93'])
+    sp.pcpool(f'TKFRAME_{frame_id}_SPEC', ['ANGLES'])
+    sp.pcpool(f'TKFRAME_{frame_id}_UNITS', ['RADIANS'])
+    sp.pipool(f'TKFRAME_{frame_id}_AXES', [3, 2, 3])
+    sp.pdpool(f'TKFRAME_{frame_id}_ANGLES', [-lon, -(math.pi / 2.0 - lat), math.pi])
+
+
+def write_leo(gm_earth, t0, first, last):
+    """A two-body LEO as a type 5 SPK: states every 60 s, each the conic at the TT seconds from t0 to its epoch."""
+    if os.path.exists(LEO):
+        os.remove(LEO)
+    a, e = 6800.0, 1.0e-4
+    elements = [a * (1.0 - e), e, math.radians(51.6), 0.0, 0.0, 0.0, t0, gm_earth]
+    tt0 = sp.unitim(t0, 'TDB', 'TT')
+    epochs = [first + 60.0 * i for i in range(int(round((last - first) / 60.0)) + 1)]
+    states = [sp.conics(elements, t0 + (sp.unitim(t, 'TDB', 'TT') - tt0)) for t in epochs]
+    handle = sp.spkopn(LEO, 'kernel_search_leo', 0)
+    sp.spkw05(handle, -67801, 399, 'J2000', epochs[0], epochs[-1], 'two-body LEO', gm_earth, len(epochs), states, epochs)
+    sp.spkcls(handle)
+
+
 def main():
     load_directory(os.path.join(TESTS, 'SolarSystem'))
     sp.furnsh(os.path.join(TESTS, 'LRO', 'lro-reconstructed-2023349_2024075_v01_little_endian.bsp'))
     gm_moon = sp.bodvcd(301, 'GM', 1)[1][0]
     write_orbiter(gm_moon, sp.str2et('2023-12-14 23:00:00 TDB'), sp.str2et('2023-12-16 01:00:00 TDB'))
     sp.furnsh(ORBITER)
+    gm_earth = sp.bodvcd(399, 'GM', 1)[1][0]
+    write_leo(gm_earth, sp.str2et('2024-03-01 00:00:00 TDB'), sp.str2et('2024-02-29 23:00:00 TDB'),
+              sp.str2et('2024-03-02 01:00:00 TDB'))
+    sp.furnsh(LEO)
     sp.gfstol(1e-9)
 
     ref = {}
@@ -138,6 +185,17 @@ def main():
         point = sp.georec(lon, latitude, km, radii[0], f)
         ref[f'point_sun_incidence {label} > 90 deg NONE'] = illumination('399', 'ITRF93', 'NONE', '399013', point, '>',
                                                                         half_pi, i0, i1, 60.0)
+    point = sp.georec(lon, lat, 0.0, radii[0], f)
+    ref['point_sun_incidence dss13 0 m < 58.83 deg NONE 3 days'] = illumination('399', 'ITRF93', 'NONE', '399013', point, '<',
+                                                                              math.radians(58.83), i0, i0 + 3.0 * 86400.0,
+                                                                              60.0)
+    l0, l1 = sp.str2et('2024-03-01 00:00:00 TDB'), sp.str2et('2024-03-02 00:00:00 TDB')
+    ref['leo_dss13_elevation > 30 deg'] = coordinate('-67801', 'DSS-13_TOPO', '399013', 'RA/DEC', 'DECLINATION', '>',
+                                                     math.radians(30.0), l0, l1, 60.0)
+    site_frame(1678013, 'DSS-13_J2000_TOPO', 399013, lon, lat)
+    ref['leo_dss13_j2000_topo_elevation > 30 deg'] = coordinate('-67801', 'DSS-13_J2000_TOPO', '399013', 'RA/DEC',
+                                                                'DECLINATION', '>', math.radians(30.0), l0, l1, 60.0)
+    ref['leo_dss13_distance < 1000 km'] = distance('-67801', '399013', '<', 1000.0, l0, l1, 60.0)
     moon_radii = sp.bodvcd(301, 'RADII', 3)[1]
     moon_frame = sp.cidfrm(301)[1]
     point = sp.georec(0.5, 0.3, 1.071, moon_radii[0], (moon_radii[0] - moon_radii[2]) / moon_radii[0])
