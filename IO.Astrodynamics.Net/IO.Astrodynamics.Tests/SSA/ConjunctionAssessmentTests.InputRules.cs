@@ -534,8 +534,9 @@ public partial class ConjunctionAssessmentTests
             : new[] { ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondaryCraft, secondaryTrajectory, window) });
     }
 
-    // From the MEASURE line below (Linux, 2026-11-14; provisional, to be set from the three platforms): the TCAs the same
-    // tick (0 s), bounded by one tick, the resolution of a label; the misses 3.45e-4 m apart, bounded by twice that
+    // From the MEASURE line below (CI run 43601908000, 2026-11-14): the TCAs the same tick on Linux x64, Windows x64 and
+    // macOS arm64 (0 s on the three), bounded by one tick, the resolution of a label; the misses 3.453e-4 m apart on the
+    // three, bounded by twice that
     private const double OwnerlessTcaBound = 1e-7;
     private const double OwnerlessMissBound = 7.0e-4;
 

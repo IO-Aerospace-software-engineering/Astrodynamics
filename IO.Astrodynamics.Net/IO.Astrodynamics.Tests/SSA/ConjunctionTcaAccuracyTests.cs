@@ -191,6 +191,10 @@ public class ConjunctionTcaAccuracyTests
         }
     }
 
+    // The label of the RK7(8) pair in the window scale against the Keplerian zero: 1.380e-7 s in UTC, TT and TAI on Linux
+    // x64, Windows x64 and macOS arm64 (MEASURE #683 label, CI run 43601908000, 2026-11-14), bounded by twice that
+    private const double LabelTcaBound = 2.8e-7;
+
     [Theory]
     [InlineData("UTC", true)]
     [InlineData("UTC", false)]
@@ -227,13 +231,13 @@ public class ConjunctionTcaAccuracyTests
                           $"{after:E3} a tick after (m²/s)");
         Assert.True(atLabel <= before && atLabel <= after, $"|rr| {atLabel:E3}, {before:E3}, {after:E3}");
 
-        // The instant within the bound of the theory above of the zero of the Keplerian range rate (RK7(8) only: the
-        // Velocity-Verlet steps of 10 s carry their own error)
+        // The instant within LabelTcaBound of the zero of the Keplerian range rate (RK7(8) only: the Velocity-Verlet steps
+        // of 10 s carry their own error)
         if (rk78)
         {
             double tcaError = PropagationTimeArgument.Tt.SecondsBetween(Start, label) - pair.KeplerianTca;
             _output.WriteLine($"MEASURE #683 label {frame}: TCA {tcaError:E3} s from the Keplerian zero");
-            Assert.True(System.Math.Abs(tcaError) < 1e-6, $"TCA {tcaError:E3} s");
+            Assert.True(System.Math.Abs(tcaError) <= LabelTcaBound, $"TCA {tcaError:E3} s");
         }
     }
 

@@ -1367,7 +1367,7 @@ release are listed under **Known limitations**.
   5 m when neither does (Changed below); the option of `Screen` is a fallback over its catalogue, never in conflict with
   a candidate's own radius. `Analyze_SecondaryHardBodyRadius_DesignedEncounters_MatchExactPc` splits the
   radius of the seven designed encounters of `tools/collision_probability` between the two spacecraft (0.6 R and 0.4 R,
-  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.2e-10 (bound 6.3e-10); a
+  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.15e-10 on the three platforms (CI run 43601908000, bound 6.3e-10); a
   theory checks the five rows of the rule on `Analyze` and `AnalyzeAll` (sampled and dense) and both avoidance paths,
   and the fallback rule on `Screen` (the candidate's own radius in the row where the others throw), with a spacecraft
   and a body as secondary; `Screen_MixedCatalogue_EachCandidateTakesItsOwnRadiusOrTheFallback` screens spacecraft of 2, 6 and 0 m and
@@ -1404,7 +1404,7 @@ release are listed under **Known limitations**.
   (the default) the tick of that frame nearer the zero of the range rate; with a tolerance of a tick or more, the middle
   of its last bracket converted to that frame, or the neighbouring tick toward the zero where the range rate is smaller
   in magnitude (one tick at most from that middle); `DenseTca_IsLabelledInTheWindowScale` and `DenseTca_InTheWindowScale_IsTheTickNearerTheZero` check UTC,
-  TT and TAI windows on RK7(8) and Velocity-Verlet pairs (the TCA 1.4e-7 s from the Keplerian zero, bound 1e-6 s), a TDB
+  TT and TAI windows on RK7(8) and Velocity-Verlet pairs (the TCA 1.38e-7 s from the Keplerian zero on Linux x64, Windows x64 and macOS arm64, CI run 43601908000, bound 2.8e-7 s), a TDB
   window bit for bit. The conjunction cases of the conformance suite pass, their `tca_s` moved by 8.7e-8 s at most and
   their relative position by 0.30 mm at most (see [Validation](../guides/validation.md)).
 - **The CDM declared any secondary spacecraft maneuverable** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): `MANEUVERABLE` was `YES` for object 2 whenever it
