@@ -72,7 +72,10 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// The atmosphere of the body is this model, or for an Earth without one NRLMSISE-00 at nominal space weather: an
     /// Earth always has an atmosphere, wherever the library decides whether a body has one (drag about the central body,
     /// in SSB mode and from a listed non-central body, <see cref="Propagator.Forces.AtmosphericDrag"/>, and the getters
-    /// with a full context); another body without a model has none (#674).
+    /// with a full context). The getters of a model-less Earth given a context that holds the altitude but not the
+    /// geodetic position and the epoch answer with the U.S. Standard Atmosphere 1976, the base atmosphere (decided by
+    /// S. Guillet, 2026-11-14); a null context, which holds no altitude, gives no atmosphere. Another body without a model
+    /// has none (#674).
     /// </remarks>
     protected IAtmosphericModel AtmosphericModel { get; }
 
