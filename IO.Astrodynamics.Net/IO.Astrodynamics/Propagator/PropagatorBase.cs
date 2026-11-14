@@ -95,6 +95,9 @@ public abstract class PropagatorBase : IPropagator
         var initialChain = Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
         var standbyChain = Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
         ValidateTargetOrbitFrames(spacecraft, initialChain.Concat(standbyChain));
+        // Each maneuver draws on a tank of the spacecraft (#676, #586), checked before anything runs: before the reset of
+        // Spacecraft.Propagate, which leaves the previous propagation as it was
+        spacecraft.CheckManeuverEngines();
 
         OriginalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
@@ -397,8 +400,10 @@ public abstract class PropagatorBase : IPropagator
         _propagationDuration = propagationDuration;
 
         // 2. The leading attitudes of the chain on the attitude timeline, and the detector of its first impulse (#539),
-        // from a chain without a cycle, which the walks of the chain would never end (#585)
+        // from a chain without a cycle, which the walks of the chain would never end (#585), whose maneuvers draw on the
+        // tanks of the spacecraft (#676, #586)
         Maneuver.Maneuver.Chain(Spacecraft.StandbyManeuver);
+        Spacecraft.CheckManeuverEngines();
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
         var eventDetectors = BuildEventDetectors();

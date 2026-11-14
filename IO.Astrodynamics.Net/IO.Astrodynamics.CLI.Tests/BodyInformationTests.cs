@@ -37,4 +37,25 @@ public class BodyInformationsTests
             Assert.Throws<ArgumentException>(() => { _ = command.GetInformations("Data", -82); });
         }
     }
+
+    /// <summary>
+    /// An identifier of the celestial classes that SPICE does not name (<c>bodc2n_c</c> finds none of these with the
+    /// kernels of Data): the record held the name of a previous call or stack bytes and the body was built from it, or
+    /// threw <see cref="System.InvalidOperationException"/> (#672); it is now an argument error naming the identifier.
+    /// </summary>
+    [Theory]
+    [InlineData(398)]
+    [InlineData(12345678)]
+    public void UnnamedIdentifier_IsAnArgumentError(int id)
+    {
+        using (Configuration.Lock())
+        {
+            var command = new BodyInformationCommand();
+            // A named body first, so that the native stack holds its record
+            Console.SetOut(new StringWriter());
+            command.GetInformations("Data", 399);
+            var e = Assert.Throws<ArgumentException>(() => { _ = command.GetInformations("Data", id); });
+            Assert.Contains(id.ToString(), e.Message);
+        }
+    }
 }

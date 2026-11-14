@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -141,7 +142,11 @@ namespace IO.Astrodynamics.Tests.Body
 
             FuelTank fuelTank = new FuelTank("My fuel tank", "ft2021", "sn1", 4000.0, 4000.0);
             Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank);
-            Assert.Throws<InvalidOperationException>(() => spc.AddEngine(eng));
+            // ArgumentException, the call receiving the faulty engine (#676, decided by S. Guillet, 2026-11-14); it was
+            // InvalidOperationException
+            var rejected = Assert.Throws<ArgumentException>(() => spc.AddEngine(eng));
+            Assert.Equal("engine", rejected.ParamName);
+            Assert.Empty(spc.Engines);
         }
 
         [Fact]
@@ -204,8 +209,8 @@ namespace IO.Astrodynamics.Tests.Body
             spc.AddPayload(pl1);
 
             Payload pl2 = new Payload("pl2", 400, "sn0");
-            new Clock("My clock", 256);
-            Spacecraft spc2 = new Spacecraft(-1002, "MySpacecraft", 2000.0, 10000.0, clk, ke);
+            Clock clk2 = new Clock("My clock", 256);
+            Spacecraft spc2 = new Spacecraft(-1002, "MySpacecraft", 2000.0, 10000.0, clk2, ke);
             FuelTank fuelTank20 = new FuelTank("My fuel tank20", "ft2021", "sn1", 4000.0, 2000.0);
             FuelTank fuelTank21 = new FuelTank("My fuel tank21", "ft2021", "sn2", 4000.0, 3000.0);
             spc2.AddFuelTank(fuelTank20);
@@ -214,8 +219,8 @@ namespace IO.Astrodynamics.Tests.Body
 
             Payload pl3 = new Payload("pl3", 50, "sn0");
             Payload pl31 = new Payload("pl31", 150, "sn1");
-            new Clock("My clock3", 256);
-            Spacecraft spc3 = new Spacecraft(-1003, "MySpacecraft", 3000.0, 10000.0, clk, ke);
+            Clock clk3 = new Clock("My clock3", 256);
+            Spacecraft spc3 = new Spacecraft(-1003, "MySpacecraft", 3000.0, 10000.0, clk3, ke);
             FuelTank fuelTank30 = new FuelTank("My fuel tank30", "ft2021", "sn0", 4000.0, 1000.0);
             FuelTank fuelTank31 = new FuelTank("My fuel tank31", "ft2021", "sn1", 4000.0, 3000.0);
             spc3.AddFuelTank(fuelTank30);
@@ -719,6 +724,212 @@ namespace IO.Astrodynamics.Tests.Body
 
             var spc3 = new Spacecraft(-1109, "Opm1109", 420000.0, 500000.0, new Clock("Clk1109", 256), withCovariance.ToKeplerianElements(), cosparId: "1998-067C");
             Assert.False(spc3.ToOpm().Data.HasCovariance);
+        }
+
+        private static StateVector LeoAbout(CelestialBody earth) =>
+            new(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), earth, new TimeSystem.Time(2024, 1, 1), Frames.Frame.ICRF);
+
+        /// <summary>
+        /// An engine draws on the tank instance the spacecraft holds (#676, #586): a tank equal by value to it but never
+        /// added is rejected, and nothing changes.
+        /// </summary>
+        [Fact]
+        public void AddEngine_ValueEqualTankNotAdded_Throws()
+        {
+            // Arrange
+            var spc = new Spacecraft(-1002, "Sat1002", 1000.0, 10000.0, new Clock("Clk1002", 65536), LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)));
+            var t1 = new FuelTank("Tank", "Model", "SN-T", 3000.0, 3000.0);
+            spc.AddFuelTank(t1);
+            var t2 = new FuelTank("Tank", "Model", "SN-T", 3000.0, 3000.0);
+            Assert.Equal(t1, t2);
+
+            // Act
+            var exception = Record.Exception(() => spc.AddEngine(new Engine("Main", "Model", "SN-E", 320.0, 5.0, t2)));
+
+            // Assert: ArgumentException, the call receiving the faulty engine (#676, decided by S. Guillet, 2026-11-14)
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("engine", rejected.ParamName);
+            Assert.Contains("Main", rejected.Message);
+            Assert.Empty(spc.Engines);
+            Assert.Null(t2.Spacecraft);
+        }
+
+        /// <summary>
+        /// One tank added to spacecraft of different NAIF ids at the same time (#676, #586): one takes it, the others throw
+        /// ArgumentException and hold nothing. A check of the holder before the attachment let two spacecraft pass it, and
+        /// the tank then served both. Twice as many threads as cores, 8 at least, released together by a barrier, 500
+        /// rounds.
+        /// </summary>
+        [Fact]
+        public void ConcurrentAddFuelTank_OneSpacecraftTakesTheTank()
+        {
+            // Arrange
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            int threads = System.Math.Max(8, 2 * Environment.ProcessorCount);
+            var spacecraft = Enumerable.Range(0, threads)
+                .Select(k => new Spacecraft(-1460 - k, "TANKRACE" + k, 1000.0, 10000.0, new Clock("TANKRACE" + k, 65536), LeoAbout(earth))).ToArray();
+            for (int round = 0; round < 500; round++)
+            {
+                var tank = new FuelTank("Race" + round, "Model", "SN" + round, 3000.0, 3000.0);
+                var errors = new Exception[threads];
+                using var barrier = new Barrier(threads);
+                var workers = Enumerable.Range(0, threads).Select(k => new Thread(() =>
+                {
+                    barrier.SignalAndWait();
+                    try
+                    {
+                        spacecraft[k].AddFuelTank(tank);
+                    }
+                    catch (Exception e)
+                    {
+                        errors[k] = e;
+                    }
+                })).ToArray();
+
+                // Act
+                foreach (var worker in workers) worker.Start();
+                foreach (var worker in workers) worker.Join();
+
+                // Assert: one holder, which is the tank's spacecraft
+                var holders = spacecraft.Where(x => x.FuelTanks.Any(t => ReferenceEquals(t, tank))).ToArray();
+                var holder = Assert.Single(holders);
+                Assert.Same(holder, tank.Spacecraft);
+                Assert.Equal(threads - 1, errors.Count(e => e != null));
+                Assert.All(errors.Where(e => e != null), e => Assert.Equal("fuelTank", Assert.IsType<ArgumentException>(e).ParamName));
+            }
+        }
+
+        /// <summary>
+        /// Control: an engine on the tank the spacecraft holds is accepted, and its first burn is Tsiolkovsky's.
+        /// </summary>
+        [Fact]
+        public void AddEngine_AddedTankInstance_Accepted()
+        {
+            // Arrange
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+            var orbit = new KeplerianElements(7000e3, 0.01, 0.9, 0.0, 0.0, System.Math.PI, earth, epoch, Frames.Frame.ICRF);
+            var spc = new Spacecraft(-1012, "Sat1012", 1000.0, 10000.0, new Clock("Clk1012", 65536), orbit);
+            var t1 = new FuelTank("Tank", "Model", "SN-T", 3000.0, 3000.0);
+            spc.AddFuelTank(t1);
+            var engine = new Engine("Main", "Model", "SN-E", 320.0, 5.0, t1);
+
+            // Act
+            spc.AddEngine(engine);
+            var maneuver = new ApogeeHeightManeuver(earth, epoch, TimeSpan.Zero, 7300e3, engine);
+            spc.SetStandbyManeuver(maneuver);
+            spc.Propagate(new Window(epoch, epoch.AddSeconds(7200.0)), [earth], new Propagator.Integrators.RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0));
+
+            // Assert: m0 (1 − exp(−Δv / (Isp g0))), g0 = 9.80665 m/s², m0 = 1 000 + 3 000 kg
+            Assert.Same(engine, spc.Engines.Single());
+            double dv = maneuver.DeltaV.Magnitude();
+            double expected = 4000.0 * (1.0 - System.Math.Exp(-dv / (320.0 * 9.80665)));
+            Assert.True(dv > 1.0);
+            Assert.Equal(expected, maneuver.FuelBurned, expected * 1e-12);
+        }
+
+        /// <summary>
+        /// The largest NAIF id magnitude whose frame id NaifId × 1000 is an int (#676): the exact product.
+        /// </summary>
+        [Fact]
+        public async Task NaifIdAtFrameIdBound_Accepted()
+        {
+            // Act
+            var spc = new Spacecraft(-2147483, "BOUND", 100.0, 1000.0, new Clock("BOUND", 65536), LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)));
+            var fk = FrameKernelFiles.NewFile("bound");
+            try
+            {
+                await spc.Frame.WriteAsync(fk);
+
+                // Assert: (long)-2147483 × 1000, in 64 bits
+                Assert.Equal(-2147483L * 1000L, (long)spc.Frame.Id);
+                Assert.Contains("FRAME_BOUND_FRAME   = -2147483000", await File.ReadAllTextAsync(fk.FullName));
+            }
+            finally
+            {
+                FrameKernelFiles.Delete(fk);
+            }
+        }
+
+        /// <summary>
+        /// A NAIF id below -2147483 has no frame id NaifId × 1000 in an int (#676): both constructors reject it, and
+        /// nothing is listed by the observer.
+        /// </summary>
+        [Theory]
+        [InlineData(-2147484, false)]
+        [InlineData(-3000000, false)]
+        [InlineData(-2147484, true)]
+        [InlineData(-3000000, true)]
+        public void NaifIdBelowFrameIdRange_Throws(int naifId, bool kernelBacked)
+        {
+            // Arrange
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+
+            // Act
+            var exception = Record.Exception(() => kernelBacked
+                ? new Spacecraft(naifId, "BIG", new TimeSystem.Time(2024, 1, 1), centerOfMotion: earth)
+                : new Spacecraft(naifId, "BIG", 100.0, 1000.0, new Clock("BIG", 65536), LeoAbout(earth)));
+
+            // Assert: -2147484 × 1000 < int.MinValue
+            Assert.True((long)naifId * 1000L < int.MinValue);
+            var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
+            Assert.Equal("naifId", rejected.ParamName);
+            Assert.Empty(earth.Satellites);
+        }
+
+        /// <summary>
+        /// Names whose FRAME_&lt;NAME&gt;_FRAME is no kernel variable SPICE can read (#676): a blank, a tab, a quote, a
+        /// parenthesis, a comma or '=', or more than 32 bytes in UTF-8 (Kernel Required Reading, "Variable Name Rules";
+        /// measured on main: SPICE(BADVARASSIGN), SPICE(NUMBEREXPECTED), SPICE(BADVARNAME)). The writer throws and writes
+        /// nothing.
+        /// </summary>
+        [Theory]
+        [InlineData("Demo Sat")]
+        [InlineData("ISS (ZARYA)")]
+        [InlineData("Sat=1")]
+        [InlineData("Sat,1")]
+        [InlineData("Sat'1")]
+        [InlineData("Sat\t1")]
+        [InlineData("ABCDEFGHIJKLMNOPQRSTU")]
+        [InlineData("ÉÉÉÉÉÉÉÉÉÉÉÉÉ")]
+        public async Task WriteFrame_NameSpiceCannotRead_Throws(string name)
+        {
+            // Arrange
+            var spc = new Spacecraft(-1221, name, 100.0, 1000.0, new Clock("NAMES", 65536), LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)));
+            var fk = FrameKernelFiles.NewFile("refused");
+
+            // Act
+            var exception = await Record.ExceptionAsync(() => spc.Frame.WriteAsync(fk));
+
+            // Assert
+            var rejected = Assert.IsType<InvalidOperationException>(exception);
+            Assert.Contains(name, rejected.Message);
+            fk.Refresh();
+            Assert.False(fk.Exists);
+        }
+
+        /// <summary>
+        /// Names at the boundary of the rule: the FK written loads in SPICE (<c>furnsh_c</c>) without
+        /// error (#676).
+        /// </summary>
+        [Theory]
+        [InlineData("STARLINK-1234")]
+        [InlineData("Sat.1")]
+        [InlineData("S/T")]
+        [InlineData("ABCDEFGHIJKLMNOPQRST")]
+        [InlineData("ABCDEFGHIJKLMNOPQRÉ")]
+        public async Task WriteFrame_BoundaryNames_LoadInSpice(string name)
+        {
+            // Arrange
+            var spc = new Spacecraft(-1222, name, 100.0, 1000.0, new Clock("NAMES", 65536), LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)));
+            var fk = FrameKernelFiles.NewFile("boundary");
+            Assert.True(System.Text.Encoding.UTF8.GetByteCount("FRAME_" + name.ToUpper() + "_FRAME") <= 32);
+
+            // Act
+            await spc.Frame.WriteAsync(fk);
+
+            // Assert: loaded without error
+            FrameKernelFiles.Load(fk);
         }
 
         /// <summary>

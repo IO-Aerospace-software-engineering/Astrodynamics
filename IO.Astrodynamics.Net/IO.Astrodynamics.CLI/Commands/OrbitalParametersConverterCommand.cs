@@ -15,7 +15,7 @@ public class OrbitalParametersConverterCommand
 
     [Command("orbital-parameters-converter", Description = "Convert an orbital parameters to another type at given epoch in given frame")]
     public Task Converter(
-        [Argument(Description = "Directory kernels path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         Parameters.OrbitalParameters orbitalParameters,
         [Option( Description = "Convert to state vector")]
@@ -29,7 +29,7 @@ public class OrbitalParametersConverterCommand
         string targetFrame = "ICRF")
     {
         //Load kernels
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         //Check inputs
         if (!(orbitalParameters.FromEquinoctial ^ orbitalParameters.FromKeplerian ^ orbitalParameters.FromStateVector ^ orbitalParameters.FromTLE))

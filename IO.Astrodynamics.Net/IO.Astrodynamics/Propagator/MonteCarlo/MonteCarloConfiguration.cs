@@ -54,7 +54,8 @@ public sealed record MonteCarloConfiguration
     public Func<Integrator> IntegratorFactory { get; init; }
 
     /// <summary>
-    /// Base NAIF ID for generated spacecraft. Run <c>i</c> gets ID <c>BaseNaifId - i</c>.
+    /// Base NAIF ID for generated spacecraft. Run <c>i</c> gets ID <c>BaseNaifId - i</c>, which must stay in
+    /// [-2147483, -1], the range of a spacecraft NAIF id (#676): <c>BaseNaifId − (RunCount − 1)</c> ≥ -2147483.
     /// Defaults to −100 000.
     /// </summary>
     public int BaseNaifId { get; init; } = -100_000;

@@ -15,7 +15,7 @@ public class FrameConverterCommand
 
     [Command("frame-converter", Description = "Convert a frame to another at given epoch")]
     public Task Convert(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Origin frame")]
         string from,
@@ -23,7 +23,7 @@ public class FrameConverterCommand
         string to,
         EpochParameters epoch)
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         if (from.Equals("ICRF", StringComparison.InvariantCultureIgnoreCase))
         {

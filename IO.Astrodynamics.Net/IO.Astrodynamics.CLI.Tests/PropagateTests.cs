@@ -43,6 +43,44 @@ public class PropagateTests
         Assert.Contains("Propagation completed", res);
     }
 
+    [Fact]
+    public async Task Propagate_ToADirectoryTooLongForItsKernels_Throws()
+    {
+        // Arrange: an output directory that puts the CK, the longest kernel of the export,
+        // <output>/MissionK673_ScenarioK673/Spacecrafts/K673/Orientation/K673.ck, at 256 characters: one more than FURNSH
+        // stores (#673). Before, the export succeeded and its kernels could not be loaded
+        var root = Directory.CreateTempSubdirectory("propagate-length-");
+        string Longest(string output) => Path.Combine(output, "MissionK673_ScenarioK673", "Spacecrafts", "K673", "Orientation", "K673.ck");
+        var output = Path.Combine(root.FullName, new string('o', 256 - Longest(root.FullName).Length - 1));
+        Assert.Equal(256, Longest(output).Length);
+        var command = new PropagateCommand();
+        StringWriter sw = new StringWriter(new StringBuilder());
+
+        try
+        {
+            using (await Configuration.LockAsync())
+            {
+                Console.SetOut(sw);
+
+                // Act
+                var exception = await Assert.ThrowsAsync<ArgumentException>(() => command.Propagate("Data", "K673",
+                    new Commands.Parameters.OrbitalParameters
+                    {
+                        CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0", Frame = "ICRF", OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 8000.0 0.0",
+                        FromStateVector = true
+                    }, new WindowParameters { Begin = "0.0", End = "60.0" }, output, false, false));
+
+                // Assert: nothing written
+                Assert.Equal("outputDirectory", exception.ParamName);
+                Assert.False(Directory.Exists(output));
+            }
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
     [Theory]
     [InlineData("circular, i 30, node 40 (suite 155)", "P452C")]
     [InlineData("equatorial, e 0.05, lop 120 (suite 156)", "P452E")]
