@@ -1384,7 +1384,9 @@ release are listed under **Known limitations**.
   `IsPropagated` false: `GetEphemeris`, `WriteEphemeris` (read back by `spkezr` within 2.8e-9 m), the window searches
   (the managed field of view against `gftfov` on the kernels it writes within 5e-7 s), the conjunction analysis with
   the check of #527 and the avoidance options on its force model, bit for bit those of its ICRF twin. Unpropagated, or
-  sampled by `TLEPropagator`, it reads SGP4 as before (0 m). `Spacecraft.ToOpm` still writes SGP4
+  sampled by `TLEPropagator`, it reads as before: its geometric state, and every read through it (from another body,
+  the window searches), is SGP4 exactly; `GetEphemeris` from its Earth without aberration interpolates the samples of
+  `TLEPropagator` (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s). `Spacecraft.ToOpm` still writes SGP4
   ([#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)).
 - **`astro propagate -t` ended in an unhandled exception** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675)). The command built the spacecraft on the TLE, about
   the TLE's point-mass Earth, and the propagation rejected it ("must be defined in inertial frame"); once accepted, it
@@ -1743,7 +1745,8 @@ release are listed under **Known limitations**.
   ISS and its elements at 61.64°, 6 h, 7 encounters: the TCA from up to 4.44 ms to 5.2 µs from SGP4's, the relative
   speed from 0.75 m/s to 7.3e-5 m/s off, the miss by at most 0.27 mm). `TLEPropagator` reads SGP4 twice more per
   sample (1 day at 60 s from 87-133 ms to 262-305 ms), 1 s before the start and 1 s after the last sample included, so a
-  TLE whose SGP4 fails within 1 s of an end of the window throws `InvalidOperationException`. Migration: none for the
+  TLE whose SGP4 fails within 1 s of an end of the window throws `InvalidOperationException`, before the spacecraft
+  receives any sample (its stored states left as they were). Migration: none for the
   velocities; for a TLE that decays at an end of the window, shorten the window by a second. The exact SGP4 state at any
   instant is `tle.ToStateVector(t)`.
 - **Breaking: a malformed TLE reports its own error first** ([#675](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/675), Fixed above): a null or empty line 1 gives "Value

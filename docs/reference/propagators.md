@@ -100,7 +100,7 @@ positions, the velocities and the accelerations of SGP4 at the samples (the cent
 ±1 s, #675; zero before 11.0.0, which put the interpolated velocity up to 49.9 m/s off SGP4). For the ISS at 60 s,
 `InterpolateAt` and `GetStateVector` are 4.3e-4 m/s and 0.38 m off SGP4 between the samples (Linux x64), and exact at
 them; `tle.ToStateVector(t)` is the exact SGP4 state at any instant. A TLE whose SGP4 fails within 1 s of an end of
-the window throws.
+the window throws, before the spacecraft receives any sample.
 
 ## BatchPropagator
 

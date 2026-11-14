@@ -75,6 +75,73 @@ public class TLEPropagatorTests
     }
 
     [Fact]
+    public void Sgp4FailingWithinOneSecondOfTheEnd_LeavesTheSpacecraftAsItWas()
+    {
+        // 28350 after its decay (Sgp4ReferenceTests.FailedSgp4_Throws: Vallado's error 1, CSPICE's BADMECCENTRICITY at
+        // 1500 min): SGP4 runs up to an instant and fails after it. A window that ends half a second before that instant
+        // has its samples, and the acceleration at its end reads SGP4 1 s later, which fails (#675)
+        var tle = new TLE("ERR", "1 28350U 04020A   06167.21788666  .16154492  76267-5  18678-3 0  8894",
+            "2 28350  64.9977 345.6130 0024870 260.7578  99.9590 16.47856722116490");
+        bool Fails(in IO.Astrodynamics.TimeSystem.Time epoch)
+        {
+            try
+            {
+                tle.ToStateVector(epoch);
+                return false;
+            }
+            catch (InvalidOperationException)
+            {
+                return true;
+            }
+        }
+
+        // The last instant SGP4 runs, by bisection on its failure between the epoch and 1500 min, to 1 ms
+        var good = tle.Epoch.ToTDB();
+        var bad = good.AddMinutes(1500.0);
+        Assert.False(Fails(good));
+        Assert.True(Fails(bad));
+        while ((bad - good).TotalSeconds > 1e-3)
+        {
+            var middle = good.AddSeconds((bad - good).TotalSeconds / 2.0);
+            if (Fails(middle))
+            {
+                bad = middle;
+            }
+            else
+            {
+                good = middle;
+            }
+        }
+
+        var end = good.AddSeconds(-0.5);
+        Assert.False(Fails(end));
+        Assert.True(Fails(end.AddSeconds(1.0)));
+        var spacecraft = new Spacecraft(-1003, "Decayed", 100.0, 10000.0, new Clock("Decayed clock", 256), tle);
+        var step = TimeSpan.FromSeconds(60.0);
+        using (var first = new TLEPropagator(new Window(end.AddSeconds(-3600.0), end.AddSeconds(-1800.0)), spacecraft, step))
+        {
+            first.Propagate();
+        }
+
+        var before = spacecraft.PropagatedStates;
+        Assert.Equal(31, before.Length);
+
+        // Act: a window whose samples SGP4 gives, the acceleration at its end not
+        using var propagator = new TLEPropagator(new Window(end.AddSeconds(-600.0), end), spacecraft, step);
+        Assert.Throws<InvalidOperationException>(() => propagator.Propagate());
+
+        // Assert: the rejected run adds no state; the spacecraft holds the states of the first run as they were
+        var after = spacecraft.PropagatedStates;
+        Assert.Equal(before.Length, after.Length);
+        for (int i = 0; i < before.Length; i++)
+        {
+            Assert.Equal(before[i].Epoch, after[i].Epoch);
+            Assert.Equal(before[i].Position, after[i].Position);
+            Assert.Equal(before[i].Velocity, after[i].Velocity);
+        }
+    }
+
+    [Fact]
     public void CheckPropagation()
     {
         Clock clk = new Clock("My clock", 256);

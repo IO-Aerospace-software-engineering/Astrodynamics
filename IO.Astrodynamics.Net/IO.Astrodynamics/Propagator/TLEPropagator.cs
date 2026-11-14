@@ -44,15 +44,17 @@ public class TLEPropagator : IPropagator
         }
 
         _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.EndDate, Frame.ICRF);
-        Spacecraft.AddPropagatedStates(_svCache);
 
         // Build synthetic PropagationSolution from TLE states, with the accelerations of SGP4 at the samples, which the cubic
-        // Hermite of a step interpolates the velocity with (#675: zero before, up to 49.9 m/s off SGP4 between samples)
+        // Hermite of a step interpolates the velocity with (#675: zero before, up to 49.9 m/s off SGP4 between samples).
+        // Read before the spacecraft receives the samples: an SGP4 that fails within 1 s of a window end leaves it as it was
         var accelerations = new Vector3[_svCacheSize];
         for (int i = 0; i < _svCacheSize; i++)
         {
             accelerations[i] = Sgp4Acceleration(Window.StartDate.Add(DeltaT * i));
         }
+
+        Spacecraft.AddPropagatedStates(_svCache);
 
         var solution = new PropagationSolution();
         var segment = new PropagationSegment(Window.StartDate, (int)_svCacheSize);
