@@ -53,7 +53,7 @@ A major version, because it breaks the API. The entries marked **Breaking** unde
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
-public statics, and the equality of frames. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
+public statics, the equality of frames, and the axes the TRIAD factories point. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
 `Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
 release are listed under **Known limitations**.
 
@@ -1356,6 +1356,19 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **`TriadAttitude.CreateLVLH` and `CreateProgradeWithSunTracking` pointed the static body axes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). A
+  spacecraft built with `bodyFront`, `bodyRight` and `bodyUp` got `Spacecraft.Down` and `Front` (LVLH), or `Front` and
+  `Up` (prograde with Sun tracking), whatever its own axes: with the front +X, the right −Y and the up +Z its front was
+  90° from the velocity under both factories; with the front +Z, the right +X and the up −Y both axes were 90° off.
+  The single-vector attitudes and the attitude of an impulse read `BodyFront` of the spacecraft that carries the
+  engine's tank. The factories now read its `BodyDown` and `BodyFront`, or `BodyFront` and `BodyUp`, at execution, the
+  static axes while the tank is on no spacecraft, and `PrimaryBodyVector` and `SecondaryBodyVector` return them; no
+  public signature changes. `TriadAttitudeTests` compares the attitude of three right-handed triads (one turned 30°
+  about (1, 1, 1)) with the closed form of each law built from the state, the spacecraft's axes and the Sun of `spkezr`
+  (within 3.6e-16 rad, Linux), and `AttitudeRecordTests` the record and `pxform` on the written CK with the same closed
+  forms over both integrators, ICRF and ECLIPJ2000 starts, `Spacecraft.Propagate`, SSB mode and `Scenario`, leading and
+  chained after an impulse (48 cases within the limits of the attitude grid). A spacecraft with the default axes is bit
+  for bit. See Changed.
 - **`CombinedManeuver`'s target orbit carried the current orbit's perigee radius** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). The target orbit was built
   with `perigeeRadius:` the perigee of the orbit before the burn (6 678 000 m for the orbit of `CombinedManeuverTest`,
   where the target's own perigee is 42 163 999.919 m or 6 600 000 m), so its `PerigeeRadius()` returned another orbit's.
@@ -1701,6 +1714,16 @@ release are listed under **Known limitations**.
   returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
+- **Breaking: the TRIAD factories point the spacecraft's instance axes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677), Fixed above): for a spacecraft built
+  with `bodyFront`, `bodyRight` or `bodyUp` other than the defaults, the attitude of `TriadAttitude.CreateLVLH` and
+  `CreateProgradeWithSunTracking` changes (90° for the axes of the issue, up to 180° in general), and with it its
+  attitude record, `GetStateOrientationToICRF`, the CK `WriteOrientation` writes, its instruments' pointing and the
+  managed field-of-view searches; `PrimaryBodyVector` and `SecondaryBodyVector` of a factory attitude follow the
+  spacecraft of the engine's tank. A spacecraft with the default axes and an engine whose tank is on no spacecraft are
+  bit for bit; the forces read no attitude, so the trajectory does not move. Migration, for the former attitude: the
+  constructor with the static axes, `new TriadAttitude(center, epoch, hold, Spacecraft.Down, OrbitalDirectionTarget.Nadir,
+  Spacecraft.Front, OrbitalDirectionTarget.Prograde, engine)`, or `Spacecraft.Front`, `OrbitalDirectionTarget.Prograde`,
+  `Spacecraft.Up`, `new CelestialAttitudeTarget(sun)` for prograde with Sun tracking.
 
 **Removed**
 

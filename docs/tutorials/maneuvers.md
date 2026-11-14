@@ -77,10 +77,12 @@ var triad = new TriadAttitude(earth, epoch, duration,
     engine, 0.0);
 ```
 
-Factory methods create common attitude profiles in one call:
+Factory methods create common attitude profiles in one call. They point the axes of the spacecraft that carries the
+engine (`BodyDown` and `BodyFront` for LVLH, `BodyFront` and `BodyUp` for Sun tracking), so a spacecraft built with
+its own `bodyFront`, `bodyRight` and `bodyUp` gets its own axes pointed:
 
 ```csharp
-// LVLH frame (nadir + velocity tracking)
+// LVLH frame (the spacecraft's down axis to nadir, its front axis toward the velocity)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
 // Prograde thrust with solar panels tracking the Sun

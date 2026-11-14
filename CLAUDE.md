@@ -186,7 +186,7 @@ Test data files live in `Data/SolarSystem/` and are copied to the output directo
 - **Single-vector attitudes** (`NadirAttitude`, `ProgradeAttitude`, etc.): leave roll unconstrained
 - Primary + secondary body vectors must be ≥5 degrees apart (prevents numerical instability)
 - `IAttitudeTarget` mixes orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial bodies (`CelestialAttitudeTarget`); `CelestialAttitudeTarget` defaults to `Aberration.None` (geometric), configurable to `Aberration.LT` for photon-based scenarios
-- Factory methods: `TriadAttitude.CreateLVLH()`, `TriadAttitude.CreateProgradeWithSunTracking()`
+- Factory methods: `TriadAttitude.CreateLVLH()`, `TriadAttitude.CreateProgradeWithSunTracking()`, on the instance axes of the spacecraft of the engine's tank (`BodyDown`/`BodyFront`, `BodyFront`/`BodyUp`), read at execution, the static axes while the tank is on no spacecraft (#677); the `TriadAttitude` constructors take literal body vectors
 - Configurable body axes per spacecraft instance (`BodyFront`, `BodyRight`, `BodyUp`); must be orthogonal and right-handed
 - In a propagation an attitude law is in force from its activation to the next activation of the chain; its hold delays the next maneuver; an impulse's attitude is in force over its thrust and maneuver windows (#539, `docs/reference/attitudes.md#the-attitude-timeline`)
 - `Instrument.Orientation` is the Euler angles (x, y, z) about the axes 1, 2, 3 of the frame kernel: `pxform(instrument, spacecraft) = eul2m(x, y, z, 1, 2, 3)` (Frames Required Reading, "Defining a TK Frame Using Euler Angles"), `Instrument.RotationToSpacecraft`, used by the managed field of view, the spacecraft-frame getters, `TriadAttitude` and `InstrumentPointingToAttitude` (#524)

@@ -1280,7 +1280,7 @@ Represents a spacecraft with components.
 | `BodyUp` | Instance body up axis (default: +Z, same as `Spacecraft.Up`) |
 | `BodyBack` / `BodyLeft` / `BodyDown` | Computed inverses of body axes |
 
-**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`). All attitude maneuvers automatically use per-instance body axes via `GetBodyFront()`.
+**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`). The attitudes read the axes of the spacecraft that carries the engine's tank at execution, with the static axes as fallback: the single-vector attitudes and the attitude of an impulse use `BodyFront` via `GetBodyFront()`, `TriadAttitude.CreateLVLH` uses `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677); the `TriadAttitude` constructors take literal body vectors.
 
 | Method | Description |
 |--------|-------------|
@@ -1447,7 +1447,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
 
-All attitude maneuvers support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y).
+The single-vector attitudes support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` of the same spacecraft, with the same fallback (#677).
 
 **TRIAD Attitude Determination**
 
@@ -1475,7 +1475,7 @@ var attitude = new TriadAttitude(
     Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
     engine);
 
-// Factory methods for common operational attitudes
+// Factory methods for common operational attitudes, on the axes of the engine's spacecraft
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
 ```
@@ -1487,9 +1487,9 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 
 Key features:
 - Minimum 5-degree separation required between body vectors and reference vectors
-- Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp`
-- Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget
-- Factory methods: `CreateLVLH()`, `CreateProgradeWithSunTracking()`
+- Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp` passed explicitly
+- Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget; the body vectors given are literal
+- Factory methods: `CreateLVLH()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the engine's spacecraft, read at execution; the static axes while the tank is on no spacecraft (#677)
 
 #### Impulse maneuvers
 
@@ -2869,7 +2869,7 @@ Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained tow
 - Use `TriadAttitude` with `IAttitudeTarget` to mix orbital directions and celestial targets:
 
 ```csharp
-// LVLH attitude using factory method
+// LVLH attitude using factory method (the spacecraft's BodyDown to nadir, its BodyFront toward prograde)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
 // Prograde with sun tracking using factory method
