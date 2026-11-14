@@ -24,7 +24,11 @@ process for a named spacecraft such as CASSINI (-82) before 11.0.0. So does an i
 does not name, by its built-in names or the loaded kernels (12345678, 2000003): its record held the name of a previous
 call or undefined bytes (#672). The same checks guard the ellipsoid of an occultation search whose frame is read from the
 body (`FindWindowsOnOccultationConstraint` without frames, `ArgumentException` naming `frontBodyId` or `targetId`) and the
-observer of `ReadEphemeris` by identifiers.
+observer of `ReadEphemeris` by identifiers built as a celestial body. A Lagrange point (391 to 395) is the exception:
+`CelestialItem.Create`, and so the observer of `ReadEphemeris`, builds it as a `LagrangePoint` without reading its body
+information, whether the kernels name it or not (`Data/SolarSystem` names none of them; the `LagrangePoint` constructor
+reads its state at J2000 TDB, so its SPK must cover that epoch), while `GetCelestialBodyInfo` and `new CelestialBody` of
+an unnamed one throw.
 
 A body the kernel pool gives no `BODYnnn_RADII` has radii 0, one it gives no `BODYnnn_GM` a GM of 0, and its frame is
 still read (`cnmfrm_c`); a barycentre has no frame (an empty `FrameName`, `FrameId` 0). Before #672 a missing variable

@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -98,10 +99,11 @@ public class NativeAbortGuardTests
 
     /// <summary>
     /// Identifiers of the celestial classes that SPICE does not name (<c>bodc2n_c</c> finds none; 2000003 has a GM in
-    /// <c>gm_de440.tpc</c>): the record held the previous call's name or stack bytes and <c>Id</c> -1, and a body built from
-    /// it had a garbage name and frame (#672). Each read follows a read of a named body.
+    /// <c>gm_de440.tpc</c>; 398 is a moon's slot of the Earth): the record held the previous call's name or stack bytes and
+    /// <c>Id</c> -1, and a body built from it had a garbage name and frame (#672). Each read follows a read of a named body.
     /// </summary>
     [Theory]
+    [InlineData(398)]
     [InlineData(12345678)]
     [InlineData(2000003)]
     [InlineData(99999999)]
@@ -115,6 +117,59 @@ public class NativeAbortGuardTests
             Assert.Contains(id.ToString(), e.Message);
             Assert.Throws<ArgumentException>(() => new CelestialBody(id));
             Assert.Throws<ArgumentException>(() => CelestialItem.Create(id));
+        }
+    }
+
+    /// <summary>
+    /// The Lagrange points 391 to 395, which the solar system kernels do not name (<c>bodc2n_c</c> finds none of them), have
+    /// no body information (#672), but <see cref="CelestialItem.Create"/> builds them as a <see cref="LagrangePoint"/>
+    /// without reading it, as before. L3 (393) is left out: <c>Data/SolarSystem</c> has no SPK for it, and the
+    /// <see cref="LagrangePoint"/> constructor reads its state at J2000 TDB.
+    /// </summary>
+    [Theory]
+    [InlineData(391)]
+    [InlineData(392)]
+    [InlineData(394)]
+    [InlineData(395)]
+    public void LagrangePoint_TheKernelsDoNotName_IsBuiltByCreateOnly(int id)
+    {
+        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.GetCelestialBodyInfo(id));
+        Assert.Equal("naifId", e.ParamName);
+        Assert.Throws<ArgumentException>(() => new CelestialBody(id));
+        var point = Assert.IsType<LagrangePoint>(CelestialItem.Create(id));
+        Assert.Equal(id, point.NaifId);
+        Assert.Equal($"L{id - 390}", point.Name);
+    }
+
+    /// <summary>
+    /// The observer of a read from L1 (391), which the kernels do not name, is still the <see cref="LagrangePoint"/> of
+    /// <see cref="CelestialItem.Create"/> (#672 changes only the site identifiers), and its state the exact negation of the
+    /// read from the Earth to L1 (a read with a celestial observer: <c>spkezr_c</c> subtracts the same two states from the
+    /// solar system barycentre), on both overloads.
+    /// </summary>
+    [Fact]
+    public void ReadEphemeris_FromAnUnnamedLagrangePoint_IsALagrangePoint()
+    {
+        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, frame: TimeFrame.TDBFrame);
+        var reads = new[] { SpiceAPI.Instance.ReadEphemeris(epoch, 391, 399, Frames.Frame.ICRF, Aberration.None).ToStateVector() }
+            .Concat(SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 391, 399, Frames.Frame.ICRF,
+                Aberration.None, TimeSpan.FromSeconds(60.0)).Select(x => x.ToStateVector()))
+            .ToArray();
+        Assert.Equal(3, reads.Length);
+        foreach (var read in reads)
+        {
+            var observer = Assert.IsType<LagrangePoint>(read.Observer);
+            Assert.Equal(391, observer.NaifId);
+            Assert.Equal("L1", observer.Name);
+            var reversed = SpiceAPI.Instance.ReadEphemeris(read.Epoch, 399, 391, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            // L1 is about 1.5e9 m from the Earth: the reference is a state, not the zeros of a read SPICE refused
+            Assert.True(reversed.Position.Magnitude() > 1.0e9);
+            double dr = (read.Position + reversed.Position).Magnitude();
+            double dv = (read.Velocity + reversed.Velocity).Magnitude();
+            _output.WriteLine($"MEASURE Lagrange observer |dr| m: {dr:E3}, |dv| m/s: {dv:E3}");
+            Assert.Equal(0.0, dr);
+            Assert.Equal(0.0, dv);
+            Assert.Equal(reversed.Epoch, read.Epoch);
         }
     }
 
