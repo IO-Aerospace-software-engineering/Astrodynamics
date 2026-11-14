@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -114,6 +116,50 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Null(clock.Spacecraft);
             var valid = new Spacecraft(-1433, "VALID", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
             Assert.Same(valid, clock.Spacecraft);
+        }
+
+        /// <summary>
+        /// One clock given to spacecraft of different NAIF ids built at the same time (#676): one takes it, the others throw
+        /// ArgumentException, and the clock declares the id of the one that took it. A check at the start of the constructor
+        /// and an attachment at its end let several constructors pass the check, and the clock silently kept the first id
+        /// for the others' SCLK. Twice as many threads as cores, 8 at least, released together by a barrier, 50 rounds.
+        /// </summary>
+        [Fact]
+        public void ConcurrentConstructions_OneTakesTheClock()
+        {
+            int threads = System.Math.Max(8, 2 * Environment.ProcessorCount);
+            for (int round = 0; round < 50; round++)
+            {
+                // Arrange
+                var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+                var clock = new Clock("RACE" + round, 65536);
+                var built = new Spacecraft[threads];
+                var errors = new Exception[threads];
+                using var barrier = new Barrier(threads);
+                var workers = Enumerable.Range(0, threads).Select(k => new Thread(() =>
+                {
+                    barrier.SignalAndWait();
+                    try
+                    {
+                        built[k] = new Spacecraft(-1440 - k, "RACE" + k, 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
+                    }
+                    catch (Exception e)
+                    {
+                        errors[k] = e;
+                    }
+                })).ToArray();
+
+                // Act
+                foreach (var worker in workers) worker.Start();
+                foreach (var worker in workers) worker.Join();
+
+                // Assert
+                var winner = Assert.Single(built, x => x != null);
+                Assert.Same(winner, clock.Spacecraft);
+                Assert.Equal(threads - 1, errors.Count(e => e != null));
+                Assert.All(errors.Where(e => e != null), e => Assert.Equal("clock", Assert.IsType<ArgumentException>(e).ParamName));
+                Assert.Same(winner, Assert.Single(earth.Satellites));
+            }
         }
 
         /// <summary>

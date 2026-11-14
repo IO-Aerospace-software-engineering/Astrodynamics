@@ -336,16 +336,19 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// Add engine to spacecraft
         /// </summary>
         /// <param name="engine"></param>
-        /// <exception cref="ArgumentException"></exception>
-        /// <exception cref="InvalidOperationException">The engine's fuel tank is not one of the tank instances added to the
-        /// spacecraft: a tank equal to one of them by name, model and serial number is another tank (#676, #586).</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="engine"/> is null.</exception>
+        /// <exception cref="ArgumentException">The engine is already added, or its fuel tank is not one of the tank
+        /// instances added to the spacecraft: a tank equal to one of them by name, model and serial number is another tank
+        /// (#676, #586; an unknown tank threw <see cref="InvalidOperationException"/> before 11.0.0).</exception>
         public void AddEngine(Engine engine)
         {
             if (engine == null) throw new ArgumentNullException(nameof(engine));
             if (!HoldsFuelTank(engine.FuelTank))
             {
-                throw new InvalidOperationException(
-                    $"Unknown fuel tank, you must add fuel tank to spacecraft before add engine: the fuel tank {engine.FuelTank.Name} (serial number {engine.FuelTank.SerialNumber}) of the engine {engine.Name} is not a tank instance of {Name}; a tank equal to one of its tanks by name, model and serial number is another tank.");
+                // ArgumentException, the call receiving the faulty engine (#676, decided by S. Guillet, 2026-11-14)
+                throw new ArgumentException(
+                    $"Unknown fuel tank, you must add fuel tank to spacecraft before add engine: the fuel tank {engine.FuelTank.Name} (serial number {engine.FuelTank.SerialNumber}) of the engine {engine.Name} is not a tank instance of {Name}; a tank equal to one of its tanks by name, model and serial number is another tank.",
+                    nameof(engine));
             }
 
             if (!_engines.Add(engine))
@@ -363,19 +366,21 @@ namespace IO.Astrodynamics.Body.Spacecraft
         public void AddFuelTank(FuelTank fuelTank)
         {
             if (fuelTank == null) throw new ArgumentNullException(nameof(fuelTank));
-            if (fuelTank.Spacecraft != null && !ReferenceEquals(fuelTank.Spacecraft, this))
-            {
-                throw new ArgumentException(
-                    $"The fuel tank {fuelTank.Name} (serial number {fuelTank.SerialNumber}) belongs to the spacecraft {fuelTank.Spacecraft.Name} ({fuelTank.Spacecraft.NaifId}): a tank belongs to one spacecraft.",
-                    nameof(fuelTank));
-            }
-
-            if (!_fuelTanks.Add(fuelTank))
+            if (_fuelTanks.Contains(fuelTank))
             {
                 throw new ArgumentException("Fuel tank already added to spacecraft");
             }
 
-            fuelTank.SetSpacecraft(this);
+            // Attached atomically, so that one spacecraft takes a tank added to several at once (#676)
+            var holder = fuelTank.AttachSpacecraft(this);
+            if (!ReferenceEquals(holder, this))
+            {
+                throw new ArgumentException(
+                    $"The fuel tank {fuelTank.Name} (serial number {fuelTank.SerialNumber}) belongs to the spacecraft {holder.Name} ({holder.NaifId}): a tank belongs to one spacecraft.",
+                    nameof(fuelTank));
+            }
+
+            _fuelTanks.Add(fuelTank);
         }
 
         // Whether the tank is one of the tank instances of the spacecraft, by reference: FuelTank compares by value (#676)

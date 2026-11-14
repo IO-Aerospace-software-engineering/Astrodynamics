@@ -25,6 +25,7 @@ public class EllipticalInstrument : Instrument
 
     public override async Task WriteKernelAsync(FileInfo outputFile)
     {
+        CheckFrameKernelName("instrument kernel");
         await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.InstrumentKernelEllipticalTemplate.ti");
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
         var templateData = await sr.ReadToEndAsync();

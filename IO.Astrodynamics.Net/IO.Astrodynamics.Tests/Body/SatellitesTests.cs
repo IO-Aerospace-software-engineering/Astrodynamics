@@ -1,9 +1,11 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -85,6 +87,54 @@ public class SatellitesTests
             Assert.Equal(built.Length, listed.Length);
             Assert.Equal(built.Length, earth.Satellites.Count);
             var expected = new HashSet<CelestialItem>(built, ReferenceEqualityComparer.Instance);
+            Assert.True(expected.SetEquals(listed), $"run {run}");
+        }
+    }
+
+    /// <summary>
+    /// The registration under contention (#676): twice as many threads as cores, 16 at least, released together by a
+    /// barrier, list interleaved instances about one body, in 5 runs. The construction test above depends on the load of
+    /// the process (its adds rarely meet when the other tests run); here every thread adds at once, so that the HashSet of
+    /// main loses entries or throws its InvalidOperationException in each run.
+    /// </summary>
+    [Fact]
+    public void ConcurrentRegistration_ListsEachInstanceOnce()
+    {
+        // Arrange: 500 spacecraft per thread, built about a body of their own
+        int threads = System.Math.Max(16, 2 * Environment.ProcessorCount);
+        var source = new CelestialBody(PlanetsAndMoons.EARTH);
+        var items = Enumerable.Range(0, threads * 500)
+            .Select(i => new Spacecraft(-50000 - i, "R" + i, 100.0, 1000.0, new Clock("R" + i, 65536), Orbit(source))).ToArray();
+        var expected = new HashSet<CelestialItem>(items, ReferenceEqualityComparer.Instance);
+
+        for (int run = 0; run < 5; run++)
+        {
+            // Act: each thread adds the items t, t + threads, t + 2 threads, ... about a fresh body
+            var target = new CelestialBody(PlanetsAndMoons.MOON);
+            var errors = new ConcurrentQueue<Exception>();
+            using var barrier = new Barrier(threads);
+            var workers = Enumerable.Range(0, threads).Select(t => new Thread(() =>
+            {
+                barrier.SignalAndWait();
+                try
+                {
+                    for (int i = t; i < items.Length; i += threads)
+                    {
+                        target.AddSatellite(items[i]);
+                    }
+                }
+                catch (Exception e)
+                {
+                    errors.Enqueue(e);
+                }
+            })).ToArray();
+            foreach (var worker in workers) worker.Start();
+            foreach (var worker in workers) worker.Join();
+
+            // Assert: no error, every instance listed once
+            Assert.True(errors.IsEmpty, $"run {run}: {errors.FirstOrDefault()}");
+            var listed = target.Satellites.ToArray();
+            Assert.Equal(items.Length, listed.Length);
             Assert.True(expected.SetEquals(listed), $"run {run}");
         }
     }

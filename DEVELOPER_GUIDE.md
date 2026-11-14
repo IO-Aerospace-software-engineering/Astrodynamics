@@ -1287,7 +1287,7 @@ Represents a spacecraft with components.
 | `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676) |
 | `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same id rule) |
 | `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same id rule) |
-| `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (#676) |
+| `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
 | `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |
 | `GetTotalMass()` | Get total mass including fuel |

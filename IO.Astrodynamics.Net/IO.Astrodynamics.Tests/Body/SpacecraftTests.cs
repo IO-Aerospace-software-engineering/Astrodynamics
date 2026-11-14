@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
@@ -141,7 +142,11 @@ namespace IO.Astrodynamics.Tests.Body
 
             FuelTank fuelTank = new FuelTank("My fuel tank", "ft2021", "sn1", 4000.0, 4000.0);
             Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank);
-            Assert.Throws<InvalidOperationException>(() => spc.AddEngine(eng));
+            // ArgumentException, the call receiving the faulty engine (#676, decided by S. Guillet, 2026-11-14); it was
+            // InvalidOperationException
+            var rejected = Assert.Throws<ArgumentException>(() => spc.AddEngine(eng));
+            Assert.Equal("engine", rejected.ParamName);
+            Assert.Empty(spc.Engines);
         }
 
         [Fact]
@@ -741,11 +746,57 @@ namespace IO.Astrodynamics.Tests.Body
             // Act
             var exception = Record.Exception(() => spc.AddEngine(new Engine("Main", "Model", "SN-E", 320.0, 5.0, t2)));
 
-            // Assert
-            var rejected = Assert.IsType<InvalidOperationException>(exception);
+            // Assert: ArgumentException, the call receiving the faulty engine (#676, decided by S. Guillet, 2026-11-14)
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("engine", rejected.ParamName);
             Assert.Contains("Main", rejected.Message);
             Assert.Empty(spc.Engines);
             Assert.Null(t2.Spacecraft);
+        }
+
+        /// <summary>
+        /// One tank added to spacecraft of different NAIF ids at the same time (#676, #586): one takes it, the others throw
+        /// ArgumentException and hold nothing. A check of the holder before the attachment let two spacecraft pass it, and
+        /// the tank then served both. Twice as many threads as cores, 8 at least, released together by a barrier, 500
+        /// rounds.
+        /// </summary>
+        [Fact]
+        public void ConcurrentAddFuelTank_OneSpacecraftTakesTheTank()
+        {
+            // Arrange
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            int threads = System.Math.Max(8, 2 * Environment.ProcessorCount);
+            var spacecraft = Enumerable.Range(0, threads)
+                .Select(k => new Spacecraft(-1460 - k, "TANKRACE" + k, 1000.0, 10000.0, new Clock("TANKRACE" + k, 65536), LeoAbout(earth))).ToArray();
+            for (int round = 0; round < 500; round++)
+            {
+                var tank = new FuelTank("Race" + round, "Model", "SN" + round, 3000.0, 3000.0);
+                var errors = new Exception[threads];
+                using var barrier = new Barrier(threads);
+                var workers = Enumerable.Range(0, threads).Select(k => new Thread(() =>
+                {
+                    barrier.SignalAndWait();
+                    try
+                    {
+                        spacecraft[k].AddFuelTank(tank);
+                    }
+                    catch (Exception e)
+                    {
+                        errors[k] = e;
+                    }
+                })).ToArray();
+
+                // Act
+                foreach (var worker in workers) worker.Start();
+                foreach (var worker in workers) worker.Join();
+
+                // Assert: one holder, which is the tank's spacecraft
+                var holders = spacecraft.Where(x => x.FuelTanks.Any(t => ReferenceEquals(t, tank))).ToArray();
+                var holder = Assert.Single(holders);
+                Assert.Same(holder, tank.Spacecraft);
+                Assert.Equal(threads - 1, errors.Count(e => e != null));
+                Assert.All(errors.Where(e => e != null), e => Assert.Equal("fuelTank", Assert.IsType<ArgumentException>(e).ParamName));
+            }
         }
 
         /// <summary>
@@ -786,11 +837,18 @@ namespace IO.Astrodynamics.Tests.Body
             // Act
             var spc = new Spacecraft(-2147483, "BOUND", 100.0, 1000.0, new Clock("BOUND", 65536), LeoAbout(new CelestialBody(PlanetsAndMoons.EARTH)));
             var fk = FrameKernelFiles.NewFile("bound");
-            await spc.Frame.WriteAsync(fk);
+            try
+            {
+                await spc.Frame.WriteAsync(fk);
 
-            // Assert: (long)-2147483 × 1000, in 64 bits
-            Assert.Equal(-2147483L * 1000L, (long)spc.Frame.Id);
-            Assert.Contains("FRAME_BOUND_FRAME   = -2147483000", await File.ReadAllTextAsync(fk.FullName));
+                // Assert: (long)-2147483 × 1000, in 64 bits
+                Assert.Equal(-2147483L * 1000L, (long)spc.Frame.Id);
+                Assert.Contains("FRAME_BOUND_FRAME   = -2147483000", await File.ReadAllTextAsync(fk.FullName));
+            }
+            finally
+            {
+                FrameKernelFiles.Delete(fk);
+            }
         }
 
         /// <summary>

@@ -22,7 +22,8 @@ belongs to the spacecraft of one NAIF id, whose id its SCLK declares (`SCLK_DATA
 spacecraft of another id is rejected with `ArgumentException`, one attached to another instance of the same id (a
 kernel-backed twin) is accepted and stays with its first spacecraft. Give each spacecraft its own `new Clock(...)`. The
 clock is attached, and the spacecraft listed by its observer's `Satellites`, at the end of the constructor, after every
-check: a constructor that throws leaves the clock free and lists nothing (#676).
+check: a constructor that throws leaves the clock free and lists nothing (#676). The clock is attached atomically: of
+spacecraft of different ids built at once on several threads with one clock, one takes it and the others throw.
 
 ## Kernel-Backed Constructor
 
@@ -55,7 +56,9 @@ The NAIF id and the clock follow the rules of the standard constructor, checked 
 a kernel-backed spacecraft is the frame the loaded kernels define for the id NaifId × 1000, whatever its name: SPICE is
 asked for that name (`frmnam_c`) at each read, so a twin named otherwise than the propagated spacecraft, or a mission FK
 that names the frame `KSAT_BUS`, is read, and so is an FK loaded after the twin is built. `Frame.Name` stays
-`Name + "_FRAME"`, the name handed to SPICE when no loaded kernel defines the id (#676; before, always that name).
+`Name + "_FRAME"`, the name handed to SPICE when no loaded kernel defines the id (#676; before, always that name). A twin
+whose `Name + "_FRAME"` is the name of the frame of another id, which read that other frame without an error before,
+reads the frame of its own id.
 
 ## Properties
 
@@ -99,8 +102,8 @@ Instance-level overrides can be set via constructor parameters (`bodyFront`, `bo
 | `AddCircularInstrument(...)` | Add circular FOV instrument; its id is negative and not the spacecraft frame's, NaifId × 1000 (#676) |
 | `AddEllipticalInstrument(...)` | Add elliptical FOV instrument, under the same id rule |
 | `AddRectangularInstrument(...)` | Add rectangular FOV instrument, under the same id rule |
-| `AddEngine(Engine)` | Add propulsion engine, whose fuel tank is a tank instance added to the spacecraft (`InvalidOperationException` otherwise, a tank equal to it by value included, #676) |
-| `AddFuelTank(FuelTank)` | Add fuel tank; a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586) |
+| `AddEngine(Engine)` | Add propulsion engine, whose fuel tank is a tank instance added to the spacecraft (`ArgumentException` otherwise, a tank equal to it by value included, #676, #586; `InvalidOperationException` for an unknown tank before 11.0.0) |
+| `AddFuelTank(FuelTank)` | Add fuel tank; a tank held by another spacecraft is rejected (`ArgumentException`, #676, #586); the tank is attached atomically, so that of spacecraft adding one tank at once on several threads one takes it |
 | `AddPayload(Payload)` | Add payload |
 | `GetTotalMass()` | Total mass including fuel |
 | `SetStandbyManeuver(Maneuver, Time?)` | Put a maneuver in standby; a later minimum epoch given here is kept by every propagation: an impulse never fires before it, an attitude never activates before it ([Minimum Epoch](impulse-maneuvers.md#minimum-epoch), [The attitude timeline](attitudes.md#the-attitude-timeline)) |
@@ -122,6 +125,11 @@ spacecraft: its engine's fuel tank is one of the spacecraft's tank instances, he
 throws `InvalidOperationException` naming the maneuver, the engine, its tank and the spacecraft (#676, #586; before, an
 impulse threw `NullReferenceException` at its burn or burnt another spacecraft's fuel, and an attitude took the static
 or another spacecraft's body axes). The engine need not be in `Engines`.
+
+The exception types of these rules follow one rule (decided by S. Guillet, 2026-11-14, after the .NET Framework Design
+Guidelines: `ArgumentException` for a bad argument, `InvalidOperationException` for the state of an object):
+`ArgumentException` where the call receives the faulty object (`AddFuelTank`, `AddEngine`, the clock of a
+constructor), `InvalidOperationException` for the chain checked at a propagation, a state of the spacecraft.
 
 ## Attitude and kernels
 
@@ -266,7 +274,10 @@ A kernel-backed spacecraft reads its frame kernel and its CK through SPICE at ev
   most, counted in the bytes of the file (UTF-8); a quote, which ends the string values the names are also written in,
   is refused too. A name outside the rule throws `InvalidOperationException` and nothing is written (#676; before, the
   FK was written and `LoadKernels` rejected it): 20 ASCII characters at most for a spacecraft, 25 for a spacecraft and an
-  instrument together; `-`, `.`, `/` and non-ASCII letters are accepted within the 32 bytes.
+  instrument together; `-`, `.`, `/` and non-ASCII letters are accepted within the 32 bytes. The instrument kernels
+  (`Instrument.WriteKernelAsync`) name the instrument frame, `<SPACECRAFT>_<INSTRUMENT>`, in the string
+  `INS<id>_FOV_FRAME`, and check the instrument FK's variable by the same rule: a quote ended that string, which SPICE
+  rejected at `furnsh_c` (SPICE(TYPEMISMATCH)), and a blank or a longer name named a frame no FK can define.
 - **The encoded SCLK.** The CK's epochs are the spacecraft clock of the library, 65 536 ticks per second from 1957: a
   double whose spacing is 2.4e-7 s up to 2025-01-19 03:13 TDB and 4.8e-7 s from then to 2093. It is the floor of the
   attitude read from the CK.

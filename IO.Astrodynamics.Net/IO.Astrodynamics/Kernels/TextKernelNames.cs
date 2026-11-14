@@ -8,7 +8,8 @@ namespace IO.Astrodynamics.Kernels;
 /// <summary>
 /// The rule of the kernel variable names that the frame kernel writers build from a name (#676): the
 /// <c>FRAME_&lt;SPACECRAFT&gt;_FRAME</c> of a spacecraft, the <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> of an
-/// instrument and the <c>FRAME_&lt;SITE&gt;_TOPO</c> of a site.
+/// instrument and the <c>FRAME_&lt;SITE&gt;_TOPO</c> of a site. The instrument kernel writers check the variable of the
+/// instrument FK, whose frame name their <c>INS&lt;id&gt;_FOV_FRAME</c> string holds.
 /// </summary>
 /// <remarks>
 /// Kernel Required Reading, "Variable Name Rules": a variable name can include any printable character except a space, a
@@ -28,16 +29,17 @@ internal static class TextKernelNames
     /// </summary>
     /// <param name="variableName">The variable name the writer builds, as it is written.</param>
     /// <param name="owner">What the name belongs to, for the message (e.g. "the spacecraft 'Demo Sat'").</param>
+    /// <param name="kernel">The kernel the writer writes, for the message.</param>
     /// <exception cref="InvalidOperationException">The name holds a whitespace or control character, a quote, a
     /// parenthesis, a comma or '=', or exceeds 32 bytes in UTF-8.</exception>
-    internal static void Check(string variableName, string owner)
+    internal static void Check(string variableName, string owner, string kernel = "frame kernel")
     {
         foreach (var c in variableName)
         {
             if (char.IsWhiteSpace(c) || char.IsControl(c) || c is '\'' or '(' or ')' or ',' or '=')
             {
                 throw new InvalidOperationException(
-                    $"The frame kernel of {owner} cannot be written: its kernel variable {variableName} holds '{c}' (U+{(int)c:X4}), which SPICE does not read in a variable name (a blank, a tab or another whitespace or control character, a quote, a parenthesis, a comma or '='). Rename it.");
+                    $"The {kernel} of {owner} cannot be written: the frame kernel variable {variableName} holds '{c}' (U+{(int)c:X4}), which SPICE does not read in a variable name (a blank, a tab or another whitespace or control character, a quote, a parenthesis, a comma or '='). Rename it.");
             }
         }
 
@@ -45,7 +47,7 @@ internal static class TextKernelNames
         if (bytes > MaximumVariableNameBytes)
         {
             throw new InvalidOperationException(
-                $"The frame kernel of {owner} cannot be written: its kernel variable {variableName} is {bytes} bytes long in UTF-8, and SPICE reads variable names of {MaximumVariableNameBytes} bytes at most. Shorten the name.");
+                $"The {kernel} of {owner} cannot be written: the frame kernel variable {variableName} is {bytes} bytes long in UTF-8, and SPICE reads variable names of {MaximumVariableNameBytes} bytes at most. Shorten the name.");
         }
     }
 }
