@@ -59,6 +59,9 @@ public class SpacecraftFrame : Frame
 
     private readonly IDataProvider _dataProvider;
     private readonly List<AttitudeEntry> _record = new();
+
+    // No region of this lock calls SPICE: an ephemeris read in this frame rotates by the record under the lock of the SPICE
+    // calls (SpiceAPI.ManagedReadFrame, #682), which this order keeps free of a lock inversion
     private readonly object _recordLock = new();
 
     public Spacecraft Spacecraft { get; }
@@ -376,6 +379,26 @@ public class SpacecraftFrame : Frame
                 $"The orientation of {Spacecraft.Name} to ICRF is labelled with its frame, {Name}, the source of the rotation, not {stateOrientation.ReferenceFrame?.Name}.",
                 nameof(stateOrientation));
         return Insert(new AttitudeEntry(stateOrientation with { AngularVelocity = Vector3.Zero }, null), true);
+    }
+
+    /// <summary>
+    /// Whether the attitude record of a managed spacecraft holds an entry: false for a spacecraft never propagated, with no
+    /// orientation added (<see cref="AddStateOrientationToICRF"/>), built from a TLE or propagated by the TLE propagator,
+    /// whose orientation reads give the identity of ICRF, whose field-of-view searches throw, and whose frame an ephemeris
+    /// read reaches SPICE by name (<see cref="SpiceAPI.ManagedReadFrame"/>); always true for a kernel-backed spacecraft,
+    /// which reads its CK (#682).
+    /// </summary>
+    internal bool HasAttitude
+    {
+        get
+        {
+            if (Spacecraft.IsSpiceBacked)
+                return true;
+            lock (_recordLock)
+            {
+                return _record.Count > 0;
+            }
+        }
     }
 
     /// <summary>The last entry of the attitude record of a managed spacecraft, null before any propagation: as

@@ -190,18 +190,60 @@ public class SpiceAPI
     /// <summary>
     /// The managed frame whose orientation an ephemeris read in <paramref name="frame"/> rotates by, or null for a frame
     /// that SPICE knows: an instance of <see cref="TemeFrame"/>, <see cref="CirsFrame"/> or <see cref="TirsFrame"/>, and
-    /// <see cref="Frame.TEME"/> for a frame named TEME (#558). SPICE knows none of these, or, for TEME, the native
-    /// construction that #451 replaced.
+    /// <see cref="Frame.TEME"/> for a frame named TEME (#558); the <see cref="Surface.SiteFrame"/> of a site built from coordinates
+    /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
+    /// (#682), which only the library holds. SPICE knows none of these, or, for TEME, the native construction that #451
+    /// replaced. The frame of a site or a spacecraft of the kernels is SPICE's, and so is the frame of a managed spacecraft
+    /// whose record is empty (never propagated, no orientation added, from a TLE or the TLE propagator): the library holds no
+    /// attitude for it, and its name reaches SPICE as before 11.0.0, which reads the frame and C-kernels of that id when they
+    /// are loaded (those the library wrote for an earlier object of the id) and rejects the frame otherwise
+    /// (SPICE(UNKNOWNFRAME)), rather than the identity of the empty record. A frame built by name is SPICE's but for TEME (#656).
     /// </summary>
+    /// <remarks>
+    /// The rotation (<see cref="ToManagedFrame"/>) runs under the lock of the SPICE calls: a <see cref="Surface.SiteFrame"/> reads
+    /// the frame of its body through SPICE, under the same lock, which is re-entrant, and no static class whose type
+    /// initializer takes it (#623); a <see cref="Body.Spacecraft.SpacecraftFrame"/> takes the lock of its attitude record inside it, which is
+    /// safe because no region of that lock calls SPICE.
+    /// </remarks>
     internal static Frame ManagedReadFrame(Frame frame) => frame switch
     {
         TemeFrame or CirsFrame or TirsFrame => frame,
+        Surface.SiteFrame { Site.IsSpiceBacked: false } => frame,
+        Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: false, HasAttitude: true } => frame,
         _ when IsTeme(frame) => Frame.TEME,
         _ => null
     };
 
+    /// <summary>The one computation method of the illumination searches, CSPICE's <c>gfilum_c</c> (#682).</summary>
+    internal const string EllipsoidMethod = "ELLIPSOID";
+
     /// <summary>
-    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558): rotated by
+    /// The computation method of an illumination search, as <c>gfilum_c</c> takes it: "The only choice currently supported
+    /// is "Ellipsoid"", "Neither case nor whitespaces are significant in `method'" (Detailed_Input <c>method</c>,
+    /// https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfilum_c.html). ELLIPSOID is accepted whatever its case and
+    /// its leading or trailing whitespace; a blank inside the word is rejected, as <c>gfilum_c</c> of N0067 rejects it
+    /// (measured, SPICE(INVALIDMETHOD), #682), and so is any other method, DSK forms included, which N0067's <c>gfilum_c</c>
+    /// does not support either, and the empty string (SPICE(EMPTYSTRING), Exceptions 18). Before 11.0.0 the native proxy
+    /// dropped <c>gfilum_c</c>'s error (no window) and the managed search never read the method.
+    /// </summary>
+    /// <returns>The method as handed to <c>gfilum_c</c>: <see cref="EllipsoidMethod"/>.</returns>
+    /// <exception cref="ArgumentNullException">The method is null.</exception>
+    /// <exception cref="ArgumentException">The method is not ELLIPSOID.</exception>
+    internal static string CheckIlluminationMethod(string method)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        if (!string.Equals(method.Trim(), EllipsoidMethod, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"The illumination method '{method}' cannot apply: ELLIPSOID is the only method, the ellipsoid of the body's radii that the managed search models and the only one CSPICE's gfilum_c supports.",
+                nameof(method));
+        }
+
+        return EllipsoidMethod;
+    }
+
+    /// <summary>
+    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558, #682): rotated by
     /// <see cref="OrbitalParameters.OrbitalParameters.ToFrame"/> at the epoch of the read, as a state in ICRF converted
     /// by the caller would be, then labelled with the frame the caller gave.
     /// </summary>
@@ -705,8 +747,12 @@ public class SpiceAPI
     /// <param name="aberration">The aberration correction.</param>
     /// <param name="stepSize">The step of the search.</param>
     /// <param name="illuminationSourceId">The NAIF id of the illumination source.</param>
-    /// <param name="method">The computation method of <c>gfilum_c</c>.</param>
+    /// <param name="method">The computation method of <c>gfilum_c</c>: ELLIPSOID, the only one it supports, whatever its case
+    /// and its leading or trailing whitespace (#682).</param>
     /// <returns>The windows where the constraint holds.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="fixedFrame"/> or <paramref name="method"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="method"/> is not ELLIPSOID; before 11.0.0 such a method gave no
+    /// window, <c>gfilum_c</c>'s error dropped by the native proxy (#682).</exception>
     /// <remarks>
     /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
     /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
@@ -721,7 +767,7 @@ public class SpiceAPI
         string method = "Ellipsoid")
     {
         if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
-        if (method == null) throw new ArgumentNullException(nameof(method));
+        method = CheckIlluminationMethod(method);
         return SearchWindows(searchWindow, relationalOperator, relation =>
         {
             lock (lockObject)

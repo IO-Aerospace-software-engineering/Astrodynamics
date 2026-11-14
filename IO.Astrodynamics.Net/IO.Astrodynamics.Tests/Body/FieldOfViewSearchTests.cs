@@ -10,6 +10,7 @@ using IO.Astrodynamics.Maneuver;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.Mission;
 using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.OrbitalParameters.TLE;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.Surface;
 using IO.Astrodynamics.TimeSystem;
@@ -737,6 +738,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         // path; the checks come first, so the instruments need no kernel)
         var unpropagated = new Spacecraft(-5153, "FOV5153", 1000.0, 3000.0, new Clock("FOV5153_CLK", 65536),
             new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, _case.Start, Frames.Frame.ICRF));
+        // The attitude it is searched with, given by hand: without one the search throws (#682)
+        unpropagated.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, unpropagated.Frame));
         var kernel = new Spacecraft(PropagatedFieldOfViewCase.ObserverId, "FOV5151", _case.Start, 1000.0, 3000.0, new Clock("FOV5151_CLK", 65536));
         foreach (var spacecraft in new[] { unpropagated, kernel })
         {
@@ -781,14 +784,149 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         // An observer inside the target's ellipsoid, on the managed path only (zzocced's rule)
         var inside = new Spacecraft(-5155, "FOV5155", 1000.0, 3000.0, new Clock("FOV5155_CLK", 65536),
             new StateVector(new Vector3(1000000.0, 0.0, 0.0), new Vector3(0.0, 100.0, 0.0), earth, _case.Start, Frames.Frame.ICRF));
+        inside.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, _case.Start, inside.Frame));
         inside.AddCircularInstrument(-5155001, "INSIDE", "fov515", 0.3, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
         inside.AddRectangularInstrument(-5155002, "INSIDER", "fov515", 0.3, 0.2, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
         foreach (var instrument in inside.Instruments)
         {
-            Assert.Throws<InvalidOperationException>(() => instrument.FindWindowsInFieldOfViewConstraint(new Window(_case.Start, _case.Start.AddSeconds(60.0)), inside, earth,
+            var exception = Assert.Throws<InvalidOperationException>(() => instrument.FindWindowsInFieldOfViewConstraint(new Window(_case.Start, _case.Start.AddSeconds(60.0)), inside, earth,
                 PropagatedFieldOfViewCase.TargetFrame("399"), ShapeType.Ellipsoid, Aberration.None, Step));
+            Assert.DoesNotContain("no attitude", exception.Message);
         }
     }
+
+    // A LEO spacecraft never propagated (a = 6800 km, i = 51.6°), with a circular camera of 30° along +Y (#682)
+    private Spacecraft Unpropagated(int id, TimeSystem.Time epoch)
+    {
+        var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, _case.Earth, epoch, Frames.Frame.ICRF);
+        var spacecraft = new Spacecraft(id, $"FOV{-id}", 100.0, 10000.0, new Clock($"FOV{-id}_CLK", 65536), orbit);
+        spacecraft.AddCircularInstrument(id * 1000 - 1, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
+        return spacecraft;
+    }
+
+    /// <summary>
+    /// #682: a managed spacecraft with an empty attitude record, never propagated (from a state, or from a TLE that reads
+    /// SGP4 at each epoch) or propagated by <see cref="IO.Astrodynamics.Propagator.TLEPropagator"/>, has no attitude to
+    /// search with: the search and <see cref="Instrument.IsInFOV"/> throw, as <c>WriteOrientation</c> refuses to write its
+    /// CK; before, the identity of ICRF was searched (5 windows of the Earth over 6 h for this camera). A field CSPICE
+    /// rejects still throws its own error first. An attitude added to its frame lifts the refusal.
+    /// </summary>
+    [Fact]
+    public void ManagedSpacecraftWithoutAttitude_Throws()
+    {
+        var earth = _case.Earth;
+        var moon = _case.Moon;
+        var epoch = new TimeSystem.Time(2024, 3, 1);
+        var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+        var fromTle = new Spacecraft(-6822, "FOV6822", 1000.0, 3000.0, new Clock("FOV6822_CLK", 65536), tle);
+        fromTle.AddCircularInstrument(-6822001, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
+        // Propagated by TLEPropagator, which records no attitude (#546)
+        var byTlePropagator = new Spacecraft(-6823, "FOV6823", 1000.0, 3000.0, new Clock("FOV6823_CLK", 65536), tle);
+        byTlePropagator.AddCircularInstrument(-6823001, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
+        var tleStart = tle.Epoch.ToTDB();
+        var tleSolution = new IO.Astrodynamics.Propagator.TLEPropagator(new Window(tleStart, tleStart.AddSeconds(6.0 * 3600.0)), byTlePropagator,
+            TimeSpan.FromMinutes(10.0)).Propagate();
+        Assert.Equal(37, tleSolution.StateVectors.Count());
+        foreach (var (spacecraft, start) in new[] { (Unpropagated(-6821, epoch), epoch), (fromTle, tleStart), (byTlePropagator, tleStart) })
+        {
+            var window = new Window(start, start.AddSeconds(6.0 * 3600.0));
+            var camera = spacecraft.Instruments.First();
+            Assert.Null(spacecraft.Frame.GetLatestStateOrientationToICRF());
+            void AssertNoAttitude(Action search)
+            {
+                var exception = Assert.Throws<InvalidOperationException>(search);
+                Assert.Contains(spacecraft.Name, exception.Message);
+                Assert.Contains("no attitude", exception.Message);
+            }
+
+            AssertNoAttitude(() => camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Ellipsoid, Aberration.LT,
+                TimeSpan.FromMinutes(1.0)));
+            AssertNoAttitude(() => camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Point, Aberration.LT,
+                TimeSpan.FromMinutes(1.0)));
+            AssertNoAttitude(() => camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, moon, moon.Frame, ShapeType.Point, Aberration.LT,
+                TimeSpan.FromMinutes(1.0)));
+            AssertNoAttitude(() => camera.IsInFOV(start.AddSeconds(3000.0), earth, Aberration.LT));
+            // The getters keep the documented identity before any attitude
+            Assert.Equal(Vector3.VectorY, camera.GetBoresightInICRFFrame(start));
+
+            // A field error first: a zero boresight
+            spacecraft.AddCircularInstrument(spacecraft.NaifId * 1000 - 2, "ZERO", "fov682", 0.3, Vector3.Zero, Vector3.VectorY, Vector3.Zero);
+            var zero = spacecraft.Instruments.First(x => x.Name == "ZERO");
+            var fieldError = Assert.Throws<InvalidOperationException>(() =>
+                zero.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Point, Aberration.LT, TimeSpan.FromMinutes(1.0)));
+            Assert.Contains("boresight", fieldError.Message);
+            Assert.Contains("boresight", Assert.Throws<InvalidOperationException>(() => zero.IsInFOV(start, earth, Aberration.LT)).Message);
+            // and an argument error before it: the instrument's spacecraft as the target
+            Assert.Throws<ArgumentException>(() =>
+                camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, spacecraft, earth.Frame, ShapeType.Point, Aberration.LT, TimeSpan.FromMinutes(1.0)));
+
+            // An attitude added to its frame lifts the refusal: the identity searched as before 11.0.0
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
+            Assert.NotEmpty(camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Ellipsoid, Aberration.LT,
+                TimeSpan.FromMinutes(1.0)));
+            camera.IsInFOV(start.AddSeconds(3000.0), earth, Aberration.LT);
+        }
+    }
+
+    /// <summary>
+    /// #682: an attitude given by hand (<see cref="SpacecraftFrame.AddStateOrientationToICRF"/>), the identity and
+    /// rotations of ±90° about Z, is the one searched: <see cref="Instrument.IsInFOV"/> equals the closed form of a circular
+    /// field, the angle between the rotated boresight and the direction of the Earth's centre at most the half-angle, at 60
+    /// epochs over 6 h; at the edges of the windows of the search that angle is the half-angle.
+    /// </summary>
+    [Fact]
+    public void AttitudeAddedByHand_IsTheOneSearched()
+    {
+        var earth = _case.Earth;
+        var epoch = new TimeSystem.Time(2024, 3, 1);
+        var window = new Window(epoch, epoch.AddSeconds(6.0 * 3600.0));
+        double halfAngle = 30.0 * IO.Astrodynamics.Constants.Deg2Rad;
+        double worst = 0.0;
+        int id = -6823;
+        // The identity keeps the boresight +Y 51.6° from the orbit's plane, the Earth's centre never within the 30° of the
+        // field; a rotation of ±90° about Z brings it to ∓X, in the plane, swept once per orbit
+        foreach (var q in new[] { Quaternion.Identity, new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2), new Quaternion(Vector3.VectorZ, -IO.Astrodynamics.Constants.PI2) })
+        {
+            var spacecraft = Unpropagated(id--, epoch);
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame));
+            var camera = spacecraft.Instruments.First();
+            var boresight = Vector3.VectorY.Rotate(q);
+            double Angle(TimeSystem.Time t) => boresight.Angle(earth.GetEphemeris(t, spacecraft, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position);
+            int inView = 0;
+            for (int k = 0; k < 60; k++)
+            {
+                var t = epoch.AddSeconds(360.0 * k);
+                bool expected = Angle(t) <= halfAngle;
+                inView += expected ? 1 : 0;
+                Assert.Equal(expected, camera.IsInFOV(t, earth, Aberration.None));
+            }
+
+            var windows = camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.None,
+                TimeSpan.FromMinutes(1.0)).ToArray();
+            if (q == Quaternion.Identity)
+            {
+                Assert.Equal(0, inView);
+                Assert.Empty(windows);
+                continue;
+            }
+
+            Assert.InRange(inView, 1, 59);
+            Assert.NotEmpty(windows);
+            foreach (var edge in windows.SelectMany(w => new[] { w.StartDate, w.EndDate }).Where(x => x > window.StartDate && x < window.EndDate))
+            {
+                worst = System.Math.Max(worst, System.Math.Abs(Angle(edge) - halfAngle));
+            }
+        }
+
+        _output.WriteLine($"MEASURE #682 attitude by hand: worst |angle at an edge - half-angle| {worst:E3} rad");
+        Assert.True(worst < AttitudeByHandEdgeLimit, $"{worst:E3} rad");
+    }
+
+    // #682. Twice the worst over Linux, Windows and macOS arm64 rounded up (CI run 43591652055, 2026-11-14): 9.689e-11 rad
+    // on each of the three: the edges of the search to 1 µs and the 100 ns of a Time, at the 1.1e-3 rad/s
+    // of the Earth's direction in LEO, within the 1.1e-9 rad they allow
+    private const double AttitudeByHandEdgeLimit = 2.0e-10;
 
     /// <summary>
     /// Twelve searches in parallel, each on a fresh spacecraft (six propagated, three of them with a nadir attitude, and six

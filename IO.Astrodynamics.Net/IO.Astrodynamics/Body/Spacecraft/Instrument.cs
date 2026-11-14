@@ -173,7 +173,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <exception cref="InvalidOperationException">The field of view cannot be searched: a boresight zero or parallel to
         /// the reference vector, a half-angle not positive, an angular radius above π/2 − 1e-6, or a shape other than a
         /// circle on an instrument that is neither an <see cref="EllipticalInstrument"/> nor a <see cref="RectangularInstrument"/>;
-        /// or, on the managed path, the observer is inside the ellipsoid of the target.</exception>
+        /// or, on the managed path, the instrument's spacecraft is managed and has no attitude (its attitude record is empty:
+        /// never propagated and no orientation added with <see cref="SpacecraftFrame.AddStateOrientationToICRF"/>, built from
+        /// a TLE, or propagated by the TLE propagator; before 11.0.0 the identity of ICRF was searched, #682), or the observer
+        /// is inside the ellipsoid of the target.</exception>
         public IEnumerable<Window> FindWindowsInFieldOfViewConstraint(Window searchWindow, Spacecraft observer, ILocalizable target,
             Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
         {
@@ -278,7 +281,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="aberration">The aberration correction.</param>
         /// <exception cref="ArgumentException">The target is the instrument's spacecraft.</exception>
         /// <exception cref="InvalidOperationException">The field of view cannot be searched (see
-        /// <see cref="FindWindowsInFieldOfViewConstraint"/>).</exception>
+        /// <see cref="FindWindowsInFieldOfViewConstraint"/>), or the spacecraft is managed and has no attitude (#682; before
+        /// 11.0.0 the identity of ICRF was used).</exception>
         public virtual bool IsInFOV(Time date, ILocalizable target, Aberration aberration)
         {
             return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(date) >= 0.0;
