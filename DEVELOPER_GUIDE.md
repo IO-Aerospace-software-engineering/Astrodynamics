@@ -189,9 +189,9 @@ Singleton class providing access to SPICE operations.
 | Method | Description |
 |--------|-------------|
 | `LoadKernels(FileSystemInfo path)` | Load SPICE kernel(s) from file or directory |
-| `UnloadKernels(FileSystemInfo path)` | Unload SPICE kernel(s) |
+| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, even after the path was deleted; a file of a loaded directory leaves its other files listed (#673) |
 | `ClearKernels()` | Unload all kernels |
-| `GetLoadedKernels()` | Get list of currently loaded kernels |
+| `GetLoadedKernels()` | Get list of currently loaded paths |
 | `GetSpiceVersion()` | Get SPICE toolkit version |
 | `ReadEphemeris(...)` | Read state vectors (throws `InvalidOperationException` on native error) |
 | `ReadOrientation(...)` | Read spacecraft orientations (throws `InvalidOperationException` on native error) |
@@ -315,7 +315,7 @@ Represents a natural celestial body (planet, moon, star).
 | Method | Description |
 |--------|-------------|
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state at epoch |
-| `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get states over window |
+| `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get states over window: every step from the start, in the window's calendar, up to its end (across a leap second the end bounds them, #682) |
 | `GetOrientation(Frame referenceFrame, Time epoch)` | Get body orientation |
 | `SideralRotationPeriod(Time epoch)` | Get sidereal rotation period |
 | `TrueSolarDay(Time epoch)` | Get true solar day duration |
@@ -1120,7 +1120,7 @@ Ground-based observation site.
 | `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows |
-| `FindWindowsOnIlluminationConstraint(...)` | Find illumination windows |
+| `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source; the emission and phase angles need an observer and throw, the method is ELLIPSOID (#682) |
 | `FindDayWindows(Window searchWindow, double twilight)` | Find daylight windows |
 | `IlluminationIncidence(Time date, ILocalizable source, Aberration aberration)` | Get solar incidence angle |
 | `WriteFrameAsync(FileInfo outputFile)` | Write site frame kernel |
@@ -1265,11 +1265,11 @@ Represents a spacecraft with components.
 
 | Property | Description |
 |----------|-------------|
-| `NaifId` | NAIF ID (negative) |
-| `Name` | Spacecraft name |
+| `NaifId` | NAIF ID, in [-2147483, -1] so that the frame id NaifId × 1000 is an `int` (#676) |
+| `Name` | Spacecraft name; its frame kernel variable `FRAME_<NAME>_FRAME` takes 20 ASCII characters at most, without blank, tab, quote, parenthesis, comma or '=' (#676) |
 | `DryOperatingMass` | Mass without fuel (kg) |
 | `MaximumOperatingMass` | Maximum operating mass (kg) |
-| `Clock` | Onboard clock |
+| `Clock` | Onboard clock, of this spacecraft's NAIF id alone: a clock attached to a spacecraft of another id is rejected (#676) |
 | `SectionalArea` | Mean cross-sectional area for drag and SRP (m²) |
 | `DragCoefficient` | Drag coefficient Cd (default 2.2) |
 | `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
@@ -1284,11 +1284,11 @@ Represents a spacecraft with components.
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument |
-| `AddEngine(Engine engine)` | Add propulsion engine |
-| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank |
+| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676) |
+| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same id rule) |
+| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same id rule) |
+| `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
+| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |
 | `GetTotalMass()` | Get total mass including fuel |
 | `GetTotalFuel()` | Get total fuel mass |
@@ -1391,8 +1391,8 @@ Base class for spacecraft instruments.
 
 | Method | Description |
 |--------|-------------|
-| `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT` |
-| `FindWindowsInFieldOfViewConstraint(...)` | The windows, in TDB, of CSPICE's `gftfov`: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search") |
+| `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT`; throws for a managed spacecraft without attitude (#682) |
+| `FindWindowsInFieldOfViewConstraint(...)` | The windows, in TDB, of CSPICE's `gftfov`: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TLEPropagator`, until `AddStateOrientationToICRF` gives it one (#682) |
 | `GetBoresightInSpacecraftFrame()` | Get boresight in spacecraft frame |
 | `GetBoresightInICRFFrame(Time date)` | Get boresight in ICRF |
 

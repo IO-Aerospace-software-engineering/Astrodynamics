@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO.Astrodynamics.Conformanc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO.Astrodynamics.Tests.ColdStart", "IO.Astrodynamics.Tests.ColdStart\IO.Astrodynamics.Tests.ColdStart.csproj", "{DEA0F3EF-D7C5-4E40-8C52-A6D054DE79D5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO.Astrodynamics.Tests.KernelUnload", "IO.Astrodynamics.Tests.KernelUnload\IO.Astrodynamics.Tests.KernelUnload.csproj", "{E63AAEBD-F154-4724-B8A4-340C9C939AD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -122,6 +124,18 @@ Global
 		{DEA0F3EF-D7C5-4E40-8C52-A6D054DE79D5}.Release|x64.Build.0 = Release|Any CPU
 		{DEA0F3EF-D7C5-4E40-8C52-A6D054DE79D5}.Release|x86.ActiveCfg = Release|Any CPU
 		{DEA0F3EF-D7C5-4E40-8C52-A6D054DE79D5}.Release|x86.Build.0 = Release|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Debug|x64.Build.0 = Debug|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Debug|x86.Build.0 = Debug|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Release|x64.ActiveCfg = Release|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Release|x64.Build.0 = Release|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Release|x86.ActiveCfg = Release|Any CPU
+		{E63AAEBD-F154-4724-B8A4-340C9C939AD5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

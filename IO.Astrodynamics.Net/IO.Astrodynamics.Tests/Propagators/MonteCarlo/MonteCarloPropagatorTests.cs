@@ -281,6 +281,56 @@ public class MonteCarloPropagatorTests
         Assert.True(result.EpochStatistics.Count > 0);
     }
 
+    [Fact]
+    public void TemeTemplate_RunsStartFromTheirRotatedSamples()
+    {
+        // Arrange: a template on an osculating TEME state with its covariance (#675: every run threw "must be defined in
+        // inertial frame"); the samples are TEME states, each rotated once to ICRF by the propagation
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        double r0 = 6800000.0;
+        double v0 = System.Math.Sqrt(earth.GM / r0);
+        var cov = new Matrix(6, 6);
+        for (int i = 0; i < 3; i++)
+        {
+            cov.Set(i, i, 100.0);
+            cov.Set(i + 3, i + 3, 0.01);
+        }
+
+        var nominal = new StateVector(new Vector3(r0, 0, 0), new Vector3(0, 0.6 * v0, 0.8 * v0), earth, TimeSystem.Time.J2000TDB,
+            Frames.Frame.TEME, cov);
+        var config = new MonteCarloConfiguration
+        {
+            RunCount = 3,
+            Seed = 675,
+            TemplateSpacecraft = new Spacecraft(-1675, "TemeTemplate", 100.0, 10000.0, new Clock("clk675", 256), nominal),
+            Window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddMinutes(10)),
+            CelestialBodiesFactory = () => [new CelestialBody(PlanetsAndMoons.EARTH)],
+            DeltaT = TimeSpan.FromSeconds(60),
+            BaseNaifId = -1680
+        };
+        var samples = StateSampler.Sample(nominal, 3, 675);
+
+        // Act
+        var runs = MonteCarloPropagator.PropagateRuns(config, nominal, samples, 0);
+        var campaign = MonteCarloPropagator.Propagate(config);
+
+        // Assert: each run starts from its TEME sample rotated by ToFrame(ICRF) (the quasi-inertial rotation of the managed
+        // TEME), bit for bit, its solution in ICRF; the campaign runs
+        for (int k = 0; k < samples.Length; k++)
+        {
+            Assert.True(runs.Results[k].Succeeded, runs.Results[k].Error?.ToString());
+            var solution = runs.Results[k].Solution;
+            var rotated = samples[k].ToFrame(Frames.Frame.ICRF).ToStateVector();
+            Assert.Equal(Frames.Frame.ICRF, solution.Frame);
+            Assert.Equal(Frames.Frame.ICRF, solution.StateVectors[0].Frame);
+            Assert.Equal(rotated.Position, solution.StateVectors[0].Position);
+            Assert.Equal(rotated.Velocity, solution.StateVectors[0].Velocity);
+        }
+
+        Assert.Equal(3, campaign.SuccessCount);
+        Assert.Equal(0, campaign.FailureCount);
+    }
+
     private static Spacecraft CreateTemplateSpacecraftWithGeopotential()
     {
         var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,

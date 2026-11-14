@@ -49,6 +49,44 @@ public class PropagateTests
         Assert.Contains("Propagation completed", res);
     }
 
+    [Fact]
+    public async Task Propagate_ToADirectoryTooLongForItsKernels_Throws()
+    {
+        // Arrange: an output directory that puts the CK, the longest kernel of the export,
+        // <output>/MissionK673_ScenarioK673/Spacecrafts/K673/Orientation/K673.ck, at 256 characters: one more than FURNSH
+        // stores (#673). Before, the export succeeded and its kernels could not be loaded
+        var root = Directory.CreateTempSubdirectory("propagate-length-");
+        string Longest(string output) => Path.Combine(output, "MissionK673_ScenarioK673", "Spacecrafts", "K673", "Orientation", "K673.ck");
+        var output = Path.Combine(root.FullName, new string('o', 256 - Longest(root.FullName).Length - 1));
+        Assert.Equal(256, Longest(output).Length);
+        var command = new PropagateCommand();
+        StringWriter sw = new StringWriter(new StringBuilder());
+
+        try
+        {
+            using (await Configuration.LockAsync())
+            {
+                Console.SetOut(sw);
+
+                // Act
+                var exception = await Assert.ThrowsAsync<ArgumentException>(() => command.Propagate("Data", "K673",
+                    new Commands.Parameters.OrbitalParameters
+                    {
+                        CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0", Frame = "ICRF", OrbitalParametersValues = "6800000.0 0.0 0.0 0.0 8000.0 0.0",
+                        FromStateVector = true
+                    }, new WindowParameters { Begin = "0.0", End = "60.0" }, output, false, false));
+
+                // Assert: nothing written
+                Assert.Equal("outputDirectory", exception.ParamName);
+                Assert.False(Directory.Exists(output));
+            }
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
     [Theory]
     [InlineData("circular, i 30, node 40 (suite 155)", "P452C")]
     [InlineData("equatorial, e 0.05, lop 120 (suite 156)", "P452E")]
@@ -210,6 +248,68 @@ public class PropagateTests
     }
 
     /// <summary>
+    /// The start of the TLE runs below: 2021-01-20 13:00 UTC, 47 min after the epoch of the ISS TLE, rounded to the TDB
+    /// second, so that the window the CLI parses from its seconds is the window of the reference to the tick.
+    /// </summary>
+    private static Time TleStart => Time.CreateTDB(System.Math.Round(new Time("2021-01-20T13:00:00Z").ToTDB().TimeSpanFromJ2000().TotalSeconds));
+
+    /// <summary>
+    /// Since #675, <c>-t</c> starts from the SGP4 state on the Earth of the CLI, so <c>-n</c> reaches the TLE path too:
+    /// the SPK of <c>-t -n</c> must be the library run of the same scenario from the SGP4 state at the TDB start of the
+    /// window, in TEME on an Earth with <see cref="GeopotentialModelParameters"/> of the requested degree (the reference of
+    /// <see cref="EarthGeopotentialDegree_IsTheDegreeOfTheRun"/>), and more than 1 m from the run of degree 10 at the end
+    /// of this 600 s window.
+    /// </summary>
+    [Theory]
+    [InlineData((ushort)2)]
+    [InlineData((ushort)50)]
+    public async Task EarthGeopotentialDegree_IsTheDegreeOfTheTleRun(ushort degree)
+    {
+        var start = TleStart;
+        var end = start.AddSeconds(600.0);
+        var values = $"{IssLine1},{IssLine2}";
+
+        using (await Configuration.LockAsync())
+        {
+            var cli = await RunAndReadEnd("t", values, "ICRF", $"N{degree}t", end, degree, start);
+            var library = await LibraryRunEnd("t", values, "ICRF", degree, end, start);
+            var degree10 = await LibraryRunEnd("t", values, "ICRF", 10, end, start);
+
+            var error = (cli - library).Magnitude();
+            var separation = (cli - degree10).Magnitude();
+            _output.WriteLine($"MEASURE #681 EarthGeopotentialDegree_IsTheDegreeOfTheTleRun, -t n = {degree}: " +
+                              $"CLI SPK to the library run {error:E2} m, to the run of degree 10 {separation:F3} m");
+            Assert.True(error < SpkInterpolationThreshold, $"CLI SPK {error:E2} m from the library run of degree {degree}");
+            Assert.True(separation > 1.0, $"CLI SPK {separation:E2} m from the library run of degree 10");
+        }
+    }
+
+    /// <summary>
+    /// The default degree of <c>-t</c> is 10, as on the other paths: the SPK of a TLE run without <c>-n</c> is byte for
+    /// byte that of <c>-n 10</c>, the library run of degree 10.
+    /// </summary>
+    [Fact]
+    public async Task DefaultDegree_IsDegree10_FromTle()
+    {
+        var start = TleStart;
+        var end = start.AddSeconds(600.0);
+        var values = $"{IssLine1},{IssLine2}";
+
+        using (await Configuration.LockAsync())
+        {
+            var withoutOption = await Run("t", values, "ICRF", "NDt", "NDt", end, null, start: start);
+            var with10 = await Run("t", values, "ICRF", "NDt", "N10t", end, 10, start: start);
+            Assert.Equal(File.ReadAllBytes(withoutOption.FullName), File.ReadAllBytes(with10.FullName));
+
+            var cli = ReadEnd(withoutOption, end);
+            var library = await LibraryRunEnd("t", values, "ICRF", 10, end, start);
+            var error = (cli - library).Magnitude();
+            _output.WriteLine($"MEASURE #681 DefaultDegree_IsDegree10_FromTle: CLI SPK to the library run of degree 10 {error:E2} m");
+            Assert.True(error < SpkInterpolationThreshold, $"CLI SPK {error:E2} m from the library run of degree 10");
+        }
+    }
+
+    /// <summary>
     /// The SPK of the CLI read at the window end against the library run of the same degree, the same computation on the
     /// same platform: what remains is the reading of the type-9 SPK, one unit in the last place of a 6.8e6 m position
     /// (9.3e-10 m). Worst over the rows of these tests in the CI of run 43595592229 (2026-11-14), the -q row on each
@@ -230,7 +330,7 @@ public class PropagateTests
     }
 
     private static async Task<FileInfo> Run(string activation, string values, string frame, string bodyName, string output, Time end,
-        ushort? degree, int center = 399)
+        ushort? degree, int center = 399, Time? start = null)
     {
         var command = new PropagateCommand();
         var sb = new StringBuilder();
@@ -243,9 +343,13 @@ public class PropagateTests
         var parameters = new Commands.Parameters.OrbitalParameters
         {
             CenterOfMotionId = center, OrbitalParametersEpoch = "0.0", Frame = frame, OrbitalParametersValues = values,
-            FromStateVector = activation == "s", FromKeplerian = activation == "k", FromEquinoctial = activation == "q"
+            FromStateVector = activation == "s", FromKeplerian = activation == "k", FromEquinoctial = activation == "q", FromTLE = activation == "t"
         };
-        var window = new WindowParameters { Begin = "0.0", End = end.TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture) };
+        var window = new WindowParameters
+        {
+            Begin = (start ?? Time.J2000TDB).TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture),
+            End = end.TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture)
+        };
         if (degree.HasValue)
         {
             await command.Propagate("Data", bodyName, parameters, window, output, false, false, degree.Value);
@@ -259,9 +363,10 @@ public class PropagateTests
         return new FileInfo(Directory.GetFiles(output, $"{bodyName}.spk", SearchOption.AllDirectories).Single());
     }
 
-    private static async Task<Vector3> RunAndReadEnd(string activation, string values, string frame, string name, Time end, ushort degree)
+    private static async Task<Vector3> RunAndReadEnd(string activation, string values, string frame, string name, Time end, ushort degree,
+        Time? start = null)
     {
-        return ReadEnd(await Run(activation, values, frame, name, name, end, degree), end);
+        return ReadEnd(await Run(activation, values, frame, name, name, end, degree, start: start), end);
     }
 
     /// <summary>The position of the spacecraft (-1000) relative to the Earth in ICRF at the window end, read from its SPK.</summary>
@@ -280,15 +385,26 @@ public class PropagateTests
 
     /// <summary>
     /// The reference: the scenario the command builds, with the library's own <see cref="GeopotentialModelParameters"/>
-    /// of <paramref name="degree"/> on a fresh stream of the embedded model (a parameter set reads its stream once).
+    /// of <paramref name="degree"/> on a fresh stream of the embedded model (a parameter set reads its stream once). For a
+    /// TLE (<c>t</c>, its two lines separated by a comma), the SGP4 state at the TDB start of the window in TEME on that
+    /// Earth, as <see cref="Helpers.TleStartState"/> builds it from <c>tle.ToStateVector</c> (#675).
     /// </summary>
-    private static async Task<Vector3> LibraryRunEnd(string activation, string values, string frame, ushort degree, Time end)
+    private static async Task<Vector3> LibraryRunEnd(string activation, string values, string frame, ushort degree, Time end,
+        Time? startEpoch = null)
     {
         var stream = typeof(PropagateCommand).Assembly.GetManifestResourceStream(EmbeddedModel)!;
         var earth = new CelestialBody(399, new GeopotentialModelParameters(stream, degree), new EarthStandardAtmosphere());
-        var v = values.Split(' ').Select(x => double.Parse(x, CultureInfo.InvariantCulture)).ToArray();
         var inputFrame = new Frames.Frame(frame == "ICRF" ? "J2000" : frame);
-        var start = Time.J2000TDB;
+        var start = startEpoch ?? Time.J2000TDB;
+        if (activation == "t")
+        {
+            var lines = values.Split(',');
+            var sgp4 = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("Reference", lines[0], lines[1]).ToStateVector(start);
+            return await LibraryRunEnd(new IO.Astrodynamics.OrbitalParameters.StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frames.Frame.TEME),
+                earth, start, end);
+        }
+
+        var v = values.Split(' ').Select(x => double.Parse(x, CultureInfo.InvariantCulture)).ToArray();
         IO.Astrodynamics.OrbitalParameters.OrbitalParameters initial = activation switch
         {
             "s" => new IO.Astrodynamics.OrbitalParameters.StateVector(new Vector3(v[0], v[1], v[2]), new Vector3(v[3], v[4], v[5]), earth, start,
@@ -296,11 +412,136 @@ public class PropagateTests
             "k" => new IO.Astrodynamics.OrbitalParameters.KeplerianElements(v[0], v[1], v[2], v[3], v[4], v[5], earth, start, inputFrame),
             _ => new IO.Astrodynamics.OrbitalParameters.EquinoctialElements(v[0], v[1], v[2], v[3], v[4], v[5], earth, start, inputFrame)
         };
+        return await LibraryRunEnd(initial, earth, start, end);
+    }
+
+    /// <summary>The scenario of the command from <paramref name="initial"/>: Velocity-Verlet 1 s, no drag or SRP.</summary>
+    private static async Task<Vector3> LibraryRunEnd(IO.Astrodynamics.OrbitalParameters.OrbitalParameters initial, CelestialBody earth, Time start,
+        Time end)
+    {
         var spacecraft = new Spacecraft(-1000, "Reference", 100.0, 100.0, new Clock("clockReference", 65536), initial, 1.0, 0.3);
         var scenario = new Mission.Scenario("ScenarioReference", new Mission.Mission("MissionReference"), new Window(start, end));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(earth);
         await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
         return spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position;
+    }
+
+    private const string IssLine1 = "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054";
+    private const string IssLine2 = "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703";
+
+    // The SPK type-9 rounding of the stored states (PropagatedArcsTests.SpkAgainstManaged of IO.Astrodynamics.Tests)
+    private const double SpkAgainstManaged = 2.4e-3;
+
+    [Fact]
+    public async Task PropagateFromTle_RunsOnTheCliEarth()
+    {
+        // Arrange: -t with -r and -a over 30 min (#675: the command threw "must be defined in inertial frame"). The
+        // reference: the library run of a spacecraft built by the test from the SGP4 state at the TDB start of the window
+        // (CSPICE evsgp4_c), rotated to ICRF by the managed TEME, on the Earth of the CLI (EGM2008 at degree 10,
+        // EarthStandardAtmosphere), with the settings of the command (Scenario.SimulateAsync, Velocity-Verlet 1 s, mass 100,
+        // area 1, Cd 0.3). The output directory is short: CSPICE loads a kernel path of at most 255 characters
+        const string outputDirectory = "P675T";
+        var command = new PropagateCommand();
+        var sb = new StringBuilder();
+        var sw = new StringWriter(sb);
+        var window = new TimeSystem.Window(new TimeSystem.Time("2021-01-20T13:00:00Z"), new TimeSystem.Time("2021-01-20T13:30:00Z"));
+        var epochs = Enumerable.Range(0, 31).Select(i => window.StartDate.ToTDB().AddSeconds(60.0 * i)).ToArray();
+        double worst = 0.0, fromPointMass = double.MaxValue;
+
+        using (await Configuration.LockAsync())
+        {
+            Console.SetOut(sw);
+
+            // Act
+            await command.Propagate("Data", "P675", new Commands.Parameters.OrbitalParameters
+            {
+                CenterOfMotionId = 399, OrbitalParametersEpoch = "2021-01-20T13:00:00Z", Frame = "ICRF",
+                OrbitalParametersValues = $"{IssLine1},{IssLine2}", FromTLE = true
+            }, new WindowParameters { Begin = "2021-01-20T13:00:00Z", End = "2021-01-20T13:30:00Z" }, outputDirectory, true, true);
+
+            var tle = new OrbitalParameters.TLE.TLE("ISS", IssLine1, IssLine2);
+            var t0 = window.StartDate.ToTDB();
+            var cliEarth = new Body.CelestialBody(399, new Body.GeopotentialModelParameters(
+                typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt"), 10),
+                new Atmosphere.EarthStandardAtmosphere());
+            var s = tle.ToOsculating(t0).ToFrame(Frames.Frame.ICRF).ToStateVector();
+            var twin = Simulate(new OrbitalParameters.StateVector(s.Position, s.Velocity, cliEarth, t0, Frames.Frame.ICRF), cliEarth, -1001, window);
+            var pointMass = Simulate(tle, (Body.CelestialBody)tle.Observer, -1002, window);
+
+            var ephemeris = new FileInfo(Directory.GetFiles(outputDirectory, "P675.spk", SearchOption.AllDirectories).Single());
+            try
+            {
+                SpiceAPI.Instance.LoadKernels(ephemeris);
+                foreach (var epoch in epochs)
+                {
+                    var fromSpk = SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1000, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    var expected = twin.GetEphemeris(epoch, cliEarth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    worst = System.Math.Max(worst, (fromSpk.Position - expected.Position).Magnitude());
+                }
+
+                var end = SpiceAPI.Instance.ReadEphemeris(epochs[^1], 399, -1000, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                fromPointMass = (end.Position - pointMass.GetEphemeris(epochs[^1], cliEarth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position)
+                    .Magnitude();
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(ephemeris);
+            }
+        }
+
+        // Assert: the SPK of the command is the library run on the Earth of the CLI, within the rounding of the SPK, and
+        // more than 1 km from the run on the point-mass Earth of the TLE, without geopotential nor atmosphere
+        _output.WriteLine($"MEASURE #675 PropagateFromTle_RunsOnTheCliEarth: SPK against the library run {worst:E3} m, " +
+                          $"{fromPointMass:F1} m from the point-mass run at the end");
+        Assert.Contains("Propagation completed", sb.ToString());
+        Assert.InRange(worst, 0.0, SpkAgainstManaged);
+        Assert.True(fromPointMass > 1000.0, $"{fromPointMass:F1} m");
+    }
+
+    /// <summary>The library run of the command: a scenario of the spacecraft and its centre, drag and SRP, Velocity-Verlet 1 s.</summary>
+    private static Body.Spacecraft.Spacecraft Simulate(OrbitalParameters.OrbitalParameters orbit, Body.CelestialBody center, int naifId,
+        TimeSystem.Window window)
+    {
+        var spacecraft = new Body.Spacecraft.Spacecraft(naifId, $"P675R{-naifId}", 100.0, 100.0, new Body.Spacecraft.Clock($"clockP675R{-naifId}", 65536),
+            orbit, 1.0, 0.3);
+        var scenario = new Mission.Scenario($"ScenarioP675R{-naifId}", new Mission.Mission($"MissionP675R{-naifId}"), window);
+        scenario.AddSpacecraft(spacecraft);
+        scenario.AddCelestialItem(center);
+        scenario.SimulateAsync(true, true, TimeSpan.FromSeconds(1.0)).GetAwaiter().GetResult();
+        return spacecraft;
+    }
+
+    [Fact]
+    public async Task PropagateFromTle_RejectsAnotherCentre()
+    {
+        // Arrange: -t about the Moon; a TLE is an Earth orbit by definition (SGP4, WGS-72)
+        const string outputDirectory = "P675M";
+        if (Directory.Exists(outputDirectory))
+        {
+            Directory.Delete(outputDirectory, true);
+        }
+
+        var command = new PropagateCommand();
+        var sb = new StringBuilder();
+        var sw = new StringWriter(sb);
+        ArgumentException exception;
+
+        using (await Configuration.LockAsync())
+        {
+            Console.SetOut(sw);
+
+            // Act
+            exception = await Assert.ThrowsAsync<ArgumentException>(() => command.Propagate("Data", "P675M", new Commands.Parameters.OrbitalParameters
+            {
+                CenterOfMotionId = 301, OrbitalParametersEpoch = "2021-01-20T13:00:00Z", Frame = "ICRF",
+                OrbitalParametersValues = $"{IssLine1},{IssLine2}", FromTLE = true
+            }, new WindowParameters { Begin = "2021-01-20T13:00:00Z", End = "2021-01-20T13:30:00Z" }, outputDirectory, false, false));
+        }
+
+        // Assert: the rule named, no SPK written
+        Assert.Contains("399", exception.Message);
+        Assert.DoesNotContain("inertial frame", exception.Message);
+        Assert.False(Directory.Exists(outputDirectory) && Directory.GetFiles(outputDirectory, "*.spk", SearchOption.AllDirectories).Any());
     }
 }

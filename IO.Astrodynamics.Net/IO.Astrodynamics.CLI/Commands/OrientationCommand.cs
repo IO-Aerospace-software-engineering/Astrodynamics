@@ -18,7 +18,7 @@ public class OrientationCommand
 
     [Command("orientation", Description = "Compute orientations of given object")]
     public Task Orientation(
-        [Argument(Description = "Kernels directory path")] string kernelsPath,
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")] string kernelsPath,
         [Argument(Description = "Object identifier (Naif Identifier)")] int objectId,
         WindowParameters windowParameters,
         [Argument(Description = "Step size <d.hh:mm:ss.fff>")] TimeSpan step,
@@ -29,7 +29,7 @@ public class OrientationCommand
             frame = "j2000";
         }
         
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
         
         Frame targetFrame = new Frame(frame);
         var orientationAt = Helpers.CreateOrientationReader(objectId, targetFrame);

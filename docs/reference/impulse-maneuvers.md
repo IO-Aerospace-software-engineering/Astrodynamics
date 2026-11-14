@@ -22,6 +22,17 @@ rad on each axis. Each finite and non-negative, zero when left out. A ΔV of
 exactly zero adds no error; any non-zero ΔV takes the whole model, the fixed terms included. The trajectory follows the
 commanded ΔV (open loop).
 
+### The frame of a target orbit
+
+`PlaneAlignmentManeuver`, `ApsidalAlignmentManeuver` and the target-orbit `PhasingManeuver` compare their target with
+the integrated state, so the target is given in the frame the spacecraft is propagated in. The constructor takes it in
+the frame of the spacecraft's initial orbit, or, for a spacecraft whose initial orbit is a TLE or an osculating TEME
+state, which is propagated in ICRF ([Propagation Frame](propagators.md#propagation-frame)), in ICRF (#675; it threw
+before 11.0.0); any other frame throws `ArgumentException`. On such a spacecraft a target in TEME still constructs, and
+the propagation rejects it when it is built (`ArgumentException`, naming `targetOrbit.ToFrame(Frame.ICRF)`), before it
+changes anything: give the target in ICRF. A maneuver built before its engine is attached to a spacecraft is not
+checked by its constructor; the propagation of a TLE or TEME spacecraft checks every target of its chain the same way.
+
 ## Thrust Window Convention
 
 The burn is impulsive: the propagated state receives the whole delta-V at the event epoch `t`.
@@ -159,6 +170,12 @@ construction of the propagator (`Spacecraft.Propagate` and so the scenario, the 
 `Build`, a `CentralBodyPropagator` built directly: `InvalidOperationException`, before the states of an earlier
 propagation are cleared) and by `Propagate` (`InvalidOperationException`). Before 11.0.0 a cycle ended the process with
 a stack overflow at the first `Spacecraft.Propagate`, or never returned through the builder.
+
+Each maneuver of the chain draws on a tank of the propagated spacecraft: its `Engine.FuelTank` is one of the
+spacecraft's tank instances, held by it. The same constructions and `Propagate` check it and throw
+`InvalidOperationException` naming the maneuver, the engine, its tank and the spacecraft, before anything changes
+(#676, #586). Before 11.0.0 an impulse on a tank added to no spacecraft threw `NullReferenceException` at its burn, and
+one on another spacecraft's tank burnt that spacecraft's fuel.
 
 ## Example
 

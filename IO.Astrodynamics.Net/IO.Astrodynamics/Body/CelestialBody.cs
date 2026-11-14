@@ -175,6 +175,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         Albedo = albedo;
         ThermalEffectiveTemperature = thermalEffectiveTemperature;
         ThermalEmissivity = thermalEmissivity;
+        RegisterWithObserver();
     }
 
     /// <summary>
@@ -203,6 +204,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         Albedo = albedo;
         ThermalEffectiveTemperature = thermalEffectiveTemperature;
         ThermalEmissivity = thermalEmissivity;
+        RegisterWithObserver();
     }
 
     private void UpdateSphereOfInfluence()
