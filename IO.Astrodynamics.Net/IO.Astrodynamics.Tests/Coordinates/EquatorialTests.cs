@@ -97,10 +97,10 @@ namespace IO.Astrodynamics.Tests.Coordinates
             return difference / (System.Math.BitIncrement(magnitude) - magnitude);
         }
 
-        // Measured on Linux x64 (2026-11-14), the worst over the 24 reads of the Moon, the frame changes and the equator below, in
-        // ulps of the reference angle (Ulps): 1 in right ascension (4.441e-16 rad, an RA in [2, 4)) and 0.5 in declination
-        // (1.110e-16 rad); the bounds are twice the worst, provisional until the three platforms are measured. Before the fix,
-        // up to 166.4 deg in RA (MOON_ME, 2024)
+        // The worst over the 24 reads of the Moon, the frame changes and the equator below, in ulps of the reference angle
+        // (Ulps), the same on Linux x64, Windows x64 and macOS arm64 (CI run 43595573884, 2026-11-14): 1 in right ascension
+        // (4.441e-16 rad, an RA in [2, 4)) and 0.5 in declination (1.110e-16 rad); the bounds are twice the worst. Before the
+        // fix, up to 166.4 deg in RA (MOON_ME, 2024)
         private const double RaToleranceUlps = 2.0;
         private const double DecToleranceUlps = 1.0;
 
@@ -160,8 +160,8 @@ namespace IO.Astrodynamics.Tests.Coordinates
 
         // The TLE against the ICRF state of tools/teme_reference (Vallado's SGP4 rotated by ERFA, IAU 2006/2000B): the residual
         // is that of the SGP4 state and of the TEME rotation (9.03e-4 m in LEO, TemeFrameTests), not the rounding of the angles.
-        // Measured on Linux x64 (2026-11-14): 1.101e-13 rad in RA and 5.870e-11 rad in Dec; twice the worst, provisional until the
-        // three platforms are measured
+        // The worst, the same on Linux x64, Windows x64 and macOS arm64 (CI run 43595573884, 2026-11-14): 1.101e-13 rad in RA
+        // and 5.870e-11 rad in Dec; twice the worst, rounded up at the second significant digit
         private const double TleRaTolerance = 2.3e-13;
         private const double TleDecTolerance = 1.2e-10;
 

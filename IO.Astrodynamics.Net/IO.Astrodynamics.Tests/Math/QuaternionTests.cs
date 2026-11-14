@@ -263,8 +263,13 @@ namespace IO.Astrodynamics.Tests.Math
             Assert.Equal(0.0, q3.VectorPart.Z);
         }
 
-        // Measured on Linux x64 (2026-11-14): 5.551e-16; twice the worst, provisional until the three platforms are measured
+        // The worst rotation of X against the matrix, 5.551e-16, the same on Linux x64, Windows x64 and macOS arm64
+        // (CI run 43595573884, 2026-11-14); twice the worst, rounded up at the second significant digit
         private const double RotationTolerance = 1.2e-15;
+
+        // The worst | |q| - 1 |, 2.220e-16 (one ulp of 1), the same on the three platforms (CI run 43595573884, 2026-11-14);
+        // twice the worst, rounded up at the second significant digit (4.4e-16 before, below twice the worst)
+        private const double NormTolerance = 4.5e-16;
 
         // #680: a quaternion of magnitude 0 is no rotation; Normalize returned it, and a vector rotated by it was zero
         [Fact]
@@ -295,8 +300,7 @@ namespace IO.Astrodynamics.Tests.Math
 
             _output.WriteLine($"MEASURE #680 Quaternion.Normalize | |q| - 1 |: {worstNorm:E3}");
             _output.WriteLine($"MEASURE #680 Quaternion.Normalize rotation of X against the matrix: {worstRotation:E3}");
-            // |q| - 1 measured 2.220e-16 (one ulp of 1): the bound is twice it
-            Assert.True(worstNorm <= 4.4e-16, $"{worstNorm:E3}");
+            Assert.True(worstNorm <= NormTolerance, $"{worstNorm:E3}");
             Assert.True(worstRotation <= RotationTolerance, $"{worstRotation:E3}");
         }
     }

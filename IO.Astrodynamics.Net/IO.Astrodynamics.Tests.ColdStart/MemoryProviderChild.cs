@@ -35,8 +35,9 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// </remarks>
 internal static class MemoryProviderChild
 {
-    // The angle between the cache's orientation and the closed form at t0 + 1830 s, between two grid points: measured
-    // 1.149e-16 rad on Linux x64 (#680, 2026-11-14); twice the worst, provisional until the three platforms are measured
+    // The angle between the cache's orientation and the closed form at t0 + 1830 s, between two grid points: 1.149e-16 rad,
+    // the same on Linux x64, Windows x64 and macOS arm64 (#680, CI run 43595573884, 2026-11-14); twice the worst, rounded
+    // up at the second significant digit
     private const double CacheTolerance = 2.3e-16;
 
     private static readonly Time T0 = new(2024, 6, 21, 12, 0, 0, frame: TimeFrame.TDBFrame);

@@ -226,8 +226,9 @@ public class VectorTests
 
     // #680: a vector of magnitude 0 has no direction. The magnitude is not scaled, so a vector whose squared components all
     // underflow (below about 1.5e-162) has magnitude 0 too; Normalize returned the vector itself, silently
-    // The spacing of the doubles in [1, 2)
-    private const double Ulp = 2.220446049250313e-16;
+    // The worst | |u| - 1 |, 2.220e-16 (one ulp of 1), and |u x v| / |v|, 2.107e-16, the same on Linux x64, Windows x64 and
+    // macOS arm64 (CI run 43595573884, 2026-11-14); the bounds are twice the worst, rounded up at the second significant digit
+    private const double NormTolerance = 4.5e-16;
 
     private const double CrossTolerance = 4.3e-16;
 
@@ -261,9 +262,7 @@ public class VectorTests
 
         _output.WriteLine($"MEASURE #680 Normalize | |u| - 1 |: {worstNorm:E3}");
         _output.WriteLine($"MEASURE #680 Normalize |u x v| / |v|: {worstCross:E3}");
-        // Measured on Linux x64 (2026-11-14): 2.220e-16 (one ulp of 1) and 2.107e-16; the bounds are twice the worst,
-        // provisional until the three platforms are measured
-        Assert.True(worstNorm <= 2.0 * Ulp, $"{worstNorm:E3}");
+        Assert.True(worstNorm <= NormTolerance, $"{worstNorm:E3}");
         Assert.True(worstCross <= CrossTolerance, $"{worstCross:E3}");
     }
 }
