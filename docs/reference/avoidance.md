@@ -104,6 +104,26 @@ Moon, Sun, SRP, in RK7(8) and by Velocity-Verlet).
 | `LeadTimes` | `TimeSpan[]` | Burn lead times before TCA |
 | `DeltaVMagnitudesMetersPerSecond` | `double[]` | Candidate delta-V magnitudes (m/s) |
 | `ExecutionError` | `ManeuverExecutionError` | Execution error of the burns (model of Gates), added to the covariance at the burn when the covariance is propagated, not used otherwise; null by default |
+| `AnalysisSampleStep` | `TimeSpan?` | Sample step of the re-analysis of each option; null (default) for the `SampleStep` the encounter was analyzed with |
+| `MaximumEventSearchStep` | `TimeSpan?` | Largest interval between the search epochs of the re-analysis; null (default) for the encounter's |
+| `SecondaryHardBodyRadiusMeters` | `double?` | Hard-body radius of the secondary; null (default) for the radius the encounter resolved; a value that differs from the radius a secondary spacecraft gives throws `ArgumentException`, a value not finite or negative `ArgumentOutOfRangeException` (the rule of [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
+| `LowRelativeSpeedThresholdMetersPerSecond` | `double?` | Relative speed below which an option is flagged `LowRelativeVelocityEncounter`; null (default) for the encounter's |
+| `MaxReturnedOptions` | `int` | Number of options returned after ranking (10) |
+| `PcThreshold` | `double` | Pc below which an option ranks first (1e-4) |
+
+Each option is re-analyzed with the settings the encounter was analyzed with, on both paths (the covariance propagated
+or not), but for the values these options give
+([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): its
+`StaleCovarianceThreshold`, `BisectionToleranceSeconds` and `NonlinearityIndexThreshold`, and the four values above
+when they are null. Before 11.0.0 every other setting went back to its default: an encounter analyzed with a stale
+threshold of a day, a secondary radius of 0 m and no low-speed threshold had a combined radius of 8 m and no flag, and
+each of its options 13 m and `StaleCovarianceUsed`. The reads of the range rate over the window and the non-linearity
+index stay off for the options, and the covariance is propagated as the [paths above](#trajectory-and-covariance-of-each-option)
+state. An encounter of `Screen` carries the settings of the screening, a sample step of 5 min by default: without
+stored steps (the two-body orbit) the search step of the options is then 18.75 s instead of 3.75 s (none of the 90
+options of a measured two-body pair moved, none of the 10 of a propagated pair; two minima within one search step would
+be one). An encounter built by hand takes the defaults of `ConjunctionAnalysisOptions` (1 min, 60 s, 1 m/s, 60 s,
+1e-9 s), those of the avoidance before 11.0.0.
 
 ## AvoidanceOption
 

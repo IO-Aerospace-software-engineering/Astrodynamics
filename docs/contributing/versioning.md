@@ -1357,6 +1357,52 @@ release are listed under **Known limitations**.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
 
+- **The conjunction analysis ignored the secondary's own hard-body radius** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)). The combined radius was the
+  protected `HardBodyRadius` plus `SecondaryHardBodyRadiusMeters` of the options (5 m by default), whatever the radius of
+  the secondary: a protected spacecraft of 8 m gave 13 m with secondaries of 0, 3 and 8 m alike, and the CDM case of the
+  study of #668 (protected 10 m, secondary 3 m) 15 m and a Pc of 3.6145e-4 for 2.7147e-4 with its 13 m, 33 % high, on
+  every path (`Screen`, `Analyze`, `AnalyzeAll`, both avoidance paths). `ToCdm` wrote object 2's `AREA_PC` as π·5².
+  An option of −5 m gave 3 m, NaN or ∞ a null Pc without a flag, and both `Spacecraft` constructors accepted an infinite
+  radius (the kernel-backed one any). The radius of the secondary is now its own when it gives one, the option otherwise,
+  5 m when neither does (Changed below). `Analyze_SecondaryHardBodyRadius_DesignedEncounters_MatchExactPc` splits the
+  radius of the seven designed encounters of `tools/collision_probability` between the two spacecraft (0.6 R and 0.4 R,
+  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.2e-10 (bound 6.3e-10); a
+  theory checks the five rows of the rule on every entry point and both paths, with a spacecraft and a body as
+  secondary, and `AREA_PC` is π·3² for a secondary of 3 m.
+- **`EvaluateAvoidance` reset the settings of the encounter** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)). Both avoidance paths re-analyzed each option with
+  new `ConjunctionAnalysisOptions` built from the four values `AvoidanceSearchOptions` mirrors, every other setting at
+  its default: an encounter analyzed with a stale threshold of a day, a secondary radius of 0 m and no low-speed
+  threshold had a combined radius of 8 m and no flag, each of its 10 options 13 m and `StaleCovarianceUsed`. The options
+  are now re-analyzed with the settings of the encounter, but for the values the avoidance options give (Changed
+  below); `AvoidanceFallbackTests` and `AvoidanceCovarianceTests` check the radius and the flags of every option on the
+  two-body, Velocity-Verlet, RK7(8) and propagated-covariance paths, for encounters of `Analyze` (both paths),
+  `AnalyzeAll` and `Screen`, and that null mirrors give, bit for bit, the options of the encounter's values given
+  explicitly.
+- **`Analyze` and `AnalyzeAll` accepted the protected spacecraft as its own secondary** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): the midpoint (or on two
+  propagations the window start) with a miss of 0 m and a Pc of 0.815, an empty list on two propagations for
+  `AnalyzeAll`. A secondary with the NAIF identifier of the protected spacecraft, the rule by which `Screen` skips it,
+  now throws `ArgumentException` naming `secondaryObject`, before any read of the states.
+- **`Analyze` and `AnalyzeAll` accepted a trajectory propagated for another spacecraft** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): another spacecraft's
+  RK7(8) trajectory gave a miss of 0 m and a Pc of 0.676 for 176.70 m and 6.7e-78, a swapped pair the right miss with
+  the covariances of the other objects; Velocity-Verlet and `TLEPropagator` solutions alike. A solution now records the
+  spacecraft it propagated (every integrator and activation path of `PropagatorBase`, and `TLEPropagator`), and the two
+  `PropagationSolution` overloads throw `ArgumentException` naming `protectedTrajectory` or `secondaryTrajectory` for
+  one of another instance (checked for `Spacecraft.Propagate` in RK7(8) and Velocity-Verlet, `CentralBodyPropagator`,
+  its builder, `BatchPropagator` and `TLEPropagator`); a solution built by hand is accepted, bit for bit.
+- **The label of a TCA depended on the search path** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)). On a UTC window the sampled search labelled its TCA in UTC
+  and the search on two propagations in the TDB of the step epoch that opened its bracket (455 of 540 UTC windows around
+  27 minima, the other 85 in UTC): the same instant, a tick apart at most, yet unequal by `==`. A dense TCA is now
+  labelled in the time frame of the window start, the tick of that frame nearer the zero of the range rate, never a
+  window end; `DenseTca_IsLabelledInTheWindowScale` and `DenseTca_InTheWindowScale_IsTheTickNearerTheZero` check UTC,
+  TT and TAI windows on RK7(8) and Velocity-Verlet pairs (the TCA 1.4e-7 s from the Keplerian zero, bound 1e-6 s), a TDB
+  window bit for bit. The conjunction cases of the conformance suite pass, their `tca_s` moved by 8.7e-8 s at most and
+  their relative position by 0.30 mm at most (see [Validation](../guides/validation.md)).
+- **The CDM declared any secondary spacecraft maneuverable** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): `MANEUVERABLE` was `YES` for object 2 whenever it
+  was a `Spacecraft`, an engineless one or a debris TLE wrapped in one included. It is now `YES` for a spacecraft with an
+  engine and `N/A` otherwise ("not available" or "not applicable", CCSDS 508.0-B-1 Cor. 2, 1.4.3.1), the value given by
+  `SecondaryParticipantMetadata` still winning; each written CDM is valid against the bundled NDM/XML 4.0.0 schema and
+  reads back the same value.
+
 **Changed**
 
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
@@ -1686,6 +1732,44 @@ release are listed under **Known limitations**.
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
 
+- **Breaking: the hard-body radius of the secondary is its own** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above).
+  `ConjunctionAnalysisOptions.SecondaryHardBodyRadiusMeters`, `ScreeningOptions.DefaultSecondaryHardBodyRadiusMeters`
+  and `AvoidanceSearchOptions.SecondaryHardBodyRadiusMeters` are `double?`, null by default (5.0 before). The radius of
+  the secondary is the `HardBodyRadius` of a secondary spacecraft when it is above 0, the option when the secondary
+  gives none (a radius of 0, or not a spacecraft), 5 m when neither does; an option that differs from the radius of the
+  secondary throws `ArgumentException` naming the secondary and the option (on `Screen`, checked over every candidate
+  before the first analysis), and an option that is NaN, infinite or negative throws `ArgumentOutOfRangeException`.
+  Both `Spacecraft` constructors throw `ArgumentOutOfRangeException` for a `hardBodyRadius` that is not finite or is
+  negative, the kernel-backed one included. The combined radius and the Pc move for every secondary spacecraft with a
+  radius under the default options (p + 5 m to p + s): `Screen`'s ranking, `EvaluateAvoidance`'s Pc and ranking, and
+  the CDM's `COLLISION_PROBABILITY` and `AREA_PC` with them; secondaries of 0 m and other objects are bit for bit.
+  Migration: read the properties as `double?`; drop an option that restated or overrode the radius of the secondary
+  spacecraft (or give the same value), and set `HardBodyRadius` on the secondary instead; code compiled against
+  10.2.0-preview-1 must be recompiled.
+- **Breaking: the avoidance options inherit the settings of the encounter** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above).
+  `AvoidanceSearchOptions.AnalysisSampleStep` and `MaximumEventSearchStep` are `TimeSpan?`,
+  `LowRelativeSpeedThresholdMetersPerSecond` and `SecondaryHardBodyRadiusMeters` `double?`, null by default for the
+  value the encounter was analyzed with (1 min, 60 s, 1.0 and 5.0 before). The stale threshold, the bisection tolerance
+  and the non-linearity threshold are those of the encounter (their defaults before). An encounter analyzed with the
+  default options gives the same options as before, bit for bit, apart from the radius; one of `Screen` carries its 5
+  min sample step, whose search step on the two-body orbit is then 18.75 s instead of 3.75 s (no option of the two
+  measured pairs moved). Migration: read the four properties as nullable; give a value to override the encounter's;
+  recompile.
+- **Breaking: `Analyze` and `AnalyzeAll` refuse the protected spacecraft as secondary and a trajectory of another
+  spacecraft** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above): `ArgumentException` naming `secondaryObject` for a secondary with the protected NAIF
+  identifier, and naming `protectedTrajectory` or `secondaryTrajectory` for a `PropagationSolution` propagated for
+  another instance, even one with the same NAIF identifier. Only calls whose result was meaningless throw. Migration:
+  leave the protected spacecraft out of the secondaries, as `Screen` does; pass each spacecraft with its own solution,
+  the instance that was propagated.
+- **The TCA of the search on two propagations is labelled in the time frame of the window start** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above):
+  on a non-TDB window it was mostly TDB; it moves by a tick at most, toward the zero of the range rate, and the burn
+  epochs of its avoidance options take that frame too. A TDB window, the sampled search and `ToCdm` (UTC already) are
+  unchanged. `Time` equality compares frames, so a comparison of such a TCA with `==` or `Equals` against a TDB `Time`
+  changes outcome; compare with `<`, `>` or `CompareTo`, which compare instants, or convert first.
+- **The CDM writes `MANEUVERABLE` `N/A` for a secondary spacecraft without an engine** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), Fixed above): `YES`
+  before. A secondary with an engine, and a value given by `SecondaryParticipantMetadata`, are unchanged. Migration: set
+  `SecondaryParticipantMetadata.Maneuverable` when the capacity of the object is known.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -1951,6 +2035,9 @@ not listed.
   seed), or, with a `BisectionToleranceSeconds` coarser than a tick, a zero at the window end as the middle of its last
   bracket. The sampled search subdivides a step one tick longer than `MaximumEventSearchStep`, one sample more for a read
   100 ns closer ([#642](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/642)); results are unaffected.
+  The `ILocalizable` overloads of `Analyze` and `AnalyzeAll` run the sampled search even for two participants propagated
+  in RK7(8): the search on the polynomials of their steps is not inferred in 11.0.0 ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)); pass their
+  `PropagationSolution` for it.
 - **Cost and input checks of the conjunction analysis**
   ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447),
   [#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).

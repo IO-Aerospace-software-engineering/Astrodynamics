@@ -67,6 +67,13 @@ var secondarySpacecraft = new Spacecraft(
     hardBodyRadius: 3.0);
 ```
 
+The analysis adds the two radii: the combined hard-body radius of this pair is 8 m + 3 m = 11 m
+(`CollisionRisk.CombinedHardBodyRadiusMeters`). The radius of the secondary is its own `HardBodyRadius`; the option
+`SecondaryHardBodyRadiusMeters` gives one only to a secondary that has none (a radius of 0, or an object that is not a
+spacecraft, 5 m when it is null too), and a value that differs from the secondary's own radius throws
+([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683); before 11.0.0 the option,
+5 m by default, replaced it, 13 m for this pair).
+
 ## Basic conjunction analysis
 
 The simplest analysis evaluates a single protected-vs-secondary pair over a

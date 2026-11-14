@@ -54,7 +54,7 @@ Kernel-backed spacecraft: `IsSpiceBacked` returns `true`. Calling `Propagate()` 
 | `DragCoefficient` | Cd (default 2.2) |
 | `SolarRadiationCoeff` | Cr (default 1.0) |
 | `CosparId` | COSPAR international designator |
-| `HardBodyRadius` | Hard-body radius for conjunction assessment (m) |
+| `HardBodyRadius` | Hard-body radius for conjunction assessment (m): finite and not negative, 0 (the default) for none, both constructors throwing `ArgumentOutOfRangeException` otherwise; the radius of the spacecraft as a secondary object too, an option of the analysis that gives another value throwing ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683), [Conjunction Assessment](conjunction-assessment.md#conjunctionassessment-methods)) |
 | `BodyFront` / `BodyRight` / `BodyUp` | Instance body axes (override static defaults) |
 | `Instruments` | Read-only collection of instruments |
 | `Engines` | Read-only collection of engines |
