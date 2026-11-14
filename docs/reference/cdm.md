@@ -19,6 +19,10 @@ The CDM module supports constructing, reading, writing, and validating CCSDS Con
 | `Cdm.ValidateSchema(path)` | Validate a CDM file against the CCSDS schema |
 | `Cdm.ValidateSchemaFromXml(xml)` | Validate a CDM XML string against the schema |
 
+The readers read one CDM: a standalone `<cdm>`, or the one `<cdm>` of an `<ndm>` or of another root. A document that holds
+several CDMs, at any depth below the root, throws `CdmParseException` naming their number (#679); before 11.0.0 the first one was returned. Split such
+a document into one CDM per document.
+
 ## Instance Methods
 
 | Method | Description |

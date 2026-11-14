@@ -662,7 +662,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream` (#679) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OMM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OMM from stream |
 | `CreateForSgp4(string objectName, string objectId, DateTime epoch, ...)` | Create OMM for SGP4 propagation |
@@ -674,7 +674,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 | `Data` | Orbital data (mean elements, TLE parameters, spacecraft parameters) |
 | `ObjectName` | Shortcut to metadata object name |
 | `ObjectId` | Shortcut to metadata object ID (COSPAR ID format: "1998-067A") |
-| `IsTleCompatible` | True if OMM contains TLE parameters for conversion |
+| `IsTleCompatible` | True if OMM contains TLE parameters and its `MEAN_ELEMENT_THEORY` is SGP4, its `REF_FRAME` TEME and its `CENTER_NAME` the Earth, each read trimmed and in any letter case; otherwise `ToTle()` throws naming the keywords at fault (#679) |
 
 | Method | Description |
 |--------|-------------|
@@ -850,7 +850,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream` (#679) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OPM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OPM from stream |
 | `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector |
@@ -872,8 +872,8 @@ Represents a complete CCSDS Orbit Parameter Message.
 | `SaveToFile(string filePath, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML file |
 | `SaveToString(bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML string |
 | `ToXmlString(bool wrapInNdm, bool indent)` | Convert to XML string without validation |
-| `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s) |
-| `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object |
+| `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s); without an observer, the centre `CENTER_NAME` names (a barycenter, the Sun, a planet or a moon; another name throws `ArgumentException`), and an observer that contradicts it throws (#679) |
+| `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector` |
 | `Validate()` | Validate OPM content and return validation result |
 
 ```csharp

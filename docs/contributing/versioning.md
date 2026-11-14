@@ -1356,6 +1356,44 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **An OPM read without an observer was about the Earth whatever its `CENTER_NAME`** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679)). `Opm.ToStateVector()` and
+  `ToSpacecraft()` built the Earth and never read `CENTER_NAME`, so a lunar state that `Opm.CreateFromStateVector` wrote
+  (`CENTER_NAME = MOON`) read back as an Earth orbit: a 956 km and e 0.988 instead of 1885.08 km and 0.0079, and an SSB
+  state a = −443 km. The position and velocity were exact; only the centre was wrong. The observer is now the centre
+  `CENTER_NAME` names, looked up, trimmed and in any letter case, in an internal table (`CCSDS/Common/CcsdsCenterNames`)
+  of the SPICE names of the barycenters 0 to 9, the Sun and the 161 planets and moons of `PlanetsAndMoons`, the names
+  the writers emit, and of NAIF's built-in synonyms of the barycenters (`SSB`, `SOLAR_SYSTEM_BARYCENTER`, `EMB`,
+  `EARTH MOON BARYCENTER`, `EARTH-MOON BARYCENTER`, `<PLANET>_BARYCENTER`); a `Barycenter` for 0 to 9, otherwise a
+  `CelestialBody` in ICRF at the epoch, as before for the Earth. The ids are literals: no kernel read, no type
+  initializer (#623). `OpmTests` reads the lunar OPM about the Moon, its semi-major axis the vis-viva of the Moon's
+  kernel GM within 1e-12 relative, and maps each name of a theory to the id CSPICE's `bodn2c_` gives it;
+  `CcsdsCenterNamesTests` checks every entry against the name SPICE gives its id (`GetCelestialBodyInfo`), and all 186
+  names agree with `bodn2c_` of CSPICE N0067. An EARTH OPM reads as before, bit for bit.
+- **`Omm.ToTle` turned any OMM with TLE parameters into an Earth TEME TLE** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679)). `IsTleCompatible` checked only the
+  `tleParameters` block, and `ToTle` built the Earth and TEME whatever `CENTER_NAME`, `REF_FRAME` and
+  `MEAN_ELEMENT_THEORY` said, so a MOON, ICRF, DSST or SGP4-XP OMM gave a TLE describing another orbit (the same line 2
+  for every one of them), `Omm.LoadFromString` loaded them without a word (the validator's warnings for ICRF and an
+  unknown theory are not seen by a `Load` caller, and it says nothing of the centre), and `ToString` marked them
+  ` (TLE)`. A TLE holds SGP4 mean elements of an Earth orbit in TEME, and the library runs the classic SGP4 (CSPICE
+  `evsgp4_c`): `IsTleCompatible` now also requires `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME and a `CENTER_NAME`
+  that names the Earth (in the table of the OPM centre above, so `earth` and ` EARTH ` are the Earth, `EARTH
+  BARYCENTER` is not); each keyword is read trimmed and in any letter case, so a padded ` TEME ` or `SGP4 ` converts as
+  before. `OmmTests` checks seven rows of centre, frame and theory, built and loaded, and that the lower-case and
+  padded twins of an EARTH/TEME/SGP4 OMM, built and loaded from `iss.omm`, give its TLE lines.
+- **A document holding several messages loaded its first one silently** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679)). The OMM, OPM and CDM readers took the
+  first message element (`FirstOrDefault`) and dropped the others: an `<ndm>` of two OMMs in the form of a Space-Track
+  catalog (ISS and CSS) passed schema validation (NDM/XML allows several messages in an `<ndm>`) and loaded as the ISS
+  through `Omm.LoadFromFile`, `LoadFromString`, `LoadFromStream` and `OmmReader`, `Omm.TryLoadFromFile` returned true
+  with no error, and `OmmValidator.ValidateFile` reported it valid (0 errors, 119 warnings), from the content of the
+  first OMM; the same for two OPMs and two CDMs, and for two messages nested under another root. Each reader now counts
+  the messages of its own type below the root, at any depth (internal `CCSDS/Common/CcsdsMessageLocator`; a second
+  message below a child of an `<ndm>`, which the schema rejects, counts too), and throws its parse exception
+  (`OmmParseException`, `OpmParseException`, `CdmParseException`) naming their number when there are two or more; the
+  message read is, as before, the root message, the child of an `<ndm>` or the descendant of another root. A mixed NDM
+  of one OMM and one OPM still gives each reader its message. The tests build the documents and count their messages
+  with System.Xml.Linq, independently of the readers, and reach every path: `Load*` with and without schema
+  validation, `Load*` and `ReadFrom*` from a file, a string and a stream, `TryLoadFromFile`, `ValidateFile` and
+  `Cdm.ReadFromFile`/`ReadFromString`/`ReadFromStream`.
 
 **Changed**
 
@@ -1685,6 +1723,28 @@ release are listed under **Known limitations**.
   returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
+- **Breaking: the centre of an OPM is its `CENTER_NAME`** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above). Without an observer, `Opm.ToStateVector()`
+  and `ToSpacecraft()` on an OPM whose `CENTER_NAME` is not a barycenter, the Sun, a planet or a moon the library
+  identifies (a ground station, a site or a spacecraft, a body that only a kernel names, a typo) throw
+  `ArgumentException` (`ParamName` `observer`) where they used the Earth; an observer whose NAIF id contradicts a known
+  `CENTER_NAME` (the Earth passed for a MOON OPM, a site passed for an EARTH OPM) throws `ArgumentException` naming both;
+  a non-Earth OPM read without an observer is about its centre, so every quantity derived from the observer moves.
+  Migration: pass the observer for a site, a spacecraft or a kernel-defined centre; pass the centre the message names,
+  or correct `CENTER_NAME`.
+- **Breaking: `Omm.ToTle` throws for an OMM that is not SGP4, TEME and Earth** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above):
+  `InvalidOperationException` naming each keyword at fault and its value (`CENTER_NAME 'MOON' is not EARTH; REF_FRAME
+  'ICRF' is not TEME; ...`) where it returned a TLE of another orbit; `IsTleCompatible` is false and `ToString` has no
+  ` (TLE)` for those OMMs. An OMM without TLE parameters throws its former message. The keywords are read trimmed and
+  in any letter case (` TEME `, `sgp4`), as before. EARTH/TEME/SGP4 OMMs (`iss.omm`, `Omm.CreateForTle`, `TLE.ToOmm`,
+  the conformance runner's) give the same TLE, bit for bit. Migration: correct the
+  metadata if the elements really are SGP4 elements of an Earth orbit in TEME; otherwise keep the object in OMM form.
+- **Breaking: a document holding several messages of a type throws** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above): `Omm`/`Opm.LoadFromFile`,
+  `LoadFromString` and `LoadFromStream`, `Cdm.ReadFromFile`, `ReadFromStream` and `ReadFromString`, and
+  `OmmReader`/`OpmReader`/`CdmReader.ReadFrom*` throw `OmmParseException`, `OpmParseException` or `CdmParseException`
+  where they returned the first message, a second message at any depth below the root counted;
+  `Omm`/`Opm.TryLoadFromFile` return false with a `PARSE_ERROR`; `OmmValidator`/`OpmValidator.ValidateFile` report the
+  file invalid. A document with one message of the type, alone or beside messages of other types, loads as before. Migration: split the NDM into one `<omm>`, `<opm>` or `<cdm>` per
+  document.
 
 **Removed**
 

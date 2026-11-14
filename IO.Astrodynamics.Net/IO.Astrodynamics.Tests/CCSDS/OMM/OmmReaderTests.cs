@@ -2,6 +2,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using IO.Astrodynamics.CCSDS.OMM;
 using Xunit;
 
@@ -379,5 +381,83 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.NotNull(omm);
             Assert.Equal("H-2A DEB", omm.ObjectName);
         }
+
+        #region Several messages (#679)
+
+        [Theory]
+        [InlineData("OmmReader.ReadFromString")]
+        [InlineData("Omm.LoadFromString")]
+        [InlineData("Omm.LoadFromFile")]
+        [InlineData("Omm.LoadFromStream")]
+        [InlineData("OmmReader.ReadFromFile")]
+        [InlineData("OmmReader.ReadFromStream")]
+        public void Read_NdmWithTwoOmm_Throws(string path)
+        {
+            var xml = NdmDocuments.TwoOmm();
+            // The schema accepts the document, so the throw under default validation is the reader's
+            Assert.True(new OmmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+            Action read = path switch
+            {
+                "OmmReader.ReadFromString" => () => _reader.ReadFromString(xml),
+                "Omm.LoadFromString" => () => Omm.LoadFromString(xml),
+                "Omm.LoadFromStream" => () => Omm.LoadFromStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))),
+                "OmmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
+                "OmmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))),
+                _ => () => NdmDocuments.WithTempFile(xml, file => Omm.LoadFromFile(file))
+            };
+
+            var ex = Assert.Throws<OmmParseException>(read);
+            Assert.Contains("2 OMM messages", ex.Message);
+        }
+
+        [Fact]
+        public void Read_NonNdmRootWithTwoNestedOmm_Throws()
+        {
+            var xml = NdmDocuments.TwoNestedOmm();
+
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
+            Assert.Contains("2 OMM messages", ex.Message);
+        }
+
+        // An NDM holding a second OMM below one of its children (a wrapper, an inner NDM) is not schema-valid, but holds
+        // two messages all the same
+        [Theory]
+        [InlineData("wrapper")]
+        [InlineData("ndm")]
+        public void Read_NdmWithOneOmmAndOneNestedOmm_Throws(string inner)
+        {
+            var xml = NdmDocuments.OneOmmAndOneNestedOmm(inner);
+
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
+            Assert.Contains("2 OMM messages", ex.Message);
+            var exLoad = Assert.Throws<OmmParseException>(() => Omm.LoadFromString(xml, validateSchema: false));
+            Assert.Contains("2 OMM messages", exLoad.Message);
+        }
+
+        // An NDM whose only OMM is below another element holds no OMM child: no OMM, as before 11.0.0
+        [Fact]
+        public void Read_NdmWithOnlyANestedOmm_FindsNoOmm()
+        {
+            var omm = XDocument.Load(NdmDocuments.IssOmmPath).Root!.Elements().Single(e => e.Name.LocalName == "omm");
+            var xml = new XElement("ndm", new XElement("wrapper", new XElement(omm))).ToString();
+
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
+            Assert.Equal("Could not find OMM element in document.", ex.Message);
+        }
+
+        [Fact]
+        public void Read_MixedNdmOneOmmOneOpm_ReadsEach()
+        {
+            var opm = IO.Astrodynamics.CCSDS.OPM.Opm.CreateMinimal("OPM SAT", "2024-001A", "EARTH", "ICRF", "UTC",
+                new IO.Astrodynamics.CCSDS.OPM.OpmStateVector(new DateTime(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc),
+                    6778.137, 0.0, 0.0, 0.0, 7.5, 0.0));
+            var xml = NdmDocuments.OneOmmOneOpm(opm);
+
+            Assert.Equal("ISS (ZARYA)", _reader.ReadFromString(xml).ObjectName);
+            Assert.Equal("OPM SAT", new IO.Astrodynamics.CCSDS.OPM.OpmReader().ReadFromString(xml).ObjectName);
+        }
+
+        #endregion
     }
 }

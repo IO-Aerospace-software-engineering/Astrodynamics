@@ -20,6 +20,23 @@ public class OmmValidatorTests
         _reader = new OmmReader();
     }
 
+    #region Several messages (#679)
+
+    [Fact]
+    public void ValidateFile_NdmWithTwoOmm_IsInvalid()
+    {
+        NdmDocuments.WithTempFile(NdmDocuments.TwoOmm(), file =>
+        {
+            var result = _validator.ValidateFile(file);
+
+            Assert.False(result.IsValid);
+            var error = Assert.Single(result.Errors);
+            Assert.Contains("2 OMM messages", error.Message);
+        });
+    }
+
+    #endregion
+
     #region Valid OMM Tests
 
     [Fact]

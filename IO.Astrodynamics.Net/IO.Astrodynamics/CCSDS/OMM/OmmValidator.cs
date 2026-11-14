@@ -144,6 +144,10 @@ public class OmmValidator
     /// <summary>
     /// Validates an OMM file completely: first against XSD schema, then against physical constraints.
     /// </summary>
+    /// <remarks>
+    /// The content is that of the one OMM message of the file, read by the reader: a file that holds several OMM messages
+    /// is invalid, with a "Failed to parse OMM" error naming their number (#679).
+    /// </remarks>
     /// <param name="filePath">Path to the OMM XML file.</param>
     /// <returns>Validation result containing all errors and warnings.</returns>
     public OmmValidationResult ValidateFile(string filePath)

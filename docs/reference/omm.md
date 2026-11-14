@@ -15,6 +15,12 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 | `Omm.LoadFromStream(stream, validateSchema?, validateContent?)` | Load from stream |
 | `Omm.TryLoadFromFile(path, out omm, out result, ...)` | Non-throwing load with validation result |
 
+Each load reads one OMM: a standalone `<omm>`, or the one `<omm>` of an `<ndm>` or of another root (messages of
+another type beside it are ignored). A document that holds several OMMs, such as a catalog NDM, or a second OMM at any depth below the root, throws
+`OmmParseException` naming their number, `TryLoadFromFile` returns false with a `PARSE_ERROR` and
+`OmmValidator.ValidateFile` reports it invalid (#679); before 11.0.0 the first one was read. Split such a document into
+one OMM per document.
+
 ### Saving
 
 | Method | Description |
@@ -34,7 +40,7 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 
 | Property | Description |
 |----------|-------------|
-| `IsTleCompatible` | Whether this OMM can be converted to a TLE |
+| `IsTleCompatible` | Whether this OMM can be converted to a TLE: it holds TLE parameters, its `MEAN_ELEMENT_THEORY` is SGP4, its `REF_FRAME` TEME and its `CENTER_NAME` the Earth (each read trimmed and in any letter case, so ` TEME ` and `sgp4` are TEME and SGP4). SGP4-XP and DSST are not compatible: the library runs the classic SGP4 (CSPICE `evsgp4_c`). Before 11.0.0 only the TLE parameters were checked (#679) |
 | `ObjectName` | Satellite name |
 | `CosparId` | Full COSPAR international designator (e.g., `1998-067A`) |
 
@@ -42,7 +48,7 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 
 | Method | Description |
 |--------|-------------|
-| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485) |
+| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485) |
 | `Validate()` | Validate and return `OmmValidationResult` |
 | `IsValid()` | Quick validity check (returns `bool`) |
 
