@@ -234,21 +234,31 @@ public class ExporterTests
     /// name of at most 255 characters, and <see cref="SpiceAPI.LoadKernels"/> hands it the full path. Before, the export
     /// deleted the previous export and wrote kernels that could not be loaded.
     /// </summary>
-    [Fact]
-    public async Task Export_ToADirectoryTooLongForItsKernels_ThrowsAndLeavesItUntouched()
+    // The spacecraft of the path-length scenario, whose CK is its longest kernel
+    private const string PathLimitSpacecraft = "EXP8674";
+
+    // A simulated scenario of one spacecraft and one star under NAIF ids no other test uses (-8674, 1000000674), and no site
+    // (Data/SolarSystem defines the DSN frames), exported to <output>/PathLimit_Export673
+    private static async Task<Scenario> PathLimitScenarioAsync()
     {
-        // Arrange: one spacecraft and one star under NAIF ids no other test uses (-8674, 1000000674), and no site
-        // (Data/SolarSystem defines the DSN frames)
-        const string name = "EXP8674";
         var mission = new Astrodynamics.Mission.Mission("PathLimit");
         var start = TimeSystem.Time.J2000TDB.AddYears(21);
         var scenario = new Scenario("Export673", mission, new Window(start, start.AddMinutes(10.0)));
         scenario.AddCelestialItem(TestHelpers.EarthAtJ2000);
-        var spacecraft = new Spacecraft(-8674, name, 1000.0, 2000.0, new Clock("EXP8674_CLK", 65536),
+        var spacecraft = new Spacecraft(-8674, PathLimitSpacecraft, 1000.0, 2000.0, new Clock("EXP8674_CLK", 65536),
             new KeplerianElements(6800000.0, 0.0, 0.0, 0.0, 0.0, 0.0, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
         scenario.AddSpacecraft(spacecraft);
         scenario.AddStar(new Astrodynamics.Body.Star(674, "star674", 1E+30, "spec", 2, 0.3792, new Astrodynamics.Coordinates.Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0, start));
         await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(1.0));
+        return scenario;
+    }
+
+    [Fact]
+    public async Task Export_ToADirectoryTooLongForItsKernels_ThrowsAndLeavesItUntouched()
+    {
+        // Arrange
+        const string name = PathLimitSpacecraft;
+        var scenario = await PathLimitScenarioAsync();
         var root = Directory.CreateTempSubdirectory("export-length-");
         // The longest kernel of the layout, <output>/<Mission>_<Scenario>/Spacecrafts/<sc>/Orientation/<sc>.ck
         string Longest(string output) => Path.Combine(output, "PathLimit_Export673", "Spacecrafts", name, "Orientation", $"{name}.ck");
@@ -298,6 +308,47 @@ public class ExporterTests
                     SpiceAPI.Instance.UnloadKernels(kernel);
                 }
             }
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
+    /// <summary>
+    /// The export writes its kernels under a scratch directory, the system temporary directory by default, then copies them
+    /// to the output directory, and loads the clock and frame kernels of each spacecraft from there: the paths under the
+    /// scratch directory are checked too, before the previous export is deleted (#673). Before, a scratch directory longer
+    /// than the output directory passed the check, the previous export was deleted, and the load of the clock kernel threw
+    /// <see cref="InvalidOperationException"/> (<c>SPICE(FILENAMETOOLONG)</c>).
+    /// </summary>
+    [Fact]
+    public async Task Export_WithAScratchDirectoryTooLongForItsKernels_ThrowsAndLeavesTheOutputUntouched()
+    {
+        // Arrange: a short output directory holding a previous export, and a scratch root whose kernel paths exceed 255
+        // characters: the CK <scratch root>/<12-character name>/Spacecrafts/EXP8674/Orientation/EXP8674.ck
+        var scenario = await PathLimitScenarioAsync();
+        var root = Directory.CreateTempSubdirectory("export-scratch-");
+        try
+        {
+            var output = Directory.CreateDirectory(Path.Combine(root.FullName, "o"));
+            var existing = Directory.CreateDirectory(Path.Combine(output.FullName, "PathLimit_Export673"));
+            var marker = Path.Combine(existing.FullName, "marker.txt");
+            await File.WriteAllTextAsync(marker, "previous export");
+            var scratchRoot = Directory.CreateDirectory(Path.Combine(root.FullName, new string('s', 200)));
+            string ck = Path.Combine("Spacecrafts", PathLimitSpacecraft, "Orientation", $"{PathLimitSpacecraft}.ck");
+            Assert.True(Path.Combine(output.FullName, "PathLimit_Export673", ck).Length <= 255);
+            Assert.True(Path.Combine(scratchRoot.FullName, "xxxxxxxx.xxx", ck).Length > 255);
+
+            // Act
+            var exporter = new CosmographiaExporter { ScratchRoot = scratchRoot };
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => exporter.ExportAsync(scenario, output));
+
+            // Assert: the path named is under the scratch root; nothing deleted, nothing left in the scratch root
+            Assert.Null(exception.ParamName);
+            Assert.Contains(scratchRoot.FullName, exception.Message);
+            Assert.Equal([marker], Directory.EnumerateFileSystemEntries(existing.FullName, "*", SearchOption.AllDirectories));
+            Assert.Empty(scratchRoot.EnumerateFileSystemInfos());
         }
         finally
         {

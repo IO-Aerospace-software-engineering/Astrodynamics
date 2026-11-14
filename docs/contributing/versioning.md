@@ -1379,7 +1379,14 @@ release are listed under **Known limitations**.
   without unloading each entry first, which would read again a text kernel deleted since its load. The C++ tests
   `API.UnloadKernelsProxyOfADeletedFile` and `API.UnloadKernelsProxyOfANameNotLoaded` check the frame lookup of
   `TransformFrameProxy`; `KernelRegistryTests` the frames and the listing after a deleted folder (both instances) and a
-  file of a folder.
+  file of a folder. SPICE unloads a text kernel or a meta-kernel by reading the pool again, which fails while another
+  text kernel deleted since its load is still loaded, and leaves out the text kernels loaded after it: the unload of the
+  recorded files throws for such a failure unless a later unload of a text kernel or a meta-kernel of the same call
+  read the whole pool again (the unload of a binary kernel, which reads nothing again, repairs nothing; whether a file
+  is binary is read from its ID word at its load). `KernelRegistryTests` unloads a folder of a text kernel listed before
+  an SPK while a deleted text kernel is loaded, which throws and leaves the frame of the text kernel loaded after the
+  deleted one unknown until the deleted one is unloaded, and a meta-kernel of one SPK, whose unload SPICE fails the
+  same way.
 - **The command line ignored a kernel file or a meta-kernel given as its kernels path** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). The 13 commands that
   load kernels wrapped the argument in a `DirectoryInfo`, from which a file loaded nothing without an error:
   `astro ephemeris mk.tm …` failed with "Celestial celestialItem frame can't be defined". A file, a kernel or a
@@ -1393,24 +1400,27 @@ release are listed under **Known limitations**.
   characters for a 120-character directory), which then failed with `SPICE(FILENAMETOOLONG)`. `SpiceAPI.WriteEphemeris`
   (under `Star` and `Site`) and `SpiceAPI.WriteOrientation` (under `Spacecraft.WriteOrientation`) handed such a path to
   CSPICE, which wrote a file under the name truncated to 255 and then failed. The export now checks every kernel path
-  of its layout before it touches the output directory, and the native writers check their target, in the bytes the
-  marshaller hands CSPICE (UTF-8 on Linux and macOS). `KernelPathLengthTests` writes each native writer's kernel at 255
+  of its layout, under the output directory and under the new directory of the system temporary directory where it
+  writes the kernels and loads the clock and frame kernels first, before it touches the output directory, and the
+  native writers check their target, in the bytes the marshaller hands CSPICE (UTF-8 on Linux and macOS). `KernelPathLengthTests` writes each native writer's kernel at 255
   characters, which SPICE loads, while a copy at 256 fails in FURNSH; at 256 the writer throws and leaves no file, and a
   255-character path holding one é (256 bytes) is rejected on Linux; `Spacecraft.WriteEphemeris` and the clock writer
   still write at 300 characters, byte for byte. `ExporterTests` exports one character too long (nothing deleted) and
-  at 255 (every kernel of `spice.json` loads); `PropagateTests` the command.
+  at 255 (every kernel of `spice.json` loads), and to a short directory with a scratch directory whose kernels would be
+  longer than 255 (nothing deleted, no scratch left); `PropagateTests` the command.
 
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
-  above). `CosmographiaExporter.ExportAsync` and `astro propagate` throw for an output directory whose kernels would have
-  a full path longer than 255 characters (UTF-8 bytes), and delete nothing; they succeeded with kernels `LoadKernels`
+  above). `CosmographiaExporter.ExportAsync` and `astro propagate` throw for an output directory (parameter
+  `outputDirectory`), or a system temporary directory (no parameter), whose kernels would have a full path longer than
+  255 characters (UTF-8 bytes), and delete nothing; they succeeded with kernels `LoadKernels`
   could not load, after deleting the previous export. `SpiceAPI.WriteEphemeris` (so `Star.WriteEphemeris` and
   `Site.WriteEphemeris`) and `SpiceAPI.WriteOrientation` (so `Spacecraft.WriteOrientation`) throw `ArgumentException`
   (parameter `filePath`) where they threw `InvalidOperationException` after leaving a file under the truncated name.
   Migration: choose a shorter output directory (the CK of a spacecraft,
-  `<output>/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck`, is usually the longest kernel), and catch
-  `ArgumentException`. `Spacecraft.WriteEphemeris` and the text kernel writers are unchanged.
+  `<output>/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck`, is usually the longest kernel) or a shorter
+  temporary directory (`TMPDIR`, `TEMP`), and catch `ArgumentException`. `Spacecraft.WriteEphemeris` and the text kernel writers are unchanged.
 - **`GetLoadedKernels` after a partial unload** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed above): after `UnloadKernels` of a file or a subfolder of a
   loaded folder, the listing names the folder's remaining kernel files, in its place, instead of the folder; after
   `UnloadKernels` of a deleted or moved path, its data is no longer readable. Migration: look for the folder's files,

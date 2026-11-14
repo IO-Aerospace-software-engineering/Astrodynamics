@@ -28,10 +28,15 @@ instruments), site and star, and the Cosmographia catalog files, among them `spi
 `astro propagate` exports the same way.
 
 The layout adds to the output directory `/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck` for the CK of
-a spacecraft, usually the longest kernel: 30 characters with the three names. SPICE takes a kernel path of at most 255
-characters, so the export throws `ArgumentException` (parameter `outputDirectory`) for a directory whose kernels would
-be longer, before it deletes or writes anything
+a spacecraft, usually the longest kernel: 31 characters plus the mission and scenario names and twice the spacecraft
+name. SPICE takes a kernel path of at most 255 characters, so the export throws `ArgumentException` (parameter
+`outputDirectory`) for a directory whose kernels would be longer, before it deletes or writes anything
 ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)); choose a shorter directory.
+The export first writes the kernels under a new directory of the system temporary directory (`Path.GetTempPath()`:
+`TMPDIR` on Linux and macOS, `TEMP` on Windows), where it loads the clock and frame kernels of each spacecraft, then
+copies them; their paths there, `<temp>/<6 to 12 characters>/Spacecrafts/<name>/Orientation/<name>.ck` for the CK, are
+checked too, and the export throws `ArgumentException` without a parameter name when the temporary directory is the
+longer one: choose a shorter temporary directory.
 
 !!! info "Kernel compatibility"
     Ensure the Cosmographia session loads the same planetary and leap-second kernels used during propagation so that frames and epochs are consistent.

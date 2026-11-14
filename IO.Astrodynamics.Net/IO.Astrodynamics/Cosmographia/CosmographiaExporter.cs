@@ -22,6 +22,17 @@ public class CosmographiaExporter
     private readonly Dictionary<Instrument, double[]> _instrumentColors = new Dictionary<Instrument, double[]>();
 
     /// <summary>
+    /// The directory under which the export writes its kernels before it copies them to the output directory; the system
+    /// temporary directory when null. Tests set it to measure the check of its kernel paths (#673).
+    /// </summary>
+    internal DirectoryInfo ScratchRoot { get; init; }
+
+    // A new directory under ScratchRoot, or under the system temporary directory
+    private DirectoryInfo CreateScratchDirectory() => ScratchRoot == null
+        ? Directory.CreateTempSubdirectory()
+        : Directory.CreateDirectory(Path.Combine(ScratchRoot.FullName, Path.GetRandomFileName()));
+
+    /// <summary>
     /// Exports the simulated scenario to <c>&lt;outputDirectory&gt;/&lt;Mission&gt;_&lt;Scenario&gt;</c>, which it replaces:
     /// its kernels under <c>Spacecrafts</c>, <c>Sites</c> and <c>Stars</c>, and the Cosmographia catalog files.
     /// </summary>
@@ -29,9 +40,13 @@ public class CosmographiaExporter
     /// <param name="outputDirectory">The directory of the export.</param>
     /// <exception cref="InvalidOperationException">The scenario has not been simulated.</exception>
     /// <exception cref="ArgumentException">A kernel of the export would have a full path longer than the 255 characters
-    /// (UTF-8 bytes) of a kernel name SPICE takes, which <see cref="SpiceAPI.LoadKernels"/> could not load; the longest is
-    /// usually the CK of a spacecraft, <c>/&lt;Mission&gt;_&lt;Scenario&gt;/Spacecrafts/&lt;name&gt;/Orientation/&lt;name&gt;.ck</c>
-    /// after the output directory, 30 characters with the three names. Nothing is deleted or written (#673).</exception>
+    /// (UTF-8 bytes) of a kernel name SPICE takes, which <see cref="SpiceAPI.LoadKernels"/> could not load: under the output
+    /// directory (parameter <c>outputDirectory</c>), or under the new directory of the system temporary directory
+    /// (<see cref="Path.GetTempPath"/>) where the export writes its kernels and loads the clock and frame kernels of each
+    /// spacecraft before it copies them (no parameter). The longest is usually the CK of a spacecraft,
+    /// <c>/&lt;Mission&gt;_&lt;Scenario&gt;/Spacecrafts/&lt;name&gt;/Orientation/&lt;name&gt;.ck</c> after the output
+    /// directory, 31 characters plus the mission and scenario names and twice the spacecraft name. Nothing is deleted or
+    /// written (#673).</exception>
     public async Task ExportAsync(Scenario scenario, DirectoryInfo outputDirectory)
     {
         if (!scenario.IsSimulated)
@@ -45,11 +60,26 @@ public class CosmographiaExporter
             Kernels.KernelPath.EnsureLoadable(Path.Combine(missionOutputPath, kernel), nameof(outputDirectory));
         }
 
-        var missionOutputDirectory = outputDirectory.CreateSubdirectory($"{scenario.Mission.Name}_{scenario.Name}");
+        // The kernels are written and loaded under a new scratch directory first: their paths there are checked too
+        var kernelsTemp = CreateScratchDirectory();
+        DirectoryInfo missionOutputDirectory;
+        try
+        {
+            foreach (var kernel in KernelPaths(scenario))
+            {
+                Kernels.KernelPath.EnsureLoadable(Path.Combine(kernelsTemp.FullName, kernel), null);
+            }
 
-        missionOutputDirectory.Delete(true);
+            missionOutputDirectory = outputDirectory.CreateSubdirectory($"{scenario.Mission.Name}_{scenario.Name}");
+            missionOutputDirectory.Delete(true);
+        }
+        catch
+        {
+            kernelsTemp.Delete(true);
+            throw;
+        }
 
-        await ExportRawDataAsync(scenario, missionOutputDirectory);
+        await ExportRawDataAsync(scenario, kernelsTemp, missionOutputDirectory);
 
         await ExportSpiceKernelsAsync(scenario, missionOutputDirectory);
 
@@ -348,9 +378,10 @@ public class CosmographiaExporter
         }
     }
 
-    private async Task ExportRawDataAsync(Scenario scenario, DirectoryInfo outputDirectory)
+    // Writes the kernels under kernelsTemp, whose kernel paths ExportAsync checked, copies them to outputDirectory, and
+    // deletes kernelsTemp
+    private async Task ExportRawDataAsync(Scenario scenario, DirectoryInfo kernelsTemp, DirectoryInfo outputDirectory)
     {
-        var kernelsTemp = Directory.CreateTempSubdirectory();
         FileInfo Kernel(string relativePath) => new(Path.Combine(kernelsTemp.FullName, relativePath));
         var spacecraftFolder = kernelsTemp.CreateSubdirectory("Spacecrafts");
         var sitesFolder = kernelsTemp.CreateSubdirectory("Sites");
