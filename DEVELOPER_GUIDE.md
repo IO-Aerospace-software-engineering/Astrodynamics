@@ -1265,11 +1265,11 @@ Represents a spacecraft with components.
 
 | Property | Description |
 |----------|-------------|
-| `NaifId` | NAIF ID (negative) |
-| `Name` | Spacecraft name |
+| `NaifId` | NAIF ID, in [-2147483, -1] so that the frame id NaifId × 1000 is an `int` (#676) |
+| `Name` | Spacecraft name; its frame kernel variable `FRAME_<NAME>_FRAME` takes 20 ASCII characters at most, without blank, tab, quote, parenthesis, comma or '=' (#676) |
 | `DryOperatingMass` | Mass without fuel (kg) |
 | `MaximumOperatingMass` | Maximum operating mass (kg) |
-| `Clock` | Onboard clock |
+| `Clock` | Onboard clock, of this spacecraft's NAIF id alone: a clock attached to a spacecraft of another id is rejected (#676) |
 | `SectionalArea` | Mean cross-sectional area for drag and SRP (m²) |
 | `DragCoefficient` | Drag coefficient Cd (default 2.2) |
 | `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
@@ -1284,11 +1284,11 @@ Represents a spacecraft with components.
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument |
-| `AddEngine(Engine engine)` | Add propulsion engine |
-| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank |
+| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676) |
+| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same id rule) |
+| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same id rule) |
+| `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
+| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |
 | `GetTotalMass()` | Get total mass including fuel |
 | `GetTotalFuel()` | Get total fuel mass |

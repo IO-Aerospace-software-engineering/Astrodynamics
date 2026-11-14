@@ -129,6 +129,14 @@ MODULE_API bool LoadKernelsProxy(const char *path);
 MODULE_API bool UnloadKernelsProxy(const char *path);
 
 /**
+ * Get the name SPICE gives to a frame id (frmnam_c), from its built-in frames and the loaded frame kernels
+ * @param frameId Frame id
+ * @param name Buffer of 33 characters that receives the name, empty when SPICE knows no frame of that id
+ * @return true when SPICE knows a frame of that id, false otherwise (call GetLastErrorProxy for details)
+ */
+MODULE_API bool GetFrameNameProxy(int frameId, char name[33]);
+
+/**
  * Convert seconds from J2000 to formatted string (TDB)
  * @param secondsFromJ2000 Seconds from J2000
  * @return Formatted string

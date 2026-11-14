@@ -215,7 +215,7 @@ namespace IO.Astrodynamics.Tests.Body
             StateVector targetOrbit = new StateVector(
                 new Vector3(6790000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), TestHelpers.EarthAtJ2000,
                 start, Frames.Frame.ICRF);
-            Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, 3000.0, clock, targetOrbit);
+            Spacecraft target = new Spacecraft(-181, "SC181", 1000.0, 3000.0, new Clock("clk181", 65536), targetOrbit);
 
             // Never propagated, it has no attitude to test with (#682); with the identity given by hand, the target 10 km
             // below it is in the field
@@ -427,6 +427,165 @@ namespace IO.Astrodynamics.Tests.Body
             {
                 files.ForEach(x => SpiceAPI.Instance.UnloadKernels(x));
             }
+        }
+
+        private static Spacecraft Host(int naifId, string name) => new(naifId, name, 100.0, 1000.0, new Clock(name + "_CLK", 65536),
+            new StateVector(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH),
+                new TimeSystem.Time(2024, 1, 1), Frames.Frame.ICRF));
+
+        /// <summary>
+        /// The id of the spacecraft frame, NaifId × 1000, is not an instrument id (#676): the instrument FK would define the
+        /// spacecraft frame relative to itself (SPICE(BADFRAMESPEC2), measured on main). The three methods reject it.
+        /// </summary>
+        [Theory]
+        [InlineData("Circular")]
+        [InlineData("Rectangular")]
+        [InlineData("Elliptical")]
+        public void AddInstrument_SpacecraftFrameId_Throws(string shape)
+        {
+            // Arrange
+            var spc = Host(-1401, "KSAT");
+            Assert.Equal(-1401000, spc.Frame.Id);
+
+            // Act
+            var exception = Record.Exception(() =>
+            {
+                switch (shape)
+                {
+                    case "Circular":
+                        spc.AddCircularInstrument(-1401000, "CAM", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                        break;
+                    case "Rectangular":
+                        spc.AddRectangularInstrument(-1401000, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                        break;
+                    default:
+                        spc.AddEllipticalInstrument(-1401000, "CAM", "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                        break;
+                }
+            });
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentOutOfRangeException>(exception);
+            Assert.Equal("naifId", rejected.ParamName);
+            Assert.Contains("-1401000", rejected.Message);
+            Assert.Empty(spc.Instruments);
+        }
+
+        /// <summary>
+        /// Instrument and spacecraft names whose FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt; is no kernel variable SPICE
+        /// can read (#676): a blank, or more than 32 bytes (Kernel Required Reading, "Variable Name Rules"). The writer throws
+        /// and writes nothing.
+        /// </summary>
+        [Theory]
+        [InlineData("HOST", "WIDE CAM")]
+        [InlineData("ABCDEFGHIJKLM", "NOPQRSTUVWXYZ")]
+        public async Task WriteFrame_NameSpiceCannotRead_Throws(string spacecraftName, string instrumentName)
+        {
+            // Arrange
+            var spc = Host(-1321, spacecraftName);
+            spc.AddCircularInstrument(-1321001, instrumentName, "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            var fk = FrameKernelFiles.NewFile("instrument_refused");
+
+            // Act
+            var exception = await Record.ExceptionAsync(() => spc.Instruments.Single().WriteFrameAsync(fk));
+
+            // Assert
+            var rejected = Assert.IsType<InvalidOperationException>(exception);
+            Assert.Contains(instrumentName, rejected.Message);
+            fk.Refresh();
+            Assert.False(fk.Exists);
+        }
+
+        /// <summary>
+        /// The instrument kernels name the frame of the instrument FK, &lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;, in
+        /// INS&lt;id&gt;_FOV_FRAME (#676): the three writers take the FK's rule. A quote ends the string value: the IK main
+        /// writes for 'CAM'1' stops SPICE with SPICE(TYPEMISMATCH) at <c>furnsh_c</c> (measured on CSPICE N0067, which
+        /// ended the process); a blank or a name over the FK's 32 bytes loads, but names a frame no FK can define. The
+        /// writer throws and writes nothing.
+        /// </summary>
+        [Theory]
+        [InlineData("Circular", "HOST", "CAM'1")]
+        [InlineData("Rectangular", "HOST", "WIDE CAM")]
+        [InlineData("Elliptical", "ABCDEFGHIJKLM", "NOPQRSTUVWXYZ")]
+        [InlineData("Circular", "ABCDEFGHIJKLM", "NOPQRSTUVWXYZ")]
+        [InlineData("Rectangular", "HOST", "CAM'1")]
+        [InlineData("Elliptical", "HOST", "CAM=1")]
+        public async Task WriteKernel_NameSpiceCannotRead_Throws(string shape, string spacecraftName, string instrumentName)
+        {
+            // Arrange
+            var spc = Host(-1323, spacecraftName);
+            AddInstrument(spc, shape, -1323001, instrumentName);
+            var ik = FrameKernelFiles.NewFile("ik_refused", ".ti");
+
+            // Act
+            var exception = await Record.ExceptionAsync(() => spc.Instruments.Single().WriteKernelAsync(ik));
+
+            // Assert
+            var rejected = Assert.IsType<InvalidOperationException>(exception);
+            Assert.Contains(instrumentName, rejected.Message);
+            ik.Refresh();
+            Assert.False(ik.Exists);
+        }
+
+        /// <summary>
+        /// Control (#676): at the bound, FRAME_ + 12 + _ + 13 = 32 bytes, the three IKs are written and load in SPICE, their
+        /// FOV frame the name the instrument FK defines.
+        /// </summary>
+        [Theory]
+        [InlineData("Circular")]
+        [InlineData("Rectangular")]
+        [InlineData("Elliptical")]
+        public async Task WriteKernel_BoundaryNames_LoadInSpice(string shape)
+        {
+            // Arrange
+            var spc = Host(-1324, "ABCDEFGHIJKL");
+            AddInstrument(spc, shape, -1324001, "NOPQRSTUVWXYZ");
+            var ik = FrameKernelFiles.NewFile("ik_boundary", ".ti");
+
+            // Act
+            await spc.Instruments.Single().WriteKernelAsync(ik);
+
+            // Assert
+            Assert.Contains("INS-1324001_FOV_FRAME            = 'ABCDEFGHIJKL_NOPQRSTUVWXYZ'", await System.IO.File.ReadAllTextAsync(ik.FullName));
+            FrameKernelFiles.Load(ik);
+        }
+
+        private static void AddInstrument(Spacecraft spc, string shape, int naifId, string name)
+        {
+            switch (shape)
+            {
+                case "Circular":
+                    spc.AddCircularInstrument(naifId, name, "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    break;
+                case "Rectangular":
+                    spc.AddRectangularInstrument(naifId, name, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    break;
+                default:
+                    spc.AddEllipticalInstrument(naifId, name, "M", 0.1, 0.05, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// A pair of 25 characters, FRAME_ + 12 + _ + 13 = 32 bytes: the instrument FK loads in SPICE with the spacecraft FK
+        /// it is relative to (#676).
+        /// </summary>
+        [Fact]
+        public async Task WriteFrame_BoundaryNames_LoadInSpice()
+        {
+            // Arrange
+            var spc = Host(-1322, "ABCDEFGHIJKL");
+            spc.AddCircularInstrument(-1322001, "NOPQRSTUVWXYZ", "M", 0.1, Vector3.VectorZ, Vector3.VectorX, Vector3.Zero);
+            var spacecraftFk = FrameKernelFiles.NewFile("instrument_host");
+            var fk = FrameKernelFiles.NewFile("instrument_boundary");
+            Assert.Equal(32, System.Text.Encoding.UTF8.GetByteCount("FRAME_ABCDEFGHIJKL_NOPQRSTUVWXYZ"));
+
+            // Act
+            await spc.Frame.WriteAsync(spacecraftFk);
+            await spc.Instruments.Single().WriteFrameAsync(fk);
+
+            // Assert: both load without error
+            FrameKernelFiles.Load(spacecraftFk, () => FrameKernelFiles.Load(fk));
         }
     }
 }

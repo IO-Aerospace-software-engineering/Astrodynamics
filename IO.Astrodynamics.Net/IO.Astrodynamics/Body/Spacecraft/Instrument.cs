@@ -110,6 +110,14 @@ namespace IO.Astrodynamics.Body.Spacecraft
             Orientation = orientation;
             RotationToSpacecraft = EulerToSpacecraft(orientation);
             Spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
+            // The instrument FK defines a TK frame of id naifId relative to the spacecraft frame, of id NaifId × 1000: the
+            // same id would define the spacecraft frame relative to itself, SPICE(BADFRAMESPEC2) (#676)
+            if (naifId == spacecraft.Frame.Id)
+            {
+                throw new ArgumentOutOfRangeException(nameof(naifId), naifId,
+                    $"The instrument id {naifId} is the id of the frame of {spacecraft.Name}, {spacecraft.Frame.Id} (NaifId × 1000): the instrument frame would be defined relative to itself. Take an id in [{spacecraft.Frame.Id - 999}, {spacecraft.Frame.Id - 1}].");
+            }
+
             NaifId = naifId;
         }
 
@@ -251,8 +259,18 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return Spacecraft.Frame.GetStateOrientationToICRF(date).Rotation * RotationToSpacecraft;
         }
 
+        /// <summary>
+        /// Writes the frame kernel of the instrument, a TK frame relative to the spacecraft frame, whose kernel variable
+        /// <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> holds the upper-cased names.
+        /// </summary>
+        /// <param name="outputFile">The frame kernel to write.</param>
+        /// <exception cref="InvalidOperationException">The names make a kernel variable name SPICE cannot read: a blank, a
+        /// tab or another whitespace or control character, a quote, a parenthesis, a comma or '=', or more than 32 bytes in
+        /// UTF-8, so 25 ASCII characters at most for the two names (Kernel Required Reading, "Variable Name Rules", #676);
+        /// nothing is written.</exception>
         public async Task WriteFrameAsync(FileInfo outputFile)
         {
+            CheckFrameKernelName("frame kernel");
             await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.InstrumentFrameTemplate.tf");
             using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
             var templateData = await sr.ReadToEndAsync();
@@ -288,7 +306,27 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return new FieldOfViewEvaluator(this, target, ShapeType.Point, null, aberration).Margin(date) >= 0.0;
         }
 
+        /// <summary>
+        /// Writes the instrument kernel, whose <c>INS&lt;id&gt;_FOV_FRAME</c> names the frame of the instrument frame kernel,
+        /// <c>&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> upper-cased.
+        /// </summary>
+        /// <param name="outputFile">The instrument kernel to write.</param>
+        /// <exception cref="InvalidOperationException">The names make a frame the instrument frame kernel cannot define, by
+        /// the rule of <see cref="WriteFrameAsync"/> (#676): a quote would end the string value, which SPICE then rejects
+        /// (SPICE(TYPEMISMATCH) at <c>furnsh_c</c>); nothing is written.</exception>
         public abstract Task WriteKernelAsync(FileInfo outputFile);
+
+        /// <summary>
+        /// Checks the kernel variable <c>FRAME_&lt;SPACECRAFT&gt;_&lt;INSTRUMENT&gt;</c> of the instrument frame kernel, whose
+        /// frame name the instrument kernel names too, before a writer opens its file (#676).
+        /// </summary>
+        /// <param name="kernel">The kernel the writer writes, for the message.</param>
+        /// <exception cref="InvalidOperationException">SPICE cannot read the variable.</exception>
+        private protected void CheckFrameKernelName(string kernel)
+        {
+            Kernels.TextKernelNames.Check("FRAME_" + Spacecraft.Name.ToUpper() + "_" + Name.ToUpper(),
+                $"the instrument '{Name}' of the spacecraft '{Spacecraft.Name}'", kernel);
+        }
 
         #region Operators
 

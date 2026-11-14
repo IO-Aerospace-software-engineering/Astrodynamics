@@ -1,12 +1,20 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IO.Astrodynamics.Body.Spacecraft
 {
     public class Clock : IEquatable<Clock>
     {
-        public Spacecraft Spacecraft { get; private set; }
+        private Spacecraft _spacecraft;
+
+        /// <summary>
+        /// The spacecraft the clock belongs to, whose NAIF id its SCLK declares: the first spacecraft built with it. A clock
+        /// serves the spacecraft of one NAIF id; a constructor given a clock of another id throws (#676), constructors on
+        /// several threads included: the clock is attached atomically.
+        /// </summary>
+        public Spacecraft Spacecraft => Volatile.Read(ref _spacecraft);
         public string Name { get; }
         public uint Resolution { get; }
 
@@ -26,9 +34,34 @@ namespace IO.Astrodynamics.Body.Spacecraft
             Resolution = resolution;
         }
 
+        /// <summary>
+        /// Checks that the clock can serve the spacecraft of <paramref name="naifId"/> (#676): an SCLK identifies one
+        /// spacecraft id (<c>SCLK_DATA_TYPE_&lt;id&gt;</c>), so a clock attached to a spacecraft of another id would write
+        /// the SCLK of that spacecraft. A clock attached to another instance of the same id writes the same SCLK.
+        /// </summary>
+        /// <exception cref="ArgumentException">The clock is attached to a spacecraft of another NAIF id.</exception>
+        internal void CheckAttachableTo(int naifId, string spacecraftName)
+        {
+            if (Spacecraft != null && Spacecraft.NaifId != naifId)
+            {
+                throw new ArgumentException(
+                    $"The clock {Name} belongs to the spacecraft {Spacecraft.Name} ({Spacecraft.NaifId}): an SCLK identifies one spacecraft id, so give {spacecraftName} ({naifId}) a clock of its own.",
+                    "clock");
+            }
+        }
+
+        /// <summary>
+        /// Attaches the clock to <paramref name="spacecraft"/>, at the end of its constructor, atomically; a clock already
+        /// attached to an instance of the same NAIF id stays with it (#676).
+        /// </summary>
+        /// <exception cref="ArgumentException">The clock was attached to a spacecraft of another NAIF id since
+        /// <see cref="CheckAttachableTo"/>, by a constructor on another thread.</exception>
         internal void AttachSpacecraft(Spacecraft spacecraft)
         {
-            Spacecraft = spacecraft;
+            if (Interlocked.CompareExchange(ref _spacecraft, spacecraft, null) != null)
+            {
+                CheckAttachableTo(spacecraft.NaifId, spacecraft.Name);
+            }
         }
 
         public async Task WriteAsync(FileInfo outputFile)

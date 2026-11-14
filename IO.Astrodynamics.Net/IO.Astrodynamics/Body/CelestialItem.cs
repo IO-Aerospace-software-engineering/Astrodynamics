@@ -57,13 +57,27 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; internal set; }
 
     /// <summary>
-    /// A collection of satellites orbiting the celestial item.
+    /// The satellites orbiting the celestial item, held weakly, by instance (#676).
     /// </summary>
-    private readonly HashSet<CelestialItem> _satellites = new();
+    private readonly WeakSatellites _satellites = new();
 
     /// <summary>
-    /// Gets a read-only collection of satellites orbiting the celestial item.
+    /// Whether the item is listed by an observer of any kind (the natural-body constructor), or by a
+    /// <see cref="CelestialBody"/> observer only (the constructor of custom parameters).
     /// </summary>
+    private readonly bool _listedByAnyObserver;
+
+    /// <summary>
+    /// Gets a read-only collection of satellites orbiting the celestial item: the instances whose initial orbital
+    /// parameters have it as observer, by reference, whose constructor completed (#676).
+    /// </summary>
+    /// <remarks>
+    /// A live view: the collection holds its items weakly, so that an item referenced nowhere else leaves it when it is
+    /// collected, and is safe across threads, constructions about one body on several threads included. Two items of one
+    /// NAIF id are both listed. The order of the enumeration is not specified; <see cref="IReadOnlyCollection{T}.Count"/>
+    /// enumerates. Before 11.0.0 it held its items strongly in a set compared by NAIF id, without a lock, and listed an
+    /// item whose constructor then threw.
+    /// </remarks>
     public IReadOnlyCollection<CelestialItem> Satellites => _satellites;
 
     /// <summary>
@@ -140,6 +154,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
     {
         _dataProvider = Configuration.Instance.DataProvider;
+        _listedByAnyObserver = true;
         ExtendedInformation = _dataProvider.GetCelestialBodyInfo(naifId);
 
         NaifId = naifId;
@@ -158,8 +173,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
             InitialOrbitalParameters = ReadStateAboutBarycenter(epoch, frame);
-
-        (InitialOrbitalParameters?.Observer as CelestialItem)?._satellites.Add(this);
     }
 
     // The state about the barycenter of the body's system; null when the loaded kernels do not chain the body to it (Mars
@@ -206,9 +219,6 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         Mass = mass;
         GM = mass * Constants.G;
         InitialOrbitalParameters = initialOrbitalParameters;
-
-
-        (InitialOrbitalParameters?.Observer as CelestialBody)?._satellites.Add(this);
         GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
     }
 
@@ -258,6 +268,20 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         }
 
         return new CelestialBody(naifId);
+    }
+
+    /// <summary>
+    /// Lists the item by the observer of its initial orbital parameters: any observer for the natural-body constructor, a
+    /// <see cref="CelestialBody"/> only for the constructor of custom parameters. The last statement of each constructor
+    /// of a derived class that does not chain to another one, after every check, so that a constructor that throws lists
+    /// nothing (#676).
+    /// </summary>
+    private protected void RegisterWithObserver()
+    {
+        var observer = _listedByAnyObserver
+            ? InitialOrbitalParameters?.Observer as CelestialItem
+            : InitialOrbitalParameters?.Observer as CelestialBody;
+        observer?.AddSatellite(this);
     }
 
     internal void AddSatellite(CelestialItem celestialItem)

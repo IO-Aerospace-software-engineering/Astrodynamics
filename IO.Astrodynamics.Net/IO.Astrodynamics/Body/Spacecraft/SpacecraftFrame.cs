@@ -72,7 +72,12 @@ public class SpacecraftFrame : Frame
     /// </summary>
     private readonly record struct AttitudeEntry(StateOrientation Orientation, object Law, bool IsLead = false);
 
-    public SpacecraftFrame(Spacecraft spacecraft) : base(spacecraft.Name + "_FRAME", spacecraft.NaifId * 1000)
+    /// <summary>
+    /// The frame of <paramref name="spacecraft"/>, named <c>Name + "_FRAME"</c>, of id NaifId × 1000, computed in checked
+    /// arithmetic: the spacecraft constructors keep it an int (a NAIF id in [-2147483, -1], #676).
+    /// </summary>
+    /// <exception cref="OverflowException">NaifId × 1000 is not an int.</exception>
+    public SpacecraftFrame(Spacecraft spacecraft) : base(spacecraft.Name + "_FRAME", checked(spacecraft.NaifId * 1000))
     {
         Spacecraft = spacecraft;
         _dataProvider = Configuration.Instance.DataProvider;
@@ -436,8 +441,18 @@ public class SpacecraftFrame : Frame
         }
     }
 
+    /// <summary>
+    /// Writes the frame kernel of the spacecraft frame, whose kernel variable <c>FRAME_&lt;NAME&gt;_FRAME</c> holds the
+    /// upper-cased name of the spacecraft.
+    /// </summary>
+    /// <param name="outputFile">The frame kernel to write.</param>
+    /// <exception cref="InvalidOperationException">The name of the spacecraft makes a kernel variable name SPICE cannot read:
+    /// a blank, a tab or another whitespace or control character, a quote, a parenthesis, a comma or '=', or more than 32
+    /// bytes in UTF-8, so 20 ASCII characters at most for the name (Kernel Required Reading, "Variable Name Rules", #676);
+    /// nothing is written.</exception>
     public async Task WriteAsync(FileInfo outputFile)
     {
+        Kernels.TextKernelNames.Check("FRAME_" + Name.ToUpper(), $"the spacecraft '{Spacecraft.Name}'");
         await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.FrameTemplate.tf");
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
         var templateData = await sr.ReadToEndAsync();

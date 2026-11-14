@@ -32,7 +32,12 @@ namespace IO.Astrodynamics.SSA;
 /// </remarks>
 public static class ConjunctionAssessment
 {
-    private static int _trialIdCounter = -9_000_000;
+    // The NAIF ids of the trial spacecraft of the avoidance options, cycling over [-2 099 999, -2 000 000] (#676): inside
+    // the range whose frame id NaifId × 1000 is an int, where -9 000 001 and below wrapped around before. Nothing keys on
+    // them: a trial reads no kernel, is listed by its observer by instance, and passes through no NAIF-id filter
+    private const int TrialIdFirst = -2_000_000;
+    private const int TrialIdCount = 100_000;
+    private static int _trialIdCounter = -1;
 
     private sealed class StateSamplingSource
     {
@@ -3072,7 +3077,7 @@ public static class ConjunctionAssessment
     private static Spacecraft CloneSpacecraft(Spacecraft template, StateVector initialState, double mass,
         double dragCoefficient, double reflectivityCoefficient)
     {
-        int trialId = Interlocked.Decrement(ref _trialIdCounter);
+        int trialId = TrialIdFirst - (int)((uint)Interlocked.Increment(ref _trialIdCounter) % TrialIdCount);
         return new Spacecraft(
             trialId,
             $"{template.Name}_SSA_TRIAL",

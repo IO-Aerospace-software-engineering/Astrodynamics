@@ -1,6 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
@@ -54,6 +57,183 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.False(clock.Equals((object)clock2));
             Assert.False(clock.Equals(null));
             Assert.False(clock.Equals((object)null));
+        }
+
+        private static StateVector LeoAbout(CelestialBody earth, TimeSystem.Time epoch) =>
+            new(new Vector3(6800e3, 0.0, 0.0), new Vector3(0.0, 7656.0, 0.0), earth, epoch, Frames.Frame.ICRF);
+
+        /// <summary>
+        /// A clock attached to a spacecraft of another NAIF id is rejected by the three ways of building a spacecraft
+        /// (#676): an SCLK identifies one spacecraft id (SCLK_DATA_TYPE_&lt;id&gt;), so the first spacecraft would write
+        /// the second's. The clock stays with the first.
+        /// </summary>
+        [Theory]
+        [InlineData("Propagated")]
+        [InlineData("KernelBacked")]
+        [InlineData("Opm")]
+        public async Task ClockOfAnotherSpacecraft_Throws(string construction)
+        {
+            // Arrange
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var epoch = new TimeSystem.Time(2024, 1, 1);
+            var clock = new Clock("SHARED", 65536);
+            var first = new Spacecraft(-1431, "FIRST", 100.0, 1000.0, clock, LeoAbout(earth, epoch));
+
+            // Act
+            var exception = Record.Exception(() => construction switch
+            {
+                "Propagated" => new Spacecraft(-1432, "SECOND", 100.0, 1000.0, clock, LeoAbout(earth, epoch)),
+                "KernelBacked" => new Spacecraft(-1432, "SECOND", epoch, clock: clock),
+                _ => IO.Astrodynamics.CCSDS.OPM.Opm.CreateFromStateVector("SECOND", "2024-001A", LeoAbout(earth, epoch)).ToSpacecraft(-1432, 1000.0, clock, earth)
+            });
+
+            // Assert
+            var rejected = Assert.IsType<ArgumentException>(exception);
+            Assert.Equal("clock", rejected.ParamName);
+            Assert.Same(first, clock.Spacecraft);
+            var file = new FileInfo(Path.Combine(Constants.OutputPath.CreateSubdirectory("Clock676").FullName, $"first_{construction}.tsc"));
+            await first.Clock.WriteAsync(file);
+            var text = await File.ReadAllTextAsync(file.FullName);
+            Assert.Contains("SCLK_DATA_TYPE_1431 ", text);
+            Assert.DoesNotContain("1432", text);
+        }
+
+        /// <summary>
+        /// A clock given to a constructor that throws stays free (#676): the same clock then builds a valid spacecraft.
+        /// </summary>
+        [Fact]
+        public void ClockKeptAfterFailedConstructor()
+        {
+            // Arrange
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var clock = new Clock("RETRY", 65536);
+
+            // Act: non-orthogonal body axes
+            Assert.Throws<ArgumentException>(() => new Spacecraft(-1433, "FAILED", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)),
+                bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorX, bodyUp: Vector3.VectorZ));
+
+            // Assert
+            Assert.Null(clock.Spacecraft);
+            var valid = new Spacecraft(-1433, "VALID", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
+            Assert.Same(valid, clock.Spacecraft);
+        }
+
+        /// <summary>
+        /// One clock given to spacecraft of different NAIF ids built at the same time (#676): one takes it, the others throw
+        /// ArgumentException, and the clock declares the id of the one that took it. A check at the start of the constructor
+        /// and an attachment at its end let several constructors pass the check, and the clock silently kept the first id
+        /// for the others' SCLK. Twice as many threads as cores, 8 at least, released together by a barrier, 50 rounds.
+        /// </summary>
+        [Fact]
+        public void ConcurrentConstructions_OneTakesTheClock()
+        {
+            int threads = System.Math.Max(8, 2 * Environment.ProcessorCount);
+            for (int round = 0; round < 50; round++)
+            {
+                // Arrange
+                var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+                var clock = new Clock("RACE" + round, 65536);
+                var built = new Spacecraft[threads];
+                var errors = new Exception[threads];
+                using var barrier = new Barrier(threads);
+                var workers = Enumerable.Range(0, threads).Select(k => new Thread(() =>
+                {
+                    barrier.SignalAndWait();
+                    try
+                    {
+                        built[k] = new Spacecraft(-1440 - k, "RACE" + k, 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
+                    }
+                    catch (Exception e)
+                    {
+                        errors[k] = e;
+                    }
+                })).ToArray();
+
+                // Act
+                foreach (var worker in workers) worker.Start();
+                foreach (var worker in workers) worker.Join();
+
+                // Assert
+                var winner = Assert.Single(built, x => x != null);
+                Assert.Same(winner, clock.Spacecraft);
+                Assert.Equal(threads - 1, errors.Count(e => e != null));
+                Assert.All(errors.Where(e => e != null), e => Assert.Equal("clock", Assert.IsType<ArgumentException>(e).ParamName));
+                Assert.Same(winner, Assert.Single(earth.Satellites));
+            }
+        }
+
+        /// <summary>
+        /// A clock held by another instance of the same NAIF id, a propagated spacecraft and its kernel-backed twin, writes the
+        /// same SCLK: accepted, and it stays with its first spacecraft (#676).
+        /// </summary>
+        [Fact]
+        public void ClockOfSameId_Accepted()
+        {
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var clock = new Clock("SAME", 65536);
+            var first = new Spacecraft(-1434, "FIRST", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
+            var second = new Spacecraft(-1434, "SECOND", 100.0, 1000.0, clock, LeoAbout(earth, new TimeSystem.Time(2024, 1, 1)));
+            Assert.Same(clock, second.Clock);
+            Assert.Same(first, clock.Spacecraft);
+        }
+
+        /// <summary>
+        /// Control (#676): the spacecraft's own SCLK declares its id, the CK is written against it, and SPICE's rotation on the
+        /// CK (<c>sxform_c</c>, the SCLK through <c>sce2c_c</c>) equals the attitude record within the CK's 2024 accuracy
+        /// (docs/reference/spacecraft.md, attitude and kernels).
+        /// </summary>
+        [Fact]
+        public async Task OwnClock_SclkReadsTheCk()
+        {
+            // Arrange
+            var earth = new CelestialBody(SolarSystemObjects.PlanetsAndMoons.EARTH);
+            var epoch = new TimeSystem.Time(2024, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
+            var spacecraft = new Spacecraft(-1435, "OWNCLK", 100.0, 1000.0, new Clock("OWNCLK", 256),
+                new KeplerianElements(7000e3, 0.001, 0.9, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF));
+            var tank = new FuelTank("t", "m", "s", 100.0, 100.0);
+            spacecraft.AddFuelTank(tank);
+            var engine = new Engine("e", "m", "s", 300.0, 1.0, tank);
+            spacecraft.AddEngine(engine);
+            spacecraft.SetStandbyManeuver(Maneuver.TriadAttitude.CreateLVLH(earth, epoch, TimeSpan.Zero, engine));
+            spacecraft.Propagate(new Window(epoch, epoch.AddSeconds(3600.0)), [earth], new Propagator.Integrators.RK78Integrator(1e-10, 1e-10),
+                false, false, TimeSpan.FromSeconds(60.0));
+            var directory = Constants.OutputPath.CreateSubdirectory("Clock676").CreateSubdirectory(Guid.NewGuid().ToString("N")[..8]);
+            var sclk = new FileInfo(Path.Combine(directory.FullName, "ownclk.tsc"));
+            var fk = new FileInfo(Path.Combine(directory.FullName, "ownclk.tf"));
+            var ck = new FileInfo(Path.Combine(directory.FullName, "ownclk.bc"));
+            await spacecraft.Clock.WriteAsync(sclk);
+            await spacecraft.Frame.WriteAsync(fk);
+            Assert.Contains("SCLK_DATA_TYPE_1435 ", await File.ReadAllTextAsync(sclk.FullName));
+
+            SpiceAPI.Instance.LoadKernels(sclk);
+            try
+            {
+                // Act
+                spacecraft.WriteOrientation(ck);
+                fk.Refresh();
+                ck.Refresh();
+                Assert.True(fk.Exists && ck.Exists);
+                SpiceAPI.Instance.LoadKernels(fk);
+                SpiceAPI.Instance.LoadKernels(ck);
+                try
+                {
+                    var t = epoch.AddSeconds(1800.0);
+                    var spice = SpiceAPI.Instance.TransformFrame(t, new Frames.Frame("OWNCLK_FRAME"), Frames.Frame.ICRF).Rotation;
+
+                    // Assert
+                    double angle = AttitudeRecordTests.RotationAngle(spacecraft.Frame.GetStateOrientationToICRF(t).Rotation, spice);
+                    Assert.True(angle <= 6.1e-10, $"{angle:E3} rad");
+                }
+                finally
+                {
+                    SpiceAPI.Instance.UnloadKernels(ck);
+                    SpiceAPI.Instance.UnloadKernels(fk);
+                }
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(sclk);
+            }
         }
     }
 }

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 #include <filesystem>
 
@@ -266,6 +267,27 @@ bool UnloadKernelsProxy(const char *path)
     if (failed_c())
     {
         HandleError();
+        return false;
+    }
+    return true;
+}
+
+bool GetFrameNameProxy(int frameId, char name[33])
+{
+    ActivateErrorManagement();
+    name[0] = '\0';
+    frmnam_c(frameId, lenout, name);
+    if (failed_c())
+    {
+        std::strncpy(lastError, HandleError(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        name[0] = '\0';
+        return false;
+    }
+
+    if (name[0] == '\0')
+    {
+        std::snprintf(lastError, sizeof(lastError), "SPICE knows no frame of id %d", frameId);
         return false;
     }
     return true;

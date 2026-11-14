@@ -129,6 +129,12 @@ task; it needs an `IntegratorFactory` that creates an `RK78Integrator`, otherwis
 
 Key features: fault isolation (a failed task does not corrupt others), `CancellationToken` via `BatchOptions`, `IProgress<BatchProgress>` for tracking, duplicate `Spacecraft` detection.
 
+Each maneuver draws on a fuel tank of the spacecraft of its task, and a tank belongs to one spacecraft
+(`Spacecraft.AddFuelTank` rejects a tank held by another): distinct spacecraft imply distinct maneuvers and engines. A
+task whose maneuver draws on another spacecraft's tank, or on a tank of none, fails before it runs with an
+`InvalidOperationException` in its result (#676, #586; before, it burnt the other spacecraft's fuel and wrote its
+records, or threw `NullReferenceException` at the burn).
+
 ## MonteCarloPropagator
 
 `MonteCarloPropagator` runs dispersion analysis by sampling initial state covariance, propagating each perturbed state via `BatchPropagator`, and aggregating per-epoch statistics.

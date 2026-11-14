@@ -21,8 +21,18 @@ public class SiteFrame : Frame
         Site = site;
     }
 
+    /// <summary>
+    /// Writes the frame kernel of the topocentric frame of the site, whose kernel variable <c>FRAME_&lt;SITE&gt;_TOPO</c>
+    /// holds the upper-cased name of the site.
+    /// </summary>
+    /// <param name="outputFile">The frame kernel to write.</param>
+    /// <exception cref="InvalidOperationException">The name of the site makes a kernel variable name SPICE cannot read: a
+    /// blank, a tab or another whitespace or control character, a quote, a parenthesis, a comma or '=', or more than 32
+    /// bytes in UTF-8, so 21 ASCII characters at most for the name (Kernel Required Reading, "Variable Name Rules", #676);
+    /// nothing is written.</exception>
     public async Task WriteAsync(FileInfo outputFile)
     {
+        Kernels.TextKernelNames.Check("FRAME_" + Name.ToUpper(), $"the site '{Site.Name}'");
         await using var stream = this.GetType().Assembly.GetManifestResourceStream("IO.Astrodynamics.Templates.SiteFrameTemplate.tf");
         using StreamReader sr = new StreamReader(stream ?? throw new InvalidOperationException());
         var templateData = await sr.ReadToEndAsync();
