@@ -351,8 +351,12 @@ public class SpiceAPI
     private const int KernelScanBufferLength = 65536;
     private static readonly byte[] BeginData = "\\begindata"u8.ToArray();
 
-    // The variable of a meta-kernel that names the kernels SPICE loads with it
-    private static readonly byte[] KernelsToLoad = "KERNELS_TO_LOAD"u8.ToArray();
+    // The variables FURNSH watches: a text kernel whose load assigns one of them is a meta-kernel (KEEPER)
+    private static readonly string[] MetaKernelVariables = ["KERNELS_TO_LOAD", "PATH_SYMBOLS", "PATH_VALUES"];
+
+    // What ends a variable name in a line of data, around the assignment operators = and +=, and the parentheses and commas
+    // of a list
+    private static readonly char[] DataSeparators = [' ', '\t', '\r', '\v', '\f', '=', '+', '(', ')', ','];
 
     /// <summary>
     /// The files that <see cref="LoadKernels"/> hands to SPICE for <paramref name="path"/>: the file itself, or the
@@ -476,43 +480,120 @@ public class SpiceAPI
 
     /// <summary>
     /// The kernels SPICE reads again when it unloads <paramref name="file"/> (KEEPER's UNLOAD, measured with CSPICE N0067),
-    /// and those whose reading may make that unload fail, from the ID word of the file and, for a text kernel, the
-    /// presence of <c>KERNELS_TO_LOAD</c>:
+    /// and those whose reading may make that unload fail, from the ID word of the file and, for a text kernel, the variables
+    /// its data assigns:
     /// <list type="bullet">
     /// <item>a text kernel: the text kernels still loaded, "Text kernels are unloaded by clearing the kernel pool and then
     /// reloading the other text kernels" (NAIF, Kernel Required Reading, "Unloading Kernels"); SPICE loads as a text
     /// kernel every file without the ID word of a binary one;</item>
-    /// <item>an SPK, a CK or a binary PCK: the other loaded kernels of its kind, which SPICE opens again
-    /// (<c>unload_c --&gt; UNLOAD --&gt; SPKLEF</c>, <c>CKLPF</c> or <c>PCKLOF --&gt; DAFOPR</c>), and not the text kernels;
-    /// </item>
-    /// <item>a meta-kernel: the text kernels still loaded, even when it names binary kernels only, and, through the unload of
-    /// the kernels it names, the kernels of their kinds (a meta-kernel of a binary PCK opens the other PCKs again), which
-    /// the library does not read from the meta-kernel: its failure counts as <see cref="KernelRereads.Unmeasured"/>;</item>
-    /// <item>any other binary kernel (DSK, EK, a DAF of the oldest ID word), whose unload was not measured: nothing for its
-    /// reads, <see cref="KernelRereads.Unmeasured"/> for its failure.</item>
+    /// <item>an SPK, a CK, a binary PCK, a DSK or an EK: the other loaded kernels of its kind, which SPICE opens again
+    /// (<c>unload_c --&gt; UNLOAD --&gt; SPKLEF</c>, <c>CKLPF</c>, <c>PCKLOF</c>, <c>ZZDSKLSF</c> or <c>EKLEF</c>), and not
+    /// the text kernels;</item>
+    /// <item>a DAF of the oldest ID word (<c>NAIF/DAF</c>), which SPICE loads as an SPK or a CK from its segments
+    /// (<c>GETFAT --&gt; ZZCKSPK</c>): the library does not tell which, so it reads no kind for the failures before it,
+    /// and its own failure, of SPKs or of CKs, is repaired by no later unload;</item>
+    /// <item>a meta-kernel (<see cref="IsMetaKernel"/>): the text kernels still loaded, even when it names binary kernels
+    /// only, and, through the unload of the kernels it names, the kernels of each of their kinds, which the library does not
+    /// read from the meta-kernel: its failure counts as <see cref="KernelRereads.Unknown"/>;</item>
+    /// <item>a file of another ID word, from which SPICE loads nothing: nothing for its reads, <see cref="KernelRereads.Unknown"/>
+    /// for its failure.</item>
     /// </list>
     /// </summary>
-    /// <remarks>A file that cannot be read counts as a binary kernel of no known kind (#673).</remarks>
+    /// <remarks>A file that cannot be read counts as a kernel of no known kind (#673).</remarks>
     internal static (KernelRereads Reads, KernelRereads MayFailOn) UnloadRereads(string file)
     {
         try
         {
             using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-            Span<byte> buffer = new byte[KernelScanBufferLength];
-            int read = stream.ReadAtLeast(buffer, buffer.Length, false);
-            var head = buffer[..read];
+            Span<byte> head = stackalloc byte[8];
+            head = head[..stream.ReadAtLeast(head, head.Length, false)];
             if (head.StartsWith("DAF/SPK "u8)) return (KernelRereads.Spks, KernelRereads.Spks);
             if (head.StartsWith("DAF/CK  "u8)) return (KernelRereads.Cks, KernelRereads.Cks);
             if (head.StartsWith("DAF/PCK "u8)) return (KernelRereads.Pcks, KernelRereads.Pcks);
-            if (HasBinaryIdWord(head)) return (KernelRereads.None, KernelRereads.Unmeasured);
-            return Contains(stream, buffer, read, KernelsToLoad)
-                ? (KernelRereads.TextKernels, KernelRereads.TextKernels | KernelRereads.Unmeasured)
+            if (head.StartsWith("DAS/DSK "u8)) return (KernelRereads.Dsks, KernelRereads.Dsks);
+            if (head.StartsWith("DAS/EK  "u8)) return (KernelRereads.Eks, KernelRereads.Eks);
+            if (head.StartsWith("NAIF/DAF"u8)) return (KernelRereads.None, KernelRereads.Spks | KernelRereads.Cks);
+            if (HasBinaryIdWord(head)) return (KernelRereads.None, KernelRereads.Unknown);
+            stream.Position = 0;
+            return IsMetaKernel(stream)
+                ? (KernelRereads.TextKernels, KernelRereads.TextKernels | KernelRereads.Unknown)
                 : (KernelRereads.TextKernels, KernelRereads.TextKernels);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            return (KernelRereads.None, KernelRereads.Unmeasured);
+            return (KernelRereads.None, KernelRereads.Unknown);
         }
+    }
+
+    /// <summary>
+    /// Whether SPICE loads the text kernel of <paramref name="stream"/> as a meta-kernel: FURNSH watches the variables
+    /// <c>KERNELS_TO_LOAD</c>, <c>PATH_SYMBOLS</c> and <c>PATH_VALUES</c> and gives the type META to a text kernel whose
+    /// load assigns one of them (KEEPER), whatever its comments say. Its data is read as RDKER reads it: the lines between
+    /// a line <c>\begindata</c> and a line <c>\begintext</c>, each marker alone on its line but for blanks, tabs and the
+    /// carriage return of a CRLF line (NAIF, Kernel Required Reading, "Text Kernel Specifications"); a name is a word of a
+    /// line of data outside its quoted strings, the names of the pool compared case-sensitively (measured with CSPICE
+    /// N0067, kinfo_c).
+    /// </summary>
+    /// <remarks>
+    /// A word that SPICE would not read as a name (a malformed line) counts as one, which can only take a text kernel for a
+    /// meta-kernel, whose failure is then never taken as repaired; such a line also makes SPICE fail the load.
+    /// </remarks>
+    private static bool IsMetaKernel(Stream stream)
+    {
+        using var reader = new StreamReader(stream, System.Text.Encoding.Latin1, false, KernelScanBufferLength, true);
+        bool data = false;
+        var line = new System.Text.StringBuilder();
+        int next;
+        do
+        {
+            next = reader.Read();
+            if (next >= 0 && next != '\n')
+            {
+                line.Append((char)next);
+                continue;
+            }
+
+            var text = line.ToString();
+            line.Clear();
+            var marker = text.Trim(' ', '\t', '\r', '\v', '\f');
+            if (marker == "\\begindata")
+            {
+                data = true;
+            }
+            else if (marker == "\\begintext")
+            {
+                data = false;
+            }
+            else if (data && AssignsMetaKernelVariable(text))
+            {
+                return true;
+            }
+        } while (next >= 0);
+
+        return false;
+    }
+
+    // Whether a line of data holds one of the variables FURNSH watches as a word outside its quoted strings ('' within a
+    // string is a quote, which toggles the state twice)
+    private static bool AssignsMetaKernelVariable(string line)
+    {
+        var unquoted = new System.Text.StringBuilder(line.Length);
+        bool quoted = false;
+        foreach (char c in line)
+        {
+            if (c == '\'')
+            {
+                quoted = !quoted;
+                unquoted.Append(' ');
+            }
+            else
+            {
+                unquoted.Append(quoted ? ' ' : c);
+            }
+        }
+
+        return unquoted.ToString().Split(DataSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Any(word => Array.IndexOf(MetaKernelVariables, word) >= 0);
     }
 
     /// <summary>
@@ -526,16 +607,18 @@ public class SpiceAPI
     /// path that matches no entry is handed to SPICE as it is (the files of a directory as it is now), which does nothing
     /// for a name SPICE does not hold.
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call repaired
-    /// it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded again, and that of an SPK, a CK
-    /// or a binary PCK opens the other loaded kernels of its kind again; each fails on a kernel deleted since its load, until
-    /// a later unload that reads the same kernels again succeeds (#673).</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call, of the same
+    /// entry or of another one, repaired it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded
+    /// again, and that of an SPK, a CK, a binary PCK, a DSK or an EK opens the other loaded kernels of its kind again; each
+    /// fails on a kernel deleted since its load, until a later unload that reads the same kernels again succeeds (#673).
+    /// Every matched entry is unloaded and removed before the exception.</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
         if (path == null) return;
         lock (lockObject)
         {
             bool matched = false;
+            var unrepaired = new List<KernelFile>();
             for (int i = 0; i < _kernels.Count; i++)
             {
                 var entry = _kernels[i];
@@ -544,7 +627,7 @@ public class SpiceAPI
                 {
                     _kernels.RemoveAt(i--);
                     matched = true;
-                    UnloadFiles(entry.Files);
+                    UnloadFiles(entry.Files, unrepaired);
                     continue;
                 }
 
@@ -564,12 +647,17 @@ public class SpiceAPI
                 _kernels.InsertRange(i, remaining);
                 i += remaining.Length - 1;
                 matched = true;
-                UnloadFiles(removed);
+                UnloadFiles(removed, unrepaired);
             }
 
             if (!matched && !UnloadKernelsProxy(path.FullName))
             {
                 throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
+            }
+
+            if (unrepaired.Count > 0)
+            {
+                throw new InvalidOperationException($"Kernel {unrepaired[0].Name} can't be unloaded. You can have more details on standard output");
             }
         }
     }
@@ -578,14 +666,15 @@ public class SpiceAPI
     /// Unloads files by their names. After it unloads a file, SPICE reads again the kernels of <see cref="UnloadRereads"/>
     /// still loaded, in their load order, and stops at one deleted since its load (<c>SPICE(FILEOPENFAILED)</c> for a text
     /// kernel, <c>SPICE(FILENOTFOUND)</c> for a binary one, measured with CSPICE N0067): the unload fails, and the text
-    /// kernels after the deleted one leave the pool, or, for binary PCKs, those before it take precedence over those after
-    /// it.
+    /// kernels after the deleted one leave the pool, or, for SPKs, CKs and binary PCKs, those before it take precedence over
+    /// those after it (each <c>SPKLEF</c>, <c>CKLPF</c> or <c>PCKLOF</c> of a loaded file closes it and loads it again
+    /// at the highest priority, and the files after the deleted one are not loaded again).
     /// A later unload that succeeds has read again every kernel of its kinds, which repairs the failures that came from
-    /// those kinds only (#673). The first failure no later unload repaired is reported.
+    /// those kinds only (#673). The failures no later unload of the call repaired are left in <paramref name="unrepaired"/>,
+    /// in their order.
     /// </summary>
-    private static void UnloadFiles(KernelFile[] files)
+    private static void UnloadFiles(KernelFile[] files, List<KernelFile> unrepaired)
     {
-        var unrepaired = new List<KernelFile>();
         foreach (var file in files)
         {
             if (!UnloadKernelsProxy(file.Name))
@@ -596,11 +685,6 @@ public class SpiceAPI
             {
                 unrepaired.RemoveAll(x => (x.MayFailOn & ~file.Reads) == KernelRereads.None);
             }
-        }
-
-        if (unrepaired.Count > 0)
-        {
-            throw new InvalidOperationException($"Kernel {unrepaired[0].Name} can't be unloaded. You can have more details on standard output");
         }
     }
 
