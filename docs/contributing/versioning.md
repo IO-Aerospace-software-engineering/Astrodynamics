@@ -1764,7 +1764,9 @@ not listed.
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
-  than every window and gap, or a `double` quantity whose sign is the condition.
+  than every window and gap, or a `double` quantity whose sign is the condition. A `double` quantity's search finds a
+  window or a gap between two samples down to the about 1 µs to which `localmin` locates its extreme, and no tangency
+  there (an extreme exactly at the value).
 - **At most 1000 windows from a CSPICE search**
   ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)). A search that CSPICE runs
   returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every
