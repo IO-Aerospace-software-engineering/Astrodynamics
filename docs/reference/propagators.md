@@ -98,9 +98,9 @@ var solution = propagator.Propagate();
 The solution holds the SGP4 states at the samples, and between them the cubic Hermite of `PropagationSegment` on the
 positions, the velocities and the accelerations of SGP4 at the samples (the central difference of its velocity at
 ±1 s, #675; zero before 11.0.0, which put the interpolated velocity up to 49.9 m/s off SGP4). For the ISS at 60 s,
-`InterpolateAt` and `GetStateVector` are 4.3e-4 m/s and 0.38 m off SGP4 between the samples (Linux x64), and exact at
-them; `tle.ToStateVector(t)` is the exact SGP4 state at any instant. A TLE whose SGP4 fails within 1 s of an end of
-the window throws, before the spacecraft receives any sample.
+`InterpolateAt` and `GetStateVector` are 4.3e-4 m/s and 0.38 m off SGP4 between the samples (the same on Linux x64,
+Windows and macOS arm64), and exact at them; `tle.ToStateVector(t)` is the exact SGP4 state at any instant. A TLE whose
+SGP4 fails within 1 s of an end of the window throws, before the spacecraft receives any sample.
 
 ## BatchPropagator
 

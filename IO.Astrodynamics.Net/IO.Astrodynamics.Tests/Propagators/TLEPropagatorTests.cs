@@ -19,8 +19,8 @@ namespace IO.Astrodynamics.Tests.Propagators;
 
 public class TLEPropagatorTests
 {
-    // Twice the worst of InterpolatedVelocity_FollowsSgp4 on Linux x64 (2026-11-13): 4.28e-4 m/s and 0.376 m. Provisional,
-    // to be set from the three platforms
+    // Twice the worst of InterpolatedVelocity_FollowsSgp4 over Linux x64, Windows and macOS arm64 (CI run 43591654097, 2026-11-14), rounded up at
+    // the second significant digit: velocity 4.282e-4, 4.282e-4 and 4.282e-4 m/s; position 0.3762, 0.3762 and 0.3762 m
     private const double InterpolatedVelocityBound = 8.6e-4;
     private const double InterpolatedPositionBound = 0.76;
 

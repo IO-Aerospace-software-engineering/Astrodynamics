@@ -48,13 +48,15 @@ public class TlePropagationTests
 
     private static readonly TimeSpan OutputStep = TimeSpan.FromSeconds(60.0);
 
-    // Twice the worst of TleStart_PointMass_FollowsKepler on Linux x64 (2026-11-13): 9.25e-7 m, 1.17e-9 m/s. Provisional,
-    // to be set from the three platforms
+    // Twice the worst of TleStart_PointMass_FollowsKepler over Linux x64, Windows and macOS arm64 (CI run 43591654097, 2026-11-14), rounded up
+    // at the second significant digit: position 9.249e-7, 9.171e-7 and 9.244e-7 m; velocity 1.172e-9, 1.164e-9 and
+    // 1.173e-9 m/s
     private const double KeplerPosition = 1.9e-6;
     private const double KeplerVelocity = 2.4e-9;
 
-    // Twice the worst of UnpropagatedOrSampledTleSpacecraft_ReadsSgp4 on Linux x64 (2026-11-14): the Lagrange interpolation
-    // of the TLEPropagator samples at mid-step, ISS at 60 s, 7.59e-4 m. Provisional, to be set from the three platforms
+    // Twice the worst of UnpropagatedOrSampledTleSpacecraft_ReadsSgp4 over Linux x64, Windows and macOS arm64 (CI run 43591654097, 2026-11-14),
+    // rounded up at the second significant digit: the Lagrange interpolation of the TLEPropagator samples at mid-step, ISS
+    // at 60 s, 7.593e-4, 7.593e-4 and 7.593e-4 m
     private const double SampledEphemerisBetweenSamples = 1.6e-3;
 
     private readonly ITestOutputHelper _output;

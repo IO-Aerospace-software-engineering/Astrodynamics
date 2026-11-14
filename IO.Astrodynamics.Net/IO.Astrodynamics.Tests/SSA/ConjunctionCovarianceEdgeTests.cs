@@ -28,6 +28,11 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
 {
     private static readonly CovariancePropagationOptions Covariance = new() { Mode = CovariancePropagationMode.Covariance };
 
+    // Twice the worst of TemeInitialCovariance_EqualsItsIcrfTwin, the covariance held in RTN from a TEME state against its
+    // ICRF twin (relative Frobenius norm), over Linux x64, Windows and macOS arm64 (CI run 43591654097, 2026-11-14), rounded up at the second
+    // significant digit: 3.09e-16, 3.09e-16 and 3.09e-16
+    private const double HeldInRtnRelative = 6.2e-16;
+
     private readonly ConjunctionCovarianceCase _case;
     private readonly ReferenceCases _cases;
     private readonly ITestOutputHelper _output;
@@ -377,7 +382,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         }
 
         _output.WriteLine($"MEASURE ConjunctionCovarianceEdgeTests.TemeInitialCovariance_EqualsItsIcrfTwin: held in RTN, {System.Math.Sqrt(difference / norm):E2} relative");
-        Assert.True(System.Math.Sqrt(difference / norm) < 1e-12, $"{System.Math.Sqrt(difference / norm):E2}");
+        Assert.True(System.Math.Sqrt(difference / norm) <= HeldInRtnRelative, $"{System.Math.Sqrt(difference / norm):E2}");
     }
 
     [Fact]
