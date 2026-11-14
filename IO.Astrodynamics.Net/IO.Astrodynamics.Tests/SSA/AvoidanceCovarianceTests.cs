@@ -354,8 +354,9 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
     {
         // Arrange: the protected spacecraft propagated in RK7(8) with its initial covariance (propagated at the
         // encounter), the secondary not propagated (its initial covariance held in RTN, about a day old at the TCA); the
-        // encounter analyzed with a stale threshold of two days, no low-speed threshold, a bisection tolerance of 1 µs and
-        // the secondary without a radius of its own given 2 m
+        // encounter analyzed with a stale threshold of two days, a low-speed threshold of 100 km/s (above any relative
+        // speed in orbit about the Earth, so that only the inherited threshold raises the flag), a bisection tolerance of
+        // 1 µs and the secondary without a radius of its own given 2 m
         var protectedCraft = WithEngine(-6431, _twoBody.ProtectedStart, out _);
         var secondaryCraft = ConjunctionCovarianceCase.NewSpacecraft(-6432, _twoBody.SecondaryStart);
         _twoBody.Propagate(protectedCraft);
@@ -363,7 +364,7 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
         {
             StaleCovarianceThreshold = TimeSpan.FromDays(2.0),
             SecondaryHardBodyRadiusMeters = 2.0,
-            LowRelativeSpeedThresholdMetersPerSecond = 0.0,
+            LowRelativeSpeedThresholdMetersPerSecond = 1.0e5,
             BisectionToleranceSeconds = 1e-6
         };
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
@@ -384,13 +385,14 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             AnalysisSampleStep = settings.SampleStep,
             MaximumEventSearchStep = settings.MaximumEventSearchStep,
             SecondaryHardBodyRadiusMeters = 2.0,
-            LowRelativeSpeedThresholdMetersPerSecond = 0.0
+            LowRelativeSpeedThresholdMetersPerSecond = 1.0e5
         });
 
         // Assert: each option on the propagated path re-analyzed with the settings of the encounter (#683: 5 m for the
-        // secondary and a stale threshold of 60 s): the radius of the encounter, the stale flag by the rule of its
-        // threshold on the sources and ages the option reports (the secondary about a day old: not stale against two
-        // days), never the low-speed flag; the null mirrors are the values of the encounter, bit for bit
+        // secondary, a stale threshold of 60 s and a low-speed threshold of 1 m/s): the radius of the encounter, the stale
+        // flag by the rule of its threshold on the sources and ages the option reports (the secondary about a day old: not
+        // stale against two days), the low-speed flag by the rule of its threshold on the relative speed of the option
+        // (raised); the null mirrors are the values of the encounter, bit for bit
         Assert.Equal(6, avoidance.Count);
         Assert.Equal(explicitly.Count, avoidance.Count);
         for (int i = 0; i < avoidance.Count; i++)
@@ -403,7 +405,8 @@ public class AvoidanceCovarianceTests : IClassFixture<ConjunctionCovarianceCase>
             Assert.True(state.SecondaryCovariance.Age > TimeSpan.FromSeconds(60.0) && state.SecondaryCovariance.Age < TimeSpan.FromDays(2.0));
             Assert.Equal(encounter.CollisionRisk.CombinedHardBodyRadiusMeters, post.CollisionRisk.CombinedHardBodyRadiusMeters);
             Assert.False(state.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
-            Assert.False(state.QualityFlags.HasFlag(EncounterQualityFlags.LowRelativeVelocityEncounter));
+            Assert.True(state.RelativeState.RelativeVelocityInertial.Magnitude() < settings.LowRelativeSpeedThresholdMetersPerSecond);
+            Assert.True(state.QualityFlags.HasFlag(EncounterQualityFlags.LowRelativeVelocityEncounter));
 
             var other = explicitly[i];
             Assert.Equal(other.BurnEpoch, avoidance[i].BurnEpoch);

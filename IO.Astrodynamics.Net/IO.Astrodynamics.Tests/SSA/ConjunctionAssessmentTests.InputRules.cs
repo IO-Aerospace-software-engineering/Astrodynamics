@@ -178,6 +178,37 @@ public partial class ConjunctionAssessmentTests
         Assert.All(encounters, e => Assert.Equal(expected, e.CollisionRisk.CombinedHardBodyRadiusMeters));
     }
 
+    [Fact]
+    public void Screen_RadiusConflictBehindAnotherCandidate_ThrowsBeforeTheFirstAnalysis()
+    {
+        // Arrange: two candidates propagated over the hour of the pair, the first without a radius of its own (the option
+        // gives it 2 m), the second of 3 m beside the option of 2 m; the window leaves the states, so that the analysis of
+        // the first candidate throws on its coverage
+        var earth = CreateEarth();
+        var (protectedStart, secondaryStart) = InputRulePair(earth);
+        var protectedCraft = InputRuleSpacecraft(NextInputRuleId(), protectedStart, ProtectedHardBodyRadius);
+        var first = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 0.0);
+        var second = InputRuleSpacecraft(NextInputRuleId(), secondaryStart, 3.0);
+        PropagateRk78(protectedCraft, earth);
+        PropagateRk78(first, earth);
+        PropagateRk78(second, earth);
+        var profile = new ProtectedSpacecraftProfile(protectedCraft);
+        var options = new ScreeningOptions { DefaultSecondaryHardBodyRadiusMeters = 2.0, MaxMissDistanceMeters = double.MaxValue };
+        var firstAlone = Record.Exception(() =>
+            ConjunctionAssessment.Screen(profile, new ILocalizable[] { first }, InputRuleWindowPastTheStates, options));
+        Assert.NotNull(firstAlone);
+        Assert.False(firstAlone is ArgumentException { ParamName: "candidates" });
+
+        // Act
+        var exception = Assert.Throws<ArgumentException>(() =>
+            ConjunctionAssessment.Screen(profile, new ILocalizable[] { first, second }, InputRuleWindowPastTheStates, options));
+
+        // Assert: the radii of every candidate resolved before the first analysis (#683), the conflict named
+        Assert.Equal("candidates", exception.ParamName);
+        Assert.Contains($"{second.Name} (NAIF {second.NaifId})", exception.Message);
+        Assert.Contains("DefaultSecondaryHardBodyRadiusMeters", exception.Message);
+    }
+
     public static IEnumerable<object[]> InvalidRadiusRows()
     {
         foreach (var options in new[] { "analysis", "analysisDense", "screening", "avoidance" })
@@ -443,6 +474,11 @@ public partial class ConjunctionAssessmentTests
             : new[] { ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondaryCraft, secondaryTrajectory, window) });
     }
 
+    // From the MEASURE line below (Linux, 2026-11-14; provisional, to be set from the three platforms): the TCAs the same
+    // tick (0 s), bounded by one tick, the resolution of a label; the misses 3.45e-4 m apart, bounded by twice that
+    private const double OwnerlessTcaBound = 1e-7;
+    private const double OwnerlessMissBound = 7.0e-4;
+
     [Fact]
     public void Analyze_OwnerlessTrajectory_IsAccepted()
     {
@@ -469,11 +505,14 @@ public partial class ConjunctionAssessmentTests
             new ConjunctionAnalysisOptions { CovariancePropagation = null });
         var all = ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondaryCraft, secondaryByHand, InputRuleWindow);
 
-        // Assert: the same close approach within the Hermite of the solution built by hand (its steps of 60 s carry the
-        // two-body states and accelerations)
+        // Assert: accepted, and the same close approach within the Hermite of the solution built by hand (its steps of 60 s
+        // carry the two-body states and accelerations)
         Assert.NotEmpty(all);
-        Assert.True(System.Math.Abs((byHand.EncounterState.Epoch - own.EncounterState.Epoch).TotalSeconds) < 1e-3);
-        Assert.True(System.Math.Abs(byHand.EncounterState.MissDistanceMeters - own.EncounterState.MissDistanceMeters) < 1.0);
+        double tcaDifference = System.Math.Abs((byHand.EncounterState.Epoch - own.EncounterState.Epoch).TotalSeconds);
+        double missDifference = System.Math.Abs(byHand.EncounterState.MissDistanceMeters - own.EncounterState.MissDistanceMeters);
+        _output.WriteLine($"MEASURE #683 owner-less trajectory: TCA {tcaDifference:E3} s, miss {missDifference:E3} m from the own solution");
+        Assert.True(tcaDifference <= OwnerlessTcaBound, $"TCA {tcaDifference:E3} s");
+        Assert.True(missDifference < OwnerlessMissBound, $"miss {missDifference:E3} m");
     }
 
     [Fact]

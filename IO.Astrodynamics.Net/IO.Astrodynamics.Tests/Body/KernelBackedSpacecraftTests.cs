@@ -346,14 +346,6 @@ public class KernelBackedSpacecraftTests
         }
     }
 
-    #endregion
-
-    #region Helper
-
-    /// <summary>
-    /// Creates a test SPK file with synthetic state vectors for a spacecraft.
-    /// The SPK covers J2000 ± 100 seconds with Earth as center body.
-    /// </summary>
     [Theory]
     [InlineData(double.PositiveInfinity, true)]
     [InlineData(double.NaN, true)]
@@ -387,6 +379,14 @@ public class KernelBackedSpacecraftTests
         }
     }
 
+    #endregion
+
+    #region Helper
+
+    /// <summary>
+    /// Creates a test SPK file with synthetic state vectors for a spacecraft.
+    /// The SPK covers J2000 ± 100 seconds with Earth as center body.
+    /// </summary>
     private static FileInfo CreateTestSpk(int naifId, string name)
     {
         var outputDir = Constants.OutputPath.CreateSubdirectory("KernelSC");

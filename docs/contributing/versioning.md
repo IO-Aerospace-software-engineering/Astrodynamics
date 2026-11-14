@@ -1376,8 +1376,11 @@ release are listed under **Known limitations**.
   are now re-analyzed with the settings of the encounter, but for the values the avoidance options give (Changed
   below); `AvoidanceFallbackTests` and `AvoidanceCovarianceTests` check the radius and the flags of every option on the
   two-body, Velocity-Verlet, RK7(8) and propagated-covariance paths, for encounters of `Analyze` (both paths),
-  `AnalyzeAll` and `Screen`, and that null mirrors give, bit for bit, the options of the encounter's values given
-  explicitly.
+  `AnalyzeAll` and `Screen` (a low-speed threshold of 100 km/s raising the flag on each option, the stale threshold
+  raising it or not by the age of each covariance), that on the two-body path each option's TCA lies on the grid the
+  encounter's sample step, maximum search step and bisection tolerance of 10 s give (the closed form of the sampled
+  search: (j + 1/2) w after the burn, w = 7.5 s and 6.25 s on the two rows, 5 s with the avoidance defaults), and that
+  null mirrors give, bit for bit, the options of the encounter's values given explicitly.
 - **`Analyze` and `AnalyzeAll` accepted the protected spacecraft as its own secondary** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)): the midpoint (or on two
   propagations the window start) with a miss of 0 m and a Pc of 0.815, an empty list on two propagations for
   `AnalyzeAll`. A secondary with the NAIF identifier of the protected spacecraft, the rule by which `Screen` skips it,
@@ -1392,8 +1395,10 @@ release are listed under **Known limitations**.
 - **The label of a TCA depended on the search path** ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)). On a UTC window the sampled search labelled its TCA in UTC
   and the search on two propagations in the TDB of the step epoch that opened its bracket (455 of 540 UTC windows around
   27 minima, the other 85 in UTC): the same instant, a tick apart at most, yet unequal by `==`. A dense TCA is now
-  labelled in the time frame of the window start, the tick of that frame nearer the zero of the range rate, never a
-  window end; `DenseTca_IsLabelledInTheWindowScale` and `DenseTca_InTheWindowScale_IsTheTickNearerTheZero` check UTC,
+  labelled in the time frame of the window start, never a window end: with a `BisectionToleranceSeconds` below a tick
+  (the default) the tick of that frame nearer the zero of the range rate; with a tolerance of a tick or more, the middle
+  of its last bracket converted to that frame, or the neighbouring tick toward the zero where the range rate is smaller
+  in magnitude (one tick at most from that middle); `DenseTca_IsLabelledInTheWindowScale` and `DenseTca_InTheWindowScale_IsTheTickNearerTheZero` check UTC,
   TT and TAI windows on RK7(8) and Velocity-Verlet pairs (the TCA 1.4e-7 s from the Keplerian zero, bound 1e-6 s), a TDB
   window bit for bit. The conjunction cases of the conformance suite pass, their `tca_s` moved by 8.7e-8 s at most and
   their relative position by 0.30 mm at most (see [Validation](../guides/validation.md)).
@@ -2036,8 +2041,8 @@ not listed.
   bracket. The sampled search subdivides a step one tick longer than `MaximumEventSearchStep`, one sample more for a read
   100 ns closer ([#642](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/642)); results are unaffected.
   The `ILocalizable` overloads of `Analyze` and `AnalyzeAll` run the sampled search even for two participants propagated
-  in RK7(8): the search on the polynomials of their steps is not inferred in 11.0.0 ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683)); pass their
-  `PropagationSolution` for it.
+  in RK7(8): the search on the polynomials of their steps is not inferred in 11.0.0 (D4 of the API review of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)); pass their `PropagationSolution` for it.
 - **Cost and input checks of the conjunction analysis**
   ([#447](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/447),
   [#640](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/640)).

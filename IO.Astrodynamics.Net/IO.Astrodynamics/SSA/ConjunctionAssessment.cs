@@ -950,7 +950,10 @@ public static class ConjunctionAssessment
     /// its frame was that of the left end of its bracket, the TDB of a step epoch most of the time). An epoch in that frame
     /// is returned as it is (a TDB window bit for bit), a window end as that end. Another is converted, and of that tick and
     /// its neighbour toward the zero of the range rate, the one where |g| is smaller is kept, the lower one on a tie
-    /// (#624's rule in that frame), the inner tick of the window when it would fall on an end or outside (#621).
+    /// (#624's rule in that frame), the inner tick of the window when it would fall on an end or outside (#621). For the
+    /// tick of the epoch nearest the zero (a bisection tolerance below a tick), that is the tick of the frame nearer the
+    /// zero; for the middle of a wider bracket (a tolerance of a tick or more), its tick in the frame or the next one
+    /// toward the zero, one tick at most from it.
     /// </summary>
     internal static Time InWindowScale(Time epoch, Window window, Func<Time, double> rangeRate)
     {
@@ -3016,13 +3019,13 @@ public static class ConjunctionAssessment
         };
     }
 
-    // A radius given as an option is finite and not negative (#683: a negative one was subtracted, a NaN or an infinite one
-    // gave no probability and no flag)
+    // A radius given as an option is finite and not negative, the rule of a spacecraft's (#683: a negative one was
+    // subtracted, a NaN or an infinite one gave no probability and no flag)
     private static void ThrowIfInvalidHardBodyRadius(double? radius, string optionName)
     {
-        if (radius is { } value && (!double.IsFinite(value) || value < 0.0))
+        if (radius is { } value)
         {
-            throw new ArgumentOutOfRangeException(optionName, value, "The hard-body radius must be finite and not negative.");
+            Spacecraft.ThrowIfInvalidHardBodyRadius(value, optionName);
         }
     }
 

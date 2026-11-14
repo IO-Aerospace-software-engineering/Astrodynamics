@@ -245,6 +245,9 @@ public class ConjunctionTcaAccuracyTests
     [InlineData("nearerBelow")]
     [InlineData("nearerAbove")]
     [InlineData("tie")]
+    [InlineData("neighbourAbove")]
+    [InlineData("neighbourBelow")]
+    [InlineData("tieNeighbourBelow")]
     [InlineData("firstTick")]
     [InlineData("lastTick")]
     public void InWindowScale_TheTickOfTheWindowFrameNearerTheZero(string row)
@@ -264,8 +267,14 @@ public class ConjunctionTcaAccuracyTests
             _ => middle
         };
 
-        // The zero of g at zero + offset ticks: 0.2 tick inside the window for the first and last rows
-        double offsetTicks = row switch { "nearerBelow" => 0.3, "nearerAbove" => -0.3, "tie" => 0.5, "firstTick" => -0.8, "lastTick" => 0.8, _ => 0.0 };
+        // The zero of g at zero + offset ticks: 0.2 tick inside the window for the first and last rows. The epoch passed
+        // converts to the tick zero; for the neighbour rows the zero of g lies 0.7 tick from it, nearer the next tick
+        // (above) or the previous one (below), and 0.5 tick below it for the tie whose lower tick is the neighbour
+        double offsetTicks = row switch
+        {
+            "nearerBelow" => 0.3, "nearerAbove" => -0.3, "tie" => 0.5, "neighbourAbove" => 0.7, "neighbourBelow" => -0.7,
+            "tieNeighbourBelow" => -0.5, "firstTick" => -0.8, "lastTick" => 0.8, _ => 0.0
+        };
         double RangeRate(TimeSystem.Time t) => (t - zero).Ticks * 1e-7 - offsetTicks * 1e-7;
         var epoch = row switch
         {
@@ -290,6 +299,9 @@ public class ConjunctionTcaAccuracyTests
             "nearerBelow" => middle.AddTicks(3),
             "nearerAbove" => middle.AddTicks(7),
             "tie" => middle,
+            "neighbourAbove" => middle.AddTicks(1),
+            "neighbourBelow" => middle.AddTicks(-1),
+            "tieNeighbourBelow" => middle.AddTicks(-1),
             "firstTick" => start.AddTicks(1),
             _ => window.EndDate.AddTicks(-1)
         };

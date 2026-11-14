@@ -140,7 +140,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             ArgumentOutOfRangeException.ThrowIfNegative(dragCoeff);
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sectionalArea);
             ArgumentOutOfRangeException.ThrowIfNegative(solarRadiationCoeff);
-            ThrowIfInvalidHardBodyRadius(hardBodyRadius);
+            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
             Clock.AttachSpacecraft(this);
@@ -191,7 +191,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             : base(naifId, name, mass, ReadKernelInitialState(naifId, epoch ?? TimeSystem.Time.J2000TDB, centerOfMotion))
         {
             _isFromKernel = true;
-            ThrowIfInvalidHardBodyRadius(hardBodyRadius);
+            ThrowIfInvalidHardBodyRadius(hardBodyRadius, nameof(hardBodyRadius));
             MaximumOperatingMass = maximumOperatingMass;
             Clock = clock ?? new Clock(name + "_CLK", 256);
             Clock.AttachSpacecraft(this);
@@ -206,12 +206,13 @@ namespace IO.Astrodynamics.Body.Spacecraft
             BodyUp = Vector3.VectorZ;
         }
 
-        // A radius is finite and not negative, 0 for none (#683: the conjunction analysis reads the radius of a secondary)
-        private static void ThrowIfInvalidHardBodyRadius(double hardBodyRadius)
+        // A hard-body radius is finite and not negative, 0 for none (#683: the conjunction analysis reads the radius of a
+        // secondary): the rule of the constructors and of the radius options of the conjunction analysis
+        internal static void ThrowIfInvalidHardBodyRadius(double hardBodyRadius, string paramName)
         {
             if (!double.IsFinite(hardBodyRadius) || hardBodyRadius < 0.0)
             {
-                throw new ArgumentOutOfRangeException(nameof(hardBodyRadius), hardBodyRadius,
+                throw new ArgumentOutOfRangeException(paramName, hardBodyRadius,
                     "The hard-body radius must be finite and not negative.");
             }
         }

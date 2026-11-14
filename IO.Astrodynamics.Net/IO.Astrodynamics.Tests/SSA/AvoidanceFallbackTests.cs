@@ -351,13 +351,16 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         }
     }
 
-    // The settings of the encounter: a stale threshold of a day, no low-speed threshold, the secondary without a radius of
-    // its own given 2 m (the protected spacecraft has none)
+    // The settings of the encounter: a stale threshold of a day, a low-speed threshold of 100 km/s (above the 8.8 km/s of
+    // the crossing at 70°, so that only the inherited threshold raises the flag), the secondary without a radius of its
+    // own given 2 m (the protected spacecraft has none)
+    private const double InheritedLowSpeedThreshold = 1.0e5;
+
     private static readonly ConjunctionAnalysisOptions InheritedSettings = HeldInRtn with
     {
         StaleCovarianceThreshold = TimeSpan.FromDays(1.0),
         SecondaryHardBodyRadiusMeters = 2.0,
-        LowRelativeSpeedThresholdMetersPerSecond = 0.0
+        LowRelativeSpeedThresholdMetersPerSecond = InheritedLowSpeedThreshold
     };
 
     // The encounter of the protected spacecraft (two-body, or propagated by Velocity-Verlet or in RK7(8)) analyzed by the
@@ -393,7 +396,7 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
                 new ScreeningOptions
                 {
                     DefaultSecondaryHardBodyRadiusMeters = 2.0,
-                    LowRelativeSpeedThresholdMetersPerSecond = 0.0,
+                    LowRelativeSpeedThresholdMetersPerSecond = InheritedLowSpeedThreshold,
                     MaxMissDistanceMeters = double.MaxValue
                 }))
         };
@@ -414,8 +417,10 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
         var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
 
         // Assert: each option re-analyzed with the settings of the encounter (#683: the radius of the avoidance options, 5 m
-        // for the secondary, and their stale threshold of 60 s): its radius, the stale flag by the rule of the encounter's
-        // threshold on the sources and ages the option reports, never the low-speed flag
+        // for the secondary, their stale threshold of 60 s and their low-speed threshold of 1 m/s): its radius, the stale
+        // flag by the rule of the encounter's threshold on the sources and ages the option reports, the low-speed flag by
+        // the rule of the encounter's threshold on the relative speed of the option (below 100 km/s: raised)
+        Assert.True(encounter.EncounterState.QualityFlags.HasFlag(EncounterQualityFlags.LowRelativeVelocityEncounter));
         Assert.Equal(6, avoidance.Count);
         int stale = 0;
         foreach (var option in avoidance)
@@ -426,7 +431,8 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             stale += expectedStale ? 1 : 0;
             Assert.Equal(encounter.CollisionRisk.CombinedHardBodyRadiusMeters, post.CollisionRisk.CombinedHardBodyRadiusMeters);
             Assert.Equal(expectedStale, state.QualityFlags.HasFlag(EncounterQualityFlags.StaleCovarianceUsed));
-            Assert.False(state.QualityFlags.HasFlag(EncounterQualityFlags.LowRelativeVelocityEncounter));
+            Assert.True(state.RelativeState.RelativeVelocityInertial.Magnitude() < InheritedLowSpeedThreshold);
+            Assert.True(state.QualityFlags.HasFlag(EncounterQualityFlags.LowRelativeVelocityEncounter));
         }
 
         // The protected covariance is held in RTN from the initial state, aged 1 h to 2.5 h at the TCA of the options:
@@ -493,6 +499,74 @@ public class AvoidanceFallbackTests : IClassFixture<AvoidanceFallbackCase>
             Assert.Equal(b.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters,
                 a.PostManeuverEncounter.CollisionRisk.CombinedHardBodyRadiusMeters);
             Assert.Equal(b.PostManeuverEncounter.EncounterState.QualityFlags, a.PostManeuverEncounter.EncounterState.QualityFlags);
+        }
+    }
+
+    [Theory]
+    [InlineData(32.0, 600.0)]
+    [InlineData(60.0, 100.0)]
+    public void EvaluateAvoidance_TwoBody_SearchesWithTheEncounterStepsAndTolerance(double sampleStepMinutes,
+        double maximumEventSearchStepSeconds)
+    {
+        // Arrange: the pair on its two-body orbits (the sampled search on a uniform grid from the window start), the
+        // encounter analyzed with a bisection tolerance of 10 s and a sample step and a maximum search step that are not
+        // the defaults (1 min, 60 s): the first row the sample step binding the search step (32 min / 16 = 120 s), the
+        // second the maximum search step (100 s)
+        int id = sampleStepMinutes == 32.0 ? -6980 : -6985;
+        var settings = InheritedSettings with
+        {
+            SampleStep = TimeSpan.FromMinutes(sampleStepMinutes),
+            MaximumEventSearchStep = TimeSpan.FromSeconds(maximumEventSearchStepSeconds),
+            BisectionToleranceSeconds = 10.0
+        };
+        var protectedCraft = ReferenceCase.NewSpacecraft(id, _case.ProtectedStart);
+        var secondary = ReferenceCase.NewSpacecraft(id - 1,
+            AvoidanceFallbackCase.SecondaryNear(_case.ProtectedStart.ToStateVector(AvoidanceFallbackCase.Tca)));
+        var window = AvoidanceFallbackCase.ScreeningWindow;
+
+        // Every close approach of the window, the one of the crossing 2 h after the start the encounter (a TCA up to
+        // 3.75 s off at 8.8 km/s leaves its miss above that of other minima of the window, which Analyze would return)
+        var encounters = ConjunctionAssessment.AnalyzeAll(new ProtectedSpacecraftProfile(protectedCraft), secondary, window, settings);
+        var encounter = encounters.OrderBy(e => System.Math.Abs((e.EncounterState.Epoch - AvoidanceFallbackCase.Tca).TotalSeconds)).First();
+        Assert.True(System.Math.Abs((encounter.EncounterState.Epoch - AvoidanceFallbackCase.Tca).TotalSeconds) < 60.0);
+
+        // The closed form of the search (docs/reference/conjunction-assessment.md, options): a step of
+        // min(max(min(S/16, M), 4 tol), S) from the start of the window, each bracket halved in ticks until it is narrower
+        // than the tolerance, its middle returned: a TCA (j + 1/2) w after the window start for an integer j, w the width
+        // of the last bracket (7.5 s for the first row, 6.25 s for the second). The defaults of the avoidance before #683
+        // give a step of 40 s and w = 5 s (a TCA never on either lattice), a tolerance of 1 ns the tick of the zero
+        double step = System.Math.Min(System.Math.Max(System.Math.Min(sampleStepMinutes * 60.0 / 16.0,
+            maximumEventSearchStepSeconds), 4.0 * settings.BisectionToleranceSeconds), sampleStepMinutes * 60.0);
+        long width = TimeSpan.FromSeconds(step).Ticks;
+        while (TimeSpan.FromTicks(width).TotalSeconds >= settings.BisectionToleranceSeconds)
+        {
+            Assert.Equal(0L, width % 2);
+            width /= 2;
+        }
+
+        void AssertOnTheLattice(TimeSystem.Time tca, TimeSystem.Time start, string what)
+        {
+            long offset = (tca - start).Ticks;
+            _output.WriteLine($"{what}: TCA {offset * 1e-7:F7} s after the start of its window, last bracket {width * 1e-7} s");
+            Assert.Equal(width / 2, offset % width);
+        }
+
+        foreach (var approach in encounters)
+        {
+            AssertOnTheLattice(approach.EncounterState.Epoch, window.StartDate, "encounter");
+        }
+
+        // Act
+        var avoidance = ConjunctionAssessment.EvaluateAvoidance(encounter, Options);
+
+        // Assert: each option searched on the window from its burn with the steps and the tolerance of the encounter
+        // (#683: the avoidance re-analyzed with a sample step of 1 min, a maximum search step of 60 s and a tolerance of
+        // 1 ns)
+        Assert.Equal(6, avoidance.Count);
+        foreach (var option in avoidance)
+        {
+            Assert.Equal(AvoidanceTrajectory.TwoBody, option.Trajectory);
+            AssertOnTheLattice(option.PostManeuverEncounter.EncounterState.Epoch, option.BurnEpoch, "option");
         }
     }
 
