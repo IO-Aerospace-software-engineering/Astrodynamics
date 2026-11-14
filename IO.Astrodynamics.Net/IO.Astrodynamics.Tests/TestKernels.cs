@@ -25,10 +25,12 @@ namespace IO.Astrodynamics.Tests;
 /// a test that needs a fresh pool, fresh type initializers or a pool without <c>Data/SolarSystem</c> runs in a child
 /// process, as <see cref="ColdStartTests"/>: no test of this process calls <see cref="SpiceAPI.ClearKernels"/>, nor
 /// unloads <c>Data/SolarSystem</c>, a file inside it, a parent of it or its anchor, which other classes read in parallel
-/// (a sanctioned exception would have to be declared to the guard, not the guard weakened); a test of the reload
+/// (a sanctioned exception would have to be declared to the guard, not the guard weakened), nor deletes a loaded binary
+/// kernel, which SPICE keeps open for good once it failed to open it again, so that the PCK searches of every IAU frame
+/// of the process can fail later (#673; <c>KernelRegistryTests</c> runs those scenarios in the child process
+/// <c>IO.Astrodynamics.Tests.KernelUnload</c>); a test of the reload
 /// branches of <see cref="SpiceAPI.LoadKernels"/> uses its own folder (as <see cref="SpiceApiTest"/> with <c>scn100</c>),
-/// never <c>Data/SolarSystem</c>, a file inside it or a parent of it; no folder of test data has a name that extends
-/// <c>Data/SolarSystem</c> (the library matches loaded paths by substring).
+/// never <c>Data/SolarSystem</c>, a file inside it or a parent of it.
 /// <see cref="KernelReloadGuardTests"/> fails when a test reloaded the folder, removed it or its anchor, or loaded it
 /// before the first call of <see cref="EnsureSolarSystem"/>, and when a kernel still loaded at its end shadows the folder
 /// (<see cref="KernelShadowing"/>).

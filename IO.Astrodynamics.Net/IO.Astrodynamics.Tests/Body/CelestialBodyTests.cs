@@ -117,6 +117,37 @@ public class CelestialBodyTests
     }
 
     [Fact]
+    public void Pallas_BuildsWithTheKernelGm()
+    {
+        // A GM in gm_de440.tpc and no RADII in pck00011.tpc: the failed RADII read left GM 0 and the frame unread, so the
+        // body could not be built (#672). The GM is the kernel text's, to SPICE's parse; the frame that of cnmfrm_c
+        double expected = KernelTextValues.GravitationalParameter(2000002);
+        for (int i = 0; i < 3; i++)
+        {
+            var pallas = new CelestialBody(2000002);
+            Assert.Equal("PALLAS", pallas.Name);
+            Assert.True(KernelTextValues.UlpDistance(expected, pallas.GM) <= KernelTextValues.SpiceParseUlps,
+                $"GM {pallas.GM:R}, the kernel text gives {expected:R}");
+            Assert.Equal(pallas.GM / IO.Astrodynamics.Constants.G, pallas.Mass);
+            Assert.Equal("IAU_PALLAS", pallas.Frame.Name);
+            Assert.Equal(0.0, pallas.EquatorialRadius);
+            Assert.Equal(0.0, pallas.Flattening);
+            Assert.Null(pallas.InitialOrbitalParameters);
+        }
+    }
+
+    [Fact]
+    public void Kerberos_WithoutFrame_Throws()
+    {
+        // KERBEROS has a GM and no body-fixed frame (cnmfrm_c finds none): the body cannot be built, every time (#672)
+        for (int i = 0; i < 3; i++)
+        {
+            var e = Assert.Throws<InvalidOperationException>(() => new CelestialBody(904));
+            Assert.Contains("frame", e.Message);
+        }
+    }
+
+    [Fact]
     public void CelestialBodyToString()
     {
         var earth = TestHelpers.EarthAtJ2000;
@@ -655,5 +686,67 @@ public class CelestialBodyTests
     {
         var result = (LagrangePoint)CelestialItem.Create(392);
         Assert.Equal("L2", result.Name);
+    }
+
+    /// <summary>
+    /// #682: the window of the leap second of 2016-12-31 (latest_leapseconds.tls: DELTA_AT 36 s to 37 s at 2017-JAN-1)
+    /// holds 121 calendar seconds from 23:59:00 to 00:01:00, 23:59:60 not being a <see cref="TimeSystem.Time"/>, and 122
+    /// elapsed seconds, which its <see cref="Window.Length"/> counts; the samples are placed in the calendar, so their
+    /// count is bounded by the window's end, as <c>Site.GetEphemeris(window)</c> bounds it.
+    /// </summary>
+    [Fact]
+    public void GetEphemerisOverWindow_AcrossLeapSecond_StaysInTheWindow()
+    {
+        var start = new TimeSystem.Time(new DateTime(2016, 12, 31, 23, 59, 0), TimeFrame.UTCFrame);
+        var end = new TimeSystem.Time(new DateTime(2017, 1, 1, 0, 1, 0), TimeFrame.UTCFrame);
+        var window = new Window(start, end);
+        Assert.Equal(TimeSpan.FromSeconds(121.0), window.Length);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var spacecraft = new Astrodynamics.Body.Spacecraft.Spacecraft(-682, "SC682", 1000.0, 3000.0, new Astrodynamics.Body.Spacecraft.Clock("SC682_CLK", 65536),
+            new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2204182967143, 0.0), earth, start, Frames.Frame.ICRF));
+        foreach (var (item, observer) in new (Astrodynamics.Body.CelestialItem, ILocalizable)[] { (earth, TestHelpers.Sun), (spacecraft, earth) })
+        {
+            foreach (var (step, count) in new[] { (1.0, 121), (30.0, 5), (121.0, 1) })
+            {
+                var states = item.GetEphemeris(window, observer, Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(step)).ToArray();
+                Assert.Equal(count, states.Length);
+                Assert.Equal(start, states[0].Epoch);
+                Assert.All(states, s => Assert.True(s.Epoch <= end, $"{item.Name} at {step} s: {s.Epoch} after {end}"));
+                if (step == 1.0)
+                {
+                    Assert.Equal(end, states[^1].Epoch);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// The windows without a leap second keep their grid: floor(Length / step) + 1 samples, sample i at Start + i·step, each
+    /// the state of <c>GetEphemeris(epoch)</c> to the bit; a TDB window, and a UTC window across 2017-12-31 (no leap second).
+    /// </summary>
+    [Fact]
+    public void GetEphemerisOverWindow_WithoutLeapSecond_Unchanged()
+    {
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var sun = TestHelpers.Sun;
+        var windows = new[]
+        {
+            (new Window(TimeSystem.Time.CreateTDB(762480000.0), TimeSystem.Time.CreateTDB(762483600.0)), TimeSpan.FromMinutes(7.0)),
+            (new Window(new TimeSystem.Time(new DateTime(2017, 12, 31, 23, 59, 0), TimeFrame.UTCFrame),
+                new TimeSystem.Time(new DateTime(2018, 1, 1, 0, 1, 0), TimeFrame.UTCFrame)), TimeSpan.FromSeconds(1.0))
+        };
+        foreach (var (window, step) in windows)
+        {
+            var states = earth.GetEphemeris(window, sun, Frames.Frame.ICRF, Aberration.None, step).Select(x => x.ToStateVector()).ToArray();
+            Assert.Equal((int)(window.Length / step) + 1, states.Length);
+            for (int i = 0; i < states.Length; i++)
+            {
+                var epoch = window.StartDate + step * i;
+                var single = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                Assert.Equal(epoch, states[i].Epoch);
+                Assert.Equal(single.Position, states[i].Position);
+                Assert.Equal(single.Velocity, states[i].Velocity);
+            }
+        }
     }
 }

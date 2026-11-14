@@ -11,6 +11,7 @@ using IO.Astrodynamics.Converters;
 using IO.Astrodynamics.DTO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Kernels;
 using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.SolarSystemObjects;
@@ -33,7 +34,16 @@ namespace IO.Astrodynamics;
 public class SpiceAPI
 {
     private static IntPtr _libHandle = IntPtr.Zero;
-    private readonly List<FileSystemInfo> _kernels = [];
+    private readonly List<KernelEntry> _kernels = [];
+
+    /// <summary>A path given to <see cref="LoadKernels"/>, and the files its load handed SPICE (#673).</summary>
+    private sealed record KernelEntry(FileSystemInfo Path, KernelFile[] Files);
+
+    /// <summary>
+    /// A file a load handed SPICE, the kernels SPICE reads again when it unloads it, and those whose reading may make that
+    /// unload fail (<see cref="UnloadRereads"/>).
+    /// </summary>
+    private sealed record KernelFile(string Name, KernelRereads Reads, KernelRereads MayFailOn);
 
     /// <summary>
     ///     Instantiate API
@@ -222,18 +232,60 @@ public class SpiceAPI
     /// <summary>
     /// The managed frame whose orientation an ephemeris read in <paramref name="frame"/> rotates by, or null for a frame
     /// that SPICE knows: an instance of <see cref="TemeFrame"/>, <see cref="CirsFrame"/> or <see cref="TirsFrame"/>, and
-    /// <see cref="Frame.TEME"/> for a frame named TEME (#558). SPICE knows none of these, or, for TEME, the native
-    /// construction that #451 replaced.
+    /// <see cref="Frame.TEME"/> for a frame named TEME (#558); the <see cref="Surface.SiteFrame"/> of a site built from coordinates
+    /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
+    /// (#682), which only the library holds. SPICE knows none of these, or, for TEME, the native construction that #451
+    /// replaced. The frame of a site or a spacecraft of the kernels is SPICE's, and so is the frame of a managed spacecraft
+    /// whose record is empty (never propagated, no orientation added, from a TLE or the TLE propagator): the library holds no
+    /// attitude for it, and its name reaches SPICE as before 11.0.0, which reads the frame and C-kernels of that id when they
+    /// are loaded (those the library wrote for an earlier object of the id) and rejects the frame otherwise
+    /// (SPICE(UNKNOWNFRAME)), rather than the identity of the empty record. A frame built by name is SPICE's but for TEME (#656).
     /// </summary>
+    /// <remarks>
+    /// The rotation (<see cref="ToManagedFrame"/>) runs under the lock of the SPICE calls: a <see cref="Surface.SiteFrame"/> reads
+    /// the frame of its body through SPICE, under the same lock, which is re-entrant, and no static class whose type
+    /// initializer takes it (#623); a <see cref="Body.Spacecraft.SpacecraftFrame"/> takes the lock of its attitude record inside it, which is
+    /// safe because no region of that lock calls SPICE.
+    /// </remarks>
     internal static Frame ManagedReadFrame(Frame frame) => frame switch
     {
         TemeFrame or CirsFrame or TirsFrame => frame,
+        Surface.SiteFrame { Site.IsSpiceBacked: false } => frame,
+        Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: false, HasAttitude: true } => frame,
         _ when IsTeme(frame) => Frame.TEME,
         _ => null
     };
 
+    /// <summary>The one computation method of the illumination searches, CSPICE's <c>gfilum_c</c> (#682).</summary>
+    internal const string EllipsoidMethod = "ELLIPSOID";
+
     /// <summary>
-    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558): rotated by
+    /// The computation method of an illumination search, as <c>gfilum_c</c> takes it: "The only choice currently supported
+    /// is "Ellipsoid"", "Neither case nor whitespaces are significant in `method'" (Detailed_Input <c>method</c>,
+    /// https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfilum_c.html). ELLIPSOID is accepted whatever its case and
+    /// its leading or trailing whitespace; a blank inside the word is rejected, as <c>gfilum_c</c> of N0067 rejects it
+    /// (measured, SPICE(INVALIDMETHOD), #682), and so is any other method, DSK forms included, which N0067's <c>gfilum_c</c>
+    /// does not support either, and the empty string (SPICE(EMPTYSTRING), Exceptions 18). Before 11.0.0 the native proxy
+    /// dropped <c>gfilum_c</c>'s error (no window) and the managed search never read the method.
+    /// </summary>
+    /// <returns>The method as handed to <c>gfilum_c</c>: <see cref="EllipsoidMethod"/>.</returns>
+    /// <exception cref="ArgumentNullException">The method is null.</exception>
+    /// <exception cref="ArgumentException">The method is not ELLIPSOID.</exception>
+    internal static string CheckIlluminationMethod(string method)
+    {
+        ArgumentNullException.ThrowIfNull(method);
+        if (!string.Equals(method.Trim(), EllipsoidMethod, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"The illumination method '{method}' cannot apply: ELLIPSOID is the only method, the ellipsoid of the body's radii that the managed search models and the only one CSPICE's gfilum_c supports.",
+                nameof(method));
+        }
+
+        return EllipsoidMethod;
+    }
+
+    /// <summary>
+    /// A state read by SPICE in J2000, expressed in the managed frame of the caller (#558, #682): rotated by
     /// <see cref="OrbitalParameters.OrbitalParameters.ToFrame"/> at the epoch of the read, as a state in ICRF converted
     /// by the caller would be, then labelled with the frame the caller gave.
     /// </summary>
@@ -274,11 +326,15 @@ public class SpiceAPI
     /// The kernel paths loaded by <see cref="LoadKernels"/>, as they are at the call: a copy taken under the lock, so that
     /// another thread may load or unload kernels while the caller enumerates it.
     /// </summary>
+    /// <remarks>
+    /// After <see cref="UnloadKernels"/> of a file or a subdirectory of a loaded directory, the directory is no longer listed
+    /// but each of its kernel files SPICE still holds, in its place.
+    /// </remarks>
     public IEnumerable<FileSystemInfo> GetLoadedKernels()
     {
         lock (lockObject)
         {
-            return _kernels.ToArray();
+            return _kernels.Select(x => x.Path).ToArray();
         }
     }
 
@@ -287,51 +343,94 @@ public class SpiceAPI
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
     /// <remarks>
+    /// <para>
     /// A file path is handed to SPICE as it is. For a directory, the kernel files of the directory and of its
     /// subdirectories are loaded, in the order of the directory listing; the other files, from which SPICE would load
-    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>).
+    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>). A path that does not exist
+    /// loads nothing.
+    /// </para>
+    /// <para>
+    /// Paths are compared by their components (#673): a path already loaded, or inside a loaded directory, reloads that
+    /// entry; a directory first unloads the entries inside it; a sibling whose name extends a loaded one is another path.
+    /// SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
+    /// </para>
     /// </remarks>
     public void LoadKernels(FileSystemInfo path)
     {
         if (path == null) throw new ArgumentNullException(nameof(path));
         lock (lockObject)
         {
-            if (_kernels.Any(x => path.FullName.Contains(x.FullName)))
+            var containing = _kernels.Where(x => IsSameOrInside(path.FullName, x.Path.FullName)).ToArray();
+            if (containing.Length > 0)
             {
-                foreach (var kernel in _kernels.Where(x => path.FullName.Contains(x.FullName)).ToArray())
+                foreach (var entry in containing)
                 {
-                    UnloadKernels(kernel);
-                    LoadKernels(kernel);
+                    UnloadKernels(entry.Path);
+                    LoadKernels(entry.Path);
                 }
 
                 return;
             }
 
-
-            var existingKernels = _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray();
-            foreach (var existingKernel in existingKernels)
+            foreach (var inside in _kernels.Where(x => IsSameOrInside(x.Path.FullName, path.FullName)).ToArray())
             {
-                UnloadKernels(existingKernel);
+                UnloadKernels(inside.Path);
             }
 
-            if (path.Exists)
+            // Not the cached Exists of the instance, which a reload of a stored entry would trust after a deletion
+            if (Exists(path))
             {
+                var files = new List<KernelFile>();
                 foreach (var kernel in KernelFiles(path))
                 {
                     if (!LoadKernelsProxy(kernel))
                     {
                         throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
                     }
+
+                    // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
+                    var (reads, mayFailOn) = UnloadRereads(kernel);
+                    files.Add(new KernelFile(kernel, reads, mayFailOn));
                 }
 
-                _kernels.Add(path);
+                _kernels.Add(new KernelEntry(path, files.ToArray()));
             }
         }
+    }
+
+    /// <summary>Whether the path exists now, as a directory for a <see cref="DirectoryInfo"/>, as a file otherwise.</summary>
+    private static bool Exists(FileSystemInfo path) =>
+        path is DirectoryInfo ? Directory.Exists(path.FullName) : File.Exists(path.FullName);
+
+    /// <summary>
+    /// Whether <paramref name="path"/> is <paramref name="root"/> or a path inside it, compared by components on the full
+    /// paths without their trailing separator, ordinal: a sibling whose name extends <paramref name="root"/>
+    /// (<c>Kernels2</c> beside <c>Kernels</c>) or a path that merely contains it is not inside it (#673).
+    /// </summary>
+    internal static bool IsSameOrInside(string path, string root)
+    {
+        path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+        root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
+        if (!path.StartsWith(root, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        // The same path; a root that keeps its separator (/ or C:\); or a separator after the root (GetFullPath writes
+        // every separator as DirectorySeparatorChar)
+        return path.Length == root.Length || Path.EndsInDirectorySeparator(root) || path[root.Length] == Path.DirectorySeparatorChar;
     }
 
     // Length of the scan buffer of IsKernelFile, and the marker of the data of a text kernel
     private const int KernelScanBufferLength = 65536;
     private static readonly byte[] BeginData = "\\begindata"u8.ToArray();
+
+    // The variables FURNSH watches: a text kernel whose load assigns one of them is a meta-kernel (KEEPER)
+    private static readonly string[] MetaKernelVariables = ["KERNELS_TO_LOAD", "PATH_SYMBOLS", "PATH_VALUES"];
+
+    // What ends a variable name in a line of data, around the assignment operators = and +=, and the parentheses and commas
+    // of a list
+    private static readonly char[] DataSeparators = [' ', '\t', '\r', '\v', '\f', '=', '+', '(', ')', ','];
 
     /// <summary>
     /// The files that <see cref="LoadKernels"/> hands to SPICE for <paramref name="path"/>: the file itself, or the
@@ -408,17 +507,25 @@ public class SpiceAPI
         Span<byte> buffer = new byte[KernelScanBufferLength];
         int read = stream.ReadAtLeast(buffer, buffer.Length, false);
         var head = buffer[..read];
-        if (head.StartsWith("DAF/"u8) || head.StartsWith("DAS/"u8) || head.StartsWith("NAIF/DAF"u8) ||
-            head.StartsWith("NAIF/DAS"u8) || head.StartsWith("KPL/"u8))
+        if (HasBinaryIdWord(head) || head.StartsWith("KPL/"u8))
         {
             return true;
         }
 
-        // Scan for \begindata, keeping the end of each buffer so that a marker across two reads is found
-        int overlap = BeginData.Length - 1;
+        return Contains(stream, buffer, read, BeginData);
+    }
+
+    /// <summary>
+    /// Whether the rest of <paramref name="stream"/>, after the <paramref name="read"/> bytes already in
+    /// <paramref name="buffer"/>, holds <paramref name="marker"/>, keeping the end of each buffer so that a marker across
+    /// two reads is found.
+    /// </summary>
+    private static bool Contains(Stream stream, Span<byte> buffer, int read, ReadOnlySpan<byte> marker)
+    {
+        int overlap = marker.Length - 1;
         while (read > 0)
         {
-            if (buffer[..read].IndexOf(BeginData) >= 0)
+            if (buffer[..read].IndexOf(marker) >= 0)
             {
                 return true;
             }
@@ -441,41 +548,234 @@ public class SpiceAPI
         return false;
     }
 
+    // The ID words of a binary kernel, DAF or DAS (NAIF, Kernel Required Reading, "SPICE Kernel Type Identification")
+    private static bool HasBinaryIdWord(ReadOnlySpan<byte> head) =>
+        head.StartsWith("DAF/"u8) || head.StartsWith("DAS/"u8) || head.StartsWith("NAIF/DAF"u8) || head.StartsWith("NAIF/DAS"u8);
+
+    /// <summary>
+    /// The kernels SPICE reads again when it unloads <paramref name="file"/> (KEEPER's UNLOAD, measured with CSPICE N0067),
+    /// and those whose reading may make that unload fail, from the ID word of the file and, for a text kernel, the variables
+    /// its data assigns:
+    /// <list type="bullet">
+    /// <item>a text kernel: the text kernels still loaded, "Text kernels are unloaded by clearing the kernel pool and then
+    /// reloading the other text kernels" (NAIF, Kernel Required Reading, "Unloading Kernels"); SPICE loads as a text
+    /// kernel every file without the ID word of a binary one;</item>
+    /// <item>an SPK, a CK, a binary PCK, a DSK or an EK: the other loaded kernels of its kind, which SPICE opens again
+    /// (<c>unload_c --&gt; UNLOAD --&gt; SPKLEF</c>, <c>CKLPF</c>, <c>PCKLOF</c>, <c>ZZDSKLSF</c> or <c>EKLEF</c>), and not
+    /// the text kernels;</item>
+    /// <item>a DAF of the oldest ID word (<c>NAIF/DAF</c>), which SPICE loads as an SPK or a CK from its segments
+    /// (<c>GETFAT --&gt; ZZCKSPK</c>): the library does not tell which, so it reads no kind for the failures before it,
+    /// and its own failure, of SPKs or of CKs, is repaired by no later unload;</item>
+    /// <item>a meta-kernel (<see cref="IsMetaKernel"/>): the text kernels still loaded, even when it names binary kernels
+    /// only, and, through the unload of the kernels it names, the kernels of each of their kinds, which the library does not
+    /// read from the meta-kernel: its failure counts as <see cref="KernelRereads.Unknown"/>;</item>
+    /// <item>a file of another ID word, from which SPICE loads nothing: nothing for its reads, <see cref="KernelRereads.Unknown"/>
+    /// for its failure.</item>
+    /// </list>
+    /// </summary>
+    /// <remarks>A file that cannot be read counts as a kernel of no known kind (#673).</remarks>
+    internal static (KernelRereads Reads, KernelRereads MayFailOn) UnloadRereads(string file)
+    {
+        try
+        {
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            Span<byte> head = stackalloc byte[8];
+            head = head[..stream.ReadAtLeast(head, head.Length, false)];
+            if (head.StartsWith("DAF/SPK "u8)) return (KernelRereads.Spks, KernelRereads.Spks);
+            if (head.StartsWith("DAF/CK  "u8)) return (KernelRereads.Cks, KernelRereads.Cks);
+            if (head.StartsWith("DAF/PCK "u8)) return (KernelRereads.Pcks, KernelRereads.Pcks);
+            if (head.StartsWith("DAS/DSK "u8)) return (KernelRereads.Dsks, KernelRereads.Dsks);
+            if (head.StartsWith("DAS/EK  "u8)) return (KernelRereads.Eks, KernelRereads.Eks);
+            if (head.StartsWith("NAIF/DAF"u8)) return (KernelRereads.None, KernelRereads.Spks | KernelRereads.Cks);
+            if (HasBinaryIdWord(head)) return (KernelRereads.None, KernelRereads.Unknown);
+            stream.Position = 0;
+            return IsMetaKernel(stream)
+                ? (KernelRereads.TextKernels, KernelRereads.TextKernels | KernelRereads.Unknown)
+                : (KernelRereads.TextKernels, KernelRereads.TextKernels);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return (KernelRereads.None, KernelRereads.Unknown);
+        }
+    }
+
+    /// <summary>
+    /// Whether SPICE loads the text kernel of <paramref name="stream"/> as a meta-kernel: FURNSH watches the variables
+    /// <c>KERNELS_TO_LOAD</c>, <c>PATH_SYMBOLS</c> and <c>PATH_VALUES</c> and gives the type META to a text kernel whose
+    /// load assigns one of them (KEEPER), whatever its comments say. Its data is read as RDKER reads it: the lines between
+    /// a line <c>\begindata</c> and a line <c>\begintext</c>, each marker alone on its line but for blanks, tabs and the
+    /// carriage return of a CRLF line (NAIF, Kernel Required Reading, "Text Kernel Specifications"); a name is a word of a
+    /// line of data outside its quoted strings, the names of the pool compared case-sensitively (measured with CSPICE
+    /// N0067, kinfo_c).
+    /// </summary>
+    /// <remarks>
+    /// A word that SPICE would not read as a name (a malformed line) counts as one, which can only take a text kernel for a
+    /// meta-kernel, whose failure is then never taken as repaired; such a line also makes SPICE fail the load.
+    /// </remarks>
+    private static bool IsMetaKernel(Stream stream)
+    {
+        using var reader = new StreamReader(stream, System.Text.Encoding.Latin1, false, KernelScanBufferLength, true);
+        bool data = false;
+        var line = new System.Text.StringBuilder();
+        int next;
+        do
+        {
+            next = reader.Read();
+            if (next >= 0 && next != '\n')
+            {
+                line.Append((char)next);
+                continue;
+            }
+
+            var text = line.ToString();
+            line.Clear();
+            var marker = text.Trim(' ', '\t', '\r', '\v', '\f');
+            if (marker == "\\begindata")
+            {
+                data = true;
+            }
+            else if (marker == "\\begintext")
+            {
+                data = false;
+            }
+            else if (data && AssignsMetaKernelVariable(text))
+            {
+                return true;
+            }
+        } while (next >= 0);
+
+        return false;
+    }
+
+    // Whether a line of data holds one of the variables FURNSH watches as a word outside its quoted strings ('' within a
+    // string is a quote, which toggles the state twice)
+    private static bool AssignsMetaKernelVariable(string line)
+    {
+        var unquoted = new System.Text.StringBuilder(line.Length);
+        bool quoted = false;
+        foreach (char c in line)
+        {
+            if (c == '\'')
+            {
+                quoted = !quoted;
+                unquoted.Append(' ');
+            }
+            else
+            {
+                unquoted.Append(quoted ? ' ' : c);
+            }
+        }
+
+        return unquoted.ToString().Split(DataSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Any(word => Array.IndexOf(MetaKernelVariables, word) >= 0);
+    }
+
     /// <summary>
     ///     Unload kernel at given path
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
+    /// <remarks>
+    /// The files a load handed SPICE are unloaded by their names, whether the path still exists or not (#673): every loaded
+    /// entry that is the path or inside it is unloaded and removed; an entry that holds the path (a file or a subdirectory
+    /// of a loaded directory) unloads the files it recorded there and is replaced, at its place, by its remaining files. A
+    /// path that matches no entry is handed to SPICE as it is (the files of a directory as it is now), which does nothing
+    /// for a name SPICE does not hold.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call, of the same
+    /// entry or of another one, repaired it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded
+    /// again, and that of an SPK, a CK, a binary PCK, a DSK or an EK opens the other loaded kernels of its kind again; each
+    /// fails on a kernel deleted since its load, until a later unload that reads the same kernels again succeeds (#673).
+    /// Every matched entry is unloaded and removed before the exception.</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
         if (path == null) return;
         lock (lockObject)
         {
-            if (path.Exists)
+            bool matched = false;
+            var unrepaired = new List<KernelFile>();
+            for (int i = 0; i < _kernels.Count; i++)
             {
-                if (!UnloadKernelsProxy(path.FullName))
+                var entry = _kernels[i];
+                // The registry follows SPICE's list first: SPICE drops a file from it even when it reports a failure
+                if (IsSameOrInside(entry.Path.FullName, path.FullName))
                 {
-                    throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
+                    _kernels.RemoveAt(i--);
+                    matched = true;
+                    UnloadFiles(entry.Files, unrepaired);
+                    continue;
                 }
 
-                _kernels.RemoveAll(x => x.FullName == path.FullName);
-                foreach (var kernel in _kernels.Where(x => x.FullName.Contains(path.FullName)).ToArray())
+                if (!IsSameOrInside(path.FullName, entry.Path.FullName))
                 {
-                    UnloadKernels(kernel);
+                    continue;
                 }
+
+                var removed = entry.Files.Where(x => IsSameOrInside(x.Name, path.FullName)).ToArray();
+                if (removed.Length == 0)
+                {
+                    continue;
+                }
+
+                var remaining = entry.Files.Except(removed).Select(x => new KernelEntry(new FileInfo(x.Name), [x])).ToArray();
+                _kernels.RemoveAt(i);
+                _kernels.InsertRange(i, remaining);
+                i += remaining.Length - 1;
+                matched = true;
+                UnloadFiles(removed, unrepaired);
+            }
+
+            if (!matched && !UnloadKernelsProxy(path.FullName))
+            {
+                throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
+            }
+
+            if (unrepaired.Count > 0)
+            {
+                throw new InvalidOperationException($"Kernel {unrepaired[0].Name} can't be unloaded. You can have more details on standard output");
             }
         }
     }
 
+    /// <summary>
+    /// Unloads files by their names. After it unloads a file, SPICE reads again the kernels of <see cref="UnloadRereads"/>
+    /// still loaded, in their load order, and stops at one deleted since its load (<c>SPICE(FILEOPENFAILED)</c> for a text
+    /// kernel, <c>SPICE(FILENOTFOUND)</c> for a binary one, measured with CSPICE N0067): the unload fails, and the text
+    /// kernels after the deleted one leave the pool, or, for SPKs, CKs and binary PCKs, those before it take precedence over
+    /// those after it (each <c>SPKLEF</c>, <c>CKLPF</c> or <c>PCKLOF</c> of a loaded file closes it and loads it again
+    /// at the highest priority, and the files after the deleted one are not loaded again).
+    /// A later unload that succeeds has read again every kernel of its kinds, which repairs the failures that came from
+    /// those kinds only (#673). The failures no later unload of the call repaired are left in <paramref name="unrepaired"/>,
+    /// in their order.
+    /// </summary>
+    private static void UnloadFiles(KernelFile[] files, List<KernelFile> unrepaired)
+    {
+        foreach (var file in files)
+        {
+            if (!UnloadKernelsProxy(file.Name))
+            {
+                unrepaired.Add(file);
+            }
+            else
+            {
+                unrepaired.RemoveAll(x => (x.MayFailOn & ~file.Reads) == KernelRereads.None);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Unloads every kernel SPICE holds and clears the kernel pool (<c>kclear_c</c>), and empties
+    /// <see cref="GetLoadedKernels"/>.
+    /// </summary>
+    /// <remarks>
+    /// The files are not unloaded one by one first: SPICE reads again the text kernels still loaded after each unload of
+    /// one, which fails for a text kernel deleted since its load, while <c>kclear_c</c> reads nothing.
+    /// </remarks>
     public void ClearKernels()
     {
         lock (lockObject)
         {
-            foreach (var kernel in _kernels.ToArray())
-            {
-                UnloadKernels(kernel);
-            }
-
             KClearProxy();
+            _kernels.Clear();
         }
     }
 
@@ -643,7 +943,7 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentException">A body modeled as an ellipsoid without a frame given is not a celestial body
     /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
-    /// process to read for a named spacecraft (#560).</exception>
+    /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
@@ -655,10 +955,10 @@ public class SpiceAPI
         lock (lockObject)
         {
             string frontFrameName = frontShape == ShapeType.Ellipsoid
-                ? frontFrame?.Name ?? GetCelestialBodyInfoProxy(frontBodyId).FrameName
+                ? frontFrame?.Name ?? ReadCelestialBodyInfo(frontBodyId, nameof(frontBodyId)).FrameName
                 : string.Empty;
             string targetFrameName = targetShape == ShapeType.Ellipsoid
-                ? targetFrame?.Name ?? GetCelestialBodyInfoProxy(targetId).FrameName
+                ? targetFrame?.Name ?? ReadCelestialBodyInfo(targetId, nameof(targetId)).FrameName
                 : string.Empty;
             var windows = new Window[1000];
             for (var i = 0; i < 1000; i++)
@@ -737,8 +1037,12 @@ public class SpiceAPI
     /// <param name="aberration">The aberration correction.</param>
     /// <param name="stepSize">The step of the search.</param>
     /// <param name="illuminationSourceId">The NAIF id of the illumination source.</param>
-    /// <param name="method">The computation method of <c>gfilum_c</c>.</param>
+    /// <param name="method">The computation method of <c>gfilum_c</c>: ELLIPSOID, the only one it supports, whatever its case
+    /// and its leading or trailing whitespace (#682).</param>
     /// <returns>The windows where the constraint holds.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="fixedFrame"/> or <paramref name="method"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="method"/> is not ELLIPSOID; before 11.0.0 such a method gave no
+    /// window, <c>gfilum_c</c>'s error dropped by the native proxy (#682).</exception>
     /// <remarks>
     /// CSPICE has no <c>&gt;=</c>, <c>&lt;=</c> or <c>!=</c> (#482): <see cref="RelationnalOperator.GreaterOrEqual"/>
     /// and <see cref="RelationnalOperator.LowerOrEqual"/> are searched as <c>&gt;</c> and <c>&lt;</c>, whose windows are
@@ -753,7 +1057,7 @@ public class SpiceAPI
         string method = "Ellipsoid")
     {
         if (fixedFrame == null) throw new ArgumentNullException(nameof(fixedFrame));
-        if (method == null) throw new ArgumentNullException(nameof(method));
+        method = CheckIlluminationMethod(method);
         return SearchWindows(searchWindow, relationalOperator, relation =>
         {
             lock (lockObject)
@@ -826,7 +1130,7 @@ public class SpiceAPI
     {
         ArgumentNullException.ThrowIfNull(frame);
         // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
-        var observer = CelestialItem.Create(observerId);
+        var observer = CreateObserver(observerId);
         lock (lockObject)
         {
             const int messageSize = 10000;
@@ -875,11 +1179,39 @@ public class SpiceAPI
     {
         ArgumentNullException.ThrowIfNull(frame);
         // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
-        var observer = CelestialItem.Create(observerId);
+        var observer = CreateObserver(observerId);
         lock (lockObject)
         {
             return ReadEphemerisAtGivenEpoch(epoch, observer, targetId, frame, aberration);
         }
+    }
+
+    /// <summary>
+    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier (<see cref="IsSiteId"/>), from
+    /// the kernels (<c>new Site(id % 1000, its SPICE name, new CelestialBody(id / 1000))</c>, which reads the site's state at
+    /// J2000 TDB), otherwise <see cref="CelestialItem.Create"/> (#672). Built before the lock (#623).
+    /// </summary>
+    private ILocalizable CreateObserver(int observerId)
+    {
+        if (!IsSiteId(observerId)) return CelestialItem.Create(observerId);
+        string name = GetCelestialBodyInfo(observerId).Name;
+        return new Surface.Site(observerId % 1000, name, new Body.CelestialBody(observerId / 1000));
+    }
+
+    /// <summary>
+    /// Whether <paramref name="naifId"/> is the identifier of a site: its body's identifier times 1000 plus its own (1 to
+    /// 999), the body a planet or a moon (101 to 999 without the Lagrange points 391 to 395), as <see cref="Surface.Site.NaifId"/>
+    /// builds it (399013 is DSS-13 on the Earth).
+    /// </summary>
+    /// <remarks>
+    /// The CLI keeps its own rule on purpose (<c>Helpers.CreateLocalizable</c>: 100001 to 999998, the site named
+    /// <c>site&lt;id&gt;</c>), as #672 decided: this rule is internal and the CLI has no access to it. The two may give a
+    /// different observer for the same identifier (a name, a Lagrange point or x000).
+    /// </remarks>
+    internal static bool IsSiteId(int naifId)
+    {
+        int body = naifId / 1000;
+        return naifId % 1000 > 0 && body is > 100 and < 1000 && body is not (>= 391 and <= 395);
     }
 
     /// <summary>
@@ -1026,11 +1358,15 @@ public class SpiceAPI
     /// <param name="naifId"></param>
     /// <param name="stateVectors"></param>
     /// <returns></returns>
+    /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
+    /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
+    /// then failed).</exception>
     public bool WriteEphemeris(FileInfo filePath, int naifId,
         IEnumerable<OrbitalParameters.StateVector> stateVectors)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (stateVectors == null) throw new ArgumentNullException(nameof(stateVectors));
+        Kernels.KernelPath.EnsureLoadable(filePath.FullName, nameof(filePath));
         lock (lockObject)
         {
             var enumerable = stateVectors as OrbitalParameters.StateVector[] ?? stateVectors.ToArray();
@@ -1068,10 +1404,14 @@ public class SpiceAPI
     /// </remarks>
     /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
     /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>
+    /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
+    /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
+    /// then failed).</exception>
     public bool WriteOrientation(FileInfo filePath, int naifId, IEnumerable<OrbitalParameters.StateOrientation> stateOrientations)
     {
         if (filePath == null) throw new ArgumentNullException(nameof(filePath));
         if (stateOrientations == null) throw new ArgumentNullException(nameof(stateOrientations));
+        Kernels.KernelPath.EnsureLoadable(filePath.FullName, nameof(filePath));
         lock (lockObject)
         {
             var enumerable = stateOrientations as OrbitalParameters.StateOrientation[] ?? stateOrientations.ToArray();
@@ -1118,16 +1458,38 @@ public class SpiceAPI
     /// </summary>
     /// <param name="naifId"></param>
     /// <returns></returns>
+    /// <remarks>
+    /// A body the kernel pool gives no <c>BODYnnn_RADII</c> has radii 0, one it gives no <c>BODYnnn_GM</c> a GM of 0, and a
+    /// barycentre has no frame (an empty <c>FrameName</c>, <c>FrameId</c> 0); before #672 a missing variable left the GM 0
+    /// and the frame name undefined.
+    /// </remarks>
     /// <exception cref="ArgumentException"><paramref name="naifId"/> is not the identifier of a celestial body
     /// (<see cref="IsCelestialBodyId"/>): a spacecraft, an instrument or a site of a negative identifier, 11 to 100, or 1000.
-    /// The native layer reads the centre of motion of any named identifier and ended the process for one of them (#560).</exception>
+    /// The native layer reads the centre of motion of any named identifier and ended the process for one of them (#560).
+    /// Or SPICE does not name it, neither by its built-in names nor by the loaded kernels (#672: the record held the name of
+    /// a previous call or undefined bytes).</exception>
     public CelestialBody GetCelestialBodyInfo(int naifId)
     {
         ThrowIfNotCelestialBody(naifId, nameof(naifId));
         lock (lockObject)
         {
-            return GetCelestialBodyInfoProxy(naifId);
+            return ReadCelestialBodyInfo(naifId, nameof(naifId));
         }
+    }
+
+    // The body information of an identifier SPICE names, under the lock: the record's Id, -1 until bodc2n_c finds the
+    // identifier, is the found flag (#672)
+    private static CelestialBody ReadCelestialBodyInfo(int naifId, string paramName)
+    {
+        var info = GetCelestialBodyInfoProxy(naifId);
+        if (info.Id != naifId)
+        {
+            throw new ArgumentException(
+                $"The NAIF identifier {naifId} has no name in SPICE: neither SPICE's built-in names nor the loaded kernels name it.",
+                paramName);
+        }
+
+        return info;
     }
 
     /// <summary>

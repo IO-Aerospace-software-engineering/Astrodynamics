@@ -1,4 +1,7 @@
 using System;
+using IO.Astrodynamics.Body;
+using IO.Astrodynamics.OrbitalParameters;
+using IO.Astrodynamics.TimeSystem;
 using Vector3 = IO.Astrodynamics.Math.Vector3;
 
 namespace IO.Astrodynamics.Coordinates;
@@ -144,6 +147,70 @@ internal static class GeodeticCoordinates
         double limitAltitude = -equatorialRadius * (flattening >= 0.0 ? e2m : 1.0) *
                                System.Math.Sqrt(zz * zz + xx * xx) / e2a;
         return new Planetodetic(longitude, limitLatitude, limitAltitude);
+    }
+
+    /// <summary>
+    /// The planetographic coordinates of a body-fixed Cartesian position, as CSPICE's <c>recpgr_c</c> gives them
+    /// (Detailed_Output <c>lon</c>, <c>lat</c>, <c>alt</c>, https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/recpgr_c.html):
+    /// the latitude and the altitude are the geodetic ones on the spheroid (<see cref="FromBodyFixed"/>, "The planetographic
+    /// definition of latitude is identical to the planetodetic"); the longitude is in [0, 2π] (2π only by rounding, as in
+    /// <c>recpgr_c</c>), increasing west when <paramref name="positiveWest"/> (from +X toward −Y), east otherwise (#682).
+    /// </summary>
+    /// <param name="position">Body-fixed position, m.</param>
+    /// <param name="equatorialRadius">Equatorial radius a of the spheroid, m.</param>
+    /// <param name="flattening">Flattening f = (a − c) / a, below 1.</param>
+    /// <param name="positiveWest">Whether the longitude increases west (<see cref="IsPlanetographicLongitudePositiveWest"/>).</param>
+    /// <exception cref="ArgumentOutOfRangeException">The radius is not positive or the flattening not below 1.</exception>
+    internal static Planetodetic ToPlanetographic(in Vector3 position, double equatorialRadius, double flattening, bool positiveWest)
+    {
+        var geodetic = FromBodyFixed(position, equatorialRadius, flattening);
+        double longitude = positiveWest ? -geodetic.Longitude : geodetic.Longitude;
+        return geodetic with { Longitude = longitude < 0.0 ? longitude + Constants._2PI : longitude };
+    }
+
+    /// <summary>
+    /// Whether the planetographic longitude of a body increases west, the default sense of CSPICE (<c>recpgr_c</c>
+    /// Particulars): west for a prograde spin, east for a retrograde one, "the spin is retrograde if [the first degree term
+    /// of W] is negative and prograde otherwise", and east for the Earth, the Moon and the Sun, its exceptions. The rate of W
+    /// is read as the opposite of the z component of the angular velocity of the body's frame at <paramref name="epoch"/>
+    /// (<see cref="Frames.Frame.GetStateOrientationToICRF"/>: that of ICRF relative to the body, in its axes). The kernel
+    /// variable <c>BODY&lt;id&gt;_PGR_POSITIVE_LON</c>, by which a kernel overrides that sense for <c>recpgr_c</c> and
+    /// <c>gfposc_c</c> (GF Required Reading, "Meridian crossing"), is not read: no kernel of the library's data defines it.
+    /// </summary>
+    internal static bool IsPlanetographicLongitudePositiveWest(CelestialBody body, in Time epoch)
+    {
+        if (body.NaifId is 10 or 399 or 301)
+        {
+            return false;
+        }
+
+        return body.Frame.GetStateOrientationToICRF(epoch).AngularVelocity.Z <= 0.0;
+    }
+
+    /// <summary>
+    /// The coordinate of <see cref="CoordinateSystem.Planetographic"/> that the managed searches of
+    /// <see cref="CelestialItem"/> and <see cref="Surface.Site"/> evaluate, CSPICE's PLANETOGRAPHIC (<c>gfposc_c</c>
+    /// Detailed_Input <c>coord</c>: LONGITUDE, LATITUDE, ALTITUDE): the position of the state in the body-fixed frame of
+    /// its observer, a <see cref="CelestialBody"/> (as the geodetic case), on its spheroid (<see cref="ToPlanetographic"/>).
+    /// <c>gfposc_c</c> takes the body of the frame's centre; the two agree for a frame centred on the observer.
+    /// </summary>
+    /// <param name="stateVector">The state of the target relative to the observer.</param>
+    /// <param name="coordinate">The coordinate: longitude, latitude or altitude.</param>
+    /// <param name="positiveWest">The sense of the longitude of the observer's body.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Another coordinate: PLANETOGRAPHIC has no radius.</exception>
+    internal static double PlanetographicCoordinate(StateVector stateVector, Coordinate coordinate, bool positiveWest)
+    {
+        var body = (CelestialBody)stateVector.Observer;
+        var position = stateVector.ToFrame(body.Frame).ToStateVector().Position;
+        var planetographic = ToPlanetographic(position, body.EquatorialRadius, body.Flattening, positiveWest);
+        return coordinate switch
+        {
+            Coordinate.Longitude => planetographic.Longitude,
+            Coordinate.Latitude => planetographic.Latitude,
+            Coordinate.Altitude => planetographic.Altitude,
+            _ => throw new ArgumentOutOfRangeException(nameof(coordinate), coordinate,
+                "The planetographic coordinates are the longitude, the latitude and the altitude.")
+        };
     }
 
     private static void CheckEllipsoid(double equatorialRadius, double flattening)

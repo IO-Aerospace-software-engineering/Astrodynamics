@@ -541,10 +541,30 @@ double ConvertUTCToTDBProxy(double utc)
     return utc + delta;
 }
 
+// The GM of a body as the kernel pool gives it, m^3/s^2, or 0 when the pool has no BODYnnn_GM; for the solar system
+// barycentre, the sum over 1 to 10, the rule of CelestialBody::ReadGM. Read only where bodfnd_c finds it, so that a missing
+// GM raises no SPICE error, which would leave SPICE failed for the next reads of the body information (#672).
+// CelestialBody::ReadGM stays unguarded: it is the mass of the native constructors of WriteEphemerisProxy and of the element
+// conversions (#655)
+static double ReadDefinedGM(int bodyId)
+{
+    if (bodyId == 0)
+    {
+        double solarSystemGM{};
+        for (int i = 1; i <= 10; ++i)
+        {
+            solarSystemGM += ReadDefinedGM(i);
+        }
+        return solarSystemGM;
+    }
+    return bodfnd_c(bodyId, "GM") ? IO::Astrodynamics::Body::CelestialBody::ReadGM(bodyId) : 0.0;
+}
+
 IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int bodyId)
 {
     ActivateErrorManagement();
-    IO::Astrodynamics::API::DTO::CelestialBodyDTO res;
+    // Zero-initialised: an unnamed identifier returns Id -1 and empty names, a barycentre an empty frame name (#672)
+    IO::Astrodynamics::API::DTO::CelestialBodyDTO res{};
 
     SpiceChar name[32]{};
     SpiceBoolean found{false};
@@ -556,11 +576,11 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
         res.CenterOfMotionId = IO::Astrodynamics::Body::CelestialBody::FindCenterOfMotionId(bodyId);
         res.BarycenterOfMotionId = IO::Astrodynamics::Body::CelestialBody::FindBarycenterOfMotionId(bodyId);
 
-        SpiceInt dim;
-        // Search body's radii
-        if (bodyId >= 10)
+        SpiceInt dim{0};
+        // Search body's radii, 0 when the kernel pool has none (#672)
+        if (bodyId >= 10 && bodfnd_c(bodyId, "RADII"))
         {
-            SpiceDouble radiiRes[3];
+            SpiceDouble radiiRes[3]{};
             bodvcd_c(bodyId, "RADII", 3, &dim, radiiRes);
             if (dim > 0)
             {
@@ -576,8 +596,8 @@ IO::Astrodynamics::API::DTO::CelestialBodyDTO GetCelestialBodyInfoProxy(int body
             }
         }
 
-        // Search CelestialItem's mass
-        res.GM = IO::Astrodynamics::Body::CelestialBody::ReadGM(bodyId);
+        // Search CelestialItem's mass, 0 when the kernel pool has none (#672)
+        res.GM = ReadDefinedGM(bodyId);
 
         //Read J Parameters
         res.J2 = IO::Astrodynamics::Body::CelestialBody::ReadJ2(bodyId);

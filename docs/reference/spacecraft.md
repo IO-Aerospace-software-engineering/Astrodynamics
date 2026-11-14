@@ -233,7 +233,12 @@ each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the space
   that output's epoch. A minimum epoch given as a TDB label falls off the TT grid by the change of TDB − TT from the
   start to it (6.0e-7 s at S + 3 400 s in the tests, about 1.5e-5 s a day later): one epoch with the output sample while
   that stays under 2 µs, two entries beyond.
-- **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF.
+- **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF, which
+  `Frame.GetStateOrientationToICRF` and getters such as `GetBoresightInICRFFrame` return, but which the field-of-view
+  search does not take for an attitude: it throws ([Field-of-view search](#field-of-view-search), [#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). An
+  ephemeris read in the frame of a managed spacecraft is rotated by its record once the record holds an entry; with an
+  empty record the frame is read by name in SPICE, as before 11.0.0, which reads the frame kernel and the CK of that id
+  when they are loaded and throws SPICE(UNKNOWNFRAME) otherwise ([Frames](frames.md)).
 - **The angular velocity** is that of the CK: at each entry the mean of the rates of the interpolated intervals on either
   side, linear between two samples of a law. Over a hold it is zero between discrete entries; after a sample of a law
   that no lead follows (an attitude added by `AddStateOrientationToICRF` after a propagation, or a lead whose change was
@@ -477,11 +482,16 @@ search for a `+S` correction.
 The managed path also throws `ArgumentException` when the search window leaves the propagated states of the
 instrument's spacecraft or of a spacecraft target, which would be extrapolated (a spacecraft target is read up to its
 light time before the start for the reception corrections, or after the end for the transmission ones, `XLT` and `XCN`,
-milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when
-the observer is inside the ellipsoid of the target. On the CSPICE path an error of `gftfov` (a missing kernel, a
+milliseconds about the Earth, which is extrapolated), and `InvalidOperationException` when the instrument's spacecraft
+has no attitude, or when the observer is inside the ellipsoid of the target. A managed spacecraft has no attitude while
+its attitude record is empty: never propagated and with no orientation added, built from a TLE, or propagated by
+`TLEPropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,
+`spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`, held from
+then on ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682); before 11.0.0 the identity of ICRF was searched). This check comes after those of the
+arguments and of the field, whose errors come first. On the CSPICE path an error of `gftfov` (a missing kernel, a
 coverage) gives no window, no exception (the native layer drops it).
 
-`IsInFOV` is the `POINT` condition with the same field and corrections, and the same field errors
+`IsInFOV` is the `POINT` condition with the same field and corrections, and the same field and attitude errors
 (`InvalidOperationException`) and target error (`ArgumentException`, the instrument's own spacecraft); the search does
 not call it, so an override does not change the search.
 

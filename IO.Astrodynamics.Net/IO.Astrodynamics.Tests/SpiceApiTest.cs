@@ -347,6 +347,118 @@ public class SpiceApiTest
     // CLI), and the name in lower case, as SPICE compares frame names ignoring case
     private static Frames.Frame[] GcrfFrames() => [Frames.Frame.GCRF, new Frames.Frame("GCRF"), new Frames.Frame("gcrf")];
 
+    // A state read from a site is the exact negation of the state read to it (#672: spkezr_c subtracts the same two states
+    // from the solar system barycentre, and a rotation commutes with the negation), 0 measured in each frame on Linux,
+    // Windows and macOS arm64; against the Site object's read, 2.98e-8 m on Linux, 2.98e-8 m on Windows and 2.98e-8 m on
+    // macOS arm64, twice that worst (CI run 43600640037, 2026-11-14)
+    private const double SiteObserverNegationTolerance = 0.0;
+    private const double SiteObjectPositionTolerance = 6.0e-8;
+
+    private static Frames.Frame SiteObserverFrame(string name) => name switch
+    {
+        "ICRF" => Frames.Frame.ICRF,
+        "ECLIPJ2000" => Frames.Frame.ECLIPTIC_J2000,
+        _ => Frames.Frame.TEME
+    };
+
+    private void AssertNegatedState(StateVector expectedReversed, StateVector actual, string label)
+    {
+        double dr = (actual.Position + expectedReversed.Position).Magnitude();
+        double dv = (actual.Velocity + expectedReversed.Velocity).Magnitude();
+        _output.WriteLine($"MEASURE site observer {label} |dr| m: {dr:E3}, |dv| m/s: {dv:E3}");
+        Assert.True(dr <= SiteObserverNegationTolerance, $"{label}: |dr| {dr:E3} m");
+        Assert.True(dv <= SiteObserverNegationTolerance, $"{label}: |dv| {dv:E3} m/s");
+        Assert.Equal(expectedReversed.Epoch, actual.Epoch);
+    }
+
+    private static void AssertSiteObserver(StateVector state, string frameName)
+    {
+        var site = Assert.IsType<Site>(state.Observer);
+        Assert.Equal(399013, site.NaifId);
+        Assert.Equal(13, site.Id);
+        Assert.Equal("DSS-13", site.Name);
+        Assert.Equal(399, site.CelestialBody.NaifId);
+        Assert.Equal(frameName, state.Frame.Name);
+    }
+
+    /// <summary>
+    /// A site identifier as the observer of the reads by identifiers (#672): the observer was built as a celestial body,
+    /// whose record has no radii, so the read threw or labelled its state with a body built from stack bytes. The geometric
+    /// state from the site to the Moon is the negation of the state from the Moon to the site, a read with a celestial
+    /// observer this change does not touch; in a fixed SPICE frame and in the managed TEME (quasi-inertial, v' = R v).
+    /// </summary>
+    [Theory]
+    [InlineData("ICRF")]
+    [InlineData("ECLIPJ2000")]
+    [InlineData("TEME")]
+    public void ReadEphemeris_FromASite_IsTheNegatedReadToTheSite(string frameName)
+    {
+        var frame = SiteObserverFrame(frameName);
+        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, frame: TimeFrame.TDBFrame);
+        var reversed = SpiceAPI.Instance.ReadEphemeris(epoch, 301, 399013, frame, Aberration.None).ToStateVector();
+        Assert.True(reversed.Position.Magnitude() > 3.0e8);
+
+        var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, frame, Aberration.None).ToStateVector();
+        AssertSiteObserver(read, frame.Name);
+        AssertNegatedState(reversed, read, $"{frameName} at an epoch");
+
+        var window = new Window(epoch, epoch.AddSeconds(60.0));
+        var reads = SpiceAPI.Instance.ReadEphemeris(window, 399013, 301, frame, Aberration.None, TimeSpan.FromSeconds(60.0))
+            .Select(x => x.ToStateVector()).ToArray();
+        Assert.Equal(2, reads.Length);
+        for (int i = 0; i < reads.Length; i++)
+        {
+            AssertSiteObserver(reads[i], frame.Name);
+            var reversedAt = SpiceAPI.Instance.ReadEphemeris(reads[i].Epoch, 301, 399013, frame, Aberration.None).ToStateVector();
+            AssertNegatedState(reversedAt, reads[i], $"{frameName} over a window, state {i}");
+        }
+    }
+
+    [Theory]
+    [InlineData(399013, true)]
+    [InlineData(301001, true)]
+    [InlineData(101999, true)]
+    [InlineData(999001, true)]
+    [InlineData(399000, false)]
+    [InlineData(391013, false)]
+    [InlineData(395013, false)]
+    [InlineData(100013, false)]
+    [InlineData(1000013, false)]
+    [InlineData(-399013, false)]
+    [InlineData(399, false)]
+    [InlineData(2000002, false)]
+    public void IsSiteId_IsTheRuleOfSiteNaifId(int naifId, bool expected)
+    {
+        // Site.NaifId is its body's identifier times 1000 plus its own, the body a planet or a moon
+        Assert.Equal(expected, SpiceAPI.IsSiteId(naifId));
+    }
+
+    [Fact]
+    public void ReadEphemeris_FromAnUnnamedSite_Throws()
+    {
+        // A site identifier SPICE does not name has no site to build (#672)
+        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, frame: TimeFrame.TDBFrame);
+        var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399998, 301, Frames.Frame.ICRF, Aberration.None));
+        Assert.Equal("naifId", e.ParamName);
+        e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddSeconds(60.0)), 399998, 301,
+            Frames.Frame.ICRF, Aberration.None, TimeSpan.FromSeconds(60.0)));
+        Assert.Equal("naifId", e.ParamName);
+    }
+
+    [Fact]
+    public void ReadEphemeris_FromASite_ObserverMatchesTheSiteObject()
+    {
+        // The library's own path for a site observer: the Moon read from a Site object, through the data provider
+        var epoch = new TimeSystem.Time(2023, 1, 1, 1, 0, 0, frame: TimeFrame.TDBFrame);
+        var site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
+        var expected = TestHelpers.MoonAtJ2000.GetEphemeris(epoch, site, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        var read = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+        AssertSiteObserver(read, Frames.Frame.ICRF.Name);
+        double dr = (read.Position - expected.Position).Magnitude();
+        _output.WriteLine($"MEASURE site observer against the Site object |dr| m: {dr:E3}");
+        Assert.True(dr <= SiteObjectPositionTolerance, $"|dr| {dr:E3} m");
+    }
+
     [Theory]
     [InlineData(Aberration.None)]
     [InlineData(Aberration.LT)]
@@ -787,9 +899,29 @@ public class SpiceApiTest
         SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
         SpiceAPI.Instance.LoadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(@"Data/UserDataTest/scn100"));
-        SpiceAPI.Instance.UnloadKernels(new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk"));
-        var kernels = SpiceAPI.Instance.GetLoadedKernels().ToArray();
-        Assert.Equal(1, @kernels.Count(x => x.FullName.Contains("scn100")));
+        var spk = new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Ephemeris/DRAGONFLY32.spk");
+        var epoch = TimeSystem.Time.CreateTDB(668100000.0);
+        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude() > 6.0e6);
+        SpiceAPI.Instance.UnloadKernels(spk);
+
+        // The folder is no longer listed, but its other kernel files, which SPICE still holds (#673): before, the folder
+        // stayed listed while SPICE no longer held the SPK of DRAGONFLY32
+        var folder = new DirectoryInfo(@"Data/UserDataTest/scn100");
+        var listed = SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName)
+            .Where(x => x == folder.FullName || x.StartsWith(folder.FullName + Path.DirectorySeparatorChar, StringComparison.Ordinal)).ToArray();
+        Assert.DoesNotContain(folder.FullName, listed);
+        Assert.DoesNotContain(spk.FullName, listed);
+        // The kernel files the project copies to scn100 (IO.Astrodynamics.Tests.csproj), but the SPK of DRAGONFLY32
+        string[] expected =
+        [
+            new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk").FullName,
+            new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc").FullName
+        ];
+        Assert.Equal(expected.Order(StringComparer.Ordinal), listed.Order(StringComparer.Ordinal));
+        // SPICE's reads: the SPK of DRAGONFLY32 (-1785) is gone, that of MySite (399132) is still there (both cover 668085625 to
+        // 668174469 s TDB)
+        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None));
+        Assert.True(SpiceAPI.Instance.ReadEphemeris(epoch, 399, 399132, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position.Magnitude() > 6.0e6);
     }
 
     [Fact]

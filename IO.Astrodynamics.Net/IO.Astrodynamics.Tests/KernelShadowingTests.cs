@@ -20,6 +20,12 @@ public sealed class KernelShadowingTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("kernel-shadowing-");
 
+    public KernelShadowingTests()
+    {
+        // The Earth of the SPKs these tests write reads PlanetsAndMoons, whose type initializer reads the kernels
+        TestKernels.EnsureSolarSystem();
+    }
+
     public void Dispose() => _root.Delete(true);
 
     [Fact]
@@ -126,6 +132,25 @@ public sealed class KernelShadowingTests : IDisposable
         Assert.DoesNotContain("D", content.Variables.Keys);
         Assert.Equal(["@2000-JAN-01"], content.Variables["E"]);
         Assert.Equal(4, KernelContent.ParseInt(content.Variables["C"][0]));
+    }
+
+    [Fact]
+    public void ReadKernel_OfAKernelOpenForWriting_ReadsIt()
+    {
+        // Arrange: a text and a binary kernel held open as CSPICE holds a kernel it loads, for reading and writing ("r+",
+        // shared for reading and writing on Windows); a FileShare.Read open fails there with a sharing violation
+        Text("held.tf", "FRAME_-135000_NAME = 'HELD_FRAME'");
+        var spk = Path.Combine(_root.FullName, "held.bsp");
+        File.WriteAllBytes(spk, Spk(-135));
+        using var text = new FileStream(Path.Combine(_root.FullName, "held.tf"), FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+        using var binary = new FileStream(spk, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+        // Act
+        var content = KernelContent.Read([_root]);
+
+        // Assert
+        Assert.Equal(["HELD_FRAME"], content.Variables["FRAME_-135000_NAME"]);
+        Assert.Contains(-135, content.SpkTargets);
     }
 
     [Fact]

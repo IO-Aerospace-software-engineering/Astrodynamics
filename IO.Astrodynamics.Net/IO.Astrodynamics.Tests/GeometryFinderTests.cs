@@ -351,6 +351,26 @@ public class GeometryFinderTests
             _output.WriteLine($"{label}[{i}]: {Seconds(actual[i].StartDate) - expected[i]:E3} s");
         }
     }
+
+    /// <summary>
+    /// #682: CSPICE's PLANETOGRAPHIC coordinates are the longitude, the latitude and the altitude (<c>gfposc_c</c>
+    /// Detailed_Input <c>coord</c>): the radius is not one of them, and the managed search throws for it, as for every other
+    /// coordinate a system does not have (before, it searched the planetocentric radius). The body's path and the site's.
+    /// </summary>
+    [Fact]
+    public void Planetographic_Radius_Throws()
+    {
+        var earth = new CelestialBody(399);
+        var moon = new CelestialBody(301);
+        var site = new Site(682, "F07RADIUS", earth, new Planetodetic(0.5, 0.3, 100.0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => moon.FindWindowsOnCoordinateConstraint(SearchWindow, earth, earth.Frame, CoordinateSystem.Planetographic,
+            Coordinate.Radius, RelationnalOperator.Greater, 3.9e8, 0.0, Aberration.None, Step).ToArray());
+        Assert.Throws<ArgumentOutOfRangeException>(() => site.FindWindowsOnCoordinateConstraint(SearchWindow, moon, moon.Frame, CoordinateSystem.Planetographic,
+            Coordinate.Radius, RelationnalOperator.Greater, 3.9e8, 0.0, Aberration.None, Step).ToArray());
+        // and the coordinates of the other systems
+        Assert.Throws<ArgumentOutOfRangeException>(() => moon.FindWindowsOnCoordinateConstraint(SearchWindow, earth, earth.Frame, CoordinateSystem.Planetographic,
+            Coordinate.Declination, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None, Step).ToArray());
+    }
 }
 
 /// <summary>
@@ -393,4 +413,5 @@ internal static class GeometryReference
         output?.WriteLine($"{label}: worst |managed - CSPICE| {worst:E3} s");
         Assert.True(worst <= threshold, $"{label}: {worst:E3} s");
     }
+
 }

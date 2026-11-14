@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -10,7 +11,10 @@ namespace IO.Astrodynamics.Tests.Body;
 /// N0067 statically: the DAF reads of <c>dafus</c> (the layout of an SPK, through the f2c routines <c>dafbfs_</c>,
 /// <c>daffna_</c>, <c>dafgs_</c>, <c>dafus_</c>, <c>dafgda_</c>) and the SPK writer <c>spkw09_c</c>, the reference of the
 /// managed writer (#540), with its append (<c>dafopw_c</c>); <c>unitim_c</c>, the conversion between TDB and TT, the
-/// reference of the TT windows of a propagation about the Earth (#547). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
+/// reference of the TT windows of a propagation about the Earth (#547); <c>recpgr_c</c>, <c>georec_c</c>, <c>spkezr_c</c>
+/// and <c>pxform_c</c>, the references of the planetographic coordinates and of a site's frame (#682); the list of the
+/// files SPICE holds, from KEEPER (the f2c routines <c>ktotal_</c> and <c>kdata_</c>; <c>ktotal_c</c> is not exported), the
+/// reference of the kernel registry and of the type of a text kernel (#673). Every call holds the lock of the library's CSPICE calls (<see cref="SpiceAPI.SyncRoot"/>).
 /// </summary>
 /// <remarks>
 /// The Linux build of the native library exports the CSPICE symbols; the Windows DLL exports only the proxies, so the tests
@@ -64,8 +68,76 @@ internal static class CspiceDirect
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
     private static extern void reset_c();
 
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int ktotal_([In] byte[] kind, ref int count, int kindLength);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int kdata_(ref int which, [In] byte[] kind, [Out] byte[] file, [Out] byte[] fileType, [Out] byte[] source,
+        ref int handle, ref int found, int kindLength, int fileLength, int fileTypeLength, int sourceLength);
+
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern double unitim_c(double epoch, string insys, string outsys);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void recpgr_c(string body, [In] double[] rectan, double re, double f, out double lon, out double lat, out double alt);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void georec_c(double lon, double lat, double alt, double re, double f, [Out] double[] rectan);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void spkezr_c(string targ, double et, string re, string abcorr, string obs, [Out] double[] starg, out double lt);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+    private static extern void pxform_c(string from, string to, double et, [Out] double[] rotate);
+
+    /// <summary>The planetographic coordinates of a body-fixed point (<c>recpgr_c</c>): the longitude in [0, 2π] in the
+    /// sense of the body (the kernel pool's), the latitude and the altitude on the spheroid of <paramref name="re"/> and
+    /// <paramref name="f"/>, in the units of the point.</summary>
+    internal static (double Longitude, double Latitude, double Altitude) Recpgr(string body, double[] rectan, double re, double f)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            recpgr_c(body, rectan, re, f, out double lon, out double lat, out double alt);
+            Check("recpgr");
+            return (lon, lat, alt);
+        }
+    }
+
+    /// <summary>The body-fixed position of a geodetic point (<c>georec_c</c>), in the units of <paramref name="re"/>.</summary>
+    internal static double[] Georec(double lon, double lat, double alt, double re, double f)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var rectan = new double[3];
+            georec_c(lon, lat, alt, re, f, rectan);
+            Check("georec");
+            return rectan;
+        }
+    }
+
+    /// <summary>The state of a target from an observer (<c>spkezr_c</c>), km and km/s.</summary>
+    internal static double[] Spkezr(string target, double et, string frame, string abcorr, string observer)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var state = new double[6];
+            spkezr_c(target, et, frame, abcorr, observer, state, out _);
+            Check("spkezr");
+            return state;
+        }
+    }
+
+    /// <summary>The rotation from one frame to another at an epoch (<c>pxform_c</c>), row-major.</summary>
+    internal static double[] Pxform(string from, string to, double et)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var rotation = new double[9];
+            pxform_c(from, to, et, rotation);
+            Check("pxform");
+            return rotation;
+        }
+    }
 
     /// <summary>The TT seconds past J2000 of a TDB epoch given in seconds past J2000 (<c>unitim_c(et, "TDB", "TT")</c>,
     /// the leapseconds kernel loaded).</summary>
@@ -172,6 +244,43 @@ internal static class CspiceDirect
     }
 
     // A CSPICE error, as the proxies' error management leaves it (RETURN mode): its long message, then a reset
+    /// <summary>The names of the files SPICE holds, in their load order, as KEEPER records them (<c>ktotal_("ALL")</c>,
+    /// then <c>kdata_</c> for each; a meta-kernel and the files it loaded are listed each).</summary>
+    internal static List<string> LoadedKernelFiles() => LoadedKernels().Select(x => x.File).ToList();
+
+    /// <summary>The type KEEPER gives a file SPICE holds (<c>kdata_</c>: SPK, CK, PCK, DSK, EK, TEXT or META), null for a file
+    /// it does not hold.</summary>
+    internal static string LoadedKernelType(string file) => LoadedKernels().Where(x => x.File == file).Select(x => x.Type).FirstOrDefault();
+
+    // The files SPICE holds and their types, in their load order
+    private static List<(string File, string Type)> LoadedKernels()
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var all = Encoding.ASCII.GetBytes("ALL");
+            int count = 0;
+            ktotal_(all, ref count, all.Length);
+            Check("ktotal");
+            var files = new List<(string File, string Type)>(count);
+            for (int which = 1; which <= count; which++)
+            {
+                var file = new byte[1024];
+                var fileType = new byte[32];
+                var source = new byte[1024];
+                int handle = 0, found = 0, index = which;
+                kdata_(ref index, all, file, fileType, source, ref handle, ref found, all.Length, file.Length, fileType.Length,
+                    source.Length);
+                Check("kdata");
+                if (found != 0)
+                {
+                    files.Add((Encoding.UTF8.GetString(file).TrimEnd(' ', '\0'), Encoding.ASCII.GetString(fileType).TrimEnd(' ', '\0')));
+                }
+            }
+
+            return files;
+        }
+    }
+
     private static void Check(string routine)
     {
         if (failed_c() == 0) return;
