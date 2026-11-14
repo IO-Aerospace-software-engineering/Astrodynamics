@@ -43,6 +43,12 @@ public class KernelWindowSearchTests
     // Earth, against the CSPICE windows of its two-body orbit (#678)
     private const double PropagatedThreshold = 7.2e-7;
 
+    // Provisional, twice the worst value on Linux x64 (3.58e-7 s, the range of the site built from DSS-13's coordinates at a
+    // 20 min step, 2026-11-14), until the CI of the three platforms has printed its MEASURE lines: the managed search at 1 µs
+    // at steps much longer than its windows (the LEO from DSS-13 and from a site built from its coordinates, the incidence
+    // of a point of DSS-13's coordinates), against CSPICE at 1e-9 s (#678)
+    private const double ShortWindowThreshold = 7.2e-7;
+
     private static readonly Lazy<Dictionary<string, double[][]>> Reference = new(() =>
         JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/GeometryReference/kernel_search_reference.json")));
 
@@ -271,7 +277,25 @@ public class KernelWindowSearchTests
     public void ShortPasses_ManagedAgainstGfposcAndGfdist(double stepMinutes)
     {
         // #678: 1, 0 and 0 of the 2 passes of about 3 min above 30 deg, 2, 0 and 0 of the 3 windows below 1000 km
-        AssertShortPasses(ManagedLeo, TimeSpan.FromMinutes(stepMinutes), $"two-body, managed, step {stepMinutes} min", ManagedThreshold);
+        AssertShortPasses(ManagedLeo, TimeSpan.FromMinutes(stepMinutes), $"two-body, managed, step {stepMinutes} min", ShortWindowThreshold);
+    }
+
+    [Theory]
+    [InlineData(5.0)]
+    [InlineData(10.0)]
+    [InlineData(20.0)]
+    public void ShortPasses_SiteFromCoordinates_AgainstGfposcAndGfdist(double stepMinutes)
+    {
+        // #678: the searches of a site built from DSS-13's planetodetic coordinates, the site seen from the LEO in its
+        // topocentric frame (declination below -30 deg) and its range, against gfposc and gfdist on the fixed point of these
+        // coordinates (a site from coordinates keeps its J2000 position, 9.2e-5 s from the kernel station's crossings)
+        var site = new Site(98, "DSS13COORDINATES", Earth, Dss13.Planetodetic);
+        var step = TimeSpan.FromMinutes(stepMinutes);
+        string path = $"site from coordinates, managed, step {stepMinutes} min";
+        AssertWindows("dss13_coordinates_from_leo_declination < -30 deg", site.FindWindowsOnCoordinateConstraint(LeoWindow, ManagedLeo, site.Frame,
+            CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step), ShortWindowThreshold, path);
+        AssertWindows("dss13_coordinates_leo_distance < 1000 km", site.FindWindowsOnDistanceConstraint(LeoWindow, ManagedLeo, RelationnalOperator.Lower, 1.0e6,
+            Aberration.None, step), ShortWindowThreshold, path);
     }
 
     [Theory]
@@ -336,7 +360,7 @@ public class KernelWindowSearchTests
         var window = new Window(IlluminationWindow.StartDate, IlluminationWindow.StartDate.AddSeconds(3.0 * 86400.0));
         AssertWindows("point_sun_incidence dss13 0 m < 58.83 deg NONE 3 days", site.FindWindowsOnIlluminationConstraint(window, IlluminationAngle.Incidence,
             RelationnalOperator.Lower, 58.83 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, Aberration.None, TimeSpan.FromHours(stepHours), TestHelpers.Sun),
-            ManagedThreshold, $"site from coordinates, managed, step {stepHours} h");
+            ShortWindowThreshold, $"site from coordinates, managed, step {stepHours} h");
     }
 
     [Fact]

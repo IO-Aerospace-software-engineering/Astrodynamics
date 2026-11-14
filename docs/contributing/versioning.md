@@ -710,36 +710,42 @@ release are listed under **Known limitations**.
     a window that held at the start of the search), and a window that ended up to 1 s before the end of the search now
     ends at it. The searches CSPICE runs (a kernel spacecraft with a kernel body or site) are unchanged.
 - **The managed threshold searches lost the windows, gaps and crossings shorter than the step**
-  ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder` decided each transition from the sign of the relation at the samples
-  alone: a window, a gap or a pair of crossings between two samples that left no trace on them was lost, and how many
-  windows a search returned depended on where the samples fell, not decreasing monotonically as the step grew. A LEO
-  (a = 6800 km, i = 51.6°) above 30° from DSS-13 gave 1, 0 and 0 of its 2 passes (3 min each) at steps of 5, 10 and
-  20 min, and 2, 0 and 0 of its 3 windows below 1000 km, all of which CSPICE's `gfposc` and `gfdist` find at every one
-  of these steps; sin(2π t / 5400 s) > 0.995 gave none of its 16 windows a day at 3 to 20 min; a site at DSS-13's
-  coordinates gave 1 and 0 of the 3 windows of the Sun's incidence below 58.83° at 5.5 and 6 h. The search now looks for
-  the extremes of the margin of the relation that the samples hide, by the rule of the occultation search
-  (`OccultationFinder.HiddenCrossings`, now shared: Brent's `localmin` between the two neighbors of each three-sample
-  extreme that does not reach zero, and over the first and last intervals), and adds each extreme on the other side of
-  zero as a sample before the transitions are located to 1 µs; each sample is evaluated once. A zero margin fails for
-  `Greater`, `Lower` and the `adjustValue` windows of `AbsoluteMin` and `AbsoluteMax`, and holds for `GreaterOrEqual`,
-  `LowerOrEqual`, `Equal` and `NotEqual`; a bracket with an undefined (NaN) sample is not searched. Every window, gap and
-  crossing of a `double` quantity is therefore found when the step is at most half the time between two extremes of the
-  quantity, a jump of a branch cut counting as one. The documentation asked for a step shorter than every window and
-  gap, "as with CSPICE": CSPICE asks for a step shorter than the shortest interval where the quantity is monotone
+  ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder` decided each
+  transition from the sign of the relation at the samples alone: a window, a gap or a pair of crossings between two
+  samples that left no trace on them was lost, and how many windows a search returned depended on where the samples
+  fell, not decreasing monotonically as the step grew. A LEO (a = 6800 km, i = 51.6°) above 30° from DSS-13 gave 1, 0
+  and 0 of its 2 passes (3 min each) at steps of 5, 10 and 20 min, and 2, 0 and 0 of its 3 windows below 1000 km, all of
+  which CSPICE's `gfposc` and `gfdist` find at every one of these steps; sin(2π t / 5400 s) > 0.995 gave none of its 16
+  windows a day at 3, 5, 10 and 20 min and 2 at 22 min, but 8 at 4 min and all 16 at 7.5 and 11.25 min; a site at
+  DSS-13's coordinates gave 1 and 0 of the 3 windows of the Sun's incidence below 58.83° at 5.5 and 6 h. The search now
+  looks for the extremes of the margin of the relation that the samples hide, by the rule of the occultation search (the
+  internal `HiddenExtremes`, moved out of `OccultationFinder` and shared: Brent's `localmin` between the two neighbors
+  of each three-sample extreme that does not reach zero, and over the first and last intervals), and adds each extreme
+  on the other side of zero as a sample before the transitions are located to 1 µs; each sample is evaluated once. A
+  zero margin fails for `Greater`, `Lower` and the `adjustValue` windows of `AbsoluteMin` and `AbsoluteMax`, and holds
+  for `GreaterOrEqual`, `LowerOrEqual`, `Equal` and `NotEqual`; a bracket with an undefined (NaN) sample is not
+  searched. Every window, gap and crossing of a `double` quantity is therefore found when the step is at most half the
+  time between two extremes of the quantity, a jump of a branch cut counting as one, down to the about 1 µs to which
+  `localmin` locates an extreme; a tangency between two samples (an extreme exactly at the value) is not found. The
+  documentation asked for a step shorter than every window and gap, "as with CSPICE": CSPICE asks for a step shorter
+  than the shortest interval where the quantity is monotone
   ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html), Particulars, "The Search
   Process" and "Step Size"; the same in `gfposc_c` and `gfilum_c`), whatever the length of the windows.
-  - **Measured** (Linux x64, 2026-11-14): the 16 closed-form windows at 3, 10 and 22 min for `Greater`,
-    `GreaterOrEqual`, `Lower` and `LowerOrEqual`, the 32 crossings of `Equal` and the 33 windows of `NotEqual` at 10
-    min, the 16 gaps of `Greater` and of `AbsoluteMin` with an adjustment, and the 16 windows of a sawtooth, each ending
-    at its jump, at 7 to 20 min, within 8.0e-7 s of the closed forms; the LEO's passes and range windows at 5, 10 and 20
-    min within 2.4e-7 s of `gfposc` and `gfdist` converged to 1e-9 s (`tools/geometry_reference`), 3.6e-7 s on the
-    same orbit propagated with RK7(8), and the count with Velocity-Verlet; the 3 incidence windows within 2.4e-7 s of
-    `gfilum`. Over 425 searches of a day (the elevation, range and azimuth of the LEO from DSS-13 and from a site from
-    coordinates, a sinusoid, the Earth-Moon distance; six relations; steps of 30 s to 10 min), each search returns the
-    same windows at every step, and the 8618 edges found before are unchanged bit for bit; the conformance cases
-    `ground_station`, `tracking_data` and `orbital_events` are unchanged bit for bit. Cost: 1735 evaluations of the
-    quantity on the LEO day at a 1 min step, 1463 before (1.19 times); the same day is complete at 10 min with 481.
-  - **Changes published results:** windows are added where the samples hid them, and a window across a gap they hid is
+  - Measured** (Linux x64, 2026-11-14): the 16 closed-form windows at 3, 10 and 22 min for `Greater`, `GreaterOrEqual`,
+    `Lower` and `LowerOrEqual`, the 32 crossings of `Equal` and the 33 windows of `NotEqual` at 10 min, the 16 gaps of
+    `Greater` and of `AbsoluteMin` with an adjustment, and the 16 windows of a sawtooth, each ending at its jump, at 7
+    to 20 min, within 8.0e-7 s of the closed forms; the LEO's passes and range windows at 5, 10 and 20 min within 2.4e-7
+    s of `gfposc` and `gfdist` converged to 1e-9 s (`tools/geometry_reference`), 3.6e-7 s on the same orbit propagated
+    with RK7(8), and the count with Velocity-Verlet; the same passes and range windows of a site built from DSS-13's
+    coordinates (`Site.FindWindowsOnCoordinateConstraint` and `FindWindowsOnDistanceConstraint`, 1, 0 and 0 of the 2
+    passes before) within 3.6e-7 s of `gfposc` and `gfdist` on the fixed point of these coordinates; the 3 incidence
+    windows within 2.4e-7 s of `gfilum`. Over 425 searches of a day (the elevation, range and azimuth of the LEO from
+    DSS-13 and from a site from coordinates, a sinusoid, the Earth-Moon distance; six relations; steps of 30 s to 10
+    min), each search returns the same windows at every step, and the 8618 edges found before are unchanged bit for bit;
+    the conformance cases `ground_station`, `tracking_data` and `orbital_events` are unchanged bit for bit. Cost: 1735
+    evaluations of the quantity on the LEO day at a 1 min step, 1463 before (1.19 times); the same day is complete at 10
+    min with 481.
+  - Changes published results:** windows are added where the samples hid them, and a window across a gap they hid is
     split there; no edge found before moves. The searches CSPICE runs, the occultation and field-of-view searches (bit
     for bit), `LocalMin`, `LocalMax`, the absolute extremes without adjustment and a boolean quantity are unchanged.
 - **The site-visibility example of the tutorial found the times when the spacecraft is 10° below the horizon**

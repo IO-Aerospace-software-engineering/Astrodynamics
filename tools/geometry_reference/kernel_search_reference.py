@@ -34,6 +34,10 @@ ELLIPSOID, the Sun as source, the incidence angle):
     topocentric frame of the library's site (north, west, zenith from the planetodetic coordinates of DSS-13 at J2000 on
     pck00011, relative to ITRF93), defined here as DSS-13_J2000_TOPO (1678013), which the frame kernel's DSS-13_TOPO
     (its coordinates at 2020-10-23 on GRS80) differs from by 7.6e-8 rad in longitude and 1.7e-8 rad in latitude;
+  - a site built from those coordinates (Site from a Planetodetic): the fixed point georec(lon, lat, alt) of DSS-13's
+    planetodetic coordinates at J2000, written as a temporary type 8 SPK (-67802, centre 399, ITRF93, removed after the
+    search), seen from the LEO in DSS-13_J2000_TOPO: declination < -30 deg (gfposc) and range < 1000 km (gfdist), the
+    searches of Site.FindWindowsOnCoordinateConstraint and FindWindowsOnDistanceConstraint on that site;
   - the point of DSS-13's longitude and latitude at 0 m on the ellipsoid (georec, as above), incidence of the Sun
     < 58.83 deg (the minimum over the window, 58.5315 deg, plus 0.3 deg, rounded), without correction, observer 399013,
     over 2023-12-15 00:05 to 2023-12-18 00:05 TDB, step 60 s.
@@ -53,6 +57,7 @@ import datetime as D
 import json
 import math
 import os
+import tempfile
 from fractions import Fraction
 
 import spiceypy as sp
@@ -144,6 +149,14 @@ def write_leo(gm_earth, t0, first, last):
     sp.spkcls(handle)
 
 
+def write_point(path, body, point, first, last):
+    """A point fixed in ITRF93 as a type 8 SPK relative to the Earth: two equal states, linear interpolation."""
+    state = list(point) + [0.0, 0.0, 0.0]
+    handle = sp.spkopn(path, 'fixed point', 0)
+    sp.spkw08(handle, body, 399, 'ITRF93', first, last, 'fixed point', 1, 2, [state, state], first, last - first)
+    sp.spkcls(handle)
+
+
 def main():
     load_directory(os.path.join(TESTS, 'SolarSystem'))
     sp.furnsh(os.path.join(TESTS, 'LRO', 'lro-reconstructed-2023349_2024075_v01_little_endian.bsp'))
@@ -196,6 +209,15 @@ def main():
     ref['leo_dss13_j2000_topo_elevation > 30 deg'] = coordinate('-67801', 'DSS-13_J2000_TOPO', '399013', 'RA/DEC',
                                                                 'DECLINATION', '>', math.radians(30.0), l0, l1, 60.0)
     ref['leo_dss13_distance < 1000 km'] = distance('-67801', '399013', '<', 1000.0, l0, l1, 60.0)
+    with tempfile.TemporaryDirectory() as scratch:
+        site_spk = os.path.join(scratch, 'dss13_coordinates.bsp')
+        write_point(site_spk, -67802, sp.georec(lon, lat, alt, radii[0], f), l0 - 3600.0, l1 + 3600.0)
+        sp.furnsh(site_spk)
+        ref['dss13_coordinates_from_leo_declination < -30 deg'] = coordinate('-67802', 'DSS-13_J2000_TOPO', '-67801',
+                                                                             'RA/DEC', 'DECLINATION', '<',
+                                                                             -math.radians(30.0), l0, l1, 60.0)
+        ref['dss13_coordinates_leo_distance < 1000 km'] = distance('-67802', '-67801', '<', 1000.0, l0, l1, 60.0)
+        sp.unload(site_spk)
     moon_radii = sp.bodvcd(301, 'RADII', 3)[1]
     moon_frame = sp.cidfrm(301)[1]
     point = sp.georec(0.5, 0.3, 1.071, moon_radii[0], (moon_radii[0] - moon_radii[2]) / moon_radii[0])

@@ -44,17 +44,19 @@ extreme; `Equal` gives the crossings of the value, as windows of zero length.
 
 Between the samples the library looks for the extremes of the quantity that the samples hide, as the occultation search
 does ([Occultations](occultations.md)): where three consecutive samples show an extreme of the quantity that does not
-reach the value, Brent's `localmin` locates it between their two neighbors (the first and last intervals likewise),
-and an extreme beyond the value becomes a sample. Every window, gap and crossing, however short, is therefore found
-when the step is at most half the time between two extremes of the quantity, a jump of a branch cut (a right
-ascension, a longitude, an azimuth) counting as one: the 2 passes of about 3 min of a LEO above 30° from DSS-13 at a
-20 min step, as CSPICE finds them. CSPICE asks for a step shorter than the shortest interval where the quantity is
-monotone ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html), Particulars, "The
-Search Process" and "Step Size"; the same in `gfposc_c` and `gfilum_c`, where a longitude or a right ascension needs its
-sine or cosine monotone); neither rule depends on the length of the windows. A `bool` quantity given to
-`GeometryFinder.FindWindowsWithCondition` has nothing to search between its samples: its step must be shorter than
+reach the value, Brent's `localmin` locates it between their two neighbors (the first and last intervals likewise), and
+an extreme beyond the value becomes a sample. Every window, gap and crossing is therefore found when the step is at most
+half the time between two extremes of the quantity, a jump of a branch cut (a right ascension, a longitude, an azimuth)
+counting as one, down to the about 1 µs to which `localmin` locates an extreme (a narrower window or gap can be missed,
+and a tangency between two samples, an extreme exactly at the value, is not found): the 2 passes of about 3 min of a LEO
+above 30° from DSS-13 at a 20 min step, as CSPICE finds them. CSPICE asks for a step shorter than the shortest interval
+where the quantity is monotone ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html),
+Particulars, "The Search Process" and "Step Size"; the same in `gfposc_c` and `gfilum_c`, where a longitude or a right
+ascension needs its sine or cosine monotone); neither rule depends on the length of the windows. A `bool` quantity given
+to `GeometryFinder.FindWindowsWithCondition` has nothing to search between its samples: its step must be shorter than
 every window and every gap. Before 11.0.0 the library decided each transition from the samples alone, and lost the
-windows, gaps and crossings between two samples ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)).
+windows, gaps and crossings between two samples
+([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)).
 
 Both searches take a distance in m. CSPICE searches the distance of a site from the kernels to a spacecraft from the
 kernels, and its illumination (`FindWindowsOnIlluminationConstraint`, `FindDayWindows`) whatever the source: its surface
