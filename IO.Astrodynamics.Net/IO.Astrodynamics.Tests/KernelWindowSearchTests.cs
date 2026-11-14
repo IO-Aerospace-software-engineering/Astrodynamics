@@ -320,8 +320,8 @@ public class KernelWindowSearchTests
     // #682. Twice the larger of the two edges it bounds, rounded up. The managed edge: 6.557e-11 rad on each of Linux,
     // Windows and macOS arm64 (CI run 43591652055, 2026-11-14; the Moon from the Earth above 4 rad), the 1 µs of the
     // searches and the 100 ns of a Time at the rate of the longitude, 7.3e-5 rad/s for the Moon in ITRF93. The gfposc
-    // edge: provisional, 1.799e-11 rad on Linux x64 (2026-11-14; the Moon from the Earth), until the CI of the three
-    // platforms has printed it
+    // edge: 1.799e-11 rad on each of Linux, Windows and macOS arm64 (CI run 43604617106, 2026-11-14; the Moon from the
+    // Earth above 4 rad)
     private const double CutAngle = 1.4e-10;
 
     private static readonly Window MoonPlanetographicWindow = new(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 11));
