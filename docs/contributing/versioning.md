@@ -1356,6 +1356,42 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **`astro propagate` ignored `--earth-geopotential-degree` (`-n`): every run used degree 10** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681)). The option was
+  declared and read by no code: `PropagateCommand` built the initial orbit through the overload of
+  `Helpers.ConvertToOrbitalParameters` that forwards no degree, so the default 10 reached `GeopotentialModelParameters`
+  on the `-s`, `-k` and `-q` paths alike, and the SPKs of `-n 2`, `-n 10` and `-n 50` were byte-identical. The degree
+  now reaches the Earth of the run, which is the library run of the same scenario with `GeopotentialModelParameters` of
+  that degree. A degree above 100, the last degree of the embedded EGM2008 model, is an argument error (the field pads
+  the degrees beyond its file with zeros, so a wired `-n 150` would have run at degree 100); 0 and 1 remain the point
+  mass. The help text, whose parenthesis was not closed, reads "Degree of the Earth geopotential (EGM2008), at most
+  100". `PropagateTests.EarthGeopotentialDegree_IsTheDegreeOfTheRun` reads the exported SPK at the end of a 600 s window
+  (n = 2 and 50 on `-s`, n = 2 on `-k` from ECLIPJ2000 and on `-q`) against the library run of that degree, within
+  2.1e-9 m (twice the Linux worst, 1.04e-9 m), and more than 1 m from the run of degree 10 (32.660 m for n = 2 and
+  4.514 m for n = 50 from 6800 km equatorial, 49.2 m and 60.7 m on the `-k` and `-q` rows); no `-n` and `-n 10` stay
+  byte-identical (`DefaultDegree_IsDegree10`). On a 30 min LEO from 6700 km, at 28 min, `-n 2` moves 168.5 m and `-n 50`
+  5.80 m from what the CLI wrote before; no other result moves.
+- **`astro sub-point` threw `NullReferenceException` for a site identifier** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681)). It cast the object of
+  `Helpers.CreateLocalizable` to `CelestialItem`, which a `Site` is not, and dereferenced the null. A site identifier
+  (its body's identifier times 1000 plus its own, 399013 for DSS-13) is now an `ArgumentException` naming the kinds the
+  command accepts, a celestial body or a spacecraft; any other identifier goes through `Helpers.CreateCelestialItem`,
+  as before for bodies and kernel-backed spacecraft (`EphemerisTests.SubPoint_OfASite_IsAnArgumentError`; the sub-points
+  of the Moon and of a kernel spacecraft unchanged).
+- **`CelestialItem.ToString` printed GM under a wrong unit, and the mass, GM and radii to 7 significant digits**
+  ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681)). The lines `Mass (kg)`, `GM (m^3.s^2)` and, in `CelestialBody.ToString`, `Equatorial radius (m)` and
+  `Polar radius (m)` used the format `E` (6 decimals): with gm_de440 and pck00011 the Earth's GM was printed 8.9e-8
+  relative off, its mass 6.7e-8 off, its equatorial radius 0.400 m and its polar radius 0.100 m off, and the GM label
+  had no space before its colon. They are now printed as the flattening and J2 to J4 lines already were, in the
+  shortest form that parses back to the property in the invariant culture, under `GM (m^3/s^2) :`; a spacecraft prints
+  through the same lines, and `astro celestial-body-info` prints them. `CelestialBodyTests.CelestialBodyToString` and
+  `BodyInformationsTests.CelestialBodyInformation`, snapshots before, now parse every value back to its property and
+  check GM within 1 ulp of `BODY399_GM` of gm_de440.tpc (gm_de431.tpc for the CLI) times 1e9 and the radii equal to
+  `BODY399_RADII` of pck00011.tpc times 1000, read from the kernel text; `SpacecraftTests.SpacecraftToString_RoundTrips`
+  does the same for a spacecraft.
+- **The release notes and the README named CLI spellings that do not exist** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681)). The TEME entry below cited "the
+  CLI `--frame TEME`", an option no command has: the frame is a positional argument of `ephemeris`, `orientation`,
+  `frame-converter` and `orbital-parameters-converter`, which all accept `TEME`. The README listed
+  `find-windows-from-FOV-constraint`, which `astro --help` lists as `find-windows-from-fov-constraint` (both spellings
+  run). Both lines now give the spellings of the tool.
 
 **Changed**
 
@@ -1391,7 +1427,8 @@ release are listed under **Known limitations**.
   (the angle between the former TEME and the definition; 2.0″ to 23.2″ at the 13 epochs of `tools/teme_reference`):
   the ICRF states of a TLE (`TLE.ToOsculating(...).ToFrame(Frame.ICRF)`, 326 to 428 m on the three TLEs of the TEME
   study, 82 to 851 m on the verification TLEs), a TLE fitted from ICRF (`TLE.Create`, `ToTLE`, about 168 m), OPM and
-  OMM in TEME, the CLI `--frame TEME`, `TLEPropagator` once converted, and the TLE participants of scenarios and
+  OMM in TEME, the CLI given the frame `TEME` (the frame arguments of `ephemeris`, `orientation`, `frame-converter`
+  and `orbital-parameters-converter`), `TLEPropagator` once converted, and the TLE participants of scenarios and
   conjunctions. TEME ↔ ICRF before 2000 and after the end of the PCK, a zero rotation before, is now defined. The SGP4
   states in TEME do not move with it; tsince in TT moves them (#599, Fixed above).
 
@@ -1685,6 +1722,14 @@ release are listed under **Known limitations**.
   returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
+- **Breaking: `astro propagate -n` above 100 throws `ArgumentException`** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681), Fixed above): such a degree ran at
+  degree 10, as every `-n` did. Migration: pass a degree of at most 100, the degree of the embedded EGM2008 model; any
+  `-n` other than 10 now gives the run of that degree.
+- **Breaking: the text of `CelestialItem.ToString`, `CelestialBody.ToString` and `Spacecraft.ToString`** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681), Fixed
+  above), and so of `astro celestial-body-info`: the mass, GM and radii are printed in round-trip form (Earth with
+  gm_de440: `5.972168399787583E+24`, `398600435507022.6`, `6378136.6`, `6356751.9`), the GM line under
+  `GM (m^3/s^2) :`. Migration: a caller that parsed the text reads the properties `Mass`, `GM`, `EquatorialRadius` and
+  `PolarRadius` instead.
 
 **Removed**
 
@@ -1713,6 +1758,11 @@ not listed.
   or a coverage gap returns no window, SPICE's message on standard output only. On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
   returns no window. Check that the kernels cover the search before trusting an empty result.
+- **A geopotential degree above the degree of its model file runs at the file's degree**
+  ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681), found on the way).
+  `GeopotentialGravitationalField` reads the coefficients a file does not hold as zeros, so
+  `GeopotentialModelParameters(path, 80)` on `EGM2008_to70_TideFree` silently runs at degree 70. The command line
+  rejects a degree above its embedded model (100); in the library, pass a degree the file holds.
 - **At most 1000 windows from a CSPICE search**
   ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)). A search that CSPICE runs
   returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every
