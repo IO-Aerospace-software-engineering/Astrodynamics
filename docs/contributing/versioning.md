@@ -1356,6 +1356,52 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **A body with a GM and no radii read GM 0 and no frame, one with radii and no GM a garbage frame** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)).
+  The native body information read `BODYnnn_RADII` and `BODYnnn_GM` without checking that the kernel pool has them; the
+  failed read left SPICE failed, so the reads after it did nothing until the error was reset at the end: the GM was the
+  stack's (0 in practice) and the frame name was left undefined. The 8 bodies SPICE names that `gm_de440.tpc` gives a GM
+  and `pck00011.tpc` no radii (Nix, Hydra, Kerberos, Styx, Pallas, Didymos, its barycentre, Dimorphos) read GM 0 and an
+  empty or garbage frame, so `new CelestialBody(2000002)` threw; the 39 bodies with radii and no GM (Elara, Nereid...)
+  read a garbage frame name, and `new CelestialBody(507)` was built with it. `GetCelestialBodyInfoProxy` now reads the
+  radii and the GM only where `bodfnd_c` finds them: radii 0 and GM 0 where the pool has none, the frame read in every
+  case, no SPICE error raised. `CelestialBody::ReadGM`, the mass of the native constructors of `WriteEphemerisProxy` and
+  of the element conversions, is unchanged
+  ([#655](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/655)). Native change, no signature
+  change.
+  - **Test:** C++ `API.GetBodyInformationGmWithoutRadii` (Pallas, Nix: the GM of `bodvcd_c` and the frame of `cnmfrm_c`
+    called by the test, radii 0), `API.GetBodyInformationRadiiWithoutGm` (Elara: GM 0, the 40 km radii of
+    `pck00011.tpc`, IAU_ELARA), `API.GetBodyInformationSolarSystemBarycenterGm` (the sum of `bodvcd_c` over 1 to 10, bit
+    for bit); `NativeAbortGuardTests.GetCelestialBodyInfo_GmWithoutRadii_ReadsTheKernelGm` (the 8 bodies against the GM
+    parsed from the text of `gm_de440.tpc`, within 10 ulp: CSPICE's own parse is up to 5 ulp off the correctly rounded
+    value, Jupiter barycentre, and 1 ulp for Nix, Kerberos and Pallas; the frames of `cnmfrm_c`, three reads equal),
+    `GetCelestialBodyInfo_RadiiWithoutGm_ReadsTheFrame` (Elara, Nereid against the text of `pck00011.tpc`),
+    `CelestialBodyTests.Pallas_BuildsWithTheKernelGm` and `Kerberos_WithoutFrame_Throws`. On `main` 2893404 the GMs
+    read 0, Pallas throws, Kerberos is built with a garbage frame.
+- **An unnamed identifier returned a stale or garbage name, a barycentre a garbage frame name** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)). The
+  native record's name and frame name had no initialiser and were filled only when SPICE named the identifier and found
+  a frame; `SpiceAPI.GetCelestialBodyInfo` returned the record without checking that SPICE named the identifier. After
+  Pallas, 2000003 (a GM in `gm_de440.tpc`, no name) read the name `PALLAS` or stack bytes with identifier -1, the
+  barycentres a garbage frame name, and `new CelestialBody(12345678)` was built from a fragment of earlier console
+  output, or threw, in turn. The record is now zero-initialised, and `SpiceAPI.GetCelestialBodyInfo` and the two
+  ellipsoid frames of `FindWindowsOnOccultationConstraint` throw `ArgumentException` naming the identifier when SPICE
+  does not name it (the record's identifier stays -1; Changed below).
+  - **Test:** C++ `API.GetBodyInformationInvalidId` (398 and 12345678 after the Earth: identifier -1, empty names, GM
+    and radii 0) and `API.GetBodyInformationBarycenter`; `NativeAbortGuardTests.GetCelestialBodyInfo_UnnamedIdentifier_Throws`
+    (12345678, 2000003 and 99999999 after Pallas, three times, with `new CelestialBody` and `CelestialItem.Create`),
+    `GetCelestialBodyInfo_Barycenter_HasNoFrame` (0 to 9 after the Earth, the names of `bodc2n_c`, no frame, the GM of
+    the kernel text) and `Occultation_UnnamedEllipsoid_Throws`. On `main` 2893404 the record is returned, the barycentres
+    read `ITRF93` from the previous call, the occultation returns no window.
+- **A ground station could not be the observer of `SpiceAPI.ReadEphemeris`** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)). Both overloads built their
+  observer with `CelestialItem.Create`, which has no site branch: DSS-13 (399013) became a celestial body whose record
+  has no radii, so the read threw `InvalidOperationException` ("frame can't be defined"), or labelled its state with a
+  body built from undefined bytes. A site identifier (its body's identifier times 1000 plus its own, the body a planet
+  or a moon, the rule of `Site.NaifId`) is now the observer `new Site(id % 1000, its SPICE name, new CelestialBody(id /
+  1000))`, built before the SPICE lock as before (#623); the state is `spkezr_c`'s, unchanged.
+  - **Test:** `SpiceApiTest.ReadEphemeris_FromASite_IsTheNegatedReadToTheSite` (ICRF, ECLIPJ2000 and the managed
+    TEME, both overloads: the exact negation of the read from the Moon to DSS-13, an observer `Site` 399013 named
+    DSS-13), `ReadEphemeris_FromASite_ObserverMatchesTheSiteObject` (the Moon read from a `Site` object, within 6e-8 m;
+    2.98e-8 m measured, Linux x64), `ReadEphemeris_FromAnUnnamedSite_Throws` and `IsSiteId_IsTheRuleOfSiteNaifId`. On
+    `main` 2893404 the `Time` overload throws in ICRF and the observer is a `CelestialBody`.
 
 **Changed**
 
@@ -1681,6 +1727,29 @@ release are listed under **Known limitations**.
   `SpiceAPI.WriteOrientation` throws `ArgumentException` for records in more than one frame. Migration: pass the
   identifier of a celestial body (a barycenter 0 to 9, the Sun 10, a planet, a moon or a Lagrange point 101 to 999, or
   above 1000), or catch `ArgumentException`; write one frame per call to `SpiceAPI.WriteOrientation`.
+- **Breaking: an identifier SPICE does not name throws `ArgumentException`** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672), Fixed above), extending #560's
+  entry above to the identifiers of the celestial classes (12345678, 2000003, a Lagrange point the kernels do not name):
+  `SpiceAPI.GetCelestialBodyInfo` (`ParamName` `naifId`) returned a record with identifier -1 and a stale or garbage
+  name; `new CelestialBody(id)`, `CelestialItem.Create(id)`, the command `celestial-body-info` and the observer of
+  `SpiceAPI.ReadEphemeris` by identifiers threw `InvalidOperationException` or built a body from undefined bytes;
+  `SpiceAPI.FindWindowsOnOccultationConstraint` with such an identifier as an ellipsoid front or target without a frame
+  (`ParamName` `frontBodyId` or `targetId`) returned no window. Migration: load the kernel that names the body
+  (`NAIF_BODY_NAME`, `NAIF_BODY_CODE`), or catch `ArgumentException`.
+- **Breaking: the GM and the frame of a body without radii or GM, and the observer of a read from a site** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672),
+  Fixed above). Under the same signatures: `SpiceAPI.GetCelestialBodyInfo(id).GM`, `CelestialBody.GM` and `Mass` move
+  from 0 to the kernel's value for 7 bodies (Nix 3048175.64816976, Hydra 3211039.206155255, Kerberos
+  1110040.850536676, Pallas 13665878145.96742, the Didymos barycentre 37.0362727488241, Dimorphos 0.339845587494,
+  Didymos 36.696427161329 m³/s², as SPICE parses `gm_de440.tpc`; Styx's is 0), so a propagation with one of them as a
+  third body now attracts; their frames (IAU_NIX, IAU_HYDRA, IAU_PALLAS, IAU_DIMORPHOS, IAU_DIDYMOS) and those of the
+  bodies with radii and no GM are read, so `new CelestialBody` builds them, and Kerberos, Styx and the Didymos
+  barycentre, which have none, throw `InvalidOperationException` every time; a barycentre's `FrameName` is empty. The
+  record of a site identifier reads frame DSS-13_TOPO and GM 0, so `new CelestialBody(399013)` builds a body classed
+  as an asteroid ([#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)) where it
+  threw. The observer of a state `SpiceAPI.ReadEphemeris` reads from a site identifier is a `Site` (NaifId 399013,
+  Name DSS-13), not a `CelestialBody`, and a site whose SPK does not cover J2000 TDB throws `InvalidOperationException`
+  from the `Site` constructor. Every body with radii and a GM, and every barycentre's GM, is read bit for bit as
+  before. Migration: none for a body the kernels describe; a caller that cast the observer of a read from a site to
+  `CelestialBody` casts it to `Site`.
 - **`Star.GetEphemeris` applies no light time** ([#533](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/533), Fixed above): with `LT`, `CN`, `XLT` and `XCN` it
   returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
@@ -1749,7 +1818,12 @@ not listed.
   [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)). `SpiceAPI.ReadEphemeris` by
   identifiers throws `ArgumentException` for a spacecraft observer: with `Aberration.None`, read with the spacecraft as
   target and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives). `SpiceAPI.GetCelestialBodyInfo` of a site identifier (DSS-13, 399013) gives the Sun as centre and the
-  barycentre 0, every identifier above 1000 being classed as an asteroid.
+  barycentre 0, every identifier above 1000 being classed as an asteroid, so `new CelestialBody(399013)` and
+  `CelestialItem.Create(399013)` build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Sun (they threw before
+  [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)): build a `Site`.
+  `SpiceAPI.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). `MemoryDataProvider` throws
+  `KeyNotFoundException` for a body it does not hold, where `SpiceDataProvider` throws `ArgumentException` for an
+  identifier SPICE does not name.
 - **Reads past the stored states of a propagated spacecraft**
   ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527),
   [#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)).

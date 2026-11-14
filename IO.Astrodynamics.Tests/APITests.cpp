@@ -295,9 +295,125 @@ TEST(API, GetBodyInformationWithoutJ)
     ASSERT_TRUE(std::isnan(res.J4));
 }
 
+// The GM and the body-fixed frame read by CSPICE directly, not through the proxy nor CelestialBody::ReadGM (#672)
+static void ExpectBodyReadAsSpice(int id, const char *name, const char *frameName, int frameId)
+{
+    SpiceInt dim{};
+    SpiceDouble gm[1]{};
+    ASSERT_TRUE(bodfnd_c(id, "GM"));
+    ASSERT_FALSE(bodfnd_c(id, "RADII"));
+    bodvcd_c(id, "GM", 1, &dim, gm);
+    SpiceInt frcode{};
+    SpiceChar frname[32]{};
+    SpiceBoolean frameFound{false};
+    cnmfrm_c(name, 32, &frcode, frname, &frameFound);
+    ASSERT_FALSE(failed_c());
+    ASSERT_TRUE(frameFound);
+    ASSERT_STREQ(frameName, frname);
+    ASSERT_EQ(frameId, frcode);
+
+    auto res = GetCelestialBodyInfoProxy(id);
+    ASSERT_EQ(id, res.Id);
+    ASSERT_STREQ(name, res.Name);
+    ASSERT_EQ(gm[0] * 1E+09, res.GM);
+    ASSERT_EQ(0.0, res.Radii.x);
+    ASSERT_EQ(0.0, res.Radii.y);
+    ASSERT_EQ(0.0, res.Radii.z);
+    ASSERT_STREQ(frname, res.FrameName);
+    ASSERT_EQ(frcode, res.FrameId);
+    ASSERT_FALSE(failed_c());
+}
+
+TEST(API, GetBodyInformationGmWithoutRadii)
+{
+    // A GM in gm_de431.tpc, no RADII in pck00011.tpc: before #672 the failed RADII read left GM 0 and the frame unread
+    ExpectBodyReadAsSpice(2000002, "PALLAS", "IAU_PALLAS", 10102);
+    ExpectBodyReadAsSpice(902, "NIX", "IAU_NIX", 10108);
+}
+
+TEST(API, GetBodyInformationRadiiWithoutGm)
+{
+    // BODY507_RADII = (40 40 40) km in pck00011.tpc, no BODY507_GM
+    ASSERT_FALSE(bodfnd_c(507, "GM"));
+    SpiceInt frcode{};
+    SpiceChar frname[32]{};
+    SpiceBoolean frameFound{false};
+    cnmfrm_c("ELARA", 32, &frcode, frname, &frameFound);
+    ASSERT_TRUE(frameFound);
+
+    auto res = GetCelestialBodyInfoProxy(507);
+    ASSERT_EQ(507, res.Id);
+    ASSERT_STREQ("ELARA", res.Name);
+    ASSERT_EQ(0.0, res.GM);
+    ASSERT_EQ(40000.0, res.Radii.x);
+    ASSERT_EQ(40000.0, res.Radii.y);
+    ASSERT_EQ(40000.0, res.Radii.z);
+    ASSERT_STREQ("IAU_ELARA", frname);
+    ASSERT_STREQ(frname, res.FrameName);
+    ASSERT_EQ(10029, frcode);
+    ASSERT_EQ(frcode, res.FrameId);
+}
+
+TEST(API, GetBodyInformationSolarSystemBarycenterGm)
+{
+    // The GM of the solar system barycentre is the sum of the GM of the barycentres 1 to 9 and of the Sun
+    double expected{};
+    for (int i = 1; i <= 10; ++i)
+    {
+        SpiceInt dim{};
+        SpiceDouble gm[1]{};
+        bodvcd_c(i, "GM", 1, &dim, gm);
+        expected += gm[0] * 1E+09;
+    }
+    ASSERT_FALSE(failed_c());
+
+    auto res = GetCelestialBodyInfoProxy(0);
+    ASSERT_EQ(0, res.Id);
+    ASSERT_STREQ("SOLAR SYSTEM BARYCENTER", res.Name);
+    ASSERT_EQ(expected, res.GM);
+    ASSERT_STREQ("", res.FrameName);
+}
+
+TEST(API, GetBodyInformationBarycenter)
+{
+    SpiceInt frcode{};
+    SpiceChar frname[32]{};
+    SpiceBoolean frameFound{true};
+    cnmfrm_c("EARTH BARYCENTER", 32, &frcode, frname, &frameFound);
+    ASSERT_FALSE(frameFound);
+
+    // A named body first, so that the stack holds its frame name
+    auto earth = GetCelestialBodyInfoProxy(399);
+    ASSERT_STREQ("ITRF93", earth.FrameName);
+    auto res = GetCelestialBodyInfoProxy(3);
+    ASSERT_EQ(3, res.Id);
+    ASSERT_STREQ("EARTH BARYCENTER", res.Name);
+    ASSERT_STREQ("", res.FrameName);
+    ASSERT_EQ(0, res.FrameId);
+}
+
 TEST(API, GetBodyInformationInvalidId)
 {
-    auto res = GetCelestialBodyInfoProxy(398);
+    for (int id: {398, 12345678})
+    {
+        SpiceChar name[32]{};
+        SpiceBoolean found{true};
+        bodc2n_c(id, 32, name, &found);
+        ASSERT_FALSE(found);
+
+        // A named body first, so that the stack holds its name and frame name
+        auto earth = GetCelestialBodyInfoProxy(399);
+        ASSERT_STREQ("EARTH", earth.Name);
+        auto res = GetCelestialBodyInfoProxy(id);
+        ASSERT_EQ(-1, res.Id);
+        ASSERT_STREQ("", res.Name);
+        ASSERT_STREQ("", res.FrameName);
+        ASSERT_EQ(0, res.FrameId);
+        ASSERT_EQ(0.0, res.GM);
+        ASSERT_EQ(0.0, res.Radii.x);
+        ASSERT_EQ(0.0, res.Radii.y);
+        ASSERT_EQ(0.0, res.Radii.z);
+    }
 }
 
 TEST(API, TransformFrame)

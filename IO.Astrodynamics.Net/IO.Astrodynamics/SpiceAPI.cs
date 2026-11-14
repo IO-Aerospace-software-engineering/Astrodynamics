@@ -611,7 +611,7 @@ public class SpiceAPI
     /// <returns></returns>
     /// <exception cref="ArgumentException">A body modeled as an ellipsoid without a frame given is not a celestial body
     /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
-    /// process to read for a named spacecraft (#560).</exception>
+    /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
@@ -623,10 +623,10 @@ public class SpiceAPI
         lock (lockObject)
         {
             string frontFrameName = frontShape == ShapeType.Ellipsoid
-                ? frontFrame?.Name ?? GetCelestialBodyInfoProxy(frontBodyId).FrameName
+                ? frontFrame?.Name ?? ReadCelestialBodyInfo(frontBodyId, nameof(frontBodyId)).FrameName
                 : string.Empty;
             string targetFrameName = targetShape == ShapeType.Ellipsoid
-                ? targetFrame?.Name ?? GetCelestialBodyInfoProxy(targetId).FrameName
+                ? targetFrame?.Name ?? ReadCelestialBodyInfo(targetId, nameof(targetId)).FrameName
                 : string.Empty;
             var windows = new Window[1000];
             for (var i = 0; i < 1000; i++)
@@ -794,7 +794,7 @@ public class SpiceAPI
     {
         ArgumentNullException.ThrowIfNull(frame);
         // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
-        var observer = CelestialItem.Create(observerId);
+        var observer = CreateObserver(observerId);
         lock (lockObject)
         {
             const int messageSize = 10000;
@@ -843,11 +843,34 @@ public class SpiceAPI
     {
         ArgumentNullException.ThrowIfNull(frame);
         // Built before the lock (#623): the observer of a Lagrange point reads Barycenters, whose type initializer takes it
-        var observer = CelestialItem.Create(observerId);
+        var observer = CreateObserver(observerId);
         lock (lockObject)
         {
             return ReadEphemerisAtGivenEpoch(epoch, observer, targetId, frame, aberration);
         }
+    }
+
+    /// <summary>
+    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier (<see cref="IsSiteId"/>), from
+    /// the kernels (<c>new Site(id % 1000, its SPICE name, new CelestialBody(id / 1000))</c>, which reads the site's state at
+    /// J2000 TDB), otherwise <see cref="CelestialItem.Create"/> (#672). Built before the lock (#623).
+    /// </summary>
+    private ILocalizable CreateObserver(int observerId)
+    {
+        if (!IsSiteId(observerId)) return CelestialItem.Create(observerId);
+        string name = GetCelestialBodyInfo(observerId).Name;
+        return new Surface.Site(observerId % 1000, name, new Body.CelestialBody(observerId / 1000));
+    }
+
+    /// <summary>
+    /// Whether <paramref name="naifId"/> is the identifier of a site: its body's identifier times 1000 plus its own (1 to
+    /// 999), the body a planet or a moon (101 to 999 without the Lagrange points 391 to 395), as <see cref="Surface.Site.NaifId"/>
+    /// builds it (399013 is DSS-13 on the Earth).
+    /// </summary>
+    internal static bool IsSiteId(int naifId)
+    {
+        int body = naifId / 1000;
+        return naifId % 1000 > 0 && body is > 100 and < 1000 && body is not (>= 391 and <= 395);
     }
 
     /// <summary>
@@ -1086,16 +1109,38 @@ public class SpiceAPI
     /// </summary>
     /// <param name="naifId"></param>
     /// <returns></returns>
+    /// <remarks>
+    /// A body the kernel pool gives no <c>BODYnnn_RADII</c> has radii 0, one it gives no <c>BODYnnn_GM</c> a GM of 0, and a
+    /// barycentre has no frame (an empty <c>FrameName</c>, <c>FrameId</c> 0); before #672 a missing variable left the GM 0
+    /// and the frame name undefined.
+    /// </remarks>
     /// <exception cref="ArgumentException"><paramref name="naifId"/> is not the identifier of a celestial body
     /// (<see cref="IsCelestialBodyId"/>): a spacecraft, an instrument or a site of a negative identifier, 11 to 100, or 1000.
-    /// The native layer reads the centre of motion of any named identifier and ended the process for one of them (#560).</exception>
+    /// The native layer reads the centre of motion of any named identifier and ended the process for one of them (#560).
+    /// Or SPICE does not name it, neither by its built-in names nor by the loaded kernels (#672: the record held the name of
+    /// a previous call or undefined bytes).</exception>
     public CelestialBody GetCelestialBodyInfo(int naifId)
     {
         ThrowIfNotCelestialBody(naifId, nameof(naifId));
         lock (lockObject)
         {
-            return GetCelestialBodyInfoProxy(naifId);
+            return ReadCelestialBodyInfo(naifId, nameof(naifId));
         }
+    }
+
+    // The body information of an identifier SPICE names, under the lock: the record's Id, -1 until bodc2n_c finds the
+    // identifier, is the found flag (#672)
+    private static CelestialBody ReadCelestialBodyInfo(int naifId, string paramName)
+    {
+        var info = GetCelestialBodyInfoProxy(naifId);
+        if (info.Id != naifId)
+        {
+            throw new ArgumentException(
+                $"The NAIF identifier {naifId} has no name in SPICE: neither SPICE's built-in names nor the loaded kernels name it.",
+                paramName);
+        }
+
+        return info;
     }
 
     /// <summary>
