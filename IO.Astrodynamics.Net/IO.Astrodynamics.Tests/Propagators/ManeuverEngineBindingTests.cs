@@ -44,9 +44,9 @@ public class ManeuverEngineBindingTests
     private const double Fuel = 3000.0;
 
     // The prograde front of the attitude record against the unit velocity of the stored states at the outputs, with
-    // BodyFront +X, worst over the outputs; measured on Linux x64 (this PR): RK7(8) 8.141e-13 rad, Velocity-Verlet
-    // 8.117e-13 rad (the static axes left it at π/2 on main). Provisional, twice the Linux worst, to be set from the CI
-    // logs of Linux, Windows and macOS arm64
+    // BodyFront +X, worst over the outputs (the static axes left it at π/2 on main); CI run 43591645844 (2026-11-14):
+    // RK7(8) 8.141e-13 rad on Linux, Windows and macOS arm64, Velocity-Verlet 8.117e-13 rad on the three. Twice the
+    // worst of the three platforms, 8.141e-13 rad
     private const double ProgradeFrontTolerance = 1.7e-12;
 
     private readonly ITestOutputHelper _output;
