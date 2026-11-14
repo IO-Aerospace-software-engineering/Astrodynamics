@@ -101,8 +101,8 @@ spacecraft.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator()
 ```
 
 With EGM2008 at degree 10 and no drag, the same ISS is 0.555 km, 0.788 km and 7.217 km from SGP4 after 1 h, 6 h and
-24 h. The command `astro propagate -t` does so, on the Earth of the CLI (EGM2008 at degree 10, the U.S. Standard
-Atmosphere 1976 with `-a`); its centre of motion must be the Earth (399).
+24 h. The command `astro propagate -t` does so, on the Earth of the CLI (EGM2008 at the degree of `-n`, 10 by default,
+the U.S. Standard Atmosphere 1976 with `-a`); its centre of motion must be the Earth (399).
 
 A TLE spacecraft reads its stored states after a numerical propagation by any path (`GetEphemeris`, `WriteEphemeris`,
 the window searches, the conjunction analysis with the check of #527, the avoidance options on its force model), and

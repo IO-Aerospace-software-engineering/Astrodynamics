@@ -1204,9 +1204,10 @@ public class SpiceAPI
     /// builds it (399013 is DSS-13 on the Earth).
     /// </summary>
     /// <remarks>
-    /// The CLI keeps its own rule on purpose (<c>Helpers.CreateLocalizable</c>: 100001 to 999998, the site named
-    /// <c>site&lt;id&gt;</c>), as #672 decided: this rule is internal and the CLI has no access to it. The two may give a
-    /// different observer for the same identifier (a name, a Lagrange point or x000).
+    /// The CLI keeps its own rule on purpose (<c>Helpers.IsSiteIdentifier</c>: 100001 to 999998, which
+    /// <c>Helpers.CreateLocalizable</c> builds as the site named <c>site&lt;id&gt;</c> and <c>sub-point</c> rejects), as
+    /// #672 decided: this rule is internal and the CLI has no access to it. The two may give a different observer for the
+    /// same identifier (a name, a Lagrange point or x000).
     /// </remarks>
     internal static bool IsSiteId(int naifId)
     {

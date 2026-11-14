@@ -32,8 +32,8 @@ public class PropagateCommand
         bool useSolarRadiationPressure,
         [Option('a', Description = "Include atmospheric drag perturbation (Earth and Mars only)")]
         bool useAtmosphericDrag,
-        [Option('n', Description = "Number of degrees used by earth geopotential model (Max. 100")]
-        ushort earthGeopotentialDegree = 10,
+        [Option('n', Description = "Degree of the Earth geopotential (EGM2008), at most 100")]
+        ushort earthGeopotentialDegree = Helpers.EarthGeopotentialDefaultDegree,
         [Argument(Description = "Body mass")] double bodyMass = 100.0,
         [Argument(Description = "Body projected area")]
         double area = 1.0,
@@ -43,16 +43,25 @@ public class PropagateCommand
         int[] celestialBodies = null
     )
     {
+        // The embedded model ends at degree 100, and a field pads the degrees beyond its file with zeros (#681); checked
+        // whatever the centre, before anything is loaded or written
+        if (earthGeopotentialDegree > Helpers.EarthGeopotentialMaximumDegree)
+        {
+            throw new ArgumentException(
+                $"The degree of the Earth geopotential is at most {Helpers.EarthGeopotentialMaximumDegree}, the degree of the embedded EGM2008 model; {earthGeopotentialDegree} was given",
+                nameof(earthGeopotentialDegree));
+        }
+
         //Load kernels
         SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         //Initialize date
         var window = Helpers.ConvertWindowInput(windowParameters);
-        var initialOrbit = Helpers.ConvertToOrbitalParameters(orbitalParameters);
+        var initialOrbit = Helpers.ConvertToOrbitalParameters(orbitalParameters, earthGeopotentialDegree);
         if (initialOrbit is TLE tle)
         {
-            // The SGP4 state at the start of the window, on the Earth of the CLI (#675)
-            initialOrbit = Helpers.TleStartState(tle, orbitalParameters.CenterOfMotionId, window);
+            // The SGP4 state at the start of the window, on the Earth of the CLI (#675), its geopotential of degree -n (#681)
+            initialOrbit = Helpers.TleStartState(tle, orbitalParameters.CenterOfMotionId, window, earthGeopotentialDegree);
         }
 
         Clock clock = new Clock($"clock{bodyName}", 65536);

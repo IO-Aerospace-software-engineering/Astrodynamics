@@ -22,6 +22,18 @@ namespace IO.Astrodynamics.CLI;
 public class Helpers
 {
     /// <summary>
+    /// The degree of the embedded EGM2008 model of the Earth, <c>Data/EGM2008_to100_TideFree.txt</c>, whose last line holds
+    /// n = m = 100: a field pads the degrees beyond its file with zeros, so a degree above it is an argument error.
+    /// </summary>
+    internal const ushort EarthGeopotentialMaximumDegree = 100;
+
+    /// <summary>
+    /// The degree of the Earth geopotential when <c>propagate -n</c> is not given, and of the conversions of
+    /// <c>orbital-parameters-converter</c>, which read the GM only.
+    /// </summary>
+    internal const ushort EarthGeopotentialDefaultDegree = 10;
+
+    /// <summary>
     /// The kernels path of a command, as <see cref="SpiceAPI.LoadKernels"/> takes it: a file (a kernel or a meta-kernel) when
     /// one exists at the path, a directory otherwise (#673: every command passed a directory, from which a file loaded
     /// nothing). A path that does not exist loads nothing, as before.
@@ -38,7 +50,7 @@ public class Helpers
     {
         ILocalizable localizableObject = null;
 
-        if (objectId is > 100_000 and < 999_999)
+        if (IsSiteIdentifier(objectId))
         {
             // A site's NAIF identifier is its body's times 1000 plus its own (399013 is DSS-13 on the Earth). Kept apart on
             // purpose from SpiceAPI.IsSiteId, the rule of SpiceAPI.ReadEphemeris's observer (#672), which is internal
@@ -51,6 +63,15 @@ public class Helpers
         }
 
         return localizableObject;
+    }
+
+    /// <summary>
+    /// Whether a NAIF identifier is a site's: its body's identifier times 1000 plus its own (399013 is DSS-13 on the Earth).
+    /// </summary>
+    /// <param name="objectId">The NAIF identifier.</param>
+    internal static bool IsSiteIdentifier(int objectId)
+    {
+        return objectId is > 100_000 and < 999_999;
     }
 
     /// <summary>
@@ -150,7 +171,7 @@ public class Helpers
     }
 
     internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(string orbitalParametersInput, int centerofMotion, string epoch, string originalFrame,
-        bool fromStateVector, bool fromKeplerian, bool fromEquinoctial, bool fromTLE, ushort geopotentialDegrees = 10)
+        bool fromStateVector, bool fromKeplerian, bool fromEquinoctial, bool fromTLE, ushort geopotentialDegrees = EarthGeopotentialDefaultDegree)
     {
         if (originalFrame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
         {
@@ -191,7 +212,7 @@ public class Helpers
     /// The centre of motion of the CLI: the Earth with the embedded EGM2008 at <paramref name="geopotentialDegrees"/> and
     /// the U.S. Standard Atmosphere 1976, Mars with its standard atmosphere, any other body as the kernels define it.
     /// </summary>
-    internal static CelestialBody CreateCenterOfMotion(int centerOfMotion, ushort geopotentialDegrees = 10)
+    internal static CelestialBody CreateCenterOfMotion(int centerOfMotion, ushort geopotentialDegrees = EarthGeopotentialDefaultDegree)
     {
         GeopotentialModelParameters geopotentialModelParameters = null;
         IAtmosphericModel atmosphericModel = null;
@@ -211,10 +232,11 @@ public class Helpers
 
     /// <summary>
     /// The initial orbit of a propagation from a TLE (#675): its SGP4 state at the TDB start of the window, in TEME, on
-    /// the Earth of the CLI, which carries its geopotential and atmosphere (the propagation rotates it once to ICRF).
+    /// the Earth of the CLI, which carries its geopotential, the embedded EGM2008 to <paramref name="geopotentialDegrees"/>
+    /// (the degree of <c>propagate -n</c>, #681), and atmosphere (the propagation rotates it once to ICRF).
     /// </summary>
     /// <exception cref="ArgumentException">The centre of motion is not the Earth: a TLE describes an Earth orbit.</exception>
-    internal static StateVector TleStartState(TLE tle, int centerOfMotion, in Window window)
+    internal static StateVector TleStartState(TLE tle, int centerOfMotion, in Window window, ushort geopotentialDegrees)
     {
         if (centerOfMotion != PlanetsAndMoons.EARTH.NaifId)
         {
@@ -224,13 +246,19 @@ public class Helpers
 
         var start = window.StartDate.ToTDB();
         var sgp4 = tle.ToStateVector(start);
-        return new StateVector(sgp4.Position, sgp4.Velocity, CreateCenterOfMotion(centerOfMotion), start, Frame.TEME);
+        return new StateVector(sgp4.Position, sgp4.Velocity, CreateCenterOfMotion(centerOfMotion, geopotentialDegrees), start, Frame.TEME);
     }
 
-    internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(Commands.Parameters.OrbitalParameters orbitalParameters)
+    /// <summary>
+    /// The orbital parameters of the command's arguments, about a centre whose geopotential, for the Earth, is the embedded
+    /// EGM2008 model to <paramref name="geopotentialDegrees"/> (#681: the degree of <c>propagate -n</c>, which no code read).
+    /// </summary>
+    internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(Commands.Parameters.OrbitalParameters orbitalParameters,
+        ushort geopotentialDegrees)
     {
         return ConvertToOrbitalParameters(orbitalParameters.OrbitalParametersValues, orbitalParameters.CenterOfMotionId, orbitalParameters.OrbitalParametersEpoch,
-            orbitalParameters.Frame, orbitalParameters.FromStateVector, orbitalParameters.FromKeplerian, orbitalParameters.FromEquinoctial, orbitalParameters.FromTLE);
+            orbitalParameters.Frame, orbitalParameters.FromStateVector, orbitalParameters.FromKeplerian, orbitalParameters.FromEquinoctial, orbitalParameters.FromTLE,
+            geopotentialDegrees);
     }
 
     internal static Planetodetic ConvertToPlanetodetic(string value)
