@@ -46,6 +46,12 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   same kind for an SPK, a CK, a PCK, a DSK or an EK; nothing repairs the failure of a meta-kernel, whose files the library
   does not read, nor that of an old DAF, whose kind it does not tell. Every path the call matched is unloaded before it
   throws. Unload the deleted kernel to restore the pool and the precedence.
+- A binary kernel (SPK, CK, binary PCK) that SPICE failed to open again stays open in SPICE for the life of the process:
+  KEEPER records the handle 0 for it, so its unload, and `ClearKernels` (`kclear_c`), remove it from the list of loaded
+  kernels but close nothing, and SPICE still searches it. Once more than 23 binary kernels are in use (the logical units
+  of CSPICE's handle manager), its unit can be released, and a later search of its kind fails to reconnect it
+  (`SPICE(FILEOPENFAIL)`): for a PCK, every IAU frame, whose search goes through the binary PCKs first (measured with
+  CSPICE N0067). Do not delete a loaded binary kernel; if one was deleted, restart the process.
 - SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
   File Naming"), and `LoadKernels` hands it the full path: a kernel at a longer path fails with
   `SPICE(FILENAMETOOLONG)`. Load it through a meta-kernel that names it by a shorter relative path, or move it.

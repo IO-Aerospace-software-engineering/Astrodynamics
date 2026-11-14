@@ -1,9 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Frames;
@@ -11,6 +9,7 @@ using IO.Astrodynamics.Kernels;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using static IO.Astrodynamics.Tests.TestKernelWriter;
 
 namespace IO.Astrodynamics.Tests;
 
@@ -24,9 +23,12 @@ namespace IO.Astrodynamics.Tests;
 /// Each frame is rotated from J2000 by its angle about z (TKFRAME_ANGLES (angle, 0, 0) about the axes (3, 2, 1), NAIF,
 /// Frames Required Reading, "Defining a TK Frame Using Euler Angles"), read back by SPICE through
 /// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/>, which throws once the frame is out of the pool. A text kernel
-/// is closed by SPICE after its load, so a loaded text kernel can be deleted on every platform; a binary kernel (the copies
-/// of the moon PCK of <c>Data/SolarSystem</c>) stays open, and the tests that delete a loaded one are skipped on Windows
-/// (<see cref="NotOnWindowsFactAttribute"/>). The frame ids and frame class ids 1999901 and up are not defined by
+/// is closed by SPICE after its load, so a loaded text kernel can be deleted on every platform, and SPICE keeps nothing of it
+/// once unloaded. A binary kernel (the copies of the moon PCK of <c>Data/SolarSystem</c>) stays open: the scenarios that
+/// delete a loaded one run in the child process <c>IO.Astrodynamics.Tests.KernelUnload</c>, because a failed reopening
+/// leaves the deleted kernel open in SPICE for good, which made the IAU frames of other test classes fail (#673), and are
+/// skipped on Windows, where it cannot be deleted (<see cref="NotOnWindowsTheoryAttribute"/>). The kernels are written by
+/// <see cref="TestKernelWriter"/>. The frame ids and frame class ids 1999901 and up are not defined by
 /// <c>Data/SolarSystem</c> (<see cref="KernelShadowing"/>), and every kernel is unloaded in <see cref="Dispose"/>.
 /// </remarks>
 public class KernelRegistryTests : IDisposable
@@ -56,32 +58,6 @@ public class KernelRegistryTests : IDisposable
     private static FileSystemInfo[] Under(DirectoryInfo folder) => SpiceAPI.Instance.GetLoadedKernels()
         .Where(k => k.FullName == folder.FullName || k.FullName.StartsWith(folder.FullName + Path.DirectorySeparatorChar, StringComparison.Ordinal))
         .ToArray();
-
-    // A TK frame kernel rotated from J2000 by angleDeg about z
-    internal static FileInfo WriteFrameKernel(DirectoryInfo folder, string fileName, int id, string frameName, double angleDeg)
-    {
-        folder.Create();
-        var file = new FileInfo(Path.Combine(folder.FullName, fileName));
-        File.WriteAllText(file.FullName,
-            $"KPL/FK\n\\begindata\nFRAME_{frameName} = {id}\nFRAME_{id}_NAME = '{frameName}'\nFRAME_{id}_CLASS = 4\n" +
-            $"FRAME_{id}_CLASS_ID = {id}\nFRAME_{id}_CENTER = 399\nTKFRAME_{id}_RELATIVE = 'J2000'\nTKFRAME_{id}_SPEC = 'ANGLES'\n" +
-            $"TKFRAME_{id}_UNITS = 'DEGREES'\nTKFRAME_{id}_AXES = ( 3, 2, 1 )\n" +
-            $"TKFRAME_{id}_ANGLES = ( {angleDeg.ToString("F1", CultureInfo.InvariantCulture)}, 0.0, 0.0 )\n\\begintext\n");
-        return file;
-    }
-
-    // A meta-kernel that loads the given kernel. A string value of the kernel pool holds 80 characters: FURNSH cuts a longer
-    // name of KERNELS_TO_LOAD there and does not load the kernel, as under the temporary folder of macOS. The name is written
-    // in pieces of at most 79 characters, each but the last ended by '+', which FURNSH joins to the next one (measured with
-    // CSPICE N0067)
-    private static FileInfo WriteMetaKernel(FileInfo metaKernel, string kernel)
-    {
-        var pieces = kernel.Chunk(79).Select(x => new string(x)).ToArray();
-        var values = string.Join("\n", pieces.Select((x, i) => i < pieces.Length - 1 ? $"'{x}+'" : $"'{x}'"));
-        metaKernel.Directory!.Create();
-        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = (\n{values}\n)\n\\begintext\n");
-        return metaKernel;
-    }
 
     // The rotation angle of the frame from ICRF, in degrees (the sign of a quaternion is free); throws once SPICE no longer
     // knows the frame
@@ -384,128 +360,30 @@ public class KernelRegistryTests : IDisposable
         Assert.Equal([after.FullName], Under(_root).Select(k => k.FullName));
     }
 
-    // A copy of the moon PCK of Data/SolarSystem whose one segment is given the frame class id classId, which
-    // Data/SolarSystem does not define (KernelShadowing), and the reference frame referenceFrame (J2000, 1, in the moon
-    // PCK). The layout is read from the file itself and checked: its DAF file record gives ND = 2 at byte 8, NI = 5 at
-    // byte 12 and the first summary record at byte 76, which holds three doubles, then the segment's two doubles and its
-    // five integers, the class id first, the reference frame second
-    private static FileInfo WritePck(DirectoryInfo folder, string fileName, int classId, int referenceFrame = 1)
+    // A child that ends takes about 1 s (Linux x64, 3 cores); the limit is 60 times that, for a slow CI machine
+    private static readonly TimeSpan ChildTimeout = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// The scenarios in which SPICE fails to open a deleted binary PCK again, each run in the child process
+    /// <c>IO.Astrodynamics.Tests.KernelUnload</c>, which loads <c>Data/SolarSystem</c>, plays the scenario and exits 0 when
+    /// it held (its scenarios and their measurements in its <c>Program</c>). In this process, the deleted PCK of such a
+    /// failure stays open in SPICE after its unload, KEEPER's handle for it being 0, and once its logical unit is released the
+    /// PCK searches of every IAU frame fail to reconnect it (#673, measured with CSPICE N0067; CI of 725ee1a and a993265).
+    /// </summary>
+    [NotOnWindowsTheory("A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open")]
+    [InlineData("UnloadKernels_OfAFolderOfTwoPcks_WhoseSecondIsDeleted_RestoresThePrecedence")]
+    [InlineData("UnloadKernels_OfAPck_WhenSpiceCannotOpenAnotherPckAgain_Throws_AndThePcksLoadedBeforeTakePrecedence")]
+    [InlineData("UnloadKernels_OfAMetaKernelOfAPckThenATextKernel_WhenSpiceCannotOpenAnotherPckAgain_Throws")]
+    public void UnloadKernels_WhenSpiceCannotOpenAnotherPckAgain_InAChildProcess(string scenario)
     {
-        var bytes = File.ReadAllBytes("Data/SolarSystem/moon_pa_de421_1900-2050.bpc");
-        Assert.Equal("DAF/PCK "u8.ToArray(), bytes[..8]);
-        Assert.Equal(2, BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(8)));
-        Assert.Equal(5, BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(12)));
-        Assert.Equal("LTL-IEEE"u8.ToArray(), bytes[88..96]);
-        int summaries = (BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(76)) - 1) * 1024;
-        Assert.Equal(1.0, BinaryPrimitives.ReadDoubleLittleEndian(bytes.AsSpan(summaries + 16)));
-        int classIdOffset = summaries + 24 + 2 * 8;
-        Assert.Equal(31006, BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(classIdOffset)));
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(classIdOffset), classId);
-        Assert.Equal(1, BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(classIdOffset + 4)));
-        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(classIdOffset + 4), referenceFrame);
-        folder.Create();
-        var file = new FileInfo(Path.Combine(folder.FullName, fileName));
-        File.WriteAllBytes(file.FullName, bytes);
-        return file;
-    }
+        string child = ChildProcess.AssemblyPath("KernelUnload", "IO.Astrodynamics.Tests.KernelUnload.dll");
+        Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");
 
-    // Writes files named by attempt until the folder lists the first one written by write(i) before the given file: a folder
-    // is loaded in the order of its listing, the file system's
-    private static FileInfo ListedBefore(DirectoryInfo folder, FileInfo listedLast, Func<int, FileInfo> write)
-    {
-        for (int i = 0; i < 64; i++)
-        {
-            var candidate = write(i);
-            var listing = Directory.EnumerateFileSystemEntries(folder.FullName).ToArray();
-            if (listing.Length == 2 && listing[0] == candidate.FullName && listing[1] == listedLast.FullName)
-            {
-                return candidate;
-            }
+        var result = ChildProcess.Run(child, ChildTimeout, Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"), scenario);
 
-            candidate.Delete();
-        }
-
-        throw new InvalidOperationException($"no name lists a file before {listedLast.FullName}");
-    }
-
-    // A PCK frame of the class classId, centred on the Moon, and three loads: a PCK P of that class relative to J2000, a
-    // folder of two PCKs of other classes (X listed before D), then a PCK Q of that class relative to ECLIPJ2000 (17), which
-    // takes precedence over P (NAIF, PCK Required Reading: the PCK loaded last). Returns the folder, X, D and the rotations
-    // of the frame from ICRF with P alone and with Q
-    private (DirectoryInfo Folder, FileInfo X, FileInfo D, Astrodynamics.Math.Quaternion WithP, Astrodynamics.Math.Quaternion WithQ) LoadPcksAroundAFolder(int classId, string frameName)
-    {
-        var frame = new FileInfo(Path.Combine(_root.FullName, "Frame", "pck.tf"));
-        frame.Directory!.Create();
-        File.WriteAllText(frame.FullName,
-            $"KPL/FK\n\\begindata\nFRAME_{frameName} = {classId}\nFRAME_{classId}_NAME = '{frameName}'\nFRAME_{classId}_CLASS = 2\n" +
-            $"FRAME_{classId}_CLASS_ID = {classId}\nFRAME_{classId}_CENTER = 301\n\\begintext\n");
-        var p = WritePck(new DirectoryInfo(Path.Combine(_root.FullName, "Before")), "p.bpc", classId);
-        var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Pcks"));
-        var d = WritePck(folder, "d.bpc", classId + 2);
-        var x = ListedBefore(folder, d, i => WritePck(folder, $"x{i}.bpc", classId + 1));
-        var q = WritePck(new DirectoryInfo(Path.Combine(_root.FullName, "After")), "q.bpc", classId, 17);
-        SpiceAPI.Instance.LoadKernels(frame);
-        SpiceAPI.Instance.LoadKernels(p);
-        SpiceAPI.Instance.LoadKernels(folder);
-        var withP = SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame(frameName), Frames.Frame.ICRF).Rotation;
-        SpiceAPI.Instance.LoadKernels(q);
-        var withQ = SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame(frameName), Frames.Frame.ICRF).Rotation;
-
-        // The two rotations differ by the obliquity of the ecliptic, about 23.4°
-        Assert.True(AngleBetweenDeg(withP, withQ) > 20.0);
-        return (folder, x, d, withP, withQ);
-    }
-
-    // The angle of the rotation from a to b, in degrees (the sign of a quaternion is free)
-    private static double AngleBetweenDeg(Astrodynamics.Math.Quaternion a, Astrodynamics.Math.Quaternion b)
-    {
-        double dot = a.W * b.W + a.VectorPart.X * b.VectorPart.X + a.VectorPart.Y * b.VectorPart.Y + a.VectorPart.Z * b.VectorPart.Z;
-        return 2.0 * System.Math.Acos(System.Math.Min(1.0, System.Math.Abs(dot))) * Astrodynamics.Constants.Rad2Deg;
-    }
-
-    [NotOnWindowsFact("A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open")]
-    public void UnloadKernels_OfAFolderOfTwoPcks_WhoseSecondIsDeleted_RestoresThePrecedence()
-    {
-        // Arrange: P, the folder [X, D] and Q, D deleted after the load. SPICE unloads a binary PCK by opening again the other
-        // PCKs still loaded, in their load order (unload_c --> UNLOAD --> PCKLOF --> DAFOPR): the unload of X opens P again,
-        // which then takes precedence over Q, and fails on D; the unload of D opens P and Q again, which restores the
-        // precedence of Q (measured with CSPICE N0067)
-        var (folder, _, d, _, withQ) = LoadPcksAroundAFolder(1999955, "IOA_F02_PCK_A");
-
-        lock (SpiceAPI.SyncRoot)
-        {
-            File.Delete(d.FullName);
-
-            // Act: the first unload fails and the second one repairs it
-            SpiceAPI.Instance.UnloadKernels(folder);
-        }
-
-        // Assert: nothing of the folder is listed, and Q takes precedence over P again
-        Assert.DoesNotContain(folder.FullName, Under(_root).Select(k => k.FullName));
-        Assert.Equal(0.0, AngleBetweenDeg(withQ, SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame("IOA_F02_PCK_A"), Frames.Frame.ICRF).Rotation), 9);
-    }
-
-    [NotOnWindowsFact("A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open")]
-    public void UnloadKernels_OfAPck_WhenSpiceCannotOpenAnotherPckAgain_Throws_AndThePcksLoadedBeforeTakePrecedence()
-    {
-        // Arrange: P, the folder [X, D] and Q, D deleted after the load
-        var (folder, x, d, withP, withQ) = LoadPcksAroundAFolder(1999958, "IOA_F02_PCK_B");
-
-        lock (SpiceAPI.SyncRoot)
-        {
-            File.Delete(d.FullName);
-
-            // Act: the unload of X opens P again, then fails on D, before Q
-            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(x));
-
-            // Assert: P takes precedence over Q, loaded after it, until a PCK unload succeeds (measured with CSPICE N0067)
-            Assert.Contains(x.FullName, exception.Message);
-            Assert.Equal(0.0, AngleBetweenDeg(withP, SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame("IOA_F02_PCK_B"), Frames.Frame.ICRF).Rotation), 9);
-            SpiceAPI.Instance.UnloadKernels(d);
-        }
-
-        Assert.DoesNotContain(folder.FullName, Under(_root).Select(k => k.FullName));
-        Assert.Equal(0.0, AngleBetweenDeg(withQ, SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame("IOA_F02_PCK_B"), Frames.Frame.ICRF).Rotation), 9);
+        Assert.True(result.HasValue, $"The child ({scenario}) did not end within {ChildTimeout.TotalSeconds} s.");
+        Assert.True(result.Value.ExitCode == 0,
+            $"The child ({scenario}) exited {result.Value.ExitCode}. Output: {result.Value.Output} Error: {result.Value.Error}");
     }
 
     [Fact]
@@ -547,9 +425,9 @@ public class KernelRegistryTests : IDisposable
         // PATH_SYMBOLS, PATH_VALUES); the unload of X fails on D, and that of D reads the text kernels again without it
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Comment"));
         var gone = WriteFrameKernel(folder, "d.tf", 1999964, "IOA_F02_CMT_D", 45.0);
-        ListedBefore(folder, gone, i =>
+        ListedBefore(folder, gone, stem =>
         {
-            var file = WriteFrameKernel(folder, $"x{i}.tf", 1999965, "IOA_F02_CMT_X", 30.0);
+            var file = WriteFrameKernel(folder, $"{stem}.tf", 1999965, "IOA_F02_CMT_X", 30.0);
             File.AppendAllText(file.FullName, "This frame kernel is not meant for KERNELS_TO_LOAD.\n");
             return file;
         });
@@ -568,40 +446,6 @@ public class KernelRegistryTests : IDisposable
         Assert.Empty(Under(_root));
         AssertUnknown("IOA_F02_CMT_X");
         AssertUnknown("IOA_F02_CMT_D");
-    }
-
-    [NotOnWindowsFact("A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open")]
-    public void UnloadKernels_OfAMetaKernelOfAPckThenATextKernel_WhenSpiceCannotOpenAnotherPckAgain_Throws()
-    {
-        // Arrange: a binary PCK D, deleted after its load, and a folder of a meta-kernel that names another PCK, listed
-        // before a text kernel. The meta-kernel's unload unloads that PCK, which opens D again and fails; the text kernel's
-        // unload reads the text kernels again, not the PCKs, and repairs nothing (measured with CSPICE N0067)
-        var gone = WritePck(new DirectoryInfo(Path.Combine(_root.FullName, "Deleted")), "d.bpc", 1999952);
-        var pck = WritePck(new DirectoryInfo(Path.Combine(_root.FullName, "Pck")), "p.bpc", 1999953);
-        var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Batch"));
-        var text = WriteFrameKernel(folder, "x.tf", 1999954, "IOA_F02_MKP_X", 90.0);
-        var metaKernel = ListedBefore(folder, text, i => WriteMetaKernel(new FileInfo(Path.Combine(folder.FullName, $"m{i}.tm")), pck.FullName));
-        SpiceAPI.Instance.LoadKernels(gone);
-        SpiceAPI.Instance.LoadKernels(folder);
-        Assert.Equal(90.0, RotationAngleDeg("IOA_F02_MKP_X"), 12);
-
-        lock (SpiceAPI.SyncRoot)
-        {
-            File.Delete(gone.FullName);
-
-            // Act: before, the text kernel's success was taken for a repair of the meta-kernel's failure
-            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(folder));
-
-            // Assert
-            Assert.Contains(metaKernel.FullName, exception.Message);
-            Assert.Equal([gone.FullName], Under(_root).Select(k => k.FullName));
-
-            // The unload of the deleted PCK opens the others again without it
-            SpiceAPI.Instance.UnloadKernels(gone);
-        }
-
-        Assert.Empty(Under(_root));
-        AssertUnknown("IOA_F02_MKP_X");
     }
 
     // Text kernels as SPICE N0067 loads them, each with the type KEEPER gives it (kinfo_c, measured): a meta-kernel when its

@@ -1397,16 +1397,24 @@ release are listed under **Known limitations**.
   not tell (internal `SpiceAPI.UnloadRereads`, from the ID word of the file and, for a text kernel, the variables its
   data assigns, outside its comments and quoted strings, read at its load; the type KEEPER gives each text kernel of the
   tests is checked by `KernelRegistryTests` through `kdata`). Every entry the call matched is unloaded and removed
-  before it throws. `KernelRegistryTests` unloads a folder of a text kernel listed before an SPK while a deleted text
+  before it throws. A binary kernel SPICE failed to open again stays open in SPICE for the life of the process: KEEPER
+  records the handle 0 for it, its unload and `kclear_c` close nothing, and once its logical unit is released (more than
+  the 23 units of CSPICE's handle manager in use) every later search of its kind fails to reconnect it, for a PCK every
+  IAU frame (measured with CSPICE N0067; the CI of the first version of the PCK tests, run in the test process, failed
+  that way on Linux and macOS arm64, `TISBOD` → `PCKSFS` → `DAFBBS` → `ZZDDHHLU` on the deleted PCK, in other test
+  classes). The tests that delete a loaded binary kernel therefore run in the child process
+  `IO.Astrodynamics.Tests.KernelUnload`, which the test project builds and copies to `KernelUnload/`, and are skipped
+  on Windows, where a loaded binary kernel cannot be deleted. `KernelRegistryTests` unloads a folder of a text kernel listed before an SPK while a deleted text
   kernel is loaded, which throws and leaves the frame of the text kernel loaded after the deleted one unknown until
   the deleted one is unloaded; a meta-kernel of one SPK, whose unload SPICE fails the same way; a folder of two binary
-  PCKs whose second is deleted, between a PCK loaded before it and one loaded after it of the same frame class, whose
+  PCKs whose second is deleted (in the child process), between a PCK loaded before it and one loaded after it of the same frame class, whose
   unload no longer throws and leaves the later PCK in precedence; the unload of the first of those two PCKs alone, which
   throws and leaves the earlier PCK in precedence until the deleted one is unloaded; a folder of a meta-kernel of a PCK
-  listed before a text kernel while a deleted PCK is loaded, which throws, the text kernel's unload not taken for a
-  repair; a folder of two loaded folders whose second's kernel is deleted, whose unload no longer stops at the first
-  folder's failure; and a folder of a text kernel whose comment names `KERNELS_TO_LOAD`, listed before a deleted one,
-  whose unload no longer throws.
+  listed before a text kernel while a deleted PCK is loaded (in the child process), which throws, the text kernel's
+  unload not taken for a repair; a folder of two loaded folders whose second's kernel is deleted, whose unload no longer
+  stops at the first folder's failure; and a folder of a text kernel whose comment names `KERNELS_TO_LOAD`, listed
+  before a deleted one, whose unload no longer throws. A folder is loaded in the order of its listing, alphabetical on
+  NTFS: the tests name the file to list first from a to z in turn and check the order through `SpiceAPI.KernelFiles`.
 - **The command line ignored a kernel file or a meta-kernel given as its kernels path** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). The 13 commands that
   load kernels wrapped the argument in a `DirectoryInfo`, from which a file loaded nothing without an error:
   `astro ephemeris mk.tm …` failed with "Celestial celestialItem frame can't be defined". A file, a kernel or a
