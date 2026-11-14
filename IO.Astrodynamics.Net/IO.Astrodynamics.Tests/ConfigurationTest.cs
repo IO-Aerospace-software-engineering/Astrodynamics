@@ -85,11 +85,12 @@ public class ConfigurationTest
         dataProvider.AddStateOrientationToICRF(frame, date1, stateOrientation1);
         dataProvider.AddStateOrientationToICRF(frame, date2, stateOrientation2);
 
-        Assert.Throws<ArgumentException>(() => dataProvider.FrameTransformationToICRF(dateToInterpolate, frame));
+        // A known frame read outside its stored orientations: InvalidOperationException, as SPICE (#680)
+        Assert.Throws<InvalidOperationException>(() => dataProvider.FrameTransformationToICRF(dateToInterpolate, frame));
     }
 
     [Fact]
-    public void GetEphemeris_ThrowsArgumentException_WhenTargetNotFound()
+    public void GetEphemeris_ThrowsInvalidOperationException_WhenTargetNotFound()
     {
         var dataProvider = new MemoryDataProvider();
         var target = TestHelpers.EarthAtJ2000;
@@ -97,7 +98,7 @@ public class ConfigurationTest
         var date = TimeSystem.Time.J2000TDB;
         var frame = Frames.Frame.ICRF;
 
-        Assert.Throws<ArgumentException>(() => dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None));
+        Assert.Throws<InvalidOperationException>(() => dataProvider.GetEphemeris(date, target, ssb, frame, Aberration.None));
     }
 
     [Fact]
@@ -158,7 +159,7 @@ public class ConfigurationTest
         dataProvider.AddStateVector(target.NaifId, date1, stateVector1);
         dataProvider.AddStateVector(target.NaifId, date2, stateVector2);
 
-        Assert.Throws<ArgumentException>(()=> dataProvider.GetEphemeris(dateToInterpolate, target, ssb, frame, Aberration.None));
+        Assert.Throws<InvalidOperationException>(() => dataProvider.GetEphemeris(dateToInterpolate, target, ssb, frame, Aberration.None));
     }
 
     [Fact]
@@ -174,11 +175,14 @@ public class ConfigurationTest
         Assert.Equal(celestialBody, result);
     }
 
+    // ArgumentException naming naifId, as SpiceDataProvider for an id SPICE does not name (#680, decided by S. Guillet,
+    // 2026-11-14)
     [Fact]
-    public void GetCelestialBodyInfo_ThrowsKeyNotFoundException_WhenNaifIdDoesNotExist()
+    public void GetCelestialBodyInfo_ThrowsArgumentException_WhenNaifIdDoesNotExist()
     {
         var dataProvider = new MemoryDataProvider();
 
-        Assert.Throws<KeyNotFoundException>(() => dataProvider.GetCelestialBodyInfo(999));
+        var exception = Assert.Throws<ArgumentException>(() => dataProvider.GetCelestialBodyInfo(999));
+        Assert.Equal("naifId", exception.ParamName);
     }
 }

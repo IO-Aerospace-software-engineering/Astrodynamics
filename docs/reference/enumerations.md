@@ -180,8 +180,8 @@ Used with [`OrbitalDirectionTarget`](attitudes.md#orbitaldirectiontarget) for TR
 | Value | Description |
 |-------|-------------|
 | `Incidence` | Angle between surface normal and illumination direction |
-| `Emission` | Angle between surface normal and observer direction |
-| `Phase` | Angle between illumination and observer directions |
+| `Emission` | Angle between surface normal and observer direction; needs an observer: `Site.FindWindowsOnIlluminationConstraint`, which takes none, throws for it (#682) |
+| `Phase` | Angle between illumination and observer directions; needs an observer, as `Emission` |
 
 ## Classification (TLE)
 

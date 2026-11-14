@@ -28,7 +28,8 @@ internal static class FieldOfViewSearch
     /// </summary>
     /// <exception cref="ArgumentException">An argument of <see cref="Check"/>, or the search window leaves the propagated
     /// states of the observer or of a spacecraft target (<see cref="CheckCoverage"/>).</exception>
-    /// <exception cref="InvalidOperationException">The field of view cannot be searched (<see cref="CheckField"/>).</exception>
+    /// <exception cref="InvalidOperationException">The field of view cannot be searched (<see cref="CheckField"/>), or the
+    /// spacecraft has no attitude (<see cref="CheckAttitude"/>).</exception>
     internal static IReadOnlyList<Window> Managed(Instrument instrument, in Window searchWindow, ILocalizable target, ShapeType targetShape, Frame targetFrame,
         Aberration aberration, in TimeSpan stepSize)
     {
@@ -72,6 +73,22 @@ internal static class FieldOfViewSearch
         }
 
         OccultationBodyModel.CheckShape(target, targetShape);
+    }
+
+    /// <summary>
+    /// The attitude of the instrument's spacecraft: a managed spacecraft whose attitude record is empty, never propagated
+    /// and with no orientation added, built from a TLE or propagated by the TLE propagator, has none to search with; its
+    /// CK, which <c>gftfov</c> would read, cannot be written either (<see cref="SpacecraftFrame.WriteOrientation"/>). Before
+    /// 11.0.0 the identity of ICRF was searched (#682). A kernel-backed spacecraft reads its CK through SPICE.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The spacecraft is managed and its attitude record is empty.</exception>
+    internal static void CheckAttitude(Instrument instrument)
+    {
+        if (instrument.Spacecraft.Frame is SpacecraftFrame frame && !frame.HasAttitude)
+        {
+            throw new InvalidOperationException(
+                $"Spacecraft {instrument.Spacecraft.Name} has no attitude to search the field of view of {instrument.Name} with: it has not been propagated, and no orientation was added to its frame (SpacecraftFrame.AddStateOrientationToICRF).");
+        }
     }
 
     /// <summary>

@@ -209,6 +209,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         Albedo = albedo;
         ThermalEffectiveTemperature = thermalEffectiveTemperature;
         ThermalEmissivity = thermalEmissivity;
+        RegisterWithObserver();
     }
 
     /// <summary>
@@ -237,6 +238,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         Albedo = albedo;
         ThermalEffectiveTemperature = thermalEffectiveTemperature;
         ThermalEmissivity = thermalEmissivity;
+        RegisterWithObserver();
     }
 
     private void UpdateSphereOfInfluence()
@@ -358,7 +360,7 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         var toIcrf = Frame.ToFrame(Frame.ICRF, epoch).Rotation;
         var icrfPos = bodyfFixedCoordinates.Rotate(toIcrf);
         var icrfRot = Vector3.VectorZ.Rotate(toIcrf);
-        var inertialVelocity = icrfRot.Cross(icrfPos).Normalize() * System.Math.Sqrt(GM / radius);
+        var inertialVelocity = icrfRot.Cross(icrfPos).NormalizeOrZero() * System.Math.Sqrt(GM / radius);
         var sv = new StateVector(icrfPos, inertialVelocity, this, epoch, Frame.ICRF);
         return new KeplerianElements(radius, 0.0, sv.Inclination(), sv.AscendingNode(), sv.ArgumentOfPeriapsis() + sv.MeanAnomaly(), 0.0, this, epoch, sv.Frame);
     }
@@ -618,6 +620,11 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
             : "atmospheric model";
     }
 
+    /// <summary>
+    /// The type of the body, the lines of <see cref="CelestialItem.ToString"/>, then its fixed frame, radii (m),
+    /// flattening and J2 to J4, every number in the shortest form that parses back to its property in the invariant
+    /// culture (#681: the radii were printed to 7 significant digits, the equatorial radius of the Earth 0.4 m off).
+    /// </summary>
     public override string ToString()
     {
         string bodyType = string.Empty;
@@ -649,8 +656,8 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         return $"{"Type :",TITLE_WIDTH} {bodyType,-VALUE_WIDTH}{Environment.NewLine}" +
                base.ToString() +
                $"{"Fixed frame :",TITLE_WIDTH} {Frame.Name,-VALUE_WIDTH}{Environment.NewLine}" +
-               $"{"Equatorial radius (m) :",TITLE_WIDTH} {EquatorialRadius.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}" +
-               $"{"Polar radius (m) :",TITLE_WIDTH} {PolarRadius.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}" +
+               $"{"Equatorial radius (m) :",TITLE_WIDTH} {EquatorialRadius.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}" +
+               $"{"Polar radius (m) :",TITLE_WIDTH} {PolarRadius.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}" +
                $"{"Flattening :",TITLE_WIDTH} {Flattening.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}" +
                $"{"J2 :",TITLE_WIDTH} {J2.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}" +
                $"{"J3 :",TITLE_WIDTH} {J3.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}" +
