@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using IO.Astrodynamics.Math;
-using IO.Astrodynamics.Occultation;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics;
@@ -21,15 +20,16 @@ namespace IO.Astrodynamics;
 /// </para>
 /// <para>
 /// <b>Step rule.</b> Between the samples, the search looks for the extremes of a <see cref="double"/> quantity that the
-/// samples hide, by the rule of the occultation search: where three consecutive samples show an extreme of the margin of
-/// the relation (the quantity minus the value, or the value minus the quantity) that does not reach zero, Brent's
+/// samples hide, by the rule of the occultation search: where three consecutive samples show an extreme of the margin
+/// of the relation (the quantity minus the value, or the value minus the quantity) that does not reach zero, Brent's
 /// <c>localmin</c> locates it between their two neighbors, and the first and last intervals are searched the same way;
-/// an extreme on the other side of zero is added as a sample. Every window, gap and crossing, however short, is
-/// therefore found when the step is at most half the time between two extremes of the quantity, a jump of a branch cut
-/// counting as one (#678). A <see cref="bool"/> quantity has no margin to search between samples: its step must be
-/// shorter than every window and every gap. CSPICE's <c>gfdist_c</c>, <c>gfposc_c</c> and <c>gfilum_c</c> ask for a
-/// step shorter than the shortest interval where the quantity is monotone (for a longitude or a right ascension, where
-/// its sine or cosine is).
+/// an extreme on the other side of zero is added as a sample. Every window, gap and crossing is therefore found when
+/// the step is at most half the time between two extremes of the quantity, a jump of a branch cut counting as one
+/// (#678), down to the about 1 µs to which <c>localmin</c> locates an extreme: a narrower window or gap can be missed,
+/// and a tangency between two samples (an extreme exactly at the value) is not found. A <see cref="bool"/> quantity has
+/// no margin to search between samples: its step must be shorter than every window and every gap. CSPICE's
+/// <c>gfdist_c</c>, <c>gfposc_c</c> and <c>gfilum_c</c> ask for a step shorter than the shortest interval where the
+/// quantity is monotone (for a longitude or a right ascension, where its sine or cosine is).
 /// </para>
 /// <para>
 /// <b>Transitions.</b> Each change of the relation between two samples is located to 1 µs (CSPICE's
@@ -232,7 +232,7 @@ public class GeometryFinder
 
     /// <summary>
     /// The margin of a relation at the samples (and at <paramref name="extra"/> offsets), each evaluated once, with the
-    /// extremes of the margin between them that the samples hide (<see cref="OccultationFinder.HiddenCrossings"/>): a window,
+    /// extremes of the margin between them that the samples hide (<see cref="HiddenExtremes.Find"/>): a window,
     /// a gap or a pair of crossings shorter than the step is found when every two consecutive intervals hold at most one
     /// extreme of the quantity.
     /// </summary>
@@ -245,7 +245,7 @@ public class GeometryFinder
     {
         var x = extra == null ? search.Offsets.ToList() : search.Offsets.Concat(extra).Distinct().OrderBy(o => o).ToList();
         var m = x.Select(margin).ToArray();
-        var hidden = OccultationFinder.HiddenCrossings(x, m, margin, Tolerance, zeroHolds);
+        var hidden = HiddenExtremes.Find(x, m, margin, Tolerance, zeroHolds);
         if (hidden.Count == 0)
         {
             return (x, m);

@@ -487,6 +487,23 @@ public class GeometryFinderTests
         Assert.Empty(finder.FindWindowsWithCondition(window, t => double.NaN, RelationnalOperator.Lower, 0.0, Step));
     }
 
+    [Theory]
+    [InlineData(RelationnalOperator.Greater)]
+    [InlineData(RelationnalOperator.GreaterOrEqual)]
+    [InlineData(RelationnalOperator.Equal)]
+    public void UndefinedSample_NextToAHiddenExtreme_IsNotSearched(RelationnalOperator relation)
+    {
+        // A search window of one interval, the quantity undefined at its start and 1 - ((t - 15 s) / 5 s)^2 elsewhere: the
+        // samples are NaN and -8, the hidden maximum 1 at 15 s. A bracket with an undefined sample is not searched, so no
+        // window comes from it, whatever the quantity does inside (the interior and edge brackets are guarded by their
+        // pattern, which a NaN sample fails; this one is not)
+        var window = new Window(Start, Start.AddSeconds(30.0));
+        Func<double, double> f = t => t <= 0.0 ? double.NaN : 1.0 - (t - 15.0) / 5.0 * ((t - 15.0) / 5.0);
+        Assert.True(double.IsNaN(f(0.0)));
+        Assert.Equal(-8.0, f(30.0));
+        Assert.Empty(new GeometryFinder().FindWindowsWithCondition(window, Of(f), relation, 0.0, Step));
+    }
+
     private void LogDeltas(string label, IReadOnlyList<Window> actual, double[] expected)
     {
         for (int i = 0; i < System.Math.Min(actual.Count, expected.Length); i++)
