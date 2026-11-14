@@ -730,6 +730,25 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
         #endregion
 
+        #region Several messages (#679)
+
+        [Fact]
+        public void TryLoadFromFile_NdmWithTwoOmm_ReturnsFalseWithParseError()
+        {
+            NdmDocuments.WithTempFile(NdmDocuments.TwoOmm(), file =>
+            {
+                var loaded = Omm.TryLoadFromFile(file, out var omm, out var result);
+
+                Assert.False(loaded);
+                Assert.Null(omm);
+                var error = Assert.Single(result.Errors);
+                Assert.Equal("PARSE_ERROR", error.Code);
+                Assert.Contains("2 OMM messages", error.Message);
+            });
+        }
+
+        #endregion
+
         #region TLE compatibility (#679)
 
         private static Omm CreateTleOmm(string centerName, string referenceFrame, string theory)

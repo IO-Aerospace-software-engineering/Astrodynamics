@@ -13,6 +13,13 @@ using IO.Astrodynamics.Math;
 
 namespace IO.Astrodynamics.CCSDS.CDM;
 
+/// <summary>
+/// Reads a CDM (Conjunction Data Message, CCSDS 508.0-B-1) in NDM/XML, standalone or wrapped in an NDM container.
+/// </summary>
+/// <remarks>
+/// A document holds one CDM: one that holds several throws <see cref="CdmParseException"/>, as before 11.0.0 it returned
+/// the first one (#679); messages of another type beside it are ignored.
+/// </remarks>
 public sealed class CdmReader
 {
     public Cdm ReadFromFile(string filePath)
@@ -83,22 +90,10 @@ public sealed class CdmReader
         return new Cdm(header, relativeMetadataData, segments);
     }
 
-    private XElement? FindCdmElement(XElement root)
+    // The root CDM, the one CDM child of an NDM or the one CDM descendant of another root; several throw (#679)
+    private static XElement? FindCdmElement(XElement root)
     {
-        var localName = root.Name.LocalName.ToUpperInvariant();
-        if (localName == "CDM")
-        {
-            return root;
-        }
-
-        if (localName == "NDM")
-        {
-            return root.Elements()
-                .FirstOrDefault(element => element.Name.LocalName.Equals("cdm", StringComparison.OrdinalIgnoreCase));
-        }
-
-        return root.Descendants()
-            .FirstOrDefault(element => element.Name.LocalName.Equals("cdm", StringComparison.OrdinalIgnoreCase));
+        return CcsdsMessageLocator.FindSingle(root, "cdm", message => new CdmParseException(message));
     }
 
     private CdmHeader ParseHeader(XElement element)

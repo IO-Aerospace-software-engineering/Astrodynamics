@@ -15,7 +15,9 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// Reads OPM (Orbit Parameter Message) files in CCSDS NDM/XML format.
 /// </summary>
 /// <remarks>
-/// Supports both standalone OPM documents and OPM messages wrapped in NDM containers.
+/// Supports both standalone OPM documents and OPM messages wrapped in NDM containers. A document holds one OPM message:
+/// one that holds several (a catalog NDM) throws <see cref="OpmParseException"/>, as before 11.0.0 it returned the first
+/// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored.
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OpmReader
@@ -27,7 +29,7 @@ public class OpmReader
     /// <returns>The parsed Opm object.</returns>
     /// <exception cref="ArgumentException">Thrown when the file path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
-    /// <exception cref="OpmParseException">Thrown when the file cannot be parsed.</exception>
+    /// <exception cref="OpmParseException">Thrown when the file cannot be parsed, or holds several OPM messages.</exception>
     public Opm ReadFromFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -46,7 +48,7 @@ public class OpmReader
     /// <param name="stream">The stream containing the OPM XML.</param>
     /// <returns>The parsed Opm object.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
-    /// <exception cref="OpmParseException">Thrown when the stream cannot be parsed.</exception>
+    /// <exception cref="OpmParseException">Thrown when the stream cannot be parsed, or holds several OPM messages.</exception>
     public Opm ReadFromStream(Stream stream)
     {
         if (stream == null)
@@ -69,7 +71,7 @@ public class OpmReader
     /// <param name="xml">The XML string containing the OPM.</param>
     /// <returns>The parsed Opm object.</returns>
     /// <exception cref="ArgumentException">Thrown when XML string is null or empty.</exception>
-    /// <exception cref="OpmParseException">Thrown when the XML cannot be parsed.</exception>
+    /// <exception cref="OpmParseException">Thrown when the XML cannot be parsed, or holds several OPM messages.</exception>
     public Opm ReadFromString(string xml)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -100,24 +102,10 @@ public class OpmReader
         return ParseOpmElement(opmElement);
     }
 
-    private XElement FindOpmElement(XElement root)
+    // The root OPM, the one OPM child of an NDM or the one OPM descendant of another root; several throw (#679)
+    private static XElement FindOpmElement(XElement root)
     {
-        var localName = root.Name.LocalName.ToUpperInvariant();
-
-        // Direct OPM element
-        if (localName == "OPM")
-            return root;
-
-        // NDM wrapper - look for opm child (case-insensitive)
-        if (localName == "NDM")
-        {
-            return root.Elements()
-                .FirstOrDefault(e => e.Name.LocalName.Equals("opm", StringComparison.OrdinalIgnoreCase));
-        }
-
-        // Check descendants if wrapped in other elements
-        return root.Descendants()
-            .FirstOrDefault(e => e.Name.LocalName.Equals("opm", StringComparison.OrdinalIgnoreCase));
+        return CcsdsMessageLocator.FindSingle(root, "opm", message => new OpmParseException(message));
     }
 
     private Opm ParseOpmElement(XElement opmElement)

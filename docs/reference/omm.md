@@ -15,6 +15,12 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 | `Omm.LoadFromStream(stream, validateSchema?, validateContent?)` | Load from stream |
 | `Omm.TryLoadFromFile(path, out omm, out result, ...)` | Non-throwing load with validation result |
 
+Each load reads one OMM: a standalone `<omm>`, or the one `<omm>` of an `<ndm>` or of another root (messages of
+another type beside it are ignored). A document that holds several OMMs, such as a catalog NDM, throws
+`OmmParseException` naming their number, `TryLoadFromFile` returns false with a `PARSE_ERROR` and
+`OmmValidator.ValidateFile` reports it invalid (#679); before 11.0.0 the first one was read. Split such a document into
+one OMM per document.
+
 ### Saving
 
 | Method | Description |

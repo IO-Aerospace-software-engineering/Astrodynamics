@@ -380,6 +380,7 @@ public class Opm
     /// <exception cref="ArgumentNullException">Thrown when filePath is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
     /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
+    /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, or holds several OPM messages (#679).</exception>
     public static Opm LoadFromFile(string filePath, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -423,6 +424,7 @@ public class Opm
     /// <returns>The loaded and validated OPM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when xml is null or empty.</exception>
     /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
+    /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, or holds several OPM messages (#679).</exception>
     public static Opm LoadFromString(string xml, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -463,6 +465,7 @@ public class Opm
     /// <returns>The loaded and validated OPM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
     /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
+    /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, or holds several OPM messages (#679).</exception>
     public static Opm LoadFromStream(Stream stream, bool validateSchema = true, bool validateContent = true)
     {
         if (stream == null)
@@ -483,6 +486,7 @@ public class Opm
     /// <param name="validateSchema">If true, validates the XML against the CCSDS OPM schema.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>True if the OPM was loaded successfully with no errors, false otherwise.</returns>
+    /// <remarks>A document that holds several OPM messages is not loaded: false, with a <c>PARSE_ERROR</c> (#679).</remarks>
     public static bool TryLoadFromFile(
         string filePath,
         out Opm opm,

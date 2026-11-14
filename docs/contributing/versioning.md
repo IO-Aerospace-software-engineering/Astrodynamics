@@ -1380,6 +1380,18 @@ release are listed under **Known limitations**.
   that names the Earth (in the table of the OPM centre above, so `earth` and ` EARTH ` are the Earth, `EARTH
   BARYCENTER` is not). `OmmTests` checks seven rows of centre, frame and theory, built and loaded, and that the
   lower-case and padded twins of an EARTH/TEME/SGP4 OMM give its TLE lines.
+- **A document holding several messages loaded its first one silently** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679)). The OMM, OPM and CDM readers took the
+  first message element (`FirstOrDefault`) and dropped the others: an `<ndm>` of two OMMs in the form of a Space-Track
+  catalog (ISS and CSS) passed schema validation (NDM/XML allows several messages in an `<ndm>`) and loaded as the ISS
+  through `Omm.LoadFromFile`, `LoadFromString`, `LoadFromStream` and `OmmReader`, `Omm.TryLoadFromFile` returned true
+  with no error, and `OmmValidator.ValidateFile` reported it valid (0 errors, 119 warnings), from the content of the
+  first OMM; the same for two OPMs and two CDMs, and for two messages nested under another root. Each reader now counts
+  the messages of its own type (the root message, the children of an `<ndm>`, the descendants of another root, as
+  before; internal `CCSDS/Common/CcsdsMessageLocator`) and throws its parse exception (`OmmParseException`,
+  `OpmParseException`, `CdmParseException`) naming their number when there are two or more. A mixed NDM of one OMM and
+  one OPM still gives each reader its message. The tests build the documents and count their messages with
+  System.Xml.Linq, independently of the readers, and reach every path: the readers, `Load*` with and without schema
+  validation, `TryLoadFromFile`, `ValidateFile` and `Cdm.ReadFromString`/`ReadFromStream`.
 **Changed**
 
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
@@ -1723,6 +1735,13 @@ release are listed under **Known limitations**.
   ` (TLE)` for those OMMs. An OMM without TLE parameters throws its former message. EARTH/TEME/SGP4 OMMs (`iss.omm`,
   `Omm.CreateForTle`, `TLE.ToOmm`, the conformance runner's) give the same TLE, bit for bit. Migration: correct the
   metadata if the elements really are SGP4 elements of an Earth orbit in TEME; otherwise keep the object in OMM form.
+- **Breaking: a document holding several messages of a type throws** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above): `Omm`/`Opm.LoadFromFile`,
+  `LoadFromString` and `LoadFromStream`, `Cdm.ReadFromFile`, `ReadFromStream` and `ReadFromString`, and
+  `OmmReader`/`OpmReader`/`CdmReader.ReadFrom*` throw `OmmParseException`, `OpmParseException` or `CdmParseException`
+  where they returned the first message; `Omm`/`Opm.TryLoadFromFile` return false with a `PARSE_ERROR`;
+  `OmmValidator`/`OpmValidator.ValidateFile` report the file invalid. A document with one message of the type, alone
+  or beside messages of other types, loads as before. Migration: split the NDM into one `<omm>`, `<opm>` or `<cdm>` per
+  document.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

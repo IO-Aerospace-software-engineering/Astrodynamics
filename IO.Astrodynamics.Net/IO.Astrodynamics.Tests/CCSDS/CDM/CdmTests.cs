@@ -175,6 +175,30 @@ public class CdmTests
     }
 
     [Fact]
+    public void ReadFromString_NdmWithTwoCdm_Throws()
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 10, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "FIRST"
+        });
+        var xml = NdmDocuments.TwoCdm(RemoveNamespaces(cdm.WriteToString(wrapInNdmContainer: false)));
+
+        var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        Assert.Contains("2 CDM messages", ex.Message);
+        using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+        var exStream = Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream));
+        Assert.Contains("2 CDM messages", exStream.Message);
+
+        // Two nested CDMs under a root that is not an NDM
+        var cdmElement = XDocument.Parse(xml).Root!.Elements().First();
+        var nested = new XElement("wrapper", new XElement("a", new XElement(cdmElement)), new XElement("b", new XElement(cdmElement))).ToString();
+        var exNested = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(nested));
+        Assert.Contains("2 CDM messages", exNested.Message);
+    }
+
+    [Fact]
     public void WriteToFile_ValidateSchemaAndReadFromFile_RoundTripsGeneratedCdm()
     {
         var original = CreateManualEncounterCase().ToCdm(new CdmExportOptions
