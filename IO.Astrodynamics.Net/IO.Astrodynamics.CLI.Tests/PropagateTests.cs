@@ -212,10 +212,11 @@ public class PropagateTests
     /// <summary>
     /// The SPK of the CLI read at the window end against the library run of the same degree, the same computation on the
     /// same platform: what remains is the reading of the type-9 SPK, one unit in the last place of a 6.8e6 m position
-    /// (9.3e-10 m). Measured on Linux (#681): 0 to 1.04e-9 m over the rows of these tests (the -q row the worst).
-    /// Provisional: twice the Linux worst, to be set from the three-platform CI logs.
+    /// (9.3e-10 m). Worst over the rows of these tests in the CI of run 43595592229 (2026-11-14), the -q row on each
+    /// platform: Linux 1.04e-9 m, Windows 1.86e-9 m (two units in the last place), macOS arm64 1.04e-9 m; twice the
+    /// Windows worst, rounded up to two digits.
     /// </summary>
-    private const double SpkInterpolationThreshold = 2.1e-9;
+    private const double SpkInterpolationThreshold = 3.8e-9;
 
     /// <summary>The degree of the last line of the embedded EGM2008 model of the CLI (n = m there).</summary>
     private static int EmbeddedModelDegree()

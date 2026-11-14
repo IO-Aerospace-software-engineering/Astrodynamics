@@ -1366,8 +1366,9 @@ release are listed under **Known limitations**.
   mass. The help text, whose parenthesis was not closed, reads "Degree of the Earth geopotential (EGM2008), at most
   100". `PropagateTests.EarthGeopotentialDegree_IsTheDegreeOfTheRun` reads the exported SPK at the end of a 600 s window
   (n = 2 and 50 on `-s`, n = 2 on `-k` from ECLIPJ2000 and on `-q`) against the library run of that degree, within
-  2.1e-9 m (twice the Linux worst, 1.04e-9 m), and more than 1 m from the run of degree 10 (32.660 m for n = 2 and
-  4.514 m for n = 50 from 6800 km equatorial, 49.2 m and 60.7 m on the `-k` and `-q` rows); no `-n` and `-n 10` stay
+  3.8e-9 m (twice the worst over Linux, Windows and macOS arm64, 1.04e-9, 1.86e-9 and 1.04e-9 m, CI run 43595592229),
+  and more than 1 m from the run of degree 10 (32.660 m for n = 2 and 4.514 m for n = 50 from 6800 km equatorial,
+  49.2 m and 60.7 m on the `-k` and `-q` rows); no `-n` and `-n 10` stay
   byte-identical (`DefaultDegree_IsDegree10`). On a 30 min LEO from 6700 km, at 28 min, `-n 2` moves 168.5 m and `-n 50`
   5.80 m from what the CLI wrote before; no other result moves.
 - **`astro sub-point` threw `NullReferenceException` for a site identifier** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681)). It cast the object of
