@@ -806,9 +806,10 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
 
     /// <summary>
     /// #682: a managed spacecraft with an empty attitude record, never propagated (from a state, or from a TLE that reads
-    /// SGP4 at each epoch), has no attitude to search with: the search and <see cref="Instrument.IsInFOV"/> throw, as
-    /// <c>WriteOrientation</c> refuses to write its CK; before, the identity of ICRF was searched (5 windows of the Earth
-    /// over 6 h for this camera). A field CSPICE rejects still throws its own error first.
+    /// SGP4 at each epoch) or propagated by <see cref="IO.Astrodynamics.Propagator.TLEPropagator"/>, has no attitude to
+    /// search with: the search and <see cref="Instrument.IsInFOV"/> throw, as <c>WriteOrientation</c> refuses to write its
+    /// CK; before, the identity of ICRF was searched (5 windows of the Earth over 6 h for this camera). A field CSPICE
+    /// rejects still throws its own error first. An attitude added to its frame lifts the refusal.
     /// </summary>
     [Fact]
     public void ManagedSpacecraftWithoutAttitude_Throws()
@@ -820,7 +821,14 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
         var fromTle = new Spacecraft(-6822, "FOV6822", 1000.0, 3000.0, new Clock("FOV6822_CLK", 65536), tle);
         fromTle.AddCircularInstrument(-6822001, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
-        foreach (var (spacecraft, start) in new[] { (Unpropagated(-6821, epoch), epoch), (fromTle, tle.Epoch.ToTDB()) })
+        // Propagated by TLEPropagator, which records no attitude (#546)
+        var byTlePropagator = new Spacecraft(-6823, "FOV6823", 1000.0, 3000.0, new Clock("FOV6823_CLK", 65536), tle);
+        byTlePropagator.AddCircularInstrument(-6823001, "CAMERA", "fov682", 30.0 * IO.Astrodynamics.Constants.Deg2Rad, Vector3.VectorY, Vector3.VectorX, Vector3.Zero);
+        var tleStart = tle.Epoch.ToTDB();
+        var tleSolution = new IO.Astrodynamics.Propagator.TLEPropagator(new Window(tleStart, tleStart.AddSeconds(6.0 * 3600.0)), byTlePropagator,
+            TimeSpan.FromMinutes(10.0)).Propagate();
+        Assert.Equal(37, tleSolution.StateVectors.Count());
+        foreach (var (spacecraft, start) in new[] { (Unpropagated(-6821, epoch), epoch), (fromTle, tleStart), (byTlePropagator, tleStart) })
         {
             var window = new Window(start, start.AddSeconds(6.0 * 3600.0));
             var camera = spacecraft.Instruments.First();
@@ -852,6 +860,12 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             // and an argument error before it: the instrument's spacecraft as the target
             Assert.Throws<ArgumentException>(() =>
                 camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, spacecraft, earth.Frame, ShapeType.Point, Aberration.LT, TimeSpan.FromMinutes(1.0)));
+
+            // An attitude added to its frame lifts the refusal: the identity searched as before 11.0.0
+            spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, spacecraft.Frame));
+            Assert.NotEmpty(camera.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, earth.Frame, ShapeType.Ellipsoid, Aberration.LT,
+                TimeSpan.FromMinutes(1.0)));
+            camera.IsInFOV(start.AddSeconds(3000.0), earth, Aberration.LT);
         }
     }
 

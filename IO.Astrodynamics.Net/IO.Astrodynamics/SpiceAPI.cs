@@ -191,9 +191,13 @@ public class SpiceAPI
     /// The managed frame whose orientation an ephemeris read in <paramref name="frame"/> rotates by, or null for a frame
     /// that SPICE knows: an instance of <see cref="TemeFrame"/>, <see cref="CirsFrame"/> or <see cref="TirsFrame"/>, and
     /// <see cref="Frame.TEME"/> for a frame named TEME (#558); the <see cref="Surface.SiteFrame"/> of a site built from coordinates
-    /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft (#682), which only the library holds. SPICE knows none
-    /// of these, or, for TEME, the native construction that #451 replaced. The frame of a site or a spacecraft of the
-    /// kernels is SPICE's. A frame built by name is SPICE's but for TEME (#656).
+    /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
+    /// (#682), which only the library holds. SPICE knows none of these, or, for TEME, the native construction that #451
+    /// replaced. The frame of a site or a spacecraft of the kernels is SPICE's, and so is the frame of a managed spacecraft
+    /// whose record is empty (never propagated, no orientation added, from a TLE or the TLE propagator): the library holds no
+    /// attitude for it, and its name reaches SPICE as before 11.0.0, which reads the frame and C-kernels of that id when they
+    /// are loaded (those the library wrote for an earlier object of the id) and rejects the frame otherwise
+    /// (SPICE(UNKNOWNFRAME)), rather than the identity of the empty record. A frame built by name is SPICE's but for TEME (#656).
     /// </summary>
     /// <remarks>
     /// The rotation (<see cref="ToManagedFrame"/>) runs under the lock of the SPICE calls: a <see cref="Surface.SiteFrame"/> reads
@@ -205,7 +209,7 @@ public class SpiceAPI
     {
         TemeFrame or CirsFrame or TirsFrame => frame,
         Surface.SiteFrame { Site.IsSpiceBacked: false } => frame,
-        Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: false } => frame,
+        Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: false, HasAttitude: true } => frame,
         _ when IsTeme(frame) => Frame.TEME,
         _ => null
     };

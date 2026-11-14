@@ -17,7 +17,6 @@ namespace IO.Astrodynamics.Tests.Surface
 {
     public class SiteTests
     {
-        private static readonly FileInfo LroSpkPath = new("Data/LRO/lro-reconstructed-2023349_2024075_v01_little_endian.bsp");
 
         private readonly ITestOutputHelper _output;
 
@@ -560,21 +559,20 @@ namespace IO.Astrodynamics.Tests.Surface
         /// <summary>
         /// #682: a frame only the library holds, the frame of a site built from coordinates, reached <c>spkezr_c</c> by name
         /// (SPICE(UNKNOWNFRAME)) when the site was read from an observer other than its body; it is read in J2000 and rotated
-        /// by the managed frame, as #558 reads TEME, CIRS and TIRS. Seen from the Moon, the Sun and LRO (a kernel
-        /// spacecraft), with and without light time, the read in the site's frame is the ICRF read rotated to it, and so
-        /// are a body read in it and the reads of <see cref="SpiceAPI"/>; a coordinate search in it runs.
+        /// by the managed frame, as #558 reads TEME, CIRS and TIRS. Seen from the Moon and the Sun, with and without light
+        /// time, the read in the site's frame is the ICRF read rotated to it, and so are a body read in it and the reads of
+        /// <see cref="SpiceAPI"/>; a coordinate search in it runs. A kernel spacecraft as the observer is in
+        /// <see cref="KernelWindowSearchTests"/>, whose class loads LRO; the rotation against CSPICE in
+        /// <see cref="CustomSite_FromTheMoon_InItsFrame_MatchesSpkezr"/>.
         /// </summary>
         [Fact]
         public void CustomSite_FromNonEarthObserver_InItsOwnFrame_EqualsTheIcrfReadRotated()
         {
-            // LRO's SPK, shared by the test classes that read LRO, which keep it loaded
-            SpiceAPI.Instance.LoadKernels(LroSpkPath);
             var earth = new CelestialBody(PlanetsAndMoons.EARTH);
             var moon = new CelestialBody(PlanetsAndMoons.MOON);
             var site = new Site(682, "F07CUSTOM", earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
             var start = new TimeSystem.Time(2024, 3, 1);
-            var lro = new Spacecraft(-85, "LRO", epoch: start);
-            foreach (var observer in new ILocalizable[] { moon, TestHelpers.Sun, lro })
+            foreach (var observer in new ILocalizable[] { moon, TestHelpers.Sun })
             {
                 foreach (var aberration in new[] { Aberration.None, Aberration.LT })
                 {

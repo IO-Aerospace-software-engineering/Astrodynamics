@@ -208,8 +208,11 @@ each epoch, `vectorIcrf = vectorInSpacecraft.Rotate(q)`, labelled with the space
   start to it (6.0e-7 s at S + 3 400 s in the tests, about 1.5e-5 s a day later): one epoch with the output sample while
   that stays under 2 µs, two entries beyond.
 - **Outside the record** the first or the last entry holds; a spacecraft never propagated has the identity of ICRF, which
-  the frame reads and getters such as `GetBoresightInICRFFrame` return, but which the field-of-view search does not take
-  for an attitude: it throws ([Field-of-view search](#field-of-view-search), [#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)).
+  `Frame.GetStateOrientationToICRF` and getters such as `GetBoresightInICRFFrame` return, but which the field-of-view
+  search does not take for an attitude: it throws ([Field-of-view search](#field-of-view-search), [#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). An
+  ephemeris read in the frame of a managed spacecraft is rotated by its record once the record holds an entry; with an
+  empty record the frame is read by name in SPICE, as before 11.0.0, which reads the frame kernel and the CK of that id
+  when they are loaded and throws SPICE(UNKNOWNFRAME) otherwise ([Frames](frames.md)).
 - **The angular velocity** is that of the CK: at each entry the mean of the rates of the interpolated intervals on either
   side, linear between two samples of a law. Over a hold it is zero between discrete entries; after a sample of a law
   that no lead follows (an attitude added by `AddStateOrientationToICRF` after a propagation, or a lead whose change was

@@ -420,4 +420,29 @@ public class KernelWindowSearchTests
             AssertPlanetographic($"DSS-13 from the Moon in {moon.Frame.Name}, {coordinate} > {value}", managed, gfposc, siteWindow, dss13, moon, null);
         }
     }
+
+    /// <summary>
+    /// #682: the frame of a site built from coordinates, read from LRO, a kernel spacecraft (this class loads its SPK): it
+    /// reached <c>spkezr_c</c> by name (SPICE(UNKNOWNFRAME)) and is read in J2000 and rotated by the managed frame, with and
+    /// without light time, as from the Moon and the Sun in <see cref="Surface.SiteTests"/>.
+    /// </summary>
+    [Fact]
+    public void CustomSite_FromLro_InItsOwnFrame_EqualsTheIcrfReadRotated()
+    {
+        var site = new Site(682, "F07CUSTOM", Earth, new Planetodetic(-117.0 * IO.Astrodynamics.Constants.Deg2Rad, 34.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0));
+        var lro = Lro;
+        var start = new TimeSystem.Time(2024, 3, 1);
+        foreach (var aberration in new[] { Aberration.None, Aberration.LT })
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                var t = start.AddSeconds(7.0 * 3600.0 * k);
+                var read = site.GetEphemeris(t, lro, site.Frame, aberration).ToStateVector();
+                var expected = site.GetEphemeris(t, lro, Frames.Frame.ICRF, aberration).ToFrame(site.Frame).ToStateVector();
+                Assert.Same(site.Frame, read.Frame);
+                Assert.InRange((read.Position - expected.Position).Magnitude(), 0.0, 1e-6);
+                Assert.InRange((read.Velocity - expected.Velocity).Magnitude(), 0.0, 1e-9);
+            }
+        }
+    }
 }

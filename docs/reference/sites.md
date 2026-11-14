@@ -81,7 +81,8 @@ the frame's centre, so the two agree for a frame centred on the observer. A kern
 longitude of a body for CSPICE with `BODY<id>_PGR_POSITIVE_LON` (GF Required Reading, "Meridian crossing"); the managed
 path does not read it, and no kernel of the library defines it. Measured against `gfposc_c` (the Moon from the Earth in
 ITRF93, the Earth and the Sun from Mercury, the Earth from Venus, DSS-13 from Mercury and from the Moon): the same window
-counts, the edges on the threshold within 4e-7 s; an edge where the longitude jumps from 2π to 0 lies within 6.6e-11
+counts, the edges on the threshold within 4e-7 s (the latitude and the altitude of DSS-13 from the Moon; the
+longitudes within 3e-7 s); an edge where the longitude jumps from 2π to 0 lies within 6.6e-11
 rad of the cut on both paths, its time within that angle over the rate of the longitude (up to 2.4e-4 s for the Sun
 from Mercury, which moves 7e-8 rad/s). Before 11.0.0 the managed `Planetographic` was the planetocentric longitude in
 (−π, π], latitude and radius.

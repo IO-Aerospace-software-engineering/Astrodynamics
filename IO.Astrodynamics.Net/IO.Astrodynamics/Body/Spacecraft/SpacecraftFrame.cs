@@ -384,7 +384,9 @@ public class SpacecraftFrame : Frame
     /// <summary>
     /// Whether the attitude record of a managed spacecraft holds an entry: false for a spacecraft never propagated, with no
     /// orientation added (<see cref="AddStateOrientationToICRF"/>), built from a TLE or propagated by the TLE propagator,
-    /// whose reads give the identity of ICRF; always true for a kernel-backed spacecraft, which reads its CK (#682).
+    /// whose orientation reads give the identity of ICRF, whose field-of-view searches throw, and whose frame an ephemeris
+    /// read reaches SPICE by name (<see cref="SpiceAPI.ManagedReadFrame"/>); always true for a kernel-backed spacecraft,
+    /// which reads its CK (#682).
     /// </summary>
     internal bool HasAttitude
     {

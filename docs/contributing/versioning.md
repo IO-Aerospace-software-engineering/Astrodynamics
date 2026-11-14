@@ -1363,8 +1363,9 @@ release are listed under **Known limitations**.
   of 30° along +Y in LEO: 5 windows of the Earth over 6 h, its boresight ICRF +Y). Both now throw
   `InvalidOperationException` naming the spacecraft, after the argument and field checks, whose errors keep their
   precedence (internal `FieldOfViewSearch.CheckAttitude`). `FieldOfViewSearchTests.ManagedSpacecraftWithoutAttitude_Throws`
-  checks the search (the Earth as a point and as its ellipsoid, the Moon) and `IsInFOV` on a spacecraft from a state and
-  from a TLE; `AttitudeAddedByHand_IsTheOneSearched` holds `IsInFOV` to the closed form of a circular field for an
+  checks the search (the Earth as a point and as its ellipsoid, the Moon) and `IsInFOV` on a spacecraft from a state,
+  from a TLE and propagated by `TLEPropagator`, and that an attitude added lifts the refusal;
+  `AttitudeAddedByHand_IsTheOneSearched` holds `IsInFOV` to the closed form of a circular field for an
   attitude given by hand, at the edges of the search within 9.7e-11 rad of the half-angle. The getters
   (`GetBoresightInICRFFrame`, …) keep the identity before any attitude.
 - **The emission and phase angles of a site's illumination search were measured from the site itself**
@@ -1392,15 +1393,17 @@ release are listed under **Known limitations**.
   internal evaluation shared by `CelestialItem` and `Site` (`GeodeticCoordinates.PlanetographicCoordinate`) takes the
   sense from the spin of the observer's body at the start of the search. `KernelWindowSearchTests` holds it to
   `gfposc_c` (the Moon from the Earth, the Earth and the Sun from Mercury, the Earth from Venus, DSS-13 from Mercury):
-  the same window counts, the edges on the threshold within 3e-7 s, those at the 0/2π cut within 6.6e-11 rad of it;
+  the same window counts, the edges on the threshold within 3e-7 s (DSS-13 from Mercury; 2e-7 s for the others), those
+  at the 0/2π cut within 6.6e-11 rad of it;
   `PlanetographicTests` holds the evaluation to `recpgr_c` for eight bodies within 1.7e-16 rad.
 - **The managed planetographic latitude was the planetocentric one, and its altitude was a radius**
   ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). PLANETOGRAPHIC is (LONGITUDE, LATITUDE, ALTITUDE) in `gfposc_c` (Detailed_Input `coord`), its
   latitude the geodetic one on the spheroid (`recpgr_c` Particulars); the managed search took the planetocentric
   latitude (−0.297009940 rad for the Moon from the Earth on 2024-03-01, `recpgr_c` −0.297039902), whose edges above
   −0.4 rad were 51.5 s and 47.5 s off, accepted `Coordinate.Radius` and threw for `Coordinate.Altitude`. The latitude
-  and the altitude are now the geodetic ones on the observer body's spheroid, within 3e-7 s and 1e-7 s of `gfposc_c`;
-  the altitude is searched and the radius throws `ArgumentOutOfRangeException`.
+  and the altitude are now the geodetic ones on the observer body's spheroid, their edges within 4e-7 s of `gfposc_c`
+  (DSS-13 from the Moon, both; the Moon from the Earth 3e-7 s and 1e-7 s); the altitude is searched and the radius
+  throws `ArgumentOutOfRangeException`.
 - **A site built from coordinates, or a managed spacecraft, read in its own frame threw SPICE(UNKNOWNFRAME)**
   ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). A read in a frame that only the library holds, the `SiteFrame` of a site built from coordinates
   seen from an observer other than its body (the Moon, the Sun, a kernel spacecraft) or the `SpacecraftFrame` of a
@@ -1408,7 +1411,12 @@ release are listed under **Known limitations**.
   `moon.GetEphemeris(t, earth, site.Frame, …)`, `SpiceAPI.ReadEphemeris` and the managed searches on them threw.
   `SpiceAPI.ManagedReadFrame` now routes these frames as [#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558) routes TEME, CIRS and TIRS: read in J2000 and
   rotated by the managed frame at the epoch of the read. Against `spkezr_c` and `pxform_c` · `georec_c` on the frame
-  kernel the library writes for the site, 4.0e-7 m and 6.4e-11 m/s over 5 epochs from the Moon.
+  kernel the library writes for the site, 4.0e-7 m and 6.4e-11 m/s over 5 epochs from the Moon; against `spkezr_c` in
+  the frame of a managed spacecraft on the frame kernel and the CK the library writes from its record, 6.8e-8 m and
+  1.6e-13 m/s. A managed spacecraft whose attitude record is empty (never propagated, no orientation added, from a TLE
+  or `TLEPropagator`) has no attitude in the library: its frame is still read by name, as before, so the frame kernel
+  and the CK of its id, if loaded, give its attitude (within 1.7e-16 rad of the attitude written), and SPICE rejects the
+  frame otherwise; it is not read with the identity of the empty record.
 - **`CelestialItem.GetEphemeris(window, …)` read past its window across a leap second** ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)). It
   counted floor(`Length` / step) + 1 samples, `Length` counting the leap second ([#508](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/508)), and placed them in
   the calendar, which does not: over 2016-12-31T23:59:00Z to 2017-01-01T00:01:00Z it returned 122 states at 1 s and 2
@@ -1777,8 +1785,10 @@ release are listed under **Known limitations**.
   which `earth_topo_201023.tf` defines; its reads in its frame from an observer other than the Earth went through the
   kernel's station frame and are now rotated by its own coordinates (27.0 to 30.3 m and 2.0e-3 m/s from the Moon for
   DSS-13's own coordinates, 2024-03-01). A caller who loaded the frame kernel the library writes for a site (or the
-  frame kernel and the CK of a managed spacecraft) gets the library's rotation, the source of those kernels: 4.0e-7 m
-  from them for a site. Migration: give a site built from coordinates a name no loaded kernel uses, or build the
+  frame kernel and the CK of a managed spacecraft, read through an object whose attitude record holds an entry) gets the
+  library's rotation, the source of those kernels: 4.0e-7 m from them for a site, 6.8e-8 m for a spacecraft; a managed
+  spacecraft with an empty record (a new object of the id, never propagated) is read through the kernels by name, as
+  before. Migration: give a site built from coordinates a name no loaded kernel uses, or build the
   station from the kernels, `new Site(13, "DSS-13", earth)`.
 
 **Removed**
@@ -1840,7 +1850,7 @@ not listed.
   even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in `Frame.CIRS` or
   `Frame.TIRS` returns no window, and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances `Frame.CIRS`
   and `Frame.TIRS`, and search in a SPICE frame. The frame of a site built from coordinates and that of a managed
-  spacecraft are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), but a CSPICE coordinate search in them (a kernel
+  spacecraft with an attitude record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), but a CSPICE coordinate search in them (a kernel
   spacecraft taking part) still returns no window, and a frame built by such a name (`new Frame("MYSITE_TOPO")`) still
   goes to SPICE.
 - **Identifiers that are not celestial bodies**
