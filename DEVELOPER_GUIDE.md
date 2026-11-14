@@ -872,8 +872,8 @@ Represents a complete CCSDS Orbit Parameter Message.
 | `SaveToFile(string filePath, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML file |
 | `SaveToString(bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML string |
 | `ToXmlString(bool wrapInNdm, bool indent)` | Convert to XML string without validation |
-| `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s) |
-| `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object |
+| `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s); without an observer, the centre `CENTER_NAME` names (a barycenter, the Sun, a planet or a moon; another name throws `ArgumentException`), and an observer that contradicts it throws (#679) |
+| `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector` |
 | `Validate()` | Validate OPM content and return validation result |
 
 ```csharp

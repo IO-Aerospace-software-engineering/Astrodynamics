@@ -301,7 +301,7 @@ var spacecraft = opm.ToSpacecraft(
     naifId: -1000,
     maximumOperatingMass: 500000.0,
     clock: new Clock("OnboardClock", 256),
-    observer: earth);  // Optional, defaults to Earth
+    observer: earth);  // Optional, defaults to the CENTER_NAME centre (an unknown one throws)
 ```
 
 **OPM ↔ StateVector Conversion**

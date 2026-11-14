@@ -190,10 +190,25 @@ public class Opm
     /// <summary>
     /// Converts this OPM to a framework StateVector.
     /// </summary>
-    /// <param name="observer">The central body (observer). If null, Earth is used.</param>
+    /// <param name="observer">
+    /// The centre of the state. If null, the centre <c>CENTER_NAME</c> names: a <see cref="Barycenter"/> for the barycenters
+    /// 0 to 9, otherwise a <see cref="CelestialBody"/> in ICRF at the epoch (the Sun, a planet or a moon).
+    /// </param>
     /// <returns>A new StateVector instance with the OPM data.</returns>
     /// <exception cref="InvalidOperationException">The <c>TIME_SYSTEM</c> is none of UTC, TAI, TDB, TT and GPS.</exception>
+    /// <exception cref="ArgumentException">
+    /// No observer is given and <c>CENTER_NAME</c> is not a centre the library identifies (a site, a spacecraft, a body that
+    /// only a kernel names): pass the observer. Or the observer's NAIF id differs from the centre <c>CENTER_NAME</c> names.
+    /// </exception>
     /// <remarks>
+    /// <para>
+    /// <c>CENTER_NAME</c> is read trimmed and in any letter case: the SPICE name of a barycenter (<c>SOLAR SYSTEM
+    /// BARYCENTER</c>, <c>EARTH BARYCENTER</c>, ...), of the Sun, of a planet or of a moon, the names the writers emit, or
+    /// one of NAIF's built-in synonyms of the barycenters (<c>SSB</c>, <c>SOLAR_SYSTEM_BARYCENTER</c>, <c>EMB</c>,
+    /// <c>EARTH MOON BARYCENTER</c>, <c>EARTH-MOON BARYCENTER</c>, <c>&lt;PLANET&gt;_BARYCENTER</c>; NAIF IDs Required
+    /// Reading). Before 11.0.0 the observer was the Earth whatever <c>CENTER_NAME</c> said (#679). A given observer with a
+    /// <c>CENTER_NAME</c> outside these names (a ground station, a spacecraft) is used as given.
+    /// </para>
     /// <para>
     /// The epoch is read in the <c>TIME_SYSTEM</c> of the metadata: UTC, TAI, TDB, TT or GPS (#485). Before 11.0.0 it was
     /// read as UTC whatever the time system, 69.19 s late for a TDB file.
@@ -221,11 +236,27 @@ public class Opm
         // The epoch in the TIME_SYSTEM of the metadata (#485); a time system the framework does not convert throws
         var timeFrame = CcsdsTimeSystemMapping.ToTimeFrame(Metadata.TimeSystemEnum, Metadata.TimeSystem);
 
-        // Default to Earth if no observer specified
+        // The centre CENTER_NAME names (#679): built when no observer is given, checked against the one given
+        bool knownCenter = CcsdsCenterNames.TryGetNaifId(Metadata.CenterName, out var centerId);
         if (observer == null)
         {
+            if (!knownCenter)
+            {
+                throw new ArgumentException(
+                    $"CENTER_NAME '{Metadata.CenterName}' is not a barycenter, the Sun, a planet or a moon the library identifies: " +
+                    "pass the observer.", nameof(observer));
+            }
+
             var epoch = new Time(Data.StateVector.Epoch, timeFrame);
-            observer = new CelestialBody(399, Frame.ICRF, epoch);
+            observer = centerId <= 9
+                ? new Barycenter(centerId, epoch)
+                : new CelestialBody(centerId, Frame.ICRF, epoch);
+        }
+        else if (knownCenter && observer.NaifId != centerId)
+        {
+            throw new ArgumentException(
+                $"The observer {observer.Name} ({observer.NaifId}) contradicts CENTER_NAME '{Metadata.CenterName}' ({centerId}): " +
+                "pass the centre CENTER_NAME names, or correct CENTER_NAME.", nameof(observer));
         }
 
         // Get the reference frame from metadata
@@ -266,7 +297,7 @@ public class Opm
     /// <param name="naifId">The NAIF identifier for the spacecraft (must be negative).</param>
     /// <param name="maximumOperatingMass">The maximum operating mass in kilograms.</param>
     /// <param name="clock">The spacecraft clock.</param>
-    /// <param name="observer">The central body (observer). If null, Earth is used.</param>
+    /// <param name="observer">The centre of the state. If null, the centre <c>CENTER_NAME</c> names, as on <see cref="ToStateVector"/>.</param>
     /// <returns>A new Spacecraft instance with the OPM data.</returns>
     /// <remarks>
     /// OPM provides: OBJECT_NAME (name), OBJECT_ID (cosparId), stateVector, and optionally spacecraftParameters.
@@ -277,6 +308,10 @@ public class Opm
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when clock is null.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when naifId is non-negative or maximumOperatingMass is invalid.</exception>
+    /// <exception cref="ArgumentException">
+    /// No observer is given and <c>CENTER_NAME</c> is not a centre the library identifies, or the observer contradicts it
+    /// (see <see cref="ToStateVector"/>).
+    /// </exception>
     public Spacecraft ToSpacecraft(int naifId, double maximumOperatingMass, Clock clock, ILocalizable observer = null)
     {
         if (clock == null)

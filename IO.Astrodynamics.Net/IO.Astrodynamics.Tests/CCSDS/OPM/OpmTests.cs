@@ -1163,6 +1163,154 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
 
         #endregion
 
+        #region Centre from CENTER_NAME (#679)
+
+        private static readonly TimeSystem.Time CentreEpoch = new(2024, 6, 21, 12, 0, 0, 0, 0, TimeSystem.TimeFrame.UTCFrame);
+
+        private static Opm WriteAndLoad(string objectName, StateVector stateVector)
+        {
+            return Opm.LoadFromString(Opm.CreateFromStateVector(objectName, "2024-002A", stateVector).ToXmlString());
+        }
+
+        private static StateVector LunarState()
+        {
+            var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, CentreEpoch);
+            return new StateVector(new Vector3(1900e3, 0.0, 0.0), new Vector3(0.0, 1600.0, 0.0), moon, CentreEpoch, Frames.Frame.ICRF);
+        }
+
+        private Opm CreateOpmAbout(string centerName)
+        {
+            var stateVector = new OpmStateVector(_testEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
+            return Opm.CreateMinimal("SAT", "2024-002A", centerName, "ICRF", "UTC", stateVector);
+        }
+
+        [Fact]
+        public void ToStateVector_LunarOpmWithoutObserver_IsAboutTheMoon()
+        {
+            var written = LunarState();
+            var opm = WriteAndLoad("LUNSAT", written);
+            Assert.Equal("MOON", opm.Metadata.CenterName);
+
+            var read = opm.ToStateVector();
+
+            Assert.Equal(301, read.Observer.NaifId);
+            Assert.Equal(written.Position, read.Position);
+            Assert.Equal(written.Velocity, read.Velocity);
+            // Vis-viva with the Moon's GM of the kernel (gm_de440.tpc), independent of the OPM code
+            double r = read.Position.Magnitude(), v = read.Velocity.Magnitude();
+            double gm = new CelestialBody(301).GM;
+            double visViva = 1.0 / (2.0 / r - v * v / gm);
+            Assert.Equal(0.0, (read.SemiMajorAxis() - visViva) / visViva, 1e-12);
+        }
+
+        [Fact]
+        public void ToStateVector_SsbOpmWithoutObserver_IsAboutTheSsb()
+        {
+            var written = new StateVector(new Vector3(1.5e11, 0.0, 0.0), new Vector3(0.0, 30000.0, 0.0),
+                Barycenters.SOLAR_SYSTEM_BARYCENTER, CentreEpoch, Frames.Frame.ICRF);
+            var opm = WriteAndLoad("HELIO", written);
+
+            var read = opm.ToStateVector();
+
+            Assert.Equal(0, read.Observer.NaifId);
+            Assert.IsType<Barycenter>(read.Observer);
+            Assert.Equal(written.Position, read.Position);
+            Assert.Equal(written.Velocity, read.Velocity);
+        }
+
+        // The ids of NAIF's built-in name/code table (NAIF IDs Required Reading), measured through bodn2c_ of CSPICE N0067
+        [Theory]
+        [InlineData("MOON", 301)]
+        [InlineData("moon", 301)]
+        [InlineData(" MOON ", 301)]
+        [InlineData("SOLAR SYSTEM BARYCENTER", 0)]
+        [InlineData("SSB", 0)]
+        [InlineData("SOLAR_SYSTEM_BARYCENTER", 0)]
+        [InlineData("EARTH BARYCENTER", 3)]
+        [InlineData("EARTH-MOON BARYCENTER", 3)]
+        [InlineData("EMB", 3)]
+        [InlineData("MARS_BARYCENTER", 4)]
+        [InlineData("SUN", 10)]
+        [InlineData("EARTH", 399)]
+        [InlineData("earth ", 399)]
+        public void ToStateVector_CenterName_MapsToNaifId(string centerName, int naifId)
+        {
+            var read = CreateOpmAbout(centerName).ToStateVector();
+
+            Assert.Equal(naifId, read.Observer.NaifId);
+            Assert.Equal(naifId is >= 0 and <= 9, read.Observer is Barycenter);
+        }
+
+        [Fact]
+        public void ToStateVector_UnknownCenterWithoutObserver_Throws()
+        {
+            var opm = CreateOpmAbout("DSS-13");
+            var clock = new Clock("OnboardClock", 256);
+
+            var ex = Assert.Throws<ArgumentException>(() => opm.ToStateVector());
+            Assert.Contains("DSS-13", ex.Message);
+            Assert.Equal("observer", ex.ParamName);
+            var exSpacecraft = Assert.Throws<ArgumentException>(() => opm.ToSpacecraft(-1001, 1000.0, clock));
+            Assert.Contains("DSS-13", exSpacecraft.Message);
+
+            // With an observer, the centre is the caller's, as before
+            var earth = new CelestialBody(399, Frames.Frame.ICRF, new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame));
+            var read = opm.ToStateVector(earth);
+            Assert.Same(earth, read.Observer);
+        }
+
+        [Fact]
+        public void ToStateVector_ObserverContradictsCenterName_Throws()
+        {
+            var lunar = WriteAndLoad("LUNSAT", LunarState());
+            var earth = new CelestialBody(399, Frames.Frame.ICRF, CentreEpoch);
+
+            var ex = Assert.Throws<ArgumentException>(() => lunar.ToStateVector(earth));
+            Assert.Contains("MOON", ex.Message);
+            Assert.Contains("EARTH", ex.Message);
+            Assert.Equal("observer", ex.ParamName);
+
+            // A consistent observer: the EMB passed for an EMB OPM, bit for bit the read without an observer
+            var emb = CreateOpmAbout("EMB");
+            var withObserver = emb.ToStateVector(new Barycenter(3, new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame)));
+            var withoutObserver = emb.ToStateVector();
+            Assert.Equal(3, withObserver.Observer.NaifId);
+            Assert.Equal(withoutObserver.Observer.NaifId, withObserver.Observer.NaifId);
+            Assert.Equal(withoutObserver.Position, withObserver.Position);
+            Assert.Equal(withoutObserver.Velocity, withObserver.Velocity);
+            Assert.Equal(withoutObserver.Epoch, withObserver.Epoch);
+        }
+
+        [Fact]
+        public void ToSpacecraft_LunarOpmWithoutObserver_IsAboutTheMoon()
+        {
+            var opm = WriteAndLoad("LUNSAT", LunarState());
+            var clock = new Clock("OnboardClock", 256);
+
+            var spacecraft = opm.ToSpacecraft(-1001, 1000.0, clock);
+
+            Assert.Equal(301, spacecraft.InitialOrbitalParameters.Observer.NaifId);
+        }
+
+        [Fact]
+        public void ToStateVector_EarthOpm_DefaultObserverUnchanged()
+        {
+            var opm = CreateMinimalOpm("ISS", "1998-067A");
+            var explicitEarth = new CelestialBody(399, Frames.Frame.ICRF, new TimeSystem.Time(_testEpoch, TimeSystem.TimeFrame.UTCFrame));
+
+            var withoutObserver = opm.ToStateVector();
+            var withObserver = opm.ToStateVector(explicitEarth);
+
+            Assert.Equal(399, withoutObserver.Observer.NaifId);
+            Assert.Equal(withObserver.Observer.NaifId, withoutObserver.Observer.NaifId);
+            Assert.Equal(withObserver.Position, withoutObserver.Position);
+            Assert.Equal(withObserver.Velocity, withoutObserver.Velocity);
+            Assert.Equal(withObserver.Epoch, withoutObserver.Epoch);
+            Assert.Equal(withObserver.Frame, withoutObserver.Frame);
+        }
+
+        #endregion
+
         #region Helper Methods
 
         private Opm CreateMinimalOpm(string objectName, string objectId)

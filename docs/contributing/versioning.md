@@ -1356,6 +1356,19 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **An OPM read without an observer was about the Earth whatever its `CENTER_NAME`** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679)). `Opm.ToStateVector()` and
+  `ToSpacecraft()` built the Earth and never read `CENTER_NAME`, so a lunar state that `Opm.CreateFromStateVector` wrote
+  (`CENTER_NAME = MOON`) read back as an Earth orbit: a 956 km and e 0.988 instead of 1885.08 km and 0.0079, and an SSB
+  state a = −443 km. The position and velocity were exact; only the centre was wrong. The observer is now the centre
+  `CENTER_NAME` names, looked up, trimmed and in any letter case, in an internal table (`CCSDS/Common/CcsdsCenterNames`)
+  of the SPICE names of the barycenters 0 to 9, the Sun and the 161 planets and moons of `PlanetsAndMoons`, the names
+  the writers emit, and of NAIF's built-in synonyms of the barycenters (`SSB`, `SOLAR_SYSTEM_BARYCENTER`, `EMB`,
+  `EARTH MOON BARYCENTER`, `EARTH-MOON BARYCENTER`, `<PLANET>_BARYCENTER`); a `Barycenter` for 0 to 9, otherwise a
+  `CelestialBody` in ICRF at the epoch, as before for the Earth. The ids are literals: no kernel read, no type
+  initializer (#623). `OpmTests` reads the lunar OPM about the Moon, its semi-major axis the vis-viva of the Moon's
+  kernel GM within 1e-12 relative, and maps each name of a theory to the id CSPICE's `bodn2c_` gives it;
+  `CcsdsCenterNamesTests` checks every entry against the name SPICE gives its id (`GetCelestialBodyInfo`), and all 186
+  names agree with `bodn2c_` of CSPICE N0067. An EARTH OPM reads as before, bit for bit.
 
 **Changed**
 
@@ -1686,6 +1699,14 @@ release are listed under **Known limitations**.
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
 
+- **Breaking: the centre of an OPM is its `CENTER_NAME`** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above). Without an observer, `Opm.ToStateVector()`
+  and `ToSpacecraft()` on an OPM whose `CENTER_NAME` is not a barycenter, the Sun, a planet or a moon the library
+  identifies (a ground station, a site or a spacecraft, a body that only a kernel names, a typo) throw
+  `ArgumentException` (`ParamName` `observer`) where they used the Earth; an observer whose NAIF id contradicts a known
+  `CENTER_NAME` (the Earth passed for a MOON OPM, a site passed for an EARTH OPM) throws `ArgumentException` naming both;
+  a non-Earth OPM read without an observer is about its centre, so every quantity derived from the observer moves.
+  Migration: pass the observer for a site, a spacecraft or a kernel-defined centre; pass the centre the message names,
+  or correct `CENTER_NAME`.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

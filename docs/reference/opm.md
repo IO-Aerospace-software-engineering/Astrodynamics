@@ -46,9 +46,31 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 
 | Method | Description |
 |--------|-------------|
-| `ToStateVector(observer)` | Convert to a `StateVector` (applies unit conversion); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS), another time system throws (#485). The library's writers write the epoch in UTC under `TIME_SYSTEM = UTC` (#479) |
-| `ToSpacecraft(naifId, maxMass, clock, observer)` | Create a `Spacecraft` from OPM data |
+| `ToStateVector(observer)` | Convert to a `StateVector` (applies unit conversion); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS), another time system throws (#485). The library's writers write the epoch in UTC under `TIME_SYSTEM = UTC` (#479). The observer is optional: see [The centre](#the-centre) |
+| `ToSpacecraft(naifId, maxMass, clock, observer)` | Create a `Spacecraft` from OPM data; the observer as on `ToStateVector` |
 | `Validate()` | Validate and return `OpmValidationResult` |
+
+### The centre
+
+Without an observer, `ToStateVector` and `ToSpacecraft` take the centre `CENTER_NAME` names (#679), read trimmed and in
+any letter case:
+
+| `CENTER_NAME` | Observer |
+|---------------|----------|
+| `SOLAR SYSTEM BARYCENTER`, `SSB`, `SOLAR_SYSTEM_BARYCENTER` | `Barycenter` 0 |
+| `<PLANET> BARYCENTER`, `<PLANET>_BARYCENTER` (`MERCURY` to `PLUTO`) | `Barycenter` 1 to 9 |
+| `EMB`, `EARTH MOON BARYCENTER`, `EARTH-MOON BARYCENTER` | `Barycenter` 3 |
+| `SUN` | `CelestialBody` 10 |
+| the SPICE name of a planet or moon of `PlanetsAndMoons` (`EARTH`, `MOON`, `MARS`, ...) | `CelestialBody` of its id |
+
+The names are those SPICE gives the ids (`bodc2n`), which the writers emit, and NAIF's built-in synonyms of the
+barycenters (NAIF IDs Required Reading). A `CelestialBody` is built in ICRF at the epoch, a `Barycenter` at the epoch.
+
+- Any other `CENTER_NAME` without an observer (a ground station such as `DSS-13`, a site, a spacecraft, a body that only
+  a kernel names) throws `ArgumentException`: pass the observer, which is then used as given.
+- An observer whose NAIF id differs from the centre a known `CENTER_NAME` names throws `ArgumentException`.
+
+Before 11.0.0 the observer was the Earth whatever `CENTER_NAME` said.
 
 ### Properties
 
