@@ -84,11 +84,13 @@ A spacecraft whose initial orbit is a TLE is propagated numerically by `Spacecra
 11.0.0 every path threw "must be defined in inertial frame"). Its start is the SGP4 state at the start of the window,
 rotated once to ICRF, on the Earth of the TLE; the propagation runs in ICRF and its states are in ICRF
 ([Propagation Frame](propagators.md#propagation-frame)). The TLE is not SGP4 then: the central body is the Earth of
-the TLE, a point mass without atmosphere, and B* is not used. For the ISS (`21020.53488036`), RK7(8) at 1e-9, the
+the TLE, a point mass without an atmospheric model, whose drag, when asked, is NRLMSISE-00 at nominal space weather, as
+for any Earth without one (#674), and B* is not used. For the ISS (`21020.53488036`), RK7(8) at 1e-9, the
 propagation is 53.663 km, 275.692 km and 1118.386 km from SGP4 after 1 h, 6 h and 24 h. An Earth with a geopotential or
-an atmosphere in the bodies does not replace it: it is ignored for gravity, its atmosphere used for drag, and drag
-without one is dropped (Known limitations of 11.0.0). For a geopotential and drag, give the spacecraft a TEME state on
-an Earth that carries them:
+an atmosphere in the bodies does not replace it: bodies of one NAIF identifier must have the same models, so the
+propagation throws `ArgumentException` naming them (#674; before, such an Earth was ignored for gravity and its
+atmosphere used for drag). For a geopotential and an atmosphere of your choice, give the spacecraft a TEME state on an
+Earth that carries them:
 
 ```csharp
 var start = window.StartDate.ToTDB();
