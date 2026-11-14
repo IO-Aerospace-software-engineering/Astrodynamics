@@ -674,7 +674,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 | `Data` | Orbital data (mean elements, TLE parameters, spacecraft parameters) |
 | `ObjectName` | Shortcut to metadata object name |
 | `ObjectId` | Shortcut to metadata object ID (COSPAR ID format: "1998-067A") |
-| `IsTleCompatible` | True if OMM contains TLE parameters and its `MEAN_ELEMENT_THEORY` is SGP4, its `REF_FRAME` TEME and its `CENTER_NAME` the Earth; otherwise `ToTle()` throws naming the keywords at fault (#679) |
+| `IsTleCompatible` | True if OMM contains TLE parameters and its `MEAN_ELEMENT_THEORY` is SGP4, its `REF_FRAME` TEME and its `CENTER_NAME` the Earth, each read trimmed and in any letter case; otherwise `ToTle()` throws naming the keywords at fault (#679) |
 
 | Method | Description |
 |--------|-------------|

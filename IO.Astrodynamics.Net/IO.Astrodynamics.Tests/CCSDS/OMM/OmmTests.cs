@@ -817,6 +817,36 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.Equal(reference.Line2, padded.ToTle().Line2);
         }
 
+        // REF_FRAME and MEAN_ELEMENT_THEORY are xsd:string and read untrimmed: padded, they name TEME and SGP4 as
+        // CENTER_NAME padded names the Earth, and give the TLE of the unpadded OMM (as before 11.0.0)
+        [Fact]
+        public void IsTleCompatible_PaddedFrameAndTheory_GivesTheSameTle()
+        {
+            var reference = CreateTleOmm("EARTH", "TEME", "SGP4").ToTle();
+            var padded = CreateTleOmm(" EARTH ", " TEME ", "SGP4 ");
+
+            Assert.True(padded.IsTleCompatible);
+            Assert.Equal(reference.Line1, padded.ToTle().Line1);
+            Assert.Equal(reference.Line2, padded.ToTle().Line2);
+
+            // The same through the reader, from iss.omm
+            var iss = File.ReadAllText("CCSDS/iss.omm");
+            var issTle = Omm.LoadFromString(iss).ToTle();
+            var loaded = Omm.LoadFromString(iss
+                .Replace("<REF_FRAME>TEME<", "<REF_FRAME> TEME <")
+                .Replace("<MEAN_ELEMENT_THEORY>SGP4<", "<MEAN_ELEMENT_THEORY>SGP4 <"));
+            Assert.Equal(" TEME ", loaded.Metadata.ReferenceFrame);
+            Assert.Equal("SGP4 ", loaded.Metadata.MeanElementTheory);
+            Assert.True(loaded.IsTleCompatible);
+            Assert.Equal(issTle.Line1, loaded.ToTle().Line1);
+            Assert.Equal(issTle.Line2, loaded.ToTle().Line2);
+
+            // A padded theory that is not SGP4 is still not compatible
+            var paddedXp = CreateTleOmm("EARTH", "TEME", " SGP4-XP ");
+            Assert.False(paddedXp.IsTleCompatible);
+            Assert.Contains("MEAN_ELEMENT_THEORY ' SGP4-XP '", Assert.Throws<InvalidOperationException>(() => paddedXp.ToTle()).Message);
+        }
+
         #endregion
     }
 }

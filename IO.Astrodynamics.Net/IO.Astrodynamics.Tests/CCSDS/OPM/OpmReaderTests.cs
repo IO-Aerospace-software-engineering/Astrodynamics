@@ -340,6 +340,10 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         [InlineData("OpmReader.ReadFromString")]
         [InlineData("Opm.LoadFromString")]
         [InlineData("Opm.LoadFromString without schema validation")]
+        [InlineData("Opm.LoadFromFile")]
+        [InlineData("Opm.LoadFromStream")]
+        [InlineData("OpmReader.ReadFromFile")]
+        [InlineData("OpmReader.ReadFromStream")]
         public void Read_NdmWithTwoOpm_Throws(string path)
         {
             var xml = TwoOpmNdm();
@@ -349,6 +353,10 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             {
                 "OpmReader.ReadFromString" => () => _reader.ReadFromString(xml),
                 "Opm.LoadFromString" => () => Opm.LoadFromString(xml),
+                "Opm.LoadFromFile" => () => NdmDocuments.WithTempFile(xml, file => Opm.LoadFromFile(file)),
+                "Opm.LoadFromStream" => () => Opm.LoadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
+                "OpmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
+                "OpmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
                 _ => () => Opm.LoadFromString(xml, validateSchema: false)
             };
 

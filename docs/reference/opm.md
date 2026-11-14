@@ -28,7 +28,7 @@ The managed API stores values in SI units internally. The OPM reader and writer 
 | `Opm.TryLoadFromFile(path, out opm, out result, ...)` | Non-throwing load with validation result |
 
 Each load reads one OPM: a standalone `<opm>`, or the one `<opm>` of an `<ndm>` or of another root (messages of
-another type beside it are ignored). A document that holds several OPMs, such as a catalog NDM, throws
+another type beside it are ignored). A document that holds several OPMs, such as a catalog NDM, or a second OPM at any depth below the root, throws
 `OpmParseException` naming their number, `TryLoadFromFile` returns false with a `PARSE_ERROR` and
 `OpmValidator.ValidateFile` reports it invalid (#679); before 11.0.0 the first one was read. Split such a document into
 one OPM per document.

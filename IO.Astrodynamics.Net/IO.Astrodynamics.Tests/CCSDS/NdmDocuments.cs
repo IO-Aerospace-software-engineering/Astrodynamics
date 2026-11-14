@@ -44,6 +44,19 @@ namespace IO.Astrodynamics.Tests.CCSDS
         }
 
         /// <summary>
+        /// An unqualified &lt;ndm&gt; holding iss.omm's &lt;omm&gt; as a child, and again inside an &lt;inner&gt; child
+        /// (a wrapper or another NDM).
+        /// </summary>
+        internal static string OneOmmAndOneNestedOmm(string inner)
+        {
+            var omm = XDocument.Load(IssOmmPath).Root!.Elements().Single(e => e.Name.LocalName == "omm");
+            var xml = new XElement("ndm", new XElement(omm), new XElement(inner, new XElement(omm))).ToString();
+            AssertMessageCount(xml, "ndm", "omm", 1);
+            Assert.Equal(2, XDocument.Parse(xml).Root!.Descendants().Count(e => e.Name.LocalName == "omm"));
+            return xml;
+        }
+
+        /// <summary>
         /// An unqualified &lt;ndm&gt; holding one OMM (iss.omm's) and one OPM.
         /// </summary>
         internal static string OneOmmOneOpm(Opm opm)

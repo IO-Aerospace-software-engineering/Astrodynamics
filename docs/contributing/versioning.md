@@ -1369,7 +1369,6 @@ release are listed under **Known limitations**.
   kernel GM within 1e-12 relative, and maps each name of a theory to the id CSPICE's `bodn2c_` gives it;
   `CcsdsCenterNamesTests` checks every entry against the name SPICE gives its id (`GetCelestialBodyInfo`), and all 186
   names agree with `bodn2c_` of CSPICE N0067. An EARTH OPM reads as before, bit for bit.
-
 - **`Omm.ToTle` turned any OMM with TLE parameters into an Earth TEME TLE** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679)). `IsTleCompatible` checked only the
   `tleParameters` block, and `ToTle` built the Earth and TEME whatever `CENTER_NAME`, `REF_FRAME` and
   `MEAN_ELEMENT_THEORY` said, so a MOON, ICRF, DSST or SGP4-XP OMM gave a TLE describing another orbit (the same line 2
@@ -1378,20 +1377,24 @@ release are listed under **Known limitations**.
   ` (TLE)`. A TLE holds SGP4 mean elements of an Earth orbit in TEME, and the library runs the classic SGP4 (CSPICE
   `evsgp4_c`): `IsTleCompatible` now also requires `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME and a `CENTER_NAME`
   that names the Earth (in the table of the OPM centre above, so `earth` and ` EARTH ` are the Earth, `EARTH
-  BARYCENTER` is not). `OmmTests` checks seven rows of centre, frame and theory, built and loaded, and that the
-  lower-case and padded twins of an EARTH/TEME/SGP4 OMM give its TLE lines.
+  BARYCENTER` is not); each keyword is read trimmed and in any letter case, so a padded ` TEME ` or `SGP4 ` converts as
+  before. `OmmTests` checks seven rows of centre, frame and theory, built and loaded, and that the lower-case and
+  padded twins of an EARTH/TEME/SGP4 OMM, built and loaded from `iss.omm`, give its TLE lines.
 - **A document holding several messages loaded its first one silently** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679)). The OMM, OPM and CDM readers took the
   first message element (`FirstOrDefault`) and dropped the others: an `<ndm>` of two OMMs in the form of a Space-Track
   catalog (ISS and CSS) passed schema validation (NDM/XML allows several messages in an `<ndm>`) and loaded as the ISS
   through `Omm.LoadFromFile`, `LoadFromString`, `LoadFromStream` and `OmmReader`, `Omm.TryLoadFromFile` returned true
   with no error, and `OmmValidator.ValidateFile` reported it valid (0 errors, 119 warnings), from the content of the
   first OMM; the same for two OPMs and two CDMs, and for two messages nested under another root. Each reader now counts
-  the messages of its own type (the root message, the children of an `<ndm>`, the descendants of another root, as
-  before; internal `CCSDS/Common/CcsdsMessageLocator`) and throws its parse exception (`OmmParseException`,
-  `OpmParseException`, `CdmParseException`) naming their number when there are two or more. A mixed NDM of one OMM and
-  one OPM still gives each reader its message. The tests build the documents and count their messages with
-  System.Xml.Linq, independently of the readers, and reach every path: the readers, `Load*` with and without schema
-  validation, `TryLoadFromFile`, `ValidateFile` and `Cdm.ReadFromString`/`ReadFromStream`.
+  the messages of its own type below the root, at any depth (internal `CCSDS/Common/CcsdsMessageLocator`; a second
+  message below a child of an `<ndm>`, which the schema rejects, counts too), and throws its parse exception
+  (`OmmParseException`, `OpmParseException`, `CdmParseException`) naming their number when there are two or more; the
+  message read is, as before, the root message, the child of an `<ndm>` or the descendant of another root. A mixed NDM
+  of one OMM and one OPM still gives each reader its message. The tests build the documents and count their messages
+  with System.Xml.Linq, independently of the readers, and reach every path: `Load*` with and without schema
+  validation, `Load*` and `ReadFrom*` from a file, a string and a stream, `TryLoadFromFile`, `ValidateFile` and
+  `Cdm.ReadFromFile`/`ReadFromString`/`ReadFromStream`.
+
 **Changed**
 
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
@@ -1720,7 +1723,6 @@ release are listed under **Known limitations**.
   returns the geometric direction at the epoch, as with `None`, and with their `+S` forms that direction with the
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
-
 - **Breaking: the centre of an OPM is its `CENTER_NAME`** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above). Without an observer, `Opm.ToStateVector()`
   and `ToSpacecraft()` on an OPM whose `CENTER_NAME` is not a barycenter, the Sun, a planet or a moon the library
   identifies (a ground station, a site or a spacecraft, a body that only a kernel names, a typo) throw
@@ -1732,16 +1734,18 @@ release are listed under **Known limitations**.
 - **Breaking: `Omm.ToTle` throws for an OMM that is not SGP4, TEME and Earth** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above):
   `InvalidOperationException` naming each keyword at fault and its value (`CENTER_NAME 'MOON' is not EARTH; REF_FRAME
   'ICRF' is not TEME; ...`) where it returned a TLE of another orbit; `IsTleCompatible` is false and `ToString` has no
-  ` (TLE)` for those OMMs. An OMM without TLE parameters throws its former message. EARTH/TEME/SGP4 OMMs (`iss.omm`,
-  `Omm.CreateForTle`, `TLE.ToOmm`, the conformance runner's) give the same TLE, bit for bit. Migration: correct the
+  ` (TLE)` for those OMMs. An OMM without TLE parameters throws its former message. The keywords are read trimmed and
+  in any letter case (` TEME `, `sgp4`), as before. EARTH/TEME/SGP4 OMMs (`iss.omm`, `Omm.CreateForTle`, `TLE.ToOmm`,
+  the conformance runner's) give the same TLE, bit for bit. Migration: correct the
   metadata if the elements really are SGP4 elements of an Earth orbit in TEME; otherwise keep the object in OMM form.
 - **Breaking: a document holding several messages of a type throws** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above): `Omm`/`Opm.LoadFromFile`,
   `LoadFromString` and `LoadFromStream`, `Cdm.ReadFromFile`, `ReadFromStream` and `ReadFromString`, and
   `OmmReader`/`OpmReader`/`CdmReader.ReadFrom*` throw `OmmParseException`, `OpmParseException` or `CdmParseException`
-  where they returned the first message; `Omm`/`Opm.TryLoadFromFile` return false with a `PARSE_ERROR`;
-  `OmmValidator`/`OpmValidator.ValidateFile` report the file invalid. A document with one message of the type, alone
-  or beside messages of other types, loads as before. Migration: split the NDM into one `<omm>`, `<opm>` or `<cdm>` per
+  where they returned the first message, a second message at any depth below the root counted;
+  `Omm`/`Opm.TryLoadFromFile` return false with a `PARSE_ERROR`; `OmmValidator`/`OpmValidator.ValidateFile` report the
+  file invalid. A document with one message of the type, alone or beside messages of other types, loads as before. Migration: split the NDM into one `<omm>`, `<opm>` or `<cdm>` per
   document.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

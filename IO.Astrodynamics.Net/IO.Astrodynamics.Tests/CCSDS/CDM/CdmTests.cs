@@ -190,6 +190,8 @@ public class CdmTests
         using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
         var exStream = Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream));
         Assert.Contains("2 CDM messages", exStream.Message);
+        var exFile = Assert.Throws<CdmParseException>(() => NdmDocuments.WithTempFile(xml, file => Cdm.ReadFromFile(file)));
+        Assert.Contains("2 CDM messages", exFile.Message);
 
         // Two nested CDMs under a root that is not an NDM
         var cdmElement = XDocument.Parse(xml).Root!.Elements().First();

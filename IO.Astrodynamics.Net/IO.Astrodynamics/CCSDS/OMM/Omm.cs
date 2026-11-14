@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.CCSDS.Common;
-using IO.Astrodynamics.CCSDS.Common.Enums;
 
 namespace IO.Astrodynamics.CCSDS.OMM;
 
@@ -86,8 +85,8 @@ public class Omm
     /// </summary>
     /// <remarks>
     /// A TLE holds SGP4 mean elements of an Earth orbit in TEME, and the library runs the classic SGP4 only (CSPICE
-    /// <c>evsgp4_c</c>), so SGP4-XP, DSST, another frame or another centre is not compatible. The theory and the frame are
-    /// compared in any letter case, the centre trimmed and in any letter case (<c>EARTH</c>, <c>earth</c>). Before 11.0.0
+    /// <c>evsgp4_c</c>), so SGP4-XP, DSST, another frame or another centre is not compatible. The centre, the frame and
+    /// the theory are compared trimmed and in any letter case (<c>EARTH</c>, <c>earth</c>, <c> TEME </c>). Before 11.0.0
     /// only the TLE parameters were checked (#679).
     /// </remarks>
     public bool IsTleCompatible => Data.HasTleParameters && TleMetadataFaults().Count == 0;
@@ -100,11 +99,18 @@ public class Omm
         var faults = new List<string>();
         if (!CcsdsCenterNames.TryGetNaifId(Metadata.CenterName, out var centerId) || centerId != 399)
             faults.Add($"CENTER_NAME '{Metadata.CenterName}' is not EARTH");
-        if (Metadata.ReferenceFrameEnum != CcsdsReferenceFrame.TEME)
+        // REF_FRAME and MEAN_ELEMENT_THEORY are xsd:string, read untrimmed: trimmed here, as CENTER_NAME
+        if (!IsKeyword(Metadata.ReferenceFrame, "TEME"))
             faults.Add($"REF_FRAME '{Metadata.ReferenceFrame}' is not TEME");
-        if (Metadata.MeanElementTheoryEnum != MeanElementTheory.SGP4)
+        if (!IsKeyword(Metadata.MeanElementTheory, "SGP4"))
             faults.Add($"MEAN_ELEMENT_THEORY '{Metadata.MeanElementTheory}' is not SGP4");
         return faults;
+    }
+
+    // The value is the keyword value, trimmed and in any letter case
+    private static bool IsKeyword(string value, string expected)
+    {
+        return value.Trim().Equals(expected, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
