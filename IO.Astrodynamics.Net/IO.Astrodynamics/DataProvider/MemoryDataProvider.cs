@@ -19,10 +19,11 @@ namespace IO.Astrodynamics.DataProvider;
 /// frame read outside its stored orientations, throw <see cref="InvalidOperationException"/>, the type SPICE throws for the
 /// same situations and the type the library's handlers of missing data catch, so a body whose barycentre's data the
 /// provider lacks builds without an orbit and with an infinite sphere of influence, as on SPICE; a frame never added throws
-/// <see cref="ArgumentException"/>. A NAIF id without body information throws <see cref="InvalidOperationException"/>
-/// too, the type the construction of a body without a name throws on SPICE (<see cref="CelestialItem"/>); the SPICE
-/// provider's own read returns a record for an id the kernels do not name and throws <see cref="ArgumentException"/>
-/// for an id that is not a celestial body's.
+/// <see cref="ArgumentException"/>. A NAIF id without body information throws <see cref="ArgumentException"/> naming
+/// <c>naifId</c>, as the SPICE provider for an id SPICE does not name or that is not a celestial body's (#672), and so do
+/// <c>new CelestialBody(id)</c> and <see cref="CelestialItem.Create"/> of that id (#680, decided by S. Guillet,
+/// 2026-11-14: a bad argument gives <see cref="ArgumentException"/>). A body whose barycentre's information the provider
+/// lacks still builds without an orbit, as on SPICE, which names every barycentre.
 /// </remarks>
 public class MemoryDataProvider : IDataProvider
 {
@@ -106,15 +107,17 @@ public class MemoryDataProvider : IDataProvider
             targetFromSSB.Velocity - observerFromSSB.Velocity, observer, date, frame);
     }
 
-    /// <exception cref="InvalidOperationException">No information was added for <paramref name="naifId"/> (#680;
-    /// <see cref="System.Collections.Generic.KeyNotFoundException"/> before 11.0.0), the type the construction of a body the
-    /// kernels do not name throws on SPICE (<see cref="CelestialItem"/>).</exception>
+    /// <exception cref="ArgumentException">No information was added for <paramref name="naifId"/>, the exception's
+    /// <see cref="ArgumentException.ParamName"/> <c>naifId</c>: the type and the parameter <see cref="SpiceDataProvider"/>
+    /// throws for an identifier SPICE does not name (#672). #680, decided by S. Guillet, 2026-11-14: a bad argument gives
+    /// <see cref="ArgumentException"/>; <see cref="System.Collections.Generic.KeyNotFoundException"/> before 11.0.0.</exception>
     public CelestialBody GetCelestialBodyInfo(int naifId)
     {
         if (!_celestialBodies.TryGetValue(naifId, out var info))
         {
-            throw new InvalidOperationException(
-                $"No celestial body information for the NAIF id {naifId}: add it with {nameof(AddCelestialBodyInfo)}.");
+            throw new ArgumentException(
+                $"No celestial body information for the NAIF id {naifId}: add it with {nameof(AddCelestialBodyInfo)}.",
+                nameof(naifId));
         }
 
         return info;

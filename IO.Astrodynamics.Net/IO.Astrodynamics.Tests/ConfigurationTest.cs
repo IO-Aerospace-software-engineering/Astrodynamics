@@ -175,11 +175,14 @@ public class ConfigurationTest
         Assert.Equal(celestialBody, result);
     }
 
+    // ArgumentException naming naifId, as SpiceDataProvider for an id SPICE does not name (#680, decided by S. Guillet,
+    // 2026-11-14)
     [Fact]
-    public void GetCelestialBodyInfo_ThrowsInvalidOperationException_WhenNaifIdDoesNotExist()
+    public void GetCelestialBodyInfo_ThrowsArgumentException_WhenNaifIdDoesNotExist()
     {
         var dataProvider = new MemoryDataProvider();
 
-        Assert.Throws<InvalidOperationException>(() => dataProvider.GetCelestialBodyInfo(999));
+        var exception = Assert.Throws<ArgumentException>(() => dataProvider.GetCelestialBodyInfo(999));
+        Assert.Equal("naifId", exception.ParamName);
     }
 }

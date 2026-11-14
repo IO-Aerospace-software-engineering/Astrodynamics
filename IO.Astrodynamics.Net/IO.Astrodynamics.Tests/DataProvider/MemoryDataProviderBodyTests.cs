@@ -1,6 +1,8 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -20,7 +22,10 @@ namespace IO.Astrodynamics.Tests.DataProvider;
 /// the stored states the Earth has its orbit. The orientation cache of a propagation over a memory frame whose two entries
 /// an hour apart do not reach its buffer points builds, and its orientation between two grid points is the closed form of
 /// the rotation about the entries' axis. Before #680 the child threw <see cref="System.Collections.Generic.KeyNotFoundException"/>
-/// ('3'), and the cache <see cref="ArgumentException"/>. The class runs in the collection of <see cref="ColdStartTests"/>,
+/// ('3'), and the cache <see cref="ArgumentException"/>. An identifier the provider has no information on throws, through
+/// each public path, the <see cref="ArgumentException"/> naming <c>naifId</c> of the SPICE provider (#680, decided by
+/// S. Guillet, 2026-11-14), while the Earth and the Moon above, whose barycentre's information is missing, still build. The
+/// class runs in the collection of <see cref="ColdStartTests"/>,
 /// alone, for the handles a child inherits on Windows.
 /// </remarks>
 [Collection(nameof(ColdStartCollection))]
@@ -33,10 +38,13 @@ public class MemoryDataProviderBodyTests
         _output = output;
     }
 
+    // One child for the class: its checks cover every case of the theory below
+    private static readonly Lazy<string> ChildOutput = new(() => ColdStartTests.RunChild("(memory-provider)", "memory-provider"));
+
     [Fact]
     public void BodyWithoutBarycentreData_BuildsWithoutOrbit_AndTheOrientationCacheKeepsThePointsUnavailable_AsOnSpice()
     {
-        string output = ColdStartTests.RunChild("(memory-provider)", "memory-provider");
+        string output = ChildOutput.Value;
         foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             _output.WriteLine(line);
@@ -44,4 +52,24 @@ public class MemoryDataProviderBodyTests
 
         Assert.Contains("MEASURE #680 orientation cache", output);
     }
+
+    /// <summary>
+    /// An id neither provider has information on, through each public path that reads the global provider's body
+    /// information: the memory provider throws the exception type and the parameter name of the SPICE provider, the
+    /// reference, <see cref="ArgumentException"/> naming <c>naifId</c> (#680, decided by S. Guillet, 2026-11-14; #672 on
+    /// SPICE). The child checks both and writes one line per id and path; it exits 1 on a difference.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(UnknownIdPaths))]
+    public void UnknownId_ThrowsAsTheSpiceProvider(int id, string path)
+    {
+        Assert.Contains($"OK unknown id {id}, {path}: SPICE ArgumentException (naifId)", ChildOutput.Value);
+        Assert.Contains($"OK unknown id {id}, {path}: memory ArgumentException (naifId), SPICE ArgumentException (naifId)",
+            ChildOutput.Value);
+    }
+
+    public static IEnumerable<object[]> UnknownIdPaths() =>
+        from id in MemoryDataProviderTests.UnknownIdValues
+        from path in new[] { "GetCelestialBodyInfo", "new CelestialBody", "CelestialItem.Create" }
+        select new object[] { id, path };
 }

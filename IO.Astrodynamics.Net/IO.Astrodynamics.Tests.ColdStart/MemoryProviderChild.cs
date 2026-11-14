@@ -1,6 +1,7 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.DataProvider;
@@ -25,6 +26,12 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// with an infinite sphere of influence, as the Earth built on SPICE outside de440s, and the orientation cache of a
 /// propagation over a memory frame whose entries do not reach its buffer points keeps those points unavailable. Before
 /// #680 the provider threw <see cref="KeyNotFoundException"/> and <see cref="ArgumentException"/>, which nothing caught.
+/// The information of an unknown identifier is a bad argument, not missing data (#680, decided by S. Guillet, 2026-11-14):
+/// <see cref="MemoryDataProvider.GetCelestialBodyInfo"/>, <c>new CelestialBody(id)</c> and
+/// <see cref="CelestialItem.Create"/> of an identifier the provider has no information on throw the
+/// <see cref="ArgumentException"/> naming <c>naifId</c> that the SPICE provider throws for the same identifiers, checked
+/// against SPICE, the reference, before the swap; a body whose barycentre's information the provider lacks still builds
+/// without an orbit, as on SPICE, which names every barycentre.
 /// </para>
 /// <para>
 /// The kernels are loaded and the static frames built under SPICE first, the reference: the Earth built at 1500-01-01,
@@ -68,6 +75,8 @@ internal static class MemoryProviderChild
             // The reference: SPICE outside de440s
             var early = new Time(1500, 1, 1, 0, 0, 0, frame: TimeFrame.TDBFrame);
             CheckWithoutOrbit("SPICE, the Earth at 1500", new CelestialBody(399, Frame.ICRF, early));
+            // The reference of the unknown ids: what SPICE throws for each, through each public path
+            var spiceUnknownIds = ThrownByUnknownIds(new SpiceDataProvider());
 
             // The Earth's info only; then with its barycentre's and the SSB's, no state
             CheckWithoutOrbit("memory, the Earth's info only", Build(399, T0, EarthInfo));
@@ -97,6 +106,7 @@ internal static class MemoryProviderChild
             // The Moon with its own info only
             CheckWithoutOrbit("memory, the Moon's info only", Build(301, T0, MoonInfo));
 
+            CheckUnknownIds(spiceUnknownIds);
             CheckOrientationCache();
             return 0;
         }
@@ -124,6 +134,67 @@ internal static class MemoryProviderChild
     {
         Check($"{label}, no orbit", body.InitialOrbitalParameters == null);
         Check($"{label}, infinite sphere of influence", double.IsPositiveInfinity(body.SphereOfInfluence));
+    }
+
+    // The ids neither provider has information on, the list of MemoryDataProviderTests.UnknownIdValues: celestial ids SPICE
+    // does not name (#672), then a spacecraft's, an id from 11 to 100, and 1000
+    private static readonly int[] UnknownIds = [398, 12345678, 2000003, 99999999, -12345, 50, 1000];
+
+    // The public paths through which an id reaches the body information: the read of the provider, the global one's when it
+    // is set, and the constructors that read the global provider
+    private static readonly (string Path, Func<IDataProvider, int, object> Read)[] UnknownIdPaths =
+    [
+        ("GetCelestialBodyInfo", (provider, id) => provider.GetCelestialBodyInfo(id)),
+        ("new CelestialBody", (_, id) => new CelestialBody(id)),
+        ("CelestialItem.Create", (_, id) => CelestialItem.Create(id))
+    ];
+
+    // The exception each path throws for each unknown id, null for none; the global provider is the one given
+    private static Dictionary<(int Id, string Path), Exception> ThrownByUnknownIds(IDataProvider provider)
+    {
+        var thrown = new Dictionary<(int Id, string Path), Exception>();
+        foreach (int id in UnknownIds)
+        {
+            foreach (var (path, read) in UnknownIdPaths)
+            {
+                try
+                {
+                    read(provider, id);
+                    thrown[(id, path)] = null;
+                }
+                catch (Exception e)
+                {
+                    thrown[(id, path)] = e;
+                }
+            }
+        }
+
+        return thrown;
+    }
+
+    private static string Describe(Exception e) => e switch
+    {
+        null => "no exception",
+        ArgumentException argument => $"{e.GetType().Name} ({argument.ParamName})",
+        _ => $"{e.GetType().Name}: {e.Message}"
+    };
+
+    // #680, decided by S. Guillet, 2026-11-14: a bad argument gives ArgumentException. On a memory provider holding the
+    // Earth's, its barycentre's, the SSB's and the Sun's information, each unknown id throws through each path the
+    // exception type and the parameter name SPICE throws, the reference: ArgumentException naming naifId (#672)
+    private static void CheckUnknownIds(Dictionary<(int Id, string Path), Exception> spice)
+    {
+        var provider = Provider(EarthInfo, EarthBarycenterInfo, SsbInfo, SunInfo);
+        Configuration.Instance.SetDataProvider(provider);
+        var memory = ThrownByUnknownIds(provider);
+        foreach (var (key, reference) in spice)
+        {
+            var thrown = memory[key];
+            Check($"unknown id {key.Id}, {key.Path}: SPICE {Describe(reference)}",
+                reference?.GetType() == typeof(ArgumentException) && ((ArgumentException)reference).ParamName == "naifId");
+            Check($"unknown id {key.Id}, {key.Path}: memory {Describe(thrown)}, SPICE {Describe(reference)}",
+                thrown?.GetType() == reference.GetType() && ((ArgumentException)thrown).ParamName == ((ArgumentException)reference).ParamName);
+        }
     }
 
     // Two orientations of a frame an hour apart, rotations of 0.1 and 0.7 rad about one fixed axis: the cache over that hour

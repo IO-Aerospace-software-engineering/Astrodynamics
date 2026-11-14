@@ -1783,16 +1783,21 @@ release are listed under **Known limitations**.
   library's handlers of missing data catch the `InvalidOperationException` of SPICE only, so `new CelestialBody(399)`
   on a provider holding the Earth's information alone threw `KeyNotFoundException` ('3'), and the orientation cache of
   a propagation over a memory frame threw from its constructor as soon as a buffer point lay before the first stored
-  orientation. The three cases now throw `InvalidOperationException` naming the item and the epoch, the contract of the
-  SPICE provider; a frame never added keeps `ArgumentException`. A planet, moon, barycentre or the Sun whose barycentre's
-  data the provider lacks builds with `InitialOrbitalParameters` null and an infinite sphere of influence, as the Earth
-  built on SPICE outside de440s, and the cache keeps the points the entries do not reach unavailable. `MemoryDataProviderTests`
-  checks the types of the state and orientation reads against those of `SpiceDataProvider` for the same reads, and that
-  of an identifier without information against `CelestialItem`'s on SPICE for a body the kernels do not name (the SPICE
-  provider's own read returns a record there); `MemoryDataProviderBodyTests` builds
+  orientation. The state and orientation reads now throw `InvalidOperationException` naming the item and the epoch, the
+  contract of the SPICE provider; a frame never added keeps `ArgumentException`. An identifier without information is a
+  bad argument (decided by S. Guillet, 2026-11-14): `GetCelestialBodyInfo` throws `ArgumentException` naming `naifId`, the
+  type and the parameter of `SpiceDataProvider` for an identifier SPICE does not name or that is not a celestial body's
+  ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)), and so do `new CelestialBody(id)` and `CelestialItem.Create(id)` of that identifier on both providers. A planet,
+  moon, barycentre or the Sun whose barycentre's data, information included, the provider lacks builds with
+  `InitialOrbitalParameters` null and an infinite sphere of influence, as the Earth built on SPICE outside de440s (SPICE
+  names every barycentre), and the cache keeps the points the entries do not reach unavailable. `MemoryDataProviderTests`
+  checks the types of the state and orientation reads against those of `SpiceDataProvider` for the same reads, and the
+  exception type and parameter name of seven unknown identifiers (four celestial ones SPICE does not name, a spacecraft's,
+  50 and 1000) against `SpiceDataProvider`'s; `MemoryDataProviderBodyTests` builds
   the Earth from one, two or three infos, a day before its stored states and within them, and the Moon, in a child
-  process (the test process never swaps the global provider, #631), and reads the cache over a memory frame between two
-  grid points against the closed-form rotation, within 1.15e-16 rad (Changed, Breaking, below).
+  process (the test process never swaps the global provider, #631), checks the same identifiers through
+  `GetCelestialBodyInfo`, `new CelestialBody(id)` and `CelestialItem.Create(id)` against SPICE, and reads the cache over a
+  memory frame between two grid points against the closed-form rotation, within 1.15e-16 rad (Changed, Breaking, below).
 - **`ToEquatorial()` and `new Equatorial(StateVector)` ignored the state's frame** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). They took atan2 and asin
   of the position in whatever frame it was expressed in, so a state in ITRF93 gave an Earth-fixed longitude, one in
   ECLIPJ2000 an ecliptic longitude and latitude, a TLE (TEME) a right ascension up to 0.32° off; the Moon from the Earth
@@ -2369,13 +2374,18 @@ release are listed under **Known limitations**.
   before. A secondary with an engine, and a value given by `SecondaryParticipantMetadata`, are unchanged. Migration: set
   `SecondaryParticipantMetadata.Maneuverable` when the capacity of the object is known.
 
-- **Breaking: `MemoryDataProvider` throws `InvalidOperationException` for missing data** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above):
+- **Breaking: `MemoryDataProvider` throws `InvalidOperationException` for missing data and `ArgumentException` for an
+  unknown identifier** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above):
   `GetEphemeris` of a target without stored states or outside them and `FrameTransformationToICRF` outside a frame's
-  stored orientations threw `ArgumentException`, `GetCelestialBodyInfo` of an identifier without information
-  `KeyNotFoundException`, and so `new CelestialBody(id)` of an identifier the provider lacks. A frame never added still
-  throws `ArgumentException`. A body built on the provider without its barycentre's data now builds without an orbit
-  instead of throwing. A variational replay of the conjunction analysis over a provider short of data surfaces the
-  provider's `InvalidOperationException` unwrapped. Migration: catch `InvalidOperationException`.
+  stored orientations threw `ArgumentException` and now throw `InvalidOperationException`. `GetCelestialBodyInfo` of an
+  identifier without information threw `KeyNotFoundException`, and so did `new CelestialBody(id)` and
+  `CelestialItem.Create(id)` of an identifier the provider lacks; they now throw `ArgumentException` whose `ParamName` is
+  `naifId`, as `SpiceDataProvider` for an identifier SPICE does not name. A frame never added still throws
+  `ArgumentException`. A body built on the provider without its barycentre's data or information now builds without an
+  orbit instead of throwing. A variational replay of the conjunction analysis over a provider short of data surfaces the
+  provider's `InvalidOperationException` unwrapped. Migration: catch `InvalidOperationException` for missing states and
+  orientations, and `ArgumentException` (the same handler on both providers) for an identifier without information, or
+  add its information with `AddCelestialBodyInfo` first.
 - **Breaking: `ToEquatorial()` and `new Equatorial(StateVector)` give the right ascension and declination in ICRF**
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above): for a state in another frame the angles change (up to 166.4° in RA for the Moon in MOON_ME,
   24.7° to 123.1° in ITRF93, 0.87° to 4.13° in ECLIPJ2000, up to 0.32° for a TLE in TEME, the Dec by up to 3.65°); the
@@ -2487,8 +2497,9 @@ not listed.
   [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)): build a `Site`.
   `SpiceAPI.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). The commands of the CLI keep
   their own site rule (any identifier from 100001 to 999998, the site named `site<id>`), kept apart on purpose.
-  `MemoryDataProvider` throws `KeyNotFoundException` for a body it does not hold, where `SpiceDataProvider` throws
-  `ArgumentException` for an identifier SPICE does not name.
+  `MemoryDataProvider` throws `ArgumentException` naming `naifId` for a body it holds no information on, as
+  `SpiceDataProvider` for an identifier SPICE does not name
+  ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680); `KeyNotFoundException` before).
 - **Reads past the stored states of a propagated spacecraft**
   ([#527](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/527),
   [#626](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/626)).
