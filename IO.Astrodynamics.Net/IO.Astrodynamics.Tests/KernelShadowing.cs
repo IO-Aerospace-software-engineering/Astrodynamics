@@ -163,9 +163,15 @@ internal sealed class KernelContent
             MetaKernels.Add(file);
         }
 
+        // FileShare.ReadWrite, as the binary reads above and SpiceAPI.IsKernelFile: CSPICE opens a text kernel it loads
+        // (and every text kernel still loaded, again, when one is unloaded) for reading and writing, as the f2c I/O library
+        // opens a file of status OLD ("r+", libI77 open.c), and on Windows an open shared for reading only (that of
+        // File.ReadLines) fails with a sharing violation while that handle is open, in this process or in a child process
         var data = new StringBuilder();
         bool inData = false;
-        foreach (var line in File.ReadLines(file))
+        using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream);
+        while (reader.ReadLine() is { } line)
         {
             string marker = line.Trim();
             if (marker == "\\begindata")

@@ -38,9 +38,10 @@ namespace IO.Astrodynamics.Tests.Body;
 /// by at most that microsecond and the rounding of its encoded SCLK.
 /// </para>
 /// <para>
-/// A TLE spacecraft is not propagated by <c>Spacecraft.Propagate</c>: its SPK holds the SGP4 states every 10 s, and its
-/// CK the identity of ICRF, the attitude of a spacecraft without an attitude maneuver, both written by the test with the
-/// raw writers (a read no longer adds to the attitude record, #523).
+/// A TLE spacecraft is not propagated by <c>Spacecraft.Propagate</c> and records no attitude: the test gives it the
+/// identity of ICRF by hand (<c>AddStateOrientationToICRF</c>), without which its search throws (#682), and writes its SPK,
+/// the SGP4 states every 10 s, and its CK, that identity, with the raw writers (a read no longer adds to the attitude
+/// record, #523).
 /// </para>
 /// <para>
 /// The fields: a circle, an ellipse and a rectangle whose boresight is -X of the frame (the fields of
@@ -177,6 +178,8 @@ public class FieldOfViewDynamicsTests
                 var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, 3000.0, new Clock("FOV5177_CLK", 65536), tle);
                 AddInstruments(spacecraft);
                 var tleStart = tle.Epoch.ToTDB();
+                // Its attitude, given by hand as the CK the test writes holds it: without one the search throws (#682)
+                spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, tleStart, spacecraft.Frame));
                 return (spacecraft, new Window(tleStart.AddSeconds(1.0), tleStart.AddSeconds(2999.0)));
             }
             default:
@@ -264,7 +267,7 @@ public class FieldOfViewDynamicsTests
         string directory = $"Data/User/FieldOfViewDynamics515/{variant.Replace('@', '_')}";
         // The kernels the library writes: a read of the spacecraft no longer changes its attitude (#523), so they may be
         // written after or before the searches. The TLE spacecraft is not propagated: its SPK holds the SGP4 states every
-        // 10 s, its CK the identity of ICRF, the attitude of a spacecraft without one
+        // 10 s, its CK the identity of ICRF, the attitude Build gave it
         if (variant == "TLE")
         {
             var earthBody = new CelestialBody(PlanetsAndMoons.EARTH);

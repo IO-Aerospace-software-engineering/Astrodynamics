@@ -49,7 +49,10 @@ The window searches take the units of the library, except the coordinate search:
 - `FindWindowsOnIlluminationConstraint`: the surface point as `Planetodetic`, longitude and latitude in rad and the
   altitude in m above the ellipsoid of the body (equatorial radius and flattening of the kernels); before 11.0.0 the
   altitude was read in km ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488)). So
-  does the CLI command `find-windows-from-illumination-constraint`.
+  does the CLI command `find-windows-from-illumination-constraint`. The method is ELLIPSOID, the only one `gfilum_c`
+  supports, whatever its case and its leading or trailing whitespace; any other, DSK forms included, throws
+  `ArgumentException`, where before 11.0.0 `gfilum_c`'s error was dropped and no window returned
+  ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)).
 
 ### Orientation kernels
 

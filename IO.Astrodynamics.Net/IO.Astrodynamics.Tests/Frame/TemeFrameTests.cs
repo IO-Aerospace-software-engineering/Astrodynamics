@@ -334,4 +334,193 @@ public class TemeFrameTests
             Assert.Same(Frames.Frame.CIRS, state.Frame);
         }
     }
+
+    [Fact]
+    public void EphemerisReadInManagedSpacecraftFrame_EqualsTheIcrfReadRotated()
+    {
+        // #682: the frame of a managed spacecraft, which only the library holds, reached spkezr_c by name
+        // (SPICE(UNKNOWNFRAME)); with an attitude record it is read in J2000 and rotated by the record, as the frames of #558
+        var epoch = new TimeSystem_Time(2024, 3, 1);
+        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        var orbit = new KeplerianElements(6800000.0, 0.0001, 51.6 * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 0.0, earth, epoch, Frames.Frame.ICRF);
+        var spacecraft = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6825, "F07SC", 100.0, 10000.0,
+            new IO.Astrodynamics.Body.Spacecraft.Clock("F07SC_CLK", 65536), orbit);
+        var frame = spacecraft.Frame;
+
+        // Its record empty, the frame is read by name, as before 11.0.0: no kernel defines F07SC_FRAME, so SPICE rejects it
+        Assert.Contains("F07SC_FRAME", Assert.Throws<InvalidOperationException>(() => moon.GetEphemeris(epoch, earth, frame, Aberration.LT)).Message);
+        Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None));
+
+        // An attitude other than the identity, given by hand
+        frame.AddStateOrientationToICRF(new StateOrientation(new Quaternion(new Vector3(1.0, 2.0, 3.0).Normalize(), 0.7), Vector3.Zero, epoch, frame));
+        var icrf = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.LT).ToStateVector();
+        var read = moon.GetEphemeris(epoch, earth, frame, Aberration.LT).ToStateVector();
+        var converted = icrf.ToFrame(frame).ToStateVector();
+        Assert.Same(frame, read.Frame);
+        Assert.InRange((read.Position - converted.Position).Magnitude(), 0.0, 1e-6);
+        Assert.InRange((read.Velocity - converted.Velocity).Magnitude(), 0.0, 1e-9);
+
+        var atEpoch = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, frame, Aberration.None).ToStateVector();
+        var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
+        Assert.Same(frame, atEpoch.Frame);
+        Assert.InRange((atEpoch.Position - expected.Position).Magnitude(), 0.0, 1e-6);
+        Assert.InRange((atEpoch.Velocity - expected.Velocity).Magnitude(), 0.0, 1e-9);
+
+        var windowed = SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch + TimeSpan.FromHours(2.0)), 399, 301, frame, Aberration.None,
+            TimeSpan.FromHours(1.0)).Select(x => x.ToStateVector()).ToArray();
+        Assert.Equal(3, windowed.Length);
+        foreach (var state in windowed)
+        {
+            var reference = SpiceAPI.Instance.ReadEphemeris(state.Epoch, 399, 301, Frames.Frame.ICRF, Aberration.None).ToFrame(frame).ToStateVector();
+            Assert.InRange((state.Position - reference.Position).Magnitude(), 0.0, 1e-6);
+            Assert.Same(frame, state.Frame);
+        }
+    }
+
+    // #682. Twice the worst over Linux, Windows and macOS arm64 rounded up (CI run 43591652055, 2026-11-14): 1.686e-16 rad
+    // on Linux, 1.023e-16 rad on Windows, 1.686e-16 rad on macOS arm64. The rotation of a CK the library writes against the
+    // closed form of the attitude it holds
+    private const double CkFrameReadAngle = 3.4e-16;
+
+    // The angle between two vectors, resolved near zero (atan2 of the cross and dot products, not an arccosine)
+    private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+
+    /// <summary>The attitude of the kernels of <see cref="ManagedSpacecraftFrameKernels"/>: 90° about Z, then 30° about X.</summary>
+    private static Quaternion CkAttitude(int k) => k < 60
+        ? new Quaternion(Vector3.VectorZ, IO.Astrodynamics.Constants.PI2)
+        : new Quaternion(Vector3.VectorX, 30.0 * IO.Astrodynamics.Constants.Deg2Rad);
+
+    /// <summary>
+    /// A managed spacecraft whose attitude, two held attitudes of <see cref="CkAttitude"/> one minute apart over two hours,
+    /// was given by hand, and its clock, frame and C-kernels written by the library and loaded; disposed, they are unloaded.
+    /// </summary>
+    private sealed class ManagedSpacecraftFrameKernels : IDisposable
+    {
+        private readonly DirectoryInfo _directory;
+        private readonly FileInfo[] _kernels;
+
+        public ManagedSpacecraftFrameKernels(int id, string name, TimeSystem_Time start)
+        {
+            var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+            var orbit = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.22, 0.0), earth, start, Frames.Frame.ICRF);
+            Writer = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(id, name, 1000.0, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock(name + "_CLK", 65536), orbit);
+            for (int k = 0; k <= 120; k++)
+            {
+                Writer.Frame.AddStateOrientationToICRF(new StateOrientation(CkAttitude(k), Vector3.Zero, start.AddSeconds(60.0 * k), Writer.Frame));
+            }
+
+            _directory = Directory.CreateTempSubdirectory("f07ck-");
+            var clock = new FileInfo(Path.Combine(_directory.FullName, "f07ck.tsc"));
+            var fk = new FileInfo(Path.Combine(_directory.FullName, "f07ck.tf"));
+            var ck = new FileInfo(Path.Combine(_directory.FullName, "f07ck.bc"));
+            Writer.Clock.WriteAsync(clock).GetAwaiter().GetResult();
+            ((IO.Astrodynamics.Body.Spacecraft.SpacecraftFrame)Writer.Frame).WriteAsync(fk).GetAwaiter().GetResult();
+            clock.Refresh();
+            fk.Refresh();
+            Assert.Empty(KernelShadowing.Find([clock, fk], KernelShadowing.SolarSystem));
+            SpiceAPI.Instance.LoadKernels(clock);
+            SpiceAPI.Instance.LoadKernels(fk);
+            _kernels = [ck, fk, clock];
+            Writer.WriteOrientation(ck);
+            ck.Refresh();
+            SpiceAPI.Instance.LoadKernels(ck);
+        }
+
+        public IO.Astrodynamics.Body.Spacecraft.Spacecraft Writer { get; }
+
+        public void Dispose()
+        {
+            foreach (var kernel in _kernels)
+            {
+                kernel.Refresh();
+                if (kernel.Exists)
+                {
+                    SpiceAPI.Instance.UnloadKernels(kernel);
+                }
+            }
+
+            _directory.Delete(true);
+        }
+    }
+
+    /// <summary>
+    /// #682: a managed spacecraft whose attitude record is empty (never propagated, a new object of the id of a spacecraft
+    /// whose kernels the library wrote) is read in its frame by name, as before 11.0.0: with the frame and C-kernels of that
+    /// id loaded, the read is rotated by the attitude of the C-kernel, the closed form of the attitude written; not by the
+    /// identity of an empty record. Once an attitude is recorded, the record is read.
+    /// </summary>
+    [Fact]
+    public void EphemerisReadInManagedSpacecraftFrame_EmptyRecord_ReadsTheKernelsByName()
+    {
+        var start = new TimeSystem_Time(2024, 3, 1);
+        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        using var kernels = new ManagedSpacecraftFrameKernels(-6826, "F07CK", start);
+        var fresh = new IO.Astrodynamics.Body.Spacecraft.Spacecraft(-6826, "F07CK", 1000.0, 3000.0, new IO.Astrodynamics.Body.Spacecraft.Clock("F07CK_CLK", 65536),
+            kernels.Writer.InitialOrbitalParameters);
+        Assert.Null(fresh.Frame.GetLatestStateOrientationToICRF());
+
+        double worst = 0.0;
+        foreach (int k in new[] { 7, 30, 59, 61, 90, 119 })
+        {
+            // Inside a held attitude, 17 s after its sample
+            var t = start.AddSeconds(60.0 * k + 17.0);
+            var icrf = moon.GetEphemeris(t, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var expected = icrf.Position.Rotate(CkAttitude(k).Conjugate());
+            foreach (var read in new[]
+                     {
+                         moon.GetEphemeris(t, earth, fresh.Frame, Aberration.None).ToStateVector(),
+                         SpiceAPI.Instance.ReadEphemeris(t, 399, 301, fresh.Frame, Aberration.None).ToStateVector(),
+                         moon.GetEphemeris(t, earth, kernels.Writer.Frame, Aberration.None).ToStateVector()
+                     })
+            {
+                worst = System.Math.Max(worst, AngleBetween(read.Position, expected));
+            }
+        }
+
+        _output.WriteLine($"MEASURE #682 managed spacecraft frame, empty record read through its kernels, against the attitude written: {worst:E3} rad");
+        Assert.True(worst < CkFrameReadAngle, $"{worst:E3} rad");
+
+        // An attitude recorded, the identity: the record is read, not the kernels
+        fresh.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, start, fresh.Frame));
+        var epoch = start.AddSeconds(600.0);
+        var fromRecord = moon.GetEphemeris(epoch, earth, fresh.Frame, Aberration.None).ToStateVector();
+        Assert.Same(fresh.Frame, fromRecord.Frame);
+        Assert.InRange(AngleBetween(fromRecord.Position, moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector().Position), 0.0, 1e-15);
+    }
+
+    /// <summary>
+    /// #682: the read in the frame of a managed spacecraft, rotated by its attitude record, against CSPICE on the frame and
+    /// C-kernels the library writes from that record: <c>spkezr_c</c> of the Moon from the Earth in the spacecraft's frame,
+    /// the C-matrix of the kernel applied by SPICE, independent of the rotation by the record.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Validation")]
+    public void EphemerisReadInManagedSpacecraftFrame_MatchesSpkezrOnTheKernelsWritten()
+    {
+        var start = new TimeSystem_Time(2024, 3, 1);
+        var moon = new CelestialBody(PlanetsAndMoons.MOON);
+        var earth = new CelestialBody(PlanetsAndMoons.EARTH);
+        using var kernels = new ManagedSpacecraftFrameKernels(-6827, "F07CKV", start);
+        double worstPosition = 0.0, worstVelocity = 0.0;
+        foreach (int k in new[] { 0, 7, 30, 59, 61, 90, 119 })
+        {
+            var t = start.AddSeconds(60.0 * k + 17.0);
+            var library = moon.GetEphemeris(t, earth, kernels.Writer.Frame, Aberration.None).ToStateVector();
+            double et = t.ToTDB().TimeSpanFromJ2000().TotalSeconds;
+            var st = IO.Astrodynamics.Tests.Body.CspiceDirect.Spkezr("MOON", et, "F07CKV_FRAME", "NONE", "EARTH");
+            worstPosition = System.Math.Max(worstPosition, (library.Position - new Vector3(st[0], st[1], st[2]) * 1000.0).Magnitude());
+            worstVelocity = System.Math.Max(worstVelocity, (library.Velocity - new Vector3(st[3], st[4], st[5]) * 1000.0).Magnitude());
+        }
+
+        _output.WriteLine($"MEASURE #682 managed spacecraft frame against spkezr on the kernels written: |dr| {worstPosition:E3} m, |dv| {worstVelocity:E3} m/s");
+        Assert.True(worstPosition < CkFrameReadPosition, $"{worstPosition:E3} m");
+        Assert.True(worstVelocity < CkFrameReadVelocity, $"{worstVelocity:E3} m/s");
+    }
+
+    // #682. Twice the worst on Linux x64 rounded up (CI run 43591652055, 2026-11-14): 6.829e-8 m, 1.608e-13 m/s; the test
+    // runs on Linux only (Validation, CspiceDirect)
+    private const double CkFrameReadPosition = 1.4e-7;
+    private const double CkFrameReadVelocity = 3.3e-13;
 }
