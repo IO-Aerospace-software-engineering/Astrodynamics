@@ -278,6 +278,122 @@ public class KernelRegistryTests : IDisposable
     }
 
     [Fact]
+    public void UnloadKernels_OfAFolderOfATextThenABinaryKernel_WhenSpiceCannotReadAnotherTextKernelAgain_Throws()
+    {
+        // Arrange: a text kernel D, deleted after its load, a text kernel E loaded after it, and a folder of a text kernel
+        // listed before a binary one (an SPK of scn100 copied). SPICE reads every text kernel still loaded again after it
+        // unloads one, from the first, and stops at D: E leaves the pool. The unload of a binary kernel reads nothing again
+        // (NAIF, Kernel Required Reading, "Unloading Kernels"; measured with CSPICE N0067)
+        var gone = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "Deleted")), "d.tf", 1999922, "IOA_F02_BATCH_D", 30.0);
+        var after = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "After")), "e.tf", 1999923, "IOA_F02_BATCH_E", 60.0);
+        var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Batch"));
+        folder.Create();
+        var binary = Path.Combine(folder.FullName, "y.bsp");
+        File.Copy("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk", binary);
+        // A folder is loaded in the order of its listing, the file system's: names are tried until the binary kernel is last
+        FileInfo text = null;
+        for (int i = 0; text == null; i++)
+        {
+            Assert.True(i < 64, "no name lists the text kernel before the binary one");
+            var candidate = WriteFrameKernel(folder, $"x{i}.tf", 1999924, "IOA_F02_BATCH_X", 90.0);
+            if (Directory.EnumerateFileSystemEntries(folder.FullName).Last() == binary)
+            {
+                text = candidate;
+            }
+            else
+            {
+                candidate.Delete();
+            }
+        }
+
+        SpiceAPI.Instance.LoadKernels(gone);
+        SpiceAPI.Instance.LoadKernels(after);
+        SpiceAPI.Instance.LoadKernels(folder);
+        Assert.Equal(60.0, RotationAngleDeg("IOA_F02_BATCH_E"), 12);
+        Assert.Equal(90.0, RotationAngleDeg("IOA_F02_BATCH_X"), 12);
+
+        lock (SpiceAPI.SyncRoot)
+        {
+            File.Delete(gone.FullName);
+
+            // Act: the text kernel's unload fails, the binary one's succeeds; before, its success hid the failure
+            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(folder));
+
+            // Assert: the failure names the text kernel; SPICE no longer knows E, which it still lists, nor X
+            Assert.Contains(text.FullName, exception.Message);
+            AssertUnknown("IOA_F02_BATCH_E");
+            AssertUnknown("IOA_F02_BATCH_X");
+            Assert.Equal([gone.FullName, after.FullName], Under(_root).Select(k => k.FullName));
+
+            // The unload of the deleted kernel reads the pool again without it
+            SpiceAPI.Instance.UnloadKernels(gone);
+        }
+
+        Assert.Equal(60.0, RotationAngleDeg("IOA_F02_BATCH_E"), 12);
+        Assert.Equal([after.FullName], Under(_root).Select(k => k.FullName));
+    }
+
+    [Fact]
+    public void UnloadKernels_OfAMetaKernelOfABinaryKernel_WhenSpiceCannotReadAnotherTextKernelAgain_Throws()
+    {
+        // Arrange: a meta-kernel that names a binary kernel only, loaded after a text kernel D deleted since its load and a
+        // text kernel E. SPICE reads the pool again when it unloads a meta-kernel too (measured with CSPICE N0067), which
+        // is why the unload of a meta-kernel counts as a reread (SpiceAPI.ReloadsPool)
+        var gone = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "Deleted")), "d.tf", 1999925, "IOA_F02_MKB_D", 30.0);
+        var after = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "After")), "e.tf", 1999926, "IOA_F02_MKB_E", 60.0);
+        var binary = new FileInfo(Path.Combine(_root.FullName, "Binary", "y.bsp"));
+        binary.Directory!.Create();
+        File.Copy("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk", binary.FullName);
+        Assert.True(binary.FullName.Length <= 78, binary.FullName);
+        var metaKernel = new FileInfo(Path.Combine(_root.FullName, "Meta", "m.tm"));
+        metaKernel.Directory!.Create();
+        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( '{binary.FullName}' )\n\\begintext\n");
+        SpiceAPI.Instance.LoadKernels(gone);
+        SpiceAPI.Instance.LoadKernels(after);
+        SpiceAPI.Instance.LoadKernels(metaKernel);
+        Assert.Equal(60.0, RotationAngleDeg("IOA_F02_MKB_E"), 12);
+
+        lock (SpiceAPI.SyncRoot)
+        {
+            File.Delete(gone.FullName);
+
+            // Act and assert: the unload reads the pool again and stops at D, so E leaves the pool
+            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(metaKernel));
+            Assert.Contains(metaKernel.FullName, exception.Message);
+            AssertUnknown("IOA_F02_MKB_E");
+            SpiceAPI.Instance.UnloadKernels(gone);
+        }
+
+        Assert.Equal(60.0, RotationAngleDeg("IOA_F02_MKB_E"), 12);
+        Assert.Equal([after.FullName], Under(_root).Select(k => k.FullName));
+    }
+
+    [Fact]
+    public void ReloadsPool_TextAndMetaKernelsOnly()
+    {
+        // Arrange: the ID words of NAIF's Kernel Required Reading, "SPICE Kernel Type Identification"
+        var folder = Directory.CreateDirectory(Path.Combine(_root.FullName, "Kinds"));
+        string Write(string name, string content)
+        {
+            var file = Path.Combine(folder.FullName, name);
+            File.WriteAllText(file, content);
+            return file;
+        }
+
+        // Act and assert: SPICE loads as a text kernel every file without the ID word of a binary kernel
+        Assert.True(SpiceAPI.ReloadsPool(WriteFrameKernel(folder, "a.tf", 1999927, "IOA_F02_KIND", 1.0).FullName));
+        Assert.True(SpiceAPI.ReloadsPool(Write("m.tm", "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( 'x' )\n\\begintext\n")));
+        Assert.True(SpiceAPI.ReloadsPool(Write("old.ti", "\\begindata\nX = 1\n")));
+        Assert.True(SpiceAPI.ReloadsPool(Write("short", "KPL")));
+        Assert.False(SpiceAPI.ReloadsPool("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
+        Assert.False(SpiceAPI.ReloadsPool(Write("das", "DAS/DSK ")));
+        Assert.False(SpiceAPI.ReloadsPool(Write("olddaf", "NAIF/DAF")));
+        Assert.False(SpiceAPI.ReloadsPool(Write("olddas", "NAIF/DAS")));
+        // A file that cannot be read repairs no failure
+        Assert.False(SpiceAPI.ReloadsPool(Path.Combine(folder.FullName, "missing.tf")));
+    }
+
+    [Fact]
     public void UnloadKernels_OfAFileLoadedByAMetaKernel_UnloadsItByName()
     {
         // Arrange: a meta-kernel names a frame kernel of another folder, which no entry holds

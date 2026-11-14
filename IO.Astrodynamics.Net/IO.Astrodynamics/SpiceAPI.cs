@@ -36,7 +36,13 @@ public class SpiceAPI
     private readonly List<KernelEntry> _kernels = [];
 
     /// <summary>A path given to <see cref="LoadKernels"/>, and the files its load handed SPICE (#673).</summary>
-    private sealed record KernelEntry(FileSystemInfo Path, string[] Files);
+    private sealed record KernelEntry(FileSystemInfo Path, KernelFile[] Files);
+
+    /// <summary>
+    /// A file a load handed SPICE, and whether SPICE reads the kernel pool again when it unloads it: a text kernel or a
+    /// meta-kernel, not a binary kernel (<see cref="ReloadsPool"/>).
+    /// </summary>
+    private sealed record KernelFile(string Name, bool ReloadsPool);
 
     /// <summary>
     ///     Instantiate API
@@ -299,16 +305,19 @@ public class SpiceAPI
             // Not the cached Exists of the instance, which a reload of a stored entry would trust after a deletion
             if (Exists(path))
             {
-                var files = KernelFiles(path).ToArray();
-                foreach (var kernel in files)
+                var files = new List<KernelFile>();
+                foreach (var kernel in KernelFiles(path))
                 {
                     if (!LoadKernelsProxy(kernel))
                     {
                         throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
                     }
+
+                    // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
+                    files.Add(new KernelFile(kernel, ReloadsPool(kernel)));
                 }
 
-                _kernels.Add(new KernelEntry(path, files));
+                _kernels.Add(new KernelEntry(path, files.ToArray()));
             }
         }
     }
@@ -415,8 +424,7 @@ public class SpiceAPI
         Span<byte> buffer = new byte[KernelScanBufferLength];
         int read = stream.ReadAtLeast(buffer, buffer.Length, false);
         var head = buffer[..read];
-        if (head.StartsWith("DAF/"u8) || head.StartsWith("DAS/"u8) || head.StartsWith("NAIF/DAF"u8) ||
-            head.StartsWith("NAIF/DAS"u8) || head.StartsWith("KPL/"u8))
+        if (HasBinaryIdWord(head) || head.StartsWith("KPL/"u8))
         {
             return true;
         }
@@ -448,6 +456,33 @@ public class SpiceAPI
         return false;
     }
 
+    // The ID words of a binary kernel, DAF or DAS (NAIF, Kernel Required Reading, "SPICE Kernel Type Identification")
+    private static bool HasBinaryIdWord(ReadOnlySpan<byte> head) =>
+        head.StartsWith("DAF/"u8) || head.StartsWith("DAS/"u8) || head.StartsWith("NAIF/DAF"u8) || head.StartsWith("NAIF/DAS"u8);
+
+    /// <summary>
+    /// Whether SPICE reads the kernel pool again when it unloads <paramref name="file"/>: "Text kernels are unloaded by
+    /// clearing the kernel pool and then reloading the other text kernels" (NAIF, Kernel Required Reading, "Unloading
+    /// Kernels"), and so are meta-kernels, whose unload fails like a text kernel's while a deleted text kernel is still
+    /// loaded, even when they name binary kernels only; the unload of a binary kernel closes it and reads nothing (measured
+    /// with CSPICE N0067). SPICE loads as a text kernel every file without the ID word of a binary one.
+    /// </summary>
+    /// <remarks>A file that cannot be read counts as a binary kernel, whose unload repairs no failure (#673).</remarks>
+    internal static bool ReloadsPool(string file)
+    {
+        try
+        {
+            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            Span<byte> head = stackalloc byte[8];
+            int read = stream.ReadAtLeast(head, head.Length, false);
+            return !HasBinaryIdWord(head[..read]);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     /// <summary>
     ///     Unload kernel at given path
     /// </summary>
@@ -459,6 +494,9 @@ public class SpiceAPI
     /// path that matches no entry is handed to SPICE as it is (the files of a directory as it is now), which does nothing
     /// for a name SPICE does not hold.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call repaired
+    /// it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded again and fails on one deleted
+    /// since its load, leaving out of the pool those loaded after it, until a later such unload succeeds (#673).</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
         if (path == null) return;
@@ -482,13 +520,13 @@ public class SpiceAPI
                     continue;
                 }
 
-                var removed = entry.Files.Where(x => IsSameOrInside(x, path.FullName)).ToArray();
+                var removed = entry.Files.Where(x => IsSameOrInside(x.Name, path.FullName)).ToArray();
                 if (removed.Length == 0)
                 {
                     continue;
                 }
 
-                var remaining = entry.Files.Except(removed).Select(x => new KernelEntry(new FileInfo(x), [x])).ToArray();
+                var remaining = entry.Files.Except(removed).Select(x => new KernelEntry(new FileInfo(x.Name), [x])).ToArray();
                 _kernels.RemoveAt(i);
                 _kernels.InsertRange(i, remaining);
                 i += remaining.Length - 1;
@@ -504,22 +542,32 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// Unloads files by their names. SPICE reads again the text kernels still loaded after it unloads one (KEEPER's
-    /// UNLOAD), so the unload of a text kernel fails while another deleted text kernel of the same files is still loaded
-    /// (<c>SPICE(FILEOPENFAILED)</c>, measured with CSPICE N0067); a later unload of the files that succeeds reads the
-    /// pool again without it, so only the failure of the last unload is reported.
+    /// Unloads files by their names. SPICE reads again the text kernels still loaded after it unloads a text kernel or a
+    /// meta-kernel (KEEPER's UNLOAD), from the first, and stops at a deleted one (<c>SPICE(FILEOPENFAILED)</c>, measured
+    /// with CSPICE N0067): the unload fails, and the pool lacks the text kernels loaded after the deleted one. A later
+    /// unload of a text kernel or a meta-kernel that succeeds has read the whole pool again, which repairs the failures
+    /// before it; the unload of a binary kernel reads nothing again and repairs nothing (#673). The first failure no later
+    /// unload repaired is reported.
     /// </summary>
-    private static void UnloadFiles(string[] files)
+    private static void UnloadFiles(KernelFile[] files)
     {
-        string failed = null;
+        var unrepaired = new List<KernelFile>();
         foreach (var file in files)
         {
-            failed = UnloadKernelsProxy(file) ? null : file;
+            if (!UnloadKernelsProxy(file.Name))
+            {
+                unrepaired.Add(file);
+            }
+            else if (file.ReloadsPool)
+            {
+                // A binary kernel's unload has never been seen to fail (it closes the file by its handle); its failure stays
+                unrepaired.RemoveAll(x => x.ReloadsPool);
+            }
         }
 
-        if (failed != null)
+        if (unrepaired.Count > 0)
         {
-            throw new InvalidOperationException($"Kernel {failed} can't be unloaded. You can have more details on standard output");
+            throw new InvalidOperationException($"Kernel {unrepaired[0].Name} can't be unloaded. You can have more details on standard output");
         }
     }
 

@@ -31,6 +31,12 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   moved since its load is still unloaded. Unloading a file or a subdirectory of a loaded directory replaces the
   directory in `GetLoadedKernels` by its remaining files. A path that was never loaded is handed to SPICE as it is,
   which unloads nothing it does not hold (a file a meta-kernel loaded is unloaded by its name).
+- SPICE unloads a text kernel or a meta-kernel by clearing the kernel pool and reading again the text kernels still
+  loaded (NAIF, Kernel Required Reading, "Unloading Kernels"); while a text kernel deleted since its load is still
+  loaded, that read stops at it, the unload fails, and the pool lacks the text kernels loaded after it. `UnloadKernels`
+  throws `InvalidOperationException` for such a failure unless a later unload of a text kernel or a meta-kernel of the
+  same call read the whole pool again; the unload of a binary kernel reads nothing again. Unload the deleted kernel to
+  restore the pool.
 - SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
   File Naming"), and `LoadKernels` hands it the full path: a kernel at a longer path fails with
   `SPICE(FILENAMETOOLONG)`. Load it through a meta-kernel that names it by a shorter relative path, or move it.

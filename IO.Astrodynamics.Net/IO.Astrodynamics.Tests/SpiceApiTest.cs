@@ -799,7 +799,13 @@ public class SpiceApiTest
             .Where(x => x == folder.FullName || x.StartsWith(folder.FullName + Path.DirectorySeparatorChar, StringComparison.Ordinal)).ToArray();
         Assert.DoesNotContain(folder.FullName, listed);
         Assert.DoesNotContain(spk.FullName, listed);
-        Assert.Equal(SpiceAPI.KernelFiles(folder).Where(x => x != spk.FullName).Order(StringComparer.Ordinal), listed.Order(StringComparer.Ordinal));
+        // The kernel files the project copies to scn100 (IO.Astrodynamics.Tests.csproj), but the SPK of DRAGONFLY32
+        string[] expected =
+        [
+            new FileInfo(@"Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk").FullName,
+            new FileInfo(@"Data/UserDataTest/scn100/Spacecrafts/DRAGONFLY32/Clocks/DRAGONFLY32.tsc").FullName
+        ];
+        Assert.Equal(expected.Order(StringComparer.Ordinal), listed.Order(StringComparer.Ordinal));
         // SPICE's reads: the SPK of DRAGONFLY32 (-1785) is gone, that of MySite (399132) is still there (both cover 668085625 to
         // 668174469 s TDB)
         Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, 399, -1785, Frames.Frame.ICRF, Aberration.None));
