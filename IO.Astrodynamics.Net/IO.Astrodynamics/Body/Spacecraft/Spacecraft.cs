@@ -110,6 +110,11 @@ namespace IO.Astrodynamics.Body.Spacecraft
         private bool _isPropagated;
         public bool IsPropagated => _isPropagated;
 
+        // Whether the stored states are those of a numerical propagation, by any path (the builder and a propagator built
+        // directly included, which leave IsPropagated false): a TLE spacecraft then reads them, SGP4 otherwise (#675).
+        // Set by SetPropagatedStates, cleared with the stored states; AddPropagatedStates (TLEPropagator) leaves it
+        private bool _holdsPropagatedStates;
+
         /// <summary>
         /// Spacecraft constructor
         /// </summary>
@@ -545,7 +550,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
-            // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
+            // A TLE starts from SGP4 at Window.StartDate and a TEME state from itself, rotated once to ICRF (#675).
             // Built before the reset, so that a rejected input leaves the previous propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
@@ -617,7 +622,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (_isFromKernel) throw new InvalidOperationException("Cannot propagate a kernel-backed spacecraft.");
 
             // Always use CentralBodyPropagator — handles any central body including Sun for interplanetary.
-            // For TLE initial parameters, the state vector is extracted at Window.StartDate by the propagator.
+            // A TLE starts from SGP4 at Window.StartDate and a TEME state from itself, rotated once to ICRF (#675).
             // Built and activated before the reset, so that a rejected input leaves the previous propagation as it was
             using var propagator = new CentralBodyPropagator(window, this, integrator, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize);
@@ -643,8 +648,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
             if (_isFromKernel)
                 return base.GetGeometricStateRelativeTo(epoch, referenceBody);
 
-            // TLE fallback
-            if (InitialOrbitalParameters is TLE)
+            // TLE fallback: SGP4, unless a numerical propagation stored its states (#675)
+            if (InitialOrbitalParameters is TLE && !_holdsPropagatedStates)
                 return InitialOrbitalParameters.ToStateVector(epoch)
                     .ToFrame(Frames.Frame.ICRF)
                     .RelativeTo(referenceBody, Aberration.None).ToStateVector();
@@ -767,18 +772,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
         {
             if (_isFromKernel) throw new InvalidOperationException("Cannot add states to a kernel-backed spacecraft.");
             _propagatedStates.Set(outputs, impulses, fill);
+            _holdsPropagatedStates = true;
         }
 
         /// <summary>
         /// The window of the propagated states that <see cref="GetGeometricStateRelativeTo"/> interpolates, from the first
-        /// to the last; null when it reads no such states: a kernel-backed spacecraft, a TLE, or fewer than two states
+        /// to the last; null when it reads no such states: a kernel-backed spacecraft, a TLE that no numerical propagation
+        /// stored states for (unpropagated, or sampled by <see cref="TLEPropagator"/>), or fewer than two states
         /// (the initial orbital parameters are then propagated in two-body motion to the epoch).
         /// </summary>
         internal Window? InterpolatedStatesWindow
         {
             get
             {
-                if (_isFromKernel || InitialOrbitalParameters is TLE || _propagatedStates.Count < 2)
+                if (_isFromKernel || (InitialOrbitalParameters is TLE && !_holdsPropagatedStates) || _propagatedStates.Count < 2)
                 {
                     return null;
                 }
@@ -984,6 +991,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
             {
                 _isPropagated = false;
                 _propagatedStates.Clear();
+                _holdsPropagatedStates = false;
                 Frame.ClearStateOrientations();
             }
 

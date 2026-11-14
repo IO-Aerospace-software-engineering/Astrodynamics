@@ -115,7 +115,9 @@ its covariance through the Jacobian of the rotation. The states of a spacecraft 
 in that frame, are therefore a rotation round trip, no longer bit for bit those of the solution. Before 11.0.0 they were
 stored in the initial frame and read as ICRF: up to 1.18e7 m off from GALACTIC, 1.86e11 m in SSB mode
 ([#535](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/535),
-[#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)).
+[#529](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/529)). A TLE or an osculating TEME
+state is rotated once to ICRF at the start, where the integration and the solution run
+([Propagation Frame](propagators.md#propagation-frame), #675).
 
 ### The stored states across an impulse
 
@@ -153,6 +155,13 @@ across the jump:
   stored state of that arc at the same epoch; without stored states, they make one arc. A propagation by
   `Spacecraft.Propagate` or `Scenario.SimulateAsync` replaces every stored state, those added before it included: before
   11.0.0 they were merged with the propagated ones. `TLEPropagator.Propagate` still adds its states, as before.
+- **A TLE spacecraft** reads its stored states once a numerical propagation stored them, by any path, the builder and
+  a `CentralBodyPropagator` built directly included (which leave `IsPropagated` false), and SGP4 otherwise: unpropagated,
+  or sampled by `TLEPropagator`, whose `AddPropagatedStates` does not change the rule (#675; before 11.0.0 it read SGP4
+  whatever its stored states, and no numerical propagation of a TLE ran). The rule is that of
+  `GetGeometricStateRelativeTo` and of every read through it; `GetEphemeris` from the centre of the stored states
+  without aberration reads them directly, whatever the initial orbit, so after `TLEPropagator` it interpolates its
+  samples (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s), as before 11.0.0.
 
 **Accuracy across an impulse** (`PropagatedArcsTests`, the worst over Linux x64, Windows and macOS arm64, CI run
 41651463194, 2026-11-03, and run 41689602272 for the velocities in SSB mode against the anchored reference; the
@@ -465,6 +474,7 @@ rows it bounds, rounded up at the second significant digit.
 | The CSPICE path on the same kernels (`gftfov` at its 1 µs) | `gftfov` converged to 1e-9 s | 9.5e-7 s |
 | Propagated spacecraft, the public managed path and its kernel-backed twin: 26 fields, both target shapes, the Earth, the Moon, the Sun, DSS-13, a site given by its coordinates, a spacecraft, the Earth-Moon barycenter, L1, a star; `None`, `LT` and `LT+S` on every field, the nine aberrations on a circle and a narrow field (221 searches off the grazing and slow edges) | `gftfov` at 1 µs on the kernels the library writes | 1.3e-6 s |
 | RK7(8), SSB mode, a TLE | same (for the TLE, an SPK of its states, which the library does not write for a TLE that is not propagated) | 1.2e-6 s |
+| A TLE propagated by RK7(8) (#675; the same on Linux x64, Windows and macOS arm64, CI run 43591654097, 2026-11-14) | same | 5.0e-7 s |
 | An impulse followed by a TRIAD attitude, a nadir attitude, the six inertial initial frames, the path of `Scenario.SimulateAsync` (CI run 41522747911, 2026-11-02: the variants of #515 the same on the three platforms, those of #537 on Linux only) | `gftfov` at 1 µs on the kernels the library writes | 1.2e-6 s (SSB mode); TRIAD 1.0e-6 s, nadir 4e-7 s |
 | Fields that graze the Earth's limb (a margin of slope 1.2e-6 rad/s at the contact) | `gftfov` at a step of 1 s | 2.5e-4 s |
 | A slow edge (an ellipse, slope 6.1e-4 per second, `LT+S`) | same | 4.4e-6 s |

@@ -13,6 +13,13 @@ var tle = new TLE("ISS (ZARYA)",
     "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 ```
 
+The constructor checks the text before it reads any kernel (#675): a null or empty line or name, a line of another
+length than 69 characters or that does not start with its line number (`ArgumentException`), catalog numbers that
+differ or a wrong checksum (`InvalidOperationException`). Before 11.0.0 it built the Earth of the TLE first, so that
+without kernels a malformed TLE threw the kernel error, and CSPICE printed the banners of its failed reads on the
+standard output. A valid TLE still needs the kernels that define the Earth (its GM, radii and frame, which its
+`Observer` carries and `MeanSemiMajorAxis` uses): it throws `InvalidOperationException` without them.
+
 ## Properties
 
 | Property | Description |
@@ -69,6 +76,41 @@ zero state (#454).
 NORAD catalog numbers run from 0 to 339999. Above 99999 they are written with the Alpha-5
 convention of the 18th Space Defense Squadron, which replaces the first digit with a letter
 (`I` and `O` excluded) without changing the column layout.
+
+## Numerical propagation of a TLE
+
+A spacecraft whose initial orbit is a TLE is propagated numerically by `Spacecraft.Propagate`, `PropagateAsync`,
+`Scenario.SimulateAsync`, `BatchPropagator`, `CentralBodyPropagator` and the builder, as any spacecraft (#675; before
+11.0.0 every path threw "must be defined in inertial frame"). Its start is the SGP4 state at the start of the window,
+rotated once to ICRF, on the Earth of the TLE; the propagation runs in ICRF and its states are in ICRF
+([Propagation Frame](propagators.md#propagation-frame)). The TLE is not SGP4 then: the central body is the Earth of
+the TLE, a point mass without atmosphere, and B* is not used. For the ISS (`21020.53488036`), RK7(8) at 1e-9, the
+propagation is 53.663 km, 275.692 km and 1118.386 km from SGP4 after 1 h, 6 h and 24 h. An Earth with a geopotential or
+an atmosphere in the bodies does not replace it: it is ignored for gravity, its atmosphere used for drag, and drag
+without one is dropped (Known limitations of 11.0.0). For a geopotential and drag, give the spacecraft a TEME state on
+an Earth that carries them:
+
+```csharp
+var start = window.StartDate.ToTDB();
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, start,
+    new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10), new Nrlmsise00Model(SpaceWeather.Nominal));
+var sgp4 = tle.ToStateVector(start);
+var spacecraft = new Spacecraft(-1001, "ISS", 420000.0, 450000.0, new Clock("iss", 65536),
+    new StateVector(sgp4.Position, sgp4.Velocity, earth, start, Frame.TEME), 1600.0, 2.2);
+spacecraft.Propagate(window, new CelestialItem[] { earth }, new RK78Integrator(), true, true, TimeSpan.FromSeconds(60.0));
+```
+
+With EGM2008 at degree 10 and no drag, the same ISS is 0.555 km, 0.788 km and 7.217 km from SGP4 after 1 h, 6 h and
+24 h. The command `astro propagate -t` does so, on the Earth of the CLI (EGM2008 at degree 10, the U.S. Standard
+Atmosphere 1976 with `-a`); its centre of motion must be the Earth (399).
+
+A TLE spacecraft reads its stored states after a numerical propagation by any path (`GetEphemeris`, `WriteEphemeris`,
+the window searches, the conjunction analysis with the check of #527, the avoidance options on its force model), and
+SGP4 otherwise: unpropagated, or sampled by `TLEPropagator`, which adds its states without changing the rule. One read
+of a sampled spacecraft is not SGP4 at the instant: `GetEphemeris` from its Earth without aberration interpolates the
+samples of `TLEPropagator`, as before (SGP4 at the samples, 7.6e-4 m from it between them for the ISS at 60 s); its
+geometric state, and the reads from any other body, are SGP4.
+`Spacecraft.ToOpm` writes the SGP4 state (#658). For SGP4 itself, use `TLEPropagator` or `tle.ToStateVector(t)`.
 
 ## See Also
 

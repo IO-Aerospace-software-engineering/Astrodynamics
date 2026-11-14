@@ -152,20 +152,7 @@ public class Helpers
         var inputFrame = new Frame(originalFrame);
         var inputEpoch = Helpers.ConvertDateTimeInput(epoch);
 
-        GeopotentialModelParameters geopotentialModelParameters = null;
-        IAtmosphericModel atmosphericModel = null;
-        if (centerofMotion == PlanetsAndMoons.EARTH.NaifId)
-        {
-            Stream sr = typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt");
-            geopotentialModelParameters = new GeopotentialModelParameters(sr, geopotentialDegrees);
-            atmosphericModel = new EarthStandardAtmosphere();
-        }
-        else if (centerofMotion == PlanetsAndMoons.MARS.NaifId)
-        {
-            atmosphericModel = new MarsStandardAtmosphere();
-        }
-
-        var inputCenterOfMotion = new CelestialBody(centerofMotion, geopotentialModelParameters, atmosphericModel);
+        var inputCenterOfMotion = CreateCenterOfMotion(centerofMotion, geopotentialDegrees);
         //Generate original orbital parameters
         OrbitalParameters.OrbitalParameters orbitalParameters = null;
         if (fromStateVector)
@@ -190,6 +177,46 @@ public class Helpers
         }
 
         return orbitalParameters;
+    }
+
+    /// <summary>
+    /// The centre of motion of the CLI: the Earth with the embedded EGM2008 at <paramref name="geopotentialDegrees"/> and
+    /// the U.S. Standard Atmosphere 1976, Mars with its standard atmosphere, any other body as the kernels define it.
+    /// </summary>
+    internal static CelestialBody CreateCenterOfMotion(int centerOfMotion, ushort geopotentialDegrees = 10)
+    {
+        GeopotentialModelParameters geopotentialModelParameters = null;
+        IAtmosphericModel atmosphericModel = null;
+        if (centerOfMotion == PlanetsAndMoons.EARTH.NaifId)
+        {
+            Stream sr = typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt");
+            geopotentialModelParameters = new GeopotentialModelParameters(sr, geopotentialDegrees);
+            atmosphericModel = new EarthStandardAtmosphere();
+        }
+        else if (centerOfMotion == PlanetsAndMoons.MARS.NaifId)
+        {
+            atmosphericModel = new MarsStandardAtmosphere();
+        }
+
+        return new CelestialBody(centerOfMotion, geopotentialModelParameters, atmosphericModel);
+    }
+
+    /// <summary>
+    /// The initial orbit of a propagation from a TLE (#675): its SGP4 state at the TDB start of the window, in TEME, on
+    /// the Earth of the CLI, which carries its geopotential and atmosphere (the propagation rotates it once to ICRF).
+    /// </summary>
+    /// <exception cref="ArgumentException">The centre of motion is not the Earth: a TLE describes an Earth orbit.</exception>
+    internal static StateVector TleStartState(TLE tle, int centerOfMotion, in Window window)
+    {
+        if (centerOfMotion != PlanetsAndMoons.EARTH.NaifId)
+        {
+            throw new ArgumentException(
+                $"A TLE describes an Earth orbit: its centre of motion is the Earth (399), not {centerOfMotion}.", nameof(centerOfMotion));
+        }
+
+        var start = window.StartDate.ToTDB();
+        var sgp4 = tle.ToStateVector(start);
+        return new StateVector(sgp4.Position, sgp4.Velocity, CreateCenterOfMotion(centerOfMotion), start, Frame.TEME);
     }
 
     internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(Commands.Parameters.OrbitalParameters orbitalParameters)

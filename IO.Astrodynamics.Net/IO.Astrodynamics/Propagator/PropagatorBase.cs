@@ -92,8 +92,9 @@ public abstract class PropagatorBase : IPropagator
         Integrator = integrator ?? throw new ArgumentNullException(nameof(integrator));
         ValidateInertialFrame(spacecraft);
         // A cycle in the maneuver chain would never end the walks of the chain: rejected before anything runs (#585)
-        Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
-        Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
+        var initialChain = Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
+        var standbyChain = Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
+        ValidateTargetOrbitFrames(spacecraft, initialChain.Concat(standbyChain));
 
         OriginalObserver = spacecraft.InitialOrbitalParameters.Observer as CelestialItem;
         Window = new Window(window.StartDate.ToTDB(), window.EndDate.ToTDB());
@@ -242,7 +243,8 @@ public abstract class PropagatorBase : IPropagator
             return null;
         }
 
-        var initial = participant.InitialOrbitalParameters;
+        // A TLE or an osculating TEME state is propagated in ICRF, and so is its covariance (#675)
+        var initial = InertialInitialOrbit(participant.InitialOrbitalParameters, start);
         var covariance = initial.ToStateVector().Covariance;
         if (!covariance.HasValue)
         {
@@ -947,15 +949,76 @@ public abstract class PropagatorBase : IPropagator
 
     private static void ValidateInertialFrame(Spacecraft spacecraft)
     {
-        if (spacecraft.InitialOrbitalParameters.Frame != Frame.ICRF
-            && spacecraft.InitialOrbitalParameters.Frame != Frame.GCRF
-            && spacecraft.InitialOrbitalParameters.Frame != Frame.B1950
-            && spacecraft.InitialOrbitalParameters.Frame != Frame.FK4
-            && spacecraft.InitialOrbitalParameters.Frame != Frame.ECLIPTIC_J2000
-            && spacecraft.InitialOrbitalParameters.Frame != Frame.ECLIPTIC_B1950
-            && spacecraft.InitialOrbitalParameters.Frame != Frame.GALACTIC_SYSTEM2)
+        var frame = PropagationFrame(spacecraft.InitialOrbitalParameters);
+        if (frame != Frame.ICRF
+            && frame != Frame.GCRF
+            && frame != Frame.B1950
+            && frame != Frame.FK4
+            && frame != Frame.ECLIPTIC_J2000
+            && frame != Frame.ECLIPTIC_B1950
+            && frame != Frame.GALACTIC_SYSTEM2)
         {
             throw new ArgumentException("Spacecraft initial orbital parameters must be defined in inertial frame", nameof(spacecraft));
+        }
+    }
+
+    /// <summary>
+    /// The initial orbit the propagation starts from (#675): a TLE becomes the SGP4 state at the start of the window,
+    /// rotated once to ICRF by the managed TEME, on the Earth of the TLE (its observer); an osculating orbit in TEME (a
+    /// frame named TEME) its state at its epoch rotated once to ICRF, the covariance through the Jacobian, the observer
+    /// kept (TEME is quasi-inertial: v' = R v, P' = diag(R, R) P diag(R, R)ᵀ). Any other orbit, a set of mean elements in
+    /// TEME included, is returned as given: the inertial-frame check rejects that set, which has no state without its
+    /// theory.
+    /// </summary>
+    /// <param name="initial">The initial orbital parameters of the spacecraft.</param>
+    /// <param name="windowStart">The start of the window, for a TLE.</param>
+    internal static OrbitalParameters.OrbitalParameters InertialInitialOrbit(OrbitalParameters.OrbitalParameters initial,
+        in Time windowStart)
+    {
+        if (initial is OrbitalParameters.TLE.TLE tle)
+        {
+            var start = windowStart.ToTDB();
+            var icrf = tle.ToStateVector(start).ToFrame(Frame.ICRF).ToStateVector();
+            // SGP4 builds a new Earth for its state: the start keeps the observer of the TLE
+            return new StateVector(icrf.Position, icrf.Velocity, tle.Observer, start, Frame.ICRF);
+        }
+
+        return IsOsculatingTeme(initial) ? initial.ToStateVector().ToFrame(Frame.ICRF).ToStateVector() : initial;
+    }
+
+    /// <summary>
+    /// The frame a spacecraft whose initial orbit is <paramref name="initial"/> is propagated in: ICRF for a TLE and an
+    /// osculating TEME orbit, rotated by <see cref="InertialInitialOrbit"/>, the frame of the orbit otherwise (#675).
+    /// </summary>
+    internal static Frame PropagationFrame(OrbitalParameters.OrbitalParameters initial) =>
+        initial is OrbitalParameters.TLE.TLE || IsOsculatingTeme(initial) ? Frame.ICRF : initial.Frame;
+
+    private static bool IsOsculatingTeme(OrbitalParameters.OrbitalParameters initial) =>
+        initial is not OrbitalParameters.TLE.TLE && initial.ElementsType == OrbitalElementsType.Osculating &&
+        SpiceAPI.IsTeme(initial.Frame);
+
+    /// <summary>
+    /// A spacecraft propagated in another frame than that of its initial orbit (a TLE or a TEME state, rotated to ICRF)
+    /// takes the target orbits of its impulses in ICRF, the frame of the integrated state they are compared with: a
+    /// target in any other frame is rejected before anything runs (#675).
+    /// </summary>
+    private static void ValidateTargetOrbitFrames(Spacecraft spacecraft, IEnumerable<Maneuver.Maneuver> maneuvers)
+    {
+        var initial = spacecraft.InitialOrbitalParameters;
+        if (PropagationFrame(initial) == initial.Frame)
+        {
+            return;
+        }
+
+        foreach (var maneuver in maneuvers)
+        {
+            if (maneuver is ImpulseManeuver { TargetOrbit: { } target } && target.Frame != Frame.ICRF)
+            {
+                throw new ArgumentException(
+                    $"The target orbit of the {maneuver.GetType().Name} is in {target.Frame.Name}, and {spacecraft.Name}, whose " +
+                    "initial orbit is a TLE or a TEME state, is propagated in ICRF: give the target in ICRF " +
+                    "(targetOrbit.ToFrame(Frame.ICRF)).", nameof(spacecraft));
+            }
         }
     }
 

@@ -9,6 +9,7 @@ using IO.Astrodynamics.Body.Spacecraft;
 using IO.Astrodynamics.CLI.Commands.Parameters;
 using IO.Astrodynamics.Cosmographia;
 using IO.Astrodynamics.Mission;
+using IO.Astrodynamics.OrbitalParameters.TLE;
 
 namespace IO.Astrodynamics.CLI.Commands;
 
@@ -46,13 +47,21 @@ public class PropagateCommand
         SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
 
         //Initialize date
+        var window = Helpers.ConvertWindowInput(windowParameters);
+        var initialOrbit = Helpers.ConvertToOrbitalParameters(orbitalParameters);
+        if (initialOrbit is TLE tle)
+        {
+            // The SGP4 state at the start of the window, on the Earth of the CLI (#675)
+            initialOrbit = Helpers.TleStartState(tle, orbitalParameters.CenterOfMotionId, window);
+        }
+
         Clock clock = new Clock($"clock{bodyName}", 65536);
-        Spacecraft spacecraft = new Spacecraft(-1000, bodyName, bodyMass, bodyMass, clock, Helpers.ConvertToOrbitalParameters(orbitalParameters), area, cd);
+        Spacecraft spacecraft = new Spacecraft(-1000, bodyName, bodyMass, bodyMass, clock, initialOrbit, area, cd);
         List<CelestialBody> bodies = new List<CelestialBody>([spacecraft.InitialOrbitalParameters.Observer as CelestialBody]);
         bodies.AddRange(celestialBodies?.Select(x => new CelestialBody(x)) ?? Array.Empty<CelestialBody>());
 
         //Build scenario
-        Scenario scenario = new Scenario($"Scenario{bodyName}", new Mission.Mission($"Mission{bodyName}"), Helpers.ConvertWindowInput(windowParameters));
+        Scenario scenario = new Scenario($"Scenario{bodyName}", new Mission.Mission($"Mission{bodyName}"), window);
         scenario.AddSpacecraft(spacecraft);
         bodies.ForEach((b) => scenario.AddCelestialItem(b));
 

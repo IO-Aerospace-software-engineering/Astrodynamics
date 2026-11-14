@@ -44,9 +44,18 @@ public class TLEPropagator : IPropagator
         }
 
         _stateOrientation[Window.EndDate] = new StateOrientation(Quaternion.Identity, Vector3.Zero, Window.EndDate, Frame.ICRF);
+
+        // Build synthetic PropagationSolution from TLE states, with the accelerations of SGP4 at the samples, which the cubic
+        // Hermite of a step interpolates the velocity with (#675: zero before, up to 49.9 m/s off SGP4 between samples).
+        // Read before the spacecraft receives the samples: an SGP4 that fails within 1 s of a window end leaves it as it was
+        var accelerations = new Vector3[_svCacheSize];
+        for (int i = 0; i < _svCacheSize; i++)
+        {
+            accelerations[i] = Sgp4Acceleration(Window.StartDate.Add(DeltaT * i));
+        }
+
         Spacecraft.AddPropagatedStates(_svCache);
 
-        // Build synthetic PropagationSolution from TLE states
         var solution = new PropagationSolution();
         var segment = new PropagationSegment(Window.StartDate, (int)_svCacheSize);
 
@@ -58,7 +67,7 @@ public class TLEPropagator : IPropagator
                 cumulativeTime, stepSize,
                 _svCache[i].Position, _svCache[i].Velocity,
                 _svCache[i + 1].Position, _svCache[i + 1].Velocity,
-                Vector3.Zero, Vector3.Zero));
+                accelerations[i], accelerations[i + 1]));
         }
 
         solution.AddSegment(segment);
@@ -66,6 +75,22 @@ public class TLEPropagator : IPropagator
 
         return solution;
     }
+    // The half-width of the central difference of the SGP4 velocity, s
+    private const double Sgp4DifferenceStep = 1.0;
+
+    /// <summary>
+    /// The acceleration of SGP4 at <paramref name="epoch"/>: the central difference of its velocity at ±1 s, whose
+    /// truncation v‴·δ²/6 is about 1.9e-6 m/s² in LEO (1.7e-5 m/s over a step of 60 s); a difference over the neighbouring
+    /// samples grows with the step squared (about 0.06 m/s at 60 s). The rotation of TEME of date over 2 s adds below
+    /// 1e-7 m/s².
+    /// </summary>
+    private Vector3 Sgp4Acceleration(in Time epoch)
+    {
+        var after = Spacecraft.InitialOrbitalParameters.ToStateVector(epoch.AddSeconds(Sgp4DifferenceStep)).Velocity;
+        var before = Spacecraft.InitialOrbitalParameters.ToStateVector(epoch.AddSeconds(-Sgp4DifferenceStep)).Velocity;
+        return (after - before) / (2.0 * Sgp4DifferenceStep);
+    }
+
     public void Dispose()
     {
         _svCache = null;
