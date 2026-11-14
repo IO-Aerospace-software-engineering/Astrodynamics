@@ -580,10 +580,10 @@ Each `ImpulseManeuver` implements:
 
 | Maneuver | g-function | Direction | Fires at |
 |----------|-----------|-----------|----------|
-| ApogeeHeightManeuver | r·v | neg→pos | Perigee |
-| PerigeeHeightManeuver | r·v | pos→neg | Apogee |
+| ApogeeHeightManeuver (target: apogee radius from the centre, m) | r·v | neg→pos | Perigee |
+| PerigeeHeightManeuver (target: perigee radius from the centre, m) | r·v | pos→neg | Apogee |
 | PhasingManeuver | r·v | neg→pos | Perigee |
-| CombinedManeuver | r·v | pos→neg | Apogee (+ precondition) |
+| CombinedManeuver (target: perigee radius from the centre, m, and inclination) | r·v | pos→neg | Apogee (+ precondition) |
 | PlaneAlignmentManeuver | r·ĥ_target | adaptive | Nearest node |
 | ApsidalAlignmentManeuver | r·(ĥ×p̂) | neg→pos | Nearest intersection |
 

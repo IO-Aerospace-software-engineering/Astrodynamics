@@ -1356,6 +1356,15 @@ release are listed under **Known limitations**.
   or observer threw. The site is now `objectId % 1000` on the body `objectId / 1000`, the rule of `Site.NaifId`.
   `EphemerisTests.CallFromASite` reads the Moon from DSS-13 (399013) through `ephemeris`, against spiceypy's `spkezr`
   to 1e-9 relative.
+- **The documentation called the targets of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` and `CombinedManeuver`
+  heights or altitudes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). The maneuvers tutorial said that `ApogeeHeightManeuver` raises the apogee "to a target
+  altitude", and the impulse-maneuver reference that the apogee and perigee maneuvers raise the heights; the targets are
+  radii in m from the centre of the maneuver centre, and the burn moves the apsis up or down. From a 400 km circular
+  orbit, `1000e3` read as an altitude is a radius 5 378 km under the surface and ends the propagation in
+  `InsufficientFuelException`. The tutorial, the reference and the XML documentation of the three constructors now say
+  "radius from the centre, in m" (R + h for an altitude h). `ApogeeHeightManeuverTests.TargetIsARadiusFromTheCentre`
+  checks R + 1 000 km against the Hohmann first burn and the apogee radius after it by vis-viva (within 1.33e-14 and
+  1.01e-15 relative, Linux). No code changes.
 
 **Changed**
 

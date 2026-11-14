@@ -6,14 +6,57 @@ using IO.Astrodynamics.Math;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Maneuvers
 {
     public class ApogeeHeightManeuverTests
     {
-        public ApogeeHeightManeuverTests()
+        private readonly ITestOutputHelper _output;
+
+        public ApogeeHeightManeuverTests(ITestOutputHelper output)
         {
+            _output = output;
             TestKernels.EnsureSolarSystem();
+        }
+
+        // Relative agreements with the Hohmann closed form, measured on Linux x64 (2026-11-14): ΔV 1.33e-14, apogee radius
+        // after the burn 1.01e-15; twice the worst until the three CI platforms have printed their MEASURE lines (provisional)
+        private const double HohmannDeltaVRelative = 2.7e-14;
+        private const double HohmannApogeeRelative = 2.1e-15;
+
+        /// <summary>
+        /// The target of an <see cref="ApogeeHeightManeuver"/> is a radius from the centre of the maneuver centre, in m, not an
+        /// altitude (#677): from a 400 km circular orbit about the Earth, a target of R + 1 000 km gives the first burn of the
+        /// Hohmann transfer to that radius and an apogee at that radius after the burn, both computed here by vis-viva.
+        /// </summary>
+        [Fact]
+        public void TargetIsARadiusFromTheCentre()
+        {
+            var earth = TestHelpers.EarthAtJ2000;
+            double mu = earth.GM;
+            double r1 = earth.EquatorialRadius + 400e3;
+            double r2 = earth.EquatorialRadius + 1000e3;
+            var state = new StateVector(new Vector3(r1, 0.0, 0.0), new Vector3(0.0, System.Math.Sqrt(mu / r1), 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var spc = new Spacecraft(-1110, "GenericSpacecraft1110", 1000.0, 3000.0, new Clock("GenericClk1110", 65536), state);
+            spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+            spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+            var maneuver = new ApogeeHeightManeuver(earth, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), TimeSpan.Zero, r2, spc.Engines.First());
+
+            var after = maneuver.TryExecute(state).sv;
+
+            // The first burn of the Hohmann transfer from r1 to r2
+            double hohmann = System.Math.Sqrt(mu / r1) * (System.Math.Sqrt(2.0 * r2 / (r1 + r2)) - 1.0);
+            double deltaV = System.Math.Abs(maneuver.DeltaV.Magnitude() - hohmann) / hohmann;
+            // The apogee after the burn by vis-viva from the state after it, at the perigee: a = 1 / (2 / r − v² / μ), r_a = 2a − r
+            double r = after.Position.Magnitude();
+            double v = after.Velocity.Magnitude();
+            double a = 1.0 / (2.0 / r - v * v / mu);
+            double apogee = System.Math.Abs(2.0 * a - r - r2) / r2;
+            _output.WriteLine($"MEASURE #677 apogee radius target: ΔV {maneuver.DeltaV.Magnitude():R} m/s against {hohmann:R} m/s, relative {deltaV:E2}; " +
+                              $"apogee {2.0 * a - r:R} m against {r2:R} m, relative {apogee:E2}");
+            Assert.True(deltaV <= HohmannDeltaVRelative, $"ΔV relative {deltaV:E3}");
+            Assert.True(apogee <= HohmannApogeeRelative, $"apogee relative {apogee:E3}");
         }
 
         [Fact]

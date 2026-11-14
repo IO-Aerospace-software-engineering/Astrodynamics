@@ -94,11 +94,13 @@ it, fired one orbit later (#569).
 
 ### ApogeeHeightManeuver
 
-Raises apogee height. Fires at perigee (r . v crosses zero from negative to positive).
+Moves the apogee, up or down, to `TargetApogee`, a radius in metres from the centre of the maneuver centre (not an
+altitude: R + h for an altitude h). Fires at perigee (r . v crosses zero from negative to positive).
 
 ### PerigeeHeightManeuver
 
-Raises perigee height. Fires at apogee (r . v crosses zero from positive to negative).
+Moves the perigee, up or down, to `TargetPerigeeHeight`, a radius in metres from the centre of the maneuver centre (not an
+altitude). Fires at apogee (r . v crosses zero from positive to negative).
 
 ### PhasingManeuver
 

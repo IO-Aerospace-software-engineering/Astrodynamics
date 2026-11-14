@@ -1501,6 +1501,9 @@ Each impulse maneuver defines a g-function for event-driven triggering:
 | `PerigeeHeightManeuver` | r·v | Positive → Negative | Apogee |
 | `PhasingManeuver` | r·v | Negative → Positive | Perigee |
 | `CombinedManeuver` | r·v | Positive → Negative | Apogee (+ precondition: apogee aligned with ascending node) |
+
+The targets of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` and `CombinedManeuver` are radii in m from the centre of
+the maneuver centre, not altitudes (for an altitude h, the equatorial radius + h); the burn moves the apsis up or down.
 | `PlaneAlignmentManeuver` | r·ĥ_target | Adaptive | Nearest orbital node (ascending or descending) |
 | `ApsidalAlignmentManeuver` | r·(ĥ×p̂) | Negative → Positive | Nearest orbit intersection point |
 

@@ -8,11 +8,32 @@ using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Maneuver
 {
+    /// <summary>
+    /// An impulse at apogee that changes the inclination and moves the perigee, up or down, to a target radius from the
+    /// centre of the maneuver centre.
+    /// </summary>
     public class CombinedManeuver : ImpulseManeuver
     {
+        /// <summary>
+        /// The perigee radius after the burn, in m from the centre of the maneuver centre (not an altitude).
+        /// </summary>
         public double TargetPerigeeHeight { get; } = double.NaN;
+
+        /// <summary>
+        /// The inclination after the burn, in radians.
+        /// </summary>
         public double TargetInclination { get; } = double.NaN;
 
+        /// <summary>
+        /// Creates the maneuver.
+        /// </summary>
+        /// <param name="maneuverCenter">The body the orbit is about.</param>
+        /// <param name="minimumEpoch">Earliest epoch when the maneuver can execute.</param>
+        /// <param name="maneuverHoldDuration">Duration to hold after the maneuver.</param>
+        /// <param name="perigeeRadius">The perigee radius after the burn, in m from the centre of
+        /// <paramref name="maneuverCenter"/>, not an altitude: for an altitude h, its equatorial radius + h.</param>
+        /// <param name="inclination">The inclination after the burn, in radians.</param>
+        /// <param name="engine">Engine used for the maneuver.</param>
         public CombinedManeuver(CelestialItem maneuverCenter, Time minimumEpoch, TimeSpan maneuverHoldDuration, double perigeeRadius, double inclination, Engine engine) : base(
             maneuverCenter, minimumEpoch, maneuverHoldDuration, engine)
         {

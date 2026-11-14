@@ -93,18 +93,23 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(
 Each impulse maneuver computes the required delta-v and defines a g-function that
 determines **when** the burn fires.
 
-### Raising apogee height
+### Moving the apogee
 
-`ApogeeHeightManeuver` fires at perigee to raise the apogee to a target altitude:
+`ApogeeHeightManeuver` fires at perigee and moves the apogee, up or down, to a target **radius**: a distance in metres
+from the centre of the maneuver centre, not an altitude. For an altitude h above the Earth, pass the equatorial radius
+plus h:
 
 ```csharp
+// An apogee 1 000 km above the equator: R + 1 000 km from the Earth's centre
+double targetApogeeRadius = earth.EquatorialRadius + 1000e3;
 var raiseApogee = new ApogeeHeightManeuver(
     earth, epoch, TimeSpan.Zero, targetApogeeRadius, engine);
 ```
 
-### Lowering perigee height
+### Moving the perigee
 
-`PerigeeHeightManeuver` fires at apogee to lower the perigee:
+`PerigeeHeightManeuver` fires at apogee and moves the perigee, up or down, to a target radius from the centre, in
+metres:
 
 ```csharp
 var lowerPerigee = new PerigeeHeightManeuver(
@@ -144,8 +149,8 @@ var apsidalAlign = new ApsidalAlignmentManeuver(
 
 ### Combined maneuver
 
-`CombinedManeuver` performs a combined plane change and perigee height adjustment
-at apogee. It includes a precondition that the apogee is aligned with the ascending
+`CombinedManeuver` performs a combined plane change and perigee change at apogee, the perigee
+moved to a target radius from the centre, in metres. It includes a precondition that the apogee is aligned with the ascending
 node before firing:
 
 ```csharp
