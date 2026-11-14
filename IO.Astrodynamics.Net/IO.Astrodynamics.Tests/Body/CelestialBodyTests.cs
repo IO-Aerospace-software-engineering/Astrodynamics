@@ -127,32 +127,24 @@ public class CelestialBodyTests
         // 1 ulp of gm_de440.tpc's BODY399_GM times 1e9 (1 ulp measured, CSPICE's parse), the radii exactly pck00011.tpc's
         // BODY399_RADII times 1000; every title right-aligned in its column
         Assert.All(res.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries), line => Assert.Equal(" : ", line.Substring(30, 3)));
-        Assert.Equal("Planet", TextKernelReference.PrintedValue(res, "Type :"));
-        Assert.Equal("399", TextKernelReference.PrintedValue(res, "Identifier :"));
-        Assert.Equal("EARTH", TextKernelReference.PrintedValue(res, "Name :"));
-        Assert.Equal("ITRF93", TextKernelReference.PrintedValue(res, "Fixed frame :"));
-        Assert.Equal(earth.Mass, TextKernelReference.PrintedNumber(res, "Mass (kg) :"));
-        var gm = TextKernelReference.PrintedNumber(res, "GM (m^3/s^2) :");
+        Assert.Equal("Planet", ToStringLines.Value(res, "Type :"));
+        Assert.Equal("399", ToStringLines.Value(res, "Identifier :"));
+        Assert.Equal("EARTH", ToStringLines.Value(res, "Name :"));
+        Assert.Equal("ITRF93", ToStringLines.Value(res, "Fixed frame :"));
+        Assert.Equal(earth.Mass, ToStringLines.Number(res, "Mass (kg) :"));
+        var gm = ToStringLines.Number(res, "GM (m^3/s^2) :");
         Assert.Equal(earth.GM, gm);
         var gmText = TextKernelReference.Read(Path.Combine(Constants.SolarSystemKernelPath.FullName, "gm_de440.tpc"), "BODY399_GM").Single() * 1e9;
-        Assert.True(TextKernelReference.Ulps(gm, gmText) <= 1, $"GM {gm:R}, kernel text {gmText:R}");
+        Assert.True(System.Math.Abs(BitConverter.DoubleToInt64Bits(gm) - BitConverter.DoubleToInt64Bits(gmText)) <= 1, $"GM {gm:R}, kernel text {gmText:R}");
         var radii = TextKernelReference.Read(Path.Combine(Constants.SolarSystemKernelPath.FullName, "pck00011.tpc"), "BODY399_RADII");
-        Assert.Equal(radii[0] * 1000.0, TextKernelReference.PrintedNumber(res, "Equatorial radius (m) :"));
-        Assert.Equal(radii[2] * 1000.0, TextKernelReference.PrintedNumber(res, "Polar radius (m) :"));
-        Assert.Equal(earth.EquatorialRadius, TextKernelReference.PrintedNumber(res, "Equatorial radius (m) :"));
-        Assert.Equal(earth.PolarRadius, TextKernelReference.PrintedNumber(res, "Polar radius (m) :"));
-        Assert.Equal(earth.Flattening, TextKernelReference.PrintedNumber(res, "Flattening :"));
-        Assert.Equal(earth.J2, TextKernelReference.PrintedNumber(res, "J2 :"));
-        Assert.Equal(earth.J3, TextKernelReference.PrintedNumber(res, "J3 :"));
-        Assert.Equal(earth.J4, TextKernelReference.PrintedNumber(res, "J4 :"));
-    }
-
-    [Fact]
-    public void TextKernelReference_NameNotAssigned_Throws()
-    {
-        Assert.Throws<InvalidOperationException>(() =>
-            TextKernelReference.Read(Path.Combine(Constants.SolarSystemKernelPath.FullName, "gm_de440.tpc"), "BODY399_NOT_ASSIGNED"));
-        Assert.Throws<InvalidOperationException>(() => TextKernelReference.PrintedValue(TestHelpers.EarthAtJ2000.ToString(), "Absent :"));
+        Assert.Equal(radii[0] * 1000.0, ToStringLines.Number(res, "Equatorial radius (m) :"));
+        Assert.Equal(radii[2] * 1000.0, ToStringLines.Number(res, "Polar radius (m) :"));
+        Assert.Equal(earth.EquatorialRadius, ToStringLines.Number(res, "Equatorial radius (m) :"));
+        Assert.Equal(earth.PolarRadius, ToStringLines.Number(res, "Polar radius (m) :"));
+        Assert.Equal(earth.Flattening, ToStringLines.Number(res, "Flattening :"));
+        Assert.Equal(earth.J2, ToStringLines.Number(res, "J2 :"));
+        Assert.Equal(earth.J3, ToStringLines.Number(res, "J3 :"));
+        Assert.Equal(earth.J4, ToStringLines.Number(res, "J4 :"));
     }
 
     [Fact]

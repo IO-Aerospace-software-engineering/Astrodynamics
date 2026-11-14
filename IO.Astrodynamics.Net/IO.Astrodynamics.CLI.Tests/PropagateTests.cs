@@ -172,8 +172,9 @@ public class PropagateTests
 
     /// <summary>
     /// The embedded model ends at degree 100 (its last line holds n = m = 100), and a field pads the degrees beyond its
-    /// file with zeros: before #681 a degree above it ran at degree 10, wired it would run at 100 silently. It is an
-    /// argument error raised before any output; the degree of the model itself runs, as the library run of that degree.
+    /// file with zeros: before #681 a degree above it ran at degree 10 about the Earth and was ignored about any other
+    /// centre; wired it would run at 100 silently. It is an argument error raised before any output, whatever the centre
+    /// (the Moon here); the degree of the model itself runs, as the library run of that degree.
     /// </summary>
     [Fact]
     public async Task EarthGeopotentialDegreeAbove100_IsAnArgumentError()
@@ -191,6 +192,11 @@ public class PropagateTests
 
             var exception = await Assert.ThrowsAsync<ArgumentException>(() => Run("s", StateValues, "ICRF", output, output,
                 Time.J2000TDB.AddSeconds(10.0), (ushort)(maximum + 1)));
+            Assert.Contains(maximum.ToString(CultureInfo.InvariantCulture), exception.Message);
+            Assert.False(Directory.Exists(output));
+
+            exception = await Assert.ThrowsAsync<ArgumentException>(() => Run("s", "2000000.0 0.0 0.0 0.0 1600.0 0.0", "ICRF", output, output,
+                Time.J2000TDB.AddSeconds(10.0), (ushort)(maximum + 1), 301));
             Assert.Contains(maximum.ToString(CultureInfo.InvariantCulture), exception.Message);
             Assert.False(Directory.Exists(output));
 
@@ -223,7 +229,7 @@ public class PropagateTests
     }
 
     private static async Task<FileInfo> Run(string activation, string values, string frame, string bodyName, string output, Time end,
-        ushort? degree)
+        ushort? degree, int center = 399)
     {
         var command = new PropagateCommand();
         var sb = new StringBuilder();
@@ -235,7 +241,7 @@ public class PropagateTests
 
         var parameters = new Commands.Parameters.OrbitalParameters
         {
-            CenterOfMotionId = 399, OrbitalParametersEpoch = "0.0", Frame = frame, OrbitalParametersValues = values,
+            CenterOfMotionId = center, OrbitalParametersEpoch = "0.0", Frame = frame, OrbitalParametersValues = values,
             FromStateVector = activation == "s", FromKeplerian = activation == "k", FromEquinoctial = activation == "q"
         };
         var window = new WindowParameters { Begin = "0.0", End = end.TimeSpanFromJ2000().TotalSeconds.ToString("R", CultureInfo.InvariantCulture) };

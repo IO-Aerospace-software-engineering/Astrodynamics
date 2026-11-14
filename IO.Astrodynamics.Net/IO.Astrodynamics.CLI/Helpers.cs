@@ -28,6 +28,12 @@ public class Helpers
     internal const ushort EarthGeopotentialMaximumDegree = 100;
 
     /// <summary>
+    /// The degree of the Earth geopotential when <c>propagate -n</c> is not given, and of the conversions of
+    /// <c>orbital-parameters-converter</c>, which read the GM only.
+    /// </summary>
+    internal const ushort EarthGeopotentialDefaultDegree = 10;
+
+    /// <summary>
     /// The object of a NAIF identifier: a site (its body's identifier times 1000 plus its own), a celestial body, or a
     /// spacecraft (a negative identifier) read from its kernels.
     /// </summary>
@@ -157,7 +163,7 @@ public class Helpers
     }
 
     internal static OrbitalParameters.OrbitalParameters ConvertToOrbitalParameters(string orbitalParametersInput, int centerofMotion, string epoch, string originalFrame,
-        bool fromStateVector, bool fromKeplerian, bool fromEquinoctial, bool fromTLE, ushort geopotentialDegrees = 10)
+        bool fromStateVector, bool fromKeplerian, bool fromEquinoctial, bool fromTLE, ushort geopotentialDegrees = EarthGeopotentialDefaultDegree)
     {
         if (originalFrame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
         {

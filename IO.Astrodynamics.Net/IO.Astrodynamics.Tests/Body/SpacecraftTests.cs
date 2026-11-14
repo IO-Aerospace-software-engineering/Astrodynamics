@@ -33,10 +33,10 @@ namespace IO.Astrodynamics.Tests.Body
                 new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 8000.0, 0.0), TestHelpers.EarthAtJ2000,
                     TimeSystem.Time.J2000TDB, Frames.Frame.ICRF));
             var res = spc.ToString();
-            Assert.Equal("-1001", TextKernelReference.PrintedValue(res, "Identifier :"));
-            Assert.Equal("MySpacecraft", TextKernelReference.PrintedValue(res, "Name :"));
-            Assert.Equal(spc.Mass, TextKernelReference.PrintedNumber(res, "Mass (kg) :"));
-            Assert.Equal(spc.GM, TextKernelReference.PrintedNumber(res, "GM (m^3/s^2) :"));
+            Assert.Equal("-1001", ToStringLines.Value(res, "Identifier :"));
+            Assert.Equal("MySpacecraft", ToStringLines.Value(res, "Name :"));
+            Assert.Equal(spc.Mass, ToStringLines.Number(res, "Mass (kg) :"));
+            Assert.Equal(spc.GM, ToStringLines.Number(res, "GM (m^3/s^2) :"));
             Assert.All(res.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries), line => Assert.Equal(" : ", line.Substring(30, 3)));
         }
 

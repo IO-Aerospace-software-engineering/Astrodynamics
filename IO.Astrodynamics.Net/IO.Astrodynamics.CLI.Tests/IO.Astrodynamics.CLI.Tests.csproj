@@ -92,9 +92,11 @@
         <!-- The reader of that reference -->
         <Compile Include="..\IO.Astrodynamics.Tests\OrbitalParameters\EquinoctialReference.cs"
                  Link="EquinoctialReference.cs" />
-        <!-- The reader of the text kernels and of the ToString lines of the body types (#681) -->
+        <!-- The reader of the text kernels, and that of the ToString lines of the body types (#681) -->
         <Compile Include="..\IO.Astrodynamics.Tests\TextKernelReference.cs"
                  Link="TextKernelReference.cs" />
+        <Compile Include="..\IO.Astrodynamics.Tests\ToStringLines.cs"
+                 Link="ToStringLines.cs" />
     </ItemGroup>
 
 </Project>

@@ -1361,7 +1361,7 @@ release are listed under **Known limitations**.
   `Helpers.ConvertToOrbitalParameters` that forwards no degree, so the default 10 reached `GeopotentialModelParameters`
   on the `-s`, `-k` and `-q` paths alike, and the SPKs of `-n 2`, `-n 10` and `-n 50` were byte-identical. The degree
   now reaches the Earth of the run, which is the library run of the same scenario with `GeopotentialModelParameters` of
-  that degree. A degree above 100, the last degree of the embedded EGM2008 model, is an argument error (the field pads
+  that degree. A degree above 100, the last degree of the embedded EGM2008 model, is an argument error whatever the centre (the field pads
   the degrees beyond its file with zeros, so a wired `-n 150` would have run at degree 100); 0 and 1 remain the point
   mass. The help text, whose parenthesis was not closed, reads "Degree of the Earth geopotential (EGM2008), at most
   100". `PropagateTests.EarthGeopotentialDegree_IsTheDegreeOfTheRun` reads the exported SPK at the end of a 600 s window
@@ -1723,8 +1723,10 @@ release are listed under **Known limitations**.
   stellar aberration alone; the position moved by the proper motion over the star's light time before (6.2″ for
   0.1″/yr at 20 pc). The occultation search reads a star the same way.
 - **Breaking: `astro propagate -n` above 100 throws `ArgumentException`** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681), Fixed above): such a degree ran at
-  degree 10, as every `-n` did. Migration: pass a degree of at most 100, the degree of the embedded EGM2008 model; any
-  `-n` other than 10 now gives the run of that degree.
+  degree 10 about the Earth, as every `-n` did, and was ignored about any other centre, which has no geopotential; it
+  now throws whatever the centre, before anything is loaded or written. Migration: pass a degree of at most 100, the
+  degree of the embedded EGM2008 model (about another centre, omit `-n`); any `-n` other than 10 about the Earth now
+  gives the run of that degree.
 - **Breaking: the text of `CelestialItem.ToString`, `CelestialBody.ToString` and `Spacecraft.ToString`** ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681), Fixed
   above), and so of `astro celestial-body-info`: the mass, GM and radii are printed in round-trip form (Earth with
   gm_de440: `5.972168399787583E+24`, `398600435507022.6`, `6378136.6`, `6356751.9`), the GM line under

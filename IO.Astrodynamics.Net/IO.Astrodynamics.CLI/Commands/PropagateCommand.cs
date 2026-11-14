@@ -32,7 +32,7 @@ public class PropagateCommand
         [Option('a', Description = "Include atmospheric drag perturbation (Earth and Mars only)")]
         bool useAtmosphericDrag,
         [Option('n', Description = "Degree of the Earth geopotential (EGM2008), at most 100")]
-        ushort earthGeopotentialDegree = 10,
+        ushort earthGeopotentialDegree = Helpers.EarthGeopotentialDefaultDegree,
         [Argument(Description = "Body mass")] double bodyMass = 100.0,
         [Argument(Description = "Body projected area")]
         double area = 1.0,
@@ -42,7 +42,8 @@ public class PropagateCommand
         int[] celestialBodies = null
     )
     {
-        // The embedded model ends at degree 100, and a field pads the degrees beyond its file with zeros (#681)
+        // The embedded model ends at degree 100, and a field pads the degrees beyond its file with zeros (#681); checked
+        // whatever the centre, before anything is loaded or written
         if (earthGeopotentialDegree > Helpers.EarthGeopotentialMaximumDegree)
         {
             throw new ArgumentException(
