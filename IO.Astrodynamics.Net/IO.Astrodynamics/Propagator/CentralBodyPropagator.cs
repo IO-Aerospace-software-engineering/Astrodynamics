@@ -145,12 +145,14 @@ public class CentralBodyPropagator : PropagatorBase
     {
         _centralBody = ResolveCentralBody(spacecraft);
 
-        InitialState = StartState(Spacecraft.InitialOrbitalParameters, Window.StartDate)
+        InitialState = StartState(InertialInitialOrbit(Spacecraft.InitialOrbitalParameters, Window.StartDate), Window.StartDate)
             .RelativeTo(_centralBody, Aberration.None).ToStateVector();
     }
 
     /// <summary>
-    /// The state of <paramref name="orbitalParameters"/> at <paramref name="start"/>: a state vector given at that instant
+    /// The state of <paramref name="orbitalParameters"/>, the initial orbit in the frame of the propagation
+    /// (<see cref="PropagatorBase.InertialInitialOrbit"/>: a TLE or a TEME state rotated to ICRF, #675), at
+    /// <paramref name="start"/>: a state vector given at that instant
     /// as it is, any other orbital parameters through <see cref="OrbitalParameters.AtEpoch"/>.
     /// </summary>
     /// <remarks>
@@ -214,7 +216,7 @@ public class CentralBodyPropagator : PropagatorBase
         var centralBody = ResolveCentralBody(spacecraft);
 
         var tdbStartDate = window.StartDate.ToTDB();
-        var initialState = StartState(spacecraft.InitialOrbitalParameters, tdbStartDate)
+        var initialState = StartState(InertialInitialOrbit(spacecraft.InitialOrbitalParameters, tdbStartDate), tdbStartDate)
             .RelativeTo(centralBody, Aberration.None).ToStateVector();
         var items = (celestialItems ?? Array.Empty<CelestialItem>()).Distinct().ToArray();
         var forces = BuildCentralBodyForces(centralBody, items, spacecraft, includeAtmosphericDrag,

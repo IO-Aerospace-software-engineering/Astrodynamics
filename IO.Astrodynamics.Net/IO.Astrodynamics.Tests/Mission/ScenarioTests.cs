@@ -297,7 +297,6 @@ namespace IO.Astrodynamics.Tests.Mission
 
             scenario.AddSpacecraft(spacecraft);
 
-            //var summary = await scenario.SimulateAsync( false, false, TimeSpan.FromSeconds(1.0));
             var site = new Site(63, "DSS-63", TestHelpers.EarthAtJ2000);
             var initialSV = spacecraft.GetEphemeris(start, site, Frames.Frame.ICRF, Aberration.None);
             var endSV = spacecraft.GetEphemeris(end, site, Frames.Frame.ICRF, Aberration.None);

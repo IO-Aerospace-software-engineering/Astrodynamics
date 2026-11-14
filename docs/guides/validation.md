@@ -550,13 +550,19 @@ the figure before it in brackets. The `tca_s` of propagated objects counts exact
 it through `ToTDT`, which truncates TDB − TT to the tick, 0.06 to 0.98 tick late on these dates; this moved the rows
 of 001, 002, 003 and 008 (0.0058, 0.0037, 0.0037 and 0.0064 at `minima[3].tca_s` before it). With
 [#625](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/625) (same suite, 2026-11-10) the
-labels take the nearest tick of their seconds: of these figures only 005 moved, the figure before it in brackets.
+labels take the nearest tick of their seconds: of these figures only 005 moved, the figure before it in brackets. With
+[#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683) (Release, Linux, 2026-11-14, the
+fixture of `Lot6CaseTests`) a TCA of the search on two propagations is labelled in the time frame of the window start,
+UTC for these cases, at the tick of that frame nearer the zero of the range rate, where it was the TDB of a step epoch
+most of the time: `tca_s` moved by 8.7e-8 s at most and the relative position by 0.30 mm at most; the rows it moved
+give the new figure, the figure before #683 in brackets (the rows of 001 to 003 and 008 before it are those of the
+paragraph above).
 
 | Key | Worst delta | Ratio | Case and output |
 |-----|-------------|-------|-----------------|
 | `conjunction_tca_s` | 2.7e-8 s | 0.027 (0.13) | `conjunction_12h_leo500_spk_crossing_007`, `tca_s` |
-| `conjunction_position_km` | 0.72 mm | 0.0029 (0.50) | 006, `relative_position_rtn_km` (007 0.79 mm of 1.6 mm before, 1.4e-13 km after) |
-| `conjunction_velocity_km_s` | 7.3e-7 m/s | 0.0029 (0.50) | 006, `relative_velocity_rtn_km_s` (007 5.0e-7 m/s before) |
+| `conjunction_position_km` | 0.51 mm | 0.0020 (0.0029, 0.50) | 006, `miss_distance_km` (`relative_position_rtn_km` 0.72 mm before #683; 007 0.79 mm of 1.6 mm before #624, 1.4e-13 km after) |
+| `conjunction_velocity_km_s` | 4.7e-7 m/s | 0.0019 (0.0029, 0.50) | 001, `relative_velocity_rtn_km_s` (006 7.3e-7 m/s before #683; 007 5.0e-7 m/s before #624) |
 | `covariance_sigma_rel` | 1.1e-6 | 0.11 | `conjunction_6h_leo400_grav10_drag_crossing_006`, `objects[1].sigma_rtn` |
 | `covariance_correlation` | 3.0e-6 | 0.30 | 006, `objects[0].correlation_rtn` |
 | `collision_probability_rel` | 1.1e-6 | 0.0011 | 006, `collision_probability` |
@@ -571,14 +577,14 @@ labels take the nearest tick of their seconds: of these figures only 005 moved, 
 
 | Case | Largest ratio | Output |
 |------|---------------|--------|
-| `conjunction_6h_leo700_grav10_headon_001` | 0.0022 | `tca_s` |
-| `conjunction_6h_leo500_grav10_crossing_002` | 0.0019 (0.0025) | `tca_s` (`relative_position_rtn_km`) |
-| `conjunction_6h_leo500_pm_crossing_003` | 0.0019 (0.0024) | `tca_s` (`relative_position_rtn_km`) |
-| `conjunction_6h_geo_grav10_slow_004` | 1.9e-5 | `objects[1].correlation_rtn` |
+| `conjunction_6h_leo700_grav10_headon_001` | 0.0058 (0.0022) | `tca_s` |
+| `conjunction_6h_leo500_grav10_crossing_002` | 0.00094 (0.0019) | `relative_position_rtn_km` (`tca_s`) |
+| `conjunction_6h_leo500_pm_crossing_003` | 0.00081 (0.0019) | `relative_position_rtn_km` (`tca_s`) |
+| `conjunction_6h_geo_grav10_slow_004` | 2.5e-5 (1.9e-5) | `objects[1].correlation_rtn` |
 | `conjunction_6h_leo700_grav10_flat_005` | 9.6e-5 (6.4e-5) | `relative_velocity_rtn_km_s` |
 | `conjunction_6h_leo400_grav10_drag_crossing_006` | 0.30 | `objects[0].correlation_rtn` |
 | `conjunction_12h_leo500_spk_crossing_007` | 0.027 (0.50) | `tca_s` (`relative_velocity_rtn_km_s`) |
-| `conjunction_12h_leo500_grav10_allminima_008` | 0.0064 (0.0063) | `minima[14].tca_s` |
+| `conjunction_12h_leo500_grav10_allminima_008` | 0.0063 (0.0064) | `minima[14].tca_s` |
 | `collision_probability_synthetic_high_001` | 1.6e-8 | `collision_probability` |
 | `collision_probability_synthetic_mid_002` | 4.9e-9 (7.5e-6) | `collision_probability` (`encounter_plane_sigma_minor_km`) |
 | `collision_probability_synthetic_low_003` | 7.4e-8 | `collision_probability` |

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- The child process of IO.Astrodynamics.Tests' KernelRegistryTests (#673): the unloads that make SPICE fail to open a
+         deleted binary kernel again, which leaves that kernel open in SPICE for good, run in a process of their own. The
+         test project builds it and copies its output to KernelUnload/ next to its own. -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>false</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\IO.Astrodynamics\IO.Astrodynamics.csproj" />
+        <Compile Include="..\IO.Astrodynamics.Tests\TestKernelWriter.cs" Link="TestKernelWriter.cs" />
+    </ItemGroup>
+
+</Project>
