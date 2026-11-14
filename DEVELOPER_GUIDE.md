@@ -2076,9 +2076,13 @@ A read at an added epoch returns that entry. A read between entries is interpola
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the
 two entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
 states. Missing data throw `InvalidOperationException`, as on SPICE (#680): a state read for a target without entries or
-outside them, an orientation read outside a frame's entries, the information of an identifier never added; a frame
-never added throws `ArgumentException`. A body whose barycentre's data the provider lacks builds with
-`InitialOrbitalParameters` null and an infinite sphere of influence, as on SPICE.
+outside them, an orientation read outside a frame's entries. A bad argument throws `ArgumentException` (#680, decided by
+S. Guillet, 2026-11-14): a frame never added, and the information of an identifier never added, whose `ParamName` is
+`naifId`, as `SpiceDataProvider` for an identifier SPICE does not name, through `GetCelestialBodyInfo`,
+`new CelestialBody(id)` and `CelestialItem.Create(id)` alike. A Lagrange point (391 to 395) is the exception of
+`CelestialItem.Create`, which builds it from its state without reading its information: its missing state throws
+`InvalidOperationException`, as on SPICE. A body whose barycentre's data, information included, the provider lacks builds
+with `InitialOrbitalParameters` null and an infinite sphere of influence, as on SPICE.
 
 ---
 

@@ -22,7 +22,9 @@ namespace IO.Astrodynamics.DataProvider;
 /// <see cref="ArgumentException"/>. A NAIF id without body information throws <see cref="ArgumentException"/> naming
 /// <c>naifId</c>, as the SPICE provider for an id SPICE does not name or that is not a celestial body's (#672), and so do
 /// <c>new CelestialBody(id)</c> and <see cref="CelestialItem.Create"/> of that id (#680, decided by S. Guillet,
-/// 2026-11-14: a bad argument gives <see cref="ArgumentException"/>). A body whose barycentre's information the provider
+/// 2026-11-14: a bad argument gives <see cref="ArgumentException"/>), except <see cref="CelestialItem.Create"/> of a
+/// Lagrange point (391 to 395), which reads the point's state, not its information: a missing state throws
+/// <see cref="InvalidOperationException"/>, as on SPICE. A body whose barycentre's information the provider
 /// lacks still builds without an orbit, as on SPICE, which names every barycentre.
 /// </remarks>
 public class MemoryDataProvider : IDataProvider

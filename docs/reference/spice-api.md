@@ -121,7 +121,9 @@ SPICE throws for the same reads. A bad argument throws `ArgumentException` (#680
 frame never added, and the information of an identifier never added, whose `ParamName` is `naifId`, the type and the
 parameter `SpiceDataProvider.GetCelestialBodyInfo` throws for an identifier SPICE does not name or that is not a
 celestial body's (#672); `new CelestialBody(id)` and `CelestialItem.Create(id)` of that identifier throw it too, on both
-providers. A body whose barycentre's data, information included, the provider lacks builds with
+providers, except `CelestialItem.Create` of a Lagrange point (391 to 395), which reads the point's state and not its
+information (above): a provider without that state throws `InvalidOperationException`, as SPICE for L3, whose state
+`Data/SolarSystem` lacks. A body whose barycentre's data, information included, the provider lacks builds with
 `InitialOrbitalParameters` null and an infinite sphere of influence, as a body the kernels do not chain to its
 barycentre (SPICE names every barycentre), and the orientation cache of a propagation keeps the points the entries do not
 reach unavailable. Before 11.0.0 the state and orientation reads threw `ArgumentException` and the information of an

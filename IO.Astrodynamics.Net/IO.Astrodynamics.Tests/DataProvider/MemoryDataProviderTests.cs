@@ -218,12 +218,14 @@ public class MemoryDataProviderTests
     /// type of <c>SpiceDataProvider.GetCelestialBodyInfo</c>, the reference, with the same parameter name (#680,
     /// decided by S. Guillet, 2026-11-14: a bad argument gives <see cref="ArgumentException"/>). The celestial ids SPICE does
     /// not name of <c>NativeAbortGuardTests.GetCelestialBodyInfo_UnnamedIdentifier_Throws</c> (#672), and ids that are no
-    /// celestial body's, which SPICE rejects before reading. The paths through the global provider,
-    /// <c>new CelestialBody(id)</c> and <c>CelestialItem.Create(id)</c>, are checked in a child process,
-    /// <see cref="MemoryDataProviderBodyTests"/>.
+    /// celestial body's, which SPICE rejects before reading, and the Lagrange points L1 to L5, which SPICE does not name
+    /// either. The paths through the global provider, <c>new CelestialBody(id)</c> and <c>CelestialItem.Create(id)</c>, are
+    /// checked in a child process, <see cref="MemoryDataProviderBodyTests"/>; <c>CelestialItem.Create</c> of a Lagrange point
+    /// reads its state, not its information.
     /// </summary>
     [Theory]
     [MemberData(nameof(UnknownIds))]
+    [MemberData(nameof(LagrangeIds))]
     public void UnknownId_ThrowsAsTheSpiceProvider(int id)
     {
         IDataProvider spice = new SpiceDataProvider();
@@ -242,4 +244,10 @@ public class MemoryDataProviderTests
     internal static readonly int[] UnknownIdValues = [398, 12345678, 2000003, 99999999, -12345, 50, 1000];
 
     public static IEnumerable<object[]> UnknownIds() => UnknownIdValues.Select(id => new object[] { id });
+
+    // L1 to L5, which SPICE does not name (Data/SolarSystem): their information throws as any unknown id's, while
+    // CelestialItem.Create builds them from their state without reading it (MemoryDataProviderBodyTests, the child process)
+    internal static readonly int[] LagrangeIdValues = [391, 392, 393, 394, 395];
+
+    public static IEnumerable<object[]> LagrangeIds() => LagrangeIdValues.Select(id => new object[] { id });
 }

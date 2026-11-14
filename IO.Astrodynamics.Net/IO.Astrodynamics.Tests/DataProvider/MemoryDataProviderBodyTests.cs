@@ -24,7 +24,9 @@ namespace IO.Astrodynamics.Tests.DataProvider;
 /// the rotation about the entries' axis. Before #680 the child threw <see cref="System.Collections.Generic.KeyNotFoundException"/>
 /// ('3'), and the cache <see cref="ArgumentException"/>. An identifier the provider has no information on throws, through
 /// each public path, the <see cref="ArgumentException"/> naming <c>naifId</c> of the SPICE provider (#680, decided by
-/// S. Guillet, 2026-11-14), while the Earth and the Moon above, whose barycentre's information is missing, still build. The
+/// S. Guillet, 2026-11-14), while the Earth and the Moon above, whose barycentre's information is missing, still build; a
+/// Lagrange point's, through <see cref="IO.Astrodynamics.Body.CelestialItem.Create"/>, which reads its state only, throws
+/// <see cref="InvalidOperationException"/> for its missing state, as SPICE for L3, whose state its kernels lack. The
 /// class runs in the collection of <see cref="ColdStartTests"/>,
 /// alone, for the handles a child inherits on Windows.
 /// </remarks>
@@ -67,6 +69,36 @@ public class MemoryDataProviderBodyTests
         Assert.Contains($"OK unknown id {id}, {path}: memory ArgumentException (naifId), SPICE ArgumentException (naifId)",
             ChildOutput.Value);
     }
+
+    /// <summary>
+    /// The Lagrange points L1 to L5, which SPICE does not name: <c>GetCelestialBodyInfo</c> and <c>new CelestialBody(id)</c>
+    /// throw the <see cref="ArgumentException"/> naming <c>naifId</c> of the SPICE provider, while
+    /// <see cref="CelestialItem.Create"/> reads no information of a Lagrange point and builds it from its state: SPICE builds
+    /// the points its kernels hold and throws <see cref="InvalidOperationException"/> for L3, which they do not hold, and the
+    /// memory provider without their states throws that type for all five, missing data, not a bad argument (#680 review,
+    /// 2026-11-14).
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(LagrangeIdPaths))]
+    public void LagrangeId_ThrowsAsTheSpiceProvider_CreateReadsTheState(int id, string path)
+    {
+        if (path == "CelestialItem.Create")
+        {
+            Assert.Contains($"OK Lagrange id {id}, {path}: SPICE {(id == 393 ? "InvalidOperationException" : "no exception")}",
+                ChildOutput.Value);
+            Assert.Contains($"OK Lagrange id {id}, {path}: memory without its state InvalidOperationException", ChildOutput.Value);
+            return;
+        }
+
+        Assert.Contains($"OK Lagrange id {id}, {path}: SPICE ArgumentException (naifId)", ChildOutput.Value);
+        Assert.Contains($"OK Lagrange id {id}, {path}: memory ArgumentException (naifId), SPICE ArgumentException (naifId)",
+            ChildOutput.Value);
+    }
+
+    public static IEnumerable<object[]> LagrangeIdPaths() =>
+        from id in MemoryDataProviderTests.LagrangeIdValues
+        from path in new[] { "GetCelestialBodyInfo", "new CelestialBody", "CelestialItem.Create" }
+        select new object[] { id, path };
 
     public static IEnumerable<object[]> UnknownIdPaths() =>
         from id in MemoryDataProviderTests.UnknownIdValues

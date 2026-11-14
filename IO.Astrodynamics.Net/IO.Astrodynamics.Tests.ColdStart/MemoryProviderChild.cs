@@ -31,7 +31,9 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <see cref="CelestialItem.Create"/> of an identifier the provider has no information on throw the
 /// <see cref="ArgumentException"/> naming <c>naifId</c> that the SPICE provider throws for the same identifiers, checked
 /// against SPICE, the reference, before the swap; a body whose barycentre's information the provider lacks still builds
-/// without an orbit, as on SPICE, which names every barycentre.
+/// without an orbit, as on SPICE, which names every barycentre. A Lagrange point (391 to 395) is no unknown identifier for
+/// <see cref="CelestialItem.Create"/>, which reads its state and not its information: its missing state throws
+/// <see cref="InvalidOperationException"/>, as SPICE for L3, whose state its kernels lack.
 /// </para>
 /// <para>
 /// The kernels are loaded and the static frames built under SPICE first, the reference: the Earth built at 1500-01-01,
@@ -77,6 +79,8 @@ internal static class MemoryProviderChild
             CheckWithoutOrbit("SPICE, the Earth at 1500", new CelestialBody(399, Frame.ICRF, early));
             // The reference of the unknown ids: what SPICE throws for each, through each public path
             var spiceUnknownIds = ThrownByUnknownIds(new SpiceDataProvider());
+            // The reference of the Lagrange points, which CelestialItem.Create builds without reading their information
+            var spiceLagrangeIds = ThrownByIds(new SpiceDataProvider(), LagrangeIds);
 
             // The Earth's info only; then with its barycentre's and the SSB's, no state
             CheckWithoutOrbit("memory, the Earth's info only", Build(399, T0, EarthInfo));
@@ -107,6 +111,7 @@ internal static class MemoryProviderChild
             CheckWithoutOrbit("memory, the Moon's info only", Build(301, T0, MoonInfo));
 
             CheckUnknownIds(spiceUnknownIds);
+            CheckLagrangeIds(spiceLagrangeIds);
             CheckOrientationCache();
             return 0;
         }
@@ -149,11 +154,20 @@ internal static class MemoryProviderChild
         ("CelestialItem.Create", (_, id) => CelestialItem.Create(id))
     ];
 
-    // The exception each path throws for each unknown id, null for none; the global provider is the one given
-    private static Dictionary<(int Id, string Path), Exception> ThrownByUnknownIds(IDataProvider provider)
+    // The Lagrange points L1 to L5: SPICE names none of them (Data/SolarSystem), and its kernels hold the states of all but
+    // L3 (no L3_de431.bsp)
+    private static readonly int[] LagrangeIds = [391, 392, 393, 394, 395];
+
+    private const int L3 = 393;
+
+    private static Dictionary<(int Id, string Path), Exception> ThrownByUnknownIds(IDataProvider provider) =>
+        ThrownByIds(provider, UnknownIds);
+
+    // The exception each path throws for each id, null for none; the global provider is the one given
+    private static Dictionary<(int Id, string Path), Exception> ThrownByIds(IDataProvider provider, int[] ids)
     {
         var thrown = new Dictionary<(int Id, string Path), Exception>();
-        foreach (int id in UnknownIds)
+        foreach (int id in ids)
         {
             foreach (var (path, read) in UnknownIdPaths)
             {
@@ -193,6 +207,37 @@ internal static class MemoryProviderChild
             Check($"unknown id {key.Id}, {key.Path}: SPICE {Describe(reference)}",
                 reference?.GetType() == typeof(ArgumentException) && ((ArgumentException)reference).ParamName == "naifId");
             Check($"unknown id {key.Id}, {key.Path}: memory {Describe(thrown)}, SPICE {Describe(reference)}",
+                thrown?.GetType() == reference.GetType() && ((ArgumentException)thrown).ParamName == ((ArgumentException)reference).ParamName);
+        }
+    }
+
+    // A Lagrange point is no unknown id for CelestialItem.Create, which builds a LagrangePoint from the Earth barycentre and
+    // the point's state without reading the point's information: its missing state is missing data. GetCelestialBodyInfo
+    // and new CelestialBody of an id SPICE does not name throw ArgumentException naming naifId on both providers; Create
+    // builds the point on SPICE where its kernels hold its state, throws InvalidOperationException where they do not (L3),
+    // and throws InvalidOperationException for every point on a memory provider without their states, the type of SPICE's
+    // missing L3. The static barycentres were built under SPICE by the reference (#680 review, 2026-11-14)
+    private static void CheckLagrangeIds(Dictionary<(int Id, string Path), Exception> spice)
+    {
+        var provider = Provider(EarthInfo, EarthBarycenterInfo, SsbInfo, SunInfo);
+        Configuration.Instance.SetDataProvider(provider);
+        var memory = ThrownByIds(provider, LagrangeIds);
+        foreach (var (key, reference) in spice)
+        {
+            var thrown = memory[key];
+            if (key.Path == "CelestialItem.Create")
+            {
+                var spiceExpected = key.Id == L3 ? typeof(InvalidOperationException) : null;
+                Check($"Lagrange id {key.Id}, {key.Path}: SPICE {Describe(reference)}", reference?.GetType() == spiceExpected);
+                Check($"Lagrange id {key.Id}, {key.Path}: memory without its state {Describe(thrown)}, SPICE without L3's state " +
+                      $"{Describe(spice[(L3, key.Path)])}",
+                    thrown?.GetType() == typeof(InvalidOperationException) && thrown.GetType() == spice[(L3, key.Path)]?.GetType());
+                continue;
+            }
+
+            Check($"Lagrange id {key.Id}, {key.Path}: SPICE {Describe(reference)}",
+                reference?.GetType() == typeof(ArgumentException) && ((ArgumentException)reference).ParamName == "naifId");
+            Check($"Lagrange id {key.Id}, {key.Path}: memory {Describe(thrown)}, SPICE {Describe(reference)}",
                 thrown?.GetType() == reference.GetType() && ((ArgumentException)thrown).ParamName == ((ArgumentException)reference).ParamName);
         }
     }
