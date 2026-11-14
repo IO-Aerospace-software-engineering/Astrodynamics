@@ -33,6 +33,12 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     // significant digit: 3.09e-16, 3.09e-16 and 3.09e-16
     private const double HeldInRtnRelative = 6.2e-16;
 
+    // Twice the worst of TemeInitialCovarianceThePropagationRejects_IsRotatedThenRemediated, the covariance at TCA from a TEME
+    // P0 rotated then remediated against the independent clipping of its ICRF twin propagated in covariance mode (relative
+    // Frobenius norm), over Linux x64, Windows and macOS arm64 (CI run 43591654097, 2026-11-14), rounded up at the second
+    // significant digit: 1.80e-16, 1.68e-16 and 1.87e-16
+    private const double RotatedThenRemediatedRelative = 3.8e-16;
+
     private readonly ConjunctionCovarianceCase _case;
     private readonly ReferenceCases _cases;
     private readonly ITestOutputHelper _output;
@@ -414,8 +420,8 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
         var twinEncounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twin), secondary,
             ConjunctionCovarianceCase.AnalysisWindow);
 
-        // Assert: rotated to ICRF, then remediated: the twin's covariance at TCA bit for bit, the reference's within the
-        // bound of Analyze_InitialCovarianceThePropagationRejects_IsRemediatedThenPropagated
+        // Assert: rotated to ICRF, then remediated: the twin's covariance at TCA bit for bit, the reference's within
+        // RotatedThenRemediatedRelative
         Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.ProtectedCovariance.Source);
         Assert.True(encounter.ProtectedCovariance.InitialCovarianceRemediated);
         Assert.True(twinEncounter.ProtectedCovariance.InitialCovarianceRemediated);
@@ -436,7 +442,7 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
 
         _output.WriteLine($"MEASURE ConjunctionCovarianceEdgeTests.TemeInitialCovarianceThePropagationRejects_IsRotatedThenRemediated: " +
                           $"{System.Math.Sqrt(difference / norm):E2} relative to the reference");
-        Assert.True(System.Math.Sqrt(difference / norm) < 1e-10, $"{System.Math.Sqrt(difference / norm):E2}");
+        Assert.True(System.Math.Sqrt(difference / norm) < RotatedThenRemediatedRelative, $"{System.Math.Sqrt(difference / norm):E2}");
     }
 
     [Fact]
