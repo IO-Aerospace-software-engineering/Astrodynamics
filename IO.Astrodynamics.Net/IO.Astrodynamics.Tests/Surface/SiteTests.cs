@@ -509,10 +509,10 @@ namespace IO.Astrodynamics.Tests.Surface
             }
         }
 
-        // Provisional (#682), twice the worst on Linux x64 (4.44e-3 s, 2026-11-13) rounded up, until the CI of the three
-        // platforms has printed its MEASURE line: the managed search takes the geodetic normal at DSS-13, gfilum the normal of surfnm,
+        // #682. Twice the worst over Linux, Windows and macOS arm64 rounded up (CI run 43591652055, 2026-11-14): 4.435e-3 s
+        // on each of the three: the managed search takes the geodetic normal at DSS-13, gfilum the normal of surfnm,
         // 0.110" apart at 1070.85 m (#654), over the rate of the emission angle
-        private const double EmissionFromTheMoonLimit = 9.0e-3;
+        private const double EmissionFromTheMoonLimit = 8.9e-3;
 
         /// <summary>
         /// #682: the way to an emission search the message of the site's search names, the public
@@ -664,8 +664,8 @@ namespace IO.Astrodynamics.Tests.Surface
             }
         }
 
-        // Twice the worst on Linux x64 (4.0e-7 m, 6.4e-11 m/s, 2026-11-13) rounded up; the test runs on Linux only
-        // (Validation, CspiceDirect)
+        // #682. Twice the worst on Linux x64 rounded up (CI run 43591652055, 2026-11-14): 3.992e-7 m, 6.447e-11 m/s; the
+        // test runs on Linux only (Validation, CspiceDirect)
         private const double SiteFrameReadPositionLimit = 8.0e-7;
         private const double SiteFrameReadVelocityLimit = 1.3e-10;
     }

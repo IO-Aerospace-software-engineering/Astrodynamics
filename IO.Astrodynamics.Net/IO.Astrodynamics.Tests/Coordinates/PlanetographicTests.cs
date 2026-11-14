@@ -24,10 +24,10 @@ namespace IO.Astrodynamics.Tests.Coordinates;
 /// </remarks>
 public class PlanetographicTests
 {
-    // Twice the worst on Linux x64 rounded up (1.7e-16 rad and 4.4e-16 relative, 2026-11-13), the test running on Linux
-    // only: the angles within an ulp of π/2, the altitude within two ulp
-    private const double AngleLimit = 4.0e-16;
-    private const double AltitudeRelativeLimit = 1.0e-15;
+    // #682. Twice the worst on Linux x64 rounded up (CI run 43591652055, 2026-11-14), the test running on Linux only:
+    // 1.665e-16 rad (Uranus) and 4.381e-16 relative (the Earth); the angles within an ulp of π/2, the altitude within two ulp
+    private const double AngleLimit = 3.4e-16;
+    private const double AltitudeRelativeLimit = 8.8e-16;
 
     private readonly ITestOutputHelper _output;
 

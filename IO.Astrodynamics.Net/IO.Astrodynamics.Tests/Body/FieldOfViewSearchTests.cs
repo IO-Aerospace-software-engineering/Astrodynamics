@@ -923,8 +923,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         Assert.True(worst < AttitudeByHandEdgeLimit, $"{worst:E3} rad");
     }
 
-    // Provisional (#682), twice the worst on Linux x64 (9.7e-11 rad, 2026-11-13) rounded up, until the CI of the three
-    // platforms has printed its MEASURE line: the edges of the search to 1 µs and the 100 ns of a Time, at the 1.1e-3 rad/s
+    // #682. Twice the worst over Linux, Windows and macOS arm64 rounded up (CI run 43591652055, 2026-11-14): 9.689e-11 rad
+    // on each of the three: the edges of the search to 1 µs and the 100 ns of a Time, at the 1.1e-3 rad/s
     // of the Earth's direction in LEO, within the 1.1e-9 rad they allow
     private const double AttitudeByHandEdgeLimit = 2.0e-10;
 

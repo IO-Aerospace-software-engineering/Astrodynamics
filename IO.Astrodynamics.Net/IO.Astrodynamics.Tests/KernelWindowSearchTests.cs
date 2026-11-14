@@ -316,9 +316,9 @@ public class KernelWindowSearchTests
         Assert.True(worstThreshold <= NativeThreshold, $"{label}: {worstThreshold:E3} s");
     }
 
-    // Provisional (#682), twice the worst on Linux x64 rounded up (6.6e-11 rad, the Moon from the Earth above 4 rad,
-    // 2026-11-13), until the CI of the three platforms has printed its MEASURE lines: the 1 µs of the searches and the
-    // 100 ns of a Time at the rate of the longitude, 7.3e-5 rad/s for the Moon in ITRF93
+    // #682. Twice the worst over Linux, Windows and macOS arm64 rounded up (CI run 43591652055, 2026-11-14): 6.557e-11 rad
+    // on each of the three (the Moon from the Earth above 4 rad): the 1 µs of the searches and the 100 ns of a Time at
+    // the rate of the longitude, 7.3e-5 rad/s for the Moon in ITRF93
     private const double CutAngle = 1.4e-10;
 
     private static readonly Window MoonPlanetographicWindow = new(new TimeSystem.Time(2024, 3, 1), new TimeSystem.Time(2024, 3, 11));

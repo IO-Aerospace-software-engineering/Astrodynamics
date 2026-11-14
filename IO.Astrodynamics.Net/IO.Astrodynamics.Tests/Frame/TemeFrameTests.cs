@@ -378,9 +378,10 @@ public class TemeFrameTests
         }
     }
 
-    // Provisional: twice the worst on Linux x64 (1.69e-16 rad, 2026-11-14) rounded up, until the CI of the three platforms
-    // has printed its MEASURE lines. The rotation of a CK the library writes against the closed form of the attitude it holds
-    private const double CkFrameReadAngle = 4.0e-16;
+    // #682. Twice the worst over Linux, Windows and macOS arm64 rounded up (CI run 43591652055, 2026-11-14): 1.686e-16 rad
+    // on Linux, 1.023e-16 rad on Windows, 1.686e-16 rad on macOS arm64. The rotation of a CK the library writes against the
+    // closed form of the attitude it holds
+    private const double CkFrameReadAngle = 3.4e-16;
 
     // The angle between two vectors, resolved near zero (atan2 of the cross and dot products, not an arccosine)
     private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
@@ -518,8 +519,8 @@ public class TemeFrameTests
         Assert.True(worstVelocity < CkFrameReadVelocity, $"{worstVelocity:E3} m/s");
     }
 
-    // Twice the worst on Linux x64 (6.8e-8 m, 1.6e-13 m/s, 2026-11-14) rounded up; the test runs on Linux only (Validation,
-    // CspiceDirect)
+    // #682. Twice the worst on Linux x64 rounded up (CI run 43591652055, 2026-11-14): 6.829e-8 m, 1.608e-13 m/s; the test
+    // runs on Linux only (Validation, CspiceDirect)
     private const double CkFrameReadPosition = 1.4e-7;
     private const double CkFrameReadVelocity = 3.3e-13;
 }
