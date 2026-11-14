@@ -792,7 +792,7 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
      `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:
    - Use `Omm.LoadFromFile()` with validation for production code
-   - Check `IsTleCompatible` before calling `ToTle()`
+   - Check `IsTleCompatible` (TLE parameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH) before calling `ToTle()`, which otherwise throws naming the keywords at fault (#679)
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
    - `ToTle()` throws when `NORAD_CAT_ID` (> 339999) or `REV_AT_EPOCH` (> 99999) exceeds TLE capacity

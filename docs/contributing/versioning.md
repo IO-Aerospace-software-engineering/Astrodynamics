@@ -1370,6 +1370,16 @@ release are listed under **Known limitations**.
   `CcsdsCenterNamesTests` checks every entry against the name SPICE gives its id (`GetCelestialBodyInfo`), and all 186
   names agree with `bodn2c_` of CSPICE N0067. An EARTH OPM reads as before, bit for bit.
 
+- **`Omm.ToTle` turned any OMM with TLE parameters into an Earth TEME TLE** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679)). `IsTleCompatible` checked only the
+  `tleParameters` block, and `ToTle` built the Earth and TEME whatever `CENTER_NAME`, `REF_FRAME` and
+  `MEAN_ELEMENT_THEORY` said, so a MOON, ICRF, DSST or SGP4-XP OMM gave a TLE describing another orbit (the same line 2
+  for every one of them), `Omm.LoadFromString` loaded them without a word (the validator's warnings for ICRF and an
+  unknown theory are not seen by a `Load` caller, and it says nothing of the centre), and `ToString` marked them
+  ` (TLE)`. A TLE holds SGP4 mean elements of an Earth orbit in TEME, and the library runs the classic SGP4 (CSPICE
+  `evsgp4_c`): `IsTleCompatible` now also requires `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME and a `CENTER_NAME`
+  that names the Earth (in the table of the OPM centre above, so `earth` and ` EARTH ` are the Earth, `EARTH
+  BARYCENTER` is not). `OmmTests` checks seven rows of centre, frame and theory, built and loaded, and that the
+  lower-case and padded twins of an EARTH/TEME/SGP4 OMM give its TLE lines.
 **Changed**
 
 - **Breaking: `SpiceAPI.FindWindowsOnIlluminationConstraint` and the CLI take the altitude in metres** ([#488](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/488), Fixed above):
@@ -1707,6 +1717,12 @@ release are listed under **Known limitations**.
   a non-Earth OPM read without an observer is about its centre, so every quantity derived from the observer moves.
   Migration: pass the observer for a site, a spacecraft or a kernel-defined centre; pass the centre the message names,
   or correct `CENTER_NAME`.
+- **Breaking: `Omm.ToTle` throws for an OMM that is not SGP4, TEME and Earth** ([#679](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/679), Fixed above):
+  `InvalidOperationException` naming each keyword at fault and its value (`CENTER_NAME 'MOON' is not EARTH; REF_FRAME
+  'ICRF' is not TEME; ...`) where it returned a TLE of another orbit; `IsTleCompatible` is false and `ToString` has no
+  ` (TLE)` for those OMMs. An OMM without TLE parameters throws its former message. EARTH/TEME/SGP4 OMMs (`iss.omm`,
+  `Omm.CreateForTle`, `TLE.ToOmm`, the conformance runner's) give the same TLE, bit for bit. Migration: correct the
+  metadata if the elements really are SGP4 elements of an Earth orbit in TEME; otherwise keep the object in OMM form.
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made

@@ -34,7 +34,7 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 
 | Property | Description |
 |----------|-------------|
-| `IsTleCompatible` | Whether this OMM can be converted to a TLE |
+| `IsTleCompatible` | Whether this OMM can be converted to a TLE: it holds TLE parameters, its `MEAN_ELEMENT_THEORY` is SGP4, its `REF_FRAME` TEME and its `CENTER_NAME` the Earth (theory and frame in any letter case, the centre trimmed too). SGP4-XP and DSST are not compatible: the library runs the classic SGP4 (CSPICE `evsgp4_c`). Before 11.0.0 only the TLE parameters were checked (#679) |
 | `ObjectName` | Satellite name |
 | `CosparId` | Full COSPAR international designator (e.g., `1998-067A`) |
 
@@ -42,7 +42,7 @@ The `IO.Astrodynamics.CCSDS.OMM` module supports loading, validating, serializin
 
 | Method | Description |
 |--------|-------------|
-| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485) |
+| `ToTle()` | Convert to a `TLE` object (requires `IsTleCompatible`; an OMM with TLE parameters that is not SGP4, TEME and Earth throws `InvalidOperationException` naming each keyword at fault and its value, #679); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS) and written as its UTC, another time system throws (#485) |
 | `Validate()` | Validate and return `OmmValidationResult` |
 | `IsValid()` | Quick validity check (returns `bool`) |
 

@@ -1,8 +1,10 @@
 // Copyright 2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using IO.Astrodynamics.CCSDS.Common;
+using IO.Astrodynamics.CCSDS.Common.Enums;
 
 namespace IO.Astrodynamics.CCSDS.OMM;
 
@@ -79,9 +81,31 @@ public class Omm
     public DateTime Epoch => Data.MeanElements.Epoch;
 
     /// <summary>
-    /// Gets a value indicating whether this OMM contains TLE-specific parameters.
+    /// Gets a value indicating whether this OMM can become a TLE: it holds TLE parameters, its <c>MEAN_ELEMENT_THEORY</c> is
+    /// SGP4, its <c>REF_FRAME</c> TEME and its <c>CENTER_NAME</c> the Earth.
     /// </summary>
-    public bool IsTleCompatible => Data.HasTleParameters;
+    /// <remarks>
+    /// A TLE holds SGP4 mean elements of an Earth orbit in TEME, and the library runs the classic SGP4 only (CSPICE
+    /// <c>evsgp4_c</c>), so SGP4-XP, DSST, another frame or another centre is not compatible. The theory and the frame are
+    /// compared in any letter case, the centre trimmed and in any letter case (<c>EARTH</c>, <c>earth</c>). Before 11.0.0
+    /// only the TLE parameters were checked (#679).
+    /// </remarks>
+    public bool IsTleCompatible => Data.HasTleParameters && TleMetadataFaults().Count == 0;
+
+    /// <summary>
+    /// The metadata keywords that keep this OMM from being a TLE, each with its value, in metadata order.
+    /// </summary>
+    private List<string> TleMetadataFaults()
+    {
+        var faults = new List<string>();
+        if (!CcsdsCenterNames.TryGetNaifId(Metadata.CenterName, out var centerId) || centerId != 399)
+            faults.Add($"CENTER_NAME '{Metadata.CenterName}' is not EARTH");
+        if (Metadata.ReferenceFrameEnum != CcsdsReferenceFrame.TEME)
+            faults.Add($"REF_FRAME '{Metadata.ReferenceFrame}' is not TEME");
+        if (Metadata.MeanElementTheoryEnum != MeanElementTheory.SGP4)
+            faults.Add($"MEAN_ELEMENT_THEORY '{Metadata.MeanElementTheory}' is not SGP4");
+        return faults;
+    }
 
     /// <summary>
     /// Gets a value indicating whether this OMM contains a covariance matrix.
@@ -195,8 +219,10 @@ public class Omm
     /// </summary>
     /// <returns>A new TLE instance with the same orbital elements.</returns>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the OMM does not contain TLE parameters (NORAD catalog ID required)
-    /// or when required mean motion is not available.
+    /// Thrown when the OMM does not contain TLE parameters (NORAD catalog ID required), when its
+    /// <c>MEAN_ELEMENT_THEORY</c> is not SGP4, its <c>REF_FRAME</c> not TEME or its <c>CENTER_NAME</c> not the Earth (the
+    /// message names each keyword at fault with its value; see <see cref="IsTleCompatible"/>), or when required mean motion
+    /// is not available.
     /// </exception>
     /// <remarks>
     /// <para>
@@ -207,8 +233,10 @@ public class Omm
     /// The object ID (international designator) is used as the COSPAR ID in the TLE.
     /// </para>
     /// <para>
-    /// The resulting TLE is in TEME, the frame of SGP4/SDP4 mean elements, whatever REF_FRAME says; no frame
-    /// bias or other inertial-frame conversion is involved.
+    /// The OMM must be an SGP4 OMM in TEME about the Earth (<see cref="IsTleCompatible"/>): the TLE is in TEME, the frame
+    /// of SGP4/SDP4 mean elements, about the Earth, and no frame or centre conversion is involved. Before 11.0.0 any OMM with
+    /// TLE parameters gave an Earth TEME TLE, whatever its <c>CENTER_NAME</c>, <c>REF_FRAME</c> or <c>MEAN_ELEMENT_THEORY</c>
+    /// said (#679).
     /// </para>
     /// <para>
     /// <c>EPOCH</c> is read in <c>TIME_SYSTEM</c> (UTC, TAI, TDB, TT or GPS) and written as its UTC, the time scale of a
@@ -219,8 +247,16 @@ public class Omm
     public OrbitalParameters.TLE.TLE ToTle()
     {
         // Validate TLE compatibility
-        if (!IsTleCompatible)
+        if (!Data.HasTleParameters)
             throw new InvalidOperationException("OMM does not contain TLE parameters. Cannot convert to TLE.");
+
+        // A TLE holds SGP4 mean elements of an Earth orbit in TEME (#679)
+        var faults = TleMetadataFaults();
+        if (faults.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"{string.Join("; ", faults)}: a TLE holds SGP4 mean elements of an Earth orbit in TEME. Cannot convert to TLE.");
+        }
 
         var tleParams = Data.TleParameters;
 

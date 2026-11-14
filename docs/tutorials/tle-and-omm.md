@@ -158,6 +158,6 @@ Unlike TLE/OMM, OPM elements are osculating — they can be used directly for nu
 
 - Parse TLEs from standard two-line format; use `ToOsculating()` or `ToStateVector(epoch)` for physical states.
 - Never call `ToStateVector()` on mean Keplerian elements — always go through the SGP4 propagator.
-- OMM and TLE are interchangeable when the OMM has TLE-compatible fields (`IsTleCompatible`).
+- OMM and TLE are interchangeable when the OMM has TLE-compatible fields (`IsTleCompatible`): TLE parameters, the SGP4 theory, TEME and the Earth.
 - OPM provides osculating state vectors in CCSDS format, ready for direct use.
 - COSPAR ID format differences between TLE and OMM are handled automatically.
