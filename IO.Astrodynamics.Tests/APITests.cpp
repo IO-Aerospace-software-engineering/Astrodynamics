@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 #include <locale>
 #include <sstream>
 #include <string>
@@ -403,7 +404,8 @@ static std::int64_t UlpDistance(double a, double b)
 // The bound, in ulp, of a GM the library reads through CSPICE against the kernel text parsed by the C++ library (correctly
 // rounded): CSPICE's parse of the decimal text is not. bodvcd_c on gm_de431.tpc, times 1e9, is 0 or 1 ulp from it for the
 // barycentres 1 to 9, Pallas, Nix, the Earth and the Moon, 4 for the Sun and for the sum over 1 to 10 (Linux x64,
-// 2026-11-14); twice that worst, as SpiceParseUlps of the .NET tests
+// 2026-11-14); provisional: the tests print each body's ulp (MEASURE #672) for the build-native jobs of Linux, Windows and
+// macOS arm64 to set it from, at twice their worst; until then the bound of SpiceParseUlps of the .NET tests
 inline constexpr std::int64_t SpiceParseUlps = 10;
 
 // The GM against the text of gm_de431.tpc, no radii where pck00011.tpc has none, and the built-in body-fixed frame given by
@@ -424,7 +426,9 @@ static void ExpectBodyReadAsKernels(int id, const char *name, const char *frameN
     auto res = GetCelestialBodyInfoProxy(id);
     ASSERT_EQ(id, res.Id);
     ASSERT_STREQ(name, res.Name);
-    ASSERT_LE(UlpDistance(gm[0] * 1E+09, res.GM), SpiceParseUlps);
+    const auto ulps = UlpDistance(gm[0] * 1E+09, res.GM);
+    std::cout << "MEASURE #672 GM of " << id << " from gm_de431.tpc's text, ulp: " << ulps << std::endl;
+    ASSERT_LE(ulps, SpiceParseUlps);
     ASSERT_EQ(0.0, res.Radii.x);
     ASSERT_EQ(0.0, res.Radii.y);
     ASSERT_EQ(0.0, res.Radii.z);
@@ -477,7 +481,9 @@ TEST(API, GetBodyInformationSolarSystemBarycenterGm)
     auto res = GetCelestialBodyInfoProxy(0);
     ASSERT_EQ(0, res.Id);
     ASSERT_STREQ("SOLAR SYSTEM BARYCENTER", res.Name);
-    ASSERT_LE(UlpDistance(expected, res.GM), SpiceParseUlps);
+    const auto ulps = UlpDistance(expected, res.GM);
+    std::cout << "MEASURE #672 GM of 0 from gm_de431.tpc's text (the sum over 1 to 10), ulp: " << ulps << std::endl;
+    ASSERT_LE(ulps, SpiceParseUlps);
     ASSERT_STREQ("", res.FrameName);
 }
 

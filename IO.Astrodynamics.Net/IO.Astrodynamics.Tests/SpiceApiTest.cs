@@ -347,9 +347,10 @@ public class SpiceApiTest
     // CLI), and the name in lower case, as SPICE compares frame names ignoring case
     private static Frames.Frame[] GcrfFrames() => [Frames.Frame.GCRF, new Frames.Frame("GCRF"), new Frames.Frame("gcrf")];
 
-    // A state read from a site is the exact negation of the state read to it (#672, measured 0 in each frame: spkezr_c
-    // subtracts the same two states from the solar system barycentre, and a rotation commutes with the negation); against
-    // the Site object's read, twice the measured 2.98e-8 m (Linux x64)
+    // A state read from a site is the exact negation of the state read to it (#672: spkezr_c subtracts the same two states
+    // from the solar system barycentre, and a rotation commutes with the negation), 0 measured in each frame on Linux,
+    // Windows and macOS arm64; against the Site object's read, 2.98e-8 m on Linux, 2.98e-8 m on Windows and 2.98e-8 m on
+    // macOS arm64, twice that worst (CI run 43600640037, 2026-11-14)
     private const double SiteObserverNegationTolerance = 0.0;
     private const double SiteObjectPositionTolerance = 6.0e-8;
 

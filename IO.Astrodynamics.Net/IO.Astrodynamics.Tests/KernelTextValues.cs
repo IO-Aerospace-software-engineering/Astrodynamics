@@ -36,7 +36,9 @@ internal static class KernelTextValues
     /// The bound, in ulp, of a GM SPICE reads from the text against <see cref="GravitationalParameter"/>: SPICE's parse of a
     /// kernel's decimal text is not correctly rounded. CSPICE's <c>bodvcd_c</c>, called directly on <c>gm_de440.tpc</c>, is 1
     /// ulp from double.Parse for Nix, Kerberos, Pallas, the Didymos barycentre, the Earth and the Moon, 2 for the Earth
-    /// barycentre and the Sun, 5 for the Jupiter barycentre (#672, Linux x64); twice that worst.
+    /// barycentre and the Sun, 5 for the Jupiter barycentre (#672, Linux x64). The library's reads (MEASURE GM of ...) are
+    /// at worst 5 ulp on Linux, 5 on Windows and 5 on macOS arm64, the Jupiter barycentre on each (CI run 43600640037,
+    /// 2026-11-14); twice that worst.
     /// </summary>
     internal const long SpiceParseUlps = 10;
 

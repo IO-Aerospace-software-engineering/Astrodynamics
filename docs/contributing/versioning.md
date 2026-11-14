@@ -1373,7 +1373,8 @@ release are listed under **Known limitations**.
     `pck00011.tpc`, IAU_ELARA), `API.GetBodyInformationSolarSystemBarycenterGm` (the sum of `bodvcd_c` over 1 to 10, bit
     for bit); `NativeAbortGuardTests.GetCelestialBodyInfo_GmWithoutRadii_ReadsTheKernelGm` (the 8 bodies against the GM
     parsed from the text of `gm_de440.tpc`, within 10 ulp: CSPICE's own parse is up to 5 ulp off the correctly rounded
-    value, Jupiter barycentre, and 1 ulp for Nix, Kerberos and Pallas; the frames of `cnmfrm_c`, three reads equal),
+    value, Jupiter barycentre, on Linux, Windows and macOS arm64 (CI run 43600640037), and 1 ulp for Nix, Kerberos and
+    Pallas; the frames of `cnmfrm_c`, three reads equal),
     `GetCelestialBodyInfo_RadiiWithoutGm_ReadsTheFrame` (Elara, Nereid against the text of `pck00011.tpc`),
     `CelestialBodyTests.Pallas_BuildsWithTheKernelGm` and `Kerberos_WithoutFrame_Throws`. On `main` 2893404 the GMs
     read 0, Pallas throws, Kerberos is built with a garbage frame.
@@ -1404,8 +1405,9 @@ release are listed under **Known limitations**.
   - **Test:** `SpiceApiTest.ReadEphemeris_FromASite_IsTheNegatedReadToTheSite` (ICRF, ECLIPJ2000 and the managed
     TEME, both overloads: the exact negation of the read from the Moon to DSS-13, an observer `Site` 399013 named
     DSS-13), `ReadEphemeris_FromASite_ObserverMatchesTheSiteObject` (the Moon read from a `Site` object, within 6e-8 m;
-    2.98e-8 m measured, Linux x64), `ReadEphemeris_FromAnUnnamedSite_Throws` and `IsSiteId_IsTheRuleOfSiteNaifId`. On
-    `main` 2893404 the `Time` overload throws in ICRF and the observer is a `CelestialBody`.
+    2.98e-8 m measured on Linux, Windows and macOS arm64, CI run 43600640037), `ReadEphemeris_FromAnUnnamedSite_Throws`
+    and `IsSiteId_IsTheRuleOfSiteNaifId`. On `main` 2893404 the `Time` overload throws in ICRF and the observer is a
+    `CelestialBody`.
 
 **Changed**
 
