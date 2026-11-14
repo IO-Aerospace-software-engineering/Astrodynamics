@@ -16,10 +16,25 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
 
 | Method | Description |
 |--------|-------------|
-| `SpiceAPI.Instance.LoadKernels(FileSystemInfo)` | Load a single kernel file, or the kernel files of a directory and of its subdirectories (other files, such as a geopotential model, are left out) |
-| `SpiceAPI.Instance.UnloadKernels(FileSystemInfo)` | Unload a file or directory load |
-| `SpiceAPI.Instance.ClearKernels()` | Unload all kernels |
-| `SpiceAPI.Instance.GetLoadedKernels()` | List currently loaded kernels |
+| `SpiceAPI.Instance.LoadKernels(FileSystemInfo)` | Load a single kernel file (a meta-kernel included), or the kernel files of a directory and of its subdirectories (other files, such as a geopotential model, are left out) |
+| `SpiceAPI.Instance.UnloadKernels(FileSystemInfo)` | Unload the files a load handed SPICE, whether the path still exists or not; a file or subdirectory of a loaded directory leaves its other files loaded |
+| `SpiceAPI.Instance.ClearKernels()` | Unload all kernels (`kclear_c`) |
+| `SpiceAPI.Instance.GetLoadedKernels()` | List the loaded paths |
+
+## Paths
+
+- Paths are compared by their components, ordinally ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)):
+  loading a path already loaded, or a path inside a loaded directory, reloads that entry; loading a directory first
+  unloads the entries inside it. A sibling whose name extends a loaded one (`kernels2` beside `kernels`) is another
+  path.
+- Each load records the files it handed SPICE, and `UnloadKernels` hands SPICE those names, so a directory deleted or
+  moved since its load is still unloaded. Unloading a file or a subdirectory of a loaded directory replaces the
+  directory in `GetLoadedKernels` by its remaining files. A path that was never loaded is handed to SPICE as it is,
+  which unloads nothing it does not hold (a file a meta-kernel loaded is unloaded by its name).
+- SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
+  File Naming"), and `LoadKernels` hands it the full path: a kernel at a longer path fails with
+  `SPICE(FILENAMETOOLONG)`. Load it through a meta-kernel that names it by a shorter relative path, or move it.
+- The command line takes a kernels path that is a directory, a kernel file or a meta-kernel.
 
 ## Example
 

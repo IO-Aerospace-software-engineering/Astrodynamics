@@ -6,14 +6,15 @@
 
 | Method | Description |
 |--------|-------------|
-| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels |
-| `UnloadKernels(FileSystemInfo path)` | Unload one kernel or a directory load |
-| `ClearKernels()` | Unload all kernels |
-| `GetLoadedKernels()` | Inspect the current kernel set |
+| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels; paths compared by components, a path inside a loaded directory reloading it (#673) |
+| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673) |
+| `ClearKernels()` | Unload all kernels (`kclear_c`) |
+| `GetLoadedKernels()` | Inspect the loaded paths |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
 | `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454) |
 | `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error) |
-| `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560) |
+| `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673) |
+| `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for a path longer than 255 characters, #673) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
@@ -24,6 +25,13 @@ process for a named spacecraft such as CASSINI (-82) before 11.0.0; an identifie
 record. The same check guards the ellipsoid of an occultation search whose frame is read from the body
 (`FindWindowsOnOccultationConstraint` without frames) and the observer of `ReadEphemeris` by identifiers, which is built
 as a celestial body.
+
+SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
+File Naming"). `LoadKernels` hands it the full path, so a longer one fails with `SPICE(FILENAMETOOLONG)`; the native
+writers `WriteEphemeris` and `WriteOrientation` throw `ArgumentException` for such a target before they write, where
+CSPICE wrote a file under the name truncated to 255 and then failed before 11.0.0. The length counted is that of the
+bytes handed to CSPICE, UTF-8 on Linux and macOS. `Spacecraft.WriteEphemeris` (the managed SPK writer) and the text
+kernel writers write any path.
 
 SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and
