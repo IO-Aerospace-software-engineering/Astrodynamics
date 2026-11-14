@@ -358,8 +358,10 @@ public readonly record struct Time : IComparable<Time>, IComparable
     /// </summary>
     /// <remarks>
     /// The seconds are those of a day without leap second; a value below 86400 whose nearest tick is 86400 s is the next
-    /// day's midnight, the nearest instant. Before 11.0.0 nothing was checked (#680): year 0 was read as 2000, and a day or
-    /// seconds outside their range rolled into the neighbouring day or year.
+    /// day's midnight, the nearest instant, except on 9999-12-31, whose next midnight no <see cref="DateTime"/> holds: there
+    /// seconds above 86399.99999995, whose nearest tick is 86400 s, throw naming <paramref name="sec"/>. Before 11.0.0
+    /// nothing was checked (#680): year 0 was read as 2000, and a day or seconds outside their range rolled into the
+    /// neighbouring day or year.
     /// </remarks>
     /// <param name="year">The year, from 1 to 9999.</param>
     /// <param name="doy">The day of the year, from 1 to 365, or 366 in a leap year of the Gregorian calendar.</param>
@@ -377,9 +379,14 @@ public readonly record struct Time : IComparable<Time>, IComparable
             throw new ArgumentOutOfRangeException(nameof(sec), sec, "The seconds of a day are finite, in [0, 86400).");
         }
 
-        var baseDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        var date = baseDate.AddDays(doy - 1).AddTicks(SecondsToTicks(sec));
-        return new Time(date, TimeFrame.UTCFrame);
+        var day = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(doy - 1);
+        long ticks = SecondsToTicks(sec);
+        if (ticks > DateTime.MaxValue.Ticks - day.Ticks)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sec), sec, "The nearest tick of the seconds is past 9999-12-31T23:59:59.9999999.");
+        }
+
+        return new Time(day.AddTicks(ticks), TimeFrame.UTCFrame);
     }
 
     /// <summary>

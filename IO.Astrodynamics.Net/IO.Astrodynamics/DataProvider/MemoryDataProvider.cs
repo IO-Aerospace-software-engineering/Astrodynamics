@@ -15,11 +15,14 @@ namespace IO.Astrodynamics.DataProvider;
 /// A data provider that reads states, orientations and body information stored in memory.
 /// </summary>
 /// <remarks>
-/// Its reads follow the contract of the SPICE provider (#680): a known item without data at the epoch (a target without
-/// stored states or read outside them, a frame read outside its stored orientations, a NAIF id without body information)
-/// throws <see cref="InvalidOperationException"/>, the type SPICE throws for the same situations and the type the
-/// library's handlers of missing data catch, so a body whose barycentre's data the provider lacks builds without an orbit
-/// and with an infinite sphere of influence, as on SPICE; a frame never added throws <see cref="ArgumentException"/>.
+/// Its reads follow the contract of the SPICE provider (#680): a target without stored states or read outside them, and a
+/// frame read outside its stored orientations, throw <see cref="InvalidOperationException"/>, the type SPICE throws for the
+/// same situations and the type the library's handlers of missing data catch, so a body whose barycentre's data the
+/// provider lacks builds without an orbit and with an infinite sphere of influence, as on SPICE; a frame never added throws
+/// <see cref="ArgumentException"/>. A NAIF id without body information throws <see cref="InvalidOperationException"/>
+/// too, the type the construction of a body without a name throws on SPICE (<see cref="CelestialItem"/>); the SPICE
+/// provider's own read returns a record for an id the kernels do not name and throws <see cref="ArgumentException"/>
+/// for an id that is not a celestial body's.
 /// </remarks>
 public class MemoryDataProvider : IDataProvider
 {
@@ -104,8 +107,8 @@ public class MemoryDataProvider : IDataProvider
     }
 
     /// <exception cref="InvalidOperationException">No information was added for <paramref name="naifId"/> (#680;
-    /// <see cref="System.Collections.Generic.KeyNotFoundException"/> before 11.0.0), the type a body the kernels do not name
-    /// throws on SPICE.</exception>
+    /// <see cref="System.Collections.Generic.KeyNotFoundException"/> before 11.0.0), the type the construction of a body the
+    /// kernels do not name throws on SPICE (<see cref="CelestialItem"/>).</exception>
     public CelestialBody GetCelestialBodyInfo(int naifId)
     {
         if (!_celestialBodies.TryGetValue(naifId, out var info))

@@ -1246,6 +1246,7 @@ public class MatirxTests
     }
 
     #endregion
+
     // #680: the elements compare as double.Equals, the semantics of Vector3 and of every record struct of the library: NaN
     // equals NaN only, +0 equals -0, and two entries one smallest subnormal apart differ. The expectation is computed pair by
     // pair from double.Equals, never from Matrix.Equals; equal matrices hash equal (the .NET contract)

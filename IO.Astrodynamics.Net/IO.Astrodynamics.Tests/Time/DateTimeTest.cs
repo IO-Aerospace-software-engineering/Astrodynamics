@@ -475,6 +475,7 @@ public class DateTimeTests
         Assert.Equal(first.DaysFromJ2000() / 36525.0, first.Centuries());
         Assert.NotEqual(first.ToJulianDate(), second.ToJulianDate());
     }
+
     // #680: a non-finite span has no instant. AddSeconds, AddMilliseconds and AddMicroseconds already throw (#625); DateTime's
     // AddDays/AddHours/AddMinutes returned the epoch unchanged for NaN (0 ticks) and named their own parameter, value
     public static TheoryData<string, double, bool> NonFiniteSpans()
@@ -553,6 +554,9 @@ public class DateTimeTests
     [InlineData(2024, 1, double.NaN, "sec")]
     [InlineData(2024, 1, double.PositiveInfinity, "sec")]
     [InlineData(2024, 1, double.NegativeInfinity, "sec")]
+    // The nearest tick of 86399.99999996 s on 9999-12-31 is 10000-01-01, past DateTime.MaxValue (9999-12-31T23:59:59.9999999):
+    // DateTime threw naming its own parameter, value
+    [InlineData(9999, 365, 86399.99999996, "sec")]
     public void CreateFromDayOfYear_RejectsOutOfRangeInputs(int year, int doy, double sec, string parameter)
     {
         var exception = Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.Create(year, doy, sec));
@@ -570,6 +574,10 @@ public class DateTimeTests
     [InlineData(1900, 60, 0.0, 1900, 3, 1, 0L)]
     [InlineData(1, 1, 0.0, 1, 1, 1, 0L)]
     [InlineData(9999, 365, 0.0, 9999, 12, 31, 0L)]
+    // The last tick of DateTime (DateTime.MaxValue), and the double nearest 86399.99999995 s, 3.8e-12 s below the half tick past
+    // it (exact decimal expansion), which rounds to it
+    [InlineData(9999, 365, 86399.9999999, 9999, 12, 31, 863999999999L)]
+    [InlineData(9999, 365, 86399.99999995, 9999, 12, 31, 863999999999L)]
     [InlineData(2024, 1, 43200.5, 2024, 1, 1, 432005000000L)]
     public void CreateFromDayOfYear_ValidBounds(int year, int doy, double sec, int expectedYear, int month, int day, long ticksOfDay)
     {

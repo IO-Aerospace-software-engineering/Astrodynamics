@@ -165,10 +165,13 @@ public class MemoryDataProviderTests
         // A node is read as it is, before and after interpolated reads
         Assert.Equal(Circular(600.0).Position, Read(sequence, 600.0).Position);
     }
-    // #680, the contract of the reads (#668, C10): a known item without data at the epoch throws InvalidOperationException,
-    // the type SPICE throws for the same situations, which the library's handlers of missing data catch (a body whose
-    // barycentre the data do not reach builds without an orbit; the orientation cache of a propagation keeps the point
-    // unavailable); a frame never added throws ArgumentException. Before, ArgumentException and KeyNotFoundException
+
+    // #680, the contract of the reads (#668, C10): a target or a frame without data at the epoch throws
+    // InvalidOperationException, the type SPICE throws for the same situations, which the library's handlers of missing data
+    // catch (a body whose barycentre the data do not reach builds without an orbit; the orientation cache of a propagation
+    // keeps the point unavailable); a frame never added throws ArgumentException; an id without body information throws
+    // InvalidOperationException, the type the construction of a body without a name throws on SPICE (CelestialItem), not
+    // the SPICE provider's read itself, which returns a record. Before, ArgumentException and KeyNotFoundException
     [Fact]
     public void MissingData_ThrowsInvalidOperationException_UnknownFrame_ArgumentException()
     {
@@ -199,7 +202,10 @@ public class MemoryDataProviderTests
         Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToICRF(Start.AddSeconds(11.0), frame));
         Assert.Throws<ArgumentException>(() => orientations.FrameTransformationToICRF(Start, new Frames.Frame("IAU_MARS")));
 
-        // An id without body info: InvalidOperationException, the type a body without a name throws on SPICE
+        // An id without body info: InvalidOperationException, the type CelestialItem throws on SPICE for a body without a name.
+        // There is no SPICE reference for the read itself: GetCelestialBodyInfoProxy leaves the name of an id the kernels do not
+        // name uninitialised (CelestialBodyDTO.Name has no initialiser): "\uFFFD\u007F" for 12345 and an empty name for 5000 in
+        // this process, measured 2026-11-14, a defect of the native layer outside #680
         var infoException = Assert.Throws<InvalidOperationException>(() => provider.GetCelestialBodyInfo(999));
         Assert.Contains("999", infoException.Message);
     }

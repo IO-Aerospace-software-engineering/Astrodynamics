@@ -262,7 +262,8 @@ namespace IO.Astrodynamics.Tests.Math
             Assert.Equal(0.0, q3.VectorPart.Y);
             Assert.Equal(0.0, q3.VectorPart.Z);
         }
-            // Measured on Linux x64 (2026-11-14): 5.551e-16; twice the worst, provisional until the three platforms are measured
+
+        // Measured on Linux x64 (2026-11-14): 5.551e-16; twice the worst, provisional until the three platforms are measured
         private const double RotationTolerance = 1.2e-15;
 
         // #680: a quaternion of magnitude 0 is no rotation; Normalize returned it, and a vector rotated by it was zero

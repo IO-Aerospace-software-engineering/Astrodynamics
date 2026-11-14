@@ -223,6 +223,7 @@ public class VectorTests
         Assert.Equal(35.0, m3.Y);
         Assert.Equal(52.5, m3.Z);
     }
+
     // #680: a vector of magnitude 0 has no direction. The magnitude is not scaled, so a vector whose squared components all
     // underflow (below about 1.5e-162) has magnitude 0 too; Normalize returned the vector itself, silently
     // The spacing of the doubles in [1, 2)

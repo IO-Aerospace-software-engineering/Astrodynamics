@@ -241,8 +241,8 @@ Represents a precise instant in time with time frame awareness.
 | `ToJulianDate()` | Get Julian Date |
 | `TimeSpanFromJ2000()` | Get TimeSpan from J2000 epoch |
 | `Add(TimeSpan span)` | Add duration |
-| `AddDays(double days)` | Add days |
-| `AddHours(double hours)` | Add hours |
+| `AddDays(double days)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddHours(double hours)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double seconds)` | Add seconds |
 
 ```csharp
@@ -1232,8 +1232,8 @@ states in ICRF. The coordinate searches of `CoordinateSystem.RaDec` keep the ang
 
 | Method | Description |
 |--------|-------------|
-| `ToCartesian()` | Convert to Cartesian vector |
-| `ToDirection()` | Get unit direction vector |
+| `ToCartesian()` | Convert to Cartesian vector, in the frame of the angles (ICRF for a state's, #680) |
+| `ToDirection()` | Get unit direction vector, in the frame of the angles (ICRF for a state's, #680) |
 
 ```csharp
 // Get equatorial coordinates

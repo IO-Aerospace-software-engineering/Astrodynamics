@@ -75,7 +75,8 @@ namespace IO.Astrodynamics.Coordinates
         internal static Equatorial FromPositionInFrame(in Vector3 position, Time epoch) => new(position, epoch);
 
         /// <summary>
-        /// Convert to cartesian coordinates
+        /// Convert to cartesian coordinates, in the frame of the angles: ICRF for the coordinates of a state (#680; before
+        /// 11.0.0 the frame of the state)
         /// </summary>
         /// <returns></returns>
         public Vector3 ToCartesian()
@@ -86,6 +87,10 @@ namespace IO.Astrodynamics.Coordinates
             return new Vector3(x, y, z);
         }
 
+        /// <summary>
+        /// The unit direction, in the frame of the angles: ICRF for the coordinates of a state (#680; before 11.0.0 the frame
+        /// of the state)
+        /// </summary>
         public Vector3 ToDirection()
         {
             double x = System.Math.Cos(Declination) * System.Math.Cos(RightAscension);
