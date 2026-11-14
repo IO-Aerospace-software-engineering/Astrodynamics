@@ -22,6 +22,13 @@ namespace IO.Astrodynamics.CLI;
 public class Helpers
 {
     /// <summary>
+    /// The kernels path of a command, as <see cref="SpiceAPI.LoadKernels"/> takes it: a file (a kernel or a meta-kernel) when
+    /// one exists at the path, a directory otherwise (#673: every command passed a directory, from which a file loaded
+    /// nothing). A path that does not exist loads nothing, as before.
+    /// </summary>
+    internal static FileSystemInfo KernelsPath(string path) => File.Exists(path) ? new FileInfo(path) : new DirectoryInfo(path);
+
+    /// <summary>
     /// The object of a NAIF identifier: a site (its body's identifier times 1000 plus its own), a celestial body, or a
     /// spacecraft (a negative identifier) read from its kernels.
     /// </summary>

@@ -16,7 +16,7 @@ public class GeometryFinderCommand
 
     [Command("find-windows-from-coordinate-constraint", Description = "Find time windows when constraint occurs")]
     public Task CoordinateConstraint(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Observer identifier (Naif Identifier)")]
         int observerId,
@@ -37,7 +37,7 @@ public class GeometryFinderCommand
         double adjustValue = 0.0,
         [Argument(Description = "Frame")] string frame = "ICRF")
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
         if (frame.Equals("icrf", StringComparison.InvariantCultureIgnoreCase))
         {
             frame = "j2000";
@@ -61,7 +61,7 @@ public class GeometryFinderCommand
 
     [Command("find-windows-from-distance-constraint", Description = "Find time windows when constraint occurs")]
     public Task DistanceConstraint(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Observer identifier (Naif Identifier)")]
         int observerId,
@@ -77,7 +77,7 @@ public class GeometryFinderCommand
         [Argument(Description = "Aberration")] string aberration = "None"
     )
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
@@ -95,7 +95,7 @@ public class GeometryFinderCommand
 
     [Command("find-windows-from-occultation-constraint", Description = "Find time windows when constraint occurs")]
     public Task OccultationConstraint(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Observer identifier (Naif Identifier)")]
         int observerId,
@@ -115,7 +115,7 @@ public class GeometryFinderCommand
         [Argument(Description = "Aberration")] string aberration = "None"
     )
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
@@ -135,7 +135,7 @@ public class GeometryFinderCommand
 
     [Command("find-windows-from-FOV-constraint", Description = "Find time windows when a target is in field of view of given instrument")]
     public Task InFieldOfViewConstraint(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Observer identifier (Naif Identifier)")]
         int observerId,
@@ -153,7 +153,7 @@ public class GeometryFinderCommand
         [Argument(Description = "Aberration")] string aberration = "None"
     )
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
@@ -171,7 +171,7 @@ public class GeometryFinderCommand
 
     [Command("find-windows-from-illumination-constraint", Description = "Find time windows when constraint occurs")]
     public Task IlluminationConstraint(
-        [Argument(Description = "Kernels directory path")]
+        [Argument(Description = "Kernels path: a directory, a kernel file or a meta-kernel")]
         string kernelsPath,
         [Argument(Description = "Observer identifier (Naif Identifier)")]
         int observerId,
@@ -195,7 +195,7 @@ public class GeometryFinderCommand
         double adjustValue=0.0
     )
     {
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernelsPath));
+        SpiceAPI.Instance.LoadKernels(Helpers.KernelsPath(kernelsPath));
 
         var win = new Window(Helpers.ConvertDateTimeInput(window.Begin), Helpers.ConvertDateTimeInput(window.End));
         var abe = Enum.Parse<Aberration>(aberration, true);
