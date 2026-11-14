@@ -1380,13 +1380,22 @@ release are listed under **Known limitations**.
   `API.UnloadKernelsProxyOfADeletedFile` and `API.UnloadKernelsProxyOfANameNotLoaded` check the frame lookup of
   `TransformFrameProxy`; `KernelRegistryTests` the frames and the listing after a deleted folder (both instances) and a
   file of a folder. SPICE unloads a text kernel or a meta-kernel by reading the pool again, which fails while another
-  text kernel deleted since its load is still loaded, and leaves out the text kernels loaded after it: the unload of the
-  recorded files throws for such a failure unless a later unload of a text kernel or a meta-kernel of the same call
-  read the whole pool again (the unload of a binary kernel, which reads nothing again, repairs nothing; whether a file
-  is binary is read from its ID word at its load). `KernelRegistryTests` unloads a folder of a text kernel listed before
-  an SPK while a deleted text kernel is loaded, which throws and leaves the frame of the text kernel loaded after the
-  deleted one unknown until the deleted one is unloaded, and a meta-kernel of one SPK, whose unload SPICE fails the
-  same way.
+  text kernel deleted since its load is still loaded, and leaves out the text kernels loaded after it. The unload of
+  an SPK, a CK or a binary PCK opens the other loaded kernels of its kind again (for a PCK `unload_c` → `UNLOAD` →
+  `PCKLOF` → `DAFOPR`), reads no text kernel, and fails on a kernel of its kind deleted since its load, after which,
+  for PCKs, those loaded before the deleted one take precedence over those loaded after it (measured with CSPICE
+  N0067: the Earth PCK of `Data/SolarSystem` over the conformance fixture's, loaded after it, until the deleted PCK is
+  unloaded); a meta-kernel's unload also opens again the kernels of the kinds it names (measured for a PCK). The
+  unload of the recorded files throws for such a failure unless a later unload of the same call read the same kernels
+  again: a text kernel's or a meta-kernel's for a text kernel, one of the same kind for an SPK, a CK or a PCK, none
+  for a meta-kernel, whose files the library does not read, nor for a DSK, an EK or a DAF of the oldest ID word, not
+  measured (internal `SpiceAPI.UnloadRereads`, from the ID word of the file and the presence of `KERNELS_TO_LOAD`,
+  read at its load). `KernelRegistryTests` unloads a folder of a text kernel listed before an SPK while a deleted text
+  kernel is loaded, which throws and leaves the frame of the text kernel loaded after the deleted one unknown until
+  the deleted one is unloaded; a meta-kernel of one SPK, whose unload SPICE fails the same way; a folder of two binary
+  PCKs whose second is deleted, whose unload no longer throws, the second unload repairing the first; and a folder of
+  a meta-kernel of a PCK listed before a text kernel while a deleted PCK is loaded, which throws, the text kernel's
+  unload no longer taken for a repair.
 - **The command line ignored a kernel file or a meta-kernel given as its kernels path** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). The 13 commands that
   load kernels wrapped the argument in a `DirectoryInfo`, from which a file loaded nothing without an error:
   `astro ephemeris mk.tm …` failed with "Celestial celestialItem frame can't be defined". A file, a kernel or a

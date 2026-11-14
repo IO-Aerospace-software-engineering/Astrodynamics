@@ -33,10 +33,14 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   which unloads nothing it does not hold (a file a meta-kernel loaded is unloaded by its name).
 - SPICE unloads a text kernel or a meta-kernel by clearing the kernel pool and reading again the text kernels still
   loaded (NAIF, Kernel Required Reading, "Unloading Kernels"); while a text kernel deleted since its load is still
-  loaded, that read stops at it, the unload fails, and the pool lacks the text kernels loaded after it. `UnloadKernels`
-  throws `InvalidOperationException` for such a failure unless a later unload of a text kernel or a meta-kernel of the
-  same call read the whole pool again; the unload of a binary kernel reads nothing again. Unload the deleted kernel to
-  restore the pool.
+  loaded, that read stops at it, the unload fails, and the pool lacks the text kernels loaded after it. The unload of an
+  SPK, a CK or a binary PCK opens the other loaded kernels of its kind again (for a PCK, `unload_c` → `PCKLOF` →
+  `DAFOPR`), reads no text kernel, and fails the same way on a kernel of its kind deleted since its load; the PCKs
+  loaded before the deleted one then take precedence over those loaded after it (measured with CSPICE N0067). A
+  meta-kernel's unload also opens again the kernels of the kinds it names (measured for a PCK). `UnloadKernels` throws
+  `InvalidOperationException` for such a failure unless a later unload of the same call read the same kernels again
+  (a text kernel's for the text kernels, a kernel of the same kind for an SPK, a CK or a PCK; nothing repairs the
+  failure of a meta-kernel). Unload the deleted kernel to restore the pool and the precedence.
 - SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
   File Naming"), and `LoadKernels` hands it the full path: a kernel at a longer path fails with
   `SPICE(FILENAMETOOLONG)`. Load it through a meta-kernel that names it by a shorter relative path, or move it.

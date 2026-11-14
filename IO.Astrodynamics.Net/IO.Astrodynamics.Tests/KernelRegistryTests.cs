@@ -1,11 +1,13 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Kernels;
 using IO.Astrodynamics.Tests.Body;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
@@ -298,8 +300,8 @@ public class KernelRegistryTests : IDisposable
     {
         // Arrange: a text kernel D, deleted after its load, a text kernel E loaded after it, and a folder of a text kernel
         // listed before a binary one (an SPK of scn100 copied). SPICE reads every text kernel still loaded again after it
-        // unloads one, from the first, and stops at D: E leaves the pool. The unload of a binary kernel reads nothing again
-        // (NAIF, Kernel Required Reading, "Unloading Kernels"; measured with CSPICE N0067)
+        // unloads one, from the first, and stops at D: E leaves the pool. The unload of an SPK opens the other SPKs again and
+        // reads no text kernel (NAIF, Kernel Required Reading, "Unloading Kernels"; measured with CSPICE N0067)
         var gone = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "Deleted")), "d.tf", 1999922, "IOA_F02_BATCH_D", 30.0);
         var after = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "After")), "e.tf", 1999923, "IOA_F02_BATCH_E", 60.0);
         var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Batch"));
@@ -354,7 +356,7 @@ public class KernelRegistryTests : IDisposable
     {
         // Arrange: a meta-kernel that names a binary kernel only, loaded after a text kernel D deleted since its load and a
         // text kernel E. SPICE reads the pool again when it unloads a meta-kernel too (measured with CSPICE N0067), which
-        // is why the unload of a meta-kernel counts as a reread (SpiceAPI.ReloadsPool)
+        // is why the unload of a meta-kernel reads the text kernels again (SpiceAPI.UnloadRereads)
         var gone = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "Deleted")), "d.tf", 1999925, "IOA_F02_MKB_D", 30.0);
         var after = WriteFrameKernel(new DirectoryInfo(Path.Combine(_root.FullName, "After")), "e.tf", 1999926, "IOA_F02_MKB_E", 60.0);
         var binary = new FileInfo(Path.Combine(_root.FullName, "Binary", "y.bsp"));
@@ -381,8 +383,114 @@ public class KernelRegistryTests : IDisposable
         Assert.Equal([after.FullName], Under(_root).Select(k => k.FullName));
     }
 
+    // A copy of the moon PCK of Data/SolarSystem whose one segment is given the frame class id classId, which
+    // Data/SolarSystem does not define (KernelShadowing). The layout is read from the file itself and checked: its DAF file
+    // record gives ND = 2 at byte 8, NI = 5 at byte 12 and the first summary record at byte 76, which holds three doubles,
+    // then the segment's two doubles and its five integers, the class id first
+    private static FileInfo WritePck(DirectoryInfo folder, string fileName, int classId)
+    {
+        var bytes = File.ReadAllBytes("Data/SolarSystem/moon_pa_de421_1900-2050.bpc");
+        Assert.Equal("DAF/PCK "u8.ToArray(), bytes[..8]);
+        Assert.Equal(2, BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(8)));
+        Assert.Equal(5, BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(12)));
+        Assert.Equal("LTL-IEEE"u8.ToArray(), bytes[88..96]);
+        int summaries = (BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(76)) - 1) * 1024;
+        Assert.Equal(1.0, BinaryPrimitives.ReadDoubleLittleEndian(bytes.AsSpan(summaries + 16)));
+        int classIdOffset = summaries + 24 + 2 * 8;
+        Assert.Equal(31006, BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(classIdOffset)));
+        BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(classIdOffset), classId);
+        folder.Create();
+        var file = new FileInfo(Path.Combine(folder.FullName, fileName));
+        File.WriteAllBytes(file.FullName, bytes);
+        return file;
+    }
+
+    // Writes files named by attempt until the folder lists the first one written by write(i) before the given file: a folder
+    // is loaded in the order of its listing, the file system's
+    private static FileInfo ListedBefore(DirectoryInfo folder, FileInfo listedLast, Func<int, FileInfo> write)
+    {
+        for (int i = 0; i < 64; i++)
+        {
+            var candidate = write(i);
+            var listing = Directory.EnumerateFileSystemEntries(folder.FullName).ToArray();
+            if (listing.Length == 2 && listing[0] == candidate.FullName && listing[1] == listedLast.FullName)
+            {
+                return candidate;
+            }
+
+            candidate.Delete();
+        }
+
+        throw new InvalidOperationException($"no name lists a file before {listedLast.FullName}");
+    }
+
     [Fact]
-    public void ReloadsPool_TextAndMetaKernelsOnly()
+    public void UnloadKernels_OfAFolderOfTwoPcks_WhoseSecondIsDeleted_DoesNotThrow()
+    {
+        // A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open
+        if (OperatingSystem.IsWindows()) return;
+
+        // Arrange: a folder of two binary PCKs, the second deleted after the load. SPICE unloads a binary PCK by opening again
+        // the other PCKs still loaded (unload_c --> UNLOAD --> PCKLOF --> DAFOPR), which fails on the deleted one; the
+        // unload of the deleted one then succeeds and opens the others again without it (measured with CSPICE N0067)
+        var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Pcks"));
+        var deleted = WritePck(folder, "d.bpc", 1999950);
+        ListedBefore(folder, deleted, i => WritePck(folder, $"p{i}.bpc", 1999951));
+        SpiceAPI.Instance.LoadKernels(folder);
+        var moon = SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame("MOON_PA"), Frames.Frame.ICRF).Rotation;
+
+        lock (SpiceAPI.SyncRoot)
+        {
+            File.Delete(deleted.FullName);
+
+            // Act: the first unload fails and the second one repairs it; before, a binary kernel's failure was never repaired
+            SpiceAPI.Instance.UnloadKernels(folder);
+        }
+
+        // Assert: nothing of the folder is listed, and the moon PCK of Data/SolarSystem reads as before
+        Assert.Empty(Under(_root));
+        Assert.Equal(moon, SpiceAPI.Instance.TransformFrame(Epoch, new Frames.Frame("MOON_PA"), Frames.Frame.ICRF).Rotation);
+    }
+
+    [Fact]
+    public void UnloadKernels_OfAMetaKernelOfAPckThenATextKernel_WhenSpiceCannotOpenAnotherPckAgain_Throws()
+    {
+        // A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open
+        if (OperatingSystem.IsWindows()) return;
+
+        // Arrange: a binary PCK D, deleted after its load, and a folder of a meta-kernel that names another PCK, listed
+        // before a text kernel. The meta-kernel's unload unloads that PCK, which opens D again and fails; the text kernel's
+        // unload reads the text kernels again, not the PCKs, and repairs nothing (measured with CSPICE N0067)
+        var gone = WritePck(new DirectoryInfo(Path.Combine(_root.FullName, "Deleted")), "d.bpc", 1999952);
+        var pck = WritePck(new DirectoryInfo(Path.Combine(_root.FullName, "Pck")), "p.bpc", 1999953);
+        var folder = new DirectoryInfo(Path.Combine(_root.FullName, "Batch"));
+        var text = WriteFrameKernel(folder, "x.tf", 1999954, "IOA_F02_MKP_X", 90.0);
+        var metaKernel = ListedBefore(folder, text, i => WriteMetaKernel(new FileInfo(Path.Combine(folder.FullName, $"m{i}.tm")), pck.FullName));
+        SpiceAPI.Instance.LoadKernels(gone);
+        SpiceAPI.Instance.LoadKernels(folder);
+        Assert.Equal(90.0, RotationAngleDeg("IOA_F02_MKP_X"), 12);
+
+        lock (SpiceAPI.SyncRoot)
+        {
+            File.Delete(gone.FullName);
+
+            // Act: before, the text kernel's success was taken for a repair of the meta-kernel's failure
+            var exception = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.UnloadKernels(folder));
+
+            // Assert
+            Assert.Contains(metaKernel.FullName, exception.Message);
+            Assert.Equal([gone.FullName], Under(_root).Select(k => k.FullName));
+
+            // The unload of the deleted PCK opens the others again without it
+            SpiceAPI.Instance.UnloadKernels(gone);
+        }
+
+        Assert.Empty(Under(_root));
+        AssertUnknown("IOA_F02_MKP_X");
+    }
+
+    [Fact]
+    public void UnloadRereads_TheKernelsOfItsKind()
     {
         // Arrange: the ID words of NAIF's Kernel Required Reading, "SPICE Kernel Type Identification"
         var folder = Directory.CreateDirectory(Path.Combine(_root.FullName, "Kinds"));
@@ -393,17 +501,32 @@ public class KernelRegistryTests : IDisposable
             return file;
         }
 
+        void AssertRereads(string file, KernelRereads reads, KernelRereads mayFailOn) =>
+            Assert.Equal((reads, mayFailOn), SpiceAPI.UnloadRereads(file));
+
+        const KernelRereads text = KernelRereads.TextKernels;
+        const KernelRereads unmeasured = KernelRereads.Unmeasured;
+
         // Act and assert: SPICE loads as a text kernel every file without the ID word of a binary kernel
-        Assert.True(SpiceAPI.ReloadsPool(WriteFrameKernel(folder, "a.tf", 1999927, "IOA_F02_KIND", 1.0).FullName));
-        Assert.True(SpiceAPI.ReloadsPool(Write("m.tm", "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( 'x' )\n\\begintext\n")));
-        Assert.True(SpiceAPI.ReloadsPool(Write("old.ti", "\\begindata\nX = 1\n")));
-        Assert.True(SpiceAPI.ReloadsPool(Write("short", "KPL")));
-        Assert.False(SpiceAPI.ReloadsPool("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk"));
-        Assert.False(SpiceAPI.ReloadsPool(Write("das", "DAS/DSK ")));
-        Assert.False(SpiceAPI.ReloadsPool(Write("olddaf", "NAIF/DAF")));
-        Assert.False(SpiceAPI.ReloadsPool(Write("olddas", "NAIF/DAS")));
+        AssertRereads(WriteFrameKernel(folder, "a.tf", 1999927, "IOA_F02_KIND", 1.0).FullName, text, text);
+        AssertRereads(Write("old.ti", "\\begindata\nX = 1\n"), text, text);
+        AssertRereads(Write("short", "KPL"), text, text);
+        // A meta-kernel, with its ID word or without it, and the name of its variable across two reads of the scan
+        AssertRereads(Write("m.tm", "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( 'x' )\n\\begintext\n"), text, text | unmeasured);
+        AssertRereads(Write("old.tm", "\\begindata\nKERNELS_TO_LOAD = ( 'x' )\n"), text, text | unmeasured);
+        const string header = "KPL/MK\n\\begindata\n";
+        AssertRereads(Write("far.tm", header + new string(' ', 65536 - header.Length - 5) + "KERNELS_TO_LOAD = ( 'x' )\n"), text,
+            text | unmeasured);
+        // The binary kernels whose unload opens the others of their kind again
+        AssertRereads("Data/UserDataTest/scn100/Sites/MySite/Ephemeris/MySite.spk", KernelRereads.Spks, KernelRereads.Spks);
+        AssertRereads("Data/FieldOfViewReference/fovleo.bc", KernelRereads.Cks, KernelRereads.Cks);
+        AssertRereads("Data/SolarSystem/moon_pa_de421_1900-2050.bpc", KernelRereads.Pcks, KernelRereads.Pcks);
+        // The others, not measured
+        AssertRereads(Write("das", "DAS/DSK "), KernelRereads.None, unmeasured);
+        AssertRereads(Write("olddaf", "NAIF/DAF"), KernelRereads.None, unmeasured);
+        AssertRereads(Write("olddas", "NAIF/DAS"), KernelRereads.None, unmeasured);
         // A file that cannot be read repairs no failure
-        Assert.False(SpiceAPI.ReloadsPool(Path.Combine(folder.FullName, "missing.tf")));
+        AssertRereads(Path.Combine(folder.FullName, "missing.tf"), KernelRereads.None, unmeasured);
     }
 
     [Fact]
