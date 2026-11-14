@@ -381,6 +381,60 @@ public class ConjunctionCovarianceEdgeTests : IClassFixture<ConjunctionCovarianc
     }
 
     [Fact]
+    public void TemeInitialCovarianceThePropagationRejects_IsRotatedThenRemediated()
+    {
+        // Arrange: the protected participant on an osculating TEME state whose P0 has a T–Ṙ correlation of −1.0001, as from
+        // rounded values (indefinite in any frame: a rotation keeps the eigenvalues), propagated in RK7(8) without the
+        // covariance, so that the analysis replays the variational equations from P0 remediated; its twin rotated to ICRF
+        // by ToFrame, P0 through diag(R, R), remediated by the analysis too (#675)
+        var teme = WithTrCorrelation(_case.ProtectedStart, -1.0001, 1.0).ToFrame(Frames.Frame.TEME).ToStateVector();
+        Assert.NotNull(PropagatorBase.InitialCovarianceRejection(teme.Covariance.Value, out _));
+        var icrf = teme.ToFrame(Frames.Frame.ICRF).ToStateVector();
+        var fromTeme = ConjunctionCovarianceCase.NewSpacecraft(-6946, teme);
+        var twin = ConjunctionCovarianceCase.NewSpacecraft(-6947, icrf);
+        var secondary = ConjunctionCovarianceCase.NewSpacecraft(-6948, _case.SecondaryStart);
+        _case.Propagate(fromTeme);
+        _case.Propagate(twin);
+        _case.Propagate(secondary);
+
+        // The reference: the ICRF P0 remediated independently (eigenvalue clipping of the correlation matrix, Hall et al.
+        // 2017), propagated with the covariance from the start
+        var reference = ConjunctionCovarianceCase.NewSpacecraft(-6949, new StateVector(icrf.Position, icrf.Velocity,
+            icrf.Observer, icrf.Epoch, icrf.Frame, ClipCorrelation(icrf.Covariance.Value)));
+        var referenceSolution = _case.Propagate(reference, Covariance);
+
+        // Act
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(fromTeme), secondary,
+            ConjunctionCovarianceCase.AnalysisWindow);
+        var twinEncounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(twin), secondary,
+            ConjunctionCovarianceCase.AnalysisWindow);
+
+        // Assert: rotated to ICRF, then remediated: the twin's covariance at TCA bit for bit, the reference's within the
+        // bound of Analyze_InitialCovarianceThePropagationRejects_IsRemediatedThenPropagated
+        Assert.Equal(CovarianceSource.Propagated, encounter.EncounterState.ProtectedCovariance.Source);
+        Assert.True(encounter.ProtectedCovariance.InitialCovarianceRemediated);
+        Assert.True(twinEncounter.ProtectedCovariance.InitialCovarianceRemediated);
+        Assert.Equal(twinEncounter.EncounterState.Epoch, encounter.EncounterState.Epoch);
+        Assert.Equal(twinEncounter.ProtectedCovariance.CovarianceInertial.Value.ToArray(),
+            encounter.ProtectedCovariance.CovarianceInertial.Value.ToArray());
+        var expected = referenceSolution.GetCovariance(encounter.EncounterState.Epoch);
+        var actual = encounter.ProtectedCovariance.CovarianceInertial.Value;
+        double difference = 0.0, norm = 0.0;
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                difference += (actual.Get(i, j) - expected.Get(i, j)) * (actual.Get(i, j) - expected.Get(i, j));
+                norm += expected.Get(i, j) * expected.Get(i, j);
+            }
+        }
+
+        _output.WriteLine($"MEASURE ConjunctionCovarianceEdgeTests.TemeInitialCovarianceThePropagationRejects_IsRotatedThenRemediated: " +
+                          $"{System.Math.Sqrt(difference / norm):E2} relative to the reference");
+        Assert.True(System.Math.Sqrt(difference / norm) < 1e-10, $"{System.Math.Sqrt(difference / norm):E2}");
+    }
+
+    [Fact]
     public void Resolver_LastEncounterPastThePropagation_ReplaysToItsEnd()
     {
         // Arrange

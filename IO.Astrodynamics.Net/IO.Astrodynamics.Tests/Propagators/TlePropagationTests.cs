@@ -53,6 +53,10 @@ public class TlePropagationTests
     private const double KeplerPosition = 1.9e-6;
     private const double KeplerVelocity = 2.4e-9;
 
+    // Twice the worst of UnpropagatedOrSampledTleSpacecraft_ReadsSgp4 on Linux x64 (2026-11-14): the Lagrange interpolation
+    // of the TLEPropagator samples at mid-step, ISS at 60 s, 7.59e-4 m. Provisional, to be set from the three platforms
+    private const double SampledEphemerisBetweenSamples = 1.6e-3;
+
     private readonly ITestOutputHelper _output;
 
     public TlePropagationTests(ITestOutputHelper output)
@@ -196,6 +200,42 @@ public class TlePropagationTests
         Assert.Equal(61, fromTle.PropagatedStates.Length);
         AssertSameStates(twin.PropagatedStates, fromTle.PropagatedStates);
         Assert.Equal(twin.ExecutedManeuvers.Count, fromTle.ExecutedManeuvers.Count);
+    }
+
+    [Theory]
+    [InlineData("Propagate")]
+    [InlineData("RK78Integrator")]
+    [InlineData("Scenario")]
+    [InlineData("Builder")]
+    public void TleStart_AwayFromItsEpoch_IsSgp4AtTheWindowStart(string path)
+    {
+        // Arrange: a window 6 h after the TLE epoch; the start is SGP4 at the window start, rotated to ICRF, not SGP4 at the
+        // TLE epoch carried to the window start by another motion
+        var tle = NewTle();
+        var window = new Window(tle.Epoch.AddHours(6.0), tle.Epoch.AddHours(7.0));
+        var t0 = window.StartDate.ToTDB();
+        var sgp4 = tle.ToStateVector(t0).ToFrame(Frames.Frame.ICRF).ToStateVector();
+        int id = -7060 - 2 * Array.IndexOf(Paths, path);
+        var fromTle = NewSpacecraft(id, tle);
+        var twin = NewSpacecraft(id - 1, Twin(tle, window));
+
+        // Act
+        var solution = Run(path, fromTle, window, Array.Empty<CelestialItem>(), false);
+        var twinSolution = Run(path, twin, window, Array.Empty<CelestialItem>(), false);
+
+        // Assert: the first state is SGP4 at the window start bit for bit, every state the twin's
+        var first = solution?.StateVectors[0] ?? fromTle.PropagatedStates[0];
+        Assert.Equal(t0, first.Epoch);
+        Assert.Equal(sgp4.Position, first.Position);
+        Assert.Equal(sgp4.Velocity, first.Velocity);
+        Assert.Equal(sgp4.Position, fromTle.PropagatedStates[0].Position);
+        Assert.Equal(sgp4.Velocity, fromTle.PropagatedStates[0].Velocity);
+        if (solution != null)
+        {
+            AssertSameStates(twinSolution.StateVectors, solution.StateVectors);
+        }
+
+        AssertSameStates(twin.PropagatedStates, fromTle.PropagatedStates);
     }
 
     [Theory]
@@ -359,15 +399,21 @@ public class TlePropagationTests
         Assert.Equal(path != "Builder", spacecraft.IsPropagated);
         var earth = (CelestialItem)tle.Observer;
 
-        // Act, assert: its reads are its stored states, 50 km and more from SGP4 at the end (53.7 km measured)
+        // Act, assert: its reads are its stored states, 50 km and more from SGP4 at the end (53.7 km measured): the geometric
+        // state, which the reads from any other body and the searches go through (GetEphemeris from the Earth without
+        // aberration reads the stored states directly, whatever the initial orbit), and the window it interpolates
         var stored = spacecraft.PropagatedStates;
         foreach (var state in stored)
         {
+            var geometric = spacecraft.GetGeometricStateRelativeTo(state.Epoch, earth);
+            Assert.Equal(state.Position, geometric.Position);
+            Assert.Equal(state.Velocity, geometric.Velocity);
             var read = spacecraft.GetEphemeris(state.Epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
             Assert.Equal(state.Position, read.Position);
             Assert.Equal(state.Velocity, read.Velocity);
         }
 
+        Assert.Equal(new Window(stored[0].Epoch, stored[^1].Epoch), spacecraft.InterpolatedStatesWindow);
         var last = stored[^1];
         double fromSgp4 = (tle.ToStateVector(last.Epoch).ToFrame(Frames.Frame.ICRF).ToStateVector().Position - last.Position).Magnitude();
         _output.WriteLine($"MEASURE TlePropagationTests.PropagatedTleSpacecraft_ReadsItsStates {path}: {fromSgp4 / 1000.0:F3} km from SGP4 at 1 h");
@@ -478,6 +524,26 @@ public class TlePropagationTests
             Assert.Equal(sgp4.Position, ephemeris.Position);
             Assert.Equal(sgp4.Velocity, ephemeris.Velocity);
         }
+
+        // The ephemeris of the sampled one from its Earth without aberration reads its stored states directly, as before
+        // #675: the SGP4 samples bit for bit, their Lagrange interpolation between them (SGP4 at the exact instant the
+        // reference)
+        double worst = 0.0;
+        for (int i = 0; i < 60; i++)
+        {
+            var sample = window.StartDate.ToTDB().AddSeconds(60.0 * i);
+            var atSample = sampled.GetEphemeris(sample, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var sgp4AtSample = tle.ToStateVector(sample).ToFrame(Frames.Frame.ICRF).ToStateVector();
+            Assert.Equal(sgp4AtSample.Position, atSample.Position);
+            Assert.Equal(sgp4AtSample.Velocity, atSample.Velocity);
+            var middle = sample.AddSeconds(30.0);
+            var between = sampled.GetEphemeris(middle, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            worst = System.Math.Max(worst, (tle.ToStateVector(middle).ToFrame(Frames.Frame.ICRF).ToStateVector().Position - between.Position).Magnitude());
+        }
+
+        _output.WriteLine($"MEASURE TlePropagationTests.UnpropagatedOrSampledTleSpacecraft_ReadsSgp4: sampled ephemeris from the Earth " +
+                          $"between the samples {worst:E3} m from SGP4");
+        Assert.InRange(worst, 0.0, SampledEphemerisBetweenSamples);
     }
 
     [Fact]
