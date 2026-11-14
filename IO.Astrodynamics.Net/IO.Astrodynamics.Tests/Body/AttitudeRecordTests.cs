@@ -357,14 +357,15 @@ public class AttitudeRecordTests
     public void Case_MatchesSpice(string key) => Check(key, _output);
 
     // The TRIAD factories on a spacecraft whose body axes are not the default ones (#677): LVLH and prograde with Sun
-    // tracking, leading or chained after the apogee-raising impulse, over both integrators, an ICRF and an ECLIPJ2000 start,
-    // Spacecraft.Propagate, SSB mode and Scenario.SimulateAsync; their own cases and NAIF identifiers, outside the grid
+    // tracking, leading or chained after the apogee-raising impulse, and a leading LVLH that the impulse interrupts and the
+    // timeline resumes after it, over both integrators, an ICRF and an ECLIPJ2000 start, Spacecraft.Propagate, SSB mode and
+    // Scenario.SimulateAsync; their own cases and NAIF identifiers, outside the grid
     private static readonly string[] FactoryAxesCases = BuildFactoryAxesCases();
 
     private static string[] BuildFactoryAxesCases()
     {
         var cases = new List<string>();
-        foreach (var law in new[] { "LvlhAxes", "ProgradeSunAxes", "ImpulseLvlhAxes", "ImpulseProgradeSunAxes" })
+        foreach (var law in new[] { "LvlhAxes", "ProgradeSunAxes", "ImpulseLvlhAxes", "ImpulseProgradeSunAxes", "LvlhImpulseAxes" })
         foreach (var integrator in new[] { "VV", "RK78" })
         foreach (var frame in new[] { "ICRF", "ECLIPJ2000" })
         foreach (var path in new[] { "Propagate", "SSB", "Scenario" })
@@ -373,45 +374,69 @@ public class AttitudeRecordTests
     }
 
     // A representative set, run by default: each factory, leading and chained, over both integrators, in ICRF through
-    // Spacecraft.Propagate, with one SSB, one Scenario and one ECLIPJ2000 start
+    // Spacecraft.Propagate, with one SSB, one Scenario and one ECLIPJ2000 start, and the LVLH resumed after the impulse
     private static readonly string[] FactoryAxesRepresentative =
     [
         "LvlhAxes|VV|ICRF|Propagate|2024", "LvlhAxes|RK78|ICRF|Propagate|2024", "ProgradeSunAxes|VV|ICRF|Propagate|2024",
         "ProgradeSunAxes|RK78|ICRF|Propagate|2024", "ImpulseLvlhAxes|VV|ICRF|Propagate|2024", "ImpulseLvlhAxes|RK78|ICRF|Propagate|2024",
         "ImpulseProgradeSunAxes|VV|ICRF|Propagate|2024", "ImpulseProgradeSunAxes|RK78|ICRF|Propagate|2024", "LvlhAxes|VV|ICRF|SSB|2024",
-        "ImpulseProgradeSunAxes|RK78|ICRF|Scenario|2024", "ProgradeSunAxes|VV|ECLIPJ2000|Propagate|2024"
+        "ImpulseProgradeSunAxes|RK78|ICRF|Scenario|2024", "ProgradeSunAxes|VV|ECLIPJ2000|Propagate|2024", "LvlhImpulseAxes|RK78|ICRF|Propagate|2024"
     ];
 
-    public static IEnumerable<object[]> FactoryAxes() => FactoryAxesRepresentative.Select(x => new object[] { x });
+    // The part of a factory-axes case, as the grid's (Parts): its index in FactoryAxesCases modulo Parts, so that its cases
+    // run in parallel over this class and AttitudeRecordGridPart1Tests to Part3Tests
+    private static int FactoryAxesPartOf(string key) => System.Math.Max(Array.IndexOf(FactoryAxesCases, key), 0) % Parts;
 
-    public static IEnumerable<object[]> FactoryAxesGrid() => FactoryAxesCases.Where(x => !FactoryAxesRepresentative.Contains(x)).Select(x => new object[] { x });
+    public static IEnumerable<object[]> FactoryAxes(int part) =>
+        FactoryAxesRepresentative.Where(x => FactoryAxesPartOf(x) == part).Select(x => new object[] { x });
+
+    public static IEnumerable<object[]> FactoryAxesGrid(int part) =>
+        FactoryAxesCases.Where(x => !FactoryAxesRepresentative.Contains(x) && FactoryAxesPartOf(x) == part).Select(x => new object[] { x });
 
     /// <summary>
     /// The TRIAD factories point the spacecraft's own axes (#677): with the front +Z, the right +X and the up −Y, the managed
     /// record and <c>pxform</c> on the CK the library writes against the closed form of the law on the spacecraft's axes
     /// (LVLH: down to nadir, front toward the velocity; prograde with Sun tracking: front to the velocity, up toward the
-    /// Sun), the impulse's attitude its front along the delta-V; the limits of the grid. On the static axes the record was
-    /// 90° off.
+    /// Sun), the impulse's attitude its front along the delta-V, a leading LVLH resumed after the impulse; the limits of the
+    /// grid. On the static axes the record was 90° off.
     /// </summary>
     [Theory]
-    [MemberData(nameof(FactoryAxes))]
+    [MemberData(nameof(FactoryAxes), 0)]
     public void TriadFactories_CustomAxes_RecordAndCkMatchClosedForm(string key) => CheckFactoryAxes(key, _output);
 
     [Theory]
     [Trait("Category", "Validation")]
-    [MemberData(nameof(FactoryAxesGrid))]
+    [MemberData(nameof(FactoryAxesGrid), 0)]
     public void TriadFactories_CustomAxes_Grid_RecordAndCkMatchClosedForm(string key) => CheckFactoryAxes(key, _output);
 
-    /// <summary>The representative set is in the product, and the two theories hold every case of it once.</summary>
+    /// <summary>The representative set is in the product, and the two theories of the parts and their classes hold every
+    /// case of it once.</summary>
     [Fact]
     public void FactoryAxes_HoldEveryCaseOnce()
     {
         Assert.All(FactoryAxesRepresentative, x => Assert.Contains(x, FactoryAxesCases));
         Assert.Equal(FactoryAxesCases.Length, FactoryAxesCases.Distinct().Count());
-        Assert.Equal(FactoryAxesCases.OrderBy(x => x), FactoryAxes().Concat(FactoryAxesGrid()).Select(x => (string)x[0]).OrderBy(x => x));
+        var parts = Enumerable.Range(0, Parts).ToArray();
+        Assert.Equal(FactoryAxesCases.OrderBy(x => x),
+            parts.SelectMany(FactoryAxes).Concat(parts.SelectMany(FactoryAxesGrid)).Select(x => (string)x[0]).OrderBy(x => x));
+        foreach (var part in parts)
+        {
+            var type = part == 0 ? typeof(AttitudeRecordTests) : typeof(AttitudeRecordTests).Assembly.GetType($"{typeof(AttitudeRecordTests).Namespace}.AttitudeRecordGridPart{part}Tests");
+            Assert.NotNull(type);
+            foreach (var (method, member) in new[]
+                     {
+                         (nameof(TriadFactories_CustomAxes_RecordAndCkMatchClosedForm), nameof(FactoryAxes)),
+                         (nameof(TriadFactories_CustomAxes_Grid_RecordAndCkMatchClosedForm), nameof(FactoryAxesGrid))
+                     })
+            {
+                var data = Assert.Single(type.GetMethod(method)!.GetCustomAttributes(typeof(MemberDataAttribute), false).Cast<MemberDataAttribute>());
+                Assert.Equal(member, data.MemberName);
+                Assert.Equal(new object[] { part }, data.Parameters);
+            }
+        }
     }
 
-    private static void CheckFactoryAxes(string key, ITestOutputHelper output)
+    internal static void CheckFactoryAxes(string key, ITestOutputHelper output)
     {
         var parts = key.Split('|');
         string law = parts[0], integrator = parts[1], frame = parts[2], path = parts[3];
@@ -1396,6 +1421,15 @@ public class AttitudeRecordTests
                         spacecraft.SetStandbyManeuver(apogee);
                         break;
                     }
+                    case "LvlhImpulseAxes":
+                    {
+                        // The leading LVLH interrupted by the impulse and resumed by the timeline after its maneuver window,
+                        // as the nadir of "NadirImpulseTriad" with no attitude chained after the impulse
+                        var lvlh = TriadAttitude.CreateLVLH(earth, Min, TimeSpan.Zero, engine);
+                        lvlh.SetNextManeuver(Apogee());
+                        spacecraft.SetStandbyManeuver(lvlh);
+                        break;
+                    }
                     case "Custom":
                         hooks.Configure(spacecraft, engine, earth, sun, start);
                         break;
@@ -1602,8 +1636,8 @@ public class AttitudeRecordTests
 
         private Time? _triadStart;
 
-        /// <summary>The activation of the TRIAD chained after the impulse by the rules: the end of the impulse's maneuver
-        /// window, tc − 0.666 dt + max(0, dt).</summary>
+        /// <summary>The activation of the TRIAD chained after the impulse by the rules, or the resumption of the law before
+        /// it when none is chained: the end of the impulse's maneuver window, tc − 0.666 dt + max(0, dt).</summary>
         internal Time TriadStart => _triadStart ??= TimelineRules.ManeuverEnd(ImpulseEpoch, BurnDuration, 0.0, !Ssb);
 
         /// <summary>The epochs of the changes of the case by the rules, in the order of the record: the opening of the
@@ -1611,7 +1645,7 @@ public class AttitudeRecordTests
         internal Time[] RuleChanges() => Law switch
         {
             "ImpulseAlone" => [Change],
-            "ImpulseTriad" or "NadirImpulseTriad" or "ImpulseLvlhAxes" or "ImpulseProgradeSunAxes" => [Change, TriadStart],
+            "ImpulseTriad" or "NadirImpulseTriad" or "ImpulseLvlhAxes" or "ImpulseProgradeSunAxes" or "LvlhImpulseAxes" => [Change, TriadStart],
             _ => []
         };
 
@@ -1648,6 +1682,12 @@ public class AttitudeRecordTests
                     if (AtRuleChange(t)) return (null, false);
                     if (t < Change) return (v => v, false);
                     return t < TriadStart ? (MinimalRotation(Spacecraft.BodyFront, ImpulseInIcrf()), false) : (ContinuousLaw(t), true);
+                case "LvlhImpulseAxes":
+                    // The LVLH on the spacecraft's axes, the impulse's attitude on its own front over the thrust and maneuver
+                    // windows, then the LVLH resumed at the end of the maneuver window (TriadStart, the same rule)
+                    if (AtRuleChange(t)) return (null, false);
+                    if (t < Change) return (ContinuousLaw(t), true);
+                    return t < TriadStart ? (MinimalRotation(Spacecraft.BodyFront, ImpulseInIcrf()), false) : (ContinuousLaw(t), true);
                 case "ImpulseAlone":
                     if (AtRuleChange(t)) return (null, false);
                     return t < Change ? (v => v, false) : (MinimalRotation(Spacecraft.Front, ImpulseInIcrf()), false);
@@ -1678,6 +1718,7 @@ public class AttitudeRecordTests
                     return Triad(Spacecraft.Front, Spacecraft.Up, r.Inverse(), FromEarth(Sun, t) - r);
                 }
                 case "LvlhAxes":
+                case "LvlhImpulseAxes":
                 case "ImpulseLvlhAxes" when t >= TriadStart:
                 {
                     // LVLH on the spacecraft's axes: its down axis to nadir, its front toward the velocity
@@ -1726,12 +1767,12 @@ public class AttitudeRecordTests
         {
             double before = System.Math.Min(LawRateSpan / 2.0, (t - Start).TotalSeconds);
             double after = System.Math.Min(LawRateSpan / 2.0, (Start.AddSeconds(Length) - t).TotalSeconds);
-            if (Law == "NadirImpulseTriad" && t < Change)
+            if (Law is "NadirImpulseTriad" or "LvlhImpulseAxes" && t < Change)
             {
                 after = System.Math.Min(after, (Change - t).TotalSeconds - 1e-6);
             }
 
-            if (Law is "ImpulseTriad" or "NadirImpulseTriad" or "ImpulseLvlhAxes" or "ImpulseProgradeSunAxes" && t >= TriadStart)
+            if (Law is "ImpulseTriad" or "NadirImpulseTriad" or "ImpulseLvlhAxes" or "ImpulseProgradeSunAxes" or "LvlhImpulseAxes" && t >= TriadStart)
             {
                 before = System.Math.Min(before, (t - TriadStart).TotalSeconds);
             }

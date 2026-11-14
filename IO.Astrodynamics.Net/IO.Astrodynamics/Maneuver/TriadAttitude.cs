@@ -307,18 +307,9 @@ public class TriadAttitude : Attitude
             engine);
     }
 
-    // The instance axis of a factory on the spacecraft of the engine's tank, the given vector otherwise: the rule of
-    // Maneuver.GetBodyFront
-    private Vector3 ResolveAxis(Func<Spacecraft, Vector3> axis, Vector3 vector)
-    {
-        if (axis == null)
-        {
-            return vector;
-        }
-
-        var spacecraft = Engine.FuelTank.Spacecraft;
-        return spacecraft != null ? axis(spacecraft) : vector;
-    }
+    // The instance axis of a factory on the spacecraft of the engine's tank (Maneuver.GetBodyAxis, the rule of
+    // GetBodyFront), the given vector for the public constructors
+    private Vector3 ResolveAxis(Func<Spacecraft, Vector3> axis, Vector3 vector) => axis == null ? vector : GetBodyAxis(axis, vector);
 
     private static CelestialItem GetManeuverCenter(ILocalizable target)
     {

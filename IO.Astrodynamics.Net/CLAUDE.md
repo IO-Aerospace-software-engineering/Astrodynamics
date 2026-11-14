@@ -629,14 +629,14 @@ Default body axes (static fields, backward-compatible):
 - `BodyBack`, `BodyLeft`, `BodyDown` — computed inverses
 - Passed via optional constructor parameters: `bodyFront`, `bodyRight`, `bodyUp`
 - Validation enforces orthogonality and right-handedness when custom axes are provided
-- The axes are read on the spacecraft of the engine's tank at execution, with the static axes as fallback while the tank is on no spacecraft: the single-vector attitudes and the impulse attitude point `BodyFront` through `GetBodyFront()` (protected helper on `Maneuver` base class), `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
+- The axes are read on the spacecraft of the engine's tank at execution, with the static axes as fallback while the tank is on no spacecraft: the single-vector attitudes and the impulse attitude point `BodyFront` through `GetBodyFront()`, `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through the one rule of `Maneuver.GetBodyAxis` (`private protected`, no public surface) (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
 
 ```csharp
 // Spacecraft with +X as front (e.g., matching a SPICE FK convention)
 var spacecraft = new Spacecraft(-1001, "Sat", 1000, 5000, clock, orbit,
     bodyFront: Vector3.VectorX, bodyRight: Vector3.VectorY.Inverse(), bodyUp: Vector3.VectorZ);
 
-// All attitude maneuvers automatically use BodyFront instead of Spacecraft.Front
+// The single-vector attitudes, the impulse attitude and the TRIAD factories use the instance axes
 var prograde = new ProgradeAttitude(earth, epoch, duration, engine);
 // → orients spacecraft.BodyFront (+X) along velocity vector
 ```

@@ -30,6 +30,16 @@ public class AttitudeRecordGridPart1Tests
     [Trait("Category", "Validation")]
     [MemberData(nameof(AttitudeRecordTests.Grid), 1, MemberType = typeof(AttitudeRecordTests))]
     public void Case_MatchesSpice(string key) => AttitudeRecordTests.Check(key, _output);
+
+    // The cases of the TRIAD factories on custom axes (#677) of this part, checked by AttitudeRecordTests.CheckFactoryAxes
+    [Theory]
+    [MemberData(nameof(AttitudeRecordTests.FactoryAxes), 1, MemberType = typeof(AttitudeRecordTests))]
+    public void TriadFactories_CustomAxes_RecordAndCkMatchClosedForm(string key) => AttitudeRecordTests.CheckFactoryAxes(key, _output);
+
+    [Theory]
+    [Trait("Category", "Validation")]
+    [MemberData(nameof(AttitudeRecordTests.FactoryAxesGrid), 1, MemberType = typeof(AttitudeRecordTests))]
+    public void TriadFactories_CustomAxes_Grid_RecordAndCkMatchClosedForm(string key) => AttitudeRecordTests.CheckFactoryAxes(key, _output);
 }
 
 /// <summary>
@@ -55,6 +65,16 @@ public class AttitudeRecordGridPart2Tests
     [Trait("Category", "Validation")]
     [MemberData(nameof(AttitudeRecordTests.Grid), 2, MemberType = typeof(AttitudeRecordTests))]
     public void Case_MatchesSpice(string key) => AttitudeRecordTests.Check(key, _output);
+
+    // The cases of the TRIAD factories on custom axes (#677) of this part, checked by AttitudeRecordTests.CheckFactoryAxes
+    [Theory]
+    [MemberData(nameof(AttitudeRecordTests.FactoryAxes), 2, MemberType = typeof(AttitudeRecordTests))]
+    public void TriadFactories_CustomAxes_RecordAndCkMatchClosedForm(string key) => AttitudeRecordTests.CheckFactoryAxes(key, _output);
+
+    [Theory]
+    [Trait("Category", "Validation")]
+    [MemberData(nameof(AttitudeRecordTests.FactoryAxesGrid), 2, MemberType = typeof(AttitudeRecordTests))]
+    public void TriadFactories_CustomAxes_Grid_RecordAndCkMatchClosedForm(string key) => AttitudeRecordTests.CheckFactoryAxes(key, _output);
 }
 
 /// <summary>
@@ -80,4 +100,14 @@ public class AttitudeRecordGridPart3Tests
     [Trait("Category", "Validation")]
     [MemberData(nameof(AttitudeRecordTests.Grid), 3, MemberType = typeof(AttitudeRecordTests))]
     public void Case_MatchesSpice(string key) => AttitudeRecordTests.Check(key, _output);
+
+    // The cases of the TRIAD factories on custom axes (#677) of this part, checked by AttitudeRecordTests.CheckFactoryAxes
+    [Theory]
+    [MemberData(nameof(AttitudeRecordTests.FactoryAxes), 3, MemberType = typeof(AttitudeRecordTests))]
+    public void TriadFactories_CustomAxes_RecordAndCkMatchClosedForm(string key) => AttitudeRecordTests.CheckFactoryAxes(key, _output);
+
+    [Theory]
+    [Trait("Category", "Validation")]
+    [MemberData(nameof(AttitudeRecordTests.FactoryAxesGrid), 3, MemberType = typeof(AttitudeRecordTests))]
+    public void TriadFactories_CustomAxes_Grid_RecordAndCkMatchClosedForm(string key) => AttitudeRecordTests.CheckFactoryAxes(key, _output);
 }

@@ -1447,7 +1447,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
 
-The single-vector attitudes support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` of the same spacecraft, with the same fallback (#677).
+The single-vector attitudes support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` of the same spacecraft, with the same fallback; both go through `GetBodyAxis(axis, fallback)` of `Maneuver` (`private protected`) (#677).
 
 **TRIAD Attitude Determination**
 
@@ -1501,11 +1501,11 @@ Each impulse maneuver defines a g-function for event-driven triggering:
 | `PerigeeHeightManeuver` | r·v | Positive → Negative | Apogee |
 | `PhasingManeuver` | r·v | Negative → Positive | Perigee |
 | `CombinedManeuver` | r·v | Positive → Negative | Apogee (+ precondition: apogee aligned with ascending node) |
-
-The targets of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` and `CombinedManeuver` are radii in m from the centre of
-the maneuver centre, not altitudes (for an altitude h, the equatorial radius + h); the burn moves the apsis up or down.
 | `PlaneAlignmentManeuver` | r·ĥ_target | Adaptive | Nearest orbital node (ascending or descending) |
 | `ApsidalAlignmentManeuver` | r·(ĥ×p̂) | Negative → Positive | Nearest orbit intersection point |
+
+The targets of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` and `CombinedManeuver` are radii in m from the centre of
+`ManeuverCenter`, not altitudes (for an altitude h, the equatorial radius + h); the burn moves the apsis up or down.
 
 ---
 

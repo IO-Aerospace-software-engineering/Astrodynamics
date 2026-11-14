@@ -98,7 +98,7 @@ determines **when** the burn fires.
 ### Moving the apogee
 
 `ApogeeHeightManeuver` fires at perigee and moves the apogee, up or down, to a target **radius**: a distance in metres
-from the centre of the maneuver centre, not an altitude. For an altitude h above the Earth, pass the equatorial radius
+from the centre of `ManeuverCenter`, not an altitude. For an altitude h above the Earth, pass the equatorial radius
 plus h:
 
 ```csharp

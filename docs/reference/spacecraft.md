@@ -65,7 +65,11 @@ Kernel-backed spacecraft: `IsSpiceBacked` returns `true`. Calling `Propagate()` 
 
 ## Static Body Axes
 
-Default body-frame directions used by all attitude maneuvers when no instance override is set.
+Default body-frame directions. The single-vector attitudes, the attitude of an impulse and the TRIAD factories
+(`TriadAttitude.CreateLVLH`, `CreateProgradeWithSunTracking`) read the instance axes (`BodyFront`, `BodyRight`,
+`BodyUp`) of the spacecraft that carries the engine's tank, and these static axes when no instance override is set or
+while the tank is on no spacecraft (#677). The `TriadAttitude` constructors take literal body vectors: pass
+`spacecraft.BodyFront`, ... for the instance axes.
 
 | Field | Direction | Vector |
 |-------|-----------|--------|

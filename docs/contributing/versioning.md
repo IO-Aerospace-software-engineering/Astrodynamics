@@ -53,9 +53,9 @@ A major version, because it breaks the API. The entries marked **Breaking** unde
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
-public statics, the equality of frames, and the axes the TRIAD factories point. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
-`Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
-release are listed under **Known limitations**.
+public statics, the equality of frames, and the axes the TRIAD factories point. **Removed** lists
+`Instrument.PositionInFOV`, `LowThrustManeuver` and `Quaternion.Zero`. Several results change: see **Fixed** and
+**Changed**. The open defects a caller can meet at this release are listed under **Known limitations**.
 
 **Added**
 
@@ -1366,9 +1366,9 @@ release are listed under **Known limitations**.
   public signature changes. `TriadAttitudeTests` compares the attitude of three right-handed triads (one turned 30°
   about (1, 1, 1)) with the closed form of each law built from the state, the spacecraft's axes and the Sun of `spkezr`
   (within 3.6e-16 rad, Linux), and `AttitudeRecordTests` the record and `pxform` on the written CK with the same closed
-  forms over both integrators, ICRF and ECLIPJ2000 starts, `Spacecraft.Propagate`, SSB mode and `Scenario`, leading and
-  chained after an impulse (48 cases within the limits of the attitude grid). A spacecraft with the default axes is bit
-  for bit. See Changed.
+  forms over both integrators, ICRF and ECLIPJ2000 starts, `Spacecraft.Propagate`, SSB mode and `Scenario`, leading,
+  chained after an impulse, and an LVLH that an impulse interrupts and the timeline resumes (60 cases within the limits
+  of the attitude grid). A spacecraft with the default axes is bit for bit. See Changed.
 - **`CombinedManeuver`'s target orbit carried the current orbit's perigee radius** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). The target orbit was built
   with `perigeeRadius:` the perigee of the orbit before the burn (6 678 000 m for the orbit of `CombinedManeuverTest`,
   where the target's own perigee is 42 163 999.919 m or 6 600 000 m), so its `PerigeeRadius()` returned another orbit's.
@@ -1379,7 +1379,7 @@ release are listed under **Known limitations**.
 - **The documentation called the targets of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` and `CombinedManeuver`
   heights or altitudes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). The maneuvers tutorial said that `ApogeeHeightManeuver` raises the apogee "to a target
   altitude", and the impulse-maneuver reference that the apogee and perigee maneuvers raise the heights; the targets are
-  radii in m from the centre of the maneuver centre, and the burn moves the apsis up or down. From a 400 km circular
+  radii in m from the centre of `ManeuverCenter`, and the burn moves the apsis up or down. From a 400 km circular
   orbit, `1000e3` read as an altitude is a radius 5 378 km under the surface and ends the propagation in
   `InsufficientFuelException`. The tutorial, the reference and the XML documentation of the three constructors now say
   "radius from the centre, in m" (R + h for an altitude h). `ApogeeHeightManeuverTests.TargetIsARadiusFromTheCentre`
