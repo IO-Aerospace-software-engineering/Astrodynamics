@@ -98,7 +98,7 @@ propagated spacecraft's throws (#676). The `TriadAttitude` constructors take lit
 | `Spacecraft.Up` | Zenith-facing | +Z |
 | `Spacecraft.Down` | Nadir-facing | -Z |
 
-Instance-level overrides can be set via constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be orthogonal and right-handed.
+Instance-level overrides can be set via constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be finite, non-zero, orthogonal and right-handed; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it.
 
 ## Methods
 

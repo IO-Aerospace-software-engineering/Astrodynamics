@@ -72,10 +72,10 @@ var pointing = new InstrumentPointingToAttitude(
 | `SecondaryAttitudeTarget` | Secondary `IAttitudeTarget` (null when using `ILocalizable`) |
 | `PrimaryBodyVector` | Spacecraft body-frame vector for primary constraint |
 | `SecondaryBodyVector` | Spacecraft body-frame vector for secondary constraint |
-| `MinimumVectorSeparation` | Minimum angle between body vectors (default 5 degrees) |
+| `MinimumVectorSeparation` | Minimum angle of the body vectors, and of the reference vectors, from collinear, in [1e-14, π/2] rad (default 5 degrees) |
 
 !!! warning
-    The primary and secondary body vectors (and reference vectors) must be at least 5 degrees apart; otherwise orientation computation is ill-conditioned.
+    The primary and secondary body vectors (and reference vectors) must be at least `MinimumVectorSeparation` (5 degrees by default) from collinear, parallel or antiparallel; otherwise orientation computation is ill-conditioned. Two vectors pass when the sine of their angle, |û × ŵ| of their unit vectors, is at least sin(separation): an angle in [separation, π − separation], free of the rounding of π − separation and of the resolution of acos near ±1, so that collinear vectors that round apart are rejected at every separation allowed: their sine is at most about (3 + √2)·2^-53 = 4.9e-16 for components collinear to their rounding (measured up to 2.4e-16), and the smallest separation is 1e-14 rad, below which such a pair passed with a roll set by rounding. A separation outside [1e-14, π/2], NaN included, throws `ArgumentOutOfRangeException` (`minimumVectorSeparation`) at construction; body vectors too close to collinear, zero or not finite throw `ArgumentException` at construction, and reference vectors too close to collinear, or not finite, `InvalidOperationException` in `ComputeOrientation` at the epoch where they are (fourth round of #668).
 
 ### Constructors
 
@@ -150,7 +150,7 @@ Each spacecraft has configurable body axes that define the physical orientation 
 | `Spacecraft.Up` | Zenith-facing | +Z |
 | `Spacecraft.Down` | Nadir-facing | -Z |
 
-Instance-level overrides can be set via the `Spacecraft` constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be orthogonal and right-handed. The axes are read on the spacecraft that carries the engine's tank, at execution, with the static axes as fallback while the tank is on no spacecraft, which a read outside a propagation alone meets (a propagation of an attitude whose tank is not the propagated spacecraft's throws, see `Engine` above, #676): the single-vector attitudes (`NadirAttitude`, `ZenithAttitude`, `ProgradeAttitude`, `RetrogradeAttitude`, `NormalAttitude`, `AntiNormalAttitude`) and the attitude of an impulse point `BodyFront` (`GetBodyFront()`), `TriadAttitude.CreateLVLH` points `BodyDown` and `BodyFront`, and `TriadAttitude.CreateProgradeWithSunTracking` `BodyFront` and `BodyUp` (#677). The `TriadAttitude` constructors take literal body vectors: pass `sc.BodyFront`, `sc.BodyUp`, ... for a spacecraft's own axes. `InstrumentPointingToAttitude` points the instrument's boresight.
+Instance-level overrides can be set via the `Spacecraft` constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be finite, non-zero, orthogonal and right-handed; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it. The axes are read on the spacecraft that carries the engine's tank, at execution, with the static axes as fallback while the tank is on no spacecraft, which a read outside a propagation alone meets (a propagation of an attitude whose tank is not the propagated spacecraft's throws, see `Engine` above, #676): the single-vector attitudes (`NadirAttitude`, `ZenithAttitude`, `ProgradeAttitude`, `RetrogradeAttitude`, `NormalAttitude`, `AntiNormalAttitude`) and the attitude of an impulse point `BodyFront` (`GetBodyFront()`), `TriadAttitude.CreateLVLH` points `BodyDown` and `BodyFront`, and `TriadAttitude.CreateProgradeWithSunTracking` `BodyFront` and `BodyUp` (#677). The `TriadAttitude` constructors take literal body vectors: pass `sc.BodyFront`, `sc.BodyUp`, ... for a spacecraft's own axes. `InstrumentPointingToAttitude` points the instrument's boresight.
 
 ## The attitude timeline
 

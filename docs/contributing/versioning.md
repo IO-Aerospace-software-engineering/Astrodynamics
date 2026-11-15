@@ -1999,6 +1999,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   result parallel to the input, the quaternion's rotation against its matrix; `StateOrientationTests`,
   `LambertSolverTests` and `CelestialBodyTests` the kept conventions; `SpacecraftTests` each zero axis (Changed,
   Breaking, below).
+- **A spacecraft accepted body axes that are not finite** (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The constructor rejected only an axis of
+  magnitude 0 (#680, above): an axis with a NaN or infinite component has a magnitude of NaN or +∞, so it was
+  normalized to NaN components (`bodyFront` (0, NaN, 0) gave (NaN, NaN, NaN), (0, +∞, 0) gave (0, NaN, 0)), and every
+  orthogonality and handedness comparison of a NaN is false, so the spacecraft was built with NaN axes. Its attitudes
+  were then NaN (`ProgradeAttitude` and `CreateLVLH` with a NaN front, `CreateLVLH` with a −∞ up) or silently wrong where
+  the law reads another axis (the identity for `ProgradeAttitude` with a NaN right). The `Spacecraft` constructor now
+  throws `ArgumentException` naming the first of `bodyFront`, `bodyRight` and `bodyUp` with a component that is not
+  finite, before the clock is attached, so a throw leaves the clock free (#676). Every finite axis is unchanged, bit
+  for bit. `SpacecraftTests` checks NaN, +∞ and −∞ in each axis, given alone or with the others, the parameter named,
+  and that the clock is free after the throw.
 - **`TriadAttitude.CreateLVLH` and `CreateProgradeWithSunTracking` pointed the static body axes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). A
   spacecraft built with `bodyFront`, `bodyRight` and `bodyUp` got `Spacecraft.Down` and `Front` (LVLH), or `Front` and
   `Up` (prograde with Sun tracking), whatever its own axes: with the front +X, the right −Y and the up +Z its front was
@@ -2637,6 +2647,29 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a type named through a namespace relative to `IO.Astrodynamics` and for a `TriadAttitude` of minimum separation 0.
   The block and region reading of `DeveloperGuideExamplesTests` is shared (`DocumentationCodeBlocks`). Documentation
   only: no library result moves.
+- **`TriadAttitude` let collinear vectors through, and accepted a separation that switched its checks off** (fourth
+  round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The constructors stored `minimumVectorSeparation` unchecked, and the body vectors (at construction)
+  and the reference directions (in `ComputeOrientation`) were rejected when acos of their clamped cosine was below the
+  separation or above π − separation. A separation of 0, a negative one or NaN made both tests false for every pair:
+  antiparallel or parallel body vectors, and nadir with zenith or with the Earth's direction, gave the same arbitrary
+  roll (a half turn about (−1, 0, 1)/√2 on a LEO, the primary on its target), without error, as the TRIAD of
+  `docs/tutorials/maneuvers.md` met (above). A tiny positive separation did not close it: π − 1e-300 rounds to π, so
+  exactly antiparallel vectors passed, and acos cannot resolve angles near 0 or π, so collinear vectors that round apart
+  (v and fl(k v)) were measured up to 3.3e-8 rad from 0 or π (23.8 % of 2e5 random pairs) and passed any separation
+  below that. A separation above π/2 rejected every pair, perpendicular ones included, as "too close to collinear". A
+  NaN body vector passed at the default separation and gave a NaN quaternion. Two vectors now pass when the sine of
+  their angle, |û × ŵ| of their unit vectors, is at least sin(separation): the same angles away from the boundary, but
+  without the rounding of π − separation and the resolution of acos. Vectors collinear to the rounding of their
+  components have a sine of at most about (3 + √2)·2^-53 = 4.9e-16 (measured up to 2.4e-16 on the same pairs, 1.8e-16
+  on 2e4 others), which a separation below it still let through (v and fl(2.9 v) at 1e-17 gave one roll, fl(−2.9 v)
+  another), so the separation is now in [1e-14, π/2] rad, 20 times that bound, and a collinear, zero or non-finite pair
+  is rejected at every separation allowed (Known limitations: subnormal components). Every attitude accepted is
+  unchanged, bit for bit: the triads, the matrices and the quaternion are computed as before. `TriadAttitudeTests`
+  checks each separation out of range (0, −0, −0.1, NaN, ±∞, 2, the double above π/2, 1e-300, 1e-17 and the double
+  below 1e-14) on the four constructors, 1e-14 accepted with the attitude of the default separation, π/2 on
+  perpendicular vectors and targets against the closed form, antiparallel body vectors and targets and parallel targets
+  at 1e-14, 2e4 random pairs v and fl(k v) at 1e-14, v and fl(±2.9 v), fl(±1.1 v) (acos 2.1e-8 and 1.5e-8 rad from
+  collinear) at 1e-12, and NaN and infinite body vectors (Changed, Breaking, below).
 
 **Changed**
 
@@ -3580,6 +3613,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   kernels that redefine nothing of `Data/SolarSystem` nothing moves, bit for bit. Migration: to keep a body's data across
   changes of the pool, build it (`new CelestialBody(id)`), which reads the kernels once.
 
+- **Breaking: `TriadAttitude` throws for a separation outside [1e-14, π/2] rad and for collinear or non-finite vectors
+  at every separation allowed** (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above). The four public constructors throw
+  `ArgumentOutOfRangeException` (`minimumVectorSeparation`) for a separation below 1e-14 rad, NaN, infinite or above
+  π/2, where 0, a negative separation and NaN were accepted and turned the collinearity checks off, a positive one below
+  1e-14 let collinear vectors that round apart through, and a separation above π/2 threw `ArgumentException` for every
+  pair of body vectors. The test of the separation is now the sine of the
+  angle, so exactly antiparallel vectors at a separation below about 2.2e-16 rad, collinear vectors that round apart at
+  a separation below about 3.4e-8 rad, and body vectors with a component that is not finite throw `ArgumentException` at
+  construction (where an attitude with an arbitrary roll, or a NaN quaternion, came out), and such reference directions
+  `InvalidOperationException` in `ComputeOrientation`; at exactly the boundary angle the decision can differ by the
+  rounding of sin against acos. Every accepted attitude is unchanged, bit for bit; the factories and the default 5
+  degrees are unchanged. Migration: pass a separation in [1e-14, π/2] rad, the default 5 degrees where 0 was passed to
+  turn the check off, and body vectors and targets that are not collinear.
 - **Breaking: a propagation of a star replaces its states** (third round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above): `Star.Propagate`,
   `Star.PropagateAsync` and `Scenario.SimulateAsync` keep the states of the last propagation only, as
@@ -3724,7 +3770,10 @@ not listed.
   nadir at 60 s outputs in LEO and up to 1.04° near the roll singularity, a TRIAD law up to 3.8e-4 rad on a Molniya;
   shorten the output step where it matters. `InstrumentPointingToAttitude` points at a celestial target geometrically
   although it requests LT (the Moon 4.2e-5 to 4.5e-5 rad, about 40 km, from its light-time direction from LEO); a `Site`
-  target is correct.
+  target is correct. `TriadAttitude` rejects vectors collinear to the rounding of normal components at every separation
+  (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)), but a
+  subnormal component (below about 2.2e-308) rounds by an absolute 4.9e-324: v = (1, 2, 3)·1e-320 and fl(0.7 v) have a
+  sine of 1.1e-4 and pass a separation below that, with a roll set by rounding; give body vectors of a normal magnitude.
 - **OPM export** ([#339](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/339),
   [#658](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/658)). `Spacecraft.ToOpm` writes the
   two-body (or SGP4) motion of the initial orbit, not the propagated state, with the mass and the maneuvers after the

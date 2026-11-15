@@ -633,7 +633,7 @@ The `TriadAttitude` class implements the TRIAD algorithm for fully-constrained 3
 **Key Concepts**
 - **Primary constraint**: Aligns a spacecraft body vector with the direction to a primary target
 - **Secondary constraint**: Constrains roll by orienting a secondary body vector toward a secondary target (as much as possible while maintaining primary constraint)
-- **Minimum vector separation**: Default 5 degrees; prevents numerical instability from near-collinear vectors
+- **Minimum vector separation**: Default 5 degrees, in [1e-14, π/2] rad (another separation throws `ArgumentOutOfRangeException`); prevents numerical instability from near-collinear vectors, tested as the sine of their angle, so collinear vectors (to the rounding of their components: a sine of at most about 4.9e-16), zero and non-finite vectors throw at every separation allowed (fourth round of #668)
 
 **Spacecraft Body Frame Convention**
 
@@ -647,7 +647,7 @@ Default body axes (static fields, backward-compatible):
 - `BodyFront`, `BodyRight`, `BodyUp` — instance properties (default to static values)
 - `BodyBack`, `BodyLeft`, `BodyDown` — computed inverses
 - Passed via optional constructor parameters: `bodyFront`, `bodyRight`, `bodyUp`
-- Validation enforces orthogonality and right-handedness when custom axes are provided
+- Validation enforces orthogonality and right-handedness when custom axes are provided; a zero axis, or one with a component that is not finite, throws `ArgumentException` naming `bodyFront`, `bodyRight` or `bodyUp` (#680, fourth round of #668)
 - The axes are read on the spacecraft of the engine's tank at execution, with the static axes as fallback while the tank is on no spacecraft (a read outside a propagation only: a propagation whose maneuver's tank is not the propagated spacecraft's throws, `Spacecraft.CheckManeuverEngines`, #676): the single-vector attitudes and the impulse attitude point `BodyFront` through `GetBodyFront()`, `TriadAttitude.CreateLVLH` points `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp`, all through the one rule of `Maneuver.GetBodyAxis` (`private protected`, no public surface) (#677); the `TriadAttitude` constructors take literal body vectors (pass `spacecraft.BodyFront`, ... for the instance axes)
 
 ```csharp
@@ -838,9 +838,9 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
    - Use `TriadAttitude` for fully-constrained orientation (eliminates roll ambiguity)
    - Use single-vector attitudes (`NadirAttitude`, `ProgradeAttitude`, `NormalAttitude`, etc.) only when roll is unconstrained
    - Use `NormalAttitude` / `AntiNormalAttitude` for plane-change burns (h = r × v)
-   - Ensure body vectors and reference vectors are not collinear (minimum 5 degrees separation)
+   - Ensure body vectors and reference vectors are not collinear (`MinimumVectorSeparation`, 5 degrees by default, in [1e-14, π/2] rad)
    - Use `Spacecraft.Front`, `Spacecraft.Up`, etc. for standard body frame directions; use instance `BodyFront`, `BodyRight`, `BodyUp` for non-standard frames
-   - Custom body axes must be orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
+   - Custom body axes must be finite, non-zero, orthogonal and right-handed (`BodyRight.Cross(BodyFront) == BodyUp`)
    - The single-vector attitudes and the impulse attitude use `GetBodyFront()`, the TRIAD factories `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp`, all on the engine's spacecraft with static fallback outside a propagation (in one, the tank is the propagated spacecraft's, #676); the `TriadAttitude` constructors take literal vectors
    - Use `IAttitudeTarget` with `TriadAttitude` to mix orbital directions (`OrbitalDirectionTarget.Prograde`, etc.) and celestial targets (`CelestialAttitudeTarget`)
    - Use factory methods `TriadAttitude.CreateLVLH()` and `CreateProgradeWithSunTracking()` for common operational attitudes (on the spacecraft's instance axes)

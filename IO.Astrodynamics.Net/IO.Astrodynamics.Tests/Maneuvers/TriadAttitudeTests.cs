@@ -1472,4 +1472,209 @@ public class TriadAttitudeTests
     }
 
     #endregion
+
+    #region Minimum vector separation (fourth round of #668)
+
+    // The smallest separation, 1e-14 rad: the sine of two vectors collinear to the rounding of their components, computed
+    // as |û × ŵ|, is at most about (3 + √2) u = 4.9e-16 (u = 2^-53: the input's rounding, that of each normalization and
+    // that of the cross product), 20 times less
+    private const double LowestSeparation = 1e-14;
+
+    // A separation is in [1e-14, π/2] rad: 0, a negative or a NaN separation switched off both collinearity checks (every
+    // degenerate triad gave an arbitrary roll), one below the rounding of the sine accepted collinear vectors that round
+    // apart (v and fl(2.9 v) at 1e-17 gave a roll set by rounding, and fl(-2.9 v) another), and one above π/2 rejected
+    // every pair, perpendicular ones included, as "too close to collinear"
+    public static TheoryData<double> SeparationsOutOfRange() => new()
+    {
+        0.0, -0.0, -0.1, double.NaN, double.PositiveInfinity, double.NegativeInfinity, 2.0, System.Math.BitIncrement(System.Math.PI / 2.0),
+        1e-300, 1e-17, System.Math.BitDecrement(LowestSeparation)
+    };
+
+    [Theory]
+    [MemberData(nameof(SeparationsOutOfRange))]
+    public void Separation_OutOfRange_Throws(double separation)
+    {
+        var (spc, _) = CreateTestSpacecraft();
+        spc.AddCircularInstrument(-667600, "CAM1", "mod1", 1.5, Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);
+        spc.AddCircularInstrument(-667601, "CAM2", "mod1", 1.5, Vector3.VectorX, Vector3.VectorY, Vector3.Zero);
+        var instruments = spc.Instruments.ToList();
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var hold = TimeSpan.FromHours(1.0);
+        var engine = spc.Engines.First();
+
+        var constructors = new Func<TriadAttitude>[]
+        {
+            () => new TriadAttitude(epoch, hold, instruments[0], TestHelpers.MoonAtJ2000, TestHelpers.Sun, engine, separation),
+            () => new TriadAttitude(epoch, hold, instruments[0], TestHelpers.MoonAtJ2000, instruments[1], TestHelpers.Sun, engine, separation),
+            () => new TriadAttitude(epoch, hold, Vector3.VectorZ, TestHelpers.MoonAtJ2000, Vector3.VectorY, TestHelpers.Sun, engine, separation),
+            () => new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, hold, Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY,
+                OrbitalDirectionTarget.Prograde, engine, separation)
+        };
+
+        foreach (var constructor in constructors)
+        {
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(constructor);
+            Assert.Equal("minimumVectorSeparation", exception.ParamName);
+        }
+    }
+
+    // Provisional, twice the Linux x64 worst until the three platforms' CI: the primary angle is 2.220E-016 rad and the
+    // secondary 0.000E+000 rad on Linux x64 (the triads of the axis vectors and of the targets, (-1, 0, 0) and (0, 1, 0),
+    // are exact, so the matrix is; the quaternion's square root and the rotation round). The angles are
+    // atan2(|a × b|, a · b), which resolves them to the rounding, where acos of the cosine cannot tell an angle below
+    // about 1.5e-8 rad from 0
+    private const double HalfPiAttitudeAngle = 4.5e-16;
+
+    private static double ResolvedAngle(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
+
+    // π/2 is the largest separation: only perpendicular vectors meet it, |Z × Y| = 1 = sin(π/2) exactly. The closed form of
+    // the TRIAD for perpendicular body vectors on perpendicular targets puts each body vector on its target
+    [Fact]
+    public void Separation_HalfPi_PerpendicularVectors_IsAccepted()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+        var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0), Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde,
+            spc.Engines.First(), System.Math.PI / 2.0);
+
+        var orientation = maneuver.ComputeOrientation(orbitalParams);
+
+        var nadir = orbitalParams.Position.Inverse().Normalize();
+        var prograde = orbitalParams.Velocity.Normalize();
+        double primaryAngle = ResolvedAngle(Vector3.VectorZ.Rotate(orientation), nadir);
+        double secondaryAngle = ResolvedAngle(Vector3.VectorY.Rotate(orientation), prograde);
+        _output.WriteLine($"MEASURE half-pi primary angle {primaryAngle:E3} rad, secondary angle {secondaryAngle:E3} rad");
+        Assert.Equal(System.Math.PI / 2.0, maneuver.MinimumVectorSeparation);
+        Assert.True(primaryAngle <= HalfPiAttitudeAngle, $"primary angle {primaryAngle:E3} rad");
+        Assert.True(secondaryAngle <= HalfPiAttitudeAngle, $"secondary angle {secondaryAngle:E3} rad");
+    }
+
+    // The smallest separation is accepted, on perpendicular vectors and on a pair whose sine, 1e-12, is above it but far
+    // below the resolution of acos near 1
+    [Fact]
+    public void Separation_LowestSeparation_IsAccepted()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var perpendicular = new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromSeconds(10.0), Vector3.VectorZ,
+            OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde, spc.Engines.First(), LowestSeparation);
+        var close = new TriadAttitude(epoch, TimeSpan.FromHours(1.0), Vector3.VectorZ, TestHelpers.MoonAtJ2000,
+            new Vector3(1e-12, 0.0, 1.0), TestHelpers.Sun, spc.Engines.First(), LowestSeparation);
+
+        Assert.Equal(LowestSeparation, perpendicular.MinimumVectorSeparation);
+        Assert.Equal(LowestSeparation, close.MinimumVectorSeparation);
+        // The separation only decides which pairs pass: the attitude is that of the default separation, bit for bit
+        var atDefault = new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromSeconds(10.0), Vector3.VectorZ,
+            OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde, spc.Engines.First()).ComputeOrientation(orbitalParams);
+        var atLowest = perpendicular.ComputeOrientation(orbitalParams);
+        Assert.Equal(atDefault.W, atLowest.W);
+        Assert.Equal(atDefault.VectorPart, atLowest.VectorPart);
+    }
+
+    // Antiparallel body vectors at the smallest separation: π − 1e-300 rounded to π, so the angle π passed the former check
+    // at 1e-300, which is now out of range
+    [Fact]
+    public void AntiparallelBodyVectors_TinySeparation_Throws()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0), Vector3.VectorZ, TestHelpers.MoonAtJ2000, Vector3.VectorZ.Inverse(), TestHelpers.Sun,
+            spc.Engines.First(), LowestSeparation));
+    }
+
+    // Collinear body vectors that round apart, at the smallest separation: v and fl(k v) for random v and k, collinear by
+    // construction, must all throw. The worst sine |û × ŵ| is printed (a record of the margin, not a threshold)
+    [Fact]
+    public void RandomRoundedCollinearBodyVectors_LowestSeparation_Throw()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+        var engine = spc.Engines.First();
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var random = new Random(668);
+        double Component() => (random.NextDouble() * 2.0 - 1.0) * System.Math.Pow(10.0, random.Next(-3, 4));
+        double worstSine = 0.0;
+        int rejected = 0;
+        const int pairs = 20000;
+        for (int i = 0; i < pairs; i++)
+        {
+            var v = new Vector3(Component(), Component(), Component());
+            double k = (random.Next(2) == 0 ? -1.0 : 1.0) * System.Math.Pow(10.0, random.NextDouble() * 12.0 - 6.0);
+            var w = v * k;
+            worstSine = System.Math.Max(worstSine, v.NormalizeOrZero().Cross(w.NormalizeOrZero()).Magnitude());
+            try
+            {
+                _ = new TriadAttitude(epoch, TimeSpan.FromHours(1.0), v, TestHelpers.MoonAtJ2000, w, TestHelpers.Sun, engine, LowestSeparation);
+            }
+            catch (ArgumentException e) when (e is not ArgumentOutOfRangeException)
+            {
+                rejected++;
+            }
+        }
+
+        _output.WriteLine($"MEASURE worst sine of v and fl(k v) over {pairs} pairs {worstSine:E3}, sin(lowest separation) {System.Math.Sin(LowestSeparation):E3}");
+        Assert.Equal(pairs, rejected);
+    }
+
+    // Collinear targets at the smallest separation: nadir and zenith (antiparallel, accepted through the rounding of
+    // π − 1e-300, which gave an arbitrary roll), nadir and the direction of the Earth (parallel)
+    [Theory]
+    [InlineData("antiparallel")]
+    [InlineData("parallel")]
+    public void CollinearTargets_TinySeparation_Throws(string geometry)
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+        IAttitudeTarget secondary = geometry == "antiparallel"
+            ? OrbitalDirectionTarget.Zenith
+            : new CelestialAttitudeTarget(TestHelpers.EarthAtJ2000);
+        var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromSeconds(10.0), Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY, secondary,
+            spc.Engines.First(), LowestSeparation);
+
+        Assert.Throws<InvalidOperationException>(() => maneuver.ComputeOrientation(orbitalParams));
+    }
+
+    // Collinear body vectors that round apart: v and fl(k v) are collinear, but the acos of their rounded cosine leaves 0 or
+    // π by about 2e-8 rad (the resolution of acos near ±1), so a separation below that accepted them and the roll was set by
+    // roundoff. The sine of their angle, |û × ŵ|, stays at the level of the rounding
+    [Theory]
+    [InlineData(2.9)]
+    [InlineData(-2.9)]
+    [InlineData(1.1)]
+    [InlineData(-1.1)]
+    public void RoundedCollinearBodyVectors_Throw(double k)
+    {
+        var (spc, _) = CreateTestSpacecraft();
+        var v = new Vector3(1.0, 2.0, 3.0);
+        var w = v * k;
+        double angle = v.Angle(w);
+        double fromCollinear = System.Math.Min(angle, System.Math.PI - angle);
+        _output.WriteLine($"MEASURE acos angle of v and {k} v from collinear {fromCollinear:E3} rad");
+        Assert.True(fromCollinear > 1e-12, $"the pair is not one that acos resolves apart: {fromCollinear:E3} rad");
+
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
+            TimeSpan.FromHours(1.0), v, TestHelpers.MoonAtJ2000, w, TestHelpers.Sun, spc.Engines.First(), 1e-12));
+    }
+
+    // A body vector with a component that is not finite has no direction: the NaN angle passed every comparison and the
+    // attitude was a NaN quaternion
+    [Theory]
+    [InlineData(double.NaN, true)]
+    [InlineData(double.NaN, false)]
+    [InlineData(double.PositiveInfinity, true)]
+    [InlineData(double.NegativeInfinity, false)]
+    public void NonFiniteBodyVector_Throws(double value, bool primary)
+    {
+        var (spc, _) = CreateTestSpacecraft();
+        var nonFinite = new Vector3(0.0, 0.0, value);
+        var primaryVector = primary ? nonFinite : Vector3.VectorZ;
+        var secondaryVector = primary ? Vector3.VectorY : nonFinite;
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(epoch, TimeSpan.FromHours(1.0), primaryVector, TestHelpers.MoonAtJ2000,
+            secondaryVector, TestHelpers.Sun, spc.Engines.First()));
+        Assert.Throws<ArgumentException>(() => new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromHours(1.0), primaryVector,
+            OrbitalDirectionTarget.Nadir, secondaryVector, OrbitalDirectionTarget.Prograde, spc.Engines.First()));
+    }
+
+    #endregion
 }

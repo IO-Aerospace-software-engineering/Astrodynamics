@@ -535,6 +535,67 @@ namespace IO.Astrodynamics.Tests.Body
             Assert.Equal(Vector3.VectorY, spc.BodyFront);
         }
 
+        // Fourth round of #668: a body axis with a component that is not finite has no direction. Its magnitude was NaN or
+        // +Infinity, not 0, so it was normalized to NaN components, which every orthogonality and handedness comparison let
+        // through: the spacecraft was built with NaN axes and its attitudes were NaN or silently the identity
+        private static Vector3? NonFiniteAxis(string axis, double value) => axis switch
+        {
+            "Y" => Vector3.VectorY,
+            "X" => Vector3.VectorX,
+            "Z" => Vector3.VectorZ,
+            "Yx" => new Vector3(0.0, value, 0.0),
+            "Xx" => new Vector3(value, 0.0, 0.0),
+            "Zx" => new Vector3(0.0, 0.0, value),
+            _ => null
+        };
+
+        public static TheoryData<string, string, string, double, string> NonFiniteBodyAxes()
+        {
+            var data = new TheoryData<string, string, string, double, string>();
+            foreach (var value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+            {
+                data.Add("Yx", "X", "Z", value, "bodyFront");
+                data.Add("Y", "Xx", "Z", value, "bodyRight");
+                data.Add("Y", "X", "Zx", value, "bodyUp");
+                data.Add("Yx", null, null, value, "bodyFront");
+                data.Add(null, "Xx", null, value, "bodyRight");
+                data.Add(null, null, "Zx", value, "bodyUp");
+                data.Add("Yx", "Xx", "Zx", value, "bodyFront");
+                data.Add("Y", "Xx", "Zx", value, "bodyRight");
+            }
+
+            return data;
+        }
+
+        [Theory]
+        [MemberData(nameof(NonFiniteBodyAxes))]
+        public void NonFiniteBodyAxis_ThrowsArgumentException(string front, string right, string up, double value, string parameter)
+        {
+            Clock clk = new Clock("My clock", 256);
+            var exception = Assert.Throws<ArgumentException>(() => new Spacecraft(-1007, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
+                bodyFront: NonFiniteAxis(front, value), bodyRight: NonFiniteAxis(right, value), bodyUp: NonFiniteAxis(up, value)));
+            Assert.Equal(parameter, exception.ParamName);
+        }
+
+        // The check runs before the clock is attached (#676): a spacecraft of another NAIF id can still take the clock
+        [Fact]
+        public void NonFiniteBodyAxis_LeavesTheClockFree()
+        {
+            Clock clk = new Clock("My clock", 256);
+            Assert.Throws<ArgumentException>(() => new Spacecraft(-1007, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
+                bodyFront: new Vector3(0.0, double.NaN, 0.0)));
+            Assert.Null(clk.Spacecraft);
+
+            var spc = new Spacecraft(-1008, "SC2", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF));
+            Assert.Same(spc, clk.Spacecraft);
+        }
+
         [Fact]
         public void CustomBodyAxes_PartialSpecification_ThrowsWhenInvalid()
         {
