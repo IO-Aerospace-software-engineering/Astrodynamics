@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace IO.Astrodynamics.Math
 {
@@ -33,8 +34,9 @@ namespace IO.Astrodynamics.Math
         /// <remarks>
         /// The axis is divided by its magnitude (#688; before 11.0.0 it was taken as it was, so a non-unit axis gave a
         /// non-unit quaternion, whose rotation of a vector was scaled by |q|² and turned by another angle). A unit axis
-        /// (|axis| = 1 exactly) gives the same quaternion bit for bit; an axis outside about 1e-150 to 1e150 is scaled by
-        /// its largest component first, so that its magnitude is represented.
+        /// (|axis| = 1 exactly) gives the same quaternion bit for bit; an axis whose squared components would overflow or
+        /// lose their digits (a component above about 1.34e154, or all below about 1e-150) is scaled by the power of two of
+        /// its largest component first (<see cref="Vector3.Normalize"/>), so that its magnitude is represented.
         /// </remarks>
         /// <exception cref="ArgumentException">The axis is zero or has a component that is not finite (NaN or infinite): it
         /// has no direction (#688).</exception>
@@ -59,8 +61,8 @@ namespace IO.Astrodynamics.Math
             return new Quaternion(c, s * axis.X, s * axis.Y, s * axis.Z);
         }
 
-        // The unit vector of a finite non-zero axis; its magnitude is computed on the axis scaled by its largest component
-        // when the squares of its components would overflow or lose their digits below the normal range
+        // The unit vector of a finite non-zero axis, scaled first by the power of two of its largest component when the
+        // squares of its components would overflow or lose their digits below the normal range (Vector3.Normalize)
         private static Vector3 UnitAxis(in Vector3 axis)
         {
             if (!double.IsFinite(axis.X) || !double.IsFinite(axis.Y) || !double.IsFinite(axis.Z))
@@ -68,19 +70,12 @@ namespace IO.Astrodynamics.Math
                 throw new ArgumentException($"The rotation axis {axis} has a component that is not finite and no direction.", nameof(axis));
             }
 
-            double largest = System.Math.Max(System.Math.Abs(axis.X), System.Math.Max(System.Math.Abs(axis.Y), System.Math.Abs(axis.Z)));
-            if (largest == 0.0)
+            if (axis.X == 0.0 && axis.Y == 0.0 && axis.Z == 0.0)
             {
                 throw new ArgumentException("The rotation axis is the zero vector and has no direction.", nameof(axis));
             }
 
-            if (largest > 1e-150 && largest < 1e150)
-            {
-                return axis / axis.Magnitude();
-            }
-
-            var scaled = axis / largest;
-            return scaled / scaled.Magnitude();
+            return axis.Normalize();
         }
 
         public Quaternion(double w, double x, double y, double z)
@@ -89,56 +84,138 @@ namespace IO.Astrodynamics.Math
             VectorPart = new Vector3(x, y, z);
         }
 
+        /// <summary>
+        /// The magnitude of this quaternion, √(w² + x² + y² + z²).
+        /// </summary>
+        /// <remarks>
+        /// A quaternion whose squared components would overflow or lose their digits below the normal range (a component
+        /// above about 1.34e154, or all below about 1e-150) is first scaled by the power of two of its largest component,
+        /// exactly, so its magnitude is the representable one (third round of #668: +Infinity or 0 before 11.0.0). Every
+        /// other quaternion gives the unscaled magnitude, bit for bit. A NaN component gives NaN, an infinite one +Infinity.
+        /// </remarks>
         public double Magnitude()
         {
-            return System.Math.Sqrt(W * W + VectorPart.X * VectorPart.X + VectorPart.Y * VectorPart.Y + VectorPart.Z * VectorPart.Z);
+            double s = MagnitudeSquared();
+            if (s >= Vector3.OrdinaryLowest && s <= double.MaxValue)
+            {
+                return System.Math.Sqrt(s);
+            }
+
+            return ScaledMagnitude(s);
+        }
+
+        private double MagnitudeSquared()
+        {
+            return W * W + VectorPart.X * VectorPart.X + VectorPart.Y * VectorPart.Y + VectorPart.Z * VectorPart.Z;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private double ScaledMagnitude(double s)
+        {
+            if (!IsFinite() || IsZero())
+            {
+                return System.Math.Sqrt(s);
+            }
+
+            int k = System.Math.ILogB(LargestComponent());
+            return System.Math.ScaleB(System.Math.Sqrt(ScaleB(-k).MagnitudeSquared()), k);
         }
 
         /// <summary>
         /// The unit quaternion of this quaternion.
         /// </summary>
-        /// <exception cref="InvalidOperationException">The magnitude is 0 (#680; the quaternion itself was returned before
-        /// 11.0.0, and a vector rotated by it was zero): a zero quaternion, or one whose components are all too small for
-        /// their squares to be represented (below about 1.5e-162). A quaternion of magnitude 0 is no rotation.</exception>
+        /// <remarks>
+        /// Every finite non-zero quaternion has one: a quaternion whose squared components would overflow or lose their
+        /// digits (a component above about 1.34e154, or all below about 1e-150) is first scaled by the power of two of its
+        /// largest component, exactly (third round of #668: such quaternions gave the zero quaternion or threw before
+        /// 11.0.0). Every other quaternion gives the quaternion over its unscaled magnitude, bit for bit.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The quaternion is zero (#680; the quaternion itself was returned
+        /// before 11.0.0, and a vector rotated by it was zero), or has a component that is not finite (third round of #668;
+        /// NaN components were returned before 11.0.0): it is no rotation.</exception>
         public Quaternion Normalize()
         {
-            double m = Magnitude();
-            if (m == 0)
+            double s = MagnitudeSquared();
+            if (s >= Vector3.OrdinaryLowest && s <= double.MaxValue)
+            {
+                double m = System.Math.Sqrt(s);
+                return new Quaternion(W / m, VectorPart / m);
+            }
+
+            if (!IsFinite())
+            {
+                throw new InvalidOperationException($"The quaternion {this} has a component that is not finite and is no rotation.");
+            }
+
+            if (IsZero())
             {
                 throw new InvalidOperationException($"The quaternion {this} has a magnitude of 0 and is no rotation.");
             }
 
-            return new Quaternion(W / m, VectorPart / m);
+            return ScaledUnit();
         }
 
         /// <summary>
-        /// The unit quaternion of this quaternion, or this quaternion when its magnitude is 0: the library's own
-        /// normalizations, bit for bit the former <see cref="Normalize"/> (#680).
+        /// The unit quaternion of this quaternion, or this quaternion when it is zero: the library's own normalizations, bit
+        /// for bit the former <see cref="Normalize"/> (#680) on every quaternion whose sum of squares lies in [1e-300,
+        /// double.MaxValue]; a quaternion with a component that is not finite keeps its former result (NaN components), and
+        /// any other finite non-zero quaternion is scaled as <see cref="Normalize"/> does (third round of #668).
         /// </summary>
         internal Quaternion NormalizeOrZero()
         {
-            double m = Magnitude();
-            if (m == 0)
+            double s = MagnitudeSquared();
+            if (s >= Vector3.OrdinaryLowest && s <= double.MaxValue || !IsFinite())
+            {
+                double m = System.Math.Sqrt(s);
+                return new Quaternion(W / m, VectorPart / m);
+            }
+
+            if (IsZero())
             {
                 return this;
             }
 
-            return new Quaternion(W / m, VectorPart / m);
+            return ScaledUnit();
         }
 
         /// <summary>
-        /// Whether this quaternion can be normalized: every component finite and a magnitude that is neither 0 nor
-        /// infinite.
+        /// Whether this quaternion can be normalized: every component finite and not all zero.
         /// </summary>
         internal bool IsNormalizable()
         {
-            if (!double.IsFinite(W) || !double.IsFinite(VectorPart.X) || !double.IsFinite(VectorPart.Y) || !double.IsFinite(VectorPart.Z))
-            {
-                return false;
-            }
+            return IsFinite() && !IsZero();
+        }
 
-            double m = Magnitude();
-            return m > 0.0 && double.IsFinite(m);
+        private bool IsFinite()
+        {
+            return double.IsFinite(W) && double.IsFinite(VectorPart.X) && double.IsFinite(VectorPart.Y) && double.IsFinite(VectorPart.Z);
+        }
+
+        private bool IsZero()
+        {
+            return W == 0.0 && VectorPart.X == 0.0 && VectorPart.Y == 0.0 && VectorPart.Z == 0.0;
+        }
+
+        private double LargestComponent()
+        {
+            return System.Math.Max(System.Math.Max(System.Math.Abs(W), System.Math.Abs(VectorPart.X)),
+                System.Math.Max(System.Math.Abs(VectorPart.Y), System.Math.Abs(VectorPart.Z)));
+        }
+
+        private Quaternion ScaleB(int n)
+        {
+            return new Quaternion(System.Math.ScaleB(W, n), System.Math.ScaleB(VectorPart.X, n), System.Math.ScaleB(VectorPart.Y, n),
+                System.Math.ScaleB(VectorPart.Z, n));
+        }
+
+        // The unit quaternion of a finite non-zero quaternion, scaled first by the power of two of its largest component
+        // (exact), so that its sum of squares lies in [1, 4]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private Quaternion ScaledUnit()
+        {
+            var scaled = ScaleB(-System.Math.ILogB(LargestComponent()));
+            double m = System.Math.Sqrt(scaled.MagnitudeSquared());
+            return new Quaternion(scaled.W / m, scaled.VectorPart / m);
         }
 
         // The unit quaternion of an argument (parameterName) or of this instance (parameterName null), which must be
@@ -150,7 +227,7 @@ namespace IO.Astrodynamics.Math
                 return q.Normalize();
             }
 
-            string message = $"The quaternion {q} has a magnitude of 0 or a component or magnitude that is not finite, and is no rotation.";
+            string message = $"The quaternion {q} is zero or has a component that is not finite, and is no rotation.";
             if (parameterName == null)
             {
                 throw new InvalidOperationException(message);
@@ -217,10 +294,11 @@ namespace IO.Astrodynamics.Math
         /// whose magnitude rounds to 1 gives the same result bit for bit; one that is unit only to rounding can move it by
         /// about 1e-16.
         /// </remarks>
-        /// <exception cref="InvalidOperationException">This quaternion has a magnitude of 0, or a component or a magnitude
-        /// that is not finite: it is no rotation.</exception>
-        /// <exception cref="ArgumentException"><paramref name="q"/> has a magnitude of 0, or a component or a magnitude that
-        /// is not finite.</exception>
+        /// <exception cref="InvalidOperationException">This quaternion is zero or has a component that is not finite: it is
+        /// no rotation. Every finite non-zero quaternion is one, its magnitude scaled as <see cref="Normalize"/> does (third
+        /// round of #668: outside about 1e-154 to 1e154 it threw before 11.0.0).</exception>
+        /// <exception cref="ArgumentException"><paramref name="q"/> is zero or has a component that is not
+        /// finite.</exception>
         public Quaternion SLERP(Quaternion q, double t)
         {
             var from = RequireUnit(this, null);
@@ -308,19 +386,30 @@ namespace IO.Astrodynamics.Math
         /// <remarks>
         /// The path is the chord from this quaternion to <paramref name="q2"/>, as given: no hemisphere is chosen, so from
         /// q to a quaternion of the other hemisphere it takes the longer rotation. A chord through zero has no rotation
-        /// there (#680's known limitation; the zero quaternion was returned before 11.0.0).
+        /// there (#680's known limitation; the zero quaternion was returned before 11.0.0). Every finite non-zero quaternion
+        /// is accepted: a chord that overflows (components of opposite signs near <see cref="double.MaxValue"/>) is
+        /// computed on both quaternions scaled by one power of two, and the result normalized as <see cref="Normalize"/>
+        /// does (third round of #668: outside about 1e-154 to 1e154 it threw before 11.0.0).
         /// </remarks>
-        /// <exception cref="InvalidOperationException">This quaternion has a magnitude of 0, or a component or a magnitude
-        /// that is not finite.</exception>
-        /// <exception cref="ArgumentException"><paramref name="q2"/> has a magnitude of 0, or a component or a magnitude that
-        /// is not finite; or the interpolated quaternion has a magnitude of 0 (<paramref name="q2"/> a negative multiple of
-        /// this quaternion, as −q at t = 0.5).</exception>
+        /// <exception cref="InvalidOperationException">This quaternion is zero or has a component that is not
+        /// finite.</exception>
+        /// <exception cref="ArgumentException"><paramref name="q2"/> is zero or has a component that is not finite; or the
+        /// interpolated quaternion is zero (<paramref name="q2"/> a negative multiple of this quaternion, as −q at
+        /// t = 0.5).</exception>
         public Quaternion Lerp(Quaternion q2, double t)
         {
             RequireUnit(this, null);
             RequireUnit(q2, nameof(q2));
 
             var result = LerpRaw(q2, t);
+            if (!result.IsFinite())
+            {
+                // The chord of two finite quaternions overflowed (components of opposite signs near double.MaxValue): the
+                // same chord on both scaled by one power of two, which leaves the direction of the result unchanged
+                int k = -System.Math.ILogB(System.Math.Max(LargestComponent(), q2.LargestComponent()));
+                result = ScaleB(k).LerpRaw(q2.ScaleB(k), t);
+            }
+
             if (!result.IsNormalizable())
             {
                 throw new ArgumentException(

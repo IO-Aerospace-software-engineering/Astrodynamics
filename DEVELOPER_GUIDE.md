@@ -1993,9 +1993,9 @@ if (atm2.Details is NrlmsiseDetails details)
 
 | Method | Description |
 |--------|-------------|
-| `Magnitude()` | Get vector length |
+| `Magnitude()` | Get vector length (scaled where the squares would overflow or underflow: the representable length of any finite vector) |
 | `MagnitudeSquared()` | Get squared length |
-| `Normalize()` | Get unit vector; `InvalidOperationException` for a magnitude of 0 (#680) |
+| `Normalize()` | Get unit vector of any finite non-zero vector; `InvalidOperationException` for the zero vector (#680) or a component that is not finite |
 | `Cross(Vector3 other)` | Cross product |
 | `Angle(Vector3 other)` | Angle between vectors (rad) |
 | `Inverse()` | Negate vector |
@@ -2032,7 +2032,7 @@ Rotation representation.
 | Method | Description |
 |--------|-------------|
 | `Magnitude()` | Get magnitude |
-| `Normalize()` | Get unit quaternion; `InvalidOperationException` for a magnitude of 0 (#680) |
+| `Normalize()` | Get unit quaternion of any finite non-zero quaternion; `InvalidOperationException` for the zero quaternion (#680) or a component that is not finite |
 | `Conjugate()` | Get conjugate |
 | `ToEuler()` | Convert to Euler angles |
 | `SLERP(Quaternion q, double t)` | Spherical linear interpolation of the rotations of the two quaternions, normalized first; throws for a zero or non-finite quaternion |

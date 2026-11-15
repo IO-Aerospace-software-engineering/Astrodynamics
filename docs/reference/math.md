@@ -22,13 +22,13 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 | `X`, `Y`, `Z` | Components |
 | `operator *(Vector3, Vector3)` | **Dot product** (not a `.Dot()` method) |
 | `Cross(Vector3)` | Cross product |
-| `Normalize()` | Unit vector; `InvalidOperationException` for a magnitude of 0, which includes components all below about 1.5e-162 (the magnitude is not scaled) (#680) |
-| `Magnitude()` | Euclidean length |
-| `MagnitudeSquared()` | Squared Euclidean length (avoids square root) |
+| `Normalize()` | Unit vector of any finite non-zero vector; `InvalidOperationException` for the zero vector (#680) or a component that is not finite (third round of #668). A vector whose squared components would overflow or lose their digits (a component above about 1.34e154, or all below about 1e-150) is first scaled exactly by the power of two of its largest component; every other vector is divided by its unscaled magnitude, bit for bit |
+| `Magnitude()` | Euclidean length, scaled as `Normalize()` is when the squares would overflow or underflow: +Infinity only above `double.MaxValue`, 0 only for the zero vector (third round of #668: +Infinity for (1e200, 0, 0) and 0 for (1e-170, 0, 0) before 11.0.0); NaN for a NaN component, +Infinity for an infinite one |
+| `MagnitudeSquared()` | Squared Euclidean length (avoids square root), unscaled: +Infinity above about 1.34e154, 0 below about 1.5e-162 |
 | `Inverse()` | Negated vector (no unary `-` operator) |
 | `Rotate(Quaternion)` | Rotate by quaternion |
-| `Angle(Vector3)` | Angle between two vectors (rad) |
-| `Angle(Vector3, Vector3)`, `Angle(Vector3, Plane)` | Signed angle about a plane normal of any finite non-zero length, atan2((a × b) · n̂, a · b); `ArgumentException` (`plane`) for a zero or non-finite normal (#680's known limitation) |
+| `Angle(Vector3)` | Angle between two vectors (rad), in [0, π]; 0 when either is zero, NaN for a non-finite component; vectors outside about 1e-150 to 1e150 compared through their scaled unit vectors (third round of #668: 0 or NaN before 11.0.0) |
+| `Angle(Vector3, Vector3)`, `Angle(Vector3, Plane)` | Signed angle about a plane normal of any finite non-zero length (a tiny or huge one included, third round of #668), atan2((a × b) · n̂, a · b); `ArgumentException` (`plane`) for a zero or non-finite normal (#680's known limitation) |
 | `To(Vector3)` | Unit quaternion of the shortest rotation from the direction of this vector to the direction of the target: the identity for the same direction, a half turn (w = 0) about a perpendicular axis for opposite directions (also when they are collinear in doubles and `Angle` is not exactly π); lengths of any finite non-zero size; `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`vector`) for a zero or non-finite target (review of #680's known limitation; the identity, NaN or the zero quaternion before 11.0.0). Opposite vectors whose cross product is a rounding residue can still miss the target |
 | `LinearInterpolation(Vector3, double)` | Linear interpolation between this and another vector |
 | `operator +(Vector3, Vector3)` | Vector addition |
@@ -67,12 +67,12 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | Member | Description |
 |--------|-------------|
 | `W`, `VectorPart` | Scalar and vector components |
-| `Magnitude()` | Quaternion magnitude |
+| `Magnitude()` | Quaternion magnitude, scaled as `Normalize()` is when the squares would overflow or underflow (third round of #668) |
 | `Conjugate()` | Inverse rotation |
-| `Normalize()` | Unit quaternion; `InvalidOperationException` for a magnitude of 0 (#680) |
+| `Normalize()` | Unit quaternion of any finite non-zero quaternion; `InvalidOperationException` for the zero quaternion (#680) or a component that is not finite (third round of #668); scaled exactly by the power of two of its largest component outside about 1e-154 to 1e154, bit for bit the quaternion over its unscaled magnitude otherwise |
 | `ToEuler()` | Convert to Euler angles (Vector3) |
-| `SLERP(Quaternion, double)` | Spherical linear interpolation of the two rotations, on the shorter path: both quaternions normalized first; `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q`) for a zero or non-finite argument |
-| `Lerp(Quaternion, double)` | Linear interpolation q + t (q2 − q), normalized, on the chord as given; `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q2`) for a zero or non-finite `q2` or a chord through zero (q to −q at t = 0.5) |
+| `SLERP(Quaternion, double)` | Spherical linear interpolation of the two rotations, on the shorter path: both quaternions normalized first (any finite non-zero magnitude); `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q`) for a zero or non-finite argument |
+| `Lerp(Quaternion, double)` | Linear interpolation q + t (q2 − q), normalized, on the chord as given, for quaternions of any finite non-zero magnitude (a chord that overflows computed on both scaled by one power of two); `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q2`) for a zero or non-finite `q2` or a chord through zero (q to −q at t = 0.5) |
 | `operator *(Quaternion, Quaternion)` | Quaternion composition |
 
 ## Matrix
@@ -114,7 +114,7 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 |--------|-------------|
 | `FromRowVectors(row0, row1, row2)` | Create 3x3 from row vectors |
 | `FromColumnVectors(col0, col1, col2)` | Create 3x3 from column vectors |
-| `FromQuaternion(Quaternion)` | Create 3x3 rotation matrix from the unit quaternion of a quaternion; `ArgumentException` (`q`) for a zero or non-finite quaternion (#680's known limitation; the identity before 11.0.0) |
+| `FromQuaternion(Quaternion)` | Create 3x3 rotation matrix from the unit quaternion of a quaternion of any finite non-zero magnitude; `ArgumentException` (`q`) for a zero or non-finite quaternion (#680's known limitation; the identity before 11.0.0) |
 | `CreateRotationMatrixX(angle)` | Rotation around X axis |
 | `CreateRotationMatrixY(angle)` | Rotation around Y axis |
 | `CreateRotationMatrixZ(angle)` | Rotation around Z axis |

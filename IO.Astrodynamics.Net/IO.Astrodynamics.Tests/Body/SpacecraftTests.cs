@@ -497,7 +497,6 @@ namespace IO.Astrodynamics.Tests.Body
             "Y" => Vector3.VectorY,
             "Z" => Vector3.VectorZ,
             "0" => Vector3.Zero,
-            "underflow" => new Vector3(1e-170, 0.0, 0.0),
             _ => null
         };
 
@@ -509,7 +508,6 @@ namespace IO.Astrodynamics.Tests.Body
         [InlineData("0", "0", "0", "bodyFront")]
         [InlineData("0", null, null, "bodyFront")]
         [InlineData(null, null, "0", "bodyUp")]
-        [InlineData("underflow", "X", "Z", "bodyFront")]
         public void ZeroBodyAxis_ThrowsArgumentException(string front, string right, string up, string parameter)
         {
             Clock clk = new Clock("My clock", 256);
@@ -518,6 +516,23 @@ namespace IO.Astrodynamics.Tests.Body
                     new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
                 bodyFront: Axis(front), bodyRight: Axis(right), bodyUp: Axis(up)));
             Assert.Equal(parameter, exception.ParamName);
+        }
+
+        // Third round of #668: a tiny finite axis has a direction. Its components squared to 0, so its unscaled magnitude was
+        // 0 and the constructor threw naming it; the magnitude is now scaled, and the axis is the unit vector of its
+        // direction, exactly (the closed form: (0, 1e-170, 0) is +Y)
+        [Theory]
+        [InlineData(1e-170)]
+        [InlineData(4.9e-324)]
+        [InlineData(1e200)]
+        public void TinyOrHugeBodyAxis_IsTheUnitVectorOfItsDirection(double length)
+        {
+            Clock clk = new Clock("My clock", 256);
+            var spc = new Spacecraft(-1007, "SC", 100.0, 1000.0, clk,
+                new StateVector(new Vector3(1.0, 2.0, 3.0), new Vector3(1.0, 2.0, 3.0), TestHelpers.EarthAtJ2000,
+                    new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame), Frames.Frame.ICRF),
+                bodyFront: new Vector3(0.0, length, 0.0), bodyRight: Vector3.VectorX, bodyUp: Vector3.VectorZ);
+            Assert.Equal(Vector3.VectorY, spc.BodyFront);
         }
 
         [Fact]

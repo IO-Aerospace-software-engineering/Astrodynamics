@@ -2352,6 +2352,35 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `docs/reference/keplerian-elements.md` now says too); `GuideMethodTables_NameMembersOfTheLibrary` checks that every
   method of the guide's member tables is a public method or constructor of the type of its heading, its bases or the
   library's extension methods, with an overload of the written argument count. No library result moves.
+- **`Normalize`, `Magnitude`, `FromQuaternion`, `TransformCovariance`, `Lerp`, `SLERP` and `Angle` gave zero, NaN,
+  +Infinity or threw for finite vectors and quaternions outside about 1e-154 to 1e154** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The magnitudes of `Vector3` and
+  `Quaternion` were √(Σ c²) unscaled: a component above about 1.34e154 squared to +Infinity, so `Normalize()` returned the
+  zero vector or quaternion and `Magnitude()` +Infinity for (1e200, 0, 0); components below about 1.5e-162 squared to 0,
+  so `Normalize()` threw "magnitude of 0" and `Magnitude()` returned 0 for (1e-170, 0, 0); between about 1e-162 and
+  1e-154 the subnormal sum of squares lost digits (`Normalize()` of (1e-160, 1e-160, 0) 5.5e-6 off 1/√2, silently).
+  `FromQuaternion`, `TransformCovariance`, `Lerp` and `SLERP` threw for a finite non-zero quaternion out of that range,
+  `Lerp`'s chord overflowed between quaternions of opposite components near `double.MaxValue`, `Angle(Vector3)` gave 0
+  between tiny vectors and NaN between huge ones, and `Angle(vector, plane)` threw for a tiny or huge normal. A vector or
+  quaternion whose sum of squares lies outside [1e-300, `double.MaxValue`] is now scaled first by the power of two of its
+  largest component (`Math.ILogB`, `Math.ScaleB`, exact): every finite non-zero one has a unit vector and its
+  representable magnitude (+Infinity only above `double.MaxValue`); `Lerp` recomputes an overflowing chord on both
+  quaternions scaled by one power of two. Every input whose sum of squares lies in [1e-300, `double.MaxValue`] (and, for
+  `Angle(Vector3)`, both in [1e-300, 1e300]) gives the same result bit for bit, so no result of the library on physical
+  quantities moves. The axis-angle constructor of #688 takes the same scaling (bit for bit in its former range). A
+  spacecraft body axis that is tiny or huge but finite is now its direction (`new Spacecraft(..., bodyFront: (0, 1e-170,
+  0))` threw naming `bodyFront`), and the library's own rotation between two vectors (the lenient form of `Vector3.To`)
+  is the rotation of tiny non-zero vectors, where it was the identity. The tests take closed forms exact in doubles: (2, −3, 6) 2^k
+  normalizes to (2/7, −3/7, 6/7) for k from −1070 to 1021 and (1, −2, 2, 4) 2^k to (0.2, −0.4, 0.4, 0.8) from −1070 to
+  1000;
+  |(3, 4, 0) 2^1000| = 5 · 2^1000 and |(3, 4, 0) ε| = 5ε exactly; π/4 between (1, 0, 0) and (1, 1, 0) at 2^±1000 within
+  one ulp; `FromQuaternion((1e200, 1e200, 0, 0))` against Rx(90°) and `SLERP(2^1000 I, 2^-1000 Rx(90°), 0.5)` against
+  Rx(45°) (MEASURE 2.220e-16 and 0); `TransformCovariance` by (1e200, 1e200, 0, 0) and (1e-170, 1e-170, 0, 0) against
+  Rx(90°) P Rx(90°)ᵀ (3.553e-15, two ulps of 9); the chord from (1e308, 0, 0, 0) to (−1e308, 1e308, 0, 0) at 0.5,
+  (0, 1, 0, 0) exactly; and 1e4 vectors of magnitude 2^-1075 to 2^1023 whose exact direction is the vector scaled back by
+  an exact power of two (| |u| − 1 | 2.220e-16, |u × d| / |d| 1.221e-16; 0.939 ulp per component and 2.125e-16 relative
+  magnitude against an 80-digit decimal computation during the triage); bounds twice the Linux x64 worst, provisional
+  until the three platforms' CI. `VectorTests`, `QuaternionTests`, `MatirxTests`, `SpacecraftTests`.
 
 **Changed**
 
@@ -2942,8 +2971,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   longer equal when one has NaN where the other has a number, or when two elements differ by 4.9e-324; NaN against NaN
   stays equal. No call throws and no numeric result moves.
 - **Breaking: `Vector3.Normalize()` and `Quaternion.Normalize()` throw for a magnitude of 0** ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above):
-  they returned the value itself. The magnitude is not scaled, so a vector or quaternion whose components are all below
-  about 1.5e-162 has magnitude 0 too and throws. `new Spacecraft(...)` throws `ArgumentException` naming `bodyFront`,
+  they returned the value itself. Only the zero vector and the zero quaternion throw for their magnitude: a finite
+  non-zero one whose components are all tiny normalizes since the third round of #668 (Changed below), which also made
+  a component that is not finite throw. `new Spacecraft(...)` throws `ArgumentException` naming `bodyFront`,
   `bodyRight` or `bodyUp` for an axis of magnitude 0 (accepted when the other given axes were zero too, thrown without a
   parameter name otherwise). Migration: test `Magnitude() > 0` before normalizing; give non-zero axes.
 - **Breaking: the TRIAD factories point the spacecraft's instance axes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677), Fixed above): for a spacecraft built
@@ -3202,6 +3232,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   initializer that read SPICE: none does now. Migration: catch `ArgumentException` or `InvalidOperationException`
   instead of `TypeInitializationException`; set the provider a static object should read before its first read of
   data, since a provider set afterwards does not reach it.
+- **Breaking: `Vector3.Normalize()` and `Quaternion.Normalize()` throw for a component that is not finite** (third
+  round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above):
+  `InvalidOperationException`, where they returned NaN components ((NaN, 0, 1) gave (NaN, NaN, NaN), (+∞, 0, 0) gave
+  (NaN, 0, 0)). A finite non-zero vector or quaternion of any size now normalizes, where a tiny one threw and a huge one
+  gave zero, and `Magnitude()` gives its representable magnitude, where it gave 0 or +Infinity. Migration: check
+  `double.IsFinite` on the components first, or catch `InvalidOperationException`.
 
 **Removed**
 
