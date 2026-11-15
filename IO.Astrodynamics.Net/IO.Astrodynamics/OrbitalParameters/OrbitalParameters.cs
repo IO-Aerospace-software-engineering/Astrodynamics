@@ -721,23 +721,44 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Get perigee vector
+    /// Get perigee vector: the position of the periapsis relative to the observer, a(1 − e) P̂, with P̂ the direction of
+    /// the periapsis (#686).
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The periapsis position, in the frame of the orbital parameters.</returns>
+    /// <remarks>
+    /// <para>
+    /// P̂ is the perifocal axis of the elements, (cos Ω cos ω − sin Ω sin ω cos i, sin Ω cos ω + cos Ω sin ω cos i,
+    /// sin ω sin i), the conic at ν = 0 (D. A. Vallado, <i>Fundamentals of Astrodynamics and Applications</i>, 4th ed.,
+    /// 2013, algorithm 10 COE2RV; to be verified by S. Guillet), defined at every eccentricity: a circular orbit has its
+    /// periapsis at ω from the node, where its true anomaly counts from. A <see cref="StateVector"/> takes the part of its
+    /// eccentricity vector in its orbit plane, e − (e · ĥ) ĥ, normalized, and its unit node vector when that part is zero
+    /// (x̂ for an equatorial orbit).
+    /// </para>
+    /// <para>
+    /// Before 11.0.0, P̂ was the eccentricity vector recomputed from the state, normalized leniently, and x̂ for an
+    /// eccentricity of exactly 0: near the rounding level of the eccentricity (about 1e-16) it cancelled to the zero
+    /// vector, so <see cref="PerigeeVelocity"/> was infinite, or to a direction off the orbit plane (#686).
+    /// </para>
+    /// </remarks>
     public Vector3 PerigeeVector()
     {
-        if (_perigeevector.HasValue)
-        {
-            return _perigeevector.Value;
-        }
-
-        if (Eccentricity() == 0.0)
-        {
-            _perigeevector = Vector3.VectorX * SemiMajorAxis();
-        }
-
-        _perigeevector ??= EccentricityVector().NormalizeOrZero() * SemiMajorAxis() * (1.0 - Eccentricity());
+        _perigeevector ??= PeriapsisDirection() * SemiMajorAxis() * (1.0 - Eccentricity());
         return _perigeevector.Value;
+    }
+
+    /// <summary>
+    /// The unit vector from the observer to the periapsis: the perifocal axis of the elements, the first column of
+    /// R3(−Ω) R1(−i) R3(−ω), defined at every eccentricity, e = 0 included (#686).
+    /// </summary>
+    internal virtual Vector3 PeriapsisDirection()
+    {
+        double o = AscendingNode();
+        double w = ArgumentOfPeriapsis();
+        double i = Inclination();
+        double cosO = System.Math.Cos(o), sinO = System.Math.Sin(o);
+        double cosW = System.Math.Cos(w), sinW = System.Math.Sin(w);
+        double cosI = System.Math.Cos(i), sinI = System.Math.Sin(i);
+        return new Vector3(cosO * cosW - sinO * sinW * cosI, sinO * cosW + cosO * sinW * cosI, sinW * sinI);
     }
 
     /// <summary>
@@ -761,22 +782,13 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Get apogee vector
+    /// Get apogee vector: the position of the apoapsis relative to the observer, −a(1 + e) P̂, with P̂ the direction of
+    /// the periapsis of <see cref="PerigeeVector"/> (#686).
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The apoapsis position, in the frame of the orbital parameters.</returns>
     public Vector3 ApogeeVector()
     {
-        if (_apogeeVector.HasValue)
-        {
-            return _apogeeVector.Value;
-        }
-
-        if (Eccentricity() == 0.0)
-        {
-            _apogeeVector = Vector3.VectorX.Inverse() * SemiMajorAxis();
-        }
-
-        _apogeeVector ??= EccentricityVector().NormalizeOrZero().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
+        _apogeeVector ??= PeriapsisDirection().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
         return _apogeeVector.Value;
     }
 
@@ -976,7 +988,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Computes the velocity at perigee.
+    /// Computes the velocity at perigee, by vis-viva at the radius of <see cref="PerigeeVector"/>.
     /// </summary>
     /// <returns>The velocity at perigee.</returns>
     public double PerigeeVelocity()
@@ -986,7 +998,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Computes the velocity at apogee.
+    /// Computes the velocity at apogee, by vis-viva at the radius of <see cref="ApogeeVector"/>.
     /// </summary>
     /// <returns>The velocity at apogee.</returns>
     public double ApogeeVelocity()

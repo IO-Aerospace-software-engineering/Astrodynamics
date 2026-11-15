@@ -406,8 +406,8 @@ Cartesian position and velocity state.
 | `SpecificAngularMomentum()` | Compute specific angular momentum vector |
 | `EccentricityVector()` | Compute eccentricity vector |
 | `AscendingNodeVector()` | Compute ascending node vector |
-| `PerigeeVector()` | Compute perigee position vector |
-| `ApogeeVector()` | Compute apogee position vector |
+| `PerigeeVector()` | Compute perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686) |
+| `ApogeeVector()` | Compute apogee position vector, −a(1 + e) P̂ |
 | `PerigeeVelocity()` | Compute velocity at perigee (m/s) |
 | `ApogeeVelocity()` | Compute velocity at apogee (m/s) |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
@@ -478,8 +478,8 @@ Classical Keplerian orbital elements (osculating or mean).
 | `Period()` | Get orbital period |
 | `PerigeeRadius()` | Get perigee radius (m) |
 | `ApogeeRadius()` | Get apogee radius (m) |
-| `PerigeeVector()` | Get perigee position vector |
-| `ApogeeVector()` | Get apogee position vector |
+| `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686) |
+| `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂ |
 | `IsCircular()` | Check if orbit is circular (e ≈ 0) |
 | `IsElliptical()` | Check if orbit is elliptical |
 | `IsParabolic()` | Check if orbit is parabolic (e = 1) |

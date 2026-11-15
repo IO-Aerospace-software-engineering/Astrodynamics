@@ -2042,6 +2042,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   closed form of q / |q| (exact) and CSPICE `q2m` (1.1e-15), `QuaternionTests` the closed forms of Lerp along q to −q
   and of `SLERP(2 I, 3 Rx(90°), 0.5)` = Rx(45°) (exact), `VectorTests` the signed angle ±π/2 about normals of 1e-100 to
   1e100, and each throw.
+- **`PerigeeVector()` and `ApogeeVector()` of a near-circular orbit were zero, or off the orbit plane** ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686)). Both
+  normalized, leniently, the eccentricity vector recomputed from the state, v × h / GM − r̂, and put the perigee on x̂
+  only for an eccentricity of exactly 0. Near the rounding level of the eccentricity the two unit terms cancel: the
+  state of the issue, a circular orbit of 7178 km inclined by 30° (e = 1.1e-16), had a zero perigee and apogee vector,
+  infinite `PerigeeVelocity()` and `ApogeeVelocity()`, and gave `PerigeeHeightManeuver` and `ApogeeHeightManeuver` a
+  target of 0 (and `Launch.GetInertialInsertionVelocity` an infinite velocity); 13 to 37 of 2000 random elements at
+  e = 1e-18 to 2e-16 had a zero vector, and the direction was off the SPICE conic by up to 3.12 rad at e ≤ 2e-16 and
+  9.6e-7 rad at 1e-9; a circular state, whose eccentricity vector is rounding noise with a part out of the plane, had
+  its perigee off the plane (|p̂ · ĥ| up to 1.0), and the x̂ of e = 0 was out of the plane of an inclined orbit.
+  Under the same signatures, the apsides are a(1 − e) P̂ and −a(1 + e) P̂ with P̂ the perifocal axis of the elements,
+  (cos Ω cos ω − sin Ω sin ω cos i, sin Ω cos ω + cos Ω sin ω cos i, sin ω sin i), for `KeplerianElements`,
+  `EquinoctialElements` and `TLE`, and for a `StateVector` the part of its eccentricity vector in its orbit plane,
+  normalized, or its unit node vector when that part is zero (x̂ for an equatorial orbit); the apsis velocities stay
+  vis-viva at the vector's radius, never 0 now. `KeplerianElementsTests` and `EquinoctialElementsTests` check 13
+  eccentricities from 0 to 0.95, 2000 sets of angles each, against CSPICE `conics` at M = 0 and π (perigee within 3.4e-16 rad and 4.4e-16 of its radius, apogee its opposite at a(1 + e); the equinoctial elements within 1.4e-15 rad and 3.7e-15 with the rounding of their conversion);
+  `StateVectorTests` 10 000 near-circular states (|p̂ · ĥ| 2.8e-16, against 1.0 before), states with a zero eccentricity vector (the node, exactly), and
+  elliptic states against `oscelt` then `conics` (7.1e-10 rad at e = 1e-6 to 1.7e-15 at 0.95, the conditioning of the eccentricity vector); the maneuver and launch tests the state of the issue
+  (apsis radii and velocities within an ulp of 7178 km and √(GM / r)).
 
 **Changed**
 
@@ -2731,6 +2749,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Angle(vector, Plane)` throw `ArgumentException` (`plane`) for a zero or non-finite normal, where they returned 0 or
   π. Nothing the library computes moves. Migration: pass non-zero quaternions and normals; interpolate with `Lerp`
   between quaternions of the same hemisphere (flip `q2` when q · q2 < 0), or use `SLERP`, which takes the shorter path.
+- **Breaking: the direction of `PerigeeVector()` and `ApogeeVector()` at and near e = 0** ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), Fixed above). For
+  `KeplerianElements`, `EquinoctialElements` and `TLE` of eccentricity exactly 0, they move from ±x̂ a to the perifocal
+  axis in the plane of the orbit, at ω from the node (Ω, ω and i of the elements; an `EquinoctialElements` has ω = 0);
+  for a `StateVector` whose eccentricity vector is exactly zero, from x̂ a to its unit node vector times a (x̂ for an
+  equatorial orbit, unchanged). Near-circular elements and states no longer give a zero vector, an infinite apsis
+  velocity or a target of 0 for `PerigeeHeightManeuver` and `ApogeeHeightManeuver`. Elsewhere the direction is the
+  elements' periapsis rather than the recomputed eccentricity vector, which moves the vector by 8.1e-16 at e = 0.95, 1.0e-14 at 0.1, 8.5e-13 at 1e-3, 9.6e-10 at 1e-6 and 8.3e-7 at 1e-9 relative for
+  elements and 3.4e-16, 2.0e-15, 2.3e-13, 2.7e-10 and 2.4e-7 (the error of the former direction, ε / e) for states; the magnitudes move by an ulp at most, and so do the targets of the apsis
+  maneuvers, their impulses, `PhasingManeuver` and `CombinedManeuver`. Migration: read `PerigeeRadius()` for the
+  magnitude alone; the direction is now the periapsis of the elements.
 
 **Removed**
 
@@ -2979,11 +3007,9 @@ not listed.
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
 - **Degenerate geometry kept by the library's normalizations**
-  ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), [#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687)). The library's own
-  normalizations still return the zero vector for a magnitude of 0 ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)), which hides two degenerate cases:
-  `PerigeeVector()` and `ApogeeVector()` are the zero vector when the eccentricity vector rounds to zero (139 of 10 000
-  random circular elements), and `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix. Give
-  near-circular elements a non-zero eccentricity for their apsides.
+  ([#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687)). The library's own
+  normalizations still return the zero vector for a magnitude of 0 ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)), which hides a degenerate case:
+  `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix.
 - **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
   read in ICRF without aberration and convert with `ToFrame`.

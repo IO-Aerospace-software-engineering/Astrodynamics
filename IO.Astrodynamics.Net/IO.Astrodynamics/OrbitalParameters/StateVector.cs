@@ -338,6 +338,30 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
+        /// The unit vector from the observer to the periapsis: the part of the eccentricity vector in the orbit plane,
+        /// e − (e · ĥ) ĥ (projected twice), normalized, and the unit node vector, where ω = 0 counts from, when that part is zero (x̂ for an
+        /// equatorial orbit) (#686). The raw eccentricity vector of a near-circular state is rounding noise whose part
+        /// out of the plane, about ε absolute, made its direction leave the plane.
+        /// </summary>
+        internal override Vector3 PeriapsisDirection()
+        {
+            var e = EccentricityVector();
+            var hHat = SpecificAngularMomentum().NormalizeOrZero();
+            var inPlane = e - hHat * (e * hHat);
+
+            // A second projection removes what the first left out of the plane, about ε |e| absolute, which is not small
+            // against the part in the plane when the eccentricity vector is rounding noise (classical Gram-Schmidt twice)
+            inPlane -= hHat * (inPlane * hHat);
+            double m = inPlane.Magnitude();
+            if (m > 0.0)
+            {
+                return inPlane / m;
+            }
+
+            return AscendingNodeVector().NormalizeOrZero();
+        }
+
+        /// <summary>
         /// The angle from <paramref name="from"/> to <paramref name="to"/>, in [0, 2π), counted positive about the
         /// angular momentum: atan2(ĥ · (from × to), from · to).
         /// </summary>

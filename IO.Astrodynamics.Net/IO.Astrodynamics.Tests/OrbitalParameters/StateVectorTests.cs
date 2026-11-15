@@ -724,5 +724,119 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.True((later.Position - expectedPosition).Magnitude() <= positionBound, $"{(later.Position - expectedPosition).Magnitude():E3} m");
             Assert.True((later.Velocity - expectedVelocity).Magnitude() <= velocityBound, $"{(later.Velocity - expectedVelocity).Magnitude():E3} m/s");
         }
-    }
+
+        // #686: the worst |p̂ · ĥ| of the perigee of a near-circular state (the circular elements of the apsis tests,
+        // |e| at the rounding level), MEASURE 2.776e-16 (Linux x64, 2026-11-15); twice the worst, rounded up at the second
+        // significant digit, provisional until the three platforms are read from the CI logs. On main: 1.0
+        private const double ApsisPlaneTolerance = 5.6e-16;
+
+        // #686: the worst | |perigee vector| / (a (1 − e)) − 1 | and | |apogee vector| / (a (1 + e)) − 1 | of the same states,
+        // MEASURE 4.441e-16 (Linux x64, 2026-11-15); provisional
+        private const double ApsisRadiusTolerance = 8.9e-16;
+
+        // #686: the perigee of a state is the direction of its eccentricity vector in its orbit plane, which for a
+        // near-circular state, whose eccentricity vector is rounding noise of about 1e-16, is not that of the raw vector:
+        // its out-of-plane part, about ε absolute, made p̂ leave the plane (|p̂ · ĥ| up to 1.0). Closed form: p̂ · ĥ = 0,
+        // |r_p| = a(1 − e), |r_a| = a(1 + e)
+        [Fact]
+        public void PerigeeVector_NearCircularState_LiesInTheOrbitPlane()
+        {
+            var random = new Random(6861);
+            double worstPlane = 0.0, worstRadius = 0.0;
+            for (int k = 0; k < 10000; k++)
+            {
+                double i = random.NextDouble() * System.Math.PI;
+                var ke = new KeplerianElements(KeplerianElementsTests.ApsisSemiMajorAxes[k % KeplerianElementsTests.ApsisSemiMajorAxes.Length], 0.0, i,
+                    random.NextDouble() * IO.Astrodynamics.Constants._2PI, random.NextDouble() * IO.Astrodynamics.Constants._2PI,
+                    random.NextDouble() * IO.Astrodynamics.Constants._2PI, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                var state = ke.ToStateVector();
+                var sv = new StateVector(state.Position, state.Velocity, state.Observer, state.Epoch, state.Frame);
+                var hHat = sv.SpecificAngularMomentum() / sv.SpecificAngularMomentum().Magnitude();
+                var perigee = sv.PerigeeVector();
+                var apogee = sv.ApogeeVector();
+
+                worstPlane = System.Math.Max(worstPlane, System.Math.Max(System.Math.Abs(perigee / perigee.Magnitude() * hHat),
+                    System.Math.Abs(apogee / apogee.Magnitude() * hHat)));
+                double a = sv.SemiMajorAxis(), e = sv.Eccentricity();
+                worstRadius = System.Math.Max(worstRadius, System.Math.Max(System.Math.Abs(perigee.Magnitude() / (a * (1.0 - e)) - 1.0),
+                    System.Math.Abs(apogee.Magnitude() / (a * (1.0 + e)) - 1.0)));
+                Assert.True(double.IsFinite(sv.PerigeeVelocity()) && double.IsFinite(sv.ApogeeVelocity()));
+            }
+
+            _output.WriteLine($"MEASURE #686 near-circular states: worst |p.h| {worstPlane:E3}, worst apsis radius against a(1 -+ e) {worstRadius:E3}");
+            Assert.True(worstPlane <= ApsisPlaneTolerance, $"{worstPlane:E3}");
+            Assert.True(worstRadius <= ApsisRadiusTolerance, $"{worstRadius:E3}");
+        }
+
+        // #686: a state whose eccentricity vector is exactly zero has its perigee at the ascending node, (ẑ × h) / |ẑ × h|,
+        // where the argument of periapsis (0) and the true anomaly count from; x̂ for an equatorial state. On main the
+        // perigee was x̂ a whatever the plane. The states are searched along the radius for e = 0 exactly, the node on ŷ:
+        // r = (0, r, 0), v = √(GM / r) (−cos i, 0, sin i), whose eccentricity vector is (0, v_y(h) / GM − 1, 0)
+        [Theory]
+        [InlineData(30.0)]
+        [InlineData(97.0)]
+        [InlineData(150.0)]
+        public void PerigeeVector_ZeroEccentricityVector_IsTheAscendingNode(double inclinationDegrees)
+        {
+            double i = inclinationDegrees * IO.Astrodynamics.Constants.Deg2Rad;
+            var earth = TestHelpers.EarthAtJ2000;
+            StateVector sv = null;
+            for (double r = 7178e3; r < 7179e3; r += 1.0)
+            {
+                double v = System.Math.Sqrt(earth.GM / r);
+                var candidate = new StateVector(new Vector3(0.0, r, 0.0), new Vector3(-v * System.Math.Cos(i), 0.0, v * System.Math.Sin(i)), earth,
+                    TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                if (candidate.EccentricityVector() == Vector3.Zero)
+                {
+                    sv = candidate;
+                    break;
+                }
+            }
+
+            Assert.NotNull(sv);
+            var perigee = sv.PerigeeVector();
+            Assert.Equal(0.0, perigee.X);
+            Assert.Equal(0.0, perigee.Z);
+            Assert.Equal(sv.SemiMajorAxis(), perigee.Y);
+            Assert.Equal(-sv.SemiMajorAxis(), sv.ApogeeVector().Y);
+
+            // The equatorial state: the node is undefined and x̂ stands for it, as before
+            double ve = System.Math.Sqrt(earth.GM / 7178e3);
+            for (double r = 7178e3; r < 7179e3; r += 1.0)
+            {
+                ve = System.Math.Sqrt(earth.GM / r);
+                var equatorial = new StateVector(new Vector3(0.0, r, 0.0), new Vector3(-ve, 0.0, 0.0), earth, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+                if (equatorial.EccentricityVector() != Vector3.Zero) continue;
+                Assert.Equal(new Vector3(equatorial.SemiMajorAxis(), 0.0, 0.0), equatorial.PerigeeVector());
+                return;
+            }
+
+            Assert.Fail("No equatorial state with a zero eccentricity vector on the radii searched");
+        }
+
+        // #686: the perigee of an elliptic state against SPICE: oscelt of the state (ConvertStateVectorToConicOrbitalElement)
+        // then conics at M = 0, the apogee against its opposite; the conditioning of the eccentricity vector, ε / e, is the same for SPICE and for the state.
+        // Thresholds per eccentricity at twice the worst over 2000 states each, MEASURE 7.129e-10 rad at e = 1e-6, 6.848e-13 at 1e-3,
+        // 6.857e-15 at 0.1 and 1.667e-15 at 0.95 (Linux x64, 2026-11-15; main 7.13e-10, 6.87e-13, 8.77e-15, 1.52e-14),
+        // rounded up at the second significant digit; provisional until the three platforms are read from the CI logs
+        [Theory]
+        [InlineData(1e-6, 1.5e-9)]
+        [InlineData(1e-3, 1.4e-12)]
+        [InlineData(0.1, 1.4e-14)]
+        [InlineData(0.95, 3.4e-15)]
+        public void PerigeeVector_EllipticState_IsTheSpiceConicAtPeriapsis(double e, double tolerance)
+        {
+            double worst = 0.0;
+            foreach (var ke in KeplerianElementsTests.RandomApsisElements(e, 6880 + (int)(-System.Math.Log10(e) * 10.0), 2000))
+            {
+                var sv = ke.ToStateVector();
+                var osculating = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(sv);
+                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(osculating.A, osculating.E, osculating.I, osculating.RAAN, osculating.AOP, 0.0);
+                worst = System.Math.Max(worst, KeplerianElementsTests.ApsisErrors(sv, spicePerigee, osculating.A, osculating.E).Angle);
+            }
+
+            _output.WriteLine($"MEASURE #686 elliptic states e = {e:E1}: worst apsis angle against SPICE oscelt + conics {worst:E3} rad");
+            Assert.True(worst <= tolerance, $"{worst:E3}");
+        }
+}
 }

@@ -74,7 +74,7 @@ conjunction analysis; see
 | `SpecificOrbitalEnergy()` | Vis-viva energy (m²/s²) |
 | `SpecificAngularMomentum()` | Angular momentum vector |
 | `EccentricityVector()` | Eccentricity vector |
-| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors |
+| `PerigeeVector()` / `ApogeeVector()` | Apse position vectors, a(1 − e) P̂ and −a(1 + e) P̂: P̂ the perifocal axis of the elements (Ω, ω, i), defined at e = 0 (at ω from the node); for a state, the part of its eccentricity vector in its orbit plane, normalized, or its unit node vector when that part is zero, x̂ for an equatorial orbit (#686) |
 | `PerigeeVelocity()` / `ApogeeVelocity()` | Apse velocities (m/s) |
 
 ## Conversion Methods
