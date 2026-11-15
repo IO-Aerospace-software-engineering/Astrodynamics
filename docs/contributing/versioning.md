@@ -2600,6 +2600,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   is unchanged, bit for bit: the same native call, copy and labelling (the CSPICE goldens of `SpiceApiTest`,
   `KernelWindowSearchTests`, `OccultationSearchValidationTests` and `FieldOfViewSearchTests`). The 1000-window cap of
   the copy stays ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+- **`SpiceAPI.TransformFrame` threw for the frame of a site only the library holds** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round). The frame of
+  a site built from coordinates, and of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel
+  defines, is the library's: the reads in it are rotated (#682, third review of #690), and `ToFrame` and
+  `GetHorizontalCoordinates` use its orientation, but `SpiceAPI.TransformFrame` handed its name, `Name + "_TOPO"`, to
+  SPICE, which does not know it, and threw `InvalidOperationException`. It now composes the transform through ICRF, as
+  for TEME, decided at each call (a frame kernel of its id loaded later is read by name): the orientation of
+  `SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's
+  `sxform_c` in the frame kernel `WriteFrameAsync` writes for the site, to and from ICRF and ITRF93 (measured on Linux
+  x64). The frame of a site whose frame the kernels define, the frames of spacecraft (SPICE's by name, which reads the
+  frame kernel and the CK written for them) and CIRS and TIRS ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)) keep their path; TEME's composition is the same code, bit for bit.
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
@@ -3540,6 +3550,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   occultation bodies, the illumination method) are unchanged. Migration: load the kernel SPICE's message names, or catch
   `InvalidOperationException` where an empty result was taken to mean "never". A search SPICE runs is unchanged, bit
   for bit.
+- **`SpiceAPI.TransformFrame` composes the frame of a site only the library holds through ICRF** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round,
+  Fixed above), where it threw `InvalidOperationException`. Not breaking for a valid use: every other pair of frames is
+  unchanged, bit for bit. Migration: none; code that caught the exception gets the transform.
 
 **Removed**
 

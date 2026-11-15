@@ -1740,7 +1740,14 @@ public class SpiceAPI
     /// <exception cref="ArgumentNullException"></exception>
     /// <remarks>
     /// A TEME frame, <see cref="Frame.TEME"/> or a frame named TEME, is the managed <see cref="TemeFrame"/> (#451): the
-    /// transform is composed through ICRF, the other frame from SPICE. SPICE must give a rotation: outside the coverage of
+    /// transform is composed through ICRF, the other frame from SPICE. So is the <see cref="Surface.SiteFrame"/> of a site
+    /// built from coordinates, or of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel defines,
+    /// decided at each call: its orientation is <see cref="Surface.SiteFrame.GetStateOrientationToICRF"/>, the frame the
+    /// reads in it, <see cref="Frame.ToFrame"/> and the horizontal coordinates use (fourth round of #668; before, the call
+    /// handed its name, <c>Name + "_TOPO"</c>, to SPICE, which does not know it, and threw). The frame of a site whose frame
+    /// the kernels define is that kernel frame, read by SPICE, and the frame of a spacecraft is SPICE's by name, which reads
+    /// the frame kernel and the C-kernel loaded for it. CIRS and TIRS are not composed: SPICE does not know them, and the
+    /// call throws (#656). SPICE must give a rotation: outside the coverage of
     /// the frame data the native layer returns the zero quaternion and drops the SPICE message, and the call throws (#454;
     /// before 11.0.0 the zero quaternion was returned, except on the TEME path).
     /// </remarks>
@@ -1750,9 +1757,18 @@ public class SpiceAPI
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
         if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
-        if (IsTeme(fromFrame) || IsTeme(toFrame))
+        // TEME and the frame of a site that only the library holds (TransformedThroughIcrf) are composed through ICRF, as the
+        // reads in them are rotated (fourth round of #668; before, only TEME was, and a site's frame threw)
+        Frame fromManaged, toManaged;
+        lock (lockObject)
         {
-            return TransformFrameThroughTeme(epoch, fromFrame, toFrame);
+            fromManaged = TransformedThroughIcrf(fromFrame);
+            toManaged = TransformedThroughIcrf(toFrame);
+        }
+
+        if (fromManaged != null || toManaged != null)
+        {
+            return TransformFrameThroughIcrf(epoch, fromFrame, fromManaged, toFrame, toManaged);
         }
 
         lock (lockObject)
@@ -1775,27 +1791,31 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The transform between a TEME frame and another frame, composed through ICRF as <see cref="Frame.ToFrame"/>, TEME by
-    /// the managed <see cref="TemeFrame"/> and the other frame by SPICE, labelled with <paramref name="fromFrame"/>.
+    /// The transform between two frames one of which is managed (<see cref="TransformedThroughIcrf"/>), composed through ICRF as
+    /// <see cref="Frame.ToFrame"/>: the managed frame by its own orientation, the other by SPICE; labelled with
+    /// <paramref name="fromFrame"/>.
     /// </summary>
-    private OrbitalParameters.StateOrientation TransformFrameThroughTeme(Time epoch, Frame fromFrame, Frame toFrame)
+    private OrbitalParameters.StateOrientation TransformFrameThroughIcrf(Time epoch, Frame fromFrame, Frame fromManaged, Frame toFrame,
+        Frame toManaged)
     {
-        var fromToIcrf = OrientationToIcrfForTeme(epoch, fromFrame);
-        var toToIcrf = OrientationToIcrfForTeme(epoch, toFrame);
+        var fromToIcrf = OrientationToIcrf(epoch, fromFrame, fromManaged);
+        var toToIcrf = OrientationToIcrf(epoch, toFrame, toManaged);
         var rotation = toToIcrf.Rotation.Conjugate() * fromToIcrf.Rotation;
         var angularVelocity = toToIcrf.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + fromToIcrf.AngularVelocity;
         return new OrbitalParameters.StateOrientation(rotation, angularVelocity, epoch, fromFrame);
     }
 
-    private OrbitalParameters.StateOrientation OrientationToIcrfForTeme(Time epoch, Frame frame)
-    {
-        if (IsTeme(frame))
-        {
-            return Frame.TEME.GetStateOrientationToICRF(epoch);
-        }
+    // The managed frame a transform composes through ICRF, or null: TEME (#451) and the SiteFrame of a site from coordinates
+    // or of a site whose frame no loaded kernel defines (ManagedReadFrame, decided at each call). Not CIRS and TIRS, which
+    // #656 owns, nor the frame of a managed spacecraft, which stays SPICE's by name: it reads the frame kernel and the CK
+    // the library wrote, the independent reference of its attitude record. Called under the lock
+    private static Frame TransformedThroughIcrf(Frame frame) =>
+        ManagedReadFrame(frame) is { } managed and (TemeFrame or Surface.SiteFrame) ? managed : null;
 
+    private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed)
+    {
         // TransformFrame throws when SPICE gives no rotation (#454)
-        return TransformFrame(epoch, frame, Frame.ICRF);
+        return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF);
     }
 
     public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)

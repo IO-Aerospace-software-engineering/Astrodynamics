@@ -52,6 +52,14 @@ CSPICE wrote a file under the name truncated to 255 and then failed before 11.0.
 bytes handed to CSPICE, UTF-8 on Linux and macOS. `Spacecraft.WriteEphemeris` (the managed SPK writer) and the text
 kernel writers write any path.
 
+`TransformFrame` composes a TEME end through ICRF (#451), and so the frame of a site built from coordinates or of a site
+from the kernels whose frame id no loaded kernel defines, the frame only the library holds, whose orientation is
+`SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, its name went to SPICE,
+which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrameAsync` writes for
+the site (measured on Linux x64). The frame of a site whose frame the kernels define and the frame of a spacecraft are
+SPICE's by name; CIRS and TIRS throw ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
+
 SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and
 label what SPICE returns with the frame given (#543).
