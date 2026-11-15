@@ -2593,10 +2593,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   does (a native change for a technical reason: an error a proxy drops), and the five `SpiceAPI.FindWindows*` throw
   `InvalidOperationException` with it, under every public route that reaches them: the CSPICE paths of
   `CelestialItem.FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
-  `FindWindowsOnCoordinateConstraint`, of `Site.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint`,
-  `FindWindowsOnIlluminationConstraint` and `FindDayWindows` (so `Launch.FindLaunchWindows` by day or by night), and of
-  `Instrument.FindWindowsInFieldOfViewConstraint`. The reference is SPICE's own error signal, read through the native
-  library on every platform (`SpiceApiTest`, `KernelWindowSearchTests` and the C++ `API` tests). A search SPICE runs
+  `FindWindowsOnCoordinateConstraint`, of `Site.FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint`,
+  `FindWindowsOnCoordinateConstraint`, `FindWindowsOnIlluminationConstraint` and `FindDayWindows` (so
+  `Launch.FindLaunchWindows` by day or by night), of `Instrument.FindWindowsInFieldOfViewConstraint`, and the five CLI
+  commands `find-windows-from-*-constraint`. The reference is SPICE's own error signal, read through the native
+  library on every platform (`SpiceApiTest`, `KernelWindowSearchTests`, `FieldOfViewReferenceTests`, the CLI's
+  `GeometryFinderTests` and the C++ `API` tests). A search SPICE runs
   is unchanged, bit for bit: the same native call, copy and labelling (the CSPICE goldens of `SpiceApiTest`,
   `KernelWindowSearchTests`, `OccultationSearchValidationTests` and `FieldOfViewSearchTests`). The 1000-window cap of
   the copy stays ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
@@ -3554,10 +3556,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Launch.FindLaunchWindows` of a kernel site included), throw `InvalidOperationException` with SPICE's message where
   they returned no window: an unknown frame, a body or an epoch without ephemeris data, an epoch outside the coverage of
   the frame data or the C-kernel, a missing instrument kernel, a step SPICE rejects, a result cell that overflows. The
-  `ArgumentException` checks made before the native call (the frames of the library SPICE does not know, the
-  occultation bodies, the illumination method) are unchanged. Migration: load the kernel SPICE's message names, or catch
-  `InvalidOperationException` where an empty result was taken to mean "never". A search SPICE runs is unchanged, bit
-  for bit.
+  CLI commands `find-windows-from-coordinate-constraint`, `find-windows-from-distance-constraint`,
+  `find-windows-from-occultation-constraint`, `find-windows-from-fov-constraint` and
+  `find-windows-from-illumination-constraint`, which call `SpiceAPI` directly, then end with that exception (its
+  message and stack on the error output, exit code 1, as for the CLI's other errors) where they printed nothing and
+  exited with 0. The `ArgumentException` checks made before the native call (the frames of the library SPICE does not
+  know, the occultation bodies, the illumination method) are unchanged. Migration: load the kernel SPICE's message
+  names, or catch `InvalidOperationException` (test the exit code of a CLI command) where an empty result was taken to
+  mean "never". A search SPICE runs is unchanged, bit for bit.
 - **`SpiceAPI.TransformFrame` composes the frame of a site only the library holds through ICRF** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round,
   Fixed above), where it threw `InvalidOperationException`. Not breaking for a valid use: every other pair of frames is
   unchanged, bit for bit. Migration: none; code that caught the exception gets the transform.

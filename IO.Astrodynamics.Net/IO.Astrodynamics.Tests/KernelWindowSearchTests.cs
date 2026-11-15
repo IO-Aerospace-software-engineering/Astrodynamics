@@ -210,6 +210,16 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         Assert.Contains("Insufficient ephemeris data", noState.Message);
         Assert.Contains("-85", noState.Message);
 
+        // The occultation search of a kernel site, a kernel spacecraft target and a kernel front body goes to gfoclt_c
+        // (Site.FindWindowsOnOccultationConstraint), and so does its complement (OccultationType.None)
+        foreach (var occultation in new[] { OccultationType.Any, OccultationType.None })
+        {
+            var noTarget = Assert.Throws<InvalidOperationException>(() => Dss13.FindWindowsOnOccultationConstraint(pastTheSpk, Lro, ShapeType.Point, Moon,
+                ShapeType.Ellipsoid, occultation, Aberration.None, Step).ToArray());
+            Assert.Contains("Insufficient ephemeris data", noTarget.Message);
+            Assert.Contains("-85", noTarget.Message);
+        }
+
         var past = new Window(new TimeSystem.Time(2160, 3, 1, frame: TimeFrame.TDBFrame), new TimeSystem.Time(2160, 3, 2, frame: TimeFrame.TDBFrame));
         var noPck = Assert.Throws<InvalidOperationException>(() => Dss13.FindWindowsOnIlluminationConstraint(past, IlluminationAngle.Incidence,
             RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, Step, TestHelpers.Sun).ToArray());

@@ -94,7 +94,7 @@ A search CSPICE cannot run throws `InvalidOperationException` with SPICE's messa
 body or an epoch without ephemeris data, an epoch outside the coverage of the frame data or of the C-kernel, an
 instrument whose kernel is not loaded (`INS<id>_FOV_FRAME` not found), a step SPICE rejects, a result cell that
 overflows. So do the CSPICE paths of the searches of `CelestialItem`, `Site` and `Instrument`, `Site.FindDayWindows`
-and the launch windows of a kernel site. Before the fourth round of
+and the launch windows of a kernel site, and the CLI commands `find-windows-from-*-constraint` end with it (exit code 1). Before the fourth round of
 [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) the native proxies printed the
 error on standard output, dropped it and returned no window, which a caller could not tell from a condition that never
 holds. The checks made before the native call keep their `ArgumentException`: a frame of the library SPICE does not

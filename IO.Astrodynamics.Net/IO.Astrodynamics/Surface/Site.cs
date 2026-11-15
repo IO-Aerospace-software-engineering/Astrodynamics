@@ -291,6 +291,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="aberration"></param>
         /// <param name="stepSize"></param>
         /// <returns>The windows, in TDB.</returns>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize)
         {
@@ -314,6 +317,9 @@ namespace IO.Astrodynamics.Surface
         /// <param name="stepSize"></param>
         /// <param name="options">The frames of the ellipsoids and the convergence tolerance; null for the defaults.</param>
         /// <returns>The windows, in TDB.</returns>
+        /// <exception cref="InvalidOperationException">On the path of CSPICE's <c>gfoclt_c</c>, SPICE cannot run the search (a
+        /// body or an epoch without ephemeris data, a frame it does not know, an epoch outside the coverage of the frame data),
+        /// with SPICE's message (fourth round of #668; before 11.0.0 the search returned no window).</exception>
         public IEnumerable<Window> FindWindowsOnOccultationConstraint(in Window searchWindow, ILocalizable target, ShapeType targetShape, INaifObject frontBody,
             ShapeType frontShape, OccultationType occultationType, Aberration aberration, in TimeSpan stepSize, OccultationSearchOptions options)
         {
