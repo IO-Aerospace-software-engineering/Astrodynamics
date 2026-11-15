@@ -569,6 +569,28 @@ namespace IO.Astrodynamics.Tests.Mission
 
 
         [Fact]
+        public async Task SimulateAsync_PropagatesTheStar_IsPropagated()
+        {
+            // Arrange: IsPropagated was always false before (it read an output directory no code set); the SPK of the star
+            // against CSPICE is the Validation test below
+            var start = new TimeSystem.Time(2001, 1, 1);
+            var end = start.AddDays(365 * 4);
+            var star = new Star(668006, "star668006", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
+                start);
+            var scenario = new Scenario("scn668b", new Astrodynamics.Mission.Mission("mission668b"), new Window(start, end));
+            scenario.AddStar(star);
+            Assert.False(star.IsPropagated);
+
+            // Act
+            await scenario.SimulateAsync(false, false, TimeSpan.FromDays(365.0));
+
+            // Assert
+            Assert.True(star.IsPropagated);
+        }
+
+        // The reference position is CSPICE's latrec_c through CspiceDirect, which the Windows DLL does not export (Linux, Validation)
+        [Fact]
+        [Trait("Category", "Validation")]
         public async Task SimulateAsync_PropagatesTheStar_AndItsSpkHoldsTheCatalogPositionWithProperMotion()
         {
             // Arrange: IsPropagated was always false before (it read an output directory no code set)
