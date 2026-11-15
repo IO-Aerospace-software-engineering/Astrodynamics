@@ -2170,7 +2170,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the target rotated to ICRF, and a spacecraft and a target both in ECLIPJ2000, burn the closed form to 7.0e-9 m/s
   (RK7(8), threshold 1.4e-8 m/s provisional) and end in the target's plane to 4.0e-11°; a maneuver attached after the
   propagator was built, by its constructor or its builder, with both integrators, is rejected by `Propagate()` before
-  its burn (no window, the tank full); `ScenarioTests` covers `Scenario.SimulateAsync`.
+  its burn (no window, the tank full); `ScenarioTests` covers `Scenario.SimulateAsync`. Both checks compared the frames by
+  name, so that a target in GCRF on a spacecraft propagated in ICRF, and the reverse, was rejected by the constructor
+  ("must be defined in the same frame"), when the propagator was built and when it propagated, although the library
+  gives GCRF the axes of ICRF (`GcrfFrame`, the identity rotation) and the relabel the message asked for,
+  `targetOrbit.ToFrame(Frame.ICRF)`, changed no number (third review). They now take GCRF and ICRF as one frame
+  (internal `PropagatorBase.SameAxes`, by name, any case), and no other pair; `Frame.Equals` is unchanged (#562).
+  `ImpulseManeuverTests` runs a plane change of 2° with its target in GCRF on an ICRF spacecraft, every order of
+  attachment, leading and chained, both integrators, bit for bit the run with the target in ICRF, and leading in RK7(8)
+  the closed form to 6.9e-9 m/s (threshold 1.4e-8 m/s); the reverse pair, an ICRF target on a GCRF spacecraft, bit for
+  bit, an ECLIPJ2000 target still rejected on it; and on a TLE spacecraft a GCRF target accepted (rejected on a mean TEME
+  set, as an ICRF one) and burning bit for bit the ICRF target.
 - **The CLI took identifiers for sites that the library does not** (cli-site-rule of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round). The commands built a site of every
   identifier from 100001 to 999998 (`Helpers.IsSiteIdentifier`), named `site<id>`, where the library's rule
@@ -3143,8 +3153,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CentralBodyPropagator.Propagate()` for one attached to the spacecraft after the propagator was built, where only a
   TLE or TEME start was checked when the propagator was built and nothing when it propagated; other
   spacecraft burned with the target's components read in the integration frame (10.7 times the closed form in the case
-  measured). The results of valid inputs are bit for bit. Migration: give the target in the spacecraft's propagation
-  frame, `targetOrbit.ToFrame(spacecraft.InitialOrbitalParameters.Frame)`, or ICRF for a TLE or TEME start.
+  measured). The results of valid inputs are bit for bit. A target in GCRF on a spacecraft propagated in ICRF (a TLE or
+  TEME start included), or in ICRF on one propagated in GCRF, is accepted as in the frame of the propagation, whose axes
+  it shares (third review), where 10.x rejected it in the constructor. Migration: give the target in the spacecraft's
+  propagation frame, `targetOrbit.ToFrame(spacecraft.InitialOrbitalParameters.Frame)`, or ICRF (or GCRF) for a TLE or
+  TEME start.
 - **Breaking: the CLI follows the library's rule of a site identifier** (cli-site-rule of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round, Fixed above). CLI only. An identifier from
   100001 to 999998 that is not a site by the library's rule (x000, a body of at most 100, a Lagrange point) is read as a
