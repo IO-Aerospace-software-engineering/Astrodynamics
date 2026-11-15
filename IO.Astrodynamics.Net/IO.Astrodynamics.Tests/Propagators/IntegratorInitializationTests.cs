@@ -28,8 +28,8 @@ namespace IO.Astrodynamics.Tests.Propagators;
 /// <see cref="NullReferenceException"/> from the first step (no observer, frame, evaluation state or RK7(8) stages).
 /// </summary>
 /// <remarks>
-/// The last state is checked against the two-body closed form (<see cref="KeplerianStm"/>) over the seconds of the time
-/// argument, TT about the Earth, TDB about the Sun; and bit for bit against the same run initialized by the caller after
+/// The last state, and Φ when it is propagated, are checked against the two-body closed form (<see cref="KeplerianStm"/>)
+/// over the seconds of the time argument, TT about the Earth, TDB about the Sun; and bit for bit against the same run initialized by the caller after
 /// construction, the pattern of the tests before, whose results the existing goldens establish.
 /// </remarks>
 public class IntegratorInitializationTests
@@ -55,6 +55,9 @@ public class IntegratorInitializationTests
     private const double Rk78KeplerThreshold = 2.0e-4;
     private const double SsbKeplerThreshold = 2.5e-4;
     private const double VvKeplerThreshold = 3.2e1;
+    // Φ of RK7(8) at 1e-10 at the end of the hour against the two-body closed form, the worst relative 3×3 block:
+    // 6.970e-11 (Linux, 2026-11-15); provisional, twice that, to be read again on Windows and macOS arm64
+    private const double Rk78PhiThreshold = 1.4e-10;
 
     private static Spacecraft NewSpacecraft(ILocalizable observer, Frames.Frame frame, Vector3 position, Vector3 velocity)
     {
@@ -128,7 +131,12 @@ public class IntegratorInitializationTests
         Assert.True(error <= (kind == "RK78" ? Rk78KeplerThreshold : VvKeplerThreshold), $"{error:E3} m");
         if (stm)
         {
-            Assert.NotNull(solution.GetStateTransitionMatrix(window.EndDate));
+            // Φ of the run against Φ of the two-body closed form after the same TT seconds, per 3×3 block
+            var (_, expected) = KeplerianStm.Propagate(earth.GM, initial.Position, initial.Velocity, elapsed);
+            double phiError = StmMeasures.WorstBlockError(StmMeasures.Elements(solution.GetStateTransitionMatrix(window.EndDate)),
+                expected);
+            _output.WriteLine($"MEASURE IntegratorInitializationTests {kind} stm={stm}: Φ worst block {phiError:E3}");
+            Assert.True(phiError <= Rk78PhiThreshold, $"Φ: {phiError:E3}");
         }
     }
 

@@ -2043,8 +2043,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the stored states, as `Spacecraft.IsPropagated` does: true after `Propagate`, `PropagateAsync` or
   `Scenario.SimulateAsync`. `PropagationOutput` stays, documented as always null. `StarTests` and `ScenarioTests` check
   each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
-  catalog position moved by the proper motion (`GetEquatorialCoordinates`) to 1.98e-16 relative over four years
-  (threshold 4.0e-16, provisional, twice the Linux worst).
+  catalog position moved by the proper motion, written in the test (right ascension and declination plus the proper
+  motion times the Julian years from the catalog epoch, at the star's distance, by CSPICE's `latrec_c`), to 1.98e-16
+  relative over four years (threshold 4.0e-16, provisional, twice the Linux worst).
 
 - **A `CentralBodyPropagator` given an integrator with its forces threw `NullReferenceException` unless its caller
   initialized the integrator** (second round of
