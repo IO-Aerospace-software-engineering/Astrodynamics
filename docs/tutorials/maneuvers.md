@@ -53,11 +53,12 @@ This eliminates roll ambiguity.
 
 ```csharp
 // Primary: spacecraft -Z toward Earth (nadir pointing)
-// Secondary: spacecraft +Z toward Sun (solar panels)
+// Secondary: spacecraft +X, the solar panel axis, toward Sun (+Z, opposite to -Z, would leave the roll undetermined:
+// the body vectors must be at least 5 degrees apart)
 var triad = new TriadAttitude(epoch, TimeSpan.FromHours(1.5),
     Spacecraft.Down, earth,    // Primary: nadir pointing
-    Spacecraft.Up, sun,        // Secondary: solar panels toward Sun
-    engine, 0.0);
+    Spacecraft.Right, sun,     // Secondary: solar panels toward Sun
+    engine);
 ```
 
 When using `CelestialAttitudeTarget`, the default aberration is `Aberration.None`
