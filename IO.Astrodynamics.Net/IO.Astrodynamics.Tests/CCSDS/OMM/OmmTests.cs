@@ -871,5 +871,61 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         }
 
         #endregion
+
+        #region Keywords out of their range
+
+        // Rows of OmmReaderTests.OmmKeywordsOutOfRange: one the schema rejects, and those it accepts though the data model
+        // refuses them (revType and distanceType xsd:double, OBJECT_NAME and ORIGINATOR xsd:string)
+        [Theory]
+        [InlineData("ECCENTRICITY", "-0.5", true)]
+        [InlineData("MEAN_MOTION", "0", false)]
+        [InlineData("SEMI_MAJOR_AXIS", "-7000", false)]
+        [InlineData("OBJECT_NAME", "", false)]
+        [InlineData("ORIGINATOR", "", false)]
+        public void LoadFromString_StreamAndFile_KeywordOutOfRange_ThrowsOmmParseException_WithAndWithoutSchema(
+            string keyword, string value, bool schemaRejects)
+        {
+            var xml = OmmReaderTests.OmmWithKeyword(keyword, value);
+
+            // Without the schema: every entry point throws the reader's exception (before: ArgumentException of the model)
+            OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() =>
+                Omm.LoadFromString(xml, validateSchema: false)), keyword, value);
+            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml)))
+            {
+                OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() =>
+                    Omm.LoadFromStream(stream, validateSchema: false)), keyword, value);
+            }
+
+            NdmDocuments.WithTempFile(xml, file =>
+            {
+                OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() =>
+                    Omm.LoadFromFile(file, validateSchema: false)), keyword, value);
+
+                // With the default validation: the schema's exception where it has a facet, the reader's otherwise
+                if (schemaRejects)
+                {
+                    Assert.Throws<OmmValidationException>(() => Omm.LoadFromString(xml));
+                    Assert.Throws<OmmValidationException>(() => Omm.LoadFromFile(file));
+                }
+                else
+                {
+                    OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() => Omm.LoadFromString(xml)), keyword, value);
+                    OmmReaderTests.AssertNamesKeyword(Assert.Throws<OmmParseException>(() => Omm.LoadFromFile(file)), keyword, value);
+                }
+
+                // TryLoadFromFile: false, the parse error naming the keyword (before: the constructor's parameter)
+                foreach (var validateSchema in schemaRejects ? new[] { false } : new[] { false, true })
+                {
+                    Assert.False(Omm.TryLoadFromFile(file, out var omm, out var result, validateSchema));
+                    Assert.Null(omm);
+                    var error = Assert.Single(result.Errors);
+                    Assert.Equal("PARSE_ERROR", error.Code);
+                    Assert.Contains(keyword, error.Message);
+                    Assert.Contains($"'{value}'", error.Message);
+                }
+            });
+        }
+
+        #endregion
     }
 }

@@ -20,6 +20,27 @@ public class OmmValidatorTests
         _reader = new OmmReader();
     }
 
+    // A schema-valid document whose value the data model refuses: ValidateFile reports the parse error naming the keyword
+    // and its value (before: the data model's message, naming its constructor parameter)
+    [Theory]
+    [InlineData("MEAN_MOTION", "0")]
+    [InlineData("SEMI_MAJOR_AXIS", "-7000")]
+    [InlineData("OBJECT_NAME", "")]
+    [InlineData("ORIGINATOR", "")]
+    public void ValidateFile_SchemaValidKeywordOutOfRange_ReportsKeyword(string keyword, string value)
+    {
+        var xml = OmmReaderTests.OmmWithKeyword(keyword, value);
+
+        NdmDocuments.WithTempFile(xml, file =>
+        {
+            var result = _validator.ValidateFile(file);
+            Assert.False(result.IsValid);
+            var error = Assert.Single(result.Errors);
+            Assert.Contains(keyword, error.Message);
+            Assert.Contains($"'{value}'", error.Message);
+        });
+    }
+
     #region Several messages (#679)
 
     [Fact]

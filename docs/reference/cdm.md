@@ -30,6 +30,14 @@ segments throws `CdmParseException` naming it, where before 11.0.0 the `Cdm` con
 second header, body, `relativeMetadataData`, metadata, data section or block throws `CdmParseException` naming the
 element and its count, where the first was read (a second `relativeMetadataData`'s miss distance dropped).
 
+An enumerated keyword whose value is not one of its own (`OBJECT`, `REF_FRAME`, `COVARIANCE_METHOD`, `MANEUVERABLE`,
+`SCREEN_VOLUME_FRAME`, `SCREEN_VOLUME_SHAPE`, `SOLAR_RAD_PRESSURE`, `EARTH_TIDES`, `INTRACK_THRUST`; CCSDS 508.0-B-1
+table 3-3) throws `CdmParseException` naming the keyword and its value, the `FormatException` of the enumeration as
+`InnerException`, for example `REF_FRAME 'TEME' is not one of the values of the keyword: Unsupported CDM reference frame
+'TEME'.` Before 11.0.0 that `FormatException` crossed the reader (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The readers do not check the
+schema: `Cdm.ValidateSchemaFromXml` rejects these values too.
+
 ### Schema validation
 
 `Cdm.ValidateSchema` and `Cdm.ValidateSchemaFromXml` check a document whose root, `ndm` or `cdm`, has no namespace

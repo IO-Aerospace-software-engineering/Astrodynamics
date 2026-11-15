@@ -325,6 +325,64 @@ public class CdmTests
         return qualified ? xml : RemoveNamespaces(xml);
     }
 
+    // ManualCdmXml in the namespace with every optional enumerated keyword present: the screen volume's frame and shape,
+    // and SOLAR_RAD_PRESSURE, EARTH_TIDES and INTRACK_THRUST in both segments
+    private static string EnumeratedKeywordCdmXml()
+    {
+        var cdm = Cdm.ReadFromString(ManualCdmXml(qualified: true));
+        var withKeywords = new Cdm(cdm.Header,
+            cdm.RelativeMetadataData with
+            {
+                ScreenVolumeFrame = CdmScreenVolumeFrame.Rtn,
+                ScreenVolumeShape = CdmScreenVolumeShape.Ellipsoid,
+                ScreenVolumeXMeters = 200.0,
+                ScreenVolumeYMeters = 1000.0,
+                ScreenVolumeZMeters = 1000.0
+            },
+            cdm.Segments.Select(segment => segment with
+            {
+                Metadata = segment.Metadata! with { SolarRadPressure = true, EarthTides = false, IntrackThrust = false }
+            }).ToList());
+        return withKeywords.WriteToString(wrapInNdmContainer: false);
+    }
+
+    // The enumerated keywords of a CDM with a value that is none of theirs: CCSDS 508.0-B-1 table 3-3 and the enumerations
+    // of ndmxml-4.0.0-cdm-1.0.xsd (objectType OBJECT1/OBJECT2, referenceFrameType EME2000/GCRF/ITRF, covarianceMethodType
+    // CALCULATED/DEFAULT, maneuverableType YES/NO/N/A, screenVolumeFrameType RTN/TVN, screenVolumeShapeType
+    // ELLIPSOID/BOX, yesNoType YES/NO)
+    [Theory]
+    [InlineData("OBJECT", "OBJECT3")]
+    [InlineData("REF_FRAME", "TEME")]
+    [InlineData("COVARIANCE_METHOD", "GUESSED")]
+    [InlineData("MANEUVERABLE", "MAYBE")]
+    [InlineData("SCREEN_VOLUME_FRAME", "XYZ")]
+    [InlineData("SCREEN_VOLUME_SHAPE", "SPHERE")]
+    [InlineData("SOLAR_RAD_PRESSURE", "MAYBE")]
+    [InlineData("EARTH_TIDES", "MAYBE")]
+    [InlineData("INTRACK_THRUST", "MAYBE")]
+    public void ReadFromString_KeywordNotOneOfItsValues_ThrowsCdmParseException(string keyword, string value)
+    {
+        var baseXml = EnumeratedKeywordCdmXml();
+        Assert.True(Cdm.ValidateSchemaFromXml(baseXml).IsValid);
+        var xml = NdmDocuments.WithElementValue(baseXml, keyword, value);
+        // The schema, the oracle that the value is not one of the keyword's, rejects the document
+        Assert.False(Cdm.ValidateSchemaFromXml(xml).IsValid);
+
+        // Before: the FormatException of CdmEnumExtensions, not the reader's documented exception
+        void AssertNamesKeyword(CdmParseException ex)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            Assert.IsType<FormatException>(ex.InnerException);
+        }
+
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml)));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(RemoveNamespaces(xml))));
+        using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+        AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream)));
+        NdmDocuments.WithTempFile(xml, file => AssertNamesKeyword(Assert.Throws<CdmParseException>(() => Cdm.ReadFromFile(file))));
+    }
+
     private static string WithSegmentCount(string xml, int count)
     {
         var document = XDocument.Parse(xml);

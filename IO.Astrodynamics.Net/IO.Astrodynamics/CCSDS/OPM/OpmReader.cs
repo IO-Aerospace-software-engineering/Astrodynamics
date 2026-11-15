@@ -22,7 +22,11 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// (NDM/XML 4.0.0; CCSDS 502.0-B-3), the maneuvers excepted: a second one throws <see cref="OpmParseException"/>, where before 11.0.0 the
 /// first was read and the others dropped, a whole second segment included. The reader is the guard without schema
 /// validation; the schema of NDM/XML 4.0.0, which the validator checks in the document's form (third round of #668),
-/// rejects these elements too, but not several messages of an NDM.
+/// rejects these elements too, but not several messages of an NDM. A keyword whose value the data model refuses (a
+/// negative ECCENTRICITY, an INCLINATION outside [0, 180], an empty OBJECT_NAME, ...) throws <see cref="OpmParseException"/> naming the
+/// keyword, its value and the rule, the data model's exception as inner exception, where before 11.0.0 the
+/// <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/> of its constructor crossed the reader; the
+/// schema rejects some of these values first, not those its types allow (fourth round of #668).
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OpmReader
@@ -35,7 +39,8 @@ public class OpmReader
     /// <exception cref="ArgumentException">Thrown when the file path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
     /// <exception cref="OpmParseException">Thrown when the file cannot be parsed, holds several OPM messages, or an OPM
-    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section, or a keyword whose
+    /// value the data model refuses, naming the keyword and its value (fourth round of #668).</exception>
     public Opm ReadFromFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -55,7 +60,8 @@ public class OpmReader
     /// <returns>The parsed Opm object.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
     /// <exception cref="OpmParseException">Thrown when the stream cannot be parsed, holds several OPM messages, or an OPM
-    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section, or a keyword whose
+    /// value the data model refuses, naming the keyword and its value (fourth round of #668).</exception>
     public Opm ReadFromStream(Stream stream)
     {
         if (stream == null)
@@ -79,7 +85,8 @@ public class OpmReader
     /// <returns>The parsed Opm object.</returns>
     /// <exception cref="ArgumentException">Thrown when XML string is null or empty.</exception>
     /// <exception cref="OpmParseException">Thrown when the XML cannot be parsed, holds several OPM messages, or an OPM
-    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section, or a keyword whose
+    /// value the data model refuses, naming the keyword and its value (fourth round of #668).</exception>
     public Opm ReadFromString(string xml)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -149,11 +156,12 @@ public class OpmReader
         var classification = GetOptionalElementValue(headerElement, "CLASSIFICATION");
         var messageId = GetOptionalElementValue(headerElement, "MESSAGE_ID");
 
-        return new CcsdsHeader(creationDate, originator, comments)
-        {
-            Classification = classification,
-            MessageId = messageId
-        };
+        return Construct(() => new CcsdsHeader(creationDate, originator, comments)
+            {
+                Classification = classification,
+                MessageId = messageId
+            }, "header",
+            new CcsdsKeyword("originator", "ORIGINATOR", originator));
     }
 
     private OpmMetadata ParseMetadata(XElement metadataElement)
@@ -172,9 +180,14 @@ public class OpmReader
         if (!string.IsNullOrEmpty(refFrameEpochStr))
             refFrameEpoch = ParseDateTime(refFrameEpochStr, "REF_FRAME_EPOCH");
 
-        return new OpmMetadata(
-            objectName, objectId, centerName, refFrame, timeSystem,
-            refFrameEpoch, comments);
+        return Construct(() => new OpmMetadata(
+                objectName, objectId, centerName, refFrame, timeSystem,
+                refFrameEpoch, comments), "metadata",
+            new CcsdsKeyword("objectName", "OBJECT_NAME", objectName),
+            new CcsdsKeyword("objectId", "OBJECT_ID", objectId),
+            new CcsdsKeyword("centerName", "CENTER_NAME", centerName),
+            new CcsdsKeyword("referenceFrame", "REF_FRAME", refFrame),
+            new CcsdsKeyword("timeSystem", "TIME_SYSTEM", timeSystem));
     }
 
     private OpmData ParseData(XElement dataElement)
@@ -194,16 +207,17 @@ public class OpmReader
 
         // Parse optional spacecraft parameters
         double? mass = null, solarRadArea = null, solarRadCoeff = null, dragArea = null, dragCoeff = null;
+        string massStr = null, solarRadAreaStr = null, solarRadCoeffStr = null, dragAreaStr = null, dragCoeffStr = null;
         IReadOnlyList<string> spacecraftComments = null;
         var spacecraftElement = GetOptionalBlock(dataElement, "spacecraftParameters");
         if (spacecraftElement != null)
         {
             spacecraftComments = GetComments(spacecraftElement);
-            var massStr = GetOptionalElementValue(spacecraftElement, "MASS");
-            var solarRadAreaStr = GetOptionalElementValue(spacecraftElement, "SOLAR_RAD_AREA");
-            var solarRadCoeffStr = GetOptionalElementValue(spacecraftElement, "SOLAR_RAD_COEFF");
-            var dragAreaStr = GetOptionalElementValue(spacecraftElement, "DRAG_AREA");
-            var dragCoeffStr = GetOptionalElementValue(spacecraftElement, "DRAG_COEFF");
+            massStr = GetOptionalElementValue(spacecraftElement, "MASS");
+            solarRadAreaStr = GetOptionalElementValue(spacecraftElement, "SOLAR_RAD_AREA");
+            solarRadCoeffStr = GetOptionalElementValue(spacecraftElement, "SOLAR_RAD_COEFF");
+            dragAreaStr = GetOptionalElementValue(spacecraftElement, "DRAG_AREA");
+            dragCoeffStr = GetOptionalElementValue(spacecraftElement, "DRAG_COEFF");
 
             if (!string.IsNullOrEmpty(massStr)) mass = ParseDouble(massStr, "MASS");
             if (!string.IsNullOrEmpty(solarRadAreaStr)) solarRadArea = ParseDouble(solarRadAreaStr, "SOLAR_RAD_AREA");
@@ -232,19 +246,26 @@ public class OpmReader
         if (userDefinedElement != null)
             userDefinedParameters = ParseUserDefinedParameters(userDefinedElement);
 
-        return new OpmData(
-            stateVector,
-            keplerianElements,
-            mass,
-            solarRadArea,
-            solarRadCoeff,
-            dragArea,
-            dragCoeff,
-            covariance,
-            maneuvers,
-            userDefinedParameters,
-            spacecraftComments,
-            dataComments);
+        // The spacecraft parameters are checked by OpmData; a value it refuses throws OpmParseException naming its keyword
+        // (fourth round of #668)
+        return Construct(() => new OpmData(
+                stateVector,
+                keplerianElements,
+                mass,
+                solarRadArea,
+                solarRadCoeff,
+                dragArea,
+                dragCoeff,
+                covariance,
+                maneuvers,
+                userDefinedParameters,
+                spacecraftComments,
+                dataComments), "spacecraftParameters",
+            new CcsdsKeyword("mass", "MASS", massStr),
+            new CcsdsKeyword("solarRadiationPressureArea", "SOLAR_RAD_AREA", solarRadAreaStr),
+            new CcsdsKeyword("solarRadiationCoefficient", "SOLAR_RAD_COEFF", solarRadCoeffStr),
+            new CcsdsKeyword("dragArea", "DRAG_AREA", dragAreaStr),
+            new CcsdsKeyword("dragCoefficient", "DRAG_COEFF", dragCoeffStr));
     }
 
     private OpmStateVector ParseStateVector(XElement element)
@@ -268,9 +289,12 @@ public class OpmReader
     {
         var comments = GetComments(element);
 
-        var sma = ParseDouble(GetRequiredElementValue(element, "SEMI_MAJOR_AXIS"), "SEMI_MAJOR_AXIS");
-        var ecc = ParseDouble(GetRequiredElementValue(element, "ECCENTRICITY"), "ECCENTRICITY");
-        var inc = ParseDouble(GetRequiredElementValue(element, "INCLINATION"), "INCLINATION");
+        var smaStr = GetRequiredElementValue(element, "SEMI_MAJOR_AXIS");
+        var eccStr = GetRequiredElementValue(element, "ECCENTRICITY");
+        var incStr = GetRequiredElementValue(element, "INCLINATION");
+        var sma = ParseDouble(smaStr, "SEMI_MAJOR_AXIS");
+        var ecc = ParseDouble(eccStr, "ECCENTRICITY");
+        var inc = ParseDouble(incStr, "INCLINATION");
         var raan = ParseDouble(GetRequiredElementValue(element, "RA_OF_ASC_NODE"), "RA_OF_ASC_NODE");
         var aop = ParseDouble(GetRequiredElementValue(element, "ARG_OF_PERICENTER"), "ARG_OF_PERICENTER");
 
@@ -284,17 +308,30 @@ public class OpmReader
         if (!string.IsNullOrEmpty(trueAnomalyStr) && !string.IsNullOrEmpty(meanAnomalyStr))
             throw new OpmParseException("Only one of TRUE_ANOMALY or MEAN_ANOMALY should be specified in keplerianElements.");
 
-        var gm = ParseDouble(GetRequiredElementValue(element, "GM"), "GM");
+        var gmStr = GetRequiredElementValue(element, "GM");
+        var gm = ParseDouble(gmStr, "GM");
+
+        // A value the data model refuses throws OpmParseException naming its keyword (fourth round of #668); the sign of
+        // SEMI_MAJOR_AXIS depends on ECCENTRICITY, so its message gives both
+        var keywords = new[]
+        {
+            new CcsdsKeyword("semiMajorAxis", "SEMI_MAJOR_AXIS", smaStr, $"ECCENTRICITY '{eccStr}'"),
+            new CcsdsKeyword("eccentricity", "ECCENTRICITY", eccStr),
+            new CcsdsKeyword("inclination", "INCLINATION", incStr),
+            new CcsdsKeyword("gm", "GM", gmStr)
+        };
 
         if (!string.IsNullOrEmpty(trueAnomalyStr))
         {
             var trueAnomaly = ParseDouble(trueAnomalyStr, "TRUE_ANOMALY");
-            return OpmKeplerianElements.CreateWithTrueAnomaly(sma, ecc, inc, raan, aop, trueAnomaly, gm, comments);
+            return Construct(() => OpmKeplerianElements.CreateWithTrueAnomaly(sma, ecc, inc, raan, aop, trueAnomaly, gm, comments),
+                "keplerianElements", keywords);
         }
         else
         {
             var meanAnomaly = ParseDouble(meanAnomalyStr, "MEAN_ANOMALY");
-            return OpmKeplerianElements.CreateWithMeanAnomaly(sma, ecc, inc, raan, aop, meanAnomaly, gm, comments);
+            return Construct(() => OpmKeplerianElements.CreateWithMeanAnomaly(sma, ecc, inc, raan, aop, meanAnomaly, gm, comments),
+                "keplerianElements", keywords);
         }
     }
 
@@ -305,14 +342,20 @@ public class OpmReader
         var epochStr = GetRequiredElementValue(element, "MAN_EPOCH_IGNITION");
         var epoch = ParseDateTime(epochStr, "MAN_EPOCH_IGNITION");
 
-        var duration = ParseDouble(GetRequiredElementValue(element, "MAN_DURATION"), "MAN_DURATION");
-        var deltaMass = ParseDouble(GetRequiredElementValue(element, "MAN_DELTA_MASS"), "MAN_DELTA_MASS");
+        var durationStr = GetRequiredElementValue(element, "MAN_DURATION");
+        var deltaMassStr = GetRequiredElementValue(element, "MAN_DELTA_MASS");
+        var duration = ParseDouble(durationStr, "MAN_DURATION");
+        var deltaMass = ParseDouble(deltaMassStr, "MAN_DELTA_MASS");
         var refFrame = GetRequiredElementValue(element, "MAN_REF_FRAME");
         var dv1 = ParseDouble(GetRequiredElementValue(element, "MAN_DV_1"), "MAN_DV_1");
         var dv2 = ParseDouble(GetRequiredElementValue(element, "MAN_DV_2"), "MAN_DV_2");
         var dv3 = ParseDouble(GetRequiredElementValue(element, "MAN_DV_3"), "MAN_DV_3");
 
-        return new OpmManeuverParameters(epoch, duration, deltaMass, refFrame, dv1, dv2, dv3, comments);
+        return Construct(() => new OpmManeuverParameters(epoch, duration, deltaMass, refFrame, dv1, dv2, dv3, comments),
+            "maneuverParameters",
+            new CcsdsKeyword("manDuration", "MAN_DURATION", durationStr),
+            new CcsdsKeyword("manDeltaMass", "MAN_DELTA_MASS", deltaMassStr),
+            new CcsdsKeyword("manRefFrame", "MAN_REF_FRAME", refFrame));
     }
 
     private CovarianceMatrix ParseCovarianceMatrix(XElement element)
@@ -370,6 +413,13 @@ public class OpmReader
     }
 
     #region Helper Methods
+
+    // Builds a data-model object; a value it refuses throws OpmParseException naming its keyword and its text, not the
+    // ArgumentException of the constructor (fourth round of #668)
+    private static T Construct<T>(Func<T> construct, string block, params CcsdsKeyword[] keywords)
+    {
+        return CcsdsValues.Construct(construct, block, (message, inner) => new OpmParseException(message, inner), keywords);
+    }
 
     // A header, body, segment, metadata, data section or required data block: one, which the schema bounds to one; none
     // or several throw, a second one no longer dropped silently

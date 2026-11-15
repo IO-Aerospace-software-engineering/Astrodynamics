@@ -263,6 +263,27 @@ namespace IO.Astrodynamics.Tests.CCSDS
         }
 
         /// <summary>
+        /// A copy of the document with the text of its first element named <paramref name="localName"/> replaced by
+        /// <paramref name="value"/> (an empty string leaves the element empty), the element renamed
+        /// <paramref name="renameTo"/> when given; the new value is checked with System.Xml.Linq, independently of the
+        /// readers.
+        /// </summary>
+        internal static string WithElementValue(string xml, string localName, string value, string? renameTo = null)
+        {
+            var document = XDocument.Parse(xml);
+            var element = document.Descendants().First(e => e.Name.LocalName == localName);
+            element.Value = value;
+            if (renameTo != null)
+            {
+                element.Name = element.Name.Namespace + renameTo;
+            }
+
+            var result = document.ToString();
+            Assert.Equal(value, XDocument.Parse(result).Descendants().First(e => e.Name.LocalName == (renameTo ?? localName)).Value);
+            return result;
+        }
+
+        /// <summary>
         /// Writes the XML to a temporary file, runs the action on its path, and deletes the file.
         /// </summary>
         internal static void WithTempFile(string xml, Action<string> action)

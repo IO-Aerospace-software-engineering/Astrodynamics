@@ -2670,6 +2670,41 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   perpendicular vectors and targets against the closed form, antiparallel body vectors and targets and parallel targets
   at 1e-14, 2e4 random pairs v and fl(k v) at 1e-14, v and fl(±2.9 v), fl(±1.1 v) (acos 2.1e-8 and 1.5e-8 rad from
   collinear) at 1e-12, and NaN and infinite body vectors (Changed, Breaking, below).
+- **A keyword out of its range escaped the OMM and OPM readers as an `ArgumentException`, and an enumerated CDM keyword
+  as a `FormatException`** (fourth round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The readers passed the parsed
+  values straight to the public constructors of the data model (`MeanElements`, `SpacecraftParameters`,
+  `TleParameters`, `OmmMetadata`, `CcsdsHeader`, `UserDefinedParameter`, `OpmKeplerianElements`, `OpmData`,
+  `OpmManeuverParameters`, `OpmMetadata`), whose argument checks throw `ArgumentOutOfRangeException` or
+  `ArgumentException`, and wrapped only `XmlException` and their own parse failures, so the constructor's exception
+  crossed `Omm`/`Opm.LoadFrom*` and `OmmReader`/`OpmReader.ReadFrom*`, whose documented exception is the reader's parse
+  exception, naming a constructor parameter (`Eccentricity must be non-negative. (Parameter 'eccentricity')`). Without
+  `validateSchema` it escaped for every range check (an OMM `ECCENTRICITY` of -0.5, `INCLINATION` of 190,
+  `RA_OF_ASC_NODE` of 360, `MEAN_MOTION` of 0, `ELEMENT_SET_NO` of 10000, a negative `MASS`; an OPM `SEMI_MAJOR_AXIS` of
+  the wrong sign for its `ECCENTRICITY`, `MAN_DELTA_MASS` of 1; an empty `OBJECT_NAME`, `ORIGINATOR` or
+  `MAN_REF_FRAME`), and with the default validation for the values the NDM/XML 4.0.0 schema accepts: an OMM
+  `MEAN_MOTION` or `SEMI_MAJOR_AXIS` not above 0 (`revType` and `distanceType` are `xsd:double`), the OPM
+  `SEMI_MAJOR_AXIS` sign and `MASS` 0 (`massType` is a `nonNegativeDouble`, `OpmData` requires a mass above 0), and the
+  empty strings (`xsd:string`). The CDM reader, which has no schema step, let the `FormatException` of
+  `CdmEnumExtensions` cross every read for an `OBJECT` of `OBJECT3`, a `REF_FRAME` of `TEME`, a `COVARIANCE_METHOD`,
+  `MANEUVERABLE`, `SCREEN_VOLUME_FRAME`, `SCREEN_VOLUME_SHAPE`, `SOLAR_RAD_PRESSURE`, `EARTH_TIDES` or `INTRACK_THRUST`
+  that is not one of its values, where `OBJECT_TYPE` already threw `CdmParseException`. Under the same signatures, the
+  readers build each block through one internal helper (`CCSDS/Common/CcsdsValues`), which maps the parameter the
+  `ArgumentException` names to its keyword and throws `OmmParseException` or `OpmParseException` naming the keyword, its
+  text, its block and the data model's rule, with the `ArgumentException` as `InnerException`
+  (`ECCENTRICITY '-0.5' in meanElements is invalid: Eccentricity must be non-negative.`; for the OPM
+  `SEMI_MAJOR_AXIS` the `ECCENTRICITY` it was checked with too); the CDM reader catches the `FormatException` of the
+  enumerated keywords, `OBJECT` and the YES/NO keywords included, and throws `CdmParseException` naming the keyword and
+  its value. `TryLoadFromFile` and `ValidateFile`, which caught every exception, now report the keyword. The rules stay
+  those of the data model, whose public constructors keep their `ArgumentException` for a programmatic caller; a
+  document that loaded loads as before, bit for bit. The tests change one keyword of iss.omm (with a GM and a
+  spacecraftParameters block) or of satellite_complete.xml, both unqualified and schema-valid, or of a CDM of the
+  library: every keyword with a range or a required string of the OMM and the OPM and every enumerated keyword of the
+  CDM, through every entry point, with the NDM/XML 4.0.0 schema as the oracle of the value's validity where it has a
+  facet (`OmmValidator`, `OpmValidator`, `Cdm.ValidateSchemaFromXml`), and the bounds of the facets (`ECCENTRICITY` 0,
+  `INCLINATION` 0 and 180, `RA_OF_ASC_NODE` -360 and 359.999, `MASS` 0) read exactly
+  (`ReadFromString_KeywordOutOfRange_*`, `ReadFromString_KeywordNotOneOfItsValues_ThrowsCdmParseException`,
+  `ReadFromString_KeywordAtRangeBoundary_Parses`).
 
 **Changed**
 
@@ -3414,9 +3449,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   in it: `Omm`/`Opm.LoadFrom*` throw the validation exception where they threw `OmmParseException` or `OpmParseException`
   ("Could not find ... element in document"). A valid document,
   Space-Track's and the writers' output included, stays valid, now without warnings. A root in the NDM/XML namespace
-  but a CDM `ndm` without a CDM, and every read with `validateSchema: false`, are unchanged, bit for bit. Migration: fix
-  the document, or pass `validateSchema: false` to read it as before; catch the validation exception for an NDM without
-  the message.
+  but a CDM `ndm` without a CDM, and every read with `validateSchema: false`, are unchanged, bit for bit by this entry
+  (a keyword out of its range now throws the reader's parse exception on every read, the fourth round's entry below).
+  Migration: fix the document, or pass `validateSchema: false` to read it without the schema step; catch the validation
+  exception for an NDM without the message.
 - **Breaking: the managed threshold searches return the windows, gaps and crossings shorter than the step**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678), Fixed above). Under the same signatures, the searches the library
   runs (`FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and `FindWindowsOnIlluminationConstraint`
@@ -3631,6 +3667,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Star.PropagateAsync` and `Scenario.SimulateAsync` keep the states of the last propagation only, as
   `Spacecraft.Propagate` does, where each added its states to those of the earlier ones. Migration: to write several
   windows, propagate over one window that covers them. No result moves for a star propagated once.
+
+- **Breaking: a keyword out of its range throws the reader's parse exception** (fourth round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above):
+  `Omm`/`Opm.LoadFromFile`, `LoadFromString` and `LoadFromStream` and `OmmReader`/`OpmReader.ReadFrom*` throw
+  `OmmParseException` or `OpmParseException` for a keyword whose value the data model refuses, where they threw the
+  `ArgumentOutOfRangeException` or `ArgumentException` of its constructor, and `Cdm.ReadFrom*` and `CdmReader.ReadFrom*`
+  throw `CdmParseException` for an enumerated keyword that is not one of its values, where they threw `FormatException`;
+  the data model's exception is the `InnerException`. The `PARSE_ERROR` of `Omm`/`Opm.TryLoadFromFile` and the error of
+  `ValidateFile` name the keyword and its value. The constructors of the data model keep their exceptions, and a
+  document that loaded loads as before. Migration: catch the reader's parse exception (`OmmParseException`,
+  `OpmParseException`, `CdmParseException`) instead of `ArgumentException` or `FormatException` around a load.
 
 **Removed**
 

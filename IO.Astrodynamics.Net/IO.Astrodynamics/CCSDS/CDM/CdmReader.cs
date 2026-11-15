@@ -21,7 +21,12 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 /// the first one (#679); messages of another type beside it are ignored. A CDM whose body holds a segment count other
 /// than two, or that holds several headers, bodies, relativeMetadataData, relativeStateVector, metadata or data sections,
 /// or blocks of a data section, throws <see cref="CdmParseException"/> too, where before 11.0.0 the first was read (and
-/// a segment count other than two threw <see cref="ArgumentException"/> from the <see cref="Cdm"/> constructor).
+/// a segment count other than two threw <see cref="ArgumentException"/> from the <see cref="Cdm"/> constructor). An
+/// enumerated keyword whose value is not one of its own (OBJECT, REF_FRAME, COVARIANCE_METHOD, MANEUVERABLE,
+/// SCREEN_VOLUME_FRAME, SCREEN_VOLUME_SHAPE, SOLAR_RAD_PRESSURE, EARTH_TIDES, INTRACK_THRUST; CCSDS 508.0-B-1 table 3-3)
+/// throws <see cref="CdmParseException"/> naming the keyword and its value, the <see cref="FormatException"/> of the
+/// enumeration as inner exception, where before 11.0.0 that <see cref="FormatException"/> crossed the reader (fourth round
+/// of #668).
 /// </remarks>
 public sealed class CdmReader
 {
@@ -172,7 +177,7 @@ public sealed class CdmReader
         return new CdmParticipantMetadata
         {
             Comments = GetComments(element),
-            Object = CdmEnumExtensions.ParseObjectRole(GetRequiredElementValue(element, "OBJECT")),
+            Object = ParseRequiredEnum(element, "OBJECT", CdmEnumExtensions.ParseObjectRole),
             ObjectDesignator = GetRequiredElementValue(element, "OBJECT_DESIGNATOR"),
             CatalogName = GetRequiredElementValue(element, "CATALOG_NAME"),
             ObjectName = GetRequiredElementValue(element, "OBJECT_NAME"),
@@ -369,14 +374,28 @@ public sealed class CdmReader
 
     private static T ParseRequiredEnum<T>(XElement parent, string localName, Func<string, T> parser)
     {
-        return parser(GetRequiredElementValue(parent, localName));
+        return ParseEnum(GetRequiredElementValue(parent, localName), localName, parser);
     }
 
     private static T? ParseOptionalEnum<T>(XElement parent, string localName, Func<string, T> parser)
         where T : struct
     {
         var value = GetOptionalElementValue(parent, localName);
-        return value == null ? null : parser(value);
+        return value == null ? null : ParseEnum(value, localName, parser);
+    }
+
+    // A value that is not one of the keyword's (CCSDS 508.0-B-1 table 3-3; the enumerations of NDM/XML cdm-1.0) throws
+    // CdmParseException naming the keyword and its value, not the FormatException of CdmEnumExtensions (fourth round of #668)
+    private static T ParseEnum<T>(string value, string localName, Func<string, T> parser)
+    {
+        try
+        {
+            return parser(value);
+        }
+        catch (FormatException ex)
+        {
+            throw new CdmParseException($"{localName} '{value}' is not one of the values of the keyword: {ex.Message}", ex);
+        }
     }
 
     private static DateTime ParseDateTime(string value, string fieldName)
@@ -496,8 +515,7 @@ public sealed class CdmReader
 
     private static bool? ParseOptionalYesNo(XElement parent, string localName)
     {
-        var value = GetOptionalElementValue(parent, localName);
-        return value == null ? null : CdmEnumExtensions.ParseYesNo(value);
+        return ParseOptionalEnum(parent, localName, CdmEnumExtensions.ParseYesNo);
     }
 
     private static ObjectType? ParseOptionalObjectType(XElement parent, string localName)

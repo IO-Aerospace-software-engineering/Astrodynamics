@@ -28,6 +28,28 @@ public class OpmValidatorTests
 
     private static readonly string[] Sources = { "writer, ndm", "writer, opm", "satellite_complete.xml" };
 
+    // A schema-valid document whose value the data model refuses: ValidateFile reports the parse error naming the keyword
+    // and its value (before: the data model's message, naming its constructor parameter)
+    [Theory]
+    [InlineData("SEMI_MAJOR_AXIS", "-6878.137")]
+    [InlineData("MASS", "0")]
+    [InlineData("MAN_REF_FRAME", "")]
+    [InlineData("OBJECT_NAME", "")]
+    [InlineData("ORIGINATOR", "")]
+    public void ValidateFile_SchemaValidKeywordOutOfRange_ReportsKeyword(string keyword, string value)
+    {
+        var xml = OpmReaderTests.OpmWithKeyword(keyword, value);
+
+        NdmDocuments.WithTempFile(xml, file =>
+        {
+            var result = _validator.ValidateFile(file);
+            Assert.False(result.IsValid);
+            var error = Assert.Single(result.Errors);
+            Assert.Contains(keyword, error.Message);
+            Assert.Contains($"'{value}'", error.Message);
+        });
+    }
+
     private static readonly string[] Forms = { "unqualified-ndm", "unqualified-message", "qualified-ndm", "qualified-message" };
 
     public static TheoryData<string, string> SourcesAndForms()

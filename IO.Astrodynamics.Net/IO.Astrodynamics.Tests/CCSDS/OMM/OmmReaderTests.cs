@@ -563,5 +563,153 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         }
 
         #endregion
+
+        #region Keywords out of their range
+
+        /// <summary>
+        /// iss.omm (as Space-Track writes it) unqualified, its xsi attributes removed, with a GM after MEAN_ANOMALY and a
+        /// spacecraftParameters block after meanElements, so that every keyword of the data model's range checks is present.
+        /// The NDM/XML 4.0.0 schema accepts it (<see cref="KeywordBaseDocument_IsSchemaValidAndReads"/>).
+        /// </summary>
+        internal static string KeywordBaseOmm()
+        {
+            var document = XDocument.Parse(NdmDocuments.InForm(File.ReadAllText(NdmDocuments.IssOmmPath), "omm", "unqualified-ndm"));
+            var meanElements = document.Descendants().Single(e => e.Name.LocalName == "meanElements");
+            meanElements.Elements().Single(e => e.Name.LocalName == "MEAN_ANOMALY")
+                .AddAfterSelf(new XElement("GM", new XAttribute("units", "km**3/s**2"), "398600.4418"));
+            meanElements.AddAfterSelf(new XElement("spacecraftParameters",
+                new XElement("MASS", new XAttribute("units", "kg"), "420000.0"),
+                new XElement("SOLAR_RAD_AREA", new XAttribute("units", "m**2"), "2500.0"),
+                new XElement("SOLAR_RAD_COEFF", "1.2"),
+                new XElement("DRAG_AREA", new XAttribute("units", "m**2"), "2500.0"),
+                new XElement("DRAG_COEFF", "2.2")));
+            return document.ToString();
+        }
+
+        /// <summary>
+        /// The keywords of the OMM whose value the data model refuses, with that value and whether the NDM/XML 4.0.0 schema
+        /// (the oracle that the value is invalid where it has a facet) rejects it: CCSDS 502.0-B-3 and the facets of
+        /// ndmxml-4.0.0-common-4.0.xsd and -omm-3.0.xsd. The schema-valid rows are those where the schema type is wider than
+        /// the data model: revType and distanceType are xsd:double, the metadata and ORIGINATOR xsd:string, the
+        /// USER_DEFINED parameter attribute xsd:string. "SEMI_MAJOR_AXIS" replaces MEAN_MOTION (the choice of meanElements).
+        /// </summary>
+        public static TheoryData<string, string, bool> OmmKeywordsOutOfRange() => new()
+        {
+            { "ECCENTRICITY", "-0.5", true }, // nonNegativeDouble
+            { "INCLINATION", "-1", true }, // inclinationRange [0, 180]
+            { "INCLINATION", "190", true },
+            { "RA_OF_ASC_NODE", "360", true }, // angleRange [-360, 360)
+            { "RA_OF_ASC_NODE", "-361", true },
+            { "ARG_OF_PERICENTER", "360", true },
+            { "ARG_OF_PERICENTER", "-361", true },
+            { "MEAN_ANOMALY", "360", true },
+            { "MEAN_ANOMALY", "-361", true },
+            { "MEAN_MOTION", "0", false }, // revType: xsd:double
+            { "MEAN_MOTION", "-1", false },
+            { "SEMI_MAJOR_AXIS", "-7000", false }, // distanceType: xsd:double
+            { "GM", "0", true }, // gmType: positiveDouble
+            { "ELEMENT_SET_NO", "10000", true }, // elementSetNoType [0, 9999]
+            { "REV_AT_EPOCH", "-1", true }, // xsd:nonNegativeInteger
+            { "MASS", "-1", true }, // massType: nonNegativeDouble
+            { "SOLAR_RAD_AREA", "-1", true }, // areaType: nonNegativeDouble
+            { "SOLAR_RAD_COEFF", "-1", true }, // nonNegativeDouble
+            { "DRAG_AREA", "-1", true },
+            { "DRAG_COEFF", "-1", true },
+            { "OBJECT_NAME", "", false }, // xsd:string
+            { "OBJECT_ID", "", false },
+            { "CENTER_NAME", "", false },
+            { "REF_FRAME", "", false },
+            { "TIME_SYSTEM", "", false },
+            { "MEAN_ELEMENT_THEORY", "", false },
+            { "ORIGINATOR", "", false },
+            { "USER_DEFINED", " ", false } // the parameter attribute: xsd:string
+        };
+
+        /// <summary>The base document with the keyword's value replaced (for USER_DEFINED, the first parameter name).</summary>
+        internal static string OmmWithKeyword(string keyword, string value)
+        {
+            var xml = KeywordBaseOmm();
+            if (keyword == "USER_DEFINED")
+            {
+                var document = XDocument.Parse(xml);
+                document.Descendants().First(e => e.Name.LocalName == "USER_DEFINED").SetAttributeValue("parameter", value);
+                return document.ToString();
+            }
+
+            return keyword == "SEMI_MAJOR_AXIS"
+                ? NdmDocuments.WithElementValue(xml, "MEAN_MOTION", value, renameTo: "SEMI_MAJOR_AXIS")
+                : NdmDocuments.WithElementValue(xml, keyword, value);
+        }
+
+        /// <summary>The parse exception names the keyword and its value, and holds the data model's exception.</summary>
+        internal static void AssertNamesKeyword(Exception ex, string keyword, string value)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            Assert.IsAssignableFrom<ArgumentException>(ex.InnerException);
+        }
+
+        [Fact]
+        public void KeywordBaseDocument_IsSchemaValidAndReads()
+        {
+            var xml = KeywordBaseOmm();
+            var schema = new OmmValidator().ValidateSchemaFromXml(xml);
+            Assert.True(schema.IsValid, string.Join("; ", schema.Errors.Select(e => e.Message)));
+
+            var omm = Omm.LoadFromString(xml);
+            Assert.Equal(398600.4418, omm.Data.MeanElements.GravitationalParameter);
+            Assert.Equal(420000.0, omm.Data.SpacecraftParameters.Mass);
+        }
+
+        [Theory]
+        [MemberData(nameof(OmmKeywordsOutOfRange))]
+        public void ReadFromString_KeywordOutOfRange_ThrowsOmmParseExceptionNamingKeywordAndValue(string keyword, string value, bool schemaRejects)
+        {
+            var xml = OmmWithKeyword(keyword, value);
+
+            // The schema is the oracle of the value's validity where it has a facet; where it is wider (schemaRejects false)
+            // the document is schema-valid, and only the data model refuses it
+            Assert.Equal(schemaRejects, !new OmmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+            // Before: the ArgumentOutOfRangeException or ArgumentException of the data model's constructor, naming its
+            // parameter (eccentricity, objectName, ...), not the reader's documented exception
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(xml));
+            AssertNamesKeyword(ex, keyword, value);
+            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+            AssertNamesKeyword(Assert.Throws<OmmParseException>(() => _reader.ReadFromStream(stream)), keyword, value);
+            NdmDocuments.WithTempFile(xml, file =>
+                AssertNamesKeyword(Assert.Throws<OmmParseException>(() => _reader.ReadFromFile(file)), keyword, value));
+        }
+
+        [Theory]
+        [InlineData("ECCENTRICITY", "0")]
+        [InlineData("INCLINATION", "0")]
+        [InlineData("INCLINATION", "180")]
+        [InlineData("RA_OF_ASC_NODE", "-360")]
+        [InlineData("RA_OF_ASC_NODE", "359.999")]
+        [InlineData("MASS", "0")]
+        public void ReadFromString_KeywordAtRangeBoundary_Parses(string keyword, string value)
+        {
+            // The bounds of the schema's facets (nonNegativeDouble, inclinationRange, angleRange, massType) are accepted by
+            // the reader, with the schema, and read exactly (the value of the text, a decimal that round-trips). The content
+            // validation, a separate layer, is not run: it refuses RA_OF_ASC_NODE -360 and MASS 0, which the schema accepts
+            var xml = OmmWithKeyword(keyword, value);
+            Assert.True(new OmmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+            var omm = Omm.LoadFromString(xml, validateSchema: true, validateContent: false);
+            Assert.Equal(omm.ToXml(), _reader.ReadFromString(xml).ToXml());
+
+            double expected = double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+            double actual = keyword switch
+            {
+                "ECCENTRICITY" => omm.Data.MeanElements.Eccentricity,
+                "INCLINATION" => omm.Data.MeanElements.Inclination,
+                "RA_OF_ASC_NODE" => omm.Data.MeanElements.RightAscensionOfAscendingNode,
+                _ => omm.Data.SpacecraftParameters.Mass!.Value
+            };
+            Assert.Equal(expected, actual);
+        }
+
+        #endregion
     }
 }
