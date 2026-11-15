@@ -42,8 +42,12 @@ tank of its engine is on a spacecraft: it takes the frame of the spacecraft's in
 spacecraft, ICRF (#675); any other frame throws `ArgumentException`. On such a spacecraft a target in TEME still
 constructs and is rejected when the propagation is built. A maneuver built before its tank is on a spacecraft, or whose
 spacecraft gets another initial orbit afterwards (`SetInitialOrbitalParameters`), is checked only when the propagation
-is built. Frames are compared by name, as everywhere in the library: a GCRF target on an ICRF spacecraft is rejected,
-although GCRF has the axes of ICRF.
+is built. Frames are compared by name, as everywhere in the library, but for ICRF and GCRF, which the library gives the
+same axes (`GcrfFrame`, the identity rotation): a GCRF target is taken on a spacecraft propagated in ICRF (a TLE or TEME
+spacecraft included), and an ICRF target on one propagated in GCRF, by the constructor and the propagation alike, the
+components of the target being those the integration reads; the burn is bit for bit that of the relabelled target
+(third review of #685; before, both were rejected, and the fix the message named, `targetOrbit.ToFrame(Frame.ICRF)`,
+changed no number). Any other pair of frames is rejected, whatever their rotation.
 
 ## Thrust Window Convention
 

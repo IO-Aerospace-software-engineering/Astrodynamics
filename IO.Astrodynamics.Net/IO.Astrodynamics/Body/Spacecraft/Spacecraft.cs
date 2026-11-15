@@ -677,8 +677,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// <param name="propagatorStepSize">The step of the output states.</param>
         /// <returns>The solution.</returns>
         /// <exception cref="ArgumentException">The target orbit of an impulse of the maneuver chain is not in the frame the
-        /// spacecraft is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685); nothing
-        /// changes.</exception>
+        /// spacecraft is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685), GCRF and ICRF
+        /// counting as one frame, whose axes they share (third review of #685); nothing changes.</exception>
         /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel.</exception>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive.</exception>
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
@@ -728,7 +728,8 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// consider parameter without its force; the integrator already holds forces or was already used by a
         /// propagation that builds its forces; listed bodies of one NAIF identifier, the observer's included, have
         /// different models; or the target orbit of an impulse of the maneuver chain is not in the frame the spacecraft
-        /// is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685).</exception>
+        /// is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685), GCRF and ICRF
+        /// counting as one frame, whose axes they share (third review of #685).</exception>
         /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; or the covariance is asked
         /// for, and the initial orbital parameters carry none, carry it at another epoch than the start of the window,
         /// or carry one that is not symmetric and positive semi-definite; or drag is asked about a central body other

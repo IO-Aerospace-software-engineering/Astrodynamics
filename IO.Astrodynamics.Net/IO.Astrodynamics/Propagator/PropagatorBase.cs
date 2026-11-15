@@ -400,8 +400,9 @@ public abstract class PropagatorBase : IPropagator
     /// <returns>The solution.</returns>
     /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
     /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too. Or an impulse
-    /// of the chain has its target orbit in another frame than the frame the propagator integrates in, a maneuver attached
-    /// after the propagator was built (#685; the constructor throws <see cref="ArgumentException"/> for those it sees); or
+    /// of the chain has its target orbit in another frame than the frame the propagator integrates in (GCRF and ICRF
+    /// counting as one, third review of #685), a maneuver attached after the propagator was built (#685; the constructor
+    /// throws <see cref="ArgumentException"/> for those it sees); or
     /// a maneuver draws on a tank that is not the spacecraft's (#676). Nothing runs.</exception>
     public PropagationSolution Propagate()
     {
@@ -1033,13 +1034,24 @@ public abstract class PropagatorBase : IPropagator
     internal static Frame PropagationFrame(OrbitalParameters.OrbitalParameters initial) =>
         initial is OrbitalParameters.TLE.TLE || IsOsculatingTeme(initial) ? Frame.ICRF : initial.Frame;
 
+    /// <summary>
+    /// Whether the components of a state in <paramref name="a"/> are those of the state in <paramref name="b"/>: the same
+    /// frame (by name, <see cref="Frame.Equals(Frame)"/>), or ICRF (SPICE <c>J2000</c>) and GCRF, which the library gives
+    /// the same axes (<see cref="GcrfFrame"/>, the identity rotation; third review of #685). A frame built by either name,
+    /// in any case, counts. No other pair of frames counts, whatever their rotation.
+    /// </summary>
+    internal static bool SameAxes(Frame a, Frame b) => a == b || (IsIcrfAxes(a) && IsIcrfAxes(b));
+
+    private static bool IsIcrfAxes(Frame frame) => frame == Frame.ICRF || frame == Frame.GCRF;
+
     private static bool IsOsculatingTeme(OrbitalParameters.OrbitalParameters initial) =>
         initial is not OrbitalParameters.TLE.TLE && initial.ElementsType == OrbitalElementsType.Osculating &&
         SpiceAPI.IsTeme(initial.Frame);
 
     /// <summary>
     /// The target orbits of the impulses of a spacecraft are compared with the integrated state, in the frame the
-    /// spacecraft is propagated in (<see cref="PropagationFrame"/>): a target in any other frame is rejected before anything
+    /// spacecraft is propagated in (<see cref="PropagationFrame"/>), or in GCRF for ICRF and the reverse, which share their
+    /// axes (<see cref="SameAxes"/>, third review of #685): a target in any other frame is rejected before anything
     /// runs, on every spacecraft (#685), when the propagator is built (<see cref="ArgumentException"/>) and again when it
     /// propagates, against the frame of its integration (<see cref="InvalidOperationException"/>: a maneuver attached to the
     /// spacecraft after the propagator was built, the state of the spacecraft). The constructor of
@@ -1055,7 +1067,7 @@ public abstract class PropagatorBase : IPropagator
         var initial = spacecraft.InitialOrbitalParameters;
         foreach (var maneuver in maneuvers)
         {
-            if (maneuver is ImpulseManeuver { TargetOrbit: { } target } && target.Frame != propagationFrame)
+            if (maneuver is ImpulseManeuver { TargetOrbit: { } target } && !SameAxes(target.Frame, propagationFrame))
             {
                 string start;
                 if (propagationFrame != PropagationFrame(initial))

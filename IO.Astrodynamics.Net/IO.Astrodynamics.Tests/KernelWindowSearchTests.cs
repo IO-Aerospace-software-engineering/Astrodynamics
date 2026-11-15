@@ -573,6 +573,173 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             }
         }
     }
+
+    // Third review of #690, measured on Linux x64 (2026-11-15): the worst |library - gfposc| of the coordinate searches in the
+    // frame of a site that SPICE does not know, 5.000e-7 s (the site from the LEO; 3.000e-7 s the LEO from the Earth): the
+    // managed search at 1 µs against gfposc at its default tolerance of 1e-6 s in the test's NAIF topocentric frame on the
+    // same coordinates, both within their convergence tolerance. Twice it, provisional until the three platforms have
+    // printed their MEASURE lines
+    private const double ManagedFrameSearchThreshold = 1.0e-6;
+
+    private void AssertSameWindows(string label, Window[] expected, Window[] actual, double threshold)
+    {
+        Assert.NotEmpty(expected);
+        Assert.Equal(expected.Length, actual.Length);
+        double worst = 0.0;
+        for (int i = 0; i < expected.Length; i++)
+        {
+            worst = System.Math.Max(worst, System.Math.Abs((actual[i].StartDate.ToTDB() - expected[i].StartDate.ToTDB()).TotalSeconds));
+            worst = System.Math.Max(worst, System.Math.Abs((actual[i].EndDate.ToTDB() - expected[i].EndDate.ToTDB()).TotalSeconds));
+        }
+
+        _output.WriteLine($"MEASURE {label}: {expected.Length} windows, worst |library - gfposc| {worst:E3} s");
+        Assert.True(worst <= threshold, $"{label}: {worst:E3} s");
+    }
+
+    // The SPKs of a site from the kernels at DSS-13's coordinates, written by the library: over the LEO's window, and about
+    // J2000 TDB, where a site from the kernels reads its planetodetic coordinates
+    private static (FileInfo, FileInfo) KernelSiteSpks(int id, string name)
+    {
+        var site = new Site(id, name, Earth, Dss13.Planetodetic);
+        var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile($"site{id}", ".bsp");
+        var spkAtJ2000 = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile($"site{id}_j2000", ".bsp");
+        site.WriteEphemeris(new Window(LeoWindow.StartDate.AddHours(-1.0), LeoWindow.EndDate.AddHours(1.0)), spk);
+        site.WriteEphemeris(new Window(TimeSystem.Time.J2000TDB.AddHours(-1.0), TimeSystem.Time.J2000TDB.AddHours(1.0)), spkAtJ2000);
+        return (spk, spkAtJ2000);
+    }
+
+    /// <summary>
+    /// A coordinate search in the frame of a site that SPICE does not know, with a kernel spacecraft taking part (third
+    /// review of #690): the frame of a site from the kernels whose frame id no loaded kernel defines, and the frame of a
+    /// site built from coordinates (#558, #682). CSPICE's <c>gfposc_c</c> got the site's own name, which SPICE does not
+    /// know, and its proxy dropped the error, so the search returned no window, while a read in the frame is the
+    /// library's. The search is the managed one in those frames, on the site's own search (the site seen from the LEO,
+    /// <see cref="Site.FindWindowsOnCoordinateConstraint"/>) and on the spacecraft's (the LEO from the Earth,
+    /// <see cref="CelestialItem.FindWindowsOnCoordinateConstraint"/>), and <see cref="SpiceAPI.FindWindowsOnCoordinateConstraint"/>,
+    /// which can only hand the frame to CSPICE, throws. The reference is <c>gfposc_c</c> in a frame kernel written by the
+    /// test in NAIF's topocentric convention on the site's <see cref="Site.Planetodetic"/>, under another id and name
+    /// (1399890, RV890_TOPO).
+    /// </summary>
+    [Fact]
+    public void CoordinateSearch_InTheFrameOfASiteSpiceDoesNotKnow_IsTheManagedSearch()
+    {
+        // Arrange: the SPK of site 790 at DSS-13's coordinates, no frame kernel of its id; the LEO of the kernels
+        var earth = Earth;
+        var (spk, spkAtJ2000) = KernelSiteSpks(790, "RV790");
+        var reference = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site790_reference");
+        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceAPI.Instance.LoadKernels(spkAtJ2000);
+        SpiceAPI.Instance.LoadKernels(LeoSpkPath);
+        try
+        {
+            var site = new Site(790, "RV790", earth);
+            Assert.True(site.IsSpiceBacked);
+            Assert.False(SpiceAPI.KernelDefinesFrame(site.Frame.Id!.Value));
+            var coordinatesSite = new Site(791, "RV791", earth, site.Planetodetic);
+            File.WriteAllText(reference.FullName, Surface.SiteTests.TopocentricFrameKernel(1399890, "RV890_TOPO", site.NaifId, site.Planetodetic));
+            Assert.Empty(KernelShadowing.Find([spk, spkAtJ2000, reference], KernelShadowing.SolarSystem));
+            SpiceAPI.Instance.LoadKernels(reference);
+            try
+            {
+                var leo = new Spacecraft(-67801, "LEO678SPK", epoch: LeoWindow.StartDate);
+                var referenceFrame = new Frames.Frame("RV890_TOPO");
+                var step = TimeSpan.FromMinutes(5.0);
+                double sixtyDegrees = 60.0 * IO.Astrodynamics.Constants.Deg2Rad;
+
+                // Act and assert: the site seen from the LEO, in the frame of the kernel site (the passes, and their complement)
+                foreach (var (relation, value, label) in new[]
+                         {
+                             (RelationnalOperator.Lower, -ThirtyDegrees, "declination < -30 deg"), (RelationnalOperator.Greater, ThirtyDegrees, "declination > 30 deg")
+                         })
+                {
+                    var expected = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(LeoWindow, leo.NaifId, site.NaifId, referenceFrame, CoordinateSystem.RaDec,
+                        Coordinate.Declination, relation, value, 0.0, Aberration.None, step).ToArray();
+                    var actual = site.FindWindowsOnCoordinateConstraint(LeoWindow, leo, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination, relation, value,
+                        0.0, Aberration.None, step).ToArray();
+                    AssertSameWindows($"kernel site without frame kernel seen from the LEO, {label}", expected, actual, ManagedFrameSearchThreshold);
+                }
+
+                // The LEO from the Earth, in the frame of the kernel site and of the site built from the same coordinates
+                var fromEarth = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(LeoWindow, earth.NaifId, leo.NaifId, referenceFrame, CoordinateSystem.RaDec,
+                    Coordinate.Declination, RelationnalOperator.Greater, sixtyDegrees, 0.0, Aberration.None, step).ToArray();
+                foreach (var (frame, label) in new[] { (site.Frame, "kernel site without frame kernel"), (coordinatesSite.Frame, "site from coordinates") })
+                {
+                    var actual = leo.FindWindowsOnCoordinateConstraint(LeoWindow, earth, frame, CoordinateSystem.RaDec, Coordinate.Declination,
+                        RelationnalOperator.Greater, sixtyDegrees, 0.0, Aberration.None, step).ToArray();
+                    AssertSameWindows($"the LEO from the Earth in the frame of the {label}, declination > 60 deg", fromEarth, actual, ManagedFrameSearchThreshold);
+                }
+
+                // SpiceAPI hands the frame to CSPICE: a frame SPICE does not know, or does not read as the library does, throws
+                foreach (var frame in new Frames.Frame[] { site.Frame, coordinatesSite.Frame, Frames.Frame.TEME, new Frames.Frame("teme") })
+                {
+                    var exception = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(LeoWindow, earth.NaifId, leo.NaifId,
+                        frame, CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Greater, sixtyDegrees, 0.0, Aberration.None, step));
+                    Assert.Equal("frame", exception.ParamName);
+                }
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(reference);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(LeoSpkPath);
+            SpiceAPI.Instance.UnloadKernels(spkAtJ2000);
+            SpiceAPI.Instance.UnloadKernels(spk);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spk);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spkAtJ2000);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(reference);
+        }
+    }
+
+    /// <summary>
+    /// Once a frame kernel defines the frame id of a site from the kernels, a coordinate search in its frame with a kernel
+    /// spacecraft taking part is CSPICE's in that kernel frame (third review of #690): the choice is made at each search, as
+    /// for a read. The frame kernel is the test's NAIF topocentric frame on the site's coordinates under the site's id,
+    /// 1399792, named RV792K_TOPO, and the reference <c>gfposc_c</c> in it by that name, bit for bit.
+    /// </summary>
+    [Fact]
+    public void CoordinateSearch_InTheFrameOfAKernelSite_FrameKernelLoaded_IsCspiceInTheKernelFrame()
+    {
+        var earth = Earth;
+        var (spk, spkAtJ2000) = KernelSiteSpks(792, "RV792");
+        var frameKernel = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site792_kernel");
+        SpiceAPI.Instance.LoadKernels(spk);
+        SpiceAPI.Instance.LoadKernels(spkAtJ2000);
+        SpiceAPI.Instance.LoadKernels(LeoSpkPath);
+        try
+        {
+            var site = new Site(792, "RV792", earth);
+            File.WriteAllText(frameKernel.FullName, Surface.SiteTests.TopocentricFrameKernel(1399792, "RV792K_TOPO", site.NaifId, site.Planetodetic));
+            Assert.Empty(KernelShadowing.Find([spk, spkAtJ2000, frameKernel], KernelShadowing.SolarSystem));
+            SpiceAPI.Instance.LoadKernels(frameKernel);
+            try
+            {
+                var leo = new Spacecraft(-67801, "LEO678SPK", epoch: LeoWindow.StartDate);
+                var step = TimeSpan.FromMinutes(5.0);
+                var expected = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(LeoWindow, leo.NaifId, site.NaifId, new Frames.Frame("RV792K_TOPO"),
+                    CoordinateSystem.RaDec, Coordinate.Declination, RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step).ToArray();
+                var actual = site.FindWindowsOnCoordinateConstraint(LeoWindow, leo, site.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
+                    RelationnalOperator.Lower, -ThirtyDegrees, 0.0, Aberration.None, step).ToArray();
+                Assert.NotEmpty(expected);
+                Assert.Equal(expected, actual);
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(frameKernel);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(LeoSpkPath);
+            SpiceAPI.Instance.UnloadKernels(spkAtJ2000);
+            SpiceAPI.Instance.UnloadKernels(spk);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spk);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spkAtJ2000);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(frameKernel);
+        }
+    }
 }
 
 /// <summary>

@@ -212,8 +212,10 @@ public class SpiceAPI
     /// The frame of a site from the kernels (<see cref="Surface.Site.IsSpiceBacked"/>) is handed the same way, by the name
     /// the loaded kernels give to its id, 1000000 + NaifId (DSS-13_TOPO for DSS-13, whatever the name of the site), and by
     /// its own name, <c>Name + "_TOPO"</c>, when no loaded kernel defines that id (#690; before, always by its own name, so
-    /// that a site named otherwise than its kernel frame threw SPICE(UNKNOWNFRAME)). The frame of a site built from
-    /// coordinates is the library's (<see cref="ManagedReadFrame"/>).
+    /// that a site named otherwise than its kernel frame threw SPICE(UNKNOWNFRAME)); an ephemeris read in that frame when
+    /// no loaded kernel defines it is the library's (<see cref="ManagedReadFrame"/>, third review of #690), so the name
+    /// reaches SPICE only where SPICE reads the frame by name (<see cref="TransformFrame"/>, the CSPICE searches). The
+    /// frame of a site built from coordinates is the library's (<see cref="ManagedReadFrame"/>).
     /// </remarks>
     internal static string SpiceFrameName(Frame frame)
     {
@@ -270,16 +272,22 @@ public class SpiceAPI
     /// that SPICE knows: an instance of <see cref="TemeFrame"/>, <see cref="CirsFrame"/> or <see cref="TirsFrame"/>, and
     /// <see cref="Frame.TEME"/> for a frame named TEME (#558); the <see cref="Surface.SiteFrame"/> of a site built from coordinates
     /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
-    /// (#682), which only the library holds. SPICE knows none of these, or, for TEME, the native construction that #451
-    /// replaced. The frame of a site or a spacecraft of the kernels is SPICE's (handed by the name the kernels give its id,
-    /// <see cref="SpiceFrameName"/>; a <see cref="Surface.SiteFrame"/> of the kernels rotates by that same kernel frame,
-    /// #690), and so is the frame of a managed spacecraft
+    /// (#682), which only the library holds; the <see cref="Surface.SiteFrame"/> of a site of the kernels whose frame id,
+    /// 1000000 + NaifId, no loaded kernel defines, the frame of its J2000 coordinates that
+    /// <see cref="Surface.SiteFrame.GetStateOrientationToICRF"/> gives it (third review of #690; before, its own name,
+    /// <c>Name + "_TOPO"</c>, reached <c>spkezr_c</c>, which threw SPICE(UNKNOWNFRAME), while the frame converted to ICRF
+    /// and the horizontal coordinates used that orientation), decided at each read, under the lock the caller holds, so
+    /// that a frame kernel loaded later is read by name. SPICE knows none of these, or, for TEME, the native construction
+    /// that #451 replaced. The frame of a site or a spacecraft of the kernels is otherwise SPICE's (handed by the name the
+    /// kernels give its id, <see cref="SpiceFrameName"/>; a <see cref="Surface.SiteFrame"/> of the kernels rotates by that
+    /// same kernel frame, #690), and so is the frame of a managed spacecraft
     /// whose record is empty (never propagated, no orientation added, from a TLE or the TLE propagator): the library holds no
     /// attitude for it, and its name reaches SPICE as before 11.0.0, which reads the frame and C-kernels of that id when they
     /// are loaded (those the library wrote for an earlier object of the id) and rejects the frame otherwise
     /// (SPICE(UNKNOWNFRAME)), rather than the identity of the empty record. A frame built by name is SPICE's but for TEME (#656).
     /// </summary>
     /// <remarks>
+    /// Called under the lock of the SPICE calls, which the lookup of a site's kernel frame (<c>frmnam_c</c>) needs.
     /// The rotation (<see cref="ToManagedFrame"/>) runs under the lock of the SPICE calls: a <see cref="Surface.SiteFrame"/> reads
     /// the frame of its body through SPICE, under the same lock, which is re-entrant, and no static class whose type
     /// initializer takes it (#623); a <see cref="Body.Spacecraft.SpacecraftFrame"/> takes the lock of its attitude record inside it, which is
@@ -289,10 +297,55 @@ public class SpiceAPI
     {
         TemeFrame or CirsFrame or TirsFrame => frame,
         Surface.SiteFrame { Site.IsSpiceBacked: false } => frame,
+        Surface.SiteFrame { Site.IsSpiceBacked: true, Id: { } id } when KernelFrameName(id) == null => frame,
         Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: false, HasAttitude: true } => frame,
         _ when IsTeme(frame) => Frame.TEME,
         _ => null
     };
+
+    /// <summary>
+    /// Whether <paramref name="frame"/> is one of the frames whose reads are the library's (<see cref="ManagedReadFrame"/>),
+    /// decided under the lock of the SPICE calls at each call; false for a null frame. SPICE does not read these frames as
+    /// the library does, or do not know them, so a CSPICE search cannot run in them as the library reads them: the
+    /// coordinate searches of <see cref="Body.CelestialItem"/> and <see cref="Surface.Site"/> take the managed search in
+    /// them (third review of #690; before, <c>gfposc_c</c> got the frame by name, which SPICE did not know unless a
+    /// loaded kernel defined it, and its proxy dropped the error: no window).
+    /// </summary>
+    internal static bool IsManagedFrame(Frame frame)
+    {
+        if (frame == null)
+        {
+            return false;
+        }
+
+        lock (lockObject)
+        {
+            return ManagedReadFrame(frame) != null;
+        }
+    }
+
+    /// <summary>
+    /// Whether SPICE knows <paramref name="frame"/> by the name it is handed (<see cref="SpiceFrameName"/>), decided under
+    /// the lock of the SPICE calls at each call: false for TEME, CIRS and TIRS, which only the library holds (a frame named
+    /// TEME included, #451), and for the frame of a site or a spacecraft whose frame id no loaded kernel defines under that
+    /// name; true for any other frame, whose name is handed as it is (third review of #690).
+    /// </summary>
+    internal static bool SpiceKnowsFrame(Frame frame)
+    {
+        lock (lockObject)
+        {
+            switch (frame)
+            {
+                case TemeFrame or CirsFrame or TirsFrame:
+                    return false;
+                case Surface.SiteFrame or Body.Spacecraft.SpacecraftFrame when frame.Id is { } id:
+                    var kernelName = KernelFrameName(id);
+                    return kernelName != null && string.Equals(kernelName, SpiceFrameName(frame), StringComparison.OrdinalIgnoreCase);
+                default:
+                    return !IsTeme(frame);
+            }
+        }
+    }
 
     /// <summary>The one computation method of the illumination searches, CSPICE's <c>gfilum_c</c> (#682).</summary>
     internal const string EllipsoidMethod = "ELLIPSOID";
@@ -1095,14 +1148,30 @@ public class SpiceAPI
     /// closed (they differ only where the quantity stays equal to the value over an interval);
     /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
+    /// The frame is handed to <c>gfposc_c</c> by name (<see cref="SpiceFrameName"/>). A frame of the library that SPICE
+    /// does not know by that name throws (<see cref="SpiceKnowsFrame"/>: TEME, CIRS, TIRS, the frame of a site or a
+    /// spacecraft whose frame id no loaded kernel defines under the name handed, third review of #690; before, the proxy
+    /// dropped the error of <c>gfposc_c</c> and the search returned no window). The frame of a site built from coordinates
+    /// or of a managed spacecraft whose name a loaded kernel gives its id is still searched in that kernel frame, by name.
+    /// <see cref="Body.CelestialItem.FindWindowsOnCoordinateConstraint"/> and
+    /// <see cref="Surface.Site.FindWindowsOnCoordinateConstraint"/> search in every frame whose reads are the library's
+    /// (<see cref="ManagedReadFrame"/>) as the library reads it.
     /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name.</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
+        if (!SpiceKnowsFrame(frame))
+        {
+            throw new ArgumentException(
+                $"CSPICE cannot search in the frame {frame.Name}: SPICE does not know it (a frame of the library, or a site or spacecraft frame that no loaded kernel defines). CelestialItem.FindWindowsOnCoordinateConstraint and Site.FindWindowsOnCoordinateConstraint search in it.",
+                nameof(frame));
+        }
+
         return SearchWindows(searchWindow, relationalOperator, relation =>
         {
             lock (lockObject)

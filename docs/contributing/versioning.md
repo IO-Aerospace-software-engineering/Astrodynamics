@@ -606,7 +606,8 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   `Frame.TEME` (or a frame named TEME), `Frame.CIRS` or `Frame.TIRS`, through `GetEphemeris` or the three
   `SpiceAPI.ReadEphemeris`, is read in J2000 and rotated by the frame at the epoch of the read: the numbers of
   `ToFrame` on the ICRF read, to 1e-6 m. CIRS and TIRS returned SPICE(UNKNOWNFRAME) and a state of |r| = 0; TEME the
-  native frame, up to 23″ from `ToFrame`. A coordinate search in a managed frame is not mapped.
+  native frame, up to 23″ from `ToFrame`. A coordinate search in a managed frame with a kernel spacecraft taking part
+  is the library's since the third review of #690.
 - **A failed SGP4 returned a zero state; TEME outside the PCK a zero rotation** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the TLE and TEME paths).
   `SpiceAPI.ConvertTleToStateVector`, under `TLE.ToOsculating` and `ToStateVector`, throws `InvalidOperationException`
   naming the TLE and the epoch when the native layer returns r = 0 (a decayed or suborbital orbit, an eccentricity out
@@ -2170,7 +2171,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the target rotated to ICRF, and a spacecraft and a target both in ECLIPJ2000, burn the closed form to 7.0e-9 m/s
   (RK7(8), threshold 1.4e-8 m/s provisional) and end in the target's plane to 4.0e-11°; a maneuver attached after the
   propagator was built, by its constructor or its builder, with both integrators, is rejected by `Propagate()` before
-  its burn (no window, the tank full); `ScenarioTests` covers `Scenario.SimulateAsync`.
+  its burn (no window, the tank full); `ScenarioTests` covers `Scenario.SimulateAsync`. Both checks compared the frames by
+  name, so that a target in GCRF on a spacecraft propagated in ICRF, and the reverse, was rejected by the constructor
+  ("must be defined in the same frame"), when the propagator was built and when it propagated, although the library
+  gives GCRF the axes of ICRF (`GcrfFrame`, the identity rotation) and the relabel the message asked for,
+  `targetOrbit.ToFrame(Frame.ICRF)`, changed no number (third review). They now take GCRF and ICRF as one frame
+  (internal `PropagatorBase.SameAxes`, by name, any case), and no other pair; `Frame.Equals` is unchanged (#562).
+  `ImpulseManeuverTests` runs a plane change of 2° with its target in GCRF on an ICRF spacecraft, every order of
+  attachment, leading and chained, both integrators, bit for bit the run with the target in ICRF, and leading in RK7(8)
+  the closed form to 6.9e-9 m/s (threshold 1.4e-8 m/s); the reverse pair, an ICRF target on a GCRF spacecraft, bit for
+  bit, an ECLIPJ2000 target still rejected on it; and on a TLE spacecraft a GCRF target accepted (rejected on a mean TEME
+  set, as an ICRF one) and burning bit for bit the ICRF target.
 - **The CLI took identifiers for sites that the library does not** (cli-site-rule of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round). The commands built a site of every
   identifier from 100001 to 999998 (`Helpers.IsSiteIdentifier`), named `site<id>`, where the library's rule
@@ -2216,7 +2227,38 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the body (`InvalidOperationException`, internal `SpiceAPI.KernelFrameNameOf`). `SiteTests` loads the file written for
   DSS-13 and GOLDSTONE, renamed so that it redefines nothing of `Data/SolarSystem`, and reads its rotation to
   `DSS-13_TOPO` by `pxform` (2.1e-16 rad, threshold 5.0e-16 rad provisional; 7.76e-8 rad before), and rejects a site
-  frame defined relative to J2000.
+  frame defined relative to J2000. A kernel site whose frame id no loaded kernel defines kept the frame of its
+  `Planetodetic` for `ToFrame(site.Frame)`, `GetHorizontalCoordinates` and the managed searches, while an ephemeris read
+  in it reached `spkezr_c` by its own name, `Name + "_TOPO"`, which SPICE does not know: the site, the Moon and
+  `SpiceAPI.ReadEphemeris` (at an epoch and over a window) in its frame threw SPICE(UNKNOWNFRAME) (third review). Such a
+  read is now read in J2000 and rotated by that frame, as for a site built from coordinates (#682,
+  `SpiceAPI.ManagedReadFrame`), decided at each read, so that a frame kernel of its id loaded later is read by its
+  kernel name. `SiteTests` compares the reads of the Moon and of the site from the Earth, by `CelestialItem.GetEphemeris`
+  and `SpiceAPI.ReadEphemeris` at an epoch and over a window, with `spkezr_c` in a frame kernel the test writes in
+  NAIF's topocentric convention (the angles of `earth_topo_201023.tf`) on `Planetodetic`, under another id: the position
+  within 7.3e-16 (angle and relative magnitude), the velocity within 4.9e-11 m/s and the frame within 5.8e-16 rad
+  (thresholds 1.5e-15, 1.0e-10 m/s and 1.2e-15 rad, provisional); then loads a frame kernel of the site's id, under
+  another name, and reads that kernel frame by name, bit for bit, and the managed frame again once it is unloaded; and
+  checks that the frame kernel written for such a site is the frame it uses (5.8e-16 rad, 0 from NAIF's, threshold
+  1.2e-15 rad provisional). Calls that threw now return; nothing else moves.
+- **A coordinate search in a frame whose reads are the library's returned no window** (third review of
+  [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690)). When CSPICE searched
+  (`Site.FindWindowsOnCoordinateConstraint` of a kernel site with a kernel spacecraft as observer,
+  `CelestialItem.FindWindowsOnCoordinateConstraint` with a kernel spacecraft taking part), `gfposc_c` got the frame by
+  name: the frame of a kernel site whose frame id no loaded kernel defines (`Name + "_TOPO"`), of a site built from
+  coordinates, of a managed spacecraft with an attitude record, `Frame.TEME`, `Frame.CIRS` and `Frame.TIRS`, names SPICE
+  does not know, so that its proxy dropped the error and the search returned no window, while a read in those frames is
+  the library's (#558, #682). These searches now take the managed search in every frame `SpiceAPI.ManagedReadFrame`
+  handles, decided at each search (internal `SpiceAPI.IsManagedFrame`), so that the search agrees with the reads; and
+  `SpiceAPI.FindWindowsOnCoordinateConstraint`, which can only hand the frame to CSPICE, throws `ArgumentException`
+  (`frame`) for a frame of the library that SPICE does not know by the name handed (internal `SpiceAPI.SpiceKnowsFrame`:
+  TEME, CIRS, TIRS, the frame of a site or a spacecraft whose id no loaded kernel defines under that name).
+  `KernelWindowSearchTests` searches, at a 5 min step, the declination of a kernel site at DSS-13's coordinates without
+  a frame kernel seen from the kernel LEO (`kernel_search_leo.bsp`) in the site's frame (2 and 12 windows, 0 before),
+  and of the LEO from the Earth in the frames of that site and of a site built from the same coordinates (9 windows),
+  against `gfposc_c` in a frame kernel the test writes in NAIF's topocentric convention on the same coordinates: within
+  5.0e-7 s (threshold 1.0e-6 s provisional, the managed search at 1 µs against `gfposc_c` at its default 1e-6 s); a
+  frame kernel of the site's id loaded, the site's search is `gfposc_c` in that kernel frame, bit for bit.
 
 - **A geopotential degree above its model file ran at the file's degree, and a missing harmonic was read as zero**
   ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689)). `GeopotentialGravitationalField`
@@ -3236,8 +3278,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `CentralBodyPropagator.Propagate()` for one attached to the spacecraft after the propagator was built, where only a
   TLE or TEME start was checked when the propagator was built and nothing when it propagated; other
   spacecraft burned with the target's components read in the integration frame (10.7 times the closed form in the case
-  measured). The results of valid inputs are bit for bit. Migration: give the target in the spacecraft's propagation
-  frame, `targetOrbit.ToFrame(spacecraft.InitialOrbitalParameters.Frame)`, or ICRF for a TLE or TEME start.
+  measured). The results of valid inputs are bit for bit. A target in GCRF on a spacecraft propagated in ICRF (a TLE or
+  TEME start included), or in ICRF on one propagated in GCRF, is accepted as in the frame of the propagation, whose axes
+  it shares (third review), where 10.x rejected it in the constructor. Migration: give the target in the spacecraft's
+  propagation frame, `targetOrbit.ToFrame(spacecraft.InitialOrbitalParameters.Frame)`, or ICRF (or GCRF) for a TLE or
+  TEME start.
 - **Breaking: the CLI follows the library's rule of a site identifier** (cli-site-rule of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round, Fixed above). CLI only. An identifier from
   100001 to 999998 that is not a site by the library's rule (x000, a body of at most 100, a Lagrange point) is read as a
@@ -3258,13 +3303,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   elevation extremes. The reads by name and the CSPICE searches do not move. A kernel site named otherwise than its
   kernel frame now reads that frame where it threw SPICE(UNKNOWNFRAME). `Site.Planetodetic` and the illumination angles
   do not move, nor does a site built from coordinates, nor a kernel site whose frame no loaded kernel defines (the frame
-  of its J2000 coordinates, its reads by name still throwing). `Site.WriteFrameAsync` (and so `CosmographiaExporter`)
+  of its J2000 coordinates, in which an ephemeris is now read in J2000 and rotated where it threw SPICE(UNKNOWNFRAME),
+  third review). `Site.WriteFrameAsync` (and so `CosmographiaExporter`)
   writes for such a site the kernel frame, under its kernel name and id, as `TKFRAME_<id>_MATRIX` relative to the frame
   of the body, where it wrote the frame of the J2000 coordinates as angles under the kernel's id (7.76e-8 rad from
   DSS-13_TOPO) and, for a site named otherwise, renamed the frame of that id; a kernel frame not fixed in the frame of
   the body throws `InvalidOperationException`, nothing written. Migration: to keep the topocentric frame of the J2000
   coordinates, build the site from them, `new Site(id, name, body, kernelSite.Planetodetic)`; its frame kernel is that
   of the former writer, under the name `<NAME>_TOPO`.
+- **Breaking: a coordinate search in a frame whose reads are the library's is the library's** (third review of
+  [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690), Fixed above).
+  `CelestialItem.FindWindowsOnCoordinateConstraint` and `Site.FindWindowsOnCoordinateConstraint` search with the library
+  in a frame whose reads are the library's (`Frame.TEME` or a frame named TEME, `Frame.CIRS`, `Frame.TIRS`, the frame of
+  a site built from coordinates, of a kernel site whose frame id no loaded kernel defines, of a managed spacecraft with
+  an attitude record), also when a kernel spacecraft takes part: where these searches returned no window they return
+  the windows of the reads in that frame, and the frame of a site built from coordinates under a name a loaded kernel
+  defines (`new Site(13, "DSS-13", earth, coordinates)` and `DSS-13_TOPO`), which `gfposc_c` searched in that kernel
+  frame, is now searched in the frame of the coordinates, as it is read since #682 (7.8e-8 rad apart for DSS-13).
+  `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` (`frame`) for a frame of the library SPICE does
+  not know by name, where it returned no window. Migration: to search in a kernel frame, pass that frame
+  (`new Frame("DSS-13_TOPO")`, or the frame of the kernel site, `new Site(13, "DSS-13", earth).Frame`); to search in a
+  library frame with CSPICE, there is no way: use the `CelestialItem` or `Site` searches.
 
 - **Breaking: a geopotential degree above its model file, or a file missing a harmonic, throws**
   ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689), Fixed above). A degree of 2 or more
@@ -3418,12 +3477,13 @@ not listed.
   [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)). A frame built by name as CIRS
   or TIRS (`new Frame("CIRS")`, a CCSDS file, the CLI) equals `Frame.CIRS` or `Frame.TIRS` but goes to SPICE, which does
   not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws, and `SpiceAPI.TransformFrame` in CIRS or TIRS throws
-  even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in `Frame.CIRS` or
-  `Frame.TIRS` returns no window, and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances `Frame.CIRS`
-  and `Frame.TIRS`, and search in a SPICE frame. The frame of a site built from coordinates and that of a managed
-  spacecraft with an attitude record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), but a CSPICE coordinate search in them (a kernel
-  spacecraft taking part) still returns no window, and a frame built by such a name (`new Frame("MYSITE_TOPO")`) still
-  goes to SPICE.
+  even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in a frame built by the
+  name CIRS or TIRS returns no window, and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances
+  `Frame.CIRS` and `Frame.TIRS`, which the coordinate searches of `CelestialItem` and `Site` search in with the library
+  (third review of #690). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
+  record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), and searched in by the library (third review of #690), but a frame built by
+  such a name (`new Frame("MYSITE_TOPO")`) still goes to SPICE, as does any frame built by a name SPICE does not know,
+  whose CSPICE search returns no window.
 - **Identifiers that are not celestial bodies**
   ([#650](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/650),
   [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)). `SpiceAPI.ReadEphemeris` by

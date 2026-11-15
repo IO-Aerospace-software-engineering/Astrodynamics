@@ -445,6 +445,207 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(900.0, tank.Quantity);
         }
 
+        // An orbit of 7000 km in the frame given, 1 rad past its ascending node and its periapsis, circular as CircularOrbit
+        // by default
+        private static KeplerianElements CircularOrbitIn(IO.Astrodynamics.Body.CelestialBody earth, double inclinationDeg, Frames.Frame frame,
+            double eccentricity = 0.0) =>
+            new(7000000.0, eccentricity, inclinationDeg * IO.Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, PlaneChangeStart, frame);
+
+        // The plane change of 2° from the orbit at 30° in initialFrame to the orbit at 32° in targetFrame, the maneuver
+        // leading, over 2 h, or chained after an apogee raise, over 6 h, attached in the order given: "tank before" (the constructor checks the
+        // frame of the target), "tank after" (the propagator, when it is built), or after a propagator built by its
+        // "constructor" or its "builder" (the propagator, when it propagates). Returns the maneuver and the final state
+        private (PlaneAlignmentManeuver Maneuver, StateVector Final) RunPlaneChange(int id, Frames.Frame initialFrame, Frames.Frame targetFrame,
+            string order, bool chained, string integrator)
+        {
+            var earth = TestHelpers.EarthAtJ2000;
+            // Chained, the orbit has an eccentricity of 1e-3, so that the apogee raise fires at its periapsis (RK7(8) keeps
+            // r·v of a circular orbit at its rounding, which it never crosses), and the plane change at a later node
+            var orbit = CircularOrbitIn(earth, 30.0, initialFrame, chained ? 1.0e-3 : 0.0);
+            var target = CircularOrbitIn(earth, 32.0, targetFrame);
+            var window = chained ? new Window(PlaneChangeStart, PlaneChangeStart.AddHours(6.0)) : PlaneChangeWindow;
+            Spacecraft spacecraft;
+            PlaneAlignmentManeuver maneuver;
+            Propagator.CentralBodyPropagator propagator = null;
+            if (order == "tank before")
+            {
+                Engine engine;
+                (spacecraft, engine) = PlaneChangeSpacecraftWithEngine(id, orbit);
+                maneuver = new PlaneAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, target, engine);
+            }
+            else
+            {
+                var tank = new FuelTank("ft685", "ftA", $"sn{-id}", 1000.0, 900.0);
+                var engine = new Engine("eng685", "engmk1", $"sn{-id}", 450, 50, tank);
+                maneuver = new PlaneAlignmentManeuver(PlaneChangeStart, TimeSpan.Zero, target, engine);
+                spacecraft = PlaneChangeSpacecraft(id, orbit);
+                if (order != "tank after")
+                {
+                    propagator = order == "builder"
+                        ? new Propagator.CentralBodyPropagatorBuilder(window, spacecraft, PlaneChangeIntegrator(integrator), PlaneChangeStep)
+                            .WithPerturbingBody(earth).Build()
+                        : new Propagator.CentralBodyPropagator(window, spacecraft, PlaneChangeIntegrator(integrator), [earth], false, false,
+                            PlaneChangeStep);
+                }
+
+                spacecraft.AddFuelTank(tank);
+                spacecraft.AddEngine(engine);
+            }
+
+            ImpulseManeuver leading = maneuver;
+            if (chained)
+            {
+                leading = new ApogeeHeightManeuver(earth, PlaneChangeStart, TimeSpan.Zero, 7100000.0, spacecraft.Engines.First());
+                leading.SetNextManeuver(maneuver);
+            }
+
+            spacecraft.SetStandbyManeuver(leading);
+            if (propagator != null)
+            {
+                using (propagator)
+                {
+                    var solution = propagator.Propagate();
+                    return (maneuver, solution.StateVectors[^1]);
+                }
+            }
+
+            spacecraft.Propagate(window, [earth], PlaneChangeIntegrator(integrator), false, false, PlaneChangeStep);
+            return (maneuver, spacecraft.PropagatedStates.Last());
+        }
+
+        // The run with a target in another frame than the propagation's, which share their axes, burns bit for bit the run
+        // whose target is in the frame of the propagation, and, leading and in RK7(8), the closed form 2 v sin(Δi/2)
+        private void AssertSameBurn((PlaneAlignmentManeuver Maneuver, StateVector Final) run, (PlaneAlignmentManeuver Maneuver, StateVector Final) twin,
+            bool chained, string integrator)
+        {
+            Assert.NotNull(run.Maneuver.ThrustWindow);
+            Assert.Equal(twin.Maneuver.ThrustWindow, run.Maneuver.ThrustWindow);
+            Assert.Equal(twin.Maneuver.DeltaV, run.Maneuver.DeltaV);
+            Assert.Equal(twin.Final.Position, run.Final.Position);
+            Assert.Equal(twin.Final.Velocity, run.Final.Velocity);
+            if (!chained && integrator == "RK78")
+            {
+                double expected = 2.0 * System.Math.Sqrt(TestHelpers.EarthAtJ2000.GM / 7000000.0) * System.Math.Sin(1.0 * IO.Astrodynamics.Constants.Deg2Rad);
+                double deltaVError = System.Math.Abs(run.Maneuver.DeltaV.Magnitude() - expected);
+                _output.WriteLine($"MEASURE plane change, target in GCRF or ICRF on the other: |dV| - closed form {deltaVError:E3} m/s");
+                Assert.True(deltaVError < PlaneChangeDeltaVThreshold, $"|dV| - closed form {deltaVError:E3} m/s");
+            }
+        }
+
+        /// <summary>
+        /// A target orbit in GCRF on a spacecraft propagated in ICRF is taken as it is (third review of #685): the library's
+        /// GCRF has the axes of ICRF (<see cref="Frames.GcrfFrame"/>, the identity rotation), so its components are those the
+        /// integration needs. The comparison by name rejected it, in the constructor of the maneuver ("must be defined in
+        /// the same frame"), when the propagator was built and when it propagated, while the relabel it asked for,
+        /// <c>targetOrbit.ToFrame(Frame.ICRF)</c>, changes no number. Every order of attachment, leading or chained, both
+        /// integrators: bit for bit the run with the target in ICRF, and, leading in RK7(8), the closed form of the plane
+        /// change 2 v sin(Δi/2) with the GM of the Earth.
+        /// </summary>
+        [Theory]
+        [InlineData("tank before", false, "VV")]
+        [InlineData("tank before", false, "RK78")]
+        [InlineData("tank before", true, "RK78")]
+        [InlineData("tank after", false, "RK78")]
+        [InlineData("tank after", true, "VV")]
+        [InlineData("constructor", false, "RK78")]
+        [InlineData("constructor", true, "VV")]
+        [InlineData("builder", false, "VV")]
+        [InlineData("builder", true, "RK78")]
+        public void TargetOrbitInGcrf_OnAnIcrfSpacecraft_BurnsAsInIcrf(string order, bool chained, string integrator)
+        {
+            // Act
+            var gcrf = RunPlaneChange(-6857, Frames.Frame.ICRF, Frames.Frame.GCRF, order, chained, integrator);
+            var icrf = RunPlaneChange(-6858, Frames.Frame.ICRF, Frames.Frame.ICRF, order, chained, integrator);
+
+            // Assert
+            AssertSameBurn(gcrf, icrf, chained, integrator);
+        }
+
+        /// <summary>
+        /// The reverse pair (third review of #685): a target orbit in ICRF (J2000, or a frame built by that name) on a
+        /// spacecraft whose initial orbit is in GCRF, propagated in GCRF, burns bit for bit the run whose target is in
+        /// GCRF, and leading in RK7(8) the closed form of the plane change. Only the pair that shares its axes is
+        /// accepted: a target in ECLIPJ2000 is still rejected on it.
+        /// </summary>
+        [Theory]
+        [InlineData("tank before", "VV")]
+        [InlineData("tank before", "RK78")]
+        [InlineData("tank after", "VV")]
+        [InlineData("tank after", "RK78")]
+        public void TargetOrbitInIcrf_OnAGcrfSpacecraft_IsAccepted(string order, string integrator)
+        {
+            // Act
+            var icrf = RunPlaneChange(-6859, Frames.Frame.GCRF, new Frames.Frame("j2000"), order, false, integrator);
+            var gcrf = RunPlaneChange(-6860, Frames.Frame.GCRF, Frames.Frame.GCRF, order, false, integrator);
+
+            // Assert
+            AssertSameBurn(icrf, gcrf, false, integrator);
+            var exception = Record.Exception(() => RunPlaneChange(-6861, Frames.Frame.GCRF, Frames.Frame.ECLIPTIC_J2000, order, false, integrator));
+            Assert.IsType<ArgumentException>(exception);
+        }
+
+        /// <summary>
+        /// On a spacecraft whose initial orbit is a TLE or an osculating TEME state, propagated in ICRF (#675), a target
+        /// orbit in GCRF, which has the axes of ICRF, is accepted as one in ICRF (third review of #685); on a set of mean
+        /// elements in TEME, which is not propagated in ICRF, it is rejected, as an ICRF target is. A TLE spacecraft burns
+        /// with a GCRF target bit for bit what it burns with the same target in ICRF; a TEME target is still rejected when
+        /// the propagation is built.
+        /// </summary>
+        [Theory]
+        [InlineData(nameof(ApsidalAlignmentManeuver))]
+        [InlineData(nameof(PlaneAlignmentManeuver))]
+        [InlineData(nameof(PhasingManeuver))]
+        public void TargetOrbitInGcrf_OnATleSpacecraft_IsAccepted(string maneuver)
+        {
+            var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+            var sgp4 = tle.ToOsculating();
+            var orbits = new IO.Astrodynamics.OrbitalParameters.OrbitalParameters[]
+            {
+                tle, new StateVector(sgp4.Position, sgp4.Velocity, tle.Observer, sgp4.Epoch, Frames.Frame.TEME), tle.ToMeanKeplerianElements()
+            };
+            for (int k = 0; k < orbits.Length; k++)
+            {
+                var spc = new Spacecraft(-1563 - k, $"Impulse{1563 + k}", 1000.0, 3000.0, new Clock($"Clk{1563 + k}", 65536), orbits[k]);
+                spc.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+                spc.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spc.FuelTanks.First()));
+                var engine = spc.Engines.First();
+                if (orbits[k] is KeplerianElements { ElementsType: OrbitalElementsType.Mean })
+                {
+                    Assert.Throws<ArgumentException>(() => Create(maneuver, Target(Frames.Frame.GCRF), engine));
+                }
+                else
+                {
+                    Assert.Equal(Frames.Frame.GCRF, Create(maneuver, Target(Frames.Frame.GCRF), engine).TargetOrbit.Frame);
+                }
+            }
+
+            // A plane change of about 1° on the TLE spacecraft, the target in GCRF and in ICRF
+            var start = tle.Epoch.ToTDB();
+            var window = new Window(start, start.AddHours(2.0));
+            (PlaneAlignmentManeuver, StateVector) Run(int id, Frames.Frame frame)
+            {
+                var spacecraft = new Spacecraft(id, $"Impulse{-id}", 1000.0, 3000.0, new Clock($"Clk{-id}", 65536), tle);
+                spacecraft.AddFuelTank(new FuelTank("ft", "ftA", "123456", 1000.0, 900.0));
+                spacecraft.AddEngine(new Engine("eng", "engmk1", "12345", 450, 50, spacecraft.FuelTanks.First()));
+                var target = new KeplerianElements(6800000.0, 0.0, 52.6423 * IO.Astrodynamics.Constants.Deg2Rad, 353.0312 * IO.Astrodynamics.Constants.Deg2Rad,
+                    0.0, 0.0, tle.Observer, start, frame);
+                var plane = new PlaneAlignmentManeuver(start, TimeSpan.Zero, target, spacecraft.Engines.First());
+                spacecraft.SetStandbyManeuver(plane);
+                var solution = spacecraft.Propagate(window, Array.Empty<IO.Astrodynamics.Body.CelestialItem>(), new RK78Integrator(), false, false,
+                    TimeSpan.FromSeconds(60.0));
+                return (plane, solution.StateVectors[^1]);
+            }
+
+            var (gcrfManeuver, gcrfEnd) = Run(-1566, Frames.Frame.GCRF);
+            var (icrfManeuver, icrfEnd) = Run(-1567, Frames.Frame.ICRF);
+            Assert.NotNull(gcrfManeuver.ThrustWindow);
+            Assert.Equal(icrfManeuver.ThrustWindow, gcrfManeuver.ThrustWindow);
+            Assert.Equal(icrfManeuver.DeltaV, gcrfManeuver.DeltaV);
+            Assert.Equal(icrfEnd.Position, gcrfEnd.Position);
+            Assert.Equal(icrfEnd.Velocity, gcrfEnd.Velocity);
+        }
+
         /// <summary>
         /// The same target given in the frame of the propagation burns the closed form of the plane change, 2 v sin(Δi/2)
         /// with the GM of the Earth (#685): the ECLIPJ2000 target rotated to ICRF on a spacecraft in ICRF, and a spacecraft

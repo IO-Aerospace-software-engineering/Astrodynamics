@@ -17,7 +17,9 @@ namespace IO.Astrodynamics.Surface;
 /// The topocentric frame of a site, <c>NAME_TOPO</c> of id 1000000 + NaifId: X toward the north, Y toward the west, Z
 /// toward the zenith. For a site from coordinates, the frame of those coordinates; for a site from the kernels, the frame
 /// the loaded kernels define for its id (DSS-13_TOPO for DSS-13, #690), or the frame of its J2000 coordinates when none
-/// does (<see cref="GetStateOrientationToICRF"/>).
+/// does (<see cref="GetStateOrientationToICRF"/>). An ephemeris read in the frame of a site from coordinates, or of a site
+/// from the kernels whose frame id no loaded kernel defines, is read in J2000 and rotated by that orientation (#682, third
+/// review of #690); in a kernel frame, SPICE reads it by the kernel's name.
 /// </summary>
 public class SiteFrame : Frame
 {
@@ -114,7 +116,9 @@ public class SiteFrame : Frame
     /// <see cref="Surface.Site.Planetodetic"/>, the position of the site at J2000 TDB on the ellipsoid of the body, which
     /// for DSS-13 departs from DSS-13_TOPO (the coordinates of the station at 2020-10-23 on the WGS84 spheroid) by 7.76e-8
     /// rad, most of it the plate motion between the two epochs. A site from the kernels whose frame no loaded kernel
-    /// defines keeps the frame of <see cref="Surface.Site.Planetodetic"/>, computed at each call.
+    /// defines keeps the frame of <see cref="Surface.Site.Planetodetic"/>, computed at each call, and an ephemeris read in
+    /// it rotates by that frame, as for a site from coordinates (third review of #690; before, it reached SPICE by the
+    /// site's own name and threw SPICE(UNKNOWNFRAME)).
     /// </remarks>
     public override StateOrientation GetStateOrientationToICRF(Time epoch)
     {
