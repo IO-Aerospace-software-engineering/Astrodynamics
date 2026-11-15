@@ -229,7 +229,7 @@ internal static class OccultationFinder
             points.Add((x[i], m[i]));
         }
 
-        points.AddRange(HiddenCrossings(x, m, f, tolerance));
+        points.AddRange(HiddenExtremes.Find(x, m, f, tolerance, true));
         points.Sort((p, q) => p.X.CompareTo(q.X));
 
         var windows = new List<(double Start, double End)>();
@@ -263,87 +263,6 @@ internal static class OccultationFinder
         }
 
         return windows;
-    }
-
-    /// <summary>
-    /// The extremes between the samples where the margin crosses zero and back without a sample showing it.
-    /// </summary>
-    private static List<(double X, double M)> HiddenCrossings(IReadOnlyList<double> x, IReadOnlyList<double> m,
-        Func<double, double> f, double tolerance)
-    {
-        var found = new List<(double X, double M)>();
-        int last = x.Count - 1;
-        if (last < 1)
-        {
-            return found;
-        }
-
-        void Search(int from, int to, bool maximum)
-        {
-            // A maximum is searched only below zero, a minimum only above: otherwise the samples already bracket a change
-            if (maximum ? m[from] >= 0.0 || m[to] >= 0.0 || (to - from == 2 && m[from + 1] >= 0.0)
-                    : m[from] < 0.0 || m[to] < 0.0 || (to - from == 2 && m[from + 1] < 0.0))
-            {
-                return;
-            }
-
-            double a = x[from];
-            double half = 0.5 * (x[to] - a);
-            double middle = a + half;
-            double sign = maximum ? -1.0 : 1.0;
-            double offset = Brent.Minimize(o => sign * f(middle + o), -half, half, tolerance, out double value, 0.0);
-            if (value < 0.0)
-            {
-                found.Add((middle + offset, sign * value));
-            }
-        }
-
-        if (last == 1)
-        {
-            Search(0, 1, m[0] < 0.0);
-            return found;
-        }
-
-        // Interior extremes of the samples, bracketed by their two neighbors
-        for (int k = 1; k < last; k++)
-        {
-            double before = m[k] - m[k - 1];
-            double after = m[k + 1] - m[k];
-            if ((before > 0.0 && after <= 0.0) || (before >= 0.0 && after < 0.0))
-            {
-                Search(k - 1, k + 1, true);
-            }
-            else if ((before < 0.0 && after >= 0.0) || (before <= 0.0 && after > 0.0))
-            {
-                Search(k - 1, k + 1, false);
-            }
-        }
-
-        // The first interval: an extreme inside it shows no pattern at the first interior sample
-        double first = m[1] - m[0];
-        double second = m[2] - m[1];
-        if (second < 0.0 && first <= 0.0)
-        {
-            Search(0, 1, true);
-        }
-        else if (second > 0.0 && first >= 0.0)
-        {
-            Search(0, 1, false);
-        }
-
-        // The last interval, likewise
-        double penultimate = m[last - 1] - m[last - 2];
-        double final = m[last] - m[last - 1];
-        if (penultimate > 0.0 && final >= 0.0)
-        {
-            Search(last - 1, last, true);
-        }
-        else if (penultimate < 0.0 && final <= 0.0)
-        {
-            Search(last - 1, last, false);
-        }
-
-        return found;
     }
 
     /// <summary>The parts of <paramref name="windows"/> outside <paramref name="removed"/>, both sorted.</summary>

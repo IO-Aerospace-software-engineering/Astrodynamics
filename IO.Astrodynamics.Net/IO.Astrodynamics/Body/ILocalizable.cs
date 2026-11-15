@@ -85,7 +85,9 @@ namespace IO.Astrodynamics.Body
         /// <param name="relationalOperator">The relational operator for the distance constraint.</param>
         /// <param name="value">The distance value for the constraint, m.</param>
         /// <param name="aberration">The aberration correction to apply.</param>
-        /// <param name="stepSize">The step size for the search.</param>
+        /// <param name="stepSize">The step size for the search: on the library's search (<see cref="GeometryFinder"/>), at
+        /// most half the time between two extremes of the quantity; on CSPICE's, shorter than the shortest interval where it
+        /// is monotone.</param>
         /// <returns>An enumerable of time windows that satisfy the distance constraint.</returns>
         IEnumerable<Window> FindWindowsOnDistanceConstraint(in Window searchWindow, ILocalizable observer, RelationnalOperator relationalOperator, double value,
             Aberration aberration, in TimeSpan stepSize);
@@ -116,7 +118,9 @@ namespace IO.Astrodynamics.Body
         /// <param name="value">The coordinate value for the constraint.</param>
         /// <param name="adjustValue">The adjustment value for the constraint.</param>
         /// <param name="aberration">The aberration correction to apply.</param>
-        /// <param name="stepSize">The step size for the search.</param>
+        /// <param name="stepSize">The step size for the search: on the library's search (<see cref="GeometryFinder"/>), at
+        /// most half the time between two extremes of the quantity; on CSPICE's, shorter than the shortest interval where it
+        /// is monotone.</param>
         /// <param name="observer">The observer of the celestial object.</param>
         /// <returns>An enumerable of time windows that satisfy the coordinate constraint.</returns>
         public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,

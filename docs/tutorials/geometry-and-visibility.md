@@ -74,6 +74,15 @@ negations `LowerOrEqual`, `GreaterOrEqual` and `NotEqual`, and the extremes
 `AbsoluteMin`, `AbsoluteMax`, `LocalMin` and `LocalMax` (see
 [Enumerations](../reference/enumerations.md#relationnaloperator)).
 
+- **Step.** The step samples the quantity; a window, a gap or a crossing
+  shorter than the step is found when the step is at most half the time
+  between two extremes of the quantity (the library's search, for a
+  propagated spacecraft or a site built from its coordinates). CSPICE, which
+  searches objects of the kernels, asks the step to be shorter than the
+  shortest interval where the quantity is monotone. The same rule holds for
+  the coordinate and illumination constraints; see
+  [Sites](../reference/sites.md#window-searches).
+
 ## Instrument field of view
 
 Spacecraft instruments have a field of view: a circle, an ellipse or a
