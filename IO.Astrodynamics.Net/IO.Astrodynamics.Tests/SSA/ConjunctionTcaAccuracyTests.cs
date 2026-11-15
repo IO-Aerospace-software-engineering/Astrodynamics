@@ -102,6 +102,216 @@ public class ConjunctionTcaAccuracyTests
         Assert.True(System.Math.Abs(missError) < 1e-3, $"miss distance {missError:E3} m");
     }
 
+    // The pair of the theory above meeting 2000 s after the start, propagated over an hour in RK7(8) or by Velocity-Verlet
+    // (10 s); the Keplerian TCA in TT seconds from the start
+    private (Spacecraft Protected, PropagationSolution ProtectedTrajectory, Spacecraft Secondary,
+        PropagationSolution SecondaryTrajectory, double KeplerianTca) LabelPair(bool rk78, int naifId)
+    {
+        const double meeting = 2000.0;
+        double mu = _earth.GM;
+        var protectedInitial = PartialsTestCases.State(PartialsTestCases.Leo400, _earth);
+        var (protectedAtMeeting, _) = KeplerianStm.Propagate(mu, protectedInitial.Position, protectedInitial.Velocity, meeting);
+        var radial = Position(protectedAtMeeting).Normalize();
+        var secondaryPosition = Position(protectedAtMeeting) + radial * 100.0;
+        var velocity = Velocity(protectedAtMeeting);
+        double angle = 40.0 * IO.Astrodynamics.Constants.Deg2Rad;
+        var secondaryVelocity = (velocity * System.Math.Cos(angle) + radial.Cross(velocity) * System.Math.Sin(angle)) *
+                                (SecondarySpeedFactor * System.Math.Sqrt(mu / secondaryPosition.Magnitude()) /
+                                 velocity.Magnitude());
+        var (secondaryStart, _) = KeplerianStm.Propagate(mu, secondaryPosition, secondaryVelocity, -meeting);
+        var secondaryInitial = new StateVector(Position(secondaryStart), Velocity(secondaryStart), _earth, Start,
+            Frames.Frame.ICRF);
+
+        var window = new TimeSystem.Window(Start, Start.AddHours(1.0));
+        var protectedSpacecraft = Spacecraft(naifId, "TCAP" + -naifId, protectedInitial);
+        var secondarySpacecraft = Spacecraft(naifId - 1, "TCAS" + -naifId, secondaryInitial);
+        PropagationSolution Propagate(Spacecraft spacecraft) => rk78
+            ? spacecraft.Propagate(window, new CelestialItem[] { _earth }, new RK78Integrator(), false, false, TimeSpan.FromSeconds(60.0))
+            : spacecraft.Propagate(window, new CelestialItem[] { _earth }, false, false, TimeSpan.FromSeconds(10.0));
+        var protectedTrajectory = Propagate(protectedSpacecraft);
+        var secondaryTrajectory = Propagate(secondarySpacecraft);
+        return (protectedSpacecraft, protectedTrajectory, secondarySpacecraft, secondaryTrajectory,
+            KeplerianTca(mu, protectedInitial, secondaryInitial, meeting - 100.0, meeting + 100.0));
+    }
+
+    private static TimeSystem.ITimeFrame LabelFrame(string frame) => frame switch
+    {
+        "UTC" => TimeSystem.TimeFrame.UTCFrame,
+        "TT" => TimeSystem.TimeFrame.TDTFrame,
+        "TAI" => TimeSystem.TimeFrame.TAIFrame,
+        _ => TimeSystem.TimeFrame.TDBFrame
+    };
+
+    // The analysis window, a minute inside the propagations at each end, in the given frame: the TCA lies between two
+    // steps of the trajectories, never in the bracket that starts at the window start
+    private static TimeSystem.Window LabelWindow(string frame) =>
+        new(Start.AddMinutes(1.0).ConvertTo(LabelFrame(frame)), Start.AddMinutes(59.0).ConvertTo(LabelFrame(frame)));
+
+    [Theory]
+    [InlineData("UTC", true, false)]
+    [InlineData("UTC", true, true)]
+    [InlineData("UTC", false, false)]
+    [InlineData("UTC", false, true)]
+    [InlineData("TT", true, false)]
+    [InlineData("TT", false, true)]
+    [InlineData("TAI", true, true)]
+    [InlineData("TAI", false, false)]
+    [InlineData("TDB", true, false)]
+    [InlineData("TDB", false, true)]
+    public void DenseTca_IsLabelledInTheWindowScale(string frame, bool rk78, bool all)
+    {
+        // Arrange
+        int naifId = -2101 - 2 * (Array.IndexOf(new[] { "UTC", "TT", "TAI", "TDB" }, frame) * 4 + (rk78 ? 2 : 0) + (all ? 1 : 0));
+        var pair = LabelPair(rk78, naifId);
+        var window = LabelWindow(frame);
+        var profile = new ProtectedSpacecraftProfile(pair.Protected);
+
+        // Act: the polynomial search of the two trajectories, and the sampled search of the same spacecraft (their last
+        // propagations) as the second reader of the scale
+        var dense = all
+            ? ConjunctionAssessment.AnalyzeAll(profile, pair.ProtectedTrajectory, pair.Secondary, pair.SecondaryTrajectory, window)
+            : new[] { ConjunctionAssessment.Analyze(profile, pair.ProtectedTrajectory, pair.Secondary, pair.SecondaryTrajectory, window) };
+        var sampled = ConjunctionAssessment.Analyze(profile, pair.Secondary, window);
+
+        // Assert: one label, the scale of the window start, on both paths (#683: the dense TCA took the TDB scale of the
+        // step that opens its bracket), the states read at it, never a window end
+        Assert.NotEmpty(dense);
+        Assert.Equal(window.StartDate.Frame, sampled.EncounterState.Epoch.Frame);
+        foreach (var encounter in dense)
+        {
+            var epoch = encounter.EncounterState.Epoch;
+            _output.WriteLine($"LABEL {frame} rk78={rk78} all={all}: {epoch} ({epoch.DateTime.Ticks}) miss " +
+                              $"{encounter.EncounterState.MissDistanceMeters:R} m; sampled {sampled.EncounterState.Epoch}");
+            Assert.Equal(window.StartDate.Frame, epoch.Frame);
+            Assert.Equal(epoch, encounter.ProtectedState.Epoch);
+            Assert.Equal(epoch, encounter.SecondaryState.Epoch);
+            Assert.NotEqual(window.StartDate, epoch);
+            Assert.NotEqual(window.EndDate, epoch);
+            Assert.True(epoch > window.StartDate && epoch < window.EndDate);
+        }
+    }
+
+    // The label of the RK7(8) pair in the window scale against the Keplerian zero: 1.380e-7 s in UTC, TT and TAI on Linux
+    // x64, Windows x64 and macOS arm64 (MEASURE #683 label, CI run 43601908000, 2026-11-14), bounded by twice that
+    private const double LabelTcaBound = 2.8e-7;
+
+    [Theory]
+    [InlineData("UTC", true)]
+    [InlineData("UTC", false)]
+    [InlineData("TT", true)]
+    [InlineData("TT", false)]
+    [InlineData("TAI", true)]
+    [InlineData("TAI", false)]
+    public void DenseTca_InTheWindowScale_IsTheTickNearerTheZero(string frame, bool rk78)
+    {
+        // Arrange
+        int naifId = -2201 - 2 * (Array.IndexOf(new[] { "UTC", "TT", "TAI" }, frame) * 2 + (rk78 ? 1 : 0));
+        var pair = LabelPair(rk78, naifId);
+        var window = LabelWindow(frame);
+
+        // Act
+        var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(pair.Protected), pair.ProtectedTrajectory,
+            pair.Secondary, pair.SecondaryTrajectory, window);
+
+        // Assert: the label in the window scale is the tick of that scale nearer the zero of the range rate of the states
+        // (#624's rule, recomputed here from the public interpolation of the two trajectories)
+        double RangeRate(TimeSystem.Time epoch)
+        {
+            var (p, v) = pair.ProtectedTrajectory.InterpolateAt(epoch);
+            var (s, w) = pair.SecondaryTrajectory.InterpolateAt(epoch);
+            return (s - p) * (w - v);
+        }
+
+        var label = encounter.EncounterState.Epoch;
+        Assert.Equal(LabelFrame(frame), label.Frame);
+        double atLabel = System.Math.Abs(RangeRate(label));
+        double before = System.Math.Abs(RangeRate(label.AddTicks(-1)));
+        double after = System.Math.Abs(RangeRate(label.AddTicks(1)));
+        _output.WriteLine($"MEASURE #683 label {frame} rk78={rk78}: |rr| {atLabel:E3} at the label, {before:E3} a tick before, " +
+                          $"{after:E3} a tick after (m²/s)");
+        Assert.True(atLabel <= before && atLabel <= after, $"|rr| {atLabel:E3}, {before:E3}, {after:E3}");
+
+        // The instant within LabelTcaBound of the zero of the Keplerian range rate (RK7(8) only: the Velocity-Verlet steps
+        // of 10 s carry their own error)
+        if (rk78)
+        {
+            double tcaError = PropagationTimeArgument.Tt.SecondsBetween(Start, label) - pair.KeplerianTca;
+            _output.WriteLine($"MEASURE #683 label {frame}: TCA {tcaError:E3} s from the Keplerian zero");
+            Assert.True(System.Math.Abs(tcaError) <= LabelTcaBound, $"TCA {tcaError:E3} s");
+        }
+    }
+
+    [Theory]
+    [InlineData("inFrame")]
+    [InlineData("startInstant")]
+    [InlineData("endInstant")]
+    [InlineData("zeroOnTheTick")]
+    [InlineData("nearerBelow")]
+    [InlineData("nearerAbove")]
+    [InlineData("tie")]
+    [InlineData("neighbourAbove")]
+    [InlineData("neighbourBelow")]
+    [InlineData("tieNeighbourBelow")]
+    [InlineData("firstTick")]
+    [InlineData("lastTick")]
+    public void InWindowScale_TheTickOfTheWindowFrameNearerTheZero(string row)
+    {
+        // Arrange: a UTC window of an hour and a range rate linear in time, g = t − t0 (s), whose zero t0 is given in UTC
+        // ticks: the closed form of the tick nearer the zero
+        var start = TimeSystem.Time.J2000UTC.AddHours(1.0);
+        var window = new TimeSystem.Window(start, start.AddHours(1.0));
+        var middle = start.AddMinutes(30.0);
+        TimeSystem.Time zero = row switch
+        {
+            "nearerBelow" => middle.AddTicks(3),
+            "nearerAbove" => middle.AddTicks(7),
+            "tie" => middle,
+            "firstTick" => start.AddTicks(1),
+            "lastTick" => window.EndDate.AddTicks(-1),
+            _ => middle
+        };
+
+        // The zero of g at zero + offset ticks: 0.2 tick inside the window for the first and last rows. The epoch passed
+        // converts to the tick zero; for the neighbour rows the zero of g lies 0.7 tick from it, nearer the next tick
+        // (above) or the previous one (below), and 0.5 tick below it for the tie whose lower tick is the neighbour
+        double offsetTicks = row switch
+        {
+            "nearerBelow" => 0.3, "nearerAbove" => -0.3, "tie" => 0.5, "neighbourAbove" => 0.7, "neighbourBelow" => -0.7,
+            "tieNeighbourBelow" => -0.5, "firstTick" => -0.8, "lastTick" => 0.8, _ => 0.0
+        };
+        double RangeRate(TimeSystem.Time t) => (t - zero).Ticks * 1e-7 - offsetTicks * 1e-7;
+        var epoch = row switch
+        {
+            "inFrame" => middle.AddTicks(12),
+            "startInstant" => start.ToTDB(),
+            "endInstant" => window.EndDate.ToTDB(),
+            _ => zero.ToTDB()
+        };
+
+        // Act
+        var label = ConjunctionAssessment.InWindowScale(epoch, window, RangeRate);
+
+        // Assert: the frame of the window start; an epoch already in it unchanged, a window end that end; otherwise the
+        // tick where |g| is smaller (the lower one on a tie), never a window end (#683)
+        Assert.Equal(window.StartDate.Frame, label.Frame);
+        var expected = row switch
+        {
+            "inFrame" => middle.AddTicks(12),
+            "startInstant" => start,
+            "endInstant" => window.EndDate,
+            "zeroOnTheTick" => middle,
+            "nearerBelow" => middle.AddTicks(3),
+            "nearerAbove" => middle.AddTicks(7),
+            "tie" => middle,
+            "neighbourAbove" => middle.AddTicks(1),
+            "neighbourBelow" => middle.AddTicks(-1),
+            "tieNeighbourBelow" => middle.AddTicks(-1),
+            "firstTick" => start.AddTicks(1),
+            _ => window.EndDate.AddTicks(-1)
+        };
+        Assert.Equal(expected, label);
+    }
+
     private static double KeplerianTca(double mu, StateVector first, StateVector second, double low, double high)
     {
         double RangeRate(double t)

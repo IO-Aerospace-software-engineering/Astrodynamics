@@ -2,6 +2,8 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using IO.Astrodynamics.Physics;
 
 namespace IO.Astrodynamics.Body
 {
@@ -16,6 +18,10 @@ namespace IO.Astrodynamics.Body
     /// with the GM and the equatorial radius of its kernels. The central term takes the GM of the kernels by default, or
     /// the GM of the model with <see cref="CentralTerm"/> set to
     /// <see cref="GeopotentialCentralTerm.ModelGravitationalParameter"/>.
+    /// <para>
+    /// One instance builds any number of bodies, on any thread: the coefficients are read once and shared, and each body
+    /// gets its own field (<see cref="GeopotentialGravitationalField"/>, not thread-safe), as from a fresh instance (#674).
+    /// </para>
     /// </remarks>
     public class GeopotentialModelParameters
     {
@@ -52,7 +58,19 @@ namespace IO.Astrodynamics.Body
         {
             GeopotentialModelPath = new StreamReader(geopotentialModelStream);
             GeopotentialDegree = geopotentialDegree;
+            // Read once, by the first body built from these parameters, on any thread; a parse error is kept and thrown
+            // again by every body built from them (#674)
+            _modelReader = new Lazy<GeopotentialModelReader>(() => new GeopotentialModelReader(GeopotentialModelPath),
+                LazyThreadSafetyMode.ExecutionAndPublication);
         }
+
+        private readonly Lazy<GeopotentialModelReader> _modelReader;
+
+        /// <summary>
+        /// The coefficients of the model, read from <see cref="GeopotentialModelPath"/> once and shared, read only, by the
+        /// fields of every body built from these parameters (#674).
+        /// </summary>
+        internal GeopotentialModelReader ModelReader => _modelReader.Value;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GeopotentialModelParameters"/> class for a model whose
@@ -87,7 +105,8 @@ namespace IO.Astrodynamics.Body
         }
 
         /// <summary>
-        /// Gets the stream reader for the geopotential model.
+        /// Gets the stream reader for the geopotential model. The first body built from these parameters reads it to its
+        /// end and closes it; every body shares the coefficients read then.
         /// </summary>
         public StreamReader GeopotentialModelPath { get; }
 

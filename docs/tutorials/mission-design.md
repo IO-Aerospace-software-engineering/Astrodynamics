@@ -85,7 +85,8 @@ var mission = new Mission("LunarExplorer");
 // Define scenario with time window
 var scenario = new Scenario("Phase1", mission, new Window(start, end));
 
-// Add celestial bodies to the environment
+// Add celestial bodies to the environment: one per NAIF identifier (a second body of an identifier is ignored when its
+// models equal those of the first, and throws ArgumentException otherwise)
 scenario.AddCelestialItem(earth);
 scenario.AddCelestialItem(moon);
 

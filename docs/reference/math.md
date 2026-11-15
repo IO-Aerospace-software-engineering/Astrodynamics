@@ -22,7 +22,7 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 | `X`, `Y`, `Z` | Components |
 | `operator *(Vector3, Vector3)` | **Dot product** (not a `.Dot()` method) |
 | `Cross(Vector3)` | Cross product |
-| `Normalize()` | Unit vector |
+| `Normalize()` | Unit vector; `InvalidOperationException` for a magnitude of 0, which includes components all below about 1.5e-162 (the magnitude is not scaled) (#680) |
 | `Magnitude()` | Euclidean length |
 | `MagnitudeSquared()` | Squared Euclidean length (avoids square root) |
 | `Inverse()` | Negated vector (no unary `-` operator) |
@@ -69,7 +69,7 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | `W`, `VectorPart` | Scalar and vector components |
 | `Magnitude()` | Quaternion magnitude |
 | `Conjugate()` | Inverse rotation |
-| `Normalize()` | Unit quaternion |
+| `Normalize()` | Unit quaternion; `InvalidOperationException` for a magnitude of 0 (#680) |
 | `ToEuler()` | Convert to Euler angles (Vector3) |
 | `SLERP(Quaternion, double)` | Spherical linear interpolation |
 | `Lerp(Quaternion, double)` | Linear interpolation |
@@ -106,6 +106,7 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | `ToArray()` | Convert to 2D array |
 | `operator +(Matrix, Matrix)` | Matrix addition |
 | `operator *(Matrix, Matrix)` | Matrix multiplication |
+| `Equals(Matrix)`, `==`, `!=` | Same dimensions and every element equal by `double.Equals`: NaN equals NaN only, +0 equals −0 (#680) |
 
 ### Static Methods
 

@@ -75,7 +75,32 @@ public class ColdStartTests
         }
     }
 
-    private static void RunChild(string mode, string schedule, string hold = null)
+    [Fact]
+    public void TleText_IsCheckedBeforeAnyKernelRead()
+    {
+        // A child that loads no kernel (#675): a malformed TLE throws the error of its text (a wrong checksum, a short line
+        // 1, two catalog numbers, a null line 1), each checked by the child. Before the fix the constructor built its Earth
+        // first, which threw the kernel error, and CSPICE printed the banners of its failed reads on the standard output:
+        // an empty output shows that no SPICE read was attempted
+        string output = RunChild("tle-text");
+
+        Assert.DoesNotContain("SPICE(", output);
+        Assert.DoesNotContain("Toolkit", output);
+        Assert.Equal(string.Empty, output.Trim());
+    }
+
+    // Runs the child with the mode, and the schedule and hold when given; returns its standard output
+    private static string RunChild(string mode, string schedule = null, string hold = null)
+    {
+        string[] arguments = schedule == null ? [mode] : hold == null ? [mode, schedule] : [mode, schedule, hold];
+        return RunChild($"({mode}, {schedule})", arguments);
+    }
+
+    /// <summary>
+    /// Runs the child process with the kernel directory and <paramref name="arguments"/>, requires it to end within
+    /// <see cref="ChildTimeout"/> and exit 0, and returns its standard output.
+    /// </summary>
+    internal static string RunChild(string description, params string[] arguments)
     {
         // ColdStart/, or beside the tests when the build was given an output directory (-o), which the child is built into
         string child = Path.Combine(AppContext.BaseDirectory, "ColdStart", "IO.Astrodynamics.Tests.ColdStart.dll");
@@ -86,7 +111,7 @@ public class ColdStartTests
 
         Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");
 
-        var start = new ProcessStartInfo(DotnetHost())
+        var start = new ProcessStartInfo(ChildProcess.DotnetHost())
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -95,11 +120,9 @@ public class ColdStartTests
         };
         start.ArgumentList.Add(child);
         start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "Data", "SolarSystem"));
-        start.ArgumentList.Add(mode);
-        start.ArgumentList.Add(schedule);
-        if (hold != null)
+        foreach (var argument in arguments)
         {
-            start.ArgumentList.Add(hold);
+            start.ArgumentList.Add(argument);
         }
 
         using var process = Process.Start(start);
@@ -109,40 +132,15 @@ public class ColdStartTests
         {
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
-            Assert.Fail($"The child ({mode}, {schedule}) did not end within {ChildTimeout.TotalSeconds} s: a thread holding the " +
+            Assert.Fail($"The child {description} did not end within {ChildTimeout.TotalSeconds} s: a thread holding the " +
                         $"SpiceAPI lock waits for a type initializer that waits for the lock (#623). Output: {output.Result} {error.Result}");
         }
 
         // The parameterless wait also waits for the end of the redirected streams
         process.WaitForExit();
         Assert.True(process.ExitCode == 0,
-            $"The child ({mode}, {schedule}) exited {process.ExitCode}. Output: {output.Result} Error: {error.Result}");
-    }
-
-    /// <summary>
-    /// The dotnet host of the runtime that runs the tests: the process itself when it is the host (<c>dotnet exec
-    /// testhost.dll</c>), otherwise the host at the root of the runtime's installation (the directory of the runtime is
-    /// <c>&lt;root&gt;/shared/Microsoft.NETCore.App/&lt;version&gt;</c>), then <c>DOTNET_HOST_PATH</c>, which the .NET CLI
-    /// sets, then <c>dotnet</c> on the path.
-    /// </summary>
-    private static string DotnetHost()
-    {
-        string executable = OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet";
-        string processPath = Environment.ProcessPath;
-        if (processPath != null && string.Equals(Path.GetFileName(processPath), executable, StringComparison.OrdinalIgnoreCase))
-        {
-            return processPath;
-        }
-
-        var runtime = new DirectoryInfo(Path.GetDirectoryName(typeof(object).Assembly.Location));
-        string root = runtime.Parent?.Parent?.Parent?.FullName;
-        if (root != null && File.Exists(Path.Combine(root, executable)))
-        {
-            return Path.Combine(root, executable);
-        }
-
-        string hostPath = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH");
-        return !string.IsNullOrEmpty(hostPath) && File.Exists(hostPath) ? hostPath : executable;
+            $"The child {description} exited {process.ExitCode}. Output: {output.Result} Error: {error.Result}");
+        return output.Result;
     }
 }
 

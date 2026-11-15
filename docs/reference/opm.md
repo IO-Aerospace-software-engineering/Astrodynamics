@@ -53,7 +53,7 @@ one OPM per document.
 | Method | Description |
 |--------|-------------|
 | `ToStateVector(observer)` | Convert to a `StateVector` (applies unit conversion); `EPOCH` is read in `TIME_SYSTEM` (UTC, TAI, TDB, TT or GPS), another time system throws (#485). The library's writers write the epoch in UTC under `TIME_SYSTEM = UTC` (#479). The observer is optional: see [The centre](#the-centre) |
-| `ToSpacecraft(naifId, maxMass, clock, observer)` | Create a `Spacecraft` from OPM data; the observer as on `ToStateVector` |
+| `ToSpacecraft(naifId, maxMass, clock, observer)` | Create a `Spacecraft` from OPM data, under the rules of its constructor: `naifId` in [-2147483, -1], and `clock` not attached to a spacecraft of another NAIF id (`ArgumentException`, #676); the observer as on `ToStateVector` |
 | `Validate()` | Validate and return `OpmValidationResult` |
 
 ### The centre

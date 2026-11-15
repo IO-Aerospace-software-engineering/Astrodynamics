@@ -17,6 +17,18 @@ integrator, whose error control scales each component separately. GCRF has the a
 its ICRF twin, labelled GCRF, with both integrators, a covariance and in SSB mode (#543; before 11.0.0 the propagator
 rejected it).
 
+A TLE or an osculating state in TEME is accepted too (#675; before 11.0.0 every path rejected it, "must be defined in
+inertial frame"), and rotated once to ICRF, where the propagation runs and its states are: a TLE starts from its SGP4
+state at the start of the window, on the Earth of the TLE (its observer); a TEME state from itself at its epoch, its
+covariance through the Jacobian (TEME is quasi-inertial: v' = R v, P' = diag(R, R) P diag(R, R)ᵀ,
+[TEME](frames.md#teme)). The run is bit for bit that of its ICRF twin, `start.ToFrame(Frame.ICRF)` on the same
+observer, on every path: `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`,
+`MonteCarloPropagator`, the constructors and the builder. The target orbit of an impulse of such a spacecraft is given
+in ICRF: a target in another frame, TEME included, is rejected when the propagation is built
+([Impulse Maneuvers](impulse-maneuvers.md)). CIRS, TIRS, the rotating frames and a set of mean elements in TEME
+(`tle.ToMeanKeplerianElements()`, which has no state without its theory) are still rejected. For a TLE, see
+[Numerical propagation of a TLE](tle.md#numerical-propagation-of-a-tle): its point-mass Earth is not SGP4.
+
 ### Propagation Loop
 
 1. Build event detectors from the spacecraft maneuver chain.
@@ -45,6 +57,17 @@ rejected it).
 | `CentralBodyPropagator(window, spacecraft, celestialBodies, drag, srp, deltaT)` | Auto-creates a default VVIntegrator with specified forces |
 | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT, covariancePropagation)` | As the first, and propagates the state transition matrix and, in covariance mode, the covariance ([Covariance Propagation](covariance-propagation.md)); null options for none |
 | `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second, with the covariance propagation; the columns of Ψ follow the forces of the integrator |
+
+On every constructor that builds the forces the central body takes part with the models of the observer: it is inserted
+first when no listed body has its NAIF identifier (a run that lists it is unchanged), and a listed body of its
+identifier, or two listed bodies of one identifier, must have the same GM, radii, gravitational field and atmospheric
+model (`ArgumentException` otherwise). Drag is that of the central body's atmosphere, NRLMSISE-00 at nominal space
+weather for an Earth without a model, and of each other listed body with an atmosphere, an Earth always having one
+([Force Models](force-models.md#atmosphericdrag)). The integrator of a constructor
+that builds the forces must be a new instance: one that holds forces or was used by such a constructor throws
+`ArgumentException` (`integrator`); the constructors without celestial bodies use the integrator and its forces as
+given, after the caller's `Initialize`. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
+constructor (#674).
 
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the
 initial orbital parameters is not propagated: it stays on the initial state, the output states carry none, and no partial
@@ -82,6 +105,13 @@ var solution = propagator.Propagate();
 | `Window` | Propagation time window |
 | `Spacecraft` | The spacecraft being propagated |
 | `DeltaT` | Output time step |
+
+The solution holds the SGP4 states at the samples, and between them the cubic Hermite of `PropagationSegment` on the
+positions, the velocities and the accelerations of SGP4 at the samples (the central difference of its velocity at
+±1 s, #675; zero before 11.0.0, which put the interpolated velocity up to 49.9 m/s off SGP4). For the ISS at 60 s,
+`InterpolateAt` and `GetStateVector` are 4.3e-4 m/s and 0.38 m off SGP4 between the samples (the same on Linux x64,
+Windows and macOS arm64), and exact at them; `tle.ToStateVector(t)` is the exact SGP4 state at any instant. A TLE whose
+SGP4 fails within 1 s of an end of the window throws, before the spacecraft receives any sample.
 
 ## BatchPropagator
 
@@ -128,6 +158,12 @@ task; it needs an `IntegratorFactory` that creates an `RK78Integrator`, otherwis
 `NotSupportedException` in its result.
 
 Key features: fault isolation (a failed task does not corrupt others), `CancellationToken` via `BatchOptions`, `IProgress<BatchProgress>` for tracking, duplicate `Spacecraft` detection.
+
+Each maneuver draws on a fuel tank of the spacecraft of its task, and a tank belongs to one spacecraft
+(`Spacecraft.AddFuelTank` rejects a tank held by another): distinct spacecraft imply distinct maneuvers and engines. A
+task whose maneuver draws on another spacecraft's tank, or on a tank of none, fails before it runs with an
+`InvalidOperationException` in its result (#676, #586; before, it burnt the other spacecraft's fuel and wrote its
+records, or threw `NullReferenceException` at the burn).
 
 ## MonteCarloPropagator
 

@@ -54,10 +54,31 @@ namespace IO.Astrodynamics.Mission
         /// Add celestialItem involved in the simulation
         /// </summary>
         /// <param name="celestialItem"></param>
+        /// <remarks>
+        /// The scenario holds one body per NAIF identifier: a body of an identifier already added is ignored when its
+        /// models (GM, radii, gravitational field, atmospheric model) are those of the body added first, and rejected
+        /// otherwise (#674).
+        /// </remarks>
         /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException">A body of the same NAIF identifier with other models was added
+        /// before.</exception>
         public void AddCelestialItem(Body.CelestialItem celestialItem)
         {
             if (celestialItem == null) throw new ArgumentNullException(nameof(celestialItem));
+            if (_celestialBodies.TryGetValue(celestialItem, out var added))
+            {
+                var difference = added.ModelDifference(celestialItem);
+                if (difference != null)
+                {
+                    throw new ArgumentException(
+                        $"The scenario already holds {added.Name} (NAIF {added.NaifId}), and {celestialItem.Name} has " +
+                        $"another {difference}: a scenario takes one model per body. Add one of them.",
+                        nameof(celestialItem));
+                }
+
+                return;
+            }
+
             _celestialBodies.Add(celestialItem);
         }
 
@@ -97,6 +118,8 @@ namespace IO.Astrodynamics.Mission
         /// <param name="includeSolarRadiationPressure">Radiation pressure will be computed from drag coefficient defined in spacecraft</param>
         /// <param name="propagatorStepSize"></param>
         /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive; checked
+        /// before any star is propagated.</exception>
         public async Task<ScenarioSummary> SimulateAsync(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
             TimeSpan propagatorStepSize)
         {
@@ -116,6 +139,8 @@ namespace IO.Astrodynamics.Mission
         /// time: the propagator adds the force model of the spacecraft to its integrator.</param>
         /// <returns>The summary of the simulation.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="integratorFactory"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive; checked
+        /// before any star is propagated.</exception>
         /// <exception cref="InvalidOperationException">There is nothing to simulate, or the factory returns null or an
         /// instance it already returned for another spacecraft.</exception>
         /// <remarks>
@@ -148,6 +173,8 @@ namespace IO.Astrodynamics.Mission
         /// </param>
         /// <returns>The summary of the simulation.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="integratorFactory"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive; checked
+        /// before any star is propagated.</exception>
         /// <exception cref="InvalidOperationException">There is nothing to simulate, or the factory returns null or an
         /// instance it already returned for another spacecraft; or the covariance is asked for and a spacecraft has no
         /// valid initial covariance at the start of the window (the message names the spacecraft).</exception>
@@ -182,6 +209,8 @@ namespace IO.Astrodynamics.Mission
         private async Task<ScenarioSummary> SimulateAsync(TimeSpan propagatorStepSize,
             Func<Body.Spacecraft.Spacecraft, Task> propagateSpacecraft)
         {
+            // Before the stars are propagated (#674)
+            Propagator.PropagatorBase.RequirePositiveStep(propagatorStepSize, nameof(propagatorStepSize));
             IsSimulated = false;
             if (_spacecrafts.Count == 0 && _sites.Count == 0 && _stars.Count == 0)
             {

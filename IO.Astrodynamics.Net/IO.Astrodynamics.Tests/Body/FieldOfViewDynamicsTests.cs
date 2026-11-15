@@ -23,8 +23,8 @@ namespace IO.Astrodynamics.Tests.Body;
 /// dynamics"), each against CSPICE's <c>gftfov</c> in the process (choice 9 (b)) on the kernels the library writes
 /// (<c>Spacecraft.WriteEphemeris</c> and <c>WriteOrientation</c>), what a user gives CSPICE or another tool: RK7(8), an
 /// impulsive maneuver followed by a TRIAD attitude inside the window (a discrete attitude), a nadir attitude (a continuous
-/// one), SSB mode, the six inertial initial frames, the path of <c>Scenario.SimulateAsync</c>, and a TLE. A TEME initial
-/// state is not on the public surface: the propagator rejects it ("must be defined in inertial frame").
+/// one), SSB mode, the six inertial initial frames, the path of <c>Scenario.SimulateAsync</c>, a TLE, and a TLE propagated
+/// by RK7(8) from its SGP4 state at the start, rotated once to ICRF (#675), which reads its stored states.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -38,9 +38,10 @@ namespace IO.Astrodynamics.Tests.Body;
 /// by at most that microsecond and the rounding of its encoded SCLK.
 /// </para>
 /// <para>
-/// A TLE spacecraft is not propagated by <c>Spacecraft.Propagate</c>: its SPK holds the SGP4 states every 10 s, and its
-/// CK the identity of ICRF, the attitude of a spacecraft without an attitude maneuver, both written by the test with the
-/// raw writers (a read no longer adds to the attitude record, #523).
+/// The unpropagated TLE spacecraft reads SGP4 and records no attitude: the test gives it the identity of ICRF by hand
+/// (<c>AddStateOrientationToICRF</c>), without which its search throws (#682), and writes its SPK, the SGP4 states every
+/// 10 s, and its CK, that identity, with the raw writers (a read no longer adds to the attitude record, #523). The TLE
+/// spacecraft propagated by <c>Spacecraft.Propagate</c> (#675) writes its kernels as any propagated spacecraft does.
 /// </para>
 /// <para>
 /// The fields: a circle, an ellipse and a rectangle whose boresight is -X of the frame (the fields of
@@ -177,6 +178,21 @@ public class FieldOfViewDynamicsTests
                 var spacecraft = new Spacecraft(-5177, "FOV5177", 1000.0, 3000.0, new Clock("FOV5177_CLK", 65536), tle);
                 AddInstruments(spacecraft);
                 var tleStart = tle.Epoch.ToTDB();
+                // Its attitude, given by hand as the CK the test writes holds it: without one the search throws (#682)
+                spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(Quaternion.Identity, Vector3.Zero, tleStart, spacecraft.Frame));
+                return (spacecraft, new Window(tleStart.AddSeconds(1.0), tleStart.AddSeconds(2999.0)));
+            }
+            case "TLEPropagated":
+            {
+                // Propagated by RK7(8) about the point-mass Earth of the TLE, with the Moon and the Sun (#675): the spacecraft
+                // reads its stored states, about 50 km from SGP4 at the end
+                var tle = new TLE("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+                    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
+                var spacecraft = new Spacecraft(-5179, "FOV5179", 1000.0, 3000.0, new Clock("FOV5179_CLK", 65536), tle);
+                AddInstruments(spacecraft);
+                var tleStart = tle.Epoch.ToTDB();
+                spacecraft.Propagate(new Window(tleStart, tleStart.AddSeconds(3000.0)), new CelestialItem[] { moon, sun }, new RK78Integrator(1e-12, 1e-12),
+                    false, false, oneSecond);
                 return (spacecraft, new Window(tleStart.AddSeconds(1.0), tleStart.AddSeconds(2999.0)));
             }
             default:
@@ -214,6 +230,12 @@ public class FieldOfViewDynamicsTests
             new(792, "SUN", ShapeType.Point, Aberration.LTS, 1), new(792, "SUN", ShapeType.Ellipsoid, Aberration.LTS, 1),
             new(792, "MOON", ShapeType.Point, Aberration.LT, 1)
         ],
+        ["TLEPropagated"] =
+        [
+            new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 1), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
+            new(791, "EARTH", ShapeType.Ellipsoid, Aberration.LTS, 1), new(789, "DSS-13", ShapeType.Point, Aberration.LT, 1),
+            new(790, "DSS-13", ShapeType.Point, Aberration.LT, 1), new(791, "DSS-13", ShapeType.Point, Aberration.LTS, 1)
+        ],
         ["TLE"] =
         [
             new(789, "EARTH", ShapeType.Ellipsoid, Aberration.LT, 1), new(790, "EARTH", ShapeType.Point, Aberration.LT, 1),
@@ -231,6 +253,7 @@ public class FieldOfViewDynamicsTests
     [InlineData("SSB")]
     [InlineData("ECLIPJ2000")]
     [InlineData("TLE")]
+    [InlineData("TLEPropagated")]
     public void Variant_MatchesGftfov(string variant) => Check(variant);
 
     /// <summary>The variants added by #537: the nadir and TRIAD attitudes from the five other inertial frames, RK7(8) and
@@ -264,7 +287,7 @@ public class FieldOfViewDynamicsTests
         string directory = $"Data/User/FieldOfViewDynamics515/{variant.Replace('@', '_')}";
         // The kernels the library writes: a read of the spacecraft no longer changes its attitude (#523), so they may be
         // written after or before the searches. The TLE spacecraft is not propagated: its SPK holds the SGP4 states every
-        // 10 s, its CK the identity of ICRF, the attitude of a spacecraft without one
+        // 10 s, its CK the identity of ICRF, the attitude Build gave it
         if (variant == "TLE")
         {
             var earthBody = new CelestialBody(PlanetsAndMoons.EARTH);

@@ -1,6 +1,8 @@
 // Copyright 2026. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Math;
 using Xunit;
@@ -165,4 +167,87 @@ public class MemoryDataProviderTests
         // A node is read as it is, before and after interpolated reads
         Assert.Equal(Circular(600.0).Position, Read(sequence, 600.0).Position);
     }
+
+    // #680, the contract of the reads (#668, C10): a target or a frame without data at the epoch throws
+    // InvalidOperationException, the type SPICE throws for the same situations, which the library's handlers of missing data
+    // catch (a body whose barycentre the data do not reach builds without an orbit; the orientation cache of a propagation
+    // keeps the point unavailable); a frame never added throws ArgumentException; an id without body information throws
+    // ArgumentException naming naifId, as SpiceDataProvider for an id SPICE does not name since #672 (a bad argument,
+    // decided by S. Guillet, 2026-11-14). Before, ArgumentException, KeyNotFoundException and, earlier in #680,
+    // InvalidOperationException for the id
+    [Fact]
+    public void MissingData_ThrowsInvalidOperationException_UnknownFrameOrId_ArgumentException()
+    {
+        var earth = TestHelpers.EarthAtJ2000;
+        var ssb = TestHelpers.SsbAtJ2000;
+        var early = new TimeSystem.Time(1500, 1, 1, 0, 0, 0, frame: TimeSystem.TimeFrame.TDBFrame);
+
+        // The reference: the types SPICE gives, the Earth outside de440s and ITRF93 outside the PCK
+        var spice = new SpiceDataProvider();
+        Assert.Throws<InvalidOperationException>(() => spice.GetEphemeris(early, earth, ssb, Frames.Frame.ICRF, Aberration.None));
+        Assert.Throws<InvalidOperationException>(() => spice.FrameTransformationToICRF(early, new Frames.Frame("ITRF93")));
+
+        // A target without states, and one read before its first or after its last state
+        var provider = new MemoryDataProvider();
+        var targetException = Assert.Throws<InvalidOperationException>(() =>
+            provider.GetEphemeris(Start, earth, ssb, Frames.Frame.ICRF, Aberration.None));
+        Assert.Contains("399", targetException.Message);
+        var states = StateProvider();
+        Assert.Throws<InvalidOperationException>(() =>
+            states.GetEphemeris(Start.AddSeconds(-1.0), earth, ssb, Frames.Frame.ICRF, Aberration.None));
+        Assert.Throws<InvalidOperationException>(() =>
+            states.GetEphemeris(Start.AddSeconds(1201.0), earth, ssb, Frames.Frame.ICRF, Aberration.None));
+
+        // A frame read outside its stored orientations; a frame never added keeps ArgumentException
+        var (orientations, frame) = OrientationProvider(0.025);
+        var frameException = Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToICRF(Start.AddSeconds(-1.0), frame));
+        Assert.Contains(frame.Name, frameException.Message);
+        Assert.Throws<InvalidOperationException>(() => orientations.FrameTransformationToICRF(Start.AddSeconds(11.0), frame));
+        Assert.Throws<ArgumentException>(() => orientations.FrameTransformationToICRF(Start, new Frames.Frame("IAU_MARS")));
+
+        // An id without body info: ArgumentException naming naifId, the type and the parameter of SpiceDataProvider for an id
+        // SPICE does not name (#672; UnknownId_ThrowsAsTheSpiceProvider below). 999 is Pluto on SPICE, an id this provider
+        // simply lacks
+        var infoException = Assert.Throws<ArgumentException>(() => provider.GetCelestialBodyInfo(999));
+        Assert.Equal("naifId", infoException.ParamName);
+        Assert.Contains("999", infoException.Message);
+    }
+
+    /// <summary>
+    /// Ids neither provider has information on: <see cref="MemoryDataProvider.GetCelestialBodyInfo"/> throws the exception
+    /// type of <c>SpiceDataProvider.GetCelestialBodyInfo</c>, the reference, with the same parameter name (#680,
+    /// decided by S. Guillet, 2026-11-14: a bad argument gives <see cref="ArgumentException"/>). The celestial ids SPICE does
+    /// not name of <c>NativeAbortGuardTests.GetCelestialBodyInfo_UnnamedIdentifier_Throws</c> (#672), and ids that are no
+    /// celestial body's, which SPICE rejects before reading, and the Lagrange points L1 to L5, which SPICE does not name
+    /// either. The paths through the global provider, <c>new CelestialBody(id)</c> and <c>CelestialItem.Create(id)</c>, are
+    /// checked in a child process, <see cref="MemoryDataProviderBodyTests"/>; <c>CelestialItem.Create</c> of a Lagrange point
+    /// reads its state, not its information.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(UnknownIds))]
+    [MemberData(nameof(LagrangeIds))]
+    public void UnknownId_ThrowsAsTheSpiceProvider(int id)
+    {
+        IDataProvider spice = new SpiceDataProvider();
+        var reference = Assert.ThrowsAny<Exception>(() => spice.GetCelestialBodyInfo(id));
+        Assert.IsType<ArgumentException>(reference);
+
+        var exception = Assert.ThrowsAny<Exception>(() => new MemoryDataProvider().GetCelestialBodyInfo(id));
+        Assert.IsType(reference.GetType(), exception);
+        Assert.Equal(((ArgumentException)reference).ParamName, ((ArgumentException)exception).ParamName);
+        Assert.Equal("naifId", ((ArgumentException)exception).ParamName);
+        Assert.Contains(id.ToString(), exception.Message);
+    }
+
+    // The ids of the theory above and of the child process's check (IO.Astrodynamics.Tests.ColdStart, MemoryProviderChild,
+    // the same list): celestial ids SPICE does not name (#672), then a spacecraft's, an id from 11 to 100, and 1000
+    internal static readonly int[] UnknownIdValues = [398, 12345678, 2000003, 99999999, -12345, 50, 1000];
+
+    public static IEnumerable<object[]> UnknownIds() => UnknownIdValues.Select(id => new object[] { id });
+
+    // L1 to L5, which SPICE does not name (Data/SolarSystem): their information throws as any unknown id's, while
+    // CelestialItem.Create builds them from their state without reading it (MemoryDataProviderBodyTests, the child process)
+    internal static readonly int[] LagrangeIdValues = [391, 392, 393, 394, 395];
+
+    public static IEnumerable<object[]> LagrangeIds() => LagrangeIdValues.Select(id => new object[] { id });
 }

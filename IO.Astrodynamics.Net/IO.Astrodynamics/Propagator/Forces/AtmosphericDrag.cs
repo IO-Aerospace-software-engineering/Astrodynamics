@@ -71,7 +71,8 @@ public class AtmosphericDrag : ForceBase
     {
         _spacecraft = spacecraft ?? throw new ArgumentNullException(nameof(spacecraft));
         _celestialBody = celestialBody ?? throw new ArgumentNullException(nameof(celestialBody));
-        if (!_celestialBody.HasAtmosphericModel)
+        // Its atmospheric model, or NRLMSISE-00 at nominal space weather for an Earth without one (#674)
+        if (_celestialBody.Atmosphere == null)
         {
             throw new ArgumentException($"The celestial body {_celestialBody.Name} does not have an atmospheric model.");
         }

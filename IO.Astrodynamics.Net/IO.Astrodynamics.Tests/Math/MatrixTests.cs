@@ -1246,4 +1246,66 @@ public class MatirxTests
     }
 
     #endregion
+
+    // #680: the elements compare as double.Equals, the semantics of Vector3 and of every record struct of the library: NaN
+    // equals NaN only, +0 equals -0, and two entries one smallest subnormal apart differ. The expectation is computed pair by
+    // pair from double.Equals, never from Matrix.Equals; equal matrices hash equal (the .NET contract)
+    [Fact]
+    public void Equals_FollowsDoubleEquals_AndTheHashContract()
+    {
+        double[] values = { 0.0, -0.0, double.Epsilon, 1.0, double.NaN, double.PositiveInfinity, double.NegativeInfinity };
+        var matrices = new System.Collections.Generic.List<(double A, double B, Matrix M)>();
+        foreach (var a in values)
+        {
+            foreach (var b in values)
+            {
+                matrices.Add((a, b, new Matrix(new[,] { { a, b }, { 0.0, 0.0 } })));
+            }
+        }
+
+        foreach (var (a1, b1, m1) in matrices)
+        {
+            // Reflexive
+            Assert.True(m1.Equals(m1));
+            Assert.True(m1 == new Matrix(new[,] { { a1, b1 }, { 0.0, 0.0 } }));
+            foreach (var (a2, b2, m2) in matrices)
+            {
+                bool expected = a1.Equals(a2) && b1.Equals(b2);
+                Assert.True(expected == m1.Equals(m2), $"({a1:R}, {b1:R}) against ({a2:R}, {b2:R}): Equals {m1.Equals(m2)}");
+                Assert.Equal(expected, m1 == m2);
+                // Symmetric
+                Assert.Equal(m1.Equals(m2), m2.Equals(m1));
+                if (expected)
+                {
+                    Assert.Equal(m1.GetHashCode(), m2.GetHashCode());
+                }
+            }
+        }
+
+        // Transitive: a == b and b == c imply a == c
+        foreach (var (_, _, m1) in matrices)
+        {
+            foreach (var (_, _, m2) in matrices)
+            {
+                if (!m1.Equals(m2)) continue;
+                foreach (var (_, _, m3) in matrices)
+                {
+                    if (m2.Equals(m3))
+                    {
+                        Assert.True(m1.Equals(m3));
+                    }
+                }
+            }
+        }
+
+        // The issue's cases: a NaN entry against a number, and 0 against the smallest subnormal
+        var zero = new Matrix(2, 2);
+        var withNaN = new Matrix(new[,] { { double.NaN, 0.0 }, { 0.0, 0.0 } });
+        var withOne = new Matrix(new[,] { { 1.0, 0.0 }, { 0.0, 0.0 } });
+        Assert.False(zero == withNaN);
+        Assert.False(withNaN == withOne);
+        Assert.False(zero == new Matrix(new[,] { { double.Epsilon, 0.0 }, { 0.0, 0.0 } }));
+        Assert.True(withNaN == new Matrix(new[,] { { double.NaN, 0.0 }, { 0.0, 0.0 } }));
+        Assert.True(zero == new Matrix(new[,] { { -0.0, 0.0 }, { 0.0, -0.0 } }));
+    }
 }

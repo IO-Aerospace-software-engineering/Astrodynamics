@@ -29,6 +29,8 @@
       <!-- The child process of ColdStartTests (#623): built before the tests, not referenced by them (Private="false": none
            of its files is copied next to theirs by the SDK); its output is copied to ColdStart/ by CopyColdStartChild. -->
       <ProjectReference Include="..\IO.Astrodynamics.Tests.ColdStart\IO.Astrodynamics.Tests.ColdStart.csproj" ReferenceOutputAssembly="false" Private="false" />
+      <!-- The child process of KernelRegistryTests (#673), the same way; copied to KernelUnload/ by CopyKernelUnloadChild. -->
+      <ProjectReference Include="..\IO.Astrodynamics.Tests.KernelUnload\IO.Astrodynamics.Tests.KernelUnload.csproj" ReferenceOutputAssembly="false" Private="false" />
     </ItemGroup>
 
     <!-- The whole output of the child process, its native library in resources/ included, to ColdStart/ (#623). With an
@@ -45,6 +47,20 @@
         <ColdStartFile Include="$(ColdStartOutputDirectory)**/*" />
       </ItemGroup>
       <Copy SourceFiles="@(ColdStartFile)" DestinationFiles="@(ColdStartFile->'$(OutDir)ColdStart/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    </Target>
+
+    <!-- The whole output of the child process of KernelRegistryTests to KernelUnload/ (#673), as CopyColdStartChild. -->
+    <Target Name="CopyKernelUnloadChild" AfterTargets="Build">
+      <MSBuild Projects="..\IO.Astrodynamics.Tests.KernelUnload\IO.Astrodynamics.Tests.KernelUnload.csproj" Targets="GetTargetPath">
+        <Output TaskParameter="TargetOutputs" PropertyName="KernelUnloadTargetPath" />
+      </MSBuild>
+      <PropertyGroup>
+        <KernelUnloadOutputDirectory>$([MSBuild]::NormalizeDirectory($([System.IO.Path]::GetDirectoryName('$(KernelUnloadTargetPath)'))))</KernelUnloadOutputDirectory>
+      </PropertyGroup>
+      <ItemGroup Condition="'$(KernelUnloadOutputDirectory)' != '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory), $(OutDir)))'">
+        <KernelUnloadFile Include="$(KernelUnloadOutputDirectory)**/*" />
+      </ItemGroup>
+      <Copy SourceFiles="@(KernelUnloadFile)" DestinationFiles="@(KernelUnloadFile->'$(OutDir)KernelUnload/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     </Target>
 
     <ItemGroup>

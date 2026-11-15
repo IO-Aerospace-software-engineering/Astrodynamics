@@ -106,6 +106,12 @@ public sealed class EncounterCase
     internal PropagationSolution ProtectedTrajectory { get; init; }
 
     /// <summary>
+    /// The options the analysis used, the radius of the secondary resolved (#683); null for a case built by hand. The
+    /// avoidance options are re-analyzed with them, but for the values <see cref="AvoidanceSearchOptions"/> gives.
+    /// </summary>
+    internal ConjunctionAnalysisOptions AnalysisOptions { get; init; }
+
+    /// <summary>
     /// Exports this encounter as a CCSDS Conjunction Data Message.
     /// </summary>
     /// <param name="options">Optional CDM export overrides.</param>
