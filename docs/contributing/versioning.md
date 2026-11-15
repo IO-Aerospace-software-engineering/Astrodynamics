@@ -1946,6 +1946,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   result parallel to the input, the quaternion's rotation against its matrix; `StateOrientationTests`,
   `LambertSolverTests` and `CelestialBodyTests` the kept conventions; `SpacecraftTests` each zero axis (Changed,
   Breaking, below).
+- **A spacecraft accepted body axes that are not finite** (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The constructor rejected only an axis of
+  magnitude 0 (#680, above): an axis with a NaN or infinite component has a magnitude of NaN or +∞, so it was
+  normalized to NaN components (`bodyFront` (0, NaN, 0) gave (NaN, NaN, NaN), (0, +∞, 0) gave (0, NaN, 0)), and every
+  orthogonality and handedness comparison of a NaN is false, so the spacecraft was built with NaN axes. Its attitudes
+  were then NaN (`ProgradeAttitude` and `CreateLVLH` with a NaN front, `CreateLVLH` with a −∞ up) or silently wrong where
+  the law reads another axis (the identity for `ProgradeAttitude` with a NaN right). The `Spacecraft` constructor now
+  throws `ArgumentException` naming the first of `bodyFront`, `bodyRight` and `bodyUp` with a component that is not
+  finite, before the clock is attached, so a throw leaves the clock free (#676). Every finite axis is unchanged, bit
+  for bit. `SpacecraftTests` checks NaN, +∞ and −∞ in each axis, given alone or with the others, the parameter named,
+  and that the clock is free after the throw.
 - **`TriadAttitude.CreateLVLH` and `CreateProgradeWithSunTracking` pointed the static body axes** ([#677](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/677)). A
   spacecraft built with `bodyFront`, `bodyRight` and `bodyUp` got `Spacecraft.Down` and `Front` (LVLH), or `Front` and
   `Up` (prograde with Sun tracking), whatever its own axes: with the front +X, the right −Y and the up +Z its front was

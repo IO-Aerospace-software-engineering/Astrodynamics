@@ -1311,7 +1311,7 @@ Represents a spacecraft with components.
 | `BodyUp` | Instance body up axis (default: +Z, same as `Spacecraft.Up`) |
 | `BodyBack` / `BodyLeft` / `BodyDown` | Computed inverses of body axes |
 
-**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`). The attitudes read the axes of the spacecraft that carries the engine's tank at execution, with the static axes as fallback: the single-vector attitudes and the attitude of an impulse use `BodyFront` via `GetBodyFront()`, `TriadAttitude.CreateLVLH` uses `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677); the `TriadAttitude` constructors take literal body vectors.
+**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be finite, non-zero, orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`); a zero axis, or one with a component that is not finite, throws `ArgumentException` naming it. The attitudes read the axes of the spacecraft that carries the engine's tank at execution, with the static axes as fallback: the single-vector attitudes and the attitude of an impulse use `BodyFront` via `GetBodyFront()`, `TriadAttitude.CreateLVLH` uses `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677); the `TriadAttitude` constructors take literal body vectors.
 
 | Method | Description |
 |--------|-------------|
