@@ -169,6 +169,100 @@ namespace IO.Astrodynamics.Tests.CCSDS
         }
 
         /// <summary>
+        /// The forms of an NDM/XML document that the SANA NDM/XML 4.0.0 master declares (CCSDS 505.0-B-3): the message of
+        /// <paramref name="xml"/> under an unqualified &lt;ndm&gt; ("unqualified-ndm") or as the root ("unqualified-message"),
+        /// every element without a namespace, as Space-Track and the writers write it; and the same with every element below
+        /// the root in the NDM namespace ("qualified-ndm", "qualified-message"), the form of the qualified schema set. Namespace
+        /// declarations and xsi attributes are removed.
+        /// </summary>
+        internal static string InForm(string xml, string messageName, string form)
+        {
+            var root = XDocument.Parse(xml).Root!;
+            var source = root.Name.LocalName == messageName
+                ? root
+                : root.Elements().Single(e => e.Name.LocalName == messageName);
+            var message = new XElement(source);
+            foreach (var element in message.DescendantsAndSelf())
+            {
+                element.Attributes().Where(a => a.IsNamespaceDeclaration || a.Name.Namespace == XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance")).Remove();
+                element.Name = element.Name.LocalName;
+            }
+
+            bool qualified = form.StartsWith("qualified", StringComparison.Ordinal);
+            if (qualified)
+            {
+                XNamespace ndm = NdmNamespace;
+                foreach (var element in form == "qualified-ndm" ? message.DescendantsAndSelf() : message.Descendants())
+                {
+                    element.Name = ndm + element.Name.LocalName;
+                }
+            }
+
+            var result = form switch
+            {
+                "unqualified-ndm" or "qualified-ndm" => new XElement("ndm", message),
+                "unqualified-message" or "qualified-message" => message,
+                _ => throw new ArgumentException($"Unknown form {form}", nameof(form))
+            };
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// A copy of the document with one mutation that the NDM/XML 4.0.0 schema rejects, applied by local name in the
+        /// message <paramref name="messageName"/>, the new elements in the namespace of their parent: "ECCENTRICITY=-0.5"
+        /// (nonNegativeDouble), "remove OBJECT_NAME" or "remove EPOCH" (required), "EPOCH=2026-DDDT05:00:55" (epochType
+        /// pattern), "INCLINATION units=rad" (angle units deg only), "X units=m" (length units km only),
+        /// "COLLISION_PROBABILITY=1.5" (probabilityType, at most 1), "FOO" (an undeclared element after OBJECT_NAME), "segment twice" (one segment), "root foo" (the root renamed, no global declaration).
+        /// </summary>
+        internal static string Mutated(string xml, string messageName, string mutation)
+        {
+            var document = XDocument.Parse(xml);
+            var message = document.Root!.Name.LocalName == messageName
+                ? document.Root
+                : document.Root.Elements().Single(e => e.Name.LocalName == messageName);
+            XElement First(string name) => message.Descendants().First(e => e.Name.LocalName == name);
+            switch (mutation)
+            {
+                case "ECCENTRICITY=-0.5":
+                    First("ECCENTRICITY").Value = "-0.5";
+                    break;
+                case "remove OBJECT_NAME":
+                    First("OBJECT_NAME").Remove();
+                    break;
+                case "remove EPOCH":
+                    First("EPOCH").Remove();
+                    break;
+                case "EPOCH=2026-DDDT05:00:55":
+                    First("EPOCH").Value = "2026-DDDT05:00:55";
+                    break;
+                case "INCLINATION units=rad":
+                    First("INCLINATION").SetAttributeValue("units", "rad");
+                    break;
+                case "COLLISION_PROBABILITY=1.5":
+                    First("COLLISION_PROBABILITY").Value = "1.5";
+                    break;
+                case "X units=m":
+                    First("X").SetAttributeValue("units", "m");
+                    break;
+                case "FOO":
+                    var objectName = First("OBJECT_NAME");
+                    objectName.AddAfterSelf(new XElement(objectName.Name.Namespace + "FOO", "1"));
+                    break;
+                case "segment twice":
+                    var segment = First("segment");
+                    segment.AddAfterSelf(new XElement(segment));
+                    break;
+                case "root foo":
+                    document.Root.Name = document.Root.Name.Namespace + "foo";
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown mutation {mutation}", nameof(mutation));
+            }
+
+            return document.ToString();
+        }
+
+        /// <summary>
         /// Writes the XML to a temporary file, runs the action on its path, and deletes the file.
         /// </summary>
         internal static void WithTempFile(string xml, Action<string> action)

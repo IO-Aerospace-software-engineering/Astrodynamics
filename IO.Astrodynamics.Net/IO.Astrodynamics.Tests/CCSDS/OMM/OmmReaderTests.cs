@@ -466,7 +466,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         // An OMM holds one header and one body, the body one segment, the segment one metadata and one data section, and
         // the data at most one of each block (NDM/XML 4.0.0, ndmxml-4.0.0-omm-3.0.xsd: ommType, ommBody, ommSegment,
         // ommData; CCSDS 502.0-B-3)
-        private static Omm FullOmm()
+        internal static Omm FullOmm()
         {
             var meanElements = MeanElements.CreateWithMeanMotion(
                 new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), 15.5, 0.001, 51.6, 10.0, 20.0, 30.0);
@@ -497,9 +497,11 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.False(qualified.IsValid);
             Assert.Contains(qualified.Errors, e => e.Message.Contains("segment"));
 
-            // The unqualified document, Space-Track's form and the writer's, matches no declaration of the qualified schemas:
-            // schema validation passes it with warnings, so the reader is the one that rejects it under default validation
-            Assert.True(validator.ValidateSchemaFromXml(NdmDocuments.TwoSegmentOmm()).IsValid);
+            // The unqualified document, Space-Track's form and the writer's, is rejected by SANA's unqualified set too (third
+            // round of #668; before, it matched no declaration and passed with warnings, the reader rejecting it)
+            var unqualified = validator.ValidateSchemaFromXml(NdmDocuments.TwoSegmentOmm());
+            Assert.False(unqualified.IsValid);
+            Assert.Contains(unqualified.Errors, e => e.Message.Contains("segment"));
         }
 
         [Theory]
@@ -525,7 +527,15 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
                 _ => () => NdmDocuments.WithTempFile(xml, file => Omm.LoadFromFile(file))
             };
 
-            // Before: the first segment, ISS (ZARYA), the second dropped
+            // Before: the first segment, ISS (ZARYA), the second dropped. Under default validation the schema rejects it first
+            // (third round of #668); without it, and through the reader, the reader does
+            if (path.StartsWith("Omm.LoadFrom", StringComparison.Ordinal) && !path.EndsWith("without schema validation", StringComparison.Ordinal))
+            {
+                var validation = Assert.Throws<OmmValidationException>(read);
+                Assert.Contains(validation.ValidationResult.Errors, e => e.Message.Contains("segment"));
+                return;
+            }
+
             var ex = Assert.Throws<OmmParseException>(read);
             Assert.Contains("2 segment elements", ex.Message);
         }

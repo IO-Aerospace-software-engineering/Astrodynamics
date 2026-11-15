@@ -58,6 +58,33 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             Assert.StartsWith("<?xml", xml);
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void WriteToString_Output_IsSchemaValidWithoutWarning(bool wrapInNdm)
+        {
+            // The unqualified form the writer writes passes the NDM/XML 4.0.0 schema, which now checks it (third round of #668)
+            var validator = new OmmValidator();
+            foreach (var omm in new[] { CreateMinimalOmm(), OmmReaderTests.FullOmm(), _reader.ReadFromFile("CCSDS/H2ADEB.omm") })
+            {
+                _writer.WrapInNdmContainer = wrapInNdm;
+                foreach (var xml in new[] { _writer.WriteToString(omm), wrapInNdm ? omm.ToXml() : _writer.WriteToString(omm) })
+                {
+                    var result = validator.ValidateSchemaFromXml(xml);
+                    Assert.True(result.IsValid, string.Join("; ", System.Linq.Enumerable.Select(result.Errors, e => e.Message)));
+                    Assert.Empty(result.Warnings);
+                }
+
+                NdmDocuments.WithTempFile("", file =>
+                {
+                    omm.SaveToFile(file, validateBeforeSave: false);
+                    var saved = validator.ValidateSchema(file);
+                    Assert.True(saved.IsValid, string.Join("; ", System.Linq.Enumerable.Select(saved.Errors, e => e.Message)));
+                    Assert.Empty(saved.Warnings);
+                });
+            }
+        }
+
         [Fact]
         public void WriteToString_NullOmm_ThrowsArgumentNullException()
         {

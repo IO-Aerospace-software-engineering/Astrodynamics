@@ -748,11 +748,19 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         }
 
         [Fact]
-        public void TryLoadFromFile_OmmWithTwoSegments_ReturnsFalseWithParseError()
+        public void TryLoadFromFile_OmmWithTwoSegments_ReturnsFalseWithSchemaOrParseError()
         {
             NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOmm(), file =>
             {
+                // The schema rejects the second segment (third round of #668: a PARSE_ERROR of the reader before)
                 var loaded = Omm.TryLoadFromFile(file, out var omm, out var result);
+
+                Assert.False(loaded);
+                Assert.Null(omm);
+                Assert.Contains(result.Errors, e => e.Code == "OMM007" && e.Message.Contains("segment"));
+
+                // Without schema validation, the reader rejects it
+                loaded = Omm.TryLoadFromFile(file, out omm, out result, validateSchema: false);
 
                 Assert.False(loaded);
                 Assert.Null(omm);

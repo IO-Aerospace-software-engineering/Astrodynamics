@@ -24,11 +24,27 @@ one OMM per document.
 The OMM itself holds one header and one body, the body one segment, the segment one metadata and one data section, and
 the data at most one of each block (NDM/XML 4.0.0, `ndmxml-4.0.0-omm-3.0.xsd`; CCSDS 502.0-B-3). An OMM
 with a second segment, or a second header, body, metadata, data section or block, throws `OmmParseException` naming
-the element and its count, with or without `validateSchema`; `TryLoadFromFile` returns false with a `PARSE_ERROR` and
-`OmmValidator.ValidateFile` reports it invalid. Before 11.0.0 the first one was read and the others dropped, a whole
-second segment included. The schema validation does not catch it for an unqualified document (the form the writer and
-Space-Track write), which matches no declaration of the qualified schemas, so the reader is the guard. Split such a
-document into one message per segment.
+the element and its count without `validateSchema`; with it the schema rejects the document first, an
+`OmmValidationException` (`TryLoadFromFile` returns false with the schema error and `OmmValidator.ValidateFile` reports it
+invalid; without schema validation, a `PARSE_ERROR` and the reader's error). Before 11.0.0 the first one was read and
+the others dropped, a whole second segment included. Split such a document into one message per segment.
+
+### Schema validation
+
+`validateSchema` and `OmmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
+505.0-B-3) in its form, as SANA publishes them: a root `ndm` or `omm` without a namespace, every element unqualified (the
+form of Space-Track and of the writer, SANA's `ndmxml_unqualified` set) or every element below the root in the
+namespace `urn:ccsds:schema:ndmxml` (the qualified set). Any other root is an error. A root in the namespace, the
+library's earlier form of a bare message, is checked as before, against the OMM schema with that root declared in the
+namespace (an `ndm` root in the namespace has no declaration and is rejected, by SANA too). The unqualified set is the
+embedded one with its `elementFormDefault` set to `unqualified`, the one difference between the two sets SANA publishes.
+
+Before the third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) an
+unqualified document matched no declaration of the validator, so it was reported valid with a warning per element and
+nothing below its root was checked: an OMM with `ECCENTRICITY` -0.5 threw `ArgumentOutOfRangeException` from
+`MeanElements` and one with `INCLINATION` in `rad` loaded, and undeclared elements were ignored. Such a document now
+makes `Load*` throw `OmmValidationException`; fix the document, or pass `validateSchema: false` to read it as before. A
+valid document, the writer's output included, validates without a warning.
 
 ### Saving
 

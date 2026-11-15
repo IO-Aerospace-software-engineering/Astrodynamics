@@ -2334,9 +2334,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   its first one: iss.omm with its segment duplicated loaded as the ISS through `OmmReader`, `Omm.LoadFromString`,
   `LoadFromFile` and `LoadFromStream`, with or without schema validation, and the same for the OPM; a duplicated
   `<metadata>` was read as its first. The NDM/XML 4.0.0 schemas bound each to one (`ommType`, `ommBody`, `ommSegment`,
-  `ommData`; the same for the OPM, its maneuvers excepted), but schema validation checks nothing of an unqualified
-  document, the form the writers and Space-Track write (only the qualified copy is rejected, "invalid child element
-  segment"). The CDM reader read a second header, body, `relativeMetadataData` (its miss distance dropped), metadata,
+  `ommData`; the same for the OPM, its maneuvers excepted), but schema validation checked nothing of an unqualified
+  document, the form the writers and Space-Track write (only the qualified copy was rejected, "invalid child element
+  segment"; it checks the standard forms since the third round, below, which rejects such a document first under
+  default validation). The CDM reader read a second header, body, `relativeMetadataData` (its miss distance dropped), metadata,
   data section or block as its first, and threw `ArgumentException` from the `Cdm` constructor for a body of one or
   three segments. Under the same signatures, the three readers take each of these elements through one internal helper
   (`CCSDS/Common/CcsdsElements`), which throws the reader's parse exception (`OmmParseException`, `OpmParseException`,
@@ -2348,6 +2349,33 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `TryLoadFromFile`, `ValidateFile` and `Cdm.ReadFrom*`; every block of a data section the reader reads is duplicated
   once (`OmmReaderTests`, `OpmReaderTests`, `CdmTests`, whose CDM gives each segment the `odParameters` block `ToCdm`
   does not write). The single-segment documents of the tests load as before.
+- **The OMM, OPM and CDM schema validation checked nothing of a standard document** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  [#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)). `OmmValidator`, `OpmValidator`
+  and `CdmValidator` loaded the common and message modules of the embedded NDM/XML 4.0.0 schemas, whose elements are
+  qualified (`elementFormDefault="qualified"`), with a synthetic root declared in the namespace `urn:ccsds:schema:ndmxml`.
+  A document whose root has no namespace, the two forms the SANA master declares (CCSDS 505.0-B-3), matched no
+  declaration: .NET reported "Could not find schema information" as a warning per element, `IsValid` counts errors only,
+  and nothing below the root was checked. So `Omm`/`Opm.LoadFrom*`, whose `validateSchema` is true by default, loaded
+  silently what the schema rejects: an OPM whose `X` is in `units="m"` loaded with 6778.137 read as km, an OMM with
+  `INCLINATION` in `rad` loaded, undeclared elements were ignored, a root `<foo>` loaded as an OMM, a malformed `EPOCH`
+  or a missing `OBJECT_NAME` reached the reader's parse exception and `ECCENTRICITY` -0.5 an
+  `ArgumentOutOfRangeException` of `MeanElements`; the CDM reported a `COLLISION_PROBABILITY` of 1.5 valid (#614).
+  Space-Track's iss.omm and H2ADEB.omm were valid with 28 to 133 warnings. Under the same signatures, a root without a namespace is
+  now validated against the schemas of its form through one internal helper (`CCSDS/Common/NdmXmlStandardForms`), from
+  the embedded master (`ndmxml-4.0.0-master-4.0.xsd`, whose `ndm`, `omm`, `opm` and `cdm` roots have no namespace): the
+  unqualified set when no element is in the NDM/XML namespace (the form of Space-Track and of the OMM and OPM writers),
+  the embedded files with their single `elementFormDefault` set to `unqualified`, which is SANA's `ndmxml_unqualified`
+  set (measured: the 14 files differ by that attribute alone); the qualified set otherwise (every element below the root
+  in the namespace). A root other than `ndm` or the message's, or one in another namespace, is an error (`OMM007`,
+  `OPM006`, `CDM001`). A root in the NDM/XML namespace, IO's earlier form of a bare message and the form `CdmWriter`
+  writes (#615), is validated as before, bit for bit. The verdicts were measured against lxml 6.1.3 (libxml2) on SANA's
+  unqualified set (sanaregistry.org/files/ndmxml_unqualified/, read 2026-11-15, SHA-256 of omm-3.0 e54622ea…2a1a,
+  opm-3.0 193e2eff…9519, common-4.0 3ae25a91…dcde, master-4.0 2abc69ce…df36) and on the qualified set: a prototype of
+  this rule agreed with lxml on the 67 documents of the measurement (iss.omm, H2ADEB.omm, iss_minimal.xml and
+  satellite_complete.xml, each with one mutation in each form), whose mutations the tests take. The tests reject each mutation in each form (`OmmValidatorTests`, `OpmValidatorTests`,
+  `CdmTests`), accept Space-Track's files and the writers' outputs without a warning (`OmmWriterTests`,
+  `OpmValidatorTests`), and check that an OPM in metres throws `OpmValidationException` from `Opm.LoadFrom*`.
 - **The C# examples of the developer guide did not compile** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). 22 of the 60 blocks of
   `DEVELOPER_GUIDE.md` failed against the library: the spacecraft example built an `Engine` without its tank, added it
   before the tank (`AddEngine` throws for a tank the spacecraft does not hold, #676), called `SetFuelTank` and read
@@ -3071,12 +3099,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above): an OMM or OPM
   with more than one header, body, segment, metadata or data section, or block of a data section (the OPM maneuvers
   excepted), makes `OmmReader`/`OpmReader.ReadFrom*` and `Omm`/`Opm.LoadFrom*` throw `OmmParseException` or
-  `OpmParseException`, with or without schema validation; `TryLoadFromFile` returns false with a `PARSE_ERROR` and
-  `ValidateFile` reports the file invalid, where the first element was read. A CDM with such a repeated element, or a
+  `OpmParseException` without schema validation (with it, since the third round, the schema rejects the document first,
+  `OmmValidationException` or `OpmValidationException`); `TryLoadFromFile` returns false with a `PARSE_ERROR` (the
+  schema error with schema validation) and `ValidateFile` reports the file invalid, where the first element was read. A CDM with such a repeated element, or a
   body without two segments, makes `CdmReader.ReadFrom*` and `Cdm.ReadFrom*` throw `CdmParseException`, where the first
   element was read and a segment count other than two threw `ArgumentException`. No schema-valid document moves.
   Migration: split such a document into one message per segment, and catch `CdmParseException` for a CDM of the wrong
   segment count.
+- **Breaking: the OMM, OPM and CDM schema validation checks the standard forms** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  [#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614), Fixed above): verdicts only, no
+  value read changes. A document whose root has no namespace that the NDM/XML 4.0.0 schema rejects, unqualified or
+  qualified below its root, or whose root is neither `ndm` nor the message's, is now invalid, where it was reported
+  valid with a warning per element: `OmmValidator`/`OpmValidator.ValidateSchema` and `Cdm.ValidateSchema*` report the
+  error, `ValidateFile` reports the file invalid, `Omm`/`Opm.LoadFrom*` with the default `validateSchema: true` throw
+  `OmmValidationException` or `OpmValidationException` (where they loaded, or threw a parse exception or an
+  `ArgumentOutOfRangeException`), and `TryLoadFromFile` returns false with the schema error. A valid document,
+  Space-Track's and the writers' output included, stays valid, now without warnings. A root in the NDM/XML namespace,
+  and every read with `validateSchema: false`, are unchanged, bit for bit. Migration: fix the document, or pass
+  `validateSchema: false` to read it as before.
 - **Breaking: the managed threshold searches return the windows, gaps and crossings shorter than the step**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678), Fixed above). Under the same signatures, the searches the library
   runs (`FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and `FindWindowsOnIlluminationConstraint`
@@ -3387,11 +3428,14 @@ not listed.
 - **CDM writing and validation** ([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614),
   [#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615),
   [#618](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/618)). `CdmWriter` puts the `cdm` and
-  `ndm` roots in the NDM/XML namespace, so the SANA schema rejects every CDM the library writes, while
-  `Cdm.ValidateSchema` checks nothing on either standard XML form (a probability of 1.5 is reported valid).
+  `ndm` roots in the NDM/XML namespace, so the SANA schema rejects every CDM the library writes, which
+  `Cdm.ValidateSchema` accepts in that form (it checks the standard forms since the third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), which closes
+  [#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)).
   `CdmExporter` writes `COLLISION_PROBABILITY_METHOD = FOSTER-2D`, which SANA does not register (Foster's method is
   FOSTER-1992). `CdmExporter` refuses an encounter with one covariance, so its `FOSTER-2D-MAX-PC` is never written
-  ([#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). Validate against the SANA schema with an external tool, and set
+  ([#342](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/342)). Remove the namespace of the
+  written CDM before exchanging it (the result validates with `Cdm.ValidateSchemaFromXml`), and set
   `CdmExportOptions.CollisionProbabilityMethod`.
 - **CDM dates and numbers** ([#616](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/616),
   [#617](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/617),

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.Common.Enums;
 
 namespace IO.Astrodynamics.CCSDS.CDM;
@@ -44,6 +45,18 @@ public sealed class CdmValidator
         return ValidateSchema(stream);
     }
 
+    /// <summary>
+    /// Validates CDM XML content from a stream against the CCSDS XSD schema.
+    /// </summary>
+    /// <remarks>
+    /// A root without a namespace, <c>ndm</c> or <c>cdm</c>, is validated against the NDM/XML 4.0.0 schemas of its form
+    /// (CCSDS 505.0-B-3), as SANA publishes them: the unqualified set when no element is in the NDM/XML namespace, the
+    /// qualified set otherwise (the elements below the root in the namespace); any other root without a namespace, or in
+    /// another namespace, is a CDM001 error. A root in the NDM/XML namespace, the form <see cref="CdmWriter"/> writes
+    /// (#615), is validated as before, against the CDM schema with that root declared in the namespace. Before the third
+    /// round of #668 a standard form matched no declaration and was reported valid, with a warning per element and nothing
+    /// below its root checked (#614).
+    /// </remarks>
     public CdmValidationResult ValidateSchema(Stream xmlStream)
     {
         if (xmlStream == null)
@@ -58,10 +71,29 @@ public sealed class CdmValidator
             using var buffer = new MemoryStream();
             xmlStream.CopyTo(buffer);
             buffer.Position = 0;
-            var document = XDocument.Load(buffer);
+            var document = XDocument.Load(buffer, LoadOptions.SetLineInfo);
             buffer.Position = 0;
 
-            var schemaSet = CreateSchemaSet(document.Root?.Name.LocalName);
+            XmlSchemaSet schemaSet;
+            var root = document.Root!;
+            if (root.Name.NamespaceName == CcsdsNamespace)
+            {
+                // A root in the namespace, the form CdmWriter writes (#615): the synthetic root, as before
+                schemaSet = CreateSchemaSet(root.Name.LocalName);
+            }
+            else
+            {
+                // A standard form, root without a namespace: the SANA schemas of NDM/XML 4.0.0, qualified or unqualified
+                // (#614; before, a synthetic root in the namespace that no such root matched, nothing below it checked)
+                var rootError = NdmXmlStandardForms.RootError(root, "CDM", "cdm", "ndm");
+                if (rootError != null)
+                {
+                    result.AddError(SchemaValidationCode, rootError, $"Line {((IXmlLineInfo)root).LineNumber}");
+                    return result;
+                }
+
+                schemaSet = NdmXmlStandardForms.For(document);
+            }
             var settings = new XmlReaderSettings
             {
                 ValidationType = ValidationType.Schema,

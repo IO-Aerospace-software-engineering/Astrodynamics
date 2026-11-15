@@ -395,15 +395,20 @@ public class Omm
     /// Loads an OMM from a file with optional validation.
     /// </summary>
     /// <param name="filePath">The path to the OMM XML file.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS OMM schema.</param>
+    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
+    /// form of the document, whose root is an <c>ndm</c> or <c>omm</c> without a namespace: every element unqualified (the
+    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
+    /// them; a root in the namespace against the OMM schema with that root, as before. Before the third round of #668 an
+    /// unqualified document was not checked.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>The loaded and validated OMM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when filePath is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
     /// <exception cref="OmmValidationException">Thrown when validation fails with errors.</exception>
     /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, holds several OMM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
-    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
+    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OmmValidationException"/>
+    /// (third round of #668), but not a second OMM of an NDM, which the schema allows.</exception>
     public static Omm LoadFromFile(string filePath, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -442,14 +447,19 @@ public class Omm
     /// Loads an OMM from an XML string with optional validation.
     /// </summary>
     /// <param name="xml">The OMM XML content.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS OMM schema.</param>
+    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
+    /// form of the document, whose root is an <c>ndm</c> or <c>omm</c> without a namespace: every element unqualified (the
+    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
+    /// them; a root in the namespace against the OMM schema with that root, as before. Before the third round of #668 an
+    /// unqualified document was not checked.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>The loaded and validated OMM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when xml is null or empty.</exception>
     /// <exception cref="OmmValidationException">Thrown when validation fails with errors.</exception>
     /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, holds several OMM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
-    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
+    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OmmValidationException"/>
+    /// (third round of #668), but not a second OMM of an NDM, which the schema allows.</exception>
     public static Omm LoadFromString(string xml, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -485,14 +495,19 @@ public class Omm
     /// Loads an OMM from a stream with optional validation.
     /// </summary>
     /// <param name="stream">The stream containing OMM XML content.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS OMM schema.</param>
+    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
+    /// form of the document, whose root is an <c>ndm</c> or <c>omm</c> without a namespace: every element unqualified (the
+    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
+    /// them; a root in the namespace against the OMM schema with that root, as before. Before the third round of #668 an
+    /// unqualified document was not checked.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>The loaded and validated OMM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
     /// <exception cref="OmmValidationException">Thrown when validation fails with errors.</exception>
     /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, holds several OMM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
-    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
+    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OmmValidationException"/>
+    /// (third round of #668), but not a second OMM of an NDM, which the schema allows.</exception>
     public static Omm LoadFromStream(Stream stream, bool validateSchema = true, bool validateContent = true)
     {
         if (stream == null)
@@ -512,7 +527,11 @@ public class Omm
     /// <param name="filePath">The path to the OMM XML file.</param>
     /// <param name="omm">The loaded OMM instance if successful, or null if validation failed.</param>
     /// <param name="validationResult">The validation result containing any errors or warnings.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS OMM schema.</param>
+    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
+    /// form of the document, whose root is an <c>ndm</c> or <c>omm</c> without a namespace: every element unqualified (the
+    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
+    /// them; a root in the namespace against the OMM schema with that root, as before. Before the third round of #668 an
+    /// unqualified document was not checked.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>True if the OMM was loaded successfully with no errors, false otherwise.</returns>
     /// <remarks>A document that holds several OMM messages (#679), or an OMM with several segments, headers, bodies,

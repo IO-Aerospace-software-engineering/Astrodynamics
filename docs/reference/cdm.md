@@ -30,6 +30,19 @@ segments throws `CdmParseException` naming it, where before 11.0.0 the `Cdm` con
 second header, body, `relativeMetadataData`, metadata, data section or block throws `CdmParseException` naming the
 element and its count, where the first was read (a second `relativeMetadataData`'s miss distance dropped).
 
+### Schema validation
+
+`Cdm.ValidateSchema` and `Cdm.ValidateSchemaFromXml` check a document whose root, `ndm` or `cdm`, has no namespace
+against the CCSDS NDM/XML 4.0.0 schemas (CCSDS 505.0-B-3) in its form, as SANA publishes them: every element unqualified
+(SANA's `ndmxml_unqualified` set) or every element below the root in the namespace `urn:ccsds:schema:ndmxml` (the
+qualified set). Any other root is a `CDM001` error. A root in the namespace, the form `CdmWriter` writes
+([#615](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/615)), is checked as before, against
+the CDM schema with that root declared in the namespace. Before the third round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) a document in a standard form
+matched no declaration of the validator, so it was reported valid with a warning per element and nothing below its root
+was checked: a `COLLISION_PROBABILITY` of 1.5 was reported valid
+([#614](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/614)).
+
 ## Instance Methods
 
 | Method | Description |

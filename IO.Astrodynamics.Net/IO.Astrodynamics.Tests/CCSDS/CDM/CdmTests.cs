@@ -162,6 +162,64 @@ public class CdmTests
         Assert.True(standaloneValidation.IsValid, FormatValidationIssues(standaloneValidation.Issues));
     }
 
+    public static TheoryData<string, string, string> CdmFormsAndMutations()
+    {
+        // The mutation and a fragment of the error that names its element. The verdicts are those of the SANA NDM/XML 4.0.0
+        // schemas (sanaregistry.org/files/ndmxml_unqualified/ for the unqualified forms, the qualified set IO embeds for the
+        // qualified ones), which reject each mutation in each form (#614)
+        var mutations = new (string Mutation, string Names)[]
+        {
+            ("COLLISION_PROBABILITY=1.5", "COLLISION_PROBABILITY"), // probabilityType: at most 1, ndmxml-4.0.0-common-4.0.xsd
+            ("remove OBJECT_NAME", "OBJECT_NAME"), // required in cdmMetadata
+            ("FOO", "FOO"), // undeclared
+            ("segment twice", "segment"), // cdmBody holds two segments
+            ("root foo", "foo") // no global declaration
+        };
+        var data = new TheoryData<string, string, string>();
+        foreach (var form in new[] { "unqualified-ndm", "unqualified-message", "qualified-ndm", "qualified-message" })
+        {
+            data.Add(form, null!, null!);
+            foreach (var (mutation, names) in mutations)
+            {
+                data.Add(form, mutation, names);
+            }
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(CdmFormsAndMutations))]
+    public void ValidateSchema_StandardForms_FollowTheSanaSchema(string form, string? mutation, string? names)
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 10, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-614"
+        });
+        var xml = NdmDocuments.InForm(cdm.WriteToString(), "cdm", form);
+        if (mutation != null)
+        {
+            xml = NdmDocuments.Mutated(xml, "cdm", mutation);
+        }
+
+        var result = Cdm.ValidateSchemaFromXml(xml);
+
+        if (mutation == null)
+        {
+            // No warning: the schema ran on every element
+            Assert.True(result.IsValid, FormatValidationIssues(result.Issues));
+            Assert.Empty(result.Issues);
+        }
+        else
+        {
+            // Before: valid, with a warning per element (#614: a probability of 1.5 reported valid)
+            Assert.False(result.IsValid, $"{form}, {mutation}: reported valid");
+            Assert.Contains(result.Issues, e => e.Severity == CdmValidationSeverity.Error && e.Message.Contains(names!, StringComparison.Ordinal));
+        }
+    }
+
     [Fact]
     public void ReadFromString_ParsesQualifiedAndUnqualifiedDocuments()
     {
