@@ -237,10 +237,26 @@ public class StarTests
         }
     }
 
-    // Provisional: twice the Linux worst against the catalog position written in the test (1.390e-16, StarTests.Propagate_Twice
-    // and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore, 2026-11-15), to be read again on Windows and macOS arm64. The
-    // epochs are whole half days from the catalog epoch, whose Julian dates, which the star differences, are exact
+    // The noise-level record of the SPK read against the catalog position written in the test: twice the worst (1.390e-16,
+    // StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore, Linux, 2026-11-15), asserted by the
+    // Validation test alone, which runs on Linux alone (the epochs are whole half days from the catalog epoch, whose Julian
+    // dates, which the star differences, are exact). The tests of every platform assert CatalogMotionInOneMicrosecond
     internal const double CatalogPositionTolerance = 2.8e-16;
+
+    /// <summary>
+    /// The bound of the tests that run on every platform, where the rounding of the sines and cosines of each runtime is not
+    /// measured: the distance the star of <see cref="NewStar"/> moves in 1 µs, the resolution of the library's epochs,
+    /// relative to its distance, the least over <paramref name="epochs"/>. Its direction is (cos²a, cos a sin a, sin a), a =
+    /// 1 + 0.1 dt rad, dt in Julian years (<see cref="CatalogPosition"/>), whose derivative has the norm √(1 + cos²a): the
+    /// bound is √(1 + cos²a) · 0.1 · 1e-6 / (365.25 · 86400), 3.6e-15 near a = 1, so that a state of another epoch, or of
+    /// another star, fails it.
+    /// </summary>
+    internal static double CatalogMotionInOneMicrosecond(Star star, IEnumerable<TimeSystem.Time> epochs) =>
+        epochs.Min(epoch =>
+        {
+            double angle = 1.0 + 0.1 * (epoch - star.Epoch).TotalDays / 365.25;
+            return System.Math.Sqrt(1.0 + System.Math.Cos(angle) * System.Math.Cos(angle)) * 0.1 * 1e-6 / (365.25 * 86400.0);
+        });
 
     [Fact]
     public void Propagate_Twice_ReplacesTheStates()
@@ -258,8 +274,10 @@ public class StarTests
 
         // Assert: the second propagation's states alone, as Spacecraft.Propagate replaces its states
         var replaced = Grid(first, TimeSpan.FromDays(1.0)).Append(new TimeSystem.Time(2001, 2, 1)).ToList();
-        double worst = CheckSpkHoldsOnly(star, Grid(second, TimeSpan.FromHours(12.0)), replaced, "StarTests.Propagate_Twice", _output);
-        Assert.True(worst <= CatalogPositionTolerance, $"{worst:E3}");
+        var kept = Grid(second, TimeSpan.FromHours(12.0));
+        double worst = CheckSpkHoldsOnly(star, kept, replaced, "StarTests.Propagate_Twice", _output);
+        double bound = CatalogMotionInOneMicrosecond(star, kept);
+        Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
         Assert.True(star.IsPropagated);
     }
 
@@ -277,13 +295,16 @@ public class StarTests
         await star.PropagateAsync(second, TimeSpan.FromHours(12.0));
 
         // Assert
-        double worst = CheckSpkHoldsOnly(star, Grid(second, TimeSpan.FromHours(12.0)),
-            Grid(first, TimeSpan.FromHours(1.0)).Append(new TimeSystem.Time(2001, 2, 1)), "StarTests.PropagateAsync_AfterPropagate", _output);
-        Assert.True(worst <= CatalogPositionTolerance, $"{worst:E3}");
+        var kept = Grid(second, TimeSpan.FromHours(12.0));
+        double worst = CheckSpkHoldsOnly(star, kept, Grid(first, TimeSpan.FromHours(1.0)).Append(new TimeSystem.Time(2001, 2, 1)),
+            "StarTests.PropagateAsync_AfterPropagate", _output);
+        double bound = CatalogMotionInOneMicrosecond(star, kept);
+        Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
     }
 
     // The segment of the SPK is read through CspiceDirect (dafus, dafgda), which the Windows DLL does not export
-    // (Linux, Validation); the cross-platform tests above read the SPK through SPICE
+    // (Linux, Validation); the cross-platform tests above read the SPK through SPICE. The noise-level record of the
+    // position, measured on Linux, is asserted here, where the test runs on Linux alone
     [Fact]
     [Trait("Category", "Validation")]
     public void Propagate_Twice_TheSpkHoldsTheSecondGridAlone()
@@ -295,6 +316,10 @@ public class StarTests
         var second = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 3));
         star.Propagate(first, TimeSpan.FromDays(1.0));
         star.Propagate(second, TimeSpan.FromHours(12.0));
+        double worst = CheckSpkHoldsOnly(star, Grid(second, TimeSpan.FromHours(12.0)),
+            Grid(first, TimeSpan.FromDays(1.0)).Append(new TimeSystem.Time(2001, 2, 1)), "StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone",
+            _output);
+        Assert.True(worst <= CatalogPositionTolerance, $"{worst:E3}");
         var directory = Directory.CreateTempSubdirectory("star668");
         var spk = new FileInfo(Path.Combine(directory.FullName, "star668013.bsp"));
         try

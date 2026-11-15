@@ -608,10 +608,11 @@ namespace IO.Astrodynamics.Tests.Mission
             // Assert: the second simulation's states alone, as Spacecraft.Propagate replaces its states
             var replaced = IO.Astrodynamics.Tests.Body.StarTests.Grid(firstWindow, TimeSpan.FromDays(1.0))
                 .Append(new TimeSystem.Time(2001, 2, 1));
-            double worst = IO.Astrodynamics.Tests.Body.StarTests.CheckSpkHoldsOnly(star,
-                IO.Astrodynamics.Tests.Body.StarTests.Grid(secondWindow, TimeSpan.FromHours(12.0)), replaced,
+            var kept = IO.Astrodynamics.Tests.Body.StarTests.Grid(secondWindow, TimeSpan.FromHours(12.0));
+            double worst = IO.Astrodynamics.Tests.Body.StarTests.CheckSpkHoldsOnly(star, kept, replaced,
                 "ScenarioTests.SimulateAsync_OfAStarPropagatedBefore", _output);
-            Assert.True(worst <= IO.Astrodynamics.Tests.Body.StarTests.CatalogPositionTolerance, $"{worst:E3}");
+            double bound = IO.Astrodynamics.Tests.Body.StarTests.CatalogMotionInOneMicrosecond(star, kept);
+            Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
         }
 
         // The reference position is CSPICE's latrec_c through CspiceDirect, which the Windows DLL does not export (Linux, Validation)
