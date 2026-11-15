@@ -59,8 +59,10 @@ deleted or not: after a change of working directory the name no longer tells, an
 kernel then fails with `SPICE(FILENOTFOUND)` once the working directory changed or the file was deleted. `LoadKernels`
 always passes full paths. The native writers unload the file they wrote, which opens the other loaded SPKs or CKs
 again: when that fails on such a kernel, `WriteEphemeris` and `WriteOrientation` throw `InvalidOperationException`
-with SPICE's message, the file written, and leave no error pending (fourth round of #668; before, they returned and the
-next kernel call failed with a wrong error). See [Kernel Management](../guides/kernel-management.md).
+with SPICE's message and leave no error pending (fourth round of #668; before, they returned and the next kernel call
+failed with a wrong error). A new file is written by then; a file the call replaces is unloaded before its removal, an
+unload that fails the same way, and is then left on disk as it was, no longer loaded, nothing written (before, it was
+removed and nothing written in its place). See [Kernel Management](../guides/kernel-management.md).
 
 SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and

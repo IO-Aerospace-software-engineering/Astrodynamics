@@ -63,7 +63,9 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   not already read. For an SPK the orphan handle stayed open, but the reads of the Moon (301), L1 (391), L2 (392) and
   Mars (4) after 25 more DAFs did not fail in the measured layout (measured with CSPICE N0067). The data of a deleted kernel are therefore no longer readable after the
   next load, unload or native write, and `GetLoadedKernels` no longer lists it from then on (a directory whose files were
-  all dropped leaves the listing, one with remaining files stays listed); a later unload of its path does nothing.
+  all dropped leaves the listing, one with remaining files stays listed); a later unload of its path does nothing. A call
+  that hands SPICE nothing (a load of a path that does not exist or of a directory without kernel files) leaves the
+  listing as it is, and a symbolic link counts as deleted once its target is.
   Before the fourth round of #668 the listing kept its path until it was unloaded. The
   file is tested by the name SPICE holds, which `LoadKernels` gives as a full path, and only for a name SPICE holds as an
   absolute path. A meta-kernel's `KERNELS_TO_LOAD` may name its files relative to the working directory of its load, and
@@ -72,8 +74,10 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   as before 11.0.0, whether its file was deleted or not; a deleted one can still stay open in SPICE, and KEEPER's own
   reopening of it, after the unload of another kernel of its kind, fails with `SPICE(FILENOTFOUND)` once the working
   directory changed or the file was deleted: `UnloadKernels` then reports it, and so do `WriteEphemeris` and
-  `WriteOrientation`, whose native writer unloads the file it wrote (`InvalidOperationException` with SPICE's message,
-  the file written; before the fourth round of #668 they returned and the next kernel call failed with a wrong error). Name the files of a
+  `WriteOrientation`, whose native writer unloads the file it wrote (`InvalidOperationException` with SPICE's message, a
+  new file written, a file the call replaces left on disk as it was and nothing written, since its unload before the
+  removal fails the same way; before the fourth round of #668 they returned and the next kernel call failed with a wrong
+  error, and a replaced file was lost). Name the files of a
   meta-kernel by absolute paths, or through `PATH_VALUES` and `PATH_SYMBOLS` with an absolute `PATH_VALUES`, to have
   them covered. A DSK is left to SPICE too (its subsystem has no public routine that closes it by its handle): keep a
   loaded DSK on disk until it is unloaded.

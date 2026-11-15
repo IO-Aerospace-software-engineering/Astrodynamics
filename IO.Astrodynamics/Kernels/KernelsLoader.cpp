@@ -69,7 +69,8 @@ namespace
      * the native writers unload the file they replace and, through their kernel object, the file they wrote, each an SPK or
      * CK unload that opens the others again (review of the second round of #668). That reopening still fails on a kernel left
      * to KEEPER (a relative name) whose file was deleted: the writer proxies destroy their kernel object before their last
-     * failed_c() check and report it (fourth round of #668). The unloads of the text kernels the
+     * failed_c() check and report it (fourth round of #668), and the writers stop before removing a file they replace whose
+     * unload failed, which is then kept as it was (review of the fourth round). The unloads of the text kernels the
      * library writes (frames, instruments, clocks) open no binary kernel again.
      */
     void UnloadDeletedBinaryKernels()

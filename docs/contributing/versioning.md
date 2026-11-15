@@ -1661,6 +1661,30 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
     and `WriteOrientation_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending` of
     `KernelUnloadChildTests` (not on Windows): the writer throws naming the file, the next two reads of the Moon are bit
     for bit the read before; on 64a3026 the writer returned.
+  - **The file a writer replaces** (review of the fourth round). The kernel object loads an existing file, and
+    `EphemerisKernel::WriteData` and `OrientationKernel::WriteOrientations` unload it before removing it, an unload that
+    fails the same way on such a kernel; they then removed the file anyway, and `spkopn_c` or `ckopn_c` returned at once
+    on the pending error: the call threw with the old file gone and nothing written. They now stop before the removal
+    when the unload failed, the error left signalled for the proxy, which reports it: the old file is on disk as it was
+    (KEEPER's `UNLOAD` closed and dropped it before reopening the others), nothing is written. **Test:** C++
+    `API.WriteEphemerisProxyReplacingAFileWhenAnSpkHeldUnderARelativeNameIsDeleted` and
+    `API.WriteOrientationProxyReplacingAFileWhenACkHeldUnderARelativeNameIsDeleted` (non-Windows): the proxy returns
+    false naming the file, nothing pending, the file's bytes those before the call, KEEPER (`kdata_c`) no longer holding
+    it, the Moon bit for bit the state SPICE gave before; on the round's first fix the file no longer existed. The child
+    scenarios `WriteEphemeris_ReplacingAFile_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile` and
+    `WriteOrientation_ReplacingAFile_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile` check the same
+    through `SpiceAPI`.
+- **`GetLoadedKernels` and the kernels the native layer drops** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round and its review). The registry
+  of `SpiceAPI` kept a deleted SPK, CK, binary PCK or EK listed after the native layer had dropped it, until it was
+  unloaded. It now follows the native rule after each native load, unload or write (internal `ForgetDroppedKernels`),
+  and only then: a `LoadKernels` or `UnloadKernels` that makes no native call (a path that does not exist, a directory
+  without kernel files) leaves the registry as it is, since SPICE still holds the file (the first version forgot it after
+  such a call too), and a symbolic link whose target was deleted counts as deleted, as `std::filesystem::exists`, which
+  follows links, tells the native layer (the first version tested the link itself and kept it listed). **Test:** the child
+  scenarios `LoadKernels_WithoutANativeCall_KeepsListingADeletedSpkSpiceStillHolds` and
+  `LoadKernels_WhenTheTargetOfALinkedSpkWasDeleted_NoLongerListsTheLink` of `KernelUnloadChildTests` (not on Windows),
+  against KEEPER's list (`CspiceDirect`, Linux) and the objects of the SPKs (read bit for bit while SPICE holds them, no
+  longer known once it dropped them); both failed on the round's first fix.
 - **The C++ tests linked a second CSPICE** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), second round). The native library linked CSPICE and SOFA
   without a keyword, which put the static archives in its link interface: the C++ test executable linked them again, so
   on Windows, where the DLL exports none of `cspice.lib`, a direct CSPICE call of a test bound to the executable's own
@@ -2647,7 +2671,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   precedence until the deleted one was unloaded. `GetLoadedKernels` no longer lists a deleted SPK, CK, binary PCK or EK
   after the next native load, unload or write, which drops it in SPICE (fourth round: it listed it until it was
   unloaded, a file SPICE no longer held; a directory whose files were all dropped leaves the listing, one with
-  remaining files stays listed, and a later unload of the dropped path does nothing). Only a kernel SPICE holds under an absolute name is concerned: one a meta-kernel names relative to
+  remaining files stays listed, and a later unload of the dropped path does nothing; a call that hands SPICE nothing, a
+  load of a path that does not exist or of a directory without kernel files, leaves the listing as it is, and a symbolic
+  link counts as deleted once its target is, as the native layer tests it, review of the fourth round). Only a kernel SPICE holds under an absolute name is concerned: one a meta-kernel names relative to
   the working directory of its load is left to SPICE as before, deleted or not, and a deleted one can still stay open.
   Migration: keep a kernel file on disk until it is unloaded; restarting the process after deleting one is no longer
   needed; name the files of a meta-kernel by absolute paths (or an absolute `PATH_VALUES`) to have their deletion
@@ -2658,10 +2684,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Site.WriteEphemeris`, `Spacecraft.WriteOrientation` and the Cosmographia export, throw `InvalidOperationException`
   with SPICE's message when the unload of the written file, which opens the other loaded SPKs or CKs again, fails: on a
   kernel SPICE holds under a relative name whose file was deleted, or after a change of working directory. Before, they
-  returned true and the next kernel call failed with a wrong error. The written file is on disk in that case. Their
-  other failures carry SPICE's message too, where they named the standard output. The success path is bit for bit
-  unchanged. Migration: name a meta-kernel's files by absolute paths, or keep them on disk and keep the working directory
-  until they are unloaded; catch `InvalidOperationException` where such a kernel may be loaded.
+  returned true and the next kernel call failed with a wrong error. A new file is written in that case. A file the call
+  replaces is unloaded before its removal, an unload that fails the same way: the call then throws with the file left on
+  disk as it was, no longer loaded, and nothing written (review of the fourth round; before, the file was removed, nothing
+  was written in its place, and the call threw). Their other failures carry SPICE's message too, where they named the
+  standard output. The success path is bit for bit unchanged. Migration: name a meta-kernel's files by absolute paths, or
+  keep them on disk and keep the working directory until they are unloaded; catch `InvalidOperationException` where such a
+  kernel may be loaded, and after it do not assume that a file being replaced holds the new data.
 - **`GetLoadedKernels` after a partial unload** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed above): after `UnloadKernels` of a file or a subfolder of a
   loaded folder, the listing names the folder's remaining kernel files, in its place, instead of the folder; after
   `UnloadKernels` of a deleted or moved path, its data is no longer readable. Migration: look for the folder's files,

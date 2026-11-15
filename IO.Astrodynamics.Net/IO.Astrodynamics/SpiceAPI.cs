@@ -190,6 +190,12 @@ public class SpiceAPI
     // (third round of #668)
     private static long _kernelPoolGeneration;
 
+    // The native loads and unloads of kernels made, under the lock (LoadKernelNative, UnloadKernelNative): each first drops
+    // in SPICE the deleted binary kernels (KernelsLoader), which the registry then follows (ForgetDroppedKernels). A call of
+    // LoadKernels or UnloadKernels that made none, a path that does not exist or a directory without kernel files, leaves
+    // the registry as it is, since SPICE dropped nothing (review of the fourth round of #668)
+    private static long _nativeKernelCalls;
+
     /// <summary>
     /// The generation of the kernel pool, raised by each call of <see cref="LoadKernels"/>, <see cref="UnloadKernels"/> and
     /// <see cref="ClearKernels"/>, failed or not: data read from SPICE at a generation hold while it is the current one.
@@ -428,7 +434,10 @@ public class SpiceAPI
     /// An SPK, CK, binary PCK or EK whose file, named by its full path, was deleted leaves the listing at the next native load,
     /// unload or write, which closes and unloads it in SPICE (<see cref="UnloadKernels"/>): a path is listed only while SPICE
     /// holds a file of it, and a directory whose files were all dropped is no longer listed (fourth round of #668; before, the
-    /// path was listed until it was unloaded). A text kernel, a meta-kernel or a DSK stays listed until it is unloaded.
+    /// path was listed until it was unloaded). A call that hands SPICE nothing (<see cref="LoadKernels"/> of a path that does
+    /// not exist or of a directory without kernel files, the unload of such a directory) leaves the listing as it is, since
+    /// SPICE still holds the file; a symbolic link counts as deleted once its target is, as the native layer tests it. A text
+    /// kernel, a meta-kernel or a DSK stays listed until it is unloaded.
     /// </para>
     /// </remarks>
     public IEnumerable<FileSystemInfo> GetLoadedKernels()
@@ -476,13 +485,14 @@ public class SpiceAPI
         if (path == null) throw new ArgumentNullException(nameof(path));
         lock (lockObject)
         {
+            long nativeCalls = _nativeKernelCalls;
             try
             {
                 LoadKernelsLocked(path);
             }
             finally
             {
-                ForgetDroppedKernels();
+                if (_nativeKernelCalls != nativeCalls) ForgetDroppedKernels();
                 Interlocked.Increment(ref _kernelPoolGeneration);
             }
         }
@@ -518,7 +528,7 @@ public class SpiceAPI
         var files = new List<KernelFile>();
         foreach (var kernel in KernelFiles(path))
         {
-            if (!LoadKernelsProxy(kernel))
+            if (!LoadKernelNative(kernel))
             {
                 throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
             }
@@ -537,6 +547,20 @@ public class SpiceAPI
     // The kinds of binary kernels the native layer closes and unloads once their files are deleted (KernelsLoader): the SPKs,
     // CKs, binary PCKs and EKs; a DAF of the oldest ID word, which KEEPER types SPK or CK, is told by WasDropped
     private const KernelRereads DroppedKinds = KernelRereads.Spks | KernelRereads.Cks | KernelRereads.Pcks | KernelRereads.Eks;
+
+    // The native load of one kernel file, counted (_nativeKernelCalls)
+    private static bool LoadKernelNative(string path)
+    {
+        _nativeKernelCalls++;
+        return LoadKernelsProxy(path);
+    }
+
+    // The native unload of one kernel name, counted (_nativeKernelCalls)
+    private static bool UnloadKernelNative(string path)
+    {
+        _nativeKernelCalls++;
+        return UnloadKernelsProxy(path);
+    }
 
     /// <summary>
     /// Removes from the registry the files the native layer dropped on its own: each native load, unload or write first
@@ -577,13 +601,20 @@ public class SpiceAPI
         return droppedKind && Path.IsPathFullyQualified(file.Name) && IsMissing(file.Name);
     }
 
-    // Mirrors std::filesystem::exists of the native layer: only a missing file or directory counts as deleted
+    // Mirrors std::filesystem::exists of the native layer, which follows symbolic links: only a missing file or directory
+    // counts as deleted, and so does a link whose final target is missing (a dangling link, which File.GetAttributes, reading
+    // the link itself, finds; review of the fourth round of #668)
     private static bool IsMissing(string file)
     {
         try
         {
-            File.GetAttributes(file);
-            return false;
+            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) == 0)
+            {
+                return false;
+            }
+
+            var target = File.ResolveLinkTarget(file, returnFinalTarget: true);
+            return target != null && !File.Exists(target.FullName) && !Directory.Exists(target.FullName);
         }
         catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
@@ -901,13 +932,14 @@ public class SpiceAPI
         if (path == null) return;
         lock (lockObject)
         {
+            long nativeCalls = _nativeKernelCalls;
             try
             {
                 UnloadKernelsLocked(path);
             }
             finally
             {
-                ForgetDroppedKernels();
+                if (_nativeKernelCalls != nativeCalls) ForgetDroppedKernels();
                 Interlocked.Increment(ref _kernelPoolGeneration);
             }
         }
@@ -949,7 +981,7 @@ public class SpiceAPI
             UnloadFiles(removed, unrepaired);
         }
 
-        if (!matched && !UnloadKernelsProxy(path.FullName))
+        if (!matched && !UnloadKernelNative(path.FullName))
         {
             throw new InvalidOperationException($"Kernel {path.FullName} can't be unloaded. You can have more details on standard output");
         }
@@ -976,7 +1008,7 @@ public class SpiceAPI
     {
         foreach (var file in files)
         {
-            if (!UnloadKernelsProxy(file.Name))
+            if (!UnloadKernelNative(file.Name))
             {
                 unrepaired.Add(file);
             }
@@ -1595,7 +1627,7 @@ public class SpiceAPI
             // File.Exists, not FileInfo.Exists: the caller's FileInfo must not cache the state of the file before the write
             if (File.Exists(filePath.FullName))
             {
-                UnloadKernelsProxy(filePath.FullName);
+                UnloadKernelNative(filePath.FullName);
                 ForgetDroppedKernels();
                 File.Delete(filePath.FullName);
             }
@@ -1623,14 +1655,17 @@ public class SpiceAPI
     /// since its load (#668, second round). Before, the unload opened the other SPKs again, failed on a deleted one, which
     /// stayed open in SPICE for good, and left the failure pending for the next kernel call. That reopening can still fail on
     /// an SPK SPICE holds under a relative name (a meta-kernel's), which the native layer leaves to SPICE, once its file was
-    /// deleted or the working directory changed: the call then throws with SPICE's message and leaves nothing pending, the
-    /// file written (fourth round of #668; before, it returned true and the next kernel call failed with a wrong error).
+    /// deleted or the working directory changed: the call then throws with SPICE's message and leaves nothing pending
+    /// (fourth round of #668; before, it returned true and the next kernel call failed with a wrong error). A new file is
+    /// written by then. A file the call replaces is unloaded before its removal, and that unload fails the same way: the
+    /// file is then left on disk as it was, no longer loaded, and nothing is written (review of the fourth round of #668;
+    /// before, it was removed and nothing written in its place).
     /// </remarks>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
     /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
     /// then failed).</exception>
-    /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload it once written (the
-    /// reopening of the other loaded SPKs); the message is SPICE's.</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
+    /// the file once written (the reopening of the other loaded SPKs); the message is SPICE's.</exception>
     public bool WriteEphemeris(FileInfo filePath, int naifId,
         IEnumerable<OrbitalParameters.StateVector> stateVectors)
     {
@@ -1684,11 +1719,14 @@ public class SpiceAPI
     /// unload opened the other CKs again, failed on a deleted one, which stayed open in SPICE for good, and left the failure
     /// pending for the next kernel call. That reopening can still fail on a CK SPICE holds under a relative name (a
     /// meta-kernel's), which the native layer leaves to SPICE, once its file was deleted or the working directory changed:
-    /// the call then throws with SPICE's message and leaves nothing pending, the file written (fourth round of #668; before,
-    /// it returned true and the next kernel call failed with a wrong error).
+    /// the call then throws with SPICE's message and leaves nothing pending (fourth round of #668; before, it returned true
+    /// and the next kernel call failed with a wrong error). A new file is written by then. A file the call replaces is
+    /// unloaded before its removal, and that unload fails the same way: the file is then left on disk as it was, no longer
+    /// loaded, and nothing is written (review of the fourth round of #668; before, it was removed and nothing written in its
+    /// place).
     /// </remarks>
-    /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload it once written (the
-    /// reopening of the other loaded CKs); the message is SPICE's.</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload the file it replaces or
+    /// the file once written (the reopening of the other loaded CKs); the message is SPICE's.</exception>
     /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
     /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters

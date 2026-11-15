@@ -46,6 +46,10 @@ public class KernelUnloadChildTests
     [InlineData("SpacecraftWriteEphemeris_ReplacingAFile_WhenAnSpkWasDeleted_NoLongerListsIt")]
     [InlineData("WriteEphemeris_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending")]
     [InlineData("WriteOrientation_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending")]
+    [InlineData("WriteEphemeris_ReplacingAFile_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile")]
+    [InlineData("WriteOrientation_ReplacingAFile_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndKeepsTheFile")]
+    [InlineData("LoadKernels_WithoutANativeCall_KeepsListingADeletedSpkSpiceStillHolds")]
+    [InlineData("LoadKernels_WhenTheTargetOfALinkedSpkWasDeleted_NoLongerListsTheLink")]
     public void DeletedBinaryKernel_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
 
     /// <summary>

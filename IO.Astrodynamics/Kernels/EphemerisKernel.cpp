@@ -71,6 +71,13 @@ void IO::Astrodynamics::Kernels::EphemerisKernel::WriteData(const std::vector<Or
     if (std::filesystem::exists(m_filePath)) {
         KernelsLoader::UnloadFile(m_filePath);
         m_isLoaded = false;
+        // The unload opens the other loaded SPKs again (unload_c --> UNLOAD --> SPKLEF), which fails on a deleted SPK
+        // SPICE holds under a relative name, left to KEEPER by KernelsLoader. The file is then kept as it was: removed, it
+        // would be lost, since nothing is written while the error is pending (review of the fourth round of #668); the
+        // error is left signalled for the writer proxy, which reports it
+        if (failed_c()) {
+            return;
+        }
         std::filesystem::remove(m_filePath);
         m_fileExists = false;
     }
