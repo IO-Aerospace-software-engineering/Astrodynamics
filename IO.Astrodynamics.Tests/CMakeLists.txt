@@ -5,6 +5,9 @@ file(GLOB_RECURSE IO_SDK_TESTS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
 add_executable(${This} ${IO_SDK_TESTS_SRC})
 
+# IO.Astrodynamics links CSPICE and SOFA PRIVATE, so this executable holds no copy of them: a test calls the proxies and the
+# library's C++ API; a direct call of a CSPICE routine fails to link on Windows, and on Linux and macOS for a routine the
+# library does not contain, instead of binding silently to a second CSPICE with its own kernel pool (#668, second round)
 target_link_libraries(${This} PUBLIC "IO.Astrodynamics" gtest_main)
 
 add_test(NAME ${This} COMMAND ${This})

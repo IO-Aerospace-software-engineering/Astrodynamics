@@ -1583,6 +1583,16 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
     Earth, the names of `bodc2n_c`, no frame, the GM of the kernel text) and `Occultation_UnnamedEllipsoid_Throws`; CLI
     `BodyInformationsTests.UnnamedIdentifier_IsAnArgumentError` (398 and 12345678 after the Earth). On `main` 2893404
     the record is returned, the barycentres read `ITRF93` from the previous call, the occultation returns no window.
+- **The C++ tests linked a second CSPICE** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), second round). The native library linked CSPICE and SOFA
+  without a keyword, which put the static archives in its link interface: the C++ test executable linked them again, so
+  on Windows, where the DLL exports none of `cspice.lib`, a direct CSPICE call of a test bound to the executable's own
+  copy, with an empty kernel pool and the default error action (why #672's first C++ tests failed on Windows only), and
+  on Linux and macOS a routine the library does not contain (`rpd_c`) came from that copy. They are now linked
+  `PRIVATE`; the headers stay public. The tests use `Constants::DEG_RAD`, bit for bit `rpd_c()`, and compile their
+  cross-checks through `cnmfrm_c` and `bodc2n_c` on Linux and macOS only, where they bind to the library's CSPICE, the
+  NAIF frames and names they expect asserted as literals on every platform. The shipped library is unchanged (on Linux
+  the `.so` is byte for byte the one of the former link, sha256 `2b987ecb…`); the test executable holds no CSPICE
+  routine (`nm`: no `T *_c`, one, `rpd_c`, before), and the 363 C++ tests pass.
 - **A ground station could not be the observer of `SpiceAPI.ReadEphemeris`** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)). Both overloads built their
   observer with `CelestialItem.Create`, which has no site branch: DSS-13 (399013) became a celestial body whose record
   has no radii, so the read threw `InvalidOperationException` ("frame can't be defined"), or labelled its state with a

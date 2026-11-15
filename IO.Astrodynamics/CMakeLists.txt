@@ -25,6 +25,10 @@ HEADER_DIRECTORIES(MyList)
 target_include_directories(${This} PUBLIC ${MyList})
 
 #ADD SPECIFICS LIBS AND HEADERS
+# CSPICE and SOFA are linked PRIVATE: they are part of the library, not of its link interface. Linked without a keyword,
+# every consumer of the target (the C++ tests) linked the static archives again, and on Windows, where the DLL exports
+# none of their symbols, a direct CSPICE call of a test bound to the consumer's own copy, with its own kernel pool and
+# error state (#668, second round). The headers stay PUBLIC: the tests include SpiceUsr.h for the types of the proxies.
 if (APPLE)
     # macOS: pick the CSPICE archive by target arch (native runners set
     # CMAKE_SYSTEM_PROCESSOR to arm64/x86_64); -DOSX_ARCH overrides for cross-compile.
@@ -40,16 +44,16 @@ if (APPLE)
     endif ()
     # Mac CSPICE headers match includeLinux (which also carries sofa.h/sofam.h) — reuse it.
     target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeLinux)
-    target_link_libraries(${This} ${_cspice})
-    target_link_libraries(${This} ${_sofa})
+    target_link_libraries(${This} PRIVATE ${_cspice})
+    target_link_libraries(${This} PRIVATE ${_sofa})
 elseif (UNIX)
     target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeLinux)
-    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.a)
-    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/libsofa_c.a)
+    target_link_libraries(${This} PRIVATE ${CMAKE_SOURCE_DIR}/external-lib/cspice.a)
+    target_link_libraries(${This} PRIVATE ${CMAKE_SOURCE_DIR}/external-lib/libsofa_c.a)
 else ()
     target_include_directories(${This} PUBLIC ${CMAKE_SOURCE_DIR}/external-lib/includeWindows)
-    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/cspice.lib)
-    target_link_libraries(${This} ${CMAKE_SOURCE_DIR}/external-lib/sofa.lib)
+    target_link_libraries(${This} PRIVATE ${CMAKE_SOURCE_DIR}/external-lib/cspice.lib)
+    target_link_libraries(${This} PRIVATE ${CMAKE_SOURCE_DIR}/external-lib/sofa.lib)
 endif ()
 
 

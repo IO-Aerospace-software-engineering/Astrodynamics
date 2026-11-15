@@ -308,11 +308,14 @@ TEST(API, GetBodyInformationWithoutJ)
     ASSERT_TRUE(std::isnan(res.J4));
 }
 
-// The CSPICE calls of these tests reach the library's kernel pool on Linux and macOS only: on Windows the DLL exports none
-// of cspice.lib, so the test executable links its own copy of CSPICE, whose kernel pool is empty and whose error state is its
-// own (#672). What the library reads from the pool is therefore checked against the text of the kernels of Data/SolarSystem,
-// as KernelTextValues does in the .NET tests, and CSPICE is called directly only for what any copy holds without a kernel:
-// its built-in body names and frames.
+// What the library reads from the kernel pool is checked against the text of the kernels of Data/SolarSystem, as
+// KernelTextValues does in the .NET tests (#672). The test executable links no CSPICE of its own (IO.Astrodynamics links it
+// PRIVATE, #668 second round; before, on Windows, where the DLL exports none of cspice.lib, it linked its own copy, whose
+// kernel pool was empty and whose error state was its own). The built-in body names and frames these tests expect are NAIF's
+// (Frames Required Reading, PCK-based frames built into SPICE; NAIF IDs Required Reading), asserted as literals on every
+// platform; on Linux and macOS, where the shared library exports the CSPICE routines it contains, they are also read through
+// cnmfrm_c and bodc2n_c, which bind to the library's own CSPICE. The Windows DLL exports only the proxies, so these calls are
+// not compiled there.
 
 // The values of a kernel variable in the data of a text kernel of Data/SolarSystem, read without SPICE: an assignment "="
 // replaces them, "+=" appends to them; the values, in parentheses or not, separated by blanks or commas, a Fortran exponent
@@ -420,6 +423,7 @@ static void ExpectBodyReadAsKernels(int id, const char *name, const char *frameN
     const auto gm = KernelTextValues("gm_de431.tpc", "BODY" + std::to_string(id) + "_GM");
     ASSERT_EQ(1u, gm.size());
     ASSERT_TRUE(KernelTextValues("pck00011.tpc", "BODY" + std::to_string(id) + "_RADII").empty());
+#if !defined(_WIN32)
     SpiceInt frcode{};
     SpiceChar frname[32]{};
     SpiceBoolean frameFound{false};
@@ -427,6 +431,7 @@ static void ExpectBodyReadAsKernels(int id, const char *name, const char *frameN
     ASSERT_TRUE(frameFound);
     ASSERT_STREQ(frameName, frname);
     ASSERT_EQ(frameId, frcode);
+#endif
 
     auto res = GetCelestialBodyInfoProxy(id);
     ASSERT_EQ(id, res.Id);
@@ -437,8 +442,8 @@ static void ExpectBodyReadAsKernels(int id, const char *name, const char *frameN
     ASSERT_EQ(0.0, res.Radii.x);
     ASSERT_EQ(0.0, res.Radii.y);
     ASSERT_EQ(0.0, res.Radii.z);
-    ASSERT_STREQ(frname, res.FrameName);
-    ASSERT_EQ(frcode, res.FrameId);
+    ASSERT_STREQ(frameName, res.FrameName);
+    ASSERT_EQ(frameId, res.FrameId);
 }
 
 TEST(API, GetBodyInformationGmWithoutRadii)
@@ -453,11 +458,15 @@ TEST(API, GetBodyInformationRadiiWithoutGm)
     // BODY507_RADII = (40 40 40) km in pck00011.tpc, no BODY507_GM in gm_de431.tpc
     ASSERT_TRUE(KernelTextValues("gm_de431.tpc", "BODY507_GM").empty());
     ASSERT_EQ((std::vector<double>{40.0, 40.0, 40.0}), KernelTextValues("pck00011.tpc", "BODY507_RADII"));
+#if !defined(_WIN32)
     SpiceInt frcode{};
     SpiceChar frname[32]{};
     SpiceBoolean frameFound{false};
     cnmfrm_c("ELARA", 32, &frcode, frname, &frameFound);
     ASSERT_TRUE(frameFound);
+    ASSERT_STREQ("IAU_ELARA", frname);
+    ASSERT_EQ(10029, frcode);
+#endif
 
     auto res = GetCelestialBodyInfoProxy(507);
     ASSERT_EQ(507, res.Id);
@@ -466,10 +475,8 @@ TEST(API, GetBodyInformationRadiiWithoutGm)
     ASSERT_EQ(40000.0, res.Radii.x);
     ASSERT_EQ(40000.0, res.Radii.y);
     ASSERT_EQ(40000.0, res.Radii.z);
-    ASSERT_STREQ("IAU_ELARA", frname);
-    ASSERT_STREQ(frname, res.FrameName);
-    ASSERT_EQ(10029, frcode);
-    ASSERT_EQ(frcode, res.FrameId);
+    ASSERT_STREQ("IAU_ELARA", res.FrameName);
+    ASSERT_EQ(10029, res.FrameId);
 }
 
 TEST(API, GetBodyInformationSolarSystemBarycenterGm)
@@ -494,11 +501,13 @@ TEST(API, GetBodyInformationSolarSystemBarycenterGm)
 
 TEST(API, GetBodyInformationBarycenter)
 {
+#if !defined(_WIN32)
     SpiceInt frcode{};
     SpiceChar frname[32]{};
     SpiceBoolean frameFound{true};
     cnmfrm_c("EARTH BARYCENTER", 32, &frcode, frname, &frameFound);
     ASSERT_FALSE(frameFound);
+#endif
 
     // A named body first, so that the stack holds its frame name
     auto earth = GetCelestialBodyInfoProxy(399);
@@ -514,10 +523,12 @@ TEST(API, GetBodyInformationInvalidId)
 {
     for (int id: {398, 12345678})
     {
+#if !defined(_WIN32)
         SpiceChar name[32]{};
         SpiceBoolean found{true};
         bodc2n_c(id, 32, name, &found);
         ASSERT_FALSE(found);
+#endif
 
         // A named body first, so that the stack holds its name and frame name
         auto earth = GetCelestialBodyInfoProxy(399);
@@ -646,10 +657,10 @@ TEST(API, ConvertEquinoctialElementsToStateVector)
     double p = 1.0e7;
     double ecc = 0.1;
     double a = p / (1. - ecc);
-    double argp = 30.0 * rpd_c();
-    double node = 15.0 * rpd_c();
-    double inc = 10.0 * rpd_c();
-    double m0 = 45.0 * rpd_c();
+    double argp = 30.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double node = 15.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double inc = 10.0 * IO::Astrodynamics::Constants::DEG_RAD;
+    double m0 = 45.0 * IO::Astrodynamics::Constants::DEG_RAD;
     IO::Astrodynamics::Time::TDB t0{-100000000.0s};
 
     //equinoctial elements
