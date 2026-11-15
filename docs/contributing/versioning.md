@@ -1636,7 +1636,7 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   cross-checks through `cnmfrm_c` and `bodc2n_c` on Linux and macOS only, where they bind to the library's CSPICE, the
   NAIF frames and names they expect asserted as literals on every platform. The shipped library is unchanged (on Linux
   the `.so` is byte for byte the one of the former link, sha256 `2b987ecb…`); the test executable holds no CSPICE
-  routine (`nm`: no `T *_c`, one, `rpd_c`, before), and the 363 C++ tests pass.
+  routine (`nm`: no `T *_c`, one, `rpd_c`, before), and the C++ tests pass (368 at the end of the second round).
 - **A ground station could not be the observer of `SpiceAPI.ReadEphemeris`** ([#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)). Both overloads built their
   observer with `CelestialItem.Create`, which has no site branch: DSS-13 (399013) became a celestial body whose record
   has no radii, so the read threw `InvalidOperationException` ("frame can't be defined"), or labelled its state with a
