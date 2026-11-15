@@ -23,6 +23,13 @@ The readers read one CDM: a standalone `<cdm>`, or the one `<cdm>` of an `<ndm>`
 several CDMs, at any depth below the root, throws `CdmParseException` naming their number (#679); before 11.0.0 the first one was returned. Split such
 a document into one CDM per document.
 
+The CDM itself holds one header and one body, the body one `relativeMetadataData` and exactly two segments, one per
+object, each segment one metadata and one data section, and each data section and the `relativeMetadataData` at most
+one of each block (NDM/XML 4.0.0, `ndmxml-4.0.0-cdm-1.0.xsd`; CCSDS 508.0-B-1, 3.2). A body with another number of
+segments throws `CdmParseException` naming it, where before 11.0.0 the `Cdm` constructor threw `ArgumentException`; a
+second header, body, `relativeMetadataData`, metadata, data section or block throws `CdmParseException` naming the
+element and its count, where the first was read (a second `relativeMetadataData`'s miss distance dropped).
+
 ## Instance Methods
 
 | Method | Description |
@@ -68,7 +75,14 @@ Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipan
   the combined radius minus it: the radius of the secondary the analysis resolved, its own `HardBodyRadius` when it
   gives one ([#683](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/683): π·5² for any
   secondary under the default options). π r² is the exporter's convention; 508 defines `AREA_PC` as the actual area of
-  the object (Annex E).
+  the object (Annex E);
+- `INTRACK_THRUST` is omitted: it states whether in-track thrust modeling was used for the orbit determination of the
+  object (CCSDS 508.0-B-1 Cor. 2, Table 3-3, optional), not its capability, which `MANEUVERABLE` states, and the library
+  runs no orbit determination. It is `NO` for a covariance the library propagated (below). Set
+  `ProtectedParticipantMetadata.IntrackThrust` or `SecondaryParticipantMetadata.IntrackThrust` to state the value of an
+  OD; `null` keeps the inferred value
+  ([#684](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/684), decided by S. Guillet,
+  2026-11-13: `YES` for a spacecraft with an engine and `NO` for one without before).
 
 ### Propagated covariance
 
@@ -86,6 +100,9 @@ For a participant whose covariance was propagated (`CovarianceSource.Propagated`
   bodies, `NONE` without any) and `SOLAR_RAD_PRESSURE` describe the forces the propagation actually used. The library
   does not know the name of a model whose constants are given; set it through `ProtectedParticipantMetadata` or
   `SecondaryParticipantMetadata` (`GravityModel = "EGM-96: 36D 36O"`), which take precedence;
+- `INTRACK_THRUST` is `NO`, whatever the engines of the spacecraft: the forces of the propagation hold no thrust model.
+  An impulsive maneuver the propagation executed is not a thrust model in the sense of Table 3-3, and the CDM has no
+  keyword for executed maneuvers, so a participant whose propagation carried impulses is `NO` too;
 - comments of the data give the source of the covariance, the process noise applied (q_R, q_T, q_N in m²/s³) or
   "No process noise applied", the consider parameters and the non-linearity index.
 

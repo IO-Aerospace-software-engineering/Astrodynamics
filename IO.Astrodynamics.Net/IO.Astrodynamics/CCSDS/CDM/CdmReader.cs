@@ -18,7 +18,10 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 /// </summary>
 /// <remarks>
 /// A document holds one CDM: one that holds several throws <see cref="CdmParseException"/>, as before 11.0.0 it returned
-/// the first one (#679); messages of another type beside it are ignored.
+/// the first one (#679); messages of another type beside it are ignored. A CDM whose body holds a segment count other
+/// than two, or that holds several headers, bodies, relativeMetadataData, relativeStateVector, metadata or data sections,
+/// or blocks of a data section, throws <see cref="CdmParseException"/> too, where before 11.0.0 the first was read (and
+/// a segment count other than two threw <see cref="ArgumentException"/> from the <see cref="Cdm"/> constructor).
 /// </remarks>
 public sealed class CdmReader
 {
@@ -79,13 +82,20 @@ public sealed class CdmReader
         var root = document.Root ?? throw new CdmParseException("XML document has no root element.");
         var cdmElement = FindCdmElement(root) ?? throw new CdmParseException("Could not find CDM element in document.");
 
-        var header = ParseHeader(GetRequiredElement(cdmElement, "header"));
-        var body = GetRequiredElement(cdmElement, "body");
-        var relativeMetadataData = ParseRelativeMetadataData(GetRequiredElement(body, "relativeMetadataData"));
-        var segments = body.Elements()
+        var header = ParseHeader(GetSingleElement(cdmElement, "header"));
+        var body = GetSingleElement(cdmElement, "body");
+        var relativeMetadataData = ParseRelativeMetadataData(GetSingleElement(body, "relativeMetadataData"));
+        var segmentElements = body.Elements()
             .Where(element => element.Name.LocalName.Equals("segment", StringComparison.OrdinalIgnoreCase))
-            .Select(ParseSegment)
             .ToArray();
+        // Exactly two segments, one per object (CCSDS 508.0-B-1, 3.2; NDM/XML cdmBody): the reader's exception, not the
+        // ArgumentException of the Cdm constructor
+        if (segmentElements.Length != 2)
+            throw new CdmParseException(
+                $"The CDM body holds {segmentElements.Length} segment elements; a CDM holds exactly two, one per object " +
+                "(CCSDS 508.0-B-1, 3.2; NDM/XML cdmBody).");
+
+        var segments = segmentElements.Select(ParseSegment).ToArray();
 
         return new Cdm(header, relativeMetadataData, segments);
     }
@@ -110,7 +120,7 @@ public sealed class CdmReader
 
     private CdmRelativeMetadataData ParseRelativeMetadataData(XElement element)
     {
-        var relativeStateVectorElement = GetOptionalElement(element, "relativeStateVector");
+        var relativeStateVectorElement = GetOptionalBlock(element, "relativeStateVector");
 
         return new CdmRelativeMetadataData
         {
@@ -152,8 +162,8 @@ public sealed class CdmReader
     {
         return new CdmSegment
         {
-            Metadata = ParseParticipantMetadata(GetRequiredElement(element, "metadata")),
-            Data = ParseData(GetRequiredElement(element, "data"))
+            Metadata = ParseParticipantMetadata(GetSingleElement(element, "metadata")),
+            Data = ParseData(GetSingleElement(element, "data"))
         };
     }
 
@@ -188,16 +198,16 @@ public sealed class CdmReader
 
     private CdmData ParseData(XElement element)
     {
-        var odParametersElement = GetOptionalElement(element, "odParameters");
-        var additionalParametersElement = GetOptionalElement(element, "additionalParameters");
+        var odParametersElement = GetOptionalBlock(element, "odParameters");
+        var additionalParametersElement = GetOptionalBlock(element, "additionalParameters");
 
         return new CdmData
         {
             Comments = GetComments(element),
             OdParameters = odParametersElement != null ? ParseOdParameters(odParametersElement) : null,
             AdditionalParameters = additionalParametersElement != null ? ParseAdditionalParameters(additionalParametersElement) : null,
-            StateVector = ParseStateVector(GetRequiredElement(element, "stateVector")),
-            CovarianceMatrix = ParseCovarianceMatrix(GetRequiredElement(element, "covarianceMatrix"))
+            StateVector = ParseStateVector(GetSingleElement(element, "stateVector")),
+            CovarianceMatrix = ParseCovarianceMatrix(GetSingleElement(element, "covarianceMatrix"))
         };
     }
 
@@ -319,6 +329,20 @@ public sealed class CdmReader
             .Where(child => child.Name.LocalName.Equals("COMMENT", StringComparison.OrdinalIgnoreCase))
             .Select(child => child.Value)
             .ToArray();
+    }
+
+    // A header, body, relativeMetadataData, metadata, data section or required data block: one, which the schema bounds to
+    // one; none or several throw, a second one no longer dropped silently
+    private static XElement GetSingleElement(XElement parent, string localName)
+    {
+        return GetOptionalBlock(parent, localName) ??
+               throw new CdmParseException($"Required element '{localName}' was not found.");
+    }
+
+    // An optional block, which the schema bounds to one: null for none, several throw
+    private static XElement? GetOptionalBlock(XElement parent, string localName)
+    {
+        return CcsdsElements.AtMostOne(parent, localName, "CDM", message => new CdmParseException(message));
     }
 
     private static XElement GetRequiredElement(XElement parent, string localName)

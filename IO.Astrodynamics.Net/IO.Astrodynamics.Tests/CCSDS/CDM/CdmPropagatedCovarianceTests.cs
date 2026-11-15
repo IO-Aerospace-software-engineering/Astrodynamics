@@ -144,7 +144,13 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
             Assert.Equal(written.CsrpSrp, read.CsrpSrp);
             Assert.Equal(cdm.Segments[s].Metadata.GravityModel, reread.Segments[s].Metadata.GravityModel);
             Assert.Equal(cdm.Segments[s].Metadata.NBodyPerturbations, reread.Segments[s].Metadata.NBodyPerturbations);
+            // The RK7(8) force model holds no thrust force: NO with the other force-model keywords (CCSDS 508.0-B-1 Cor. 2,
+            // Table 3-3; decision of S. Guillet, 2026-11-13, #684)
+            Assert.False(cdm.Segments[s].Metadata.IntrackThrust);
+            Assert.False(reread.Segments[s].Metadata.IntrackThrust);
         }
+
+        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(xml, "<INTRACK_THRUST>NO</INTRACK_THRUST>").Count);
 
         // The rows CDRG and CSRP: the extended covariance of the propagation with the covariance at the TCA, the cross terms
         // rotated to RTN as the state block and scaled by A/m, the variances by (A/m)² (CCSDS 508.0-B-1)
@@ -197,6 +203,10 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         // Arrange: the defaults of the analysis
         var protectedCraft = ReferenceSpacecraft(-6311, _case.ProtectedStart);
         var secondaryCraft = ReferenceSpacecraft(-6312, _case.SecondaryStart);
+        // An engine on the secondary: a capability, not a thrust model of its propagation (#684)
+        var tank = new FuelTank("tank6312", "model", "sn1", 20.0, 20.0);
+        secondaryCraft.AddFuelTank(tank);
+        secondaryCraft.AddEngine(new Engine("engine6312", "model", "sn1", 300.0, 10.0, tank));
         _case.Propagate(protectedCraft);
         _case.Propagate(secondaryCraft);
         var encounter = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
@@ -214,12 +224,20 @@ public class CdmPropagatedCovarianceTests : IClassFixture<CdmPropagatedCovarianc
         Assert.Equal(encounter.SecondaryState.RotateCovarianceToRtn(encounter.SecondaryState.Covariance.Value).ToArray(),
             matrix.StateCovarianceRtn.ToArray());
         Assert.Equal(CovarianceSource.Propagated, encounter.SecondaryCovariance.Source);
+        // NO despite the secondary's engine: its propagation modeled no in-track thrust (#684: YES from the engine)
+        Assert.Equal(CdmManeuverable.Yes, cdm.Segments[1].Metadata.Maneuverable);
+        Assert.False(cdm.Segments[1].Metadata.IntrackThrust);
+        Assert.False(cdm.Segments[0].Metadata.IntrackThrust);
 
         // The former behaviour still refuses a stale covariance by default
         var held = ConjunctionAssessment.Analyze(new ProtectedSpacecraftProfile(protectedCraft), secondaryCraft,
             CdmPropagatedCovarianceCase.AnalysisWindow, new ConjunctionAnalysisOptions { CovariancePropagation = null });
         Assert.Throws<InvalidOperationException>(() => held.ToCdm());
-        Assert.Null(held.ToCdm(new CdmExportOptions { AllowStaleCovariance = true }).Segments[0].Metadata.GravityModel);
+        var heldCdm = held.ToCdm(new CdmExportOptions { AllowStaleCovariance = true });
+        Assert.Null(heldCdm.Segments[0].Metadata.GravityModel);
+        // The covariance held in RTN was not propagated: INTRACK_THRUST omitted, as the force-model keywords (#684)
+        Assert.Null(heldCdm.Segments[0].Metadata.IntrackThrust);
+        Assert.Null(heldCdm.Segments[1].Metadata.IntrackThrust);
     }
 
     private static Spacecraft ReferenceSpacecraft(int naifId, StateVector start) =>
