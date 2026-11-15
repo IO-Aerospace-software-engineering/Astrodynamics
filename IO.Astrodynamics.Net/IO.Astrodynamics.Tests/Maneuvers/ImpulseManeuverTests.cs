@@ -379,6 +379,49 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         /// <summary>
+        /// A target orbit in another frame than the propagation's, on a maneuver attached after the propagator is built,
+        /// is rejected when the propagator propagates (#685, second review): <see cref="Propagator.PropagatorBase.Propagate"/>
+        /// reads the chain of the spacecraft again, and the propagation read the components of the ECLIPJ2000 target as if
+        /// they were in ICRF (2807.185 m/s for a plane change of 2°, whose ΔV is 263.394 m/s). The state of the spacecraft,
+        /// not an argument, so an <see cref="InvalidOperationException"/>, as for its engines (#676). Public constructor and
+        /// builder, both integrators; nothing runs.
+        /// </summary>
+        [Theory]
+        [InlineData("constructor", "VV")]
+        [InlineData("constructor", "RK78")]
+        [InlineData("builder", "VV")]
+        [InlineData("builder", "RK78")]
+        public void TargetOrbitInAnotherFrame_AttachedAfterThePropagatorIsBuilt_IsRejectedWhenItPropagates(string path, string integrator)
+        {
+            // Arrange: the propagator of a spacecraft in ICRF without maneuver, then a plane change on an ECLIPJ2000 target,
+            // built before its tank is on the spacecraft (no check at construction)
+            var earth = TestHelpers.EarthAtJ2000;
+            var spacecraft = PlaneChangeSpacecraft(path == "builder" ? -6855 : -6856, CircularOrbit(earth, 30.0));
+            using var propagator = path == "builder"
+                ? new Propagator.CentralBodyPropagatorBuilder(PlaneChangeWindow, spacecraft, PlaneChangeIntegrator(integrator), PlaneChangeStep)
+                    .WithPerturbingBody(earth).Build()
+                : new Propagator.CentralBodyPropagator(PlaneChangeWindow, spacecraft, PlaneChangeIntegrator(integrator), [earth], false, false,
+                    PlaneChangeStep);
+            var tank = new FuelTank("ft685", "ftA", "sn6855", 1000.0, 900.0);
+            var engine = new Engine("eng685", "engmk1", "sn6855", 450, 50, tank);
+            var rejected = CreateAt(nameof(PlaneAlignmentManeuver), CircularOrbit(earth, 32.0).ToFrame(Frames.Frame.ECLIPTIC_J2000), engine);
+            spacecraft.AddFuelTank(tank);
+            spacecraft.AddEngine(engine);
+            spacecraft.SetStandbyManeuver(rejected);
+
+            // Act
+            var exception = Assert.Throws<InvalidOperationException>(() => propagator.Propagate());
+
+            // Assert: the frames and the fix named; nothing ran
+            Assert.Contains(nameof(PlaneAlignmentManeuver), exception.Message);
+            Assert.Contains("ECLIPJ2000", exception.Message);
+            Assert.Contains("ToFrame(Frame.ICRF)", exception.Message);
+            Assert.Null(rejected.ThrustWindow);
+            Assert.Null(rejected.ManeuverWindow);
+            Assert.Equal(900.0, tank.Quantity);
+        }
+
+        /// <summary>
         /// The same target given in the frame of the propagation burns the closed form of the plane change, 2 v sin(Δi/2)
         /// with the GM of the Earth (#685): the ECLIPJ2000 target rotated to ICRF on a spacecraft in ICRF, and a spacecraft
         /// and a target both in ECLIPJ2000, the burn not depending on the frame. RK7(8), whose integration resolves the closed

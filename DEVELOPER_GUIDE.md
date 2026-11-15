@@ -1123,7 +1123,7 @@ Ground-based observation site.
 | `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source; the emission and phase angles need an observer and throw, the method is ELLIPSOID (#682) |
 | `FindDayWindows(Window searchWindow, double twilight)` | Find daylight windows |
 | `IlluminationIncidence(Time date, ILocalizable source, Aberration aberration)` | Get solar incidence angle |
-| `WriteFrameAsync(FileInfo outputFile)` | Write site frame kernel |
+| `WriteFrameAsync(FileInfo outputFile)` | Write site frame kernel: the frame of its coordinates, or for a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name (#690) |
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;

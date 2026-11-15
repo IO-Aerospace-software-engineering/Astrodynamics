@@ -41,7 +41,9 @@ new CelestialBody(id / 1000))`, whose constructor reads the site's state at J200
 Any other identifier is built by `CelestialItem.Create`, a barycenter, a Lagrange point or a celestial body (#672: a
 site observer was built as a celestial body, which threw or was built from undefined bytes). The state itself is
 `spkezr_c`'s, which needs only the identifier. The commands of the CLI build their objects by identifier with the same
-rule and the same site (since 11.0.0; before, any identifier from 100001 to 999998 was a site named `site<id>`).
+rule and the same site (since 11.0.0; before, any identifier from 100001 to 999998 was a site named `site<id>`), so a
+site the loaded kernels do not name fails in both with "has no name in SPICE": load a kernel that names it, as the frame
+kernel of `Site.WriteFrameAsync` does, with its SPK.
 
 SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
 File Naming"). `LoadKernels` hands it the full path, so a longer one fails with `SPICE(FILENAMETOOLONG)`; the native

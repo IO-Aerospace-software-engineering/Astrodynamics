@@ -32,7 +32,7 @@ Ground-based observation or tracking site.
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows ([Occultations](occultations.md)) |
 | `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source ([Illumination](#illumination)) |
 | `FindDayWindows(Window, double)` | Find daylight windows |
-| `WriteFrameAsync(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676) |
+| `WriteFrameAsync(FileInfo)` | Write the frame kernel of the topocentric frame `<NAME>_TOPO`; its kernel variable `FRAME_<NAME>_TOPO` follows SPICE's rules (Kernel Required Reading, "Variable Name Rules"): no blank, tab or other whitespace or control character, quote, parenthesis, comma or '=', 32 bytes at most in UTF-8, so 21 ASCII characters for the name; another name throws `InvalidOperationException` and nothing is written (#676). For a site from the kernels whose frame id the loaded kernels define, that kernel frame under its kernel name, as a TK matrix of the body frame; one not fixed in the body frame throws `InvalidOperationException` (#690) |
 
 ### Window searches
 
@@ -143,8 +143,14 @@ SPICE(UNKNOWNFRAME) on a read by name. A site from the kernels whose frame no lo
 its `Planetodetic`, and a read by name in it still throws SPICE(UNKNOWNFRAME). `Planetodetic` and the illumination
 angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
 `Planetodetic`, the normal `gfilum_c` takes for the site in `FindWindowsOnIlluminationConstraint` (#488), not the
-zenith of the kernel frame. To keep the frame of the coordinates at J2000, build the site from them:
-`new Site(id, name, body, kernelSite.Planetodetic)`.
+zenith of the kernel frame. `WriteFrameAsync` of such a site writes that kernel frame: its name and id in the
+kernels, and its rotation to the frame of the body read from SPICE, as `TKFRAME_<id>_MATRIX` (column order, one column
+per line, CSPICE reading 132 characters of a line), so that the file defines the frame the kernels define to the
+rounding of the matrix (2.1e-16 rad for DSS-13); loaded beside those kernels it assigns their frame again. A kernel
+frame not fixed in the frame of the body (read at J2000 TDB and 6 h later) cannot be written as a TK frame of the body
+and throws `InvalidOperationException`. Before 11.0.0 the writer wrote the frame of `Planetodetic` under the kernel's
+id, 7.76e-8 rad from `DSS-13_TOPO`, and for a site named otherwise renamed the frame of that id. To keep the frame of
+the coordinates at J2000, build the site from them: `new Site(id, name, body, kernelSite.Planetodetic)`.
 
 ### Example
 

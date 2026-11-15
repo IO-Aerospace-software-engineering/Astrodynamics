@@ -547,9 +547,12 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Write frame data
+        /// Writes the frame kernel of the topocentric frame of the site (<see cref="SiteFrame.WriteAsync"/>): the frame of
+        /// <see cref="Planetodetic"/>, or for a site from the kernels whose frame id the loaded kernels define, that kernel
+        /// frame under its kernel name (#690).
         /// </summary>
-        /// <param name="outputFile"></param>
+        /// <param name="outputFile">The frame kernel to write.</param>
+        /// <exception cref="InvalidOperationException">See <see cref="SiteFrame.WriteAsync"/>; nothing is written.</exception>
         public async Task WriteFrameAsync(FileInfo outputFile)
         {
             await Frame.WriteAsync(outputFile);

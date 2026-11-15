@@ -52,6 +52,9 @@ public class Helpers
     /// Before 11.0.0 the CLI kept its own rule, 100001 to 999998, and built the site <c>site&lt;id&gt;</c> of any of them:
     /// an x000, a body of at most 100 or a Lagrange point failed with another error than the library's
     /// (<c>ArgumentOutOfRangeException</c> for 399000), and a site was not named as SPICE names it (DSS-13 for 399013).
+    /// A site that no loaded kernel names now fails as the library fails (<see cref="ArgumentException"/>, "has no name in
+    /// SPICE"), where it was read as <c>site&lt;id&gt;</c>: the SPK <c>Site.WriteEphemeris</c> writes names nothing, and the
+    /// frame kernel of <c>Site.WriteFrameAsync</c> names the site.
     /// </remarks>
     internal static ILocalizable CreateLocalizable(int objectId, in Time epoch)
     {

@@ -32,9 +32,12 @@ chained, when it is built, on every spacecraft and every path (`Spacecraft.Propa
 `Scenario.SimulateAsync`, `BatchPropagator`, `MonteCarloPropagator`, the constructors, the builder and the avoidance
 propagations of the conjunction analysis): a target in another frame throws `ArgumentException` (parameter
 `spacecraft`) naming the maneuver, the two frames and the fix, `targetOrbit.ToFrame(Frame.ICRF)` for ICRF, before it
-changes anything (#685; before 11.0.0 only a TLE or TEME spacecraft was checked there, #675, and on another spacecraft
-the components of the target were read as if they were in the integration frame: a plane change of 2° from an
-ECLIPJ2000 target on an ICRF spacecraft burned 2807 m/s for 263 m/s). The constructor checks the target too, when the
+changes anything, and again when the propagator propagates (`PropagatorBase.Propagate`, which reads the chain of the
+spacecraft again), against the frame it integrates in: a maneuver attached after the propagator was built and whose
+target is in another frame throws `InvalidOperationException`, the state of the spacecraft (#685; before 11.0.0 only a
+TLE or TEME spacecraft was checked there, #675, and on another spacecraft the components of the target were read as if
+they were in the integration frame: a plane change of 2° from an ECLIPJ2000 target on an ICRF spacecraft burned
+2807 m/s for 263 m/s). The constructor checks the target too, when the
 tank of its engine is on a spacecraft: it takes the frame of the spacecraft's initial orbit or, on a TLE or TEME
 spacecraft, ICRF (#675); any other frame throws `ArgumentException`. On such a spacecraft a target in TEME still
 constructs and is rejected when the propagation is built. A maneuver built before its tank is on a spacecraft, or whose

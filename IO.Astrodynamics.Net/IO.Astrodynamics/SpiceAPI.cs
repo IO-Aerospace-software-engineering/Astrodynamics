@@ -218,11 +218,17 @@ public class SpiceAPI
     /// Whether the loaded kernels define a frame of id <paramref name="frameId"/> (<c>frmnam_c</c>), read under the lock
     /// at each call, so that a frame kernel loaded or unloaded since is taken into account (#690).
     /// </summary>
-    internal static bool KernelDefinesFrame(int frameId)
+    internal static bool KernelDefinesFrame(int frameId) => KernelFrameNameOf(frameId) != null;
+
+    /// <summary>
+    /// The name the loaded kernels give to the frame of id <paramref name="frameId"/> (<c>frmnam_c</c>), null when they
+    /// define none; read under the lock at each call (#690).
+    /// </summary>
+    internal static string KernelFrameNameOf(int frameId)
     {
         lock (lockObject)
         {
-            return KernelFrameName(frameId) != null;
+            return KernelFrameName(frameId);
         }
     }
 

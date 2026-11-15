@@ -185,6 +185,74 @@ public class EphemerisTests
     }
 
     /// <summary>
+    /// A site whose SPK is loaded without a kernel that names it (the SPK <c>Site.WriteEphemeris</c> writes, the name being
+    /// in the frame kernel of <c>Site.WriteFrameAsync</c>) fails as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
+    /// fails, "has no name in SPICE" (cli-site-rule of #668's second round; before, the CLI built it as <c>site&lt;id&gt;</c>);
+    /// with the kernel that names it loaded, its frame kernel, the CLI reads it under that name, the states of
+    /// <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>: the migration of the Breaking entry.
+    /// </summary>
+    [Fact]
+    public async Task Ephemeris_FromASiteTheKernelsDoNotName_FailsAsTheLibrary_AndReadsOnceNamed()
+    {
+        using (Configuration.Lock())
+        {
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var begin = Time.J2000TDB;
+            var directory = Directory.CreateTempSubdirectory("clisite-");
+            var spk = new FileInfo(Path.Combine(directory.FullName, "site777.bsp"));
+            var frameKernel = new FileInfo(Path.Combine(directory.FullName, "site777.tf"));
+            var site = new Surface.Site(777, "CLISITE", new Body.CelestialBody(399), new Coordinates.Planetodetic(0.1, 0.6, 100.0));
+            site.WriteEphemeris(new Window(begin.AddDays(-1.0), begin.AddDays(1.0)), spk);
+            await site.WriteFrameAsync(frameKernel);
+            var window = new WindowParameters { Begin = begin.ToString(), End = begin.AddSeconds(60.0).ToString() };
+            SpiceAPI.Instance.LoadKernels(spk);
+            try
+            {
+                // Without the kernel that names it
+                var command = new EphemerisCommand();
+                Console.SetOut(new StringWriter(new StringBuilder()));
+                var fromCli = Record.Exception(() => { _ = command.Ephemeris("Data", 301, 399777, window, TimeSpan.FromMinutes(1)); });
+                var fromLibrary = Record.Exception(() => SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None));
+                Assert.NotNull(fromLibrary);
+                Assert.NotNull(fromCli);
+                Assert.IsType(fromLibrary.GetType(), fromCli);
+                Assert.Equal(fromLibrary.Message, fromCli.Message);
+                Assert.Contains("399777 has no name in SPICE", fromCli.Message);
+
+                // With it
+                SpiceAPI.Instance.LoadKernels(frameKernel);
+                try
+                {
+                    var sb = new StringBuilder();
+                    Console.SetOut(new StringWriter(sb));
+                    await command.Ephemeris("Data", 301, 399777, window, TimeSpan.FromMinutes(1));
+                    var expected = SpiceAPI.Instance.ReadEphemeris(begin, 399777, 301, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                    Assert.Equal("CLISITE", expected.Observer.Name);
+                    // The command reads through GetEphemeris: the position of the library's read to its last digit (measured on
+                    // Linux x64: 1.0e-7 m in X, 2.5e-16 relative); threshold twice that, provisional until the three platforms
+                    // have run it
+                    var line = sb.ToString().Split(Environment.NewLine)[0];
+                    Assert.StartsWith($"Epoch : {begin} Position : ", line);
+                    var xyz = System.Text.RegularExpressions.Regex.Matches(line, @"(?<=X : |Y : |Z: )-?[0-9.E+-]+").Take(3)
+                        .Select(m => double.Parse(m.Value, CultureInfo.InvariantCulture)).ToArray();
+                    var printed = new Math.Vector3(xyz[0], xyz[1], xyz[2]);
+                    Assert.True((printed - expected.Position).Magnitude() < 5e-16 * expected.Position.Magnitude(),
+                        $"{printed} against {expected.Position}");
+                }
+                finally
+                {
+                    SpiceAPI.Instance.UnloadKernels(frameKernel);
+                }
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+                directory.Delete(true);
+            }
+        }
+    }
+
+    /// <summary>
     /// sub-point takes an identifier that is not a site by the library's rule for a celestial item, as
     /// <see cref="CelestialItem.Create"/> does: it no longer calls 391013, 399000 or 100500 a site.
     /// </summary>

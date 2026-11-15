@@ -26,7 +26,8 @@ observer, on every path: `Spacecraft.Propagate` and `PropagateAsync`, `Scenario.
 `MonteCarloPropagator`, the constructors and the builder. The target orbit of an impulse of such a spacecraft is given
 in ICRF: a target in another frame, TEME included, is rejected when the propagation is built. On every spacecraft the
 target orbits of the impulses are given in the frame of the propagation, and any other frame is rejected when the
-propagation is built (#685; before 11.0.0 only a TLE or TEME spacecraft was checked there,
+propagation is built (`ArgumentException`) and, for a maneuver attached after it was built, when it propagates
+(`InvalidOperationException`) (#685; before 11.0.0 only a TLE or TEME spacecraft was checked there,
 [The frame of a target orbit](impulse-maneuvers.md#the-frame-of-a-target-orbit)). CIRS, TIRS, the rotating frames and a set of mean elements in TEME
 (`tle.ToMeanKeplerianElements()`, which has no state without its theory) are still rejected. For a TLE, see
 [Numerical propagation of a TLE](tle.md#numerical-propagation-of-a-tle): its point-mass Earth is not SGP4.

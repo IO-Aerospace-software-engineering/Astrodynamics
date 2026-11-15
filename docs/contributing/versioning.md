@@ -2020,12 +2020,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   7000 km at 30° and 32° in ICRF, the target given in ECLIPJ2000, burned 2807.185 m/s and left the orbit 23.44° from the
   target's plane, the closed form 2 v sin(Δi/2) of the plane misread (Δi = 21.44°), for 263.394 m/s. The propagator now
   checks every target of the chain, leading and chained, against the frame of the propagation when it is built, on
-  every spacecraft (`PropagatorBase.ValidateTargetOrbitFrames`, the check of #675 without its early return), before
-  anything changes. `ImpulseManeuverTests` covers the three maneuvers, both orders, leading and chained, both
+  every spacecraft (`PropagatorBase.TargetOrbitFrameError`, the check of #675 without its early return), before
+  anything changes, and again when it propagates (`PropagatorBase.Propagate` reads the chain of the spacecraft again),
+  against the frame of its integration: a maneuver attached to the spacecraft after a `CentralBodyPropagator` was built
+  (constructor or builder) and then `Propagate()` burned the same 2807.185 m/s (second review). `ImpulseManeuverTests` covers the three maneuvers, both orders, leading and chained, both
   integrators, and a fresh spacecraft as one already propagated (its states and maneuver windows left as they were);
   the target rotated to ICRF, and a spacecraft and a target both in ECLIPJ2000, burn the closed form to 7.0e-9 m/s
-  (RK7(8), threshold 1.4e-8 m/s provisional) and end in the target's plane to 4.0e-11°; `ScenarioTests` covers
-  `Scenario.SimulateAsync`.
+  (RK7(8), threshold 1.4e-8 m/s provisional) and end in the target's plane to 4.0e-11°; a maneuver attached after the
+  propagator was built, by its constructor or its builder, with both integrators, is rejected by `Propagate()` before
+  its burn (no window, the tank full); `ScenarioTests` covers `Scenario.SimulateAsync`.
 - **The CLI took identifiers for sites that the library does not** (cli-site-rule of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round). The commands built a site of every
   identifier from 100001 to 999998 (`Helpers.IsSiteIdentifier`), named `site<id>`, where the library's rule
@@ -2038,7 +2041,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (internal `SpiceAPI.CreateKernelSite`, which `SpiceAPI.CreateObserver` uses too); `Helpers.IsSiteIdentifier` is gone.
   `EphemerisTests` compares the command from 391013, 399000, 100500, 301001 and 395013 with `SpiceAPI.ReadEphemeris`
   (same exception and message), the site of 399013 with the observer of `SpiceAPI.ReadEphemeris` (DSS-13), and
-  `sub-point` of 391013, 399000 and 100500 with `CelestialItem.Create`.
+  `sub-point` of 391013, 399000 and 100500 with `CelestialItem.Create`, and the command from a site whose SPK is
+  loaded without a kernel that names it with `SpiceAPI.ReadEphemeris` (the same "has no name in SPICE"), then, its
+  frame kernel loaded, with the states of `SpiceAPI.ReadEphemeris` under its name.
 - **The frame of a site from the kernels had two orientations** ([#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690)). SPICE read the
   frame of a kernel site by its name (`DSS-13_TOPO` of `earth_topo_201023.tf`, built on the coordinates of the station
   at 2020-10-23 on the WGS84 spheroid) in `spkezr_c` and `gfposc_c`, while the library rotated by a frame it built from
@@ -2060,7 +2065,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   provisional) and the literals of `tools/geodetic_reference/dss13_topo.c` in `DSS-13_TOPO`; `SiteTests`,
   `GeometryFinderTests` and `KernelWindowSearchTests` the managed searches of the kernel site against `gfposc_c` in
   `DSS-13_TOPO` (`tools/geometry_reference`, regenerated: the Moon's Z and elevation extremes, the LEO elevation, 1.2e-7
-  s two-body and 2.4e-7 s RK7(8)), where they compared with a reference in the frame the library built.
+  s two-body and 2.4e-7 s RK7(8)), where they compared with a reference in the frame the library built. The frame kernel
+  of such a site (`Site.WriteFrameAsync`, which `CosmographiaExporter` writes for every site of a scenario) still held
+  the frame of `Planetodetic` under the kernel's id 1399013 and name `DSS-13_TOPO`, 7.76e-8 rad from it, and for
+  GOLDSTONE renamed that id `GOLDSTONE_TOPO` (second review): it now writes the kernel frame, its kernel name and id and
+  its rotation to the frame of the body read from SPICE as `TKFRAME_<id>_MATRIX`, one column per line (CSPICE reads 132
+  characters of a line: the nine components on one line gave 6), and rejects a kernel frame not fixed in the frame of
+  the body (`InvalidOperationException`, internal `SpiceAPI.KernelFrameNameOf`). `SiteTests` loads the file written for
+  DSS-13 and GOLDSTONE, renamed so that it redefines nothing of `Data/SolarSystem`, and reads its rotation to
+  `DSS-13_TOPO` by `pxform` (2.1e-16 rad, threshold 5.0e-16 rad provisional; 7.76e-8 rad before), and rejects a site
+  frame defined relative to J2000.
 
 **Changed**
 
@@ -2737,7 +2751,9 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   ([#685](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/685), Fixed above). A propagation whose impulse target orbit is not in the frame the spacecraft is
   propagated in throws `ArgumentException` (parameter `spacecraft`) when the propagator is built, on every path
   (`Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`, `MonteCarloPropagator`,
-  the constructors, the builder and the avoidance propagations), where only a TLE or TEME start was checked there; other
+  the constructors, the builder and the avoidance propagations), and `InvalidOperationException` from
+  `CentralBodyPropagator.Propagate()` for one attached to the spacecraft after the propagator was built, where only a
+  TLE or TEME start was checked when the propagator was built and nothing when it propagated; other
   spacecraft burned with the target's components read in the integration frame (10.7 times the closed form in the case
   measured). The results of valid inputs are bit for bit. Migration: give the target in the spacecraft's propagation
   frame, `targetOrbit.ToFrame(spacecraft.InitialOrbitalParameters.Frame)`, or ICRF for a TLE or TEME start.
@@ -2745,9 +2761,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round, Fixed above). CLI only. An identifier from
   100001 to 999998 that is not a site by the library's rule (x000, a body of at most 100, a Lagrange point) is read as a
   celestial item: the error of `SpiceAPI.ReadEphemeris` instead of `ArgumentOutOfRangeException` or another message,
-  and `sub-point` no longer calls it a site. A site is named by its SPICE name (DSS-13), not `site<id>`. The printed
-  states do not move. Migration: none for a valid site identifier; a script that matched the name `site<id>` or the
-  former exceptions takes the SPICE name and the library's exceptions.
+  and `sub-point` no longer calls it a site. A site is named by its SPICE name (DSS-13), not `site<id>`, and a site
+  that no loaded kernel names fails as `SpiceAPI.ReadEphemeris` fails, `ArgumentException` "has no name in SPICE", where
+  it was read as `site<id>`: the SPK of a site the library writes (`Site.WriteEphemeris`) names nothing, its name being
+  in the frame kernel of `Site.WriteFrameAsync`. The printed states of a named site do not move. Migration: load a
+  kernel that names the site (`NAIF_BODY_NAME`/`NAIF_BODY_CODE`, as the frame kernel of `Site.WriteFrameAsync` does)
+  with its SPK; a script that matched the name `site<id>` or the former exceptions takes the SPICE name and the
+  library's exceptions.
 - **Breaking: a site from the kernels takes the frame of its kernels** ([#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690), Fixed above). A
   site from the kernels whose frame id (1000000 + NaifId) the loaded kernels define uses that kernel frame on every
   path: its managed azimuths and elevations (`GetHorizontalCoordinates`), `ToFrame(site.Frame)` and the managed
@@ -2757,8 +2777,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   elevation extremes. The reads by name and the CSPICE searches do not move. A kernel site named otherwise than its
   kernel frame now reads that frame where it threw SPICE(UNKNOWNFRAME). `Site.Planetodetic` and the illumination angles
   do not move, nor does a site built from coordinates, nor a kernel site whose frame no loaded kernel defines (the frame
-  of its J2000 coordinates, its reads by name still throwing). Migration: to keep the topocentric frame of the J2000
-  coordinates, build the site from them, `new Site(id, name, body, kernelSite.Planetodetic)`.
+  of its J2000 coordinates, its reads by name still throwing). `Site.WriteFrameAsync` (and so `CosmographiaExporter`)
+  writes for such a site the kernel frame, under its kernel name and id, as `TKFRAME_<id>_MATRIX` relative to the frame
+  of the body, where it wrote the frame of the J2000 coordinates as angles under the kernel's id (7.76e-8 rad from
+  DSS-13_TOPO) and, for a site named otherwise, renamed the frame of that id; a kernel frame not fixed in the frame of
+  the body throws `InvalidOperationException`, nothing written. Migration: to keep the topocentric frame of the J2000
+  coordinates, build the site from them, `new Site(id, name, body, kernelSite.Planetodetic)`; its frame kernel is that
+  of the former writer, under the name `<NAME>_TOPO`.
 
 **Removed**
 
