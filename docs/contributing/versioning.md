@@ -2361,12 +2361,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   1e-154 the subnormal sum of squares lost digits (`Normalize()` of (1e-160, 1e-160, 0) 5.5e-6 off 1/√2, silently).
   `FromQuaternion`, `TransformCovariance`, `Lerp` and `SLERP` threw for a finite non-zero quaternion out of that range,
   `Lerp`'s chord overflowed between quaternions of opposite components near `double.MaxValue`, `Angle(Vector3)` gave 0
-  between tiny vectors and NaN between huge ones, and `Angle(vector, plane)` threw for a tiny or huge normal. A vector or
+  between tiny vectors and NaN between huge ones, and `Angle(vector, plane)` threw for a tiny or huge normal and took
+  atan2((a × b) · n̂, a · b) on unscaled vectors (π/4 instead of atan 2 from (1e200, 0, 0) to (1e200, 2e200, 0), NaN for
+  most huge pairs, 0 below about 1e-154). A vector or
   quaternion whose sum of squares lies outside [1e-300, `double.MaxValue`] is now scaled first by the power of two of its
   largest component (`Math.ILogB`, `Math.ScaleB`, exact): every finite non-zero one has a unit vector and its
-  representable magnitude (+Infinity only above `double.MaxValue`); `Lerp` recomputes an overflowing chord on both
-  quaternions scaled by one power of two. Every input whose sum of squares lies in [1e-300, `double.MaxValue`] (and, for
-  `Angle(Vector3)`, both in [1e-300, 1e300]) gives the same result bit for bit, so no result of the library on physical
+  representable magnitude (+Infinity only above `double.MaxValue`); `Lerp` recomputes on both quaternions scaled by one
+  power of two a chord that overflows, or whose quaternions have their largest component below 1e-150 (its products
+  rounded into the subnormal range: from 4.9e-324 (1, 0, 0, 0) to 4.9e-324 (0, 1, 0, 0) any t gave (1, 0, 0, 0), at 1e-320
+  a component 4e-4 off); the signed `Angle` scales both vectors by the powers of two of their largest components (exact,
+  the angle unchanged) unless both sums of squares lie in [1e-300, 1e300]. Every input whose sum of squares lies in
+  [1e-300, `double.MaxValue`] (for `Lerp`, whose largest component is at least 1e-150; for `Angle(Vector3)` and the signed
+  `Angle`, both sums in [1e-300, 1e300]) gives the same result bit for bit, so no result of the library on physical
   quantities moves. The axis-angle constructor of #688 takes the same scaling (bit for bit in its former range). A
   spacecraft body axis that is tiny or huge but finite is now its direction (`new Spacecraft(..., bodyFront: (0, 1e-170,
   0))` threw naming `bodyFront`), and the library's own rotation between two vectors (the lenient form of `Vector3.To`)
@@ -2377,10 +2383,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   one ulp; `FromQuaternion((1e200, 1e200, 0, 0))` against Rx(90°) and `SLERP(2^1000 I, 2^-1000 Rx(90°), 0.5)` against
   Rx(45°) (MEASURE 2.220e-16 and 0); `TransformCovariance` by (1e200, 1e200, 0, 0) and (1e-170, 1e-170, 0, 0) against
   Rx(90°) P Rx(90°)ᵀ (3.553e-15, two ulps of 9); the chord from (1e308, 0, 0, 0) to (−1e308, 1e308, 0, 0) at 0.5,
-  (0, 1, 0, 0) exactly; and 1e4 vectors of magnitude 2^-1075 to 2^1023 whose exact direction is the vector scaled back by
-  an exact power of two (| |u| − 1 | 2.220e-16, |u × d| / |d| 1.221e-16; 0.939 ulp per component and 2.125e-16 relative
-  magnitude against an 80-digit decimal computation during the triage); bounds twice the Linux x64 worst, provisional
-  until the three platforms' CI. `VectorTests`, `QuaternionTests`, `MatirxTests`, `SpacecraftTests`.
+  (0, 1, 0, 0) exactly; `Lerp` from s (1, 0, 0, 0) to s (0, 1, 0, 0) for s from 4.9e-324 to 1e-160 against
+  (1 − t, t, 0, 0) / √((1 − t)² + t²) (3.331e-16); the signed `Angle` from (1, 0, 0) 2^ka to (1, 2, 0) 2^kb within one
+  ulp of atan 2 (ka, kb from −1074 to 1022), and 1e4 directions in a plane at scales 2^-960 to 2^1022 against β − α
+  (8.882e-16 rad); and 1e4 vectors of magnitude 2^-1075 to 2^1023 whose exact direction is the vector scaled back by
+  an exact power of two (| |u| − 1 | 2.220e-16, |u × d| / |d| 1.221e-16, the magnitude 1.940e-16 relative against a
+  double-double computation; 0.939 ulp per component and 2.125e-16 relative magnitude against an 80-digit decimal
+  computation during the triage); bounds twice the Linux x64 worst, provisional until the three platforms' CI. `VectorTests`, `QuaternionTests`, `MatirxTests`, `SpacecraftTests`.
 - **`Plane.GetAngle` returned NaN for parallel normals, for normals outside about 1e-154 to 1e154, and for a zero or
   non-finite normal or vector** (third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
   The quotient (n1 · n2) / (|n1| |n2|) rounded past ±1 for parallel and antiparallel normals, where `Acos` and `Asin`
@@ -2389,8 +2398,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   off for normals near 1e-160), and a zero or non-finite normal or vector (`default(Plane)` included) gave NaN silently.
   The quotient is now clamped to [-1, 1] (it changes only results that were NaN), computed through the scaled unit
   vectors of `Normalize` when a sum of squares lies outside [1e-300, 1e300], and a zero or non-finite normal or vector
-  throws (Changed below). Every finite result of before is unchanged bit for bit, so `CelestialBody.HelioSynchronousOrbit`,
-  the library's one call, does not move. `PlaneTests` checks 1e5 parallel and antiparallel pairs against the closed forms
+  throws (Changed below). Normals whose sums of squares both lie in [1e-300, 1e300] give the former result bit for bit;
+  a finite result of before with a sum of squares in (1e300, `double.MaxValue`] can move by one ulp (the cosine through
+  the unit vectors). `CelestialBody.HelioSynchronousOrbit`, the library's one call (a normal of about 1e11 m and a unit
+  vector), does not move. `PlaneTests` checks 1e5 parallel and antiparallel pairs against the closed forms
   0, π and ±π/2 (MEASURE 2.980e-8 rad, the √(2ε) of acos and asin one ulp from ±1; bound twice the Linux x64 worst,
   provisional until the three platforms' CI), π/4 between normals at 2^±1000 and 2^-1070 within one ulp, and the throws.
 

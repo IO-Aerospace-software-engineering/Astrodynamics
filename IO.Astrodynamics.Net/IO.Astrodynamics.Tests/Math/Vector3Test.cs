@@ -298,6 +298,65 @@ public class VectorTests
         Assert.Equal(System.Math.PI, Vector3.VectorX.Angle(new Vector3(-1.0, 1e-300, 0.0), new Vector3(0.0, 0.0, -z)));
     }
 
+    // The signed angle took atan2((a × b) · n̂, a · b) on the vectors unscaled: for huge vectors the products overflowed
+    // (π/4 instead of atan 2 from (1e200, 0, 0) to (1e200, 2e200, 0), NaN for most pairs), for tiny ones they underflowed
+    // (0). The closed form: from (1, 0, 0) 2^ka to (1, 2, 0) 2^kb the angle is atan 2 about +z, −atan 2 about −z, at
+    // any scales; the products of the vectors scaled by powers of two are exact, so within one ulp of Math.Atan(2)
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1000, 1000)]
+    [InlineData(1022, 1021)]
+    [InlineData(-1000, -1000)]
+    [InlineData(-1070, -1070)]
+    [InlineData(1000, -1000)]
+    [InlineData(-1074, 1021)]
+    public void SignedAngle_ExtremeVectors_IsTheAngleOfTheirDirections(int ka, int kb)
+    {
+        var a = new Vector3(System.Math.ScaleB(1.0, ka), 0.0, 0.0);
+        var b = new Vector3(System.Math.ScaleB(1.0, kb), System.Math.ScaleB(2.0, kb), 0.0);
+        double expected = System.Math.Atan(2.0);
+        double ulp = System.Math.BitIncrement(expected) - expected;
+        Assert.True(System.Math.Abs(a.Angle(b, Vector3.VectorZ) - expected) <= ulp, $"{a.Angle(b, Vector3.VectorZ):R}");
+        Assert.True(System.Math.Abs(a.Angle(b, new Plane(new Vector3(0.0, 0.0, -1e-200))) + expected) <= ulp, $"{a.Angle(b, Plane.Z):R}");
+        Assert.True(System.Math.Abs(b.Angle(a, new Vector3(0.0, 0.0, 1e200)) + expected) <= ulp, $"{b.Angle(a, Vector3.VectorZ):R}");
+    }
+
+    // Random directions in the plane z = 0, a = (cos α, sin α, 0) 2^ea and b = (cos β, sin β, 0) 2^eb, ea and eb over
+    // 2^-960 to 2^1022 (every component a normal double), about n = ±z of random length: the closed form β − α (resp.
+    // α − β) reduced to (−π, π]. The worst difference, MEASURE 8.882e-16 rad (Linux x64, 2026-11-15; NaN before the
+    // fix), twice the worst, rounded up at the second significant digit, provisional until the three platforms are read
+    // from the CI logs; the vectors with a NaN component give NaN and a zero vector 0, as the unsigned Angle does
+    private const double SignedAngleSweepTolerance = 1.8e-15;
+
+    [Fact]
+    public void SignedAngle_LogUniformScales_IsTheDifferenceOfTheDirectionAngles()
+    {
+        var random = new Random(668);
+        double worst = 0.0;
+        for (int i = 0; i < 10000; i++)
+        {
+            double alpha = (random.NextDouble() * 2.0 - 1.0) * System.Math.PI;
+            double beta = (random.NextDouble() * 2.0 - 1.0) * System.Math.PI;
+            int ea = random.Next(-960, 1023);
+            int eb = random.Next(-960, 1023);
+            var a = new Vector3(System.Math.ScaleB(System.Math.Cos(alpha), ea), System.Math.ScaleB(System.Math.Sin(alpha), ea), 0.0);
+            var b = new Vector3(System.Math.ScaleB(System.Math.Cos(beta), eb), System.Math.ScaleB(System.Math.Sin(beta), eb), 0.0);
+            double normal = System.Math.Pow(10.0, random.NextDouble() * 600.0 - 300.0);
+            double up = a.Angle(b, new Vector3(0.0, 0.0, normal));
+            double down = a.Angle(b, new Plane(new Vector3(0.0, 0.0, -normal)));
+            worst = System.Math.Max(worst, System.Math.Abs(System.Math.IEEERemainder(up - (beta - alpha), 2.0 * System.Math.PI)));
+            worst = System.Math.Max(worst, System.Math.Abs(System.Math.IEEERemainder(down - (alpha - beta), 2.0 * System.Math.PI)));
+        }
+
+        _output.WriteLine($"MEASURE signed Angle over 2^-960 to 2^1022 against beta - alpha: {worst:E3}");
+        Assert.True(worst <= SignedAngleSweepTolerance, $"{worst:E3}");
+
+        Assert.True(double.IsNaN(new Vector3(double.NaN, 0.0, 0.0).Angle(Vector3.VectorY, Vector3.VectorZ)));
+        Assert.True(double.IsNaN(Vector3.VectorX.Angle(new Vector3(0.0, double.PositiveInfinity, 0.0), Vector3.VectorZ)));
+        Assert.Equal(0.0, Vector3.Zero.Angle(new Vector3(1e200, 1e200, 0.0), Vector3.VectorZ));
+        Assert.Equal(0.0, new Vector3(1e-200, 1e-200, 0.0).Angle(Vector3.Zero, Vector3.VectorZ));
+    }
+
     // Review of #680's known limitation: To normalized its result leniently. A zero or non-finite vector gave the identity
     // (or NaN) silently; a zero or non-finite vector has no direction to rotate from or to
     [Theory]
@@ -473,17 +532,18 @@ public class VectorTests
     // The unit vector over the whole double range, magnitudes 2^-1075 to 2^1023: the direction d of each draw is
     // scaled by 2^e (exact, but for the bits a subnormal result loses), and the exact direction of the vector is that
     // vector scaled back by 2^-e (exact: a multiplication of a finite double by a power of two that does not overflow).
-    // The invariants of the closed form: | |u| - 1 | and |u x d'| / |d'|; the magnitude against the exact identity
-    // |v| = 2^e |d'|, relative, where it is a normal double (|d'| rounded once by a correctly rounded square root, as the
-    // scaled magnitude is). The worst, MEASURE | |u| - 1 | 2.220e-16, |u x d'| / |d'| 1.221e-16, magnitude 0 (Linux x64,
-    // 2026-11-15; 0.939 ulp per component and 2.125e-16 relative magnitude against an 80-digit decimal computation during
-    // the triage); twice the worst rounded up at the second significant digit (one ulp of 1 for the exact magnitude),
-    // provisional until the three platforms are read from the CI logs
+    // The invariants of the closed form: | |u| - 1 | and |u x d'| / |d'|; the magnitude, relative, where it is a normal
+    // double, against |v| = 2^e |d'| with |d'| computed in double-double (products split by FusedMultiplyAdd, sums by
+    // TwoSum, the square root corrected by one Newton step: relative error about 1e-32), independent of the code under
+    // test. The worst, MEASURE | |u| - 1 | 2.220e-16, |u x d'| / |d'| 1.221e-16, magnitude 1.940e-16 (Linux x64,
+    // 2026-11-15; 2.125e-16 reported against an 80-digit decimal computation during the triage); twice the
+    // worst rounded up at the second significant digit, provisional
+    // until the three platforms are read from the CI logs
     private const double SweepNormTolerance = 4.5e-16;
 
     private const double SweepCrossTolerance = 2.5e-16;
 
-    private const double SweepMagnitudeTolerance = 2.3e-16;
+    private const double SweepMagnitudeTolerance = 3.9e-16;
 
     [Fact]
     public void Normalize_LogUniformOverTheWholeDoubleRange()
@@ -507,10 +567,12 @@ public class VectorTests
 
             worstNorm = System.Math.Max(worstNorm, System.Math.Abs(u.Magnitude() - 1.0));
             worstCross = System.Math.Max(worstCross, u.Cross(exact).Magnitude() / exact.Magnitude());
-            double reference = System.Math.ScaleB(exact.Magnitude(), e);
-            if (reference >= 2.2250738585072014e-308 && double.IsFinite(reference))
+            double magnitude = v.Magnitude();
+            if (magnitude >= 2.2250738585072014e-308 && double.IsFinite(magnitude))
             {
-                worstMagnitude = System.Math.Max(worstMagnitude, System.Math.Abs(v.Magnitude() / reference - 1.0));
+                var (hi, lo) = DoubleDoubleMagnitude(exact);
+                // ScaleB(magnitude, -e) is exact for a normal magnitude; the error is taken against hi + lo
+                worstMagnitude = System.Math.Max(worstMagnitude, System.Math.Abs((System.Math.ScaleB(magnitude, -e) - hi - lo) / hi));
             }
         }
 
@@ -520,6 +582,33 @@ public class VectorTests
         Assert.True(worstNorm <= SweepNormTolerance, $"{worstNorm:E3}");
         Assert.True(worstCross <= SweepCrossTolerance, $"{worstCross:E3}");
         Assert.True(worstMagnitude <= SweepMagnitudeTolerance, $"{worstMagnitude:E3}");
+    }
+
+    // √(x² + y² + z²) in double-double: each square exact as hi + lo (FusedMultiplyAdd), the sums by TwoSum, then
+    // r = √s_hi corrected by one Newton step on the remainder s − r² (exact through FusedMultiplyAdd); relative error
+    // about 1e-32, far below the 1.1e-16 it measures
+    private static (double hi, double lo) DoubleDoubleMagnitude(in Vector3 v)
+    {
+        static (double s, double e) TwoSum(double a, double b)
+        {
+            double s = a + b;
+            double bb = s - a;
+            return (s, (a - (s - bb)) + (b - bb));
+        }
+
+        static (double hi, double lo) Add(double ahi, double alo, double bhi, double blo)
+        {
+            var (s, e) = TwoSum(ahi, bhi);
+            e += alo + blo;
+            return TwoSum(s, e);
+        }
+
+        double x2 = v.X * v.X, y2 = v.Y * v.Y, z2 = v.Z * v.Z;
+        var (shi, slo) = Add(x2, System.Math.FusedMultiplyAdd(v.X, v.X, -x2), y2, System.Math.FusedMultiplyAdd(v.Y, v.Y, -y2));
+        (shi, slo) = Add(shi, slo, z2, System.Math.FusedMultiplyAdd(v.Z, v.Z, -z2));
+        double r = System.Math.Sqrt(shi);
+        double remainder = System.Math.FusedMultiplyAdd(-r, r, shi) + slo;
+        return TwoSum(r, remainder / (2.0 * r));
     }
 
     // The magnitude was not scaled: +Infinity for a component above about 1.34e154, 0 below about 1.5e-162. Closed forms:

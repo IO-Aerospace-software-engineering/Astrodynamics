@@ -589,5 +589,41 @@ namespace IO.Astrodynamics.Tests.Math
             Assert.Equal(tiny.W, tiny.VectorPart.X);
             Assert.True(System.Math.Abs(tiny.W - System.Math.Sqrt(0.5)) <= ExtremeRotationTolerance, $"{tiny}");
         }
+
+        // Lerp computed the chord q + t (q2 − q) of tiny quaternions unscaled, so its products rounded into the subnormal
+        // range: from s (1, 0, 0, 0) to s (0, 1, 0, 0) at 4.9e-324 any t gave (1, 0, 0, 0), at 1e-320 the components were
+        // off by up to 6.8e-4. The closed form: (1 − t, t, 0, 0) / √((1 − t)² + t²) at any scale s, over 1000 draws of t
+        // per scale. The worst component, MEASURE 3.331e-16 (1e-160; 0 to 2.220e-16 at the other scales; Linux x64,
+        // 2026-11-15; before the fix 0.707 at 4.9e-324, 3.99e-4 at 1e-320, 3.99e-14 at 1e-310); twice the worst, rounded
+        // up at the second significant digit, provisional until the three platforms are read from the CI logs
+        [Theory]
+        [InlineData(4.9e-324)]
+        [InlineData(1e-320)]
+        [InlineData(1e-310)]
+        [InlineData(2.2250738585072014e-308)]
+        [InlineData(1e-300)]
+        [InlineData(1e-160)]
+        public void Lerp_TinyQuaternions_InterpolateAsTheirDirections(double s)
+        {
+            var q = new Quaternion(s, 0.0, 0.0, 0.0);
+            var q2 = new Quaternion(0.0, s, 0.0, 0.0);
+            var random = new Random(668);
+            double worst = 0.0;
+            for (int i = 0; i < 1000; i++)
+            {
+                double t = i == 0 ? 0.3 : i == 1 ? 1.0 / 3.0 : random.NextDouble();
+                double norm = System.Math.Sqrt((1.0 - t) * (1.0 - t) + t * t);
+                var expected = new Quaternion((1.0 - t) / norm, t / norm, 0.0, 0.0);
+                var lerp = q.Lerp(q2, t);
+                worst = System.Math.Max(worst, System.Math.Max(System.Math.Abs(lerp.W - expected.W), System.Math.Abs(lerp.VectorPart.X - expected.VectorPart.X)));
+                Assert.Equal(0.0, lerp.VectorPart.Y);
+                Assert.Equal(0.0, lerp.VectorPart.Z);
+            }
+
+            _output.WriteLine($"MEASURE Lerp of s (1, 0, 0, 0) to s (0, 1, 0, 0) at s = {s:E3}, worst component: {worst:E3}");
+            Assert.True(worst <= TinyLerpTolerance, $"{worst:E3}");
+        }
+
+        private const double TinyLerpTolerance = 6.7e-16;
     }
 }

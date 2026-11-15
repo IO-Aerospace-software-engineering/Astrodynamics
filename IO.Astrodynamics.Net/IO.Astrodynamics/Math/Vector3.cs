@@ -212,8 +212,15 @@ namespace IO.Astrodynamics.Math
         /// <summary>
         /// The signed angle from this vector to <paramref name="vector"/>, positive counterclockwise about
         /// <paramref name="plane"/>, the normal of the plane of the angle, of any finite non-zero length, in (−π, π]:
-        /// atan2((a × b) · n̂, a · b). A zero vector gives 0, as the unsigned <see cref="Angle(in Vector3)"/> does.
+        /// atan2((a × b) · n̂, a · b). A zero vector gives 0 and a vector with a component that is not finite NaN, as the
+        /// unsigned <see cref="Angle(in Vector3)"/> does.
         /// </summary>
+        /// <remarks>
+        /// Two finite non-zero vectors whose sums of squares are not both in [1e-300, 1e300] are first scaled by the
+        /// powers of two of their largest components, exactly, so their products neither overflow nor lose their digits
+        /// (third round of #668: from (1e200, 0, 0) to (1e200, 2e200, 0) gave π/4 instead of atan 2, most such pairs NaN,
+        /// and vectors below about 1e-154 gave 0); every other pair gives the former atan2, bit for bit.
+        /// </remarks>
         /// <exception cref="ArgumentException"><paramref name="plane"/> is the zero vector or has a component that is not
         /// finite: it orients no plane (#680's known limitation; before 11.0.0 the unsigned 0 or π was returned, its sign
         /// lost). A tiny or huge finite normal orients its plane (third round of #668: below about 1.5e-162 or above about
@@ -230,7 +237,19 @@ namespace IO.Astrodynamics.Math
                 throw new ArgumentException($"The plane normal {plane} has a magnitude of 0 and orients no plane.", nameof(plane));
             }
 
-            return double.Atan2(Cross(vector) * plane.Normalize(), this * vector);
+            var n = plane.Normalize();
+            double s1 = MagnitudeSquared();
+            double s2 = vector.MagnitudeSquared();
+            if (IsOrdinaryPair(s1, s2) || !IsFiniteNonZero(this) || !IsFiniteNonZero(vector))
+            {
+                return double.Atan2(Cross(vector) * n, this * vector);
+            }
+
+            // Vectors whose products would overflow or lose their digits: both scaled by the powers of two of their largest
+            // components (exact), which multiplies (a × b) · n̂ and a · b by the same power of two and leaves the angle
+            var a = ScaleB(this, -System.Math.ILogB(LargestComponent(this)));
+            var b = ScaleB(vector, -System.Math.ILogB(LargestComponent(vector)));
+            return double.Atan2(a.Cross(b) * n, a * b);
         }
 
         /// <summary>

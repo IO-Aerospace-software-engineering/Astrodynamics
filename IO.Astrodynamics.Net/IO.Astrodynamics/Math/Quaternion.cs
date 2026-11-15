@@ -387,9 +387,11 @@ namespace IO.Astrodynamics.Math
         /// The path is the chord from this quaternion to <paramref name="q2"/>, as given: no hemisphere is chosen, so from
         /// q to a quaternion of the other hemisphere it takes the longer rotation. A chord through zero has no rotation
         /// there (#680's known limitation; the zero quaternion was returned before 11.0.0). Every finite non-zero quaternion
-        /// is accepted: a chord that overflows (components of opposite signs near <see cref="double.MaxValue"/>) is
+        /// is accepted: a chord that overflows (components of opposite signs near <see cref="double.MaxValue"/>), or of
+        /// quaternions whose largest component is below 1e-150, whose products would round into the subnormal range, is
         /// computed on both quaternions scaled by one power of two, and the result normalized as <see cref="Normalize"/>
-        /// does (third round of #668: outside about 1e-154 to 1e154 it threw before 11.0.0).
+        /// does (third round of #668: outside about 1e-154 to 1e154 it threw before 11.0.0). Every other chord is the
+        /// unscaled one, bit for bit.
         /// </remarks>
         /// <exception cref="InvalidOperationException">This quaternion is zero or has a component that is not
         /// finite.</exception>
@@ -401,12 +403,14 @@ namespace IO.Astrodynamics.Math
             RequireUnit(this, null);
             RequireUnit(q2, nameof(q2));
 
+            double largest = System.Math.Max(LargestComponent(), q2.LargestComponent());
             var result = LerpRaw(q2, t);
-            if (!result.IsFinite())
+            if (!result.IsFinite() || largest < LerpLowest)
             {
-                // The chord of two finite quaternions overflowed (components of opposite signs near double.MaxValue): the
-                // same chord on both scaled by one power of two, which leaves the direction of the result unchanged
-                int k = -System.Math.ILogB(System.Math.Max(LargestComponent(), q2.LargestComponent()));
+                // The chord of two finite quaternions overflowed (components of opposite signs near double.MaxValue), or
+                // its products would round into the subnormal range (quaternions below about 1e-150): the same chord on both
+                // scaled by one power of two, which leaves the direction of the result unchanged
+                int k = -System.Math.ILogB(largest);
                 result = ScaleB(k).LerpRaw(q2.ScaleB(k), t);
             }
 
@@ -419,6 +423,10 @@ namespace IO.Astrodynamics.Math
 
             return result.Normalize();
         }
+
+        // The largest component below which Lerp scales its quaternions: the products t (q2 − q) of a larger one keep the
+        // digits that count (any one lost lies below 2^-1074 / 1e-150 of the largest, relative), bit for bit as before
+        private const double LerpLowest = 1e-150;
 
         // The former public Lerp, unchecked: the fallback of the unchecked SLERP, bit for bit
         private Quaternion LerpUnchecked(Quaternion q2, double t)
