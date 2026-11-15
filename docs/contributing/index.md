@@ -38,8 +38,8 @@ error a proxy drops, performance), with its P/Invoke declarations in the same pu
   `dotnet test --filter "Category!=Validation&Category!=LongValidation"`. Validations and studies of
   minutes each carry `[Trait("Category", "LongValidation")]` instead, with `[LongValidationFact]` or
   `[LongValidationTheory]`: they are skipped unless `IO_ASTRODYNAMICS_LONG_VALIDATION` is 1, so neither a plain
-  `dotnet test`, an IDE, the CI nor the CD runs them. The manual workflow `long-validation.yml` sets the variable; run it
-  before each release, and on a pull request that changes the dynamics these tests measure. A golden is recaptured only for an intended change of results, which
+  `dotnet test`, an IDE, the CI nor the CD runs them. The manual workflow `long-validation.yml` sets the variable (about
+  40 min on the runner: run 43603489238, 2026-11-14); run it before each release, and on a pull request that changes the dynamics these tests measure. A golden is recaptured only for an intended change of results, which
   the pull request states: set `IO_ASTRODYNAMICS_GOLDEN_CAPTURE` to the `Data/Golden` directory of the test project and
   run `PropagationGoldenTests`.
 - XML documentation comments on every public member, and a documentation update when the public

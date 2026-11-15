@@ -5,7 +5,8 @@ name: Long validation
 # partials, the cost of the conjunction analysis; phase 2, feature 1), excluded from the CI and the CD (decisions of
 # S. Guillet, 2026-10-06 and 2026-10-22). They are skipped unless IO_ASTRODYNAMICS_LONG_VALIDATION is 1, which this
 # workflow sets. Run by hand, on Linux, with the native library built from the sources as in the CI: before each
-# release, and on a pull request that changes the dynamics these tests measure.
+# release, and on a pull request that changes the dynamics these tests measure. About 40 min on the runner (39 min 17 s,
+# tests 37.76 min, run 43603489238, 2026-11-14, after #669 and #670).
 on:
   workflow_dispatch:
 

@@ -29,7 +29,7 @@ dotnet test --filter "Category!=LongValidation"
 # Skip the Validation category too (bit-for-bit goldens, heavy validations), which CI runs on Linux only
 dotnet test --filter "Category!=Validation&Category!=LongValidation"
 
-# Run the LongValidation category (Linux, about 1 h 15 min on the CI runner, run 43235887045)
+# Run the LongValidation category (Linux, about 40 min on the CI runner: 39 min 17 s, tests 37.76 min, run 43603489238, 2026-11-14, after #669 and #670)
 IO_ASTRODYNAMICS_LONG_VALIDATION=1 dotnet test IO.Astrodynamics.Tests/IO.Astrodynamics.Tests.csproj -c Release --filter "Category=LongValidation"
 
 # Run a single test by name
