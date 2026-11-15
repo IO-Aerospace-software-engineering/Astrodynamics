@@ -84,7 +84,11 @@ public class CdmTests
         Assert.Equal(CdmManeuverable.Yes, protectedSegment.Metadata.Maneuverable);
         Assert.Equal("EARTH", protectedSegment.Metadata.OrbitCenter);
         Assert.Equal(CdmReferenceFrame.Gcrf, protectedSegment.Metadata.ReferenceFrame);
-        Assert.True(protectedSegment.Metadata.SolarRadPressure);
+        // No OD and no propagated covariance: whether solar radiation pressure was used for the OD is not stated (CCSDS
+        // 508.0-B-1 Cor. 2, Table 3-3; YES from Cr > 0, a capability, before)
+        Assert.Null(protectedSegment.Metadata.SolarRadPressure);
+        Assert.Null(secondarySegment.Metadata!.SolarRadPressure);
+        Assert.DoesNotContain(XDocument.Parse(cdm.WriteToString()).Descendants(), e => e.Name.LocalName == "SOLAR_RAD_PRESSURE");
         // No OD and no propagated covariance: whether in-track thrust was modeled for the OD is not stated (#684; NO, from
         // the absent engines, before)
         Assert.Null(protectedSegment.Metadata.IntrackThrust);
@@ -156,6 +160,98 @@ public class CdmTests
 
         Assert.True(wrappedValidation.IsValid, FormatValidationIssues(wrappedValidation.Issues));
         Assert.True(standaloneValidation.IsValid, FormatValidationIssues(standaloneValidation.Issues));
+    }
+
+    public static TheoryData<string, string, string> CdmFormsAndMutations()
+    {
+        // The mutation and a fragment of the error that names its element. The verdicts are those of the SANA NDM/XML 4.0.0
+        // schemas (sanaregistry.org/files/ndmxml_unqualified/ for the unqualified forms, the qualified set IO embeds for the
+        // qualified ones), which reject each mutation in each form (#614)
+        var mutations = new (string Mutation, string Names)[]
+        {
+            ("COLLISION_PROBABILITY=1.5", "COLLISION_PROBABILITY"), // probabilityType: at most 1, ndmxml-4.0.0-common-4.0.xsd
+            ("remove OBJECT_NAME", "OBJECT_NAME"), // required in cdmMetadata
+            ("FOO", "FOO"), // undeclared
+            ("segment twice", "segment"), // cdmBody holds two segments
+            ("root foo", "foo") // no global declaration
+        };
+        var data = new TheoryData<string, string, string>();
+        foreach (var form in new[] { "unqualified-ndm", "unqualified-message", "qualified-ndm", "qualified-message" })
+        {
+            data.Add(form, null!, null!);
+            foreach (var (mutation, names) in mutations)
+            {
+                data.Add(form, mutation, names);
+            }
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(CdmFormsAndMutations))]
+    public void ValidateSchema_StandardForms_FollowTheSanaSchema(string form, string? mutation, string? names)
+    {
+        var cdm = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 10, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-614"
+        });
+        var xml = NdmDocuments.InForm(cdm.WriteToString(), "cdm", form);
+        if (mutation != null)
+        {
+            xml = NdmDocuments.Mutated(xml, "cdm", mutation);
+        }
+
+        var result = Cdm.ValidateSchemaFromXml(xml);
+
+        if (mutation == null)
+        {
+            // No warning: the schema ran on every element
+            Assert.True(result.IsValid, FormatValidationIssues(result.Issues));
+            Assert.Empty(result.Issues);
+        }
+        else
+        {
+            // Before: valid, with a warning per element (#614: a probability of 1.5 reported valid)
+            Assert.False(result.IsValid, $"{form}, {mutation}: reported valid");
+            Assert.Contains(result.Issues, e => e.Severity == CdmValidationSeverity.Error && e.Message.Contains(names!, StringComparison.Ordinal));
+        }
+    }
+
+    // An <ndm> that the NDM/XML 4.0.0 schema accepts but that holds no CDM: empty, or holding only an OMM (lxml 6.1.3 with
+    // SANA's unqualified set accepts both), without a namespace or in the namespace, whose root the CDM validator checks
+    // against the NDM schema. The reader finds no CDM in it, so it is not a CDM document (third round of #668: valid with
+    // no issue before)
+    [Theory]
+    [InlineData("empty")]
+    [InlineData("unqualified-ndm")]
+    [InlineData("qualified-ndm")]
+    [InlineData("namespace, empty")]
+    [InlineData("namespace, omm")]
+    public void ValidateSchema_NdmWithoutCdm_IsInvalid(string document)
+    {
+        var issOmm = File.ReadAllText(NdmDocuments.IssOmmPath);
+        var xml = document switch
+        {
+            "empty" => "<ndm/>",
+            "namespace, empty" => $"<ndm xmlns=\"{NdmDocuments.NdmNamespace}\"/>",
+            "namespace, omm" => new XElement(XName.Get("ndm", NdmDocuments.NdmNamespace),
+                XElement.Parse(NdmDocuments.QualifiedMessage(issOmm, "omm"))).ToString(),
+            _ => NdmDocuments.InForm(issOmm, "omm", document)
+        };
+        var parse = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        Assert.Equal("Could not find CDM element in document.", parse.Message);
+
+        var result = Cdm.ValidateSchemaFromXml(xml);
+
+        Assert.False(result.IsValid);
+        var error = Assert.Single(result.Issues);
+        Assert.Equal(CdmValidationSeverity.Error, error.Severity);
+        Assert.Equal("CDM001", error.Code);
+        Assert.Contains("<cdm>", error.Message);
+        NdmDocuments.WithTempFile(xml, file => Assert.Equal(error.Message, Assert.Single(Cdm.ValidateSchema(file).Issues).Message));
     }
 
     [Fact]
@@ -567,6 +663,46 @@ public class CdmTests
         var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
         Assert.Equal(value, Cdm.ReadFromString(xml).Segments[given].Metadata!.IntrackThrust);
+    }
+
+    [Theory]
+    [InlineData(1, true)]
+    [InlineData(1, false)]
+    [InlineData(1, null)]
+    [InlineData(2, true)]
+    [InlineData(2, false)]
+    [InlineData(2, null)]
+    public void ToCdm_SolarRadPressureOverride_SetsEitherValueAndNullKeepsTheDefault(int participant, bool? value)
+    {
+        // Arrange: the value of one participant given, the caller stating that of its OD; a null override keeps the default,
+        // omitted without a propagated covariance
+        var encounter = CreateManualEncounterCase();
+        var metadata = new CdmParticipantMetadata { SolarRadPressure = value };
+        var options = new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 30, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-SRP-OVERRIDE",
+            ProtectedParticipantMetadata = participant == 1 ? metadata : null,
+            SecondaryParticipantMetadata = participant == 2 ? metadata : null
+        };
+
+        // Act
+        var cdm = encounter.ToCdm(options);
+        var xml = cdm.WriteToString();
+
+        // Assert: YES or NO as given, read back; omitted for null; the other participant omitted; the CDM schema-valid (the
+        // keyword is optional, minOccurs 0 in ndmxml-4.0.0-cdm-1.0.xsd)
+        int given = participant - 1;
+        Assert.Equal(value, cdm.Segments[given].Metadata!.SolarRadPressure);
+        Assert.Null(cdm.Segments[1 - given].Metadata!.SolarRadPressure);
+        var written = XDocument.Parse(xml).Descendants().Where(e => e.Name.LocalName == "SOLAR_RAD_PRESSURE")
+            .Select(e => e.Value).ToArray();
+        Assert.Equal(value switch { true => new[] { "YES" }, false => new[] { "NO" }, _ => Array.Empty<string>() }, written);
+        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
+        Assert.True(cdm.Validate().IsValid);
+        Assert.Equal(value, Cdm.ReadFromString(xml).Segments[given].Metadata!.SolarRadPressure);
     }
 
     [Fact]

@@ -21,6 +21,20 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         [Fact]
+        public void LoadFromString_PositionInMeters_ThrowsValidationException()
+        {
+            // An OPM states its position in km (positionUnits, ndmxml-4.0.0-common-4.0.xsd): X in m is rejected by the
+            // schema under default validation (before: loaded, 6778.137 read as km)
+            var xml = NdmDocuments.Mutated(OpmReaderTests.FullOpm().ToXmlString(), "opm", "X units=m");
+
+            var ex = Assert.Throws<OpmValidationException>(() => Opm.LoadFromString(xml));
+            Assert.Contains(ex.ValidationResult.Errors, e => e.Message.Contains("units", StringComparison.Ordinal));
+            NdmDocuments.WithTempFile(xml, file => Assert.Throws<OpmValidationException>(() => Opm.LoadFromFile(file)));
+            Assert.Throws<OpmValidationException>(() => Opm.LoadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))));
+            Assert.Equal(6778.137, Opm.LoadFromString(xml, validateSchema: false).Data.StateVector.X);
+        }
+
+        [Fact]
         public void ReadFromString_ValidMinimalOpm_ReturnsOpm()
         {
             // Arrange
@@ -415,7 +429,7 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         private static Opm MinimalOpm() =>
             Opm.CreateMinimal("OPM SAT", "2024-001A", "EARTH", "ICRF", "UTC", new OpmStateVector(OpmEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0));
 
-        private static Opm FullOpm()
+        internal static Opm FullOpm()
         {
             var stateVector = new OpmStateVector(OpmEpoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0);
             var keplerian = OpmKeplerianElements.CreateWithTrueAnomaly(6778.137, 0.001, 51.6, 120.0, 90.0, 45.0, 398600.4418);
@@ -448,8 +462,11 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             Assert.False(qualified.IsValid);
             Assert.Contains(qualified.Errors, e => e.Message.Contains("segment"));
 
-            // The unqualified document, the writer's form, passes schema validation: the reader is the one that rejects it
-            Assert.True(validator.ValidateSchemaFromXml(NdmDocuments.TwoSegmentOpm(MinimalOpm())).IsValid);
+            // The unqualified document, the writer's form, is rejected by SANA's unqualified set too (third round of #668;
+            // before, it matched no declaration and passed with warnings, the reader rejecting it)
+            var unqualified = validator.ValidateSchemaFromXml(NdmDocuments.TwoSegmentOpm(MinimalOpm()));
+            Assert.False(unqualified.IsValid);
+            Assert.Contains(unqualified.Errors, e => e.Message.Contains("segment"));
         }
 
         [Theory]
@@ -475,7 +492,15 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
                 _ => () => Opm.LoadFromString(xml, validateSchema: false)
             };
 
-            // Before: the first segment, OPM SAT, the second dropped
+            // Before: the first segment, OPM SAT, the second dropped. Under default validation the schema rejects it first
+            // (third round of #668); without it, and through the reader, the reader does
+            if (path is "Opm.LoadFromString" or "Opm.LoadFromFile" or "Opm.LoadFromStream")
+            {
+                var validation = Assert.Throws<OpmValidationException>(read);
+                Assert.Contains(validation.ValidationResult.Errors, e => e.Message.Contains("segment"));
+                return;
+            }
+
             var ex = Assert.Throws<OpmParseException>(read);
             Assert.Contains("2 segment elements", ex.Message);
         }
@@ -503,11 +528,19 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         [Fact]
-        public void TryLoadFromFile_OpmWithTwoSegments_ReturnsFalseWithParseError()
+        public void TryLoadFromFile_OpmWithTwoSegments_ReturnsFalseWithSchemaOrParseError()
         {
             NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOpm(MinimalOpm()), file =>
             {
+                // The schema rejects the second segment (third round of #668: a PARSE_ERROR of the reader before)
                 var loaded = Opm.TryLoadFromFile(file, out var opm, out var result);
+
+                Assert.False(loaded);
+                Assert.Null(opm);
+                Assert.Contains(result.Errors, e => e.Code == "OPM006" && e.Message.Contains("segment"));
+
+                // Without schema validation, the reader rejects it
+                loaded = Opm.TryLoadFromFile(file, out opm, out result, validateSchema: false);
 
                 Assert.False(loaded);
                 Assert.Null(opm);
@@ -524,9 +557,14 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             {
                 var result = new OpmValidator().ValidateFile(file);
 
+                // The schema rejects the second segment (third round of #668: the reader's "2 segment elements" before,
+                // reported under the path "Parser" as "Failed to parse OPM: ...", the schema then checking no unqualified file)
                 Assert.False(result.IsValid);
                 var error = Assert.Single(result.Errors);
-                Assert.Contains("2 segment elements", error.Message);
+                Assert.Equal("OPM006", error.Code);
+                Assert.Contains("'segment'", error.Message);
+                Assert.DoesNotContain("Failed to parse", error.Message);
+                Assert.StartsWith("Line ", error.Path);
             });
         }
 

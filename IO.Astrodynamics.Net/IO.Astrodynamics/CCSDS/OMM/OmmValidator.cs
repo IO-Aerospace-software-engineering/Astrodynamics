@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.Common.Enums;
@@ -87,6 +88,17 @@ public class OmmValidator
     /// <summary>
     /// Validates OMM XML content from a stream against the CCSDS XSD schema.
     /// </summary>
+    /// <remarks>
+    /// A root without a namespace, <c>ndm</c> or <c>omm</c>, is validated against the NDM/XML 4.0.0 schemas of its form
+    /// (CCSDS 505.0-B-3), as SANA publishes them: the unqualified set when no element is in the NDM/XML namespace (the form
+    /// of Space-Track and of the writer), the qualified set otherwise (the elements below the root in the namespace); any
+    /// other root without a namespace, or in another namespace, is a OMM007 error, and so is an <c>ndm</c> that holds no
+    /// <c>omm</c> child (empty, or of other messages only), which the NDM master accepts but in which the reader finds no
+    /// OMM (valid before the fix of the third round of #668, the reader then throwing its parse exception). A root in the NDM/XML namespace is
+    /// validated as before, against the OMM schema with that root declared in the namespace. Before the third round of
+    /// #668 an unqualified document matched no declaration and was reported valid, with a warning per element and nothing
+    /// below its root checked.
+    /// </remarks>
     /// <param name="xmlStream">Stream containing the OMM XML content.</param>
     /// <returns>Validation result containing any schema errors.</returns>
     public OmmValidationResult ValidateSchema(Stream xmlStream)
@@ -98,7 +110,40 @@ public class OmmValidator
 
         try
         {
-            var schemaSet = GetSchemaSet();
+            // Buffered, to read the root before the validation (#668, third round)
+            using var buffer = new MemoryStream();
+            xmlStream.CopyTo(buffer);
+            buffer.Position = 0;
+            var document = XDocument.Load(buffer, LoadOptions.SetLineInfo);
+            buffer.Position = 0;
+
+            XmlSchemaSet schemaSet;
+            var root = document.Root!;
+            if (root.Name.NamespaceName == CcsdsNamespace)
+            {
+                // A root in the namespace, IO's former form of a bare message: the synthetic root, as before
+                schemaSet = GetSchemaSet();
+            }
+            else
+            {
+                // A standard form, root without a namespace: the SANA schemas of NDM/XML 4.0.0, qualified or unqualified
+                var rootError = NdmXmlStandardForms.RootError(root, "OMM", "omm", "ndm");
+                if (rootError != null)
+                {
+                    result.AddError(SchemaValidation, rootError, $"Line {((IXmlLineInfo)root).LineNumber}");
+                    return result;
+                }
+
+                // An <ndm> that holds no OMM: a valid NDM, not an OMM document (third round of #668)
+                var messageError = NdmXmlStandardForms.MessageError(root, "omm");
+                if (messageError != null)
+                {
+                    result.AddError(SchemaValidation, messageError, $"Line {((IXmlLineInfo)root).LineNumber}");
+                }
+
+                schemaSet = NdmXmlStandardForms.For(document);
+            }
+
             var settings = new XmlReaderSettings
             {
                 ValidationType = ValidationType.Schema,
@@ -122,7 +167,7 @@ public class OmmValidator
                 result.AddIssue(new OmmValidationError(severity, SchemaValidation, e.Message, path));
             };
 
-            using var reader = XmlReader.Create(xmlStream, settings);
+            using var reader = XmlReader.Create(buffer, settings);
             while (reader.Read()) { }
         }
         catch (XmlSchemaException ex)
@@ -146,9 +191,9 @@ public class OmmValidator
     /// </summary>
     /// <remarks>
     /// The content is that of the one OMM message of the file, read by the reader: a file that holds several OMM messages
-    /// is invalid, with a "Failed to parse OMM" error naming their number (#679), and so is one whose OMM holds several
-    /// segments, headers, bodies, metadata or data sections, or blocks of a data section, which the schema validation of an
-    /// unqualified file does not see.
+    /// is invalid, with a "Failed to parse OMM" error naming their number (#679). One whose OMM holds several segments,
+    /// headers, bodies, metadata or data sections, or blocks of a data section is invalid too, its schema validation
+    /// rejecting it (third round of #668: the reader's error before, the schema then checking no unqualified file).
     /// </remarks>
     /// <param name="filePath">Path to the OMM XML file.</param>
     /// <returns>Validation result containing all errors and warnings.</returns>

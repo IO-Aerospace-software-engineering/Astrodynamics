@@ -374,15 +374,20 @@ public class Opm
     /// Loads an OPM from a file with optional validation.
     /// </summary>
     /// <param name="filePath">The path to the OPM XML file.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS OPM schema.</param>
+    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
+    /// form of the document, whose root is an <c>ndm</c> or <c>opm</c> without a namespace: every element unqualified (the
+    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
+    /// them; a root in the namespace against the OPM schema with that root, as before. Before the third round of #668 an
+    /// unqualified document was not checked.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>The loaded and validated OPM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when filePath is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
     /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
     /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
-    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
+    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
+    /// (third round of #668), but not a second OPM of an NDM, which the schema allows.</exception>
     public static Opm LoadFromFile(string filePath, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -421,14 +426,19 @@ public class Opm
     /// Loads an OPM from an XML string with optional validation.
     /// </summary>
     /// <param name="xml">The OPM XML content.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS OPM schema.</param>
+    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
+    /// form of the document, whose root is an <c>ndm</c> or <c>opm</c> without a namespace: every element unqualified (the
+    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
+    /// them; a root in the namespace against the OPM schema with that root, as before. Before the third round of #668 an
+    /// unqualified document was not checked.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>The loaded and validated OPM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when xml is null or empty.</exception>
     /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
     /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
-    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
+    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
+    /// (third round of #668), but not a second OPM of an NDM, which the schema allows.</exception>
     public static Opm LoadFromString(string xml, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -464,14 +474,19 @@ public class Opm
     /// Loads an OPM from a stream with optional validation.
     /// </summary>
     /// <param name="stream">The stream containing OPM XML content.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS OPM schema.</param>
+    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
+    /// form of the document, whose root is an <c>ndm</c> or <c>opm</c> without a namespace: every element unqualified (the
+    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
+    /// them; a root in the namespace against the OPM schema with that root, as before. Before the third round of #668 an
+    /// unqualified document was not checked.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>The loaded and validated OPM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
     /// <exception cref="OpmValidationException">Thrown when validation fails with errors.</exception>
     /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
-    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
-    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
+    /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
+    /// (third round of #668), but not a second OPM of an NDM, which the schema allows.</exception>
     public static Opm LoadFromStream(Stream stream, bool validateSchema = true, bool validateContent = true)
     {
         if (stream == null)
@@ -489,7 +504,11 @@ public class Opm
     /// <param name="filePath">The path to the OPM XML file.</param>
     /// <param name="opm">The loaded OPM instance if successful, or null if validation failed.</param>
     /// <param name="validationResult">The validation result containing any errors or warnings.</param>
-    /// <param name="validateSchema">If true, validates the XML against the CCSDS OPM schema.</param>
+    /// <param name="validateSchema">If true, validates the XML against the CCSDS NDM/XML 4.0.0 schema (CCSDS 505.0-B-3) in the
+    /// form of the document, whose root is an <c>ndm</c> or <c>opm</c> without a namespace: every element unqualified (the
+    /// form of Space-Track and of the writer) or every element below the root in the NDM/XML namespace, as SANA publishes
+    /// them; a root in the namespace against the OPM schema with that root, as before. Before the third round of #668 an
+    /// unqualified document was not checked.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>True if the OPM was loaded successfully with no errors, false otherwise.</returns>
     /// <remarks>A document that holds several OPM messages (#679), or an OPM with several segments, headers, bodies,

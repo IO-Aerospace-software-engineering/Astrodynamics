@@ -20,8 +20,9 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored. The message holds one header and one
 /// body, the body one segment, the segment one metadata and one data section, and the data at most one of each block
 /// (NDM/XML 4.0.0; CCSDS 502.0-B-3), the maneuvers excepted: a second one throws <see cref="OpmParseException"/>, where before 11.0.0 the
-/// first was read and the others dropped, a whole second segment included. The schema validation of an unqualified
-/// document, the writer's and Space-Track's form, checks none of this, so the reader is the guard.
+/// first was read and the others dropped, a whole second segment included. The reader is the guard without schema
+/// validation; the schema of NDM/XML 4.0.0, which the validator checks in the document's form (third round of #668),
+/// rejects these elements too, but not several messages of an NDM.
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OpmReader
