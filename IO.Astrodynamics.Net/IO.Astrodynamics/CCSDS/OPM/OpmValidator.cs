@@ -133,6 +133,10 @@ public class OpmValidator
     /// <summary>
     /// Validates an OPM file completely: first against XSD schema, then against physical constraints.
     /// </summary>
+    /// <remarks>
+    /// The content is that of the one OPM message of the file, read by the reader: a file that holds several OPM messages
+    /// is invalid, with a "Failed to parse OPM" error naming their number (#679).
+    /// </remarks>
     /// <param name="filePath">Path to the OPM XML file.</param>
     /// <returns>Validation result containing all errors and warnings.</returns>
     public OpmValidationResult ValidateFile(string filePath)
