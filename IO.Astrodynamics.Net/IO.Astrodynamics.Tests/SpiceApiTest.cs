@@ -445,6 +445,57 @@ public class SpiceApiTest
         Assert.Equal("naifId", e.ParamName);
     }
 
+    /// <summary>
+    /// The documented limitation of a site observer read by identifiers (#672, documented in the fourth round of #668): the
+    /// observer is a <see cref="Site"/>, which needs a SPICE name and a state at J2000 TDB. A site from coordinates whose SPK
+    /// the library wrote (no naming kernel loaded) throws <see cref="ArgumentException"/> naming <c>naifId</c> as observer,
+    /// while the read with the site as target, <c>spkezr_c</c> by number, works: it is the site's own position from the
+    /// Earth, the workaround the documentation gives. With the naming frame kernel loaded and an SPK that does not cover
+    /// J2000 TDB, the site's constructor reads past it: SPICE's error at 2000 JAN 01 12:00:00.
+    /// </summary>
+    [Fact]
+    public async Task ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks()
+    {
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var site = new Site(786, "RE786", PlanetsAndMoons.EARTH_BODY, new Planetodetic(0.5, 0.2, 1000.0));
+        var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786", ".bsp");
+        var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786_names");
+        site.WriteEphemeris(new Window(epoch.AddDays(-1.0), epoch.AddDays(1.0)), spk);
+        await site.WriteFrameAsync(fk);
+        Assert.Empty(KernelShadowing.Find([spk, fk], KernelShadowing.SolarSystem));
+        SpiceAPI.Instance.LoadKernels(spk);
+        try
+        {
+            var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
+            Assert.Equal("naifId", e.ParamName);
+            Assert.Contains("has no name in SPICE", e.Message);
+            e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddHours(2.0)), site.NaifId, 301,
+                Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1.0)));
+            Assert.Equal("naifId", e.ParamName);
+
+            var asTarget = SpiceAPI.Instance.ReadEphemeris(epoch, 399, site.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var managed = site.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            Assert.Equal(managed.Position, asTarget.Position, TestHelpers.VectorComparer);
+
+            SpiceAPI.Instance.LoadKernels(fk);
+            try
+            {
+                var past = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
+                Assert.Contains("2000 JAN 01 12:00:00", past.Message);
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(fk);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spk);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spk);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(fk);
+        }
+    }
+
     [Fact]
     public void ReadEphemeris_FromASite_ObserverMatchesTheSiteObject()
     {

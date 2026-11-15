@@ -43,7 +43,14 @@ site observer was built as a celestial body, which threw or was built from undef
 `spkezr_c`'s, which needs only the identifier. The commands of the CLI build their objects by identifier with the same
 rule and the same site (since 11.0.0; before, any identifier from 100001 to 999998 was a site named `site<id>`), so a
 site the loaded kernels do not name fails in both with "has no name in SPICE": load a kernel that names it, as the frame
-kernel of `Site.WriteFrameAsync` does, with its SPK.
+kernel of `Site.WriteFrameAsync` does, with its SPK. The two conditions, measured on a site from coordinates whose SPK
+`Site.WriteEphemeris` wrote over two days of 2024 (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): loaded alone, a read from the
+site throws `ArgumentException` (`naifId`, "The NAIF identifier 399786 has no name in SPICE"); with the naming frame
+kernel loaded too, `InvalidOperationException` with SPICE's message ("Insufficient ephemeris data ... at the ephemeris
+epoch 2000 JAN 01 12:00:00.000"), the `Site` constructor reading the site at J2000 TDB. The read with the site as target
+(`ReadEphemeris(epoch, 399, 399786, ...)`) needs neither: with `Aberration.None`, read the site as target from the
+observer and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives).
 
 SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
 File Naming"). `LoadKernels` hands it the full path, so a longer one fails with `SPICE(FILENAMETOOLONG)`; the native

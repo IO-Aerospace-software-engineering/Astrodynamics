@@ -2610,6 +2610,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `sxform_c` in the frame kernel `WriteFrameAsync` writes for the site, to and from ICRF and ITRF93 (measured on Linux
   x64). The frame of a site whose frame the kernels define, the frames of spacecraft (SPICE's by name, which reads the
   frame kernel and the CK written for them) and CIRS and TIRS ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)) keep their path; TEME's composition is the same code, bit for bit.
+- **The documentation of a site observer of `SpiceAPI.ReadEphemeris` by identifiers stated no condition** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth
+  round). The observer of a site identifier is a `Site` built from its SPICE name and read at J2000 TDB (#672), so a
+  site no loaded kernel names throws `ArgumentException` (`naifId`, "has no name in SPICE") and one whose SPK does not
+  cover J2000 TDB `InvalidOperationException` (SPICE's message at 2000 JAN 01 12:00:00), which the XML documentation of
+  both overloads and the root `CLAUDE.md` did not say. They now do, with the workaround for `Aberration.None`: read with
+  the site as target and negate the state. Documentation only: no behaviour changes
+  (`SpiceApiTest.ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks` pins it).
+
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
@@ -3633,7 +3641,9 @@ not listed.
   ([#650](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/650),
   [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)). `SpiceAPI.ReadEphemeris` by
   identifiers throws `ArgumentException` for a spacecraft observer: with `Aberration.None`, read with the spacecraft as
-  target and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives). `SpiceAPI.GetCelestialBodyInfo` of a site identifier (DSS-13, 399013) gives the Sun as centre and the
+  target and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives); so does a site observer
+  that no loaded kernel names, and one whose SPK does not cover J2000 TDB, which its `Site` constructor reads, throws
+  `InvalidOperationException`, with the same workaround (documented in the fourth round of #668). `SpiceAPI.GetCelestialBodyInfo` of a site identifier (DSS-13, 399013) gives the Sun as centre and the
   barycentre 0, every identifier above 1000 being classed as an asteroid, so `new CelestialBody(399013)` and
   `CelestialItem.Create(399013)` build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Sun (they threw or were
   built with a garbage frame name before

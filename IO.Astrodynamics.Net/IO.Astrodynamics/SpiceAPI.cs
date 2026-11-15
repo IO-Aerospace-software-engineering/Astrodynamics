@@ -1341,7 +1341,18 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454).</exception>
+    /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454), or the observer is a
+    /// site whose SPK does not cover J2000 TDB (see the remarks).</exception>
+    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
+    /// that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a <see cref="Surface.Site"/>
+    /// built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE, as the frame kernel
+    /// of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is another identifier that is not a
+    /// celestial body, or that SPICE does not name (#672).</exception>
+    /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
+    /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
+    /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
+    /// <see cref="Aberration.None"/>, read the site as target from the observer and negate the state (documented in the
+    /// fourth round of #668).</remarks>
     public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
         int observerId, int targetId, Frame frame,
         Aberration aberration, TimeSpan stepSize)
@@ -1391,7 +1402,18 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">SPICE gives no state (#454): the kernels do not cover the epoch or do
-    /// not chain the target to the observer; the message is SPICE's. Before 11.0.0 the state was undefined.</exception>
+    /// not chain the target to the observer; the message is SPICE's. Before 11.0.0 the state was undefined. Or the observer
+    /// is a site whose SPK does not cover J2000 TDB (see the remarks).</exception>
+    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
+    /// that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a <see cref="Surface.Site"/>
+    /// built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE, as the frame kernel
+    /// of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is another identifier that is not a
+    /// celestial body, or that SPICE does not name (#672).</exception>
+    /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
+    /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
+    /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
+    /// <see cref="Aberration.None"/>, read the site as target from the observer and negate the state (documented in the
+    /// fourth round of #668).</remarks>
     public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, int observerId,
         int targetId, Frame frame, Aberration aberration)
     {
