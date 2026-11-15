@@ -144,8 +144,8 @@ public class Star : CelestialBody
     /// </summary>
     /// <remarks>
     /// Before 11.0.0 it was the difference of the two Julian dates, each rounded to a double near 2.45e6 (4.66e-10 day,
-    /// about 40 µs) before the subtraction: off whole and half days from J2000 the star was that of an epoch up to 2 µs
-    /// away.
+    /// about 40 µs) before the subtraction: off whole and half days from J2000 the star was that of an epoch up to about
+    /// 20 µs away, half that resolution.
     /// </remarks>
     private double JulianYearsFromCatalogEpoch(Time epoch)
     {

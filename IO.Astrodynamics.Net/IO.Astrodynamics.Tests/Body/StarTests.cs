@@ -381,7 +381,7 @@ public class StarTests
     // alone (no sine nor cosine), so the same on every platform: twice the worst (4.441e-16 rad, 2 ulp of a + μ dt near
     // 1.4 rad, the slow star 40 years after its epoch; 2.220e-16 for the fast star; Linux, 2026-11-15), provisional.
     // Before the fix, the Julian dates rounded before their difference put the fast star 6.328e-14 rad away, the position
-    // of an epoch up to 2 µs away
+    // of an epoch up to about 20 µs away (half the 2^-31 day, 40.2 µs, a Julian date near 2.45e6 resolves)
     internal const double ClosedFormAngleTolerance = 8.9e-16;
 
     [Fact]
@@ -429,9 +429,11 @@ public class StarTests
         Assert.True(worstPosition <= bound, $"{worstPosition:E3} > {bound:E3}");
     }
 
-    // The record of the right ascension and declination sigmas off half days against their closed form, IEEE 754
-    // arithmetic alone, so the same on every platform: twice the worst relative difference (3.469e-16, Linux, 2026-11-15),
-    // provisional. Before the fix, the rounded Julian dates moved them by 3.930e-12 relative
+    // The record of the right ascension and declination sigmas off half days against their closed form: twice the worst
+    // relative difference (3.469e-16, Linux, 2026-11-15), provisional until the Windows and macOS arm64 CI logs give their
+    // worst. The sigmas square through System.Math.Pow, the platform's libm, which IEEE 754 does not require to round
+    // correctly, so the figure may differ between platforms. Before the fix, the rounded Julian dates moved them by
+    // 3.930e-12 relative
     internal const double ClosedFormSigmaTolerance = 7.0e-16;
 
     [Fact]
