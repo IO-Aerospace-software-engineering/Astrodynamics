@@ -355,6 +355,10 @@ public class SpiceAPI
     /// entry; a directory first unloads the entries inside it; a sibling whose name extends a loaded one is another path.
     /// SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
     /// </para>
+    /// <para>
+    /// Each native load first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted since its load, as
+    /// <see cref="UnloadKernels"/> does (#668, second round).
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
     /// <exception cref="ArgumentException">The path is neither a file nor a directory on disk: nothing is loaded, unloaded
@@ -681,17 +685,26 @@ public class SpiceAPI
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
     /// <remarks>
+    /// <para>
     /// The files a load handed SPICE are unloaded by their names, whether the path still exists or not (#673): every loaded
     /// entry that is the path or inside it is unloaded and removed; an entry that holds the path (a file or a subdirectory
     /// of a loaded directory) unloads the files it recorded there and is replaced, at its place, by its remaining files. A
     /// path that matches no entry is handed to SPICE as it is (the files of a directory as it is now), which does nothing
     /// for a name SPICE does not hold.
+    /// </para>
+    /// <para>
+    /// Each native load and unload first closes, by the handle SPICE holds, and unloads every SPK, CK, binary PCK and EK whose
+    /// file was deleted since its load (#668, second round): SPICE would otherwise fail to open it again after the unload of
+    /// another kernel of its kind and keep it open for the life of the process. Its data are no longer readable from then on;
+    /// <see cref="GetLoadedKernels"/> lists its path until it is unloaded, which then does nothing.
+    /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call, of the same
     /// entry or of another one, repaired it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded
-    /// again, and that of an SPK, a CK, a binary PCK, a DSK or an EK opens the other loaded kernels of its kind again; each
-    /// fails on a kernel deleted since its load, until a later unload that reads the same kernels again succeeds (#673).
-    /// Every matched entry is unloaded and removed before the exception.</exception>
+    /// again, and that of a DSK opens the other loaded DSKs again; each fails on a kernel of those kinds deleted since its
+    /// load, until a later unload that reads the same kernels again succeeds (#673). A deleted SPK, CK, binary PCK or EK no
+    /// longer makes an unload fail (#668, second round). Every matched entry is unloaded and removed before the
+    /// exception.</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
         if (path == null) return;
@@ -751,7 +764,8 @@ public class SpiceAPI
     /// at the highest priority, and the files after the deleted one are not loaded again).
     /// A later unload that succeeds has read again every kernel of its kinds, which repairs the failures that came from
     /// those kinds only (#673). The failures no later unload of the call repaired are left in <paramref name="unrepaired"/>,
-    /// in their order.
+    /// in their order. Since the second round of #668 the native unload first closes and unloads the deleted SPKs, CKs,
+    /// binary PCKs and EKs, so only text kernels, meta-kernels and DSKs still fail this way.
     /// </summary>
     private static void UnloadFiles(KernelFile[] files, List<KernelFile> unrepaired)
     {

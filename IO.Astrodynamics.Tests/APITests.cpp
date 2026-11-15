@@ -839,3 +839,116 @@ TEST(API, UnloadKernelsProxyOfANameNotLoaded)
     ASSERT_TRUE(UnloadKernelsProxy(file.string().c_str()));
     std::filesystem::remove(file);
 }
+
+namespace
+{
+    // A folder of its own under the temporary directory, emptied
+    std::filesystem::path FreshFolder(const std::string &name)
+    {
+        auto folder = std::filesystem::temp_directory_path() / name;
+        std::filesystem::remove_all(folder);
+        std::filesystem::create_directories(folder);
+        return folder;
+    }
+
+    // Copies of the L1 SPK of Data/SolarSystem, loaded: more DAFs in use than the 23 logical units of CSPICE's handle
+    // manager, so that a later search reconnects the units it released (ZZDDHHLU)
+    std::vector<std::filesystem::path> LoadSpkCopies(const std::filesystem::path &folder, int count)
+    {
+        std::vector<std::filesystem::path> files;
+        for (int i = 0; i < count; ++i)
+        {
+            auto file = folder / ("x" + std::to_string(i) + ".bsp");
+            std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L1_de431.bsp", file);
+            EXPECT_TRUE(LoadKernelsProxy(file.string().c_str()));
+            files.push_back(file);
+        }
+        return files;
+    }
+
+    void UnloadAll(const std::vector<std::filesystem::path> &files)
+    {
+        for (const auto &file: files)
+        {
+            UnloadKernelsProxy(file.string().c_str());
+        }
+    }
+
+    void ExpectSameRotation(const IO::Astrodynamics::API::DTO::FrameTransformationDTO &expected,
+                            const IO::Astrodynamics::API::DTO::FrameTransformationDTO &actual)
+    {
+        EXPECT_EQ(expected.Rotation.w, actual.Rotation.w);
+        EXPECT_EQ(expected.Rotation.x, actual.Rotation.x);
+        EXPECT_EQ(expected.Rotation.y, actual.Rotation.y);
+        EXPECT_EQ(expected.Rotation.z, actual.Rotation.z);
+    }
+}
+
+// KEEPER's UNLOAD opens again the other loaded kernels of the kind it unloads (unload_c -> UNLOAD -> PCKLOF). Before the
+// second round of #668, a PCK deleted since its load failed that reopening (SPICE(FILENOTFOUND)) and stayed open in the DAF
+// and PCK tables while KEEPER stored the handle 0 for it: no later unload or kclear_c closed it, and once its logical unit was
+// released, every IAU frame failed to reconnect it (SPICE(FILEOPENFAIL), measured with CSPICE N0067). The reference is the
+// IAU_EARTH rotation SPICE gives before the scenario, bit for bit
+TEST(API, UnloadKernelsProxyWhenAnotherPckIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto before = TransformFrameProxy("J2000", "IAU_EARTH", 0.0);
+    ASSERT_NE(0.0, before.Rotation.w);
+    auto folder = FreshFolder("ioa_g4_cpp_pck");
+    auto a = folder / "a.bpc";
+    auto b = folder / "b.bpc";
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/moon_pa_de421_1900-2050.bpc", a);
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/moon_pa_de421_1900-2050.bpc", b);
+    ASSERT_TRUE(LoadKernelsProxy(a.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(b.string().c_str()));
+    std::filesystem::remove(b);
+
+    EXPECT_TRUE(UnloadKernelsProxy(a.string().c_str()));
+    auto copies = LoadSpkCopies(folder, 25);
+    ExpectSameRotation(before, TransformFrameProxy("J2000", "IAU_EARTH", 0.0));
+    EXPECT_TRUE(UnloadKernelsProxy(b.string().c_str()));
+
+    UnloadAll(copies);
+    std::filesystem::remove_all(folder);
+    ExpectSameRotation(before, TransformFrameProxy("J2000", "IAU_EARTH", 0.0));
+#endif
+}
+
+// The SPK analog, two deleted SPKs among four: whichever is unloaded first, KEEPER reopens the other one. The reference is
+// the state of the Moon from the Earth SPICE gives before the scenario, bit for bit: its segments are in de440s.bsp, loaded
+// before the copies, so its search passes every SPK loaded after it (SPKSFS searches the files from the last loaded)
+TEST(API, UnloadKernelsProxyOfTwoDeletedSpks)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto before = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    ASSERT_FALSE(std::isnan(before.position.x));
+    auto folder = FreshFolder("ioa_g4_cpp_spk");
+    std::vector<std::filesystem::path> files;
+    for (const char *name: {"a.bsp", "b.bsp", "c.bsp", "d.bsp"})
+    {
+        files.push_back(folder / name);
+        std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", files.back());
+        ASSERT_TRUE(LoadKernelsProxy(files.back().string().c_str()));
+    }
+    std::filesystem::remove(files[1]);
+    std::filesystem::remove(files[2]);
+
+    EXPECT_TRUE(UnloadKernelsProxy(files[0].string().c_str()));
+    auto copies = LoadSpkCopies(folder, 25);
+    const auto after = ReadEphemerisAtGivenEpochProxy(0.0, 399, 301, "J2000", "NONE");
+    EXPECT_EQ(before.position.x, after.position.x);
+    EXPECT_EQ(before.position.y, after.position.y);
+    EXPECT_EQ(before.position.z, after.position.z);
+    EXPECT_EQ(before.velocity.x, after.velocity.x);
+    EXPECT_EQ(before.velocity.y, after.velocity.y);
+    EXPECT_EQ(before.velocity.z, after.velocity.z);
+
+    UnloadAll(copies);
+    UnloadAll(files);
+    std::filesystem::remove_all(folder);
+#endif
+}

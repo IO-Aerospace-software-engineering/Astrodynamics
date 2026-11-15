@@ -1503,7 +1503,8 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   not tell (internal `SpiceAPI.UnloadRereads`, from the ID word of the file and, for a text kernel, the variables its
   data assigns, outside its comments and quoted strings, read at its load; the type KEEPER gives each text kernel of the
   tests is checked by `KernelRegistryTests` through `kdata`). Every entry the call matched is unloaded and removed
-  before it throws. A binary kernel SPICE failed to open again stays open in SPICE for the life of the process: KEEPER
+  before it throws. A binary kernel SPICE failed to open again stayed open in SPICE for the life of the process (fixed by
+  the second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), below): KEEPER
   records the handle 0 for it, its unload and `kclear_c` close nothing, and once its logical unit is released (more than
   the 23 units of CSPICE's handle manager in use) every later search of its kind fails to reconnect it, for a PCK every
   IAU frame (measured with CSPICE N0067; the CI of the first version of the PCK tests, run in the test process, failed
@@ -1515,9 +1516,9 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   the deleted one is unloaded; a meta-kernel of one SPK, whose unload SPICE fails the same way; a folder of two binary
   PCKs whose second is deleted (in the child process), between a PCK loaded before it and one loaded after it of the same frame class, whose
   unload no longer throws and leaves the later PCK in precedence; the unload of the first of those two PCKs alone, which
-  throws and leaves the earlier PCK in precedence until the deleted one is unloaded; a folder of a meta-kernel of a PCK
-  listed before a text kernel while a deleted PCK is loaded (in the child process), which throws, the text kernel's
-  unload not taken for a repair; a folder of two loaded folders whose second's kernel is deleted, whose unload no longer
+  threw and left the earlier PCK in precedence until the deleted one was unloaded; a folder of a meta-kernel of a PCK
+  listed before a text kernel while a deleted PCK is loaded (in the child process), which threw, the text kernel's
+  unload not taken for a repair (neither throws since the second round of #668, below); a folder of two loaded folders whose second's kernel is deleted, whose unload no longer
   stops at the first folder's failure; and a folder of a text kernel whose comment names `KERNELS_TO_LOAD`, listed
   before a deleted one, whose unload no longer throws. A folder is loaded in the order of its listing, alphabetical on
   NTFS: the tests name the file to list first from a to z in turn and check the order through `SpiceAPI.KernelFiles`.
@@ -1583,6 +1584,30 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
     Earth, the names of `bodc2n_c`, no frame, the GM of the kernel text) and `Occultation_UnnamedEllipsoid_Throws`; CLI
     `BodyInformationsTests.UnnamedIdentifier_IsAnArgumentError` (398 and 12345678 after the Earth). On `main` 2893404
     the record is returned, the barycentres read `ITRF93` from the previous call, the occultation returns no window.
+- **A deleted binary kernel stayed open in SPICE for the life of the process** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), second round). KEEPER's
+  `UNLOAD` opens again the other loaded kernels of the kind it unloads (`unload_c` → `UNLOAD` → `SPKLEF`, `CKLPF`,
+  `PCKLOF`, `EKLEF`); for a file deleted since its load `DAFOPR` fails before the subsystem touches its table, so the
+  file stayed open in the DAF and subsystem tables while KEEPER stored the handle 0 for it: neither its unload nor
+  `kclear_c` closed it, and once CSPICE's handle manager released its logical unit (more than 23 in use) every later
+  search of its kind failed to reconnect it (`SPICE(FILEOPENFAIL)`), for a PCK every IAU frame; a deleted PCK never
+  unloaded did the same. With two deleted kernels of a kind no order of unloads avoided it, and no proxy gave the .NET
+  layer the handle, so the fix is native (a technical reason, CLAUDE.md): `KernelsLoader::Load` and `Unload` first close
+  every SPK, CK, binary PCK and EK whose file no longer exists by the handle KEEPER still holds (`spkuef_c`, `ckupf_c`,
+  `pckuof_c`, `ekuef_c`), then unload it, the expected `SPICE(FILENOTFOUND)` of an intermediate reopening reset, the last
+  unload reopening the remaining kernels of each kind in their load order; the P/Invoke declarations are unchanged. A DSK
+  is left to SPICE: its subsystem has no public routine that closes it by handle. Measured with CSPICE N0067 and checked
+  bit for bit against SPICE itself: the IAU_EARTH rotation and the Moon's state read before the deletion, read again once
+  25 more DAFs are loaded.
+  - **Test:** C++ `API.UnloadKernelsProxyWhenAnotherPckIsDeleted` (two copies of the moon PCK, the second deleted: the
+    unload of the first returned false on `main` 9015ea2 and IAU_EARTH was the zero quaternion after 25 SPKs) and
+    `API.UnloadKernelsProxyOfTwoDeletedSpks` (two deleted SPKs among four: the unload of the first returned false);
+    `KernelRegistryTests.DeletedBinaryKernel_InAChildProcess`, in the child process `IO.Astrodynamics.Tests.KernelUnload`
+    (not on Windows): a deleted PCK and the unload of another PCK, a folder of two PCKs both deleted, a deleted SPK and the
+    unload of another SPK, a deleted PCK never unloaded and the load of a text kernel, a deleted CK and the unload of another
+    copy of `Data/CLPS`'s CK; each checks that KEEPER no longer holds the deleted file and that its DAF handle is closed
+    (`kdata_`, `dafhfn_` through `CspiceDirect`, Linux), then the IAU_EARTH rotation and the Moon's state after 25 more
+    DAFs, bit for bit those read before the scenario. Six of them fail on `main` 9015ea2 (the unload throws, or the deleted
+    file is still held).
 - **The C++ tests linked a second CSPICE** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), second round). The native library linked CSPICE and SOFA
   without a keyword, which put the static archives in its link interface: the C++ test executable linked them again, so
   on Windows, where the DLL exports none of `cspice.lib`, a direct CSPICE call of a test bound to the executable's own
@@ -2044,6 +2069,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   command given a kernels path that does not exist fails with that `ArgumentException` (`KernelsPathTests`), where it
   failed later on a frame or a body. `UnloadKernels` of a missing path is unchanged. No numerical result moves.
   Migration: give an existing path, or test `File.Exists`/`Directory.Exists` first and catch `ArgumentException`.
+- **Breaking: each native load and unload first unloads the SPKs, CKs, binary PCKs and EKs whose file was deleted** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  second round, Fixed above). `LoadKernels` (each file it hands SPICE) and `UnloadKernels` close and unload every such
+  kernel first, so its data are no longer readable after the next kernel call; before, they stayed readable until CSPICE
+  released its logical unit, after which every search of its kind failed for the life of the process. `UnloadKernels` no
+  longer throws for a deleted SPK, CK, binary PCK or EK (it still throws for a deleted text kernel, meta-kernel or DSK),
+  and the kernels of the kind keep their precedence: the unload of a PCK while another PCK of the same frame class loaded
+  before a deleted one returns and leaves the PCK loaded last in precedence, where it threw and gave the earlier one
+  precedence until the deleted one was unloaded. `GetLoadedKernels` lists the deleted path until it is unloaded, which
+  then does nothing. Migration: keep a kernel file on disk until it is unloaded; restarting the process after deleting
+  one is no longer needed. No numerical result moves for kernels that exist.
 - **`GetLoadedKernels` after a partial unload** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed above): after `UnloadKernels` of a file or a subfolder of a
   loaded folder, the listing names the folder's remaining kernel files, in its place, instead of the folder; after
   `UnloadKernels` of a deleted or moved path, its data is no longer readable. Migration: look for the folder's files,

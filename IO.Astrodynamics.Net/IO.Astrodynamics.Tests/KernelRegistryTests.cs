@@ -364,17 +364,24 @@ public class KernelRegistryTests : IDisposable
     private static readonly TimeSpan ChildTimeout = TimeSpan.FromSeconds(60);
 
     /// <summary>
-    /// The scenarios in which SPICE fails to open a deleted binary PCK again, each run in the child process
+    /// The scenarios in which a loaded binary kernel (PCK, SPK, CK) is deleted, each run in the child process
     /// <c>IO.Astrodynamics.Tests.KernelUnload</c>, which loads <c>Data/SolarSystem</c>, plays the scenario and exits 0 when
-    /// it held (its scenarios and their measurements in its <c>Program</c>). In this process, the deleted PCK of such a
-    /// failure stays open in SPICE after its unload, KEEPER's handle for it being 0, and once its logical unit is released the
-    /// PCK searches of every IAU frame fail to reconnect it (#673, measured with CSPICE N0067; CI of 725ee1a and a993265).
+    /// it held (its scenarios and their measurements in its <c>Program</c>). Before the second round of #668, SPICE failed to
+    /// open such a kernel again after the unload of another kernel of its kind, and the deleted kernel stayed open in SPICE
+    /// for good, KEEPER's handle for it being 0: once its logical unit was released the PCK searches of every IAU frame failed
+    /// to reconnect it (#673, measured with CSPICE N0067; CI of 725ee1a and a993265). The native load and unload now close
+    /// and unload every deleted SPK, CK, binary PCK and EK first; the scenarios still run in a child process, so that a
+    /// native library without that unload leaves the test process sound.
     /// </summary>
     [NotOnWindowsTheory("A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open")]
     [InlineData("UnloadKernels_OfAFolderOfTwoPcks_WhoseSecondIsDeleted_RestoresThePrecedence")]
-    [InlineData("UnloadKernels_OfAPck_WhenSpiceCannotOpenAnotherPckAgain_Throws_AndThePcksLoadedBeforeTakePrecedence")]
-    [InlineData("UnloadKernels_OfAMetaKernelOfAPckThenATextKernel_WhenSpiceCannotOpenAnotherPckAgain_Throws")]
-    public void UnloadKernels_WhenSpiceCannotOpenAnotherPckAgain_InAChildProcess(string scenario)
+    [InlineData("UnloadKernels_OfAPck_WhenAnotherPckWasDeleted_ClosesIt_AndKeepsThePrecedence")]
+    [InlineData("UnloadKernels_OfAMetaKernelOfAPckThenATextKernel_WhenAnotherPckWasDeleted_DoesNotThrow")]
+    [InlineData("UnloadKernels_OfAFolderOfTwoPcks_BothDeleted_ClosesThem")]
+    [InlineData("UnloadKernels_OfAnSpk_WhenAnotherSpkWasDeleted_ClosesIt")]
+    [InlineData("LoadKernels_WhenAPckWasDeletedAndNeverUnloaded_ClosesIt")]
+    [InlineData("UnloadKernels_OfACk_WhenAnotherCkWasDeleted_ClosesIt")]
+    public void DeletedBinaryKernel_InAChildProcess(string scenario)
     {
         string child = ChildProcess.AssemblyPath("KernelUnload", "IO.Astrodynamics.Tests.KernelUnload.dll");
         Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");

@@ -39,9 +39,8 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   loaded (NAIF, Kernel Required Reading, "Unloading Kernels"); while a text kernel deleted since its load is still
   loaded, that read stops at it, the unload fails, and the pool lacks the text kernels loaded after it. The unload of an
   SPK, a CK, a binary PCK, a DSK or an EK opens the other loaded kernels of its kind again (`unload_c` → `SPKLEF`,
-  `CKLPF`, `PCKLOF`, `ZZDSKLSF` or `EKLEF`), reads no text kernel, and fails the same way on a kernel of its kind
-  deleted since its load; after such a failure the SPKs, CKs or PCKs loaded before the deleted one take precedence over
-  those loaded after it, which SPICE did not open again (measured with CSPICE N0067). A meta-kernel's unload also
+  `CKLPF`, `PCKLOF`, `ZZDSKLSF` or `EKLEF`) and reads no text kernel; for a DSK it fails the same way on a DSK deleted
+  since its load. A deleted SPK, CK, binary PCK or EK no longer makes it fail: see the next point. A meta-kernel's unload also
   unloads the kernels it names and opens again the loaded kernels of each of their kinds. SPICE loads a text kernel as
   a meta-kernel when its data assigns `KERNELS_TO_LOAD`, `PATH_SYMBOLS` or `PATH_VALUES`, not when only its comments
   name them, and an old DAF (`NAIF/DAF`) as an SPK or a CK from its segments. `UnloadKernels` throws
@@ -50,12 +49,18 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   same kind for an SPK, a CK, a PCK, a DSK or an EK; nothing repairs the failure of a meta-kernel, whose files the library
   does not read, nor that of an old DAF, whose kind it does not tell. Every path the call matched is unloaded before it
   throws. Unload the deleted kernel to restore the pool and the precedence.
-- A binary kernel (SPK, CK, binary PCK) that SPICE failed to open again stays open in SPICE for the life of the process:
-  KEEPER records the handle 0 for it, so its unload, and `ClearKernels` (`kclear_c`), remove it from the list of loaded
-  kernels but close nothing, and SPICE still searches it. Once more than 23 binary kernels are in use (the logical units
-  of CSPICE's handle manager), its unit can be released, and a later search of its kind fails to reconnect it
-  (`SPICE(FILEOPENFAIL)`): for a PCK, every IAU frame, whose search goes through the binary PCKs first (measured with
-  CSPICE N0067). Do not delete a loaded binary kernel; if one was deleted, restart the process.
+- Each native load and unload (every file `LoadKernels` hands SPICE, every `UnloadKernels`) first closes every SPK, CK,
+  binary PCK and EK whose file was deleted since its load, by the handle SPICE holds for it (`spkuef_c`, `ckupf_c`,
+  `pckuof_c`, `ekuef_c`), then unloads it; the last of those unloads opens the remaining kernels of each kind again in
+  their load order, which keeps their precedence. Before 11.0.0, SPICE failed to open such a kernel again after the
+  unload of another kernel of its kind (`SPICE(FILENOTFOUND)`): KEEPER recorded the handle 0 for it, so its unload and
+  `ClearKernels` (`kclear_c`) closed nothing, it stayed open for the life of the process, and once more than 23 binary
+  kernels were in use (the logical units of CSPICE's handle manager) a later search of its kind failed to reconnect it
+  (`SPICE(FILEOPENFAIL)`): for a PCK, every IAU frame, whose search goes through the binary PCKs first, even for a deleted
+  PCK never unloaded (measured with CSPICE N0067). The data of a deleted kernel are therefore no longer readable after the
+  next load or unload; `GetLoadedKernels` lists its path until it is unloaded, which then does nothing. The file is tested
+  by the name SPICE holds, which `LoadKernels` gives as a full path. A DSK is left to SPICE (its subsystem has no public
+  routine that closes it by its handle): keep a loaded DSK on disk until it is unloaded.
 - SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
   File Naming"), and `LoadKernels` hands it the full path: a kernel at a longer path fails with
   `SPICE(FILENAMETOOLONG)`. Load it through a meta-kernel that names it by a shorter relative path, or move it.
