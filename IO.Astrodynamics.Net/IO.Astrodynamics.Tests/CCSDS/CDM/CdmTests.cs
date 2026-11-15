@@ -207,14 +207,25 @@ public class CdmTests
     // A CDM holds one header and one body, the body one relativeMetadataData and exactly two segments, one per object,
     // each segment one metadata and one data section, the data at most one of each block (NDM/XML 4.0.0,
     // ndmxml-4.0.0-cdm-1.0.xsd: cdmType, cdmBody, cdmSegment, cdmData; CCSDS 508.0-B-1, 3.2)
+    // ToCdm writes no odParameters block, so each segment is given one, so that every block of cdmData is present
     private static string ManualCdmXml(bool qualified = false)
     {
-        var xml = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        var exported = CreateManualEncounterCase().ToCdm(new CdmExportOptions
         {
             CreationDateUtc = new DateTime(2026, 3, 15, 10, 10, 0, DateTimeKind.Utc),
             Originator = "IO.Astrodynamics.Tests",
             MessageId = "STRUCTURE"
-        }).WriteToString(wrapInNdmContainer: false);
+        });
+        var odParameters = new CdmOdParameters
+        {
+            TimeLastObservationStartUtc = new DateTime(2026, 3, 14, 0, 0, 0, DateTimeKind.Utc),
+            TimeLastObservationEndUtc = new DateTime(2026, 3, 14, 12, 0, 0, DateTimeKind.Utc),
+            ActualOdSpanDays = 3.0,
+            ObservationsUsed = 120
+        };
+        var cdm = new Cdm(exported.Header, exported.RelativeMetadataData,
+            exported.Segments.Select(segment => segment with { Data = segment.Data! with { OdParameters = odParameters } }).ToList());
+        var xml = cdm.WriteToString(wrapInNdmContainer: false);
         return qualified ? xml : RemoveNamespaces(xml);
     }
 
@@ -268,6 +279,7 @@ public class CdmTests
     [InlineData("body/relativeMetadataData/relativeStateVector")]
     [InlineData("body/segment/metadata")]
     [InlineData("body/segment/data")]
+    [InlineData("body/segment/data/odParameters")]
     [InlineData("body/segment/data/additionalParameters")]
     [InlineData("body/segment/data/stateVector")]
     [InlineData("body/segment/data/covarianceMatrix")]
@@ -276,6 +288,7 @@ public class CdmTests
         // The first segment's element when the path goes through a segment; before, the first was read (a second
         // relativeMetadataData's miss distance dropped)
         var xml = ManualCdmXml();
+        Assert.All(Cdm.ReadFromString(xml).Segments, segment => Assert.NotNull(segment.Data!.OdParameters));
         var document = XDocument.Parse(xml);
         if (path.StartsWith("body/segment/", StringComparison.Ordinal))
         {
@@ -510,7 +523,7 @@ public class CdmTests
         Assert.Null(cdm.Segments[0].Metadata!.IntrackThrust);
         Assert.Null(cdm.Segments[1].Metadata!.IntrackThrust);
         Assert.Equal(CdmManeuverable.Yes, cdm.Segments[1].Metadata!.Maneuverable);
-        Assert.Empty(XDocument.Parse(xml).Descendants().Where(e => e.Name.LocalName == "INTRACK_THRUST"));
+        Assert.DoesNotContain(XDocument.Parse(xml).Descendants(), e => e.Name.LocalName == "INTRACK_THRUST");
         var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
         Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
         var reread = Cdm.ReadFromString(xml);

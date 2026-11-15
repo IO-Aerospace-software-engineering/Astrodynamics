@@ -2040,7 +2040,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   with the embedded SANA schemas that the qualified copy is rejected and its one-segment original accepted, and reach
   every path: `Load*` with and without schema validation, `Load*` and `ReadFrom*` from a file, a string and a stream,
   `TryLoadFromFile`, `ValidateFile` and `Cdm.ReadFrom*`; every block of a data section the reader reads is duplicated
-  once (`OmmReaderTests`, `OpmReaderTests`, `CdmTests`). The single-segment documents of the tests load as before.
+  once (`OmmReaderTests`, `OpmReaderTests`, `CdmTests`, whose CDM gives each segment the `odParameters` block `ToCdm`
+  does not write). The single-segment documents of the tests load as before.
 
 **Changed**
 
