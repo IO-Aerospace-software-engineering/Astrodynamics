@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <iostream>
 #include <filesystem>
+#include <cstring>
+#include <string>
 
 
 #include <Proxy.h>
@@ -96,66 +98,97 @@ bool LaunchProxy(IO::Astrodynamics::API::DTO::LaunchDTO &launchDto)
     }
 }
 
+namespace
+{
+    // The failure of a native writer: the message of its writing, taken (and SPICE reset) before its kernel object is
+    // destroyed, then that of the destruction, whose unload of the written file opens the other loaded kernels of its kind
+    // again (fourth round of #668). Copied into lastError; true when there is none
+    bool ReportWriterErrors(std::string writing)
+    {
+        std::string message = std::move(writing);
+        if (failed_c())
+        {
+            if (!message.empty()) message += " ";
+            message += HandleError();
+        }
+        if (message.empty())
+        {
+            return true;
+        }
+        std::strncpy(lastError, message.c_str(), sizeof(lastError) - 1);
+        lastError[sizeof(lastError) - 1] = '\0';
+        return false;
+    }
+}
+
+// The kernel object lives in an inner scope: its destructor unloads the written file (Kernel::~Kernel), and that unload_c
+// opens the other loaded SPKs again (unload_c --> UNLOAD --> SPKLEF), which fails on a deleted SPK SPICE holds under a
+// relative name, left to KEEPER by KernelsLoader. Before the fourth round of #668 the destructor ran after the return, so
+// that failure was left pending into the next proxy while this one returned true. The writing's error is taken first, so
+// that the destructor unloads on a clean SPICE state, as it did before
 bool WriteEphemerisProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateVectorDTO *sv,
                          unsigned int size)
 {
     ActivateErrorManagement();
-    IO::Astrodynamics::Kernels::EphemerisKernel kernel(filePath, objectId);
-
-    std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> states;
-    states.reserve(size);
-    std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
-
-
-    for (unsigned int i = 0; i < size; ++i)
+    std::string writing;
     {
-        if (celestialBodies.find(sv[i].centerOfMotionId) == celestialBodies.end())
+        IO::Astrodynamics::Kernels::EphemerisKernel kernel(filePath, objectId);
+
+        std::vector<IO::Astrodynamics::OrbitalParameters::StateVector> states;
+        states.reserve(size);
+        std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
+
+
+        for (unsigned int i = 0; i < size; ++i)
         {
-            celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
-                    sv[i].centerOfMotionId);
+            if (celestialBodies.find(sv[i].centerOfMotionId) == celestialBodies.end())
+            {
+                celestialBodies[sv[i].centerOfMotionId] = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(
+                        sv[i].centerOfMotionId);
+            }
+            states.emplace_back(celestialBodies[sv[i].centerOfMotionId], ToVector3D(sv[i].position),
+                                ToVector3D(sv[i].velocity),
+                                IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
+                                IO::Astrodynamics::Frames::Frames(sv[i].inertialFrame));
         }
-        states.emplace_back(celestialBodies[sv[i].centerOfMotionId], ToVector3D(sv[i].position),
-                            ToVector3D(sv[i].velocity),
-                            IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(sv[i].epoch)),
-                            IO::Astrodynamics::Frames::Frames(sv[i].inertialFrame));
-    }
 
-    kernel.WriteData(states);
-    if (failed_c())
-    {
-        HandleError();
-        return false;
+        kernel.WriteData(states);
+        if (failed_c())
+        {
+            writing = HandleError();
+        }
     }
-    return true;
+    return ReportWriterErrors(std::move(writing));
 }
 
+// The CK analog of WriteEphemerisProxy: the destructor's unload of the written CK opens the other loaded CKs again
+// (unload_c --> UNLOAD --> CKLPF)
 bool WriteOrientationProxy(const char *filePath, int objectId, IO::Astrodynamics::API::DTO::StateOrientationDTO *so,
                            unsigned int size)
 {
     ActivateErrorManagement();
-    std::filesystem::path path(filePath);
-    std::filesystem::path parentPath = path.parent_path();
-    IO::Astrodynamics::Kernels::OrientationKernel kernel(filePath, objectId, objectId * 1000);
-
-    std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> states;
-    states.emplace_back();
-
-    states.back().reserve(size);
-    std::map<int, std::shared_ptr<IO::Astrodynamics::Body::CelestialBody>> celestialBodies;
-
-    for (unsigned int i = 0; i < size; ++i)
+    std::string writing;
     {
-        states.back().emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
-                                   IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
-                                   IO::Astrodynamics::Frames::Frames(so[i].frame));
+        IO::Astrodynamics::Kernels::OrientationKernel kernel(filePath, objectId, objectId * 1000);
+
+        std::vector<std::vector<IO::Astrodynamics::OrbitalParameters::StateOrientation>> states;
+        states.emplace_back();
+
+        states.back().reserve(size);
+
+        for (unsigned int i = 0; i < size; ++i)
+        {
+            states.back().emplace_back(ToQuaternion(so[i].orientation), ToVector3D(so[i].angularVelocity),
+                                       IO::Astrodynamics::Time::TDB(std::chrono::duration<double>(so[i].epoch)),
+                                       IO::Astrodynamics::Frames::Frames(so[i].frame));
+        }
+        kernel.WriteOrientations(states);
+        if (failed_c())
+        {
+            writing = HandleError();
+        }
     }
-    kernel.WriteOrientations(states);
-    if (failed_c())
-    {
-        HandleError();
-        return false;
-    }
-    return true;
+    return ReportWriterErrors(std::move(writing));
 }
 
 bool ReadOrientationProxy(IO::Astrodynamics::API::DTO::WindowDTO searchWindow, int spacecraftId, double tolerance,

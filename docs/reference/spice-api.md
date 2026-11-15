@@ -7,14 +7,14 @@
 | Method | Description |
 |--------|-------------|
 | `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components, a path inside a loaded directory reloading it (#673) |
-| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673) |
+| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673); a deleted SPK, CK, binary PCK or EK already dropped by an earlier native call is no longer listed, and its unload does nothing (#668) |
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
-| `GetLoadedKernels()` | Inspect the loaded paths |
+| `GetLoadedKernels()` | Inspect the loaded paths; a deleted SPK, CK, binary PCK or EK leaves the listing at the next native load, unload or write (#668) |
 | `GetSpiceVersion()` | Read the underlying CSPICE version |
 | `ReadEphemeris(...)` | Read state data (throws `InvalidOperationException` with SPICE's message when the kernels give no state, #454) |
 | `ReadOrientation(...)` | Read orientation data (throws `InvalidOperationException` on native error) |
-| `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673) |
-| `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for a path longer than 255 characters, #673) |
+| `WriteOrientation(FileInfo, int, IEnumerable<StateOrientation>)` | Write orientation records as a type-3 CK (throws `ArgumentException` for records in more than one frame, #560, and for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written CK fails, #668) |
+| `WriteEphemeris(FileInfo, int, IEnumerable<StateVector>)` | Write states as an SPK through the native writer, under `Star` and `Site` (throws `ArgumentException` for a path longer than 255 characters, #673; `InvalidOperationException` with SPICE's message when the writing or the last unload of the written SPK fails, #668) |
 | `GetCelestialBodyInfo(int)` | Read the name, centre of motion, radii, GM and frame of a celestial body (throws `ArgumentException` for an identifier that is not one, #560, or that SPICE does not name, #672) |
 
 `GetCelestialBodyInfo`, and so `new CelestialBody(id)` and the command `celestial-body-info`, take the identifier of a
@@ -51,6 +51,18 @@ writers `WriteEphemeris` and `WriteOrientation` throw `ArgumentException` for su
 CSPICE wrote a file under the name truncated to 255 and then failed before 11.0.0. The length counted is that of the
 bytes handed to CSPICE, UTF-8 on Linux and macOS. `Spacecraft.WriteEphemeris` (the managed SPK writer) and the text
 kernel writers write any path.
+
+Each native load and unload, and the native writers, first close and unload the SPKs, CKs, binary PCKs and EKs whose
+file, named by an absolute path, was deleted since its load. A name SPICE holds relative to the working directory, from
+a meta-kernel's `KERNELS_TO_LOAD` or a direct C++ caller of `LoadKernelsProxy`, is left to SPICE whether its file was
+deleted or not: after a change of working directory the name no longer tells, and KEEPER's own reopening of such a
+kernel then fails with `SPICE(FILENOTFOUND)` once the working directory changed or the file was deleted. `LoadKernels`
+always passes full paths. The native writers unload the file they wrote, which opens the other loaded SPKs or CKs
+again: when that fails on such a kernel, `WriteEphemeris` and `WriteOrientation` throw `InvalidOperationException`
+with SPICE's message and leave no error pending (fourth round of #668; before, they returned and the next kernel call
+failed with a wrong error). A new file is written by then; a file the call replaces is unloaded before its removal, an
+unload that fails the same way, and is then left on disk as it was, no longer loaded, nothing written (before, it was
+removed and nothing written in its place). See [Kernel Management](../guides/kernel-management.md).
 
 SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and

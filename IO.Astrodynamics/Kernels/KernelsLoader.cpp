@@ -15,9 +15,12 @@ namespace
     constexpr SpiceInt TypeLength{32};
 
     // Whether the file of a loaded kernel no longer exists, its name taken as SPICE holds it. A name the file system cannot
-    // test counts as existing, so that nothing is unloaded on a doubt, and so does a relative name: a meta-kernel can name its
-    // files relative to the working directory of its load, which may have changed since, so that the name no longer tells
-    // whether the file SPICE holds open was deleted (review of the second round of #668). The library loads by full path
+    // test counts as existing, so that nothing is unloaded on a doubt, and so does a relative name, whether a meta-kernel's
+    // KERNELS_TO_LOAD or a direct C++ caller of LoadKernelsProxy gave it: it is relative to the working directory of its
+    // load, which may have changed since, so that the name no longer tells whether the file SPICE holds open was deleted
+    // (review of the second round of #668). Such a kernel is left to SPICE, deleted or not: KEEPER's own reopening of it,
+    // after the unload of another kernel of its kind, fails with SPICE(FILENOTFOUND) once the working directory changed or
+    // the file was deleted (fourth round of #668). The .NET layer loads by full path
     bool WasDeleted(const char *file)
     {
         std::error_code error;
@@ -53,16 +56,21 @@ namespace
      * Unloads every SPK, CK, binary PCK and EK whose file was deleted since its load (#668, second round). KEEPER's UNLOAD
      * opens again the other loaded kernels of the kind it unloads (unload_c --> UNLOAD --> SPKLEF, CKLPF, PCKLOF, EKLEF):
      * for a deleted file, DAFOPR fails before the subsystem touches its table, so the file stays open in the DAF and
-     * subsystem tables while KEEPER stores the handle 0 for it. From then on neither its unload nor kclear_c closes it, and
-     * once CSPICE's handle manager has released its logical unit (more than 23 in use) every search that reaches it fails to
-     * reconnect it (SPICE(FILEOPENFAIL)): for a PCK, every IAU frame (measured with CSPICE N0067). Only native code holds the
+     * subsystem tables while KEEPER stores the handle 0 for it. From then on neither its unload nor kclear_c closes it
+     * (measured for SPKs, CKs and PCKs; the EK not measured). Once CSPICE's handle manager has released its logical unit
+     * (more than 23 in use), the searches that reach it fail to reconnect it (SPICE(FILEOPENFAIL)): for a PCK every IAU
+     * frame, for a CK the reads of epochs not already read; for an SPK the reads of the Moon, L1, L2 and Mars after 25 more
+     * DAFs did not fail in the measured layout, the orphan handle staying open (CSPICE N0067). Only native code holds the
      * handle, so the kernels are first closed by the handle KEEPER still holds, then dropped from KEEPER by unload_c, whose
      * reopening of the remaining kernels of the kind fails, as expected, on the next deleted file, already closed; the last
      * unload_c reopens every remaining kernel of the kind in load order, which restores their precedence. A DSK is left to
      * KEEPER: its subsystem has no public routine that closes it by handle. A kernel SPICE holds under a relative name is left
      * to KEEPER too (WasDeleted). Every unload_c of a binary kernel by the library runs after it (KernelsLoader::UnloadFile):
      * the native writers unload the file they replace and, through their kernel object, the file they wrote, each an SPK or
-     * CK unload that opens the others again (review of the second round of #668). The unloads of the text kernels the
+     * CK unload that opens the others again (review of the second round of #668). That reopening still fails on a kernel left
+     * to KEEPER (a relative name) whose file was deleted: the writer proxies destroy their kernel object before their last
+     * failed_c() check and report it (fourth round of #668), and the writers stop before removing a file they replace whose
+     * unload failed, which is then kept as it was (review of the fourth round). The unloads of the text kernels the
      * library writes (frames, instruments, clocks) open no binary kernel again.
      */
     void UnloadDeletedBinaryKernels()
