@@ -29,6 +29,21 @@ the element and its count without `validateSchema`; with it the schema rejects t
 invalid; without schema validation, a `PARSE_ERROR` and the reader's error). Before 11.0.0 the first one was read and
 the others dropped, a whole second segment included. Split such a document into one message per segment.
 
+A keyword whose value the data model refuses throws `OmmParseException` naming the keyword, its value, its block and the
+rule, the data model's exception as `InnerException` (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): `ECCENTRICITY` negative,
+`INCLINATION` outside [0, 180], `RA_OF_ASC_NODE`, `ARG_OF_PERICENTER` or `MEAN_ANOMALY` outside [-360, 360),
+`MEAN_MOTION` or `SEMI_MAJOR_AXIS` not above 0, `GM` not above 0, `ELEMENT_SET_NO` outside [0, 9999], `REV_AT_EPOCH`
+negative, a negative spacecraft parameter, an empty `OBJECT_NAME`, `OBJECT_ID`, `CENTER_NAME`, `REF_FRAME`,
+`TIME_SYSTEM`, `MEAN_ELEMENT_THEORY` or `ORIGINATOR`, or a blank `USER_DEFINED` parameter name, for example
+`ECCENTRICITY '-0.5' in meanElements is invalid: Eccentricity must be non-negative.` Before 11.0.0 the
+`ArgumentOutOfRangeException` or `ArgumentException` of the data model's constructor crossed the reader, naming its
+parameter. With `validateSchema` the schema rejects most of these values first (`OmmValidationException`), but not those
+its types allow: `MEAN_MOTION` and `SEMI_MAJOR_AXIS` are `xsd:double` and the metadata strings `xsd:string`, so a
+`MEAN_MOTION` of 0 or an empty `OBJECT_NAME` throws `OmmParseException` with the default validation too.
+`TryLoadFromFile` returns false with a `PARSE_ERROR` and `OmmValidator.ValidateFile` an error, both naming the keyword.
+The constructors of the data model (`MeanElements`, `OmmMetadata`, ...) keep their `ArgumentException`.
+
 ### Schema validation
 
 `validateSchema` and `OmmValidator.ValidateSchema` check the document against the CCSDS NDM/XML 4.0.0 schemas (CCSDS
