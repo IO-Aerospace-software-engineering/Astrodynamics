@@ -36,6 +36,15 @@ namespace IO.Astrodynamics.Tests;
 /// before the first call of <see cref="EnsureSolarSystem"/>, and when a kernel still loaded at its end shadows the folder
 /// (<see cref="KernelShadowing"/>).
 /// </para>
+/// <para>
+/// Two more sets are loaded once per process and never unloaded, by the same mechanism and under the same guard (#668,
+/// second round): <c>Data/LRO</c> (<see cref="EnsureLro"/>, the reconstructed SPK of LRO, -85 about the Moon, read by
+/// several classes) and <c>Data/OccultationReference</c> (<see cref="EnsureOccultationReference"/>, the SPKs of the
+/// occultation references). Before, each class loaded them in its constructor and never unloaded them, so each of their
+/// tests reloaded them, and the unload of an SPK reopens every loaded SPK (KEEPER), all under the SPICE lock. A kernel
+/// that a single class reads (the orbiter SPK of <c>KernelWindowSearchTests</c>, <c>Data/FieldOfViewReference</c>) is
+/// loaded by a class fixture and unloaded in its <c>Dispose</c>.
+/// </para>
 /// </remarks>
 internal static class TestKernels
 {
@@ -45,6 +54,32 @@ internal static class TestKernels
 
     /// <summary>Loads <c>Data/SolarSystem</c> if it is not loaded, where a constructor or a fixture loaded it.</summary>
     internal static void EnsureSolarSystem() => SolarSystem.Ensure();
+
+    /// <summary>The reconstructed SPK of LRO (<c>Data/LRO</c>) and its anchor.</summary>
+    internal static readonly SharedKernels Lro = new(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Data", "LRO")),
+        new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "KernelReloadAnchorLro")));
+
+    /// <summary>The SPKs of the occultation references (<c>Data/OccultationReference</c>) and their anchor.</summary>
+    internal static readonly SharedKernels OccultationReference = new(
+        new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Data", "OccultationReference")),
+        new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "KernelReloadAnchorOccultation")));
+
+    /// <summary>The sets loaded once per process, which no test unloads.</summary>
+    internal static SharedKernels[] Shared => [SolarSystem, Lro, OccultationReference];
+
+    /// <summary>Loads <c>Data/SolarSystem</c>, then <c>Data/LRO</c> if it is not loaded.</summary>
+    internal static void EnsureLro()
+    {
+        SolarSystem.Ensure();
+        Lro.Ensure();
+    }
+
+    /// <summary>Loads <c>Data/SolarSystem</c>, then <c>Data/OccultationReference</c> if it is not loaded.</summary>
+    internal static void EnsureOccultationReference()
+    {
+        SolarSystem.Ensure();
+        OccultationReference.Ensure();
+    }
 }
 
 /// <summary>

@@ -108,7 +108,7 @@ Test classes of `IO.Astrodynamics.Tests` load the solar system kernels in their 
 ```csharp
 TestKernels.EnsureSolarSystem();
 ```
-No test of that process unloads `Data/SolarSystem`, calls `ClearKernels` or sets the global data provider (a child process instead, as `ColdStartTests` and `MemoryDataProviderBodyTests`, #631, #680), and no kernel a test loads may redefine what `Data/SolarSystem` defines; `KernelReloadGuardTests` and `KernelShadowingTests` check both. A test's own kernels are loaded with `LoadKernels` and unloaded in `finally` or `Dispose`.
+No test of that process unloads `Data/SolarSystem`, calls `ClearKernels` or sets the global data provider (a child process instead, as `ColdStartTests` and `MemoryDataProviderBodyTests`, #631, #680), and no kernel a test loads may redefine what `Data/SolarSystem` defines; `KernelReloadGuardTests` and `KernelShadowingTests` check both. A test's own kernels are loaded with `LoadKernels` and unloaded in `finally` or `Dispose` (a class fixture's `Dispose` for a kernel only its class reads, as `KernelWindowSearchKernels` and `FieldOfViewReferenceKernels`). Two more sets are loaded once per process by the same mechanism and never unloaded, under the same guard: `Data/LRO` (`TestKernels.EnsureLro()`, the LRO SPK several classes read) and `Data/OccultationReference` (`TestKernels.EnsureOccultationReference()`) (#668, second round).
 Test data files live in `Data/SolarSystem/` and are copied to the output directory.
 
 ## Critical Domain Rules

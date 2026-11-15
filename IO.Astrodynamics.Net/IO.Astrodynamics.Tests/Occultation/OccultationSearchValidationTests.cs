@@ -43,7 +43,6 @@ namespace IO.Astrodynamics.Tests.Occultation;
 public class OccultationSearchValidationTests
 {
     private static readonly DirectoryInfo ReferencePath = new("Data/OccultationReference");
-    private static readonly FileInfo LroSpkPath = new("Data/LRO/lro-reconstructed-2023349_2024075_v01_little_endian.bsp");
 
     // Provisional thresholds, twice the worst value over the scenarios on Linux x64 (2026-10-27), rounded up at the second
     // digit. Geometric: 1.49e-7 s against the reference at 1e-9 s, the managed search at 100 ns (the tick, and the 119 ns
@@ -66,9 +65,9 @@ public class OccultationSearchValidationTests
     public OccultationSearchValidationTests(ITestOutputHelper output)
     {
         _output = output;
-        TestKernels.EnsureSolarSystem();
-        SpiceAPI.Instance.LoadKernels(ReferencePath);
-        SpiceAPI.Instance.LoadKernels(LroSpkPath);
+        // Data/OccultationReference and Data/LRO, loaded once per process (#668, second round)
+        TestKernels.EnsureOccultationReference();
+        TestKernels.EnsureLro();
     }
 
     private static readonly Frames.Frame IauEarth = new("IAU_EARTH");

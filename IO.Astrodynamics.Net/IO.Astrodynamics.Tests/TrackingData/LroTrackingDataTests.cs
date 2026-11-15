@@ -17,7 +17,6 @@ namespace IO.Astrodynamics.Tests.TrackingData;
 
 public class LroTrackingDataTests
 {
-    private static readonly FileInfo LroSpkPath = new("Data/LRO/lro-reconstructed-2023349_2024075_v01_little_endian.bsp");
 
     private readonly CelestialBody _earth;
     private readonly CelestialBody _moon;
@@ -30,8 +29,8 @@ public class LroTrackingDataTests
 
     public LroTrackingDataTests()
     {
-        TestKernels.EnsureSolarSystem();
-        SpiceAPI.Instance.LoadKernels(LroSpkPath);
+        // Data/LRO, loaded once per process (#668, second round)
+        TestKernels.EnsureLro();
 
         _earth = new CelestialBody(PlanetsAndMoons.EARTH);
         _moon = new CelestialBody(PlanetsAndMoons.MOON);
