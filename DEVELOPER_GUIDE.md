@@ -1522,7 +1522,7 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 - `OrbitalDirection` enum: `Prograde`, `Retrograde`, `Nadir`, `Zenith`, `Normal`, `AntiNormal`
 
 Key features:
-- Minimum 5-degree separation required between body vectors and reference vectors
+- Minimum separation from collinear required between body vectors and reference vectors: `MinimumVectorSeparation`, 5 degrees by default, in (0, π/2] rad (another throws `ArgumentOutOfRangeException`); collinear, zero and non-finite vectors throw at any separation
 - Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp` passed explicitly
 - Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget; the body vectors given are literal
 - Factory methods: `CreateLVLH()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the engine's spacecraft, read at execution; the static axes while the tank is on no spacecraft (#677), read outside a propagation only, since a propagation of an attitude whose tank is not the propagated spacecraft's throws (#676)

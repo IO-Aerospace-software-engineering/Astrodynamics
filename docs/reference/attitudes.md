@@ -72,10 +72,10 @@ var pointing = new InstrumentPointingToAttitude(
 | `SecondaryAttitudeTarget` | Secondary `IAttitudeTarget` (null when using `ILocalizable`) |
 | `PrimaryBodyVector` | Spacecraft body-frame vector for primary constraint |
 | `SecondaryBodyVector` | Spacecraft body-frame vector for secondary constraint |
-| `MinimumVectorSeparation` | Minimum angle between body vectors (default 5 degrees) |
+| `MinimumVectorSeparation` | Minimum angle of the body vectors, and of the reference vectors, from collinear, in (0, π/2] rad (default 5 degrees) |
 
 !!! warning
-    The primary and secondary body vectors (and reference vectors) must be at least 5 degrees apart; otherwise orientation computation is ill-conditioned.
+    The primary and secondary body vectors (and reference vectors) must be at least `MinimumVectorSeparation` (5 degrees by default) from collinear, parallel or antiparallel; otherwise orientation computation is ill-conditioned. Two vectors pass when the sine of their angle, |û × ŵ| of their unit vectors, is at least sin(separation): an angle in [separation, π − separation], free of the rounding of π − separation and of the resolution of acos near ±1, so that collinear vectors that round apart are rejected at any separation above about 2.5e-16 rad (their sine was measured up to 2.4e-16; below that separation such a pair can still pass). A separation outside (0, π/2], NaN included, throws `ArgumentOutOfRangeException` (`minimumVectorSeparation`) at construction; body vectors too close to collinear, zero or not finite throw `ArgumentException` at construction, and reference vectors too close to collinear, or not finite, `InvalidOperationException` in `ComputeOrientation` at the epoch where they are (fourth round of #668).
 
 ### Constructors
 

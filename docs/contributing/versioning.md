@@ -2591,6 +2591,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a type named through a namespace relative to `IO.Astrodynamics` and for a `TriadAttitude` of minimum separation 0.
   The block and region reading of `DeveloperGuideExamplesTests` is shared (`DocumentationCodeBlocks`). Documentation
   only: no library result moves.
+- **`TriadAttitude` let collinear vectors through, and accepted a separation that switched its checks off** (fourth
+  round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The constructors stored `minimumVectorSeparation` unchecked, and the body vectors (at construction)
+  and the reference directions (in `ComputeOrientation`) were rejected when acos of their clamped cosine was below the
+  separation or above π − separation. A separation of 0, a negative one or NaN made both tests false for every pair:
+  antiparallel or parallel body vectors, and nadir with zenith or with the Earth's direction, gave the same arbitrary
+  roll (a half turn about (−1, 0, 1)/√2 on a LEO, the primary on its target), without error, as the TRIAD of
+  `docs/tutorials/maneuvers.md` met (above). A tiny positive separation did not close it: π − 1e-300 rounds to π, so
+  exactly antiparallel vectors passed, and acos cannot resolve angles near 0 or π, so collinear vectors that round apart
+  (v and fl(k v)) were measured up to 3.3e-8 rad from 0 or π (23.8 % of 2e5 random pairs) and passed any separation
+  below that. A separation above π/2 rejected every pair, perpendicular ones included, as "too close to collinear". A
+  NaN body vector passed at the default separation and gave a NaN quaternion. The separation is now in (0, π/2] rad,
+  and two vectors pass when the sine of their angle, |û × ŵ| of their unit vectors, is at least sin(separation): the
+  same angles away from the boundary, but without the rounding of π − separation and the resolution of acos, so a
+  collinear, zero or non-finite pair is rejected at any separation (collinear vectors that round apart have a sine of
+  at most 2.4e-16, measured on the same pairs, so below a separation of about 2.5e-16 rad such a pair can still pass).
+  Every attitude accepted is unchanged, bit for bit: the triads, the matrices and the quaternion are computed as before.
+  `TriadAttitudeTests` checks each separation out of range (0, −0, −0.1, NaN, ±∞, 2 and the double above π/2) on the
+  four constructors, π/2 on perpendicular vectors and targets against the closed form, antiparallel body vectors and
+  targets and parallel targets at 1e-300, v and fl(±2.9 v), fl(±1.1 v) (acos 2.1e-8 and 1.5e-8 rad from collinear) at
+  1e-12, and NaN and infinite body vectors (Changed, Breaking, below).
 
 **Changed**
 
@@ -3516,6 +3536,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   kernels that redefine nothing of `Data/SolarSystem` nothing moves, bit for bit. Migration: to keep a body's data across
   changes of the pool, build it (`new CelestialBody(id)`), which reads the kernels once.
 
+- **Breaking: `TriadAttitude` throws for a separation outside (0, π/2] and for collinear or non-finite vectors at any
+  separation** (fourth round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above). The four public constructors throw
+  `ArgumentOutOfRangeException` (`minimumVectorSeparation`) for a separation that is 0 or less, NaN, infinite or above
+  π/2, where 0, a negative separation and NaN were accepted and turned the collinearity checks off, and a separation
+  above π/2 threw `ArgumentException` for every pair of body vectors. The test of the separation is now the sine of the
+  angle, so exactly antiparallel vectors at a separation below about 2.2e-16 rad, collinear vectors that round apart at
+  a separation below about 3.4e-8 rad, and body vectors with a component that is not finite throw `ArgumentException` at
+  construction (where an attitude with an arbitrary roll, or a NaN quaternion, came out), and such reference directions
+  `InvalidOperationException` in `ComputeOrientation`; at exactly the boundary angle the decision can differ by the
+  rounding of sin against acos. Every accepted attitude is unchanged, bit for bit; the factories and the default 5
+  degrees are unchanged. Migration: pass a separation in (0, π/2], the default 5 degrees where 0 was passed to turn the
+  check off, and body vectors and targets that are not collinear.
 - **Breaking: a propagation of a star replaces its states** (third round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above): `Star.Propagate`,
   `Star.PropagateAsync` and `Scenario.SimulateAsync` keep the states of the last propagation only, as

@@ -94,18 +94,52 @@ public class TriadAttitude : Attitude
     private readonly Func<Spacecraft, Vector3> _secondaryAxis;
 
     /// <summary>
-    /// Minimum allowed angle between vectors (body or reference) in radians.
-    /// Default is 5 degrees. Vectors closer than this are considered collinear,
-    /// which would result in numerical instability and poor attitude determination.
+    /// Minimum allowed angle between vectors (body or reference) in radians, in (0, π/2].
+    /// Default is 5 degrees. Vectors closer than this to collinear (parallel or antiparallel) are rejected,
+    /// as they would result in numerical instability and poor attitude determination.
     /// </summary>
+    /// <remarks>
+    /// Two vectors pass when the sine of their angle, |û × ŵ| of their unit vectors, is at least sin(separation): that is
+    /// an angle in [separation, π − separation], without the rounding of π − separation (which is π below about 2.2e-16
+    /// rad) or the resolution of acos near ±1 (collinear vectors that round apart were measured up to 3.3e-8 rad from 0
+    /// or π), and it rejects a zero vector and a vector with a component that is not finite (fourth round of #668). The
+    /// sine of collinear vectors that round apart was measured up to 2.4e-16, so below a separation of about 2.5e-16 rad
+    /// such a pair can still pass, with a roll set by rounding.
+    /// </remarks>
     public double MinimumVectorSeparation { get; }
 
     private const double DefaultMinimumSeparation = 5.0 * Constants.Deg2Rad;
+
+    // A separation is in (0, π/2] rad (fourth round of #668): 0, a negative one or NaN switched off both collinearity
+    // checks, and one above π/2 rejected every pair, perpendicular ones included
+    private static void CheckMinimumVectorSeparation(double minimumVectorSeparation)
+    {
+        if (!(minimumVectorSeparation > 0.0 && minimumVectorSeparation <= System.Math.PI / 2.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(minimumVectorSeparation), minimumVectorSeparation,
+                "The minimum vector separation must be in (0, π/2] rad.");
+        }
+    }
+
+    // Whether two vectors are at least the separation away from collinear: the sine of their angle, |û × ŵ|, at least
+    // sin(separation), which for a separation in (0, π/2] is the angle in [separation, π − separation], free of the rounding
+    // of π − separation and of the resolution of acos near ±1; a zero vector (sine 0) and a vector that is not finite (NaN)
+    // fail (fourth round of #668)
+    private bool AreSeparated(in Vector3 a, in Vector3 b)
+    {
+        double sine = a.NormalizeOrZero().Cross(b.NormalizeOrZero()).Magnitude();
+        return sine >= System.Math.Sin(MinimumVectorSeparation);
+    }
 
     /// <summary>
     /// Creates a TRIAD attitude maneuver using an instrument's boresight and reference vector.
     /// The boresight points at the primary target, while the reference vector constrains roll toward the secondary target.
     /// </summary>
+    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in (0, π/2] (default: 5 degrees).</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in (0, π/2] (fourth
+    /// round of #668).</exception>
+    /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
+    /// zero or has a component that is not finite.</exception>
     public TriadAttitude(
         Time minimumEpoch,
         TimeSpan maneuverHoldDuration,
@@ -116,6 +150,7 @@ public class TriadAttitude : Attitude
         double minimumVectorSeparation = DefaultMinimumSeparation)
         : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration, engine)
     {
+        CheckMinimumVectorSeparation(minimumVectorSeparation);
         if (instrument == null) throw new ArgumentNullException(nameof(instrument));
         PrimaryTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
         SecondaryTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
@@ -130,6 +165,11 @@ public class TriadAttitude : Attitude
     /// <summary>
     /// Creates a TRIAD attitude maneuver using two different instruments pointing at two targets.
     /// </summary>
+    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in (0, π/2] (default: 5 degrees).</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in (0, π/2] (fourth
+    /// round of #668).</exception>
+    /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
+    /// zero or has a component that is not finite.</exception>
     public TriadAttitude(
         Time minimumEpoch,
         TimeSpan maneuverHoldDuration,
@@ -141,6 +181,7 @@ public class TriadAttitude : Attitude
         double minimumVectorSeparation = DefaultMinimumSeparation)
         : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration, engine)
     {
+        CheckMinimumVectorSeparation(minimumVectorSeparation);
         if (primaryInstrument == null) throw new ArgumentNullException(nameof(primaryInstrument));
         if (secondaryInstrument == null) throw new ArgumentNullException(nameof(secondaryInstrument));
         PrimaryTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
@@ -156,6 +197,11 @@ public class TriadAttitude : Attitude
     /// <summary>
     /// Creates a TRIAD attitude maneuver using explicit body frame vectors and ILocalizable targets.
     /// </summary>
+    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in (0, π/2] (default: 5 degrees).</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in (0, π/2] (fourth
+    /// round of #668).</exception>
+    /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
+    /// zero or has a component that is not finite.</exception>
     public TriadAttitude(
         Time minimumEpoch,
         TimeSpan maneuverHoldDuration,
@@ -167,6 +213,7 @@ public class TriadAttitude : Attitude
         double minimumVectorSeparation = DefaultMinimumSeparation)
         : base(GetManeuverCenter(primaryTarget), minimumEpoch, maneuverHoldDuration, engine)
     {
+        CheckMinimumVectorSeparation(minimumVectorSeparation);
         PrimaryTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
         SecondaryTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
         MinimumVectorSeparation = minimumVectorSeparation;
@@ -194,7 +241,11 @@ public class TriadAttitude : Attitude
     /// <param name="secondaryBodyVector">Secondary direction in body frame for roll constraint.</param>
     /// <param name="secondaryTarget">Secondary attitude target (orbital direction or celestial body).</param>
     /// <param name="engine">Engine used for the maneuver.</param>
-    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians (default: 5 degrees).</param>
+    /// <param name="minimumVectorSeparation">Minimum angle between vectors in radians, in (0, π/2] (default: 5 degrees).</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumVectorSeparation"/> is not in (0, π/2] (fourth
+    /// round of #668).</exception>
+    /// <exception cref="ArgumentException">The body vectors are closer than the separation to collinear, or one of them is
+    /// zero or has a component that is not finite.</exception>
     /// <example>
     /// <code>
     /// // Prograde with sun tracking
@@ -217,6 +268,7 @@ public class TriadAttitude : Attitude
         double minimumVectorSeparation = DefaultMinimumSeparation)
         : base(maneuverCenter ?? throw new ArgumentNullException(nameof(maneuverCenter)), minimumEpoch, maneuverHoldDuration, engine)
     {
+        CheckMinimumVectorSeparation(minimumVectorSeparation);
         PrimaryAttitudeTarget = primaryTarget ?? throw new ArgumentNullException(nameof(primaryTarget));
         SecondaryAttitudeTarget = secondaryTarget ?? throw new ArgumentNullException(nameof(secondaryTarget));
         MinimumVectorSeparation = minimumVectorSeparation;
@@ -320,9 +372,9 @@ public class TriadAttitude : Attitude
 
     private void ValidateBodyVectors()
     {
-        double angle = PrimaryBodyVector.Angle(SecondaryBodyVector);
-        if (angle < MinimumVectorSeparation || angle > System.Math.PI - MinimumVectorSeparation)
+        if (!AreSeparated(PrimaryBodyVector, SecondaryBodyVector))
         {
+            double angle = PrimaryBodyVector.Angle(SecondaryBodyVector);
             throw new ArgumentException(
                 $"Body vectors are too close to collinear. Angle: {angle * Constants.Rad2Deg:F2} degrees. " +
                 $"Minimum separation required: {MinimumVectorSeparation * Constants.Rad2Deg:F2} degrees.");
@@ -334,6 +386,8 @@ public class TriadAttitude : Attitude
     /// </summary>
     /// <param name="stateVector">Current spacecraft state vector.</param>
     /// <returns>Quaternion representing the spacecraft orientation.</returns>
+    /// <exception cref="InvalidOperationException">The reference vectors are closer than
+    /// <see cref="MinimumVectorSeparation"/> to collinear, or one of them is zero or not finite.</exception>
     public override Quaternion ComputeOrientation(StateVector stateVector)
     {
         Vector3 primaryRefVector;
@@ -356,9 +410,9 @@ public class TriadAttitude : Attitude
         }
 
         // Validate reference vectors are not collinear
-        double refAngle = primaryRefVector.Angle(secondaryRefVector);
-        if (refAngle < MinimumVectorSeparation || refAngle > System.Math.PI - MinimumVectorSeparation)
+        if (!AreSeparated(primaryRefVector, secondaryRefVector))
         {
+            double refAngle = primaryRefVector.Angle(secondaryRefVector);
             throw new InvalidOperationException(
                 $"Reference vectors are too close to collinear at epoch {stateVector.Epoch}. " +
                 $"Angle: {refAngle * Constants.Rad2Deg:F2} degrees. " +
