@@ -58,7 +58,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
 - P/Invoke wrapper around native SPICE toolkit (NASA's CSPICE)
 - Platform-specific libraries: `IO.Astrodynamics.dll` (Windows), `libIO.Astrodynamics.so` (Linux)
 - Thread-safe access through lock synchronization
-- Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`
+- Native error propagation: `ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy` and the five `FindWindows*` proxies of the CSPICE window searches (fourth round of #668; before, they dropped SPICE's error and returned no window) return `bool`; on failure, `GetLastErrorProxy()` retrieves the thread-local error message, and `SpiceAPI` throws `InvalidOperationException`
 
 **Data Provider Pattern**
 - `IDataProvider` interface with implementations:
@@ -808,7 +808,7 @@ var deg2Rad = IO.Astrodynamics.Constants.Deg2Rad; // not Constants.Deg2Rad (that
 
 1. **Thread Safety**: CSPICE operations are not thread-safe - all API calls must use the shared lock object
 2. **Kernel Management**: Load/unload SPICE kernels appropriately to avoid memory leaks
-3. **Native Error Handling**: The C++ proxy functions (`ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy`) return `bool` instead of throwing exceptions across the P/Invoke boundary. On failure, call `GetLastErrorProxy()` for the error message. The `SpiceAPI` class wraps this pattern and throws `InvalidOperationException` with the native message.
+3. **Native Error Handling**: The C++ proxy functions (`ReadOrientationProxy`, `ReadEphemerisProxy`, `LaunchProxy`, and the five `FindWindows*` proxies of the CSPICE window searches) return `bool` instead of throwing exceptions across the P/Invoke boundary. On failure, call `GetLastErrorProxy()` for the error message. The `SpiceAPI` class wraps this pattern and throws `InvalidOperationException` with the native message.
 4. **Native Resources**: Properly free unmanaged memory returned from native calls
 5. **Time Systems**: Be explicit about time frames when working with epochs
 6. **Coordinate Systems**: Always specify reference frames for state vectors and transformations

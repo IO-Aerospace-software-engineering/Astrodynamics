@@ -73,6 +73,20 @@ The window searches take the units of the library, except the coordinate search:
   `ArgumentException`, where before 11.0.0 `gfilum_c`'s error was dropped and no window returned
   ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)).
 
+### Errors of the window searches
+
+A search CSPICE cannot run throws `InvalidOperationException` with SPICE's message: a frame name SPICE does not know, a
+body or an epoch without ephemeris data, an epoch outside the coverage of the frame data or of the C-kernel, an
+instrument whose kernel is not loaded (`INS<id>_FOV_FRAME` not found), a step SPICE rejects, a result cell that
+overflows. So do the CSPICE paths of the searches of `CelestialItem`, `Site` and `Instrument`, `Site.FindDayWindows`
+and the launch windows of a kernel site. Before the fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) the native proxies printed the
+error on standard output, dropped it and returned no window, which a caller could not tell from a condition that never
+holds. The checks made before the native call keep their `ArgumentException`: a frame of the library SPICE does not
+know in `FindWindowsOnCoordinateConstraint`, an occultation body without a frame, an illumination method other than
+ELLIPSOID. A search SPICE runs is unchanged, and returns at most 1000 windows
+([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
+
 ### Orientation kernels
 
 `ReadOrientation` and `WriteOrientation` are the C-matrix pair of CSPICE's `ckgpav_c` and `ckw03_c`. Each record is

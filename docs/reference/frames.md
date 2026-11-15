@@ -167,7 +167,8 @@ loaded (those the library wrote for an earlier object of the id) and throws SPIC
 search of `CelestialItem` or `Site` in a frame whose reads are the library's is the library's, also when a kernel
 spacecraft takes part, so that it agrees with the reads; `SpiceAPI.FindWindowsOnCoordinateConstraint`, which hands the
 frame to CSPICE by name, throws `ArgumentException` for TEME, CIRS, TIRS and the frame of a site or a spacecraft that no
-loaded kernel defines under its name (third review of #690; before, no window).
+loaded kernel defines under its name (third review of #690; before, no window), and `InvalidOperationException` with
+SPICE's message for any other name SPICE does not know (fourth round of #668; before, no window).
 
 ### TEME
 

@@ -193,6 +193,30 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
             RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, Step, TestHelpers.Sun), 1.0e-2, "site from coordinates");
     }
 
+    [Fact]
+    public void CspiceSearches_SpiceCannotRun_ThrowSpiceError()
+    {
+        // The public searches that go to CSPICE throw SPICE's error where SPICE cannot search (#668, fourth round): before,
+        // the native proxies dropped it and the searches returned no window. The reference is SPICE's error signal: a frame
+        // name it does not know, a window past LRO's SPK (2023-349 to 2024-075), a window past de440s and the Earth's PCK
+        var unknownFrame = Assert.Throws<InvalidOperationException>(() => Lro.FindWindowsOnCoordinateConstraint(DistanceWindow, Moon,
+            new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 500000.0, 0.0, Aberration.None,
+            Step).ToArray());
+        Assert.Contains("NOT_A_FRAME_668", unknownFrame.Message);
+
+        var pastTheSpk = new Window(new TimeSystem.Time(2024, 6, 1, frame: TimeFrame.TDBFrame), new TimeSystem.Time(2024, 6, 2, frame: TimeFrame.TDBFrame));
+        var noState = Assert.Throws<InvalidOperationException>(() => Lro.FindWindowsOnDistanceConstraint(pastTheSpk, Moon, RelationnalOperator.Greater,
+            LroMoonDistance, Aberration.None, Step).ToArray());
+        Assert.Contains("Insufficient ephemeris data", noState.Message);
+        Assert.Contains("-85", noState.Message);
+
+        var past = new Window(new TimeSystem.Time(2160, 3, 1, frame: TimeFrame.TDBFrame), new TimeSystem.Time(2160, 3, 2, frame: TimeFrame.TDBFrame));
+        var noPck = Assert.Throws<InvalidOperationException>(() => Dss13.FindWindowsOnIlluminationConstraint(past, IlluminationAngle.Incidence,
+            RelationnalOperator.Greater, IO.Astrodynamics.Constants.PI2, 0.0, Aberration.None, Step, TestHelpers.Sun).ToArray());
+        Assert.Contains("2160", noPck.Message);
+        Assert.Throws<InvalidOperationException>(() => Dss13.FindDayWindows(past, 0.8 * IO.Astrodynamics.Constants.Deg2Rad).ToArray());
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

@@ -2581,7 +2581,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a type named through a namespace relative to `IO.Astrodynamics` and for a `TriadAttitude` of minimum separation 0.
   The block and region reading of `DeveloperGuideExamplesTests` is shared (`DocumentationCodeBlocks`). Documentation
   only: no library result moves.
-
+- **A CSPICE window search that SPICE could not run returned no window** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round;
+  [#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454),
+  [#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). The five native proxies of the
+  window searches (`gfdist_c`, `gfoclt_c`, `gfposc_c`, `gfilum_c`, `gftfov_c`) read SPICE's error, reset it and returned
+  no window, its message on standard output only: a frame name SPICE does not know (`new Frame("NOT_A_FRAME_668")` in a
+  coordinate or illumination search), a body without ephemeris data (399999), a window past `de440s.bsp` or the Earth's
+  PCK (2160), a kernel spacecraft searched past its SPK, an instrument whose kernel is not loaded (`INS-999123_FOV_FRAME`
+  not found), a step of 0, a result cell that overflows: an empty result a caller could not tell from a condition that
+  never holds. The proxies now return `bool` and keep SPICE's message for `GetLastErrorProxy()`, as `ReadEphemerisProxy`
+  does (a native change for a technical reason: an error a proxy drops), and the five `SpiceAPI.FindWindows*` throw
+  `InvalidOperationException` with it, under every public route that reaches them: the CSPICE paths of
+  `CelestialItem.FindWindowsOnDistanceConstraint`, `FindWindowsOnOccultationConstraint` and
+  `FindWindowsOnCoordinateConstraint`, of `Site.FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint`,
+  `FindWindowsOnIlluminationConstraint` and `FindDayWindows` (so `Launch.FindLaunchWindows` by day or by night), and of
+  `Instrument.FindWindowsInFieldOfViewConstraint`. The reference is SPICE's own error signal, read through the native
+  library on every platform (`SpiceApiTest`, `KernelWindowSearchTests` and the C++ `API` tests). A search SPICE runs
+  is unchanged, bit for bit: the same native call, copy and labelling (the CSPICE goldens of `SpiceApiTest`,
+  `KernelWindowSearchTests`, `OccultationSearchValidationTests` and `FieldOfViewSearchTests`). The 1000-window cap of
+  the copy stays ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
@@ -3512,6 +3530,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Spacecraft.Propagate` does, where each added its states to those of the earlier ones. Migration: to write several
   windows, propagate over one window that covers them. No result moves for a star propagated once.
 
+- **Breaking: a CSPICE window search that SPICE cannot run throws `InvalidOperationException`** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round,
+  Fixed above). The five `SpiceAPI.FindWindows*`, and the CSPICE paths of the distance, occultation, coordinate,
+  illumination and field-of-view searches of `CelestialItem`, `Site` and `Instrument` (`Site.FindDayWindows` and
+  `Launch.FindLaunchWindows` of a kernel site included), throw `InvalidOperationException` with SPICE's message where
+  they returned no window: an unknown frame, a body or an epoch without ephemeris data, an epoch outside the coverage of
+  the frame data or the C-kernel, a missing instrument kernel, a step SPICE rejects, a result cell that overflows. The
+  `ArgumentException` checks made before the native call (the frames of the library SPICE does not know, the
+  occultation bodies, the illumination method) are unchanged. Migration: load the kernel SPICE's message names, or catch
+  `InvalidOperationException` where an empty result was taken to mean "never". A search SPICE runs is unchanged, bit
+  for bit.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -3531,14 +3560,11 @@ The open defects a caller can meet at this release, grouped by cause; each line 
 one. The other open issues (tests, the conformance runner, benchmarks, documentation warnings and feature requests) are
 not listed.
 
-- **SPICE errors still dropped by the CSPICE window searches**
-  ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454),
-  [#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). The five
-  `SpiceAPI.FindWindows*` searches (distance, occultation, coordinate, illumination, field of view, under the CSPICE
-  paths of `CelestialItem`, `Site` and `Instrument`) drop a SPICE error: a missing instrument kernel, an unknown frame
-  or a coverage gap returns no window, SPICE's message on standard output only. On the CSPICE path of
+- **A front body without radii on the CSPICE path of the occultation search**
+  ([#496](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/496)). On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
-  returns no window. Check that the kernels cover the search before trusting an empty result.
+  cannot be searched there: SPICE's error, `InvalidOperationException` since the fourth round of #668 (before, no
+  window). The other SPICE errors of the CSPICE window searches throw since that round (Changed above).
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
@@ -3584,12 +3610,12 @@ not listed.
   or TIRS (`new Frame("CIRS")`, a CCSDS file, the CLI) equals `Frame.CIRS` or `Frame.TIRS` but goes to SPICE, which does
   not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws, and `SpiceAPI.TransformFrame` in CIRS or TIRS throws
   even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in a frame built by the
-  name CIRS or TIRS returns no window, and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances
+  name CIRS or TIRS throws SPICE's error (no window before the fourth round of #668), and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances
   `Frame.CIRS` and `Frame.TIRS`, which the coordinate searches of `CelestialItem` and `Site` search in with the library
   (third review of #690). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
   record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), and searched in by the library (third review of #690), but a frame built by
   such a name (`new Frame("MYSITE_TOPO")`) still goes to SPICE, as does any frame built by a name SPICE does not know,
-  whose CSPICE search returns no window.
+  whose CSPICE search throws SPICE's error (no window before the fourth round of #668).
 - **Identifiers that are not celestial bodies**
   ([#650](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/650),
   [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)). `SpiceAPI.ReadEphemeris` by
