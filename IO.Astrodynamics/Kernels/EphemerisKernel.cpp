@@ -2,6 +2,7 @@
  Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <EphemerisKernel.h>
+#include <KernelsLoader.h>
 #include <SDKException.h>
 #include <filesystem>
 #include <utility>
@@ -68,7 +69,7 @@ void IO::Astrodynamics::Kernels::EphemerisKernel::WriteData(const std::vector<Or
     }
 
     if (std::filesystem::exists(m_filePath)) {
-        unload_c(m_filePath.c_str());
+        KernelsLoader::UnloadFile(m_filePath);
         m_isLoaded = false;
         std::filesystem::remove(m_filePath);
         m_fileExists = false;

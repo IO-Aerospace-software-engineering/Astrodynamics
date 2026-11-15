@@ -14,11 +14,17 @@ namespace
     constexpr SpiceInt FileLength{256};
     constexpr SpiceInt TypeLength{32};
 
-    // Whether the file of a loaded kernel no longer exists, its name taken as SPICE holds it; a name the file system cannot
-    // test counts as existing, so that nothing is unloaded on a doubt
+    // Whether the file of a loaded kernel no longer exists, its name taken as SPICE holds it. A name the file system cannot
+    // test counts as existing, so that nothing is unloaded on a doubt, and so does a relative name: a meta-kernel can name its
+    // files relative to the working directory of its load, which may have changed since, so that the name no longer tells
+    // whether the file SPICE holds open was deleted (review of the second round of #668). The library loads by full path
     bool WasDeleted(const char *file)
     {
         std::error_code error;
+        if (!std::filesystem::path(file).is_absolute())
+        {
+            return false;
+        }
         bool exists = std::filesystem::exists(file, error);
         return !error && !exists;
     }
@@ -53,7 +59,11 @@ namespace
      * handle, so the kernels are first closed by the handle KEEPER still holds, then dropped from KEEPER by unload_c, whose
      * reopening of the remaining kernels of the kind fails, as expected, on the next deleted file, already closed; the last
      * unload_c reopens every remaining kernel of the kind in load order, which restores their precedence. A DSK is left to
-     * KEEPER: its subsystem has no public routine that closes it by handle.
+     * KEEPER: its subsystem has no public routine that closes it by handle. A kernel SPICE holds under a relative name is left
+     * to KEEPER too (WasDeleted). Every unload_c of a binary kernel by the library runs after it (KernelsLoader::UnloadFile):
+     * the native writers unload the file they replace and, through their kernel object, the file they wrote, each an SPK or
+     * CK unload that opens the others again (review of the second round of #668). The unloads of the text kernels the
+     * library writes (frames, instruments, clocks) open no binary kernel again.
      */
     void UnloadDeletedBinaryKernels()
     {
@@ -133,4 +143,10 @@ void IO::Astrodynamics::Kernels::KernelsLoader::Unload(const std::string &path)
 {
     UnloadDeletedBinaryKernels();
     UnloadPath(path);
+}
+
+void IO::Astrodynamics::Kernels::KernelsLoader::UnloadFile(const std::string &path)
+{
+    UnloadDeletedBinaryKernels();
+    unload_c(path.c_str());
 }

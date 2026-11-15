@@ -357,7 +357,8 @@ public class SpiceAPI
     /// </para>
     /// <para>
     /// Each native load first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted since its load, as
-    /// <see cref="UnloadKernels"/> does (#668, second round).
+    /// <see cref="UnloadKernels"/> does (#668, second round); a kernel SPICE holds under a relative name, from a meta-kernel,
+    /// is left to SPICE.
     /// </para>
     /// </remarks>
     /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
@@ -696,14 +697,18 @@ public class SpiceAPI
     /// Each native load and unload first closes, by the handle SPICE holds, and unloads every SPK, CK, binary PCK and EK whose
     /// file was deleted since its load (#668, second round): SPICE would otherwise fail to open it again after the unload of
     /// another kernel of its kind and keep it open for the life of the process. Its data are no longer readable from then on;
-    /// <see cref="GetLoadedKernels"/> lists its path until it is unloaded, which then does nothing.
+    /// <see cref="GetLoadedKernels"/> lists its path until it is unloaded, which then does nothing. <see cref="WriteEphemeris"/>
+    /// and <see cref="WriteOrientation"/> do the same before the unloads of their writer. The file is tested by the name
+    /// SPICE holds: a kernel a meta-kernel names relative to the working directory of its load is left to SPICE, deleted or
+    /// not, since that name no longer reaches its file once the working directory changed; name the files of a meta-kernel
+    /// by absolute paths to have them covered.
     /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call, of the same
     /// entry or of another one, repaired it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded
     /// again, and that of a DSK opens the other loaded DSKs again; each fails on a kernel of those kinds deleted since its
-    /// load, until a later unload that reads the same kernels again succeeds (#673). A deleted SPK, CK, binary PCK or EK no
-    /// longer makes an unload fail (#668, second round). Every matched entry is unloaded and removed before the
+    /// load, until a later unload that reads the same kernels again succeeds (#673). A deleted SPK, CK, binary PCK or EK
+    /// SPICE holds under an absolute name no longer makes an unload fail (#668, second round). Every matched entry is unloaded and removed before the
     /// exception.</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
@@ -1379,6 +1384,12 @@ public class SpiceAPI
     /// <param name="naifId"></param>
     /// <param name="stateVectors"></param>
     /// <returns></returns>
+    /// <remarks>
+    /// The native writer unloads the file it replaces and, once written, the file itself; like every native load and unload
+    /// (<see cref="UnloadKernels"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
+    /// since its load (#668, second round). Before, the unload opened the other SPKs again, failed on a deleted one, which
+    /// stayed open in SPICE for good, and left the failure pending for the next kernel call.
+    /// </remarks>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
     /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
     /// then failed).</exception>
@@ -1421,7 +1432,11 @@ public class SpiceAPI
     /// <returns>True when the CK is written.</returns>
     /// <remarks>
     /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
-    /// convention, the conjugate of the record's rotation, in J2000.
+    /// convention, the conjugate of the record's rotation, in J2000. The native writer unloads the file it replaces and, once
+    /// written, the file itself; like every native load and unload (<see cref="UnloadKernels"/>), it first closes and
+    /// unloads every SPK, CK, binary PCK and EK whose file was deleted since its load (#668, second round). Before, the
+    /// unload opened the other CKs again, failed on a deleted one, which stayed open in SPICE for good, and left the failure
+    /// pending for the next kernel call.
     /// </remarks>
     /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
     /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>

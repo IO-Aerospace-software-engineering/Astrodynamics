@@ -369,8 +369,8 @@ public class KernelRegistryTests : IDisposable
     /// it held (its scenarios and their measurements in its <c>Program</c>). Before the second round of #668, SPICE failed to
     /// open such a kernel again after the unload of another kernel of its kind, and the deleted kernel stayed open in SPICE
     /// for good, KEEPER's handle for it being 0: once its logical unit was released the PCK searches of every IAU frame failed
-    /// to reconnect it (#673, measured with CSPICE N0067; CI of 725ee1a and a993265). The native load and unload now close
-    /// and unload every deleted SPK, CK, binary PCK and EK first; the scenarios still run in a child process, so that a
+    /// to reconnect it (#673, measured with CSPICE N0067; CI of 725ee1a and a993265). The native load and unload, and those
+    /// of the native writers, now close and unload every deleted SPK, CK, binary PCK and EK first; the scenarios still run in a child process, so that a
     /// native library without that unload leaves the test process sound.
     /// </summary>
     [NotOnWindowsTheory("A loaded binary kernel cannot be deleted on Windows, where SPICE keeps it open")]
@@ -381,7 +381,20 @@ public class KernelRegistryTests : IDisposable
     [InlineData("UnloadKernels_OfAnSpk_WhenAnotherSpkWasDeleted_ClosesIt")]
     [InlineData("LoadKernels_WhenAPckWasDeletedAndNeverUnloaded_ClosesIt")]
     [InlineData("UnloadKernels_OfACk_WhenAnotherCkWasDeleted_ClosesIt")]
-    public void DeletedBinaryKernel_InAChildProcess(string scenario)
+    [InlineData("WriteEphemeris_WhenAnSpkWasDeleted_ClosesIt")]
+    [InlineData("WriteOrientation_WhenACkWasDeleted_ClosesIt")]
+    public void DeletedBinaryKernel_InAChildProcess(string scenario) => RunKernelUnloadChild(scenario);
+
+    /// <summary>
+    /// A meta-kernel that names its SPK relative to the working directory of its load, then a change of the working directory:
+    /// the next load keeps the SPK, which still exists, readable (review of the second round of #668). Run in the child process
+    /// on every platform: it changes the working directory of its process.
+    /// </summary>
+    [Fact]
+    public void LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively_InAChildProcess() =>
+        RunKernelUnloadChild("LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively");
+
+    private static void RunKernelUnloadChild(string scenario)
     {
         string child = ChildProcess.AssemblyPath("KernelUnload", "IO.Astrodynamics.Tests.KernelUnload.dll");
         Assert.True(File.Exists(child), $"The child process {child} is missing: the build of the test project copies it.");

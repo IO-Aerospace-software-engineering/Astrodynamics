@@ -952,3 +952,179 @@ TEST(API, UnloadKernelsProxyOfTwoDeletedSpks)
     std::filesystem::remove_all(folder);
 #endif
 }
+
+#if !defined(_WIN32)
+extern "C" int dafhfn_(SpiceInt *handle, char *fname, int fnameLength);
+
+namespace
+{
+    // The handle KEEPER holds for a file, -1 when KEEPER does not hold it (kdata_c binds to the library's CSPICE on Linux and
+    // macOS, where the shared library exports the CSPICE routines it contains)
+    SpiceInt KeeperHandle(const std::filesystem::path &file)
+    {
+        SpiceInt count{};
+        ktotal_c("ALL", &count);
+        for (SpiceInt i = 0; i < count; ++i)
+        {
+            SpiceChar name[256]{};
+            SpiceChar type[32]{};
+            SpiceChar source[256]{};
+            SpiceInt handle{};
+            SpiceBoolean found{};
+            kdata_c(i, "ALL", 256, 32, 256, name, type, source, &handle, &found);
+            if (found && file.string() == name)
+            {
+                return handle;
+            }
+        }
+        return -1;
+    }
+
+    // Whether a DAF handle is still open (dafhfn_ signals SPICE(NOSUCHHANDLE) for a closed one; DAF handles are not reused)
+    bool DafHandleOpen(SpiceInt handle)
+    {
+        char name[256]{};
+        dafhfn_(&handle, name, sizeof(name));
+        if (failed_c())
+        {
+            reset_c();
+            return false;
+        }
+        return true;
+    }
+}
+#endif
+
+// The native writers unload kernels too: the writer's kernel object unloads the file it writes when it is destroyed, and the
+// file it replaces before writing (Kernel::~Kernel, EphemerisKernel::WriteData), and each such unload_c of an SPK opens the
+// other loaded SPKs again (unload_c -> UNLOAD -> SPKLEF). Before the second round of #668, those unloads did not first
+// close the deleted binary kernels: the reopening failed on a deleted SPK, which stayed open with KEEPER's handle 0,
+// and the failure was left pending after the proxy returned true, so that the next unload of an SPK failed. The references
+// are KEEPER's list (kdata_c) and the DAF handles (dafhfn_) of the library's CSPICE
+TEST(API, WriteEphemerisProxyWhenAnotherSpkIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    auto folder = FreshFolder("ioa_g4_cpp_write_spk");
+    auto a = folder / "a.bsp";
+    auto b = folder / "b.bsp";
+    auto c = folder / "c.bsp";
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", a);
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", b);
+    ASSERT_TRUE(LoadKernelsProxy(a.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(b.string().c_str()));
+    const SpiceInt handle = KeeperHandle(b);
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(b);
+
+    IO::Astrodynamics::API::DTO::StateVectorDTO sv[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        sv[i].position = {6800000.0 + i, 0.0, 0.0};
+        sv[i].velocity = {0.0, 8000.0, 0.0};
+        sv[i].epoch = i;
+        sv[i].centerOfMotionId = 399;
+        sv[i].SetFrame("J2000");
+    }
+
+    // Written twice: the second write replaces the file, which unloads it in WriteData
+    EXPECT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999971, sv, 3));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(b));
+    EXPECT_FALSE(DafHandleOpen(handle));
+    ASSERT_TRUE(LoadKernelsProxy(c.string().c_str()));
+    EXPECT_TRUE(WriteEphemerisProxy(c.string().c_str(), -1999971, sv, 3));
+    EXPECT_FALSE(failed_c());
+    EXPECT_TRUE(UnloadKernelsProxy(a.string().c_str()));
+    EXPECT_TRUE(UnloadKernelsProxy(c.string().c_str()));
+    EXPECT_EQ(-1, KeeperHandle(a));
+    EXPECT_EQ(-1, KeeperHandle(c));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// The CK analog: the writer's kernel object unloads the CK it writes when it is destroyed, which opens the other loaded CKs
+// again (unload_c -> UNLOAD -> CKLPF). Two CKs of the spacecraft -175 written by the proxy itself, loaded, the second deleted
+TEST(API, WriteOrientationProxyWhenAnotherCkIsDeleted)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "A loaded binary kernel cannot be deleted on Windows";
+#else
+    const auto earth = std::make_shared<IO::Astrodynamics::Body::CelestialBody>(399);
+    std::unique_ptr<IO::Astrodynamics::OrbitalParameters::OrbitalParameters> orbitalParams = std::make_unique<
+        IO::Astrodynamics::OrbitalParameters::StateVector>(earth, IO::Astrodynamics::Math::Vector3D(6800000.0, 0.0, 0.0),
+                                                           IO::Astrodynamics::Math::Vector3D(0.0, 8000.0, 0.0),
+                                                           IO::Astrodynamics::Time::TDB(0.0s),
+                                                           IO::Astrodynamics::Frames::InertialFrames::ICRF());
+    IO::Astrodynamics::Body::Spacecraft::Spacecraft spc(-175, "SPC000", 1000.0, 3000.0, std::string(SpacecraftPath),
+                                                        std::move(orbitalParams));
+    IO::Astrodynamics::API::DTO::StateOrientationDTO so[3];
+    for (int i = 0; i < 3; ++i)
+    {
+        so[i].orientation = {1.0, 0.0, 0.0, 0.0};
+        so[i].angularVelocity = {0.0, 0.0, 0.0};
+        so[i].epoch = i;
+        so[i].SetFrame("J2000");
+    }
+
+    auto folder = FreshFolder("ioa_g4_cpp_write_ck");
+    auto a = folder / "a.bc";
+    auto b = folder / "b.bc";
+    auto c = folder / "c.bc";
+    ASSERT_TRUE(WriteOrientationProxy(a.string().c_str(), -175, so, 3));
+    ASSERT_TRUE(WriteOrientationProxy(b.string().c_str(), -175, so, 3));
+    ASSERT_TRUE(LoadKernelsProxy(a.string().c_str()));
+    ASSERT_TRUE(LoadKernelsProxy(b.string().c_str()));
+    const SpiceInt handle = KeeperHandle(b);
+    ASSERT_GT(handle, 0);
+    std::filesystem::remove(b);
+
+    EXPECT_TRUE(WriteOrientationProxy(c.string().c_str(), -175, so, 3));
+    EXPECT_FALSE(failed_c());
+    EXPECT_EQ(-1, KeeperHandle(b));
+    EXPECT_FALSE(DafHandleOpen(handle));
+    EXPECT_TRUE(UnloadKernelsProxy(a.string().c_str()));
+    EXPECT_EQ(-1, KeeperHandle(a));
+    reset_c();
+    std::filesystem::remove_all(folder);
+#endif
+}
+
+// A meta-kernel that names its SPK relative to the working directory of its load: SPICE holds the SPK under that relative
+// name, and once the working directory changed the name no longer reaches the file, which still exists. Tested by that
+// name, the next load of any kernel would take it for deleted, close it and unload it (the first version of the cleanup of
+// the second round of #668 did). A relative name is left to SPICE: KEEPER keeps the SPK with its handle open. The references are KEEPER's list and the DAF handles
+TEST(API, LoadKernelsProxyAfterTheWorkingDirectoryChangedKeepsAnSpkAMetaKernelNamesRelatively)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "KEEPER's list is read through the CSPICE routines the shared library exports on Linux and macOS only";
+#else
+    auto folder = FreshFolder("ioa_g4_cpp_relative");
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", folder / "x.bsp");
+    {
+        std::ofstream metaKernel(folder / "mk.tm");
+        metaKernel << "KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( 'x.bsp' )\n\\begintext\n";
+        std::ofstream text(folder / "t.tk");
+        text << "KPL/PCK\n\\begindata\nIOA_G4_RELATIVE = 1\n\\begintext\n";
+    }
+    const auto workingDirectory = std::filesystem::current_path();
+    std::filesystem::current_path(folder);
+    const bool loaded = LoadKernelsProxy((folder / "mk.tm").string().c_str());
+    std::filesystem::current_path(workingDirectory);
+    ASSERT_TRUE(loaded);
+    const SpiceInt handle = KeeperHandle("x.bsp");
+    ASSERT_GT(handle, 0);
+
+    EXPECT_TRUE(LoadKernelsProxy((folder / "t.tk").string().c_str()));
+    EXPECT_EQ(handle, KeeperHandle("x.bsp"));
+    EXPECT_TRUE(DafHandleOpen(handle));
+
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "t.tk").string().c_str()));
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "mk.tm").string().c_str()));
+    EXPECT_EQ(-1, KeeperHandle("x.bsp"));
+    EXPECT_FALSE(DafHandleOpen(handle));
+    std::filesystem::remove_all(folder);
+#endif
+}

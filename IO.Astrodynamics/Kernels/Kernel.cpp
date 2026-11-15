@@ -2,6 +2,7 @@
  Copyright (c) 2021-2023. Sylvain Guillet (sylvain.guillet@tutamail.com)
  */
 #include <Kernel.h>
+#include <KernelsLoader.h>
 #include <filesystem>
 #include <cstring>
 
@@ -20,9 +21,12 @@ IO::Astrodynamics::Kernels::Kernel::Kernel(std::string filePath) : m_filePath{st
     }
 }
 
+// A binary kernel is unloaded after the deleted binary kernels (KernelsLoader::UnloadFile): KEEPER's unload of an SPK or a CK
+// opens the other loaded kernels of its kind again, and failed on a deleted one, which then stayed open in SPICE for good
+// (review of the second round of #668)
 IO::Astrodynamics::Kernels::Kernel::~Kernel()
 {
-    unload_c(m_filePath.c_str());
+    KernelsLoader::UnloadFile(m_filePath);
 }
 
 std::string IO::Astrodynamics::Kernels::Kernel::GetPath() const
@@ -46,8 +50,8 @@ void IO::Astrodynamics::Kernels::Kernel::AddComment(const std::string &comment) 
     SpiceChar buffer[1][COMLENGTH + 1];
     std::strcpy(buffer[0], comment.c_str());
 
-    //Unbload kernel
-    unload_c(m_filePath.c_str());
+    //Unload kernel
+    KernelsLoader::UnloadFile(m_filePath);
 
     //write comment
     dafopw_c(m_filePath.c_str(), &handle);
