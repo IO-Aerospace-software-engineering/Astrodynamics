@@ -138,7 +138,9 @@ provider set before they are first read, and lacking their data, does not leave 
 provider's exception (`ArgumentException` naming `naifId` for missing information) until the data are there, and each
 read goes to the provider set at its time, so that the data may be added to that provider or another provider set in
 its place (a `SpiceDataProvider` and `LoadKernels`, for instance). Once read, an object keeps the provider it read its
-data from, for its data and its ephemeris. Before
+data from, for its data and its ephemeris. A provider that gives one of them a GM or, for a body, radii of 0 (SPICE
+before `LoadKernels`) makes the read throw `InvalidOperationException` naming the missing variable, and nothing is kept
+(third round of #668). Before
 11.0.0 their type initializers read the provider, and one missing datum threw a `TypeInitializationException` that the
 runtime keeps for the life of the process.
 

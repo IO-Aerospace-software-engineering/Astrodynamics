@@ -287,6 +287,16 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
 
     private BodyProviderData BodyData => (BodyProviderData)Resolved;
 
+    /// <summary>The data of a static body: those of its item and its radii (<c>BODYnnn_RADII</c> on SPICE).</summary>
+    private protected override void RequireKernelData(DTO.CelestialBody information)
+    {
+        base.RequireKernelData(information);
+        if (!(information.Radii.X > 0.0 && information.Radii.Y > 0.0 && information.Radii.Z > 0.0))
+        {
+            throw MissingKernelData("radii", $"BODY{NaifId}_RADII", "a PCK such as pck00011.tpc");
+        }
+    }
+
     private protected override ProviderData ReadProviderData(IDataProvider provider, Frame frame, in Time epoch)
     {
         var data = ReadItemData(new BodyProviderData { Provider = provider }, frame, epoch);

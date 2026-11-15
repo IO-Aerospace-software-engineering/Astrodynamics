@@ -2300,8 +2300,29 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `SUN_BODY`, the frame and orbit of `EARTH_BODY`, the orbit of the Earth barycentre and its ephemeris about the solar
   system barycentre are SPICE's, exactly, and stay SPICE's once another memory provider is set (before this, the retry
   went back to the provider of the type initializer: the objects threw the memory provider's `ArgumentException` for the
-  process while `SpiceAPI.GetCelestialBodyInfo(0)` answered). On SPICE, reading those data before `LoadKernels` still
-  keeps the zeros SPICE answers (its own issue).
+  process while `SpiceAPI.GetCelestialBodyInfo(0)` answered). On SPICE, reading those data before `LoadKernels` kept
+  the zeros SPICE answers, fixed by the third round (the next entry).
+- **A static solar system object read on SPICE before `LoadKernels` kept the zeros SPICE answered for the life of the
+  process** (third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). SPICE
+  names the bodies without kernels (its built-in names), and since #672 a body information without `BODYnnn_GM` or
+  `BODYnnn_RADII` has a GM or radii of 0: the first read of a static object of `Barycenters`, `PlanetsAndMoons` or `Stars`
+  succeeded with those zeros and the deferred object kept them. Measured in a fresh process: `EARTH_BODY` had a GM of 0,
+  radii of 0, a J2 of NaN, the built-in frame `IAU_EARTH`, no orbit and an infinite sphere of influence, the GM of the
+  Earth barycentre, the solar system barycentre, `SUN_BODY` and `MOON_BODY` 0, all unchanged after `LoadKernels`
+  (`SpiceAPI.GetCelestialBodyInfo(399)` then gave 3.986e14 m³/s²). A static object now keeps its data only when the
+  provider gives the data the kernels give each of them: a GM (on SPICE `BODYnnn_GM`, for the solar system barycentre the
+  sum of `BODY1_GM` to `BODY10_GM`) and, for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`, radii (`BODYnnn_RADII`), checked
+  before its orbit is read; otherwise the read throws `InvalidOperationException` naming the missing variable, keeps
+  nothing, and the next read tries again. The objects users build are unchanged, bit for bit. In a fresh process
+  (`MemoryDataProviderBodyTests`, mode `static-bodies-before-kernels` of the cold-start child): before any kernel, the GM
+  of `EARTH_BODY` (twice, naming `BODY399_GM`), its frame, radius and orbit, the GM of the Earth barycentre (naming
+  `BODY3_GM`) and of the solar system barycentre (naming `BODY1_GM` to `BODY10_GM`), the radius and frame of `SUN_BODY`
+  and the GM of `MOON_BODY` throw; with `gm_de440.tpc` alone, the GM of `EARTH_BODY` throws naming `BODY399_RADII`
+  (twice) and the frame of `MOON_BODY` throws; after `LoadKernels` the GM, radii, J2 (finite) and frame (`ITRF93`) of
+  `EARTH_BODY`, its orbit (`spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB), the GM of the two barycentres
+  and of `MOON_BODY` and the radius and GM of `SUN_BODY` are SPICE's (`SpiceAPI.GetCelestialBodyInfo`), exactly. An orbit
+  the provider cannot give at the first complete read (an SPK loaded after the GM and radii kernels) is still kept as
+  absent, as a body the kernels do not chain to its barycentre.
 - **The CDM wrote `INTRACK_THRUST` from the engines of a spacecraft** ([#684](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/684)). `EncounterCase.ToCdm` set
   `INTRACK_THRUST` of either object to `YES` for a spacecraft with an engine and `NO` for one without, its capability,
   where CCSDS 508.0-B-1 Cor. 2 (Table 3-3) defines it as whether in-track thrust modeling was used for the OD of the
@@ -3202,6 +3223,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   initializer that read SPICE: none does now. Migration: catch `ArgumentException` or `InvalidOperationException`
   instead of `TypeInitializationException`; set the provider a static object should read before its first read of
   data, since a provider set afterwards does not reach it.
+
+- **Breaking: a static solar system object whose provider gives no GM or radii throws** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above). The first read of a
+  member that needs the data of a static object of `Barycenters`, `PlanetsAndMoons` or `Stars` throws
+  `InvalidOperationException`, naming the missing variable (`BODYnnn_GM`, `BODY1_GM` to `BODY10_GM` for the solar system
+  barycentre, `BODYnnn_RADII` for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`), when its provider gives a GM or radii of 0
+  (SPICE without the kernels that define them, a `MemoryDataProvider` record holding zeros), and keeps nothing, where it
+  returned the zeros, J2 NaN and no orbit and kept them for the process. On SPICE with the kernels loaded nothing moves.
+  Migration: load the kernels (a GM kernel and a PCK) before the first read of a static object's data, or give a
+  `MemoryDataProvider` record its GM and radii; `new CelestialBody(id)` still reads whatever the kernels give.
 
 **Removed**
 

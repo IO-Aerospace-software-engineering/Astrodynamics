@@ -157,6 +157,28 @@ public class MemoryDataProviderBodyTests
         Assert.Contains("OK EARTH_BARYCENTER's ephemeris, once its data are read, stays SPICE's under a later provider", output);
     }
 
+    /// <summary>
+    /// The static objects read on SPICE before any kernel is loaded, then after <c>LoadKernels</c>, in a fresh process: SPICE
+    /// names the bodies without kernels but gives no <c>BODYnnn_GM</c> nor <c>BODYnnn_RADII</c>, and a read of a static
+    /// object whose data need them throws <see cref="InvalidOperationException"/> naming the missing variable, at each read;
+    /// once the kernels are loaded, the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <c>SpiceAPI</c>), exactly.
+    /// Before, the first read cached the zeros SPICE answered (GM 0, radii 0, J2 NaN, no orbit, the frame IAU_EARTH) for the
+    /// life of the process.
+    /// </summary>
+    [Fact]
+    public void StaticBodies_ReadBeforeTheKernels_ThrowAndCacheNothing_ThenAreTheKernelValues()
+    {
+        string output = ColdStartTests.RunChild("(static-bodies-before-kernels)", "static-bodies-before-kernels");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK EARTH_BODY.GM before the kernels, read 2: InvalidOperationException", output);
+        Assert.Contains("OK EARTH_BODY's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK EARTH_BODY.Frame after the kernels ITRF93, SPICE ITRF93", output);
+    }
+
     public static IEnumerable<object[]> LagrangeIdPaths() =>
         from id in MemoryDataProviderTests.LagrangeIdValues
         from path in new[] { "GetCelestialBodyInfo", "new CelestialBody", "CelestialItem.Create" }

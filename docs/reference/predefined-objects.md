@@ -78,8 +78,15 @@ a provider set later does not reach it. The data read are published once, with n
 never waits for another thread (#623). Before 11.0.0 the type initializers read the provider: a missing datum threw a
 `TypeInitializationException` kept for the life of the process, and every later use of the class failed.
 
-On SPICE the provider answers with zeros for the data of a body before its kernels are loaded: read a static object's
-data after `LoadKernels`, or the zeros are kept for the process.
+An object keeps its data only when the provider gives the data the kernels give each of them: a GM (on SPICE
+`BODYnnn_GM`; for the solar system barycentre the sum of `BODY1_GM` to `BODY10_GM`) and, for `EARTH_BODY`, `MOON_BODY` and
+`SUN_BODY`, radii (`BODYnnn_RADII`). SPICE names the bodies without kernels and answers a GM or radii of 0 for a
+variable no loaded kernel defines: a read before `LoadKernels`, or with a GM kernel and no PCK, throws
+`InvalidOperationException` naming the missing variable and keeps nothing, so that the read after `LoadKernels` gives
+the kernel values. Before the third round of #668 such a read kept the zeros for the life of the process (a GM of 0,
+radii of 0, J2 NaN, the built-in frame `IAU_EARTH` for the Earth, no orbit). The orbit is not required: one the
+provider cannot give at the first complete read (an SPK loaded after the GM and radii kernels) stays null, as for a body
+the kernels do not chain to its barycentre: read a static object's data after `LoadKernels`.
 
 ## SolarSystemObjects.Stars
 

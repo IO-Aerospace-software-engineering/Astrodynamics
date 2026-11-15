@@ -2139,7 +2139,10 @@ first read and lacking their data makes each such read throw the provider's exce
 the type initializer threw before 11.0.0 a `TypeInitializationException` kept for the life of the process. Each read
 goes to the provider set at its time: the data may be added to that provider, or another provider set in its place. Once
 read, an object keeps the provider it read its data from, for its data and its ephemeris. Their identifiers, names and
-predicates need no data.
+predicates need no data. A provider that gives one of them a GM or, for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`, radii
+of 0 (SPICE before `LoadKernels`, which answers 0 for `BODYnnn_GM` or `BODYnnn_RADII` no loaded kernel defines) makes
+the read throw `InvalidOperationException` naming the variable, and nothing is kept: load the kernels before the first
+read of their data.
 
 ---
 

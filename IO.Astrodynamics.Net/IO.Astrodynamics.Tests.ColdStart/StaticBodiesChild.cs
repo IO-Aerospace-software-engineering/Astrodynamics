@@ -14,7 +14,8 @@ using BodyInfo = IO.Astrodynamics.DTO.CelestialBody;
 namespace IO.Astrodynamics.Tests.ColdStart;
 
 /// <summary>
-/// The modes <c>static-bodies-memory</c>, <c>static-bodies-spice</c> and <c>static-bodies-switch</c> of the child process: the static objects of
+/// The modes <c>static-bodies-memory</c>, <c>static-bodies-spice</c>, <c>static-bodies-switch</c> and
+/// <c>static-bodies-before-kernels</c> of the child process: the static objects of
 /// <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> (<see cref="PlanetsAndMoons.EARTH_BODY"/>,
 /// <see cref="PlanetsAndMoons.MOON_BODY"/>) and <see cref="Stars"/> (<see cref="Stars.SUN_BODY"/>) read no provider data
 /// when their class is initialized, and resolve their data at first read, retried on failure.
@@ -38,6 +39,10 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <c>static-bodies-switch</c>: the static objects first read on an empty <see cref="MemoryDataProvider"/>, then on a
 /// <see cref="SpiceDataProvider"/> set afterwards with the kernels loaded, against SPICE, exactly; once read, an object
 /// keeps the provider it read its data from, see <see cref="RunSwitch"/>.
+/// </para>
+/// <para>
+/// <c>static-bodies-before-kernels</c>: the static objects read on SPICE before any kernel is loaded, then after, see
+/// <see cref="RunBeforeKernels"/>.
 /// </para>
 /// <para>Exit 0 when every check holds, 1 with the failed check or the exception on the standard error.</para>
 /// </remarks>
@@ -239,6 +244,97 @@ internal static class StaticBodiesChild
         catch (Exception e)
         {
             Console.Error.WriteLine($"static-bodies-switch threw: {e}");
+            return 1;
+        }
+    }
+
+    /// <summary>
+    /// The mode <c>static-bodies-before-kernels</c>: the static objects read on the SPICE provider before any kernel is
+    /// loaded, then after <see cref="SpiceAPI.LoadKernels"/>. Without kernels SPICE names the bodies (its built-in names)
+    /// but gives no <c>BODYnnn_GM</c> nor <c>BODYnnn_RADII</c>: a read of a member of an object whose data need them throws
+    /// <see cref="InvalidOperationException"/> naming the missing variable, at each read, and caches nothing, so that once
+    /// the kernels are loaded the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c> through <see cref="SpiceAPI"/>),
+    /// exactly; with a GM kernel alone, the read of a body throws naming its missing <c>BODYnnn_RADII</c>. Before, the
+    /// first read cached the zeros SPICE answered (GM 0, radii 0, no orbit, the built-in frame <c>IAU_EARTH</c>) for the
+    /// life of the process; the solar system barycentre, whose GM is the sum of <c>BODY1_GM</c> to <c>BODY10_GM</c>, kept
+    /// a GM of 0.
+    /// </summary>
+    internal static int RunBeforeKernels(string kernels)
+    {
+        try
+        {
+            // Before any kernel is loaded, on the default SPICE provider
+            for (int i = 1; i <= 2; i++)
+            {
+                var gm = Expect<InvalidOperationException>($"EARTH_BODY.GM before the kernels, read {i}", () => PlanetsAndMoons.EARTH_BODY.GM);
+                Check($"read {i}: the message names BODY399_GM ({gm.Message})", gm.Message.Contains("BODY399_GM"));
+            }
+
+            Expect<InvalidOperationException>("EARTH_BODY.Frame before the kernels", () => PlanetsAndMoons.EARTH_BODY.Frame);
+            Expect<InvalidOperationException>("EARTH_BODY.EquatorialRadius before the kernels",
+                () => PlanetsAndMoons.EARTH_BODY.EquatorialRadius);
+            Expect<InvalidOperationException>("EARTH_BODY.InitialOrbitalParameters before the kernels",
+                () => PlanetsAndMoons.EARTH_BODY.InitialOrbitalParameters);
+            var barycenter = Expect<InvalidOperationException>("EARTH_BARYCENTER.GM before the kernels", () => Barycenters.EARTH_BARYCENTER.GM);
+            Check($"the message names BODY3_GM ({barycenter.Message})", barycenter.Message.Contains("BODY3_GM"));
+            Expect<InvalidOperationException>("SUN_BODY.EquatorialRadius before the kernels", () => Stars.SUN_BODY.EquatorialRadius);
+            Expect<InvalidOperationException>("MOON_BODY.GM before the kernels", () => PlanetsAndMoons.MOON_BODY.GM);
+            Check("the identifiers need no data", PlanetsAndMoons.EARTH_BODY.NaifId == 399 && PlanetsAndMoons.EARTH_BODY.Name == "EARTH"
+                                                    && Barycenters.EARTH_BARYCENTER.IsBarycenter && Stars.SUN_BODY.IsSun);
+            var ssb = Expect<InvalidOperationException>("SOLAR_SYSTEM_BARYCENTER.GM before the kernels",
+                () => Barycenters.SOLAR_SYSTEM_BARYCENTER.GM);
+            Check($"the message names BODY1_GM to BODY10_GM ({ssb.Message})", ssb.Message.Contains("BODY1_GM to BODY10_GM"));
+            var sun = Expect<InvalidOperationException>("SUN_BODY.Frame before the kernels", () => Stars.SUN_BODY.Frame);
+            Check($"the message names the GM first, BODY10_GM ({sun.Message})", sun.Message.Contains("BODY10_GM"));
+
+            // A GM kernel alone: the bodies still lack their radii, which the message names, and nothing is kept
+            var gmKernel = new FileInfo(Path.Combine(kernels, "gm_de440.tpc"));
+            SpiceAPI.Instance.LoadKernels(gmKernel);
+            for (int i = 1; i <= 2; i++)
+            {
+                var radii = Expect<InvalidOperationException>($"EARTH_BODY.GM with the GM kernel alone, read {i}",
+                    () => PlanetsAndMoons.EARTH_BODY.GM);
+                Check($"read {i}: the message names BODY399_RADII ({radii.Message})", radii.Message.Contains("BODY399_RADII"));
+            }
+
+            Expect<InvalidOperationException>("MOON_BODY.Frame with the GM kernel alone", () => PlanetsAndMoons.MOON_BODY.Frame);
+            SpiceAPI.Instance.UnloadKernels(gmKernel);
+
+            // The kernels
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+
+            var ssbInfo = SpiceAPI.Instance.GetCelestialBodyInfo(0);
+            var barycenterInfo = SpiceAPI.Instance.GetCelestialBodyInfo(3);
+            var earthInfo = SpiceAPI.Instance.GetCelestialBodyInfo(399);
+            var moonInfo = SpiceAPI.Instance.GetCelestialBodyInfo(301);
+            var sunInfo = SpiceAPI.Instance.GetCelestialBodyInfo(10);
+            var earth = PlanetsAndMoons.EARTH_BODY;
+            Check($"EARTH_BODY.GM after the kernels {earth.GM:R}, SPICE {earthInfo.GM:R}", earth.GM == earthInfo.GM && earth.GM > 0.0);
+            Check($"EARTH_BODY's radii after the kernels {earth.EquatorialRadius:R} {earth.PolarRadius:R}, SPICE {earthInfo.Radii.X:R} {earthInfo.Radii.Z:R}",
+                earth.EquatorialRadius == earthInfo.Radii.X && earth.PolarRadius == earthInfo.Radii.Z && earth.EquatorialRadius > 0.0);
+            Check($"EARTH_BODY.J2 after the kernels {earth.J2:R}, SPICE {earthInfo.J2:R}", earth.J2.Equals(earthInfo.J2) && double.IsFinite(earth.J2));
+            Check($"EARTH_BODY.Frame after the kernels {earth.Frame.Name}, SPICE {earthInfo.FrameName}",
+                earth.Frame.Name == earthInfo.FrameName && earth.Frame.Name == "ITRF93");
+            var earthOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None).ToStateVector();
+            var earthState = earth.InitialOrbitalParameters.ToStateVector();
+            Check("EARTH_BODY's orbit after the kernels is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
+                earthState.Position == earthOrbit.Position && earthState.Velocity == earthOrbit.Velocity);
+            Check("EARTH_BODY's sphere of influence after the kernels is finite",
+                double.IsFinite(earth.SphereOfInfluence) && earth.SphereOfInfluence > 0.0);
+            Check($"EARTH_BARYCENTER.GM after the kernels {Barycenters.EARTH_BARYCENTER.GM:R}, SPICE {barycenterInfo.GM:R}",
+                Barycenters.EARTH_BARYCENTER.GM == barycenterInfo.GM);
+            Check($"SUN_BODY.EquatorialRadius after the kernels {Stars.SUN_BODY.EquatorialRadius:R}, SPICE {sunInfo.Radii.X:R}",
+                Stars.SUN_BODY.EquatorialRadius == sunInfo.Radii.X && Stars.SUN_BODY.GM == sunInfo.GM);
+            Check($"MOON_BODY.GM after the kernels {PlanetsAndMoons.MOON_BODY.GM:R}, SPICE {moonInfo.GM:R}",
+                PlanetsAndMoons.MOON_BODY.GM == moonInfo.GM);
+            Check($"SOLAR_SYSTEM_BARYCENTER.GM after the kernels {Barycenters.SOLAR_SYSTEM_BARYCENTER.GM:R}, SPICE {ssbInfo.GM:R}",
+                Barycenters.SOLAR_SYSTEM_BARYCENTER.GM == ssbInfo.GM && ssbInfo.GM > 0.0);
+            Check("SOLAR_SYSTEM_BARYCENTER has no orbit", Barycenters.SOLAR_SYSTEM_BARYCENTER.InitialOrbitalParameters == null);
+            return 0;
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"static-bodies-before-kernels threw: {e}");
             return 1;
         }
     }

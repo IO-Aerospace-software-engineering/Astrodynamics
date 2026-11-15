@@ -61,7 +61,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// the data provider at the first read, as <see cref="GM"/>, <see cref="InitialOrbitalParameters"/> and the
     /// provider-backed members of a <see cref="CelestialBody"/>: a read the provider cannot answer throws its exception
     /// (<see cref="ArgumentException"/> naming <c>naifId</c> for missing information) and is tried again at the next read,
-    /// on the provider set at that time; once read, the object keeps the provider it read its data from.
+    /// on the provider set at that time; so does a read whose provider gives a GM or, for a body, radii of 0 (SPICE before
+    /// <c>LoadKernels</c>), with <see cref="InvalidOperationException"/> naming the missing variable (third round of #668:
+    /// before, those zeros were kept for the life of the process); once read, the object keeps the provider it read its
+    /// data from.
     /// </remarks>
     public double Mass => _deferred == null ? _mass : Resolved.Mass;
 
@@ -126,7 +129,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     /// <summary>
     /// The provider data of a deferred item: read at the first call from the global provider of that time, built exactly
-    /// as the natural-body constructor builds them; a read that throws caches nothing, so that the next call tries again,
+    /// as the natural-body constructor builds them, once the provider gives a GM and, for a body, radii
+    /// (<see cref="RequireKernelData"/>); a read that throws caches nothing, so that the next call tries again,
     /// on the global provider of its own time. The data are published with a
     /// compare-exchange, never under a lock held across the provider call, so that a thread holding the SPICE lock never
     /// waits for another (#623); two threads that read at once may both read, and the first published is kept.
@@ -167,6 +171,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 "Celestial celestialItem name can't be defined, please check if you have loaded associated kernels");
         }
 
+        RequireKernelData(information);
         data.Information = information;
         data.Mass = information.GM / Constants.G;
         data.GM = information.GM;
@@ -176,6 +181,30 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             : null;
         return data;
     }
+
+    /// <summary>
+    /// Checks that the information a deferred item read holds the data the kernels give each static object, before its
+    /// orbit is read: a GM (on SPICE <c>BODYnnn_GM</c>, for the solar system barycentre the sum of <c>BODY1_GM</c> to
+    /// <c>BODY10_GM</c>); a <see cref="CelestialBody"/> adds its radii.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The provider gives no such datum (a GM or radii of 0, which SPICE answers
+    /// for a variable no loaded kernel defines): the message names the variable. Nothing is kept, so that the next read
+    /// tries again (third round of #668: before, a read before <c>LoadKernels</c> kept the zeros SPICE answered for the
+    /// life of the process).</exception>
+    private protected virtual void RequireKernelData(DTO.CelestialBody information)
+    {
+        if (!(information.GM > 0.0))
+        {
+            throw MissingKernelData("GM", NaifId == 0 ? "any of BODY1_GM to BODY10_GM" : $"BODY{NaifId}_GM",
+                "a GM kernel such as gm_de440.tpc");
+        }
+    }
+
+    /// <summary>The exception of a static object whose provider gives no <paramref name="datum"/>.</summary>
+    private protected InvalidOperationException MissingKernelData(string datum, string variables, string kernel) =>
+        new($"The data provider gives no {datum} for {Name} ({NaifId}), a static object of Barycenters, PlanetsAndMoons or " +
+            $"Stars: on SPICE, no loaded kernel defines {variables} ({kernel}). Its data are not kept: the next read tries " +
+            "again, on the provider set at that time.");
 
     /// <summary>
     /// The satellites orbiting the celestial item, held weakly, by instance (#676).
