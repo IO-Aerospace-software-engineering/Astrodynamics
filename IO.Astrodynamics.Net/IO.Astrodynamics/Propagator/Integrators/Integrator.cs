@@ -1,6 +1,8 @@
 // Copyright 2024. Sylvain Guillet (sylvain.guillet@tutamail.com)
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
@@ -52,6 +54,27 @@ public abstract class Integrator : IIntegrator
     public void AddForce(ForceBase force)
     {
         _forces.Add(force);
+    }
+
+    // 1 once a propagation that builds its forces took this integrator (#674)
+    private int _claimed;
+
+    /// <summary>
+    /// Takes this integrator for a propagation that builds its forces (the constructors of
+    /// <see cref="CentralBodyPropagator"/> with celestial bodies, the builder, <c>Spacecraft.Propagate</c>, the batch, Monte
+    /// Carlo and scenario paths), atomically: two threads given one instance cannot both take it (#674).
+    /// </summary>
+    /// <exception cref="ArgumentException">The integrator already holds forces, or a propagation already took it.</exception>
+    internal void ClaimForForces()
+    {
+        if (_forces.Count > 0 || Interlocked.CompareExchange(ref _claimed, 1, 0) != 0)
+        {
+            throw new ArgumentException(
+                "The integrator already holds forces or was already used by a propagation that builds its forces, which " +
+                "would add its forces to those it holds: pass a new integrator to each propagation (for example " +
+                "new RK78Integrator(...)), or give an integrator whose forces you added to the constructor of " +
+                "CentralBodyPropagator without celestial bodies.", "integrator");
+        }
     }
 
     /// <summary>

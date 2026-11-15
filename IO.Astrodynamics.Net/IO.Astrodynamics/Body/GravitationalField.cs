@@ -25,6 +25,16 @@ public class GravitationalField
     }
 
     /// <summary>
+    /// Whether <paramref name="other"/> gives the same acceleration for the same body: two point masses, or the same
+    /// instance; a field derived by a user is equal to itself only (#674).
+    /// </summary>
+    internal virtual bool HasSameModel(GravitationalField other)
+    {
+        return ReferenceEquals(this, other) ||
+               (other != null && GetType() == typeof(GravitationalField) && other.GetType() == typeof(GravitationalField));
+    }
+
+    /// <summary>
     /// Adds the analytic ∂a/∂r of <see cref="ComputeGravitationalAcceleration"/> to <paramref name="dadr"/>, if this
     /// field has them.
     /// </summary>

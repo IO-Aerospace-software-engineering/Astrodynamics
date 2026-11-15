@@ -402,4 +402,84 @@ public class CentralBodyPropagatorBuilderTests
     }
 
     #endregion
+
+    #region The central body, its twins and the integrator (#674)
+
+    [Fact]
+    public void Build_Twice_Throws_AndKeepsTheForcesOfTheFirstBuild()
+    {
+        // Arrange
+        var earth = CreateEarth();
+        var spc = CreateSpacecraft(earth);
+        var integrator = new RK78Integrator(1e-10, 1e-10, 60.0);
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var builder = new CentralBodyPropagatorBuilder(window, spc, integrator, TimeSpan.FromSeconds(60))
+            .WithPerturbingBody(Stars.SUN_BODY).IncludeSolarRadiationPressure().IncludeAlbedo(CreateEarth(albedo: 0.3));
+        builder.Build();
+        int forces = integrator.Forces.Count;
+
+        // Act
+        var exception = Assert.Throws<ArgumentException>(() => builder.Build());
+
+        // Assert
+        Assert.Equal("integrator", exception.ParamName);
+        Assert.Equal(forces, integrator.Forces.Count);
+    }
+
+    [Fact]
+    public void Build_WithATwinOfTheObserverWithAnotherModel_Throws()
+    {
+        // Arrange: the orbit on a model-less Earth, an Earth with a geopotential given as a perturbing body
+        var earth = CreateEarth();
+        var twin = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, TimeSystem.Time.J2000TDB,
+            new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
+        var integrator = new RK78Integrator(1e-10, 1e-10, 60.0);
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var builder = new CentralBodyPropagatorBuilder(window, CreateSpacecraft(earth), integrator, TimeSpan.FromSeconds(60))
+            .WithPerturbingBody(twin);
+
+        // Act
+        var exception = Assert.Throws<ArgumentException>(() => builder.Build());
+
+        // Assert: before the integrator is taken
+        Assert.Contains("gravitational field", exception.Message);
+        Assert.Empty(integrator.Forces);
+        new CentralBodyPropagatorBuilder(window, CreateSpacecraft(earth), integrator, TimeSpan.FromSeconds(60)).Build();
+    }
+
+    [Fact]
+    public void Build_WithAValueEqualTwinOfTheObserver_IsTheRunWithoutIt()
+    {
+        // Arrange: a separately built Earth with the same models as the observer
+        var earth = CreateEarth();
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        StateVector Run(params CelestialItem[] bodies)
+        {
+            var spc = CreateSpacecraft(earth);
+            var builder = new CentralBodyPropagatorBuilder(window, spc, new RK78Integrator(1e-10, 1e-10, 60.0),
+                TimeSpan.FromSeconds(60)).WithPerturbingBodies(bodies).IncludeAtmosphericDrag().IncludeSolarRadiationPressure();
+            builder.Build().Propagate();
+            return spc.PropagatedStates[^1];
+        }
+
+        // Act
+        var withoutIt = Run(Stars.SUN_BODY);
+        var withIt = Run(CreateEarth(), Stars.SUN_BODY);
+
+        // Assert
+        Assert.Equal(withoutIt.Position, withIt.Position);
+        Assert.Equal(withoutIt.Velocity, withIt.Velocity);
+    }
+
+    [Fact]
+    public void NonPositiveStep_Throws()
+    {
+        var earth = CreateEarth();
+        var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB + TimeSpan.FromHours(1));
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new CentralBodyPropagatorBuilder(window, CreateSpacecraft(earth), new RK78Integrator(), TimeSpan.Zero));
+        Assert.Equal("deltaT", exception.ParamName);
+    }
+
+    #endregion
 }

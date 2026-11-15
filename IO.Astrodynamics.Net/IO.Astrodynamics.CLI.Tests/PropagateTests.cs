@@ -466,8 +466,10 @@ public class PropagateTests
                 typeof(PropagateCommand).Assembly.GetManifestResourceStream("IO.Astrodynamics.CLI.Data.EGM2008_to100_TideFree.txt"), 10),
                 new Atmosphere.EarthStandardAtmosphere());
             var s = tle.ToOsculating(t0).ToFrame(Frames.Frame.ICRF).ToStateVector();
-            var twin = Simulate(new OrbitalParameters.StateVector(s.Position, s.Velocity, cliEarth, t0, Frames.Frame.ICRF), cliEarth, -1001, window);
-            var pointMass = Simulate(tle, (Body.CelestialBody)tle.Observer, -1002, window);
+            var twin = Simulate(new OrbitalParameters.StateVector(s.Position, s.Velocity, cliEarth, t0, Frames.Frame.ICRF), cliEarth, -1001, window, true);
+            // The run of the command before #675, on the TLE's Earth without its drag: that Earth has no atmospheric model,
+            // whose drag was dropped before #674 and is NRLMSISE-00 at nominal space weather since
+            var pointMass = Simulate(tle, (Body.CelestialBody)tle.Observer, -1002, window, false);
 
             var ephemeris = new FileInfo(Directory.GetFiles(outputDirectory, "P675.spk", SearchOption.AllDirectories).Single());
             try
@@ -499,16 +501,19 @@ public class PropagateTests
         Assert.True(fromPointMass > 1000.0, $"{fromPointMass:F1} m");
     }
 
-    /// <summary>The library run of the command: a scenario of the spacecraft and its centre, drag and SRP, Velocity-Verlet 1 s.</summary>
+    /// <summary>
+    /// The library run of the command: a scenario of the spacecraft and its centre, SRP, drag as <paramref name="drag"/> says,
+    /// Velocity-Verlet 1 s.
+    /// </summary>
     private static Body.Spacecraft.Spacecraft Simulate(OrbitalParameters.OrbitalParameters orbit, Body.CelestialBody center, int naifId,
-        TimeSystem.Window window)
+        TimeSystem.Window window, bool drag)
     {
         var spacecraft = new Body.Spacecraft.Spacecraft(naifId, $"P675R{-naifId}", 100.0, 100.0, new Body.Spacecraft.Clock($"clockP675R{-naifId}", 65536),
             orbit, 1.0, 0.3);
         var scenario = new Mission.Scenario($"ScenarioP675R{-naifId}", new Mission.Mission($"MissionP675R{-naifId}"), window);
         scenario.AddSpacecraft(spacecraft);
         scenario.AddCelestialItem(center);
-        scenario.SimulateAsync(true, true, TimeSpan.FromSeconds(1.0)).GetAwaiter().GetResult();
+        scenario.SimulateAsync(drag, true, TimeSpan.FromSeconds(1.0)).GetAwaiter().GetResult();
         return spacecraft;
     }
 

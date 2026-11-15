@@ -177,7 +177,7 @@ public class TlePropagationTests
     public void TleStart_EqualsItsIcrfTwin(string path, bool thirdBodiesAndSrp)
     {
         // Arrange: the TLE spacecraft and its twin, the central body only (the point-mass Earth of the TLE), or with the Moon
-        // and the Sun and SRP; no other Earth in the bodies (an Earth twin is ignored for gravity, a separate defect)
+        // and the Sun and SRP; no other Earth in the bodies (an Earth of other models throws, #674)
         var tle = NewTle();
         var window = OneHour(tle);
         var bodies = thirdBodiesAndSrp

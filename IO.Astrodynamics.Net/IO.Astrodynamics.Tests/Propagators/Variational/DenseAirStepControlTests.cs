@@ -260,12 +260,12 @@ public class DenseAirStepControlTests
         // step of #468 needs the state to meet its tolerance, so the 100-rejection guard still stops the propagation,
         // with or without the option, its message not naming Y
         var body = Body("US 1976");
-        var integrator = new RK78Integrator(1e-12, 1e-12);
-        integrator.AddForce(new JitterForce(1.0));
+        var spacecraft = NewSpacecraft(body, 400e3);
+        var integrator = WithJitter(1.0, body, spacecraft);
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window,
-            NewSpacecraft(body, 400e3), integrator, new CelestialItem[] { body }, false, false, Window.Length,
+            spacecraft, integrator, Window.Length,
             new CovariancePropagationOptions { IncludeInStepControl = includeInStepControl }).Propagate());
 
         // Assert
@@ -360,6 +360,17 @@ public class DenseAirStepControlTests
         public double GetDensity(IAtmosphericContext context) => Density(context.Altitude);
     }
 
+    // The noise, then the gravity of the body, the forces the force-building constructor gave the noise before #674, which
+    // rejects an integrator that already holds forces: given to the constructor without celestial bodies, initialized
+    private static RK78Integrator WithJitter(double amplitude, CelestialBody body, Spacecraft spacecraft)
+    {
+        var integrator = new RK78Integrator(1e-12, 1e-12);
+        integrator.AddForce(new JitterForce(amplitude));
+        integrator.AddForce(new GravitationalAcceleration(body));
+        integrator.Initialize(spacecraft.InitialOrbitalParameters.ToStateVector());
+        return integrator;
+    }
+
     // An acceleration of noise in time alone, up to half its amplitude: the force is not smooth, its partials, taken at
     // a fixed epoch, are zero
     private sealed class JitterForce(double amplitude) : ForceBase
@@ -378,12 +389,12 @@ public class DenseAirStepControlTests
         // Arrange: the noise of the force reaches the state, not Φ (error of the state 0.56, of Y 8.2e-8, measured
         // 2026-10-21)
         var body = Body("US 1976");
-        var integrator = new RK78Integrator(1e-12, 1e-12);
-        integrator.AddForce(new JitterForce(1e-7));
+        var spacecraft = NewSpacecraft(body, 400e3);
+        var integrator = WithJitter(1e-7, body, spacecraft);
 
         // Act
         var exception = Assert.Throws<InvalidOperationException>(() => new CentralBodyPropagator(Window,
-            NewSpacecraft(body, 400e3), integrator, new CelestialItem[] { body }, false, false, Window.Length,
+            spacecraft, integrator, Window.Length,
             new CovariancePropagationOptions { IncludeInStepControl = true }).Propagate());
 
         // Assert
