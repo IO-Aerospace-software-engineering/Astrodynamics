@@ -128,8 +128,11 @@ A site built from coordinates has a frame only the library holds (`SiteFrame`): 
 J2000 and rotated by it, from any observer ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682), as [TEME, CIRS and TIRS](frames.md#teme)); before 11.0.0
 a read from an observer other than the site's body threw SPICE(UNKNOWNFRAME). The rotation is that of the site's own
 coordinates, also when its name is that of a station whose frame a loaded kernel defines (`new Site(13, "DSS-13",
-earth, coordinates)` and `DSS-13_TOPO`); the CSPICE coordinate search in that frame (a kernel spacecraft taking part)
-returns no window ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)).
+earth, coordinates)` and `DSS-13_TOPO`). A coordinate search in that frame is the library's, also when a kernel
+spacecraft takes part (third review of [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690); before, CSPICE's `gfposc_c` got the frame by name and returned
+no window, or for a site named as a kernel frame searched in that kernel frame, [#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)), and
+`SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it unless a loaded kernel defines its id
+under its name.
 
 A site from the kernels (`new Site(13, "DSS-13", earth)`) has the frame the loaded kernels define for its id,
 1000000 + NaifId (`DSS-13_TOPO`, 1399013, of `earth_topo_201023.tf`), on every path
@@ -145,9 +148,12 @@ its `Planetodetic`, and an ephemeris read in it is read in J2000 and rotated by 
 coordinates (third review of #690; before, its own name, `Name + "_TOPO"`, reached `spkezr_c`, which threw
 SPICE(UNKNOWNFRAME), while `ToFrame` and `GetHorizontalCoordinates` used that frame): within 7.4e-16 in position and
 5.9e-16 rad in frame of SPICE in a frame kernel of NAIF's topocentric convention on its `Planetodetic` (measured on Linux
-x64). The choice is made at each read, so a frame kernel of its id loaded later is read by name. The CSPICE coordinate
-search in that frame (a kernel spacecraft taking part) returns no window, as in the frame of a site built from
-coordinates (#558), and `SpiceAPI.TransformFrame` with it throws, as with that frame. `Planetodetic` and the illumination
+x64). The choice is made at each read, so a frame kernel of its id loaded later is read by name. A coordinate search
+in that frame is the library's, also when a kernel spacecraft takes part, as in the frame of a site built from
+coordinates: within 5.0e-7 s of `gfposc_c` in that frame kernel for a site at DSS-13's coordinates seen from a LEO
+(measured on Linux x64; before, `gfposc_c` got the site's own name and returned no window), and CSPICE's once a frame
+kernel of its id is loaded; `SpiceAPI.FindWindowsOnCoordinateConstraint` with it throws `ArgumentException`, and
+`SpiceAPI.TransformFrame` with it throws, as with that frame. `Planetodetic` and the illumination
 angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
 `Planetodetic`, the normal `gfilum_c` takes for the site in `FindWindowsOnIlluminationConstraint` (#488), not the
 zenith of the kernel frame. `WriteFrameAsync` of such a site writes that kernel frame: its name and id in the

@@ -291,6 +291,50 @@ public class SpiceAPI
         _ => null
     };
 
+    /// <summary>
+    /// Whether <paramref name="frame"/> is one of the frames whose reads are the library's (<see cref="ManagedReadFrame"/>),
+    /// decided under the lock of the SPICE calls at each call; false for a null frame. SPICE does not read these frames as
+    /// the library does, or do not know them, so a CSPICE search cannot run in them as the library reads them: the
+    /// coordinate searches of <see cref="Body.CelestialItem"/> and <see cref="Surface.Site"/> take the managed search in
+    /// them (third review of #690; before, <c>gfposc_c</c> got the frame by name, which SPICE did not know unless a
+    /// loaded kernel defined it, and its proxy dropped the error: no window).
+    /// </summary>
+    internal static bool IsManagedFrame(Frame frame)
+    {
+        if (frame == null)
+        {
+            return false;
+        }
+
+        lock (lockObject)
+        {
+            return ManagedReadFrame(frame) != null;
+        }
+    }
+
+    /// <summary>
+    /// Whether SPICE knows <paramref name="frame"/> by the name it is handed (<see cref="SpiceFrameName"/>), decided under
+    /// the lock of the SPICE calls at each call: false for TEME, CIRS and TIRS, which only the library holds (a frame named
+    /// TEME included, #451), and for the frame of a site or a spacecraft whose frame id no loaded kernel defines under that
+    /// name; true for any other frame, whose name is handed as it is (third review of #690).
+    /// </summary>
+    internal static bool SpiceKnowsFrame(Frame frame)
+    {
+        lock (lockObject)
+        {
+            switch (frame)
+            {
+                case TemeFrame or CirsFrame or TirsFrame:
+                    return false;
+                case Surface.SiteFrame or Body.Spacecraft.SpacecraftFrame when frame.Id is { } id:
+                    var kernelName = KernelFrameName(id);
+                    return kernelName != null && string.Equals(kernelName, SpiceFrameName(frame), StringComparison.OrdinalIgnoreCase);
+                default:
+                    return !IsTeme(frame);
+            }
+        }
+    }
+
     /// <summary>The one computation method of the illumination searches, CSPICE's <c>gfilum_c</c> (#682).</summary>
     internal const string EllipsoidMethod = "ELLIPSOID";
 
@@ -1054,14 +1098,30 @@ public class SpiceAPI
     /// closed (they differ only where the quantity stays equal to the value over an interval);
     /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
+    /// The frame is handed to <c>gfposc_c</c> by name (<see cref="SpiceFrameName"/>). A frame of the library that SPICE
+    /// does not know by that name throws (<see cref="SpiceKnowsFrame"/>: TEME, CIRS, TIRS, the frame of a site or a
+    /// spacecraft whose frame id no loaded kernel defines under the name handed, third review of #690; before, the proxy
+    /// dropped the error of <c>gfposc_c</c> and the search returned no window). The frame of a site built from coordinates
+    /// or of a managed spacecraft whose name a loaded kernel gives its id is still searched in that kernel frame, by name.
+    /// <see cref="Body.CelestialItem.FindWindowsOnCoordinateConstraint"/> and
+    /// <see cref="Surface.Site.FindWindowsOnCoordinateConstraint"/> search in every frame whose reads are the library's
+    /// (<see cref="ManagedReadFrame"/>) as the library reads it.
     /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name.</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
         TimeSpan stepSize)
     {
         if (frame == null) throw new ArgumentNullException(nameof(frame));
+        if (!SpiceKnowsFrame(frame))
+        {
+            throw new ArgumentException(
+                $"CSPICE cannot search in the frame {frame.Name}: SPICE does not know it (a frame of the library, or a site or spacecraft frame that no loaded kernel defines). CelestialItem.FindWindowsOnCoordinateConstraint and Site.FindWindowsOnCoordinateConstraint search in it.",
+                nameof(frame));
+        }
+
         return SearchWindows(searchWindow, relationalOperator, relation =>
         {
             lock (lockObject)

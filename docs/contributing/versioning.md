@@ -606,7 +606,8 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   `Frame.TEME` (or a frame named TEME), `Frame.CIRS` or `Frame.TIRS`, through `GetEphemeris` or the three
   `SpiceAPI.ReadEphemeris`, is read in J2000 and rotated by the frame at the epoch of the read: the numbers of
   `ToFrame` on the ICRF read, to 1e-6 m. CIRS and TIRS returned SPICE(UNKNOWNFRAME) and a state of |r| = 0; TEME the
-  native frame, up to 23″ from `ToFrame`. A coordinate search in a managed frame is not mapped.
+  native frame, up to 23″ from `ToFrame`. A coordinate search in a managed frame with a kernel spacecraft taking part
+  is the library's since the third review of #690.
 - **A failed SGP4 returned a zero state; TEME outside the PCK a zero rotation** ([#454](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/454), the TLE and TEME paths).
   `SpiceAPI.ConvertTleToStateVector`, under `TLE.ToOsculating` and `ToStateVector`, throws `InvalidOperationException`
   naming the TLE and the epoch when the native layer returns r = 0 (a decayed or suborbital orbit, an eccentricity out
@@ -2240,6 +2241,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   another name, and reads that kernel frame by name, bit for bit, and the managed frame again once it is unloaded; and
   checks that the frame kernel written for such a site is the frame it uses (5.8e-16 rad, 0 from NAIF's, threshold
   1.2e-15 rad provisional). Calls that threw now return; nothing else moves.
+- **A coordinate search in a frame whose reads are the library's returned no window** (third review of
+  [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690)). When CSPICE searched
+  (`Site.FindWindowsOnCoordinateConstraint` of a kernel site with a kernel spacecraft as observer,
+  `CelestialItem.FindWindowsOnCoordinateConstraint` with a kernel spacecraft taking part), `gfposc_c` got the frame by
+  name: the frame of a kernel site whose frame id no loaded kernel defines (`Name + "_TOPO"`), of a site built from
+  coordinates, of a managed spacecraft with an attitude record, `Frame.TEME`, `Frame.CIRS` and `Frame.TIRS`, names SPICE
+  does not know, so that its proxy dropped the error and the search returned no window, while a read in those frames is
+  the library's (#558, #682). These searches now take the managed search in every frame `SpiceAPI.ManagedReadFrame`
+  handles, decided at each search (internal `SpiceAPI.IsManagedFrame`), so that the search agrees with the reads; and
+  `SpiceAPI.FindWindowsOnCoordinateConstraint`, which can only hand the frame to CSPICE, throws `ArgumentException`
+  (`frame`) for a frame of the library that SPICE does not know by the name handed (internal `SpiceAPI.SpiceKnowsFrame`:
+  TEME, CIRS, TIRS, the frame of a site or a spacecraft whose id no loaded kernel defines under that name).
+  `KernelWindowSearchTests` searches, at a 5 min step, the declination of a kernel site at DSS-13's coordinates without
+  a frame kernel seen from the kernel LEO (`kernel_search_leo.bsp`) in the site's frame (2 and 12 windows, 0 before),
+  and of the LEO from the Earth in the frames of that site and of a site built from the same coordinates (9 windows),
+  against `gfposc_c` in a frame kernel the test writes in NAIF's topocentric convention on the same coordinates: within
+  5.0e-7 s (threshold 1.0e-6 s provisional, the managed search at 1 µs against `gfposc_c` at its default 1e-6 s); a
+  frame kernel of the site's id loaded, the site's search is `gfposc_c` in that kernel frame, bit for bit.
 
 - **A geopotential degree above its model file ran at the file's degree, and a missing harmonic was read as zero**
   ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689)). `GeopotentialGravitationalField`
@@ -3186,6 +3205,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the body throws `InvalidOperationException`, nothing written. Migration: to keep the topocentric frame of the J2000
   coordinates, build the site from them, `new Site(id, name, body, kernelSite.Planetodetic)`; its frame kernel is that
   of the former writer, under the name `<NAME>_TOPO`.
+- **Breaking: a coordinate search in a frame whose reads are the library's is the library's** (third review of
+  [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690), Fixed above).
+  `CelestialItem.FindWindowsOnCoordinateConstraint` and `Site.FindWindowsOnCoordinateConstraint` search with the library
+  in a frame whose reads are the library's (`Frame.TEME` or a frame named TEME, `Frame.CIRS`, `Frame.TIRS`, the frame of
+  a site built from coordinates, of a kernel site whose frame id no loaded kernel defines, of a managed spacecraft with
+  an attitude record), also when a kernel spacecraft takes part: where these searches returned no window they return
+  the windows of the reads in that frame, and the frame of a site built from coordinates under a name a loaded kernel
+  defines (`new Site(13, "DSS-13", earth, coordinates)` and `DSS-13_TOPO`), which `gfposc_c` searched in that kernel
+  frame, is now searched in the frame of the coordinates, as it is read since #682 (7.8e-8 rad apart for DSS-13).
+  `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` (`frame`) for a frame of the library SPICE does
+  not know by name, where it returned no window. Migration: to search in a kernel frame, pass that frame
+  (`new Frame("DSS-13_TOPO")`, or the frame of the kernel site, `new Site(13, "DSS-13", earth).Frame`); to search in a
+  library frame with CSPICE, there is no way: use the `CelestialItem` or `Site` searches.
 
 - **Breaking: a geopotential degree above its model file, or a file missing a harmonic, throws**
   ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689), Fixed above). A degree of 2 or more
@@ -3301,12 +3333,13 @@ not listed.
   [#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)). A frame built by name as CIRS
   or TIRS (`new Frame("CIRS")`, a CCSDS file, the CLI) equals `Frame.CIRS` or `Frame.TIRS` but goes to SPICE, which does
   not know it: `new Frame("CIRS").ToFrame(Frame.ICRF, t)` throws, and `SpiceAPI.TransformFrame` in CIRS or TIRS throws
-  even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in `Frame.CIRS` or
-  `Frame.TIRS` returns no window, and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances `Frame.CIRS`
-  and `Frame.TIRS`, and search in a SPICE frame. The frame of a site built from coordinates and that of a managed
-  spacecraft with an attitude record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), but a CSPICE coordinate search in them (a kernel
-  spacecraft taking part) still returns no window, and a frame built by such a name (`new Frame("MYSITE_TOPO")`) still
-  goes to SPICE.
+  even for the instances. `FindWindowsOnCoordinateConstraint` with a kernel-backed spacecraft in a frame built by the
+  name CIRS or TIRS returns no window, and `SpiceAPI.ReadOrientation` in those frames throws. Use the instances
+  `Frame.CIRS` and `Frame.TIRS`, which the coordinate searches of `CelestialItem` and `Site` search in with the library
+  (third review of #690). The frame of a site built from coordinates and that of a managed spacecraft with an attitude
+  record are read in J2000 and rotated ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)), and searched in by the library (third review of #690), but a frame built by
+  such a name (`new Frame("MYSITE_TOPO")`) still goes to SPICE, as does any frame built by a name SPICE does not know,
+  whose CSPICE search returns no window.
 - **Identifiers that are not celestial bodies**
   ([#650](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/650),
   [#651](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/651)). `SpiceAPI.ReadEphemeris` by

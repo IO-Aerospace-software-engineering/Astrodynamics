@@ -164,7 +164,10 @@ before, a read in it threw SPICE(UNKNOWNFRAME)), decided at each read. The frame
 is empty (never propagated, no orientation added, built from a TLE or propagated by `TLEPropagator`) holds no attitude in
 the library: a read in it still reaches SPICE by name, which reads the frame kernel and the CK of that id when they are
 loaded (those the library wrote for an earlier object of the id) and throws SPICE(UNKNOWNFRAME) otherwise. A coordinate
-search that CSPICE runs in one of them is not mapped.
+search of `CelestialItem` or `Site` in a frame whose reads are the library's is the library's, also when a kernel
+spacecraft takes part, so that it agrees with the reads; `SpiceAPI.FindWindowsOnCoordinateConstraint`, which hands the
+frame to CSPICE by name, throws `ArgumentException` for TEME, CIRS, TIRS and the frame of a site or a spacecraft that no
+loaded kernel defines under its name (third review of #690; before, no window).
 
 ### TEME
 

@@ -342,10 +342,18 @@ namespace IO.Astrodynamics.Surface
         /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
         /// shorter than the shortest interval where the quantity is monotone.</param>
         /// <returns></returns>
+        /// <remarks>
+        /// CSPICE's <c>gfposc_c</c> searches when the site is from the kernels, the observer a spacecraft from the kernels and
+        /// the frame one SPICE reads as the library does; in a frame whose reads are the library's (TEME, CIRS, TIRS, the
+        /// frame of a site built from coordinates, of a site from the kernels whose frame id no loaded kernel defines, of a
+        /// managed spacecraft with an attitude record) the library searches, on the reads in that frame (third review of
+        /// #690; before, <c>gfposc_c</c> got a name SPICE does not know and returned no window).
+        /// </remarks>
         public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
         {
-            if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked && ci3.IsSpacecraft)
+            // CSPICE searches only in a frame SPICE reads as the library does (third review of #690)
+            if (IsSpiceBacked && observer is CelestialItem ci3 && ci3.IsSpiceBacked && ci3.IsSpacecraft && !SpiceAPI.IsManagedFrame(frame))
             {
                 bool isDistanceCoord = coordinate is Coordinate.X or Coordinate.Y or Coordinate.Z
                     or Coordinate.Range or Coordinate.Radius or Coordinate.Altitude;

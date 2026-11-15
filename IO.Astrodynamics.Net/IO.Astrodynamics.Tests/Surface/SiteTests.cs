@@ -510,7 +510,7 @@ namespace IO.Astrodynamics.Tests.Surface
         // "TK frames"; the angle set of earth_topo_201023.tf): the angles (-lon, -(pi/2 - lat), pi) about the axes (3, 2, 3),
         // relative to ITRF93, so X toward the north, Y toward the west and Z toward the zenith. SPICE builds its rotation from
         // the angles; the library builds the frame of a site's coordinates by its own matrix (SiteFrame)
-        private static string TopocentricFrameKernel(int frameId, string name, int centerId, Planetodetic planetodetic)
+        internal static string TopocentricFrameKernel(int frameId, string name, int centerId, Planetodetic planetodetic)
         {
             string R(double x) => x.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
             return $"KPL/FK\n\\begindata\nFRAME_{name} = {frameId}\nFRAME_{frameId}_NAME = '{name}'\nFRAME_{frameId}_CLASS = 4\n" +
