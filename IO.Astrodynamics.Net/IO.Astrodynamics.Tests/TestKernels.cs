@@ -138,7 +138,7 @@ internal sealed class SharedKernels
             _removalObserved |= _inPlace;
             if (path < 0)
             {
-                // LoadKernels ignores a path that does not exist
+                // LoadKernels throws ArgumentException for a path that does not exist; this message names the shared set
                 if (!Directory.Exists(Path.FullName))
                 {
                     throw new DirectoryNotFoundException($"The kernels {Path.FullName} do not exist.");

@@ -6,7 +6,7 @@
 
 | Method | Description |
 |--------|-------------|
-| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels; paths compared by components, a path inside a loaded directory reloading it (#673) |
+| `LoadKernels(FileSystemInfo path)` | Load a kernel file or a directory of kernels, the path taken as what it is on disk, `ArgumentException` for one that does not exist; paths compared by components, a path inside a loaded directory reloading it (#673) |
 | `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, whether the path still exists or not; after a file or subdirectory of a loaded directory, its other files stay listed in its place (#673) |
 | `ClearKernels()` | Unload all kernels (`kclear_c`) |
 | `GetLoadedKernels()` | Inspect the loaded paths |

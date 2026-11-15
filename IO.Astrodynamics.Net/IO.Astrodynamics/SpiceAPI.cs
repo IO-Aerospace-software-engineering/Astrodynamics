@@ -346,8 +346,9 @@ public class SpiceAPI
     /// <para>
     /// A file path is handed to SPICE as it is. For a directory, the kernel files of the directory and of its
     /// subdirectories are loaded, in the order of the directory listing; the other files, from which SPICE would load
-    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>). A path that does not exist
-    /// loads nothing.
+    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>). The path is taken as what it
+    /// is on disk, whatever its type: a <see cref="FileInfo"/> that names a directory loads the directory, a
+    /// <see cref="DirectoryInfo"/> that names a file loads the file.
     /// </para>
     /// <para>
     /// Paths are compared by their components (#673): a path already loaded, or inside a loaded directory, reloads that
@@ -355,11 +356,21 @@ public class SpiceAPI
     /// SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
     /// </para>
     /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException">The path is neither a file nor a directory on disk: nothing is loaded, unloaded
+    /// or reloaded. Before 11.0.0 such a path loaded nothing and the call returned.</exception>
     public void LoadKernels(FileSystemInfo path)
     {
         if (path == null) throw new ArgumentNullException(nameof(path));
         lock (lockObject)
         {
+            // Before any unload or reload, so that a failed call changes nothing; not the cached Exists of the instance,
+            // which a reload of a stored entry would trust after a deletion
+            if (!Exists(path))
+            {
+                throw new ArgumentException($"The kernel path {path.FullName} does not exist.", nameof(path));
+            }
+
             var containing = _kernels.Where(x => IsSameOrInside(path.FullName, x.Path.FullName)).ToArray();
             if (containing.Length > 0)
             {
@@ -377,30 +388,25 @@ public class SpiceAPI
                 UnloadKernels(inside.Path);
             }
 
-            // Not the cached Exists of the instance, which a reload of a stored entry would trust after a deletion
-            if (Exists(path))
+            var files = new List<KernelFile>();
+            foreach (var kernel in KernelFiles(path))
             {
-                var files = new List<KernelFile>();
-                foreach (var kernel in KernelFiles(path))
+                if (!LoadKernelsProxy(kernel))
                 {
-                    if (!LoadKernelsProxy(kernel))
-                    {
-                        throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
-                    }
-
-                    // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
-                    var (reads, mayFailOn) = UnloadRereads(kernel);
-                    files.Add(new KernelFile(kernel, reads, mayFailOn));
+                    throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
                 }
 
-                _kernels.Add(new KernelEntry(path, files.ToArray()));
+                // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
+                var (reads, mayFailOn) = UnloadRereads(kernel);
+                files.Add(new KernelFile(kernel, reads, mayFailOn));
             }
+
+            _kernels.Add(new KernelEntry(path, files.ToArray()));
         }
     }
 
-    /// <summary>Whether the path exists now, as a directory for a <see cref="DirectoryInfo"/>, as a file otherwise.</summary>
-    private static bool Exists(FileSystemInfo path) =>
-        path is DirectoryInfo ? Directory.Exists(path.FullName) : File.Exists(path.FullName);
+    /// <summary>Whether the path is a file or a directory on disk now, whatever the type of <paramref name="path"/>.</summary>
+    private static bool Exists(FileSystemInfo path) => File.Exists(path.FullName) || Directory.Exists(path.FullName);
 
     /// <summary>
     /// Whether <paramref name="path"/> is <paramref name="root"/> or a path inside it, compared by components on the full
@@ -435,7 +441,7 @@ public class SpiceAPI
     /// <summary>
     /// The files that <see cref="LoadKernels"/> hands to SPICE for <paramref name="path"/>: the file itself, or the
     /// kernel files of a directory and of its subdirectories, in the order of the directory listing, as the native
-    /// loader walks it.
+    /// loader walks it. The path is walked as a directory whenever it is one on disk, whatever its type.
     /// </summary>
     /// <remarks>
     /// The other files of a directory (a geopotential model, a readme) are left out: SPICE would load nothing from
@@ -444,7 +450,7 @@ public class SpiceAPI
     /// </remarks>
     internal static IEnumerable<string> KernelFiles(FileSystemInfo path)
     {
-        if (path is not DirectoryInfo && !Directory.Exists(path.FullName))
+        if (!Directory.Exists(path.FullName))
         {
             yield return path.FullName;
             yield break;

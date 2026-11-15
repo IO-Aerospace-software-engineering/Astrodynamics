@@ -1525,7 +1525,7 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   load kernels wrapped the argument in a `DirectoryInfo`, from which a file loaded nothing without an error:
   `astro ephemeris mk.tm …` failed with "Celestial celestialItem frame can't be defined". A file, a kernel or a
   meta-kernel, is now loaded as a file (`Helpers.KernelsPath`), a folder as before, bit for bit; a path that does not
-  exist still loads nothing. `KernelsPathTests` gives `frame-converter` a TK frame kernel, then a meta-kernel that names
+  exist is an argument error that names it (Changed, `LoadKernels` of a missing path). `KernelsPathTests` gives `frame-converter` a TK frame kernel, then a meta-kernel that names
   it, and reads the quaternion of the 90° rotation about z (|W| = |Z| = cos 45°).
 - **The Cosmographia export wrote kernels that SPICE cannot load, and the native writers a file under a truncated
   name** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673)). SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading,
@@ -2023,6 +2023,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Migration: choose a shorter output directory (the CK of a spacecraft,
   `<output>/<Mission>_<Scenario>/Spacecrafts/<name>/Orientation/<name>.ck`, is usually the longest kernel) or a shorter
   temporary directory (`TMPDIR`, `TEMP`), and catch `ArgumentException`. `Spacecraft.WriteEphemeris` and the text kernel writers are unchanged.
+- **Breaking: `LoadKernels` of a path that does not exist throws `ArgumentException`** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), second round).
+  `SpiceAPI.LoadKernels` threw nothing and loaded nothing for a path that is neither a file nor a directory on disk, and
+  for a `FileInfo` that names a directory or a `DirectoryInfo` that names a file (it tested the path by its .NET type):
+  the first read that needed the kernels failed later, with a SPICE error that did not name the path. It now throws
+  `ArgumentException` (parameter `path`, the full path in the message) before anything is unloaded or reloaded, so a
+  missing path inside a loaded folder no longer reloads the folder; and it takes the path as what it is on disk, a
+  `FileInfo` naming a folder loading the folder, a `DirectoryInfo` naming a file loading the file (`SpiceApiTest`, a TK
+  frame of 90° about z read back through `pxform`, and KEEPER's count unchanged by a failed call). Every `astro`
+  command given a kernels path that does not exist fails with that `ArgumentException` (`KernelsPathTests`), where it
+  failed later on a frame or a body. `UnloadKernels` of a missing path is unchanged. No numerical result moves.
+  Migration: give an existing path, or test `File.Exists`/`Directory.Exists` first and catch `ArgumentException`.
 - **`GetLoadedKernels` after a partial unload** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed above): after `UnloadKernels` of a file or a subfolder of a
   loaded folder, the listing names the folder's remaining kernel files, in its place, instead of the folder; after
   `UnloadKernels` of a deleted or moved path, its data is no longer readable. Migration: look for the folder's files,
