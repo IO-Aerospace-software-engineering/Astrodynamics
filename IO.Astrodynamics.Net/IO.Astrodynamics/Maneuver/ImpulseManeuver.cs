@@ -78,7 +78,11 @@ namespace IO.Astrodynamics.Maneuver
         /// spacecraft of the engine nor in the frame it is propagated in (ICRF for a TLE or a TEME state, #675).</exception>
         /// <remarks>
         /// On a spacecraft whose initial orbit is a TLE or a TEME state, the propagation integrates in ICRF and takes the
-        /// target in ICRF: a target in TEME is accepted here, as before, and rejected when the propagation is built.
+        /// target in ICRF: a target in TEME is accepted here, as before, and rejected when the propagation is built. This
+        /// check runs only when the tank of the engine is on a spacecraft, against the initial orbit it has then; the
+        /// propagation checks every target again when it is built, on every spacecraft (#685), so that a maneuver built
+        /// before its tank is attached, or whose spacecraft gets another initial orbit, is rejected there
+        /// (<see cref="ArgumentException"/>) when its target is not in the frame of the propagation.
         /// </remarks>
         protected ImpulseManeuver(Time minimumEpoch, TimeSpan maneuverHoldDuration, OrbitalParameters.OrbitalParameters targetOrbit, Engine engine) : this(
             RequireTargetOrbit(targetOrbit).Observer as CelestialItem, minimumEpoch, maneuverHoldDuration, engine)

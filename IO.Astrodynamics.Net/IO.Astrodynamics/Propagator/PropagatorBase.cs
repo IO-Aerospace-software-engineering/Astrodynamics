@@ -1023,26 +1023,28 @@ public abstract class PropagatorBase : IPropagator
         SpiceAPI.IsTeme(initial.Frame);
 
     /// <summary>
-    /// A spacecraft propagated in another frame than that of its initial orbit (a TLE or a TEME state, rotated to ICRF)
-    /// takes the target orbits of its impulses in ICRF, the frame of the integrated state they are compared with: a
-    /// target in any other frame is rejected before anything runs (#675).
+    /// The target orbits of the impulses of a spacecraft are compared with the integrated state, in the frame the
+    /// spacecraft is propagated in (<see cref="PropagationFrame"/>): a target in any other frame is rejected before anything
+    /// runs, on every spacecraft (#685). The constructor of <see cref="ImpulseManeuver"/> checks the frame of its target
+    /// only when its tank is on a spacecraft, against the initial orbit it has then; this check covers a maneuver built
+    /// before its tank is attached, a spacecraft given another initial orbit afterwards, and a TLE or TEME start, which is
+    /// propagated in ICRF (#675).
     /// </summary>
     private static void ValidateTargetOrbitFrames(Spacecraft spacecraft, IEnumerable<Maneuver.Maneuver> maneuvers)
     {
         var initial = spacecraft.InitialOrbitalParameters;
-        if (PropagationFrame(initial) == initial.Frame)
-        {
-            return;
-        }
-
+        var propagationFrame = PropagationFrame(initial);
         foreach (var maneuver in maneuvers)
         {
-            if (maneuver is ImpulseManeuver { TargetOrbit: { } target } && target.Frame != Frame.ICRF)
+            if (maneuver is ImpulseManeuver { TargetOrbit: { } target } && target.Frame != propagationFrame)
             {
+                var start = propagationFrame == initial.Frame
+                    ? $"whose initial orbit is in {propagationFrame.Name}, is propagated in {propagationFrame.Name}"
+                    : $"whose initial orbit is a TLE or a TEME state, is propagated in {propagationFrame.Name}";
+                var fix = propagationFrame == Frame.ICRF ? "Frame.ICRF" : "spacecraft.InitialOrbitalParameters.Frame";
                 throw new ArgumentException(
-                    $"The target orbit of the {maneuver.GetType().Name} is in {target.Frame.Name}, and {spacecraft.Name}, whose " +
-                    "initial orbit is a TLE or a TEME state, is propagated in ICRF: give the target in ICRF " +
-                    "(targetOrbit.ToFrame(Frame.ICRF)).", nameof(spacecraft));
+                    $"The target orbit of the {maneuver.GetType().Name} is in {target.Frame.Name}, and {spacecraft.Name}, {start}: " +
+                    $"give the target in {propagationFrame.Name} (targetOrbit.ToFrame({fix})).", nameof(spacecraft));
             }
         }
     }

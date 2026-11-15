@@ -667,6 +667,20 @@ namespace IO.Astrodynamics.Body.Spacecraft
             return Task.Run(() => Propagate(window, celestialBodies, includeAtmosphericDrag, includeSolarRadiationPressure, propagatorStepSize));
         }
 
+        /// <summary>
+        /// Propagate the spacecraft with the default integrator (Velocity-Verlet at <paramref name="propagatorStepSize"/>).
+        /// </summary>
+        /// <param name="window">The propagation window.</param>
+        /// <param name="celestialBodies">Celestial bodies used for gravity, third-body perturbations, drag, and SRP.</param>
+        /// <param name="includeAtmosphericDrag">Whether to include atmospheric drag.</param>
+        /// <param name="includeSolarRadiationPressure">Whether to include solar radiation pressure.</param>
+        /// <param name="propagatorStepSize">The step of the output states.</param>
+        /// <returns>The solution.</returns>
+        /// <exception cref="ArgumentException">The target orbit of an impulse of the maneuver chain is not in the frame the
+        /// spacecraft is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685); nothing
+        /// changes.</exception>
+        /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="propagatorStepSize"/> is not positive.</exception>
         public PropagationSolution Propagate(Window window, IEnumerable<CelestialItem> celestialBodies, bool includeAtmosphericDrag,
             bool includeSolarRadiationPressure, TimeSpan propagatorStepSize)
         {
@@ -712,8 +726,9 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// is not an <see cref="RK78Integrator"/>.</exception>
         /// <exception cref="ArgumentException">Process noise or consider parameters without the covariance, or a
         /// consider parameter without its force; the integrator already holds forces or was already used by a
-        /// propagation that builds its forces; or listed bodies of one NAIF identifier, the observer's included, have
-        /// different models.</exception>
+        /// propagation that builds its forces; listed bodies of one NAIF identifier, the observer's included, have
+        /// different models; or the target orbit of an impulse of the maneuver chain is not in the frame the spacecraft
+        /// is propagated in, the frame of its initial orbit or ICRF for a TLE or a TEME state (#685).</exception>
         /// <exception cref="InvalidOperationException">The spacecraft comes from a kernel; or the covariance is asked
         /// for, and the initial orbital parameters carry none, carry it at another epoch than the start of the window,
         /// or carry one that is not symmetric and positive semi-definite; or drag is asked about a central body other

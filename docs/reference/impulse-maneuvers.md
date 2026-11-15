@@ -25,13 +25,22 @@ commanded ΔV (open loop).
 ### The frame of a target orbit
 
 `PlaneAlignmentManeuver`, `ApsidalAlignmentManeuver` and the target-orbit `PhasingManeuver` compare their target with
-the integrated state, so the target is given in the frame the spacecraft is propagated in. The constructor takes it in
-the frame of the spacecraft's initial orbit, or, for a spacecraft whose initial orbit is a TLE or an osculating TEME
-state, which is propagated in ICRF ([Propagation Frame](propagators.md#propagation-frame)), in ICRF (#675; it threw
-before 11.0.0); any other frame throws `ArgumentException`. On such a spacecraft a target in TEME still constructs, and
-the propagation rejects it when it is built (`ArgumentException`, naming `targetOrbit.ToFrame(Frame.ICRF)`), before it
-changes anything: give the target in ICRF. A maneuver built before its engine is attached to a spacecraft is not
-checked by its constructor; the propagation of a TLE or TEME spacecraft checks every target of its chain the same way.
+the integrated state, so the target is given in the frame the spacecraft is propagated in: the frame of its initial
+orbit, or ICRF for a spacecraft whose initial orbit is a TLE or an osculating TEME state, which is propagated in ICRF
+([Propagation Frame](propagators.md#propagation-frame)). The propagation checks every target of the chain, leading and
+chained, when it is built, on every spacecraft and every path (`Spacecraft.Propagate` and `PropagateAsync`,
+`Scenario.SimulateAsync`, `BatchPropagator`, `MonteCarloPropagator`, the constructors, the builder and the avoidance
+propagations of the conjunction analysis): a target in another frame throws `ArgumentException` (parameter
+`spacecraft`) naming the maneuver, the two frames and the fix, `targetOrbit.ToFrame(Frame.ICRF)` for ICRF, before it
+changes anything (#685; before 11.0.0 only a TLE or TEME spacecraft was checked there, #675, and on another spacecraft
+the components of the target were read as if they were in the integration frame: a plane change of 2° from an
+ECLIPJ2000 target on an ICRF spacecraft burned 2807 m/s for 263 m/s). The constructor checks the target too, when the
+tank of its engine is on a spacecraft: it takes the frame of the spacecraft's initial orbit or, on a TLE or TEME
+spacecraft, ICRF (#675); any other frame throws `ArgumentException`. On such a spacecraft a target in TEME still
+constructs and is rejected when the propagation is built. A maneuver built before its tank is on a spacecraft, or whose
+spacecraft gets another initial orbit afterwards (`SetInitialOrbitalParameters`), is checked only when the propagation
+is built. Frames are compared by name, as everywhere in the library: a GCRF target on an ICRF spacecraft is rejected,
+although GCRF has the axes of ICRF.
 
 ## Thrust Window Convention
 

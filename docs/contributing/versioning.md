@@ -2011,6 +2011,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   validation, `Load*` and `ReadFrom*` from a file, a string and a stream, `TryLoadFromFile`, `ValidateFile` and
   `Cdm.ReadFromFile`/`ReadFromString`/`ReadFromStream`.
 
+- **A target orbit in another frame than the propagation's burned silently** ([#685](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/685)). The
+  constructor of `ImpulseManeuver` checks the frame of its target only when the tank of its engine is on a spacecraft,
+  against the initial orbit the spacecraft has then, and the check of the propagation (#675) covered only a TLE or TEME
+  start: a `PlaneAlignmentManeuver`, `ApsidalAlignmentManeuver` or target-orbit `PhasingManeuver` built before its tank
+  was added, or whose spacecraft was then given another initial orbit (`SetInitialOrbitalParameters`), read the
+  components of its target as if they were in the integration frame. A plane change of 2° between circular orbits of
+  7000 km at 30° and 32° in ICRF, the target given in ECLIPJ2000, burned 2807.185 m/s and left the orbit 23.44° from the
+  target's plane, the closed form 2 v sin(Δi/2) of the plane misread (Δi = 21.44°), for 263.394 m/s. The propagator now
+  checks every target of the chain, leading and chained, against the frame of the propagation when it is built, on
+  every spacecraft (`PropagatorBase.ValidateTargetOrbitFrames`, the check of #675 without its early return), before
+  anything changes. `ImpulseManeuverTests` covers the three maneuvers, both orders, leading and chained, both
+  integrators, and a fresh spacecraft as one already propagated (its states and maneuver windows left as they were);
+  the target rotated to ICRF, and a spacecraft and a target both in ECLIPJ2000, burn the closed form to 7.0e-9 m/s
+  (RK7(8), threshold 1.4e-8 m/s provisional) and end in the target's plane to 4.0e-11°; `ScenarioTests` covers
+  `Scenario.SimulateAsync`.
+
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
@@ -2681,6 +2697,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `NotEqual` is split at the crossings added. No call throws and no edge found before moves; the quantity is
   evaluated about 1.2 times as often at a step where nothing is hidden. Migration: none to find every window; a caller
   who relied on a coarse step to pass over short windows filters the result by length.
+
+- **Breaking: a target orbit in another frame than the propagation's throws on every spacecraft**
+  ([#685](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/685), Fixed above). A propagation whose impulse target orbit is not in the frame the spacecraft is
+  propagated in throws `ArgumentException` (parameter `spacecraft`) when the propagator is built, on every path
+  (`Spacecraft.Propagate` and `PropagateAsync`, `Scenario.SimulateAsync`, `BatchPropagator`, `MonteCarloPropagator`,
+  the constructors, the builder and the avoidance propagations), where only a TLE or TEME start was checked there; other
+  spacecraft burned with the target's components read in the integration frame (10.7 times the closed form in the case
+  measured). The results of valid inputs are bit for bit. Migration: give the target in the spacecraft's propagation
+  frame, `targetOrbit.ToFrame(spacecraft.InitialOrbitalParameters.Frame)`, or ICRF for a TLE or TEME start.
 
 **Removed**
 

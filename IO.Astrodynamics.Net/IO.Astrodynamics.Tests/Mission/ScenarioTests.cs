@@ -737,6 +737,41 @@ namespace IO.Astrodynamics.Tests.Mission
             }
         }
 
+        /// <summary>
+        /// A plane alignment whose target is in ECLIPJ2000, built before its tank is on a spacecraft propagated in ICRF, is
+        /// rejected when the simulation builds the propagation of that spacecraft, as by <see cref="Spacecraft.Propagate(Window, System.Collections.Generic.IEnumerable{CelestialItem}, bool, bool, TimeSpan)"/> (#685):
+        /// it burned 2807 m/s for a plane change of 2° (263 m/s), the target's components read in ICRF.
+        /// </summary>
+        [Fact]
+        public async Task SimulateAsync_TargetOrbitInAnotherFrame_IsRejected()
+        {
+            // Arrange
+            var window = new Window(TimeSystem.Time.J2000TDB, TimeSystem.Time.J2000TDB.AddHours(2.0));
+            var earth = TestHelpers.EarthAtJ2000;
+            var orbit = new KeplerianElements(7000000.0, 0.0, 30.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, window.StartDate,
+                Frames.Frame.ICRF);
+            var target = new KeplerianElements(7000000.0, 0.0, 32.0 * Astrodynamics.Constants.Deg2Rad, 0.0, 0.0, 1.0, earth, window.StartDate,
+                Frames.Frame.ICRF).ToFrame(Frames.Frame.ECLIPTIC_J2000);
+            var tank = new FuelTank("ft685", "ftA", "sn685", 1000.0, 900.0);
+            var engine = new Engine("eng685", "engmk1", "sn685", 450, 50, tank);
+            var maneuver = new PlaneAlignmentManeuver(window.StartDate, TimeSpan.Zero, target, engine);
+            var spacecraft = new Spacecraft(-6855, "Scenario685", 1000.0, 3000.0, new Clock("clk685", 65536), orbit);
+            spacecraft.AddFuelTank(tank);
+            spacecraft.AddEngine(engine);
+            spacecraft.SetStandbyManeuver(maneuver);
+            var scenario = new Scenario("scn685", new Astrodynamics.Mission.Mission("mission685"), window);
+            scenario.AddSpacecraft(spacecraft);
+
+            // Act
+            var exception = await Assert.ThrowsAsync<ArgumentException>(() => scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0)));
+
+            // Assert
+            Assert.Equal("spacecraft", exception.ParamName);
+            Assert.Contains("ToFrame(Frame.ICRF)", exception.Message);
+            Assert.False(spacecraft.IsPropagated);
+            Assert.Null(maneuver.ThrustWindow);
+        }
+
         [Fact]
         public async Task PropagateException()
         {
