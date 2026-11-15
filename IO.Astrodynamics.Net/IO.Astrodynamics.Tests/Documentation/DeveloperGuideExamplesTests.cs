@@ -213,10 +213,10 @@ public class DeveloperGuideExamplesTests
             new Vector3(vxp, vyp * System.Math.Cos(i), vyp * System.Math.Sin(i)));
     }
 
-    // Twice the worst over Linux x64 (2026-11-15), provisional until the three platforms' CI (MEASURE line below): the
-    // example's Velocity-Verlet propagation at 1 s steps against the two-body closed form after 12 h, 1.245e2 m and
-    // 1.352e-1 m/s, the integrator's own error (second order: 1.245e4 m at 10 s, 4.475e5 m at 60 s, the step of the guide
-    // before #668; RK7(8) 0.32 m at any of these steps)
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI run 43745883709, 2026-11-15;
+    // MEASURE line below), rounded up at the second significant digit: the example's Velocity-Verlet propagation at 1 s
+    // steps against the two-body closed form after 12 h, 1.245e2 m and 1.352e-1 m/s, the integrator's own error (second
+    // order: 1.245e4 m at 10 s, 4.475e5 m at 60 s, the step of the guide before #668; RK7(8) 0.32 m at any of these steps)
     private const double SpacecraftExamplePositionLimit = 2.5e2;
     private const double SpacecraftExampleVelocityLimit = 2.8e-1;
 

@@ -269,8 +269,8 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
     sampled search) and at the window ends. The seven `collision_probability` encounters through `Analyze`, whose exact
     TCA lies within 4.3e-7 tick of a tick: the Pc within 3.15e-10 of its exact value (005, at its exact tick; 9.03e-9
     before, 003 and 005 returned one tick early), asserted at 6.4e-10 (6.3e-10 until #668, whose three-digit prints give
-    3.1549e-10 on Linux x64, twice which is above 6.3e-10; provisional until the three-digit prints of Windows x64 and
-    macOS arm64 are read from the CI of #668; 1.9e-8 before #624). Against `gfdist_c` on the
+    3.1549e-10 on Linux x64, Windows x64 and macOS arm64, CI run 43745883709, twice which is above 6.3e-10; 1.9e-8
+    before #624). Against `gfdist_c` on the
     crossing LEOs, the TCA within 6.4e-8 s of CSPICE's zero below the tick at 60 s steps and 9.0e-8 s at the default
     steps (1.5e-7 s before), asserted at 1.8e-7 s (4e-7 s, when the reference was CSPICE's minimum on the grid of ticks,
     up to 0.96 tick from its zero); the #620 RTN position within 1.5e-4 m of the design (6.3e-4 m before), asserted at
@@ -1829,7 +1829,7 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   5 m when neither does (Changed below); the option of `Screen` is a fallback over its catalogue, never in conflict with
   a candidate's own radius. `Analyze_SecondaryHardBodyRadius_DesignedEncounters_MatchExactPc` splits the
   radius of the seven designed encounters of `tools/collision_probability` between the two spacecraft (0.6 R and 0.4 R,
-  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.15e-10 on the three platforms (CI run 43601908000; bound 6.4e-10 since #668, provisional until the three platforms' three-digit prints, 6.3e-10 before); a
+  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.15e-10 on the three platforms (CI run 43601908000; bound 6.4e-10 since #668, from the three platforms' three-digit prints, 3.1549e-10 in CI run 43745883709, 6.3e-10 before); a
   theory checks the five rows of the rule on `Analyze` and `AnalyzeAll` (sampled and dense) and both avoidance paths,
   and the fallback rule on `Screen` (the candidate's own radius in the row where the others throw), with a spacecraft
   and a body as secondary; `Screen_MixedCatalogue_EachCandidateTakesItsOwnRadiusOrTheFallback` screens spacecraft of 2, 6 and 0 m and
@@ -2129,12 +2129,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   vis-viva at the vector's radius, never 0 now. Mean `KeplerianElements` and `EquinoctialElements` keep throwing, as
   `ToStateVector()` and `EccentricityVector()` do, now at e = 0 too; a `TLE` takes the axis of its osculating elements
   at its epoch, the elements its other members return. `KeplerianElementsTests` and `EquinoctialElementsTests` check 13
-  eccentricities from 0 to 0.95, 2000 sets of angles each, against CSPICE `conics` at M = 0 and π (perigee within 3.4e-16 rad and 4.4e-16 of its radius, apogee its opposite at a(1 + e); the equinoctial elements within 1.4e-15 rad and 3.7e-15 with the rounding of their conversion);
+  eccentricities from 0 to 0.95, 2000 sets of angles each, against CSPICE `conics` at M = 0 and π (perigee within 3.6e-16 rad and 4.4e-16 of its radius, apogee its opposite at a(1 + e); the equinoctial elements within 1.4e-15 rad and 4.1e-15 with the rounding of their conversion);
   `StateVectorTests` 10 000 near-circular states (|p̂ · ĥ| 2.8e-16, against 1.0 before), states with a zero eccentricity vector (the node, exactly), and
   elliptic states against `oscelt` then `conics` (7.1e-10 rad at e = 1e-6 to 1.7e-15 at 0.95, the conditioning of the eccentricity vector); the maneuver and launch tests the state of the issue
   (apsis radii and velocities within an ulp of 7178 km and √(GM / r)); `KeplerianElementsTests` the throws of mean
   elements at e = 0, 0.01 and 0.7, and the apsides of the ISS TLE and of a TLE of e = 0.72 against the periapsis of their
-  SGP4 state by `oscelt` then `conics` (1.5e-13 rad).
+  SGP4 state by `oscelt` then `conics` (1.8e-13 rad); each figure the worst of Linux x64, Windows x64 and macOS arm64
+  (CI run 43745883709).
 - **A rectilinear state had an RTN frame with zero rows and the elements of an equatorial orbit** ([#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687)).
   `StateVector.CreateRtnRotation` built its rows with the lenient normalization, so for r × v = 0 (a radial motion, a
   zero velocity, the centre) the T and N rows were zero (and the R row at the centre): `FromRtn((0, 1, 0))` was the zero
@@ -2169,7 +2170,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (constructor or builder) and then `Propagate()` burned the same 2807.185 m/s (second review). `ImpulseManeuverTests` covers the three maneuvers, both orders, leading and chained, both
   integrators, and a fresh spacecraft as one already propagated (its states and maneuver windows left as they were);
   the target rotated to ICRF, and a spacecraft and a target both in ECLIPJ2000, burn the closed form to 7.0e-9 m/s
-  (RK7(8), threshold 1.4e-8 m/s provisional) and end in the target's plane to 4.0e-11°; a maneuver attached after the
+  (RK7(8), threshold 1.4e-8 m/s, twice the worst of the three platforms) and end in the target's plane to 4.0e-11°; a maneuver attached after the
   propagator was built, by its constructor or its builder, with both integrators, is rejected by `Propagate()` before
   its burn (no window, the tank full); `ScenarioTests` covers `Scenario.SimulateAsync`. Both checks compared the frames by
   name, so that a target in GCRF on a spacecraft propagated in ICRF, and the reverse, was rejected by the constructor
@@ -2212,10 +2213,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   illumination angles (`IlluminationIncidence`, `IlluminationEmission`) take the normal of the ellipsoid at
   `Planetodetic`, the normal `gfilum_c` takes for the site, so they keep agreeing with
   `FindWindowsOnIlluminationConstraint`. No C++ change. `FrameTests` checks the frame of DSS-13 against SPICE's
-  `DSS-13_TOPO` (0 rad, angular velocity 0) and against the closed form of `TKFRAME_1399013_ANGLES` (2.98e-16 rad,
-  threshold 6.0e-16 rad provisional) and the Moon from GOLDSTONE against `spkezr_c` in `DSS-13_TOPO` (2.1e-16 rad);
-  `SiteTests` the horizontal coordinates against `spkezr_c` in `DSS-13_TOPO` by name (1.6e-16 rad, threshold 3.2e-16 rad
-  provisional) and the literals of `tools/geodetic_reference/dss13_topo.c` in `DSS-13_TOPO`; `SiteTests`,
+  `DSS-13_TOPO` (0 rad, angular velocity 0) and against the closed form of `TKFRAME_1399013_ANGLES` (3.13e-16 rad,
+  threshold 6.3e-16 rad) and the Moon from GOLDSTONE against `spkezr_c` in `DSS-13_TOPO` (2.1e-16 rad);
+  `SiteTests` the horizontal coordinates against `spkezr_c` in `DSS-13_TOPO` by name (2.1e-16 rad, threshold 4.2e-16 rad)
+  and the literals of `tools/geodetic_reference/dss13_topo.c` in `DSS-13_TOPO`; `SiteTests`,
   `GeometryFinderTests` and `KernelWindowSearchTests` the managed searches of the kernel site against `gfposc_c` in
   `DSS-13_TOPO` (`tools/geometry_reference`, regenerated: the Moon's Z and elevation extremes, the LEO elevation, 1.2e-7
   s two-body and 2.4e-7 s RK7(8)), where they compared with a reference in the frame the library built. The frame kernel
@@ -2226,7 +2227,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   characters of a line: the nine components on one line gave 6), and rejects a kernel frame not fixed in the frame of
   the body (`InvalidOperationException`, internal `SpiceAPI.KernelFrameNameOf`). `SiteTests` loads the file written for
   DSS-13 and GOLDSTONE, renamed so that it redefines nothing of `Data/SolarSystem`, and reads its rotation to
-  `DSS-13_TOPO` by `pxform` (2.1e-16 rad, threshold 5.0e-16 rad provisional; 7.76e-8 rad before), and rejects a site
+  `DSS-13_TOPO` by `pxform` (2.1e-16 rad, threshold 4.3e-16 rad; 7.76e-8 rad before), and rejects a site
   frame defined relative to J2000. A kernel site whose frame id no loaded kernel defines kept the frame of its
   `Planetodetic` for `ToFrame(site.Frame)`, `GetHorizontalCoordinates` and the managed searches, while an ephemeris read
   in it reached `spkezr_c` by its own name, `Name + "_TOPO"`, which SPICE does not know: the site, the Moon and
@@ -2237,10 +2238,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `SpiceAPI.ReadEphemeris` at an epoch and over a window, with `spkezr_c` in a frame kernel the test writes in
   NAIF's topocentric convention (the angles of `earth_topo_201023.tf`) on `Planetodetic`, under another id: the position
   within 7.3e-16 (angle and relative magnitude), the velocity within 4.9e-11 m/s and the frame within 5.8e-16 rad
-  (thresholds 1.5e-15, 1.0e-10 m/s and 1.2e-15 rad, provisional); then loads a frame kernel of the site's id, under
+  (thresholds 1.5e-15, 9.9e-11 m/s and 1.2e-15 rad); then loads a frame kernel of the site's id, under
   another name, and reads that kernel frame by name, bit for bit, and the managed frame again once it is unloaded; and
   checks that the frame kernel written for such a site is the frame it uses (5.8e-16 rad, 0 from NAIF's, threshold
-  1.2e-15 rad provisional). Calls that threw now return; nothing else moves.
+  1.2e-15 rad); each figure the worst of Linux x64, Windows x64 and macOS arm64 and each threshold twice it (CI run
+  43745883709). Calls that threw now return; nothing else moves.
 - **A coordinate search in a frame whose reads are the library's returned no window** (third review of
   [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690)). When CSPICE searched
   (`Site.FindWindowsOnCoordinateConstraint` of a kernel site with a kernel spacecraft as observer,
@@ -2257,7 +2259,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a frame kernel seen from the kernel LEO (`kernel_search_leo.bsp`) in the site's frame (2 and 12 windows, 0 before),
   and of the LEO from the Earth in the frames of that site and of a site built from the same coordinates (9 windows),
   against `gfposc_c` in a frame kernel the test writes in NAIF's topocentric convention on the same coordinates: within
-  5.0e-7 s (threshold 1.0e-6 s provisional, the managed search at 1 µs against `gfposc_c` at its default 1e-6 s); a
+  5.0e-7 s on the three platforms (threshold 1.0e-6 s, the managed search at 1 µs against `gfposc_c` at its default 1e-6 s); a
   frame kernel of the site's id loaded, the site's search is `gfposc_c` in that kernel frame, bit for bit.
 
 - **A geopotential degree above its model file ran at the file's degree, and a missing harmonic was read as zero**
@@ -2329,7 +2331,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the state transition matrix) and Velocity-Verlet, without any `Initialize` by the caller, against the two-body closed
   form over the TT seconds of the hour about the Earth (9.95e-5 m in RK7(8) at 1e-10, 15.9 m by Velocity-Verlet at 1 s,
   its truncation), about the Sun in SSB mode over the TDB seconds of a day (1.22e-4 m), from an ECLIPJ2000 state
-  integrated in ECLIPJ2000 (9.95e-5 m) (thresholds provisional, twice the Linux worst); bit for bit the run the caller
+  integrated in ECLIPJ2000 (9.95e-5 m) (the same on the three platforms; thresholds twice the worst); bit for bit the run the caller
   initializes after construction, with and without an impulse, and the force-building constructor with the same single
   force; a recording `IIntegrator` sees one `Initialize`, by the constructor, with the central body, the frame and the
   TDB start of a UTC window.
@@ -2488,7 +2490,7 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   in a namespace outside `IO.Astrodynamics` as an application's, and `DeveloperGuideExamplesTests` checks that each
   block equals its region and runs the 40 that need only `Data/SolarSystem`; the spacecraft example against the two-body
   state of its elements after 12 h (124.5 m, the Velocity-Verlet error at the 1 s step it now uses: 447 km at the 60 s
-  of before; bounds 2.5e2 m and 2.8e-1 m/s, provisional, twice the Linux x64 worst until the three platforms' CI). A
+  of before; bounds 2.5e2 m and 2.8e-1 m/s, twice the worst, the same on the three platforms). A
   block that continues an earlier one names its inputs in its first comment. The KeplerianElements table listed
   `ApogeeRadius()`, which never existed (the apogee radius is `ApogeeVector().Magnitude()`, as
   `docs/reference/keplerian-elements.md` now says too); `GuideMethodTables_NameMembersOfTheLibrary` checks that every
@@ -2531,7 +2533,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (8.882e-16 rad); and 1e4 vectors of magnitude 2^-1075 to 2^1023 whose exact direction is the vector scaled back by
   an exact power of two (| |u| − 1 | 2.220e-16, |u × d| / |d| 1.221e-16, the magnitude 1.940e-16 relative against a
   double-double computation; 0.939 ulp per component and 2.125e-16 relative magnitude against an 80-digit decimal
-  computation during the triage); bounds twice the Linux x64 worst, provisional until the three platforms' CI. `VectorTests`, `QuaternionTests`, `MatirxTests`, `SpacecraftTests`.
+  computation during the triage); bounds twice the worst over the three platforms (the same figures on the three, but
+  the SLERP at 2^±1000, 5.6e-17 on Windows x64). `VectorTests`, `QuaternionTests`, `MatirxTests`, `SpacecraftTests`.
 - **`Plane.GetAngle` returned NaN for parallel normals, for normals outside about 1e-154 to 1e154, and for a zero or
   non-finite normal or vector** (third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
   The quotient (n1 · n2) / (|n1| |n2|) rounded past ±1 for parallel and antiparallel normals, where `Acos` and `Asin`
@@ -2544,8 +2547,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   a finite result of before with a sum of squares in (1e300, `double.MaxValue`] can move by one ulp (the cosine through
   the unit vectors). `CelestialBody.HelioSynchronousOrbit`, the library's one call (a normal of about 1e11 m and a unit
   vector), does not move. `PlaneTests` checks 1e5 parallel and antiparallel pairs against the closed forms
-  0, π and ±π/2 (MEASURE 2.980e-8 rad, the √(2ε) of acos and asin one ulp from ±1; bound twice the Linux x64 worst,
-  provisional until the three platforms' CI), π/4 between normals at 2^±1000 and 2^-1070 within one ulp, and the throws.
+  0, π and ±π/2 (MEASURE 2.980e-8 rad on the three platforms, the √(2ε) of acos and asin one ulp from ±1; bound twice
+  the worst), π/4 between normals at 2^±1000 and 2^-1070 within one ulp, and the throws.
 - **The C# examples of the two `CLAUDE.md` files and of several pages of `docs/` did not compile or threw** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), third round).
   12 of the 27 blocks of `IO.Astrodynamics.Net/CLAUDE.md` failed against the library: the TLE example read `newTle`,
   which it never declared; the OMM example saved with `wrapInNdm` and `indent`, parameters of `Opm.SaveToFile` that
@@ -2567,8 +2570,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   propagated through an apogee raise, so that its loop exports the impulse), and checks what they state: the catalog
   number of the TLE text, the mean motion of the OMM in rad/s, the OPM state and the exported impulse in the units of
   CCSDS 502.0-B-3, the 1976 standard atmosphere at 10 km against its table I, and the Earth observation attitude, Down
-  on the nadir and Right on the Sun's direction perpendicular to it (2.5e-16 and 6.5e-16 rad on Linux x64; bounds
-  5.0e-16 and 1.3e-15 rad, provisional, twice the Linux x64 worst until the three platforms' CI). The same TRIAD of
+  on the nadir and Right on the Sun's direction perpendicular to it (2.5e-16 and 6.5e-16 rad on the three platforms;
+  bounds 5.0e-16 and 1.3e-15 rad, twice the worst). The same TRIAD of
   opposite vectors, passed a minimum separation of 0 so as not to throw, stood in `docs/tutorials/maneuvers.md`, where
   its roll was not toward the Sun, and a second TRIAD of that page passed 0 too, which turned off the guard on
   collinear reference vectors; both keep the default 5 degrees. `docs/` wrote `Frames.Frame` 14 times in 8 pages

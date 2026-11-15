@@ -726,12 +726,12 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         }
 
         // #686: the worst |p̂ · ĥ| of the perigee of a near-circular state (the circular elements of the apsis tests,
-        // |e| at the rounding level), MEASURE 2.776e-16 (Linux x64, 2026-11-15); twice the worst, rounded up at the second
-        // significant digit, provisional until the three platforms are read from the CI logs. On main: 1.0
+        // |e| at the rounding level), MEASURE 2.776e-16 on each of Linux x64, Windows x64 and macOS arm64 (CI run
+        // 43745883709, 2026-11-15); twice the worst, rounded up at the second significant digit. On main: 1.0
         private const double ApsisPlaneTolerance = 5.6e-16;
 
         // #686: the worst | |perigee vector| / (a (1 − e)) − 1 | and | |apogee vector| / (a (1 + e)) − 1 | of the same states,
-        // MEASURE 4.441e-16 (Linux x64, 2026-11-15); provisional
+        // MEASURE 4.441e-16 on each of the three platforms (CI run 43745883709, 2026-11-15); twice the worst, as above
         private const double ApsisRadiusTolerance = 8.9e-16;
 
         // #686: the perigee of a state is the direction of its eccentricity vector in its orbit plane, which for a
@@ -817,8 +817,9 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         // #686: the perigee of an elliptic state against SPICE: oscelt of the state (ConvertStateVectorToConicOrbitalElement)
         // then conics at M = 0, the apogee against its opposite; the conditioning of the eccentricity vector, ε / e, is the same for SPICE and for the state.
         // Thresholds per eccentricity at twice the worst over 2000 states each, MEASURE 7.129e-10 rad at e = 1e-6, 6.848e-13 at 1e-3,
-        // 6.857e-15 at 0.1 and 1.667e-15 at 0.95 (Linux x64, 2026-11-15; main 7.13e-10, 6.87e-13, 8.77e-15, 1.52e-14),
-        // rounded up at the second significant digit; provisional until the three platforms are read from the CI logs
+        // 6.857e-15 at 0.1 and 1.667e-15 at 0.95 on Linux x64 and Windows x64 (macOS arm64 6.295e-10, 6.847e-13, 6.857e-15
+        // and 1.503e-15; CI run 43745883709, 2026-11-15; main 7.13e-10, 6.87e-13, 8.77e-15, 1.52e-14), rounded up at the
+        // second significant digit
         [Theory]
         [InlineData(1e-6, 1.5e-9)]
         [InlineData(1e-3, 1.4e-12)]

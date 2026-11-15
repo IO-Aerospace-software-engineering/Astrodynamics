@@ -573,18 +573,18 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         // #686: the worst angle between an apsis vector of the elements and its reference: the perigee against the SPICE
         // conic at M = 0, the apogee against the opposite direction (the apoapsis of the conic is −a(1 + e) P̂; conics at
         // M = π propagates half an orbit and resolves only 6e-15 to 1.3e-14 rad), over 13 eccentricities from 0 to 0.95 and
-        // 2000 sets of angles each, MEASURE 3.412e-16 rad (Linux x64, 2026-11-15); twice the worst, rounded up at the second
-        // significant digit, provisional until the three platforms are read from the CI logs. On main: zero vectors and
-        // angles up to 3.14 rad at e <= 2e-16, 8.6e-7 rad at 1e-9
-        internal const double ApsisAngleTolerance = 6.9e-16;
+        // 2000 sets of angles each, MEASURE 3.412e-16, 3.640e-16 and 3.565e-16 rad on Linux x64, Windows x64 and macOS arm64
+        // (CI run 43745883709, 2026-11-15); twice the worst, rounded up at the second significant digit. On main: zero
+        // vectors and angles up to 3.14 rad at e <= 2e-16, 8.6e-7 rad at 1e-9
+        internal const double ApsisAngleTolerance = 7.3e-16;
 
-        // #686: the worst | |r_p| / |r_p,SPICE| − 1 | and | |r_a| / (a (1 + e)) − 1 |, MEASURE 4.441e-16 (Linux x64,
-        // 2026-11-15); provisional
+        // #686: the worst | |r_p| / |r_p,SPICE| − 1 | and | |r_a| / (a (1 + e)) − 1 |, MEASURE 4.441e-16 on each of the three
+        // platforms (CI run 43745883709, 2026-11-15); twice the worst, as above
         internal const double ApsisLengthTolerance = 8.9e-16;
 
-        // #686: the worst | v_apsis / √(GM (2 / r − 1 / a)) − 1 |, r = a(1 ∓ e), MEASURE 7.105e-15 (Linux x64, 2026-11-15),
-        // the ulp of the radius amplified by the cancellation of 2 / r − 1 / a at the apogee of e = 0.95;
-        // provisional
+        // #686: the worst | v_apsis / √(GM (2 / r − 1 / a)) − 1 |, r = a(1 ∓ e), MEASURE 7.105e-15, 7.438e-15 and 7.105e-15
+        // on Linux x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15), the ulp of the radius amplified by
+        // the cancellation of 2 / r − 1 / a at the apogee of e = 0.95; twice the worst, as above
         internal const double ApsisVelocityTolerance = 1.5e-14;
 
         // The angle of each apsis against its reference, and the relative error of its radius, for orbital parameters whose
@@ -668,10 +668,10 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         // Review of #686: a TLE holds mean elements, but its semi-major axis, eccentricity and angles are those of its
         // osculating elements at its epoch (SGP4/SDP4), so its apsides are those of its osculating orbit and do not throw
         // with the mean elements above. Reference: the periapsis of the SGP4 state by SPICE oscelt then conics at M = 0
-        // (N0067); the radii are a(1 ∓ e) of the same elements. MEASURE 1.460e-13 rad (ISS, e about 1e-3 osculating) and
-        // 1.279e-16 rad (e = 0.72), Linux x64, 2026-11-15; twice the worst, rounded up at the second significant digit,
-        // provisional until the three platforms are read from the CI logs
-        private const double TleApsisAngleTolerance = 3.0e-13;
+        // (N0067); the radii are a(1 ∓ e) of the same elements. MEASURE (ISS, e about 1e-3 osculating; e = 0.72) 1.460e-13 and
+        // 1.279e-16 rad on Linux x64, 1.844e-13 and 1.137e-16 on Windows x64, 1.459e-13 and 1.279e-16 on macOS arm64 (CI run
+        // 43745883709, 2026-11-15); twice the worst, rounded up at the second significant digit
+        private const double TleApsisAngleTolerance = 3.7e-13;
 
         [Theory]
         [InlineData("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",

@@ -27,10 +27,11 @@ namespace IO.Astrodynamics.Tests;
 /// </summary>
 public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
 {
-    // Provisional, twice the worst value on Linux x64 (4.77e-7 s, 2026-11-11) rounded up, until the CI of the three platforms has
-    // printed its MEASURE lines: the native searches at CSPICE's default tolerance of 1e-6 s against the reference at
-    // 1e-9 s, and the 100 ns of a Time
-    private const double NativeThreshold = 1.0e-6;
+    // Twice the worst value over Linux x64, Windows x64 and macOS arm64 (4.768e-7 s on each, the distance of LRO from the
+    // Moon and from the Earth-Moon barycenter; the planetographic searches 4.000e-7 s; CI run 43745883709, 2026-11-15),
+    // rounded up at the second significant digit: the native searches at CSPICE's default tolerance of 1e-6 s against the
+    // reference at 1e-9 s, and the 100 ns of a Time
+    private const double NativeThreshold = 9.6e-7;
 
     // The managed search at 1 µs against the reference (GeometryReference.ThresholdCrossing)
     private const double ManagedThreshold = GeometryReference.ThresholdCrossing;
@@ -574,11 +575,11 @@ public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
         }
     }
 
-    // Third review of #690, measured on Linux x64 (2026-11-15): the worst |library - gfposc| of the coordinate searches in the
-    // frame of a site that SPICE does not know, 5.000e-7 s (the site from the LEO; 3.000e-7 s the LEO from the Earth): the
-    // managed search at 1 µs against gfposc at its default tolerance of 1e-6 s in the test's NAIF topocentric frame on the
-    // same coordinates, both within their convergence tolerance. Twice it, provisional until the three platforms have
-    // printed their MEASURE lines
+    // Third review of #690: the worst |library - gfposc| of the coordinate searches in the frame of a site that SPICE does
+    // not know, 5.000e-7 s on each of Linux x64, Windows x64 and macOS arm64 (the site from the LEO; 3.000e-7 s the LEO
+    // from the Earth; CI run 43745883709, 2026-11-15): the managed search at 1 µs against gfposc at its default tolerance
+    // of 1e-6 s in the test's NAIF topocentric frame on the same coordinates, both within their convergence tolerance.
+    // Twice it
     private const double ManagedFrameSearchThreshold = 1.0e-6;
 
     private void AssertSameWindows(string label, Window[] expected, Window[] actual, double threshold)

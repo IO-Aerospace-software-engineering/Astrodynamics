@@ -227,10 +227,11 @@ public class EquinoctialElementsTests
     // of those Keplerian elements at M = 0 and its opposite; a circular orbit (f = g = 0) has no ω, and its periapsis is at the
     // node (ϖ = Ω, ω = 0, the convention of EquinoctialElements.ArgumentOfPeriapsis), so its reference takes ω = 0, and an
     // equatorial one (h = k = 0) has Ω = 0. The conversion to equinoctial elements and back to Ω, ω, i and a adds its
-    // rounding: MEASURE 1.405e-15 rad and 3.664e-15 for the radii (Linux x64, 2026-11-15), twice the worst, rounded up at
-    // the second significant digit, provisional until the three platforms are read from the CI logs
+    // rounding: MEASURE 1.405e-15, 1.405e-15 and 1.420e-15 rad, and 3.664e-15, 4.108e-15 and 3.664e-15 for the radii, on
+    // Linux x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15), twice the worst, rounded up at the second
+    // significant digit
     private const double ApsisAngleTolerance = 2.9e-15;
-    private const double ApsisLengthTolerance = 7.4e-15;
+    private const double ApsisLengthTolerance = 8.3e-15;
 
     [Fact]
     public void PerigeeAndApogeeVectors_AreTheConicAtPeriapsisAndApoapsisOfSpice_AtEveryEccentricity()

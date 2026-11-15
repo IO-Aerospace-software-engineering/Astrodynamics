@@ -26,10 +26,10 @@ public class FrameTests
     }
 
     // #690: the frame of a site from the kernels against SPICE's frame of its id, DSS-13_TOPO (1399013), and against the
-    // closed form of TKFRAME_1399013_ANGLES. Measured on Linux x64: 0 against SPICE, 2.98e-16 rad against the closed form
-    // (2000-01-02; 1.26e-16 rad at 2024-03-01); threshold twice the worst rounded up, provisional until the three platforms
-    // have printed their MEASURE lines
-    private const double KernelSiteFrameThreshold = 6.0e-16;
+    // closed form of TKFRAME_1399013_ANGLES. Measured: 0 against SPICE on the three platforms; against the closed form
+    // 2.978e-16 rad (2000-01-02) and 1.262e-16 rad (2024-03-01) on Linux x64 and Windows x64, 3.043e-16 and 3.126e-16 rad
+    // on macOS arm64 (CI run 43745883709, 2026-11-15); threshold twice the worst, rounded up at the second significant digit
+    private const double KernelSiteFrameThreshold = 6.3e-16;
 
     // The rotation angle of a rotation matrix, from its axis vector and its trace, precise at small angles
     private static double RotationAngle(double[,] r)

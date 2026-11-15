@@ -270,9 +270,9 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         // #685: a plane change of 2° between circular orbits of 7000 km about the point-mass Earth, RK7(8) over 2 h, against
-        // the closed form 2 v sin(Δi/2) with the GM of the Earth. Measured on Linux x64: |ΔV| − closed form 6.99e-9 m/s, the
-        // final angle between h and the target's h 4.00e-11°; thresholds twice those, provisional until the three platforms
-        // have printed their MEASURE lines
+        // the closed form 2 v sin(Δi/2) with the GM of the Earth. Measured on each of Linux x64, Windows x64 and macOS arm64
+        // (CI run 43745883709, 2026-11-15): |ΔV| − closed form 6.986e-9 m/s, the final angle between h and the target's h
+        // 3.996e-11°; thresholds twice those, rounded up at the second significant digit
         private const double PlaneChangeDeltaVThreshold = 1.4e-8;
         private const double PlaneChangeFinalAngleThreshold = 8.0e-11 * IO.Astrodynamics.Constants.Deg2Rad;
 

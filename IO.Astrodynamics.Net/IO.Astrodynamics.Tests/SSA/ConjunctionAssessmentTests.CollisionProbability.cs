@@ -44,9 +44,9 @@ public partial class ConjunctionAssessmentTests
     // 2.0e-14. The same encounters with the hard-body radius split between the two spacecraft (#683): worst 3.15e-10
     // (005) on Linux x64, Windows x64 and macOS arm64 (CI run 43601908000, 2026-11-14), within the same bound.
     // Those figures were read from two-digit prints, and twice the worst they hid is above 6.3e-10 (#668): printed with
-    // E3 and R, both worsts are 3.155E-010 (3.1548581964299066E-10, 005) on Linux x64 (2026-11-15), twice which is
-    // 6.3097e-10, so the bound of the rule is 6.4e-10. Provisional: from Linux x64 alone, to be re-derived from the E3/R
-    // prints of Linux x64, Windows x64 and macOS arm64 in the CI logs of the pull request of #668
+    // E3 and R, both worsts are 3.155E-010 (005) on Linux x64, Windows x64 and macOS arm64 (3.1548581964299066E-10 on
+    // Linux x64 and macOS arm64, 3.15485498018157E-10 on Windows x64; CI run 43745883709, 2026-11-15), twice which is
+    // 6.3097e-10, so the bound of the rule is 6.4e-10
     private const double DesignedEncounterAnalyzePcBound = 6.4e-10;
 
     // The 25 reproductions of #610, #611 and #612: worst 7.64e-15 on Linux x64 and Windows x64, 7.43e-15 on macOS arm64
@@ -62,9 +62,8 @@ public partial class ConjunctionAssessmentTests
 
     // Fdlibm's erf and erfc, relative, at 22 points of its branches: worst 1.85e-16, the same on the three platforms.
     // Read from a two-digit print, it hid a worst twice which is above 3.7e-16 (#668): 1.854E-016
-    // (1.8542344564253528E-16) on Linux x64 (2026-11-15), twice which is 3.7085e-16, so the bound of the rule is
-    // 3.8e-16. Provisional: from Linux x64 alone, to be re-derived from the E3/R prints of the three platforms in the CI
-    // logs of the pull request of #668
+    // (1.8542344564253528E-16) on Linux x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15), twice which
+    // is 3.7085e-16, so the bound of the rule is 3.8e-16
     private const double ErrorFunctionBound = 3.8e-16;
 
     // The exact Pc of IO's CARA checks, tools/collision_probability (rows "cara"): Omitron case 01 and Alfano case 03 of

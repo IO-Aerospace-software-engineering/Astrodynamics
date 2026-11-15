@@ -1154,8 +1154,8 @@ public class MatirxTests
     // Third round of #668: the rotation's magnitude was not scaled, so a finite quaternion with a component above about
     // 1.34e154 threw ArgumentException (rotation). (1e200, 1e200, 0, 0) is Rx(90°), which sends y to z and z to -y: the
     // closed form of R P Rᵀ for P = diag(4, 1, 9, 0.04, 0.01, 0.09) is diag(4, 9, 1, 0.04, 0.09, 0.01). The worst element,
-    // MEASURE 3.553e-15 (two ulps of 9; Linux x64, 2026-11-15) at 1e200 and 1e-170 alike; twice the worst rounded up at the
-    // second significant digit, provisional until the three platforms are read from the CI logs
+    // MEASURE 3.553e-15 (two ulps of 9) at 1e200 and 1e-170 alike on each of Linux x64, Windows x64 and macOS arm64 (CI
+    // run 43745883709, 2026-11-15); twice the worst rounded up at the second significant digit
     private const double ExtremeRotationCovarianceTolerance = 7.2e-15;
 
     [Theory]
@@ -1382,9 +1382,9 @@ public class MatirxTests
     }
 
     // The worst element of FromQuaternion against the closed form of q / |q| and against SPICE q2m over 10 000 random
-    // quaternions of 1e-10 to 1e10, MEASURE 0 against the closed form and 1.110e-15 against q2m (Linux x64,
-    // 2026-11-15); twice the worst, rounded up at the second
-    // significant digit, provisional until the three platforms are read from the CI logs
+    // quaternions of 1e-10 to 1e10, MEASURE 0 against the closed form on each of Linux x64, Windows x64 and macOS arm64
+    // and 1.110e-15 against q2m (Validation category, Linux only; CI run 43745883709, 2026-11-15); twice the worst,
+    // rounded up at the second significant digit
     private const double FromQuaternionTolerance = 2.3e-15;
 
     [Fact]

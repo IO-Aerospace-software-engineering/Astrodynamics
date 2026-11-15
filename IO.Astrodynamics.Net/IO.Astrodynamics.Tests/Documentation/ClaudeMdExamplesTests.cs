@@ -336,10 +336,11 @@ public class ClaudeMdExamplesTests
     // components (Vector3.Angle's acos resolves only about 1.5e-8 rad there)
     private static double AngleBetween(Vector3 a, Vector3 b) => System.Math.Atan2(a.Cross(b).Magnitude(), a * b);
 
-    // Twice the worst over Linux x64 (2026-11-15), provisional until the three platforms' CI (MEASURE line below): the
-    // angles of the Earth observation TRIAD's Down to the closed-form nadir and of its Right to the component of the SPICE
-    // geometric Sun direction perpendicular to nadir, over 24 epochs 4 min apart: 2.483e-16 and 6.489e-16 rad, the rounding
-    // of the TRIAD rotation (Vector3.Angle's acos gave 1.490e-8 and 2.107e-8 rad, its own resolution)
+    // Twice the worst over Linux x64, Windows x64 and macOS arm64 (the same on the three, CI run 43745883709, 2026-11-15;
+    // MEASURE line below), rounded up at the second significant digit: the angles of the Earth observation TRIAD's Down to
+    // the closed-form nadir and of its Right to the component of the SPICE geometric Sun direction perpendicular to nadir,
+    // over 24 epochs 4 min apart: 2.483e-16 and 6.489e-16 rad, the rounding of the TRIAD rotation (Vector3.Angle's acos
+    // gave 1.490e-8 and 2.107e-8 rad, its own resolution)
     private const double EarthObservationDownLimit = 5.0e-16;
     private const double EarthObservationRightLimit = 1.3e-15;
 

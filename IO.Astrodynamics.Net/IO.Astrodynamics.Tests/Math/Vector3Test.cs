@@ -323,9 +323,9 @@ public class VectorTests
 
     // Random directions in the plane z = 0, a = (cos α, sin α, 0) 2^ea and b = (cos β, sin β, 0) 2^eb, ea and eb over
     // 2^-960 to 2^1022 (every component a normal double), about n = ±z of random length: the closed form β − α (resp.
-    // α − β) reduced to (−π, π]. The worst difference, MEASURE 8.882e-16 rad (Linux x64, 2026-11-15; NaN before the
-    // fix), twice the worst, rounded up at the second significant digit, provisional until the three platforms are read
-    // from the CI logs; the vectors with a NaN component give NaN and a zero vector 0, as the unsigned Angle does
+    // α − β) reduced to (−π, π]. The worst difference, MEASURE 8.882e-16 rad on each of Linux x64, Windows x64 and macOS
+    // arm64 (CI run 43745883709, 2026-11-15; NaN before the fix), twice the worst, rounded up at the second significant
+    // digit; the vectors with a NaN component give NaN and a zero vector 0, as the unsigned Angle does
     private const double SignedAngleSweepTolerance = 1.8e-15;
 
     [Fact]
@@ -385,8 +385,8 @@ public class VectorTests
     // x̂ to −x̂, a half turn (w = 0) about an axis perpendicular to x̂. Lengths whose squares or products overflow or lose
     // their digits (1e±100 to 1e±200, a subnormal) are scaled first: before, 1e200 gave NaN and 1e-200 the zero quaternion
     // or a non-unit one. The worst angle, MEASURE 4.041e-16 rad, and | |q| − 1 |, 2.220e-16, over these lengths and the
-    // collinear opposite pairs below (Linux x64, 2026-11-15), twice the worst, rounded up at the second significant digit,
-    // provisional until the three platforms are read from the CI logs
+    // collinear opposite pairs below, the same on Linux x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15),
+    // twice the worst, rounded up at the second significant digit
     private const double ToAngleTolerance = 8.1e-16;
 
     [Theory]
@@ -501,8 +501,8 @@ public class VectorTests
     }
 
     // (3, 4, 0) times a scale is (0.6, 0.8, 0) to the rounding of the scaled components (relative 1.1e-16 each); MEASURE
-    // 1.110e-16 at 1e200, 0 at 1e-160 and 1e-200 (Linux x64, 2026-11-15), twice the worst rounded up at the second
-    // significant digit, provisional until the three platforms are read from the CI logs
+    // 1.110e-16 at 1e200, 0 at 1e-160 and 1e-200, the same on Linux x64, Windows x64 and macOS arm64 (CI run 43745883709,
+    // 2026-11-15), twice the worst rounded up at the second significant digit
     private const double PythagoreanTolerance = 2.3e-16;
 
     [Theory]
@@ -535,10 +535,9 @@ public class VectorTests
     // The invariants of the closed form: | |u| - 1 | and |u x d'| / |d'|; the magnitude, relative, where it is a normal
     // double, against |v| = 2^e |d'| with |d'| computed in double-double (products split by FusedMultiplyAdd, sums by
     // TwoSum, the square root corrected by one Newton step: relative error about 1e-32), independent of the code under
-    // test. The worst, MEASURE | |u| - 1 | 2.220e-16, |u x d'| / |d'| 1.221e-16, magnitude 1.940e-16 (Linux x64,
-    // 2026-11-15; 2.125e-16 reported against an 80-digit decimal computation during the triage); twice the
-    // worst rounded up at the second significant digit, provisional
-    // until the three platforms are read from the CI logs
+    // test. The worst, MEASURE | |u| - 1 | 2.220e-16, |u x d'| / |d'| 1.221e-16, magnitude 1.940e-16, the same on Linux
+    // x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15; 2.125e-16 reported against an 80-digit decimal
+    // computation during the triage); twice the worst rounded up at the second significant digit
     private const double SweepNormTolerance = 4.5e-16;
 
     private const double SweepCrossTolerance = 2.5e-16;

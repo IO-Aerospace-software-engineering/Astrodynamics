@@ -43,9 +43,10 @@ namespace IO.Astrodynamics.Tests.Surface
 
 
         // #690: the horizontal coordinates of a site from the kernels are those of the frame of its kernels, against spkezr_c
-        // of the Moon from DSS-13 in DSS-13_TOPO by name. Measured on Linux x64: 1.59e-16 rad (2000-01-05); threshold twice
-        // that rounded up, provisional until the three platforms have printed their MEASURE lines
-        private const double KernelTopocentricThreshold = 3.2e-16;
+        // of the Moon from DSS-13 in DSS-13_TOPO by name. Measured: 1.593e-16 rad on Linux x64 (2000-01-05), 2.076e-16 on
+        // Windows x64 (2000-01-10), 1.974e-16 on macOS arm64 (2000-01-10) (CI run 43745883709, 2026-11-15); threshold twice
+        // the worst, rounded up at the second significant digit
+        private const double KernelTopocentricThreshold = 4.2e-16;
 
         private void AssertAgainstKernelTopocentricFrame(in TimeSystem.Time epoch, Horizontal horizontal)
         {
@@ -397,9 +398,9 @@ namespace IO.Astrodynamics.Tests.Surface
         }
 
         // #690, second review: the frame kernel written for a site from the kernels, read back by SPICE, against the kernel
-        // frame it copies. Measured on Linux x64: 2.128e-16 rad at both dates, for both names; threshold twice that rounded up,
-        // provisional until the three platforms have printed their MEASURE lines
-        private const double WrittenKernelSiteFrameThreshold = 5.0e-16;
+        // frame it copies. Measured at both dates, for both names: 2.128e-16 rad on Linux x64 and Windows x64, 1.626e-16 on
+        // macOS arm64 (CI run 43745883709, 2026-11-15); threshold twice the worst, rounded up at the second significant digit
+        private const double WrittenKernelSiteFrameThreshold = 4.3e-16;
 
         /// <summary>
         /// The frame kernel written for a site from the kernels whose frame the loaded kernels define is that kernel frame
@@ -774,13 +775,13 @@ namespace IO.Astrodynamics.Tests.Surface
             }
         }
 
-        // Third review of #690, measured on Linux x64 (2026-11-15) against SPICE in the test's NAIF topocentric frame: the
-        // position of a read 7.336e-16 at worst (the angle 5.155e-16 rad, |r| relative 7.336e-16), its velocity 4.915e-11 m/s
-        // (the Moon, about 28 km/s in the frame), the frame itself 5.822e-16 rad, and the written frame 5.822e-16 rad from the
-        // frame used (0 from NAIF's); thresholds twice those rounded up, provisional until the three platforms have printed
-        // their MEASURE lines
+        // Third review of #690, against SPICE in the test's NAIF topocentric frame, the worst on Linux x64, Windows x64 and
+        // macOS arm64 (CI run 43745883709, 2026-11-15): the position of a read (the larger of the angle and of |r| relative)
+        // 7.336e-16, 5.884e-16 and 4.470e-16, its velocity 4.915e-11, 3.989e-11 and 2.876e-11 m/s (the Moon, about 28 km/s
+        // in the frame), the frame itself 5.822e-16, 4.475e-16 and 3.925e-16 rad, and the written frame as far from the
+        // frame used (0 from NAIF's); thresholds twice the worst, rounded up at the second significant digit
         private const double KernelSiteManagedReadPositionThreshold = 1.5e-15;
-        private const double KernelSiteManagedReadVelocityThreshold = 1.0e-10;
+        private const double KernelSiteManagedReadVelocityThreshold = 9.9e-11;
         private const double KernelSiteManagedFrameThreshold = 1.2e-15;
         private const double KernelSiteWrittenFrameThreshold = 1.2e-15;
 

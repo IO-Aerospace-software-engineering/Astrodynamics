@@ -337,19 +337,21 @@ namespace IO.Astrodynamics.Tests.Math
         }
 
         // #688: the worst angle between the rotated vector and Rodrigues' formula over 10 000 random axes of 1e-10 to 1e10,
-        // MEASURE 6.350e-16 rad against Rodrigues and 6.163e-16 against SPICE vrotv (Linux x64, 2026-11-15); twice the worst, rounded up at the second significant digit,
-        // provisional until the three platforms are read from the CI logs
+        // MEASURE 6.350e-16 rad against Rodrigues on each of Linux x64, Windows x64 and macOS arm64 and 6.163e-16 against
+        // SPICE vrotv (Validation category, Linux only; CI run 43745883709, 2026-11-15); twice the worst, rounded up at the
+        // second significant digit
         private const double AxisAngleRotationAngleTolerance = 1.3e-15;
 
-        // #688: the worst | |v'| / |v_Rodrigues| - 1 |, MEASURE 9.992e-16 against Rodrigues and 8.882e-16 against vrotv (Linux x64,
-        // 2026-11-15); provisional, as above
+        // #688: the worst | |v'| / |v_Rodrigues| - 1 |, MEASURE 9.992e-16 against Rodrigues on each of the three platforms and
+        // 8.882e-16 against vrotv (Validation category, Linux only; CI run 43745883709, 2026-11-15); as above
         private const double AxisAngleLengthTolerance = 2.0e-15;
 
-        // #688: the worst | |q| - 1 |, MEASURE 3.331e-16 (Linux x64, 2026-11-15); provisional, as above
+        // #688: the worst | |q| - 1 |, MEASURE 3.331e-16 on each of the three platforms (CI run 43745883709, 2026-11-15); as
+        // above
         private const double AxisAngleNormTolerance = 6.7e-16;
 
         // #688: the worst element of the rotation matrix of the quaternion against SPICE axisar, MEASURE 8.882e-16
-        // (Linux x64, 2026-11-15); provisional, as above
+        // (Validation category, Linux only; CI run 43745883709, 2026-11-15); as above
         private const double AxisAngleMatrixTolerance = 1.8e-15;
 
         private static (Vector3 Axis, double Angle, Vector3 V) RandomAxisAngle(Random random)
@@ -459,8 +461,8 @@ namespace IO.Astrodynamics.Tests.Math
         }
 
         // The worst component of SLERP(2 I, 3 Rx(90°), 0.5) against the closed form Rx(45°) = (cos(π/8), sin(π/8), 0, 0),
-        // MEASURE 0 and | |s| - 1 | 0 (Linux x64, 2026-11-15); twice the worst (one ulp of 1 when the measure is exact), provisional
-        // until the three platforms are read from the CI logs
+        // MEASURE 0 and | |s| - 1 | 0 on each of Linux x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15);
+        // twice the worst (one ulp of 1 when the measure is exact)
         private const double SlerpTolerance = 2.3e-16;
 
         // The known limitation of #680: SLERP never normalised its inputs, so a non-unit input gave a non-unit result (the
@@ -553,8 +555,8 @@ namespace IO.Astrodynamics.Tests.Math
 
         // The worst element of FromQuaternion((1e200, 1e200, 0, 0)) against the closed form of Rx(90°), and of the SLERP
         // of the identity times 2^1000 and Rx(90°) times 2^-1000 at 0.5 against Rx(45°) = (cos π/8, sin π/8, 0, 0): MEASURE
-        // 2.220e-16 and 0 (Linux x64, 2026-11-15); twice the worst, rounded up at the second significant digit, provisional
-        // until the three platforms are read from the CI logs
+        // 2.220e-16 and 0 on Linux x64 and macOS arm64, 2.220e-16 and 5.551e-17 on Windows x64 (CI run 43745883709,
+        // 2026-11-15); twice the worst, rounded up at the second significant digit
         private const double ExtremeRotationTolerance = 4.5e-16;
 
         // Third round of #668: FromQuaternion, SLERP and Lerp required a magnitude that was neither 0 nor infinite, unscaled,
@@ -593,9 +595,9 @@ namespace IO.Astrodynamics.Tests.Math
         // Lerp computed the chord q + t (q2 − q) of tiny quaternions unscaled, so its products rounded into the subnormal
         // range: from s (1, 0, 0, 0) to s (0, 1, 0, 0) at 4.9e-324 any t gave (1, 0, 0, 0), at 1e-320 the components were
         // off by up to 6.8e-4. The closed form: (1 − t, t, 0, 0) / √((1 − t)² + t²) at any scale s, over 1000 draws of t
-        // per scale. The worst component, MEASURE 3.331e-16 (1e-160; 0 to 2.220e-16 at the other scales; Linux x64,
-        // 2026-11-15; before the fix 0.707 at 4.9e-324, 3.99e-4 at 1e-320, 3.99e-14 at 1e-310); twice the worst, rounded
-        // up at the second significant digit, provisional until the three platforms are read from the CI logs
+        // per scale. The worst component, MEASURE 3.331e-16 (1e-160; 0 to 2.220e-16 at the other scales; the same on Linux
+        // x64, Windows x64 and macOS arm64, CI run 43745883709, 2026-11-15; before the fix 0.707 at 4.9e-324, 3.99e-4 at
+        // 1e-320, 3.99e-14 at 1e-310); twice the worst, rounded up at the second significant digit
         [Theory]
         [InlineData(4.9e-324)]
         [InlineData(1e-320)]

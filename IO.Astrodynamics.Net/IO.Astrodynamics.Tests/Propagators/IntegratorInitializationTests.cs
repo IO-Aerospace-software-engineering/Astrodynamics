@@ -49,14 +49,15 @@ public class IntegratorInitializationTests
     private static int _nextId = -668100;
     private static int NextId() => Interlocked.Decrement(ref _nextId);
 
-    // Provisional thresholds: twice the Linux worst of the MEASURE lines (2026-11-15), to be read again on Windows and
-    // macOS arm64. RK7(8) at 1e-10 about the Earth: 9.947e-5 m (ICRF, with and without Φ, and ECLIPJ2000); at 1e-12
+    // Thresholds twice the worst of the MEASURE lines over Linux x64, Windows x64 and macOS arm64, the same on the three
+    // (CI run 43745883709, 2026-11-15), rounded up at the second significant digit. RK7(8) at 1e-10 about the Earth: 9.947e-5 m (ICRF, with and without Φ, and ECLIPJ2000); at 1e-12
     // about the Sun over a day: 1.221e-4 m; Velocity-Verlet at 1 s: 15.89 m, its truncation (1589 m at 10 s, h²)
     private const double Rk78KeplerThreshold = 2.0e-4;
     private const double SsbKeplerThreshold = 2.5e-4;
     private const double VvKeplerThreshold = 3.2e1;
     // Φ of RK7(8) at 1e-10 at the end of the hour against the two-body closed form, the worst relative 3×3 block:
-    // 6.970e-11 (Linux, 2026-11-15); provisional, twice that, to be read again on Windows and macOS arm64
+    // 6.970e-11 on each of Linux x64, Windows x64 and macOS arm64 (CI run 43745883709, 2026-11-15); twice that, rounded
+    // up at the second significant digit
     private const double Rk78PhiThreshold = 1.4e-10;
 
     private static Spacecraft NewSpacecraft(ILocalizable observer, Frames.Frame frame, Vector3 position, Vector3 velocity)

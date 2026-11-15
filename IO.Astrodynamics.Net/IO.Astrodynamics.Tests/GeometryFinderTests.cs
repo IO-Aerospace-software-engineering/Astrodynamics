@@ -599,12 +599,13 @@ internal static class GeometryReference
     // DSS-13 beyond 400 000 km); the Earth-Moon distance extremes at a 1-day step: 4.81e-7 s (LOCMIN). The Moon's elevation
     // extremes from DSS-13 at a 60 s step: the managed extreme is the tick (100 ns) nearest its root, so the reference can
     // lie up to 5e-8 s from it. In DSS-13_TOPO, the frame of the kernel site since #690, both extremes are the tick nearest
-    // the reference, 2.71e-8 s (LOCMAX) and 3.87e-8 s (LOCMIN) from it on Linux x64; twice the latter rounded up,
-    // provisional until the three platforms have printed their MEASURE lines (the former reference, in the frame the library
-    // built, fell 4.51e-9 s from a tick, and its threshold, 1e-8 s, below the 5e-8 s of a tick)
+    // the reference on Linux x64 and Windows x64, 2.712e-8 s (LOCMAX) and 3.865e-8 s (LOCMIN) from it; on macOS arm64 the
+    // LOCMAX is the next tick, 7.287e-8 s from it (1e-7 s less 2.712e-8 s), the LOCMIN 3.865e-8 s (CI run 43745883709,
+    // 2026-11-15); twice the worst, rounded up at the second significant digit (the former reference, in the frame the
+    // library built, fell 4.51e-9 s from a tick, and its threshold, 1e-8 s, below the 5e-8 s of a tick)
     internal const double ThresholdCrossing = 4.8e-7;
     internal const double ThresholdDistanceExtreme = 1.0e-6;
-    internal const double ThresholdElevationExtreme = 8.0e-8;
+    internal const double ThresholdElevationExtreme = 1.5e-7;
 
     private static readonly Lazy<Dictionary<string, double[][]>> Windows = new(() =>
         JsonSerializer.Deserialize<Dictionary<string, double[][]>>(File.ReadAllText("Data/GeometryReference/geometry_reference.json")));

@@ -130,8 +130,8 @@ namespace IO.Astrodynamics.Tests.Maneuvers
         }
 
         // #686: the worst relative difference of the apsis radii and velocities of the issue's elements from the closed form
-        // of the circular orbit, r = 7178 km and v = √(GM / r), MEASURE 2.220e-16, one ulp (Linux x64, 2026-11-15); twice the worst,
-        // rounded up at the second significant digit, provisional until the three platforms are read from the CI logs
+        // of the circular orbit, r = 7178 km and v = √(GM / r), MEASURE 2.220e-16, one ulp, on each of Linux x64, Windows x64
+        // and macOS arm64 (CI run 43745883709, 2026-11-15); twice the worst, rounded up at the second significant digit
         internal const double Issue686Tolerance = 4.5e-16;
 
         [Fact]

@@ -158,8 +158,8 @@ public class PlaneTests
     // a quarter of the time (478 904 of 2e6 pairs on the base of the third round of #668). The closed forms: 0 between a and
     // a s, π between a and -a s, π/2 between the plane of normal a and the vector a s, for s > 0; acos and asin are
     // sensitive near ±1 (an error δ of the quotient gives √(2δ), 2.98e-8 rad for one ulp of 1 below it), so the
-    // worst, MEASURE 2.980e-08 rad for each of the four (Linux x64, 2026-11-15), is twice the worst rounded up at the second
-    // significant digit, provisional until the three platforms are read from the CI logs
+    // worst, MEASURE 2.980e-08 rad for each of the four on each of Linux x64, Windows x64 and macOS arm64 (CI run
+    // 43745883709, 2026-11-15), is twice the worst rounded up at the second significant digit
     private const double ParallelTolerance = 6.0e-8;
 
     [Fact]
