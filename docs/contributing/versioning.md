@@ -2010,6 +2010,90 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   with System.Xml.Linq, independently of the readers, and reach every path: `Load*` with and without schema
   validation, `Load*` and `ReadFrom*` from a file, a string and a stream, `TryLoadFromFile`, `ValidateFile` and
   `Cdm.ReadFromFile`/`ReadFromString`/`ReadFromStream`.
+- **`new Quaternion(axis, angle)` took its axis as it was** ([#688](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/688)). The constructor returned
+  (cos(a/2), sin(a/2) axis) without checking or normalising the axis: Euler-Rodrigues parameters are a unit quaternion
+  only for a unit axis, and a vector rotated by q p q* is scaled by |q|², so `new Quaternion((0, 0, 2), π/2)` had a
+  magnitude of 1.58 and turned X to (−1.5, 2, 0), 126.87° instead of 90°, and a zero axis gave a quaternion of
+  magnitude 0.707 that turned X to (0.5, 0, 0), whose `Normalize()` was the identity; a NaN component gave a NaN
+  quaternion. The constructor now divides the axis by its magnitude (scaled by its largest component outside about
+  1e-150 to 1e150) and throws `ArgumentException` (parameter `axis`) for a zero axis or a component that is not finite.
+  The library's own axis-angle quaternions (`Instrument`'s Euler angles, `PlaneAlignmentManeuver`, the SLERP of the
+  attitude record, `StateOrientation.AtDate`, whose zero angular velocity is a zero axis at a zero angle) go through an
+  internal factory, bit for bit as before. `QuaternionTests` checks 10 000 random axes of 1e-10 to 1e10 and angles in
+  [−2π, 2π) against Rodrigues' formula (worst 6.4e-16 rad, |q| within 3.3e-16 of 1) and against CSPICE `vrotv` and
+  `axisar` (rotation matrix within 8.9e-16), the table of the issue, and the zero and non-finite axes.
+- **Public math methods that normalized leniently returned silently for a zero or non-finite input** (the known
+  limitation of [#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). #680 made `Vector3.Normalize()` and `Quaternion.Normalize()` throw for a magnitude
+  of 0 and moved the library's calls to the internal lenient helper, which four public methods also used on their own
+  argument or result: `Matrix.FromQuaternion` of the zero quaternion was the identity (so `Matrix.TransformCovariance`
+  returned the covariance unrotated) and of a NaN quaternion all NaN; `Quaternion.Lerp` from q to −q at t = 0.5, or
+  to the zero quaternion at t = 1, was the zero quaternion; `Quaternion.SLERP`, which never normalized its inputs, gave
+  a quaternion of magnitude 0.707 toward the zero quaternion and the SLERP of the quaternions, not of their rotations,
+  for non-unit inputs (`SLERP(2 I, 3 Rx(90°), 0.5)` 0.075 off Rx(45°)); `Vector3.Angle(vector, plane)` and
+  `Angle(vector, Plane)` with a zero normal gave the unsigned 0 or π, the sign lost (π from X to (−1, 1e-300, 0)
+  where the normal −z gives −π/2 to Y); `Vector3.To` returned the identity for a zero vector, NaN for vectors whose
+  squared lengths overflow (1e200) and the zero quaternion or a non-unit one for lengths below about 1e-150, and two
+  vectors collinear and opposite in doubles whose `Angle` is not exactly π (a × b = 0 exactly) missed its half-turn
+  branch: w = a · b + |a| |b| was 0, giving the zero quaternion, or a rounding residue, giving the identity (7309 of the
+  29 857 such pairs of 100 000 b = −k a, 1102 of them zero quaternions; review of this change). Under the same
+  signatures, `FromQuaternion` and `TransformCovariance` throw
+  `ArgumentException` (`q`, `rotation`) for a zero or non-finite quaternion; `Lerp` throws `InvalidOperationException`
+  for a zero or non-finite instance and `ArgumentException` (`q2`) for a zero or non-finite `q2` or a chord through
+  zero; `SLERP` normalizes both inputs, with the same exceptions (`q`); `Angle(vector, plane)` throws
+  `ArgumentException` (`plane`) for a zero or non-finite normal; `To` throws `InvalidOperationException` for a zero or
+  non-finite instance and `ArgumentException` (`vector`) for a zero or non-finite target, divides vectors outside about
+  1e-150 to 1e150 by their largest component, and gives a half turn for vectors collinear and opposite in doubles.
+  Every non-degenerate result of `FromQuaternion`, `TransformCovariance`, `Lerp`, `Angle` and `To` is unchanged bit for
+  bit. The library's own interpolation of the orientation cache of a propagation, the signed angle of
+  `ApsidalAlignmentManeuver`, the single-vector attitudes and the attitude of an impulse (`To` of the body front onto a
+  position, velocity, angular momentum or delta-V, which keeps the identity for a zero target, a zero delta-V included)
+  go through internal unchecked paths, bit for bit but
+  for the half turn of collinear opposite vectors, where they recorded the zero quaternion or the identity. `MatrixTests` checks `FromQuaternion` of 10 000 random quaternions of 1e-10 to 1e10 against the
+  closed form of q / |q| (exact) and CSPICE `q2m` (1.1e-15), `QuaternionTests` the closed forms of Lerp along q to −q
+  and of `SLERP(2 I, 3 Rx(90°), 0.5)` = Rx(45°) (exact), `VectorTests` the signed angle ±π/2 about normals of 1e-100 to
+  1e100, `To` from x̂ to ŷ (Rz(90°)) and to −x̂ (a half turn) at lengths of 4.9e-324 to 1e200 and the 29 857 collinear
+  opposite pairs against the closed form of a half turn (4.0e-16 rad), and each throw; `ImpulseManeuverTests` an
+  impulse of zero delta-V, whose attitude stays the identity.
+- **`PerigeeVector()` and `ApogeeVector()` of a near-circular orbit were zero, or off the orbit plane** ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686)). Both
+  normalized, leniently, the eccentricity vector recomputed from the state, v × h / GM − r̂, and put the perigee on x̂
+  only for an eccentricity of exactly 0. Near the rounding level of the eccentricity the two unit terms cancel: the
+  state of the issue, a circular orbit of 7178 km inclined by 30° (e = 1.1e-16), had a zero perigee and apogee vector,
+  infinite `PerigeeVelocity()` and `ApogeeVelocity()`, and gave `PerigeeHeightManeuver` and `ApogeeHeightManeuver` a
+  target of 0 (and `Launch.GetInertialInsertionVelocity` an infinite velocity); 13 to 37 of 2000 random elements at
+  e = 1e-18 to 2e-16 had a zero vector, and the direction was off the SPICE conic by up to 3.12 rad at e ≤ 2e-16 and
+  9.6e-7 rad at 1e-9; a circular state, whose eccentricity vector is rounding noise with a part out of the plane, had
+  its perigee off the plane (|p̂ · ĥ| up to 1.0), and the x̂ of e = 0 was out of the plane of an inclined orbit.
+  Under the same signatures, the apsides are a(1 − e) P̂ and −a(1 + e) P̂ with P̂ the perifocal axis of the elements,
+  (cos Ω cos ω − sin Ω sin ω cos i, sin Ω cos ω + cos Ω sin ω cos i, sin ω sin i), for `KeplerianElements`,
+  `EquinoctialElements` and `TLE`, and for a `StateVector` the part of its eccentricity vector in its orbit plane,
+  normalized, or its unit node vector when that part is zero (x̂ for an equatorial orbit); the apsis velocities stay
+  vis-viva at the vector's radius, never 0 now. Mean `KeplerianElements` and `EquinoctialElements` keep throwing, as
+  `ToStateVector()` and `EccentricityVector()` do, now at e = 0 too; a `TLE` takes the axis of its osculating elements
+  at its epoch, the elements its other members return. `KeplerianElementsTests` and `EquinoctialElementsTests` check 13
+  eccentricities from 0 to 0.95, 2000 sets of angles each, against CSPICE `conics` at M = 0 and π (perigee within 3.4e-16 rad and 4.4e-16 of its radius, apogee its opposite at a(1 + e); the equinoctial elements within 1.4e-15 rad and 3.7e-15 with the rounding of their conversion);
+  `StateVectorTests` 10 000 near-circular states (|p̂ · ĥ| 2.8e-16, against 1.0 before), states with a zero eccentricity vector (the node, exactly), and
+  elliptic states against `oscelt` then `conics` (7.1e-10 rad at e = 1e-6 to 1.7e-15 at 0.95, the conditioning of the eccentricity vector); the maneuver and launch tests the state of the issue
+  (apsis radii and velocities within an ulp of 7178 km and √(GM / r)); `KeplerianElementsTests` the throws of mean
+  elements at e = 0, 0.01 and 0.7, and the apsides of the ISS TLE and of a TLE of e = 0.72 against the periapsis of their
+  SGP4 state by `oscelt` then `conics` (1.5e-13 rad).
+- **A rectilinear state had an RTN frame with zero rows and the elements of an equatorial orbit** ([#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687)).
+  `StateVector.CreateRtnRotation` built its rows with the lenient normalization, so for r × v = 0 (a radial motion, a
+  zero velocity, the centre) the T and N rows were zero (and the R row at the centre): `FromRtn((0, 1, 0))` was the zero
+  vector and `RotateCovarianceToRtn` of the identity diag(1, 0, 0, 1, 0, 0), through `ToRtn`, `FromRtn` and both
+  covariance rotations, so the conjunction analysis and the CDM export of such a participant used a singular rotation;
+  `Inclination()` was atan2(0, 0) = 0, so the node was x̂ (Ω = 0) and ω = π, and `ToKeplerianElements` and
+  `ToEquinoctial` gave an equatorial orbit, the node vectors ±x̂, the longitudes 0 or a number, and the two-body motion
+  to another epoch (`AtEpoch`, `ToStateVector(Time)`) a mean anomaly or a state of NaN; nothing threw. Under the same
+  signatures, every member that reads the orbit plane or the RTN frame throws `InvalidOperationException` for a
+  rectilinear or non-finite state (the condition of `RtnProcessNoise`, r × v = 0 exactly), the list of the Breaking
+  entry below; the guard is in `Inclination()`, which the node, the argument of periapsis, the node vectors, the
+  longitudes and the elements read, and in the RTN rotation; `Eccentricity()` = 1 and `TrueAnomaly()` = π of a moving
+  state off the centre, the limits of every nearby orbit, are kept. `StateVectorTests` checks every listed member, each on a fresh state, on the four
+  states of the issue, a state moving through the centre and a non-finite one, CSPICE `oscltx` signalling `SPICE(DEGENERATECASE)` on the same states, and a state of
+  |h| = 1e-3 m²/s whose rotation is bit for bit its closed form; `ConjunctionAssessmentTests` an analysis with a
+  protected spacecraft at rest at the centre. The 32 dense cases of `ConjunctionAssessmentTests` that put the protected
+  spacecraft there now move both participants by the same uniform motion, (1, 0, 0) m + (0, 0, 1e-3) m/s t, which
+  leaves their relative state bit for bit and their closed-form TCAs and misses unchanged.
 
 **Changed**
 
@@ -2681,6 +2765,62 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `NotEqual` is split at the crossings added. No call throws and no edge found before moves; the quantity is
   evaluated about 1.2 times as often at a step where nothing is hidden. Migration: none to find every window; a caller
   who relied on a coarse step to pass over short windows filters the result by length.
+- **Breaking: `new Quaternion(axis, angle)` normalises its axis and throws for a zero or non-finite one** ([#688](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/688), Fixed
+  above): a finite non-zero axis of any length gives the unit quaternion of the rotation by `angle` about its direction,
+  where a non-unit axis gave a non-unit quaternion turning by another angle; a zero axis, or one with a NaN or infinite
+  component, throws `ArgumentException` (parameter `axis`) where it returned a quaternion that was no rotation. A unit
+  axis (|axis| = 1 exactly) gives the same quaternion bit for bit; an axis that is unit only to rounding (`v.Normalize()`)
+  can move it by an ulp. Nothing the library computes moves. Migration: pass any non-zero direction; check the magnitude
+  of a vector that can be zero (a zero angular velocity) before passing it, and use `Quaternion.Identity` for no
+  rotation.
+- **Breaking: `Matrix.FromQuaternion`, `Matrix.TransformCovariance`, `Quaternion.Lerp`, `Quaternion.SLERP`,
+  `Vector3.Angle(vector, plane)` and `Vector3.To` throw for a zero or non-finite input** (the known limitation of [#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above).
+  `FromQuaternion` and `TransformCovariance` throw `ArgumentException` (`q`, `rotation`) where they used the identity
+  (or NaN); `Lerp` throws `InvalidOperationException` for a zero or non-finite instance and `ArgumentException` (`q2`)
+  for a zero or non-finite `q2` and when the chord passes through zero (`Lerp(q, −q, 0.5)`), where it returned the zero
+  quaternion; `SLERP` normalizes its inputs and throws the same way (`q`), so non-unit inputs give the SLERP of their
+  rotations, and inputs unit only to rounding can move its result by about 1e-16; `Angle(vector, plane)` and
+  `Angle(vector, Plane)` throw `ArgumentException` (`plane`) for a zero or non-finite normal, where they returned 0 or
+  π; `To` throws `InvalidOperationException` for a zero or non-finite instance and `ArgumentException` (`vector`) for a
+  zero or non-finite target, where it returned the identity or NaN, and gives the rotation of the directions at any
+  finite length and a half turn for vectors collinear and opposite in doubles, where it returned NaN, the zero quaternion
+  or the identity. Nothing else the library computes moves: a single-vector attitude or the attitude of an impulse whose
+  body front is collinear and opposite to its target (or delta-V) in doubles is now that half turn, where it recorded the
+  zero quaternion or the identity; a zero target or delta-V keeps the identity.
+  Migration: pass non-zero quaternions, normals and vectors; interpolate with `Lerp` between quaternions of the same
+  hemisphere (flip `q2` when q · q2 < 0), or use `SLERP`, which takes the shorter path.
+- **Breaking: the direction of `PerigeeVector()` and `ApogeeVector()` at and near e = 0** ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), Fixed above). For
+  `KeplerianElements`, `EquinoctialElements` and `TLE` of eccentricity exactly 0, they move from ±x̂ a to the perifocal
+  axis in the plane of the orbit, at ω from the node (Ω, ω and i of the elements; an `EquinoctialElements` has ω = 0);
+  for a `StateVector` whose eccentricity vector is exactly zero, from x̂ a to its unit node vector times a (x̂ for an
+  equatorial orbit, unchanged). Near-circular elements and states no longer give a zero vector, an infinite apsis
+  velocity or a target of 0 for `PerigeeHeightManeuver` and `ApogeeHeightManeuver`. Elsewhere the direction is the
+  elements' periapsis rather than the recomputed eccentricity vector, which moves the vector by 8.1e-16 at e = 0.95, 1.0e-14 at 0.1, 8.5e-13 at 1e-3, 9.6e-10 at 1e-6 and 8.3e-7 at 1e-9 relative for
+  elements and 3.4e-16, 2.0e-15, 2.3e-13, 2.7e-10 and 2.4e-7 (the error of the former direction, ε / e) for states; the magnitudes move by an ulp at most, and so do the targets of the apsis
+  maneuvers, their impulses, `PhasingManeuver` and `CombinedManeuver`. Mean elements have no position: mean
+  `KeplerianElements` and `EquinoctialElements` throw `InvalidOperationException` from `PerigeeVector`, `ApogeeVector`,
+  `PerigeeVelocity` and `ApogeeVelocity` at every eccentricity, as they did at e ≠ 0 through `ToStateVector()` and as
+  `EccentricityVector()` does, and now also at e = 0, where they returned ±x̂ a; so `PerigeeHeightManeuver`,
+  `ApogeeHeightManeuver` and `Launch` keep rejecting a mean target orbit. A `TLE`, whose semi-major axis, eccentricity
+  and angles are those of its osculating elements at its epoch (SGP4/SDP4), takes the perifocal axis of those elements.
+  Migration: read `PerigeeRadius()` for the magnitude alone; the direction is now the periapsis of the elements;
+  convert mean elements with their propagator first (`TLE.ToOsculating()`).
+- **Breaking: a rectilinear state throws where it has no RTN frame or orbit plane** ([#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687), Fixed above): on a
+  state with r × v = 0 exactly (a radial motion, a zero velocity, the centre) or a non-finite state, every member that
+  reads the orbit plane or the RTN frame throws `InvalidOperationException`: `CreateRtnRotation`, `ToRtn`, `FromRtn`,
+  `RotateCovarianceToRtn` and `RotateCovarianceFromRtn` (a matrix with zero rows before); `Inclination`,
+  `AscendingNode`, `ArgumentOfPeriapsis`, `AscendingNodeVector`, `DescendingNodeVector`, `TrueLongitude()`,
+  `TrueLongitude(Time)` and `MeanLongitude` (0, 0, π, x̂, −x̂, 0 and a number, or NaN); `ToKeplerianElements()`,
+  `ToKeplerianElements(Time)`, `ToEquinoctial`, `AtEpoch`, `TrueAnomaly(Time)` and `ToStateVector(Time)` at another
+  instant, the two-body ephemeris of a spacecraft that is not propagated (equatorial elements, NaN or a NaN state); at the
+  centre, whose eccentricity vector is zero, also `TrueAnomaly()`, `MeanAnomaly()`, `EccentricAnomaly()`,
+  `EpochAtMeanAnomaly`, `ToStateVector(double)`, `PerigeeVector`, `ApogeeVector`, `PerigeeVelocity` and
+  `ApogeeVelocity` (0, the epoch, the state itself, the zero vector or NaN); and `MeanAnomaly()` of a non-finite state,
+  which threw the message of an empty `Nullable`. A moving state off the centre keeps `Eccentricity()` = 1 and
+  `TrueAnomaly()` = π, and every member that reads no plane is unchanged. `ConjunctionAssessment.Analyze`, `AnalyzeAll`,
+  `EvaluateAvoidance`, `EncounterCovariance` and the CDM export throw through them for such a participant state at TCA
+  or at its burn. Every state with r × v ≠ 0 is unchanged, bit for bit. Migration: give the state a non-zero angular
+  momentum, or handle the radial case separately (its direction is r̂; it has no plane).
 
 **Removed**
 
@@ -2928,17 +3068,6 @@ not listed.
   searched by `gfilum_c` with the normal of `surfnm_c` at the point, and the same site built from its coordinates,
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
-- **Degenerate geometry kept by the library's normalizations**
-  ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), [#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687), [#688](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/688)). The library's own
-  normalizations still return the zero vector for a magnitude of 0 ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)), which hides three degenerate cases:
-  `PerigeeVector()` and `ApogeeVector()` are the zero vector when the eccentricity vector rounds to zero (139 of 10 000
-  random circular elements), `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix, and
-  `new Quaternion(axis, angle)` neither checks nor normalises its axis (a zero axis gives a non-unit quaternion). The
-  public methods that normalize their own argument or result the same way return silently too:
-  `Matrix.FromQuaternion` of the zero quaternion is the identity, `Quaternion.Lerp` from q to −q at t = 0.5 the zero
-  quaternion, and `Vector3.Angle(vector, plane)` with a zero plane normal 0 or π, the unsigned angle's sign lost. Give
-  near-circular elements a non-zero eccentricity for their apsides, a unit axis to the quaternion, and non-zero
-  quaternions and normals to these methods.
 - **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
   read in ICRF without aberration and convert with `ToFrame`.

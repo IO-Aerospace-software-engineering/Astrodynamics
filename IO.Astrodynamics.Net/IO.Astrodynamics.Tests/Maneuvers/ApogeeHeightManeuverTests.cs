@@ -173,5 +173,19 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             Assert.Throws<ArgumentException>(() => new PlaneAlignmentManeuver(TimeSystem.Time.J2000TDB, TimeSpan.Zero, target, spc.Engines.First()));
         }
-    }
+
+        // #686: the apogee of the issue's near-circular elements is 7178 km (PerigeeHeightManeuverTests.Issue686Elements);
+        // it was 0
+        [Fact]
+        public void Create_FromNearCircularElements_TargetsTheirApogeeRadius()
+        {
+            var ke = PerigeeHeightManeuverTests.Issue686Elements();
+            FuelTank fuelTank = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
+            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank);
+            var maneuver = new ApogeeHeightManeuver(TimeSystem.Time.J2000TDB, TimeSpan.Zero, ke, eng);
+            double error = System.Math.Abs(maneuver.TargetApogee / 7178e3 - 1.0);
+            _output.WriteLine($"MEASURE #686 issue elements: TargetApogee against 7178 km {error:E3}");
+            Assert.True(error <= PerigeeHeightManeuverTests.Issue686Tolerance, $"{error:E3}");
+        }
+}
 }

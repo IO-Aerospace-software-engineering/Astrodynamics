@@ -406,8 +406,8 @@ Cartesian position and velocity state.
 | `SpecificAngularMomentum()` | Compute specific angular momentum vector |
 | `EccentricityVector()` | Compute eccentricity vector |
 | `AscendingNodeVector()` | Compute ascending node vector |
-| `PerigeeVector()` | Compute perigee position vector |
-| `ApogeeVector()` | Compute apogee position vector |
+| `PerigeeVector()` | Compute perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); a state at the centre has none and throws (#687) |
+| `ApogeeVector()` | Compute apogee position vector, −a(1 + e) P̂ |
 | `PerigeeVelocity()` | Compute velocity at perigee (m/s) |
 | `ApogeeVelocity()` | Compute velocity at apogee (m/s) |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
@@ -417,6 +417,11 @@ Cartesian position and velocity state.
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
 | `ToTLE(TLE.Configuration config)` | Convert to TLE format |
+
+A rectilinear state (r × v = 0: a radial motion, a zero velocity, the centre) or a non-finite one has no orbit plane and
+no RTN frame: the members that read the plane (inclination, node, argument of periapsis, node vectors, longitudes, the
+elements, the two-body motion to another epoch, the RTN rotations, and at the centre the anomalies and apsides) throw
+`InvalidOperationException` (#687); see `docs/reference/state-vector.md`.
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
@@ -478,8 +483,8 @@ Classical Keplerian orbital elements (osculating or mean).
 | `Period()` | Get orbital period |
 | `PerigeeRadius()` | Get perigee radius (m) |
 | `ApogeeRadius()` | Get apogee radius (m) |
-| `PerigeeVector()` | Get perigee position vector |
-| `ApogeeVector()` | Get apogee position vector |
+| `PerigeeVector()` | Get perigee position vector, a(1 − e) P̂, P̂ the direction of the periapsis in the orbit plane, defined at e = 0 (#686); mean elements throw, as `ToStateVector()` does (use `PerigeeRadius()`) |
+| `ApogeeVector()` | Get apogee position vector, −a(1 + e) P̂; mean elements throw |
 | `IsCircular()` | Check if orbit is circular (e ≈ 0) |
 | `IsElliptical()` | Check if orbit is elliptical |
 | `IsParabolic()` | Check if orbit is parabolic (e = 1) |
@@ -1957,7 +1962,7 @@ if (atm2.Details is NrlmsiseDetails details)
 | `Cross(Vector3 other)` | Cross product |
 | `Angle(Vector3 other)` | Angle between vectors (rad) |
 | `Inverse()` | Negate vector |
-| `To(Vector3 other)` | Vector from this to other |
+| `To(Vector3 other)` | Unit quaternion of the shortest rotation from this direction to the direction of `other`; throws for a zero or non-finite vector |
 | `Rotate(Quaternion q)` | Rotate by quaternion |
 | `LinearInterpolation(Vector3 other, double t)` | Linear interpolation |
 
@@ -1993,8 +1998,8 @@ Rotation representation.
 | `Normalize()` | Get unit quaternion; `InvalidOperationException` for a magnitude of 0 (#680) |
 | `Conjugate()` | Get conjugate |
 | `ToEuler()` | Convert to Euler angles |
-| `SLERP(Quaternion q, double t)` | Spherical linear interpolation |
-| `Lerp(Quaternion q, double t)` | Linear interpolation |
+| `SLERP(Quaternion q, double t)` | Spherical linear interpolation of the rotations of the two quaternions, normalized first; throws for a zero or non-finite quaternion |
+| `Lerp(Quaternion q, double t)` | Linear interpolation, normalized; throws for a zero or non-finite quaternion and for a chord through zero (q to −q at t = 0.5) |
 
 #### Matrix
 

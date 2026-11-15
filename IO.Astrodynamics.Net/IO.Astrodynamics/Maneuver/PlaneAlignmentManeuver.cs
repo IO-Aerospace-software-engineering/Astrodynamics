@@ -124,7 +124,7 @@ namespace IO.Astrodynamics.Maneuver
             var deltaV = 2.0 * projectedVector.Magnitude() * System.Math.Sin(RelativeInclination * 0.5);
 
             //Compute the quaternion
-            var q = new Quaternion(pos.NormalizeOrZero(), rotationAngle);
+            var q = Quaternion.FromAxisAngle(pos.NormalizeOrZero(), rotationAngle);
 
             //Rotate velocity vector
             var rotateVecor = projectedVector.NormalizeOrZero().Rotate(q);

@@ -222,4 +222,41 @@ public class EquinoctialElementsTests
         var eq2 = sv.ToEquinoctial();
         Assert.Equal(eq, eq2, TestHelpers.EquinoctialComparer);
     }
+
+    // #686: the apsides of the equinoctial elements of the Keplerian elements of KeplerianElementsTests are the SPICE conic
+    // of those Keplerian elements at M = 0 and its opposite; a circular orbit (f = g = 0) has no ω, and its periapsis is at the
+    // node (ϖ = Ω, ω = 0, the convention of EquinoctialElements.ArgumentOfPeriapsis), so its reference takes ω = 0, and an
+    // equatorial one (h = k = 0) has Ω = 0. The conversion to equinoctial elements and back to Ω, ω, i and a adds its
+    // rounding: MEASURE 1.405e-15 rad and 3.664e-15 for the radii (Linux x64, 2026-11-15), twice the worst, rounded up at
+    // the second significant digit, provisional until the three platforms are read from the CI logs
+    private const double ApsisAngleTolerance = 2.9e-15;
+    private const double ApsisLengthTolerance = 7.4e-15;
+
+    [Fact]
+    public void PerigeeAndApogeeVectors_AreTheConicAtPeriapsisAndApoapsisOfSpice_AtEveryEccentricity()
+    {
+        double worstAngle = 0.0, worstLength = 0.0;
+        foreach (double e in KeplerianElementsTests.ApsisEccentricities)
+        {
+            double worstAngleE = 0.0;
+            foreach (var ke in KeplerianElementsTests.RandomApsisElements(e, 6870 + System.Array.IndexOf(KeplerianElementsTests.ApsisEccentricities, e), 2000))
+            {
+                var eq = ke.ToEquinoctial();
+                double raan = ke.I == 0.0 ? 0.0 : ke.RAAN;
+                double aop = e == 0.0 ? 0.0 : ke.I == 0.0 ? ke.RAAN + ke.AOP : ke.AOP;
+                var spicePerigee = KeplerianElementsTests.SpiceConicPosition(ke.A, ke.E, ke.I, raan, aop, 0.0);
+                var (angle, length) = KeplerianElementsTests.ApsisErrors(eq, spicePerigee, ke.A, ke.E);
+                worstAngleE = System.Math.Max(worstAngleE, angle);
+                worstLength = System.Math.Max(worstLength, length);
+                Assert.True(double.IsFinite(eq.PerigeeVelocity()) && double.IsFinite(eq.ApogeeVelocity()));
+            }
+
+            _output.WriteLine($"MEASURE #686 equinoctial e = {e:E1}: worst apsis angle against SPICE conics {worstAngleE:E3} rad");
+            worstAngle = System.Math.Max(worstAngle, worstAngleE);
+        }
+
+        _output.WriteLine($"MEASURE #686 equinoctial: worst apsis angle {worstAngle:E3} rad, apsis radius {worstLength:E3}");
+        Assert.True(worstAngle <= ApsisAngleTolerance, $"{worstAngle:E3}");
+        Assert.True(worstLength <= ApsisLengthTolerance, $"{worstLength:E3}");
+    }
 }

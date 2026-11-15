@@ -90,6 +90,18 @@ internal static class CspiceDirect
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     private static extern void pxform_c(string from, string to, double et, [Out] double[] rotate);
 
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void q2m_c([In] double[] q, [Out] double[] r);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int axisar_([In] double[] axis, ref double angle, [Out] double[] r);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int vrotv_([In] double[] v, [In] double[] axis, ref double theta, [Out] double[] r);
+
+    [DllImport(Library, CallingConvention = CallingConvention.Cdecl)]
+    private static extern void oscltx_c([In] double[] state, double et, double mu, [Out] double[] elts);
+
     /// <summary>The planetographic coordinates of a body-fixed point (<c>recpgr_c</c>): the longitude in [0, 2π] in the
     /// sense of the body (the kernel pool's), the latitude and the altitude on the spheroid of <paramref name="re"/> and
     /// <paramref name="f"/>, in the units of the point.</summary>
@@ -136,6 +148,66 @@ internal static class CspiceDirect
             pxform_c(from, to, et, rotation);
             Check("pxform");
             return rotation;
+        }
+    }
+
+    /// <summary>The rotation matrix of a SPICE quaternion (<c>q2m_c</c>, scalar first), row-major.</summary>
+    internal static double[] Q2m(double w, double x, double y, double z)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var r = new double[9];
+            q2m_c([w, x, y, z], r);
+            Check("q2m");
+            return r;
+        }
+    }
+
+    /// <summary>The matrix that rotates vectors by <paramref name="angle"/> radians about <paramref name="axis"/> (the f2c
+    /// routine <c>axisar_</c>, whose column-major matrix is returned row-major; the axis need not be a unit vector).</summary>
+    internal static double[] Axisar(double[] axis, double angle)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var columnMajor = new double[9];
+            double theta = angle;
+            axisar_(axis, ref theta, columnMajor);
+            Check("axisar");
+            var r = new double[9];
+            for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                r[3 * i + j] = columnMajor[i + 3 * j];
+            return r;
+        }
+    }
+
+    /// <summary>The vector <paramref name="v"/> rotated by <paramref name="angle"/> radians about <paramref name="axis"/>
+    /// (the f2c routine <c>vrotv_</c>; the axis need not be a unit vector).</summary>
+    internal static double[] Vrotv(double[] v, double[] axis, double angle)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var r = new double[3];
+            double theta = angle;
+            vrotv_(v, axis, ref theta, r);
+            Check("vrotv");
+            return r;
+        }
+    }
+
+    /// <summary>The short error message SPICE signals for the osculating elements of a state (<c>oscltx_c</c>), or null
+    /// when it gives them; SPICE is reset after the error.</summary>
+    internal static string OscltxError(double[] state, double et, double mu)
+    {
+        lock (SpiceAPI.SyncRoot)
+        {
+            var elts = new double[20];
+            oscltx_c(state, et, mu, elts);
+            if (failed_c() == 0) return null;
+            var message = new StringBuilder(64);
+            getmsg_c("SHORT", message.Capacity, message);
+            reset_c();
+            return message.ToString().Trim();
         }
     }
 

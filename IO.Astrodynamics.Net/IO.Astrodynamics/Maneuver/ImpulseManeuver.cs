@@ -161,11 +161,13 @@ namespace IO.Astrodynamics.Maneuver
             Engine.FuelTank.Spacecraft.ChainStandbyManeuver(this.NextManeuver, ManeuverWindow.Value.EndDate);
 
             //return computed state vector and state orientation
-            //The front along the delta-V, in ICRF whatever the frame of the state (#529, #535)
+            //The front along the delta-V, in ICRF whatever the frame of the state (#529, #535); a zero delta-V (a target
+            //already reached) keeps the identity, as the attitude record holds for no attitude, bit for bit as before 11.0.0,
+            //through the internal path of Vector3.To, which throws for a zero target (review of #680's known limitation)
             var deltaVInIcrf = stateVector.Frame == Frames.Frame.ICRF
                 ? DeltaV
                 : DeltaV.Rotate(stateVector.Frame.ToFrame(Frames.Frame.ICRF, stateVector.Epoch).Rotation);
-            return (after, new StateOrientation(GetBodyFront().To(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
+            return (after, new StateOrientation(GetBodyFront().ToOrIdentity(deltaVInIcrf), Vector3.Zero, stateVector.Epoch, Frames.Frame.ICRF));
         }
 
         internal override void Reset()

@@ -193,6 +193,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get vector to ascending node unitless
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane (#687).</exception>
     public virtual Vector3 AscendingNodeVector()
     {
         if (_ascendingNodeVector.HasValue)
@@ -216,6 +218,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get vector to descending node unitless
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane (#687).</exception>
     public Vector3 DescendingNodeVector()
     {
         _decendingNodeVector ??= AscendingNodeVector().Inverse();
@@ -334,6 +338,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the mean anomaly at the epoch or the eccentricity is not finite (#453).
     /// </exception>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane (#687).</exception>
     public double TrueAnomaly(Time epoch)
     {
         return AtEpoch(epoch).TrueAnomaly();
@@ -349,6 +355,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the mean anomaly or the eccentricity is not finite (#453).
     /// </exception>
+    /// <exception cref="InvalidOperationException">A <see cref="StateVector"/> at the centre (r = 0), whose eccentricity
+    /// vector is zero, or a non-finite one has no orbit plane to count from (#687).</exception>
     public double EccentricAnomaly()
     {
         if (_eccentricAnomaly.HasValue)
@@ -639,6 +647,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Mean elements require a specific propagator (e.g., SGP4/SDP4) for accurate position calculations.
     /// Also thrown when the mean anomaly at the epoch or the eccentricity is not finite (#453).
     /// </exception>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane and no two-body motion to another instant (#687).</exception>
     public virtual StateVector ToStateVector(Time epoch)
     {
         if (ElementsType == OrbitalElementsType.Mean)
@@ -660,6 +670,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the mean anomaly at that epoch or the eccentricity is not finite (#453).
     /// </exception>
+    /// <exception cref="InvalidOperationException">A <see cref="StateVector"/> at the centre (r = 0), whose eccentricity
+    /// vector is zero, or a non-finite one has no orbit plane to count from (#687).</exception>
     public StateVector ToStateVector(double trueAnomaly)
     {
         return ToStateVector(EpochAtMeanAnomaly(TrueAnomalyToMeanAnomaly(trueAnomaly, Eccentricity(), EccentricAnomaly(trueAnomaly))));
@@ -680,6 +692,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// passage came one period late, and at e = 0.999999, where <see cref="KeplerianElements"/> keeps its mean anomaly
     /// unreduced, it could be in the past (#474).</remarks>
     /// <exception cref="ArgumentOutOfRangeException">The passage lies beyond the epochs a <see cref="Time"/> holds.</exception>
+    /// <exception cref="InvalidOperationException">A <see cref="StateVector"/> at the centre (r = 0), whose eccentricity
+    /// vector is zero, or a non-finite one has no orbit plane to count from (#687).</exception>
     public Time EpochAtMeanAnomaly(double meanAnomaly)
     {
         var res = meanAnomaly - MeanAnomaly();
@@ -697,6 +711,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Convert to equinoctial
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane and no elements (#687).</exception>
     public virtual EquinoctialElements ToEquinoctial()
     {
         if (_equinoctial is null)
@@ -721,23 +737,51 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Get perigee vector
+    /// Get perigee vector: the position of the periapsis relative to the observer, a(1 − e) P̂, with P̂ the direction of
+    /// the periapsis (#686).
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The periapsis position, in the frame of the orbital parameters.</returns>
+    /// <remarks>
+    /// <para>
+    /// P̂ is the perifocal axis of the elements, (cos Ω cos ω − sin Ω sin ω cos i, sin Ω cos ω + cos Ω sin ω cos i,
+    /// sin ω sin i), the conic at ν = 0 (D. A. Vallado, <i>Fundamentals of Astrodynamics and Applications</i>, 4th ed.,
+    /// 2013, algorithm 10 COE2RV; to be verified by S. Guillet), defined at every eccentricity: a circular orbit has its
+    /// periapsis at ω from the node, where its true anomaly counts from. A <see cref="StateVector"/> takes the part of its
+    /// eccentricity vector in its orbit plane, e − (e · ĥ) ĥ, normalized, and its unit node vector when that part is zero
+    /// (x̂ for an equatorial orbit).
+    /// </para>
+    /// <para>
+    /// Before 11.0.0, P̂ was the eccentricity vector recomputed from the state, normalized leniently, and x̂ for an
+    /// eccentricity of exactly 0: near the rounding level of the eccentricity (about 1e-16) it cancelled to the zero
+    /// vector, so <see cref="PerigeeVelocity"/> was infinite, or to a direction off the orbit plane (#686).
+    /// </para>
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
+    /// throws (a <see cref="TLE.TLE"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
+    /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public Vector3 PerigeeVector()
     {
-        if (_perigeevector.HasValue)
-        {
-            return _perigeevector.Value;
-        }
-
-        if (Eccentricity() == 0.0)
-        {
-            _perigeevector = Vector3.VectorX * SemiMajorAxis();
-        }
-
-        _perigeevector ??= EccentricityVector().NormalizeOrZero() * SemiMajorAxis() * (1.0 - Eccentricity());
+        _perigeevector ??= PeriapsisDirection() * SemiMajorAxis() * (1.0 - Eccentricity());
         return _perigeevector.Value;
+    }
+
+    /// <summary>
+    /// The unit vector from the observer to the periapsis: the perifocal axis of the elements, the first column of
+    /// R3(−Ω) R1(−i) R3(−ω), defined at every eccentricity, e = 0 included (#686).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">The elements are mean elements, which have no position, as
+    /// <see cref="ToStateVector()"/> and <see cref="EccentricityVector"/> throw (review of #686).</exception>
+    internal virtual Vector3 PeriapsisDirection()
+    {
+        ThrowIfMeanElements();
+
+        double o = AscendingNode();
+        double w = ArgumentOfPeriapsis();
+        double i = Inclination();
+        double cosO = System.Math.Cos(o), sinO = System.Math.Sin(o);
+        double cosW = System.Math.Cos(w), sinW = System.Math.Sin(w);
+        double cosI = System.Math.Cos(i), sinI = System.Math.Sin(i);
+        return new Vector3(cosO * cosW - sinO * sinW * cosI, sinO * cosW + cosO * sinW * cosI, sinW * sinI);
     }
 
     /// <summary>
@@ -761,22 +805,16 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Get apogee vector
+    /// Get apogee vector: the position of the apoapsis relative to the observer, −a(1 + e) P̂, with P̂ the direction of
+    /// the periapsis of <see cref="PerigeeVector"/> (#686).
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The apoapsis position, in the frame of the orbital parameters.</returns>
+    /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
+    /// throws (a <see cref="TLE.TLE"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
+    /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public Vector3 ApogeeVector()
     {
-        if (_apogeeVector.HasValue)
-        {
-            return _apogeeVector.Value;
-        }
-
-        if (Eccentricity() == 0.0)
-        {
-            _apogeeVector = Vector3.VectorX.Inverse() * SemiMajorAxis();
-        }
-
-        _apogeeVector ??= EccentricityVector().NormalizeOrZero().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
+        _apogeeVector ??= PeriapsisDirection().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
         return _apogeeVector.Value;
     }
 
@@ -795,6 +833,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// second: <see cref="Time"/> + <see cref="TimeSpan"/> adds calendar seconds to a UTC time, so across a leap second
     /// <c>Epoch + Period()</c> is a period and one second of TT later.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane (#687).</exception>
     public virtual OrbitalParameters AtEpoch(Time epoch)
     {
         var ke = this.ToKeplerianElements();
@@ -814,6 +854,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Thrown when the true anomaly is computed from the mean anomaly and the mean anomaly or the eccentricity is not
     /// finite (#453).
     /// </exception>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane (#687).</exception>
     public double TrueLongitude()
     {
         _trueLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly()) % Constants._2PI;
@@ -828,6 +870,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the mean anomaly at the epoch or the eccentricity is not finite (#453).
     /// </exception>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane (#687).</exception>
     public double TrueLongitude(Time epoch)
     {
         return (AscendingNode() + ArgumentOfPeriapsis() + TrueAnomaly(epoch)) % Constants._2PI;
@@ -837,6 +881,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Get the mean longitude
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane (#687).</exception>
     public double MeanLongitude()
     {
         _meanLongitude ??= (AscendingNode() + ArgumentOfPeriapsis() + MeanAnomaly()) % Constants._2PI;
@@ -892,6 +938,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns>The Keplerian elements at the given epoch.</returns>
     /// <remarks>The elapsed time is that of <see cref="AtEpoch"/>: the dynamical time of the observer, TT seconds about
     /// the Earth, TDB seconds about any other body (#501, #508).</remarks>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane and no elements (#687).</exception>
     public KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
@@ -906,6 +954,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Converts the orbital parameters to Keplerian elements at the current epoch.
     /// </summary>
     /// <returns>The Keplerian elements at the current epoch.</returns>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane and no elements (#687).</exception>
     public virtual KeplerianElements ToKeplerianElements()
     {
         if (_keplerianElements is not null)
@@ -976,9 +1026,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Computes the velocity at perigee.
+    /// Computes the velocity at perigee, by vis-viva at the radius of <see cref="PerigeeVector"/>.
     /// </summary>
     /// <returns>The velocity at perigee.</returns>
+    /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
+    /// throws (a <see cref="TLE.TLE"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
+    /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public double PerigeeVelocity()
     {
         _perigeeVelocity ??= System.Math.Sqrt(Observer.GM * (2 / PerigeeVector().Magnitude() - 1.0 / SemiMajorAxis()));
@@ -986,9 +1039,12 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Computes the velocity at apogee.
+    /// Computes the velocity at apogee, by vis-viva at the radius of <see cref="ApogeeVector"/>.
     /// </summary>
     /// <returns>The velocity at apogee.</returns>
+    /// <exception cref="InvalidOperationException">Mean elements, which have no position, as <see cref="ToStateVector()"/>
+    /// throws (a <see cref="TLE.TLE"/> takes its osculating elements); or a <see cref="StateVector"/> at the centre
+    /// (r = 0) or non-finite, which has no orbit plane (#686, #687).</exception>
     public double ApogeeVelocity()
     {
         _apogeeVelocity ??= System.Math.Sqrt(Observer.GM * (2 / ApogeeVector().Magnitude() - 1.0 / SemiMajorAxis()));

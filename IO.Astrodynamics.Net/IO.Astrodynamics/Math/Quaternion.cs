@@ -23,12 +23,64 @@ namespace IO.Astrodynamics.Math
         }
 
 
+        /// <summary>
+        /// The unit quaternion of the rotation by <paramref name="angle"/> about the direction of <paramref name="axis"/>:
+        /// (cos(a/2), k sin(a/2)), k = axis / |axis| (the Euler-Rodrigues parameters, a unit quaternion only for a unit k).
+        /// </summary>
+        /// <param name="axis">The direction of the rotation axis, of any finite non-zero length; a vector rotated by the
+        /// quaternion turns by <paramref name="angle"/> about it, positive counterclockwise seen from its tip.</param>
+        /// <param name="angle">The rotation angle, in radians.</param>
+        /// <remarks>
+        /// The axis is divided by its magnitude (#688; before 11.0.0 it was taken as it was, so a non-unit axis gave a
+        /// non-unit quaternion, whose rotation of a vector was scaled by |q|² and turned by another angle). A unit axis
+        /// (|axis| = 1 exactly) gives the same quaternion bit for bit; an axis outside about 1e-150 to 1e150 is scaled by
+        /// its largest component first, so that its magnitude is represented.
+        /// </remarks>
+        /// <exception cref="ArgumentException">The axis is zero or has a component that is not finite (NaN or infinite): it
+        /// has no direction (#688).</exception>
         public Quaternion(Vector3 axis, double angle)
         {
+            var unitAxis = UnitAxis(axis);
             double c = System.Math.Cos(angle * 0.5);
             double s = System.Math.Sin(angle * 0.5);
             W = c;
-            VectorPart = new Vector3(s * axis.X, s * axis.Y, s * axis.Z);
+            VectorPart = new Vector3(s * unitAxis.X, s * unitAxis.Y, s * unitAxis.Z);
+        }
+
+        /// <summary>
+        /// The quaternion (cos(a/2), axis sin(a/2)) of an axis taken as it is, unchecked: the library's own axis-angle
+        /// quaternions, bit for bit the former public constructor (#688). Its axes are unit vectors, or the zero vector of a
+        /// zero angular velocity at a zero angle, which gives the identity.
+        /// </summary>
+        internal static Quaternion FromAxisAngle(in Vector3 axis, double angle)
+        {
+            double c = System.Math.Cos(angle * 0.5);
+            double s = System.Math.Sin(angle * 0.5);
+            return new Quaternion(c, s * axis.X, s * axis.Y, s * axis.Z);
+        }
+
+        // The unit vector of a finite non-zero axis; its magnitude is computed on the axis scaled by its largest component
+        // when the squares of its components would overflow or lose their digits below the normal range
+        private static Vector3 UnitAxis(in Vector3 axis)
+        {
+            if (!double.IsFinite(axis.X) || !double.IsFinite(axis.Y) || !double.IsFinite(axis.Z))
+            {
+                throw new ArgumentException($"The rotation axis {axis} has a component that is not finite and no direction.", nameof(axis));
+            }
+
+            double largest = System.Math.Max(System.Math.Abs(axis.X), System.Math.Max(System.Math.Abs(axis.Y), System.Math.Abs(axis.Z)));
+            if (largest == 0.0)
+            {
+                throw new ArgumentException("The rotation axis is the zero vector and has no direction.", nameof(axis));
+            }
+
+            if (largest > 1e-150 && largest < 1e150)
+            {
+                return axis / axis.Magnitude();
+            }
+
+            var scaled = axis / largest;
+            return scaled / scaled.Magnitude();
         }
 
         public Quaternion(double w, double x, double y, double z)
@@ -72,6 +124,39 @@ namespace IO.Astrodynamics.Math
             }
 
             return new Quaternion(W / m, VectorPart / m);
+        }
+
+        /// <summary>
+        /// Whether this quaternion can be normalized: every component finite and a magnitude that is neither 0 nor
+        /// infinite.
+        /// </summary>
+        internal bool IsNormalizable()
+        {
+            if (!double.IsFinite(W) || !double.IsFinite(VectorPart.X) || !double.IsFinite(VectorPart.Y) || !double.IsFinite(VectorPart.Z))
+            {
+                return false;
+            }
+
+            double m = Magnitude();
+            return m > 0.0 && double.IsFinite(m);
+        }
+
+        // The unit quaternion of an argument (parameterName) or of this instance (parameterName null), which must be
+        // normalizable: ArgumentException for an argument, InvalidOperationException for the instance
+        internal static Quaternion RequireUnit(in Quaternion q, string parameterName)
+        {
+            if (q.IsNormalizable())
+            {
+                return q.Normalize();
+            }
+
+            string message = $"The quaternion {q} has a magnitude of 0 or a component or magnitude that is not finite, and is no rotation.";
+            if (parameterName == null)
+            {
+                throw new InvalidOperationException(message);
+            }
+
+            throw new ArgumentException(message, parameterName);
         }
 
         public Quaternion Conjugate()
@@ -120,12 +205,34 @@ namespace IO.Astrodynamics.Math
         }
 
         /// <summary>
-        /// Performs Spherical Linear Interpolation (SLERP) between the current quaternion and the specified quaternion.
+        /// Performs Spherical Linear Interpolation (SLERP) between the rotation of the current quaternion and the rotation
+        /// of the specified quaternion, on the shorter path.
         /// </summary>
         /// <param name="q">The target quaternion to interpolate towards.</param>
         /// <param name="t">The interpolation factor, clamped between 0 and 1.</param>
-        /// <returns>The interpolated quaternion.</returns>
+        /// <returns>The interpolated unit quaternion.</returns>
+        /// <remarks>
+        /// Both quaternions are normalized first, so the result is the SLERP of their rotations (#680's known limitation;
+        /// before 11.0.0 a non-unit input gave the SLERP of the quaternions themselves, not a rotation). A unit input
+        /// whose magnitude rounds to 1 gives the same result bit for bit; one that is unit only to rounding can move it by
+        /// about 1e-16.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">This quaternion has a magnitude of 0, or a component or a magnitude
+        /// that is not finite: it is no rotation.</exception>
+        /// <exception cref="ArgumentException"><paramref name="q"/> has a magnitude of 0, or a component or a magnitude that
+        /// is not finite.</exception>
         public Quaternion SLERP(Quaternion q, double t)
+        {
+            var from = RequireUnit(this, null);
+            var to = RequireUnit(q, nameof(q));
+            return from.SlerpUnchecked(to, t);
+        }
+
+        /// <summary>
+        /// The SLERP of the quaternions as they are, unchecked: the library's own interpolation of the orientation cache of
+        /// a propagation, bit for bit the former public <see cref="SLERP"/>.
+        /// </summary>
+        internal Quaternion SlerpUnchecked(Quaternion q, double t)
         {
             // Clamps the parameter t between 0 and 1
             t = System.Math.Clamp(t, 0.0, 1.0);
@@ -145,7 +252,7 @@ namespace IO.Astrodynamics.Math
             if (dot > 1.0f - epsilon)
             {
                 // Linear interpolation
-                return Lerp(q, t);
+                return LerpUnchecked(q, t);
             }
 
             // Calculates the angle between the quaternions
@@ -189,26 +296,56 @@ namespace IO.Astrodynamics.Math
 
             double angle = 2.0 * System.Math.Atan2(sinHalf, delta.W);
             var axis = delta.VectorPart / sinHalf;
-            return ((new Quaternion(axis, angle * fraction) * q0).NormalizeOrZero(), axis, angle);
+            return ((FromAxisAngle(axis, angle * fraction) * q0).NormalizeOrZero(), axis, angle);
         }
 
         /// <summary>
-        /// Linearly interpolates between the current quaternion and the specified quaternion.
+        /// Linearly interpolates between the current quaternion and the specified quaternion, q + t (q2 − q), normalized.
         /// </summary>
         /// <param name="q2">The target quaternion to interpolate towards.</param>
         /// <param name="t">The interpolation factor, clamped between 0 and 1.</param>
-        /// <returns>The interpolated quaternion.</returns>
+        /// <returns>The interpolated unit quaternion.</returns>
+        /// <remarks>
+        /// The path is the chord from this quaternion to <paramref name="q2"/>, as given: no hemisphere is chosen, so from
+        /// q to a quaternion of the other hemisphere it takes the longer rotation. A chord through zero has no rotation
+        /// there (#680's known limitation; the zero quaternion was returned before 11.0.0).
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">This quaternion has a magnitude of 0, or a component or a magnitude
+        /// that is not finite.</exception>
+        /// <exception cref="ArgumentException"><paramref name="q2"/> has a magnitude of 0, or a component or a magnitude that
+        /// is not finite; or the interpolated quaternion has a magnitude of 0 (<paramref name="q2"/> a negative multiple of
+        /// this quaternion, as −q at t = 0.5).</exception>
         public Quaternion Lerp(Quaternion q2, double t)
+        {
+            RequireUnit(this, null);
+            RequireUnit(q2, nameof(q2));
+
+            var result = LerpRaw(q2, t);
+            if (!result.IsNormalizable())
+            {
+                throw new ArgumentException(
+                    $"The linear interpolation from {this} to {q2} at t = {t} is {result}, which has a magnitude of 0 or one that is not finite, and is no rotation.",
+                    nameof(q2));
+            }
+
+            return result.Normalize();
+        }
+
+        // The former public Lerp, unchecked: the fallback of the unchecked SLERP, bit for bit
+        private Quaternion LerpUnchecked(Quaternion q2, double t)
+        {
+            return LerpRaw(q2, t).NormalizeOrZero();
+        }
+
+        private Quaternion LerpRaw(in Quaternion q2, double t)
         {
             t = System.Math.Clamp(t, 0.0, 1.0);
 
-            Quaternion result = new Quaternion(W + t * (q2.W - W),
+            return new Quaternion(W + t * (q2.W - W),
                 VectorPart.X + t * (q2.VectorPart.X - VectorPart.X),
                 VectorPart.Y + t * (q2.VectorPart.Y - VectorPart.Y),
                 VectorPart.Z + t * (q2.VectorPart.Z - VectorPart.Z)
             );
-
-            return result.NormalizeOrZero();
         }
     }
 }

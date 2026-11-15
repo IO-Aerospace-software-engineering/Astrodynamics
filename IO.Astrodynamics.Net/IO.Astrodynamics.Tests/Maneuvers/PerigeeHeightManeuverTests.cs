@@ -115,5 +115,43 @@ namespace IO.Astrodynamics.Tests.Maneuvers
             Assert.Equal(new Window(new TimeSystem.Time(2000, 01, 01, 23, 58, 08, 663, 672).AddTicks(7), TimeSpan.FromSeconds(10.7439713)), maneuver.ManeuverWindow);
             Assert.Equal(537.19856491695327, maneuver.FuelBurned,3);
         }
-    }
+
+        // #686, the state of the issue: a circular orbit of 7178 km inclined by 30°, r = (r, 0, 0), v = √(GM / r)(0, cos 30°,
+        // sin 30°), GM the Earth's of gm_de440.tpc, whose Keplerian elements have e = 1.1e-16, at the rounding level, where
+        // the eccentricity vector cancels to zero: the perigee vector was zero and the apsis velocities infinite
+        internal static KeplerianElements Issue686Elements()
+        {
+            var earth = TestHelpers.EarthAtJ2000;
+            double r = 7178e3;
+            double v = System.Math.Sqrt(earth.GM / r);
+            double i = 30.0 * IO.Astrodynamics.Constants.Deg2Rad;
+            return new StateVector(new Vector3(r, 0.0, 0.0), new Vector3(0.0, v * System.Math.Cos(i), v * System.Math.Sin(i)), earth, TimeSystem.Time.J2000TDB,
+                Frames.Frame.ICRF).ToKeplerianElements();
+        }
+
+        // #686: the worst relative difference of the apsis radii and velocities of the issue's elements from the closed form
+        // of the circular orbit, r = 7178 km and v = √(GM / r), MEASURE 2.220e-16, one ulp (Linux x64, 2026-11-15); twice the worst,
+        // rounded up at the second significant digit, provisional until the three platforms are read from the CI logs
+        internal const double Issue686Tolerance = 4.5e-16;
+
+        [Fact]
+        public void Create_FromNearCircularElements_TargetsTheirPerigeeRadius()
+        {
+            var ke = Issue686Elements();
+            FuelTank fuelTank = new FuelTank("My fuel tank10", "ft2021", "sn0", 4000.0, 3000.0);
+            Engine eng = new Engine("My engine", "model 1", "sn1", 350.0, 50.0, fuelTank);
+            var maneuver = new PerigeeHeightManeuver(TimeSystem.Time.J2000TDB, TimeSpan.Zero, ke, eng);
+
+            double r = 7178e3;
+            double v = System.Math.Sqrt(TestHelpers.EarthAtJ2000.GM / r);
+            double worst = new[]
+            {
+                System.Math.Abs(ke.PerigeeVector().Magnitude() / r - 1.0), System.Math.Abs(ke.ApogeeVector().Magnitude() / r - 1.0),
+                System.Math.Abs(maneuver.TargetPerigeeHeight / r - 1.0), System.Math.Abs(ke.PerigeeVelocity() / v - 1.0),
+                System.Math.Abs(ke.ApogeeVelocity() / v - 1.0)
+            }.Max();
+            System.Console.WriteLine($"MEASURE #686 issue elements e = {ke.E:E3}: worst apsis radius and velocity against 7178 km and sqrt(GM/r) {worst:E3}");
+            Assert.True(worst <= Issue686Tolerance, $"{worst:E3}");
+        }
+}
 }

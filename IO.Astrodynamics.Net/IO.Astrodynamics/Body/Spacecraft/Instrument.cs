@@ -231,7 +231,7 @@ namespace IO.Astrodynamics.Body.Spacecraft
                 return Quaternion.Identity;
             }
 
-            return (new Quaternion(Vector3.VectorX, -orientation.X) * new Quaternion(Vector3.VectorY, -orientation.Y) * new Quaternion(Vector3.VectorZ, -orientation.Z)).NormalizeOrZero();
+            return (Quaternion.FromAxisAngle(Vector3.VectorX, -orientation.X) * Quaternion.FromAxisAngle(Vector3.VectorY, -orientation.Y) * Quaternion.FromAxisAngle(Vector3.VectorZ, -orientation.Z)).NormalizeOrZero();
         }
 
         public Vector3 GetBoresightInICRFFrame(in Time date)

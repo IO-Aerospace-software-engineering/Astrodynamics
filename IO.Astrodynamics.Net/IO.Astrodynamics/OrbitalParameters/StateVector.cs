@@ -166,13 +166,24 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
         /// <summary>
-        /// Calculates the eccentricity vector.
+        /// Calculates the inclination.
         /// </summary>
         /// <returns></returns>
+        /// <remarks>
+        /// A rectilinear state has no orbit plane, so no inclination, ascending node or argument of periapsis, and no
+        /// Keplerian or equinoctial elements: before 11.0.0 they were those of an equatorial orbit (i = 0, Ω = 0, ω = π)
+        /// (#687). Only r × v = 0 exactly throws; a state close to it is ill-conditioned, its plane the direction of a small
+        /// angular momentum. The eccentricity (1) and true anomaly (π) of a moving state off the centre, the limits of every
+        /// nearby orbit, are kept.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,
+        /// or the centre), or not finite: it has no orbit plane (#687).</exception>
         public override double Inclination()
         {
             if (!_inclination.HasValue)
             {
+                ThrowIfRectilinear(NoOrbitPlane);
+
                 // atan2 of the two components of h, well conditioned near 0 and π, where acos of h_z / |h| is not
                 var h = SpecificAngularMomentum();
                 double inclination = System.Math.Atan2(System.Math.Sqrt(h.X * h.X + h.Y * h.Y), h.Z);
@@ -198,6 +209,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// Calculates the right ascension of the ascending node.
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,
+        /// or the centre), or not finite: it has no orbit plane (#687).</exception>
         public override double AscendingNode()
         {
             if (_ascendingNode.HasValue)
@@ -229,6 +242,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// Calculates the argument of periapsis.
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,
+        /// or the centre), or not finite: it has no orbit plane (#687).</exception>
         public override double ArgumentOfPeriapsis()
         {
             if (_periapsisArgument.HasValue)
@@ -263,6 +278,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// Calculates the mean anomaly.
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="InvalidOperationException">The state is at the centre (r = 0), where its eccentricity vector is
+        /// zero and its anomaly counts from a node it does not have, or not finite (#687).</exception>
         public override double MeanAnomaly()
         {
             double ea = EccentricAnomaly(TrueAnomaly());
@@ -280,13 +297,22 @@ namespace IO.Astrodynamics.OrbitalParameters
                 _meanAnomaly ??= Eccentricity() * System.Math.Sinh(ea) - ea;
             }
 
-            return _meanAnomaly.Value;
+            // No conic has a non-finite eccentricity: the state is not finite and has no elements (#687; the message of an
+            // empty Nullable before)
+            if (!_meanAnomaly.HasValue)
+            {
+                ThrowIfRectilinear(NoOrbitPlane);
+            }
+
+            return _meanAnomaly!.Value;
         }
 
         /// <summary>
         /// Calculates the true anomaly.
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="InvalidOperationException">The state is at the centre (r = 0), where its eccentricity vector is
+        /// zero and its anomaly counts from a node it does not have, or not finite (#687).</exception>
         public override double TrueAnomaly()
         {
             if (_trueAnomaly.HasValue)
@@ -335,6 +361,30 @@ namespace IO.Astrodynamics.OrbitalParameters
             }
 
             return v % Constants._2PI;
+        }
+
+        /// <summary>
+        /// The unit vector from the observer to the periapsis: the part of the eccentricity vector in the orbit plane,
+        /// e − (e · ĥ) ĥ (projected twice), normalized, and the unit node vector, where ω = 0 counts from, when that part
+        /// is zero (x̂ for an equatorial orbit) (#686). The raw eccentricity vector of a near-circular state is rounding
+        /// noise whose part out of the plane, about ε absolute, made its direction leave the plane.
+        /// </summary>
+        internal override Vector3 PeriapsisDirection()
+        {
+            var e = EccentricityVector();
+            var hHat = SpecificAngularMomentum().NormalizeOrZero();
+            var inPlane = e - hHat * (e * hHat);
+
+            // A second projection removes what the first left out of the plane, about ε |e| absolute, which is not small
+            // against the part in the plane when the eccentricity vector is rounding noise (classical Gram-Schmidt twice)
+            inPlane -= hHat * (inPlane * hHat);
+            double m = inPlane.Magnitude();
+            if (m > 0.0)
+            {
+                return inPlane / m;
+            }
+
+            return AscendingNodeVector().NormalizeOrZero();
         }
 
         /// <summary>
@@ -416,13 +466,35 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
 
+        private const string NoOrbitPlane = "orbit plane, so no inclination, ascending node, argument of periapsis or elements";
+
+        // A rectilinear state (r × v = 0, the condition of RtnProcessNoise) or a non-finite one, which fails the comparisons,
+        // has no orbit plane and no RTN frame (#687)
+        private void ThrowIfRectilinear(string what)
+        {
+            double h = Position.Cross(Velocity).Magnitude();
+            double r = Position.Magnitude();
+            if (!(h > 0.0) || !(r > 0.0))
+            {
+                throw new InvalidOperationException(
+                    $"The state vector (position {Position}, velocity {Velocity}) is rectilinear (r × v = 0) or not finite, and has no {what}.");
+            }
+        }
+
         /// <summary>
         /// Computes the 3x3 rotation matrix from the inertial frame to the RTN (Radial-Transverse-Normal) frame.
         /// R = r_hat, T = (h × r) normalized, N = (r × v) normalized.
         /// </summary>
         /// <returns>A 3x3 rotation matrix whose rows are the R, T, N unit vectors in inertial coordinates.</returns>
+        /// <remarks>
+        /// The frame needs r × v ≠ 0 (CCSDS 508.0-B-1, the RTN frame of the CDM): no rotation represents it for a rectilinear
+        /// state. Only r × v = 0 exactly throws; near it the T and N axes are those of a small angular momentum.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,
+        /// or the centre), or not finite: it has no RTN frame (#687; a matrix with zero rows was used before 11.0.0).</exception>
         public Matrix CreateRtnRotation()
         {
+            ThrowIfRectilinear("RTN frame");
             var r = Position.NormalizeOrZero();
             var h = Position.Cross(Velocity).NormalizeOrZero();
             var t = h.Cross(r).NormalizeOrZero();
@@ -434,6 +506,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </summary>
         /// <param name="inertialVector">A vector expressed in the inertial frame.</param>
         /// <returns>The vector expressed in RTN coordinates.</returns>
+        /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,
+        /// or the centre), or not finite: it has no RTN frame (#687; a matrix with zero rows was used before 11.0.0).</exception>
         public Vector3 ToRtn(Vector3 inertialVector)
         {
             var rtn = CreateRtnRotation();
@@ -446,6 +520,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </summary>
         /// <param name="rtnVector">A vector expressed in RTN coordinates.</param>
         /// <returns>The vector expressed in inertial coordinates.</returns>
+        /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,
+        /// or the centre), or not finite: it has no RTN frame (#687; a matrix with zero rows was used before 11.0.0).</exception>
         public Vector3 FromRtn(Vector3 rtnVector)
         {
             var rtn = CreateRtnRotation();
@@ -467,6 +543,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// TCA. It differs from <see cref="ToFrame"/>, which applies the full Jacobian of a
         /// rotating frame.
         /// </remarks>
+        /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,
+        /// or the centre), or not finite: it has no RTN frame (#687; a matrix with zero rows was used before 11.0.0).</exception>
         public Matrix RotateCovarianceToRtn(Matrix covarianceIcrf)
         {
             var rotation = CreateRtnRotation();
@@ -526,6 +604,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// </summary>
         /// <param name="covarianceRtn">A 6x6 covariance matrix in RTN coordinates (units: m², m²/s, m²/s²).</param>
         /// <returns>The 6x6 covariance matrix in the inertial frame of this state.</returns>
+        /// <exception cref="InvalidOperationException">The state is rectilinear (r × v = 0: a radial motion, a zero velocity,
+        /// or the centre), or not finite: it has no RTN frame (#687; a matrix with zero rows was used before 11.0.0).</exception>
         public Matrix RotateCovarianceFromRtn(Matrix covarianceRtn)
         {
             var rotation = CreateRtnRotation();

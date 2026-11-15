@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.OrbitalParameters.TLE;
@@ -835,6 +836,16 @@ public class TLE : OrbitalParameters, IEquatable<TLE>
     public override double SemiMajorAxis()
     {
         return ToKeplerianElements().A;
+    }
+
+    /// <summary>
+    /// The direction of the periapsis of the osculating elements at the TLE epoch (SGP4/SDP4), as the semi-major axis,
+    /// eccentricity and angles of the TLE are, so that <see cref="OrbitalParameters.PerigeeVector"/> and
+    /// <see cref="OrbitalParameters.ApogeeVector"/> are the apsides of its osculating orbit (review of #686).
+    /// </summary>
+    internal override Vector3 PeriapsisDirection()
+    {
+        return ToKeplerianElements().PeriapsisDirection();
     }
 
     public override double Eccentricity()
