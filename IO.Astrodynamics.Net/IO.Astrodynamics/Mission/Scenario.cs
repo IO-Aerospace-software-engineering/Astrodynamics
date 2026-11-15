@@ -145,7 +145,8 @@ namespace IO.Astrodynamics.Mission
         /// instance it already returned for another spacecraft.</exception>
         /// <remarks>
         /// The overload without a factory keeps the default Velocity-Verlet integrator. Stars are propagated the same
-        /// way by both overloads.
+        /// way by both overloads; the propagation of a star replaces the states it held (<see cref="Star.Propagate"/>), as
+        /// that of a spacecraft does.
         /// </remarks>
         public async Task<ScenarioSummary> SimulateAsync(bool includeAtmosphericDrag, bool includeSolarRadiationPressure,
             TimeSpan propagatorStepSize, Func<Integrator> integratorFactory)

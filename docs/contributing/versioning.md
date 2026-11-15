@@ -2254,6 +2254,23 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   motion times the Julian years from the catalog epoch, at the star's distance, by CSPICE's `latrec_c`), to 1.98e-16
   relative over four years (threshold 4.0e-16, provisional, twice the Linux worst).
 
+- **A star propagated twice kept the states of both propagations** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). `Star.Propagate` added each state
+  to a dictionary with `TryAdd`, which kept the states of every earlier propagation, the first one of an epoch winning,
+  and `Scenario.SimulateAsync` propagated its stars through it without clearing them, where `Spacecraft.Propagate`
+  replaces the stored states: `WriteEphemeris` wrote one segment from the first window ever propagated to the last, the
+  gaps between windows interpolated, so that SPICE read the star at epochs no propagation asked for. Measured: after a
+  propagation over four days of January 2001 (step one day) and one over the first six hours of 1 March 2001 (step 1 h), the one segment of
+  the SPK started on 1 January (ET 31579200 s), and SPICE read the star there. Each propagation now computes all its states, then replaces those the
+  star held (one array published at once); `Scenario.SimulateAsync` goes through it. `StarTests` and `ScenarioTests`
+  propagate twice over different windows and steps (`Propagate` then `Propagate`, `Propagate` then `PropagateAsync`, two
+  scenarios over different windows): SPICE (`spkezr` through `SpiceAPI`) reads the SPK at each epoch of the second grid
+  at the catalog position moved by the proper motion, written in the tests (the epochs whole half days from the catalog
+  epoch), to 1.39e-16 relative (threshold 2.8e-16, provisional, twice the Linux worst), and throws at the epochs of the
+  first window and between the two; the Validation test reads the segment with CSPICE (`dafus`, `dafgda`): one segment
+  of type 8 over the second window, its first epoch, step and number of states those of the second grid. A single
+  propagation writes the same SPK as before, bit for bit.
+
 - **A `CentralBodyPropagator` given an integrator with its forces threw `NullReferenceException` unless its caller
   initialized the integrator** (second round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The constructors
@@ -3233,6 +3250,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   returned the zeros, J2 NaN and no orbit and kept them for the process. On SPICE with the kernels loaded nothing moves.
   Migration: load the kernels (a GM kernel and a PCK) before the first read of a static object's data, or give a
   `MemoryDataProvider` record its GM and radii; `new CelestialBody(id)` still reads whatever the kernels give.
+
+- **Breaking: a propagation of a star replaces its states** (third round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above): `Star.Propagate`,
+  `Star.PropagateAsync` and `Scenario.SimulateAsync` keep the states of the last propagation only, as
+  `Spacecraft.Propagate` does, where each added its states to those of the earlier ones. Migration: to write several
+  windows, propagate over one window that covers them. No result moves for a star propagated once.
 
 **Removed**
 

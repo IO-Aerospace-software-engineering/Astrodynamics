@@ -588,6 +588,32 @@ namespace IO.Astrodynamics.Tests.Mission
             Assert.True(star.IsPropagated);
         }
 
+        [Fact]
+        public async Task SimulateAsync_OfAStarPropagatedBefore_ReplacesItsStates()
+        {
+            // Arrange: one star in two scenarios over different windows, their steps different; before, the second
+            // simulation added its states to the first's, so that the SPK of the star covered both windows and the gap
+            var star = IO.Astrodynamics.Tests.Body.StarTests.NewStar(668014, new TimeSystem.Time(2001, 1, 1));
+            var firstWindow = new Window(new TimeSystem.Time(2001, 1, 1), new TimeSystem.Time(2001, 1, 5));
+            var secondWindow = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 3));
+            var first = new Scenario("scn668c", new Astrodynamics.Mission.Mission("mission668c"), firstWindow);
+            var second = new Scenario("scn668d", new Astrodynamics.Mission.Mission("mission668d"), secondWindow);
+            first.AddStar(star);
+            second.AddStar(star);
+
+            // Act: the star's step is the propagator's step here (the window over 1000 is shorter)
+            await first.SimulateAsync(false, false, TimeSpan.FromDays(1.0));
+            await second.SimulateAsync(false, false, TimeSpan.FromHours(12.0));
+
+            // Assert: the second simulation's states alone, as Spacecraft.Propagate replaces its states
+            var replaced = IO.Astrodynamics.Tests.Body.StarTests.Grid(firstWindow, TimeSpan.FromDays(1.0))
+                .Append(new TimeSystem.Time(2001, 2, 1));
+            double worst = IO.Astrodynamics.Tests.Body.StarTests.CheckSpkHoldsOnly(star,
+                IO.Astrodynamics.Tests.Body.StarTests.Grid(secondWindow, TimeSpan.FromHours(12.0)), replaced,
+                "ScenarioTests.SimulateAsync_OfAStarPropagatedBefore", _output);
+            Assert.True(worst <= IO.Astrodynamics.Tests.Body.StarTests.CatalogPositionTolerance, $"{worst:E3}");
+        }
+
         // The reference position is CSPICE's latrec_c through CspiceDirect, which the Windows DLL does not export (Linux, Validation)
         [Fact]
         [Trait("Category", "Validation")]
