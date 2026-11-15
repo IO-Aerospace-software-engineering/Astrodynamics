@@ -268,7 +268,9 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
     seed's own range rate forward and backward, the widened bracket, the range rate followed over the candidates, the
     sampled search) and at the window ends. The seven `collision_probability` encounters through `Analyze`, whose exact
     TCA lies within 4.3e-7 tick of a tick: the Pc within 3.15e-10 of its exact value (005, at its exact tick; 9.03e-9
-    before, 003 and 005 returned one tick early), asserted at 6.3e-10 (1.9e-8 before). Against `gfdist_c` on the
+    before, 003 and 005 returned one tick early), asserted at 6.4e-10 (6.3e-10 until #668, whose three-digit prints give
+    3.1549e-10 on Linux x64, twice which is above 6.3e-10; provisional until the three-digit prints of Windows x64 and
+    macOS arm64 are read from the CI of #668; 1.9e-8 before #624). Against `gfdist_c` on the
     crossing LEOs, the TCA within 6.4e-8 s of CSPICE's zero below the tick at 60 s steps and 9.0e-8 s at the default
     steps (1.5e-7 s before), asserted at 1.8e-7 s (4e-7 s, when the reference was CSPICE's minimum on the grid of ticks,
     up to 0.96 tick from its zero); the #620 RTN position within 1.5e-4 m of the design (6.3e-4 m before), asserted at
@@ -725,8 +727,10 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   zero margin fails for `Greater`, `Lower` and the `adjustValue` windows of `AbsoluteMin` and `AbsoluteMax`, and holds
   for `GreaterOrEqual`, `LowerOrEqual`, `Equal` and `NotEqual`; a bracket with an undefined (NaN) sample is not
   searched. Every window, gap and crossing of a `double` quantity is therefore found when the step is at most half the
-  time between two extremes of the quantity, a jump of a branch cut counting as one, down to the about 1 µs to which
-  `localmin` locates an extreme; a tangency between two samples (an extreme exactly at the value) is not found. The
+  time between two extremes of the quantity, a jump of a branch cut counting as one, down to the resolution of
+  `localmin`, about 2 √ε h + 2τ/3 for a step h and τ = 1 µs (2.5 µs at a 1 min step, 19 µs at 10 min, 41 µs at 22.5 min;
+  "about 1 µs" until #668, which longer steps do not reach); a tangency between two samples (an extreme exactly at the
+  value) is not found. The
   documentation asked for a step shorter than every window and gap, "as with CSPICE": CSPICE asks for a step shorter
   than the shortest interval where the quantity is monotone
   ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html), Particulars, "The Search
@@ -1824,7 +1828,7 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   5 m when neither does (Changed below); the option of `Screen` is a fallback over its catalogue, never in conflict with
   a candidate's own radius. `Analyze_SecondaryHardBodyRadius_DesignedEncounters_MatchExactPc` splits the
   radius of the seven designed encounters of `tools/collision_probability` between the two spacecraft (0.6 R and 0.4 R,
-  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.15e-10 on the three platforms (CI run 43601908000, bound 6.3e-10); a
+  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.15e-10 on the three platforms (CI run 43601908000; bound 6.4e-10 since #668, provisional until the three platforms' three-digit prints, 6.3e-10 before); a
   theory checks the five rows of the rule on `Analyze` and `AnalyzeAll` (sampled and dense) and both avoidance paths,
   and the fallback rule on `Screen` (the candidate's own radius in the row where the others throw), with a spacecraft
   and a body as secondary; `Screen_MixedCatalogue_EachCandidateTakesItsOwnRadiusOrTheFallback` screens spacecraft of 2, 6 and 0 m and
@@ -2330,6 +2334,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `TryLoadFromFile`, `ValidateFile` and `Cdm.ReadFrom*`; every block of a data section the reader reads is duplicated
   once (`OmmReaderTests`, `OpmReaderTests`, `CdmTests`, whose CDM gives each segment the `odParameters` block `ToCdm`
   does not write). The single-segment documents of the tests load as before.
+- **The C# examples of the developer guide did not compile** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). 22 of the 60 blocks of
+  `DEVELOPER_GUIDE.md` failed against the library: the spacecraft example built an `Engine` without its tank, added it
+  before the tank (`AddEngine` throws for a tank the spacecraft does not hold, #676), called `SetFuelTank` and read
+  `StateVectorsRelativeToICRF`, neither of which exists, and its Engine table listed a constructor that does not exist;
+  elsewhere, parameters of other names (`a:` on `KeplerianElements`, `longitude:` on `Planetodetic`, `maxRevolutions:`,
+  `occultingBody:`), `TLE.Configuration`, `Omm.CreateForSgp4`, `Omm.SaveToString`, `LambertSolution.DepartureVelocity`,
+  `PlanetsAndMoons.SUN`, unary minus on `Vector3`, `Frames.Frame` (which does not resolve in an application's namespace),
+  a TRIAD attitude on two opposite body vectors (which throws), a local named `explicit` and locals declared twice. Every
+  block now compiles: each is the region of a method of `IO.Astrodynamics.Tests/Documentation/DeveloperGuideExamples.cs`,
+  in a namespace outside `IO.Astrodynamics` as an application's, and `DeveloperGuideExamplesTests` checks that each
+  block equals its region and runs the 40 that need only `Data/SolarSystem`; the spacecraft example against the two-body
+  state of its elements after 12 h (124.5 m, the Velocity-Verlet error at the 1 s step it now uses: 447 km at the 60 s
+  of before; bounds 2.5e2 m and 2.8e-1 m/s, provisional, twice the Linux x64 worst until the three platforms' CI). A
+  block that continues an earlier one names its inputs in its first comment. The KeplerianElements table listed
+  `ApogeeRadius()`, which never existed (the apogee radius is `ApogeeVector().Magnitude()`, as
+  `docs/reference/keplerian-elements.md` now says too); `GuideMethodTables_NameMembersOfTheLibrary` checks that every
+  method of the guide's member tables is a public method or constructor of the type of its heading, its bases or the
+  library's extension methods, with an overload of the written argument count. No library result moves.
 
 **Changed**
 
@@ -3212,8 +3234,11 @@ not listed.
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
   than every window and gap, or a `double` quantity whose sign is the condition. A `double` quantity's search finds a
-  window or a gap between two samples down to the about 1 µs to which `localmin` locates its extreme, and no tangency
-  there (an extreme exactly at the value).
+  window or a gap between two samples down to the resolution of `localmin`, about 2 √ε h + 2τ/3 for a step h and
+  τ = 1 µs (2.5 µs at a 1 min step, 19 µs at 10 min, 41 µs at 22.5 min; #668), and no tangency there (an extreme
+  exactly at the value). The occultation and field-of-view searches have the same limit, the bound scaling with
+  `OccultationSearchOptions.ConvergenceTolerance` (#668: their documentation said "however short", and the `stepSize`
+  of the distance, coordinate and illumination searches of `CelestialItem` and `Site` "every window and gap").
 - **At most 1000 windows from a CSPICE search**
   ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)). A search that CSPICE runs
   returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every

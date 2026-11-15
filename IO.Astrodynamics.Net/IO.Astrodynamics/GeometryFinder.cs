@@ -25,8 +25,10 @@ namespace IO.Astrodynamics;
 /// <c>localmin</c> locates it between their two neighbors, and the first and last intervals are searched the same way;
 /// an extreme on the other side of zero is added as a sample. Every window, gap and crossing is therefore found when
 /// the step is at most half the time between two extremes of the quantity, a jump of a branch cut counting as one
-/// (#678), down to the about 1 µs to which <c>localmin</c> locates an extreme: a narrower window or gap can be missed,
-/// and a tangency between two samples (an extreme exactly at the value) is not found. A <see cref="bool"/> quantity has
+/// (#678), down to the resolution of <c>localmin</c>, which locates an extreme to √ε |x| + τ/3 (|x| up to the step h
+/// from the middle of its bracket, τ = 1 µs): a window or gap narrower than about 2 √ε h + 2τ/3 (2.5 µs at a 1 min step,
+/// 19 µs at 10 min, 41 µs at 22.5 min) can be missed, and a tangency between two samples (an extreme exactly at the
+/// value) is not found (#668: #678 stated about 1 µs, which longer steps do not reach). A <see cref="bool"/> quantity has
 /// no margin to search between samples: its step must be shorter than every window and every gap. CSPICE's
 /// <c>gfdist_c</c>, <c>gfposc_c</c> and <c>gfilum_c</c> ask for a step shorter than the shortest interval where the
 /// quantity is monotone (for a longitude or a right ascension, where its sine or cosine is).

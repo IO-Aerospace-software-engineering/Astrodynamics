@@ -30,7 +30,8 @@ public partial class ConjunctionAssessmentTests
     private const string CollisionProbabilityReferenceFile = "Data/CollisionProbabilityReference/collision_probability_reference.json";
 
     // Every bound below is twice the worst relative error over Linux x64, Windows x64 and macOS arm64 (CI of #622 at
-    // 7f5e6dfb, 2026-11-10), rounded up to two digits. The internal integral on the seven encounters (the doubles of
+    // 7f5e6dfb, 2026-11-10), rounded up to two digits, the worst read from a print of at least three digits (E3, and R
+    // for the worst lines, since #668): a two-digit print can hide a worst twice which passes the bound. The internal integral on the seven encounters (the doubles of
     // the suite's inputs.yaml): worst 2.01e-14 (003), the same on the three
     private const double DesignedEncounterPcBound = 4.1e-14;
 
@@ -41,8 +42,12 @@ public partial class ConjunctionAssessmentTests
     // rate, one tick early for 003 and 005, over which the covariance was held in RTN, and 003's Pc of 1.1e-8 (miss 11
     // sigma) amplified that rotation: 9.03e-9, the same on the three platforms, bound 1.9e-8. The integral itself is at
     // 2.0e-14. The same encounters with the hard-body radius split between the two spacecraft (#683): worst 3.15e-10
-    // (005) on Linux x64, Windows x64 and macOS arm64 (CI run 43601908000, 2026-11-14), within the same bound
-    private const double DesignedEncounterAnalyzePcBound = 6.3e-10;
+    // (005) on Linux x64, Windows x64 and macOS arm64 (CI run 43601908000, 2026-11-14), within the same bound.
+    // Those figures were read from two-digit prints, and twice the worst they hid is above 6.3e-10 (#668): printed with
+    // E3 and R, both worsts are 3.155E-010 (3.1548581964299066E-10, 005) on Linux x64 (2026-11-15), twice which is
+    // 6.3097e-10, so the bound of the rule is 6.4e-10. Provisional: from Linux x64 alone, to be re-derived from the E3/R
+    // prints of Linux x64, Windows x64 and macOS arm64 in the CI logs of the pull request of #668
+    private const double DesignedEncounterAnalyzePcBound = 6.4e-10;
 
     // The 25 reproductions of #610, #611 and #612: worst 7.64e-15 on Linux x64 and Windows x64, 7.43e-15 on macOS arm64
     // (#612, λ2 1e-2 m² at 30°); before the fix 0 or 4e-86 for 1 (#610), −4.6 % (#611), null (#612)
@@ -55,8 +60,12 @@ public partial class ConjunctionAssessmentTests
     // the fix 1.3e-6 at the 200 000-evaluation budget
     private const double CancellationPcBound = 1.1e-10;
 
-    // Fdlibm's erf and erfc, relative, at 22 points of its branches: worst 1.85e-16, the same on the three platforms
-    private const double ErrorFunctionBound = 3.7e-16;
+    // Fdlibm's erf and erfc, relative, at 22 points of its branches: worst 1.85e-16, the same on the three platforms.
+    // Read from a two-digit print, it hid a worst twice which is above 3.7e-16 (#668): 1.854E-016
+    // (1.8542344564253528E-16) on Linux x64 (2026-11-15), twice which is 3.7085e-16, so the bound of the rule is
+    // 3.8e-16. Provisional: from Linux x64 alone, to be re-derived from the E3/R prints of the three platforms in the CI
+    // logs of the pull request of #668
+    private const double ErrorFunctionBound = 3.8e-16;
 
     // The exact Pc of IO's CARA checks, tools/collision_probability (rows "cara"): Omitron case 01 and Alfano case 03 of
     // NASA CARA Pc2D_Foster_UnitTest.m, as the tests build their inputs
@@ -94,11 +103,11 @@ public partial class ConjunctionAssessmentTests
             Assert.NotNull(pc);
             double error = RelativeError(pc.Value, exact.GetProperty("pc"));
             worst = System.Math.Max(worst, error);
-            _output.WriteLine($"MEASURE #611 internal {encounter.GetProperty("name").GetString()}: Pc {pc.Value:R}, relative error {error:E2}");
-            Assert.True(error <= DesignedEncounterPcBound, $"{encounter.GetProperty("name").GetString()}: {error:E2}");
+            _output.WriteLine($"MEASURE #611 internal {encounter.GetProperty("name").GetString()}: Pc {pc.Value:R}, relative error {error:E3}");
+            Assert.True(error <= DesignedEncounterPcBound, $"{encounter.GetProperty("name").GetString()}: {error:E3}");
         }
 
-        _output.WriteLine($"MEASURE #611 internal worst {worst:E2}");
+        _output.WriteLine($"MEASURE #611 internal worst {worst:E3} ({worst:R})");
     }
 
     [Fact]
@@ -147,14 +156,14 @@ public partial class ConjunctionAssessmentTests
             Assert.NotNull(result.CollisionRisk.ProbabilityOfCollision);
             double error = RelativeError(result.CollisionRisk.ProbabilityOfCollision.Value, exact.GetProperty("pc"));
             worst = System.Math.Max(worst, error);
-            _output.WriteLine($"MEASURE #611 Analyze {encounter.GetProperty("name").GetString()}: relative error {error:E2}, flags {flags}");
-            Assert.True(error <= DesignedEncounterAnalyzePcBound, $"{encounter.GetProperty("name").GetString()}: {error:E2}");
+            _output.WriteLine($"MEASURE #611 Analyze {encounter.GetProperty("name").GetString()}: relative error {error:E3}, flags {flags}");
+            Assert.True(error <= DesignedEncounterAnalyzePcBound, $"{encounter.GetProperty("name").GetString()}: {error:E3}");
             Assert.Equal(exact.GetProperty("remediated").GetBoolean(), flags.HasFlag(EncounterQualityFlags.CovarianceRemediated));
             Assert.Equal(exact.GetProperty("maximum").GetBoolean(), flags.HasFlag(EncounterQualityFlags.SingleCovarianceMaximumPcUsed));
             Assert.False(flags.HasFlag(EncounterQualityFlags.CovarianceUnavailable));
         }
 
-        _output.WriteLine($"MEASURE #611 Analyze worst {worst:E2}");
+        _output.WriteLine($"MEASURE #611 Analyze worst {worst:E3} ({worst:R})");
     }
 
     [Fact]
@@ -179,11 +188,11 @@ public partial class ConjunctionAssessmentTests
             Assert.NotNull(pc);
             double error = RelativeError(pc.Value, row.GetProperty("exact").GetProperty("pc"));
             worst = System.Math.Max(worst, error);
-            _output.WriteLine($"MEASURE #{row.GetProperty("issue").GetString()} {row.GetProperty("name").GetString()}: Pc {pc.Value:R}, relative error {error:E2}");
-            Assert.True(error <= ReproductionPcBound, $"{row.GetProperty("name").GetString()}: {error:E2}");
+            _output.WriteLine($"MEASURE #{row.GetProperty("issue").GetString()} {row.GetProperty("name").GetString()}: Pc {pc.Value:R}, relative error {error:E3}");
+            Assert.True(error <= ReproductionPcBound, $"{row.GetProperty("name").GetString()}: {error:E3}");
         }
 
-        _output.WriteLine($"MEASURE #610-#612 reproductions worst {worst:E2}");
+        _output.WriteLine($"MEASURE #610-#612 reproductions worst {worst:E3} ({worst:R})");
     }
 
     [Fact]
@@ -210,11 +219,11 @@ public partial class ConjunctionAssessmentTests
             Assert.Equal(direct, pc.Value);
             double error = RelativeError(pc.Value, row.GetProperty("exact").GetProperty("pc"));
             worst = System.Math.Max(worst, error);
-            _output.WriteLine($"MEASURE #611 cancellation {row.GetProperty("name").GetString()}: Pc {pc.Value:R}, relative error {error:E2}");
-            Assert.True(error <= CancellationPcBound, $"{row.GetProperty("name").GetString()}: {error:E2}");
+            _output.WriteLine($"MEASURE #611 cancellation {row.GetProperty("name").GetString()}: Pc {pc.Value:R}, relative error {error:E3}");
+            Assert.True(error <= CancellationPcBound, $"{row.GetProperty("name").GetString()}: {error:E3}");
         }
 
-        _output.WriteLine($"MEASURE #611 cancellation worst {worst:E2}");
+        _output.WriteLine($"MEASURE #611 cancellation worst {worst:E3} ({worst:R})");
     }
 
     [Fact]
@@ -227,11 +236,11 @@ public partial class ConjunctionAssessmentTests
             double erfError = RelativeError(EncounterPlaneProbability.Erf(x), row.GetProperty("erf"));
             double erfcError = RelativeError(EncounterPlaneProbability.Erfc(x), row.GetProperty("erfc"), 1.0e-300);
             worst = System.Math.Max(worst, System.Math.Max(erfError, erfcError));
-            Assert.True(erfError <= ErrorFunctionBound, $"erf({x:R}): {erfError:E2}");
-            Assert.True(erfcError <= ErrorFunctionBound, $"erfc({x:R}): {erfcError:E2}");
+            Assert.True(erfError <= ErrorFunctionBound, $"erf({x:R}): {erfError:E3}");
+            Assert.True(erfcError <= ErrorFunctionBound, $"erfc({x:R}): {erfcError:E3}");
         }
 
-        _output.WriteLine($"MEASURE #611 erf/erfc worst {worst:E2}");
+        _output.WriteLine($"MEASURE #611 erf/erfc worst {worst:E3} ({worst:R})");
     }
 
     [Fact]

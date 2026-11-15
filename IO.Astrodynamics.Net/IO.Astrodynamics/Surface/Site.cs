@@ -254,8 +254,10 @@ namespace IO.Astrodynamics.Surface
         /// <param name="value">The distance, m.</param>
         /// <param name="aberration"></param>
         /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-        /// than the shortest interval where the quantity is monotone.</param>
+        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+        /// shorter than the shortest interval where the quantity is monotone.</param>
         /// <returns></returns>
         /// <remarks>For a site from the kernels and a spacecraft from the kernels, CSPICE's <c>gfdist_c</c> searches;
         /// otherwise the library does (<see cref="GeometryFinder"/>). Both take the distance in metres (#466).</remarks>
@@ -335,8 +337,10 @@ namespace IO.Astrodynamics.Surface
         /// <param name="adjustValue"></param>
         /// <param name="aberration"></param>
         /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-        /// than the shortest interval where the quantity is monotone.</param>
+        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+        /// shorter than the shortest interval where the quantity is monotone.</param>
         /// <returns></returns>
         public IEnumerable<Window> FindWindowsOnCoordinateConstraint(in Window searchWindow, ILocalizable observer, Frame frame, CoordinateSystem coordinateSystem,
             Coordinate coordinate, RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration, in TimeSpan stepSize)
@@ -431,8 +435,10 @@ namespace IO.Astrodynamics.Surface
         /// <param name="adjustValue"></param>
         /// <param name="aberration"></param>
         /// <param name="stepSize">The step of the samples. The library's search (<see cref="GeometryFinder"/>) finds every
-        /// window and gap when it is at most half the time between two extremes of the quantity; CSPICE's, when it is shorter
-        /// than the shortest interval where the quantity is monotone.</param>
+        /// window and gap when it is at most half the time between two extremes of the quantity, down to the resolution of
+        /// Brent's <c>localmin</c> (a window or gap narrower than about 2 √ε h + 2τ/3, h the step and τ 1 µs, can be missed,
+        /// a tangency between samples is not found; the remarks of <see cref="GeometryFinder"/>); CSPICE's, when it is
+        /// shorter than the shortest interval where the quantity is monotone.</param>
         /// <param name="illuminationSource"></param>
         /// <param name="method">ELLIPSOID, the only method, whatever its case and its leading or trailing whitespace
         /// (<c>gfilum_c</c> Detailed_Input <c>method</c>, #682).</param>

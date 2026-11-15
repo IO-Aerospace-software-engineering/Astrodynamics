@@ -932,7 +932,10 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
     /// Twelve searches in parallel, each on a fresh spacecraft (six propagated, three of them with a nadir attitude, and six
     /// kernel-backed; circles, ellipses and rectangles), equal the same searches run one after the other on other fresh
     /// spacecraft, to the tick; the CK of a propagated one is still written after its search (the search reads nothing
-    /// before the search window, #523).
+    /// before the search window, #523). The spacecraft searched one after the other are then read from 12 threads
+    /// (orientations and <c>IsInFOV</c> at epochs off the output grid) and searched again in parallel: the windows equal
+    /// their first ones to the tick and the attitude records are unchanged, since a read stores nothing (#523; the rule
+    /// docs/guides/thread-safety.md states, corrected by #668: it said a spacecraft's frame stored every orientation read).
     /// </summary>
     [Fact]
     public async Task ConcurrentSearches_EqualSequentialSearches()
@@ -980,7 +983,8 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             return (spacecraft, () => inst.FindWindowsInFieldOfViewConstraint(window, spacecraft, target, itrf, targetShape, Aberration.LTS, Step).ToArray());
         }
 
-        var sequential = Enumerable.Range(0, 12).Select(i => Fresh(i, 0).search()).ToArray();
+        var first = Enumerable.Range(0, 12).Select(i => Fresh(i, 0)).ToArray();
+        var sequential = first.Select(x => x.search()).ToArray();
         var fresh = Enumerable.Range(0, 12).Select(i => Fresh(i, 1)).ToArray();
         var concurrent = new IReadOnlyList<Window>[12];
         Parallel.For(0, 12, new ParallelOptions { MaxDegreeOfParallelism = 12 }, i => concurrent[i] = fresh[i].search());
@@ -995,6 +999,38 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
         }
 
         Assert.True(sequential.Sum(x => x.Count) > 6);
+
+        // The same instances, read from 12 threads at epochs off the output grid, then searched again in parallel: a read
+        // stores nothing (#523), so the windows and the records of the propagated ones do not move
+        var records = first.Select(x => x.spacecraft.Frame.GetStateOrientationsToICRF().ToArray()).ToArray();
+        Assert.All(records.Take(6), r => Assert.NotEmpty(r));
+        Parallel.For(0, 12, new ParallelOptions { MaxDegreeOfParallelism = 12 }, i =>
+        {
+            var (spacecraft, _) = first[i];
+            for (int k = 0; k < 40; k++)
+            {
+                var epoch = window.StartDate.AddSeconds(0.37 + 49.3 * k + 0.011 * i);
+                spacecraft.GetOrientation(Frames.Frame.ICRF, epoch);
+                foreach (var instrument in spacecraft.Instruments)
+                {
+                    instrument.IsInFOV(epoch, earth, Aberration.LT);
+                }
+            }
+        });
+        var again = new IReadOnlyList<Window>[12];
+        Parallel.For(0, 12, new ParallelOptions { MaxDegreeOfParallelism = 12 }, i => again[i] = first[i].search());
+        for (int i = 0; i < 12; i++)
+        {
+            Assert.Equal(sequential[i].Count, again[i].Count);
+            for (int k = 0; k < sequential[i].Count; k++)
+            {
+                Assert.Equal(sequential[i][k].StartDate.TimeSpanFromJ2000().Ticks, again[i][k].StartDate.TimeSpanFromJ2000().Ticks);
+                Assert.Equal(sequential[i][k].EndDate.TimeSpanFromJ2000().Ticks, again[i][k].EndDate.TimeSpanFromJ2000().Ticks);
+            }
+
+            Assert.Equal(records[i], first[i].spacecraft.Frame.GetStateOrientationsToICRF().ToArray());
+        }
+
         // The CK is written in the ticks of the spacecraft's clock, whose kernel is loaded first
         var clock = new FileInfo("Data/User/FieldOfViewSearch515/concurrent.tsc");
         File.Delete(clock.FullName);

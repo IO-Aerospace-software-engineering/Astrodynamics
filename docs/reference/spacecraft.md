@@ -473,8 +473,11 @@ aspect ratio up to 1.0034 (the Earth, the Moon, the Sun) and fields of aspect ra
 elongated target stretches the limb of the field by its own aspect ratio.
 
 **Step.** `gftfov` asks the step to be shorter than every window and every gap. The managed search finds an event or a
-gap shorter than the step as long as the step is at most half the time between the extremes of the margin: with a step
-longer than an event, the managed path may find a window that `gftfov` misses.
+gap shorter than the step as long as the step is at most half the time between the extremes of the margin, down to the
+resolution of the search of an extreme between samples (Brent's `localmin`): an event or a gap narrower than about
+2 √ε h + 2τ/3 (h the step, τ the 1 µs tolerance; 2.5 µs at 1 min, 19 µs at 10 min) can be missed, and a tangency between
+samples is not found (#668; see `docs/reference/occultations.md`, "Resolution"). With a step longer than an event, the
+managed path may find a window that `gftfov` misses.
 
 **Aberration.** The light time of `spkltc` (`LT`, `CN` and their transmission forms `XLT`, `XCN`); for the `+S`
 corrections, the stellar aberration of `stelab` (`stlabx` for transmission), as `gftfov` applies them. A `Star` is a

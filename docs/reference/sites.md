@@ -48,8 +48,9 @@ does ([Occultations](occultations.md)): where three consecutive samples show an 
 reach the value, Brent's `localmin` locates it between their two neighbors (the first and last intervals likewise), and
 an extreme beyond the value becomes a sample. Every window, gap and crossing is therefore found when the step is at most
 half the time between two extremes of the quantity, a jump of a branch cut (a right ascension, a longitude, an azimuth)
-counting as one, down to the about 1 µs to which `localmin` locates an extreme (a narrower window or gap can be missed,
-and a tangency between two samples, an extreme exactly at the value, is not found): the 2 passes of about 3 min of a LEO
+counting as one, down to the resolution of `localmin`, about 2 √ε h + 2τ/3 for a step h and τ = 1 µs (2.5 µs at a
+1 min step, 19 µs at 10 min, 41 µs at 22.5 min: a narrower window or gap can be missed, and a tangency between two
+samples, an extreme exactly at the value, is not found; #668): the 2 passes of about 3 min of a LEO
 above 30° from DSS-13 at a 20 min step, as CSPICE finds them. CSPICE asks for a step shorter than the shortest interval
 where the quantity is monotone ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html),
 Particulars, "The Search Process" and "Step Size"; the same in `gfposc_c` and `gfilum_c`, where a longitude or a right

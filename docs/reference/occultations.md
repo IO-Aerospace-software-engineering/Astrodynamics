@@ -57,6 +57,14 @@ extreme is searched, so an event shorter than the step is found as long as the s
 the extremes of the margins. For the eclipses of a satellite, a quarter of the period finds a penumbra of a few
 seconds. `gfoclt` asks the step to be shorter than every event and every gap.
 
+**Resolution.** The search for an extreme between samples is Brent's `localmin`, whose abscissa tolerance is
+√ε |x| + τ/3 (|x| up to the step h from the middle of its bracket, τ the convergence tolerance), and it stops only at a
+margin strictly past zero. A window or a gap narrower than about 2 √ε h + 2τ/3 can therefore be missed: 2.5 µs at a
+1 min step, 19 µs at 10 min, 41 µs at 22.5 min with τ = 1 µs; the bound scales with
+`OccultationSearchOptions.ConvergenceTolerance`. A tangency between two samples (an extreme exactly at zero) is not
+found. On a closed-form margin of period 5400 s, every window was found down to 0.3 µs at a 1 min step and 10 µs at 10
+and 22.5 min, every gap down to 0.3 µs, 1 µs and 10 µs (#668, `OccultationFinderResolutionTests`, Linux x64).
+
 **Aberration.** `None`, or the light time (`LT`, `CN`, `XLT`, `XCN`) as `gfoclt`: each body's position and frame at its
 corrected epoch. The stellar aberration of the `+S` corrections is ignored, as `gfoclt` does. A `Star` is a direction,
 read at the epoch whatever the correction, as the [field-of-view search](spacecraft.md) reads it: its catalog position

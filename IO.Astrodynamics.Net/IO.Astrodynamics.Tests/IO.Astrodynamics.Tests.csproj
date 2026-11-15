@@ -258,6 +258,13 @@
       <Content Include="Data\FieldOfViewReference\*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
+      <!-- The developer guide and its compiled examples, compared by DeveloperGuideExamplesTests (#668). -->
+      <None Include="..\..\DEVELOPER_GUIDE.md" Link="Docs\DEVELOPER_GUIDE.md">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Include="Documentation\DeveloperGuideExamples.cs" Link="Docs\DeveloperGuideExamples.cs">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <!-- Reconstructed LRO trajectory, used by the tracking-data tests. -->
       <None Remove="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp" />
       <Content Include="Data\LRO\lro-reconstructed-2023349_2024075_v01_little_endian.bsp">
