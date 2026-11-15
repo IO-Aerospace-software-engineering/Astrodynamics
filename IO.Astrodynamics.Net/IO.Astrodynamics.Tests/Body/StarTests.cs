@@ -143,4 +143,24 @@ public class StarTests
         Assert.Equal("stepSize", exception.ParamName);
         Assert.False(star.IsPropagated);
     }
+
+    [Fact]
+    public async Task IsPropagated_IsTrueOnceTheStatesAreStored()
+    {
+        // Arrange
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var window = new Window(epoch, epoch.AddHours(1.0));
+        var bySync = NewStar(668003, epoch);
+        var byAsync = NewStar(668004, epoch);
+
+        // Act and assert: false before, true after either path; the output directory of an older design stays null
+        Assert.False(bySync.IsPropagated);
+        Assert.False(byAsync.IsPropagated);
+        bySync.Propagate(window, TimeSpan.FromMinutes(10.0));
+        await byAsync.PropagateAsync(window, TimeSpan.FromMinutes(10.0));
+        Assert.True(bySync.IsPropagated);
+        Assert.True(byAsync.IsPropagated);
+        Assert.Null(bySync.PropagationOutput);
+        Assert.Null(byAsync.PropagationOutput);
+    }
 }

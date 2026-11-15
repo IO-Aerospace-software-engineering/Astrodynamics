@@ -122,14 +122,19 @@ public class Star : CelestialBody
     public double DeclinationSigmaProperMotion { get; }
 
     /// <summary>
-    /// Gets the directory for propagation output.
+    /// Always null: the directory of an older design that wrote the propagation to files. A star keeps its propagated
+    /// states in memory and writes them only through <see cref="WriteEphemeris"/>, to the file its caller gives.
     /// </summary>
     public DirectoryInfo PropagationOutput { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether the star has been propagated.
+    /// Gets a value indicating whether the star holds propagated states: true once <see cref="Propagate"/>,
+    /// <see cref="PropagateAsync"/> or <c>Scenario.SimulateAsync</c> stored them.
     /// </summary>
-    public bool IsPropagated => PropagationOutput != null;
+    /// <remarks>
+    /// Before 11.0.0 it read <see cref="PropagationOutput"/>, which no code sets, and was always false.
+    /// </remarks>
+    public bool IsPropagated => !_propagatedStates.IsEmpty;
 
     /// <summary>
     /// Gets the equatorial coordinates of the star at a specific epoch.

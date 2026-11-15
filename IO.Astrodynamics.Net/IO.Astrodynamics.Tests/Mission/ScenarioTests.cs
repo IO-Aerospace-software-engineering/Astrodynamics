@@ -569,6 +569,52 @@ namespace IO.Astrodynamics.Tests.Mission
 
 
         [Fact]
+        public async Task SimulateAsync_PropagatesTheStar_AndItsSpkHoldsTheCatalogPositionWithProperMotion()
+        {
+            // Arrange: IsPropagated was always false before (it read an output directory no code set)
+            var start = new TimeSystem.Time(2001, 1, 1);
+            var end = start.AddDays(365 * 4);
+            var star = new Star(668005, "star668005", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, start), 0.1, 0.1, 0, 0, 0, 0,
+                start);
+            var scenario = new Scenario("scn668", new Astrodynamics.Mission.Mission("mission668"), new Window(start, end));
+            scenario.AddStar(star);
+            var step = TimeSpan.FromDays(365.0);
+            Assert.False(star.IsPropagated);
+
+            // Act
+            await scenario.SimulateAsync(false, false, step);
+
+            // Assert: the stored states exist, and SPICE reads them back from the SPK the star writes, against the closed
+            // form of the catalog position moved by its proper motion
+            Assert.True(star.IsPropagated);
+            var directory = Directory.CreateTempSubdirectory("star668");
+            var spk = new FileInfo(Path.Combine(directory.FullName, "star668005.bsp"));
+            star.WriteEphemeris(spk);
+            SpiceAPI.Instance.LoadKernels(spk);
+            try
+            {
+                double worst = 0.0;
+                for (var epoch = start; epoch <= end; epoch += step)
+                {
+                    var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None)
+                        .ToStateVector();
+                    var closedForm = star.GetEquatorialCoordinates(epoch).ToCartesian();
+                    double relative = (read.Position - closedForm).Magnitude() / closedForm.Magnitude();
+                    worst = System.Math.Max(worst, relative);
+                }
+
+                // Provisional: twice the Linux worst (1.982e-16, 2026-11-15), to be read again on Windows and macOS arm64
+                _output.WriteLine($"MEASURE ScenarioTests.SimulateAsync_PropagatesTheStar: worst relative position {worst:E3}");
+                Assert.True(worst <= 4.0e-16, $"{worst:E3}");
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+                directory.Delete(true);
+            }
+        }
+
+        [Fact]
         public void Equality()
         {
             Astrodynamics.Mission.Mission mission = new Astrodynamics.Mission.Mission("mission02");

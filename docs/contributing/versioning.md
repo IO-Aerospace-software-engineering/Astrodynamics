@@ -2037,6 +2037,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `StarTests` checks a step of 0, −1 tick and −1 s on both methods (the base needed a watchdog: a step of 0 had not
   ended after 5 s).
 
+- **`Star.IsPropagated` was always false** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). It read `PropagationOutput`, the
+  output directory of an older design, which no code sets, while `Propagate` keeps its states in memory. It now reads
+  the stored states, as `Spacecraft.IsPropagated` does: true after `Propagate`, `PropagateAsync` or
+  `Scenario.SimulateAsync`. `PropagationOutput` stays, documented as always null. `StarTests` and `ScenarioTests` check
+  each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
+  catalog position moved by the proper motion (`GetEquatorialCoordinates`) to 1.98e-16 relative over four years
+  (threshold 4.0e-16, provisional, twice the Linux worst).
+
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
@@ -2723,6 +2732,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `ArgumentOutOfRangeException`, parameter `stepSize`, from the call itself for `PropagateAsync` (no task is created),
   where the call never returned and a negative step exhausted the memory. Migration: pass a positive step. No result
   moves for a positive step.
+
+- **Breaking: `Star.IsPropagated` becomes true once the star is propagated** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above), after `Propagate`,
+  `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput` stays null. Migration: code that
+  relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
 
 **Removed**
 
