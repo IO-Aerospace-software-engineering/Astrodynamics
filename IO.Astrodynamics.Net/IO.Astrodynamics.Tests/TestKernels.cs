@@ -26,14 +26,24 @@ namespace IO.Astrodynamics.Tests;
 /// process, as <see cref="ColdStartTests"/>: no test of this process calls <see cref="SpiceAPI.ClearKernels"/>, nor
 /// unloads <c>Data/SolarSystem</c>, a file inside it, a parent of it or its anchor, which other classes read in parallel
 /// (a sanctioned exception would have to be declared to the guard, not the guard weakened), nor deletes a loaded binary
-/// kernel, which SPICE keeps open for good once it failed to open it again, so that the PCK searches of every IAU frame
-/// of the process can fail later (#673; <c>KernelRegistryTests</c> runs those scenarios in the child process
-/// <c>IO.Astrodynamics.Tests.KernelUnload</c>); a test of the reload
+/// kernel: a native library before the second round of #668 kept it open for good once it failed to open it again, so
+/// that the PCK searches of every IAU frame of the process could fail later (#673), and the native load and unload now
+/// unload such a kernel at the next kernel call of any test class (<c>KernelRegistryTests</c> runs those scenarios in the
+/// child process <c>IO.Astrodynamics.Tests.KernelUnload</c>); a test of the reload
 /// branches of <see cref="SpiceAPI.LoadKernels"/> uses its own folder (as <see cref="SpiceApiTest"/> with <c>scn100</c>),
 /// never <c>Data/SolarSystem</c>, a file inside it or a parent of it.
 /// <see cref="KernelReloadGuardTests"/> fails when a test reloaded the folder, removed it or its anchor, or loaded it
 /// before the first call of <see cref="EnsureSolarSystem"/>, and when a kernel still loaded at its end shadows the folder
 /// (<see cref="KernelShadowing"/>).
+/// </para>
+/// <para>
+/// Two more sets are loaded once per process and never unloaded, by the same mechanism and under the same guard (#668,
+/// second round): <c>Data/LRO</c> (<see cref="EnsureLro"/>, the reconstructed SPK of LRO, -85 about the Moon, read by
+/// several classes) and <c>Data/OccultationReference</c> (<see cref="EnsureOccultationReference"/>, the SPKs of the
+/// occultation references). Before, each class loaded them in its constructor and never unloaded them, so each of their
+/// tests reloaded them, and the unload of an SPK reopens every loaded SPK (KEEPER), all under the SPICE lock. A kernel
+/// that a single class reads (the orbiter SPK of <c>KernelWindowSearchTests</c>, <c>Data/FieldOfViewReference</c>) is
+/// loaded by a class fixture and unloaded in its <c>Dispose</c>.
 /// </para>
 /// </remarks>
 internal static class TestKernels
@@ -44,6 +54,32 @@ internal static class TestKernels
 
     /// <summary>Loads <c>Data/SolarSystem</c> if it is not loaded, where a constructor or a fixture loaded it.</summary>
     internal static void EnsureSolarSystem() => SolarSystem.Ensure();
+
+    /// <summary>The reconstructed SPK of LRO (<c>Data/LRO</c>) and its anchor.</summary>
+    internal static readonly SharedKernels Lro = new(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Data", "LRO")),
+        new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "KernelReloadAnchorLro")));
+
+    /// <summary>The SPKs of the occultation references (<c>Data/OccultationReference</c>) and their anchor.</summary>
+    internal static readonly SharedKernels OccultationReference = new(
+        new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "Data", "OccultationReference")),
+        new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "KernelReloadAnchorOccultation")));
+
+    /// <summary>The sets loaded once per process, which no test unloads.</summary>
+    internal static SharedKernels[] Shared => [SolarSystem, Lro, OccultationReference];
+
+    /// <summary>Loads <c>Data/SolarSystem</c>, then <c>Data/LRO</c> if it is not loaded.</summary>
+    internal static void EnsureLro()
+    {
+        SolarSystem.Ensure();
+        Lro.Ensure();
+    }
+
+    /// <summary>Loads <c>Data/SolarSystem</c>, then <c>Data/OccultationReference</c> if it is not loaded.</summary>
+    internal static void EnsureOccultationReference()
+    {
+        SolarSystem.Ensure();
+        OccultationReference.Ensure();
+    }
 }
 
 /// <summary>
@@ -138,7 +174,7 @@ internal sealed class SharedKernels
             _removalObserved |= _inPlace;
             if (path < 0)
             {
-                // LoadKernels ignores a path that does not exist
+                // LoadKernels throws ArgumentException for a path that does not exist; this message names the shared set
                 if (!Directory.Exists(Path.FullName))
                 {
                     throw new DirectoryNotFoundException($"The kernels {Path.FullName} do not exist.");

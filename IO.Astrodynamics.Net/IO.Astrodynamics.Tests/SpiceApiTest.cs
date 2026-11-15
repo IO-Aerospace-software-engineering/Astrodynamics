@@ -891,6 +891,130 @@ public class SpiceApiTest
         Assert.Throws<ArgumentNullException>(() => SpiceAPI.Instance.LoadKernels(null));
     }
 
+    // The rotation angle of a frame from ICRF, in degrees, read by SPICE (pxform through TransformFrame; the sign of a
+    // quaternion is free)
+    private static double RotationAngleFromIcrfDeg(string frameName)
+    {
+        var q = SpiceAPI.Instance.TransformFrame(new TimeSystem.Time(2024, 1, 1), new Frames.Frame(frameName), Frames.Frame.ICRF).Rotation;
+        return 2.0 * System.Math.Acos(System.Math.Min(1.0, System.Math.Abs(q.W))) * Astrodynamics.Constants.Rad2Deg;
+    }
+
+    // The KEEPER count of the files SPICE holds (CspiceDirect, Linux only), -1 elsewhere
+    private static int KeeperCount() => OperatingSystem.IsLinux() ? Body.CspiceDirect.LoadedKernelFiles().Count : -1;
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    void LoadKernels_OfAMissingFile_ThrowsArgumentException_AndLoadsNothing(bool asDirectory)
+    {
+        // A path that does not exist on disk, under a fresh temporary folder: before, LoadKernels returned and loaded nothing,
+        // and the first read that needed the kernel failed far from the cause
+        var root = Directory.CreateTempSubdirectory("load-missing-");
+        try
+        {
+            var missing = Path.Combine(root.FullName, asDirectory ? "Kernels" : "missing.bsp");
+            FileSystemInfo path = asDirectory ? new DirectoryInfo(missing) : new FileInfo(missing);
+            lock (SpiceAPI.SyncRoot)
+            {
+                var listed = SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
+                int keeper = KeeperCount();
+
+                var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.LoadKernels(path));
+
+                Assert.Equal("path", e.ParamName);
+                Assert.Contains(missing, e.Message);
+                Assert.Equal(listed, SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName));
+                Assert.Equal(keeper, KeeperCount());
+            }
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
+    [Fact]
+    void LoadKernels_OfAFileInfoNamingADirectory_LoadsTheDirectory()
+    {
+        // A TK frame of 90° about z from J2000 (TKFRAME_ANGLES (90, 0, 0) about the axes (3, 2, 1), NAIF, Frames Required
+        // Reading): its rotation angle from ICRF is 90° in closed form. Before, a FileInfo naming a folder loaded nothing
+        var root = Directory.CreateTempSubdirectory("load-fileinfo-folder-");
+        var folder = new DirectoryInfo(Path.Combine(root.FullName, "Frames"));
+        TestKernelWriter.WriteFrameKernel(folder, "a.tf", 1999970, "IOA_G4_FI_DIR", 90.0);
+        var path = new FileInfo(folder.FullName);
+        try
+        {
+            SpiceAPI.Instance.LoadKernels(path);
+
+            Assert.Equal(90.0, RotationAngleFromIcrfDeg("IOA_G4_FI_DIR"), 1e-12);
+            Assert.Contains(SpiceAPI.Instance.GetLoadedKernels(), x => x.FullName == folder.FullName);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(path);
+            root.Delete(true);
+        }
+
+        Assert.Throws<InvalidOperationException>(() => RotationAngleFromIcrfDeg("IOA_G4_FI_DIR"));
+    }
+
+    [Fact]
+    void LoadKernels_OfADirectoryInfoNamingAFile_LoadsTheFile()
+    {
+        // The same frame kernel, named by a DirectoryInfo: before, it loaded nothing
+        var root = Directory.CreateTempSubdirectory("load-dirinfo-file-");
+        var file = TestKernelWriter.WriteFrameKernel(root, "a.tf", 1999971, "IOA_G4_DI_FILE", 90.0);
+        var path = new DirectoryInfo(file.FullName);
+        try
+        {
+            SpiceAPI.Instance.LoadKernels(path);
+
+            Assert.Equal(90.0, RotationAngleFromIcrfDeg("IOA_G4_DI_FILE"), 1e-12);
+            Assert.Contains(SpiceAPI.Instance.GetLoadedKernels(), x => x.FullName == file.FullName);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(path);
+            root.Delete(true);
+        }
+
+        Assert.Throws<InvalidOperationException>(() => RotationAngleFromIcrfDeg("IOA_G4_DI_FILE"));
+    }
+
+    [Fact]
+    void LoadKernels_OfAMissingPathInsideALoadedFolder_Throws_AndKeepsTheFolder()
+    {
+        // Before, a path inside a loaded folder reloaded the folder, whether the path existed or not: the folder's entry
+        // moved to the end of the list
+        var root = Directory.CreateTempSubdirectory("load-missing-inside-");
+        var folder = new DirectoryInfo(Path.Combine(root.FullName, "Frames"));
+        TestKernelWriter.WriteFrameKernel(folder, "a.tf", 1999972, "IOA_G4_IN_DIR", 90.0);
+        try
+        {
+            SpiceAPI.Instance.LoadKernels(folder);
+            var missing = new FileInfo(Path.Combine(folder.FullName, "missing.tf"));
+            lock (SpiceAPI.SyncRoot)
+            {
+                var listed = SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName).ToArray();
+                Assert.Contains(folder.FullName, listed);
+                int keeper = KeeperCount();
+
+                var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.LoadKernels(missing));
+
+                Assert.Equal("path", e.ParamName);
+                Assert.Equal(listed, SpiceAPI.Instance.GetLoadedKernels().Select(x => x.FullName));
+                Assert.Equal(keeper, KeeperCount());
+            }
+
+            Assert.Equal(90.0, RotationAngleFromIcrfDeg("IOA_G4_IN_DIR"), 1e-12);
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(folder);
+            root.Delete(true);
+        }
+    }
+
     private static object lockobj = new Object();
 
     [Fact]

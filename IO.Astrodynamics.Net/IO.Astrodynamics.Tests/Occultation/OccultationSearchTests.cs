@@ -32,8 +32,8 @@ public class OccultationSearchTests
     public OccultationSearchTests(ITestOutputHelper output)
     {
         _output = output;
-        TestKernels.EnsureSolarSystem();
-        SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data/OccultationReference"));
+        // Data/OccultationReference, loaded once per process (#668, second round)
+        TestKernels.EnsureOccultationReference();
     }
 
     private static Window Eclipse2005Window => new(new TimeSystem.Time("2005-10-03 00:00:00"), new TimeSystem.Time("2005-10-04 00:00:00"));

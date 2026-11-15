@@ -5,6 +5,7 @@
 #include <Spacecraft.h>
 #include <Builder.h>
 #include <InvalidArgumentException.h>
+#include <KernelsLoader.h>
 
 
 IO::Astrodynamics::Kernels::OrientationKernel::OrientationKernel(std::string filePath, int spacecraftId, int spacecraftFrameId) : IO::Astrodynamics::Kernels::Kernel(
@@ -91,7 +92,7 @@ void IO::Astrodynamics::Kernels::OrientationKernel::WriteOrientations(const std:
     }
 
     if (std::filesystem::exists(m_filePath)) {
-        unload_c(m_filePath.c_str());
+        KernelsLoader::UnloadFile(m_filePath);
         m_isLoaded = false;
         std::filesystem::remove(m_filePath);
         m_fileExists = false;

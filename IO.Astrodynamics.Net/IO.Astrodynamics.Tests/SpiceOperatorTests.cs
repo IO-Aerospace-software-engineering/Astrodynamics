@@ -41,16 +41,14 @@ namespace IO.Astrodynamics.Tests;
 /// </remarks>
 public class SpiceOperatorTests
 {
-    private static readonly FileInfo LroSpkPath = new("Data/LRO/lro-reconstructed-2023349_2024075_v01_little_endian.bsp");
-
     // 2023-12-15 00:00:51 to 12:00:51 UTC, inside the LRO SPK, a step of 60 s (#482's setup on whole TDB seconds)
     private static readonly Window LroWindow = new(TimeSystem.Time.CreateTDB(755870520.0), TimeSystem.Time.CreateTDB(755913720.0));
     private static readonly TimeSpan LroStep = TimeSpan.FromSeconds(60.0);
 
     public SpiceOperatorTests()
     {
-        TestKernels.EnsureSolarSystem();
-        SpiceAPI.Instance.LoadKernels(LroSpkPath);
+        // Data/LRO, loaded once per process (#668, second round)
+        TestKernels.EnsureLro();
     }
 
     private static string[] Text(IEnumerable<Window> windows) =>

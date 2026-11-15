@@ -777,6 +777,10 @@ Test classes load the solar system kernels in their constructor through `TestKer
 TestKernels.EnsureSolarSystem();
 ```
 
+A class that reads LRO calls `TestKernels.EnsureLro()`, and one that reads the occultation references
+`TestKernels.EnsureOccultationReference()`: those sets are loaded once per process too and never unloaded; a kernel only
+one class reads is loaded by a class fixture and unloaded in its `Dispose` (#668, second round).
+
 Test data files are in `Data/SolarSystem/` and copied to output directory.
 
 **Name shadowing in test namespaces.** `IO.Astrodynamics.Tests` contains the sub-namespaces `Frame`

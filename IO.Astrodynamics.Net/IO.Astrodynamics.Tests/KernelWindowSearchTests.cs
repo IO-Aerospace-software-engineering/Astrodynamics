@@ -25,11 +25,8 @@ namespace IO.Astrodynamics.Tests;
 /// <c>tools/geometry_reference/kernel_search_reference.py</c> (<c>kernel_search_reference.json</c>, converged to 1e-9 s;
 /// the native searches run at CSPICE's default of 1e-6 s), and the managed search on the same geometry.
 /// </summary>
-public class KernelWindowSearchTests
+public class KernelWindowSearchTests : IClassFixture<KernelWindowSearchKernels>
 {
-    private static readonly FileInfo LroSpkPath = new("Data/LRO/lro-reconstructed-2023349_2024075_v01_little_endian.bsp");
-    private static readonly FileInfo OrbiterSpkPath = new("Data/GeometryReference/kernel_search_orbiter.bsp");
-
     // Provisional, twice the worst value on Linux x64 (4.77e-7 s, 2026-11-11) rounded up, until the CI of the three platforms has
     // printed its MEASURE lines: the native searches at CSPICE's default tolerance of 1e-6 s against the reference at
     // 1e-9 s, and the 100 ns of a Time
@@ -60,12 +57,11 @@ public class KernelWindowSearchTests
 
     private readonly ITestOutputHelper _output;
 
+    // Data/LRO, loaded once per process, and the orbiter SPK, loaded by the class fixture (#668, second round)
     public KernelWindowSearchTests(ITestOutputHelper output)
     {
         _output = output;
-        TestKernels.EnsureSolarSystem();
-        SpiceAPI.Instance.LoadKernels(LroSpkPath);
-        SpiceAPI.Instance.LoadKernels(OrbiterSpkPath);
+        TestKernels.EnsureLro();
     }
 
     private static Spacecraft Lro => new(-85, "LRO", epoch: DistanceWindow.StartDate);
@@ -576,5 +572,26 @@ public class KernelWindowSearchTests
                 Assert.InRange((read.Velocity - expected.Velocity).Magnitude(), 0.0, 1e-9);
             }
         }
+    }
+}
+
+/// <summary>
+/// The orbiter SPK of <see cref="KernelWindowSearchTests"/> (<c>Data/GeometryReference/kernel_search_orbiter.bsp</c>, -85901),
+/// which no other class reads: loaded once for the class and unloaded after it (#668, second round). Before, the class
+/// loaded it in its constructor, so each test reloaded it, and never unloaded it.
+/// </summary>
+public sealed class KernelWindowSearchKernels : IDisposable
+{
+    internal static readonly FileInfo OrbiterSpkPath = new("Data/GeometryReference/kernel_search_orbiter.bsp");
+
+    public KernelWindowSearchKernels()
+    {
+        TestKernels.EnsureSolarSystem();
+        SpiceAPI.Instance.LoadKernels(OrbiterSpkPath);
+    }
+
+    public void Dispose()
+    {
+        SpiceAPI.Instance.UnloadKernels(OrbiterSpkPath);
     }
 }

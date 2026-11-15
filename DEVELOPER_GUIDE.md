@@ -188,7 +188,7 @@ Singleton class providing access to SPICE operations.
 
 | Method | Description |
 |--------|-------------|
-| `LoadKernels(FileSystemInfo path)` | Load SPICE kernel(s) from file or directory |
+| `LoadKernels(FileSystemInfo path)` | Load SPICE kernel(s) from file or directory, the path taken as what it is on disk; `ArgumentException` for a path that does not exist |
 | `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, even after the path was deleted; a file of a loaded directory leaves its other files listed (#673) |
 | `ClearKernels()` | Unload all kernels |
 | `GetLoadedKernels()` | Get list of currently loaded paths |

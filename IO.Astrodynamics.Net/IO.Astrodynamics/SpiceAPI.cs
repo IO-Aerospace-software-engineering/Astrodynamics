@@ -372,20 +372,36 @@ public class SpiceAPI
     /// <para>
     /// A file path is handed to SPICE as it is. For a directory, the kernel files of the directory and of its
     /// subdirectories are loaded, in the order of the directory listing; the other files, from which SPICE would load
-    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>). A path that does not exist
-    /// loads nothing.
+    /// nothing (a geopotential model, a readme), are left out (<see cref="IsKernelFile"/>). The path is taken as what it
+    /// is on disk, whatever its type: a <see cref="FileInfo"/> that names a directory loads the directory, a
+    /// <see cref="DirectoryInfo"/> that names a file loads the file.
     /// </para>
     /// <para>
     /// Paths are compared by their components (#673): a path already loaded, or inside a loaded directory, reloads that
     /// entry; a directory first unloads the entries inside it; a sibling whose name extends a loaded one is another path.
     /// SPICE stores a kernel name of at most 255 characters (FURNSH), and the full path is handed to it.
     /// </para>
+    /// <para>
+    /// Each native load first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted since its load, as
+    /// <see cref="UnloadKernels"/> does (#668, second round); a kernel SPICE holds under a relative name, from a meta-kernel,
+    /// is left to SPICE.
+    /// </para>
     /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="ArgumentException">The path is neither a file nor a directory on disk: nothing is loaded, unloaded
+    /// or reloaded. Before 11.0.0 such a path loaded nothing and the call returned.</exception>
     public void LoadKernels(FileSystemInfo path)
     {
         if (path == null) throw new ArgumentNullException(nameof(path));
         lock (lockObject)
         {
+            // Before any unload or reload, so that a failed call changes nothing; not the cached Exists of the instance,
+            // which a reload of a stored entry would trust after a deletion
+            if (!Exists(path))
+            {
+                throw new ArgumentException($"The kernel path {path.FullName} does not exist.", nameof(path));
+            }
+
             var containing = _kernels.Where(x => IsSameOrInside(path.FullName, x.Path.FullName)).ToArray();
             if (containing.Length > 0)
             {
@@ -403,30 +419,25 @@ public class SpiceAPI
                 UnloadKernels(inside.Path);
             }
 
-            // Not the cached Exists of the instance, which a reload of a stored entry would trust after a deletion
-            if (Exists(path))
+            var files = new List<KernelFile>();
+            foreach (var kernel in KernelFiles(path))
             {
-                var files = new List<KernelFile>();
-                foreach (var kernel in KernelFiles(path))
+                if (!LoadKernelsProxy(kernel))
                 {
-                    if (!LoadKernelsProxy(kernel))
-                    {
-                        throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
-                    }
-
-                    // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
-                    var (reads, mayFailOn) = UnloadRereads(kernel);
-                    files.Add(new KernelFile(kernel, reads, mayFailOn));
+                    throw new InvalidOperationException($"Kernel {kernel} can't be loaded. You can have more details on standard output");
                 }
 
-                _kernels.Add(new KernelEntry(path, files.ToArray()));
+                // Read once SPICE has read it, so that a file SPICE cannot read keeps the error of its load
+                var (reads, mayFailOn) = UnloadRereads(kernel);
+                files.Add(new KernelFile(kernel, reads, mayFailOn));
             }
+
+            _kernels.Add(new KernelEntry(path, files.ToArray()));
         }
     }
 
-    /// <summary>Whether the path exists now, as a directory for a <see cref="DirectoryInfo"/>, as a file otherwise.</summary>
-    private static bool Exists(FileSystemInfo path) =>
-        path is DirectoryInfo ? Directory.Exists(path.FullName) : File.Exists(path.FullName);
+    /// <summary>Whether the path is a file or a directory on disk now, whatever the type of <paramref name="path"/>.</summary>
+    private static bool Exists(FileSystemInfo path) => File.Exists(path.FullName) || Directory.Exists(path.FullName);
 
     /// <summary>
     /// Whether <paramref name="path"/> is <paramref name="root"/> or a path inside it, compared by components on the full
@@ -461,7 +472,7 @@ public class SpiceAPI
     /// <summary>
     /// The files that <see cref="LoadKernels"/> hands to SPICE for <paramref name="path"/>: the file itself, or the
     /// kernel files of a directory and of its subdirectories, in the order of the directory listing, as the native
-    /// loader walks it.
+    /// loader walks it. The path is walked as a directory whenever it is one on disk, whatever its type.
     /// </summary>
     /// <remarks>
     /// The other files of a directory (a geopotential model, a readme) are left out: SPICE would load nothing from
@@ -470,7 +481,7 @@ public class SpiceAPI
     /// </remarks>
     internal static IEnumerable<string> KernelFiles(FileSystemInfo path)
     {
-        if (path is not DirectoryInfo && !Directory.Exists(path.FullName))
+        if (!Directory.Exists(path.FullName))
         {
             yield return path.FullName;
             yield break;
@@ -701,17 +712,30 @@ public class SpiceAPI
     /// </summary>
     /// <param name="path">Path where kernels are located. This could be a file path or a directory path</param>
     /// <remarks>
+    /// <para>
     /// The files a load handed SPICE are unloaded by their names, whether the path still exists or not (#673): every loaded
     /// entry that is the path or inside it is unloaded and removed; an entry that holds the path (a file or a subdirectory
     /// of a loaded directory) unloads the files it recorded there and is replaced, at its place, by its remaining files. A
     /// path that matches no entry is handed to SPICE as it is (the files of a directory as it is now), which does nothing
     /// for a name SPICE does not hold.
+    /// </para>
+    /// <para>
+    /// Each native load and unload first closes, by the handle SPICE holds, and unloads every SPK, CK, binary PCK and EK whose
+    /// file was deleted since its load (#668, second round): SPICE would otherwise fail to open it again after the unload of
+    /// another kernel of its kind and keep it open for the life of the process. Its data are no longer readable from then on;
+    /// <see cref="GetLoadedKernels"/> lists its path until it is unloaded, which then does nothing. <see cref="WriteEphemeris"/>
+    /// and <see cref="WriteOrientation"/> do the same before the unloads of their writer. The file is tested by the name
+    /// SPICE holds: a kernel a meta-kernel names relative to the working directory of its load is left to SPICE, deleted or
+    /// not, since that name no longer reaches its file once the working directory changed; name the files of a meta-kernel
+    /// by absolute paths to have them covered.
+    /// </para>
     /// </remarks>
     /// <exception cref="InvalidOperationException">SPICE failed to unload a file and no later unload of the call, of the same
     /// entry or of another one, repaired it: the unload of a text kernel or a meta-kernel reads the text kernels still loaded
-    /// again, and that of an SPK, a CK, a binary PCK, a DSK or an EK opens the other loaded kernels of its kind again; each
-    /// fails on a kernel deleted since its load, until a later unload that reads the same kernels again succeeds (#673).
-    /// Every matched entry is unloaded and removed before the exception.</exception>
+    /// again, and that of a DSK opens the other loaded DSKs again; each fails on a kernel of those kinds deleted since its
+    /// load, until a later unload that reads the same kernels again succeeds (#673). A deleted SPK, CK, binary PCK or EK
+    /// SPICE holds under an absolute name no longer makes an unload fail (#668, second round). Every matched entry is unloaded and removed before the
+    /// exception.</exception>
     public void UnloadKernels(FileSystemInfo path)
     {
         if (path == null) return;
@@ -771,7 +795,8 @@ public class SpiceAPI
     /// at the highest priority, and the files after the deleted one are not loaded again).
     /// A later unload that succeeds has read again every kernel of its kinds, which repairs the failures that came from
     /// those kinds only (#673). The failures no later unload of the call repaired are left in <paramref name="unrepaired"/>,
-    /// in their order.
+    /// in their order. Since the second round of #668 the native unload first closes and unloads the deleted SPKs, CKs,
+    /// binary PCKs and EKs, so only text kernels, meta-kernels and DSKs still fail this way.
     /// </summary>
     private static void UnloadFiles(KernelFile[] files, List<KernelFile> unrepaired)
     {
@@ -1394,6 +1419,12 @@ public class SpiceAPI
     /// <param name="naifId"></param>
     /// <param name="stateVectors"></param>
     /// <returns></returns>
+    /// <remarks>
+    /// The native writer unloads the file it replaces and, once written, the file itself; like every native load and unload
+    /// (<see cref="UnloadKernels"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
+    /// since its load (#668, second round). Before, the unload opened the other SPKs again, failed on a deleted one, which
+    /// stayed open in SPICE for good, and left the failure pending for the next kernel call.
+    /// </remarks>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
     /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
     /// then failed).</exception>
@@ -1436,7 +1467,11 @@ public class SpiceAPI
     /// <returns>True when the CK is written.</returns>
     /// <remarks>
     /// <see cref="Body.Spacecraft.Spacecraft.WriteOrientation"/> writes the attitude record of a propagated spacecraft in this
-    /// convention, the conjugate of the record's rotation, in J2000.
+    /// convention, the conjugate of the record's rotation, in J2000. The native writer unloads the file it replaces and, once
+    /// written, the file itself; like every native load and unload (<see cref="UnloadKernels"/>), it first closes and
+    /// unloads every SPK, CK, binary PCK and EK whose file was deleted since its load (#668, second round). Before, the
+    /// unload opened the other CKs again, failed on a deleted one, which stayed open in SPICE for good, and left the failure
+    /// pending for the next kernel call.
     /// </remarks>
     /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
     /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>

@@ -18,9 +18,10 @@ namespace IO.Astrodynamics.Tests.Body;
 
 /// <summary>
 /// The kernels and the CSPICE windows of <c>tools/fov_reference</c> (choice 9 (a) of #515), loaded once for the class:
-/// the reload of its text kernels by each test would make CSPICE re-read every text kernel loaded.
+/// the reload of its text kernels by each test would make CSPICE re-read every text kernel loaded. Unloaded after the
+/// class (#668, second round): before, they stayed loaded for the rest of the process.
 /// </summary>
-public sealed class FieldOfViewReferenceKernels
+public sealed class FieldOfViewReferenceKernels : IDisposable
 {
     internal static readonly DirectoryInfo Path = new("Data/FieldOfViewReference");
 
@@ -32,6 +33,11 @@ public sealed class FieldOfViewReferenceKernels
     }
 
     internal JsonElement Root { get; }
+
+    public void Dispose()
+    {
+        SpiceAPI.Instance.UnloadKernels(Path);
+    }
 }
 
 /// <summary>
