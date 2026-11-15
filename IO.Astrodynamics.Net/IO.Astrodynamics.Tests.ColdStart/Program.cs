@@ -17,9 +17,11 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 
 /// <summary>
 /// The child process of <c>ColdStartTests</c> (#623): in a fresh process, thread A calls a method of the library that
-/// takes the SpiceAPI lock while thread B reads, for the first time in the process, a static class whose type
-/// initializer reads SPICE (<see cref="PlanetsAndMoons"/> or <see cref="Barycenters"/>). Before #623, thread A held the
-/// lock while it waited for that type initializer, which waited for the lock: the process hung, with no exception.
+/// takes the SpiceAPI lock while thread B reads, for the first time in the process, a static object of
+/// <see cref="PlanetsAndMoons"/> or <see cref="Barycenters"/> and its GM. Before #623, thread A held the lock while it
+/// waited for the type initializer of that class, which read SPICE and waited for the lock: the process hung, with no
+/// exception. Since the second round of #668 the initializers read nothing, and the GM is read from the provider at its
+/// first read, outside any lock of the library.
 /// The process exits 0 when both threads have ended.
 /// </summary>
 /// <remarks>
@@ -28,31 +30,34 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// milliseconds. The modes, thread A then thread B:
 /// <list type="bullet">
 /// <item><c>direct</c>: <see cref="SpiceAPI.ConvertTleToStateVector(string, string, string, Time)"/>; the first read of
-/// <see cref="PlanetsAndMoons.EARTH_BODY"/>.</item>
+/// <see cref="PlanetsAndMoons.EARTH_BODY"/> and its GM.</item>
 /// <item><c>tle</c>: <see cref="TLE.ToStateVector(Time)"/>, the TLE built before the threads start; the same read.</item>
 /// <item><c>lagrange</c>: <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/> from L1 (391), whose
 /// observer is a <see cref="LagrangePoint"/>, which reads <see cref="Barycenters.EARTH_BARYCENTER"/>; the first read of
-/// <see cref="Barycenters.EARTH_BARYCENTER"/>.</item>
+/// <see cref="Barycenters.EARTH_BARYCENTER"/> and its GM.</item>
 /// <item><c>lagrange-window</c>: <see cref="SpiceAPI.ReadEphemeris(Window, int, int, Frame, Aberration, TimeSpan)"/> from
 /// L1 over 60 s every 30 s; the same read.</item>
 /// </list>
 /// The mode <c>memory-provider</c> (#680) takes the kernel directory alone and has no thread nor schedule: the library on a
 /// <see cref="MemoryDataProvider"/> set as the global provider, see <see cref="MemoryProviderChild"/>.
+/// The modes <c>static-bodies-memory</c> and <c>static-bodies-spice</c> take the kernel directory alone: the static
+/// objects resolve their data at first read, see <see cref="StaticBodiesChild"/>.
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
 /// </para>
 /// <para>
 /// The schedules: <c>race</c> starts the two threads behind a <see cref="Barrier"/>, the reproduction of #623;
-/// <c>held</c> places thread B inside the type initializer before thread A starts: a data provider that delegates to
-/// <see cref="SpiceDataProvider"/> holds thread B, at its first read of a body (inside the initializer, before it takes
-/// the lock), for the given time, and thread A starts once thread B is held. Thread A then takes the lock while thread
-/// B is inside the initializer, which a deadlock needs, whatever the timing of the machine, as long as thread A reaches
-/// the static class within the hold.
+/// <c>held</c> places thread B inside its first read of the provider before thread A starts: a data provider that
+/// delegates to <see cref="SpiceDataProvider"/> holds thread B, at its first read of a body information (before it takes
+/// the lock; inside the type initializer before the second round of #668, inside the first read of the GM since), for
+/// the given time, and thread A starts once thread B is held. Thread A then takes the lock while thread B is inside
+/// that read, which a deadlock needed, whatever the timing of the machine, as long as thread A reaches the static class
+/// within the hold.
 /// </para>
 /// <para>
 /// Exit codes: 0 both threads ended; 1 a thread threw (its exception on the standard error); 2 wrong arguments; 3 with
-/// the schedule <c>held</c>, thread B did not enter the type initializer within 20 s (the class was initialized before,
-/// so the process does not test what it should). The 20 s are a third of the time <c>ColdStartTests</c> gives a child,
+/// the schedule <c>held</c>, thread B did not enter its first read of the provider within 20 s (the object was read
+/// before, so the process does not test what it should). The 20 s are a third of the time <c>ColdStartTests</c> gives a child,
 /// so that this exit reaches the test rather than being taken for a deadlock.
 /// </para>
 /// </remarks>
@@ -71,6 +76,17 @@ internal static class Program
         if (args.Length == 2 && args[1] == "memory-provider")
         {
             return MemoryProviderChild.Run(args[0]);
+        }
+
+        // The static objects of Barycenters, PlanetsAndMoons and Stars resolve their data at first read, retried on failure
+        if (args.Length == 2 && args[1] == "static-bodies-memory")
+        {
+            return StaticBodiesChild.RunMemory();
+        }
+
+        if (args.Length == 2 && args[1] == "static-bodies-spice")
+        {
+            return StaticBodiesChild.RunSpice(args[0]);
         }
 
         // Before the schedule check and before any kernel is loaded: the text of a TLE is checked before any SPICE read
@@ -139,7 +155,7 @@ internal static class Program
             {
                 if (!provider.Entered.Wait(EnterTimeout))
                 {
-                    Console.Error.WriteLine("Thread B did not enter the type initializer: the class was initialized before.");
+                    Console.Error.WriteLine("Thread B did not enter its first read of the provider: the object was read before.");
                     Interlocked.CompareExchange(ref exitCode, 3, 0);
                     return;
                 }
@@ -193,7 +209,7 @@ internal static class Program
     private static int Usage()
     {
         Console.Error.WriteLine("Usage: <kernel directory> <direct|tle|lagrange|lagrange-window> <race|held> [hold in ms, for held], " +
-                                "or <kernel directory> memory-provider, or <kernel directory> tle-text");
+                                "or <kernel directory> memory-provider|static-bodies-memory|static-bodies-spice|tle-text");
         return 2;
     }
 
@@ -242,12 +258,14 @@ internal static class Program
         }
     }
 
-    // The first reads of the static classes, each in a method of its own, compiled when thread B calls it
+    // The first reads of the static classes, each in a method of its own, compiled when thread B calls it. Their objects
+    // read the provider at the first read of a provider-backed member (second round of #668), so thread B reads one: the
+    // GM, through the provider, as the type initializer read it before
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ReadEarthBody() => GC.KeepAlive(PlanetsAndMoons.EARTH_BODY);
+    private static void ReadEarthBody() => GC.KeepAlive(PlanetsAndMoons.EARTH_BODY.GM);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ReadEarthBarycenter() => GC.KeepAlive(Barycenters.EARTH_BARYCENTER);
+    private static void ReadEarthBarycenter() => GC.KeepAlive(Barycenters.EARTH_BARYCENTER.GM);
 
     /// <summary>
     /// <see cref="SpiceDataProvider"/>, which holds the thread that set <see cref="HoldsThisThread"/> at its first read of

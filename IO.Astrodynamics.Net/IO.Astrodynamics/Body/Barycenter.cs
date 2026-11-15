@@ -1,5 +1,6 @@
 ﻿using System;
 using IO.Astrodynamics.Frames;
+using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 
 namespace IO.Astrodynamics.Body
@@ -25,6 +26,20 @@ namespace IO.Astrodynamics.Body
         public Barycenter(int naifId, Time epoch) : base(naifId, Frame.ECLIPTIC_J2000, epoch)
         {
             RegisterWithObserver();
+        }
+
+        /// <summary>
+        /// A static object of <see cref="SolarSystemObjects.Barycenters"/>: its identifiers and name without any read of
+        /// the data provider, at J2000 TDB in ECLIPJ2000; its provider data (information, GM, orbit about the solar system
+        /// barycenter) are read at the first read of a member that needs them, retried on failure (see
+        /// <see cref="CelestialItem.Mass"/>).
+        /// </summary>
+        internal static Barycenter CreateDeferred(int naifId, string name) => new(new NaifObject(naifId, name, string.Empty), true);
+
+        // The constructor of CreateDeferred: the parameter deferred tells it apart from the public constructors
+        private Barycenter(NaifObject knownObject, bool deferred) : base(knownObject, Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB)
+        {
+            _ = deferred;
         }
     }
 }

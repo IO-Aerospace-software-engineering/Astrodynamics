@@ -65,6 +65,7 @@ dotnet tool install --global --add-source ./IO.Astrodynamics.CLI/bin/Debug IO.As
   - `SpiceDataProvider`: Default, uses SPICE kernel files
   - `MemoryDataProvider`: In-memory for testing
 - Configured via `Configuration.Instance.SetDataProvider()`
+- The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the provider at the first read of a member that needs its data, not in their type initializer; a read the provider cannot answer throws its exception and is retried at the next read
 
 **Key Namespaces**
 - `IO.Astrodynamics.Body`: Celestial bodies, spacecraft, instruments

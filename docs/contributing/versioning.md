@@ -2065,6 +2065,27 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   force; a recording `IIntegrator` sees one `Initialize`, by the constructor, with the central body, the frame and the
   TDB start of a UTC window.
 
+- **A static solar system object read on a `MemoryDataProvider` without its data left its class unusable for the life
+  of the process** (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
+  The type initializers of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) built
+  their objects with the natural-body constructors, which read the provider: with a provider holding only the Earth's
+  information, `CelestialItem.Create(391)` threw a `TypeInitializationException` for `Barycenters` (the information of
+  the barycentre 0), and still did once the data were added, the runtime keeping the exception; the library's own paths
+  that read those classes (the observer resolution, `LagrangePoint`, `Star`, the Sun of SSB mode, the radiation forces)
+  failed with it. The objects now read no provider data when their class is initialized: their identifier, name and
+  predicates need none, and their other members are read at the first read of one of them, exactly as the natural-body
+  constructors read them, through one internal object published with a compare-exchange, never under a lock held
+  across the provider call (#623); a read that throws caches nothing and the next read tries again. The objects users
+  build are unchanged, bit for bit. In fresh processes (`MemoryDataProviderBodyTests`, modes `static-bodies-memory` and
+  `static-bodies-spice` of the cold-start child): on a memory provider holding the Earth's information only,
+  `CelestialItem.Create(391)` throws the provider's `InvalidOperationException` naming 391 and
+  `SOLAR_SYSTEM_BARYCENTER.GM` its `ArgumentException` naming `naifId`, twice; once the information and the states are
+  added, the GM are those given and the orbits of L1, the Earth barycentre, `EARTH_BODY` and `SUN_BODY` the exact
+  differences of the stored states; on SPICE, the kernels loaded first, the names and GM of the ten barycentres, the GM,
+  equatorial radius, J2, name and frame of `EARTH_BODY` and the GM of `SUN_BODY` and `MOON_BODY` equal SPICE's body
+  information, and the orbit of `EARTH_BODY` `spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB, exactly. On
+  SPICE, reading those data before `LoadKernels` still keeps the zeros SPICE answers (its own issue).
+
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
@@ -2764,6 +2785,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   barycentre in SSB mode, for instance) is replaced by the propagator's; one made after construction still wins.
   Migration: drop the explicit `Initialize`, or keep it after construction with the propagator's initial state. No
   result moves for a caller who initialized with the central body and the frame of the propagation.
+
+- **Breaking: the static objects of `Barycenters`, `PlanetsAndMoons` and `Stars` read their provider data at first use**
+  (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above). With
+  a provider lacking a static object's data, the first read of a member that needs them (GM, mass, orbit, radii, J2 to
+  J4, frame, sphere of influence) throws the provider's own exception (`ArgumentException` naming `naifId` for missing
+  information, `InvalidOperationException` for a missing state), at each read until the data exist, where the first read
+  of the class threw a `TypeInitializationException` that never cleared. The provider is reached at that first read,
+  not when the class is initialized; the identifiers, names and predicates need no data, and `ExtendedInformation` is
+  null until the data are read. On SPICE with the kernels loaded nothing moves. The `#623` deadlock needed a type
+  initializer that read SPICE: none does now. Migration: catch `ArgumentException` or `InvalidOperationException`
+  instead of `TypeInitializationException`.
 
 **Removed**
 

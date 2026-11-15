@@ -16,24 +16,32 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <summary>
     /// Gets the polar radius of the celestial body.
     /// </summary>
-    public double PolarRadius { get; }
+    public double PolarRadius => IsDeferred ? BodyData.PolarRadius : _polarRadius;
+
+    private readonly double _polarRadius;
 
     /// <summary>
     /// Gets the equatorial radius of the celestial body.
     /// </summary>
-    public double EquatorialRadius { get; }
+    public double EquatorialRadius => IsDeferred ? BodyData.EquatorialRadius : _equatorialRadius;
+
+    private readonly double _equatorialRadius;
 
     /// <summary>
     /// Gets the flattening of the celestial body.
     /// </summary>
-    public double Flattening { get; }
+    public double Flattening => IsDeferred ? BodyData.Flattening : _flattening;
+
+    private readonly double _flattening;
 
     /// <summary>
     /// Gets the semi-axes of the body's reference ellipsoid along the X, Y and Z axes of its body-fixed frame, in
     /// meters: the <c>BODYnnn_RADII</c> of the kernels, or (equatorial, equatorial, polar) for a body built from its
     /// radii. The occultation searches model the body as this ellipsoid.
     /// </summary>
-    public Vector3 Radii { get; }
+    public Vector3 Radii => IsDeferred ? BodyData.Radii : _radii;
+
+    private readonly Vector3 _radii;
 
     /// <summary>
     /// Gets or sets the sphere of influence of the celestial body.
@@ -43,27 +51,41 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
     /// <see cref="CelestialItem.InitialOrbitalParameters"/> is null because the loaded kernels do not chain it to its
     /// system barycenter (#454).
     /// </remarks>
-    public double SphereOfInfluence { get; private set; }
+    public double SphereOfInfluence
+    {
+        get => IsDeferred ? BodyData.SphereOfInfluence : _sphereOfInfluence;
+        private set => _sphereOfInfluence = value;
+    }
+
+    private double _sphereOfInfluence;
 
     /// <summary>
     /// Gets the reference frame of the celestial body.
     /// </summary>
-    public Frame Frame { get; }
+    public Frame Frame => IsDeferred ? BodyData.Frame : _frame;
+
+    private readonly Frame _frame;
 
     /// <summary>
     /// Gets the J2 coefficient of the celestial body.
     /// </summary>
-    public double J2 { get; }
+    public double J2 => IsDeferred ? BodyData.J2 : _j2;
+
+    private readonly double _j2;
 
     /// <summary>
     /// Gets the J3 coefficient of the celestial body.
     /// </summary>
-    public double J3 { get; }
+    public double J3 => IsDeferred ? BodyData.J3 : _j3;
+
+    private readonly double _j3;
 
     /// <summary>
     /// Gets the J4 coefficient of the celestial body.
     /// </summary>
-    public double J4 { get; }
+    public double J4 => IsDeferred ? BodyData.J4 : _j4;
+
+    private readonly double _j4;
 
     /// <summary>
     /// Gets the atmospheric model given to the celestial body, null when none was given.
@@ -186,24 +208,16 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0) :
         base(naifId, frame, epoch, geopotentialModelParameters)
     {
-        PolarRadius = ExtendedInformation.Radii.Z;
-        EquatorialRadius = ExtendedInformation.Radii.X;
-        Radii = new Vector3(ExtendedInformation.Radii.X, ExtendedInformation.Radii.Y, ExtendedInformation.Radii.Z);
-        Flattening = (EquatorialRadius - PolarRadius) / EquatorialRadius;
-        J2 = ExtendedInformation.J2;
-        J3 = ExtendedInformation.J3;
-        J4 = ExtendedInformation.J4;
-        if (double.IsNaN(Flattening))
-        {
-            Flattening = 0.0;
-        }
-
-        Frame = string.IsNullOrEmpty(ExtendedInformation.FrameName)
-            ? throw new InvalidOperationException(
-                "Celestial celestialItem frame can't be defined, please check if you have loaded associated kernels")
-            : new Frame(ExtendedInformation.FrameName);
-
-        UpdateSphereOfInfluence();
+        var data = ReadBodyData(new BodyProviderData(), ExtendedInformation, Mass, InitialOrbitalParameters);
+        _polarRadius = data.PolarRadius;
+        _equatorialRadius = data.EquatorialRadius;
+        _radii = data.Radii;
+        _flattening = data.Flattening;
+        _j2 = data.J2;
+        _j3 = data.J3;
+        _j4 = data.J4;
+        _frame = data.Frame;
+        _sphereOfInfluence = data.SphereOfInfluence;
 
         AtmosphericModel = atmosphericModel;
         Albedo = albedo;
@@ -225,13 +239,13 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         OrbitalParameters.OrbitalParameters initialOrbitalParameters = null, double albedo = 0.0,
         double thermalEffectiveTemperature = 0.0, double thermalEmissivity = 0.0) : base(naifId, name, mass, initialOrbitalParameters)
     {
-        PolarRadius = polarRadius;
-        EquatorialRadius = equatorialRadius;
-        Radii = new Vector3(equatorialRadius, equatorialRadius, polarRadius);
-        Flattening = (EquatorialRadius - PolarRadius) / EquatorialRadius;
-        if (double.IsNaN(Flattening))
+        _polarRadius = polarRadius;
+        _equatorialRadius = equatorialRadius;
+        _radii = new Vector3(equatorialRadius, equatorialRadius, polarRadius);
+        _flattening = (equatorialRadius - polarRadius) / equatorialRadius;
+        if (double.IsNaN(_flattening))
         {
-            Flattening = 0.0;
+            _flattening = 0.0;
         }
 
         SphereOfInfluence = double.PositiveInfinity;
@@ -241,19 +255,78 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         RegisterWithObserver();
     }
 
-    private void UpdateSphereOfInfluence()
+    /// <summary>
+    /// A static object of <see cref="PlanetsAndMoons"/> or <see cref="Stars"/>: its identifiers and name without any read
+    /// of the data provider, at J2000 TDB in ECLIPJ2000, without geopotential or atmospheric model; its provider data
+    /// (information, GM, radii, J2 to J4, frame, orbit and sphere of influence) are read at the first read of a member
+    /// that needs them, retried on failure (see <see cref="CelestialItem.Mass"/>).
+    /// </summary>
+    internal static CelestialBody CreateDeferred(NaifObject naifObject) =>
+        new(naifObject, Frame.ECLIPTIC_J2000, TimeSystem.Time.J2000TDB, deferred: true);
+
+    // The constructor of CreateDeferred: the parameter deferred tells it apart from the public constructors
+    private CelestialBody(NaifObject naifObject, Frame frame, Time epoch, bool deferred) : base(naifObject, frame, epoch)
     {
-        SphereOfInfluence = double.PositiveInfinity;
-        if (InitialOrbitalParameters == null) return;
-        if (IsSun)
+        _ = deferred;
+    }
+
+    /// <summary>The provider data of a body: those of its item, its radii, J2 to J4, frame and sphere of influence.</summary>
+    private sealed class BodyProviderData : ProviderData
+    {
+        internal double PolarRadius { get; set; }
+        internal double EquatorialRadius { get; set; }
+        internal Vector3 Radii { get; set; }
+        internal double Flattening { get; set; }
+        internal double J2 { get; set; }
+        internal double J3 { get; set; }
+        internal double J4 { get; set; }
+        internal Frame Frame { get; set; }
+        internal double SphereOfInfluence { get; set; }
+    }
+
+    private BodyProviderData BodyData => (BodyProviderData)Resolved;
+
+    private protected override ProviderData ReadProviderData(Frame frame, in Time epoch)
+    {
+        var data = ReadItemData(new BodyProviderData(), frame, epoch);
+        return ReadBodyData(data, data.Information, data.Mass, data.InitialOrbitalParameters);
+    }
+
+    /// <summary>
+    /// Fills the members of a body from its <paramref name="information"/>, as the natural-body constructor reads them,
+    /// and its sphere of influence from its <paramref name="mass"/> and <paramref name="orbit"/>.
+    /// </summary>
+    private BodyProviderData ReadBodyData(BodyProviderData data, DTO.CelestialBody information, double mass,
+        OrbitalParameters.OrbitalParameters orbit)
+    {
+        data.PolarRadius = information.Radii.Z;
+        data.EquatorialRadius = information.Radii.X;
+        data.Radii = new Vector3(information.Radii.X, information.Radii.Y, information.Radii.Z);
+        double flattening = (data.EquatorialRadius - data.PolarRadius) / data.EquatorialRadius;
+        data.Flattening = double.IsNaN(flattening) ? 0.0 : flattening;
+        data.J2 = information.J2;
+        data.J3 = information.J3;
+        data.J4 = information.J4;
+        data.Frame = string.IsNullOrEmpty(information.FrameName)
+            ? throw new InvalidOperationException(
+                "Celestial celestialItem frame can't be defined, please check if you have loaded associated kernels")
+            : new Frame(information.FrameName);
+        data.SphereOfInfluence = ReadSphereOfInfluence(information, mass, orbit);
+        return data;
+    }
+
+    // The sphere of influence of a body of the given mass and orbit about the barycentre of its system: +Infinity without
+    // an orbit and for the Sun
+    private double ReadSphereOfInfluence(DTO.CelestialBody information, double mass, OrbitalParameters.OrbitalParameters orbit)
+    {
+        if (orbit == null || IsSun)
         {
-            SphereOfInfluence = double.PositiveInfinity;
-            return;
+            return double.PositiveInfinity;
         }
 
-        var mainBody = new CelestialBody(ExtendedInformation.CenterOfMotionId, Frame.ECLIPTIC_J2000, InitialOrbitalParameters.Epoch);
-        var a = this.GetEphemeris(InitialOrbitalParameters.Epoch, mainBody, Frame.ECLIPTIC_J2000, Aberration.None).SemiMajorAxis();
-        SphereOfInfluence = InitialOrbitalParameters != null ? SphereOfInluence(a, Mass, mainBody.Mass) : double.PositiveInfinity;
+        var mainBody = new CelestialBody(information.CenterOfMotionId, Frame.ECLIPTIC_J2000, orbit.Epoch);
+        var a = this.GetEphemeris(orbit.Epoch, mainBody, Frame.ECLIPTIC_J2000, Aberration.None).SemiMajorAxis();
+        return SphereOfInluence(a, mass, mainBody.Mass);
     }
 
     private static double SphereOfInluence(double a, double minorMass, double majorMass)

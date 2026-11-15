@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using IO.Astrodynamics.Coordinates;
 using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
@@ -33,20 +34,31 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </summary>
     public string Name { get; }
 
+    private readonly double _mass;
+    private readonly double _gm;
+    private readonly GravitationalField _gravitationalField;
+    private OrbitalParameters.OrbitalParameters _initialOrbitalParameters;
+
     /// <summary>
     /// Gets the mass of the celestial item.
     /// </summary>
-    public double Mass { get; }
+    /// <remarks>
+    /// For a static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/>, read from
+    /// the data provider at the first read, as <see cref="GM"/>, <see cref="InitialOrbitalParameters"/> and the
+    /// provider-backed members of a <see cref="CelestialBody"/>: a read the provider cannot answer throws its exception
+    /// (<see cref="ArgumentException"/> naming <c>naifId</c> for missing information) and is tried again at the next read.
+    /// </remarks>
+    public double Mass => _deferred == null ? _mass : Resolved.Mass;
 
     /// <summary>
     /// Gets the standard gravitational parameter (GM) of the celestial item.
     /// </summary>
-    public double GM { get; }
+    public double GM => _deferred == null ? _gm : Resolved.GM;
 
     /// <summary>
     /// Gets the gravitational field of the celestial item.
     /// </summary>
-    protected GravitationalField GravitationalField { get; }
+    protected GravitationalField GravitationalField => _deferred == null ? _gravitationalField : Resolved.GravitationalField;
 
     /// <summary>The gravitational field of the body, for the description of a force model (CDM export).</summary>
     internal GravitationalField Field => GravitationalField;
@@ -54,7 +66,99 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Gets or sets the initial orbital parameters of the celestial item.
     /// </summary>
-    public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; internal set; }
+    public OrbitalParameters.OrbitalParameters InitialOrbitalParameters
+    {
+        get => _deferred == null ? _initialOrbitalParameters : Resolved.InitialOrbitalParameters;
+        internal set
+        {
+            if (_deferred != null)
+            {
+                throw new InvalidOperationException("The orbit of a static solar system object is read from its data provider.");
+            }
+
+            _initialOrbitalParameters = value;
+        }
+    }
+
+    /// <summary>
+    /// The epoch and the frame of the orbit of a static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/>
+    /// or <see cref="Stars"/>, whose provider data are read at the first read of a member that needs them; null for any
+    /// other item, whose constructor reads them.
+    /// </summary>
+    private readonly DeferredData _deferred;
+
+    private sealed record DeferredData(Frame Frame, Time Epoch);
+
+    /// <summary>
+    /// The provider data of an item built by the natural-body constructor: the body information, the mass, the GM, the
+    /// gravitational field and the orbit about the barycentre of its system.
+    /// </summary>
+    private protected class ProviderData
+    {
+        internal DTO.CelestialBody Information { get; set; }
+        internal double Mass { get; set; }
+        internal double GM { get; set; }
+        internal GravitationalField GravitationalField { get; set; }
+        internal OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; set; }
+    }
+
+    // The provider data of a deferred item, once read; published once, never under a lock (#623)
+    private ProviderData _resolved;
+
+    /// <summary>Whether the item is a static object whose provider data are read at first use.</summary>
+    private protected bool IsDeferred => _deferred != null;
+
+    /// <summary>
+    /// The provider data of a deferred item: read at the first call, built exactly as the natural-body constructor
+    /// builds them; a read that throws caches nothing, so that the next call tries again. The data are published with a
+    /// compare-exchange, never under a lock held across the provider call, so that a thread holding the SPICE lock never
+    /// waits for another (#623); two threads that read at once may both read, and the first published is kept.
+    /// </summary>
+    private protected ProviderData Resolved => Volatile.Read(ref _resolved) ?? Resolve();
+
+    private ProviderData Resolve()
+    {
+        var data = ReadProviderData(_deferred.Frame, _deferred.Epoch);
+        var published = Interlocked.CompareExchange(ref _resolved, data, null);
+        if (published != null)
+        {
+            return published;
+        }
+
+        // Listed by the observer of its orbit, as the natural-body constructor lists its item
+        ExtendedInformation = data.Information;
+        (data.InitialOrbitalParameters?.Observer as CelestialItem)?.AddSatellite(this);
+        return data;
+    }
+
+    /// <summary>
+    /// Reads the provider data of a deferred item; a <see cref="CelestialBody"/> adds its own.
+    /// </summary>
+    private protected virtual ProviderData ReadProviderData(Frame frame, in Time epoch) =>
+        ReadItemData(new ProviderData(), frame, epoch);
+
+    /// <summary>
+    /// Fills <paramref name="data"/> as the natural-body constructor reads its item: the information of the provider,
+    /// the GM and mass, the point-mass field and the orbit about the barycentre of the system.
+    /// </summary>
+    private protected T ReadItemData<T>(T data, Frame frame, in Time epoch) where T : ProviderData
+    {
+        var information = _dataProvider.GetCelestialBodyInfo(NaifId);
+        if (string.IsNullOrEmpty(information.Name))
+        {
+            throw new InvalidOperationException(
+                "Celestial celestialItem name can't be defined, please check if you have loaded associated kernels");
+        }
+
+        data.Information = information;
+        data.Mass = information.GM / Constants.G;
+        data.GM = information.GM;
+        data.GravitationalField = CreateGravitationalField(NaifId, information.GM, null);
+        data.InitialOrbitalParameters = NaifId != 0 && (IsPlanet || IsMoon || IsBarycenter || IsSun)
+            ? ReadStateAboutBarycenter(epoch, frame)
+            : null;
+        return data;
+    }
 
     /// <summary>
     /// The satellites orbiting the celestial item, held weakly, by instance (#676).
@@ -83,6 +187,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Used for performance improvement and to avoid duplicated calls in the CelestialItem API.
     /// </summary>
+    /// <remarks>
+    /// Null for a static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/> until
+    /// its provider data are read, at the first read of a member that needs them.
+    /// </remarks>
     protected DTO.CelestialBody ExtendedInformation;
 
     private readonly GeometryFinder _geometryFinder = new GeometryFinder();
@@ -163,9 +271,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 "Celestial celestialItem name can't be defined, please check if you have loaded associated kernels")
             : ExtendedInformation.Name;
 
-        Mass = ExtendedInformation.GM / Constants.G;
-        GM = ExtendedInformation.GM;
-        GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
+        _mass = ExtendedInformation.GM / Constants.G;
+        _gm = ExtendedInformation.GM;
+        _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
 
         BarycenterOfMotionId = FindBarycenterOfMotionId(this);
         CenterOfMotionId = FindCenterOfMotionId(this);
@@ -173,6 +281,28 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
             InitialOrbitalParameters = ReadStateAboutBarycenter(epoch, frame);
+    }
+
+    /// <summary>
+    /// A static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/>: its identifiers
+    /// and the name of its <paramref name="knownObject"/>, without any read of the data provider, whose data (information,
+    /// GM, orbit about the barycentre at <paramref name="epoch"/> in <paramref name="frame"/>) are read at the first read
+    /// of a member that needs them (<see cref="Resolved"/>), with the point-mass field.
+    /// </summary>
+    /// <remarks>
+    /// Before, the static classes built their objects with the natural-body constructor, which read the provider in their
+    /// type initializer: a missing datum threw a <see cref="TypeInitializationException"/> that the runtime keeps for the
+    /// life of the process, so that every later use failed, even once the data existed.
+    /// </remarks>
+    private protected CelestialItem(NaifObject knownObject, Frame frame, in Time epoch)
+    {
+        _dataProvider = Configuration.Instance.DataProvider;
+        _listedByAnyObserver = true;
+        _deferred = new DeferredData(frame, epoch);
+        NaifId = knownObject.NaifId;
+        Name = knownObject.Name;
+        BarycenterOfMotionId = FindBarycenterOfMotionId(this);
+        CenterOfMotionId = FindCenterOfMotionId(this);
     }
 
     // The state about the barycenter of the body's system; null when the loaded kernels do not chain the body to it (Mars
@@ -229,10 +359,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
         NaifId = naifId;
         Name = name;
-        Mass = mass;
-        GM = mass * Constants.G;
+        _mass = mass;
+        _gm = mass * Constants.G;
         InitialOrbitalParameters = initialOrbitalParameters;
-        GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
+        _gravitationalField = CreateGravitationalField(naifId, _gm, geopotentialModelParameters);
     }
 
     // The NAIF identifier of the Earth, whose geopotential is EGM2008 unless its parameters give other constants, and

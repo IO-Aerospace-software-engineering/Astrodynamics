@@ -129,6 +129,13 @@ barycentre (SPICE names every barycentre), and the orientation cache of a propag
 reach unavailable. Before 11.0.0 the state and orientation reads threw `ArgumentException` and the information of an
 identifier never added `KeyNotFoundException`.
 
+The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
+provider at the first read of a member that needs its data (see [Predefined Objects](predefined-objects.md)), so a
+provider set before they are first read, and lacking their data, does not leave them unusable: each read throws the
+provider's exception (`ArgumentException` naming `naifId` for missing information) until the data are added. Before
+11.0.0 their type initializers read the provider, and one missing datum threw a `TypeInitializationException` that the
+runtime keeps for the life of the process.
+
 ```csharp
 var memoryProvider = new MemoryDataProvider();
 Configuration.Instance.SetDataProvider(memoryProvider);

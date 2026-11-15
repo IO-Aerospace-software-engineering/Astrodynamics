@@ -95,6 +95,46 @@ public class MemoryDataProviderBodyTests
             ChildOutput.Value);
     }
 
+    /// <summary>
+    /// The static objects of <c>Barycenters</c>, <c>PlanetsAndMoons</c> and <c>Stars</c> on a memory provider set before any
+    /// static class is read, holding the Earth's information only: <c>CelestialItem.Create(391)</c> throws the provider's
+    /// <see cref="InvalidOperationException"/> for the missing state of L1, a provider-backed member of a static object the
+    /// provider's <see cref="ArgumentException"/> naming <c>naifId</c> at each read; once the data are added, the members
+    /// are the data given, combined by exact subtractions. Before, the first read of <c>Barycenters</c> threw a
+    /// <see cref="TypeInitializationException"/> that the runtime kept for the life of the process.
+    /// </summary>
+    [Fact]
+    public void StaticBodies_OnAMemoryProvider_ResolveAtFirstRead_AndRetryOnFailure()
+    {
+        string output = ColdStartTests.RunChild("(static-bodies-memory)", "static-bodies-memory");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK CelestialItem.Create(391) without its state: InvalidOperationException", output);
+        Assert.Contains("OK SOLAR_SYSTEM_BARYCENTER.GM without its information, read 2: ArgumentException", output);
+        Assert.Contains("OK L1's state is the stored state of 391 minus that of the Earth barycentre", output);
+        Assert.Contains("OK SUN_BODY's orbit is its state about the solar system barycentre", output);
+    }
+
+    /// <summary>
+    /// The static objects on SPICE, the kernels loaded before any read, against SPICE through <c>SpiceAPI</c> (the body
+    /// information of <c>bodvrd</c>, the state of <c>spkezr</c>), exactly.
+    /// </summary>
+    [Fact]
+    public void StaticBodies_OnSpice_AreTheKernelValues()
+    {
+        string output = ColdStartTests.RunChild("(static-bodies-spice)", "static-bodies-spice");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK EARTH_BODY's orbit is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK SOLAR_SYSTEM_BARYCENTER has no orbit", output);
+    }
+
     public static IEnumerable<object[]> LagrangeIdPaths() =>
         from id in MemoryDataProviderTests.LagrangeIdValues
         from path in new[] { "GetCelestialBodyInfo", "new CelestialBody", "CelestialItem.Create" }
