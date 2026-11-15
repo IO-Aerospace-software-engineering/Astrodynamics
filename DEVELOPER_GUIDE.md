@@ -2092,9 +2092,11 @@ with `InitialOrbitalParameters` null and an infinite sphere of influence, as on 
 
 The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
 provider at the first read of a member that needs its data, not in their type initializer: a provider set before their
-first read and lacking their data makes each such read throw the provider's exception until the data are added, where
-the type initializer threw before 11.0.0 a `TypeInitializationException` kept for the life of the process. Their
-identifiers, names and predicates need no data.
+first read and lacking their data makes each such read throw the provider's exception until the data are there, where
+the type initializer threw before 11.0.0 a `TypeInitializationException` kept for the life of the process. Each read
+goes to the provider set at its time: the data may be added to that provider, or another provider set in its place. Once
+read, an object keeps the provider it read its data from, for its data and its ephemeris. Their identifiers, names and
+predicates need no data.
 
 ---
 

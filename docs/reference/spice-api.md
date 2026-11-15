@@ -132,7 +132,10 @@ identifier never added `KeyNotFoundException`.
 The static objects of `Barycenters`, `PlanetsAndMoons` (`EARTH_BODY`, `MOON_BODY`) and `Stars` (`SUN_BODY`) read the
 provider at the first read of a member that needs its data (see [Predefined Objects](predefined-objects.md)), so a
 provider set before they are first read, and lacking their data, does not leave them unusable: each read throws the
-provider's exception (`ArgumentException` naming `naifId` for missing information) until the data are added. Before
+provider's exception (`ArgumentException` naming `naifId` for missing information) until the data are there, and each
+read goes to the provider set at its time, so that the data may be added to that provider or another provider set in
+its place (a `SpiceDataProvider` and `LoadKernels`, for instance). Once read, an object keeps the provider it read its
+data from, for its data and its ephemeris. Before
 11.0.0 their type initializers read the provider, and one missing datum threw a `TypeInitializationException` that the
 runtime keeps for the life of the process.
 

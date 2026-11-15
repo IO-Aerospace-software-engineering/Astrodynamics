@@ -70,8 +70,11 @@ data. Their other members, the GM, the mass, `InitialOrbitalParameters` (at J200
 barycentre of their system) and, for a body, the radii, flattening, J2 to J4, frame and sphere of influence, are read
 from the provider at the first read of one of them, exactly as `new CelestialBody(naifObject)` or `new Barycenter(id)`
 reads them. A read the provider cannot answer throws its exception (`ArgumentException` naming `naifId` for missing
-information, `InvalidOperationException` for a missing state) and caches nothing: the next read tries again, and
-succeeds once the data exist. The data read are published once, with no lock held across the provider call, so a read
+information, `InvalidOperationException` for a missing state) and caches nothing: the next read tries again, on the
+provider set at its time (`Configuration.Instance.SetDataProvider`), and succeeds once that provider has the data, the
+same provider completed or another one set since. Once its data are read, an object keeps the provider it read them
+from, for its data and for its ephemeris, as an object built by a constructor keeps the provider of its construction:
+a provider set later does not reach it. The data read are published once, with no lock held across the provider call, so a read
 never waits for another thread (#623). Before 11.0.0 the type initializers read the provider: a missing datum threw a
 `TypeInitializationException` kept for the life of the process, and every later use of the class failed.
 

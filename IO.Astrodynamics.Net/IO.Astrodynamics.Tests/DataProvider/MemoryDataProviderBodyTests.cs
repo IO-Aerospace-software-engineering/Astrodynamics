@@ -135,6 +135,28 @@ public class MemoryDataProviderBodyTests
         Assert.Contains("OK SOLAR_SYSTEM_BARYCENTER has no orbit", output);
     }
 
+    /// <summary>
+    /// The static objects first read on an empty memory provider, then on a SPICE provider set afterwards with the kernels
+    /// loaded: each read retries on the provider set at that time, and the members are SPICE's (<c>bodvrd</c>, <c>spkezr</c>
+    /// through <c>SpiceAPI</c>), exactly; once read, an object keeps the provider it read its data from, for its data and its
+    /// ephemeris. Before, the retry went back to the provider current when the class was initialized: the objects threw
+    /// the memory provider's <see cref="ArgumentException"/> for the life of the process.
+    /// </summary>
+    [Fact]
+    public void StaticBodies_ReadFirstOnAMemoryProvider_ResolveOnTheProviderSetAtTheirNextRead()
+    {
+        string output = ColdStartTests.RunChild("(static-bodies-switch)", "static-bodies-switch");
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            _output.WriteLine(line);
+        }
+
+        Assert.Contains("OK SUN_BODY.GM on the empty memory provider: ArgumentException", output);
+        Assert.Contains("OK EARTH_BODY's orbit after the switch is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB", output);
+        Assert.Contains("OK EARTH_BARYCENTER's ephemeris after the switch is spkezr's state of 3 about 0 in ICRF", output);
+        Assert.Contains("OK EARTH_BARYCENTER's ephemeris, once its data are read, stays SPICE's under a later provider", output);
+    }
+
     public static IEnumerable<object[]> LagrangeIdPaths() =>
         from id in MemoryDataProviderTests.LagrangeIdValues
         from path in new[] { "GetCelestialBodyInfo", "new CelestialBody", "CelestialItem.Create" }

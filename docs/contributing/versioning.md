@@ -2076,16 +2076,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   failed with it. The objects now read no provider data when their class is initialized: their identifier, name and
   predicates need none, and their other members are read at the first read of one of them, exactly as the natural-body
   constructors read them, through one internal object published with a compare-exchange, never under a lock held
-  across the provider call (#623); a read that throws caches nothing and the next read tries again. The objects users
-  build are unchanged, bit for bit. In fresh processes (`MemoryDataProviderBodyTests`, modes `static-bodies-memory` and
-  `static-bodies-spice` of the cold-start child): on a memory provider holding the Earth's information only,
+  across the provider call (#623); a read that throws caches nothing and the next read tries again, on the provider set
+  at its time, so that a read that failed on one provider succeeds once the data exist on that provider or on another
+  set since (a `SpiceDataProvider` with its kernels after a `MemoryDataProvider`); once read, an object keeps the provider
+  it read its data from, for its data and its ephemeris. The objects users build are unchanged, bit for bit. In fresh
+  processes (`MemoryDataProviderBodyTests`, modes `static-bodies-memory`, `static-bodies-spice` and
+  `static-bodies-switch` of the cold-start child): on a memory provider holding the Earth's information only,
   `CelestialItem.Create(391)` throws the provider's `InvalidOperationException` naming 391 and
   `SOLAR_SYSTEM_BARYCENTER.GM` its `ArgumentException` naming `naifId`, twice; once the information and the states are
   added, the GM are those given and the orbits of L1, the Earth barycentre, `EARTH_BODY` and `SUN_BODY` the exact
   differences of the stored states; on SPICE, the kernels loaded first, the names and GM of the ten barycentres, the GM,
   equatorial radius, J2, name and frame of `EARTH_BODY` and the GM of `SUN_BODY` and `MOON_BODY` equal SPICE's body
-  information, and the orbit of `EARTH_BODY` `spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB, exactly. On
-  SPICE, reading those data before `LoadKernels` still keeps the zeros SPICE answers (its own issue).
+  information, and the orbit of `EARTH_BODY` `spkezr`'s state of 399 about 3 in ECLIPJ2000 at J2000 TDB, exactly; read
+  first on an empty memory provider (the `ArgumentException` of each), then after `SetDataProvider(new
+  SpiceDataProvider())` and `LoadKernels`, the GM of the solar system barycentre, the Earth barycentre, `EARTH_BODY` and
+  `SUN_BODY`, the frame and orbit of `EARTH_BODY`, the orbit of the Earth barycentre and its ephemeris about the solar
+  system barycentre are SPICE's, exactly, and stay SPICE's once another memory provider is set (before this, the retry
+  went back to the provider of the type initializer: the objects threw the memory provider's `ArgumentException` for the
+  process while `SpiceAPI.GetCelestialBodyInfo(0)` answered). On SPICE, reading those data before `LoadKernels` still
+  keeps the zeros SPICE answers (its own issue).
 
 **Changed**
 
@@ -2793,10 +2802,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   J4, frame, sphere of influence) throws the provider's own exception (`ArgumentException` naming `naifId` for missing
   information, `InvalidOperationException` for a missing state), at each read until the data exist, where the first read
   of the class threw a `TypeInitializationException` that never cleared. The provider is reached at that first read,
-  not when the class is initialized; the identifiers, names and predicates need no data, and `ExtendedInformation` is
+  not when the class is initialized: each read goes to the provider set at its time, and an object that has read its
+  data keeps that provider for its data and its ephemeris, where before it kept the provider of the type initializer
+  for both; the identifiers, names and predicates need no data, and `ExtendedInformation` is
   null until the data are read. On SPICE with the kernels loaded nothing moves. The `#623` deadlock needed a type
   initializer that read SPICE: none does now. Migration: catch `ArgumentException` or `InvalidOperationException`
-  instead of `TypeInitializationException`.
+  instead of `TypeInitializationException`; set the provider a static object should read before its first read of
+  data, since a provider set afterwards does not reach it.
 
 **Removed**
 

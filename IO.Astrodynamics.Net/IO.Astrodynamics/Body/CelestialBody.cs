@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.DataProvider;
 using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
 using IO.Astrodynamics.Atmosphere;
@@ -286,9 +287,9 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
 
     private BodyProviderData BodyData => (BodyProviderData)Resolved;
 
-    private protected override ProviderData ReadProviderData(Frame frame, in Time epoch)
+    private protected override ProviderData ReadProviderData(IDataProvider provider, Frame frame, in Time epoch)
     {
-        var data = ReadItemData(new BodyProviderData(), frame, epoch);
+        var data = ReadItemData(new BodyProviderData { Provider = provider }, frame, epoch);
         return ReadBodyData(data, data.Information, data.Mass, data.InitialOrbitalParameters);
     }
 

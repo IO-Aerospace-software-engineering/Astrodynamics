@@ -14,7 +14,7 @@ using BodyInfo = IO.Astrodynamics.DTO.CelestialBody;
 namespace IO.Astrodynamics.Tests.ColdStart;
 
 /// <summary>
-/// The modes <c>static-bodies-memory</c> and <c>static-bodies-spice</c> of the child process: the static objects of
+/// The modes <c>static-bodies-memory</c>, <c>static-bodies-spice</c> and <c>static-bodies-switch</c> of the child process: the static objects of
 /// <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> (<see cref="PlanetsAndMoons.EARTH_BODY"/>,
 /// <see cref="PlanetsAndMoons.MOON_BODY"/>) and <see cref="Stars"/> (<see cref="Stars.SUN_BODY"/>) read no provider data
 /// when their class is initialized, and resolve their data at first read, retried on failure.
@@ -33,6 +33,11 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// <para>
 /// <c>static-bodies-spice</c>: the kernels loaded before any read, the members of the static objects against SPICE
 /// through <see cref="SpiceAPI"/> (the body information of <c>bodvrd</c> and the state of <c>spkezr</c>), exactly.
+/// </para>
+/// <para>
+/// <c>static-bodies-switch</c>: the static objects first read on an empty <see cref="MemoryDataProvider"/>, then on a
+/// <see cref="SpiceDataProvider"/> set afterwards with the kernels loaded, against SPICE, exactly; once read, an object
+/// keeps the provider it read its data from, see <see cref="RunSwitch"/>.
 /// </para>
 /// <para>Exit 0 when every check holds, 1 with the failed check or the exception on the standard error.</para>
 /// </remarks>
@@ -163,6 +168,77 @@ internal static class StaticBodiesChild
         catch (Exception e)
         {
             Console.Error.WriteLine($"static-bodies-spice threw: {e}");
+            return 1;
+        }
+    }
+
+    /// <summary>
+    /// The mode <c>static-bodies-switch</c>: the static objects first read on an empty <see cref="MemoryDataProvider"/>,
+    /// then on a <see cref="SpiceDataProvider"/> set afterwards with the kernels loaded. A failed read is retried on the
+    /// provider set at the time of the read: before, the retry went back to the provider of the type initializer, so that
+    /// the objects stayed unusable for the process. Once read, an object keeps the provider it read its data from, for its
+    /// data and its ephemeris.
+    /// </summary>
+    internal static int RunSwitch(string kernels)
+    {
+        try
+        {
+            // Before any static class of the library is read: a provider without any data
+            Configuration.Instance.SetDataProvider(new MemoryDataProvider());
+            Expect<ArgumentException>("SOLAR_SYSTEM_BARYCENTER.GM on the empty memory provider",
+                () => Barycenters.SOLAR_SYSTEM_BARYCENTER.GM);
+            Expect<ArgumentException>("EARTH_BARYCENTER.GM on the empty memory provider", () => Barycenters.EARTH_BARYCENTER.GM);
+            Expect<ArgumentException>("EARTH_BODY.GM on the empty memory provider", () => PlanetsAndMoons.EARTH_BODY.GM);
+            Expect<ArgumentException>("SUN_BODY.GM on the empty memory provider", () => Stars.SUN_BODY.GM);
+
+            // The usual recovery: the SPICE provider, then the kernels
+            Configuration.Instance.SetDataProvider(new SpiceDataProvider());
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo(kernels));
+
+            var ssbInfo = SpiceAPI.Instance.GetCelestialBodyInfo(0);
+            var barycenterInfo = SpiceAPI.Instance.GetCelestialBodyInfo(3);
+            var earthInfo = SpiceAPI.Instance.GetCelestialBodyInfo(399);
+            var sunInfo = SpiceAPI.Instance.GetCelestialBodyInfo(10);
+            Check($"SOLAR_SYSTEM_BARYCENTER.GM after the switch {Barycenters.SOLAR_SYSTEM_BARYCENTER.GM:R}, SPICE {ssbInfo.GM:R}",
+                Barycenters.SOLAR_SYSTEM_BARYCENTER.GM == ssbInfo.GM);
+            Check($"EARTH_BARYCENTER.GM after the switch {Barycenters.EARTH_BARYCENTER.GM:R}, SPICE {barycenterInfo.GM:R}",
+                Barycenters.EARTH_BARYCENTER.GM == barycenterInfo.GM);
+            Check($"EARTH_BODY.GM after the switch {PlanetsAndMoons.EARTH_BODY.GM:R}, SPICE {earthInfo.GM:R}",
+                PlanetsAndMoons.EARTH_BODY.GM == earthInfo.GM);
+            Check($"SUN_BODY.GM after the switch {Stars.SUN_BODY.GM:R}, SPICE {sunInfo.GM:R}", Stars.SUN_BODY.GM == sunInfo.GM);
+            Check($"EARTH_BODY.Frame after the switch {PlanetsAndMoons.EARTH_BODY.Frame.Name}, SPICE {earthInfo.FrameName}",
+                PlanetsAndMoons.EARTH_BODY.Frame.Name == earthInfo.FrameName);
+
+            var barycenterOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 0, 3, Frame.ECLIPTIC_J2000, Aberration.None).ToStateVector();
+            var barycenterState = Barycenters.EARTH_BARYCENTER.InitialOrbitalParameters.ToStateVector();
+            Check("EARTH_BARYCENTER's orbit after the switch is spkezr's state of 3 about 0 in ECLIPJ2000 at J2000 TDB",
+                barycenterState.Position == barycenterOrbit.Position && barycenterState.Velocity == barycenterOrbit.Velocity);
+            var earthOrbit = SpiceAPI.Instance.ReadEphemeris(J2000, 3, 399, Frame.ECLIPTIC_J2000, Aberration.None).ToStateVector();
+            var earthState = PlanetsAndMoons.EARTH_BODY.InitialOrbitalParameters.ToStateVector();
+            Check("EARTH_BODY's orbit after the switch is spkezr's state of 399 about 3 in ECLIPJ2000 at J2000 TDB",
+                earthState.Position == earthOrbit.Position && earthState.Velocity == earthOrbit.Velocity);
+            Check("EARTH_BODY's sphere of influence after the switch is finite",
+                double.IsFinite(PlanetsAndMoons.EARTH_BODY.SphereOfInfluence) && PlanetsAndMoons.EARTH_BODY.SphereOfInfluence > 0.0);
+
+            var epoch = new Time(2021, 1, 20, 18, 0, 0, frame: TimeFrame.UTCFrame);
+            var spkezr = SpiceAPI.Instance.ReadEphemeris(epoch, 0, 3, Frame.ICRF, Aberration.None).ToStateVector();
+            var ephemeris = Barycenters.EARTH_BARYCENTER.GetEphemeris(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF,
+                Aberration.None).ToStateVector();
+            Check("EARTH_BARYCENTER's ephemeris after the switch is spkezr's state of 3 about 0 in ICRF",
+                ephemeris.Position == spkezr.Position && ephemeris.Velocity == spkezr.Velocity);
+
+            // Once read, an object keeps the provider it read its data from: another provider set later changes nothing
+            Configuration.Instance.SetDataProvider(new MemoryDataProvider());
+            Check("EARTH_BODY.GM, once read, stays SPICE's under a later provider", PlanetsAndMoons.EARTH_BODY.GM == earthInfo.GM);
+            var kept = Barycenters.EARTH_BARYCENTER.GetEphemeris(epoch, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF,
+                Aberration.None).ToStateVector();
+            Check("EARTH_BARYCENTER's ephemeris, once its data are read, stays SPICE's under a later provider",
+                kept.Position == spkezr.Position && kept.Velocity == spkezr.Velocity);
+            return 0;
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"static-bodies-switch threw: {e}");
             return 1;
         }
     }

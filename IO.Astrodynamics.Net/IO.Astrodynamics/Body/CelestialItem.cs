@@ -19,7 +19,21 @@ namespace IO.Astrodynamics.Body;
 
 public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 {
+    /// <summary>
+    /// The data provider of the item, the global one when it was built. A static object of <see cref="Barycenters"/>,
+    /// <see cref="PlanetsAndMoons"/> or <see cref="Stars"/> reads through <see cref="ItemProvider"/> instead: the provider
+    /// it read its data from, or the global provider of the time of the read until its data are read.
+    /// </summary>
     protected readonly IDataProvider _dataProvider;
+
+    /// <summary>
+    /// The provider the item reads through: <see cref="_dataProvider"/> for an item built by a constructor; for a static
+    /// object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/>, the provider it read its
+    /// data from, and until it has read them the global provider of the time of the read, so that a read that failed on
+    /// one provider is tried again on the provider set since.
+    /// </summary>
+    private protected IDataProvider ItemProvider =>
+        _deferred == null ? _dataProvider : Volatile.Read(ref _resolved)?.Provider ?? Configuration.Instance.DataProvider;
 
     protected const int TITLE_WIDTH = 32;
     protected const int VALUE_WIDTH = 32;
@@ -46,7 +60,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// For a static object of <see cref="Barycenters"/>, <see cref="PlanetsAndMoons"/> or <see cref="Stars"/>, read from
     /// the data provider at the first read, as <see cref="GM"/>, <see cref="InitialOrbitalParameters"/> and the
     /// provider-backed members of a <see cref="CelestialBody"/>: a read the provider cannot answer throws its exception
-    /// (<see cref="ArgumentException"/> naming <c>naifId</c> for missing information) and is tried again at the next read.
+    /// (<see cref="ArgumentException"/> naming <c>naifId</c> for missing information) and is tried again at the next read,
+    /// on the provider set at that time; once read, the object keeps the provider it read its data from.
     /// </remarks>
     public double Mass => _deferred == null ? _mass : Resolved.Mass;
 
@@ -95,6 +110,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// </summary>
     private protected class ProviderData
     {
+        internal IDataProvider Provider { get; init; }
         internal DTO.CelestialBody Information { get; set; }
         internal double Mass { get; set; }
         internal double GM { get; set; }
@@ -109,8 +125,9 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     private protected bool IsDeferred => _deferred != null;
 
     /// <summary>
-    /// The provider data of a deferred item: read at the first call, built exactly as the natural-body constructor
-    /// builds them; a read that throws caches nothing, so that the next call tries again. The data are published with a
+    /// The provider data of a deferred item: read at the first call from the global provider of that time, built exactly
+    /// as the natural-body constructor builds them; a read that throws caches nothing, so that the next call tries again,
+    /// on the global provider of its own time. The data are published with a
     /// compare-exchange, never under a lock held across the provider call, so that a thread holding the SPICE lock never
     /// waits for another (#623); two threads that read at once may both read, and the first published is kept.
     /// </summary>
@@ -118,7 +135,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     private ProviderData Resolve()
     {
-        var data = ReadProviderData(_deferred.Frame, _deferred.Epoch);
+        var data = ReadProviderData(Configuration.Instance.DataProvider, _deferred.Frame, _deferred.Epoch);
         var published = Interlocked.CompareExchange(ref _resolved, data, null);
         if (published != null)
         {
@@ -132,18 +149,18 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     }
 
     /// <summary>
-    /// Reads the provider data of a deferred item; a <see cref="CelestialBody"/> adds its own.
+    /// Reads the provider data of a deferred item from <paramref name="provider"/>; a <see cref="CelestialBody"/> adds its own.
     /// </summary>
-    private protected virtual ProviderData ReadProviderData(Frame frame, in Time epoch) =>
-        ReadItemData(new ProviderData(), frame, epoch);
+    private protected virtual ProviderData ReadProviderData(IDataProvider provider, Frame frame, in Time epoch) =>
+        ReadItemData(new ProviderData { Provider = provider }, frame, epoch);
 
     /// <summary>
-    /// Fills <paramref name="data"/> as the natural-body constructor reads its item: the information of the provider,
+    /// Fills <paramref name="data"/> as the natural-body constructor reads its item: the information of its provider,
     /// the GM and mass, the point-mass field and the orbit about the barycentre of the system.
     /// </summary>
     private protected T ReadItemData<T>(T data, Frame frame, in Time epoch) where T : ProviderData
     {
-        var information = _dataProvider.GetCelestialBodyInfo(NaifId);
+        var information = data.Provider.GetCelestialBodyInfo(NaifId);
         if (string.IsNullOrEmpty(information.Name))
         {
             throw new InvalidOperationException(
@@ -485,7 +502,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         // Sites are not CelestialItems and handle their own SPICE delegation in Site.GetEphemeris.
         if (observer is CelestialItem && observer.IsSpiceBacked)
         {
-            return _dataProvider.GetEphemeris(epoch, this, observer, frame, aberration);
+            return ItemProvider.GetEphemeris(epoch, this, observer, frame, aberration);
         }
 
         // Reference-body approach for non-SPICE observers
@@ -511,7 +528,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     {
         if (NaifId == referenceBody.NaifId)
             return new StateVector(Vector3.Zero, Vector3.Zero, referenceBody, epoch, Frame.ICRF);
-        return _dataProvider.GetEphemeris(epoch, this, referenceBody, Frame.ICRF, Aberration.None).ToStateVector();
+        return ItemProvider.GetEphemeris(epoch, this, referenceBody, Frame.ICRF, Aberration.None).ToStateVector();
     }
 
     /// <summary>
@@ -713,7 +730,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     internal virtual OrbitalParameters.OrbitalParameters GetGeometricStateFromICRF(in Time date)
     {
-        return _dataProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None).ToStateVector();
+        return ItemProvider.GetEphemeris(date, this, Barycenters.SOLAR_SYSTEM_BARYCENTER, Frame.ICRF, Aberration.None).ToStateVector();
     }
 
     /// <summary>
