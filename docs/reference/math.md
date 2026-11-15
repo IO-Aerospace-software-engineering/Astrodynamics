@@ -39,6 +39,18 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 !!! warning "Dot Product Convention"
     Use `v1 * v2` for the dot product. There is no `.Dot()` method. `Vector3` has no unary `-` operator; use `.Inverse()` instead.
 
+## Plane
+
+`Plane` is a normal and a distance from the origin (`Plane.X`, `Plane.Y`, `Plane.Z`: the planes of unit normals along
+the axes, through the origin). The constructors take the normal as it is; `default(Plane)` and `new Plane()` have the zero
+normal, which orients no plane.
+
+| Member | Description |
+|--------|-------------|
+| `Normal`, `Distance` | Normal and distance from the origin |
+| `GetAngle(Plane)` | Angle between the two normals, acos((n1 · n2) / (\|n1\| \|n2\|)), in [0, π], the quotient clamped to [-1, 1] (parallel normals 0, antiparallel π, near which acos is sensitive: about 3e-8 rad); `InvalidOperationException` for a zero or non-finite normal of this plane, `ArgumentException` (`plane`) for one of the argument (third round of #668: NaN before 11.0.0, also for about a quarter of parallel normals and for normals outside about 1e-154 to 1e154) |
+| `GetAngle(Vector3)` | Angle of the vector to the plane, asin((n · v) / (\|n\| \|v\|)), in [-π/2, π/2], positive on the side of the normal, clamped likewise; `InvalidOperationException` for a zero or non-finite normal of this plane, `ArgumentException` (`vector`) for a zero or non-finite vector |
+
 ## Quaternion
 
 `Quaternion` represents a rotation with W (scalar) and VectorPart (X, Y, Z) components.

@@ -2381,6 +2381,18 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   an exact power of two (| |u| − 1 | 2.220e-16, |u × d| / |d| 1.221e-16; 0.939 ulp per component and 2.125e-16 relative
   magnitude against an 80-digit decimal computation during the triage); bounds twice the Linux x64 worst, provisional
   until the three platforms' CI. `VectorTests`, `QuaternionTests`, `MatirxTests`, `SpacecraftTests`.
+- **`Plane.GetAngle` returned NaN for parallel normals, for normals outside about 1e-154 to 1e154, and for a zero or
+  non-finite normal or vector** (third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)).
+  The quotient (n1 · n2) / (|n1| |n2|) rounded past ±1 for parallel and antiparallel normals, where `Acos` and `Asin`
+  return NaN: NaN in 478 904 of 2e6 pairs of planes (a, a s) and (a, −a s), s in [0.1, 10.1], and in 239 452 of 1e6
+  angles of a vector a s to the plane of normal a. The magnitudes were unscaled (NaN for (1e200, 0, 0), π/4 1.3e-4 rad
+  off for normals near 1e-160), and a zero or non-finite normal or vector (`default(Plane)` included) gave NaN silently.
+  The quotient is now clamped to [-1, 1] (it changes only results that were NaN), computed through the scaled unit
+  vectors of `Normalize` when a sum of squares lies outside [1e-300, 1e300], and a zero or non-finite normal or vector
+  throws (Changed below). Every finite result of before is unchanged bit for bit, so `CelestialBody.HelioSynchronousOrbit`,
+  the library's one call, does not move. `PlaneTests` checks 1e5 parallel and antiparallel pairs against the closed forms
+  0, π and ±π/2 (MEASURE 2.980e-8 rad, the √(2ε) of acos and asin one ulp from ±1; bound twice the Linux x64 worst,
+  provisional until the three platforms' CI), π/4 between normals at 2^±1000 and 2^-1070 within one ulp, and the throws.
 
 **Changed**
 
@@ -3238,6 +3250,11 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   (NaN, 0, 0)). A finite non-zero vector or quaternion of any size now normalizes, where a tiny one threw and a huge one
   gave zero, and `Magnitude()` gives its representable magnitude, where it gave 0 or +Infinity. Migration: check
   `double.IsFinite` on the components first, or catch `InvalidOperationException`.
+- **Breaking: `Plane.GetAngle(Plane)` and `Plane.GetAngle(Vector3)` throw for a zero or non-finite normal or vector**
+  (third round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above):
+  `InvalidOperationException` when the normal of the plane itself is zero or has a component that is not finite
+  (`default(Plane)` and `new Plane()` included), `ArgumentException` (`plane`, `vector`) for such an argument, where they
+  returned NaN. The constructors still take any normal. Migration: give planes a finite non-zero normal, or catch.
 
 **Removed**
 
