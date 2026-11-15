@@ -124,7 +124,9 @@ public class Star : CelestialBody
     /// <summary>
     /// Always null: the directory of an older design that wrote the propagation to files. A star keeps its propagated
     /// states in memory and writes them only through <see cref="WriteEphemeris"/>, to the file its caller gives.
+    /// Obsolete since 11.0.0: read <see cref="IsPropagated"/>, and write the states with <see cref="WriteEphemeris"/>.
     /// </summary>
+    [Obsolete("Always null: a star keeps its propagated states in memory. Read IsPropagated to know whether it holds them, and write them with WriteEphemeris.")]
     public DirectoryInfo PropagationOutput { get; private set; }
 
     /// <summary>
@@ -137,13 +139,28 @@ public class Star : CelestialBody
     public bool IsPropagated => Volatile.Read(ref _propagatedStates).Length > 0;
 
     /// <summary>
-    /// Gets the equatorial coordinates of the star at a specific epoch.
+    /// The Julian years from the catalog epoch to <paramref name="epoch"/>, the calendars of the two times as they are
+    /// (as <see cref="Time.ToJulianDate"/> reads them), from the exact difference of their ticks rounded once to a double.
+    /// </summary>
+    /// <remarks>
+    /// Before 11.0.0 it was the difference of the two Julian dates, each rounded to a double near 2.45e6 (4.66e-10 day,
+    /// about 40 µs) before the subtraction: off whole and half days from J2000 the star was that of an epoch up to about
+    /// 20 µs away, half that resolution.
+    /// </remarks>
+    private double JulianYearsFromCatalogEpoch(Time epoch)
+    {
+        return (epoch.DateTime.Ticks - Epoch.DateTime.Ticks) / (double)TimeSpan.TicksPerDay / Time.JULIAN_YEAR;
+    }
+
+    /// <summary>
+    /// Gets the equatorial coordinates of the star at a specific epoch: those of the catalog epoch plus the proper motions
+    /// times dt, the Julian years from the catalog epoch, from the exact difference of the ticks.
     /// </summary>
     /// <param name="epoch">The epoch time for the coordinates.</param>
     /// <returns>The equatorial coordinates at the specified epoch.</returns>
     public Equatorial GetEquatorialCoordinates(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
+        var dt = JulianYearsFromCatalogEpoch(epoch);
         var dec = (EquatorialCoordinatesAtEpoch.Declination + dt * DeclinationProperMotion) % Constants.PI2;
 
         var ra = (EquatorialCoordinatesAtEpoch.RightAscension + dt * RightAscensionProperMotion) % Constants._2PI;
@@ -156,24 +173,26 @@ public class Star : CelestialBody
     }
 
     /// <summary>
-    /// Gets the sigma value for right ascension at a specific epoch.
+    /// Gets the sigma value for right ascension at a specific epoch, dt the Julian years from the catalog epoch, from the
+    /// exact difference of the ticks.
     /// </summary>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for right ascension at the specified epoch.</returns>
     public double GetRightAscensionSigma(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
+        var dt = JulianYearsFromCatalogEpoch(epoch);
         return System.Math.Sqrt(System.Math.Pow(RightAscensionSigma, 2) + System.Math.Pow(dt * RightAscensionSigmaProperMotion, 2)) % Constants._2PI;
     }
 
     /// <summary>
-    /// Gets the sigma value for declination at a specific epoch.
+    /// Gets the sigma value for declination at a specific epoch, dt the Julian years from the catalog epoch, from the exact
+    /// difference of the ticks.
     /// </summary>
     /// <param name="epoch">The epoch time for the sigma value.</param>
     /// <returns>The sigma value for declination at the specified epoch.</returns>
     public double GetDeclinationSigma(Time epoch)
     {
-        var dt = (epoch.ToJulianDate() - Epoch.ToJulianDate()) / Time.JULIAN_YEAR;
+        var dt = JulianYearsFromCatalogEpoch(epoch);
         return System.Math.Sqrt(System.Math.Pow(DeclinationSigma, 2) + System.Math.Pow(dt * DeclinationSigmaProperMotion, 2)) % Constants.PI2;
     }
 
