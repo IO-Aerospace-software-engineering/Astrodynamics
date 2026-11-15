@@ -54,9 +54,9 @@ public class LambertSolver
         double s = (c + r1Norm + r2Norm) / 2.0;
 
         // Check if the transfer is possible
-        Vector3 ir1 = r1.Normalize();
-        Vector3 ir2 = r2.Normalize();
-        Vector3 ih = ir1.Cross(ir2).Normalize();
+        Vector3 ir1 = r1.NormalizeOrZero();
+        Vector3 ir2 = r2.NormalizeOrZero();
+        Vector3 ih = ir1.Cross(ir2).NormalizeOrZero();
 
         if (System.Math.Abs(ih.Z) < 1e-12)
             throw new ArgumentException("The angular momentum vector has no z component, cannot define transfer direction.");
@@ -78,8 +78,8 @@ public class LambertSolver
             it2 = ih.Cross(ir2);
         }
 
-        it1 = it1.Normalize();
-        it2 = it2.Normalize();
+        it1 = it1.NormalizeOrZero();
+        it2 = it2.NormalizeOrZero();
 
         // If the transfer is retrograde, invert the lambda and the in-plane vectors
         if (isRetrograde)

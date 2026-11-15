@@ -185,7 +185,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
         }
 
         var sv = ToStateVector();
-        _eccentricVector = (sv.Velocity.Cross(SpecificAngularMomentum()) / Observer.GM) - sv.Position.Normalize();
+        _eccentricVector = (sv.Velocity.Cross(SpecificAngularMomentum()) / Observer.GM) - sv.Position.NormalizeOrZero();
         return _eccentricVector.Value;
     }
 
@@ -736,7 +736,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             _perigeevector = Vector3.VectorX * SemiMajorAxis();
         }
 
-        _perigeevector ??= EccentricityVector().Normalize() * SemiMajorAxis() * (1.0 - Eccentricity());
+        _perigeevector ??= EccentricityVector().NormalizeOrZero() * SemiMajorAxis() * (1.0 - Eccentricity());
         return _perigeevector.Value;
     }
 
@@ -776,7 +776,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
             _apogeeVector = Vector3.VectorX.Inverse() * SemiMajorAxis();
         }
 
-        _apogeeVector ??= EccentricityVector().Normalize().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
+        _apogeeVector ??= EccentricityVector().NormalizeOrZero().Inverse() * SemiMajorAxis() * (1.0 + Eccentricity());
         return _apogeeVector.Value;
     }
 
@@ -964,9 +964,11 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     }
 
     /// <summary>
-    /// Converts the orbital parameters to equatorial coordinates.
+    /// Converts the orbital parameters to equatorial coordinates: the right ascension and declination in ICRF, whatever
+    /// the frame of the orbital parameters (#680), see <see cref="Equatorial(StateVector)"/>.
     /// </summary>
-    /// <returns>The equatorial coordinates.</returns>
+    /// <returns>The equatorial coordinates of the position relative to the observer, in ICRF.</returns>
+    /// <exception cref="InvalidOperationException">The data do not give the orientation of the frame at the epoch.</exception>
     public Equatorial ToEquatorial()
     {
         _equatorial ??= new Equatorial(ToStateVector());

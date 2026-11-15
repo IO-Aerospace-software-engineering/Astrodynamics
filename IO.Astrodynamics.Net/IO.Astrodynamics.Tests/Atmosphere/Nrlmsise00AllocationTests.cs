@@ -141,7 +141,9 @@ public class Nrlmsise00AllocationTests
             new Nrlmsise00Model(SpaceWeather.Nominal));
         var contextOnly = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch, null,
             new ContextOnlyModel());
+        // An Earth without a model takes NRLMSISE-00 at nominal space weather (#674); another body has no atmosphere
         var none = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Epoch);
+        var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Epoch);
 
         foreach (var context in Grid())
         {
@@ -155,7 +157,8 @@ public class Nrlmsise00AllocationTests
             AssertSameBits(contextOnly.GetAirDensity(context),
                 contextOnly.GetAirDensity(context.Altitude, latitude, longitude, epoch));
 
-            Assert.Equal(0.0, none.GetAirDensity(context.Altitude, latitude, longitude, epoch));
+            AssertSameBits(nrlmsise.GetAirDensity(context), none.GetAirDensity(context.Altitude, latitude, longitude, epoch));
+            Assert.Equal(0.0, moon.GetAirDensity(context.Altitude, latitude, longitude, epoch));
         }
     }
 

@@ -138,7 +138,13 @@ spacecraft can take another integrator:
 
 An integrator receives the forces of the spacecraft it propagates, so it must not be shared between spacecraft:
 the batch, Monte Carlo and scenario entry points take a factory that returns a new instance for each spacecraft.
-`Scenario.SimulateAsync` refuses a factory that returns the same instance twice.
+`Scenario.SimulateAsync` refuses a factory that returns the same instance twice. Every entry point that builds the
+forces takes its integrator atomically and throws `ArgumentException` (`integrator`) for one that already holds forces
+or was already used by such an entry point, a second `CentralBodyPropagatorBuilder.Build()` included; in a batch or a
+Monte Carlo campaign whose factory returns one instance, one task runs and the others fail with that exception (#674).
+An integrator whose forces the caller added goes to the `CentralBodyPropagator` constructor without celestial bodies,
+after its `Initialize`. The step of `VVIntegrator` and of every entry point must be positive
+(`ArgumentOutOfRangeException` otherwise).
 
 ```csharp
 var summary = await scenario.SimulateAsync(false, false, TimeSpan.FromSeconds(10.0),

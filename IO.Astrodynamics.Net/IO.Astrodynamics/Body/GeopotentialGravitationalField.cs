@@ -75,6 +75,18 @@ public class GeopotentialGravitationalField : GravitationalField
     internal GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees,
         double? gravitationalParameter, double? referenceRadius, double bodyGravitationalParameter,
         string modelName, GeopotentialCentralTerm centralTerm = GeopotentialCentralTerm.BodyGravitationalParameter)
+        : this(new GeopotentialModelReader(geopotentialModelFile), maxDegrees, gravitationalParameter, referenceRadius,
+            bodyGravitationalParameter, modelName, centralTerm)
+    {
+    }
+
+    /// <summary>
+    /// A field from coefficients already read: those of a <see cref="GeopotentialModelParameters"/>, shared by every
+    /// body built from it (#674). The reader is only read; the field keeps its own table and buffers.
+    /// </summary>
+    internal GeopotentialGravitationalField(GeopotentialModelReader geopotentialModelReader, ushort maxDegrees,
+        double? gravitationalParameter, double? referenceRadius, double bodyGravitationalParameter,
+        string modelName, GeopotentialCentralTerm centralTerm)
     {
         GravitationalParameter = gravitationalParameter;
         ReferenceRadius = referenceRadius;
@@ -96,7 +108,7 @@ public class GeopotentialGravitationalField : GravitationalField
             : 1.0;
 
         MaxDegree = maxDegrees;
-        _geopotentialModelReader = new GeopotentialModelReader(geopotentialModelFile);
+        _geopotentialModelReader = geopotentialModelReader;
 
         // Allocate Legendre buffers
         (_P, _dP) = LegendreFunctions.AllocateLegendreTable(MaxDegree);
@@ -123,6 +135,46 @@ public class GeopotentialGravitationalField : GravitationalField
                 }
             }
         }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Two geopotentials of the same type, degree, constants, central term and coefficients (C and S), the coefficients of
+    /// one reader or equal value by value.
+    /// </remarks>
+    internal override bool HasSameModel(GravitationalField other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        if (other is not GeopotentialGravitationalField field || field.GetType() != GetType() ||
+            field.MaxDegree != MaxDegree || field.GravitationalParameter != GravitationalParameter ||
+            field.ReferenceRadius != ReferenceRadius || field.CentralTerm != CentralTerm ||
+            field.ModelName != ModelName || !field._harmonicsScale.Equals(_harmonicsScale))
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(field._geopotentialModelReader, _geopotentialModelReader))
+        {
+            return true;
+        }
+
+        for (int n = 0; n <= MaxDegree; n++)
+        {
+            for (int m = 0; m <= n; m++)
+            {
+                if (!_coefficients[n][m].C.Equals(field._coefficients[n][m].C) ||
+                    !_coefficients[n][m].S.Equals(field._coefficients[n][m].S))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /// <summary>

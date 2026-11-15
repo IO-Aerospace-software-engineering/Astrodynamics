@@ -475,4 +475,114 @@ public class DateTimeTests
         Assert.Equal(first.DaysFromJ2000() / 36525.0, first.Centuries());
         Assert.NotEqual(first.ToJulianDate(), second.ToJulianDate());
     }
+
+    // #680: a non-finite span has no instant. AddSeconds, AddMilliseconds and AddMicroseconds already throw (#625); DateTime's
+    // AddDays/AddHours/AddMinutes returned the epoch unchanged for NaN (0 ticks) and named their own parameter, value
+    public static TheoryData<string, double, bool> NonFiniteSpans()
+    {
+        var data = new TheoryData<string, double, bool>();
+        foreach (var method in new[] { "days", "hours", "minutes", "julianDate" })
+        {
+            foreach (var value in new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity })
+            {
+                data.Add(method, value, true);
+                data.Add(method, value, false);
+            }
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(NonFiniteSpans))]
+    public void AddDaysHoursMinutesAndCreateFromJD_RejectANonFiniteArgument(string parameter, double value, bool utc)
+    {
+        ITimeFrame frame = utc ? TimeFrame.UTCFrame : TimeFrame.TDBFrame;
+        var epoch = new TimeSystem.Time(2024, 6, 21, 12, 0, 0, frame: frame);
+        Func<TimeSystem.Time> call = parameter switch
+        {
+            "days" => () => epoch.AddDays(value),
+            "hours" => () => epoch.AddHours(value),
+            "minutes" => () => epoch.AddMinutes(value),
+            _ => () => TimeSystem.Time.CreateFromJD(value, frame)
+        };
+
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => call());
+        Assert.Equal(parameter, exception.ParamName);
+    }
+
+    [Fact]
+    public void AddDaysHoursMinutes_FiniteArguments_Unchanged()
+    {
+        // A non-regression check of the guard, not a correctness reference: the result is DateTime's arithmetic, bit for bit
+        // (its truncation is #637's, not this guard's), for 1e5 random spans within ±1e5 days in each unit
+        var random = new Random(680);
+        var baseDate = new DateTime(2024, 6, 21, 12, 0, 0);
+        var tdb = new TimeSystem.Time(baseDate, TimeFrame.TDBFrame);
+        var utc = new TimeSystem.Time(DateTime.SpecifyKind(baseDate, DateTimeKind.Utc), TimeFrame.UTCFrame);
+        for (int i = 0; i < 100000; i++)
+        {
+            double days = (random.NextDouble() * 2.0 - 1.0) * 1.0e5;
+            Assert.Equal(baseDate.AddDays(days).Ticks, tdb.AddDays(days).DateTime.Ticks);
+            Assert.Equal(baseDate.AddHours(days * 24.0).Ticks, tdb.AddHours(days * 24.0).DateTime.Ticks);
+            Assert.Equal(baseDate.AddMinutes(days * 1440.0).Ticks, utc.AddMinutes(days * 1440.0).DateTime.Ticks);
+            Assert.Equal(TimeFrame.TDBFrame, tdb.AddDays(days).Frame);
+            Assert.Equal(TimeFrame.UTCFrame, utc.AddMinutes(days * 1440.0).Frame);
+
+            double julianDate = TimeSystem.Time.JULIAN_J2000 + days;
+            Assert.Equal(TimeSystem.Time.J2000.AddDays(julianDate - TimeSystem.Time.JULIAN_J2000).Ticks,
+                TimeSystem.Time.CreateFromJD(julianDate, TimeFrame.TDBFrame).DateTime.Ticks);
+        }
+    }
+
+    // #680: the day of year counts the days of its year, 365 or 366 by the Gregorian rule (a multiple of 4, not of 100 unless
+    // of 400), and the seconds those of a day without leap second, [0, 86400); year 0 was read as 2000
+    [Theory]
+    [InlineData(0, 1, 0.0, "year")]
+    [InlineData(-1, 1, 0.0, "year")]
+    [InlineData(10000, 1, 0.0, "year")]
+    [InlineData(2024, 0, 0.0, "doy")]
+    [InlineData(2024, -5, 0.0, "doy")]
+    [InlineData(2024, 367, 0.0, "doy")]
+    [InlineData(2023, 366, 0.0, "doy")]
+    [InlineData(1900, 366, 0.0, "doy")]
+    [InlineData(2024, 400, 0.0, "doy")]
+    [InlineData(2024, 1, -1.0, "sec")]
+    [InlineData(2024, 1, -1.0e-7, "sec")]
+    [InlineData(2024, 1, 86400.0, "sec")]
+    [InlineData(2024, 1, 90000.0, "sec")]
+    [InlineData(2024, 1, double.NaN, "sec")]
+    [InlineData(2024, 1, double.PositiveInfinity, "sec")]
+    [InlineData(2024, 1, double.NegativeInfinity, "sec")]
+    // The nearest tick of 86399.99999996 s on 9999-12-31 is 10000-01-01, past DateTime.MaxValue (9999-12-31T23:59:59.9999999):
+    // DateTime threw naming its own parameter, value
+    [InlineData(9999, 365, 86399.99999996, "sec")]
+    public void CreateFromDayOfYear_RejectsOutOfRangeInputs(int year, int doy, double sec, string parameter)
+    {
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => TimeSystem.Time.Create(year, doy, sec));
+        Assert.Equal(parameter, exception.ParamName);
+    }
+
+    [Theory]
+    // The last day of a leap year and of a common year
+    [InlineData(2024, 366, 0.0, 2024, 12, 31, 0L)]
+    [InlineData(2023, 365, 86399.9999999, 2023, 12, 31, 863999999999L)]
+    // The nearest tick of 86399.99999996 s is 86400 s: the next day's midnight, the nearest instant
+    [InlineData(2024, 1, 86399.99999996, 2024, 1, 2, 0L)]
+    // Day 60: 29 February in a leap year (2000, a multiple of 400), 1 March otherwise (1900, a multiple of 100)
+    [InlineData(2000, 60, 0.0, 2000, 2, 29, 0L)]
+    [InlineData(1900, 60, 0.0, 1900, 3, 1, 0L)]
+    [InlineData(1, 1, 0.0, 1, 1, 1, 0L)]
+    [InlineData(9999, 365, 0.0, 9999, 12, 31, 0L)]
+    // The last tick of DateTime (DateTime.MaxValue), and the double nearest 86399.99999995 s, 3.8e-12 s below the half tick past
+    // it (exact decimal expansion), which rounds to it
+    [InlineData(9999, 365, 86399.9999999, 9999, 12, 31, 863999999999L)]
+    [InlineData(9999, 365, 86399.99999995, 9999, 12, 31, 863999999999L)]
+    [InlineData(2024, 1, 43200.5, 2024, 1, 1, 432005000000L)]
+    public void CreateFromDayOfYear_ValidBounds(int year, int doy, double sec, int expectedYear, int month, int day, long ticksOfDay)
+    {
+        var time = TimeSystem.Time.Create(year, doy, sec);
+        Assert.Equal(TimeFrame.UTCFrame, time.Frame);
+        Assert.Equal(new DateTime(expectedYear, month, day, 0, 0, 0, DateTimeKind.Utc).AddTicks(ticksOfDay), time.DateTime);
+    }
 }

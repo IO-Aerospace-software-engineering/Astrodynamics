@@ -729,5 +729,124 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
         }
 
         #endregion
+
+        #region Several messages (#679)
+
+        [Fact]
+        public void TryLoadFromFile_NdmWithTwoOmm_ReturnsFalseWithParseError()
+        {
+            NdmDocuments.WithTempFile(NdmDocuments.TwoOmm(), file =>
+            {
+                var loaded = Omm.TryLoadFromFile(file, out var omm, out var result);
+
+                Assert.False(loaded);
+                Assert.Null(omm);
+                var error = Assert.Single(result.Errors);
+                Assert.Equal("PARSE_ERROR", error.Code);
+                Assert.Contains("2 OMM messages", error.Message);
+            });
+        }
+
+        #endregion
+
+        #region TLE compatibility (#679)
+
+        private static Omm CreateTleOmm(string centerName, string referenceFrame, string theory)
+        {
+            var meanElements = MeanElements.CreateWithMeanMotion(
+                new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), 15.5, 0.001, 51.6, 10.0, 20.0, 30.0);
+            var tleParameters = TleParameters.CreateWithBStarAndDDot(1e-4, 0.0, 0.0, noradCatalogId: 12345,
+                elementSetNumber: 1, revolutionNumberAtEpoch: 10);
+            return new Omm(CcsdsHeader.Create("TEST"),
+                new OmmMetadata("SAT", "2020-001A", centerName, referenceFrame, "UTC", theory),
+                OmmData.CreateForTle(meanElements, tleParameters));
+        }
+
+        // A TLE holds SGP4 mean elements of an Earth orbit in TEME: the library's SGP4 (CSPICE evsgp4_c, WGS-72) takes
+        // nothing else
+        [Theory]
+        [InlineData("MOON", "TEME", "SGP4", new[] { "CENTER_NAME 'MOON'" })]
+        [InlineData("EARTH BARYCENTER", "TEME", "SGP4", new[] { "CENTER_NAME 'EARTH BARYCENTER'" })]
+        [InlineData("EARTH", "ICRF", "SGP4", new[] { "REF_FRAME 'ICRF'" })]
+        [InlineData("EARTH", "EME2000", "SGP4", new[] { "REF_FRAME 'EME2000'" })]
+        [InlineData("EARTH", "TEME", "DSST", new[] { "MEAN_ELEMENT_THEORY 'DSST'" })]
+        [InlineData("EARTH", "TEME", "SGP4-XP", new[] { "MEAN_ELEMENT_THEORY 'SGP4-XP'" })]
+        [InlineData("MOON", "ICRF", "DSST", new[] { "CENTER_NAME 'MOON'", "REF_FRAME 'ICRF'", "MEAN_ELEMENT_THEORY 'DSST'" })]
+        public void IsTleCompatible_MetadataNotSgp4TemeEarth_IsFalse_AndToTleNamesTheKeyword(string centerName,
+            string referenceFrame, string theory, string[] keywordsAtFault)
+        {
+            var omm = CreateTleOmm(centerName, referenceFrame, theory);
+            Assert.True(omm.Data.HasTleParameters);
+
+            Assert.False(omm.IsTleCompatible);
+            var ex = Assert.Throws<InvalidOperationException>(() => omm.ToTle());
+            foreach (var keyword in keywordsAtFault)
+            {
+                Assert.Contains(keyword, ex.Message);
+            }
+
+            Assert.Equal(keywordsAtFault.Length, ex.Message.Split(';').Length);
+            Assert.DoesNotContain("(TLE)", omm.ToString());
+        }
+
+        [Fact]
+        public void ToTle_LoadedMoonOmm_Throws()
+        {
+            var xml = CreateTleOmm("MOON", "TEME", "SGP4").ToXml();
+
+            var loaded = Omm.LoadFromString(xml);
+
+            Assert.False(loaded.IsTleCompatible);
+            var ex = Assert.Throws<InvalidOperationException>(() => loaded.ToTle());
+            Assert.Contains("CENTER_NAME 'MOON'", ex.Message);
+        }
+
+        [Fact]
+        public void IsTleCompatible_CaseAndPaddingInsensitiveSgp4TemeEarth_GivesTheSameTle()
+        {
+            var reference = CreateTleOmm("EARTH", "TEME", "SGP4").ToTle();
+            var lowerCase = CreateTleOmm("earth", "teme", "sgp4");
+            var padded = CreateTleOmm(" EARTH ", "TEME", "SGP4");
+
+            Assert.True(lowerCase.IsTleCompatible);
+            Assert.True(padded.IsTleCompatible);
+            Assert.Contains("(TLE)", padded.ToString());
+            Assert.Equal(reference.Line1, lowerCase.ToTle().Line1);
+            Assert.Equal(reference.Line2, lowerCase.ToTle().Line2);
+            Assert.Equal(reference.Line1, padded.ToTle().Line1);
+            Assert.Equal(reference.Line2, padded.ToTle().Line2);
+        }
+
+        // REF_FRAME and MEAN_ELEMENT_THEORY are xsd:string and read untrimmed: padded, they name TEME and SGP4 as
+        // CENTER_NAME padded names the Earth, and give the TLE of the unpadded OMM (as before 11.0.0)
+        [Fact]
+        public void IsTleCompatible_PaddedFrameAndTheory_GivesTheSameTle()
+        {
+            var reference = CreateTleOmm("EARTH", "TEME", "SGP4").ToTle();
+            var padded = CreateTleOmm(" EARTH ", " TEME ", "SGP4 ");
+
+            Assert.True(padded.IsTleCompatible);
+            Assert.Equal(reference.Line1, padded.ToTle().Line1);
+            Assert.Equal(reference.Line2, padded.ToTle().Line2);
+
+            // The same through the reader, from iss.omm
+            var iss = File.ReadAllText("CCSDS/iss.omm");
+            var issTle = Omm.LoadFromString(iss).ToTle();
+            var loaded = Omm.LoadFromString(iss
+                .Replace("<REF_FRAME>TEME<", "<REF_FRAME> TEME <")
+                .Replace("<MEAN_ELEMENT_THEORY>SGP4<", "<MEAN_ELEMENT_THEORY>SGP4 <"));
+            Assert.Equal(" TEME ", loaded.Metadata.ReferenceFrame);
+            Assert.Equal("SGP4 ", loaded.Metadata.MeanElementTheory);
+            Assert.True(loaded.IsTleCompatible);
+            Assert.Equal(issTle.Line1, loaded.ToTle().Line1);
+            Assert.Equal(issTle.Line2, loaded.ToTle().Line2);
+
+            // A padded theory that is not SGP4 is still not compatible
+            var paddedXp = CreateTleOmm("EARTH", "TEME", " SGP4-XP ");
+            Assert.False(paddedXp.IsTleCompatible);
+            Assert.Contains("MEAN_ELEMENT_THEORY ' SGP4-XP '", Assert.Throws<InvalidOperationException>(() => paddedXp.ToTle()).Message);
+        }
+
+        #endregion
     }
 }

@@ -141,7 +141,7 @@ internal readonly struct OccultationBody
         double y = System.Math.Abs(n.Y);
         double z = System.Math.Abs(n.Z);
         var helper = x <= y && x <= z ? Vector3.VectorX : y <= z ? Vector3.VectorY : Vector3.VectorZ;
-        e1 = helper.Cross(n).Normalize();
+        e1 = helper.Cross(n).NormalizeOrZero();
         e2 = n.Cross(e1);
     }
 }

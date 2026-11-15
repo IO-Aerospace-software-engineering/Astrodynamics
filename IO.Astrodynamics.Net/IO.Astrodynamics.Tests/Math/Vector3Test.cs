@@ -1,10 +1,19 @@
+using System;
 using IO.Astrodynamics.Math;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Math;
 
 public class VectorTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public VectorTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     [Fact]
     public void Createvector()
     {
@@ -213,5 +222,47 @@ public class VectorTests
         Assert.Equal(17.5, m3.X);
         Assert.Equal(35.0, m3.Y);
         Assert.Equal(52.5, m3.Z);
+    }
+
+    // #680: a vector of magnitude 0 has no direction. The magnitude is not scaled, so a vector whose squared components all
+    // underflow (below about 1.5e-162) has magnitude 0 too; Normalize returned the vector itself, silently
+    // The worst | |u| - 1 |, 2.220e-16 (one ulp of 1), and |u x v| / |v|, 2.107e-16, the same on Linux x64, Windows x64 and
+    // macOS arm64 (CI run 43595573884, 2026-11-14); the bounds are twice the worst, rounded up at the second significant digit
+    private const double NormTolerance = 4.5e-16;
+
+    private const double CrossTolerance = 4.3e-16;
+
+    [Fact]
+    public void Normalize_OfZero_Throws_AndOfANonZeroIsAParallelUnitVector()
+    {
+        Assert.Throws<InvalidOperationException>(() => Vector3.Zero.Normalize());
+        Assert.Throws<InvalidOperationException>(() => new Vector3(1e-170, 0.0, 0.0).Normalize());
+        Assert.Throws<InvalidOperationException>(() => new Vector3(-0.0, 0.0, -1e-163).Normalize());
+
+        // The closed form: the unit vector of v has norm 1 and is parallel to v, checked through its norm and the cross
+        // product, not through the quotient the code computes; magnitudes from 1e-150 to 1e150, log-uniform
+        var random = new Random(680);
+        double worstNorm = 0.0;
+        double worstCross = 0.0;
+        for (int i = 0; i < 10000; i++)
+        {
+            double magnitude = System.Math.Pow(10.0, random.NextDouble() * 300.0 - 150.0);
+            var direction = new Vector3(random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0);
+            if (direction.Magnitude() < 0.1) continue;
+            var v = direction * magnitude;
+
+            var u = v.Normalize();
+
+            worstNorm = System.Math.Max(worstNorm, System.Math.Abs(u.Magnitude() - 1.0));
+            // The direction the vector was scaled from, parallel to it within the rounding of the scaling
+            worstCross = System.Math.Max(worstCross, u.Cross(direction).Magnitude() / direction.Magnitude());
+            // The former code, bit for bit: the vector over its magnitude
+            Assert.Equal(new Vector3(v.X / v.Magnitude(), v.Y / v.Magnitude(), v.Z / v.Magnitude()), u);
+        }
+
+        _output.WriteLine($"MEASURE #680 Normalize | |u| - 1 |: {worstNorm:E3}");
+        _output.WriteLine($"MEASURE #680 Normalize |u x v| / |v|: {worstCross:E3}");
+        Assert.True(worstNorm <= NormTolerance, $"{worstNorm:E3}");
+        Assert.True(worstCross <= CrossTolerance, $"{worstCross:E3}");
     }
 }

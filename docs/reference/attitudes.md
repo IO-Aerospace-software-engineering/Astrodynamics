@@ -13,7 +13,7 @@ All attitude maneuvers inherit from the abstract `Attitude` class.
 | `ManeuverCenter` | Property | The central body for the maneuver frame |
 | `MinimumEpoch` | Property | Earliest epoch at which the attitude can activate: it activates at the later of this epoch and the end of the window of the previous maneuver of the chain |
 | `ManeuverHoldDuration` | Property | How long the attitude is held before the next maneuver of the chain may start; the law stays in force until the next activation. TT seconds about the Earth (#547) |
-| `Engine` | Property | The engine associated with this maneuver |
+| `Engine` | Property | The engine associated with this maneuver, whose fuel tank is the propagated spacecraft's: the attitude takes that spacecraft's body axes, and a propagation whose attitude's tank is another spacecraft's, or no spacecraft's, throws `InvalidOperationException` before it runs (#676, #586; before, it ran with the static or the other spacecraft's axes) |
 
 **Constructor** (used by all concrete attitude types):
 
@@ -120,8 +120,15 @@ var attitude = new TriadAttitude(
 
 | Method | Primary | Secondary | Description |
 |--------|---------|-----------|-------------|
-| `TriadAttitude.CreateLVLH(maneuverCenter, epoch, duration, engine)` | Down toward Nadir | Front toward Prograde | Local Vertical / Local Horizontal attitude |
-| `TriadAttitude.CreateProgradeWithSunTracking(maneuverCenter, epoch, duration, sun, engine)` | Front toward Prograde | Up toward Sun | Prograde with solar-panel Sun tracking |
+| `TriadAttitude.CreateLVLH(maneuverCenter, epoch, duration, engine)` | the spacecraft's `BodyDown` toward Nadir | its `BodyFront` toward Prograde | Local Vertical / Local Horizontal attitude |
+| `TriadAttitude.CreateProgradeWithSunTracking(maneuverCenter, epoch, duration, sun, engine)` | the spacecraft's `BodyFront` toward Prograde | its `BodyUp` toward Sun | Prograde with solar-panel Sun tracking |
+
+The axes are those of the spacecraft that carries the engine's tank, read at execution; while the tank is on no
+spacecraft, the static `Spacecraft.Down`, `Front` and `Up`. `PrimaryBodyVector` and `SecondaryBodyVector` of a factory
+attitude return those axes. Before 11.0.0 the factories pointed the static axes whatever the spacecraft's, 90° off for
+a spacecraft whose front is +X or +Z (#677); for that attitude, pass the static axes to the constructor:
+`new TriadAttitude(center, epoch, duration, Spacecraft.Down, OrbitalDirectionTarget.Nadir, Spacecraft.Front,
+OrbitalDirectionTarget.Prograde, engine)`.
 
 ```csharp
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
@@ -143,7 +150,7 @@ Each spacecraft has configurable body axes that define the physical orientation 
 | `Spacecraft.Up` | Zenith-facing | +Z |
 | `Spacecraft.Down` | Nadir-facing | -Z |
 
-Instance-level overrides can be set via the `Spacecraft` constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be orthogonal and right-handed. All attitude maneuvers use `GetBodyFront()` which reads per-instance axes with fallback to the static default.
+Instance-level overrides can be set via the `Spacecraft` constructor parameters (`bodyFront`, `bodyRight`, `bodyUp`). Custom axes must be orthogonal and right-handed. The axes are read on the spacecraft that carries the engine's tank, at execution, with the static axes as fallback while the tank is on no spacecraft, which a read outside a propagation alone meets (a propagation of an attitude whose tank is not the propagated spacecraft's throws, see `Engine` above, #676): the single-vector attitudes (`NadirAttitude`, `ZenithAttitude`, `ProgradeAttitude`, `RetrogradeAttitude`, `NormalAttitude`, `AntiNormalAttitude`) and the attitude of an impulse point `BodyFront` (`GetBodyFront()`), `TriadAttitude.CreateLVLH` points `BodyDown` and `BodyFront`, and `TriadAttitude.CreateProgradeWithSunTracking` `BodyFront` and `BodyUp` (#677). The `TriadAttitude` constructors take literal body vectors: pass `sc.BodyFront`, `sc.BodyUp`, ... for a spacecraft's own axes. `InstrumentPointingToAttitude` points the instrument's boresight.
 
 ## The attitude timeline
 

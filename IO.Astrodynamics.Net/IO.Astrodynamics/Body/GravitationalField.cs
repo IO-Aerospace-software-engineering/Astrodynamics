@@ -21,7 +21,17 @@ public class GravitationalField
         CelestialItem centerOfMotion = stateVector.Observer as CelestialItem;
         var position = stateVector.Position;
 
-        return position.Normalize() * (-centerOfMotion.GM / System.Math.Pow(position.Magnitude(), 2.0));
+        return position.NormalizeOrZero() * (-centerOfMotion.GM / System.Math.Pow(position.Magnitude(), 2.0));
+    }
+
+    /// <summary>
+    /// Whether <paramref name="other"/> gives the same acceleration for the same body: two point masses, or the same
+    /// instance; a field derived by a user is equal to itself only (#674).
+    /// </summary>
+    internal virtual bool HasSameModel(GravitationalField other)
+    {
+        return ReferenceEquals(this, other) ||
+               (other != null && GetType() == typeof(GravitationalField) && other.GetType() == typeof(GravitationalField));
     }
 
     /// <summary>

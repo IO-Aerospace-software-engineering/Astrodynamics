@@ -57,13 +57,27 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     public OrbitalParameters.OrbitalParameters InitialOrbitalParameters { get; internal set; }
 
     /// <summary>
-    /// A collection of satellites orbiting the celestial item.
+    /// The satellites orbiting the celestial item, held weakly, by instance (#676).
     /// </summary>
-    private readonly HashSet<CelestialItem> _satellites = new();
+    private readonly WeakSatellites _satellites = new();
 
     /// <summary>
-    /// Gets a read-only collection of satellites orbiting the celestial item.
+    /// Whether the item is listed by an observer of any kind (the natural-body constructor), or by a
+    /// <see cref="CelestialBody"/> observer only (the constructor of custom parameters).
     /// </summary>
+    private readonly bool _listedByAnyObserver;
+
+    /// <summary>
+    /// Gets a read-only collection of satellites orbiting the celestial item: the instances whose initial orbital
+    /// parameters have it as observer, by reference, whose constructor completed (#676).
+    /// </summary>
+    /// <remarks>
+    /// A live view: the collection holds its items weakly, so that an item referenced nowhere else leaves it when it is
+    /// collected, and is safe across threads, constructions about one body on several threads included. Two items of one
+    /// NAIF id are both listed. The order of the enumeration is not specified; <see cref="IReadOnlyCollection{T}.Count"/>
+    /// enumerates. Before 11.0.0 it held its items strongly in a set compared by NAIF id, without a lock, and listed an
+    /// item whose constructor then threw.
+    /// </remarks>
     public IReadOnlyCollection<CelestialItem> Satellites => _satellites;
 
     /// <summary>
@@ -140,6 +154,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     protected CelestialItem(int naifId, Frame frame, in Time epoch, GeopotentialModelParameters geopotentialModelParameters = null)
     {
         _dataProvider = Configuration.Instance.DataProvider;
+        _listedByAnyObserver = true;
         ExtendedInformation = _dataProvider.GetCelestialBodyInfo(naifId);
 
         NaifId = naifId;
@@ -158,19 +173,30 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         if (NaifId == 0) return;
         if (IsPlanet || IsMoon || IsBarycenter || IsSun)
             InitialOrbitalParameters = ReadStateAboutBarycenter(epoch, frame);
-
-        (InitialOrbitalParameters?.Observer as CelestialItem)?._satellites.Add(this);
     }
 
     // The state about the barycenter of the body's system; null when the loaded kernels do not chain the body to it (Mars
     // to Pluto and their moons with de440s alone), and the sphere of influence of a CelestialBody is then +Infinity, as
     // for a body built from custom parameters. Before #454 the native read returned an undefined state there; a read
-    // that needs the body's position still throws
+    // that needs the body's position still throws. A provider without information on the barycentre, which SPICE always
+    // names (0 to 9), throws ArgumentException for its identifier (MemoryDataProvider, #680): the identifier is the
+    // library's, not the caller's, and the barycentre's information is missing data, so the body builds without an orbit
+    // as when the barycentre's state is missing, and as the same body built on SPICE
     private OrbitalParameters.OrbitalParameters ReadStateAboutBarycenter(in Time epoch, Frame frame)
     {
+        Barycenter barycenter;
         try
         {
-            return GetEphemeris(epoch, new Barycenter(BarycenterOfMotionId, epoch), frame, Aberration.None);
+            barycenter = new Barycenter(BarycenterOfMotionId, epoch);
+        }
+        catch (Exception e) when (e is ArgumentException or InvalidOperationException)
+        {
+            return null;
+        }
+
+        try
+        {
+            return GetEphemeris(epoch, barycenter, frame, Aberration.None);
         }
         catch (InvalidOperationException)
         {
@@ -206,14 +232,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         Mass = mass;
         GM = mass * Constants.G;
         InitialOrbitalParameters = initialOrbitalParameters;
-
-
-        (InitialOrbitalParameters?.Observer as CelestialBody)?._satellites.Add(this);
         GravitationalField = CreateGravitationalField(naifId, GM, geopotentialModelParameters);
     }
 
-    // The NAIF identifier of the Earth, whose geopotential is EGM2008 unless its parameters give other constants
-    private const int EarthNaifId = 399;
+    // The NAIF identifier of the Earth, whose geopotential is EGM2008 unless its parameters give other constants, and
+    // whose atmosphere without a model is NRLMSISE-00 at nominal space weather
+    private protected const int EarthNaifId = 399;
 
     /// <summary>
     /// The gravitational field of a body: the point mass, or the geopotential of <paramref name="parameters"/>, its
@@ -241,7 +265,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
             modelName = "EGM2008";
         }
 
-        return new GeopotentialGravitationalField(parameters.GeopotentialModelPath, parameters.GeopotentialDegree,
+        // The coefficients of the parameters, read once and shared by every body built from them (#674)
+        return new GeopotentialGravitationalField(parameters.ModelReader, parameters.GeopotentialDegree,
             gravitationalParameter, referenceRadius, gm, modelName, parameters.CentralTerm);
     }
 
@@ -260,6 +285,20 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
         return new CelestialBody(naifId);
     }
 
+    /// <summary>
+    /// Lists the item by the observer of its initial orbital parameters: any observer for the natural-body constructor, a
+    /// <see cref="CelestialBody"/> only for the constructor of custom parameters. The last statement of each constructor
+    /// of a derived class that does not chain to another one, after every check, so that a constructor that throws lists
+    /// nothing (#676).
+    /// </summary>
+    private protected void RegisterWithObserver()
+    {
+        var observer = _listedByAnyObserver
+            ? InitialOrbitalParameters?.Observer as CelestialItem
+            : InitialOrbitalParameters?.Observer as CelestialBody;
+        observer?.AddSatellite(this);
+    }
+
     internal void AddSatellite(CelestialItem celestialItem)
     {
         _satellites.Add(celestialItem);
@@ -273,6 +312,12 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <summary>
     /// Get ephemeris
     /// </summary>
+    /// <remarks>
+    /// The states every <paramref name="stepSize"/> from the start of the window, placed in its calendar
+    /// (<c>StartDate + i · stepSize</c>), up to its end. Across a leap second the window's <see cref="Window.Length"/> counts
+    /// one second more than its calendar: the end bounds the samples, so that none lies past it (#682; before 11.0.0 the
+    /// last state of such a window could lie one second past its end).
+    /// </remarks>
     /// <param name="searchWindow"></param>
     /// <param name="observer"></param>
     /// <param name="frame"></param>
@@ -281,11 +326,17 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// <returns></returns>
     public IEnumerable<OrbitalParameters.OrbitalParameters> GetEphemeris(in Window searchWindow, ILocalizable observer, Frame frame, Aberration aberration, in TimeSpan stepSize)
     {
+        // An upper bound of the count: the Length counts the leap seconds the calendar placement does not
         var occurences = (int)((searchWindow.Length / stepSize) + 1);
         var ephemeris = new List<OrbitalParameters.OrbitalParameters>(occurences);
         for (int i = 0; i < occurences; i++)
         {
             var epoch = searchWindow.StartDate + stepSize * i;
+            if (epoch > searchWindow.EndDate)
+            {
+                break;
+            }
+
             ephemeris.Add(GetEphemeris(epoch, observer, frame, aberration));
         }
 
@@ -576,7 +627,7 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                               fromPosition.ToStateVector().Position;
         var target2Position = this.GetEphemeris(epoch, fromPosition.Observer, fromPosition.Frame, aberration).ToStateVector().Position -
                               fromPosition.ToStateVector().Position;
-        return target1Position.Normalize().Angle(target2Position.Normalize());
+        return target1Position.NormalizeOrZero().Angle(target2Position.NormalizeOrZero());
     }
 
 
@@ -1043,7 +1094,8 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 evaluateCoordinates = date =>
                 {
                     var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                    var equatorial = stateVector.ToEquatorial();
+                    // The angles in the search frame, as gfposc, not rotated to ICRF as ToEquatorial (#680)
+                    var equatorial = Equatorial.FromPositionInFrame(stateVector.Position, stateVector.Epoch);
                     return coordinate switch
                     {
                         Coordinate.Declination => equatorial.Declination,
@@ -1069,18 +1121,11 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
                 };
                 break;
             case CoordinateSystem.Planetographic:
+                // CSPICE's PLANETOGRAPHIC (#682): the sense of the longitude of the observer's body read once, at the start
+                bool positiveWest = observer is CelestialBody observerBody &&
+                                    GeodeticCoordinates.IsPlanetographicLongitudePositiveWest(observerBody, searchWindow.StartDate);
                 evaluateCoordinates = date =>
-                {
-                    var stateVector = GetEphemeris(date, observer, frame, aberration).ToStateVector();
-                    var planetographic = stateVector.ToPlanetocentric(aberration);
-                    return coordinate switch
-                    {
-                        Coordinate.Latitude => planetographic.Latitude,
-                        Coordinate.Longitude => planetographic.Longitude,
-                        Coordinate.Radius => planetographic.Radius,
-                        _ => throw new ArgumentOutOfRangeException()
-                    };
-                };
+                    GeodeticCoordinates.PlanetographicCoordinate(GetEphemeris(date, observer, frame, aberration).ToStateVector(), coordinate, positiveWest);
                 break;
         }
 
@@ -1091,12 +1136,78 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
 
     #region Operators
 
+    /// <summary>
+    /// The identifier, name, mass (kg) and GM (m^3/s^2) of the item, one "title : value" line each, every number in the
+    /// shortest form that parses back to its property in the invariant culture (#681: the mass and GM were printed to 7
+    /// significant digits, GM under "m^3.s^2").
+    /// </summary>
     public override string ToString()
     {
         return $"{"Identifier :",TITLE_WIDTH} {NaifId,-VALUE_WIDTH}{Environment.NewLine}" +
                $"{"Name :",TITLE_WIDTH} {Name,-VALUE_WIDTH}{Environment.NewLine}" +
-               $"{"Mass (kg) :",TITLE_WIDTH} {Mass.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}" +
-               $"{"GM (m^3.s^2):",TITLE_WIDTH} {GM.ToString("E", CultureInfo.InvariantCulture),-VALUE_WIDTH:E}{Environment.NewLine}";
+               $"{"Mass (kg) :",TITLE_WIDTH} {Mass.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}" +
+               $"{"GM (m^3/s^2) :",TITLE_WIDTH} {GM.ToString(CultureInfo.InvariantCulture),-VALUE_WIDTH}{Environment.NewLine}";
+    }
+
+    /// <summary>
+    /// What differs between the models of this body and of <paramref name="other"/>, a body of the same NAIF identifier,
+    /// for the message of a rejected pair; null when they give the same forces: the same GM, the same gravitational field
+    /// (<see cref="GravitationalField.HasSameModel"/>) and, for two <see cref="CelestialBody"/>, the same radii and the same
+    /// atmospheric model (#674). Albedo and thermal properties are not compared: the forces of a propagation built from
+    /// its bodies do not read them.
+    /// </summary>
+    internal virtual string ModelDifference(CelestialItem other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return null;
+        }
+
+        if (!GM.Equals(other.GM))
+        {
+            return string.Create(CultureInfo.InvariantCulture, $"GM ({GM:R} and {other.GM:R} m³/s²)");
+        }
+
+        if (!GravitationalField.HasSameModel(other.GravitationalField))
+        {
+            return "gravitational field";
+        }
+
+        return (this is CelestialBody) == (other is CelestialBody) ? null : "kind of body";
+    }
+
+    /// <summary>
+    /// Rejects listed bodies of one NAIF identifier whose models differ, before any of them is dropped as a duplicate: the
+    /// bodies of the central body's identifier against <paramref name="centralBody"/>, the others against the first of
+    /// their identifier (#674). A propagation takes one model per body.
+    /// </summary>
+    /// <param name="centralBody">The central body of the propagation, the observer of the orbit or the Sun.</param>
+    /// <param name="bodies">The listed bodies.</param>
+    /// <param name="paramName">The name of the list, for the exception.</param>
+    /// <exception cref="ArgumentException">Two bodies of one NAIF identifier have different models.</exception>
+    internal static void RequireOneModelPerBody(CelestialItem centralBody, IReadOnlyList<CelestialItem> bodies,
+        string paramName)
+    {
+        foreach (var group in bodies.Where(b => b != null).GroupBy(b => b.NaifId))
+        {
+            bool central = centralBody != null && group.Key == centralBody.NaifId;
+            var reference = central ? centralBody : group.First();
+            foreach (var body in group)
+            {
+                var difference = reference.ModelDifference(body);
+                if (difference == null)
+                {
+                    continue;
+                }
+
+                throw new ArgumentException(central
+                    ? $"The listed body {body.Name} (NAIF {body.NaifId}) has another {difference} than {reference.Name}, " +
+                      "the central body of the orbit: a propagation takes the models of its central body. List the " +
+                      "observer of the orbit itself, or build the orbit on the listed body."
+                    : $"The listed bodies {reference.Name} and {body.Name} (NAIF {body.NaifId}) differ by their " +
+                      $"{difference}: a propagation takes one model per body. List one of them.", paramName);
+            }
+        }
     }
 
     public bool Equals(CelestialItem other)

@@ -2,7 +2,9 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using IO.Astrodynamics.CCSDS.OPM;
 using Xunit;
 
@@ -323,5 +325,83 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
             // Act & Assert
             Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml));
         }
+
+        #region Several messages (#679)
+
+        private static string TwoOpmNdm()
+        {
+            var epoch = new DateTime(2024, 1, 15, 12, 0, 0, DateTimeKind.Utc);
+            var first = Opm.CreateMinimal("FIRST", "2024-001A", "EARTH", "ICRF", "UTC", new OpmStateVector(epoch, 6778.137, 0.0, 0.0, 0.0, 7.5, 0.0));
+            var second = Opm.CreateMinimal("SECOND", "2024-002A", "EARTH", "ICRF", "UTC", new OpmStateVector(epoch, 7000.0, 0.0, 0.0, 0.0, 7.4, 0.0));
+            return NdmDocuments.TwoOpm(first, second);
+        }
+
+        [Theory]
+        [InlineData("OpmReader.ReadFromString")]
+        [InlineData("Opm.LoadFromString")]
+        [InlineData("Opm.LoadFromString without schema validation")]
+        [InlineData("Opm.LoadFromFile")]
+        [InlineData("Opm.LoadFromStream")]
+        [InlineData("OpmReader.ReadFromFile")]
+        [InlineData("OpmReader.ReadFromStream")]
+        public void Read_NdmWithTwoOpm_Throws(string path)
+        {
+            var xml = TwoOpmNdm();
+            Assert.True(new OpmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+            Action read = path switch
+            {
+                "OpmReader.ReadFromString" => () => _reader.ReadFromString(xml),
+                "Opm.LoadFromString" => () => Opm.LoadFromString(xml),
+                "Opm.LoadFromFile" => () => NdmDocuments.WithTempFile(xml, file => Opm.LoadFromFile(file)),
+                "Opm.LoadFromStream" => () => Opm.LoadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
+                "OpmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
+                "OpmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(Encoding.UTF8.GetBytes(xml))),
+                _ => () => Opm.LoadFromString(xml, validateSchema: false)
+            };
+
+            var ex = Assert.Throws<OpmParseException>(read);
+            Assert.Contains("2 OPM messages", ex.Message);
+        }
+
+        [Fact]
+        public void TryLoadFromFile_NdmWithTwoOpm_ReturnsFalseWithParseError()
+        {
+            NdmDocuments.WithTempFile(TwoOpmNdm(), file =>
+            {
+                var loaded = Opm.TryLoadFromFile(file, out var opm, out var result);
+
+                Assert.False(loaded);
+                Assert.Null(opm);
+                var error = Assert.Single(result.Errors);
+                Assert.Equal("PARSE_ERROR", error.Code);
+                Assert.Contains("2 OPM messages", error.Message);
+            });
+        }
+
+        [Fact]
+        public void ValidateFile_NdmWithTwoOpm_IsInvalid()
+        {
+            NdmDocuments.WithTempFile(TwoOpmNdm(), file =>
+            {
+                var result = new OpmValidator().ValidateFile(file);
+
+                Assert.False(result.IsValid);
+                var error = Assert.Single(result.Errors);
+                Assert.Contains("2 OPM messages", error.Message);
+            });
+        }
+
+        [Fact]
+        public void Read_NonNdmRootWithTwoNestedOpm_Throws()
+        {
+            var opm = XDocument.Parse(TwoOpmNdm()).Root.Elements().First();
+            var xml = new XElement("wrapper", new XElement("a", new XElement(opm)), new XElement("b", new XElement(opm))).ToString();
+
+            var ex = Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml));
+            Assert.Contains("2 OPM messages", ex.Message);
+        }
+
+        #endregion
     }
 }

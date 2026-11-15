@@ -189,9 +189,9 @@ Singleton class providing access to SPICE operations.
 | Method | Description |
 |--------|-------------|
 | `LoadKernels(FileSystemInfo path)` | Load SPICE kernel(s) from file or directory |
-| `UnloadKernels(FileSystemInfo path)` | Unload SPICE kernel(s) |
+| `UnloadKernels(FileSystemInfo path)` | Unload the files a load handed SPICE, even after the path was deleted; a file of a loaded directory leaves its other files listed (#673) |
 | `ClearKernels()` | Unload all kernels |
-| `GetLoadedKernels()` | Get list of currently loaded kernels |
+| `GetLoadedKernels()` | Get list of currently loaded paths |
 | `GetSpiceVersion()` | Get SPICE toolkit version |
 | `ReadEphemeris(...)` | Read state vectors (throws `InvalidOperationException` on native error) |
 | `ReadOrientation(...)` | Read spacecraft orientations (throws `InvalidOperationException` on native error) |
@@ -241,8 +241,8 @@ Represents a precise instant in time with time frame awareness.
 | `ToJulianDate()` | Get Julian Date |
 | `TimeSpanFromJ2000()` | Get TimeSpan from J2000 epoch |
 | `Add(TimeSpan span)` | Add duration |
-| `AddDays(double days)` | Add days |
-| `AddHours(double hours)` | Add hours |
+| `AddDays(double days)` | Add days; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
+| `AddHours(double hours)` | Add hours; a non-finite argument throws `ArgumentOutOfRangeException` (#680) |
 | `AddSeconds(double seconds)` | Add seconds |
 
 ```csharp
@@ -315,7 +315,7 @@ Represents a natural celestial body (planet, moon, star).
 | Method | Description |
 |--------|-------------|
 | `GetEphemeris(Time epoch, ILocalizable observer, Frame frame, Aberration aberration)` | Get state at epoch |
-| `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get states over window |
+| `GetEphemeris(Window window, ILocalizable observer, Frame frame, Aberration aberration, TimeSpan step)` | Get states over window: every step from the start, in the window's calendar, up to its end (across a leap second the end bounds them, #682) |
 | `GetOrientation(Frame referenceFrame, Time epoch)` | Get body orientation |
 | `SideralRotationPeriod(Time epoch)` | Get sidereal rotation period |
 | `TrueSolarDay(Time epoch)` | Get true solar day duration |
@@ -412,7 +412,7 @@ Cartesian position and velocity state.
 | `ApogeeVelocity()` | Compute velocity at apogee (m/s) |
 | `ToKeplerianElements()` | Convert to Keplerian elements |
 | `ToEquinoctial()` | Convert to equinoctial elements |
-| `ToEquatorial()` | Convert to equatorial coordinates |
+| `ToEquatorial()` | Right ascension and declination in ICRF, whatever the frame of the state (rotated at its epoch, #680), and the distance |
 | `ToFrame(Frame frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
@@ -662,7 +662,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream` (#679) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OMM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OMM from stream |
 | `CreateForSgp4(string objectName, string objectId, DateTime epoch, ...)` | Create OMM for SGP4 propagation |
@@ -674,7 +674,7 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 | `Data` | Orbital data (mean elements, TLE parameters, spacecraft parameters) |
 | `ObjectName` | Shortcut to metadata object name |
 | `ObjectId` | Shortcut to metadata object ID (COSPAR ID format: "1998-067A") |
-| `IsTleCompatible` | True if OMM contains TLE parameters for conversion |
+| `IsTleCompatible` | True if OMM contains TLE parameters and its `MEAN_ELEMENT_THEORY` is SGP4, its `REF_FRAME` TEME and its `CENTER_NAME` the Earth, each read trimmed and in any letter case; otherwise `ToTle()` throws naming the keywords at fault (#679) |
 
 | Method | Description |
 |--------|-------------|
@@ -850,7 +850,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 
 | Factory Method | Description |
 |----------------|-------------|
-| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file |
+| `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OPM from XML file; a document with several OPM messages throws `OpmParseException`, as do `LoadFromString` and `LoadFromStream` (#679) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OPM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OPM from stream |
 | `CreateFromStateVector(string objectName, string objectId, StateVector sv, ...)` | Create OPM from state vector |
@@ -872,8 +872,8 @@ Represents a complete CCSDS Orbit Parameter Message.
 | `SaveToFile(string filePath, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML file |
 | `SaveToString(bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML string |
 | `ToXmlString(bool wrapInNdm, bool indent)` | Convert to XML string without validation |
-| `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s) |
-| `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object |
+| `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s); without an observer, the centre `CENTER_NAME` names (a barycenter, the Sun, a planet or a moon; another name throws `ArgumentException`), and an observer that contradicts it throws (#679) |
+| `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector` |
 | `Validate()` | Validate OPM content and return validation result |
 
 ```csharp
@@ -1120,7 +1120,7 @@ Ground-based observation site.
 | `AngularSeparation(Time epoch, ILocalizable target1, ILocalizable target2, Aberration aberration)` | Compute angular separation |
 | `FindWindowsOnDistanceConstraint(...)` | Find distance constraint windows |
 | `FindWindowsOnOccultationConstraint(...)` | Find occultation windows |
-| `FindWindowsOnIlluminationConstraint(...)` | Find illumination windows |
+| `FindWindowsOnIlluminationConstraint(...)` | Find the windows of the incidence angle of a source; the emission and phase angles need an observer and throw, the method is ELLIPSOID (#682) |
 | `FindDayWindows(Window searchWindow, double twilight)` | Find daylight windows |
 | `IlluminationIncidence(Time date, ILocalizable source, Aberration aberration)` | Get solar incidence angle |
 | `WriteFrameAsync(FileInfo outputFile)` | Write site frame kernel |
@@ -1217,7 +1217,11 @@ Planetocentric coordinates.
 
 #### Equatorial
 
-Right ascension and declination.
+Right ascension and declination in ICRF: `new Equatorial(stateVector)` and `ToEquatorial()` rotate a state in another
+frame to ICRF at its epoch first (#680; before 11.0.0 they gave the angles of the position in the state's frame). For a
+light-time corrected state read in a frame centred on its target (the Moon in MOON_ME), SPICE takes that frame at the
+epoch minus the light time, while the rotation is taken at the state's epoch (3.05e-6 rad for the Moon): read such
+states in ICRF. The coordinate searches of `CoordinateSystem.RaDec` keep the angles in their search frame, as `gfposc`.
 
 | Property | Description |
 |----------|-------------|
@@ -1228,8 +1232,8 @@ Right ascension and declination.
 
 | Method | Description |
 |--------|-------------|
-| `ToCartesian()` | Convert to Cartesian vector |
-| `ToDirection()` | Get unit direction vector |
+| `ToCartesian()` | Convert to Cartesian vector, in the frame of the angles (ICRF for a state's, #680) |
+| `ToDirection()` | Get unit direction vector, in the frame of the angles (ICRF for a state's, #680) |
 
 ```csharp
 // Get equatorial coordinates
@@ -1265,11 +1269,11 @@ Represents a spacecraft with components.
 
 | Property | Description |
 |----------|-------------|
-| `NaifId` | NAIF ID (negative) |
-| `Name` | Spacecraft name |
+| `NaifId` | NAIF ID, in [-2147483, -1] so that the frame id NaifId × 1000 is an `int` (#676) |
+| `Name` | Spacecraft name; its frame kernel variable `FRAME_<NAME>_FRAME` takes 20 ASCII characters at most, without blank, tab, quote, parenthesis, comma or '=' (#676) |
 | `DryOperatingMass` | Mass without fuel (kg) |
 | `MaximumOperatingMass` | Maximum operating mass (kg) |
-| `Clock` | Onboard clock |
+| `Clock` | Onboard clock, of this spacecraft's NAIF id alone: a clock attached to a spacecraft of another id is rejected (#676) |
 | `SectionalArea` | Mean cross-sectional area for drag and SRP (m²) |
 | `DragCoefficient` | Drag coefficient Cd (default 2.2) |
 | `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
@@ -1280,15 +1284,15 @@ Represents a spacecraft with components.
 | `BodyUp` | Instance body up axis (default: +Z, same as `Spacecraft.Up`) |
 | `BodyBack` / `BodyLeft` / `BodyDown` | Computed inverses of body axes |
 
-**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`). All attitude maneuvers automatically use per-instance body axes via `GetBodyFront()`.
+**Configurable body axes**: Pass `bodyFront`, `bodyRight`, `bodyUp` to the constructor to override the default body frame. Custom axes must be orthogonal and right-handed (`bodyRight.Cross(bodyFront) == bodyUp`). The attitudes read the axes of the spacecraft that carries the engine's tank at execution, with the static axes as fallback: the single-vector attitudes and the attitude of an impulse use `BodyFront` via `GetBodyFront()`, `TriadAttitude.CreateLVLH` uses `BodyDown`/`BodyFront` and `CreateProgradeWithSunTracking` `BodyFront`/`BodyUp` (#677); the `TriadAttitude` constructors take literal body vectors.
 
 | Method | Description |
 |--------|-------------|
-| `AddCircularInstrument(...)` | Add circular FOV instrument |
-| `AddRectangularInstrument(...)` | Add rectangular FOV instrument |
-| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument |
-| `AddEngine(Engine engine)` | Add propulsion engine |
-| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank |
+| `AddCircularInstrument(...)` | Add circular FOV instrument (an id other than the spacecraft frame's, NaifId × 1000, #676) |
+| `AddRectangularInstrument(...)` | Add rectangular FOV instrument (same id rule) |
+| `AddEllipticalInstrument(...)` | Add elliptical FOV instrument (same id rule) |
+| `AddEngine(Engine engine)` | Add propulsion engine, on a tank instance added to the spacecraft (`ArgumentException` otherwise, #676, #586) |
+| `AddFuelTank(FuelTank fuelTank)` | Add fuel tank, held by no other spacecraft (#676, #586); a maneuver draws on a tank of the spacecraft it is propagated with, or the propagation throws before it runs |
 | `AddPayload(Payload payload)` | Add payload |
 | `GetTotalMass()` | Get total mass including fuel |
 | `GetTotalFuel()` | Get total fuel mass |
@@ -1391,8 +1395,8 @@ Base class for spacecraft instruments.
 
 | Method | Description |
 |--------|-------------|
-| `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT` |
-| `FindWindowsInFieldOfViewConstraint(...)` | The windows, in TDB, of CSPICE's `gftfov`: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search") |
+| `IsInFOV(Time date, ILocalizable target, Aberration aberration)` | Whether the target's center is in the field: CSPICE's `fovtrg` with `POINT`; throws for a managed spacecraft without attitude (#682) |
+| `FindWindowsInFieldOfViewConstraint(...)` | The windows, in TDB, of CSPICE's `gftfov`: the target as a point or as its ellipsoid, every field shape, on both paths (see `docs/reference/spacecraft.md`, "Field-of-view search"); throws for a managed spacecraft without attitude, never propagated, from a TLE or propagated by `TLEPropagator`, until `AddStateOrientationToICRF` gives it one (#682) |
 | `GetBoresightInSpacecraftFrame()` | Get boresight in spacecraft frame |
 | `GetBoresightInICRFFrame(Time date)` | Get boresight in ICRF |
 
@@ -1447,7 +1451,7 @@ Base class for impulse maneuvers. Uses industry-standard g-function event detect
 - `InstrumentPointingAttitude`: Point instrument at target (single-vector, roll unconstrained)
 - `TriadAttitude`: Fully-constrained 3-DOF attitude using TRIAD algorithm (eliminates roll ambiguity)
 
-All attitude maneuvers support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y).
+The single-vector attitudes support configurable body axes via `GetBodyFront()`, which reads per-instance axes from `Spacecraft.BodyFront` with fallback to the static default `Spacecraft.Front` (+Y). The TRIAD factories read `BodyDown`/`BodyFront` and `BodyFront`/`BodyUp` of the same spacecraft, with the same fallback; both go through `GetBodyAxis(axis, fallback)` of `Maneuver` (`private protected`) (#677).
 
 **TRIAD Attitude Determination**
 
@@ -1475,7 +1479,7 @@ var attitude = new TriadAttitude(
     Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
     engine);
 
-// Factory methods for common operational attitudes
+// Factory methods for common operational attitudes, on the axes of the engine's spacecraft
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duration, sun, engine);
 ```
@@ -1487,9 +1491,9 @@ var sunTrack = TriadAttitude.CreateProgradeWithSunTracking(earth, epoch, duratio
 
 Key features:
 - Minimum 5-degree separation required between body vectors and reference vectors
-- Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp`
-- Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget
-- Factory methods: `CreateLVLH()`, `CreateProgradeWithSunTracking()`
+- Uses spacecraft body frame: Front (+Y), Right (+X), Up (+Z) — or per-instance `BodyFront`, `BodyRight`, `BodyUp` passed explicitly
+- Four constructor overloads: single instrument, dual instruments, explicit vectors, IAttitudeTarget; the body vectors given are literal
+- Factory methods: `CreateLVLH()` (`BodyDown` to nadir, `BodyFront` toward prograde), `CreateProgradeWithSunTracking()` (`BodyFront` to prograde, `BodyUp` toward the Sun), on the instance axes of the engine's spacecraft, read at execution; the static axes while the tank is on no spacecraft (#677), read outside a propagation only, since a propagation of an attitude whose tank is not the propagated spacecraft's throws (#676)
 
 #### Impulse maneuvers
 
@@ -1503,6 +1507,9 @@ Each impulse maneuver defines a g-function for event-driven triggering:
 | `CombinedManeuver` | r·v | Positive → Negative | Apogee (+ precondition: apogee aligned with ascending node) |
 | `PlaneAlignmentManeuver` | r·ĥ_target | Adaptive | Nearest orbital node (ascending or descending) |
 | `ApsidalAlignmentManeuver` | r·(ĥ×p̂) | Negative → Positive | Nearest orbit intersection point |
+
+The targets of `ApogeeHeightManeuver`, `PerigeeHeightManeuver` and `CombinedManeuver` are radii in m from the centre of
+`ManeuverCenter`, not altitudes (for an altitude h, the equatorial radius + h); the burn moves the apsis up or down.
 
 ---
 
@@ -1592,7 +1599,8 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Force Models:**
 - **Gravitational acceleration** from each body in the `bodies` list. If a body has a `GeopotentialModelParameters`, the full spherical harmonic model (EGM2008) is used; otherwise point-mass gravity is applied.
 - **Third-body perturbation**: Battin's numerically stable formula for each celestial body beyond the central body.
-- **Atmospheric drag** (when `drag` is true): uses the body's atmospheric model with atmosphere-relative velocity (accounts for body co-rotation). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
+- **Atmospheric drag** (when `drag` is true): uses the central body's atmosphere with atmosphere-relative velocity (accounts for body co-rotation): its atmospheric model, or NRLMSISE-00 at nominal space weather for an Earth built without one; another central body without a model throws `InvalidOperationException`; the other listed bodies with an atmosphere add their drag, and about the Sun (a star or barycentre observer) they give it, an Earth always having one (#674). Default Cd = 2.2 (free-molecular flow). Mass ratio is dynamic (tracks fuel consumption via `GetTotalMass()`).
+- **The central body** takes part whether or not it is listed, with the observer's models; listed bodies of one NAIF identifier, the observer's included, must have the same models (`ArgumentException` otherwise). The integrator of a force-building path must be a new instance, and the step positive (#674).
 - **Solar radiation pressure** (when `srp` is true): cannonball model with reflectivity coefficient Cr (`Spacecraft.SolarRadiationCoeff`, default 1.0). Uses continuous shadow fraction for partial/annular eclipse geometry instead of binary eclipse detection. Mass ratio is dynamic.
 - **Albedo radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeAlbedo()`): Lambertian sphere model for reflected sunlight. Requires `CelestialBody` with `albedo > 0`. Phase-angle dependent visibility function naturally zeroes on the dark side.
 - **Thermal radiation pressure** (via `CentralBodyPropagatorBuilder.IncludeThermalRadiation()`): Isotropic emitter model for infrared body radiation. Requires `CelestialBody` with `thermalEffectiveTemperature > 0` and `thermalEmissivity > 0`. Always present regardless of Sun geometry or eclipse state.
@@ -1657,7 +1665,7 @@ Configuration for enabling geopotential gravity on a `CelestialBody`.
 
 | Property | Description |
 |----------|-------------|
-| `GeopotentialModelPath` | Stream reader for the model file |
+| `GeopotentialModelPath` | Stream reader for the model file, read once by the first body built from the parameters; every body shares its coefficients (#674) |
 | `GeopotentialDegree` | Maximum degree/order to use |
 | `GravitationalParameter`, `ReferenceRadius` | The constants given to the four-argument constructors; null otherwise. The harmonics then take EGM2008's GM (3.986004415e14 m³/s²) and radius (6378136.3 m) for the Earth, the kernel GM and equatorial radius for another body; the central term always takes the kernel GM (#410) |
 
@@ -1886,15 +1894,17 @@ Console.WriteLine($"Mars atmosphere: ρ={atmosphere.Density:E3} kg/m³");
 
 #### CelestialBody Integration
 
-`CelestialBody` provides convenient `GetAtmosphere` methods that automatically select the best available model.
+`CelestialBody` provides `GetAtmosphere` methods that read its atmospheric model. An Earth built without one answers a
+full context with NRLMSISE-00 at nominal space weather, the atmosphere of its drag (#674); without the geodetic position
+and the epoch, a body without a model gives a NaN temperature and a zero pressure and density.
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
 
-// Simple: altitude-only (uses EarthStandardAtmosphere)
+// Simple: altitude-only; EARTH_BODY has no model, so NaN, 0 and 0 (give the body an EarthStandardAtmosphere for US 1976)
 var atm1 = earth.GetAtmosphere(10000);  // 10 km altitude
 
-// Full context: automatically uses NRLMSISE-00 for Earth
+// Full context: NRLMSISE-00 at nominal space weather for an Earth without a model
 var context = AtmosphericContext.FromPlanetodetic(
     altitude: 400000,
     geodeticLatitude: 45 * Constants.Deg2Rad,
@@ -1943,7 +1953,7 @@ if (atm2.Details is NrlmsiseDetails details)
 |--------|-------------|
 | `Magnitude()` | Get vector length |
 | `MagnitudeSquared()` | Get squared length |
-| `Normalize()` | Get unit vector |
+| `Normalize()` | Get unit vector; `InvalidOperationException` for a magnitude of 0 (#680) |
 | `Cross(Vector3 other)` | Cross product |
 | `Angle(Vector3 other)` | Angle between vectors (rad) |
 | `Inverse()` | Negate vector |
@@ -1980,7 +1990,7 @@ Rotation representation.
 | Method | Description |
 |--------|-------------|
 | `Magnitude()` | Get magnitude |
-| `Normalize()` | Get unit quaternion |
+| `Normalize()` | Get unit quaternion; `InvalidOperationException` for a magnitude of 0 (#680) |
 | `Conjugate()` | Get conjugate |
 | `ToEuler()` | Convert to Euler angles |
 | `SLERP(Quaternion q, double t)` | Spherical linear interpolation |
@@ -2071,7 +2081,14 @@ memoryProvider.AddStateVector(399, epoch, earthState);
 A read at an added epoch returns that entry. A read between entries is interpolated and never stored, so it depends on
 the entries only, not on the reads before it (#548): an orientation is the exact spherical linear interpolation of the
 two entries around it (`StateOrientation.Interpolate`), a state the 8-point Lagrange interpolation of the nearest added
-states. A read outside the entries throws `ArgumentException`.
+states. Missing data throw `InvalidOperationException`, as on SPICE (#680): a state read for a target without entries or
+outside them, an orientation read outside a frame's entries. A bad argument throws `ArgumentException` (#680, decided by
+S. Guillet, 2026-11-14): a frame never added, and the information of an identifier never added, whose `ParamName` is
+`naifId`, as `SpiceDataProvider` for an identifier SPICE does not name, through `GetCelestialBodyInfo`,
+`new CelestialBody(id)` and `CelestialItem.Create(id)` alike. A Lagrange point (391 to 395) is the exception of
+`CelestialItem.Create`, which builds it from its state without reading its information: its missing state throws
+`InvalidOperationException`, as on SPICE. A body whose barycentre's data, information included, the provider lacks builds
+with `InitialOrbitalParameters` null and an infinite sphere of influence, as on SPICE.
 
 ---
 
@@ -2866,7 +2883,7 @@ Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained tow
 - Use `TriadAttitude` with `IAttitudeTarget` to mix orbital directions and celestial targets:
 
 ```csharp
-// LVLH attitude using factory method
+// LVLH attitude using factory method (the spacecraft's BodyDown to nadir, its BodyFront toward prograde)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
 // Prograde with sun tracking using factory method

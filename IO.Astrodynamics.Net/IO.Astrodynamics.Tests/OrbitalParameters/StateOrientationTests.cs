@@ -106,6 +106,22 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.Equal(Frames.Frame.ECLIPTIC_J2000, res.ReferenceFrame);
         }
         
+        // #680: a zero angular velocity rotates nothing. AtDate normalizes the zero axis through the library's lenient
+        // helper, which keeps the zero vector (the public Normalize throws for it), so the rotation is unchanged
+        [Fact]
+        public void AtDate_WithZeroAngularVelocity_IsTheSameRotation()
+        {
+            var identity = new StateOrientation(Quaternion.Identity, Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
+            Assert.Equal(Quaternion.Identity, identity.AtDate(TimeSystem.Time.J2000TDB.AddSeconds(60.0)).Rotation);
+
+            var rotation = new Quaternion(new Vector3(0.0, 0.6, 0.8), 0.3);
+            var so = new StateOrientation(rotation, Vector3.Zero, TimeSystem.Time.J2000TDB, Frames.Frame.ECLIPTIC_J2000);
+            var res = so.AtDate(TimeSystem.Time.J2000TDB.AddSeconds(60.0));
+            var delta = res.Rotation * rotation.Conjugate();
+            Assert.True(2.0 * System.Math.Atan2(delta.VectorPart.Magnitude(), System.Math.Abs(delta.W)) < 1e-15);
+            Assert.Equal(Vector3.Zero, res.AngularVelocity);
+        }
+
         [Fact]
         public void Interpolate_SameReferenceFrame_ReturnsInterpolatedState()
         {

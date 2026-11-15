@@ -56,7 +56,7 @@ public sealed class CirsFrame : Frame
     {
         var (x, y) = Iau2006Model.CipXY(t);
         double s = Iau2006Model.CioLocator(t, x, y);
-        return Iau2006Model.PrecessionNutationMatrix(x, y, s).Transpose().ToQuaternion().Normalize();
+        return Iau2006Model.PrecessionNutationMatrix(x, y, s).Transpose().ToQuaternion().NormalizeOrZero();
     }
 
     private static Vector3 ComputeAngularVelocity(double t)

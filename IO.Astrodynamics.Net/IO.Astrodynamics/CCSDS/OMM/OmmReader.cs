@@ -15,7 +15,9 @@ namespace IO.Astrodynamics.CCSDS.OMM;
 /// Reads OMM (Orbit Mean-elements Message) files in CCSDS NDM/XML format.
 /// </summary>
 /// <remarks>
-/// Supports both standalone OMM documents and OMM messages wrapped in NDM containers.
+/// Supports both standalone OMM documents and OMM messages wrapped in NDM containers. A document holds one OMM message:
+/// one that holds several (a catalog NDM) throws <see cref="OmmParseException"/>, as before 11.0.0 it returned the first
+/// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored.
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OmmReader
@@ -29,7 +31,7 @@ public class OmmReader
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentException">Thrown when the file path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
-    /// <exception cref="OmmParseException">Thrown when the file cannot be parsed.</exception>
+    /// <exception cref="OmmParseException">Thrown when the file cannot be parsed, or holds several OMM messages.</exception>
     public Omm ReadFromFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -48,7 +50,7 @@ public class OmmReader
     /// <param name="stream">The stream containing the OMM XML.</param>
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
-    /// <exception cref="OmmParseException">Thrown when the stream cannot be parsed.</exception>
+    /// <exception cref="OmmParseException">Thrown when the stream cannot be parsed, or holds several OMM messages.</exception>
     public Omm ReadFromStream(Stream stream)
     {
         if (stream == null)
@@ -71,7 +73,7 @@ public class OmmReader
     /// <param name="xml">The XML string containing the OMM.</param>
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentException">Thrown when XML string is null or empty.</exception>
-    /// <exception cref="OmmParseException">Thrown when the XML cannot be parsed.</exception>
+    /// <exception cref="OmmParseException">Thrown when the XML cannot be parsed, or holds several OMM messages.</exception>
     public Omm ReadFromString(string xml)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -102,24 +104,10 @@ public class OmmReader
         return ParseOmmElement(ommElement);
     }
 
-    private XElement FindOmmElement(XElement root)
+    // The root OMM, the one OMM child of an NDM or the one OMM descendant of another root; several throw (#679)
+    private static XElement FindOmmElement(XElement root)
     {
-        var localName = root.Name.LocalName.ToUpperInvariant();
-
-        // Direct OMM element
-        if (localName == "OMM")
-            return root;
-
-        // NDM wrapper - look for omm child (case-insensitive)
-        if (localName == "NDM")
-        {
-            return root.Elements()
-                .FirstOrDefault(e => e.Name.LocalName.Equals("omm", StringComparison.OrdinalIgnoreCase));
-        }
-
-        // Check descendants if wrapped in other elements
-        return root.Descendants()
-            .FirstOrDefault(e => e.Name.LocalName.Equals("omm", StringComparison.OrdinalIgnoreCase));
+        return CcsdsMessageLocator.FindSingle(root, "omm", message => new OmmParseException(message));
     }
 
     private Omm ParseOmmElement(XElement ommElement)

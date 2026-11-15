@@ -398,7 +398,8 @@ public partial class ConjunctionAssessmentTests
         var start = TimeSystem.Time.J2000TDB;
         var window = new Window(start, start.AddSeconds(3.0));
         var protectedSpacecraft = CreateSpacecraft(-5505, "P", earth, Vector3.Zero, Vector3.Zero);
-        var secondarySpacecraft = CreateSpacecraft(-5506, "S", earth, new Vector3(10.0, 0.0, 0.0), Vector3.Zero);
+        // The option gives the secondary its radius of 0 m, which the spacecraft then carries (#683: a differing option throws)
+        var secondarySpacecraft = CreateSpacecraft(-5506, "S", earth, new Vector3(10.0, 0.0, 0.0), Vector3.Zero, hardBodyRadius: 0.0);
         var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         const double root1 = 0.75;
         const double root2 = 1.50;
@@ -459,7 +460,9 @@ public partial class ConjunctionAssessmentTests
         var end = start.AddSeconds(2.0);
         var window = new Window(start, end);
         var protectedSpacecraft = CreateSpacecraft(-5507, "P", earth, Vector3.Zero, Vector3.Zero);
-        var secondarySpacecraft = CreateSpacecraft(-5508, "S", earth, new Vector3(10.0, 200.0, 0.0), new Vector3(0.0, -100.0, 0.0));
+        // The option gives the secondary its radius of 0 m, which the spacecraft then carries (#683: a differing option throws)
+        var secondarySpacecraft = CreateSpacecraft(-5508, "S", earth, new Vector3(10.0, 200.0, 0.0), new Vector3(0.0, -100.0, 0.0),
+            hardBodyRadius: 0.0);
         var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
 
         var protectedTrajectory = CreatePropagationSolution(
@@ -504,7 +507,9 @@ public partial class ConjunctionAssessmentTests
         var earth = CreateEarth();
         var start = TimeSystem.Time.J2000TDB;
         var protectedSpacecraft = CreateSpacecraft(naifId, "P", earth, Vector3.Zero, Vector3.Zero);
-        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "S", earth, new Vector3(x, y0, 0.0), new Vector3(0.0, vy, 0.0));
+        // RectilinearPassOptions give the secondary its radius of 0 m, which the spacecraft then carries (#683)
+        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "S", earth, new Vector3(x, y0, 0.0), new Vector3(0.0, vy, 0.0),
+            hardBodyRadius: 0.0);
         var protectedTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
             stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
         var secondaryTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,

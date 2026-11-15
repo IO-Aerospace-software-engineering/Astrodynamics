@@ -23,8 +23,11 @@ public static class MonteCarloPropagator
     /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
     /// <returns>Aggregated statistics across all successful runs.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="config"/> or required fields are null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than 2.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <see cref="MonteCarloConfiguration.RunCount"/> is less than 2,
+    /// or <see cref="MonteCarloConfiguration.DeltaT"/> is not positive.</exception>
     /// <exception cref="ArgumentException">Thrown when the template spacecraft's initial state vector has no covariance.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown, before any run is propagated, when the NAIF ID of a run,
+    /// <see cref="MonteCarloConfiguration.BaseNaifId"/> − i, is not in [-2147483, -1] (#676).</exception>
     public static MonteCarloResult Propagate(MonteCarloConfiguration config)
     {
         Validate(config);
@@ -127,7 +130,8 @@ public static class MonteCarloPropagator
     /// Executes a Monte Carlo propagation campaign asynchronously on a thread-pool thread.
     /// </summary>
     /// <param name="config">Campaign configuration including run count, template spacecraft, and force model options.</param>
-    /// <returns>A task that completes with the aggregated statistics across all successful runs.</returns>
+    /// <returns>A task that completes with the aggregated statistics across all successful runs, or faults with the
+    /// exceptions of <see cref="Propagate"/>, a NAIF ID of a run out of [-2147483, -1] included (#676).</returns>
     public static Task<MonteCarloResult> PropagateAsync(MonteCarloConfiguration config)
     {
         return Task.Run(() => Propagate(config));
@@ -140,5 +144,7 @@ public static class MonteCarloPropagator
             throw new ArgumentOutOfRangeException(nameof(config.RunCount), "RunCount must be at least 2.");
         ArgumentNullException.ThrowIfNull(config.TemplateSpacecraft);
         ArgumentNullException.ThrowIfNull(config.CelestialBodiesFactory);
+        // Before any run: through the batch, a bad step would fail every run without an exception (#674)
+        PropagatorBase.RequirePositiveStep(config.DeltaT, nameof(config.DeltaT));
     }
 }
