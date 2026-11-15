@@ -1,18 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
+using IO.Astrodynamics.Math;
 using IO.Astrodynamics.SolarSystemObjects;
 using IO.Astrodynamics.TimeSystem;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IO.Astrodynamics.Tests.Body;
 
 public class StarTests
 {
-    public StarTests()
+    private readonly ITestOutputHelper _output;
+
+    public StarTests(ITestOutputHelper output)
     {
         TestKernels.EnsureSolarSystem();
+        _output = output;
     }
 
     [Fact]
@@ -99,7 +107,7 @@ public class StarTests
         Assert.Equal(8.1373353929324910E+16, eph2.ToEquatorial().Distance);
     }
 
-    private static Star NewStar(int catalogNumber, TimeSystem.Time epoch) =>
+    internal static Star NewStar(int catalogNumber, TimeSystem.Time epoch) =>
         new(catalogNumber, $"star{catalogNumber}", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0,
             epoch);
 
@@ -162,5 +170,180 @@ public class StarTests
         Assert.True(byAsync.IsPropagated);
         Assert.Null(bySync.PropagationOutput);
         Assert.Null(byAsync.PropagationOutput);
+    }
+
+    /// <summary>The epochs of a propagation of a star: from the start of the window, every step, up to its end.</summary>
+    internal static List<TimeSystem.Time> Grid(Window window, TimeSpan step)
+    {
+        var epochs = new List<TimeSystem.Time>();
+        for (var epoch = window.StartDate; epoch <= window.EndDate; epoch += step)
+        {
+            epochs.Add(epoch);
+        }
+
+        return epochs;
+    }
+
+    /// <summary>
+    /// The position of the stars of <see cref="NewStar"/> from the solar system barycenter in ICRF at <paramref name="epoch"/>,
+    /// written here: the right ascension and the declination 1 + 0.1 dt rad, dt the Julian years from the catalog epoch, at
+    /// the star's distance.
+    /// </summary>
+    internal static Vector3 CatalogPosition(Star star, TimeSystem.Time epoch)
+    {
+        double dt = (epoch - star.Epoch).TotalDays / 365.25;
+        double angle = 1.0 + 0.1 * dt;
+        return new Vector3(System.Math.Cos(angle) * System.Math.Cos(angle), System.Math.Cos(angle) * System.Math.Sin(angle),
+            System.Math.Sin(angle)) * star.Distance;
+    }
+
+    /// <summary>
+    /// Writes the SPK of <paramref name="star"/>, loads it and checks through SPICE (<c>spkezr</c>, <see cref="SpiceAPI"/>)
+    /// that it holds the states of <paramref name="kept"/> alone: each at the catalog position written here, and no state
+    /// at the epochs of <paramref name="replaced"/> nor between the two windows, where SPICE has no data (the read throws).
+    /// Returns the worst relative position.
+    /// </summary>
+    internal static double CheckSpkHoldsOnly(Star star, IReadOnlyList<TimeSystem.Time> kept, IEnumerable<TimeSystem.Time> replaced,
+        string label, ITestOutputHelper output)
+    {
+        var directory = Directory.CreateTempSubdirectory("star668");
+        var spk = new FileInfo(Path.Combine(directory.FullName, $"star{star.CatalogNumber}.bsp"));
+        star.WriteEphemeris(spk);
+        SpiceAPI.Instance.LoadKernels(spk);
+        try
+        {
+            double worst = 0.0;
+            foreach (var epoch in kept)
+            {
+                var read = SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+                var catalog = CatalogPosition(star, epoch);
+                double relative = (read.Position - catalog).Magnitude() / catalog.Magnitude();
+                worst = System.Math.Max(worst, relative);
+            }
+
+            output.WriteLine($"MEASURE {label}: worst relative position {worst:E3}");
+            foreach (var epoch in replaced)
+            {
+                Assert.Throws<InvalidOperationException>(() =>
+                    SpiceAPI.Instance.ReadEphemeris(epoch, 0, star.NaifId, Frames.Frame.ICRF, Aberration.None));
+            }
+
+            return worst;
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spk);
+            directory.Delete(true);
+        }
+    }
+
+    // The noise-level record of the SPK read against the catalog position written in the test: twice the worst (1.390e-16,
+    // StarTests.Propagate_Twice and ScenarioTests.SimulateAsync_OfAStarPropagatedBefore, Linux, 2026-11-15), asserted by the
+    // Validation test alone, which runs on Linux alone (the epochs are whole half days from the catalog epoch, whose Julian
+    // dates, which the star differences, are exact). The tests of every platform assert CatalogMotionInOneMicrosecond
+    internal const double CatalogPositionTolerance = 2.8e-16;
+
+    /// <summary>
+    /// The bound of the tests that run on every platform, where the rounding of the sines and cosines of each runtime is not
+    /// measured: the distance the star of <see cref="NewStar"/> moves in 1 µs, the resolution of the library's epochs,
+    /// relative to its distance, the least over <paramref name="epochs"/>. Its direction is (cos²a, cos a sin a, sin a), a =
+    /// 1 + 0.1 dt rad, dt in Julian years (<see cref="CatalogPosition"/>), whose derivative has the norm √(1 + cos²a): the
+    /// bound is √(1 + cos²a) · 0.1 · 1e-6 / (365.25 · 86400), 3.6e-15 near a = 1, so that a state of another epoch, or of
+    /// another star, fails it.
+    /// </summary>
+    internal static double CatalogMotionInOneMicrosecond(Star star, IEnumerable<TimeSystem.Time> epochs) =>
+        epochs.Min(epoch =>
+        {
+            double angle = 1.0 + 0.1 * (epoch - star.Epoch).TotalDays / 365.25;
+            return System.Math.Sqrt(1.0 + System.Math.Cos(angle) * System.Math.Cos(angle)) * 0.1 * 1e-6 / (365.25 * 86400.0);
+        });
+
+    [Fact]
+    public void Propagate_Twice_ReplacesTheStates()
+    {
+        // Arrange: two propagations over different windows and steps; before, the second added its states to the first's
+        // (TryAdd), so that the SPK of the star covered both windows and the gap between them
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var star = NewStar(668011, epoch);
+        var first = new Window(epoch, epoch.AddDays(4.0));
+        var second = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 3));
+
+        // Act
+        star.Propagate(first, TimeSpan.FromDays(1.0));
+        star.Propagate(second, TimeSpan.FromHours(12.0));
+
+        // Assert: the second propagation's states alone, as Spacecraft.Propagate replaces its states
+        var replaced = Grid(first, TimeSpan.FromDays(1.0)).Append(new TimeSystem.Time(2001, 2, 1)).ToList();
+        var kept = Grid(second, TimeSpan.FromHours(12.0));
+        double worst = CheckSpkHoldsOnly(star, kept, replaced, "StarTests.Propagate_Twice", _output);
+        double bound = CatalogMotionInOneMicrosecond(star, kept);
+        Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
+        Assert.True(star.IsPropagated);
+    }
+
+    [Fact]
+    public async Task PropagateAsync_AfterPropagate_ReplacesTheStates()
+    {
+        // Arrange
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var star = NewStar(668012, epoch);
+        var first = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 1, 6, 0, 0));
+        var second = new Window(epoch, epoch.AddDays(2.0));
+
+        // Act: the later window first, then an earlier one at another step, through the asynchronous path
+        star.Propagate(first, TimeSpan.FromHours(1.0));
+        await star.PropagateAsync(second, TimeSpan.FromHours(12.0));
+
+        // Assert
+        var kept = Grid(second, TimeSpan.FromHours(12.0));
+        double worst = CheckSpkHoldsOnly(star, kept, Grid(first, TimeSpan.FromHours(1.0)).Append(new TimeSystem.Time(2001, 2, 1)),
+            "StarTests.PropagateAsync_AfterPropagate", _output);
+        double bound = CatalogMotionInOneMicrosecond(star, kept);
+        Assert.True(worst <= bound, $"{worst:E3} > {bound:E3}");
+    }
+
+    // The segment of the SPK is read through CspiceDirect (dafus, dafgda), which the Windows DLL does not export
+    // (Linux, Validation); the cross-platform tests above read the SPK through SPICE. The noise-level record of the
+    // position, measured on Linux, is asserted here, where the test runs on Linux alone
+    [Fact]
+    [Trait("Category", "Validation")]
+    public void Propagate_Twice_TheSpkHoldsTheSecondGridAlone()
+    {
+        // Arrange
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var star = NewStar(668013, epoch);
+        var first = new Window(epoch, epoch.AddDays(4.0));
+        var second = new Window(new TimeSystem.Time(2001, 3, 1), new TimeSystem.Time(2001, 3, 3));
+        star.Propagate(first, TimeSpan.FromDays(1.0));
+        star.Propagate(second, TimeSpan.FromHours(12.0));
+        double worst = CheckSpkHoldsOnly(star, Grid(second, TimeSpan.FromHours(12.0)),
+            Grid(first, TimeSpan.FromDays(1.0)).Append(new TimeSystem.Time(2001, 2, 1)), "StarTests.Propagate_Twice_TheSpkHoldsTheSecondGridAlone",
+            _output);
+        Assert.True(worst <= CatalogPositionTolerance, $"{worst:E3}");
+        var directory = Directory.CreateTempSubdirectory("star668");
+        var spk = new FileInfo(Path.Combine(directory.FullName, "star668013.bsp"));
+        try
+        {
+            // Act
+            star.WriteEphemeris(spk);
+            var segments = CspiceDirect.ReadSegments(spk.FullName);
+
+            // Assert: one segment over the second window, of type 8 (the states are evenly spaced): its N states, its first
+            // epoch and its step (the words 6N, 6N + 1, the last word N, SPK Required Reading, type 8) are those of the
+            // second grid, in ET (TDB seconds from J2000)
+            var grid = Grid(second, TimeSpan.FromHours(12.0)).Select(x => x.TimeSpanFromJ2000().TotalSeconds).ToArray();
+            var segment = Assert.Single(segments);
+            Assert.Equal(8, segment.Type);
+            Assert.Equal(grid[0], segment.Start);
+            Assert.Equal(grid[^1], segment.End);
+            int n = (int)segment.Data[^1];
+            Assert.Equal(grid.Length, n);
+            Assert.Equal(grid[0], segment.Data[6 * n]);
+            Assert.Equal(12.0 * 3600.0, segment.Data[6 * n + 1]);
+        }
+        finally
+        {
+            directory.Delete(true);
+        }
     }
 }

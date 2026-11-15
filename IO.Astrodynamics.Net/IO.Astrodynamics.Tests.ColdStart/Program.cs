@@ -40,8 +40,9 @@ namespace IO.Astrodynamics.Tests.ColdStart;
 /// </list>
 /// The mode <c>memory-provider</c> (#680) takes the kernel directory alone and has no thread nor schedule: the library on a
 /// <see cref="MemoryDataProvider"/> set as the global provider, see <see cref="MemoryProviderChild"/>.
-/// The modes <c>static-bodies-memory</c>, <c>static-bodies-spice</c> and <c>static-bodies-switch</c> take the kernel directory alone: the static
-/// objects resolve their data at first read, see <see cref="StaticBodiesChild"/>.
+/// The modes <c>static-bodies-memory</c>, <c>static-bodies-spice</c>, <c>static-bodies-switch</c> and
+/// <c>static-bodies-before-kernels</c> take the kernel directory alone: the static objects resolve their data at first read,
+/// see <see cref="StaticBodiesChild"/>.
 /// The mode <c>tle-text</c> takes no schedule and loads no kernel: each malformed TLE must throw the error of its text,
 /// and nothing may be written on the standard output (#675).
 /// </para>
@@ -92,6 +93,11 @@ internal static class Program
         if (args.Length == 2 && args[1] == "static-bodies-switch")
         {
             return StaticBodiesChild.RunSwitch(args[0]);
+        }
+
+        if (args.Length == 2 && args[1] == "static-bodies-before-kernels")
+        {
+            return StaticBodiesChild.RunBeforeKernels(args[0]);
         }
 
         // Before the schedule check and before any kernel is loaded: the text of a TLE is checked before any SPICE read

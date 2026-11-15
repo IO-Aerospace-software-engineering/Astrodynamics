@@ -2139,7 +2139,13 @@ first read and lacking their data makes each such read throw the provider's exce
 the type initializer threw before 11.0.0 a `TypeInitializationException` kept for the life of the process. Each read
 goes to the provider set at its time: the data may be added to that provider, or another provider set in its place. Once
 read, an object keeps the provider it read its data from, for its data and its ephemeris. Their identifiers, names and
-predicates need no data.
+predicates need no data. A provider that gives one of them a GM or, for `EARTH_BODY`, `MOON_BODY` and `SUN_BODY`, radii
+of 0 (SPICE before `LoadKernels`, which answers 0 for `BODYnnn_GM` or `BODYnnn_RADII` no loaded kernel defines) makes
+the read throw `InvalidOperationException` naming the variable, and nothing is kept. On SPICE their data follow the
+kernel pool: the first read after each `LoadKernels`, `UnloadKernels` or `ClearKernels` reads them again, so that a
+kernel loaded later (`geophysical.ker` for `BODY399_J2`, `earth_assoc_itrf93.tf` and `moon_assoc_me.tf` for the frames
+`ITRF93` and `MOON_ME`, an SPK for the orbit) reaches them; data equal to those held keep the instances held. To keep a
+body's data across changes of the pool, build it (`new CelestialBody(id)`).
 
 ---
 

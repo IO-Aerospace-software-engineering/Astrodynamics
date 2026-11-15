@@ -283,9 +283,24 @@ public class CelestialBody : CelestialItem, IOrientable<Frame>
         internal double J4 { get; set; }
         internal Frame Frame { get; set; }
         internal double SphereOfInfluence { get; set; }
+
+        // The radii, J2 to J4 and the frame are those of the information; the sphere of influence also reads the mass and
+        // the orbit of the main body
+        internal override bool HasSameValues(ProviderData other) =>
+            base.HasSameValues(other) && SphereOfInfluence.Equals(((BodyProviderData)other).SphereOfInfluence);
     }
 
     private BodyProviderData BodyData => (BodyProviderData)Resolved;
+
+    /// <summary>The data of a static body: those of its item and its radii (<c>BODYnnn_RADII</c> on SPICE).</summary>
+    private protected override void RequireKernelData(DTO.CelestialBody information)
+    {
+        base.RequireKernelData(information);
+        if (!(information.Radii.X > 0.0 && information.Radii.Y > 0.0 && information.Radii.Z > 0.0))
+        {
+            throw MissingKernelData("radii", $"BODY{NaifId}_RADII", "a PCK such as pck00011.tpc");
+        }
+    }
 
     private protected override ProviderData ReadProviderData(IDataProvider provider, Frame frame, in Time epoch)
     {
