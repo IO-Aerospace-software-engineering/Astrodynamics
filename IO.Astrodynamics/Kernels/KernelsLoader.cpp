@@ -56,9 +56,11 @@ namespace
      * Unloads every SPK, CK, binary PCK and EK whose file was deleted since its load (#668, second round). KEEPER's UNLOAD
      * opens again the other loaded kernels of the kind it unloads (unload_c --> UNLOAD --> SPKLEF, CKLPF, PCKLOF, EKLEF):
      * for a deleted file, DAFOPR fails before the subsystem touches its table, so the file stays open in the DAF and
-     * subsystem tables while KEEPER stores the handle 0 for it. From then on neither its unload nor kclear_c closes it, and
-     * once CSPICE's handle manager has released its logical unit (more than 23 in use) every search that reaches it fails to
-     * reconnect it (SPICE(FILEOPENFAIL)): for a PCK, every IAU frame (measured with CSPICE N0067). Only native code holds the
+     * subsystem tables while KEEPER stores the handle 0 for it. From then on neither its unload nor kclear_c closes it
+     * (measured for SPKs, CKs and PCKs; the EK not measured). Once CSPICE's handle manager has released its logical unit
+     * (more than 23 in use), the searches that reach it fail to reconnect it (SPICE(FILEOPENFAIL)): for a PCK every IAU
+     * frame, for a CK the reads of epochs not already read; for an SPK the reads of the Moon, L1, L2 and Mars after 25 more
+     * DAFs did not fail in the measured layout, the orphan handle staying open (CSPICE N0067). Only native code holds the
      * handle, so the kernels are first closed by the handle KEEPER still holds, then dropped from KEEPER by unload_c, whose
      * reopening of the remaining kernels of the kind fails, as expected, on the next deleted file, already closed; the last
      * unload_c reopens every remaining kernel of the kind in load order, which restores their precedence. A DSK is left to

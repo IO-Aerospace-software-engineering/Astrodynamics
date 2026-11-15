@@ -1510,9 +1510,11 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   tests is checked by `KernelRegistryTests` through `kdata`). Every entry the call matched is unloaded and removed
   before it throws. A binary kernel SPICE failed to open again stayed open in SPICE for the life of the process (fixed by
   the second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), below): KEEPER
-  records the handle 0 for it, its unload and `kclear_c` close nothing, and once its logical unit is released (more than
-  the 23 units of CSPICE's handle manager in use) every later search of its kind fails to reconnect it, for a PCK every
-  IAU frame (measured with CSPICE N0067; the CI of the first version of the PCK tests, run in the test process, failed
+  records the handle 0 for it, its unload and `kclear_c` close nothing (measured for SPKs, CKs and PCKs; the EK not
+  measured), and once its logical unit is released (more than the 23 units of CSPICE's handle manager in use) the
+  searches that reach it fail to reconnect it: for a PCK every IAU frame, for a CK the reads at epochs not already read,
+  while for an SPK the reads of the Moon, L1, L2 and Mars after 25 more DAFs did not fail in the measured layout
+  (measured with CSPICE N0067; the CI of the first version of the PCK tests, run in the test process, failed
   that way on Linux and macOS arm64, `TISBOD` → `PCKSFS` → `DAFBBS` → `ZZDDHHLU` on the deleted PCK, in other test
   classes). The tests that delete a loaded binary kernel therefore run in the child process
   `IO.Astrodynamics.Tests.KernelUnload`, which the test project builds and copies to `KernelUnload/`, and are skipped
@@ -1593,9 +1595,12 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   `UNLOAD` opens again the other loaded kernels of the kind it unloads (`unload_c` → `UNLOAD` → `SPKLEF`, `CKLPF`,
   `PCKLOF`, `EKLEF`); for a file deleted since its load `DAFOPR` fails before the subsystem touches its table, so the
   file stayed open in the DAF and subsystem tables while KEEPER stored the handle 0 for it: neither its unload nor
-  `kclear_c` closed it, and once CSPICE's handle manager released its logical unit (more than 23 in use) every later
-  search of its kind failed to reconnect it (`SPICE(FILEOPENFAIL)`), for a PCK every IAU frame; a deleted PCK never
-  unloaded did the same. With two deleted kernels of a kind no order of unloads avoided it, and no proxy gave the .NET
+  `kclear_c` closed it (measured for SPKs, CKs and PCKs; the EK not measured), and once CSPICE's handle manager released
+  its logical unit (more than 23 in use) the searches that reached it failed to reconnect it (`SPICE(FILEOPENFAIL)`): for
+  a PCK every IAU frame, a deleted PCK never unloaded included, and for a CK the reads at epochs not already read (205
+  intervals of the CLPS CK, read at 51, 102, 153 and 204); for an SPK the orphan handles stayed open, but the reads of the
+  Moon (301), L1 (391), L2 (392) and Mars (4) from the Earth at ET 0, 1e6, 5e7 and -3e8 after 25 more DAFs did not fail
+  in the measured layout (CSPICE N0067, fourth round of #668). With two deleted kernels of a kind no order of unloads avoided it, and no proxy gave the .NET
   layer the handle, so the fix is native (a technical reason, CLAUDE.md): `KernelsLoader::Load` and `Unload` first close
   every SPK, CK, binary PCK and EK whose file no longer exists by the handle KEEPER still holds (`spkuef_c`, `ckupf_c`,
   `pckuof_c`, `ekuef_c`), then unload it, the expected `SPICE(FILENOTFOUND)` of an intermediate reopening reset, the last
@@ -2610,7 +2615,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `WriteOrientation` (and so `Star.WriteEphemeris`, `Site.WriteEphemeris`, `Spacecraft.WriteOrientation` and the
   Cosmographia export) close and unload every such kernel first, so its data are no longer readable after the next
   kernel call; before, they stayed readable until CSPICE
-  released its logical unit, after which every search of its kind failed for the life of the process. `UnloadKernels` no
+  released its logical unit, after which, for the life of the process, every IAU frame failed for a PCK and the reads of
+  a CK at epochs not already read failed (the SPK reads measured did not fail). `UnloadKernels` no
   longer throws for a deleted SPK, CK, binary PCK or EK (it still throws for a deleted text kernel, meta-kernel or DSK),
   and the kernels of the kind keep their precedence: the unload of a PCK while another PCK of the same frame class loaded
   before a deleted one returns and leaves the PCK loaded last in precedence, where it threw and gave the earlier one

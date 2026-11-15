@@ -56,10 +56,12 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   `pckuof_c`, `ekuef_c`), then unloads it; the last of those unloads opens the remaining kernels of each kind again in
   their load order, which keeps their precedence. Before 11.0.0, SPICE failed to open such a kernel again after the
   unload of another kernel of its kind (`SPICE(FILENOTFOUND)`): KEEPER recorded the handle 0 for it, so its unload and
-  `ClearKernels` (`kclear_c`) closed nothing, it stayed open for the life of the process, and once more than 23 binary
-  kernels were in use (the logical units of CSPICE's handle manager) a later search of its kind failed to reconnect it
-  (`SPICE(FILEOPENFAIL)`): for a PCK, every IAU frame, whose search goes through the binary PCKs first, even for a deleted
-  PCK never unloaded (measured with CSPICE N0067). The data of a deleted kernel are therefore no longer readable after the
+  `ClearKernels` (`kclear_c`) closed nothing, and it stayed open for the life of the process (measured for SPKs, CKs and
+  PCKs; the EK is not measured). Once more than 23 binary kernels were in use (the logical units of CSPICE's handle
+  manager), the searches that reached it failed to reconnect it (`SPICE(FILEOPENFAIL)`): for a PCK, every IAU frame,
+  whose search goes through the binary PCKs first, even for a deleted PCK never unloaded; for a CK, the reads at epochs
+  not already read. For an SPK the orphan handle stayed open, but the reads of the Moon (301), L1 (391), L2 (392) and
+  Mars (4) after 25 more DAFs did not fail in the measured layout (measured with CSPICE N0067). The data of a deleted kernel are therefore no longer readable after the
   next load, unload or native write; `GetLoadedKernels` lists its path until it is unloaded, which then does nothing. The
   file is tested by the name SPICE holds, which `LoadKernels` gives as a full path, and only for a name SPICE holds as an
   absolute path. A meta-kernel's `KERNELS_TO_LOAD` may name its files relative to the working directory of its load, and
