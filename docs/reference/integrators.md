@@ -6,7 +6,7 @@ Integrators advance spacecraft state through time under configured force models.
 
 | Method | Description |
 |--------|-------------|
-| `Initialize(StateVector)` | Set initial conditions and force model context |
+| `Initialize(StateVector)` | Set the observer, the frame and the epoch of the evaluations; called by every `CentralBodyPropagator` constructor and after each event |
 | `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` | Advance state, returning `IntegrationResult` |
 
 `IntegrationResult` contains the completed `PropagationSegment` and optional event information if a detector triggered during the segment.
@@ -143,7 +143,7 @@ forces takes its integrator atomically and throws `ArgumentException` (`integrat
 or was already used by such an entry point, a second `CentralBodyPropagatorBuilder.Build()` included; in a batch or a
 Monte Carlo campaign whose factory returns one instance, one task runs and the others fail with that exception (#674).
 An integrator whose forces the caller added goes to the `CentralBodyPropagator` constructor without celestial bodies,
-after its `Initialize`. The step of `VVIntegrator` and of every entry point must be positive
+which initializes it with the initial state of the propagation (a later `Initialize` by the caller replaces it). The step of `VVIntegrator` and of every entry point must be positive
 (`ArgumentOutOfRangeException` otherwise).
 
 ```csharp

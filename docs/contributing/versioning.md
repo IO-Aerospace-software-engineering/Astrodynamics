@@ -2046,6 +2046,25 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   catalog position moved by the proper motion (`GetEquatorialCoordinates`) to 1.98e-16 relative over four years
   (threshold 4.0e-16, provisional, twice the Linux worst).
 
+- **A `CentralBodyPropagator` given an integrator with its forces threw `NullReferenceException` unless its caller
+  initialized the integrator** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The constructors
+  `(window, spacecraft, IIntegrator, deltaT)` and `(…, covariancePropagation)` ended without
+  `integrator.Initialize(InitialState)`, which the force-building constructors and the internal one of the avoidance
+  options call: the integrator had no observer, frame, evaluation state nor RK7(8) stages (RK7(8) failed in
+  `RK78Stepper.Step`, Velocity-Verlet in `Integrator.UpdateEvalState`), and no document told the caller to initialize
+  it. Both now initialize it with the initial state of the propagation (about the central body, the Sun in SSB mode, in
+  the inertial frame of the propagation, at the TDB start of the window), before the covariance propagation is enabled,
+  the order of the force-building path; the default Velocity-Verlet constructor, whose integrator its own constructor
+  initializes, chains past that call. `IntegratorInitializationTests` runs both constructors, RK7(8) (with and without
+  the state transition matrix) and Velocity-Verlet, without any `Initialize` by the caller, against the two-body closed
+  form over the TT seconds of the hour about the Earth (9.95e-5 m in RK7(8) at 1e-10, 15.9 m by Velocity-Verlet at 1 s,
+  its truncation), about the Sun in SSB mode over the TDB seconds of a day (1.22e-4 m), from an ECLIPJ2000 state
+  integrated in ECLIPJ2000 (9.95e-5 m) (thresholds provisional, twice the Linux worst); bit for bit the run the caller
+  initializes after construction, with and without an impulse, and the force-building constructor with the same single
+  force; a recording `IIntegrator` sees one `Initialize`, by the constructor, with the central body, the frame and the
+  TDB start of a UTC window.
+
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
@@ -2737,6 +2756,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above), after `Propagate`,
   `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput` stays null. Migration: code that
   relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
+
+- **Breaking: the constructors of `CentralBodyPropagator` that take an integrator with its forces initialize it**
+  (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above) with
+  the initial state of the propagation. A run that threw `NullReferenceException` now propagates. An `Initialize` the
+  caller made before construction with another observer or frame (the spacecraft's state about the solar system
+  barycentre in SSB mode, for instance) is replaced by the propagator's; one made after construction still wins.
+  Migration: drop the explicit `Initialize`, or keep it after construction with the propagator's initial state. No
+  result moves for a caller who initialized with the central body and the frame of the propagation.
 
 **Removed**
 

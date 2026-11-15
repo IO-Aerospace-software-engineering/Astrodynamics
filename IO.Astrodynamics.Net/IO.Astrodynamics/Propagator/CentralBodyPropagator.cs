@@ -158,7 +158,9 @@ public class CentralBodyPropagator : PropagatorBase
     /// <param name="window">The propagation window.</param>
     /// <param name="spacecraft">The spacecraft.</param>
     /// <param name="integrator">The integrator and its forces; the state transition matrix needs an
-    /// <see cref="RK78Integrator"/>.</param>
+    /// <see cref="RK78Integrator"/>. The propagator initializes it with its initial state, as the overload without
+    /// <paramref name="covariancePropagation"/>; a later <see cref="IIntegrator.Initialize"/> by the caller replaces
+    /// it.</param>
     /// <param name="deltaT">The step of the output states.</param>
     /// <param name="covariancePropagation">The propagation of the state transition matrix and of the covariance; null
     /// for none.</param>
@@ -197,7 +199,7 @@ public class CentralBodyPropagator : PropagatorBase
 
     /// <summary>
     /// Instantiate central-body propagator with a custom integrator that already has forces configured.
-    /// No forces are added; the integrator is used as-is.
+    /// No forces are added; the integrator is initialized with the initial state of the propagation.
     /// The central body is inferred from the spacecraft's orbital parameters observer.
     /// When the observer is a Star or Barycenter, the Sun is used as the central body.
     /// </summary>
@@ -206,12 +208,20 @@ public class CentralBodyPropagator : PropagatorBase
     /// between the instants of the window, the forces at t being those of TT₀ + t; about any other central body, the Sun
     /// of a star or barycentre observer included, over TDB seconds. The epochs of the segments, the steps, the events and
     /// the output states are TDB labels in both cases, and the velocities are per second of the time argument.
+    /// <para>
+    /// The propagator initializes the integrator with its initial state (<see cref="IIntegrator.Initialize"/>): about the
+    /// central body, the Sun in SSB mode, in the inertial frame of the propagation (ICRF for a TLE or a TEME state), at
+    /// the TDB start of the window. A later <see cref="IIntegrator.Initialize"/> by the caller replaces it. Before 11.0.0
+    /// the integrator was used as given, and one its caller had not initialized threw
+    /// <see cref="NullReferenceException"/> at the first step.
+    /// </para>
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="deltaT"/> is not positive.</exception>
     public CentralBodyPropagator(in Window window, Spacecraft spacecraft, IIntegrator integrator, TimeSpan deltaT)
         : this(window, spacecraft, integrator, RequirePositiveStep(deltaT, nameof(deltaT)),
             PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
+        integrator.Initialize(InitialState);
     }
 
     // Every constructor ends here; the internal one of the avoidance options and of the non-linearity index directly,
@@ -268,8 +278,10 @@ public class CentralBodyPropagator : PropagatorBase
         : this(window, spacecraft,
             CreateDefaultIntegrator(window, spacecraft, celestialBodies,
                 includeAtmosphericDrag, includeSolarRadiationPressure, deltaT),
-            deltaT)
+            deltaT, PropagationTimeArgument.For(spacecraft?.InitialOrbitalParameters?.Observer))
     {
+        // The Velocity-Verlet integrator is initialized by its constructor with the initial state, and the step checked
+        // by CreateDefaultIntegrator (PlanForces)
         _orientationCache = CreateFrameOrientationCache(Window, _centralBody);
     }
 

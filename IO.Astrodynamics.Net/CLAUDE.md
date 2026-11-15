@@ -570,6 +570,8 @@ public interface IIntegrator
 }
 ```
 
+Every `CentralBodyPropagator` constructor calls `Initialize` with the initial state of the propagation (about the central body, in the inertial frame of the propagation, at the TDB start of the window), those that take an integrator with its forces included; a later `Initialize` by the caller replaces it.
+
 VVIntegrator is the fixed-step symplectic option; RK78Integrator is the adaptive high-accuracy one. Both store `AcceptedStep` for Hermite dense output. Event detection happens at step boundaries (VV) or with sub-step bisection refinement (RK78) on states computed by shortened RK7(8) steps; the RK7(8) restart after a maneuver uses the same shortened step, never the cubic Hermite interpolation, which is off by up to ~100 m in LEO (#363).
 
 ### Event Detection System

@@ -1585,7 +1585,7 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 - `IntegrationResult`: Integration segment + optional `EventInfo` (detector index, precise event time and state)
 
 **Integrator Interface (`IIntegrator`):**
-- `Initialize(StateVector initialState)` — set observer, frame, workspace
+- `Initialize(StateVector initialState)` — set observer, frame, workspace; called by every `CentralBodyPropagator` constructor with the initial state of the propagation (the constructors that take an integrator with its forces included), and after each event
 - `IntegrateSegment(pos, vel, baseEpoch, duration, eventDetectors)` → `IntegrationResult`
 - Default: `VVIntegrator` (Velocity-Verlet, fixed-step, event detection at step boundaries)
 - `RK78Integrator` (adaptive Prince-Dormand 7(8), sub-step event refinement via bisection)

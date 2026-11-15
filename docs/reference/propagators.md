@@ -53,10 +53,10 @@ in ICRF: a target in another frame, TEME included, is rejected when the propagat
 | Constructor | Description |
 |-------------|-------------|
 | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT)` | Full control: specify integrator, bodies, and perturbation flags |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added) |
+| `CentralBodyPropagator(window, spacecraft, integrator, deltaT)` | Use a pre-configured integrator (forces already added), which the propagator initializes with its initial state |
 | `CentralBodyPropagator(window, spacecraft, celestialBodies, drag, srp, deltaT)` | Auto-creates a default VVIntegrator with specified forces |
 | `CentralBodyPropagator(window, spacecraft, integrator, celestialBodies, drag, srp, deltaT, covariancePropagation)` | As the first, and propagates the state transition matrix and, in covariance mode, the covariance ([Covariance Propagation](covariance-propagation.md)); null options for none |
-| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second, with the covariance propagation; the columns of Ψ follow the forces of the integrator |
+| `CentralBodyPropagator(window, spacecraft, integrator, deltaT, covariancePropagation)` | As the second (the integrator initialized by the propagator), with the covariance propagation; the columns of Ψ follow the forces of the integrator |
 
 On every constructor that builds the forces the central body takes part with the models of the observer: it is inserted
 first when no listed body has its NAIF identifier (a run that lists it is unchanged), and a listed body of its
@@ -66,7 +66,9 @@ weather for an Earth without a model, and of each other listed body with an atmo
 ([Force Models](force-models.md#atmosphericdrag)). The integrator of a constructor
 that builds the forces must be a new instance: one that holds forces or was used by such a constructor throws
 `ArgumentException` (`integrator`); the constructors without celestial bodies use the integrator and its forces as
-given, after the caller's `Initialize`. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
+given and initialize it with the initial state of the propagation: about the central body (the Sun in SSB mode), in the
+inertial frame of the propagation, at the TDB start of the window; a later `Initialize` by the caller replaces it. Before
+11.0.0 they used it as given, and one its caller had not initialized threw `NullReferenceException` at the first step. A step of zero or less throws `ArgumentOutOfRangeException` (`deltaT`) on every
 constructor (#674).
 
 The covariance propagation needs an `RK78Integrator` (`NotSupportedException` otherwise). Without it, a covariance of the

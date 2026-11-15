@@ -18,7 +18,8 @@ public interface IIntegrator
     /// <summary>
     /// Initialize the integrator with the initial state.
     /// Sets the observer and frame used for constructing intermediate StateVectors.
-    /// Called by the propagator after forces have been added.
+    /// Called by the propagator: by every constructor of <see cref="CentralBodyPropagator"/>, once the forces are added
+    /// (with an integrator that already has its forces, at construction too), and after each event.
     /// </summary>
     void Initialize(StateVector initialState);
 
