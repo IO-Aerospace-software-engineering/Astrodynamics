@@ -726,8 +726,10 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   zero margin fails for `Greater`, `Lower` and the `adjustValue` windows of `AbsoluteMin` and `AbsoluteMax`, and holds
   for `GreaterOrEqual`, `LowerOrEqual`, `Equal` and `NotEqual`; a bracket with an undefined (NaN) sample is not
   searched. Every window, gap and crossing of a `double` quantity is therefore found when the step is at most half the
-  time between two extremes of the quantity, a jump of a branch cut counting as one, down to the about 1 µs to which
-  `localmin` locates an extreme; a tangency between two samples (an extreme exactly at the value) is not found. The
+  time between two extremes of the quantity, a jump of a branch cut counting as one, down to the resolution of
+  `localmin`, about 2 √ε h + 2τ/3 for a step h and τ = 1 µs (2.5 µs at a 1 min step, 19 µs at 10 min, 41 µs at 22.5 min;
+  "about 1 µs" until #668, which longer steps do not reach); a tangency between two samples (an extreme exactly at the
+  value) is not found. The
   documentation asked for a step shorter than every window and gap, "as with CSPICE": CSPICE asks for a step shorter
   than the shortest interval where the quantity is monotone
   ([`gfdist_c`](https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/gfdist_c.html), Particulars, "The Search
@@ -2719,8 +2721,10 @@ not listed.
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter
   than every window and gap, or a `double` quantity whose sign is the condition. A `double` quantity's search finds a
-  window or a gap between two samples down to the about 1 µs to which `localmin` locates its extreme, and no tangency
-  there (an extreme exactly at the value).
+  window or a gap between two samples down to the resolution of `localmin`, about 2 √ε h + 2τ/3 for a step h and
+  τ = 1 µs (2.5 µs at a 1 min step, 19 µs at 10 min, 41 µs at 22.5 min; #668), and no tangency there (an extreme
+  exactly at the value). The occultation and field-of-view searches have the same limit, the bound scaling with
+  `OccultationSearchOptions.ConvergenceTolerance` (#668: their documentation said "however short").
 - **At most 1000 windows from a CSPICE search**
   ([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)). A search that CSPICE runs
   returns its first 1000 windows and drops the rest without an error; `NotEqual` then ends with one window across every

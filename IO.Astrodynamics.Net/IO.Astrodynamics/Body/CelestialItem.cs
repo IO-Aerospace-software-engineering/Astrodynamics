@@ -1009,8 +1009,10 @@ public abstract class CelestialItem : ILocalizable, IEquatable<CelestialItem>
     /// root finder to <see cref="OccultationSearchOptions.ConvergenceTolerance"/>; it reads the states and the
     /// orientations, never writes a kernel, and keeps no state, so searches on separate propagations may run
     /// concurrently. Its step rule: every window, even shorter than the step, is found when the step is at most half the
-    /// time between the extremes of the margins (a quarter of the period for the eclipses of a satellite); see the
-    /// reference page on occultations.
+    /// time between the extremes of the margins (a quarter of the period for the eclipses of a satellite), down to the
+    /// resolution of Brent's <c>localmin</c>: a window or a gap narrower than about 2 √ε h + 2τ/3 (h the step, τ the
+    /// convergence tolerance; 19 µs at a 10 min step with τ = 1 µs) can be missed, and a tangency between samples is not
+    /// found (#668); see the reference page on occultations.
     /// </para>
     /// </remarks>
     /// <param name="searchWindow">The search window.</param>

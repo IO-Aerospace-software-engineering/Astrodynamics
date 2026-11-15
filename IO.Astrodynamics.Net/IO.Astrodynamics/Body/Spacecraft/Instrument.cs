@@ -156,8 +156,10 @@ namespace IO.Astrodynamics.Body.Spacecraft
         /// </para>
         /// <para>
         /// <b>Step.</b> <c>gftfov</c> finds every window and gap longer than the step. The managed search finds every window
-        /// and gap, however short, when the step is at most half the time between the extremes of the margin; with a step
-        /// longer than an event, the two paths may then differ, the managed one finding the event.
+        /// and gap shorter than the step when the step is at most half the time between the extremes of the margin, down to
+        /// the resolution of Brent's <c>localmin</c>: one narrower than about 2 √ε h + 2τ/3 (h the step, τ the 1 µs
+        /// tolerance; 2.5 µs at 1 min, 19 µs at 10 min) can be missed, and a tangency between samples is not found (#668);
+        /// with a step longer than an event, the two paths may then differ, the managed one finding the event.
         /// </para>
         /// <para>
         /// <b>Target frame.</b> Used as given for an ellipsoid, without a check of its center; <c>gftfov</c> requires a
