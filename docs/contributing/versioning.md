@@ -2029,6 +2029,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   complete: `EGM2008_to70_TideFree` (2553 rows, Σ (n + 1) for n = 2 to 70), the CLI's `EGM2008_to100_TideFree` (5148)
   and the suite's `GMM2B_to20` and `LP165P_to20` (228 each).
 
+- **`Star.Propagate` and `Star.PropagateAsync` never returned for a step of zero or less** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The loop `epoch += stepSize` never
+  passed the end of the window, and a negative step stored a state at every turn, without bound; #674 had guarded
+  `Scenario.SimulateAsync` before its stars, not the star's own methods. Both now apply the step rule of the library
+  (`PropagatorBase.RequirePositiveStep`, #674) first, `PropagateAsync` before it creates its task, and store nothing.
+  `StarTests` checks a step of 0, −1 tick and −1 s on both methods (the base needed a watchdog: a step of 0 had not
+  ended after 5 s).
+
 **Changed**
 
 - **Breaking: kernel paths longer than SPICE takes throw `ArgumentException` before anything is written** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed
@@ -2709,6 +2717,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   check runs when the body or the field is built, not in the constructor of `GeopotentialModelParameters`, which reads
   nothing. Migration: pass a degree of at most 70 with `EGM2008_to70_TideFree` (`astro propagate -n`: at most 100, as
   before), or give a complete model file. No result moves for a degree the file covers.
+
+- **Breaking: a step of zero or less of `Star.Propagate` and `Star.PropagateAsync` throws** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above):
+  `ArgumentOutOfRangeException`, parameter `stepSize`, from the call itself for `PropagateAsync` (no task is created),
+  where the call never returned and a negative step exhausted the memory. Migration: pass a positive step. No result
+  moves for a positive step.
 
 **Removed**
 

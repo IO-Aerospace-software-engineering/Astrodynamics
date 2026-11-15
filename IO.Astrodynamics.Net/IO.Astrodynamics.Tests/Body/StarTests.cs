@@ -98,4 +98,49 @@ public class StarTests
         Assert.Equal(1.2, eph2.ToEquatorial().Declination, 3);
         Assert.Equal(8.1373353929324910E+16, eph2.ToEquatorial().Distance);
     }
+
+    private static Star NewStar(int catalogNumber, TimeSystem.Time epoch) =>
+        new(catalogNumber, $"star{catalogNumber}", 1E+30, "spec", 2, 0.3792, new Equatorial(1, 1, epoch), 0.1, 0.1, 0, 0, 0, 0,
+            epoch);
+
+    public static TheoryData<long> NonPositiveSteps() => new() { 0L, -1L, -TimeSpan.TicksPerSecond };
+
+    [Theory]
+    [MemberData(nameof(NonPositiveSteps))]
+    public void Propagate_AStepOfZeroOrLess_Throws(long stepTicks)
+    {
+        // Arrange: before, the loop epoch += step never passed the end of the window (a negative step also stored a state
+        // at each turn, without bound)
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var star = NewStar(668001, epoch);
+        var window = new Window(epoch, epoch.AddHours(1.0));
+
+        // Act
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => star.Propagate(window, TimeSpan.FromTicks(stepTicks)));
+
+        // Assert: the rule of every step of the library (#674), and nothing stored
+        Assert.Equal("stepSize", exception.ParamName);
+        Assert.False(star.IsPropagated);
+        Assert.Throws<ArgumentException>(() => star.WriteEphemeris(new System.IO.FileInfo("star668001.bsp")));
+    }
+
+    [Theory]
+    [MemberData(nameof(NonPositiveSteps))]
+    public void PropagateAsync_AStepOfZeroOrLess_ThrowsOnTheCall(long stepTicks)
+    {
+        // Arrange
+        var epoch = new TimeSystem.Time(2001, 1, 1);
+        var star = NewStar(668002, epoch);
+        var window = new Window(epoch, epoch.AddHours(1.0));
+
+        // Act: thrown by the call itself, before any task is created
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        {
+            _ = star.PropagateAsync(window, TimeSpan.FromTicks(stepTicks));
+        });
+
+        // Assert
+        Assert.Equal("stepSize", exception.ParamName);
+        Assert.False(star.IsPropagated);
+    }
 }
