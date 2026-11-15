@@ -100,7 +100,7 @@ Inferred metadata, which `ProtectedParticipantMetadata` and `SecondaryParticipan
   2026-11-13: `YES` for a spacecraft with an engine and `NO` for one without before);
 - `SOLAR_RAD_PRESSURE` is omitted, as `GRAVITY_MODEL`, `ATMOSPHERIC_MODEL`, `N_BODY_PERTURBATIONS` and `EARTH_TIDES`
   are: it states whether solar radiation pressure perturbations were used for the orbit determination of the object
-  (CCSDS 508.0-B-1 Cor. 2, Table 3-3, optional; wording to be verified by S. Guillet), not whether the spacecraft has a
+  (CCSDS 508.0-B-1 Cor. 2, Table 3-3, optional; wording confirmed by S. Guillet, 2026-11-15), not whether the spacecraft has a
   reflectivity coefficient. For a covariance the library propagated it is `YES` or `NO` from the forces of the
   propagation (below). Set `ProtectedParticipantMetadata.SolarRadPressure` or
   `SecondaryParticipantMetadata.SolarRadPressure` to state the value of an OD; `null` keeps the inferred value (third
