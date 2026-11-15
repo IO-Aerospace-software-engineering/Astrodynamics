@@ -1993,8 +1993,8 @@ Rotation representation.
 | `Normalize()` | Get unit quaternion; `InvalidOperationException` for a magnitude of 0 (#680) |
 | `Conjugate()` | Get conjugate |
 | `ToEuler()` | Convert to Euler angles |
-| `SLERP(Quaternion q, double t)` | Spherical linear interpolation |
-| `Lerp(Quaternion q, double t)` | Linear interpolation |
+| `SLERP(Quaternion q, double t)` | Spherical linear interpolation of the rotations of the two quaternions, normalized first; throws for a zero or non-finite quaternion |
+| `Lerp(Quaternion q, double t)` | Linear interpolation, normalized; throws for a zero or non-finite quaternion and for a chord through zero (q to −q at t = 0.5) |
 
 #### Matrix
 

@@ -1308,4 +1308,89 @@ public class MatirxTests
         Assert.True(withNaN == new Matrix(new[,] { { double.NaN, 0.0 }, { 0.0, 0.0 } }));
         Assert.True(zero == new Matrix(new[,] { { -0.0, 0.0 }, { 0.0, -0.0 } }));
     }
+
+    // The known limitation of #680: FromQuaternion normalised its argument leniently, so the zero quaternion gave the
+    // identity and TransformCovariance returned the covariance unrotated; a zero or non-finite quaternion is no rotation
+    [Theory]
+    [InlineData(0.0, 0.0, 0.0, 0.0)]
+    [InlineData(double.NaN, 0.0, 0.0, 0.0)]
+    [InlineData(1.0, double.PositiveInfinity, 0.0, 0.0)]
+    [InlineData(0.0, 0.0, double.NegativeInfinity, 1.0)]
+    [InlineData(1e-170, 0.0, -1e-170, 0.0)]
+    public void FromQuaternion_ZeroOrNonFiniteQuaternion_Throws(double w, double x, double y, double z)
+    {
+        var q = new Quaternion(w, x, y, z);
+        Assert.Equal("q", Assert.Throws<ArgumentException>(() => Matrix.FromQuaternion(q)).ParamName);
+        Assert.Equal("rotation", Assert.Throws<ArgumentException>(() => Matrix.TransformCovariance(Matrix.Identity6x6(), q)).ParamName);
+    }
+
+    // The rotation matrix of a non-zero quaternion is the closed form of its unit quaternion u = q / |q|:
+    // [1 - 2(y² + z²), 2(xy - wz), 2(xz + wy); 2(xy + wz), 1 - 2(x² + z²), 2(yz - wx); 2(xz - wy), 2(yz + wx), 1 - 2(x² + y²)]
+    // (M. D. Shuster, A survey of attitude representations, J. Astronaut. Sci. 41(4), 1993, the attitude matrix of a
+    // quaternion, transposed for the active rotation q p q*; to be verified by S. Guillet), and SPICE q2m (Validation)
+    private static Quaternion RandomQuaternion(Random random)
+    {
+        Quaternion q;
+        do
+        {
+            q = new Quaternion(random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0, random.NextDouble() * 2.0 - 1.0,
+                random.NextDouble() * 2.0 - 1.0);
+        } while (q.Magnitude() < 1e-3);
+
+        return q * System.Math.Pow(10.0, random.NextDouble() * 20.0 - 10.0);
+    }
+
+    // The worst element of FromQuaternion against the closed form of q / |q| and against SPICE q2m over 10 000 random
+    // quaternions of 1e-10 to 1e10, MEASURE 0 against the closed form and 1.110e-15 against q2m (Linux x64,
+    // 2026-11-15); twice the worst, rounded up at the second
+    // significant digit, provisional until the three platforms are read from the CI logs
+    private const double FromQuaternionTolerance = 2.3e-15;
+
+    [Fact]
+    public void FromQuaternion_NonZeroQuaternion_IsTheRotationMatrixOfItsUnitQuaternion()
+    {
+        var random = new Random(6801);
+        double worst = 0.0;
+        for (int i = 0; i < 10000; i++)
+        {
+            var q = RandomQuaternion(random);
+            double m = System.Math.Sqrt(q.W * q.W + q.VectorPart.X * q.VectorPart.X + q.VectorPart.Y * q.VectorPart.Y + q.VectorPart.Z * q.VectorPart.Z);
+            double w = q.W / m, x = q.VectorPart.X / m, y = q.VectorPart.Y / m, z = q.VectorPart.Z / m;
+            double[] expected =
+            [
+                1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y - w * z), 2.0 * (x * z + w * y),
+                2.0 * (x * y + w * z), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - w * x),
+                2.0 * (x * z - w * y), 2.0 * (y * z + w * x), 1.0 - 2.0 * (x * x + y * y)
+            ];
+            var matrix = Matrix.FromQuaternion(q);
+            for (int r = 0; r < 3; r++)
+            for (int c = 0; c < 3; c++)
+                worst = System.Math.Max(worst, System.Math.Abs(matrix.Get(r, c) - expected[3 * r + c]));
+        }
+
+        Console.WriteLine($"MEASURE FromQuaternion against the closed form of q / |q|: {worst:E3}");
+        Assert.True(worst <= FromQuaternionTolerance, $"{worst:E3}");
+    }
+
+    [Fact]
+    [Trait("Category", "Validation")]
+    public void FromQuaternion_NonZeroQuaternion_IsTheRotationMatrixOfSpiceQ2m()
+    {
+        TestKernels.EnsureSolarSystem();
+        var random = new Random(6802);
+        double worst = 0.0;
+        for (int i = 0; i < 10000; i++)
+        {
+            var q = RandomQuaternion(random);
+            double m = System.Math.Sqrt(q.W * q.W + q.VectorPart.X * q.VectorPart.X + q.VectorPart.Y * q.VectorPart.Y + q.VectorPart.Z * q.VectorPart.Z);
+            var expected = IO.Astrodynamics.Tests.Body.CspiceDirect.Q2m(q.W / m, q.VectorPart.X / m, q.VectorPart.Y / m, q.VectorPart.Z / m);
+            var matrix = Matrix.FromQuaternion(q);
+            for (int r = 0; r < 3; r++)
+            for (int c = 0; c < 3; c++)
+                worst = System.Math.Max(worst, System.Math.Abs(matrix.Get(r, c) - expected[3 * r + c]));
+        }
+
+        Console.WriteLine($"MEASURE FromQuaternion against SPICE q2m of q / |q|: {worst:E3}");
+        Assert.True(worst <= FromQuaternionTolerance, $"{worst:E3}");
+    }
 }

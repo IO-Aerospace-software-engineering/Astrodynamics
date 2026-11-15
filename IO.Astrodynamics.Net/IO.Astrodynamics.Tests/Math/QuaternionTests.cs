@@ -430,5 +430,58 @@ namespace IO.Astrodynamics.Tests.Math
             Assert.True(worstLength <= AxisAngleLengthTolerance, $"{worstLength:E3}");
             Assert.True(worstMatrix <= AxisAngleMatrixTolerance, $"{worstMatrix:E3}");
         }
+
+        // The known limitation of #680: Lerp normalised its result leniently, so a zero or non-finite input, or an
+        // interpolation through zero (q + t (q2 - q) = 0, as from q to -q at t = 0.5), returned the zero quaternion
+        [Fact]
+        public void Lerp_ZeroInputOrAntipodalAtT_Throws()
+        {
+            var q = new Quaternion(Vector3.VectorZ, 1.0);
+            var minusQ = q * -1.0;
+            var zero = new Quaternion(0.0, 0.0, 0.0, 0.0);
+            var nan = new Quaternion(double.NaN, 0.0, 0.0, 0.0);
+
+            Assert.Equal("q2", Assert.Throws<ArgumentException>(() => q.Lerp(minusQ, 0.5)).ParamName);
+            Assert.Equal("q2", Assert.Throws<ArgumentException>(() => q.Lerp(zero, 1.0)).ParamName);
+            Assert.Equal("q2", Assert.Throws<ArgumentException>(() => q.Lerp(zero, 0.0)).ParamName);
+            Assert.Equal("q2", Assert.Throws<ArgumentException>(() => q.Lerp(nan, 0.5)).ParamName);
+            Assert.Throws<InvalidOperationException>(() => zero.Lerp(q, 0.5));
+            Assert.Throws<InvalidOperationException>(() => nan.Lerp(q, 0.5));
+
+            // Elsewhere on the same path, q + t (q2 - q) = (1 - 2t) q, whose unit quaternion is q for t < 0.5 and -q beyond
+            var before = q.Lerp(minusQ, 0.25);
+            var after = q.Lerp(minusQ, 0.75);
+            Assert.True(System.Math.Abs(before.W - q.W) <= 1e-16 && (before.VectorPart - q.VectorPart).Magnitude() <= 1e-16, $"{before}");
+            Assert.True(System.Math.Abs(after.W + q.W) <= 1e-16 && (after.VectorPart + q.VectorPart).Magnitude() <= 1e-16, $"{after}");
+        }
+
+        // The worst component of SLERP(2 I, 3 Rx(90°), 0.5) against the closed form Rx(45°) = (cos(π/8), sin(π/8), 0, 0),
+        // MEASURE 0 and | |s| - 1 | 0 (Linux x64, 2026-11-15); twice the worst (one ulp of 1 when the measure is exact), provisional
+        // until the three platforms are read from the CI logs
+        private const double SlerpTolerance = 2.3e-16;
+
+        // The known limitation of #680: SLERP never normalised its inputs, so a non-unit input gave a non-unit result (the
+        // SLERP of the quaternions, not of their rotations) and a zero input a quaternion of magnitude 0.707. It is the
+        // SLERP of the unit quaternions (Shoemake 1985): the rotation by t times the angle about the fixed axis
+        [Fact]
+        public void Slerp_NonUnitInputs_AreTheSlerpOfTheirRotations()
+        {
+            var from = Quaternion.Identity * 2.0;
+            var to = new Quaternion(Vector3.VectorX, IO.Astrodynamics.Constants.PI2) * 3.0;
+            var s = from.SLERP(to, 0.5);
+            double w = System.Math.Cos(System.Math.PI / 8.0), x = System.Math.Sin(System.Math.PI / 8.0);
+            double worst = System.Math.Max(System.Math.Max(System.Math.Abs(s.W - w), System.Math.Abs(s.VectorPart.X - x)),
+                System.Math.Max(System.Math.Abs(s.VectorPart.Y), System.Math.Abs(s.VectorPart.Z)));
+            _output.WriteLine($"MEASURE SLERP(2 I, 3 Rx(90°), 0.5) against Rx(45°): {worst:E3}, | |s| - 1 |: {System.Math.Abs(s.Magnitude() - 1.0):E3}");
+            Assert.True(worst <= SlerpTolerance, $"{worst:E3}");
+            Assert.True(System.Math.Abs(s.Magnitude() - 1.0) <= SlerpTolerance, $"{s.Magnitude()}");
+
+            var zero = new Quaternion(0.0, 0.0, 0.0, 0.0);
+            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.SLERP(zero, 0.5)).ParamName);
+            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.SLERP(new Quaternion(1.0, double.NaN, 0.0, 0.0), 0.5)).ParamName);
+            Assert.Equal("q", Assert.Throws<ArgumentException>(() => Quaternion.Identity.SLERP(new Quaternion(double.PositiveInfinity, 0.0, 0.0, 0.0), 0.5)).ParamName);
+            Assert.Throws<InvalidOperationException>(() => zero.SLERP(Quaternion.Identity, 0.5));
+            Assert.Throws<InvalidOperationException>(() => new Quaternion(double.NaN, 0.0, 0.0, 0.0).SLERP(Quaternion.Identity, 0.5));
+        }
 }
 }

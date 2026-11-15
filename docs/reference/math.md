@@ -28,7 +28,7 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 | `Inverse()` | Negated vector (no unary `-` operator) |
 | `Rotate(Quaternion)` | Rotate by quaternion |
 | `Angle(Vector3)` | Angle between two vectors (rad) |
-| `Angle(Vector3, Vector3)` | Angle between vectors with plane normal for sign |
+| `Angle(Vector3, Vector3)`, `Angle(Vector3, Plane)` | Signed angle about a plane normal of any finite non-zero length, atan2((a × b) · n̂, a · b); `ArgumentException` (`plane`) for a zero or non-finite normal (#680's known limitation) |
 | `To(Vector3)` | Quaternion that rotates this vector to the target vector |
 | `LinearInterpolation(Vector3, double)` | Linear interpolation between this and another vector |
 | `operator +(Vector3, Vector3)` | Vector addition |
@@ -71,8 +71,8 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 | `Conjugate()` | Inverse rotation |
 | `Normalize()` | Unit quaternion; `InvalidOperationException` for a magnitude of 0 (#680) |
 | `ToEuler()` | Convert to Euler angles (Vector3) |
-| `SLERP(Quaternion, double)` | Spherical linear interpolation |
-| `Lerp(Quaternion, double)` | Linear interpolation |
+| `SLERP(Quaternion, double)` | Spherical linear interpolation of the two rotations, on the shorter path: both quaternions normalized first; `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q`) for a zero or non-finite argument |
+| `Lerp(Quaternion, double)` | Linear interpolation q + t (q2 − q), normalized, on the chord as given; `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`q2`) for a zero or non-finite `q2` or a chord through zero (q to −q at t = 0.5) |
 | `operator *(Quaternion, Quaternion)` | Quaternion composition |
 
 ## Matrix
@@ -114,12 +114,12 @@ There is no zero-quaternion constant: (0, 0, 0, 0) is not a rotation; `new Quate
 |--------|-------------|
 | `FromRowVectors(row0, row1, row2)` | Create 3x3 from row vectors |
 | `FromColumnVectors(col0, col1, col2)` | Create 3x3 from column vectors |
-| `FromQuaternion(Quaternion)` | Create 3x3 rotation matrix from quaternion |
+| `FromQuaternion(Quaternion)` | Create 3x3 rotation matrix from the unit quaternion of a quaternion; `ArgumentException` (`q`) for a zero or non-finite quaternion (#680's known limitation; the identity before 11.0.0) |
 | `CreateRotationMatrixX(angle)` | Rotation around X axis |
 | `CreateRotationMatrixY(angle)` | Rotation around Y axis |
 | `CreateRotationMatrixZ(angle)` | Rotation around Z axis |
 | `CreateBlockDiagonal(upperLeft, lowerRight)` | Create block-diagonal matrix |
-| `TransformCovariance(covariance, rotation)` | Rotate a 6x6 covariance with `diag(R, R)`; only between inertial frames, use `ToFrame` for a rotating frame |
+| `TransformCovariance(covariance, rotation)` | Rotate a 6x6 covariance with `diag(R, R)`; only between inertial frames, use `ToFrame` for a rotating frame; `ArgumentException` (`rotation`) for a zero or non-finite quaternion |
 | `Identity6x6()` | 6x6 identity matrix |
 
 ## Lagrange

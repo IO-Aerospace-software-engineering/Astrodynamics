@@ -126,6 +126,39 @@ namespace IO.Astrodynamics.Math
             return new Quaternion(W / m, VectorPart / m);
         }
 
+        /// <summary>
+        /// Whether this quaternion can be normalized: every component finite and a magnitude that is neither 0 nor
+        /// infinite.
+        /// </summary>
+        internal bool IsNormalizable()
+        {
+            if (!double.IsFinite(W) || !double.IsFinite(VectorPart.X) || !double.IsFinite(VectorPart.Y) || !double.IsFinite(VectorPart.Z))
+            {
+                return false;
+            }
+
+            double m = Magnitude();
+            return m > 0.0 && double.IsFinite(m);
+        }
+
+        // The unit quaternion of an argument (parameterName) or of this instance (parameterName null), which must be
+        // normalizable: ArgumentException for an argument, InvalidOperationException for the instance
+        internal static Quaternion RequireUnit(in Quaternion q, string parameterName)
+        {
+            if (q.IsNormalizable())
+            {
+                return q.Normalize();
+            }
+
+            string message = $"The quaternion {q} has a magnitude of 0 or a component or magnitude that is not finite, and is no rotation.";
+            if (parameterName == null)
+            {
+                throw new InvalidOperationException(message);
+            }
+
+            throw new ArgumentException(message, parameterName);
+        }
+
         public Quaternion Conjugate()
         {
             return new Quaternion(W, VectorPart.Inverse());
@@ -172,12 +205,34 @@ namespace IO.Astrodynamics.Math
         }
 
         /// <summary>
-        /// Performs Spherical Linear Interpolation (SLERP) between the current quaternion and the specified quaternion.
+        /// Performs Spherical Linear Interpolation (SLERP) between the rotation of the current quaternion and the rotation
+        /// of the specified quaternion, on the shorter path.
         /// </summary>
         /// <param name="q">The target quaternion to interpolate towards.</param>
         /// <param name="t">The interpolation factor, clamped between 0 and 1.</param>
-        /// <returns>The interpolated quaternion.</returns>
+        /// <returns>The interpolated unit quaternion.</returns>
+        /// <remarks>
+        /// Both quaternions are normalized first, so the result is the SLERP of their rotations (#680's known limitation;
+        /// before 11.0.0 a non-unit input gave the SLERP of the quaternions themselves, not a rotation). A unit input
+        /// whose magnitude rounds to 1 gives the same result bit for bit; one that is unit only to rounding can move it by
+        /// about 1e-16.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">This quaternion has a magnitude of 0, or a component or a magnitude
+        /// that is not finite: it is no rotation.</exception>
+        /// <exception cref="ArgumentException"><paramref name="q"/> has a magnitude of 0, or a component or a magnitude that
+        /// is not finite.</exception>
         public Quaternion SLERP(Quaternion q, double t)
+        {
+            var from = RequireUnit(this, null);
+            var to = RequireUnit(q, nameof(q));
+            return from.SlerpUnchecked(to, t);
+        }
+
+        /// <summary>
+        /// The SLERP of the quaternions as they are, unchecked: the library's own interpolation of the orientation cache of
+        /// a propagation, bit for bit the former public <see cref="SLERP"/>.
+        /// </summary>
+        internal Quaternion SlerpUnchecked(Quaternion q, double t)
         {
             // Clamps the parameter t between 0 and 1
             t = System.Math.Clamp(t, 0.0, 1.0);
@@ -197,7 +252,7 @@ namespace IO.Astrodynamics.Math
             if (dot > 1.0f - epsilon)
             {
                 // Linear interpolation
-                return Lerp(q, t);
+                return LerpUnchecked(q, t);
             }
 
             // Calculates the angle between the quaternions
@@ -245,22 +300,52 @@ namespace IO.Astrodynamics.Math
         }
 
         /// <summary>
-        /// Linearly interpolates between the current quaternion and the specified quaternion.
+        /// Linearly interpolates between the current quaternion and the specified quaternion, q + t (q2 − q), normalized.
         /// </summary>
         /// <param name="q2">The target quaternion to interpolate towards.</param>
         /// <param name="t">The interpolation factor, clamped between 0 and 1.</param>
-        /// <returns>The interpolated quaternion.</returns>
+        /// <returns>The interpolated unit quaternion.</returns>
+        /// <remarks>
+        /// The path is the chord from this quaternion to <paramref name="q2"/>, as given: no hemisphere is chosen, so from
+        /// q to a quaternion of the other hemisphere it takes the longer rotation. A chord through zero has no rotation
+        /// there (#680's known limitation; the zero quaternion was returned before 11.0.0).
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">This quaternion has a magnitude of 0, or a component or a magnitude
+        /// that is not finite.</exception>
+        /// <exception cref="ArgumentException"><paramref name="q2"/> has a magnitude of 0, or a component or a magnitude that
+        /// is not finite; or the interpolated quaternion has a magnitude of 0 (<paramref name="q2"/> a negative multiple of
+        /// this quaternion, as −q at t = 0.5).</exception>
         public Quaternion Lerp(Quaternion q2, double t)
+        {
+            RequireUnit(this, null);
+            RequireUnit(q2, nameof(q2));
+
+            var result = LerpRaw(q2, t);
+            if (!result.IsNormalizable())
+            {
+                throw new ArgumentException(
+                    $"The linear interpolation from {this} to {q2} at t = {t} is {result}, which has a magnitude of 0 or one that is not finite, and is no rotation.",
+                    nameof(q2));
+            }
+
+            return result.Normalize();
+        }
+
+        // The former public Lerp, unchecked: the fallback of the unchecked SLERP, bit for bit
+        private Quaternion LerpUnchecked(Quaternion q2, double t)
+        {
+            return LerpRaw(q2, t).NormalizeOrZero();
+        }
+
+        private Quaternion LerpRaw(in Quaternion q2, double t)
         {
             t = System.Math.Clamp(t, 0.0, 1.0);
 
-            Quaternion result = new Quaternion(W + t * (q2.W - W),
+            return new Quaternion(W + t * (q2.W - W),
                 VectorPart.X + t * (q2.VectorPart.X - VectorPart.X),
                 VectorPart.Y + t * (q2.VectorPart.Y - VectorPart.Y),
                 VectorPart.Z + t * (q2.VectorPart.Z - VectorPart.Z)
             );
-
-            return result.NormalizeOrZero();
         }
     }
 }

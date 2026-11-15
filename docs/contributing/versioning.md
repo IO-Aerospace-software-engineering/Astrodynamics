@@ -2022,6 +2022,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   internal factory, bit for bit as before. `QuaternionTests` checks 10 000 random axes of 1e-10 to 1e10 and angles in
   [−2π, 2π) against Rodrigues' formula (worst 6.4e-16 rad, |q| within 3.3e-16 of 1) and against CSPICE `vrotv` and
   `axisar` (rotation matrix within 8.9e-16), the table of the issue, and the zero and non-finite axes.
+- **Public math methods that normalized leniently returned silently for a zero or non-finite input** (the known
+  limitation of [#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)). #680 made `Vector3.Normalize()` and `Quaternion.Normalize()` throw for a magnitude
+  of 0 and moved the library's calls to the internal lenient helper, which four public methods also used on their own
+  argument or result: `Matrix.FromQuaternion` of the zero quaternion was the identity (so `Matrix.TransformCovariance`
+  returned the covariance unrotated) and of a NaN quaternion all NaN; `Quaternion.Lerp` from q to −q at t = 0.5, or
+  to the zero quaternion at t = 1, was the zero quaternion; `Quaternion.SLERP`, which never normalized its inputs, gave
+  a quaternion of magnitude 0.707 toward the zero quaternion and the SLERP of the quaternions, not of their rotations,
+  for non-unit inputs (`SLERP(2 I, 3 Rx(90°), 0.5)` 0.075 off Rx(45°)); `Vector3.Angle(vector, plane)` and
+  `Angle(vector, Plane)` with a zero normal gave the unsigned 0 or π, the sign lost (π from X to (−1, 1e-300, 0)
+  where the normal −z gives −π/2 to Y). Under the same signatures, `FromQuaternion` and `TransformCovariance` throw
+  `ArgumentException` (`q`, `rotation`) for a zero or non-finite quaternion; `Lerp` throws `InvalidOperationException`
+  for a zero or non-finite instance and `ArgumentException` (`q2`) for a zero or non-finite `q2` or a chord through
+  zero; `SLERP` normalizes both inputs, with the same exceptions (`q`); `Angle(vector, plane)` throws
+  `ArgumentException` (`plane`) for a zero or non-finite normal. Every non-degenerate result of `FromQuaternion`,
+  `TransformCovariance`, `Lerp` and `Angle` is unchanged bit for bit. The library's own interpolation of the
+  orientation cache of a propagation and the signed angle of `ApsidalAlignmentManeuver` go through internal unchecked
+  paths, bit for bit. `MatrixTests` checks `FromQuaternion` of 10 000 random quaternions of 1e-10 to 1e10 against the
+  closed form of q / |q| (exact) and CSPICE `q2m` (1.1e-15), `QuaternionTests` the closed forms of Lerp along q to −q
+  and of `SLERP(2 I, 3 Rx(90°), 0.5)` = Rx(45°) (exact), `VectorTests` the signed angle ±π/2 about normals of 1e-100 to
+  1e100, and each throw.
 
 **Changed**
 
@@ -2701,6 +2721,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   can move it by an ulp. Nothing the library computes moves. Migration: pass any non-zero direction; check the magnitude
   of a vector that can be zero (a zero angular velocity) before passing it, and use `Quaternion.Identity` for no
   rotation.
+- **Breaking: `Matrix.FromQuaternion`, `Matrix.TransformCovariance`, `Quaternion.Lerp`, `Quaternion.SLERP` and
+  `Vector3.Angle(vector, plane)` throw for a zero or non-finite input** (the known limitation of [#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680), Fixed above).
+  `FromQuaternion` and `TransformCovariance` throw `ArgumentException` (`q`, `rotation`) where they used the identity
+  (or NaN); `Lerp` throws `InvalidOperationException` for a zero or non-finite instance and `ArgumentException` (`q2`)
+  for a zero or non-finite `q2` and when the chord passes through zero (`Lerp(q, −q, 0.5)`), where it returned the zero
+  quaternion; `SLERP` normalizes its inputs and throws the same way (`q`), so non-unit inputs give the SLERP of their
+  rotations, and inputs unit only to rounding can move its result by about 1e-16; `Angle(vector, plane)` and
+  `Angle(vector, Plane)` throw `ArgumentException` (`plane`) for a zero or non-finite normal, where they returned 0 or
+  π. Nothing the library computes moves. Migration: pass non-zero quaternions and normals; interpolate with `Lerp`
+  between quaternions of the same hemisphere (flip `q2` when q · q2 < 0), or use `SLERP`, which takes the shorter path.
 
 **Removed**
 
@@ -2952,12 +2982,8 @@ not listed.
   ([#686](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/686), [#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687)). The library's own
   normalizations still return the zero vector for a magnitude of 0 ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)), which hides two degenerate cases:
   `PerigeeVector()` and `ApogeeVector()` are the zero vector when the eccentricity vector rounds to zero (139 of 10 000
-  random circular elements), and `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix. The
-  public methods that normalize their own argument or result the same way return silently too:
-  `Matrix.FromQuaternion` of the zero quaternion is the identity, `Quaternion.Lerp` from q to −q at t = 0.5 the zero
-  quaternion, and `Vector3.Angle(vector, plane)` with a zero plane normal 0 or π, the unsigned angle's sign lost. Give
-  near-circular elements a non-zero eccentricity for their apsides, and non-zero quaternions and normals to these
-  methods.
+  random circular elements), and `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix. Give
+  near-circular elements a non-zero eccentricity for their apsides.
 - **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
   read in ICRF without aberration and convert with `ToFrame`.

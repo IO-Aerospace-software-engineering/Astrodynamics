@@ -88,12 +88,46 @@ namespace IO.Astrodynamics.Math
             return System.Math.Acos(dotProduct);
         }
 
+        /// <summary>
+        /// The signed angle from this vector to <paramref name="vector"/>, positive counterclockwise about the normal of
+        /// <paramref name="plane"/>, in (−π, π]: atan2((a × b) · n̂, a · b).
+        /// </summary>
+        /// <exception cref="ArgumentException">The normal of <paramref name="plane"/> has a magnitude of 0, or a component or
+        /// a magnitude that is not finite (#680's known limitation).</exception>
         public double Angle(in Vector3 vector, in Plane plane)
         {
             return Angle(vector, plane.Normal);
         }
 
+        /// <summary>
+        /// The signed angle from this vector to <paramref name="vector"/>, positive counterclockwise about
+        /// <paramref name="plane"/>, the normal of the plane of the angle, of any finite non-zero length, in (−π, π]:
+        /// atan2((a × b) · n̂, a · b). A zero vector gives 0, as the unsigned <see cref="Angle(in Vector3)"/> does.
+        /// </summary>
+        /// <exception cref="ArgumentException"><paramref name="plane"/> has a magnitude of 0 (a zero normal, or components all
+        /// below about 1.5e-162), or a component or a magnitude that is not finite: it orients no plane (#680's known
+        /// limitation; before 11.0.0 the unsigned 0 or π was returned, its sign lost).</exception>
         public double Angle(in Vector3 vector, in Vector3 plane)
+        {
+            if (!double.IsFinite(plane.X) || !double.IsFinite(plane.Y) || !double.IsFinite(plane.Z))
+            {
+                throw new ArgumentException($"The plane normal {plane} has a component that is not finite and orients no plane.", nameof(plane));
+            }
+
+            double m = plane.Magnitude();
+            if (!(m > 0.0) || !double.IsFinite(m))
+            {
+                throw new ArgumentException($"The plane normal {plane} has a magnitude of 0 or one that is not finite, and orients no plane.", nameof(plane));
+            }
+
+            return double.Atan2(Cross(vector) * (plane / m), this * vector);
+        }
+
+        /// <summary>
+        /// The signed angle about a normal normalized leniently, a zero normal giving the unsigned 0 or π: the library's
+        /// own signed angle of <see cref="Maneuver.ApsidalAlignmentManeuver"/>, bit for bit the former public overload.
+        /// </summary>
+        internal double AngleAboutNormalOrZero(in Vector3 vector, in Vector3 plane)
         {
             return double.Atan2(Cross(vector) * plane.NormalizeOrZero(), this * vector);
         }

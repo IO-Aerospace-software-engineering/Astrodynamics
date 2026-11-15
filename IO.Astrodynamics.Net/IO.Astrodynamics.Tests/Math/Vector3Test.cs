@@ -265,4 +265,32 @@ public class VectorTests
         Assert.True(worstNorm <= NormTolerance, $"{worstNorm:E3}");
         Assert.True(worstCross <= CrossTolerance, $"{worstCross:E3}");
     }
+
+    // The known limitation of #680: the signed angle normalised its plane normal leniently, so a zero normal gave the
+    // unsigned 0 or π, its sign lost silently; a zero or non-finite normal defines no orientation
+    [Theory]
+    [InlineData(0.0, 0.0, 0.0)]
+    [InlineData(double.NaN, 0.0, 1.0)]
+    [InlineData(0.0, double.PositiveInfinity, 0.0)]
+    [InlineData(0.0, 0.0, double.NegativeInfinity)]
+    public void SignedAngle_ZeroOrNonFinitePlane_Throws(double x, double y, double z)
+    {
+        var normal = new Vector3(x, y, z);
+        Assert.Equal("plane", Assert.Throws<ArgumentException>(() => Vector3.VectorX.Angle(new Vector3(-1.0, 1e-300, 0.0), normal)).ParamName);
+        Assert.Equal("plane", Assert.Throws<ArgumentException>(() => Vector3.VectorX.Angle(Vector3.VectorY, normal)).ParamName);
+        Assert.Equal("plane", Assert.Throws<ArgumentException>(() => Vector3.VectorX.Angle(Vector3.VectorY, new Plane(normal))).ParamName);
+    }
+
+    // The signed angle about a non-zero normal of any length: atan2((a × b) · n̂, a · b), -π/2 from X to Y about -z,
+    // +π/2 about +z (the closed form, exact in doubles)
+    [Theory]
+    [InlineData(-1.0)]
+    [InlineData(-1e-100)]
+    [InlineData(-1e100)]
+    public void SignedAngle_NonZeroPlane_IsTheAngleAboutItsDirection(double z)
+    {
+        Assert.Equal(-System.Math.PI / 2.0, Vector3.VectorX.Angle(Vector3.VectorY, new Vector3(0.0, 0.0, z)));
+        Assert.Equal(System.Math.PI / 2.0, Vector3.VectorX.Angle(Vector3.VectorY, new Plane(new Vector3(0.0, 0.0, -z))));
+        Assert.Equal(System.Math.PI, Vector3.VectorX.Angle(new Vector3(-1.0, 1e-300, 0.0), new Vector3(0.0, 0.0, -z)));
+    }
 }

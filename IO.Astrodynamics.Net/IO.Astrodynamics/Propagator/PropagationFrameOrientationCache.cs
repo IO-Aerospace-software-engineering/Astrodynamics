@@ -143,7 +143,7 @@ public sealed class PropagationFrameOrientationCache
             return new StateOrientation(read.Rotation, read.AngularVelocity, epoch, Frame.ICRF);
         }
 
-        var rotation = p0.Rotation.SLERP(p1.Rotation, ratio);
+        var rotation = p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
         var angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
 
         return new StateOrientation(rotation, angularVelocity, epoch, Frame.ICRF);
@@ -159,7 +159,7 @@ public sealed class PropagationFrameOrientationCache
             return ReadAt(epoch).Rotation;
         }
 
-        return p0.Rotation.SLERP(p1.Rotation, ratio);
+        return p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
     }
 
     /// <summary>
@@ -175,7 +175,7 @@ public sealed class PropagationFrameOrientationCache
             return;
         }
 
-        rotation = p0.Rotation.SLERP(p1.Rotation, ratio);
+        rotation = p0.Rotation.SlerpUnchecked(p1.Rotation, ratio);
         angularVelocity = p0.AngularVelocity.LinearInterpolation(p1.AngularVelocity, ratio);
     }
 
