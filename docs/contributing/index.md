@@ -44,6 +44,11 @@ error a proxy drops, performance), with its P/Invoke declarations in the same pu
   run `PropagationGoldenTests`.
 - XML documentation comments on every public member, and a documentation update when the public
   API changes.
+- Each C# block of `DEVELOPER_GUIDE.md` is compiled: it is the region `guide:<n>` of a method of
+  `IO.Astrodynamics.Tests/Documentation/DeveloperGuideExamples.cs` (n its rank among the guide's csharp blocks, the
+  excerpt of `Constants` excepted), and `DeveloperGuideExamplesTests` fails when a block and its region differ. Change
+  the block and its region together; a block that continues an earlier one names its inputs in its first comment, and
+  the method declares them (#668).
 - Microsoft C# conventions, SOLID and DRY, methods that do one thing.
 
 The full guidelines live in

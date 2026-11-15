@@ -2013,6 +2013,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   with System.Xml.Linq, independently of the readers, and reach every path: `Load*` with and without schema
   validation, `Load*` and `ReadFrom*` from a file, a string and a stream, `TryLoadFromFile`, `ValidateFile` and
   `Cdm.ReadFromFile`/`ReadFromString`/`ReadFromStream`.
+- **The C# examples of the developer guide did not compile** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). 22 of the 60 blocks of
+  `DEVELOPER_GUIDE.md` failed against the library: the spacecraft example built an `Engine` without its tank, added it
+  before the tank (`AddEngine` throws for a tank the spacecraft does not hold, #676), called `SetFuelTank` and read
+  `StateVectorsRelativeToICRF`, neither of which exists, and its Engine table listed a constructor that does not exist;
+  elsewhere, parameters of other names (`a:` on `KeplerianElements`, `longitude:` on `Planetodetic`, `maxRevolutions:`,
+  `occultingBody:`), `TLE.Configuration`, `Omm.CreateForSgp4`, `Omm.SaveToString`, `LambertSolution.DepartureVelocity`,
+  `PlanetsAndMoons.SUN`, unary minus on `Vector3`, `Frames.Frame` (which does not resolve in an application's namespace),
+  a TRIAD attitude on two opposite body vectors (which throws), a local named `explicit` and locals declared twice. Every
+  block now compiles: each is the region of a method of `IO.Astrodynamics.Tests/Documentation/DeveloperGuideExamples.cs`,
+  in a namespace outside `IO.Astrodynamics` as an application's, and `DeveloperGuideExamplesTests` checks that each
+  block equals its region and runs the 40 that need only `Data/SolarSystem`; the spacecraft example against the two-body
+  state of its elements after 12 h (124.5 m, the Velocity-Verlet error at the 1 s step it now uses: 447 km at the 60 s
+  of before). A block that continues an earlier one names its inputs in its first comment. No library result moves.
 
 **Changed**
 

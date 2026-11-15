@@ -112,6 +112,7 @@ SpiceAPI.Instance.LoadKernels(new FileInfo("de440.bsp"));
 ```csharp
 using IO.Astrodynamics;
 using IO.Astrodynamics.Body;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.TimeSystem;
 using IO.Astrodynamics.SolarSystemObjects;
 
@@ -126,7 +127,7 @@ var sun = new CelestialBody(Stars.Sun);
 var epoch = new Time(2024, 6, 21, 12, 0, 0);
 
 // Get Earth's state vector relative to the Sun
-var stateVector = earth.GetEphemeris(epoch, sun, Frames.Frame.ICRF, Aberration.None)
+var stateVector = earth.GetEphemeris(epoch, sun, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
 Console.WriteLine($"Position: {stateVector.Position}");
@@ -136,23 +137,26 @@ Console.WriteLine($"Velocity: {stateVector.Velocity}");
 ### Basic Example: Create an Orbit
 
 ```csharp
+using IO.Astrodynamics;
+using IO.Astrodynamics.Frames;
 using IO.Astrodynamics.OrbitalParameters;
-using IO.Astrodynamics.Math;
+using IO.Astrodynamics.SolarSystemObjects;
+using IO.Astrodynamics.TimeSystem;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
 var epoch = new Time(2024, 1, 1, 0, 0, 0);
 
 // Create from Keplerian elements
 var orbit = new KeplerianElements(
-    a: 7000000.0,                        // Semi-major axis (m)
-    e: 0.001,                            // Eccentricity
-    i: 51.6 * Constants.Deg2Rad,         // Inclination (rad)
-    raan: 100.0 * Constants.Deg2Rad,     // RAAN (rad)
-    aop: 90.0 * Constants.Deg2Rad,       // Argument of periapsis (rad)
-    m: 0.0,                              // Mean anomaly (rad)
-    observer: earth,
-    epoch: epoch,
-    frame: Frames.Frame.ICRF
+    7000000.0,                           // Semi-major axis (m)
+    0.001,                               // Eccentricity
+    51.6 * Constants.Deg2Rad,            // Inclination (rad)
+    100.0 * Constants.Deg2Rad,           // RAAN (rad)
+    90.0 * Constants.Deg2Rad,            // Argument of periapsis (rad)
+    0.0,                                 // Mean anomaly (rad)
+    earth,                               // Observer: the center of motion
+    epoch,
+    Frame.ICRF
 );
 
 // Convert to state vector
@@ -164,6 +168,7 @@ Console.WriteLine($"Orbital Period: {orbit.Period().TotalHours:F2} hours");
 
 ```csharp
 using IO.Astrodynamics.OrbitalParameters.TLE;
+using IO.Astrodynamics.TimeSystem;
 
 var tle = new TLE("ISS (ZARYA)",
     "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
@@ -333,13 +338,13 @@ var moon = new CelestialBody(PlanetsAndMoons.MOON);
 var sun = new CelestialBody(Stars.Sun);
 
 // Get ephemeris
-var state = earth.GetEphemeris(Time.J2000TDB, sun, Frames.Frame.ICRF, Aberration.None);
+var state = earth.GetEphemeris(Time.J2000TDB, sun, Frame.ICRF, Aberration.None);
 var sv = state.ToStateVector();
 
 // Compute geosynchronous orbit
 var geoOrbit = earth.GeosynchronousOrbit(0.0, 0.0, new Time(2024, 1, 1));
 
-// Find lunar eclipses
+// Find solar eclipses: the Sun (this item) behind the Moon, seen from the Earth's center
 var eclipses = sun.FindWindowsOnOccultationConstraint(
     new Window(new Time(2024, 1, 1), new Time(2024, 12, 31)),
     earth, ShapeType.Ellipsoid, moon, ShapeType.Ellipsoid,
@@ -416,7 +421,7 @@ Cartesian position and velocity state.
 | `ToFrame(Frame frame)` | Transform to different reference frame |
 | `RelativeTo(ILocalizable target, Aberration aberration)` | Transform to different center |
 | `Inverse()` | Invert position and velocity |
-| `ToTLE(TLE.Configuration config)` | Convert to TLE format |
+| `ToTLE(Configuration config)` | Convert to TLE format (`IO.Astrodynamics.OrbitalParameters.TLE.Configuration`) |
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
@@ -426,7 +431,7 @@ var epoch = new Time(2024, 1, 1);
 var sv = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0),      // Position (m)
     new Vector3(0.0, 8000.0, 0.0),         // Velocity (m/s)
-    earth, epoch, Frames.Frame.ICRF
+    earth, epoch, Frame.ICRF
 );
 
 // Compute orbital elements
@@ -439,7 +444,7 @@ Console.WriteLine($"Period: {sv.Period().TotalMinutes:F2} min");
 var kep = sv.ToKeplerianElements();
 
 // Transform to different frame
-var svEcliptic = sv.ToFrame(Frames.Frame.ECLIPTIC_J2000);
+var svEcliptic = sv.ToFrame(Frame.ECLIPTIC_J2000);
 ```
 
 #### KeplerianElements
@@ -448,7 +453,7 @@ Classical Keplerian orbital elements (osculating or mean).
 
 | Constructor | Description |
 |------------|-------------|
-| `KeplerianElements(double a, double e, double i, double raan, double aop, double m, CelestialItem observer, Time epoch, Frame frame)` | Create from elements |
+| `KeplerianElements(double semiMajorAxis, double eccentricity, double inclination, double rigthAscendingNode, double argumentOfPeriapsis, double meanAnomaly, ILocalizable observer, Time epoch, Frame frame)` | Create from elements (the parameter of the RAAN is spelled `rigthAscendingNode`) |
 | `KeplerianElements(..., double perigeeRadius)` | Create parabolic orbit with perigee radius |
 | `KeplerianElements(..., OrbitalElementsType elementsType)` | Create with explicit element type |
 
@@ -494,15 +499,15 @@ var epoch = new Time(2024, 1, 1);
 
 // Create osculating Keplerian elements (ISS-like orbit)
 var kep = new KeplerianElements(
-    a: 6800000.0,                        // Semi-major axis (m)
-    e: 0.001,                            // Eccentricity
-    i: 51.6 * Constants.Deg2Rad,         // Inclination
-    raan: 100.0 * Constants.Deg2Rad,     // RAAN
-    aop: 90.0 * Constants.Deg2Rad,       // Argument of periapsis
-    m: 0.0,                              // Mean anomaly (at perigee)
-    observer: earth,
-    epoch: epoch,
-    frame: Frames.Frame.ICRF
+    6800000.0,                           // Semi-major axis (m)
+    0.001,                               // Eccentricity
+    51.6 * Constants.Deg2Rad,            // Inclination
+    100.0 * Constants.Deg2Rad,           // RAAN
+    90.0 * Constants.Deg2Rad,            // Argument of periapsis
+    0.0,                                 // Mean anomaly (at perigee)
+    earth,                               // Observer: the center of motion
+    epoch,
+    Frame.ICRF
 );
 
 // Get state at later time
@@ -522,7 +527,7 @@ var meanKep = KeplerianElements.FromOMM(
     meanAnomaly: 39.2360,                // degrees
     observer: earth,
     epoch: epoch,
-    frame: Frames.Frame.TEME
+    frame: Frame.TEME
 );
 
 Console.WriteLine($"Elements type: {meanKep.ElementsType}"); // Mean
@@ -557,7 +562,9 @@ The classical equinoctial set (GMAT's EquinoctialH, K, P and Q) is h = G, k = F,
 | `Lv()` | True longitude (rad), `L0` |
 
 ```csharp
-var sv = new StateVector(...);
+var sv = new StateVector(
+    new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 1000.0),
+    PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1), Frame.ICRF);
 var equinoctial = sv.ToEquinoctial();
 
 // Access equinoctial components
@@ -634,12 +641,15 @@ Console.WriteLine($"Mean motion: {meanKep.MeanMotion()} rad/s");
 
 // Create TLE from state vector
 var epoch = new Time(2024, 1, 1);
-var state = new StateVector(...);
-var config = new TLE.Configuration(99999, "MY_SAT", "24001A");
+var state = new StateVector(
+    new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 5413.8, 5413.8),
+    PlanetsAndMoons.EARTH_BODY, epoch, Frame.ICRF);
+// The Configuration of IO.Astrodynamics.OrbitalParameters.TLE, not IO.Astrodynamics.Configuration
+var config = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(99999, "MY_SAT", "24001A");
 var newTle = state.ToTLE(config);
 
 // NORAD catalog numbers above 99999 use the Alpha-5 convention (up to 339999)
-var alpha5 = new TLE.Configuration(275544, "MY_SAT", "24001A");
+var alpha5 = new IO.Astrodynamics.OrbitalParameters.TLE.Configuration(275544, "MY_SAT", "24001A");
 var alpha5Tle = state.ToTLE(alpha5);
 Console.WriteLine(alpha5Tle.Line1.Substring(2, 5)); // T5544
 Console.WriteLine(alpha5Tle.NoradCatalogId);        // 275544
@@ -665,7 +675,8 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 | `LoadFromFile(string filePath, bool validateSchema, bool validateContent)` | Load OMM from XML file; a document with several OMM messages throws `OmmParseException`, as do `LoadFromString` and `LoadFromStream` (#679) |
 | `LoadFromString(string xml, bool validateSchema, bool validateContent)` | Load OMM from XML string |
 | `LoadFromStream(Stream stream, bool validateSchema, bool validateContent)` | Load OMM from stream |
-| `CreateForSgp4(string objectName, string objectId, DateTime epoch, ...)` | Create OMM for SGP4 propagation |
+| `CreateForTle(string objectName, string objectId, DateTime epoch, double meanMotion, ...)` | Create OMM for SGP4 propagation (mean elements and TLE parameters) |
+| `CreateMinimal(...)` | Create OMM with the required fields only |
 
 | Property | Description |
 |----------|-------------|
@@ -678,8 +689,9 @@ Represents a complete CCSDS Orbit Mean-elements Message.
 
 | Method | Description |
 |--------|-------------|
-| `SaveToFile(string filePath, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OMM to XML file |
-| `SaveToString(bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OMM to XML string |
+| `SaveToFile(string filePath, bool validateBeforeSave)` | Save OMM to XML file |
+| `SaveToStream(Stream stream, bool validateBeforeSave)` | Save OMM to a stream |
+| `ToXml()` | Write OMM as an XML string (`OmmWriter` for the NDM container and indentation options) |
 | `ToTle()` | Convert OMM to TLE (requires TLE parameters in data) |
 | `Validate()` | Validate OMM content and return validation result |
 
@@ -707,7 +719,7 @@ if (omm.IsTleCompatible)
 }
 
 // Create OMM programmatically
-var newOmm = Omm.CreateForSgp4(
+var newOmm = Omm.CreateForTle(
     objectName: "MY_SATELLITE",
     objectId: "2024-001A",
     epoch: DateTime.UtcNow,
@@ -715,7 +727,7 @@ var newOmm = Omm.CreateForSgp4(
     eccentricity: 0.001,
     inclination: 51.6,          // degrees
     raan: 100.0,                // degrees
-    argumentOfPericenter: 90.0, // degrees
+    argOfPericenter: 90.0,      // degrees
     meanAnomaly: 0.0,           // degrees
     bstar: 0.0001,
     meanMotionDot: 0.00001,
@@ -746,7 +758,7 @@ var omm = tle.ToOmm(originator: "My Organization");
 omm.SaveToFile("iss.omm");
 
 // Or get as XML string
-var xml = omm.SaveToString();
+var xml = omm.ToXml();
 ```
 
 #### Round-Trip Conversion
@@ -778,6 +790,10 @@ newOmm.SaveToFile("satellite_updated.omm");
 Low-level classes for reading and writing OMM XML files:
 
 ```csharp
+// OmmReader for parsing
+var reader = new OmmReader();
+var omm = reader.ReadFromFile("input.omm");
+
 // OmmWriter for custom output options
 var writer = new OmmWriter
 {
@@ -787,10 +803,6 @@ var writer = new OmmWriter
 
 var xml = writer.WriteToString(omm);
 writer.WriteToFile(omm, "output.omm");
-
-// OmmReader for parsing
-var reader = new OmmReader();
-var omm = reader.ReadFromFile("input.omm");
 ```
 
 #### OmmValidator
@@ -798,6 +810,7 @@ var omm = reader.ReadFromFile("input.omm");
 Validates OMM content for physical constraints and CCSDS compliance:
 
 ```csharp
+// omm: an Omm, loaded or converted as above (tle.ToOmm())
 var validator = new OmmValidator();
 var result = validator.Validate(omm);
 
@@ -870,7 +883,7 @@ Represents a complete CCSDS Orbit Parameter Message.
 | Method | Description |
 |--------|-------------|
 | `SaveToFile(string filePath, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML file |
-| `SaveToString(bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to XML string |
+| `SaveToStream(Stream stream, bool validateBeforeSave, bool wrapInNdm, bool indent)` | Save OPM to a stream |
 | `ToXmlString(bool wrapInNdm, bool indent)` | Convert to XML string without validation |
 | `ToStateVector(ILocalizable observer)` | Convert OPM to framework StateVector (km→m, km/s→m/s); without an observer, the centre `CENTER_NAME` names (a barycenter, the Sun, a planet or a moon; another name throws `ArgumentException`), and an observer that contradicts it throws (#679) |
 | `ToSpacecraft(int naifId, double maxMass, Clock clock, ILocalizable observer)` | Convert OPM to Spacecraft object; the observer as on `ToStateVector` |
@@ -904,6 +917,7 @@ var spacecraft = opm.ToSpacecraft(
 The `Spacecraft` class provides a `ToOpm()` method for exporting spacecraft state to CCSDS OPM format:
 
 ```csharp
+// clock: a Clock; stateVector: the initial state (an ISS-like orbit)
 // Create spacecraft and propagate with maneuvers
 var spacecraft = new Spacecraft(-1000, "ISS", 420000.0, 500000.0, clock,
     stateVector, 1600.0, 2.2, "1998-067A", 1.5);
@@ -930,6 +944,7 @@ OPM carries no covariance: moving it there would take the state transition matri
 OPM data contains mandatory state vector and optional components:
 
 ```csharp
+// epoch: the epoch of the state; x, y, z (km) and vx, vy, vz (km/s): its components
 // Create OPM with all components
 var header = CcsdsHeader.Create("My Organization");
 var metadata = new OpmMetadata("SAT-1", "2024-001A", "EARTH", "ICRF", "UTC");
@@ -995,6 +1010,7 @@ opm.SaveToFile("complete_opm.xml");
 After executing maneuvers during propagation, export them to OPM format:
 
 ```csharp
+// spacecraft: a Spacecraft propagated with impulse maneuvers
 // After spacecraft propagation with executed maneuvers
 foreach (var maneuver in spacecraft.ExecutedManeuvers)
 {
@@ -1017,6 +1033,7 @@ foreach (var maneuver in spacecraft.ExecutedManeuvers)
 Validates OPM content for physical constraints and CCSDS compliance:
 
 ```csharp
+// opm: an Opm, loaded or built as above
 var validator = new OpmValidator();
 var result = validator.Validate(opm);
 
@@ -1076,14 +1093,15 @@ Reference frame for spatial transformations.
 
 ```csharp
 // Use predefined frames
-var icrf = Frames.Frame.ICRF;
-var ecliptic = Frames.Frame.ECLIPTIC_J2000;
+var icrf = Frame.ICRF;
+var ecliptic = Frame.ECLIPTIC_J2000;
 
 // Create body-fixed frame
-var earthFrame = new Frames.Frame("IAU_EARTH");
+var earthFrame = new Frame("IAU_EARTH");
 
 // Transform state vector
-var svICRF = new StateVector(..., frame: icrf);
+var svICRF = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
+    PlanetsAndMoons.EARTH_BODY, Time.J2000TDB, icrf);
 var svEcliptic = svICRF.ToFrame(ecliptic);
 
 // Get frame transformation
@@ -1160,15 +1178,17 @@ Specialized site for launch operations.
 
 | Constructor | Description |
 |------------|-------------|
-| `LaunchSite(int id, string name, CelestialBody body, IEnumerable<AzimuthRange> allowedAzimuths)` | Create with azimuth constraints |
+| `LaunchSite(int id, string name, CelestialBody body, Planetodetic coordinates, params AzimuthRange[] allowedAzimuths)` | Create with its coordinates and azimuth constraints |
 
 | Method | Description |
 |--------|-------------|
 | `IsAzimuthAllowed(double azimuth)` | Check if launch azimuth is allowed |
 
 ```csharp
+var earth = PlanetsAndMoons.EARTH_BODY;
 var launchSite = new LaunchSite(100, "MyLaunchSite", earth,
-    new[] { new AzimuthRange(45 * Constants.Deg2Rad, 135 * Constants.Deg2Rad) });
+    new Planetodetic(-81.0 * Constants.Deg2Rad, 28.5 * Constants.Deg2Rad, 0.0),
+    new AzimuthRange(45 * Constants.Deg2Rad, 135 * Constants.Deg2Rad));
 
 if (launchSite.IsAzimuthAllowed(90 * Constants.Deg2Rad))
     Console.WriteLine("East launch is allowed");
@@ -1184,7 +1204,7 @@ Geodetic coordinates (longitude, latitude, altitude).
 
 | Constructor | Description |
 |------------|-------------|
-| `Planetodetic(double longitude, double latitude, double altitude)` | Create coordinates |
+| `Planetodetic(double Longitude, double Latitude, double Altitude)` | Create coordinates (a record struct: its parameters are its properties) |
 
 | Property | Description |
 |----------|-------------|
@@ -1199,9 +1219,9 @@ Geodetic coordinates (longitude, latitude, altitude).
 ```csharp
 // Create geodetic coordinates
 var coords = new Planetodetic(
-    longitude: -122.0 * Constants.Deg2Rad,
-    latitude: 37.0 * Constants.Deg2Rad,
-    altitude: 100.0
+    Longitude: -122.0 * Constants.Deg2Rad,
+    Latitude: 37.0 * Constants.Deg2Rad,
+    Altitude: 100.0
 );
 ```
 
@@ -1237,8 +1257,10 @@ states in ICRF. The coordinate searches of `CoordinateSystem.RaDec` keep the ang
 
 ```csharp
 // Get equatorial coordinates
+var earth = PlanetsAndMoons.EARTH_BODY;
+var epoch = new Time(2024, 1, 1, 12, 0, 0);
 var moon = new CelestialBody(PlanetsAndMoons.MOON);
-var sv = moon.GetEphemeris(epoch, earth, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+var sv = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None).ToStateVector();
 var eq = sv.ToEquatorial();
 
 Console.WriteLine($"RA: {eq.RightAscension * Constants.Rad2Deg:F4}°");
@@ -1278,7 +1300,6 @@ Represents a spacecraft with components.
 | `DragCoefficient` | Drag coefficient Cd (default 2.2) |
 | `SolarRadiationCoeff` | Solar radiation pressure coefficient Cr (default 1.0, range 1.0–2.0) |
 | `InitialOrbitalParameters` | Initial orbit |
-| `StateVectorsRelativeToICRF` | Propagated states (CB-relative in ICRF) |
 | `BodyFront` | Instance body front axis (default: +Y, same as `Spacecraft.Front`) |
 | `BodyRight` | Instance body right axis (default: +X, same as `Spacecraft.Right`) |
 | `BodyUp` | Instance body up axis (default: +Z, same as `Spacecraft.Up`) |
@@ -1313,19 +1334,18 @@ var epoch = new Time(2024, 1, 1);
 // Define initial orbit
 var orbit = new KeplerianElements(
     7000000, 0.001, 51.6 * Constants.Deg2Rad, 0, 0, 0,
-    earth, epoch, Frames.Frame.ICRF
+    earth, epoch, Frame.ICRF
 );
 
 // Create spacecraft
 var clock = new Clock("MainClock", 256);
 var spacecraft = new Spacecraft(-1001, "MySat", 500.0, 1000.0, clock, orbit);
 
-// Add components
-var engine = new Engine("MainEngine", "RCS", 500.0, 300.0);  // thrust, ISP
-var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial
-spacecraft.AddEngine(engine);
+// Add components: the tank first, then the engine that draws on it (AddEngine requires its tank on the spacecraft)
+var tank = new FuelTank("MainTank", "Propellant", "Tank1", 200.0, 100.0);  // capacity, initial quantity (kg)
 spacecraft.AddFuelTank(tank);
-engine.SetFuelTank(tank);
+var engine = new Engine("MainEngine", "RCS", "Engine1", 300.0, 0.05, tank);  // ISP (s), fuel flow (kg/s)
+spacecraft.AddEngine(engine);
 
 // Add instrument
 spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
@@ -1335,20 +1355,23 @@ spacecraft.AddCircularInstrument(-1001001, "Camera", "Imager",
     new Vector3(0, 0, 0)                 // Orientation
 );
 
-// Propagate (returns PropagationSolution for dense output)
+// Propagate (returns PropagationSolution for dense output). The default integrator, Velocity-Verlet, is of the second
+// order: its error grows as the square of the step (about 120 m after 12 h in this LEO at 1 s, 450 km at 60 s)
 var solution = spacecraft.Propagate(
     new Window(epoch, epoch.AddDays(1)),
     new[] { earth },
     includeAtmosphericDrag: false,
     includeSolarRadiationPressure: false,
-    TimeSpan.FromSeconds(60)
+    TimeSpan.FromSeconds(1)
 );
 
-// Interpolate at any epoch within the propagation window
-var stateAtHalfDay = solution.InterpolateAt(epoch.AddHours(12));
+// Interpolate at any epoch within the propagation window: position (m) and velocity (m/s)
+var (positionAtHalfDay, velocityAtHalfDay) = solution.InterpolateAt(epoch.AddHours(12));
 
-// Access propagated states from the cache
-foreach (var sv in spacecraft.StateVectorsRelativeToICRF.Values.Take(5))
+// Read the stored states relative to an observer: every minute over the first four
+var states = spacecraft.GetEphemeris(new Window(epoch, epoch.AddMinutes(4)), earth, Frame.ICRF, Aberration.None,
+    TimeSpan.FromMinutes(1));
+foreach (var sv in states.Select(x => x.ToStateVector()))
 {
     Console.WriteLine($"{sv.Epoch}: {sv.Position.Magnitude():F0} m");
 }
@@ -1360,20 +1383,21 @@ Propulsion engine.
 
 | Constructor | Description |
 |------------|-------------|
-| `Engine(string name, string model, double thrust, double isp)` | Create engine |
+| `Engine(string name, string model, string serialNumber, double isp, double fuelFlow, FuelTank fuelTank)` | Create an engine drawing on a tank, which is added to the spacecraft before the engine (`AddFuelTank`, then `AddEngine`) |
 
 | Property | Description |
 |----------|-------------|
 | `Name` | Engine name |
 | `Model` | Engine model |
-| `Thrust` | Thrust force (N) |
+| `SerialNumber` | Engine serial number |
 | `ISP` | Specific impulse (s) |
 | `FuelFlow` | Fuel flow rate (kg/s) |
+| `Thrust` | Thrust force (N): ISP × g0 × fuel flow |
+| `FuelTank` | The tank the engine draws on, given to the constructor |
 
 | Method | Description |
 |--------|-------------|
-| `SetFuelTank(FuelTank tank)` | Associate fuel tank |
-| `Ignite(Vector3 deltaV)` | Execute burn |
+| `Ignite(in Vector3 deltaV)` | Burn the fuel of a ΔV (Tsiolkovsky, on the total mass of the tank's spacecraft) from its tank; returns the fuel burned (kg) |
 
 #### FuelTank
 
@@ -1410,7 +1434,7 @@ Launch window computation.
 
 | Constructor | Description |
 |------------|-------------|
-| `Launch(LaunchSite site, LaunchSite recoverySite, OrbitalParameters targetOrbit, double inclination)` | Create launch scenario |
+| `Launch(LaunchSite launchSite, Site recoverySite, OrbitalParameters targetOrbit, double twilight, bool? launchByDay)` | Create launch scenario: launch by day, by night, or either (null) |
 
 | Method | Description |
 |--------|-------------|
@@ -1458,6 +1482,8 @@ The single-vector attitudes support configurable body axes via `GetBodyFront()`,
 The `TriadAttitude` class uses two non-collinear observation vectors to fully constrain spacecraft attitude. Unlike single-vector pointing, TRIAD eliminates roll ambiguity by constraining all three degrees of freedom.
 
 ```csharp
+// earth, moon, sun: CelestialBody; camera: an Instrument and engine an Engine of the spacecraft;
+// minimumEpoch, epoch: Time; holdDuration, duration: TimeSpan
 // Point spacecraft Front at Moon, keep Up toward Sun
 var attitude = new TriadAttitude(
     minimumEpoch, TimeSpan.FromMinutes(30),
@@ -1466,14 +1492,14 @@ var attitude = new TriadAttitude(
     engine);
 
 // Using instruments
-var attitude = new TriadAttitude(
+var cameraAttitude = new TriadAttitude(
     minimumEpoch, holdDuration,
     camera,                    // Uses camera boresight (primary) and refVector (secondary)
     earth, sun,                // Primary target, secondary target
     engine);
 
 // Using IAttitudeTarget (orbital directions and/or celestial bodies)
-var attitude = new TriadAttitude(
+var targetAttitude = new TriadAttitude(
     earth, epoch, duration,
     Spacecraft.Front, OrbitalDirectionTarget.Prograde,       // Primary: prograde pointing
     Spacecraft.Up, new CelestialAttitudeTarget(sun),         // Secondary: solar panel toward Sun
@@ -1521,15 +1547,17 @@ Solve Lambert's problem for transfer orbits.
 
 | Method | Description |
 |--------|-------------|
-| `Solve(bool isRetrograde, OrbitalParameters initial, OrbitalParameters target, CelestialItem center, ushort maxRevolution)` | Solve Lambert problem |
+| `Solve(bool isRetrograde, OrbitalParameters initialOrbitalParameters, OrbitalParameters targetOjectOrbitalParameters, CelestialItem centerOfMotion, ushort maxRevolution)` | Solve Lambert problem; the `LambertResult` holds the solutions (`GetZeroRevolutionSolution()`, `GetMultiRevolutionSolutions(n)`), each with `V1`, `V2`, `DeltaV1`, `DeltaV2` and `DeltaV` |
 
 ```csharp
 var earth = PlanetsAndMoons.EARTH_BODY;
 var epoch = new Time(2024, 1, 1);
 
-// Define departure and arrival states
-var departure = new StateVector(...);
-var arrival = new StateVector(...);
+// Define departure and arrival states: a LEO, and a point of a higher circular orbit 45 minutes later
+var departure = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
+    earth, epoch, Frame.ICRF);
+var arrival = new StateVector(new Vector3(-6000000.0, 4000000.0, 0.0), new Vector3(-4124.0, -6187.0, 0.0),
+    earth, epoch.AddMinutes(45.0), Frame.ICRF);
 
 // Solve Lambert problem
 var solver = new LambertSolver();
@@ -1537,8 +1565,8 @@ var result = solver.Solve(false, departure, arrival, earth, 0);
 
 // Get zero-revolution solution
 var solution = result.GetZeroRevolutionSolution();
-Console.WriteLine($"Delta-V at departure: {solution.DepartureVelocity.Magnitude():F1} m/s");
-Console.WriteLine($"Delta-V at arrival: {solution.ArrivalVelocity.Magnitude():F1} m/s");
+Console.WriteLine($"Delta-V at departure: {solution.DeltaV1.Magnitude():F1} m/s");
+Console.WriteLine($"Delta-V at arrival: {solution.DeltaV2.Magnitude():F1} m/s");
 ```
 
 ---
@@ -1609,15 +1637,18 @@ RK7(8) to the time of closest approach. See `docs/reference/covariance-propagati
 **Geopotential usage:**
 
 ```csharp
+var epoch = new Time(2024, 1, 1);
+var clock = new Clock("Clock", 256);
+
 // Create Earth with degree-10 EGM2008 geopotential
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
 // Initial state in ICRF
 var orbit = new StateVector(
     new Vector3(6800000.0, 0, 0),
     new Vector3(0, 7500.0, 0),
-    earth, epoch, Frames.Frame.ICRF);
+    earth, epoch, Frame.ICRF);
 
 var spacecraft = new Spacecraft(-1001, "Sat", 100.0, 10000.0, clock, orbit);
 
@@ -1630,7 +1661,7 @@ var propagator = new CentralBodyPropagator(
 var solution = propagator.Propagate();
 
 // Use dense output for sub-step interpolation
-var midState = solution.InterpolateAt(epoch.AddHours(12));
+var (midPosition, midVelocity) = solution.InterpolateAt(epoch.AddHours(12));
 ```
 
 **Accuracy:** With degree-10 EGM2008, Moon, and Sun perturbations, 24h LEO propagation achieves sub-kilometer position accuracy compared to GMAT reference solutions.
@@ -1709,12 +1740,14 @@ The orientation cache of a propagation is active only on the thread that propaga
 | 70 | Maximum available (EGM2008_to70) | Highest fidelity |
 
 ```csharp
+var epoch = new Time(2024, 1, 1);
+
 // Degree-10 geopotential (good balance of accuracy and speed)
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
 // Degree-2 (J2-only) for quick analysis
-var earthJ2 = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earthJ2 = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 2));
 
 // Point-mass only (no geopotential)
@@ -1813,12 +1846,15 @@ NRLMSISE-00 empirical atmosphere model (0-2000+ km). Requires full context with 
 | `Nrlmsise00Model(NrlmsiseFlags flags, SpaceWeather weather)` | Create with custom flags and weather |
 
 ```csharp
+using IO.Astrodynamics.Atmosphere;
+using IO.Astrodynamics.Atmosphere.NRLMSISE_00;
+
 // Use nominal conditions
 var model = new Nrlmsise00Model();
 
 // Or specify space weather
 var spaceWeather = new SpaceWeather { F107 = 150, F107A = 150, Ap = 4 };
-var model = new Nrlmsise00Model(spaceWeather);
+var weatherModel = new Nrlmsise00Model(spaceWeather);
 
 // Or use preset conditions
 var solarMinModel = new Nrlmsise00Model(SpaceWeather.SolarMinimum);
@@ -2065,11 +2101,12 @@ In-memory data provider for testing.
 
 | Method | Description |
 |--------|-------------|
-| `AddCelestialBodyInfo(params CelestialBody[] bodies)` | Add celestial body data |
+| `AddCelestialBodyInfo(params IO.Astrodynamics.DTO.CelestialBody[] bodies)` | Add the information of bodies (NAIF id, radii, GM, frame) |
 | `AddStateVector(int naifId, Time date, StateVector sv)` | Add state vector |
 | `AddStateOrientationToICRF(Frame frame, Time date, StateOrientation orientation)` | Add orientation |
 
 ```csharp
+// customEarth: the information of a body (IO.Astrodynamics.DTO.CelestialBody); epoch: Time; earthState: a StateVector of the Earth
 // For testing without SPICE kernels
 var memoryProvider = new MemoryDataProvider();
 Configuration.Instance.SetDataProvider(memoryProvider);
@@ -2197,35 +2234,42 @@ SpiceAPI.Instance.ClearKernels();
 
 ```csharp
 // Always be explicit about time frames
-var utc = new Time(2024, 1, 1, 12, 0, 0);       // Defaults to TDB
-var explicit = new Time(new DateTime(2024, 1, 1), TimeFrame.UTCFrame);
+var tdbByDefault = new Time(2024, 1, 1, 12, 0, 0);    // No frame given: TDB
+var utc = new Time(new DateTime(2024, 1, 1, 12, 0, 0), TimeFrame.UTCFrame);
 
 // Convert as needed
 var tdb = utc.ToTDB();
 var tai = utc.ToTAI();
 
 // Use TDB for dynamical calculations
-var state = earth.GetEphemeris(epoch.ToTDB(), sun, Frame.ICRF, Aberration.None);
+var earth = PlanetsAndMoons.EARTH_BODY;
+var sun = new CelestialBody(Stars.Sun);
+var state = earth.GetEphemeris(utc.ToTDB(), sun, Frame.ICRF, Aberration.None);
 ```
 
 ### Reference Frame Awareness
 
 ```csharp
 // ICRF/J2000: Inertial frame for most calculations
-var sv = new StateVector(..., frame: Frames.Frame.ICRF);
+var sv = new StateVector(new Vector3(6800000.0, 0.0, 0.0), new Vector3(0.0, 7656.2, 0.0),
+    PlanetsAndMoons.EARTH_BODY, new Time(2024, 1, 1), Frame.ICRF);
 
 // Body-fixed frames for surface operations
-var earthFrame = new Frames.Frame("IAU_EARTH");
+var earthFrame = new Frame("IAU_EARTH");
 var bodyFixed = sv.ToFrame(earthFrame);
 
 // TEME for TLE propagation (handled automatically)
+var tle = new TLE("ISS (ZARYA)",
+    "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+    "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703");
 var tleSv = tle.ToStateVector();  // Returns in TEME
-var icrfSv = tleSv.ToFrame(Frames.Frame.ICRF);
+var icrfSv = tleSv.ToFrame(Frame.ICRF);
 ```
 
 ### Error Handling
 
 ```csharp
+// body: a CelestialItem; epoch: Time; observer: an ILocalizable; frame: a Frame
 try
 {
     var state = body.GetEphemeris(epoch, observer, frame, Aberration.None);
@@ -2306,14 +2350,14 @@ scenario.AddCelestialItem(earth);
 var targetOrbit = new StateVector(
     new Vector3(4390853.7, 5110607.0, 917659.9),
     new Vector3(-4979.5, 3033.3, 6933.2),
-    earth, start, Frames.Frame.ICRF
+    earth, start, Frame.ICRF
 );
 
 // Define chaser spacecraft initial orbit (parking orbit)
 var chaserOrbit = new StateVector(
     new Vector3(5056554.2, 4395595.5, 0.0),
     new Vector3(-3708.6, 4266.3, 6736.9),
-    earth, start, Frames.Frame.ICRF
+    earth, start, Frame.ICRF
 );
 
 // Create target spacecraft
@@ -2364,7 +2408,7 @@ var executedManeuver = chaser.InitialManeuver;
 Console.WriteLine($"Maneuver 1 start: {executedManeuver.ManeuverWindow?.StartDate}");
 Console.WriteLine($"Maneuver 1 delta-V: {((ImpulseManeuver)executedManeuver).DeltaV.Magnitude():F1} m/s");
 Console.WriteLine($"Fuel burned: {executedManeuver.FuelBurned:F1} kg");
-Console.WriteLine($"Total fuel consumption: {summary.SpacecraftSummaries.First().FuelConsumption:F1} kg");
+Console.WriteLine($"Total fuel consumption: {summary.SpacecraftSummaries.Single(x => x.Spacecraft == chaser).FuelConsumption:F1} kg");
 ```
 
 ### Lambert Transfer (Interplanetary or Lunar)
@@ -2382,12 +2426,12 @@ var departureEpoch = Time.J2000TDB;
 var departureState = new StateVector(
     new Vector3(7000000.0, 0.0, 0.0),
     new Vector3(0.0, 8000.0, 0.0),
-    earth, departureEpoch, Frames.Frame.ICRF
+    earth, departureEpoch, Frame.ICRF
 );
 
 // Define arrival (Moon position in 3 days)
 var arrivalEpoch = departureEpoch.AddDays(3);
-var moonState = moon.GetEphemeris(arrivalEpoch, earth, Frames.Frame.ICRF, Aberration.None)
+var moonState = moon.GetEphemeris(arrivalEpoch, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
 // Solve Lambert's problem
@@ -2397,7 +2441,7 @@ var result = solver.Solve(
     departureState,
     moonState,
     earth,
-    maxRevolutions: 0
+    maxRevolution: 0
 );
 
 // Get the zero-revolution solution
@@ -2412,7 +2456,7 @@ Console.WriteLine($"Arrival delta-V: {solution.DeltaV2.Magnitude():F1} m/s");
 var transferOrbit = new StateVector(
     departureState.Position,
     solution.V1,
-    earth, departureEpoch, Frames.Frame.ICRF
+    earth, departureEpoch, Frame.ICRF
 );
 
 // Verify arrival position
@@ -2434,15 +2478,15 @@ var searchStart = new Time(2024, 6, 2);
 
 // Create launch site (Kennedy Space Center)
 var launchSite = new LaunchSite(
-    id: 33,
-    name: "KSC",
-    body: earth,
-    coordinates: new Planetodetic(
+    33,
+    "KSC",
+    earth,
+    new Planetodetic(
         -81.0 * Constants.Deg2Rad,   // Longitude
         28.5 * Constants.Deg2Rad,    // Latitude
-        0.0                           // Altitude
+        0.0                          // Altitude
     ),
-    azimuthRange: new AzimuthRange(0.0, 2 * Math.PI)  // All azimuths allowed
+    new AzimuthRange(0.0, 2 * Math.PI)  // All azimuths allowed
 );
 
 // Create recovery site
@@ -2453,7 +2497,7 @@ var recoverySite = new Site(34, "Recovery", earth,
 var targetOrbit = new StateVector(
     new Vector3(-1.144E+06, 4.905E+06, 4.553E+06),
     new Vector3(-5.588E+03, -4.213E+03, 3.126E+03),
-    earth, searchStart, Frames.Frame.ICRF
+    earth, searchStart, Frame.ICRF
 );
 
 // Create launch scenario
@@ -2493,13 +2537,13 @@ var searchWindow = new Window(
     new Time(2024, 12, 31)
 );
 
-// Find lunar eclipses (Moon occulted by Earth as seen from Sun)
-var lunarEclipses = sun.FindWindowsOnOccultationConstraint(
+// Find lunar eclipses: the Moon (this item) behind the Earth, seen from the Sun
+var lunarEclipses = moon.FindWindowsOnOccultationConstraint(
     searchWindow,
-    occultingBody: earth,
-    occultingShape: ShapeType.Ellipsoid,
-    occultedBody: moon,
-    occultedShape: ShapeType.Ellipsoid,
+    observer: sun,
+    targetShape: ShapeType.Ellipsoid,
+    frontBody: earth,
+    frontShape: ShapeType.Ellipsoid,
     occultationType: OccultationType.Any,
     aberration: Aberration.None,
     stepSize: TimeSpan.FromHours(1)
@@ -2549,7 +2593,7 @@ scenario.AddCelestialItem(earth);
 var orbit = new StateVector(
     new Vector3(6800000.0, 0.0, 0.0),
     new Vector3(0.0, 7656.2, 0.0),
-    earth, start, Frames.Frame.ICRF
+    earth, start, Frame.ICRF
 );
 
 // Create spacecraft with camera
@@ -2605,6 +2649,7 @@ Export simulation results for visualization in Cosmographia:
 ```csharp
 using IO.Astrodynamics.Cosmographia;
 
+// start, end: the window of the scenario
 // After running a scenario simulation...
 var mission = new Mission("Visualization");
 var scenario = new Scenario("Demo", mission, new Window(start, end));
@@ -2679,8 +2724,8 @@ var visibilityWindows = goldstone.FindWindowsOnDistanceConstraint(
 High-fidelity propagation including gravitational effects from multiple bodies:
 
 ```csharp
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, Time.J2000TDB);
-var moon = new CelestialBody(PlanetsAndMoons.MOON, Frames.Frame.ICRF, Time.J2000TDB);
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, Time.J2000TDB);
+var moon = new CelestialBody(PlanetsAndMoons.MOON, Frame.ICRF, Time.J2000TDB);
 var sun = new CelestialBody(Stars.Sun);
 
 var start = Time.J2000TDB;
@@ -2689,8 +2734,9 @@ var end = start.AddDays(25);
 var mission = new Mission("DeepSpaceTest");
 var scenario = new Scenario("LunarFlyby", mission, new Window(start, end));
 
-// Start at Moon's position to test N-body accuracy
-var moonState = moon.GetEphemeris(start, earth, Frames.Frame.ICRF, Aberration.None)
+// Start at the Moon's position and velocity. A massless probe does not stay with the Moon, whose own mass adds about
+// 1.2 % to the attraction of their relative motion: they drift tens of thousands of km apart in 25 days
+var moonState = moon.GetEphemeris(start, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
 var clock = new Clock("Clock", 256);
@@ -2712,17 +2758,17 @@ var summary = await scenario.SimulateAsync(
 );
 
 // Compare spacecraft to Moon position at end
-var spcFinal = spacecraft.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None)
+var spcFinal = spacecraft.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
-var moonFinal = moon.GetEphemeris(end, earth, Frames.Frame.ICRF, Aberration.None)
+var moonFinal = moon.GetEphemeris(end, earth, Frame.ICRF, Aberration.None)
     .ToStateVector();
 
 var positionError = (spcFinal.Position - moonFinal.Position).Magnitude();
 var velocityError = (spcFinal.Velocity - moonFinal.Velocity).Magnitude();
 
-Console.WriteLine($"25-day propagation accuracy:");
-Console.WriteLine($"  Position error: {positionError:F1} m");
-Console.WriteLine($"  Velocity error: {velocityError:F4} m/s");
+Console.WriteLine($"Probe - Moon after 25 days:");
+Console.WriteLine($"  Position difference: {positionError:F1} m");
+Console.WriteLine($"  Velocity difference: {velocityError:F4} m/s");
 ```
 
 ### High-Fidelity LEO Propagation with Geopotential
@@ -2733,14 +2779,14 @@ Propagate a LEO satellite with EGM2008 spherical harmonics, Moon, and Sun pertur
 var epoch = new Time(2025, 8, 25, 11, 55, 44, frame: TimeFrame.UTCFrame);
 
 // Earth with degree-10 EGM2008 geopotential
-var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frames.Frame.ICRF, epoch,
+var earth = new CelestialBody(PlanetsAndMoons.EARTH, Frame.ICRF, epoch,
     new GeopotentialModelParameters("Data/SolarSystem/EGM2008_to70_TideFree", 10));
 
 // LEO orbit (~400 km altitude)
 var orbit = new StateVector(
     new Vector3(5442162.59, -4068949.85, -13456.85),   // Position (m)
     new Vector3(2858.20, 3809.79, 6002.13),             // Velocity (m/s)
-    earth, epoch, Frames.Frame.ICRF);
+    earth, epoch, Frame.ICRF);
 
 var clock = new Clock("Clock", 256);
 var spacecraft = new Spacecraft(-1001, "LEOSat", 100.0, 10000.0, clock, orbit);
@@ -2754,11 +2800,11 @@ var propagator = new CentralBodyPropagator(
 
 var solution = propagator.Propagate();
 
-// Get final state via dense output or from cache
-var finalState = spacecraft.StateVectorsRelativeToICRF.Values.Last();
+// Get the final position and velocity from the dense output
+var (finalPosition, finalVelocity) = solution.InterpolateAt(epoch.AddDays(1));
 
-Console.WriteLine($"Position after 24h: ({finalState.Position.X/1000:F3}, " +
-    $"{finalState.Position.Y/1000:F3}, {finalState.Position.Z/1000:F3}) km");
+Console.WriteLine($"Position after 24h: ({finalPosition.X/1000:F3}, " +
+    $"{finalPosition.Y/1000:F3}, {finalPosition.Z/1000:F3}) km");
 ```
 
 ### Earth Observation with Attitude Maneuvers
@@ -2779,7 +2825,7 @@ scenario.AddCelestialItem(earth);
 // Define orbit
 var orbit = new KeplerianElements(
     11800000.0, 0.3, 1.0, 0.0, 0.0, 0.0,
-    earth, start, Frames.Frame.ICRF
+    earth, start, Frame.ICRF
 );
 
 // Create spacecraft
@@ -2826,7 +2872,7 @@ Use TRIAD attitude when you need fully-constrained orientation (e.g., pointing a
 using IO.Astrodynamics.Maneuver;
 
 var earth = PlanetsAndMoons.EARTH_BODY;
-var sun = PlanetsAndMoons.SUN;
+var sun = new CelestialBody(Stars.Sun);
 var start = new Time(2024, 6, 21, 12, 0, 0);
 var end = start.AddHours(2);
 
@@ -2838,7 +2884,7 @@ scenario.AddCelestialItem(sun);
 // Create spacecraft in LEO
 var orbit = new KeplerianElements(
     6778000.0, 0.001, 51.6 * Constants.Deg2Rad, 0.0, 0.0, 0.0,
-    earth, start, Frames.Frame.ICRF
+    earth, start, Frame.ICRF
 );
 
 var clock = new Clock("Clock", 256);
@@ -2846,7 +2892,7 @@ var spacecraft = new Spacecraft(-500, "Observer", 500.0, 1000.0, clock, orbit);
 
 // Add Earth observation camera (points down via boresight)
 spacecraft.AddCircularInstrument(-500100, "EarthCam", "NadirCamera",
-    0.5, -Vector3.VectorZ, Vector3.VectorY, Vector3.Zero);  // Boresight: -Z (nadir), refVector: +Y
+    0.5, Vector3.VectorZ.Inverse(), Vector3.VectorY, Vector3.Zero);  // Boresight: -Z (nadir), refVector: +Y
 
 // Add propulsion
 var tank = new FuelTank("Tank1", "Model", "SN1", 100.0, 100.0);
@@ -2858,12 +2904,13 @@ scenario.AddSpacecraft(spacecraft);
 
 // Configure TRIAD attitude:
 // - Primary: Spacecraft Down (-Z) points at Earth (nadir)
-// - Secondary: Spacecraft Up (+Z) oriented toward Sun (for solar panels)
+// - Secondary: Spacecraft Right (+X), the solar panel axis, oriented toward Sun (a vector at 5 degrees at least from the
+//   primary: Up, opposite to Down, would be rejected)
 var triadManeuver = new TriadAttitude(
     start,                          // Start time
     TimeSpan.FromHours(1.5),        // Hold duration
     Spacecraft.Down, earth,         // Primary constraint: nadir pointing
-    Spacecraft.Up, sun,             // Secondary constraint: solar panel toward Sun
+    Spacecraft.Right, sun,          // Secondary constraint: solar panel toward Sun
     engine
 );
 
@@ -2883,6 +2930,7 @@ Console.WriteLine("Spacecraft maintains nadir pointing with roll constrained tow
 - Use `TriadAttitude` with `IAttitudeTarget` to mix orbital directions and celestial targets:
 
 ```csharp
+// earth: the CelestialBody of the orbit; sun: the Sun; engine: an Engine of the spacecraft; epoch: Time; duration: TimeSpan
 // LVLH attitude using factory method (the spacecraft's BodyDown to nadir, its BodyFront toward prograde)
 var lvlh = TriadAttitude.CreateLVLH(earth, epoch, duration, engine);
 
@@ -2922,6 +2970,7 @@ When integrating IO.Astrodynamics into your applications:
 ### Recommended Validation Approach
 
 ```csharp
+// moon, earth: CelestialBody; epoch: Time
 // Example: Validate against JPL Horizons for critical calculations
 var computed = moon.GetEphemeris(epoch, earth, Frame.ICRF, Aberration.None);
 // Compare computed.Position with Horizons data
