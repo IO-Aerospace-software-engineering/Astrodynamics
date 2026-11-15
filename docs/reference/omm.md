@@ -60,8 +60,9 @@ Before the third round of [#668](https://github.com/IO-Aerospace-software-engine
 unqualified document matched no declaration of the validator, so it was reported valid with a warning per element and
 nothing below its root was checked: an OMM with `ECCENTRICITY` -0.5 threw `ArgumentOutOfRangeException` from
 `MeanElements` and one with `INCLINATION` in `rad` loaded, and undeclared elements were ignored. Such a document now
-makes `Load*` throw `OmmValidationException`; fix the document, or pass `validateSchema: false` to read it as before. A
-valid document, the writer's output included, validates without a warning.
+makes `Load*` throw `OmmValidationException`; fix the document, or pass `validateSchema: false` to read it without the
+schema step, where a keyword out of its range, as that `ECCENTRICITY`, throws `OmmParseException` since the fourth round
+(above). A valid document, the writer's output included, validates without a warning.
 
 ### Saving
 

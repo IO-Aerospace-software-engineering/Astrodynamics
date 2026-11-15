@@ -72,8 +72,8 @@ Before the third round of [#668](https://github.com/IO-Aerospace-software-engine
 unqualified document matched no declaration of the validator, so it was reported valid with a warning per element and
 nothing below its root was checked: an OPM whose `X` is in `units="m"` loaded with its value read as km, and undeclared
 elements were ignored. Such a document now makes `Load*` throw `OpmValidationException`; fix the document, or pass
-`validateSchema: false` to read it as before. A valid document, the writer's output included, validates without a
-warning.
+`validateSchema: false` to read it without the schema step, where a keyword out of its range throws `OpmParseException`
+since the fourth round (above). A valid document, the writer's output included, validates without a warning.
 
 ### Saving
 

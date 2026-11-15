@@ -3342,9 +3342,10 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   in it: `Omm`/`Opm.LoadFrom*` throw the validation exception where they threw `OmmParseException` or `OpmParseException`
   ("Could not find ... element in document"). A valid document,
   Space-Track's and the writers' output included, stays valid, now without warnings. A root in the NDM/XML namespace
-  but a CDM `ndm` without a CDM, and every read with `validateSchema: false`, are unchanged, bit for bit. Migration: fix
-  the document, or pass `validateSchema: false` to read it as before; catch the validation exception for an NDM without
-  the message.
+  but a CDM `ndm` without a CDM, and every read with `validateSchema: false`, are unchanged, bit for bit by this entry
+  (a keyword out of its range now throws the reader's parse exception on every read, the fourth round's entry below).
+  Migration: fix the document, or pass `validateSchema: false` to read it without the schema step; catch the validation
+  exception for an NDM without the message.
 - **Breaking: the managed threshold searches return the windows, gaps and crossings shorter than the step**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678), Fixed above). Under the same signatures, the searches the library
   runs (`FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and `FindWindowsOnIlluminationConstraint`
