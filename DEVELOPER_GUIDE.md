@@ -1691,7 +1691,7 @@ Computes the full 3D gravitational acceleration including spherical harmonic per
 **Normalization convention:** Geodesy (fully-normalized) without Condon-Shortley phase:
 `P_bar_nm = sqrt((2 - delta_0m)(2n+1)(n-m)!/(n+m)!) * P_nm`
 
-**Supported model file:** EGM2008 (tide-free), included as `Data/SolarSystem/EGM2008_to70_TideFree`. The file provides coefficients C_nm and S_nm from degree 2 to degree 70.
+**Supported model file:** EGM2008 (tide-free), included as `Data/SolarSystem/EGM2008_to70_TideFree`. The file provides coefficients C_nm and S_nm from degree 2 to degree 70. The degree of a field is at most the highest degree of its file, whose every coefficient (n, m) with 2 ≤ n ≤ degree must be present: a degree above the file throws `ArgumentOutOfRangeException` (`maxDegrees`), a missing coefficient `ArgumentException`, when the body or the field is built (#689; before 11.0.0 both were read as zeros). Degrees 0 and 1, absent from the file, are the point mass.
 
 **Thread safety:** `GeopotentialGravitationalField` is **not** thread-safe. Pre-allocated buffers (`_P`, `_dP` Legendre tables and `_cosMLambda`, `_sinMLambda` trig arrays) are overwritten on every acceleration evaluation. Create a separate `CelestialBody` instance per thread when propagating concurrently.
 

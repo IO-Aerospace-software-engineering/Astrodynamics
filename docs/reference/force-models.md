@@ -87,6 +87,12 @@ propagator can pass its whole body list, Sun included.
 
 EGM2008 spherical harmonics up to degree 70 with geodesy-normalized Legendre functions (no Condon-Shortley phase).
 
+The degree is at most the highest degree of the model file, which must hold every coefficient (n, m) with
+2 ≤ n ≤ degree: a degree above the file throws `ArgumentOutOfRangeException` (parameter `maxDegrees`, the message naming
+the degree asked and the file's), a missing coefficient `ArgumentException` naming n and m, when the field or the body
+is built (#689; before 11.0.0 both were read as zeros, so a degree above the file ran at the file's degree). Degrees 0
+and 1, absent from the models, are the point mass.
+
 The coefficients of a model are normalized to its own GM and reference radius, which the coefficient file does not
 carry. The harmonics are evaluated with them, and the central term with the GM of the SPICE kernels:
 

@@ -1722,9 +1722,9 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   `Helpers.ConvertToOrbitalParameters` that forwards no degree, so the default 10 reached `GeopotentialModelParameters`
   on the `-s`, `-k` and `-q` paths alike, and the SPKs of `-n 2`, `-n 10` and `-n 50` were byte-identical. The degree
   now reaches the Earth of the run, which is the library run of the same scenario with `GeopotentialModelParameters` of
-  that degree. A degree above 100, the last degree of the embedded EGM2008 model, is an argument error whatever the centre (the field pads
-  the degrees beyond its file with zeros, so a wired `-n 150` would have run at degree 100); 0 and 1 remain the point
-  mass. The help text, whose parenthesis was not closed, reads "Degree of the Earth geopotential (EGM2008), at most
+  that degree. A degree above 100, the last degree of the embedded EGM2008 model, is an argument error whatever the centre, checked
+  before anything is loaded (the field then padded the degrees beyond its file with zeros, so a wired `-n 150` would have
+  run at degree 100; since #689 it throws too); 0 and 1 remain the point mass. The help text, whose parenthesis was not closed, reads "Degree of the Earth geopotential (EGM2008), at most
   100". `PropagateTests.EarthGeopotentialDegree_IsTheDegreeOfTheRun` reads the exported SPK at the end of a 600 s window
   (n = 2 and 50 on `-s`, n = 2 on `-k` from ECLIPJ2000 and on `-q`) against the library run of that degree, within
   3.8e-9 m (twice the worst over Linux, Windows and macOS arm64, 1.04e-9, 1.86e-9 and 1.04e-9 m, CI run 43595592229),
@@ -2010,6 +2010,24 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   with System.Xml.Linq, independently of the readers, and reach every path: `Load*` with and without schema
   validation, `Load*` and `ReadFrom*` from a file, a string and a stream, `TryLoadFromFile`, `ValidateFile` and
   `Cdm.ReadFromFile`/`ReadFromString`/`ReadFromStream`.
+
+- **A geopotential degree above its model file ran at the file's degree, and a missing harmonic was read as zero**
+  ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689)). `GeopotentialGravitationalField`
+  set its degree to the one asked whatever the file held and caught the missing coefficients of every degree as zeros:
+  `GeopotentialModelParameters(path, 80)` on `EGM2008_to70_TideFree` built a field of degree 80 whose acceleration at
+  6678.137 km was that of degree 70, bit for bit, and a file without its (2, 0) row built a field without J2, 2.648e-2
+  m/s² from the full file at the pole at 6678.137 km (the closed form 3 J2 μ Re²/r⁴). The reader now records the
+  highest degree of its file (internal `GeopotentialModelReader.MaximumDegree`), and the field, which both public paths
+  reach, rejects a degree above it and a missing (n, m) with 2 ≤ n ≤ degree, when the body (or the field) is built, so
+  that the parameters still read their file once (#674); degrees 0 and 1 stay the point mass. A complete file gives the
+  same table, bit for bit, for every degree it covers. `GeopotentialModelDegreeTests` builds degrees 71, 80 and 100 from
+  `EGM2008_to70_TideFree` through the field, a path and a stream; the file without its (2, 0) row at degree 10 (and its
+  (10, 10) row) throws naming the pair, and at degrees 0 and 1 builds and gives GM/r² along −r to 1e-15, bit for bit
+  the full file's; the file followed by explicit zero rows to degree 80 gives the degree-70 field bit for bit over 2000
+  directions at 300 km. The fields of degrees 120 and 130 of `GeopotentialPartialsTests` are built from such a file
+  (results unchanged, bit for bit). The model files the library, the command line and the conformance runner use are
+  complete: `EGM2008_to70_TideFree` (2553 rows, Σ (n + 1) for n = 2 to 70), the CLI's `EGM2008_to100_TideFree` (5148)
+  and the suite's `GMM2B_to20` and `LP165P_to20` (228 each).
 
 **Changed**
 
@@ -2682,6 +2700,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   evaluated about 1.2 times as often at a step where nothing is hidden. Migration: none to find every window; a caller
   who relied on a coarse step to pass over short windows filters the result by length.
 
+- **Breaking: a geopotential degree above its model file, or a file missing a harmonic, throws**
+  ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689), Fixed above). A degree of 2 or more
+  above the highest degree of the model file throws `ArgumentOutOfRangeException` (parameter `maxDegrees`, the message
+  naming the degree asked and the file's), from `new GeopotentialGravitationalField(file, degree)` and from the
+  constructor of a `CelestialBody` given `GeopotentialModelParameters`; it ran silently at the file's degree. A file
+  without a coefficient (n, m) with 2 ≤ n ≤ degree throws `ArgumentException` naming n and m; the term was zero. The
+  check runs when the body or the field is built, not in the constructor of `GeopotentialModelParameters`, which reads
+  nothing. Migration: pass a degree of at most 70 with `EGM2008_to70_TideFree` (`astro propagate -n`: at most 100, as
+  before), or give a complete model file. No result moves for a degree the file covers.
+
 **Removed**
 
 - **`Instrument.PositionInFOV`** (protected), on which `IsInFOV` was built before #515: its reference vector was not made
@@ -2709,11 +2737,6 @@ not listed.
   or a coverage gap returns no window, SPICE's message on standard output only. On the CSPICE path of
   `FindWindowsOnOccultationConstraint` the front body is always passed as an ellipsoid, so a front body without radii
   returns no window. Check that the kernels cover the search before trusting an empty result.
-- **A geopotential degree above the degree of its model file runs at the file's degree**
-  ([#681](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/681), found on the way).
-  `GeopotentialGravitationalField` reads the coefficients a file does not hold as zeros, so
-  `GeopotentialModelParameters(path, 80)` on `EGM2008_to70_TideFree` silently runs at degree 70. The command line
-  rejects a degree above its embedded model (100); in the library, pass a degree the file holds.
 - **A boolean quantity in the managed window search**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678)). `GeometryFinder.FindWindowsWithCondition` of a `Func<Time, bool>`
   has no margin to search between its samples: a window or a gap shorter than the step can be lost. Use a step shorter

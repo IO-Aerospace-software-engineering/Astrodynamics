@@ -46,13 +46,20 @@ public class GeopotentialGravitationalField : GravitationalField
     /// Initializes a new instance of the <see cref="GeopotentialGravitationalField"/> class.
     /// </summary>
     /// <param name="geopotentialModelFile">The stream reader for the geopotential model file.</param>
-    /// <param name="maxDegrees">The maximum degrees for the geopotential model. Default is 70.</param>
+    /// <param name="maxDegrees">The maximum degrees for the geopotential model, at most the highest degree of the file.
+    /// Default is 70.</param>
     /// <remarks>
     /// The harmonics of this field are evaluated with the GM and the equatorial radius of the body they are evaluated
     /// for, and its central term with the GM of that body; a <see cref="CelestialBody"/> built with
     /// <see cref="GeopotentialModelParameters"/> gives its field the constants of the model instead, and its choice of
-    /// <see cref="GeopotentialModelParameters.CentralTerm"/>.
+    /// <see cref="GeopotentialModelParameters.CentralTerm"/>. The file must hold every coefficient (n, m) with
+    /// 2 ≤ n ≤ <paramref name="maxDegrees"/>; degrees 0 and 1, absent from the models, are the point mass. Before 11.0.0
+    /// a degree above the file, or a missing coefficient, was read as zero (#689).
     /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxDegrees"/> is 2 or more and above the highest
+    /// degree of the file (EGM2008_to70_TideFree: 70).</exception>
+    /// <exception cref="ArgumentException">The file has no coefficient for an (n, m) with
+    /// 2 ≤ n ≤ <paramref name="maxDegrees"/>.</exception>
     public GeopotentialGravitationalField(StreamReader geopotentialModelFile, ushort maxDegrees = 70)
         : this(geopotentialModelFile, maxDegrees, null, null, 1.0, null)
     {
@@ -84,6 +91,11 @@ public class GeopotentialGravitationalField : GravitationalField
     /// A field from coefficients already read: those of a <see cref="GeopotentialModelParameters"/>, shared by every
     /// body built from it (#674). The reader is only read; the field keeps its own table and buffers.
     /// </summary>
+    /// <remarks>Both public paths reach this constructor, where the degree is checked against the file (#689).</remarks>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="maxDegrees"/> is 2 or more and above the highest
+    /// degree of the file.</exception>
+    /// <exception cref="ArgumentException">The file has no coefficient for an (n, m) with
+    /// 2 ≤ n ≤ <paramref name="maxDegrees"/>.</exception>
     internal GeopotentialGravitationalField(GeopotentialModelReader geopotentialModelReader, ushort maxDegrees,
         double? gravitationalParameter, double? referenceRadius, double bodyGravitationalParameter,
         string modelName, GeopotentialCentralTerm centralTerm)
@@ -107,6 +119,16 @@ public class GeopotentialGravitationalField : GravitationalField
             ? gravitationalParameter.Value / bodyGravitationalParameter
             : 1.0;
 
+        // The degree must be one the file holds (#689): before, a degree above the file, or a harmonic missing from it,
+        // was read as zeros, so the field ran silently at the degree of the file, or without that term
+        if (maxDegrees >= FirstHarmonicDegree && maxDegrees > geopotentialModelReader.MaximumDegree)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxDegrees), maxDegrees,
+                $"The geopotential degree {maxDegrees} is above the highest degree of the model file, " +
+                $"{geopotentialModelReader.MaximumDegree}: pass a degree of at most {geopotentialModelReader.MaximumDegree} " +
+                "or a model file that goes to the degree.");
+        }
+
         MaxDegree = maxDegrees;
         _geopotentialModelReader = geopotentialModelReader;
 
@@ -128,10 +150,17 @@ public class GeopotentialGravitationalField : GravitationalField
                 {
                     _coefficients[n][m] = _geopotentialModelReader.ReadCoefficient((ushort)n, (ushort)m);
                 }
+                catch (KeyNotFoundException) when (n < FirstHarmonicDegree)
+                {
+                    // Degrees 0 and 1 are absent from the models (the central term is the point mass): zeros
+                    _coefficients[n][m] = new GeopotentialCoefficient((ushort)n, (ushort)m, 0.0, 0.0, 0.0, 0.0);
+                }
                 catch (KeyNotFoundException)
                 {
-                    // Coefficient not available in model (e.g. n=0,1 absent from EGM2008) — use zeros
-                    _coefficients[n][m] = new GeopotentialCoefficient((ushort)n, (ushort)m, 0.0, 0.0, 0.0, 0.0);
+                    throw new ArgumentException(
+                        $"The geopotential model file has no coefficient for n = {n}, m = {m}, a harmonic of degree " +
+                        $"{maxDegrees}; its highest degree is {_geopotentialModelReader.MaximumDegree}. Give a complete model " +
+                        "file, or a degree below the missing harmonic.");
                 }
             }
         }
