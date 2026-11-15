@@ -391,11 +391,13 @@ public class SpiceAPI
     /// <summary>
     ///     Retrieve the last error message from the native proxy layer and throw an InvalidOperationException.
     /// </summary>
-    private static void ThrowLastProxyError()
+    private static void ThrowLastProxyError() => throw new InvalidOperationException(LastProxyError());
+
+    /// <summary>The last error message of the native proxy layer, or a generic message when it holds none.</summary>
+    private static string LastProxyError()
     {
-        var ptr = GetLastErrorProxy();
-        var msg = Marshal.PtrToStringAnsi(ptr);
-        throw new InvalidOperationException(string.IsNullOrEmpty(msg) ? "Native proxy call failed" : msg);
+        var msg = Marshal.PtrToStringAnsi(GetLastErrorProxy());
+        return string.IsNullOrEmpty(msg) ? "Native proxy call failed" : msg;
     }
 
     /// <summary>
@@ -1542,11 +1544,16 @@ public class SpiceAPI
     /// The native writer unloads the file it replaces and, once written, the file itself; like every native load and unload
     /// (<see cref="UnloadKernels"/>), it first closes and unloads every SPK, CK, binary PCK and EK whose file was deleted
     /// since its load (#668, second round). Before, the unload opened the other SPKs again, failed on a deleted one, which
-    /// stayed open in SPICE for good, and left the failure pending for the next kernel call.
+    /// stayed open in SPICE for good, and left the failure pending for the next kernel call. That reopening can still fail on
+    /// an SPK SPICE holds under a relative name (a meta-kernel's), which the native layer leaves to SPICE, once its file was
+    /// deleted or the working directory changed: the call then throws with SPICE's message and leaves nothing pending, the
+    /// file written (fourth round of #668; before, it returned true and the next kernel call failed with a wrong error).
     /// </remarks>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
     /// (UTF-8 bytes) of a kernel name SPICE takes; nothing is written (#673: CSPICE wrote under the name truncated to 255,
     /// then failed).</exception>
+    /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload it once written (the
+    /// reopening of the other loaded SPKs); the message is SPICE's.</exception>
     public bool WriteEphemeris(FileInfo filePath, int naifId,
         IEnumerable<OrbitalParameters.StateVector> stateVectors)
     {
@@ -1562,8 +1569,7 @@ public class SpiceAPI
                 (uint)enumerable.Length);
             if (res == false)
             {
-                throw new InvalidOperationException(
-                    "An error occurred while writing ephemeris. You can have more details on standard output.");
+                throw new InvalidOperationException($"An error occurred while writing ephemeris: {LastProxyError()}");
             }
 
             return true;
@@ -1590,8 +1596,13 @@ public class SpiceAPI
     /// written, the file itself; like every native load and unload (<see cref="UnloadKernels"/>), it first closes and
     /// unloads every SPK, CK, binary PCK and EK whose file was deleted since its load (#668, second round). Before, the
     /// unload opened the other CKs again, failed on a deleted one, which stayed open in SPICE for good, and left the failure
-    /// pending for the next kernel call.
+    /// pending for the next kernel call. That reopening can still fail on a CK SPICE holds under a relative name (a
+    /// meta-kernel's), which the native layer leaves to SPICE, once its file was deleted or the working directory changed:
+    /// the call then throws with SPICE's message and leaves nothing pending, the file written (fourth round of #668; before,
+    /// it returned true and the next kernel call failed with a wrong error).
     /// </remarks>
+    /// <exception cref="InvalidOperationException">SPICE failed to write the file, or to unload it once written (the
+    /// reopening of the other loaded CKs); the message is SPICE's.</exception>
     /// <exception cref="ArgumentException">The records are empty, or are not all in the frame of the first one: the native
     /// writer rejects them with a C++ exception that ended the process (#560, the comment on #454).</exception>
     /// <exception cref="ArgumentException">The full path of <paramref name="filePath"/> is longer than the 255 characters
@@ -1616,8 +1627,7 @@ public class SpiceAPI
             bool res = WriteOrientationProxy(filePath.FullName, naifId, enumerable.Select(x => x.Convert()).ToArray(), (uint)enumerable.Length);
             if (res == false)
             {
-                throw new InvalidOperationException(
-                    "An error occurred while writing orientation. You can have more details on standard output.");
+                throw new InvalidOperationException($"An error occurred while writing orientation: {LastProxyError()}");
             }
 
             return true;

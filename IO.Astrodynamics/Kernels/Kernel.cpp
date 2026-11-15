@@ -23,7 +23,9 @@ IO::Astrodynamics::Kernels::Kernel::Kernel(std::string filePath) : m_filePath{st
 
 // A binary kernel is unloaded after the deleted binary kernels (KernelsLoader::UnloadFile): KEEPER's unload of an SPK or a CK
 // opens the other loaded kernels of its kind again, and failed on a deleted one, which then stayed open in SPICE for good
-// (review of the second round of #668)
+// (review of the second round of #668). That reopening can still fail on a kernel SPICE holds under a relative name, which
+// KernelsLoader leaves to SPICE: the error is left signalled, and the writer proxies, which destroy their kernel object in an
+// inner scope, report it (fourth round of #668)
 IO::Astrodynamics::Kernels::Kernel::~Kernel()
 {
     KernelsLoader::UnloadFile(m_filePath);

@@ -69,7 +69,9 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   longer reaches the file once the working directory changed, so a kernel held under a relative name is left to SPICE,
   as before 11.0.0, whether its file was deleted or not; a deleted one can still stay open in SPICE, and KEEPER's own
   reopening of it, after the unload of another kernel of its kind, fails with `SPICE(FILENOTFOUND)` once the working
-  directory changed or the file was deleted. Name the files of a
+  directory changed or the file was deleted: `UnloadKernels` then reports it, and so do `WriteEphemeris` and
+  `WriteOrientation`, whose native writer unloads the file it wrote (`InvalidOperationException` with SPICE's message,
+  the file written; before the fourth round of #668 they returned and the next kernel call failed with a wrong error). Name the files of a
   meta-kernel by absolute paths, or through `PATH_VALUES` and `PATH_SYMBOLS` with an absolute `PATH_VALUES`, to have
   them covered. A DSK is left to SPICE too (its subsystem has no public routine that closes it by its handle): keep a
   loaded DSK on disk until it is unloaded.

@@ -67,7 +67,9 @@ namespace
      * KEEPER: its subsystem has no public routine that closes it by handle. A kernel SPICE holds under a relative name is left
      * to KEEPER too (WasDeleted). Every unload_c of a binary kernel by the library runs after it (KernelsLoader::UnloadFile):
      * the native writers unload the file they replace and, through their kernel object, the file they wrote, each an SPK or
-     * CK unload that opens the others again (review of the second round of #668). The unloads of the text kernels the
+     * CK unload that opens the others again (review of the second round of #668). That reopening still fails on a kernel left
+     * to KEEPER (a relative name) whose file was deleted: the writer proxies destroy their kernel object before their last
+     * failed_c() check and report it (fourth round of #668). The unloads of the text kernels the
      * library writes (frames, instruments, clocks) open no binary kernel again.
      */
     void UnloadDeletedBinaryKernels()

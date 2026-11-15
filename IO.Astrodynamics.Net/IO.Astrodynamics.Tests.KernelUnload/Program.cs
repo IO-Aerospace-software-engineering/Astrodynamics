@@ -51,11 +51,13 @@ internal static class Program
     internal const string WriterOfAnSpk = "WriteEphemeris_WhenAnSpkWasDeleted_ClosesIt";
     internal const string WriterOfACk = "WriteOrientation_WhenACkWasDeleted_ClosesIt";
     internal const string RelativeName = "LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively";
+    internal const string WriterOfAnSpkRelative = "WriteEphemeris_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending";
+    internal const string WriterOfACkRelative = "WriteOrientation_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending";
 
     private static readonly string[] Scenarios =
     [
         FolderOfTwoPcks, PckOfAFolder, MetaKernelOfAPck, FolderOfTwoDeletedPcks, DeletedSpk, DeletedPckNeverUnloaded, DeletedCk, WriterOfAnSpk,
-        WriterOfACk, RelativeName
+        WriterOfACk, RelativeName, WriterOfAnSpkRelative, WriterOfACkRelative
     ];
 
     // More DAFs than the 23 logical units of CSPICE's handle manager, with those of Data/SolarSystem
@@ -105,6 +107,12 @@ internal static class Program
                     break;
                 case WriterOfACk:
                     WriteCkWhenAnotherIsDeleted(root, kernels);
+                    break;
+                case WriterOfAnSpkRelative:
+                    WriteSpkWhenAnSpkHeldRelativelyIsDeleted(root, kernels);
+                    break;
+                case WriterOfACkRelative:
+                    WriteCkWhenACkHeldRelativelyIsDeleted(root, kernels);
                     break;
                 default:
                     LoadAfterTheWorkingDirectoryChanged(root);
@@ -351,6 +359,79 @@ internal static class Program
         SpiceAPI.Instance.UnloadKernels(metaKernel);
         Check(Throws(() => ReadRelativeObject()) != null, "the SPK's object is no longer known once the meta-kernel is unloaded");
         Check(Listed(root).Length == 0, "nothing is listed");
+    }
+
+    // A meta-kernel that names an SPK X relative to the working directory of its load, X deleted, then an SPK written by
+    // the native writer, whose kernel object unloads the file it wrote when it is destroyed: that unload opens the other SPKs
+    // again (unload_c --> UNLOAD --> SPKLEF --> DAFOPR) and fails on X, which the native drop leaves to SPICE (a relative
+    // name). Before the fourth round of #668 the failure came after the proxy's last check: WriteEphemeris returned, and the
+    // next kernel call, the read of the Moon, threw "Celestial celestialItem name can't be defined". WriteEphemeris now throws
+    // SPICE's message and leaves nothing pending: the Moon is read bit for bit as before, twice
+    private static void WriteSpkWhenAnSpkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "RelativeSpk"));
+        var x = Copy(Path.Combine(kernels.FullName, "L2_de431.bsp"), folder, "x.bsp");
+        LoadRelativeMetaKernel(folder, "x.bsp");
+        var before = ReadMoon();
+        File.Delete(x.FullName);
+
+        var error = Throws(() => SpiceAPI.Instance.WriteEphemeris(new FileInfo(Path.Combine(folder.FullName, "c.bsp")), -1999976, EarthStates()));
+
+        Check(error.Message.Contains("x.bsp"), $"the exception names x.bsp ({error.Message})");
+        CheckSameMoon(before, "the first read after the writer");
+        CheckSameMoon(before, "the second read after the writer");
+    }
+
+    // The CK analog: a meta-kernel that names a CK X relatively, X deleted, then a CK written by the native writer, whose
+    // kernel object's unload of the written CK opens the other CKs again (unload_c --> UNLOAD --> CKLPF) and fails on X
+    private static void WriteCkWhenACkHeldRelativelyIsDeleted(DirectoryInfo root, DirectoryInfo kernels)
+    {
+        var folder = Directory.CreateDirectory(Path.Combine(root.FullName, "RelativeCk"));
+        var clock = new Clock("IOA_J1_CLOCK", 65536);
+        var spacecraft = new Spacecraft(-1977, "IOA_J1_SPC", 3000.0, 10000.0, clock, EarthStates()[0]);
+        var clockFile = new FileInfo(Path.Combine(folder.FullName, "clock.tsc"));
+        clock.WriteAsync(clockFile).GetAwaiter().GetResult();
+        SpiceAPI.Instance.LoadKernels(clockFile);
+        var records = Enumerable.Range(0, 3)
+            .Select(i => new StateOrientation(Quaternion.Identity, Vector3.Zero, Epoch.AddSeconds(i), Frame.ICRF)).ToArray();
+        var x = new FileInfo(Path.Combine(folder.FullName, "x.bc"));
+        SpiceAPI.Instance.WriteOrientation(x, spacecraft.NaifId, records);
+        LoadRelativeMetaKernel(folder, "x.bc");
+        var before = ReadMoon();
+        File.Delete(x.FullName);
+
+        var error = Throws(() =>
+            SpiceAPI.Instance.WriteOrientation(new FileInfo(Path.Combine(folder.FullName, "c.bc")), spacecraft.NaifId, records));
+
+        Check(error.Message.Contains("x.bc"), $"the exception names x.bc ({error.Message})");
+        CheckSameMoon(before, "the first read after the writer");
+        CheckSameMoon(before, "the second read after the writer");
+    }
+
+    // Loads the meta-kernel mk.tm of the folder, which names the file relatively, with the working directory set to the folder
+    private static void LoadRelativeMetaKernel(DirectoryInfo folder, string name)
+    {
+        var metaKernel = new FileInfo(Path.Combine(folder.FullName, "mk.tm"));
+        File.WriteAllText(metaKernel.FullName, $"KPL/MK\n\\begindata\nKERNELS_TO_LOAD = ( '{name}' )\n\\begintext\n");
+        var workingDirectory = Directory.GetCurrentDirectory();
+        try
+        {
+            Directory.SetCurrentDirectory(folder.FullName);
+            SpiceAPI.Instance.LoadKernels(metaKernel);
+        }
+        finally
+        {
+            Directory.SetCurrentDirectory(workingDirectory);
+        }
+    }
+
+    private static StateVector ReadMoon() => SpiceAPI.Instance.ReadEphemeris(Epoch, 399, 301, Frame.ICRF, Aberration.None).ToStateVector();
+
+    private static void CheckSameMoon(StateVector before, string what)
+    {
+        var moon = ReadMoon();
+        Check(moon.Position == before.Position && moon.Velocity == before.Velocity,
+            $"{what}: the Moon is the state read before ({moon.Position} against {before.Position})");
     }
 
     private static StateVector ReadRelativeObject() =>

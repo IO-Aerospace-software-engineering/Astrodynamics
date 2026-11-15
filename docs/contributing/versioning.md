@@ -1637,6 +1637,30 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
     `KernelRegistryTests.LoadKernels_AfterTheWorkingDirectoryChanged_KeepsAnSpkAMetaKernelNamesRelatively_InAChildProcess`,
     on every platform (an object of an SPK the library wrote, read bit for bit after the load as before it; before, the
     read threw: no ephemeris data).
+- **The native writers left the failure of their last unload pending** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), fourth round). The kernel object of
+  `WriteEphemerisProxy` and `WriteOrientationProxy` unloads the file it wrote when it is destroyed (`Kernel::~Kernel`),
+  and that `unload_c` opens the other loaded SPKs or CKs again (`unload_c` → `UNLOAD` → `SPKLEF` or `CKLPF` →
+  `DAFOPR`). The native drop of the deleted kernels leaves a name SPICE holds relative to the working directory to SPICE,
+  so for such a kernel whose file was deleted, or after a change of working directory, the reopening fails with
+  `SPICE(FILENOTFOUND)`. The object was a local destroyed after `return`, after the proxy's last `failed_c()` check, and
+  `ActivateErrorManagement` does not reset: the proxy returned true, the error stayed pending, and the next proxy, an
+  unrelated read, failed with it (`ReadEphemerisAtGivenEpochProxy` of the Moon a NaN state, `SpiceAPI.ReadEphemeris`
+  "Celestial celestialItem name can't be defined", a wrong message that consumed the error); the failure path reset
+  before the destructor, whose own error then leaked the same way, and neither proxy copied a message into
+  `GetLastErrorProxy`. The kernel object now lives in an inner scope: the writing's error is taken and SPICE reset
+  before it is destroyed, so that it unloads on a clean state as before, then the destruction's error is taken, and the
+  proxy returns false with both messages in `GetLastErrorProxy` (a native change for a technical reason, CLAUDE.md: an
+  error a proxy leaks; the P/Invoke declarations are unchanged). `SpiceAPI.WriteEphemeris` and `WriteOrientation` throw
+  `InvalidOperationException` with that message, where they named the standard output. The success path is unchanged.
+  - **Test:** C++ `API.WriteEphemerisProxyWhenAnSpkHeldUnderARelativeNameIsDeleted` and
+    `API.WriteOrientationProxyWhenACkHeldUnderARelativeNameIsDeleted` (non-Windows: a meta-kernel naming `x.bsp` or
+    `x.bc` loaded with the working directory set to its folder, restored at once, the file deleted, then a file written):
+    the proxy returns false, `GetLastErrorProxy` names the file, `failed_c()` is false and the next read of the Moon from
+    the Earth is bit for bit the one SPICE gave before the scenario; on 64a3026 the proxy returned true with the error
+    pending. The child scenarios `WriteEphemeris_WhenAnSpkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending`
+    and `WriteOrientation_WhenACkHeldUnderARelativeNameWasDeleted_ThrowsAndLeavesNothingPending` of
+    `KernelUnloadChildTests` (not on Windows): the writer throws naming the file, the next two reads of the Moon are bit
+    for bit the read before; on 64a3026 the writer returned.
 - **The C++ tests linked a second CSPICE** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), second round). The native library linked CSPICE and SOFA
   without a keyword, which put the static archives in its link interface: the C++ test executable linked them again, so
   on Windows, where the DLL exports none of `cspice.lib`, a direct CSPICE call of a test bound to the executable's own
@@ -2626,6 +2650,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   Migration: keep a kernel file on disk until it is unloaded; restarting the process after deleting one is no longer
   needed; name the files of a meta-kernel by absolute paths (or an absolute `PATH_VALUES`) to have their deletion
   covered. No numerical result moves for kernels that exist.
+- **Breaking: `WriteEphemeris` and `WriteOrientation` throw when the last unload of their native writer fails** ([#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668),
+  fourth round, Fixed above). `SpiceAPI.WriteEphemeris` and `WriteOrientation`, and so `Star.WriteEphemeris`,
+  `Site.WriteEphemeris`, `Spacecraft.WriteOrientation` and the Cosmographia export, throw `InvalidOperationException`
+  with SPICE's message when the unload of the written file, which opens the other loaded SPKs or CKs again, fails: on a
+  kernel SPICE holds under a relative name whose file was deleted, or after a change of working directory. Before, they
+  returned true and the next kernel call failed with a wrong error. The written file is on disk in that case. Their
+  other failures carry SPICE's message too, where they named the standard output. The success path is bit for bit
+  unchanged. Migration: name a meta-kernel's files by absolute paths, or keep them on disk and keep the working directory
+  until they are unloaded; catch `InvalidOperationException` where such a kernel may be loaded.
 - **`GetLoadedKernels` after a partial unload** ([#673](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/673), Fixed above): after `UnloadKernels` of a file or a subfolder of a
   loaded folder, the listing names the folder's remaining kernel files, in its place, instead of the folder; after
   `UnloadKernels` of a deleted or moved path, its data is no longer readable. Migration: look for the folder's files,
