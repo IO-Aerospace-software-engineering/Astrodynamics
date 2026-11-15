@@ -197,15 +197,39 @@ public class SpiceAPI
     /// frame kernel, and by its own name when no loaded kernel defines that id (#676; before, always by its own name,
     /// <c>Name + "_FRAME"</c>). The lookup runs at each call, under the lock the caller holds, so a frame kernel loaded
     /// after the spacecraft is built is read. The frame of a managed spacecraft is handed by its name.
+    /// The frame of a site from the kernels (<see cref="Surface.Site.IsSpiceBacked"/>) is handed the same way, by the name
+    /// the loaded kernels give to its id, 1000000 + NaifId (DSS-13_TOPO for DSS-13, whatever the name of the site), and by
+    /// its own name, <c>Name + "_TOPO"</c>, when no loaded kernel defines that id (#690; before, always by its own name, so
+    /// that a site named otherwise than its kernel frame threw SPICE(UNKNOWNFRAME)). The frame of a site built from
+    /// coordinates is the library's (<see cref="ManagedReadFrame"/>).
     /// </remarks>
     internal static string SpiceFrameName(Frame frame)
     {
-        if (frame is Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: true, Id: { } id })
+        if (frame is Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: true } or Surface.SiteFrame { Site.IsSpiceBacked: true } &&
+            frame.Id is { } id)
         {
             return KernelFrameName(id) ?? frame.Name;
         }
 
         return string.Equals(frame.Name, Frame.GCRF.Name, StringComparison.OrdinalIgnoreCase) ? Frame.ICRF.Name : frame.Name;
+    }
+
+    /// <summary>
+    /// Whether the loaded kernels define a frame of id <paramref name="frameId"/> (<c>frmnam_c</c>), read under the lock
+    /// at each call, so that a frame kernel loaded or unloaded since is taken into account (#690).
+    /// </summary>
+    internal static bool KernelDefinesFrame(int frameId) => KernelFrameNameOf(frameId) != null;
+
+    /// <summary>
+    /// The name the loaded kernels give to the frame of id <paramref name="frameId"/> (<c>frmnam_c</c>), null when they
+    /// define none; read under the lock at each call (#690).
+    /// </summary>
+    internal static string KernelFrameNameOf(int frameId)
+    {
+        lock (lockObject)
+        {
+            return KernelFrameName(frameId);
+        }
     }
 
     // The name of the frame of id frameId in the loaded kernels, null when they define none; called under the lock
@@ -235,7 +259,9 @@ public class SpiceAPI
     /// <see cref="Frame.TEME"/> for a frame named TEME (#558); the <see cref="Surface.SiteFrame"/> of a site built from coordinates
     /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
     /// (#682), which only the library holds. SPICE knows none of these, or, for TEME, the native construction that #451
-    /// replaced. The frame of a site or a spacecraft of the kernels is SPICE's, and so is the frame of a managed spacecraft
+    /// replaced. The frame of a site or a spacecraft of the kernels is SPICE's (handed by the name the kernels give its id,
+    /// <see cref="SpiceFrameName"/>; a <see cref="Surface.SiteFrame"/> of the kernels rotates by that same kernel frame,
+    /// #690), and so is the frame of a managed spacecraft
     /// whose record is empty (never propagated, no orientation added, from a TLE or the TLE propagator): the library holds no
     /// attitude for it, and its name reaches SPICE as before 11.0.0, which reads the frame and C-kernels of that id when they
     /// are loaded (those the library wrote for an earlier object of the id) and rejects the frame otherwise
@@ -1187,15 +1213,25 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier (<see cref="IsSiteId"/>), from
-    /// the kernels (<c>new Site(id % 1000, its SPICE name, new CelestialBody(id / 1000))</c>, which reads the site's state at
-    /// J2000 TDB), otherwise <see cref="CelestialItem.Create"/> (#672). Built before the lock (#623).
+    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier (<see cref="IsSiteId"/>),
+    /// from the kernels (<see cref="CreateKernelSite"/>), otherwise <see cref="CelestialItem.Create"/> (#672). Built before
+    /// the lock (#623). The CLI builds its objects by identifier the same way (<c>Helpers.CreateLocalizable</c>).
     /// </summary>
     private ILocalizable CreateObserver(int observerId)
     {
-        if (!IsSiteId(observerId)) return CelestialItem.Create(observerId);
-        string name = GetCelestialBodyInfo(observerId).Name;
-        return new Surface.Site(observerId % 1000, name, new Body.CelestialBody(observerId / 1000));
+        return IsSiteId(observerId) ? CreateKernelSite(observerId) : CelestialItem.Create(observerId);
+    }
+
+    /// <summary>
+    /// The site of a site identifier (<see cref="IsSiteId"/>) from the kernels: <c>new Site(id % 1000, its SPICE name, new
+    /// CelestialBody(id / 1000))</c>, which reads the site's state at J2000 TDB (#672). Not under the lock (#623).
+    /// </summary>
+    /// <param name="siteId">The NAIF identifier of the site, its body's times 1000 plus its own.</param>
+    /// <exception cref="ArgumentException">The loaded kernels give the identifier no name.</exception>
+    internal Surface.Site CreateKernelSite(int siteId)
+    {
+        string name = GetCelestialBodyInfo(siteId).Name;
+        return new Surface.Site(siteId % 1000, name, new Body.CelestialBody(siteId / 1000));
     }
 
     /// <summary>
@@ -1204,10 +1240,9 @@ public class SpiceAPI
     /// builds it (399013 is DSS-13 on the Earth).
     /// </summary>
     /// <remarks>
-    /// The CLI keeps its own rule on purpose (<c>Helpers.IsSiteIdentifier</c>: 100001 to 999998, which
-    /// <c>Helpers.CreateLocalizable</c> builds as the site named <c>site&lt;id&gt;</c> and <c>sub-point</c> rejects), as
-    /// #672 decided: this rule is internal and the CLI has no access to it. The two may give a different observer for the
-    /// same identifier (a name, a Lagrange point or x000).
+    /// The CLI follows this rule (<c>Helpers.CreateLocalizable</c> and <c>sub-point</c>, through the internals the library
+    /// gives it): before 11.0.0 it kept its own, 100001 to 999998, and built the site <c>site&lt;id&gt;</c> of any of them,
+    /// so that the two gave a different observer for a name, a Lagrange point or x000.
     /// </remarks>
     internal static bool IsSiteId(int naifId)
     {

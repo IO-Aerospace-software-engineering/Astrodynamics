@@ -86,10 +86,12 @@ by name (a CCSDS file, the CLI) takes the identity shortcut of `ToFrame` and pas
 propagation as the static frame does. The name does not carry the Earth orientation parameters of a `TirsFrame` or a
 `TemeFrame` built with a provider: it equals `Frame.TIRS` or `Frame.TEME`, so `ToFrame` between them is the identity.
 Nor does it carry the definition of a `SiteFrame` or a `SpacecraftFrame`: each equals any frame of its name, a kernel
-frame included, whatever its axes. A site named DSS-13 has the frame `DSS-13_TOPO`, the name of the kernel frame of the
-real station (`earth_topo_201023.tf`): if its coordinates differ, `new Frame("DSS-13_TOPO").ToFrame(site.Frame, t)` is
-the identity, not the rotation between the two topocentric frames. Give a site or a spacecraft a name no loaded kernel
-uses for another frame.
+frame included, whatever its axes. A site built from coordinates and named DSS-13 has the frame `DSS-13_TOPO`, the name
+of the kernel frame of the real station (`earth_topo_201023.tf`): if its coordinates differ, `new
+Frame("DSS-13_TOPO").ToFrame(site.Frame, t)` is the identity, not the rotation between the two topocentric frames. Give a
+site from coordinates or a spacecraft a name no loaded kernel uses for another frame. A site from the kernels has the
+kernel frame of its id (1000000 + NaifId) when a loaded kernel defines it, whatever its name, so the identity is then
+exact ([Sites](sites.md#reads-in-the-sites-frame), #690).
 `Frame.ICRF` is named `J2000`: `new Frame("ICRF")` is another name, not this frame. `Id` takes no part.
 Equality is not routing: a frame named TEME or GCRF is routed to the managed rotation by its name (see [TEME](#teme)
 and [ICRF, GCRF And EME2000](#icrf-gcrf-and-eme2000)), but a frame named CIRS or TIRS that is not a `CirsFrame` or a

@@ -248,12 +248,10 @@ public class KernelWindowSearchTests
     // CSPICE windows of the same orbit written as kernel_search_leo.bsp (-67801), each state at the TT seconds from the epoch
     private static readonly FileInfo LeoSpkPath = new("Data/GeometryReference/kernel_search_leo.bsp");
     private static readonly Window LeoWindow = new(TimeSystem.Time.CreateTDB(762523200.0), TimeSystem.Time.CreateTDB(762609600.0));
+    // The elevation in DSS-13_TOPO, the frame of the kernels of DSS-13, which the managed searches of the kernel site take
+    // (#690): before, the frame the library built from the planetodetic coordinates of DSS-13 at J2000 on pck00011,
+    // 7.6e-8 rad away in longitude, 1.07e-5 s on these crossings, compared with a reference of its own
     private const string LeoElevation = "leo_dss13_elevation > 30 deg";
-
-    // The elevation in the topocentric frame of the library's site, built from the planetodetic coordinates of DSS-13 at
-    // J2000 on pck00011, which the frame kernel's DSS-13_TOPO (the coordinates at 2020-10-23 on GRS80) differs from by
-    // 7.6e-8 rad in longitude: 1.07e-5 s on these crossings
-    private const string LeoSiteFrameElevation = "leo_dss13_j2000_topo_elevation > 30 deg";
     private const string LeoRange = "leo_dss13_distance < 1000 km";
     private static readonly double ThirtyDegrees = 30.0 * IO.Astrodynamics.Constants.Deg2Rad;
 
@@ -265,7 +263,7 @@ public class KernelWindowSearchTests
     private void AssertShortPasses(Spacecraft leo, TimeSpan step, string path, double threshold)
     {
         var dss13 = Dss13;
-        AssertWindows(LeoSiteFrameElevation, leo.FindWindowsOnCoordinateConstraint(LeoWindow, dss13, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
+        AssertWindows(LeoElevation, leo.FindWindowsOnCoordinateConstraint(LeoWindow, dss13, dss13.Frame, CoordinateSystem.RaDec, Coordinate.Declination,
             RelationnalOperator.Greater, ThirtyDegrees, 0.0, Aberration.None, step), threshold, path);
         AssertWindows(LeoRange, leo.FindWindowsOnDistanceConstraint(LeoWindow, dss13, RelationnalOperator.Lower, 1.0e6, Aberration.None, step), threshold, path);
     }
@@ -345,7 +343,7 @@ public class KernelWindowSearchTests
             RelationnalOperator.Greater, ThirtyDegrees, 0.0, Aberration.None, step).ToArray();
         var ranges = leo.FindWindowsOnDistanceConstraint(LeoWindow, dss13, RelationnalOperator.Lower, 1.0e6, Aberration.None, step).ToArray();
         _output.WriteLine($"MEASURE Velocity-Verlet: {passes.Length} passes, {ranges.Length} range windows");
-        Assert.Equal(Reference.Value[LeoSiteFrameElevation].Length, passes.Length);
+        Assert.Equal(Reference.Value[LeoElevation].Length, passes.Length);
         Assert.Equal(Reference.Value[LeoRange].Length, ranges.Length);
     }
 

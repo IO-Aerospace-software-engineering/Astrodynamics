@@ -114,7 +114,12 @@ public abstract class PropagatorBase : IPropagator
         // A cycle in the maneuver chain would never end the walks of the chain: rejected before anything runs (#585)
         var initialChain = Maneuver.Maneuver.Chain(spacecraft.InitialManeuver);
         var standbyChain = Maneuver.Maneuver.Chain(spacecraft.StandbyManeuver);
-        ValidateTargetOrbitFrames(spacecraft, initialChain.Concat(standbyChain));
+        if (TargetOrbitFrameError(spacecraft, initialChain.Concat(standbyChain), PropagationFrame(spacecraft.InitialOrbitalParameters))
+            is { } frameError)
+        {
+            throw new ArgumentException(frameError, nameof(spacecraft));
+        }
+
         // Each maneuver draws on a tank of the spacecraft (#676, #586), checked before anything runs: before the reset of
         // Spacecraft.Propagate, which leaves the previous propagation as it was
         spacecraft.CheckManeuverEngines();
@@ -394,7 +399,10 @@ public abstract class PropagatorBase : IPropagator
     /// </summary>
     /// <returns>The solution.</returns>
     /// <exception cref="InvalidOperationException">The maneuver chain of the spacecraft is a cycle, which a subclass that
-    /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too.</exception>
+    /// sets <see cref="Maneuver.Maneuver.NextManeuver"/> can build (#585); the constructor checks it too. Or an impulse
+    /// of the chain has its target orbit in another frame than the frame the propagator integrates in, a maneuver attached
+    /// after the propagator was built (#685; the constructor throws <see cref="ArgumentException"/> for those it sees); or
+    /// a maneuver draws on a tank that is not the spacecraft's (#676). Nothing runs.</exception>
     public PropagationSolution Propagate()
     {
         // The orientation cache is active on this thread only, so concurrent propagations sharing a central body do not
@@ -422,7 +430,14 @@ public abstract class PropagatorBase : IPropagator
         // 2. The leading attitudes of the chain on the attitude timeline, and the detector of its first impulse (#539),
         // from a chain without a cycle, which the walks of the chain would never end (#585), whose maneuvers draw on the
         // tanks of the spacecraft (#676, #586)
-        Maneuver.Maneuver.Chain(Spacecraft.StandbyManeuver);
+        // and whose target orbits are in the frame of the integration: a maneuver attached after the propagator was built
+        // escaped the check of the constructor (#685)
+        var chain = Maneuver.Maneuver.Chain(Spacecraft.StandbyManeuver);
+        if (TargetOrbitFrameError(Spacecraft, chain, InitialState.Frame) is { } frameError)
+        {
+            throw new InvalidOperationException(frameError);
+        }
+
         Spacecraft.CheckManeuverEngines();
         _timeline = new AttitudeTimeline();
         _impulses.Clear();
@@ -1023,28 +1038,49 @@ public abstract class PropagatorBase : IPropagator
         SpiceAPI.IsTeme(initial.Frame);
 
     /// <summary>
-    /// A spacecraft propagated in another frame than that of its initial orbit (a TLE or a TEME state, rotated to ICRF)
-    /// takes the target orbits of its impulses in ICRF, the frame of the integrated state they are compared with: a
-    /// target in any other frame is rejected before anything runs (#675).
+    /// The target orbits of the impulses of a spacecraft are compared with the integrated state, in the frame the
+    /// spacecraft is propagated in (<see cref="PropagationFrame"/>): a target in any other frame is rejected before anything
+    /// runs, on every spacecraft (#685), when the propagator is built (<see cref="ArgumentException"/>) and again when it
+    /// propagates, against the frame of its integration (<see cref="InvalidOperationException"/>: a maneuver attached to the
+    /// spacecraft after the propagator was built, the state of the spacecraft). The constructor of
+    /// <see cref="ImpulseManeuver"/> checks the frame of its target only when its tank is on a spacecraft, against the
+    /// initial orbit it has then; this check covers a maneuver built before its tank is attached, a spacecraft given another
+    /// initial orbit afterwards, and a TLE or TEME start, which is propagated in ICRF (#675).
     /// </summary>
-    private static void ValidateTargetOrbitFrames(Spacecraft spacecraft, IEnumerable<Maneuver.Maneuver> maneuvers)
+    /// <returns>The message of the first target in another frame than <paramref name="propagationFrame"/>, null when there
+    /// is none.</returns>
+    private static string TargetOrbitFrameError(Spacecraft spacecraft, IEnumerable<Maneuver.Maneuver> maneuvers,
+        Frame propagationFrame)
     {
         var initial = spacecraft.InitialOrbitalParameters;
-        if (PropagationFrame(initial) == initial.Frame)
-        {
-            return;
-        }
-
         foreach (var maneuver in maneuvers)
         {
-            if (maneuver is ImpulseManeuver { TargetOrbit: { } target } && target.Frame != Frame.ICRF)
+            if (maneuver is ImpulseManeuver { TargetOrbit: { } target } && target.Frame != propagationFrame)
             {
-                throw new ArgumentException(
-                    $"The target orbit of the {maneuver.GetType().Name} is in {target.Frame.Name}, and {spacecraft.Name}, whose " +
-                    "initial orbit is a TLE or a TEME state, is propagated in ICRF: give the target in ICRF " +
-                    "(targetOrbit.ToFrame(Frame.ICRF)).", nameof(spacecraft));
+                string start;
+                if (propagationFrame != PropagationFrame(initial))
+                {
+                    // The initial orbit was changed after the propagator was built, which keeps the frame it was built with
+                    start = $"is propagated in {propagationFrame.Name} by this propagator";
+                }
+                else if (propagationFrame == initial.Frame)
+                {
+                    start = $"whose initial orbit is in {propagationFrame.Name}, is propagated in {propagationFrame.Name}";
+                }
+                else
+                {
+                    start = $"whose initial orbit is a TLE or a TEME state, is propagated in {propagationFrame.Name}";
+                }
+
+                var fix = propagationFrame == Frame.ICRF ? "Frame.ICRF"
+                    : propagationFrame == initial.Frame ? "spacecraft.InitialOrbitalParameters.Frame"
+                    : $"new Frame(\"{propagationFrame.Name}\")";
+                return $"The target orbit of the {maneuver.GetType().Name} is in {target.Frame.Name}, and {spacecraft.Name}, {start}: " +
+                       $"give the target in {propagationFrame.Name} (targetOrbit.ToFrame({fix})).";
             }
         }
+
+        return null;
     }
 
     public void Dispose()

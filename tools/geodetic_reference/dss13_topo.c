@@ -1,11 +1,13 @@
 /*
- * Reference horizontal coordinates for SiteTests (#411): the Moon seen from DSS-13 in its topocentric frame
+ * Reference horizontal coordinates for SiteTests (#411, #690): the Moon seen from DSS-13 in its topocentric frame
  * DSS-13_TOPO (earth_topo_201023.tf: Z toward the zenith, X toward the north, built from the published geodetic
- * coordinates of the station), geometric (no aberration), at the epochs of the tests (TDB). Azimuth from the north
- * toward the east. Also the same quantities in the frame that the library builds (Surface/SiteFrame.cs): north, west
- * and zenith of the geodetic coordinates of the station at J2000 TDB on the ellipsoid of pck00011 (the radii of the
- * library), relative to ITRF93, instead of the WGS84 spheroid of the frame kernel. Run from the repository root; see
- * README.md.
+ * coordinates of the station at 2020-10-23), geometric (no aberration), at the epochs of the tests (TDB), the frame of
+ * the kernel site DSS-13 since #690 (SiteTests.GetHorizontalCoordinates to 4). Azimuth from the north toward the east.
+ * Also the same quantities in the frame of the geodetic coordinates of the station at J2000 TDB on the ellipsoid of
+ * pck00011 (the radii of the library): north, west and zenith relative to ITRF93, the frame of a site built from these
+ * coordinates (SiteTests.GetHorizontalCoordinates5), and the angles of the Sun and of the Moon to that zenith, the
+ * ellipsoid normal the illumination angles of the site take (SiteTests.Illumination*). Run from the repository root;
+ * see README.md.
  */
 #include <math.h>
 #include <stdio.h>

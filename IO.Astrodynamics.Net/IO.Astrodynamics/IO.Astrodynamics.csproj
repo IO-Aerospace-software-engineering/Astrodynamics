@@ -27,6 +27,7 @@
     <ItemGroup>
         <InternalsVisibleTo Include="IO.Astrodynamics.Tests" />
         <InternalsVisibleTo Include="IO.Astrodynamics.Tests.KernelUnload" />
+        <InternalsVisibleTo Include="IO.Astrodynamics.CLI" />
         <InternalsVisibleTo Include="IO.Astrodynamics.CLI.Tests" />
         <InternalsVisibleTo Include="IO.Astrodynamics.ConformanceRunner" />
     </ItemGroup>
@@ -53,6 +54,7 @@
       <EmbeddedResource Include="Templates\InstrumentKernelEllipticalTemplate.ti" />
       <EmbeddedResource Include="Templates\InstrumentKernelRectangularTemplate.ti" />
       <EmbeddedResource Include="Templates\SiteFrameTemplate.tf" />
+      <EmbeddedResource Include="Templates\SiteKernelFrameTemplate.tf" />
       <None Remove="PDS\V4\Schemas\PDS4_MSN_1K00_1300.xsd" />
       <EmbeddedResource Include="PDS\V4\Schemas\PDS4_MSN_1K00_1300.xsd" />
       <None Remove="PDS\V4\Schemas\PDS4_PDS_1K00.xsd" />

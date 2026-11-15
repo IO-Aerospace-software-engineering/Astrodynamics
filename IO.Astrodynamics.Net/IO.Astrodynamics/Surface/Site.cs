@@ -31,7 +31,8 @@ namespace IO.Astrodynamics.Surface
         /// The planetodetic coordinates of the site: longitude and latitude in rad, altitude in m above the ellipsoid of
         /// its body. For a site from the kernels, those of its position at J2000 TDB, which a search of
         /// <see cref="FindWindowsOnIlluminationConstraint"/> and <see cref="FindDayWindows"/> by CSPICE takes as the
-        /// site (#488).
+        /// site (#488), and whose ellipsoid normal the illumination angles take. The frame of a site from the kernels is
+        /// not built from them when a loaded kernel defines the frame of its id (<see cref="SiteFrame"/>, #690).
         /// </summary>
         public Planetodetic Planetodetic { get; }
 
@@ -468,28 +469,49 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Get illumination emission angle
+        /// The emission angle at the site: the angle between the direction of <paramref name="observer"/> and the normal to
+        /// the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for the site
+        /// (<see cref="FindWindowsOnIlluminationConstraint"/>, #488).
         /// </summary>
-        /// <param name="date"></param>
-        /// <param name="observer"></param>
-        /// <param name="aberration"></param>
-        /// <returns></returns>
+        /// <param name="date">The epoch.</param>
+        /// <param name="observer">The observer.</param>
+        /// <param name="aberration">The aberration correction of the direction.</param>
+        /// <returns>The emission angle, rad.</returns>
+        /// <remarks>
+        /// For a site from coordinates the normal is the Z axis of <see cref="Frame"/>. A site from the kernels whose frame
+        /// kernel is loaded has the kernel frame (#690), whose zenith departs from that normal (7.8e-8 rad for DSS-13): the
+        /// angle keeps the normal at <see cref="Planetodetic"/>, so that it agrees with the illumination searches.
+        /// </remarks>
         public double IlluminationEmission(Time date, ILocalizable observer, Aberration aberration)
         {
-            return observer.GetEphemeris(date, this, Frame, aberration).ToStateVector().Position.Angle(Vector3.VectorZ);
+            return observer.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position.Angle(EllipsoidNormalInIcrf(date));
         }
 
         /// <summary>
-        /// Get illumination incidence angle
+        /// The incidence angle at the site: the angle between the direction of <paramref name="illuminationSource"/> and the
+        /// normal to the ellipsoid of the body at <see cref="Planetodetic"/>, the normal CSPICE's <c>gfilum_c</c> takes for
+        /// the site (<see cref="FindWindowsOnIlluminationConstraint"/>, #488).
         /// </summary>
-        /// <param name="date"></param>
-        /// <param name="illuminationSource"></param>
-        /// <param name="aberration"></param>
-        /// <returns></returns>
+        /// <param name="date">The epoch.</param>
+        /// <param name="illuminationSource">The source of illumination.</param>
+        /// <param name="aberration">The aberration correction of the direction.</param>
+        /// <returns>The incidence angle, rad.</returns>
+        /// <remarks>As <see cref="IlluminationEmission"/>: the normal at <see cref="Planetodetic"/>, the Z axis of
+        /// <see cref="Frame"/> for a site from coordinates (#690).</remarks>
         public double IlluminationIncidence(Time date, ILocalizable illuminationSource, Aberration aberration)
         {
-            var illuminationPosition = illuminationSource.GetEphemeris(date, this, this.Frame, aberration).ToStateVector().Position;
-            return Vector3.VectorZ.Angle(illuminationPosition);
+            var illuminationPosition = illuminationSource.GetEphemeris(date, this, Frames.Frame.ICRF, aberration).ToStateVector().Position;
+            return EllipsoidNormalInIcrf(date).Angle(illuminationPosition);
+        }
+
+        // The normal to the ellipsoid of the body at the planetodetic coordinates of the site, fixed in the frame of the body,
+        // in ICRF at the epoch
+        private Vector3 EllipsoidNormalInIcrf(in Time date)
+        {
+            double cosLatitude = System.Math.Cos(Planetodetic.Latitude);
+            var normal = new Vector3(cosLatitude * System.Math.Cos(Planetodetic.Longitude), cosLatitude * System.Math.Sin(Planetodetic.Longitude),
+                System.Math.Sin(Planetodetic.Latitude));
+            return normal.Rotate(CelestialBody.Frame.ToFrame(Frames.Frame.ICRF, date).Rotation);
         }
 
         /// <summary>
@@ -525,9 +547,12 @@ namespace IO.Astrodynamics.Surface
         }
 
         /// <summary>
-        /// Write frame data
+        /// Writes the frame kernel of the topocentric frame of the site (<see cref="SiteFrame.WriteAsync"/>): the frame of
+        /// <see cref="Planetodetic"/>, or for a site from the kernels whose frame id the loaded kernels define, that kernel
+        /// frame under its kernel name (#690).
         /// </summary>
-        /// <param name="outputFile"></param>
+        /// <param name="outputFile">The frame kernel to write.</param>
+        /// <exception cref="InvalidOperationException">See <see cref="SiteFrame.WriteAsync"/>; nothing is written.</exception>
         public async Task WriteFrameAsync(FileInfo outputFile)
         {
             await Frame.WriteAsync(outputFile);

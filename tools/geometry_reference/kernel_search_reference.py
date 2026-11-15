@@ -30,14 +30,13 @@ ELLIPSOID, the Sun as source, the incidence angle):
     23:00 to 2024-03-02 01:00 TDB, centre 399, J2000), each state the conic at the TT seconds from the epoch to its own,
     as the library's two-body motion and propagation count them about the Earth (TT - TDB moves by up to 2.9e-5 s a day);
     seen from DSS-13 (399013) over 2024-03-01 00:00 to 2024-03-02 00:00 TDB: elevation > 30 deg (gfposc, declination
-    in DSS-13_TOPO) and range < 1000 km (gfdist), step 60 s, no aberration correction; and the elevation in the
-    topocentric frame of the library's site (north, west, zenith from the planetodetic coordinates of DSS-13 at J2000 on
-    pck00011, relative to ITRF93), defined here as DSS-13_J2000_TOPO (1678013), which the frame kernel's DSS-13_TOPO
-    (its coordinates at 2020-10-23 on GRS80) differs from by 7.6e-8 rad in longitude and 1.7e-8 rad in latitude;
-  - a site built from those coordinates (Site from a Planetodetic): the fixed point georec(lon, lat, alt) of DSS-13's
-    planetodetic coordinates at J2000, written as a temporary type 8 SPK (-67802, centre 399, ITRF93, removed after the
-    search), seen from the LEO in DSS-13_J2000_TOPO: declination < -30 deg (gfposc) and range < 1000 km (gfdist), the
-    searches of Site.FindWindowsOnCoordinateConstraint and FindWindowsOnDistanceConstraint on that site;
+    in DSS-13_TOPO, the frame of the kernel site, #690) and range < 1000 km (gfdist), step 60 s, no aberration
+    correction;
+  - a site built from DSS-13's planetodetic coordinates at J2000 on pck00011 (Site from a Planetodetic): the fixed point
+    georec(lon, lat, alt), written as a temporary type 8 SPK (-67802, centre 399, ITRF93, removed after the search), seen
+    from the LEO in the topocentric frame of a site from coordinates (north, west, zenith of those coordinates, relative
+    to ITRF93), defined here as DSS-13_J2000_TOPO (1678013): declination < -30 deg (gfposc) and range < 1000 km
+    (gfdist), the searches of Site.FindWindowsOnCoordinateConstraint and FindWindowsOnDistanceConstraint on that site;
   - the point of DSS-13's longitude and latitude at 0 m on the ellipsoid (georec, as above), incidence of the Sun
     < 58.83 deg (the minimum over the window, 58.5315 deg, plus 0.3 deg, rounded), without correction, observer 399013,
     over 2023-12-15 00:05 to 2023-12-18 00:05 TDB, step 60 s.
@@ -206,8 +205,6 @@ def main():
     ref['leo_dss13_elevation > 30 deg'] = coordinate('-67801', 'DSS-13_TOPO', '399013', 'RA/DEC', 'DECLINATION', '>',
                                                      math.radians(30.0), l0, l1, 60.0)
     site_frame(1678013, 'DSS-13_J2000_TOPO', 399013, lon, lat)
-    ref['leo_dss13_j2000_topo_elevation > 30 deg'] = coordinate('-67801', 'DSS-13_J2000_TOPO', '399013', 'RA/DEC',
-                                                                'DECLINATION', '>', math.radians(30.0), l0, l1, 60.0)
     ref['leo_dss13_distance < 1000 km'] = distance('-67801', '399013', '<', 1000.0, l0, l1, 60.0)
     with tempfile.TemporaryDirectory() as scratch:
         site_spk = os.path.join(scratch, 'dss13_coordinates.bsp')

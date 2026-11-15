@@ -42,6 +42,22 @@ namespace IO.Astrodynamics.Tests.Surface
         }
 
 
+        // #690: the horizontal coordinates of a site from the kernels are those of the frame of its kernels, against spkezr_c
+        // of the Moon from DSS-13 in DSS-13_TOPO by name. Measured on Linux x64: 1.59e-16 rad (2000-01-05); threshold twice
+        // that rounded up, provisional until the three platforms have printed their MEASURE lines
+        private const double KernelTopocentricThreshold = 3.2e-16;
+
+        private void AssertAgainstKernelTopocentricFrame(in TimeSystem.Time epoch, Horizontal horizontal)
+        {
+            var expected = SpiceAPI.Instance.ReadEphemeris(epoch, 399013, 301, new Frames.Frame("DSS-13_TOPO"), Aberration.None).ToStateVector().Position;
+            double cosElevation = System.Math.Cos(horizontal.Elevation);
+            var actual = new Vector3(cosElevation * System.Math.Cos(horizontal.Azimuth), -cosElevation * System.Math.Sin(horizontal.Azimuth),
+                System.Math.Sin(horizontal.Elevation));
+            double angle = System.Math.Atan2(actual.Cross(expected).Magnitude(), actual * expected);
+            _output.WriteLine($"MEASURE #690 horizontal coordinates at {epoch} against spkezr in DSS-13_TOPO: {angle:E3} rad");
+            Assert.True(angle <= KernelTopocentricThreshold, $"{angle:E3} rad");
+        }
+
         [Fact]
         public void GetHorizontalCoordinates()
         {
@@ -49,12 +65,13 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            // SPICE in the topocentric frame of the library, built from the geodetic coordinates of DSS-13 on the
-            // ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c); before #411 the frame took the latitude of
-            // the relation of the surface, 3.05e-5° too far north
-            Assert.Equal(117.89632135112616, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
-            Assert.Equal(16.790619489720385, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
-            Assert.Equal(400552679.30400002, hor.Range, 3);
+            // SPICE in DSS-13_TOPO, the frame of the kernels of DSS-13 (tools/geodetic_reference/dss13_topo.c, #690); before
+            // 11.0.0 the frame of the library, built from the geodetic coordinates of DSS-13 at J2000 TDB on the ellipsoid
+            // of pck00011, 7.8e-8 rad away (its lines 'pck00011 frame')
+            Assert.Equal(117.89631808999324, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(16.790616801126596, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(400552679.30434096, hor.Range, 3);
+            AssertAgainstKernelTopocentricFrame(epoch, hor);
         }
 
         [Fact]
@@ -64,12 +81,13 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            // SPICE in the topocentric frame of the library, built from the geodetic coordinates of DSS-13 on the
-            // ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c); before #411 the frame took the latitude of
-            // the relation of the surface, 3.05e-5° too far north
-            Assert.Equal(100.01881556283226, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
-            Assert.Equal(-23.236009058726474, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
-            Assert.Equal(408535095.85179406, hor.Range, 3);
+            // SPICE in DSS-13_TOPO, the frame of the kernels of DSS-13 (tools/geodetic_reference/dss13_topo.c, #690); before
+            // 11.0.0 the frame of the library, built from the geodetic coordinates of DSS-13 at J2000 TDB on the ellipsoid
+            // of pck00011, 7.8e-8 rad away (its lines 'pck00011 frame')
+            Assert.Equal(100.01881372444433, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(-23.23601238548768, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(408535095.85179836, hor.Range, 3);
+            AssertAgainstKernelTopocentricFrame(epoch, hor);
         }
 
         [Fact]
@@ -79,12 +97,13 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            // SPICE in the topocentric frame of the library, built from the geodetic coordinates of DSS-13 on the
-            // ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c); before #411 the frame took the latitude of
-            // the relation of the surface, 3.05e-5° too far north
-            Assert.Equal(41.608311183520655, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
-            Assert.Equal(-63.020738075776627, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
-            Assert.Equal(401248015.68691534, hor.Range, 3);
+            // SPICE in DSS-13_TOPO, the frame of the kernels of DSS-13 (tools/geodetic_reference/dss13_topo.c, #690); before
+            // 11.0.0 the frame of the library, built from the geodetic coordinates of DSS-13 at J2000 TDB on the ellipsoid
+            // of pck00011, 7.8e-8 rad away (its lines 'pck00011 frame')
+            Assert.Equal(41.608304711283012, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(-63.02074114350669, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(401248015.68690348, hor.Range, 3);
+            AssertAgainstKernelTopocentricFrame(epoch, hor);
         }
 
         [Fact]
@@ -94,12 +113,13 @@ namespace IO.Astrodynamics.Tests.Surface
 
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var hor = site.GetHorizontalCoordinates(epoch, TestHelpers.MoonAtJ2000, Aberration.None);
-            // SPICE in the topocentric frame of the library, built from the geodetic coordinates of DSS-13 on the
-            // ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c); before #411 the frame took the latitude of
-            // the relation of the surface, 3.05e-5° too far north
-            Assert.Equal(312.54263018434767, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
-            Assert.Equal(-33.618936771066764, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
-            Assert.Equal(376638211.11299998, hor.Range, 3);
+            // SPICE in DSS-13_TOPO, the frame of the kernels of DSS-13 (tools/geodetic_reference/dss13_topo.c, #690); before
+            // 11.0.0 the frame of the library, built from the geodetic coordinates of DSS-13 at J2000 TDB on the ellipsoid
+            // of pck00011, 7.8e-8 rad away (its lines 'pck00011 frame')
+            Assert.Equal(312.54262561680804, hor.Azimuth * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(-33.618934802402485, hor.Elevation * IO.Astrodynamics.Constants.Rad2Deg, 9);
+            Assert.Equal(376638211.1128177, hor.Range, 3);
+            AssertAgainstKernelTopocentricFrame(epoch, hor);
         }
 
         [Fact]
@@ -107,8 +127,10 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             var epoch = new TimeSystem.Time(2000, 1, 15, 12, 0, 0);
             // A custom site at the geodetic coordinates of DSS-13 on the ellipsoid of pck00011 (SPICE recgeo_c of the
-            // kernel station at J2000 TDB, tools/geodetic_reference/dss13_topo.c) sees what the kernel station sees;
-            // before #411 these coordinates were 1073.24 m and 35.24719501°, and the custom site was 1.3 m away
+            // kernel station at J2000 TDB, tools/geodetic_reference/dss13_topo.c): the position of the kernel station, in
+            // the topocentric frame of those J2000 coordinates. The kernel station saw the same before #690; it now takes
+            // its kernel frame, DSS-13_TOPO, and its azimuth is 4.6e-6° away (GetHorizontalCoordinates4). Before #411
+            // these coordinates were 1073.24 m and 35.24719501°, and the custom site was 1.3 m away
             var site = new Site(339, "TestSite", TestHelpers.EarthAtJ2000,
                 new Planetodetic(-116.79445837193671 * IO.Astrodynamics.Constants.Deg2Rad,
                     35.247164496550241 * IO.Astrodynamics.Constants.Deg2Rad, 1070.8505951920122));
@@ -258,8 +280,8 @@ namespace IO.Astrodynamics.Tests.Surface
                 site.Frame, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
                 TimeSpan.FromSeconds(60.0));
 
-            // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s) in the frame the library builds for the
-            // station: the Moon is up at the start and at the end of the search window, whose bounds close the windows
+            // CSPICE gfposc (tools/geometry_reference, converged to 1e-9 s) in DSS-13_TOPO, the frame of the kernels of the
+            // station (#690): the Moon is up at the start and at the end of the search window, whose bounds close the windows
             var windows = res as Window[] ?? res.ToArray();
             GeometryReference.AssertWindows(null, "dss13_moon_z > 0", windows, GeometryReference.ThresholdCrossing);
             Assert.Equal(TimeSystem.Time.J2000TDB, windows[0].StartDate);
@@ -374,13 +396,124 @@ namespace IO.Astrodynamics.Tests.Surface
                 res);
         }
 
+        // #690, second review: the frame kernel written for a site from the kernels, read back by SPICE, against the kernel
+        // frame it copies. Measured on Linux x64: 2.128e-16 rad at both dates, for both names; threshold twice that rounded up,
+        // provisional until the three platforms have printed their MEASURE lines
+        private const double WrittenKernelSiteFrameThreshold = 5.0e-16;
+
+        /// <summary>
+        /// The frame kernel written for a site from the kernels whose frame the loaded kernels define is that kernel frame
+        /// (#690, second review): its name and id, DSS-13_TOPO (1399013) whatever the name of the site, and its orientation.
+        /// It wrote the frame of <see cref="Site.Planetodetic"/> (the J2000 coordinates on pck00011) under the kernel's id,
+        /// 7.76e-8 rad from DSS-13_TOPO (6.3e-8 rad at its zenith), and for a site named otherwise renamed the frame of id
+        /// 1399013. The file is loaded with its frame and body renamed (1399913, T690_TOPO, 399913), so that it redefines
+        /// nothing of Data/SolarSystem, and SPICE reads its rotation to DSS-13_TOPO (pxform), the identity.
+        /// </summary>
+        [Theory]
+        [InlineData("DSS-13")]
+        [InlineData("GOLDSTONE")]
+        public async Task WriteFrame_KernelSite_WritesTheKernelFrame(string name)
+        {
+            // Arrange
+            var site = new Site(13, name, PlanetsAndMoons.EARTH_BODY);
+            var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("kernel_site");
+            var renamed = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("kernel_site_renamed");
+            try
+            {
+                // Act
+                await site.WriteFrameAsync(fk);
+
+                // Assert: the kernel's name and id; SPICE reads the renamed copy as DSS-13_TOPO
+                var text = await File.ReadAllTextAsync(fk.FullName);
+                Assert.Contains("FRAME_1399013_NAME        = 'DSS-13_TOPO'", text);
+                Assert.Contains("FRAME_DSS-13_TOPO        = 1399013", text);
+                if (name != "DSS-13")
+                {
+                    Assert.DoesNotContain(name + "_TOPO", text);
+                }
+
+                await File.WriteAllTextAsync(renamed.FullName, text.Replace("1399013", "1399913").Replace("399013", "399913")
+                    .Replace("DSS-13_TOPO", "T690_TOPO").Replace($"'{name.ToUpper()}'", "'T690'"));
+                Assert.Empty(KernelShadowing.Find([renamed], KernelShadowing.SolarSystem));
+                SpiceAPI.Instance.LoadKernels(renamed);
+                try
+                {
+                    foreach (var date in new[] { "2000-01-02T00:00:00", "2024-03-01T00:00:00" })
+                    {
+                        var epoch = new TimeSystem.Time(date + " TDB");
+                        var rotation = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("T690_TOPO"), new Frames.Frame("DSS-13_TOPO")).Rotation;
+                        double angle = 2.0 * System.Math.Atan2(rotation.VectorPart.Magnitude(), System.Math.Abs(rotation.W));
+                        _output.WriteLine($"MEASURE #690 written frame of {name} against DSS-13_TOPO {date}: {angle:E3} rad");
+                        Assert.True(angle <= WrittenKernelSiteFrameThreshold, $"{angle:E3} rad");
+                    }
+                }
+                finally
+                {
+                    SpiceAPI.Instance.UnloadKernels(renamed);
+                }
+            }
+            finally
+            {
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(fk);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(renamed);
+            }
+        }
+
+        /// <summary>
+        /// A site from the kernels whose kernel frame is not fixed in the frame of its body cannot be written as a TK frame of
+        /// that body (#690, second review): a frame of id 1399777 defined relative to J2000 for a site of an SPK written by
+        /// the library. The writer throws <see cref="InvalidOperationException"/> and writes nothing.
+        /// </summary>
+        [Fact]
+        public async Task WriteFrame_KernelSiteWhoseFrameIsNotFixedInItsBody_Throws()
+        {
+            // Arrange: the SPK of the site and a frame kernel of its id relative to J2000
+            var earth = PlanetsAndMoons.EARTH_BODY;
+            var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site777", ".bsp");
+            var frameKernel = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site777_inertial");
+            var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site777_written");
+            new Site(777, "RV690", earth, new Planetodetic(0.1, 0.6, 100.0))
+                .WriteEphemeris(new Window(TimeSystem.Time.J2000TDB.AddDays(-1.0), TimeSystem.Time.J2000TDB.AddDays(1.0)), spk);
+            await File.WriteAllTextAsync(frameKernel.FullName,
+                "KPL/FK\n\\begindata\nFRAME_RV690_TOPO = 1399777\nFRAME_1399777_NAME = 'RV690_TOPO'\nFRAME_1399777_CLASS = 4\n" +
+                "FRAME_1399777_CLASS_ID = 1399777\nFRAME_1399777_CENTER = 399777\nTKFRAME_1399777_SPEC = 'MATRIX'\n" +
+                "TKFRAME_1399777_RELATIVE = 'J2000'\nTKFRAME_1399777_MATRIX = (1 0 0 0 1 0 0 0 1)\n\\begintext\n");
+            Assert.Empty(KernelShadowing.Find([spk, frameKernel], KernelShadowing.SolarSystem));
+            SpiceAPI.Instance.LoadKernels(spk);
+            SpiceAPI.Instance.LoadKernels(frameKernel);
+            try
+            {
+                var site = new Site(777, "RV690", earth);
+                Assert.True(site.IsSpiceBacked);
+
+                // Act
+                var exception = await Record.ExceptionAsync(() => site.WriteFrameAsync(fk));
+
+                // Assert
+                var rejected = Assert.IsType<InvalidOperationException>(exception);
+                Assert.Contains("RV690_TOPO", rejected.Message);
+                Assert.Contains("ITRF93", rejected.Message);
+                fk.Refresh();
+                Assert.False(fk.Exists);
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(frameKernel);
+                SpiceAPI.Instance.UnloadKernels(spk);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spk);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(frameKernel);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(fk);
+            }
+        }
+
         [Fact]
         public void IlluminationIncidence()
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            // SPICE: the angle of the Sun to the zenith of the frame of the library, from the geodetic coordinates of DSS-13
-            // on the ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c)
+            // SPICE: the angle of the Sun to the normal of the ellipsoid of pck00011 at the geodetic coordinates of DSS-13 at
+            // J2000 TDB, gfilum's normal for the site (tools/geodetic_reference/dss13_topo.c, its zenith of the 'pck00011
+            // frame'), not the zenith of DSS-13_TOPO, the frame of the site since #690
             Assert.Equal(2.1862894689515753, res, 12);
         }
 
@@ -389,8 +522,9 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationEmission(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            // SPICE: the angle of the Sun to the zenith of the frame of the library, from the geodetic coordinates of DSS-13
-            // on the ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c)
+            // SPICE: the angle of the Sun to the normal of the ellipsoid of pck00011 at the geodetic coordinates of DSS-13 at
+            // J2000 TDB, gfilum's normal for the site (tools/geodetic_reference/dss13_topo.c, its zenith of the 'pck00011
+            // frame'), not the zenith of DSS-13_TOPO, the frame of the site since #690
             Assert.Equal(2.1862894689515753, res, 12);
         }
 
@@ -407,8 +541,9 @@ namespace IO.Astrodynamics.Tests.Surface
         {
             Site site = new Site(13, "DSS-13", TestHelpers.EarthAtJ2000);
             var res = site.IlluminationIncidence(TimeSystem.Time.J2000TDB, TestHelpers.Sun, Aberration.None);
-            // SPICE: the angle of the Sun to the zenith of the frame of the library, from the geodetic coordinates of DSS-13
-            // on the ellipsoid of pck00011 (tools/geodetic_reference/dss13_topo.c)
+            // SPICE: the angle of the Sun to the normal of the ellipsoid of pck00011 at the geodetic coordinates of DSS-13 at
+            // J2000 TDB, gfilum's normal for the site (tools/geodetic_reference/dss13_topo.c, its zenith of the 'pck00011
+            // frame'), not the zenith of DSS-13_TOPO, the frame of the site since #690
             Assert.Equal(2.1862894689515753, res, 12);
         }
 
