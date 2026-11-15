@@ -52,6 +52,13 @@ CSPICE wrote a file under the name truncated to 255 and then failed before 11.0.
 bytes handed to CSPICE, UTF-8 on Linux and macOS. `Spacecraft.WriteEphemeris` (the managed SPK writer) and the text
 kernel writers write any path.
 
+Each native load and unload, and the native writers, first close and unload the SPKs, CKs, binary PCKs and EKs whose
+file, named by an absolute path, was deleted since its load. A name SPICE holds relative to the working directory, from
+a meta-kernel's `KERNELS_TO_LOAD` or a direct C++ caller of `LoadKernelsProxy`, is left to SPICE whether its file was
+deleted or not: after a change of working directory the name no longer tells, and KEEPER's own reopening of such a
+kernel then fails with `SPICE(FILENOTFOUND)` once the working directory changed or the file was deleted. `LoadKernels`
+always passes full paths. See [Kernel Management](../guides/kernel-management.md).
+
 SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and
 label what SPICE returns with the frame given (#543).

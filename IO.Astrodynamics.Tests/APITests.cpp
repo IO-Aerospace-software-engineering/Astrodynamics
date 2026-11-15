@@ -1128,3 +1128,40 @@ TEST(API, LoadKernelsProxyAfterTheWorkingDirectoryChangedKeepsAnSpkAMetaKernelNa
     std::filesystem::remove_all(folder);
 #endif
 }
+
+// A direct C++ caller that loads an SPK by a name relative to the working directory: SPICE holds it under that name, and once
+// the working directory changed the name no longer tells whether the file was deleted. The native drop of the deleted binary
+// kernels tests only the names SPICE holds as absolute paths, so it leaves this one to SPICE, as it does a meta-kernel's
+// relative names (fourth round of #668). The references are KEEPER's list (kdata_c) and the DAF handles (dafhfn_)
+TEST(API, LoadKernelsProxyAfterTheWorkingDirectoryChangedKeepsAnSpkLoadedByARelativeName)
+{
+#if defined(_WIN32)
+    GTEST_SKIP() << "KEEPER's list is read through the CSPICE routines the shared library exports on Linux and macOS only";
+#else
+    auto folder = FreshFolder("ioa_j1_cpp_relative_direct");
+    std::filesystem::copy_file(std::string(SolarSystemKernelPath) + "/L2_de431.bsp", folder / "y.bsp");
+    {
+        std::ofstream text(folder / "t.tk");
+        text << "KPL/PCK\n\\begindata\nIOA_J1_RELATIVE = 1\n\\begintext\n";
+    }
+    // The working directory is restored before any other kernel call: the harness loads Data/SolarSystem by relative names,
+    // which KEEPER opens again by those names
+    const auto workingDirectory = std::filesystem::current_path();
+    std::filesystem::current_path(folder);
+    const bool loaded = LoadKernelsProxy("y.bsp");
+    std::filesystem::current_path(workingDirectory);
+    ASSERT_TRUE(loaded);
+    const SpiceInt handle = KeeperHandle("y.bsp");
+    ASSERT_GT(handle, 0);
+
+    EXPECT_TRUE(LoadKernelsProxy((folder / "t.tk").string().c_str()));
+    EXPECT_EQ(handle, KeeperHandle("y.bsp"));
+    EXPECT_TRUE(DafHandleOpen(handle));
+
+    EXPECT_TRUE(UnloadKernelsProxy((folder / "t.tk").string().c_str()));
+    EXPECT_TRUE(UnloadKernelsProxy("y.bsp"));
+    EXPECT_EQ(-1, KeeperHandle("y.bsp"));
+    EXPECT_FALSE(DafHandleOpen(handle));
+    std::filesystem::remove_all(folder);
+#endif
+}

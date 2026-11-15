@@ -61,10 +61,13 @@ SPICE kernels supply the ephemeris, orientation, leap-second, and body-constant 
   (`SPICE(FILEOPENFAIL)`): for a PCK, every IAU frame, whose search goes through the binary PCKs first, even for a deleted
   PCK never unloaded (measured with CSPICE N0067). The data of a deleted kernel are therefore no longer readable after the
   next load, unload or native write; `GetLoadedKernels` lists its path until it is unloaded, which then does nothing. The
-  file is tested by the name SPICE holds, which `LoadKernels` gives as a full path. A meta-kernel's `KERNELS_TO_LOAD` may
-  name its files relative to the working directory of its load: SPICE holds them under that relative name, which no
+  file is tested by the name SPICE holds, which `LoadKernels` gives as a full path, and only for a name SPICE holds as an
+  absolute path. A meta-kernel's `KERNELS_TO_LOAD` may name its files relative to the working directory of its load, and
+  a direct C++ caller of `LoadKernelsProxy` may pass a relative name: SPICE holds them under that relative name, which no
   longer reaches the file once the working directory changed, so a kernel held under a relative name is left to SPICE,
-  as before 11.0.0, whether its file was deleted or not; a deleted one can still stay open in SPICE. Name the files of a
+  as before 11.0.0, whether its file was deleted or not; a deleted one can still stay open in SPICE, and KEEPER's own
+  reopening of it, after the unload of another kernel of its kind, fails with `SPICE(FILENOTFOUND)` once the working
+  directory changed or the file was deleted. Name the files of a
   meta-kernel by absolute paths, or through `PATH_VALUES` and `PATH_SYMBOLS` with an absolute `PATH_VALUES`, to have
   them covered. A DSK is left to SPICE too (its subsystem has no public routine that closes it by its handle): keep a
   loaded DSK on disk until it is unloaded.

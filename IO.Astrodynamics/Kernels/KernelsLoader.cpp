@@ -15,9 +15,12 @@ namespace
     constexpr SpiceInt TypeLength{32};
 
     // Whether the file of a loaded kernel no longer exists, its name taken as SPICE holds it. A name the file system cannot
-    // test counts as existing, so that nothing is unloaded on a doubt, and so does a relative name: a meta-kernel can name its
-    // files relative to the working directory of its load, which may have changed since, so that the name no longer tells
-    // whether the file SPICE holds open was deleted (review of the second round of #668). The library loads by full path
+    // test counts as existing, so that nothing is unloaded on a doubt, and so does a relative name, whether a meta-kernel's
+    // KERNELS_TO_LOAD or a direct C++ caller of LoadKernelsProxy gave it: it is relative to the working directory of its
+    // load, which may have changed since, so that the name no longer tells whether the file SPICE holds open was deleted
+    // (review of the second round of #668). Such a kernel is left to SPICE, deleted or not: KEEPER's own reopening of it,
+    // after the unload of another kernel of its kind, fails with SPICE(FILENOTFOUND) once the working directory changed or
+    // the file was deleted (fourth round of #668). The .NET layer loads by full path
     bool WasDeleted(const char *file)
     {
         std::error_code error;
