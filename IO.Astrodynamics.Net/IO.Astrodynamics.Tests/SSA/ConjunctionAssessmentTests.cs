@@ -342,14 +342,14 @@ public partial class ConjunctionAssessmentTests
             -5503,
             "P",
             earth,
-            Vector3.Zero,
-            Vector3.Zero);
+            UniformOffsetPosition,
+            UniformOffsetVelocity);
         var secondarySpacecraft = CreateSpacecraft(
             -5504,
             "S",
             earth,
-            new Vector3(10.0, 0.0, 0.0),
-            new Vector3(0.0, 100.0 * System.Math.PI, 0.0));
+            new Vector3(10.0, 0.0, 0.0) + UniformOffsetPosition,
+            new Vector3(0.0, 100.0 * System.Math.PI, 0.0) + UniformOffsetVelocity);
         var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
 
         var protectedTrajectory = CreatePropagationSolution(
@@ -357,7 +357,7 @@ public partial class ConjunctionAssessmentTests
             start,
             durationSeconds: 3.0,
             stepSeconds: 0.25,
-            stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
+            stateAtSeconds: t => WithUniformOffset(t, (Vector3.Zero, Vector3.Zero, Vector3.Zero)));
         var secondaryTrajectory = CreatePropagationSolution(
             earth,
             start,
@@ -366,10 +366,10 @@ public partial class ConjunctionAssessmentTests
             stateAtSeconds: t =>
             {
                 double phase = System.Math.PI * t;
-                return (
+                return WithUniformOffset(t, (
                     new Vector3(10.0, 100.0 * System.Math.Sin(phase), 0.0),
                     new Vector3(0.0, 100.0 * System.Math.PI * System.Math.Cos(phase), 0.0),
-                    new Vector3(0.0, -100.0 * System.Math.PI * System.Math.PI * System.Math.Sin(phase), 0.0));
+                    new Vector3(0.0, -100.0 * System.Math.PI * System.Math.PI * System.Math.Sin(phase), 0.0)));
             });
 
         var encounters = ConjunctionAssessment.AnalyzeAll(
@@ -397,9 +397,10 @@ public partial class ConjunctionAssessmentTests
         var earth = CreateEarth();
         var start = TimeSystem.Time.J2000TDB;
         var window = new Window(start, start.AddSeconds(3.0));
-        var protectedSpacecraft = CreateSpacecraft(-5505, "P", earth, Vector3.Zero, Vector3.Zero);
+        var protectedSpacecraft = CreateSpacecraft(-5505, "P", earth, UniformOffsetPosition, UniformOffsetVelocity);
         // The option gives the secondary its radius of 0 m, which the spacecraft then carries (#683: a differing option throws)
-        var secondarySpacecraft = CreateSpacecraft(-5506, "S", earth, new Vector3(10.0, 0.0, 0.0), Vector3.Zero, hardBodyRadius: 0.0);
+        var secondarySpacecraft = CreateSpacecraft(-5506, "S", earth, new Vector3(10.0, 0.0, 0.0) + UniformOffsetPosition, UniformOffsetVelocity,
+            hardBodyRadius: 0.0);
         var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
         const double root1 = 0.75;
         const double root2 = 1.50;
@@ -411,7 +412,7 @@ public partial class ConjunctionAssessmentTests
             start,
             durationSeconds: 3.0,
             stepSeconds: 3.0,
-            stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
+            stateAtSeconds: t => WithUniformOffset(t, (Vector3.Zero, Vector3.Zero, Vector3.Zero)));
         var secondaryTrajectory = CreatePropagationSolution(
             earth,
             start,
@@ -425,10 +426,10 @@ public partial class ConjunctionAssessmentTests
                     (t - root1) * (t - root3) +
                     (t - root1) * (t - root2));
                 double acceleration = scale * (6.0 * t - 2.0 * (root1 + root2 + root3));
-                return (
+                return WithUniformOffset(t, (
                     new Vector3(10.0, displacement, 0.0),
                     new Vector3(0.0, speed, 0.0),
-                    new Vector3(0.0, acceleration, 0.0));
+                    new Vector3(0.0, acceleration, 0.0)));
             });
 
         var encounters = ConjunctionAssessment.AnalyzeAll(
@@ -459,10 +460,10 @@ public partial class ConjunctionAssessmentTests
         var start = TimeSystem.Time.J2000TDB;
         var end = start.AddSeconds(2.0);
         var window = new Window(start, end);
-        var protectedSpacecraft = CreateSpacecraft(-5507, "P", earth, Vector3.Zero, Vector3.Zero);
+        var protectedSpacecraft = CreateSpacecraft(-5507, "P", earth, UniformOffsetPosition, UniformOffsetVelocity);
         // The option gives the secondary its radius of 0 m, which the spacecraft then carries (#683: a differing option throws)
-        var secondarySpacecraft = CreateSpacecraft(-5508, "S", earth, new Vector3(10.0, 200.0, 0.0), new Vector3(0.0, -100.0, 0.0),
-            hardBodyRadius: 0.0);
+        var secondarySpacecraft = CreateSpacecraft(-5508, "S", earth, new Vector3(10.0, 200.0, 0.0) + UniformOffsetPosition,
+            new Vector3(0.0, -100.0, 0.0) + UniformOffsetVelocity, hardBodyRadius: 0.0);
         var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
 
         var protectedTrajectory = CreatePropagationSolution(
@@ -470,16 +471,16 @@ public partial class ConjunctionAssessmentTests
             start,
             durationSeconds: 2.0,
             stepSeconds: 2.0,
-            stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
+            stateAtSeconds: t => WithUniformOffset(t, (Vector3.Zero, Vector3.Zero, Vector3.Zero)));
         var secondaryTrajectory = CreatePropagationSolution(
             earth,
             start,
             durationSeconds: 2.0,
             stepSeconds: 2.0,
-            stateAtSeconds: t => (
+            stateAtSeconds: t => WithUniformOffset(t, (
                 new Vector3(10.0, 200.0 - 100.0 * t, 0.0),
                 new Vector3(0.0, -100.0, 0.0),
-                Vector3.Zero));
+                Vector3.Zero)));
 
         var encounter = ConjunctionAssessment.Analyze(
             profile,
@@ -499,21 +500,33 @@ public partial class ConjunctionAssessmentTests
         Assert.Equal(10.0, encounter.EncounterState.MissDistanceMeters, 9);
     }
 
+    // #687: the protected spacecraft of the dense tests was at rest at the centre (r = 0, v = 0), a state with no RTN
+    // frame, which the analysis needs at TCA for the relative state and the covariance. Both participants now move by the
+    // same uniform motion r0 + v0 t, r0 × v0 ≠ 0, chosen so that the relative state is the former one bit for bit, and
+    // with it the closed forms and the decisions at the tick: r0 = (1, 0, 0) m adds exactly to the secondary's x of 10 or
+    // 50 m, its y is untouched, and v0 = (0, 0, 1e-3) m/s gives both participants the same z
+    private static readonly Vector3 UniformOffsetPosition = new(1.0, 0.0, 0.0);
+    private static readonly Vector3 UniformOffsetVelocity = new(0.0, 0.0, 1e-3);
+
+    private static (Vector3 position, Vector3 velocity, Vector3 acceleration) WithUniformOffset(double t,
+        (Vector3 position, Vector3 velocity, Vector3 acceleration) state) =>
+        (state.position + UniformOffsetPosition + UniformOffsetVelocity * t, state.velocity + UniformOffsetVelocity, state.acceleration);
+
     // A rectilinear pass in a 2 s window: the secondary at (x, y0 + vy t) m from the protected spacecraft, one accepted
-    // step; closest, x m, where y = 0
+    // step; closest, x m, where y = 0; both with the uniform motion above
     private static (ProtectedSpacecraftProfile, PropagationSolution, Spacecraft, PropagationSolution, Window)
         RectilinearPass(int naifId, double y0, double vy, double x = 10.0)
     {
         var earth = CreateEarth();
         var start = TimeSystem.Time.J2000TDB;
-        var protectedSpacecraft = CreateSpacecraft(naifId, "P", earth, Vector3.Zero, Vector3.Zero);
+        var protectedSpacecraft = CreateSpacecraft(naifId, "P", earth, UniformOffsetPosition, UniformOffsetVelocity);
         // RectilinearPassOptions give the secondary its radius of 0 m, which the spacecraft then carries (#683)
-        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "S", earth, new Vector3(x, y0, 0.0), new Vector3(0.0, vy, 0.0),
-            hardBodyRadius: 0.0);
+        var secondarySpacecraft = CreateSpacecraft(naifId - 1, "S", earth, new Vector3(x, y0, 0.0) + UniformOffsetPosition,
+            new Vector3(0.0, vy, 0.0) + UniformOffsetVelocity, hardBodyRadius: 0.0);
         var protectedTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
-            stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
+            stateAtSeconds: t => WithUniformOffset(t, (Vector3.Zero, Vector3.Zero, Vector3.Zero)));
         var secondaryTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
-            stateAtSeconds: t => (new Vector3(x, y0 + vy * t, 0.0), new Vector3(0.0, vy, 0.0), Vector3.Zero));
+            stateAtSeconds: t => WithUniformOffset(t, (new Vector3(x, y0 + vy * t, 0.0), new Vector3(0.0, vy, 0.0), Vector3.Zero)));
         return (new ProtectedSpacecraftProfile(protectedSpacecraft), protectedTrajectory, secondarySpacecraft,
             secondaryTrajectory, new Window(start, start.AddSeconds(2.0)));
     }
@@ -697,6 +710,30 @@ public partial class ConjunctionAssessmentTests
             encounter.EncounterState.MissDistanceMeters, 9);
         Assert.Empty(ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondary, secondaryTrajectory,
             window, RectilinearPassOptions));
+    }
+
+    // #687: a protected spacecraft at rest at the centre (r × v = 0) has no RTN frame at TCA, which the relative state and
+    // the covariance of the encounter need: Analyze and AnalyzeAll throw, where they rotated them by a matrix with zero
+    // rows (CCSDS 508.0-B-1: N = (r × v) / |r × v|)
+    [Fact]
+    public void Analyze_RectilinearProtectedStateAtTca_Throws()
+    {
+        var earth = CreateEarth();
+        var start = TimeSystem.Time.J2000TDB;
+        var protectedSpacecraft = CreateSpacecraft(-5540, "P", earth, Vector3.Zero, Vector3.Zero);
+        var secondarySpacecraft = CreateSpacecraft(-5541, "S", earth, new Vector3(10.0, -100.0, 0.0), new Vector3(0.0, 100.0, 0.0),
+            hardBodyRadius: 0.0);
+        var protectedTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
+            stateAtSeconds: _ => (Vector3.Zero, Vector3.Zero, Vector3.Zero));
+        var secondaryTrajectory = CreatePropagationSolution(earth, start, durationSeconds: 2.0, stepSeconds: 2.0,
+            stateAtSeconds: t => (new Vector3(10.0, -100.0 + 100.0 * t, 0.0), new Vector3(0.0, 100.0, 0.0), Vector3.Zero));
+        var profile = new ProtectedSpacecraftProfile(protectedSpacecraft);
+        var window = new Window(start, start.AddSeconds(2.0));
+
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.Analyze(profile, protectedTrajectory, secondarySpacecraft,
+            secondaryTrajectory, window, RectilinearPassOptions));
+        Assert.Throws<InvalidOperationException>(() => ConjunctionAssessment.AnalyzeAll(profile, protectedTrajectory, secondarySpacecraft,
+            secondaryTrajectory, window, RectilinearPassOptions));
     }
 
     [Theory]

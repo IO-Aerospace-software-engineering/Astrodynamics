@@ -838,5 +838,85 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             _output.WriteLine($"MEASURE #686 elliptic states e = {e:E1}: worst apsis angle against SPICE oscelt + conics {worst:E3} rad");
             Assert.True(worst <= tolerance, $"{worst:E3}");
         }
-}
+
+        // #687: the four rectilinear states of the issue, r × v = 0: a radial outward motion, an inclined line through
+        // the centre, a zero velocity and the centre itself; and a non-finite state
+        public static TheoryData<double, double, double, double, double, double> RectilinearStates => new()
+        {
+            { 7000e3, 0.0, 0.0, 7.5e3, 0.0, 0.0 },
+            { 4000e3, 3000e3, 5000e3, -4e3, -3e3, -5e3 },
+            { 7000e3, 1000e3, -2000e3, 0.0, 0.0, 0.0 },
+            { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+            { double.NaN, 0.0, 0.0, 0.0, 7.5e3, 0.0 }
+        };
+
+        // #687: a rectilinear state has no RTN frame (N = (r × v) / |r × v|, CCSDS 508.0-B-1 and Vallado 2013 §3.3) and no
+        // orbit plane, so no inclination, node or argument of periapsis: CreateRtnRotation returned a matrix with zero rows
+        // (FromRtn((0, 1, 0)) = 0) and the elements were equatorial (i = 0, Ω = 0, ω = π). Each member throws now;
+        // the eccentricity 1 and the true anomaly π, the limits of every nearby orbit, are kept
+        [Theory]
+        [MemberData(nameof(RectilinearStates))]
+        public void RectilinearState_HasNoRtnFrameNorOrbitPlane_Throws(double x, double y, double z, double vx, double vy, double vz)
+        {
+            var sv = new StateVector(new Vector3(x, y, z), new Vector3(vx, vy, vz), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var covariance = Matrix.Identity6x6();
+            Assert.Throws<InvalidOperationException>(() => sv.CreateRtnRotation());
+            Assert.Throws<InvalidOperationException>(() => sv.ToRtn(Vector3.VectorX));
+            Assert.Throws<InvalidOperationException>(() => sv.FromRtn(Vector3.VectorY));
+            Assert.Throws<InvalidOperationException>(() => sv.RotateCovarianceToRtn(covariance));
+            Assert.Throws<InvalidOperationException>(() => sv.RotateCovarianceFromRtn(covariance));
+            Assert.Throws<InvalidOperationException>(() => sv.Inclination());
+            Assert.Throws<InvalidOperationException>(() => sv.AscendingNode());
+            Assert.Throws<InvalidOperationException>(() => sv.ArgumentOfPeriapsis());
+            Assert.Throws<InvalidOperationException>(() => sv.ToKeplerianElements());
+            Assert.Throws<InvalidOperationException>(() => sv.ToEquinoctial());
+
+            // A moving rectilinear state off the centre keeps the limits of its neighbours
+            if (double.IsFinite(x) && (vx != 0.0 || vy != 0.0 || vz != 0.0) && (x != 0.0 || y != 0.0 || z != 0.0))
+            {
+                Assert.Equal(1.0, sv.Eccentricity(), 15);
+                Assert.Equal(System.Math.PI, sv.TrueAnomaly(), 15);
+            }
+        }
+
+        // #687: SPICE rejects the same states: oscltx (CSPICE N0067) signals SPICE(DEGENERATECASE), the independent
+        // reference that they have no osculating elements (CspiceDirect, Linux, Validation)
+        [Theory]
+        [Trait("Category", "Validation")]
+        [InlineData(7000e3, 0.0, 0.0, 7.5e3, 0.0, 0.0)]
+        [InlineData(4000e3, 3000e3, 5000e3, -4e3, -3e3, -5e3)]
+        [InlineData(7000e3, 1000e3, -2000e3, 0.0, 0.0, 0.0)]
+        [InlineData(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)]
+        public void RectilinearState_SpiceRejectsTheSameStates(double x, double y, double z, double vx, double vy, double vz)
+        {
+            Assert.Equal("SPICE(DEGENERATECASE)", IO.Astrodynamics.Tests.Body.CspiceDirect.OscltxError([x, y, z, vx, vy, vz], 0.0, TestHelpers.EarthAtJ2000.GM));
+
+            // The near-rectilinear control has its elements
+            Assert.Null(IO.Astrodynamics.Tests.Body.CspiceDirect.OscltxError([7000e3, 0.0, 0.0, 7.5e3, 1e-9, 0.0], 0.0, TestHelpers.EarthAtJ2000.GM));
+        }
+
+        // #687: a nearly rectilinear state, |h| = 1e-3 m²/s, keeps its RTN rotation, bit for bit the closed form of the rows
+        // R = r / |r|, N = (r × v) / |r × v|, T = N × R, a rotation (det 1)
+        [Fact]
+        public void NearRectilinearState_StillHasItsRtnRotation()
+        {
+            var r = new Vector3(7000e3, 0.0, 0.0);
+            var v = new Vector3(7.5e3, 1e-3 / 7000e3, 0.0);
+            var sv = new StateVector(r, v, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var rotation = sv.CreateRtnRotation();
+
+            var h = r.Cross(v);
+            Assert.True(h.Magnitude() > 0.0);
+            var rHat = r / r.Magnitude();
+            var nHat = h / h.Magnitude();
+            var tHat = nHat.Cross(rHat);
+            tHat /= tHat.Magnitude();
+            var expected = Matrix.FromRowVectors(rHat, tHat, nHat);
+            Assert.Equal(expected, rotation);
+            double det = rotation.Get(0, 0) * (rotation.Get(1, 1) * rotation.Get(2, 2) - rotation.Get(1, 2) * rotation.Get(2, 1))
+                         - rotation.Get(0, 1) * (rotation.Get(1, 0) * rotation.Get(2, 2) - rotation.Get(1, 2) * rotation.Get(2, 0))
+                         + rotation.Get(0, 2) * (rotation.Get(1, 0) * rotation.Get(2, 1) - rotation.Get(1, 1) * rotation.Get(2, 0));
+            Assert.Equal(1.0, det, 15);
+        }
+    }
 }

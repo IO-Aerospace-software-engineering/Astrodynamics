@@ -2060,6 +2060,22 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `StateVectorTests` 10 000 near-circular states (|p̂ · ĥ| 2.8e-16, against 1.0 before), states with a zero eccentricity vector (the node, exactly), and
   elliptic states against `oscelt` then `conics` (7.1e-10 rad at e = 1e-6 to 1.7e-15 at 0.95, the conditioning of the eccentricity vector); the maneuver and launch tests the state of the issue
   (apsis radii and velocities within an ulp of 7178 km and √(GM / r)).
+- **A rectilinear state had an RTN frame with zero rows and the elements of an equatorial orbit** ([#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687)).
+  `StateVector.CreateRtnRotation` built its rows with the lenient normalization, so for r × v = 0 (a radial motion, a
+  zero velocity, the centre) the T and N rows were zero (and the R row at the centre): `FromRtn((0, 1, 0))` was the zero
+  vector and `RotateCovarianceToRtn` of the identity diag(1, 0, 0, 1, 0, 0), through `ToRtn`, `FromRtn` and both
+  covariance rotations, so the conjunction analysis and the CDM export of such a participant used a singular rotation;
+  `Inclination()` was atan2(0, 0) = 0, so the node was x̂ (Ω = 0) and ω = π, and `ToKeplerianElements` and
+  `ToEquinoctial` gave an equatorial orbit; nothing threw. Under the same signatures, `CreateRtnRotation`, `ToRtn`,
+  `FromRtn`, `RotateCovarianceToRtn`, `RotateCovarianceFromRtn`, `Inclination`, `AscendingNode`,
+  `ArgumentOfPeriapsis`, `ToKeplerianElements` and `ToEquinoctial` throw `InvalidOperationException` for a rectilinear
+  or non-finite state (the condition of `RtnProcessNoise`, r × v = 0 exactly); `Eccentricity()` = 1 and
+  `TrueAnomaly()` = π of a moving state off the centre, the limits of every nearby orbit, are kept. `StateVectorTests` checks the four states of the
+  issue and a non-finite one, CSPICE `oscltx` signalling `SPICE(DEGENERATECASE)` on the same states, and a state of
+  |h| = 1e-3 m²/s whose rotation is bit for bit its closed form; `ConjunctionAssessmentTests` an analysis with a
+  protected spacecraft at rest at the centre. The 32 dense cases of `ConjunctionAssessmentTests` that put the protected
+  spacecraft there now move both participants by the same uniform motion, (1, 0, 0) m + (0, 0, 1e-3) m/s t, which
+  leaves their relative state bit for bit and their closed-form TCAs and misses unchanged.
 
 **Changed**
 
@@ -2759,6 +2775,14 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   elements and 3.4e-16, 2.0e-15, 2.3e-13, 2.7e-10 and 2.4e-7 (the error of the former direction, ε / e) for states; the magnitudes move by an ulp at most, and so do the targets of the apsis
   maneuvers, their impulses, `PhasingManeuver` and `CombinedManeuver`. Migration: read `PerigeeRadius()` for the
   magnitude alone; the direction is now the periapsis of the elements.
+- **Breaking: a rectilinear state throws where it has no RTN frame or orbit plane** ([#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687), Fixed above): on a
+  state with r × v = 0 exactly (a radial motion, a zero velocity, the centre) or a non-finite state, `CreateRtnRotation`,
+  `ToRtn`, `FromRtn`, `RotateCovarianceToRtn`, `RotateCovarianceFromRtn`, `Inclination`, `AscendingNode`,
+  `ArgumentOfPeriapsis`, `ToKeplerianElements` and `ToEquinoctial` throw `InvalidOperationException`, where they
+  returned a singular matrix, equatorial elements or NaN. `ConjunctionAssessment.Analyze`, `AnalyzeAll`,
+  `EvaluateAvoidance`, `EncounterCovariance` and the CDM export throw through them for such a participant state at TCA
+  or at its burn. Every state with r × v ≠ 0 is unchanged, bit for bit. Migration: give the state a non-zero angular
+  momentum, or handle the radial case separately (its direction is r̂; it has no plane).
 
 **Removed**
 
@@ -3006,10 +3030,6 @@ not listed.
   searched by `gfilum_c` with the normal of `surfnm_c` at the point, and the same site built from its coordinates,
   searched with the geodetic normal, give illumination windows up to 34.0 ms apart at DSS-13, 1070.85 m up (0.110″
   between the normals); `FindDayWindows` and `Launch` follow.
-- **Degenerate geometry kept by the library's normalizations**
-  ([#687](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/687)). The library's own
-  normalizations still return the zero vector for a magnitude of 0 ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680)), which hides a degenerate case:
-  `CreateRtnRotation` of a rectilinear state (r × v = 0) returns a singular matrix.
 - **In-memory data provider** ([#559](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/559)).
   `MemoryDataProvider.GetEphemeris` returns its ICRF numbers labelled with the frame asked and ignores the aberration:
   read in ICRF without aberration and convert with `ToFrame`.

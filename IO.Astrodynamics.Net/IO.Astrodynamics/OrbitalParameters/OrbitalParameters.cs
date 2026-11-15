@@ -697,6 +697,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Convert to equinoctial
     /// </summary>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane and no elements (#687).</exception>
     public virtual EquinoctialElements ToEquinoctial()
     {
         if (_equinoctial is null)
@@ -904,6 +906,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <returns>The Keplerian elements at the given epoch.</returns>
     /// <remarks>The elapsed time is that of <see cref="AtEpoch"/>: the dynamical time of the observer, TT seconds about
     /// the Earth, TDB seconds about any other body (#501, #508).</remarks>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane and no elements (#687).</exception>
     public KeplerianElements ToKeplerianElements(Time epoch)
     {
         double ellapsedTime = Propagator.PropagationTimeArgument.ElapsedSeconds(Observer, Epoch, epoch);
@@ -918,6 +922,8 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// Converts the orbital parameters to Keplerian elements at the current epoch.
     /// </summary>
     /// <returns>The Keplerian elements at the current epoch.</returns>
+    /// <exception cref="InvalidOperationException">A rectilinear or non-finite <see cref="StateVector"/> (r × v = 0) has no
+    /// orbit plane and no elements (#687).</exception>
     public virtual KeplerianElements ToKeplerianElements()
     {
         if (_keplerianElements is not null)
