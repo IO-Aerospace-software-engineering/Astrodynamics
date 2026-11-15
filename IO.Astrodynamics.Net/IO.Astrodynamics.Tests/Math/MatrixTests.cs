@@ -1327,7 +1327,7 @@ public class MatirxTests
     // The rotation matrix of a non-zero quaternion is the closed form of its unit quaternion u = q / |q|:
     // [1 - 2(y² + z²), 2(xy - wz), 2(xz + wy); 2(xy + wz), 1 - 2(x² + z²), 2(yz - wx); 2(xz - wy), 2(yz + wx), 1 - 2(x² + y²)]
     // (M. D. Shuster, A survey of attitude representations, J. Astronaut. Sci. 41(4), 1993, the attitude matrix of a
-    // quaternion, transposed for the active rotation q p q*; to be verified by S. Guillet), and SPICE q2m (Validation)
+    // quaternion, transposed for the active rotation q p q*; confirmed by S. Guillet, 2026-11-15), and SPICE q2m (Validation)
     private static Quaternion RandomQuaternion(Random random)
     {
         Quaternion q;

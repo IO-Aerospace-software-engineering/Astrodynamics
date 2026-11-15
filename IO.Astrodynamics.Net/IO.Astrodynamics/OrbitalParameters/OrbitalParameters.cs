@@ -745,7 +745,7 @@ public abstract class OrbitalParameters : IEquatable<OrbitalParameters>
     /// <para>
     /// P̂ is the perifocal axis of the elements, (cos Ω cos ω − sin Ω sin ω cos i, sin Ω cos ω + cos Ω sin ω cos i,
     /// sin ω sin i), the conic at ν = 0 (D. A. Vallado, <i>Fundamentals of Astrodynamics and Applications</i>, 4th ed.,
-    /// 2013, algorithm 10 COE2RV; to be verified by S. Guillet), defined at every eccentricity: a circular orbit has its
+    /// 2013, algorithm 10 COE2RV; confirmed by S. Guillet, 2026-11-15), defined at every eccentricity: a circular orbit has its
     /// periapsis at ω from the node, where its true anomaly counts from. A <see cref="StateVector"/> takes the part of its
     /// eccentricity vector in its orbit plane, e − (e · ĥ) ĥ, normalized, and its unit node vector when that part is zero
     /// (x̂ for an equatorial orbit).

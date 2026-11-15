@@ -602,7 +602,7 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
 
         // #686: PerigeeVector and ApogeeVector are the conic at periapsis and apoapsis, r(ν = 0) = a(1 − e) P̂ and
         // r(ν = π) = −a(1 + e) P̂, P̂ the first column of R3(−Ω) R1(−i) R3(−ω) (D. A. Vallado, Fundamentals of Astrodynamics
-        // and Applications, 4th ed., 2013, algorithm 10 COE2RV; to be verified by S. Guillet), at every eccentricity, the
+        // and Applications, 4th ed., 2013, algorithm 10 COE2RV; confirmed by S. Guillet, 2026-11-15), at every eccentricity, the
         // circular orbit included, where the periapsis lies at ω from the node; SPICE conics the reference of P̂
         [Fact]
         public void PerigeeAndApogeeVectors_AreTheConicAtPeriapsisAndApoapsisOfSpice_AtEveryEccentricity()
