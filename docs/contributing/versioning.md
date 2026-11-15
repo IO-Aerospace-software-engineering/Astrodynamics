@@ -2026,6 +2026,19 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the target rotated to ICRF, and a spacecraft and a target both in ECLIPJ2000, burn the closed form to 7.0e-9 m/s
   (RK7(8), threshold 1.4e-8 m/s provisional) and end in the target's plane to 4.0e-11°; `ScenarioTests` covers
   `Scenario.SimulateAsync`.
+- **The CLI took identifiers for sites that the library does not** (cli-site-rule of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round). The commands built a site of every
+  identifier from 100001 to 999998 (`Helpers.IsSiteIdentifier`), named `site<id>`, where the library's rule
+  (`SpiceAPI.IsSiteId`, the rule of `Site.NaifId`) excludes x000, a body of at most 100 and the Lagrange points 391 to
+  395, and names the site by its SPICE name: from the observer 399000 `ephemeris` threw `ArgumentOutOfRangeException`
+  from `Site(0, ...)` where `SpiceAPI.ReadEphemeris` throws `ArgumentException` ("399000 has no name"), 391013 failed on
+  the body 391, 100500 as "100 is not a celestial body", and `sub-point` rejected 391013, 399000 and 100500 as sites. The
+  library gives its internals to the CLI (`InternalsVisibleTo`, as to the conformance runner; the CLI is packed with the
+  library of its build), and `Helpers.CreateLocalizable` and `sub-point` take the library's rule and its site factory
+  (internal `SpiceAPI.CreateKernelSite`, which `SpiceAPI.CreateObserver` uses too); `Helpers.IsSiteIdentifier` is gone.
+  `EphemerisTests` compares the command from 391013, 399000, 100500, 301001 and 395013 with `SpiceAPI.ReadEphemeris`
+  (same exception and message), the site of 399013 with the observer of `SpiceAPI.ReadEphemeris` (DSS-13), and
+  `sub-point` of 391013, 399000 and 100500 with `CelestialItem.Create`.
 
 **Changed**
 
@@ -2706,6 +2719,13 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   spacecraft burned with the target's components read in the integration frame (10.7 times the closed form in the case
   measured). The results of valid inputs are bit for bit. Migration: give the target in the spacecraft's propagation
   frame, `targetOrbit.ToFrame(spacecraft.InitialOrbitalParameters.Frame)`, or ICRF for a TLE or TEME start.
+- **Breaking: the CLI follows the library's rule of a site identifier** (cli-site-rule of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)'s second round, Fixed above). CLI only. An identifier from
+  100001 to 999998 that is not a site by the library's rule (x000, a body of at most 100, a Lagrange point) is read as a
+  celestial item: the error of `SpiceAPI.ReadEphemeris` instead of `ArgumentOutOfRangeException` or another message,
+  and `sub-point` no longer calls it a site. A site is named by its SPICE name (DSS-13), not `site<id>`. The printed
+  states do not move. Migration: none for a valid site identifier; a script that matched the name `site<id>` or the
+  former exceptions takes the SPICE name and the library's exceptions.
 
 **Removed**
 
@@ -2795,8 +2815,8 @@ not listed.
   `CelestialItem.Create(399013)` build a body DSS-13 of GM 0 and frame DSS-13_TOPO about the Sun (they threw or were
   built with a garbage frame name before
   [#672](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/672)): build a `Site`.
-  `SpiceAPI.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). The commands of the CLI keep
-  their own site rule (any identifier from 100001 to 999998, the site named `site<id>`), kept apart on purpose.
+  `SpiceAPI.ReadEphemeris` from a site identifier labels its state with a `Site` (#672). The commands of the CLI follow
+  the same rule and build the same site (its SPICE name), under Changed.
   `MemoryDataProvider` throws `ArgumentException` naming `naifId` for a body it holds no information on, as
   `SpiceDataProvider` for an identifier SPICE does not name
   ([#680](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/680); `KeyNotFoundException` before).

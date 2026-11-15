@@ -41,37 +41,21 @@ public class Helpers
     internal static FileSystemInfo KernelsPath(string path) => File.Exists(path) ? new FileInfo(path) : new DirectoryInfo(path);
 
     /// <summary>
-    /// The object of a NAIF identifier: a site (its body's identifier times 1000 plus its own), a celestial body, or a
-    /// spacecraft (a negative identifier) read from its kernels.
+    /// The object of a NAIF identifier: a site by the library's rule (<see cref="SpiceAPI.IsSiteId"/>, its body's identifier
+    /// times 1000 plus its own, the body a planet or a moon without the Lagrange points), built from the kernels under its
+    /// SPICE name as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frame, Aberration)"/> builds its observer; a celestial
+    /// item; or a spacecraft (a negative identifier) read from its kernels.
     /// </summary>
     /// <param name="objectId">The NAIF identifier.</param>
     /// <param name="epoch">An epoch the kernels of a spacecraft cover: the kernel-backed spacecraft reads its SPK there.</param>
+    /// <remarks>
+    /// Before 11.0.0 the CLI kept its own rule, 100001 to 999998, and built the site <c>site&lt;id&gt;</c> of any of them:
+    /// an x000, a body of at most 100 or a Lagrange point failed with another error than the library's
+    /// (<c>ArgumentOutOfRangeException</c> for 399000), and a site was not named as SPICE names it (DSS-13 for 399013).
+    /// </remarks>
     internal static ILocalizable CreateLocalizable(int objectId, in Time epoch)
     {
-        ILocalizable localizableObject = null;
-
-        if (IsSiteIdentifier(objectId))
-        {
-            // A site's NAIF identifier is its body's times 1000 plus its own (399013 is DSS-13 on the Earth). Kept apart on
-            // purpose from SpiceAPI.IsSiteId, the rule of SpiceAPI.ReadEphemeris's observer (#672), which is internal
-            var id = objectId % 1000;
-            localizableObject = new Site(id, $"site{id}", new CelestialBody(objectId / 1000));
-        }
-        else
-        {
-            localizableObject = CreateCelestialItem(objectId, epoch);
-        }
-
-        return localizableObject;
-    }
-
-    /// <summary>
-    /// Whether a NAIF identifier is a site's: its body's identifier times 1000 plus its own (399013 is DSS-13 on the Earth).
-    /// </summary>
-    /// <param name="objectId">The NAIF identifier.</param>
-    internal static bool IsSiteIdentifier(int objectId)
-    {
-        return objectId is > 100_000 and < 999_999;
+        return SpiceAPI.IsSiteId(objectId) ? SpiceAPI.Instance.CreateKernelSite(objectId) : CreateCelestialItem(objectId, epoch);
     }
 
     /// <summary>

@@ -115,6 +115,102 @@ public class EphemerisTests
         }
     }
 
+    /// <summary>
+    /// An observer identifier from 100001 to 999998 is read as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
+    /// reads it (cli-site-rule of #668's second round): a site by the library's rule (<see cref="SpiceAPI.IsSiteId"/>, the
+    /// rule of <c>Site.NaifId</c>) built from the kernels under its SPICE name, anything else (x000, a body of at most 100,
+    /// a Lagrange point) a celestial item. Before, the CLI kept its own rule (100001 to 999998) and built the site
+    /// <c>site&lt;id&gt;</c> of any of them, which failed otherwise: <c>ArgumentOutOfRangeException</c> from
+    /// <c>Site(0, ...)</c> for 399000, "391 has no name" for 391013, "100 is not a celestial body" for 100500, and for
+    /// 301001, a site of the Moon by the rule that the kernels do not name, no ephemeris data instead of the missing name.
+    /// </summary>
+    [Theory]
+    [InlineData(391013)]
+    [InlineData(399000)]
+    [InlineData(100500)]
+    [InlineData(301001)]
+    [InlineData(395013)]
+    public void Ephemeris_FromAnIdentifierThatIsNotASite_FailsAsTheLibrary(int observerId)
+    {
+        using (Configuration.Lock())
+        {
+            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame);
+            var command = new EphemerisCommand();
+            Console.SetOut(new StringWriter(new StringBuilder()));
+            var fromCli = Record.Exception(() =>
+            {
+                _ = command.Ephemeris("Data", 301, observerId, new WindowParameters
+                {
+                    Begin = begin.ToString(),
+                    End = begin.AddSeconds(60.0).ToString()
+                }, TimeSpan.FromMinutes(1));
+            });
+
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var fromLibrary = Record.Exception(() => SpiceAPI.Instance.ReadEphemeris(begin, observerId, 301, Frames.Frame.ICRF, Aberration.None));
+
+            Assert.Equal(observerId == 301001, SpiceAPI.IsSiteId(observerId));
+            Assert.NotNull(fromLibrary);
+            Assert.NotNull(fromCli);
+            Assert.IsType(fromLibrary.GetType(), fromCli);
+            Assert.Equal((fromLibrary as ArgumentException)?.ParamName, (fromCli as ArgumentException)?.ParamName);
+            Assert.Equal(fromLibrary.Message, fromCli.Message);
+        }
+    }
+
+    /// <summary>
+    /// A site observer is named by its SPICE name, as <see cref="SpiceAPI.ReadEphemeris(Time, int, int, Frames.Frame, Aberration)"/>
+    /// names it (DSS-13 for 399013), and its states do not move: <see cref="CallFromASite"/>.
+    /// </summary>
+    [Fact]
+    public void ASiteObserver_IsTheSiteOfTheLibrary()
+    {
+        using (Configuration.Lock())
+        {
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var begin = new Time(new DateTime(2023, 01, 01, 1, 0, 0), TimeFrame.TDBFrame);
+
+            // The observer the ephemeris command builds (Helpers.CreateLocalizable, internal to the CLI)
+            var createLocalizable = typeof(EphemerisCommand).Assembly.GetType("IO.Astrodynamics.CLI.Helpers")!
+                .GetMethod("CreateLocalizable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+            var site = Assert.IsType<Surface.Site>(createLocalizable.Invoke(null, [399013, begin]));
+            var fromLibrary = SpiceAPI.Instance.ReadEphemeris(begin, 399013, 301, Frames.Frame.ICRF, Aberration.None);
+
+            Assert.Equal("DSS-13", site.Name);
+            Assert.Equal(399013, site.NaifId);
+            var librarySite = Assert.IsType<Surface.Site>(fromLibrary.Observer);
+            Assert.Equal(librarySite.Name, site.Name);
+            Assert.Equal(librarySite.NaifId, site.NaifId);
+        }
+    }
+
+    /// <summary>
+    /// sub-point takes an identifier that is not a site by the library's rule for a celestial item, as
+    /// <see cref="CelestialItem.Create"/> does: it no longer calls 391013, 399000 or 100500 a site.
+    /// </summary>
+    [Theory]
+    [InlineData(391013)]
+    [InlineData(399000)]
+    [InlineData(100500)]
+    public void SubPoint_OfAnIdentifierThatIsNotASite_IsACelestialItem(int objectId)
+    {
+        using (Configuration.Lock())
+        {
+            var command = new EphemerisCommand();
+            Console.SetOut(new StringWriter(new StringBuilder()));
+            var fromCli = Record.Exception(() => { _ = command.SubPoint("Data", objectId, 399, new EpochParameters { Epoch = "0.0" }); });
+
+            SpiceAPI.Instance.LoadKernels(new DirectoryInfo("Data"));
+            var fromLibrary = Record.Exception(() => Body.CelestialItem.Create(objectId));
+
+            Assert.NotNull(fromLibrary);
+            Assert.NotNull(fromCli);
+            Assert.DoesNotContain("is a site", fromCli.Message);
+            Assert.IsType(fromLibrary.GetType(), fromCli);
+            Assert.Equal(fromLibrary.Message, fromCli.Message);
+        }
+    }
+
     [Fact]
     public void SubPoint()
     {

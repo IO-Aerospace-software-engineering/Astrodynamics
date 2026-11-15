@@ -1187,15 +1187,25 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier (<see cref="IsSiteId"/>), from
-    /// the kernels (<c>new Site(id % 1000, its SPICE name, new CelestialBody(id / 1000))</c>, which reads the site's state at
-    /// J2000 TDB), otherwise <see cref="CelestialItem.Create"/> (#672). Built before the lock (#623).
+    /// The observer of the reads by identifiers: a <see cref="Surface.Site"/> for a site identifier (<see cref="IsSiteId"/>),
+    /// from the kernels (<see cref="CreateKernelSite"/>), otherwise <see cref="CelestialItem.Create"/> (#672). Built before
+    /// the lock (#623). The CLI builds its objects by identifier the same way (<c>Helpers.CreateLocalizable</c>).
     /// </summary>
     private ILocalizable CreateObserver(int observerId)
     {
-        if (!IsSiteId(observerId)) return CelestialItem.Create(observerId);
-        string name = GetCelestialBodyInfo(observerId).Name;
-        return new Surface.Site(observerId % 1000, name, new Body.CelestialBody(observerId / 1000));
+        return IsSiteId(observerId) ? CreateKernelSite(observerId) : CelestialItem.Create(observerId);
+    }
+
+    /// <summary>
+    /// The site of a site identifier (<see cref="IsSiteId"/>) from the kernels: <c>new Site(id % 1000, its SPICE name, new
+    /// CelestialBody(id / 1000))</c>, which reads the site's state at J2000 TDB (#672). Not under the lock (#623).
+    /// </summary>
+    /// <param name="siteId">The NAIF identifier of the site, its body's times 1000 plus its own.</param>
+    /// <exception cref="ArgumentException">The loaded kernels give the identifier no name.</exception>
+    internal Surface.Site CreateKernelSite(int siteId)
+    {
+        string name = GetCelestialBodyInfo(siteId).Name;
+        return new Surface.Site(siteId % 1000, name, new Body.CelestialBody(siteId / 1000));
     }
 
     /// <summary>
@@ -1204,10 +1214,9 @@ public class SpiceAPI
     /// builds it (399013 is DSS-13 on the Earth).
     /// </summary>
     /// <remarks>
-    /// The CLI keeps its own rule on purpose (<c>Helpers.IsSiteIdentifier</c>: 100001 to 999998, which
-    /// <c>Helpers.CreateLocalizable</c> builds as the site named <c>site&lt;id&gt;</c> and <c>sub-point</c> rejects), as
-    /// #672 decided: this rule is internal and the CLI has no access to it. The two may give a different observer for the
-    /// same identifier (a name, a Lagrange point or x000).
+    /// The CLI follows this rule (<c>Helpers.CreateLocalizable</c> and <c>sub-point</c>, through the internals the library
+    /// gives it): before 11.0.0 it kept its own, 100001 to 999998, and built the site <c>site&lt;id&gt;</c> of any of them,
+    /// so that the two gave a different observer for a name, a Lagrange point or x000.
     /// </remarks>
     internal static bool IsSiteId(int naifId)
     {
