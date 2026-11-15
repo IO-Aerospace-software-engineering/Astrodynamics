@@ -73,30 +73,35 @@ public class SpiceAPI
     private static extern bool GetFrameNameProxy(int frameId, [Out] byte[] name);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern void FindWindowsOnDistanceConstraintProxy(Window searchWindow, int observerId,
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool FindWindowsOnDistanceConstraintProxy(Window searchWindow, int observerId,
         int targetId, string constraint, double value, string aberration, double stepSize, [In] [Out] Window[] windows);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern void FindWindowsOnOccultationConstraintProxy(Window searchWindow, int observerId,
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool FindWindowsOnOccultationConstraintProxy(Window searchWindow, int observerId,
         int targetId,
         string targetFrame, string targetShape, int frontBodyId, string frontFrame, string frontShape,
         string occultationType,
         string aberration, double stepSize, [In] [Out] Window[] windows);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern void FindWindowsOnCoordinateConstraintProxy(Window searchWindow, int observerId, int targetId,
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool FindWindowsOnCoordinateConstraintProxy(Window searchWindow, int observerId, int targetId,
         string frame, string coordinateSystem, string coordinate,
         string relationalOperator, double value, double adjustValue, string aberration, double stepSize,
         [In] [Out] Window[] windows);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern void FindWindowsOnIlluminationConstraintProxy(Window searchWindow, int observerId,
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool FindWindowsOnIlluminationConstraintProxy(Window searchWindow, int observerId,
         string illuminationSource, int targetBody, string fixedFrame,
         Planetodetic geodetic, string illuminationType, string relationalOperator, double value, double adjustValue,
         string aberration, double stepSize, string method, [In] [Out] Window[] windows);
 
     [DllImport(@"IO.Astrodynamics", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern void FindWindowsInFieldOfViewConstraintProxy(Window searchWindow, int observerId,
+    [return: MarshalAs(UnmanagedType.I1)]
+    private static extern bool FindWindowsInFieldOfViewConstraintProxy(Window searchWindow, int observerId,
         int instrumentId, int targetId, string targetFrame, string targetShape, string aberration, double stepSize,
         [In] [Out] Window[] windows);
 
@@ -1141,6 +1146,10 @@ public class SpiceAPI
     /// <see cref="RelationnalOperator.NotEqual"/> is the search window less the instants of <c>=</c>, a window from each
     /// crossing to the next, as the managed search gives it.
     /// </remarks>
+    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, with
+    /// SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the error and the search returned no
+    /// window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnDistanceConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, RelationnalOperator relationalOperator, double value, Aberration aberration,
         TimeSpan stepSize)
@@ -1160,8 +1169,12 @@ public class SpiceAPI
                 windows[i] = new Window(double.NaN, double.NaN);
             }
 
-            FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relation, value,
-                aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            if (!FindWindowsOnDistanceConstraintProxy(searchWindow.Convert(), observerId, targetId, relation, value,
+                aberration.GetDescription(), stepSize.TotalSeconds, windows))
+            {
+                ThrowLastProxyError();
+            }
+
             return WithinSearchWindow(windows, searchWindow);
         }
     }
@@ -1179,6 +1192,10 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
+    /// the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize)
@@ -1208,6 +1225,10 @@ public class SpiceAPI
     /// <exception cref="ArgumentException">A body modeled as an ellipsoid without a frame given is not a celestial body
     /// (<see cref="IsCelestialBodyId"/>): its frame is read from the body's information, which the native layer ended the
     /// process to read for a named spacecraft (#560); or SPICE does not name it, so it has no frame (#672).</exception>
+    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// frame or radii it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped
+    /// the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnOccultationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, ShapeType targetShape, int frontBodyId, ShapeType frontShape,
         OccultationType occultationType, Aberration aberration, TimeSpan stepSize, Frame frontFrame, Frame targetFrame)
@@ -1230,8 +1251,12 @@ public class SpiceAPI
                 windows[i] = new Window(double.NaN, double.NaN);
             }
 
-            FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
-                frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            if (!FindWindowsOnOccultationConstraintProxy(searchWindow.Convert(), observerId, targetId, targetFrameName, targetShape.GetDescription(),
+                frontBodyId, frontFrameName, frontShape.GetDescription(), occultationType.GetDescription(), aberration.GetDescription(), stepSize.TotalSeconds, windows))
+            {
+                ThrowLastProxyError();
+            }
+
             return WithinSearchWindow(windows, searchWindow);
         }
     }
@@ -1269,6 +1294,10 @@ public class SpiceAPI
     /// </remarks>
     /// <exception cref="ArgumentNullException"></exception>
     /// <exception cref="ArgumentException">The frame is a frame of the library that SPICE does not know by name.</exception>
+    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// frame name it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
+    /// error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnCoordinateConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetId, Frame frame, CoordinateSystem coordinateSystem, Coordinate coordinate,
         RelationnalOperator relationalOperator, double value, double adjustValue, Aberration aberration,
@@ -1292,10 +1321,14 @@ public class SpiceAPI
                     windows[i] = new Window(double.NaN, double.NaN);
                 }
 
-                FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
+                if (!FindWindowsOnCoordinateConstraintProxy(searchWindow.Convert(), observerId, targetId,
                     SpiceFrameName(frame), coordinateSystem.GetDescription(),
                     coordinate.GetDescription(), relation, value, adjustValue,
-                    aberration.GetDescription(), stepSize.TotalSeconds, windows);
+                    aberration.GetDescription(), stepSize.TotalSeconds, windows))
+                {
+                    ThrowLastProxyError();
+                }
+
                 return WithinSearchWindow(windows, searchWindow);
             }
         });
@@ -1331,6 +1364,10 @@ public class SpiceAPI
     /// crossing to the next, as the managed search gives it.
     /// Before 11.0.0 the altitude was read in km (#488).
     /// </remarks>
+    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, a
+    /// fixed frame it does not know, with SPICE's message (fourth round of #668; before 11.0.0 the native layer dropped the
+    /// error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsOnIlluminationConstraint(TimeSystem.Window searchWindow, int observerId,
         int targetBodyId, Frame fixedFrame, Coordinates.Planetodetic planetodetic, IlluminationAngle illuminationType, RelationnalOperator relationalOperator,
         double value, double adjustValue, Aberration aberration, TimeSpan stepSize, int illuminationSourceId,
@@ -1348,12 +1385,16 @@ public class SpiceAPI
                     windows[i] = new Window(double.NaN, double.NaN);
                 }
 
-                FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
+                if (!FindWindowsOnIlluminationConstraintProxy(searchWindow.Convert(), observerId,
                     illuminationSourceId.ToString(), targetBodyId, fixedFrame.Name,
                     // The native layer hands the altitude to georec_c beside a radius in km (#488)
                     (planetodetic with { Altitude = planetodetic.Altitude / 1000.0 }).Convert(),
                     illuminationType.GetDescription(), relation, value, adjustValue,
-                    aberration.GetDescription(), stepSize.TotalSeconds, method, windows);
+                    aberration.GetDescription(), stepSize.TotalSeconds, method, windows))
+                {
+                    ThrowLastProxyError();
+                }
+
                 return WithinSearchWindow(windows, searchWindow);
             }
         });
@@ -1372,6 +1413,10 @@ public class SpiceAPI
     /// <param name="stepSize"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="InvalidOperationException">SPICE cannot run the search: a body or an epoch without ephemeris data,
+    /// an epoch outside the coverage of the frame data, a step SPICE rejects, more windows than its result cell holds, an
+    /// instrument whose field of view no loaded instrument kernel defines, with SPICE's message (fourth round of #668;
+    /// before 11.0.0 the native layer dropped the error and the search returned no window).</exception>
     public IEnumerable<TimeSystem.Window> FindWindowsInFieldOfViewConstraint(TimeSystem.Window searchWindow, int observerId,
         int instrumentId, int targetId, Frame targetFrame, ShapeType targetShape, Aberration aberration, TimeSpan stepSize)
     {
@@ -1386,8 +1431,11 @@ public class SpiceAPI
 
             var searchWindowDto = searchWindow.Convert();
 
-            FindWindowsInFieldOfViewConstraintProxy(searchWindowDto, observerId, instrumentId, targetId, targetFrame.Name, targetShape.GetDescription(),
-                aberration.GetDescription(), stepSize.TotalSeconds, windows);
+            if (!FindWindowsInFieldOfViewConstraintProxy(searchWindowDto, observerId, instrumentId, targetId, targetFrame.Name, targetShape.GetDescription(),
+                aberration.GetDescription(), stepSize.TotalSeconds, windows))
+            {
+                ThrowLastProxyError();
+            }
 
             return WithinSearchWindow(windows, searchWindow);
         }
@@ -1403,7 +1451,18 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <param name="stepSize"></param>
     /// <returns></returns>
-    /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454).</exception>
+    /// <exception cref="InvalidOperationException">SPICE gives no state at one of the epochs (#454), or the observer is a
+    /// site whose SPK does not cover J2000 TDB (see the remarks).</exception>
+    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
+    /// that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a <see cref="Surface.Site"/>
+    /// built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE, as the frame kernel
+    /// of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is another identifier that is not a
+    /// celestial body, or that SPICE does not name (#672).</exception>
+    /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
+    /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
+    /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
+    /// <see cref="Aberration.None"/>, read the site as target from the observer and negate the state (documented in the
+    /// fourth round of #668).</remarks>
     public IEnumerable<OrbitalParameters.OrbitalParameters> ReadEphemeris(TimeSystem.Window searchWindow,
         int observerId, int targetId, Frame frame,
         Aberration aberration, TimeSpan stepSize)
@@ -1453,7 +1512,18 @@ public class SpiceAPI
     /// <param name="aberration"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">SPICE gives no state (#454): the kernels do not cover the epoch or do
-    /// not chain the target to the observer; the message is SPICE's. Before 11.0.0 the state was undefined.</exception>
+    /// not chain the target to the observer; the message is SPICE's. Before 11.0.0 the state was undefined. Or the observer
+    /// is a site whose SPK does not cover J2000 TDB (see the remarks).</exception>
+    /// <exception cref="ArgumentException">The observer is a site identifier (<see cref="IsSiteId"/>: body × 1000 + site)
+    /// that no loaded kernel names (<c>naifId</c>, "has no name in SPICE"): its observer is a <see cref="Surface.Site"/>
+    /// built from its SPICE name (#672); load a kernel that names it (NAIF_BODY_NAME and NAIF_BODY_CODE, as the frame kernel
+    /// of <see cref="Surface.Site.WriteFrameAsync"/>) with its SPK. Or the observer is another identifier that is not a
+    /// celestial body, or that SPICE does not name (#672).</exception>
+    /// <remarks>The observer of a site identifier is <c>new Site(id % 1000, name, new CelestialBody(id / 1000))</c>, whose
+    /// constructor reads the site at J2000 TDB: its SPK must cover that epoch, or the read throws
+    /// <see cref="InvalidOperationException"/>. Neither condition applies to the site as target: with
+    /// <see cref="Aberration.None"/>, read the site as target from the observer and negate the state (documented in the
+    /// fourth round of #668).</remarks>
     public OrbitalParameters.OrbitalParameters ReadEphemeris(Time epoch, int observerId,
         int targetId, Frame frame, Aberration aberration)
     {
@@ -1836,7 +1906,14 @@ public class SpiceAPI
     /// <exception cref="ArgumentNullException"></exception>
     /// <remarks>
     /// A TEME frame, <see cref="Frame.TEME"/> or a frame named TEME, is the managed <see cref="TemeFrame"/> (#451): the
-    /// transform is composed through ICRF, the other frame from SPICE. SPICE must give a rotation: outside the coverage of
+    /// transform is composed through ICRF, the other frame from SPICE. So is the <see cref="Surface.SiteFrame"/> of a site
+    /// built from coordinates, or of a site from the kernels whose frame id (1000000 + NaifId) no loaded kernel defines,
+    /// decided at each call: its orientation is <see cref="Surface.SiteFrame.GetStateOrientationToICRF"/>, the frame the
+    /// reads in it, <see cref="Frame.ToFrame"/> and the horizontal coordinates use (fourth round of #668; before, the call
+    /// handed its name, <c>Name + "_TOPO"</c>, to SPICE, which does not know it, and threw). The frame of a site whose frame
+    /// the kernels define is that kernel frame, read by SPICE, and the frame of a spacecraft is SPICE's by name, which reads
+    /// the frame kernel and the C-kernel loaded for it. CIRS and TIRS are not composed: SPICE does not know them, and the
+    /// call throws (#656). SPICE must give a rotation: outside the coverage of
     /// the frame data the native layer returns the zero quaternion and drops the SPICE message, and the call throws (#454;
     /// before 11.0.0 the zero quaternion was returned, except on the TEME path).
     /// </remarks>
@@ -1846,9 +1923,18 @@ public class SpiceAPI
     {
         if (fromFrame == null) throw new ArgumentNullException(nameof(fromFrame));
         if (toFrame == null) throw new ArgumentNullException(nameof(toFrame));
-        if (IsTeme(fromFrame) || IsTeme(toFrame))
+        // TEME and the frame of a site that only the library holds (TransformedThroughIcrf) are composed through ICRF, as the
+        // reads in them are rotated (fourth round of #668; before, only TEME was, and a site's frame threw)
+        Frame fromManaged, toManaged;
+        lock (lockObject)
         {
-            return TransformFrameThroughTeme(epoch, fromFrame, toFrame);
+            fromManaged = TransformedThroughIcrf(fromFrame);
+            toManaged = TransformedThroughIcrf(toFrame);
+        }
+
+        if (fromManaged != null || toManaged != null)
+        {
+            return TransformFrameThroughIcrf(epoch, fromFrame, fromManaged, toFrame, toManaged);
         }
 
         lock (lockObject)
@@ -1871,27 +1957,31 @@ public class SpiceAPI
     }
 
     /// <summary>
-    /// The transform between a TEME frame and another frame, composed through ICRF as <see cref="Frame.ToFrame"/>, TEME by
-    /// the managed <see cref="TemeFrame"/> and the other frame by SPICE, labelled with <paramref name="fromFrame"/>.
+    /// The transform between two frames one of which is managed (<see cref="TransformedThroughIcrf"/>), composed through ICRF as
+    /// <see cref="Frame.ToFrame"/>: the managed frame by its own orientation, the other by SPICE; labelled with
+    /// <paramref name="fromFrame"/>.
     /// </summary>
-    private OrbitalParameters.StateOrientation TransformFrameThroughTeme(Time epoch, Frame fromFrame, Frame toFrame)
+    private OrbitalParameters.StateOrientation TransformFrameThroughIcrf(Time epoch, Frame fromFrame, Frame fromManaged, Frame toFrame,
+        Frame toManaged)
     {
-        var fromToIcrf = OrientationToIcrfForTeme(epoch, fromFrame);
-        var toToIcrf = OrientationToIcrfForTeme(epoch, toFrame);
+        var fromToIcrf = OrientationToIcrf(epoch, fromFrame, fromManaged);
+        var toToIcrf = OrientationToIcrf(epoch, toFrame, toManaged);
         var rotation = toToIcrf.Rotation.Conjugate() * fromToIcrf.Rotation;
         var angularVelocity = toToIcrf.AngularVelocity.Inverse().Rotate(rotation.Conjugate()) + fromToIcrf.AngularVelocity;
         return new OrbitalParameters.StateOrientation(rotation, angularVelocity, epoch, fromFrame);
     }
 
-    private OrbitalParameters.StateOrientation OrientationToIcrfForTeme(Time epoch, Frame frame)
-    {
-        if (IsTeme(frame))
-        {
-            return Frame.TEME.GetStateOrientationToICRF(epoch);
-        }
+    // The managed frame a transform composes through ICRF, or null: TEME (#451) and the SiteFrame of a site from coordinates
+    // or of a site whose frame no loaded kernel defines (ManagedReadFrame, decided at each call). Not CIRS and TIRS, which
+    // #656 owns, nor the frame of a managed spacecraft, which stays SPICE's by name: it reads the frame kernel and the CK
+    // the library wrote, the independent reference of its attitude record. Called under the lock
+    private static Frame TransformedThroughIcrf(Frame frame) =>
+        ManagedReadFrame(frame) is { } managed and (TemeFrame or Surface.SiteFrame) ? managed : null;
 
+    private OrbitalParameters.StateOrientation OrientationToIcrf(Time epoch, Frame frame, Frame managed)
+    {
         // TransformFrame throws when SPICE gives no rotation (#454)
-        return TransformFrame(epoch, frame, Frame.ICRF);
+        return managed != null ? managed.GetStateOrientationToICRF(epoch) : TransformFrame(epoch, frame, Frame.ICRF);
     }
 
     public IEnumerable<OrbitalParameters.StateOrientation> TransformFrame(TimeSystem.Window window, Frame fromFrame, Frame toFrame, TimeSpan stepSize)

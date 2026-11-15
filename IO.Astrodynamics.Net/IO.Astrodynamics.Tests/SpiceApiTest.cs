@@ -445,6 +445,57 @@ public class SpiceApiTest
         Assert.Equal("naifId", e.ParamName);
     }
 
+    /// <summary>
+    /// The documented limitation of a site observer read by identifiers (#672, documented in the fourth round of #668): the
+    /// observer is a <see cref="Site"/>, which needs a SPICE name and a state at J2000 TDB. A site from coordinates whose SPK
+    /// the library wrote (no naming kernel loaded) throws <see cref="ArgumentException"/> naming <c>naifId</c> as observer,
+    /// while the read with the site as target, <c>spkezr_c</c> by number, works: it is the site's own position from the
+    /// Earth, the workaround the documentation gives. With the naming frame kernel loaded and an SPK that does not cover
+    /// J2000 TDB, the site's constructor reads past it: SPICE's error at 2000 JAN 01 12:00:00.
+    /// </summary>
+    [Fact]
+    public async Task ReadEphemeris_FromAnUnnamedWrittenSite_ThrowsAndTheTargetReadWorks()
+    {
+        var epoch = new TimeSystem.Time(2024, 3, 1, 12, 0, 0, frame: TimeFrame.TDBFrame);
+        var site = new Site(786, "RE786", PlanetsAndMoons.EARTH_BODY, new Planetodetic(0.5, 0.2, 1000.0));
+        var spk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786", ".bsp");
+        var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site786_names");
+        site.WriteEphemeris(new Window(epoch.AddDays(-1.0), epoch.AddDays(1.0)), spk);
+        await site.WriteFrameAsync(fk);
+        Assert.Empty(KernelShadowing.Find([spk, fk], KernelShadowing.SolarSystem));
+        SpiceAPI.Instance.LoadKernels(spk);
+        try
+        {
+            var e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
+            Assert.Equal("naifId", e.ParamName);
+            Assert.Contains("has no name in SPICE", e.Message);
+            e = Assert.Throws<ArgumentException>(() => SpiceAPI.Instance.ReadEphemeris(new Window(epoch, epoch.AddHours(2.0)), site.NaifId, 301,
+                Frames.Frame.ICRF, Aberration.None, TimeSpan.FromHours(1.0)));
+            Assert.Equal("naifId", e.ParamName);
+
+            var asTarget = SpiceAPI.Instance.ReadEphemeris(epoch, 399, site.NaifId, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            var managed = site.GetEphemeris(epoch, PlanetsAndMoons.EARTH_BODY, Frames.Frame.ICRF, Aberration.None).ToStateVector();
+            Assert.Equal(managed.Position, asTarget.Position, TestHelpers.VectorComparer);
+
+            SpiceAPI.Instance.LoadKernels(fk);
+            try
+            {
+                var past = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.ReadEphemeris(epoch, site.NaifId, 301, Frames.Frame.ICRF, Aberration.None));
+                Assert.Contains("2000 JAN 01 12:00:00", past.Message);
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(fk);
+            }
+        }
+        finally
+        {
+            SpiceAPI.Instance.UnloadKernels(spk);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spk);
+            IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(fk);
+        }
+    }
+
     [Fact]
     public void ReadEphemeris_FromASite_ObserverMatchesTheSiteObject()
     {
@@ -606,6 +657,114 @@ public class SpiceApiTest
             SpiceAPI.Instance.UnloadKernels(ckFile);
             SpiceAPI.Instance.UnloadKernels(sclkFile);
         }
+    }
+
+    // A search SPICE cannot run throws SPICE's error (#668, fourth round): before, the five proxies of the window searches
+    // printed it, dropped it and returned no window, which a caller could not tell from a condition that never holds.
+    // The reference is SPICE's own error signal, read through the native library (getmsg_c), so these tests run on every
+    // platform; the windows of the valid searches are the CSPICE goldens of the tests above, unchanged
+    private static readonly Window ErrorSearchWindow = new(new TimeSystem.Time(2024, 3, 1, frame: TimeFrame.TDBFrame),
+        new TimeSystem.Time(2024, 3, 10, frame: TimeFrame.TDBFrame));
+
+    // Past the coverage of de440s.bsp (1849 to 2150) and of the Earth's high-precision PCK
+    private static readonly Window PastTheEphemerisWindow = new(new TimeSystem.Time(2160, 3, 1, frame: TimeFrame.TDBFrame),
+        new TimeSystem.Time(2160, 3, 10, frame: TimeFrame.TDBFrame));
+
+    private static readonly Planetodetic ErrorSearchPoint = new(30.0 * IO.Astrodynamics.Constants.Deg2Rad, 10.0 * IO.Astrodynamics.Constants.Deg2Rad, 1000.0);
+
+    [Fact]
+    public void FindWindowsOnCoordinateConstraint_UnknownFrame_ThrowsSpiceError()
+    {
+        // A frame name SPICE does not know, which the frames of the library (SpiceKnowsFrame) do not cover
+        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+            new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0,
+            Aberration.None, TimeSpan.FromHours(1.0)));
+        Assert.Contains("NOT_A_FRAME_668", e.Message);
+        Assert.Contains("not recognized", e.Message);
+        // and NotEqual, formed from the search of "="
+        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+            new Frames.Frame("NOT_A_FRAME_668"), CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.NotEqual, 0.0, 0.0,
+            Aberration.None, TimeSpan.FromHours(1.0)));
+        Assert.Contains("NOT_A_FRAME_668", e.Message);
+    }
+
+    [Fact]
+    public void FindWindowsOnCoordinateConstraint_WithoutData_ThrowsSpiceError()
+    {
+        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 399999,
+            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+            TimeSpan.FromHours(1.0)));
+        Assert.Contains("399999", e.Message);
+        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(PastTheEphemerisWindow, 399, 301,
+            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+            TimeSpan.FromHours(1.0)));
+        Assert.Contains("Insufficient ephemeris data", e.Message);
+        Assert.Contains("2160", e.Message);
+        // A step SPICE rejects
+        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301,
+            Frames.Frame.ICRF, CoordinateSystem.Rectangular, Coordinate.Z, RelationnalOperator.Greater, 0.0, 0.0, Aberration.None,
+            TimeSpan.Zero));
+        Assert.Contains("step size must be positive", e.Message);
+    }
+
+    [Fact]
+    public void FindWindowsOnDistanceConstraint_WithoutData_ThrowsSpiceError()
+    {
+        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 399999,
+            RelationnalOperator.Greater, 400000000.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
+        Assert.Contains("399999", e.Message);
+        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnDistanceConstraint(PastTheEphemerisWindow, 399, 301,
+            RelationnalOperator.Greater, 400000000.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
+        Assert.Contains("Insufficient ephemeris data", e.Message);
+        Assert.Contains("2160", e.Message);
+    }
+
+    [Fact]
+    public void FindWindowsOnOccultationConstraint_WithoutData_ThrowsSpiceError()
+    {
+        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(PastTheEphemerisWindow, 399, 10,
+            ShapeType.Ellipsoid, 301, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT, TimeSpan.FromMinutes(1.0)).ToArray());
+        Assert.Contains("2160", e.Message);
+        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnOccultationConstraint(ErrorSearchWindow, 399, 399999,
+            ShapeType.Point, 301, ShapeType.Ellipsoid, OccultationType.Any, Aberration.LT, TimeSpan.FromMinutes(1.0)).ToArray());
+        Assert.Contains("399999", e.Message);
+    }
+
+    [Fact]
+    public void FindWindowsOnIlluminationConstraint_UnknownFrameOrWithoutData_ThrowsSpiceError()
+    {
+        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399,
+            new Frames.Frame("NOT_A_FRAME_668"), ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0,
+            Aberration.None, TimeSpan.FromHours(1.0), 10));
+        Assert.Contains("NOT_A_FRAME_668", e.Message);
+        e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(PastTheEphemerisWindow, 301, 399,
+            PlanetsAndMoons.EARTH_BODY.Frame, ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0,
+            Aberration.None, TimeSpan.FromHours(1.0), 10));
+        Assert.Contains("2160", e.Message);
+    }
+
+    [Fact]
+    public void FindWindowsInFieldOfViewConstraint_InstrumentWithoutKernel_ThrowsSpiceError()
+    {
+        // gftfov reads the instrument's field of view in the kernel pool: no instrument kernel defines -999123
+        var e = Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.FindWindowsInFieldOfViewConstraint(ErrorSearchWindow, -999, -999123,
+            301, PlanetsAndMoons.MOON_BODY.Frame, ShapeType.Ellipsoid, Aberration.None, TimeSpan.FromHours(1.0)).ToArray());
+        Assert.Contains("INS-999123_FOV_FRAME", e.Message);
+    }
+
+    [Fact]
+    public void FindWindows_ValidSearchesOnTheErrorWindow_StillGiveWindows()
+    {
+        // The controls of the tests above, on the same window: the Moon south of the equator of J2000 over the 9 days,
+        // farther than 380000 km, and the incidence at the point below 60°
+        var south = SpiceAPI.Instance.FindWindowsOnCoordinateConstraint(ErrorSearchWindow, 399, 301, Frames.Frame.ICRF, CoordinateSystem.Rectangular,
+            Coordinate.Z, RelationnalOperator.Lower, 0.0, 0.0, Aberration.None, TimeSpan.FromHours(1.0)).ToArray();
+        Assert.Single(south);
+        Assert.NotEmpty(SpiceAPI.Instance.FindWindowsOnDistanceConstraint(ErrorSearchWindow, 399, 301, RelationnalOperator.Greater, 380000000.0,
+            Aberration.None, TimeSpan.FromHours(1.0)));
+        Assert.NotEmpty(SpiceAPI.Instance.FindWindowsOnIlluminationConstraint(ErrorSearchWindow, 301, 399, PlanetsAndMoons.EARTH_BODY.Frame,
+            ErrorSearchPoint, IlluminationAngle.Incidence, RelationnalOperator.Lower, System.Math.PI / 3.0, 0.0, Aberration.None,
+            TimeSpan.FromHours(1.0), 10));
     }
 
     [Fact]

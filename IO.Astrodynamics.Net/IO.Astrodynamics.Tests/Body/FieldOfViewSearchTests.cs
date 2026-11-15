@@ -764,9 +764,21 @@ public class FieldOfViewSearchTests : IClassFixture<PropagatedFieldOfViewCase>
             Assert.Throws<InvalidOperationException>(() =>
                 user.FindWindowsInFieldOfViewConstraint(window, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, Step));
             Assert.Throws<InvalidOperationException>(() => user.IsInFOV(window.StartDate, earth, Aberration.LT));
-            // and a circle of a user's subclass is searched, its cross angle its field of view
-            Assert.NotNull(new UserInstrument(spacecraft, InstrumentShape.Circular).FindWindowsInFieldOfViewConstraint(new Window(window.StartDate, window.StartDate.AddSeconds(60.0)),
-                spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.None, Step));
+            // and a circle of a user's subclass is searched, its cross angle its field of view, on the managed path; on the
+            // SPICE path gftfov reads its instrument kernel, which this subclass does not write: SPICE's error, where the
+            // search returned no window before (#668)
+            var circle = new UserInstrument(spacecraft, InstrumentShape.Circular);
+            var shortWindow = new Window(window.StartDate, window.StartDate.AddSeconds(60.0));
+            if (spacecraft == unpropagated)
+            {
+                Assert.NotNull(circle.FindWindowsInFieldOfViewConstraint(shortWindow, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.None, Step));
+            }
+            else
+            {
+                var exception = Assert.Throws<InvalidOperationException>(() =>
+                    circle.FindWindowsInFieldOfViewConstraint(shortWindow, spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.None, Step));
+                Assert.Contains($"INS{circle.NaifId}_FOV_FRAME", exception.Message);
+            }
         }
 
         // The coverage of the propagated states (choice 14): the observer's, and a spacecraft target's for a kernel-backed observer

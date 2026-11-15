@@ -43,7 +43,14 @@ site observer was built as a celestial body, which threw or was built from undef
 `spkezr_c`'s, which needs only the identifier. The commands of the CLI build their objects by identifier with the same
 rule and the same site (since 11.0.0; before, any identifier from 100001 to 999998 was a site named `site<id>`), so a
 site the loaded kernels do not name fails in both with "has no name in SPICE": load a kernel that names it, as the frame
-kernel of `Site.WriteFrameAsync` does, with its SPK.
+kernel of `Site.WriteFrameAsync` does, with its SPK. The two conditions, measured on a site from coordinates whose SPK
+`Site.WriteEphemeris` wrote over two days of 2024 (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)): loaded alone, a read from the
+site throws `ArgumentException` (`naifId`, "The NAIF identifier 399786 has no name in SPICE"); with the naming frame
+kernel loaded too, `InvalidOperationException` with SPICE's message ("Insufficient ephemeris data ... at the ephemeris
+epoch 2000 JAN 01 12:00:00.000"), the `Site` constructor reading the site at J2000 TDB. The read with the site as target
+(`ReadEphemeris(epoch, 399, 399786, ...)`) needs neither: with `Aberration.None`, read the site as target from the
+observer and negate the state (with LT, CN or +S the negation is not the state `spkezr` gives).
 
 SPICE takes a kernel path of at most 255 characters (NAIF, SPICE Kernel Required Reading, "Recommendations on Kernel
 File Naming"). `LoadKernels` hands it the full path, so a longer one fails with `SPICE(FILENAMETOOLONG)`; the native
@@ -63,6 +70,14 @@ with SPICE's message and leave no error pending (fourth round of #668; before, t
 failed with a wrong error). A new file is written by then; a file the call replaces is unloaded before its removal, an
 unload that fails the same way, and is then left on disk as it was, no longer loaded, nothing written (before, it was
 removed and nothing written in its place). See [Kernel Management](../guides/kernel-management.md).
+
+`TransformFrame` composes a TEME end through ICRF (#451), and so the frame of a site built from coordinates or of a site
+from the kernels whose frame id no loaded kernel defines, the frame only the library holds, whose orientation is
+`SiteFrame.GetStateOrientationToICRF`, bit for bit `ToFrame`'s (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, its name went to SPICE,
+which threw): within 9.3e-16 rad and 5.7e-20 rad/s of `sxform_c` in the frame kernel `Site.WriteFrameAsync` writes for
+the site (measured on Linux x64). The frame of a site whose frame the kernels define and the frame of a spacecraft are
+SPICE's by name; CIRS and TIRS throw ([#656](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/656)).
 
 SPICE has no GCRF frame. `ReadEphemeris`, `ReadOrientation`, `TransformFrame` and `FindWindowsOnCoordinateConstraint`
 hand a frame named GCRF (`Frame.GCRF` or `new Frame("GCRF")`, in any case) to SPICE as `J2000`, the axes of GCRF, and
@@ -84,6 +99,20 @@ The window searches take the units of the library, except the coordinate search:
   supports, whatever its case and its leading or trailing whitespace; any other, DSK forms included, throws
   `ArgumentException`, where before 11.0.0 `gfilum_c`'s error was dropped and no window returned
   ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682)).
+
+### Errors of the window searches
+
+A search CSPICE cannot run throws `InvalidOperationException` with SPICE's message: a frame name SPICE does not know, a
+body or an epoch without ephemeris data, an epoch outside the coverage of the frame data or of the C-kernel, an
+instrument whose kernel is not loaded (`INS<id>_FOV_FRAME` not found), a step SPICE rejects, a result cell that
+overflows. So do the CSPICE paths of the searches of `CelestialItem`, `Site` and `Instrument`, `Site.FindDayWindows`
+and the launch windows of a kernel site, and the CLI commands `find-windows-from-*-constraint` end with it (exit code 1). Before the fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668) the native proxies printed the
+error on standard output, dropped it and returned no window, which a caller could not tell from a condition that never
+holds. The checks made before the native call keep their `ArgumentException`: a frame of the library SPICE does not
+know in `FindWindowsOnCoordinateConstraint`, an occultation body without a frame, an illumination method other than
+ELLIPSOID. A search SPICE runs is unchanged, and returns at most 1000 windows
+([#653](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/653)).
 
 ### Orientation kernels
 

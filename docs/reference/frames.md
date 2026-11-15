@@ -167,7 +167,12 @@ loaded (those the library wrote for an earlier object of the id) and throws SPIC
 search of `CelestialItem` or `Site` in a frame whose reads are the library's is the library's, also when a kernel
 spacecraft takes part, so that it agrees with the reads; `SpiceAPI.FindWindowsOnCoordinateConstraint`, which hands the
 frame to CSPICE by name, throws `ArgumentException` for TEME, CIRS, TIRS and the frame of a site or a spacecraft that no
-loaded kernel defines under its name (third review of #690; before, no window).
+loaded kernel defines under its name (third review of #690; before, no window), and `InvalidOperationException` with
+SPICE's message for any other name SPICE does not know (fourth round of #668; before, no window).
+`SpiceAPI.TransformFrame` composes through ICRF a TEME end and the `SiteFrame` of a site only the library holds (from
+coordinates, or from the kernels with no frame kernel of its id loaded), decided at each call (fourth round of #668;
+before, a site's frame threw); CIRS and TIRS throw there (#656), and the frame of a spacecraft is SPICE's by name,
+which reads the frame kernel and the CK written for it.
 
 ### TEME
 
@@ -194,7 +199,7 @@ rotation about z.
   frame applies: TEME → ITRF93 is TEME → ICRF, then ICRF → ITRF93 from SPICE.
 - **By name.** A frame built by name, `new Frame("TEME")` in any case (a CCSDS file, the CLI, user code), is routed to
   `Frame.TEME` by `SpiceDataProvider` and `MemoryDataProvider`, and `SpiceAPI.TransformFrame` composes a TEME end
-  through ICRF; the native TEME of the C++ layer is no longer used. An ephemeris read in TEME is read in J2000
+  through ICRF (as it composes the frame of a site only the library holds, #668); the native TEME of the C++ layer is no longer used. An ephemeris read in TEME is read in J2000
   and rotated (#558). A frame built by name equals `Frame.TEME` ([Equality](#equality), #562).
 - **Measured** (`tools/teme_reference`, 2026-11-08; a LEO and a GEO state at 13 epochs from 1980 to 2026): within
   0.9 mm (LEO) and 18 mm (GEO) of ERFA's CIP route with IAU 2006/2000B, 19 mm and 106 mm (0.55 mas, IAU 2000B's

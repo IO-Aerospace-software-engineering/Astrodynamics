@@ -470,18 +470,20 @@ public class FieldOfViewReferenceTests : IClassFixture<FieldOfViewReferenceKerne
     }
 
     /// <summary>
-    /// The SPICE path of a kernel-backed spacecraft, a search window outside the coverage of its kernels: no window and no
-    /// exception, the error of gftfov dropped by the native proxy (#454). The
-    /// managed path has no coverage check for a kernel-backed spacecraft (choice 14 is for propagated states): the native
-    /// reading of its states outside the kernels is a defect of its own, outside #515 (#454).
+    /// The SPICE path of a kernel-backed spacecraft, a search window outside the coverage of its kernels: SPICE's error of
+    /// gftfov, <c>InvalidOperationException</c> (fourth round of #668; before, the native proxy dropped it and the search
+    /// returned no window). The reference is SPICE's own error signal, read through the native library. The managed path has
+    /// no coverage check for a kernel-backed spacecraft (choice 14 is for propagated states).
     /// </summary>
     [Fact]
-    public void SpicePath_OutsideKernelCoverage_ReturnsNoWindow()
+    public void SpicePath_OutsideKernelCoverage_ThrowsSpiceError()
     {
         var instrument = InstrumentOf(-470101001);
         var earth = new CelestialBody(PlanetsAndMoons.EARTH);
         var outside = new Window(SearchWindow.EndDate.AddSeconds(3600.0), SearchWindow.EndDate.AddSeconds(7200.0));
-        Assert.Empty(instrument.FindWindowsInFieldOfViewConstraint(outside, instrument.Spacecraft, earth, Frames.Frame.ICRF, ShapeType.Point, Aberration.LT,
-            TimeSpan.FromSeconds(60.0)));
+        var exception = Assert.Throws<InvalidOperationException>(() => instrument.FindWindowsInFieldOfViewConstraint(outside, instrument.Spacecraft, earth,
+            Frames.Frame.ICRF, ShapeType.Point, Aberration.LT, TimeSpan.FromSeconds(60.0)).ToArray());
+        Assert.Contains("Insufficient ephemeris data", exception.Message);
+        Assert.Contains("-470101", exception.Message);
     }
 }

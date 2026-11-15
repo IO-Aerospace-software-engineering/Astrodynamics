@@ -160,4 +160,47 @@ public class GeometryFinderTests
                 , res);
         }
     }
+
+    /// <summary>
+    /// A search SPICE cannot run ends the command with SPICE's error, <c>InvalidOperationException</c>, and prints no window
+    /// (fourth round of #668; before, the native proxies dropped the error and the command printed nothing and succeeded).
+    /// The reference is SPICE's own error signal: a frame name it does not know, a body without ephemeris data (399999), a
+    /// window past de440s (2160), an instrument whose kernel is not loaded (<c>INS-999123_FOV_FRAME</c>).
+    /// </summary>
+    [Fact]
+    public void SearchesSpiceCannotRun_ThrowSpiceError()
+    {
+        using (Configuration.Lock())
+        {
+            var command = new GeometryFinderCommand();
+            StringBuilder sb = new StringBuilder();
+            Console.SetOut(new StringWriter(sb));
+            var window = new WindowParameters { Begin = "2024-03-01T00:00:00", End = "2024-03-21T00:00:00" };
+            var past = new WindowParameters { Begin = "2160-03-01T00:00:00", End = "2160-03-02T00:00:00" };
+
+            var e = Assert.Throws<InvalidOperationException>(() => { _ = command.CoordinateConstraint("Data", 10, 399, "Rectangular", "Z", "=", 0.0, window,
+                TimeSpan.FromDays(10), frame: "NOT_A_FRAME_668"); });
+            Assert.Contains("NOT_A_FRAME_668", e.Message);
+            Assert.Contains("not recognized", e.Message);
+
+            e = Assert.Throws<InvalidOperationException>(() => { _ = command.DistanceConstraint("Data", 399, 399999, ">", 400000000.0, window, TimeSpan.FromDays(10)); });
+            Assert.Contains("399999", e.Message);
+
+            e = Assert.Throws<InvalidOperationException>(() => { _ = command.OccultationConstraint("Data", 399, 10, "Ellipsoid", 301, "Ellipsoid", "ANY", past,
+                TimeSpan.FromHours(1.0), "LT"); });
+            Assert.Contains("Insufficient ephemeris data", e.Message);
+            Assert.Contains("2160", e.Message);
+
+            e = Assert.Throws<InvalidOperationException>(() => { _ = command.InFieldOfViewConstraint("Data", -999, -999123, 399, "ITRF93", "Ellipsoid", window,
+                TimeSpan.FromHours(1.0), "LT"); });
+            Assert.Contains("INS-999123_FOV_FRAME", e.Message);
+
+            e = Assert.Throws<InvalidOperationException>(() => { _ = command.IlluminationConstraint("Data", 10, 399, 10, "NOT_A_FRAME_668",
+                new PlanetodeticParameters { Planetodetic = "0.0349 0.8378 0.0" }, "Incidence", "<", System.Math.PI * 0.5, window, TimeSpan.FromHours(4.5),
+                "None"); });
+            Assert.Contains("NOT_A_FRAME_668", e.Message);
+
+            Assert.Equal(string.Empty, sb.ToString());
+        }
+    }
 }

@@ -46,7 +46,9 @@ internal static class FieldOfViewSearch
 
     /// <summary>
     /// The rules of a search, checked before either path: the step, the search window, the target and its shape, the field
-    /// of view. <c>gftfov</c> would swallow their errors and return no window (the native proxy drops them).
+    /// of view, so that both paths throw the same exception for them, whatever <c>gftfov</c> would signal (an error it
+    /// signals throws <see cref="InvalidOperationException"/> with SPICE's message since the fourth round of #668; before,
+    /// the native proxy dropped it and returned no window).
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The step is not positive.</exception>
     /// <exception cref="ArgumentException">The search window ends before it starts, the target is the instrument's

@@ -132,7 +132,10 @@ earth, coordinates)` and `DSS-13_TOPO`). A coordinate search in that frame is th
 spacecraft takes part (third review of [#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690); before, CSPICE's `gfposc_c` got the frame by name and returned
 no window, or for a site named as a kernel frame searched in that kernel frame, [#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)), and
 `SpiceAPI.FindWindowsOnCoordinateConstraint` throws `ArgumentException` for it unless a loaded kernel defines its id
-under its name.
+under its name. `SpiceAPI.TransformFrame` with it is the library's frame composed through ICRF, as for TEME: the
+orientation `ToFrame` uses, bit for bit, within 9.3e-16 rad and 5.7e-20 rad/s of SPICE's `sxform_c` in the frame kernel
+`WriteFrameAsync` writes for the site (measured on Linux x64; fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), before, it threw).
 
 A site from the kernels (`new Site(13, "DSS-13", earth)`) has the frame the loaded kernels define for its id,
 1000000 + NaifId (`DSS-13_TOPO`, 1399013, of `earth_topo_201023.tf`), on every path
@@ -153,7 +156,8 @@ in that frame is the library's, also when a kernel spacecraft takes part, as in 
 coordinates: within 5.0e-7 s of `gfposc_c` in that frame kernel for a site at DSS-13's coordinates seen from a LEO
 (measured on Linux x64; before, `gfposc_c` got the site's own name and returned no window), and CSPICE's once a frame
 kernel of its id is loaded; `SpiceAPI.FindWindowsOnCoordinateConstraint` with it throws `ArgumentException`, and
-`SpiceAPI.TransformFrame` with it throws, as with that frame. `Planetodetic` and the illumination
+`SpiceAPI.TransformFrame` with it composes that frame through ICRF, as for a site built from coordinates (fourth round
+of #668; before, it threw). `Planetodetic` and the illumination
 angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
 `Planetodetic`, the normal `gfilum_c` takes for the site in `FindWindowsOnIlluminationConstraint` (#488), not the
 zenith of the kernel frame. `WriteFrameAsync` of such a site writes that kernel frame: its name and id in the

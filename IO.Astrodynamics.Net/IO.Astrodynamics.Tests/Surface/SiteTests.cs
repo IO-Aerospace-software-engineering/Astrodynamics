@@ -775,6 +775,130 @@ namespace IO.Astrodynamics.Tests.Surface
             }
         }
 
+        // #668, fourth round, measured on Linux x64 (2026-11-15): SpiceAPI.TransformFrame with the frame of a site from coordinates
+        // against SPICE's sxform in the frame kernel the library writes for it, renamed, 9.325e-16 rad and 5.666e-20 rad/s at
+        // worst; thresholds twice those rounded up, provisional until the three platforms have printed their MEASURE lines
+        private const double ManagedSiteTransformAngleThreshold = 1.9e-15;
+        private const double ManagedSiteTransformRateThreshold = 1.2e-19;
+
+        /// <summary>
+        /// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/> with the frame of a site built from
+        /// coordinates (#668, fourth round): the library's frame composed through ICRF, as for TEME, where SPICE, which does not
+        /// know the frame, made it throw. The reference is SPICE's <c>sxform_c</c> in the frame kernel the library writes for
+        /// the site (<see cref="Site.WriteFrameAsync"/>: a TK frame of ITRF93), loaded with its frame and body renamed (1399874,
+        /// TF874_TOPO, 399874) so that the site keeps its own frame and nothing of Data/SolarSystem is redefined, to and from
+        /// ICRF and ITRF93, at two epochs.
+        /// </summary>
+        [Fact]
+        public async Task TransformFrame_SiteFromCoordinates_MatchesSpiceInItsWrittenFrame()
+        {
+            // Arrange
+            var site = new Site(774, "TF774", PlanetsAndMoons.EARTH_BODY, new Planetodetic(30 * Astrodynamics.Constants.Deg2Rad, 10 * Astrodynamics.Constants.Deg2Rad, 1000.0));
+            var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site774_written");
+            var renamed = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site774_renamed");
+            try
+            {
+                await site.WriteFrameAsync(fk);
+                var text = await File.ReadAllTextAsync(fk.FullName);
+                await File.WriteAllTextAsync(renamed.FullName, text.Replace("1399774", "1399874").Replace("399774", "399874")
+                    .Replace("TF774_TOPO", "TF874_TOPO").Replace("'TF774'", "'TF874'"));
+                Assert.Empty(KernelShadowing.Find([renamed], KernelShadowing.SolarSystem));
+                SpiceAPI.Instance.LoadKernels(renamed);
+                try
+                {
+                    Assert.False(site.IsSpiceBacked);
+                    var reference = new Frames.Frame("TF874_TOPO");
+                    foreach (var date in new[] { "2000-01-02T00:00:00", "2024-03-01T12:00:00" })
+                    {
+                        var epoch = new TimeSystem.Time(date + " TDB");
+                        foreach (var other in new[] { Frames.Frame.ICRF, PlanetsAndMoons.EARTH_BODY.Frame })
+                        {
+                            foreach (bool fromSite in new[] { true, false })
+                            {
+                                // Act
+                                var library = fromSite ? SpiceAPI.Instance.TransformFrame(epoch, site.Frame, other) : SpiceAPI.Instance.TransformFrame(epoch, other, site.Frame);
+                                var spice = fromSite ? SpiceAPI.Instance.TransformFrame(epoch, reference, other) : SpiceAPI.Instance.TransformFrame(epoch, other, reference);
+
+                                // Assert
+                                double angle = RotationAngle(spice.Rotation.Conjugate() * library.Rotation);
+                                double rate = (library.AngularVelocity - spice.AngularVelocity).Magnitude();
+                                string direction = fromSite ? $"site -> {other.Name}" : $"{other.Name} -> site";
+                                _output.WriteLine($"MEASURE TransformFrame of a site from coordinates {direction} at {date}: {angle:E3} rad, |dw| {rate:E3} rad/s");
+                                Assert.True(angle <= ManagedSiteTransformAngleThreshold, $"{direction} {date}: {angle:E3} rad");
+                                Assert.True(rate <= ManagedSiteTransformRateThreshold, $"{direction} {date}: {rate:E3} rad/s");
+                                Assert.Equal(fromSite ? site.Frame : other, library.ReferenceFrame);
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    SpiceAPI.Instance.UnloadKernels(renamed);
+                }
+            }
+            finally
+            {
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(fk);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(renamed);
+            }
+        }
+
+        /// <summary>
+        /// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/> with the frame of a site built from
+        /// coordinates is the orientation the library gives the frame everywhere else (<see cref="Frames.Frame.ToFrame"/>, the
+        /// reads in it), bit for bit, to ICRF and from it (its conjugate) (#668, fourth round; before, it threw). A guard of the
+        /// routing, which needs no SPICE reference.
+        /// </summary>
+        [Fact]
+        public void TransformFrame_SiteFromCoordinates_IsTheFrameOfTheLibrary()
+        {
+            var site = new Site(775, "TF775", PlanetsAndMoons.EARTH_BODY, new Planetodetic(-1.2, -0.4, 250.0));
+            foreach (var epoch in new[] { new TimeSystem.Time("2000-01-02T00:00:00 TDB"), new TimeSystem.Time("2024-03-01T12:00:00 TDB") })
+            {
+                var toIcrf = SpiceAPI.Instance.TransformFrame(epoch, site.Frame, Frames.Frame.ICRF).Rotation;
+                var expected = site.Frame.ToFrame(Frames.Frame.ICRF, epoch).Rotation;
+                Assert.Equal(expected, toIcrf);
+                Assert.Equal(expected.Conjugate(), SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, site.Frame).Rotation);
+            }
+        }
+
+        /// <summary>
+        /// <see cref="SpiceAPI.TransformFrame(TimeSystem.Time, Frames.Frame, Frames.Frame)"/> with the frame of a site from the
+        /// kernels whose frame id no loaded kernel defines is the frame of its J2000 coordinates
+        /// (<see cref="SiteFrame.GetStateOrientationToICRF"/>), bit for bit, where it threw (#668, fourth round); with the frame
+        /// of a site whose frame the kernels define (DSS-13), SPICE's frame, as before. The frames of CIRS and TIRS keep their
+        /// path, which #656 owns.
+        /// </summary>
+        [Fact]
+        public void TransformFrame_KernelSites_TheFrameTheSiteUses()
+        {
+            var spk = KernelSiteSpk(783, "RV783");
+            SpiceAPI.Instance.LoadKernels(spk);
+            try
+            {
+                var site = new Site(783, "RV783", PlanetsAndMoons.EARTH_BODY);
+                Assert.True(site.IsSpiceBacked);
+                Assert.False(SpiceAPI.KernelDefinesFrame(site.Frame.Id!.Value));
+                foreach (var epoch in KernelSiteEpochs)
+                {
+                    var expected = site.Frame.GetStateOrientationToICRF(epoch).Rotation;
+                    Assert.Equal(expected, SpiceAPI.Instance.TransformFrame(epoch, site.Frame, Frames.Frame.ICRF).Rotation);
+                    Assert.Equal(expected.Conjugate(), SpiceAPI.Instance.TransformFrame(epoch, Frames.Frame.ICRF, site.Frame).Rotation);
+                }
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spk);
+            }
+
+            var dss13 = new Site(13, "DSS-13", PlanetsAndMoons.EARTH_BODY);
+            var at = new TimeSystem.Time("2024-03-01T12:00:00 TDB");
+            Assert.Equal(SpiceAPI.Instance.TransformFrame(at, new Frames.Frame("DSS-13_TOPO"), Frames.Frame.ICRF).Rotation,
+                SpiceAPI.Instance.TransformFrame(at, dss13.Frame, Frames.Frame.ICRF).Rotation);
+            Assert.Throws<InvalidOperationException>(() => SpiceAPI.Instance.TransformFrame(at, Frames.Frame.CIRS, Frames.Frame.ICRF));
+        }
+
         // Third review of #690, against SPICE in the test's NAIF topocentric frame, the worst on Linux x64, Windows x64 and
         // macOS arm64 (CI run 43745883709, 2026-11-15): the position of a read (the larger of the angle and of |r| relative)
         // 7.336e-16, 5.884e-16 and 4.470e-16, its velocity 4.915e-11, 3.989e-11 and 2.876e-11 m/s (the Moon, about 28 km/s

@@ -506,8 +506,10 @@ its attitude record is empty: never propagated and with no orientation added, bu
 `TLEPropagator` ([#546](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/546)); its CK cannot be written either. Propagate it, or give it its attitude,
 `spacecraft.Frame.AddStateOrientationToICRF(new StateOrientation(q, Vector3.Zero, epoch, spacecraft.Frame))`, held from
 then on ([#682](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/682); before 11.0.0 the identity of ICRF was searched). This check comes after those of the
-arguments and of the field, whose errors come first. On the CSPICE path an error of `gftfov` (a missing kernel, a
-coverage) gives no window, no exception (the native layer drops it).
+arguments and of the field, whose errors come first. On the CSPICE path an error of `gftfov` (a missing kernel, an
+epoch outside the coverage of the kernels) throws `InvalidOperationException` with SPICE's message (fourth round of
+[#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668); before, the native layer dropped it
+and the search returned no window).
 
 `IsInFOV` is the `POINT` condition with the same field and corrections, and the same field and attitude errors
 (`InvalidOperationException`) and target error (`ArgumentException`, the instrument's own spacecraft); the search does
