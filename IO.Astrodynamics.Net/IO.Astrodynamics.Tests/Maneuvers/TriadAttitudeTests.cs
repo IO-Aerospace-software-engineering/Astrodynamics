@@ -1475,12 +1475,19 @@ public class TriadAttitudeTests
 
     #region Minimum vector separation (fourth round of #668)
 
-    // A separation is in (0, π/2] rad: 0, a negative or a NaN separation switched off both collinearity checks (every
-    // degenerate triad gave an arbitrary roll), and one above π/2 rejected every pair, perpendicular ones included, as
-    // "too close to collinear"
+    // The smallest separation, 1e-14 rad: the sine of two vectors collinear to the rounding of their components, computed
+    // as |û × ŵ|, is at most about (3 + √2) u = 4.9e-16 (u = 2^-53: the input's rounding, that of each normalization and
+    // that of the cross product), 20 times less
+    private const double LowestSeparation = 1e-14;
+
+    // A separation is in [1e-14, π/2] rad: 0, a negative or a NaN separation switched off both collinearity checks (every
+    // degenerate triad gave an arbitrary roll), one below the rounding of the sine accepted collinear vectors that round
+    // apart (v and fl(2.9 v) at 1e-17 gave a roll set by rounding, and fl(-2.9 v) another), and one above π/2 rejected
+    // every pair, perpendicular ones included, as "too close to collinear"
     public static TheoryData<double> SeparationsOutOfRange() => new()
     {
-        0.0, -0.0, -0.1, double.NaN, double.PositiveInfinity, double.NegativeInfinity, 2.0, System.Math.BitIncrement(System.Math.PI / 2.0)
+        0.0, -0.0, -0.1, double.NaN, double.PositiveInfinity, double.NegativeInfinity, 2.0, System.Math.BitIncrement(System.Math.PI / 2.0),
+        1e-300, 1e-17, System.Math.BitDecrement(LowestSeparation)
     };
 
     [Theory]
@@ -1542,18 +1549,74 @@ public class TriadAttitudeTests
         Assert.True(secondaryAngle <= HalfPiAttitudeAngle, $"secondary angle {secondaryAngle:E3} rad");
     }
 
-    // Antiparallel body vectors at a tiny separation: π − 1e-300 rounds to π, so the angle π passed the former check
+    // The smallest separation is accepted, on perpendicular vectors and on a pair whose sine, 1e-12, is above it but far
+    // below the resolution of acos near 1
+    [Fact]
+    public void Separation_LowestSeparation_IsAccepted()
+    {
+        var (spc, orbitalParams) = CreateTestSpacecraft();
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var perpendicular = new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromSeconds(10.0), Vector3.VectorZ,
+            OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde, spc.Engines.First(), LowestSeparation);
+        var close = new TriadAttitude(epoch, TimeSpan.FromHours(1.0), Vector3.VectorZ, TestHelpers.MoonAtJ2000,
+            new Vector3(1e-12, 0.0, 1.0), TestHelpers.Sun, spc.Engines.First(), LowestSeparation);
+
+        Assert.Equal(LowestSeparation, perpendicular.MinimumVectorSeparation);
+        Assert.Equal(LowestSeparation, close.MinimumVectorSeparation);
+        // The separation only decides which pairs pass: the attitude is that of the default separation, bit for bit
+        var atDefault = new TriadAttitude(TestHelpers.EarthAtJ2000, epoch, TimeSpan.FromSeconds(10.0), Vector3.VectorZ,
+            OrbitalDirectionTarget.Nadir, Vector3.VectorY, OrbitalDirectionTarget.Prograde, spc.Engines.First()).ComputeOrientation(orbitalParams);
+        var atLowest = perpendicular.ComputeOrientation(orbitalParams);
+        Assert.Equal(atDefault.W, atLowest.W);
+        Assert.Equal(atDefault.VectorPart, atLowest.VectorPart);
+    }
+
+    // Antiparallel body vectors at the smallest separation: π − 1e-300 rounded to π, so the angle π passed the former check
+    // at 1e-300, which is now out of range
     [Fact]
     public void AntiparallelBodyVectors_TinySeparation_Throws()
     {
         var (spc, _) = CreateTestSpacecraft();
         Assert.Throws<ArgumentException>(() => new TriadAttitude(new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
             TimeSpan.FromHours(1.0), Vector3.VectorZ, TestHelpers.MoonAtJ2000, Vector3.VectorZ.Inverse(), TestHelpers.Sun,
-            spc.Engines.First(), 1e-300));
+            spc.Engines.First(), LowestSeparation));
     }
 
-    // Collinear targets at a tiny separation: nadir and zenith (antiparallel, accepted through the rounding of π − 1e-300,
-    // which gave an arbitrary roll), nadir and the direction of the Earth (parallel)
+    // Collinear body vectors that round apart, at the smallest separation: v and fl(k v) for random v and k, collinear by
+    // construction, must all throw. The worst sine |û × ŵ| is printed (a record of the margin, not a threshold)
+    [Fact]
+    public void RandomRoundedCollinearBodyVectors_LowestSeparation_Throw()
+    {
+        var (spc, _) = CreateTestSpacecraft();
+        var engine = spc.Engines.First();
+        var epoch = new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame);
+        var random = new Random(668);
+        double Component() => (random.NextDouble() * 2.0 - 1.0) * System.Math.Pow(10.0, random.Next(-3, 4));
+        double worstSine = 0.0;
+        int rejected = 0;
+        const int pairs = 20000;
+        for (int i = 0; i < pairs; i++)
+        {
+            var v = new Vector3(Component(), Component(), Component());
+            double k = (random.Next(2) == 0 ? -1.0 : 1.0) * System.Math.Pow(10.0, random.NextDouble() * 12.0 - 6.0);
+            var w = v * k;
+            worstSine = System.Math.Max(worstSine, v.NormalizeOrZero().Cross(w.NormalizeOrZero()).Magnitude());
+            try
+            {
+                _ = new TriadAttitude(epoch, TimeSpan.FromHours(1.0), v, TestHelpers.MoonAtJ2000, w, TestHelpers.Sun, engine, LowestSeparation);
+            }
+            catch (ArgumentException e) when (e is not ArgumentOutOfRangeException)
+            {
+                rejected++;
+            }
+        }
+
+        _output.WriteLine($"MEASURE worst sine of v and fl(k v) over {pairs} pairs {worstSine:E3}, sin(lowest separation) {System.Math.Sin(LowestSeparation):E3}");
+        Assert.Equal(pairs, rejected);
+    }
+
+    // Collinear targets at the smallest separation: nadir and zenith (antiparallel, accepted through the rounding of
+    // π − 1e-300, which gave an arbitrary roll), nadir and the direction of the Earth (parallel)
     [Theory]
     [InlineData("antiparallel")]
     [InlineData("parallel")]
@@ -1565,7 +1628,7 @@ public class TriadAttitudeTests
             : new CelestialAttitudeTarget(TestHelpers.EarthAtJ2000);
         var maneuver = new TriadAttitude(TestHelpers.EarthAtJ2000, new TimeSystem.Time(DateTime.MinValue, TimeFrame.TDBFrame),
             TimeSpan.FromSeconds(10.0), Vector3.VectorZ, OrbitalDirectionTarget.Nadir, Vector3.VectorY, secondary,
-            spc.Engines.First(), 1e-300);
+            spc.Engines.First(), LowestSeparation);
 
         Assert.Throws<InvalidOperationException>(() => maneuver.ComputeOrientation(orbitalParams));
     }
