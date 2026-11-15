@@ -35,6 +35,19 @@ public class OmmValidatorTests
         });
     }
 
+    [Fact]
+    public void ValidateFile_OmmWithTwoSegments_IsInvalid()
+    {
+        NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOmm(), file =>
+        {
+            var result = _validator.ValidateFile(file);
+
+            Assert.False(result.IsValid);
+            var error = Assert.Single(result.Errors);
+            Assert.Contains("2 segment elements", error.Message);
+        });
+    }
+
     #endregion
 
     #region Valid OMM Tests

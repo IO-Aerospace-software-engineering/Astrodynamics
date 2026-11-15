@@ -95,6 +95,79 @@ namespace IO.Astrodynamics.Tests.CCSDS
             return xml;
         }
 
+        /// <summary>The namespace of the qualified NDM/XML 4.0.0 schemas (CCSDS 505.0-B-3).</summary>
+        internal const string NdmNamespace = "urn:ccsds:schema:ndmxml";
+
+        /// <summary>
+        /// iss.omm (an unqualified NDM of one OMM, as Space-Track writes it) with its &lt;segment&gt; twice, the copy's
+        /// OBJECT_NAME renamed.
+        /// </summary>
+        internal static string TwoSegmentOmm()
+        {
+            return WithDuplicatedElement(System.IO.File.ReadAllText(IssOmmPath), "omm", "body/segment");
+        }
+
+        /// <summary>
+        /// An OPM as <see cref="Opm.ToXmlString"/> writes it (unqualified) with its &lt;segment&gt; twice, the copy's
+        /// OBJECT_NAME renamed.
+        /// </summary>
+        internal static string TwoSegmentOpm(Opm opm)
+        {
+            return WithDuplicatedElement(opm.ToXmlString(), "opm", "body/segment");
+        }
+
+        /// <summary>
+        /// A copy of the document with the element at <paramref name="path"/> (local names from the message element,
+        /// '/'-separated) repeated right after itself, the copy's OBJECT_NAME, if any, renamed "SECOND SEGMENT". The count of
+        /// that element in its parent, 2, is checked with System.Xml.Linq, independently of the readers.
+        /// </summary>
+        internal static string WithDuplicatedElement(string xml, string messageName, string path)
+        {
+            var document = XDocument.Parse(xml);
+            var message = document.Root!.Name.LocalName == messageName
+                ? document.Root
+                : document.Root.Elements().Single(e => e.Name.LocalName == messageName);
+            var element = path.Split('/').Aggregate(message, (parent, name) => parent.Elements().Single(e => e.Name.LocalName == name));
+            var copy = new XElement(element);
+            foreach (var objectName in copy.DescendantsAndSelf().Where(e => e.Name.LocalName == "OBJECT_NAME"))
+            {
+                objectName.Value = "SECOND SEGMENT";
+            }
+
+            element.AddAfterSelf(copy);
+            var result = document.ToString();
+            var reparsed = XDocument.Parse(result);
+            var reparsedMessage = reparsed.Root!.Name.LocalName == messageName
+                ? reparsed.Root
+                : reparsed.Root.Elements().Single(e => e.Name.LocalName == messageName);
+            var names = path.Split('/');
+            var parentOfDuplicate = names.Take(names.Length - 1)
+                .Aggregate(reparsedMessage, (parent, name) => parent.Elements().Single(e => e.Name.LocalName == name));
+            Assert.Equal(2, parentOfDuplicate.Elements().Count(e => e.Name.LocalName == names[^1]));
+            return result;
+        }
+
+        /// <summary>
+        /// The message element of the document, standalone (out of its &lt;ndm&gt;, which the validators' schema set does
+        /// not declare), with every element in the namespace of the qualified NDM/XML schemas and the namespace declarations
+        /// and xsi attributes removed, so that the embedded SANA schemas check its structure.
+        /// </summary>
+        internal static string QualifiedMessage(string xml, string messageName)
+        {
+            var root = XDocument.Parse(xml).Root!;
+            var message = new XElement(root.Name.LocalName == messageName
+                ? root
+                : root.Elements().Single(e => e.Name.LocalName == messageName));
+            XNamespace ndm = NdmNamespace;
+            foreach (var element in message.DescendantsAndSelf())
+            {
+                element.Attributes().Where(a => a.IsNamespaceDeclaration || a.Name.Namespace == XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance")).Remove();
+                element.Name = ndm + element.Name.LocalName;
+            }
+
+            return message.ToString();
+        }
+
         /// <summary>
         /// Writes the XML to a temporary file, runs the action on its path, and deletes the file.
         /// </summary>

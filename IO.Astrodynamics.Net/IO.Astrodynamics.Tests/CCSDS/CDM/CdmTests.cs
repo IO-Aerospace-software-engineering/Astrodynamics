@@ -204,6 +204,98 @@ public class CdmTests
         Assert.Contains("2 CDM messages", exNested.Message);
     }
 
+    // A CDM holds one header and one body, the body one relativeMetadataData and exactly two segments, one per object,
+    // each segment one metadata and one data section, the data at most one of each block (NDM/XML 4.0.0,
+    // ndmxml-4.0.0-cdm-1.0.xsd: cdmType, cdmBody, cdmSegment, cdmData; CCSDS 508.0-B-1, 3.2)
+    private static string ManualCdmXml(bool qualified = false)
+    {
+        var xml = CreateManualEncounterCase().ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 10, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "STRUCTURE"
+        }).WriteToString(wrapInNdmContainer: false);
+        return qualified ? xml : RemoveNamespaces(xml);
+    }
+
+    private static string WithSegmentCount(string xml, int count)
+    {
+        var document = XDocument.Parse(xml);
+        var body = document.Root!.Elements().Single(e => e.Name.LocalName == "body");
+        var segments = body.Elements().Where(e => e.Name.LocalName == "segment").ToList();
+        if (count < segments.Count)
+        {
+            segments.Skip(count).ToList().ForEach(e => e.Remove());
+        }
+        else
+        {
+            for (int i = segments.Count; i < count; i++)
+            {
+                body.Add(new XElement(segments[1]));
+            }
+        }
+
+        var result = document.ToString();
+        Assert.Equal(count, XDocument.Parse(result).Root!.Elements().Single(e => e.Name.LocalName == "body").Elements()
+            .Count(e => e.Name.LocalName == "segment"));
+        return result;
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    public void ReadFromString_CdmWithOneOrThreeSegments_ThrowsParseException(int count)
+    {
+        // The embedded schema rejects the qualified document: a CDM holds exactly two segments
+        Assert.True(Cdm.ValidateSchemaFromXml(ManualCdmXml(qualified: true)).IsValid);
+        Assert.False(Cdm.ValidateSchemaFromXml(WithSegmentCount(ManualCdmXml(qualified: true), count)).IsValid);
+
+        // Before: ArgumentException from the Cdm constructor, not the reader's documented exception
+        foreach (var xml in new[] { WithSegmentCount(ManualCdmXml(), count), WithSegmentCount(ManualCdmXml(qualified: true), count) })
+        {
+            var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+            Assert.Contains($"{count} segment elements", ex.Message);
+            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml));
+            Assert.Throws<CdmParseException>(() => Cdm.ReadFromStream(stream));
+            Assert.Throws<CdmParseException>(() => NdmDocuments.WithTempFile(xml, file => Cdm.ReadFromFile(file)));
+        }
+    }
+
+    [Theory]
+    [InlineData("header")]
+    [InlineData("body")]
+    [InlineData("body/relativeMetadataData")]
+    [InlineData("body/relativeMetadataData/relativeStateVector")]
+    [InlineData("body/segment/metadata")]
+    [InlineData("body/segment/data")]
+    [InlineData("body/segment/data/additionalParameters")]
+    [InlineData("body/segment/data/stateVector")]
+    [InlineData("body/segment/data/covarianceMatrix")]
+    public void ReadFromString_CdmWithDuplicateStructuralElement_Throws(string path)
+    {
+        // The first segment's element when the path goes through a segment; before, the first was read (a second
+        // relativeMetadataData's miss distance dropped)
+        var xml = ManualCdmXml();
+        var document = XDocument.Parse(xml);
+        if (path.StartsWith("body/segment/", StringComparison.Ordinal))
+        {
+            // Duplicate within the first segment only
+            var segment = document.Root!.Elements().Single(e => e.Name.LocalName == "body").Elements().First(e => e.Name.LocalName == "segment");
+            var element = path.Substring("body/segment/".Length).Split('/')
+                .Aggregate(segment, (parent, name) => parent.Elements().Single(e => e.Name.LocalName == name));
+            element.AddAfterSelf(new XElement(element));
+            Assert.Equal(2, element.Parent!.Elements().Count(e => e.Name.LocalName == element.Name.LocalName));
+            xml = document.ToString();
+        }
+        else
+        {
+            xml = NdmDocuments.WithDuplicatedElement(xml, "cdm", path);
+        }
+
+        var ex = Assert.Throws<CdmParseException>(() => Cdm.ReadFromString(xml));
+        Assert.Contains($"2 {path.Split('/')[^1]} elements", ex.Message);
+    }
+
     [Fact]
     public void WriteToFile_ValidateSchemaAndReadFromFile_RoundTripsGeneratedCdm()
     {

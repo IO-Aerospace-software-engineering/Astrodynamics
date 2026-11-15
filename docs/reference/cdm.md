@@ -23,6 +23,13 @@ The readers read one CDM: a standalone `<cdm>`, or the one `<cdm>` of an `<ndm>`
 several CDMs, at any depth below the root, throws `CdmParseException` naming their number (#679); before 11.0.0 the first one was returned. Split such
 a document into one CDM per document.
 
+The CDM itself holds one header and one body, the body one `relativeMetadataData` and exactly two segments, one per
+object, each segment one metadata and one data section, and each data section and the `relativeMetadataData` at most
+one of each block (NDM/XML 4.0.0, `ndmxml-4.0.0-cdm-1.0.xsd`; CCSDS 508.0-B-1, 3.2). A body with another number of
+segments throws `CdmParseException` naming it, where before 11.0.0 the `Cdm` constructor threw `ArgumentException`; a
+second header, body, `relativeMetadataData`, metadata, data section or block throws `CdmParseException` naming the
+element and its count, where the first was read (a second `relativeMetadataData`'s miss distance dropped).
+
 ## Instance Methods
 
 | Method | Description |

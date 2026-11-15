@@ -802,12 +802,14 @@ IO.Astrodynamics.Constants.Deg2Rad // not Constants.Deg2Rad (that is the test he
      `NoradCatalogNumber` handles the conversion — never format the field by hand
 8. **CCSDS OMM Handling**: When working with OMM files:
    - Use `Omm.LoadFromFile()` with validation for production code
+   - A document with several OMM messages (#679), or an OMM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OmmParseException`, with or without `validateSchema` (the schema validation checks nothing of an unqualified document); split it into one message per segment
    - Check `IsTleCompatible` (TLE parameters, `MEAN_ELEMENT_THEORY` SGP4, `REF_FRAME` TEME, `CENTER_NAME` EARTH) before calling `ToTle()`, which otherwise throws naming the keywords at fault (#679)
    - Use `TLE.ToOmm()` to convert TLE data for CCSDS-compliant archiving
    - COSPAR ID format conversion is automatic (OMM: "1998-067A" ↔ TLE: "98067A")
    - `ToTle()` throws when `NORAD_CAT_ID` (> 339999) or `REV_AT_EPOCH` (> 99999) exceeds TLE capacity
 9. **CCSDS OPM Handling**: When working with OPM files:
    - Use `Opm.LoadFromFile()` with validation for production code
+   - A document with several OPM messages (#679), or an OPM with several segments, headers, bodies, metadata or data sections, or blocks of a data section, throws `OpmParseException`, with or without `validateSchema` (the schema validation checks nothing of an unqualified document); split it into one message per segment
    - Use `Spacecraft.ToOpm()` for archiving spacecraft state with maneuvers
    - Use `Opm.ToSpacecraft()` to restore spacecraft (requires naifId, clock, maxMass)
    - Use `Opm.ToStateVector()` for simple state vector extraction

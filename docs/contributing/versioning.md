@@ -2021,6 +2021,26 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the issue (an engine on both spacecraft: no `INTRACK_THRUST` element, `MANEUVERABLE` still `YES`, schema-valid, read
   back null) and each override of either object; `CdmPropagatedCovarianceTests` checks `NO` for two propagated
   covariances, a secondary with an engine included, and the keyword omitted for the covariance held in RTN.
+- **A message with two segments loaded its first one silently** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). The OMM and OPM readers found
+  the header, body, segment, metadata and data of a message by their first element (`FirstOrDefault`), so an OMM whose
+  body held a second `<segment>`, and equally a second header, body, metadata, data section or data block, loaded as
+  its first one: iss.omm with its segment duplicated loaded as the ISS through `OmmReader`, `Omm.LoadFromString`,
+  `LoadFromFile` and `LoadFromStream`, with or without schema validation, and the same for the OPM; a duplicated
+  `<metadata>` was read as its first. The NDM/XML 4.0.0 schemas bound each to one (`ommType`, `ommBody`, `ommSegment`,
+  `ommData`; the same for the OPM, its maneuvers excepted), but schema validation checks nothing of an unqualified
+  document, the form the writers and Space-Track write (only the qualified copy is rejected, "invalid child element
+  segment"). The CDM reader read a second header, body, `relativeMetadataData` (its miss distance dropped), metadata,
+  data section or block as its first, and threw `ArgumentException` from the `Cdm` constructor for a body of one or
+  three segments. Under the same signatures, the three readers take each of these elements through one internal helper
+  (`CCSDS/Common/CcsdsElements`), which throws the reader's parse exception (`OmmParseException`, `OpmParseException`,
+  `CdmParseException`) naming the element and its count when there are several, and the CDM reader throws
+  `CdmParseException` for a body that does not hold two segments. Keyword duplicates (two `OBJECT_NAME`) are out of
+  scope. The tests build the documents with System.Xml.Linq and count the elements independently of the readers, show
+  with the embedded SANA schemas that the qualified copy is rejected and its one-segment original accepted, and reach
+  every path: `Load*` with and without schema validation, `Load*` and `ReadFrom*` from a file, a string and a stream,
+  `TryLoadFromFile`, `ValidateFile` and `Cdm.ReadFrom*`; every block of a data section the reader reads is duplicated
+  once (`OmmReaderTests`, `OpmReaderTests`, `CdmTests`). The single-segment documents of the tests load as before.
 
 **Changed**
 
@@ -2689,6 +2709,16 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and one without `NO`; for a propagated covariance it is `NO`, even with engines. Migration: set
   `CdmExportOptions.ProtectedParticipantMetadata.IntrackThrust` or `SecondaryParticipantMetadata.IntrackThrust` to
   state the value of an OD.
+- **Breaking: a message with several segments, or a repeated structural element, throws** (second round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above): an OMM or OPM
+  with more than one header, body, segment, metadata or data section, or block of a data section (the OPM maneuvers
+  excepted), makes `OmmReader`/`OpmReader.ReadFrom*` and `Omm`/`Opm.LoadFrom*` throw `OmmParseException` or
+  `OpmParseException`, with or without schema validation; `TryLoadFromFile` returns false with a `PARSE_ERROR` and
+  `ValidateFile` reports the file invalid, where the first element was read. A CDM with such a repeated element, or a
+  body without two segments, makes `CdmReader.ReadFrom*` and `Cdm.ReadFrom*` throw `CdmParseException`, where the first
+  element was read and a segment count other than two threw `ArgumentException`. No schema-valid document moves.
+  Migration: split such a document into one message per segment, and catch `CdmParseException` for a CDM of the wrong
+  segment count.
 - **Breaking: the managed threshold searches return the windows, gaps and crossings shorter than the step**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678), Fixed above). Under the same signatures, the searches the library
   runs (`FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and `FindWindowsOnIlluminationConstraint`

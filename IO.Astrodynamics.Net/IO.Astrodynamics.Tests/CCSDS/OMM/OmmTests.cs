@@ -747,6 +747,21 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
             });
         }
 
+        [Fact]
+        public void TryLoadFromFile_OmmWithTwoSegments_ReturnsFalseWithParseError()
+        {
+            NdmDocuments.WithTempFile(NdmDocuments.TwoSegmentOmm(), file =>
+            {
+                var loaded = Omm.TryLoadFromFile(file, out var omm, out var result);
+
+                Assert.False(loaded);
+                Assert.Null(omm);
+                var error = Assert.Single(result.Errors);
+                Assert.Equal("PARSE_ERROR", error.Code);
+                Assert.Contains("2 segment elements", error.Message);
+            });
+        }
+
         #endregion
 
         #region TLE compatibility (#679)

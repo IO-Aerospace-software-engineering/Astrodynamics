@@ -401,7 +401,9 @@ public class Omm
     /// <exception cref="ArgumentNullException">Thrown when filePath is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
     /// <exception cref="OmmValidationException">Thrown when validation fails with errors.</exception>
-    /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, or holds several OMM messages (#679).</exception>
+    /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, holds several OMM messages (#679), or
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
+    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
     public static Omm LoadFromFile(string filePath, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -445,7 +447,9 @@ public class Omm
     /// <returns>The loaded and validated OMM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when xml is null or empty.</exception>
     /// <exception cref="OmmValidationException">Thrown when validation fails with errors.</exception>
-    /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, or holds several OMM messages (#679).</exception>
+    /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, holds several OMM messages (#679), or
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
+    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
     public static Omm LoadFromString(string xml, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -486,7 +490,9 @@ public class Omm
     /// <returns>The loaded and validated OMM instance.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
     /// <exception cref="OmmValidationException">Thrown when validation fails with errors.</exception>
-    /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, or holds several OMM messages (#679).</exception>
+    /// <exception cref="OmmParseException">Thrown when the document cannot be parsed, holds several OMM messages (#679), or
+    /// several headers, bodies, segments, metadata or data sections, or blocks of a data section (whatever
+    /// <c>validateSchema</c>: the schema checks no unqualified document).</exception>
     public static Omm LoadFromStream(Stream stream, bool validateSchema = true, bool validateContent = true)
     {
         if (stream == null)
@@ -509,7 +515,8 @@ public class Omm
     /// <param name="validateSchema">If true, validates the XML against the CCSDS OMM schema.</param>
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>True if the OMM was loaded successfully with no errors, false otherwise.</returns>
-    /// <remarks>A document that holds several OMM messages is not loaded: false, with a <c>PARSE_ERROR</c> (#679).</remarks>
+    /// <remarks>A document that holds several OMM messages (#679), or an OMM with several segments, headers, bodies,
+    /// metadata or data sections, or blocks of a data section, is not loaded: false, with a <c>PARSE_ERROR</c>.</remarks>
     public static bool TryLoadFromFile(
         string filePath,
         out Omm omm,

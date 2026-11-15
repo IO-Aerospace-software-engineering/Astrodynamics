@@ -135,7 +135,9 @@ public class OpmValidator
     /// </summary>
     /// <remarks>
     /// The content is that of the one OPM message of the file, read by the reader: a file that holds several OPM messages
-    /// is invalid, with a "Failed to parse OPM" error naming their number (#679).
+    /// is invalid, with a "Failed to parse OPM" error naming their number (#679), and so is one whose OPM holds several
+    /// segments, headers, bodies, metadata or data sections, or blocks of a data section, which the schema validation of an
+    /// unqualified file does not see.
     /// </remarks>
     /// <param name="filePath">Path to the OPM XML file.</param>
     /// <returns>Validation result containing all errors and warnings.</returns>

@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using IO.Astrodynamics.CCSDS.Common;
 using IO.Astrodynamics.CCSDS.OMM;
 using Xunit;
 
@@ -456,6 +457,99 @@ namespace IO.Astrodynamics.Tests.CCSDS.OMM
 
             Assert.Equal("ISS (ZARYA)", _reader.ReadFromString(xml).ObjectName);
             Assert.Equal("OPM SAT", new IO.Astrodynamics.CCSDS.OPM.OpmReader().ReadFromString(xml).ObjectName);
+        }
+
+        #endregion
+
+        #region Several segments or structural elements
+
+        // An OMM holds one header and one body, the body one segment, the segment one metadata and one data section, and
+        // the data at most one of each block (NDM/XML 4.0.0, ndmxml-4.0.0-omm-3.0.xsd: ommType, ommBody, ommSegment,
+        // ommData; CCSDS 502.0-B-3)
+        private static Omm FullOmm()
+        {
+            var meanElements = MeanElements.CreateWithMeanMotion(
+                new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), 15.5, 0.001, 51.6, 10.0, 20.0, 30.0);
+            var tleParameters = TleParameters.CreateWithBStarAndDDot(1e-4, 0.0, 0.0, noradCatalogId: 12345,
+                elementSetNumber: 1, revolutionNumberAtEpoch: 10);
+            var covariance = new CovarianceMatrix(
+                cxX: 1.0e-6,
+                cyX: 0.0, cyY: 1.0e-6,
+                czX: 0.0, czY: 0.0, czZ: 1.0e-6,
+                cxDotX: 0.0, cxDotY: 0.0, cxDotZ: 0.0, cxDotXDot: 1.0e-9,
+                cyDotX: 0.0, cyDotY: 0.0, cyDotZ: 0.0, cyDotXDot: 0.0, cyDotYDot: 1.0e-9,
+                czDotX: 0.0, czDotY: 0.0, czDotZ: 0.0, czDotXDot: 0.0, czDotYDot: 0.0, czDotZDot: 1.0e-9);
+            return new Omm(CcsdsHeader.Create("TEST"),
+                new OmmMetadata("SAT", "2020-001A", "EARTH", "TEME", "UTC", "SGP4"),
+                new OmmData(meanElements, new SpacecraftParameters(mass: 100.0, dragArea: 1.0, dragCoeff: 2.2), tleParameters,
+                    covariance, new UserDefinedParameters(new[] { new UserDefinedParameter("COLOR", "BLUE") })));
+        }
+
+        [Fact]
+        public void TwoSegmentOmm_SchemaBoundsTheSegmentToOne()
+        {
+            // The qualified copy of the two-segment document is rejected by the embedded SANA NDM/XML 4.0.0 schema, its
+            // one-segment original accepted: the schema bounds the segment to one
+            var validator = new OmmValidator();
+            var original = validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(File.ReadAllText(NdmDocuments.IssOmmPath), "omm"));
+            Assert.True(original.IsValid, string.Join("; ", original.Errors.Select(e => e.Message)));
+            var qualified = validator.ValidateSchemaFromXml(NdmDocuments.QualifiedMessage(NdmDocuments.TwoSegmentOmm(), "omm"));
+            Assert.False(qualified.IsValid);
+            Assert.Contains(qualified.Errors, e => e.Message.Contains("segment"));
+
+            // The unqualified document, Space-Track's form and the writer's, matches no declaration of the qualified schemas:
+            // schema validation passes it with warnings, so the reader is the one that rejects it under default validation
+            Assert.True(validator.ValidateSchemaFromXml(NdmDocuments.TwoSegmentOmm()).IsValid);
+        }
+
+        [Theory]
+        [InlineData("OmmReader.ReadFromString")]
+        [InlineData("Omm.LoadFromString")]
+        [InlineData("Omm.LoadFromString without schema validation")]
+        [InlineData("Omm.LoadFromFile")]
+        [InlineData("Omm.LoadFromStream")]
+        [InlineData("OmmReader.ReadFromFile")]
+        [InlineData("OmmReader.ReadFromStream")]
+        public void Read_OmmWithTwoSegments_Throws(string path)
+        {
+            var xml = NdmDocuments.TwoSegmentOmm();
+
+            Action read = path switch
+            {
+                "OmmReader.ReadFromString" => () => _reader.ReadFromString(xml),
+                "Omm.LoadFromString" => () => Omm.LoadFromString(xml),
+                "Omm.LoadFromString without schema validation" => () => Omm.LoadFromString(xml, validateSchema: false),
+                "Omm.LoadFromStream" => () => Omm.LoadFromStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))),
+                "OmmReader.ReadFromFile" => () => NdmDocuments.WithTempFile(xml, file => _reader.ReadFromFile(file)),
+                "OmmReader.ReadFromStream" => () => _reader.ReadFromStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(xml))),
+                _ => () => NdmDocuments.WithTempFile(xml, file => Omm.LoadFromFile(file))
+            };
+
+            // Before: the first segment, ISS (ZARYA), the second dropped
+            var ex = Assert.Throws<OmmParseException>(read);
+            Assert.Contains("2 segment elements", ex.Message);
+        }
+
+        [Theory]
+        [InlineData("header")]
+        [InlineData("body")]
+        [InlineData("body/segment/metadata")]
+        [InlineData("body/segment/data")]
+        [InlineData("body/segment/data/meanElements")]
+        [InlineData("body/segment/data/spacecraftParameters")]
+        [InlineData("body/segment/data/tleParameters")]
+        [InlineData("body/segment/data/covarianceMatrix")]
+        [InlineData("body/segment/data/userDefinedParameters")]
+        public void Read_OmmWithDuplicateStructuralElement_Throws(string path)
+        {
+            var xml = FullOmm().ToXml();
+            Assert.Equal("SAT", _reader.ReadFromString(xml).ObjectName);
+            var duplicated = NdmDocuments.WithDuplicatedElement(xml, "omm", path);
+
+            var ex = Assert.Throws<OmmParseException>(() => _reader.ReadFromString(duplicated));
+            Assert.Contains($"2 {path.Split('/')[^1]} elements", ex.Message);
+            var exLoad = Assert.Throws<OmmParseException>(() => Omm.LoadFromString(duplicated, validateSchema: false, validateContent: false));
+            Assert.Contains($"2 {path.Split('/')[^1]} elements", exLoad.Message);
         }
 
         #endregion

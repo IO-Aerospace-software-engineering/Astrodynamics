@@ -17,7 +17,11 @@ namespace IO.Astrodynamics.CCSDS.OMM;
 /// <remarks>
 /// Supports both standalone OMM documents and OMM messages wrapped in NDM containers. A document holds one OMM message:
 /// one that holds several (a catalog NDM) throws <see cref="OmmParseException"/>, as before 11.0.0 it returned the first
-/// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored.
+/// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored. The message holds one header and one
+/// body, the body one segment, the segment one metadata and one data section, and the data at most one of each block
+/// (NDM/XML 4.0.0; CCSDS 502.0-B-3): a second one throws <see cref="OmmParseException"/>, where before 11.0.0 the
+/// first was read and the others dropped, a whole second segment included. The schema validation of an unqualified
+/// document, the writer's and Space-Track's form, checks none of this, so the reader is the guard.
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OmmReader
@@ -31,7 +35,8 @@ public class OmmReader
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentException">Thrown when the file path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
-    /// <exception cref="OmmParseException">Thrown when the file cannot be parsed, or holds several OMM messages.</exception>
+    /// <exception cref="OmmParseException">Thrown when the file cannot be parsed, holds several OMM messages, or an OMM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
     public Omm ReadFromFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -50,7 +55,8 @@ public class OmmReader
     /// <param name="stream">The stream containing the OMM XML.</param>
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
-    /// <exception cref="OmmParseException">Thrown when the stream cannot be parsed, or holds several OMM messages.</exception>
+    /// <exception cref="OmmParseException">Thrown when the stream cannot be parsed, holds several OMM messages, or an OMM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
     public Omm ReadFromStream(Stream stream)
     {
         if (stream == null)
@@ -73,7 +79,8 @@ public class OmmReader
     /// <param name="xml">The XML string containing the OMM.</param>
     /// <returns>The parsed OMM object.</returns>
     /// <exception cref="ArgumentException">Thrown when XML string is null or empty.</exception>
-    /// <exception cref="OmmParseException">Thrown when the XML cannot be parsed, or holds several OMM messages.</exception>
+    /// <exception cref="OmmParseException">Thrown when the XML cannot be parsed, holds several OMM messages, or an OMM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
     public Omm ReadFromString(string xml)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -182,25 +189,25 @@ public class OmmReader
 
         // Parse optional spacecraft parameters
         SpacecraftParameters spacecraftParams = null;
-        var spacecraftElement = GetOptionalElement(dataElement, "spacecraftParameters");
+        var spacecraftElement = GetOptionalBlock(dataElement, "spacecraftParameters");
         if (spacecraftElement != null)
             spacecraftParams = ParseSpacecraftParameters(spacecraftElement);
 
         // Parse optional TLE parameters
         TleParameters tleParams = null;
-        var tleElement = GetOptionalElement(dataElement, "tleParameters");
+        var tleElement = GetOptionalBlock(dataElement, "tleParameters");
         if (tleElement != null)
             tleParams = ParseTleParameters(tleElement);
 
         // Parse optional covariance matrix
         CovarianceMatrix covariance = null;
-        var covarianceElement = GetOptionalElement(dataElement, "covarianceMatrix");
+        var covarianceElement = GetOptionalBlock(dataElement, "covarianceMatrix");
         if (covarianceElement != null)
             covariance = ParseCovarianceMatrix(covarianceElement);
 
         // Parse optional user-defined parameters
         UserDefinedParameters userDefined = null;
-        var userDefinedElement = GetOptionalElement(dataElement, "userDefinedParameters");
+        var userDefinedElement = GetOptionalBlock(dataElement, "userDefinedParameters");
         if (userDefinedElement != null)
             userDefined = ParseUserDefinedParameters(userDefinedElement);
 
@@ -389,12 +396,20 @@ public class OmmReader
 
     #region Helper Methods
 
-    private XElement GetRequiredElement(XElement parent, string localName)
+    // A header, body, segment, metadata, data section or required data block: one, which the schema bounds to one; none
+    // or several throw, a second one no longer dropped silently
+    private static XElement GetRequiredElement(XElement parent, string localName)
     {
-        var element = GetOptionalElement(parent, localName);
+        var element = GetOptionalBlock(parent, localName);
         if (element == null)
             throw new OmmParseException($"Required element '{localName}' not found in '{parent.Name.LocalName}'.");
         return element;
+    }
+
+    // An optional data block, which the schema bounds to one: null for none, several throw
+    private static XElement GetOptionalBlock(XElement parent, string localName)
+    {
+        return CcsdsElements.AtMostOne(parent, localName, "OMM", message => new OmmParseException(message));
     }
 
     private XElement GetOptionalElement(XElement parent, string localName)

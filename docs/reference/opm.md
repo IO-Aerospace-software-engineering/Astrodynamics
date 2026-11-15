@@ -33,6 +33,15 @@ another type beside it are ignored). A document that holds several OPMs, such as
 `OpmValidator.ValidateFile` reports it invalid (#679); before 11.0.0 the first one was read. Split such a document into
 one OPM per document.
 
+The OPM itself holds one header and one body, the body one segment, the segment one metadata and one data section, and
+the data at most one of each block, the maneuvers excepted (NDM/XML 4.0.0, `ndmxml-4.0.0-opm-3.0.xsd`; CCSDS 502.0-B-3). An OPM
+with a second segment, or a second header, body, metadata, data section or block, throws `OpmParseException` naming
+the element and its count, with or without `validateSchema`; `TryLoadFromFile` returns false with a `PARSE_ERROR` and
+`OpmValidator.ValidateFile` reports it invalid. Before 11.0.0 the first one was read and the others dropped, a whole
+second segment included. The schema validation does not catch it for an unqualified document (the form the writer and
+Space-Track write), which matches no declaration of the qualified schemas, so the reader is the guard. Split such a
+document into one message per segment.
+
 ### Saving
 
 | Method | Description |

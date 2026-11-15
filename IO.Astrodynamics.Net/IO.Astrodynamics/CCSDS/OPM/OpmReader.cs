@@ -17,7 +17,11 @@ namespace IO.Astrodynamics.CCSDS.OPM;
 /// <remarks>
 /// Supports both standalone OPM documents and OPM messages wrapped in NDM containers. A document holds one OPM message:
 /// one that holds several (a catalog NDM) throws <see cref="OpmParseException"/>, as before 11.0.0 it returned the first
-/// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored.
+/// one (#679); messages of another type beside it (an OPM beside an OMM) are ignored. The message holds one header and one
+/// body, the body one segment, the segment one metadata and one data section, and the data at most one of each block
+/// (NDM/XML 4.0.0; CCSDS 502.0-B-3), the maneuvers excepted: a second one throws <see cref="OpmParseException"/>, where before 11.0.0 the
+/// first was read and the others dropped, a whole second segment included. The schema validation of an unqualified
+/// document, the writer's and Space-Track's form, checks none of this, so the reader is the guard.
 /// Conforms to CCSDS 502.0-B-3 (ODM Blue Book) and CCSDS 505.0-B-3 (NDM/XML Blue Book).
 /// </remarks>
 public class OpmReader
@@ -29,7 +33,8 @@ public class OpmReader
     /// <returns>The parsed Opm object.</returns>
     /// <exception cref="ArgumentException">Thrown when the file path is null or empty.</exception>
     /// <exception cref="FileNotFoundException">Thrown when the file does not exist.</exception>
-    /// <exception cref="OpmParseException">Thrown when the file cannot be parsed, or holds several OPM messages.</exception>
+    /// <exception cref="OpmParseException">Thrown when the file cannot be parsed, holds several OPM messages, or an OPM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
     public Opm ReadFromFile(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -48,7 +53,8 @@ public class OpmReader
     /// <param name="stream">The stream containing the OPM XML.</param>
     /// <returns>The parsed Opm object.</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null.</exception>
-    /// <exception cref="OpmParseException">Thrown when the stream cannot be parsed, or holds several OPM messages.</exception>
+    /// <exception cref="OpmParseException">Thrown when the stream cannot be parsed, holds several OPM messages, or an OPM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
     public Opm ReadFromStream(Stream stream)
     {
         if (stream == null)
@@ -71,7 +77,8 @@ public class OpmReader
     /// <param name="xml">The XML string containing the OPM.</param>
     /// <returns>The parsed Opm object.</returns>
     /// <exception cref="ArgumentException">Thrown when XML string is null or empty.</exception>
-    /// <exception cref="OpmParseException">Thrown when the XML cannot be parsed, or holds several OPM messages.</exception>
+    /// <exception cref="OpmParseException">Thrown when the XML cannot be parsed, holds several OPM messages, or an OPM
+    /// with several segments, headers, bodies, metadata or data sections, or blocks of a data section.</exception>
     public Opm ReadFromString(string xml)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -180,14 +187,14 @@ public class OpmReader
 
         // Parse optional Keplerian elements
         OpmKeplerianElements keplerianElements = null;
-        var keplerianElement = GetOptionalElement(dataElement, "keplerianElements");
+        var keplerianElement = GetOptionalBlock(dataElement, "keplerianElements");
         if (keplerianElement != null)
             keplerianElements = ParseKeplerianElements(keplerianElement);
 
         // Parse optional spacecraft parameters
         double? mass = null, solarRadArea = null, solarRadCoeff = null, dragArea = null, dragCoeff = null;
         IReadOnlyList<string> spacecraftComments = null;
-        var spacecraftElement = GetOptionalElement(dataElement, "spacecraftParameters");
+        var spacecraftElement = GetOptionalBlock(dataElement, "spacecraftParameters");
         if (spacecraftElement != null)
         {
             spacecraftComments = GetComments(spacecraftElement);
@@ -206,7 +213,7 @@ public class OpmReader
 
         // Parse optional covariance matrix
         CovarianceMatrix covariance = null;
-        var covarianceElement = GetOptionalElement(dataElement, "covarianceMatrix");
+        var covarianceElement = GetOptionalBlock(dataElement, "covarianceMatrix");
         if (covarianceElement != null)
             covariance = ParseCovarianceMatrix(covarianceElement);
 
@@ -220,7 +227,7 @@ public class OpmReader
 
         // Parse optional user-defined parameters
         OpmUserDefinedParameters userDefinedParameters = null;
-        var userDefinedElement = GetOptionalElement(dataElement, "userDefinedParameters");
+        var userDefinedElement = GetOptionalBlock(dataElement, "userDefinedParameters");
         if (userDefinedElement != null)
             userDefinedParameters = ParseUserDefinedParameters(userDefinedElement);
 
@@ -363,12 +370,20 @@ public class OpmReader
 
     #region Helper Methods
 
-    private XElement GetRequiredElement(XElement parent, string localName)
+    // A header, body, segment, metadata, data section or required data block: one, which the schema bounds to one; none
+    // or several throw, a second one no longer dropped silently
+    private static XElement GetRequiredElement(XElement parent, string localName)
     {
-        var element = GetOptionalElement(parent, localName);
+        var element = GetOptionalBlock(parent, localName);
         if (element == null)
             throw new OpmParseException($"Required element '{localName}' not found in '{parent.Name.LocalName}'.");
         return element;
+    }
+
+    // An optional data block, which the schema bounds to one: null for none, several throw
+    private static XElement GetOptionalBlock(XElement parent, string localName)
+    {
+        return CcsdsElements.AtMostOne(parent, localName, "OPM", message => new OpmParseException(message));
     }
 
     private XElement GetOptionalElement(XElement parent, string localName)
