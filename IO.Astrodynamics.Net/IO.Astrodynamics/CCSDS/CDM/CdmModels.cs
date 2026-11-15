@@ -106,6 +106,18 @@ public sealed record CdmParticipantMetadata
 
     public bool? EarthTides { get; init; }
 
+    /// <summary>
+    /// <c>INTRACK_THRUST</c>: whether in-track thrust modeling was used for the orbit determination of the object (CCSDS
+    /// 508.0-B-1 Cor. 2, Table 3-3, optional), not whether the object can maneuver, which <see cref="Maneuverable"/> states.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="IO.Astrodynamics.SSA.EncounterCase.ToCdm"/> infers <c>false</c> (<c>NO</c>) for a participant whose
+    /// covariance the library propagated to TCA, whose force model holds no thrust, as it fills the other force-model
+    /// keywords; otherwise it infers nothing and the keyword is omitted, the library running no orbit determination. Set
+    /// it in <see cref="CdmExportOptions.ProtectedParticipantMetadata"/> or
+    /// <see cref="CdmExportOptions.SecondaryParticipantMetadata"/> to state the value of an OD; <c>null</c> keeps the
+    /// inferred value (#684: <c>true</c> for a spacecraft with an engine before).
+    /// </remarks>
     public bool? IntrackThrust { get; init; }
 }
 

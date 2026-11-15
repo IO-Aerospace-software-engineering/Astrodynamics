@@ -85,7 +85,10 @@ public class CdmTests
         Assert.Equal("EARTH", protectedSegment.Metadata.OrbitCenter);
         Assert.Equal(CdmReferenceFrame.Gcrf, protectedSegment.Metadata.ReferenceFrame);
         Assert.True(protectedSegment.Metadata.SolarRadPressure);
-        Assert.False(protectedSegment.Metadata.IntrackThrust);
+        // No OD and no propagated covariance: whether in-track thrust was modeled for the OD is not stated (#684; NO, from
+        // the absent engines, before)
+        Assert.Null(protectedSegment.Metadata.IntrackThrust);
+        Assert.Null(secondarySegment.Metadata.IntrackThrust);
 
         Assert.Equal("41002", secondarySegment.Metadata.ObjectDesignator);
         Assert.Equal("NAIF", secondarySegment.Metadata.CatalogName);
@@ -395,6 +398,73 @@ public class CdmTests
     }
 
     [Fact]
+    public void ToCdm_ParticipantsWithEngines_OmitIntrackThrust()
+    {
+        // Arrange: #684's case, an engine on both spacecraft, nothing propagated by the library
+        var encounter = CreateManualEncounterCase(withEngines: true);
+
+        // Act
+        var cdm = encounter.ToCdm(new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 30, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-684"
+        });
+        var xml = cdm.WriteToString();
+
+        // Assert: INTRACK_THRUST states "whether in-track thrust modeling was used for the OD of the object" (CCSDS 508.0-B-1
+        // Cor. 2, Table 3-3, Obligatory No; Annex A2.1.5 item 39, status O), not the capability MANEUVERABLE states: the
+        // library ran no OD, so the keyword is omitted (#684: YES from the engines); MANEUVERABLE stays YES for object 2
+        Assert.Null(cdm.Segments[0].Metadata!.IntrackThrust);
+        Assert.Null(cdm.Segments[1].Metadata!.IntrackThrust);
+        Assert.Equal(CdmManeuverable.Yes, cdm.Segments[1].Metadata!.Maneuverable);
+        Assert.Empty(XDocument.Parse(xml).Descendants().Where(e => e.Name.LocalName == "INTRACK_THRUST"));
+        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
+        var reread = Cdm.ReadFromString(xml);
+        Assert.Null(reread.Segments[0].Metadata!.IntrackThrust);
+        Assert.Null(reread.Segments[1].Metadata!.IntrackThrust);
+    }
+
+    [Theory]
+    [InlineData(1, true)]
+    [InlineData(1, false)]
+    [InlineData(1, null)]
+    [InlineData(2, true)]
+    [InlineData(2, false)]
+    [InlineData(2, null)]
+    public void ToCdm_IntrackThrustOverride_SetsEitherValueAndNullKeepsTheDefault(int participant, bool? value)
+    {
+        // Arrange: both spacecraft with an engine, the value of one participant given (decision of S. Guillet, 2026-11-13,
+        // #684: the caller states the OD's value; a null override keeps the default, omitted without a propagated covariance)
+        var encounter = CreateManualEncounterCase(withEngines: true);
+        var metadata = new CdmParticipantMetadata { IntrackThrust = value };
+        var options = new CdmExportOptions
+        {
+            CreationDateUtc = new DateTime(2026, 3, 15, 10, 30, 0, DateTimeKind.Utc),
+            Originator = "IO.Astrodynamics.Tests",
+            MessageId = "CDM-UNIT-684-OVERRIDE",
+            ProtectedParticipantMetadata = participant == 1 ? metadata : null,
+            SecondaryParticipantMetadata = participant == 2 ? metadata : null
+        };
+
+        // Act
+        var cdm = encounter.ToCdm(options);
+        var xml = cdm.WriteToString();
+
+        // Assert: YES or NO as given, read back; omitted for null; the other participant omitted
+        int given = participant - 1;
+        Assert.Equal(value, cdm.Segments[given].Metadata!.IntrackThrust);
+        Assert.Null(cdm.Segments[1 - given].Metadata!.IntrackThrust);
+        var written = XDocument.Parse(xml).Descendants().Where(e => e.Name.LocalName == "INTRACK_THRUST")
+            .Select(e => e.Value).ToArray();
+        Assert.Equal(value switch { true => new[] { "YES" }, false => new[] { "NO" }, _ => Array.Empty<string>() }, written);
+        var schemaValidation = Cdm.ValidateSchemaFromXml(xml);
+        Assert.True(schemaValidation.IsValid, FormatValidationIssues(schemaValidation.Issues));
+        Assert.Equal(value, Cdm.ReadFromString(xml).Segments[given].Metadata!.IntrackThrust);
+    }
+
+    [Fact]
     public void ToCdm_SameStateInIcrfAndGcrf_ExportsTheSameContent()
     {
         // Frame.ICRF (SPICE J2000) and Frame.GCRF share the ICRF axes, so the GCRF label of the CDM is exact for both.
@@ -468,7 +538,7 @@ public class CdmTests
         Assert.Contains("covariance", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static EncounterCase CreateManualEncounterCase()
+    private static EncounterCase CreateManualEncounterCase(bool withEngines = false)
     {
         var earth = CreateEarth();
         var epoch = TimeSystem.Time.J2000TDB.AddMinutes(5.0);
@@ -524,6 +594,15 @@ public class CdmTests
             cosparId: "2026-001B",
             solarRadiationCoeff: 1.1,
             hardBodyRadius: 3.0);
+        if (withEngines)
+        {
+            foreach (var spacecraft in new[] { protectedSpacecraft, secondarySpacecraft })
+            {
+                var tank = new FuelTank("tank" + -spacecraft.NaifId, "model", "sn1", 20.0, 20.0);
+                spacecraft.AddFuelTank(tank);
+                spacecraft.AddEngine(new Engine("engine" + -spacecraft.NaifId, "model", "sn1", 300.0, 10.0, tank));
+            }
+        }
 
         var relativePosition = secondaryState.Position - protectedState.Position;
         var relativeVelocity = secondaryState.Velocity - protectedState.Velocity;

@@ -2010,6 +2010,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   with System.Xml.Linq, independently of the readers, and reach every path: `Load*` with and without schema
   validation, `Load*` and `ReadFrom*` from a file, a string and a stream, `TryLoadFromFile`, `ValidateFile` and
   `Cdm.ReadFromFile`/`ReadFromString`/`ReadFromStream`.
+- **The CDM wrote `INTRACK_THRUST` from the engines of a spacecraft** ([#684](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/684)). `EncounterCase.ToCdm` set
+  `INTRACK_THRUST` of either object to `YES` for a spacecraft with an engine and `NO` for one without, its capability,
+  where CCSDS 508.0-B-1 Cor. 2 (Table 3-3) defines it as whether in-track thrust modeling was used for the OD of the
+  object (the examples of §3.6.3 and §4.4 have `MANEUVERABLE = YES` with `INTRACK_THRUST = NO`), and a `null` in
+  `ProtectedParticipantMetadata`/`SecondaryParticipantMetadata` could not clear it. Under the same signatures (decided
+  by S. Guillet, 2026-11-13), the keyword is `NO` for a covariance the library propagated to TCA, whose force model
+  holds no thrust, with the other force-model keywords, and omitted otherwise, as `EARTH_TIDES` is; a value given in
+  the options is written, `null` keeping the inferred one. `MANEUVERABLE` is unchanged. `CdmTests` checks the case of
+  the issue (an engine on both spacecraft: no `INTRACK_THRUST` element, `MANEUVERABLE` still `YES`, schema-valid, read
+  back null) and each override of either object; `CdmPropagatedCovarianceTests` checks `NO` for two propagated
+  covariances, a secondary with an engine included, and the keyword omitted for the covariance held in RTN.
 
 **Changed**
 
@@ -2672,6 +2683,12 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Omm`/`Opm.TryLoadFromFile` return false with a `PARSE_ERROR`; `OmmValidator`/`OpmValidator.ValidateFile` report the
   file invalid. A document with one message of the type, alone or beside messages of other types, loads as before. Migration: split the NDM into one `<omm>`, `<opm>` or `<cdm>` per
   document.
+- **Breaking: the CDM writes `INTRACK_THRUST` only for a covariance the library propagated** ([#684](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/684), Fixed above):
+  the text of an exported CDM changes. For a participant whose covariance the library did not propagate the keyword is
+  omitted, and `Metadata.IntrackThrust` of the result of `ToCdm` is null, where a spacecraft with an engine got `YES`
+  and one without `NO`; for a propagated covariance it is `NO`, even with engines. Migration: set
+  `CdmExportOptions.ProtectedParticipantMetadata.IntrackThrust` or `SecondaryParticipantMetadata.IntrackThrust` to
+  state the value of an OD.
 - **Breaking: the managed threshold searches return the windows, gaps and crossings shorter than the step**
   ([#678](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/678), Fixed above). Under the same signatures, the searches the library
   runs (`FindWindowsOnDistanceConstraint`, `FindWindowsOnCoordinateConstraint` and `FindWindowsOnIlluminationConstraint`

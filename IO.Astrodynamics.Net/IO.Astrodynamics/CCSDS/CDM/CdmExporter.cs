@@ -371,7 +371,11 @@ internal static class CdmExporter
             NBodyPerturbations = forceModel?.NBodyPerturbations,
             SolarRadPressure = forceModel?.SolarRadiationPressure ??
                                (source is Spacecraft spacecraft ? spacecraft.SolarRadiationCoeff > 0.0 : null),
-            IntrackThrust = source is Spacecraft craft ? craft.Engines.Count > 0 : null
+            // Whether in-track thrust modeling was used for the OD (CCSDS 508.0-B-1 Cor. 2, Table 3-3), not the capability
+            // MANEUVERABLE states: NO for a covariance this library propagated, whose force model holds no thrust; omitted
+            // otherwise, the library running no OD (#684, decided by S. Guillet, 2026-11-13: YES for a spacecraft with an
+            // engine before)
+            IntrackThrust = forceModel?.IntrackThrust
         };
     }
 

@@ -14,7 +14,7 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 /// <summary>
 /// The force model of an RK7(8) propagation in the words of the CDM metadata (CCSDS 508.0-B-1, §3.3:
 /// <c>GRAVITY_MODEL</c>, <c>ATMOSPHERIC_MODEL</c>, <c>N_BODY_PERTURBATIONS</c>, <c>SOLAR_RAD_PRESSURE</c>), from the
-/// forces the propagation actually used (step 10, E5).
+/// forces the propagation actually used (step 10, E5), and <c>INTRACK_THRUST</c>, which it never models (#684).
 /// </summary>
 /// <param name="GravityModel">The gravity of the central body: <c>EGM2008: nD nO</c> for the harmonics of EGM2008 to
 /// degree and order n with its own constants (the Earth's default), <c>GEOPOTENTIAL: nD nO</c> for other harmonics, as
@@ -26,6 +26,13 @@ namespace IO.Astrodynamics.CCSDS.CDM;
 internal sealed record CdmForceModel(string GravityModel, string AtmosphericModel, string NBodyPerturbations,
     bool SolarRadiationPressure)
 {
+    /// <summary>
+    /// Whether in-track thrust modeling was used (CCSDS 508.0-B-1 Cor. 2, Table 3-3, <c>INTRACK_THRUST</c>): never, the
+    /// forces of an RK7(8) propagation holding no thrust model; an impulsive maneuver it executed is no thrust model in that
+    /// sense, and the CDM has no keyword for it (#684).
+    /// </summary>
+    internal bool IntrackThrust => false;
+
     /// <summary>
     /// The force model of the dynamics of a propagation, its central body being <paramref name="dynamics"/>' observer.
     /// </summary>
