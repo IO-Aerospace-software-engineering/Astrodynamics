@@ -130,6 +130,22 @@ coordinates, also when its name is that of a station whose frame a loaded kernel
 earth, coordinates)` and `DSS-13_TOPO`); the CSPICE coordinate search in that frame (a kernel spacecraft taking part)
 returns no window ([#558](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/558)).
 
+A site from the kernels (`new Site(13, "DSS-13", earth)`) has the frame the loaded kernels define for its id,
+1000000 + NaifId (`DSS-13_TOPO`, 1399013, of `earth_topo_201023.tf`), on every path
+([#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690)): SPICE reads it by the name the
+kernels give that id, whatever the name of the site (`new Site(13, "GOLDSTONE", earth)` reads `DSS-13_TOPO`), and the
+library rotates by it (`ToFrame(site.Frame)`, `GetHorizontalCoordinates`, the managed coordinate searches), read from
+SPICE at each call. Before 11.0.0 the library rotated by a frame it built from `Planetodetic`, the position of the
+station at J2000 TDB on the `pck00011` ellipsoid, while SPICE read the kernel frame by name: the two departed by
+7.8e-8 rad for DSS-13, most of it the epoch (0.41 m of plate motion between J2000 and the 2020-10-23 of the frame
+kernel, 0.47 m by 2024), 2.1e-9 rad of it the spheroid; a site named otherwise than its kernel frame threw
+SPICE(UNKNOWNFRAME) on a read by name. A site from the kernels whose frame no loaded kernel defines keeps the frame of
+its `Planetodetic`, and a read by name in it still throws SPICE(UNKNOWNFRAME). `Planetodetic` and the illumination
+angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
+`Planetodetic`, the normal `gfilum_c` takes for the site in `FindWindowsOnIlluminationConstraint` (#488), not the
+zenith of the kernel frame. To keep the frame of the coordinates at J2000, build the site from them:
+`new Site(id, name, body, kernelSite.Planetodetic)`.
+
 ### Example
 
 ```csharp
@@ -163,9 +179,10 @@ normal to the ellipsoid through the point, and the altitude is measured along it
 are covered; the flattening must be below 1. The conversion from Cartesian coordinates is the closed form of Vermeille
 (2002) with the changes of Karney (2011), without iteration; both directions agree with CSPICE `georec_c`/`recgeo_c` to
 about 1e-15 (see [Validation](../guides/validation.md#reference-validations)). A custom site is placed by this
-conversion on the ellipsoid of its body; the topocentric frame of a site is built from its geodetic coordinates on that
-same ellipsoid, so it can differ slightly from a frame kernel built on another spheroid (DSS-13: 9.5e-7° in latitude
-between the `pck00011` ellipsoid and the WGS84 spheroid of `earth_topo_201023.tf`).
+conversion on the ellipsoid of its body; the topocentric frame of a site built from coordinates is built from them on
+that same ellipsoid, so it can differ slightly from a frame kernel built on another spheroid (DSS-13: 9.5e-7° in
+latitude between the `pck00011` ellipsoid and the WGS84 spheroid of `earth_topo_201023.tf`, 2.1e-9 rad of the axes). A
+site from the kernels has the kernel frame of its id ([Reads in the site's frame](#reads-in-the-sites-frame), #690).
 
 ### Horizontal
 

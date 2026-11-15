@@ -2039,6 +2039,28 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `EphemerisTests` compares the command from 391013, 399000, 100500, 301001 and 395013 with `SpiceAPI.ReadEphemeris`
   (same exception and message), the site of 399013 with the observer of `SpiceAPI.ReadEphemeris` (DSS-13), and
   `sub-point` of 391013, 399000 and 100500 with `CelestialItem.Create`.
+- **The frame of a site from the kernels had two orientations** ([#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690)). SPICE read the
+  frame of a kernel site by its name (`DSS-13_TOPO` of `earth_topo_201023.tf`, built on the coordinates of the station
+  at 2020-10-23 on the WGS84 spheroid) in `spkezr_c` and `gfposc_c`, while the library rotated by a frame it built from
+  `Site.Planetodetic`, the position of the station at J2000 TDB on the `pck00011` ellipsoid (`ToFrame(site.Frame)`,
+  `GetHorizontalCoordinates`, the managed coordinate searches): 7.76e-8 rad apart for DSS-13 at 2000-01-02 and at
+  2024-03-01, 7.72e-8 rad of it the 0.41 m of plate motion between J2000 and 2020-10-23 and 2.1e-9 rad the spheroid;
+  the Moon by name and rotated 7.4e-8 to 7.8e-8 rad apart, the elevations 6.1e-8 rad. A kernel site named otherwise
+  than its kernel frame (`new Site(13, "GOLDSTONE", earth)`) threw SPICE(UNKNOWNFRAME) (`'GOLDSTONE_TOPO'` not
+  recognized) on a read by name. `SpiceAPI.SpiceFrameName` now hands the frame of a kernel site by the name the loaded
+  kernels give its id, 1000000 + NaifId (`frmnam_c`, as for a kernel spacecraft since #676), and its own name when
+  none does; `SiteFrame.GetStateOrientationToICRF` of a kernel site whose frame id the loaded kernels define is
+  SPICE's transformation of that frame, read at each call and not stored (internal `SpiceAPI.KernelDefinesFrame`); the
+  illumination angles (`IlluminationIncidence`, `IlluminationEmission`) take the normal of the ellipsoid at
+  `Planetodetic`, the normal `gfilum_c` takes for the site, so they keep agreeing with
+  `FindWindowsOnIlluminationConstraint`. No C++ change. `FrameTests` checks the frame of DSS-13 against SPICE's
+  `DSS-13_TOPO` (0 rad, angular velocity 0) and against the closed form of `TKFRAME_1399013_ANGLES` (2.98e-16 rad,
+  threshold 6.0e-16 rad provisional) and the Moon from GOLDSTONE against `spkezr_c` in `DSS-13_TOPO` (2.1e-16 rad);
+  `SiteTests` the horizontal coordinates against `spkezr_c` in `DSS-13_TOPO` by name (1.6e-16 rad, threshold 3.2e-16 rad
+  provisional) and the literals of `tools/geodetic_reference/dss13_topo.c` in `DSS-13_TOPO`; `SiteTests`,
+  `GeometryFinderTests` and `KernelWindowSearchTests` the managed searches of the kernel site against `gfposc_c` in
+  `DSS-13_TOPO` (`tools/geometry_reference`, regenerated: the Moon's Z and elevation extremes, the LEO elevation, 1.2e-7
+  s two-body and 2.4e-7 s RK7(8)), where they compared with a reference in the frame the library built.
 
 **Changed**
 
@@ -2726,6 +2748,17 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   and `sub-point` no longer calls it a site. A site is named by its SPICE name (DSS-13), not `site<id>`. The printed
   states do not move. Migration: none for a valid site identifier; a script that matched the name `site<id>` or the
   former exceptions takes the SPICE name and the library's exceptions.
+- **Breaking: a site from the kernels takes the frame of its kernels** ([#690](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/690), Fixed above). A
+  site from the kernels whose frame id (1000000 + NaifId) the loaded kernels define uses that kernel frame on every
+  path: its managed azimuths and elevations (`GetHorizontalCoordinates`), `ToFrame(site.Frame)` and the managed
+  coordinate searches move by up to 7.8e-8 rad for DSS-13 (azimuth 117.89632135112616° to 117.89631808999324° and
+  elevation 16.790619489720385° to 16.790616801126596° for the Moon at 2000-01-01 12:00 TDB; 1.1e-7 rad in azimuth at an
+  elevation of -63°), 1.07e-5 s on a LEO elevation edge, 1.15e-3 s on a rise or set of the Moon and 1.07e-3 s on its
+  elevation extremes. The reads by name and the CSPICE searches do not move. A kernel site named otherwise than its
+  kernel frame now reads that frame where it threw SPICE(UNKNOWNFRAME). `Site.Planetodetic` and the illumination angles
+  do not move, nor does a site built from coordinates, nor a kernel site whose frame no loaded kernel defines (the frame
+  of its J2000 coordinates, its reads by name still throwing). Migration: to keep the topocentric frame of the J2000
+  coordinates, build the site from them, `new Site(id, name, body, kernelSite.Planetodetic)`.
 
 **Removed**
 

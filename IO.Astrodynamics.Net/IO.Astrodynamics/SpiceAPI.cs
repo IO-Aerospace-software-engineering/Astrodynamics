@@ -197,15 +197,33 @@ public class SpiceAPI
     /// frame kernel, and by its own name when no loaded kernel defines that id (#676; before, always by its own name,
     /// <c>Name + "_FRAME"</c>). The lookup runs at each call, under the lock the caller holds, so a frame kernel loaded
     /// after the spacecraft is built is read. The frame of a managed spacecraft is handed by its name.
+    /// The frame of a site from the kernels (<see cref="Surface.Site.IsSpiceBacked"/>) is handed the same way, by the name
+    /// the loaded kernels give to its id, 1000000 + NaifId (DSS-13_TOPO for DSS-13, whatever the name of the site), and by
+    /// its own name, <c>Name + "_TOPO"</c>, when no loaded kernel defines that id (#690; before, always by its own name, so
+    /// that a site named otherwise than its kernel frame threw SPICE(UNKNOWNFRAME)). The frame of a site built from
+    /// coordinates is the library's (<see cref="ManagedReadFrame"/>).
     /// </remarks>
     internal static string SpiceFrameName(Frame frame)
     {
-        if (frame is Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: true, Id: { } id })
+        if (frame is Body.Spacecraft.SpacecraftFrame { Spacecraft.IsSpiceBacked: true } or Surface.SiteFrame { Site.IsSpiceBacked: true } &&
+            frame.Id is { } id)
         {
             return KernelFrameName(id) ?? frame.Name;
         }
 
         return string.Equals(frame.Name, Frame.GCRF.Name, StringComparison.OrdinalIgnoreCase) ? Frame.ICRF.Name : frame.Name;
+    }
+
+    /// <summary>
+    /// Whether the loaded kernels define a frame of id <paramref name="frameId"/> (<c>frmnam_c</c>), read under the lock
+    /// at each call, so that a frame kernel loaded or unloaded since is taken into account (#690).
+    /// </summary>
+    internal static bool KernelDefinesFrame(int frameId)
+    {
+        lock (lockObject)
+        {
+            return KernelFrameName(frameId) != null;
+        }
     }
 
     // The name of the frame of id frameId in the loaded kernels, null when they define none; called under the lock
@@ -235,7 +253,9 @@ public class SpiceAPI
     /// <see cref="Frame.TEME"/> for a frame named TEME (#558); the <see cref="Surface.SiteFrame"/> of a site built from coordinates
     /// and the <see cref="Body.Spacecraft.SpacecraftFrame"/> of a managed spacecraft whose attitude record holds an entry
     /// (#682), which only the library holds. SPICE knows none of these, or, for TEME, the native construction that #451
-    /// replaced. The frame of a site or a spacecraft of the kernels is SPICE's, and so is the frame of a managed spacecraft
+    /// replaced. The frame of a site or a spacecraft of the kernels is SPICE's (handed by the name the kernels give its id,
+    /// <see cref="SpiceFrameName"/>; a <see cref="Surface.SiteFrame"/> of the kernels rotates by that same kernel frame,
+    /// #690), and so is the frame of a managed spacecraft
     /// whose record is empty (never propagated, no orientation added, from a TLE or the TLE propagator): the library holds no
     /// attitude for it, and its name reaches SPICE as before 11.0.0, which reads the frame and C-kernels of that id when they
     /// are loaded (those the library wrote for an earlier object of the id) and rejects the frame otherwise

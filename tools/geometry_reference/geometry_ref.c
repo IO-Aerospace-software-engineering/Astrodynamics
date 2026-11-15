@@ -7,10 +7,10 @@
  *     extrema, the windows within 1000 km of the absolute minimum;
  *   - the distance of the Moon from DSS-13 > 400 000 km over SiteTests' window;
  *   - DSS-13 seen from the Moon in the Moon's frame, declination > 0, 2000-01-01 12:00 to 2000-02-01 12:00 TDB;
- *   - the Moon seen from DSS-13 in the topocentric frame that the library builds (Surface/SiteFrame.cs: north, west and
- *     the geodetic zenith of the station at J2000 TDB on the ellipsoid of pck00011, as tools/geodetic_reference
- *     /dss13_topo.c), 2000-01-01 12:00 to 2000-01-02 12:00 TDB: Z > 0, Z = 0, the local maxima and minima of the
- *     elevation;
+ *   - the Moon seen from DSS-13 in DSS-13_TOPO, the frame of its kernels (earth_topo_201023.tf), which the library takes
+ *     for the frame of a site from the kernels (#690; before, the frame it built from the geodetic coordinates of the
+ *     station at J2000 TDB on the ellipsoid of pck00011), 2000-01-01 12:00 to 2000-01-02 12:00 TDB: Z > 0, Z = 0, the
+ *     local maxima and minima of the elevation;
  *   - the Sun seen from the site of SiteTests.FindWindowsOnIlluminationConstraint (longitude -116.79445837 deg,
  *     latitude 35.24716450 deg, altitude 1070.85059 m on pck00011, as the library places a site given by its
  *     coordinates), elevation > -0.8 deg (an incidence below 90.8 deg), 2021-05-17 12:00 to 2021-05-18 12:00 TDB, without
@@ -150,17 +150,13 @@ int main(int argc, char **argv) {
     coordinate("moon_dss13_declination > 0", "DSS-13", moonFrame, "NONE", "MOON", "RA/DEC", "DECLINATION", ">", 0.0, et0, et2,
                60.0);
 
-    /* The Moon from DSS-13 in the library's frame of the kernel station, on pck00011 at J2000 TDB */
-    double station[3], lt, lon, lat, alt;
-    spkpos_c("DSS-13", et0, "ITRF93", "NONE", "EARTH", station, &lt);
-    recgeo_c(station, radii[0], f, &lon, &lat, &alt);
-    topo_frame("DSS-13_LIB_TOPO", 1399913, 399013, lon, lat);
+    /* The Moon from DSS-13 in the frame of its kernels, DSS-13_TOPO (#690) */
     double day = et0 + 86400.0;
-    coordinate("dss13_moon_z > 0", "MOON", "DSS-13_LIB_TOPO", "NONE", "DSS-13", "RECTANGULAR", "Z", ">", 0.0, et0, day, 60.0);
-    coordinate("dss13_moon_z = 0", "MOON", "DSS-13_LIB_TOPO", "NONE", "DSS-13", "RECTANGULAR", "Z", "=", 0.0, et0, day, 60.0);
-    coordinate("dss13_moon_elevation LOCMAX", "MOON", "DSS-13_LIB_TOPO", "NONE", "DSS-13", "LATITUDINAL", "LATITUDE", "LOCMAX",
+    coordinate("dss13_moon_z > 0", "MOON", "DSS-13_TOPO", "NONE", "DSS-13", "RECTANGULAR", "Z", ">", 0.0, et0, day, 60.0);
+    coordinate("dss13_moon_z = 0", "MOON", "DSS-13_TOPO", "NONE", "DSS-13", "RECTANGULAR", "Z", "=", 0.0, et0, day, 60.0);
+    coordinate("dss13_moon_elevation LOCMAX", "MOON", "DSS-13_TOPO", "NONE", "DSS-13", "LATITUDINAL", "LATITUDE", "LOCMAX",
                0.0, et0, day, 60.0);
-    coordinate("dss13_moon_elevation LOCMIN", "MOON", "DSS-13_LIB_TOPO", "NONE", "DSS-13", "LATITUDINAL", "LATITUDE", "LOCMIN",
+    coordinate("dss13_moon_elevation LOCMIN", "MOON", "DSS-13_TOPO", "NONE", "DSS-13", "LATITUDINAL", "LATITUDE", "LOCMIN",
                0.0, et0, day, 60.0);
 
     /* The site of SiteTests.FindWindowsOnIlluminationConstraint, given by its coordinates */
