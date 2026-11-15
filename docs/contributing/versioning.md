@@ -2216,7 +2216,20 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   the body (`InvalidOperationException`, internal `SpiceAPI.KernelFrameNameOf`). `SiteTests` loads the file written for
   DSS-13 and GOLDSTONE, renamed so that it redefines nothing of `Data/SolarSystem`, and reads its rotation to
   `DSS-13_TOPO` by `pxform` (2.1e-16 rad, threshold 5.0e-16 rad provisional; 7.76e-8 rad before), and rejects a site
-  frame defined relative to J2000.
+  frame defined relative to J2000. A kernel site whose frame id no loaded kernel defines kept the frame of its
+  `Planetodetic` for `ToFrame(site.Frame)`, `GetHorizontalCoordinates` and the managed searches, while an ephemeris read
+  in it reached `spkezr_c` by its own name, `Name + "_TOPO"`, which SPICE does not know: the site, the Moon and
+  `SpiceAPI.ReadEphemeris` (at an epoch and over a window) in its frame threw SPICE(UNKNOWNFRAME) (third review). Such a
+  read is now read in J2000 and rotated by that frame, as for a site built from coordinates (#682,
+  `SpiceAPI.ManagedReadFrame`), decided at each read, so that a frame kernel of its id loaded later is read by its
+  kernel name. `SiteTests` compares the reads of the Moon and of the site from the Earth, by `CelestialItem.GetEphemeris`
+  and `SpiceAPI.ReadEphemeris` at an epoch and over a window, with `spkezr_c` in a frame kernel the test writes in
+  NAIF's topocentric convention (the angles of `earth_topo_201023.tf`) on `Planetodetic`, under another id: the position
+  within 7.3e-16 (angle and relative magnitude), the velocity within 4.9e-11 m/s and the frame within 5.8e-16 rad
+  (thresholds 1.5e-15, 1.0e-10 m/s and 1.2e-15 rad, provisional); then loads a frame kernel of the site's id, under
+  another name, and reads that kernel frame by name, bit for bit, and the managed frame again once it is unloaded; and
+  checks that the frame kernel written for such a site is the frame it uses (5.8e-16 rad, 0 from NAIF's, threshold
+  1.2e-15 rad provisional). Calls that threw now return; nothing else moves.
 
 - **A geopotential degree above its model file ran at the file's degree, and a missing harmonic was read as zero**
   ([#689](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/689)). `GeopotentialGravitationalField`
@@ -3152,7 +3165,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   elevation extremes. The reads by name and the CSPICE searches do not move. A kernel site named otherwise than its
   kernel frame now reads that frame where it threw SPICE(UNKNOWNFRAME). `Site.Planetodetic` and the illumination angles
   do not move, nor does a site built from coordinates, nor a kernel site whose frame no loaded kernel defines (the frame
-  of its J2000 coordinates, its reads by name still throwing). `Site.WriteFrameAsync` (and so `CosmographiaExporter`)
+  of its J2000 coordinates, in which an ephemeris is now read in J2000 and rotated where it threw SPICE(UNKNOWNFRAME),
+  third review). `Site.WriteFrameAsync` (and so `CosmographiaExporter`)
   writes for such a site the kernel frame, under its kernel name and id, as `TKFRAME_<id>_MATRIX` relative to the frame
   of the body, where it wrote the frame of the J2000 coordinates as angles under the kernel's id (7.76e-8 rad from
   DSS-13_TOPO) and, for a site named otherwise, renamed the frame of that id; a kernel frame not fixed in the frame of

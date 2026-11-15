@@ -141,7 +141,13 @@ station at J2000 TDB on the `pck00011` ellipsoid, while SPICE read the kernel fr
 7.8e-8 rad for DSS-13, most of it the epoch (0.41 m of plate motion between J2000 and the 2020-10-23 of the frame
 kernel, 0.47 m by 2024), 2.1e-9 rad of it the spheroid; a site named otherwise than its kernel frame threw
 SPICE(UNKNOWNFRAME) on a read by name. A site from the kernels whose frame no loaded kernel defines keeps the frame of
-its `Planetodetic`, and a read by name in it still throws SPICE(UNKNOWNFRAME). `Planetodetic` and the illumination
+its `Planetodetic`, and an ephemeris read in it is read in J2000 and rotated by that frame, as for a site built from
+coordinates (third review of #690; before, its own name, `Name + "_TOPO"`, reached `spkezr_c`, which threw
+SPICE(UNKNOWNFRAME), while `ToFrame` and `GetHorizontalCoordinates` used that frame): within 7.4e-16 in position and
+5.9e-16 rad in frame of SPICE in a frame kernel of NAIF's topocentric convention on its `Planetodetic` (measured on Linux
+x64). The choice is made at each read, so a frame kernel of its id loaded later is read by name. The CSPICE coordinate
+search in that frame (a kernel spacecraft taking part) returns no window, as in the frame of a site built from
+coordinates (#558), and `SpiceAPI.TransformFrame` with it throws, as with that frame. `Planetodetic` and the illumination
 angles do not move: `IlluminationIncidence` and `IlluminationEmission` take the normal of the ellipsoid at
 `Planetodetic`, the normal `gfilum_c` takes for the site in `FindWindowsOnIlluminationConstraint` (#488), not the
 zenith of the kernel frame. `WriteFrameAsync` of such a site writes that kernel frame: its name and id in the

@@ -91,7 +91,8 @@ of the kernel frame of the real station (`earth_topo_201023.tf`): if its coordin
 Frame("DSS-13_TOPO").ToFrame(site.Frame, t)` is the identity, not the rotation between the two topocentric frames. Give a
 site from coordinates or a spacecraft a name no loaded kernel uses for another frame. A site from the kernels has the
 kernel frame of its id (1000000 + NaifId) when a loaded kernel defines it, whatever its name, so the identity is then
-exact ([Sites](sites.md#reads-in-the-sites-frame), #690).
+exact ([Sites](sites.md#reads-in-the-sites-frame), #690); when none does, the frame of its J2000 coordinates, in which an
+ephemeris is read in J2000 and rotated, as in the frame of a site from coordinates.
 `Frame.ICRF` is named `J2000`: `new Frame("ICRF")` is another name, not this frame. `Id` takes no part.
 Equality is not routing: a frame named TEME or GCRF is routed to the managed rotation by its name (see [TEME](#teme)
 and [ICRF, GCRF And EME2000](#icrf-gcrf-and-eme2000)), but a frame named CIRS or TIRS that is not a `CirsFrame` or a
@@ -157,7 +158,9 @@ and they rotate: an ephemeris read in `Frame.CIRS` or `Frame.TIRS` (an instance 
 J2000 and rotated by the frame at the epoch of the read, the numbers `ToFrame` gives on the state read in ICRF (#558). So
 are the frames only the library holds, the `SiteFrame` of a site built from coordinates and the `SpacecraftFrame` of a
 managed spacecraft whose attitude record holds an entry (#682; before 11.0.0 a read in them reached SPICE by name and threw
-SPICE(UNKNOWNFRAME)), whatever a loaded kernel defines under their names. The frame of a managed spacecraft whose record
+SPICE(UNKNOWNFRAME)), whatever a loaded kernel defines under their names, and the `SiteFrame` of a site from the kernels
+whose frame id (1000000 + NaifId) no loaded kernel defines, the frame of its J2000 coordinates (third review of #690;
+before, a read in it threw SPICE(UNKNOWNFRAME)), decided at each read. The frame of a managed spacecraft whose record
 is empty (never propagated, no orientation added, built from a TLE or propagated by `TLEPropagator`) holds no attitude in
 the library: a read in it still reaches SPICE by name, which reads the frame kernel and the CK of that id when they are
 loaded (those the library wrote for an earlier object of the id) and throws SPICE(UNKNOWNFRAME) otherwise. A coordinate
