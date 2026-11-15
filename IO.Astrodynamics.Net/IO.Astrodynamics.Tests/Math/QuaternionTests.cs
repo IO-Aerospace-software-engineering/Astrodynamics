@@ -319,12 +319,15 @@ namespace IO.Astrodynamics.Tests.Math
         }
 
         // #688, the table of the issue: an axis along z of any length rotates X by 90° about z to Y, as the unit axis does
-        // (the closed form (cos 90°, sin 90°, 0) of the rotation; (0, 0, 2) gave (-1.5, 2, 0), a non-unit quaternion)
+        // (the closed form (cos 90°, sin 90°, 0) of the rotation; (0, 0, 2) gave (-1.5, 2, 0), a non-unit quaternion); 1e200
+        // and 1e-200, whose squares overflow or underflow, are scaled by their largest component first
         [Theory]
         [InlineData(1.0)]
         [InlineData(2.0)]
         [InlineData(1e-3)]
         [InlineData(1e10)]
+        [InlineData(1e200)]
+        [InlineData(1e-200)]
         public void AxisAngle_AxisAlongZOfAnyLength_RotatesXToY(double length)
         {
             var q = new Quaternion(new Vector3(0.0, 0.0, length), IO.Astrodynamics.Constants.PI2);
