@@ -569,5 +569,103 @@ namespace IO.Astrodynamics.Tests.CCSDS.OPM
         }
 
         #endregion
+
+        #region Keywords out of their range
+
+        /// <summary>satellite_complete.xml unqualified (its namespace removed), which the NDM/XML 4.0.0 schema accepts.</summary>
+        internal static string KeywordBaseOpm()
+        {
+            return NdmDocuments.InForm(
+                File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CCSDS", "OPM", "satellite_complete.xml")),
+                "opm", "unqualified-ndm");
+        }
+
+        /// <summary>
+        /// The keywords of the OPM whose value the data model refuses, with that value, a second keyword set with it
+        /// ("KEYWORD=value", or null), and whether the NDM/XML 4.0.0 schema rejects the document (CCSDS 502.0-B-3; the facets
+        /// of ndmxml-4.0.0-common-4.0.xsd and -opm-3.0.xsd). The schema-valid rows are those where the schema type is wider
+        /// than the data model: distanceType is xsd:double (the sign of SEMI_MAJOR_AXIS against ECCENTRICITY), massType
+        /// nonNegativeDouble (OpmData requires a mass above 0), MAN_REF_FRAME, OBJECT_NAME and ORIGINATOR xsd:string.
+        /// </summary>
+        public static TheoryData<string, string, string?, bool> OpmKeywordsOutOfRange() => new()
+        {
+            { "ECCENTRICITY", "-0.5", null, true }, // nonNegativeDouble
+            { "SEMI_MAJOR_AXIS", "-6878.137", null, false }, // distanceType: xsd:double; e < 1 needs a > 0
+            { "SEMI_MAJOR_AXIS", "0", null, false },
+            { "SEMI_MAJOR_AXIS", "7000", "ECCENTRICITY=1.5", false }, // e > 1 needs a < 0
+            { "INCLINATION", "-1", null, true }, // inclinationRange [0, 180]
+            { "INCLINATION", "181", null, true },
+            { "GM", "-1", null, true }, // gmType: positiveDouble
+            { "GM", "0", null, true },
+            { "MASS", "0", null, false }, // massType: nonNegativeDouble
+            { "MASS", "-1", null, true },
+            { "SOLAR_RAD_AREA", "-1", null, true }, // areaType: nonNegativeDouble
+            { "SOLAR_RAD_COEFF", "-1", null, true }, // nonNegativeDouble
+            { "DRAG_AREA", "-1", null, true },
+            { "DRAG_COEFF", "-1", null, true },
+            { "MAN_DURATION", "-1", null, true }, // durationType: nonNegativeDouble
+            { "MAN_DELTA_MASS", "1", null, true }, // deltamassTypeZ: nonPositiveDouble
+            { "MAN_REF_FRAME", "", null, false }, // xsd:string
+            { "OBJECT_NAME", "", null, false },
+            { "ORIGINATOR", "", null, false }
+        };
+
+        /// <summary>The base document with the keyword's value replaced, and the second keyword's when given.</summary>
+        internal static string OpmWithKeyword(string keyword, string value, string? with = null)
+        {
+            var xml = NdmDocuments.WithElementValue(KeywordBaseOpm(), keyword, value);
+            if (with != null)
+            {
+                var parts = with.Split('=');
+                xml = NdmDocuments.WithElementValue(xml, parts[0], parts[1]);
+            }
+
+            return xml;
+        }
+
+        /// <summary>The parse exception names the keyword and its value (and the second keyword's), and holds the data model's exception.</summary>
+        internal static void AssertNamesKeyword(Exception ex, string keyword, string value, string? with = null)
+        {
+            Assert.Contains(keyword, ex.Message);
+            Assert.Contains($"'{value}'", ex.Message);
+            if (with != null)
+            {
+                var parts = with.Split('=');
+                Assert.Contains(parts[0], ex.Message);
+                Assert.Contains($"'{parts[1]}'", ex.Message);
+            }
+
+            Assert.IsAssignableFrom<ArgumentException>(ex.InnerException);
+        }
+
+        [Fact]
+        public void KeywordBaseDocument_IsSchemaValidAndReads()
+        {
+            var xml = KeywordBaseOpm();
+            var schema = new OpmValidator().ValidateSchemaFromXml(xml);
+            Assert.True(schema.IsValid, string.Join("; ", schema.Errors.Select(e => e.Message)));
+            Assert.Equal(1500.0, Opm.LoadFromString(xml).Data.Mass);
+        }
+
+        [Theory]
+        [MemberData(nameof(OpmKeywordsOutOfRange))]
+        public void ReadFromString_KeywordOutOfRange_ThrowsOpmParseExceptionNamingKeywordAndValue(
+            string keyword, string value, string? with, bool schemaRejects)
+        {
+            var xml = OpmWithKeyword(keyword, value, with);
+
+            // The schema is the oracle of the value's validity where it has a facet; where it is wider the document is
+            // schema-valid, and only the data model refuses it
+            Assert.Equal(schemaRejects, !new OpmValidator().ValidateSchemaFromXml(xml).IsValid);
+
+            // Before: the ArgumentOutOfRangeException or ArgumentException of the data model's constructor
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromString(xml)), keyword, value, with);
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(xml));
+            AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromStream(stream)), keyword, value, with);
+            NdmDocuments.WithTempFile(xml, file =>
+                AssertNamesKeyword(Assert.Throws<OpmParseException>(() => _reader.ReadFromFile(file)), keyword, value, with));
+        }
+
+        #endregion
     }
 }

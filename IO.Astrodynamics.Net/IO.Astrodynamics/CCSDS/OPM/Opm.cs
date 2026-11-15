@@ -387,7 +387,10 @@ public class Opm
     /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
     /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
     /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
-    /// (third round of #668), but not a second OPM of an NDM, which the schema allows.</exception>
+    /// (third round of #668), but not a second OPM of an NDM, which the schema allows. Also when a keyword holds a value the
+    /// data model refuses (ECCENTRICITY negative, SEMI_MAJOR_AXIS of the wrong sign for its ECCENTRICITY, MASS not above 0, an empty OBJECT_NAME), naming the keyword and its value, without <c>validateSchema</c> or with it for a value
+    /// the schema accepts; before 11.0.0 the <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/>
+    /// of the data model's constructor (fourth round of #668).</exception>
     public static Opm LoadFromFile(string filePath, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -438,7 +441,10 @@ public class Opm
     /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
     /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
     /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
-    /// (third round of #668), but not a second OPM of an NDM, which the schema allows.</exception>
+    /// (third round of #668), but not a second OPM of an NDM, which the schema allows. Also when a keyword holds a value the
+    /// data model refuses (ECCENTRICITY negative, SEMI_MAJOR_AXIS of the wrong sign for its ECCENTRICITY, MASS not above 0, an empty OBJECT_NAME), naming the keyword and its value, without <c>validateSchema</c> or with it for a value
+    /// the schema accepts; before 11.0.0 the <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/>
+    /// of the data model's constructor (fourth round of #668).</exception>
     public static Opm LoadFromString(string xml, bool validateSchema = true, bool validateContent = true)
     {
         if (string.IsNullOrWhiteSpace(xml))
@@ -486,7 +492,10 @@ public class Opm
     /// <exception cref="OpmParseException">Thrown when the document cannot be parsed, holds several OPM messages (#679), or
     /// several headers, bodies, segments, metadata or data sections, or blocks of a data section, without
     /// <c>validateSchema</c>; with it, the schema rejects the latter first, an <see cref="OpmValidationException"/>
-    /// (third round of #668), but not a second OPM of an NDM, which the schema allows.</exception>
+    /// (third round of #668), but not a second OPM of an NDM, which the schema allows. Also when a keyword holds a value the
+    /// data model refuses (ECCENTRICITY negative, SEMI_MAJOR_AXIS of the wrong sign for its ECCENTRICITY, MASS not above 0, an empty OBJECT_NAME), naming the keyword and its value, without <c>validateSchema</c> or with it for a value
+    /// the schema accepts; before 11.0.0 the <see cref="ArgumentOutOfRangeException"/> or <see cref="ArgumentException"/>
+    /// of the data model's constructor (fourth round of #668).</exception>
     public static Opm LoadFromStream(Stream stream, bool validateSchema = true, bool validateContent = true)
     {
         if (stream == null)
@@ -512,7 +521,8 @@ public class Opm
     /// <param name="validateContent">If true, validates the content for physical constraints and consistency.</param>
     /// <returns>True if the OPM was loaded successfully with no errors, false otherwise.</returns>
     /// <remarks>A document that holds several OPM messages (#679), or an OPM with several segments, headers, bodies,
-    /// metadata or data sections, or blocks of a data section, is not loaded: false, with a <c>PARSE_ERROR</c>.</remarks>
+    /// metadata or data sections, or blocks of a data section, or a keyword whose value the data model refuses, is not
+    /// loaded: false, with a <c>PARSE_ERROR</c>, which names that keyword and its value (fourth round of #668).</remarks>
     public static bool TryLoadFromFile(
         string filePath,
         out Opm opm,
