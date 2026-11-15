@@ -124,7 +124,9 @@ public class Star : CelestialBody
     /// <summary>
     /// Always null: the directory of an older design that wrote the propagation to files. A star keeps its propagated
     /// states in memory and writes them only through <see cref="WriteEphemeris"/>, to the file its caller gives.
+    /// Obsolete since 11.0.0: read <see cref="IsPropagated"/>, and write the states with <see cref="WriteEphemeris"/>.
     /// </summary>
+    [Obsolete("Always null: a star keeps its propagated states in memory. Read IsPropagated to know whether it holds them, and write them with WriteEphemeris.")]
     public DirectoryInfo PropagationOutput { get; private set; }
 
     /// <summary>

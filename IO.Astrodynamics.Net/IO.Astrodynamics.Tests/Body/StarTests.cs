@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using IO.Astrodynamics.Body;
 using IO.Astrodynamics.Coordinates;
@@ -168,8 +169,30 @@ public class StarTests
         await byAsync.PropagateAsync(window, TimeSpan.FromMinutes(10.0));
         Assert.True(bySync.IsPropagated);
         Assert.True(byAsync.IsPropagated);
+        // The obsolete member is read on purpose: it stays null
+#pragma warning disable CS0618
         Assert.Null(bySync.PropagationOutput);
         Assert.Null(byAsync.PropagationOutput);
+#pragma warning restore CS0618
+    }
+
+    [Fact]
+    public void PropagationOutput_IsObsoleteAsAWarning()
+    {
+        // Arrange: the output directory of an older design, always null, which no code sets
+        // (nameof of an obsolete member raises CS0618 too)
+#pragma warning disable CS0618
+        var property = typeof(Star).GetProperty(nameof(Star.PropagationOutput));
+#pragma warning restore CS0618
+
+        // Act
+        var obsolete = property!.GetCustomAttribute<ObsoleteAttribute>();
+
+        // Assert: a warning (CS0618), not an error, whose message points to the members that replace it
+        Assert.NotNull(obsolete);
+        Assert.False(obsolete.IsError);
+        Assert.Contains(nameof(Star.IsPropagated), obsolete.Message);
+        Assert.Contains(nameof(Star.WriteEphemeris), obsolete.Message);
     }
 
     /// <summary>The epochs of a propagation of a star: from the start of the window, every step, up to its end.</summary>

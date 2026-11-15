@@ -53,9 +53,10 @@ A major version, because it breaks the API. The entries marked **Breaking** unde
 caller can meet, with its migration: among them the maneuver chain on the attitude timeline, the kernels and the
 stored states of a propagated spacecraft, `Instrument.Orientation`, `InstrumentPointingToAttitude`, the reads that now
 throw outside the coverage, the TT seconds of a propagation about the Earth, `Quaternion.Identity` and the `readonly`
-public statics, the equality of frames, and the axes the TRIAD factories point. **Removed** lists
-`Instrument.PositionInFOV`, `LowThrustManeuver` and `Quaternion.Zero`. Several results change: see **Fixed** and
-**Changed**. The open defects a caller can meet at this release are listed under **Known limitations**.
+public statics, the equality of frames, and the axes the TRIAD factories point. **Deprecated** lists
+`Star.PropagationOutput`, always null. **Removed** lists `Instrument.PositionInFOV`, `LowThrustManeuver` and
+`Quaternion.Zero`. Several results change: see **Fixed** and **Changed**. The open defects a caller can meet at this
+release are listed under **Known limitations**.
 
 **Added**
 
@@ -2290,8 +2291,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668)). It read `PropagationOutput`, the
   output directory of an older design, which no code sets, while `Propagate` keeps its states in memory. It now reads
   the stored states, as `Spacecraft.IsPropagated` does: true after `Propagate`, `PropagateAsync` or
-  `Scenario.SimulateAsync`. `PropagationOutput` stays, documented as always null. `StarTests` and `ScenarioTests` check
-  each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
+  `Scenario.SimulateAsync`. `PropagationOutput` stays, documented as always null, marked `[Obsolete]` (see
+  **Deprecated**). `StarTests` and `ScenarioTests` check each path; the SPK of the star propagated by `SimulateAsync`, read back by SPICE (`spkezr` through `SpiceAPI`), is the
   catalog position moved by the proper motion, written in the test (right ascension and declination plus the proper
   motion times the Julian years from the catalog epoch, at the star's distance, by CSPICE's `latrec_c`), to 1.98e-16
   relative over four years (threshold 4.0e-16, provisional, twice the Linux worst).
@@ -3449,8 +3450,8 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
 
 - **Breaking: `Star.IsPropagated` becomes true once the star is propagated** (second round of
   [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above), after `Propagate`,
-  `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput` stays null. Migration: code that
-  relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
+  `PropagateAsync` or `Scenario.SimulateAsync`; it was always false. `PropagationOutput` stays null, marked `[Obsolete]`
+  (see **Deprecated**). Migration: code that relied on false, or checked `PropagationOutput`, reads `IsPropagated`.
 
 - **Breaking: the constructors of `CentralBodyPropagator` that take an integrator with its forces initialize it**
   (second round of [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), Fixed above) with
@@ -3511,6 +3512,15 @@ throws `InvalidOperationException` on both, as SPICE for L3, whose state `Data/S
   `Star.PropagateAsync` and `Scenario.SimulateAsync` keep the states of the last propagation only, as
   `Spacecraft.Propagate` does, where each added its states to those of the earlier ones. Migration: to write several
   windows, propagate over one window that covers them. No result moves for a star propagated once.
+
+**Deprecated**
+
+- **`Star.PropagationOutput`** is marked `[Obsolete]` (a warning, CS0618; fourth round of
+  [#668](https://github.com/IO-Aerospace-software-engineering/Astrodynamics/issues/668), decided by S. Guillet,
+  2026-11-15). It is always null: the output directory of an older design that wrote the propagation to files, which no
+  code sets, while a star keeps its propagated states in memory. Nothing moves at run time. It may be removed in a later
+  major version. Migration: read `IsPropagated` to know whether the star holds propagated states, and write them with
+  `WriteEphemeris`, to a file of the caller's choice.
 
 **Removed**
 
