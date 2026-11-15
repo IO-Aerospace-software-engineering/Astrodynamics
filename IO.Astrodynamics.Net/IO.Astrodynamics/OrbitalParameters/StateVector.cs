@@ -182,7 +182,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         {
             if (!_inclination.HasValue)
             {
-                ThrowIfRectilinear("an orbit plane, so no inclination, ascending node, argument of periapsis or elements");
+                ThrowIfRectilinear(NoOrbitPlane);
 
                 // atan2 of the two components of h, well conditioned near 0 and π, where acos of h_z / |h| is not
                 var h = SpecificAngularMomentum();
@@ -278,6 +278,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// Calculates the mean anomaly.
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="InvalidOperationException">The state is at the centre (r = 0), where its eccentricity vector is
+        /// zero and its anomaly counts from a node it does not have, or not finite (#687).</exception>
         public override double MeanAnomaly()
         {
             double ea = EccentricAnomaly(TrueAnomaly());
@@ -295,13 +297,22 @@ namespace IO.Astrodynamics.OrbitalParameters
                 _meanAnomaly ??= Eccentricity() * System.Math.Sinh(ea) - ea;
             }
 
-            return _meanAnomaly.Value;
+            // No conic has a non-finite eccentricity: the state is not finite and has no elements (#687; the message of an
+            // empty Nullable before)
+            if (!_meanAnomaly.HasValue)
+            {
+                ThrowIfRectilinear(NoOrbitPlane);
+            }
+
+            return _meanAnomaly!.Value;
         }
 
         /// <summary>
         /// Calculates the true anomaly.
         /// </summary>
         /// <returns></returns>
+        /// <exception cref="InvalidOperationException">The state is at the centre (r = 0), where its eccentricity vector is
+        /// zero and its anomaly counts from a node it does not have, or not finite (#687).</exception>
         public override double TrueAnomaly()
         {
             if (_trueAnomaly.HasValue)
@@ -455,6 +466,8 @@ namespace IO.Astrodynamics.OrbitalParameters
         }
 
 
+        private const string NoOrbitPlane = "orbit plane, so no inclination, ascending node, argument of periapsis or elements";
+
         // A rectilinear state (r × v = 0, the condition of RtnProcessNoise) or a non-finite one, which fails the comparisons,
         // has no orbit plane and no RTN frame (#687)
         private void ThrowIfRectilinear(string what)
@@ -481,7 +494,7 @@ namespace IO.Astrodynamics.OrbitalParameters
         /// or the centre), or not finite: it has no RTN frame (#687; a matrix with zero rows was used before 11.0.0).</exception>
         public Matrix CreateRtnRotation()
         {
-            ThrowIfRectilinear("an RTN frame");
+            ThrowIfRectilinear("RTN frame");
             var r = Position.NormalizeOrZero();
             var h = Position.Cross(Velocity).NormalizeOrZero();
             var t = h.Cross(r).NormalizeOrZero();

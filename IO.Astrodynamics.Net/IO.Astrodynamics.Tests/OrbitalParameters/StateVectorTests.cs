@@ -840,36 +840,81 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
         }
 
         // #687: the four rectilinear states of the issue, r × v = 0: a radial outward motion, an inclined line through
-        // the centre, a zero velocity and the centre itself; and a non-finite state
+        // the centre, a zero velocity and the centre itself; a state moving through the centre; and a non-finite state
         public static TheoryData<double, double, double, double, double, double> RectilinearStates => new()
         {
             { 7000e3, 0.0, 0.0, 7.5e3, 0.0, 0.0 },
             { 4000e3, 3000e3, 5000e3, -4e3, -3e3, -5e3 },
             { 7000e3, 1000e3, -2000e3, 0.0, 0.0, 0.0 },
             { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+            { 0.0, 0.0, 0.0, 0.0, 7.5e3, 0.0 },
             { double.NaN, 0.0, 0.0, 0.0, 7.5e3, 0.0 }
         };
 
         // #687: a rectilinear state has no RTN frame (N = (r × v) / |r × v|, CCSDS 508.0-B-1 and Vallado 2013 §3.3) and no
         // orbit plane, so no inclination, node or argument of periapsis: CreateRtnRotation returned a matrix with zero rows
-        // (FromRtn((0, 1, 0)) = 0) and the elements were equatorial (i = 0, Ω = 0, ω = π). Each member throws now;
-        // the eccentricity 1 and the true anomaly π, the limits of every nearby orbit, are kept
+        // (FromRtn((0, 1, 0)) = 0) and the elements were equatorial (i = 0, Ω = 0, ω = π). Each member throws now, with
+        // every public member that reads the plane (the node vectors, the longitudes, the two-body motion to another epoch:
+        // x̂, −x̂, 0, a number or NaN before; second review of #687); the eccentricity 1 and the true anomaly π, the limits of
+        // every nearby orbit, are kept
         [Theory]
         [MemberData(nameof(RectilinearStates))]
         public void RectilinearState_HasNoRtnFrameNorOrbitPlane_Throws(double x, double y, double z, double vx, double vy, double vz)
         {
-            var sv = new StateVector(new Vector3(x, y, z), new Vector3(vx, vy, vz), TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF);
+            var epoch = TimeSystem.Time.J2000TDB;
+            var later = epoch.AddSeconds(10.0);
+            StateVector New() => new(new Vector3(x, y, z), new Vector3(vx, vy, vz), TestHelpers.EarthAtJ2000, epoch, Frames.Frame.ICRF);
             var covariance = Matrix.Identity6x6();
-            Assert.Throws<InvalidOperationException>(() => sv.CreateRtnRotation());
-            Assert.Throws<InvalidOperationException>(() => sv.ToRtn(Vector3.VectorX));
-            Assert.Throws<InvalidOperationException>(() => sv.FromRtn(Vector3.VectorY));
-            Assert.Throws<InvalidOperationException>(() => sv.RotateCovarianceToRtn(covariance));
-            Assert.Throws<InvalidOperationException>(() => sv.RotateCovarianceFromRtn(covariance));
-            Assert.Throws<InvalidOperationException>(() => sv.Inclination());
-            Assert.Throws<InvalidOperationException>(() => sv.AscendingNode());
-            Assert.Throws<InvalidOperationException>(() => sv.ArgumentOfPeriapsis());
-            Assert.Throws<InvalidOperationException>(() => sv.ToKeplerianElements());
-            Assert.Throws<InvalidOperationException>(() => sv.ToEquinoctial());
+
+            // A fresh state for each member, so that no member reads a value an earlier one cached
+            void Throws(Func<StateVector, object> member, string frameOrPlane)
+            {
+                var exception = Assert.Throws<InvalidOperationException>(() => member(New()));
+                Assert.Contains($"is rectilinear (r × v = 0) or not finite, and has no {frameOrPlane}", exception.Message);
+            }
+
+            Throws(sv => sv.CreateRtnRotation(), "RTN frame");
+            Throws(sv => sv.ToRtn(Vector3.VectorX), "RTN frame");
+            Throws(sv => sv.FromRtn(Vector3.VectorY), "RTN frame");
+            Throws(sv => sv.RotateCovarianceToRtn(covariance), "RTN frame");
+            Throws(sv => sv.RotateCovarianceFromRtn(covariance), "RTN frame");
+            Throws(sv => sv.Inclination(), "orbit plane");
+            Throws(sv => sv.AscendingNode(), "orbit plane");
+            Throws(sv => sv.ArgumentOfPeriapsis(), "orbit plane");
+            Throws(sv => sv.ToKeplerianElements(), "orbit plane");
+            Throws(sv => sv.ToEquinoctial(), "orbit plane");
+            Throws(sv => sv.AscendingNodeVector(), "orbit plane");
+            Throws(sv => sv.DescendingNodeVector(), "orbit plane");
+            Throws(sv => sv.TrueLongitude(), "orbit plane");
+            Throws(sv => sv.TrueLongitude(later), "orbit plane");
+            Throws(sv => sv.MeanLongitude(), "orbit plane");
+            Throws(sv => sv.AtEpoch(later), "orbit plane");
+            Throws(sv => sv.ToKeplerianElements(later), "orbit plane");
+            Throws(sv => sv.TrueAnomaly(later), "orbit plane");
+            Throws(sv => sv.ToStateVector(later), "orbit plane");
+
+            // A non-finite state has no conic: its mean anomaly threw the message of an empty Nullable
+            if (!double.IsFinite(x))
+            {
+                Throws(sv => sv.MeanAnomaly(), "orbit plane");
+            }
+
+            // At the centre the eccentricity vector is zero, so the anomalies count from the node and the periapsis is
+            // along it: they have no plane either (0, the epoch, the zero vector or NaN before)
+            if (x == 0.0 && y == 0.0 && z == 0.0)
+            {
+                Throws(sv => sv.TrueAnomaly(), "orbit plane");
+                Throws(sv => sv.MeanAnomaly(), "orbit plane");
+                Throws(sv => sv.EccentricAnomaly(), "orbit plane");
+                Throws(sv => sv.EpochAtMeanAnomaly(1.0), "orbit plane");
+                Throws(sv => sv.ToStateVector(System.Math.PI), "orbit plane");
+                Throws(sv => sv.PerigeeVector(), "orbit plane");
+                Throws(sv => sv.ApogeeVector(), "orbit plane");
+                Throws(sv => sv.PerigeeVelocity(), "orbit plane");
+                Throws(sv => sv.ApogeeVelocity(), "orbit plane");
+            }
+
+            var sv = New();
 
             // A moving rectilinear state off the centre keeps the limits of its neighbours
             if (double.IsFinite(x) && (vx != 0.0 || vy != 0.0 || vz != 0.0) && (x != 0.0 || y != 0.0 || z != 0.0))

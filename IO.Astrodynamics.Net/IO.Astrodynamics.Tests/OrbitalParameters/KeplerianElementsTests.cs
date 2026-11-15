@@ -634,5 +634,67 @@ namespace IO.Astrodynamics.Tests.OrbitalParameters
             Assert.True(worstLength <= ApsisLengthTolerance, $"{worstLength:E3}");
             Assert.True(worstVelocity <= ApsisVelocityTolerance, $"{worstVelocity:E3}");
         }
+
+        // Review of #686: mean elements have no position, so no apsis vector. The apsides went through the eccentricity
+        // vector of the state, which throws for mean elements (ToStateVector, "Cannot convert mean elements directly to a
+        // state vector"); the perifocal axis of #686 had made them return a mean apsis silently, and PerigeeHeightManeuver,
+        // ApogeeHeightManeuver and Launch accept a mean target orbit through them. They throw again, at every eccentricity,
+        // as EccentricityVector of the same elements does
+        [Theory]
+        [InlineData(0.0)]
+        [InlineData(0.01)]
+        [InlineData(0.7)]
+        public void ApsisVectors_OfMeanElements_Throw_AsTheirEccentricityVectorDoes(double e)
+        {
+            var mean = new KeplerianElements(7000e3, e, 0.5, 1.0, 2.0, 0.3, TestHelpers.EarthAtJ2000, TimeSystem.Time.J2000TDB, Frames.Frame.ICRF,
+                null, null, null, OrbitalElementsType.Mean);
+            var meanEquinoctial = new EquinoctialElements(7000e3 * (1.0 - e * e), e * System.Math.Cos(3.0), e * System.Math.Sin(3.0),
+                System.Math.Tan(0.25) * System.Math.Cos(1.0), System.Math.Tan(0.25) * System.Math.Sin(1.0), 3.3, TestHelpers.EarthAtJ2000,
+                TimeSystem.Time.J2000TDB, Frames.Frame.ICRF, null, OrbitalElementsType.Mean);
+
+            foreach (IO.Astrodynamics.OrbitalParameters.OrbitalParameters orbit in new IO.Astrodynamics.OrbitalParameters.OrbitalParameters[] { mean, meanEquinoctial })
+            {
+                Assert.Throws<InvalidOperationException>(() => orbit.EccentricityVector());
+                Assert.Contains("mean elements", Assert.Throws<InvalidOperationException>(() => orbit.PerigeeVector()).Message);
+                Assert.Contains("mean elements", Assert.Throws<InvalidOperationException>(() => orbit.ApogeeVector()).Message);
+                Assert.Contains("mean elements", Assert.Throws<InvalidOperationException>(() => orbit.PerigeeVelocity()).Message);
+                Assert.Contains("mean elements", Assert.Throws<InvalidOperationException>(() => orbit.ApogeeVelocity()).Message);
+            }
+
+            // The magnitude alone stays available, a(1 − e) of the elements
+            Assert.Equal(7000e3 * (1.0 - e), mean.PerigeeRadius());
+        }
+
+        // Review of #686: a TLE holds mean elements, but its semi-major axis, eccentricity and angles are those of its
+        // osculating elements at its epoch (SGP4/SDP4), so its apsides are those of its osculating orbit and do not throw
+        // with the mean elements above. Reference: the periapsis of the SGP4 state by SPICE oscelt then conics at M = 0
+        // (N0067); the radii are a(1 ∓ e) of the same elements. MEASURE 1.460e-13 rad (ISS, e about 1e-3 osculating) and
+        // 1.279e-16 rad (e = 0.72), Linux x64, 2026-11-15; twice the worst, rounded up at the second significant digit,
+        // provisional until the three platforms are read from the CI logs
+        private const double TleApsisAngleTolerance = 3.0e-13;
+
+        [Theory]
+        [InlineData("ISS", "1 25544U 98067A   21020.53488036  .00016717  00000-0  10270-3 0  9054",
+            "2 25544  51.6423 353.0312 0000493 320.8755  39.2360 15.49309423 25703")]
+        [InlineData("CZ-3C DEB", "1 39348U 10057N   24238.91466777  .00000306  00000-0  19116-2 0  9995",
+            "2 39348  20.0230 212.2863 7218258 312.9449   5.6833  2.25781763 89468")]
+        public void ApsisVectors_OfATle_AreAlongThePeriapsisOfItsSgp4State(string name, string line1, string line2)
+        {
+            var tle = new IO.Astrodynamics.OrbitalParameters.TLE.TLE(name, line1, line2);
+            var state = tle.ToStateVector();
+            var osculating = SpiceAPI.Instance.ConvertStateVectorToConicOrbitalElement(state);
+            var spicePerigee = SpiceConicPosition(osculating.A, osculating.E, osculating.I, osculating.RAAN, osculating.AOP, 0.0);
+
+            double perigeeAngle = AngleBetween(tle.PerigeeVector(), spicePerigee);
+            double apogeeAngle = AngleBetween(tle.ApogeeVector(), spicePerigee.Inverse());
+            _output.WriteLine($"MEASURE review of #686 TLE {name}: apsis angle against SPICE oscelt + conics of its SGP4 state {System.Math.Max(perigeeAngle, apogeeAngle):E3} rad");
+            Assert.True(perigeeAngle <= TleApsisAngleTolerance, $"{perigeeAngle:E3}");
+            Assert.True(apogeeAngle <= TleApsisAngleTolerance, $"{apogeeAngle:E3}");
+
+            double a = tle.SemiMajorAxis();
+            double e = tle.Eccentricity();
+            Assert.Equal(a * (1.0 - e), tle.PerigeeVector().Magnitude(), a * 1e-15);
+            Assert.Equal(a * (1.0 + e), tle.ApogeeVector().Magnitude(), a * 1e-15);
+        }
     }
 }

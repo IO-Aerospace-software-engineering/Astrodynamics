@@ -162,32 +162,116 @@ namespace IO.Astrodynamics.Math
             return new Vector3(v1.X - v2.X, v1.Y - v2.Y, v1.Z - v2.Z);
         }
 
+        /// <summary>
+        /// The unit quaternion of the shortest rotation that turns the direction of this vector onto the direction of
+        /// <paramref name="vector"/>: the identity for the same direction, a half turn (w = 0) about an axis perpendicular
+        /// to both for opposite directions, otherwise the rotation about this vector × <paramref name="vector"/>.
+        /// </summary>
+        /// <param name="vector">The target direction, of any finite non-zero length.</param>
+        /// <remarks>
+        /// Only the directions count: vectors whose lengths or the product of their lengths lie outside about 1e-150 to
+        /// 1e150 are first divided by their largest component, so that their squares are represented (before 11.0.0 they
+        /// gave NaN or a quaternion that was not a rotation). Two vectors collinear and opposite in doubles (their cross
+        /// product exactly zero) give a half turn, also when their <see cref="Angle(in Vector3)"/> is not exactly π
+        /// through rounding, which gave the zero quaternion or the identity before 11.0.0 (review of #680's known
+        /// limitation). Opposite vectors whose cross product is a rounding residue still give the rotation about that
+        /// residue, which can miss the target.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">This vector is zero or has a component that is not finite: it has
+        /// no direction to rotate from (the identity, or NaN, was returned before 11.0.0).</exception>
+        /// <exception cref="ArgumentException"><paramref name="vector"/> is zero or has a component that is not finite: it
+        /// has no direction to rotate to (the identity, or NaN, was returned before 11.0.0).</exception>
         public Quaternion To(in Vector3 vector)
         {
-            var dot = this * vector;
-            var angle = System.Math.Abs(this.Angle(vector));
+            if (!IsFiniteNonZero(this))
+            {
+                throw new InvalidOperationException($"The vector {this} is zero or not finite and has no direction to rotate from.");
+            }
+
+            if (!IsFiniteNonZero(vector))
+            {
+                throw new ArgumentException($"The vector {vector} is zero or not finite and has no direction to rotate to.", nameof(vector));
+            }
+
+            return RotationTo(vector);
+        }
+
+        /// <summary>
+        /// The rotation of <see cref="To"/>, the identity for a zero vector: the library's own attitudes, whose degenerate
+        /// targets (a zero position, velocity, angular momentum or delta-V) kept the identity, bit for bit the former public
+        /// method there (review of #680's known limitation).
+        /// </summary>
+        internal Quaternion ToOrIdentity(in Vector3 vector)
+        {
+            if (Magnitude() == 0.0 || vector.Magnitude() == 0.0)
+            {
+                return Quaternion.Identity;
+            }
+
+            return RotationTo(vector);
+        }
+
+        private static bool IsFiniteNonZero(in Vector3 v)
+        {
+            return double.IsFinite(v.X) && double.IsFinite(v.Y) && double.IsFinite(v.Z) && (v.X != 0.0 || v.Y != 0.0 || v.Z != 0.0);
+        }
+
+        private static double LargestComponent(in Vector3 v)
+        {
+            return System.Math.Max(System.Math.Abs(v.X), System.Math.Max(System.Math.Abs(v.Y), System.Math.Abs(v.Z)));
+        }
+
+        // The rotation between two non-zero vectors; vectors whose squares or the product of whose lengths would overflow or
+        // lose their digits below the normal range are divided by their largest component first, so that the result does
+        // not depend on their lengths; every other pair is computed bit for bit as before 11.0.0
+        private Quaternion RotationTo(in Vector3 vector)
+        {
+            double largestFrom = LargestComponent(this);
+            double largestTo = LargestComponent(vector);
+            double product = largestFrom * largestTo;
+            if (largestFrom > 1e-150 && largestFrom < 1e150 && largestTo > 1e-150 && largestTo < 1e150 && product > 1e-150 && product < 1e150)
+            {
+                return RotationBetween(this, vector);
+            }
+
+            return RotationBetween(this / largestFrom, vector / largestTo);
+        }
+
+        private static Quaternion RotationBetween(in Vector3 from, in Vector3 to)
+        {
+            var dot = from * to;
+            var angle = System.Math.Abs(from.Angle(to));
             if (angle <= double.Epsilon)
             {
                 return Quaternion.Identity;
             }
 
-            var mag1 = Magnitude();
-            var mag2 = vector.Magnitude();
-            if (System.Math.Abs(angle - Constants.PI) < double.Epsilon) //Manage 180° case
-            {
-                double x = System.Math.Abs(vector.X);
-                double y = System.Math.Abs(vector.Y);
-                double z = System.Math.Abs(vector.Z);
+            var mag1 = from.Magnitude();
+            var mag2 = to.Magnitude();
+            var v = from.Cross(to);
 
-                Vector3 axis = x < y ? (x < z ? VectorX : VectorZ) : (y < z ? VectorY : VectorZ);
-                var vec = vector.Cross(axis);
-                return new Quaternion(0.0, vec.X, vec.Y, vec.Z).NormalizeOrZero();
+            // Opposite directions: the angle π exactly, or a cross product exactly zero with a negative dot product (collinear
+            // in doubles, where the angle can be π less a rounding residue and w = dot + |a| |b| is 0 or a residue)
+            if (System.Math.Abs(angle - Constants.PI) < double.Epsilon || (v.X == 0.0 && v.Y == 0.0 && v.Z == 0.0 && dot < 0.0))
+            {
+                return HalfTurnOnto(to);
             }
 
-            var v = this.Cross(vector);
             var w = dot + System.Math.Sqrt(mag1 * mag1 * mag2 * mag2);
 
             return new Quaternion(w, v.X, v.Y, v.Z).NormalizeOrZero();
+        }
+
+        // A half turn about the axis perpendicular to the target and to the coordinate axis of its smallest component
+        private static Quaternion HalfTurnOnto(in Vector3 to)
+        {
+            double x = System.Math.Abs(to.X);
+            double y = System.Math.Abs(to.Y);
+            double z = System.Math.Abs(to.Z);
+
+            Vector3 axis = x < y ? (x < z ? VectorX : VectorZ) : (y < z ? VectorY : VectorZ);
+            var vec = to.Cross(axis);
+            return new Quaternion(0.0, vec.X, vec.Y, vec.Z).NormalizeOrZero();
         }
 
         public Vector3 Rotate(in Quaternion quaternion)

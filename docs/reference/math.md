@@ -29,7 +29,7 @@ Core geometry, linear algebra, interpolation, and physics utilities used through
 | `Rotate(Quaternion)` | Rotate by quaternion |
 | `Angle(Vector3)` | Angle between two vectors (rad) |
 | `Angle(Vector3, Vector3)`, `Angle(Vector3, Plane)` | Signed angle about a plane normal of any finite non-zero length, atan2((a × b) · n̂, a · b); `ArgumentException` (`plane`) for a zero or non-finite normal (#680's known limitation) |
-| `To(Vector3)` | Quaternion that rotates this vector to the target vector |
+| `To(Vector3)` | Unit quaternion of the shortest rotation from the direction of this vector to the direction of the target: the identity for the same direction, a half turn (w = 0) about a perpendicular axis for opposite directions (also when they are collinear in doubles and `Angle` is not exactly π); lengths of any finite non-zero size; `InvalidOperationException` for a zero or non-finite instance, `ArgumentException` (`vector`) for a zero or non-finite target (review of #680's known limitation; the identity, NaN or the zero quaternion before 11.0.0). Opposite vectors whose cross product is a rounding residue can still miss the target |
 | `LinearInterpolation(Vector3, double)` | Linear interpolation between this and another vector |
 | `operator +(Vector3, Vector3)` | Vector addition |
 | `operator -(Vector3, Vector3)` | Vector subtraction |

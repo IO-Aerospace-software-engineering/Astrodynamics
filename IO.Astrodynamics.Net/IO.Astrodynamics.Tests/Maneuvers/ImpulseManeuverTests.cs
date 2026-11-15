@@ -239,5 +239,29 @@ namespace IO.Astrodynamics.Tests.Maneuvers
 
             Assert.Equal(initial == "covariance", after.Covariance.HasValue);
         }
+
+        /// <summary>
+        /// Review of #680's known limitation: <see cref="Vector3.To"/> throws for a zero target now, and an impulse whose
+        /// delta-V is zero (a target already reached) has no direction to point its front along. Its attitude stays the
+        /// identity, which the attitude record holds for "no attitude", bit for bit the value the impulse returned before
+        /// 11.0.0, and its state after is the state before.
+        /// </summary>
+        [Fact]
+        public void AZeroDeltaV_KeepsTheIdentityAttitude()
+        {
+            var engine = Engine(true);
+            var spc = engine.FuelTank.Spacecraft;
+            var impulse = new IO.Astrodynamics.Tests.Propagators.Variational.FixedImpulse(TestHelpers.EarthAtJ2000, MinimumEpoch,
+                TimeSystem.Time.J2000TDB, Vector3.Zero, engine);
+            spc.SetStandbyManeuver(impulse);
+
+            var given = spc.InitialOrbitalParameters.ToStateVector();
+            var (after, orientation) = impulse.TryExecute(given);
+
+            Assert.Equal(Quaternion.Identity, orientation.Rotation);
+            Assert.Equal(Vector3.Zero, impulse.DeltaV);
+            Assert.Equal(given.Position, after.Position);
+            Assert.Equal(given.Velocity, after.Velocity);
+        }
     }
 }
