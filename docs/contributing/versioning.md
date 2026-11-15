@@ -268,7 +268,8 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
     seed's own range rate forward and backward, the widened bracket, the range rate followed over the candidates, the
     sampled search) and at the window ends. The seven `collision_probability` encounters through `Analyze`, whose exact
     TCA lies within 4.3e-7 tick of a tick: the Pc within 3.15e-10 of its exact value (005, at its exact tick; 9.03e-9
-    before, 003 and 005 returned one tick early), asserted at 6.3e-10 (1.9e-8 before). Against `gfdist_c` on the
+    before, 003 and 005 returned one tick early), asserted at 6.4e-10 (6.3e-10 until #668, whose three-digit prints give
+    3.1549e-10, twice which is above 6.3e-10; 1.9e-8 before #624). Against `gfdist_c` on the
     crossing LEOs, the TCA within 6.4e-8 s of CSPICE's zero below the tick at 60 s steps and 9.0e-8 s at the default
     steps (1.5e-7 s before), asserted at 1.8e-7 s (4e-7 s, when the reference was CSPICE's minimum on the grid of ticks,
     up to 0.96 tick from its zero); the #620 RTN position within 1.5e-4 m of the design (6.3e-4 m before), asserted at
@@ -1770,7 +1771,7 @@ public statics, the equality of frames, and the axes the TRIAD factories point. 
   5 m when neither does (Changed below); the option of `Screen` is a fallback over its catalogue, never in conflict with
   a candidate's own radius. `Analyze_SecondaryHardBodyRadius_DesignedEncounters_MatchExactPc` splits the
   radius of the seven designed encounters of `tools/collision_probability` between the two spacecraft (0.6 R and 0.4 R,
-  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.15e-10 on the three platforms (CI run 43601908000, bound 6.3e-10); a
+  no option): the combined radius is their sum and the Pc the exact one of mpmath within 3.15e-10 on the three platforms (CI run 43601908000; bound 6.4e-10 since #668, 6.3e-10 before); a
   theory checks the five rows of the rule on `Analyze` and `AnalyzeAll` (sampled and dense) and both avoidance paths,
   and the fallback rule on `Screen` (the candidate's own radius in the row where the others throw), with a spacecraft
   and a body as secondary; `Screen_MixedCatalogue_EachCandidateTakesItsOwnRadiusOrTheFallback` screens spacecraft of 2, 6 and 0 m and
