@@ -707,13 +707,82 @@ namespace IO.Astrodynamics.Tests.Surface
             }
         }
 
+        /// <summary>
+        /// The frame kernel written for a site from the kernels whose frame id no loaded kernel defines is the frame the site
+        /// uses (#690, second review; a guard): the frame of <see cref="Site.Planetodetic"/>, under the site's name and id,
+        /// RV782_TOPO (1399782), which redefines nothing of Data/SolarSystem. The file is loaded with its frame and body
+        /// renamed (1399882, RV882_TOPO, 399882), so that the site keeps its frame, and SPICE reads its rotation against the
+        /// frame the site uses and against a frame kernel written by the test in NAIF's topocentric convention.
+        /// </summary>
+        [Fact]
+        public async Task WriteFrame_KernelSiteWithoutFrameKernel_WritesTheFrameItUses()
+        {
+            // Arrange
+            var spk = KernelSiteSpk(782, "RV782");
+            var fk = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site782_written");
+            var renamed = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site782_renamed");
+            var reference = IO.Astrodynamics.Tests.Body.FrameKernelFiles.NewFile("site782_reference");
+            SpiceAPI.Instance.LoadKernels(spk);
+            try
+            {
+                var site = new Site(782, "RV782", PlanetsAndMoons.EARTH_BODY);
+                Assert.True(site.IsSpiceBacked);
+
+                // Act
+                await site.WriteFrameAsync(fk);
+
+                // Assert: the site's name and id, nothing of Data/SolarSystem redefined
+                var text = await File.ReadAllTextAsync(fk.FullName);
+                Assert.Contains("FRAME_1399782_NAME        = 'RV782_TOPO'", text);
+                Assert.Contains("FRAME_RV782_TOPO        = 1399782", text);
+                Assert.Empty(KernelShadowing.Find([fk], KernelShadowing.SolarSystem));
+                await File.WriteAllTextAsync(renamed.FullName, text.Replace("1399782", "1399882").Replace("399782", "399882")
+                    .Replace("RV782_TOPO", "RV882_TOPO").Replace("'RV782'", "'RV882'"));
+                await File.WriteAllTextAsync(reference.FullName, TopocentricFrameKernel(1399982, "RV982_TOPO", site.NaifId, site.Planetodetic));
+                Assert.Empty(KernelShadowing.Find([renamed, reference], KernelShadowing.SolarSystem));
+                SpiceAPI.Instance.LoadKernels(renamed);
+                SpiceAPI.Instance.LoadKernels(reference);
+                try
+                {
+                    Assert.False(SpiceAPI.KernelDefinesFrame(site.Frame.Id!.Value));
+                    foreach (var epoch in KernelSiteEpochs)
+                    {
+                        var written = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("RV882_TOPO"), Frames.Frame.ICRF).Rotation;
+                        var used = site.Frame.ToFrame(Frames.Frame.ICRF, epoch).Rotation;
+                        var naif = SpiceAPI.Instance.TransformFrame(epoch, new Frames.Frame("RV982_TOPO"), Frames.Frame.ICRF).Rotation;
+                        double againstUsed = RotationAngle(written.Conjugate() * used);
+                        double againstNaif = RotationAngle(written.Conjugate() * naif);
+                        _output.WriteLine($"MEASURE written frame of a kernel site without frame kernel at {epoch}: against the frame used {againstUsed:E3} rad, " +
+                                          $"against NAIF's topocentric frame {againstNaif:E3} rad");
+                        Assert.True(againstUsed <= KernelSiteWrittenFrameThreshold, $"{againstUsed:E3} rad");
+                        Assert.True(againstNaif <= KernelSiteWrittenFrameThreshold, $"{againstNaif:E3} rad");
+                    }
+                }
+                finally
+                {
+                    SpiceAPI.Instance.UnloadKernels(reference);
+                    SpiceAPI.Instance.UnloadKernels(renamed);
+                }
+            }
+            finally
+            {
+                SpiceAPI.Instance.UnloadKernels(spk);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(spk);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(fk);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(renamed);
+                IO.Astrodynamics.Tests.Body.FrameKernelFiles.Delete(reference);
+            }
+        }
+
         // Third review of #690, measured on Linux x64 (2026-11-15) against SPICE in the test's NAIF topocentric frame: the
         // position of a read 7.336e-16 at worst (the angle 5.155e-16 rad, |r| relative 7.336e-16), its velocity 4.915e-11 m/s
-        // (the Moon, about 28 km/s in the frame), the frame itself 5.822e-16 rad; thresholds twice those rounded up,
-        // provisional until the three platforms have printed their MEASURE lines
+        // (the Moon, about 28 km/s in the frame), the frame itself 5.822e-16 rad, and the written frame 5.822e-16 rad from the
+        // frame used (0 from NAIF's); thresholds twice those rounded up, provisional until the three platforms have printed
+        // their MEASURE lines
         private const double KernelSiteManagedReadPositionThreshold = 1.5e-15;
         private const double KernelSiteManagedReadVelocityThreshold = 1.0e-10;
         private const double KernelSiteManagedFrameThreshold = 1.2e-15;
+        private const double KernelSiteWrittenFrameThreshold = 1.2e-15;
 
         [Fact]
         public void IlluminationIncidence()
